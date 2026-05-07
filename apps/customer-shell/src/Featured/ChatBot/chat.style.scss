@@ -1,0 +1,365 @@
+/* src/styles/components/chat.scss */
+@import "../../styles/base/typography"; // <- uses your typography variables
+
+/* Shared utilities */
+%box {
+  box-sizing: border-box;
+}
+
+/* Chat root */
+.chat-widget {
+  @extend %box;
+  font-family: $font-primary;
+  border-radius: 12px;
+  overflow: hidden;
+  background: $white-color;
+  width: 420px;
+  max-width: calc(100% - 32px);
+  display: flex;
+  flex-direction: column;
+  transition: transform 220ms ease, opacity 220ms ease;
+  color: $text-dark;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  will-change: transform, opacity;
+
+  /* state helpers */
+  &.closed {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+    pointer-events: none;
+    height: 0;
+    overflow: hidden;
+  }
+
+  &.open {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+
+  /* modifier: floating (default on desktop) */
+  &--floating {
+    position: fixed;
+    right: 24px;
+    bottom: 80px;
+    z-index: 9999;
+    width: 420px;
+  }
+
+  /* modifier: inline (full-width card) */
+  &--inline {
+    position: relative;
+    margin: 24px auto;
+    width: 100%;
+    max-width: 1100px;
+    box-shadow: none;
+    background: transparent;
+  }
+
+  /* header */
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: linear-gradient(
+      90deg,
+      $primary-color,
+      darken($primary-color, 20%)
+    );
+    color: $light-bg;
+  }
+  &__title {
+    font-weight: $font-semibold;
+    font-size: $font-size-md;
+    letter-spacing: 0.1px;
+  }
+  &__actions .chat-close-btn {
+    background: transparent;
+    border: none;
+    color: $light-bg;
+    font-size: $font-size-lg;
+    cursor: pointer;
+    padding: 6px;
+  }
+  &__actions .chat-close-btn:focus {
+    outline: 2px solid rgba($primary-color, 0.18);
+    border-radius: 6px;
+  }
+
+  /* messages */
+  &__messages {
+    @extend %box;
+    max-height: 400px;
+    height: 400px;
+    overflow-y: auto;
+    padding: 12px;
+    background: $white-color;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    scroll-behavior: smooth;
+  }
+
+  .chat-msg {
+    display: flex;
+    width: 100%;
+
+    &__content {
+      padding: 10px 12px;
+      border-radius: 12px;
+      display: inline-block;
+      max-width: 85%;
+      line-height: 1.35;
+      font-size: $font-size-sm;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+    }
+
+    &--user {
+      justify-content: flex-end;
+      .chat-msg__content {
+        background: darken($primary-color, 10%);
+        color: $white-color;
+        border-bottom-right-radius: 6px;
+        border-bottom-left-radius: 12px;
+      }
+    }
+
+    &--assistant {
+      justify-content: flex-start;
+      .chat-msg__content {
+        background: $primary-color;
+        color: $white-color;
+        border: 1px solid $border-color;
+        border-bottom-left-radius: 6px;
+        border-bottom-right-radius: 12px;
+      }
+    }
+  }
+
+  /* input area */
+  &__input {
+    @extend %box;
+    display: flex;
+    gap: 8px;
+    padding: 10px;
+    align-items: flex-end;
+    background: $primary-color;
+    border-top: 1px solid $border-color;
+  }
+
+  &__input textarea {
+    flex: 1;
+    resize: none;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid $border-color;
+    font-family: $font-primary;
+    font-size: $font-size-md;
+    min-height: 38px;
+    max-height: 160px;
+    line-height: $line-height-md;
+    overflow: auto;
+  }
+
+  &__input textarea:focus {
+    outline: 2px solid rgba($primary-color, 0.14);
+  }
+
+  /* integrate with your .ui-button while keeping layout */
+  &__input .ui-button {
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 14px;
+    white-space: nowrap;
+  }
+
+  /* small tweak: when floating and narrow screen allow width shrink */
+  &--floating.small {
+    width: 320px;
+  }
+}
+
+/* Floating toggle button (compact) */
+.chat-floating-toggle {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 9998;
+  background: $white-color;
+  color: $light-bg;
+  padding: 10px 14px;
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+  cursor: pointer;
+  font-weight: $font-semibold;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+.chat-floating-toggle:active {
+  transform: scale(0.98);
+}
+.chat-floating-toggle:focus {
+  outline: 2px solid rgba($primary-color, 0.16);
+}
+
+/* ===========================
+   Responsive breakpoints
+   =========================== */
+
+/* Large desktop (>= 1200px) - default is fine */
+
+/* Tablet */
+@media (max-width: $breakpoint-tablet) {
+  .chat-widget {
+    &--floating {
+      width: 360px;
+      right: 20px;
+      bottom: 20px;
+    }
+
+    &--inline {
+      max-width: 900px;
+      margin: 18px auto;
+    }
+
+    &__messages {
+      max-height: 360px;
+      height: 360px;
+    }
+  }
+
+  .chat-floating-toggle {
+    right: 20px;
+    bottom: 20px;
+  }
+}
+
+/* Mobile: make chat full-screen modal when opened; hide inline embed */
+/* MOBILE: overlay modal (not full-screen) */
+@media (max-width: $breakpoint-mobile) {
+  /* hide inline embedded chat (show floating overlay instead) */
+  .chat-widget--inline {
+    display: none !important;
+  }
+
+  /* backdrop overlay */
+  .chat-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 12, 20, 0.45); // dim behind panel
+    z-index: 9997;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 180ms ease;
+  }
+  .chat-backdrop.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* floating becomes centered overlay modal when open */
+  .chat-widget--floating {
+    width: 92vw;
+    max-width: 480px;
+    height: auto;
+    max-height: 80vh;
+    /* right: 50%; */
+    bottom: 60px;
+    transform: translate(50%, 50%);
+    left: auto;
+    top: auto;
+    border-radius: 12px;
+    overflow: hidden;
+    display: none;
+    z-index: 9999;
+
+    /* panel visible when open */
+    &.open {
+      display: flex;
+    }
+
+    &.closed {
+      display: none;
+    }
+
+    &__header {
+      padding: 12px 14px;
+      background: linear-gradient(
+        90deg,
+        $primary-color,
+        darken($primary-color, 6%)
+      );
+    }
+
+    &__messages {
+      padding: 12px 14px;
+      max-height: calc(80vh - 160px);
+      height: auto;
+      overflow-y: auto;
+      background: $secondary-color;
+      border-bottom: 1px solid $border-color;
+    }
+
+    &__input {
+      padding: 10px 12px;
+      border-top: 1px solid $border-color;
+      background: $primary-color;
+    }
+
+    &__input textarea {
+      min-height: 44px;
+      max-height: 160px;
+      font-size: $font-size-md;
+    }
+  }
+
+  /* small viewport polishing */
+  .chat-floating-toggle {
+    right: 16px;
+    bottom: 16px;
+    padding: 8px 12px;
+    font-size: $font-size-sm;
+    z-index: 10000; /* keep toggle above backdrop so user can re-open */
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 360px) {
+  .chat-widget--floating {
+    &__header {
+      padding: 10px 12px;
+    }
+    &__messages {
+      padding: 10px 12px;
+      max-height: calc(100vh - 150px);
+      height: calc(100vh - 150px);
+    }
+    &__input {
+      padding: 10px;
+    }
+  }
+
+  .chat-floating-toggle {
+    right: 12px;
+    bottom: 12px;
+  }
+}
+
+/* Accessibility: visible focus for buttons */
+.chat-widget button:focus,
+.chat-floating-toggle:focus {
+  outline: 3px solid rgba($primary-color, 0.14);
+  outline-offset: 2px;
+}
+
+/* minor niceties */
+.chat-widget__messages::-webkit-scrollbar {
+  width: 8px;
+}
+.chat-widget__messages::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+}

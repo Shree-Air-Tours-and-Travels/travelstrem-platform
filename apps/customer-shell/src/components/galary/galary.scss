@@ -1,0 +1,349 @@
+// File: src/components/Gallery/galary.scss
+@import "../../styles/base/typography"; // trem-scss base (your preferred typography)
+
+/* Fallbacks if trem-scss variables are missing */
+$font-primary: if(
+  global-variable-exists(font-primary),
+  $font-primary,
+  "Poppins, sans-serif"
+);
+$accent-color: if(global-variable-exists(accent-color), $light-bg, #1e88e5);
+
+/* Component */
+.ui-gallery {
+  font-family: $font-primary;
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  --accent: #{$accent-color};
+  --aspect-ratio: 56.25%; // default 16:9
+
+  /* Header */
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 0;
+
+    .ui-gallery__titles {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ui-gallery__title {
+      margin: 0;
+      font-size: 1.125rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: inherit;
+    }
+
+    .ui-gallery__subtitle {
+      margin: 0.15rem 0 0;
+      font-size: 0.9rem;
+      opacity: 0.85;
+      color: inherit;
+    }
+
+    .ui-gallery__controls {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .ui-gallery__btn {
+      background: transparent;
+      border: none;
+      font-size: 1.25rem;
+      padding: 0.35rem 0.6rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 160ms ease, opacity 160ms ease;
+      color: inherit;
+
+      &:hover {
+        transform: translateY(-2px);
+      }
+      &:active {
+        transform: translateY(0);
+        scale: 0.99;
+      }
+    }
+  }
+
+  /* Viewport / track / slides */
+  &__viewport {
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    background: linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.03),
+      rgba(0, 0, 0, 0.02)
+    );
+
+    /* aspect ratio using padding trick for broad browser support */
+    &::before {
+      content: "";
+      display: block;
+      padding-top: var(--aspect-ratio);
+    }
+  }
+
+  &__track {
+    display: flex;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    will-change: transform;
+  }
+
+  &__slide {
+    flex: 0 0 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 220px;
+    overflow: hidden;
+
+    .ui-gallery__image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .ui-gallery__caption {
+      position: absolute;
+      left: 1rem;
+      bottom: 1rem;
+      padding: 0.5rem 0.75rem;
+      background: rgba(0, 0, 0, 0.45);
+      color: $white-color;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      max-width: calc(100% - 2rem);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  /* Meta area (dots + thumbs) */
+  &__meta {
+    margin-top: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .ui-gallery__preview-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    background: $text-dark;
+    color: #fff;
+    transition: background 0.2s ease;
+
+    &:hover {
+      background: darken($text-dark, 8%);
+    }
+  }
+
+  /* Dots */
+  &__dots {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+
+    .ui-gallery__dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      border: 1px solid #fff;
+      background: rgba(0, 0, 0, 0.06);
+      padding: 0;
+      transition: transform 180ms ease, background 180ms ease;
+      cursor: pointer;
+
+      &.is-active {
+        transform: scale(1.15);
+        background: var(--accent);
+        border-color: transparent;
+      }
+    }
+  }
+
+  /* Thumbnails */
+  &__thumbs {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+    -webkit-overflow-scrolling: touch;
+
+    .ui-gallery__thumb {
+      border: none;
+      background: transparent;
+      padding: 0.25rem;
+      cursor: pointer;
+      border-radius: 6px;
+      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02) inset;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      img {
+        width: 72px;
+        height: 48px;
+        object-fit: cover;
+        border-radius: 6px;
+        display: block;
+      }
+
+      &.is-active img {
+        outline: 2px solid var(--accent);
+        transform: scale(1.02);
+      }
+    }
+  }
+
+  /* Lightbox */
+  &__lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.85);
+
+    .ui-gallery__lightbox-content {
+      max-width: 92vw;
+      max-height: 88vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      text-align: center;
+    }
+
+    img {
+      max-width: 100%;
+      max-height: 76vh;
+      object-fit: contain;
+      border-radius: 8px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .ui-gallery__lightbox-caption {
+      color: #fff;
+      opacity: 0.95;
+      font-size: 0.95rem;
+    }
+
+    .ui-gallery__lightbox-close,
+    .ui-gallery__lightbox-prev,
+    .ui-gallery__lightbox-next {
+      position: fixed;
+      background: transparent;
+      border: none;
+      color: $white-color;
+      font-size: 2rem;
+      cursor: pointer;
+      padding: 0.25rem;
+      line-height: 1;
+      transition: opacity 140ms ease, transform 140ms ease;
+    }
+
+    .ui-gallery__lightbox-close {
+      top: 18px;
+      right: 22px;
+    }
+    .ui-gallery__lightbox-prev {
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    .ui-gallery__lightbox-next {
+      right: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .ui-gallery__lightbox-close:hover,
+    .ui-gallery__lightbox-prev:hover,
+    .ui-gallery__lightbox-next:hover {
+      transform: translateY(-2px);
+      opacity: 0.95;
+    }
+  }
+
+  /* Screen reader only */
+  &__sr-only {
+    position: absolute !important;
+    height: 1px;
+    width: 1px;
+    overflow: hidden;
+    clip: rect(1px, 1px, 1px, 1px);
+    white-space: nowrap;
+    border: 0;
+    padding: 0;
+    margin: -1px;
+  }
+
+  /* Responsiveness */
+  @media (max-width: 768px) {
+    &__header {
+      padding: 0.5rem 0;
+    }
+    .ui-gallery__title {
+      font-size: 1rem;
+    }
+    .ui-gallery__subtitle {
+      display: none;
+    }
+    &__thumbs img {
+      width: 56px;
+      height: 36px;
+    }
+    &__slide {
+      min-height: 160px;
+    }
+  }
+
+  @media (min-width: 1200px) {
+    &__viewport {
+      border-radius: 16px;
+    }
+    &__header .ui-gallery__title {
+      font-size: 1.375rem;
+    }
+    &__slide .ui-gallery__caption {
+      font-size: 1rem;
+      padding: 0.6rem 0.9rem;
+    }
+  }
+}
+
+/* Utility hack for setups where the trem-scss import may not declare helpers.
+   In your real trem-scss this function should be provided; this is a no-op fallback. */
+@function global-variable-exists($name) {
+  @return true;
+}

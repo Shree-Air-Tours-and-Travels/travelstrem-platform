@@ -1,0 +1,29 @@
+@import "../../styles/base/typography"; // Import typography variables
+
+.ui-title {
+  font-family: $font-primary;
+  font-size: $font-size-xxl;
+  font-weight: $font-bold;
+  color: $text-dark;
+  text-align: center;
+
+  &--light {
+    color: $white-color;
+  }
+
+  &--primary {
+    color: $primary-color;
+  }
+
+  &--secondary {
+    color: $secondary-color;
+  }
+
+  &--small {
+    font-size: $font-size-lg;
+  }
+
+  &--large {
+    font-size: $font-size-xxxl;
+  }
+}

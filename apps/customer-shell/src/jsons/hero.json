@@ -1,0 +1,22 @@
+{
+    "status": "success",
+    "message": "Hero content fetched successfully",
+    "componentData": {
+        "title": "Traveling opens the door to creating",
+        "description": "Discover the world with TravelsTREM...",
+        "data": [],
+        "structure": {
+            "highlight": "memories",
+            "buttonText": "Explore Now",
+            "images": {
+                "main": "/hero-images/air-hostest1.png",
+                "gallery": [
+                    "/hero-images/air-hostest2.jpg",
+                    "/hero-images/air-hostest3.jpg"
+                ],
+                "video": "/hero-images/hero-video.mp4"
+            }
+        },
+        "config": {}
+    }
+}

@@ -1,0 +1,229 @@
+@import "../../styles/base/typography"; // trem-scss (canonical)
+
+$mt-gap: 16px !default;
+$mt-border: var(--muted-border, #eee);
+$mt-bg: var(--page-bg, #fff);
+
+/* ---------- ManageTours (clean, only layout + toolbar + grid) ----------
+   Note: drawer, tour-view and form overlay styles have been removed from
+   this file — they are managed in their respective component SCSS files.
+*/
+
+.mt-root {
+  padding: $mt-gap;
+  display: flex;
+  flex-direction: column;
+  gap: $mt-gap;
+  min-height: 100vh;
+  background: $mt-bg;
+}
+
+.mt-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $mt-gap;
+  position: sticky;
+  top: 72px; /* header height is managed globally */
+  background: rgba(255, 255, 255, 0.98);
+  z-index: 120;
+  padding: 8px 0;
+  margin-bottom: 0;
+  border-bottom: 1px solid $mt-border;
+
+  h2 {
+    margin: 0;
+    @include type-lg;
+  }
+  .mt-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+}
+
+.mt-content {
+  display: flex;
+  gap: $mt-gap;
+  align-items: stretch;
+  width: 100%;
+}
+
+/* primary scrolling grid area */
+.mt-grid {
+  flex: 1 1 auto;
+  display: flex;
+  gap: 12px;
+  flex-direction: column;
+  padding-right: 6px;
+
+  /* keep a max-height so non-touch devices see an inner scroll */
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* aesthetic scrollbars (desktop) */
+.mt-grid::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.mt-grid::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 6px;
+}
+.mt-grid::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* small utility: compact view column used by parent when needed */
+.mt-side {
+  flex: 0 0 420px;
+  margin-left: $mt-gap;
+}
+
+/* Responsive: on touch devices prefer single-column flow and let page scroll */
+@include mq-max($tablet-max) {
+  .mt-root {
+    padding: 12px;
+  }
+
+  .mt-toolbar {
+    top: 62px !important;
+    padding: 12px 0;
+    gap: 12px;
+  }
+  .mt-toolbar .mt-actions button {
+    min-height: 44px;
+    padding: 10px 14px;
+    font-size: 16px;
+  }
+
+  .mt-content {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .mt-grid {
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+  }
+  .mt-grid > * {
+    width: 100%;
+  }
+
+  .mt-side {
+    width: 100%;
+    margin-left: 0;
+    border: 1px solid $mt-border;
+    border-radius: 8px;
+  }
+}
+
+/* accessibility: prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .mt-grid {
+    scroll-behavior: auto;
+  }
+}
+
+/* small helper classes */
+.mt-empty {
+  @include type-sm;
+  color: var(--muted);
+  padding: 2rem;
+  text-align: center;
+}
+
+
+/* ---------- Confirm Modal ---------- */
+
+.tm-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45); // soft dark blur overlay
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999; // sits above everything
+  pointer-events: auto; // allow clicks to close only on modal actions
+}
+
+.tm-modal {
+  width: 360px;
+  max-width: 90%;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px 22px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+  animation: tm-pop 0.22s ease-out;
+  pointer-events: auto; // modal is interactive
+}
+
+.tm-modal-header {
+  margin-bottom: 10px;
+
+  h4 {
+    font-size: 1.25rem;
+    margin: 0;
+    font-weight: 600;
+    color: #111828;
+  }
+}
+
+.tm-modal-body {
+  p {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #374151;
+    line-height: 1.45;
+  }
+}
+
+.tm-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+  gap: 10px;
+
+  .btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    border: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .tm-btn-cancel {
+    background: #e5e7eb;
+    color: #1f2937;
+
+    &:hover {
+      background: #d1d5db;
+    }
+  }
+
+  .tm-btn-danger {
+    background: #ef4444;
+    color: white;
+
+    &:hover {
+      background: #dc2626;
+    }
+  }
+}
+
+/* slight modal scale-in animation */
+@keyframes tm-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* End of ManageTours.scss — overlay/drawer/view styles are now component-scoped */

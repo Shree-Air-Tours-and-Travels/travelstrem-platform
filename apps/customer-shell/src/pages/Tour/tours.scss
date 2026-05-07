@@ -1,0 +1,370 @@
+@import "../../styles/base/typography";
+
+/* ===========================================================
+   Tours page styles (two-column: filters + listing)
+   =========================================================== */
+
+/* tokens */
+$tours-gap: 1.25rem;
+$tours-max-width: 1200px;
+$tours-padding: 1.25rem;
+$tours-card-radius: 12px;
+$tours-card-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+$tours-break-3col: 1280px;
+$tours-break-2col: 900px;
+$tours-break-1col: 480px;
+
+/* CSS variables for runtime tweaks */
+:root {
+  --tours-header-height: 120px; /* adjust to header height (desktop) */
+  --filters-sticky-top: 20px;   /* offset inside sidebar for sticky filters */
+}
+
+/* Root container */
+.tours-page {
+  width: 100%;
+  box-sizing: border-box;
+  padding: $tours-padding;
+  background: transparent;
+  color: $tertiary-color;
+
+  &__inner {
+    max-width: $tours-max-width;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  /* header area (title + small intro) */
+  &__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 1rem;
+    justify-content: space-between;
+
+    &__left {
+      min-width: 220px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    &__right {
+      /* legacy: you used this earlier — keep relative so sticky is contained */
+      position: relative;
+      min-width: 300px;
+      width: 100%;
+      display: flex;
+      justify-content: flex-end;
+      align-items: flex-start;
+    }
+  }
+
+  /* Two-column body: sidebar (filters) + listing */
+  &__body {
+    display: flex;
+    gap: 1.25rem;
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  /* Sidebar for filters */
+  &__sidebar {
+    min-width: 260px;
+    max-width: 420px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: flex-start;
+
+    &-inner {
+      width: 100%;
+      position: relative; /* contains sticky child */
+    }
+  }
+
+  /* Make the Filters wrapper sticky inside the sidebar */
+  .filters-card__sticky {
+    position: sticky;
+    top: var(--filters-sticky-top);
+    z-index: 40;
+    align-self: flex-start;
+    width: 100%;
+  }
+
+  /* Listing column (scrollable) */
+  &__listing {
+    flex: 1 1 auto;
+    min-width: 0;
+    box-sizing: border-box;
+
+    /* Constrain vertical height so the listing scrolls independently */
+    max-height: calc(100vh - var(--tours-header-height));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-right: 8px; /* keep content clear of scrollbar */
+  }
+
+  &__content {
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    position: relative;
+    padding-bottom: 2rem;
+  }
+
+  &__message {
+    padding: 1rem;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.03);
+    color: $primary-color;
+
+    &--error {
+      background: rgba(255, 0, 0, 0.05);
+      color: $danger-color;
+    }
+  }
+
+  &__inline-loader {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.95rem;
+    color: $text-muted;
+
+    &__dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: $primary-color;
+      animation: tours-pulse 1s infinite;
+    }
+
+    &__text {
+      opacity: 0.95;
+    }
+  }
+
+  /* List / cards in the listing column — keep simple vertical flow */
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem 0;
+    align-items: stretch;
+  }
+
+  &__card {
+    width: 100%;
+    display: flex;
+    box-sizing: border-box;
+    border-radius: 12px;
+  }
+
+  /* sentinel for intersection observer at the end of the list */
+  &__sentinel {
+    height: 1px;
+    width: 100%;
+  }
+
+  /* skeleton / loader cards (for preloader representation) */
+  &__skeletons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  &__skeleton {
+    flex: 1 1 calc(25% - 1rem);
+    max-width: calc(25% - 1rem);
+    background: $hp-bg;
+    border-radius: $tours-card-radius;
+    padding: 0.75rem;
+    box-sizing: border-box;
+    box-shadow: $tours-card-shadow;
+
+    @media (max-width: $tours-break-3col) {
+      flex: 1 1 calc(33.3333% - 1rem);
+      max-width: calc(33.3333% - 1rem);
+    }
+    @media (max-width: $tours-break-2col) {
+      flex: 1 1 calc(50% - 1rem);
+      max-width: calc(50% - 1rem);
+    }
+    @media (max-width: $tours-break-1col) {
+      flex: 1 1 100%;
+      max-width: 100%;
+    }
+
+    &__inner {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    &__media {
+      height: 140px;
+      border-radius: 8px;
+      background: linear-gradient(90deg, rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.03));
+    }
+
+    &__title {
+      height: 16px;
+      width: 60%;
+      border-radius: 4px;
+      background: rgba(0, 0, 0, 0.06);
+      margin-top: 0.5rem;
+    }
+  }
+}
+
+/* loader dot animation */
+@keyframes tours-pulse {
+  0% { opacity: 0.4; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 0.4; transform: scale(0.9); }
+}
+
+/* ============================
+   Compatibility: preloader UI
+   (kept from your previous file)
+   ============================ */
+.ui-tour--loading {
+  padding: 28px 14px;
+  box-sizing: border-box;
+  width: 100%;
+  background: transparent;
+
+  .ui-tour__header {
+    width: 100%;
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ui-tour-preloader__intro {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    max-width: 760px;
+
+    .sp-line {
+      background: $hp-bg;
+      border-radius: 10px;
+      height: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sp-title { width: 36%; border-radius: 12px; }
+    .sp-desc  { width: 72%; border-radius: 8px; margin-top: 6px; }
+  }
+
+  .ui-tour-preloader__packages {
+    width: 100%;
+    max-width: 1200px;
+    margin-top: 16px;
+    display: grid;
+    gap: 12px;
+    align-items: start;
+    justify-items: center;
+    grid-template-columns: repeat(1, 1fr);
+  }
+
+  .sp-card {
+    background: transparent;
+    border-radius: 12px;
+    padding: 12px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    transition: transform 0.18s ease;
+  }
+
+  .sp-card__media {
+    width: 100%;
+    height: 160px;
+    border-radius: 10px;
+    background: $hp-bg;
+  }
+
+  .sp-card__body { display: flex; flex-direction: column; gap: 8px; }
+
+  .sp-card-title { width: 60%; height: 14px; border-radius: 8px; background: $hp-bg; }
+  .sp-card-sub   { width: 40%; height: 12px; border-radius: 8px; background: $hp-bg; margin-top: 6px; }
+
+  .sp-actions { display: flex; gap: 10px; margin-top: 10px; }
+
+  .sp-btn { height: 36px; border-radius: 8px; min-width: 88px; background: $hp-bg; }
+  .sp-btn-primary { width: 120px; }
+  .sp-btn-outline { width: 90px; }
+
+  /* shimmer overlay (reuse hp-shimmer variable from trem-scss) */
+  .sp-line::after, .sp-card__media::after, .sp-card-title::after, .sp-card-sub::after, .sp-btn::after {
+    content: "";
+    position: absolute;
+    left: -150%;
+    top: 0;
+    height: 100%;
+    width: 250%;
+    background-image: $hp-shimmer;
+    transform: translateX(0);
+    animation: service-shimmer 1.2s linear infinite;
+  }
+
+  @keyframes service-shimmer {
+    0% { transform: translateX(-60%); }
+    100% { transform: translateX(60%); }
+  }
+}
+
+/* responsive: layout stacks on small screens */
+@media (max-width: 980px) {
+  .tours-page {
+    padding: 12px;
+
+    &__body {
+      flex-direction: column;
+    }
+
+    &__sidebar {
+      width: 100%;
+      max-width: none;
+      order: 0;
+    }
+
+    &__listing {
+      max-height: none;
+      overflow: visible;
+      order: 1;
+    }
+
+    .filters-card__sticky {
+      position: static;
+      top: auto;
+    }
+  }
+
+  .ui-tour-preloader__packages {
+    grid-template-columns: repeat(1, 1fr);
+  }
+}
+
+/* other small device tweaks */
+@media (max-width: 420px) {
+  .sp-card__media { height: 120px; }
+  .sp-card { gap: 10px; padding: 10px; }
+  .tours-page { padding: 10px; }
+}
+
+/* NOTE:
+   - position: sticky will fail if any ancestor has overflow set (hidden/auto/scroll)
+     or an ancestor has a transform. If sticky doesn't appear to work, inspect parents.
+*/

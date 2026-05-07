@@ -1,0 +1,89 @@
+/* src/styles/components/infoCard.scss */
+@import "../../../styles/base/typography";
+
+/* Info card: left side of tour details */
+// infoCard.scss
+// Styles for the info-card area (left/main column content)
+
+.info-card {
+  width: 100%;
+  box-sizing: border-box;
+  color: #0f172a;
+
+  &__title {
+    margin: 0 0 8px 0;
+    font-size: 1.5rem; /* 24px */
+    font-weight: 700;
+    line-height: 1.15;
+  }
+
+  &__description {
+    margin: 0 0 16px 0;
+    font-size: 1rem;
+    color: #334155;
+    line-height: 1.6;
+  }
+
+  &__details {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 16px;
+    background: transparent;
+  }
+
+  &__row {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    font-size: 0.95rem;
+    color: #334155;
+
+    strong {
+      display: inline-block;
+      min-width: 110px;
+      font-weight: 600;
+      color: #0f172a;
+    }
+  }
+
+  &__structure {
+    margin-top: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    & .info-card__section {
+      padding: 12px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid rgba(2,6,23,0.04);
+      box-shadow: 0 6px 18px rgba(2,6,23,0.03);
+
+      h3 {
+        margin: 0 0 8px 0;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #0f172a;
+      }
+
+      p {
+        margin: 0;
+        color: #475569;
+        font-size: 0.95rem;
+        line-height: 1.6;
+      }
+    }
+  }
+
+  // smaller screens: tighten spacing
+  @media (max-width: 768px) {
+    &__title {
+      font-size: 1.25rem;
+    }
+
+    &__row strong {
+      min-width: 92px;
+    }
+  }
+}

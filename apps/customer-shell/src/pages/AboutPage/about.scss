@@ -1,0 +1,380 @@
+@import "../../styles/base/typography";
+
+/* About page BEM: about-page */
+.about-page {
+  background: $light-bg;
+  color: $primary-color;
+  font-family: $font-primary;
+  padding-bottom: 48px;
+
+  /* Hero */
+  &__hero {
+    padding: 48px 20px;
+    .about-page__hero-inner {
+      max-width: $container-width;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    & .about-page__brand {
+      flex: 0 0 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    & .about-page__logo {
+      height: 96px;
+      width: auto;
+      object-fit: contain;
+      display: block;
+    }
+
+    & .about-page__intro {
+      flex: 1 1 420px;
+      min-width: 240px;
+      text-align: left;
+    }
+
+    & .about-page__title {
+      margin: 0 0 8px;
+      font-size: $font-size-xxl;
+      color: $primary-color;
+      line-height: 1.08;
+    }
+
+    & .about-page__tagline {
+      margin: 0 0 16px;
+      color: $secondary-color;
+      font-size: $font-size-md;
+    }
+
+    & .about-page__meta {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+      color: $secondary-color;
+
+      &-item {
+        font-size: $font-size-sm;
+      }
+
+      &-sep {
+        color: $text-muted;
+        margin: 0 6px;
+      }
+    }
+
+    & .about-page__actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+
+      .btn {
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-weight: $font-semibold;
+        cursor: pointer;
+      }
+
+      .btn-primary {
+        background: $primary-color;
+        color: $white-color;
+        border: none;
+
+        &:hover,
+        &:focus {
+          background: darken($primary-color, 6%);
+        }
+      }
+
+      .btn-secondary {
+        background: transparent;
+        border: 1px solid $border-color;
+        color: $primary-color;
+
+        &:hover,
+        &:focus {
+          background: lighten($primary-color, 46%);
+          color: $text-dark;
+        }
+      }
+    }
+  } // hero
+
+  /* Highlights */
+  &__highlights {
+    margin-top: 18px;
+    padding: 18px 20px;
+
+    .about-page__container {
+      max-width: $container-width;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+
+    .about-page__stat {
+      background: $white-color;
+      border: 1px solid $border-color;
+      padding: 16px;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(2, 8, 23, 0.04);
+
+      &-value {
+        font-size: 1.35rem;
+        font-weight: $font-bold;
+        color: $primary-color;
+      }
+
+      &-label {
+        margin-top: 6px;
+        color: $secondary-color;
+        font-size: $font-size-sm;
+      }
+    }
+  }
+
+  /* Powered by alignment */
+  .about-page__powered {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin: 6px 0 10px;
+    flex-wrap: wrap;
+
+    .about-page__powered-label {
+      font-size: $font-size-sm;
+      color: $secondary-color;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .about-page__subtitle {
+      margin: 0;
+      font-size: $font-size-lg;
+      color: $primary-color;
+      line-height: 1;
+    }
+
+    @include mq-max($tablet-max) {
+      justify-content: center;
+      text-align: center;
+
+      .about-page__powered-label {
+        order: 1;
+        width: 100%;
+        margin-bottom: -4px;
+      }
+
+      .about-page__subtitle {
+        order: 2;
+        width: 100%;
+      }
+    }
+  }
+
+  /* Mission / Vision */
+  &__mv {
+    padding: 28px 20px;
+
+    &-grid {
+      max-width: $container-width;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .about-page__card {
+      background: $white-color;
+      border-radius: 12px;
+      border: 1px solid $border-color;
+      padding: 18px;
+      box-shadow: 0 6px 18px rgba(2, 8, 23, 0.04);
+      .about-page__card-title {
+        margin: 0 0 8px;
+        color: $text-dark;
+        font-weight: $font-semibold;
+        font-size: $font-size-lg;
+      }
+      .about-page__card-text {
+        margin: 0 0 8px;
+        color: $secondary-color;
+      }
+    }
+  }
+
+  /* Leadership */
+  &__leadership {
+    padding: 28px 20px;
+
+    .about-page__container {
+      max-width: $container-width;
+      margin: 0 auto;
+    }
+
+    .about-page__section-title {
+      margin: 0 0 18px;
+      font-size: $font-size-xl;
+      color: $text-dark;
+      text-align: left;
+    }
+
+    .about-page__team {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .about-page__person {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 12px;
+      background: $white-color;
+      border: 1px solid $border-color;
+      border-radius: 10px;
+
+      & .about-page__avatar {
+        flex: 0 0 72px;
+        height: 72px;
+        width: 72px;
+        border-radius: 8px;
+        overflow: hidden;
+        background: $primary-color;
+        color: $white-color;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      & .about-page__person-role {
+        font-size: $font-size-sm;
+        color: $secondary-color;
+        margin-bottom: 4px;
+      }
+
+      & .about-page__person-name {
+        font-weight: $font-semibold;
+        color: $text-dark;
+        margin-bottom: 6px;
+      }
+
+      & .about-page__person-bio {
+        color: $secondary-color;
+        font-size: $font-size-sm;
+      }
+    }
+  }
+
+  /* Contact strip */
+  &__contact-strip {
+    margin-top: 28px;
+    padding: 16px 20px;
+    border-top: 1px dashed $border-color;
+
+    & .about-page__contact-inner {
+      max-width: $container-width;
+      margin: 0 auto;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    & .about-page__contact-left,
+    & .about-page__contact-center,
+    & .about-page__contact-right {
+      flex: 1 1 220px;
+      min-width: 180px;
+      text-align: left;
+      color: $secondary-color;
+
+      strong {
+        display: block;
+        color: $text-dark;
+        margin-bottom: 6px;
+      }
+    }
+
+    & .about-page__contact-link {
+      color: $primary-color;
+      text-decoration: none;
+    }
+
+    & .about-page__contact-sep {
+      margin: 0 8px;
+      color: $text-muted;
+    }
+  } // contact strip
+
+  /* small screens */
+  @include mq-max($tablet-max) {
+    &__highlights {
+      .about-page__container {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    &__leadership {
+      .about-page__team {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    &__hero {
+      & .about-page__intro {
+        text-align: center;
+      }
+      & .about-page__brand {
+        justify-content: center;
+      }
+    }
+
+    &__contact-strip {
+      & .about-page__contact-inner {
+        gap: 10px;
+      }
+      & .about-page__contact-left,
+      & .about-page__contact-center,
+      & .about-page__contact-right {
+        text-align: center;
+        min-width: 0;
+      }
+    }
+  }
+
+  @include mq-max($breakpoint-mobile) {
+    padding-bottom: 36px;
+
+    &__highlights {
+      .about-page__container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    &__leadership {
+      .about-page__team {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+}
+
+/* helper */
+.about-page .about-page__avatar-svg {
+  display: block;
+  width: 72px;
+  height: 72px;
+  color: $primary-color;
+}

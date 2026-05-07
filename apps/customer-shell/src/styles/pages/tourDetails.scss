@@ -1,0 +1,227 @@
+@import "../../styles/base/typography"; // trem-scss — provides mixins + variables
+
+.ui-tour-details {
+  background: $light-bg;
+  color: $primary-color;
+  padding: 48px 0;
+
+  &__container {
+    max-width: $full-width;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+
+  &__page-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+
+    .page-actions__left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      .action-back {
+        background: transparent;
+        border: 1px solid rgba(0,0,0,0.04);
+        padding: 10px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .tour-title {
+        @include type-xl();
+        color: $primary-color;
+        margin: 0;
+      }
+    }
+
+    .page-actions__right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .action-row { display: flex; align-items: center; gap: 8px; }
+
+      .icon-btn { background: transparent; border: none; padding: 8px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; }
+    }
+  }
+
+  /* HERO */
+  &__hero {
+    margin-bottom: 28px;
+
+    .td-hero__gallery-wrap {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .td-hero__gallery {
+      width: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 22px rgba(15,23,42,0.06);
+      background: var(--bg-2);
+      padding: 8px;
+    }
+
+    .td-hero__summary { width: 100%; }
+  }
+
+  /* LEFT INFO CARD (desktop) */
+  .td-left-info-card {
+    display: none; // toggled on desktop
+
+    .info-card__inner {
+      background: var(--bg-2);
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: 0 16px 40px rgba(15,23,42,0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      width: 320px;
+      /* no sticky here — keep static so right summary can stick */
+      position: static;
+      top: auto;
+    }
+
+    .info-card__price {
+      .price-badge {
+        @include type-xxl();
+        background: linear-gradient(90deg, rgba(28,117,120,0.12), rgba(59,181,185,0.06));
+        padding: 12px 14px;
+        border-radius: 12px;
+        display: inline-block;
+        color: var(--color-primary);
+        font-weight: $font-bold;
+        box-shadow: 0 6px 18px rgba(28,117,120,0.06);
+      }
+
+      .price-sub { @include type-sm(); color: $text-muted; margin-top: 6px; }
+
+      .rating-row { display:flex; align-items:center; gap:8px; margin-top:8px; .rating-stars{ color: #f59e0b; } .rating-count{ @include type-xs(); color: $text-muted; }}
+    }
+
+    .info-card__quick { display:flex; flex-direction:column; gap:10px; padding-top: 6px;
+      .quick-row { display:flex; justify-content:space-between; align-items:center; @include type-sm(); strong{ color: var(--text); font-weight:$font-semibold; } span{ color: $text-muted;} }
+    }
+
+    .info-card__ctas { display:flex; gap:10px; margin-top: 8px; .btn{ flex:1 } }
+
+    /* prominent primary CTA */
+    .btn--primary { @include type-md(); padding: 12px 14px; border-radius: 10px; background: linear-gradient(90deg, var(--color-primary), var(--color-secondary)); box-shadow: 0 8px 20px rgba(28,117,120,0.12); color: #fff; border: none; }
+
+    .btn--outline { border: 1px solid rgba(28,117,120,0.12); background: transparent; color: var(--color-primary); }
+
+    .info-card__tags { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; .tag{ @include type-xs(); padding:6px 10px; border-radius:999px; background: rgba(28,117,120, 0.06); color: var(--color-primary); } }
+  }
+
+  /* MAIN area */
+  &__main {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 28px;
+
+    .ui-tour-details__left { display:flex; flex-direction:column; gap:18px; }
+    .ui-tour-details__right { display:none; }
+  }
+
+  /* Description card */
+  .description-card--modern { width:100%; background: var(--bg-2); padding: 14px 16px; border-radius:12px; box-shadow: 0 8px 22px rgba(15,23,42,0.04); }
+  .dc-text { @include type-md(); color: var(--text); line-height:1.6; }
+  .dc-empty { @include type-sm(); color: $text-muted; }
+
+  /* DETAILS CARD */
+  .card.details { background: var(--bg-2); padding: 14px; border-radius: 12px; box-shadow: 0 8px 22px rgba(15,23,42,0.04); display:flex; flex-direction:column; gap:12px; }
+
+  .td-section { padding: 10px 0; border-bottom: 1px dashed rgba(0,0,0,0.03); &:last-child{ border-bottom:none } }
+
+  /* Price */
+  .td-price .price-row { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+  .td-price .price-range { @include type-md(); color: var(--text); }
+  .td-price .price-meta .muted { @include type-xs(); color: $text-muted; }
+
+  /* availability */
+  .td-availability__body{ display:flex; gap:12px; flex-wrap:wrap; @include type-sm(); }
+
+  /* inclusions/exclusions */
+  .td-inclusions-exclusions .two-col { display:grid; grid-template-columns:1fr; gap:14px; }
+  .td-inclusions-exclusions .card-list ul{ margin:0; padding-left:1rem; li{ margin-bottom:6px; @include type-sm(); } }
+
+  /* meeting & languages */
+  .td-meeting-langs .tags { display:flex; gap:8px; flex-wrap:wrap; }
+  .td-meeting-langs .tag { @include type-xs(); padding:6px 10px; border-radius:999px; background: rgba(28,117,120,0.06); color: var(--color-primary); }
+
+  /* cancellation */
+  .td-cancellation .muted { @include type-sm(); color: $text-muted; white-space: pre-wrap; }
+
+  /* tags */
+  .td-tags .tags { display:flex; gap:8px; flex-wrap:wrap; }
+
+  /* location */
+  .td-location .address { @include type-sm(); font-weight:600; }
+  .td-location .meta { @include type-xs(); color: $text-muted; display:flex; gap:12px; flex-wrap:wrap; }
+  .td-location .link { @include type-xs(); text-decoration:underline; }
+
+  /* REVIEWS (animated reveal) */
+  @keyframes reviewIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .td-reviews .reviews-header{ display:flex; justify-content:space-between; align-items:center; gap:12px }
+  .td-reviews .reviews-list{ display:flex; flex-direction:column; gap:12px; margin-top:8px }
+  .td-reviews .review{ background: linear-gradient(180deg, rgba(28,117,120,0.02), rgba(59,181,185,0.01)); padding:12px; border-radius:10px; opacity:0; transform: translateY(8px); animation: reviewIn 360ms cubic-bezier(.2,.9,.3,1) forwards; }
+  /* small stagger using nth-child (supports up to 8 children nicely) */
+  .td-reviews .review:nth-child(1){ animation-delay: 40ms; }
+  .td-reviews .review:nth-child(2){ animation-delay: 80ms; }
+  .td-reviews .review:nth-child(3){ animation-delay: 120ms; }
+  .td-reviews .review:nth-child(4){ animation-delay: 160ms; }
+  .td-reviews .review:nth-child(5){ animation-delay: 200ms; }
+  .td-reviews .review:nth-child(6){ animation-delay: 240ms; }
+  .td-reviews .review:nth-child(7){ animation-delay: 280ms; }
+  .td-reviews .review:nth-child(8){ animation-delay: 320ms; }
+
+  .td-reviews .review-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:6px }
+  .td-reviews .review-body{ @include type-sm(); color: var(--text); }
+  .reviews-actions { margin-top:8px; }
+
+  /* meta grid */
+  .td-meta .meta-grid{ display:grid; grid-template-columns: repeat(1,1fr); gap:8px; @include type-xs(); color: $text-muted }
+
+  /* utilities */
+  .muted { color: $text-muted; }
+  .link { color: var(--color-primary); text-decoration: none; &:hover{ text-decoration:underline } }
+
+  /* Right column summary: show & make sticky on desktop */
+  .sticky-summary { display:none }
+  .ui-tour-details__right .summary-card { display: none; }
+
+  /* responsive tweaks */
+  @include mq-min($breakpoint-md) {
+    .td-hero__gallery-wrap { grid-template-columns: 320px 1fr; align-items:start; }
+    .td-left-info-card { display:block; }
+
+    &__main { grid-template-columns: 1fr 320px; gap: 28px; }
+    .ui-tour-details__right { display:block; }
+    .sticky-summary { display:block; position: sticky; top: 92px; }
+
+    /* restore SummaryCard on desktop and make it sticky (visible) */
+    .ui-tour-details__right .summary-card { display: block !important; }
+  }
+
+  @include mq-min($breakpoint-lg) {
+    padding: 64px 0;
+    .td-left-info-card .info-card__inner { width: 320px; }
+  }
+
+  /* focus states */
+  a:focus, button:focus { outline: 3px solid rgba($primary-color, 0.14); outline-offset: 3px; }
+}

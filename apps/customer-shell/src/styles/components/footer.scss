@@ -1,0 +1,226 @@
+@import "../../styles/base/typography";
+
+/* Footer (BEM: ui-footer) */
+.ui-footer {
+  background: $light-bg;
+  color: $primary-color;
+  font-family: $primary-color;
+  padding: 40px 20px;
+  box-sizing: border-box;
+
+  /* container: constrains width and layout */
+  &__container {
+    max-width: $container-width;
+    margin: 0 auto;
+    display: flex;
+    gap: 32px;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  /* Brand / logo */
+  &__brand {
+    flex: 1 1 220px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+
+    &-link {
+      display: inline-block;
+    }
+
+    &-logo {
+      display: block;
+      height: 96px;
+      width: auto;
+      object-fit: contain;
+    }
+  }
+
+  /* Links section */
+  &__links {
+    flex: 1 1 340px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+
+    .ui-footer__title {
+      font-size: $font-size-md;
+      color: $primary-color;
+      margin: 0 0 8px;
+      font-weight: $font-semibold;
+    }
+
+    & .ui-footer__list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 6px 14px;
+      width: 100%;
+    }
+    .ui-footer__link {
+      color: $secondary-color;
+      font-size: $font-size-md;
+      text-decoration: none;
+      transition: color 160ms ease, transform 160ms ease;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 6px 4px;
+      border-radius: 6px;
+
+      &:hover,
+      &:focus {
+        color: $primary-color;
+        transform: translateY(-2px);
+      }
+    }
+  }
+
+  /* Social block */
+  &__social {
+    flex: 1 1 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+
+    .ui-footer__title {
+      font-size: $font-size-md;
+      color: $primary-color;
+      margin: 0;
+      font-weight: $font-semibold;
+    }
+
+    &-items {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    &-link {
+      color: $secondary-color;
+      font-size: $font-size-md;
+      text-decoration: none;
+      padding: 6px 10px;
+      border-radius: 8px;
+      transition: color 160ms ease, background 160ms ease, transform 160ms ease;
+      background: transparent;
+
+      &:hover,
+      &:focus {
+        color: $white-color;
+        background: $primary-color;
+        transform: translateY(-3px);
+      }
+    }
+  }
+
+  /* Meta row */
+  &__meta {
+    max-width: $container-width;
+    margin: 20px auto 0;
+    padding-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: center;
+    color: $secondary-color;
+    font-size: $font-size-sm;
+
+    .ui-footer__owner {
+      color: $primary-color;
+      font-weight: $font-medium;
+    }
+
+    .ui-footer__note {
+      font-size: 0.85rem;
+      font-style: italic;
+      color: $secondary-color;
+    }
+  }
+
+  /* small utilities */
+  &__title {
+    margin: 0 0 8px;
+  }
+
+  /* Responsive */
+  @include mq-max($tablet-max) {
+    padding: 28px 16px;
+
+    &__container {
+      gap: 18px;
+    }
+
+    &__brand {
+      justify-content: center;
+      width: 100%;
+      order: 1;
+    }
+
+    &__links {
+      order: 2;
+      width: 100%;
+      align-items: center;
+
+      & .ui-footer__list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        justify-items: center;
+      }
+
+      .ui-footer__link {
+        text-align: center;
+      }
+    }
+
+    &__social {
+      order: 3;
+      width: 100%;
+      align-items: center;
+
+      &-items {
+        justify-content: center;
+      }
+    }
+
+    &__meta {
+      margin-top: 18px;
+    }
+  }
+
+  @include mq-max($breakpoint-mobile) {
+    &__brand &-logo {
+      height: 72px;
+    }
+
+    &__links {
+      & .ui-footer__list {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+}
+
+/* Focus style for keyboard users */
+a:focus,
+button:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba($primary-color, 0.12);
+  border-radius: 8px;
+}
+
+/* Small helper: preserve baseline for logo images */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}

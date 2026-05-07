@@ -1,0 +1,410 @@
+@import "../../../styles/base/typography";
+
+/* ---- Layout tokens (override if needed) ---- */
+$filters-bg: $white-color;
+$filters-radius: 12px;
+$filters-gap: 12px;
+$filters-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+$filters-border: 1px solid rgba(15, 23, 42, 0.04);
+$filters-width: 360px;
+$filters-padding: 14px;
+
+/* -------- Filters card (sticky) -------- */
+.filters-card {
+  width: 100%;
+  box-sizing: border-box;
+  background: transparent;
+
+  &__sticky {
+    position: relative;
+    /* For larger layouts you may want "position: sticky; top: 80px;" in page-level integration */
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: $filters-gap;
+    margin-bottom: 10px;
+
+    &-left {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    &-right {
+      display: flex;
+      align-items: center;
+    }
+  }
+
+  &__desc {
+    color: $text-muted;
+    font-size: 0.9rem;
+  }
+
+  /* Card body */
+  &__body {
+    background: $filters-bg;
+    border-radius: $filters-radius;
+    box-shadow: $filters-shadow;
+    border: $filters-border;
+    padding: $filters-padding;
+    display: flex;
+    flex-direction: column;
+    gap: $filters-gap;
+  }
+
+  .filters-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin-bottom: 8px;
+
+    .filters-col {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+  }
+
+  /* Footer with actions */
+  &__footer {
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: 8px;
+  }
+
+  .filters-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .filters-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 160px;
+    justify-content: flex-end;
+    font-size: 0.95rem;
+
+    &__loading {
+      color: $primary-color;
+      font-weight: 600;
+    }
+
+    &__success {
+      color: $success-color;
+    }
+
+    &__error {
+      color: $danger-color;
+    }
+  }
+
+  &.collapsed {
+    /* show only header; body hidden */
+    .filters-card__body,
+    .filters-card__footer {
+      display: none;
+    }
+  }
+
+  &.expanded {
+    .filters-card__body,
+    .filters-card__footer {
+      display: block;
+    }
+  }
+
+  /* Toggle / handle for mobile collapsed state */
+  &__toggle {
+    display: none; /* shown on mobile/tablet via media queries */
+    -webkit-tap-highlight-color: transparent;
+    border: none;
+    background: transparent;
+    padding: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  /* Small visual helpers for the fixed layout */
+  &--fixed {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    z-index: 1100;
+    padding: 12px;
+    box-shadow: 0 6px 24px rgba(15, 23, 42, 0.08);
+    background: transparent; /* header will contain the visible background */
+  }
+}
+
+/* ---- Error / helper states ---- */
+.filters__error {
+  color: $success-color;
+  background: rgba(255, 50, 50, 0.04);
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 0.92rem;
+}
+
+/* ---- skeleton / preloader ---- */
+.filters-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  .s-row {
+    display: flex;
+    gap: 10px;
+    .s-box {
+      flex: 1;
+      height: 36px;
+      border-radius: 8px;
+      background: $hp-bg;
+      position: relative;
+      overflow: hidden;
+
+      &::after {
+        content: "";
+        position: absolute;
+        left: -150%;
+        top: 0;
+        height: 100%;
+        width: 250%;
+        background-image: $hp-shimmer;
+        animation: service-shimmer 1.2s linear infinite;
+      }
+    }
+  }
+}
+
+/* shimmer */
+@keyframes service-shimmer {
+  0% {
+    transform: translateX(-60%);
+  }
+  100% {
+    transform: translateX(60%);
+  }
+}
+
+/* ---- responsive behaviour ---- */
+
+/* For small screens make the card full width and compact */
+@media (max-width: $breakpoint-mobile) {
+  .filters-card {
+    &--fixed {
+      /* Full-bleed fixed header area */
+      padding-left: 10px;
+      padding-right: 10px;
+    }
+
+    .filters-row {
+      flex-direction: column;
+    }
+
+    &__body {
+      padding: 12px;
+      border-radius: 10px;
+    }
+
+    .filters-actions {
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    /* show mobile toggle */
+    &__toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* fixed behavior: header always visible, body scrollable */
+    &.mobile-fixed,
+    &--fixed {
+      position: fixed;
+      left: 0;
+      right: 0;
+      top: 0;
+      z-index: 1100;
+      background: transparent;
+
+      /* create a top header band that contains visible background & shadow */
+      & > .filters-card__header {
+        background: $filters-bg;
+        border-radius: 0 0 12px 12px;
+        padding: 12px;
+        margin: 0;
+        box-shadow: $filters-shadow;
+      }
+
+      /* body becomes a layer below header and scrollable */
+      & > .filters-card__body {
+        position: fixed;
+        left: 8px;
+        right: 8px;
+        top: calc(
+          56px + env(safe-area-inset-top)
+        ); /* header height + safe area */
+        bottom: 12px;
+        max-height: calc(100vh - (56px + env(safe-area-inset-top)) - 12px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        background: $filters-bg;
+        border-radius: 12px;
+        padding: 12px;
+        box-shadow: $filters-shadow;
+      }
+
+      & > .filters-card__footer {
+        position: fixed;
+        left: 8px;
+        right: 8px;
+        bottom: 12px;
+        z-index: 1110;
+        background: transparent;
+        display: flex;
+        justify-content: center;
+      }
+
+      /* collapsed state: show only header + small expand handle */
+      &.collapsed {
+        & > .filters-card__body,
+        & > .filters-card__footer {
+          display: none;
+        }
+
+        /* show an expand handle centered at bottom of header */
+        & > .filters-card__header::after {
+          content: "";
+          display: block;
+          width: 46px;
+          height: 6px;
+          background: rgba(15, 23, 42, 0.06);
+          border-radius: 6px;
+          margin: 8px auto 0;
+        }
+      }
+    }
+  }
+}
+
+/* Tablet breakpoint: similar fixed top but with max-width and side gutters */
+@media (min-width: calc(#{$breakpoint-mobile} + 1px)) and (max-width: $breakpoint-tablet) {
+  .filters-card {
+    &--fixed {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      top: 12px;
+      z-index: 1100;
+      width: auto;
+      max-width: calc(100% - 24px);
+    }
+
+    /* header stays visible */
+    & > .filters-card__header {
+      background: $filters-bg;
+      border-radius: 10px;
+      padding: 12px;
+      margin: 0;
+      box-shadow: $filters-shadow;
+    }
+
+    &.mobile-fixed {
+      & > .filters-card__body {
+        position: fixed;
+        left: 12px;
+        right: 12px;
+        top: calc(64px + env(safe-area-inset-top));
+        bottom: 24px;
+        max-height: calc(100vh - (64px + env(safe-area-inset-top)) - 24px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 12px;
+        background: $filters-bg;
+        border-radius: 10px;
+        box-shadow: $filters-shadow;
+      }
+
+      &.collapsed {
+        & > .filters-card__body,
+        & > .filters-card__footer {
+          display: none;
+        }
+
+        & > .filters-card__header::after {
+          content: "";
+          display: block;
+          width: 56px;
+          height: 8px;
+          background: rgba(15, 23, 42, 0.06);
+          border-radius: 8px;
+          margin: 10px auto 0;
+        }
+      }
+    }
+
+    /* show toggle on tablet */
+    &__toggle {
+      display: inline-flex;
+    }
+  }
+}
+
+/* ---- small visual helpers for FieldViewResolver children ---- */
+.filters-card .field-label {
+  display: block;
+  font-size: 0.88rem;
+  margin-bottom: 6px;
+  color: $text-muted;
+}
+
+.filters-card input[type="text"],
+.filters-card input[type="number"],
+.filters-card select,
+.filters-card textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  background: $white-color;
+  font-size: 0.95rem;
+  color: $tertiary-color;
+}
+
+.filters-card select[multiple] {
+  min-height: 90px;
+}
+
+/* disabled button visual hints (for reused Button component) */
+.filters-card button[disabled] {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* small utility */
+.ui-filter-title {
+  letter-spacing: -0.2px;
+}
+
+/* Accessibility: ensure focus styles for toggle */
+.filters-card__toggle:focus {
+  outline: 3px solid rgba(28, 117, 120, 0.12);
+}
+
+/* Smooth transitions */
+.filters-card__body,
+.filters-card__header,
+.filters-card__footer {
+  transition: transform 220ms ease, opacity 180ms ease;
+}

@@ -1,0 +1,38 @@
+@import "../../styles/base/typography"; // Import typography variables
+
+.ui-subtitle {
+  font-family: $font-primary;
+  font-size: $font-size-lg;
+  font-weight: $font-medium;
+  text-align: center;
+  margin-bottom: 0.5rem;
+
+  &--light {
+    color: $text-light;
+  }
+
+  &--primary {
+    color: $primary-color;
+  }
+
+  &--secondary {
+    color: $secondary-color;
+  }
+
+  &--tertiary {
+    color:$tertiary-color;
+  }
+
+  &--small {
+    font-size: $font-size-md;
+  }
+
+  &--medium {
+    font-size: $font-size-lg; // medium level
+    font-weight: $font-semibold;
+  }
+
+  &--large {
+    font-size: $font-size-xl;
+  }
+}

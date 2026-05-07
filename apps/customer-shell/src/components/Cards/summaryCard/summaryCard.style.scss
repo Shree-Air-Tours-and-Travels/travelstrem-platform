@@ -1,0 +1,126 @@
+/* src/styles/components/summaryCard.scss */
+@import "../../../styles/base/typography";
+// summaryCard.style.scss
+// Styles for the summary-card (sidebar / purchase box)
+
+.summary-card {
+  background: $white-color;
+  border-radius: 12px;
+  padding: 18px;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  // optional sticky behavior when used in a larger layout
+  &.sticky {
+    position: sticky;
+    top: 24px;
+    align-self: flex-start;
+  }
+
+  &__header {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.125rem; /* 18px */
+    line-height: 1.2;
+    font-weight: 600;
+    color: #0f172a;
+  }
+
+  &__city {
+    font-size: 0.875rem; /* 14px */
+    color: #475569;
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__price,
+  &__period,
+  &__group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 110px;
+    .label {
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+    .value {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #0f172a;
+    }
+  }
+
+  &__rating {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #f59e0b; /* gold-ish star */
+    font-weight: 600;
+    .fa, svg {
+      vertical-align: middle;
+    }
+    small {
+      color: #64748b;
+      font-weight: 400;
+      margin-left: 6px;
+      font-size: 0.8125rem;
+    }
+  }
+
+  &__actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+
+    // if you want primary button full width stack on mobile, it will collapse below with media query
+    .btn {
+      width: 100%;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-weight: 600;
+    }
+
+    // fallback for ghost/outline/solid variants are defined inside your Button component.
+  }
+
+  &__footer {
+    font-size: 0.875rem;
+    color: #64748b;
+    text-align: center;
+    padding-top: 6px;
+    border-top: 1px solid rgba(15,23,42,0.04);
+  }
+
+  // small screens: actions stacked and card becomes full-width
+  @media (max-width: 768px) {
+    padding: 14px;
+    &.sticky {
+      position: relative;
+      top: 0;
+    }
+
+    &__meta {
+      gap: 10px;
+    }
+
+    &__actions {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+

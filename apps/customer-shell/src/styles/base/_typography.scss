@@ -1,0 +1,398 @@
+// src/styles/base/_typography.scss
+// ==============================
+// TravelsTREM — Typography, Tokens, Mixins & Themes
+// Consolidated and defensive: includes breakpoints used across the project.
+// ==============================
+
+/* ------------------------------
+   1) Layout / Breakpoint variables
+   ------------------------------ */
+$container-width: 1200px;
+$full-width: 1400px;
+/* Breakpoints (single source) */
+$breakpoint-mobile: 480px;               // small phones
+$breakpoint-phablet: 576px;              // large phones
+$breakpoint-tablet: 768px;               // tablets portrait
+$breakpoint-tablet-landscape: 1024px;    // tablets landscape
+$breakpoint-laptop: 1280px;              // small desktops / laptops
+$breakpoint-desktop: 1440px;             // desktops
+$breakpoint-wide: 1600px;
+$breakpoint-ultra: 1920px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 1024px;
+
+
+/* Convenience derived max values for older code */
+$mobile-max: $breakpoint-tablet - 1px;       // 767px
+$tablet-max: $breakpoint-laptop - 1px;       // 1279px
+$laptop-max: $breakpoint-desktop - 1px;      // 1439px
+$desktop-max: $breakpoint-wide - 1px;
+
+/* ------------------------------
+   2) Core typography tokens
+   ------------------------------ */
+$font-primary: "Poppins", sans-serif;
+$font-secondary: "Roboto", sans-serif;
+
+$font-size-xs: 0.75rem;   // 12px
+$font-size-sm: 0.875rem;  // 14px
+$font-size-md: 1rem;      // 16px
+$font-size-lg: 1.25rem;   // 20px
+$font-size-xl: 1.5rem;    // 24px
+$font-size-xxl: 2rem;     // 32px
+$font-size-xxxl: 2.5rem;  // 40px
+
+$font-light: 300;
+$font-regular: 400;
+$font-medium: 500;
+$font-semibold: 600;
+$font-bold: 700;
+$font-size-xs: 0.76rem !default;
+$line-height-xs: 1.25 !default;
+$line-height-sm: 1.2;
+$line-height-md: 1.5;
+$line-height-lg: 1.75;
+
+/* ------------------------------
+   3) Color tokens (Sass & CSS vars)
+   ------------------------------ */
+/* Sass-level colors (used for compile-time fallbacks where needed) */
+$primary-color: #1c7578;    // teal-blue
+$secondary-color: #3bb5b9; 
+$tertiary-color:#4e8d8e; // teal-sky
+$accent-color: #ff9900;
+$success-color: #28a745;
+$danger-color: #dc3545;
+
+$light-bg: #f8f9fa;
+$white-color: #fefefe;
+$text-dark: #1c1c1c;
+$text-muted: #6c757d;
+$border-color: #ced4da;
+$text-light:$border-color;
+
+/* CSS variables for runtime theming (light theme defaults) */
+:root {
+  --color-primary: #{$primary-color};
+  --color-primary-dark: #{darken($primary-color, 8%)};
+  --color-secondary: #{$secondary-color};
+  --color-accent: #{$accent-color};
+  --color-success: #{$success-color};
+  --color-danger: #{$danger-color};
+
+  --bg: #{$light-bg};
+  --bg-2: #{$white-color};
+  --text: #{$text-dark};
+  --muted: #{$text-muted};
+  --border: #{$border-color};
+
+  --container-width: #{$container-width};
+  --root-font-size: 16px;
+}
+
+/* Dark theme override — toggle by adding .theme--dark to <html> or <body> */
+.theme--dark {
+  --bg: #0b1020;
+  --bg-2: #0f1724;
+  --text: #f4f6f8;
+  --muted: rgba(244,246,248,0.7);
+  --border: rgba(255,255,255,0.06);
+
+  /* keep same accent but provide a darker variant tuned for dark background */
+  --color-primary: #1c7578;
+  --color-primary-dark: #{darken(#1c7578, 10%)};
+  --color-secondary: #3bb5b9;
+  --color-accent: #ffb84d;
+}
+
+/* ------------------------------
+   4) Helper functions & mixins
+   ------------------------------ */
+@function rem($px, $base: 16) {
+  @return #{($px / $base)}rem;
+}
+
+@mixin mq-min($size) {
+  @media (min-width: $size) {
+    @content;
+  }
+}
+@mixin mq-max($size) {
+  @media (max-width: $size) {
+    @content;
+  }
+}
+@mixin mq-between($min, $max) {
+  @media (min-width: $min) and (max-width: $max) {
+    @content;
+  }
+}
+
+/* fluid type */
+@mixin fluid-type($min, $max, $min-vw: 320px, $max-vw: 1200px) {
+  font-size: clamp(#{$min}, #{$min} + (#{$max} - #{$min}) * ((100vw - #{$min-vw}) / (#{$max-vw} - #{$min-vw})), #{$max});
+}
+
+/* ellipsis */
+@mixin ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* multiline clamp with fallback */
+@mixin clamp-lines($lines, $line-height: 1.4) {
+  line-height: $line-height;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: $lines;
+  overflow: hidden;
+  max-height: ($lines * $line-height) + 0rem;
+}
+
+/* ------------------------------
+   5) Typographic utility mixins
+   ------------------------------ */
+@mixin type-base {
+  font-family: $font-primary;
+  font-size: $font-size-md;
+  line-height: $line-height-md;
+  font-weight: $font-regular;
+  color: var(--text);
+}
+
+@mixin type-sm {
+  font-family: $font-primary;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  font-weight: $font-regular;
+  color: var(--muted);
+}
+
+@mixin type-md {
+  font-family: $font-primary;
+  font-size: $font-size-md;       // same size as base, but stronger weight
+  line-height: $line-height-md;
+  font-weight: $font-medium;       // sits between regular and semibold
+  color: var(--text);
+}
+
+/* New: Extra small text (for meta, labels, tags) */
+@mixin type-xs {
+  font-family: $font-primary;
+  font-size: $font-size-xs;        // make sure you have $font-size-xs defined
+  line-height: $line-height-xs;    // same for line-height-xs
+  font-weight: $font-regular;
+  color: var(--muted);             // lighter color like sm
+}
+
+@mixin type-lg {
+  font-family: $font-primary;
+  font-size: $font-size-lg;
+  line-height: $line-height-lg;
+  font-weight: $font-medium;
+  color: var(--text);
+}
+
+@mixin type-xl {
+  font-family: $font-primary;
+  font-size: $font-size-xl;
+  line-height: $line-height-md;
+  font-weight: $font-semibold;
+  color: var(--text);
+}
+
+@mixin type-xxl {
+  font-family: $font-primary;
+  font-size: $font-size-xxl;
+  line-height: $line-height-sm;
+  font-weight: $font-semibold;
+  color: var(--text);
+}
+
+@mixin type-xxxl {
+  font-family: $font-primary;
+  font-size: $font-size-xxxl;
+  line-height: $line-height-sm;
+  font-weight: $font-bold;
+  color: var(--text);
+}
+
+/* ------------------------------
+   6) Base styles (global)
+   ------------------------------ */
+html {
+  font-size: var(--root-font-size);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  box-sizing: border-box;
+}
+
+*, *::before, *::after { box-sizing: inherit; }
+
+body {
+  @include type-base();
+  background: var(--bg);
+  color: var(--text);
+  margin: 0;
+}
+
+/* Headings */
+h1,h2,h3,h4,h5,h6 {
+  font-family: $font-primary;
+  font-weight: $font-bold;
+  color: var(--text);
+  margin: 0 0 0.75rem;
+}
+
+h1 { font-size: $font-size-xxxl; line-height: $line-height-sm; }
+h2 { font-size: $font-size-xxl; line-height: $line-height-sm; }
+h3 { font-size: $font-size-xl;  line-height: $line-height-md; }
+h4 { font-size: $font-size-lg;  line-height: $line-height-md; }
+h5 { font-size: $font-size-md;  line-height: $line-height-lg; }
+h6 { font-size: $font-size-sm;  line-height: $line-height-lg; }
+
+/* Responsive heading adjustments */
+@include mq-max($tablet-max) {
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.25rem; }
+}
+
+/* Paragraphs & links */
+p { font-size: $font-size-md; color: var(--muted); line-height: $line-height-lg; margin-bottom: 1rem; }
+p.lead { font-size: $font-size-lg; color: var(--text); }
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color 0.18s ease;
+  &:hover {
+    /* Use runtime variable, with a Sass fallback compiled into the rule */
+    color: var(--color-primary-dark, #{darken($primary-color, 8%)});
+  }
+}
+
+/* ------------------------------
+   7) Buttons
+   ------------------------------ */
+button, .btn {
+  font-family: $font-primary;
+  font-size: $font-size-md;
+  font-weight: $font-semibold;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  border: none;
+  transition: all 160ms ease;
+  background: var(--color-primary);
+  color: #fff;
+}
+
+button.btn--outline {
+  background: transparent;
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
+}
+
+button.btn--ghost {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid transparent;
+}
+
+.btn-sm { padding: 0.35rem 0.6rem; font-size: $font-size-sm; }
+.btn-lg { padding: 0.75rem 1.25rem; font-size: $font-size-lg; }
+
+/* ------------------------------
+   8) Forms & focus
+   ------------------------------ */
+label { display: inline-block; margin-bottom: 0.35rem; font-size: $font-size-sm; font-weight: $font-medium; color: var(--text); }
+
+input, textarea, select {
+  font-family: inherit;
+  font-size: $font-size-md;
+  line-height: $line-height-md;
+  color: var(--text);
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-2);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+  &:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 4px rgba(28,117,120,0.06); }
+  &::placeholder { color: var(--muted); opacity: 0.9; }
+}
+
+/* ------------------------------
+   9) Preloader skeleton helpers
+   ------------------------------ */
+$hp-bg: $secondary-color;
+$hp-shimmer: linear-gradient(90deg, rgba(2,1,1,0) 0%, rgba(2,16,72,0.12) 50%, rgba(255,255,255,0) 100%);
+
+.sp-card {
+  background: transparent;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  &__media { width: 100%; height: 120px; border-radius: 10px; background: $hp-bg; position: relative; overflow: hidden; }
+  &__body { display:flex; flex-direction:column; gap:8px; }
+}
+.sp-card__media::after, .sp-card-title::after, .sp-card-sub::after, .sp-btn::after {
+  content: ""; position: absolute; left: -150%; top: 0; height: 100%; width: 250%; background-image: $hp-shimmer; animation: trem-shimmer 1.2s linear infinite;
+}
+@keyframes trem-shimmer { 0% { transform: translateX(-60%);} 100% { transform: translateX(60%);} }
+
+/* ------------------------------
+   10) Utilities
+   ------------------------------ */
+.text-primary { color: var(--color-primary); }
+.text-secondary { color: var(--color-secondary); }
+.text-muted { color: var(--muted); }
+.text-center { text-align: center; }
+.truncate { @include ellipsis; }
+.clamp-2 { @include clamp-lines(2); }
+.clamp-3 { @include clamp-lines(3); }
+
+.visually-hidden {
+  position: absolute !important;
+  height: 1px;
+  width: 1px;
+  overflow: hidden;
+  clip: rect(1px,1px,1px,1px);
+  white-space: nowrap;
+  border: 0;
+  padding: 0;
+  margin: -1px;
+}
+
+/* ------------------------------
+   11) Responsive helpers examples
+   ------------------------------ */
+@include mq-max($tablet-max) {
+  body { font-size: 0.98rem; }
+}
+
+@include mq-min($breakpoint-laptop) {
+  .container { max-width: $container-width; margin: 0 auto; padding: 0 1.25rem; }
+}
+
+/* ------------------------------
+   12) Accessibility & misc
+   ------------------------------ */
+:focus { outline-offset: 3px; }
+a:focus, button:focus, input:focus { box-shadow: 0 0 0 4px rgba(28,117,120,0.06); outline: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+}
+@media print {
+  body { background: #fff; color: #000; }
+  a::after { content: " (" attr(href) ")"; font-size: 0.85em; }
+  .no-print { display: none !important; }
+}
+
+/* End of _typography.scss */
+
+

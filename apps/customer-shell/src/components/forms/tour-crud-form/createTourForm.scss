@@ -1,0 +1,374 @@
+@import "../../../styles/base/typography"; // trem-scss canonical tokens/mixins
+
+/* Create Tour Form — visually appealing, accessible, fully responsive
+   Features:
+   - Semi-transparent backdrop overlay
+   - Slide-in panel (right on desktop, full-screen on mobile)
+   - Fixed header and footer, scrollable body
+   - Steps bar with compact pills and progress indication
+   - Calm card-like surface, soft shadows, roomy spacing
+   - Form fields grouped in sections with responsive two-column layout
+*/
+
+.ctf-root-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 15, 20, 0.45);
+  display: flex;
+  justify-content: center; // horizontally center
+  align-items: center; // vertically center (below header space handled by panel max-height)
+  z-index: 1500;
+  padding: 1.25rem;
+  overflow: hidden; // prevent background from scrolling when overlay is present
+  touch-action: none; // avoid background gestures on mobile
+  /* Overlay covers full viewport and intercepts all pointer events so background cannot be clicked */
+  pointer-events: auto; // panel slides in from right by default
+  z-index: 1500;
+  padding: 1.25rem; // padding retained
+
+  // accessible backdrop blur for modern browsers
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    pointer-events: none;
+  }
+}
+
+.ctf-panel {
+  position: relative;
+  width: 100%;
+  max-width: 780px; // comfortable reading width
+  /* limit panel height and respect the fixed header (72px) */
+  max-height: calc(96vh - 72px);
+  height: auto;
+  background: var(--bg-2);
+  border-radius: 12px;
+  box-shadow: 0 18px 40px rgba(10, 18, 28, 0.32);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: translateX(0);
+  animation: ctf-slide 240ms cubic-bezier(0.2, 0.9, 0.3, 1);
+
+  @include mq-min($breakpoint-laptop) {
+    max-width: 900px;
+    width: 100vh; // if you want 50% of screen on large
+  }
+}
+
+@keyframes ctf-slide {
+  from {
+    transform: translateX(8%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* header */
+.ctf-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.8), transparent);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+
+  h3 {
+    @include type-lg();
+    margin: 0;
+  }
+
+  .ctf-steps-line {
+    display: flex;
+    gap: 8px;
+    margin-top: 0.35rem;
+
+    .ctf-step {
+      width: 34px;
+      height: 34px;
+      display: inline-grid;
+      place-items: center;
+      border-radius: 50%;
+      background: transparent;
+      border: 2px solid var(--border);
+      color: var(--muted);
+      font-weight: $font-medium;
+      font-size: 0.9rem;
+      transition: all 160ms ease;
+
+      &.done {
+        background: var(--color-primary);
+        border-color: var(--color-primary);
+        color: #fff;
+        transform: scale(0.98);
+      }
+      &.active {
+        background: linear-gradient(
+          90deg,
+          var(--color-primary),
+          var(--color-secondary)
+        );
+        border-color: transparent;
+        color: #fff;
+        box-shadow: 0 6px 18px rgba(28, 117, 120, 0.12);
+      }
+    }
+  }
+
+  .ctf-header-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+}
+
+/* body scroll area with sticky header/footer */
+.ctf-panel-body {
+  overflow: auto;
+  padding: 1rem 1.25rem;
+  flex: 1 1 auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ctf-form-inner {
+  display: block;
+  max-width: 100%;
+}
+
+.ctf-section {
+  background: transparent;
+  padding: 0.75rem 0;
+  margin-bottom: 0.75rem;
+  border-radius: 8px;
+
+  fieldset {
+    border: 1px dashed var(--border);
+    padding: 0.75rem;
+    border-radius: 8px;
+    margin-top: 0.5rem;
+  }
+  legend {
+    padding: 0 0.5rem;
+    font-weight: $font-medium;
+    font-size: $font-size-sm;
+    color: var(--muted);
+  }
+
+  label {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 0.6rem;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  input[type="date"],
+  textarea,
+  select {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  textarea {
+    min-height: 120px;
+    resize: vertical;
+  }
+}
+
+/* two column rows that collapse on small screens */
+.ctf-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: start;
+
+  @include mq-max($mobile-max) {
+    grid-template-columns: 1fr; // single column on phones
+  }
+}
+
+/* Array item visuals */
+.ctf-array {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+  input {
+    flex: 1 1 180px;
+  }
+  .btn {
+    padding: 0.4rem 0.6rem;
+    border-radius: 6px;
+  }
+}
+
+.ctf-error {
+  background: rgba(255, 0, 0, 0.05);
+  color: $danger-color;
+}
+
+/* footer */
+.ctf-panel-footer {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 1.25rem;
+  border-top: 1px solid var(--border);
+  background: linear-gradient(0deg, rgba(255, 255, 255, 0.7), transparent);
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+
+  .ctf-footer-left {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  .ctf-footer-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .btn.primary {
+    background: linear-gradient(
+      90deg,
+      var(--color-primary),
+      var(--color-secondary)
+    );
+    box-shadow: 0 8px 20px rgba(28, 117, 120, 0.14);
+    color: #fff;
+  }
+  .btn[disabled] {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+/* compact helpers */
+.ctf-compact-meta {
+  @include type-xs();
+  color: var(--muted);
+}
+
+/* subtle form focus states for inputs inside the panel */
+.ctf-panel input:focus,
+.ctf-panel textarea:focus,
+.ctf-panel select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 6px 20px rgba(28, 117, 120, 0.06);
+}
+
+/* responsive tweaks */
+@include mq-max($tablet-max) {
+  .ctf-panel {
+    width: 100%;
+    height: 100vh;
+    border-radius: 12px 12px 0 0;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-height: 100vh;
+    padding-bottom: calc(env(safe-area-inset-bottom) + 12px);
+    margin: 0;
+  }
+  .ctf-panel-header,
+  .ctf-panel-footer {
+    display: flex;
+    justify-content: none;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  .ctf-panel-body {
+    padding: 1rem;
+  }
+}
+.ctf-panel-header,
+.ctf-panel-footer {
+  display: flex;
+
+  justify-content: none;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+.ctf-panel-body {
+  padding: 1rem;
+}
+
+@include mq-min($breakpoint-laptop) {
+  .ctf-panel-body {
+    padding: 1.25rem 1.5rem;
+  }
+}
+
+/* accessibility: shrink steps visually on tiny screens */
+@include mq-max($breakpoint-phablet) {
+  .ctf-steps-line {
+    gap: 6px;
+    .ctf-step {
+      width: 30px;
+      height: 30px;
+      font-size: 0.85rem;
+    }
+  }
+}
+
+/* small utilities used by the form */
+.ctf-tag-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+.ctf-tag {
+  @include type-xs();
+  padding: 0.35rem 0.5rem;
+  border-radius: 6px;
+  background: rgba(28, 117, 120, 0.06);
+  color: var(--color-primary);
+}
+
+/* success + error visuals (lightweight) */
+.ctf-feedback {
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  font-size: $font-size-sm;
+}
+.ctf-feedback--error {
+  background: rgba(220, 53, 69, 0.06);
+  color: var(--color-danger);
+  border: 1px solid rgba(220, 53, 69, 0.12);
+}
+.ctf-feedback--ok {
+  background: rgba(40, 167, 69, 0.06);
+  color: var(--success-color);
+  border: 1px solid rgba(40, 167, 69, 0.12);
+}
+
+/* tiny animation for add buttons */
+.btn {
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.btn:active {
+  transform: translateY(1px) scale(0.997);
+}
+
+/* print friendly: hide overlay on print */
+@media print {
+  .ctf-root-overlay {
+    display: none !important;
+  }
+}

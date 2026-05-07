@@ -1,0 +1,101 @@
+@import "../../styles/base/typography";
+
+/* TourView — overlay variant (modal / bottom-sheet) using trem-scss tokens
+   This file augments the existing .tour-view with an overlay wrapper so it
+   behaves like the CreateTourForm: centered modal on desktop, bottom-sheet on mobile.
+*/
+
+.tour-view-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+  background: rgba(10,15,20,0.45);
+  z-index: 1400;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  touch-action: none;
+  overflow: hidden; /* prevent body scroll */
+}
+
+/* Ensure the panel itself is the only scroll container */
+.tour-view-overlay .tour-view { max-height: calc(92vh - 72px); overflow: hidden; }
+
+/* Reuse the tour-view root but make it panel-like */
+.tour-view {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-2);
+  border-radius: 12px;
+  box-shadow: 0 18px 48px rgba(2,6,23,0.18);
+  overflow: hidden;
+  width: min(1100px, 92vw);
+  height: auto;
+  max-height: calc(92vh - 72px);
+}
+
+.tour-view .tv-header,
+.tour-view .tv-footer {
+  flex: 0 0 auto;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255,255,255,0.6), transparent);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tour-view .tv-header { border-bottom: 1px solid rgba(0,0,0,0.04); }
+
+.tour-view .tv-body {
+  flex: 1 1 auto;
+  overflow-y: auto; /* only panel scrolls */
+  padding: 1rem 1.25rem;
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 1rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tour-view .tv-photo { width: 100%; height: 180px; object-fit: cover; border-radius: 8px; margin: 0; }
+.tour-view .tv-row { display:flex; gap:12px; align-items:flex-start; margin-bottom: 12px; }
+.tour-view .tv-section { margin-bottom: 12px; }
+
+.tour-view .tv-footer { border-top: 1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding: 0.75rem 1rem; }
+
+/* responsive: bottom-sheet behavior on mobile */
+@include mq-max($tablet-max) {
+  .tour-view-overlay {
+    align-items: flex-end; /* slide from bottom */
+    padding: 0;
+  }
+  .tour-view {
+    width: 100%;
+    border-radius: 12px 12px 0 0;
+    max-height: 100vh;
+    height: calc(100vh - env(safe-area-inset-top));
+    animation: sheet-up 220ms cubic-bezier(.22,.9,.3,1);
+  }
+  @keyframes sheet-up { from { transform: translateY(8%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .tour-view .tv-body { grid-template-columns: 1fr; padding-bottom: calc(env(safe-area-inset-bottom) + 12px); }
+}
+
+/* Desktop subtle entrance */
+@include mq-min($breakpoint-laptop) {
+  .tour-view { animation: pop-in 180ms cubic-bezier(.2,.9,.3,1); }
+  @keyframes pop-in { from { transform: scale(.985) translateY(6px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+}
+
+/* Accessibility: trap pointer events to overlay */
+.tour-view-overlay { pointer-events: auto; }
+.tour-view-overlay > * { pointer-events: auto; }
+
+/* Small tweaks for very small phones */
+@include mq-max($breakpoint-phablet) {
+  .tour-view { border-radius: 12px 12px 0 0; .tv-header, .tv-footer { padding: 0.75rem; } .tv-photo { height: 140px; } }
+}
+
+/* Print & focus */
+@media print { .tour-view { box-shadow: none; border-radius: 0; } .tv-body { overflow: visible; } }

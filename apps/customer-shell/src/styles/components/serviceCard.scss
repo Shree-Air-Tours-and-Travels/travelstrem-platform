@@ -1,0 +1,47 @@
+@import "../../styles/base/typography"; // Import typography variables
+
+.ui-service-card {
+  background: $light-bg;
+  border-radius: 10px;
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+  width: 100%;
+  height: 100%;
+
+  &:hover {
+    transform: translateY(-5px);
+  }
+
+  &__image-container {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: $primary-color;
+  }
+
+  &__image {
+    width: 60%;
+    height: auto;
+  }
+
+  &__title {
+    font-size: $font-size-lg;
+    font-weight: $font-bold;
+    color: $primary-color;
+  }
+
+  &__description {
+    font-size: $font-size-md;
+    color: $secondary-color;
+  }
+}

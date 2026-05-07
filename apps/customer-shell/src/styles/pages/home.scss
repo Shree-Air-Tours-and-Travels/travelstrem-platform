@@ -1,0 +1,19 @@
+@import "../../styles/base/typography";
+
+.ui-home {
+  background: #f9f9f9;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  box-sizing: border-box;
+
+  &__explore {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    //   background: #fff;
+  }
+}

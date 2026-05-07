@@ -1,0 +1,66 @@
+{
+  "status": "success",
+  "message": "filters metadata",
+  "componentData": {
+    "title": "Tours Filters",
+    "description": "Available filters for tours listing",
+    "data": [],
+    "structure": {
+      "fields": {
+        "search": { "type": "text", "label": "Search" },
+        "city": { "type": "select", "label": "City", "optionsSource": "cities" },
+        "minPrice": { "type": "number", "label": "Min price" },
+        "maxPrice": { "type": "number", "label": "Max price" },
+        "minDays": { "type": "number", "label": "Min days" },
+        "maxDays": { "type": "number", "label": "Max days" },
+        "featured": { "type": "select", "label": "Featured" },
+        "rating": { "type": "select", "label": "Rating" },
+        "adults": { "type": "number", "label": "Adults" },
+        "children": { "type": "number", "label": "Children" },
+        "infants": { "type": "number", "label": "Infants" },
+        "arrivalDate": { "type": "date", "label": "Arrival date" },
+        "returnDate": { "type": "date", "label": "Return date" }
+      }
+    },
+    "config": {
+      "defaults": {
+        "search": "",
+        "city": "",
+        "minPrice": "",
+        "maxPrice": "",
+        "minDays": "",
+        "maxDays": "",
+        "featured": "",
+        "rating": "",
+        "adults": 2,
+        "children": 0,
+        "infants": 0,
+        "arrivalDate": "",
+        "returnDate": ""
+      },
+      "options": {
+        "cities": ["Paris", "London", "New York", "Delhi", "Tokyo"],
+        "featured": [
+          { "label": "Any", "value": "" },
+          { "label": "Featured", "value": "true" },
+          { "label": "Not featured", "value": "false" }
+        ],
+        "ratings": [
+          { "label": "Any rating", "value": "" },
+          { "label": "4+ stars", "value": "4" },
+          { "label": "3+ stars", "value": "3" },
+          { "label": "2+ stars", "value": "2" }
+        ],
+        "maxGuests": {
+          "adults": 10,
+          "children": 10,
+          "infants": 4
+        },
+        "dateRange": {
+          "earliest": "2025-01-01",
+          "latest": "2026-12-31"
+        }
+      }
+    }
+  }
+}

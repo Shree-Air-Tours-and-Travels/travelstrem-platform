@@ -1,0 +1,154 @@
+/*
+SCSS: src/components/GlobalLoader/globalLoader.scss
+Place this file beside the component. It contains variables and a fade-out animation.
+*/
+
+$primary-color: #1c7578;
+$white-color: #ffffff;
+$loader-overlay: rgba(0, 0, 0, 0.55);
+$loader-fade-duration: 0.45s;
+
+.tt-loader {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: $loader-overlay;
+  z-index: 99999; /* high so it blocks everything */
+  transition: opacity $loader-fade-duration ease,
+    visibility 0s linear $loader-fade-duration;
+  opacity: 1;
+  visibility: visible;
+
+  &--hiding {
+    opacity: 0;
+    visibility: hidden;
+    transition-delay: 0s;
+  }
+
+  &__box {
+    display: flex;
+    gap: 0.75rem;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem 1.5rem;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(6px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+    pointer-events: none; /* prevent accidental focus traps inside box; svg will still show */
+  }
+
+  &__label {
+    font-size: 1rem;
+    color: $white-color;
+    margin-top: 0.5rem;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    text-align: center;
+    max-width: 380px;
+  }
+}
+
+/* SVG and animations kept from prior design */
+.tt-globe {
+  display: block;
+  overflow: visible;
+}
+
+.tt-globe__group {
+  transform-origin: 50% 50%;
+  animation: tt-rotate 3.6s linear infinite;
+}
+
+.tt-ring {
+  stroke: rgba($primary-color, 0.14);
+  stroke-linecap: round;
+}
+.tt-orbit {
+  stroke: rgba($primary-color, 0.24);
+  stroke-width: 1.8;
+  stroke-dasharray: 3 6;
+  transform-origin: 50% 50%;
+  animation: tt-orbit-tilt 1.9s linear infinite;
+}
+.tt-latitudes ellipse {
+  fill: none;
+  stroke: rgba($primary-color, 0.28);
+  stroke-width: 1.2;
+}
+.tt-continents path {
+  fill: $primary-color;
+  opacity: 0.98;
+  animation: tt-continents-float 2.6s ease-in-out infinite;
+}
+.tt-satellite {
+  fill: $white-color;
+  stroke: $primary-color;
+  stroke-width: 0.6;
+  animation: tt-satellite-orbit 1.6s linear infinite;
+}
+
+@keyframes tt-rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+@keyframes tt-orbit-tilt {
+  0% {
+    transform: rotateX(0deg) rotateZ(0deg);
+  }
+  50% {
+    transform: rotateX(10deg) rotateZ(180deg);
+  }
+  100% {
+    transform: rotateX(0deg) rotateZ(360deg);
+  }
+}
+@keyframes tt-continents-float {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-1.8px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+@keyframes tt-satellite-orbit {
+  0% {
+    transform: rotate(0deg) translateY(-40px) rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg) translateY(-40px) rotate(-360deg);
+  }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .tt-globe__group,
+  .tt-orbit,
+  .tt-continents path,
+  .tt-satellite {
+    animation: none !important;
+  }
+}
+
+/* small screens */
+@media (max-width: 520px) {
+  .tt-loader__box {
+    padding: 1rem;
+  }
+  .tt-loader__label {
+    font-size: 0.95rem;
+    max-width: 260px;
+  }
+}
+
+/* End of file */

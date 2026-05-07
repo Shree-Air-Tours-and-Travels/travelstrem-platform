@@ -1,0 +1,21 @@
+// 1. Import Utility Files (Variables, Mixins, Functions)
+@import "./styles/utils/variables";
+@import "./styles/utils/mixins";
+@import "./styles/utils/functions";
+@import "~slick-carousel/slick/slick.css";
+@import "~slick-carousel/slick/slick-theme.css";
+// 2. Import Base Styles (Global, Reset, Typography)
+@import "./styles/base/reset";
+@import "./styles/base/typography";
+@import "./styles/base/global";
+
+// 3. Import Layout Files
+
+
+// 4. Import Component Styles
+
+
+
+// 6. Import Themes (Dark/Light)
+@import "./styles/themes/dark";
+@import "./styles/themes/light";

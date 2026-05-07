@@ -1,0 +1,42 @@
+{
+    "status": "success",
+    "message": "Services content fetched successfully",
+    "componentData": {
+        "title": "Our Services",
+        "description": "We offer a complete range of travel solutions to make your journey hassle-free and memorable.",
+        "data": [
+            {
+                "id": "flights-hotels",
+                "label": "Flights & Hotels",
+                "description": "Book the best deals on domestic and international flights and comfortable hotel stays worldwide.",
+                "image": "/service-images/flights-hotel.png"
+            },
+            {
+                "id": "travel-packages",
+                "label": "Travel Packages",
+                "description": "Explore our curated domestic and international travel packages for every kind of traveler.",
+                "image": "/service-images/guide.png"
+            },
+            {
+                "id": "visa-passport",
+                "label": "Visa & Passport Assistance",
+                "description": "Get expert assistance for your visa applications and passport-related services.",
+                "image": "/service-images/visa.png"
+            },
+            {
+                "id": "corporate-packages",
+                "label": "Corporate Packages",
+                "description": "Tailored corporate travel solutions including flights, hotels, and event arrangements for your business needs.",
+                "image": "/service-images/corporate.png"
+            },
+            {
+                "id": "cab-services",
+                "label": "Cab Services",
+                "description": "Convenient and affordable cab services for airport transfers, sightseeing, and outstation travel.",
+                "image": "/service-images/cab.png"
+            }
+        ],
+        "structure": {},
+        "config": {}
+    }
+}

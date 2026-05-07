@@ -1,0 +1,218 @@
+// styles/Stories/button.scss
+@import "../../styles/base/typography"; // trem-scss canonical file
+
+// --------------------------------------------------
+// Base: ui-button (modernized to trem-scss tokens)
+// --------------------------------------------------
+.ui-button {
+  // base typography (replace mixin names if your trem-scss uses different names)
+  @include type-md();
+  font-family: $font-primary;
+  font-weight: $font-bold;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 40px;
+  box-sizing: border-box;
+  border: 2px solid transparent;
+  border-radius: 10px; // modern default
+  padding: 12px 14px;  // default padding = medium
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 180ms ease, box-shadow 220ms ease, filter 160ms ease;
+  -webkit-tap-highlight-color: transparent;
+  background-clip: padding-box;
+  user-select: none;
+  color: var(--color-on-surface, $white-color);
+
+  // focus-visible (accessible)
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba($primary-color, 0.12);
+  }
+
+  &:active { transform: translateY(1px); }
+
+  &.is-disabled,
+  &:disabled,
+  &[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.56;
+    pointer-events: none;
+    filter: grayscale(6%);
+  }
+}
+
+/* -------------------------
+   Size variants
+   ------------------------- */
+.ui-button--xl   { @include type-xl(); padding: 16px 22px; border-radius: 12px; }
+.ui-button--large{ @include type-lg();  padding: 14px 18px; }
+.ui-button--medium{ @include type-md(); padding: 12px 14px; }
+.ui-button--small{ @include type-sm();   padding: 8px 12px; }
+.ui-button--extra-small,
+.ui-button--xs { @include type-xs(); padding: 6px 10px; font-weight: $font-regular; }
+
+/* circular icon button */
+.ui-button--circular {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border-radius: 50%;
+  @include type-sm();
+}
+
+/* icon helper */
+.ui-button__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  svg, img { width: 1em; height: 1em; display: block; }
+}
+
+/* -------------------------
+   Variant: solid (primary look)
+   ------------------------- */
+.ui-button--solid {
+  // color classes will override below
+  &.ui-button--primary {
+    background: linear-gradient(215deg, $primary-color, $secondary-color);
+    color: var(--color-on-primary, $white-color);
+    border-color: transparent;
+    box-shadow: 0 8px 20px rgba($primary-color, 0.12);
+    &:hover { transform: translateY(-2px); filter: brightness(0.98); }
+  }
+
+  &.ui-button--c { // alternate (secondary)
+    background: linear-gradient(215deg, $secondary-color, color-mix(in srgb, $secondary-color 80%, black 20%));
+    color: var(--color-on-primary, $white-color);
+    border-color: transparent;
+    box-shadow: 0 8px 18px rgba($secondary-color, 0.08);
+    &:hover { transform: translateY(-1px); }
+  }
+
+  &.ui-button--danger {
+    background: linear-gradient(215deg, $danger-color, color-mix(in srgb, $danger-color 70%, black 30%));
+    color: $white-color;
+    border-color: transparent;
+    box-shadow: 0 8px 18px rgba($danger-color, 0.08);
+    &:hover { filter: brightness(0.96); }
+  }
+
+  &.ui-button--white {
+    background: $white-color;
+    color: $primary-color;
+    border-color: $white-color;
+    box-shadow: 0 6px 16px rgba(15,23,42,0.04);
+    &:hover { transform: translateY(-1px); filter: brightness(0.99); }
+  }
+}
+
+/* -------------------------
+   Variant: outline
+   ------------------------- */
+.ui-button--outline {
+  background: transparent;
+  color: $primary-color;
+  border-width: 1px;
+  border-style: solid;
+
+  &.ui-button--primary { color: $primary-color; border-color: rgba($primary-color, 0.12); &:hover { background: rgba($primary-color, 0.04); color: $primary-color;} }
+  &.ui-button--secondary { color: $secondary-color; border-color: rgba($secondary-color, 0.12); &:hover { background: rgba($secondary-color, 0.04);} }
+  &.ui-button--danger { color: $danger-color; border-color: rgba($danger-color, 0.12); &:hover { background: rgba($danger-color, 0.04);} }
+  &.ui-button--white { color: $white-color; border-color: rgba($white-color, 0.12); &:hover { background: rgba($white-color, 0.06);} }
+}
+
+/* -------------------------
+   Variant: text (link-like)
+   ------------------------- */
+.ui-button--text {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-weight: $font-regular;
+  color: $primary-color;
+  &:hover { text-decoration: underline; color: darken($primary-color, 6%); }
+}
+
+/* -------------------------
+   Variant: solid-outline (solid fill + outline accent)
+   ------------------------- */
+.ui-button--solid-outline {
+  border-width: 2px;
+  font-weight: $font-bold;
+
+  &.ui-button--primary {
+    background: $primary-color;
+    color: var(--color-on-primary, $white-color);
+    border-color: $secondary-color;
+    box-shadow: 0 8px 18px rgba($primary-color, 0.08);
+    &:hover { transform: translateY(-1px); filter: brightness(0.98); border-color: darken($secondary-color, 6%); }
+  }
+
+  &.ui-button--secondary {
+    background: $secondary-color;
+    color: var(--color-on-primary, $white-color);
+    border-color: $primary-color;
+    &:hover { border-color: darken($primary-color, 6%); }
+  }
+
+  &.ui-button--danger {
+    background: $danger-color;
+    color: $white-color;
+    border-color: $white-color;
+    &:hover { filter: brightness(0.96); }
+  }
+
+  &.ui-button--white {
+    background: $white-color;
+    color: $primary-color;
+    border-color: $danger-color;
+    &:hover { filter: brightness(0.995); }
+  }
+}
+
+/* -------------------------
+   Ghost / disabled visual tweak
+   ------------------------- */
+.ui-button--ghost {
+  background: transparent;
+  color: var(--color-muted, rgba(0,0,0,0.6));
+  border: 1px dashed rgba(0,0,0,0.06);
+  cursor: default !important;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* -------------------------
+   Secondary color helper (keeps your existing prop pattern)
+   e.g. ui-button--secondary-primary, ui-button--secondary-danger
+   ------------------------- */
+@each $clr in (primary, secondary, danger, white) {
+  .ui-button--secondary-#{$clr} {
+    @if $clr == primary {
+      border-color: $primary-color !important;
+    } @else if $clr == secondary {
+      border-color: $secondary-color !important;
+    } @else if $clr == danger {
+      border-color: $danger-color !important;
+    } @else {
+      border-color: $white-color !important;
+    }
+  }
+}
+
+/* -------------------------
+   Utility: small visual tweak for icon-only anchor/button
+   ------------------------- */
+.ui-button.icon-only {
+  padding: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+/* Optional: allow you to keep old markup that used .btn classes */
+.btn--compat { @extend .ui-button; }

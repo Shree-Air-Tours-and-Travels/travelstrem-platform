@@ -1,0 +1,317 @@
+@import "../../../styles/base/typography";
+
+/* --- add this near the top of your SCSS (helpers / utils) --- */
+
+/* single-line ellipsis */
+@mixin ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* multiline clamp with fallback
+   Usage: @include clamp-lines(3); */
+@mixin clamp-lines($lines, $line-height: 1.4) {
+  // prefer modern webkit approach
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: $lines;
+  overflow: hidden;
+
+  // Fallback for non-webkit: enforce max-height based on line-height
+  // Keep a consistent rendering by setting line-height (only if not already set)
+  line-height: $line-height;
+  max-height: $line-height * $lines; // SCSS will multiply
+}
+
+/* If you want a more defensive fallback (some browsers ignore -webkit-line-clamp),
+   use this version that sets both techniques and keeps ellipsis via overflow. */
+@mixin clamp-lines-defensive($lines, $line-height: 1.4) {
+  // set line-height explicitly for measurements
+  line-height: $line-height;
+  // webkit clamp
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: $lines;
+  // generic fallback
+  overflow: hidden;
+  max-height: $lines * $line-height;
+}
+
+/* --- end helpers --- */
+
+/* Mobile-first base (friendly to small screens) */
+.tour-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  align-items: stretch;
+  background: $white-color;
+  border-radius: 12px;
+  padding: 0.6rem;
+  box-shadow: 0 6px 18px rgba($text-dark, 0.05);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+  min-height: auto;
+  height: auto;
+  max-height: auto;
+  min-width: 362px;
+  position: relative;
+
+  &.is-featured {
+    .tour-card-list__media {
+      position: relative;
+    }
+
+    .tour-card-list__badge {
+      position: absolute;
+      top: 0.75rem;
+      left: 0.75rem;
+      padding: 0.25rem 0.6rem;
+      background: #d5a019; // your theme color
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: 5px;
+      z-index: 2;
+      pointer-events: none;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  }
+
+  &:hover {
+    transform: none; /* avoid hover shift on touch devices */
+    box-shadow: 0 8px 20px rgba($text-dark, 0.06);
+  }
+
+  /* media (top on mobile) */
+  &__media {
+    width: 100%;
+    border-radius: 10px;
+    overflow: hidden;
+    background: linear-gradient(
+      180deg,
+      rgba($primary-color, 0.03),
+      rgba($secondary-color, 0.02)
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 140px;
+  }
+
+  &__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  &__placeholder {
+    padding: 1rem;
+    background: $text-muted;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    img {
+      max-width: 60%;
+      opacity: 0.7;
+    }
+  }
+
+  /* content */
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-width: 0; // important for text truncation
+    padding: 0;
+  }
+
+  &__header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .ui-subtitle-parent {
+    height: auto;
+  }
+
+  &__desc {
+    color: $secondary-color;
+    font-size: $font-size-sm;
+    line-height: 1.4;
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
+    @include clamp-lines(3);
+  }
+
+  &__extra {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+  }
+
+  &__info-card__tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+    .tag {
+      @include type-xs();
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(28, 117, 120, 0.06);
+      color: var(--color-primary);
+    }
+  }
+
+  //   .tag {
+  //     background: rgba($primary-color, 0.06);
+  //     border: 1px solid rgba($primary-color, 0.08);
+  //     padding: 0.18rem 0.45rem;
+  //     border-radius: 6px;
+  //     font-size: $font-size-xs;
+  //     color: $primary-color;
+  //   }
+
+  /* aside (bottom on mobile) */
+  &__aside {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: stretch;
+    padding-top: 0;
+    width: 100%;
+  }
+
+  &__price {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .price {
+      font-weight: $font-bold;
+      font-size: $font-size-xs;
+      color: $primary-color;
+    }
+    .rating {
+      font-size: $font-size-sm;
+      color: $secondary-color;
+    }
+  }
+
+ /* tourCardSecondary.scss (append or merge) */
+&__action {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .ui-button {
+    // keep buttons compact in the aside
+    &.ui-button--small { min-width: 84px; padding: 8px 10px; }
+  }
+
+  .tour-card-list__admin-actions {
+    display: inline-flex;
+    gap: 8px;
+    margin-left: 8px;
+    align-items: center;
+  }
+}
+
+}
+
+/* Desktop / large screens: turn into three-column row */
+@media (min-width: 720px) {
+  .tour-card-list {
+    flex-direction: row;
+    gap: 1rem;
+    padding: 0.6rem;
+    align-items: stretch;
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 30px rgba($text-dark, 0.08);
+    }
+
+    &__media {
+      flex: 0 0 220px;
+      min-height: auto;
+      aspect-ratio: 4/3;
+    }
+
+    &__content {
+      flex: 1 1 auto;
+      padding: 0.2rem 0;
+    }
+
+    &__aside {
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding-left: 0.4rem;
+    }
+
+    &__price {
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+
+      .price {
+        font-size: $font-size-xs;
+      }
+      .rating {
+        margin-top: 0.25rem;
+      }
+    }
+
+    &__action {
+      display: flex;
+      justify-content: flex-end;
+      .tour-card-list__action-button {
+        .btn {
+          width: auto !important;
+          min-width: 96px;
+          padding: 0.45rem 0.9rem;
+        }
+      }
+    }
+  }
+}
+
+/* Accessibility / readable text adjustments on small screens */
+@media (max-width: 420px) {
+  .tour-card-list {
+    padding: 0.5rem;
+    min-width: 100%;
+    &__media {
+      min-height: 120px;
+    }
+    &__desc {
+      font-size: 13px;
+    }
+    &__price {
+      .price {
+        font-size: $font-size-xs;
+      }
+    }
+    &__action .tour-card-list__action-button .btn {
+      min-height: 48px;
+      font-size: 15px;
+    }
+  }
+}
+
+/* Fallback mixin if clamp-lines isn't available */
+// @include if-not-exists(clamp-lines) {
+// //   @mixin clamp-lines($lines) {
+// //     display: -webkit-box;
+// //     -webkit-line-clamp: $lines;
+// //     -webkit-box-orient: vertical;
+// //     overflow: hidden;
+// //   }
+// }
