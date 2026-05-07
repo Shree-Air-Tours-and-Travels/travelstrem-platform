@@ -1,0 +1,6 @@
+node_modules
+.pnpm-store
+.pnpm-modules
+.DS_Store
+build
+.turbo
