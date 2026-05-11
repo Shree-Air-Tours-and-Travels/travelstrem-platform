@@ -1,0 +1,19 @@
+@import "../../styles/base/typography"; // Import typography variables
+
+.ui-span {
+  &--primary {
+    color: $primary-color;
+    font-size: large;
+    font-weight: bold;
+    padding: 0 0.25rem;
+    border-radius: 4px;
+  }
+
+  &--light {
+    color: $light-bg;
+    font-size: $font-size-lg;
+    font-weight: bold;
+    padding: 0 0.25rem;
+    border-radius: 4px;
+  }
+}
