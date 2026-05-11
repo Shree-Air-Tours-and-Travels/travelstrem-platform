@@ -1,0 +1,59 @@
+@import "../../styles/base/typography";
+
+.ui-review-card {
+  background: $primary-color;
+  padding: 1.5rem;
+  border: 5px solid $border-color;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column; // Stack items vertically
+  align-items: center;
+  gap: 1rem;
+  width: 400px; // Fixed width for uniformity
+  height: 250px; // Fixed height for consistency
+  box-shadow: var(--shadow-sm);
+  overflow: hidden; // Prevent content from overflowing
+
+  &__image {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid $primary-color;
+  }
+
+  &__content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    width: 100%; // Ensures text spans the card width
+    padding: 0 10px; // Add padding to prevent touching edges
+  }
+
+  &__name {
+    font-size: $font-size-md;
+    font-weight: $font-bold;
+    color: $primary-color;
+    margin-bottom: 0.3rem;
+    text-align: center; // Center the name
+  }
+
+  &__text {
+    font-size: $font-size-sm;
+    color: $secondary-color;
+    flex-grow: 1; // Allows it to expand within the container
+    max-height: 90px; // Fixed height to prevent overflow
+    overflow-y: auto; // Enables scrolling if text exceeds limit
+    word-wrap: break-word; // Ensures long words wrap instead of overflowing
+    padding-right: 5px; // Prevents text from touching the border
+  }
+
+  &__rating {
+    font-size: $font-size-md;
+    font-weight: $font-semibold;
+    color: $accent-color;
+    text-align: center; // Aligns rating text
+    padding-top: 5px;
+  }
+}

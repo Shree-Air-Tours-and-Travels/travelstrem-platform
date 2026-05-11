@@ -1,0 +1,65 @@
+@import "../base/typography";
+
+.admin-shell-header {
+  min-height: 72px;
+  padding: 0 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+
+  &__brand {
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    font-size: $font-size-lg;
+    font-weight: $font-bold;
+  }
+
+  &__nav,
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  &__nav a {
+    color: var(--text);
+    text-decoration: none;
+
+    &.active {
+      color: var(--color-primary);
+      font-weight: $font-semibold;
+    }
+  }
+
+  &__user {
+    color: var(--muted);
+    font-size: $font-size-sm;
+  }
+
+  &__button {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-2);
+    color: var(--color-primary);
+    padding: 0.45rem 0.75rem;
+    cursor: pointer;
+  }
+}
+
+@media (max-width: 720px) {
+  .admin-shell-header {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 1rem;
+
+    &__nav,
+    &__actions {
+      flex-wrap: wrap;
+    }
+  }
+}

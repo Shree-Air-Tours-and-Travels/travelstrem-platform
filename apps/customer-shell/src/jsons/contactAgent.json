@@ -1,0 +1,23 @@
+{
+  "status": "success",
+  "message": "Contact request received",
+  "componentData": {
+    "title": "Contact request",
+    "description": "Lead saved successfully",
+    "data": [
+      {
+        "id": "650c1f3a...",
+        "name": "Rahul Sharma",
+        "email": "rahul@example.com",
+        "phone": "9876543210",
+        "tourId": "642a8b3f",
+        "tourTitle": "Manali 5D/4N - Mountains & Adventure",
+        "url": "https://travelsTREM/tours/642a8b3f",
+        "createdAt": "2025-09-07T17:20:00.000Z",
+        "notified": true
+      }
+    ],
+    "structure": { "notified": true },
+    "config": {}
+  }
+}

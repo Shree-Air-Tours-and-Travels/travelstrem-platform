@@ -1,0 +1,235 @@
+{
+    "status": "success",
+    "message": "Tour fetched successfully",
+    "handler": "admin", // Possible values: "admin", "user", "employee"
+    "componentData": {
+        "state": {
+            "data": {
+                "id": "68bef4c028101fbaca3b11e5",
+                "title": "Nusa Pendia, Bali, Indonesia",
+                "description": "this is the description",
+                "tours": [
+                    {
+                        "_id": "68bef4c028101fbaca3b11e5",
+                        "title": "Nusa Pendia, Bali, Indonesia",
+                        "city": "Bali",
+                        "address": {
+                            "line1": "Somewhere in Indonesia",
+                            "line2": "",
+                            "city": "Bali",
+                            "state": "Bali",
+                            "zip": "00000",
+                            "country": "Indonesia",
+                            "_id": "68bef4c028101fbaca3b11e6"
+                        },
+                        "distance": 500,
+                        "period": {
+                            "days": 7,
+                            "nights": 6
+                        },
+                        "photos": [
+                            "/tour-images/tour-img05.jpg"
+                        ],
+                        "desc": "this is the description",
+                        "price": 99,
+                        "maxGroupSize": 8,
+                        "reviews": [],
+                        "featured": true,
+                        "__v": 0,
+                        "createdAt": "2025-09-08T15:22:40.957Z",
+                        "updatedAt": "2025-09-08T15:22:40.957Z",
+                        "avgRating": 0,
+                        "id": "68bef4c028101fbaca3b11e5"
+                    }
+                ]
+            }
+        },
+        "structure": {
+            "fields": [
+                // Fields for the main tour details
+                {
+                    "name": "title",
+                    "type": "text",
+                    "label": "Tour Title",
+                    "required": true
+                },
+                {
+                    "name": "description",
+                    "type": "textarea",
+                    "label": "Tour Description",
+                    "required": true
+                },
+                {
+                    // Nested form for tour details
+                    "name": "tours",
+                    "type": "form",
+                    "label": "Tour's Data",
+                    "itemStructure": {
+                        "fields": [
+                            {
+                                "name": "title",
+                                "type": "text",
+                                "label": "Tour Title",
+                                "required": true
+                            },
+                            {
+                                "name": "city",
+                                "type": "text",
+                                "label": "City",
+                                "required": true
+                            },
+                            {
+                                "name": "address.line1",
+                                "type": "text",
+                                "label": "Address Line 1",
+                                "required": true
+                            },
+                            {
+                                "name": "address.line2",
+                                "type": "text",
+                                "label": "Address Line 2"
+                            },
+                            {
+                                "name": "address.city",
+                                "type": "text",
+                                "label": "City",
+                                "required": true
+                            },
+                            {
+                                "name": "address.state",
+                                "type": "text",
+                                "label": "State/Province",
+                                "required": true
+                            },
+                            {
+                                "name": "address.zip",
+                                "type": "text",
+                                "label": "ZIP/Postal Code",
+                                "required": true
+                            },
+                            {
+                                "name": "address.country",
+                                "type": "text",
+                                "label": "Country",
+                                "required": true
+                            },
+                            {
+                                "name": "distance",
+                                "type": "number",
+                                "label": "Distance (in km)",
+                                "required": true,
+                                "min": 0
+                            },
+                            {
+                                "name": "period.days",
+                                "type": "number",
+                                "label": "Number of Days",
+                                "required": true,
+                                "min": 1
+                            },
+                            {
+                                "name": "period.nights",
+                                "type": "number",
+                                "label": "Number of Nights",
+                                "required": true,
+                                "min": 0
+                            },
+                            {
+                                "name": "photos",
+                                "type": "array",
+                                "label": "Photo URLs",
+                                "itemType": "text",
+                                "required": true
+                            },
+                            {
+                                "name": "desc",
+                                "type": "textarea",
+                                "label": "Description",
+                                "required": true
+                            },
+                            {
+                                "name": "price",
+                                "type": "number",
+                                "label": "Price (in USD)",
+                                "required": true,
+                                "min": 0
+                            },
+                            {
+                                "name": "maxGroupSize",
+                                "type": "number",
+                                "label": "Maximum Group Size",
+                                "required": true,
+                                "min": 1
+                            },
+                            {
+                                "name": "featured",
+                                "type": "checkbox",
+                                "label": "Featured Tour"
+                            },
+                            {
+                                "name": "createdAt",
+                                "type": "datetime",
+                                "label": "Created At",
+                                "readonly": true
+                            },
+                            {
+                                "name": "updatedAt",
+                                "type": "datetime",
+                                "label": "Updated At",
+                                "readonly": true
+                            },
+                            {
+                                "name": "avgRating",
+                                "type": "number",
+                                "label": "Average Rating",
+                                "readonly": true,
+                                "min": 0,
+                                "max": 5
+                            }
+                        ]
+                    },
+                    "config": {
+                        "header": {
+                            "title": "Nusa Pendia, Bali, Indonesia"
+                        },
+                        "footer": {
+                            "text": "Explore more tours"
+                        }
+                    },
+                    "actions": {
+                        // Actions specific to the tour form can be defined here
+                        "back": {
+                            "label": "Explore more tours",
+                            "url": "/tours"
+                        },
+                        "contact": {
+                            "label": "Contact Us"
+                        },
+                        "chat": {
+                            "label": "Design Your Trip"
+                        }
+                    }
+                }
+            ],
+            "card": {
+                // for example in summary card we can use this
+            },
+            "config": {
+                // Configuration for the entire component
+            },
+            "actions": {
+                // Global actions can be defined here
+                "share": {
+                    "label": "Share this tour"
+                },
+                "save": {
+                    "label": "Save to Wishlist"
+                }
+            },
+            "layout": {
+                // Layout settings for the component
+
+            }
+        }
+    }
+}
