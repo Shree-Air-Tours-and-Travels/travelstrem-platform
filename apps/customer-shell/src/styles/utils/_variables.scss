@@ -1,0 +1,7 @@
+// Compatibility aliases. The canonical values live in styles/base/_typography.scss.
+$background-color: var(--bg);
+$surface-color: var(--bg-2);
+$text-color: var(--text);
+$font-family: $font-primary;
+$base-font-size: var(--root-font-size);
+$breakpoint-desktop: $breakpoint-laptop;

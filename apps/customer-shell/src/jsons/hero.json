@@ -1,0 +1,73 @@
+{
+    "status": "success",
+    "message": "Hero content fetched successfully",
+    "componentData": {
+        "title": "Traveling opens the door to creating",
+        "description": "Discover the world with TravelsTREM...",
+        "data": [],
+        "structure": {
+            "eyebrow": "Premium Travel Experiences",
+            "highlight": "memories",
+            "buttonText": "Explore Now",
+            "secondaryButtonText": "Watch story",
+            "featuredDestination": {
+                "label": "Top Destination",
+                "title": "Bali, Indonesia"
+            },
+            "stats": [
+                {
+                    "value": "15K+",
+                    "label": "Happy Travelers"
+                },
+                {
+                    "value": "120+",
+                    "label": "Destinations"
+                },
+                {
+                    "value": "4.9",
+                    "label": "Average Rating"
+                }
+            ],
+            "visual": {
+                "headline": "Live route studio",
+                "subline": "Flights, stays, weather, and local moments balanced in one plan.",
+                "orbitItems": [
+                    {
+                        "label": "Flights",
+                        "icon": "plane"
+                    },
+                    {
+                        "label": "Stays",
+                        "icon": "hotel"
+                    },
+                    {
+                        "label": "Routes",
+                        "icon": "route"
+                    },
+                    {
+                        "label": "Weather",
+                        "icon": "cloud"
+                    }
+                ],
+                "gallery": [
+                    {
+                        "label": "Next window",
+                        "value": "Sep - Nov",
+                        "icon": "calendar"
+                    },
+                    {
+                        "label": "Trip style",
+                        "value": "Slow luxury",
+                        "icon": "sparkles"
+                    },
+                    {
+                        "label": "Mood",
+                        "value": "Island calm",
+                        "icon": "compass"
+                    }
+                ]
+            }
+        },
+        "config": {}
+    }
+}

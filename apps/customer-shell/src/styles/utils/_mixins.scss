@@ -1,0 +1,44 @@
+@mixin respond-max($size) {
+  @media (max-width: $size) {
+    @content;
+  }
+}
+
+@mixin respond-min($size) {
+  @media (min-width: $size) {
+    @content;
+  }
+}
+
+@mixin app-container($max: $container-width) {
+  width: min($max, calc(100% - 32px));
+  margin-inline: auto;
+}
+
+@mixin card-surface {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+}
+
+@mixin skeleton-shimmer($bg: $surface-muted) {
+  position: relative;
+  overflow: hidden;
+  background: $bg;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, var(--color-transparent), var(--surface-shimmer), var(--color-transparent));
+    animation: trem-shimmer 1.2s infinite linear;
+  }
+}
+
+@keyframes trem-shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}

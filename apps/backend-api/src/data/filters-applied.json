@@ -1,0 +1,299 @@
+{
+  "appliedAt": "2025-11-13T17:44:32.728Z",
+  "filters": {
+    "search": "jaipur",
+    "city": "",
+    "minPrice": "",
+    "maxPrice": "",
+    "minDays": "",
+    "maxDays": "",
+    "featured": "",
+    "rating": "",
+    "adults": 2,
+    "children": 0,
+    "infants": 0,
+    "arrivalDate": "",
+    "returnDate": ""
+  },
+  "componentData": {
+    "state": {
+      "data": {
+        "id": null,
+        "title": "Filtered Tours",
+        "description": "Tours matching your filters",
+        "tours": [
+          {
+            "_id": "6915a85d0fd8775e3113721e",
+            "title": "Majestic Jaipur Escape",
+            "city": "Jaipur",
+            "address": {
+              "line1": "117 SHRIRAMPURI COLONY",
+              "line2": "NIWARU ROAD",
+              "city": "Jaipur",
+              "state": "Rajasthan",
+              "zip": "302012",
+              "country": "India"
+            },
+            "distance": 550,
+            "period": {
+              "days": 2,
+              "nights": 3
+            },
+            "photo": "/tour-images/tour-img17.jpg",
+            "photos": [
+              "/tour-images/tour-img07.jpg",
+              "/tour-images/tour-img05.jpg",
+              "/tour-images/tour-img08.jpg",
+              "/tour-images/tour-img09.jpg"
+            ],
+            "desc": "Jaipur trip is a vibrant blend of forts, palaces, markets, and desert charm. You explore the iconic Pink City sights—Hawa Mahal, City Palace, Jantar Mantar—before heading to the grand Amber, Jaigarh, and Nahargarh forts for sweeping views and royal history. Evenings bring street food, colorful bazaars, and the glow of sandstone under sunset. With time for both culture and relaxation, five days in Jaipur gives a balanced taste of heritage, art, and Rajasthan’s warm hospitality, all wrapped in its signature pink hue.",
+            "price": {
+              "min": 8999,
+              "max": 14999,
+              "currency": "INR",
+              "isFinal": true,
+              "source": "agent"
+            },
+            "seasonalPricing": [],
+            "itinerary": [
+              {
+                "day": 1,
+                "title": "Arrival and Leisure",
+                "summary": "Arrive in Jaipur, settle in, and enjoy a light introduction to the city.",
+                "activities": [
+                  "Check-in",
+                  "local market walk",
+                  "Hawa Mahal photo stop"
+                ],
+                "meals": [
+                  "Lunch",
+                  "Dinner"
+                ],
+                "accommodation": "Jaipur hotel",
+                "location": "Jaipur",
+                "notes": "Keep the day light to adjust to travel and explore nearby areas at your own pace.",
+                "_id": "6915abdc0fd8775e3113732f"
+              },
+              {
+                "day": 2,
+                "title": "Forts & Scenic Views",
+                "summary": "Explore Jaipur’s majestic hill forts and enjoy panoramic city views.",
+                "activities": [
+                  "Amber Fort",
+                  "Jaigarh Fort",
+                  "Jal Mahal stop",
+                  "light shopping"
+                ],
+                "meals": [
+                  "Breakfast",
+                  "Lunch"
+                ],
+                "accommodation": "Jaipur hotel",
+                "location": "Jaipur",
+                "notes": "Start early for Amber Fort to avoid crowds and heat.",
+                "_id": "6915abdc0fd8775e31137330"
+              }
+            ],
+            "highlights": [
+              {
+                "title": "Majestic Hill Forts",
+                "short": "Explore Jaipur’s grand forts with stunning panoramic views.",
+                "icon": "fort",
+                "order": 1,
+                "_id": "6915abdc0fd8775e31137331"
+              },
+              {
+                "title": "Royal Heritage Walk",
+                "short": "Discover palaces, observatories, and centuries-old architecture.",
+                "icon": "palace",
+                "order": 2,
+                "_id": "6915abdc0fd8775e31137332"
+              },
+              {
+                "title": "Vibrant Local Markets",
+                "short": "Shop handicrafts, jewelry, and traditional Rajasthani art.",
+                "icon": "marketplace",
+                "order": 3,
+                "_id": "6915abdc0fd8775e31137333"
+              }
+            ],
+            "maxGroupSize": 12,
+            "reviews": [
+              {
+                "name": "Akshat goyal",
+                "rating": 5,
+                "comment": "Wonderful trip, everything was well-organized!",
+                "_id": "6915a85d0fd8775e31137224"
+              },
+              {
+                "name": "robert",
+                "rating": 5,
+                "comment": "Loved the experience! Especially Solang Valley.",
+                "_id": "6915a85d0fd8775e31137225"
+              }
+            ],
+            "featured": true,
+            "createdAt": "2025-11-13T09:43:57.121Z",
+            "updatedAt": "2025-11-13T09:58:52.580Z",
+            "__v": 0,
+            "priceInfo": {
+              "min": 8999,
+              "max": 14999,
+              "currency": "INR",
+              "isFinal": true,
+              "source": "agent",
+              "matchedSeason": null,
+              "note": ""
+            },
+            "avgRating": 5
+          }
+        ]
+      }
+    },
+    "structure": {
+      "fields": [
+        {
+          "name": "search",
+          "label": "Search",
+          "type": "text",
+          "value": ""
+        },
+        {
+          "name": "city",
+          "label": "City",
+          "type": "select",
+          "value": "",
+          "optionsSource": "cities"
+        },
+        {
+          "name": "minPrice",
+          "label": "Min Price",
+          "type": "number",
+          "value": ""
+        },
+        {
+          "name": "maxPrice",
+          "label": "Max Price",
+          "type": "number",
+          "value": ""
+        },
+        {
+          "name": "minDays",
+          "label": "Min Days",
+          "type": "number",
+          "value": ""
+        },
+        {
+          "name": "maxDays",
+          "label": "Max Days",
+          "type": "number",
+          "value": ""
+        },
+        {
+          "name": "featured",
+          "label": "Featured",
+          "type": "select",
+          "value": "",
+          "optionsSource": "featured"
+        },
+        {
+          "name": "rating",
+          "label": "Rating",
+          "type": "select",
+          "value": "",
+          "optionsSource": "ratings"
+        },
+        {
+          "name": "adults",
+          "label": "Adults",
+          "type": "number",
+          "value": 2
+        },
+        {
+          "name": "children",
+          "label": "Children",
+          "type": "number",
+          "value": 0
+        },
+        {
+          "name": "infants",
+          "label": "Infants",
+          "type": "number",
+          "value": 0
+        },
+        {
+          "name": "arrivalDate",
+          "label": "Arrival Date",
+          "type": "date",
+          "value": ""
+        },
+        {
+          "name": "returnDate",
+          "label": "Return Date",
+          "type": "date",
+          "value": ""
+        }
+      ],
+      "actions": [
+        {
+          "name": "apply",
+          "type": "apply",
+          "label": "Apply filters",
+          "className": "button button--primary",
+          "method": "POST",
+          "endpoint": "/filters.json/apply"
+        },
+        {
+          "name": "reset",
+          "type": "reset",
+          "label": "Reset filters",
+          "className": "button",
+          "method": "GET",
+          "endpoint": "/tours.json"
+        }
+      ],
+      "submitText": "Apply Filters",
+      "layout": {
+        "rows": [
+          [
+            "search",
+            "city",
+            "minPrice",
+            "maxPrice"
+          ],
+          [
+            "minDays",
+            "maxDays",
+            "featured",
+            "rating"
+          ],
+          [
+            "adults",
+            "children",
+            "infants",
+            "arrivalDate"
+          ],
+          [
+            "returnDate"
+          ]
+        ]
+      }
+    },
+    "config": {
+      "header": {
+        "title": "Filtered Tour Packages"
+      },
+      "footer": {
+        "text": "Explore curated tours across stunning destinations"
+      }
+    },
+    "actions": {
+      "share": {
+        "label": "Share this tour"
+      },
+      "save": {
+        "label": "Save to Wishlist"
+      }
+    }
+  }
+}
