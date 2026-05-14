@@ -1,383 +1,555 @@
-// server/controllers/bookingController.js
 import mongoose from "mongoose";
-import Booking from "../../models/Booking.js";
+import Booking, { BOOKING_STATUSES, PAYMENT_STATUSES } from "../../models/Booking.js";
 import Tour from "../../models/Tour.js";
-
-/* ---------------------- Response helpers ---------------------- */
+import BookingService from "./services/BookingService.js";
+import TravellerService from "./services/TravellerService.js";
+import QuoteService from "./services/QuoteService.js";
+import PaymentService from "./services/PaymentService.js";
+import DocumentService from "./services/DocumentService.js";
+import BookingTimelineService from "./services/BookingTimelineService.js";
+import AuditService from "./services/AuditService.js";
+import StatusHistoryService from "./services/StatusHistoryService.js";
+import AssignmentService from "./services/AssignmentService.js";
+import NotificationService from "../notifications/NotificationService.js";
 
 function sendSuccess(res, dataPayload = {}, message = "OK", opts = {}) {
     const { title = "", description = "", structure = {}, config = {} } = opts;
     return res.json({
         status: "success",
         message,
-        componentData: {
-            title,
-            description,
-            data: dataPayload,
-            structure,
-            config,
-        },
+        componentData: { title, description, data: dataPayload, structure, config },
     });
 }
 
 function sendError(res, message = "Something went wrong", statusCode = 500, opts = {}) {
-    const { title = "", description = "" } = opts;
+    const { title = "", description = "", structure = {}, config = {} } = opts;
     return res.status(statusCode).json({
         status: "error",
         message,
-        componentData: {
-            title,
-            description,
-            data: [],
-            structure: {},
-            config: {},
-        },
+        componentData: { title, description, data: [], structure, config },
     });
 }
 
-/* ---------------------- Utilities ---------------------- */
-
-function validateDates(startDate, endDate) {
-    const s = new Date(startDate);
-    const e = new Date(endDate);
-    if (isNaN(s.getTime()) || isNaN(e.getTime())) return false;
-    return s <= e;
+function asDate(value) {
+    if (!value) return null;
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
 }
 
-/**
- * Normalize authenticated user info from multiple possible places:
- * 1) req.user (preferred) - JWT middleware payload
- * 2) req.body.user (object or JSON-string)
- * 3) req.query.userId / req.query.userRole
- * 4) headers: x-user-id / x-user-role
- *
- * Returns { userId, userRole, authUser }
- */
+function validateDates(startDate, endDate) {
+    const start = asDate(startDate);
+    const end = asDate(endDate);
+    return !!start && !!end && start <= end;
+}
+
+function normalizeObjectId(value) {
+    if (!value) return null;
+    const raw = typeof value === "object" ? (value._id || value.id) : value;
+    return mongoose.Types.ObjectId.isValid(String(raw)) ? String(raw) : null;
+}
+
+function cleanString(value) {
+    return String(value || "").trim();
+}
+
+function normalizeEmail(value) {
+    return cleanString(value).toLowerCase();
+}
+
+function normalizePhone(value) {
+    return cleanString(value);
+}
+
 function authInfoFromReq(req) {
     if (!req) return { userId: null, userRole: null, authUser: null };
-
-    // 1) From req.user (JWT)
     if (req.user) {
         const payload = req.user;
-        const userId = payload.sub || payload.id || payload._id || payload.userId || null;
-        const userRole = payload.role || payload.userRole || payload.roleName || null;
-        return { userId, userRole, authUser: payload };
+        return {
+            userId: payload.sub || payload.id || payload._id || payload.userId || null,
+            userRole: payload.role || payload.userRole || payload.roleName || null,
+            authUser: payload,
+        };
     }
 
-    // 2) From req.body.user (object or JSON string)
-    try {
-        const bodyUserRaw = (req.body && req.body.user) || null;
-        if (bodyUserRaw) {
-            let parsed = null;
-            if (typeof bodyUserRaw === "string") {
-                try {
-                    parsed = JSON.parse(bodyUserRaw);
-                } catch (e) {
-                    // maybe it's just an id string
-                    parsed = { id: bodyUserRaw };
-                }
-            } else if (typeof bodyUserRaw === "object") {
-                parsed = bodyUserRaw;
-            }
-
-            if (parsed) {
-                const userId = parsed.id || parsed._id || parsed.sub || parsed.userId || null;
-                const userRole = parsed.role || parsed.userRole || null;
-                if (userId) return { userId, userRole, authUser: parsed };
-            }
+    const bodyUserRaw = req.body?.user || null;
+    if (bodyUserRaw) {
+        let parsed = bodyUserRaw;
+        if (typeof bodyUserRaw === "string") {
+            try { parsed = JSON.parse(bodyUserRaw); } catch { parsed = { id: bodyUserRaw }; }
         }
-    } catch (e) {
-        // ignore parse errors
+        const userId = parsed?.id || parsed?._id || parsed?.sub || parsed?.userId || null;
+        if (userId) return { userId, userRole: parsed?.role || parsed?.userRole || null, authUser: parsed };
     }
 
-    // 3) From query params
-    try {
-        if (req.query) {
-            const qUserId = req.query.userId || req.query.user || req.query.uid || null;
-            const qUserRole = req.query.userRole || req.query.role || null;
-            if (qUserId) return { userId: qUserId, userRole: qUserRole, authUser: { id: qUserId, role: qUserRole } };
-        }
-    } catch (e) { /* ignore */ }
+    const qUserId = req.query?.userId || req.query?.user || req.query?.uid || null;
+    if (qUserId && String(qUserId).toLowerCase() !== "all") {
+        return { userId: qUserId, userRole: req.query?.userRole || req.query?.role || null, authUser: { id: qUserId, role: req.query?.role } };
+    }
 
-    // 4) From headers (x-user-id, x-user-role)
-    try {
-        const hUserId = req.headers && (req.headers["x-user-id"] || req.headers["x-user"] || req.headers["x-uid"]);
-        const hUserRole = req.headers && (req.headers["x-user-role"] || req.headers["x-role"]);
-        if (hUserId) return { userId: hUserId, userRole: hUserRole || null, authUser: { id: hUserId, role: hUserRole } };
-    } catch (e) { /* ignore */ }
+    const hUserId = req.headers?.["x-user-id"] || req.headers?.["x-user"] || req.headers?.["x-uid"];
+    if (hUserId) {
+        return { userId: hUserId, userRole: req.headers?.["x-user-role"] || req.headers?.["x-role"] || null, authUser: { id: hUserId } };
+    }
 
-    // Nothing found
     return { userId: null, userRole: null, authUser: null };
 }
 
-/**
- * Robust privilege detection:
- * - Accepts multiple shapes for role information (userRole string, authUser.role, authUser.roles array, boolean flags)
- * - Honors x-admin / x-is-admin header for dev/testing
- */
 function isPrivilegedFromReq(authUser, userRole, req) {
-    const roleString = (userRole || (authUser && (authUser.role || authUser.roleName)) || "").toString().toLowerCase();
-    const rolesArray = Array.isArray(authUser && authUser.roles) ? authUser.roles.map(r => String(r).toLowerCase()) : [];
-    const isAdminFlag = !!(authUser && (authUser.isAdmin || authUser.is_owner || authUser.isAdministrator));
-    const headerAdmin = !!(req && req.headers && (req.headers["x-admin"] === "1" || req.headers["x-is-admin"] === "true"));
-
-    const normalized = new Set();
-    if (roleString) normalized.add(roleString);
-    if (Array.isArray(rolesArray)) rolesArray.forEach(r => normalized.add(r));
-    if (authUser && authUser.role) normalized.add(String(authUser.role).toLowerCase());
-    if (authUser && authUser.roleName) normalized.add(String(authUser.roleName).toLowerCase());
-    // sometimes roles are provided as comma separated string
-    if (typeof roleString === "string" && roleString.includes(",")) {
-        roleString.split(",").map(s => s.trim()).forEach(s => normalized.add(s));
-    }
-
-    // check common privileged role tokens
-    const privilegedNames = ["admin", "agent", "superadmin", "administrator"];
-    if (isAdminFlag || headerAdmin) return true;
-    for (const p of privilegedNames) {
-        for (const r of normalized) {
-            if (!r) continue;
-            if (r.includes(p) || r === p) return true;
-        }
-    }
-    return false;
+    const roles = new Set();
+    const add = (value) => {
+        if (!value) return;
+        String(value).split(",").map((part) => part.trim().toLowerCase()).filter(Boolean).forEach((part) => roles.add(part));
+    };
+    add(userRole);
+    add(authUser?.role);
+    add(authUser?.roleName);
+    if (Array.isArray(authUser?.roles)) authUser.roles.forEach(add);
+    const headerAdmin = req?.headers?.["x-admin"] === "1" || req?.headers?.["x-is-admin"] === "true";
+    if (headerAdmin || authUser?.isAdmin || authUser?.isAdministrator) return true;
+    return [...roles].some((role) => ["superadmin", "super_admin", "admin", "agent", "sales_agent", "operations", "finance", "support"].includes(role));
 }
 
-/* ---------------------- Controller methods ---------------------- */
+function actorFromReq(req) {
+    const { userId, userRole, authUser } = authInfoFromReq(req);
+    const privileged = isPrivilegedFromReq(authUser, userRole, req);
+    return {
+        id: normalizeObjectId(userId),
+        role: userRole,
+        type: privileged ? "admin" : "customer",
+        privileged,
+        authUser,
+    };
+}
 
-/**
- * Create booking
- * Uses authInfoFromReq for flexible identification.
- */
-export const createBooking = async (req, res) => {
-    const session = await mongoose.startSession();
+function requestMeta(req) {
+    return { ip: req.ip || req.headers?.["x-forwarded-for"] || "", userAgent: req.headers?.["user-agent"] || "" };
+}
+
+function normalizeTraveller(raw = {}, index = 0, defaults = {}) {
+    const firstName = cleanString(raw.firstName || raw.givenName);
+    const lastName = cleanString(raw.lastName || raw.surname || raw.familyName);
+    return {
+        travellerType: raw.travellerType || raw.travelerType || "adult",
+        title: cleanString(raw.title),
+        firstName,
+        middleName: cleanString(raw.middleName),
+        lastName,
+        gender: raw.gender || "",
+        dob: asDate(raw.dob || raw.dateOfBirth),
+        age: raw.age === "" || raw.age == null ? undefined : Number(raw.age),
+        nationality: cleanString(raw.nationality),
+        countryOfResidence: cleanString(raw.countryOfResidence),
+        passportNumber: cleanString(raw.passportNumber || raw.passport || raw.governmentId),
+        passportIssueCountry: cleanString(raw.passportIssueCountry),
+        passportIssueDate: asDate(raw.passportIssueDate),
+        passportExpiryDate: asDate(raw.passportExpiryDate),
+        maritalStatus: cleanString(raw.maritalStatus),
+        email: normalizeEmail(raw.email || defaults.email),
+        phone: normalizePhone(raw.phone || defaults.phone),
+        alternatePhone: normalizePhone(raw.alternatePhone),
+        emergencyContactName: cleanString(raw.emergencyContactName),
+        emergencyContactRelation: cleanString(raw.emergencyContactRelation),
+        emergencyContactNumber: normalizePhone(raw.emergencyContactNumber),
+        dietaryPreferences: cleanString(raw.dietaryPreferences),
+        foodRestrictions: cleanString(raw.foodRestrictions),
+        medicalConditions: cleanString(raw.medicalConditions),
+        mobilityAssistance: !!raw.mobilityAssistance,
+        wheelchairRequired: !!raw.wheelchairRequired,
+        pregnancyStatus: cleanString(raw.pregnancyStatus),
+        specialAssistanceNotes: cleanString(raw.specialAssistanceNotes || raw.specialRequests),
+        frequentFlyerNumber: cleanString(raw.frequentFlyerNumber),
+        seatPreference: cleanString(raw.seatPreference),
+        visaStatus: cleanString(raw.visaStatus),
+        pickupAddress: cleanString(raw.pickupAddress),
+        dropAddress: cleanString(raw.dropAddress),
+        gstNumber: cleanString(raw.gstNumber),
+        companyName: cleanString(raw.companyName),
+        travelInsuranceOpted: !!raw.travelInsuranceOpted,
+        insuranceProvider: cleanString(raw.insuranceProvider),
+        documentChecklistStatus: raw.documentChecklistStatus || "PENDING",
+    };
+}
+
+function validateTravellersPayload(travellers = [], opts = {}) {
+    const errors = {};
+    if (!Array.isArray(travellers) || travellers.length < 1) {
+        errors.travelers = "At least one traveller is required.";
+        return { ok: false, errors, travellers: [] };
+    }
+
+    const normalized = travellers.map((traveller, index) => {
+        const item = normalizeTraveller(traveller, index, opts.defaults || {});
+        if (!item.firstName || item.firstName.length < 2) errors[`travelers.${index}.firstName`] = "First name is required.";
+        if (!item.lastName && opts.requireFullDetails) errors[`travelers.${index}.lastName`] = "Last name is required.";
+        if (item.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(item.email)) errors[`travelers.${index}.email`] = "Enter a valid email.";
+        if (item.phone && !/^\+?[0-9][0-9\s-]{6,18}$/.test(item.phone)) errors[`travelers.${index}.phone`] = "Enter a valid phone number.";
+        if (item.age != null && (!Number.isFinite(item.age) || item.age < 0 || item.age > 120)) errors[`travelers.${index}.age`] = "Enter a valid age.";
+        if (opts.requireFullDetails && !item.passportNumber) errors[`travelers.${index}.passportNumber`] = "Passport / ID is required.";
+        return item;
+    });
+
+    return { ok: Object.keys(errors).length === 0, errors, travellers: normalized };
+}
+
+function normalizePrimaryContact(body = {}, travellers = [], authUser = {}) {
+    const contact = body.primaryContact || body.contact || {};
+    const firstTraveller = travellers[0] || {};
+    return {
+        name: cleanString(contact.name || body.contactName || authUser?.name || `${firstTraveller.firstName || ""} ${firstTraveller.lastName || ""}`),
+        email: normalizeEmail(contact.email || body.contactEmail || authUser?.email || firstTraveller.email),
+        phone: normalizePhone(contact.phone || body.contactPhone || authUser?.phone || firstTraveller.phone),
+    };
+}
+
+function travellerCounts(body = {}, travellers = []) {
+    const adultCount = Number(body.adultCount ?? body.tripSelection?.adultCount ?? body.guests ?? travellers.length ?? 1) || 1;
+    const childCount = Number(body.childCount ?? body.tripSelection?.childCount ?? 0) || 0;
+    const infantCount = Number(body.infantCount ?? body.tripSelection?.infantCount ?? 0) || 0;
+    return { adultCount, childCount, infantCount, total: Math.max(1, adultCount + childCount + infantCount, travellers.length || 0) };
+}
+
+function normalizeTripSelection(body = {}, travellers = []) {
+    const counts = travellerCounts(body, travellers);
+    return {
+        packageId: cleanString(body.packageId || body.tripSelection?.packageId),
+        roomType: cleanString(body.roomType || body.tripSelection?.roomType),
+        adultCount: counts.adultCount,
+        childCount: counts.childCount,
+        infantCount: counts.infantCount,
+        currency: cleanString(body.currency || body.tripSelection?.currency || "INR"),
+        pickupCity: cleanString(body.pickupCity || body.tripSelection?.pickupCity),
+        specialRequirements: cleanString(body.specialRequirements || body.specialRequests),
+    };
+}
+
+function normalizeTripPreferences(raw = {}) {
+    const prefs = raw.tripPreferences || raw.preferences || {};
+    return {
+        airportTransferNeeded: !!prefs.airportTransferNeeded,
+        roomSharingPreference: cleanString(prefs.roomSharingPreference),
+        bedType: cleanString(prefs.bedType),
+        smokingPreference: cleanString(prefs.smokingPreference),
+        mealPreference: cleanString(prefs.mealPreference),
+        extraActivities: Array.isArray(prefs.extraActivities) ? prefs.extraActivities.map(cleanString).filter(Boolean) : [],
+        specialRequests: cleanString(prefs.specialRequests || raw.specialRequests),
+    };
+}
+
+function normalizeSourceAttribution(body = {}, req) {
+    return {
+        source: cleanString(body.source || body.sourceAttribution?.source || "website"),
+        campaign: cleanString(body.campaign || body.sourceAttribution?.campaign),
+        utmSource: cleanString(body.utmSource || body.sourceAttribution?.utmSource || req.query?.utm_source),
+        utmMedium: cleanString(body.utmMedium || body.sourceAttribution?.utmMedium || req.query?.utm_medium),
+        utmCampaign: cleanString(body.utmCampaign || body.sourceAttribution?.utmCampaign || req.query?.utm_campaign),
+        referrer: cleanString(body.referrer || body.sourceAttribution?.referrer || req.headers?.referer),
+    };
+}
+
+function resolveTravelWindow(body = {}) {
+    const startDate = body.travelWindow?.startDate || body.startDate || body.travelDate || body.tripSelection?.travelDate;
+    const endDate = body.travelWindow?.endDate || body.endDate || body.travelDate || body.tripSelection?.travelDate;
+    return { startDate, endDate };
+}
+
+async function saveWithBookingRefRetry(booking, options = {}) {
+    let lastErr = null;
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+        try {
+            await booking.save(options);
+            return booking;
+        } catch (err) {
+            lastErr = err;
+            if (err.code === 11000 && err.keyPattern?.bookingRef) {
+                const now = new Date();
+                const datePart = now.toISOString().slice(0, 10).replace(/-/g, "");
+                const timePart = now.toISOString().slice(11, 16).replace(":", "");
+                booking.bookingRef = `TREM-${datePart}-${timePart}-${Math.random().toString(36).slice(2, 14).toUpperCase()}`;
+                continue;
+            }
+            throw err;
+        }
+    }
+    throw lastErr;
+}
+
+async function hydrateBooking(id, options = {}) {
+    const booking = await Booking.findById(id)
+        .populate("tour")
+        .populate("user", "name email role")
+        .populate("assignedAgent", "name email role");
+    return BookingService.hydrate(booking, options);
+}
+
+async function findAuthorizedBooking(req, bookingId, action = "view") {
+    const { userId, userRole, authUser } = authInfoFromReq(req);
+    if (!userId) return { error: { message: "Authentication required.", status: 401 } };
+    const privileged = isPrivilegedFromReq(authUser, userRole, req);
+    const booking = await Booking.findById(bookingId);
+    if (!booking) return { error: { message: "Booking not found", status: 404 } };
+    if (!privileged && String(booking.user) !== String(userId)) {
+        return { error: { message: `Not authorized to ${action} this booking`, status: 403 } };
+    }
+    return { booking, actor: { id: normalizeObjectId(userId), role: userRole, type: privileged ? "admin" : "customer", privileged, authUser } };
+}
+
+async function transitionBookingStatus(booking, nextStatus, actor, reason = "") {
+    const transition = booking.transitionStatus(nextStatus);
+    if (!transition.changed) return transition;
+    await StatusHistoryService.record({ bookingId: booking._id, from: transition.from, to: transition.to, actor, reason });
+    await BookingTimelineService.record({
+        bookingId: booking._id,
+        actor,
+        action: "booking.status.changed",
+        metadata: { from: transition.from, to: transition.to, reason },
+    });
+    await NotificationService.notify({
+        userId: booking.user,
+        bookingId: booking._id,
+        event: "STATUS_CHANGED",
+        title: "Booking status updated",
+        body: `Booking ${booking.bookingRef} moved to ${transition.to.replace(/_/g, " ").toLowerCase()}.`,
+        metadata: { from: transition.from, to: transition.to },
+    });
+    return transition;
+}
+
+export const createDraftBooking = async (req, res) => {
     try {
-        const { userId } = authInfoFromReq(req);
-        if (!userId) return sendError(res, "Authentication required.", 401);
+        const actor = actorFromReq(req);
+        if (!actor.id) return sendError(res, "Authentication required.", 401);
 
-        const { tourId, startDate, endDate, travelers = [], specialRequests = "", autoConfirm = false, payment = null } = req.body || {};
-
+        const body = req.body || {};
+        const tourId = normalizeObjectId(body.tourId || body.tour);
         if (!tourId) return sendError(res, "tourId is required", 400);
-        if (!startDate || !endDate) return sendError(res, "startDate and endDate are required", 400);
-        if (!validateDates(startDate, endDate)) return sendError(res, "Invalid date range", 400);
+
+        const { startDate, endDate } = resolveTravelWindow(body);
+        if (!validateDates(startDate, endDate)) return sendError(res, "Valid travelWindow.startDate/endDate are required.", 400);
 
         const tour = await Tour.findById(tourId);
         if (!tour) return sendError(res, "Tour not found", 404);
 
-        const guestsCount = Array.isArray(travelers) && travelers.length > 0 ? travelers.length : 1;
+        const guestsCount = Math.max(1, Number(body.guests || travellerCounts(body, []).total || 1));
         const priceSnapshot = Booking.buildPriceSnapshot(tour, startDate, guestsCount);
+        const idempotencyKey = cleanString(req.headers?.["idempotency-key"] || body.idempotencyKey);
+        if (idempotencyKey) {
+            const existing = await Booking.findOne({ user: actor.id, idempotencyKey });
+            if (existing) return sendSuccess(res, await hydrateBooking(existing._id), "Draft booking restored.", { title: "Draft Booking" });
+        }
 
-        const bookingDoc = new Booking({
-            user: userId,
+        const priority = String(body.priority || "MEDIUM").toUpperCase();
+        const dueDates = BookingService.priorityDueDates(priority);
+        const booking = new Booking({
+            user: actor.id,
             tour: tourId,
-            startDate,
-            endDate,
-            travelers,
+            idempotencyKey,
+            travelWindow: { startDate, endDate },
+            tripSelection: normalizeTripSelection(body, []),
+            primaryContact: normalizePrimaryContact(body, [], actor.authUser),
+            tripPreferences: normalizeTripPreferences(body),
             guestsCount,
-            priceSnapshot,
             seatsReserved: guestsCount,
-            specialRequests,
-            status: autoConfirm ? "confirmed" : "pending",
-            payment: payment ? {
-                method: payment.method || "",
-                providerId: payment.providerId || "",
-                amountPaid: payment.amountPaid || 0,
-                currency: payment.currency || priceSnapshot.currency,
-                paidAt: payment.paidAt ? new Date(payment.paidAt) : new Date(),
-                raw: payment.raw || {},
-            } : {},
+            priceSnapshot,
+            paymentSummary: { total: priceSnapshot.total, paid: 0, remaining: priceSnapshot.total, refunded: 0 },
+            status: "DRAFT",
+            priority: ["LOW", "MEDIUM", "HIGH", "URGENT"].includes(priority) ? priority : "MEDIUM",
+            ...dueDates,
+            sourceAttribution: normalizeSourceAttribution(body, req),
+            createdBy: actor.id,
+            updatedBy: actor.id,
+            organizationId: normalizeObjectId(body.organizationId),
+            tenantId: normalizeObjectId(body.tenantId),
         });
 
-        // Auto-confirm with transaction (seat decrement)
-        if (autoConfirm && tour.availability && Number.isFinite(tour.availability.seatsAvailable)) {
-            await session.withTransaction(async () => {
-                const tourForUpdate = await Tour.findById(tourId).session(session).exec();
-
-                const seatsAvailable = tourForUpdate.availability && Number.isFinite(tourForUpdate.availability.seatsAvailable)
-                    ? tourForUpdate.availability.seatsAvailable
-                    : null;
-
-                if (seatsAvailable !== null && seatsAvailable < guestsCount) {
-                    throw new Error("Not enough seats available for requested guests.");
-                }
-
-                if (seatsAvailable !== null) {
-                    tourForUpdate.availability.seatsAvailable = seatsAvailable - guestsCount;
-                    await tourForUpdate.save({ session });
-                }
-
-                // Save booking with retries (handle rare bookingRef dup)
-                let saved = false;
-                let lastErr = null;
-                for (let attempt = 0; attempt < 4 && !saved; attempt++) {
-                    try {
-                        await bookingDoc.save({ session });
-                        saved = true;
-                    } catch (err) {
-                        lastErr = err;
-                        if (err.code === 11000 && err.keyPattern && err.keyPattern.bookingRef) {
-                            bookingDoc.bookingRef = `TREM-${(new Date()).toISOString().slice(0, 10).replace(/-/g, '')}-${Math.random().toString(36).slice(2, 10).toUpperCase()}`;
-                            continue;
-                        }
-                        throw err;
-                    }
-                }
-                if (!saved) throw lastErr;
-            });
-
-            session.endSession();
-            const populated = await Booking.findById(bookingDoc._id).populate("tour").populate("user", "name email role");
-            return sendSuccess(res, populated, "Booking created and confirmed.", { title: "Booking Created" });
-        }
-
-        // Non-auto-confirm: save normally (with retry)
-        session.endSession();
-        let saved = false;
-        let lastErr = null;
-        for (let attempt = 0; attempt < 4 && !saved; attempt++) {
-            try {
-                await bookingDoc.save();
-                saved = true;
-            } catch (err) {
-                lastErr = err;
-                if (err.code === 11000 && err.keyPattern && err.keyPattern.bookingRef) {
-                    bookingDoc.bookingRef = `TREM-${(new Date()).toISOString().slice(0, 10).replace(/-/g, '')}-${Math.random().toString(36).slice(2, 10).toUpperCase()}`;
-                    continue;
-                }
-                throw err;
-            }
-        }
-        if (!saved) throw lastErr;
-
-        const populated = await Booking.findById(bookingDoc._id).populate("tour").populate("user", "name email role");
-        return sendSuccess(res, populated, "Booking created.", { title: "Booking Created" });
+        await saveWithBookingRefRetry(booking);
+        await BookingTimelineService.record({ bookingId: booking._id, actor, action: "booking.created", metadata: { tourId, status: "DRAFT" } });
+        await NotificationService.notify({ userId: booking.user, bookingId: booking._id, event: "BOOKING_CREATED", title: "Draft booking created", body: "Your tour booking draft is ready.", metadata: { tourId } });
+        return sendSuccess(res, await hydrateBooking(booking._id), "Draft booking created.", { title: "Draft Booking Created" });
     } catch (err) {
-        session.endSession();
-        console.error("createBooking error:", err);
-        if (err && err.code === 11000) {
-            return sendError(res, "Duplicate key error. Try again.", 500);
+        console.error("createDraftBooking:", err);
+        return sendError(res, err.message || "Failed to create draft booking.", 500);
+    }
+};
+
+export const createBooking = async (req, res) => {
+    const body = req.body || {};
+    const hasTravellers = Array.isArray(body.travelers || body.travellers) && (body.travelers || body.travellers).length > 0;
+    if (!hasTravellers && !body.submit) return createDraftBooking(req, res);
+
+    try {
+        const actor = actorFromReq(req);
+        if (!actor.id) return sendError(res, "Authentication required.", 401);
+
+        const tourId = normalizeObjectId(body.tourId || body.tour);
+        if (!tourId) return sendError(res, "tourId is required", 400);
+        const { startDate, endDate } = resolveTravelWindow(body);
+        if (!validateDates(startDate, endDate)) return sendError(res, "Valid travelWindow.startDate/endDate are required.", 400);
+
+        const tour = await Tour.findById(tourId);
+        if (!tour) return sendError(res, "Tour not found", 404);
+
+        const inputTravellers = body.travelers || body.travellers || [];
+        const primaryContact = normalizePrimaryContact(body, inputTravellers, actor.authUser);
+        const travellerValidation = validateTravellersPayload(inputTravellers, {
+            requireFullDetails: true,
+            defaults: { email: primaryContact.email, phone: primaryContact.phone },
+        });
+        if (!travellerValidation.ok) return sendError(res, "Please fix traveller details.", 400, { config: { validation: { errors: travellerValidation.errors } } });
+
+        const guestsCount = Math.max(travellerValidation.travellers.length, Number(body.guests || 0), 1);
+        const priceSnapshot = Booking.buildPriceSnapshot(tour, startDate, guestsCount);
+        const idempotencyKey = cleanString(req.headers?.["idempotency-key"] || body.idempotencyKey);
+        if (idempotencyKey) {
+            const existing = await Booking.findOne({ user: actor.id, idempotencyKey });
+            if (existing) return sendSuccess(res, await hydrateBooking(existing._id), "Booking restored.", { title: "Booking" });
         }
+
+        const priority = String(body.priority || "MEDIUM").toUpperCase();
+        const booking = new Booking({
+            user: actor.id,
+            tour: tourId,
+            idempotencyKey,
+            travelWindow: { startDate, endDate },
+            tripSelection: normalizeTripSelection(body, travellerValidation.travellers),
+            primaryContact,
+            tripPreferences: normalizeTripPreferences(body),
+            guestsCount,
+            seatsReserved: guestsCount,
+            priceSnapshot,
+            paymentSummary: { total: priceSnapshot.total, paid: 0, remaining: priceSnapshot.total, refunded: 0 },
+            status: body.autoConfirm ? "CONFIRMED" : "QUOTE_REQUESTED",
+            priority: ["LOW", "MEDIUM", "HIGH", "URGENT"].includes(priority) ? priority : "MEDIUM",
+            ...BookingService.priorityDueDates(priority),
+            sourceAttribution: normalizeSourceAttribution(body, req),
+            createdBy: actor.id,
+            updatedBy: actor.id,
+            organizationId: normalizeObjectId(body.organizationId),
+            tenantId: normalizeObjectId(body.tenantId),
+            termsAccepted: !!body.termsAccepted,
+            cancellationPolicyAccepted: !!body.cancellationPolicyAccepted,
+        });
+
+        await saveWithBookingRefRetry(booking);
+        await TravellerService.replaceForBooking(booking._id, travellerValidation.travellers);
+        await BookingTimelineService.record({ bookingId: booking._id, actor, action: "booking.created", metadata: { tourId } });
+        await BookingTimelineService.record({ bookingId: booking._id, actor, action: "quote.requested", metadata: { travellerCount: travellerValidation.travellers.length } });
+        await StatusHistoryService.record({ bookingId: booking._id, from: "DRAFT", to: booking.status, actor, reason: "Initial quote request" });
+        await NotificationService.notify({
+            userId: booking.user,
+            bookingId: booking._id,
+            event: "QUOTE_REQUESTED",
+            title: "Quote request submitted",
+            body: "Your request is with our travel team. We will send a quote soon.",
+            metadata: { tourId },
+        });
+        return sendSuccess(res, await hydrateBooking(booking._id), "Quote request submitted.", { title: "Booking Created" });
+    } catch (err) {
+        console.error("createBooking:", err);
+        if (err.code === 11000) return sendError(res, "Duplicate booking request. Try again.", 409);
         return sendError(res, err.message || "Failed to create booking.", 500);
     }
 };
 
-/**
- * Get booking by id
- * - Authenticated user required
- * - Admin/Agent can view any booking; member can view only their own
- */
+export const submitBooking = async (req, res) => {
+    try {
+        const { booking, actor, error } = await findAuthorizedBooking(req, req.params.bookingId || req.params.id, "submit");
+        if (error) return sendError(res, error.message, error.status);
+        const body = req.body || {};
+        const existingTravellers = await TravellerService.list(booking._id);
+        const inputTravellers = body.travelers || body.travellers || existingTravellers;
+        const primaryContact = normalizePrimaryContact(body, inputTravellers, actor.authUser);
+        const travellerValidation = validateTravellersPayload(inputTravellers, { requireFullDetails: true, defaults: { email: primaryContact.email, phone: primaryContact.phone } });
+        if (!travellerValidation.ok) return sendError(res, "Please fix traveller details.", 400, { config: { validation: { errors: travellerValidation.errors } } });
+
+        const { startDate, endDate } = resolveTravelWindow({ ...body, travelWindow: body.travelWindow || booking.travelWindow });
+        if (!validateDates(startDate, endDate)) return sendError(res, "Invalid date range.", 400);
+
+        const before = booking.toObject();
+        booking.travelWindow = { startDate, endDate };
+        booking.primaryContact = primaryContact;
+        booking.tripPreferences = normalizeTripPreferences(body);
+        booking.tripSelection = normalizeTripSelection(body, travellerValidation.travellers);
+        booking.guestsCount = travellerValidation.travellers.length;
+        booking.seatsReserved = booking.guestsCount;
+        booking.termsAccepted = !!body.termsAccepted;
+        booking.cancellationPolicyAccepted = !!body.cancellationPolicyAccepted;
+        booking.updatedBy = actor.id;
+        const tour = await Tour.findById(booking.tour);
+        if (tour) {
+            booking.priceSnapshot = Booking.buildPriceSnapshot(tour, booking.travelWindow.startDate, booking.guestsCount);
+            booking.paymentSummary = { total: booking.priceSnapshot.total, paid: 0, remaining: booking.priceSnapshot.total, refunded: 0 };
+        }
+        await transitionBookingStatus(booking, "QUOTE_REQUESTED", actor, "Customer submitted booking for quote");
+        await booking.save();
+        await TravellerService.replaceForBooking(booking._id, travellerValidation.travellers);
+        await AuditService.record({ bookingId: booking._id, action: "booking.submit", before, after: booking.toObject(), actor, reqMeta: requestMeta(req) });
+        return sendSuccess(res, await hydrateBooking(booking._id), "Booking submitted for quote.", { title: "Quote Requested" });
+    } catch (err) {
+        console.error("submitBooking:", err);
+        return sendError(res, err.message || "Failed to submit booking.", 500);
+    }
+};
+
 export const getBookingById = async (req, res) => {
     try {
-        const { userId, userRole, authUser } = authInfoFromReq(req);
-        if (!userId) return sendError(res, "Authentication required.", 401);
-
-        const privileged = isPrivilegedFromReq(authUser, userRole, req);
-
-        const { id } = req.params;
-
-        const booking = await Booking.findById(id)
-            .populate("tour")
-            .populate("user", "name email role");
-
-        if (!booking) return sendError(res, "Booking not found", 404);
-
-        if (!privileged && String(booking.user._id || booking.user) !== String(userId)) {
-            return sendError(res, "Not authorized to view this booking", 403);
-        }
-
-        return sendSuccess(res, booking, "Booking fetched.", { title: "Booking" });
+        const { booking, error } = await findAuthorizedBooking(req, req.params.id, "view");
+        if (error) return sendError(res, error.message, error.status);
+        return sendSuccess(res, await hydrateBooking(booking._id), "Booking fetched.", { title: "Booking" });
     } catch (err) {
         console.error("getBookingById:", err);
         return sendError(res, "Failed to fetch booking", 500);
     }
 };
 
-/**
- * Robust List bookings (supports filters via query: ?tourId=&userId=&status=&limit=&skip=)
- * - Admin/agent (authenticated) see all (or filter by ?userId=...)
- * - Member sees only their own bookings
- * - Unauthenticated requests must provide ?userId (DEV only)
- *
- * NOTE: Behavior implemented:
- *  - userId=all => treated as no filter
- *  - if privileged AND qUserIdParam equals authenticated user id => treat as no filter (return all)
- */
 export const listBookings = async (req, res) => {
     try {
         const { userId: authUserId, userRole, authUser } = authInfoFromReq(req);
-
         const privileged = isPrivilegedFromReq(authUser, userRole, req);
+        const qUserIdRaw = req.query?.userId || req.query?.user || null;
+        const qUserId = qUserIdRaw && String(qUserIdRaw).toLowerCase() !== "all" ? qUserIdRaw : null;
+        if (!authUserId && !qUserId) return sendError(res, "Authentication required.", 401);
 
-        // Debugging: show what authInfoFromReq returned (only in non-production)
-        if ((process.env.NODE_ENV || "").toLowerCase() !== "production") {
-            console.debug("[listBookings] authInfoFromReq ->", {
-                authUserId,
-                userRole,
-                privileged,
-                authUserSample: authUser ? (typeof authUser === "object" ? { id: authUser.id || authUser._id || authUser.sub, roles: authUser.roles } : authUser) : null
-            });
+        const q = { deletedAt: null };
+        const qTourId = normalizeObjectId(req.query?.tourId);
+        const qAgentId = normalizeObjectId(req.query?.agentId);
+        const qStatus = req.query?.status ? Booking.normalizeStatus(req.query.status) : null;
+        const qPaymentStatus = req.query?.paymentStatus ? String(req.query.paymentStatus).toUpperCase() : null;
+        if (qTourId) q.tour = qTourId;
+        if (qAgentId) q.assignedAgent = qAgentId;
+        if (qStatus && BOOKING_STATUSES.includes(qStatus)) q.status = qStatus;
+        if (qPaymentStatus && PAYMENT_STATUSES.includes(qPaymentStatus)) q.paymentStatus = qPaymentStatus;
+
+        if (authUserId) {
+            if (!privileged) q.user = authUserId;
+            else if (qUserId && String(qUserId) !== String(authUserId)) q.user = qUserId;
+        } else if (qUserId) q.user = qUserId;
+
+        if (req.query?.travelDateFrom || req.query?.travelDateTo) {
+            q["travelWindow.startDate"] = {};
+            const from = asDate(req.query.travelDateFrom);
+            const to = asDate(req.query.travelDateTo);
+            if (from) q["travelWindow.startDate"].$gte = from;
+            if (to) q["travelWindow.startDate"].$lte = to;
         }
 
-        // Query params
-        const qTourId = req.query && (req.query.tourId || null);
-        const qUserIdParamRaw = req.query && (req.query.userId || req.query.user || null);
-        const qStatus = req.query && (req.query.status || null);
-        const rawLimit = req.query && req.query.limit != null ? Number(req.query.limit) : 50;
-        const rawSkip = req.query && req.query.skip != null ? Number(req.query.skip) : 0;
-
+        const rawLimit = Number(req.query?.limit ?? 50);
+        const rawSkip = Number(req.query?.skip ?? 0);
         const limit = Number.isFinite(rawLimit) ? Math.max(1, Math.min(200, rawLimit)) : 50;
         const skip = Number.isFinite(rawSkip) ? Math.max(0, rawSkip) : 0;
 
-        // Normalize qUserIdParam: treat "all" (case-insensitive) as null -> meaning no filter
-        let qUserIdParam = qUserIdParamRaw;
-        if (qUserIdParam && String(qUserIdParam).toLowerCase() === "all") {
-            qUserIdParam = null;
-        }
-
-        // If there's no auth and no explicit userId param -> reject
-        if (!authUserId && !qUserIdParam) {
-            return sendError(res, "Authentication required.", 401);
-        }
-
-        const q = {};
-        if (qTourId) q.tour = qTourId;
-        if (qStatus) q.status = qStatus;
-
-        // Authorization logic:
-        // - Non-privileged authenticated users -> only own bookings
-        // - Privileged (admin/agent) -> if ?userId provided AND it's NOT equal to the auth user's id -> filter by it
-        //                                 otherwise return all bookings
-        if (authUserId) {
-            if (!privileged) {
-                q.user = authUserId;
-            } else {
-                if (qUserIdParam && String(qUserIdParam) !== String(authUserId)) {
-                    q.user = qUserIdParam;
-                }
-                // else: privileged + (no qUserIdParam OR qUserIdParam === authUserId) => no user filter -> return all
-            }
-        } else {
-            // No auth but explicit qUserIdParam provided (DEV fallback)
-            if (qUserIdParam) q.user = qUserIdParam;
-        }
-
         const bookings = await Booking.find(q)
             .sort({ createdAt: -1 })
-            .skip(Number(skip))
-            .limit(Number(limit))
-            .populate("tour", "title city _id")
-            .populate("user", "name email role");
-
+            .skip(skip)
+            .limit(limit)
+            .populate("tour", "title city photo photos price _id")
+            .populate("user", "name email role")
+            .populate("assignedAgent", "name email role");
         const total = await Booking.countDocuments(q);
+        const hydrated = await BookingService.hydrateMany(bookings, { includeDeep: false });
 
-        return sendSuccess(res, bookings, "Bookings listed.", {
+        return sendSuccess(res, hydrated, "Bookings listed.", {
             title: "Bookings",
-            config: {
-                total,
-                skip: Number(skip),
-                limit: Number(limit),
-                filters: { tourId: qTourId || null, userId: q.user || null, status: qStatus || null },
-            },
+            config: { total, skip, limit, filters: { status: qStatus, userId: q.user || null, tourId: qTourId, agentId: qAgentId } },
         });
     } catch (err) {
         console.error("listBookings:", err);
@@ -385,254 +557,370 @@ export const listBookings = async (req, res) => {
     }
 };
 
-/**
- * Confirm a booking (after payment)
- * - Authenticated required. Admin/agent or owner allowed.
- * - Performs seat decrement in a transaction if availability is tracked.
- */
-export const confirmBooking = async (req, res) => {
-    const session = await mongoose.startSession();
+export const updateBooking = async (req, res) => {
     try {
-        const { userId, userRole, authUser } = authInfoFromReq(req);
-        if (!userId) return sendError(res, "Authentication required.", 401);
+        const { booking, actor, error } = await findAuthorizedBooking(req, req.params.bookingId, "edit");
+        if (error) return sendError(res, error.message, error.status);
+        const updates = req.body || {};
+        const before = booking.toObject();
+        const updatingTravellers = updates.travelers || updates.travellers;
+        if (updatingTravellers && !booking.canEditTravellers() && !actor.privileged) return sendError(res, `Traveller edits are locked for ${booking.status} bookings.`, 409);
 
-        const privileged = isPrivilegedFromReq(authUser, userRole, req);
-
-        const { bookingId } = req.params;
-        const payment = req.body.payment || {};
-
-        const booking = await Booking.findById(bookingId);
-        if (!booking) return sendError(res, "Booking not found", 404);
-
-        if (!privileged && String(booking.user) !== String(userId)) {
-            return sendError(res, "Not authorized to confirm this booking", 403);
+        if (updates.travelWindow || updates.startDate || updates.endDate) {
+            const { startDate, endDate } = resolveTravelWindow({ ...updates, travelWindow: updates.travelWindow || booking.travelWindow });
+            if (!validateDates(startDate, endDate)) return sendError(res, "Invalid date range", 400);
+            booking.travelWindow = { startDate, endDate };
         }
 
-        if (booking.status === "confirmed") return sendError(res, "Already confirmed", 400);
-        if (booking.status === "cancelled") return sendError(res, "Booking already cancelled", 400);
-
-        const tour = await Tour.findById(booking.tour);
-        if (!tour) return sendError(res, "Tour not found", 404);
-
-        const seatsNeeded = booking.seatsReserved || booking.guestsCount || 1;
-
-        await session.withTransaction(async () => {
-            const tourForUpdate = await Tour.findById(tour._id).session(session).exec();
-
-            const seatsAvailable = tourForUpdate.availability && Number.isFinite(tourForUpdate.availability.seatsAvailable)
-                ? tourForUpdate.availability.seatsAvailable
-                : null;
-
-            if (seatsAvailable !== null && seatsAvailable < seatsNeeded) {
-                throw new Error("Not enough seats available to confirm booking.");
+        if (updatingTravellers) {
+            const travellerValidation = validateTravellersPayload(updatingTravellers, { requireFullDetails: true, defaults: booking.primaryContact });
+            if (!travellerValidation.ok) return sendError(res, "Please fix traveller details.", 400, { config: { validation: { errors: travellerValidation.errors } } });
+            booking.guestsCount = travellerValidation.travellers.length;
+            booking.seatsReserved = booking.guestsCount;
+            const tour = await Tour.findById(booking.tour);
+            if (tour) {
+                booking.priceSnapshot = Booking.buildPriceSnapshot(tour, booking.travelWindow.startDate, booking.guestsCount);
+                const paid = booking.paymentSummary?.paid || 0;
+                booking.paymentSummary = { total: booking.priceSnapshot.total, paid, remaining: Math.max(0, booking.priceSnapshot.total - paid), refunded: booking.paymentSummary?.refunded || 0 };
             }
+            await TravellerService.replaceForBooking(booking._id, travellerValidation.travellers);
+            await BookingTimelineService.record({ bookingId: booking._id, actor, action: "traveller.updated", metadata: { travellerCount: booking.guestsCount } });
+            await NotificationService.notify({ userId: booking.user, bookingId: booking._id, event: "TRAVELLER_UPDATED", title: "Traveller details updated", body: "Traveller information was updated." });
+        }
 
-            if (seatsAvailable !== null) {
-                tourForUpdate.availability.seatsAvailable = seatsAvailable - seatsNeeded;
-                await tourForUpdate.save({ session });
-            }
-
-            // apply payment info and confirm
-            booking.payment = {
-                method: payment.method || booking.payment.method || "",
-                providerId: payment.providerId || booking.payment.providerId || "",
-                amountPaid: payment.amountPaid != null ? payment.amountPaid : booking.payment.amountPaid,
-                currency: payment.currency || booking.priceSnapshot.currency,
-                paidAt: payment.paidAt ? new Date(payment.paidAt) : new Date(),
-                raw: payment.raw || booking.payment.raw || {},
-            };
-            booking.status = "confirmed";
-            await booking.save({ session });
-        });
-
-        session.endSession();
-
-        const populated = await Booking.findById(booking._id).populate("tour").populate("user", "name email role");
-        return sendSuccess(res, populated, "Booking confirmed.", { title: "Booking Confirmed" });
+        if (updates.primaryContact || updates.contact) booking.primaryContact = normalizePrimaryContact(updates, [], actor.authUser);
+        if (updates.tripPreferences || updates.preferences) booking.tripPreferences = normalizeTripPreferences(updates);
+        if (updates.priority) {
+            booking.priority = String(updates.priority).toUpperCase();
+            Object.assign(booking, BookingService.priorityDueDates(booking.priority));
+        }
+        booking.updatedBy = actor.id;
+        await booking.save();
+        await AuditService.record({ bookingId: booking._id, action: "booking.update", before, after: booking.toObject(), actor, reqMeta: requestMeta(req) });
+        return sendSuccess(res, await hydrateBooking(booking._id), "Booking updated.", { title: "Booking Updated" });
     } catch (err) {
-        session.endSession();
-        console.error("confirmBooking:", err);
-        return sendError(res, err.message || "Failed to confirm booking", 500);
+        console.error("updateBooking:", err);
+        return sendError(res, err.message || "Failed to update booking", 500);
     }
 };
 
-/**
- * Cancel a booking — returns seats if they were reserved.
- * Only owner or admin/agent can cancel. We increment seatsAvailable if booking was confirmed.
- */
-export const cancelBooking = async (req, res) => {
-    const session = await mongoose.startSession();
+export const changeBookingStatus = async (req, res) => {
     try {
-        const { userId, userRole, authUser } = authInfoFromReq(req);
-        if (!userId) return sendError(res, "Authentication required.", 401);
-
-        const privileged = isPrivilegedFromReq(authUser, userRole, req);
-
-        const { bookingId } = req.params;
-        const booking = await Booking.findById(bookingId);
-        if (!booking) return sendError(res, "Booking not found", 404);
-
-        if (!privileged && String(booking.user) !== String(userId)) {
-            return sendError(res, "Not authorized to cancel this booking", 403);
+        const { booking, actor, error } = await findAuthorizedBooking(req, req.params.bookingId || req.params.id, "change status");
+        if (error) return sendError(res, error.message, error.status);
+        if (!actor.privileged && !["CUSTOMER_ACCEPTED", "CUSTOMER_REJECTED", "CANCELLED"].includes(Booking.normalizeStatus(req.body?.status))) {
+            return sendError(res, "Not authorized to change this status.", 403);
         }
-
-        if (booking.status === "cancelled") return sendError(res, "Already cancelled", 400);
-
-        const tour = await Tour.findById(booking.tour);
-        if (!tour) {
-            booking.status = "cancelled";
-            booking.cancelledAt = new Date();
-            await booking.save();
-            const populated = await Booking.findById(booking._id).populate("tour").populate("user", "name email role");
-            return sendSuccess(res, populated, "Booking cancelled.", { title: "Booking Cancelled" });
-        }
-
-        const seatsToReturn = booking.status === "confirmed" ? (booking.seatsReserved || booking.guestsCount || 1) : 0;
-
-        await session.withTransaction(async () => {
-            if (seatsToReturn > 0 && tour.availability && Number.isFinite(tour.availability.seatsAvailable)) {
-                const tourForUpdate = await Tour.findById(tour._id).session(session).exec();
-                tourForUpdate.availability.seatsAvailable = (tourForUpdate.availability.seatsAvailable || 0) + seatsToReturn;
-                await tourForUpdate.save({ session });
-            }
-
-            booking.status = "cancelled";
-            booking.cancelledAt = new Date();
-            await booking.save({ session });
-        });
-
-        session.endSession();
-        const populated = await Booking.findById(booking._id).populate("tour").populate("user", "name email role");
-        return sendSuccess(res, populated, "Booking cancelled.", { title: "Booking Cancelled" });
+        const before = booking.toObject();
+        await transitionBookingStatus(booking, req.body?.status, actor, cleanString(req.body?.reason));
+        booking.updatedBy = actor.id;
+        await booking.save();
+        await AuditService.record({ bookingId: booking._id, action: "booking.status", before, after: booking.toObject(), actor, reqMeta: requestMeta(req) });
+        return sendSuccess(res, await hydrateBooking(booking._id), "Booking status updated.", { title: "Status Updated" });
     } catch (err) {
-        session.endSession();
+        console.error("changeBookingStatus:", err);
+        return sendError(res, err.message || "Failed to update status", 400);
+    }
+};
+
+export const cancelBooking = async (req, res) => {
+    try {
+        const { booking, actor, error } = await findAuthorizedBooking(req, req.params.bookingId || req.params.id, "cancel");
+        if (error) return sendError(res, error.message, error.status);
+        if (booking.status === "CANCELLED") return sendError(res, "Already cancelled", 400);
+        const before = booking.toObject();
+        await transitionBookingStatus(booking, "CANCELLED", actor, cleanString(req.body?.reason || "Cancelled"));
+        booking.cancelledAt = new Date();
+        booking.updatedBy = actor.id;
+        await booking.save();
+        await AuditService.record({ bookingId: booking._id, action: "booking.cancel", before, after: booking.toObject(), actor, reqMeta: requestMeta(req) });
+        await NotificationService.notify({ userId: booking.user, bookingId: booking._id, event: "CANCELLATION_REQUESTED", title: "Booking cancelled", body: "Your booking request has been cancelled." });
+        return sendSuccess(res, await hydrateBooking(booking._id), "Booking cancelled.", { title: "Booking Cancelled" });
+    } catch (err) {
         console.error("cancelBooking:", err);
         return sendError(res, err.message || "Failed to cancel booking", 500);
     }
 };
 
-/**
- * Update booking (partial fields). Only allow certain fields to be changed.
- */
-export const updateBooking = async (req, res) => {
+export const createQuote = async (req, res) => {
     try {
-        const { userId, userRole, authUser } = authInfoFromReq(req);
-        if (!userId) return sendError(res, "Authentication required.", 401);
+        const { booking, actor, error } = await findAuthorizedBooking(req, req.params.bookingId || req.params.id, "quote");
+        if (error) return sendError(res, error.message, error.status);
+        if (!actor.privileged) return sendError(res, "Only admins/agents can create quotes.", 403);
 
-        const privileged = isPrivilegedFromReq(authUser, userRole, req);
+        const before = booking.toObject();
+        const quote = await QuoteService.create(booking, req.body || {}, actor);
+        booking.currentQuoteVersion = quote.version;
+        booking.latestQuoteId = quote._id;
+        booking.priceSnapshot = {
+            ...(booking.priceSnapshot?.toObject?.() || booking.priceSnapshot || {}),
+            total: quote.finalAmount,
+            perPerson: booking.guestsCount ? Math.round(quote.finalAmount / booking.guestsCount) : quote.finalAmount,
+            currency: quote.currency,
+            isFinal: true,
+            source: "quote_engine",
+            note: `Quote v${quote.version}`,
+        };
+        booking.paymentSummary = { total: quote.finalAmount, paid: booking.paymentSummary?.paid || 0, remaining: Math.max(0, quote.finalAmount - (booking.paymentSummary?.paid || 0)), refunded: booking.paymentSummary?.refunded || 0 };
 
-        const authUserObj = { id: userId, role: userRole };
-
-        const { bookingId } = req.params;
-        const updates = req.body || {};
-
-        const allowed = new Set(["specialRequests", "notes", "travelers", "startDate", "endDate"]);
-        const payload = {};
-        Object.keys(updates).forEach(k => { if (allowed.has(k)) payload[k] = updates[k]; });
-
-        const booking = await Booking.findById(bookingId);
-        if (!booking) return sendError(res, "Booking not found", 404);
-
-        if (!privileged && String(booking.user) !== String(authUserObj.id)) {
-            return sendError(res, "Not authorized to edit this booking", 403);
-        }
-
-        if ((payload.startDate && payload.endDate) && !validateDates(payload.startDate, payload.endDate)) {
-            return sendError(res, "Invalid date range", 400);
-        }
-
-        if (payload.travelers) {
-            booking.travelers = payload.travelers;
-            booking.guestsCount = Array.isArray(payload.travelers) ? payload.travelers.length : booking.guestsCount;
-            const tour = await Tour.findById(booking.tour);
-            if (tour) {
-                booking.priceSnapshot = Booking.buildPriceSnapshot(tour, payload.startDate || booking.startDate, booking.guestsCount);
-                booking.seatsReserved = booking.guestsCount;
-            }
-        }
-
-        ["specialRequests", "notes", "startDate", "endDate"].forEach(k => {
-            if (payload[k] !== undefined) booking[k] = payload[k];
-        });
-
-        booking.updatedAt = new Date();
+        if (Booking.normalizeStatus(booking.status) === "QUOTE_REQUESTED") await transitionBookingStatus(booking, "UNDER_REVIEW", actor, "Quote preparation started");
+        await transitionBookingStatus(booking, "QUOTE_READY", actor, "Quote created");
+        if (req.body?.sendNow) await transitionBookingStatus(booking, "QUOTE_SENT", actor, "Quote created and sent");
+        booking.updatedBy = actor.id;
         await booking.save();
-
-        const populated = await Booking.findById(booking._id).populate("tour").populate("user", "name email role");
-        return sendSuccess(res, populated, "Booking updated.", { title: "Booking Updated" });
+        await BookingTimelineService.record({ bookingId: booking._id, actor, action: req.body?.sendNow ? "quote.sent" : "quote.created", metadata: { version: quote.version, finalAmount: quote.finalAmount, currency: quote.currency } });
+        await NotificationService.notify({ userId: booking.user, bookingId: booking._id, event: req.body?.sendNow ? "QUOTE_SENT" : "QUOTE_READY", title: "Your tour quote is ready", body: `Quote ${quote.quoteRef} is ready for review.`, metadata: { version: quote.version } });
+        await AuditService.record({ bookingId: booking._id, action: "quote.create", before, after: booking.toObject(), actor, reqMeta: requestMeta(req) });
+        return sendSuccess(res, await hydrateBooking(booking._id), "Quote created.", { title: "Quote Created" });
     } catch (err) {
-        console.error("updateBooking:", err);
-        return sendError(res, "Failed to update booking", 500);
+        console.error("createQuote:", err);
+        return sendError(res, err.message || "Failed to create quote.", 500);
     }
 };
 
-/**
- * Add a traveler to booking
- */
+export const sendQuote = async (req, res) => {
+    try {
+        const { booking, actor, error } = await findAuthorizedBooking(req, req.params.bookingId || req.params.id, "send quote");
+        if (error) return sendError(res, error.message, error.status);
+        if (!actor.privileged) return sendError(res, "Only admins/agents can send quotes.", 403);
+        const quote = await QuoteService.markSent(booking._id, Number(req.body?.version || booking.currentQuoteVersion));
+        if (!quote) return sendError(res, "Quote not found.", 404);
+        const before = booking.toObject();
+        await transitionBookingStatus(booking, "QUOTE_SENT", actor, "Quote sent to customer");
+        booking.updatedBy = actor.id;
+        await booking.save();
+        await BookingTimelineService.record({ bookingId: booking._id, actor, action: "quote.sent", metadata: { version: quote.version } });
+        await NotificationService.notify({ userId: booking.user, bookingId: booking._id, event: "QUOTE_SENT", title: "Quote sent", body: "Your travel quote is ready to accept or reject.", metadata: { version: quote.version } });
+        await AuditService.record({ bookingId: booking._id, action: "quote.send", before, after: booking.toObject(), actor, reqMeta: requestMeta(req) });
+        return sendSuccess(res, await hydrateBooking(booking._id), "Quote sent.", { title: "Quote Sent" });
+    } catch (err) {
+        console.error("sendQuote:", err);
+        return sendError(res, err.message || "Failed to send quote.", 500);
+    }
+};
+
+export const acceptQuote = async (req, res) => {
+    try {
+        const { booking, actor, error } = await findAuthorizedBooking(req, req.params.bookingId || req.params.id, "accept quote");
+        if (error) return sendError(res, error.message, error.status);
+        const quote = await QuoteService.markDecision(booking._id, Number(req.body?.version || booking.currentQuoteVersion), "accept");
+        if (!quote) return sendError(res, "No quote is available to accept.", 409);
+        const before = booking.toObject();
+        await transitionBookingStatus(booking, "CUSTOMER_ACCEPTED", actor, "Customer accepted quote");
+        await transitionBookingStatus(booking, "PAYMENT_PENDING", actor, "Payment is now pending");
+        booking.paymentStatus = "UNPAID";
+        booking.updatedBy = actor.id;
+        await booking.save();
+        await NotificationService.notify({ userId: booking.user, bookingId: booking._id, event: "QUOTE_ACCEPTED", title: "Quote accepted", body: "Your quote has been accepted. Payment is pending.", metadata: { version: quote.version } });
+        await AuditService.record({ bookingId: booking._id, action: "quote.accept", before, after: booking.toObject(), actor, reqMeta: requestMeta(req) });
+        return sendSuccess(res, await hydrateBooking(booking._id), "Quote accepted.", { title: "Quote Accepted" });
+    } catch (err) {
+        console.error("acceptQuote:", err);
+        return sendError(res, err.message || "Failed to accept quote.", 500);
+    }
+};
+
+export const rejectQuote = async (req, res) => {
+    try {
+        const { booking, actor, error } = await findAuthorizedBooking(req, req.params.bookingId || req.params.id, "reject quote");
+        if (error) return sendError(res, error.message, error.status);
+        const quote = await QuoteService.markDecision(booking._id, Number(req.body?.version || booking.currentQuoteVersion), "reject");
+        if (!quote) return sendError(res, "No quote is available to reject.", 409);
+        const before = booking.toObject();
+        await transitionBookingStatus(booking, "CUSTOMER_REJECTED", actor, cleanString(req.body?.reason || "Customer rejected quote"));
+        booking.updatedBy = actor.id;
+        await booking.save();
+        await NotificationService.notify({ userId: booking.user, bookingId: booking._id, event: "QUOTE_REJECTED", title: "Quote rejected", body: "Your quote was rejected. Our team can prepare a revised quote.", metadata: { version: quote.version } });
+        await AuditService.record({ bookingId: booking._id, action: "quote.reject", before, after: booking.toObject(), actor, reqMeta: requestMeta(req) });
+        return sendSuccess(res, await hydrateBooking(booking._id), "Quote rejected.", { title: "Quote Rejected" });
+    } catch (err) {
+        console.error("rejectQuote:", err);
+        return sendError(res, err.message || "Failed to reject quote.", 500);
+    }
+};
+
+export const recordPayment = async (req, res) => {
+    try {
+        const { booking, actor, error } = await findAuthorizedBooking(req, req.params.bookingId || req.params.id, "record payment");
+        if (error) return sendError(res, error.message, error.status);
+        if (!actor.privileged && Booking.normalizeStatus(booking.status) !== "PAYMENT_PENDING") return sendError(res, "Payment is not open for this booking.", 409);
+        const body = req.body?.payment || req.body || {};
+        const amount = Number(body.amount ?? body.amountPaid ?? 0);
+        if (!Number.isFinite(amount) || amount <= 0) return sendError(res, "Payment amount is required.", 400);
+
+        const before = booking.toObject();
+        await PaymentService.record(booking, body, actor);
+        booking.paymentSummary = await PaymentService.summarize(booking._id, booking.priceSnapshot?.total || 0);
+        booking.paymentStatus = booking.paymentSummary.remaining <= 0 ? "PAID" : "PARTIAL";
+        await transitionBookingStatus(booking, booking.paymentStatus === "PAID" ? "PAID" : "PARTIALLY_PAID", actor, "Payment recorded");
+        if (booking.paymentStatus === "PAID" && actor.privileged) await transitionBookingStatus(booking, "CONFIRMED", actor, "Fully paid booking confirmed");
+        booking.updatedBy = actor.id;
+        await booking.save();
+        await NotificationService.notify({ userId: booking.user, bookingId: booking._id, event: "PAYMENT_RECEIVED", title: "Payment received", body: "Payment has been recorded against your booking.", metadata: { amount } });
+        await AuditService.record({ bookingId: booking._id, action: "payment.record", before, after: booking.toObject(), actor, reqMeta: requestMeta(req) });
+        return sendSuccess(res, await hydrateBooking(booking._id), "Payment recorded.", { title: "Payment Recorded" });
+    } catch (err) {
+        console.error("recordPayment:", err);
+        return sendError(res, err.message || "Failed to record payment.", 500);
+    }
+};
+
+export const confirmBooking = async (req, res) => {
+    try {
+        const { booking, actor, error } = await findAuthorizedBooking(req, req.params.bookingId, "confirm");
+        if (error) return sendError(res, error.message, error.status);
+        if (!actor.privileged) return sendError(res, "Only admins/agents can confirm bookings.", 403);
+        const before = booking.toObject();
+        booking.priceSnapshot = { ...(booking.priceSnapshot?.toObject?.() || booking.priceSnapshot || {}), isFinal: true };
+        if (req.body?.payment || req.body?.amount || req.body?.amountPaid) {
+            const payment = req.body?.payment || req.body;
+            await PaymentService.record(booking, { ...payment, amount: payment.amountPaid || payment.amount || booking.priceSnapshot?.total || 0, type: "remaining" }, actor);
+            booking.paymentSummary = await PaymentService.summarize(booking._id, booking.priceSnapshot?.total || 0);
+            booking.paymentStatus = booking.paymentSummary.remaining <= 0 ? "PAID" : "PARTIAL";
+        }
+        booking.status = "CONFIRMED";
+        booking.updatedBy = actor.id;
+        await StatusHistoryService.record({ bookingId: booking._id, from: before.status, to: "CONFIRMED", actor, reason: "Admin confirmed booking" });
+        await booking.save();
+        await BookingTimelineService.record({ bookingId: booking._id, actor, action: "booking.confirmed", metadata: {} });
+        await NotificationService.notify({ userId: booking.user, bookingId: booking._id, event: "BOOKING_CONFIRMED", title: "Booking confirmed", body: "Your tour booking is confirmed." });
+        await AuditService.record({ bookingId: booking._id, action: "booking.confirm", before, after: booking.toObject(), actor, reqMeta: requestMeta(req) });
+        return sendSuccess(res, await hydrateBooking(booking._id), "Booking confirmed.", { title: "Booking Confirmed" });
+    } catch (err) {
+        console.error("confirmBooking:", err);
+        return sendError(res, err.message || "Failed to confirm booking", 500);
+    }
+};
+
+export const assignBooking = async (req, res) => {
+    try {
+        const { booking, actor, error } = await findAuthorizedBooking(req, req.params.bookingId || req.params.id, "assign");
+        if (error) return sendError(res, error.message, error.status);
+        if (!actor.privileged) return sendError(res, "Only admins/agents can assign bookings.", 403);
+        const agentId = normalizeObjectId(req.body?.agentId || req.body?.assignedAgent);
+        if (!agentId) return sendError(res, "agentId is required.", 400);
+        const before = booking.toObject();
+        await AssignmentService.assign({ booking, newAgent: agentId, assignedBy: actor.id, reason: cleanString(req.body?.reason) });
+        booking.assignedAgent = agentId;
+        booking.updatedBy = actor.id;
+        await booking.save();
+        await BookingTimelineService.record({ bookingId: booking._id, actor, action: "booking.assigned", metadata: { previousAgent: before.assignedAgent, newAgent: agentId } });
+        await AuditService.record({ bookingId: booking._id, action: "booking.assign", before, after: booking.toObject(), actor, reqMeta: requestMeta(req) });
+        return sendSuccess(res, await hydrateBooking(booking._id), "Booking assigned.", { title: "Booking Assigned" });
+    } catch (err) {
+        console.error("assignBooking:", err);
+        return sendError(res, err.message || "Failed to assign booking.", 500);
+    }
+};
+
+export const uploadBookingDocument = async (req, res) => {
+    try {
+        const { booking, actor, error } = await findAuthorizedBooking(req, req.params.bookingId || req.params.id, "upload document");
+        if (error) return sendError(res, error.message, error.status);
+        const body = req.body || {};
+        if (!body.fileName && !body.name && !body.url) return sendError(res, "fileName or url is required.", 400);
+        const before = booking.toObject();
+        const document = await DocumentService.upload(booking._id, body, actor);
+        await BookingTimelineService.record({ bookingId: booking._id, actor, action: "document.uploaded", metadata: { type: document.type, fileName: document.fileName, travellerId: document.travellerId } });
+        await NotificationService.notify({ userId: booking.user, bookingId: booking._id, event: "DOCUMENT_UPLOADED", title: "Document uploaded", body: "A booking document was uploaded.", metadata: { type: document.type } });
+        await AuditService.record({ bookingId: booking._id, action: "document.upload", before, after: { document }, actor, reqMeta: requestMeta(req) });
+        return sendSuccess(res, await hydrateBooking(booking._id), "Document uploaded.", { title: "Document Uploaded" });
+    } catch (err) {
+        console.error("uploadBookingDocument:", err);
+        return sendError(res, err.message || "Failed to upload document.", 500);
+    }
+};
+
+export const requestMoreDocs = async (req, res) => {
+    try {
+        const { booking, actor, error } = await findAuthorizedBooking(req, req.params.bookingId || req.params.id, "request documents");
+        if (error) return sendError(res, error.message, error.status);
+        if (!actor.privileged) return sendError(res, "Only admins/agents can request documents.", 403);
+        const requested = Array.isArray(req.body?.documents) ? req.body.documents : [];
+        await BookingTimelineService.record({ bookingId: booking._id, actor, action: "documents.requested", metadata: { documents: requested, message: cleanString(req.body?.message) } });
+        await NotificationService.notify({ userId: booking.user, bookingId: booking._id, event: "DOCUMENTS_REQUESTED", title: "More documents requested", body: cleanString(req.body?.message || "Please upload the requested travel documents."), metadata: { documents: requested } });
+        return sendSuccess(res, await hydrateBooking(booking._id), "Document request sent.", { title: "Documents Requested" });
+    } catch (err) {
+        console.error("requestMoreDocs:", err);
+        return sendError(res, err.message || "Failed to request documents.", 500);
+    }
+};
+
+export const refundBooking = async (req, res) => {
+    try {
+        const { booking, actor, error } = await findAuthorizedBooking(req, req.params.bookingId || req.params.id, "refund");
+        if (error) return sendError(res, error.message, error.status);
+        if (!actor.privileged) return sendError(res, "Only admins/finance can refund bookings.", 403);
+        const before = booking.toObject();
+        if (req.body?.amount) await PaymentService.record(booking, { ...req.body, type: "refund", status: req.body?.processed ? "REFUNDED" : "REFUND_PENDING" }, actor);
+        booking.paymentSummary = await PaymentService.summarize(booking._id, booking.priceSnapshot?.total || 0);
+        booking.paymentStatus = req.body?.processed ? "REFUNDED" : "REFUND_PENDING";
+        await transitionBookingStatus(booking, req.body?.processed ? "REFUNDED" : "REFUND_PENDING", actor, cleanString(req.body?.reason || "Refund updated"));
+        booking.updatedBy = actor.id;
+        await booking.save();
+        await NotificationService.notify({ userId: booking.user, bookingId: booking._id, event: "REFUND_PROCESSED", title: "Refund updated", body: `Refund status: ${booking.paymentStatus}` });
+        await AuditService.record({ bookingId: booking._id, action: "payment.refund", before, after: booking.toObject(), actor, reqMeta: requestMeta(req) });
+        return sendSuccess(res, await hydrateBooking(booking._id), "Refund updated.", { title: "Refund Updated" });
+    } catch (err) {
+        console.error("refundBooking:", err);
+        return sendError(res, err.message || "Failed to update refund.", 500);
+    }
+};
+
 export const addTraveler = async (req, res) => {
     try {
-        const { userId, userRole, authUser } = authInfoFromReq(req);
-        if (!userId) return sendError(res, "Authentication required.", 401);
-
-        const privileged = isPrivilegedFromReq(authUser, userRole, req);
-        const authUserObj = { id: userId, role: userRole };
-
-        const { bookingId } = req.params;
-        const traveler = req.body.traveler;
-        if (!traveler) return sendError(res, "traveler payload required", 400);
-
-        const booking = await Booking.findById(bookingId);
-        if (!booking) return sendError(res, "Booking not found", 404);
-
-        if (!privileged && String(booking.user) !== String(authUserObj.id)) {
-            return sendError(res, "Not authorized to modify this booking", 403);
-        }
-
-        booking.travelers.push(traveler);
-        booking.guestsCount = booking.travelers.length;
-        const tour = await Tour.findById(booking.tour);
-        if (tour) booking.priceSnapshot = Booking.buildPriceSnapshot(tour, booking.startDate, booking.guestsCount);
+        const { booking, actor, error } = await findAuthorizedBooking(req, req.params.bookingId, "add traveller");
+        if (error) return sendError(res, error.message, error.status);
+        if (!booking.canEditTravellers() && !actor.privileged) return sendError(res, `Traveller edits are locked for ${booking.status} bookings.`, 409);
+        const travellerValidation = validateTravellersPayload([req.body?.traveler || req.body?.traveller || req.body], { requireFullDetails: true, defaults: booking.primaryContact });
+        if (!travellerValidation.ok) return sendError(res, "Please fix traveller details.", 400, { config: { validation: { errors: travellerValidation.errors } } });
+        const before = booking.toObject();
+        await TravellerService.add(booking._id, travellerValidation.travellers[0]);
+        booking.guestsCount = await TravellerService.count(booking._id);
         booking.seatsReserved = booking.guestsCount;
-
+        const tour = await Tour.findById(booking.tour);
+        if (tour) {
+            booking.priceSnapshot = Booking.buildPriceSnapshot(tour, booking.travelWindow.startDate, booking.guestsCount);
+            booking.paymentSummary = { ...booking.paymentSummary, total: booking.priceSnapshot.total, remaining: Math.max(0, booking.priceSnapshot.total - (booking.paymentSummary?.paid || 0)) };
+        }
+        booking.updatedBy = actor.id;
         await booking.save();
-        const populated = await Booking.findById(booking._id).populate("tour").populate("user", "name email role");
-        return sendSuccess(res, populated, "Traveler added.", { title: "Traveler Added" });
+        await BookingTimelineService.record({ bookingId: booking._id, actor, action: "traveller.updated", metadata: { travellerCount: booking.guestsCount } });
+        await AuditService.record({ bookingId: booking._id, action: "traveller.add", before, after: booking.toObject(), actor, reqMeta: requestMeta(req) });
+        return sendSuccess(res, await hydrateBooking(booking._id), "Traveller added.", { title: "Traveller Added" });
     } catch (err) {
         console.error("addTraveler:", err);
-        return sendError(res, "Failed to add traveler", 500);
+        return sendError(res, err.message || "Failed to add traveller", 500);
     }
 };
 
-/**
- * Remove traveler by traveler _id
- */
 export const removeTraveler = async (req, res) => {
     try {
-        const { userId, userRole, authUser } = authInfoFromReq(req);
-        if (!userId) return sendError(res, "Authentication required.", 401);
-
-        const privileged = isPrivilegedFromReq(authUser, userRole, req);
-        const authUserObj = { id: userId, role: userRole };
-
-        const { bookingId, travelerId } = req.params;
-        const booking = await Booking.findById(bookingId);
-        if (!booking) return sendError(res, "Booking not found", 404);
-
-        if (!privileged && String(booking.user) !== String(authUserObj.id)) {
-            return sendError(res, "Not authorized to modify this booking", 403);
-        }
-
-        booking.travelers = booking.travelers.filter(t => String(t._id) !== String(travelerId));
-        booking.guestsCount = booking.travelers.length;
-        const tour = await Tour.findById(booking.tour);
-        if (tour) booking.priceSnapshot = Booking.buildPriceSnapshot(tour, booking.startDate, booking.guestsCount);
+        const { booking, actor, error } = await findAuthorizedBooking(req, req.params.bookingId, "remove traveller");
+        if (error) return sendError(res, error.message, error.status);
+        if (!booking.canEditTravellers() && !actor.privileged) return sendError(res, `Traveller edits are locked for ${booking.status} bookings.`, 409);
+        const currentCount = await TravellerService.count(booking._id);
+        if (currentCount <= 1) return sendError(res, "At least one traveller is required.", 400);
+        const before = booking.toObject();
+        await TravellerService.remove(booking._id, req.params.travelerId);
+        booking.guestsCount = await TravellerService.count(booking._id);
         booking.seatsReserved = booking.guestsCount;
-
+        const tour = await Tour.findById(booking.tour);
+        if (tour) {
+            booking.priceSnapshot = Booking.buildPriceSnapshot(tour, booking.travelWindow.startDate, booking.guestsCount);
+            booking.paymentSummary = { ...booking.paymentSummary, total: booking.priceSnapshot.total, remaining: Math.max(0, booking.priceSnapshot.total - (booking.paymentSummary?.paid || 0)) };
+        }
+        booking.updatedBy = actor.id;
         await booking.save();
-        const populated = await Booking.findById(booking._id).populate("tour").populate("user", "name email role");
-        return sendSuccess(res, populated, "Traveler removed.", { title: "Traveler Removed" });
+        await BookingTimelineService.record({ bookingId: booking._id, actor, action: "traveller.updated", metadata: { travellerCount: booking.guestsCount, removedTravellerId: req.params.travelerId } });
+        await AuditService.record({ bookingId: booking._id, action: "traveller.remove", before, after: booking.toObject(), actor, reqMeta: requestMeta(req) });
+        return sendSuccess(res, await hydrateBooking(booking._id), "Traveller removed.", { title: "Traveller Removed" });
     } catch (err) {
         console.error("removeTraveler:", err);
-        return sendError(res, "Failed to remove traveler", 500);
+        return sendError(res, err.message || "Failed to remove traveller", 500);
     }
 };
+
+export const adminListBookings = listBookings;
+export const adminGetBookingById = getBookingById;
+export const setPrice = createQuote;

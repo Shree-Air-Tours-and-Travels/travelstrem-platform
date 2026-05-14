@@ -23,7 +23,7 @@ export default function BookingCard({ booking, role, onCancel, onConfirm, onUpda
 
   // derived
   const guests = booking.guestsCount || (booking.travelers && booking.travelers.length) || 1;
-  const status = booking.status || "pending";
+  const status = String(booking.status || "QUOTE_REQUESTED").toUpperCase();
 
   function updateTravelerField(idx, field, value) {
     setLocalTravelers(prev => {
@@ -42,7 +42,7 @@ export default function BookingCard({ booking, role, onCancel, onConfirm, onUpda
     setConfirming(true);
     if (onConfirm) {
       // send simple final price object: { method: 'agent-set', providerId: 'agent', amountPaid, currency }
-      const payload = { method: 'agent-set', providerId: 'agent', amountPaid: Number(finalAmount) || 0, currency: booking.priceSnapshot?.currency || 'INR' };
+      const payload = { finalAmount: Number(finalAmount) || 0, currency: booking.priceSnapshot?.currency || 'INR' };
       await onConfirm(payload);
     }
     setConfirming(false);
@@ -56,7 +56,7 @@ export default function BookingCard({ booking, role, onCancel, onConfirm, onUpda
           <div style={{ fontSize: 12, color: "#666" }}>{new Date(booking.startDate).toLocaleDateString()} → {new Date(booking.endDate).toLocaleDateString()}</div>
         </div>
         <div style={{ textAlign: "right" }}>
-          <div style={{ fontSize: 14 }}>Status: <strong>{status}</strong></div>
+          <div style={{ fontSize: 14 }}>Status: <strong>{status.replace(/_/g, " ").toLowerCase()}</strong></div>
           <div style={{ fontSize: 12 }}>{guests} guests</div>
         </div>
       </header>
@@ -108,24 +108,24 @@ export default function BookingCard({ booking, role, onCancel, onConfirm, onUpda
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <button className="bm-btn bm-btn-outline" onClick={() => onOpen && onOpen(id)}>View</button>
 
-            {role === "member" && status !== "cancelled" && (
+            {role === "member" && status !== "CANCELLED" && (
               <>
                 <button className="bm-btn" onClick={() => setEditing(true)}>Edit travelers</button>
                 <button className="bm-btn bm-btn-ghost" onClick={() => onCancel && onCancel(id)}>Cancel booking</button>
               </>
             )}
 
-            {(role === "admin" || role === "agent") && status !== "confirmed" && (
+            {(role === "admin" || role === "agent") && !["QUOTE_SENT", "CUSTOMER_ACCEPTED", "PAYMENT_PENDING", "PAID", "CONFIRMED", "CANCELLED"].includes(status) && (
               <div style={{ marginTop: 6 }}>
                 <div style={{ marginBottom: 6 }}>
-                  <label>Final price (total)</label>
+                  <label>Quote total</label>
                   <input type="number" value={finalAmount} onChange={e => setFinalAmount(e.target.value)} />
                 </div>
-                <button className="bm-btn bm-btn-primary" onClick={handleConfirm} disabled={confirming}>{confirming ? "Confirming..." : "Confirm & Set Price"}</button>
+                <button className="bm-btn bm-btn-primary" onClick={handleConfirm} disabled={confirming}>{confirming ? "Sending..." : "Generate & Send Quote"}</button>
               </div>
             )}
 
-            {status === "confirmed" && (
+            {["PAYMENT_PENDING", "CONFIRMED"].includes(status) && (
               <div style={{ marginTop: 6 }}>
                 <button className="bm-btn" onClick={() => alert("Pay Now (dummy) — integrate payment provider here")}>Pay now</button>
               </div>

@@ -24,6 +24,8 @@ import formsRouter from "./routes/form.js";
 import filtersRoutes from "./routes/filtersRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import bookingRoutes from "./routes/bookingsRoutes.js";
+import adminBookingRoutes from "./routes/adminBookingRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
 import portalRoutes from "./routes/portalRoutes.js";
 
 const app = express();
@@ -143,6 +145,8 @@ app.use("/api/chat", chatRoutes);
 app.use("/api", formsRouter);
 app.use("/api", filtersRoutes);
 app.use("/api/bookings", bookingRoutes);
+app.use("/api/admin/bookings", adminBookingRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 /* ------------------------------
    Optional: list registered routes in dev

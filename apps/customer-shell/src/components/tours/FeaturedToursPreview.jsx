@@ -5,7 +5,7 @@ import { Button } from "@packages/trem-ui";
 import { Title } from "@packages/trem-ui";
 import { SubTitle } from "@packages/trem-ui";
 import PortalPreloader from "../Loader/PortalPreloader";
-import { ROUTES, getPackageListPath, getPackageTourDetailsPath } from "@packages/trem-utils";
+import { ROUTES, getTourDetailsPath, getTourListPath, slugify } from "@packages/trem-utils";
 import "./FeaturedToursPreview.scss";
 
 const extractTours = (componentData) => {
@@ -17,6 +17,7 @@ const extractTours = (componentData) => {
 };
 
 const getTourId = (tour) => tour?._id || tour?.id;
+const getTourRef = (tour) => slugify(tour?.title) || getTourId(tour);
 const getTourImage = (tour) => tour?.photo || tour?.photos?.[0] || "";
 const getRouteText = (tour) => {
     const origin = tour?.city?.from || "Flexible start";
@@ -39,8 +40,8 @@ export default function FeaturedToursPreview({ user }) {
     });
     const tours = extractTours(componentData);
 
-    const goToTour = (tourId) => {
-        navigate(user ? getPackageTourDetailsPath(tourId) : ROUTES.login);
+    const goToTour = (tour) => {
+        navigate(user ? getTourDetailsPath(getTourRef(tour)) : ROUTES.login, { state: { tour } });
     };
 
     if (loading) {
@@ -56,7 +57,7 @@ export default function FeaturedToursPreview({ user }) {
                     <Title id="featured-tours-title" text="Featured Tours" variant="primary" size="medium" />
                     <SubTitle text="Four recent picks from the ToursTREM catalog" variant="secondary" size="small" />
                 </div>
-                <Button text="View all" variant="outline" size="small" onClick={() => navigate(user ? getPackageListPath() : ROUTES.login)} />
+                <Button text="View all" variant="outline" size="small" onClick={() => navigate(user ? getTourListPath() : ROUTES.login)} />
             </div>
 
             <div className="featured-tours-preview__grid">
@@ -66,7 +67,7 @@ export default function FeaturedToursPreview({ user }) {
 
                     return (
                         <article className="featured-tours-preview__card" key={tourId || tour?.title}>
-                            <button type="button" className="featured-tours-preview__media" onClick={() => goToTour(tourId)}>
+                            <button type="button" className="featured-tours-preview__media" onClick={() => goToTour(tour)}>
                                 {imageSrc ? (
                                     <img src={imageSrc} alt={tour?.title || "Featured tour"} loading="lazy" />
                                 ) : (
@@ -78,7 +79,7 @@ export default function FeaturedToursPreview({ user }) {
                                 <p>{getRouteText(tour)}</p>
                                 <div className="featured-tours-preview__meta">
                                     <span>{getPriceText(tour)}</span>
-                                    <button type="button" onClick={() => goToTour(tourId)}>Open</button>
+                                    <button type="button" onClick={() => goToTour(tour)}>Open</button>
                                 </div>
                             </div>
                         </article>

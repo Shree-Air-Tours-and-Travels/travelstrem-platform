@@ -11,7 +11,7 @@ import { useThemeMode } from "@packages/trem-utils";
 import { AuthPage, createAuthService } from "@apps/auth-trem";
 import { AdminShellHeader, Footer } from "@packages/trem-ui";
 import api from "./services/apiClient";
-import { emit } from "./core/eventBus";
+import { emit } from "@packages/trem-events";
 import { clearUserSessionCache } from "./services/userSession";
 
 const authService = createAuthService(api);

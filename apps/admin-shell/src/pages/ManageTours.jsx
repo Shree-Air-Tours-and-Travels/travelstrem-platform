@@ -148,7 +148,7 @@ export default function ManageTours({ session }) {
         try {
             await confirmBooking(bookingId, finalPriceData);
             await fetchBookings();
-            alert("Booking confirmed and final price set.");
+            alert("Quote generated and sent to customer.");
         } catch (e) {
             console.error("confirmBooking:", e);
             alert(e.message || "Confirm failed");
@@ -267,7 +267,7 @@ export default function ManageTours({ session }) {
                     <header className="mt-toolbar" style={{ marginTop: 8 }}>
                         <div>
                             <h3 style={{ margin: 0 }}>Bookings</h3>
-                            <p style={{ margin: 0, fontSize: 13, color: "#666" }}>Admins & agents can confirm bookings and set final price.</p>
+                            <p style={{ margin: 0, fontSize: 13, color: "#666" }}>Admins & agents can review requests, create quotes, and manage booking status.</p>
                         </div>
                         <div className="mt-actions">
                             <button className="btn" onClick={fetchBookings}>Refresh</button>

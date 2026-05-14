@@ -26,38 +26,88 @@
   background: var(--card-bg);
 
   text-align: left;
+  font: inherit;
 
   cursor: pointer;
 
   transition:
     transform 0.35s ease,
     box-shadow 0.35s ease,
-    border-color 0.35s ease;
+    border-color 0.35s ease,
+    background 0.35s ease;
 
-  box-shadow: var(--shadow-soft);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.08) inset,
+    0 18px 48px rgba(7, 18, 17, 0.1),
+    var(--shadow-soft);
 
   overflow: hidden;
 
-  &:hover {
-    transform: translateY(-8px);
+  isolation: isolate;
 
-    box-shadow: var(--shadow-card);
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      radial-gradient(circle at 18% 8%, var(--primary-softer), transparent 34%),
+      linear-gradient(
+        145deg,
+        var(--surface-glass-strong),
+        var(--card-bg) 46%,
+        var(--surface-elevated)
+      );
+    opacity: 0.95;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 1px;
+    z-index: -1;
+    border-radius: calc(#{$radius-lg} - 1px);
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.08),
+      transparent 42%
+    );
+    pointer-events: none;
+  }
+
+  &:hover {
+    transform: translateY(-6px);
+
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.12) inset,
+      0 28px 70px rgba(7, 18, 17, 0.16),
+      0 0 32px var(--primary-softer);
 
     border-color: var(--primary-focus);
+
+    .ui-service-card__image-container {
+      background: var(--primary-soft);
+      transform: translateY(-2px);
+    }
 
     .ui-service-card__action {
       transform: translate(3px, -3px);
       background: var(--color-primary);
       color: var(--color-on-primary);
-    }
-
-    .ui-service-card__image-container {
-      background: var(--primary-soft);
+      border-color: var(--color-primary);
     }
   }
 
   &:focus {
     outline: none;
+  }
+
+  &:focus-visible {
+    border-color: var(--color-primary);
+    box-shadow:
+      0 0 0 4px var(--focus-ring),
+      0 28px 70px rgba(7, 18, 17, 0.16),
+      var(--shadow-soft);
   }
 
   &__top {
@@ -80,13 +130,19 @@
 
     border-radius: 24px;
 
-    background: var(--surface-inset);
+    background: var(--surface-elevated);
+
+    border: 1px solid var(--muted-border);
 
     transition:
       background 0.35s ease,
       transform 0.35s ease;
 
     padding: 1.1rem;
+
+    svg {
+      color: var(--icon);
+    }
   }
 
   &__image {
@@ -104,19 +160,20 @@
     align-items: center;
     justify-content: center;
 
+    flex-shrink: 0;
+
+    border: 1px solid var(--muted-border);
     border-radius: 999px;
 
-    background: var(--primary-soft);
+    background: var(--surface-elevated);
 
     color: var(--icon);
 
     transition:
       transform 0.3s ease,
-      background 0.3s ease;
-
-    svg {
-      stroke-width: 2.2;
-    }
+      background 0.3s ease,
+      border-color 0.3s ease,
+      color 0.3s ease;
   }
 
   &__content {
@@ -165,9 +222,11 @@
 
     border-radius: 999px;
 
-    background: var(--surface-inset);
+    background: var(--surface-elevated);
 
-    color: var(--icon);
+    color: var(--control-text);
+
+    border: 1px solid var(--muted-border);
 
     font-size: 0.82rem;
     font-weight: 600;
@@ -175,6 +234,63 @@
     letter-spacing: -0.01em;
 
     white-space: nowrap;
+  }
+}
+
+.theme--dark .ui-service-card {
+  border-color: rgba(126, 232, 223, 0.22);
+  background: linear-gradient(
+    145deg,
+    rgba(21, 49, 45, 0.98),
+    rgba(10, 28, 26, 0.98)
+  );
+
+  &::before {
+    background:
+      radial-gradient(
+        circle at 20% 0%,
+        rgba(95, 224, 212, 0.2),
+        transparent 36%
+      ),
+      linear-gradient(
+        145deg,
+        rgba(28, 57, 53, 0.98),
+        rgba(13, 29, 27, 0.98) 48%,
+        rgba(18, 42, 39, 0.98)
+      );
+    opacity: 1;
+  }
+
+  &::after {
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.12),
+      transparent 44%
+    );
+  }
+
+  .ui-service-card__image-container,
+  .ui-service-card__action,
+  .ui-service-card__highlight {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(126, 232, 223, 0.18);
+  }
+
+  .ui-service-card__image-container svg,
+  .ui-service-card__action {
+    color: rgba(126, 232, 223, 0.94);
+  }
+
+  .ui-service-card__title {
+    color: #ffffff !important;
+  }
+
+  .ui-service-card__description {
+    color: rgba(229, 246, 243, 0.78) !important;
+  }
+
+  .ui-service-card__highlight {
+    color: rgba(245, 251, 250, 0.9);
   }
 }
 

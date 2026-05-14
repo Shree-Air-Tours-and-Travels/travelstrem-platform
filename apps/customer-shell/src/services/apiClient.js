@@ -1,7 +1,7 @@
 // frontend/src/utils/api.js
 import axios from "axios";
 import { getConfiguredApiBase } from "../config/portalEnvironment";
-import { registerAuthHeaderClearer } from "../core/eventBus";
+import { registerAuthHeaderClearer } from "@packages/trem-events";
 import { setFetchDataApiClient } from "@packages/trem-utils";
 
 /**

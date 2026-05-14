@@ -2,10 +2,11 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import "../../styles/components/header.scss";
 import Icon from "../../icons/Icon.jsx";
-import { emit } from "../../core/eventBus";
+import { emit } from "@packages/trem-events";
 import { usePortalConfig } from "../../components/portal/PortalConfigContext.jsx";
 import Dropdown from "../../components/Dropdown/Dropdown.jsx";
 import { useThemeMode } from "@packages/trem-utils";
+import NotificationBell from "../../components/notifications/NotificationBell.jsx";
 
 const getNavPath = (item) => item?.path || "/";
 
@@ -175,6 +176,11 @@ export default function Header() {
                 {leftSection.showStatus && !mobile && (
                     <li className="ui-header__user">
                         <span className="ui-header__user-welcome">{session?.flags?.role || user.role || "member"}</span>
+                    </li>
+                )}
+                {!mobile && (
+                    <li>
+                        <NotificationBell />
                     </li>
                 )}
                 {leftSection.showLogout && (

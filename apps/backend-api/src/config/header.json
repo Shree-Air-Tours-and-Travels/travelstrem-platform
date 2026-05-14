@@ -123,7 +123,6 @@
     "routeMap": {
       "/": "shell",
       "/about": "shell",
-      "/packages": "toursTREM",
       "/tours": "toursTREM",
       "/bookings": "bookingTREM",
       "/admin": "adminTREM",
@@ -135,9 +134,6 @@
       { "id": "search", "path": "/search", "component": "search", "access": "public" },
       { "id": "login", "path": "/login", "component": "auth", "access": "publicOnly", "authenticatedRedirect": "/" },
       { "id": "auth", "path": "/auth", "component": "auth", "access": "publicOnly", "authenticatedRedirect": "/" },
-      { "id": "legacyPackageDetails", "path": "/packages/:id", "redirectTo": "/tours/:id", "access": "authenticated", "preserveState": true },
-      { "id": "legacyPackageSlugDetails", "path": "/packages/slug/:slug", "redirectTo": "/tours/slug/:slug", "access": "authenticated", "preserveState": true },
-      { "id": "legacyPackages", "path": "/packages/*", "redirectTo": "/tours", "access": "authenticated", "preserveState": true },
       { "id": "tours", "path": "/tours/*", "remote": "toursTREM", "component": "remote.toursTREM", "access": "authenticated", "preserveState": true },
       { "id": "checkout", "path": "/checkout/:bookingId", "component": "checkout", "access": "authenticated", "preserveState": true },
       { "id": "bookings", "path": "/bookings", "component": "dashboard", "access": "authenticated" },

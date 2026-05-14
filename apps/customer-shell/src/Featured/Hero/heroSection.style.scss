@@ -5,7 +5,12 @@
   width: 100%;
   overflow: hidden;
   background:
-    linear-gradient(135deg, var(--primary-softer), var(--secondary-soft) 45%, var(--tertiary-soft)),
+    linear-gradient(
+      135deg,
+      var(--primary-softer),
+      var(--secondary-soft) 45%,
+      var(--tertiary-soft)
+    ),
     var(--page-bg);
   padding: 4rem 1.5rem 6rem;
 
@@ -14,8 +19,18 @@
     position: absolute;
     inset: 0;
     background:
-      linear-gradient(90deg, var(--color-transparent) 0 47%, var(--border) 47% 48%, var(--color-transparent) 48% 100%),
-      linear-gradient(0deg, var(--color-transparent) 0 47%, var(--border) 47% 48%, var(--color-transparent) 48% 100%);
+      linear-gradient(
+        90deg,
+        var(--color-transparent) 0 47%,
+        var(--border) 47% 48%,
+        var(--color-transparent) 48% 100%
+      ),
+      linear-gradient(
+        0deg,
+        var(--color-transparent) 0 47%,
+        var(--border) 47% 48%,
+        var(--color-transparent) 48% 100%
+      );
     background-size: 84px 84px;
     opacity: 0.28;
     pointer-events: none;
@@ -100,7 +115,11 @@
   }
 
   &__cta {
-    background: linear-gradient(135deg, var(--color-primary-dark), var(--color-secondary)) !important;
+    background: linear-gradient(
+      135deg,
+      var(--color-primary-dark),
+      var(--color-secondary)
+    ) !important;
     color: var(--color-on-primary) !important;
     border-radius: 999px !important;
     padding-inline: 1.8rem !important;
@@ -187,7 +206,7 @@
 
   &__visual-stage {
     position: relative;
-    width: min(100%, 620px);
+    width: min(100%, 680px);
     aspect-ratio: 1;
     border-radius: 28px;
   }
@@ -226,7 +245,11 @@
     border: 1px solid var(--border);
     border-radius: 50%;
     background:
-      linear-gradient(145deg, var(--surface-glass-strong), var(--surface-glass)),
+      linear-gradient(
+        145deg,
+        var(--surface-glass-strong),
+        var(--surface-glass)
+      ),
       var(--surface);
     box-shadow: var(--shadow-card);
 
@@ -262,7 +285,11 @@
     position: absolute;
     inset: 18%;
     border-radius: 50%;
-    background: radial-gradient(circle, var(--primary-surface), var(--color-transparent) 68%);
+    background: radial-gradient(
+      circle,
+      var(--primary-surface),
+      var(--color-transparent) 68%
+    );
     animation: heroPulse 4.2s ease-in-out infinite;
   }
 
@@ -282,6 +309,7 @@
     color: var(--text);
     box-shadow: var(--shadow-md);
     animation: heroNodeFloat 5s ease-in-out infinite;
+    z-index: 3;
 
     svg {
       color: var(--color-secondary);
@@ -302,8 +330,8 @@
     }
 
     &--2 {
-      top: 38%;
-      right: 1%;
+      top: 39%;
+      right: 0;
       animation-delay: 0.8s;
     }
 
@@ -362,17 +390,17 @@
 
   &__mini-gallery {
     position: absolute;
-    top: 5%;
-    right: 0;
+    top: -5%;
+    right: 1.5rem;
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
-    z-index: 5;
+    gap: 0.85rem;
+    z-index: 6;
   }
 
   &__mini-card {
-    width: 150px;
-    min-height: 94px;
+    width: 156px;
+    min-height: 88px;
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
@@ -473,17 +501,18 @@
     }
 
     &__visual-stage {
+      width: min(100%, 560px);
       aspect-ratio: auto;
-      min-height: 620px;
+      min-height: 650px;
     }
 
     &__planet {
-      inset: 20% 12% 34%;
+      inset: 18% 9% 38%;
       border-radius: 28px;
     }
 
     &__orbit {
-      inset: 8% 2% 25%;
+      inset: 8% 2% 32%;
       border-radius: 32px;
     }
 
@@ -497,12 +526,12 @@
       }
 
       &--2 {
-        top: 28%;
+        top: 33%;
         right: 0;
       }
 
       &--3 {
-        bottom: 26%;
+        bottom: 34%;
         left: 50%;
         transform: translateX(-50%);
       }
@@ -518,9 +547,9 @@
       right: 0;
       bottom: 0;
       left: 0;
-      flex-direction: row;
-      justify-content: center;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.65rem;
     }
 
     &__floating-card {
@@ -528,6 +557,11 @@
       bottom: 24%;
       transform: translateX(-50%);
       min-width: 230px;
+    }
+
+    &__mini-card {
+      width: auto;
+      min-height: 86px;
     }
   }
 
@@ -558,21 +592,58 @@
     }
 
     &__visual-stage {
-      min-height: 690px;
+      display: grid;
+      gap: 0.75rem;
+      min-height: auto;
+      aspect-ratio: auto;
+    }
+
+    &__orbit {
+      display: none;
     }
 
     &__planet {
-      inset: 22% 5% 41%;
+      position: relative;
+      inset: auto;
+      order: 2;
+      min-height: 210px;
+      border-radius: 28px;
       padding: 1rem;
     }
 
     &__orbit-node {
+      position: relative;
+      inset: auto !important;
+      transform: none !important;
+      width: 100%;
       min-height: 76px;
+      animation: none;
+
+      &--1 {
+        order: 1;
+      }
+
+      &--2,
+      &--3,
+      &--4 {
+        display: none;
+      }
     }
 
     &__floating-card {
+      position: relative;
+      left: auto;
+      bottom: auto;
+      order: 3;
       width: 100%;
-      bottom: 26%;
+      min-width: 0;
+      transform: none;
+    }
+
+    &__mini-gallery {
+      position: relative;
+      order: 4;
+      grid-template-columns: 1fr;
     }
 
     &__mini-card {

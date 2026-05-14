@@ -10,7 +10,7 @@ import { useComponentData } from "@packages/trem-utils";
 
 import {
     ROUTES,
-    getPackageListPath,
+    getTourListPath,
 } from "@packages/trem-utils";
 
 import {
@@ -193,7 +193,7 @@ const HeroSection = ({ user }) => {
 
     const handleHeroClick = () => {
         if (user) {
-            navigate(getPackageListPath());
+            navigate(getTourListPath());
         } else {
             navigate(ROUTES.login);
         }

@@ -51,7 +51,7 @@ module.exports = {
     },
     webpack: {
         configure: (webpackConfig) => {
-            webpackConfig.output.publicPath = "auto";
+            webpackConfig.output.publicPath = "/";
             webpackConfig.output.uniqueName = moduleFederationConfig.name;
             webpackConfig.optimization.runtimeChunk = false;
             webpackConfig.resolve.modules = [

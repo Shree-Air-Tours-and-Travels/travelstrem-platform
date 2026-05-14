@@ -8,7 +8,7 @@ import { Button } from "@packages/trem-ui";
 import { SubTitle } from "@packages/trem-ui";
 import isArray from "lodash/isArray";
 import get from "lodash/get";
-import { ROUTES, getPackageListPath, getPackageTourDetailsPath } from "@packages/trem-utils";
+import { ROUTES, getTourDetailsPath, getTourListPath, slugify } from "@packages/trem-utils";
 
 const TOURS_PREVIEW_LIMIT = 4;
 const DESCRIPTION_LIMIT = 180;
@@ -24,6 +24,7 @@ const TOUR_PREVIEW_TEXT = {
 };
 
 const getTourId = (tour) => tour?._id || tour?.id;
+const getTourRef = (tour) => slugify(tour?.title) || getTourId(tour);
 
 const getTourImage = (tour) => tour?.photo || tour?.photos?.[0] || "";
 
@@ -130,7 +131,7 @@ const HomeTourCard = ({ tour, onView }) => {
                     variant="solid"
                     color="primary"
                     size="small"
-                    onClick={() => onView(tourId)}
+                    onClick={() => onView(tour)}
                 />
             </aside>
         </article>
@@ -165,12 +166,12 @@ const TourPackages = ({ user }) => {
     const visibleTours = recentList.slice(0, TOURS_PREVIEW_LIMIT);
 
     const handleViewAll = () => {
-        if (user) navigate(getPackageListPath());
+        if (user) navigate(getTourListPath());
         else navigate(ROUTES.login);
     };
 
-    const navigateToTour = (tourId) => {
-        if (user) navigate(getPackageTourDetailsPath(tourId));
+    const navigateToTour = (tour) => {
+        if (user) navigate(getTourDetailsPath(getTourRef(tour)), { state: { tour } });
         else navigate(ROUTES.login);
     };
 

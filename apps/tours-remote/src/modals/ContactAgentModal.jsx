@@ -5,11 +5,11 @@ import { Title } from "@packages/trem-ui";
 import { SubTitle } from "@packages/trem-ui";
 import { Button } from "@packages/trem-ui";
 import ContactForm from "../components/forms/contact-agent-form/contact_form";
-import { fetchData } from "@packages/trem-utils";
+import { fetchData, validateFields } from "@packages/trem-utils";
 const defaultFields = [
-    { name: "name", label: "Full name", type: "text", value: "" },
-    { name: "email", label: "Email", type: "email", value: "" },
-    { name: "phone", label: "Phone", type: "text", value: "" }
+    { name: "name", label: "Full name", type: "text", required: true, minLength: 2, value: "" },
+    { name: "email", label: "Email", type: "email", required: true, value: "" },
+    { name: "phone", label: "Phone", type: "tel", required: true, value: "" }
 ];
 
 const ContactAgentModal = ({ open, onClose, tourId, formData }) => {
@@ -17,7 +17,11 @@ const ContactAgentModal = ({ open, onClose, tourId, formData }) => {
     console.log("ContactAgentModal render", { open, tourId, hasFormData: !!formData });
 
     // fields meta either from parent-provided formData or default
-    const fieldsMeta = formData?.structure?.fields ?? defaultFields;
+    const fieldsMeta = useMemo(() => (formData?.structure?.fields ?? defaultFields).map((field) => ({
+        ...field,
+        type: field.name === "email" ? "email" : field.name === "phone" ? "tel" : field.type,
+        required: field.required ?? ["name", "email", "phone"].includes(field.name),
+    })), [formData?.structure?.fields]);
     const submitText = formData?.structure?.submitText ?? "Send Request";
 
     // build initial form state from fields meta
@@ -28,12 +32,14 @@ const ContactAgentModal = ({ open, onClose, tourId, formData }) => {
     }, [fieldsMeta]);
 
     const [form, setForm] = useState(initialForm);
+    const [errors, setErrors] = useState({});
     const [msg, setMsg] = useState(null);
     const [submitting, setSubmitting] = useState(false);
 
     // when fields meta changes (or modal opened with different data), reset form
     useEffect(() => {
         setForm(initialForm);
+        setErrors({});
         setMsg(null);
     }, [initialForm]);
 
@@ -42,19 +48,31 @@ const ContactAgentModal = ({ open, onClose, tourId, formData }) => {
     // tour info: prefer data provided via formData.data[0], else minimal fallback
     const tour = (formData?.data && formData.data[0]) ? formData.data[0] : { _id: tourId, title: "" };
 
-    const handleChange = (name, value) => setForm(prev => ({ ...prev, [name]: value }));
+    const fieldsMap = useMemo(() => {
+        const map = {};
+        fieldsMeta.forEach((field) => {
+            if (field?.name) map[field.name] = field;
+        });
+        return map;
+    }, [fieldsMeta]);
 
-    const validateBasic = () => {
-        if (!form.name?.trim()) return "Name is required";
-        if (!/^\S+@\S+\.\S+$/.test(form.email)) return "Enter a valid email";
-        if (!form.phone?.trim()) return "Phone is required";
-        return null;
+    const handleChange = (name, value) => {
+        setForm(prev => ({ ...prev, [name]: value }));
+        setErrors((prev) => {
+            const copy = { ...prev };
+            delete copy[name];
+            return copy;
+        });
     };
 
     const handleSubmit = async (ev) => {
         ev?.preventDefault?.();
-        const vErr = validateBasic();
-        if (vErr) return setMsg({ type: "error", text: vErr });
+        const validation = validateFields(form, fieldsMap);
+        if (!validation.ok) {
+            setErrors(validation.errors);
+            setMsg({ type: "error", text: "Please fix the highlighted fields." });
+            return;
+        }
 
         setSubmitting(true);
         setMsg(null);
@@ -108,17 +126,18 @@ const ContactAgentModal = ({ open, onClose, tourId, formData }) => {
                     onCancel={onClose}
                     submitting={submitting}
                     submitText={submitText}
+                    errors={errors}
                     Button={Button} // pass your Button component so ContactForm can render it
                 />
 
-                {msg && <div style={{ marginTop: 10, color: msg.type === "error" ? "#c00" : "green" }}>{msg.text}</div>}
+                {msg && <div style={{ marginTop: 10, color: msg.type === "error" ? "var(--color-danger)" : "var(--color-primary-dark)", fontWeight: 700 }}>{msg.text}</div>}
             </div>
 
             {/* inline styles for isolation — keep as before */}
             <style jsx>{`
-        .ct-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:9999; }
-        .ct-modal-card { background:#fff; padding:20px; width:520px; max-width:96%; border-radius:10px; position:relative; box-shadow:0 8px 30px rgba(0,0,0,0.12); }
-        .ct-close { position:absolute; right:12px; top:10px; border:none; background:transparent; cursor:pointer; font-size:16px; }
+        .ct-modal-overlay { position:fixed; inset:0; background:var(--overlay); display:flex; align-items:center; justify-content:center; z-index:9999; padding:20px; }
+        .ct-modal-card { background:var(--surface); color:var(--text); padding:20px; width:520px; max-width:96%; max-height:90vh; overflow:auto; border:1px solid var(--border); border-radius:10px; position:relative; box-shadow:var(--shadow-lg); }
+        .ct-close { position:absolute; right:12px; top:10px; border:1px solid var(--border); border-radius:8px; background:var(--surface-inset); color:var(--text); cursor:pointer; font-size:16px; width:34px; height:34px; }
       `}</style>
         </div>
     );

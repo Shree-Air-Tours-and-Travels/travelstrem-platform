@@ -12,9 +12,9 @@ import {
 } from "lucide-react";
 
 import "../../styles/components/serviceCard.scss";
+import SubTitle from "../../../../../packages/trem-ui/src/components/SubTitle";
+import Title from "../../../../../packages/trem-ui/src/components/Title";
 
-import { SubTitle } from "@packages/trem-ui";
-import { Title } from "@packages/trem-ui";
 
 /* ==========================
    Service Icons
@@ -59,6 +59,7 @@ const ServiceIcon = ({ id }) => {
 const ServiceCard = ({ service, onClick }) => {
     return (
         <button
+            type="button"
             className="ui-service-card"
             onClick={() => onClick(service)}
             aria-label={`Open ${service.label}`}
@@ -68,23 +69,23 @@ const ServiceCard = ({ service, onClick }) => {
                     <ServiceIcon id={service.id} />
                 </div>
 
-                <div className="ui-service-card__action">
+                <span className="ui-service-card__action" aria-hidden="true">
                     <ArrowUpRight
                         size={18}
                         strokeWidth={2.2}
                     />
-                </div>
+                </span>
             </div>
 
             <div className="ui-service-card__content">
                 <Title
-                    className="ui-service-card__title"
+                    primaryClassname="ui-service-card__title"
                     text={service.label}
                     size="small"
                 />
 
                 <SubTitle
-                    className="ui-service-card__description"
+                    primaryClassname="ui-service-card__description"
                     text={
                         service.shortDescription ||
                         service.description
@@ -123,7 +124,6 @@ ServiceCard.propTypes = {
             PropTypes.string
         ),
     }).isRequired,
-
     onClick: PropTypes.func,
 };
 

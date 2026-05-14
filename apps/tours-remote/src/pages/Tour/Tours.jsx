@@ -40,6 +40,14 @@ const extractTours = (componentData) => {
   return [];
 };
 
+const slugifyTourTitle = (value = "") =>
+  String(value)
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
 // const extractData = (componentData) => {
 //   if (!componentData) return [];
 //   const stateData = componentData?.state?.data;
@@ -110,7 +118,10 @@ const ToursPage = () => {
     return () => obs.disconnect();
   }, [sourceTours, listingScrollRef.current, sentinelRef.current]);
 
-  const onView = (id) => navigate(`/tours/${id}`);
+  const onView = (tour) => {
+    const ref = slugifyTourTitle(tour?.title) || tour?._id || tour?.id;
+    navigate(`/tours/${encodeURIComponent(ref)}`, { state: { tour } });
+  };
   const handleFilterChange = (tours, meta = {}) => {
     setFilteredTours(Array.isArray(tours) ? tours : null);
     setFilterMeta(meta || {});

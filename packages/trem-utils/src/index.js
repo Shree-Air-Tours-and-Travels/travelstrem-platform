@@ -6,8 +6,7 @@ export { default as useComponentData, setComponentDataFetcher } from "./data/use
 export { default as fetchData, fetchData as fetchComponentData, setFetchDataApiClient } from "./http/fetchData.js";
 export {
   ROUTES,
-  getLegacyPackageTourDetailsPath,
-  getPackageListPath,
-  getPackageTourDetailsPath,
+  getTourDetailsPath,
+  getTourListPath,
 } from "./routes/routes.js";
-export { getActiveFilterCount, getOptionList, validateAll, validateField } from "./filters/filterUtils.js";
+export { getActiveFilterCount, getOptionList, validateAll, validateField, validateFields } from "./filters/filterUtils.js";

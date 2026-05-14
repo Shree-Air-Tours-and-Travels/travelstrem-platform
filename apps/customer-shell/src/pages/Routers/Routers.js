@@ -13,7 +13,7 @@ import { ROUTES } from "@packages/trem-utils";
 import { usePortalConfig } from "../../components/portal/PortalConfigContext";
 import api from "../../services/apiClient";
 import authService from "../../services/authService";
-import { emit } from "../../core/eventBus";
+import { emit } from "@packages/trem-events";
 
 const interpolatePath = (path, params) =>
     Object.entries(params || {}).reduce(

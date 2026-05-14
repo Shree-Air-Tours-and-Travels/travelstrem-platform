@@ -1,8 +1,18 @@
-import React from "react";
+import React, { useState } from "react";
 import "./about.scss";
 import { NavLink } from "react-router-dom";
-import { SubTitle } from "@packages/trem-ui";
-import { getPackageListPath } from "@packages/trem-utils";
+import {
+    ArrowUpRight,
+    BadgeCheck,
+    Building2,
+    Compass,
+    MapPin,
+    PhoneCall,
+    Sparkles,
+    UsersRound,
+} from "lucide-react";
+import { getTourListPath } from "@packages/trem-utils";
+import ContactAgentModal from "../../modals/ContactAgentModal";
 
 const aboutData = {
     company: {
@@ -10,231 +20,280 @@ const aboutData = {
         firmName: "Shree Air Tours and Travels",
         tagline: "Tours * Reservations * Experience * Management",
         foundedYear: 1997,
-        officeAddress: "G-108 Shalimar complex, opposite church road, MI road, jaipur",
+        officeAddress:
+            "G-108 Shalimar complex, opposite church road, MI road, jaipur",
         experienceYears: 28,
-        clients: 1000
+        clients: 1000,
     },
     leadership: [
         {
             role: "Chair Person / Owner",
             name: "Mrs. Nisha Goyal",
-            bio: "Strategic advisor and steward of the company culture."
+            bio: "Strategic advisor and steward of the company culture.",
         },
         {
             role: "Founder / Managing Director",
             name: "Mr. Shreekant Goyal",
-            bio: "Started the firm with an ethos of trust, safety and excellent customer service."
+            bio: "Started the firm with an ethos of trust, safety and excellent customer service.",
         },
         {
             role: "CEO / Executive Director",
             name: "Mr. Akshat Goyal",
-            bio: "Product-focused front-end lead and the face of TravelsTREM. Passionate about building delightful travel experiences."
-        }
+            bio: "Product-focused front-end lead and the face of TravelsTREM. Passionate about building delightful travel experiences.",
+        },
     ],
     highlights: [
         { label: "Years of Experience", value: "28+" },
         { label: "Happy Clients", value: "1000+" },
         { label: "Tours Curated", value: "350+" },
-        { label: "Cities Covered", value: "120+" }
+        { label: "Cities Covered", value: "120+" },
+    ],
+    values: [
+        {
+            icon: BadgeCheck,
+            title: "Trusted planning",
+            text: "Clear pricing, vetted partners, and human support from the first call to the final check-in.",
+        },
+        {
+            icon: Compass,
+            title: "Local intelligence",
+            text: "Jaipur roots, pan-India reach, and itineraries shaped around real traveler intent.",
+        },
+        {
+            icon: UsersRound,
+            title: "Personal care",
+            text: "A family-led team that treats every journey like a relationship, not a transaction.",
+        },
     ],
     mission: {
         title: "Our Mission",
         paragraphs: [
-            "To make travel simple, memorable and responsible — crafting local-first experiences with global standards.",
-            "We place transparency and human care above all: clear pricing, vetted partners, and 24/7 support for travelers."
-        ]
+            "To make travel simple, memorable and responsible by crafting local-first experiences with global standards.",
+            "We place transparency and human care above all: clear pricing, vetted partners, and 24/7 support for travelers.",
+        ],
     },
     vision: {
         title: "Our Vision",
         paragraphs: [
             "To be the most loved travel partner for explorers in India and beyond.",
-            "To grow sustainably while sharing the joy of travel widely."
-        ]
+            "To grow sustainably while sharing the joy of travel widely.",
+        ],
     },
     ctas: {
         contactEmail: "contact@travelstrem.example",
         phone: "960XXXXXXXX",
         primary: { label: "Contact Sales", href: "/contact" },
-        secondary: { label: "View Tours", href: getPackageListPath() }
+        secondary: { label: "View Tours", href: getTourListPath() },
     },
-    seo: {
-        title: "About TravelsTREM — Shree Air Tours and Travels",
-        description: "TravelsTREM (Shree Air Tours and Travels) — 28 years of experience, 1000+ clients. Founded by Mr. Shreekant Goyal. CEO: Akshat Goyal."
-    }
 };
 
-export default function About({ user }) {
-    const { company, leadership, highlights, mission, vision, ctas } = aboutData;
+const getInitials = (name) =>
+    name
+        .split(" ")
+        .filter((part) => !["Mr.", "Mrs.", "Ms."].includes(part))
+        .slice(0, 2)
+        .map((part) => part[0])
+        .join("");
 
-    const mapsHref = company?.officeAddress
-        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(company?.officeAddress)}`
+const contactModalData = {
+    title: "Talk to our travel expert",
+    description:
+        "Share your travel requirement and our team will get back to you.",
+    structure: {
+        submitText: "Send request",
+        fields: [
+            { name: "name", label: "Full name", type: "text", value: "" },
+            { name: "email", label: "Email", type: "email", value: "" },
+            { name: "phone", label: "Phone", type: "text", value: "" },
+            {
+                name: "message",
+                label: "Travel requirement",
+                type: "textarea",
+                value: "",
+                placeholder: "Destination, dates, travelers, budget...",
+            },
+        ],
+    },
+    data: [{ _id: "about-contact", title: "About page inquiry" }],
+};
+
+export default function About() {
+    const [contactOpen, setContactOpen] = useState(false);
+    const { company, leadership, highlights, values, mission, vision, ctas } =
+        aboutData;
+
+    const mapsHref = company.officeAddress
+        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+              company.officeAddress
+          )}`
         : null;
 
     return (
         <main className="about-page" role="main" aria-labelledby="about-heading">
-            {/* Hero */}
-            <section
-                className="about-page__hero"
-                style={{ backgroundColor: "var(--hero-bg, transparent)" }}
-                aria-hidden="false"
-            >
-                <div className="about-page__hero-inner">
-                    <div className="about-page__brand">
-                        <span className="about-page__brand-text">{company.displayName}</span>
-                    </div>
-
+            <section className="about-page__hero">
+                <div className="about-page__container about-page__hero-grid">
                     <div className="about-page__intro">
-                        {/* Use Title & SubTitle as element children */}
-                        <div id="about-heading" className="about-page__title" > {company.displayName}
-                        </div>
+                        <span className="about-page__eyebrow">
+                            <Sparkles size={16} />
+                            Powered by {company.firmName}
+                        </span>
 
-                        <div className="about-page__powered">
-                            <span className="about-page__powered-label">Powered by</span>
-                            <SubTitle id="about-sub-heading" text={company.firmName}>
-                            </SubTitle>
-                        </div>
+                        <h1 id="about-heading" className="about-page__title">
+                            {company.displayName}
+                        </h1>
 
-                        <p className="about-page__tagline">{company.tagline}</p>
+                        <p className="about-page__lede">
+                            A modern travel desk backed by {company.experienceYears}+
+                            years of trust, curated journeys, and concierge-style
+                            support for explorers, families, and businesses.
+                        </p>
 
                         <div className="about-page__meta">
-                            <span className="about-page__meta-item">
-                                <strong>{company.experienceYears}+</strong> yrs experience
+                            <span>
+                                <Building2 size={16} />
+                                Since {company.foundedYear}
                             </span>
-                            <span className="about-page__meta-sep" aria-hidden="true">•</span>
-                            <span className="about-page__meta-item">
-                                <strong>{company.clients}+</strong> happy clients
+                            <span>
+                                <MapPin size={16} />
+                                Jaipur, India
                             </span>
-                            <span className="about-page__meta-sep" aria-hidden="true">•</span>
-                            <span className="about-page__meta-item">
-                                {company.officeAddress}
-                            </span>
+                            <span>{company.tagline}</span>
                         </div>
 
                         <div className="about-page__actions">
-                            <NavLink className="btn btn-primary" to={ctas.primary.href}>
+                            <button
+                                className="about-page__btn about-page__btn--primary"
+                                type="button"
+                                onClick={() => setContactOpen(true)}
+                            >
                                 {ctas.primary.label}
-                            </NavLink>
-                            <NavLink className="btn btn-secondary" to={ctas.secondary.href}>
+                                <ArrowUpRight size={17} />
+                            </button>
+                            <NavLink className="about-page__btn about-page__btn--secondary" to={ctas.secondary.href}>
                                 {ctas.secondary.label}
                             </NavLink>
                         </div>
                     </div>
+
+                    <aside className="about-page__brand-panel" aria-label="Company snapshot">
+                        <img
+                            className="about-page__logo"
+                            src="/logo-images/logo-theme-teal-main.png"
+                            alt="TravelsTREM"
+                        />
+                        <div className="about-page__panel-copy">
+                            <span>Travel management</span>
+                            <strong>Designed around clarity, comfort, and care.</strong>
+                        </div>
+                        <div className="about-page__route-card">
+                            <span>JAI</span>
+                            <i />
+                            <Compass size={20} />
+                            <i />
+                            <span>WORLD</span>
+                        </div>
+                    </aside>
                 </div>
             </section>
 
-            {/* Highlights */}
-            <section className="about-page__highlights" aria-label="Company highlights">
-                <div className="about-page__container">
-                    {highlights.map((h, idx) => (
-                        <div className="about-page__stat" key={idx}>
-                            <div className="about-page__stat-value">{h.value}</div>
-                            <div className="about-page__stat-label">{h.label}</div>
+            <section className="about-page__stats" aria-label="Company highlights">
+                <div className="about-page__container about-page__stats-grid">
+                    {highlights.map((item) => (
+                        <div className="about-page__stat" key={item.label}>
+                            <strong>{item.value}</strong>
+                            <span>{item.label}</span>
                         </div>
                     ))}
                 </div>
             </section>
 
-            {/* Leadership */}
-            <section className="about-page__leadership" aria-label="Leadership">
+            <section className="about-page__values" aria-labelledby="values-title">
                 <div className="about-page__container">
-                    <h2 className="about-page__section-title">Leadership</h2>
-                    <div className="about-page__team">
-                        {leadership.map((m, i) => (
-                            <div className="about-page__person" key={i}>
-                                <div className="about-page__avatar" aria-hidden="true">
-                                    <svg
-                                        width="72"
-                                        height="72"
-                                        viewBox="0 0 72 72"
-                                        fill="none"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        className="about-page__avatar-svg"
-                                        role="img"
-                                        aria-label={m.name}
-                                    >
-                                        <rect width="72" height="72" rx="12" fill="currentColor" />
-                                        <text
-                                            x="50%"
-                                            y="50%"
-                                            dominantBaseline="middle"
-                                            textAnchor="middle"
-                                            fontSize="26"
-                                            fill="#fff"
-                                        >
-                                            {m.name.split(" ").slice(0, 2).map(n => n[0]).join("")}
-                                        </text>
-                                    </svg>
-                                </div>
-
-                                <div className="about-page__person-body">
-                                    <div className="about-page__person-role">{m.role}</div>
-                                    <div className="about-page__person-name">{m.name}</div>
-                                    <div className="about-page__person-bio">{m.bio}</div>
-                                </div>
-                            </div>
+                    <div className="about-page__section-head">
+                        <span>Why travelers choose us</span>
+                        <h2 id="values-title">Premium service, still personal.</h2>
+                    </div>
+                    <div className="about-page__values-grid">
+                        {values.map(({ icon: Icon, title, text }) => (
+                            <article className="about-page__value" key={title}>
+                                <span className="about-page__value-icon">
+                                    <Icon size={22} />
+                                </span>
+                                <h3>{title}</h3>
+                                <p>{text}</p>
+                            </article>
                         ))}
                     </div>
                 </div>
             </section>
 
-            {/* Mission & Vision */}
+            <section className="about-page__leadership" aria-labelledby="leadership-title">
+                <div className="about-page__container">
+                    <div className="about-page__section-head">
+                        <span>Leadership</span>
+                        <h2 id="leadership-title">The people behind the journey.</h2>
+                    </div>
+
+                    <div className="about-page__team">
+                        {leadership.map((member) => (
+                            <article className="about-page__person" key={member.name}>
+                                <div className="about-page__avatar" aria-hidden="true">
+                                    {getInitials(member.name)}
+                                </div>
+                                <div className="about-page__person-body">
+                                    <span>{member.role}</span>
+                                    <h3>{member.name}</h3>
+                                    <p>{member.bio}</p>
+                                </div>
+                            </article>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
             <section className="about-page__mv" aria-label="Mission and Vision">
                 <div className="about-page__container about-page__mv-grid">
-                    <article className="about-page__card" aria-labelledby="mission-title">
-                        <h2 id="mission-title" className="about-page__card-title">
-                            {mission.title}
-                        </h2>
-                        {mission.paragraphs.map((p, i) => (
-                            <p key={i} className="about-page__card-text">
-                                {p}
-                            </p>
-                        ))}
-                    </article>
-
-                    <article className="about-page__card" aria-labelledby="vision-title">
-                        <h2 id="vision-title" className="about-page__card-title">
-                            {vision.title}
-                        </h2>
-                        {vision.paragraphs.map((p, i) => (
-                            <p key={i} className="about-page__card-text">
-                                {p}
-                            </p>
-                        ))}
-                    </article>
+                    {[mission, vision].map((item) => (
+                        <article className="about-page__story" key={item.title}>
+                            <h2>{item.title}</h2>
+                            {item.paragraphs.map((paragraph) => (
+                                <p key={paragraph}>{paragraph}</p>
+                            ))}
+                        </article>
+                    ))}
                 </div>
             </section>
 
-
-            {/* Footer contact strip */}
             <section className="about-page__contact-strip" aria-label="Contact">
                 <div className="about-page__container about-page__contact-inner">
-                    <div className="about-page__contact-left">
-                        <strong>Firm</strong>
-                        <div>{company.firmName}</div>
-                    </div>
-
-                    <div className="about-page__contact-center">
-                        <strong>Office</strong>
-                        <div>{company.officeAddress}</div>
+                    <div>
+                        <span>Office</span>
+                        <strong>{company.officeAddress}</strong>
                         {mapsHref ? (
-                            <a className="link" href={mapsHref} target="_blank" rel="noopener noreferrer">Open in Google Maps</a>
+                            <a href={mapsHref} target="_blank" rel="noopener noreferrer">
+                                Open in Google Maps
+                            </a>
                         ) : null}
                     </div>
-
-                    <div className="about-page__contact-right">
-                        <strong>Reach</strong>
-                        <div>
-                            <a className="about-page__contact-link" href={`mailto:${ctas.contactEmail}`}>
-                                {ctas.contactEmail}
-                            </a>
-                            <span className="about-page__contact-sep">•</span>
-                            <a className="about-page__contact-link" href={`tel:${ctas.phone}`}>
-                                {ctas.phone}
-                            </a>
-                        </div>
+                    <div>
+                        <span>Reach</span>
+                        <strong>
+                            <a href={`mailto:${ctas.contactEmail}`}>{ctas.contactEmail}</a>
+                        </strong>
+                        <a href={`tel:${ctas.phone}`}>
+                            <PhoneCall size={15} />
+                            {ctas.phone}
+                        </a>
                     </div>
                 </div>
             </section>
+
+            <ContactAgentModal
+                open={contactOpen}
+                onClose={() => setContactOpen(false)}
+                tourId="about-contact"
+                formData={contactModalData}
+            />
         </main>
     );
 }

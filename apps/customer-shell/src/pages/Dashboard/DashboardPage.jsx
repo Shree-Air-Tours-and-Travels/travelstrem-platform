@@ -4,8 +4,9 @@ import "../../modals/BookingModal.scss"; // reuse styles
 import { useNavigate } from "react-router-dom";
 import { fetchData } from "@packages/trem-utils";
 import GlobalLoader from "../../components/Loader/Loader";
-import { getPackageTourDetailsPath } from "@packages/trem-utils";
+import { getTourDetailsPath, slugify } from "@packages/trem-utils";
 import { usePortalConfig } from "../../components/portal/PortalConfigContext";
+import CustomerBookingCard from "../../components/bookings/CustomerBookingCard";
 
 // Toggle mock via env during development
 
@@ -19,7 +20,8 @@ export default function DashboardPage() {
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
-    const [filterStatus, setFilterStatus] = useState(""); // e.g. pending, confirmed
+    const [message, setMessage] = useState("");
+    const [filterStatus, setFilterStatus] = useState("");
 
     useEffect(() => {
         loadBookings();
@@ -58,24 +60,22 @@ export default function DashboardPage() {
 
     // actions
     async function handleCancel(bookingId) {
-        // confirm first
-        const ok = window.confirm("Are you sure you want to cancel this booking?");
-        if (!ok) return;
-
         try {
+            setMessage("");
             // optimistic UI update for immediate feedback
-            setBookings(prev => prev.map(b => (String(b.id || b._id) === String(bookingId) ? { ...b, status: "cancelled" } : b)));
+            setBookings(prev => prev.map(b => (String(b.id || b._id) === String(bookingId) ? { ...b, status: "CANCELLED" } : b)));
 
             const res = await fetchData(`/bookings/${bookingId}/cancel`, { method: "POST", headers: { "Content-Type": "application/json" } });
             if (!res || res.status !== "success") throw new Error(res.message || "Cancel failed");
 
             // reload authoritative data
             await loadBookings();
+            setMessage("Booking cancelled.");
         } catch (err) {
             console.error(err);
             // rollback optimistic change if real API failed
             await loadBookings();
-            alert(err.message || "Cancel failed");
+            setError(err.message || "Cancel failed");
         }
     }
 
@@ -90,6 +90,30 @@ export default function DashboardPage() {
         }
     }
 
+    async function handleAcceptQuote(bookingId) {
+        try {
+            const res = await fetchData(`/bookings/${bookingId}/accept-quote`, { method: "POST", headers: { "Content-Type": "application/json" } });
+            if (!res || res.status !== "success") throw new Error(res.message || "Accept quote failed");
+            await loadBookings();
+            setMessage("Quote accepted. Payment is now pending.");
+        } catch (err) {
+            console.error(err);
+            setError(err.message || "Accept quote failed");
+        }
+    }
+
+    async function handleRejectQuote(bookingId) {
+        try {
+            const res = await fetchData(`/bookings/${bookingId}/reject-quote`, { method: "POST", headers: { "Content-Type": "application/json" } });
+            if (!res || res.status !== "success") throw new Error(res.message || "Reject quote failed");
+            await loadBookings();
+            setMessage("Quote rejected. Our team can revise it.");
+        } catch (err) {
+            console.error(err);
+            setError(err.message || "Reject quote failed");
+        }
+    }
+
     async function handleUpdateTravelers(bookingId, travelers) {
         try {
             const res = await fetchData(`/bookings/${bookingId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ travelers }) });
@@ -98,37 +122,43 @@ export default function DashboardPage() {
         } catch (err) {
             console.error(err);
             alert(err.message || "Update failed");
+            throw err;
         }
+    }
+
+    function handlePay(booking) {
+        const bookingId = booking?.id || booking?._id;
+        if (bookingId) navigate(`/checkout/${bookingId}`);
     }
 
     // unified navigation helper — used by both cards
     function goToTour(payload) {
         if (!payload) return;
-        let tourId = null;
+        let tourRef = null;
         if (typeof payload === "string" || typeof payload === "number") {
-            tourId = String(payload);
+            tourRef = String(payload);
         } else if (typeof payload === "object") {
-            tourId = payload.tour?.id || payload.tour?._id || null;
+            tourRef = slugify(payload.tour?.title) || payload.tour?.id || payload.tour?._id || null;
         }
-        if (!tourId) return;
-        navigate(getPackageTourDetailsPath(tourId));
+        if (!tourRef) return;
+        navigate(getTourDetailsPath(tourRef), typeof payload === "object" ? { state: { tour: payload.tour } } : undefined);
     }
 
     // presentation helpers
-    const cardStyle = { borderRadius: 12, padding: 12, background: 'var(--card-bg,#fff)', boxShadow: '0 6px 18px rgba(15,23,42,0.06)' };
+    const cardStyle = { borderRadius: 12, padding: 12, background: 'var(--card-bg)', color: "var(--text)", border: "1px solid var(--border)", boxShadow: 'var(--shadow-sm)' };
 
     function statusStyle(status) {
-        const s = String(status || "").toLowerCase();
-        if (s === "cancelled") return { background: "#ffe6e6", color: "#b00020", padding: '4px 8px', borderRadius: 8, fontWeight: 600 };
-        if (s === "confirmed") return { background: "#e6ffef", color: "#0b6", padding: '4px 8px', borderRadius: 8, fontWeight: 600 };
-        if (s === "pending") return { background: "#fff7e6", color: "#b8860b", padding: '4px 8px', borderRadius: 8, fontWeight: 600 };
-        return { background: "#f3f4f6", color: "#333", padding: '4px 8px', borderRadius: 8, fontWeight: 600 };
+        const s = String(status || "").toUpperCase();
+        if (s === "CANCELLED") return { background: "var(--danger-soft)", color: "var(--color-danger)", padding: '4px 8px', borderRadius: 8, fontWeight: 600 };
+        if (["CONFIRMED", "TICKETED", "TRAVEL_READY", "COMPLETED", "PAID"].includes(s)) return { background: "var(--success-soft)", color: "var(--color-primary-dark)", padding: '4px 8px', borderRadius: 8, fontWeight: 600 };
+        if (["QUOTE_REQUESTED", "UNDER_REVIEW", "QUOTE_READY", "QUOTE_SENT", "PAYMENT_PENDING", "PARTIALLY_PAID"].includes(s)) return { background: "var(--warning-soft)", color: "var(--color-warning)", padding: '4px 8px', borderRadius: 8, fontWeight: 600 };
+        return { background: "var(--surface-inset)", color: "var(--text)", padding: '4px 8px', borderRadius: 8, fontWeight: 600 };
     }
 
     function shouldShowPayNow(role, booking) {
         if (!booking) return false;
         const isMember = role === "member" || (booking.user && booking.user.role === "member");
-        return isMember && String(booking.status).toLowerCase() === "confirmed" && !!booking.priceSnapshot && !!booking.priceSnapshot.isFinal && Number(booking.priceSnapshot.total || 0) > Number(booking.payment?.amountPaid || 0);
+        return isMember && ["PAYMENT_PENDING", "PARTIALLY_PAID", "CONFIRMED"].includes(String(booking.status).toUpperCase()) && !!booking.priceSnapshot && !!booking.priceSnapshot.isFinal && Number(booking.priceSnapshot.total || 0) > Number(booking.payment?.amountPaid || 0);
     }
 
     // -----------------------
@@ -257,39 +287,54 @@ export default function DashboardPage() {
     // Render
     // -----------------------
     return (
-        <main className="dashboard-root container" style={{ padding: 16 }}>
-            <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <main className="dashboard-root container" style={{ padding: 16, minHeight: "100vh", background: "var(--page-bg)", color: "var(--text)" }}>
+            <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 12, flexWrap: "wrap" }}>
                 <div>
-                    <h2 style={{ margin: 0 }}>Bookings</h2>
-                    <p style={{ margin: 0, fontSize: 13, color: "#666" }}>Bookings overview — cards adapt to your role.</p>
+                    <h2 style={{ margin: 0, color: "var(--title)" }}>Bookings</h2>
+                    <p style={{ margin: 0, fontSize: 13, color: "var(--muted)" }}>Bookings overview - cards adapt to your role.</p>
                 </div>
 
                 <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                     <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <span style={{ fontSize: 13 }}>Status</span>
-                        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ marginLeft: 6 }}>
+                        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ marginLeft: 6, background: "var(--control-bg)", color: "var(--control-text)", border: "1px solid var(--control-border)", borderRadius: 8, padding: "0.4rem 0.5rem" }}>
                             <option value="">All</option>
-                            <option value="pending">Pending</option>
-                            <option value="confirmed">Confirmed</option>
-                            <option value="cancelled">Cancelled</option>
+                            <option value="QUOTE_REQUESTED">Quote requested</option>
+                            <option value="UNDER_REVIEW">Under review</option>
+                            <option value="QUOTE_SENT">Quote sent</option>
+                            <option value="PAYMENT_PENDING">Payment pending</option>
+                            <option value="CONFIRMED">Confirmed</option>
+                            <option value="CANCELLED">Cancelled</option>
                         </select>
                     </label>
                     <button className="btn" onClick={() => loadBookings()}>Refresh</button>
                 </div>
             </header>
+            {message ? <div style={{ marginBottom: 12, color: "var(--color-primary-dark)", fontWeight: 700 }}>{message}</div> : null}
 
             {loading ? (
                 <GlobalLoader visible={loading} text={`Fetching Bookings`} />
             ) : error ? (
                 <div style={{ color: "var(--danger, #b00020)" }}>Error: {error}</div>
             ) : bookings.length === 0 ? (
-                <div>No bookings found.</div>
+                <div style={{ padding: 16, border: "1px solid var(--border)", borderRadius: 8, background: "var(--surface)" }}>No bookings found.</div>
             ) : (
-                <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))" }}>
+                <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 520px), 1fr))" }}>
                     {bookings.map(b => {
                         const isOwner = String(b.user?.id || b.user?._id) === String(user?.id || user?._id);
                         if (role === 'member' || isOwner) {
-                            return <UserBookingCard key={b.id || b._id} b={b} />;
+                            return (
+                                <CustomerBookingCard
+                                    key={b.id || b._id}
+                                    booking={b}
+                                    onCancel={handleCancel}
+                                    onSaveTravelers={handleUpdateTravelers}
+                                    onViewTour={goToTour}
+                                    onPay={handlePay}
+                                    onAcceptQuote={handleAcceptQuote}
+                                    onRejectQuote={handleRejectQuote}
+                                />
+                            );
                         }
                         return <AdminBookingCard key={b.id || b._id} b={b} />;
                     })}

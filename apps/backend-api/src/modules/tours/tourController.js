@@ -65,6 +65,35 @@ const assertSeasonalPricingValid = (seasons = []) => {
     }
 };
 
+const escapeRegExp = (value = "") => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const slugifyTourTitle = (value = "") =>
+    String(value)
+        .trim()
+        .toLowerCase()
+        .replace(/&/g, " and ")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+
+const findTourByRef = async (tourRef) => {
+    const ref = decodeURIComponent(String(tourRef || "")).trim();
+    if (!ref) return null;
+
+    if (/^[0-9a-fA-F]{24}$/.test(ref)) {
+        const byId = await Tour.findById(ref);
+        if (byId) return byId;
+    }
+
+    const titleCandidate = ref.replace(/-/g, " ").trim();
+    const directTitle = await Tour.findOne({
+        title: new RegExp(`^${escapeRegExp(titleCandidate)}$`, "i"),
+    });
+    if (directTitle) return directTitle;
+
+    const tours = await Tour.find({}, "title city address distance period startDate endDate photo photos desc price seasonalPricing itinerary highlights availability meetingPoint inclusions exclusions languages cancellationPolicy minAge maxAge maxGroupSize reviews featured tags isPublished status createdAt updatedAt");
+    return tours.find((tour) => slugifyTourTitle(tour.title) === slugifyTourTitle(ref)) || null;
+};
+
 /**
  * Build priceInfo safely from a Tour doc (handles getCurrentPrice errors).
  */
@@ -379,17 +408,17 @@ export const getTours = async (req, res) => {
 };
 
 /**
- * GET /tours/:id
+ * GET /tours/:tourRef
  */
-export const getTourById = async (req, res) => {
+export const getTourByRef = async (req, res) => {
     const handler = getHandlerFromReq(req);
-    const { id } = req.params;
+    const { tourRef } = req.params;
     const dateQuery = req.query?.date ? new Date(req.query.date) : new Date();
 
     try {
         const [payload, tourRaw] = await Promise.all([
             readStaticPayload(),
-            Tour.findById(id),
+            findTourByRef(tourRef),
         ]);
 
         if (!tourRaw) {
@@ -416,7 +445,7 @@ export const getTourById = async (req, res) => {
             componentData,
         }, req);
     } catch (error) {
-        console.error("getTourById error:", error);
+        console.error("getTourByRef error:", error);
         const payload = await readStaticPayload();
         const componentData = buildComponentData(payload, handler, "Tour Details", []);
         return sendJson(res, 500, {

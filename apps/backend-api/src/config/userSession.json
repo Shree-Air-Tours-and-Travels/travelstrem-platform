@@ -20,12 +20,8 @@
       "home": "/",
       "auth": "/auth",
       "about": "/about",
-      "packages": "/packages",
-      "packageDetails": "/packages/:id",
-      "packageSlugDetails": "/packages/slug/:slug",
-      "legacyTours": "/tours",
-      "legacyTourDetails": "/tours/:id",
-      "legacyPackageTourDetails": "/packages/tours/:id",
+      "tours": "/tours",
+      "tourDetails": "/tours/:tourRef",
       "bookings": "/bookings",
       "bookingDetails": "/bookings/:id",
       "checkout": "/checkout/:bookingId",
@@ -38,7 +34,7 @@
       "preservePathname": true,
       "preserveSearch": true,
       "preserveHash": true,
-      "paramKeys": ["id", "slug", "bookingId"],
+      "paramKeys": ["id", "tourRef", "bookingId"],
       "redirectStateKey": "from"
     },
     "roles": {
