@@ -1,6 +1,6 @@
 // modules/tours/filtersRoutes.js
 import express from "express";
-import { getFilters, applyFilters } from "./filtersController.js";
+import { getFilters, applyFilters } from "./controllers/filterController.js";
 
 const router = express.Router();
 

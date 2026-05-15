@@ -1,0 +1,50 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "overview": "Overview",
+        "days": "days",
+        "maxGroupSize": "Max Group Size",
+        "languages": "Languages",
+        "meetingPoint": "Meeting Point"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "TourOverview",
+          "props": {
+            "titleRef": "overview",
+            "fields": [
+              {
+                "name": "duration",
+                "labelRef": "days"
+              },
+              {
+                "name": "maxGroupSize",
+                "labelRef": "maxGroupSize"
+              },
+              {
+                "name": "languages",
+                "labelRef": "languages"
+              },
+              {
+                "name": "meetingPoint",
+                "labelRef": "meetingPoint"
+              }
+            ]
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

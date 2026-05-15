@@ -1,0 +1,30 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "inclusions": "Inclusions",
+        "exclusions": "Exclusions"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "InclusionsExclusions",
+          "props": {
+            "inclusionsTitleRef": "inclusions",
+            "exclusionsTitleRef": "exclusions"
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

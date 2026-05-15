@@ -1,5 +1,5 @@
 import express from "express";
-import { getHero, createHero } from "./heroController.js";
+import { getHero, createHero } from "./controllers/heroController.js";
 
 const router = express.Router();
 

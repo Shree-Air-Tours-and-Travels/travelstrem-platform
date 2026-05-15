@@ -1,5 +1,5 @@
 import express from "express";
-import { getForm, submitForm, getLeads } from "./controller.js";
+import { getForm, submitForm, getLeads } from "./controllers/formController.js";
 const router = express.Router();
 
 router.get("/form.json", getForm);

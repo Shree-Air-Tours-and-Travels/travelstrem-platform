@@ -87,6 +87,7 @@ const Filters = ({ onChange }) => {
   // helper: extract tours from various possible server responses
   const extractToursFromResponse = (res) => {
     if (!res) return [];
+    if (Array.isArray(res.component?.data?.tours)) return res.component.data.tours;
     if (res.componentData && res.componentData.state && Array.isArray(res.componentData.state.data?.tours)) {
       return res.componentData.state.data.tours;
     }
@@ -117,7 +118,7 @@ const Filters = ({ onChange }) => {
 
       const tours = extractToursFromResponse(res);
       // notify parent with tours array (could be empty)
-      const serverErrors = res?.componentData?.state?.data?.errors || res?.componentData?.config?.validation?.errors;
+      const serverErrors = res?.component?.data?.errors || res?.componentData?.state?.data?.errors || res?.componentData?.config?.validation?.errors;
       if (serverErrors && Object.keys(serverErrors).length) {
         setErrors(serverErrors);
         setExpanded(true);

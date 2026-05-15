@@ -1,0 +1,41 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "contactAgent": "Contact Agent",
+        "contactAgentDescription": "Fill this form and our agent will contact you about the selected tour.",
+        "fullName": "Full name",
+        "email": "Email",
+        "phone": "Phone",
+        "sendRequest": "Send Request"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {
+        "titleRef": "contactAgent",
+        "descriptionRef": "contactAgentDescription"
+      },
+      "widgets": [
+        {
+          "type": "ContactAgentForm",
+          "props": {
+            "fields": [
+              { "name": "name", "labelRef": "fullName", "type": "text" },
+              { "name": "email", "labelRef": "email", "type": "email" },
+              { "name": "phone", "labelRef": "phone", "type": "text" }
+            ],
+            "submitLabelRef": "sendRequest"
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

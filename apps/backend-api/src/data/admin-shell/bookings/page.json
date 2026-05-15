@@ -1,157 +1,38 @@
 {
   "status": "success",
-
   "component": {
-    "data": {
-      "title": "Bookings Management",
-      "subtitle": "",
-      "description": "View and manage all platform bookings.",
-      "itemIds": []
+    "data": {},
+    "dataScope": {
+      "options": {}
     },
-
     "elements": {
       "labels": {
         "pageTitle": "Bookings Management",
-        "pageDescription": "View and manage all platform bookings.",
-        "searchBookings": "Search bookings",
-        "searchPlaceholder": "Search by booking ID, customer name, or tour...",
-        "filterByStatus": "Filter by Status",
-        "filterByDate": "Filter by Date",
-        "filterByTour": "Filter by Tour",
-        "filterByAgent": "Filter by Agent",
-        "allStatuses": "All Statuses",
-        "draft": "Draft",
-        "pending": "Pending",
-        "confirmed": "Confirmed",
-        "inProgress": "In Progress",
-        "completed": "Completed",
-        "cancelled": "Cancelled",
-        "refunded": "Refunded",
-        "dateFrom": "From",
-        "dateTo": "To",
-        "applyFilters": "Apply Filters",
-        "clearFilters": "Clear Filters",
-        "exportCSV": "Export CSV",
-        "exportPDF": "Export PDF",
-        "bookingId": "Booking ID",
-        "customerName": "Customer",
-        "tourName": "Tour",
-        "bookingDate": "Booking Date",
-        "travelDate": "Travel Date",
-        "travellers": "Travellers",
-        "totalAmount": "Total Amount",
-        "status": "Status",
-        "agent": "Agent",
-        "actions": "Actions",
-        "viewDetails": "View Details",
-        "editBooking": "Edit",
-        "cancelBooking": "Cancel",
-        "refundBooking": "Process Refund",
-        "sendReminder": "Send Reminder",
-        "assignAgent": "Assign Agent",
-        "addNote": "Add Note",
-        "viewTimeline": "View Timeline",
-        "bookingDetails": "Booking Details",
-        "customerInfo": "Customer Information",
-        "travellerInfo": "Traveller Information",
-        "paymentInfo": "Payment Information",
-        "paymentStatus": "Payment Status",
-        "paymentMethod": "Payment Method",
-        "paid": "Paid",
-        "unpaid": "Unpaid",
-        "partiallyPaid": "Partially Paid",
-        "refundedLabel": "Refunded",
-        "notes": "Notes",
-        "addNotePlaceholder": "Type your note here...",
-        "saveNote": "Save Note",
-        "timeline": "Timeline",
-        "noResults": "No bookings found matching your filters.",
-        "loading": "Loading bookings...",
-        "totalBookings": "Total Bookings",
-        "showing": "Showing",
-        "to": "to",
-        "of": "of",
-        "prevPage": "Previous",
-        "nextPage": "Next",
-        "confirmCancelTitle": "Cancel Booking",
-        "confirmCancelMessage": "Are you sure you want to cancel this booking? This action may have financial implications.",
-        "confirmRefundTitle": "Process Refund",
-        "confirmRefundMessage": "Are you sure you want to process a refund for this booking?",
-        "yesCancel": "Yes, Cancel Booking",
-        "yesRefund": "Yes, Process Refund",
-        "noGoBack": "No, Go Back",
-        "actionSuccess": "Action completed successfully",
-        "actionFailed": "Action failed. Please try again.",
-        "bookingUpdated": "Booking updated successfully",
-        "noteAdded": "Note added successfully"
+        "pageDescription": "View and manage all platform bookings."
       },
-
-      "urls": {
-        "exportCsvEndpoint": "/api/admin/bookings/export/csv",
-        "exportPdfEndpoint": "/api/admin/bookings/export/pdf"
-      }
+      "urls": {}
     },
-
     "structure": {
+      "header": {
+        "titleRef": "pageTitle",
+        "descriptionRef": "pageDescription"
+      },
       "widgets": [
         {
           "type": "BookingsToolbar",
-          "props": {
-            "searchLabelRef": "searchBookings",
-            "searchPlaceholderRef": "searchPlaceholder",
-            "exportCsvLabelRef": "exportCSV",
-            "exportPdfLabelRef": "exportPDF"
-          }
+          "widgetRef": "./widgets/bookings-toolbar.json"
         },
         {
           "type": "BookingsFilters",
-          "props": {
-            "fields": [
-              { "name": "status", "labelRef": "filterByStatus", "type": "select" },
-              { "name": "tour", "labelRef": "filterByTour", "type": "select" },
-              { "name": "agent", "labelRef": "filterByAgent", "type": "select" },
-              { "name": "dateFrom", "labelRef": "dateFrom", "type": "date" },
-              { "name": "dateTo", "labelRef": "dateTo", "type": "date" }
-            ],
-            "applyLabelRef": "applyFilters",
-            "clearLabelRef": "clearFilters",
-            "statusOptions": [
-              { "value": "", "labelRef": "allStatuses" },
-              { "value": "draft", "labelRef": "draft" },
-              { "value": "pending", "labelRef": "pending" },
-              { "value": "confirmed", "labelRef": "confirmed" },
-              { "value": "inProgress", "labelRef": "inProgress" },
-              { "value": "completed", "labelRef": "completed" },
-              { "value": "cancelled", "labelRef": "cancelled" },
-              { "value": "refunded", "labelRef": "refunded" }
-            ]
-          }
+          "widgetRef": "./widgets/bookings-filters.json"
         },
         {
           "type": "BookingsTable",
-          "props": {
-            "columns": [
-              { "field": "bookingRef", "labelRef": "bookingId", "sortable": true },
-              { "field": "customerName", "labelRef": "customerName", "sortable": true },
-              { "field": "tourName", "labelRef": "tourName", "sortable": true },
-              { "field": "bookingDate", "labelRef": "bookingDate", "sortable": true },
-              { "field": "travelDate", "labelRef": "travelDate", "sortable": true },
-              { "field": "travellerCount", "labelRef": "travellers", "sortable": true },
-              { "field": "totalAmount", "labelRef": "totalAmount", "sortable": true },
-              { "field": "status", "labelRef": "status", "sortable": true }
-            ],
-            "actions": [
-              { "name": "view", "labelRef": "viewDetails", "icon": "eye" },
-              { "name": "edit", "labelRef": "editBooking", "icon": "edit" },
-              { "name": "cancel", "labelRef": "cancelBooking", "icon": "x-circle" }
-            ],
-            "emptyLabelRef": "noResults",
-            "loadingLabelRef": "loading",
-            "prevLabelRef": "prevPage",
-            "nextLabelRef": "nextPage"
-          }
+          "widgetRef": "./widgets/bookings-table.json"
         }
-      ]
+      ],
+      "config": {},
+      "actions": []
     }
   }
 }

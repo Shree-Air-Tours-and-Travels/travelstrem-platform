@@ -1,7 +1,8 @@
 // modules/auth/routes.js
 import express from "express";
-import * as controller from "./controller.js";
-import authMiddleware from "../../middleware/authMiddleware.js";
+import * as controller from "./controllers/authController.js";
+import authMiddleware from "../../core/auth/authMiddleware.js";
+import { validateLogin, validateRegister } from "./validators/create.validation.js";
  
 const router = express.Router();
 
@@ -11,8 +12,8 @@ router.get("/config", controller.getAuthConfig);
 /*
   Public auth endpoints
 */
-router.post("/register", controller.register);
-router.post("/login", controller.login);
+router.post("/register", validateRegister, controller.register);
+router.post("/login", validateLogin, controller.login);
 router.post("/admin-registration-otp", controller.requestAdminRegistrationOtp);
 
 /*

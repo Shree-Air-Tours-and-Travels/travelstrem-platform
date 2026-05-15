@@ -1,169 +1,60 @@
 {
   "status": "success",
-
   "component": {
-    "data": {
-      "title": "Tour Details",
-      "subtitle": "",
-      "description": "",
-      "itemIds": []
+    "data": {},
+    "dataScope": {
+      "options": {}
     },
-
     "elements": {
       "labels": {
-        "pageTitle": "Tour Details",
-        "overview": "Overview",
-        "highlights": "Highlights",
-        "itinerary": "Itinerary",
-        "inclusions": "Inclusions",
-        "exclusions": "Exclusions",
-        "meetingPoint": "Meeting Point",
-        "cancellationPolicy": "Cancellation Policy",
-        "reviews": "Reviews",
-        "writeReview": "Write a Review",
-        "submitReview": "Submit Review",
-        "yourRating": "Your Rating",
-        "yourReview": "Your Review",
-        "reviewSubmitted": "Thank you! Your review has been submitted.",
-        "pricingTitle": "Pricing",
-        "perPerson": "per person",
-        "bookNow": "Book Now",
-        "contactAgent": "Contact Agent",
-        "saveToWishlist": "Save to Wishlist",
-        "shareTour": "Share this tour",
-        "chatOnWhatsapp": "Chat on whatsapp",
-        "backToTours": "Back to Tours",
-        "days": "days",
-        "nights": "nights",
-        "availableSeats": "Available Seats",
-        "totalSeats": "Total Seats",
-        "tourGuide": "Tour Guide",
-        "languages": "Languages",
-        "maxGroupSize": "Max Group Size",
-        "minAge": "Minimum Age",
-        "maxAge": "Maximum Age",
-        "tourHighlights": "Tour Highlights",
-        "fullItinerary": "Full Itinerary",
-        "day": "Day",
-        "activities": "Activities",
-        "meals": "Meals",
-        "accommodation": "Accommodation",
-        "location": "Location",
-        "notes": "Notes",
-        "readMore": "Read More",
-        "showLess": "Show Less",
-        "photoGallery": "Photo Gallery",
-        "viewAllPhotos": "View All Photos",
-        "similarTours": "Similar Tours",
-        "youMayAlsoLike": "You May Also Like",
-        "priceFrom": "From",
-        "priceTo": "To",
-        "currency": "Currency",
-        "seasonalPricing": "Seasonal Pricing",
-        "season": "Season",
-        "startDate": "Start Date",
-        "endDate": "End Date",
-        "adultPrice": "Adult Price",
-        "childPrice": "Child Price",
-        "faq": "Frequently Asked Questions",
-        "askQuestion": "Ask a Question",
-        "contactInfo": "Contact Information",
-        "callUs": "Call Us",
-        "emailUs": "Email Us",
-        "visitWebsite": "Visit Website",
-        "notFound": "Tour not found",
-        "notFoundMessage": "The tour you are looking for does not exist or has been removed.",
-        "loading": "Loading tour details..."
+        "pageTitle": "Tour Details"
       },
-
-      "urls": {
-        "defaultImage": "/tour-images/tour-img01.jpg",
-        "placeholderAvatar": "/images/avatar-placeholder.png"
-      }
+      "urls": {}
     },
-
     "structure": {
+      "header": {
+        "titleRef": "pageTitle"
+      },
       "widgets": [
         {
           "type": "TourGallery",
-          "props": {
-            "titleRef": "photoGallery",
-            "ctaLabelRef": "viewAllPhotos"
-          }
+          "widgetRef": "./widgets/tour-gallery.json"
         },
         {
           "type": "TourOverview",
-          "props": {
-            "titleRef": "overview",
-            "fields": [
-              { "name": "duration", "labelRef": "days" },
-              { "name": "maxGroupSize", "labelRef": "maxGroupSize" },
-              { "name": "languages", "labelRef": "languages" },
-              { "name": "meetingPoint", "labelRef": "meetingPoint" }
-            ]
-          }
+          "widgetRef": "./widgets/tour-overview.json"
         },
         {
           "type": "TourHighlights",
-          "props": {
-            "titleRef": "highlights"
-          }
+          "widgetRef": "./widgets/tour-highlights.json"
         },
         {
           "type": "PricingCard",
-          "props": {
-            "titleRef": "pricingTitle",
-            "priceLabelRef": "perPerson",
-            "seasonalTitleRef": "seasonalPricing",
-            "ctaLabelRef": "bookNow",
-            "secondaryCtaRef": "contactAgent"
-          }
+          "widgetRef": "./widgets/pricing-card.json"
         },
         {
           "type": "ItineraryTimeline",
-          "props": {
-            "titleRef": "fullItinerary",
-            "dayLabelRef": "day",
-            "activitiesLabelRef": "activities",
-            "mealsLabelRef": "meals",
-            "accommodationLabelRef": "accommodation",
-            "locationLabelRef": "location",
-            "notesLabelRef": "notes"
-          }
+          "widgetRef": "./widgets/itinerary-timeline.json"
         },
         {
           "type": "InclusionsExclusions",
-          "props": {
-            "inclusionsTitleRef": "inclusions",
-            "exclusionsTitleRef": "exclusions"
-          }
+          "widgetRef": "./widgets/inclusions-exclusions.json"
         },
         {
           "type": "CancellationPolicy",
-          "props": {
-            "titleRef": "cancellationPolicy"
-          }
+          "widgetRef": "./widgets/cancellation-policy.json"
         },
         {
           "type": "ReviewsSection",
-          "props": {
-            "titleRef": "reviews",
-            "writeLabelRef": "writeReview",
-            "submitLabelRef": "submitReview",
-            "ratingLabelRef": "yourRating",
-            "reviewLabelRef": "yourReview",
-            "successLabelRef": "reviewSubmitted",
-            "emptyMessage": "No reviews yet. Be the first to review!"
-          }
+          "widgetRef": "./widgets/reviews-section.json"
         },
         {
           "type": "SimilarTours",
-          "props": {
-            "titleRef": "youMayAlsoLike",
-            "ctaLabelRef": "viewDetails"
-          }
+          "widgetRef": "./widgets/similar-tours.json"
         }
-      ]
+      ],
+      "config": {},
+      "actions": []
     }
   }
 }

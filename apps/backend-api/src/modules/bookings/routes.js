@@ -24,7 +24,7 @@ import {
     setPrice,
     submitBooking,
     uploadBookingDocument,
-} from "./controller.js";
+} from "./controllers/bookingController.js";
 
 const router = express.Router();
 

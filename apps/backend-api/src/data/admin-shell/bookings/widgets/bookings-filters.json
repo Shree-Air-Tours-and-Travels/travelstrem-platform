@@ -1,0 +1,73 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "filterByStatus": "Filter by Status",
+        "filterByTour": "Filter by Tour",
+        "filterByAgent": "Filter by Agent",
+        "dateFrom": "From",
+        "dateTo": "To",
+        "applyFilters": "Apply Filters",
+        "clearFilters": "Clear Filters",
+        "allStatuses": "All Statuses",
+        "draft": "Draft",
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "inProgress": "In Progress",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "refunded": "Refunded"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "BookingsFilters",
+          "props": {
+            "fields": [
+              {
+                "name": "status",
+                "labelRef": "filterByStatus",
+                "type": "select",
+                "optionsRef": "statusOptions"
+              },
+              {
+                "name": "tour",
+                "labelRef": "filterByTour",
+                "type": "select",
+                "optionsRef": "tourOptions"
+              },
+              {
+                "name": "agent",
+                "labelRef": "filterByAgent",
+                "type": "select",
+                "optionsRef": "agentOptions"
+              },
+              {
+                "name": "dateFrom",
+                "labelRef": "dateFrom",
+                "type": "date"
+              },
+              {
+                "name": "dateTo",
+                "labelRef": "dateTo",
+                "type": "date"
+              }
+            ],
+            "applyLabelRef": "applyFilters",
+            "clearLabelRef": "clearFilters"
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

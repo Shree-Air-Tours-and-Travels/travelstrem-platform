@@ -11,7 +11,7 @@ import {
     requestMoreDocs,
     sendQuote,
     setPrice,
-} from "./controller.js";
+} from "./controllers/bookingController.js";
 
 const router = express.Router();
 

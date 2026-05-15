@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { encryptedStringField, maskSecret } from "../../../utils/secureFields.js";
+import { encryptedStringField, maskSecret } from "../../../core/auth/secureFields.js";
 
 const { Schema } = mongoose;
 

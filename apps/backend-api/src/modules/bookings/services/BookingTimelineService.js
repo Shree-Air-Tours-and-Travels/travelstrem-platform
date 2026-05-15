@@ -1,5 +1,5 @@
 import BookingTimeline from "../models/BookingTimeline.js";
-import EventBus from "./EventBus.js";
+import EventBus from "../../../core/eventBus/index.js";
 
 export const BookingTimelineService = {
   async record({ bookingId, actor = {}, action, metadata = {} }, options = {}) {

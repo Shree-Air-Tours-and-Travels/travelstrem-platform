@@ -80,11 +80,7 @@ const HeroOrbitVisual = ({
     visual = {},
     featuredDestination = {},
 }) => {
-    const destination = {
-        label: "Top Destination",
-        title: "Bali, Indonesia",
-        ...(featuredDestination || {}),
-    };
+    const destination = featuredDestination || {};
     const orbitItems = Array.isArray(visual.orbitItems)
         ? visual.orbitItems.slice(0, 4)
         : [];
@@ -161,7 +157,7 @@ const HeroOrbitVisual = ({
 const HeroSection = ({ user }) => {
     const navigate = useNavigate();
 
-    const { loading, error, componentData } =
+    const { loading, error, resolvedView } =
         useComponentData("/hero.json", {
             headers: {},
             params: {
@@ -179,16 +175,13 @@ const HeroSection = ({ user }) => {
         );
     }
 
-    if (!componentData) return null;
+    if (!resolvedView) return null;
+    const widget = resolvedView?.structure?.widgets?.[0] || {};
+    const props = widget.props || {};
+    const hero = resolvedView?.hero || {};
 
-    const {
-        title,
-        description,
-        structure = {},
-    } = componentData;
-
-    const stats = Array.isArray(structure?.stats)
-        ? structure.stats
+    const stats = Array.isArray(props?.stats)
+        ? props.stats
         : [];
 
     const handleHeroClick = () => {
@@ -210,26 +203,26 @@ const HeroSection = ({ user }) => {
                     <div className="ui-home__main__hero__eyebrow">
                         <span className="ui-home__main__hero__eyebrow-dot" />
 
-                        {structure?.eyebrow}
+                        {props?.title}
                     </div>
 
                     <div className="ui-home__main__hero__heading">
                         <Title
                             className="ui-home__main__hero__title"
-                            text={title}
+                            text={hero.title || props?.heading}
                         />
 
                         <Title
                             className="ui-home__main__hero__highlight"
                             text={
-                                structure?.highlight
+                                props?.highlight
                             }
                         />
                     </div>
 
                     <SubTitle
                         className="ui-home__main__hero__description"
-                        text={description}
+                        text={hero.description || props?.description}
                         variant="tertiary"
                         size="small"
                     />
@@ -237,7 +230,7 @@ const HeroSection = ({ user }) => {
                     <div className="ui-home__main__hero__actions">
                         <Button
                             text={
-                                structure?.buttonText
+                                props?.buttonText
                             }
                             variant="solid"
                             size="medium"
@@ -255,7 +248,7 @@ const HeroSection = ({ user }) => {
                                 />
                             </span>
 
-                            {structure?.secondaryButtonText}
+                            {props?.secondaryButtonText}
                         </button>
                     </div>
 
@@ -285,8 +278,16 @@ const HeroSection = ({ user }) => {
 
                 <div className="ui-home__main__hero__visual">
                     <HeroOrbitVisual
-                        visual={structure?.visual}
-                        featuredDestination={structure?.featuredDestination}
+                        visual={{
+                            headline: props?.visualHeadline,
+                            subline: props?.visualSubline,
+                            orbitItems: props?.orbitItems,
+                            gallery: props?.gallery,
+                        }}
+                        featuredDestination={{
+                            label: props?.featuredDestinationLabel,
+                            title: props?.featuredDestinationTitle,
+                        }}
                     />
                 </div>
             </div>

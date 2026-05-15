@@ -1,0 +1,40 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "reviews": "Reviews",
+        "writeReview": "Write a Review",
+        "submitReview": "Submit Review",
+        "yourRating": "Your Rating",
+        "yourReview": "Your Review",
+        "reviewSubmitted": "Thank you! Your review has been submitted.",
+        "noReviewsYet": "No reviews yet. Be the first to review!"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "ReviewsSection",
+          "props": {
+            "titleRef": "reviews",
+            "writeLabelRef": "writeReview",
+            "submitLabelRef": "submitReview",
+            "ratingLabelRef": "yourRating",
+            "reviewLabelRef": "yourReview",
+            "successLabelRef": "reviewSubmitted",
+            "emptyMessageRef": "noReviewsYet"
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

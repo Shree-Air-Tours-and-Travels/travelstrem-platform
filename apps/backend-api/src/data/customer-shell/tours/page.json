@@ -1,108 +1,32 @@
 {
   "status": "success",
-
   "component": {
-    "data": {
-      "title": "Our Popular Tour Packages",
-      "subtitle": "",
-      "description": "",
-      "itemIds": []
+    "data": {},
+    "dataScope": {
+      "options": {}
     },
-
     "elements": {
       "labels": {
-        "pageTitle": "Our Popular Tour Packages",
-        "pageDescription": "",
-        "searchTours": "Search tours",
-        "searchPlaceholder": "Jaipur, island, palace...",
-        "filterFrom": "From",
-        "filterTo": "To",
-        "filterCountry": "Country",
-        "filterMinPrice": "Min price",
-        "filterMaxPrice": "Max price",
-        "filterMinDays": "Min days",
-        "filterMaxDays": "Max days",
-        "filterArrival": "Arrival",
-        "filterReturn": "Return",
-        "filterFeatured": "Feature status",
-        "filterRating": "Rating",
-        "filterTags": "Interests",
-        "filterLanguages": "Languages",
-        "filterTravellers": "Travelers",
-        "applyFilters": "Apply Filters",
-        "resetFilters": "Reset",
-        "anyStatus": "Any status",
-        "featuredOnly": "Featured only",
-        "standardTours": "Standard tours",
-        "anyRating": "Any rating",
-        "rating4plus": "4+ stars",
-        "rating3plus": "3+ stars",
-        "rating2plus": "2+ stars",
-        "any": "Any",
-        "bookNow": "Book Now",
-        "viewDetails": "View Details",
-        "contactAgent": "Contact Agent",
-        "perPerson": "per person",
-        "days": "days",
-        "nights": "nights",
-        "viewMore": "View More",
-        "noToursFound": "No tours found matching your criteria.",
-        "loadingTours": "Loading tours...",
-        "tours": "Tours",
-        "packages": "Packages",
-        "backToTours": "Back to Tours",
-        "featured": "Featured",
-        "sortBy": "Sort by",
-        "sortPriceLowHigh": "Price: Low to High",
-        "sortPriceHighLow": "Price: High to Low",
-        "sortDuration": "Duration",
-        "sortRating": "Rating",
-        "sortPopularity": "Popularity",
-        "totalTours": "Total tours",
-        "clearAllFilters": "Clear All"
+        "pageTitle": "Our Popular Tour Packages"
       },
-
-      "urls": {
-        "defaultTourImage": "/tour-images/tour-img01.jpg"
-      }
+      "urls": {}
     },
-
     "structure": {
+      "header": {
+        "titleRef": "pageTitle"
+      },
       "widgets": [
         {
           "type": "TourFilters",
-          "props": {
-            "fields": [
-              { "name": "search", "labelRef": "searchTours", "type": "text", "placeholderRef": "searchPlaceholder" },
-              { "name": "originCity", "labelRef": "filterFrom", "type": "select" },
-              { "name": "destinationCity", "labelRef": "filterTo", "type": "select" },
-              { "name": "country", "labelRef": "filterCountry", "type": "select" },
-              { "name": "minPrice", "labelRef": "filterMinPrice", "type": "number" },
-              { "name": "maxPrice", "labelRef": "filterMaxPrice", "type": "number" },
-              { "name": "minDays", "labelRef": "filterMinDays", "type": "number" },
-              { "name": "maxDays", "labelRef": "filterMaxDays", "type": "number" },
-              { "name": "arrivalDate", "labelRef": "filterArrival", "type": "date" },
-              { "name": "returnDate", "labelRef": "filterReturn", "type": "date" },
-              { "name": "tags", "labelRef": "filterTags", "type": "multiselect" }
-            ],
-            "actions": [
-              { "name": "apply", "labelRef": "applyFilters", "method": "POST", "endpoint": "/api/filters.json/apply" },
-              { "name": "reset", "labelRef": "resetFilters", "method": "GET", "endpoint": "/api/tours.json" }
-            ]
-          }
+          "widgetRef": "./widgets/tour-filters.json"
         },
         {
           "type": "ToursList",
-          "props": {
-            "emptyLabelRef": "noToursFound",
-            "loadingLabelRef": "loadingTours",
-            "ctaLabelRef": "viewDetails",
-            "priceLabelRef": "perPerson",
-            "daysLabelRef": "days",
-            "nightsLabelRef": "nights"
-          }
+          "widgetRef": "./widgets/tours-list.json"
         }
-      ]
+      ],
+      "config": {},
+      "actions": []
     }
   }
 }

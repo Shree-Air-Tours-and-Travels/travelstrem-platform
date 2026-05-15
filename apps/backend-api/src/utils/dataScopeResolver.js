@@ -1,7 +1,5 @@
 import config from "../config/index.js";
 
-const SCOPE_ORDER = ["environment", "remote", "page", "shared"];
-
 class DataScopeResolver {
   constructor(options = {}) {
     this.cache = options.cache !== false ? new Map() : null;
@@ -24,6 +22,9 @@ class DataScopeResolver {
 
   resolveShared(sharedData = {}) {
     return this._cached("shared", () => ({
+      dataScope: {
+        options: { ...sharedData?.dataScope?.options },
+      },
       elements: {
         labels: { ...sharedData?.elements?.labels },
         urls: { ...sharedData?.elements?.urls },
@@ -35,6 +36,9 @@ class DataScopeResolver {
     const component = pageDefinition?.component || {};
     return {
       data: { ...component?.data },
+      dataScope: {
+        options: { ...component?.dataScope?.options },
+      },
       elements: {
         labels: { ...component?.elements?.labels },
         urls: { ...component?.elements?.urls },
@@ -63,10 +67,27 @@ class DataScopeResolver {
 
   resolveRemoteOverrides(remoteOverrides = {}) {
     return {
+      dataScope: {
+        options: { ...remoteOverrides?.dataScope?.options },
+      },
       elements: {
         labels: { ...remoteOverrides?.elements?.labels },
         urls: { ...remoteOverrides?.elements?.urls },
       },
+    };
+  }
+
+  resolveFeatureOverrides(featureOverrides = {}) {
+    return {
+      data: { ...featureOverrides?.data },
+      dataScope: {
+        options: { ...featureOverrides?.dataScope?.options },
+      },
+      elements: {
+        labels: { ...featureOverrides?.elements?.labels },
+        urls: { ...featureOverrides?.elements?.urls },
+      },
+      structure: this._deepClone(featureOverrides?.structure || {}),
     };
   }
 
@@ -78,59 +99,73 @@ class DataScopeResolver {
     return Object.assign({}, ...sources.map((s) => s?.elements?.urls || {}));
   }
 
+  mergeOptions(...sources) {
+    return Object.assign({}, ...sources.map((s) => s?.dataScope?.options || {}));
+  }
+
   resolve(scopeTree = {}) {
     const shared = this.resolveShared(scopeTree.shared);
     const page = this.resolvePage(scopeTree.page);
     const environment = this.resolveEnvironment();
     const remote = this.resolveRemoteOverrides(scopeTree.remoteOverrides);
+    const feature = this.resolveFeatureOverrides(scopeTree.featureOverrides);
 
     const labels = this.mergeLabels(
-      environment,
-      remote,
+      shared,
       page,
-      shared
+      remote,
+      feature,
+      environment
     );
 
     const urls = this.mergeUrls(
-      environment,
-      remote,
+      shared,
       page,
-      shared
+      remote,
+      feature,
+      environment
     );
+    const options = this.mergeOptions(shared, page, remote, feature, environment);
 
     return {
       status: "success",
       component: {
         data: {
           ...page.data,
+          ...feature.data,
           _meta: {
             env: environment.env,
             resolvedAt: new Date().toISOString(),
           },
         },
+        dataScope: { options },
         elements: { labels, urls },
-        structure: page.structure,
+        structure: Object.keys(feature.structure).length ? feature.structure : page.structure,
       },
     };
   }
 
   resolveDataScope(pageDefinition, scopeContext = {}) {
-    const { sharedData, remoteOverrides } = scopeContext;
+    const { sharedData, remoteOverrides, featureOverrides } = scopeContext;
     const shared = this.resolveShared(sharedData);
     const page = this.resolvePage(pageDefinition);
     const environment = this.resolveEnvironment();
     const remote = this.resolveRemoteOverrides(remoteOverrides);
+    const feature = this.resolveFeatureOverrides(featureOverrides);
 
-    const labels = this.mergeLabels(environment, remote, page, shared);
-    const urls = this.mergeUrls(environment, remote, page, shared);
+    const labels = this.mergeLabels(shared, page, remote, feature, environment);
+    const urls = this.mergeUrls(shared, page, remote, feature, environment);
+    const options = this.mergeOptions(shared, page, remote, feature, environment);
 
     return {
       shared,
       page,
       environment,
       remote,
+      feature,
       mergedLabels: labels,
       mergedUrls: urls,
+      mergedOptions: options,
     };
   }
 

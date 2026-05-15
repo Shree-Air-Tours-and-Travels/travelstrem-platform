@@ -1,0 +1,73 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "sortRecommended": "Recommended",
+        "sortPriceLowHigh": "Price: Low to High",
+        "sortPriceHighLow": "Price: High to Low",
+        "sortDuration": "Duration",
+        "sortRating": "Rating",
+        "noToursFound": "No tours found matching your criteria.",
+        "loadingTours": "Loading tours...",
+        "loadMore": "Load More Tours",
+        "viewDetails": "View Details",
+        "perPerson": "per person",
+        "days": "days",
+        "nights": "nights",
+        "rating": "Rating",
+        "reviews": "reviews",
+        "featured": "Featured"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "TourGrid",
+          "props": {
+            "sortOptions": [
+              {
+                "id": "recommended",
+                "labelRef": "sortRecommended"
+              },
+              {
+                "id": "price_asc",
+                "labelRef": "sortPriceLowHigh"
+              },
+              {
+                "id": "price_desc",
+                "labelRef": "sortPriceHighLow"
+              },
+              {
+                "id": "duration",
+                "labelRef": "sortDuration"
+              },
+              {
+                "id": "rating",
+                "labelRef": "sortRating"
+              }
+            ],
+            "emptyLabelRef": "noToursFound",
+            "loadingLabelRef": "loadingTours",
+            "loadMoreLabelRef": "loadMore",
+            "ctaLabelRef": "viewDetails",
+            "priceLabelRef": "perPerson",
+            "daysLabelRef": "days",
+            "nightsLabelRef": "nights",
+            "ratingLabelRef": "rating",
+            "reviewsLabelRef": "reviews",
+            "featuredLabelRef": "featured"
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "savedTours": "Saved Tours",
+        "noSavedTours": "No saved tours"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "SavedToursSummary",
+          "props": {
+            "titleRef": "savedTours",
+            "emptyLabelRef": "noSavedTours"
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

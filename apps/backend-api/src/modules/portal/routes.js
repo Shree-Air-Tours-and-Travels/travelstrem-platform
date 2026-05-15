@@ -1,5 +1,5 @@
 import express from "express";
-import { getHeaderConfig, getPageConfig, getSession, getUserSession } from "./controller.js";
+import { getHeaderConfig, getPageConfig, getSession, getUserSession } from "./controllers/portalController.js";
 
 const router = express.Router();
 

@@ -58,11 +58,12 @@ const slugifyTourTitle = (value = "") =>
 
 const ToursPage = () => {
   const navigate = useNavigate();
-  const { loading: initialLoading, error: initialError, componentData } = useComponentData("/tours.json", { auto: true });
+  const { loading: initialLoading, error: initialError, componentData, elements, data } = useComponentData("/tours.json", { auto: true });
 
   // all tours returned by default /tours.json endpoint
   const allTours = useMemo(() => extractTours(componentData), [componentData]);
-  const pageTitle = get(componentData, "state.data.title", "Our Top listed Packages")
+  const labels = elements?.labels || {};
+  const pageTitle = data?.title || get(componentData, "state.data.title", "");
 
 
   
@@ -132,14 +133,14 @@ const ToursPage = () => {
       <div className="tours-page__inner">
         <header className="tours-page__header">
           <div className="tours-page__header__left">
-            <span className="tours-page__eyebrow">ToursTREM catalog</span>
+            <span className="tours-page__eyebrow">{labels.catalogEyebrow}</span>
             <Title text={pageTitle} variant="primary" />
-            <SubTitle text={"Explore curated tours across stunning destinations"} variant="primary" size="small" />
+            <SubTitle text={labels.catalogSubtitle} variant="primary" size="small" />
           </div>
           <div className="tours-page__header__right">
             <div className="tours-page__result-pill">
               <span className="tours-page__result-pill-icon" aria-hidden />
-              <span>{totalResults} tours</span>
+              <span>{totalResults} {labels.toursUnit}</span>
             </div>
           </div>
         </header>
@@ -166,20 +167,20 @@ const ToursPage = () => {
 
             {(initialError) && (
               <div className="tours-page__message tours-page__message--error" role="alert">
-                Error: {initialError}
+                {labels.errorPrefix}: {initialError}
               </div>
             )}
 
             {!initialLoading && !initialError && displayed.length === 0 && (
-              <div className="tours-page__message">No tours found. Try widening the price, dates, or destination filters.</div>
+              <div className="tours-page__message">{labels.emptyResults}</div>
             )}
 
             <div className="tours-page__listing-header">
               <div>
-                <span>Showing</span>
+                <span>{labels.showing}</span>
                 <strong>{displayed.length} of {totalResults}</strong>
               </div>
-              {filterMeta?.reset ? <span>All tours</span> : <span>{filteredTours !== null ? "Filtered results" : "Latest inventory"}</span>}
+              {filterMeta?.reset ? <span>{labels.allTours}</span> : <span>{filteredTours !== null ? labels.filteredResults : labels.latestInventory}</span>}
             </div>
 
             <div className="tours-page__list" aria-live="polite">

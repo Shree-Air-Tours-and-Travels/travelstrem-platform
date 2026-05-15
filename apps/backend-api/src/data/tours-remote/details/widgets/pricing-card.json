@@ -1,0 +1,36 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "pricingTitle": "Pricing",
+        "perPerson": "per person",
+        "seasonalPricing": "Seasonal Pricing",
+        "bookNow": "Book Now",
+        "contactAgent": "Contact Agent"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "PricingCard",
+          "props": {
+            "titleRef": "pricingTitle",
+            "priceLabelRef": "perPerson",
+            "seasonalTitleRef": "seasonalPricing",
+            "ctaLabelRef": "bookNow",
+            "secondaryCtaRef": "contactAgent"
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

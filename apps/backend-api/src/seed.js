@@ -1,7 +1,7 @@
 // seed.js
 import dotenv from "dotenv";
 import fs from "fs";
-import connectDB from "./config/db.js";
+import connectDB from "./config/database.js";
 import Tour from "./modules/tours/models/Tour.js";
 import tours from "./utils/dummydata/tours.js";
 

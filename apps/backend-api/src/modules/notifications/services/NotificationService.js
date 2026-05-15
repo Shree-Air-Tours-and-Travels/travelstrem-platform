@@ -1,4 +1,4 @@
-import Notification from "../models/Notification.js";
+import NotificationRepository from "../repositories/NotificationRepository.js";
 import NotificationQueue from "./NotificationQueue.js";
 
 const SUPPORTED_CHANNELS = new Set(["in_app", "email", "sms", "push", "whatsapp"]);
@@ -6,7 +6,7 @@ const SUPPORTED_CHANNELS = new Set(["in_app", "email", "sms", "push", "whatsapp"
 export const NotificationService = {
   async notify({ userId, bookingId = null, event, channels = ["in_app"], title, body = "", metadata = {}, recipientType = "customer" }, options = {}) {
     const safeChannels = channels.filter((channel) => SUPPORTED_CHANNELS.has(channel));
-    const notification = await Notification.create([{
+    const notification = await NotificationRepository.create([{
       userId,
       bookingId,
       recipientType,
@@ -35,18 +35,18 @@ export const NotificationService = {
     const query = { userId };
     if (unreadOnly) query.isRead = false;
     const [items, unreadCount] = await Promise.all([
-      Notification.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit),
-      Notification.countDocuments({ userId, isRead: false }),
+      NotificationRepository.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      NotificationRepository.countDocuments({ userId, isRead: false }),
     ]);
     return { items, unreadCount };
   },
 
   async markRead(userId, notificationId) {
     if (notificationId === "all") {
-      await Notification.updateMany({ userId, isRead: false }, { $set: { isRead: true } });
+      await NotificationRepository.updateMany({ userId, isRead: false }, { $set: { isRead: true } });
       return true;
     }
-    await Notification.updateOne({ _id: notificationId, userId }, { $set: { isRead: true } });
+    await NotificationRepository.updateOne({ _id: notificationId, userId }, { $set: { isRead: true } });
     return true;
   },
 };
