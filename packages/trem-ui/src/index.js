@@ -5,3 +5,13 @@ export { default as Title } from "./components/Title.jsx";
 export { default as Icon } from "./icons/Icon.jsx";
 export { default as Footer } from "./layout/Footer.jsx";
 export { default as AdminShellHeader } from "./layout/AdminShellHeader.jsx";
+export {
+  typography,
+  colors,
+  spacing,
+  radius,
+  breakpoints,
+  shadows,
+  motion,
+  themes,
+} from "@packages/trem-design-tokens";

@@ -406,6 +406,8 @@ importers:
 
   packages/trem-config: {}
 
+  packages/trem-design-tokens: {}
+
   packages/trem-environment: {}
 
   packages/trem-events: {}
@@ -418,6 +420,9 @@ importers:
 
   packages/trem-ui:
     dependencies:
+      '@packages/trem-design-tokens':
+        specifier: workspace:*
+        version: link:../trem-design-tokens
       react:
         specifier: ^18.3.1
         version: 18.3.1

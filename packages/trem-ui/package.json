@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "main": "src/index.js",
+  "dependencies": {
+    "@packages/trem-design-tokens": "workspace:*"
+  },
   "peerDependencies": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

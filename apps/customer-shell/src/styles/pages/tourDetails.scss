@@ -1,4 +1,4 @@
-@import "../../styles/base/typography"; // trem-scss — provides mixins + variables
+@import "@packages/trem-ui/styles/base/typography"; // trem-scss — provides mixins + variables
 
 .ui-tour-details {
   background: $light-bg;

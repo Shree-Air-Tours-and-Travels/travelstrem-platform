@@ -1,577 +1,7 @@
-// src/styles/base/_typography.scss
-// ==============================
-// TravelsTREM — Typography, Tokens, Mixins & Themes
-// Consolidated and defensive: includes breakpoints used across the project.
-// ==============================
+// Compatibility entrypoint for trem-ui styles.
+// Design values, CSS variables, themes, and mixins live in trem-design-tokens.
+@import "@packages/trem-design-tokens/scss";
 
-/* ------------------------------
-   1) Layout / Breakpoint variables
-   ------------------------------ */
-$container-width: 1180px;
-$full-width: 1400px;
-/* Breakpoints (single source) */
-$breakpoint-mobile: 640px; // phones
-$breakpoint-phablet: 576px; // large phones
-$breakpoint-tablet: 900px; // tablets portrait
-$breakpoint-tablet-landscape: 1024px; // tablets landscape
-$breakpoint-laptop: 1280px; // small desktops / laptops
-$breakpoint-desktop: 1440px; // desktops
-$breakpoint-wide: 1600px;
-$breakpoint-ultra: 1920px;
-$breakpoint-md: 768px;
-$breakpoint-lg: 1024px;
-
-/* Convenience derived max values for older code */
-$mobile-max: $breakpoint-tablet - 1px; // 767px
-$tablet-max: $breakpoint-laptop - 1px; // 1279px
-$laptop-max: $breakpoint-desktop - 1px; // 1439px
-$desktop-max: $breakpoint-wide - 1px;
-
-/* ------------------------------
-   2) Core typography tokens
-   ------------------------------ */
-$font-primary:
-  "Inter",
-  "Poppins",
-  system-ui,
-  -apple-system,
-  BlinkMacSystemFont,
-  "Segoe UI",
-  sans-serif;
-$font-secondary: $font-primary;
-
-$font-size-xs: 0.75rem; // 12px
-$font-size-sm: 0.875rem; // 14px
-$font-size-md: 1rem; // 16px
-$font-size-lg: 1.25rem; // 20px
-$font-size-xl: 1.5rem; // 24px
-$font-size-xxl: 2rem; // 32px
-$font-size-xxxl: 2.5rem; // 40px
-
-$font-light: 300;
-$font-regular: 400;
-$font-medium: 500;
-$font-semibold: 600;
-$font-bold: 700;
-$font-size-xs: 0.76rem !default;
-$line-height-xs: 1.25 !default;
-$line-height-sm: 1.2;
-$line-height-md: 1.5;
-$line-height-lg: 1.75;
-
-/* ------------------------------
-   3) Color tokens (Sass & CSS vars)
-   ------------------------------ */
-
-//* ------------------------------
-
-/* Sass-level colors (used for compile-time fallbacks where needed) */
-
-$primary-color: #0f8f86; // refined travel teal
-$primary-dark: #07655f;
-
-$secondary-color: #1d4f91; // deep itinerary blue
-$secondary-dark: #123565;
-
-$tertiary-color: #d8942a; // warm destination gold
-$tertiary-dark: #8a5a10;
-
-$accent-color: #132321; // premium ink green
-
-$success-color: #166534;
-$danger-color: #b91c1c;
-
-/* Base backgrounds */
-
-$light-bg: #fcfcfd;
-$white-color: #ffffff;
-
-$surface-muted: #dcecea;
-
-/* Typography */
-
-$text-dark: #111111;
-
-$text-muted: #4b5563;
-
-$text-light: rgba(17, 17, 17, 0.62);
-
-/* Borders */
-
-$border-color: rgba(17, 17, 17, 0.12);
-$transparent-color: transparent;
-
-/* Radius */
-
-$radius-sm: 10px;
-$radius-md: 16px;
-$radius-lg: 28px;
-
-/* Shadows */
-
-$shadow-soft: 0 10px 30px rgba(17, 17, 17, 0.06);
-
-$shadow-card: 0 24px 60px rgba(17, 17, 17, 0.08);
-$shadow-sm: 0 4px 12px rgba(17, 17, 17, 0.04);
-$shadow-md: 0 8px 22px rgba(17, 17, 17, 0.06);
-$shadow-lg: 0 16px 40px rgba(17, 17, 17, 0.12);
-$overlay-color: rgba(17, 17, 17, 0.48);
-
-/* Home page */
-
-$hp-bg: #edf8f7;
-
-$hp-shimmer: linear-gradient(
-  90deg,
-  transparent 0%,
-  rgba(255, 255, 255, 0.92) 50%,
-  transparent 100%
-);
-
-/* ==========================
-   CSS variables
-   ========================== */
-
-:root {
-  --color-primary: #{$primary-color};
-
-  --color-primary-dark: #{$primary-dark};
-
-  --color-secondary: #{$secondary-color};
-
-  --color-secondary-dark: #{$secondary-dark};
-
-  --color-tertiary: #{$tertiary-color};
-
-  --color-tertiary-dark: #{$tertiary-dark};
-  --color-tertiary-text: var(--color-tertiary-dark);
-
-  --color-accent: #{$accent-color};
-
-  --color-success: #{$success-color};
-
-  --color-danger: #{$danger-color};
-  --color-warning: #{$accent-color};
-  --color-on-primary: #{$white-color};
-  --color-on-surface: #{$text-dark};
-  --color-transparent: #{$transparent-color};
-  --color-link: var(--color-primary);
-  --color-link-hover: var(--color-primary-dark);
-
-  --bg: #{$light-bg};
-
-  --bg-2: #{$white-color};
-  --card-bg: #{$white-color};
-  --surface: #{$white-color};
-  --surface-elevated: #{$white-color};
-  --surface-inset: #{$surface-muted};
-
-  --text: #{$text-dark};
-  --heading: #{$text-dark};
-  --title: #{$text-dark};
-  --title-accent: #{$primary-dark};
-  --subtitle: #{$text-muted};
-  --nav-text: #{$text-dark};
-  --nav-text-active: #{$primary-color};
-  --nav-text-muted: #{$text-light};
-  --card-title: #{$text-dark};
-  --card-text: #{$text-muted};
-  --icon: #{$text-dark};
-  --icon-active: #{$primary-color};
-
-  --muted: #{$text-muted};
-  --color-muted: #{$text-muted};
-
-  --text-light: #{$text-light};
-
-  --border: #{$border-color};
-  --muted-border: #{$border-color};
-
-  --surface-muted: #{$surface-muted};
-  --page-bg: #{$light-bg};
-  --overlay: #{$overlay-color};
-  --overlay-strong: rgba(17, 17, 17, 0.6);
-  --primary-soft: rgba(15, 143, 134, 0.1);
-  --primary-softer: rgba(15, 143, 134, 0.05);
-  --primary-surface: rgba(15, 143, 134, 0.12);
-  --primary-surface-hover: rgba(15, 143, 134, 0.2);
-  --primary-focus: rgba(15, 143, 134, 0.18);
-  --primary-shadow: rgba(15, 143, 134, 0.18);
-  --secondary-soft: rgba(29, 79, 145, 0.1);
-  --secondary-surface: rgba(29, 79, 145, 0.12);
-  --secondary-surface-hover: rgba(29, 79, 145, 0.2);
-  --tertiary-soft: rgba(216, 148, 42, 0.16);
-  --tertiary-surface: rgba(216, 148, 42, 0.22);
-  --tertiary-surface-hover: rgba(216, 148, 42, 0.32);
-  --danger-soft: rgba(185, 28, 28, 0.08);
-  --success-soft: rgba(22, 101, 52, 0.08);
-  --warning-soft: rgba(17, 17, 17, 0.08);
-  --neutral-soft: rgba(17, 17, 17, 0.06);
-  --neutral-softer: rgba(17, 17, 17, 0.03);
-  --control-bg: #{$white-color};
-  --control-bg-hover: rgba(17, 17, 17, 0.05);
-  --control-border: #{$border-color};
-  --control-text: #{$text-dark};
-  --surface-glass: rgba(255, 255, 255, 0.88);
-  --surface-glass-strong: rgba(255, 255, 255, 0.98);
-  --surface-shimmer: rgba(255, 255, 255, 0.75);
-  --focus-ring: rgba(109, 92, 147, 0.14);
-
-  --radius-sm: #{$radius-sm};
-
-  --radius-md: #{$radius-md};
-
-  --radius-lg: #{$radius-lg};
-
-  --shadow-soft: #{$shadow-soft};
-
-  --shadow-card: #{$shadow-card};
-  --shadow-sm: #{$shadow-sm};
-  --shadow-md: #{$shadow-md};
-  --shadow-lg: #{$shadow-lg};
-
-  --container-width: #{$container-width};
-
-  --root-font-size: 16px;
-
-  --tours-bg: var(--bg);
-  --tours-surface: var(--bg-2);
-  --tours-border: var(--border);
-  --tours-text: var(--text);
-  --tours-muted: var(--muted);
-  --tours-accent: var(--color-primary);
-  --tours-accent-dark: var(--color-primary-dark);
-  --tours-shadow: var(--shadow-md);
-}
-
-/* ==========================
-   Dark theme
-   ========================== */
-
-.theme--light {
-  color-scheme: light;
-
-  --color-primary: #0f8f86;
-  --color-primary-dark: #07655f;
-  --color-secondary: #1d4f91;
-  --color-secondary-dark: #123565;
-  --color-tertiary: #d8942a;
-  --color-tertiary-dark: #8a5a10;
-  --color-tertiary-text: var(--color-tertiary-dark);
-  --color-accent: #132321;
-  --color-warning: #b97813;
-  --color-on-primary: #ffffff;
-  --color-on-secondary: #ffffff;
-  --color-on-tertiary: #19140a;
-  --color-on-surface: #132321;
-  --color-link: var(--color-primary-dark);
-  --color-link-hover: var(--color-secondary-dark);
-
-  --bg: #f8fbfa;
-  --bg-2: #ffffff;
-  --card-bg: #ffffff;
-  --surface: #ffffff;
-  --surface-elevated: #ffffff;
-  --surface-inset: #dcecea;
-  --surface-muted: #e4f1ef;
-  --page-bg: #f8fbfa;
-
-  --text: #132321;
-  --heading: #101918;
-  --title: #101918;
-  --title-accent: #07655f;
-  --subtitle: #526260;
-  --nav-text: #263735;
-  --nav-text-active: #07655f;
-  --nav-text-muted: rgba(19, 35, 33, 0.58);
-  --card-title: #101918;
-  --card-text: #526260;
-  --icon: #263735;
-  --icon-active: #07655f;
-  --muted: #526260;
-  --color-muted: #526260;
-  --text-light: rgba(19, 35, 33, 0.62);
-
-  --border: rgba(19, 35, 33, 0.12);
-  --muted-border: rgba(19, 35, 33, 0.1);
-  --overlay: rgba(12, 25, 23, 0.48);
-  --overlay-strong: rgba(12, 25, 23, 0.64);
-
-  --primary-soft: rgba(15, 143, 134, 0.1);
-  --primary-softer: rgba(15, 143, 134, 0.05);
-  --primary-surface: rgba(15, 143, 134, 0.12);
-  --primary-surface-hover: rgba(15, 143, 134, 0.2);
-  --primary-focus: rgba(15, 143, 134, 0.18);
-  --primary-shadow: rgba(15, 143, 134, 0.18);
-  --secondary-soft: rgba(29, 79, 145, 0.1);
-  --secondary-surface: rgba(29, 79, 145, 0.12);
-  --secondary-surface-hover: rgba(29, 79, 145, 0.2);
-  --tertiary-soft: rgba(216, 148, 42, 0.16);
-  --tertiary-surface: rgba(216, 148, 42, 0.22);
-  --tertiary-surface-hover: rgba(216, 148, 42, 0.32);
-  --danger-soft: rgba(185, 28, 28, 0.08);
-  --success-soft: rgba(22, 101, 52, 0.08);
-  --warning-soft: rgba(185, 120, 19, 0.12);
-  --neutral-soft: rgba(19, 35, 33, 0.06);
-  --neutral-softer: rgba(19, 35, 33, 0.03);
-  --control-bg: #ffffff;
-  --control-bg-hover: rgba(19, 35, 33, 0.05);
-  --control-border: rgba(19, 35, 33, 0.12);
-  --control-text: #132321;
-  --surface-glass: rgba(255, 255, 255, 0.86);
-  --surface-glass-strong: rgba(255, 255, 255, 0.97);
-  --surface-shimmer: rgba(255, 255, 255, 0.78);
-  --focus-ring: rgba(15, 143, 134, 0.22);
-  --shadow-soft: 0 10px 30px rgba(19, 35, 33, 0.07);
-  --shadow-card: 0 24px 60px rgba(19, 35, 33, 0.1);
-  --shadow-sm: 0 4px 12px rgba(19, 35, 33, 0.05);
-  --shadow-md: 0 8px 22px rgba(19, 35, 33, 0.08);
-  --shadow-lg: 0 16px 40px rgba(19, 35, 33, 0.14);
-}
-
-.theme--dark {
-  color-scheme: dark;
-
-  --bg: #081312;
-
-  --bg-2: #0d1d1b;
-  --card-bg: #102321;
-
-  --text: #f5fbfa;
-  --heading: #ffffff;
-
-  --muted: rgba(229, 246, 243, 0.74);
-  --color-muted: rgba(229, 246, 243, 0.74);
-
-  --text-light: rgba(229, 246, 243, 0.58);
-
-  --border: rgba(255, 255, 255, 0.1);
-  --muted-border: rgba(255, 255, 255, 0.1);
-
-  --surface-muted: #14302d;
-  --page-bg: #081312;
-  --overlay: rgba(0, 0, 0, 0.68);
-  --overlay-strong: rgba(0, 0, 0, 0.78);
-
-  --color-primary: #5fe0d4;
-
-  --color-primary-dark: #21a99d;
-
-  --color-secondary: #7eb6ff;
-
-  --color-secondary-dark: #3c7dca;
-
-  --color-tertiary: #f1b85f;
-
-  --color-tertiary-dark: #bf7d18;
-  --color-tertiary-text: var(--color-tertiary);
-
-  --color-accent: #ffffff;
-  --color-warning: #f1b85f;
-  --color-on-primary: #061211;
-  --color-on-secondary: #07111f;
-  --color-on-tertiary: #191103;
-  --color-on-surface: #fafafa;
-  --color-link: #7ee8df;
-  --color-link-hover: #ffffff;
-  --title: #ffffff;
-  --title-accent: #7ee8df;
-  --subtitle: rgba(229, 246, 243, 0.78);
-  --nav-text: rgba(245, 251, 250, 0.9);
-  --nav-text-active: #7ee8df;
-  --nav-text-muted: rgba(229, 246, 243, 0.5);
-  --card-title: #ffffff;
-  --card-text: rgba(229, 246, 243, 0.76);
-  --icon: rgba(245, 251, 250, 0.88);
-  --icon-active: #061211;
-  --primary-soft: rgba(95, 224, 212, 0.16);
-  --primary-softer: rgba(95, 224, 212, 0.08);
-  --primary-surface: rgba(95, 224, 212, 0.18);
-  --primary-surface-hover: rgba(95, 224, 212, 0.28);
-  --primary-focus: rgba(95, 224, 212, 0.26);
-  --primary-shadow: rgba(95, 224, 212, 0.22);
-  --secondary-soft: rgba(126, 182, 255, 0.14);
-  --secondary-surface: rgba(126, 182, 255, 0.16);
-  --secondary-surface-hover: rgba(126, 182, 255, 0.24);
-  --tertiary-soft: rgba(241, 184, 95, 0.14);
-  --tertiary-surface: rgba(241, 184, 95, 0.18);
-  --tertiary-surface-hover: rgba(241, 184, 95, 0.26);
-  --danger-soft: rgba(248, 113, 113, 0.14);
-  --success-soft: rgba(74, 222, 128, 0.14);
-  --warning-soft: rgba(241, 184, 95, 0.14);
-  --neutral-soft: rgba(255, 255, 255, 0.08);
-  --neutral-softer: rgba(255, 255, 255, 0.04);
-  --control-bg: rgba(255, 255, 255, 0.06);
-  --control-bg-hover: rgba(255, 255, 255, 0.1);
-  --control-border: rgba(255, 255, 255, 0.14);
-  --control-text: rgba(250, 250, 250, 0.92);
-  --surface: #0d1d1b;
-  --surface-elevated: #142926;
-  --surface-inset: #102a27;
-  --surface-glass: rgba(13, 29, 27, 0.88);
-  --surface-glass-strong: rgba(13, 29, 27, 0.98);
-  --surface-shimmer: rgba(255, 255, 255, 0.16);
-  --focus-ring: rgba(95, 224, 212, 0.26);
-  --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.32);
-  --shadow-card: 0 24px 60px rgba(0, 0, 0, 0.4);
-  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.22);
-  --shadow-md: 0 8px 22px rgba(0, 0, 0, 0.32);
-  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.44);
-}
-
-/* ------------------------------
-   4) Helper functions & mixins
-   ------------------------------ */
-@function rem($px, $base: 16) {
-  @return #{($px / $base)}rem;
-}
-
-@mixin mq-min($size) {
-  @media (min-width: $size) {
-    @content;
-  }
-}
-@mixin mq-max($size) {
-  @media (max-width: $size) {
-    @content;
-  }
-}
-@mixin mq-between($min, $max) {
-  @media (min-width: $min) and (max-width: $max) {
-    @content;
-  }
-}
-
-/* fluid type */
-@mixin fluid-type($min, $max, $min-vw: 320px, $max-vw: 1200px) {
-  font-size: clamp(
-    #{$min},
-    #{$min} + (#{$max} - #{$min}) *
-      ((100vw - #{$min-vw}) / (#{$max-vw} - #{$min-vw})),
-    #{$max}
-  );
-}
-
-/* ellipsis */
-@mixin ellipsis {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* multiline clamp with fallback */
-@mixin clamp-lines($lines, $line-height: 1.4) {
-  line-height: $line-height;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: $lines;
-  overflow: hidden;
-  max-height: ($lines * $line-height) + 0rem;
-}
-
-@mixin app-container($max: $container-width) {
-  width: min(#{$max}, calc(100% - 32px));
-  margin-inline: auto;
-}
-
-@mixin card-surface {
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-card);
-}
-
-@mixin skeleton-shimmer($bg: $surface-muted) {
-  position: relative;
-  overflow: hidden;
-  background: $bg;
-
-  &::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    transform: translateX(-100%);
-    background: linear-gradient(
-      90deg,
-      var(--color-transparent),
-      var(--surface-shimmer),
-      var(--color-transparent)
-    );
-    animation: trem-shimmer 1.2s infinite linear;
-  }
-}
-
-/* ------------------------------
-   5) Typographic utility mixins
-   ------------------------------ */
-@mixin type-base {
-  font-family: $font-primary;
-  font-size: $font-size-md;
-  line-height: $line-height-md;
-  font-weight: $font-regular;
-  color: var(--text);
-}
-
-@mixin type-sm {
-  font-family: $font-primary;
-  font-size: $font-size-sm;
-  line-height: $line-height-sm;
-  font-weight: $font-regular;
-  color: var(--muted);
-}
-
-@mixin type-md {
-  font-family: $font-primary;
-  font-size: $font-size-md; // same size as base, but stronger weight
-  line-height: $line-height-md;
-  font-weight: $font-medium; // sits between regular and semibold
-  color: var(--text);
-}
-
-/* New: Extra small text (for meta, labels, tags) */
-@mixin type-xs {
-  font-family: $font-primary;
-  font-size: $font-size-xs; // make sure you have $font-size-xs defined
-  line-height: $line-height-xs; // same for line-height-xs
-  font-weight: $font-regular;
-  color: var(--muted); // lighter color like sm
-}
-
-@mixin type-lg {
-  font-family: $font-primary;
-  font-size: $font-size-lg;
-  line-height: $line-height-lg;
-  font-weight: $font-medium;
-  color: var(--text);
-}
-
-@mixin type-xl {
-  font-family: $font-primary;
-  font-size: $font-size-xl;
-  line-height: $line-height-md;
-  font-weight: $font-semibold;
-  color: var(--text);
-}
-
-@mixin type-xxl {
-  font-family: $font-primary;
-  font-size: $font-size-xxl;
-  line-height: $line-height-sm;
-  font-weight: $font-semibold;
-  color: var(--text);
-}
-
-@mixin type-xxxl {
-  font-family: $font-primary;
-  font-size: $font-size-xxxl;
-  line-height: $line-height-sm;
-  font-weight: $font-bold;
-  color: var(--text);
-}
-
-/* ------------------------------
-   6) Base styles (global)
-   ------------------------------ */
 html {
   font-size: var(--root-font-size);
   -webkit-font-smoothing: antialiased;
@@ -592,7 +22,6 @@ body {
   margin: 0;
 }
 
-/* Headings */
 h1,
 h2,
 h3,
@@ -609,47 +38,53 @@ h1 {
   font-size: $font-size-xxxl;
   line-height: $line-height-sm;
 }
+
 h2 {
   font-size: $font-size-xxl;
   line-height: $line-height-sm;
 }
+
 h3 {
   font-size: $font-size-xl;
   line-height: $line-height-md;
 }
+
 h4 {
   font-size: $font-size-lg;
   line-height: $line-height-md;
 }
+
 h5 {
   font-size: $font-size-md;
   line-height: $line-height-lg;
 }
+
 h6 {
   font-size: $font-size-sm;
   line-height: $line-height-lg;
 }
 
-/* Responsive heading adjustments */
 @include mq-max($tablet-max) {
   h1 {
     font-size: 2rem;
   }
+
   h2 {
     font-size: 1.5rem;
   }
+
   h3 {
     font-size: 1.25rem;
   }
 }
 
-/* Paragraphs & links */
 p {
   font-size: $font-size-md;
   color: var(--muted);
   line-height: $line-height-lg;
   margin-bottom: 1rem;
 }
+
 p.lead {
   font-size: $font-size-lg;
   color: var(--text);
@@ -658,25 +93,23 @@ p.lead {
 a {
   color: var(--color-primary);
   text-decoration: none;
-  transition: color 0.18s ease;
+  transition: color $duration-medium $ease-standard;
+
   &:hover {
     color: var(--color-primary-dark);
   }
 }
 
-/* ------------------------------
-   7) Buttons
-   ------------------------------ */
 button,
 .btn {
   font-family: $font-primary;
   font-size: $font-size-md;
   font-weight: $font-semibold;
   padding: 0.5rem 1rem;
-  border-radius: 6px;
+  border-radius: $radius-xs;
   cursor: pointer;
   border: none;
-  transition: all 160ms ease;
+  transition: all $duration-base $ease-standard;
   background: var(--color-primary);
   color: var(--color-on-primary);
 }
@@ -697,14 +130,12 @@ button.btn--ghost {
   padding: 0.35rem 0.6rem;
   font-size: $font-size-sm;
 }
+
 .btn-lg {
   padding: 0.75rem 1.25rem;
   font-size: $font-size-lg;
 }
 
-/* ------------------------------
-   8) Forms & focus
-   ------------------------------ */
 label {
   display: inline-block;
   margin-bottom: 0.35rem;
@@ -725,13 +156,15 @@ select {
   border-radius: 8px;
   border: 1px solid var(--border);
   transition:
-    border-color 0.12s ease,
-    box-shadow 0.12s ease;
+    border-color $duration-fast $ease-standard,
+    box-shadow $duration-fast $ease-standard;
+
   &:focus {
     outline: none;
     border-color: var(--color-primary);
     box-shadow: 0 0 0 4px var(--focus-ring);
   }
+
   &::placeholder {
     color: var(--muted);
     opacity: 0.9;
@@ -744,27 +177,30 @@ select {
   }
 }
 
-/* ------------------------------
-   10) Utilities
-   ------------------------------ */
 .text-primary {
   color: var(--color-primary);
 }
+
 .text-secondary {
   color: var(--color-secondary);
 }
+
 .text-muted {
   color: var(--muted);
 }
+
 .text-center {
   text-align: center;
 }
+
 .truncate {
   @include ellipsis;
 }
+
 .clamp-2 {
   @include clamp-lines(2);
 }
+
 .clamp-3 {
   @include clamp-lines(3);
 }
@@ -781,9 +217,6 @@ select {
   margin: -1px;
 }
 
-/* ------------------------------
-   11) Responsive helpers examples
-   ------------------------------ */
 @include mq-max($tablet-max) {
   body {
     font-size: 0.98rem;
@@ -798,12 +231,10 @@ select {
   }
 }
 
-/* ------------------------------
-   12) Accessibility & misc
-   ------------------------------ */
 :focus {
   outline-offset: 3px;
 }
+
 a:focus,
 button:focus,
 input:focus {
@@ -811,25 +242,18 @@ input:focus {
   outline: none;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
-  }
-}
 @media print {
   body {
     background: var(--bg-2);
     color: var(--text);
   }
+
   a::after {
     content: " (" attr(href) ")";
     font-size: 0.85em;
   }
+
   .no-print {
     display: none !important;
   }
 }
-
-/* End of _typography.scss */

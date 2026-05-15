@@ -1,4 +1,4 @@
-@import "../../styles/base/typography"; // trem-scss
+@import "@packages/trem-ui/styles/base/typography"; // trem-scss
 
 // layout tokens (override if already declared globally)
 $header-height: 72px;

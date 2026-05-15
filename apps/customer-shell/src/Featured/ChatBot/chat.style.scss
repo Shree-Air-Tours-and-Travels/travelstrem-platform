@@ -1,5 +1,5 @@
 /* src/styles/components/chat.scss */
-@import "../../styles/base/typography"; // <- uses your typography variables
+@import "@packages/trem-ui/styles/base/typography"; // <- uses your typography variables
 
 /* Shared utilities */
 %box {

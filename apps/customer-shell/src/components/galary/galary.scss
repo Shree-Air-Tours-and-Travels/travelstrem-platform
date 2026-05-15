@@ -1,5 +1,5 @@
 // File: src/components/Gallery/galary.scss
-@import "../../styles/base/typography"; // trem-scss base (your preferred typography)
+@import "@packages/trem-ui/styles/base/typography"; // trem-scss base (your preferred typography)
 
 /* Fallbacks if trem-scss variables are missing */
 $font-primary: if(
