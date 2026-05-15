@@ -2,7 +2,7 @@
 import dotenv from "dotenv";
 import fs from "fs";
 import connectDB from "./config/db.js";
-import Tour from "./models/Tour.js";
+import Tour from "./modules/tours/models/Tour.js";
 import tours from "./utils/dummydata/tours.js";
 
 // Load environment file like in server.js

@@ -1,4 +1,4 @@
-import Booking from "../../../models/Booking.js";
+import Booking from "../models/Booking.js";
 import TravellerService from "./TravellerService.js";
 import QuoteService from "./QuoteService.js";
 import PaymentService from "./PaymentService.js";

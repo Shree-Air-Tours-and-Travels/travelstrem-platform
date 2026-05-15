@@ -1,4 +1,4 @@
-import BookingDocument from "../../../models/BookingDocument.js";
+import BookingDocument from "../models/BookingDocument.js";
 
 export const DocumentService = {
   async upload(bookingId, payload = {}, actor = {}, options = {}) {

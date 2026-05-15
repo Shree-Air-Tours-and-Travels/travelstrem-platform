@@ -1,4 +1,4 @@
-import BookingPayment from "../../../models/BookingPayment.js";
+import BookingPayment from "../models/BookingPayment.js";
 
 export const PaymentService = {
   async record(booking, payload = {}, actor = {}, options = {}) {

@@ -1,4 +1,4 @@
-import BookingAssignment from "../../../models/BookingAssignment.js";
+import BookingAssignment from "../models/BookingAssignment.js";
 
 export const AssignmentService = {
   async assign({ booking, newAgent, assignedBy, reason = "" }, options = {}) {

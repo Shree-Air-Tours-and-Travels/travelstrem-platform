@@ -1,0 +1,119 @@
+{
+  "status": "success",
+
+  "component": {
+    "data": {
+      "title": "Discover Tours",
+      "subtitle": "Find your perfect adventure",
+      "description": "Browse our curated collection of tours and travel packages.",
+      "itemIds": []
+    },
+
+    "elements": {
+      "labels": {
+        "pageTitle": "Discover Tours",
+        "pageSubtitle": "Find your perfect adventure",
+        "pageDescription": "Browse our curated collection of tours and travel packages.",
+        "bookNow": "Book Now",
+        "viewDetails": "View Details",
+        "contactAgent": "Contact Agent",
+        "perPerson": "per person",
+        "days": "days",
+        "nights": "nights",
+        "from": "From",
+        "to": "To",
+        "duration": "Duration",
+        "price": "Price",
+        "rating": "Rating",
+        "reviews": "reviews",
+        "noToursFound": "No tours found matching your criteria.",
+        "loadingTours": "Loading tours...",
+        "loadMore": "Load More Tours",
+        "showingResults": "Showing results",
+        "of": "of",
+        "sortBy": "Sort by",
+        "sortRecommended": "Recommended",
+        "sortPriceLowHigh": "Price: Low to High",
+        "sortPriceHighLow": "Price: High to Low",
+        "sortDuration": "Duration",
+        "sortRating": "Rating",
+        "featured": "Featured",
+        "popularDestinations": "Popular Destinations",
+        "viewAll": "View All",
+        "quickFilterAll": "All Tours",
+        "quickFilterAdventure": "Adventure",
+        "quickFilterCultural": "Cultural",
+        "quickFilterBeach": "Beach",
+        "quickFilterWildlife": "Wildlife",
+        "quickFilterLuxury": "Luxury",
+        "startPlanning": "Start Planning Your Trip",
+        "startPlanningDesc": "Tell us your preferences and we will create a personalized itinerary.",
+        "getStarted": "Get Started",
+        "shareTour": "Share",
+        "saveTour": "Save",
+        "saved": "Saved"
+      },
+
+      "urls": {
+        "defaultTourImage": "/tour-images/tour-img01.jpg",
+        "placeholderImage": "/images/placeholder.jpg"
+      }
+    },
+
+    "structure": {
+      "widgets": [
+        {
+          "type": "HeroBanner",
+          "props": {
+            "titleRef": "pageTitle",
+            "subtitleRef": "pageSubtitle",
+            "descriptionRef": "pageDescription"
+          }
+        },
+        {
+          "type": "QuickFilters",
+          "props": {
+            "filters": [
+              { "id": "all", "labelRef": "quickFilterAll", "active": true },
+              { "id": "adventure", "labelRef": "quickFilterAdventure" },
+              { "id": "cultural", "labelRef": "quickFilterCultural" },
+              { "id": "beach", "labelRef": "quickFilterBeach" },
+              { "id": "wildlife", "labelRef": "quickFilterWildlife" },
+              { "id": "luxury", "labelRef": "quickFilterLuxury" }
+            ]
+          }
+        },
+        {
+          "type": "TourGrid",
+          "props": {
+            "sortOptions": [
+              { "id": "recommended", "labelRef": "sortRecommended" },
+              { "id": "price_asc", "labelRef": "sortPriceLowHigh" },
+              { "id": "price_desc", "labelRef": "sortPriceHighLow" },
+              { "id": "duration", "labelRef": "sortDuration" },
+              { "id": "rating", "labelRef": "sortRating" }
+            ],
+            "emptyLabelRef": "noToursFound",
+            "loadingLabelRef": "loadingTours",
+            "loadMoreLabelRef": "loadMore",
+            "ctaLabelRef": "viewDetails",
+            "priceLabelRef": "perPerson",
+            "daysLabelRef": "days",
+            "nightsLabelRef": "nights",
+            "ratingLabelRef": "rating",
+            "reviewsLabelRef": "reviews",
+            "featuredLabelRef": "featured"
+          }
+        },
+        {
+          "type": "StartPlanning",
+          "props": {
+            "titleRef": "startPlanning",
+            "descriptionRef": "startPlanningDesc",
+            "ctaLabelRef": "getStarted"
+          }
+        }
+      ]
+    }
+  }
+}

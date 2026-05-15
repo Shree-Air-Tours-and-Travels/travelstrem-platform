@@ -1,5 +1,5 @@
-import BookingTraveller from "../../../models/BookingTraveller.js";
-import BookingDocument from "../../../models/BookingDocument.js";
+import BookingTraveller from "../models/BookingTraveller.js";
+import BookingDocument from "../models/BookingDocument.js";
 
 export const TravellerService = {
   async replaceForBooking(bookingId, travellers, options = {}) {

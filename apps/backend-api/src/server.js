@@ -16,17 +16,17 @@ import connectDB from "./config/db.js"; // keep your existing DB connector
 import config from "./config/index.js"; // <--- import the single config file
 
 // Import your routes (paths left as you had them)
-import authRoutes from "./routes/authRoutes.js";
-import tourRoutes from "./routes/tourRoutes.js";
-import heroRoutes from "./routes/heroRoutes.js";
-import serviceRoutes from "./routes/serviceRoutes.js";
-import formsRouter from "./routes/form.js";
-import filtersRoutes from "./routes/filtersRoutes.js";
-import chatRoutes from "./routes/chatRoutes.js";
-import bookingRoutes from "./routes/bookingsRoutes.js";
-import adminBookingRoutes from "./routes/adminBookingRoutes.js";
-import notificationRoutes from "./routes/notificationRoutes.js";
-import portalRoutes from "./routes/portalRoutes.js";
+import authRoutes from "./modules/auth/routes.js";
+import tourRoutes from "./modules/tours/routes.js";
+import heroRoutes from "./modules/portal/heroRoutes.js";
+import serviceRoutes from "./modules/services/routes.js";
+import formsRouter from "./modules/forms/routes.js";
+import filtersRoutes from "./modules/tours/filtersRoutes.js";
+import chatRoutes from "./modules/chat/routes.js";
+import bookingRoutes from "./modules/bookings/routes.js";
+import adminBookingRoutes from "./modules/bookings/adminRoutes.js";
+import notificationRoutes from "./modules/notifications/routes.js";
+import portalRoutes from "./modules/portal/routes.js";
 
 const app = express();
 app.set("trust proxy", true);

@@ -1,0 +1,125 @@
+{
+  "status": "success",
+
+  "component": {
+    "data": {
+      "title": "My Profile",
+      "subtitle": "",
+      "description": "Manage your personal information and preferences.",
+      "itemIds": []
+    },
+
+    "elements": {
+      "labels": {
+        "profileTitle": "My Profile",
+        "profileDescription": "Manage your personal information and preferences.",
+        "personalInfo": "Personal Information",
+        "fullName": "Full Name",
+        "emailAddress": "Email Address",
+        "phoneNumber": "Phone Number",
+        "dateOfBirth": "Date of Birth",
+        "nationality": "Nationality",
+        "editProfile": "Edit Profile",
+        "saveChanges": "Save Changes",
+        "cancel": "Cancel",
+        "changePassword": "Change Password",
+        "currentPassword": "Current Password",
+        "newPassword": "New Password",
+        "confirmPassword": "Confirm Password",
+        "preferences": "Preferences",
+        "language": "Language",
+        "currency": "Currency",
+        "notificationPreferences": "Notification Preferences",
+        "emailNotifications": "Email Notifications",
+        "smsNotifications": "SMS Notifications",
+        "bookingHistory": "Booking History",
+        "viewAllBookings": "View All Bookings",
+        "noBookingsYet": "No bookings yet",
+        "savedTours": "Saved Tours",
+        "noSavedTours": "No saved tours",
+        "logout": "Logout",
+        "deleteAccount": "Delete Account",
+        "profileUpdated": "Profile updated successfully",
+        "passwordChanged": "Password changed successfully"
+      },
+
+      "urls": {
+        "defaultAvatar": "/images/default-avatar.png"
+      }
+    },
+
+    "structure": {
+      "widgets": [
+        {
+          "type": "ProfileHeader",
+          "props": {
+            "titleRef": "profileTitle",
+            "avatarUrlRef": "defaultAvatar"
+          }
+        },
+        {
+          "type": "ProfileForm",
+          "props": {
+            "sectionTitleRef": "personalInfo",
+            "fields": [
+              { "name": "name", "labelRef": "fullName", "type": "text", "required": true },
+              { "name": "email", "labelRef": "emailAddress", "type": "email", "required": true },
+              { "name": "phone", "labelRef": "phoneNumber", "type": "tel" },
+              { "name": "dob", "labelRef": "dateOfBirth", "type": "date" },
+              { "name": "nationality", "labelRef": "nationality", "type": "text" }
+            ],
+            "submitLabelRef": "saveChanges",
+            "cancelLabelRef": "cancel"
+          }
+        },
+        {
+          "type": "PasswordSection",
+          "props": {
+            "titleRef": "changePassword",
+            "fields": [
+              { "name": "currentPassword", "labelRef": "currentPassword", "type": "password", "required": true },
+              { "name": "newPassword", "labelRef": "newPassword", "type": "password", "required": true },
+              { "name": "confirmPassword", "labelRef": "confirmPassword", "type": "password", "required": true }
+            ],
+            "submitLabelRef": "saveChanges"
+          }
+        },
+        {
+          "type": "PreferencesSection",
+          "props": {
+            "titleRef": "preferences",
+            "fields": [
+              { "name": "language", "labelRef": "language", "type": "select" },
+              { "name": "currency", "labelRef": "currency", "type": "select" }
+            ]
+          }
+        },
+        {
+          "type": "NotificationPreferences",
+          "props": {
+            "titleRef": "notificationPreferences",
+            "toggles": [
+              { "name": "emailNotifications", "labelRef": "emailNotifications" },
+              { "name": "smsNotifications", "labelRef": "smsNotifications" }
+            ]
+          }
+        },
+        {
+          "type": "BookingHistorySummary",
+          "props": {
+            "titleRef": "bookingHistory",
+            "ctaLabelRef": "viewAllBookings",
+            "emptyLabelRef": "noBookingsYet"
+          }
+        },
+        {
+          "type": "SavedToursSummary",
+          "props": {
+            "titleRef": "savedTours",
+            "emptyLabelRef": "noSavedTours"
+          }
+        }
+      ]
+    }
+  }
+}

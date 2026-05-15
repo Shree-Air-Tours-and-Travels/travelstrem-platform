@@ -1,4 +1,4 @@
-import BookingStatusHistory from "../../../models/BookingStatusHistory.js";
+import BookingStatusHistory from "../models/BookingStatusHistory.js";
 
 export const StatusHistoryService = {
   async record({ bookingId, from, to, actor = {}, reason = "" }, options = {}) {

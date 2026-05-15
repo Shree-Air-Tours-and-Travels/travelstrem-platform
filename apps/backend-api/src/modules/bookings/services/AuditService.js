@@ -1,4 +1,4 @@
-import BookingAuditLog from "../../../models/BookingAuditLog.js";
+import BookingAuditLog from "../models/BookingAuditLog.js";
 
 export const AuditService = {
   async record({ bookingId, action, before = null, after = null, actor = {}, reqMeta = {} }, options = {}) {

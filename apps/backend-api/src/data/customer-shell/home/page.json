@@ -1,0 +1,116 @@
+{
+  "status": "success",
+
+  "component": {
+    "data": {
+      "title": "Travelling opens the door to creating",
+      "subtitle": "memories",
+      "description": "Discover the world with TravelsTREM. Curated adventures, stunning destinations, and memories that last a lifetime.",
+      "itemIds": []
+    },
+
+    "elements": {
+      "labels": {
+        "heroEyebrow": "Premium Travel Experiences",
+        "heroHighlight": "memories",
+        "heroButtonText": "Explore Now",
+        "heroSecondaryButtonText": "Watch story",
+        "topDestinationLabel": "Top Destination",
+        "topDestinationTitle": "Bali, Indonesia",
+        "statsHappyTravelers": "Happy Travelers",
+        "statsDestinations": "Destinations",
+        "statsAvgRating": "Average Rating",
+        "visualHeadline": "Live route studio",
+        "visualSubline": "Flights, stays, weather, and local moments balanced in one plan.",
+        "orbitFlights": "Flights",
+        "orbitStays": "Stays",
+        "orbitRoutes": "Routes",
+        "orbitWeather": "Weather",
+        "galleryNextWindow": "Next window",
+        "galleryTripStyle": "Trip style",
+        "galleryMood": "Mood",
+        "sepNov": "Sep - Nov",
+        "slowLuxury": "Slow luxury",
+        "islandCalm": "Island calm",
+        "servicesTitle": "Our Services",
+        "servicesDescription": "Curated travel experiences and premium travel solutions designed to make every journey seamless, elegant, and memorable.",
+        "featuredToursTitle": "Our Popular Tour Packages",
+        "featuredToursDescription": "",
+        "bookNow": "Book Now",
+        "contactAgent": "Contact Agent",
+        "viewMore": "View More",
+        "exploreNow": "Explore Now",
+        "backToTours": "Back to Tours",
+        "shareThisTour": "Share this tour",
+        "saveToWishlist": "Save to Wishlist",
+        "contactUs": "Contact Us",
+        "chatOnWhatsapp": "Chat on whatsapp",
+        "reserve": "Reserve",
+        "learnMore": "Learn More",
+        "readMore": "Read More",
+        "showLess": "Show Less"
+      },
+
+      "urls": {
+        "heroImagePrimary": "/tour-images/tour-img12.jpg",
+        "heroImageSecondary": "/tour-images/tour-img06.jpg",
+        "serviceFlightsHotelImage": "/service-images/flights-hotel.png",
+        "serviceTravelPackagesImage": "/service-images/guide.png",
+        "serviceVisaImage": "/service-images/visa.png",
+        "serviceCorporateImage": "/service-images/corporate.png",
+        "serviceCabImage": "/service-images/cab.png"
+      }
+    },
+
+    "structure": {
+      "widgets": [
+        {
+          "type": "Hero",
+          "props": {
+            "titleRef": "heroEyebrow",
+            "highlightRef": "heroHighlight",
+            "buttonTextRef": "heroButtonText",
+            "secondaryButtonTextRef": "heroSecondaryButtonText",
+            "featuredDestinationLabelRef": "topDestinationLabel",
+            "featuredDestinationTitleRef": "topDestinationTitle",
+            "stats": [
+              { "value": "15K+", "labelRef": "statsHappyTravelers" },
+              { "value": "120+", "labelRef": "statsDestinations" },
+              { "value": "4.9", "labelRef": "statsAvgRating" }
+            ],
+            "visualHeadlineRef": "visualHeadline",
+            "visualSublineRef": "visualSubline",
+            "orbitItems": [
+              { "icon": "plane", "labelRef": "orbitFlights" },
+              { "icon": "hotel", "labelRef": "orbitStays" },
+              { "icon": "route", "labelRef": "orbitRoutes" },
+              { "icon": "cloud", "labelRef": "orbitWeather" }
+            ],
+            "gallery": [
+              { "icon": "calendar", "labelRef": "galleryNextWindow", "valueRef": "sepNov" },
+              { "icon": "sparkles", "labelRef": "galleryTripStyle", "valueRef": "slowLuxury" },
+              { "icon": "compass", "labelRef": "galleryMood", "valueRef": "islandCalm" }
+            ]
+          }
+        },
+        {
+          "type": "services",
+          "props": {
+            "titleRef": "servicesTitle",
+            "descriptionRef": "servicesDescription",
+            "source": "shell"
+          }
+        },
+        {
+          "type": "featuredTours",
+          "props": {
+            "titleRef": "featuredToursTitle",
+            "descriptionRef": "featuredToursDescription",
+            "ctaLabelRef": "viewMore",
+            "source": "toursTREM"
+          }
+        }
+      ]
+    }
+  }
+}

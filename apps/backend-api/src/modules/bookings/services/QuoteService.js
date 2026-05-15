@@ -1,4 +1,4 @@
-import BookingQuote from "../../../models/BookingQuote.js";
+import BookingQuote from "../models/BookingQuote.js";
 
 export function computeQuoteFinalAmount(quote = {}) {
   const additions = ["basePrice", "hotelPrice", "flightPrice", "visaFee", "insuranceFee", "taxes", "serviceFee", "agentMarkup"]

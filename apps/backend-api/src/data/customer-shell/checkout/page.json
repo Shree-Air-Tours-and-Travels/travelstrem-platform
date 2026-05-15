@@ -1,0 +1,170 @@
+{
+  "status": "success",
+
+  "component": {
+    "data": {
+      "title": "Checkout",
+      "subtitle": "",
+      "description": "Review and confirm your booking.",
+      "itemIds": []
+    },
+
+    "elements": {
+      "labels": {
+        "checkoutTitle": "Checkout",
+        "checkoutDescription": "Review and confirm your booking.",
+        "bookingSummary": "Booking Summary",
+        "tourDetails": "Tour Details",
+        "tourName": "Tour Name",
+        "tourDate": "Tour Date",
+        "duration": "Duration",
+        "travellers": "Travellers",
+        "adults": "Adults",
+        "children": "Children",
+        "infants": "Infants",
+        "priceBreakdown": "Price Breakdown",
+        "basePrice": "Base Price",
+        "taxesAndFees": "Taxes & Fees",
+        "discount": "Discount",
+        "totalAmount": "Total Amount",
+        "promoCode": "Promo Code",
+        "applyPromo": "Apply",
+        "removePromo": "Remove",
+        "invalidPromo": "Invalid promo code",
+        "promoApplied": "Promo code applied successfully",
+        "travellerDetails": "Traveller Details",
+        "addTraveller": "Add Traveller",
+        "removeTraveller": "Remove",
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "dateOfBirth": "Date of Birth",
+        "nationality": "Nationality",
+        "passportNumber": "Passport Number",
+        "specialRequirements": "Special Requirements",
+        "paymentMethod": "Payment Method",
+        "creditCard": "Credit Card",
+        "debitCard": "Debit Card",
+        "netBanking": "Net Banking",
+        "upi": "UPI",
+        "wallet": "Wallet",
+        "cardNumber": "Card Number",
+        "cardHolderName": "Card Holder Name",
+        "expiryDate": "Expiry Date",
+        "cvv": "CVV",
+        "billingAddress": "Billing Address",
+        "sameAsContact": "Same as contact information",
+        "termsAndConditions": "I agree to the Terms & Conditions and Cancellation Policy",
+        "confirmBooking": "Confirm Booking",
+        "processingPayment": "Processing your payment...",
+        "bookingConfirmed": "Booking Confirmed!",
+        "bookingReference": "Booking Reference",
+        "confirmationEmailSent": "A confirmation email has been sent to your registered email address.",
+        "viewBookings": "View My Bookings",
+        "continueShopping": "Continue Shopping",
+        "cancellationPolicy": "Cancellation Policy",
+        "freeCancellation": "Free cancellation up to 48 hours before departure",
+        "partialCancellation": "50% refund for cancellations within 24-48 hours",
+        "noCancellation": "No refund for cancellations within 24 hours",
+        "required": "Required",
+        "optional": "Optional",
+        "editBooking": "Edit Booking",
+        "goBack": "Go Back"
+      },
+
+      "urls": {
+        "termsUrl": "/terms",
+        "cancellationPolicyUrl": "/cancellation-policy",
+        "privacyPolicyUrl": "/privacy"
+      }
+    },
+
+    "structure": {
+      "widgets": [
+        {
+          "type": "BookingSummary",
+          "props": {
+            "titleRef": "bookingSummary"
+          }
+        },
+        {
+          "type": "PriceBreakdown",
+          "props": {
+            "titleRef": "priceBreakdown",
+            "labels": {
+              "basePriceRef": "basePrice",
+              "taxesRef": "taxesAndFees",
+              "discountRef": "discount",
+              "totalRef": "totalAmount",
+              "promoCodeRef": "promoCode",
+              "applyRef": "applyPromo",
+              "removeRef": "removePromo",
+              "invalidRef": "invalidPromo",
+              "appliedRef": "promoApplied"
+            }
+          }
+        },
+        {
+          "type": "TravellerForm",
+          "props": {
+            "titleRef": "travellerDetails",
+            "addLabelRef": "addTraveller",
+            "removeLabelRef": "removeTraveller",
+            "fields": [
+              { "name": "firstName", "labelRef": "firstName", "type": "text", "required": true },
+              { "name": "lastName", "labelRef": "lastName", "type": "text", "required": true },
+              { "name": "dob", "labelRef": "dateOfBirth", "type": "date", "required": true },
+              { "name": "nationality", "labelRef": "nationality", "type": "text", "required": true },
+              { "name": "passportNumber", "labelRef": "passportNumber", "type": "text" }
+            ],
+            "specialReqLabelRef": "specialRequirements"
+          }
+        },
+        {
+          "type": "PaymentSection",
+          "props": {
+            "titleRef": "paymentMethod",
+            "methods": [
+              { "id": "creditCard", "labelRef": "creditCard" },
+              { "id": "debitCard", "labelRef": "debitCard" },
+              { "id": "netBanking", "labelRef": "netBanking" },
+              { "id": "upi", "labelRef": "upi" },
+              { "id": "wallet", "labelRef": "wallet" }
+            ],
+            "cardFields": [
+              { "name": "cardNumber", "labelRef": "cardNumber", "type": "text", "required": true },
+              { "name": "cardHolderName", "labelRef": "cardHolderName", "type": "text", "required": true },
+              { "name": "expiryDate", "labelRef": "expiryDate", "type": "text", "required": true },
+              { "name": "cvv", "labelRef": "cvv", "type": "password", "required": true }
+            ]
+          }
+        },
+        {
+          "type": "TermsCheckbox",
+          "props": {
+            "labelRef": "termsAndConditions",
+            "termsUrlRef": "termsUrl",
+            "cancellationUrlRef": "cancellationPolicyUrl"
+          }
+        },
+        {
+          "type": "ConfirmButton",
+          "props": {
+            "labelRef": "confirmBooking",
+            "processingRef": "processingPayment"
+          }
+        },
+        {
+          "type": "CancellationPolicy",
+          "props": {
+            "titleRef": "cancellationPolicy",
+            "rules": [
+              { "labelRef": "freeCancellation" },
+              { "labelRef": "partialCancellation" },
+              { "labelRef": "noCancellation" }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

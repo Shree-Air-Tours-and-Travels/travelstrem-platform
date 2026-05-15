@@ -1,4 +1,4 @@
-import BookingTimeline from "../../../models/BookingTimeline.js";
+import BookingTimeline from "../models/BookingTimeline.js";
 import EventBus from "./EventBus.js";
 
 export const BookingTimelineService = {
