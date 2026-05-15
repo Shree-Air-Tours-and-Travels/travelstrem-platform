@@ -7,6 +7,7 @@ import { usePortalConfig } from "../../components/portal/PortalConfigContext.jsx
 import Dropdown from "../../components/Dropdown/Dropdown.jsx";
 import { useThemeMode } from "@packages/trem-utils";
 import NotificationBell from "../../components/notifications/NotificationBell.jsx";
+import { canAccessAuthRoute } from "@packages/trem-auth-core";
 
 const getNavPath = (item) => item?.path || "/";
 
@@ -24,11 +25,10 @@ const normalizeMenuItem = (item, index) => ({
 
 const canShowItem = (item, session) => {
     const role = session?.user?.role || session?.flags?.role || "public";
-    const isAuthenticated = !!session?.isAuthenticated;
-    if (item?.access === "authenticated" && !isAuthenticated) return false;
-    if (item?.access === "publicOnly" && isAuthenticated) return false;
-    if (item?.access === "roles") return isAuthenticated && Array.isArray(item.roles) && item.roles.includes(role);
-    return true;
+    if (item?.access === "roles") {
+        return canAccessAuthRoute(item, session) || (session?.isAuthenticated && Array.isArray(item.roles) && item.roles.includes(role));
+    }
+    return canAccessAuthRoute(item, session);
 };
 
 export default function Header() {
