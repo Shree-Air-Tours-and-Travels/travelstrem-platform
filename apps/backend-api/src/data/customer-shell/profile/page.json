@@ -1,0 +1,54 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "profileTitle": "My Profile",
+        "profileDescription": "Manage your personal information and preferences."
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {
+        "titleRef": "profileTitle",
+        "descriptionRef": "profileDescription"
+      },
+      "widgets": [
+        {
+          "type": "ProfileHeader",
+          "widgetRef": "./widgets/profile-header.json"
+        },
+        {
+          "type": "ProfileForm",
+          "widgetRef": "./widgets/profile-form.json"
+        },
+        {
+          "type": "PasswordSection",
+          "widgetRef": "./widgets/password-section.json"
+        },
+        {
+          "type": "PreferencesSection",
+          "widgetRef": "./widgets/preferences-section.json"
+        },
+        {
+          "type": "NotificationPreferences",
+          "widgetRef": "./widgets/notification-preferences.json"
+        },
+        {
+          "type": "BookingHistorySummary",
+          "widgetRef": "./widgets/booking-history-summary.json"
+        },
+        {
+          "type": "SavedToursSummary",
+          "widgetRef": "./widgets/saved-tours-summary.json"
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

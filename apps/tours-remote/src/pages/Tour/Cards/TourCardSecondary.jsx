@@ -42,7 +42,7 @@ const TourCardSecondary = ({ tour, onView, isAdmin = false, onEdit, onDelete }) 
     const routeText = getRouteText(tour);
 
     const handleView = () => {
-        if (typeof onView === "function") onView(_id);
+        if (typeof onView === "function") onView(tour);
     };
 
     const handleEdit = () => {

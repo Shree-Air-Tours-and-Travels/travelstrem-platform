@@ -1,0 +1,28 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "cancellationPolicy": "Cancellation Policy"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "CancellationPolicy",
+          "props": {
+            "titleRef": "cancellationPolicy"
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

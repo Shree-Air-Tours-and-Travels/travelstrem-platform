@@ -1,672 +1,454 @@
-// /src/pages/tours/TourDetails.jsx
 import React, { useMemo, useState } from "react";
-import { useParams, useLocation, useNavigate } from "react-router-dom";
-import { useComponentData } from "@packages/trem-utils";
-import "../../styles/pages/tourDetails.scss";
-import Gallery from "../../components/galary/galary";
-import ContactAgentModal from "../../modals/ContactAgentModal.jsx";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import get from "lodash/get";
-import { fetchData } from "@packages/trem-utils";
-import SummaryCard from "../../components/Cards/summaryCard/summaryCards.jsx";
-import HighlightsCard from "../../components/Cards/highlightCard/HighlightsCard.jsx";
-import ItineraryCard from "../../components/Cards/internityCard/ItineraryCard.jsx";
-import Icon from "../../icons/Icon.jsx";
-import { Title } from "@packages/trem-ui";
-import { SubTitle } from "@packages/trem-ui";
+import { fetchData, useComponentData } from "@packages/trem-utils";
+import { FiArrowLeft, FiCamera, FiChevronLeft, FiChevronRight, FiExternalLink, FiMessageCircle, FiShare2 } from "react-icons/fi";
 import BookingModal from "../../modals/BookingModal.jsx";
-import { useDeviceType } from "@packages/trem-utils";
+import ContactAgentModal from "../../modals/ContactAgentModal.jsx";
+import "../../styles/pages/tourDetails.scss";
 
-/**
- * Improved TourDetails UI
- * - Desktop: left info card next to gallery (compact price/quick facts + CTAs)
- * - Reviews: show 5 by default, "Show more" adds 5 more; "Show less" collapses back
- * - Clean meta (no tour id)
- * - Grouped cards for visual clarity
- */
+const MONEY_FORMATTERS = new Map();
 
-const REVIEWS_CHUNK = 5;
+const getCurrencyFormatter = (currency = "INR") => {
+    if (!MONEY_FORMATTERS.has(currency)) {
+        MONEY_FORMATTERS.set(
+            currency,
+            new Intl.NumberFormat("en-IN", {
+                style: "currency",
+                currency,
+                maximumFractionDigits: 0,
+            })
+        );
+    }
+    return MONEY_FORMATTERS.get(currency);
+};
 
-const TourDetailsSkeleton = () => (
-    <main className="tour-details tour-details--loading" role="status" aria-live="polite" aria-label="Loading tour details">
-        <div className="tour-details__loading-hero" />
-        <div className="tour-details__loading-content">
-            <div className="tour-details__loading-main">
-                <div className="tour-details__loading-line tour-details__loading-line--title" />
-                <div className="tour-details__loading-line" />
-                <div className="tour-details__loading-line" />
-                <div className="tour-details__loading-line tour-details__loading-line--short" />
+const slugifyTourTitle = (value = "") =>
+    String(value)
+        .trim()
+        .toLowerCase()
+        .replace(/&/g, " and ")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+
+const getRouteIdentityFromPath = (pathname) => {
+    const parts = pathname.split("/").filter(Boolean);
+    const appIndex = parts.indexOf("tours");
+    const relevantParts = appIndex >= 0 ? parts.slice(appIndex + 1) : parts;
+
+    return relevantParts[0] || "";
+};
+
+const extractTour = (componentData, navTour) => {
+    const stateData =
+        get(componentData, "state.data") ||
+        get(componentData, "componentData.state.data") ||
+        get(componentData, "componentData.data") ||
+        get(componentData, "data");
+
+    let apiTour = null;
+    if (Array.isArray(stateData)) apiTour = stateData[0] || null;
+    else if (Array.isArray(stateData?.tours)) apiTour = stateData.tours[0] || null;
+    else if (stateData && typeof stateData === "object" && (stateData._id || stateData.title)) apiTour = stateData;
+
+    if (!navTour && !apiTour) return null;
+
+    return {
+        ...(navTour || {}),
+        ...(apiTour || {}),
+        _page: {
+            title: get(componentData, "state.data.title") || get(componentData, "config.header.title"),
+            description: get(componentData, "state.data.description") || get(componentData, "config.header.description"),
+            actions: get(componentData, "actions") || {},
+        },
+    };
+};
+
+const getCityDisplay = (tour = {}) => {
+    const city = tour.city;
+    if (!city) return "Flexible route";
+    if (typeof city === "string") return city;
+    const from = city.from || city.name || city.city;
+    const to = city.to || tour.address?.city;
+    if (from && to) return `${from} to ${to}`;
+    return from || to || "Flexible route";
+};
+
+const getPhotos = (tour = {}) => {
+    if (Array.isArray(tour.photos) && tour.photos.length) return tour.photos.filter(Boolean);
+    if (tour.photo) return [tour.photo];
+    return [];
+};
+
+const getPriceText = (tour = {}) => {
+    const price = tour.priceInfo || tour.price || {};
+    const currency = price.currency || "INR";
+    const formatter = getCurrencyFormatter(currency);
+    const min = Number(price.min);
+    const max = Number(price.max);
+
+    if (!Number.isFinite(min) || min <= 0) return "Price on request";
+    if (price.isFinal || !Number.isFinite(max) || min === max) return formatter.format(min);
+    return `${formatter.format(min)} - ${formatter.format(max)}`;
+};
+
+const formatDate = (value) => {
+    if (!value) return "Flexible";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "Flexible";
+    return new Intl.DateTimeFormat("en-IN", { day: "2-digit", month: "short", year: "numeric" }).format(date);
+};
+
+const DetailSkeleton = () => (
+    <main className="tour-detail tour-detail--loading" role="status" aria-label="Loading tour details">
+        <div className="tour-detail__shell">
+            <div className="tour-detail__skeleton tour-detail__skeleton--hero" />
+            <div className="tour-detail__skeleton-grid">
+                <div className="tour-detail__skeleton" />
+                <div className="tour-detail__skeleton" />
+                <div className="tour-detail__skeleton" />
             </div>
-            <aside className="tour-details__loading-side">
-                <div className="tour-details__loading-line tour-details__loading-line--title" />
-                <div className="tour-details__loading-line" />
-                <div className="tour-details__loading-button" />
-            </aside>
         </div>
     </main>
 );
 
-const normalizeToursRoute = (url) => {
-    if (!url || url === "/packages") return "/tours";
-    if (url.startsWith("/packages/")) return url.replace("/packages/", "/tours/");
-    return url;
-};
+const EmptyState = ({ title, message, onBack }) => (
+    <main className="tour-detail">
+        <div className="tour-detail__shell">
+            <section className="tour-detail__empty">
+                <p className="tour-detail__eyebrow">ToursTREM</p>
+                <h1>{title}</h1>
+                <p>{message}</p>
+                <button className="tour-detail__button tour-detail__button--primary" type="button" onClick={onBack}>
+                    Back to tours
+                </button>
+            </section>
+        </div>
+    </main>
+);
 
-const getRouteIdentityFromPath = (pathname) => {
-    const parts = pathname.split("/").filter(Boolean);
-    const toursIndex = parts.indexOf("tours");
-    const packagesIndex = parts.indexOf("packages");
-    const appIndex = toursIndex >= 0 ? toursIndex : packagesIndex;
-    const relevantParts = appIndex >= 0 ? parts.slice(appIndex + 1) : parts;
+const Fact = ({ label, value }) => (
+    <div className="tour-detail__fact">
+        <span>{label}</span>
+        <strong>{value || "-"}</strong>
+    </div>
+);
 
-    if (relevantParts[0] === "slug" && relevantParts[1]) {
-        return { slug: decodeURIComponent(relevantParts[1]) };
-    }
+const Section = ({ title, children, className = "" }) => (
+    <section className={`tour-detail__section ${className}`} aria-labelledby={slugifyTourTitle(title)}>
+        <h2 id={slugifyTourTitle(title)}>{title}</h2>
+        {children}
+    </section>
+);
 
-    if (relevantParts[0]) {
-        return { id: decodeURIComponent(relevantParts[0]) };
-    }
-
-    return {};
-};
-
-const TourDetails = () => {
-    const params = useParams();
-    const location = useLocation();
-    const navigate = useNavigate();
-    const routeIdentity = getRouteIdentityFromPath(location.pathname);
-    const id = params.id || routeIdentity.id;
-    const slug = params.slug || routeIdentity.slug;
-
-    const [modalOpen, setModalOpen] = useState(false);
-    const [formData, setFormData] = useState(null);
-    const [bookingOpen, setBookingOpen] = useState(false);
-    const [selectedTourForBooking, setSelectedTourForBooking] = useState(null);
-
-    // UI state
-    const [reviewsVisibleCount, setReviewsVisibleCount] = useState(REVIEWS_CHUNK);
-
-    // choose endpoint from params
-    const endpoint = id ? `/tours.json/${id}` : slug ? `/tours/slug/${slug}` : "/tours.json";
-    const { loading, error, componentData } = useComponentData(endpoint, { auto: Boolean(endpoint) });
-
-    const { isMobile, isTablet } = useDeviceType();
-    const isDesktop = !isMobile && !isTablet;
-
-    const tour = useMemo(() => {
-        const navTour = location.state?.tour;
-        if (navTour) {
-            const _pageFromComponent = get(componentData, "config.header.title")
-                ? {
-                    title: get(componentData, "config.header.title"),
-                    description: get(componentData, "state.data.description") || get(componentData, "config.header.description"),
-                    structure: get(componentData, "structure"),
-                    config: get(componentData, "config"),
-                    actions: get(componentData, "actions"),
-                }
-                : {};
-            return { ...navTour, _page: { ...(navTour._page || {}), ..._pageFromComponent } };
-        }
-
-        if (!componentData) return null;
-
-        const stateData =
-            get(componentData, "state.data") ||
-            get(componentData, "componentData.state.data") ||
-            get(componentData, "componentData.data") ||
-            get(componentData, "data");
-
-        let candidate = null;
-        if (Array.isArray(stateData) && stateData.length) {
-            candidate = stateData[0];
-        } else if (stateData && typeof stateData === "object") {
-            if (Array.isArray(stateData.tours) && stateData.tours.length) candidate = stateData.tours[0];
-            else candidate = stateData;
-        }
-
-        if (!candidate) return null;
-
-        const _page = {
-            title:
-                get(componentData, "config.header.title") ||
-                get(componentData, "state.data.title") ||
-                get(componentData, "componentData.state.data.title") ||
-                candidate.title,
-            description:
-                get(componentData, "state.data.description") ||
-                get(componentData, "componentData.state.data.description") ||
-                candidate.desc ||
-                candidate.description,
-            structure: get(componentData, "structure") || get(componentData, "componentData.structure"),
-            config: get(componentData, "config") || get(componentData, "componentData.config"),
-            actions: get(componentData, "actions") || get(componentData, "componentData.actions"),
-            rawComponentData: componentData,
-        };
-
-        return { ...candidate, _page };
-    }, [componentData, location.state]);
-
-    // cityDisplay: supports string (legacy) or object { from, to, name, city, _id }
-    const cityDisplay = useMemo(() => {
-        const c = tour?.city;
-        if (!c) return null;
-
-        // If it's just a single string (example: "Zagreb")
-        if (typeof c === "string") return c;
-
-        const from = c.from || c.name || c.city;
-        const to = c.to;
-
-        // If both exist → show the route
-        if (from && to) return `${from} → ${to}`;
-
-        // If only one side exists → show the single location
-        if (from) return from;
-        if (to) return to;
-
-        // Absolute last fallback
-        return c._id || null;
-    }, [tour?.city]);
-
-    const photos = Array.isArray(tour?.photos) && tour.photos.length ? tour.photos : tour?.photo ? [tour.photo] : [];
-
-    const handleContactClick = async (selectedTour) => {
-        try {
-            const res = await fetchData(`/form.json?form=contact-agent&tourId=${selectedTour._id}`);
-            if (res?.status === "success") {
-                setFormData(res.componentData);
-                setModalOpen(true);
-            }
-        } catch (err) {
-            console.error(err);
-        }
-    };
-
-    const pageDescription = get(tour, "_page.description", tour?.description);
-    if (loading) return <TourDetailsSkeleton />;
-    if (error) return <div className="ui-error">{typeof error === "string" ? error : "Failed to load tour"}</div>;
-    if (!tour) return <div className="ui-error">Tour not found</div>;
-
-    /* -------------------------
-       helpers / renderers
-       ------------------------- */
-
-    const formatPriceRange = (price) => {
-        const currency = price.currency || "INR";
-        if (price.min && price.max) {
-            return `${currency} ${price.min.toLocaleString()} - ${currency} ${price.max.toLocaleString()}`;
-        }
-        if (price.min) {
-            return `${currency} ${price.min.toLocaleString()}`;
-        }
-        return null;
-    };
-
-    const renderLeftInfoCard = () => {
-        // Shown on desktop beside Gallery — quick facts + CTA
-        const priceObj = tour.price || tour.priceInfo || {};
-        const priceText = formatPriceRange(priceObj) || get(tour, "priceInfo.note") || "Contact for price";
-
-        return (
-            <aside className="td-left-info-card" aria-hidden={!isDesktop}>
-                <div className="info-card__inner">
-                    <div className="info-card__price">
-                        <div className="price-badge">{priceText}</div>
-                        {priceObj.isFinal && <div className="price-sub">Final price</div>}
-                        {get(tour, "avgRating") ? (
-                            <div className="rating-row" aria-label={`Average rating ${tour.avgRating}`}>
-                                <span className="rating-stars">{"★".repeat(Math.round(tour.avgRating))}</span>
-                                <span className="rating-count">{` ${tour.avgRating} • ${Array.isArray(tour.reviews) ? tour.reviews.length : 0} reviews`}</span>
-                            </div>
-                        ) : null}
-                    </div>
-
-                    <div className="info-card__quick">
-                        <div className="quick-row">
-                            <strong>Duration</strong>
-                            <span>{tour.period ? `${tour.period.days ?? "—"}d / ${tour.period.nights ?? "—"}n` : "—"}</span>
-                        </div>
-                        <div className="quick-row">
-                            <strong>Group size</strong>
-                            <span>{tour.maxGroupSize ?? "—"}</span>
-                        </div>
-                        <div className="quick-row">
-                            <strong>City</strong>
-                            <span>{cityDisplay ?? "—"}</span>
-                        </div>
-                    </div>
-
-                    <div className="info-card__ctas">
-                        <button
-                            className="btn btn--primary"
-                            onClick={() => {
-                                setSelectedTourForBooking(tour);
-                                setBookingOpen(true);
-                            }}
-                        >
-                            Reserve now
-                        </button>
-                        <button
-                            className="btn btn--outline"
-                            onClick={() => handleContactClick(tour)}
-                        >
-                            Contact agent
-                        </button>
-                    </div>
-
-                    {Array.isArray(tour.tags) && tour.tags.length ? (
-                        <div className="info-card__tags">
-                            {tour.tags.slice(0, 6).map((t, i) => (
-                                <span key={i} className="tag">{t}</span>
-                            ))}
-                        </div>
-                    ) : null}
-                </div>
-            </aside>
-        );
-    };
-
-    const renderPrice = () => {
-        const price = tour.price || tour.priceInfo || {};
-        if (!price) return null;
-        const currency = price.currency || "INR";
-        return (
-            <div className="td-section td-price">
-                <Title text="Price" size="small" align="start" />
-                <div className="td-price__body">
-                    <div className="price-row">
-                        <div className="price-range">
-                            {formatPriceRange(price) ? <strong>{formatPriceRange(price)}</strong> : <span>Contact for price</span>}
-                        </div>
-                        <div className="price-meta">
-                            {price.isFinal ? <span className="tag tag--final">Final Price </span> : null}
-                            {price.source ? <span className="muted">{price.source}</span> : null}
-                        </div>
-                    </div>
-
-                    {Array.isArray(tour.seasonalPricing) && tour.seasonalPricing.length ? (
-                        <div className="seasonal-pricing">
-                            <Title text="Seasonal Pricing" size="xsmall" align="start" />
-                            <ul>
-                                {tour.seasonalPricing.map((s, idx) => (
-                                    <li key={idx}>
-                                        {s.label || `${s.from || "N/A"} - ${s.to || "N/A"}`} : {s.min ? `${currency} ${s.min}` : "-"} {s.max ? `- ${currency} ${s.max}` : ""}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    ) : null}
-                </div>
-            </div>
-        );
-    };
-
-    const renderAvailability = () => {
-        const avail = tour.availability || {};
-        const totalSeats = avail.totalSeats ?? null;
-        const seatsAvailable = avail.seatsAvailable ?? null;
-        return (
-            <div className="td-section td-availability">
-                <Title text="Availability" size="small" align="start" />
-                <div className="td-availability__body">
-                    <div>{totalSeats !== null ? `Total seats: ${totalSeats}` : "Total seats: —"}</div>
-                    <div>{seatsAvailable !== null ? `Seats available: ${seatsAvailable}` : "Seats available: —"}</div>
-                </div>
-            </div>
-        );
-    };
-
-    const renderInclusionsExclusions = () => {
-        return (
-            <div className="td-section td-inclusions-exclusions">
-                <div className="two-col">
-                    <div>
-                        <Title text="Inclusions" size="small" align="start" />
-                        <div className="card-list">
-                            {Array.isArray(tour.inclusions) && tour.inclusions.length ? (
-                                <ul>
-                                    {tour.inclusions.map((inc, i) => (
-                                        <li key={i}>{inc}</li>
-                                    ))}
-                                </ul>
-                            ) : (
-                                <div className="muted">No inclusions listed</div>
-                            )}
-                        </div>
-                    </div>
-                    <div>
-                        <Title text="Exclusions" size="small" align="start" />
-                        <div className="card-list">
-                            {Array.isArray(tour.exclusions) && tour.exclusions.length ? (
-                                <ul>
-                                    {tour.exclusions.map((exc, i) => (
-                                        <li key={i}>{exc}</li>
-                                    ))}
-                                </ul>
-                            ) : (
-                                <div className="muted">No exclusions listed</div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    };
-
-    const renderMeetingAndLang = () => {
-        return (
-            <div className="td-section td-meeting-langs">
-                <div>
-                    <Title text="Meeting Point" size="small" align="start" />
-                    <div className="muted">{tour.meetingPoint || "Meeting point not specified"}</div>
-                </div>
-
-                <div style={{ marginTop: "0.75rem" }}>
-                    <Title text="Languages" size="small" align="start" />
-                    <div>
-                        {Array.isArray(tour.languages) && tour.languages.length ? (
-                            <div className="tags">
-                                {tour.languages.map((l, i) => (
-                                    <span key={i} className="tag">{l}</span>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="muted">No languages specified</div>
-                        )}
-                    </div>
-                </div>
-            </div>
-        );
-    };
-
-    const renderCancellationPolicy = () => {
-        return (
-            <div className="td-section td-cancellation">
-                <Title text="Cancellation Policy" size="small" align="start" />
-                <div className="muted">{tour.cancellationPolicy || "No cancellation policy provided"}</div>
-            </div>
-        );
-    };
-
-    const renderTags = () => {
-        return (
-            <div className="td-section td-tags">
-                <Title text="Tags" size="small" align="start" />
-                {Array.isArray(tour.tags) && tour.tags.length ? (
-                    <div className="tour-card-list__info-card__tags">
-                        {tour.tags.slice(0, 6).map((t, i) => (
-                            <span key={i} className="tag">{t}</span>
-                        ))}
-                    </div>
-                ) : null}
-            </div>
-        );
-    };
-
-    const renderLocation = () => {
-        const addr = tour.address || {};
-        const addrLines = [];
-        if (addr.line1) addrLines.push(addr.line1);
-        if (addr.line2) addrLines.push(addr.line2);
-        if (addr.city) addrLines.push(addr.city);
-        if (addr.state) addrLines.push(addr.state);
-        if (addr.zip) addrLines.push(addr.zip);
-        if (addr.country) addrLines.push(addr.country);
-
-        const addressString = addrLines.join(", ");
-        const mapsHref = addressString
-            ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressString)}`
-            : null;
-
-        return (
-            <div className="td-section td-location">
-                <Title text="Location & Address" size="small" align="start" />
-                <div className="td-location__body">
-                    {addressString ? <div className="address">{addressString}</div> : <div className="muted">Address not specified</div>}
-                    <div className="meta">
-                        {typeof tour.distance !== "undefined" && tour.distance !== null ? <div>Distance: {tour.distance} km</div> : null}
-                        {tour.maxGroupSize ? <div>Max group size: {tour.maxGroupSize}</div> : null}
-                        {tour.period ? <div>Duration: {tour.period.days ?? "—"} days / {tour.period.nights ?? "—"} nights</div> : null}
-                    </div>
-                    {mapsHref ? (
-                        <a className="link" href={mapsHref} target="_blank" rel="noopener noreferrer">Open in Google Maps</a>
-                    ) : null}
-                </div>
-            </div>
-        );
-    };
-
-    const renderReviews = () => {
-        const reviews = Array.isArray(tour.reviews) ? tour.reviews : [];
-        const shown = reviews.slice(0, reviewsVisibleCount);
-        const moreAvailable = reviews.length > shown.length;
-
-        return (
-            <div className="td-section td-reviews" aria-labelledby="reviews-heading">
-                <div className="reviews-header">
-                    <Title id="reviews-heading" text={`Reviews (${reviews.length})`} size="small" align="start" />
-                    {tour.avgRating ? <div className="muted">Avg: {tour.avgRating}</div> : null}
-                </div>
-
-                <div className="reviews-list">
-                    {shown.length ? (
-                        shown.map((r, i) => (
-                            <div key={r._id || i} className="review">
-                                <div className="review-head">
-                                    <strong>{r.name || "Guest"}</strong>
-                                    <span className="rating">{"★".repeat(Math.max(0, Math.round(r.rating || 0)))} </span>
-                                </div>
-                                <div className="review-body">{r.comment || ""}</div>
-                            </div>
-                        ))
-                    ) : (
-                        <div className="muted">No reviews yet.</div>
-                    )}
-                </div>
-
-                {/* show more / show less */}
-                {reviews.length > 0 ? (
-                    <div className="reviews-actions">
-                        {moreAvailable ? (
-                            <button
-                                className="btn btn--ghost"
-                                onClick={() => setReviewsVisibleCount((c) => c + REVIEWS_CHUNK)}
-                                aria-label="Load more reviews"
-                            >
-                                Show more reviews
-                            </button>
-                        ) : reviews.length > REVIEWS_CHUNK ? (
-                            <button
-                                className="btn btn--ghost"
-                                onClick={() => setReviewsVisibleCount(REVIEWS_CHUNK)}
-                                aria-label="Collapse reviews"
-                            >
-                                Show less
-                            </button>
-                        ) : null}
-                    </div>
-                ) : null}
-            </div>
-        );
-    };
-
-    const renderMeta = () => {
-        return (
-            <div className="td-section td-meta">
-                <Title text="Additional Info" size="small" align="start" />
-                <div className="meta-grid">
-                    <div><strong>Status:</strong> {tour.status || (tour.isPublished ? "published" : "draft")}</div>
-                    <div><strong>Featured:</strong> {tour.featured ? "Yes" : "No"}</div>
-                    <div><strong>Created:</strong> {tour.createdAt ? new Date(tour.createdAt).toLocaleString("en-IN") : "—"}</div>
-                    <div><strong>Updated:</strong> {tour.updatedAt ? new Date(tour.updatedAt).toLocaleString("en-IN") : "—"}</div>
-                    <div><strong>Source:</strong> {get(tour, "price.source") || get(tour, "priceInfo.source") || "—"}</div>
-                    <div><strong>Is Final Price:</strong> {get(tour, "price.isFinal") || get(tour, "priceInfo.isFinal") ? "Yes" : "No"}</div>
-                    {/* intentionally omitted ID display */}
-                </div>
-            </div>
-        );
-    };
-
+const ListBlock = ({ items = [], empty = "Not specified" }) => {
+    if (!Array.isArray(items) || !items.length) return <p className="tour-detail__muted">{empty}</p>;
     return (
-        <main className="ui-tour-details" aria-labelledby="tour-title">
-            <div className="ui-tour-details__container">
-                {/* header actions */}
-                <div className="ui-tour-details__page-actions">
-                    <div className="page-actions__left">
-                        <button
-                            className="action-back"
-                            onClick={() => navigate(normalizeToursRoute(get(componentData, "actions.back.url", "/tours")))}
-                            aria-label="Back to list"
-                        >
-                            <Icon name="backArrow" />
-                        </button>
-                        <h1 id="tour-title" className="tour-title">
-                            {get(tour, "_page.title", tour.title)}
-                        </h1>
-                    </div>
-
-                    <div className="page-actions__right">
-                        <div className="action-row">
-                            <button
-                                className="icon-btn"
-                                onClick={() => {
-                                    if (navigator.share) {
-                                        navigator.share({
-                                            title: tour.title,
-                                            text: tour.desc || tour.description,
-                                            url: window.location.href,
-                                        }).catch(() => { });
-                                    } else {
-                                        navigator.clipboard
-                                            ?.writeText(window.location.href)
-                                            .then(() => alert("Tour link copied to clipboard"))
-                                            .catch(() => alert("Copy failed — share the URL manually"));
-                                    }
-                                }}
-                                aria-label="Share"
-                            >
-                                <Icon name="share" />
-                            </button>
-
-                            <button
-                                className="icon-btn"
-                                onClick={async () => {
-                                    try {
-                                        const res = await fetchData("/wishlist", { method: "POST", body: { tourId: tour._id } });
-                                        if (res?.status === "success") alert("Saved to wishlist");
-                                        else alert(res?.message || "Failed to save");
-                                    } catch (e) {
-                                        console.error(e);
-                                        alert("Failed to save to wishlist");
-                                    }
-                                }}
-                                aria-label="Save to wishlist"
-                            >
-                                <Icon name="wishlist" />
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* hero: gallery + left-info (desktop) + summary card (mobile fallback) */}
-                <section className="ui-tour-details__hero" aria-label="Tour gallery and booking">
-                    <div className="td-hero__gallery-wrap">
-                        {isDesktop && renderLeftInfoCard()}
-                        <div className="td-hero__gallery">
-                            <Gallery
-                                images={photos}
-                                title={get(tour, "title", "Tour title not available")}
-                                subtitle={cityDisplay ? `Explore ${cityDisplay}` : "Explore the destination"}
-                                autoPlay={true}
-                                showIndicators={true}
-                                showThumbnails={true}
-                                aspectRatio="56.25%"
-                                showControls={false}
-                            />
-                        </div>
-
-                        {/* mobile / tablet summary under gallery */}
-                        {(isMobile || isTablet) && (
-                            <aside className="td-hero__summary">
-                                <SummaryCard
-                                    tour={tour}
-                                    onReserve={(t) => {
-                                        setSelectedTourForBooking(t);
-                                        setBookingOpen(true);
-                                    }}
-                                    onContact={handleContactClick}
-                                    goBack={(url) => navigate(normalizeToursRoute(url))}
-                                />
-                            </aside>
-                        )}
-                    </div>
-                </section>
-
-                {/* main content area */}
-                <section className="ui-tour-details__main">
-                    <div className="ui-tour-details__left">
-                        <div className="card highlights">
-                            <HighlightsCard tour={tour} />
-                        </div>
-
-                        <article className="card description-card description-card--modern" aria-labelledby="description-heading" role="region">
-                            <header className="description-card__header">
-                                <Title id="description-heading" text="Description" size="medium" variant="primary" align="start" />
-                            </header>
-
-                            <div className="description-card__body">
-                                {pageDescription ? (
-                                    <SubTitle text={pageDescription} color="primary" primaryClassname="dc-text" />
-                                ) : (
-                                    <div className="dc-empty">No description available.</div>
-                                )}
-                            </div>
-                        </article>
-
-                        <div className="card itinerary">
-                            <ItineraryCard tour={tour} />
-                        </div>
-
-                        {/* new detailed sections grouped into a card for clean visual blocks */}
-                        <div className="card details">
-                            {renderPrice()}
-                            {renderAvailability()}
-                            {renderInclusionsExclusions()}
-                            {renderMeetingAndLang()}
-                            {renderCancellationPolicy()}
-                            {renderTags()}
-                            {renderLocation()}
-                            {renderReviews()}
-                            {renderMeta()}
-                        </div>
-                    </div>
-
-                    <aside className="ui-tour-details__right">
-                        <div className="sticky-summary">
-                            {/* keep summary card for desktop in the right column (secondary) */}
-                            <SummaryCard
-                                tour={tour}
-                                cityDisplay={cityDisplay}
-                                onReserve={(t) => {
-                                    setSelectedTourForBooking(t);
-                                    setBookingOpen(true);
-                                }}
-                                onContact={handleContactClick}
-                                goBack={(url) => navigate(normalizeToursRoute(url))}
-                            />
-                        </div>
-                    </aside>
-                </section>
-            </div>
-
-            {modalOpen && (
-                <ContactAgentModal open={modalOpen} tourId={tour._id} onClose={() => setModalOpen(false)} formData={formData} />
-            )}
-
-            {bookingOpen && selectedTourForBooking && (
-                <BookingModal open={bookingOpen} onClose={() => setBookingOpen(false)} tour={selectedTourForBooking} />
-            )}
-        </main>
+        <ul className="tour-detail__check-list">
+            {items.map((item, index) => (
+                <li key={`${item}-${index}`}>{item}</li>
+            ))}
+        </ul>
     );
 };
 
-export default TourDetails;
+const TourGallery = ({ photos = [], title, cityDisplay }) => {
+    const [activeIndex, setActiveIndex] = useState(0);
+    const activePhoto = photos[activeIndex] || photos[0];
+
+    if (!photos.length) {
+        return (
+            <div className="tour-detail__media-placeholder">
+                <span>TravelsTREM</span>
+            </div>
+        );
+    }
+
+    const goToPhoto = (nextIndex) => {
+        const lastIndex = photos.length - 1;
+        if (nextIndex < 0) setActiveIndex(lastIndex);
+        else if (nextIndex > lastIndex) setActiveIndex(0);
+        else setActiveIndex(nextIndex);
+    };
+
+    const visiblePhotos = photos.slice(0, 5);
+    const hiddenCount = Math.max(photos.length - visiblePhotos.length, 0);
+
+    return (
+        <div className="tour-detail__gallery">
+            <div className="tour-detail__gallery-stage" aria-label="Tour image gallery">
+                <button
+                    className="tour-detail__gallery-tile tour-detail__gallery-tile--main"
+                    type="button"
+                    onClick={() => setActiveIndex(activeIndex)}
+                    aria-label={`Current image ${activeIndex + 1}`}
+                >
+                    <img src={activePhoto} alt={`${title} view ${activeIndex + 1}`} loading="eager" />
+                    <span className="tour-detail__gallery-caption">
+                        <span>{cityDisplay}</span>
+                        <strong>{title}</strong>
+                    </span>
+                </button>
+
+                {visiblePhotos.slice(1).map((photo, index) => {
+                    const photoIndex = index + 1;
+                    const isLastVisible = photoIndex === visiblePhotos.length - 1 && hiddenCount > 0;
+
+                    return (
+                        <button
+                            className={`tour-detail__gallery-tile${photoIndex === activeIndex ? " is-active" : ""}`}
+                            type="button"
+                            key={`${photo}-${photoIndex}`}
+                            onClick={() => setActiveIndex(photoIndex)}
+                            aria-label={`Show image ${photoIndex + 1}`}
+                            aria-current={photoIndex === activeIndex ? "true" : undefined}
+                        >
+                            <img src={photo} alt="" loading="lazy" />
+                            {isLastVisible ? (
+                                <span className="tour-detail__gallery-more">
+                                    <FiCamera aria-hidden="true" />
+                                    {hiddenCount}+ more
+                                </span>
+                            ) : null}
+                        </button>
+                    );
+                })}
+
+                {photos.length > 1 ? (
+                    <div className="tour-detail__gallery-controls" aria-label="Gallery controls">
+                        <button type="button" onClick={() => goToPhoto(activeIndex - 1)} aria-label="Previous image">
+                            <FiChevronLeft aria-hidden="true" />
+                        </button>
+                        <span>{activeIndex + 1} / {photos.length}</span>
+                        <button type="button" onClick={() => goToPhoto(activeIndex + 1)} aria-label="Next image">
+                            <FiChevronRight aria-hidden="true" />
+                        </button>
+                    </div>
+                ) : null}
+
+                <a className="tour-detail__gallery-open" href={activePhoto} target="_blank" rel="noreferrer" aria-label="Open current image in new tab">
+                    <FiExternalLink aria-hidden="true" />
+                    <span>Open</span>
+                </a>
+            </div>
+        </div>
+    );
+};
+
+export default function ToursDetails() {
+    const params = useParams();
+    const location = useLocation();
+    const navigate = useNavigate();
+    const routeRef = params.tourRef || getRouteIdentityFromPath(location.pathname);
+    const decodedRef = decodeURIComponent(String(routeRef || ""));
+    const endpoint = decodedRef ? `/tours.json/${encodeURIComponent(decodedRef)}` : "";
+
+    const { loading, error, componentData } = useComponentData(endpoint, {
+        auto: Boolean(endpoint),
+        cache: false,
+    });
+
+    const [contactOpen, setContactOpen] = useState(false);
+    const [contactFormData, setContactFormData] = useState(null);
+    const [bookingOpen, setBookingOpen] = useState(false);
+
+    const navTour = location.state?.tour || null;
+    const tour = useMemo(() => extractTour(componentData, navTour), [componentData, navTour]);
+    const photos = useMemo(() => getPhotos(tour), [tour]);
+    const cityDisplay = useMemo(() => getCityDisplay(tour), [tour]);
+    const pageTitle = tour?._page?.title || tour?.title || "Tour details";
+    const description = tour?.desc || tour?.description || tour?._page?.description || "";
+    const priceText = getPriceText(tour);
+    const durationText = tour?.period ? `${tour.period.days ?? "-"} days / ${tour.period.nights ?? "-"} nights` : "Flexible";
+    const ratingText = Number(tour?.avgRating) > 0 ? `${Number(tour.avgRating).toFixed(1)} / 5` : "New tour";
+    const reviews = Array.isArray(tour?.reviews) ? tour.reviews : [];
+    const itinerary = Array.isArray(tour?.itinerary) ? [...tour.itinerary].sort((a, b) => Number(a.day) - Number(b.day)) : [];
+    const highlights = Array.isArray(tour?.highlights) ? tour.highlights : [];
+    const tags = Array.isArray(tour?.tags) ? tour.tags : [];
+
+    const handleBack = () => navigate("/tours");
+
+    const handleContact = async () => {
+        if (!tour?._id) return;
+        const res = await fetchData(`/form.json?form=contact-agent&tourId=${tour._id}`);
+        if (res?.status === "success") {
+            setContactFormData(res.componentData);
+            setContactOpen(true);
+        }
+    };
+
+    const handleShare = async () => {
+        const shareUrl = window.location.href;
+        if (navigator.share) {
+            await navigator.share({ title: tour?.title || "Tour", text: description, url: shareUrl }).catch(() => {});
+            return;
+        }
+        await navigator.clipboard?.writeText(shareUrl).catch(() => {});
+    };
+
+    if (loading && !tour) return <DetailSkeleton />;
+    if (error && !tour) {
+        return <EmptyState title="Tour could not load" message={error} onBack={handleBack} />;
+    }
+    if (!tour) {
+        return <EmptyState title="Tour not found" message="The tour link may be outdated or unavailable." onBack={handleBack} />;
+    }
+
+    return (
+        <main className="tour-detail" aria-labelledby="tour-detail-title">
+            <div className="tour-detail__shell">
+                <nav className="tour-detail__breadcrumbs" aria-label="Breadcrumb">
+                    <Link to="/tours">Tours</Link>
+                    <span aria-hidden="true">/</span>
+                    <span>{tour.title}</span>
+                </nav>
+
+                <button className="tour-detail__mobile-back" type="button" onClick={handleBack}>
+                    <FiArrowLeft aria-hidden="true" />
+                    Back to tours
+                </button>
+
+                <section className="tour-detail__hero" aria-label="Tour overview">
+                    <div className="tour-detail__hero-copy">
+                        <p className="tour-detail__eyebrow">{cityDisplay}</p>
+                        <h1 id="tour-detail-title">{pageTitle}</h1>
+                        {description ? <p className="tour-detail__lede">{description}</p> : null}
+                        {tags.length ? (
+                            <div className="tour-detail__tags tour-detail__tags--hero">
+                                {tags.slice(0, 8).map((tag) => (
+                                    <span key={tag}>{tag}</span>
+                                ))}
+                            </div>
+                        ) : null}
+                    </div>
+                </section>
+
+                <section className="tour-detail__media" aria-label="Tour images">
+                    <TourGallery photos={photos} title={tour.title} cityDisplay={cityDisplay} />
+                    <aside className="tour-detail__booking-widget" aria-label="Trip actions">
+                        <div>
+                            <p className="tour-detail__eyebrow">Plan this trip</p>
+                            <span>Starting from</span>
+                            <strong>{priceText}</strong>
+                            <p>{tour?.priceInfo?.isFinal ? "Confirmed rate" : "Rate may vary by season and availability"}</p>
+                        </div>
+                        <div className="tour-detail__booking-meta">
+                            <Fact label="Route" value={cityDisplay} />
+                            <Fact label="Distance" value={tour.distance ? `${tour.distance} km` : "Flexible"} />
+                        </div>
+                        <div className="tour-detail__action-grid">
+                            <button className="tour-detail__button tour-detail__button--primary" type="button" onClick={() => setBookingOpen(true)}>
+                                Book now
+                            </button>
+                            <button className="tour-detail__button" type="button" onClick={handleContact}>
+                                <FiMessageCircle aria-hidden="true" />
+                                Enquire
+                            </button>
+                            <button className="tour-detail__icon-button" type="button" onClick={handleShare} aria-label="Share tour">
+                                <FiShare2 aria-hidden="true" />
+                            </button>
+                        </div>
+                    </aside>
+                </section>
+
+                <section className="tour-detail__facts" aria-label="Trip facts">
+                    <Fact label="Duration" value={durationText} />
+                    <Fact label="Group size" value={tour.maxGroupSize ? `Up to ${tour.maxGroupSize}` : "Private options"} />
+                    <Fact label="Rating" value={ratingText} />
+                    <Fact label="Start date" value={formatDate(tour.startDate)} />
+                </section>
+
+                <div className="tour-detail__layout">
+                    <div className="tour-detail__content">
+                        {highlights.length ? (
+                            <Section title="Why This Trip Works">
+                                <div className="tour-detail__highlight-grid">
+                                    {highlights.map((item, index) => (
+                                        <article className="tour-detail__highlight" key={item._id || item.title || index}>
+                                            <span>{String(index + 1).padStart(2, "0")}</span>
+                                            <h3>{item.title}</h3>
+                                            {item.short ? <p>{item.short}</p> : null}
+                                        </article>
+                                    ))}
+                                </div>
+                            </Section>
+                        ) : null}
+
+                        <Section title="Itinerary">
+                            {itinerary.length ? (
+                                <div className="tour-detail__timeline">
+                                    {itinerary.map((day, index) => (
+                                        <article className="tour-detail__timeline-item" key={day._id || `${day.day}-${index}`}>
+                                            <div className="tour-detail__timeline-marker">Day {day.day || index + 1}</div>
+                                            <div>
+                                                <h3>{day.title || "Planned experience"}</h3>
+                                                {day.summary ? <p>{day.summary}</p> : null}
+                                                <div className="tour-detail__mini-meta">
+                                                    {day.location ? <span>{day.location}</span> : null}
+                                                    {day.accommodation ? <span>{day.accommodation}</span> : null}
+                                                    {Array.isArray(day.meals) && day.meals.length ? <span>{day.meals.join(", ")}</span> : null}
+                                                </div>
+                                                <ListBlock items={day.activities} empty="Activities will be confirmed by the travel desk." />
+                                                {day.notes ? <p className="tour-detail__note">{day.notes}</p> : null}
+                                            </div>
+                                        </article>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="tour-detail__muted">A detailed itinerary will be shared by the travel desk.</p>
+                            )}
+                        </Section>
+
+                        <section className="tour-detail__split">
+                            <Section title="Included" className="tour-detail__section--compact">
+                                <ListBlock items={tour.inclusions} empty="Inclusions will be confirmed before booking." />
+                            </Section>
+                            <Section title="Not Included" className="tour-detail__section--compact">
+                                <ListBlock items={tour.exclusions} empty="Exclusions will be confirmed before booking." />
+                            </Section>
+                        </section>
+
+                        <Section title="Planning Details">
+                            <div className="tour-detail__detail-grid">
+                                <Fact label="Meeting point" value={tour.meetingPoint || "Shared after confirmation"} />
+                                <Fact label="Languages" value={Array.isArray(tour.languages) && tour.languages.length ? tour.languages.join(", ") : "English / Hindi on request"} />
+                                <Fact label="Seats available" value={tour.availability?.seatsAvailable ?? "On request"} />
+                                <Fact label="Age guidance" value={tour.minAge || tour.maxAge ? `${tour.minAge || 0}+${tour.maxAge ? ` to ${tour.maxAge}` : ""}` : "All ages"} />
+                            </div>
+                            {tour.cancellationPolicy ? (
+                                <p className="tour-detail__policy">{tour.cancellationPolicy}</p>
+                            ) : null}
+                        </Section>
+
+                        <Section title="Guest Notes">
+                            {reviews.length ? (
+                                <div className="tour-detail__reviews">
+                                    {reviews.slice(0, 4).map((review, index) => (
+                                        <article className="tour-detail__review" key={review._id || index}>
+                                            <div>
+                                                <strong>{review.name || "Guest"}</strong>
+                                                <span>{Number(review.rating || 0).toFixed(1)} / 5</span>
+                                            </div>
+                                            <p>{review.comment || "Loved the experience."}</p>
+                                        </article>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="tour-detail__muted">No guest reviews yet.</p>
+                            )}
+                        </Section>
+                    </div>
+
+                </div>
+            </div>
+
+            {contactOpen ? (
+                <ContactAgentModal open={contactOpen} tourId={tour._id} onClose={() => setContactOpen(false)} formData={contactFormData} />
+            ) : null}
+
+            {bookingOpen ? (
+                <BookingModal open={bookingOpen} onClose={() => setBookingOpen(false)} tour={tour} />
+            ) : null}
+        </main>
+    );
+}

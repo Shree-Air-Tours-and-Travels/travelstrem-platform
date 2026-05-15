@@ -1,0 +1,67 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "totalBookings": "Total Bookings",
+        "activeUsers": "Active Users",
+        "totalRevenue": "Total Revenue",
+        "pendingRequests": "Pending Requests",
+        "today": "Today",
+        "thisWeek": "This Week",
+        "thisMonth": "This Month",
+        "vsLastPeriod": "vs last period"
+      },
+      "urls": {
+        "iconBookings": "/icons/bookings.svg",
+        "iconUsers": "/icons/users.svg",
+        "iconRevenue": "/icons/revenue.svg",
+        "iconPending": "/icons/pending.svg"
+      }
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "StatsGrid",
+          "props": {
+            "cards": [
+              {
+                "metric": "totalBookings",
+                "labelRef": "totalBookings",
+                "iconRef": "iconBookings"
+              },
+              {
+                "metric": "activeUsers",
+                "labelRef": "activeUsers",
+                "iconRef": "iconUsers"
+              },
+              {
+                "metric": "totalRevenue",
+                "labelRef": "totalRevenue",
+                "iconRef": "iconRevenue"
+              },
+              {
+                "metric": "pendingRequests",
+                "labelRef": "pendingRequests",
+                "iconRef": "iconPending"
+              }
+            ],
+            "periodLabels": {
+              "todayRef": "today",
+              "thisWeekRef": "thisWeek",
+              "thisMonthRef": "thisMonth"
+            },
+            "trendLabelRef": "vsLastPeriod"
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

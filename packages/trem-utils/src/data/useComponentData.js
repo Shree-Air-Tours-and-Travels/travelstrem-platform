@@ -8,6 +8,13 @@ const DEFAULT_COMPONENT_DATA = {
   config: {},
 };
 
+const DEFAULT_PAGE_COMPONENT = {
+  data: {},
+  dataScope: { options: {} },
+  elements: { labels: {}, urls: {} },
+  structure: { header: {}, widgets: [], config: {}, actions: [] },
+};
+
 const responseCache = new Map();
 const inflightRequests = new Map();
 let componentDataFetcher = null;
@@ -57,6 +64,96 @@ const readComponentData = async (endpoint, options) => {
   return request;
 };
 
+const resolveNode = (value, labels, urls, options) => {
+  if (Array.isArray(value)) return value.map((item) => resolveNode(item, labels, urls, options));
+  if (!value || typeof value !== "object") return value;
+
+  return Object.entries(value).reduce((acc, [key, child]) => {
+    if (typeof child === "string" && key.endsWith("Ref") && key !== "iconRef") {
+      const targetKey = key.slice(0, -3);
+      const source = key === "optionsRef" ? options : key.toLowerCase().includes("url") ? urls : labels;
+      acc[targetKey] = source[child] ?? child;
+      acc[key] = child;
+      return acc;
+    }
+    acc[key] = resolveNode(child, labels, urls, options);
+    return acc;
+  }, {});
+};
+
+export const buildResolvedView = (component = DEFAULT_PAGE_COMPONENT) => {
+  const labels = component?.elements?.labels || {};
+  const urls = component?.elements?.urls || {};
+  const options = component?.dataScope?.options || {};
+  return {
+    structure: component?.structure || {},
+    elements: { labels, urls },
+    dataScope: { options },
+    data: component?.data || DEFAULT_PAGE_COMPONENT.data,
+    resolvedView: {
+      ...component?.data,
+      structure: resolveNode(component?.structure || {}, labels, urls, options),
+      elements: { labels, urls },
+      dataScope: { options },
+    },
+  };
+};
+
+const toLegacyComponentData = (component) => {
+  if (!component) return DEFAULT_COMPONENT_DATA;
+  const view = buildResolvedView(component);
+  const hero = view.resolvedView.structure?.widgets?.find((widget) => widget.type === "Hero");
+  if (hero) {
+    const props = hero.props || {};
+    return {
+      title: component.data?.title || "",
+      description: component.data?.description || "",
+      data: component.data || {},
+      structure: {
+        eyebrow: props.title,
+        highlight: props.highlight,
+        buttonText: props.buttonText,
+        secondaryButtonText: props.secondaryButtonText,
+        featuredDestination: {
+          label: props.featuredDestinationLabel,
+          title: props.featuredDestinationTitle,
+        },
+        stats: props.stats || [],
+        visual: {
+          headline: props.visualHeadline,
+          subline: props.visualSubline,
+          orbitItems: props.orbitItems || [],
+          gallery: props.gallery || [],
+        },
+      },
+      config: {},
+    };
+  }
+  const widgets = view.resolvedView.structure?.widgets || [];
+  if (widgets.length === 1) {
+    const [widget] = widgets;
+    return {
+      ...component.data,
+      data: component.data,
+      structure: {
+        ...(widget.props || {}),
+        actions: view.resolvedView.structure?.actions || [],
+      },
+      elements: view.elements,
+      config: {
+        options: view.dataScope.options,
+      },
+    };
+  }
+  return {
+    ...component.data,
+    data: component.data,
+    structure: view.resolvedView.structure,
+    elements: view.elements,
+    config: {},
+  };
+};
+
 export default function useComponentData(endpoint, options = {}) {
   const { auto = true, transform = null } = options;
   const requestKey = getRequestKey(endpoint, options);
@@ -73,6 +170,11 @@ export default function useComponentData(endpoint, options = {}) {
     message: null,
     handler: null,
     componentData: DEFAULT_COMPONENT_DATA,
+    structure: DEFAULT_PAGE_COMPONENT.structure,
+    elements: DEFAULT_PAGE_COMPONENT.elements,
+    dataScope: DEFAULT_PAGE_COMPONENT.dataScope,
+    data: DEFAULT_PAGE_COMPONENT.data,
+    resolvedView: buildResolvedView().resolvedView,
   });
 
   const fetcher = useCallback(
@@ -81,10 +183,11 @@ export default function useComponentData(endpoint, options = {}) {
       setState((current) => ({ ...current, loading: true, error: null }));
       try {
         const res = await readComponentData(ep, optionsRef.current);
-        const { status, message, componentData, handler } = res;
+        const { status, message, componentData, component, handler } = res;
+        const pageView = buildResolvedView(component || DEFAULT_PAGE_COMPONENT);
         const finalComponentData = transform
-          ? transform(componentData || DEFAULT_COMPONENT_DATA)
-          : componentData || DEFAULT_COMPONENT_DATA;
+          ? transform(componentData || toLegacyComponentData(component))
+          : componentData || toLegacyComponentData(component);
 
         setState({
           loading: false,
@@ -93,6 +196,7 @@ export default function useComponentData(endpoint, options = {}) {
           message,
           handler,
           componentData: finalComponentData,
+          ...pageView,
         });
       } catch (err) {
         setState({
@@ -102,6 +206,11 @@ export default function useComponentData(endpoint, options = {}) {
           message: err.message || "Unknown error",
           handler: null,
           componentData: DEFAULT_COMPONENT_DATA,
+          structure: DEFAULT_PAGE_COMPONENT.structure,
+          elements: DEFAULT_PAGE_COMPONENT.elements,
+          dataScope: DEFAULT_PAGE_COMPONENT.dataScope,
+          data: DEFAULT_PAGE_COMPONENT.data,
+          resolvedView: buildResolvedView().resolvedView,
         });
       }
     },

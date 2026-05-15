@@ -13,7 +13,8 @@ import { ROUTES } from "@packages/trem-utils";
 import { usePortalConfig } from "../../components/portal/PortalConfigContext";
 import api from "../../services/apiClient";
 import authService from "../../services/authService";
-import { emit } from "../../core/eventBus";
+import { emit } from "@packages/trem-events";
+import { canAccessAuthRoute, hasAuthRole } from "@packages/trem-auth-core";
 
 const interpolatePath = (path, params) =>
     Object.entries(params || {}).reduce(
@@ -33,14 +34,6 @@ const AdminShellRedirect = () => {
     }, []);
 
     return null;
-};
-
-const hasRole = (session, roles = []) => {
-    if (!roles.length) return true;
-    const permissions = session?.permissions || [];
-    const role = session?.user?.role;
-
-    return roles.includes(role) || permissions.some((permission) => roles.includes(permission));
 };
 
 const Routers = () => {
@@ -94,7 +87,7 @@ const Routers = () => {
     const protectRoute = (route, element) => {
         // This is a generic interpreter for backend route.access config.
         // The rules are not page-specific hardchecks; backend still owns route metadata and fallbacks.
-        if (route.access === "authenticated" && !session?.isAuthenticated) {
+        if (route.access === "authenticated" && !canAccessAuthRoute(route, session)) {
             return <Navigate to={ROUTES.login} replace state={{ from: location }} />;
         }
 
@@ -103,7 +96,7 @@ const Routers = () => {
                 return <Navigate to={ROUTES.login} replace state={{ from: location }} />;
             }
 
-            if (!hasRole(session, route.roles || [])) {
+            if (!hasAuthRole(session, route.roles || [])) {
                 return <Navigate to={headerConfig?.fallbacks?.unauthorized || ROUTES.home} replace />;
             }
         }

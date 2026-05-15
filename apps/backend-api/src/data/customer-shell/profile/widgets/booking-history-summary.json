@@ -1,0 +1,32 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "bookingHistory": "Booking History",
+        "viewAllBookings": "View All Bookings",
+        "noBookingsYet": "No bookings yet"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "BookingHistorySummary",
+          "props": {
+            "titleRef": "bookingHistory",
+            "ctaLabelRef": "viewAllBookings",
+            "emptyLabelRef": "noBookingsYet"
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

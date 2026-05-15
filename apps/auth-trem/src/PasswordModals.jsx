@@ -11,7 +11,7 @@ const usePreventScroll = (open) => {
   }, [open]);
 };
 
-export function ForgotPasswordModal({ open, initialEmail = "", onClose, onOtpSent, api }) {
+export function ForgotPasswordModal({ open, initialEmail = "", onClose, onOtpSent, authService }) {
   const [email, setEmail] = useState(initialEmail || "");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
@@ -37,7 +37,7 @@ export function ForgotPasswordModal({ open, initialEmail = "", onClose, onOtpSen
 
     setLoading(true);
     try {
-      const res = await api.post("/auth/forgot-password", { email });
+      const res = await authService.forgotPassword({ email });
       setVariant("success");
       setMessage(res?.data?.message || "If that email exists, an OTP has been sent.");
       setTimeout(() => onOtpSent?.(email), 700);
@@ -72,7 +72,7 @@ export function ForgotPasswordModal({ open, initialEmail = "", onClose, onOtpSen
   );
 }
 
-export function ResetPasswordModal({ open, email = "", onClose, onResetSuccess, api }) {
+export function ResetPasswordModal({ open, email = "", onClose, onResetSuccess, authService }) {
   const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -112,7 +112,7 @@ export function ResetPasswordModal({ open, email = "", onClose, onResetSuccess, 
 
     setLoading(true);
     try {
-      const res = await api.post("/auth/reset-password", { email, otp, password });
+      const res = await authService.resetPassword({ email, otp, password });
       setVariant("success");
       setMessage("Password reset successful. Signing you in now.");
       setTimeout(() => onResetSuccess?.(res?.data), 500);

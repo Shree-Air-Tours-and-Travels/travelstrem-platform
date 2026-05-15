@@ -1,0 +1,44 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "pageTitle": "Discover Tours",
+        "pageSubtitle": "Find your perfect adventure",
+        "pageDescription": "Browse our curated collection of tours and travel packages."
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {
+        "titleRef": "pageTitle",
+        "subtitleRef": "pageSubtitle",
+        "descriptionRef": "pageDescription"
+      },
+      "widgets": [
+        {
+          "type": "HeroBanner",
+          "widgetRef": "./widgets/hero-banner.json"
+        },
+        {
+          "type": "QuickFilters",
+          "widgetRef": "./widgets/quick-filters.json"
+        },
+        {
+          "type": "TourGrid",
+          "widgetRef": "./widgets/tour-grid.json"
+        },
+        {
+          "type": "StartPlanning",
+          "widgetRef": "./widgets/start-planning.json"
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "photoGallery": "Photo Gallery",
+        "viewAllPhotos": "View All Photos"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "TourGallery",
+          "props": {
+            "titleRef": "photoGallery",
+            "ctaLabelRef": "viewAllPhotos"
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

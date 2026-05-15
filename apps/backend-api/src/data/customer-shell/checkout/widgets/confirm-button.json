@@ -1,0 +1,30 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "confirmBooking": "Confirm Booking",
+        "processingPayment": "Processing your payment..."
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "ConfirmButton",
+          "props": {
+            "labelRef": "confirmBooking",
+            "processingRef": "processingPayment"
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "@packages/trem-design-tokens",
+  "version": "1.0.0",
+  "private": true,
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./scss": "./src/scss/index.scss",
+    "./scss/*": "./src/scss/*.scss"
+  }
+}

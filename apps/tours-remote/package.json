@@ -3,8 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@packages/trem-environment": "workspace:*",
+    "@packages/trem-events": "workspace:*",
+    "@packages/trem-runtime": "workspace:*",
+    "@packages/trem-session": "workspace:*",
     "@packages/trem-ui": "workspace:*",
     "@packages/trem-utils": "workspace:*",
+    "@packages/trem-widget-contracts": "workspace:*",
     "ajv": "^8.20.0",
     "axios": "^1.8.4",
     "lodash": "^4.17.21",

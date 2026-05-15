@@ -167,7 +167,8 @@ export default function CheckoutPage() {
     const formattedEnd = endDate ? fmtDate(endDate) : "—";
     const priceTotal = priceSnapshot?.total ?? 0;
     const currency = priceSnapshot?.currency ?? "INR";
-    const isConfirmed = String(status).toLowerCase() === "confirmed";
+    const normalizedStatus = String(status || "").toUpperCase();
+    const isPaymentOpen = ["PAYMENT_PENDING", "PARTIALLY_PAID", "CONFIRMED"].includes(normalizedStatus);
 
     return (
         <main style={pageStyle} className="checkout-root">
@@ -242,7 +243,7 @@ export default function CheckoutPage() {
                         <div style={actions}>
                             <button aria-label="Back" style={btnGhost} onClick={() => navigate(-1)}>Back</button>
 
-                            {isConfirmed ? (
+                            {isPaymentOpen ? (
                                 <button aria-label="Pay" style={btnPrimary} onClick={handlePay} disabled={processing}>
                                     {processing ? "Processing..." : `Pay ${currency} ${priceTotal}`}
                                 </button>

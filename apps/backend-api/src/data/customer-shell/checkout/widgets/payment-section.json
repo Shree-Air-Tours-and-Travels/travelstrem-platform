@@ -1,0 +1,85 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "paymentMethod": "Payment Method",
+        "creditCard": "Credit Card",
+        "debitCard": "Debit Card",
+        "netBanking": "Net Banking",
+        "upi": "UPI",
+        "wallet": "Wallet",
+        "cardNumber": "Card Number",
+        "cardHolderName": "Card Holder Name",
+        "expiryDate": "Expiry Date",
+        "cvv": "CVV"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "PaymentSection",
+          "props": {
+            "titleRef": "paymentMethod",
+            "methods": [
+              {
+                "id": "creditCard",
+                "labelRef": "creditCard"
+              },
+              {
+                "id": "debitCard",
+                "labelRef": "debitCard"
+              },
+              {
+                "id": "netBanking",
+                "labelRef": "netBanking"
+              },
+              {
+                "id": "upi",
+                "labelRef": "upi"
+              },
+              {
+                "id": "wallet",
+                "labelRef": "wallet"
+              }
+            ],
+            "cardFields": [
+              {
+                "name": "cardNumber",
+                "labelRef": "cardNumber",
+                "type": "text",
+                "required": true
+              },
+              {
+                "name": "cardHolderName",
+                "labelRef": "cardHolderName",
+                "type": "text",
+                "required": true
+              },
+              {
+                "name": "expiryDate",
+                "labelRef": "expiryDate",
+                "type": "text",
+                "required": true
+              },
+              {
+                "name": "cvv",
+                "labelRef": "cvv",
+                "type": "password",
+                "required": true
+              }
+            ]
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

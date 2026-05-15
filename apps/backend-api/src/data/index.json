@@ -1,0 +1,64 @@
+{
+  "version": "1.0.0",
+  "defaultPage": "customer-shell/home",
+  "pages": {
+    "customer-shell/home": {
+      "app": "customer-shell",
+      "page": "home",
+      "file": "./customer-shell/home/page.json"
+    },
+    "customer-shell/profile": {
+      "app": "customer-shell",
+      "page": "profile",
+      "file": "./customer-shell/profile/page.json"
+    },
+    "customer-shell/tours": {
+      "app": "customer-shell",
+      "page": "tours",
+      "file": "./customer-shell/tours/page.json"
+    },
+    "customer-shell/checkout": {
+      "app": "customer-shell",
+      "page": "checkout",
+      "file": "./customer-shell/checkout/page.json"
+    },
+    "tours-remote/listing": {
+      "app": "tours-remote",
+      "page": "listing",
+      "file": "./tours-remote/listing/page.json"
+    },
+    "tours-remote/details": {
+      "app": "tours-remote",
+      "page": "details",
+      "file": "./tours-remote/details/page.json"
+    },
+    "admin-shell/dashboard": {
+      "app": "admin-shell",
+      "page": "dashboard",
+      "file": "./admin-shell/dashboard/page.json"
+    },
+    "admin-shell/bookings": {
+      "app": "admin-shell",
+      "page": "bookings",
+      "file": "./admin-shell/bookings/page.json"
+    }
+  },
+  "pathMap": {
+    "/": "customer-shell/home",
+    "/profile": "customer-shell/profile",
+    "/tours": "customer-shell/tours",
+    "/checkout": "customer-shell/checkout",
+    "/admin": "admin-shell/dashboard",
+    "/admin/bookings": "admin-shell/bookings"
+  },
+  "aliases": {
+    "home": "customer-shell/home",
+    "profile": "customer-shell/profile",
+    "tours": "customer-shell/tours",
+    "checkout": "customer-shell/checkout",
+    "tour-listing": "tours-remote/listing",
+    "tour-details": "tours-remote/details",
+    "dashboard": "admin-shell/dashboard",
+    "bookings": "admin-shell/bookings"
+  }
+}

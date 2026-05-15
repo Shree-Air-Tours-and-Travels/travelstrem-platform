@@ -17,6 +17,7 @@ const ContactForm = ({
     onCancel,
     submitting = false,
     submitText = "Send Request",
+    errors = {},
     Button
 }) => {
     const renderField = (f) => {
@@ -30,8 +31,9 @@ const ContactForm = ({
                     name={f.name}
                     value={val}
                     onChange={(e) => onChange(f.name, e.target.value)}
-                    style={styles.input}
+                    style={{ ...styles.input, ...(errors[f.name] ? styles.inputError : {}) }}
                     placeholder={f.placeholder ?? ""}
+                    aria-invalid={!!errors[f.name]}
                 />
             );
         }
@@ -43,8 +45,9 @@ const ContactForm = ({
                 type={type}
                 value={val}
                 onChange={(e) => onChange(f.name, e.target.value)}
-                style={styles.input}
+                style={{ ...styles.input, ...(errors[f.name] ? styles.inputError : {}) }}
                 placeholder={f.placeholder ?? ""}
+                aria-invalid={!!errors[f.name]}
             />
         );
     };
@@ -55,6 +58,7 @@ const ContactForm = ({
                 <div key={f.name} style={{ marginTop: 10 }}>
                     <label style={{ display: "block", fontSize: 13, marginBottom: 6 }}>{f.label ?? f.name}</label>
                     {renderField(f)}
+                    {errors[f.name] ? <div style={styles.fieldError}>{errors[f.name]}</div> : null}
                 </div>
             ))}
 
@@ -95,23 +99,34 @@ const styles = {
         width: "100%",
         padding: 10,
         borderRadius: 6,
-        border: "1px solid #ddd",
-        boxSizing: "border-box"
+        border: "1px solid var(--control-border)",
+        boxSizing: "border-box",
+        background: "var(--control-bg)",
+        color: "var(--control-text)"
+    },
+    inputError: {
+        borderColor: "#dc2626",
+        boxShadow: "0 0 0 3px rgba(220,38,38,0.10)"
+    },
+    fieldError: {
+        marginTop: 6,
+        color: "#b91c1c",
+        fontSize: 12
     },
     submit: {
         padding: "9px 14px",
         borderRadius: 8,
         border: "none",
-        background: "#0b5fff",
-        color: "#fff",
+        background: "var(--color-primary)",
+        color: "var(--color-on-primary)",
         cursor: "pointer"
     },
     cancel: {
         padding: "9px 14px",
         borderRadius: 8,
-        border: "1px solid #ccc",
+        border: "1px solid var(--border)",
         background: "transparent",
-        color: "#333",
+        color: "var(--text)",
         cursor: "pointer"
     }
 };
@@ -124,6 +139,7 @@ ContactForm.propTypes = {
     onCancel: PropTypes.func.isRequired,
     submitting: PropTypes.bool,
     submitText: PropTypes.string,
+    errors: PropTypes.object,
     Button: PropTypes.oneOfType([PropTypes.func, PropTypes.object])
 };
 

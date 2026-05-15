@@ -116,18 +116,20 @@ export const fetchData = async (endpoint, options = {}) => {
       res = await apiClient.request({ url: endpoint, method: methodUpper, data: finalBody, params: finalParams, headers });
     }
 
-    const { status, message, componentData } = res?.data || {};
-    if (status === "success") return { status, message, componentData };
+    const { status, message, componentData, component } = res?.data || {};
+    if (status === "success") return { status, message, componentData, component };
 
     return {
       status: "error",
       message: message || "Something went wrong",
+      component,
       componentData: componentData || { title: "", description: "", data: [], structure: {}, config: {} },
     };
   } catch (err) {
     return {
       status: "error",
       message: err?.response?.data?.message || err.message || "Network error",
+      component: err?.response?.data?.component,
       componentData: err?.response?.data?.componentData || { title: "", description: "", data: [], structure: {}, config: {} },
     };
   }

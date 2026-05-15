@@ -1,0 +1,42 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "cancellationPolicy": "Cancellation Policy",
+        "freeCancellation": "Free cancellation up to 48 hours before departure",
+        "partialCancellation": "50% refund for cancellations within 24-48 hours",
+        "noCancellation": "No refund for cancellations within 24 hours"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "CancellationPolicy",
+          "props": {
+            "titleRef": "cancellationPolicy",
+            "rules": [
+              {
+                "labelRef": "freeCancellation"
+              },
+              {
+                "labelRef": "partialCancellation"
+              },
+              {
+                "labelRef": "noCancellation"
+              }
+            ]
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

@@ -21,8 +21,8 @@ const TOURS_REMOTE_CONFIG = {
     },
     remoteProps: {
         embedded: true,
-        basename: ROUTES.shellTours,
-        basePath: ROUTES.shellTours,
+        basename: ROUTES.tours,
+        basePath: ROUTES.tours,
     },
 };
 

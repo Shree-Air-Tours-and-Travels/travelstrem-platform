@@ -1,0 +1,32 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "pageTitle": "Our Popular Tour Packages"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {
+        "titleRef": "pageTitle"
+      },
+      "widgets": [
+        {
+          "type": "TourFilters",
+          "widgetRef": "./widgets/tour-filters.json"
+        },
+        {
+          "type": "ToursList",
+          "widgetRef": "./widgets/tours-list.json"
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

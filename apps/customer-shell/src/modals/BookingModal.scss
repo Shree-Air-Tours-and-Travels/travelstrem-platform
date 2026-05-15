@@ -3,7 +3,7 @@
 /* FILE: src/components/booking/BookingModal.scss                                     */
 /* Uses the trem-scss typography tokens and utilities (import the canonical file) */
 
-@import "../styles/base/typography";
+@import "@packages/trem-ui/styles/base/typography";
 
 .bm-overlay {
   position: fixed;

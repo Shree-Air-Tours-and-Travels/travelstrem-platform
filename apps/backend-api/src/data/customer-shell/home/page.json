@@ -1,0 +1,32 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {},
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "Hero",
+          "widgetRef": "./widgets/hero.json"
+        },
+        {
+          "type": "services",
+          "widgetRef": "./widgets/services.json"
+        },
+        {
+          "type": "featuredTours",
+          "widgetRef": "./widgets/featured-tours.json"
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

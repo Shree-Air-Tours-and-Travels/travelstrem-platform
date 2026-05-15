@@ -1,0 +1,54 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "revenueChart": "Revenue Overview",
+        "last7Days": "Last 7 Days",
+        "last30Days": "Last 30 Days",
+        "last90Days": "Last 90 Days",
+        "thisYear": "This Year",
+        "exportReport": "Export Report",
+        "refreshData": "Refresh Data"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "RevenueChart",
+          "props": {
+            "titleRef": "revenueChart",
+            "periods": [
+              {
+                "id": "7d",
+                "labelRef": "last7Days"
+              },
+              {
+                "id": "30d",
+                "labelRef": "last30Days"
+              },
+              {
+                "id": "90d",
+                "labelRef": "last90Days"
+              },
+              {
+                "id": "year",
+                "labelRef": "thisYear"
+              }
+            ],
+            "exportLabelRef": "exportReport",
+            "refreshLabelRef": "refreshData"
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

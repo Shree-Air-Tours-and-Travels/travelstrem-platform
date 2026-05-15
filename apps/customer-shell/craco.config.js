@@ -51,7 +51,7 @@ module.exports = {
     },
     webpack: {
         configure: (webpackConfig) => {
-            webpackConfig.output.publicPath = "auto";
+            webpackConfig.output.publicPath = "/";
             webpackConfig.output.uniqueName = moduleFederationConfig.name;
             webpackConfig.optimization.runtimeChunk = false;
             webpackConfig.resolve.modules = [
@@ -61,8 +61,10 @@ module.exports = {
             webpackConfig.resolve.alias = {
                 ...(webpackConfig.resolve.alias || {}),
                 "@apps/auth-trem": path.resolve(__dirname, "../../apps/auth-trem/src/public-api.js"),
+                "@packages/trem-auth-core": path.resolve(__dirname, "../../packages/trem-auth-core/src"),
                 "@packages/trem-ui": path.resolve(__dirname, "../../packages/trem-ui/src"),
                 "@packages/trem-utils": path.resolve(__dirname, "../../packages/trem-utils/src"),
+                "@packages/trem-widget-contracts": path.resolve(__dirname, "../../packages/trem-widget-contracts/src"),
             };
             webpackConfig.resolve.plugins = (webpackConfig.resolve.plugins || []).filter(
                 (plugin) => !(plugin instanceof ModuleScopePlugin)

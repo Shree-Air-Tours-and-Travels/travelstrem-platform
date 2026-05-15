@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import { initApp } from "../../core/initApp";
 import { getHeaderConfig } from "../../services/configService";
 import { clearUserSessionCache } from "../../services/userSession";
-import { on, registerSessionCacheClearer } from "../../core/eventBus";
+import { on, registerSessionCacheClearer } from "@packages/trem-events";
 
 const DEFAULT_SESSION = {
     user: null,

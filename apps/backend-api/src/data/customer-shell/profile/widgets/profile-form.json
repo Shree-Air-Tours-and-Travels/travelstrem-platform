@@ -1,0 +1,66 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "personalInfo": "Personal Information",
+        "fullName": "Full Name",
+        "emailAddress": "Email Address",
+        "phoneNumber": "Phone Number",
+        "dateOfBirth": "Date of Birth",
+        "nationality": "Nationality",
+        "saveChanges": "Save Changes",
+        "cancel": "Cancel"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "ProfileForm",
+          "props": {
+            "sectionTitleRef": "personalInfo",
+            "fields": [
+              {
+                "name": "name",
+                "labelRef": "fullName",
+                "type": "text",
+                "required": true
+              },
+              {
+                "name": "email",
+                "labelRef": "emailAddress",
+                "type": "email",
+                "required": true
+              },
+              {
+                "name": "phone",
+                "labelRef": "phoneNumber",
+                "type": "tel"
+              },
+              {
+                "name": "dob",
+                "labelRef": "dateOfBirth",
+                "type": "date"
+              },
+              {
+                "name": "nationality",
+                "labelRef": "nationality",
+                "type": "text"
+              }
+            ],
+            "submitLabelRef": "saveChanges",
+            "cancelLabelRef": "cancel"
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}
