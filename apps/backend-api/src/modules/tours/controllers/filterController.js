@@ -284,7 +284,7 @@ export const getFilters = async (req, res) => {
     const tours = await TourRepository.findLean();
     const options = getFilterFacts(tours);
     return sendJson(res, 200, {
-      ...pageDefinitionService.buildWidgetResponse("customer-shell/tours", "./widgets/tour-filters.json", {
+      ...pageDefinitionService.buildWidgetResponse("tours-remote/listing", "./widgets/tour-filters.json", {
         injectData: {
           summary: {
             totalTours: options.totalTours,
@@ -308,7 +308,7 @@ export const getFilters = async (req, res) => {
     return sendJson(res, 500, {
       status: "error",
       message: "Failed to load filters",
-      ...pageDefinitionService.buildWidgetResponse("customer-shell/tours", "./widgets/tour-filters.json"),
+      ...pageDefinitionService.buildWidgetResponse("tours-remote/listing", "./widgets/tour-filters.json"),
     }, req);
   }
 };
@@ -332,7 +332,7 @@ export const applyFilters = async (req, res) => {
       return sendJson(res, 400, {
         status: "error",
         message: "Invalid filter values",
-        ...pageDefinitionService.buildPageResponse("customer-shell/tours", {
+        ...pageDefinitionService.buildPageResponse("tours-remote/listing", {
           injectData: {
             tours: [],
             errors: validation.errors,
@@ -473,7 +473,7 @@ export const applyFilters = async (req, res) => {
     return sendJson(res, 200, {
       status: "success",
       message: `${filtered.length} tours matched`,
-      ...pageDefinitionService.buildPageResponse("customer-shell/tours", {
+      ...pageDefinitionService.buildPageResponse("tours-remote/listing", {
         injectData: {
           tours: filtered,
           total: filtered.length,
@@ -494,7 +494,7 @@ export const applyFilters = async (req, res) => {
     return sendJson(res, 500, {
       status: "error",
       message: "Failed to apply filters",
-      ...pageDefinitionService.buildPageResponse("customer-shell/tours", {
+      ...pageDefinitionService.buildPageResponse("tours-remote/listing", {
         injectData: { tours: [] },
       }),
     }, req);

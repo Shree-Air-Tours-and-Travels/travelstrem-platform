@@ -70,6 +70,11 @@ const serviceSchema = new mongoose.Schema(
                 trim: true,
             },
         },
+
+        disabled: {
+            type: Boolean,
+            default: false,
+        },
     },
     {
         timestamps: true,

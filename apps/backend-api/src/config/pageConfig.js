@@ -8,7 +8,7 @@ export default {
       "/": "home",
       "/about": "about",
       "/tours": "tours",
-      "/bookings": "bookings"
+      "/dashboard": "dashboard"
     },
     "pages": {
       "home": {
@@ -24,7 +24,7 @@ export default {
           },
           {
             "type": "featuredTours",
-            "source": "toursTREM"
+            "source": "shell"
           }
         ]
       },
@@ -51,11 +51,11 @@ export default {
           }
         ]
       },
-      "bookings": {
-        "page": "bookings",
+      "dashboard": {
+        "page": "dashboard",
         "widgets": [
           {
-            "type": "bookingsDashboard",
+            "type": "dashboard",
             "source": "shell"
           }
         ]

@@ -22,7 +22,7 @@
             "titleRef": "featuredToursTitle",
             "descriptionRef": "featuredToursDescription",
             "ctaLabelRef": "viewMore",
-            "source": "toursTREM"
+            "source": "shell"
           }
         }
       ],

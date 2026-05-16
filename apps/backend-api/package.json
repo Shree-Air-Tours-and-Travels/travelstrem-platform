@@ -10,6 +10,7 @@
     "start": "cross-env NODE_ENV=production node src/server.js",
     "start:prod": "cross-env NODE_ENV=production node src/server.js",
     "seed:tours": "node src/seed.js",
+    "seed:services": "node src/seed-services.js",
     "test": "cross-env NODE_ENV=test jest --runInBand"
   },
   "dependencies": {

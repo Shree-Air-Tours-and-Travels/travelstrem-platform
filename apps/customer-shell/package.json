@@ -7,6 +7,7 @@
     "@apps/auth-trem": "workspace:*",
     "@fortawesome/fontawesome-free": "^6.7.2",
     "@packages/trem-auth-core": "workspace:*",
+    "@packages/trem-modals": "workspace:*",
     "@packages/trem-environment": "workspace:*",
     "@packages/trem-events": "workspace:*",
     "@packages/trem-runtime": "workspace:*",
