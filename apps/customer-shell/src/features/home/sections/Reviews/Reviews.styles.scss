@@ -1,0 +1,85 @@
+@import "@packages/trem-ui/styles/base/typography";
+
+.ui-reviews {
+  padding: 3rem;
+  background-color: $primary-color;
+  text-align: center;
+  width: 100%;
+
+  &__title {
+    font-size: $font-size-xxl;
+    font-weight: $font-bold;
+    color: $primary-color;
+    margin-bottom: 1rem;
+  }
+
+  &__subtitle {
+    font-size: $font-size-md;
+    color: $secondary-color;
+    margin-bottom: 2rem;
+  }
+
+  &__slider {
+    margin: 0 auto;
+    padding: 1rem;
+
+    .slick-prev::before,
+    .slick-next::before {
+      color: $primary-color;
+      z-index: 2;
+    }
+
+    .slick-dots {
+      bottom: -30px;
+    }
+  }
+
+  &__form {
+    background: $primary-color;
+    padding: 2rem;
+    border-radius: 10px;
+    max-width: 500px;
+    margin: 3rem auto;
+    box-shadow: var(--shadow-sm);
+
+    &-title {
+      font-size: $font-size-lg;
+      font-weight: $font-medium;
+      margin-bottom: 1rem;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+
+      .ui-reviews__input,
+      .ui-reviews__textarea {
+        width: 100%;
+        padding: 0.8rem;
+        border: 1px solid $border-color;
+        border-radius: 5px;
+        font-size: $font-size-md;
+        font-family: $font-primary;
+        color: $primary-color;
+      }
+
+      .btn-primary {
+        background-color: $primary-color;
+        color: $text-light;
+        font-size: $font-size-md;
+        font-weight: $font-semibold;
+        padding: 0.8rem;
+        border-radius: 5px;
+        border: none;
+        cursor: pointer;
+        transition: background 0.3s ease-in-out;
+
+        &:hover {
+          background-color: darken($primary-color, 10%);
+        }
+      }
+    }
+  }
+}
+

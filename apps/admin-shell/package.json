@@ -5,6 +5,10 @@
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.7.2",
     "@apps/auth-trem": "workspace:*",
+    "@packages/trem-environment": "workspace:*",
+    "@packages/trem-events": "workspace:*",
+    "@packages/trem-runtime": "workspace:*",
+    "@packages/trem-session": "workspace:*",
     "@packages/trem-ui": "workspace:*",
     "@packages/trem-utils": "workspace:*",
     "@testing-library/dom": "^10.4.0",

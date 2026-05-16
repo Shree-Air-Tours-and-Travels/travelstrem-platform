@@ -2,15 +2,10 @@ export const ROUTES = {
   auth: "/auth",
   login: "/login",
   home: "/",
-  packages: "/tours",
-  shellTours: "/tours",
-  legacyPackageTours: "/packages/tours",
+  tours: "/tours",
 };
 
-export const getPackageListPath = () => ROUTES.packages;
+export const getTourListPath = () => ROUTES.tours;
 
-export const getPackageTourDetailsPath = (tourId) =>
-  `${ROUTES.packages}/${encodeURIComponent(String(tourId))}`;
-
-export const getLegacyPackageTourDetailsPath = (tourId) =>
-  `${ROUTES.legacyPackageTours}/${encodeURIComponent(String(tourId))}`;
+export const getTourDetailsPath = (tourRef) =>
+  `${ROUTES.tours}/${encodeURIComponent(String(tourRef))}`;

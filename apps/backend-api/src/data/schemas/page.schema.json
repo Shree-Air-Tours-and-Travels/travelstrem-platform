@@ -1,0 +1,42 @@
+{
+  "required": ["status", "component"],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["success", "error"],
+      "required": true
+    },
+    "component": {
+      "type": "object",
+      "required": true,
+      "properties": {
+        "data": { "type": "object", "required": true },
+        "dataScope": {
+          "type": "object",
+          "required": true,
+          "properties": {
+            "options": { "type": "object", "required": true }
+          }
+        },
+        "elements": {
+          "type": "object",
+          "required": true,
+          "properties": {
+            "labels": { "type": "object", "required": true },
+            "urls": { "type": "object", "required": true }
+          }
+        },
+        "structure": {
+          "type": "object",
+          "required": true,
+          "properties": {
+            "header": { "type": "object", "required": true },
+            "widgets": { "type": "array", "required": true },
+            "config": { "type": "object", "required": true },
+            "actions": { "type": "array", "required": true }
+          }
+        }
+      }
+    }
+  }
+}

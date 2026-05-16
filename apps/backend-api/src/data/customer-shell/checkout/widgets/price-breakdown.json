@@ -1,0 +1,48 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "priceBreakdown": "Price Breakdown",
+        "basePrice": "Base Price",
+        "taxesAndFees": "Taxes & Fees",
+        "discount": "Discount",
+        "totalAmount": "Total Amount",
+        "promoCode": "Promo Code",
+        "applyPromo": "Apply",
+        "removePromo": "Remove",
+        "invalidPromo": "Invalid promo code",
+        "promoApplied": "Promo code applied successfully"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "PriceBreakdown",
+          "props": {
+            "titleRef": "priceBreakdown",
+            "labels": {
+              "basePriceRef": "basePrice",
+              "taxesRef": "taxesAndFees",
+              "discountRef": "discount",
+              "totalRef": "totalAmount",
+              "promoCodeRef": "promoCode",
+              "applyRef": "applyPromo",
+              "removeRef": "removePromo",
+              "invalidRef": "invalidPromo",
+              "appliedRef": "promoApplied"
+            }
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

@@ -1,0 +1,85 @@
+@import "@packages/trem-ui/styles/base/typography"; // Ensure the correct path to your typography file
+
+.ui-experience {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4rem 6rem;
+  background-color: $primary-color;
+
+  &__content {
+    max-width: 50%;
+  }
+
+  &__tag {
+    font-size: $font-size-md;
+    font-weight: $font-semibold;
+    background-color: $accent-color;
+    color: $text-light;
+    padding: 0.5rem 1.2rem;
+    border-radius: 20px;
+    display: inline-block;
+    margin-bottom: 1rem;
+  }
+
+  &__title {
+    font-size: $font-size-xxl;
+    font-weight: $font-bold;
+    color: $text-dark;
+    margin-bottom: 1rem;
+  }
+
+  &__description {
+    font-size: $font-size-md;
+    color: $secondary-color;
+    line-height: $line-height-lg;
+    margin-bottom: 2rem;
+  }
+
+  &__stats {
+    display: flex;
+    gap: 2rem;
+    margin-top: 1rem;
+  }
+
+  &__stat {
+    text-align: center;
+    background-color: $text-muted;
+    padding: 1rem 1.5rem;
+    border-radius: 10px;
+    min-width: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    .ui-experience__icon {
+      font-size: $font-size-xl;
+      color: $primary-color;
+      margin-bottom: 0.5rem;
+    }
+
+    .ui-experience__value {
+      font-size: $font-size-xl;
+      font-weight: $font-extrabold;
+      color: $text-dark;
+    }
+
+    .ui-experience__label {
+      font-size: $font-size-md;
+      font-weight: $font-medium;
+      color: $secondary-color;
+    }
+  }
+
+  &__image {
+    max-width: 50%;
+    text-align: center;
+
+    img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 10px;
+    }
+  }
+}

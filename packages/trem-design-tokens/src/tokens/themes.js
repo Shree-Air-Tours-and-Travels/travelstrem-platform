@@ -1,0 +1,26 @@
+export const themes = {
+  light: {
+    colorScheme: "light",
+    background: "#f8fbfa",
+    surface: "#ffffff",
+    text: "#132321",
+    primary: "#0f8f86",
+    primaryDark: "#07655f",
+    secondary: "#1d4f91",
+    secondaryDark: "#123565",
+    tertiary: "#d8942a",
+    tertiaryDark: "#8a5a10",
+  },
+  dark: {
+    colorScheme: "dark",
+    background: "#081312",
+    surface: "#0d1d1b",
+    text: "#f5fbfa",
+    primary: "#5fe0d4",
+    primaryDark: "#21a99d",
+    secondary: "#7eb6ff",
+    secondaryDark: "#3c7dca",
+    tertiary: "#f1b85f",
+    tertiaryDark: "#bf7d18",
+  },
+};

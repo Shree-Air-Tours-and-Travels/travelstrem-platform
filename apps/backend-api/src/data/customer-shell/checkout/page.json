@@ -1,0 +1,54 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "checkoutTitle": "Checkout",
+        "checkoutDescription": "Review and confirm your booking."
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {
+        "titleRef": "checkoutTitle",
+        "descriptionRef": "checkoutDescription"
+      },
+      "widgets": [
+        {
+          "type": "BookingSummary",
+          "widgetRef": "./widgets/booking-summary.json"
+        },
+        {
+          "type": "PriceBreakdown",
+          "widgetRef": "./widgets/price-breakdown.json"
+        },
+        {
+          "type": "TravellerForm",
+          "widgetRef": "./widgets/traveller-form.json"
+        },
+        {
+          "type": "PaymentSection",
+          "widgetRef": "./widgets/payment-section.json"
+        },
+        {
+          "type": "TermsCheckbox",
+          "widgetRef": "./widgets/terms-checkbox.json"
+        },
+        {
+          "type": "ConfirmButton",
+          "widgetRef": "./widgets/confirm-button.json"
+        },
+        {
+          "type": "CancellationPolicy",
+          "widgetRef": "./widgets/cancellation-policy.json"
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}
