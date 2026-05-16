@@ -1,0 +1,58 @@
+{
+  "elements": {
+    "labels": {
+      "appName": "TravelsTREM",
+      "loading": "Loading...",
+      "error": "Something went wrong",
+      "retry": "Retry",
+      "cancel": "Cancel",
+      "confirm": "Confirm",
+      "save": "Save",
+      "delete": "Delete",
+      "edit": "Edit",
+      "close": "Close",
+      "back": "Back",
+      "next": "Next",
+      "submit": "Submit",
+      "search": "Search",
+      "noResults": "No results found",
+      "viewAll": "View All",
+      "showMore": "Show More",
+      "showLess": "Show Less",
+      "optional": "Optional",
+      "required": "Required",
+      "selectOption": "-- Select --",
+      "or": "or",
+      "and": "and",
+      "home": "Home",
+      "about": "About",
+      "services": "Services",
+      "contact": "Contact",
+      "login": "Login",
+      "logout": "Logout",
+      "register": "Register",
+      "profile": "Profile",
+      "settings": "Settings",
+      "help": "Help",
+      "notFound": "Page Not Found",
+      "notFoundMessage": "The page you are looking for does not exist.",
+      "goHome": "Go Home",
+      "serverError": "Server Error",
+      "serverErrorMessage": "An unexpected error occurred. Please try again later.",
+      "sessionExpired": "Your session has expired. Please login again.",
+      "unauthorized": "You do not have permission to access this page.",
+      "successMessage": "Operation completed successfully.",
+      "copiedToClipboard": "Copied to clipboard",
+      "confirmAction": "Are you sure you want to proceed?",
+      "yesProceed": "Yes, Proceed",
+      "noGoBack": "No, Go Back"
+    },
+
+    "urls": {
+      "logoUrl": "/logo-images/travelsTrem-header-logo.png",
+      "faviconUrl": "/favicon.ico",
+      "defaultAvatar": "/images/default-avatar.png",
+      "placeholderImage": "/images/placeholder.jpg"
+    }
+  }
+}

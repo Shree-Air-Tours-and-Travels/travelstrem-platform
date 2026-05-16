@@ -1,0 +1,32 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "pageTitle": "Discover Tours",
+        "pageSubtitle": "Find your perfect adventure",
+        "pageDescription": "Browse our curated collection of tours and travel packages."
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "HeroBanner",
+          "props": {
+            "titleRef": "pageTitle",
+            "subtitleRef": "pageSubtitle",
+            "descriptionRef": "pageDescription"
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

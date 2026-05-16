@@ -1,0 +1,28 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "bookingSummary": "Booking Summary"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "BookingSummary",
+          "props": {
+            "titleRef": "bookingSummary"
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

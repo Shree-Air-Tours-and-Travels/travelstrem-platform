@@ -1,0 +1,114 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "searchTours": "Search tours",
+        "searchPlaceholder": "Jaipur, island, palace...",
+        "filterFrom": "From",
+        "filterTo": "To",
+        "filterCountry": "Country",
+        "filterMinPrice": "Min price",
+        "filterMaxPrice": "Max price",
+        "filterMinDays": "Min days",
+        "filterMaxDays": "Max days",
+        "filterArrival": "Arrival",
+        "filterReturn": "Return",
+        "filterTags": "Interests",
+        "applyFilters": "Apply Filters",
+        "resetFilters": "Reset"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "TourFilters",
+          "props": {
+            "fields": [
+              {
+                "name": "search",
+                "labelRef": "searchTours",
+                "type": "text",
+                "placeholderRef": "searchPlaceholder"
+              },
+              {
+                "name": "originCity",
+                "labelRef": "filterFrom",
+                "type": "select",
+                "optionsRef": "originCityOptions"
+              },
+              {
+                "name": "destinationCity",
+                "labelRef": "filterTo",
+                "type": "select",
+                "optionsRef": "destinationCityOptions"
+              },
+              {
+                "name": "country",
+                "labelRef": "filterCountry",
+                "type": "select",
+                "optionsRef": "countryOptions"
+              },
+              {
+                "name": "minPrice",
+                "labelRef": "filterMinPrice",
+                "type": "number"
+              },
+              {
+                "name": "maxPrice",
+                "labelRef": "filterMaxPrice",
+                "type": "number"
+              },
+              {
+                "name": "minDays",
+                "labelRef": "filterMinDays",
+                "type": "number"
+              },
+              {
+                "name": "maxDays",
+                "labelRef": "filterMaxDays",
+                "type": "number"
+              },
+              {
+                "name": "arrivalDate",
+                "labelRef": "filterArrival",
+                "type": "date"
+              },
+              {
+                "name": "returnDate",
+                "labelRef": "filterReturn",
+                "type": "date"
+              },
+              {
+                "name": "tags",
+                "labelRef": "filterTags",
+                "type": "multiselect"
+              }
+            ]
+          }
+        }
+      ],
+      "config": {},
+      "actions": [
+        {
+          "name": "apply",
+          "labelRef": "applyFilters",
+          "method": "POST",
+          "endpoint": "/filters.json/apply"
+        },
+        {
+          "name": "reset",
+          "labelRef": "resetFilters",
+          "method": "GET",
+          "endpoint": "/tours.json"
+        }
+      ]
+    }
+  }
+}

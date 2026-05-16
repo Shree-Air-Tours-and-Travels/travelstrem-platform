@@ -1,0 +1,60 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "pageTitle": "Tour Details"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {
+        "titleRef": "pageTitle"
+      },
+      "widgets": [
+        {
+          "type": "TourGallery",
+          "widgetRef": "./widgets/tour-gallery.json"
+        },
+        {
+          "type": "TourOverview",
+          "widgetRef": "./widgets/tour-overview.json"
+        },
+        {
+          "type": "TourHighlights",
+          "widgetRef": "./widgets/tour-highlights.json"
+        },
+        {
+          "type": "PricingCard",
+          "widgetRef": "./widgets/pricing-card.json"
+        },
+        {
+          "type": "ItineraryTimeline",
+          "widgetRef": "./widgets/itinerary-timeline.json"
+        },
+        {
+          "type": "InclusionsExclusions",
+          "widgetRef": "./widgets/inclusions-exclusions.json"
+        },
+        {
+          "type": "CancellationPolicy",
+          "widgetRef": "./widgets/cancellation-policy.json"
+        },
+        {
+          "type": "ReviewsSection",
+          "widgetRef": "./widgets/reviews-section.json"
+        },
+        {
+          "type": "SimilarTours",
+          "widgetRef": "./widgets/similar-tours.json"
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

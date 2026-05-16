@@ -28,7 +28,7 @@ const shuffle = (arr, seed = 1) => {
 const pickPhotos = (index) => {
     const s = index + 7;
     const shuffled = shuffle(photoPool, s);
-    return [shuffled[0], shuffled[1], shuffled[2], shuffled[3]];
+    return [shuffled[0], shuffled[1], shuffled[2], shuffled[3], shuffled[4], shuffled[5], shuffled[6]];
 };
 
 const tours = [

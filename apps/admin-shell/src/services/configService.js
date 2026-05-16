@@ -1,4 +1,4 @@
-import { getConfiguredApiBase } from "../config/portalEnvironment";
+import { getConfiguredApiBase } from "../core/config/portalEnvironment";
 
 const normalizeApiBase = (raw) => {
     const base = raw || "http://localhost:5000";

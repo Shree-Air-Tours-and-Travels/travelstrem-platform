@@ -1,0 +1,50 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "dashboardTitle": "Admin Dashboard",
+        "dashboardDescription": "Overview of platform metrics and quick actions."
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {
+        "titleRef": "dashboardTitle",
+        "descriptionRef": "dashboardDescription"
+      },
+      "widgets": [
+        {
+          "type": "StatsGrid",
+          "widgetRef": "./widgets/stats-grid.json"
+        },
+        {
+          "type": "QuickActions",
+          "widgetRef": "./widgets/quick-actions.json"
+        },
+        {
+          "type": "BookingStatusChart",
+          "widgetRef": "./widgets/booking-status-chart.json"
+        },
+        {
+          "type": "RevenueChart",
+          "widgetRef": "./widgets/revenue-chart.json"
+        },
+        {
+          "type": "RecentBookingsList",
+          "widgetRef": "./widgets/recent-bookings-list.json"
+        },
+        {
+          "type": "PopularDestinations",
+          "widgetRef": "./widgets/popular-destinations.json"
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

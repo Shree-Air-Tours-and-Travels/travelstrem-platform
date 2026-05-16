@@ -1,0 +1,28 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "popularDestinations": "Popular Destinations"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "PopularDestinations",
+          "props": {
+            "titleRef": "popularDestinations"
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

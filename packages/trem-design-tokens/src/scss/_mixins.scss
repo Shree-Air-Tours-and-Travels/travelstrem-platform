@@ -1,0 +1,59 @@
+@function rem($px, $base: 16) {
+  @return #{($px / $base)}rem;
+}
+
+@mixin fluid-type($min, $max, $min-vw: 320px, $max-vw: 1200px) {
+  font-size: clamp(
+    #{$min},
+    #{$min} + (#{$max} - #{$min}) *
+      ((100vw - #{$min-vw}) / (#{$max-vw} - #{$min-vw})),
+    #{$max}
+  );
+}
+
+@mixin ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@mixin clamp-lines($lines, $line-height: 1.4) {
+  line-height: $line-height;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: $lines;
+  overflow: hidden;
+  max-height: ($lines * $line-height) + 0rem;
+}
+
+@mixin app-container($max: $container-width) {
+  width: min(#{$max}, calc(100% - 32px));
+  margin-inline: auto;
+}
+
+@mixin card-surface {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+}
+
+@mixin skeleton-shimmer($bg: $surface-muted) {
+  position: relative;
+  overflow: hidden;
+  background: $bg;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      var(--color-transparent),
+      var(--surface-shimmer),
+      var(--color-transparent)
+    );
+    animation: trem-shimmer $duration-shimmer infinite linear;
+  }
+}

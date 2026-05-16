@@ -1,30 +1,32 @@
-import React from "react";
-import HeroSection from "../Featured/Hero/heroSection";
-import ServiceList from "../Featured/Service/serviceLst";
-import About from "../pages/AboutPage/About";
-import DashboardPage from "../pages/Dashboard/DashboardPage";
-import FederatedToursApp from "../components/federation/FederatedToursApp";
-import FeaturedToursPreview from "../components/tours/FeaturedToursPreview";
-import { usePortalConfig } from "../components/portal/PortalConfigContext";
+import React, { Suspense } from "react";
+import { getWidgetRenderProps, normalizeWidgetConfig } from "@packages/trem-widget-contracts";
+import { usePortalConfig } from "../app/providers/PortalProvider";
+import { shellWidgetRegistry } from "./registry/widgetRegistry";
 
-export const WidgetRenderer = ({ widgets = [] }) => {
-    const { session } = usePortalConfig();
+const WidgetFallback = () => null;
 
-    const widgetRegistry = {
-        heroBanner: (props) => <HeroSection user={session?.user} {...props} />,
-        services: ServiceList,
-        featuredTours: (props) => <FeaturedToursPreview user={session?.user} {...props} />,
-        offers: () => null,
-        aboutContent: About,
-        microApp: FederatedToursApp,
-        bookingsDashboard: DashboardPage,
-    };
+export const WidgetRenderer = ({ widgets = [], registry = shellWidgetRegistry }) => {
+    const portalContext = usePortalConfig();
 
-    return widgets.map((widget, index) => {
-        const Component = widgetRegistry[widget.type];
+    return widgets.map((rawWidget, index) => {
+        const widget = normalizeWidgetConfig(rawWidget, index);
+        const definition = registry.get(widget.type);
+        const Component = definition?.component;
+
         if (!Component) return null;
 
-        return <Component key={`${widget.type}-${index}`} {...(widget.props || {})} />;
+        const props = getWidgetRenderProps(definition, widget, {
+            session: portalContext.session,
+            headerConfig: portalContext.headerConfig,
+            pageConfig: portalContext.pageConfig,
+            reload: portalContext.reload,
+        });
+
+        return (
+            <Suspense fallback={<WidgetFallback />} key={widget.id}>
+                <Component {...props} />
+            </Suspense>
+        );
     });
 };
 

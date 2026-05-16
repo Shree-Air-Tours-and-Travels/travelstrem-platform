@@ -1,0 +1,40 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "fullItinerary": "Full Itinerary",
+        "day": "Day",
+        "activities": "Activities",
+        "meals": "Meals",
+        "accommodation": "Accommodation",
+        "location": "Location",
+        "notes": "Notes"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "ItineraryTimeline",
+          "props": {
+            "titleRef": "fullItinerary",
+            "dayLabelRef": "day",
+            "activitiesLabelRef": "activities",
+            "mealsLabelRef": "meals",
+            "accommodationLabelRef": "accommodation",
+            "locationLabelRef": "location",
+            "notesLabelRef": "notes"
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

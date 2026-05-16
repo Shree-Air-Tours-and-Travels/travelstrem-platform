@@ -1,0 +1,32 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "startPlanning": "Start Planning Your Trip",
+        "startPlanningDesc": "Tell us your preferences and we will create a personalized itinerary.",
+        "getStarted": "Get Started"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "StartPlanning",
+          "props": {
+            "titleRef": "startPlanning",
+            "descriptionRef": "startPlanningDesc",
+            "ctaLabelRef": "getStarted"
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}
