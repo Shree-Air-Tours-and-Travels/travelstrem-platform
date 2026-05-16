@@ -1,0 +1,30 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "youMayAlsoLike": "You May Also Like",
+        "viewDetails": "View Details"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "SimilarTours",
+          "props": {
+            "titleRef": "youMayAlsoLike",
+            "ctaLabelRef": "viewDetails"
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

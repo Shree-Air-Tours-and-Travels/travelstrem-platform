@@ -1,0 +1,32 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "servicesTitle": "Our Services",
+        "servicesDescription": "Curated travel experiences and premium travel solutions designed to make every journey seamless, elegant, and memorable.",
+        "servicesNote": "We currently offer only Travel Packages service. Other services listed are coming soon."
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "services",
+          "props": {
+            "titleRef": "servicesTitle",
+            "descriptionRef": "servicesDescription",
+            "source": "shell"
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

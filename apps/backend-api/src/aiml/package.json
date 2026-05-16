@@ -1,7 +1,0 @@
-{
-  "name": "travelsTREM-aiml",
-  "version": "1.0.0",
-  "type": "module",
-  "private": true,
-  "description": "AI / ML logic layer for TravelsTREM chatbot"
-}

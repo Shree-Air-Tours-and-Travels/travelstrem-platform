@@ -85,12 +85,18 @@ export async function fetchAdminBookings() {
 
 export async function confirmBooking(bookingId, finalPriceData = {}) {
     await expectSuccess(
-        fetchData(`/bookings/${bookingId}/confirm`, {
+        fetchData(`/admin/bookings/${bookingId}/set-price`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ payment: finalPriceData }),
+            body: JSON.stringify({
+                finalAmount: Number(finalPriceData.finalAmount || finalPriceData.amountPaid || 0),
+                currency: finalPriceData.currency || "INR",
+                basePrice: Number(finalPriceData.finalAmount || finalPriceData.amountPaid || 0),
+                notes: finalPriceData.notes || "",
+                sendNow: true,
+            }),
         }),
-        "Confirm failed"
+        "Quote generation failed"
     );
 }
 

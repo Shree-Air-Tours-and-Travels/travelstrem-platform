@@ -2,11 +2,11 @@
 
 .admin-shell-header {
   min-height: 72px;
-  padding: 0 1.5rem;
+  padding: 0 $space-6;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: $space-4;
   border-bottom: 1px solid var(--border);
   background: var(--bg);
   color: var(--text);
@@ -23,7 +23,7 @@
   &__actions {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: $space-4;
   }
 
   &__nav a {
@@ -46,7 +46,7 @@
     border-radius: var(--radius-sm);
     background: var(--bg-2);
     color: var(--color-primary);
-    padding: 0.45rem 0.75rem;
+    padding: 0.45rem $space-3;
     cursor: pointer;
   }
 }
@@ -55,7 +55,7 @@
   .admin-shell-header {
     align-items: flex-start;
     flex-direction: column;
-    padding: 1rem;
+    padding: $space-4;
 
     &__nav,
     &__actions {

@@ -5,6 +5,7 @@
   "main": "src/public-api.js",
   "dependencies": {
     "@craco/craco": "^7.1.0",
+    "@packages/trem-auth-core": "workspace:*",
     "@packages/trem-ui": "workspace:*",
     "axios": "^1.8.4",
     "react": "^18.3.1",

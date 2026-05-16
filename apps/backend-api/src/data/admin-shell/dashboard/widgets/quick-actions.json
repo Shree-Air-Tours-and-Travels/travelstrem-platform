@@ -1,0 +1,71 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "quickActions": "Quick Actions",
+        "createTour": "Create New Tour",
+        "manageTours": "Manage Tours",
+        "manageBookings": "Manage Bookings",
+        "manageUsers": "Manage Users",
+        "viewReports": "View Reports",
+        "systemSettings": "System Settings"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "QuickActions",
+          "props": {
+            "titleRef": "quickActions"
+          }
+        }
+      ],
+      "config": {},
+      "actions": [
+        {
+          "id": "createTour",
+          "labelRef": "createTour",
+          "icon": "plus",
+          "path": "/admin/tours/create"
+        },
+        {
+          "id": "manageTours",
+          "labelRef": "manageTours",
+          "icon": "list",
+          "path": "/admin/tours"
+        },
+        {
+          "id": "manageBookings",
+          "labelRef": "manageBookings",
+          "icon": "calendar",
+          "path": "/admin/bookings"
+        },
+        {
+          "id": "manageUsers",
+          "labelRef": "manageUsers",
+          "icon": "users",
+          "path": "/admin/users"
+        },
+        {
+          "id": "viewReports",
+          "labelRef": "viewReports",
+          "icon": "chart",
+          "path": "/admin/reports"
+        },
+        {
+          "id": "systemSettings",
+          "labelRef": "systemSettings",
+          "icon": "settings",
+          "path": "/admin/settings"
+        }
+      ]
+    }
+  }
+}

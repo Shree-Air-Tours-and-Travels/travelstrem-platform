@@ -1,0 +1,33 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "termsAndConditions": "I agree to the Terms & Conditions and Cancellation Policy"
+      },
+      "urls": {
+        "termsUrl": "/terms",
+        "cancellationPolicyUrl": "/cancellation-policy"
+      }
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "TermsCheckbox",
+          "props": {
+            "labelRef": "termsAndConditions",
+            "termsUrlRef": "termsUrl",
+            "cancellationUrlRef": "cancellationPolicyUrl"
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}
