@@ -64,9 +64,9 @@ export default {
         ]
       },
       {
-        "label": "Bookings",
-        "app": "bookingTREM",
-        "path": "/bookings",
+        "label": "Dashboard",
+        "app": "customer-shell",
+        "path": "/dashboard",
         "disabled": false
       },
       {
@@ -83,7 +83,7 @@ export default {
       { "id": "home", "label": "Home", "path": "/", "access": "public" },
       { "id": "about", "label": "About", "path": "/about", "access": "public" },
       { "id": "tours", "label": "Tours & Packages", "path": "/tours", "access": "authenticated" },
-      { "id": "bookings", "label": "Bookings", "path": "/bookings", "access": "authenticated" }
+      { "id": "dashboard", "label": "Dashboard", "path": "/dashboard", "access": "authenticated" }
     ],
     "authActions": {
       "login": { "label": "Login", "path": "/login" },
@@ -100,15 +100,6 @@ export default {
         "exportName": "ToursApp",
         "remoteProps": { "embedded": true, "basename": "/tours", "basePath": "/tours" }
       },
-      "bookingTREM": {
-        "key": "bookingTREM",
-        "label": "BookingTREM",
-        "routeBase": "/bookings",
-        "defaultRemoteUrl": "http://localhost:3002",
-        "module": "bookingTREM/App",
-        "exportName": "BookingApp",
-        "remoteProps": { "embedded": true }
-      },
       "adminTREM": {
         "key": "adminTREM",
         "label": "AdminTREM",
@@ -124,9 +115,9 @@ export default {
       "/": "shell",
       "/about": "shell",
       "/tours": "toursTREM",
-      "/bookings": "bookingTREM",
+      "/dashboard": "shell",
       "/admin": "adminTREM",
-      "/checkout": "bookingTREM"
+      "/checkout": "shell"
     },
     "routes": [
       { "id": "home", "path": "/", "component": "home", "access": "public" },
@@ -136,9 +127,8 @@ export default {
       { "id": "auth", "path": "/auth", "component": "auth", "access": "publicOnly", "authenticatedRedirect": "/" },
       { "id": "tours", "path": "/tours/*", "remote": "toursTREM", "component": "remote.toursTREM", "access": "authenticated", "preserveState": true },
       { "id": "checkout", "path": "/checkout/:bookingId", "component": "checkout", "access": "authenticated", "preserveState": true },
-      { "id": "bookings", "path": "/bookings", "component": "dashboard", "access": "authenticated" },
-      { "id": "admin", "path": "/admin/*", "remote": "adminTREM", "component": "remote.adminTREM", "access": "roles", "roles": ["admin"], "preserveState": true },
-      { "id": "bookingDetails", "path": "/bookings/:id", "component": "checkout", "access": "authenticated", "preserveState": true }
+      { "id": "dashboard", "path": "/dashboard", "component": "dashboard", "access": "authenticated" },
+      { "id": "admin", "path": "/admin/*", "remote": "adminTREM", "component": "remote.adminTREM", "access": "roles", "roles": ["admin"], "preserveState": true }
     ],
     "fallbacks": {
       "authenticated": "/",

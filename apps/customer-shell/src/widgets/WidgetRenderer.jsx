@@ -1,6 +1,6 @@
 import React, { Suspense } from "react";
 import { getWidgetRenderProps, normalizeWidgetConfig } from "@packages/trem-widget-contracts";
-import { usePortalConfig } from "../components/portal/PortalConfigContext";
+import { usePortalConfig } from "../app/providers/PortalProvider";
 import { shellWidgetRegistry } from "./registry/widgetRegistry";
 
 const WidgetFallback = () => null;

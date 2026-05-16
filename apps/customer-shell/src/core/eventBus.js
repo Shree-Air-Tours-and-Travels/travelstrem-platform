@@ -1,11 +1,12 @@
-export {
+import {
     emit,
     on,
     registerAuthHeaderClearer,
     registerSessionCacheClearer,
+    initEventBus as initSharedEventBus,
 } from "@packages/trem-events";
 
-import { initEventBus as initSharedEventBus } from "@packages/trem-events";
+export { emit, on, registerAuthHeaderClearer, registerSessionCacheClearer };
 
 export const initEventBus = () =>
     initSharedEventBus({

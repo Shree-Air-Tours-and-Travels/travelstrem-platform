@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getConfiguredApiBase } from "../config/portalEnvironment";
+import { getConfiguredApiBase } from "../core/config/portalEnvironment";
 import { setFetchDataApiClient } from "@packages/trem-utils";
 
 function normalizeBase(raw) {

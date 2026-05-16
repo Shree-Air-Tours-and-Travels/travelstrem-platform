@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@packages/trem-modals": "workspace:*",
     "@packages/trem-environment": "workspace:*",
     "@packages/trem-events": "workspace:*",
     "@packages/trem-runtime": "workspace:*",

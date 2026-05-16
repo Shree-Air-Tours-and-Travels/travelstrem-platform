@@ -338,7 +338,7 @@ const sanitizeTourPayload = (raw = {}) => {
 /* ----------------- Common helpers to build responses ----------------- */
 
 const buildToursPage = (toursArray = []) => pageDefinitionService.buildPageResponse(
-    "customer-shell/tours",
+    "tours-remote/listing",
     {
         injectData: {
             tours: toursArray,
@@ -446,7 +446,7 @@ export const createTour = async (req, res) => {
         const normalized = normalizeTourForResponse(savedTour.toObject ? savedTour.toObject() : savedTour, priceInfo);
 
         return sendJson(res, 201, {
-            ...pageDefinitionService.buildPageResponse("customer-shell/tours", {
+            ...pageDefinitionService.buildPageResponse("tours-remote/listing", {
                 injectData: { tours: [normalized], tour: normalized },
             }),
             message: "Tour created successfully",
@@ -490,7 +490,7 @@ export const updateTour = async (req, res) => {
         const normalized = normalizeTourForResponse(updatedTour.toObject ? updatedTour.toObject() : updatedTour, priceInfo);
 
         return sendJson(res, 200, {
-            ...pageDefinitionService.buildPageResponse("customer-shell/tours", {
+            ...pageDefinitionService.buildPageResponse("tours-remote/listing", {
                 injectData: { tours: [normalized], tour: normalized },
             }),
             message: "Tour updated successfully",
@@ -524,7 +524,7 @@ export const deleteTour = async (req, res) => {
         }
 
         return sendJson(res, 200, {
-            ...pageDefinitionService.buildPageResponse("customer-shell/tours", {
+            ...pageDefinitionService.buildPageResponse("tours-remote/listing", {
                 injectData: { deletedTourId: id },
             }),
             message: "Tour deleted successfully",
@@ -549,7 +549,7 @@ export const deleteAllTours = async (req, res) => {
     try {
         const result = await TourRepository.deleteMany({});
         return sendJson(res, 200, {
-            ...pageDefinitionService.buildPageResponse("customer-shell/tours", {
+            ...pageDefinitionService.buildPageResponse("tours-remote/listing", {
                 injectData: { deletedCount: result.deletedCount || 0 },
             }),
             message: `Deleted ${result.deletedCount || 0} tours`,

@@ -30,7 +30,7 @@ export const getForm = async (req, res) => {
         }
 
         return res.status(200).json({
-            ...pageDefinitionService.buildWidgetResponse("customer-shell/tours", "./widgets/contact-agent-form.json", {
+            ...pageDefinitionService.buildWidgetResponse("tours-remote/listing", "./widgets/contact-agent-form.json", {
                 injectData: tour ? { tour } : {},
             }),
             message: "Contact form fetched",
@@ -99,7 +99,7 @@ export const submitForm = async (req, res) => {
         return res.status(200).json({
             status: "success",
             message: "Request submitted successfully",
-            ...pageDefinitionService.buildWidgetResponse("customer-shell/tours", "./widgets/contact-agent-form.json", {
+            ...pageDefinitionService.buildWidgetResponse("tours-remote/listing", "./widgets/contact-agent-form.json", {
                 injectData: {
                     lead: {
                         id: savedLead._id,

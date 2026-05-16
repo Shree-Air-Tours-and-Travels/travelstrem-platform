@@ -1,13 +1,12 @@
 import React from "react";
 import { createWidgetDefinition, createWidgetRegistry, WIDGET_SOURCES } from "@packages/trem-widget-contracts";
-import HeroSection from "../../Featured/Hero/heroSection";
-import ServiceList from "../../Featured/Service/serviceLst";
-import About from "../../pages/AboutPage/About";
-import DashboardPage from "../../pages/Dashboard/DashboardPage";
-import FederatedToursApp from "../../components/federation/FederatedToursApp";
-import FeaturedToursPreview from "../../components/tours/FeaturedToursPreview";
+import HeroSection from "../../features/home/sections/Hero/Hero";
+import ServiceList from "../../features/home/sections/Services/Services";
+import TopTours from "../../features/home/sections/TopTours/TopTours";
+import About from "../../features/about/About";
+import DashboardPage from "../../features/dashboard/Dashboard";
+import FederatedToursApp from "../../federation/FederatedToursApp";
 
-const FederatedFeaturedTours = React.lazy(() => import("toursTREM/FeaturedTours"));
 const FederatedTourCard = React.lazy(() => import("toursTREM/TourCard"));
 const FederatedBookingWidget = React.lazy(() => import("toursTREM/BookingWidget"));
 const FederatedReviewWidget = React.lazy(() => import("toursTREM/ReviewWidget"));
@@ -32,8 +31,8 @@ export const shellWidgetDefinitions = [
     }),
     createWidgetDefinition({
         type: "featuredTours",
-        aliases: ["tourPreview", "tours.preview"],
-        component: FeaturedToursPreview,
+        aliases: ["topTours", "tourPreview", "tours.preview", "tours.featured"],
+        component: TopTours,
         mapProps: withUser,
     }),
     createWidgetDefinition({
@@ -51,16 +50,9 @@ export const shellWidgetDefinitions = [
         component: FederatedToursApp,
     }),
     createWidgetDefinition({
-        type: "bookingsDashboard",
-        aliases: ["bookings.dashboard"],
+        type: "dashboard",
+        aliases: ["customer.dashboard"],
         component: DashboardPage,
-    }),
-    createWidgetDefinition({
-        type: "tours.featured",
-        aliases: ["remote.featuredTours", "FeaturedTours"],
-        source: WIDGET_SOURCES.FEDERATED,
-        component: FederatedFeaturedTours,
-        defaultProps: { embedded: true },
     }),
     createWidgetDefinition({
         type: "tourCard",

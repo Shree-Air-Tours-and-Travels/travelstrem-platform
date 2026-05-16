@@ -1,5 +1,5 @@
 import React from "react";
-import AdminApp from "../App";
+import AdminApp from "../app/App";
 
 export const adminRouteDefinitions = [
     { path: "/admin/tours", roles: ["admin"], element: <AdminApp /> },

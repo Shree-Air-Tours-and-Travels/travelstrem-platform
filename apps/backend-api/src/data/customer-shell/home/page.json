@@ -12,16 +12,14 @@
     "structure": {
       "header": {},
       "widgets": [
-        {
-          "type": "Hero",
-          "widgetRef": "./widgets/hero.json"
-        },
+
         {
           "type": "services",
           "widgetRef": "./widgets/services.json"
         },
         {
           "type": "featuredTours",
+          "source": "shell",
           "widgetRef": "./widgets/featured-tours.json"
         }
       ],
