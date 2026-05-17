@@ -1,18 +1,8 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-import {
-    ArrowUpRight,
-    Plane,
-    Hotel,
-    Map,
-    ShieldCheck,
-    BriefcaseBusiness,
-    CarTaxiFront,
-} from "lucide-react";
-
 import "./ServiceCard.styles.scss";
-import { SubTitle, Title } from "@packages/trem-ui";
+import { Icon, SubTitle, Title } from "@packages/trem-ui";
 
 
 /* ==========================
@@ -29,25 +19,25 @@ const ServiceIcon = ({ id }) => {
         case "flights-hotels":
             return (
                 <div className="ui-service-card__icon-stack">
-                    <Plane {...iconProps} />
-                    <Hotel {...iconProps} />
+                    <Icon name="plane" {...iconProps} />
+                    <Icon name="hotel" {...iconProps} />
                 </div>
             );
 
         case "travel-packages":
-            return <Map {...iconProps} />;
+            return <Icon name="map" {...iconProps} />;
 
         case "visa-passport":
-            return <ShieldCheck {...iconProps} />;
+            return <Icon name="shieldCheck" {...iconProps} />;
 
         case "corporate-packages":
-            return <BriefcaseBusiness {...iconProps} />;
+            return <Icon name="briefcaseBusiness" {...iconProps} />;
 
         case "cab-services":
-            return <CarTaxiFront {...iconProps} />;
+            return <Icon name="carTaxiFront" {...iconProps} />;
 
         default:
-            return <Plane {...iconProps} />;
+            return <Icon name="plane" {...iconProps} />;
     }
 };
 
@@ -69,10 +59,7 @@ const ServiceCard = ({ service, onClick }) => {
                 </div>
 
                 <span className="ui-service-card__action" aria-hidden="true">
-                    <ArrowUpRight
-                        size={18}
-                        strokeWidth={2.2}
-                    />
+                    <Icon name="arrowUpRight" size={18} strokeWidth={2.2} />
                 </span>
             </div>
 

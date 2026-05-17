@@ -1,0 +1,50 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {
+        "statusOptions": [
+          { "label": "All", "value": "" },
+          { "label": "Quote requested", "value": "QUOTE_REQUESTED" },
+          { "label": "Under review", "value": "UNDER_REVIEW" },
+          { "label": "Payment pending", "value": "PAYMENT_PENDING" },
+          { "label": "Confirmed", "value": "CONFIRMED" },
+          { "label": "Cancelled", "value": "CANCELLED" }
+        ]
+      }
+    },
+    "elements": {
+      "labels": {
+        "pageTitle": "Your trips, quotes, and payments",
+        "pageDescription": "Track every journey from quote request to final confirmation.",
+        "activeTrips": "Active trips",
+        "awaitingQuote": "Awaiting quote",
+        "paymentPending": "Payment pending",
+        "amountDue": "Amount due",
+        "bookings": "Bookings",
+        "refresh": "Refresh",
+        "emptyTitle": "No bookings found",
+        "emptyDescription": "Your upcoming trips and quote requests will appear here."
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {
+        "titleRef": "pageTitle",
+        "descriptionRef": "pageDescription"
+      },
+      "widgets": [
+        {
+          "type": "dashboard",
+          "source": "shell",
+          "props": {
+            "variant": "customer"
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

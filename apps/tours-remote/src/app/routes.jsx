@@ -1,7 +1,7 @@
 import React from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import ToursPage from "../features/tours/Tours";
-import ToursDetails from "../features/tours/ToursDetails";
+import ToursDetails from "../features/tourDetails/ToursDetails";
 
 export default function AppRoutes({ embedded = false }) {
     if (embedded) {

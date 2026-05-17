@@ -11,7 +11,8 @@ export default {
     "leftSection": {
       "welcome": true,
       "showLogout": true,
-      "showStatus": true
+      "showStatus": true,
+      "showNotifications": true
     },
     "menu": [
       {

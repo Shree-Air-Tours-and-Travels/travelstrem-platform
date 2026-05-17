@@ -9,7 +9,7 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { useThemeMode } from "@packages/trem-utils";
 import { AuthPage, createAuthService } from "@apps/auth-trem";
-import { AdminShellHeader, Footer } from "@packages/trem-ui";
+import { Header, Footer } from "@packages/trem-ui";
 import api from "../services/apiClient";
 import { emit } from "@packages/trem-events";
 import { clearUserSessionCache } from "../services/userSession";
@@ -17,6 +17,18 @@ import { clearUserSessionCache } from "../services/userSession";
 const authService = createAuthService(api);
 const adminRoles = ["admin", "agent"];
 const isAllowedAdminRole = (session) => adminRoles.includes(session?.user?.role);
+const adminHeaderConfig = {
+    brand: { label: "AdminTREM", homePath: "/admin/tours" },
+    leftSection: { welcome: true, showStatus: true, showNotifications: false },
+    menu: [
+        { id: "adminTours", label: "Tours", path: "/admin/tours", access: "roles", roles: adminRoles },
+        { id: "agentTours", label: "Agent", path: "/agent/tours", access: "roles", roles: adminRoles },
+    ],
+    authActions: {
+        login: { label: "Login", path: "/login" },
+        logout: { label: "Logout" },
+    },
+};
 
 export default function AdminApp({ embedded = false, session: providedSession = null }) {
     const { theme, toggleTheme } = useThemeMode();
@@ -94,7 +106,7 @@ export default function AdminApp({ embedded = false, session: providedSession = 
     if (!embedded && (!state.session?.isAuthenticated || !isAllowedAdminRole(state.session))) {
         return (
             <div className="admin-app-shell">
-                <AdminShellHeader theme={theme} onToggleTheme={toggleTheme} />
+                <Header headerConfig={adminHeaderConfig} theme={theme} onToggleTheme={toggleTheme} showNotifications={false} />
                 <main className="admin-auth-page">
                     {state.session?.isAuthenticated && !isAllowedAdminRole(state.session) && (
                         <div className="admin-auth-page__notice">This account does not have AdminTREM access.</div>
@@ -134,7 +146,7 @@ export default function AdminApp({ embedded = false, session: providedSession = 
     return (
         <div className={embedded ? "admin-app-shell admin-app-shell--embedded" : "admin-app-shell"}>
             {!embedded && (
-                <AdminShellHeader user={state.session?.user} theme={theme} onToggleTheme={toggleTheme} onLogout={handleLogout} />
+                <Header session={state.session} headerConfig={adminHeaderConfig} theme={theme} onToggleTheme={toggleTheme} onLogout={handleLogout} showNotifications={false} />
             )}
             <Routes>
                 <Route path="/manage/tours" element={<ManageTours embedded={embedded} session={state.session} />} />

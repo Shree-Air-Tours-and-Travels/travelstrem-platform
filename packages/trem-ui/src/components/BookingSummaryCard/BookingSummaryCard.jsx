@@ -1,6 +1,6 @@
-// src/components/booking/SummaryCard.jsx
 import React, { useMemo } from "react";
 import PropTypes from "prop-types";
+import "./BookingSummaryCard.styles.scss";
 
 /**
  * BookingSummaryCard (inline styles, theme: #1c7578)
@@ -40,17 +40,6 @@ export default function BookingSummaryCard({ tour, startDate, endDate, guests = 
     }, [currency]);
 
     const styles = {
-        root: {
-            width: "100%",
-            boxSizing: "border-box",
-            borderRadius: 12,
-            padding: 14,
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
-            boxShadow: "var(--shadow-sm)",
-            fontFamily: "Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial",
-            color: "var(--text)",
-        },
         header: { marginBottom: 10 },
         titleRow: { display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8 },
         title: { fontSize: 16, fontWeight: 700, color: "var(--title)", margin: 0 },
@@ -65,7 +54,7 @@ export default function BookingSummaryCard({ tour, startDate, endDate, guests = 
     };
 
     return (
-        <aside style={styles.root} aria-label="Booking summary">
+        <aside className="booking-summary-card" aria-label="Booking summary">
             <div style={styles.header}>
                 <div style={styles.titleRow}>
                     <h4 style={styles.title}>Summary</h4>

@@ -12,6 +12,11 @@
       "page": "checkout",
       "file": "./customer-shell/checkout/page.json"
     },
+    "customer-shell/dashboard": {
+      "app": "customer-shell",
+      "page": "dashboard",
+      "file": "./customer-shell/dashboard/page.json"
+    },
     "tours-remote/listing": {
       "app": "tours-remote",
       "page": "listing",
@@ -35,12 +40,14 @@
   },
   "pathMap": {
     "/": "customer-shell/home",
+    "/dashboard": "customer-shell/dashboard",
     "/checkout": "customer-shell/checkout",
     "/admin": "admin-shell/dashboard",
     "/admin/bookings": "admin-shell/bookings"
   },
   "aliases": {
     "home": "customer-shell/home",
+    "customer-dashboard": "customer-shell/dashboard",
     "checkout": "customer-shell/checkout",
     "tour-listing": "tours-remote/listing",
     "tour-details": "tours-remote/details",

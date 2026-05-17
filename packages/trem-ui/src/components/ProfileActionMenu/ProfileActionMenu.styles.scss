@@ -1,0 +1,125 @@
+@import "../../styles/base/typography";
+
+.profile-action-menu {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+
+  &__trigger {
+    width: 42px;
+    height: 42px;
+    display: inline-grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid color-mix(in srgb, var(--color-primary) 28%, var(--border));
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--color-primary) 16%, transparent);
+    cursor: pointer;
+  }
+
+  &__trigger:hover,
+  &__trigger:focus-visible {
+    border-color: var(--color-primary);
+    outline: none;
+  }
+
+  &__initials {
+    font-size: 0.78rem;
+    font-weight: $font-bold;
+    letter-spacing: 0;
+  }
+
+  &__panel {
+    position: absolute;
+    top: calc(100% + 14px);
+    z-index: 1300;
+    width: min(280px, calc(100vw - 32px));
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    box-shadow: var(--shadow-lg);
+  }
+
+  &--end &__panel { right: 0; }
+  &--start &__panel { left: 0; }
+
+  &__identity {
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+    padding: 8px 8px 12px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 6px;
+  }
+
+  &__avatar {
+    width: 38px;
+    height: 38px;
+    display: inline-grid;
+    place-items: center;
+    border-radius: 999px;
+    background: var(--primary-soft);
+    color: var(--text);
+    font-size: 0.78rem;
+    font-weight: $font-bold;
+  }
+
+  &__meta {
+    min-width: 0;
+    display: grid;
+    gap: 2px;
+
+    strong,
+    small {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    strong {
+      color: var(--text);
+      font-size: $font-size-sm;
+      font-weight: $font-bold;
+    }
+
+    small {
+      color: var(--muted);
+      font-size: $font-size-xs;
+      text-transform: capitalize;
+    }
+  }
+
+  &__item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 40px;
+    padding: 9px 10px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text);
+    font-size: $font-size-sm;
+    font-weight: $font-semibold;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  &__item:hover,
+  &__item:focus-visible {
+    background: var(--primary-soft);
+    color: var(--color-primary);
+    outline: none;
+  }
+
+  &__item--danger:hover,
+  &__item--danger:focus-visible {
+    background: rgba(207, 52, 52, 0.12);
+    color: var(--color-danger, #cf3434);
+  }
+}

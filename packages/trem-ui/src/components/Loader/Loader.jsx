@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import "./loader.style.scss";
+import "./Loader.styles.scss";
 
 const HIDE_ANIMATION_DELAY = 450;
 const FINISH_CALLBACK_DELAY = 550;

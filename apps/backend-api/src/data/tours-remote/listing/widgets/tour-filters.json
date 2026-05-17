@@ -100,13 +100,13 @@
           "name": "apply",
           "labelRef": "applyFilters",
           "method": "POST",
-          "endpoint": "/filters.json/apply"
+          "endpoint": "/tour-listing-updated"
         },
         {
           "name": "reset",
           "labelRef": "resetFilters",
-          "method": "GET",
-          "endpoint": "/tours.json"
+          "method": "POST",
+          "endpoint": "/tour-listing-updated"
         }
       ]
     }

@@ -1,18 +1,15 @@
 {
   "status": "success",
   "component": {
-    "data": {},
+    "data": {
+      "filters": []
+    },
     "dataScope": {
       "options": {}
     },
     "elements": {
       "labels": {
-        "quickFilterAll": "All Tours",
-        "quickFilterAdventure": "Adventure",
-        "quickFilterCultural": "Cultural",
-        "quickFilterBeach": "Beach",
-        "quickFilterWildlife": "Wildlife",
-        "quickFilterLuxury": "Luxury"
+        "quickFilterAll": "All Tours"
       },
       "urls": {}
     },
@@ -22,33 +19,7 @@
         {
           "type": "QuickFilters",
           "props": {
-            "filters": [
-              {
-                "id": "all",
-                "labelRef": "quickFilterAll",
-                "active": true
-              },
-              {
-                "id": "adventure",
-                "labelRef": "quickFilterAdventure"
-              },
-              {
-                "id": "cultural",
-                "labelRef": "quickFilterCultural"
-              },
-              {
-                "id": "beach",
-                "labelRef": "quickFilterBeach"
-              },
-              {
-                "id": "wildlife",
-                "labelRef": "quickFilterWildlife"
-              },
-              {
-                "id": "luxury",
-                "labelRef": "quickFilterLuxury"
-              }
-            ]
+            "filters": []
           }
         }
       ],

@@ -7,6 +7,7 @@ import { getConfiguredRemoteOrigin } from "../core/config/portalEnvironment";
 const TOURS_REMOTE_URL = getConfiguredRemoteOrigin("toursTREM");
 
 const TOURS_REMOTE_CONFIG = {
+    remoteKey: "toursTREM",
     label: "ToursTREM",
     exportName: "ToursApp",
     remoteUrl: TOURS_REMOTE_URL,
@@ -30,7 +31,17 @@ export default function FederatedToursApp() {
     const { headerConfig } = usePortalConfig();
     const remoteConfig = headerConfig?.remotes?.toursTREM || headerConfig?.remotes?.tours || {};
     const remoteUrl = remoteConfig.defaultRemoteUrl || TOURS_REMOTE_URL;
-    const fallbackRemoteUrls = Array.isArray(remoteConfig.fallbackRemoteUrls) ? remoteConfig.fallbackRemoteUrls : [];
+    const fallbackRemoteUrls = React.useMemo(
+        () => Array.isArray(remoteConfig.fallbackRemoteUrls) ? remoteConfig.fallbackRemoteUrls : [],
+        [remoteConfig.fallbackRemoteUrls]
+    );
+    const remoteProps = React.useMemo(
+        () => ({
+            ...TOURS_REMOTE_CONFIG.remoteProps,
+            ...(remoteConfig.remoteProps || {}),
+        }),
+        [remoteConfig.remoteProps]
+    );
 
     return (
         <FederatedMicroApp
@@ -43,10 +54,7 @@ export default function FederatedToursApp() {
                 ...TOURS_REMOTE_CONFIG.errorView,
                 remoteUrl,
             }}
-            remoteProps={{
-                ...TOURS_REMOTE_CONFIG.remoteProps,
-                ...(remoteConfig.remoteProps || {}),
-            }}
+            remoteProps={remoteProps}
         />
     );
 }

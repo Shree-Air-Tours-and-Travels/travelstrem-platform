@@ -1,24 +1,47 @@
 // TourCardSecondary.jsx
 import React from "react";
+import { FiBookmark, FiCalendar, FiHeart, FiMapPin, FiUsers } from "react-icons/fi";
 
 import "./tourCardSecondary.scss";
-import { Title } from "@packages/trem-ui";
-import { SubTitle } from "@packages/trem-ui";
 import { Button } from "@packages/trem-ui";
 
-const getRouteText = (tour = {}) => {
-    const origin = tour.city?.from || "Flexible start";
-    const destination = tour.city?.to || tour.address?.city || "Curated destination";
-    return `${origin} to ${destination}`;
+const formatMoney = (value, currency = "INR") => {
+    const amount = Number(value);
+    if (!Number.isFinite(amount) || amount <= 0) return "";
+    try {
+        return new Intl.NumberFormat("en-IN", {
+            style: "currency",
+            currency,
+            maximumFractionDigits: 0,
+        }).format(amount);
+    } catch (e) {
+        return `${currency} ${amount}`;
+    }
 };
 
-const getPriceText = (tour = {}) => {
+const getPriceParts = (tour = {}) => {
     const price = tour.priceInfo || tour.price;
-    if (!price) return "Price on request";
+    if (!price) return { current: "Price on request", original: "" };
     const currency = price.currency || "INR";
-    if (Number(price.min) <= 0 && Number(price.max) <= 0) return "Price on request";
-    if (price.isFinal || Number(price.min) === Number(price.max)) return `${currency} ${price.min}`;
-    return `${currency} ${price.min} - ${price.max}`;
+    const current = formatMoney(price.min, currency);
+    const original = Number(price.max) > Number(price.min) ? formatMoney(price.max, currency) : "";
+    return { current: current || "Price on request", original };
+};
+
+const getLocationText = (tour = {}) => {
+    const city = tour.address?.city || tour.city?.to || tour.city?.from;
+    const country = tour.address?.country;
+    return [city, country].filter(Boolean).join(", ") || "Curated destination";
+};
+
+const getCategory = (tour = {}) => {
+    const tag = Array.isArray(tour.tags) && tour.tags.length ? tour.tags[0] : "";
+    return tag ? `${tag.charAt(0).toUpperCase()}${tag.slice(1)}` : "Tour";
+};
+
+const getGuideAvatar = (tour = {}) => {
+    const review = Array.isArray(tour.reviews) && tour.reviews.length ? tour.reviews[0] : null;
+    return review?.avatar || review?.photo || "";
 };
 
 const TourCardSecondary = ({ tour, onView, isAdmin = false, onEdit, onDelete }) => {
@@ -32,17 +55,29 @@ const TourCardSecondary = ({ tour, onView, isAdmin = false, onEdit, onDelete }) 
         avgRating,
         maxGroupSize,
         featured,
+        reviews = [],
     } = tour || {};
 
     const imageSrc = photo ? photo : photos?.length ? photos[0] : null;
     const displayRating =
         Number.isFinite(avgRating) ? Number(avgRating).toFixed(1) : "0.0";
 
-    const priceText = getPriceText(tour);
-    const routeText = getRouteText(tour);
+    const price = getPriceParts(tour);
+    const locationText = getLocationText(tour);
+    const category = getCategory(tour);
+    const guideAvatar = getGuideAvatar(tour);
+    const reviewCount = Array.isArray(reviews) ? reviews.length : 0;
+    const truncatedDesc = desc ? `${desc.slice(0, 170)}${desc.length > 170 ? "..." : ""}` : "No description";
 
     const handleView = () => {
         if (typeof onView === "function") onView(tour);
+    };
+
+    const handleKeyDown = (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            handleView();
+        }
     };
 
     const handleEdit = () => {
@@ -60,9 +95,21 @@ const TourCardSecondary = ({ tour, onView, isAdmin = false, onEdit, onDelete }) 
         <article
             className={`tour-card-list ${featured ? "is-featured" : ""}`}
             aria-labelledby={`tour-${_id}-title`}
+            role="button"
+            tabIndex={0}
+            onClick={handleView}
+            onKeyDown={handleKeyDown}
         >
             <div className="tour-card-list__media" aria-hidden={!imageSrc}>
-                {featured && <span className="tour-card-list__badge">Featured</span>}
+                <span className="tour-card-list__heart" aria-hidden="true">
+                    <FiHeart />
+                </span>
+                {featured && (
+                    <span className="tour-card-list__badge">
+                        <FiBookmark aria-hidden="true" />
+                        Trending
+                    </span>
+                )}
 
                 {imageSrc ? (
                     <img
@@ -76,87 +123,80 @@ const TourCardSecondary = ({ tour, onView, isAdmin = false, onEdit, onDelete }) 
                         <span>TravelsTREM</span>
                     </div>
                 )}
+                <div className="tour-card-list__dots" aria-hidden="true">
+                    <span className="is-active" />
+                    <span />
+                    <span />
+                    <span />
+                </div>
             </div>
 
             <div className="tour-card-list__content">
                 <div className="tour-card-list__header">
-                    <div className="tour-card-list__kicker">{routeText}</div>
-                    <Title text={title || "Untitled Tour"} variant="primary" size="small" primaryClassname="tour-card-list__title" />
-                    <div className="tour-card-list__meta">
-                        <SubTitle
-                            text={`${period?.days ?? "-"} days / ${period?.nights ?? "-"} nights / up to ${maxGroupSize ?? "-"} travelers`}
-                            variant="secondary"
+                    <div className="tour-card-list__title-row">
+                        <h3 id={`tour-${_id}-title`} className="tour-card-list__title">{title || "Untitled Tour"}</h3>
+                        <div className="tour-card-list__taxonomy">
+                            <span className="tour-card-list__category">
+                                <FiBookmark aria-hidden="true" />
+                                {category}
+                            </span>
+                            <span className="tour-card-list__rating">
+                                <strong>{displayRating}</strong>
+                                <span>({reviewCount || 0} Reviews)</span>
+                            </span>
+                        </div>
+                    </div>
+                    <div className="tour-card-list__location">
+                        <FiMapPin aria-hidden="true" />
+                        <span>{locationText}</span>
+                    </div>
+                </div>
+
+                <p className="tour-card-list__desc">{truncatedDesc}</p>
+
+                <div className="tour-card-list__footer">
+                    <div className="tour-card-list__facts">
+                        <span>
+                            <FiCalendar aria-hidden="true" />
+                            {period?.days ?? "-"} Day,{period?.nights ?? "-"} Night
+                        </span>
+                        <span>
+                            <FiUsers aria-hidden="true" />
+                            {maxGroupSize ?? "-"} Guests
+                        </span>
+                    </div>
+                    <div className="tour-card-list__price">
+                        <span className="tour-card-list__price-label">Starts From</span>
+                        <strong>{price.current}</strong>
+                        {price.original ? <del>{price.original}</del> : null}
+                        <span className="tour-card-list__avatar" aria-hidden="true">
+                            {guideAvatar ? <img src={guideAvatar} alt="" /> : <span>{String(title || "T").charAt(0)}</span>}
+                        </span>
+                    </div>
+                </div>
+
+                {isAdmin && (
+                    <div className="tour-card-list__admin-actions" role="group" aria-label="admin actions" onClick={(event) => event.stopPropagation()}>
+                    <Button
+                            text="Edit"
+                            variant="outline"
+                            color="secondary"
                             size="small"
+                            onClick={handleEdit}
+                            primaryClassName="ui-button--edit"
+                        />
+
+                        <Button
+                            text="Delete"
+                            variant="solid"
+                            color="danger"
+                            size="small"
+                            onClick={handleDelete}
+                            primaryClassName="ui-button--delete"
                         />
                     </div>
-                </div>
-
-                <div className="tour-card-list__desc">
-                    <SubTitle
-                        text={
-                            desc ? `${desc.slice(0, 200)}${desc.length > 200 ? "…" : ""}` : "No description"
-                        }
-                        variant="tertiary"
-                        size="small"
-                        primaryClassname="ui-subtitle-parent"
-                    />
-                </div>
-
-                {Array.isArray(tour.tags) && tour.tags.length ? (
-                    <div className="tour-card-list__info-card__tags">
-                        {tour.tags.slice(0, 6).map((t, i) => (
-                            <span key={i} className="tag">{t}</span>
-                        ))}
-                    </div>
-                ) : null}
+                )}
             </div>
-
-            <aside className="tour-card-list__aside" aria-hidden={false}>
-                <div className="tour-card-list__price">
-                    <span className="tour-card-list__price-label">From</span>
-                    <p className="price">{priceText}</p>
-                    {avgRating !== undefined && (
-                        <div className="rating">
-                            {displayRating} <span aria-hidden="true">★</span>
-                        </div>
-                    )}
-                </div>
-
-                <div className="tour-card-list__action">
-                    {/* Always show View */}
-                    <Button
-                        text="View tour"
-                        variant="solid"
-                        color="primary"
-                        size="small"
-                        onClick={handleView}
-                        primaryClassName="ui-button--view"
-                    />
-
-                    {/* Admin-only controls */}
-                    {isAdmin && (
-                        <div className="tour-card-list__admin-actions" role="group" aria-label="admin actions">
-                            <Button
-                                text="Edit"
-                                variant="outline"
-                                color="secondary"
-                                size="small"
-                                onClick={handleEdit}
-                                primaryClassName="ui-button--edit"
-                            />
-
-                            <Button
-                                text="Delete"
-                                variant="solid"
-                                color="danger"
-                                size="small"
-                                onClick={handleDelete}
-                                primaryClassName="ui-button--delete"
-                            />
-                        </div>
-                    )}
-                </div>
-            </aside>
         </article>
     );
 };

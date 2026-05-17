@@ -13,6 +13,7 @@ import adminBookingRoutes from "../modules/bookings/adminRoutes.js";
 import notificationRoutes from "../modules/notifications/routes.js";
 import portalRoutes from "../modules/portal/routes.js";
 import pageDefinitionRoutes from "../modules/pageDefinitions/routes.js";
+import toursPageRoutes from "../modules/tours/pageRoutes.js";
 
 const getDbHealth = () => {
   const readyState = mongoose.connection.readyState;
@@ -50,6 +51,7 @@ export default function registerRoutes(app) {
   app.use(API_ROUTES.CHAT, chatRoutes);
   app.use(API_ROUTES.API, formsRouter);
   app.use(API_ROUTES.API, filtersRoutes);
+  app.use(API_ROUTES.API, toursPageRoutes);
   app.use(API_ROUTES.BOOKINGS, bookingRoutes);
   app.use(API_ROUTES.ADMIN_BOOKINGS, adminBookingRoutes);
   app.use(API_ROUTES.NOTIFICATIONS, notificationRoutes);

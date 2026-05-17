@@ -1,0 +1,107 @@
+.trem-header-notification {
+  position: relative;
+
+  &__button {
+    position: relative;
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      outline: none;
+    }
+
+    strong {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      min-width: 18px;
+      height: 18px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      background: var(--color-danger, #dc2626);
+      color: #fff;
+      font-size: 0.68rem;
+      line-height: 1;
+    }
+  }
+
+  &__panel {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    width: min(340px, calc(100vw - 24px));
+    max-height: 380px;
+    overflow: auto;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    box-shadow: var(--shadow-lg);
+    z-index: 1300;
+
+    header {
+      position: sticky;
+      top: 0;
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.75rem 0.85rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      font-weight: 800;
+    }
+
+    button {
+      border: 0;
+      background: transparent;
+      color: var(--color-primary);
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    p {
+      margin: 0;
+      padding: 0.9rem;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+  }
+
+  &__list {
+    display: grid;
+  }
+
+  article {
+    display: grid;
+    gap: 0.25rem;
+    padding: 0.75rem 0.85rem;
+    border-bottom: 1px solid var(--border);
+
+    &.is-unread {
+      background: var(--primary-soft);
+    }
+
+    strong {
+      color: var(--title);
+      font-size: 0.85rem;
+    }
+
+    span {
+      color: var(--muted);
+      font-size: 0.8rem;
+      line-height: 1.4;
+    }
+  }
+}

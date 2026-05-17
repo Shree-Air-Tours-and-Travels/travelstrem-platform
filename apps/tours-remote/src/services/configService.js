@@ -1,4 +1,4 @@
-import { getConfiguredApiBase } from "../core/config/portalEnvironment";
+import { getConfiguredApiBase } from "../core/config/portalEnvironment.js";
 
 const normalizeApiBase = (raw) => {
     const base = raw || getConfiguredApiBase();

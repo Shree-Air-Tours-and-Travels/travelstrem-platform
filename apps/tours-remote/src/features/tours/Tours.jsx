@@ -1,1 +1,2 @@
-export { default } from "./ToursPage.container";
+import ToursPageContainer from "./container/ToursPage.container";
+export default ToursPageContainer;

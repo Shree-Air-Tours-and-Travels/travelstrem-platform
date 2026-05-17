@@ -12,6 +12,8 @@
         "sortPriceHighLow": "Price: High to Low",
         "sortDuration": "Duration",
         "sortRating": "Rating",
+        "sortBy": "Sort by",
+        "sortNote": "Save an average of 15% on curated tours when you're signed in.",
         "noToursFound": "No tours found matching your criteria.",
         "loadingTours": "Loading tours...",
         "loadMore": "Load More Tours",
@@ -53,6 +55,7 @@
                 "labelRef": "sortRating"
               }
             ],
+            "sortNoteLabelRef": "sortNote",
             "emptyLabelRef": "noToursFound",
             "loadingLabelRef": "loadingTours",
             "loadMoreLabelRef": "loadMore",

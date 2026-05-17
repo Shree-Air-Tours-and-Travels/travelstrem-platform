@@ -8,6 +8,7 @@ const REMOTE_STATUS = {
     ready: "ready",
     unavailable: "unavailable",
 };
+const REMOTE_AVAILABILITY_CACHE = new Map();
 
 const isReactComponent = (Component) =>
     typeof Component === "function" ||
@@ -70,22 +71,28 @@ const checkRemoteAvailable = async (remoteEntryUrl) => {
 class RemoteBoundary extends React.Component {
     constructor(props) {
         super(props);
-        this.state = { hasError: false };
+        this.state = { hasError: false, error: null };
     }
 
-    static getDerivedStateFromError() {
-        return { hasError: true };
+    static getDerivedStateFromError(error) {
+        return { hasError: true, error };
     }
 
     componentDidCatch(error, errorInfo) {
-        if (process.env.NODE_ENV !== "development") {
-            console.error(`Failed to load ${this.props.label} remote:`, error, errorInfo);
-        }
+        console.error(`Failed to render ${this.props.label} remote:`, error, errorInfo);
     }
 
     render() {
         if (this.state.hasError) {
-            return <MicroAppErrorView {...this.props.errorView} onRetry={this.props.onRetry} />;
+            const errorMessage = this.state.error?.message || "Unknown remote render error";
+            return (
+                <MicroAppErrorView
+                    {...this.props.errorView}
+                    title={`${this.props.label} render failed`}
+                    message={errorMessage}
+                    onRetry={this.props.onRetry}
+                />
+            );
         }
 
         return this.props.children;
@@ -94,6 +101,7 @@ class RemoteBoundary extends React.Component {
 
 export default function FederatedMicroApp({
     label,
+    remoteKey,
     importer,
     exportName,
     remoteUrl,
@@ -102,10 +110,16 @@ export default function FederatedMicroApp({
     loadingText,
     errorView,
     remoteProps = {},
+    preflightRemote = false,
 }) {
+    const cacheId = React.useMemo(
+        () => remoteKey || label || remoteUrl || "remote",
+        [label, remoteKey, remoteUrl]
+    );
+    const cachedRemote = REMOTE_AVAILABILITY_CACHE.get(cacheId);
     const [retryKey, setRetryKey] = React.useState(0);
-    const [remoteStatus, setRemoteStatus] = React.useState(REMOTE_STATUS.checking);
-    const [activeRemoteUrl, setActiveRemoteUrl] = React.useState(remoteUrl);
+    const [remoteStatus, setRemoteStatus] = React.useState(preflightRemote && !cachedRemote ? REMOTE_STATUS.checking : REMOTE_STATUS.ready);
+    const [activeRemoteUrl, setActiveRemoteUrl] = React.useState(cachedRemote || remoteUrl);
     const remoteCandidates = React.useMemo(
         () => uniqueRemoteUrls([remoteUrl, ...fallbackRemoteUrls]),
         [fallbackRemoteUrls, remoteUrl]
@@ -116,11 +130,26 @@ export default function FederatedMicroApp({
     );
 
     const handleRetry = React.useCallback(() => {
-        setRemoteStatus(REMOTE_STATUS.checking);
-    }, []);
+        setRetryKey((key) => key + 1);
+        setRemoteStatus(preflightRemote ? REMOTE_STATUS.checking : REMOTE_STATUS.ready);
+    }, [preflightRemote]);
 
     React.useEffect(() => {
+        if (!preflightRemote) return undefined;
         if (remoteStatus !== REMOTE_STATUS.checking) return undefined;
+        const cached = REMOTE_AVAILABILITY_CACHE.get(cacheId);
+        if (cached) {
+            setActiveRemoteUrl(cached);
+            setRemoteStatus(REMOTE_STATUS.ready);
+            return undefined;
+        }
+        if (remoteKey && typeof window !== "undefined" && window[remoteKey]) {
+            const knownUrl = activeRemoteUrl || remoteCandidates[0] || remoteUrl;
+            REMOTE_AVAILABILITY_CACHE.set(cacheId, knownUrl);
+            setActiveRemoteUrl(knownUrl);
+            setRemoteStatus(REMOTE_STATUS.ready);
+            return undefined;
+        }
 
         let active = true;
         const check = async () => {
@@ -128,6 +157,7 @@ export default function FederatedMicroApp({
                 const available = await checkRemoteAvailable(getRemoteEntryUrl(candidate));
                 if (!active) return;
                 if (available) {
+                    REMOTE_AVAILABILITY_CACHE.set(cacheId, candidate);
                     setActiveRemoteUrl(candidate);
                     setRemoteStatus(REMOTE_STATUS.ready);
                     setRetryKey((key) => key + 1);
@@ -142,7 +172,7 @@ export default function FederatedMicroApp({
         return () => {
             active = false;
         };
-    }, [remoteCandidates, remoteStatus]);
+    }, [activeRemoteUrl, cacheId, preflightRemote, remoteCandidates, remoteKey, remoteStatus, remoteUrl]);
 
     if (remoteStatus === REMOTE_STATUS.checking) {
         return <GlobalLoader visible text={checkingText} />;

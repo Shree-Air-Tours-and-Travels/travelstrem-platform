@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, PortalPreloader, SubTitle, Title } from "@packages/trem-ui";
+import { Button, PortalPreloader, SubTitle, Title, SmoothScroll } from "@packages/trem-ui";
 import "./TopTours.styles.scss";
 
 const getTourImage = (tour) => tour?.photo || tour?.photos?.[0] || "";
@@ -52,17 +52,21 @@ export default function TopToursView({ title, description, loading, error, tours
 
     return (
         <section className="top-tours" aria-labelledby="top-tours-title">
-            <header className="top-tours__header">
-                <div>
-                    <Title id="top-tours-title" text={title} variant="primary" size="medium" />
-                    {description ? <SubTitle text={description} variant="secondary" size="small" /> : null}
-                </div>
-                <Button text="View all" variant="outline" size="small" onClick={onViewAll} />
-            </header>
+            <SmoothScroll variant="slideUp" delay={0.1}>
+                <header className="top-tours__header">
+                    <div>
+                        <Title id="top-tours-title" text={title} variant="primary" size="medium" />
+                        {description ? <SubTitle text={description} variant="secondary" size="small" /> : null}
+                    </div>
+                    <Button text="View all" variant="outline" size="small" onClick={onViewAll} />
+                </header>
+            </SmoothScroll>
 
             <div className="top-tours__grid">
-                {tours.map((tour) => (
-                    <TopTourCard key={tour?._id || tour?.id || tour?.title} tour={tour} onView={onView} />
+                {tours.map((tour, index) => (
+                    <SmoothScroll key={tour?._id || tour?.id || tour?.title} variant="slideUp" delay={0.15 + index * 0.1}>
+                        <TopTourCard tour={tour} onView={onView} />
+                    </SmoothScroll>
                 ))}
             </div>
         </section>

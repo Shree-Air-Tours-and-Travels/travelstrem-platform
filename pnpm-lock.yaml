@@ -129,6 +129,9 @@ importers:
       '@packages/trem-ui':
         specifier: workspace:*
         version: link:../../packages/trem-ui
+      '@packages/trem-utils':
+        specifier: workspace:*
+        version: link:../../packages/trem-utils
       axios:
         specifier: ^1.8.4
         version: 1.16.0
