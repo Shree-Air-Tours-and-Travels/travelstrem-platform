@@ -1,16 +1,7 @@
 import React from "react";
 import "./about.scss";
 import { NavLink } from "react-router-dom";
-import {
-    ArrowUpRight,
-    BadgeCheck,
-    Building2,
-    Compass,
-    MapPin,
-    PhoneCall,
-    Sparkles,
-    UsersRound,
-} from "lucide-react";
+import { Icon } from "@packages/trem-ui";
 import { getTourListPath } from "@packages/trem-utils";
 import { ContactAgentModal } from "@packages/trem-modals";
 
@@ -50,17 +41,17 @@ const aboutData = {
     ],
     values: [
         {
-            icon: BadgeCheck,
+            icon: "badgeCheck",
             title: "Trusted planning",
             text: "Clear pricing, vetted partners, and human support from the first call to the final check-in.",
         },
         {
-            icon: Compass,
+            icon: "compass",
             title: "Local intelligence",
             text: "Jaipur roots, pan-India reach, and itineraries shaped around real traveler intent.",
         },
         {
-            icon: UsersRound,
+            icon: "usersRound",
             title: "Personal care",
             text: "A family-led team that treats every journey like a relationship, not a transaction.",
         },
@@ -127,7 +118,7 @@ export default function AboutView({ contactOpen, setContactOpen, mapsHref }) {
                 <div className="about-page__container about-page__hero-grid">
                     <div className="about-page__intro">
                         <span className="about-page__eyebrow">
-                            <Sparkles size={16} />
+                            <Icon name="sparkles" size={16} />
                             Powered by {company.firmName}
                         </span>
 
@@ -143,11 +134,11 @@ export default function AboutView({ contactOpen, setContactOpen, mapsHref }) {
 
                         <div className="about-page__meta">
                             <span>
-                                <Building2 size={16} />
+                                <Icon name="building2" size={16} />
                                 Since {company.foundedYear}
                             </span>
                             <span>
-                                <MapPin size={16} />
+                                <Icon name="mapPin" size={16} />
                                 Jaipur, India
                             </span>
                             <span>{company.tagline}</span>
@@ -160,7 +151,7 @@ export default function AboutView({ contactOpen, setContactOpen, mapsHref }) {
                                 onClick={() => setContactOpen(true)}
                             >
                                 {ctas.primary.label}
-                                <ArrowUpRight size={17} />
+                                <Icon name="arrowUpRight" size={17} />
                             </button>
                             <NavLink className="about-page__btn about-page__btn--secondary" to={ctas.secondary.href}>
                                 {ctas.secondary.label}
@@ -181,7 +172,7 @@ export default function AboutView({ contactOpen, setContactOpen, mapsHref }) {
                         <div className="about-page__route-card">
                             <span>JAI</span>
                             <i />
-                            <Compass size={20} />
+                            <Icon name="compass" size={20} />
                             <i />
                             <span>WORLD</span>
                         </div>
@@ -207,10 +198,10 @@ export default function AboutView({ contactOpen, setContactOpen, mapsHref }) {
                         <h2 id="values-title">Premium service, still personal.</h2>
                     </div>
                     <div className="about-page__values-grid">
-                        {values.map(({ icon: Icon, title, text }) => (
+                        {values.map(({ icon, title, text }) => (
                             <article className="about-page__value" key={title}>
                                 <span className="about-page__value-icon">
-                                    <Icon size={22} />
+                                    <Icon name={icon} size={22} />
                                 </span>
                                 <h3>{title}</h3>
                                 <p>{text}</p>
@@ -274,7 +265,7 @@ export default function AboutView({ contactOpen, setContactOpen, mapsHref }) {
                             <a href={`mailto:${ctas.contactEmail}`}>{ctas.contactEmail}</a>
                         </strong>
                         <a href={`tel:${ctas.phone}`}>
-                            <PhoneCall size={15} />
+                            <Icon name="phoneCall" size={15} />
                             {ctas.phone}
                         </a>
                     </div>

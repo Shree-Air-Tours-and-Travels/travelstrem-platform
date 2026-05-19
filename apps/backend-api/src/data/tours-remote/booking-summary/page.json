@@ -1,0 +1,96 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "pageTitle": "Booking Summary",
+        "dashboard": "Dashboard",
+        "cancelBooking": "Cancel Booking",
+        "cancelBookingConfirm": "Cancel Booking",
+        "cancelBookingNote": "This will cancel the booking request. You can still view it from your dashboard.",
+        "keepBooking": "Keep Booking",
+        "backToDashboard": "Back to dashboard",
+        "viewTour": "View Tour",
+        "guestLabel": "Guests",
+        "estimatedPerPerson": "Estimated Per Person",
+        "finalPerPerson": "Per Person",
+        "estimatedTotal": "Estimated Total",
+        "finalTotal": "Total",
+        "remaining": "Remaining",
+        "estimateNote": "This is an estimate. Final cost will be confirmed by an admin quote.",
+        "travelDetails": "Travel Details",
+        "startDate": "Start Date",
+        "endDate": "End Date",
+        "contactName": "Contact Name",
+        "contactEmail": "Contact Email",
+        "contactPhone": "Contact Phone",
+        "specialRequests": "Special Requests",
+        "travelers": "Travelers",
+        "addTraveler": "Add Traveler",
+        "remove": "Remove",
+        "travelerLabel": "Traveler {number}",
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "email": "Email",
+        "phone": "Phone",
+        "age": "Age",
+        "nationality": "Nationality",
+        "passport": "Passport / ID",
+        "emergencyContact": "Emergency Contact",
+        "emergencyPhone": "Emergency Phone",
+        "journeyTimeline": "Journey Timeline",
+        "noTimeline": "No timeline updates yet.",
+        "proceedToCheckout": "Proceed to Checkout",
+        "updateBooking": "Update Booking",
+        "saving": "Saving...",
+        "cancelLabel": "Cancel Booking",
+        "contactAgent": "Contact Agent",
+        "bookingUpdated": "Booking details updated.",
+        "bookingLoadError": "Booking could not load",
+        "bookingSubmitted": "Booking request submitted",
+        "submittedPrompt": "You can stay on this summary page to review details, or go to your dashboard. The dashboard View Booking action will bring you back here.",
+        "goToDashboard": "Go to Dashboard",
+        "stayHere": "Stay Here",
+        "myBookings": "My Bookings",
+        "tourDetails": "Tour details",
+        "tourDetailsFallback": "Tour details will appear here once confirmed."
+      },
+      "urls": {
+        "contactPhoneUrl": "tel:+919057635580"
+      }
+    },
+    "structure": {
+      "header": {
+        "titleRef": "pageTitle"
+      },
+      "widgets": [
+        {
+          "type": "BookingSummaryHero",
+          "widgetRef": "./widgets/booking-hero.json"
+        },
+        {
+          "type": "BookingSummaryTourDetails",
+          "widgetRef": "./widgets/booking-tour-details.json"
+        },
+        {
+          "type": "BookingSummaryTravelDetails",
+          "widgetRef": "./widgets/booking-travel-details.json"
+        },
+        {
+          "type": "BookingSummaryTravelers",
+          "widgetRef": "./widgets/booking-travelers.json"
+        },
+        {
+          "type": "BookingSummaryTimeline",
+          "widgetRef": "./widgets/booking-timeline.json"
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

@@ -586,7 +586,7 @@ const styles = {
     error: { background: "var(--danger-soft)", color: "var(--color-danger)", padding: 10, borderRadius: 8, marginBottom: 12, border: "1px solid var(--border)" },
     stepsRow: { display: "flex", gap: 8, marginBottom: 12 },
     stepDot: (active) => ({ width: 30, height: 30, borderRadius: 8, display: "grid", placeItems: "center", background: active ? "var(--color-primary)" : "var(--surface-inset)", color: active ? "var(--color-on-primary)" : "var(--muted)", fontWeight: 700 }),
-    footer: { display: "flex", justifyContent: "space-between", gap: 12, padding: 14, borderTop: "1px solid #eee", alignItems: "center" },
+    footer: { display: "flex", justifyContent: "space-between", gap: 12, padding: 14,         borderTop: "1px solid var(--border)", alignItems: "center" },
     contactGrid: { marginBottom: 14 },
     travelerCard: { border: "1px solid var(--border)", padding: 12, borderRadius: 10, background: "var(--surface-elevated)" },
     travelerTitle: { display: "block", marginBottom: 10, color: "var(--color-primary-dark)" },

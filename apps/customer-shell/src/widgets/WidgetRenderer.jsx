@@ -20,6 +20,7 @@ export const WidgetRenderer = ({ widgets = [], registry = shellWidgetRegistry })
             headerConfig: portalContext.headerConfig,
             pageConfig: portalContext.pageConfig,
             reload: portalContext.reload,
+            dispatchEvent: portalContext.dispatchEvent,
         });
 
         return (

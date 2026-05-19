@@ -10,6 +10,9 @@ const backendTarget =
     process.env.REACT_APP_BACKEND_URL ||
     process.env.REACT_APP_API_URL?.replace(/\/api\/?$/, "") ||
     "http://localhost:5000";
+const toursRemoteTarget =
+    process.env.REACT_APP_TOURS_REMOTE_URL ||
+    "http://localhost:3001";
 
 function extendBabelIncludes(webpackConfig) {
     const oneOfRule = webpackConfig.module.rules.find((rule) => Array.isArray(rule.oneOf));
@@ -29,7 +32,6 @@ module.exports = {
                 target: backendTarget,
                 changeOrigin: true,
                 secure: false,
-                ws: false,
             },
         };
         devServerConfig.client = {

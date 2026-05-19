@@ -1,9 +1,14 @@
 import React from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { initApp } from "../../core/initApp";
 import { getHeaderConfig } from "../../services/configService";
 import { clearUserSessionCache } from "../../services/userSession";
-import { on, registerSessionCacheClearer } from "@packages/trem-events";
+import {
+    createPortalEventController,
+    emit,
+    registerEventHandler,
+    registerSessionCacheClearer,
+} from "@packages/trem-events";
 
 const DEFAULT_SESSION = {
     user: null,
@@ -33,6 +38,7 @@ const DEFAULT_HEADER_CONFIG = {
             items: [{ label: "Tours & Packages", app: "toursTREM", path: "/tours", disabled: false }],
         },
         { label: "Dashboard", app: "customer-shell", path: "/dashboard", disabled: false },
+        { label: "Favorites", app: "customer-shell", path: "/favorites", disabled: false },
     ],
     authActions: {
         login: { label: "Login", path: "/login" },
@@ -61,6 +67,7 @@ const PortalConfigContext = React.createContext({
     pageConfig: DEFAULT_PAGE_CONFIG,
     reload: () => Promise.resolve(),
     refreshHeader: () => Promise.resolve(),
+    dispatchEvent: () => Promise.resolve(false),
 });
 
 const getPortalParams = ({ pathname, search, hash }) => ({
@@ -71,10 +78,12 @@ const getPortalParams = ({ pathname, search, hash }) => ({
 
 export function PortalConfigProvider({ children }) {
     const location = useLocation();
+    const navigate = useNavigate();
     const initOnceRef = React.useRef(null);
     const latestLocationRef = React.useRef(location);
     const lastHeaderRouteRef = React.useRef("");
     const sessionRef = React.useRef(DEFAULT_SESSION);
+    const eventControllerRef = React.useRef(null);
     const [state, setState] = React.useState({
         loading: true,
         error: null,
@@ -153,17 +162,34 @@ export function PortalConfigProvider({ children }) {
         return initOnceRef.current;
     }, []);
 
-    React.useEffect(() => {
-        const unsubscribe = on("SESSION_TOKEN_READY", () => {
-            clearUserSessionCache();
-            initOnceRef.current = null;
-            loadPortalConfig({ forceSession: true, location: latestLocationRef.current }).catch((error) => {
-                console.warn("[PortalConfig] session refresh failed:", error?.message || error);
-            });
+    if (!eventControllerRef.current) {
+        eventControllerRef.current = createPortalEventController({
+            navigate,
+            emit,
+            reload: loadPortalConfig,
+            getLocation: () => latestLocationRef.current,
+            getSession: () => sessionRef.current,
         });
+    }
+
+    React.useEffect(() => {
+        eventControllerRef.current.configure({
+            sessionConfig: state.session?.config || {},
+            headerConfig: state.headerConfig || DEFAULT_HEADER_CONFIG,
+        });
+    }, [state.headerConfig, state.session]);
+
+    React.useEffect(() => {
+        const unsubscribe = registerEventHandler((eventName, payload, meta) =>
+            eventControllerRef.current.dispatch(eventName, payload, meta)
+        );
 
         return unsubscribe;
-    }, [loadPortalConfig]);
+    }, []);
+
+    const dispatchEvent = React.useCallback((eventName, payload = {}, meta = {}) => (
+        eventControllerRef.current.dispatch(eventName, payload, meta)
+    ), []);
 
     React.useEffect(() => {
         loadPortalConfig();
@@ -185,8 +211,9 @@ export function PortalConfigProvider({ children }) {
             userSession: state.session,
             reload: loadPortalConfig,
             refreshHeader,
+            dispatchEvent,
         }),
-        [loadPortalConfig, refreshHeader, state]
+        [dispatchEvent, loadPortalConfig, refreshHeader, state]
     );
 
     return <PortalConfigContext.Provider value={value}>{children}</PortalConfigContext.Provider>;

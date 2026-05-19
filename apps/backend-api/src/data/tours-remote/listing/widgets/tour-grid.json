@@ -12,8 +12,13 @@
         "sortPriceHighLow": "Price: High to Low",
         "sortDuration": "Duration",
         "sortRating": "Rating",
+        "sortBy": "Sort by",
+        "sortNote": "Save an average of 15% on curated tours when you're signed in.",
+        "showing": "Showing",
+        "of": "of",
         "noToursFound": "No tours found matching your criteria.",
         "loadingTours": "Loading tours...",
+        "scrollForMore": "Scroll for more tours",
         "loadMore": "Load More Tours",
         "viewDetails": "View Details",
         "perPerson": "per person",
@@ -53,6 +58,7 @@
                 "labelRef": "sortRating"
               }
             ],
+            "sortNoteLabelRef": "sortNote",
             "emptyLabelRef": "noToursFound",
             "loadingLabelRef": "loadingTours",
             "loadMoreLabelRef": "loadMore",

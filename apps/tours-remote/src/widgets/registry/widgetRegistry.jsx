@@ -2,7 +2,7 @@ import { createWidgetDefinition, createWidgetRegistry, WIDGET_SOURCES } from "@p
 import TourCard from "../../features/tours/widgets/TourCard/TourCard";
 import BookingWidget from "../../features/tours/widgets/BookingWidget/BookingWidget";
 import ReviewWidget from "../../features/tours/widgets/ReviewWidget/ReviewWidget";
-import TourFilters from "../../features/filters/widgets/TourFilters/TourFilters";
+import TourFilters from "../../features/tours/widgets/TourFilters/TourFilters";
 
 export const toursWidgetDefinitions = [
     createWidgetDefinition({

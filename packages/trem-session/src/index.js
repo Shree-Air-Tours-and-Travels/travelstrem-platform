@@ -6,17 +6,8 @@ export const normalizeSession = (data = {}) => ({
     config: data.config || {},
 });
 
-export const getStoredAuthToken = ({ preferTokenKeyName = false } = {}) => {
-    if (typeof localStorage === "undefined") return null;
-
-    const preferredKey = preferTokenKeyName ? localStorage.getItem("auth_token_key_name") : null;
-
-    return (
-        (preferredKey && localStorage.getItem(preferredKey)) ||
-        localStorage.getItem("auth_token") ||
-        localStorage.getItem("token")
-    );
-};
+/** @deprecated Tokens are now stored in httpOnly cookies. */
+export const getStoredAuthToken = () => null;
 
 const appendParams = (url, params = {}) => {
     Object.entries(params).forEach(([key, value]) => {
@@ -57,15 +48,14 @@ export const createApiServiceUserSession = ({ apiService }) =>
         requestSession: (params = {}) => apiService.get("/session", { params }),
     });
 
-export const createFetchUserSession = ({ apiBase, preferTokenKeyName = false, fetchImpl } = {}) =>
+export const createFetchUserSession = ({ apiBase, fetchImpl } = {}) =>
     createUserSession({
         requestSession: async (params = {}) => {
             const url = new URL(`${apiBase}/session`);
-            const token = getStoredAuthToken({ preferTokenKeyName });
             appendParams(url, params);
 
             const res = await (fetchImpl || fetch)(url.toString(), {
-                headers: token ? { Authorization: `Bearer ${token}` } : {},
+                credentials: "include",
             });
 
             return res.json();

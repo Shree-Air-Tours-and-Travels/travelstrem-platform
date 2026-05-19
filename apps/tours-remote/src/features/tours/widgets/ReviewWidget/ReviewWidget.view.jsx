@@ -1,5 +1,5 @@
 import React from "react";
-import "../../tourDetails.scss";
+import "../../../tourDetails/tourDetails.scss";
 
 export default function ReviewWidgetView({ items, emptyText }) {
     if (!items.length) return <p className="tour-detail__muted">{emptyText}</p>;

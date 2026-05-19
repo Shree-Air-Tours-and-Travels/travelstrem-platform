@@ -27,6 +27,8 @@ const ConfigRedirect = ({ to }) => {
     return <Navigate to={interpolatePath(to, params)} replace />;
 };
 
+const FavoritesRedirect = () => <Navigate to="/dashboard" state={{ activeNav: "favorites" }} replace />;
+
 const AdminShellRedirect = () => {
     React.useEffect(() => {
         const adminUrl = process.env.REACT_APP_ADMIN_SHELL_URL || "http://localhost:3002/admin/tours";
@@ -77,6 +79,7 @@ const Routers = () => {
         auth: user ? <Navigate to={redirectAfterAuth} replace /> : customerAuthPage,
         checkout: <CheckoutPage />,
         dashboard: <DashboardPage />,
+        favorites: <FavoritesRedirect />,
         "remote.adminTREM": <AdminShellRedirect />,
         "remote.admin": <AdminShellRedirect />,
         admin: <AdminShellRedirect />,
@@ -150,6 +153,10 @@ const Routers = () => {
                         <Route
                             path="/dashboard"
                             element={protectRoute({ access: "authenticated" }, <DashboardPage />)}
+                        />
+                        <Route
+                            path="/favorites"
+                            element={protectRoute({ access: "authenticated" }, <FavoritesRedirect />)}
                         />
                         <Route
                             path="/checkout/:bookingId"

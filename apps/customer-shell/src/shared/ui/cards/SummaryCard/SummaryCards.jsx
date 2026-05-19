@@ -1,7 +1,6 @@
 // src/components/Cards/summaryCard/summaryCards.jsx
 import get from "lodash/get";
-import { Button } from "@packages/trem-ui";
-import { FaStar } from "react-icons/fa";
+import { Button, Icon } from "@packages/trem-ui";
 import "./SummaryCard.styles.scss";
 import { Title } from "@packages/trem-ui";
 import { SubTitle } from "@packages/trem-ui";
@@ -91,7 +90,7 @@ const SummaryCard = ({ tour, onReserve, onContact, goBack, startChat, cityDispla
                 )}
 
                 <div className="summary-card__rating">
-                    <FaStar />
+                    <Icon name="star" />
                     <span>{avgRating !== null ? avgRating.toFixed(1) : DEFAULTS.misc.noRating}</span>
                     <small>({reviewsCount})</small>
                 </div>

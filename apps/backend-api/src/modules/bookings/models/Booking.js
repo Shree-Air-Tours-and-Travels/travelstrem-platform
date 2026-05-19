@@ -205,6 +205,8 @@ bookingSchema.index(
 bookingSchema.statics.normalizeStatus = function (status) {
   const aliases = {
     pending: "QUOTE_REQUESTED",
+    upcoming: "QUOTE_REQUESTED",
+    recommended: "QUOTE_REQUESTED",
     confirmed: "CONFIRMED",
     cancelled: "CANCELLED",
     completed: "COMPLETED",

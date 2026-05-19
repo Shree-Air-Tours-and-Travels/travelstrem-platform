@@ -9,7 +9,7 @@ module.exports = {
         "./TourCard": "./src/features/tours/widgets/TourCard/TourCard.jsx",
         "./BookingWidget": "./src/features/tours/widgets/BookingWidget/BookingWidget.jsx",
         "./ReviewWidget": "./src/features/tours/widgets/ReviewWidget/ReviewWidget.jsx",
-        "./TourFilters": "./src/features/filters/widgets/TourFilters/TourFilters.jsx",
+        "./TourFilters": "./src/features/tours/widgets/TourFilters/TourFilters.jsx",
         "./WidgetRegistry": "./src/widgets/registry/widgetRegistry.jsx",
     },
     shared: {

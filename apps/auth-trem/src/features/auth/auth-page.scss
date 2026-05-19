@@ -1,17 +1,25 @@
 @import "@packages/trem-ui/styles/base/typography";
 
+.auth-trem-shell {
+  min-height: 100vh;
+  background: var(--page-bg);
+  color: var(--text);
+}
+
 .auth-trem {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 60vh;
-  padding: 28px;
+  min-height: 100%;
+  padding: 24px;
   background: var(--page-bg);
   color: var(--text);
   font-family: $font-primary;
 
   &__card {
     width: min(920px, 100%);
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
     padding: 26px;
     border: 1px solid var(--border);
     border-radius: 14px;

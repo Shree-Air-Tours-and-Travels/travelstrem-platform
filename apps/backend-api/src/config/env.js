@@ -169,8 +169,15 @@ const ENABLE_EMAILS = get("ENABLE_EMAILS", portalJsonConfig?.features?.emails ??
 const DEV_DELAY_MS = Number(get("DEV_DELAY_MS", portalJsonConfig?.features?.devDelayMs ?? 3000));
 
 /* ------------------------------
-   10) OTP and other application-level settings
-   ------------------------------ */
+    10) Cloudinary config
+    ------------------------------ */
+const CLOUDINARY_NAME = get("CLOUDINARY_NAME", portalJsonConfig?.cloudinary?.name || "") || null;
+const CLOUDINARY_KEY = get("CLOUDINARY_KEY", portalJsonConfig?.cloudinary?.key || "") || null;
+const CLOUDINARY_SECRET = get("CLOUDINARY_SECRET", portalJsonConfig?.cloudinary?.secret || "") || null;
+
+/* ------------------------------
+    11) OTP and other application-level settings
+    ------------------------------ */
 const OTP_TTL_MS = Number(get("OTP_TTL_MS", portalJsonConfig?.features?.otpTtlMs || 15 * 60 * 1000)); // 15 minutes by default
 
 process.env.MONGO_URI = process.env.MONGO_URI || MONGO_URI;
@@ -186,10 +193,13 @@ process.env.OAUTH_GOOGLE_URL = process.env.OAUTH_GOOGLE_URL || portalJsonConfig?
 process.env.OAUTH_GITHUB_URL = process.env.OAUTH_GITHUB_URL || portalJsonConfig?.oauth?.githubUrl || "";
 process.env.OAUTH_APPLE_URL = process.env.OAUTH_APPLE_URL || portalJsonConfig?.oauth?.appleUrl || "";
 process.env.AGENT_WEBHOOK_URL = process.env.AGENT_WEBHOOK_URL || portalJsonConfig?.webhooks?.agentWebhookUrl || "";
+process.env.CLOUDINARY_NAME = process.env.CLOUDINARY_NAME || CLOUDINARY_NAME || "";
+process.env.CLOUDINARY_KEY = process.env.CLOUDINARY_KEY || CLOUDINARY_KEY || "";
+process.env.CLOUDINARY_SECRET = process.env.CLOUDINARY_SECRET || CLOUDINARY_SECRET || "";
 
 /* ------------------------------
-   11) Config summary helper
-   ------------------------------ */
+    12) Config summary helper
+    ------------------------------ */
 function logConfigSummary() {
     if (!DEBUG) return;
     // DO NOT print secrets
@@ -205,6 +215,7 @@ function logConfigSummary() {
         JWT_ACCESS_PRESENT: Boolean(JWT.accessSecret) ? "***SET***" : "MISSING",
         SMTP_AVAILABLE,
         ADMIN_CREATION_SECRET: ADMIN_CREATION_SECRET ? "***SET***" : "MISSING",
+        CLOUDINARY: CLOUDINARY_NAME ? `***SET*** (${CLOUDINARY_NAME})` : "NOT_CONFIGURED (local fallback)",
         RATE_LIMIT,
         DEV_DELAY_MS,
         DEBUG,
@@ -234,6 +245,9 @@ const config = {
     DEBUG,
     DEV_DELAY_MS,
     OTP_TTL_MS,
+    CLOUDINARY_NAME,
+    CLOUDINARY_KEY,
+    CLOUDINARY_SECRET,
     PORTAL_CONFIG: portalJsonConfig,
     logConfigSummary,
 };
@@ -257,6 +271,9 @@ export {
     DEBUG,
     DEV_DELAY_MS,
     OTP_TTL_MS,
+    CLOUDINARY_NAME,
+    CLOUDINARY_KEY,
+    CLOUDINARY_SECRET,
     portalJsonConfig as PORTAL_CONFIG,
     logConfigSummary,
 };

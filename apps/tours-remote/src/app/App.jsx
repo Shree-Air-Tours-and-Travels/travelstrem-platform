@@ -1,4 +1,5 @@
 import React from "react";
+import { FavoritesProvider } from "@packages/trem-ui";
 import AppRoutes from "./routes";
 import { initApp } from "../core/initApp";
 import "../main.scss";
@@ -6,7 +7,7 @@ import { useThemeMode, setComponentDataFetcher, fetchData } from "@packages/trem
 
 setComponentDataFetcher(fetchData);
 
-export default function App({ embedded = false }) {
+export default function App({ dispatchEvent, embedded = false, userSession = null }) {
     const { theme, toggleTheme } = useThemeMode();
     const [state, setState] = React.useState({
         loading: !embedded,
@@ -62,7 +63,9 @@ export default function App({ embedded = false }) {
                     </button>
                 </header>
             )}
-            <AppRoutes embedded={embedded} />
+            <FavoritesProvider>
+                <AppRoutes dispatchEvent={dispatchEvent} embedded={embedded} userSession={userSession || state.session} />
+            </FavoritesProvider>
         </div>
     );
 }

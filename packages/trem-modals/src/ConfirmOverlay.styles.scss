@@ -1,0 +1,155 @@
+.trem-confirm {
+  padding: 0.5rem 0;
+
+  &__note {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    padding: 1rem 0.5rem;
+    color: var(--subtitle);
+    font-size: 0.88rem;
+    line-height: 1.6;
+    border-radius: 12px;
+    background: var(--surface-inset);
+    margin-bottom: 1rem;
+
+    .trem-icon {
+      flex-shrink: 0;
+      margin-top: 2px;
+      color: var(--color-primary);
+    }
+
+    p {
+      margin: 0;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  &__btn {
+    flex: 1;
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.65rem 1.2rem;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+    font-family: inherit;
+    border: 1px solid var(--border);
+
+    &--cancel {
+      background: transparent;
+      color: var(--muted);
+      border-color: transparent;
+      &:hover { background: var(--surface-inset); color: var(--text); }
+    }
+
+    &--confirm {
+      background: var(--color-primary);
+      color: var(--color-on-primary);
+      border-color: var(--color-primary);
+      box-shadow: 0 2px 8px rgba(28, 117, 120, 0.2);
+      &:hover { background: var(--color-primary-dark); border-color: var(--color-primary-dark); }
+      &:disabled { opacity: 0.55; cursor: not-allowed; box-shadow: none; }
+    }
+  }
+}
+
+.trem-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+
+  &__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(2px);
+  }
+
+  &__dialog {
+    position: relative;
+    width: min(480px, 100%);
+    background: var(--surface);
+    border-radius: 16px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+    padding: 1.75rem;
+    animation: trem-confirm-in 180ms ease both;
+  }
+
+  &__close {
+    position: absolute;
+    top: 0.85rem;
+    right: 0.85rem;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: background 120ms ease;
+    &:hover { background: var(--surface-inset); color: var(--text); }
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin-bottom: 1rem;
+
+    .trem-icon {
+      flex-shrink: 0;
+      color: var(--color-primary);
+    }
+
+    h3 {
+      margin: 0;
+      font-size: 1.1rem;
+      color: var(--title);
+    }
+  }
+
+  &__note {
+    color: var(--subtitle);
+    font-size: 0.88rem;
+    line-height: 1.6;
+    padding: 1rem;
+    border-radius: 12px;
+    background: var(--surface-inset);
+    margin-bottom: 1.25rem;
+
+    p { margin: 0; }
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+}
+
+@keyframes trem-confirm-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}

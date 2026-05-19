@@ -3,6 +3,7 @@ import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import morgan from "morgan";
 import rateLimit from "express-rate-limit";
+import path from "path";
 import config from "../config/index.js";
 
 const allowedOrigins = Array.isArray(config.FRONTENDS) ? config.FRONTENDS : [];
@@ -31,6 +32,7 @@ export default function registerMiddleware(app) {
   app.use(morgan(config.DEBUG ? "dev" : "combined"));
   app.use(cors(corsOptions));
   app.options("*", cors(corsOptions));
+  app.use("/uploads", app.express.static(path.resolve("uploads")));
 
   if (config.DEBUG) {
     app.use((req, res, next) => {

@@ -19,8 +19,20 @@
         "filterArrival": "Arrival",
         "filterReturn": "Return",
         "filterTags": "Interests",
+        "filterFeatured": "Tour status",
+        "featuredAny": "Any status",
+        "featuredTrue": "Featured only",
+        "featuredFalse": "Standard tours",
         "applyFilters": "Apply Filters",
-        "resetFilters": "Reset"
+        "resetFilters": "Reset",
+        "hideFilters": "Hide",
+        "showFilters": "Filters",
+        "processing": "Processing…",
+        "results": "results",
+        "priceRange": "Price",
+        "dayRange": "Duration",
+        "groupSize": "Group",
+        "liveTours": "tours"
       },
       "urls": {}
     },
@@ -89,6 +101,11 @@
                 "name": "tags",
                 "labelRef": "filterTags",
                 "type": "multiselect"
+              },
+              {
+                "name": "featured",
+                "labelRef": "filterFeatured",
+                "type": "select"
               }
             ]
           }
@@ -100,13 +117,13 @@
           "name": "apply",
           "labelRef": "applyFilters",
           "method": "POST",
-          "endpoint": "/filters.json/apply"
+          "endpoint": "/tour-listing-updated"
         },
         {
           "name": "reset",
           "labelRef": "resetFilters",
-          "method": "GET",
-          "endpoint": "/tours.json"
+          "method": "POST",
+          "endpoint": "/tour-listing-updated"
         }
       ]
     }

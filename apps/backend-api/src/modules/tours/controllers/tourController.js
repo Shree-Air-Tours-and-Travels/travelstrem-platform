@@ -5,7 +5,6 @@ import {
 } from "../services/tourService.js";
 import config from "../../../config/index.js";
 import pageDefinitionService from "../../../services/pageDefinitionService.js";
-
 const NODE_ENV = (config.nodeEnv || "development").toString().trim();
 const IS_DEVELOPMENT = NODE_ENV === "development";
 const DEFAULT_DELAY_MS = Number.isFinite(Number(config.devDelayMs))
@@ -335,17 +334,6 @@ const sanitizeTourPayload = (raw = {}) => {
     };
 };
 
-/* ----------------- Common helpers to build responses ----------------- */
-
-const buildToursPage = (toursArray = []) => pageDefinitionService.buildPageResponse(
-    "tours-remote/listing",
-    {
-        injectData: {
-            tours: toursArray,
-        },
-    },
-);
-
 /* ----------------- Controller actions ----------------- */
 
 /**
@@ -372,15 +360,26 @@ export const getTours = async (req, res) => {
         });
 
         return sendJson(res, 200, {
-            ...buildToursPage(tours),
+            status: "success",
+            component: {
+                data: { tours },
+                dataScope: { options: {} },
+                elements: { labels: {}, urls: {} },
+                structure: { header: {}, widgets: [], config: {}, actions: [] },
+            },
             message: "Tours fetched successfully",
             handler,
         }, req);
     } catch (error) {
         console.error("getTours error:", error);
         return sendJson(res, 500, {
-            ...buildToursPage([]),
             status: "error",
+            component: {
+                data: { tours: [] },
+                dataScope: { options: {} },
+                elements: { labels: {}, urls: {} },
+                structure: { header: {}, widgets: [], config: {}, actions: [] },
+            },
             message: "Failed to fetch tours",
             handler,
             error: error.message,
@@ -401,7 +400,6 @@ export const getTourByRef = async (req, res) => {
 
         if (!tourRaw) {
             return sendJson(res, 404, {
-                ...pageDefinitionService.buildPageResponse("tours-remote/details"),
                 status: "error",
                 message: "Tour not found",
                 handler,
@@ -413,17 +411,26 @@ export const getTourByRef = async (req, res) => {
         const normalized = normalizeTourForResponse(tourObj, priceInfo);
 
         return sendJson(res, 200, {
-            ...pageDefinitionService.buildPageResponse("tours-remote/details", {
-                injectData: { tours: [normalized], tour: normalized },
-            }),
+            status: "success",
+            component: {
+                data: normalized,
+                dataScope: { options: {} },
+                elements: { labels: {}, urls: {} },
+                structure: { header: {}, widgets: [], config: {}, actions: [] },
+            },
             message: "Tour fetched successfully",
             handler,
         }, req);
     } catch (error) {
         console.error("getTourByRef error:", error);
         return sendJson(res, 500, {
-            ...pageDefinitionService.buildPageResponse("tours-remote/details"),
             status: "error",
+            component: {
+                data: null,
+                dataScope: { options: {} },
+                elements: { labels: {}, urls: {} },
+                structure: { header: {}, widgets: [], config: {}, actions: [] },
+            },
             message: "Failed to fetch tour",
             handler,
             error: error.message,
@@ -563,5 +570,49 @@ export const deleteAllTours = async (req, res) => {
             handler,
             error: error.message,
         }, req);
+    }
+};
+
+/**
+ * GET /tours/:id/price (getTourPricePreview)
+ */
+export const getTourPricePreview = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const dateParam = req.query.date || new Date().toISOString();
+        const guests = Math.max(1, Number(req.query.guests) || 1);
+        const date = new Date(dateParam);
+
+        if (Number.isNaN(date.getTime())) {
+            return res.status(400).json({ status: "error", message: "Invalid date" });
+        }
+
+        const doc = await TourRepository.findById(id);
+        if (!doc) {
+            return res.status(404).json({ status: "error", message: "Tour not found" });
+        }
+
+        const priceInfo = buildPriceInfo(doc, date);
+        const perPerson = priceInfo?.min || 0;
+        const total = perPerson * guests;
+
+        return res.status(200).json({
+            status: "success",
+            componentData: {
+                data: {
+                    priceSnapshot: {
+                        perPerson,
+                        total,
+                        min: priceInfo?.min,
+                        max: priceInfo?.max,
+                        currency: priceInfo?.currency || "INR",
+                        isFinal: !!priceInfo?.isFinal,
+                    },
+                },
+            },
+        });
+    } catch (error) {
+        console.error("getTourPricePreview error:", error);
+        return res.status(500).json({ status: "error", message: "Failed to get price preview" });
     }
 };

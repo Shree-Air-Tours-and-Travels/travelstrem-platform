@@ -1,33 +1,22 @@
 import React from "react";
-import { Title } from "@packages/trem-ui";
+import { Icon, Title, SmoothScroll } from "@packages/trem-ui";
 import { SubTitle } from "@packages/trem-ui";
 import { Button } from "@packages/trem-ui";
-import {
-    ArrowUpRight,
-    CalendarDays,
-    CloudSun,
-    Compass,
-    MapPin,
-    Navigation,
-    Plane,
-    Play,
-    Sparkles,
-} from "lucide-react";
 import "./Hero.styles.scss";
 
 const heroIconMap = {
-    calendar: CalendarDays,
-    cloud: CloudSun,
-    compass: Compass,
-    hotel: MapPin,
-    map: MapPin,
-    navigation: Navigation,
-    plane: Plane,
-    route: Navigation,
-    sparkles: Sparkles,
+    calendar: "calendarDays",
+    cloud: "cloudSun",
+    compass: "compass",
+    hotel: "hotel",
+    map: "mapPin",
+    navigation: "navigation",
+    plane: "plane",
+    route: "navigation",
+    sparkles: "sparkles",
 };
 
-const getHeroIcon = (icon) => heroIconMap[icon] || Sparkles;
+const getHeroIcon = (icon) => heroIconMap[icon] || "sparkles";
 
 const HeroPreloader = () => {
     return (
@@ -65,18 +54,18 @@ const HeroOrbitVisual = ({ visual = {}, featuredDestination = {} }) => {
             <div className="ui-home__main__hero__orbit ui-home__main__hero__orbit--inner" />
             <div className="ui-home__main__hero__planet">
                 <div className="ui-home__main__hero__planet-glow" />
-                <Compass size={64} />
+                <Icon name="compass" size={64} />
                 <span>{visual.headline}</span>
                 <p>{visual.subline}</p>
             </div>
             {orbitItems.map((item, index) => {
-                const Icon = getHeroIcon(item.icon);
+                const iconName = getHeroIcon(item.icon);
                 return (
                     <div
                         key={`${item.label}-${index}`}
                         className={`ui-home__main__hero__orbit-node ui-home__main__hero__orbit-node--${index + 1}`}
                     >
-                        <Icon size={20} />
+                        <Icon name={iconName} size={20} />
                         <span>{item.label}</span>
                     </div>
                 );
@@ -86,17 +75,17 @@ const HeroOrbitVisual = ({ visual = {}, featuredDestination = {} }) => {
                     <SubTitle text={destination.label} size="small" />
                     <Title text={destination.title} size="small" />
                 </div>
-                <ArrowUpRight size={18} />
+                <Icon name="arrowUpRight" size={18} />
             </div>
             <div className="ui-home__main__hero__mini-gallery">
                 {gallery.map((item, index) => {
-                    const Icon = getHeroIcon(item.icon);
+                    const iconName = getHeroIcon(item.icon);
                     return (
                         <div
                             key={`${item.label}-${index}`}
                             className="ui-home__main__hero__mini-card"
                         >
-                            <Icon size={18} />
+                            <Icon name={iconName} size={18} />
                             <span>{item.label}</span>
                             <strong>{item.value}</strong>
                         </div>
@@ -122,64 +111,76 @@ const HeroSectionView = ({ loading, error, resolvedView, props, hero, stats, use
         <section className="ui-home__main__hero">
             <div className="ui-home__main__hero__container">
                 <div className="ui-home__main__hero__content">
-                    <div className="ui-home__main__hero__eyebrow">
-                        <span className="ui-home__main__hero__eyebrow-dot" />
-                        {props?.title}
-                    </div>
-                    <div className="ui-home__main__hero__heading">
-                        <Title
-                            className="ui-home__main__hero__title"
-                            text={hero.title || props?.heading}
+                    <SmoothScroll variant="slideUp" delay={0.1}>
+                        <div className="ui-home__main__hero__eyebrow">
+                            <span className="ui-home__main__hero__eyebrow-dot" />
+                            {props?.title}
+                        </div>
+                    </SmoothScroll>
+                    <SmoothScroll variant="slideUp" delay={0.2}>
+                        <div className="ui-home__main__hero__heading">
+                            <Title
+                                className="ui-home__main__hero__title"
+                                text={hero.title || props?.heading}
+                            />
+                            <Title
+                                className="ui-home__main__hero__highlight"
+                                text={props?.highlight}
+                            />
+                        </div>
+                    </SmoothScroll>
+                    <SmoothScroll variant="slideUp" delay={0.3}>
+                        <SubTitle
+                            className="ui-home__main__hero__description"
+                            text={hero.description || props?.description}
+                            variant="tertiary"
+                            size="small"
                         />
-                        <Title
-                            className="ui-home__main__hero__highlight"
-                            text={props?.highlight}
-                        />
-                    </div>
-                    <SubTitle
-                        className="ui-home__main__hero__description"
-                        text={hero.description || props?.description}
-                        variant="tertiary"
-                        size="small"
-                    />
-                    <div className="ui-home__main__hero__actions">
-                        <Button
-                            text={props?.buttonText}
-                            variant="solid"
-                            size="medium"
-                            onClick={handleHeroClick}
-                            primaryClassName="ui-home__main__hero__cta"
-                        />
-                        <button className="ui-home__main__hero__video-btn">
-                            <span className="ui-home__main__hero__video-icon">
-                                <Play size={16} fill="currentColor" />
-                            </span>
-                            {props?.secondaryButtonText}
-                        </button>
-                    </div>
-                    <div className="ui-home__main__hero__stats">
-                        {stats.map((stat, index) => (
-                            <div className="ui-home__main__hero__stat" key={`${stat.label}-${index}`}>
-                                <Title text={stat.value} size="small" />
-                                <SubTitle text={stat.label} size="small" />
-                            </div>
-                        ))}
-                    </div>
+                    </SmoothScroll>
+                    <SmoothScroll variant="slideUp" delay={0.4}>
+                        <div className="ui-home__main__hero__actions">
+                            <Button
+                                text={props?.buttonText}
+                                variant="solid"
+                                size="medium"
+                                onClick={handleHeroClick}
+                                primaryClassName="ui-home__main__hero__cta"
+                            />
+                            <button className="ui-home__main__hero__video-btn">
+                                <span className="ui-home__main__hero__video-icon">
+                                    <Icon name="play" size={16} fill="currentColor" />
+                                </span>
+                                {props?.secondaryButtonText}
+                            </button>
+                        </div>
+                    </SmoothScroll>
+                    <SmoothScroll variant="fadeIn" delay={0.5}>
+                        <div className="ui-home__main__hero__stats">
+                            {stats.map((stat, index) => (
+                                <div className="ui-home__main__hero__stat" key={`${stat.label}-${index}`}>
+                                    <Title text={stat.value} size="small" />
+                                    <SubTitle text={stat.label} size="small" />
+                                </div>
+                            ))}
+                        </div>
+                    </SmoothScroll>
                 </div>
-                <div className="ui-home__main__hero__visual">
-                    <HeroOrbitVisual
-                        visual={{
-                            headline: props?.visualHeadline,
-                            subline: props?.visualSubline,
-                            orbitItems: props?.orbitItems,
-                            gallery: props?.gallery,
-                        }}
-                        featuredDestination={{
-                            label: props?.featuredDestinationLabel,
-                            title: props?.featuredDestinationTitle,
-                        }}
-                    />
-                </div>
+                <SmoothScroll variant="scaleIn" delay={0.3} duration={0.8}>
+                    <div className="ui-home__main__hero__visual">
+                        <HeroOrbitVisual
+                            visual={{
+                                headline: props?.visualHeadline,
+                                subline: props?.visualSubline,
+                                orbitItems: props?.orbitItems,
+                                gallery: props?.gallery,
+                            }}
+                            featuredDestination={{
+                                label: props?.featuredDestinationLabel,
+                                title: props?.featuredDestinationTitle,
+                            }}
+                        />
+                    </div>
+                </SmoothScroll>
             </div>
         </section>
     );

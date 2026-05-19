@@ -1,0 +1,17 @@
+{
+  "status": "success",
+  "component": {
+    "structure": {
+      "widgets": [
+        {
+          "type": "BookingSummaryTravelers",
+          "props": {}
+        }
+      ]
+    },
+    "elements": {
+      "labels": {}
+    },
+    "data": {}
+  }
+}

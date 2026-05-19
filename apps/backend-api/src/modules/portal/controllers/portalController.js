@@ -6,9 +6,13 @@ import pageConfigTemplate from "../../../config/pageConfig.js";
 import User from "../../auth/models/User.js";
 
 const JWT_SECRET = (config.JWT && config.JWT.accessSecret) || process.env.JWT_SECRET || "replace_this_in_production";
+const COOKIE_NAME = config.IS_PRODUCTION ? "__Host-token" : "token";
 
 
 const getBearerToken = (req) => {
+    const cookieToken = req.cookies?.[COOKIE_NAME] || req.cookies?.token;
+    if (cookieToken) return cookieToken;
+
     const authHeader = req.headers.authorization || req.headers.Authorization || "";
     if (!authHeader.startsWith("Bearer ")) return null;
     return authHeader.split(" ")[1] || null;
@@ -227,6 +231,9 @@ export const getSession = async (req, res) => {
             },
             config: {
                 pageConfig,
+                eventConfig: sessionConfigTemplate.componentData?.eventConfig || {},
+                eventNames: sessionConfigTemplate.componentData?.eventNames || {},
+                routeState: sessionConfigTemplate.componentData?.routeState || {},
             },
         });
     } catch (error) {

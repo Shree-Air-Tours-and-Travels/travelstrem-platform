@@ -187,7 +187,7 @@
 .chat-floating-toggle {
   position: fixed;
   right: 24px;
-  bottom: 24px;
+  bottom: calc(88px + env(safe-area-inset-bottom));
   z-index: 9998;
   background: var(--bg-2);
   color: $light-bg;
@@ -209,20 +209,57 @@
    Responsive breakpoints
    =========================== */
 
-/* Large desktop (>= 1200px) - default is fine */
-
-/* Tablet */
-@media (max-width: $breakpoint-tablet) {
+/* Mobile & mini-tablets: both get the mobile treatment */
+@media (max-width: $breakpoint-mini-tablet) {
   .chat-widget {
     &--floating {
-      width: 360px;
-      right: 20px;
-      bottom: 20px;
+      width: 92vw;
+      max-width: 480px;
+      height: auto;
+      max-height: 80vh;
+      bottom: 60px;
+      border-radius: 12px;
+      overflow: hidden;
+      display: none;
+      z-index: 9999;
+
+      &.open {
+        display: flex;
+      }
+
+      &.closed {
+        display: none;
+      }
+
+      &__header {
+        padding: 12px 14px;
+        background: linear-gradient(90deg, $primary-color, darken($primary-color, 6%));
+      }
+
+      &__messages {
+        padding: 12px 14px;
+        max-height: calc(80vh - 160px);
+        height: auto;
+        overflow-y: auto;
+        background: $secondary-color;
+        border-bottom: 1px solid $border-color;
+      }
+
+      &__input {
+        padding: 10px 12px;
+        border-top: 1px solid $border-color;
+        background: $primary-color;
+      }
+
+      &__input textarea {
+        min-height: 44px;
+        max-height: 160px;
+        font-size: $font-size-md;
+      }
     }
 
     &--inline {
-      max-width: 900px;
-      margin: 18px auto;
+      display: none !important;
     }
 
     &__messages {
@@ -231,98 +268,27 @@
     }
   }
 
-  .chat-floating-toggle {
-    right: 20px;
-    bottom: 20px;
-  }
-}
-
-/* Mobile: make chat full-screen modal when opened; hide inline embed */
-/* MOBILE: overlay modal (not full-screen) */
-@media (max-width: $breakpoint-mobile) {
-  /* hide inline embedded chat (show floating overlay instead) */
-  .chat-widget--inline {
-    display: none !important;
-  }
-
-  /* backdrop overlay */
   .chat-backdrop {
     position: fixed;
     inset: 0;
-    background: var(--overlay); // dim behind panel
+    background: var(--overlay);
     z-index: 9997;
     opacity: 0;
     pointer-events: none;
     transition: opacity 180ms ease;
   }
+
   .chat-backdrop.visible {
     opacity: 1;
     pointer-events: auto;
   }
 
-  /* floating becomes centered overlay modal when open */
-  .chat-widget--floating {
-    width: 92vw;
-    max-width: 480px;
-    height: auto;
-    max-height: 80vh;
-    /* right: 50%; */
-    bottom: 60px;
-    transform: translate(50%, 50%);
-    left: auto;
-    top: auto;
-    border-radius: 12px;
-    overflow: hidden;
-    display: none;
-    z-index: 9999;
-
-    /* panel visible when open */
-    &.open {
-      display: flex;
-    }
-
-    &.closed {
-      display: none;
-    }
-
-    &__header {
-      padding: 12px 14px;
-      background: linear-gradient(
-        90deg,
-        $primary-color,
-        darken($primary-color, 6%)
-      );
-    }
-
-    &__messages {
-      padding: 12px 14px;
-      max-height: calc(80vh - 160px);
-      height: auto;
-      overflow-y: auto;
-      background: $secondary-color;
-      border-bottom: 1px solid $border-color;
-    }
-
-    &__input {
-      padding: 10px 12px;
-      border-top: 1px solid $border-color;
-      background: $primary-color;
-    }
-
-    &__input textarea {
-      min-height: 44px;
-      max-height: 160px;
-      font-size: $font-size-md;
-    }
-  }
-
-  /* small viewport polishing */
   .chat-floating-toggle {
     right: 16px;
-    bottom: 16px;
+    bottom: calc(82px + env(safe-area-inset-bottom));
     padding: 8px 12px;
     font-size: $font-size-sm;
-    z-index: 10000; /* keep toggle above backdrop so user can re-open */
+    z-index: 10000;
   }
 }
 
@@ -344,7 +310,7 @@
 
   .chat-floating-toggle {
     right: 12px;
-    bottom: 12px;
+    bottom: calc(76px + env(safe-area-inset-bottom));
   }
 }
 

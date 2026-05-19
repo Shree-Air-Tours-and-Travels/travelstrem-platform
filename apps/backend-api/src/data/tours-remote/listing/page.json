@@ -25,16 +25,16 @@
           "widgetRef": "./widgets/hero-banner.json"
         },
         {
-          "type": "QuickFilters",
+          "type": "quickChips",
           "widgetRef": "./widgets/quick-filters.json"
         },
         {
-          "type": "TourGrid",
-          "widgetRef": "./widgets/tour-grid.json"
+          "type": "filters",
+          "widgetRef": "./widgets/tour-filters.json"
         },
         {
-          "type": "StartPlanning",
-          "widgetRef": "./widgets/start-planning.json"
+          "type": "listing",
+          "widgetRef": "./widgets/tour-grid.json"
         }
       ],
       "config": {},

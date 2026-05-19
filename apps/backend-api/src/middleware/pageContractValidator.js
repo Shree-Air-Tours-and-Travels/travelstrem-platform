@@ -1,4 +1,4 @@
-const isLabelRefKey = (key) => key.endsWith("Ref") && !/urlRef$/i.test(key) && key !== "iconRef" && key !== "optionsRef";
+const isLabelRefKey = (key) => key.endsWith("Ref") && !/urlRef$/i.test(key) && key !== "iconRef" && key !== "optionsRef" && key !== "widgetRef";
 const isUrlRefKey = (key) => /urlRef$/i.test(key) || key === "iconRef";
 
 const isObject = (value) => Boolean(value) && typeof value === "object" && !Array.isArray(value);

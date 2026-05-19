@@ -1,7 +1,18 @@
 // modules/tours/filtersController.js
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 import TourRepository from "../repositories/TourRepository.js";
 import config from "../../../config/index.js";
-import pageDefinitionService from "../../../services/pageDefinitionService.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const DATA_DIR = path.resolve(__dirname, "../../../data");
+
+const readWidgetJson = () => {
+  const filePath = path.resolve(DATA_DIR, "tours-remote/listing/widgets/tour-filters.json");
+  return JSON.parse(fs.readFileSync(filePath, "utf8"));
+};
 
 /* ============================================================
    DEV SETTINGS (same as your pattern)
@@ -172,6 +183,35 @@ const normalizeArray = (value) => {
   return [normalizeText(value)].filter(Boolean);
 };
 
+const normalizePaging = (input = {}) => {
+  const page = Math.max(1, Number(input.page) || 1);
+  const limit = Math.max(1, Math.min(Number(input.limit) || 6, 30));
+  return { page, limit, skip: (page - 1) * limit };
+};
+
+const normalizeSort = (value = "recommended") => {
+  const normalized = normalizeText(value || "recommended");
+  return ["recommended", "price_asc", "price_desc", "duration", "rating"].includes(normalized) ? normalized : "recommended";
+};
+
+const sortTours = (tours = [], sortId = "recommended") => {
+  if (sortId === "recommended") return tours;
+  const priceValue = (tour = {}) => {
+    const price = tour.priceInfo || tour.price || {};
+    const value = price.min ?? price.max;
+    const numberValue = Number(value);
+    return Number.isFinite(numberValue) ? numberValue : Number.MAX_SAFE_INTEGER;
+  };
+
+  return [...tours].sort((a, b) => {
+    if (sortId === "price_asc") return priceValue(a) - priceValue(b);
+    if (sortId === "price_desc") return priceValue(b) - priceValue(a);
+    if (sortId === "duration") return Number(a?.period?.days || 0) - Number(b?.period?.days || 0);
+    if (sortId === "rating") return Number(b?.avgRating || 0) - Number(a?.avgRating || 0);
+    return 0;
+  });
+};
+
 const validateFiltersPayload = (input = {}, options = {}) => {
   const errors = {};
   const clean = {
@@ -214,33 +254,51 @@ const validateFiltersPayload = (input = {}, options = {}) => {
   });
 
   const numericRules = [
-    ["minPrice", options.priceRange?.min ?? 0, options.priceRange?.max ?? Number.MAX_SAFE_INTEGER],
-    ["maxPrice", options.priceRange?.min ?? 0, options.priceRange?.max ?? Number.MAX_SAFE_INTEGER],
-    ["minDays", options.dayRange?.min || 1, options.dayRange?.max || 365],
-    ["maxDays", options.dayRange?.min || 1, options.dayRange?.max || 365],
+    ["minPrice", 0, options.priceRange?.max ?? Number.MAX_SAFE_INTEGER],
+    ["maxPrice", 0, options.priceRange?.max ?? Number.MAX_SAFE_INTEGER],
+    ["minDays", 1, options.dayRange?.max || 365],
+    ["maxDays", 1, options.dayRange?.max || 365],
     ["groupSize", 1, options.groupSizeRange?.max || 99],
     ["rating", 0, 5],
   ];
+
+  const fieldLabels = {
+    minPrice: "Min price",
+    maxPrice: "Max price",
+    minDays: "Min days",
+    maxDays: "Max days",
+    groupSize: "Group size",
+    rating: "Rating",
+  };
 
   numericRules.forEach(([name, min, max]) => {
     const value = clean[name];
     if (value === "") return;
     if (!Number.isFinite(value)) {
-      errors[name] = "Enter a valid number";
+      errors[name] = `${fieldLabels[name] || name} must be a valid number`;
       return;
     }
-    if (value < min) errors[name] = `Minimum ${min}`;
-    if (value > max) errors[name] = `Maximum ${max}`;
+    if (value < 0) {
+      errors[name] = `${fieldLabels[name] || name} cannot be negative`;
+      return;
+    }
+    if (value < min) {
+      errors[name] = `${fieldLabels[name] || name} minimum is ${min}`;
+      return;
+    }
+    if (value > max) {
+      errors[name] = `${fieldLabels[name] || name} maximum is ${max}`;
+    }
   });
 
   if (clean.minPrice !== "" && clean.maxPrice !== "" && clean.minPrice > clean.maxPrice) {
-    errors.minPrice = "Min price must be below max";
-    errors.maxPrice = "Max price must be above min";
+    errors.minPrice = "Min price must be less than or equal to max price";
+    errors.maxPrice = "Max price must be greater than or equal to min price";
   }
 
   if (clean.minDays !== "" && clean.maxDays !== "" && clean.minDays > clean.maxDays) {
-    errors.minDays = "Min days must be below max";
-    errors.maxDays = "Max days must be above min";
+    errors.minDays = "Min days must be less than or equal to max days";
+    errors.maxDays = "Max days must be greater than or equal to min days";
   }
 
   const parseFilterDate = (name) => {
@@ -261,11 +319,11 @@ const validateFiltersPayload = (input = {}, options = {}) => {
   }
 
   if (options.dateRange?.earliest && arrival && arrival < new Date(options.dateRange.earliest)) {
-    errors.arrivalDate = `Earliest ${options.dateRange.earliest}`;
+    errors.arrivalDate = `Earliest available arrival date is ${options.dateRange.earliest}`;
   }
 
   if (options.dateRange?.latest && returnDate && returnDate > new Date(options.dateRange.latest)) {
-    errors.returnDate = `Latest ${options.dateRange.latest}`;
+    errors.returnDate = `Latest available return date is ${options.dateRange.latest}`;
   }
 
   return {
@@ -277,29 +335,35 @@ const validateFiltersPayload = (input = {}, options = {}) => {
 
 /* ============================================================
    GET /api/filters → auto-extract options from tours
-   (kept largely as you already had it)
 ============================================================ */
 export const getFilters = async (req, res) => {
   try {
     const tours = await TourRepository.findLean();
     const options = getFilterFacts(tours);
+    const widget = readWidgetJson();
+
     return sendJson(res, 200, {
-      ...pageDefinitionService.buildWidgetResponse("tours-remote/listing", "./widgets/tour-filters.json", {
-        injectData: {
+      status: "success",
+      component: {
+        data: {
           summary: {
             totalTours: options.totalTours,
             priceRange: options.priceRange,
             dayRange: options.dayRange,
           },
         },
-        injectDataScope: {
+        dataScope: {
           options: {
             originCityOptions: options.originCities,
             destinationCityOptions: options.destinationCities,
             countryOptions: options.countries,
+            tags: options.tags,
+            featured: options.featured,
           },
         },
-      }),
+        elements: widget.component.elements,
+        structure: widget.component.structure,
+      },
       message: "Filters fetched successfully",
     }, req);
 
@@ -308,54 +372,41 @@ export const getFilters = async (req, res) => {
     return sendJson(res, 500, {
       status: "error",
       message: "Failed to load filters",
-      ...pageDefinitionService.buildWidgetResponse("tours-remote/listing", "./widgets/tour-filters.json"),
     }, req);
   }
 };
 
 /* ============================================================
    POST /api/filters/apply
-   - Build a Mongo query for direct-matchable fields
-   - Fetch candidates via .find(q).lean()
-   - Hydrate each doc to compute priceInfo via getCurrentPrice (if defined)
-   - Compute avgRating from reviews (virtuals absent in lean)
-   - Apply the remaining filters in-memory (price overlap, rating)
-   - Return componentData.state.data.tours = [..]
 ============================================================ */
 export const applyFilters = async (req, res) => {
   try {
+    const body = req.body || {};
+    const filtersInput = body.filters && typeof body.filters === "object" ? body.filters : body;
+    const paging = normalizePaging(body);
+    const sort = normalizeSort(body.sort);
     const inventory = await TourRepository.findLean();
     const options = getFilterFacts(inventory);
-    const validation = validateFiltersPayload(req.body || {}, options);
+    const validation = validateFiltersPayload(filtersInput, options);
 
     if (!validation.ok) {
       return sendJson(res, 400, {
         status: "error",
         message: "Invalid filter values",
-        ...pageDefinitionService.buildPageResponse("tours-remote/listing", {
-          injectData: {
-            tours: [],
-            errors: validation.errors,
-            filters: validation.clean,
-          },
-          injectDataScope: {
-            options: {
-              originCityOptions: options.originCities,
-              destinationCityOptions: options.destinationCities,
-              countryOptions: options.countries,
-            },
-          },
-        }),
+        component: {
+          data: { tours: [], errors: validation.errors, filters: validation.clean },
+          dataScope: { options: {} },
+          elements: { labels: {}, urls: {} },
+          structure: { header: {}, widgets: [], config: {}, actions: [] },
+        },
       }, req);
     }
 
     const f = validation.clean;
 
-    // Build base mongo query for things expressible directly in Mongo
     const q = {};
     const and = [];
 
-    // Search (title or desc) — escape user input
     if (f.search) {
       const s = escapeRegExp(String(f.search));
       and.push({ $or: [{ title: new RegExp(s, "i") }, { desc: new RegExp(s, "i") }, { tags: new RegExp(s, "i") }] });
@@ -378,12 +429,10 @@ export const applyFilters = async (req, res) => {
       and.push({ "address.country": new RegExp(`^${escapeRegExp(f.country)}$`, "i") });
     }
 
-    // Featured
     if (f.featured !== undefined && f.featured !== "") {
       q.featured = String(f.featured).toLowerCase() === "true";
     }
 
-    // Days (period.days)
     const minDays = safeNum(f.minDays);
     const maxDays = safeNum(f.maxDays);
     if (!Number.isNaN(minDays) || !Number.isNaN(maxDays)) {
@@ -392,7 +441,6 @@ export const applyFilters = async (req, res) => {
       if (!Number.isNaN(maxDays)) q["period.days"].$lte = maxDays;
     }
 
-    // Tags & languages — Mongo $in
     if (Array.isArray(f.tags) && f.tags.length > 0) {
       q.tags = { $in: f.tags };
     }
@@ -400,7 +448,6 @@ export const applyFilters = async (req, res) => {
       q.languages = { $in: f.languages };
     }
 
-    // groupSize (maxGroupSize >= groupSize)
     const groupSize = safeNum(f.groupSize);
     if (!Number.isNaN(groupSize)) {
       q.maxGroupSize = { $gte: groupSize };
@@ -434,59 +481,59 @@ export const applyFilters = async (req, res) => {
       console.debug("applyFilters base mongo query:", JSON.stringify(q, null, 2));
     }
 
-    // Fetch candidate docs (lean for speed)
     let candidates = await TourRepository.find(q).sort({ createdAt: -1 }).lean();
 
-    // For each candidate, compute derived fields used by UI: priceInfo & avgRating
     const processed = candidates.map((doc) => {
       const avgRating = computeAvgRating(doc);
       const priceInfo = buildPriceInfo(doc, f.arrivalDate ? new Date(f.arrivalDate) : new Date());
-
       return { ...doc, avgRating, priceInfo };
     });
 
-    // Now apply in-memory filters (price overlap, rating)
     const minP = safeNum(f.minPrice);
     const maxP = safeNum(f.maxPrice);
     const ratingThreshold = safeNum(f.rating);
 
     const filtered = processed.filter((t) => {
-      // rating
       if (!Number.isNaN(ratingThreshold) && ratingThreshold !== 0) {
         if (!(t.avgRating >= ratingThreshold)) return false;
       }
 
-      // price (range overlap)
       if (!Number.isNaN(minP) || !Number.isNaN(maxP)) {
         const p = t.priceInfo || t.price;
         if (!p) return false;
         const tourMin = Number.isFinite(Number(p.min)) ? Number(p.min) : Number.NEGATIVE_INFINITY;
         const tourMax = Number.isFinite(Number(p.max)) ? Number(p.max) : Number.POSITIVE_INFINITY;
-        if (!Number.isNaN(minP) && tourMax < minP) return false;
-        if (!Number.isNaN(maxP) && tourMin > maxP) return false;
+        if (!Number.isNaN(minP) && tourMin < minP) return false;
+        if (!Number.isNaN(maxP) && tourMax > maxP) return false;
       }
 
       return true;
     });
+    const sorted = sortTours(filtered, sort);
+    const total = sorted.length;
+    const tours = sorted.slice(paging.skip, paging.skip + paging.limit);
+    const totalPages = Math.max(1, Math.ceil(total / paging.limit));
 
-    // Return in the same shape your frontend expects
     return sendJson(res, 200, {
       status: "success",
-      message: `${filtered.length} tours matched`,
-      ...pageDefinitionService.buildPageResponse("tours-remote/listing", {
-        injectData: {
-          tours: filtered,
-          total: filtered.length,
+      component: {
+        data: {
+          tours,
           filters: f,
-        },
-        injectDataScope: {
-          options: {
-            originCityOptions: options.originCities,
-            destinationCityOptions: options.destinationCities,
-            countryOptions: options.countries,
+          sort,
+          pagination: {
+            page: paging.page,
+            limit: paging.limit,
+            total,
+            totalPages,
+            hasMore: paging.page < totalPages,
           },
         },
-      }),
+        dataScope: { options: {} },
+        elements: { labels: {}, urls: {} },
+        structure: { header: {}, widgets: [], config: {}, actions: [] },
+      },
+      message: `${total} tours matched`,
     }, req);
 
   } catch (error) {
@@ -494,9 +541,12 @@ export const applyFilters = async (req, res) => {
     return sendJson(res, 500, {
       status: "error",
       message: "Failed to apply filters",
-      ...pageDefinitionService.buildPageResponse("tours-remote/listing", {
-        injectData: { tours: [] },
-      }),
+      component: {
+        data: { tours: [] },
+        dataScope: { options: {} },
+        elements: { labels: {}, urls: {} },
+        structure: { header: {}, widgets: [], config: {}, actions: [] },
+      },
     }, req);
   }
 };

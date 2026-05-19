@@ -1,0 +1,17 @@
+{
+  "status": "success",
+  "component": {
+    "structure": {
+      "widgets": [
+        {
+          "type": "BookingCheckoutSidebar",
+          "props": {}
+        }
+      ]
+    },
+    "elements": {
+      "labels": {}
+    },
+    "data": {}
+  }
+}

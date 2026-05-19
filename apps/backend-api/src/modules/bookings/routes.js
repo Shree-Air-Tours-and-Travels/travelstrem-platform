@@ -25,6 +25,7 @@ import {
     submitBooking,
     uploadBookingDocument,
 } from "./controllers/bookingController.js";
+import { getBookingWidget } from "../tours/controllers/widgetController.js";
 
 const router = express.Router();
 
@@ -52,8 +53,10 @@ router.post("/:bookingId/submit", submitBooking);
 router.post("/:bookingId/cancel", cancelBooking);
 router.post("/:bookingId/accept-quote", acceptQuote);
 router.post("/:bookingId/reject-quote", rejectQuote);
+router.post("/:bookingId/payment", recordPayment);
 router.post("/:bookingId/upload", uploadBookingDocument);
 router.get("/", listBookings);
+router.get("/:id/widgets/:widgetFile.json", getBookingWidget);
 router.get("/:id", getBookingById);
 router.put("/:bookingId", updateBooking);
 router.patch("/:bookingId", updateBooking);

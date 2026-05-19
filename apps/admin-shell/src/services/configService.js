@@ -8,12 +8,6 @@ const normalizeApiBase = (raw) => {
 
 export const API_BASE = normalizeApiBase(getConfiguredApiBase());
 
-const getAuthHeaders = () => {
-    const token = localStorage.getItem("auth_token") || localStorage.getItem("token");
-
-    return token ? { Authorization: `Bearer ${token}` } : {};
-};
-
 const readComponentData = async (path, params = {}) => {
     const url = new URL(`${API_BASE}${path}`);
     Object.entries(params).forEach(([key, value]) => {
@@ -21,9 +15,9 @@ const readComponentData = async (path, params = {}) => {
     });
 
     const res = await fetch(url.toString(), {
+        credentials: "include",
         headers: {
             "Content-Type": "application/json",
-            ...getAuthHeaders(),
         },
     });
 

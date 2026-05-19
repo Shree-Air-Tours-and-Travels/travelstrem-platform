@@ -29,7 +29,7 @@
                     }
                 ],
                 "photoss": [
-                    "/tour-images/tour-img01.jpg"
+                    "https://res.cloudinary.com/dofxshf3z/image/upload/v1779131576/tour-img01_tljj0m.jpg"
                 ],
                 "featured": true
             },
@@ -55,7 +55,7 @@
                 "desc": "this is the description",
                 "reviews": [],
                 "photos": [
-                    "/tour-images/tour-img02.jpg"
+                    "https://res.cloudinary.com/dofxshf3z/image/upload/v1779131579/tour-img02_gjgdel.jpg"
                 ],
                 "featured": true
             },
@@ -74,7 +74,7 @@
                 "desc": "this is the description",
                 "reviews": [],
                 "photos": [
-                    "/tour-images/tour-img03.jpg"
+                    "https://res.cloudinary.com/dofxshf3z/image/upload/v1779131579/tour-img03_fi3oaw.jpg"
                 ],
                 "featured": true
             },
@@ -93,7 +93,7 @@
                 "desc": "this is the description",
                 "reviews": [],
                 "photos": [
-                    "/tour-images/tour-img04.jpg"
+                    "https://res.cloudinary.com/dofxshf3z/image/upload/v1779131576/tour-img04_e0pdeh.jpg"
                 ],
                 "featured": true
             }

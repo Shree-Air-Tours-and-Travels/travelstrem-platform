@@ -1,0 +1,32 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": { "options": {} },
+    "elements": {
+      "labels": {
+        "metricTotalBookings": "Total Bookings",
+        "metricTotalTransactions": "Total Transactions",
+        "metricAverageValue": "Average Value"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "DashboardMetrics",
+          "props": {
+            "items": [
+              { "id": "bookings", "labelRef": "metricTotalBookings", "value": "0", "icon": "calendar", "tone": "danger" },
+              { "id": "transactions", "labelRef": "metricTotalTransactions", "value": "$0", "icon": "coin", "tone": "olive" },
+              { "id": "average", "labelRef": "metricAverageValue", "value": "$0", "icon": "wallet", "tone": "primary" }
+            ]
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

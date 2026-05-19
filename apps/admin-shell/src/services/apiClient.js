@@ -24,12 +24,7 @@ setFetchDataApiClient(api);
 api.interceptors.request.use(
     (cfg) => {
         try {
-            const preferredKey = localStorage.getItem("auth_token_key_name");
-            const token =
-                (preferredKey && localStorage.getItem(preferredKey)) ||
-                localStorage.getItem("auth_token") ||
-                localStorage.getItem("token") ||
-                JSON.parse(localStorage.getItem("userInfo") || "{}")?.token;
+            const token = localStorage.getItem("token") || localStorage.getItem("auth_token");
             if (token) {
                 cfg.headers = cfg.headers || {};
                 cfg.headers.Authorization = `Bearer ${token}`;

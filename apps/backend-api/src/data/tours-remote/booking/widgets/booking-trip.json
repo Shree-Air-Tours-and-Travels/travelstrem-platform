@@ -1,0 +1,29 @@
+{
+  "status": "success",
+  "component": {
+    "structure": {
+      "widgets": [
+        {
+          "type": "BookingTripStep",
+          "props": {
+            "showPricePreview": true
+          }
+        }
+      ]
+    },
+    "elements": {
+      "labels": {
+        "startDate": "Start Date",
+        "endDate": "End Date",
+        "guests": "Guests",
+        "maxLabel": "max",
+        "seatsAvailable": "seats available",
+        "flexibleGroup": "Flexible group size",
+        "startBeforeEnd": "Start date must be before end date",
+        "endAfterStart": "End date must be after start date",
+        "onlySeatsLeft": "Only {seats} seats left for this tour"
+      }
+    },
+    "data": {}
+  }
+}

@@ -53,10 +53,20 @@ export default {
       },
       "dashboard": {
         "page": "dashboard",
+        "title": "Customer Dashboard",
+        "description": "Track trips, quote requests, payments, and traveller details.",
         "widgets": [
           {
             "type": "dashboard",
-            "source": "shell"
+            "source": "shell",
+            "props": {
+              "variant": "customer",
+              "title": "Your trips, quotes, and payments",
+              "description": "Track every journey from quote request to final confirmation.",
+              "refreshLabel": "Refresh",
+              "emptyTitle": "No bookings found",
+              "emptyDescription": "Your upcoming trips and quote requests will appear here."
+            }
           }
         ]
       }

@@ -1,5 +1,5 @@
 import React from "react";
-import { FiAlertTriangle, FiExternalLink, FiRefreshCw } from "react-icons/fi";
+import { Icon } from "@packages/trem-ui";
 import "./MicroAppError.scss";
 import { getConfiguredRemoteOrigin } from "../core/config/portalEnvironment";
 
@@ -18,7 +18,7 @@ export default function MicroAppErrorView({
         <section className="micro-app-error" role="alert" aria-live="polite">
             <div className="micro-app-error__panel">
                 <div className="micro-app-error__icon" aria-hidden="true">
-                    <FiAlertTriangle />
+                    <Icon name="alertTriangle" />
                 </div>
 
                 <div className="micro-app-error__content">
@@ -35,7 +35,7 @@ export default function MicroAppErrorView({
 
                     <div className="micro-app-error__actions">
                         <button type="button" className="micro-app-error__button primary" onClick={onRetry}>
-                            <FiRefreshCw aria-hidden="true" />
+                            <Icon name="refreshCw" aria-hidden="true" />
                             <span>Retry</span>
                         </button>
 
@@ -46,7 +46,7 @@ export default function MicroAppErrorView({
                                 target="_blank"
                                 rel="noreferrer"
                             >
-                                <FiExternalLink aria-hidden="true" />
+                                <Icon name="externalLink" aria-hidden="true" />
                                 <span>{openLabel}</span>
                             </a>
                         )}
