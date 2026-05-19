@@ -18,6 +18,12 @@ const UserRepository = {
   create(payload) {
     return new User(payload);
   },
+  updateProfile(userId, updates) {
+    return User.findByIdAndUpdate(userId, updates, { new: true, runValidators: true });
+  },
+  updatePassword(userId, passwordHash) {
+    return User.findByIdAndUpdate(userId, { passwordHash }, { new: true });
+  },
 };
 
 export default UserRepository;

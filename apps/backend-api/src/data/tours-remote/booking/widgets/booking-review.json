@@ -1,0 +1,28 @@
+{
+  "status": "success",
+  "component": {
+    "structure": {
+      "widgets": [
+        {
+          "type": "BookingReviewStep",
+          "props": {}
+        }
+      ]
+    },
+    "elements": {
+      "labels": {
+        "reviewTitle": "Review your booking",
+        "tour": "Tour",
+        "dates": "Dates",
+        "guests": "Guests",
+        "contact": "Contact",
+        "travelers": "Travelers",
+        "submit": "Submit Quote Request",
+        "submitting": "Submitting...",
+        "age": "Age {value}",
+        "to": "to"
+      }
+    },
+    "data": {}
+  }
+}

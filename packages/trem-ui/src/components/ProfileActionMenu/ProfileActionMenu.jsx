@@ -1,6 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Icon from "../../icons/Icon/Icon.jsx";
+import BottomSheet from "../BottomSheet/BottomSheet.jsx";
 import "./ProfileActionMenu.styles.scss";
+
+const MOBILE_BREAKPOINT = 768;
+
+function isMobile() {
+  return typeof window !== "undefined" && window.innerWidth <= MOBILE_BREAKPOINT;
+}
 
 const getInitials = (user) => {
   const source = user?.name || user?.email || "";
@@ -28,9 +35,10 @@ export default function ProfileActionMenu({
   const themeLabel = theme === "dark" ? "Light mode" : "Dark mode";
   const themeIcon = theme === "dark" ? "sun" : "moon";
   const userLabel = user?.name || user?.email || "Profile";
+  const showBottomSheet = isMobile();
 
   useEffect(() => {
-    if (!open) return undefined;
+    if (!open || showBottomSheet) return undefined;
     const closeFromOutside = (event) => {
       if (!rootRef.current?.contains(event.target)) setOpen(false);
     };
@@ -43,7 +51,7 @@ export default function ProfileActionMenu({
       document.removeEventListener("mousedown", closeFromOutside);
       window.removeEventListener("keydown", closeFromEscape);
     };
-  }, [open]);
+  }, [open, showBottomSheet]);
 
   const runAction = (handler, fallbackEventName) => {
     setOpen(false);
@@ -55,6 +63,34 @@ export default function ProfileActionMenu({
       window.dispatchEvent(new CustomEvent(fallbackEventName, { detail: { source: "profile-action-menu" } }));
     }
   };
+
+  const panelContent = (
+    <div className="profile-action-menu__panel" role="menu">
+      <div className="profile-action-menu__identity">
+        <span className="profile-action-menu__avatar">
+          {initials ? initials : <Icon name="user" size={18} />}
+        </span>
+        <span className="profile-action-menu__meta">
+          <strong>{userLabel}</strong>
+          <small>{isAuthenticated ? user?.role || "member" : "Guest"}</small>
+        </span>
+      </div>
+      <button className="profile-action-menu__item" type="button" role="menuitem" onClick={() => runAction(onToggleTheme)}>
+        <Icon name={themeIcon} size={17} />
+        <span>{themeLabel}</span>
+      </button>
+      <button className="profile-action-menu__item" type="button" role="menuitem" onClick={() => runAction(onSettings, "TREM_SETTINGS_REQUESTED")}>
+        <Icon name="settings" size={17} />
+        <span>{settingsLabel}</span>
+      </button>
+      {isAuthenticated && (
+        <button className="profile-action-menu__item profile-action-menu__item--danger" type="button" role="menuitem" onClick={() => runAction(onLogout)}>
+          <Icon name="logout" size={17} />
+          <span>{logoutLabel}</span>
+        </button>
+      )}
+    </div>
+  );
 
   return (
     <div className={`profile-action-menu profile-action-menu--${align} ${className}`.trim()} ref={rootRef}>
@@ -69,33 +105,10 @@ export default function ProfileActionMenu({
         {initials ? <span className="profile-action-menu__initials">{initials}</span> : <Icon name="user" size={20} />}
       </button>
 
-      {open && (
-        <div className="profile-action-menu__panel" role="menu">
-          <div className="profile-action-menu__identity">
-            <span className="profile-action-menu__avatar">
-              {initials ? initials : <Icon name="user" size={18} />}
-            </span>
-            <span className="profile-action-menu__meta">
-              <strong>{userLabel}</strong>
-              <small>{isAuthenticated ? user?.role || "member" : "Guest"}</small>
-            </span>
-          </div>
-          <button className="profile-action-menu__item" type="button" role="menuitem" onClick={() => runAction(onToggleTheme)}>
-            <Icon name={themeIcon} size={17} />
-            <span>{themeLabel}</span>
-          </button>
-          <button className="profile-action-menu__item" type="button" role="menuitem" onClick={() => runAction(onSettings, "TREM_SETTINGS_REQUESTED")}>
-            <Icon name="settings" size={17} />
-            <span>{settingsLabel}</span>
-          </button>
-          {isAuthenticated && (
-            <button className="profile-action-menu__item profile-action-menu__item--danger" type="button" role="menuitem" onClick={() => runAction(onLogout)}>
-              <Icon name="logout" size={17} />
-              <span>{logoutLabel}</span>
-            </button>
-          )}
-        </div>
-      )}
+      {open && !showBottomSheet && panelContent}
+      <BottomSheet open={open && showBottomSheet} onClose={() => setOpen(false)}>
+        {panelContent}
+      </BottomSheet>
     </div>
   );
 }

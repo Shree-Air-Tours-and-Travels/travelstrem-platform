@@ -1,153 +1,199 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
 import { fetchData } from "@packages/trem-utils";
-import { getTourDetailsPath, slugify } from "@packages/trem-utils";
 import { usePortalConfig } from "../../app/providers/PortalProvider";
 import DashboardPageView from "./Dashboard.view";
+
+const DASHBOARD_PAGE_ENDPOINT = "/pages/customer-shell/dashboard";
+const BOOKING_LIMIT = 8;
+
+const formatCurrency = (amount, currency = "INR") => {
+    const value = Number(amount || 0);
+    try {
+        return new Intl.NumberFormat("en-IN", {
+            style: "currency",
+            currency,
+            maximumFractionDigits: value % 1 ? 2 : 0,
+        }).format(value);
+    } catch {
+        return `${currency} ${value.toLocaleString("en-IN")}`;
+    }
+};
+
+const formatDate = (value) => {
+    if (!value) return "N/A";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "N/A";
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+};
+
+const dayCount = (start, end) => {
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return "N/A";
+    const diff = Math.max(1, Math.round((endDate - startDate) / 86400000) + 1);
+    return `${diff} Day${diff > 1 ? "s" : ""}`;
+};
+
+const normalizeSort = (value) => {
+    const label = String(value || "Recommended").toLowerCase();
+    if (label.includes("low")) return "price-low";
+    if (label.includes("high")) return "price-high";
+    if (label.includes("new")) return "newest";
+    return "recommended";
+};
+
+const mapBookingRow = (booking) => {
+    const tour = booking?.tour || {};
+    const price = booking?.paymentSummary?.total || booking?.priceSnapshot?.total || 0;
+    const currency = booking?.priceSnapshot?.currency || booking?.tripSelection?.currency || "INR";
+    const image = tour?.photo || tour?.photos?.[0] || "https://res.cloudinary.com/dofxshf3z/image/upload/v1779131576/tour-img01_tljj0m.jpg";
+    const tags = Array.isArray(tour?.tags) ? tour.tags : [];
+    return {
+        bookingId: booking?.id || booking?._id,
+        id: booking?.bookingRef || `#${booking?.id || booking?._id || ""}`,
+        tourId: tour?.id || tour?._id || booking?.tour,
+        tour: tour?.title || "Unknown Tour",
+        type: tags[0] || booking?.tripSelection?.packageId || "Custom Tour",
+        travellers: `${booking?.guestsCount || booking?.travelers?.length || 1} Guest${(booking?.guestsCount || 1) > 1 ? "s" : ""}`,
+        days: dayCount(booking?.startDate || booking?.travelWindow?.startDate, booking?.endDate || booking?.travelWindow?.endDate),
+        price: formatCurrency(price, currency),
+        date: formatDate(booking?.startDate || booking?.travelWindow?.startDate),
+        status: String(booking?.status || "PENDING").replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase()),
+        image,
+        raw: booking,
+    };
+};
 
 export default function DashboardPageContainer() {
     const { session } = usePortalConfig();
     const user = session?.user || {};
-    const role = session?.flags?.role || user.role || "member";
-    const navigate = useNavigate();
-
-    const [bookings, setBookings] = useState([]);
+    const [pageDefinition, setPageDefinition] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
-    const [message, setMessage] = useState("");
-    const [filterStatus, setFilterStatus] = useState("");
+    const [profile, setProfile] = useState(null);
+    const [bookingQuery, setBookingQuery] = useState({
+        page: 1,
+        search: "",
+        status: "All",
+        tourType: "All",
+        sort: "Recommended",
+    });
+    const [bookingState, setBookingState] = useState({
+        loading: true,
+        error: "",
+        rows: [],
+        total: 0,
+        limit: BOOKING_LIMIT,
+        metrics: null,
+    });
 
     useEffect(() => {
-        loadBookings();
-    }, [role, filterStatus]);
+        let cancelled = false;
 
-    async function loadBookings() {
-        try {
+        async function loadDashboard() {
             setLoading(true);
             setError("");
 
-            const params = {};
-            if (filterStatus) params.status = filterStatus;
-            if (role === "member") {
-                params.userId = user?.id || user?._id;
+            try {
+                const [pageRes, profileRes] = await Promise.all([
+                    fetchData(DASHBOARD_PAGE_ENDPOINT),
+                    fetchData("/auth/profile").catch(() => null),
+                ]);
+                if (!pageRes || pageRes.status !== "success") throw new Error(pageRes?.message || "Failed to load dashboard");
+                if (!cancelled) {
+                    setPageDefinition(pageRes.component || null);
+                    if (profileRes?.status === "success") setProfile(profileRes.componentData?.data);
+                }
+            } catch (err) {
+                if (!cancelled) setError(err?.message || "Failed to load dashboard");
+            } finally {
+                if (!cancelled) setLoading(false);
             }
+        }
 
-            const qp = new URLSearchParams(params).toString();
-            const endpoint = `/bookings${qp ? `?${qp}` : ""}`;
+        loadDashboard();
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
-            const res = await fetchData(endpoint);
-            if (!res || res.status !== "success") {
-                throw new Error(res.message || "Failed to load bookings");
+    useEffect(() => {
+        let cancelled = false;
+
+        async function loadBookings() {
+            setBookingState((prev) => ({ ...prev, loading: true, error: "" }));
+            const params = {
+                limit: BOOKING_LIMIT,
+                skip: (Math.max(1, bookingQuery.page) - 1) * BOOKING_LIMIT,
+                sort: normalizeSort(bookingQuery.sort),
+            };
+            if (bookingQuery.search) params.search = bookingQuery.search;
+            if (bookingQuery.status && bookingQuery.status !== "All") params.status = bookingQuery.status;
+            if (bookingQuery.tourType && bookingQuery.tourType !== "All") params.tourType = bookingQuery.tourType;
+
+            try {
+                const statsParams = { ...params, limit: 200, skip: 0 };
+                const [res, statsRes] = await Promise.all([
+                    fetchData("/bookings", { params }),
+                    fetchData("/bookings", { params: statsParams }),
+                ]);
+                if (!res || res.status !== "success") throw new Error(res?.message || "Failed to load bookings");
+                const data = Array.isArray(res.componentData?.data) ? res.componentData.data : [];
+                const statsData = Array.isArray(statsRes?.componentData?.data) ? statsRes.componentData.data : data;
+                const total = Number(res.componentData?.config?.total || data.length || 0);
+                const totalTransactions = statsData.reduce((sum, booking) => sum + Number(booking?.paymentSummary?.total || booking?.priceSnapshot?.total || 0), 0);
+                const avg = total ? totalTransactions / total : 0;
+                if (!cancelled) {
+                    setBookingState({
+                        loading: false,
+                        error: "",
+                        rows: data.map(mapBookingRow),
+                        total,
+                        limit: Number(res.componentData?.config?.limit || BOOKING_LIMIT),
+                        metrics: {
+                            totalBookings: total,
+                            totalTransactions: formatCurrency(totalTransactions, statsData[0]?.priceSnapshot?.currency || "INR"),
+                            averageValue: formatCurrency(avg, statsData[0]?.priceSnapshot?.currency || "INR"),
+                        },
+                    });
+                }
+            } catch (err) {
+                if (!cancelled) {
+                    setBookingState((prev) => ({
+                        ...prev,
+                        loading: false,
+                        error: err?.message || "Failed to load bookings",
+                    }));
+                }
             }
-            const data = res.componentData && res.componentData.data;
-            setBookings(Array.isArray(data) ? data : (data ? [data] : []));
-        } catch (err) {
-            console.error("loadBookings:", err);
-            setError(err.message || "Failed to load bookings");
-        } finally {
-            setLoading(false);
         }
-    }
 
-    async function handleCancel(bookingId) {
-        try {
-            setMessage("");
-            setBookings(prev => prev.map(b => (String(b.id || b._id) === String(bookingId) ? { ...b, status: "CANCELLED" } : b)));
+        loadBookings();
+        return () => {
+            cancelled = true;
+        };
+    }, [bookingQuery]);
 
-            const res = await fetchData(`/bookings/${bookingId}/cancel`, { method: "POST", headers: { "Content-Type": "application/json" } });
-            if (!res || res.status !== "success") throw new Error(res.message || "Cancel failed");
-
-            await loadBookings();
-            setMessage("Booking cancelled.");
-        } catch (err) {
-            console.error(err);
-            await loadBookings();
-            setError(err.message || "Cancel failed");
-        }
-    }
-
-    async function handleConfirm(bookingId, finalPriceData = {}) {
-        try {
-            const res = await fetchData(`/bookings/${bookingId}/confirm`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ payment: finalPriceData }) });
-            if (!res || res.status !== "success") throw new Error(res.message || "Confirm failed");
-            await loadBookings();
-        } catch (err) {
-            console.error(err);
-            alert(err.message || "Confirm failed");
-        }
-    }
-
-    async function handleAcceptQuote(bookingId) {
-        try {
-            const res = await fetchData(`/bookings/${bookingId}/accept-quote`, { method: "POST", headers: { "Content-Type": "application/json" } });
-            if (!res || res.status !== "success") throw new Error(res.message || "Accept quote failed");
-            await loadBookings();
-            setMessage("Quote accepted. Payment is now pending.");
-        } catch (err) {
-            console.error(err);
-            setError(err.message || "Accept quote failed");
-        }
-    }
-
-    async function handleRejectQuote(bookingId) {
-        try {
-            const res = await fetchData(`/bookings/${bookingId}/reject-quote`, { method: "POST", headers: { "Content-Type": "application/json" } });
-            if (!res || res.status !== "success") throw new Error(res.message || "Reject quote failed");
-            await loadBookings();
-            setMessage("Quote rejected. Our team can revise it.");
-        } catch (err) {
-            console.error(err);
-            setError(err.message || "Reject quote failed");
-        }
-    }
-
-    async function handleUpdateTravelers(bookingId, travelers) {
-        try {
-            const res = await fetchData(`/bookings/${bookingId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ travelers }) });
-            if (!res || res.status !== "success") throw new Error(res.message || "Update failed");
-            await loadBookings();
-        } catch (err) {
-            console.error(err);
-            alert(err.message || "Update failed");
-            throw err;
-        }
-    }
-
-    function handlePay(booking) {
-        const bookingId = booking?.id || booking?._id;
-        if (bookingId) navigate(`/checkout/${bookingId}`);
-    }
-
-    function goToTour(payload) {
-        if (!payload) return;
-        let tourRef = null;
-        if (typeof payload === "string" || typeof payload === "number") {
-            tourRef = String(payload);
-        } else if (typeof payload === "object") {
-            tourRef = slugify(payload.tour?.title) || payload.tour?.id || payload.tour?._id || null;
-        }
-        if (!tourRef) return;
-        navigate(getTourDetailsPath(tourRef), typeof payload === "object" ? { state: { tour: payload.tour } } : undefined);
-    }
+    const dashboardContract = useMemo(() => {
+        const labels = pageDefinition?.elements?.labels || {};
+        const widgets = pageDefinition?.structure?.widgets || [];
+        const options = pageDefinition?.dataScope?.options || {};
+        return { labels, widgets, options };
+    }, [pageDefinition]);
 
     return (
         <DashboardPageView
-            bookings={bookings}
             loading={loading}
             error={error}
-            message={message}
-            filterStatus={filterStatus}
-            setFilterStatus={setFilterStatus}
-            role={role}
+            labels={dashboardContract.labels}
+            widgets={dashboardContract.widgets}
+            options={dashboardContract.options}
             user={user}
-            loadBookings={loadBookings}
-            handleCancel={handleCancel}
-            handleConfirm={handleConfirm}
-            handleAcceptQuote={handleAcceptQuote}
-            handleRejectQuote={handleRejectQuote}
-            handleUpdateTravelers={handleUpdateTravelers}
-            handlePay={handlePay}
-            goToTour={goToTour}
+            profile={profile}
+            onProfileUpdate={setProfile}
+            bookingState={bookingState}
+            bookingQuery={bookingQuery}
+            onBookingQueryChange={setBookingQuery}
         />
     );
 }

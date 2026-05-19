@@ -254,33 +254,51 @@ const validateFiltersPayload = (input = {}, options = {}) => {
   });
 
   const numericRules = [
-    ["minPrice", options.priceRange?.min ?? 0, options.priceRange?.max ?? Number.MAX_SAFE_INTEGER],
-    ["maxPrice", options.priceRange?.min ?? 0, options.priceRange?.max ?? Number.MAX_SAFE_INTEGER],
-    ["minDays", options.dayRange?.min || 1, options.dayRange?.max || 365],
-    ["maxDays", options.dayRange?.min || 1, options.dayRange?.max || 365],
+    ["minPrice", 0, options.priceRange?.max ?? Number.MAX_SAFE_INTEGER],
+    ["maxPrice", 0, options.priceRange?.max ?? Number.MAX_SAFE_INTEGER],
+    ["minDays", 1, options.dayRange?.max || 365],
+    ["maxDays", 1, options.dayRange?.max || 365],
     ["groupSize", 1, options.groupSizeRange?.max || 99],
     ["rating", 0, 5],
   ];
+
+  const fieldLabels = {
+    minPrice: "Min price",
+    maxPrice: "Max price",
+    minDays: "Min days",
+    maxDays: "Max days",
+    groupSize: "Group size",
+    rating: "Rating",
+  };
 
   numericRules.forEach(([name, min, max]) => {
     const value = clean[name];
     if (value === "") return;
     if (!Number.isFinite(value)) {
-      errors[name] = "Enter a valid number";
+      errors[name] = `${fieldLabels[name] || name} must be a valid number`;
       return;
     }
-    if (value < min) errors[name] = `Minimum ${min}`;
-    if (value > max) errors[name] = `Maximum ${max}`;
+    if (value < 0) {
+      errors[name] = `${fieldLabels[name] || name} cannot be negative`;
+      return;
+    }
+    if (value < min) {
+      errors[name] = `${fieldLabels[name] || name} minimum is ${min}`;
+      return;
+    }
+    if (value > max) {
+      errors[name] = `${fieldLabels[name] || name} maximum is ${max}`;
+    }
   });
 
   if (clean.minPrice !== "" && clean.maxPrice !== "" && clean.minPrice > clean.maxPrice) {
-    errors.minPrice = "Min price must be below max";
-    errors.maxPrice = "Max price must be above min";
+    errors.minPrice = "Min price must be less than or equal to max price";
+    errors.maxPrice = "Max price must be greater than or equal to min price";
   }
 
   if (clean.minDays !== "" && clean.maxDays !== "" && clean.minDays > clean.maxDays) {
-    errors.minDays = "Min days must be below max";
-    errors.maxDays = "Max days must be above min";
+    errors.minDays = "Min days must be less than or equal to max days";
+    errors.maxDays = "Max days must be greater than or equal to min days";
   }
 
   const parseFilterDate = (name) => {
@@ -301,11 +319,11 @@ const validateFiltersPayload = (input = {}, options = {}) => {
   }
 
   if (options.dateRange?.earliest && arrival && arrival < new Date(options.dateRange.earliest)) {
-    errors.arrivalDate = `Earliest ${options.dateRange.earliest}`;
+    errors.arrivalDate = `Earliest available arrival date is ${options.dateRange.earliest}`;
   }
 
   if (options.dateRange?.latest && returnDate && returnDate > new Date(options.dateRange.latest)) {
-    errors.returnDate = `Latest ${options.dateRange.latest}`;
+    errors.returnDate = `Latest available return date is ${options.dateRange.latest}`;
   }
 
   return {
@@ -339,6 +357,8 @@ export const getFilters = async (req, res) => {
             originCityOptions: options.originCities,
             destinationCityOptions: options.destinationCities,
             countryOptions: options.countries,
+            tags: options.tags,
+            featured: options.featured,
           },
         },
         elements: widget.component.elements,
@@ -483,8 +503,8 @@ export const applyFilters = async (req, res) => {
         if (!p) return false;
         const tourMin = Number.isFinite(Number(p.min)) ? Number(p.min) : Number.NEGATIVE_INFINITY;
         const tourMax = Number.isFinite(Number(p.max)) ? Number(p.max) : Number.POSITIVE_INFINITY;
-        if (!Number.isNaN(minP) && tourMax < minP) return false;
-        if (!Number.isNaN(maxP) && tourMin > maxP) return false;
+        if (!Number.isNaN(minP) && tourMin < minP) return false;
+        if (!Number.isNaN(maxP) && tourMax > maxP) return false;
       }
 
       return true;

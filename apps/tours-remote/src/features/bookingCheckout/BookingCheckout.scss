@@ -1,0 +1,94 @@
+.booking-checkout-page {
+  min-height: 100vh;
+  padding: clamp(1rem, 2vw, 2rem);
+  background: var(--surface-subtle, #f7faf9);
+  color: var(--text, #14201d);
+}
+
+.booking-checkout-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 1rem;
+}
+
+.booking-checkout-tour {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+
+  img {
+    width: 96px;
+    height: 82px;
+    border-radius: 8px;
+    object-fit: cover;
+  }
+
+  strong,
+  span {
+    display: block;
+  }
+
+  strong {
+    font-size: 1.1rem;
+  }
+
+  span {
+    margin-top: 0.25rem;
+    color: var(--text-muted, #62736e);
+    font-weight: 700;
+  }
+}
+
+.booking-checkout-totals {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+
+  div {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid var(--border, #dde7e3);
+    padding: 0.8rem 0;
+  }
+
+  dt {
+    color: var(--text-muted, #62736e);
+    font-weight: 700;
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 900;
+  }
+}
+
+.booking-checkout-side {
+  align-self: start;
+  display: grid;
+  gap: 0.75rem;
+
+  p {
+    margin: 0;
+    color: var(--text-muted, #62736e);
+    line-height: 1.6;
+  }
+
+  button {
+    width: 100%;
+  }
+
+  button:first-of-type {
+    background: var(--color-primary, #0f766e);
+    border-color: var(--color-primary, #0f766e);
+    color: var(--color-on-primary, #fff);
+  }
+}
+
+@media (max-width: 860px) {
+  .booking-checkout-grid {
+    grid-template-columns: 1fr;
+  }
+}

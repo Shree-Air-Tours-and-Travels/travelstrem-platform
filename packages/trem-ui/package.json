@@ -3,13 +3,16 @@
   "version": "1.0.0",
   "private": true,
   "main": "src/index.js",
-  "dependencies": {
-    "@packages/trem-design-tokens": "workspace:*",
-    "prop-types": "^15.8.1"
+  "dependencies": { "@packages/trem-design-tokens": "workspace:*", "prop-types": "^15.8.1" },
+  "peerDependencies": { "react": "^18.3.1", "react-dom": "^18.3.1", "react-router-dom": "^7.8.2" },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.2.0",
+    "jsdom": "^26.0.0",
+    "vitest": "^3.0.0"
   },
-  "peerDependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^7.8.2"
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
   }
 }

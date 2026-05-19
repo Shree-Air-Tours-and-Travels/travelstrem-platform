@@ -28,7 +28,7 @@ const TOURS_REMOTE_CONFIG = {
 };
 
 export default function FederatedToursApp() {
-    const { headerConfig } = usePortalConfig();
+    const { dispatchEvent, headerConfig, session } = usePortalConfig();
     const remoteConfig = headerConfig?.remotes?.toursTREM || headerConfig?.remotes?.tours || {};
     const remoteUrl = remoteConfig.defaultRemoteUrl || TOURS_REMOTE_URL;
     const fallbackRemoteUrls = React.useMemo(
@@ -39,8 +39,10 @@ export default function FederatedToursApp() {
         () => ({
             ...TOURS_REMOTE_CONFIG.remoteProps,
             ...(remoteConfig.remoteProps || {}),
+            dispatchEvent,
+            userSession: session,
         }),
-        [remoteConfig.remoteProps]
+        [dispatchEvent, remoteConfig.remoteProps, session]
     );
 
     return (

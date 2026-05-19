@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import QuickFiltersView from "./QuickFilters.view";
+import { QuickChips } from "@packages/trem-ui";
 
 export default function QuickFiltersContainer({ widgetData, onQuickFilter }) {
     const filters = widgetData?.data?.filters || widgetData?.structure?.widgets?.[0]?.props?.filters || [];
@@ -11,5 +11,5 @@ export default function QuickFiltersContainer({ widgetData, onQuickFilter }) {
         onQuickFilter?.(id);
     }, [onQuickFilter]);
 
-    return <QuickFiltersView filters={filters} labels={labels} activeId={activeId} onFilterClick={handleClick} />;
+    return <QuickChips filters={filters} labels={labels} activeId={activeId} onClick={handleClick} className="tours-page__quick-filters" />;
 }

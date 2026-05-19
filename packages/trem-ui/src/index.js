@@ -12,7 +12,16 @@ export { default as ProfileActionMenu } from "./components/ProfileActionMenu/Pro
 export { default as Header } from "./layout/Header/Header.jsx";
 export { default as Dropdown } from "./components/Dropdown/Dropdown.jsx";
 export { default as SmoothScroll } from "./components/SmoothScroll/SmoothScroll.jsx";
+export { default as TourCard } from "./components/TourCard/TourCard.jsx";
 export { default as BookingSummaryCard } from "./components/BookingSummaryCard/BookingSummaryCard.jsx";
+export { default as BottomSheet } from "./components/BottomSheet/BottomSheet.jsx";
+export { default as Breadcrumbs } from "./components/Breadcrumbs/Breadcrumbs.jsx";
+export { default as InputField } from "./components/InputField/InputField.jsx";
+export { default as FloatingActionBar } from "./components/FloatingActionBar/FloatingActionBar.jsx";
+export { default as EmptyState } from "./components/EmptyState/EmptyState.jsx";
+export { default as QuickChips } from "./components/QuickChips/QuickChips.jsx";
+
+export { FavoritesProvider, useFavoritesContext } from "./context/FavoritesContext.jsx";
 export {
   typography,
   colors,

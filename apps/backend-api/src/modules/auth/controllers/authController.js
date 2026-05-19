@@ -37,6 +37,29 @@ const signTokenForUser = (user) =>
         { expiresIn: JWT_EXPIRES_IN }
     );
 
+const COOKIE_NAME = IS_PRODUCTION ? "__Host-token" : "token";
+
+const setTokenCookie = (res, token) => {
+    res.cookie(COOKIE_NAME, token, {
+        httpOnly: true,
+        secure: IS_PRODUCTION,
+        sameSite: IS_PRODUCTION ? "strict" : "lax",
+        path: "/",
+        ...(IS_PRODUCTION ? {} : {}),
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+};
+
+const clearTokenCookie = (res) => {
+    res.cookie(COOKIE_NAME, "", {
+        httpOnly: true,
+        secure: IS_PRODUCTION,
+        sameSite: IS_PRODUCTION ? "strict" : "lax",
+        path: "/",
+        maxAge: 0,
+    });
+};
+
 const isPrivilegedRole = (role) => role === "admin" || role === "agent";
 
 const getPrivilegedOtpKey = (email, role) => `${role}:${email}`;
@@ -181,6 +204,7 @@ export const register = async (req, res) => {
         await user.save();
 
         const token = signTokenForUser(user);
+        setTokenCookie(res, token);
         const safeUser = { id: user._id, name: user.name, email: user.email, role: user.role };
         return res.status(201).json({ token, user: safeUser });
     } catch (err) {
@@ -213,6 +237,7 @@ export const login = async (req, res) => {
         }
 
         const token = signTokenForUser(user);
+        setTokenCookie(res, token);
         const safeUser = { id: user._id, name: user.name, email: user.email, role: user.role };
         return res.json({ token, user: safeUser });
     } catch (err) {
@@ -335,6 +360,7 @@ export const resetPassword = async (req, res) => {
         }
 
         const token = signTokenForUser(user);
+        setTokenCookie(res, token);
         const safeUser = { id: user._id, name: user.name, email: user.email, role: user.role };
 
         return res.json({ message: "Password reset successful.", token, user: safeUser });
@@ -344,6 +370,15 @@ export const resetPassword = async (req, res) => {
     }
 };
 
+
+/**
+ * POST /auth/logout
+ * Clears the auth cookie.
+ */
+export const logout = async (req, res) => {
+    clearTokenCookie(res);
+    return res.json({ message: "Logged out successfully." });
+};
 
 /**
  * GET /auth/me

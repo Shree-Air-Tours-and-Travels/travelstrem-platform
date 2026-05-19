@@ -1,5 +1,6 @@
 import React from "react";
 import "./ReviewCard.styles.scss";
+import { Icon } from "@packages/trem-ui";
 
 const ReviewCard = ({ review }) => {
   return (
@@ -8,7 +9,7 @@ const ReviewCard = ({ review }) => {
       <div className="ui-review-card__content">
         <h4 className="ui-review-card__name">{review.name}</h4>
         <p className="ui-review-card__text">{review.review}</p>
-        <span className="ui-review-card__rating">⭐ {review.rating}</span>
+        <span className="ui-review-card__rating"><Icon name="star" size={14} /> {review.rating}</span>
       </div>
     </div>
   );

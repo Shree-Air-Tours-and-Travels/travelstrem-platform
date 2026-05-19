@@ -63,7 +63,7 @@ export default function TopToursContainer({
         (tour) => {
             const ref = getTourRef(tour);
             if (!ref) return;
-            if (user) navigate(getTourDetailsPath(ref), { state: { tour } });
+            if (user) navigate(getTourDetailsPath(ref), { state: { tour, from: { label: "Home", path: "/" } } });
             else navigate(ROUTES.login);
         },
         [navigate, user]

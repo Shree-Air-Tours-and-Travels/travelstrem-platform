@@ -1,0 +1,30 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": { "options": {} },
+    "elements": {
+      "labels": {
+        "serviceHotels": "Hotels",
+        "serviceFlights": "Flights",
+        "serviceTours": "Tours",
+        "serviceCars": "Cars",
+        "serviceCruise": "Cruise"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "ServiceShortcuts",
+          "props": {
+            "items": []
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

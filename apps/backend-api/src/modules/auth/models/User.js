@@ -13,9 +13,10 @@ const userSchema = new mongoose.Schema({
     passwordHash: { type: String, required: true },
     role: {
         type: String,
-        enum: ["member", "agent", "admin"], // updated to match frontend roles
+        enum: ["member", "agent", "admin"],
         default: "member",
     },
+    avatar: { type: String, default: "user" },
     createdAt: { type: Date, default: Date.now },
 
     // 🔹 Forgot/Reset password fields

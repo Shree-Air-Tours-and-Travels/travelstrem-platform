@@ -17,10 +17,8 @@
       "header": {},
       "widgets": [
         {
-          "type": "QuickFilters",
-          "props": {
-            "filters": []
-          }
+          "type": "quickChips",
+          "props": {}
         }
       ],
       "config": {},

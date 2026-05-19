@@ -25,7 +25,7 @@
           "widgetRef": "./widgets/hero-banner.json"
         },
         {
-          "type": "QuickFilters",
+          "type": "quickChips",
           "widgetRef": "./widgets/quick-filters.json"
         },
         {

@@ -1,0 +1,33 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "route": "Route",
+        "distance": "Distance",
+        "km": "km",
+        "startDate": "Start date",
+        "seats": "Seats",
+        "available": "available",
+        "onRequest": "On request",
+        "flexible": "Flexible"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "TourFacts",
+          "props": {}
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

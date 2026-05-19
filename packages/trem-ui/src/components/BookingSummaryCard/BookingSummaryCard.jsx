@@ -82,7 +82,7 @@ export default function BookingSummaryCard({ tour, startDate, endDate, guests = 
                 </div>
 
                 <div style={styles.totalRow}>
-                    <span>Total</span>
+                    <span>Estimate Cost</span>
                     <strong>{formatter.format(Number(total) || 0)}</strong>
                 </div>
 

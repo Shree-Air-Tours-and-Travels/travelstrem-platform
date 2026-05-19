@@ -19,6 +19,14 @@ const canShowItem = (item, session) => {
   return true;
 };
 
+const getUserInitials = (user) => {
+  const source = user?.name || user?.email || "";
+  const parts = source.trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+};
+
 const DEFAULT_CONFIG = {
   brand: { label: "TravelsTREM", homePath: "/" },
   leftSection: { welcome: true, showStatus: true, showNotifications: true },
@@ -26,7 +34,7 @@ const DEFAULT_CONFIG = {
   authActions: { login: { label: "Login", path: "/login" }, logout: { label: "Logout" } },
 };
 
-export default function Header({ headerConfig = DEFAULT_CONFIG, session = null, theme = "light", onToggleTheme, onLogout, onSettings, notificationFetcher, showNotifications, className = "" }) {
+export default function Header({ headerConfig = DEFAULT_CONFIG, session = null, theme = "light", onToggleTheme, onLogout, onSettings, onNavigate, notificationFetcher, showNotifications, className = "" }) {
   const navigate = useNavigate();
   const location = useLocation();
   const user = session?.user || null;
@@ -85,56 +93,116 @@ export default function Header({ headerConfig = DEFAULT_CONFIG, session = null, 
       window.location.assign(item.href);
       return;
     }
-    navigate(getNavPath(item));
-  }, [navigate]);
+    const path = getNavPath(item);
+    if (typeof onNavigate === "function") {
+      onNavigate(item, path);
+      return;
+    }
+    navigate(path);
+  }, [navigate, onNavigate]);
 
-  const NavItem = ({ item, isFirst }) => {
-    if (item.type === "dropdown") {
-      const isDropdownActive = (item.items || []).some((child) => isPathActive(getNavPath(child), activePath));
+  const onPathClick = useCallback((path, label) => {
+    setOpen(false);
+    if (typeof onNavigate === "function") {
+      onNavigate({ path, label }, path);
+      return;
+    }
+    navigate(path);
+  }, [navigate, onNavigate]);
+
+  const runAction = useCallback((handler, fallbackEventName) => {
+    setOpen(false);
+    if (typeof handler === "function") {
+      handler();
+      return;
+    }
+    if (fallbackEventName && typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent(fallbackEventName, { detail: { source: "header-drawer" } }));
+    }
+  }, []);
+
+const NavItem = ({ item, isFirst, drawer, activePath, firstLinkRef, onNavClick, onClose }) => {
+  const [expanded, setExpanded] = useState(false);
+
+  if (item.type === "dropdown") {
+    const isDropdownActive = (item.items || []).some((child) => isPathActive(getNavPath(child), activePath));
+
+    if (drawer) {
+      const isExpanded = expanded || isDropdownActive;
       return (
-        <li key={item.id} className="trem-header__dropdown">
-          <Dropdown
-            isActive={isDropdownActive}
-            hoverable
-            align="left"
-            closeOnSelect
-            trigger={
-              <button className={`trem-header__dropdown-trigger${isDropdownActive ? " is-active" : ""}`} type="button" disabled={item.disabled} onClick={(e) => e.preventDefault()}>
-                {item.label}
-              </button>
-            }
-            items={item.items.map((child) => {
-              const childPath = getNavPath(child);
-              return {
-                key: child.id,
-                label: child.label,
-                disabled: child.disabled,
-                active: isPathActive(childPath, activePath),
-                onClick: () => onNavClick(child),
-              };
-            })}
-          />
+        <li className="trem-header__drawer-dropdown">
+          <button className={`trem-header__drawer-dropdown-trigger${isDropdownActive ? " is-active" : ""}`} type="button" onClick={() => setExpanded((s) => !s)}>
+            {item.label}
+            <Icon name="chevronDown" className={isExpanded ? "is-open" : ""} />
+          </button>
+          {isExpanded && (
+            <ul className="trem-header__drawer-sublist">
+              {item.items.map((child) => {
+                const childPath = getNavPath(child);
+                return (
+                  <li key={child.id}>
+                    {child.disabled ? (
+                      <span className="trem-header__link is-disabled">{child.label}</span>
+                    ) : (
+                      <NavLink to={childPath} className={() => (isPathActive(childPath, activePath) ? "active" : "")} onClick={(event) => { event.preventDefault(); onNavClick(child); }}>
+                        {child.label}
+                      </NavLink>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </li>
       );
     }
+
     return (
-      <li key={item.id}>
-        {item.disabled ? (
-          <span className="trem-header__link is-disabled">{item.label}</span>
-        ) : (
-          <NavLink to={item.path} className={() => (isPathActive(item.path, activePath) ? "active" : "")} onClick={() => setOpen(false)} ref={isFirst ? firstLinkRef : undefined}>
-            {item.label}
-          </NavLink>
-        )}
+      <li className="trem-header__dropdown">
+        <Dropdown
+          isActive={isDropdownActive}
+          hoverable
+          align="left"
+          closeOnSelect
+          trigger={
+            <button className={`trem-header__dropdown-trigger${isDropdownActive ? " is-active" : ""}`} type="button" disabled={item.disabled} onClick={(e) => e.preventDefault()}>
+              {item.label}
+              <Icon name="chevronDown" />
+            </button>
+          }
+          items={item.items.map((child) => {
+            const childPath = getNavPath(child);
+            return {
+              key: child.id,
+              label: child.label,
+              disabled: child.disabled,
+              active: isPathActive(childPath, activePath),
+              onClick: () => onNavClick(child),
+            };
+          })}
+        />
       </li>
     );
-  };
+  }
+
+  return (
+    <li>
+      {item.disabled ? (
+        <span className="trem-header__link is-disabled">{item.label}</span>
+      ) : (
+        <NavLink to={item.path} className={() => (isPathActive(item.path, activePath) ? "active" : "")} onClick={(event) => { event.preventDefault(); onNavClick(item); }} ref={isFirst ? firstLinkRef : undefined}>
+          {item.label}
+        </NavLink>
+      )}
+    </li>
+  );
+};
 
   const renderUserArea = (mobile = false) => {
     if (!user) {
       return (
         <li>
-          <NavLink to={loginAction.path || "/login"} className={({ isActive }) => (isActive ? "active" : "")} onClick={() => setOpen(false)} ref={mobile ? firstLinkRef : undefined}>
+          <NavLink to={loginAction.path || "/login"} className={({ isActive }) => (isActive ? "active" : "")} onClick={(event) => { event.preventDefault(); onPathClick(loginAction.path || "/login", loginAction.label || "Login"); }} ref={mobile ? firstLinkRef : undefined}>
             {loginAction.label || "Login"}
           </NavLink>
         </li>
@@ -147,9 +215,6 @@ export default function Header({ headerConfig = DEFAULT_CONFIG, session = null, 
             <span className="trem-header__user-welcome">Welcome, <strong>{user.name || user.email}</strong></span>
           </li>
         )}
-        {/* {leftSection.showStatus && !mobile && (
-          <li className="trem-header__user"><span className="trem-header__user-welcome">{session?.flags?.role || user.role || "member"}</span></li>
-        )} */}
       </>
     );
   };
@@ -179,28 +244,66 @@ export default function Header({ headerConfig = DEFAULT_CONFIG, session = null, 
     <>
       <header className={`trem-header ${open ? "is-open" : ""} ${className}`.trim()} role="banner">
         <div className="trem-header__container">
-          <button className="trem-header__logo" type="button" onClick={() => navigate(brand.homePath || "/")}>
-            {/* {brand.logoSrc ? <img src={brand.logoSrc} alt={brand.label || "TravelsTREM"} /> : null} */}
+          <button className="trem-header__toggle" type="button" onClick={() => setOpen((s) => !s)} aria-label={open ? "Close menu" : "Open menu"} aria-expanded={open}>
+            <Icon name={open ? "menuClose" : "menuOpen"} />
+          </button>
+          <button className="trem-header__logo" type="button" onClick={() => onPathClick(brand.homePath || "/", brand.label || "TravelsTREM")}>
             <span className="trem-header__brand-text">{brand.label || "TravelsTREM"}</span>
           </button>
           <nav className="trem-header__nav" role="navigation" aria-label="Main navigation">
-            <ul className="trem-header__menu trem-header__menu--start">{navItems.map((item, i) => <NavItem item={item} key={item.id} isFirst={i === 0} />)}</ul>
+            <ul className="trem-header__menu trem-header__menu--start">{navItems.map((item, i) => <NavItem item={item} key={item.id} isFirst={i === 0} activePath={activePath} firstLinkRef={firstLinkRef} onNavClick={onNavClick} onClose={() => setOpen(false)} />)}</ul>
             <ul className="trem-header__menu trem-header__menu--end">{renderUserArea(false)}{renderActions()}</ul>
-            <button aria-label={open ? "Close menu" : "Open menu"} aria-expanded={open} className={`trem-header__toggle ${open ? "is-open" : ""}`} type="button" onClick={() => setOpen((s) => !s)}>
-              {open ? <Icon name="menuClose" /> : <Icon name="menuOpen" />}
-            </button>
+            <div className="trem-header__mobile-actions">
+              {notificationsEnabled && user ? <NotificationBell fetcher={notificationFetcher} variant="sidebar" /> : null}
+            </div>
           </nav>
         </div>
         <div className={`trem-header__overlay ${open ? "is-visible" : ""}`} onClick={() => setOpen(false)} role="button" aria-hidden={!open} tabIndex={-1} />
         <aside className={`trem-header__drawer ${open ? "is-open" : ""}`} aria-hidden={!open} aria-label="Mobile menu" ref={drawerRef}>
-          <div className="trem-header__drawer-header">
-            <button className="trem-header__drawer-close" onClick={() => setOpen(false)} aria-label="Close menu" type="button"><Icon name="menuClose" /></button>
+          <div className="trem-header__drawer-inner">
+            <div className="trem-header__drawer-top">
+              {user ? (
+                <div className="trem-header__drawer-profile">
+                  <span className="trem-header__drawer-avatar">{getUserInitials(user)}</span>
+                  <div className="trem-header__drawer-info">
+                    <strong>{user.name || user.email}</strong>
+                    <small>{user.role || "member"}</small>
+                  </div>
+                </div>
+              ) : (
+                <NavLink to={loginAction.path || "/login"} className="trem-header__drawer-login" onClick={(event) => { event.preventDefault(); onPathClick(loginAction.path || "/login", loginAction.label || "Login"); }}>
+                  <Icon name="user" />
+                  {loginAction.label || "Login"}
+                </NavLink>
+              )}
+              <button className="trem-header__drawer-close" onClick={() => setOpen(false)} aria-label="Close menu" type="button">
+                <Icon name="menuClose" />
+              </button>
+            </div>
+
+            <div className="trem-header__drawer-body">
+              <ul className="trem-header__drawer-menu">
+                {navItems.map((item, i) => <NavItem item={item} key={item.id} isFirst={i === 0} drawer activePath={activePath} firstLinkRef={firstLinkRef} onNavClick={onNavClick} onClose={() => setOpen(false)} />)}
+              </ul>
+            </div>
+
+            <div className="trem-header__drawer-bottom">
+              <button type="button" className="trem-header__drawer-action" onClick={() => runAction(onToggleTheme)}>
+                <Icon name={theme === "dark" ? "sun" : "moon"} />
+                <span>{theme === "dark" ? "Light mode" : "Dark mode"}</span>
+              </button>
+              <button type="button" className="trem-header__drawer-action" onClick={() => runAction(onSettings, "TREM_SETTINGS_REQUESTED")}>
+                <Icon name="settings" />
+                <span>Settings</span>
+              </button>
+              {session?.isAuthenticated && (
+                <button type="button" className="trem-header__drawer-action trem-header__drawer-action--danger" onClick={() => runAction(onLogout)}>
+                  <Icon name="logout" />
+                  <span>{logoutAction.label || "Logout"}</span>
+                </button>
+              )}
+            </div>
           </div>
-          <ul className="trem-header__drawer-menu">
-            <li className="trem-header__drawer-actions">{renderActions(false)}</li>
-            {renderUserArea(true)}
-            {navItems.map((item, i) => <NavItem item={item} key={item.id} isFirst={!user && i === 0} />)}
-          </ul>
         </aside>
       </header>
       <div className="trem-header__spacer" />

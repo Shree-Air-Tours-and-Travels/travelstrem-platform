@@ -4,7 +4,7 @@ import { getCityDisplay, getPriceText } from "../../helper";
 import { WidgetError, WidgetSkeleton } from "../../shared";
 import PricingCardView from "./PricingCard.view";
 
-export default function PricingCardContainer({ tourRef, tour: fallbackTour, onBook, onContact, onShare }) {
+export default function PricingCardContainer({ tourRef, tour: fallbackTour, onBook, onContact, onShare, isFavorited, onFavorite }) {
     const { loading, error, widgetData } = useTourDetailWidget(tourRef, "pricing-card.json");
     const labels = widgetData?.elements?.labels || {};
     const tour = widgetData?.data?.tour || fallbackTour || null;
@@ -23,6 +23,8 @@ export default function PricingCardContainer({ tourRef, tour: fallbackTour, onBo
             onBook={onBook}
             onContact={onContact}
             onShare={onShare}
+            isFavorited={isFavorited}
+            onFavorite={onFavorite}
         />
     );
 }

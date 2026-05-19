@@ -28,7 +28,7 @@
                             "nights": 6
                         },
                         "photos": [
-                            "/tour-images/tour-img05.jpg"
+                            "https://res.cloudinary.com/dofxshf3z/image/upload/v1779131576/tour-img05_wt4bgs.jpg"
                         ],
                         "desc": "this is the description",
                         "price": 99,

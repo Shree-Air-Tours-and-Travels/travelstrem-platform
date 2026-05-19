@@ -1,10 +1,11 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { fetchData, useComponentData } from "@packages/trem-utils";
 import ToursDetailsView, { DetailSkeleton, EmptyState } from "../view/ToursDetails.view";
 import { getRouteIdentityFromPath, slugifyTitle } from "../helper";
+import useFavorites from "../../tours/hooks/useFavorites";
 
-export default function ToursDetailsContainer() {
+export default function ToursDetailsContainer({ dispatchEvent } = {}) {
     const params = useParams();
     const location = useLocation();
     const navigate = useNavigate();
@@ -16,16 +17,35 @@ export default function ToursDetailsContainer() {
     const pageLabels = elements?.labels || {};
 
     const [activeTour, setActiveTour] = useState(location.state?.tour || null);
+    const [breadcrumbRoot, setBreadcrumbRoot] = useState({ label: "Tours", path: "/tours" });
+    const referrer = useMemo(() => location.state?.from || breadcrumbRoot, [location.state?.from, breadcrumbRoot]);
+
+    useEffect(() => {
+        fetchData("/breadcrumb.json")
+            .then((res) => {
+                if (res?.status === "success" && res?.componentData?.root) {
+                    setBreadcrumbRoot(res.componentData.root);
+                }
+            })
+            .catch(() => {});
+    }, []);
     const [contactOpen, setContactOpen] = useState(false);
     const [contactFormData, setContactFormData] = useState(null);
-    const [bookingOpen, setBookingOpen] = useState(false);
+    const [bookConfirmOpen, setBookConfirmOpen] = useState(false);
+    const { isFavorited, toggleFavorite } = useFavorites();
 
     const handleTourLoad = useCallback((tour) => {
         if (!tour?._id) return;
         setActiveTour((current) => (current?._id === tour._id ? current : tour));
     }, []);
 
-    const handleBack = useCallback(() => navigate("/tours"), [navigate]);
+    const handleBack = useCallback(() => {
+        if (typeof dispatchEvent === "function") {
+            dispatchEvent("navigateToTours", { path: referrer.path });
+            return;
+        }
+        navigate(referrer.path);
+    }, [dispatchEvent, navigate, referrer]);
 
     const handleContact = useCallback(async (tour) => {
         const selectedTour = tour || activeTour;
@@ -39,9 +59,26 @@ export default function ToursDetailsContainer() {
     }, [activeTour]);
 
     const handleBook = useCallback((tour) => {
-        if (tour) setActiveTour(tour);
-        setBookingOpen(true);
-    }, []);
+        const selectedTour = tour || activeTour;
+        if (selectedTour) setActiveTour(selectedTour);
+        setBookConfirmOpen(true);
+    }, [activeTour]);
+
+    const handleBookConfirm = useCallback(() => {
+        const selectedTour = activeTour;
+        if (!selectedTour) return;
+        const ref = slugifyTitle(selectedTour?.title) || selectedTour?._id || decodedRef;
+        if (typeof dispatchEvent === "function") {
+            dispatchEvent("navigateToBooking", {
+                tourRef: encodeURIComponent(ref),
+                state: { tour: selectedTour, from: referrer },
+            });
+            return;
+        }
+        navigate(`/tours/${encodeURIComponent(ref)}/book`, { state: { tour: selectedTour, from: referrer } });
+    }, [activeTour, decodedRef, dispatchEvent, navigate, referrer]);
+
+    const handleBookConfirmClose = useCallback(() => setBookConfirmOpen(false), []);
 
     const handleShare = useCallback(async (tour) => {
         const shareUrl = window.location.href;
@@ -74,14 +111,25 @@ export default function ToursDetailsContainer() {
             activeTour={activeTour}
             contactOpen={contactOpen}
             contactFormData={contactFormData}
-            bookingOpen={bookingOpen}
+            bookConfirmOpen={bookConfirmOpen}
+            referrerLabel={referrer.label}
+            breadcrumbItems={[
+                ...(referrer.path !== breadcrumbRoot.path
+                    ? [referrer, breadcrumbRoot]
+                    : [referrer]
+                ),
+                { label: activeTour?.title || pageLabels.pageTitle || slugifyTitle(decodedRef).replace(/-/g, " ") },
+            ]}
             onTourLoad={handleTourLoad}
             onBack={handleBack}
             onBook={handleBook}
+            onBookConfirm={handleBookConfirm}
+            onBookConfirmClose={handleBookConfirmClose}
             onContact={handleContact}
             onShare={handleShare}
+            isFavorited={isFavorited}
+            onFavorite={toggleFavorite}
             setContactOpen={setContactOpen}
-            setBookingOpen={setBookingOpen}
         />
     );
 }

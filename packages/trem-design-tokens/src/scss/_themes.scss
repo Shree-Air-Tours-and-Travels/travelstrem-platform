@@ -37,10 +37,12 @@
   --icon-active: #{$primary-color};
   --muted: #{$text-muted};
   --color-muted: #{$text-muted};
+  --text-muted: #{$text-muted};
   --text-light: #{$text-light};
   --border: #{$border-color};
   --muted-border: #{$border-color};
   --surface-muted: #{$surface-muted};
+  --surface-subtle: #f4f8f7;
   --page-bg: #{$light-bg};
   --overlay: #{$overlay-color};
   --overlay-strong: rgba(17, 17, 17, 0.6);
@@ -113,6 +115,7 @@
   --surface-elevated: #ffffff;
   --surface-inset: #dcecea;
   --surface-muted: #e4f1ef;
+  --surface-subtle: #f4f8f7;
   --page-bg: #f8fbfa;
   --text: #132321;
   --heading: #101918;
@@ -128,6 +131,7 @@
   --icon-active: #07655f;
   --muted: #526260;
   --color-muted: #526260;
+  --text-muted: #526260;
   --text-light: rgba(19, 35, 33, 0.62);
   --border: rgba(19, 35, 33, 0.12);
   --muted-border: rgba(19, 35, 33, 0.1);
@@ -174,10 +178,12 @@
   --heading: #ffffff;
   --muted: rgba(229, 246, 243, 0.74);
   --color-muted: rgba(229, 246, 243, 0.74);
+  --text-muted: rgba(229, 246, 243, 0.74);
   --text-light: rgba(229, 246, 243, 0.58);
   --border: rgba(255, 255, 255, 0.1);
   --muted-border: rgba(255, 255, 255, 0.1);
   --surface-muted: #14302d;
+  --surface-subtle: #0a1918;
   --page-bg: #081312;
   --overlay: rgba(0, 0, 0, 0.68);
   --overlay-strong: rgba(0, 0, 0, 0.78);

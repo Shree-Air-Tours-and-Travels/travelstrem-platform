@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useComponentData, fetchData } from "@packages/trem-utils";
 import ToursPageView from "../view/ToursPage.view";
 import { slugifyTourTitle } from "../helper";
+import useFavorites from "../hooks/useFavorites";
 
-const PAGE_SIZE = 6;
+const PAGE_SIZE = 8;
 const PAGE_KEY = "tours-remote/listing";
 
 const fetchWidget = async (widgetRef) => {
@@ -35,8 +36,9 @@ const getPaginationFromData = (data, fallbackTotal = 0) => {
     };
 };
 
-export default function ToursPageContainer() {
+export default function ToursPageContainer({ dispatchEvent } = {}) {
     const navigate = useNavigate();
+    const { isFavorited, toggleFavorite } = useFavorites();
 
     const { loading: pageLoading, error: pageError, elements, structure } = useComponentData("/tours-page.json", { auto: true });
     const pageLabels = elements?.labels || {};
@@ -72,14 +74,13 @@ export default function ToursPageContainer() {
     const initialError = pageError;
 
     const [displayed, setDisplayed] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
     const [filterMeta, setFilterMeta] = useState({ total: null, filters: {} });
     const [sortId, setSortId] = useState("recommended");
     const [activeFilters, setActiveFilters] = useState({});
     const [pagination, setPagination] = useState(() => getPaginationFromData(initialPagination, 0));
     const [listingLoading, setListingLoading] = useState(false);
     const [listingError, setListingError] = useState(null);
-    const sentinelRef = useRef(null);
-    const listingScrollRef = useRef(null);
     const requestSeq = useRef(0);
 
     const totalResults = pagination?.total ?? displayed.length;
@@ -90,10 +91,11 @@ export default function ToursPageContainer() {
         const nextPagination = getPaginationFromData(widgetsData.listing?.data || {}, tours.length);
         setDisplayed(tours);
         setPagination(nextPagination);
+        setCurrentPage(1);
         setFilterMeta({ total: nextPagination.total, filters: {} });
     }, [widgetsData.listing]);
 
-    const requestTours = useCallback(async ({ filters = activeFilters, sort = sortId, page = 1, append = false, meta = {} } = {}) => {
+    const requestTours = useCallback(async ({ filters = activeFilters, sort = sortId, page = 1, meta = {} } = {}) => {
         const seq = requestSeq.current + 1;
         requestSeq.current = seq;
         setListingLoading(true);
@@ -114,15 +116,16 @@ export default function ToursPageContainer() {
             const data = getResponseData(res);
             const tours = getToursFromResponse(res);
             const nextPagination = getPaginationFromData(data, tours.length);
-            setDisplayed((prev) => (append ? [...prev, ...tours] : tours));
+            setDisplayed(tours);
             setPagination(nextPagination);
+            setCurrentPage(page);
             setFilterMeta({
                 ...meta,
                 filters,
                 total: nextPagination.total,
                 reset: meta.reset ?? false,
             });
-            if (!append && listingScrollRef.current) listingScrollRef.current.scrollTop = 0;
+            if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
             return { tours, data, pagination: nextPagination };
         } catch (err) {
             if (requestSeq.current === seq) setListingError(err?.message || "Failed to load tours");
@@ -132,62 +135,54 @@ export default function ToursPageContainer() {
         }
     }, [activeFilters, sortId]);
 
-    useEffect(() => {
-        const root = listingScrollRef.current;
-        const sentinel = sentinelRef.current;
-        if (!root || !sentinel) return;
-
-        const obs = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting && pagination?.hasMore && !listingLoading) {
-                        requestTours({
-                            page: (pagination.page || 1) + 1,
-                            append: true,
-                            meta: filterMeta,
-                        });
-                    }
-                });
-            },
-            {
-                root,
-                rootMargin: "200px",
-                threshold: 0.1,
-            }
-        );
-
-        obs.observe(sentinel);
-        return () => obs.disconnect();
-    }, [pagination, listingLoading, requestTours, filterMeta, listingScrollRef.current, sentinelRef.current]);
-
     const onView = (tour) => {
         const ref = slugifyTourTitle(tour?.title) || tour?._id || tour?.id;
-        navigate(`/tours/${encodeURIComponent(ref)}`, { state: { tour } });
+        if (typeof dispatchEvent === "function") {
+            dispatchEvent("navigateToTourDetails", {
+                tourRef: encodeURIComponent(ref),
+                state: { tour, from: { label: "Tours", path: "/tours" } },
+            });
+            return;
+        }
+        navigate(`/tours/${encodeURIComponent(ref)}`, { state: { tour, from: { label: "Tours", path: "/tours" } } });
     };
 
     const handleFilterChange = (tours, meta = {}) => {
         const nextFilters = meta.filters || {};
         const dataPagination = meta.pagination || getPaginationFromData(meta, Array.isArray(tours) ? tours.length : 0);
+
+        // On filter-panel reset, preserve quick filter (tags) and re-request
+        if (meta.reset && activeFilters.tags?.length) {
+            nextFilters.tags = activeFilters.tags;
+            requestTours({ filters: nextFilters, page: 1, meta: { ...meta, filters: nextFilters, reset: true } });
+            return;
+        }
+
         setActiveFilters(nextFilters);
         setDisplayed(Array.isArray(tours) ? tours : []);
         setPagination(dataPagination);
+        setCurrentPage(1);
         setFilterMeta({
             ...meta,
             total: dataPagination.total ?? meta.total ?? (Array.isArray(tours) ? tours.length : 0),
             reset: meta.reset ?? false,
         });
-        if (listingScrollRef.current) listingScrollRef.current.scrollTop = 0;
+        if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
     };
+
+    const handlePageChange = useCallback((page) => {
+        requestTours({ page, meta: filterMeta });
+    }, [requestTours, filterMeta]);
 
     const handleQuickFilter = useCallback((filterId) => {
         const filters = filterId === "all" ? {} : { tags: [filterId] };
         setActiveFilters(filters);
-        requestTours({ filters, page: 1, append: false, meta: { quickFilter: filterId, reset: filterId === "all" } });
+        requestTours({ filters, page: 1, meta: { quickFilter: filterId, reset: filterId === "all" } });
     }, [requestTours]);
 
     const handleSortChange = useCallback((nextSortId) => {
         setSortId(nextSortId);
-        requestTours({ sort: nextSortId, page: 1, append: false, meta: filterMeta });
+        requestTours({ sort: nextSortId, page: 1, meta: filterMeta });
     }, [requestTours, filterMeta]);
 
     return (
@@ -204,15 +199,17 @@ export default function ToursPageContainer() {
             filterMeta={filterMeta}
             filterWidgetData={filterWidgetData}
             listingWidgetData={widgetsData.listing}
-            listingScrollRef={listingScrollRef}
-            sentinelRef={sentinelRef}
             onView={onView}
+            isFavorited={isFavorited}
+            onFavorite={toggleFavorite}
             sortId={sortId}
             onSortChange={handleSortChange}
-            hasMore={!!pagination?.hasMore}
-            loadingMore={listingLoading && displayed.length > 0}
+            currentPage={currentPage}
+            totalPages={pagination?.totalPages || 1}
+            loadingMore={listingLoading}
             handleFilterChange={handleFilterChange}
             onQuickFilter={handleQuickFilter}
+            onPageChange={handlePageChange}
         />
     );
 }

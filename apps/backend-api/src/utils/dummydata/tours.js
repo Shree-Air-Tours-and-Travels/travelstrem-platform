@@ -2,14 +2,22 @@
 // Generated list of 10 tour package objects (for frontend seeding / mocks).
 // All fields filled (no nulls). Prices are realistic average ranges (INR) based on marketplace offers in 2025.
 
-const photoPool = (() => {
-    const pool = [];
-    for (let n = 2; n <= 16; n++) {
-        const num = String(n).padStart(2, "0");
-        pool.push(`/tour-images/tour-img${num}.jpg`);
-    }
-    return pool;
-})();
+const CLOUDINARY_BASE = "https://res.cloudinary.com/dofxshf3z/image/upload";
+const CLOUDINARY_URLS = [
+    `${CLOUDINARY_BASE}/v1779131576/tour-img01_tljj0m.jpg`,
+    `${CLOUDINARY_BASE}/v1779131579/tour-img02_gjgdel.jpg`,
+    `${CLOUDINARY_BASE}/v1779131579/tour-img03_fi3oaw.jpg`,
+    `${CLOUDINARY_BASE}/v1779131576/tour-img04_e0pdeh.jpg`,
+    `${CLOUDINARY_BASE}/v1779131576/tour-img05_wt4bgs.jpg`,
+    `${CLOUDINARY_BASE}/v1779131576/tour-img06_vvmms0.jpg`,
+    `${CLOUDINARY_BASE}/v1779131576/tour-img11_b6u8kn.jpg`,
+    `${CLOUDINARY_BASE}/v1779131577/tour-img14_okpafa.jpg`,
+    `${CLOUDINARY_BASE}/v1779131576/tour-img15_vs7fg8.jpg`,
+    `${CLOUDINARY_BASE}/v1779131577/tour-img16_s7rcgo.jpg`,
+    `${CLOUDINARY_BASE}/v1779131577/tour-img17_pmk8ih.jpg`,
+];
+
+const photoPool = CLOUDINARY_URLS;
 
 const shuffle = (arr, seed = 1) => {
     const a = arr.slice();
@@ -49,7 +57,7 @@ const tours = [
         // sample running window (useful for seasonal pricing / fixed departures)
         startDate: "2025-12-01T00:00:00.000Z",
         endDate: "2026-03-31T23:59:59.000Z",
-        photo: "/tour-images/tour-img07.jpg",
+        photo: CLOUDINARY_URLS[0],
         photos: pickPhotos(1),
         desc:
             "Classic Jaipur package with comfortable 3-star/4-star hotel options, guided sightseeing of Amber Fort, City Palace, Jantar Mantar and local bazaars. Ideal for families and first-time visitors.",
@@ -141,7 +149,7 @@ const tours = [
         period: { days: 4, nights: 3 },
         startDate: "2025-10-01T00:00:00.000Z",
         endDate: "2026-03-31T23:59:59.000Z",
-        photo: "/tour-images/tour-img11.jpg",
+        photo: CLOUDINARY_URLS[6],
         photos: pickPhotos(2),
         desc:
             "Relax on sandy beaches, enjoy beach shacks and nightlife; options for water-sports and heritage sightseeing. Hotel choices from budget to 4-star available.",
@@ -240,7 +248,7 @@ const tours = [
         period: { days: 5, nights: 4 },
         startDate: "2025-05-01T00:00:00.000Z",
         endDate: "2025-11-30T23:59:59.000Z",
-        photo: "/tour-images/tour-img09.jpg",
+        photo: CLOUDINARY_URLS[2],
         photos: pickPhotos(3),
         desc:
             "Beginner-friendly Himalayan trek with experienced guides, village homestays and riverside camping. Includes guide, cook and basic camping gear.",
@@ -303,7 +311,7 @@ const tours = [
         period: { days: 2, nights: 1 },
         startDate: "2025-01-01T00:00:00.000Z",
         endDate: "2026-12-31T23:59:59.000Z",
-        photo: "/tour-images/tour-img12.jpg",
+        photo: CLOUDINARY_URLS[3],
         photos: pickPhotos(4),
         desc:
             "Overnight houseboat cruise in Kerala's backwaters with traditional Kerala meals, village views and calm waterways. Suitable for couples and families seeking relaxation.",
@@ -351,7 +359,7 @@ const tours = [
         period: { days: 1, nights: 0 },
         startDate: "2025-01-01T00:00:00.000Z",
         endDate: "2026-12-31T23:59:59.000Z",
-        photo: "/tour-images/tour-img02.jpg",
+        photo: CLOUDINARY_URLS[1],
         photos: pickPhotos(5),
         desc: "Early-morning Taj Mahal visit with private transport, guided tour of Agra Fort and breakfast near Taj — perfect for quick trips from Delhi.",
         price: { min: 2499, max: 4499, currency: "INR", isFinal: true, source: "manual" },
@@ -394,7 +402,7 @@ const tours = [
         period: { days: 3, nights: 2 },
         startDate: "2025-01-01T00:00:00.000Z",
         endDate: "2026-12-31T23:59:59.000Z",
-        photo: "/tour-images/tour-img08.jpg",
+        photo: CLOUDINARY_URLS[5],
         photos: pickPhotos(6),
         desc: "A mix of yoga sessions, Ganga Aarti, guided meditation and optional white-water rafting for adventure seekers. Suitable for solo travellers and groups.",
         price: { min: 7999, max: 11999, currency: "INR", isFinal: false, source: "ai" },
@@ -442,7 +450,7 @@ const tours = [
         period: { days: 2, nights: 1 },
         startDate: "2025-10-01T00:00:00.000Z",
         endDate: "2026-03-31T23:59:59.000Z",
-        photo: "/tour-images/tour-img10.jpg",
+        photo: CLOUDINARY_URLS[4],
         photos: pickPhotos(7),
         desc: "Romantic lakeside city with palaces, boat rides and cultural performances — ideal for couples and photographers.",
         price: { min: 8999, max: 17999, currency: "INR", isFinal: true, source: "agent" },
@@ -489,7 +497,7 @@ const tours = [
         period: { days: 2, nights: 1 },
         startDate: "2025-10-01T00:00:00.000Z",
         endDate: "2026-03-31T23:59:59.000Z",
-        photo: "/tour-images/tour-img13.jpg",
+        photo: CLOUDINARY_URLS[8],
         photos: pickPhotos(8),
         desc: "Charming hill station weekend with colonial walks, toy-train optional ride and easy nature trails — family-friendly.",
         price: { min: 4999, max: 8999, currency: "INR", isFinal: true, source: "manual" },
@@ -530,7 +538,7 @@ const tours = [
         period: { days: 5, nights: 4 },
         startDate: "2025-10-01T00:00:00.000Z",
         endDate: "2026-03-31T23:59:59.000Z",
-        photo: "/tour-images/tour-img14.jpg",
+        photo: CLOUDINARY_URLS[7],
         photos: pickPhotos(9),
         desc: "Island-hopping itinerary with snorkeling, scuba (optional), Radhanagar beach and local island culture. Mid-range to premium resorts available.",
         price: { min: 24999, max: 44999, currency: "INR", isFinal: true, source: "agent" },
@@ -577,7 +585,7 @@ const tours = [
         period: { days: 7, nights: 6 },
         startDate: "2025-05-01T00:00:00.000Z",
         endDate: "2025-09-30T23:59:59.000Z",
-        photo: "/tour-images/tour-img16.jpg",
+        photo: CLOUDINARY_URLS[9],
         photos: pickPhotos(10),
         desc: "Classic Leh-Ladakh roadtrip with Pangong Lake, Nubra Valley, high passes and acclimatisation days. Comfortable stays with local guides.",
         price: { min: 44999, max: 79999, currency: "INR", isFinal: true, source: "agent" },

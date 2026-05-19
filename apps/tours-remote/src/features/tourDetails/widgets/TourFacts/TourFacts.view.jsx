@@ -1,17 +1,28 @@
 import React from "react";
-import { Fact } from "../../shared";
+import { Icon } from "@packages/trem-ui";
 import { formatTourDate, getCityDisplay } from "../../helper";
 
-export default function TourFactsView({ tour }) {
-    if (!tour) return null;
+export default function TourFactsView({ tour, labels = {} }) {
+  if (!tour) return null;
 
-    return (
-        <section className="tour-detail__facts" aria-label="Trip facts">
-            <Fact label="Route" value={getCityDisplay(tour)} />
-            <Fact label="Distance" value={tour.distance ? `${tour.distance} km` : "Flexible"} />
-            <Fact label="Start date" value={formatTourDate(tour.startDate)} />
-            <Fact label="Seats" value={tour.availability?.seatsAvailable != null ? `${tour.availability.seatsAvailable} available` : "On request"} />
-        </section>
-    );
+  const facts = [
+    { icon: "mapPin", label: labels.route || "Route", value: getCityDisplay(tour) },
+    { icon: "mapPin", label: labels.distance || "Distance", value: tour.distance ? `${tour.distance} ${labels.km || "km"}` : labels.flexible || "Flexible" },
+    { icon: "calendar", label: labels.startDate || "Start date", value: formatTourDate(tour.startDate) },
+    { icon: "usersRound", label: labels.seats || "Seats", value: tour.availability?.seatsAvailable != null ? `${tour.availability.seatsAvailable} ${labels.available || "available"}` : labels.onRequest || "On request" },
+  ];
+
+  return (
+    <div className="tour-detail__facts-bar" aria-label={labels.ariaLabel || "Trip facts"}>
+      {facts.map((fact) => (
+        <div key={fact.label} className="tour-detail__fact-card">
+          <Icon name={fact.icon} />
+          <div>
+            <span>{fact.label}</span>
+            <strong>{fact.value}</strong>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 }
-

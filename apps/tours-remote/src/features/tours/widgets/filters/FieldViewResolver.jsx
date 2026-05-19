@@ -1,6 +1,7 @@
 // components/Filters/FieldViewResolver.jsx
 import React from "react";
 import PropTypes from "prop-types";
+import { Dropdown, Icon } from "@packages/trem-ui";
 
 export default function FieldViewResolver({
   name,
@@ -33,7 +34,7 @@ export default function FieldViewResolver({
       } else if (name === "infants") {
         min = 0;
         max = maxGuests.infants;
-      } else if (["minPrice", "maxPrice", "minDays", "maxDays"].includes(name)) {
+      } else if (["minPrice", "maxPrice", "minDays", "maxDays", "groupSize", "rating"].includes(name)) {
         min = 0;
       }
 
@@ -60,39 +61,42 @@ export default function FieldViewResolver({
 
     case "select": {
       const opts = getOptionList(field) || [];
-      const isSimpleStringArray = Array.isArray(opts) && opts.length > 0 && typeof opts[0] === "string";
+      const selectedOption = opts.find((o) => String(o.value) === String(inputValue));
+      const hasAnyOption = opts.some((o) => String(o.value) === "");
+
+      const items = [
+        ...(hasAnyOption ? [] : [{ id: "", label: `Any ${label.toLowerCase()}`, active: inputValue === "" }]),
+        ...opts
+          .filter((o) => String(o.value) !== "")
+          .map((o) => ({
+            id: String(o.value),
+            label: o.label || o,
+            active: String(o.value) === String(inputValue),
+            onClick: () => onInput(name, "select")({ target: { value: o.value || "" } }),
+          })),
+      ];
 
       return (
         <div className="fv-wrapper">
           <label className="filters__label" key={name}>
             <span className="filters__labelText">{label}</span>
-            <select
-              className={`filters__input ${error ? "filters__input--error" : ""}`}
-              value={inputValue}
-              onChange={onInput(name, "select")}
-              aria-invalid={!!error}
-              aria-describedby={describedBy}
-            >
-              {isSimpleStringArray ? (
-                <>
-                  <option value="">{`Any ${label.toLowerCase()}`}</option>
-                  {opts.map((o) => (
-                    <option key={o} value={o}>
-                      {o}
-                    </option>
-                  ))}
-                </>
-              ) : (
-                <>
-                  {!opts.find((o) => String(o.value) === "") && <option value="">{`Any ${label.toLowerCase()}`}</option>}
-                  {opts.map((o) => (
-                    <option key={String(o.value)} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </>
+            <Dropdown
+              hoverable={false}
+              align="left"
+              closeOnSelect={true}
+              items={items}
+              trigger={({ open }) => (
+                <button
+                  className={`filters__input filters__select-trigger ${error ? "filters__input--error" : ""}`}
+                  type="button"
+                  aria-invalid={!!error}
+                  aria-describedby={describedBy}
+                >
+                  <span>{selectedOption ? (selectedOption.label || selectedOption.value || selectedOption) : `Any ${label.toLowerCase()}`}</span>
+                  <Icon name="chevronDown" className={open ? "is-open" : ""} />
+                </button>
               )}
-            </select>
+            />
           </label>
           {error && <div className="filters__fieldError" id={describedBy}>{error}</div>}
         </div>

@@ -27,6 +27,16 @@
       "page": "details",
       "file": "./tours-remote/details/page.json"
     },
+    "tours-remote/booking-summary": {
+      "app": "tours-remote",
+      "page": "booking-summary",
+      "file": "./tours-remote/booking-summary/page.json"
+    },
+    "tours-remote/booking-checkout": {
+      "app": "tours-remote",
+      "page": "booking-checkout",
+      "file": "./tours-remote/booking-checkout/page.json"
+    },
     "admin-shell/dashboard": {
       "app": "admin-shell",
       "page": "dashboard",

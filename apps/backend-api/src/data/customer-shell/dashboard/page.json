@@ -3,29 +3,12 @@
   "component": {
     "data": {},
     "dataScope": {
-      "options": {
-        "statusOptions": [
-          { "label": "All", "value": "" },
-          { "label": "Quote requested", "value": "QUOTE_REQUESTED" },
-          { "label": "Under review", "value": "UNDER_REVIEW" },
-          { "label": "Payment pending", "value": "PAYMENT_PENDING" },
-          { "label": "Confirmed", "value": "CONFIRMED" },
-          { "label": "Cancelled", "value": "CANCELLED" }
-        ]
-      }
+      "options": {}
     },
     "elements": {
       "labels": {
-        "pageTitle": "Your trips, quotes, and payments",
-        "pageDescription": "Track every journey from quote request to final confirmation.",
-        "activeTrips": "Active trips",
-        "awaitingQuote": "Awaiting quote",
-        "paymentPending": "Payment pending",
-        "amountDue": "Amount due",
-        "bookings": "Bookings",
-        "refresh": "Refresh",
-        "emptyTitle": "No bookings found",
-        "emptyDescription": "Your upcoming trips and quote requests will appear here."
+        "pageTitle": "Profile",
+        "pageDescription": "Manage your profile, bookings, and travel activity."
       },
       "urls": {}
     },
@@ -36,11 +19,52 @@
       },
       "widgets": [
         {
-          "type": "dashboard",
-          "source": "shell",
-          "props": {
-            "variant": "customer"
-          }
+          "type": "CustomerDashboardShell",
+          "widgetRef": "./widgets/dashboard-shell.json"
+        },
+        {
+          "type": "DashboardAlert",
+          "widgetRef": "./widgets/booking-alert.json"
+        },
+        {
+          "type": "DashboardMetrics",
+          "widgetRef": "./widgets/metrics.json"
+        },
+        {
+          "type": "RecentBookings",
+          "widgetRef": "./widgets/recent-bookings.json"
+        },
+        {
+          "type": "BookingStatistics",
+          "widgetRef": "./widgets/booking-statistics.json"
+        },
+        {
+          "type": "ServiceShortcuts",
+          "widgetRef": "./widgets/service-shortcuts.json"
+        },
+        {
+          "type": "BookingsChart",
+          "widgetRef": "./widgets/bookings-chart.json"
+        },
+        {
+          "type": "MostBookedServices",
+          "widgetRef": "./widgets/most-booked-services.json"
+        },
+        {
+          "type": "NotificationsPanel",
+          "widgetRef": "./widgets/notifications.json"
+        },
+        {
+          "type": "RecentInvoices",
+          "widgetRef": "./widgets/recent-invoices.json"
+        },
+        {
+          "type": "BookingTable",
+          "widgetRef": "./widgets/booking-table.json"
+        },
+        {
+          "type": "SettingsForm",
+          "widgetRef": "./widgets/settings-form.json"
         }
       ],
       "config": {},

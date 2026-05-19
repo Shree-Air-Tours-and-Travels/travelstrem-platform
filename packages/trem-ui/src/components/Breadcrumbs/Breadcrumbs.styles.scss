@@ -1,0 +1,45 @@
+.trem-breadcrumbs {
+  ol {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    flex-wrap: wrap;
+  }
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.82rem;
+    color: var(--muted);
+
+    a {
+      color: var(--color-primary);
+      text-decoration: none;
+      font-weight: 500;
+      white-space: nowrap;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    span {
+      &:not(.trem-breadcrumbs__sep) {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 200px;
+      }
+    }
+  }
+
+  &__sep {
+    color: var(--border);
+    pointer-events: none;
+    user-select: none;
+  }
+}

@@ -1,21 +1,61 @@
 import React from "react";
-import { FiChevronDown, FiInfo } from "react-icons/fi";
-import { Dropdown } from "@packages/trem-ui";
+import { Dropdown, Icon, TourCard, EmptyState } from "@packages/trem-ui";
 import { TourListSkeleton } from "../../shared";
-import TourCardSecondary from "../../../../shared/ui/cards/TourCards/TourSecondaryCards/TourCardSecondary";
-
-const DEFAULT_SORT_OPTIONS = [
-    { id: "recommended", label: "Recommended" },
-    { id: "price_asc", label: "Price: Low to High" },
-    { id: "price_desc", label: "Price: High to Low" },
-    { id: "duration", label: "Duration" },
-    { id: "rating", label: "Rating" },
-];
 
 const getLabel = (labels = {}, item = {}) => {
     if (item.labelRef && labels[item.labelRef]) return labels[item.labelRef];
     return item.label || item.id;
 };
+
+function Pagination({ currentPage, totalPages, onPageChange }) {
+    if (totalPages <= 1) return null;
+
+    const pages = [];
+    const maxVisible = 5;
+
+    let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let end = Math.min(totalPages, start + maxVisible - 1);
+    if (end - start + 1 < maxVisible) {
+        start = Math.max(1, end - maxVisible + 1);
+    }
+
+    if (start > 1) {
+        pages.push(1);
+        if (start > 2) pages.push("...");
+    }
+    for (let i = start; i <= end; i++) pages.push(i);
+    if (end < totalPages) {
+        if (end < totalPages - 1) pages.push("...");
+        pages.push(totalPages);
+    }
+
+    return (
+        <div className="tours-page__pagination">
+            <button className="tours-page__page-btn" type="button" disabled={currentPage <= 1} onClick={() => onPageChange(currentPage - 1)} aria-label="Previous page">
+                <Icon name="chevronLeft" />
+            </button>
+            {pages.map((p, i) =>
+                p === "..." ? (
+                    <span key={`ellipsis-${i}`} className="tours-page__page-ellipsis">...</span>
+                ) : (
+                    <button
+                        key={p}
+                        type="button"
+                        className={`tours-page__page-btn tours-page__page-num${p === currentPage ? " is-active" : ""}`}
+                        onClick={() => onPageChange(p)}
+                        aria-label={`Page ${p}`}
+                        aria-current={p === currentPage ? "page" : undefined}
+                    >
+                        {p}
+                    </button>
+                )
+            )}
+            <button className="tours-page__page-btn" type="button" disabled={currentPage >= totalPages} onClick={() => onPageChange(currentPage + 1)} aria-label="Next page">
+                <Icon name="chevronRight" />
+            </button>
+        </div>
+    );
+}
 
 export default function ListingView({
     initialLoading,
@@ -26,19 +66,22 @@ export default function ListingView({
     listingWidgetData,
     filteredTours,
     filterMeta,
-    sentinelRef,
     onView,
+    isFavorited,
+    onFavorite,
     sortId = "recommended",
     onSortChange,
-    hasMore,
+    currentPage,
+    totalPages,
     loadingMore,
+    onPageChange,
 }) {
     const listingProps = listingWidgetData?.structure?.widgets?.[0]?.props || {};
-    const sortOptions = listingProps.sortOptions?.length ? listingProps.sortOptions : DEFAULT_SORT_OPTIONS;
+    const sortOptions = listingProps.sortOptions?.length ? listingProps.sortOptions : [];
     const noteLabelRef = listingProps.noteLabelRef || listingProps.sortNoteLabelRef || "sortNote";
-    const sortNote = listingLabels[noteLabelRef] || listingProps.note || listingWidgetData?.data?.note || "Save more with seasonal rates and member-only offers when you plan ahead.";
+    const sortNote = listingLabels[noteLabelRef] || listingProps.note || listingWidgetData?.data?.note || "";
     const sortLabel = listingLabels.sortBy || listingProps.sortLabel || "Sort by";
-    const selectedSort = sortOptions.find((option) => option.id === sortId) || sortOptions[0] || DEFAULT_SORT_OPTIONS[0];
+    const selectedSort = sortOptions.find((option) => option.id === sortId) || sortOptions[0] || { id: sortId, label: sortId };
     const sortItems = sortOptions.map((option) => ({
         id: option.id,
         label: getLabel(listingLabels, option),
@@ -54,13 +97,10 @@ export default function ListingView({
                     {listingLabels.errorPrefix || "Error"}: {initialError}
                 </div>
             )}
-            {!initialLoading && !initialError && displayed.length === 0 && (
-                <div className="tours-page__message">{listingLabels.noToursFound || "No tours found"}</div>
-            )}
             <div className="tours-page__listing-header">
                 <div>
                     <span>{listingLabels.showing || "Showing"} </span>
-                    <strong>{displayed.length} of {totalResults}</strong>
+                    <strong>{displayed.length} {listingLabels.of || "of"} {totalResults}</strong>
                 </div>
                 <div className="tours-page__listing-controls">
                     <label className="tours-page__sort">
@@ -74,29 +114,36 @@ export default function ListingView({
                             trigger={({ open }) => (
                                 <button className="tours-page__sort-trigger" type="button" aria-label={sortLabel}>
                                     <span>{getLabel(listingLabels, selectedSort)}</span>
-                                    <FiChevronDown className={open ? "is-open" : ""} aria-hidden="true" />
+                                    <Icon name="chevronDown" className={open ? "is-open" : ""} />
                                 </button>
                             )}
                         />
                     </label>
                 </div>
             </div>
-            {sortNote ? (
+             {sortNote ? (
                 <div className="tours-page__sort-note">
-                    <FiInfo aria-hidden="true" />
+                                        <Icon name="info" />
                     <span>{sortNote}</span>
                 </div>
             ) : null}
+            {!initialLoading && !initialError && displayed.length === 0 && (
+                <EmptyState
+                    icon="search"
+                    title={listingLabels.noToursFound || "No tours found"}
+                    description="Try adjusting your filters or check back later for new tours."
+                />
+            )}
+           
             <div className="tours-page__list" aria-live="polite">
                 {displayed.map((t) => (
                     <div className="tours-page__card" key={t._id || t.id}>
-                        <TourCardSecondary tour={t} onView={onView} />
+                        <TourCard tour={t} onView={onView} favorited={isFavorited(t)} onFavorite={onFavorite} />
                     </div>
                 ))}
             </div>
             {loadingMore && <div className="tours-page__message">{listingLabels.loadingTours || "Loading tours..."}</div>}
-            {!loadingMore && hasMore && <div className="tours-page__load-hint">{listingLabels.scrollForMore || "Scroll for more tours"}</div>}
-            <div ref={sentinelRef} className="tours-page__sentinel" aria-hidden />
+            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={onPageChange} />
         </>
     );
 }

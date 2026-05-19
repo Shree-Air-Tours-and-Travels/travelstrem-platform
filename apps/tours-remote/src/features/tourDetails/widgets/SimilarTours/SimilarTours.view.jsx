@@ -1,20 +1,19 @@
 import React from "react";
-import { Section } from "../../shared";
+import { TourCard } from "@packages/trem-ui";
 
-export default function SimilarToursView({ labels, tours }) {
-    if (!tours.length) return null;
+export default function SimilarToursView({ labels, tours, onView, isFavorited, onFavorite }) {
+  if (!tours.length) return null;
 
-    return (
-        <Section title={labels.youMayAlsoLike || "You May Also Like"}>
-            <div className="tour-detail__similar-grid">
-                {tours.slice(0, 3).map((tour) => (
-                    <article className="tour-detail__similar-card" key={tour._id || tour.title}>
-                        <h3>{tour.title}</h3>
-                        {tour.desc ? <p>{tour.desc}</p> : null}
-                    </article>
-                ))}
-            </div>
-        </Section>
-    );
+  return (
+    <section className="tour-detail__section">
+      <h2>{labels.youMayAlsoLike || "You May Also Like"}</h2>
+      <div className="tour-detail__section-body">
+        <div className="tour-detail__similar-grid">
+          {tours.slice(0, 4).map((tour) => (
+            <TourCard key={tour._id || tour.title} tour={tour} onView={onView} variant="grid" favorited={isFavorited(tour)} onFavorite={onFavorite} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
 }
-

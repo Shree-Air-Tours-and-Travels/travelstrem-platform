@@ -56,15 +56,10 @@ export const extractToken = (res) => res?.data?.token || res?.token || res?.data
 export const extractSafeUser = (res) =>
   res?.data?.user || res?.data?.data?.user || (res?.data && typeof res.data === "object" && res.data.user) || res?.user || null;
 
+/** @deprecated Tokens are now stored in httpOnly cookies. Kept for backward compat during migration. */
 export const getStoredAuthToken = ({ storage = localStorage } = {}) => {
   if (!storage) return null;
-  const preferredKey = storage.getItem("auth_token_key_name");
-
-  return (
-    (preferredKey && storage.getItem(preferredKey)) ||
-    storage.getItem("auth_token") ||
-    storage.getItem("token")
-  );
+  return storage.getItem("token") || storage.getItem("auth_token");
 };
 
 export const setAuthHeader = (api, token) => {
@@ -91,12 +86,8 @@ export const persistAuthSession = ({
   if (!token) throw new Error("No token from server.");
 
   const safeUser = extractSafeUser(response);
-  const tokenKey = storageKeys.token || "token";
   const rememberKey = storageKeys.rememberEmail || "remember_email";
 
-  storage.setItem(tokenKey, token);
-  storage.setItem("auth_token", token);
-  storage.setItem("auth_token_key_name", tokenKey);
   if (safeUser) storage.setItem("auth_user", JSON.stringify(safeUser));
   setAuthHeader(api, token);
 
@@ -107,8 +98,8 @@ export const persistAuthSession = ({
   return { token, user: safeUser };
 };
 
-export const clearAuthSession = ({ api, storage = localStorage, storageKeys = ["token", "auth_token", "auth_user", "auth_token_key_name"] } = {}) => {
-  storageKeys.forEach((key) => storage.removeItem(key));
+export const clearAuthSession = ({ api, storage = localStorage } = {}) => {
+  ["token", "auth_token", "auth_user", "auth_token_key_name"].forEach((key) => storage?.removeItem(key));
   clearAuthHeader(api);
 };
 

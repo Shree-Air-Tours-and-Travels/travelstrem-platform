@@ -84,15 +84,11 @@
 
   &__body {
     flex: 1 1 auto;
-    min-height: 0;
     display: flex;
     flex-direction: column;
     gap: 0.9rem;
     padding: 1rem;
     background: var(--surface);
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: var(--primary-focus) var(--color-transparent);
   }
 
   .filters-row {
@@ -110,15 +106,17 @@
     min-width: 0;
   }
 
-  &__footer {
-    flex: 0 0 auto;
+  &__actions {
+    position: sticky;
+    top: var(--filters-sticky-top);
+    z-index: 21;
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    padding: 1rem;
+    padding: 0.75rem 1rem;
     background: var(--surface-elevated);
-    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
   }
 
   .filters-actions {
@@ -153,8 +151,8 @@
 
   &.collapsed {
     .filters-card__quick-stats,
-    .filters-card__body,
-    .filters-card__footer {
+    .filters-card__actions,
+    .filters-card__body {
       display: none;
     }
   }
@@ -195,6 +193,54 @@
   &--error {
     border-color: $danger-color;
     box-shadow: 0 0 0 3px var(--danger-soft);
+  }
+}
+
+.filters__select-trigger {
+  @include type-sm();
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid var(--control-border);
+  border-radius: 8px;
+  background: var(--control-bg);
+  color: var(--control-text);
+  padding: 0.65rem 0.75rem;
+  outline: none;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+
+  &:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 4px var(--focus-ring);
+  }
+
+  &--error {
+    border-color: $danger-color;
+    box-shadow: 0 0 0 3px var(--danger-soft);
+  }
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  svg {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    transition: transform 200ms ease;
+
+    &.is-open {
+      transform: rotate(180deg);
+    }
   }
 }
 
@@ -302,6 +348,10 @@
       height: auto;
     }
 
+    &__actions {
+      flex-direction: column;
+    }
+
     &__body {
       max-height: none;
       overflow: visible;
@@ -309,10 +359,6 @@
 
     .filters-row {
       grid-template-columns: 1fr;
-    }
-
-    &__footer {
-      flex-direction: column;
     }
 
     .filters-actions,

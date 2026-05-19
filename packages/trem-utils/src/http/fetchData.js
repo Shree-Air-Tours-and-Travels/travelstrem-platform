@@ -22,41 +22,12 @@ export const setFetchDataApiClient = (api) => {
   apiClient = api || apiClient;
 };
 
-const readTokenFromStorage = () => {
-  try {
-    const configuredKey = localStorage.getItem("auth_token_key_name");
-    if (configuredKey) {
-      const token = localStorage.getItem(configuredKey);
-      if (token) return token;
-    }
-    return localStorage.getItem("token") || localStorage.getItem("auth_token") || null;
-  } catch (err) {
-    return null;
-  }
-};
-
 const readAuthUserFromStorage = () => {
   try {
     const raw = localStorage.getItem("auth_user");
     return raw ? JSON.parse(raw) : null;
   } catch (err) {
     return null;
-  }
-};
-
-const ensureAuthHeader = () => {
-  const token = readTokenFromStorage();
-  if (!token) return;
-  apiClient.defaults.headers = apiClient.defaults.headers || {};
-  apiClient.defaults.headers.common = apiClient.defaults.headers.common || {};
-  apiClient.defaults.headers.common.Authorization = `Bearer ${token}`;
-};
-
-const exposeAuthHeaderForDebug = () => {
-  try {
-    window.__lastFetchAuthHeader = apiClient.defaults?.headers?.common?.Authorization || null;
-  } catch (err) {
-    // no-op outside browser contexts
   }
 };
 
@@ -95,8 +66,6 @@ const attachStoredUser = (method, params, body) => {
 export const fetchData = async (endpoint, options = {}) => {
   const { method = "GET", body = null, headers = {}, params = {} } = options;
   const methodUpper = method.toUpperCase();
-  ensureAuthHeader();
-  exposeAuthHeaderForDebug();
 
   const { finalParams, finalBody } = attachStoredUser(methodUpper, { ...(params || {}) }, body);
 

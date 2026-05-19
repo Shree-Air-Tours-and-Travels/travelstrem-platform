@@ -1,0 +1,47 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": { "options": {} },
+    "elements": {
+      "labels": {},
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "SettingsForm",
+          "props": {
+            "sections": [
+              {
+                "id": "profile",
+                "titleRef": "sectionProfile",
+                "fields": [
+                  { "id": "avatar", "type": "iconPicker", "labelRef": "fieldAvatar" },
+                  { "id": "name", "type": "text", "labelRef": "fieldName", "placeholderRef": "fieldNamePlaceholder" }
+                ]
+              },
+              {
+                "id": "password",
+                "titleRef": "sectionPassword",
+                "fields": [
+                  { "id": "currentPassword", "type": "password", "labelRef": "fieldCurrentPassword", "placeholderRef": "fieldCurrentPasswordPlaceholder" },
+                  { "id": "newPassword", "type": "password", "labelRef": "fieldNewPassword", "placeholderRef": "fieldNewPasswordPlaceholder" },
+                  { "id": "confirmPassword", "type": "password", "labelRef": "fieldConfirmPassword", "placeholderRef": "fieldConfirmPasswordPlaceholder" }
+                ]
+              }
+            ],
+            "submitBtnRef": "btnSave",
+            "submittingBtnRef": "btnUpdating",
+            "toastSuccessRef": "toastProfileSaved",
+            "toastPasswordRef": "toastPasswordSaved",
+            "toastErrorRef": "toastError"
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

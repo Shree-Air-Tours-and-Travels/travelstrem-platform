@@ -1,0 +1,59 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "pageTitle": "Checkout",
+        "bookingSummary": "Booking Summary",
+        "contactAgent": "Contact Agent",
+        "paymentSummary": "Payment Summary",
+        "guestCount": "{count} guest",
+        "guestCountPlural": "{count} guests",
+        "perPerson": "Per Person",
+        "totalCost": "Total Cost",
+        "paid": "Paid",
+        "amountDue": "Amount Due",
+        "checkoutNote": "Checkout opens after the quote is accepted and payment is pending.",
+        "completePayment": "Complete Payment",
+        "sidebarNote": "Your admin-finalized quote is ready. Continue when you are ready to record the payment.",
+        "payNow": "Pay {amount}",
+        "processing": "Processing...",
+        "reviewBooking": "Review Booking",
+        "errorLoad": "Checkout could not load",
+        "backToBooking": "Back to booking",
+        "paymentSuccess": "Payment recorded successfully.",
+        "paymentFailed": "Payment failed",
+        "confirmPayTitle": "Confirm Payment",
+        "confirmPayNote": "This will record a payment of {amount} against your booking.",
+        "confirmPayLabel": "Pay Now",
+        "confirmCancelLabel": "Cancel"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {
+        "titleRef": "pageTitle"
+      },
+      "widgets": [
+        {
+          "type": "BookingCheckoutHero",
+          "widgetRef": "./widgets/checkout-hero.json"
+        },
+        {
+          "type": "BookingCheckoutPaymentSummary",
+          "widgetRef": "./widgets/checkout-payment-summary.json"
+        },
+        {
+          "type": "BookingCheckoutSidebar",
+          "widgetRef": "./widgets/checkout-sidebar.json"
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

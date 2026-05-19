@@ -14,11 +14,11 @@ import AssignmentService from "../services/AssignmentService.js";
 import NotificationService from "../../notifications/services/NotificationService.js";
 
 function sendSuccess(res, dataPayload = {}, message = "OK", opts = {}) {
-    const { title = "", description = "", structure = {}, config = {} } = opts;
+    const { title = "", description = "", structure = {}, config = {}, elements = {} } = opts;
     return res.json({
         status: "success",
         message,
-        componentData: { title, description, data: dataPayload, structure, config },
+        componentData: { title, description, data: dataPayload, structure, config, elements },
     });
 }
 
@@ -491,11 +491,63 @@ export const submitBooking = async (req, res) => {
     }
 };
 
+function sanitizeBookingForCustomer(booking) {
+    if (!booking) return booking;
+    const {
+        user, assignedAgent,
+        idempotencyKey, sourceAttribution,
+        createdBy, updatedBy, organizationId, tenantId,
+        deletedAt, cancelledAt, latestQuoteId,
+        seatsReserved, priority, responseDueAt, quoteDueAt, followupAt,
+        termsAccepted, cancellationPolicyAccepted,
+        auditLogs, documents, assignments,
+        quotes, payments, payment,
+        ...safe
+    } = booking;
+
+    if (safe.tour) {
+        safe.tour = {
+            id: safe.tour.id || safe.tour._id,
+            title: safe.tour.title,
+            photo: safe.tour.photo,
+            photos: safe.tour.photos,
+            desc: safe.tour.desc,
+        };
+    }
+
+    return safe;
+}
+
 export const getBookingById = async (req, res) => {
     try {
         const { booking, error } = await findAuthorizedBooking(req, req.params.id, "view");
         if (error) return sendError(res, error.message, error.status);
-        return sendSuccess(res, await hydrateBooking(booking._id), "Booking fetched.", { title: "Booking" });
+
+        const hydrated = await hydrateBooking(booking._id);
+        const sanitized = sanitizeBookingForCustomer(hydrated);
+        const tourRef = sanitized.tour?.id || "";
+
+        const structure = {
+            actions: [
+                {
+                    name: "viewTour",
+                    type: "navigate",
+                    labelRef: "viewTourLabel",
+                    urlRef: "tourDetailsUrl",
+                },
+            ],
+        };
+
+        const elements = {
+            labels: {
+                viewTourLabel: "View Tour",
+            },
+            urls: {
+                tourDetailsUrl: tourRef ? `/tours/${tourRef}` : "",
+            },
+        };
+
+        return sendSuccess(res, sanitized, "Booking fetched.", { title: "Booking", structure, elements });
     } catch (err) {
         console.error("getBookingById:", err);
         return sendError(res, "Failed to fetch booking", 500);
@@ -515,10 +567,32 @@ export const listBookings = async (req, res) => {
         const qAgentId = normalizeObjectId(req.query?.agentId);
         const qStatus = req.query?.status ? Booking.normalizeStatus(req.query.status) : null;
         const qPaymentStatus = req.query?.paymentStatus ? String(req.query.paymentStatus).toUpperCase() : null;
+        const qSearch = cleanString(req.query?.search || req.query?.q);
+        const qTourType = cleanString(req.query?.tourType);
         if (qTourId) q.tour = qTourId;
         if (qAgentId) q.assignedAgent = qAgentId;
         if (qStatus && BOOKING_STATUSES.includes(qStatus)) q.status = qStatus;
         if (qPaymentStatus && PAYMENT_STATUSES.includes(qPaymentStatus)) q.paymentStatus = qPaymentStatus;
+        if (qSearch) {
+            const searchRegex = new RegExp(qSearch.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+            q.$or = [
+                { bookingRef: searchRegex },
+                { "primaryContact.name": searchRegex },
+                { "primaryContact.email": searchRegex },
+                { status: searchRegex },
+            ];
+        }
+        if (qTourType && qTourType.toLowerCase() !== "all") {
+            const tourTypeRegex = new RegExp(qTourType.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+            const matchingTours = await Tour.find({
+                $or: [
+                    { tags: tourTypeRegex },
+                    { title: tourTypeRegex },
+                    { desc: tourTypeRegex },
+                ],
+            }).select("_id");
+            q.tour = { $in: matchingTours.map((tour) => tour._id) };
+        }
 
         if (authUserId) {
             if (!privileged) q.user = authUserId;
@@ -538,11 +612,23 @@ export const listBookings = async (req, res) => {
         const limit = Number.isFinite(rawLimit) ? Math.max(1, Math.min(200, rawLimit)) : 50;
         const skip = Number.isFinite(rawSkip) ? Math.max(0, rawSkip) : 0;
 
+        const sortKey = String(req.query?.sort || "recommended").toLowerCase();
+        const sortMap = {
+            newest: { createdAt: -1 },
+            oldest: { createdAt: 1 },
+            "price-low": { "paymentSummary.total": 1, createdAt: -1 },
+            "price-high": { "paymentSummary.total": -1, createdAt: -1 },
+            "price: low to high": { "paymentSummary.total": 1, createdAt: -1 },
+            "price: high to low": { "paymentSummary.total": -1, createdAt: -1 },
+            recommended: { createdAt: -1 },
+        };
+        const sort = sortMap[sortKey] || sortMap.recommended;
+
         const bookings = await BookingRepository.find(q)
-            .sort({ createdAt: -1 })
+            .sort(sort)
             .skip(skip)
             .limit(limit)
-            .populate("tour", "title city photo photos price _id")
+            .populate("tour", "title city photo photos price period tags _id")
             .populate("user", "name email role")
             .populate("assignedAgent", "name email role");
         const total = await BookingRepository.countDocuments(q);
@@ -550,7 +636,7 @@ export const listBookings = async (req, res) => {
 
         return sendSuccess(res, hydrated, "Bookings listed.", {
             title: "Bookings",
-            config: { total, skip, limit, filters: { status: qStatus, userId: q.user || null, tourId: qTourId, agentId: qAgentId } },
+            config: { total, skip, limit, filters: { status: qStatus, userId: q.user || null, tourId: qTourId, agentId: qAgentId, search: qSearch, tourType: qTourType, sort: sortKey } },
         });
     } catch (err) {
         console.error("listBookings:", err);

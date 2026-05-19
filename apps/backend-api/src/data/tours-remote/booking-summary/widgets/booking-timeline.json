@@ -1,0 +1,17 @@
+{
+  "status": "success",
+  "component": {
+    "structure": {
+      "widgets": [
+        {
+          "type": "BookingSummaryTimeline",
+          "props": {}
+        }
+      ]
+    },
+    "elements": {
+      "labels": {}
+    },
+    "data": {}
+  }
+}

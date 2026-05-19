@@ -1,9 +1,9 @@
 import React from "react";
+import { EmptyState, GlobalLoader } from "@packages/trem-ui";
 import "./ManageTours.scss";
 import CreateTourForm from "./CreateTourForm";
 import TourCardSecondary from "../../shared/ui/cards/TourCards/TourCardSecondary/TourCardSecondary";
 import TourView from "./TourView";
-import { GlobalLoader } from "@packages/trem-ui";
 import BookingCard from "./BookingCard";
 
 export function ConfirmModal({ open, title = "Confirm", message = "Are you sure?", onCancel, onConfirm }) {
@@ -133,7 +133,11 @@ export default function ManageToursView({
                         {loadingBookings ? (
                             <GlobalLoader visible={loadingBookings} text="Loading bookings..." />
                         ) : bookings.length === 0 ? (
-                            <div style={{ padding: 12 }}>No bookings found.</div>
+                            <EmptyState
+                                icon="calendar"
+                                title="No bookings found"
+                                description="No booking requests yet. They will appear here once customers submit them."
+                            />
                         ) : (
                             <div style={{ display: "grid", gap: 12 }}>
                                 {bookings.map((b) => (

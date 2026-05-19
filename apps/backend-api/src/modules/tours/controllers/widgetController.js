@@ -2,6 +2,11 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import TourRepository from "../repositories/TourRepository.js";
+import BookingRepository from "../../bookings/repositories/BookingRepository.js";
+import TravellerService from "../../bookings/services/TravellerService.js";
+import BookingTimelineService from "../../bookings/services/BookingTimelineService.js";
+import StatusHistoryService from "../../bookings/services/StatusHistoryService.js";
+import QuoteService from "../../bookings/services/QuoteService.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -10,6 +15,9 @@ const DATA_DIR = path.resolve(__dirname, "../../../data");
 const PAGE_DIR_MAP = {
   "tours-remote/listing": "tours-remote/listing",
   "tours-remote/details": "tours-remote/details",
+  "tours-remote/booking": "tours-remote/booking",
+  "tours-remote/booking-summary": "tours-remote/booking-summary",
+  "tours-remote/booking-checkout": "tours-remote/booking-checkout",
 };
 
 const escapeRegExp = (s = "") => String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -94,6 +102,21 @@ const buildPriceInfo = (doc, date = new Date()) => {
     note: "",
   };
 };
+
+function ensurePageContract(widget) {
+  const c = widget.component || {};
+  if (!c.dataScope) c.dataScope = { options: {} };
+  if (!c.dataScope.options) c.dataScope.options = {};
+  if (!c.elements) c.elements = { labels: {}, urls: {} };
+  if (!c.elements.labels) c.elements.labels = {};
+  if (!c.elements.urls) c.elements.urls = {};
+  if (!c.structure) c.structure = {};
+  if (!c.structure.header) c.structure.header = {};
+  if (!c.structure.widgets) c.structure.widgets = [];
+  if (!c.structure.config) c.structure.config = {};
+  if (!c.structure.actions) c.structure.actions = [];
+  return widget;
+}
 
 const normalizeTourForResponse = (tourObj = {}, priceInfo = null) => {
   return {
@@ -202,6 +225,11 @@ export const getWidget = async (req, res) => {
         countryOptions: uniqueOptions(countries),
         tags: uniqueOptions(tags),
         languages: uniqueOptions(languages),
+        featured: [
+          { label: "Any status", value: "" },
+          { label: "Featured only", value: "true" },
+          { label: "Standard tours", value: "false" },
+        ],
         groupSizeRange: numberRange(groupSizes),
         dateRange: {
           earliest: dateValues.length ? new Date(Math.min(...dateValues)).toISOString().slice(0, 10) : "",
@@ -209,26 +237,17 @@ export const getWidget = async (req, res) => {
         },
       };
 
-      const widgetFields = widget.component.structure.widgets?.[0]?.props?.fields || [];
       const resBody = {
         status: "success",
         component: {
           data: { summary },
           dataScope: { options },
           elements: widget.component.elements,
-          structure: {
-            ...widget.component.structure,
-            fields: widgetFields,
-          },
-          config: {
-            options,
-            defaults: widget.component.structure.config?.defaults || {},
-            summary,
-          },
+          structure: widget.component.structure,
         },
       };
 
-      return res.status(200).json(resBody);
+      return res.status(200).json(ensurePageContract(resBody));
     }
 
     if (fileName === "quick-filters.json") {
@@ -248,7 +267,6 @@ export const getWidget = async (req, res) => {
 
       widget.component.data.filters = filters;
       widget.component.elements.labels = labels;
-      widget.component.structure.widgets[0].props.filters = filters;
     }
 
     if (fileName === "tour-grid.json") {
@@ -286,6 +304,9 @@ export const getWidget = async (req, res) => {
           const normalized = normalizeTourForResponse(tourObj, priceInfo);
           switch (fileName) {
             case "tour-overview.json":
+              widget.component.data.tour = normalized;
+              break;
+            case "tour-facts.json":
               widget.component.data.tour = normalized;
               break;
             case "tour-gallery.json":
@@ -344,7 +365,126 @@ export const getWidget = async (req, res) => {
       }
     }
 
-    return res.status(200).json(widget);
+    const isBookingPage = pageKey?.startsWith("tours-remote/booking");
+    if (isBookingPage) {
+      const bookingId = req.params.bookingId || req.query.bookingId;
+      if (bookingId) {
+        const bookingDoc = await BookingRepository.findById(bookingId).populate("tour");
+        if (bookingDoc) {
+          const raw = typeof bookingDoc.toJSON === "function" ? bookingDoc.toJSON() : bookingDoc;
+          const tourRaw = raw.tour || {};
+          const tour = {
+            id: tourRaw.id || tourRaw._id,
+            title: tourRaw.title,
+            photo: tourRaw.photo,
+            photos: Array.isArray(tourRaw.photos) ? tourRaw.photos : [],
+            desc: tourRaw.desc,
+          };
+
+          switch (fileName) {
+            case "booking-hero.json":
+            case "checkout-hero.json":
+              widget.component.data.booking = {
+                id: raw.id,
+                bookingRef: raw.bookingRef,
+                status: raw.status,
+                guestsCount: raw.guestsCount,
+                startDate: raw.startDate || raw.travelWindow?.startDate,
+                endDate: raw.endDate || raw.travelWindow?.endDate,
+                tour,
+              };
+              break;
+            case "booking-tour-details.json": {
+              const quotes = await QuoteService.list(bookingId);
+              const currentQuote = quotes?.[0] || null;
+              widget.component.data.booking = {
+                id: raw.id,
+                bookingRef: raw.bookingRef,
+                status: raw.status,
+                guestsCount: raw.guestsCount,
+                tour,
+                priceSnapshot: raw.priceSnapshot || {},
+                paymentSummary: raw.paymentSummary || {},
+                currentQuote,
+                currentQuoteVersion: raw.currentQuoteVersion || 0,
+                viewTourUrl: `/tours/${tour.id}`,
+              };
+              break;
+            }
+            case "booking-travel-details.json":
+              widget.component.data.booking = {
+                id: raw.id,
+                status: raw.status,
+                travelWindow: raw.travelWindow || { startDate: null, endDate: null },
+                primaryContact: raw.primaryContact || {},
+                tripPreferences: raw.tripPreferences || {},
+                tripSelection: raw.tripSelection || {},
+              };
+              break;
+            case "booking-travelers.json": {
+              const travelers = await TravellerService.list(bookingId);
+              widget.component.data.booking = {
+                id: raw.id,
+                status: raw.status,
+                guestsCount: raw.guestsCount,
+                travelers: (travelers || []).map((t) => ({
+                  id: t.id || t._id,
+                  travellerType: t.travellerType || "adult",
+                  firstName: t.firstName || "",
+                  lastName: t.lastName || "",
+                  email: t.email || "",
+                  phone: t.phone || "",
+                  age: t.age || "",
+                  nationality: t.nationality || "",
+                  passportNumber: t.passportNumber || "",
+                  emergencyContactName: t.emergencyContactName || "",
+                  emergencyContactNumber: t.emergencyContactNumber || "",
+                })),
+              };
+              break;
+            }
+            case "booking-timeline.json": {
+              const [timeline, statusHistory] = await Promise.all([
+                BookingTimelineService.list(bookingId, 8),
+                StatusHistoryService.list(bookingId, 8),
+              ]);
+              widget.component.data.booking = {
+                id: raw.id,
+                timeline: (timeline || []).map((item) => ({
+                  id: item.id || item._id,
+                  action: item.action,
+                  createdAt: item.createdAt,
+                  metadata: item.metadata,
+                })),
+                statusHistory: (statusHistory || []).map((item) => ({
+                  id: item.id || item._id,
+                  from: item.from,
+                  to: item.to,
+                  createdAt: item.createdAt,
+                })),
+              };
+              break;
+            }
+            case "checkout-payment-summary.json":
+            case "checkout-sidebar.json":
+              widget.component.data.booking = {
+                id: raw.id,
+                bookingRef: raw.bookingRef,
+                status: raw.status,
+                guestsCount: raw.guestsCount,
+                tour,
+                priceSnapshot: raw.priceSnapshot || {},
+                paymentSummary: raw.paymentSummary || {},
+              };
+              break;
+            default:
+              break;
+          }
+        }
+      }
+    }
+
+    return res.status(200).json(ensurePageContract(widget));
   } catch (error) {
     console.error("getWidget error:", error);
     return res.status(404).json({
@@ -357,5 +497,10 @@ export const getWidget = async (req, res) => {
 export const getTourDetailsWidget = (req, res) => {
   req.query.pageKey = "tours-remote/details";
   req.query.tourRef = req.params.tourRef;
+  return getWidget(req, res);
+};
+
+export const getBookingWidget = (req, res) => {
+  req.query.bookingId = req.params.id || req.params.bookingId;
   return getWidget(req, res);
 };

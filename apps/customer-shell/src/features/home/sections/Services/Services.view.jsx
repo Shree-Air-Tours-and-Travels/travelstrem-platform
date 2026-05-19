@@ -1,4 +1,5 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import "./Services.styles.scss";
 import { Icon, Title, SubTitle, SmoothScroll } from "@packages/trem-ui";
@@ -437,97 +438,100 @@ const ServiceListView = ({
                 </div>
             </section>
 
-            <AnimatePresence>
-                {selectedService && (
-                    <motion.div
-                        className="ui-service-modal"
-                        onClick={() =>
-                            setSelectedService(null)
-                        }
-                        variants={modalVariants}
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                    >
+            {createPortal(
+                <AnimatePresence>
+                    {selectedService && (
                         <motion.div
-                            className="ui-service-modal__content"
-                            onClick={(e) =>
-                                e.stopPropagation()
+                            className="ui-service-modal"
+                            onClick={() =>
+                                setSelectedService(null)
                             }
-                            variants={contentVariants}
-                            role="dialog"
-                            aria-modal="true"
-                            aria-labelledby="service-modal-title"
+                            variants={modalVariants}
+                            initial="hidden"
+                            animate="visible"
+                            exit="exit"
                         >
-                            {selectedService?.disabled && (
-                                <span className="ui-service-modal__coming-soon">Coming soon</span>
-                            )}
-
-                            <button
-                                className="ui-service-modal__close"
-                                onClick={() =>
-                                    setSelectedService(null)
+                            <motion.div
+                                className="ui-service-modal__content"
+                                onClick={(e) =>
+                                    e.stopPropagation()
                                 }
-                                aria-label="Close modal"
+                                variants={contentVariants}
+                                role="dialog"
+                                aria-modal="true"
+                                aria-labelledby="service-modal-title"
                             >
-                                <Icon name="x" size={20} />
-                            </button>
-
-                            <ServiceModalHero
-                                service={selectedService}
-                                onContactClick={() =>
-                                    setContactService(selectedService)
-                                }
-                            />
-
-                            <div className="ui-service-modal__body">
-                                <div className="ui-service-modal__header">
-                                    {selectedService?.disabled && componentData?.elements?.labels?.servicesNote && (
-                                        <p className="ui-service-modal__note">
-                                            {componentData.elements.labels.servicesNote}
-                                        </p>
-                                    )}
-
-                                    <h3
-                                        className="ui-service-modal__title"
-                                        id="service-modal-title"
-                                    >
-                                        {selectedService.label}
-                                    </h3>
-
-                                    <p className="ui-service-modal__description">
-                                        {selectedService.fullDescription ||
-                                            selectedService.description}
-                                    </p>
-                                </div>
-
-                                {selectedService.features
-                                    ?.length > 0 && (
-                                    <div className="ui-service-modal__features">
-                                        {selectedService.features.map(
-                                            (
-                                                feature,
-                                                index
-                                            ) => (
-                                                <div
-                                                    key={
-                                                        index
-                                                    }
-                                                    className="ui-service-modal__feature"
-                                                >
-                                                    {feature}
-                                                </div>
-                                            )
-                                        )}
-                                    </div>
+                                {selectedService?.disabled && (
+                                    <span className="ui-service-modal__coming-soon">Coming soon</span>
                                 )}
 
-                                <div className="ui-service-modal__section-break" />
-                            </div>
+                                <button
+                                    className="ui-service-modal__close"
+                                    onClick={() =>
+                                        setSelectedService(null)
+                                    }
+                                    aria-label="Close modal"
+                                >
+                                    <Icon name="x" size={20} />
+                                </button>
+
+                                <ServiceModalHero
+                                    service={selectedService}
+                                    onContactClick={() =>
+                                        setContactService(selectedService)
+                                    }
+                                />
+
+                                <div className="ui-service-modal__body">
+                                    <div className="ui-service-modal__header">
+                                        {selectedService?.disabled && componentData?.elements?.labels?.servicesNote && (
+                                            <p className="ui-service-modal__note">
+                                                {componentData.elements.labels.servicesNote}
+                                            </p>
+                                        )}
+
+                                        <h3
+                                            className="ui-service-modal__title"
+                                            id="service-modal-title"
+                                        >
+                                            {selectedService.label}
+                                        </h3>
+
+                                        <p className="ui-service-modal__description">
+                                            {selectedService.fullDescription ||
+                                                selectedService.description}
+                                        </p>
+                                    </div>
+
+                                    {selectedService.features
+                                        ?.length > 0 && (
+                                        <div className="ui-service-modal__features">
+                                            {selectedService.features.map(
+                                                (
+                                                    feature,
+                                                    index
+                                                ) => (
+                                                    <div
+                                                        key={
+                                                            index
+                                                        }
+                                                        className="ui-service-modal__feature"
+                                                    >
+                                                        {feature}
+                                                    </div>
+                                                )
+                                            )}
+                                        </div>
+                                    )}
+
+                                    <div className="ui-service-modal__section-break" />
+                                </div>
+                            </motion.div>
                         </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                    )}
+                </AnimatePresence>,
+                document.body
+            )}
 
             <ContactAgentModal
                 open={Boolean(contactService)}

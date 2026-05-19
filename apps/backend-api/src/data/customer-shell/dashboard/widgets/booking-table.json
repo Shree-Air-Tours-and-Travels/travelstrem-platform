@@ -1,0 +1,50 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {
+        "tourTypeOptions": ["All", "Adventure tourism", "Escorted tour", "Sightseeing tours", "Romantic"],
+        "statusOptions": ["All", "Upcoming", "Pending", "Cancelled", "Completed"],
+        "sortOptions": ["Recommended", "Newest", "Price: Low to High", "Price: High to Low"]
+      }
+    },
+    "elements": {
+      "labels": {
+        "bookingList": "Booking List",
+        "tableSearch": "Search",
+        "tourType": "Tour Type",
+        "status": "Status",
+        "sortBy": "Sort By",
+        "showEntries": "Show entries",
+        "tableSummaryTitle": "Tour",
+        "tableSummarySubtitle": "No of Booking : 0"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "BookingTable",
+          "props": {
+            "titleRef": "bookingList",
+            "searchRef": "tableSearch",
+            "tourTypeRef": "tourType",
+            "statusRef": "status",
+            "sortByRef": "sortBy",
+            "showEntriesRef": "showEntries",
+            "summary": {
+              "titleRef": "tableSummaryTitle",
+              "subtitleRef": "tableSummarySubtitle",
+              "dateRange": ""
+            },
+            "rows": []
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

@@ -41,6 +41,13 @@ export default function registerRoutes(app) {
     });
   });
   app.get("/", (req, res) => res.send(`${config.APP_NAME} API is running`));
+  app.get("/api/breadcrumb.json", (req, res) => res.json({
+    status: "success",
+    message: "OK",
+    componentData: {
+      root: { label: "Tours", path: "/tours" },
+    },
+  }));
 
   app.use(API_ROUTES.AUTH, authRoutes);
   app.use(API_ROUTES.API, portalRoutes);

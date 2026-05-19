@@ -61,6 +61,12 @@
       border-bottom: 1px solid var(--border);
       background: var(--surface);
       font-weight: 800;
+
+      div {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
     }
 
     button {
@@ -76,6 +82,29 @@
       padding: 0.9rem;
       color: var(--muted);
       font-size: 0.88rem;
+    }
+  }
+
+  &__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    border-radius: 6px;
+
+    &:hover {
+      background: var(--surface-inset);
+    }
+
+    svg {
+      width: 20px;
+      height: 20px;
     }
   }
 
@@ -104,4 +133,72 @@
       line-height: 1.4;
     }
   }
+
+  /* Sidebar variant */
+  &--sidebar &__panel--sidebar {
+    display: contents;
+  }
+
+  &__sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 1400;
+    height: 100dvh;
+    width: min(84vw, 380px);
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    box-shadow: var(--shadow-lg);
+    transform: translateX(0);
+    animation: trem-notif-sidebar-in 260ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  &__overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 1399;
+  }
+
+  &__sidebar &__panel {
+    position: static;
+    top: auto;
+    right: auto;
+    width: 100%;
+    max-height: none;
+    overflow: auto;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    z-index: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+
+    header {
+      position: static;
+      padding: 1rem 1.25rem;
+    }
+
+    p {
+      padding: 1.25rem;
+    }
+  }
+
+  &__sidebar &__list {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  &__sidebar article {
+    padding: 1rem 1.25rem;
+  }
+}
+
+@keyframes trem-notif-sidebar-in {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
 }

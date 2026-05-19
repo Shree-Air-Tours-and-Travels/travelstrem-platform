@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { debounce } from "lodash";
 import { getActiveFilterCount, getOptionList, validateAll, fetchData } from "@packages/trem-utils";
 import FiltersView from "./Filters.view";
 
@@ -19,9 +20,9 @@ const extractToursFromResponse = (res) => {
 
 const extractResponseData = (res) => res?.component?.data || res?.componentData?.state?.data || {};
 
-export default function FiltersContainer({ onChange, widgetData, sortId = "recommended", pageSize = 6 }) {
+export default function FiltersContainer({ onChange, widgetData, sortId = "recommended", pageSize = 8 }) {
     const [meta, setMeta] = useState(widgetData || null);
-    const [values, setValues] = useState(() => (widgetData?.config?.defaults ? { ...widgetData.config.defaults } : {}));
+    const [values, setValues] = useState(() => (widgetData?.structure?.config?.defaults ? { ...widgetData.structure.config.defaults } : {}));
     const [errors, setErrors] = useState({});
     const [loadingMeta, setLoadingMeta] = useState(!widgetData);
     const [loadingAction, setLoadingAction] = useState(false);
@@ -32,18 +33,18 @@ export default function FiltersContainer({ onChange, widgetData, sortId = "recom
     useEffect(() => {
         if (widgetData) {
             setMeta(widgetData);
-            setValues(widgetData?.config?.defaults ? { ...widgetData.config.defaults } : {});
+            setValues(widgetData?.structure?.config?.defaults ? { ...widgetData.structure.config.defaults } : {});
             setLoadingMeta(false);
         }
     }, [widgetData]);
 
     const structure = meta?.structure || {};
-    const fieldsArr = Array.isArray(structure.fields) ? structure.fields : [];
+    const fieldsArr = Array.isArray(structure.widgets?.[0]?.props?.fields) ? structure.widgets[0].props.fields : [];
     const actions = Array.isArray(structure.actions) ? structure.actions : [];
     const rows = (structure.layout && structure.layout.rows) || [fieldsArr.map((f) => f.name)];
-    const serverOptions = meta?.config?.options || {};
-    const defaults = meta?.config?.defaults || {};
-    const summary = meta?.config?.summary || meta?.data?.summary || {};
+    const serverOptions = meta?.dataScope?.options || {};
+    const defaults = meta?.structure?.config?.defaults || {};
+    const summary = meta?.data?.summary || {};
     const activeCount = getActiveFilterCount(values, defaults);
 
     const fieldsMap = useMemo(() => {
@@ -53,6 +54,32 @@ export default function FiltersContainer({ onChange, widgetData, sortId = "recom
         });
         return m;
     }, [JSON.stringify(fieldsArr)]);
+
+    const applyAction = useMemo(
+        () => actions.find((act) => act.name === "apply" || act.type === "apply"),
+        [actions]
+    );
+
+    const applyActionRef = useRef(applyAction);
+    applyActionRef.current = applyAction;
+
+    const doApplyRef = useRef(null);
+
+    const debouncedApplyRef = useRef(null);
+
+    useEffect(() => {
+        if (!applyAction?.endpoint) return;
+
+        doApplyRef.current = doApply;
+
+        debouncedApplyRef.current = debounce((payload) => {
+            doApplyRef.current(payload, applyActionRef.current);
+        }, 400);
+
+        return () => {
+            debouncedApplyRef.current?.cancel();
+        };
+    }, [applyAction?.endpoint]);
 
     const onInput = (name, type) => (e) => {
         let val;
@@ -67,13 +94,18 @@ export default function FiltersContainer({ onChange, widgetData, sortId = "recom
             } else val = e;
         } else val = e.target ? e.target.value : e;
 
-        setValues((s) => ({ ...s, [name]: val }));
+        const next = { ...values, [name]: val };
+
+        setValues(next);
         setErrors((prev) => {
             const copy = { ...prev };
             delete copy[name];
             return copy;
         });
         setMessage(null);
+
+        if (!debouncedApplyRef.current) return;
+        debouncedApplyRef.current(next);
     };
 
     const doApply = async (payload, action) => {
@@ -125,7 +157,7 @@ export default function FiltersContainer({ onChange, widgetData, sortId = "recom
     };
 
     const doReset = async (action) => {
-        setValues(meta?.config?.defaults ? { ...meta.config.defaults } : {});
+        setValues(meta?.structure?.config?.defaults ? { ...meta.structure.config.defaults } : {});
         setErrors({});
         setMessage(null);
 
@@ -171,6 +203,7 @@ export default function FiltersContainer({ onChange, widgetData, sortId = "recom
 
     const handleActionClick = async (act) => {
         if (!act) return;
+        debouncedApplyRef.current?.cancel();
         if (act.name === "reset" || act.type === "reset") {
             await doReset(act);
             return;

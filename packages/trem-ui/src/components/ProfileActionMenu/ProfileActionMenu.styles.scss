@@ -123,3 +123,13 @@
     color: var(--color-danger, #cf3434);
   }
 }
+
+.trem-bottom-sheet .profile-action-menu__panel {
+  position: static;
+  width: auto;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 4px 0;
+  z-index: auto;
+}

@@ -1,6 +1,7 @@
 // modules/auth/routes.js
 import express from "express";
 import * as controller from "./controllers/authController.js";
+import * as profileController from "./controllers/profileController.js";
 import authMiddleware from "../../core/auth/authMiddleware.js";
 import { validateLogin, validateRegister } from "./validators/create.validation.js";
  
@@ -54,8 +55,20 @@ router.get("/github", makeOAuthHandler("github"));
 router.get("/apple", makeOAuthHandler("apple"));
 
 /*
+  Logout - clears the auth cookie
+*/
+router.post("/logout", controller.logout);
+
+/*
   Protected route - returns current user info (requires jwtAuth middleware)
 */
 router.get("/me", authMiddleware, controller.getCurrentUser);
+
+/*
+  Profile routes (authenticated)
+*/
+router.get("/profile", authMiddleware, profileController.getProfile);
+router.put("/profile", authMiddleware, profileController.updateProfile);
+router.put("/password", authMiddleware, profileController.updatePassword);
 
 export default router;

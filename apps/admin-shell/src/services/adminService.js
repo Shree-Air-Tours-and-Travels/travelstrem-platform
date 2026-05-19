@@ -5,6 +5,8 @@ function normalizeToursResponse(res) {
         throw new Error(res?.message || "Failed to fetch tours");
     }
 
+    if (Array.isArray(res.component?.data?.tours)) return res.component.data.tours;
+
     const componentData = res.componentData || {};
 
     if (Array.isArray(componentData.data)) return componentData.data;

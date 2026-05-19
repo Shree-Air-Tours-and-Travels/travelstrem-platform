@@ -79,12 +79,12 @@ export default function AdminApp({ embedded = false, session: providedSession = 
 
     const handleLogout = React.useCallback(() => {
         localStorage.removeItem("auth_token");
-        localStorage.removeItem("token");
         localStorage.removeItem("auth_user");
         localStorage.removeItem("auth_token_key_name");
         delete api.defaults.headers.common.Authorization;
         clearUserSessionCache();
         emit("USER_LOGOUT");
+        api.post("/auth/logout").catch(() => {});
         setState({ loading: false, error: null, session: null });
     }, []);
 

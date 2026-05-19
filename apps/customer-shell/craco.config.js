@@ -28,16 +28,10 @@ function extendBabelIncludes(webpackConfig) {
 module.exports = {
     devServer: (devServerConfig) => {
         devServerConfig.proxy = {
-            "/tour-images": {
-                target: toursRemoteTarget,
-                changeOrigin: true,
-                secure: false,
-            },
             "/api": {
                 target: backendTarget,
                 changeOrigin: true,
                 secure: false,
-                ws: false,
             },
         };
         devServerConfig.client = {

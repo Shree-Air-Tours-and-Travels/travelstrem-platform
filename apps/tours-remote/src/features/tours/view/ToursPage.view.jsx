@@ -18,15 +18,17 @@ export default function ToursPageView({
     filterMeta,
     filterWidgetData,
     listingWidgetData,
-    listingScrollRef,
-    sentinelRef,
     onView,
+    isFavorited,
+    onFavorite,
     sortId,
     onSortChange,
-    hasMore,
+    currentPage,
+    totalPages,
     loadingMore,
     handleFilterChange,
     onQuickFilter,
+    onPageChange,
 }) {
     const listingLabels = widgetsData.listing?.elements?.labels || {};
 
@@ -37,18 +39,18 @@ export default function ToursPageView({
                     if (w.type === "HeroBanner") {
                         return <HeroBanner key={w.type} widgetData={widgetsData.HeroBanner} pageTitle={pageTitle} />;
                     }
-                    if (w.type === "QuickFilters") {
-                        return <QuickFilters key={w.type} widgetData={widgetsData.QuickFilters} onQuickFilter={onQuickFilter} />;
+                    if (w.type === "quickChips") {
+                        return <QuickFilters key={w.type} widgetData={widgetsData.quickChips} onQuickFilter={onQuickFilter} />;
                     }
                     if (w.type === "filters") {
                         return (
                             <div key={w.type} className="tours-page__body">
                                 <aside className="tours-page__sidebar">
                                     <div className="tours-page__sidebar-inner">
-                                        <Filters onChange={handleFilterChange} widgetData={filterWidgetData} sortId={sortId} pageSize={6} />
+                                        <Filters onChange={handleFilterChange} widgetData={filterWidgetData} sortId={sortId} pageSize={8} />
                                     </div>
                                 </aside>
-                                <section className="tours-page__listing" ref={listingScrollRef} aria-label="Tours listing">
+                                <section className="tours-page__listing" aria-label="Tours listing">
                                     <Listing
                                         initialLoading={initialLoading}
                                         initialError={initialError}
@@ -58,13 +60,15 @@ export default function ToursPageView({
                                         listingWidgetData={listingWidgetData}
                                         filteredTours={filteredTours}
                                         filterMeta={filterMeta}
-                                        listingScrollRef={listingScrollRef}
-                                        sentinelRef={sentinelRef}
                                         onView={onView}
+                                        isFavorited={isFavorited}
+                                        onFavorite={onFavorite}
                                         sortId={sortId}
                                         onSortChange={onSortChange}
-                                        hasMore={hasMore}
+                                        currentPage={currentPage}
+                                        totalPages={totalPages}
                                         loadingMore={loadingMore}
+                                        onPageChange={onPageChange}
                                     />
                                 </section>
                             </div>

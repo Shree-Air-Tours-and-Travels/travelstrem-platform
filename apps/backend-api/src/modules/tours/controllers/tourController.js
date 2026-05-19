@@ -572,3 +572,47 @@ export const deleteAllTours = async (req, res) => {
         }, req);
     }
 };
+
+/**
+ * GET /tours/:id/price (getTourPricePreview)
+ */
+export const getTourPricePreview = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const dateParam = req.query.date || new Date().toISOString();
+        const guests = Math.max(1, Number(req.query.guests) || 1);
+        const date = new Date(dateParam);
+
+        if (Number.isNaN(date.getTime())) {
+            return res.status(400).json({ status: "error", message: "Invalid date" });
+        }
+
+        const doc = await TourRepository.findById(id);
+        if (!doc) {
+            return res.status(404).json({ status: "error", message: "Tour not found" });
+        }
+
+        const priceInfo = buildPriceInfo(doc, date);
+        const perPerson = priceInfo?.min || 0;
+        const total = perPerson * guests;
+
+        return res.status(200).json({
+            status: "success",
+            componentData: {
+                data: {
+                    priceSnapshot: {
+                        perPerson,
+                        total,
+                        min: priceInfo?.min,
+                        max: priceInfo?.max,
+                        currency: priceInfo?.currency || "INR",
+                        isFinal: !!priceInfo?.isFinal,
+                    },
+                },
+            },
+        });
+    } catch (error) {
+        console.error("getTourPricePreview error:", error);
+        return res.status(500).json({ status: "error", message: "Failed to get price preview" });
+    }
+};

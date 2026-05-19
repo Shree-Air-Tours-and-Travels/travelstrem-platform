@@ -1,1 +1,3 @@
-export { default } from "./Dashboard.container";
+import DashboardPageContainer from "./Dashboard.container";
+
+export default DashboardPageContainer;

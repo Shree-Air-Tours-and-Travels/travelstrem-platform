@@ -1,11 +1,9 @@
-// src/components/ContactAgentModal.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
-import { Title } from "@packages/trem-ui";
-import { SubTitle } from "@packages/trem-ui";
-import { Button } from "@packages/trem-ui";
-import { ContactForm } from "@packages/trem-ui";
+import { Button, ContactForm } from "@packages/trem-ui";
 import { fetchData, validateFields } from "@packages/trem-utils";
+import "./ContactAgentModal.styles.scss";
+
 const defaultFields = [
     { name: "name", label: "Full name", type: "text", required: true, minLength: 2, value: "" },
     { name: "email", label: "Email", type: "email", required: true, value: "" },
@@ -13,10 +11,6 @@ const defaultFields = [
 ];
 
 const ContactAgentModal = ({ open, onClose, tourId, formData }) => {
-    // console.log for quick debug
-    console.log("ContactAgentModal render", { open, tourId, hasFormData: !!formData });
-
-    // fields meta either from parent-provided formData or default
     const fieldsMeta = useMemo(() => (formData?.structure?.fields ?? defaultFields).map((field) => ({
         ...field,
         type: field.name === "email" ? "email" : field.name === "phone" ? "tel" : field.type,
@@ -24,7 +18,6 @@ const ContactAgentModal = ({ open, onClose, tourId, formData }) => {
     })), [formData?.structure?.fields]);
     const submitText = formData?.structure?.submitText ?? "Send Request";
 
-    // build initial form state from fields meta
     const initialForm = useMemo(() => {
         const obj = {};
         fieldsMeta.forEach((f) => { obj[f.name] = f.value ?? ""; });
@@ -36,7 +29,6 @@ const ContactAgentModal = ({ open, onClose, tourId, formData }) => {
     const [msg, setMsg] = useState(null);
     const [submitting, setSubmitting] = useState(false);
 
-    // when fields meta changes (or modal opened with different data), reset form
     useEffect(() => {
         setForm(initialForm);
         setErrors({});
@@ -45,7 +37,6 @@ const ContactAgentModal = ({ open, onClose, tourId, formData }) => {
 
     if (!open) return null;
 
-    // tour info: prefer data provided via formData.data[0], else minimal fallback
     const tour = (formData?.data && formData.data[0]) ? formData.data[0] : { _id: tourId, title: "" };
 
     const fieldsMap = useMemo(() => {
@@ -86,12 +77,9 @@ const ContactAgentModal = ({ open, onClose, tourId, formData }) => {
         };
 
         try {
-            // POST to submit endpoint (controller expects ?form=contact-agent)
             const { status, message } = await fetchData("/submit.json?form=contact-agent", { method: "POST", body: payload });
-            // backend returns: { status, message, componentData }
             if (status === "success") {
                 setMsg({ type: "success", text: message });
-                // optionally clear form and auto-close
                 setTimeout(() => onClose(), 1100);
             } else {
                 setMsg({ type: "error", text: message });
@@ -104,41 +92,57 @@ const ContactAgentModal = ({ open, onClose, tourId, formData }) => {
         }
     };
 
-    console.log("ContactAgentModal render complete", { tour, form, msg, submitting });
+    const priceStr = tour?.price
+        ? (typeof tour.price === "object" ? tour.price?.from ?? tour.price?.amount ?? "" : tour.price)
+        : tour?.priceInfo?.from ?? "";
 
     return (
         <div className="ct-modal-overlay" role="dialog" aria-modal="true">
+            <div className="ct-modal-backdrop" onClick={onClose} />
             <div className="ct-modal-card">
-                <button className="ct-close" onClick={onClose} aria-label="Close">✕</button>
+                <button className="ct-modal-close" onClick={onClose} aria-label="Close">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
 
-                {/* Custom Title & Subtitle */}
-                <Title text={formData?.title} variant="primary" size="medium" />
-                {formData?.description && <SubTitle text={formData.description} variant="primary" size="small" />}
+                <div className="ct-modal-card__body">
+                    <div className="ct-modal-card__header">
+                        <h3 className="ct-modal-card__title">{formData?.title || "Contact Agent"}</h3>
+                        {formData?.description && <p className="ct-modal-card__desc">{formData.description}</p>}
+                    </div>
 
-                <SubTitle text={`(${tour?.title})`} variant="tertiary" size="small" />
+                    {tour?.title && (
+                        <div className="ct-modal-card__tour">
+                            {tour?.image && (
+                                <div className="ct-modal-card__tour-img">
+                                    <img src={tour.image} alt={tour.title} />
+                                </div>
+                            )}
+                            <div className="ct-modal-card__tour-info">
+                                <strong>{tour.title}</strong>
+                                {priceStr && <span className="ct-modal-card__tour-price">{priceStr}</span>}
+                            </div>
+                        </div>
+                    )}
 
-                {/* ContactForm (separate component) */}
-                <ContactForm
-                    fieldsMeta={fieldsMeta}
-                    formValues={form}
-                    onChange={handleChange}
-                    onSubmit={handleSubmit}
-                    onCancel={onClose}
-                    submitting={submitting}
-                    submitText={submitText}
-                    errors={errors}
-                    Button={Button} // pass your Button component so ContactForm can render it
-                />
+                    <ContactForm
+                        fieldsMeta={fieldsMeta}
+                        formValues={form}
+                        onChange={handleChange}
+                        onSubmit={handleSubmit}
+                        onCancel={onClose}
+                        submitting={submitting}
+                        submitText={submitText}
+                        errors={errors}
+                        Button={Button}
+                    />
 
-                {msg && <div style={{ marginTop: 10, color: msg.type === "error" ? "var(--color-danger)" : "var(--color-primary-dark)", fontWeight: 700 }}>{msg.text}</div>}
+                    {msg && (
+                        <div className={`ct-modal-card__msg ct-modal-card__msg--${msg.type}`}>
+                            {msg.text}
+                        </div>
+                    )}
+                </div>
             </div>
-
-            {/* inline styles for isolation — keep as before */}
-            <style jsx>{`
-        .ct-modal-overlay { position:fixed; inset:0; background:var(--overlay); display:flex; align-items:center; justify-content:center; z-index:9999; padding:20px; }
-        .ct-modal-card { background:var(--surface); color:var(--text); padding:20px; width:520px; max-width:96%; max-height:90vh; overflow:auto; border:1px solid var(--border); border-radius:10px; position:relative; box-shadow:var(--shadow-lg); }
-        .ct-close { position:absolute; right:12px; top:10px; border:1px solid var(--border); border-radius:8px; background:var(--surface-inset); color:var(--text); cursor:pointer; font-size:16px; width:34px; height:34px; }
-      `}</style>
         </div>
     );
 };
