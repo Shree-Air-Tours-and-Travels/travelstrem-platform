@@ -1,10 +1,12 @@
 import React from "react";
-import { EmptyState, GlobalLoader } from "@packages/trem-ui";
+import { useNavigate } from "react-router-dom";
+import { EmptyState } from "@packages/trem-ui";
 import "./ManageTours.scss";
 import CreateTourForm from "./CreateTourForm";
 import TourCardSecondary from "../../shared/ui/cards/TourCards/TourCardSecondary/TourCardSecondary";
 import TourView from "./TourView";
 import BookingCard from "./BookingCard";
+import { TourCardSkeleton, BookingCardSkeleton, WidgetError } from "../../shared/Skeleton";
 
 export function ConfirmModal({ open, title = "Confirm", message = "Are you sure?", onCancel, onConfirm }) {
     if (!open) return null;
@@ -30,12 +32,48 @@ export function ConfirmModal({ open, title = "Confirm", message = "Are you sure?
     );
 }
 
+export function Toast({ toast, setToast }) {
+    if (!toast.visible) return null;
+    const bgMap = { success: "#2e7d32", error: "#c62828", info: "#1565c0" };
+    return (
+        <div
+            className="tm-toast"
+            style={{
+                position: "fixed",
+                top: 20,
+                right: 20,
+                zIndex: 9999,
+                background: bgMap[toast.type] || bgMap.info,
+                color: "#fff",
+                padding: "12px 20px",
+                borderRadius: 8,
+                boxShadow: "0 4px 20px rgba(0,0,0,0.25)",
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                fontSize: 14,
+                cursor: "pointer",
+                animation: "tm-toast-in 260ms ease",
+            }}
+            onClick={() => setToast({ message: "", type: "info", visible: false })}
+            role="alert"
+        >
+            <span>{toast.message}</span>
+            <span style={{ fontSize: 18, lineHeight: 1, opacity: 0.8 }}>×</span>
+        </div>
+    );
+}
+
 export default function ManageToursView({
     tab, tours, bookings, loading, loadingBookings, formOpen, viewOpen, editing,
     viewTour, error, auth, setTab, openCreate, openEdit, openView, handleDelete,
     handleDeleteAll, fetchTours, fetchBookings, handleConfirmBooking,
-    handleCancelBooking, handleUpdateTravelers, setFormOpen, setViewOpen, setViewTour
+    handleCancelBooking, handleUpdateTravelers, handleStatusTransition,
+    handleRecordPayment, handleRefund, setFormOpen, setViewOpen, setViewTour,
+    confirmDelete, confirmMessage, handleConfirmDelete, handleCancelDelete,
+    toast, setToast
 }) {
+    const navigate = useNavigate();
     return (
         <div className="mt-root">
             <header className="mt-toolbar">
@@ -63,12 +101,12 @@ export default function ManageToursView({
                         </div>
                     </header>
 
-                    {error && <div className="mt-error">{error}</div>}
+                    {error && <WidgetError message={error} />}
 
                     <div className="mt-content">
                         <section className="mt-grid" aria-live="polite">
                             {loading ? (
-                                <GlobalLoader visible={loading} text={`Loading tours ...`} />
+                                Array.from({ length: 4 }).map((_, i) => <TourCardSkeleton key={i} />)
                             ) : tours.length === 0 ? (
                                 <div className="mt-empty">No tours yet</div>
                             ) : (
@@ -131,7 +169,7 @@ export default function ManageToursView({
 
                     <div className="mt-content">
                         {loadingBookings ? (
-                            <GlobalLoader visible={loadingBookings} text="Loading bookings..." />
+                            Array.from({ length: 4 }).map((_, i) => <BookingCardSkeleton key={i} />)
                         ) : bookings.length === 0 ? (
                             <EmptyState
                                 icon="calendar"
@@ -146,10 +184,13 @@ export default function ManageToursView({
                                         booking={b}
                                         role={auth.role}
                                         onCancel={() => handleCancelBooking(b.id || b._id)}
-                                        onConfirm={(finalPriceData) => handleConfirmBooking(b.id || b._id, finalPriceData)}
+                                        onGenerateQuote={(id, data) => handleConfirmBooking(id, data)}
+                                        onStatusTransition={(id, status) => handleStatusTransition(id, status)}
+                                        onRecordPayment={(id, amount, currency) => handleRecordPayment(id, amount, currency)}
+                                        onRefund={(id, amount, currency) => handleRefund(id, amount, currency)}
                                         onUpdateTravelers={(travelers) => handleUpdateTravelers(b.id || b._id, travelers)}
                                         onOpen={() => {
-                                            window.location.href = `/bookings/${b.id || b._id}`;
+                                            navigate(`/bookings/${b.id || b._id}`);
                                         }}
                                     />
                                 ))}
@@ -159,7 +200,13 @@ export default function ManageToursView({
                 </>
             )}
 
-            <ConfirmModal open={false} />
+            <Toast toast={toast} setToast={setToast} />
+            <ConfirmModal
+                open={confirmDelete !== null}
+                message={confirmMessage}
+                onCancel={handleCancelDelete}
+                onConfirm={handleConfirmDelete}
+            />
         </div>
     );
 }

@@ -409,3 +409,170 @@
     }
   }
 }
+
+.booking-summary-agent {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 1rem;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-primary, #0f766e) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary, #0f766e) 20%, transparent);
+  font-size: 0.88rem;
+  color: var(--text-muted, #62736e);
+
+  svg {
+    color: var(--color-primary, #0f766e);
+    flex-shrink: 0;
+  }
+
+  strong {
+    color: var(--text, #14201d);
+  }
+}
+
+.booking-summary-progress {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 1rem 1.2rem;
+  border-radius: 8px;
+  background: var(--surface, #fff);
+  border: 1px solid var(--border, #dde7e3);
+  overflow-x: auto;
+}
+
+.booking-summary-progress__step {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.booking-summary-progress__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--border, #dde7e3);
+  transition: background 0.3s ease;
+}
+
+.booking-summary-progress__step.is-complete .booking-summary-progress__dot {
+  background: var(--color-success, #0f8f68);
+}
+
+.booking-summary-progress__step.is-current .booking-summary-progress__dot {
+  background: var(--color-primary, #0f766e);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary, #0f766e) 25%, transparent);
+}
+
+.booking-summary-progress__step.is-cancelled .booking-summary-progress__dot {
+  background: var(--color-danger, #c5392f);
+}
+
+.booking-summary-progress__step.is-rejected .booking-summary-progress__dot {
+  background: var(--color-warning, #d97706);
+}
+
+.booking-summary-progress__label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-muted, #62736e);
+  white-space: nowrap;
+}
+
+.booking-summary-progress__step.is-complete .booking-summary-progress__label {
+  color: var(--color-success, #0f8f68);
+}
+
+.booking-summary-progress__step.is-current .booking-summary-progress__label {
+  color: var(--color-primary, #0f766e);
+}
+
+.booking-summary-progress__step.is-cancelled .booking-summary-progress__label {
+  color: var(--color-danger, #c5392f);
+}
+
+.booking-summary-progress__step.is-rejected .booking-summary-progress__label {
+  color: var(--color-warning, #d97706);
+}
+
+.booking-summary-progress__line {
+  width: 32px;
+  height: 2px;
+  margin: 0 0.5rem;
+  background: var(--border, #dde7e3);
+  flex-shrink: 0;
+}
+
+.booking-summary-progress__step.is-complete + .booking-summary-progress__step .booking-summary-progress__line,
+.booking-summary-progress__step.is-complete .booking-summary-progress__line {
+  background: var(--color-success, #0f8f68);
+}
+
+.booking-summary-card__downloads {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.8rem;
+}
+
+.booking-summary-card__downloads button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 32px;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--border, #dde7e3);
+  border-radius: 6px;
+  background: var(--surface, #fff);
+  color: var(--color-primary, #0f766e);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.booking-summary-card__downloads button:hover {
+  background: color-mix(in srgb, var(--color-primary, #0f766e) 8%, transparent);
+}
+
+.booking-cancel-info {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.booking-cancel-info__details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+.booking-cancel-info__details > div {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 6px;
+  background: var(--surface-subtle, #f7faf9);
+  border: 1px solid var(--border, #dde7e3);
+}
+
+.booking-cancel-info__details > div span {
+  font-size: 0.82rem;
+  color: var(--text-muted, #62736e);
+}
+
+.booking-cancel-info__policy {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--color-warning, #d97706) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-warning, #d97706) 20%, transparent);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.booking-cancel-info__policy strong {
+  font-size: 0.88rem;
+}

@@ -1,5 +1,10 @@
 @import "@packages/trem-ui/styles/base/typography";
 
+@keyframes sk-pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.8; }
+}
+
 * {
     box-sizing: border-box;
 }

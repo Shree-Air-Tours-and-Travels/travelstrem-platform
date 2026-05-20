@@ -57,7 +57,7 @@ export default function BookingCheckoutPage({ dispatchEvent } = {}) {
 
       const widgets = [heroRes, paymentRes, sidebarRes];
       for (const w of widgets) {
-        if (!w || w.status !== "success") throw new Error(w?.message || "Failed to load checkout");
+        if (!w || w.status !== "success") throw new Error(w?.message || pageLabels.loadWidgetsError || "Failed to load checkout");
       }
 
       const hero = heroRes.component?.data?.booking || {};
@@ -193,7 +193,20 @@ export default function BookingCheckoutPage({ dispatchEvent } = {}) {
               <div><dt>{t("paid", "Paid")}</dt><dd>{price.formattedPaid}</dd></div>
               <div><dt>{t("amountDue", "Amount Due")}</dt><dd>{price.formattedRemaining}</dd></div>
             </dl>
-            {!canPay ? (
+            {!canPay && price.paid > 0 && price.remaining <= 0 ? (
+              <div className="booking-checkout-paid-msg">
+                <h3>✓ Payment Complete</h3>
+                <p>Your payment of <strong>{price.formattedPaid}</strong> has been recorded. Here is what happens next:</p>
+                <ol>
+                  <li><strong>Admin Confirmation</strong> — An admin will review and confirm your booking.</li>
+                  <li><strong>Ticketing</strong> — Once confirmed, tickets will be issued for your tour.</li>
+                  <li><strong>Travel Ready</strong> — You will receive your booking pass with all details.</li>
+                  <li><strong>Enjoy your tour!</strong></li>
+                </ol>
+                <p>You can track your booking status from the <button type="button" className="is-link" onClick={goToSummary}>Booking Summary</button> page at any time.</p>
+              </div>
+            ) : null}
+            {!canPay && price.paid <= 0 ? (
               <p className="booking-summary-card__note">
                 {t("checkoutNote", "Checkout opens after the quote is accepted and payment is pending.")}
               </p>

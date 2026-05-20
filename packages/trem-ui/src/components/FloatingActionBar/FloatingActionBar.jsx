@@ -9,7 +9,7 @@ function isMobile() {
   return typeof window !== "undefined" && window.innerWidth <= MOBILE_BP;
 }
 
-export default function FloatingActionBar({
+const FloatingActionBar = React.memo(function FloatingActionBar({
   actions = [],
   align = "stretch",
   error,
@@ -114,4 +114,6 @@ export default function FloatingActionBar({
       )}
     </>
   );
-}
+});
+
+export default FloatingActionBar;

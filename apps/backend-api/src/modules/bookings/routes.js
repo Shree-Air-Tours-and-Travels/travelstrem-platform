@@ -13,6 +13,7 @@ import {
     listBookings,
     confirmBooking,
     cancelBooking,
+    getCancelInfo,
     updateBooking,
     addTraveler,
     removeTraveler,
@@ -26,6 +27,7 @@ import {
     uploadBookingDocument,
 } from "./controllers/bookingController.js";
 import { getBookingWidget } from "../tours/controllers/widgetController.js";
+import { downloadQuote, downloadInvoice, downloadBookingPass } from "./controllers/documentController.js";
 
 const router = express.Router();
 
@@ -51,6 +53,7 @@ router.put("/:bookingId/travellers/:travellerId", updateBooking);
 router.put("/:bookingId/travelers/:travelerId", updateBooking);
 router.post("/:bookingId/submit", submitBooking);
 router.post("/:bookingId/cancel", cancelBooking);
+router.get("/:bookingId/cancel-info", getCancelInfo);
 router.post("/:bookingId/accept-quote", acceptQuote);
 router.post("/:bookingId/reject-quote", rejectQuote);
 router.post("/:bookingId/payment", recordPayment);
@@ -62,6 +65,11 @@ router.put("/:bookingId", updateBooking);
 router.patch("/:bookingId", updateBooking);
 router.delete("/:bookingId/travelers/:travelerId", removeTraveler);
 router.delete("/:bookingId/travellers/:travelerId", removeTraveler);
+
+// DOCUMENT DOWNLOADS
+router.get("/:bookingId/downloads/quote", downloadQuote);
+router.get("/:bookingId/downloads/invoice", downloadInvoice);
+router.get("/:bookingId/downloads/voucher", downloadBookingPass);
 
 // LEGACY / SHORT ADMIN ACTIONS USED BY EXISTING UI
 router.post("/:bookingId/confirm", confirmBooking);

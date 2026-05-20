@@ -312,45 +312,46 @@ export default function BookingModal({ open = false, onClose = () => { }, tour }
 
     if (!isOpen) return null;
 
-    const theme = "#1c7578";
-    const fieldError = (name) => fieldErrors[name] ? <div style={styles.fieldError}>{fieldErrors[name]}</div> : null;
-    const inputStyle = (name, extra = {}) => ({ ...styles.input, ...(fieldErrors[name] ? styles.inputError : {}), ...extra });
+    const fieldError = (name) => fieldErrors[name] ? <div className="bm-field-error">{fieldErrors[name]}</div> : null;
+    const inputClass = (name) => `bm-input${fieldErrors[name] ? " bm-input--error" : ""}`;
 
     return (
-        <div style={styles.overlay} role="dialog" aria-modal="true" aria-label={`Booking - ${tour?.title || ""}`}>
-            <div style={styles.modal}>
-                <header style={styles.header}>
+        <div className="bm-overlay" role="dialog" aria-modal="true" aria-label={`Booking - ${tour?.title || ""}`}>
+            <div className="bm-root">
+                <header className="bm-header">
                     <div>
-                        <h3 style={styles.title}>Reserve - {tour?.title}</h3>
-                        <p style={styles.sub}>Quick reservation · {tour?.city?.from || "Flexible"} → {tour?.city?.to || "Route"}</p>
+                        <h3 className="bm-title">Reserve - {tour?.title}</h3>
+                        <p className="bm-sub">Quick reservation · {tour?.city?.from || "Flexible"} → {tour?.city?.to || "Route"}</p>
                     </div>
-                    <button style={styles.closeBtn} onClick={closeModal} aria-label="Close reservation">×</button>
+                    <button className="bm-close" onClick={closeModal} aria-label="Close reservation">×</button>
                 </header>
 
-                <div style={styles.body}>
-                    <div style={styles.left}>
-                        <div style={styles.stepsRow} aria-label="Booking steps">
-                            {[1, 2, 3].map((item) => <div key={item} style={styles.stepDot(step === item)}>{item}</div>)}
+                <div className="bm-body">
+                    <div className="bm-body__left">
+                        <div className="bm-steps" aria-label="Booking steps">
+                            {[1, 2, 3].map((item) => (
+                                <div key={item} className={`bm-step${step === item ? " bm-step--active" : ""}`}>{item}</div>
+                            ))}
                         </div>
 
-                        {error && <div style={styles.error}>{error}</div>}
+                        {error && <div className="bm-error">{error}</div>}
 
                         {step === 1 && (
-                            <section style={styles.panel}>
-                                <label style={styles.label}>Start date</label>
-                                <input style={inputStyle("startDate")} type="date" value={startDate} onChange={(e) => { setStartDate(e.target.value); clearFieldError("startDate"); }} />
+                            <section className="bm-panel">
+                                <label className="bm-label">Start date</label>
+                                <input className={inputClass("startDate")} type="date" value={startDate} onChange={(e) => { setStartDate(e.target.value); clearFieldError("startDate"); }} />
                                 {fieldError("startDate")}
 
-                                <label style={styles.label}>End date</label>
-                                <input style={inputStyle("endDate")} type="date" value={endDate} onChange={(e) => { setEndDate(e.target.value); clearFieldError("endDate"); }} />
+                                <label className="bm-label">End date</label>
+                                <input className={inputClass("endDate")} type="date" value={endDate} onChange={(e) => { setEndDate(e.target.value); clearFieldError("endDate"); }} />
                                 {fieldError("endDate")}
 
-                                <label style={styles.label}>Guests</label>
-                                <div style={styles.guestRow}>
-                                    <button style={{ ...styles.qtyBtn, color: theme }} onClick={() => setGuests((value) => Math.max(1, Number(value) - 1))} aria-label="Decrease guests" type="button">-</button>
-                                    <div style={styles.guestCount}>{guests}</div>
-                                    <button style={{ ...styles.qtyBtn, color: theme }} onClick={() => { setGuests((value) => Number(value) + 1); clearFieldError("guests"); }} aria-label="Increase guests" type="button">+</button>
-                                    <div style={styles.note}>
+                                <label className="bm-label">Guests</label>
+                                <div className="bm-guest-row">
+                                    <button className="bm-qty" onClick={() => setGuests((value) => Math.max(1, Number(value) - 1))} aria-label="Decrease guests" type="button">-</button>
+                                    <div className="bm-qty-num">{guests}</div>
+                                    <button className="bm-qty" onClick={() => { setGuests((value) => Number(value) + 1); clearFieldError("guests"); }} aria-label="Increase guests" type="button">+</button>
+                                    <div className="bm-note">
                                         {tour?.maxGroupSize ? `${tour.maxGroupSize} max` : "Flexible group size"}
                                         {tour?.availability?.seatsAvailable != null && ` · ${tour.availability.seatsAvailable} seats available`}
                                     </div>
@@ -360,33 +361,33 @@ export default function BookingModal({ open = false, onClose = () => { }, tour }
                         )}
 
                         {step === 2 && (
-                            <section style={styles.panel}>
-                                <p style={styles.note}>Traveler details are required before you continue. More guests keep this area scrollable instead of expanding the modal.</p>
+                            <section className="bm-panel">
+                                <p className="bm-note">Traveler details are required before you continue. More guests keep this area scrollable instead of expanding the modal.</p>
 
-                                <div style={styles.contactGrid}>
-                                    <label style={styles.label}>Contact email</label>
-                                    <input style={inputStyle("contactEmail")} type="email" value={contactEmail} onChange={(e) => { setContactEmail(e.target.value); clearFieldError("contactEmail"); }} />
+                                <div className="bm-contact-grid">
+                                    <label className="bm-label">Contact email</label>
+                                    <input className={inputClass("contactEmail")} type="email" value={contactEmail} onChange={(e) => { setContactEmail(e.target.value); clearFieldError("contactEmail"); }} />
                                     {fieldError("contactEmail")}
 
-                                    <label style={styles.label}>Contact phone</label>
-                                    <input style={inputStyle("contactPhone")} type="tel" value={contactPhone} onChange={(e) => { setContactPhone(e.target.value); clearFieldError("contactPhone"); }} />
+                                    <label className="bm-label">Contact phone</label>
+                                    <input className={inputClass("contactPhone")} type="tel" value={contactPhone} onChange={(e) => { setContactPhone(e.target.value); clearFieldError("contactPhone"); }} />
                                     {fieldError("contactPhone")}
                                 </div>
 
-                                <div style={styles.trList}>
+                                <div className="bm-tr-list">
                                     {travelers.map((traveler, index) => (
-                                        <div key={index} style={styles.travelerCard}>
-                                            <strong style={styles.travelerTitle}>Traveler {index + 1}</strong>
-                                            <div style={styles.fieldGrid}>
+                                        <div key={index} className="bm-traveler-card">
+                                            <strong className="bm-traveler-title">Traveler {index + 1}</strong>
+                                            <div className="bm-field-grid">
                                                 <div>
-                                                    <select style={inputStyle(`travelers.${index}.travellerType`)} value={traveler.travellerType} onChange={(e) => updateTraveler(index, "travellerType", e.target.value)}>
+                                                    <select className={inputClass(`travelers.${index}.travellerType`)} value={traveler.travellerType} onChange={(e) => updateTraveler(index, "travellerType", e.target.value)}>
                                                         <option value="adult">Adult</option>
                                                         <option value="child">Child</option>
                                                         <option value="infant">Infant</option>
                                                     </select>
                                                 </div>
                                                 <div>
-                                                    <select style={inputStyle(`travelers.${index}.title`)} value={traveler.title} onChange={(e) => updateTraveler(index, "title", e.target.value)}>
+                                                    <select className={inputClass(`travelers.${index}.title`)} value={traveler.title} onChange={(e) => updateTraveler(index, "title", e.target.value)}>
                                                         <option value="">Title</option>
                                                         <option value="Mr">Mr</option>
                                                         <option value="Ms">Ms</option>
@@ -395,15 +396,15 @@ export default function BookingModal({ open = false, onClose = () => { }, tour }
                                                     </select>
                                                 </div>
                                                 <div>
-                                                    <input style={inputStyle(`travelers.${index}.firstName`)} placeholder="First name" value={traveler.firstName} onChange={(e) => updateTraveler(index, "firstName", e.target.value)} />
+                                                    <input className={inputClass(`travelers.${index}.firstName`)} placeholder="First name" value={traveler.firstName} onChange={(e) => updateTraveler(index, "firstName", e.target.value)} />
                                                     {fieldError(`travelers.${index}.firstName`)}
                                                 </div>
                                                 <div>
-                                                    <input style={inputStyle(`travelers.${index}.lastName`)} placeholder="Last name" value={traveler.lastName} onChange={(e) => updateTraveler(index, "lastName", e.target.value)} />
+                                                    <input className={inputClass(`travelers.${index}.lastName`)} placeholder="Last name" value={traveler.lastName} onChange={(e) => updateTraveler(index, "lastName", e.target.value)} />
                                                     {fieldError(`travelers.${index}.lastName`)}
                                                 </div>
                                                 <div>
-                                                    <select style={inputStyle(`travelers.${index}.gender`)} value={traveler.gender} onChange={(e) => updateTraveler(index, "gender", e.target.value)}>
+                                                    <select className={inputClass(`travelers.${index}.gender`)} value={traveler.gender} onChange={(e) => updateTraveler(index, "gender", e.target.value)}>
                                                         <option value="">Gender</option>
                                                         <option value="male">Male</option>
                                                         <option value="female">Female</option>
@@ -412,57 +413,57 @@ export default function BookingModal({ open = false, onClose = () => { }, tour }
                                                     </select>
                                                 </div>
                                                 <div>
-                                                    <input style={inputStyle(`travelers.${index}.dob`)} type="date" placeholder="DOB" value={traveler.dob} onChange={(e) => updateTraveler(index, "dob", e.target.value)} />
+                                                    <input className={inputClass(`travelers.${index}.dob`)} type="date" placeholder="DOB" value={traveler.dob} onChange={(e) => updateTraveler(index, "dob", e.target.value)} />
                                                 </div>
                                                 <div>
-                                                    <input style={inputStyle(`travelers.${index}.email`)} placeholder="Email" value={traveler.email} onChange={(e) => updateTraveler(index, "email", e.target.value)} />
+                                                    <input className={inputClass(`travelers.${index}.email`)} placeholder="Email" value={traveler.email} onChange={(e) => updateTraveler(index, "email", e.target.value)} />
                                                     {fieldError(`travelers.${index}.email`)}
                                                 </div>
                                                 <div>
-                                                    <input style={inputStyle(`travelers.${index}.phone`)} placeholder="Phone" value={traveler.phone} onChange={(e) => updateTraveler(index, "phone", e.target.value)} />
+                                                    <input className={inputClass(`travelers.${index}.phone`)} placeholder="Phone" value={traveler.phone} onChange={(e) => updateTraveler(index, "phone", e.target.value)} />
                                                     {fieldError(`travelers.${index}.phone`)}
                                                 </div>
                                                 <div>
-                                                    <input style={inputStyle(`travelers.${index}.age`)} placeholder="Age" value={traveler.age} onChange={(e) => updateTraveler(index, "age", e.target.value)} />
+                                                    <input className={inputClass(`travelers.${index}.age`)} placeholder="Age" value={traveler.age} onChange={(e) => updateTraveler(index, "age", e.target.value)} />
                                                     {fieldError(`travelers.${index}.age`)}
                                                 </div>
                                                 <div>
-                                                    <input style={inputStyle(`travelers.${index}.passport`)} placeholder="Passport / ID" value={traveler.passport} onChange={(e) => updateTraveler(index, "passport", e.target.value)} />
+                                                    <input className={inputClass(`travelers.${index}.passport`)} placeholder="Passport / ID" value={traveler.passport} onChange={(e) => updateTraveler(index, "passport", e.target.value)} />
                                                     {fieldError(`travelers.${index}.passport`)}
                                                 </div>
                                                 <div>
-                                                    <input style={inputStyle(`travelers.${index}.nationality`)} placeholder="Nationality" value={traveler.nationality} onChange={(e) => updateTraveler(index, "nationality", e.target.value)} />
+                                                    <input className={inputClass(`travelers.${index}.nationality`)} placeholder="Nationality" value={traveler.nationality} onChange={(e) => updateTraveler(index, "nationality", e.target.value)} />
                                                     {fieldError(`travelers.${index}.nationality`)}
                                                 </div>
                                                 <div>
-                                                    <input style={inputStyle(`travelers.${index}.countryOfResidence`)} placeholder="Country of residence" value={traveler.countryOfResidence} onChange={(e) => updateTraveler(index, "countryOfResidence", e.target.value)} />
+                                                    <input className={inputClass(`travelers.${index}.countryOfResidence`)} placeholder="Country of residence" value={traveler.countryOfResidence} onChange={(e) => updateTraveler(index, "countryOfResidence", e.target.value)} />
                                                 </div>
                                                 <div>
-                                                    <input style={inputStyle(`travelers.${index}.passportIssueCountry`)} placeholder="Passport issue country" value={traveler.passportIssueCountry} onChange={(e) => updateTraveler(index, "passportIssueCountry", e.target.value)} />
+                                                    <input className={inputClass(`travelers.${index}.passportIssueCountry`)} placeholder="Passport issue country" value={traveler.passportIssueCountry} onChange={(e) => updateTraveler(index, "passportIssueCountry", e.target.value)} />
                                                 </div>
                                                 <div>
-                                                    <input style={inputStyle(`travelers.${index}.passportExpiryDate`)} type="date" value={traveler.passportExpiryDate} onChange={(e) => updateTraveler(index, "passportExpiryDate", e.target.value)} />
+                                                    <input className={inputClass(`travelers.${index}.passportExpiryDate`)} type="date" value={traveler.passportExpiryDate} onChange={(e) => updateTraveler(index, "passportExpiryDate", e.target.value)} />
                                                     {fieldError(`travelers.${index}.passportExpiryDate`)}
                                                 </div>
                                                 <div>
-                                                    <input style={inputStyle(`travelers.${index}.emergencyContactName`)} placeholder="Emergency contact name" value={traveler.emergencyContactName} onChange={(e) => updateTraveler(index, "emergencyContactName", e.target.value)} />
+                                                    <input className={inputClass(`travelers.${index}.emergencyContactName`)} placeholder="Emergency contact name" value={traveler.emergencyContactName} onChange={(e) => updateTraveler(index, "emergencyContactName", e.target.value)} />
                                                     {fieldError(`travelers.${index}.emergencyContactName`)}
                                                 </div>
                                                 <div>
-                                                    <input style={inputStyle(`travelers.${index}.emergencyContactRelation`)} placeholder="Emergency relation" value={traveler.emergencyContactRelation} onChange={(e) => updateTraveler(index, "emergencyContactRelation", e.target.value)} />
+                                                    <input className={inputClass(`travelers.${index}.emergencyContactRelation`)} placeholder="Emergency relation" value={traveler.emergencyContactRelation} onChange={(e) => updateTraveler(index, "emergencyContactRelation", e.target.value)} />
                                                 </div>
                                                 <div>
-                                                    <input style={inputStyle(`travelers.${index}.emergencyContactNumber`)} placeholder="Emergency phone" value={traveler.emergencyContactNumber} onChange={(e) => updateTraveler(index, "emergencyContactNumber", e.target.value)} />
+                                                    <input className={inputClass(`travelers.${index}.emergencyContactNumber`)} placeholder="Emergency phone" value={traveler.emergencyContactNumber} onChange={(e) => updateTraveler(index, "emergencyContactNumber", e.target.value)} />
                                                     {fieldError(`travelers.${index}.emergencyContactNumber`)}
                                                 </div>
                                                 <div>
-                                                    <input style={inputStyle(`travelers.${index}.dietaryPreferences`)} placeholder="Dietary preferences" value={traveler.dietaryPreferences} onChange={(e) => updateTraveler(index, "dietaryPreferences", e.target.value)} />
+                                                    <input className={inputClass(`travelers.${index}.dietaryPreferences`)} placeholder="Dietary preferences" value={traveler.dietaryPreferences} onChange={(e) => updateTraveler(index, "dietaryPreferences", e.target.value)} />
                                                 </div>
                                                 <div>
-                                                    <input style={inputStyle(`travelers.${index}.medicalConditions`)} placeholder="Medical conditions" value={traveler.medicalConditions} onChange={(e) => updateTraveler(index, "medicalConditions", e.target.value)} />
+                                                    <input className={inputClass(`travelers.${index}.medicalConditions`)} placeholder="Medical conditions" value={traveler.medicalConditions} onChange={(e) => updateTraveler(index, "medicalConditions", e.target.value)} />
                                                 </div>
                                                 <div>
-                                                    <select style={inputStyle(`travelers.${index}.visaStatus`)} value={traveler.visaStatus} onChange={(e) => updateTraveler(index, "visaStatus", e.target.value)}>
+                                                    <select className={inputClass(`travelers.${index}.visaStatus`)} value={traveler.visaStatus} onChange={(e) => updateTraveler(index, "visaStatus", e.target.value)}>
                                                         <option value="">Visa status</option>
                                                         <option value="not_required">Not required</option>
                                                         <option value="required">Required</option>
@@ -478,19 +479,19 @@ export default function BookingModal({ open = false, onClose = () => { }, tour }
                         )}
 
                         {step === 3 && (
-                            <section style={styles.panel}>
-                                <h4 style={styles.reviewTitle}>Review</h4>
-                                <div style={styles.reviewRows}>
+                            <section className="bm-panel">
+                                <h4 className="bm-review-title">Review</h4>
+                                <div className="bm-review-rows">
                                     <div><strong>Tour</strong><span>{tour.title}</span></div>
                                     <div><strong>Dates</strong><span>{startDate || "TBD"} → {endDate || "TBD"}</span></div>
                                     <div><strong>Guests</strong><span>{guests}</span></div>
                                     <div><strong>Contact</strong><span>{contactEmail} · {contactPhone}</span></div>
                                 </div>
 
-                                <h5 style={styles.reviewTitle}>Travelers</h5>
-                                <div style={styles.reviewTravelerList}>
+                                <h5 className="bm-review-title">Travelers</h5>
+                                <div className="bm-review-travelers">
                                     {travelers.map((traveler, index) => (
-                                        <div key={index} style={styles.reviewTraveler}>
+                                        <div key={index} className="bm-review-traveler">
                                             <div>
                                                 <strong>{traveler.firstName} {traveler.lastName}</strong>
                                                 <span>{traveler.email} · {traveler.phone}</span>
@@ -500,15 +501,15 @@ export default function BookingModal({ open = false, onClose = () => { }, tour }
                                     ))}
                                 </div>
 
-                                <button style={styles.btnPrimary} onClick={handleReserve} disabled={loading} type="button">
+                                <button className="bm-btn bm-btn--primary" onClick={handleReserve} disabled={loading} type="button">
                                     {loading ? "Submitting..." : "Submit Quote Request"}
                                 </button>
                             </section>
                         )}
                     </div>
 
-                    <aside style={styles.right}>
-                        <div style={styles.stickySide}>
+                    <aside className="bm-body__right">
+                        <div className="bm-sticky">
                             <BookingSummaryCard
                                 tour={tour}
                                 startDate={startDate}
@@ -516,90 +517,23 @@ export default function BookingModal({ open = false, onClose = () => { }, tour }
                                 guests={guests}
                                 priceSnapshot={pricePreview || (tour?.price || tour?.priceInfo || {})}
                             />
-                            <div style={styles.helpCard}>
+                            <div className="bm-help-card">
                                 <strong>Need help?</strong>
-                                <span>Contact support at <a href="tel:+919057635580" style={styles.helpLink}>+91 9057635580</a></span>
+                                <span>Contact support at <a href="tel:+919057635580" className="bm-help-link">+91 9057635580</a></span>
                                 <span>Cancellation: {tour?.cancellationPolicy || "Check terms on checkout"}</span>
                             </div>
                         </div>
                     </aside>
                 </div>
 
-                <footer style={styles.footer}>
-                    <div>{step > 1 && <button style={{ ...styles.btnGhost, color: theme }} onClick={goBack} type="button">Back</button>}</div>
-                    <div>{step < 3 && <button style={styles.btnPrimary} onClick={goNext} type="button">Next</button>}</div>
+                <footer className="bm-footer">
+                    <div>{step > 1 && <button className="bm-btn bm-btn--ghost" onClick={goBack} type="button">Back</button>}</div>
+                    <div>{step < 3 && <button className="bm-btn bm-btn--primary" onClick={goNext} type="button">Next</button>}</div>
                 </footer>
             </div>
         </div>
     );
 }
-
-const styles = {
-    overlay: {
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.42)",
-        zIndex: 1200,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 20,
-        WebkitOverflowScrolling: "touch",
-    },
-    modal: {
-        width: "100%",
-        maxWidth: 980,
-        maxHeight: "96vh",
-        background: "var(--surface)",
-        borderRadius: 12,
-        boxShadow: "var(--shadow-lg)",
-        display: "flex",
-        flexDirection: "column",
-        overflow: "hidden",
-    },
-    header: {
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: 12,
-        padding: "18px 20px",
-        borderBottom: "1px solid var(--border)",
-        background: "linear-gradient(90deg, var(--primary-soft), var(--surface))",
-    },
-    title: { margin: 0, fontSize: 18, fontWeight: 700, color: "var(--title)" },
-    sub: { margin: 0, fontSize: 12, color: "var(--muted)" },
-    closeBtn: { background: "transparent", border: "none", fontSize: 22, cursor: "pointer", color: "var(--text)" },
-    body: { display: "flex", flexDirection: "row", gap: 18, padding: 18, alignItems: "flex-start", overflow: "hidden", minHeight: 0, flex: "1 1 auto" },
-    left: { flex: "1 1 560px", minWidth: 260, maxHeight: "calc(96vh - 158px)", overflowY: "auto", paddingRight: 4 },
-    right: { width: 320, flexShrink: 0 },
-    stickySide: { position: "sticky", top: 18 },
-    panel: { marginBottom: 14, background: "transparent" },
-    label: { display: "block", fontSize: 13, marginBottom: 6, color: "var(--muted)" },
-    input: { width: "100%", boxSizing: "border-box", padding: "10px 12px", borderRadius: 8, border: "1px solid var(--control-border)", background: "var(--control-bg)", color: "var(--control-text)", marginBottom: 10, fontSize: 14 },
-    inputError: { borderColor: "#ef4444", boxShadow: "0 0 0 3px rgba(239,68,68,0.10)" },
-    fieldError: { marginTop: -6, marginBottom: 8, color: "#b91c1c", fontSize: 12 },
-    guestRow: { display: "flex", alignItems: "center", gap: 8, marginBottom: 12 },
-    guestCount: { minWidth: 36, textAlign: "center", fontWeight: 700 },
-    qtyBtn: { padding: "6px 10px", borderRadius: 8, border: "1px solid var(--border)", cursor: "pointer", background: "var(--surface-inset)" },
-    btnPrimary: { background: "var(--color-primary)", color: "var(--color-on-primary)", border: "none", padding: "10px 14px", borderRadius: 10, cursor: "pointer", fontWeight: 600 },
-    btnGhost: { background: "transparent", border: "1px solid var(--border)", padding: "8px 12px", borderRadius: 8, cursor: "pointer" },
-    error: { background: "var(--danger-soft)", color: "var(--color-danger)", padding: 10, borderRadius: 8, marginBottom: 12, border: "1px solid var(--border)" },
-    stepsRow: { display: "flex", gap: 8, marginBottom: 12 },
-    stepDot: (active) => ({ width: 30, height: 30, borderRadius: 8, display: "grid", placeItems: "center", background: active ? "var(--color-primary)" : "var(--surface-inset)", color: active ? "var(--color-on-primary)" : "var(--muted)", fontWeight: 700 }),
-    footer: { display: "flex", justifyContent: "space-between", gap: 12, padding: 14,         borderTop: "1px solid var(--border)", alignItems: "center" },
-    contactGrid: { marginBottom: 14 },
-    travelerCard: { border: "1px solid var(--border)", padding: 12, borderRadius: 10, background: "var(--surface-elevated)" },
-    travelerTitle: { display: "block", marginBottom: 10, color: "var(--color-primary-dark)" },
-    fieldGrid: { display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8 },
-    trList: { display: "flex", flexDirection: "column", gap: 10, maxHeight: "min(46vh, 420px)", overflowY: "auto", paddingRight: 4 },
-    note: { fontSize: 13, color: "var(--muted)" },
-    reviewTitle: { margin: "6px 0 10px 0", color: "var(--color-primary-dark)" },
-    reviewRows: { display: "grid", gap: 8, marginBottom: 12 },
-    reviewTravelerList: { display: "grid", gap: 8, maxHeight: 260, overflowY: "auto" },
-    reviewTraveler: { padding: 10, borderRadius: 8, background: "var(--surface-inset)", display: "flex", justifyContent: "space-between", gap: 10 },
-    helpCard: { marginTop: 12, padding: 12, borderRadius: 10, border: "1px solid var(--border)", display: "grid", gap: 6, fontSize: 13, color: "var(--muted)" },
-    helpLink: { color: "var(--color-primary)", textDecoration: "none" },
-};
 
 BookingModal.propTypes = {
     open: PropTypes.bool,

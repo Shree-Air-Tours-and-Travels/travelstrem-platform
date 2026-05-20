@@ -41,7 +41,7 @@ export default function BookingPageView({
 }) {
   const [showConfirm, setShowConfirm] = useState(false);
   if (loading) {
-    return <GlobalLoader visible text="Loading booking page..." />;
+    return <GlobalLoader visible text={pageLabels.loadingText || "Loading booking page..."} />;
   }
 
   if (error) {
@@ -49,10 +49,10 @@ export default function BookingPageView({
       <main className="booking-page">
         <div className="booking-page__shell">
           <section className="booking-page__empty">
-            <h1>Booking could not load</h1>
+            <h1>{pageLabels.bookingLoadError || "Booking could not load"}</h1>
             <p>{error}</p>
             <button className="booking-page__btn booking-page__btn--primary" type="button" onClick={onGoBack}>
-              Back to tours
+              {pageLabels.backToTours || "Back to tours"}
             </button>
           </section>
         </div>
@@ -65,10 +65,10 @@ export default function BookingPageView({
       <main className="booking-page">
         <div className="booking-page__shell">
           <section className="booking-page__empty">
-            <h1>Tour not found</h1>
-            <p>The tour could not be loaded for booking. It may have been removed or is unavailable.</p>
+            <h1>{pageLabels.tourNotFound || "Tour not found"}</h1>
+            <p>{pageLabels.tourNotFoundDesc || "The tour could not be loaded for booking. It may have been removed or is unavailable."}</p>
             <button className="booking-page__btn booking-page__btn--primary" type="button" onClick={onGoBack}>
-              Back to tours
+              {pageLabels.backToTours || "Back to tours"}
             </button>
           </section>
         </div>
@@ -104,7 +104,7 @@ export default function BookingPageView({
             <div className="booking-page__card">
               <div className="booking-page__card-header">
                 <h2>{stepLabels[step]}</h2>
-                <span>{step === 1 ? "Dates & guests" : step === 2 ? `${travelers.length} traveler${travelers.length > 1 ? "s" : ""}` : "Confirm & pay"}</span>
+                <span>{step === 1 ? (pageLabels.step1Subtitle || "Dates & guests") : step === 2 ? ((pageLabels.step2Subtitle || "{count} traveler").replace("{count}", travelers.length) + (travelers.length > 1 ? (pageLabels.step2SubtitlePlural || "s") : "")) : (pageLabels.step3Subtitle || "Confirm & pay")}</span>
               </div>
               <div className="booking-page__card-scroll">
                 {step === 1 && (
@@ -172,7 +172,7 @@ export default function BookingPageView({
             />
             <div className="booking-page__help-card">
               <strong>{pageLabels.needHelp || "Need help?"}</strong>
-              <span>{(pageLabels.contactSupport || "Contact support at")} <a href="tel:+919057635580">{pageLabels.supportPhone || "+91 9057635580"}</a></span>
+              <span>{(pageLabels.contactSupport || "Contact support at")} <a href={pageLabels.supportPhoneUrl || "tel:+919057635580"}>{pageLabels.supportPhone || "+91 9057635580"}</a></span>
               <span>{pageLabels.cancellationNote || "Free cancellation within 24 hours of booking"}</span>
             </div>
           </aside>
@@ -183,7 +183,7 @@ export default function BookingPageView({
         variant="floating"
         align="left"
         showBg
-        error={fieldErrors && Object.keys(fieldErrors).some(k => k !== '_general') ? "Please fix the highlighted fields." : undefined}
+        error={fieldErrors && Object.keys(fieldErrors).some(k => k !== '_general') ? (pageLabels.fixHighlighted || "Please fix the highlighted fields.") : undefined}
         actions={[
           ...(step > 1 ? [{ label: pageLabels.back || "Back", iconLeft: "chevronLeft", variant: "ghost", onClick: onBack }] : []),
           ...(step < 3
@@ -204,7 +204,7 @@ export default function BookingPageView({
         cancelLabel={pageLabels.submitConfirmCancel || "Cancel"}
         confirmDisabled={submitting}
       />
-      {submitting && <GlobalLoader visible text="Submitting your request..." />}
+      {submitting && <GlobalLoader visible text={pageLabels.submittingText || "Submitting your request..."} />}
     </main>
   );
 }

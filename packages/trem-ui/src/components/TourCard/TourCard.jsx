@@ -43,7 +43,7 @@ const getGuideAvatar = (tour) => {
   return review?.avatar || review?.photo || "";
 };
 
-export default function TourCard({ tour, path, onView, favorited, onFavorite, isAdmin = false, onEdit, onDelete, className = "", variant = "list" }) {
+const TourCard = React.memo(function TourCard({ tour, path, onView, favorited, onFavorite, isAdmin = false, onEdit, onDelete, className = "", variant = "list" }) {
   const {
     _id,
     title,
@@ -197,4 +197,6 @@ export default function TourCard({ tour, path, onView, favorited, onFavorite, is
       {cardContent}
     </article>
   );
-}
+});
+
+export default TourCard;

@@ -1,10 +1,7 @@
-import { createFetchUserSession } from "@packages/trem-session";
-import { API_BASE } from "./configService";
+import { createApiServiceUserSession } from "@packages/trem-session";
+import apiService from "./apiService";
 
-const userSession = createFetchUserSession({
-    apiBase: API_BASE,
-    preferTokenKeyName: true,
-});
+const userSession = createApiServiceUserSession({ apiService });
 
 export const initUserSession = userSession.initUserSession;
 export const clearUserSessionCache = userSession.clearUserSessionCache;

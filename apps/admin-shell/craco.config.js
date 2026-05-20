@@ -37,6 +37,7 @@ module.exports = {
                 ws: false,
             },
         };
+        devServerConfig.historyApiFallback = true;
         devServerConfig.headers = {
             ...(devServerConfig.headers || {}),
             "Access-Control-Allow-Origin": "*",

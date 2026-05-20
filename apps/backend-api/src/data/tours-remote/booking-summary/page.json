@@ -57,11 +57,35 @@
         "stayHere": "Stay Here",
         "myBookings": "My Bookings",
         "tourDetails": "Tour details",
-        "tourDetailsFallback": "Tour details will appear here once confirmed."
+        "tourDetailsFallback": "Tour details will appear here once confirmed.",
+        "bookingLoadErrorText": "Booking could not load",
+        "loadingText": "Loading booking summary...",
+        "updateError": "Please change booking details or add/remove a traveler before updating.",
+        "updateErrorGeneric": "Failed to update booking",
+        "assignedTo": "Assigned to {name}",
+        "quoteDue": "Quote due: {date}",
+        "responseDue": "Response due: {date}",
+        "callOrMessage": "Call or message us",
+        "downloadQuote": "Download Quote",
+        "downloadInvoice": "Download Invoice",
+        "bookingPass": "Booking Pass",
+        "cancelOverlayLoading": "Loading cancellation details...",
+        "cancelOverlayDefault": "This will cancel the booking request. You can still view it from your dashboard.",
+        "actionFailed": "Action failed",
+        "quoteAccepted": "Quote accepted. Proceed to checkout.",
+        "cancelledMessage": "Booking cancelled.",
+        "phaseRequest": "Request",
+        "phaseQuote": "Quote",
+        "phaseDecision": "Decision",
+        "phasePayment": "Payment",
+        "phaseConfirmed": "Confirmed",
+        "phaseCompleted": "Completed",
+        "phaseCancelled": "Cancelled",
+        "phaseRejected": "Rejected",
+        "contactPhoneUrl": "tel:+919057635580",
+        "supportPhone": "+91 9057635580"
       },
-      "urls": {
-        "contactPhoneUrl": "tel:+919057635580"
-      }
+      "urls": {}
     },
     "structure": {
       "header": {

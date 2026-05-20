@@ -4,30 +4,6 @@ import { fetchData, useComponentData, validateFields } from "@packages/trem-util
 import BookingPageView from "../booking/view/BookingPage.view";
 import { getDateInputValue, emptyTraveler, readStoredUser } from "../booking/helper";
 
-const bookingFields = {
-  trip: {
-    startDate: { name: "startDate", type: "date", required: true, messages: { required: "Start date is required" } },
-    endDate: { name: "endDate", type: "date", required: true, messages: { required: "End date is required" } },
-    guests: { name: "guests", type: "number", required: true, min: 1, integer: true, messages: { min: "Add at least one guest" } },
-  },
-  contact: {
-    contactEmail: { name: "contactEmail", type: "email", required: true, messages: { required: "Contact email is required" } },
-    contactPhone: { name: "contactPhone", type: "tel", required: true, messages: { required: "Contact phone is required" } },
-  },
-  traveler: {
-    firstName: { name: "firstName", type: "text", required: true, minLength: 2, messages: { required: "First name is required" } },
-    lastName: { name: "lastName", type: "text", required: true, messages: { required: "Last name is required" } },
-    email: { name: "email", type: "email", required: true, messages: { required: "Traveler email is required" } },
-    phone: { name: "phone", type: "tel", required: true, messages: { required: "Traveler phone is required" } },
-    age: { name: "age", type: "number", required: true, min: 1, max: 120, integer: true, messages: { required: "Age is required" } },
-    passport: { name: "passport", type: "text", required: true, minLength: 5, maxLength: 20, pattern: "^[A-Za-z0-9]{5,20}$", messages: { required: "Passport / ID is required", pattern: "Passport must be 5\u201320 alphanumeric characters" } },
-    nationality: { name: "nationality", type: "text", required: true, messages: { required: "Nationality is required" } },
-    passportExpiryDate: { name: "passportExpiryDate", type: "text", required: true, minLength: 5, pattern: "^\\d{2}/\\d{2}$", messages: { required: "Passport expiry is required", pattern: "Use MM/YY format" } },
-    emergencyContactName: { name: "emergencyContactName", type: "text", required: true, messages: { required: "Emergency contact is required" } },
-    emergencyContactNumber: { name: "emergencyContactNumber", type: "tel", required: true, messages: { required: "Emergency phone is required" } },
-  },
-};
-
 export default function BookingPageContainer({ dispatchEvent } = {}) {
   const { tourRef } = useParams();
   const location = useLocation();
@@ -39,8 +15,32 @@ export default function BookingPageContainer({ dispatchEvent } = {}) {
   const options = dataScope?.options || {};
   const maxGuests = config?.maxGuests || 10;
 
+  const bookingFields = useMemo(() => ({
+    trip: {
+      startDate: { name: "startDate", type: "date", required: true, messages: { required: pageLabels.requiredStartDate || "Start date is required" } },
+      endDate: { name: "endDate", type: "date", required: true, messages: { required: pageLabels.requiredEndDate || "End date is required" } },
+      guests: { name: "guests", type: "number", required: true, min: 1, integer: true, messages: { min: pageLabels.addAtLeastOneGuest || "Add at least one guest" } },
+    },
+    contact: {
+      contactEmail: { name: "contactEmail", type: "email", required: true, messages: { required: pageLabels.requiredContactEmail || "Contact email is required" } },
+      contactPhone: { name: "contactPhone", type: "tel", required: true, messages: { required: pageLabels.requiredContactPhone || "Contact phone is required" } },
+    },
+    traveler: {
+      firstName: { name: "firstName", type: "text", required: true, minLength: 2, messages: { required: pageLabels.requiredFirstName || "First name is required" } },
+      lastName: { name: "lastName", type: "text", required: true, messages: { required: pageLabels.requiredLastName || "Last name is required" } },
+      email: { name: "email", type: "email", required: true, messages: { required: pageLabels.requiredTravelerEmail || "Traveler email is required" } },
+      phone: { name: "phone", type: "tel", required: true, messages: { required: pageLabels.requiredTravelerPhone || "Traveler phone is required" } },
+      age: { name: "age", type: "number", required: true, min: 1, max: 120, integer: true, messages: { required: pageLabels.requiredAge || "Age is required" } },
+      passport: { name: "passport", type: "text", required: true, minLength: 5, maxLength: 20, pattern: "^[A-Za-z0-9]{5,20}$", messages: { required: pageLabels.requiredPassport || "Passport / ID is required", pattern: pageLabels.passportPattern || "Passport must be 5\u201320 alphanumeric characters" } },
+      nationality: { name: "nationality", type: "text", required: true, messages: { required: pageLabels.requiredNationality || "Nationality is required" } },
+      passportExpiryDate: { name: "passportExpiryDate", type: "text", required: true, minLength: 5, pattern: "^\\d{2}/\\d{2}$", messages: { required: pageLabels.requiredPassportExpiry || "Passport expiry is required", pattern: pageLabels.passportExpiryPattern || "Use MM/YY format" } },
+      emergencyContactName: { name: "emergencyContactName", type: "text", required: true, messages: { required: pageLabels.requiredEmergencyName || "Emergency contact is required" } },
+      emergencyContactNumber: { name: "emergencyContactNumber", type: "tel", required: true, messages: { required: pageLabels.requiredEmergencyPhone || "Emergency phone is required" } },
+    },
+  }), [pageLabels]);
+
     const [tour, setTour] = useState(location.state?.tour || null);
-    const referrer = useMemo(() => location.state?.from || { label: "Tours", path: "/tours" }, [location.state?.from]);
+    const referrer = useMemo(() => location.state?.from || { label: pageLabels.tours || "Tours", path: "/tours" }, [location.state?.from, pageLabels]);
   const [tourLoading, setTourLoading] = useState(!tour);
   const [tourError, setTourError] = useState(null);
   const [step, setStep] = useState(1);
@@ -135,17 +135,17 @@ export default function BookingPageContainer({ dispatchEvent } = {}) {
     const start = new Date(startDate);
     const end = new Date(endDate);
     if (!nextErrors.startDate && !nextErrors.endDate && start > end) {
-      nextErrors.startDate = "Start date must be before end date";
-      nextErrors.endDate = "End date must be after start date";
+      nextErrors.startDate = pageLabels.startBeforeEnd || "Start date must be before end date";
+      nextErrors.endDate = pageLabels.endAfterStart || "End date must be after start date";
     }
-    if (total < 1) nextErrors.guests = "Add at least one traveler";
+    if (total < 1) nextErrors.guests = pageLabels.addAtLeastOne || "Add at least one traveler";
     if (tour?.availability?.seatsAvailable != null) {
       const seats = Number(tour.availability.seatsAvailable);
-      if (Number.isFinite(seats) && total > seats) nextErrors.guests = `Only ${seats} seats left for this tour`;
+      if (Number.isFinite(seats) && total > seats) nextErrors.guests = (pageLabels.onlySeatsLeft || "Only {seats} seats left for this tour").replace("{seats}", seats);
     }
     setFieldErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
-  }, [startDate, endDate, adults, children, infants, tour]);
+  }, [startDate, endDate, adults, children, infants, tour, pageLabels]);
 
   const validateTravelerStep = useCallback(() => {
     const nextErrors = { ...validateFields({ contactEmail, contactPhone }, bookingFields.contact).errors };
@@ -195,7 +195,7 @@ export default function BookingPageContainer({ dispatchEvent } = {}) {
       try {
         const check = await fetchData(`/bookings/check?tourId=${tourId}&userId=${user.id}`);
         if (check?.status === "success" && check?.componentData?.hasActive) {
-          setFieldErrors({ _general: "You already have a pending booking for this tour. Please wait for agent confirmation before booking again." });
+          setFieldErrors({ _general: pageLabels.pendingBookingError || "You already have a pending booking for this tour. Please wait for agent confirmation before booking again." });
           setSubmitting(false);
           return;
         }
@@ -270,16 +270,16 @@ export default function BookingPageContainer({ dispatchEvent } = {}) {
           }, {});
           setFieldErrors(mappedErrors);
         }
-        throw new Error(res?.message || "Booking failed");
+        throw new Error(res?.message || pageLabels.bookingFailed || "Booking failed");
       }
 
       const booking = res.componentData?.data;
-      if (!booking) throw new Error("Booking created but no booking data returned.");
+      if (!booking) throw new Error(pageLabels.bookingNoData || "Booking created but no booking data returned.");
 
       const bookingId = booking.id || booking._id;
       const state = {
         showDashboardPrompt: true,
-        from: { label: "Dashboard", path: "/dashboard", activeNav: "tours" },
+        from: { label: pageLabels.dashboard || "Dashboard", path: "/dashboard", activeNav: "tours" },
       };
       if (typeof dispatchEvent === "function") {
         dispatchEvent("navigateToBookingSummary", { bookingId, replace: true, state });
@@ -287,11 +287,11 @@ export default function BookingPageContainer({ dispatchEvent } = {}) {
         navigate(`/tours/bookings/${bookingId}`, { replace: true, state });
       }
     } catch (err) {
-      setFieldErrors((prev) => ({ ...prev, _general: err.message || "Failed to create booking" }));
+      setFieldErrors((prev) => ({ ...prev, _general: err.message || pageLabels.createBookingFailed || "Failed to create booking" }));
     } finally {
       setSubmitting(false);
     }
-  }, [tour, startDate, endDate, adults, children, infants, travelers, contactEmail, contactPhone, user, validateTripStep, validateTravelerStep, dispatchEvent, navigate]);
+  }, [tour, startDate, endDate, adults, children, infants, travelers, contactEmail, contactPhone, user, validateTripStep, validateTravelerStep, dispatchEvent, navigate, pageLabels]);
 
   const loading = pageLoading || tourLoading;
   const error = pageError || tourError;
@@ -320,11 +320,11 @@ export default function BookingPageContainer({ dispatchEvent } = {}) {
       submitting={submitting}
       breadcrumbItems={[
         ...(referrer.path !== "/tours"
-          ? [referrer, { label: "Tours", path: "/tours" }]
+          ? [referrer, { label: pageLabels.tours || "Tours", path: "/tours" }]
           : [referrer]
         ),
         ...(tour?.title ? [{ label: tour.title }] : []),
-        { label: "Book" },
+        { label: pageLabels.book || "Book" },
       ]}
       onStartDateChange={setStartDate}
       onEndDateChange={setEndDate}

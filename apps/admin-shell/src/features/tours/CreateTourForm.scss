@@ -326,6 +326,19 @@
   }
 }
 
+/* field-level error text */
+.ctf-field-err {
+    font-size: $font-size-xs;
+    color: var(--color-danger);
+    margin: -0.3rem 0 0.5rem;
+    padding-left: 0.25rem;
+}
+
+.ctf-input-error {
+    border-color: var(--color-danger) !important;
+    box-shadow: 0 0 0 3px var(--danger-soft) !important;
+}
+
 /* small utilities used by the form */
 .ctf-tag-list {
   display: flex;
@@ -364,6 +377,234 @@
 }
 .btn:active {
   transform: translateY(1px) scale(0.997);
+}
+
+/* --- Image Uploader --- */
+.ctf-image-uploader {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ctf-dropzone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 140px;
+  border: 2px dashed var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 160ms, background 160ms;
+  overflow: hidden;
+  position: relative;
+  background: var(--bg-1);
+}
+
+.ctf-dropzone:hover {
+  border-color: var(--color-primary);
+  background: var(--primary-soft);
+}
+
+.ctf-dropzone--over {
+  border-color: var(--color-primary);
+  background: var(--primary-soft);
+  border-style: solid;
+}
+
+.ctf-dropzone--uploading {
+  pointer-events: none;
+  cursor: default;
+}
+
+.ctf-dropzone-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 24px;
+  color: var(--muted);
+  font-size: $font-size-sm;
+}
+
+.ctf-dropzone-icon {
+  font-size: 2rem;
+  line-height: 1;
+  color: var(--color-primary);
+  font-weight: $font-bold;
+}
+
+.ctf-dropzone-preview {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.ctf-upload-progress {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px;
+  width: 100%;
+}
+
+.ctf-progress-track {
+  width: 100%;
+  max-width: 280px;
+  height: 8px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.ctf-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+  border-radius: 4px;
+  transition: width 300ms ease;
+}
+
+.ctf-upload-label {
+  font-size: $font-size-sm;
+  color: var(--muted);
+}
+
+/* Photo grid */
+.ctf-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 8px;
+}
+
+.ctf-photo-thumb {
+  position: relative;
+  border-radius: 6px;
+  overflow: hidden;
+  aspect-ratio: 1;
+  background: var(--bg-1);
+  border: 2px solid transparent;
+}
+
+.ctf-photo-thumb--main {
+  border-color: var(--color-primary);
+}
+
+.ctf-photo-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.ctf-thumb-remove,
+.ctf-thumb-setmain {
+  position: absolute;
+  top: 2px;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transition: opacity 140ms;
+}
+
+.ctf-photo-thumb:hover .ctf-thumb-remove,
+.ctf-photo-thumb:hover .ctf-thumb-setmain {
+  opacity: 1;
+}
+
+.ctf-thumb-remove {
+  right: 2px;
+  background: var(--color-danger);
+  color: #fff;
+}
+
+.ctf-thumb-setmain {
+  left: 2px;
+  background: rgba(0, 0, 0, 0.5);
+  color: #ffd700;
+  font-size: 12px;
+}
+
+.ctf-thumb-remove:hover {
+  background: darkred;
+}
+
+/* URL fallback */
+.ctf-url-fallback {
+  cursor: pointer;
+  font-size: $font-size-sm;
+  color: var(--muted);
+}
+
+.ctf-url-fallback summary {
+  padding: 4px 0;
+}
+
+.ctf-url-fallback[open] input {
+  margin-top: 6px;
+}
+
+/* --- Highlights Editor --- */
+.ctf-highlight-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 8px;
+  background: var(--bg-1);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.ctf-highlight-order {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-weight: $font-bold;
+  font-size: $font-size-sm;
+  flex-shrink: 0;
+  margin-top: 6px;
+}
+
+.ctf-highlight-fields {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ctf-highlight-fields input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ctf-highlight-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.ctf-sm-btn {
+  padding: 2px 8px;
+  font-size: $font-size-sm;
+  line-height: 1.4;
+  border-radius: 4px;
+}
+
+.ctf-sm-btn--danger {
+  color: var(--color-danger);
 }
 
 /* print friendly: hide overlay on print */

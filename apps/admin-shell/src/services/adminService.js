@@ -116,3 +116,68 @@ export async function updateBookingTravelers(bookingId, travelers) {
         "Update failed"
     );
 }
+
+export async function updateBookingStatus(bookingId, status, reason = "") {
+    await expectSuccess(
+        fetchData(`/admin/bookings/${bookingId}/status`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status, reason }),
+        }),
+        `Status transition to ${status} failed`
+    );
+}
+
+export async function recordAdminPayment(bookingId, amount, currency = "INR", options = {}) {
+    await expectSuccess(
+        fetchData(`/admin/bookings/${bookingId}/payment`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                amount: Number(amount),
+                currency,
+                provider: options.provider || "admin_manual",
+                transactionId: options.transactionId || `ADM-PAY-${Date.now()}`,
+                status: "PAID",
+                type: options.type || "partial",
+            }),
+        }),
+        "Payment recording failed"
+    );
+}
+
+export async function processRefund(bookingId, amount, currency = "INR", reason = "") {
+    await expectSuccess(
+        fetchData(`/admin/bookings/${bookingId}/refund`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                amount: Number(amount),
+                currency,
+                reason,
+            }),
+        }),
+        "Refund processing failed"
+    );
+}
+
+export async function adminGetBooking(bookingId) {
+    const res = await fetchData(`/admin/bookings/${bookingId}`);
+    return normalizeBookingsResponse(res);
+}
+
+export async function uploadTourImage(file) {
+    const fd = new FormData();
+    fd.append("image", file);
+    const res = await fetchData("/tours.json/upload", {
+        method: "POST",
+        body: fd,
+    });
+    const url =
+        res?.componentData?.data?.url ||
+        res?.componentData?.url ||
+        res?.data?.url ||
+        res?.url;
+    if (!url) throw new Error(res?.message || "Upload returned no URL");
+    return url;
+}

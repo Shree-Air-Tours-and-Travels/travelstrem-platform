@@ -1,0 +1,49 @@
+.trem-storybook-shell {
+  min-width: min(1040px, calc(100vw - 48px));
+  color: var(--text);
+}
+
+.trem-storybook-stack {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.trem-storybook-column {
+  display: grid;
+  gap: 16px;
+  width: min(760px, calc(100vw - 48px));
+}
+
+.trem-storybook-panel {
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-2);
+}
+
+.trem-storybook-icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+  gap: 12px;
+  width: min(880px, calc(100vw - 48px));
+}
+
+.trem-storybook-icon {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-2);
+  color: var(--text);
+}
+
+.trem-storybook-icon span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}

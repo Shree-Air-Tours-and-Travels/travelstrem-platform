@@ -64,42 +64,49 @@ const attachStoredUser = (method, params, body) => {
 };
 
 export const fetchData = async (endpoint, options = {}) => {
-  const { method = "GET", body = null, headers = {}, params = {} } = options;
+  const { method = "GET", body = null, headers = {}, params = {}, signal } = options;
   const methodUpper = method.toUpperCase();
 
   const { finalParams, finalBody } = attachStoredUser(methodUpper, { ...(params || {}) }, body);
 
   try {
     let res;
+    const config = { params: finalParams, headers, signal };
     if (methodUpper === "GET") {
-      res = await apiClient.get(endpoint, { params: finalParams, headers });
+      res = await apiClient.get(endpoint, config);
     } else if (methodUpper === "POST") {
-      res = await apiClient.post(endpoint, finalBody, { params: finalParams, headers });
+      res = await apiClient.post(endpoint, finalBody, config);
     } else if (methodUpper === "PUT") {
-      res = await apiClient.put(endpoint, finalBody, { params: finalParams, headers });
+      res = await apiClient.put(endpoint, finalBody, config);
     } else if (methodUpper === "PATCH") {
-      res = await apiClient.patch(endpoint, finalBody, { params: finalParams, headers });
+      res = await apiClient.patch(endpoint, finalBody, config);
     } else if (methodUpper === "DELETE") {
-      res = await apiClient.delete(endpoint, { data: finalBody, params: finalParams, headers });
+      res = await apiClient.delete(endpoint, { ...config, data: finalBody });
     } else {
-      res = await apiClient.request({ url: endpoint, method: methodUpper, data: finalBody, params: finalParams, headers });
+      res = await apiClient.request({ url: endpoint, method: methodUpper, data: finalBody, ...config });
     }
 
     const { status, message, componentData, component } = res?.data || {};
-    if (status === "success") return { status, message, componentData, component };
+    const data = componentData?.data ?? component?.data ?? null;
+    if (status === "success") return { status, message, componentData, component, data };
 
     return {
       status: "error",
       message: message || "Something went wrong",
       component,
       componentData: componentData || { title: "", description: "", data: [], structure: {}, config: {} },
+      data: null,
     };
   } catch (err) {
+    if (axios.isCancel(err)) {
+      return { status: "cancelled", message: "Request cancelled", data: null };
+    }
     return {
       status: "error",
       message: err?.response?.data?.message || err.message || "Network error",
       component: err?.response?.data?.component,
       componentData: err?.response?.data?.componentData || { title: "", description: "", data: [], structure: {}, config: {} },
+      data: null,
     };
   }
 };

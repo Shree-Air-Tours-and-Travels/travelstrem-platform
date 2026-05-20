@@ -226,4 +226,10 @@ $mt-bg: var(--page-bg);
   }
 }
 
+/* ---------- Toast notification ---------- */
+@keyframes tm-toast-in {
+    from { opacity: 0; transform: translateX(40px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
 /* End of ManageTours.scss — overlay/drawer/view styles are now component-scoped */

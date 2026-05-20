@@ -369,7 +369,7 @@ export const getWidget = async (req, res) => {
     if (isBookingPage) {
       const bookingId = req.params.bookingId || req.query.bookingId;
       if (bookingId) {
-        const bookingDoc = await BookingRepository.findById(bookingId).populate("tour");
+        const bookingDoc = await BookingRepository.findById(bookingId).populate("tour").populate("assignedAgent", "name email role");
         if (bookingDoc) {
           const raw = typeof bookingDoc.toJSON === "function" ? bookingDoc.toJSON() : bookingDoc;
           const tourRaw = raw.tour || {};
@@ -379,7 +379,20 @@ export const getWidget = async (req, res) => {
             photo: tourRaw.photo,
             photos: Array.isArray(tourRaw.photos) ? tourRaw.photos : [],
             desc: tourRaw.desc,
+            city: tourRaw.city,
+            meetingPoint: tourRaw.meetingPoint,
+            cancellationPolicy: tourRaw.cancellationPolicy,
+            highlights: tourRaw.highlights,
+            period: tourRaw.period,
+            address: tourRaw.address,
           };
+
+          const agentRaw = raw.assignedAgent || null;
+          const assignedAgent = agentRaw ? {
+            name: agentRaw.name,
+            email: agentRaw.email,
+            role: agentRaw.role,
+          } : null;
 
           switch (fileName) {
             case "booking-hero.json":
@@ -392,6 +405,9 @@ export const getWidget = async (req, res) => {
                 startDate: raw.startDate || raw.travelWindow?.startDate,
                 endDate: raw.endDate || raw.travelWindow?.endDate,
                 tour,
+                assignedAgent,
+                responseDueAt: raw.responseDueAt,
+                quoteDueAt: raw.quoteDueAt,
               };
               break;
             case "booking-tour-details.json": {

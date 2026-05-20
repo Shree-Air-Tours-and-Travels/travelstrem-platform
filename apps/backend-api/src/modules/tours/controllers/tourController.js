@@ -334,6 +334,167 @@ const sanitizeTourPayload = (raw = {}) => {
     };
 };
 
+/**
+ * sanitizeTourPayloadForUpdate(raw)
+ * - Only processes fields that are present in `raw`
+ * - Does NOT throw on missing required fields (title, desc, price)
+ * - Returns only the fields that were sent, safe for partial PUT
+ */
+const sanitizeTourPayloadForUpdate = (raw = {}) => {
+    const p = { ...raw };
+    const result = {};
+
+    if (p.title !== undefined) {
+        if (!p.title) throw new Error("Missing required field: title");
+        result.title = String(p.title);
+    }
+
+    if (p.desc !== undefined || p.description !== undefined) {
+        if (!p.desc && !p.description) throw new Error("Missing required field: desc/description");
+        result.desc = p.desc || p.description || "";
+    }
+
+    if (p.price !== undefined) {
+        if (!p.price) throw new Error("Missing price object (price.min & price.max required)");
+        if (p.price.min == null || p.price.max == null) throw new Error("price.min and price.max are required");
+        result.price = {
+            min: Number(p.price.min),
+            max: Number(p.price.max),
+            currency: p.price.currency || "INR",
+            isFinal: !!p.price.isFinal,
+            source: p.price.source || "manual",
+        };
+        if (Number.isNaN(result.price.min) || Number.isNaN(result.price.max)) throw new Error("price.min or price.max is not a number");
+        if (result.price.min > result.price.max) throw new Error("price.min cannot be greater than price.max");
+    }
+
+    if (p.seasonalPricing !== undefined) {
+        if (!Array.isArray(p.seasonalPricing)) throw new Error("seasonalPricing must be an array");
+        result.seasonalPricing = p.seasonalPricing.map((s, idx) => {
+            if (s.min == null || s.max == null) throw new Error(`seasonalPricing[${idx}] requires min & max`);
+            const start = parseDate(s.startDate);
+            const end = parseDate(s.endDate);
+            return {
+                seasonName: s.seasonName || `Season ${idx + 1}`,
+                startDate: start,
+                endDate: end,
+                min: Number(s.min),
+                max: Number(s.max),
+                currency: s.currency || result.price?.currency || "INR",
+                isFinal: !!s.isFinal,
+                source: s.source || "manual",
+                notes: s.notes || "",
+            };
+        });
+        assertSeasonalPricingValid(result.seasonalPricing);
+    }
+
+    if (p.itinerary !== undefined) {
+        if (!Array.isArray(p.itinerary)) throw new Error("itinerary must be an array");
+        result.itinerary = p.itinerary.map((it, idx) => {
+            const day = it.day != null ? Number(it.day) : idx + 1;
+            if (Number.isNaN(day) || day < 1) throw new Error(`itinerary[${idx}].day must be a positive integer`);
+            return {
+                day,
+                title: it.title || "",
+                summary: it.summary || "",
+                activities: Array.isArray(it.activities) ? it.activities.map(String) : (it.activities ? [String(it.activities)] : []),
+                meals: Array.isArray(it.meals) ? it.meals.map(String) : (it.meals ? [String(it.meals)] : []),
+                accommodation: it.accommodation || "",
+                location: it.location || "",
+                notes: it.notes || "",
+            };
+        });
+        const days = result.itinerary.map(i => i.day);
+        const uniqDays = Array.from(new Set(days));
+        if (uniqDays.length !== days.length) throw new Error("itinerary days must be unique");
+        result.itinerary.sort((a, b) => a.day - b.day);
+    }
+
+    if (p.highlights !== undefined) {
+        if (!Array.isArray(p.highlights)) throw new Error("highlights must be an array");
+        result.highlights = p.highlights.map((h, idx) => ({
+            title: h.title || `Highlight ${idx + 1}`,
+            short: h.short || "",
+            icon: h.icon || "",
+            order: Number.isFinite(Number(h.order)) ? Number(h.order) : (h.order === 0 ? 0 : idx),
+        }));
+        result.highlights.sort((a, b) => a.order - b.order);
+    }
+
+    if (p.period !== undefined) {
+        result.period = {
+            days: Number(p.period.days),
+            nights: Number(p.period.nights),
+        };
+        if (Number.isNaN(result.period.days) || result.period.days < 1) throw new Error("period.days must be a positive integer");
+        if (Number.isNaN(result.period.nights) || result.period.nights < 0) throw new Error("period.nights must be a non-negative integer");
+    }
+
+    if (p.startDate !== undefined) result.startDate = p.startDate ? parseDate(p.startDate) : null;
+    if (p.endDate !== undefined) result.endDate = p.endDate ? parseDate(p.endDate) : null;
+
+    if (p.city !== undefined) result.city = p.city || null;
+    if (p.address !== undefined) result.address = p.address || null;
+    if (p.distance !== undefined) result.distance = p.distance != null ? Number(p.distance) : null;
+    if (p.photo !== undefined) result.photo = p.photo || "";
+    if (p.meetingPoint !== undefined) result.meetingPoint = p.meetingPoint || "";
+    if (p.cancellationPolicy !== undefined) result.cancellationPolicy = p.cancellationPolicy || "";
+    if (p.featured !== undefined) result.featured = !!p.featured;
+    if (p.isPublished !== undefined) result.isPublished = typeof p.isPublished === "boolean" ? p.isPublished : true;
+    if (p.status !== undefined) result.status = p.status || "published";
+
+    if (p.availability !== undefined) {
+        result.availability = {
+            totalSeats: p.availability.totalSeats == null ? null : Number(p.availability.totalSeats),
+            seatsAvailable: p.availability.seatsAvailable == null ? null : Number(p.availability.seatsAvailable),
+        };
+    }
+
+    if (p.maxGroupSize !== undefined) {
+        result.maxGroupSize = Number(p.maxGroupSize);
+        if (Number.isNaN(result.maxGroupSize) || result.maxGroupSize < 1) throw new Error("maxGroupSize must be a positive integer");
+    }
+    if (p.minAge !== undefined) {
+        result.minAge = p.minAge != null ? Number(p.minAge) : null;
+        if (result.minAge != null && (Number.isNaN(result.minAge) || result.minAge < 0)) throw new Error("minAge must be >= 0");
+    }
+    if (p.maxAge !== undefined) {
+        result.maxAge = p.maxAge != null ? Number(p.maxAge) : null;
+        if (result.maxAge != null && (Number.isNaN(result.maxAge) || result.maxAge < 0)) throw new Error("maxAge must be >= 0");
+    }
+
+    if (p.photos !== undefined) {
+        result.photos = Array.isArray(p.photos) ? p.photos.map(String) : (p.photos ? [String(p.photos)] : []);
+    }
+    if (p.inclusions !== undefined) {
+        result.inclusions = Array.isArray(p.inclusions) ? p.inclusions.map(String) : (p.inclusions ? [String(p.inclusions)] : []);
+    }
+    if (p.exclusions !== undefined) {
+        result.exclusions = Array.isArray(p.exclusions) ? p.exclusions.map(String) : (p.exclusions ? [String(p.exclusions)] : []);
+    }
+    if (p.languages !== undefined) {
+        result.languages = Array.isArray(p.languages) ? p.languages.map(String) : (p.languages ? [String(p.languages)] : []);
+    }
+    if (p.tags !== undefined) {
+        result.tags = Array.isArray(p.tags) ? p.tags.map(String) : (p.tags ? [String(p.tags)] : []);
+    }
+
+    if (p.reviews !== undefined) {
+        if (!Array.isArray(p.reviews)) throw new Error("reviews must be an array");
+        result.reviews = p.reviews.map((r, idx) => {
+            if (!r.name || r.rating == null) throw new Error(`reviews[${idx}] requires name and rating`);
+            return {
+                name: String(r.name),
+                rating: Number(r.rating),
+                comment: r.comment || "",
+            };
+        });
+    }
+
+    return result;
+};
+
 /* ----------------- Controller actions ----------------- */
 
 /**
@@ -478,7 +639,7 @@ export const updateTour = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const sanitized = sanitizeTourPayload(req.body);
+        const sanitized = sanitizeTourPayloadForUpdate(req.body);
 
         const updatedTour = await TourRepository.findByIdAndUpdate(id, sanitized, {
             new: true,

@@ -9,7 +9,9 @@
     "start": "turbo run start",
     "test": "turbo run test",
     "clean": "turbo run clean",
-    "apps": "turbo run dev --filter='./apps/*'"
+    "apps": "turbo run dev --filter='./apps/*'",
+    "storybook": "pnpm --filter @packages/trem-standard-ui-library storybook",
+    "build:storybook": "pnpm --filter @packages/trem-standard-ui-library build-storybook"
   },
   "devDependencies": {
     "turbo": "^2.9.9"

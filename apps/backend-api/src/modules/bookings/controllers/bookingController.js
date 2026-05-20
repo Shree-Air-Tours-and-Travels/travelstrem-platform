@@ -729,6 +729,31 @@ export const cancelBooking = async (req, res) => {
     }
 };
 
+export const getCancelInfo = async (req, res) => {
+    try {
+        const { booking, error } = await findAuthorizedBooking(req, req.params.bookingId || req.params.id, "view");
+        if (error) return sendError(res, error.message, error.status);
+
+        const tour = booking.tour;
+        const paidAmount = booking.paymentSummary?.paid || 0;
+        const totalAmount = booking.paymentSummary?.total || booking.priceSnapshot?.total || 0;
+        const refundEstimate = booking.status === "CANCELLED" ? 0 : paidAmount;
+
+        return sendSuccess(res, {
+            bookingRef: booking.bookingRef,
+            status: booking.status,
+            paidAmount,
+            totalAmount,
+            refundEstimate,
+            cancellationPolicy: tour?.cancellationPolicy || "Standard cancellation policy applies.",
+            canCancel: booking.status !== "CANCELLED" && booking.status !== "COMPLETED" && booking.status !== "REFUNDED",
+        }, "Cancel info retrieved.", { title: "Cancel Info" });
+    } catch (err) {
+        console.error("getCancelInfo:", err);
+        return sendError(res, err.message || "Failed to get cancel info", 500);
+    }
+};
+
 export const createQuote = async (req, res) => {
     try {
         const { booking, actor, error } = await findAuthorizedBooking(req, req.params.bookingId || req.params.id, "quote");

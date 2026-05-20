@@ -1,12 +1,10 @@
 import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import ManageTours from "../features/tours/ManageTours";
+import BookingDetail from "../features/tours/BookingDetail/BookingDetail";
 import { initApp } from "../core/initApp";
 import "../main.scss";
 import "bootstrap/dist/css/bootstrap.min.css";
-import "remixicon/fonts/remixicon.css";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
 import { useThemeMode } from "@packages/trem-utils";
 import { AuthPage, createAuthService } from "@apps/auth-trem";
 import { Header, Footer } from "@packages/trem-ui";
@@ -32,38 +30,32 @@ const adminHeaderConfig = {
 
 export default function AdminApp({ embedded = false, session: providedSession = null }) {
     const { theme, toggleTheme } = useThemeMode();
+    const location = useLocation();
     const [state, setState] = React.useState({
         loading: !embedded,
         error: null,
         session: providedSession,
     });
 
-    React.useEffect(() => {
-        // Embedded AdminTREM trusts the shell session boundary and avoids duplicate auth calls.
-        // Standalone AdminTREM still validates itself through its own lifecycle.
-        if (embedded) return undefined;
-
-        let active = true;
-
-        initApp({
-            pathname: window.location.pathname,
-            search: window.location.search,
-            hash: window.location.hash,
-            app: "adminTREM",
-        })
-            .then(({ session }) => {
-                if (!active) return;
-                setState({ loading: false, error: null, session });
-            })
-            .catch((error) => {
-                if (!active) return;
-                setState({ loading: false, error: error?.message || "init-app-failed", session: null });
+    const initAdminApp = React.useCallback(async () => {
+        setState((prev) => ({ ...prev, loading: true, error: null }));
+        try {
+            const { session } = await initApp({
+                pathname: window.location.pathname,
+                search: window.location.search,
+                hash: window.location.hash,
+                app: "adminTREM",
             });
+            setState({ loading: false, error: null, session });
+        } catch (error) {
+            setState({ loading: false, error: error?.message || "init-app-failed", session: null });
+        }
+    }, []);
 
-        return () => {
-            active = false;
-        };
-    }, [embedded]);
+    React.useEffect(() => {
+        if (embedded) return undefined;
+        initAdminApp();
+    }, [embedded, initAdminApp]);
 
     const reloadAdminSession = React.useCallback(async () => {
         clearUserSessionCache();
@@ -100,10 +92,21 @@ export default function AdminApp({ embedded = false, session: providedSession = 
     }
 
     if (state.error) {
-        return <main className="app-status">AdminTREM initialization failed: {state.error}</main>;
+        return (
+            <main className="app-status app-status--center">
+                <div>
+                    <div className="app-status__title">AdminTREM initialization failed</div>
+                    <div className="app-status__muted">{state.error}</div>
+                    <button className="btn btn-primary mt-3" onClick={initAdminApp}>
+                        Retry
+                    </button>
+                </div>
+            </main>
+        );
     }
 
     if (!embedded && (!state.session?.isAuthenticated || !isAllowedAdminRole(state.session))) {
+        const afterAuthPath = `${location.pathname}${location.search}${location.hash}` || "/admin/tours";
         return (
             <div className="admin-app-shell">
                 <Header headerConfig={adminHeaderConfig} theme={theme} onToggleTheme={toggleTheme} showNotifications={false} />
@@ -135,7 +138,7 @@ export default function AdminApp({ embedded = false, session: providedSession = 
                             },
                         ]}
                         defaultRole="admin"
-                        afterAuthPath="/admin/tours"
+                        afterAuthPath={afterAuthPath}
                     />
                 </main>
                 <Footer user={state.session?.user} />
@@ -152,6 +155,7 @@ export default function AdminApp({ embedded = false, session: providedSession = 
                 <Route path="/manage/tours" element={<ManageTours embedded={embedded} session={state.session} />} />
                 <Route path="/admin/tours" element={<ManageTours embedded={embedded} session={state.session} />} />
                 <Route path="/agent/tours" element={<ManageTours embedded={embedded} session={state.session} />} />
+                <Route path="/bookings/:bookingId" element={<BookingDetail />} />
                 <Route path="*" element={<Navigate to="/manage/tours" replace />} />
             </Routes>
             {!embedded && <Footer user={state.session?.user} />}

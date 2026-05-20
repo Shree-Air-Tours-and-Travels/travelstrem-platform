@@ -30,7 +30,10 @@
         "confirmPayTitle": "Confirm Payment",
         "confirmPayNote": "This will record a payment of {amount} against your booking.",
         "confirmPayLabel": "Pay Now",
-        "confirmCancelLabel": "Cancel"
+        "confirmCancelLabel": "Cancel",
+        "loadPageError": "Failed to load checkout page",
+        "loadWidgetsError": "Failed to load checkout",
+        "loadError": "Failed to load checkout"
       },
       "urls": {}
     },

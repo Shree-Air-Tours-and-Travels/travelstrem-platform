@@ -2,7 +2,7 @@ import React from "react";
 import { Header } from "@packages/trem-ui";
 import { useThemeMode } from "@packages/trem-utils";
 import AuthPage from "../features/auth/AuthPage.jsx";
-import { createAuthApi, createAuthService } from "../services/authService.js";
+import { createAuthApi, createAuthService } from "@packages/trem-auth-core";
 
 const api = createAuthApi();
 const authService = createAuthService(api);

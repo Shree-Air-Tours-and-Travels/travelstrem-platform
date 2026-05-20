@@ -1,4 +1,5 @@
 import { getConfiguredApiBase } from "../core/config/portalEnvironment";
+import api from "./apiClient";
 
 const normalizeApiBase = (raw) => {
     const base = raw || "http://localhost:5000";
@@ -9,25 +10,10 @@ const normalizeApiBase = (raw) => {
 export const API_BASE = normalizeApiBase(getConfiguredApiBase());
 
 const readComponentData = async (path, params = {}) => {
-    const url = new URL(`${API_BASE}${path}`);
-    Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) url.searchParams.set(key, value);
-    });
-
-    const res = await fetch(url.toString(), {
-        credentials: "include",
-        headers: {
-            "Content-Type": "application/json",
-        },
-    });
-
-    if (!res.ok) throw new Error(`Config request failed: ${path}`);
-
-    const data = await res.json();
+    const { data } = await api.get(path, { params });
     return data.componentData || data;
 };
 
 export const getHeaderConfig = (params) => readComponentData("/header-config", params);
 
-// Retained for standalone diagnostics/CMS previews. Normal init consumes pageConfig from /session.
 export const getPageConfig = (params) => readComponentData("/page-config", params);
