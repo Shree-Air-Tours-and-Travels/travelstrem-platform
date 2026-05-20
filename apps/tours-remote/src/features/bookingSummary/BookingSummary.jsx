@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { Breadcrumbs, GlobalLoader, Icon, FloatingActionBar } from "@packages/trem-ui";
+import { Breadcrumbs, Button, GlobalLoader, Icon, FloatingActionBar, Title, Paragraph } from "@packages/trem-ui";
 import { ConfirmOverlay } from "@packages/trem-modals";
 import { fetchData } from "@packages/trem-utils";
 import "../booking/Booking.scss";
@@ -355,12 +355,12 @@ export default function BookingSummaryPage({ dispatchEvent } = {}) {
 
   const fabActions = useMemo(() => [
     ...(canProceedToCheckout ? [{ label: t("proceedToCheckout", "Proceed to Checkout"), variant: "primary", iconRight: "arrowRight", onClick: proceedToCheckout, disabled: saving }] : []),
-    ...(canEdit ? [{ label: saving ? t("saving", "Saving...") : t("updateBooking", "Update Booking"), variant: "ghost", iconLeft: "save", onClick: handleSave, disabled: saving || !hasChanges }] : []),
-    ...(hasQuote ? [{ label: t("downloadQuote", "Download Quote"), variant: "ghost", iconLeft: "download", onClick: downloadQuote, disabled: saving }] : []),
-    ...(hasPayment ? [{ label: t("downloadInvoice", "Download Invoice"), variant: "ghost", iconLeft: "download", onClick: downloadInvoice, disabled: saving }] : []),
-    ...(isConfirmedOrAfter ? [{ label: t("bookingPass", "Booking Pass"), variant: "ghost", iconLeft: "download", onClick: downloadBookingPass, disabled: saving }] : []),
+    ...(canEdit ? [{ label: saving ? t("saving", "Saving...") : t("updateBooking", "Update Booking"), variant: "outline", iconLeft: "save", onClick: handleSave, disabled: saving || !hasChanges }] : []),
+    ...(hasQuote ? [{ label: t("downloadQuote", "Download Quote"), variant: "outline", iconLeft: "download", onClick: downloadQuote, disabled: saving }] : []),
+    ...(hasPayment ? [{ label: t("downloadInvoice", "Download Invoice"), variant: "outline", iconLeft: "download", onClick: downloadInvoice, disabled: saving }] : []),
+    ...(isConfirmedOrAfter ? [{ label: t("bookingPass", "Booking Pass"), variant: "outline", iconLeft: "download", onClick: downloadBookingPass, disabled: saving }] : []),
     ...(canCancel ? [{ label: t("cancelLabel", "Cancel Booking"), variant: "danger", iconLeft: "x", onClick: () => setShowCancel(true), disabled: saving }] : []),
-    { label: t("contactAgent", "Contact Agent"), iconLeft: "phone", onClick: () => window.open(pageLabels?.contactPhoneUrl || "tel:+919057635580"), overflowMobile: true },
+    ...(pageLabels?.contactPhoneUrl || pageLabels?.supportPhone ? [{ label: t("contactAgent", "Contact Agent"), variant: "outline", iconLeft: "phone", onClick: () => window.open(pageLabels?.contactPhoneUrl || "tel:+919057635580"), overflowMobile: true }] : []),
   ], [canProceedToCheckout, canEdit, canCancel, saving, hasChanges, proceedToCheckout, handleSave, hasQuote, hasPayment, isConfirmedOrAfter, t, pageLabels]);
 
   const runAction = async (endpoint, successMessage, body = {}) => {
@@ -393,9 +393,9 @@ export default function BookingSummaryPage({ dispatchEvent } = {}) {
       <main className="booking-summary-page">
         <section className="booking-summary-page__empty">
           <Icon name="alertTriangle" />
-          <h1>{t("bookingLoadError", "Booking could not load")}</h1>
-          <p>{error}</p>
-          <button type="button" onClick={() => goToDashboard(referrer.activeNav)}>{t("backToDashboard", "Back to dashboard")}</button>
+          <Title text={t("bookingLoadError", "Booking could not load")} />
+          <Paragraph text={error} />
+          <Button variant="outline" onClick={() => goToDashboard(referrer.activeNav)}>{t("backToDashboard", "Back to dashboard")}</Button>
         </section>
       </main>
     );
@@ -415,14 +415,14 @@ export default function BookingSummaryPage({ dispatchEvent } = {}) {
         <header className="booking-summary-hero">
           <div>
             <span className={`booking-summary-status ${statusClass(status)}`}>{statusLabel(status)}</span>
-            <h1>{tour?.title || t("pageTitle", "Booking Summary")}</h1>
-            <p>{booking?.bookingRef}</p>
+            <Title text={tour?.title || t("pageTitle", "Booking Summary")} />
+            <Paragraph text={booking?.bookingRef} />
           </div>
           <div className="booking-summary-hero__actions">
-            <button type="button" onClick={() => goToDashboard(referrer.activeNav || "tours")}>
+            <Button variant="text" onClick={() => goToDashboard(referrer.activeNav || "tours")}>
               {t("dashboard", "Dashboard")}
-            </button>
-            {canCancel ? <button type="button" className="is-danger" onClick={() => setShowCancel(true)}>{t("cancelBooking", "Cancel Booking")}</button> : null}
+            </Button>
+            {canCancel ? <Button variant="solid" color="danger" primaryClassName="is-danger" onClick={() => setShowCancel(true)}>{t("cancelBooking", "Cancel Booking")}</Button> : null}
           </div>
         </header>
 
@@ -432,8 +432,8 @@ export default function BookingSummaryPage({ dispatchEvent } = {}) {
             <span>
               {(t("assignedTo", "Assigned to {name}") || "Assigned to {name}").replace("{name}", booking.assignedAgent.name)}
               {booking.assignedAgent.email ? ` (${booking.assignedAgent.email})` : ""}
-              {booking.quoteDueAt ? ` — ${(t("quoteDue", "Quote due: {date}") || "Quote due: {date}").replace("{date}", toDateInput(booking.quoteDueAt))}` : ""}
-              {booking.responseDueAt ? ` — ${(t("responseDue", "Response due: {date}") || "Response due: {date}").replace("{date}", toDateInput(booking.responseDueAt))}` : ""}
+              {booking.quoteDueAt ? ` , ${(t("quoteDue", "Quote due: {date}") || "Quote due: {date}").replace("{date}", toDateInput(booking.quoteDueAt))}` : ""}
+              {booking.responseDueAt ? ` , ${(t("responseDue", "Response due: {date}") || "Response due: {date}").replace("{date}", toDateInput(booking.responseDueAt))}` : ""}
             </span>
           </div>
         ) : null}
@@ -476,14 +476,14 @@ export default function BookingSummaryPage({ dispatchEvent } = {}) {
             <img src={tour?.photo || tour?.photos?.[0] || "https://res.cloudinary.com/dofxshf3z/image/upload/v1779131576/tour-img01_tljj0m.jpg"} alt="" />
             <div>
               <div className="booking-summary-card__tour-header">
-                <h2>{tour?.title || t("tourDetails", "Tour details")}</h2>
-                {viewTourAction && viewTourUrl ? <button type="button" onClick={viewTour} className="booking-summary-card__tour-btn">{viewTourLabel}</button> : null}
+                <Title text={tour?.title || t("tourDetails", "Tour details")} />
+                {viewTourAction && viewTourUrl ? <Button variant="text" primaryClassName="booking-summary-card__tour-btn" onClick={viewTour}>{viewTourLabel}</Button> : null}
               </div>
-              <p>{tour?.desc || t("tourDetailsFallback", "Tour details will appear here once confirmed.")}</p>
+              <Paragraph text={tour?.desc || t("tourDetailsFallback", "Tour details will appear here once confirmed.")} />
               <div className="booking-summary-card__downloads">
-                {hasQuote ? <button type="button" className="is-link" onClick={downloadQuote}><Icon name="download" size={14} /> {t("downloadQuote", "Download Quote")}</button> : null}
-                {hasPayment ? <button type="button" className="is-link" onClick={downloadInvoice}><Icon name="download" size={14} /> {t("downloadInvoice", "Download Invoice")}</button> : null}
-                {isConfirmedOrAfter ? <button type="button" className="is-link" onClick={downloadBookingPass}><Icon name="download" size={14} /> {t("bookingPass", "Booking Pass")}</button> : null}
+                {hasQuote ? <Button variant="text" primaryClassName="is-link" onClick={downloadQuote}><Icon name="download" size={14} /> {t("downloadQuote", "Download Quote")}</Button> : null}
+                {hasPayment ? <Button variant="text" primaryClassName="is-link" onClick={downloadInvoice}><Icon name="download" size={14} /> {t("downloadInvoice", "Download Invoice")}</Button> : null}
+                {isConfirmedOrAfter ? <Button variant="text" primaryClassName="is-link" onClick={downloadBookingPass}><Icon name="download" size={14} /> {t("bookingPass", "Booking Pass")}</Button> : null}
               </div>
               <dl>
                 <div><dt>{t("guestLabel", "Guests")}</dt><dd>{booking?.guestsCount || form?.travelers?.length || 1}</dd></div>
@@ -491,12 +491,12 @@ export default function BookingSummaryPage({ dispatchEvent } = {}) {
                 <div><dt>{price.isFinal ? t("finalTotal", "Total") : t("estimatedTotal", "Estimated Total")}</dt><dd>{price.isFinal ? price.total : price.estimateTotal}</dd></div>
                 <div><dt>{t("remaining", "Remaining")}</dt><dd>{price.remaining}</dd></div>
               </dl>
-              {!price.isFinal ? <p className="booking-summary-card__note">{t("estimateNote", "This is an estimate. Final cost will be confirmed by an admin quote.")}</p> : null}
+              {!price.isFinal ? <Paragraph primaryClassname="booking-summary-card__note" text={t("estimateNote", "This is an estimate. Final cost will be confirmed by an admin quote.")} /> : null}
             </div>
           </article>
 
           <article className="booking-summary-card">
-            <h2>{t("travelDetails", "Travel Details")}</h2>
+            <Title text={t("travelDetails", "Travel Details")} />
             <div className="booking-summary-form-grid">
               <label>{t("startDate", "Start Date")}<input type="date" value={form.startDate} disabled={!canEdit} onChange={(event) => setForm((prev) => ({ ...prev, startDate: event.target.value }))} /></label>
               <label>{t("endDate", "End Date")}<input type="date" value={form.endDate} disabled={!canEdit} onChange={(event) => setForm((prev) => ({ ...prev, endDate: event.target.value }))} /></label>
@@ -509,15 +509,15 @@ export default function BookingSummaryPage({ dispatchEvent } = {}) {
 
           <article className="booking-summary-card">
             <header className="booking-summary-card__header">
-              <h2>{t("travelers", "Travelers")}</h2>
-              {canEdit ? <button type="button" onClick={addTraveler}>{t("addTraveler", "Add Traveler")}</button> : null}
+              <Title text={t("travelers", "Travelers")} />
+              {canEdit ? <Button variant="text" onClick={addTraveler}>{t("addTraveler", "Add Traveler")}</Button> : null}
             </header>
             <div className="booking-summary-travelers">
               {form.travelers.map((traveler, index) => (
                 <section key={traveler.id || index} className="booking-summary-traveler">
                   <header>
                     <strong>{(t("travelerLabel", "Traveler {number}") || "Traveler {number}").replace("{number}", String(index + 1))}</strong>
-                    {canEdit && form.travelers.length > 1 ? <button type="button" onClick={() => removeTraveler(index)}>{t("remove", "Remove")}</button> : null}
+                    {canEdit && form.travelers.length > 1 ? <Button variant="text" onClick={() => removeTraveler(index)}>{t("remove", "Remove")}</Button> : null}
                   </header>
                   <div className="booking-summary-form-grid">
                     <label>{t("firstName", "First Name")}<input value={traveler.firstName} disabled={!canEdit} onChange={(event) => updateTraveler(index, "firstName", event.target.value)} /></label>
@@ -536,7 +536,7 @@ export default function BookingSummaryPage({ dispatchEvent } = {}) {
           </article>
 
           <article className="booking-summary-card">
-            <h2>{t("journeyTimeline", "Journey Timeline")}</h2>
+            <Title text={t("journeyTimeline", "Journey Timeline")} />
             <div className="booking-summary-timeline">
               {(booking?.timeline || booking?.statusHistory || []).slice(0, 8).map((item) => (
                 <div key={item.id || item._id || item.createdAt}>
@@ -547,15 +547,15 @@ export default function BookingSummaryPage({ dispatchEvent } = {}) {
                   </div>
                 </div>
               ))}
-              {!(booking?.timeline || booking?.statusHistory || []).length ? <p>{t("noTimeline", "No timeline updates yet.")}</p> : null}
+              {!(booking?.timeline || booking?.statusHistory || []).length ? <Paragraph text={t("noTimeline", "No timeline updates yet.")} /> : null}
             </div>
           </article>
         </section>
 
         <FloatingActionBar
           variant="floating"
-          align="stretch"
           showBg
+          mobileVisible={4}
           actions={fabActions}
           renderOverflow={(actions) => (
             <div className="booking-fab__contact">
@@ -595,11 +595,11 @@ export default function BookingSummaryPage({ dispatchEvent } = {}) {
         <div className="booking-summary-return" role="dialog" aria-modal="true">
           <div>
             <Icon name="checkCircle" />
-            <h2>{t("bookingSubmitted", "Booking request submitted")}</h2>
-            <p>{t("submittedPrompt", "You can stay on this summary page to review details, or go to your dashboard. The dashboard View Booking action will bring you back here.")}</p>
+            <Title text={t("bookingSubmitted", "Booking request submitted")} />
+            <Paragraph text={t("submittedPrompt", "You can stay on this summary page to review details, or go to your dashboard. The dashboard View Booking action will bring you back here.")} />
             <div>
-              <button type="button" onClick={() => goToDashboard("tours")}>{t("goToDashboard", "Go to Dashboard")}</button>
-              <button type="button" onClick={() => setShowDashboardPrompt(false)}>{t("stayHere", "Stay Here")}</button>
+              <Button variant="text" onClick={() => goToDashboard("tours")}>{t("goToDashboard", "Go to Dashboard")}</Button>
+              <Button variant="text" onClick={() => setShowDashboardPrompt(false)}>{t("stayHere", "Stay Here")}</Button>
             </div>
           </div>
         </div>

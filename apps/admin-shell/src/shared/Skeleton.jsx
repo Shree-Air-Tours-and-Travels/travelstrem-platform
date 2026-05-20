@@ -1,4 +1,5 @@
 import React from "react";
+import { Button, SubTitle, Paragraph } from "@packages/trem-ui";
 
 const styles = {
     tourCard: {
@@ -55,9 +56,9 @@ export function WidgetError({ message, onRetry }) {
             borderRadius: 8,
             border: '1px solid var(--danger-soft, #ffd0d0)',
         }}>
-            <h3 style={{ margin: '0 0 0.5rem', color: 'var(--color-danger, #e00)' }}>Something went wrong</h3>
-            <p style={{ margin: '0 0 1rem', fontSize: 14 }}>{message}</p>
-            {onRetry && <button className="btn" onClick={onRetry}>Retry</button>}
+            <SubTitle text="Something went wrong" variant="primary" color="var(--color-danger, #e00)" />
+            <Paragraph size="small">{message}</Paragraph>
+            {onRetry && <Button primaryClassName="btn" variant="solid" color="primary" onClick={onRetry} text="Retry" />}
         </div>
     );
 }

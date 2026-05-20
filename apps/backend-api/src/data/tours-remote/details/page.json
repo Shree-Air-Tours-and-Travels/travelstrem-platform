@@ -7,7 +7,19 @@
     },
     "elements": {
       "labels": {
-        "pageTitle": "Tour Details"
+        "pageTitle": "Tour Details",
+        "bookNow": "Book now",
+        "enquire": "Enquire",
+        "backToTours": "Back to tours",
+        "backToLabel": "Back to",
+        "referrerTours": "Tours",
+        "confirmBookingTitle": "Book Your Spot",
+        "confirmBookingNote": "Please note that this is a request for booking. Our agent will get in touch with you to provide a final quote and confirm your reservation.",
+        "confirmBookingConfirmLabel": "Request Booking",
+        "confirmBookingCancelLabel": "Cancel",
+        "tourNotFoundTitle": "Tour not found",
+        "tourNotFoundMessage": "The tour link is missing a valid reference.",
+        "tourErrorTitle": "Tour details could not load"
       },
       "urls": {}
     },
@@ -18,41 +30,75 @@
       "widgets": [
         {
           "type": "TourGallery",
+          "source": "shell",
           "widgetRef": "./widgets/tour-gallery.json"
         },
         {
           "type": "TourOverview",
+          "source": "shell",
           "widgetRef": "./widgets/tour-overview.json"
         },
         {
           "type": "TourHighlights",
+          "source": "shell",
           "widgetRef": "./widgets/tour-highlights.json"
         },
         {
           "type": "PricingCard",
+          "source": "shell",
           "widgetRef": "./widgets/pricing-card.json"
         },
         {
           "type": "ItineraryTimeline",
+          "source": "shell",
           "widgetRef": "./widgets/itinerary-timeline.json"
         },
         {
           "type": "InclusionsExclusions",
+          "source": "shell",
           "widgetRef": "./widgets/inclusions-exclusions.json"
         },
         {
           "type": "CancellationPolicy",
+          "source": "shell",
           "widgetRef": "./widgets/cancellation-policy.json"
         },
         {
           "type": "ReviewsSection",
+          "source": "shell",
           "widgetRef": "./widgets/reviews-section.json"
         },
         {
           "type": "SimilarTours",
+          "source": "shell",
           "widgetRef": "./widgets/similar-tours.json"
         }
       ],
+      "floatingActionBar": {
+        "config": {
+          "variant": "floating",
+          "align": "left-right",
+          "showBg": true,
+          "mobileVisible": 2
+        },
+        "actions": [
+          {
+            "type": "ghost",
+            "refId": "enquire",
+            "config": {
+              "alignementOnBar": "left",
+              "iconLeft": "messageCircle"
+            }
+          },
+          {
+            "type": "submit",
+            "refId": "bookNow",
+            "config": {
+              "alignementOnBar": "right"
+            }
+          }
+        ]
+      },
       "config": {},
       "actions": []
     }

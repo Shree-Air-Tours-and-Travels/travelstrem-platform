@@ -93,7 +93,7 @@
 
 .theme--light {
   color-scheme: light;
-  --color-primary: rgb(25, 28, 28);
+  --color-primary: #0f8f86;
   --color-primary-dark: #07655f;
   --color-secondary: #1d4f91;
   --color-secondary-dark: #123565;
@@ -171,6 +171,7 @@
 
 .theme--dark {
   color-scheme: dark;
+  --color-danger: #f87171;
   --bg: #081312;
   --bg-2: #0d1d1b;
   --card-bg: #102321;

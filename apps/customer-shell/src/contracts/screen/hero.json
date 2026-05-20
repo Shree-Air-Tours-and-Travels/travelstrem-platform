@@ -2,10 +2,10 @@
     "status": "success",
     "message": "Hero content fetched successfully",
     "componentData": {
-        "title": "Traveling opens the door to creating",
-        "description": "Discover the world with TravelsTREM...",
         "data": [],
         "structure": {
+            "title": "Traveling opens the door to creating",
+            "description": "Discover the world with TravelsTREM...",
             "eyebrow": "Premium Travel Experiences",
             "highlight": "memories",
             "buttonText": "Explore Now",
@@ -71,3 +71,4 @@
         "config": {}
     }
 }
+

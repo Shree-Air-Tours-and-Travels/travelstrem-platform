@@ -34,3 +34,35 @@ export const quickFilters = [
   { id: "luxury", label: "Luxury" },
   { id: "disabled", label: "Disabled", disabled: true },
 ];
+
+export const galleryImages = [
+  "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80",
+  "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=1200&q=80",
+  "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1200&q=80",
+  "https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1200&q=80",
+  "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80",
+  "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1200&q=80",
+  "https://images.unsplash.com/photo-1530789253388-582c481c54b0?auto=format&fit=crop&w=1200&q=80",
+];
+
+export const contactFields = [
+  { name: "name", label: "Full Name", type: "text", placeholder: "Enter your name" },
+  { name: "email", label: "Email Address", type: "email", placeholder: "you@example.com" },
+  { name: "phone", label: "Phone Number", type: "tel", placeholder: "+1 234 567 890" },
+  { name: "message", label: "Message", type: "textarea", placeholder: "Tell us about your trip..." },
+];
+
+export const headerNavItems = [
+  { id: "home", label: "Home", path: "/" },
+  { id: "tours", label: "Tours", path: "/tours" },
+  {
+    id: "more",
+    label: "More",
+    type: "dropdown",
+    items: [
+      { id: "about", label: "About", path: "/about" },
+      { id: "contact", label: "Contact", path: "/contact" },
+      { id: "faq", label: "FAQ", path: "/faq" },
+    ],
+  },
+];

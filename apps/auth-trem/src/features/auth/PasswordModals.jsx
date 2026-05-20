@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Button, SubTitle, Paragraph } from "@packages/trem-ui";
 
 const usePreventScroll = (open) => {
   useEffect(() => {
@@ -56,16 +57,16 @@ export function ForgotPasswordModal({ open, initialEmail = "", onClose, onOtpSen
       <div className="auth-modal__card">
         <div className="auth-modal__header">
           <div>
-            <h3>Forgot password</h3>
-            <p>Enter your account email and we will send a secure OTP.</p>
+            <SubTitle text="Forgot password" />
+            <Paragraph>Enter your account email and we will send a secure OTP.</Paragraph>
           </div>
         </div>
         <label className="auth-modal__label">Email</label>
         <input className="auth-modal__field" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" type="email" autoFocus />
         {message && <div className={`auth-modal__message auth-modal__message--${variant}`}>{message}</div>}
         <div className="auth-modal__actions">
-          <button type="button" className="auth-modal__ghost" onClick={onClose} disabled={loading}>Close</button>
-          <button type="button" className="auth-modal__primary" onClick={handleSendOtp} disabled={loading}>{loading ? "Sending..." : "Send OTP"}</button>
+          <Button variant="text" isCircular iconLeft="x" onClick={onClose} aria-label="Close" primaryClassName="auth-modal__ghost" />
+          <Button variant="solid" color="primary" text="Send OTP" onClick={handleSendOtp} disabled={loading} primaryClassName="auth-modal__primary" />
         </div>
       </div>
     </div>
@@ -131,8 +132,8 @@ export function ResetPasswordModal({ open, email = "", onClose, onResetSuccess, 
       <div className="auth-modal__card">
         <div className="auth-modal__header">
           <div>
-            <h3>Reset password</h3>
-            <p>OTP was sent to <strong>{email}</strong>.</p>
+            <SubTitle text="Reset password" />
+            <Paragraph>OTP was sent to <strong>{email}</strong>.</Paragraph>
           </div>
         </div>
         <label className="auth-modal__label">One-time code</label>
@@ -143,8 +144,8 @@ export function ResetPasswordModal({ open, email = "", onClose, onResetSuccess, 
         <input className="auth-modal__field" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Confirm password" type="password" />
         {message && <div className={`auth-modal__message auth-modal__message--${variant}`}>{message}</div>}
         <div className="auth-modal__actions">
-          <button type="button" className="auth-modal__ghost" onClick={onClose} disabled={loading}>Close</button>
-          <button type="button" className="auth-modal__primary" onClick={handleReset} disabled={loading}>{loading ? "Resetting..." : "Reset password"}</button>
+          <Button variant="text" isCircular iconLeft="x" onClick={onClose} aria-label="Close" primaryClassName="auth-modal__ghost" />
+          <Button variant="solid" color="primary" text="Reset Password" type="submit" onClick={handleReset} disabled={loading} primaryClassName="auth-modal__primary" />
         </div>
       </div>
     </div>

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
+import { Button } from "@packages/trem-ui";
 
 const STATUS_LABEL = (s) => String(s || "").replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 
@@ -54,7 +55,7 @@ export default function BookingCard({ booking, role, onCancel, onStatusTransitio
         <div>
           <strong style={{ fontSize: 16 }}>{tour.title || "Untitled tour"}</strong>
           <div style={{ fontSize: 12, color: "#666" }}>
-            {booking.startDate ? new Date(booking.startDate).toLocaleDateString() : "—"} → {booking.endDate ? new Date(booking.endDate).toLocaleDateString() : "—"}
+            {booking.startDate ? new Date(booking.startDate).toLocaleDateString() : ","} → {booking.endDate ? new Date(booking.endDate).toLocaleDateString() : ","}
           </div>
         </div>
         <div style={{ textAlign: "right" }}>
@@ -66,10 +67,10 @@ export default function BookingCard({ booking, role, onCancel, onStatusTransitio
       <div style={{ display: "flex", gap: 12 }}>
         <div style={{ flex: 1 }}>
           <div style={{ marginBottom: 6 }}>
-            <strong>Contact:</strong> {user.name || booking.primaryContact?.name || booking.contactEmail || booking.travelers?.[0]?.email || "—"}
+            <strong>Contact:</strong> {user.name || booking.primaryContact?.name || booking.contactEmail || booking.travelers?.[0]?.email || ","}
           </div>
           <div style={{ marginBottom: 6 }}>
-            <strong>Pricing:</strong> {priceSnapshot?.perPerson ? `${priceSnapshot.perPerson} each` : "—"} · total {priceSnapshot?.total || "—"} {priceSnapshot?.currency || "INR"}
+            <strong>Pricing:</strong> {priceSnapshot?.perPerson ? `${priceSnapshot.perPerson} each` : ","} · total {priceSnapshot?.total || ","} {priceSnapshot?.currency || "INR"}
           </div>
           {paymentSummary ? (
             <div style={{ marginBottom: 6, display: "flex", gap: 12, fontSize: 13 }}>
@@ -91,8 +92,8 @@ export default function BookingCard({ booking, role, onCancel, onStatusTransitio
                   </div>
                 ))}
                 <div style={{ display: "flex", gap: 6 }}>
-                  <button className="bm-btn bm-btn-ghost" onClick={() => { setEditing(false); setLocalTravelers(booking.travelers || []); }}>Cancel</button>
-                  <button className="bm-btn bm-btn-primary" onClick={() => { setEditing(false); onUpdateTravelers?.(localTravelers); }}>Save</button>
+                  <Button primaryClassName="bm-btn bm-btn-ghost" variant="outline" onClick={() => { setEditing(false); setLocalTravelers(booking.travelers || []); }} text="Cancel" />
+                  <Button primaryClassName="bm-btn bm-btn-primary" variant="solid" color="primary" onClick={() => { setEditing(false); onUpdateTravelers?.(localTravelers); }} text="Save" />
                 </div>
               </div>
             ) : (
@@ -107,21 +108,17 @@ export default function BookingCard({ booking, role, onCancel, onStatusTransitio
         </div>
 
         <aside style={{ width: 240, display: "flex", flexDirection: "column", gap: 6 }}>
-          <button className="bm-btn bm-btn-outline" onClick={() => onOpen?.(id)} style={{ width: "100%" }}>View Details</button>
+          <Button primaryClassName="bm-btn bm-btn-outline" variant="outline" onClick={() => onOpen?.(id)} text="View Details" />
 
           {isAdmin && canGenerateQuote ? (
             <div>
               <input type="number" value={quoteAmount} onChange={e => setQuoteAmount(e.target.value)} placeholder="Amount" style={{ width: "100%", marginBottom: 4 }} />
-              <button className="bm-btn bm-btn-primary" style={{ width: "100%" }} disabled={actionLoading === "quote"} onClick={() => doAction("quote", () => onGenerateQuote?.(id, { finalAmount: Number(quoteAmount) || 0, currency: priceSnapshot?.currency || "INR" }))}>
-                {actionLoading === "quote" ? "Sending..." : "Generate & Send Quote"}
-              </button>
+              <Button primaryClassName="bm-btn bm-btn-primary" variant="solid" color="primary" disabled={actionLoading === "quote"} onClick={() => doAction("quote", () => onGenerateQuote?.(id, { finalAmount: Number(quoteAmount) || 0, currency: priceSnapshot?.currency || "INR" }))} text={actionLoading === "quote" ? "Sending..." : "Generate & Send Quote"} />
             </div>
           ) : null}
 
           {isAdmin && (statusActions[status] || []).map((sa) => (
-            <button key={sa.action} className="bm-btn bm-btn-primary" style={{ width: "100%" }} disabled={actionLoading === sa.action} onClick={() => doAction(sa.action, () => onStatusTransition?.(id, sa.target))}>
-              {actionLoading === sa.action ? "Processing..." : sa.label}
-            </button>
+            <Button key={sa.action} primaryClassName="bm-btn bm-btn-primary" variant="solid" color="primary" disabled={actionLoading === sa.action} onClick={() => doAction(sa.action, () => onStatusTransition?.(id, sa.target))} text={actionLoading === sa.action ? "Processing..." : sa.label} />
           ))}
 
           {isAdmin && !isTerminal && remaining > 0 ? (
@@ -129,14 +126,12 @@ export default function BookingCard({ booking, role, onCancel, onStatusTransitio
               <div>
                 <input type="number" value={payAmount} onChange={e => setPayAmount(e.target.value)} placeholder="Amount" style={{ width: "100%", marginBottom: 4 }} />
                 <div style={{ display: "flex", gap: 4 }}>
-                  <button className="bm-btn bm-btn-ghost" style={{ flex: 1 }} onClick={() => setShowPayInput(false)}>Cancel</button>
-                  <button className="bm-btn bm-btn-primary" style={{ flex: 1 }} disabled={actionLoading === "pay"} onClick={() => doAction("pay", () => onRecordPayment?.(id, Number(payAmount), priceSnapshot?.currency || "INR").then(() => setShowPayInput(false)))}>
-                    {actionLoading === "pay" ? "..." : "Record"}
-                  </button>
+                  <Button primaryClassName="bm-btn bm-btn-ghost" variant="outline" onClick={() => setShowPayInput(false)} text="Cancel" />
+                  <Button primaryClassName="bm-btn bm-btn-primary" variant="solid" color="primary" disabled={actionLoading === "pay"} onClick={() => doAction("pay", () => onRecordPayment?.(id, Number(payAmount), priceSnapshot?.currency || "INR").then(() => setShowPayInput(false)))} text={actionLoading === "pay" ? "..." : "Record"} />
                 </div>
               </div>
             ) : (
-              <button className="bm-btn" style={{ width: "100%" }} onClick={() => { setPayAmount(remaining); setShowPayInput(true); }}>Record Payment</button>
+              <Button primaryClassName="bm-btn" variant="solid" onClick={() => { setPayAmount(remaining); setShowPayInput(true); }} text="Record Payment" />
             )
           ) : null}
 
@@ -145,21 +140,17 @@ export default function BookingCard({ booking, role, onCancel, onStatusTransitio
               <div>
                 <input type="number" value={refundAmount} onChange={e => setRefundAmount(e.target.value)} placeholder="Refund amount" style={{ width: "100%", marginBottom: 4 }} />
                 <div style={{ display: "flex", gap: 4 }}>
-                  <button className="bm-btn bm-btn-ghost" style={{ flex: 1 }} onClick={() => setShowRefundInput(false)}>Cancel</button>
-                  <button className="bm-btn bm-btn-danger" style={{ flex: 1 }} disabled={actionLoading === "refund"} onClick={() => doAction("refund", () => onRefund?.(id, Number(refundAmount), priceSnapshot?.currency || "INR").then(() => setShowRefundInput(false)))}>
-                    {actionLoading === "refund" ? "..." : "Refund"}
-                  </button>
+                  <Button primaryClassName="bm-btn bm-btn-ghost" variant="outline" onClick={() => setShowRefundInput(false)} text="Cancel" />
+                  <Button primaryClassName="bm-btn bm-btn-danger" variant="solid" color="danger" disabled={actionLoading === "refund"} onClick={() => doAction("refund", () => onRefund?.(id, Number(refundAmount), priceSnapshot?.currency || "INR").then(() => setShowRefundInput(false)))} text={actionLoading === "refund" ? "..." : "Refund"} />
                 </div>
               </div>
             ) : (
-              <button className="bm-btn bm-btn-danger" style={{ width: "100%" }} onClick={() => setShowRefundInput(true)}>Process Refund</button>
+              <Button primaryClassName="bm-btn bm-btn-danger" variant="solid" color="danger" onClick={() => setShowRefundInput(true)} text="Process Refund" />
             )
           ) : null}
 
           {!isTerminal ? (
-            <button className="bm-btn bm-btn-ghost" style={{ width: "100%" }} disabled={actionLoading === "cancel"} onClick={() => doAction("cancel", () => onCancel?.(id))}>
-              Cancel Booking
-            </button>
+            <Button primaryClassName="bm-btn bm-btn-ghost" variant="outline" disabled={actionLoading === "cancel"} onClick={() => doAction("cancel", () => onCancel?.(id))} text="Cancel Booking" />
           ) : null}
         </aside>
       </div>

@@ -105,7 +105,7 @@ const tourSchema = new Schema({
         source: { type: String, enum: ["manual", "ai", "agent"], default: "manual" },
     },
 
-    // Seasonal pricing—overrides base price when date in range
+    // Seasonal pricing,overrides base price when date in range
     seasonalPricing: [seasonalPricingSchema],
 
     // Itinerary and highlights

@@ -1,5 +1,5 @@
 import React from "react";
-import { Dropdown, Icon, TourCard, EmptyState } from "@packages/trem-ui";
+import { Button, Dropdown, Icon, TourCard, EmptyState } from "@packages/trem-ui";
 import { TourListSkeleton } from "../../shared";
 
 const getLabel = (labels = {}, item = {}) => {
@@ -31,28 +31,24 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
 
     return (
         <div className="tours-page__pagination">
-            <button className="tours-page__page-btn" type="button" disabled={currentPage <= 1} onClick={() => onPageChange(currentPage - 1)} aria-label="Previous page">
-                <Icon name="chevronLeft" />
-            </button>
+            <Button primaryClassName="tours-page__page-btn" variant="text" isCircular iconLeft="chevronLeft" disabled={currentPage <= 1} onClick={() => onPageChange(currentPage - 1)} aria-label="Previous page" />
             {pages.map((p, i) =>
                 p === "..." ? (
                     <span key={`ellipsis-${i}`} className="tours-page__page-ellipsis">...</span>
                 ) : (
-                    <button
+                    <Button
                         key={p}
-                        type="button"
-                        className={`tours-page__page-btn tours-page__page-num${p === currentPage ? " is-active" : ""}`}
+                        primaryClassName={`tours-page__page-btn tours-page__page-num${p === currentPage ? " is-active" : ""}`}
+                        variant="text"
                         onClick={() => onPageChange(p)}
                         aria-label={`Page ${p}`}
                         aria-current={p === currentPage ? "page" : undefined}
                     >
                         {p}
-                    </button>
+                    </Button>
                 )
             )}
-            <button className="tours-page__page-btn" type="button" disabled={currentPage >= totalPages} onClick={() => onPageChange(currentPage + 1)} aria-label="Next page">
-                <Icon name="chevronRight" />
-            </button>
+            <Button primaryClassName="tours-page__page-btn" variant="text" isCircular iconLeft="chevronRight" disabled={currentPage >= totalPages} onClick={() => onPageChange(currentPage + 1)} aria-label="Next page" />
         </div>
     );
 }
@@ -112,10 +108,10 @@ export default function ListingView({
                             className="tours-page__sort-dropdown"
                             menuClassName="tours-page__sort-menu"
                             trigger={({ open }) => (
-                                <button className="tours-page__sort-trigger" type="button" aria-label={sortLabel}>
+                                <Button primaryClassName="tours-page__sort-trigger" variant="text" aria-label={sortLabel}>
                                     <span>{getLabel(listingLabels, selectedSort)}</span>
                                     <Icon name="chevronDown" className={open ? "is-open" : ""} />
-                                </button>
+                                </Button>
                             )}
                         />
                     </label>

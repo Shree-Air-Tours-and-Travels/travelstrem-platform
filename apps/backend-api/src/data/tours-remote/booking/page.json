@@ -249,10 +249,35 @@
         "titleRef": "pageTitle"
       },
       "widgets": [
-        { "type": "BookingTripStep", "widgetRef": "./widgets/booking-trip.json", "id": 1 },
-        { "type": "BookingTravelerStep", "widgetRef": "./widgets/booking-traveler.json", "id": 2 },
-        { "type": "BookingReviewStep", "widgetRef": "./widgets/booking-review.json", "id": 3 }
+        { "type": "BookingTripStep", "source": "shell", "widgetRef": "./widgets/booking-trip.json", "id": 1 },
+        { "type": "BookingTravelerStep", "source": "shell", "widgetRef": "./widgets/booking-traveler.json", "id": 2 },
+        { "type": "BookingReviewStep", "source": "shell", "widgetRef": "./widgets/booking-review.json", "id": 3 }
       ],
+      "floatingActionBar": {
+        "config": {
+          "variant": "floating",
+          "align": "left-right",
+          "showBg": true,
+          "mobileVisible": 2
+        },
+        "actions": [
+          {
+            "type": "back",
+            "refId": "back",
+            "config": { "alignementOnBar": "left" }
+          },
+          {
+            "type": "next",
+            "refId": "next",
+            "config": { "alignementOnBar": "right" }
+          },
+          {
+            "type": "submit",
+            "refId": "submit",
+            "config": { "alignementOnBar": "right" }
+          }
+        ]
+      },
       "overlayConfig": {
         "submitConfirm": {
           "titleRef": "submitConfirmTitle",

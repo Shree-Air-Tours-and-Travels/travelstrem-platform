@@ -1,4 +1,4 @@
-# Codex Implementation Rules — TravelsTREM
+# Codex Implementation Rules , TravelsTREM
 
 This document defines mandatory implementation rules for Codex across the TravelsTREM monorepo.
 
@@ -40,7 +40,7 @@ Examples:
 
 Every generated document MUST use this structure:
 
-# Feature Name — Flow Documentation
+# Feature Name , Flow Documentation
 
 ## Overview
 

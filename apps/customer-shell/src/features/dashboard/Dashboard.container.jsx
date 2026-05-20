@@ -1,9 +1,8 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { fetchData } from "@packages/trem-utils";
+import React, { useEffect, useState, useCallback } from "react";
+import { fetchData, useComponentData } from "@packages/trem-utils";
 import { usePortalConfig } from "../../app/providers/PortalProvider";
 import DashboardPageView from "./Dashboard.view";
 
-const DASHBOARD_PAGE_ENDPOINT = "/pages/customer-shell/dashboard";
 const BOOKING_LIMIT = 8;
 
 const formatCurrency = (amount, currency = "INR") => {
@@ -67,10 +66,21 @@ const mapBookingRow = (booking) => {
 export default function DashboardPageContainer() {
     const { session } = usePortalConfig();
     const user = session?.user || {};
-    const [pageDefinition, setPageDefinition] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
+
+    const {
+        loading: pageLoading,
+        error: pageError,
+        elements,
+        structure,
+        resolvedView,
+    } = useComponentData("/pages/customer-shell/dashboard", {
+        headers: {},
+        params: {},
+    });
+
     const [profile, setProfile] = useState(null);
+    const [icons, setIcons] = useState([]);
+    const [profileLoading, setProfileLoading] = useState(true);
     const [bookingQuery, setBookingQuery] = useState({
         page: 1,
         search: "",
@@ -86,35 +96,39 @@ export default function DashboardPageContainer() {
         limit: BOOKING_LIMIT,
         metrics: null,
     });
+    const [favoritesState, setFavoritesState] = useState({
+        loading: true,
+        error: null,
+        items: [],
+    });
+    const [favoritesChips, setFavoritesChips] = useState([
+        { id: "tours", label: "Tours", active: true },
+        { id: "flights", label: "Flights", disabled: true },
+        { id: "hotels", label: "Hotels", disabled: true },
+        { id: "experiences", label: "Experiences", disabled: true },
+        { id: "visa", label: "Visa", disabled: true },
+    ]);
 
     useEffect(() => {
         let cancelled = false;
 
-        async function loadDashboard() {
-            setLoading(true);
-            setError("");
-
+        async function loadProfile() {
+            setProfileLoading(true);
             try {
-                const [pageRes, profileRes] = await Promise.all([
-                    fetchData(DASHBOARD_PAGE_ENDPOINT),
-                    fetchData("/auth/profile").catch(() => null),
-                ]);
-                if (!pageRes || pageRes.status !== "success") throw new Error(pageRes?.message || "Failed to load dashboard");
-                if (!cancelled) {
-                    setPageDefinition(pageRes.component || null);
-                    if (profileRes?.status === "success") setProfile(profileRes.componentData?.data);
+                const res = await fetchData("/auth/profile").catch(() => null);
+                if (!cancelled && res?.status === "success") {
+                    setProfile(res.componentData?.data || null);
+                    setIcons(res.componentData?.config?.icons || []);
                 }
-            } catch (err) {
-                if (!cancelled) setError(err?.message || "Failed to load dashboard");
+            } catch {
+                // ignore
             } finally {
-                if (!cancelled) setLoading(false);
+                if (!cancelled) setProfileLoading(false);
             }
         }
 
-        loadDashboard();
-        return () => {
-            cancelled = true;
-        };
+        loadProfile();
+        return () => { cancelled = true; };
     }, []);
 
     useEffect(() => {
@@ -174,26 +188,50 @@ export default function DashboardPageContainer() {
         };
     }, [bookingQuery]);
 
-    const dashboardContract = useMemo(() => {
-        const labels = pageDefinition?.elements?.labels || {};
-        const widgets = pageDefinition?.structure?.widgets || [];
-        const options = pageDefinition?.dataScope?.options || {};
-        return { labels, widgets, options };
-    }, [pageDefinition]);
+    const loadFavorites = useCallback(async () => {
+        setFavoritesState((prev) => ({ ...prev, loading: true, error: null }));
+        try {
+            const res = await fetchData("/tours.json/favorites");
+            if (res?.status === "success") {
+                const data = res.componentData?.data || [];
+                const structureChips = res.componentData?.structure?.widgets?.[0]?.props?.chips;
+                if (structureChips) setFavoritesChips(structureChips);
+                setFavoritesState({ loading: false, error: null, items: data });
+            } else {
+                setFavoritesState({ loading: false, error: res?.message || "Failed to load favorites", items: [] });
+            }
+        } catch (err) {
+            setFavoritesState({ loading: false, error: err.message || "Something went wrong", items: [] });
+        }
+    }, []);
+
+    useEffect(() => {
+        loadFavorites();
+    }, [loadFavorites]);
+
+    const labels = elements?.labels || {};
+    const widgets = structure?.widgets || resolvedView?.structure?.widgets || [];
+    const options = resolvedView?.dataScope?.options || {};
+    const loading = pageLoading || profileLoading;
+    const error = pageError || null;
 
     return (
         <DashboardPageView
             loading={loading}
             error={error}
-            labels={dashboardContract.labels}
-            widgets={dashboardContract.widgets}
-            options={dashboardContract.options}
+            labels={labels}
+            widgets={widgets}
+            options={options}
             user={user}
             profile={profile}
+            icons={icons}
             onProfileUpdate={setProfile}
             bookingState={bookingState}
             bookingQuery={bookingQuery}
             onBookingQueryChange={setBookingQuery}
+            favoritesState={favoritesState}
+            favoritesChips={favoritesChips}
+            loadFavorites={loadFavorites}
         />
     );
 }

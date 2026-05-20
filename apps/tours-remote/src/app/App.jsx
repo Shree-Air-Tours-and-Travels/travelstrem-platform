@@ -1,5 +1,5 @@
 import React from "react";
-import { FavoritesProvider } from "@packages/trem-ui";
+import { Button, FavoritesProvider } from "@packages/trem-ui";
 import AppRoutes from "./routes";
 import { initApp } from "../core/initApp";
 import "../main.scss";
@@ -57,10 +57,10 @@ export default function App({ dispatchEvent, embedded = false, userSession = nul
         <div className={embedded ? "tours-app-shell tours-app-shell--embedded" : "tours-app-shell"}>
             {!embedded && (
                 <header className="micro-app-header">
-                    <button className="micro-app-header__brand" type="button">ToursTREM</button>
-                    <button className="micro-app-header__theme-toggle" type="button" onClick={toggleTheme}>
+                    <Button primaryClassName="micro-app-header__brand" variant="text">ToursTREM</Button>
+                    <Button primaryClassName="micro-app-header__theme-toggle" variant="text" onClick={toggleTheme}>
                         {theme === "dark" ? "Light" : "Dark"}
-                    </button>
+                    </Button>
                 </header>
             )}
             <FavoritesProvider>

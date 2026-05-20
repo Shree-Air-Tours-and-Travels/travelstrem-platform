@@ -1,7 +1,5 @@
 import React from "react";
-import { Icon, Title, SmoothScroll } from "@packages/trem-ui";
-import { SubTitle } from "@packages/trem-ui";
-import { Button } from "@packages/trem-ui";
+import { Icon, Title, SmoothScroll, SubTitle, Button, Paragraph } from "@packages/trem-ui";
 import "./Hero.styles.scss";
 
 const heroIconMap = {
@@ -56,7 +54,7 @@ const HeroOrbitVisual = ({ visual = {}, featuredDestination = {} }) => {
                 <div className="ui-home__main__hero__planet-glow" />
                 <Icon name="compass" size={64} />
                 <span>{visual.headline}</span>
-                <p>{visual.subline}</p>
+                <Paragraph text={visual.subline} />
             </div>
             {orbitItems.map((item, index) => {
                 const iconName = getHeroIcon(item.icon);
@@ -100,9 +98,9 @@ const HeroSectionView = ({ loading, error, resolvedView, props, hero, stats, use
     if (loading) return <HeroPreloader />;
     if (error) {
         return (
-            <p className="ui-home__main__hero__error">
+            <Paragraph primaryClassname="ui-home__main__hero__error">
                 {error}
-            </p>
+            </Paragraph>
         );
     }
     if (!resolvedView) return null;
@@ -146,12 +144,7 @@ const HeroSectionView = ({ loading, error, resolvedView, props, hero, stats, use
                                 onClick={handleHeroClick}
                                 primaryClassName="ui-home__main__hero__cta"
                             />
-                            <button className="ui-home__main__hero__video-btn">
-                                <span className="ui-home__main__hero__video-icon">
-                                    <Icon name="play" size={16} fill="currentColor" />
-                                </span>
-                                {props?.secondaryButtonText}
-                            </button>
+                            <Button variant="outline" iconLeft="play" text={props?.secondaryButtonText} primaryClassName="ui-home__main__hero__video-btn" />
                         </div>
                     </SmoothScroll>
                     <SmoothScroll variant="fadeIn" delay={0.5}>

@@ -13,8 +13,8 @@ Two shell applications exist:
 
 | Shell                  | Port   | Module Federation Name | Role                                                        |
 | ---------------------- | ------ | ---------------------- | ----------------------------------------------------------- |
-| `apps/customer-shell/` | `3000` | `frontendShell`        | Customer portal — loads `toursTREM` remote                  |
-| `apps/admin-shell/`    | `3002` | —                      | Standalone admin portal (Module Federation not enabled yet) |
+| `apps/customer-shell/` | `3000` | `frontendShell`        | Customer portal , loads `toursTREM` remote                  |
+| `apps/admin-shell/`    | `3002` | ,                      | Standalone admin portal (Module Federation not enabled yet) |
 
 ---
 

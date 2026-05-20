@@ -200,7 +200,7 @@ export default function BookingPageContainer({ dispatchEvent } = {}) {
           return;
         }
       } catch {
-        // backend check unavailable — proceed anyway
+        // backend check unavailable , proceed anyway
       }
     }
 

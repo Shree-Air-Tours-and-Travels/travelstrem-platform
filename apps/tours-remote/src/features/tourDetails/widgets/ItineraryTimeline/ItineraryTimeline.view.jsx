@@ -1,11 +1,12 @@
 import React from "react";
+import { Title, SubTitle, Paragraph } from "@packages/trem-ui";
 
 export default function ItineraryTimelineView({ labels, itinerary }) {
   if (!itinerary.length) return null;
 
   return (
     <section className="tour-detail__section">
-      <h2>{labels.fullItinerary || "Itinerary"}</h2>
+      <Title text={labels.fullItinerary || "Itinerary"} />
       <div className="tour-detail__section-body">
         <div className="tour-detail__timeline">
           {itinerary.map((day, index) => (
@@ -14,8 +15,8 @@ export default function ItineraryTimelineView({ labels, itinerary }) {
                 {labels.day || "Day"} {day.day || index + 1}
               </div>
               <div>
-                <h3>{day.title || "Planned experience"}</h3>
-                {day.summary ? <p>{day.summary}</p> : null}
+                <SubTitle text={day.title || "Planned experience"} />
+                {day.summary ? <Paragraph text={day.summary} /> : null}
                 <div className="tour-detail__mini-meta">
                   {day.location ? <span>{day.location}</span> : null}
                   {day.accommodation ? <span>{day.accommodation}</span> : null}
@@ -26,7 +27,7 @@ export default function ItineraryTimelineView({ labels, itinerary }) {
                     {day.activities.map((act, i) => <li key={i}>{act}</li>)}
                   </ul>
                 ) : null}
-                {day.notes ? <p className="tour-detail__note">{day.notes}</p> : null}
+                {day.notes ? <Paragraph primaryClassname="tour-detail__note" text={day.notes} /> : null}
               </div>
             </article>
           ))}

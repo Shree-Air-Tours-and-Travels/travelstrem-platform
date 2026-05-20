@@ -1,7 +1,7 @@
 // components/Filters/FieldViewResolver.jsx
 import React from "react";
 import PropTypes from "prop-types";
-import { Dropdown, Icon } from "@packages/trem-ui";
+import { Dropdown, Icon, Button } from "@packages/trem-ui";
 
 export default function FieldViewResolver({
   name,
@@ -86,15 +86,16 @@ export default function FieldViewResolver({
               closeOnSelect={true}
               items={items}
               trigger={({ open }) => (
-                <button
-                  className={`filters__input filters__select-trigger ${error ? "filters__input--error" : ""}`}
+                <Button
+                  primaryClassName={`filters__input filters__select-trigger ${error ? "filters__input--error" : ""}`}
                   type="button"
                   aria-invalid={!!error}
                   aria-describedby={describedBy}
+                  variant="text"
                 >
                   <span>{selectedOption ? (selectedOption.label || selectedOption.value || selectedOption) : `Any ${label.toLowerCase()}`}</span>
                   <Icon name="chevronDown" className={open ? "is-open" : ""} />
-                </button>
+                </Button>
               )}
             />
           </label>
@@ -124,15 +125,15 @@ export default function FieldViewResolver({
                 const isSelected = selected.includes(String(optionValue));
 
                 return (
-                  <button
+                  <Button
                     key={String(optionValue)}
                     type="button"
-                    className={`filters__chip ${isSelected ? "is-selected" : ""}`}
+                    primaryClassName={`filters__chip ${isSelected ? "is-selected" : ""}`}
                     onClick={() => toggleValue(optionValue)}
                     aria-pressed={isSelected}
-                  >
-                    {optionLabel}
-                  </button>
+                    variant="outline"
+                    text={optionLabel}
+                  />
                 );
               }) : <span className="filters__empty-options">No options yet</span>}
             </div>

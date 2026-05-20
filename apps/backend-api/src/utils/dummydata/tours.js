@@ -61,7 +61,7 @@ const tours = [
         photos: pickPhotos(1),
         desc:
             "Classic Jaipur package with comfortable 3-star/4-star hotel options, guided sightseeing of Amber Fort, City Palace, Jantar Mantar and local bazaars. Ideal for families and first-time visitors.",
-        // base price range (per person) — approximate market averages for 3-day Jaipur packages in 2025.
+        // base price range (per person) , approximate market averages for 3-day Jaipur packages in 2025.
         price: { min: 4999, max: 14999, currency: "INR", isFinal: false, source: "manual" },
         seasonalPricing: [
             {
@@ -234,7 +234,7 @@ const tours = [
 
     {
         _id: "t3",
-        title: "Himalayan Trek — Manali Short Trek",
+        title: "Himalayan Trek , Manali Short Trek",
         city: { from: "Chandigarh", to: "Manali" },
         address: {
             line1: "Mall Road",
@@ -297,7 +297,7 @@ const tours = [
 
     {
         _id: "t4",
-        title: "Kerala Backwaters — Alleppey Houseboat",
+        title: "Kerala Backwaters , Alleppey Houseboat",
         city: { from: "Kochi", to: "Alleppey" },
         address: {
             line1: "Alleppey Backwaters",
@@ -345,7 +345,7 @@ const tours = [
 
     {
         _id: "t5",
-        title: "Agra Day Trip — Taj Sunrise",
+        title: "Agra Day Trip , Taj Sunrise",
         city: { from: "Delhi", to: "Agra" },
         address: {
             line1: "Near Taj East Gate",
@@ -361,7 +361,7 @@ const tours = [
         endDate: "2026-12-31T23:59:59.000Z",
         photo: CLOUDINARY_URLS[1],
         photos: pickPhotos(5),
-        desc: "Early-morning Taj Mahal visit with private transport, guided tour of Agra Fort and breakfast near Taj — perfect for quick trips from Delhi.",
+        desc: "Early-morning Taj Mahal visit with private transport, guided tour of Agra Fort and breakfast near Taj , perfect for quick trips from Delhi.",
         price: { min: 2499, max: 4499, currency: "INR", isFinal: true, source: "manual" },
         seasonalPricing: [],
         itinerary: [
@@ -452,7 +452,7 @@ const tours = [
         endDate: "2026-03-31T23:59:59.000Z",
         photo: CLOUDINARY_URLS[4],
         photos: pickPhotos(7),
-        desc: "Romantic lakeside city with palaces, boat rides and cultural performances — ideal for couples and photographers.",
+        desc: "Romantic lakeside city with palaces, boat rides and cultural performances , ideal for couples and photographers.",
         price: { min: 8999, max: 17999, currency: "INR", isFinal: true, source: "agent" },
         seasonalPricing: [],
         itinerary: [
@@ -499,7 +499,7 @@ const tours = [
         endDate: "2026-03-31T23:59:59.000Z",
         photo: CLOUDINARY_URLS[8],
         photos: pickPhotos(8),
-        desc: "Charming hill station weekend with colonial walks, toy-train optional ride and easy nature trails — family-friendly.",
+        desc: "Charming hill station weekend with colonial walks, toy-train optional ride and easy nature trails , family-friendly.",
         price: { min: 4999, max: 8999, currency: "INR", isFinal: true, source: "manual" },
         seasonalPricing: [],
         itinerary: [{ day: 1, title: "Shimla Walks", summary: "Mall Road and Christ Church visit", activities: ["Mall Road stroll", "Christ Church visit", "Optional toy-train (at extra cost)"], meals: ["Breakfast"], accommodation: "Heritage hotel (Shimla)", location: "Shimla", notes: "Weather may be cool; carry warm clothes." }],
@@ -560,7 +560,7 @@ const tours = [
         minAge: 12,
         maxAge: 60,
         maxGroupSize: 12,
-        reviews: [{ name: "Karan", rating: 5, comment: "Like a postcard — stunning!" }],
+        reviews: [{ name: "Karan", rating: 5, comment: "Like a postcard , stunning!" }],
         featured: true,
         tags: ["beach", "diving"],
         isPublished: true,

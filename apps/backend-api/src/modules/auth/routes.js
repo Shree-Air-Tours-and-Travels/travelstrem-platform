@@ -44,7 +44,7 @@ const makeOAuthHandler = (provider) => (req, res) => {
     return res.redirect(redirectTo);
   }
 
-  // Not implemented — return a clear HTTP error so callers know to implement OAuth
+  // Not implemented , return a clear HTTP error so callers know to implement OAuth
   return res.status(501).json({
     message: `OAuth for "${provider}" is not implemented on the server. Set OAUTH_${provider.toUpperCase()}_URL or implement the provider flow.`,
   });

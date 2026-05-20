@@ -89,14 +89,14 @@ const TourCard = React.memo(function TourCard({ tour, path, onView, favorited, o
     <>
       <div className="tour-card__media" aria-hidden={!imageSrc}>
         {showHeart && (
-          <button
-            className={`tour-card__heart${favorited ? " is-favorited" : ""}`}
+          <Button
+            variant="text"
+            isCircular
+            iconLeft="heart"
+            primaryClassName={`tour-card__heart${favorited ? " is-favorited" : ""}`}
             onClick={handleFavClick}
             aria-label={favorited ? "Remove from favorites" : "Add to favorites"}
-            type="button"
-          >
-            <Icon name="heart" />
-          </button>
+          />
         )}
         {featured && (
           <span className="tour-card__badge">

@@ -152,7 +152,7 @@ const services = [
     description:
       "All-inclusive cruise experiences with world-class dining, entertainment, and shore excursions.",
     fullDescription:
-      "Set sail on the vacation of a lifetime with our cruise booking service. We partner with the world's leading cruise lines including Royal Caribbean, Carnival, Norwegian, MSC, and Celebrity Cruises. Whether you're looking for a short weekend cruise, a family-friendly voyage, or a luxury expedition to Antarctica, we offer the best deals with cabin upgrades, onboard credits, and all-inclusive packages. Enjoy world-class dining, Broadway-style entertainment, exciting shore excursions, and premium amenities — all included in your cruise fare.",
+      "Set sail on the vacation of a lifetime with our cruise booking service. We partner with the world's leading cruise lines including Royal Caribbean, Carnival, Norwegian, MSC, and Celebrity Cruises. Whether you're looking for a short weekend cruise, a family-friendly voyage, or a luxury expedition to Antarctica, we offer the best deals with cabin upgrades, onboard credits, and all-inclusive packages. Enjoy world-class dining, Broadway-style entertainment, exciting shore excursions, and premium amenities , all included in your cruise fare.",
     image: "/service-images/cruise-bookings.jpg",
     coverImage: "/service-images/cruise-bookings-cover.jpg",
     features: [
@@ -181,7 +181,7 @@ const services = [
     description:
       "Pre-booked private airport transfers with meet-and-greet service and flight tracking for punctuality.",
     fullDescription:
-      "Start and end your trip stress-free with our premium airport transfer service. Available at 300+ airports worldwide, our private transfer service includes professional chauffeurs, real-time flight tracking to adjust for delays, meet-and-greet at arrivals with name boards, and luggage assistance. Choose from economy sedans, premium SUVs, or luxury limousines. All rides are pre-paid with fixed pricing — no surge charges, no waiting fees. Book in advance and enjoy a smooth transition between the airport and your accommodation or business venue.",
+      "Start and end your trip stress-free with our premium airport transfer service. Available at 300+ airports worldwide, our private transfer service includes professional chauffeurs, real-time flight tracking to adjust for delays, meet-and-greet at arrivals with name boards, and luggage assistance. Choose from economy sedans, premium SUVs, or luxury limousines. All rides are pre-paid with fixed pricing , no surge charges, no waiting fees. Book in advance and enjoy a smooth transition between the airport and your accommodation or business venue.",
     image: "/service-images/airport-transfers.jpg",
     coverImage: "/service-images/airport-transfers-cover.jpg",
     features: [
@@ -210,7 +210,7 @@ const services = [
     description:
       "Handcrafted group tours and fully customizable private travel packages across India and international destinations.",
     fullDescription:
-      "Our travel packages are designed for every kind of traveler — from budget-friendly group tours to luxury private vacations. Choose from our pre-designed itineraries covering popular destinations like Rajasthan, Kerala, Goa, Himachal, and international hotspots like Dubai, Bali, Thailand, Europe, and more. Each package includes accommodation, meals, guided sightseeing, inter-city transfers, and activity passes. We also offer fully customizable private packages where you pick the destination, duration, hotels, and experiences. Our travel experts handle all the logistics so you can focus on making memories.",
+      "Our travel packages are designed for every kind of traveler , from budget-friendly group tours to luxury private vacations. Choose from our pre-designed itineraries covering popular destinations like Rajasthan, Kerala, Goa, Himachal, and international hotspots like Dubai, Bali, Thailand, Europe, and more. Each package includes accommodation, meals, guided sightseeing, inter-city transfers, and activity passes. We also offer fully customizable private packages where you pick the destination, duration, hotels, and experiences. Our travel experts handle all the logistics so you can focus on making memories.",
     image: "/service-images/travel-packages.jpg",
     coverImage: "/service-images/travel-packages-cover.jpg",
     features: [

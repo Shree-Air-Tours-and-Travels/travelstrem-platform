@@ -37,7 +37,7 @@ function labelValue(doc, label, value, opts = {}) {
   const x = opts.x || 50;
   const y = opts.y || doc.y;
   doc.fontSize(9).font("Helvetica-Bold").fillColor("#555").text(label, x, y, { continued: true });
-  doc.font("Helvetica").fillColor("#000").text(` ${value || "—"}`, { indent: 0 });
+  doc.font("Helvetica").fillColor("#000").text(` ${value || ","}`, { indent: 0 });
 }
 
 function sectionTitle(doc, text) {
@@ -48,12 +48,12 @@ function sectionTitle(doc, text) {
 }
 
 function formatINR(amount) {
-  if (amount == null) return "—";
+  if (amount == null) return ",";
   return `₹ ${Number(amount).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function formatDate(d) {
-  if (!d) return "—";
+  if (!d) return ",";
   return new Date(d).toLocaleDateString("en-IN", { dateStyle: "long" });
 }
 
@@ -70,15 +70,15 @@ export function generateQuotePdf(booking, quote, tour, travelers) {
   doc.moveDown(0.5);
 
   sectionTitle(doc, "Tour Details");
-  labelValue(doc, "Tour:", tour?.title || "—");
-  labelValue(doc, "Destination:", `${tour?.city?.from || "—"} → ${tour?.city?.to || "—"}`);
-  labelValue(doc, "Dates:", `${formatDate(booking.startDate)} — ${formatDate(booking.endDate)}`);
+  labelValue(doc, "Tour:", tour?.title || ",");
+  labelValue(doc, "Destination:", `${tour?.city?.from || ","} → ${tour?.city?.to || ","}`);
+  labelValue(doc, "Dates:", `${formatDate(booking.startDate)} , ${formatDate(booking.endDate)}`);
   labelValue(doc, "Guests:", String(booking.guestsCount || travelers?.length || 1));
   doc.moveDown(0.3);
 
-  labelValue(doc, "Contact:", booking.primaryContact?.name || "—");
-  labelValue(doc, "Email:", booking.primaryContact?.email || "—");
-  labelValue(doc, "Phone:", booking.primaryContact?.phone || "—");
+  labelValue(doc, "Contact:", booking.primaryContact?.name || ",");
+  labelValue(doc, "Email:", booking.primaryContact?.email || ",");
+  labelValue(doc, "Phone:", booking.primaryContact?.phone || ",");
 
   sectionTitle(doc, "Price Breakdown");
 
@@ -152,20 +152,20 @@ export function generateInvoicePdf(booking, payments, tour) {
   const lastPayment = payments?.[0];
   if (lastPayment) {
     labelValue(doc, "Payment Date:", formatDate(lastPayment.paymentDate));
-    labelValue(doc, "Transaction ID:", lastPayment.transactionId || "—");
-    labelValue(doc, "Payment Method:", lastPayment.provider || lastPayment.method || "—");
+    labelValue(doc, "Transaction ID:", lastPayment.transactionId || ",");
+    labelValue(doc, "Payment Method:", lastPayment.provider || lastPayment.method || ",");
   }
   doc.moveDown(0.5);
 
   sectionTitle(doc, "Customer Details");
-  labelValue(doc, "Name:", booking.primaryContact?.name || "—");
-  labelValue(doc, "Email:", booking.primaryContact?.email || "—");
-  labelValue(doc, "Phone:", booking.primaryContact?.phone || "—");
+  labelValue(doc, "Name:", booking.primaryContact?.name || ",");
+  labelValue(doc, "Email:", booking.primaryContact?.email || ",");
+  labelValue(doc, "Phone:", booking.primaryContact?.phone || ",");
 
   sectionTitle(doc, "Booking Details");
-  labelValue(doc, "Tour:", tour?.title || "—");
-  labelValue(doc, "Destination:", `${tour?.city?.from || "—"} → ${tour?.city?.to || "—"}`);
-  labelValue(doc, "Dates:", `${formatDate(booking.startDate)} — ${formatDate(booking.endDate)}`);
+  labelValue(doc, "Tour:", tour?.title || ",");
+  labelValue(doc, "Destination:", `${tour?.city?.from || ","} → ${tour?.city?.to || ","}`);
+  labelValue(doc, "Dates:", `${formatDate(booking.startDate)} , ${formatDate(booking.endDate)}`);
   labelValue(doc, "Guests:", String(booking.guestsCount || 1));
 
   sectionTitle(doc, "Payment Summary");
@@ -218,8 +218,8 @@ export function generateInvoicePdf(booking, payments, tour) {
     doc.font("Helvetica").fillColor("#333");
     payments.slice(0, 10).forEach((pmt) => {
       doc.text(formatDate(pmt.paymentDate), 60, doc.y, { width: 100 });
-      doc.text(pmt.provider || pmt.method || "—", 170, doc.y, { width: 100 });
-      doc.text(pmt.transactionId || "—", 280, doc.y, { width: 130 });
+      doc.text(pmt.provider || pmt.method || ",", 170, doc.y, { width: 100 });
+      doc.text(pmt.transactionId || ",", 280, doc.y, { width: 130 });
       doc.text(formatINR(pmt.amount), 460, doc.y, { align: "right", width: 80 });
       doc.moveDown(0.3);
     });
@@ -247,10 +247,10 @@ export function generateBookingPassPdf(booking, travelers, tour) {
   doc.moveDown(0.5);
 
   sectionTitle(doc, "Tour Information");
-  labelValue(doc, "Tour:", tour?.title || "—");
-  labelValue(doc, "Destination:", `${tour?.city?.from || "—"} → ${tour?.city?.to || "—"}`);
-  labelValue(doc, "Travel Dates:", `${formatDate(booking.startDate)} — ${formatDate(booking.endDate)}`);
-  labelValue(doc, "Duration:", `${booking.period?.days || "—"} Days / ${booking.period?.nights || "—"} Nights`);
+  labelValue(doc, "Tour:", tour?.title || ",");
+  labelValue(doc, "Destination:", `${tour?.city?.from || ","} → ${tour?.city?.to || ","}`);
+  labelValue(doc, "Travel Dates:", `${formatDate(booking.startDate)} , ${formatDate(booking.endDate)}`);
+  labelValue(doc, "Duration:", `${booking.period?.days || ","} Days / ${booking.period?.nights || ","} Nights`);
   labelValue(doc, "Meeting Point:", tour?.meetingPoint || booking.meetingPoint || "To be confirmed");
   doc.moveDown(0.3);
 
@@ -260,15 +260,15 @@ export function generateBookingPassPdf(booking, travelers, tour) {
   }
 
   sectionTitle(doc, "Primary Contact");
-  labelValue(doc, "Name:", booking.primaryContact?.name || "—");
-  labelValue(doc, "Email:", booking.primaryContact?.email || "—");
-  labelValue(doc, "Phone:", booking.primaryContact?.phone || "—");
+  labelValue(doc, "Name:", booking.primaryContact?.name || ",");
+  labelValue(doc, "Email:", booking.primaryContact?.email || ",");
+  labelValue(doc, "Phone:", booking.primaryContact?.phone || ",");
 
   sectionTitle(doc, "Travelers");
   if (travelers?.length) {
     doc.fontSize(9);
     travelers.forEach((t, i) => {
-      const name = `${t.firstName || ""} ${t.lastName || ""}`.trim() || "—";
+      const name = `${t.firstName || ""} ${t.lastName || ""}`.trim() || ",";
       doc.font("Helvetica-Bold").fillColor("#333").text(`${i + 1}. ${name}`);
       doc.font("Helvetica").fillColor("#666");
       const details = [];
@@ -286,7 +286,7 @@ export function generateBookingPassPdf(booking, travelers, tour) {
     sectionTitle(doc, "Highlights");
     doc.fontSize(9).font("Helvetica").fillColor("#555");
     tour.highlights.forEach((h) => {
-      doc.text(`• ${h.title}${h.short ? ` — ${h.short}` : ""}`);
+      doc.text(`• ${h.title}${h.short ? ` , ${h.short}` : ""}`);
     });
   }
 

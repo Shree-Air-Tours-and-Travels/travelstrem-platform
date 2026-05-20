@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { EmptyState } from "@packages/trem-ui";
+import { Button, EmptyState, Title, SubTitle, Paragraph } from "@packages/trem-ui";
 import "./ManageTours.scss";
 import CreateTourForm from "./CreateTourForm";
 import TourCardSecondary from "../../shared/ui/cards/TourCards/TourCardSecondary/TourCardSecondary";
@@ -14,18 +14,14 @@ export function ConfirmModal({ open, title = "Confirm", message = "Are you sure?
         <div className="tm-modal-overlay" role="dialog" aria-modal="true">
             <div className="tm-modal">
                 <div className="tm-modal-header">
-                    <h4>{title}</h4>
+                    <SubTitle text={title} />
                 </div>
                 <div className="tm-modal-body">
-                    <p>{message}</p>
+                    <Paragraph>{message}</Paragraph>
                 </div>
                 <div className="tm-modal-actions">
-                    <button type="button" className="btn tm-btn-cancel" onClick={onCancel}>
-                        Cancel
-                    </button>
-                    <button type="button" className="btn tm-btn-danger" onClick={onConfirm}>
-                        Confirm
-                    </button>
+                    <Button type="button" primaryClassName="btn tm-btn-cancel" variant="outline" onClick={onCancel} text="Cancel" />
+                    <Button type="button" primaryClassName="btn tm-btn-danger" variant="solid" color="danger" onClick={onConfirm} text="Confirm" />
                 </div>
             </div>
         </div>
@@ -77,10 +73,10 @@ export default function ManageToursView({
     return (
         <div className="mt-root">
             <header className="mt-toolbar">
-                <h2>Admin — Manage</h2>
+                <Title text="Admin , Manage" />
                 <div className="mt-actions">
-                    <button className="btn" onClick={() => setTab("tours")}>Tours</button>
-                    <button className="btn" onClick={() => setTab("bookings")}>Bookings</button>
+                    <Button primaryClassName="btn" variant="outline" onClick={() => setTab("tours")} text="Tours" />
+                    <Button primaryClassName="btn" variant="outline" onClick={() => setTab("bookings")} text="Bookings" />
                 </div>
             </header>
 
@@ -92,12 +88,12 @@ export default function ManageToursView({
                 <>
                     <header className="mt-toolbar" style={{ marginTop: 8 }}>
                         <div>
-                            <h3 style={{ margin: 0 }}>Tours</h3>
+                            <SubTitle text="Tours" />
                         </div>
                         <div className="mt-actions">
-                            <button className="btn" onClick={openCreate}>+ New Tour</button>
-                            <button className="btn" onClick={fetchTours}>Refresh</button>
-                            <button className="btn" onClick={handleDeleteAll}>Delete All</button>
+                            <Button primaryClassName="btn" variant="solid" color="primary" onClick={openCreate} text="+ New Tour" />
+                            <Button primaryClassName="btn" variant="outline" onClick={fetchTours} text="Refresh" />
+                            <Button primaryClassName="btn" variant="outline" color="danger" onClick={handleDeleteAll} text="Delete All" />
                         </div>
                     </header>
 
@@ -159,11 +155,11 @@ export default function ManageToursView({
                 <>
                     <header className="mt-toolbar" style={{ marginTop: 8 }}>
                         <div>
-                            <h3 style={{ margin: 0 }}>Bookings</h3>
-                            <p style={{ margin: 0, fontSize: 13, color: "#666" }}>Admins & agents can review requests, create quotes, and manage booking status.</p>
+                            <SubTitle text="Bookings" />
+                            <Paragraph size="small" color="#666">Admins & agents can review requests, create quotes, and manage booking status.</Paragraph>
                         </div>
                         <div className="mt-actions">
-                            <button className="btn" onClick={fetchBookings}>Refresh</button>
+                            <Button primaryClassName="btn" variant="outline" onClick={fetchBookings} text="Refresh" />
                         </div>
                     </header>
 

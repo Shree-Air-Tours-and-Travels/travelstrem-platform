@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Icon from "../../icons/Icon/Icon.jsx";
+import Button from "../Button/Button.jsx";
 import "./BottomSheet.styles.scss";
 
 export default function BottomSheet({ open, onClose, children, title, className = "" }) {
@@ -31,9 +32,7 @@ export default function BottomSheet({ open, onClose, children, title, className 
         <div className="trem-bottom-sheet__header">
           <span />
           <div className="trem-bottom-sheet__handle" />
-          <button className="trem-bottom-sheet__close" type="button" onClick={onClose} aria-label="Close">
-            <Icon name="menuClose" />
-          </button>
+          <Button variant="text" isCircular iconLeft="menuClose" onClick={onClose} aria-label="Close" primaryClassName="trem-bottom-sheet__close" />
         </div>
         {title && <div className="trem-bottom-sheet__title">{title}</div>}
         <div className="trem-bottom-sheet__body">

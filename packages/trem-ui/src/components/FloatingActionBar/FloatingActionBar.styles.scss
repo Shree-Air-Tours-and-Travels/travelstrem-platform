@@ -52,9 +52,13 @@
     padding-top: 0;
   }
 
+  &--has-note {
+    padding-top: 0;
+  }
+
   &__error {
-    background: #fef2f2;
-    color: #b91c1c;
+    background: var(--danger-soft);
+    color: var(--color-danger);
     padding: 0.65rem 0.9rem;
     font-size: 0.82rem;
     font-weight: 500;
@@ -62,7 +66,18 @@
     align-items: center;
     gap: 0.4rem;
     margin: 0 -1rem 0.75rem;
-    border-bottom: 1px solid #fecaca;
+    border-bottom: 1px solid var(--color-danger);
+  }
+
+  &__note {
+    background: var(--surface-inset);
+    color: var(--text-muted);
+    padding: 0.5rem 0.9rem;
+    font-size: 0.78rem;
+    font-weight: 400;
+    text-align: center;
+    margin: 0 -1rem 0.75rem;
+    border-bottom: 1px solid var(--border);
   }
 
   &--align-left &__inner {
@@ -75,6 +90,10 @@
 
   &--align-center &__inner {
     justify-content: center;
+  }
+
+  &--align-left-right &__inner {
+    justify-content: space-between;
   }
 
   &--align-stretch &__inner {
@@ -118,6 +137,20 @@
     }
   }
 
+  &__group {
+    display: flex;
+    align-items: stretch;
+    gap: 0.5rem;
+
+    &--left {
+      justify-content: flex-start;
+    }
+
+    &--right {
+      justify-content: flex-end;
+    }
+  }
+
   &__inner {
     display: flex;
     align-items: stretch;
@@ -135,18 +168,6 @@
 
   &__btn {
     min-height: 48px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.65rem 1.25rem;
-    border-radius: 10px;
-    font-size: 0.88rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: border-color 160ms ease, background 160ms ease, color 160ms ease, transform 120ms ease, box-shadow 160ms ease;
-    border: 1px solid var(--border);
-    font-family: inherit;
     white-space: nowrap;
 
     @media (max-width: 768px) {
@@ -154,116 +175,10 @@
       border-right: 1px solid var(--border);
       border-radius: 0;
       min-height: 52px;
-      font-size: 0.82rem;
-      padding: 0.55rem 0.75rem;
     }
 
     &:active {
       transform: scale(0.98);
-    }
-
-    &--sm {
-      min-height: 40px;
-      padding: 0.5rem 0.9rem;
-      font-size: 0.8rem;
-    }
-
-    &--lg {
-      min-height: 56px;
-      padding: 0.8rem 1.6rem;
-      font-size: 0.95rem;
-    }
-
-    &--icon-only {
-      width: 48px;
-      padding: 0;
-
-      &.trem-fab__btn--sm {
-        width: 40px;
-      }
-
-      &.trem-fab__btn--lg {
-        width: 56px;
-      }
-    }
-
-    &--primary {
-      background: var(--color-primary);
-      color: var(--color-on-primary);
-      border-color: var(--color-primary);
-      box-shadow: 0 2px 8px rgba(28, 117, 120, 0.2);
-
-      @media (max-width: 768px) {
-        background: var(--color-primary);
-        color: var(--color-on-primary);
-      }
-
-      &:hover {
-        background: var(--color-primary-dark);
-        border-color: var(--color-primary-dark);
-        box-shadow: 0 4px 12px rgba(28, 117, 120, 0.3);
-      }
-
-      &:disabled {
-        opacity: 0.55;
-        cursor: not-allowed;
-        box-shadow: none;
-      }
-    }
-
-    &--ghost {
-      background: transparent;
-      color: var(--text);
-      border-color: transparent;
-
-      @media (max-width: 768px) {
-        background: transparent;
-        color: var(--text);
-      }
-
-      &:hover {
-        background: var(--surface-inset);
-        border-color: var(--border);
-      }
-
-      &:disabled {
-        opacity: 0.45;
-        cursor: not-allowed;
-      }
-    }
-
-    &--outline {
-      background: transparent;
-      color: var(--text);
-      border: 1px solid var(--border);
-
-      &:hover {
-        background: var(--surface-inset);
-        border-color: var(--text);
-      }
-
-      &:disabled {
-        opacity: 0.45;
-        cursor: not-allowed;
-      }
-    }
-
-    &--danger {
-      background: #dc2626;
-      color: #fff;
-      border-color: #dc2626;
-      box-shadow: 0 2px 8px rgba(220, 38, 38, 0.2);
-
-      &:hover {
-        background: #b91c1c;
-        border-color: #b91c1c;
-      }
-
-      &:disabled {
-        opacity: 0.55;
-        cursor: not-allowed;
-        box-shadow: none;
-      }
     }
 
     &--more {
@@ -336,11 +251,11 @@
     }
 
     &--danger {
-      color: #dc2626;
+      color: var(--color-danger);
       font-weight: 600;
 
       &:hover {
-        background: #fef2f2;
+        background: var(--danger-soft);
       }
     }
   }
@@ -375,7 +290,6 @@
 
       .trem-fab__btn {
         border-radius: 10px;
-        border: 1px solid var(--border);
       }
     }
 

@@ -1,15 +1,15 @@
 import React from "react";
-import { Icon } from "@packages/trem-ui";
+import { Icon, Title, Paragraph } from "@packages/trem-ui";
 
 export default function TourOverviewView({ labels, tour, cityDisplay, title, description, durationText, ratingText, tags }) {
   if (!tour) return null;
 
   return (
     <section className="tour-detail__hero" aria-label={labels.overview || "Tour overview"}>
-      <p className="tour-detail__eyebrow">{cityDisplay}</p>
+      <Paragraph primaryClassname="tour-detail__eyebrow" text={cityDisplay} />
       <div className="tour-detail__hero-copy">
-        <h1 id="tour-detail-title">{title}</h1>
-        {description ? <p className="tour-detail__lede">{description}</p> : null}
+        <Title text={title} />
+        {description ? <Paragraph primaryClassname="tour-detail__lede" text={description} /> : null}
       </div>
       <div className="tour-detail__hero-facts" aria-label="Trip summary">
         <div className="tour-detail__fact">

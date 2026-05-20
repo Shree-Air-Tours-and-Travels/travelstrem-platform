@@ -2,6 +2,7 @@
 import React from "react";
 import get from "lodash/get";
 import "./InfoCard.styles.scss";
+import { Title, SubTitle, Paragraph } from "@packages/trem-ui";
 
 const InfoCard = ({ tour }) => {
   if (!tour) return null;
@@ -18,9 +19,9 @@ const InfoCard = ({ tour }) => {
 
   return (
     <div className="info-card">
-      <h1 className="info-card__title">{title}</h1>
+      <Title primaryClassname="info-card__title" text={title} />
 
-      {description && <p className="info-card__description">{description}</p>}
+      {description && <Paragraph primaryClassname="info-card__description" text={description} />}
 
       <div className="info-card__details">
         {city && <div className="info-card__row"><strong>City:</strong> {city}</div>}
@@ -43,7 +44,7 @@ const InfoCard = ({ tour }) => {
         <div className="info-card__structure">
           {sections.map((s, i) => (
             <div key={i} className="info-card__section">
-              <h3>{s.title}</h3>
+              <SubTitle text={s.title} />
               {/* If you later have actual data for the section (itinerary content, reviews), render it here */}
             </div>
           ))}

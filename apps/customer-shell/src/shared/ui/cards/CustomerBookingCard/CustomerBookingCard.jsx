@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
+import { Button, SubTitle, Paragraph } from "@packages/trem-ui";
 import { validateFields } from "@packages/trem-utils";
 import "./CustomerBookingCard.styles.scss";
 
@@ -104,8 +105,8 @@ export default function CustomerBookingCard({ booking, onCancel, onSaveTravelers
                 <header className="customer-booking-card__header">
                     <div>
                         <span className={`customer-booking-card__status customer-booking-card__status--${status.toLowerCase()}`}>{formatStatus(status)}</span>
-                        <h3>{tour.title || "Tour booking"}</h3>
-                        <p>{formatDate(booking.startDate)} - {formatDate(booking.endDate)}</p>
+                        <SubTitle text={tour.title || "Tour booking"} />
+                        <Paragraph text={`${formatDate(booking.startDate)} - ${formatDate(booking.endDate)}`} />
                     </div>
                     <div className="customer-booking-card__price">
                         <span>{finalPriceReady ? price.currency || "INR" : "Price"}</span>
@@ -119,7 +120,7 @@ export default function CustomerBookingCard({ booking, onCancel, onSaveTravelers
                     <span>{finalPriceReady ? "Quote ready" : "Awaiting quote"}</span>
                 </div>
 
-                {pendingAmount > 0 ? <p className="customer-booking-card__due">Amount due: {price.currency || "INR"} {pendingAmount}</p> : null}
+                {pendingAmount > 0 ? <Paragraph primaryClassname="customer-booking-card__due" text={`Amount due: ${price.currency || "INR"} ${pendingAmount}`} /> : null}
 
                 {editing ? (
                     <div className="customer-booking-card__editor">
@@ -129,7 +130,7 @@ export default function CustomerBookingCard({ booking, onCancel, onSaveTravelers
                                 <section className="customer-booking-card__traveler-edit" key={traveler._id || index}>
                                     <div className="customer-booking-card__traveler-edit-head">
                                         <strong>Traveler {index + 1}</strong>
-                                        {travelers.length > 1 ? <button type="button" onClick={() => removeTraveler(index)}>Remove</button> : null}
+                                        {travelers.length > 1 ? <Button variant="outline" text="Remove" onClick={() => removeTraveler(index)} /> : null}
                                     </div>
                                     <div className="customer-booking-card__fields">
                                         {["firstName", "lastName", "email", "phone", "age"].map((field) => (
@@ -150,9 +151,9 @@ export default function CustomerBookingCard({ booking, onCancel, onSaveTravelers
                         </div>
 
                         <div className="customer-booking-card__edit-actions">
-                            <button type="button" onClick={addTraveler}>Add traveler</button>
-                            <button type="button" onClick={() => { setEditing(false); setTravelers(booking.travelers || []); setErrors({}); }}>Discard changes</button>
-                            <button type="button" className="is-primary" onClick={saveTravelers} disabled={saving}>{saving ? "Saving..." : "Save travelers"}</button>
+                            <Button variant="solid" color="primary" text="Add traveler" onClick={addTraveler} />
+                            <Button variant="outline" text="Discard changes" onClick={() => { setEditing(false); setTravelers(booking.travelers || []); setErrors({}); }} />
+                            <Button variant="solid" color="primary" text={saving ? "Saving..." : "Save travelers"} onClick={saveTravelers} disabled={saving} primaryClassName="is-primary" />
                         </div>
                     </div>
                 ) : (
@@ -164,12 +165,12 @@ export default function CustomerBookingCard({ booking, onCancel, onSaveTravelers
                 )}
 
                 <footer className="customer-booking-card__actions">
-                    <button type="button" onClick={() => onViewTour(booking)}>View tour</button>
-                    {canEditTravelers ? <button type="button" onClick={() => setEditing(true)}>Edit travellers</button> : null}
-                    {canAcceptQuote ? <button type="button" className="is-primary" onClick={() => onAcceptQuote(id)}>Accept quote</button> : null}
-                    {canAcceptQuote ? <button type="button" onClick={() => onRejectQuote(id)}>Reject quote</button> : null}
-                    {!isCancelled ? <button type="button" onClick={() => onCancel(id)}>Cancel booking</button> : null}
-                    {canPay && pendingAmount > 0 ? <button type="button" className="is-primary" onClick={() => onPay(booking)}>Continue payment</button> : null}
+                    <Button variant="outline" text="View tour" onClick={() => onViewTour(booking)} />
+                    {canEditTravelers ? <Button variant="outline" text="Edit travellers" onClick={() => setEditing(true)} /> : null}
+                    {canAcceptQuote ? <Button variant="solid" color="primary" text="Accept quote" onClick={() => onAcceptQuote(id)} primaryClassName="is-primary" /> : null}
+                    {canAcceptQuote ? <Button variant="outline" color="danger" text="Reject quote" onClick={() => onRejectQuote(id)} /> : null}
+                    {!isCancelled ? <Button variant="outline" text="Cancel booking" onClick={() => onCancel(id)} /> : null}
+                    {canPay && pendingAmount > 0 ? <Button variant="solid" color="primary" text="Continue payment" onClick={() => onPay(booking)} primaryClassName="is-primary" /> : null}
                 </footer>
             </div>
         </article>

@@ -110,13 +110,13 @@ export default function ChatWidget({ user = null, readonly = false, floating = f
                             <div className="chat-msg__text">{m.text}</div>
                             <div className="chat-options">
                                 {m.options.map((opt) => (
-                                    <button
+                                    <Button
                                         key={opt.value}
-                                        className="chat-option-btn"
+                                        primaryClassName="chat-option-btn"
                                         onClick={() => handleOptionClick(opt.value)}
-                                    >
-                                        {opt.label}
-                                    </button>
+                                        variant="outline"
+                                        text={opt.label}
+                                    />
                                 ))}
                             </div>
                         </>
@@ -153,15 +153,16 @@ export default function ChatWidget({ user = null, readonly = false, floating = f
                 aria-label="Chat widget"
             >
                 <div className="chat-widget__header">
-                    <div className="chat-widget__title">TravelsTREM — Virtual Assistant</div>
+                    <div className="chat-widget__title">TravelsTREM , Virtual Assistant</div>
                     <div className="chat-widget__actions">
-                        <button
-                            className="chat-close-btn"
+                        <Button
+                            primaryClassName="chat-close-btn"
                             onClick={() => setOpen(false)}
                             aria-label="Close chat"
-                        >
-                            ✕
-                        </button>
+                            variant="text"
+                            isCircular
+                            text="✕"
+                        />
                     </div>
                 </div>
 

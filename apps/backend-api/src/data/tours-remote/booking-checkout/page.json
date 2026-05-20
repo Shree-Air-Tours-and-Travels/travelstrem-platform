@@ -44,17 +44,40 @@
       "widgets": [
         {
           "type": "BookingCheckoutHero",
+          "source": "shell",
           "widgetRef": "./widgets/checkout-hero.json"
         },
         {
           "type": "BookingCheckoutPaymentSummary",
+          "source": "shell",
           "widgetRef": "./widgets/checkout-payment-summary.json"
         },
         {
           "type": "BookingCheckoutSidebar",
+          "source": "shell",
           "widgetRef": "./widgets/checkout-sidebar.json"
         }
       ],
+      "floatingActionBar": {
+        "config": {
+          "variant": "floating",
+          "align": "left-right",
+          "showBg": true,
+          "mobileVisible": 2
+        },
+        "actions": [
+          {
+            "type": "back",
+            "refId": "backToBooking",
+            "config": { "alignementOnBar": "left" }
+          },
+          {
+            "type": "submit",
+            "refId": "payNow",
+            "config": { "alignementOnBar": "right", "iconRight": "arrowRight" }
+          }
+        ]
+      },
       "config": {},
       "actions": []
     }

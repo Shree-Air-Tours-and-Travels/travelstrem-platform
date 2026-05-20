@@ -3,7 +3,7 @@ import "./BookingModal.scss";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
-import { BookingSummaryCard } from "@packages/trem-ui";
+import { Button, BookingSummaryCard } from "@packages/trem-ui";
 import { fetchData, validateFields } from "@packages/trem-utils";
 
 const bookingFields = {
@@ -323,7 +323,7 @@ export default function BookingModal({ open = false, onClose = () => { }, tour }
                         <h3 className="bm-title">Reserve - {tour?.title}</h3>
                         <p className="bm-sub">Quick reservation · {tour?.city?.from || "Flexible"} → {tour?.city?.to || "Route"}</p>
                     </div>
-                    <button className="bm-close" onClick={closeModal} aria-label="Close reservation">×</button>
+                    <Button variant="text" isCircular iconLeft="x" onClick={closeModal} aria-label="Close" primaryClassName="bm-close" />
                 </header>
 
                 <div className="bm-body">
@@ -348,9 +348,9 @@ export default function BookingModal({ open = false, onClose = () => { }, tour }
 
                                 <label className="bm-label">Guests</label>
                                 <div className="bm-guest-row">
-                                    <button className="bm-qty" onClick={() => setGuests((value) => Math.max(1, Number(value) - 1))} aria-label="Decrease guests" type="button">-</button>
+                                    <Button variant="outline" size="small" isCircular iconLeft="minus" onClick={() => setGuests((value) => Math.max(1, Number(value) - 1))} aria-label="Decrease guests" type="button" primaryClassName="bm-qty" />
                                     <div className="bm-qty-num">{guests}</div>
-                                    <button className="bm-qty" onClick={() => { setGuests((value) => Number(value) + 1); clearFieldError("guests"); }} aria-label="Increase guests" type="button">+</button>
+                                    <Button variant="outline" size="small" isCircular iconLeft="plus" onClick={() => { setGuests((value) => Number(value) + 1); clearFieldError("guests"); }} aria-label="Increase guests" type="button" primaryClassName="bm-qty" />
                                     <div className="bm-note">
                                         {tour?.maxGroupSize ? `${tour.maxGroupSize} max` : "Flexible group size"}
                                         {tour?.availability?.seatsAvailable != null && ` · ${tour.availability.seatsAvailable} seats available`}
@@ -501,9 +501,7 @@ export default function BookingModal({ open = false, onClose = () => { }, tour }
                                     ))}
                                 </div>
 
-                                <button className="bm-btn bm-btn--primary" onClick={handleReserve} disabled={loading} type="button">
-                                    {loading ? "Submitting..." : "Submit Quote Request"}
-                                </button>
+                                <Button variant="solid" color="primary" type="submit" text={loading ? "Submitting..." : "Submit Quote Request"} disabled={loading} onClick={handleReserve} primaryClassName="bm-btn bm-btn--primary" />
                             </section>
                         )}
                     </div>
@@ -527,8 +525,8 @@ export default function BookingModal({ open = false, onClose = () => { }, tour }
                 </div>
 
                 <footer className="bm-footer">
-                    <div>{step > 1 && <button className="bm-btn bm-btn--ghost" onClick={goBack} type="button">Back</button>}</div>
-                    <div>{step < 3 && <button className="bm-btn bm-btn--primary" onClick={goNext} type="button">Next</button>}</div>
+                    <div>{step > 1 && <Button variant="outline" text="Back" onClick={goBack} type="button" primaryClassName="bm-btn bm-btn--ghost" />}</div>
+                    <div>{step < 3 && <Button variant="solid" text="Next" onClick={goNext} type="button" primaryClassName="bm-btn bm-btn--primary" />}</div>
                 </footer>
             </div>
         </div>

@@ -19,6 +19,7 @@ export { default as Breadcrumbs } from "./components/Breadcrumbs/Breadcrumbs.jsx
 export { default as InputField } from "./components/InputField/InputField.jsx";
 export { default as FloatingActionBar } from "./components/FloatingActionBar/FloatingActionBar.jsx";
 export { default as EmptyState } from "./components/EmptyState/EmptyState.jsx";
+export { default as Paragraph } from "./components/Paragraph/Paragraph.jsx";
 export { default as QuickChips } from "./components/QuickChips/QuickChips.jsx";
 
 export { FavoritesProvider, useFavoritesContext } from "./context/FavoritesContext.jsx";

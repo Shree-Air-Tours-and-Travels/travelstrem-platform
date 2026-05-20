@@ -22,18 +22,22 @@
       "widgets": [
         {
           "type": "HeroBanner",
+          "source": "shell",
           "widgetRef": "./widgets/hero-banner.json"
         },
         {
           "type": "quickChips",
+          "source": "shell",
           "widgetRef": "./widgets/quick-filters.json"
         },
         {
           "type": "filters",
+          "source": "shell",
           "widgetRef": "./widgets/tour-filters.json"
         },
         {
           "type": "listing",
+          "source": "shell",
           "widgetRef": "./widgets/tour-grid.json"
         }
       ],

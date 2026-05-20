@@ -7,7 +7,7 @@ import "../main.scss";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useThemeMode } from "@packages/trem-utils";
 import { AuthPage, createAuthService } from "@apps/auth-trem";
-import { Header, Footer } from "@packages/trem-ui";
+import { Button, Header, Footer } from "@packages/trem-ui";
 import api from "../services/apiClient";
 import { emit } from "@packages/trem-events";
 import { clearUserSessionCache } from "../services/userSession";
@@ -97,9 +97,7 @@ export default function AdminApp({ embedded = false, session: providedSession = 
                 <div>
                     <div className="app-status__title">AdminTREM initialization failed</div>
                     <div className="app-status__muted">{state.error}</div>
-                    <button className="btn btn-primary mt-3" onClick={initAdminApp}>
-                        Retry
-                    </button>
+                    <Button primaryClassName="btn btn-primary mt-3" variant="solid" color="primary" onClick={initAdminApp} text="Retry" />
                 </div>
             </main>
         );

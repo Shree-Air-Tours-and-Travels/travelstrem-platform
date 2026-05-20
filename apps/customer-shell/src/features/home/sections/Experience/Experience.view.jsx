@@ -1,6 +1,6 @@
 import React from "react";
 import "./Experience.styles.scss";
-import { Icon, Title, SmoothScroll } from "@packages/trem-ui";
+import { Icon, Title, SmoothScroll, SubTitle, Paragraph } from "@packages/trem-ui";
 import experienceImage from "../../shared/assets/images/experience.png";
 
 const experienceData = {
@@ -23,13 +23,13 @@ const ExperienceView = () => {
         <div className="ui-experience__content">
           <Title className="ui-experience__tag" text={experienceData.tag} />
           <Title className="ui-experience__title" text={experienceData.title} size="small" variant="secondary"/>
-          <p className="ui-experience__description">{experienceData.description}</p>
+          <Paragraph primaryClassname="ui-experience__description" text={experienceData.description} />
           <div className="ui-experience__stats">
             {experienceData.stats.map((stat) => (
               <div key={stat.id} className="ui-experience__stat">
                 <span className="ui-experience__icon">{stat.icon}</span>
-                <h3 className="ui-experience__value">{stat.value}</h3>
-                <p className="ui-experience__label">{stat.label}</p>
+                <SubTitle primaryClassname="ui-experience__value" text={stat.value} />
+                <Paragraph primaryClassname="ui-experience__label" text={stat.label} />
               </div>
             ))}
           </div>

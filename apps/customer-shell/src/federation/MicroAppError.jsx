@@ -1,5 +1,5 @@
 import React from "react";
-import { Icon } from "@packages/trem-ui";
+import { Button, Icon, Title, Paragraph } from "@packages/trem-ui";
 import "./MicroAppError.scss";
 import { getConfiguredRemoteOrigin } from "../core/config/portalEnvironment";
 
@@ -22,9 +22,9 @@ export default function MicroAppErrorView({
                 </div>
 
                 <div className="micro-app-error__content">
-                    <p className="micro-app-error__eyebrow">Micro app load failed</p>
-                    <h1>{title}</h1>
-                    <p>{message}</p>
+                    <Paragraph primaryClassname="micro-app-error__eyebrow" text="Micro app load failed" />
+                    <Title text={title} />
+                    <Paragraph text={message} />
 
                     {remoteEntryUrl && (
                         <div className="micro-app-error__endpoint">
@@ -34,10 +34,7 @@ export default function MicroAppErrorView({
                     )}
 
                     <div className="micro-app-error__actions">
-                        <button type="button" className="micro-app-error__button primary" onClick={onRetry}>
-                            <Icon name="refreshCw" aria-hidden="true" />
-                            <span>Retry</span>
-                        </button>
+                        <Button variant="solid" color="primary" text="Retry" iconLeft="refreshCw" onClick={onRetry} primaryClassName="micro-app-error__button primary" />
 
                         {remoteUrl && (
                             <a

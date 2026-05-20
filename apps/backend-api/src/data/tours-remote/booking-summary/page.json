@@ -94,25 +94,75 @@
       "widgets": [
         {
           "type": "BookingSummaryHero",
+          "source": "shell",
           "widgetRef": "./widgets/booking-hero.json"
         },
         {
           "type": "BookingSummaryTourDetails",
+          "source": "shell",
           "widgetRef": "./widgets/booking-tour-details.json"
         },
         {
           "type": "BookingSummaryTravelDetails",
+          "source": "shell",
           "widgetRef": "./widgets/booking-travel-details.json"
         },
         {
           "type": "BookingSummaryTravelers",
+          "source": "shell",
           "widgetRef": "./widgets/booking-travelers.json"
         },
         {
           "type": "BookingSummaryTimeline",
+          "source": "shell",
           "widgetRef": "./widgets/booking-timeline.json"
         }
       ],
+      "floatingActionBar": {
+        "config": {
+          "variant": "floating",
+          "align": "left-right",
+          "showBg": true,
+          "mobileVisible": 3
+        },
+        "actions": [
+          {
+            "type": "submit",
+            "refId": "proceedToCheckout",
+            "config": { "alignementOnBar": "left", "iconRight": "arrowRight" }
+          },
+          {
+            "type": "save",
+            "refId": "updateBooking",
+            "config": { "alignementOnBar": "left", "iconLeft": "save" }
+          },
+          {
+            "type": "ghost",
+            "refId": "downloadQuote",
+            "config": { "alignementOnBar": "right", "iconLeft": "download", "overflowMobile": true }
+          },
+          {
+            "type": "ghost",
+            "refId": "downloadInvoice",
+            "config": { "alignementOnBar": "right", "iconLeft": "download", "overflowMobile": true }
+          },
+          {
+            "type": "ghost",
+            "refId": "bookingPass",
+            "config": { "alignementOnBar": "right", "iconLeft": "download", "overflowMobile": true }
+          },
+          {
+            "type": "danger",
+            "refId": "cancelLabel",
+            "config": { "alignementOnBar": "right", "iconLeft": "x", "overflowMobile": true }
+          },
+          {
+            "type": "ghost",
+            "refId": "contactAgent",
+            "config": { "alignementOnBar": "right", "iconLeft": "phone", "overflowMobile": true }
+          }
+        ]
+      },
       "config": {},
       "actions": []
     }

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button, SubTitle, Paragraph } from "@packages/trem-ui";
 import './TourView.scss';
 
 export default function TourViewView({ tour, onClose, onEdit, panelRef }) {
@@ -22,13 +23,13 @@ export default function TourViewView({ tour, onClose, onEdit, panelRef }) {
       >
         <header className="tv-header">
           <div className="tv-title">
-            <h3>{tour.title}</h3>
+            <SubTitle text={tour.title} variant="primary" size="large" />
             <div className="tv-meta">{tour.city?.from} → {tour.city?.to}</div>
           </div>
 
           <div className="tv-actions">
-            <button className="btn" onClick={() => onEdit(tour)}>Edit</button>
-            <button className="btn" onClick={onClose} aria-label="Close view">Close</button>
+            <Button primaryClassName="btn" variant="solid" color="primary" onClick={() => onEdit(tour)} text="Edit" />
+            <Button primaryClassName="btn" variant="outline" onClick={onClose} aria-label="Close view" text="Close" />
           </div>
         </header>
 
@@ -41,33 +42,33 @@ export default function TourViewView({ tour, onClose, onEdit, panelRef }) {
           <main className="tv-main" aria-label="Tour content">
             <div className="tv-row">
               <div className="tv-summary">
-                <p><strong>Duration:</strong> {tour.period?.days}d / {tour.period?.nights}n</p>
-                <p><strong>Distance:</strong> {tour.distance ?? '—'} km</p>
-                <p><strong>Price:</strong> {tour.price ? `${tour.price.min}-${tour.price.max} ${tour.price.currency}` : '—'}</p>
-                <p><strong>Seats:</strong> {tour.availability?.seatsAvailable ?? '—'} / {tour.availability?.totalSeats ?? '—'}</p>
-                <p><strong>Meeting point:</strong> {tour.meetingPoint || '—'}</p>
+                <Paragraph><strong>Duration:</strong> {tour.period?.days}d / {tour.period?.nights}n</Paragraph>
+                <Paragraph><strong>Distance:</strong> {tour.distance ?? ','} km</Paragraph>
+                <Paragraph><strong>Price:</strong> {tour.price ? `${tour.price.min}-${tour.price.max} ${tour.price.currency}` : ','}</Paragraph>
+                <Paragraph><strong>Seats:</strong> {tour.availability?.seatsAvailable ?? ','} / {tour.availability?.totalSeats ?? ','}</Paragraph>
+                <Paragraph><strong>Meeting point:</strong> {tour.meetingPoint || ','}</Paragraph>
               </div>
             </div>
 
             <section className="tv-section">
-              <h4>Description</h4>
-              <p>{tour.desc || 'No description available.'}</p>
+              <SubTitle text="Description" />
+              <Paragraph>{tour.desc || 'No description available.'}</Paragraph>
             </section>
 
             <section className="tv-section">
-              <h4>Itinerary</h4>
-              {(tour.itinerary || []).length === 0 && <p className="tv-empty">No itinerary provided.</p>}
+              <SubTitle text="Itinerary" />
+              {(tour.itinerary || []).length === 0 && <Paragraph primaryClassname="tv-empty">No itinerary provided.</Paragraph>}
               {(tour.itinerary || []).map(it => (
                 <div key={it._id || it.day} className="tv-it">
-                  <strong>Day {it.day} — {it.title || ''}</strong>
-                  {it.summary && <p>{it.summary}</p>}
+                  <strong>Day {it.day} , {it.title || ''}</strong>
+                  {it.summary && <Paragraph>{it.summary}</Paragraph>}
                 </div>
               ))}
             </section>
 
             <section className="tv-section">
-              <h4>Highlights</h4>
-              {(tour.highlights || []).length === 0 ? <p>—</p> : (
+              <SubTitle text="Highlights" />
+              {(tour.highlights || []).length === 0 ? <Paragraph>,</Paragraph> : (
                 <ul>
                   {(tour.highlights || []).map((h, idx) => <li key={h._id || idx}>{h.title || h}</li>)}
                 </ul>
@@ -75,12 +76,12 @@ export default function TourViewView({ tour, onClose, onEdit, panelRef }) {
             </section>
 
             <section className="tv-section">
-              <h4>Seasonal Pricing</h4>
-              {(tour.seasonalPricing || []).length === 0 ? <p>—</p> : (
+              <SubTitle text="Seasonal Pricing" />
+              {(tour.seasonalPricing || []).length === 0 ? <Paragraph>,</Paragraph> : (
                 <ul>
                   {(tour.seasonalPricing || []).map((s, idx) => (
                     <li key={s._id || idx}>
-                      {s.seasonName || 'Season'} — {s.min ?? '-'}-{s.max ?? '-'} {s.currency || (tour.price && tour.price.currency) || ''}
+                      {s.seasonName || 'Season'} , {s.min ?? '-'}-{s.max ?? '-'} {s.currency || (tour.price && tour.price.currency) || ''}
                       {' '}({s.startDate ? new Date(s.startDate).toLocaleDateString() : '-'} → {s.endDate ? new Date(s.endDate).toLocaleDateString() : '-'})
                     </li>
                   ))}
@@ -92,7 +93,7 @@ export default function TourViewView({ tour, onClose, onEdit, panelRef }) {
 
         <footer className="tv-footer">
           <div className="tv-footer-left">
-            <small>Tags: {(tour.tags || []).join(', ') || '—'}</small>
+            <small>Tags: {(tour.tags || []).join(', ') || ','}</small>
           </div>
      
         </footer>

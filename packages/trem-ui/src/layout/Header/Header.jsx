@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import Button from "../../components/Button/Button.jsx";
 import Dropdown from "../../components/Dropdown/Dropdown.jsx";
 import Icon from "../../icons/Icon/Icon.jsx";
 import NotificationBell from "../../components/NotificationBell/NotificationBell.jsx";
@@ -131,10 +132,7 @@ const NavItem = ({ item, isFirst, drawer, activePath, firstLinkRef, onNavClick, 
       const isExpanded = expanded || isDropdownActive;
       return (
         <li className="trem-header__drawer-dropdown">
-          <button className={`trem-header__drawer-dropdown-trigger${isDropdownActive ? " is-active" : ""}`} type="button" onClick={() => setExpanded((s) => !s)}>
-            {item.label}
-            <Icon name="chevronDown" className={isExpanded ? "is-open" : ""} />
-          </button>
+          <Button variant="text" text={item.label} iconRight="chevronDown" onClick={() => setExpanded((s) => !s)} primaryClassName={`trem-header__drawer-dropdown-trigger${isDropdownActive ? " is-active" : ""}`} />
           {isExpanded && (
             <ul className="trem-header__drawer-sublist">
               {item.items.map((child) => {
@@ -165,10 +163,7 @@ const NavItem = ({ item, isFirst, drawer, activePath, firstLinkRef, onNavClick, 
           align="left"
           closeOnSelect
           trigger={
-            <button className={`trem-header__dropdown-trigger${isDropdownActive ? " is-active" : ""}`} type="button" disabled={item.disabled} onClick={(e) => e.preventDefault()}>
-              {item.label}
-              <Icon name="chevronDown" />
-            </button>
+            <Button variant="text" text={item.label} iconRight="chevronDown" disabled={item.disabled} onClick={(e) => e.preventDefault()} primaryClassName={`trem-header__dropdown-trigger${isDropdownActive ? " is-active" : ""}`} />
           }
           items={item.items.map((child) => {
             const childPath = getNavPath(child);
@@ -244,12 +239,8 @@ const NavItem = ({ item, isFirst, drawer, activePath, firstLinkRef, onNavClick, 
     <>
       <header className={`trem-header ${open ? "is-open" : ""} ${className}`.trim()} role="banner">
         <div className="trem-header__container">
-          <button className="trem-header__toggle" type="button" onClick={() => setOpen((s) => !s)} aria-label={open ? "Close menu" : "Open menu"} aria-expanded={open}>
-            <Icon name={open ? "menuClose" : "menuOpen"} />
-          </button>
-          <button className="trem-header__logo" type="button" onClick={() => onPathClick(brand.homePath || "/", brand.label || "TravelsTREM")}>
-            <span className="trem-header__brand-text">{brand.label || "TravelsTREM"}</span>
-          </button>
+          <Button variant="text" iconLeft={open ? "menuClose" : "menuOpen"} onClick={() => setOpen((s) => !s)} aria-label={open ? "Close menu" : "Open menu"} aria-expanded={open} primaryClassName="trem-header__toggle" />
+          <Button variant="text" text={brand.label || "TravelsTREM"} onClick={() => onPathClick(brand.homePath || "/", brand.label || "TravelsTREM")} primaryClassName="trem-header__logo" />
           <nav className="trem-header__nav" role="navigation" aria-label="Main navigation">
             <ul className="trem-header__menu trem-header__menu--start">{navItems.map((item, i) => <NavItem item={item} key={item.id} isFirst={i === 0} activePath={activePath} firstLinkRef={firstLinkRef} onNavClick={onNavClick} onClose={() => setOpen(false)} />)}</ul>
             <ul className="trem-header__menu trem-header__menu--end">{renderUserArea(false)}{renderActions()}</ul>
@@ -276,9 +267,7 @@ const NavItem = ({ item, isFirst, drawer, activePath, firstLinkRef, onNavClick, 
                   {loginAction.label || "Login"}
                 </NavLink>
               )}
-              <button className="trem-header__drawer-close" onClick={() => setOpen(false)} aria-label="Close menu" type="button">
-                <Icon name="menuClose" />
-              </button>
+              <Button variant="text" isCircular iconLeft="menuClose" onClick={() => setOpen(false)} aria-label="Close menu" primaryClassName="trem-header__drawer-close" />
             </div>
 
             <div className="trem-header__drawer-body">
@@ -288,19 +277,10 @@ const NavItem = ({ item, isFirst, drawer, activePath, firstLinkRef, onNavClick, 
             </div>
 
             <div className="trem-header__drawer-bottom">
-              <button type="button" className="trem-header__drawer-action" onClick={() => runAction(onToggleTheme)}>
-                <Icon name={theme === "dark" ? "sun" : "moon"} />
-                <span>{theme === "dark" ? "Light mode" : "Dark mode"}</span>
-              </button>
-              <button type="button" className="trem-header__drawer-action" onClick={() => runAction(onSettings, "TREM_SETTINGS_REQUESTED")}>
-                <Icon name="settings" />
-                <span>Settings</span>
-              </button>
+              <Button variant="text" iconLeft={theme === "dark" ? "sun" : "moon"} text={theme === "dark" ? "Light mode" : "Dark mode"} onClick={() => runAction(onToggleTheme)} primaryClassName="trem-header__drawer-action" />
+              <Button variant="text" iconLeft="settings" text="Settings" onClick={() => runAction(onSettings, "TREM_SETTINGS_REQUESTED")} primaryClassName="trem-header__drawer-action" />
               {session?.isAuthenticated && (
-                <button type="button" className="trem-header__drawer-action trem-header__drawer-action--danger" onClick={() => runAction(onLogout)}>
-                  <Icon name="logout" />
-                  <span>{logoutAction.label || "Logout"}</span>
-                </button>
+                <Button variant="text" iconLeft="logout" text={logoutAction.label || "Logout"} onClick={() => runAction(onLogout)} primaryClassName="trem-header__drawer-action trem-header__drawer-action--danger" />
               )}
             </div>
           </div>

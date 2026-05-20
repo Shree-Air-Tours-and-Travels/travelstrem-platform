@@ -1,5 +1,5 @@
 import React from "react";
-import { Icon, Breadcrumbs, FloatingActionBar } from "@packages/trem-ui";
+import { Button, Icon, Breadcrumbs, FloatingActionBar, Title, Paragraph } from "@packages/trem-ui";
 import { ContactAgentModal, ConfirmOverlay } from "@packages/trem-modals";
 import TourOverview from "../widgets/TourOverview/TourOverview";
 import TourGallery from "../widgets/TourGallery/TourGallery";
@@ -30,11 +30,11 @@ export const EmptyState = ({ title, message, onBack }) => (
   <main className="tour-detail">
     <div className="tour-detail__shell">
       <section className="tour-detail__empty">
-        <h1>{title}</h1>
-        <p>{message}</p>
-        <button className="tour-detail__button tour-detail__button--primary" type="button" onClick={onBack}>
-          Back to tours
-        </button>
+        <Title text={title} />
+        <Paragraph text={message} />
+        <Button primaryClassName="tour-detail__button tour-detail__button--primary" variant="solid" color="primary" onClick={onBack}>
+          {elements?.labels?.backToTours || "Back to tours"}
+        </Button>
       </section>
     </div>
   </main>
@@ -70,6 +70,7 @@ const renderWidget = (widget, props) => {
 
 export default function ToursDetailsView({
   tourRef, widgets, pageTitle, activeTour,
+  structure, elements,
   contactOpen, contactFormData,
   bookConfirmOpen, breadcrumbItems, referrerLabel,
   onTourLoad, onBack, onBook, onBookConfirm, onBookConfirmClose, onContact, onShare,
@@ -88,10 +89,10 @@ export default function ToursDetailsView({
       <div className="tour-detail__shell">
         <Breadcrumbs items={breadcrumbItems} className="tour-detail__breadcrumbs" />
 
-        <button className="tour-detail__mobile-back" type="button" onClick={onBack}>
+        <Button primaryClassName="tour-detail__mobile-back" variant="text" onClick={onBack}>
           <Icon name="arrowLeft" />
-          Back to {referrerLabel || "Tours"}
-        </button>
+          {elements?.labels?.backToLabel || "Back to"} {referrerLabel || elements?.labels?.referrerTours || "Tours"}
+        </Button>
 
         <div className="tour-detail__hero-section">
           <div className="tour-detail__hero-main">
@@ -121,21 +122,19 @@ export default function ToursDetailsView({
         open={bookConfirmOpen}
         onClose={onBookConfirmClose}
         onConfirm={() => { onBookConfirmClose(); onBookConfirm(); }}
-        title="Book Your Spot"
-        note="Please note that this is a request for booking. Our agent will get in touch with you to provide a final quote and confirm your reservation."
+        title={elements?.labels?.confirmBookingTitle || "Book Your Spot"}
+        note={elements?.labels?.confirmBookingNote || "Please note that this is a request for booking. Our agent will get in touch with you to provide a final quote and confirm your reservation."}
         icon="calendar"
-        confirmLabel="Request Booking"
-        cancelLabel="Cancel"
+        confirmLabel={elements?.labels?.confirmBookingConfirmLabel || "Request Booking"}
+        cancelLabel={elements?.labels?.confirmBookingCancelLabel || "Cancel"}
       />
 
       <FloatingActionBar
-        variant="floating"
-        align="left"
-        showBg
-        mobileVariant="compact"
+        structure={structure?.floatingActionBar}
+        text={elements?.labels}
         actions={[
-          { label: "Book now", variant: "primary", onClick: () => onBook(activeTour) },
-          { label: "Enquire", variant: "ghost", iconLeft: "messageCircle", onClick: () => onContact(activeTour) },
+          { label: elements?.labels?.bookNow || "Book now", variant: "primary", onClick: () => onBook(activeTour) },
+          { label: elements?.labels?.enquire || "Enquire", variant: "ghost", iconLeft: "messageCircle", onClick: () => onContact(activeTour) },
         ]}
       />
     </main>

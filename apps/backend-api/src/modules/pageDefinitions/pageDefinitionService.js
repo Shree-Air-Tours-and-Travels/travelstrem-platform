@@ -331,7 +331,7 @@ class PageDefinitionService {
   }
 
   /* ------------------------------------------------------------------ */
-  /*  Dashboard hydration — replaces mock widget data with live         */
+  /*  Dashboard hydration , replaces mock widget data with live         */
   /* ------------------------------------------------------------------ */
 
   _mapBookingStatus(status) {

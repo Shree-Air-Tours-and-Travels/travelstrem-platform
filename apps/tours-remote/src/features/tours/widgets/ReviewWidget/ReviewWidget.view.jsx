@@ -1,8 +1,9 @@
 import React from "react";
+import { Paragraph } from "@packages/trem-ui";
 import "../../../tourDetails/tourDetails.scss";
 
 export default function ReviewWidgetView({ items, emptyText }) {
-    if (!items.length) return <p className="tour-detail__muted">{emptyText}</p>;
+    if (!items.length) return <Paragraph primaryClassname="tour-detail__muted" text={emptyText} />;
 
     return (
         <div className="tour-detail__reviews">
@@ -12,7 +13,7 @@ export default function ReviewWidgetView({ items, emptyText }) {
                         <strong>{review.name || "Guest"}</strong>
                         <span>{Number(review.rating || 0).toFixed(1)} / 5</span>
                     </div>
-                    <p>{review.comment || "Loved the experience."}</p>
+                    <Paragraph text={review.comment || "Loved the experience."} />
                 </article>
             ))}
         </div>

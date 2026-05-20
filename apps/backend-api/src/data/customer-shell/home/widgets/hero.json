@@ -37,7 +37,7 @@
       "header": {},
       "widgets": [
         {
-          "type": "Hero",
+          "type": "heroBanner",
           "props": {
             "headingRef": "heroTitle",
             "descriptionRef": "heroDescription",

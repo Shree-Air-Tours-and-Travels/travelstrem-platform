@@ -7,6 +7,11 @@
       "page": "home",
       "file": "./customer-shell/home/page.json"
     },
+     "customer-shell/about": {
+      "app": "customer-shell",
+      "page": "about",
+      "file": "./customer-shell/about/page.json"
+    },
     "customer-shell/checkout": {
       "app": "customer-shell",
       "page": "checkout",
@@ -26,6 +31,11 @@
       "app": "tours-remote",
       "page": "details",
       "file": "./tours-remote/details/page.json"
+    },
+    "tours-remote/booking": {
+      "app": "tours-remote",
+      "page": "booking",
+      "file": "./tours-remote/booking/page.json"
     },
     "tours-remote/booking-summary": {
       "app": "tours-remote",
@@ -50,17 +60,27 @@
   },
   "pathMap": {
     "/": "customer-shell/home",
+    "/about": "customer-shell/about",
     "/dashboard": "customer-shell/dashboard",
     "/checkout": "customer-shell/checkout",
+    "/tours": "tours-remote/listing",
+    "/tours/:tourRef": "tours-remote/details",
+    "/tours/:tourRef/book": "tours-remote/booking",
+    "/tours/bookings/:bookingId": "tours-remote/booking-summary",
+    "/tours/bookings/:bookingId/checkout": "tours-remote/booking-checkout",
     "/admin": "admin-shell/dashboard",
     "/admin/bookings": "admin-shell/bookings"
   },
   "aliases": {
     "home": "customer-shell/home",
+    "about": "customer-shell/about",
     "customer-dashboard": "customer-shell/dashboard",
     "checkout": "customer-shell/checkout",
     "tour-listing": "tours-remote/listing",
     "tour-details": "tours-remote/details",
+    "tour-booking": "tours-remote/booking",
+    "tour-booking-summary": "tours-remote/booking-summary",
+    "tour-booking-checkout": "tours-remote/booking-checkout",
     "dashboard": "admin-shell/dashboard",
     "bookings": "admin-shell/bookings"
   }

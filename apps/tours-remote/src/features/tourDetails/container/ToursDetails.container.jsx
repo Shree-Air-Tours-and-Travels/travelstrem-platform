@@ -95,12 +95,12 @@ export default function ToursDetailsContainer({ dispatchEvent } = {}) {
     }, [activeTour]);
 
     if (!decodedRef) {
-        return <EmptyState title="Tour not found" message="The tour link is missing a valid reference." onBack={handleBack} />;
+        return <EmptyState title={pageLabels.tourNotFoundTitle || "Tour not found"} message={pageLabels.tourNotFoundMessage || "The tour link is missing a valid reference."} onBack={handleBack} />;
     }
 
     if (loading && !widgets.length) return <DetailSkeleton />;
     if (error && !widgets.length) {
-        return <EmptyState title="Tour details could not load" message={error} onBack={handleBack} />;
+        return <EmptyState title={pageLabels.tourErrorTitle || "Tour details could not load"} message={error} onBack={handleBack} />;
     }
 
     return (
@@ -109,6 +109,8 @@ export default function ToursDetailsContainer({ dispatchEvent } = {}) {
             widgets={widgets}
             pageTitle={activeTour?.title || pageLabels.pageTitle || slugifyTitle(decodedRef).replace(/-/g, " ")}
             activeTour={activeTour}
+            structure={structure}
+            elements={elements}
             contactOpen={contactOpen}
             contactFormData={contactFormData}
             bookConfirmOpen={bookConfirmOpen}

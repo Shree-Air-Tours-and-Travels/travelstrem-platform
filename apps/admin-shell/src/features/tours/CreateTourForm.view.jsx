@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback } from "react";
+import { Button, SubTitle } from "@packages/trem-ui";
 import "./CreateTourForm.scss";
 
 const STEPS = ['Basic', 'Schedule', 'Itinerary', 'Pricing', 'Logistics', 'Content', 'Review'];
@@ -23,17 +24,19 @@ function ChipInput({ value = [], onChange, placeholder = "Add item" }) {
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); add(); } }}
                     placeholder={placeholder}
                 />
-                <button type="button" className="btn" onClick={add}>Add</button>
+                <Button type="button" primaryClassName="btn" onClick={add} text="Add" />
             </div>
             <div className="ctf-tag-list">
                 {value.map((item, i) => (
                     <span key={i} className="ctf-tag">
                         {item}
-                        <button
+                        <Button
                             type="button"
+                            variant="text"
+                            isCircular
+                            iconLeft="x"
                             onClick={() => remove(i)}
-                            style={{ marginLeft: 6, background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', padding: 0, fontSize: '1.1em', lineHeight: 1 }}
-                        >×</button>
+                        />
                     </span>
                 ))}
             </div>
@@ -111,19 +114,25 @@ function ImageUploader({ uploading, uploadProgress, photo, photos = [], onUpload
                     {allPhotos.map((url, i) => (
                         <div key={i} className={`ctf-photo-thumb ${url === photo ? 'ctf-photo-thumb--main' : ''}`}>
                             <img src={url} alt={`Photo ${i + 1}`} />
-                            <button
+                            <Button
                                 type="button"
-                                className="ctf-thumb-remove"
+                                primaryClassName="ctf-thumb-remove"
+                                variant="text"
+                                isCircular
+                                iconLeft="x"
                                 onClick={e => { e.stopPropagation(); onRemove(url); }}
                                 title="Remove"
-                            >×</button>
+                            />
                             {url !== photo && (
-                                <button
+                                <Button
                                     type="button"
-                                    className="ctf-thumb-setmain"
+                                    primaryClassName="ctf-thumb-setmain"
+                                    variant="text"
+                                    isCircular
+                                    iconLeft="star"
                                     onClick={e => { e.stopPropagation(); onSetMain(url); }}
                                     title="Set as main"
-                                >★</button>
+                                />
                             )}
                         </div>
                     ))}
@@ -149,13 +158,13 @@ export default function CreateTourFormView({
             <div className="ctf-panel">
                 <header className="ctf-panel-header">
                     <div>
-                        <h3>{form._id ? 'Edit Tour' : 'Create Tour'}</h3>
+                        <SubTitle text={form._id ? 'Edit Tour' : 'Create Tour'} />
                         <div className="ctf-steps-line">
                             {STEPS.map((s, i) => <span key={s} className={`ctf-step ${i === step ? 'active' : i < step ? 'done' : ''}`}>{i + 1}</span>)}
                         </div>
                     </div>
                     <div className="ctf-header-actions">
-                        <button className="btn" onClick={onCancel}>Cancel</button>
+                        <Button primaryClassName="btn" onClick={onCancel} text="Cancel" />
                     </div>
                 </header>
 
@@ -258,15 +267,15 @@ export default function CreateTourFormView({
 
                         {step === 2 && (
                             <section className="ctf-section">
-                                <h4 style={{ margin: '0 0 0.75rem' }}>Itinerary Days</h4>
+                                <SubTitle text="Itinerary Days" />
                                 {(form.itinerary || []).map((day, idx) => (
                                     <div key={idx} style={{ border: '1px solid var(--border)', borderRadius: 8, padding: '0.75rem', marginBottom: '0.75rem' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                                             <strong>Day {day.day || idx + 1}</strong>
                                             <div style={{ display: 'flex', gap: 4 }}>
-                                                <button type="button" className="btn" disabled={idx === 0} onClick={() => moveArrayItem?.('itinerary', idx, idx - 1)}>▲</button>
-                                                <button type="button" className="btn" disabled={idx === (form.itinerary || []).length - 1} onClick={() => moveArrayItem?.('itinerary', idx, idx + 1)}>▼</button>
-                                                <button type="button" className="btn" onClick={() => removeArrayItem('itinerary', idx)}>Remove</button>
+                                                <Button type="button" primaryClassName="btn" disabled={idx === 0} onClick={() => moveArrayItem?.('itinerary', idx, idx - 1)} text="▲" />
+                                                <Button type="button" primaryClassName="btn" disabled={idx === (form.itinerary || []).length - 1} onClick={() => moveArrayItem?.('itinerary', idx, idx + 1)} text="▼" />
+                                                <Button type="button" primaryClassName="btn" onClick={() => removeArrayItem('itinerary', idx)} text="Remove" />
                                             </div>
                                         </div>
                                         <label>Day #<input type="number" min={1} value={day.day || ''} onChange={e => updateArrayItem('itinerary', idx, { ...day, day: Number(e.target.value) })} /></label>
@@ -283,10 +292,10 @@ export default function CreateTourFormView({
                                         <label>Notes<textarea value={day.notes || ''} onChange={e => updateArrayItem('itinerary', idx, { ...day, notes: e.target.value })} /></label>
                                     </div>
                                 ))}
-                                <button type="button" className="btn" onClick={() => {
+                                <Button type="button" primaryClassName="btn" onClick={() => {
                                     const nextDay = ((form.itinerary || []).reduce((max, d) => Math.max(max, d.day || 0), 0)) + 1;
                                     addArrayItem('itinerary', { day: nextDay, title: '', summary: '', activities: [], meals: [], accommodation: '', location: '', notes: '' });
-                                }}>+ Add Day</button>
+                                }} text="+ Add Day" />
                             </section>
                         )}
 
@@ -327,11 +336,11 @@ export default function CreateTourFormView({
                                                 <input value={s.seasonName || ''} placeholder="name" onChange={e => updateArrayItem('seasonalPricing', idx, { ...s, seasonName: e.target.value })} />
                                                 <input type="date" value={s.startDate || ''} onChange={e => updateArrayItem('seasonalPricing', idx, { ...s, startDate: e.target.value })} />
                                                 <input type="date" value={s.endDate || ''} onChange={e => updateArrayItem('seasonalPricing', idx, { ...s, endDate: e.target.value })} />
-                                                <button type="button" className="btn" onClick={() => removeArrayItem('seasonalPricing', idx)}>Remove</button>
+                                                <Button type="button" primaryClassName="btn" onClick={() => removeArrayItem('seasonalPricing', idx)} text="Remove" />
                                             </div>
                                         );
                                     })}
-                                    <button type="button" className="btn" onClick={() => addArrayItem('seasonalPricing', { seasonName: '', startDate: '', endDate: '', min: form.price.min, max: form.price.max })}>Add season</button>
+                                    <Button type="button" primaryClassName="btn" onClick={() => addArrayItem('seasonalPricing', { seasonName: '', startDate: '', endDate: '', min: form.price.min, max: form.price.max })} text="Add season" />
                                 </fieldset>
                             </section>
                         )}
@@ -372,21 +381,21 @@ export default function CreateTourFormView({
                                                 <input value={h.icon || ''} onChange={e => updateArrayItem('highlights', idx, { ...h, icon: e.target.value })} placeholder="Icon name or URL" />
                                             </div>
                                             <div className="ctf-highlight-actions">
-                                                <button type="button" className="btn ctf-sm-btn" disabled={idx === 0} onClick={() => {
+                                                <Button type="button" primaryClassName="btn ctf-sm-btn" disabled={idx === 0} onClick={() => {
                                                     const arr = [...(form.highlights || [])];
                                                     [arr[idx - 1], arr[idx]] = [arr[idx], arr[idx - 1]];
                                                     setForm({ ...form, highlights: arr });
-                                                }} title="Move up">↑</button>
-                                                <button type="button" className="btn ctf-sm-btn" disabled={idx === (form.highlights || []).length - 1} onClick={() => {
+                                                }} title="Move up" text="↑" />
+                                                <Button type="button" primaryClassName="btn ctf-sm-btn" disabled={idx === (form.highlights || []).length - 1} onClick={() => {
                                                     const arr = [...(form.highlights || [])];
                                                     [arr[idx], arr[idx + 1]] = [arr[idx + 1], arr[idx]];
                                                     setForm({ ...form, highlights: arr });
-                                                }} title="Move down">↓</button>
-                                                <button type="button" className="btn ctf-sm-btn ctf-sm-btn--danger" onClick={() => removeArrayItem('highlights', idx)} title="Remove">×</button>
+                                                }} title="Move down" text="↓" />
+                                                <Button type="button" primaryClassName="btn ctf-sm-btn ctf-sm-btn--danger" variant="text" isCircular iconLeft="x" onClick={() => removeArrayItem('highlights', idx)} title="Remove" />
                                             </div>
                                         </div>
                                     ))}
-                                    <button type="button" className="btn" style={{ marginTop: 8 }} onClick={() => addArrayItem('highlights', { title: '', short: '', icon: '', order: (form.highlights || []).length + 1 })}>+ Add Highlight</button>
+                                    <Button type="button" primaryClassName="btn" style={{ marginTop: 8 }} onClick={() => addArrayItem('highlights', { title: '', short: '', icon: '', order: (form.highlights || []).length + 1 })} text="+ Add Highlight" />
                                 </fieldset>
                             </section>
                         )}
@@ -424,13 +433,13 @@ export default function CreateTourFormView({
 
                 <footer className="ctf-panel-footer">
                     <div className="ctf-footer-left">
-                        <button className="btn" disabled={step === 0} onClick={back}>Back</button>
+                        <Button primaryClassName="btn" disabled={step === 0} onClick={back} text="Back" />
                     </div>
                     <div className="ctf-footer-actions">
                         {step < STEPS.length - 1 ? (
-                            <button className="btn primary" onClick={next}>Next</button>
+                            <Button primaryClassName="btn" variant="solid" color="primary" onClick={next} text="Next" />
                         ) : (
-                            <button className="btn primary" onClick={submit} disabled={saving}>{saving ? 'Saving…' : 'Submit'}</button>
+                            <Button primaryClassName="btn" variant="solid" color="primary" type="submit" onClick={submit} disabled={saving} text={saving ? 'Saving…' : 'Submit'} />
                         )}
                     </div>
                 </footer>

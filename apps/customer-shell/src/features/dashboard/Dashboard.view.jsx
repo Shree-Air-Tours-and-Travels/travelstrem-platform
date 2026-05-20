@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Dropdown, GlobalLoader, Icon, TourCard, Breadcrumbs, PortalPreloader, BottomSheet, EmptyState, QuickChips } from "@packages/trem-ui";
+import { Button, Dropdown, GlobalLoader, Icon, TourCard, Breadcrumbs, PortalPreloader, BottomSheet, EmptyState, QuickChips, Title, SubTitle, Paragraph } from "@packages/trem-ui";
 import { fetchData, getTourDetailsPath, slugify } from "@packages/trem-utils";
 import "./Dashboard.styles.scss";
 
@@ -23,7 +23,7 @@ function Panel({ className = "", title, action, children }) {
         <section className={`dashboard-panel ${className}`.trim()}>
             {(title || action) && (
                 <header className="dashboard-panel__header">
-                    {title ? <h2>{title}</h2> : <span />}
+                    {title ? <Title text={title} /> : <span />}
                     {action}
                 </header>
             )}
@@ -86,14 +86,13 @@ function CustomerDashboardShell({ widget, labels, children, user, activeNav, onN
     return (
         <main className={`customer-dashboard-page${!sidebarOpen ? " is-sidebar-collapsed" : ""}`}>
             {banner && <div className="customer-dashboard-page__banner">{banner}</div>}
-            <button
-                type="button"
-                className="customer-dashboard-page__sidebar-toggle"
+            <Button
+                variant="text"
+                iconLeft={sidebarOpen ? "chevronLeft" : "chevronRight"}
                 onClick={toggleSidebar}
                 aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
-            >
-                <Icon name={sidebarOpen ? "chevronLeft" : "chevronRight"} />
-            </button>
+                primaryClassName="customer-dashboard-page__sidebar-toggle"
+            />
             <div className="customer-dashboard-page__body">
                 <aside className={`customer-dashboard-sidebar${!sidebarOpen ? " is-collapsed" : ""}`} aria-label="Dashboard navigation">
                     <div className="customer-dashboard-sidebar__profile">
@@ -104,45 +103,38 @@ function CustomerDashboardShell({ widget, labels, children, user, activeNav, onN
                             <strong>{displayName}</strong>
                             <span>{since}</span>
                         </div>
-                        <button type="button" aria-label="Edit profile" className="customer-dashboard-sidebar__profile-action" onClick={() => onNavChange?.("settings")}>
-                            <Icon name="settings" size={16} />
-                        </button>
+                        <Button variant="text" iconLeft="settings" iconSize={16} aria-label="Edit profile" primaryClassName="customer-dashboard-sidebar__profile-action" onClick={() => onNavChange?.("settings")} />
                     </div>
 
                     <nav className="customer-dashboard-sidebar__nav">
                         {navigation.map((section) => (
                             <section key={section.sectionRef || section.items?.[0]?.id}>
-                                <h3>{getLabel(labels, section.sectionRef, section.sectionRef)}</h3>
+                                <SubTitle text={getLabel(labels, section.sectionRef, section.sectionRef)} />
                                 {(section.items || []).map((item) => {
                                     const isExpanded = shouldExpand(item);
                                     const hasChildren = item.children?.length > 0;
                                     return (
                                         <div key={item.id}>
-                                            <button
-                                                type="button"
-                                                className={`customer-dashboard-sidebar__item${itemOrChildActive(item) ? " is-active" : ""}${item.disabled ? " is-disabled" : ""}`}
+                                            <Button
+                                                variant="text"
+                                                iconLeft={item.icon || "compass"}
+                                                text={`${getLabel(labels, item.labelRef, item.label)}${item.badge ? ` ${item.badge}` : ""}`}
+                                                iconRight={hasChildren ? (isExpanded ? "chevronDown" : "chevronRight") : undefined}
+                                                primaryClassName={`customer-dashboard-sidebar__item${itemOrChildActive(item) ? " is-active" : ""}${item.disabled ? " is-disabled" : ""}`}
                                                 disabled={item.disabled}
                                                 onClick={() => handleNavClick(item)}
-                                            >
-                                                <div>
-                                                    <Icon name={item.icon || "compass"} aria-hidden="true" />
-                                                    <span>{getLabel(labels, item.labelRef, item.label)}</span>
-                                                    {item.badge ? <b>{item.badge}</b> : null}
-                                                    {hasChildren ? <Icon name={isExpanded ? "chevronDown" : "chevronRight"} className="customer-dashboard-sidebar__chevron" aria-hidden="true" /> : null}
-                                                </div>
-                                            </button>
+                                            />
                                             {hasChildren && isExpanded ? (
                                                 <ul className="customer-dashboard-sidebar__sublist">
                                                     {item.children.map((child) => (
                                                         <li key={child.id || child.labelRef}>
-                                                            <button
-                                                                type="button"
-                                                                className={`customer-dashboard-sidebar__subitem${activeNav === child.id ? " is-active" : ""}`}
+                                                            <Button
+                                                                variant="text"
+                                                                iconLeft={child.icon || undefined}
+                                                                text={getLabel(labels, child.labelRef, child.label)}
+                                                                primaryClassName={`customer-dashboard-sidebar__subitem${activeNav === child.id ? " is-active" : ""}`}
                                                                 onClick={() => onNavChange?.(child.id)}
-                                                            >
-                                                                {child.icon ? <Icon name={child.icon} aria-hidden="true" /> : null}
-                                                                <span>{getLabel(labels, child.labelRef, child.label)}</span>
-                                                            </button>
+                                                            />
                                                         </li>
                                                     ))}
                                                 </ul>
@@ -168,7 +160,7 @@ function DashboardAlert({ widget, labels }) {
         <div className={`dashboard-alert${getToneClass(props.tone)}`}>
             <Icon name="alertTriangle" aria-hidden="true" />
             <span>{getLabel(labels, props.messageRef, props.message)}</span>
-            <button type="button" aria-label="Dismiss alert">×</button>
+            <Button variant="text" text="×" aria-label="Dismiss alert" />
         </div>
     );
 }
@@ -200,7 +192,7 @@ function DashboardMetrics({ widget, labels, bookingState }) {
 function RecentBookings({ widget, labels }) {
     const props = getWidgetProps(widget);
     return (
-        <Panel className="dashboard-recent-bookings" title={getLabel(labels, props.titleRef, "Recent Booking")} action={<button type="button">Plane</button>}>
+        <Panel className="dashboard-recent-bookings" title={getLabel(labels, props.titleRef, "Recent Booking")} action={<Button variant="text" text="Plane" />}>
             <div className="dashboard-list">
                 {(props.items || []).map((item) => (
                     <article className="dashboard-list-row" key={item.id}>
@@ -222,7 +214,7 @@ function BookingStatistics({ widget, labels }) {
     const props = getWidgetProps(widget);
     const segments = props.segments || [];
     return (
-        <Panel className="dashboard-statistics" title={getLabel(labels, props.titleRef, "Booking Statistic")} action={<button type="button">January</button>}>
+        <Panel className="dashboard-statistics" title={getLabel(labels, props.titleRef, "Booking Statistic")} action={<Button variant="text" text="January" />}>
             <span>{getLabel(labels, props.amountLabelRef, "Total Amount Spend")}</span>
             <strong>{props.amount}</strong>
             <div className="dashboard-rings" aria-hidden="true">
@@ -244,7 +236,7 @@ function BookingStatistics({ widget, labels }) {
                     </li>
                 ))}
             </ul>
-            <p>{props.comparison}</p>
+            <Paragraph text={props.comparison} />
         </Panel>
     );
 }
@@ -268,7 +260,7 @@ function BookingsChart({ widget, labels }) {
     const props = getWidgetProps(widget);
     const bars = props.bars || [];
     return (
-        <Panel className="dashboard-chart" title={getLabel(labels, props.titleRef, "Recent Bookings")} action={<button type="button">2025</button>}>
+        <Panel className="dashboard-chart" title={getLabel(labels, props.titleRef, "Recent Bookings")} action={<Button variant="text" text="2025" />}>
             <span>{getLabel(labels, props.metricLabelRef, "Spending For Bookings")}</span>
             <div className="dashboard-chart__metric">
                 <strong>{props.amount}</strong>
@@ -288,7 +280,7 @@ function BookingsChart({ widget, labels }) {
 function CompactServiceList({ widget, labels, type }) {
     const props = getWidgetProps(widget);
     return (
-        <Panel className="dashboard-compact-list" title={getLabel(labels, props.titleRef, type)} action={<button type="button">All</button>}>
+        <Panel className="dashboard-compact-list" title={getLabel(labels, props.titleRef, type)} action={<Button variant="text" text="All" />}>
             <div className="dashboard-list dashboard-list--compact">
                 {(props.items || []).map((item) => (
                     <article className="dashboard-list-row" key={`${item.name}-${item.date}`}>
@@ -308,7 +300,7 @@ function CompactServiceList({ widget, labels, type }) {
 function NotificationsPanel({ widget, labels }) {
     const props = getWidgetProps(widget);
     return (
-        <Panel className="dashboard-notifications" title={getLabel(labels, props.titleRef, "Notifications")} action={<button type="button">All</button>}>
+        <Panel className="dashboard-notifications" title={getLabel(labels, props.titleRef, "Notifications")} action={<Button variant="text" text="All" />}>
             {(props.items || []).map((item) => {
                 const title = getLabel(labels, item.titleRef, item.title);
                 return (
@@ -316,7 +308,7 @@ function NotificationsPanel({ widget, labels }) {
                     <span><Icon name="bell" aria-hidden="true" /></span>
                     <div>
                         <strong>{title}</strong>
-                        <p>{item.body}</p>
+                        <Paragraph text={item.body} />
                     </div>
                     <time>{item.time}</time>
                 </article>
@@ -326,49 +318,14 @@ function NotificationsPanel({ widget, labels }) {
     );
 }
 
-const DEFAULT_CHIPS = [
-    { id: "tours", label: "Tours", active: true },
-    { id: "flights", label: "Flights", disabled: true },
-    { id: "hotels", label: "Hotels", disabled: true },
-    { id: "experiences", label: "Experiences", disabled: true },
-    { id: "visa", label: "Visa", disabled: true },
-];
-
-function FavoritesTourList() {
+function FavoritesTourList({ labels, favoritesState, favoritesChips, loadFavorites }) {
     const navigate = useNavigate();
-    const [favorites, setFavorites] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
     const [activeChip, setActiveChip] = useState("tours");
-    const [chips, setChips] = useState(DEFAULT_CHIPS);
     const [sort, setSort] = useState("recommended");
-
-    const fetchFavorites = useCallback(async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const res = await fetchData("/tours.json/favorites");
-            if (res?.status === "success") {
-                const data = res.componentData?.data || [];
-                setFavorites(data);
-                const structureChips = res.componentData?.structure?.widgets?.[0]?.props?.chips;
-                if (structureChips) setChips(structureChips);
-            } else {
-                setError(res?.message || "Failed to load favorites");
-            }
-        } catch (err) {
-            setError(err.message || "Something went wrong");
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        fetchFavorites();
-    }, [fetchFavorites]);
+    const { loading, error, items: favorites } = favoritesState;
 
     const handleChipClick = (chipId) => {
-        const chip = chips.find((c) => c.id === chipId);
+        const chip = favoritesChips.find((c) => c.id === chipId);
         if (!chip || chip.disabled) return;
         setActiveChip(chipId);
     };
@@ -393,7 +350,7 @@ function FavoritesTourList() {
         return (
             <section className="dashboard-favorites">
                 <div className="dashboard-favorites__container">
-                    <PortalPreloader type="cards" count={3} text="Loading favorites" />
+                    <PortalPreloader type="cards" count={3} text={getLabel(labels, "favoritesLoading", "Loading favorites")} />
                 </div>
             </section>
         );
@@ -405,8 +362,8 @@ function FavoritesTourList() {
                 <div className="dashboard-favorites__container">
                     <div className="dashboard-favorites__error">
                         <Icon name="alertTriangle" size={24} />
-                        <p>{error}</p>
-                        <button type="button" className="dashboard-favorites__retry" onClick={fetchFavorites}>Try again</button>
+                        <Paragraph>{error}</Paragraph>
+                        <Button variant="solid" color="primary" text={getLabel(labels, "retry", "Try again")} onClick={loadFavorites} primaryClassName="dashboard-favorites__retry" />
                     </div>
                 </div>
             </section>
@@ -419,18 +376,18 @@ function FavoritesTourList() {
         <section className="dashboard-favorites">
             <div className="dashboard-favorites__container">
                 <header className="dashboard-favorites__header">
-                    <h1 className="dashboard-favorites__title">My Favorites</h1>
-                    {hasFavorites && <span className="dashboard-favorites__count">{favorites.length} saved</span>}
+                    <Title primaryClassname="dashboard-favorites__title" text={getLabel(labels, "favoritesTitle", "My Favorites")} />
+                    {hasFavorites && <span className="dashboard-favorites__count">{favorites.length} {getLabel(labels, "favoritesSaved", "saved")}</span>}
                     <select className="dashboard-favorites__sort" value={sort} onChange={(e) => setSort(e.target.value)} aria-label="Sort tours">
-                        <option value="recommended">Recommended</option>
-                        <option value="price-asc">Price: Low to High</option>
-                        <option value="price-desc">Price: High to Low</option>
-                        <option value="rating">Top Rated</option>
+                        <option value="recommended">{getLabel(labels, "navRecommended", "Recommended")}</option>
+                        <option value="price-asc">{getLabel(labels, "navPriceLow", "Price: Low to High")}</option>
+                        <option value="price-desc">{getLabel(labels, "navPriceHigh", "Price: High to Low")}</option>
+                        <option value="rating">{getLabel(labels, "navTopRated", "Top Rated")}</option>
                     </select>
                 </header>
 
                 <QuickChips
-                    filters={chips}
+                    filters={favoritesChips}
                     activeId={activeChip}
                     onClick={handleChipClick}
                     className="dashboard-favorites__chips"
@@ -439,8 +396,8 @@ function FavoritesTourList() {
                 {!hasFavorites ? (
                     <EmptyState
                         icon="heart"
-                        title="No favorites yet"
-                        description="Start exploring tours and save the ones you love. Your favorites will appear here."
+                        title={getLabel(labels, "favoritesEmptyTitle", "No favorites yet")}
+                        description={getLabel(labels, "favoritesEmptyDescription", "Start exploring tours and save the ones you love. Your favorites will appear here.")}
                     />
                 ) : (
                     <div className="dashboard-favorites__grid">
@@ -465,7 +422,7 @@ function BookingTable({ widget, labels, options, bookingState, bookingQuery, onB
     const page = Number(bookingQuery?.page || 1);
     const pageCount = Math.max(1, Math.ceil(total / limit));
     const summarySubtitle = bookingState
-        ? `No of Booking : ${total}`
+        ? `${getLabel(labels, "summarySubtitleLabel", "No of Booking :")} ${total}`
         : getLabel(labels, props.summary?.subtitleRef, props.summary?.subtitle);
     const updateQuery = (patch) => {
         onBookingQueryChange?.((prev) => ({ ...prev, page: 1, ...patch }));
@@ -475,17 +432,17 @@ function BookingTable({ widget, labels, options, bookingState, bookingQuery, onB
         <section className="dashboard-booking-table">
             <header className="dashboard-booking-table__summary">
                 <div>
-                    <h2>{getLabel(labels, props.summary?.titleRef, props.summary?.title || "Tour")}</h2>
+                    <Title text={getLabel(labels, props.summary?.titleRef, props.summary?.title || "Tour")} />
                     <span>{summarySubtitle}</span>
                 </div>
                 <div>
-                    <button type="button"><Icon name="calendar" aria-hidden="true" />{props.summary?.dateRange}</button>
-                    <button type="button"><Icon name="share" aria-hidden="true" />Export <Icon name="chevronDown" aria-hidden="true" /></button>
+                    <Button variant="text" iconLeft="calendar" text={props.summary?.dateRange} />
+                    <Button variant="text" iconLeft="share" text={getLabel(labels, "tableExport", "Export")} iconRight="chevronDown" />
                 </div>
             </header>
             <div className="dashboard-booking-table__panel">
                 <header className="dashboard-booking-table__toolbar">
-                    <h2>{getLabel(labels, props.titleRef, "Booking List")}</h2>
+                    <Title text={getLabel(labels, props.titleRef, "Booking List")} />
                     <label>
                         <Icon name="search" aria-hidden="true" />
                         <input
@@ -517,7 +474,7 @@ function BookingTable({ widget, labels, options, bookingState, bookingQuery, onB
                                 ...item,
                                 onClick: () => updateQuery({ sort: item.label }),
                             }))}
-                            trigger={() => <button type="button">{bookingQuery?.sort || "Recommended"} <Icon name="chevronDown" aria-hidden="true" /></button>}
+                            trigger={() => <Button variant="text" text={bookingQuery?.sort || "Recommended"} iconRight="chevronDown" />}
                         />
                     </div>
                 </header>
@@ -527,13 +484,13 @@ function BookingTable({ widget, labels, options, bookingState, bookingQuery, onB
                     <table>
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>Tour & Type</th>
-                                <th>Travellers</th>
-                                <th>Days</th>
-                                <th>Price</th>
-                                <th>Date</th>
-                                <th>Status</th>
+                                <th>{getLabel(labels, "tableHeaderId", "ID")}</th>
+                                <th>{getLabel(labels, "tableHeaderTour", "Tour & Type")}</th>
+                                <th>{getLabel(labels, "tableHeaderTravellers", "Travellers")}</th>
+                                <th>{getLabel(labels, "tableHeaderDays", "Days")}</th>
+                                <th>{getLabel(labels, "tableHeaderPrice", "Price")}</th>
+                                <th>{getLabel(labels, "tableHeaderDate", "Date")}</th>
+                                <th>{getLabel(labels, "tableHeaderStatus", "Status")}</th>
                                 <th aria-label="Actions" />
                             </tr>
                         </thead>
@@ -553,17 +510,16 @@ function BookingTable({ widget, labels, options, bookingState, bookingQuery, onB
                                     <td>{row.date}</td>
                                     <td><b className={statusClass(row.status)}>{row.status}</b></td>
                                     <td className="dashboard-booking-table__actions">
-                                        <button
-                                            type="button"
+                                        <Button
+                                            variant="text"
+                                            iconLeft="eye"
                                             aria-label={`View booking ${row.id}`}
                                             onClick={() => {
                                                 if (row.bookingId) {
                                                     navigate(`/tours/bookings/${row.bookingId}`, { state: { from: { label: "Dashboard", path: "/dashboard", activeNav: "tours" } } });
                                                 }
                                             }}
-                                        >
-                                            <Icon name="eye" />
-                                        </button>
+                                        />
                                     </td>
                                 </tr>
                             ))}
@@ -572,8 +528,8 @@ function BookingTable({ widget, labels, options, bookingState, bookingQuery, onB
                                     <td colSpan={8}>
                                         <EmptyState
                                             icon="search"
-                                            title="No bookings found"
-                                            description="No bookings found for the selected filters."
+                                            title={getLabel(labels, "noBookingsFoundTitle", "No bookings found")}
+                                            description={getLabel(labels, "noBookingsFoundDescription", "No bookings found for the selected filters.")}
                                         />
                                     </td>
                                 </tr>
@@ -584,21 +540,21 @@ function BookingTable({ widget, labels, options, bookingState, bookingQuery, onB
                 <footer className="dashboard-booking-table__footer">
                     <span>{getLabel(labels, props.showEntriesRef, "Show entries")} {rows.length} of {total}</span>
                     <div>
-                        <button type="button" disabled={page <= 1} onClick={() => onBookingQueryChange?.((prev) => ({ ...prev, page: Math.max(1, page - 1) }))}>‹</button>
+                        <Button variant="outline" size="small" text="‹" disabled={page <= 1} onClick={() => onBookingQueryChange?.((prev) => ({ ...prev, page: Math.max(1, page - 1) }))} />
                         {Array.from({ length: Math.min(3, pageCount) }, (_, index) => {
                             const pageNumber = index + 1;
                             return (
-                                <button
-                                    type="button"
+                                <Button
+                                    variant="outline"
+                                    size="small"
+                                    text={String(pageNumber)}
                                     key={pageNumber}
-                                    className={pageNumber === page ? "is-active" : ""}
+                                    primaryClassName={pageNumber === page ? "is-active" : ""}
                                     onClick={() => onBookingQueryChange?.((prev) => ({ ...prev, page: pageNumber }))}
-                                >
-                                    {pageNumber}
-                                </button>
+                                />
                             );
                         })}
-                        <button type="button" disabled={page >= pageCount} onClick={() => onBookingQueryChange?.((prev) => ({ ...prev, page: Math.min(pageCount, page + 1) }))}>›</button>
+                        <Button variant="outline" size="small" text="›" disabled={page >= pageCount} onClick={() => onBookingQueryChange?.((prev) => ({ ...prev, page: Math.min(pageCount, page + 1) }))} />
                     </div>
                 </footer>
             </div>
@@ -651,57 +607,36 @@ function MobileBottomNav({ navigation, labels, activeNav, onNavChange }) {
     return (
         <>
             <nav className="dashboard-mobile-nav">
-                <button
-                    type="button"
-                    className={activeNav === "dashboard" ? "is-active" : ""}
-                    onClick={() => onNavChange("dashboard")}
-                >
-                    <Icon name="user" />
-                    <span>Profile</span>
-                </button>
-                <button type="button" className={bookingChildActive ? "is-active" : ""} onClick={() => setSheet("bookings")}>
-                    <Icon name="suitcase" />
-                    <span>My Bookings</span>
-                </button>
-                <button
-                    type="button"
-                    className={activeNav === "favorites" ? "is-active" : ""}
-                    onClick={() => onNavChange("favorites")}
-                >
-                    <Icon name="heart" />
-                    <span>Favorites</span>
-                </button>
-                <button type="button" onClick={() => setSheet("more")}>
-                    <Icon name="moreVertical" />
-                    <span>More</span>
-                </button>
+                <Button variant="text" iconLeft="user" text={getLabel(labels, "navDashboard", "Profile")} primaryClassName={activeNav === "dashboard" ? "is-active" : ""} onClick={() => onNavChange("dashboard")} />
+                <Button variant="text" iconLeft="suitcase" text={getLabel(labels, "navBookings", "My Bookings")} primaryClassName={bookingChildActive ? "is-active" : ""} onClick={() => setSheet("bookings")} />
+                <Button variant="text" iconLeft="heart" text={getLabel(labels, "navFavorites", "Favorites")} primaryClassName={activeNav === "favorites" ? "is-active" : ""} onClick={() => onNavChange("favorites")} />
+                <Button variant="text" iconLeft="moreVertical" text={getLabel(labels, "mobileNavMore", "More")} onClick={() => setSheet("more")} />
             </nav>
 
             <BottomSheet open={sheet === "bookings"} onClose={() => setSheet(null)} title="My Bookings">
                 {bookingsItem?.children?.map((child) => (
-                    <button
+                    <Button
                         key={child.id}
-                        type="button"
-                        className="dashboard-mobile-sheet-item"
+                        variant="text"
+                        iconLeft={child.icon || "compass"}
+                        text={getLabel(labels, child.labelRef, child.label)}
+                        primaryClassName="dashboard-mobile-sheet-item"
                         onClick={() => { onNavChange(child.id); setSheet(null); }}
-                    >
-                        <Icon name={child.icon || "compass"} />
-                        <span>{getLabel(labels, child.labelRef, child.label)}</span>
-                    </button>
+                    />
                 ))}
             </BottomSheet>
 
             <BottomSheet open={sheet === "more"} onClose={() => setSheet(null)} title="More">
                 {moreSections.map((section) => (
                     <div key={section.sectionRef || section.items?.[0]?.id}>
-                        <h4 className="dashboard-mobile-sheet-section">
-                            {getLabel(labels, section.sectionRef, section.sectionRef)}
-                        </h4>
+                        <SubTitle primaryClassname="dashboard-mobile-sheet-section" text={getLabel(labels, section.sectionRef, section.sectionRef)} />
                         {section.items.map((item) => (
-                            <button
+                            <Button
                                 key={item.id}
-                                type="button"
-                                className={`dashboard-mobile-sheet-item${item.disabled ? " is-disabled" : ""}`}
+                                variant="text"
+                                iconLeft={item.icon || "compass"}
+                                text={`${getLabel(labels, item.labelRef, item.label)}${item.badge ? ` ${item.badge}` : ""}`}
+                                primaryClassName={`dashboard-mobile-sheet-item${item.disabled ? " is-disabled" : ""}`}
                                 disabled={item.disabled}
                                 onClick={() => {
                                     if (!item.disabled) {
@@ -709,11 +644,7 @@ function MobileBottomNav({ navigation, labels, activeNav, onNavChange }) {
                                         setSheet(null);
                                     }
                                 }}
-                            >
-                                <Icon name={item.icon || "compass"} />
-                                <span>{getLabel(labels, item.labelRef, item.label)}</span>
-                                {item.badge ? <b>{item.badge}</b> : null}
-                            </button>
+                            />
                         ))}
                     </div>
                 ))}
@@ -722,32 +653,18 @@ function MobileBottomNav({ navigation, labels, activeNav, onNavChange }) {
     );
 }
 
-function SettingsForm({ widget, labels, profile, onProfileUpdate }) {
+function SettingsForm({ widget, labels, profile, icons = [], onProfileUpdate }) {
     const props = getWidgetProps(widget);
     const sections = props.sections || [];
     const [form, setForm] = useState({ name: "", avatar: "user", currentPassword: "", newPassword: "", confirmPassword: "" });
     const [saving, setSaving] = useState(null);
     const [toast, setToast] = useState(null);
-    const [icons, setIcons] = useState([]);
 
     useEffect(() => {
         if (profile) {
             setForm((prev) => ({ ...prev, name: profile.name || "", avatar: profile.avatar || "user" }));
         }
     }, [profile]);
-
-    useEffect(() => {
-        fetchData("/auth/profile").then((res) => {
-            if (res?.status === "success") {
-                const profileData = res.componentData?.data;
-                setIcons(res.componentData?.config?.icons || []);
-                if (profileData && !profile) {
-                    setForm((prev) => ({ ...prev, name: profileData.name || "", avatar: profileData.avatar || "user" }));
-                    onProfileUpdate?.(profileData);
-                }
-            }
-        }).catch(() => {});
-    }, []);
 
     const showToast = (msg, type = "success") => {
         setToast({ message: msg, type });
@@ -777,11 +694,11 @@ function SettingsForm({ widget, labels, profile, onProfileUpdate }) {
 
     const savePassword = async () => {
         if (form.newPassword !== form.confirmPassword) {
-            showToast("Passwords do not match", "error");
+            showToast(getLabel(labels, "passwordMismatch", "Passwords do not match"), "error");
             return;
         }
         if (form.newPassword.length < 6) {
-            showToast("Password must be at least 6 characters", "error");
+            showToast(getLabel(labels, "passwordMinLength", "Password must be at least 6 characters"), "error");
             return;
         }
         setSaving("password");
@@ -813,7 +730,7 @@ function SettingsForm({ widget, labels, profile, onProfileUpdate }) {
             )}
             {sections.map((section) => (
                 <div key={section.id} className="dashboard-settings__section">
-                    <h2>{getLabel(labels, section.titleRef, section.id)}</h2>
+                    <Title text={getLabel(labels, section.titleRef, section.id)} />
                     <div className="dashboard-settings__fields">
                         {section.fields.map((field) => {
                             const label = getLabel(labels, field.labelRef, field.id);
@@ -824,15 +741,15 @@ function SettingsForm({ widget, labels, profile, onProfileUpdate }) {
                                         <label>{label}</label>
                                         <div className="dashboard-settings__icon-grid">
                                             {icons.map((icon) => (
-                                                <button
+                                                <Button
                                                     key={icon}
-                                                    type="button"
-                                                    className={`dashboard-settings__icon-btn${form.avatar === icon ? " is-active" : ""}`}
+                                                    variant="outline"
+                                                    iconLeft={icon}
+                                                    isCircular
+                                                    primaryClassName={`dashboard-settings__icon-btn${form.avatar === icon ? " is-active" : ""}`}
                                                     onClick={() => setForm((prev) => ({ ...prev, avatar: icon }))}
                                                     title={icon}
-                                                >
-                                                    <Icon name={icon} />
-                                                </button>
+                                                />
                                             ))}
                                         </div>
                                     </div>
@@ -853,24 +770,24 @@ function SettingsForm({ widget, labels, profile, onProfileUpdate }) {
                         })}
                     </div>
                     {section.id === "profile" && (
-                        <button
-                            type="button"
-                            className="dashboard-settings__submit"
+                        <Button
+                            variant="solid"
+                            color="primary"
+                            text={saving === "profile" ? getLabel(labels, "btnUpdating", "Saving...") : getLabel(labels, "btnSave", "Save Changes")}
                             onClick={saveProfile}
                             disabled={saving === "profile"}
-                        >
-                            {saving === "profile" ? getLabel(labels, "btnUpdating", "Saving...") : getLabel(labels, "btnSave", "Save Changes")}
-                        </button>
+                            primaryClassName="dashboard-settings__submit"
+                        />
                     )}
                     {section.id === "password" && (
-                        <button
-                            type="button"
-                            className="dashboard-settings__submit"
+                        <Button
+                            variant="solid"
+                            color="primary"
+                            text={saving === "password" ? getLabel(labels, "btnUpdating", "Saving...") : getLabel(labels, "btnSave", "Save Changes")}
                             onClick={savePassword}
                             disabled={saving === "password"}
-                        >
-                            {saving === "password" ? getLabel(labels, "btnUpdating", "Saving...") : getLabel(labels, "btnSave", "Save Changes")}
-                        </button>
+                            primaryClassName="dashboard-settings__submit"
+                        />
                     )}
                 </div>
             ))}
@@ -878,7 +795,7 @@ function SettingsForm({ widget, labels, profile, onProfileUpdate }) {
     );
 }
 
-export default function DashboardPageView({ loading, error, labels, widgets, options, user, profile, onProfileUpdate, bookingState, bookingQuery, onBookingQueryChange }) {
+export default function DashboardPageView({ loading, error, labels, widgets, options, user, profile, icons, onProfileUpdate, bookingState, bookingQuery, onBookingQueryChange, favoritesState, favoritesChips, loadFavorites }) {
     if (loading) return <GlobalLoader visible text="Loading dashboard" />;
     if (error) return <main className="customer-dashboard-page customer-dashboard-page--error">Error: {error}</main>;
 
@@ -942,13 +859,13 @@ export default function DashboardPageView({ loading, error, labels, widgets, opt
             user={mergedUser}
             activeNav={activeNav}
             onNavChange={setActiveNav}
-            banner={activeTab === "dashboard" ? "Dashboard data is placeholder while we integrate real-time bookings." : null}
+            banner={activeTab === "dashboard" ? getLabel(labels, "dashboardBanner", "Dashboard data is placeholder while we integrate real-time bookings.") : null}
         >
             <Breadcrumbs items={breadcrumbItems} />
             {activeTab === "favorites" ? (
-                <FavoritesTourList />
+                <FavoritesTourList labels={labels} favoritesState={favoritesState} favoritesChips={favoritesChips} loadFavorites={loadFavorites} />
             ) : activeTab === "settings" ? (
-                <SettingsForm widget={settingsWidget} labels={labels} profile={profile} onProfileUpdate={onProfileUpdate} />
+                <SettingsForm widget={settingsWidget} labels={labels} profile={profile} icons={icons} onProfileUpdate={onProfileUpdate} />
             ) : (
                 <div className="customer-dashboard-grid">
                     {filteredWidgets.map((widget, index) => {

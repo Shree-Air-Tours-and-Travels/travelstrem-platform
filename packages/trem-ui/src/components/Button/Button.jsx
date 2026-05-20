@@ -1,17 +1,22 @@
 import React from "react";
+import Icon from "../../icons/Icon/Icon.jsx";
 import "./Button.styles.scss";
 
 const Button = ({
+  children,
   text,
   size = "medium",
-  variant = "solid", // "solid" | "outline" | "text" | "solid-outline"
+  variant = "solid",
   color = "primary",
-  secondaryColor = null, // optional for mixed variants
+  secondaryColor = null,
+  iconLeft = null,
+  iconRight = null,
+  iconSize = 18,
   isCircular = false,
   onClick,
   href,
   target = "_self",
-  primaryClassName = "", // new prop
+  primaryClassName = "",
   className = "",
   type = "button",
   disabled = false,
@@ -24,21 +29,30 @@ const Button = ({
     ui-button--${color} 
     ${secondaryColor ? `ui-button--secondary-${secondaryColor}` : ""} 
     ${isCircular ? "ui-button--circular" : ""} 
+    ${iconLeft || iconRight ? "ui-button--has-icon" : ""}
     ${primaryClassName}
     ${className}
   `.trim();
 
+  const content = children || (
+    <>
+      {iconLeft && <span className="ui-button__icon"><Icon name={iconLeft} size={iconSize} /></span>}
+      {text && <span>{text}</span>}
+      {iconRight && <span className="ui-button__icon"><Icon name={iconRight} size={iconSize} /></span>}
+    </>
+  );
+
   if (href) {
     return (
       <a href={href} target={target} className={classNames} aria-disabled={disabled} {...rest}>
-        {text}
+        {content}
       </a>
     );
   }
 
   return (
     <button className={classNames} onClick={onClick} type={type} disabled={disabled} {...rest}>
-      {text}
+      {content}
     </button>
   );
 };

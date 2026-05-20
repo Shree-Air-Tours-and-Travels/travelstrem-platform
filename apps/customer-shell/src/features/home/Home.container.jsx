@@ -1,5 +1,5 @@
 import React from "react";
-import { usePortalConfig } from "../../app/providers/PortalProvider";
+import { useComponentData } from "@packages/trem-utils";
 import HomeView from "./Home.view";
 
 const fallbackWidgets = [
@@ -9,9 +9,20 @@ const fallbackWidgets = [
 ];
 
 const HomeContainer = () => {
-    const { pageConfig } = usePortalConfig();
-    const widgets = Array.isArray(pageConfig?.widgets) && pageConfig.widgets.length ? pageConfig.widgets : fallbackWidgets;
-    return <HomeView widgets={widgets} />;
+    const { loading, error, resolvedView } = useComponentData(
+        "/pages/customer-shell/home",
+        { headers: {}, params: {} }
+    );
+
+    const widgets = resolvedView?.structure?.widgets || fallbackWidgets;
+
+    return (
+        <HomeView
+            loading={loading}
+            error={error}
+            widgets={widgets}
+        />
+    );
 };
 
 export default HomeContainer;

@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 
 import "./ServiceCard.styles.scss";
-import { Icon, SubTitle, Title } from "@packages/trem-ui";
+import { Icon, SubTitle, Title, Button } from "@packages/trem-ui";
 
 
 /* ==========================
@@ -47,9 +47,9 @@ const ServiceIcon = ({ id }) => {
 
 const ServiceCard = ({ service, onClick }) => {
     return (
-        <button
+        <Button
             type="button"
-            className="ui-service-card"
+            primaryClassName="ui-service-card"
             onClick={() => onClick(service)}
             aria-label={`Open ${service.label}`}
         >
@@ -96,7 +96,7 @@ const ServiceCard = ({ service, onClick }) => {
                     </div>
                 )}
             </div>
-        </button>
+        </Button>
     );
 };
 

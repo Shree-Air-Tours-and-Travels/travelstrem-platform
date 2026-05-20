@@ -6,15 +6,26 @@
       "options": {}
     },
     "elements": {
-      "labels": {},
+      "labels": {
+        "pageTitle": "TravelsTREM — Curated Travel Experiences",
+        "pageDescription": "Discover the world with TravelsTREM. Curated adventures, stunning destinations, and memories that last a lifetime."
+      },
       "urls": {}
     },
     "structure": {
-      "header": {},
+      "header": {
+        "titleRef": "pageTitle",
+        "descriptionRef": "pageDescription"
+      },
       "widgets": [
-
+        {
+          "type": "heroBanner",
+          "source": "shell",
+          "widgetRef": "./widgets/hero.json"
+        },
         {
           "type": "services",
+          "source": "shell",
           "widgetRef": "./widgets/services.json"
         },
         {

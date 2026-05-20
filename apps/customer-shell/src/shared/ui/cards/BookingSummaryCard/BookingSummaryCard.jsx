@@ -1,6 +1,7 @@
 // src/components/booking/SummaryCard.jsx
 import React, { useMemo } from "react";
 import PropTypes from "prop-types";
+import { SubTitle, Paragraph } from "@packages/trem-ui";
 
 /**
  * BookingSummaryCard (inline styles, theme: #1c7578)
@@ -68,7 +69,7 @@ export default function BookingSummaryCard({ tour, startDate, endDate, guests = 
         <aside style={styles.root} aria-label="Booking summary">
             <div style={styles.header}>
                 <div style={styles.titleRow}>
-                    <h4 style={styles.title}>Summary</h4>
+                    <SubTitle text="Summary" />
                     <div style={styles.pill}>{tour?.city?.from ? `${tour.city.from} → ${tour.city.to}` : ""}</div>
                 </div>
                 <div style={styles.sub}>{tour?.title}</div>
@@ -98,9 +99,7 @@ export default function BookingSummaryCard({ tour, startDate, endDate, guests = 
                 </div>
 
                 <div style={styles.small}>
-                    <p style={{ margin: "6px 0 0 0" }}>
-                        Final price, taxes and payment options will appear on the checkout page.
-                    </p>
+                    <Paragraph text="Final price, taxes and payment options will appear on the checkout page." />
                 </div>
             </div>
         </aside>

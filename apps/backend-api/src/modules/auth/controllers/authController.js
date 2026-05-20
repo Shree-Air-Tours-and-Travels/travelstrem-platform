@@ -262,7 +262,7 @@ export const forgotPassword = async (req, res) => {
         const user = await UserRepository.findByEmail(normalizedEmail);
 
         if (!user) {
-            // For security you might want to always return 200 — but original code returned 404.
+            // For security you might want to always return 200 , but original code returned 404.
             return res.status(404).json({ message: "No account found with that email address." });
         }
 

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Button, Icon } from "@packages/trem-ui";
+import { Button, Icon, Title, Paragraph } from "@packages/trem-ui";
 import { getReturnPath, useAuthFlow } from "@packages/trem-auth-core";
 import { ForgotPasswordModal, ResetPasswordModal } from "./PasswordModals.jsx";
 import "./auth-page.scss";
@@ -85,9 +85,9 @@ export default function AuthPage({
       <div className="auth-trem__card">
         <header className="auth-trem__header">
           <div>
-            <p className="auth-trem__eyebrow">{appName}</p>
-            <h2 className="auth-trem__title">{activeTab === "login" ? cfg.strings?.signInWith || "Sign in" : cfg.strings?.signUpWith || "Create account"}</h2>
-            <p className="auth-trem__sub">{activeTab === "login" ? "Enter your details to continue." : "Create access for this shell."}</p>
+            <Paragraph primaryClassname="auth-trem__eyebrow">{appName}</Paragraph>
+            <Title primaryClassname="auth-trem__title" text={activeTab === "login" ? cfg.strings?.signInWith || "Sign in" : cfg.strings?.signUpWith || "Create account"} />
+            <Paragraph primaryClassname="auth-trem__sub">{activeTab === "login" ? "Enter your details to continue." : "Create access for this shell."}</Paragraph>
           </div>
           <div className="auth-trem__brand-icon">
             <Icon name="shield" size={36} title="authentication" />
@@ -95,13 +95,9 @@ export default function AuthPage({
         </header>
 
         <div className="auth-trem__tabs">
-          <button type="button" className={`auth-trem__tab ${activeTab === "login" ? "is-active" : ""}`} onClick={() => setActiveTab("login")}>
-            {cfg.strings?.loginButton || "Log In"}
-          </button>
+          <Button variant="text" text={cfg.strings?.loginButton || "Log In"} onClick={() => setActiveTab("login")} primaryClassName={`auth-trem__tab ${activeTab === "login" ? "is-active" : ""}`} />
           {registerEnabled && (
-            <button type="button" className={`auth-trem__tab ${activeTab === "register" ? "is-active" : ""}`} onClick={() => setActiveTab("register")}>
-              {cfg.strings?.registerButton || "Register"}
-            </button>
+            <Button variant="text" text={cfg.strings?.registerButton || "Register"} onClick={() => setActiveTab("register")} primaryClassName={`auth-trem__tab ${activeTab === "register" ? "is-active" : ""}`} />
           )}
         </div>
 
@@ -114,27 +110,23 @@ export default function AuthPage({
 
           <div className="auth-trem__field-wrap">
             <input className="auth-trem__field-input" type={showPassword ? "text" : "password"} placeholder={cfg.strings?.placeholder?.password || "Password"} value={form.password} onChange={update("password")} required />
-            <button type="button" className="auth-trem__field-action" onClick={() => setShowPassword((value) => !value)} aria-label="Toggle password visibility">
-              <Icon name={showPassword ? "eyeSlash" : "eye"} size={16} />
-            </button>
+            <Button variant="text" iconLeft={showPassword ? "eyeSlash" : "eye"} iconSize={16} onClick={() => setShowPassword((value) => !value)} aria-label="Toggle password visibility" primaryClassName="auth-trem__field-action" />
           </div>
 
           {activeTab === "register" && (
             <>
               <div className="auth-trem__field-wrap">
                 <input className="auth-trem__field-input" type={showConfirmPassword ? "text" : "password"} placeholder={cfg.strings?.placeholder?.confirmPassword || "Confirm password"} value={form.confirmPassword} onChange={update("confirmPassword")} required />
-                <button type="button" className="auth-trem__field-action" onClick={() => setShowConfirmPassword((value) => !value)} aria-label="Toggle confirm password visibility">
-                  <Icon name={showConfirmPassword ? "eyeSlash" : "eye"} size={16} />
-                </button>
+                <Button variant="text" iconLeft={showConfirmPassword ? "eyeSlash" : "eye"} iconSize={16} onClick={() => setShowConfirmPassword((value) => !value)} aria-label="Toggle confirm password visibility" primaryClassName="auth-trem__field-action" />
               </div>
 
               {roles.length > 1 && (
                 <div className="auth-trem__roles">
                   {roles.map((role) => (
-                    <button type="button" key={role.value} className={`auth-trem__role ${form.role === role.value ? "is-active" : ""}`} onClick={() => setForm((state) => ({ ...state, role: role.value }))}>
+                    <div key={role.value} className={`auth-trem__role ${form.role === role.value ? "is-active" : ""}`} onClick={() => setForm((state) => ({ ...state, role: role.value }))} role="button" tabIndex={0}>
                       <span className="auth-trem__role-title">{role.title}</span>
                       <span className="auth-trem__role-sub">{role.subtitle}</span>
-                    </button>
+                    </div>
                   ))}
                 </div>
               )}
@@ -143,9 +135,7 @@ export default function AuthPage({
                 <div className="auth-trem__secret">
                   <div className="auth-trem__otp-row">
                     <input className="auth-trem__field" type="text" inputMode="numeric" placeholder="Backend console OTP" value={form.adminOtp} onChange={update("adminOtp")} required />
-                    <button type="button" className="auth-trem__otp-button" onClick={requestRegistrationOtp} disabled={otpLoading}>
-                      {otpLoading ? "Sending..." : "Get OTP"}
-                    </button>
+                    <Button variant="outline" size="small" text={otpLoading ? "Sending..." : "Get OTP"} onClick={requestRegistrationOtp} disabled={otpLoading} primaryClassName="auth-trem__otp-button" />
                   </div>
                   <div className="auth-trem__hint">Click Get OTP, then copy the code printed in the backend console.</div>
                   {otpMessage && <div className="auth-trem__otp-message">{otpMessage}</div>}
@@ -158,16 +148,12 @@ export default function AuthPage({
             <label className="auth-trem__remember">
               <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} /> Remember me
             </label>
-            <button type="button" className="auth-trem__link" onClick={() => setShowForgotModal(true)}>
-              {cfg.strings?.forgotPassword || "Forgot password?"}
-            </button>
+            <Button variant="text" text={cfg.strings?.forgotPassword || "Forgot password?"} onClick={() => setShowForgotModal(true)} primaryClassName="auth-trem__link" />
           </div>
 
           {error && <div className="auth-trem__error" role="alert">{error}</div>}
 
-          <button className="auth-trem__primary" type="submit" disabled={loading}>
-            {loading ? cfg.strings?.processing || "Processing..." : activeTab === "login" ? cfg.strings?.loginButton || "Log In" : cfg.strings?.registerButton || "Register"}
-          </button>
+          <Button variant="solid" color="primary" type="submit" text={loading ? cfg.strings?.processing || "Processing..." : activeTab === "login" ? cfg.strings?.loginButton || "Log In" : cfg.strings?.registerButton || "Register"} disabled={loading} primaryClassName="auth-trem__primary" />
         </form>
 
         {registerEnabled && (

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { Icon, BottomSheet } from "@packages/trem-ui";
+import { Button, Icon, BottomSheet } from "@packages/trem-ui";
 import "./ConfirmOverlay.styles.scss";
 
 const MOBILE_BP = 768;
@@ -59,12 +59,8 @@ export default function ConfirmOverlay({
             </div>
           )}
           <div className="trem-confirm__actions">
-            <button className="trem-confirm__btn trem-confirm__btn--cancel" type="button" onClick={onClose}>
-              {cancelLabel}
-            </button>
-            <button className="trem-confirm__btn trem-confirm__btn--confirm" type="button" onClick={onConfirm} disabled={confirmDisabled}>
-              {confirmLabel}
-            </button>
+            <Button variant="outline" text={cancelLabel} onClick={onClose} primaryClassName="trem-confirm__btn trem-confirm__btn--cancel" />
+            <Button variant="solid" color="primary" text={confirmLabel} onClick={onConfirm} disabled={confirmDisabled} primaryClassName="trem-confirm__btn trem-confirm__btn--confirm" />
           </div>
         </div>
       </BottomSheet>
@@ -75,9 +71,7 @@ export default function ConfirmOverlay({
     <div className={`trem-confirm-overlay ${className}`.trim()}>
       <div className="trem-confirm-overlay__backdrop" onClick={onClose} />
       <div className="trem-confirm-overlay__dialog" role="dialog" aria-modal="true" aria-label={title}>
-        <button className="trem-confirm-overlay__close" type="button" onClick={onClose} aria-label="Close">
-          <Icon name="x" />
-        </button>
+        <Button variant="text" isCircular iconLeft="x" onClick={onClose} aria-label="Close" primaryClassName="trem-confirm-overlay__close" />
         <div className="trem-confirm-overlay__header">
           {icon && <Icon name={icon} size={24} />}
           <h3>{title}</h3>
@@ -88,12 +82,8 @@ export default function ConfirmOverlay({
           </div>
         )}
         <div className="trem-confirm-overlay__actions">
-          <button className="trem-confirm__btn trem-confirm__btn--cancel" type="button" onClick={onClose}>
-            {cancelLabel}
-          </button>
-          <button className="trem-confirm__btn trem-confirm__btn--confirm" type="button" onClick={onConfirm} disabled={confirmDisabled}>
-            {confirmLabel}
-          </button>
+          <Button variant="outline" text={cancelLabel} onClick={onClose} primaryClassName="trem-confirm__btn trem-confirm__btn--cancel" />
+          <Button variant="solid" color="primary" text={confirmLabel} onClick={onConfirm} disabled={confirmDisabled} primaryClassName="trem-confirm__btn trem-confirm__btn--confirm" />
         </div>
       </div>
     </div>,

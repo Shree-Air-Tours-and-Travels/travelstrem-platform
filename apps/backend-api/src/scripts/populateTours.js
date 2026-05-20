@@ -156,7 +156,7 @@ const languages = ["English", "Hindi"];
 
 const additionalLanguages = ["Marathi", "Bengali", "Tamil", "Telugu", "Kannada", "Malayalam", "Gujarati"];
 
-const tourDesc = (title, dest) => `${title} — a carefully curated ${dest?.to || "travel"} experience designed for comfort and discovery. Includes expert guide, quality accommodation, and handpicked activities.`;
+const tourDesc = (title, dest) => `${title} , a carefully curated ${dest?.to || "travel"} experience designed for comfort and discovery. Includes expert guide, quality accommodation, and handpicked activities.`;
 
 // ---------------------------------------------------------------------------
 // Tour factory
@@ -260,7 +260,7 @@ function makeInternationalTour(rand, index) {
     itinerary: Array.from({ length: Math.min(days, 4) }, (_, i) => ({
       day: i + 1,
       title: i === 0 ? "Arrival & City Tour" : i === days - 1 ? "Departure" : `Day ${i + 1} Exploration`,
-      summary: `Exploring ${dest.to} — day ${i + 1}.`,
+      summary: `Exploring ${dest.to} , day ${i + 1}.`,
       activities: [`Visit ${dest.to} landmark`, "Local cuisine tasting", "Shopping & leisure"],
       meals: i === 0 ? ["Dinner"] : i === days - 1 ? ["Breakfast"] : ["Breakfast", "Lunch"],
       accommodation: "International standard hotel",

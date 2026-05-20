@@ -1,4 +1,5 @@
 import React from "react";
+import { Button, Title, SubTitle, Paragraph } from "@packages/trem-ui";
 import "../BookingDetail.scss";
 
 const STATUS_PHASES = [
@@ -13,9 +14,9 @@ const STATUS_PHASES = [
 const statusLabel = (s) => String(s || "").replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 
 const toDateInput = (v) => {
-    if (!v) return "—";
+    if (!v) return ",";
     const d = new Date(v);
-    return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString("en-IN", { dateStyle: "long" });
+    return Number.isNaN(d.getTime()) ? "," : d.toLocaleDateString("en-IN", { dateStyle: "long" });
 };
 
 const formatCurrency = (v, c = "INR") => {
@@ -45,8 +46,8 @@ function WidgetSkeleton() {
 function WidgetError({ message }) {
     return (
         <div className="bd-error">
-            <h3>Something went wrong</h3>
-            <p>{message}</p>
+            <SubTitle text="Something went wrong" />
+            <Paragraph>{message}</Paragraph>
         </div>
     );
 }
@@ -65,7 +66,7 @@ export default function BookingDetailView({ booking, loading, error, navigate })
             <div className="bd-page">
                 <WidgetError message={error} />
                 <div style={{ marginTop: 16 }}>
-                    <button onClick={() => navigate("/manage/tours")}>Back to Manage</button>
+                    <Button variant="text" onClick={() => navigate("/manage/tours")} text="Back to Manage" />
                 </div>
             </div>
         );
@@ -75,8 +76,8 @@ export default function BookingDetailView({ booking, loading, error, navigate })
         return (
             <div className="bd-page">
                 <div className="bd-error">
-                    <h2>Booking not found</h2>
-                    <button onClick={() => navigate("/manage/tours")}>Back to Manage</button>
+                    <Title text="Booking not found" />
+                    <Button variant="text" onClick={() => navigate("/manage/tours")} text="Back to Manage" />
                 </div>
             </div>
         );
@@ -92,8 +93,8 @@ export default function BookingDetailView({ booking, loading, error, navigate })
             <div className="bd-shell">
                 <header className="bd-header">
                     <div>
-                        <button className="bd-back" onClick={() => navigate("/manage/tours")}>← Back to Manage</button>
-                        <h1>{tour.title || "Booking Details"}</h1>
+                        <Button primaryClassName="bd-back" variant="text" iconLeft="arrowLeft" onClick={() => navigate("/manage/tours")} text="Back to Manage" />
+                        <Title text={tour.title || "Booking Details"} variant="primary" size="large" />
                         <div className="bd-ref">{booking.bookingRef}</div>
                     </div>
                     <div className="bd-status">{statusLabel(status)}</div>
@@ -103,7 +104,7 @@ export default function BookingDetailView({ booking, loading, error, navigate })
                     <div className="bd-agent">
                         Assigned to <strong>{booking.assignedAgent.name}</strong>
                         {booking.assignedAgent.email ? ` (${booking.assignedAgent.email})` : ""}
-                        {booking.quoteDueAt ? ` — Quote due: ${toDateInput(booking.quoteDueAt)}` : ""}
+                        {booking.quoteDueAt ? ` , Quote due: ${toDateInput(booking.quoteDueAt)}` : ""}
                     </div>
                 ) : null}
 
@@ -131,8 +132,8 @@ export default function BookingDetailView({ booking, loading, error, navigate })
 
                 <div className="bd-grid">
                     <div className="bd-card bd-card--tour">
-                        <h2>Tour Details</h2>
-                        <p>{tour.desc || "No description available."}</p>
+                        <Title text="Tour Details" />
+                        <Paragraph>{tour.desc || "No description available."}</Paragraph>
                         <div className="bd-meta-grid">
                             <div><span>Guests</span><strong>{booking.guestsCount || 1}</strong></div>
                             <div><span>Per Person</span><strong>{formatCurrency(booking.priceSnapshot?.perPerson, booking.priceSnapshot?.currency)}</strong></div>
@@ -144,25 +145,25 @@ export default function BookingDetailView({ booking, loading, error, navigate })
                         {booking.currentQuote ? (
                             <div className="bd-quote-info">
                                 <strong>Latest Quote v{booking.currentQuote.version}</strong>
-                                <span>— {formatCurrency(booking.currentQuote.finalAmount, booking.currentQuote.currency)}</span>
+                                <span>, {formatCurrency(booking.currentQuote.finalAmount, booking.currentQuote.currency)}</span>
                                 {booking.currentQuote.expirationDate ? <span> (valid until {toDateInput(booking.currentQuote.expirationDate)})</span> : null}
                             </div>
                         ) : null}
                     </div>
 
                     <div className="bd-card">
-                        <h2>Contact</h2>
+                        <Title text="Contact" />
                         <div className="bd-meta-grid">
-                            <div><span>Name</span><strong>{booking.primaryContact?.name || "—"}</strong></div>
-                            <div><span>Email</span><strong>{booking.primaryContact?.email || "—"}</strong></div>
-                            <div><span>Phone</span><strong>{booking.primaryContact?.phone || "—"}</strong></div>
+                            <div><span>Name</span><strong>{booking.primaryContact?.name || ","}</strong></div>
+                            <div><span>Email</span><strong>{booking.primaryContact?.email || ","}</strong></div>
+                            <div><span>Phone</span><strong>{booking.primaryContact?.phone || ","}</strong></div>
                             <div><span>Start Date</span><strong>{toDateInput(booking.startDate)}</strong></div>
                             <div><span>End Date</span><strong>{toDateInput(booking.endDate)}</strong></div>
                         </div>
                     </div>
 
                     <div className="bd-card">
-                        <h2>Travelers ({booking.travelers?.length || 0})</h2>
+                        <Title text={`Travelers (${booking.travelers?.length || 0})`} />
                         {booking.travelers?.length ? (
                             <div className="bd-travelers">
                                 {booking.travelers.map((t, i) => (
@@ -174,12 +175,12 @@ export default function BookingDetailView({ booking, loading, error, navigate })
                                 ))}
                             </div>
                         ) : (
-                            <p className="bd-muted">No traveler details.</p>
+                            <Paragraph primaryClassname="bd-muted">No traveler details.</Paragraph>
                         )}
                     </div>
 
                     <div className="bd-card">
-                        <h2>Payment History</h2>
+                        <Title text="Payment History" />
                         <div className="bd-payment-list">
                             {booking.payments?.length ? (
                                 booking.payments.map((pmt, i) => (
@@ -191,13 +192,13 @@ export default function BookingDetailView({ booking, loading, error, navigate })
                                     </div>
                                 ))
                             ) : (
-                                <p className="bd-muted">No payment records yet.</p>
+                                <Paragraph primaryClassname="bd-muted">No payment records yet.</Paragraph>
                             )}
                         </div>
                     </div>
 
                     <div className="bd-card">
-                        <h2>Journey Timeline</h2>
+                        <Title text="Journey Timeline" />
                         <div className="bd-timeline">
                             {(booking.timeline || booking.statusHistory || []).slice(0, 15).map((item) => (
                                 <div key={item.id || item._id || item.createdAt} className="bd-timeline-item">
@@ -214,7 +215,7 @@ export default function BookingDetailView({ booking, loading, error, navigate })
                                     </div>
                                 </div>
                             ))}
-                            {!(booking.timeline || booking.statusHistory || []).length ? <p className="bd-muted">No timeline updates yet.</p> : null}
+                            {!(booking.timeline || booking.statusHistory || []).length ? <Paragraph primaryClassname="bd-muted">No timeline updates yet.</Paragraph> : null}
                         </div>
                     </div>
                 </div>

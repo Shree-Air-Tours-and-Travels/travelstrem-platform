@@ -6,7 +6,7 @@ $mt-bg: var(--page-bg);
 
 /* ---------- ManageTours (clean, only layout + toolbar + grid) ----------
    Note: drawer, tour-view and form overlay styles have been removed from
-   this file — they are managed in their respective component SCSS files.
+   this file , they are managed in their respective component SCSS files.
 */
 
 .mt-root {
@@ -232,4 +232,4 @@ $mt-bg: var(--page-bg);
     to { opacity: 1; transform: translateX(0); }
 }
 
-/* End of ManageTours.scss — overlay/drawer/view styles are now component-scoped */
+/* End of ManageTours.scss , overlay/drawer/view styles are now component-scoped */

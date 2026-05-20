@@ -1,12 +1,12 @@
 import React from "react";
-import { TourCard } from "@packages/trem-ui";
+import { TourCard, Title } from "@packages/trem-ui";
 
 export default function SimilarToursView({ labels, tours, onView, isFavorited, onFavorite }) {
   if (!tours.length) return null;
 
   return (
     <section className="tour-detail__section">
-      <h2>{labels.youMayAlsoLike || "You May Also Like"}</h2>
+      <Title text={labels.youMayAlsoLike || "You May Also Like"} />
       <div className="tour-detail__section-body">
         <div className="tour-detail__similar-grid">
           {tours.slice(0, 4).map((tour) => (

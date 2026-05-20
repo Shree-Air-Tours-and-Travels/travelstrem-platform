@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import Icon from "../../icons/Icon/Icon.jsx";
+import Button from "../Button/Button.jsx";
 import "./NotificationBell.styles.scss";
 
 export default function NotificationBell({ fetcher, markAllReadPath = "/notifications/read-all", listPath = "/notifications?limit=8", variant = "dropdown" }) {
@@ -54,8 +55,8 @@ export default function NotificationBell({ fetcher, markAllReadPath = "/notifica
       <header>
         <span>Notifications</span>
         <div>
-          {unreadCount > 0 ? <button type="button" onClick={markAllRead}>Mark all read</button> : null}
-          {isSidebar ? <button type="button" className="trem-header-notification__close" onClick={() => setOpen(false)} aria-label="Close notifications"><Icon name="menuClose" /></button> : null}
+          {unreadCount > 0 ? <Button variant="text" text="Mark all read" onClick={markAllRead} /> : null}
+          {isSidebar ? <Button variant="text" isCircular iconLeft="menuClose" onClick={() => setOpen(false)} aria-label="Close notifications" primaryClassName="trem-header-notification__close" /> : null}
         </div>
       </header>
       {loading ? <p>Loading...</p> : null}
@@ -74,10 +75,7 @@ export default function NotificationBell({ fetcher, markAllReadPath = "/notifica
   return (
     <div className={`trem-header-notification${isSidebar ? " trem-header-notification--sidebar" : ""}`} ref={isSidebar ? undefined : panelRef}>
       {isSidebar && open ? <div className="trem-header-notification__overlay" onClick={() => setOpen(false)} role="button" tabIndex={-1} /> : null}
-      <button className="trem-header-notification__button" type="button" onClick={() => setOpen((value) => !value)} aria-label="Notifications">
-        <Icon name="bell" size={19} />
-        {unreadCount > 0 ? <strong>{unreadCount > 9 ? "9+" : unreadCount}</strong> : null}
-      </button>
+      <Button variant="text" iconLeft="bell" text={unreadCount > 0 ? (unreadCount > 9 ? "9+" : unreadCount.toString()) : ""} primaryClassName="trem-header-notification__button" onClick={() => setOpen((value) => !value)} aria-label="Notifications" />
       {open ? (
         isSidebar ? (
           <div className="trem-header-notification__sidebar" ref={panelRef}>

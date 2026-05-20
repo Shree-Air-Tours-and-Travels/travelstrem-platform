@@ -1,6 +1,7 @@
 // src/components/forms/ContactForm.jsx
 import React from "react";
 import PropTypes from "prop-types";
+import Button from "../Button/Button.jsx";
 
 const ContactForm = ({
     fieldsMeta = [],
@@ -73,10 +74,8 @@ const ContactForm = ({
                     </>
                 ) : (
                     <>
-                        <button type="submit" disabled={submitting} style={styles.submit}>
-                            {submitting ? "Sending..." : submitText}
-                        </button>
-                        <button type="button" onClick={onCancel} style={styles.cancel}>Cancel</button>
+                        <Button type="submit" disabled={submitting} variant="solid" color="primary" text={submitting ? "Sending..." : submitText} style={styles.submit} />
+                        <Button type="button" onClick={onCancel} variant="outline" color="primary" text="Cancel" style={styles.cancel} />
                     </>
                 )}
             </div>

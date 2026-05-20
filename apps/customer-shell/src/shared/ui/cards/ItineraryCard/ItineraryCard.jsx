@@ -38,7 +38,7 @@ const ItineraryCard = ({ tour }) => {
       <header className="itinerary-card__header">
         <Title id="itinerary-title" text="Itinerary" size="medium" />
         <span className="itinerary-card__meta" aria-hidden="true">
-          {isArray(arr) ? `${arr.length} day${arr.length === 1 ? "" : "s"}` : "—"}
+          {isArray(arr) ? `${arr.length} day${arr.length === 1 ? "" : "s"}` : ","}
         </span>
       </header>
 

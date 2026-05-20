@@ -32,21 +32,6 @@
   padding: 2rem;
 }
 
-.booking-summary-page__empty button,
-.booking-summary-hero button,
-.booking-summary-card button,
-.booking-summary-actions button,
-.booking-summary-return button {
-  min-height: 42px;
-  border: 1px solid var(--border, #dde7e3);
-  border-radius: 8px;
-  padding: 0.55rem 1rem;
-  background: var(--surface, #fff);
-  color: var(--text, #14201d);
-  font-weight: 700;
-  cursor: pointer;
-}
-
 .booking-summary-hero {
   display: flex;
   align-items: center;
@@ -103,11 +88,6 @@
   justify-content: flex-end;
   flex-wrap: wrap;
   gap: 0.7rem;
-}
-
-.booking-summary-hero__actions .is-danger {
-  color: var(--color-danger, #c5392f);
-  border-color: color-mix(in srgb, var(--color-danger, #c5392f) 35%, var(--border, #dde7e3));
 }
 
 .booking-summary-grid {
@@ -184,20 +164,6 @@
 
   &__tour-btn {
     white-space: nowrap;
-    min-height: 38px;
-    border: 1px solid var(--color-primary, #0f766e);
-    border-radius: 8px;
-    padding: 0.45rem 1rem;
-    background: var(--color-primary, #0f766e);
-    color: #fff;
-    font-weight: 700;
-    font-size: 0.88rem;
-    cursor: pointer;
-    transition: opacity 0.2s ease;
-
-    &:hover {
-      opacity: 0.85;
-    }
   }
 
   p {
@@ -515,26 +481,6 @@
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-bottom: 0.8rem;
-}
-
-.booking-summary-card__downloads button {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  min-height: 32px;
-  padding: 0.3rem 0.7rem;
-  border: 1px solid var(--border, #dde7e3);
-  border-radius: 6px;
-  background: var(--surface, #fff);
-  color: var(--color-primary, #0f766e);
-  font-size: 0.82rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.booking-summary-card__downloads button:hover {
-  background: color-mix(in srgb, var(--color-primary, #0f766e) 8%, transparent);
 }
 
 .booking-cancel-info {

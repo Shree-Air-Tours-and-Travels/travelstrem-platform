@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Icon, BookingSummaryCard, GlobalLoader, FloatingActionBar, Breadcrumbs } from "@packages/trem-ui";
+import { Button, Icon, BookingSummaryCard, GlobalLoader, FloatingActionBar, Breadcrumbs, Title, SubTitle, Paragraph } from "@packages/trem-ui";
 import { ConfirmOverlay } from "@packages/trem-modals";
 import BookingTripStep from "../widgets/BookingTripStep/BookingTripStep";
 import BookingTravelerStep from "../widgets/BookingTravelerStep/BookingTravelerStep";
@@ -49,11 +49,11 @@ export default function BookingPageView({
       <main className="booking-page">
         <div className="booking-page__shell">
           <section className="booking-page__empty">
-            <h1>{pageLabels.bookingLoadError || "Booking could not load"}</h1>
-            <p>{error}</p>
-            <button className="booking-page__btn booking-page__btn--primary" type="button" onClick={onGoBack}>
+            <Title text={pageLabels.bookingLoadError || "Booking could not load"} />
+            <Paragraph text={error} />
+            <Button variant="solid" color="primary" onClick={onGoBack}>
               {pageLabels.backToTours || "Back to tours"}
-            </button>
+            </Button>
           </section>
         </div>
       </main>
@@ -65,11 +65,11 @@ export default function BookingPageView({
       <main className="booking-page">
         <div className="booking-page__shell">
           <section className="booking-page__empty">
-            <h1>{pageLabels.tourNotFound || "Tour not found"}</h1>
-            <p>{pageLabels.tourNotFoundDesc || "The tour could not be loaded for booking. It may have been removed or is unavailable."}</p>
-            <button className="booking-page__btn booking-page__btn--primary" type="button" onClick={onGoBack}>
+            <Title text={pageLabels.tourNotFound || "Tour not found"} />
+            <Paragraph text={pageLabels.tourNotFoundDesc || "The tour could not be loaded for booking. It may have been removed or is unavailable."} />
+            <Button variant="solid" color="primary" onClick={onGoBack}>
               {pageLabels.backToTours || "Back to tours"}
-            </button>
+            </Button>
           </section>
         </div>
       </main>
@@ -88,7 +88,7 @@ export default function BookingPageView({
         <Breadcrumbs items={breadcrumbItems} className="booking-page__breadcrumbs" />
 
         <div className="booking-page__header">
-          <h1>{pageLabels.pageTitle || "Book Your Tour"}</h1>
+          <Title text={pageLabels.pageTitle || "Book Your Tour"} />
           <div className="booking-page__steps" aria-label="Booking steps">
             {[1, 2, 3].map((s) => (
               <React.Fragment key={s}>
@@ -103,7 +103,7 @@ export default function BookingPageView({
           <div className="booking-page__main">
             <div className="booking-page__card">
               <div className="booking-page__card-header">
-                <h2>{stepLabels[step]}</h2>
+                <SubTitle text={stepLabels[step]} />
                 <span>{step === 1 ? (pageLabels.step1Subtitle || "Dates & guests") : step === 2 ? ((pageLabels.step2Subtitle || "{count} traveler").replace("{count}", travelers.length) + (travelers.length > 1 ? (pageLabels.step2SubtitlePlural || "s") : "")) : (pageLabels.step3Subtitle || "Confirm & pay")}</span>
               </div>
               <div className="booking-page__card-scroll">
@@ -181,11 +181,10 @@ export default function BookingPageView({
 
       <FloatingActionBar
         variant="floating"
-        align="left"
         showBg
         error={fieldErrors && Object.keys(fieldErrors).some(k => k !== '_general') ? (pageLabels.fixHighlighted || "Please fix the highlighted fields.") : undefined}
         actions={[
-          ...(step > 1 ? [{ label: pageLabels.back || "Back", iconLeft: "chevronLeft", variant: "ghost", onClick: onBack }] : []),
+          ...(step > 1 ? [{ label: pageLabels.back || "Back", iconLeft: "chevronLeft", variant: "outline", onClick: onBack }] : []),
           ...(step < 3
             ? [{ label: pageLabels.next || "Next Step", iconRight: "chevronRight", variant: "primary", onClick: onNext }]
             : [{ label: submitting ? (pageLabels.submitting || "Submitting...") : (pageLabels.submit || "Submit Quote Request"), variant: "primary", disabled: submitting, onClick: () => setShowConfirm(true) }]
