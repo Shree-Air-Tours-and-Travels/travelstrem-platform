@@ -401,15 +401,17 @@ class PageDefinitionService {
       ...widget,
       props: {
         ...widget.props,
-        summary: {
-          ...widget.props.summary,
+        heroBanner: {
+          ...widget.props.heroBanner,
+          subtitle: `No of Booking : ${bookings.length}`,
           dateRange: bookings.length > 0
             ? `${this._formatDate(bookings[bookings.length - 1].createdAt)} - ${this._formatDate(bookings[0].createdAt)}`
-            : widget.props.summary.dateRange,
+            : widget.props.heroBanner?.dateRange,
         },
         rows: bookings.map((b) => {
           const tourId = b.tour?._id || null;
           return {
+            bookingId: String(b._id),
             id: `#${b.bookingRef || b._id}`,
             tour: b.tour?.title || "Unknown Tour",
             type: this._bookingTourType(b),

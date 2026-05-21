@@ -83,6 +83,7 @@ export default function DashboardPageContainer() {
     const [profileLoading, setProfileLoading] = useState(true);
     const [bookingQuery, setBookingQuery] = useState({
         page: 1,
+        limit: BOOKING_LIMIT,
         search: "",
         status: "All",
         tourType: "All",
@@ -136,9 +137,10 @@ export default function DashboardPageContainer() {
 
         async function loadBookings() {
             setBookingState((prev) => ({ ...prev, loading: true, error: "" }));
+            const limit = Number(bookingQuery.limit || BOOKING_LIMIT);
             const params = {
-                limit: BOOKING_LIMIT,
-                skip: (Math.max(1, bookingQuery.page) - 1) * BOOKING_LIMIT,
+                limit,
+                skip: (Math.max(1, bookingQuery.page) - 1) * limit,
                 sort: normalizeSort(bookingQuery.sort),
             };
             if (bookingQuery.search) params.search = bookingQuery.search;

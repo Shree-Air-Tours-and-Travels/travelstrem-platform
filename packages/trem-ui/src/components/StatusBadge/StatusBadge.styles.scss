@@ -1,0 +1,72 @@
+@import "../../styles/base/typography";
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  border-radius: $radius-full;
+  font-weight: $font-bold;
+  line-height: $line-height-xs;
+  white-space: nowrap;
+}
+
+.status-badge__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: $radius-circle;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.status-badge--sm {
+  padding: 2px 8px;
+  font-size: 0.7rem;
+}
+.status-badge--sm .status-badge__dot {
+  width: 4px;
+  height: 4px;
+}
+
+.status-badge--md {
+  padding: $space-1 $space-3;
+  font-size: $font-size-xs;
+}
+
+.status-badge--lg {
+  padding: $space-1-5 $space-4;
+  font-size: $font-size-sm;
+}
+.status-badge--lg .status-badge__dot {
+  width: 8px;
+  height: 8px;
+}
+
+.status-badge--neutral {
+  color: var(--muted, #64748b);
+  background: var(--surface, #f1f5f9);
+}
+
+.status-badge--info {
+  color: var(--color-secondary, #2563eb);
+  background: var(--color-secondary-bg, #dbeafe);
+}
+
+.status-badge--success {
+  color: var(--color-success, #166534);
+  background: var(--color-success-bg, #dcfce7);
+}
+
+.status-badge--warning {
+  color: var(--color-tertiary, #92400e);
+  background: var(--color-tertiary-bg, #fef3c7);
+}
+
+.status-badge--danger {
+  color: var(--color-danger, #991b1b);
+  background: var(--color-danger-bg, #fee2e2);
+}
+
+.status-badge--secondary {
+  color: var(--color-secondary-variant, #6b21a8);
+  background: var(--color-secondary-variant-bg, #f3e8ff);
+}

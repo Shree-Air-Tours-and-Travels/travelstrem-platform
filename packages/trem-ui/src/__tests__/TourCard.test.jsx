@@ -95,7 +95,7 @@ describe('TourCard', () => {
         <TourCard tour={baseTour} />
       </MemoryRouter>
     );
-    const priceEl = screen.getByText('Starts From');
-    expect(priceEl).toBeInTheDocument();
+    expect(screen.getByText('From')).toBeInTheDocument();
+    expect(screen.getByText('₹15,000 - ₹25,000')).toBeInTheDocument();
   });
 });

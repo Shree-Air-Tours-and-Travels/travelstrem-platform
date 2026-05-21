@@ -1,11 +1,9 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, EmptyState, Title, SubTitle, Paragraph } from "@packages/trem-ui";
+import { Button, EmptyState, Title, SubTitle, Paragraph, TourCard, BookingCard } from "@packages/trem-ui";
 import "./ManageTours.scss";
 import CreateTourForm from "./CreateTourForm";
-import TourCardSecondary from "../../shared/ui/cards/TourCards/TourCardSecondary/TourCardSecondary";
 import TourView from "./TourView";
-import BookingCard from "./BookingCard";
 import { TourCardSkeleton, BookingCardSkeleton, WidgetError } from "../../shared/Skeleton";
 
 export function ConfirmModal({ open, title = "Confirm", message = "Are you sure?", onCancel, onConfirm }) {
@@ -107,7 +105,7 @@ export default function ManageToursView({
                                 <div className="mt-empty">No tours yet</div>
                             ) : (
                                 tours.map((t) => (
-                                    <TourCardSecondary
+                                    <TourCard
                                         key={t._id || t.id}
                                         tour={t}
                                         isAdmin

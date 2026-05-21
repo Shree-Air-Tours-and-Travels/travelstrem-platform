@@ -1,9 +1,0 @@
-import{R as t}from"./index-Bc2G9s8g.js";import{c as e}from"./FavoritesContext-ClvQQ5W1.js";import"./index-BO6cjGmN.js";import"./chunk-5KNZJZUH-BSpkXNOh.js";const x={title:"Trem UI/Actions/Button",component:e,tags:["autodocs"],argTypes:{variant:{control:"select",options:["solid","outline","text","solid-outline"]},color:{control:"select",options:["primary","secondary","danger","white"]},size:{control:"select",options:["small","medium","large"]}},args:{text:"Book now",variant:"solid",color:"primary",size:"medium",disabled:!1}},o={},r={render:()=>t.createElement("div",{className:"trem-storybook-stack"},t.createElement(e,{text:"Solid",variant:"solid",color:"primary"}),t.createElement(e,{text:"Outline",variant:"outline",color:"secondary"}),t.createElement(e,{text:"Text",variant:"text",color:"secondary"}),t.createElement(e,{text:"Danger",variant:"solid",color:"danger"}),t.createElement(e,{text:"Mixed",variant:"solid-outline",color:"primary",secondaryColor:"danger"}))};var a,n,s;o.parameters={...o.parameters,docs:{...(a=o.parameters)==null?void 0:a.docs,source:{originalSource:"{}",...(s=(n=o.parameters)==null?void 0:n.docs)==null?void 0:s.source}}};var i,l,c;r.parameters={...r.parameters,docs:{...(i=r.parameters)==null?void 0:i.docs,source:{originalSource:`{
-  render: () => <div className="trem-storybook-stack">
-      <Button text="Solid" variant="solid" color="primary" />
-      <Button text="Outline" variant="outline" color="secondary" />
-      <Button text="Text" variant="text" color="secondary" />
-      <Button text="Danger" variant="solid" color="danger" />
-      <Button text="Mixed" variant="solid-outline" color="primary" secondaryColor="danger" />
-    </div>
-}`,...(c=(l=r.parameters)==null?void 0:l.docs)==null?void 0:c.source}}};const y=["Playground","Variants"];export{o as Playground,r as Variants,y as __namedExportsOrder,x as default};

@@ -1,48 +1,58 @@
 import React, { useState } from "react";
-import { BookingSummaryCard, TourCard } from "@packages/trem-ui";
+import { TourCard } from "@packages/trem-ui";
 import { sampleTour } from "./sampleData";
 
 export default {
-  title: "Trem UI/Data Display/Cards",
+  title: "Trem UI/Data Display/TourCard",
   tags: ["autodocs"],
 };
+
+//
+// ─── TOUR CARD ────────────────────────────────────────────────────────────────
+//
 
 export const TourPlayground = {
   name: "Tour Card / Playground",
   component: TourCard,
   argTypes: {
     favorited: { control: "boolean" },
+    isAdmin: { control: "boolean" },
+    featured: { control: "boolean" },
+    variant: { control: "select", options: ["list", "grid"] },
   },
   args: {
-    tour: sampleTour,
+    tour: { ...sampleTour, featured: true },
     favorited: false,
+    isAdmin: false,
+    variant: "list",
   },
   render: (args) => {
     const [favorited, setFavorited] = useState(args.favorited);
-    const onView = () => {};
     return (
-      <div className="trem-storybook-column" style={{ maxWidth: 400 }}>
+      <div className="trem-storybook-column">
         <TourCard
-          tour={sampleTour}
+          tour={{ ...sampleTour, featured: args.featured }}
           favorited={favorited}
           onFavorite={() => setFavorited((v) => !v)}
-          onView={onView}
+          onView={() => {}}
+          isAdmin={args.isAdmin}
+          variant={args.variant}
         />
       </div>
     );
   },
 };
 
-export const Tour = {
+export const TourDefault = {
   name: "Tour Card / Default",
   render: () => {
     const [favorited, setFavorited] = useState(false);
     return (
-      <div className="trem-storybook-column" style={{ maxWidth: 400 }}>
+      <div className="trem-storybook-column">
         <TourCard
           tour={sampleTour}
           favorited={favorited}
-          onFavorite={() => setFavorited((value) => !value)}
+          onFavorite={() => setFavorited((v) => !v)}
           onView={() => {}}
         />
       </div>
@@ -53,7 +63,7 @@ export const Tour = {
 export const TourFavorited = {
   name: "Tour Card / Favorited",
   render: () => (
-    <div className="trem-storybook-column" style={{ maxWidth: 400 }}>
+    <div className="trem-storybook-column">
       <TourCard
         tour={sampleTour}
         favorited={true}
@@ -64,60 +74,90 @@ export const TourFavorited = {
   ),
 };
 
-export const BookingSummaryPlayground = {
-  name: "Booking Summary / Playground",
-  component: BookingSummaryCard,
-  argTypes: {
-    startDate: { control: "date" },
-    endDate: { control: "date" },
-    guests: { control: { type: "number", min: 1, max: 20 } },
-  },
-  args: {
-    tour: sampleTour,
-    startDate: "2026-06-12",
-    endDate: "2026-06-16",
-    guests: 3,
-    priceSnapshot: { perPerson: 24999, total: 74997, currency: "INR" },
-  },
-  render: (args) => (
-    <div className="trem-storybook-column" style={{ maxWidth: 400 }}>
-      <BookingSummaryCard
-        tour={sampleTour}
-        startDate={args.startDate}
-        endDate={args.endDate}
-        guests={args.guests}
-        priceSnapshot={{ perPerson: 24999, total: 74997, currency: "INR" }}
+export const TourFeatured = {
+  name: "Tour Card / Featured",
+  render: () => (
+    <div className="trem-storybook-column">
+      <TourCard
+        tour={{ ...sampleTour, featured: true }}
+        onView={() => {}}
       />
     </div>
   ),
 };
 
-export const BookingSummary = {
-  name: "Booking Summary / Default",
+export const TourAdminView = {
+  name: "Tour Card / Admin View",
   render: () => (
-    <div className="trem-storybook-column" style={{ maxWidth: 400 }}>
-      <BookingSummaryCard
+    <div className="trem-storybook-column">
+      <TourCard
         tour={sampleTour}
-        startDate="2026-06-12"
-        endDate="2026-06-16"
-        guests={3}
-        priceSnapshot={{ perPerson: 24999, total: 74997, currency: "INR" }}
+        isAdmin
+        onView={() => {}}
+        onEdit={() => {}}
+        onDelete={() => {}}
       />
     </div>
   ),
 };
 
-export const BookingSummarySingle = {
-  name: "Booking Summary / Solo Traveller",
+export const TourGridView = {
+  name: "Tour Card / Grid Variant",
   render: () => (
     <div className="trem-storybook-column" style={{ maxWidth: 400 }}>
-      <BookingSummaryCard
+      <TourCard
         tour={sampleTour}
-        startDate="2026-07-01"
-        endDate="2026-07-05"
-        guests={1}
-        priceSnapshot={{ perPerson: 32999, total: 32999, currency: "INR" }}
+        variant="grid"
+        onView={() => {}}
       />
+    </div>
+  ),
+};
+
+export const TourNoImage = {
+  name: "Tour Card / Without Image",
+  render: () => (
+    <div className="trem-storybook-column">
+      <TourCard
+        tour={{ ...sampleTour, photo: null, photos: [] }}
+        onView={() => {}}
+      />
+    </div>
+  ),
+};
+
+export const TourWithLink = {
+  name: "Tour Card / With Link Path",
+  render: () => (
+    <div className="trem-storybook-column">
+      <TourCard
+        tour={sampleTour}
+        path="/tours/himalayan-escape"
+        onView={() => {}}
+      />
+    </div>
+  ),
+};
+
+export const TourWithTags = {
+  name: "Tour Card / With Tags",
+  render: () => (
+    <div className="trem-storybook-column">
+      <TourCard
+        tour={{ ...sampleTour, tags: ["adventure", "himalayas", "trekking", "nature", "photography"] }}
+        onView={() => {}}
+      />
+    </div>
+  ),
+};
+
+export const TourResponsiveGallery = {
+  name: "Tour Card / Responsive Gallery",
+  render: () => (
+    <div style={{ display: "grid", gap: 20, width: "100%" }}>
+      <TourCard tour={sampleTour} onView={() => {}} />
+      <TourCard tour={{ ...sampleTour, featured: true, tags: ["luxury", "honeymoon"] }} favorited onFavorite={() => {}} onView={() => {}} />
+      <TourCard tour={{ ...sampleTour, _id: "t2", title: "Kerala Backwaters Houseboat Experience", tags: ["houseboat", "backwaters"] }} isAdmin onView={() => {}} onEdit={() => {}} onDelete={() => {}} />
     </div>
   ),
 };

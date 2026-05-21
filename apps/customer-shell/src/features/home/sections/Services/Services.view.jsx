@@ -2,9 +2,7 @@ import React from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import "./Services.styles.scss";
-import { Icon, Title, SubTitle, SmoothScroll, Button, Paragraph } from "@packages/trem-ui";
-import ServiceCard from "../../../../shared/ui/cards/ServiceCard/ServiceCard";
-import { PortalPreloader } from "@packages/trem-ui";
+import { Icon, Title, SubTitle, SmoothScroll, Button, Paragraph, ServiceCard, PortalPreloader } from "@packages/trem-ui";
 import { ContactAgentModal } from "@packages/trem-modals";
 
 const travelChips = [

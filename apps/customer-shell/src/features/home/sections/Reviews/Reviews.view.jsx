@@ -1,8 +1,7 @@
 import React from "react";
 import Slider from "react-slick";
 import "./Reviews.styles.scss";
-import ReviewCard from "../../../../shared/ui/cards/ReviewCard/ReviewCard";
-import { Button, Title, SmoothScroll, Paragraph, SubTitle } from "@packages/trem-ui";
+import { Button, Title, SmoothScroll, Paragraph, SubTitle, ReviewCard } from "@packages/trem-ui";
 
 const ReviewsView = ({ reviews, newReview, handleInputChange, handleSubmit, sliderSettings }) => {
     return (

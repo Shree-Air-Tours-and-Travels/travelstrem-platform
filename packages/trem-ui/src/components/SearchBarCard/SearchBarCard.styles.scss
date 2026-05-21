@@ -1,0 +1,55 @@
+@import "../../styles/base/typography";
+
+.ui-search-bar-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: $primary-color;
+  border: $primary-color solid 1px;
+  border-radius: 10px;
+  box-shadow: var(--shadow-sm);
+  width: 100%;
+  max-width: 800px;
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  &__label {
+    font-size: $font-size-sm;
+    font-weight: $font-medium;
+    color: $primary-color;
+  }
+
+  &__input {
+    padding: 0.6rem;
+    font-size: $font-size-md;
+    border: 1px solid $border-color;
+    border-radius: 5px;
+    outline: none;
+    transition: border 0.3s ease;
+
+    &:focus {
+      border-color: $primary-color;
+    }
+  }
+
+  &__button {
+    background: $primary-color;
+    color: $light-bg;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    font-size: $font-size-md;
+    font-weight: $font-bold;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+
+    &:hover {
+      background: darken($primary-color, 10%);
+    }
+  }
+}
