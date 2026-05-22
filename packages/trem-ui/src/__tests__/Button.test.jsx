@@ -13,7 +13,7 @@ describe('Button', () => {
 
   it('renders anchor element when href is provided', () => {
     render(<Button text="Visit" href="/tours" />);
-    const link = screen.getByText('Visit');
+    const link = screen.getByRole('link');
     expect(link.tagName).toBe('A');
     expect(link).toHaveAttribute('href', '/tours');
   });
@@ -25,7 +25,7 @@ describe('Button', () => {
 
   it('applies disabled state to anchor', () => {
     render(<Button text="Link" href="/test" disabled />);
-    expect(screen.getByText('Link')).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.getByRole('link')).toHaveAttribute('aria-disabled', 'true');
   });
 
   it('applies custom className', () => {

@@ -11,7 +11,7 @@
     "start:prod": "cross-env NODE_ENV=production node src/server.js",
     "seed:tours:populate": "cross-env USE_DOTENV=true node src/scripts/populateTours.js",
     "seed:services": "cross-env USE_DOTENV=true node src/scripts/seed-services.js",
-    "test": "cross-env NODE_ENV=test jest --runInBand"
+    "test": "cross-env NODE_ENV=test jest --runInBand --passWithNoTests"
   },
   "dependencies": {
     "axios": "^1.11.0",

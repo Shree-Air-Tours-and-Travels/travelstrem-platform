@@ -60,6 +60,7 @@ const FloatingActionBar = React.memo(function FloatingActionBar({
   borderRadius = true,
   mobileVisible = 2,
   gap = "medium",
+  hideOnDesktop = false,
   renderOverflow,
   sheetTitle = "More actions",
 
@@ -79,13 +80,16 @@ const FloatingActionBar = React.memo(function FloatingActionBar({
   }, []);
 
   const resolved = useMemo(() => {
+    if (Array.isArray(actions) && actions.length > 0) {
+      return actions.map((a) => {
+        const mapped = mapLegacyVariant(a.variant);
+        return { ...mapped, ...a, variant: mapped.variant, color: a.color || mapped.color };
+      });
+    }
     if (structure) {
       return resolveActions(structure, text);
     }
-    return actions.map((a) => {
-      const mapped = mapLegacyVariant(a.variant);
-      return { ...mapped, ...a, variant: mapped.variant, color: a.color || mapped.color };
-    });
+    return [];
   }, [structure, text, actions]);
 
   const resolvedError = error || (errorView && text?.[errorView.pageLevelError]) || undefined;
@@ -141,6 +145,7 @@ const FloatingActionBar = React.memo(function FloatingActionBar({
           ${borderRadius ? "trem-fab--rounded" : "trem-fab--square"}
           trem-fab--gap-${gap}
           ${resolvedNote ? "trem-fab--has-note" : ""}
+          ${hideOnDesktop ? "trem-fab--hide-desktop" : ""}
           ${className}`.trim()}
       >
         {resolvedError && (

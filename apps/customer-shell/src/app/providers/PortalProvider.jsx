@@ -38,7 +38,6 @@ const DEFAULT_HEADER_CONFIG = {
             items: [{ label: "Tours & Packages", app: "toursTREM", path: "/tours", disabled: false }],
         },
         { label: "Dashboard", app: "customer-shell", path: "/dashboard", disabled: false },
-        { label: "Favorites", app: "customer-shell", path: "/favorites", disabled: false },
     ],
     authActions: {
         login: { label: "Login", path: "/login" },

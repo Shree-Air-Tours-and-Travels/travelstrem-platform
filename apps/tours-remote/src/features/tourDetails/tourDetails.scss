@@ -702,7 +702,7 @@
     }
   }
 
-  /* ─── Similar Tours ─── */
+  /* ─── Similar Tours (legacy, now in SimilarTours.styles.scss) ─── */
   &__similar-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);

@@ -5,6 +5,20 @@ import FiltersView from "./Filters.view";
 
 const isCompactViewport = () => typeof window !== "undefined" && window.innerWidth <= 900;
 
+const resolveMetaTitle = (data) => {
+    if (!data) return data;
+    const labels = data?.elements?.labels || {};
+    const props = data?.structure?.widgets?.[0]?.props || {};
+    const resolved = { ...data };
+    if (props.titleRef && labels[props.titleRef]) {
+        resolved.title = labels[props.titleRef];
+    }
+    if (props.descriptionRef && labels[props.descriptionRef]) {
+        resolved.description = labels[props.descriptionRef];
+    }
+    return resolved;
+};
+
 const extractToursFromResponse = (res) => {
     if (!res) return [];
     if (Array.isArray(res.component?.data?.tours)) return res.component.data.tours;
@@ -20,19 +34,32 @@ const extractToursFromResponse = (res) => {
 
 const extractResponseData = (res) => res?.component?.data || res?.componentData?.state?.data || {};
 
-export default function FiltersContainer({ onChange, widgetData, sortId = "recommended", pageSize = 8 }) {
-    const [meta, setMeta] = useState(widgetData || null);
+export default function FiltersContainer({ onChange, widgetData, sortId = "recommended", pageSize = 8, expanded: externalExpanded, onExpandedChange }) {
+    const [meta, setMeta] = useState(resolveMetaTitle(widgetData) || null);
     const [values, setValues] = useState(() => (widgetData?.structure?.config?.defaults ? { ...widgetData.structure.config.defaults } : {}));
     const [errors, setErrors] = useState({});
     const [loadingMeta, setLoadingMeta] = useState(!widgetData);
     const [loadingAction, setLoadingAction] = useState(false);
     const [message, setMessage] = useState(null);
-    const [expanded, setExpanded] = useState(() => !isCompactViewport());
+    const [internalExpanded, setInternalExpanded] = useState(() => !isCompactViewport());
     const [lastResultCount, setLastResultCount] = useState(null);
+
+    const expanded = externalExpanded !== undefined ? externalExpanded : internalExpanded;
+
+    const handleSetExpanded = React.useCallback((valueOrUpdater) => {
+        const nextValue = typeof valueOrUpdater === "function" ? valueOrUpdater(expanded) : valueOrUpdater;
+        if (onExpandedChange) {
+            onExpandedChange(nextValue);
+        } else {
+            setInternalExpanded(nextValue);
+        }
+    }, [expanded, onExpandedChange]);
+
+    const setExpanded = handleSetExpanded;
 
     useEffect(() => {
         if (widgetData) {
-            setMeta(widgetData);
+            setMeta(resolveMetaTitle(widgetData));
             setValues(widgetData?.structure?.config?.defaults ? { ...widgetData.structure.config.defaults } : {});
             setLoadingMeta(false);
         }

@@ -10,6 +10,18 @@ import "./Header.styles.scss";
 const getNavPath = (item) => item?.path || "/";
 const isPathActive = (path, pathname) => !path ? false : path === "/" ? pathname === "/" : pathname === path || pathname.startsWith(`${path}/`);
 const normalizeMenuItem = (item, index) => ({ ...item, id: item.id || `${item.label || "item"}-${index}`, type: item.type || (Array.isArray(item.items) ? "dropdown" : "internal"), path: getNavPath(item) });
+const getNavIcon = (item) => item?.icon || ({
+  Home: "compass",
+  About: "info",
+  Services: "briefcaseBusiness",
+  Dashboard: "user",
+  "Tours & Packages": "map",
+  Flights: "plane",
+  Hotels: "hotel",
+  Cab: "taxi",
+  "Visa & Passport": "passport",
+  "Visa & Passport Assistance": "passport",
+}[item?.label] || "circleDot");
 
 const canShowItem = (item, session) => {
   const authenticated = Boolean(session?.isAuthenticated);
@@ -35,7 +47,7 @@ const DEFAULT_CONFIG = {
   authActions: { login: { label: "Login", path: "/login" }, logout: { label: "Logout" } },
 };
 
-export default function Header({ headerConfig = DEFAULT_CONFIG, session = null, theme = "light", onToggleTheme, onLogout, onSettings, onNavigate, notificationFetcher, showNotifications, className = "" }) {
+export default function Header({ headerConfig = DEFAULT_CONFIG, session = null, theme = "light", onToggleTheme, onLogout, onSettings, onNavigate, onFavoritesClick, notificationFetcher, showNotifications, className = "" }) {
   const navigate = useNavigate();
   const location = useLocation();
   const user = session?.user || null;
@@ -132,7 +144,7 @@ const NavItem = ({ item, isFirst, drawer, activePath, firstLinkRef, onNavClick, 
       const isExpanded = expanded || isDropdownActive;
       return (
         <li className="trem-header__drawer-dropdown">
-          <Button variant="text" text={item.label} iconRight="chevronDown" onClick={() => setExpanded((s) => !s)} primaryClassName={`trem-header__drawer-dropdown-trigger${isDropdownActive ? " is-active" : ""}`} />
+          <Button variant="text" text={item.label} iconLeft={getNavIcon(item)} iconRight="chevronDown" onClick={() => setExpanded((s) => !s)} primaryClassName={`trem-header__drawer-dropdown-trigger${isDropdownActive ? " is-active" : ""}`} />
           {isExpanded && (
             <ul className="trem-header__drawer-sublist">
               {item.items.map((child) => {
@@ -140,9 +152,10 @@ const NavItem = ({ item, isFirst, drawer, activePath, firstLinkRef, onNavClick, 
                 return (
                   <li key={child.id}>
                     {child.disabled ? (
-                      <span className="trem-header__link is-disabled">{child.label}</span>
+                      <span className="trem-header__drawer-link is-disabled"><Icon name={getNavIcon(child)} size={18} />{child.label}</span>
                     ) : (
                       <NavLink to={childPath} className={() => (isPathActive(childPath, activePath) ? "active" : "")} onClick={(event) => { event.preventDefault(); onNavClick(child); }}>
+                        <Icon name={getNavIcon(child)} size={18} />
                         {child.label}
                       </NavLink>
                     )}
@@ -183,9 +196,13 @@ const NavItem = ({ item, isFirst, drawer, activePath, firstLinkRef, onNavClick, 
   return (
     <li>
       {item.disabled ? (
-        <span className="trem-header__link is-disabled">{item.label}</span>
+        <span className={drawer ? "trem-header__drawer-link is-disabled" : "trem-header__link is-disabled"}>
+          {drawer ? <Icon name={getNavIcon(item)} size={18} /> : null}
+          {item.label}
+        </span>
       ) : (
         <NavLink to={item.path} className={() => (isPathActive(item.path, activePath) ? "active" : "")} onClick={(event) => { event.preventDefault(); onNavClick(item); }} ref={isFirst ? firstLinkRef : undefined}>
+          {drawer ? <Icon name={getNavIcon(item)} size={18} /> : null}
           {item.label}
         </NavLink>
       )}
@@ -214,13 +231,25 @@ const NavItem = ({ item, isFirst, drawer, activePath, firstLinkRef, onNavClick, 
     );
   };
 
+  const handleFavoritesClick = useCallback(() => {
+    if (typeof onFavoritesClick === "function") {
+      onFavoritesClick();
+    } else {
+      onPathClick("/favorites", "Favorites");
+    }
+  }, [onFavoritesClick, onPathClick]);
+
   const renderActions = (wrapItems = true) => {
+    const favorites = user ? (
+      <Button variant="text" iconLeft="heart" primaryClassName="trem-header__action-btn" onClick={handleFavoritesClick} aria-label="Favorites" />
+    ) : null;
     const notification = notificationsEnabled && user ? <NotificationBell fetcher={notificationFetcher} /> : null;
     const profile = <ProfileActionMenu user={user} isAuthenticated={session?.isAuthenticated} theme={theme} onToggleTheme={onToggleTheme} onSettings={onSettings} onLogout={onLogout} logoutLabel={logoutAction.label || "Logout"} />;
 
     if (!wrapItems) {
       return (
         <>
+          {favorites}
           {notification}
           {profile}
         </>
@@ -229,6 +258,7 @@ const NavItem = ({ item, isFirst, drawer, activePath, firstLinkRef, onNavClick, 
 
     return (
       <>
+        {favorites && <li>{favorites}</li>}
         {notification && <li>{notification}</li>}
         <li>{profile}</li>
       </>
@@ -245,6 +275,7 @@ const NavItem = ({ item, isFirst, drawer, activePath, firstLinkRef, onNavClick, 
             <ul className="trem-header__menu trem-header__menu--start">{navItems.map((item, i) => <NavItem item={item} key={item.id} isFirst={i === 0} activePath={activePath} firstLinkRef={firstLinkRef} onNavClick={onNavClick} onClose={() => setOpen(false)} />)}</ul>
             <ul className="trem-header__menu trem-header__menu--end">{renderUserArea(false)}{renderActions()}</ul>
             <div className="trem-header__mobile-actions">
+              {user ? <Button variant="text" iconLeft="heart" primaryClassName="trem-header__action-btn" onClick={handleFavoritesClick} aria-label="Favorites" /> : null}
               {notificationsEnabled && user ? <NotificationBell fetcher={notificationFetcher} variant="sidebar" /> : null}
             </div>
           </nav>

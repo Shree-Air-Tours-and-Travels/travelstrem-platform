@@ -63,6 +63,7 @@ export default function Header() {
             onLogout={handleLogout}
             onSettings={handleSettings}
             onNavigate={handleNavigate}
+            onFavoritesClick={() => handleNavigate({ path: "/favorites" }, "/favorites")}
             notificationFetcher={fetchData}
         />
     );

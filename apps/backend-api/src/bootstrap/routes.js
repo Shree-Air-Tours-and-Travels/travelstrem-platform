@@ -5,6 +5,7 @@ import authRoutes from "../modules/auth/routes.js";
 import tourRoutes from "../modules/tours/routes.js";
 import heroRoutes from "../modules/portal/heroRoutes.js";
 import serviceRoutes from "../modules/services/routes.js";
+import featuredToursRoutes from "../modules/tours/featuredToursRoutes.js";
 import formsRouter from "../modules/forms/routes.js";
 import filtersRoutes from "../modules/tours/filtersRoutes.js";
 import chatRoutes from "../modules/chat/routes.js";
@@ -55,6 +56,7 @@ export default function registerRoutes(app) {
   app.use(API_ROUTES.TOURS, tourRoutes);
   app.use(API_ROUTES.HERO, heroRoutes);
   app.use(API_ROUTES.SERVICES, serviceRoutes);
+  app.use(API_ROUTES.FEATURED_TOURS, featuredToursRoutes);
   app.use(API_ROUTES.CHAT, chatRoutes);
   app.use(API_ROUTES.API, formsRouter);
   app.use(API_ROUTES.API, filtersRoutes);

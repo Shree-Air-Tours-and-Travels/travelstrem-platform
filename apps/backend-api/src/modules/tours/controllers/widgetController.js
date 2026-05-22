@@ -156,6 +156,29 @@ const normalizeTourForResponse = (tourObj = {}, priceInfo = null) => {
   };
 };
 
+const normalizeTourCardForResponse = (tourObj = {}, priceInfo = null) => {
+  const reviews = Array.isArray(tourObj.reviews) ? tourObj.reviews : [];
+  const reviewCount = reviews.length;
+
+  return {
+    _id: tourObj._id || tourObj.id || null,
+    title: tourObj.title || "",
+    city: tourObj.city ? { from: tourObj.city.from, to: tourObj.city.to } : null,
+    address: tourObj.address ? { city: tourObj.address.city, country: tourObj.address.country } : null,
+    period: tourObj.period || null,
+    photo: tourObj.photo || "",
+    photos: Array.isArray(tourObj.photos) && tourObj.photos.length > 0 ? [tourObj.photos[0]] : [],
+    desc: tourObj.desc ? tourObj.desc.slice(0, 120) : "",
+    avgRating: tourObj.avgRating != null ? tourObj.avgRating : 0,
+    maxGroupSize: tourObj.maxGroupSize || null,
+    reviewCount,
+    reviews: [],
+    featured: !!tourObj.featured,
+    tags: Array.isArray(tourObj.tags) ? tourObj.tags.slice(0, 4) : [],
+    priceInfo: priceInfo || null,
+  };
+};
+
 export const getWidget = async (req, res) => {
   try {
     const pageKey = req.query.pageKey;
@@ -274,11 +297,11 @@ export const getWidget = async (req, res) => {
       const sort = normalizeSort(req.query?.sort);
       const toursRaw = await TourRepository.find({}).sort({ createdAt: -1 });
       const dateQuery = req.query?.date ? new Date(req.query.date) : new Date();
-      const allTours = (Array.isArray(toursRaw) ? toursRaw : []).map((doc) => {
-        const tourObj = doc.toObject ? doc.toObject() : doc;
-        const priceInfo = buildPriceInfo(doc, dateQuery);
-        return normalizeTourForResponse(tourObj, priceInfo);
-      });
+       const allTours = (Array.isArray(toursRaw) ? toursRaw : []).map((doc) => {
+         const tourObj = doc.toObject ? doc.toObject() : doc;
+         const priceInfo = buildPriceInfo(doc, dateQuery);
+         return normalizeTourCardForResponse(tourObj, priceInfo);
+       });
       const sorted = sortToursForResponse(allTours, sort);
       const total = sorted.length;
       const totalPages = Math.max(1, Math.ceil(total / paging.limit));
@@ -336,14 +359,14 @@ export const getWidget = async (req, res) => {
               widget.component.data.reviews = Array.isArray(normalized.reviews) ? normalized.reviews : [];
               widget.component.data.avgRating = normalized.avgRating || 0;
               break;
-            case "similar-tours.json": {
-              const allTours = await TourRepository.find({}).sort({ createdAt: -1 });
-              const currentTags = new Set((normalized.tags || []).map((tag) => String(tag).toLowerCase()));
-              widget.component.data.tours = (Array.isArray(allTours) ? allTours : [])
-                .map((doc) => {
-                  const tourObj = doc.toObject ? doc.toObject() : doc;
-                  return normalizeTourForResponse(tourObj, buildPriceInfo(doc));
-                })
+             case "similar-tours.json": {
+               const allTours = await TourRepository.find({}).sort({ createdAt: -1 });
+               const currentTags = new Set((normalized.tags || []).map((tag) => String(tag).toLowerCase()));
+               widget.component.data.tours = (Array.isArray(allTours) ? allTours : [])
+                 .map((doc) => {
+                   const tourObj = doc.toObject ? doc.toObject() : doc;
+                   return normalizeTourCardForResponse(tourObj, buildPriceInfo(doc));
+                 })
                 .filter((candidate) => String(candidate._id) !== String(normalized._id))
                 .sort((a, b) => {
                   const aScore = (a.tags || []).filter((tag) => currentTags.has(String(tag).toLowerCase())).length;

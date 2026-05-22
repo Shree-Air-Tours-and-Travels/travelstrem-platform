@@ -152,9 +152,34 @@ const normalizeTourForResponse = (tourObj = {}, priceInfo = null) => {
         status: tourObj.status || "published",
         createdAt: tourObj.createdAt || null,
         updatedAt: tourObj.updatedAt || null,
-        avgRating: tourObj.avgRating != null ? tourObj.avgRating : (Array.isArray(tourObj.reviews) && tourObj.reviews.length ? (tourObj.reviews.reduce((a, r) => a + (Number(r.rating) || 0), 0) / tourObj.reviews.length).toFixed(1) : 0),
+         avgRating: tourObj.avgRating != null ? tourObj.avgRating : (Array.isArray(tourObj.reviews) && tourObj.reviews.length ? (tourObj.reviews.reduce((a, r) => a + (Number(r.rating) || 0), 0) / tourObj.reviews.length).toFixed(1) : 0),
+         priceInfo: priceInfo || null,
+     };
+ };
+
+const normalizeTourCardForResponse = (tourObj = {}, priceInfo = null) => {
+    const reviews = Array.isArray(tourObj.reviews) ? tourObj.reviews : [];
+    const reviewCount = reviews.length;
+    const avgRating = tourObj.avgRating != null
+        ? tourObj.avgRating
+        : (reviewCount ? (reviews.reduce((a, r) => a + (Number(r.rating) || 0), 0) / reviewCount).toFixed(1) : 0);
+
+    return {
+        _id: tourObj._id || tourObj.id || null,
+        title: tourObj.title || "",
+        city: tourObj.city ? { from: tourObj.city.from, to: tourObj.city.to } : null,
+        address: tourObj.address ? { city: tourObj.address.city, country: tourObj.address.country } : null,
+        period: tourObj.period || null,
+        photo: tourObj.photo || "",
+        photos: Array.isArray(tourObj.photos) && tourObj.photos.length > 0 ? [tourObj.photos[0]] : [],
+        desc: tourObj.desc ? tourObj.desc.slice(0, 120) : "",
+        avgRating,
+        maxGroupSize: tourObj.maxGroupSize || null,
+        reviewCount,
+        reviews: [],
+        featured: !!tourObj.featured,
+        tags: Array.isArray(tourObj.tags) ? tourObj.tags.slice(0, 4) : [],
         priceInfo: priceInfo || null,
-        raw: tourObj, // keep raw object for debugging if needed
     };
 };
 
@@ -513,12 +538,12 @@ export const getTours = async (req, res) => {
 
         const toursRaw = await toursQuery;
 
-        const tours = (Array.isArray(toursRaw) ? toursRaw : []).map((doc) => {
-            const tourObj = doc.toObject ? doc.toObject() : doc;
-            const priceInfo = buildPriceInfo(doc, dateQuery);
-            const normalized = normalizeTourForResponse(tourObj, priceInfo);
-            return normalized;
-        });
+         const tours = (Array.isArray(toursRaw) ? toursRaw : []).map((doc) => {
+             const tourObj = doc.toObject ? doc.toObject() : doc;
+             const priceInfo = buildPriceInfo(doc, dateQuery);
+             const normalized = normalizeTourCardForResponse(tourObj, priceInfo);
+             return normalized;
+         });
 
         return sendJson(res, 200, {
             status: "success",

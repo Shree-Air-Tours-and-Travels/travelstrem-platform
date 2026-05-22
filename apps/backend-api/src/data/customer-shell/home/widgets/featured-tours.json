@@ -1,33 +1,42 @@
 {
-  "status": "success",
-  "component": {
-    "data": {},
-    "dataScope": {
-      "options": {}
-    },
-    "elements": {
-      "labels": {
-        "featuredToursTitle": "Our Popular Tour Packages",
-        "featuredToursDescription": "",
-        "viewMore": "View More"
-      },
-      "urls": {}
-    },
-    "structure": {
-      "header": {},
-      "widgets": [
-        {
-          "type": "featuredTours",
-          "props": {
-            "titleRef": "featuredToursTitle",
-            "descriptionRef": "featuredToursDescription",
-            "ctaLabelRef": "viewMore",
-            "source": "shell"
-          }
+    "status": "success",
+    "component": {
+        "data": {},
+        "dataScope": {
+            "options": {}
+        },
+        "elements": {
+            "labels": {
+                "featuredToursTitle": "Our Popular Tour Packages",
+                "featuredToursDescription": "",
+                "viewMore": "View More"
+            },
+            "urls": {
+                "featuredTours": {
+                    "path": "/tours.json",
+                    "params": {
+                        "featured": "true",
+                        "limit": 4
+                    }
+                }
+            }
+        },
+        "structure": {
+            "header": {},
+            "widgets": [
+                {
+                    "type": "featuredTours",
+                    "props": {
+                        "titleRef": "featuredToursTitle",
+                        "descriptionRef": "featuredToursDescription",
+                        "ctaLabelRef": "viewMore",
+                        "source": "shell",
+                        "urlRef": "featuredTours"
+                    }
+                }
+            ],
+            "config": {},
+            "actions": []
         }
-      ],
-      "config": {},
-      "actions": []
     }
-  }
 }

@@ -9,7 +9,8 @@
     },
     "elements": {
       "labels": {
-        "quickFilterAll": "All Tours"
+        "quickFilterAll": "All Tours",
+        "quickFiltersTitle": "Find your perfect adventure"
       },
       "urls": {}
     },
@@ -18,7 +19,9 @@
       "widgets": [
         {
           "type": "quickChips",
-          "props": {}
+          "props": {
+            "titleRef": "quickFiltersTitle"
+          }
         }
       ],
       "config": {},

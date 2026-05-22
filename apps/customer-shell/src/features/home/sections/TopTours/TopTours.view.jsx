@@ -2,7 +2,7 @@ import React from "react";
 import { Button, PortalPreloader, SubTitle, Title, SmoothScroll, TourCard } from "@packages/trem-ui";
 import "./TopTours.styles.scss";
 
-export default function TopToursView({ title, description, loading, error, tours, onView, onViewAll }) {
+export default function TopToursView({ title, description, ctaLabel = "View all", loading, error, tours, onView, onViewAll }) {
     if (loading) return <PortalPreloader type="cards" count={4} text="Loading featured tours" />;
     if (error || !tours.length) return null;
 
@@ -14,7 +14,7 @@ export default function TopToursView({ title, description, loading, error, tours
                         <Title id="top-tours-title" text={title} variant="primary" size="medium" />
                         {description ? <SubTitle text={description} variant="secondary" size="small" /> : null}
                     </div>
-                    <Button text="View all" variant="outline" size="small" onClick={onViewAll} />
+                    <Button text={ctaLabel} variant="outline" size="small" onClick={onViewAll} />
                 </header>
             </SmoothScroll>
 

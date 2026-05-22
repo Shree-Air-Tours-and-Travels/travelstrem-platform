@@ -7,9 +7,7 @@
     },
     "elements": {
       "labels": {
-        "pageTitle": "Discover Tours",
-        "pageSubtitle": "Find your perfect adventure",
-        "pageDescription": "Browse our curated collection of tours and travel packages."
+        "pageTitle": "Discover Tours"
       },
       "urls": {}
     },
@@ -19,9 +17,7 @@
         {
           "type": "HeroBanner",
           "props": {
-            "titleRef": "pageTitle",
-            "subtitleRef": "pageSubtitle",
-            "descriptionRef": "pageDescription"
+            "titleRef": "pageTitle"
           }
         }
       ],

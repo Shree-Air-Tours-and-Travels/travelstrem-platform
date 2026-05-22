@@ -4,6 +4,7 @@ export const API_ROUTES = Object.freeze({
   TOURS: "/api/tours.json",
   HERO: "/api/hero.json",
   SERVICES: "/api/services.json",
+  FEATURED_TOURS: "/api/featured-tours.json",
 
   CHAT: "/api/chat",
   BOOKINGS: "/api/bookings",

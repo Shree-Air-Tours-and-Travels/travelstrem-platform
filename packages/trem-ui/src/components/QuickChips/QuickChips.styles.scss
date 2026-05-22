@@ -5,6 +5,15 @@
   align-items: center;
 }
 
+.tt-quick-chips__title {
+  width: 100%;
+  margin: 0 0 0.65rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text, #14201d);
+  line-height: 1.4;
+}
+
 .tt-quick-chips__chip {
   display: inline-flex;
   align-items: center;
