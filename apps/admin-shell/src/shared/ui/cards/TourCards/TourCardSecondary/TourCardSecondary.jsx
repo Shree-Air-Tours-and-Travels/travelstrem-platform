@@ -2,9 +2,7 @@
 import React from "react";
 
 import "./tourCardSecondary.scss";
-import { Title } from "@packages/trem-ui";
-import { SubTitle } from "@packages/trem-ui";
-import { Button } from "@packages/trem-ui";
+import { Title, SubTitle, Button, Paragraph } from "@packages/trem-ui";
 
 const getRouteText = (tour = {}) => {
     const origin = tour.city?.from || "Flexible start";
@@ -114,7 +112,7 @@ const TourCardSecondary = ({ tour, onView, isAdmin = false, onEdit, onDelete }) 
             <aside className="tour-card-list__aside" aria-hidden={false}>
                 <div className="tour-card-list__price">
                     <span className="tour-card-list__price-label">From</span>
-                    <p className="price">{priceText}</p>
+                    <Paragraph primaryClassname="price">{priceText}</Paragraph>
                     {avgRating !== undefined && (
                         <div className="rating">
                             {displayRating} <span aria-hidden="true">★</span>

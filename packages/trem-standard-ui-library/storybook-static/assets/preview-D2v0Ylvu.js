@@ -1,0 +1,1 @@
+import{R as e}from"./index-Bc2G9s8g.js";import{M as t}from"./chunk-5KNZJZUH-BSpkXNOh.js";const l={parameters:{controls:{matchers:{color:/(background|color)$/i,date:/Date$/i}},layout:"centered"},decorators:[r=>e.createElement(t,null,e.createElement("div",{className:"trem-storybook-shell"},e.createElement(r,null)))]};export{l as default};

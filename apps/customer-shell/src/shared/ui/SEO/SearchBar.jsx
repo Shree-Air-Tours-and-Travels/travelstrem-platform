@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "./SearchBar.styles.scss";
-import SearchBarCard from "../../cards/SearchBarCard/SearchBarCard";
+import { SearchBarCard } from "@packages/trem-ui";
 
 const searchData = {
   fields: [

@@ -18,7 +18,11 @@
         "sortBy": "Sort By",
         "showEntries": "Show entries",
         "tableSummaryTitle": "Tour",
-        "tableSummarySubtitle": "No of Booking : 0"
+        "tableSummarySubtitle": "No of Booking : 0",
+        "viewBookingAction": "View booking",
+        "dateRangeLabel": "Booking date range",
+        "exportCsv": "Export CSV",
+        "exportPdf": "Export PDF"
       },
       "urls": {}
     },
@@ -29,16 +33,100 @@
           "type": "BookingTable",
           "props": {
             "titleRef": "bookingList",
-            "searchRef": "tableSearch",
-            "tourTypeRef": "tourType",
-            "statusRef": "status",
-            "sortByRef": "sortBy",
-            "showEntriesRef": "showEntries",
-            "summary": {
+            "heroBanner": {
               "titleRef": "tableSummaryTitle",
               "subtitleRef": "tableSummarySubtitle",
-              "dateRange": ""
+              "variant": "summary",
+              "actions": [
+                {
+                  "id": "dateRange",
+                  "icon": "calendar",
+                  "iconOnly": true,
+                  "labelRef": "dateRangeLabel"
+                },
+                {
+                  "id": "export",
+                  "icon": "share",
+                  "labelRef": "tableExport",
+                  "options": [
+                    { "id": "csv", "labelRef": "exportCsv" },
+                    { "id": "pdf", "labelRef": "exportPdf" }
+                  ]
+                }
+              ]
             },
+            "table": {
+              "titleRef": "bookingList",
+              "ariaLabelRef": "bookingList",
+              "width": "100%",
+              "maxWidth": "100%",
+              "minHeight": "420px",
+              "maxHeight": "760px",
+              "controlHeight": "48px",
+              "contentMinWidth": 1120,
+              "serverSide": true,
+              "loadingLabel": "Loading bookings...",
+              "emptyState": {
+                "titleRef": "noBookingsFoundTitle",
+                "descriptionRef": "noBookingsFoundDescription"
+              }
+            },
+            "actions": {
+              "serverSide": true,
+              "search": {
+                "placeholderRef": "tableSearch",
+                "keys": ["id", "tour", "type", "travellers", "status"]
+              },
+              "filters": [
+                {
+                  "id": "tourType",
+                  "labelRef": "tourType",
+                  "accessor": "type",
+                  "optionsKey": "tourTypeOptions"
+                },
+                {
+                  "id": "status",
+                  "labelRef": "status",
+                  "accessor": "status",
+                  "optionsKey": "statusOptions"
+                }
+              ]
+            },
+            "sortingHeader": {
+              "labelRef": "sortBy",
+              "selectLabelRef": "sortBy",
+              "optionsKey": "sortOptions"
+            },
+            "pagination": {
+              "serverSide": true,
+              "pageSizeOptions": [8, 16, 24],
+              "pageSizeLabel": "Show",
+              "entriesLabel": "entries"
+            },
+            "columns": [
+              { "id": "id", "labelRef": "tableHeaderId", "minWidth": 140, "emphasis": "danger", "clickable": true, "action": "viewBooking", "actionLabelRef": "viewBookingAction" },
+              {
+                "id": "tour",
+                "labelRef": "tableHeaderTour",
+                "type": "mediaText",
+                "minWidth": 310,
+                "titleAccessor": "tour",
+                "subtitleAccessor": "type",
+                "mediaAccessor": "image"
+              },
+              { "id": "travellers", "labelRef": "tableHeaderTravellers", "minWidth": 180 },
+              { "id": "days", "labelRef": "tableHeaderDays", "minWidth": 120 },
+              { "id": "price", "labelRef": "tableHeaderPrice", "minWidth": 130 },
+              { "id": "date", "labelRef": "tableHeaderDate", "minWidth": 150 },
+              { "id": "status", "labelRef": "tableHeaderStatus", "type": "status", "minWidth": 150 },
+              {
+                "id": "actions",
+                "type": "actions",
+                "minWidth": 70,
+                "align": "right",
+                "actions": [{ "id": "view", "labelRef": "viewBookingAction", "icon": "eye" }]
+              }
+            ],
             "rows": []
           }
         }

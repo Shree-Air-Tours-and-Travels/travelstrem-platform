@@ -1,0 +1,30 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "pageTitle": "Agent Dashboard",
+        "pageDescription": "View agent profile, approval status, and agency assignment."
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {
+        "titleRef": "pageTitle",
+        "descriptionRef": "pageDescription"
+      },
+      "widgets": [
+        {
+          "type": "AgentProfileWorkspace",
+          "widgetRef": "./widgets/profile-workspace.json"
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

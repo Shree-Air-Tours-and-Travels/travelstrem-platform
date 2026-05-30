@@ -1,0 +1,17 @@
+{
+    "buttons": {
+        "newTour": { "text": "New Tour", "iconLeft": "tours" },
+        "refresh": { "text": "Refresh", "iconLeft": "refreshCw", "variant": "outline" }
+    },
+    "emptyState": {
+        "noTours": {
+            "icon": "map",
+            "title": "No tours yet",
+            "description": "Assigned and agency-visible tours will appear here."
+        },
+        "serviceFallback": {
+            "icon": "briefcaseBusiness",
+            "description": "This service module will be connected after the screen design is finalized."
+        }
+    }
+}

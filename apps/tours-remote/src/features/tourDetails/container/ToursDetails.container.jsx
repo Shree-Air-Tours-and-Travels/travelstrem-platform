@@ -51,8 +51,23 @@ export default function ToursDetailsContainer({ dispatchEvent } = {}) {
         const selectedTour = tour || activeTour;
         if (!selectedTour?._id) return;
         const res = await fetchData(`/form.json?form=contact-agent&tourId=${selectedTour._id}`);
-        if (res?.status === "success") {
-            setContactFormData(res.componentData);
+        if (res?.status === "success" && res.component) {
+            const labels = res.component.elements?.labels || {};
+            const widgetProps = res.component.structure?.widgets?.[0]?.props || {};
+            const header = res.component.structure?.header || {};
+            setContactFormData({
+                title: labels[header.titleRef] || "Contact Agent",
+                description: labels[header.descriptionRef] || "",
+                structure: {
+                    submitText: labels[widgetProps.submitLabelRef] || "Send Request",
+                    fields: (widgetProps.fields || []).map((f) => ({
+                        ...f,
+                        label: labels[f.labelRef] || f.name,
+                        required: f.required ?? ["name", "email", "phone"].includes(f.name),
+                    })),
+                },
+                data: res.component.data?.tour ? [res.component.data.tour] : [],
+            });
             setActiveTour(selectedTour);
             setContactOpen(true);
         }
@@ -95,12 +110,12 @@ export default function ToursDetailsContainer({ dispatchEvent } = {}) {
     }, [activeTour]);
 
     if (!decodedRef) {
-        return <EmptyState title="Tour not found" message="The tour link is missing a valid reference." onBack={handleBack} />;
+        return <EmptyState title={pageLabels.tourNotFoundTitle || "Tour not found"} message={pageLabels.tourNotFoundMessage || "The tour link is missing a valid reference."} onBack={handleBack} />;
     }
 
     if (loading && !widgets.length) return <DetailSkeleton />;
     if (error && !widgets.length) {
-        return <EmptyState title="Tour details could not load" message={error} onBack={handleBack} />;
+        return <EmptyState title={pageLabels.tourErrorTitle || "Tour details could not load"} message={error} onBack={handleBack} />;
     }
 
     return (
@@ -109,6 +124,8 @@ export default function ToursDetailsContainer({ dispatchEvent } = {}) {
             widgets={widgets}
             pageTitle={activeTour?.title || pageLabels.pageTitle || slugifyTitle(decodedRef).replace(/-/g, " ")}
             activeTour={activeTour}
+            structure={structure}
+            elements={elements}
             contactOpen={contactOpen}
             contactFormData={contactFormData}
             bookConfirmOpen={bookConfirmOpen}

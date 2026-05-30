@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Booking, { BOOKING_STATUSES, PAYMENT_STATUSES } from "../models/Booking.js";
 import BookingRepository from "../repositories/BookingRepository.js";
 import Tour from "../../tours/models/Tour.js";
+import User from "../../auth/models/User.js";
 import BookingService from "../services/BookingService.js";
 import TravellerService from "../services/TravellerService.js";
 import QuoteService from "../services/QuoteService.js";
@@ -62,37 +63,13 @@ function normalizePhone(value) {
 }
 
 function authInfoFromReq(req) {
-    if (!req) return { userId: null, userRole: null, authUser: null };
-    if (req.user) {
-        const payload = req.user;
-        return {
-            userId: payload.sub || payload.id || payload._id || payload.userId || null,
-            userRole: payload.role || payload.userRole || payload.roleName || null,
-            authUser: payload,
-        };
-    }
-
-    const bodyUserRaw = req.body?.user || null;
-    if (bodyUserRaw) {
-        let parsed = bodyUserRaw;
-        if (typeof bodyUserRaw === "string") {
-            try { parsed = JSON.parse(bodyUserRaw); } catch { parsed = { id: bodyUserRaw }; }
-        }
-        const userId = parsed?.id || parsed?._id || parsed?.sub || parsed?.userId || null;
-        if (userId) return { userId, userRole: parsed?.role || parsed?.userRole || null, authUser: parsed };
-    }
-
-    const qUserId = req.query?.userId || req.query?.user || req.query?.uid || null;
-    if (qUserId && String(qUserId).toLowerCase() !== "all") {
-        return { userId: qUserId, userRole: req.query?.userRole || req.query?.role || null, authUser: { id: qUserId, role: req.query?.role } };
-    }
-
-    const hUserId = req.headers?.["x-user-id"] || req.headers?.["x-user"] || req.headers?.["x-uid"];
-    if (hUserId) {
-        return { userId: hUserId, userRole: req.headers?.["x-user-role"] || req.headers?.["x-role"] || null, authUser: { id: hUserId } };
-    }
-
-    return { userId: null, userRole: null, authUser: null };
+    if (!req?.user) return { userId: null, userRole: null, authUser: null };
+    const payload = req.user;
+    return {
+        userId: payload.sub || payload.id || payload._id || payload.userId || null,
+        userRole: payload.role || payload.userRole || payload.roleName || null,
+        authUser: payload,
+    };
 }
 
 function isPrivilegedFromReq(authUser, userRole, req) {
@@ -119,6 +96,37 @@ function actorFromReq(req) {
         type: privileged ? "admin" : "customer",
         privileged,
         authUser,
+    };
+}
+
+async function resolveBookingAgent({ tour, actor }) {
+    if (tour?.ownerAgent) return tour.ownerAgent;
+
+    if (tour?.partnerAgencyRef) {
+        const partnerAgent = await User.findOne({
+            role: "agent",
+            partnerAgencyRef: tour.partnerAgencyRef,
+            agentApprovalStatus: "approved",
+        }).select("_id");
+        if (partnerAgent?._id) return partnerAgent._id;
+    }
+
+    const adminUser = await User.findOne({
+        role: "admin",
+        adminLevel: "master",
+    }).select("_id");
+    if (adminUser?._id) return adminUser._id;
+
+    return null;
+}
+
+async function assignmentScopeForAgent(agentId) {
+    if (!agentId) return {};
+    const agent = await User.findById(agentId).select("agentRef agencyRef partnerAgencyRef");
+    return {
+        assignedAgentRef: agent?.agentRef || "",
+        assignedAgencyRef: agent?.agencyRef || "",
+        assignedPartnerAgencyRef: agent?.partnerAgencyRef || "",
     };
 }
 
@@ -277,8 +285,8 @@ async function saveWithBookingRefRetry(booking, options = {}) {
 async function hydrateBooking(id, options = {}) {
     const booking = await BookingRepository.findById(id)
         .populate("tour")
-        .populate("user", "name email role")
-        .populate("assignedAgent", "name email role");
+        .populate("user", "name email role agentRef agencyRef partnerAgencyRef")
+        .populate("assignedAgent", "name email role agentRef agencyRef partnerAgencyRef");
     return BookingService.hydrate(booking, options);
 }
 
@@ -290,6 +298,16 @@ async function findAuthorizedBooking(req, bookingId, action = "view") {
     if (!booking) return { error: { message: "Booking not found", status: 404 } };
     if (!privileged && String(booking.user) !== String(userId)) {
         return { error: { message: `Not authorized to ${action} this booking`, status: 403 } };
+    }
+    const effectiveRole = String(userRole || authUser?.role || "").toLowerCase();
+    if (privileged && effectiveRole === "agent") {
+        const agent = await User.findById(userId).select("agencyRef partnerAgencyRef");
+        const sameAgent = String(booking.assignedAgent || "") === String(userId);
+        const sameAgency = agent?.agencyRef && booking.assignedAgencyRef && agent.agencyRef === booking.assignedAgencyRef;
+        const samePartner = agent?.partnerAgencyRef && booking.assignedPartnerAgencyRef && agent.partnerAgencyRef === booking.assignedPartnerAgencyRef;
+        if (!sameAgent && !sameAgency && !samePartner) {
+            return { error: { message: `Not authorized to ${action} this booking`, status: 403 } };
+        }
     }
     return { booking, actor: { id: normalizeObjectId(userId), role: userRole, type: privileged ? "admin" : "customer", privileged, authUser } };
 }
@@ -340,9 +358,13 @@ export const createDraftBooking = async (req, res) => {
 
         const priority = String(body.priority || "MEDIUM").toUpperCase();
         const dueDates = BookingService.priorityDueDates(priority);
+        const assignedAgent = await resolveBookingAgent({ tour, actor });
+        const assignmentScope = await assignmentScopeForAgent(assignedAgent);
         const booking = new Booking({
             user: actor.id,
             tour: tourId,
+            assignedAgent,
+            ...assignmentScope,
             idempotencyKey,
             travelWindow: { startDate, endDate },
             tripSelection: normalizeTripSelection(body, []),
@@ -363,6 +385,14 @@ export const createDraftBooking = async (req, res) => {
         });
 
         await saveWithBookingRefRetry(booking);
+        if (assignedAgent) {
+            await AssignmentService.assign({
+                booking,
+                newAgent: assignedAgent,
+                assignedBy: assignedAgent,
+                reason: tour.ownerAgent ? "Assigned to tour owner agent." : "Assigned by default provider/platform priority.",
+            });
+        }
         await BookingTimelineService.record({ bookingId: booking._id, actor, action: "booking.created", metadata: { tourId, status: "DRAFT" } });
         await NotificationService.notify({ userId: booking.user, bookingId: booking._id, event: "BOOKING_CREATED", title: "Draft booking created", body: "Your tour booking draft is ready.", metadata: { tourId } });
         return sendSuccess(res, await hydrateBooking(booking._id), "Draft booking created.", { title: "Draft Booking Created" });
@@ -406,9 +436,13 @@ export const createBooking = async (req, res) => {
         }
 
         const priority = String(body.priority || "MEDIUM").toUpperCase();
+        const assignedAgent = await resolveBookingAgent({ tour, actor });
+        const assignmentScope = await assignmentScopeForAgent(assignedAgent);
         const booking = new Booking({
             user: actor.id,
             tour: tourId,
+            assignedAgent,
+            ...assignmentScope,
             idempotencyKey,
             travelWindow: { startDate, endDate },
             tripSelection: normalizeTripSelection(body, travellerValidation.travellers),
@@ -431,6 +465,14 @@ export const createBooking = async (req, res) => {
         });
 
         await saveWithBookingRefRetry(booking);
+        if (assignedAgent) {
+            await AssignmentService.assign({
+                booking,
+                newAgent: assignedAgent,
+                assignedBy: assignedAgent,
+                reason: tour.ownerAgent ? "Assigned to tour owner agent." : "Assigned by default provider/platform priority.",
+            });
+        }
         await TravellerService.replaceForBooking(booking._id, travellerValidation.travellers);
         await BookingTimelineService.record({ bookingId: booking._id, actor, action: "booking.created", metadata: { tourId } });
         await BookingTimelineService.record({ bookingId: booking._id, actor, action: "quote.requested", metadata: { travellerCount: travellerValidation.travellers.length } });
@@ -595,9 +637,20 @@ export const listBookings = async (req, res) => {
         }
 
         if (authUserId) {
-            if (!privileged) q.user = authUserId;
-            else if (qUserId && String(qUserId) !== String(authUserId)) q.user = qUserId;
-        } else if (qUserId) q.user = qUserId;
+            if (!privileged) {
+                q.user = authUserId;
+            } else if (String(userRole || authUser?.role || "").toLowerCase() === "admin") {
+                if (qUserId && String(qUserId).toLowerCase() !== "all") q.user = qUserId;
+            } else {
+                const agent = await User.findById(authUserId).select("agencyRef partnerAgencyRef");
+                const visibility = [{ assignedAgent: authUserId }];
+                if (agent?.agencyRef) visibility.push({ assignedAgencyRef: agent.agencyRef });
+                if (agent?.partnerAgencyRef) visibility.push({ assignedPartnerAgencyRef: agent.partnerAgencyRef });
+                q.$and = [...(q.$and || []), { $or: visibility }];
+            }
+        } else if (qUserId) {
+            q.user = qUserId;
+        }
 
         if (req.query?.travelDateFrom || req.query?.travelDateTo) {
             q["travelWindow.startDate"] = {};
@@ -629,8 +682,8 @@ export const listBookings = async (req, res) => {
             .skip(skip)
             .limit(limit)
             .populate("tour", "title city photo photos price period tags _id")
-            .populate("user", "name email role")
-            .populate("assignedAgent", "name email role");
+            .populate("user", "name email role agentRef agencyRef partnerAgencyRef")
+            .populate("assignedAgent", "name email role agentRef agencyRef partnerAgencyRef");
         const total = await BookingRepository.countDocuments(q);
         const hydrated = await BookingService.hydrateMany(bookings, { includeDeep: false });
 
@@ -726,6 +779,32 @@ export const cancelBooking = async (req, res) => {
     } catch (err) {
         console.error("cancelBooking:", err);
         return sendError(res, err.message || "Failed to cancel booking", 500);
+    }
+};
+
+export const getCancelInfo = async (req, res) => {
+    try {
+        const { booking, error } = await findAuthorizedBooking(req, req.params.bookingId || req.params.id, "view");
+        if (error) return sendError(res, error.message, error.status);
+
+        const tour = booking.tour;
+        const paidAmount = booking.paymentSummary?.paid || 0;
+        const totalAmount = booking.paymentSummary?.total || booking.priceSnapshot?.total || 0;
+        const refundEstimate = booking.status === "CANCELLED" ? 0 : paidAmount;
+
+        const shortRef = (booking.bookingRef || "").split("-").length >= 3 ? `TREM-${booking.bookingRef.split("-")[2]}` : booking.bookingRef;
+        return sendSuccess(res, {
+            bookingRef: shortRef,
+            status: booking.status,
+            paidAmount,
+            totalAmount,
+            refundEstimate,
+            cancellationPolicy: tour?.cancellationPolicy || "Standard cancellation policy applies.",
+            canCancel: booking.status !== "CANCELLED" && booking.status !== "COMPLETED" && booking.status !== "REFUNDED",
+        }, "Cancel info retrieved.", { title: "Cancel Info" });
+    } catch (err) {
+        console.error("getCancelInfo:", err);
+        return sendError(res, err.message || "Failed to get cancel info", 500);
     }
 };
 
@@ -886,9 +965,13 @@ export const assignBooking = async (req, res) => {
         if (!actor.privileged) return sendError(res, "Only admins/agents can assign bookings.", 403);
         const agentId = normalizeObjectId(req.body?.agentId || req.body?.assignedAgent);
         if (!agentId) return sendError(res, "agentId is required.", 400);
+        const assignmentScope = await assignmentScopeForAgent(agentId);
         const before = booking.toObject();
         await AssignmentService.assign({ booking, newAgent: agentId, assignedBy: actor.id, reason: cleanString(req.body?.reason) });
         booking.assignedAgent = agentId;
+        booking.assignedAgentRef = assignmentScope.assignedAgentRef || "";
+        booking.assignedAgencyRef = assignmentScope.assignedAgencyRef || "";
+        booking.assignedPartnerAgencyRef = assignmentScope.assignedPartnerAgencyRef || "";
         booking.updatedBy = actor.id;
         await booking.save();
         await BookingTimelineService.record({ bookingId: booking._id, actor, action: "booking.assigned", metadata: { previousAgent: before.assignedAgent, newAgent: agentId } });

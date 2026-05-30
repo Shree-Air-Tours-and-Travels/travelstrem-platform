@@ -2,9 +2,7 @@ import React from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import "./Services.styles.scss";
-import { Icon, Title, SubTitle, SmoothScroll } from "@packages/trem-ui";
-import ServiceCard from "../../../../shared/ui/cards/ServiceCard/ServiceCard";
-import { PortalPreloader } from "@packages/trem-ui";
+import { Icon, Title, SubTitle, SmoothScroll, Button, Paragraph, ServiceCard, PortalPreloader } from "@packages/trem-ui";
 import { ContactAgentModal } from "@packages/trem-modals";
 
 const travelChips = [
@@ -231,12 +229,8 @@ const ServiceModalHero = ({ service, onContactClick }) => {
                         <Icon name="sparkles" size={15} />
                         Service preview
                     </span>
-                    <h2 className="ui-service-modal__hero-title">
-                        {service?.label}
-                    </h2>
-                    <p className="ui-service-modal__hero-description">
-                        {service?.shortDescription || service?.description}
-                    </p>
+                    <Title primaryClassname="ui-service-modal__hero-title" text={service?.label} />
+                    <Paragraph primaryClassname="ui-service-modal__hero-description" text={service?.shortDescription || service?.description} />
 
                     <div className="ui-service-modal__chips" aria-label={`${service?.label} highlights`}>
                         {chips.slice(0, 4).map((chip) => (
@@ -258,13 +252,13 @@ const ServiceModalHero = ({ service, onContactClick }) => {
                             {remoteTarget.label}
                             <Icon name="arrowUpRight" size={18} />
                         </a>
-                        <button
+                        <Button
                             type="button"
                             onClick={onContactClick}
-                            className="ui-service-modal__cta ui-service-modal__cta--secondary"
-                        >
-                            Talk to an expert
-                        </button>
+                            primaryClassName="ui-service-modal__cta ui-service-modal__cta--secondary"
+                            variant="outline"
+                            text="Talk to an expert"
+                        />
                     </div>
                 </div>
 
@@ -322,17 +316,15 @@ const ServiceListView = ({
 
     if (error) {
         return (
-            <p className="ui-service__error">
+            <Paragraph primaryClassname="ui-service__error">
                 {error}
-            </p>
+            </Paragraph>
         );
     }
 
     if (!services.length) {
         return (
-            <p className="ui-service__empty">
-                No services available
-            </p>
+            <Paragraph primaryClassname="ui-service__empty" text="No services available" />
         );
     }
 
@@ -367,18 +359,18 @@ const ServiceListView = ({
                                 size="small"
                             />
 
-                            <button
-                                className="ui-service__intro-cta"
+                            <Button
+                                primaryClassName="ui-service__intro-cta"
                                 type="button"
                                 onClick={() =>
                                     setSelectedService(
                                         travelPackagesService
                                     )
                                 }
-                            >
-                                Preview Travel Packages
-                                <Icon name="arrowUpRight" size={17} />
-                            </button>
+                                variant="text"
+                                text="Preview Travel Packages"
+                                iconRight="arrowUpRight"
+                            />
                         </div>
                     </SmoothScroll>
 
@@ -387,14 +379,15 @@ const ServiceListView = ({
                         className="ui-service__cards-wrap"
                         ref={wrapperRef}
                     >
-                        <button
-                            className={`ui-service__nav ui-service__nav--prev${visibleCount <= 1 ? ' ui-service__nav--hidden' : ''}`}
+                        <Button
+                            primaryClassName={`ui-service__nav ui-service__nav--prev${visibleCount <= 1 ? ' ui-service__nav--hidden' : ''}`}
                             onClick={prev}
                             aria-label="Previous services"
                             disabled={current === 0}
-                        >
-                            &#8249;
-                        </button>
+                            variant="text"
+                            isCircular
+                            iconLeft="chevronLeft"
+                        />
 
                         <div className="ui-service__cards-viewport">
                             <div
@@ -423,16 +416,17 @@ const ServiceListView = ({
                             </div>
                         </div>
 
-                        <button
-                            className={`ui-service__nav ui-service__nav--next${visibleCount <= 1 ? ' ui-service__nav--hidden' : ''}`}
+                        <Button
+                            primaryClassName={`ui-service__nav ui-service__nav--next${visibleCount <= 1 ? ' ui-service__nav--hidden' : ''}`}
                             onClick={next}
                             aria-label="Next services"
                             disabled={
                                 current >= maxIndex
                             }
-                        >
-                            &#8250;
-                        </button>
+                            variant="text"
+                            isCircular
+                            iconLeft="chevronRight"
+                        />
                     </div>
                     </SmoothScroll>
                 </div>
@@ -465,15 +459,16 @@ const ServiceListView = ({
                                     <span className="ui-service-modal__coming-soon">Coming soon</span>
                                 )}
 
-                                <button
-                                    className="ui-service-modal__close"
+                                <Button
+                                    primaryClassName="ui-service-modal__close"
                                     onClick={() =>
                                         setSelectedService(null)
                                     }
                                     aria-label="Close modal"
-                                >
-                                    <Icon name="x" size={20} />
-                                </button>
+                                    variant="text"
+                                    isCircular
+                                    iconLeft="x"
+                                />
 
                                 <ServiceModalHero
                                     service={selectedService}
@@ -485,22 +480,16 @@ const ServiceListView = ({
                                 <div className="ui-service-modal__body">
                                     <div className="ui-service-modal__header">
                                         {selectedService?.disabled && componentData?.elements?.labels?.servicesNote && (
-                                            <p className="ui-service-modal__note">
-                                                {componentData.elements.labels.servicesNote}
-                                            </p>
+                                            <Paragraph primaryClassname="ui-service-modal__note" text={componentData.elements.labels.servicesNote} />
                                         )}
 
-                                        <h3
-                                            className="ui-service-modal__title"
+                                        <SubTitle
+                                            primaryClassname="ui-service-modal__title"
                                             id="service-modal-title"
-                                        >
-                                            {selectedService.label}
-                                        </h3>
+                                            text={selectedService.label}
+                                        />
 
-                                        <p className="ui-service-modal__description">
-                                            {selectedService.fullDescription ||
-                                                selectedService.description}
-                                        </p>
+                                        <Paragraph primaryClassname="ui-service-modal__description" text={selectedService.fullDescription || selectedService.description} />
                                     </div>
 
                                     {selectedService.features

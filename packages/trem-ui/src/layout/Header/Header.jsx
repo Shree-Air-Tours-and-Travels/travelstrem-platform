@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import Button from "../../components/Button/Button.jsx";
 import Dropdown from "../../components/Dropdown/Dropdown.jsx";
 import Icon from "../../icons/Icon/Icon.jsx";
 import NotificationBell from "../../components/NotificationBell/NotificationBell.jsx";
@@ -9,6 +10,18 @@ import "./Header.styles.scss";
 const getNavPath = (item) => item?.path || "/";
 const isPathActive = (path, pathname) => !path ? false : path === "/" ? pathname === "/" : pathname === path || pathname.startsWith(`${path}/`);
 const normalizeMenuItem = (item, index) => ({ ...item, id: item.id || `${item.label || "item"}-${index}`, type: item.type || (Array.isArray(item.items) ? "dropdown" : "internal"), path: getNavPath(item) });
+const getNavIcon = (item) => item?.icon || ({
+  Home: "compass",
+  About: "info",
+  Services: "briefcaseBusiness",
+  Dashboard: "user",
+  "Tours & Packages": "map",
+  Flights: "plane",
+  Hotels: "hotel",
+  Cab: "taxi",
+  "Visa & Passport": "passport",
+  "Visa & Passport Assistance": "passport",
+}[item?.label] || "circleDot");
 
 const canShowItem = (item, session) => {
   const authenticated = Boolean(session?.isAuthenticated);
@@ -34,7 +47,7 @@ const DEFAULT_CONFIG = {
   authActions: { login: { label: "Login", path: "/login" }, logout: { label: "Logout" } },
 };
 
-export default function Header({ headerConfig = DEFAULT_CONFIG, session = null, theme = "light", onToggleTheme, onLogout, onSettings, onNavigate, notificationFetcher, showNotifications, className = "" }) {
+export default function Header({ headerConfig = DEFAULT_CONFIG, session = null, theme = "light", onToggleTheme, onLogout, onSettings, onNavigate, onFavoritesClick, notificationFetcher, showNotifications, showFavorites = true, className = "" }) {
   const navigate = useNavigate();
   const location = useLocation();
   const user = session?.user || null;
@@ -77,6 +90,7 @@ export default function Header({ headerConfig = DEFAULT_CONFIG, session = null, 
   const loginAction = config.authActions?.login || DEFAULT_CONFIG.authActions.login;
   const logoutAction = config.authActions?.logout || DEFAULT_CONFIG.authActions.logout;
   const notificationsEnabled = showNotifications ?? leftSection.showNotifications ?? true;
+  const favoritesEnabled = showFavorites && leftSection.showFavorites !== false;
 
   const navItems = useMemo(() => {
     const configuredMenu = Array.isArray(config.menu) && config.menu.length ? config.menu : config.navigation || [];
@@ -131,10 +145,7 @@ const NavItem = ({ item, isFirst, drawer, activePath, firstLinkRef, onNavClick, 
       const isExpanded = expanded || isDropdownActive;
       return (
         <li className="trem-header__drawer-dropdown">
-          <button className={`trem-header__drawer-dropdown-trigger${isDropdownActive ? " is-active" : ""}`} type="button" onClick={() => setExpanded((s) => !s)}>
-            {item.label}
-            <Icon name="chevronDown" className={isExpanded ? "is-open" : ""} />
-          </button>
+          <Button variant="text" text={item.label} iconLeft={getNavIcon(item)} iconRight="chevronDown" onClick={() => setExpanded((s) => !s)} primaryClassName={`trem-header__drawer-dropdown-trigger${isDropdownActive ? " is-active" : ""}`} />
           {isExpanded && (
             <ul className="trem-header__drawer-sublist">
               {item.items.map((child) => {
@@ -142,9 +153,10 @@ const NavItem = ({ item, isFirst, drawer, activePath, firstLinkRef, onNavClick, 
                 return (
                   <li key={child.id}>
                     {child.disabled ? (
-                      <span className="trem-header__link is-disabled">{child.label}</span>
+                      <span className="trem-header__drawer-link is-disabled"><Icon name={getNavIcon(child)} size={18} />{child.label}</span>
                     ) : (
                       <NavLink to={childPath} className={() => (isPathActive(childPath, activePath) ? "active" : "")} onClick={(event) => { event.preventDefault(); onNavClick(child); }}>
+                        <Icon name={getNavIcon(child)} size={18} />
                         {child.label}
                       </NavLink>
                     )}
@@ -165,10 +177,7 @@ const NavItem = ({ item, isFirst, drawer, activePath, firstLinkRef, onNavClick, 
           align="left"
           closeOnSelect
           trigger={
-            <button className={`trem-header__dropdown-trigger${isDropdownActive ? " is-active" : ""}`} type="button" disabled={item.disabled} onClick={(e) => e.preventDefault()}>
-              {item.label}
-              <Icon name="chevronDown" />
-            </button>
+            <Button variant="text" text={item.label} iconRight="chevronDown" disabled={item.disabled} onClick={(e) => e.preventDefault()} primaryClassName={`trem-header__dropdown-trigger${isDropdownActive ? " is-active" : ""}`} />
           }
           items={item.items.map((child) => {
             const childPath = getNavPath(child);
@@ -188,9 +197,13 @@ const NavItem = ({ item, isFirst, drawer, activePath, firstLinkRef, onNavClick, 
   return (
     <li>
       {item.disabled ? (
-        <span className="trem-header__link is-disabled">{item.label}</span>
+        <span className={drawer ? "trem-header__drawer-link is-disabled" : "trem-header__link is-disabled"}>
+          {drawer ? <Icon name={getNavIcon(item)} size={18} /> : null}
+          {item.label}
+        </span>
       ) : (
         <NavLink to={item.path} className={() => (isPathActive(item.path, activePath) ? "active" : "")} onClick={(event) => { event.preventDefault(); onNavClick(item); }} ref={isFirst ? firstLinkRef : undefined}>
+          {drawer ? <Icon name={getNavIcon(item)} size={18} /> : null}
           {item.label}
         </NavLink>
       )}
@@ -219,13 +232,25 @@ const NavItem = ({ item, isFirst, drawer, activePath, firstLinkRef, onNavClick, 
     );
   };
 
+  const handleFavoritesClick = useCallback(() => {
+    if (typeof onFavoritesClick === "function") {
+      onFavoritesClick();
+    } else {
+      onPathClick("/favorites", "Favorites");
+    }
+  }, [onFavoritesClick, onPathClick]);
+
   const renderActions = (wrapItems = true) => {
+    const favorites = favoritesEnabled && user ? (
+      <Button variant="text" iconLeft="heart" primaryClassName="trem-header__action-btn" onClick={handleFavoritesClick} aria-label="Favorites" />
+    ) : null;
     const notification = notificationsEnabled && user ? <NotificationBell fetcher={notificationFetcher} /> : null;
     const profile = <ProfileActionMenu user={user} isAuthenticated={session?.isAuthenticated} theme={theme} onToggleTheme={onToggleTheme} onSettings={onSettings} onLogout={onLogout} logoutLabel={logoutAction.label || "Logout"} />;
 
     if (!wrapItems) {
       return (
         <>
+          {favorites}
           {notification}
           {profile}
         </>
@@ -234,6 +259,7 @@ const NavItem = ({ item, isFirst, drawer, activePath, firstLinkRef, onNavClick, 
 
     return (
       <>
+        {favorites && <li>{favorites}</li>}
         {notification && <li>{notification}</li>}
         <li>{profile}</li>
       </>
@@ -244,16 +270,13 @@ const NavItem = ({ item, isFirst, drawer, activePath, firstLinkRef, onNavClick, 
     <>
       <header className={`trem-header ${open ? "is-open" : ""} ${className}`.trim()} role="banner">
         <div className="trem-header__container">
-          <button className="trem-header__toggle" type="button" onClick={() => setOpen((s) => !s)} aria-label={open ? "Close menu" : "Open menu"} aria-expanded={open}>
-            <Icon name={open ? "menuClose" : "menuOpen"} />
-          </button>
-          <button className="trem-header__logo" type="button" onClick={() => onPathClick(brand.homePath || "/", brand.label || "TravelsTREM")}>
-            <span className="trem-header__brand-text">{brand.label || "TravelsTREM"}</span>
-          </button>
+          <Button variant="text" iconLeft={open ? "menuClose" : "menuOpen"} onClick={() => setOpen((s) => !s)} aria-label={open ? "Close menu" : "Open menu"} aria-expanded={open} primaryClassName="trem-header__toggle" />
+          <Button variant="text" text={brand.label || "TravelsTREM"} onClick={() => onPathClick(brand.homePath || "/", brand.label || "TravelsTREM")} primaryClassName="trem-header__logo" />
           <nav className="trem-header__nav" role="navigation" aria-label="Main navigation">
             <ul className="trem-header__menu trem-header__menu--start">{navItems.map((item, i) => <NavItem item={item} key={item.id} isFirst={i === 0} activePath={activePath} firstLinkRef={firstLinkRef} onNavClick={onNavClick} onClose={() => setOpen(false)} />)}</ul>
             <ul className="trem-header__menu trem-header__menu--end">{renderUserArea(false)}{renderActions()}</ul>
             <div className="trem-header__mobile-actions">
+              {favoritesEnabled && user ? <Button variant="text" iconLeft="heart" primaryClassName="trem-header__action-btn" onClick={handleFavoritesClick} aria-label="Favorites" /> : null}
               {notificationsEnabled && user ? <NotificationBell fetcher={notificationFetcher} variant="sidebar" /> : null}
             </div>
           </nav>
@@ -276,9 +299,7 @@ const NavItem = ({ item, isFirst, drawer, activePath, firstLinkRef, onNavClick, 
                   {loginAction.label || "Login"}
                 </NavLink>
               )}
-              <button className="trem-header__drawer-close" onClick={() => setOpen(false)} aria-label="Close menu" type="button">
-                <Icon name="menuClose" />
-              </button>
+              <Button variant="text" isCircular iconLeft="menuClose" onClick={() => setOpen(false)} aria-label="Close menu" primaryClassName="trem-header__drawer-close" />
             </div>
 
             <div className="trem-header__drawer-body">
@@ -288,19 +309,10 @@ const NavItem = ({ item, isFirst, drawer, activePath, firstLinkRef, onNavClick, 
             </div>
 
             <div className="trem-header__drawer-bottom">
-              <button type="button" className="trem-header__drawer-action" onClick={() => runAction(onToggleTheme)}>
-                <Icon name={theme === "dark" ? "sun" : "moon"} />
-                <span>{theme === "dark" ? "Light mode" : "Dark mode"}</span>
-              </button>
-              <button type="button" className="trem-header__drawer-action" onClick={() => runAction(onSettings, "TREM_SETTINGS_REQUESTED")}>
-                <Icon name="settings" />
-                <span>Settings</span>
-              </button>
+              <Button variant="text" iconLeft={theme === "dark" ? "sun" : "moon"} text={theme === "dark" ? "Light mode" : "Dark mode"} onClick={() => runAction(onToggleTheme)} primaryClassName="trem-header__drawer-action" />
+              <Button variant="text" iconLeft="settings" text="Settings" onClick={() => runAction(onSettings, "TREM_SETTINGS_REQUESTED")} primaryClassName="trem-header__drawer-action" />
               {session?.isAuthenticated && (
-                <button type="button" className="trem-header__drawer-action trem-header__drawer-action--danger" onClick={() => runAction(onLogout)}>
-                  <Icon name="logout" />
-                  <span>{logoutAction.label || "Logout"}</span>
-                </button>
+                <Button variant="text" iconLeft="logout" text={logoutAction.label || "Logout"} onClick={() => runAction(onLogout)} primaryClassName="trem-header__drawer-action trem-header__drawer-action--danger" />
               )}
             </div>
           </div>

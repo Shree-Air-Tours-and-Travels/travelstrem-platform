@@ -27,7 +27,7 @@ if (SMTP_HOST && SMTP_PORT) {
 
 const sendMail = async ({ to, subject, text, html }) => {
   if (!transporter) {
-    // no SMTP configured — fallback to console (dev)
+    // no SMTP configured , fallback to console (dev)
     console.info("[mailer] fallback sendMail: to=", to, "subject=", subject, "text=", text);
     return Promise.resolve();
   }

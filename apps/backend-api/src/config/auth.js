@@ -47,10 +47,7 @@ export default {
         "signUp": "Sign up",
         "alreadyAMember": "Already a member?"
       },
-      "storageKeys": {
-        "token": "token",
-        "rememberMe": "remember_email"
-      }
+      "storageKeys": {}
     }
   },
   "config": {}

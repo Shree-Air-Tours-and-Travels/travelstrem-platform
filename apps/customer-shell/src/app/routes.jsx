@@ -4,7 +4,6 @@ import { Navigate, Route, Routes, useLocation, useParams } from "react-router-do
 import { AuthPage } from "@apps/auth-trem";
 import Home from "../features/home/Home";
 import About from "../features/about/About";
-import CheckoutPage from "../features/checkout/Checkout";
 import DashboardPage from "../features/dashboard/Dashboard";
 import FederatedToursApp from "../federation/FederatedToursApp";
 import SearchResultList from "../shared/ui/SEO/SearchResultList";
@@ -57,6 +56,7 @@ const Routers = () => {
             emit={emit}
             reload={reload}
             appName="TravelsTREM"
+            authStoragePrefix="customerTREM"
             allowedRoles={["member"]}
             roleOptions={[
                 {
@@ -69,6 +69,7 @@ const Routers = () => {
             defaultRole="member"
             afterAuthPath={redirectAfterAuth}
             showAdminSecret={false}
+            adminShellUrl={process.env.REACT_APP_ADMIN_SHELL_URL || "http://localhost:3002/admin/tours"}
         />
     );
 
@@ -77,7 +78,6 @@ const Routers = () => {
         about: <About />,
         search: <SearchResultList />,
         auth: user ? <Navigate to={redirectAfterAuth} replace /> : customerAuthPage,
-        checkout: <CheckoutPage />,
         dashboard: <DashboardPage />,
         favorites: <FavoritesRedirect />,
         "remote.adminTREM": <AdminShellRedirect />,
@@ -157,10 +157,6 @@ const Routers = () => {
                         <Route
                             path="/favorites"
                             element={protectRoute({ access: "authenticated" }, <FavoritesRedirect />)}
-                        />
-                        <Route
-                            path="/checkout/:bookingId"
-                            element={protectRoute({ access: "authenticated" }, <CheckoutPage />)}
                         />
                         <Route
                             path="/admin/*"

@@ -1,15 +1,14 @@
 import React from "react";
 import Slider from "react-slick";
 import "./Reviews.styles.scss";
-import ReviewCard from "../../../../shared/ui/cards/ReviewCard/ReviewCard";
-import { Title, SmoothScroll } from "@packages/trem-ui";
+import { Button, Title, SmoothScroll, Paragraph, SubTitle, ReviewCard } from "@packages/trem-ui";
 
 const ReviewsView = ({ reviews, newReview, handleInputChange, handleSubmit, sliderSettings }) => {
     return (
         <section className="ui-reviews">
             <SmoothScroll variant="slideUp" delay={0.1}>
                 <Title className="ui-reviews__title" text="Customer Reviews" />
-                <p className="ui-reviews__subtitle">See what our travelers have to say about their experiences.</p>
+                <Paragraph primaryClassname="ui-reviews__subtitle" text="See what our travelers have to say about their experiences." />
             </SmoothScroll>
 
             <SmoothScroll variant="slideUp" delay={0.3}>
@@ -22,7 +21,7 @@ const ReviewsView = ({ reviews, newReview, handleInputChange, handleSubmit, slid
 
             <SmoothScroll variant="slideUp" delay={0.4}>
                 <div className="ui-reviews__form">
-                    <h3 className="ui-reviews__form-title">Leave a Review</h3>
+                    <SubTitle primaryClassname="ui-reviews__form-title" text="Leave a Review" />
                     <form onSubmit={handleSubmit}>
                         <input
                             type="text"
@@ -52,7 +51,7 @@ const ReviewsView = ({ reviews, newReview, handleInputChange, handleSubmit, slid
                             className="ui-reviews__input"
                             required
                         />
-                        <button type="submit" className="btn-primary">Submit Review</button>
+                        <Button variant="solid" color="primary" type="submit" text="Submit Review" primaryClassName="btn-primary" />
                     </form>
                 </div>
             </SmoothScroll>

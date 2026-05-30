@@ -1,0 +1,107 @@
+@import "@packages/trem-ui/styles/base/typography";
+
+@import "./shared/styles/utils/variables";
+@import "./shared/styles/utils/mixins";
+@import "./shared/styles/utils/functions";
+
+@import "./shared/styles/base/reset";
+@import "./shared/styles/base/global";
+
+@keyframes sk-pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.8; }
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: $font-primary;
+    background: var(--page-bg);
+    color: var(--text);
+}
+
+.agent-app-shell {
+    min-height: 100vh;
+    background: var(--page-bg);
+    color: var(--text);
+}
+
+.agent-app-shell--embedded {
+    min-height: auto;
+}
+
+.agent-auth-page {
+    min-height: calc(100vh - 72px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    &__notice {
+        width: min(920px, calc(100% - 2rem));
+        margin: 1rem auto 0;
+        padding: 0.85rem 1rem;
+        border: 1px solid var(--danger-soft);
+        border-radius: var(--radius-sm);
+        background: var(--danger-soft);
+        color: var(--text);
+        font-weight: $font-semibold;
+    }
+}
+
+.micro-app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 72px;
+    padding: 0 1.5rem;
+    background: var(--surface-glass-strong);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    backdrop-filter: blur(14px);
+
+    &__brand,
+    &__theme-toggle {
+        border: 0;
+        background: var(--color-transparent);
+    }
+
+    &__brand {
+        color: var(--text);
+        font-weight: $font-bold;
+        font-size: $font-size-lg;
+    }
+
+    &__theme-toggle {
+        color: var(--color-primary-dark);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 0.45rem 0.75rem;
+    }
+}
+
+.app-status {
+    padding: 1.5rem;
+    color: var(--text);
+    background: var(--page-bg);
+
+    &--center {
+        min-height: 50vh;
+        display: grid;
+        place-items: center;
+        text-align: center;
+    }
+
+    &__title {
+        font-size: $font-size-lg;
+        font-weight: $font-semibold;
+        margin-bottom: 0.5rem;
+    }
+
+    &__muted {
+        color: var(--muted);
+    }
+}

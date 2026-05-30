@@ -3,6 +3,7 @@ import axios from "axios";
 import { getConfiguredApiBase } from "../core/config/portalEnvironment";
 import { registerAuthHeaderClearer } from "@packages/trem-events";
 import { setFetchDataApiClient } from "@packages/trem-utils";
+import { setupRefreshInterceptor } from "@packages/trem-auth-core";
 
 /**
  * Normalize and choose base:
@@ -21,6 +22,8 @@ let RAW_BASE = getConfiguredApiBase();
 
 const BASE = normalizeBase(RAW_BASE) ?? "";
 const baseURL = (BASE.endsWith("/api") ? BASE : `${BASE}/api`).replace(/([^:]\/)\/+/g, "$1");
+const AUTH_STORAGE_PREFIX = "customerTREM";
+if (typeof window !== "undefined") window.__TREM_AUTH_STORAGE_PREFIX__ = AUTH_STORAGE_PREFIX;
 
 console.info("API baseURL (built):", baseURL);
 
@@ -44,12 +47,16 @@ registerAuthHeaderClearer(clearApiAuthHeader);
 api.interceptors.request.use(
   (cfg) => {
     try {
-      const token = localStorage.getItem("token") || localStorage.getItem("auth_token");
+      const token = localStorage.getItem(`${AUTH_STORAGE_PREFIX}:token`);
       if (token) {
         cfg.headers = cfg.headers || {};
         cfg.headers.Authorization = `Bearer ${token}`;
       } else if (cfg?.headers?.Authorization) {
         delete cfg.headers.Authorization;
+      }
+      if (!token) {
+        cfg.headers = cfg.headers || {};
+        cfg.headers["X-Ignore-Cookie-Auth"] = "true";
       }
     } catch (err) {
       // ignore parse errors
@@ -58,5 +65,7 @@ api.interceptors.request.use(
   },
   (err) => Promise.reject(err)
 );
+
+setupRefreshInterceptor(api, AUTH_STORAGE_PREFIX);
 
 export default api;

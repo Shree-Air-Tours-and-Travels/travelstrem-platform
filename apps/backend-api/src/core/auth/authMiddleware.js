@@ -2,7 +2,7 @@
 import jwt from "jsonwebtoken";
 import config from "../../config/index.js";
 
-const JWT_SECRET = (config.JWT && config.JWT.accessSecret) || process.env.JWT_SECRET || "replace_this_in_production";
+const JWT_SECRET = (config.JWT && config.JWT.accessSecret) || process.env.JWT_SECRET;
 const IS_PRODUCTION = !!config.IS_PRODUCTION;
 const COOKIE_NAME = IS_PRODUCTION ? "__Host-token" : "token";
 
@@ -11,10 +11,11 @@ const COOKIE_NAME = IS_PRODUCTION ? "__Host-token" : "token";
  * Replies 401 if no token or invalid/expired.
  */
 export default function authMiddleware(req, res, next) {
-  const token = req.cookies?.[COOKIE_NAME] || (() => {
+  const token = (() => {
     const authHeader = req.headers.authorization || req.headers.Authorization || "";
-    if (!authHeader || !authHeader.startsWith("Bearer ")) return null;
-    return authHeader.split(" ")[1];
+    if (authHeader && authHeader.startsWith("Bearer ")) return authHeader.split(" ")[1];
+    if (req.headers["x-ignore-cookie-auth"] === "true") return null;
+    return req.cookies?.[COOKIE_NAME] || req.cookies?.token || null;
   })();
 
   if (!token) {

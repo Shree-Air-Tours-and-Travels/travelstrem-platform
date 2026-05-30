@@ -1,0 +1,527 @@
+@import "@packages/trem-ui/styles/base/typography";
+
+$agent-page-padding: $space-4;
+$agent-gap: $space-3;
+
+.agent-ops {
+  min-height: calc(100vh - 72px);
+  padding: $agent-gap $agent-page-padding $space-5;
+  background: var(--page-bg);
+  color: var(--text);
+}
+
+.agent-ops__heading,
+.agent-session-bar,
+.agent-panel,
+.agent-main-widget {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.agent-ops__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 3.375rem;
+  padding: 0 $space-5;
+  border-radius: var(--radius-sm);
+
+  h1,
+  h2 {
+    margin: 0;
+    color: var(--color-primary);
+    font-size: $font-size-xl;
+  }
+}
+
+.agent-widget-actions {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  flex-wrap: wrap;
+}
+
+.agent-session-bar {
+  margin-top: $space-2;
+  padding: $space-3;
+  border-radius: var(--radius-sm);
+  font-size: $font-size-xs;
+  color: var(--text);
+
+  span {
+    margin-left: $space-3;
+  }
+}
+
+.agent-ops__body {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: $agent-gap;
+  margin-top: $space-2;
+}
+
+.agent-side {
+  min-width: 14rem;
+  max-width: 16rem;
+}
+
+.agent-side.is-collapsed {
+  min-width: auto;
+  max-width: 76px;
+}
+
+.agent-side {
+  display: grid;
+  gap: $agent-gap;
+  align-content: start;
+}
+
+.agent-side.is-collapsed + .agent-ops__content {
+  grid-column: 2;
+}
+
+.agent-sidebar.trem-dashboard-sidebar {
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.agent-panel {
+  border-radius: var(--radius-sm);
+  padding: $space-3;
+}
+
+.agent-profile-head {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  padding-bottom: $space-3;
+  border-bottom: 1px solid var(--border);
+
+  strong,
+  span {
+    display: block;
+  }
+
+  strong {
+    font-size: $font-size-sm;
+    color: var(--text);
+  }
+
+  span {
+    margin-top: $space-1;
+    font-size: $font-size-xs;
+    color: var(--muted);
+  }
+}
+
+.agent-profile-head__icon,
+.agent-profile-card-large__avatar {
+  display: inline-grid;
+  place-items: center;
+  color: var(--color-on-primary);
+  background: var(--color-primary);
+}
+
+.agent-profile-head__icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-xs);
+}
+
+.agent-facts,
+.agent-profile-summary {
+  margin: 0;
+
+  div {
+    padding: $space-3 0 0;
+  }
+
+  dt {
+    color: var(--text);
+    font-size: $font-size-xs;
+    font-weight: $font-bold;
+  }
+
+  dd {
+    margin: $space-1 0 0;
+    color: var(--color-primary);
+    font-size: $font-size-xs;
+    overflow-wrap: anywhere;
+  }
+}
+
+.agent-ops__content {
+  min-width: 0;
+}
+
+.agent-main-widget {
+  position: relative;
+  min-height: 38.75rem;
+  border-radius: var(--radius-sm);
+  padding: $agent-gap;
+}
+
+.agent-widget-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-3;
+  min-height: 2.25rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: $space-2;
+
+  h2,
+  h3 {
+    margin: 0;
+    color: var(--text);
+    font-size: $font-size-md;
+  }
+}
+
+.agent-service-chips.tt-quick-chips {
+  justify-content: flex-end;
+  margin: 0;
+}
+
+.agent-widget-actions .btn {
+  min-height: 1.875rem;
+  padding: 0 $space-4;
+  border-radius: var(--radius-sm);
+}
+
+.agent-services-list {
+  display: grid;
+  gap: $agent-gap;
+  max-height: calc(100vh - 230px);
+  overflow-y: auto;
+  padding-right: $space-2;
+}
+
+.agent-service-card.tour-card {
+  display: grid !important;
+  grid-template-columns: minmax(10rem, 13.75rem) minmax(0, 1fr) !important;
+  min-height: 9.375rem !important;
+  height: auto !important;
+  border-radius: var(--radius-sm) !important;
+  border-color: var(--border) !important;
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  overflow: hidden !important;
+}
+
+.agent-service-card.tour-card .tour-card__media {
+  width: 100% !important;
+  min-height: 9.375rem !important;
+}
+
+.agent-service-card.tour-card .tour-card__img,
+.agent-service-card.tour-card .tour-card__placeholder {
+  height: 100% !important;
+  min-height: 9.375rem !important;
+  object-fit: cover !important;
+}
+
+.agent-service-card.tour-card .tour-card__body {
+  padding: 0.8rem !important;
+  gap: 0.45rem !important;
+  min-height: 9.375rem !important;
+  background: transparent !important;
+}
+
+.agent-service-card.tour-card .tour-card__footer {
+  margin-top: auto !important;
+}
+
+.agent-profile-grid {
+  display: grid;
+  gap: $space-4;
+  padding: $space-3 0;
+}
+
+.agent-profile-card-large {
+  display: flex;
+  align-items: center;
+  gap: $space-4;
+  padding: $space-5;
+  border: 1px solid var(--border);
+  background: var(--surface-elevated);
+
+  h1,
+  h2 {
+    color: var(--text);
+    margin: 0;
+  }
+
+  p {
+    color: var(--muted);
+    margin: $space-1 0 0;
+  }
+}
+
+.agent-profile-card-large__avatar {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  font-weight: 800;
+}
+
+.agent-profile-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $agent-gap;
+
+  div {
+    padding: $space-4;
+    border: 1px solid var(--border);
+    background: var(--surface-elevated);
+  }
+}
+
+.agent-booking-table.booking-table {
+  color: var(--text);
+
+  .booking-table__panel,
+  .booking-table__pagination {
+    border-color: var(--border);
+    background: var(--surface);
+  }
+}
+
+.agent-bookings-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: $agent-gap;
+}
+
+.tm-toast {
+  position: fixed;
+  top: $space-5;
+  right: $space-5;
+  z-index: 9999;
+  color: var(--color-on-primary);
+  padding: $space-3 $space-5;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  font-size: $font-size-sm;
+  cursor: pointer;
+}
+
+.tm-toast--success {
+  background: var(--color-success);
+}
+
+.tm-toast--error {
+  background: var(--color-danger);
+}
+
+.tm-toast--info {
+  background: var(--color-primary);
+}
+
+.mt-empty,
+.tt-empty-state {
+  color: var(--muted);
+}
+
+.agency-loading {
+  padding: $space-10;
+  text-align: center;
+  color: var(--muted);
+}
+
+.agency-status-card {
+  padding: $space-5;
+}
+
+.agency-status-badge {
+  margin-bottom: $space-4;
+}
+
+.agency-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $agent-gap;
+  margin: 0;
+}
+
+.agency-details div {
+  padding: $space-3;
+  border: 1px solid var(--border);
+  background: var(--surface-elevated);
+}
+
+.agency-details dt {
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+  color: var(--muted);
+  margin-bottom: $space-1;
+}
+
+.agency-details dd {
+  margin: 0;
+  font-size: $font-size-sm;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.agency-notes {
+  margin: $space-4 0 0;
+  padding: $agent-gap;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  font-size: $font-size-xs;
+  color: var(--muted);
+}
+
+.agency-form {
+  padding: $space-5;
+  display: grid;
+  gap: $space-4;
+  max-width: 30rem;
+}
+
+.agency-form__error {
+  padding: $space-2 $space-3;
+  background: var(--danger-soft);
+  color: var(--color-danger);
+  border-radius: var(--radius-xs);
+  font-size: $font-size-xs;
+}
+
+.agency-form__field {
+  display: grid;
+  gap: $space-1;
+}
+
+.agency-form__field span {
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+  color: var(--text);
+}
+
+.agency-form__field input {
+  padding: $space-2 $space-3;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--surface);
+  color: var(--text);
+  font-size: $font-size-sm;
+}
+
+.agency-form__field input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.agency-form__actions {
+  padding-top: $space-2;
+}
+
+.agency-form__actions .btn {
+  width: 100%;
+}
+
+.agency-section {
+  margin-top: $space-4;
+  padding-top: $space-4;
+  border-top: 1px solid var(--border);
+}
+
+.agency-section__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $agent-gap;
+}
+
+.agent-settings-widget .agent-settings-content {
+  padding: $space-3 0;
+}
+
+.agent-settings-section {
+  margin-top: $space-5;
+}
+
+.agent-settings-section:first-of-type {
+  margin-top: $space-4;
+}
+
+.settings-form {
+  display: grid;
+  gap: $space-4;
+  max-width: 25rem;
+  margin-top: $agent-gap;
+}
+
+.settings-form__actions {
+  padding-top: $space-1;
+}
+
+.settings-avatar-hint {
+  margin: $space-2 0 $agent-gap;
+  font-size: $font-size-xs;
+  color: var(--muted);
+}
+
+.settings-avatar-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-2;
+}
+
+.settings-avatar-option {
+  display: inline-grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color $duration-fast $ease-standard, background $duration-fast $ease-standard;
+}
+
+.settings-avatar-option:hover {
+  border-color: var(--color-primary);
+}
+
+.settings-avatar-option--active {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.settings-avatar-option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+  .agent-ops__heading,
+  .agent-widget-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .agent-ops__body {
+    grid-template-columns: 1fr;
+  }
+
+  .agent-service-chips.tt-quick-chips {
+    justify-content: flex-start;
+  }
+
+  .agent-service-card.tour-card {
+    grid-template-columns: 1fr !important;
+  }
+
+  .agent-profile-summary {
+    grid-template-columns: 1fr;
+  }
+}

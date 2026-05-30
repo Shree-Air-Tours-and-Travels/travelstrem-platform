@@ -1,5 +1,5 @@
 import React from "react";
-import { Dropdown, InputField, Icon } from "@packages/trem-ui";
+import { Button, Dropdown, InputField, Icon, Paragraph } from "@packages/trem-ui";
 
 function toItems(options, currentValue, onChange) {
   return options.map((opt) => {
@@ -33,10 +33,10 @@ function SelectField({ options, value, onChange, placeholder, searchable }) {
       hoverable={false}
       searchPlaceholder="Search..."
       trigger={({ open }) => (
-        <button className="booking-page__select-trigger" type="button">
+        <Button primaryClassName="booking-page__select-trigger" variant="text">
           <span>{currentLabel(options, value, placeholder || "\u2014 Select \u2014")}</span>
           <Icon name="chevronDown" className={open ? "is-open" : ""} />
-        </button>
+        </Button>
       )}
     />
   );
@@ -284,9 +284,7 @@ export default function BookingTravelerStepView({
 
   return (
     <div className="booking-page__card-body">
-      <p className="booking-page__hint" style={{ marginBottom: "1rem", lineHeight: 1.5 }}>
-        {labels.travelerHint || "Please provide details for each traveler."}
-      </p>
+      <Paragraph primaryClassname="booking-page__hint" text={labels.travelerHint || "Please provide details for each traveler."} />
 
       <div className="booking-page__section-title" style={{ marginTop: 0 }}>
         {labels.sectionContact || "Contact Details"}
@@ -307,9 +305,9 @@ export default function BookingTravelerStepView({
       <div className="booking-page__section-title">{labels.guests || "Number of Travelers"}</div>
       <div className="booking-page__guest-row" style={{ marginBottom: "1rem" }}>
         <div className="booking-page__qty-group">
-          <button className="booking-page__qty-btn" type="button" onClick={() => onGuestsChange(Math.max(1, Number(guests) - 1))} disabled={Number(guests) <= 1} aria-label="Decrease travelers">−</button>
+          <Button primaryClassName="booking-page__qty-btn" variant="text" onClick={() => onGuestsChange(Math.max(1, Number(guests) - 1))} disabled={Number(guests) <= 1} aria-label="Decrease travelers">−</Button>
           <span className="booking-page__qty-num">{guests}</span>
-          <button className="booking-page__qty-btn" type="button" onClick={() => onGuestsChange(Number(guests) + 1)} disabled={maxGuests && Number(guests) >= maxGuests} aria-label="Increase travelers">+</button>
+          <Button primaryClassName="booking-page__qty-btn" variant="text" onClick={() => onGuestsChange(Number(guests) + 1)} disabled={maxGuests && Number(guests) >= maxGuests} aria-label="Increase travelers">+</Button>
         </div>
       </div>
 

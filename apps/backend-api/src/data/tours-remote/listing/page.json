@@ -7,33 +7,33 @@
     },
     "elements": {
       "labels": {
-        "pageTitle": "Discover Tours",
-        "pageSubtitle": "Find your perfect adventure",
-        "pageDescription": "Browse our curated collection of tours and travel packages."
+        "pageTitle": "Discover Tours"
       },
       "urls": {}
     },
     "structure": {
       "header": {
-        "titleRef": "pageTitle",
-        "subtitleRef": "pageSubtitle",
-        "descriptionRef": "pageDescription"
+        "titleRef": "pageTitle"
       },
       "widgets": [
         {
           "type": "HeroBanner",
+          "source": "shell",
           "widgetRef": "./widgets/hero-banner.json"
         },
         {
           "type": "quickChips",
+          "source": "shell",
           "widgetRef": "./widgets/quick-filters.json"
         },
         {
           "type": "filters",
+          "source": "shell",
           "widgetRef": "./widgets/tour-filters.json"
         },
         {
           "type": "listing",
+          "source": "shell",
           "widgetRef": "./widgets/tour-grid.json"
         }
       ],

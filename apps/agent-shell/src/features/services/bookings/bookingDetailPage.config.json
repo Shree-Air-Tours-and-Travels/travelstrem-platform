@@ -1,0 +1,6 @@
+{
+    "breadcrumbs": [
+        { "label": "Services", "path": "/agent/services" },
+        { "label": "Bookings Management", "path": "/agent/services/bookings" }
+    ]
+}

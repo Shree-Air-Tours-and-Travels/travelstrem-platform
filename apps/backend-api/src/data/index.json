@@ -7,6 +7,11 @@
       "page": "home",
       "file": "./customer-shell/home/page.json"
     },
+     "customer-shell/about": {
+      "app": "customer-shell",
+      "page": "about",
+      "file": "./customer-shell/about/page.json"
+    },
     "customer-shell/checkout": {
       "app": "customer-shell",
       "page": "checkout",
@@ -27,6 +32,11 @@
       "page": "details",
       "file": "./tours-remote/details/page.json"
     },
+    "tours-remote/booking": {
+      "app": "tours-remote",
+      "page": "booking",
+      "file": "./tours-remote/booking/page.json"
+    },
     "tours-remote/booking-summary": {
       "app": "tours-remote",
       "page": "booking-summary",
@@ -46,22 +56,60 @@
       "app": "admin-shell",
       "page": "bookings",
       "file": "./admin-shell/bookings/page.json"
+    },
+    "agent-shell/services": {
+      "app": "agent-shell",
+      "page": "services",
+      "file": "./agent-shell/services/page.json"
+    },
+    "agent-shell/dashboard": {
+      "app": "agent-shell",
+      "page": "dashboard",
+      "file": "./agent-shell/dashboard/page.json"
+    },
+    "agent-shell/bookings": {
+      "app": "agent-shell",
+      "page": "bookings",
+      "file": "./agent-shell/bookings/page.json"
+    },
+    "agent-shell/agency": {
+      "app": "agent-shell",
+      "page": "agency",
+      "file": "./agent-shell/agency/page.json"
     }
   },
   "pathMap": {
     "/": "customer-shell/home",
+    "/about": "customer-shell/about",
     "/dashboard": "customer-shell/dashboard",
     "/checkout": "customer-shell/checkout",
+    "/tours": "tours-remote/listing",
+    "/tours/:tourRef": "tours-remote/details",
+    "/tours/:tourRef/book": "tours-remote/booking",
+    "/tours/bookings/:bookingId": "tours-remote/booking-summary",
+    "/tours/bookings/:bookingId/checkout": "tours-remote/booking-checkout",
     "/admin": "admin-shell/dashboard",
-    "/admin/bookings": "admin-shell/bookings"
+    "/admin/bookings": "admin-shell/bookings",
+    "/agent/services": "agent-shell/services",
+    "/agent/dashboard": "agent-shell/dashboard",
+    "/agent/bookings": "agent-shell/bookings",
+    "/agent/agency": "agent-shell/agency"
   },
   "aliases": {
     "home": "customer-shell/home",
+    "about": "customer-shell/about",
     "customer-dashboard": "customer-shell/dashboard",
     "checkout": "customer-shell/checkout",
     "tour-listing": "tours-remote/listing",
     "tour-details": "tours-remote/details",
+    "tour-booking": "tours-remote/booking",
+    "tour-booking-summary": "tours-remote/booking-summary",
+    "tour-booking-checkout": "tours-remote/booking-checkout",
     "dashboard": "admin-shell/dashboard",
-    "bookings": "admin-shell/bookings"
+    "bookings": "admin-shell/bookings",
+    "agent-services": "agent-shell/services",
+    "agent-dashboard": "agent-shell/dashboard",
+    "agent-bookings": "agent-shell/bookings",
+    "agent-agency": "agent-shell/agency"
   }
 }

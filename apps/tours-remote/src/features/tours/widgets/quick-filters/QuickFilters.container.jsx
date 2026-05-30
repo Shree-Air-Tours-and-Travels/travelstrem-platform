@@ -1,9 +1,11 @@
 import React, { useCallback, useState } from "react";
-import { QuickChips } from "@packages/trem-ui";
+import QuickFiltersView from "./QuickFilters.view";
 
 export default function QuickFiltersContainer({ widgetData, onQuickFilter }) {
     const filters = widgetData?.data?.filters || widgetData?.structure?.widgets?.[0]?.props?.filters || [];
     const labels = widgetData?.elements?.labels || {};
+    const props = widgetData?.structure?.widgets?.[0]?.props || {};
+    const title = props.titleRef ? labels[props.titleRef] : null;
     const [activeId, setActiveId] = useState("all");
 
     const handleClick = useCallback((id) => {
@@ -11,5 +13,5 @@ export default function QuickFiltersContainer({ widgetData, onQuickFilter }) {
         onQuickFilter?.(id);
     }, [onQuickFilter]);
 
-    return <QuickChips filters={filters} labels={labels} activeId={activeId} onClick={handleClick} className="tours-page__quick-filters" />;
+    return <QuickFiltersView title={title} filters={filters} labels={labels} activeId={activeId} onFilterClick={handleClick} />;
 }

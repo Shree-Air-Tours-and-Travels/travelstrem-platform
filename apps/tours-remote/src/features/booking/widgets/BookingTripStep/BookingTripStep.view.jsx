@@ -1,4 +1,5 @@
 import React from "react";
+import { Button } from "@packages/trem-ui";
 
 export default function BookingTripStepView({
   labels,
@@ -57,25 +58,25 @@ export default function BookingTripStepView({
           <div className="booking-page__breakdown-row">
             <span>{labels.adultCount || "Adults"} <small>{labels.adultAgeHint || "12+ yrs"}</small></span>
             <div className="booking-page__qty-group">
-              <button className="booking-page__qty-btn" type="button" onClick={() => handleAdult(-1)} disabled={Number(adults || 0) <= 1} aria-label="Decrease adults">−</button>
+              <Button primaryClassName="booking-page__qty-btn" variant="text" onClick={() => handleAdult(-1)} disabled={Number(adults || 0) <= 1} aria-label="Decrease adults">−</Button>
               <span className="booking-page__qty-num">{adults || 0}</span>
-              <button className="booking-page__qty-btn" type="button" onClick={() => handleAdult(1)} disabled={overMax} aria-label="Increase adults">+</button>
+              <Button primaryClassName="booking-page__qty-btn" variant="text" onClick={() => handleAdult(1)} disabled={overMax} aria-label="Increase adults">+</Button>
             </div>
           </div>
           <div className="booking-page__breakdown-row">
             <span>{labels.childCount || "Children"} <small>{labels.childAgeHint || "2\u201311 yrs"}</small></span>
             <div className="booking-page__qty-group">
-              <button className="booking-page__qty-btn" type="button" onClick={() => handleChild(-1)} disabled={Number(children || 0) <= 0} aria-label="Decrease children">−</button>
+              <Button primaryClassName="booking-page__qty-btn" variant="text" onClick={() => handleChild(-1)} disabled={Number(children || 0) <= 0} aria-label="Decrease children">−</Button>
               <span className="booking-page__qty-num">{children || 0}</span>
-              <button className="booking-page__qty-btn" type="button" onClick={() => handleChild(1)} disabled={overMax} aria-label="Increase children">+</button>
+              <Button primaryClassName="booking-page__qty-btn" variant="text" onClick={() => handleChild(1)} disabled={overMax} aria-label="Increase children">+</Button>
             </div>
           </div>
           <div className="booking-page__breakdown-row">
             <span>{labels.infantCount || "Infants"} <small>{labels.infantAgeHint || "0\u201323 mo"}</small></span>
             <div className="booking-page__qty-group">
-              <button className="booking-page__qty-btn" type="button" onClick={() => handleInfant(-1)} disabled={Number(infants || 0) <= 0} aria-label="Decrease infants">−</button>
+              <Button primaryClassName="booking-page__qty-btn" variant="text" onClick={() => handleInfant(-1)} disabled={Number(infants || 0) <= 0} aria-label="Decrease infants">−</Button>
               <span className="booking-page__qty-num">{infants || 0}</span>
-              <button className="booking-page__qty-btn" type="button" onClick={() => handleInfant(1)} disabled={overMax} aria-label="Increase infants">+</button>
+              <Button primaryClassName="booking-page__qty-btn" variant="text" onClick={() => handleInfant(1)} disabled={overMax} aria-label="Increase infants">+</Button>
             </div>
           </div>
         </div>

@@ -76,15 +76,41 @@
     line-height: 1.6;
   }
 
-  button {
+  .ui-button {
     width: 100%;
   }
+}
 
-  button:first-of-type {
-    background: var(--color-primary, #0f766e);
-    border-color: var(--color-primary, #0f766e);
-    color: var(--color-on-primary, #fff);
+.booking-checkout-paid-msg {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-success, #10b981) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-success, #10b981) 25%, transparent);
+
+  h3 {
+    margin: 0 0 0.5rem;
+    color: var(--color-success, #10b981);
   }
+
+  p {
+    margin: 0 0 0.5rem;
+    color: var(--text, #14201d);
+    line-height: 1.6;
+  }
+
+  ol {
+    margin: 0 0 0.8rem;
+    padding-left: 1.2rem;
+    display: grid;
+    gap: 0.4rem;
+
+    li {
+      color: var(--text, #14201d);
+      line-height: 1.5;
+    }
+  }
+
 }
 
 @media (max-width: 860px) {

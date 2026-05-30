@@ -1,14 +1,34 @@
-import React, { useState } from "react";
-import { saveTour } from "../../services/adminService";
+import React, { useState, useEffect } from "react";
+import { saveTour, uploadTourImage } from "../../services/adminService";
+import { validateFields } from "@packages/trem-utils";
 import CreateTourFormView from "./CreateTourForm.view";
 
-const STEPS = ['Basic', 'Schedule', 'Pricing', 'Logistics', 'Content', 'Review'];
+const STEPS = ['Basic', 'Schedule', 'Itinerary', 'Pricing', 'Logistics', 'Content', 'Review'];
+
+const REQUIRED_FIELDS = ['title', 'city.from', 'city.to', 'distance', 'period.days', 'period.nights', 'desc', 'maxGroupSize', 'price.min', 'price.max'];
+
+function getFieldValue(obj, path) {
+    const parts = path.split('.');
+    let cur = obj;
+    for (const p of parts) {
+        if (cur == null || typeof cur !== 'object') return undefined;
+        cur = cur[p];
+    }
+    return cur;
+}
 
 export default function CreateTourForm({ initial = null, onCancel = () => { }, onSaved = () => { } }) {
     const [step, setStep] = useState(0);
     const [saving, setSaving] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
     const [error, setError] = useState(null);
-    const [form, setForm] = useState(() => {
+    const [success, setSuccess] = useState(null);
+    const [dirty, setDirty] = useState(false);
+    const [touched, setTouched] = useState({});
+    const [fieldErrors, setFieldErrors] = useState({});
+    const [seasonOverlaps, setSeasonOverlaps] = useState([]);
+    const [form, setFormState] = useState(() => {
         const blank = {
             title: '',
             city: { from: '', to: '' },
@@ -42,6 +62,11 @@ export default function CreateTourForm({ initial = null, onCancel = () => { }, o
         return initial ? { ...blank, ...initial } : blank;
     });
 
+    function setForm(valueOrFn) {
+        setDirty(true);
+        setFormState(valueOrFn);
+    }
+
     function setAt(path, value) {
         setForm(prev => {
             const copy = JSON.parse(JSON.stringify(prev));
@@ -55,10 +80,74 @@ export default function CreateTourForm({ initial = null, onCancel = () => { }, o
     function next() { setStep(s => Math.min(STEPS.length - 1, s + 1)); }
     function back() { setStep(s => Math.max(0, s - 1)); }
 
+    function findSeasonalOverlaps(pricing) {
+        const indexed = (pricing || []).map((s, idx) => ({ ...s, idx, _start: s.startDate ? new Date(s.startDate) : null, _end: s.endDate ? new Date(s.endDate) : null }));
+        const withDates = indexed.filter(s => s._start && s._end && !isNaN(s._start) && !isNaN(s._end));
+        if (withDates.length < 2) return [];
+        const sorted = [...withDates].sort((a, b) => a._start - b._start);
+        const overlaps = [];
+        for (let i = 1; i < sorted.length; i++) {
+            const prev = sorted[i - 1];
+            const curr = sorted[i];
+            if (curr._start <= prev._end) {
+                overlaps.push({ idxA: prev.idx, idxB: curr.idx, msg: `"${curr.seasonName || 'Season'}" overlaps with "${prev.seasonName || 'Season'}"` });
+            }
+        }
+        return overlaps;
+    }
+
+    function validateAll() {
+        const errs = {};
+
+        const flat = {
+            title: form.title,
+            desc: form.desc,
+        };
+        const fieldMap = {
+            title: { type: "text", required: true, messages: { required: "Title is required" } },
+            desc: { type: "textarea", required: true, messages: { required: "Description is required" } },
+        };
+        const result = validateFields(flat, fieldMap);
+        Object.assign(errs, result.errors);
+
+        if (!form.city?.from) errs['city.from'] = 'City from is required';
+        if (!form.city?.to) errs['city.to'] = 'City to is required';
+        if (form.distance == null || Number(form.distance) < 0) errs.distance = 'Distance must be 0 or more';
+        if (form.period?.days == null || Number(form.period.days) < 1) errs['period.days'] = 'Days must be at least 1';
+        if (form.period?.nights == null || Number(form.period.nights) < 0) errs['period.nights'] = 'Nights must be 0 or more';
+        if (form.price?.min == null || Number(form.price.min) < 0) errs['price.min'] = 'Min price is required';
+        if (form.price?.max == null || Number(form.price.max) < 0) errs['price.max'] = 'Max price is required';
+        if (Number(form.price?.min) > Number(form.price?.max)) errs['price.max'] = 'Max must be >= min';
+        if (form.maxGroupSize == null || Number(form.maxGroupSize) < 1) errs.maxGroupSize = 'Max group size must be at least 1';
+        return errs;
+    }
+
+    function handleBlur(name) {
+        setTouched(prev => ({ ...prev, [name]: true }));
+        const errs = validateAll();
+        setFieldErrors(prev => ({ ...prev, [name]: errs[name] || null }));
+    }
+
+    function markAllTouched() {
+        const all = {};
+        REQUIRED_FIELDS.forEach(f => { all[f] = true; });
+        setTouched(all);
+        setFieldErrors(validateAll());
+    }
+
     async function submit(e) {
         e?.preventDefault?.();
-        setSaving(true);
         setError(null);
+        setSuccess(null);
+
+        const errs = validateAll();
+        if (Object.keys(errs).length > 0) {
+            markAllTouched();
+            setError(Object.values(errs)[0]);
+            return;
+        }
+
+        setSaving(true);
 
         try {
             const payload = JSON.parse(JSON.stringify(form));
@@ -116,14 +205,33 @@ export default function CreateTourForm({ initial = null, onCancel = () => { }, o
             if (payload.maxGroupSize != null) payload.maxGroupSize = Number(payload.maxGroupSize);
             if (payload.minAge != null) payload.minAge = Number(payload.minAge);
             if (payload.maxAge != null) payload.maxAge = Number(payload.maxAge);
+            if (payload.distance != null) payload.distance = Number(payload.distance);
 
-            if (!payload.title) throw new Error('Title is required.');
-            if (!payload.desc) throw new Error('Description (desc) is required.');
-            if (payload.price.min == null || payload.price.max == null) throw new Error('price.min and price.max are required.');
+            if (payload.availability) {
+                payload.availability.totalSeats = payload.availability.totalSeats != null ? Number(payload.availability.totalSeats) : null;
+                payload.availability.seatsAvailable = payload.availability.seatsAvailable != null ? Number(payload.availability.seatsAvailable) : null;
+            }
 
             if (typeof payload.photos === 'string') payload.photos = payload.photos.split(',').map(s => s.trim()).filter(Boolean);
+
+            const overlaps = findSeasonalOverlaps(payload.seasonalPricing);
+            if (overlaps.length > 0) {
+                setSeasonOverlaps(overlaps);
+                throw new Error(overlaps[0].msg);
+            }
+
+            const days = payload.itinerary?.map(d => d.day).filter(d => d != null) || [];
+            if (days.length > 0) {
+                const unique = new Set(days);
+                if (unique.size !== days.length) throw new Error('Itinerary day numbers must be unique.');
+                const sorted = [...days].sort((a, b) => a - b);
+                if (sorted[sorted.length - 1] !== sorted.length) throw new Error('Itinerary day numbers must be sequential (1, 2, 3, …).');
+            }
+
             const saved = await saveTour(payload);
-            onSaved(saved);
+            setDirty(false);
+            setSuccess(form._id ? 'Tour updated successfully!' : 'Tour created successfully!');
+            setTimeout(() => onSaved(saved), 2000);
         } catch (err) {
             console.error('CreateTourForm submit error:', err);
             setError(err.message || 'Unexpected error');
@@ -132,17 +240,74 @@ export default function CreateTourForm({ initial = null, onCancel = () => { }, o
         }
     }
 
-    function addArrayItem(key, item) { setForm(prev => ({ ...prev, [key]: [...(Array.isArray(prev[key]) ? prev[key] : []), item] })); }
-    function updateArrayItem(key, idx, item) { setForm(prev => { const copy = { ...prev }; copy[key] = [...(copy[key] || [])]; copy[key][idx] = item; return copy; }); }
-    function removeArrayItem(key, idx) { setForm(prev => { const copy = { ...prev }; copy[key] = (copy[key] || []).filter((_, i) => i !== idx); return copy; }); }
+    function addArrayItem(key, item) { setDirty(true); setFormState(prev => ({ ...prev, [key]: [...(Array.isArray(prev[key]) ? prev[key] : []), item] })); }
+    function updateArrayItem(key, idx, item) { setDirty(true); setFormState(prev => { const copy = { ...prev }; copy[key] = [...(copy[key] || [])]; copy[key][idx] = item; return copy; }); }
+    function removeArrayItem(key, idx) { setDirty(true); setFormState(prev => { const copy = { ...prev }; copy[key] = (copy[key] || []).filter((_, i) => i !== idx); return copy; }); }
+    function moveArrayItem(key, fromIdx, toIdx) { setDirty(true); setFormState(prev => { const copy = { ...prev }; const arr = [...(copy[key] || [])]; if (toIdx < 0 || toIdx >= arr.length) return prev; const [moved] = arr.splice(fromIdx, 1); arr.splice(toIdx, 0, moved); copy[key] = arr; return copy; }); }
+
+    async function handleUploadImage(fileOrFiles) {
+        const files = Array.isArray(fileOrFiles)
+            ? fileOrFiles
+            : Array.from(fileOrFiles?.length != null ? fileOrFiles : (fileOrFiles ? [fileOrFiles] : []));
+        if (files.length === 0) return null;
+
+        setUploading(true);
+        setUploadProgress(0);
+        try {
+            const urls = [];
+            for (let i = 0; i < files.length; i += 1) {
+                const url = await uploadTourImage(files[i]);
+                urls.push(url);
+                setUploadProgress(Math.round(((i + 1) / files.length) * 100));
+            }
+            setForm(prev => {
+                const existing = Array.isArray(prev.photos) ? prev.photos : [];
+                const photos = [...existing, ...urls].filter(Boolean);
+                return { ...prev, photo: prev.photo || urls[0] || '', photos };
+            });
+            return urls.length === 1 ? urls[0] : urls;
+        } catch (e) {
+            console.error("Upload failed:", e);
+            setError(e.message || "Upload failed");
+            return null;
+        } finally {
+            setUploading(false);
+            setUploadProgress(0);
+        }
+    }
+
+    function handleCancel() {
+        if (dirty && !window.confirm("You have unsaved changes. Discard them?")) return;
+        onCancel();
+    }
+
+    useEffect(() => {
+        setSeasonOverlaps(findSeasonalOverlaps(form.seasonalPricing));
+    }, [form.seasonalPricing]);
+
+    useEffect(() => {
+        if (!dirty) return;
+        function handler(e) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+        window.addEventListener('beforeunload', handler);
+        return () => window.removeEventListener('beforeunload', handler);
+    }, [dirty]);
 
     return (
         <CreateTourFormView
             form={form}
             step={step}
             saving={saving}
+            uploading={uploading}
+            uploadProgress={uploadProgress}
             error={error}
-            onCancel={onCancel}
+            success={success}
+            touched={touched}
+            fieldErrors={fieldErrors}
+            seasonOverlaps={seasonOverlaps}
+            onCancel={handleCancel}
             submit={submit}
             next={next}
             back={back}
@@ -151,6 +316,10 @@ export default function CreateTourForm({ initial = null, onCancel = () => { }, o
             addArrayItem={addArrayItem}
             updateArrayItem={updateArrayItem}
             removeArrayItem={removeArrayItem}
+            moveArrayItem={moveArrayItem}
+            handleUploadImage={handleUploadImage}
+            handleBlur={handleBlur}
+            onDismissSuccess={() => setSuccess(null)}
         />
     );
 }

@@ -1,4 +1,6 @@
 // modules/tours/controller.js
+const isObject = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
+const toString = (v) => String(v ?? "");
 import TourRepository from "../repositories/TourRepository.js";
 import {
     getHandlerFromReq,
@@ -87,7 +89,7 @@ const findTourByRef = async (tourRef) => {
     });
     if (directTitle) return directTitle;
 
-    const tours = await TourRepository.find({}, "title city address distance period startDate endDate photo photos desc price seasonalPricing itinerary highlights availability meetingPoint inclusions exclusions languages cancellationPolicy minAge maxAge maxGroupSize reviews featured tags isPublished status createdAt updatedAt");
+    const tours = await TourRepository.find({}, "title city address distance period startDate endDate photo photos desc price seasonalPricing itinerary highlights availability meetingPoint inclusions exclusions languages cancellationPolicy minAge maxAge maxGroupSize reviews featured tags isPublished status ownerAgent createdAt updatedAt");
     return tours.find((tour) => slugifyTourTitle(tour.title) === slugifyTourTitle(ref)) || null;
 };
 
@@ -118,7 +120,7 @@ const buildPriceInfo = (doc, date = new Date()) => {
  * Normalize a tour object for API response and ensure all schema keys are present.
  * Accepts either mongoose doc or plain object (tourObj).
  */
-const normalizeTourForResponse = (tourObj = {}, priceInfo = null) => {
+export const normalizeTourForResponse = (tourObj = {}, priceInfo = null) => {
     // defensive defaults
     return {
         _id: tourObj._id || tourObj.id || null,
@@ -150,11 +152,56 @@ const normalizeTourForResponse = (tourObj = {}, priceInfo = null) => {
         tags: Array.isArray(tourObj.tags) ? tourObj.tags : [],
         isPublished: typeof tourObj.isPublished === "boolean" ? tourObj.isPublished : true,
         status: tourObj.status || "published",
+        ownerAgent: isObject(tourObj.ownerAgent)
+            ? toString(tourObj.ownerAgent._id)
+            : toString(tourObj.ownerAgent) || null,
+        agentTour: !!tourObj.agentTour,
+        agencyRef: tourObj.agencyRef || "",
+        partnerAgencyRef: tourObj.partnerAgencyRef || "",
+        inventorySource: tourObj.inventorySource || "platform",
+        providerName: tourObj.providerName || "",
+        ...extractOwnerInfo(tourObj.ownerAgent),
         createdAt: tourObj.createdAt || null,
         updatedAt: tourObj.updatedAt || null,
-        avgRating: tourObj.avgRating != null ? tourObj.avgRating : (Array.isArray(tourObj.reviews) && tourObj.reviews.length ? (tourObj.reviews.reduce((a, r) => a + (Number(r.rating) || 0), 0) / tourObj.reviews.length).toFixed(1) : 0),
+         avgRating: tourObj.avgRating != null ? tourObj.avgRating : (Array.isArray(tourObj.reviews) && tourObj.reviews.length ? (tourObj.reviews.reduce((a, r) => a + (Number(r.rating) || 0), 0) / tourObj.reviews.length).toFixed(1) : 0),
+         priceInfo: priceInfo || null,
+     };
+ };
+
+const normalizeTourCardForResponse = (tourObj = {}, priceInfo = null) => {
+    const reviews = Array.isArray(tourObj.reviews) ? tourObj.reviews : [];
+    const reviewCount = reviews.length;
+    const avgRating = tourObj.avgRating != null
+        ? tourObj.avgRating
+        : (reviewCount ? (reviews.reduce((a, r) => a + (Number(r.rating) || 0), 0) / reviewCount).toFixed(1) : 0);
+
+    return {
+        _id: tourObj._id || tourObj.id || null,
+        title: tourObj.title || "",
+        city: tourObj.city ? { from: tourObj.city.from, to: tourObj.city.to } : null,
+        address: tourObj.address ? { city: tourObj.address.city, country: tourObj.address.country } : null,
+        period: tourObj.period || null,
+        photo: tourObj.photo || "",
+        photos: Array.isArray(tourObj.photos) && tourObj.photos.length > 0 ? [tourObj.photos[0]] : [],
+        desc: tourObj.desc ? tourObj.desc.slice(0, 120) : "",
+        avgRating,
+        maxGroupSize: tourObj.maxGroupSize || null,
+        reviewCount,
+        reviews: [],
+        featured: !!tourObj.featured,
+        tags: Array.isArray(tourObj.tags) ? tourObj.tags.slice(0, 4) : [],
+        ownerAgent: isObject(tourObj.ownerAgent)
+            ? toString(tourObj.ownerAgent._id)
+            : toString(tourObj.ownerAgent) || null,
+        agentTour: !!tourObj.agentTour,
+        agencyRef: tourObj.agencyRef || "",
+        partnerAgencyRef: tourObj.partnerAgencyRef || "",
+        inventorySource: tourObj.inventorySource || "platform",
+        providerName: tourObj.providerName || "",
+        ...extractOwnerInfo(tourObj.ownerAgent),
+        createdAt: tourObj.createdAt || null,
+        updatedAt: tourObj.updatedAt || null,
         priceInfo: priceInfo || null,
-        raw: tourObj, // keep raw object for debugging if needed
     };
 };
 
@@ -300,6 +347,7 @@ const sanitizeTourPayload = (raw = {}) => {
     p.featured = !!p.featured;
     p.isPublished = typeof p.isPublished === "boolean" ? p.isPublished : true;
     p.status = p.status || "published";
+    p.inventorySource = ["agent", "provider", "platform"].includes(p.inventorySource) ? p.inventorySource : "platform";
 
     // Keep other structural fields as-is (city, address)
     return {
@@ -331,7 +379,220 @@ const sanitizeTourPayload = (raw = {}) => {
         tags: p.tags || [],
         isPublished: p.isPublished,
         status: p.status,
+        ownerAgent: p.ownerAgent || null,
+        agencyRef: p.agencyRef || "",
+        partnerAgencyRef: p.partnerAgencyRef || "",
+        inventorySource: p.inventorySource,
+        providerName: p.providerName || "",
     };
+};
+
+/**
+ * sanitizeTourPayloadForUpdate(raw)
+ * - Only processes fields that are present in `raw`
+ * - Does NOT throw on missing required fields (title, desc, price)
+ * - Returns only the fields that were sent, safe for partial PUT
+ */
+const sanitizeTourPayloadForUpdate = (raw = {}) => {
+    const p = { ...raw };
+    const result = {};
+
+    if (p.title !== undefined) {
+        if (!p.title) throw new Error("Missing required field: title");
+        result.title = String(p.title);
+    }
+
+    if (p.desc !== undefined || p.description !== undefined) {
+        if (!p.desc && !p.description) throw new Error("Missing required field: desc/description");
+        result.desc = p.desc || p.description || "";
+    }
+
+    if (p.price !== undefined) {
+        if (!p.price) throw new Error("Missing price object (price.min & price.max required)");
+        if (p.price.min == null || p.price.max == null) throw new Error("price.min and price.max are required");
+        result.price = {
+            min: Number(p.price.min),
+            max: Number(p.price.max),
+            currency: p.price.currency || "INR",
+            isFinal: !!p.price.isFinal,
+            source: p.price.source || "manual",
+        };
+        if (Number.isNaN(result.price.min) || Number.isNaN(result.price.max)) throw new Error("price.min or price.max is not a number");
+        if (result.price.min > result.price.max) throw new Error("price.min cannot be greater than price.max");
+    }
+
+    if (p.seasonalPricing !== undefined) {
+        if (!Array.isArray(p.seasonalPricing)) throw new Error("seasonalPricing must be an array");
+        result.seasonalPricing = p.seasonalPricing.map((s, idx) => {
+            if (s.min == null || s.max == null) throw new Error(`seasonalPricing[${idx}] requires min & max`);
+            const start = parseDate(s.startDate);
+            const end = parseDate(s.endDate);
+            return {
+                seasonName: s.seasonName || `Season ${idx + 1}`,
+                startDate: start,
+                endDate: end,
+                min: Number(s.min),
+                max: Number(s.max),
+                currency: s.currency || result.price?.currency || "INR",
+                isFinal: !!s.isFinal,
+                source: s.source || "manual",
+                notes: s.notes || "",
+            };
+        });
+        assertSeasonalPricingValid(result.seasonalPricing);
+    }
+
+    if (p.itinerary !== undefined) {
+        if (!Array.isArray(p.itinerary)) throw new Error("itinerary must be an array");
+        result.itinerary = p.itinerary.map((it, idx) => {
+            const day = it.day != null ? Number(it.day) : idx + 1;
+            if (Number.isNaN(day) || day < 1) throw new Error(`itinerary[${idx}].day must be a positive integer`);
+            return {
+                day,
+                title: it.title || "",
+                summary: it.summary || "",
+                activities: Array.isArray(it.activities) ? it.activities.map(String) : (it.activities ? [String(it.activities)] : []),
+                meals: Array.isArray(it.meals) ? it.meals.map(String) : (it.meals ? [String(it.meals)] : []),
+                accommodation: it.accommodation || "",
+                location: it.location || "",
+                notes: it.notes || "",
+            };
+        });
+        const days = result.itinerary.map(i => i.day);
+        const uniqDays = Array.from(new Set(days));
+        if (uniqDays.length !== days.length) throw new Error("itinerary days must be unique");
+        result.itinerary.sort((a, b) => a.day - b.day);
+    }
+
+    if (p.highlights !== undefined) {
+        if (!Array.isArray(p.highlights)) throw new Error("highlights must be an array");
+        result.highlights = p.highlights.map((h, idx) => ({
+            title: h.title || `Highlight ${idx + 1}`,
+            short: h.short || "",
+            icon: h.icon || "",
+            order: Number.isFinite(Number(h.order)) ? Number(h.order) : (h.order === 0 ? 0 : idx),
+        }));
+        result.highlights.sort((a, b) => a.order - b.order);
+    }
+
+    if (p.period !== undefined) {
+        result.period = {
+            days: Number(p.period.days),
+            nights: Number(p.period.nights),
+        };
+        if (Number.isNaN(result.period.days) || result.period.days < 1) throw new Error("period.days must be a positive integer");
+        if (Number.isNaN(result.period.nights) || result.period.nights < 0) throw new Error("period.nights must be a non-negative integer");
+    }
+
+    if (p.startDate !== undefined) result.startDate = p.startDate ? parseDate(p.startDate) : null;
+    if (p.endDate !== undefined) result.endDate = p.endDate ? parseDate(p.endDate) : null;
+
+    if (p.city !== undefined) result.city = p.city || null;
+    if (p.address !== undefined) result.address = p.address || null;
+    if (p.distance !== undefined) result.distance = p.distance != null ? Number(p.distance) : null;
+    if (p.photo !== undefined) result.photo = p.photo || "";
+    if (p.meetingPoint !== undefined) result.meetingPoint = p.meetingPoint || "";
+    if (p.cancellationPolicy !== undefined) result.cancellationPolicy = p.cancellationPolicy || "";
+    if (p.featured !== undefined) result.featured = !!p.featured;
+    if (p.isPublished !== undefined) result.isPublished = typeof p.isPublished === "boolean" ? p.isPublished : true;
+    if (p.status !== undefined) result.status = p.status || "published";
+    if (p.ownerAgent !== undefined) result.ownerAgent = p.ownerAgent || null;
+    if (p.agencyRef !== undefined) result.agencyRef = String(p.agencyRef || "");
+    if (p.partnerAgencyRef !== undefined) result.partnerAgencyRef = String(p.partnerAgencyRef || "");
+    if (p.inventorySource !== undefined) {
+        result.inventorySource = ["agent", "provider", "platform"].includes(p.inventorySource) ? p.inventorySource : "platform";
+    }
+    if (p.providerName !== undefined) result.providerName = String(p.providerName || "");
+
+    if (p.availability !== undefined) {
+        result.availability = {
+            totalSeats: p.availability.totalSeats == null ? null : Number(p.availability.totalSeats),
+            seatsAvailable: p.availability.seatsAvailable == null ? null : Number(p.availability.seatsAvailable),
+        };
+    }
+
+    if (p.maxGroupSize !== undefined) {
+        result.maxGroupSize = Number(p.maxGroupSize);
+        if (Number.isNaN(result.maxGroupSize) || result.maxGroupSize < 1) throw new Error("maxGroupSize must be a positive integer");
+    }
+    if (p.minAge !== undefined) {
+        result.minAge = p.minAge != null ? Number(p.minAge) : null;
+        if (result.minAge != null && (Number.isNaN(result.minAge) || result.minAge < 0)) throw new Error("minAge must be >= 0");
+    }
+    if (p.maxAge !== undefined) {
+        result.maxAge = p.maxAge != null ? Number(p.maxAge) : null;
+        if (result.maxAge != null && (Number.isNaN(result.maxAge) || result.maxAge < 0)) throw new Error("maxAge must be >= 0");
+    }
+
+    if (p.photos !== undefined) {
+        result.photos = Array.isArray(p.photos) ? p.photos.map(String) : (p.photos ? [String(p.photos)] : []);
+    }
+    if (p.inclusions !== undefined) {
+        result.inclusions = Array.isArray(p.inclusions) ? p.inclusions.map(String) : (p.inclusions ? [String(p.inclusions)] : []);
+    }
+    if (p.exclusions !== undefined) {
+        result.exclusions = Array.isArray(p.exclusions) ? p.exclusions.map(String) : (p.exclusions ? [String(p.exclusions)] : []);
+    }
+    if (p.languages !== undefined) {
+        result.languages = Array.isArray(p.languages) ? p.languages.map(String) : (p.languages ? [String(p.languages)] : []);
+    }
+    if (p.tags !== undefined) {
+        result.tags = Array.isArray(p.tags) ? p.tags.map(String) : (p.tags ? [String(p.tags)] : []);
+    }
+
+    if (p.reviews !== undefined) {
+        if (!Array.isArray(p.reviews)) throw new Error("reviews must be an array");
+        result.reviews = p.reviews.map((r, idx) => {
+            if (!r.name || r.rating == null) throw new Error(`reviews[${idx}] requires name and rating`);
+            return {
+                name: String(r.name),
+                rating: Number(r.rating),
+                comment: r.comment || "",
+            };
+        });
+    }
+
+    return result;
+};
+
+/**
+ * Check whether the requesting user can modify (update/delete) the given tour.
+ * - Admins can modify any tour.
+ * - Users matching the tour's partnerAgencyRef can modify tours under that agency.
+ * - Agents can only modify tours they own (ownerAgent matches their user id).
+ */
+export const canModifyTour = (user, tour) => {
+    if (!user || !tour) return false;
+
+    // Admin can modify any tour
+    if (user.role === "admin") return true;
+
+    // Partner agency user can modify tours linked to their agency
+    if (user.partnerAgencyRef && tour.partnerAgencyRef === user.partnerAgencyRef) return true;
+
+    // Agent can only modify tours they own AND that are agent-scoped
+    if (user.role === "agent") {
+        if (tour.agentTour !== true && tour.inventorySource !== "agent") return false;
+        const ownerId = toString(tour.ownerAgent?._id || tour.ownerAgent);
+        const userId = toString(user.sub || user.id);
+        if (ownerId && userId && ownerId === userId) return true;
+    }
+
+    return false;
+};
+
+/**
+ * Extract owner display info from a populated or raw ownerAgent field.
+ */
+const extractOwnerInfo = (ownerAgent) => {
+    if (!ownerAgent) return { ownerAgentName: "", ownerAgentRef: "" };
+    if (isObject(ownerAgent) && ownerAgent._id) {
+        return {
+            ownerAgentName: ownerAgent.name || "",
+            ownerAgentRef: ownerAgent.agentRef || "",
+        };
+    }
+    return { ownerAgentName: "", ownerAgentRef: "" };
 };
 
 /* ----------------- Controller actions ----------------- */
@@ -352,12 +613,12 @@ export const getTours = async (req, res) => {
 
         const toursRaw = await toursQuery;
 
-        const tours = (Array.isArray(toursRaw) ? toursRaw : []).map((doc) => {
-            const tourObj = doc.toObject ? doc.toObject() : doc;
-            const priceInfo = buildPriceInfo(doc, dateQuery);
-            const normalized = normalizeTourForResponse(tourObj, priceInfo);
-            return normalized;
-        });
+         const tours = (Array.isArray(toursRaw) ? toursRaw : []).map((doc) => {
+             const tourObj = doc.toObject ? doc.toObject() : doc;
+             const priceInfo = buildPriceInfo(doc, dateQuery);
+             const normalized = normalizeTourCardForResponse(tourObj, priceInfo);
+             return normalized;
+         });
 
         return sendJson(res, 200, {
             status: "success",
@@ -445,6 +706,14 @@ export const createTour = async (req, res) => {
     const handler = getHandlerFromReq(req);
     try {
         const sanitized = sanitizeTourPayload(req.body);
+        if (req.user?.role === "agent") {
+            sanitized.ownerAgent = req.user.sub || req.user.id || null;
+            sanitized.agentTour = true;
+            sanitized.agentRef = req.user.agentRef || "";
+            sanitized.agencyRef = req.user.agencyRef || "";
+            sanitized.partnerAgencyRef = req.user.partnerAgencyRef || "";
+            sanitized.inventorySource = "agent";
+        }
 
         const newTour = TourRepository.create(sanitized);
         const savedTour = await newTour.save();
@@ -478,20 +747,29 @@ export const updateTour = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const sanitized = sanitizeTourPayload(req.body);
-
-        const updatedTour = await TourRepository.findByIdAndUpdate(id, sanitized, {
-            new: true,
-            runValidators: true,
-        });
-
-        if (!updatedTour) {
+        const existing = await TourRepository.findById(id);
+        if (!existing) {
             return sendJson(res, 404, {
                 status: "error",
                 message: "Tour not found",
                 handler,
             }, req);
         }
+
+        if (!canModifyTour(req.user, existing)) {
+            return sendJson(res, 403, {
+                status: "error",
+                message: "You do not have permission to modify this tour",
+                handler,
+            }, req);
+        }
+
+        const sanitized = sanitizeTourPayloadForUpdate(req.body);
+
+        const updatedTour = await TourRepository.findByIdAndUpdate(id, sanitized, {
+            new: true,
+            runValidators: true,
+        });
 
         const priceInfo = buildPriceInfo(updatedTour, new Date());
         const normalized = normalizeTourForResponse(updatedTour.toObject ? updatedTour.toObject() : updatedTour, priceInfo);
@@ -521,14 +799,24 @@ export const deleteTour = async (req, res) => {
     const handler = getHandlerFromReq(req);
     const { id } = req.params;
     try {
-        const deletedTour = await TourRepository.findByIdAndDelete(id);
-        if (!deletedTour) {
+        const existing = await TourRepository.findById(id);
+        if (!existing) {
             return sendJson(res, 404, {
                 status: "error",
                 message: "Tour not found",
                 handler,
             }, req);
         }
+
+        if (!canModifyTour(req.user, existing)) {
+            return sendJson(res, 403, {
+                status: "error",
+                message: "You do not have permission to delete this tour",
+                handler,
+            }, req);
+        }
+
+        const deletedTour = await TourRepository.findByIdAndDelete(id);
 
         return sendJson(res, 200, {
             ...pageDefinitionService.buildPageResponse("tours-remote/listing", {
@@ -554,6 +842,13 @@ export const deleteTour = async (req, res) => {
 export const deleteAllTours = async (req, res) => {
     const handler = getHandlerFromReq(req);
     try {
+        if (req.user?.role !== "admin") {
+            return sendJson(res, 403, {
+                status: "error",
+                message: "Only admins can delete all tours",
+                handler,
+            }, req);
+        }
         const result = await TourRepository.deleteMany({});
         return sendJson(res, 200, {
             ...pageDefinitionService.buildPageResponse("tours-remote/listing", {

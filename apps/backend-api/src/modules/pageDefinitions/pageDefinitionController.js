@@ -44,7 +44,8 @@ export const getPageRegistry = (req, res) => res.json({
       pathMap: pageDefinitionService.getPathMap(),
       aliases: pageDefinitionService.getAliases(),
     },
+    dataScope: { options: {} },
     elements: { labels: {}, urls: {} },
-    structure: {},
+    structure: { header: {}, widgets: [], config: {}, actions: [] },
   },
 });

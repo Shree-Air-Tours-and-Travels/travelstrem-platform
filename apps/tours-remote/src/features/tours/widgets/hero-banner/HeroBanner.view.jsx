@@ -5,9 +5,9 @@ export default function HeroBannerView({ labels, pageTitle }) {
     return (
         <header className="tours-page__header">
             <div className="tours-page__header__left">
-                <span className="tours-page__eyebrow">{labels.pageSubtitle || "Find your perfect adventure"}</span>
+                <span className="tours-page__eyebrow">{labels.pageSubtitle}</span>
                 <Title text={pageTitle} variant="primary" />
-                <SubTitle text={labels.pageDescription || "Browse our curated collection"} variant="primary" size="small" />
+                <SubTitle text={labels.pageDescription} variant="primary" size="small" />
             </div>
         </header>
     );

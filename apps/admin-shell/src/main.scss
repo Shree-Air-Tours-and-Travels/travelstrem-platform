@@ -1,5 +1,17 @@
 @import "@packages/trem-ui/styles/base/typography";
 
+@import "./shared/styles/utils/variables";
+@import "./shared/styles/utils/mixins";
+@import "./shared/styles/utils/functions";
+
+@import "./shared/styles/base/reset";
+@import "./shared/styles/base/global";
+
+@keyframes sk-pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.8; }
+}
+
 * {
     box-sizing: border-box;
 }

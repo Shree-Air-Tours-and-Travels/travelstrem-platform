@@ -1,21 +1,19 @@
 import React from "react";
+import { QuickChips } from "@packages/trem-ui";
 
-export default function QuickFiltersView({ filters, labels, activeId, onFilterClick }) {
+export default function QuickFiltersView({ title, filters, labels, activeId, onFilterClick }) {
     if (!filters.length) return null;
 
     return (
-        <div className="tours-page__quick-filters">
-            {filters.map((f) => (
-                <button
-                    key={f.id}
-                    className={`tours-page__quick-filter${activeId === f.id ? " tours-page__quick-filter--active" : ""}`}
-                    type="button"
-                    onClick={() => onFilterClick(f.id)}
-                    aria-pressed={activeId === f.id}
-                >
-                    {f.labelRef ? (labels[f.labelRef] || f.id) : (f.label || f.id)}
-                </button>
-            ))}
+        <div className="tours-page__quick-filters-wrapper">
+            {title && <div className="tours-page__quick-filters-title">{title}</div>}
+            <QuickChips
+                filters={filters}
+                labels={labels}
+                activeId={activeId}
+                onClick={onFilterClick}
+                className="tours-page__quick-filters"
+            />
         </div>
     );
 }

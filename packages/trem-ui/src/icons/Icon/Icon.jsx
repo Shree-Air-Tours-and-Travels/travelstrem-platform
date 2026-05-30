@@ -177,7 +177,15 @@ const City = (p) => (
 const Clock = (p) => (
   <Svg {...p}>
     <circle cx="12" cy="12" r="10" {...s} />
-    <path d="M12 6v6l4 2" {...s} />
+    <polyline points="12 6 12 12 16 14" {...s} />
+  </Svg>
+);
+
+const Download = (p) => (
+  <Svg {...p}>
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" {...s} />
+    <polyline points="7 10 12 15 17 10" {...s} />
+    <line x1="12" y1="15" x2="12" y2="3" {...s} />
   </Svg>
 );
 
@@ -708,6 +716,7 @@ const ICONS = {
   cloudSun: CloudSun,
   compass: Compass,
   destination: Destination,
+  download: Download,
   experiences: Experiences,
   externalLink: ArrowUpRight,
   eye: Eye,

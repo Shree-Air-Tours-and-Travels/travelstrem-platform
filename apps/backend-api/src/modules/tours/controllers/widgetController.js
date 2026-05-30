@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { normalizeTourForResponse } from "./tourController.js";
 import TourRepository from "../repositories/TourRepository.js";
 import BookingRepository from "../../bookings/repositories/BookingRepository.js";
 import TravellerService from "../../bookings/services/TravellerService.js";
@@ -118,40 +119,27 @@ function ensurePageContract(widget) {
   return widget;
 }
 
-const normalizeTourForResponse = (tourObj = {}, priceInfo = null) => {
+
+
+const normalizeTourCardForResponse = (tourObj = {}, priceInfo = null) => {
+  const reviews = Array.isArray(tourObj.reviews) ? tourObj.reviews : [];
+  const reviewCount = reviews.length;
+
   return {
     _id: tourObj._id || tourObj.id || null,
     title: tourObj.title || "",
-    city: tourObj.city || null,
-    address: tourObj.address || null,
-    distance: typeof tourObj.distance === "number" ? tourObj.distance : (tourObj.distance ? Number(tourObj.distance) : null),
+    city: tourObj.city ? { from: tourObj.city.from, to: tourObj.city.to } : null,
+    address: tourObj.address ? { city: tourObj.address.city, country: tourObj.address.country } : null,
     period: tourObj.period || null,
-    startDate: tourObj.startDate || null,
-    endDate: tourObj.endDate || null,
     photo: tourObj.photo || "",
-    photos: Array.isArray(tourObj.photos) ? tourObj.photos : (tourObj.photos ? [tourObj.photos] : []),
-    desc: tourObj.desc || "",
-    price: tourObj.price || null,
-    seasonalPricing: Array.isArray(tourObj.seasonalPricing) ? tourObj.seasonalPricing : [],
-    itinerary: Array.isArray(tourObj.itinerary) ? tourObj.itinerary : [],
-    highlights: Array.isArray(tourObj.highlights) ? tourObj.highlights : [],
-    availability: tourObj.availability || { totalSeats: null, seatsAvailable: null },
-    meetingPoint: tourObj.meetingPoint || "",
-    inclusions: Array.isArray(tourObj.inclusions) ? tourObj.inclusions : [],
-    exclusions: Array.isArray(tourObj.exclusions) ? tourObj.exclusions : [],
-    languages: Array.isArray(tourObj.languages) ? tourObj.languages : [],
-    cancellationPolicy: tourObj.cancellationPolicy || "",
-    minAge: typeof tourObj.minAge === "number" ? tourObj.minAge : (tourObj.minAge ? Number(tourObj.minAge) : null),
-    maxAge: typeof tourObj.maxAge === "number" ? tourObj.maxAge : (tourObj.maxAge ? Number(tourObj.maxAge) : null),
-    maxGroupSize: tourObj.maxGroupSize || null,
-    reviews: Array.isArray(tourObj.reviews) ? tourObj.reviews : [],
-    featured: !!tourObj.featured,
-    tags: Array.isArray(tourObj.tags) ? tourObj.tags : [],
-    isPublished: typeof tourObj.isPublished === "boolean" ? tourObj.isPublished : true,
-    status: tourObj.status || "published",
-    createdAt: tourObj.createdAt || null,
-    updatedAt: tourObj.updatedAt || null,
+    photos: Array.isArray(tourObj.photos) && tourObj.photos.length > 0 ? [tourObj.photos[0]] : [],
+    desc: tourObj.desc ? tourObj.desc.slice(0, 120) : "",
     avgRating: tourObj.avgRating != null ? tourObj.avgRating : 0,
+    maxGroupSize: tourObj.maxGroupSize || null,
+    reviewCount,
+    reviews: [],
+    featured: !!tourObj.featured,
+    tags: Array.isArray(tourObj.tags) ? tourObj.tags.slice(0, 4) : [],
     priceInfo: priceInfo || null,
   };
 };
@@ -274,11 +262,11 @@ export const getWidget = async (req, res) => {
       const sort = normalizeSort(req.query?.sort);
       const toursRaw = await TourRepository.find({}).sort({ createdAt: -1 });
       const dateQuery = req.query?.date ? new Date(req.query.date) : new Date();
-      const allTours = (Array.isArray(toursRaw) ? toursRaw : []).map((doc) => {
-        const tourObj = doc.toObject ? doc.toObject() : doc;
-        const priceInfo = buildPriceInfo(doc, dateQuery);
-        return normalizeTourForResponse(tourObj, priceInfo);
-      });
+       const allTours = (Array.isArray(toursRaw) ? toursRaw : []).map((doc) => {
+         const tourObj = doc.toObject ? doc.toObject() : doc;
+         const priceInfo = buildPriceInfo(doc, dateQuery);
+         return normalizeTourCardForResponse(tourObj, priceInfo);
+       });
       const sorted = sortToursForResponse(allTours, sort);
       const total = sorted.length;
       const totalPages = Math.max(1, Math.ceil(total / paging.limit));
@@ -336,14 +324,14 @@ export const getWidget = async (req, res) => {
               widget.component.data.reviews = Array.isArray(normalized.reviews) ? normalized.reviews : [];
               widget.component.data.avgRating = normalized.avgRating || 0;
               break;
-            case "similar-tours.json": {
-              const allTours = await TourRepository.find({}).sort({ createdAt: -1 });
-              const currentTags = new Set((normalized.tags || []).map((tag) => String(tag).toLowerCase()));
-              widget.component.data.tours = (Array.isArray(allTours) ? allTours : [])
-                .map((doc) => {
-                  const tourObj = doc.toObject ? doc.toObject() : doc;
-                  return normalizeTourForResponse(tourObj, buildPriceInfo(doc));
-                })
+             case "similar-tours.json": {
+               const allTours = await TourRepository.find({}).sort({ createdAt: -1 });
+               const currentTags = new Set((normalized.tags || []).map((tag) => String(tag).toLowerCase()));
+               widget.component.data.tours = (Array.isArray(allTours) ? allTours : [])
+                 .map((doc) => {
+                   const tourObj = doc.toObject ? doc.toObject() : doc;
+                   return normalizeTourCardForResponse(tourObj, buildPriceInfo(doc));
+                 })
                 .filter((candidate) => String(candidate._id) !== String(normalized._id))
                 .sort((a, b) => {
                   const aScore = (a.tags || []).filter((tag) => currentTags.has(String(tag).toLowerCase())).length;
@@ -369,7 +357,7 @@ export const getWidget = async (req, res) => {
     if (isBookingPage) {
       const bookingId = req.params.bookingId || req.query.bookingId;
       if (bookingId) {
-        const bookingDoc = await BookingRepository.findById(bookingId).populate("tour");
+        const bookingDoc = await BookingRepository.findById(bookingId).populate("tour").populate("assignedAgent", "name email role");
         if (bookingDoc) {
           const raw = typeof bookingDoc.toJSON === "function" ? bookingDoc.toJSON() : bookingDoc;
           const tourRaw = raw.tour || {};
@@ -379,7 +367,23 @@ export const getWidget = async (req, res) => {
             photo: tourRaw.photo,
             photos: Array.isArray(tourRaw.photos) ? tourRaw.photos : [],
             desc: tourRaw.desc,
+            city: tourRaw.city,
+            meetingPoint: tourRaw.meetingPoint,
+            cancellationPolicy: tourRaw.cancellationPolicy,
+            highlights: tourRaw.highlights,
+            period: tourRaw.period,
+            address: tourRaw.address,
           };
+
+          const agentRaw = raw.assignedAgent || null;
+          const assignedAgent = agentRaw ? {
+            name: agentRaw.name,
+            email: agentRaw.email,
+            role: agentRaw.role,
+          } : null;
+
+          const BOOKING_PROCEED_HIDE_STATUSES = new Set(["CANCELLED", "COMPLETED", "REFUNDED"]);
+          const isProceedHide = BOOKING_PROCEED_HIDE_STATUSES.has(raw.status);
 
           switch (fileName) {
             case "booking-hero.json":
@@ -392,6 +396,10 @@ export const getWidget = async (req, res) => {
                 startDate: raw.startDate || raw.travelWindow?.startDate,
                 endDate: raw.endDate || raw.travelWindow?.endDate,
                 tour,
+                assignedAgent,
+                responseDueAt: raw.responseDueAt,
+                quoteDueAt: raw.quoteDueAt,
+                isProceedHide,
               };
               break;
             case "booking-tour-details.json": {
@@ -408,6 +416,7 @@ export const getWidget = async (req, res) => {
                 currentQuote,
                 currentQuoteVersion: raw.currentQuoteVersion || 0,
                 viewTourUrl: `/tours/${tour.id}`,
+                isProceedHide,
               };
               break;
             }
@@ -419,6 +428,7 @@ export const getWidget = async (req, res) => {
                 primaryContact: raw.primaryContact || {},
                 tripPreferences: raw.tripPreferences || {},
                 tripSelection: raw.tripSelection || {},
+                isProceedHide,
               };
               break;
             case "booking-travelers.json": {
@@ -440,6 +450,7 @@ export const getWidget = async (req, res) => {
                   emergencyContactName: t.emergencyContactName || "",
                   emergencyContactNumber: t.emergencyContactNumber || "",
                 })),
+                isProceedHide,
               };
               break;
             }
@@ -462,6 +473,7 @@ export const getWidget = async (req, res) => {
                   to: item.to,
                   createdAt: item.createdAt,
                 })),
+                isProceedHide,
               };
               break;
             }
@@ -475,6 +487,7 @@ export const getWidget = async (req, res) => {
                 tour,
                 priceSnapshot: raw.priceSnapshot || {},
                 paymentSummary: raw.paymentSummary || {},
+                isProceedHide,
               };
               break;
             default:

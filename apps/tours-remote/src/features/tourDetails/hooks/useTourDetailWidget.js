@@ -14,13 +14,13 @@ export default function useTourDetailWidget(tourRef, widgetFile) {
             return undefined;
         }
 
-        let cancelled = false;
+        const abortController = new AbortController();
         setState((current) => ({ ...current, loading: true, error: null }));
 
         (async () => {
             const endpoint = `/tours.json/${encodeURIComponent(tourRef)}/widgets/${widgetFile}`;
-            const res = await fetchData(endpoint);
-            if (cancelled) return;
+            const res = await fetchData(endpoint, { signal: abortController.signal });
+            if (abortController.signal.aborted) return;
 
             if (res?.status === "success" && res.component) {
                 setState({ loading: false, error: null, widgetData: res.component });
@@ -35,7 +35,7 @@ export default function useTourDetailWidget(tourRef, widgetFile) {
         })();
 
         return () => {
-            cancelled = true;
+            abortController.abort();
         };
     }, [tourRef, widgetFile]);
 

@@ -1,88 +1,106 @@
-import React from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { getTourDetailsPath, getTourListPath, ROUTES, slugify } from "@packages/trem-utils";
+import {get, isArray} from "lodash";
+import {
+    getTourDetailsPath,
+    getTourListPath,
+    ROUTES,
+    slugify,
+    useComponentData,
+} from "@packages/trem-utils";
 import apiService from "../../../../services/apiService";
 import TopToursView from "./TopTours.view";
 
-const DEFAULT_LIMIT = 4;
+const getTourSlug = (tour) => slugify(tour?.title) || tour?._id || tour?.id;
 
-const extractTours = (payload) => {
-    const candidates = [
-        payload?.componentData?.state?.data?.tours,
-        payload?.componentData?.data?.tours,
-        payload?.component?.data?.tours,
-        payload?.state?.data?.tours,
-        payload?.data?.tours,
-        payload?.data,
-        payload?.tours,
-    ];
-
-    const tours = candidates.find(Array.isArray);
-    if (tours) return tours;
-    if (Array.isArray(payload?.data)) return payload.data;
-    return [];
+// Read tours array from API response (nested under component.data.tours).
+const extractTourData = (payload) => {
+    const tours = get(payload, "component.data.tours", []);
+    return Array.isArray(tours) ? tours : [];
 };
 
-const getTourRef = (tour) => slugify(tour?.title) || tour?._id || tour?.id;
-
-export default function TopToursContainer({
-    user,
-    title = "Top Featured Tours",
-    description = "Newest featured trips from the TravelsTREM catalog",
-    limit = DEFAULT_LIMIT,
-}) {
+export default function TopToursContainer({ user }) {
     const navigate = useNavigate();
-    const [state, setState] = React.useState({
-        loading: true,
-        error: null,
-        tours: [],
-    });
 
-    React.useEffect(() => {
-        let active = true;
+    // Load featured-tours widget config (labels, URL, limit).
+    const {
+        loading: configLoading,
+        error: configError,
+        resolvedView,
+    } = useComponentData("/featured-tours.json");
 
-        setState((current) => ({ ...current, loading: true, error: null }));
+    // Pull widget props from the first widget slot.
+    const widget = get(resolvedView, "structure.widgets[0]", {});
+    const {
+        title = "",
+        description = "",
+        ctaLabel = "View all",
+        url = null,
+    } = get(widget, "props", {});
 
-        apiService
-            .get("/tours.json", { params: { featured: "true", limit } })
-            .then((payload) => {
-                if (!active) return;
-                setState({ loading: false, error: null, tours: extractTours(payload).slice(0, limit) });
-            })
-            .catch((error) => {
-                if (!active) return;
-                setState({ loading: false, error: error?.message || "Failed to load tours", tours: [] });
+    const toursEndpoint = get(url, "path", "/tours.json");
+    const toursParams = get(url, "params", { featured: "true" });
+    const maxTours = get(url, "limit", null);
+
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [tours, setTours] = useState([]);
+
+    // Fetch featured tours from the API once widget config is ready.
+    const fetchTourData = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const payload = await apiService.get(toursEndpoint, {
+                params: toursParams,
             });
+            const result = extractTourData(payload);
+            setTours(maxTours ? result.slice(0, maxTours) : result);
+        } catch (err) {
+            setError(get(err, "message", "Failed to load tours"));
+        } finally {
+            setLoading(false);
+        }
+    }, [toursEndpoint, toursParams, maxTours]);
 
-        return () => {
-            active = false;
-        };
-    }, [limit]);
+    useEffect(() => {
+        if (!configLoading && !configError) fetchTourData();
+    }, [configLoading, configError, fetchTourData]);
 
-    const openTour = React.useCallback(
+    const handleTourClick = useCallback(
         (tour) => {
-            const ref = getTourRef(tour);
-            if (!ref) return;
-            if (user) navigate(getTourDetailsPath(ref), { state: { tour, from: { label: "Home", path: "/" } } });
-            else navigate(ROUTES.login);
+            const slug = getTourSlug(tour);
+            if (!slug) return;
+            if (user) {
+                navigate(getTourDetailsPath(slug), {
+                    state: { tour, from: { label: "Home", path: "/" } },
+                });
+            } else {
+                navigate(ROUTES.login);
+            }
         },
-        [navigate, user]
+        [navigate, user],
     );
 
-    const viewAll = React.useCallback(() => {
+    const handleViewAll = useCallback(() => {
         if (user) navigate(getTourListPath());
         else navigate(ROUTES.login);
     }, [navigate, user]);
+
+    if (configLoading || loading)
+        return <TopToursView loading error={null} tours={[]} />;
+    if (configError || error || !tours.length) return null;
 
     return (
         <TopToursView
             title={title}
             description={description}
-            loading={state.loading}
-            error={state.error}
-            tours={state.tours}
-            onView={openTour}
-            onViewAll={viewAll}
+            ctaLabel={ctaLabel}
+            loading={false}
+            error={null}
+            tours={tours}
+            onView={handleTourClick}
+            onViewAll={handleViewAll}
         />
     );
 }

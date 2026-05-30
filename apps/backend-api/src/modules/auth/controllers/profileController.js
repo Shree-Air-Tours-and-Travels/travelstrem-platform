@@ -1,5 +1,7 @@
 import bcrypt from "bcryptjs";
+import User from "../models/User.js";
 import UserRepository from "../repositories/UserRepository.js";
+import RefreshToken from "../models/RefreshToken.js";
 
 const PROFILE_ICONS = [
     "user", "compass", "map", "globe", "plane", "train",
@@ -10,7 +12,7 @@ const PROFILE_ICONS = [
 export const getProfile = async (req, res) => {
     try {
         const userId = req.user?.sub;
-        const user = await UserRepository.findById(userId, "-passwordHash -resetPasswordOtp -resetPasswordExpires");
+        const user = await UserRepository.findById(userId, "-passwordHash");
         if (!user) return res.status(404).json({ status: "error", message: "User not found" });
         const data = {
             id: user.id,
@@ -80,6 +82,11 @@ export const updatePassword = async (req, res) => {
         }
         const passwordHash = await bcrypt.hash(newPassword, 10);
         await UserRepository.updatePassword(userId, passwordHash);
+
+        user.tokenVersion = (user.tokenVersion || 0) + 1;
+        await user.save();
+        await RefreshToken.deleteMany({ userId });
+
         return res.status(200).json({ status: "success", message: "Password updated successfully" });
     } catch (error) {
         console.error("updatePassword error:", error);

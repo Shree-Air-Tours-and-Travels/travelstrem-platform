@@ -35,10 +35,6 @@ const ContactAgentModal = ({ open, onClose, tourId, formData }) => {
         setMsg(null);
     }, [initialForm]);
 
-    if (!open) return null;
-
-    const tour = (formData?.data && formData.data[0]) ? formData.data[0] : { _id: tourId, title: "" };
-
     const fieldsMap = useMemo(() => {
         const map = {};
         fieldsMeta.forEach((field) => {
@@ -46,6 +42,13 @@ const ContactAgentModal = ({ open, onClose, tourId, formData }) => {
         });
         return map;
     }, [fieldsMeta]);
+
+    const tour = (formData?.data && formData.data[0]) ? formData.data[0] : { _id: tourId, title: "" };
+    const priceStr = tour?.price
+        ? (typeof tour.price === "object" ? tour.price?.from ?? tour.price?.amount ?? "" : tour.price)
+        : tour?.priceInfo?.from ?? "";
+
+    if (!open) return null;
 
     const handleChange = (name, value) => {
         setForm(prev => ({ ...prev, [name]: value }));
@@ -86,23 +89,17 @@ const ContactAgentModal = ({ open, onClose, tourId, formData }) => {
             }
         } catch (err) {
             console.error("submit error", err?.response || err);
-            setMsg({ type: "error", text: err?.response?.message });
+            setMsg({ type: "error", text: err?.response?.data?.message || err.message || "Something went wrong. Please try again." });
         } finally {
             setSubmitting(false);
         }
     };
 
-    const priceStr = tour?.price
-        ? (typeof tour.price === "object" ? tour.price?.from ?? tour.price?.amount ?? "" : tour.price)
-        : tour?.priceInfo?.from ?? "";
-
     return (
         <div className="ct-modal-overlay" role="dialog" aria-modal="true">
             <div className="ct-modal-backdrop" onClick={onClose} />
             <div className="ct-modal-card">
-                <button className="ct-modal-close" onClick={onClose} aria-label="Close">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                </button>
+                <Button variant="text" isCircular iconLeft="x" onClick={onClose} aria-label="Close" primaryClassName="ct-modal-close" />
 
                 <div className="ct-modal-card__body">
                     <div className="ct-modal-card__header">

@@ -1,0 +1,30 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "pageTitle": "Agent Bookings",
+        "pageDescription": "Track bookings assigned to this agent or agency."
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {
+        "titleRef": "pageTitle",
+        "descriptionRef": "pageDescription"
+      },
+      "widgets": [
+        {
+          "type": "AgentBookingsTable",
+          "widgetRef": "./widgets/bookings-table.json"
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

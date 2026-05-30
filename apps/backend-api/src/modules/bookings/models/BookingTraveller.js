@@ -1,16 +1,23 @@
 import mongoose from "mongoose";
 import { encryptedStringField, maskSecret } from "../../../core/auth/secureFields.js";
+import {
+  DOCUMENT_CHECKLIST_STATUS,
+  DOCUMENT_CHECKLIST_STATUS_LIST,
+  GENDER_LIST,
+  TRAVELLER_TYPE,
+  TRAVELLER_TYPE_LIST,
+} from "../../../constants/enums.js";
 
 const { Schema } = mongoose;
 
 const bookingTravellerSchema = new Schema({
   bookingId: { type: Schema.Types.ObjectId, ref: "Booking", required: true },
-  travellerType: { type: String, enum: ["adult", "child", "infant"], default: "adult" },
+  travellerType: { type: String, enum: TRAVELLER_TYPE_LIST, default: TRAVELLER_TYPE.ADULT },
   title: { type: String, trim: true, default: "" },
   firstName: { type: String, required: true, trim: true },
   middleName: { type: String, trim: true, default: "" },
   lastName: { type: String, trim: true, default: "" },
-  gender: { type: String, enum: ["male", "female", "other", "prefer_not_say", ""], default: "" },
+  gender: { type: String, enum: [...GENDER_LIST, ""], default: "" },
   dob: { type: Date, default: null },
   age: { type: Number, min: 0 },
   nationality: { type: String, trim: true, default: "" },
@@ -42,7 +49,7 @@ const bookingTravellerSchema = new Schema({
   companyName: { type: String, trim: true, default: "" },
   travelInsuranceOpted: { type: Boolean, default: false },
   insuranceProvider: { type: String, trim: true, default: "" },
-  documentChecklistStatus: { type: String, enum: ["PENDING", "PARTIAL", "COMPLETE"], default: "PENDING" },
+  documentChecklistStatus: { type: String, enum: DOCUMENT_CHECKLIST_STATUS_LIST, default: DOCUMENT_CHECKLIST_STATUS.PENDING },
 }, {
   timestamps: true,
   toJSON: { virtuals: true, getters: true },

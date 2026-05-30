@@ -1,0 +1,16 @@
+{
+    "pageTitle": "Profile",
+    "loadingText": "Loading profile",
+    "fallbackName": "Agent",
+    "fallbackAvatarInitial": "A",
+    "fields": [
+        { "key": "role", "label": "Role", "accessor": "role" },
+        { "key": "status", "label": "Status", "accessor": "approvalStatus", "fallback": "approved" },
+        { "key": "agencyRef", "label": "Agency Ref", "accessor": "agencyRef", "fallback": "independent" },
+        { "key": "agentRef", "label": "Agent Ref", "accessor": "agentRef", "fallback": "unassigned" },
+        { "key": "joined", "label": "Joined", "accessor": "createdAt" }
+    ],
+    "partnerStatus": {
+        "label": "Partner Agency:"
+    }
+}

@@ -1,4 +1,5 @@
 import { fetchData } from "@packages/trem-utils";
+import api from "./apiClient";
 
 function normalizeToursResponse(res) {
     if (!res || res.status !== "success") {
@@ -115,4 +116,102 @@ export async function updateBookingTravelers(bookingId, travelers) {
         }),
         "Update failed"
     );
+}
+
+export async function updateBookingStatus(bookingId, status, reason = "") {
+    await expectSuccess(
+        fetchData(`/admin/bookings/${bookingId}/status`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status, reason }),
+        }),
+        `Status transition to ${status} failed`
+    );
+}
+
+export async function recordAdminPayment(bookingId, amount, currency = "INR", options = {}) {
+    await expectSuccess(
+        fetchData(`/admin/bookings/${bookingId}/payment`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                amount: Number(amount),
+                currency,
+                provider: options.provider || "admin_manual",
+                transactionId: options.transactionId || `ADM-PAY-${Date.now()}`,
+                status: "PAID",
+                type: options.type || "partial",
+            }),
+        }),
+        "Payment recording failed"
+    );
+}
+
+export async function processRefund(bookingId, amount, currency = "INR", reason = "") {
+    await expectSuccess(
+        fetchData(`/admin/bookings/${bookingId}/refund`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                amount: Number(amount),
+                currency,
+                reason,
+            }),
+        }),
+        "Refund processing failed"
+    );
+}
+
+export async function adminGetBooking(bookingId) {
+    const res = await fetchData(`/admin/bookings/${bookingId}`);
+    return normalizeBookingsResponse(res);
+}
+
+export async function fetchPartnerAgencies(status = "") {
+    const res = await api.get("/auth/partner-agencies", { params: status ? { status } : {} });
+    return Array.isArray(res?.data?.data) ? res.data.data : [];
+}
+
+export async function reviewPartnerAgency(id, status) {
+    const res = await api.post(`/auth/partner-agencies/${id}/review`, { status });
+    return res?.data?.data;
+}
+
+export async function fetchAgents(status = "") {
+    const res = await api.get("/auth/agents", { params: status ? { status } : {} });
+    return Array.isArray(res?.data?.data) ? res.data.data : [];
+}
+
+export async function reviewAgent(id, status) {
+    const res = await api.post(`/auth/agents/${id}/review`, { status });
+    return res?.data?.data;
+}
+
+export async function fetchAdmins(status = "") {
+    const res = await api.get("/auth/admins", { params: status ? { status } : {} });
+    return Array.isArray(res?.data?.data) ? res.data.data : [];
+}
+
+export async function reviewAdmin(id, status) {
+    const res = await api.post(`/auth/admins/${id}/review`, { status });
+    return res?.data?.data;
+}
+
+export async function removeAdmin(id) {
+    const res = await api.post(`/auth/admins/${id}/remove`, {});
+    return res?.data?.data;
+}
+
+export async function uploadTourImage(file) {
+    const fd = new FormData();
+    fd.append("image", file);
+    const response = await api.post("/tours.json/upload", fd);
+    const res = response?.data || {};
+    const url =
+        res?.componentData?.data?.url ||
+        res?.componentData?.url ||
+        res?.data?.url ||
+        res?.url;
+    if (!url) throw new Error(res?.message || "Upload returned no URL");
+    return url;
 }

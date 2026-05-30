@@ -11,7 +11,7 @@ import "./BookingSummaryCard.styles.scss";
  *  - guests: number
  *  - priceSnapshot: object (perPerson, total, min, max, currency)
  */
-export default function BookingSummaryCard({ tour, startDate, endDate, guests = 1, priceSnapshot = {} }) {
+const BookingSummaryCard = React.memo(function BookingSummaryCard({ tour, startDate, endDate, guests = 1, priceSnapshot = {} }) {
     const theme = "#1c7578";
 
     const perPerson = useMemo(() => {
@@ -94,8 +94,9 @@ export default function BookingSummaryCard({ tour, startDate, endDate, guests = 
             </div>
         </aside>
     );
-}
+});
 
+BookingSummaryCard.displayName = "BookingSummaryCard";
 BookingSummaryCard.propTypes = {
     tour: PropTypes.object.isRequired,
     startDate: PropTypes.string,
@@ -103,3 +104,4 @@ BookingSummaryCard.propTypes = {
     guests: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
     priceSnapshot: PropTypes.object,
 };
+export default BookingSummaryCard;

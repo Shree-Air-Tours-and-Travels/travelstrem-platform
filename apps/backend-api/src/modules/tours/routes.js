@@ -6,23 +6,24 @@ import { uploadTourImage, uploadAndAttachPhotos } from "./controllers/uploadCont
 import { requireTourBody } from "./validators/create.validation.js";
 import { requireTourUpdateBody } from "./validators/update.validation.js";
 import { upload } from "../../services/cloudinary.js";
+import authMiddleware from "../../shared/auth/middleware.js";
 
 const router = express.Router();
 
 // GET all tours
-router.get("/", getTours);        // Get all tours
-router.get("/favorites", getFavorites);
+router.get("/", authMiddleware, getTours);        // Get all tours
+router.get("/favorites", authMiddleware, getFavorites);
 router.get("/:id/price", getTourPricePreview);
 router.get("/:tourRef/widgets/:widgetFile.json", getTourDetailsWidget);
 router.get("/:tourRef", getTourByRef);  // Get single tour by id or slug ref
-router.post("/", requireTourBody, createTour);     // Create new tour
-router.post("/favorite/toggle", toggleFavorite);
-router.put("/:id", requireTourUpdateBody, updateTour);   // Update tour
-router.delete("/:id", deleteTour);// Delete tour
-router.delete("/", deleteAllTours);
+router.post("/", authMiddleware, requireTourBody, createTour);     // Create new tour
+router.post("/favorite/toggle", authMiddleware, toggleFavorite);
+router.put("/:id", authMiddleware, requireTourUpdateBody, updateTour);   // Update tour
+router.delete("/:id", authMiddleware, deleteTour);// Delete tour
+router.delete("/", authMiddleware, deleteAllTours);
 
 // Image upload
-router.post("/upload", upload.single("image"), uploadTourImage);
-router.post("/:id/photos", upload.array("images", 10), uploadAndAttachPhotos);
+router.post("/upload", authMiddleware, upload.single("image"), uploadTourImage);
+router.post("/:id/photos", authMiddleware, upload.array("images", 10), uploadAndAttachPhotos);
 
 export default router;

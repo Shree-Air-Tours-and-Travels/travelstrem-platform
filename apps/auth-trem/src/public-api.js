@@ -1,6 +1,6 @@
 export { default as AuthPage } from "./features/auth/AuthPage.jsx";
 export { default as AuthTremApp } from "./app/App.jsx";
-export { createAuthService, createAuthApi } from "./services/authService.js";
+export { createAuthApi, createAuthService } from "@packages/trem-auth-core";
 export {
   DEFAULT_AUTH_ROLES,
   canAccessAuthRoute,

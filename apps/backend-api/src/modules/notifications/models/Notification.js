@@ -1,15 +1,21 @@
 import mongoose from "mongoose";
+import {
+  NOTIFICATION_CHANNEL,
+  NOTIFICATION_CHANNEL_LIST,
+  NOTIFICATION_RECIPIENT_TYPE,
+  NOTIFICATION_RECIPIENT_TYPE_LIST,
+} from "../../../constants/enums.js";
 
 const { Schema } = mongoose;
 
-export const NOTIFICATION_CHANNELS = ["in_app", "email", "sms", "push", "whatsapp"];
+export const NOTIFICATION_CHANNELS = NOTIFICATION_CHANNEL_LIST;
 
 const notificationSchema = new Schema({
   userId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
   bookingId: { type: Schema.Types.ObjectId, ref: "Booking", default: null, index: true },
-  recipientType: { type: String, enum: ["customer", "admin", "agent", "support"], default: "customer", index: true },
+  recipientType: { type: String, enum: NOTIFICATION_RECIPIENT_TYPE_LIST, default: NOTIFICATION_RECIPIENT_TYPE.CUSTOMER, index: true },
   event: { type: String, trim: true, required: true, index: true },
-  channels: { type: [String], enum: NOTIFICATION_CHANNELS, default: ["in_app"] },
+  channels: { type: [String], enum: NOTIFICATION_CHANNELS, default: [NOTIFICATION_CHANNEL.IN_APP] },
   title: { type: String, trim: true, required: true },
   body: { type: String, trim: true, default: "" },
   metadata: { type: Schema.Types.Mixed, default: {} },

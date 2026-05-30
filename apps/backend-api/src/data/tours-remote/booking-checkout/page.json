@@ -30,7 +30,10 @@
         "confirmPayTitle": "Confirm Payment",
         "confirmPayNote": "This will record a payment of {amount} against your booking.",
         "confirmPayLabel": "Pay Now",
-        "confirmCancelLabel": "Cancel"
+        "confirmCancelLabel": "Cancel",
+        "loadPageError": "Failed to load checkout page",
+        "loadWidgetsError": "Failed to load checkout",
+        "loadError": "Failed to load checkout"
       },
       "urls": {}
     },
@@ -41,17 +44,40 @@
       "widgets": [
         {
           "type": "BookingCheckoutHero",
+          "source": "shell",
           "widgetRef": "./widgets/checkout-hero.json"
         },
         {
           "type": "BookingCheckoutPaymentSummary",
+          "source": "shell",
           "widgetRef": "./widgets/checkout-payment-summary.json"
         },
         {
           "type": "BookingCheckoutSidebar",
+          "source": "shell",
           "widgetRef": "./widgets/checkout-sidebar.json"
         }
       ],
+      "floatingActionBar": {
+        "config": {
+          "variant": "floating",
+          "align": "left-right",
+          "showBg": true,
+          "mobileVisible": 2
+        },
+        "actions": [
+          {
+            "type": "back",
+            "refId": "backToBooking",
+            "config": { "alignementOnBar": "left" }
+          },
+          {
+            "type": "submit",
+            "refId": "payNow",
+            "config": { "alignementOnBar": "right", "iconRight": "arrowRight" }
+          }
+        ]
+      },
       "config": {},
       "actions": []
     }

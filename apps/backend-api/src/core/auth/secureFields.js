@@ -4,7 +4,10 @@ const ALGORITHM = "aes-256-gcm";
 const ENCRYPTION_PREFIX = "enc:v1:";
 
 function getKey() {
-  const secret = process.env.PII_ENCRYPTION_KEY || process.env.JWT_SECRET || "travelstrem-dev-pii-key-change-me";
+  const secret = process.env.PII_ENCRYPTION_KEY;
+  if (!secret) {
+    throw new Error("Missing PII_ENCRYPTION_KEY environment variable — required for encrypting PII fields.");
+  }
   return crypto.createHash("sha256").update(secret).digest();
 }
 

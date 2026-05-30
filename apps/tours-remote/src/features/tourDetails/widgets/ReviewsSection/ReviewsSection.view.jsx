@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Icon } from "@packages/trem-ui";
+import { Icon, Button, Title, Paragraph } from "@packages/trem-ui";
 
 const PER_PAGE = 4;
 
@@ -15,9 +15,9 @@ export default function ReviewsSectionView({ labels, reviews }) {
   if (!reviews.length) {
     return (
       <section className="tour-detail__section">
-        <h2>{labels.reviews || "Guest Notes"}</h2>
+        <Title text={labels.reviews || "Guest Notes"} />
         <div className="tour-detail__section-body">
-          <p className="tour-detail__muted">{labels.noReviewsYet || "No guest reviews yet."}</p>
+          <Paragraph primaryClassname="tour-detail__muted" text={labels.noReviewsYet || "No guest reviews yet."} />
         </div>
       </section>
     );
@@ -28,7 +28,7 @@ export default function ReviewsSectionView({ labels, reviews }) {
 
   return (
     <section className="tour-detail__section">
-      <h2>{labels.reviews || "Guest Notes"} <span style={{ fontSize: "0.82rem", fontWeight: 600, color: "var(--muted)" }}>({reviews.length})</span></h2>
+      <Title text={labels.reviews || "Guest Notes"} /> <span style={{ fontSize: "0.82rem", fontWeight: 600, color: "var(--muted)" }}>({reviews.length})</span>
       <div className="tour-detail__section-body">
         <div className="tour-detail__reviews">
           {current.map((review, index) => (
@@ -43,19 +43,21 @@ export default function ReviewsSectionView({ labels, reviews }) {
                   <span>{Number(review.rating || 0).toFixed(1)}</span>
                 </div>
               </div>
-              <p>{review.comment || labels.lovedExperience || "Loved the experience."}</p>
+              <Paragraph text={review.comment || labels.lovedExperience || "Loved the experience."} />
             </article>
           ))}
         </div>
         {totalPages > 1 && (
           <div className="tour-detail__review-pagination">
             {Array.from({ length: totalPages }, (_, i) => (
-              <button
+              <Button
                 key={i}
                 type="button"
-                className={`tour-detail__page-dot${i === page ? " is-active" : ""}`}
+                primaryClassName={`tour-detail__page-dot${i === page ? " is-active" : ""}`}
                 onClick={() => setPage(i)}
                 aria-label={`Page ${i + 1}`}
+                variant="text"
+                isCircular
               />
             ))}
           </div>

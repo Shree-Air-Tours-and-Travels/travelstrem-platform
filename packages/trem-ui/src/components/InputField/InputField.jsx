@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from "react";
 import Dropdown from "../Dropdown/Dropdown.jsx";
 import Icon from "../../icons/Icon/Icon.jsx";
+import Button from "../Button/Button.jsx";
 import "./InputField.styles.scss";
 
 const DEFAULT_COUNTRY_CODES = [
@@ -237,10 +238,7 @@ export default function InputField({
           align="left"
           searchPlaceholder="Search country code..."
           trigger={({ open }) => (
-            <button className="trem-input__cc-trigger" type="button" tabIndex={-1}>
-              <span>{cc}</span>
-              <Icon name="chevronDown" className={open ? "is-open" : ""} />
-            </button>
+            <Button variant="text" primaryClassName="trem-input__cc-trigger" iconRight="chevronDown" text={cc} tabIndex={-1} />
           )}
         />
       )}

@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import Button from "../Button/Button.jsx";
 import Icon from "../../icons/Icon/Icon.jsx";
 import BottomSheet from "../BottomSheet/BottomSheet.jsx";
 import "./Dropdown.styles.scss";
@@ -195,17 +196,15 @@ export default function Dropdown({
     }
     return (
       <li key={item.key || item.id || index} role="none">
-        <button
-          type="button"
-          className={`trem-dropdown__item${item.active ? " is-active" : ""}${item.disabled ? " is-disabled" : ""}`}
+        <Button
+          variant="text"
+          text={item.label}
+          iconLeft={typeof item.icon === "string" ? item.icon : undefined}
+          primaryClassName={`trem-dropdown__item${item.active ? " is-active" : ""}${item.disabled ? " is-disabled" : ""}`}
           disabled={item.disabled}
           role="menuitem"
           onClick={() => handleItemClick(item)}
-        >
-          {item.icon && <span className="trem-dropdown__item-icon">{item.icon}</span>}
-          <span className="trem-dropdown__item-label">{item.label}</span>
-          {item.badge != null && <span className="trem-dropdown__item-badge">{item.badge}</span>}
-        </button>
+        />
       </li>
     );
   }

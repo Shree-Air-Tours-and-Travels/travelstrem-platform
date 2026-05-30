@@ -1,8 +1,8 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import DataScopeResolver from "../../utils/dataScopeResolver.js";
-import { validatePageContract } from "../../middleware/pageContractValidator.js";
+import DataScopeResolver from "../../shared/utils/dataScopeResolver.js";
+import { validatePageContract } from "../../shared/validators/pageContractValidator.js";
 import Booking from "../bookings/models/Booking.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -331,7 +331,7 @@ class PageDefinitionService {
   }
 
   /* ------------------------------------------------------------------ */
-  /*  Dashboard hydration — replaces mock widget data with live         */
+  /*  Dashboard hydration , replaces mock widget data with live         */
   /* ------------------------------------------------------------------ */
 
   _mapBookingStatus(status) {
@@ -401,15 +401,17 @@ class PageDefinitionService {
       ...widget,
       props: {
         ...widget.props,
-        summary: {
-          ...widget.props.summary,
+        heroBanner: {
+          ...widget.props.heroBanner,
+          subtitle: `No of Booking : ${bookings.length}`,
           dateRange: bookings.length > 0
             ? `${this._formatDate(bookings[bookings.length - 1].createdAt)} - ${this._formatDate(bookings[0].createdAt)}`
-            : widget.props.summary.dateRange,
+            : widget.props.heroBanner?.dateRange,
         },
         rows: bookings.map((b) => {
           const tourId = b.tour?._id || null;
           return {
+            bookingId: String(b._id),
             id: `#${b.bookingRef || b._id}`,
             tour: b.tour?.title || "Unknown Tour",
             type: this._bookingTourType(b),

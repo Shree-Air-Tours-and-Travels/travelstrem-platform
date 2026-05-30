@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Icon from "../../icons/Icon/Icon.jsx";
+import Button from "../Button/Button.jsx";
 import BottomSheet from "../BottomSheet/BottomSheet.jsx";
 import "./ProfileActionMenu.styles.scss";
 
@@ -75,35 +76,26 @@ export default function ProfileActionMenu({
           <small>{isAuthenticated ? user?.role || "member" : "Guest"}</small>
         </span>
       </div>
-      <button className="profile-action-menu__item" type="button" role="menuitem" onClick={() => runAction(onToggleTheme)}>
-        <Icon name={themeIcon} size={17} />
-        <span>{themeLabel}</span>
-      </button>
-      <button className="profile-action-menu__item" type="button" role="menuitem" onClick={() => runAction(onSettings, "TREM_SETTINGS_REQUESTED")}>
-        <Icon name="settings" size={17} />
-        <span>{settingsLabel}</span>
-      </button>
+      <Button variant="text" iconLeft={themeIcon} text={themeLabel} primaryClassName="profile-action-menu__item" role="menuitem" onClick={() => runAction(onToggleTheme)} />
+      <Button variant="text" iconLeft="settings" text={settingsLabel} primaryClassName="profile-action-menu__item" role="menuitem" onClick={() => runAction(onSettings, "TREM_SETTINGS_REQUESTED")} />
       {isAuthenticated && (
-        <button className="profile-action-menu__item profile-action-menu__item--danger" type="button" role="menuitem" onClick={() => runAction(onLogout)}>
-          <Icon name="logout" size={17} />
-          <span>{logoutLabel}</span>
-        </button>
+        <Button variant="text" iconLeft="logout" text={logoutLabel} primaryClassName="profile-action-menu__item profile-action-menu__item--danger" role="menuitem" onClick={() => runAction(onLogout)} />
       )}
     </div>
   );
 
   return (
     <div className={`profile-action-menu profile-action-menu--${align} ${className}`.trim()} ref={rootRef}>
-      <button
-        className="profile-action-menu__trigger"
-        type="button"
+      <Button
+        variant="text"
+        text={initials || undefined}
+        iconLeft={!initials ? "user" : undefined}
+        primaryClassName="profile-action-menu__trigger"
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Open profile actions"
         onClick={() => setOpen((value) => !value)}
-      >
-        {initials ? <span className="profile-action-menu__initials">{initials}</span> : <Icon name="user" size={20} />}
-      </button>
+      />
 
       {open && !showBottomSheet && panelContent}
       <BottomSheet open={open && showBottomSheet} onClose={() => setOpen(false)}>

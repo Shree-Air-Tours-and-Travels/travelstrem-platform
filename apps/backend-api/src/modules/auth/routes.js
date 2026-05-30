@@ -2,7 +2,7 @@
 import express from "express";
 import * as controller from "./controllers/authController.js";
 import * as profileController from "./controllers/profileController.js";
-import authMiddleware from "../../core/auth/authMiddleware.js";
+import authMiddleware from "../../shared/auth/middleware.js";
 import { validateLogin, validateRegister } from "./validators/create.validation.js";
  
 const router = express.Router();
@@ -15,7 +15,18 @@ router.get("/config", controller.getAuthConfig);
 */
 router.post("/register", validateRegister, controller.register);
 router.post("/login", validateLogin, controller.login);
+router.post("/verify-otp", controller.verifyLoginOtp);
+router.post("/resend-otp", controller.resendLoginOtp);
 router.post("/admin-registration-otp", controller.requestAdminRegistrationOtp);
+router.post("/partner-agencies/apply", controller.applyPartnerAgency);
+router.get("/partner-agencies/check", controller.checkPartnerAgency);
+router.get("/partner-agencies", authMiddleware, controller.listPartnerAgencies);
+router.post("/partner-agencies/:id/review", authMiddleware, controller.reviewPartnerAgency);
+router.get("/agents", authMiddleware, controller.listAgents);
+router.post("/agents/:id/review", authMiddleware, controller.reviewAgent);
+router.get("/admins", authMiddleware, controller.listAdmins);
+router.post("/admins/:id/review", authMiddleware, controller.reviewAdmin);
+router.post("/admins/:id/remove", authMiddleware, controller.removeAdmin);
 
 /*
   Password reset flow
@@ -44,7 +55,7 @@ const makeOAuthHandler = (provider) => (req, res) => {
     return res.redirect(redirectTo);
   }
 
-  // Not implemented — return a clear HTTP error so callers know to implement OAuth
+  // Not implemented , return a clear HTTP error so callers know to implement OAuth
   return res.status(501).json({
     message: `OAuth for "${provider}" is not implemented on the server. Set OAUTH_${provider.toUpperCase()}_URL or implement the provider flow.`,
   });
@@ -57,6 +68,7 @@ router.get("/apple", makeOAuthHandler("apple"));
 /*
   Logout - clears the auth cookie
 */
+router.post("/refresh", controller.refreshTokenEndpoint);
 router.post("/logout", controller.logout);
 
 /*

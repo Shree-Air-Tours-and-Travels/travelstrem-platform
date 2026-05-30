@@ -6,7 +6,7 @@ $mt-bg: var(--page-bg);
 
 /* ---------- ManageTours (clean, only layout + toolbar + grid) ----------
    Note: drawer, tour-view and form overlay styles have been removed from
-   this file — they are managed in their respective component SCSS files.
+   this file , they are managed in their respective component SCSS files.
 */
 
 .mt-root {
@@ -16,6 +16,14 @@ $mt-bg: var(--page-bg);
   gap: $mt-gap;
   min-height: 100vh;
   background: $mt-bg;
+}
+
+.mt-session-bar {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
 }
 
 .mt-toolbar {
@@ -39,6 +47,7 @@ $mt-bg: var(--page-bg);
     display: flex;
     gap: 8px;
     align-items: center;
+    flex-wrap: wrap;
   }
 }
 
@@ -47,20 +56,102 @@ $mt-bg: var(--page-bg);
   gap: $mt-gap;
   align-items: stretch;
   width: 100%;
+  min-width: 0;
 }
 
 /* primary scrolling grid area */
 .mt-grid {
   flex: 1 1 auto;
+  min-width: 0;
   display: flex;
-  gap: 12px;
   flex-direction: column;
+  gap: 16px;
   padding-right: 6px;
 
   /* keep a max-height so non-touch devices see an inner scroll */
   max-height: calc(100vh - 120px);
   overflow-y: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+}
+
+.mt-grid > * {
+  flex: 0 0 auto;
+}
+
+.mt-admin-tour-card.tour-card {
+  display: grid !important;
+  grid-template-columns: 300px minmax(0, 1fr) !important;
+  grid-template-rows: auto !important;
+  width: 100% !important;
+  min-height: 260px !important;
+  height: auto !important;
+  max-height: none !important;
+  align-items: stretch !important;
+  overflow: hidden !important;
+  border-radius: 8px !important;
+}
+
+.mt-admin-tour-card.tour-card .tour-card__media {
+  width: 300px !important;
+  height: auto !important;
+  min-height: 260px !important;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+  align-self: stretch !important;
+}
+
+.mt-admin-tour-card.tour-card .tour-card__img,
+.mt-admin-tour-card.tour-card .tour-card__placeholder {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 260px !important;
+  object-fit: cover !important;
+}
+
+.mt-admin-tour-card.tour-card .tour-card__body {
+  min-width: 0 !important;
+  min-height: 260px !important;
+  height: auto !important;
+  padding: 1rem 1.1rem !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.65rem !important;
+  overflow: visible !important;
+}
+
+.mt-admin-tour-card.tour-card .tour-card__footer {
+  margin-top: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 0.75rem !important;
+  flex-wrap: wrap !important;
+}
+
+.mt-admin-tour-card.tour-card .tour-card__actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  flex-wrap: wrap !important;
+  gap: 0.5rem !important;
+  margin-left: auto !important;
+  width: auto !important;
+}
+
+.mt-admin-tour-card.tour-card .tour-card__admin {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  flex-wrap: wrap !important;
+  gap: 0.5rem !important;
+}
+
+.mt-admin-tour-card.tour-card .tour-card__title,
+.mt-admin-tour-card.tour-card .tour-card__desc,
+.mt-admin-tour-card.tour-card .tour-card__location span,
+.mt-admin-tour-card.tour-card .tour-card__detail span {
+  overflow-wrap: anywhere;
 }
 
 /* aesthetic scrollbars (desktop) */
@@ -118,6 +209,35 @@ $mt-bg: var(--page-bg);
     border: 1px solid $mt-border;
     border-radius: 8px;
   }
+
+  .mt-admin-tour-card.tour-card {
+    grid-template-columns: 1fr !important;
+    min-height: 0 !important;
+  }
+
+  .mt-admin-tour-card.tour-card .tour-card__media {
+    width: 100% !important;
+    min-height: 190px !important;
+    aspect-ratio: 16 / 9 !important;
+  }
+
+  .mt-admin-tour-card.tour-card .tour-card__img,
+  .mt-admin-tour-card.tour-card .tour-card__placeholder {
+    min-height: 190px !important;
+  }
+
+  .mt-admin-tour-card.tour-card .tour-card__body {
+    min-height: 0 !important;
+  }
+
+  .mt-admin-tour-card.tour-card .tour-card__footer,
+  .mt-admin-tour-card.tour-card .tour-card__actions,
+  .mt-admin-tour-card.tour-card .tour-card__admin {
+    justify-content: flex-start !important;
+    width: 100% !important;
+    margin-left: 0 !important;
+  }
+
 }
 
 /* accessibility: prefer reduced motion */
@@ -226,4 +346,10 @@ $mt-bg: var(--page-bg);
   }
 }
 
-/* End of ManageTours.scss — overlay/drawer/view styles are now component-scoped */
+/* ---------- Toast notification ---------- */
+@keyframes tm-toast-in {
+    from { opacity: 0; transform: translateX(40px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+/* End of ManageTours.scss , overlay/drawer/view styles are now component-scoped */

@@ -1,0 +1,49 @@
+@import "../../styles/base/typography";
+
+.ui-paragraph {
+  font-family: $font-primary;
+  line-height: $line-height-lg;
+  margin-bottom: 1rem;
+
+  &--body {
+    font-size: $font-size-md;
+    font-weight: $font-regular;
+    color: var(--muted);
+  }
+
+  &--lead {
+    font-size: $font-size-lg;
+    font-weight: $font-regular;
+    color: var(--text);
+  }
+
+  &--muted {
+    font-size: $font-size-md;
+    font-weight: $font-regular;
+    color: var(--muted);
+  }
+
+  &--small {
+    font-size: $font-size-sm;
+    font-weight: $font-regular;
+    color: var(--muted);
+  }
+
+  &--xsmall {
+    font-size: $font-size-xs;
+    font-weight: $font-regular;
+    color: var(--muted);
+  }
+
+  &--small {
+    font-size: $font-size-sm;
+  }
+
+  &--medium {
+    font-size: $font-size-md;
+  }
+
+  &--large {
+    font-size: $font-size-lg;
+  }
+}

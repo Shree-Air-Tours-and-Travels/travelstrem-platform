@@ -81,6 +81,7 @@ export default function ToursPageContainer({ dispatchEvent } = {}) {
     const [pagination, setPagination] = useState(() => getPaginationFromData(initialPagination, 0));
     const [listingLoading, setListingLoading] = useState(false);
     const [listingError, setListingError] = useState(null);
+    const [filtersExpanded, setFiltersExpanded] = useState(() => typeof window !== "undefined" ? window.innerWidth > 900 : true);
     const requestSeq = useRef(0);
 
     const totalResults = pagination?.total ?? displayed.length;
@@ -210,6 +211,8 @@ export default function ToursPageContainer({ dispatchEvent } = {}) {
             handleFilterChange={handleFilterChange}
             onQuickFilter={handleQuickFilter}
             onPageChange={handlePageChange}
+            filtersExpanded={filtersExpanded}
+            onFiltersExpandedChange={setFiltersExpanded}
         />
     );
 }

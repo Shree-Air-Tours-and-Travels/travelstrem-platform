@@ -35,8 +35,11 @@ export const BookingService = {
       includeDeep ? AssignmentService.list(bookingId) : Promise.resolve([]),
     ]);
     const latestQuote = quotes[0] || null;
+    const BOOKING_PROCEED_HIDE_STATUSES = ["CANCELLED", "COMPLETED", "REFUNDED"];
+    const isProceedHide = BOOKING_PROCEED_HIDE_STATUSES.includes(doc.status);
     return {
       ...doc,
+      isProceedHide,
       startDate: doc.startDate || doc.travelWindow?.startDate,
       endDate: doc.endDate || doc.travelWindow?.endDate,
       travelers,

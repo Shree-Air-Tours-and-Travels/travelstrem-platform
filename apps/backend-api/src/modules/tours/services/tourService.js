@@ -5,7 +5,7 @@
 
 /**
  * Determine handler/role from request user object.
- * Accepts "admin", "agent", "user" — defaults to "user".
+ * Accepts "admin", "agent", "user" , defaults to "user".
  */
 export const getHandlerFromReq = (req) => {
   const role = req?.user?.role;

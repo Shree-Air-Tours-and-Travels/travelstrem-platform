@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
+import Button from "../Button/Button.jsx";
 import "./Gallery.styles.scss";
 
 const Gallery = ({
@@ -109,25 +110,23 @@ const Gallery = ({
 
                     {hasMultiple && (
                         <div className="gallery__nav">
-                            <button
-                                type="button"
-                                className="gallery__nav-btn"
+                            <Button
+                                variant="text"
+                                iconLeft="chevronLeft"
+                                primaryClassName="gallery__nav-btn"
                                 onClick={(e) => { e.stopPropagation(); prev(); }}
                                 aria-label="Previous image"
-                            >
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-                            </button>
+                            />
                             <span className="gallery__nav-counter">
                                 {String(activeIndex + 1).padStart(2, "0")} / {String(count).padStart(2, "0")}
                             </span>
-                            <button
-                                type="button"
-                                className="gallery__nav-btn"
+                            <Button
+                                variant="text"
+                                iconLeft="chevronRight"
+                                primaryClassName="gallery__nav-btn"
                                 onClick={(e) => { e.stopPropagation(); next(); }}
                                 aria-label="Next image"
-                            >
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-                            </button>
+                            />
                         </div>
                     )}
 
@@ -177,30 +176,30 @@ const Gallery = ({
                     aria-label="Image viewer"
                     onClick={() => setLightboxOpen(false)}
                 >
-                    <button
-                        className="gallery__lightbox-btn gallery__lightbox-btn--close"
+                    <Button
+                        variant="text"
+                        iconLeft="x"
+                        primaryClassName="gallery__lightbox-btn gallery__lightbox-btn--close"
                         onClick={() => setLightboxOpen(false)}
                         aria-label="Close viewer"
-                    >
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                    </button>
+                    />
 
                     {hasMultiple && (
                         <>
-                            <button
-                                className="gallery__lightbox-btn gallery__lightbox-btn--prev"
+                            <Button
+                                variant="text"
+                                iconLeft="chevronLeft"
+                                primaryClassName="gallery__lightbox-btn gallery__lightbox-btn--prev"
                                 onClick={(e) => { e.stopPropagation(); prev(); }}
                                 aria-label="Previous image"
-                            >
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-                            </button>
-                            <button
-                                className="gallery__lightbox-btn gallery__lightbox-btn--next"
+                            />
+                            <Button
+                                variant="text"
+                                iconLeft="chevronRight"
+                                primaryClassName="gallery__lightbox-btn gallery__lightbox-btn--next"
                                 onClick={(e) => { e.stopPropagation(); next(); }}
                                 aria-label="Next image"
-                            >
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-                            </button>
+                            />
                         </>
                     )}
 
