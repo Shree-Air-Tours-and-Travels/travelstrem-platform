@@ -1,0 +1,18 @@
+{
+    "breadcrumbs": [
+        { "label": "Services", "path": "/agent/services" },
+        { "label": "Tours Management", "path": "/agent/services/tours" },
+        { "label": "Manage Tour" }
+    ],
+    "title": "Manage: {{tourName}}",
+    "loading": {
+        "text": "Loading tour..."
+    },
+    "notFound": {
+        "title": "Tour not found",
+        "description": "The tour you requested could not be found."
+    },
+    "error": {
+        "title": "Failed to load tour"
+    }
+}

@@ -1,0 +1,47 @@
+{
+    "breadcrumbs": [
+        { "label": "Services", "path": "/agent/services" },
+        { "label": "Bookings Management" }
+    ],
+    "pageTitle": "Bookings Management",
+    "columns": [
+        { "id": "displayId", "label": "ID", "accessor": "displayId", "minWidth": 150, "emphasis": "strong" },
+        { "id": "tour", "label": "Tour & Type", "type": "mediaText", "titleAccessor": "tour", "subtitleAccessor": "type", "minWidth": 280 },
+        { "id": "travellers", "label": "Travellers", "accessor": "travellers", "minWidth": 120 },
+        { "id": "days", "label": "Days", "accessor": "days", "minWidth": 100 },
+        { "id": "price", "label": "Price", "accessor": "price", "minWidth": 110 },
+        { "id": "date", "label": "Date", "accessor": "date", "minWidth": 120 },
+        { "id": "status", "label": "Status", "accessor": "status", "type": "status", "toneAccessor": "statusTone", "minWidth": 120 }
+    ],
+    "table": {
+        "title": "All Bookings",
+        "contentMinWidth": 980,
+        "emptyState": {
+            "title": "No bookings",
+            "description": "No booking records match your criteria."
+        }
+    },
+    "actions": {
+        "search": {
+            "placeholder": "Search bookings",
+            "keys": ["displayId", "tour", "type", "status"]
+        }
+    },
+    "sortingHeader": {
+        "label": "Sort:",
+        "defaultValue": "recommended",
+        "options": [
+            { "label": "Recommended", "value": "recommended" },
+            { "label": "Newest", "value": "newest", "sort": { "columnId": "date", "direction": "desc" } }
+        ]
+    },
+    "pagination": {
+        "pageSizeOptions": [8, 16, 24],
+        "pageSize": 8
+    },
+    "refreshButton": {
+        "text": "Refresh",
+        "variant": "outline",
+        "iconLeft": "refreshCw"
+    }
+}

@@ -1,6 +1,8 @@
 import axios from "axios";
 import { getConfiguredApiBase } from "../core/config/portalEnvironment";
+import { registerAuthHeaderClearer } from "@packages/trem-events";
 import { setFetchDataApiClient } from "@packages/trem-utils";
+import { setupRefreshInterceptor } from "@packages/trem-auth-core";
 
 function normalizeBase(raw) {
     if (raw == null || raw === "") return raw;
@@ -8,10 +10,12 @@ function normalizeBase(raw) {
     return `https://${raw}`.replace(/\/$/, "");
 }
 
-let rawBase = getConfiguredApiBase();
+let RAW_BASE = getConfiguredApiBase();
 
-const base = normalizeBase(rawBase) ?? "";
-const baseURL = (base.endsWith("/api") ? base : `${base}/api`).replace(/([^:]\/)\/+/g, "$1");
+const BASE = normalizeBase(RAW_BASE) ?? "";
+const baseURL = (BASE.endsWith("/api") ? BASE : `${BASE}/api`).replace(/([^:]\/)\/+/g, "$1");
+const AUTH_STORAGE_PREFIX = "adminTREM";
+if (typeof window !== "undefined") window.__TREM_AUTH_STORAGE_PREFIX__ = AUTH_STORAGE_PREFIX;
 
 const api = axios.create({
     baseURL,
@@ -21,20 +25,40 @@ const api = axios.create({
 
 setFetchDataApiClient(api);
 
+export const clearApiAuthHeader = () => {
+    if (api.defaults?.headers?.common?.Authorization) {
+        delete api.defaults.headers.common.Authorization;
+    }
+};
+
+registerAuthHeaderClearer(clearApiAuthHeader);
+
 api.interceptors.request.use(
     (cfg) => {
         try {
-            const token = localStorage.getItem("token") || localStorage.getItem("auth_token");
+            const token = localStorage.getItem(`${AUTH_STORAGE_PREFIX}:token`);
             if (token) {
                 cfg.headers = cfg.headers || {};
                 cfg.headers.Authorization = `Bearer ${token}`;
+            } else if (cfg?.headers?.Authorization) {
+                delete cfg.headers.Authorization;
+            }
+            if (!token) {
+                cfg.headers = cfg.headers || {};
+                cfg.headers["X-Ignore-Cookie-Auth"] = "true";
             }
         } catch (err) {
             // ignore parse errors
+        }
+        if (cfg.data instanceof FormData) {
+            delete cfg.headers?.["Content-Type"];
+            delete cfg.headers?.["content-type"];
         }
         return cfg;
     },
     (err) => Promise.reject(err)
 );
+
+setupRefreshInterceptor(api, AUTH_STORAGE_PREFIX);
 
 export default api;

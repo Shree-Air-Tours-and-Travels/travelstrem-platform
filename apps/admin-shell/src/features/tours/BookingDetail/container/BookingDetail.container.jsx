@@ -2,6 +2,13 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { fetchData } from "@packages/trem-utils";
 import BookingDetailView from "../view/BookingDetail.view";
+import {
+    cancelBooking,
+    confirmBooking,
+    processRefund,
+    recordAdminPayment,
+    updateBookingStatus,
+} from "../../../../services/adminService";
 
 export default function BookingDetailContainer() {
     const { bookingId } = useParams();
@@ -9,6 +16,8 @@ export default function BookingDetailContainer() {
     const [booking, setBooking] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [reloadKey, setReloadKey] = useState(0);
+    const [actionState, setActionState] = useState({ loading: "", message: "", error: "" });
 
     useEffect(() => {
         if (!bookingId) return;
@@ -57,14 +66,36 @@ export default function BookingDetailContainer() {
             cancelled = true;
             controller.abort();
         };
-    }, [bookingId]);
+    }, [bookingId, reloadKey]);
+
+    const runAction = async (label, task) => {
+        setActionState({ loading: label, message: "", error: "" });
+        try {
+            await task();
+            setActionState({ loading: "", message: "Booking updated", error: "" });
+            setReloadKey((key) => key + 1);
+        } catch (err) {
+            setActionState({ loading: "", message: "", error: err?.message || "Action failed" });
+        }
+    };
+
+    const actions = {
+        generateQuote: (id, data) => runAction("quote", () => confirmBooking(id, data)),
+        cancel: (id) => runAction("cancel", () => cancelBooking(id)),
+        statusTransition: (id, status) => runAction(status, () => updateBookingStatus(id, status)),
+        recordPayment: (id, amount, currency) => runAction("payment", () => recordAdminPayment(id, amount, currency)),
+        refund: (id, amount, currency) => runAction("refund", () => processRefund(id, amount, currency)),
+    };
 
     return (
         <BookingDetailView
             booking={booking}
+            bookingId={bookingId}
             loading={loading}
             error={error}
             navigate={navigate}
+            actions={actions}
+            actionState={actionState}
         />
     );
 }

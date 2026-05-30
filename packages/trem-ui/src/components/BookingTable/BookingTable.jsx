@@ -241,7 +241,7 @@ export default function BookingTable({
   const sortValue = sortingHeader.value ?? internalSortValue;
   const page = pagination.currentPage ?? internalPage;
   const pageSize = pagination.pageSize ?? internalPageSize;
-  const searchableKeys = actions.search?.keys || columns.map((column) => column.accessor || column.id);
+  const searchableKeys = (actions.search?.keys || columns.map((column) => column.accessor || column.id)).filter(Boolean);
   const sortOption = (sortingHeader.options || []).map(normalizeOption).find((option) => option.value === sortValue);
   const effectiveSort = sortOption?.sort || columnSort;
   const componentStyle = {

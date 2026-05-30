@@ -78,6 +78,7 @@ export function ResetPasswordModal({ open, email = "", onClose, onResetSuccess, 
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
   const [message, setMessage] = useState(null);
   const [variant, setVariant] = useState("info");
 
@@ -88,6 +89,7 @@ export function ResetPasswordModal({ open, email = "", onClose, onResetSuccess, 
     setConfirm("");
     setMessage(null);
     setLoading(false);
+    setResending(false);
     setVariant("info");
   }, [open]);
 
@@ -125,6 +127,27 @@ export function ResetPasswordModal({ open, email = "", onClose, onResetSuccess, 
     }
   };
 
+  const handleResend = async () => {
+    setMessage(null);
+    if (!email || !email.includes("@")) {
+      setVariant("error");
+      setMessage("A valid email is required before resending OTP.");
+      return;
+    }
+
+    setResending(true);
+    try {
+      const res = await authService.forgotPassword({ email });
+      setVariant("success");
+      setMessage(res?.data?.message || "A new OTP has been sent.");
+    } catch (err) {
+      setVariant("error");
+      setMessage(err?.response?.data?.message || "Could not resend OTP.");
+    } finally {
+      setResending(false);
+    }
+  };
+
   if (!open) return null;
 
   return (
@@ -137,14 +160,15 @@ export function ResetPasswordModal({ open, email = "", onClose, onResetSuccess, 
           </div>
         </div>
         <label className="auth-modal__label">One-time code</label>
-        <input className="auth-modal__field" value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="123456" />
+        <input className="auth-modal__field" value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="123456" inputMode="numeric" autoComplete="one-time-code" />
         <label className="auth-modal__label">New password</label>
-        <input className="auth-modal__field" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="New password" type="password" />
+        <input className="auth-modal__field" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="New password" type="password" autoComplete="new-password" />
         <label className="auth-modal__label">Confirm password</label>
-        <input className="auth-modal__field" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Confirm password" type="password" />
+        <input className="auth-modal__field" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Confirm password" type="password" autoComplete="new-password" />
         {message && <div className={`auth-modal__message auth-modal__message--${variant}`}>{message}</div>}
         <div className="auth-modal__actions">
           <Button variant="text" isCircular iconLeft="x" onClick={onClose} aria-label="Close" primaryClassName="auth-modal__ghost" />
+          <Button variant="outline" color="primary" text={resending ? "Sending..." : "Resend OTP"} onClick={handleResend} disabled={loading || resending} primaryClassName="auth-modal__secondary" />
           <Button variant="solid" color="primary" text="Reset Password" type="submit" onClick={handleReset} disabled={loading} primaryClassName="auth-modal__primary" />
         </div>
       </div>

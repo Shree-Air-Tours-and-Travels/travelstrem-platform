@@ -4,10 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "CACHE_DIR=/private/tmp/travelstrem-storybook-cache storybook dev -p 6006 --host 127.0.0.1 --disable-telemetry --no-open",
-    "storybook": "CACHE_DIR=/private/tmp/travelstrem-storybook-cache storybook dev -p 6006 --host 127.0.0.1 --disable-telemetry --no-open",
-    "build": "CACHE_DIR=/private/tmp/travelstrem-storybook-cache storybook build --disable-telemetry",
-    "build-storybook": "CACHE_DIR=/private/tmp/travelstrem-storybook-cache storybook build --disable-telemetry"
+    "dev": "CACHE_DIR=/private/tmp/travelstrem-storybook-cache-$USER storybook dev -p 6006 --host 127.0.0.1 --disable-telemetry --no-open",
+    "storybook": "CACHE_DIR=/private/tmp/travelstrem-storybook-cache-$USER storybook dev -p 6006 --host 127.0.0.1 --disable-telemetry --no-open",
+    "build": "CACHE_DIR=/private/tmp/travelstrem-storybook-cache-$USER storybook build --disable-telemetry --output-dir /private/tmp/travelstrem-storybook-static-$USER",
+    "build-storybook": "CACHE_DIR=/private/tmp/travelstrem-storybook-cache-$USER storybook build --disable-telemetry --output-dir /private/tmp/travelstrem-storybook-static-$USER"
   },
   "dependencies": {
     "@packages/trem-design-tokens": "workspace:*",

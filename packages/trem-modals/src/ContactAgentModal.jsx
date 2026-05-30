@@ -35,10 +35,6 @@ const ContactAgentModal = ({ open, onClose, tourId, formData }) => {
         setMsg(null);
     }, [initialForm]);
 
-    if (!open) return null;
-
-    const tour = (formData?.data && formData.data[0]) ? formData.data[0] : { _id: tourId, title: "" };
-
     const fieldsMap = useMemo(() => {
         const map = {};
         fieldsMeta.forEach((field) => {
@@ -46,6 +42,13 @@ const ContactAgentModal = ({ open, onClose, tourId, formData }) => {
         });
         return map;
     }, [fieldsMeta]);
+
+    const tour = (formData?.data && formData.data[0]) ? formData.data[0] : { _id: tourId, title: "" };
+    const priceStr = tour?.price
+        ? (typeof tour.price === "object" ? tour.price?.from ?? tour.price?.amount ?? "" : tour.price)
+        : tour?.priceInfo?.from ?? "";
+
+    if (!open) return null;
 
     const handleChange = (name, value) => {
         setForm(prev => ({ ...prev, [name]: value }));
@@ -86,15 +89,11 @@ const ContactAgentModal = ({ open, onClose, tourId, formData }) => {
             }
         } catch (err) {
             console.error("submit error", err?.response || err);
-            setMsg({ type: "error", text: err?.response?.message });
+            setMsg({ type: "error", text: err?.response?.data?.message || err.message || "Something went wrong. Please try again." });
         } finally {
             setSubmitting(false);
         }
     };
-
-    const priceStr = tour?.price
-        ? (typeof tour.price === "object" ? tour.price?.from ?? tour.price?.amount ?? "" : tour.price)
-        : tour?.priceInfo?.from ?? "";
 
     return (
         <div className="ct-modal-overlay" role="dialog" aria-modal="true">

@@ -17,6 +17,9 @@ importers:
       '@apps/auth-trem':
         specifier: workspace:*
         version: link:../auth-trem
+      '@packages/trem-auth-core':
+        specifier: workspace:*
+        version: link:../../packages/trem-auth-core
       '@packages/trem-environment':
         specifier: workspace:*
         version: link:../../packages/trem-environment
@@ -35,6 +38,9 @@ importers:
       '@packages/trem-utils':
         specifier: workspace:*
         version: link:../../packages/trem-utils
+      '@packages/trem-widget-contracts':
+        specifier: workspace:*
+        version: link:../../packages/trem-widget-contracts
       '@testing-library/dom':
         specifier: ^10.4.0
         version: 10.4.1
@@ -62,6 +68,97 @@ importers:
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
+      prop-types:
+        specifier: ^15.8.1
+        version: 15.8.1
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+      react-icons:
+        specifier: ^5.5.0
+        version: 5.6.0(react@18.3.1)
+      react-router:
+        specifier: ^7.8.2
+        version: 7.15.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react-router-dom:
+        specifier: ^7.8.2
+        version: 7.15.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react-scripts:
+        specifier: 5.0.1
+        version: 5.0.1(@babel/plugin-syntax-flow@7.28.6(@babel/core@7.29.0))(@babel/plugin-transform-react-jsx@7.28.6(@babel/core@7.29.0))(@types/babel__core@7.20.5)(eslint@8.57.1)(react@18.3.1)(sass@1.99.0)(ts-node@10.9.2(@types/node@25.6.0)(typescript@4.9.5))(type-fest@0.21.3)(typescript@4.9.5)
+      sass:
+        specifier: ^1.86.0
+        version: 1.99.0
+      web-vitals:
+        specifier: ^2.1.4
+        version: 2.1.4
+    devDependencies:
+      '@craco/craco':
+        specifier: ^7.1.0
+        version: 7.1.0(@types/node@25.6.0)(postcss@8.5.14)(react-scripts@5.0.1(@babel/plugin-syntax-flow@7.28.6(@babel/core@7.29.0))(@babel/plugin-transform-react-jsx@7.28.6(@babel/core@7.29.0))(@types/babel__core@7.20.5)(eslint@8.57.1)(react@18.3.1)(sass@1.99.0)(ts-node@10.9.2(@types/node@25.6.0)(typescript@4.9.5))(type-fest@0.21.3)(typescript@4.9.5))(typescript@4.9.5)
+      cross-env:
+        specifier: ^7.0.3
+        version: 7.0.3
+
+  apps/agent-shell:
+    dependencies:
+      '@apps/auth-trem':
+        specifier: workspace:*
+        version: link:../auth-trem
+      '@packages/trem-auth-core':
+        specifier: workspace:*
+        version: link:../../packages/trem-auth-core
+      '@packages/trem-environment':
+        specifier: workspace:*
+        version: link:../../packages/trem-environment
+      '@packages/trem-events':
+        specifier: workspace:*
+        version: link:../../packages/trem-events
+      '@packages/trem-runtime':
+        specifier: workspace:*
+        version: link:../../packages/trem-runtime
+      '@packages/trem-session':
+        specifier: workspace:*
+        version: link:../../packages/trem-session
+      '@packages/trem-ui':
+        specifier: workspace:*
+        version: link:../../packages/trem-ui
+      '@packages/trem-utils':
+        specifier: workspace:*
+        version: link:../../packages/trem-utils
+      '@packages/trem-widget-contracts':
+        specifier: workspace:*
+        version: link:../../packages/trem-widget-contracts
+      '@testing-library/dom':
+        specifier: ^10.4.0
+        version: 10.4.1
+      '@testing-library/jest-dom':
+        specifier: ^6.6.3
+        version: 6.9.1
+      '@testing-library/react':
+        specifier: ^16.2.0
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@18.3.7(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@testing-library/user-event':
+        specifier: ^13.5.0
+        version: 13.5.0(@testing-library/dom@10.4.1)
+      ajv:
+        specifier: ^8.20.0
+        version: 8.20.0
+      ajv-keywords:
+        specifier: ^5.1.0
+        version: 5.1.0(ajv@8.20.0)
+      axios:
+        specifier: ^1.8.4
+        version: 1.16.0
+      bootstrap:
+        specifier: ^5.3.3
+        version: 5.3.8(@popperjs/core@2.11.8)
+      lodash:
+        specifier: ^4.17.21
+        version: 4.18.1
       prop-types:
         specifier: ^15.8.1
         version: 15.8.1
@@ -12353,7 +12450,7 @@ snapshots:
       '@babel/plugin-syntax-flow': 7.28.6(@babel/core@7.29.0)
       '@babel/plugin-transform-react-jsx': 7.28.6(@babel/core@7.29.0)
       eslint: 8.57.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       string-natural-compare: 3.0.1
 
   eslint-plugin-import@2.32.0(@typescript-eslint/parser@5.62.0(eslint@8.57.1)(typescript@4.9.5))(eslint@8.57.1):
@@ -12995,7 +13092,7 @@ snapshots:
     dependencies:
       '@types/html-minifier-terser': 6.1.0
       html-minifier-terser: 6.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       pretty-error: 4.0.0
       tapable: 2.3.3
     optionalDependencies:
@@ -15267,7 +15364,7 @@ snapshots:
 
   pretty-error@4.0.0:
     dependencies:
-      lodash: 4.17.21
+      lodash: 4.18.1
       renderkid: 3.0.0
 
   pretty-format@27.5.1:
@@ -15727,7 +15824,7 @@ snapshots:
       css-select: 4.3.0
       dom-converter: 0.2.0
       htmlparser2: 6.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       strip-ansi: 6.0.1
 
   require-directory@2.1.1: {}
@@ -16978,7 +17075,7 @@ snapshots:
 
   whatwg-url@8.7.0:
     dependencies:
-      lodash: 4.17.21
+      lodash: 4.18.1
       tr46: 2.1.0
       webidl-conversions: 6.1.0
 
@@ -17064,7 +17161,7 @@ snapshots:
       fast-json-stable-stringify: 2.1.0
       fs-extra: 9.1.0
       glob: 7.2.3
-      lodash: 4.17.21
+      lodash: 4.18.1
       pretty-bytes: 5.6.0
       rollup: 2.80.0
       rollup-plugin-terser: 7.0.2(rollup@2.80.0)

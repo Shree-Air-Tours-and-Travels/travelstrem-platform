@@ -1,28 +1,40 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
     deleteAllTours,
     deleteTour,
-    fetchAdminBookings,
+    fetchAdmins,
+    fetchAgents,
     fetchAdminTours,
-    updateBookingTravelers,
-    confirmBooking,
-    cancelBooking,
-    updateBookingStatus,
-    recordAdminPayment,
-    processRefund,
+    fetchPartnerAgencies,
+    removeAdmin,
+    reviewAdmin,
+    reviewAgent,
+    reviewPartnerAgency,
 } from "../../services/adminService";
 import ManageToursView from "./ManageTours.view";
 
+const VALID_TABS = new Set(["dashboard", "tours", "agencies"]);
+
+const getTabFromSearch = (search) => {
+    const tab = new URLSearchParams(search || "").get("tab") || "dashboard";
+    return VALID_TABS.has(tab) ? tab : "dashboard";
+};
+
 export default function ManageTours({ session }) {
+    const location = useLocation();
+    const navigate = useNavigate();
     const auth = {
         user: session?.user || null,
         role: session?.flags?.role || session?.user?.role || "member",
     };
-    const [tab, setTab] = useState("tours");
+    const [tab, setTabState] = useState(() => getTabFromSearch(location.search));
     const [tours, setTours] = useState([]);
-    const [bookings, setBookings] = useState([]);
+    const [admins, setAdmins] = useState([]);
+    const [agents, setAgents] = useState([]);
+    const [partnerAgencies, setPartnerAgencies] = useState([]);
+    const [agencyLoading, setAgencyLoading] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [loadingBookings, setLoadingBookings] = useState(false);
     const [formOpen, setFormOpen] = useState(false);
     const [viewOpen, setViewOpen] = useState(false);
     const [editing, setEditing] = useState(null);
@@ -33,6 +45,14 @@ export default function ManageTours({ session }) {
     const [confirmMessage, setConfirmMessage] = useState("");
     const [toast, setToast] = useState({ message: "", type: "info", visible: false });
 
+    const setTab = useCallback((nextTab) => {
+        const safeTab = VALID_TABS.has(nextTab) ? nextTab : "dashboard";
+        setTabState(safeTab);
+        const params = new URLSearchParams(location.search);
+        params.set("tab", safeTab);
+        navigate(`${location.pathname}?${params.toString()}`, { replace: false });
+    }, [location.pathname, location.search, navigate]);
+
     const showToast = useCallback((message, type = "info", durationMs = 3000) => {
         setToast({ message, type, visible: true });
         setTimeout(() => setToast({ message: "", type: "info", visible: false }), durationMs);
@@ -40,13 +60,21 @@ export default function ManageTours({ session }) {
 
     useEffect(() => {
         fetchTours();
+        fetchAgencyManagement();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
-        if (tab === "bookings") fetchBookings();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [tab]);
+        const nextTab = getTabFromSearch(location.search);
+        const params = new URLSearchParams(location.search);
+        const requestedTab = params.get("tab");
+        if (requestedTab && !VALID_TABS.has(requestedTab)) {
+            params.set("tab", nextTab);
+            navigate(`${location.pathname}?${params.toString()}`, { replace: true });
+            return;
+        }
+        setTabState((current) => current === nextTab ? current : nextTab);
+    }, [location.pathname, location.search, navigate]);
 
     async function fetchTours() {
         const seq = ++requestSeq.current;
@@ -63,6 +91,65 @@ export default function ManageTours({ session }) {
             setTours([]);
         } finally {
             if (requestSeq.current === seq) setLoading(false);
+        }
+    }
+
+    async function fetchAgencyManagement() {
+        setAgencyLoading(true);
+        try {
+            const [nextAgents, nextAgencies] = await Promise.all([
+                fetchAgents(),
+                fetchPartnerAgencies(),
+            ]);
+            const nextAdmins = auth.user?.adminLevel === "master" ? await fetchAdmins() : [];
+            setAdmins(nextAdmins);
+            setAgents(nextAgents);
+            setPartnerAgencies(nextAgencies);
+        } catch (e) {
+            console.error("fetchAgencyManagement error:", e);
+            showToast(e.message || "Failed to load agency management", "error");
+        } finally {
+            setAgencyLoading(false);
+        }
+    }
+
+    async function handleReviewAgent(id, status) {
+        try {
+            await reviewAgent(id, status);
+            showToast(`Agent ${status}`, "success");
+            await fetchAgencyManagement();
+        } catch (e) {
+            showToast(e.message || "Agent review failed", "error");
+        }
+    }
+
+    async function handleReviewPartnerAgency(id, status) {
+        try {
+            await reviewPartnerAgency(id, status);
+            showToast(`Partner agency ${status}`, "success");
+            await fetchAgencyManagement();
+        } catch (e) {
+            showToast(e.message || "Partner review failed", "error");
+        }
+    }
+
+    async function handleReviewAdmin(id, status) {
+        try {
+            await reviewAdmin(id, status);
+            showToast(`Admin ${status}`, "success");
+            await fetchAgencyManagement();
+        } catch (e) {
+            showToast(e.message || "Admin review failed", "error");
+        }
+    }
+
+    async function handleRemoveAdmin(id) {
+        try {
+            await removeAdmin(id);
+            showToast("Admin access removed", "success");
+            await fetchAgencyManagement();
+        } catch (e) {
+            showToast(e.message || "Admin removal failed", "error");
         }
     }
 
@@ -111,96 +198,15 @@ export default function ManageTours({ session }) {
         setViewOpen(true);
     }
 
-    async function fetchBookings() {
-        const seq = ++requestSeq.current;
-        setLoadingBookings(true);
-        try {
-            const data = await fetchAdminBookings();
-            if (requestSeq.current !== seq) return;
-            setBookings(Array.isArray(data) ? data : []);
-        } catch (e) {
-            if (requestSeq.current !== seq) return;
-            console.error("fetchBookings:", e);
-            showToast(e.message || "Failed to load bookings", "error");
-            setBookings([]);
-        } finally {
-            if (requestSeq.current === seq) setLoadingBookings(false);
-        }
-    }
-
-    async function handleConfirmBooking(bookingId, finalPriceData = {}) {
-        try {
-            await confirmBooking(bookingId, finalPriceData);
-            await fetchBookings();
-            showToast("Quote generated and sent to customer.", "success");
-        } catch (e) {
-            console.error("confirmBooking:", e);
-            showToast(e.message || "Confirm failed", "error");
-        }
-    }
-
-    async function handleCancelBooking(bookingId) {
-        try {
-            await cancelBooking(bookingId);
-            await fetchBookings();
-            showToast("Booking cancelled.", "success");
-        } catch (e) {
-            console.error("cancelBooking:", e);
-            showToast(e.message || "Cancel failed", "error");
-        }
-    }
-
-    async function handleUpdateTravelers(bookingId, travelers) {
-        try {
-            await updateBookingTravelers(bookingId, travelers);
-            await fetchBookings();
-            showToast("Travelers updated.", "success");
-        } catch (e) {
-            console.error("updateTravelers:", e);
-            showToast(e.message || "Update failed", "error");
-        }
-    }
-
-    async function handleStatusTransition(bookingId, status) {
-        try {
-            await updateBookingStatus(bookingId, status);
-            await fetchBookings();
-            showToast(`Booking status changed to ${status.replace(/_/g, " ").toLowerCase()}.`, "success");
-        } catch (e) {
-            console.error("handleStatusTransition:", e);
-            showToast(e.message || "Status transition failed", "error");
-        }
-    }
-
-    async function handleRecordPayment(bookingId, amount, currency) {
-        try {
-            await recordAdminPayment(bookingId, amount, currency);
-            await fetchBookings();
-            showToast("Payment recorded.", "success");
-        } catch (e) {
-            console.error("handleRecordPayment:", e);
-            showToast(e.message || "Payment recording failed", "error");
-        }
-    }
-
-    async function handleRefund(bookingId, amount, currency) {
-        try {
-            await processRefund(bookingId, amount, currency);
-            await fetchBookings();
-            showToast("Refund processed.", "success");
-        } catch (e) {
-            console.error("handleRefund:", e);
-            showToast(e.message || "Refund processing failed", "error");
-        }
-    }
-
     return (
         <ManageToursView
             tab={tab}
             tours={tours}
-            bookings={bookings}
+            admins={admins}
+            agents={agents}
+            partnerAgencies={partnerAgencies}
             loading={loading}
-            loadingBookings={loadingBookings}
+            agencyLoading={agencyLoading}
             formOpen={formOpen}
             viewOpen={viewOpen}
             editing={editing}
@@ -218,13 +224,11 @@ export default function ManageTours({ session }) {
             handleConfirmDelete={handleConfirmDelete}
             handleCancelDelete={handleCancelDelete}
             fetchTours={fetchTours}
-            fetchBookings={fetchBookings}
-            handleConfirmBooking={handleConfirmBooking}
-            handleCancelBooking={handleCancelBooking}
-            handleUpdateTravelers={handleUpdateTravelers}
-            handleStatusTransition={handleStatusTransition}
-            handleRecordPayment={handleRecordPayment}
-            handleRefund={handleRefund}
+            fetchAgencyManagement={fetchAgencyManagement}
+            handleReviewAdmin={handleReviewAdmin}
+            handleRemoveAdmin={handleRemoveAdmin}
+            handleReviewAgent={handleReviewAgent}
+            handleReviewPartnerAgency={handleReviewPartnerAgency}
             toast={toast}
             setToast={setToast}
             setFormOpen={setFormOpen}

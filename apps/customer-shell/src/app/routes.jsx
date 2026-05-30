@@ -56,6 +56,7 @@ const Routers = () => {
             emit={emit}
             reload={reload}
             appName="TravelsTREM"
+            authStoragePrefix="customerTREM"
             allowedRoles={["member"]}
             roleOptions={[
                 {
@@ -68,6 +69,7 @@ const Routers = () => {
             defaultRole="member"
             afterAuthPath={redirectAfterAuth}
             showAdminSecret={false}
+            adminShellUrl={process.env.REACT_APP_ADMIN_SHELL_URL || "http://localhost:3002/admin/tours"}
         />
     );
 

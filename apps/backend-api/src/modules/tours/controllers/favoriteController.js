@@ -4,7 +4,7 @@ import Tour from "../models/Tour.js";
 export const toggleFavorite = async (req, res) => {
   try {
     const { tourId } = req.body;
-    const userId = req.headers["x-user-id"] || "anonymous";
+    const userId = req.user?.sub || req.user?.id || req.user?._id || req.user?.userId;
 
     if (!tourId) {
       return res.status(400).json({ status: "error", message: "tourId is required" });
@@ -27,7 +27,7 @@ export const toggleFavorite = async (req, res) => {
 
 export const getFavorites = async (req, res) => {
   try {
-    const userId = req.headers["x-user-id"] || "anonymous";
+    const userId = req.user?.sub || req.user?.id || req.user?._id || req.user?.userId;
     const favorites = await Favorite.find({ userId }).sort({ createdAt: -1 }).lean();
     const tourIds = favorites.map((f) => f.tourId);
     const tours = await Tour.find({ _id: { $in: tourIds } });

@@ -8,12 +8,9 @@ const UserRepository = {
     const query = User.findById(id);
     return projection ? query.select(projection) : query;
   },
-  findForPasswordReset(email, otp) {
-    return User.findOne({
-      email,
-      resetPasswordOtp: otp,
-      resetPasswordExpires: { $gt: Date.now() },
-    });
+  findOne(query = {}, projection) {
+    const dbQuery = User.findOne(query);
+    return projection ? dbQuery.select(projection) : dbQuery;
   },
   create(payload) {
     return new User(payload);

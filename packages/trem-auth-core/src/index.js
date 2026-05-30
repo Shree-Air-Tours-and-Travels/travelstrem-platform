@@ -87,8 +87,11 @@ export const persistAuthSession = ({
 
   const safeUser = extractSafeUser(response);
   const rememberKey = storageKeys.rememberEmail || "remember_email";
+  const tokenKey = storageKeys.token || "token";
+  const userKey = storageKeys.user || "auth_user";
 
-  if (safeUser) storage.setItem("auth_user", JSON.stringify(safeUser));
+  storage.setItem(tokenKey, token);
+  if (safeUser) storage.setItem(userKey, JSON.stringify(safeUser));
   setAuthHeader(api, token);
 
   if (remember) storage.setItem(rememberKey, rememberEmail);
@@ -98,9 +101,76 @@ export const persistAuthSession = ({
   return { token, user: safeUser };
 };
 
-export const clearAuthSession = ({ api, storage = localStorage } = {}) => {
-  ["token", "auth_token", "auth_user", "auth_token_key_name"].forEach((key) => storage?.removeItem(key));
+export const clearAuthSession = ({ api, storage = localStorage, storagePrefix = "" } = {}) => {
+  const prefix = storagePrefix ? `${storagePrefix}:` : "";
+  [prefix + "token", "token", "auth_token", prefix + "auth_user", "auth_user", "auth_token_key_name"].forEach((key) => storage?.removeItem(key));
   clearAuthHeader(api);
+};
+
+export const setupRefreshInterceptor = (api, storagePrefix = "") => {
+  const prefix = storagePrefix ? `${storagePrefix}:` : "";
+  let isRefreshing = false;
+  let failedQueue = [];
+
+  const processQueue = (error, token = null) => {
+    failedQueue.forEach(({ resolve, reject }) => {
+      if (error) reject(error);
+      else resolve(token);
+    });
+    failedQueue = [];
+  };
+
+  api.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+      const originalRequest = error.config;
+
+      if (
+        error.response?.status !== 401 ||
+        originalRequest._retry ||
+        originalRequest.url?.includes("/auth/refresh") ||
+        originalRequest.url?.includes("/auth/login") ||
+        originalRequest.url?.includes("/auth/register") ||
+        originalRequest.url?.includes("/auth/logout")
+      ) {
+        return Promise.reject(error);
+      }
+
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then((token) => {
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          return api(originalRequest);
+        });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        const response = await api.post("/auth/refresh");
+        const { token } = response.data;
+        if (token) {
+          localStorage.setItem(prefix + "token", token);
+          api.defaults.headers.common.Authorization = `Bearer ${token}`;
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          processQueue(null, token);
+          return api(originalRequest);
+        }
+        throw new Error("No token in refresh response");
+      } catch (refreshError) {
+        processQueue(refreshError, null);
+        clearAuthSession({ api, storagePrefix });
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("USER_LOGOUT", { detail: { reason: "refresh_failed" } }));
+        }
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+  );
 };
 
 export const createRefreshHandler = ({ authService, persistSession, onRefresh } = {}) => async (payload = {}) => {
@@ -140,6 +210,8 @@ export const createAuthService = (api) => ({
   register: (payload) => api.post("/auth/register", payload, { headers: { "Content-Type": "application/json" } }),
   forgotPassword: (payload) => api.post("/auth/forgot-password", payload, { headers: { "Content-Type": "application/json" } }),
   resetPassword: (payload) => api.post("/auth/reset-password", payload, { headers: { "Content-Type": "application/json" } }),
+  verifyLoginOtp: (payload) => api.post("/auth/verify-otp", payload, { headers: { "Content-Type": "application/json" } }),
+  resendLoginOtp: (payload) => api.post("/auth/resend-otp", payload, { headers: { "Content-Type": "application/json" } }),
   refresh: (payload = {}) => api.post("/auth/refresh", payload, { headers: { "Content-Type": "application/json" } }),
 });
 
@@ -149,21 +221,25 @@ export const getReturnPath = (locationState, fallback) => {
   return `${from.pathname || fallback}${from.search || ""}${from.hash || ""}`;
 };
 
-export const normalizeAuthConfig = (remote, roleOptions, defaultRole) => ({
+export const normalizeAuthConfig = (remote, roleOptions, defaultRole, storagePrefix = "") => {
+  const prefix = storagePrefix ? `${storagePrefix}:` : "";
+  return ({
   defaultRole: defaultRole || remote?.defaultRole || "member",
   roles: Array.isArray(roleOptions) && roleOptions.length ? roleOptions : Array.isArray(remote?.roles) ? remote.roles : DEFAULT_AUTH_ROLES,
   socialProviders: Array.isArray(remote?.socialProviders) ? remote.socialProviders : [],
   strings: { ...(remote?.strings || {}) },
   storageKeys: {
-    token: remote?.storageKeys?.token || "token",
-    rememberEmail: remote?.storageKeys?.rememberMe || remote?.storageKeys?.rememberEmail || "remember_email",
+    token: remote?.storageKeys?.token || `${prefix}token`,
+    user: remote?.storageKeys?.user || `${prefix}auth_user`,
+    rememberEmail: remote?.storageKeys?.rememberMe || remote?.storageKeys?.rememberEmail || `${prefix}remember_email`,
   },
-});
+  });
+};
 
 export const extractAuthConfig = (res) =>
   res?.componentData?.structure || res?.data?.componentData?.structure || res?.data?.data?.componentData?.structure;
 
-export const useAuthConfig = ({ authService, roleOptions, defaultRole } = {}) => {
+export const useAuthConfig = ({ authService, roleOptions, defaultRole, storagePrefix = "" } = {}) => {
   const [cfg, setCfg] = useState(null);
   const [cfgLoading, setCfgLoading] = useState(true);
   const [cfgError, setCfgError] = useState(null);
@@ -177,11 +253,11 @@ export const useAuthConfig = ({ authService, roleOptions, defaultRole } = {}) =>
         const res = await authService.getConfig();
         const remote = extractAuthConfig(res);
         if (!remote) throw new Error("Invalid config format from server");
-        if (!canceled) setCfg(normalizeAuthConfig(remote, roleOptions, defaultRole));
+        if (!canceled) setCfg(normalizeAuthConfig(remote, roleOptions, defaultRole, storagePrefix));
       } catch (err) {
         if (!canceled) {
           setCfgError(err?.response?.data?.message || err.message || "Failed to load auth config");
-          setCfg(normalizeAuthConfig(null, roleOptions, defaultRole));
+          setCfg(normalizeAuthConfig(null, roleOptions, defaultRole, storagePrefix));
         }
       } finally {
         if (!canceled) setCfgLoading(false);
@@ -191,7 +267,7 @@ export const useAuthConfig = ({ authService, roleOptions, defaultRole } = {}) =>
     return () => {
       canceled = true;
     };
-  }, [authService, defaultRole, roleOptions]);
+  }, [authService, defaultRole, roleOptions, storagePrefix]);
 
   return { cfg, cfgLoading, cfgError };
 };
@@ -206,6 +282,8 @@ export const useAuthFlow = ({
   defaultRole = "member",
   registerEnabled = true,
   showAdminSecret = true,
+  otpLoginEnabled = false,
+  storagePrefix = "",
 } = {}) => {
   const [activeTab, setActiveTab] = useState("login");
   const [loading, setLoading] = useState(false);
@@ -214,7 +292,9 @@ export const useAuthFlow = ({
   const [otpMessage, setOtpMessage] = useState(null);
   const [remember, setRemember] = useState(false);
   const [form, setForm] = useState(null);
-  const { cfg, cfgLoading, cfgError } = useAuthConfig({ authService, roleOptions, defaultRole });
+  const [loginOtpStep, setLoginOtpStep] = useState(null);
+  const [otpCode, setOtpCode] = useState("");
+  const { cfg, cfgLoading, cfgError } = useAuthConfig({ authService, roleOptions, defaultRole, storagePrefix });
 
   const roles = useMemo(() => {
     const configured = cfg?.roles || roleOptions || DEFAULT_AUTH_ROLES;
@@ -229,6 +309,7 @@ export const useAuthFlow = ({
     setForm({
       name: "",
       email: remembered || "",
+      phone: "",
       password: "",
       confirmPassword: "",
       role: initialRole,
@@ -239,7 +320,12 @@ export const useAuthFlow = ({
   const update = useCallback((key) => (e) => setForm((state) => ({ ...state, [key]: e?.target?.value ?? e })), []);
 
   const selectedRole = roles.find((role) => role.value === form?.role);
-  const needsSecret = Boolean(showAdminSecret && selectedRole?.requiresSecret);
+  const needsSecret = Boolean(
+    showAdminSecret &&
+      (selectedRole?.requiresSecret ||
+        (selectedRole?.requiresSecretForEmail &&
+          form?.email?.trim().toLowerCase() === String(selectedRole.requiresSecretForEmail).trim().toLowerCase()))
+  );
 
   const persistSession = useCallback(async (response) => {
     const session = persistAuthSession({
@@ -267,8 +353,9 @@ export const useAuthFlow = ({
       const res = await authService.requestAdminRegistrationOtp({
         email: form.email.trim(),
         role: form.role,
+        phone: form.phone?.trim() || "",
       });
-      setOtpMessage(res?.data?.message || res?.message || "OTP generated. Check the backend console.");
+      setOtpMessage(res?.data?.message || res?.message || "Registration OTP generated.");
     } catch (err) {
       setError(err?.response?.data?.message || err.message || "Could not generate registration OTP.");
     } finally {
@@ -292,8 +379,18 @@ export const useAuthFlow = ({
       if (activeTab === "login") {
         if (!form.email || !form.password) throw new Error(cfg.strings?.missingLoginFields || "Email and password are required.");
         const res = await authService.login({ email: form.email.trim(), password: form.password });
-        await persistSession(res);
-        return { status: "authenticated", action: "login" };
+        const responseData = res?.data || res;
+        if (responseData?.status === "verify_otp") {
+          setLoginOtpStep({
+            verificationId: responseData.verificationId,
+            email: responseData.email,
+            expiresInMs: responseData.expiresInMs,
+          });
+          setOtpCode("");
+          return { status: "verify_otp", action: "login" };
+        }
+        const userData = await persistSession(res);
+        return { status: "authenticated", action: "login", user: userData };
       }
 
       if (!registerEnabled) throw new Error("Registration is not enabled for this shell.");
@@ -304,13 +401,20 @@ export const useAuthFlow = ({
       const payload = {
         name: form.name.trim(),
         email: form.email.trim(),
+        phone: form.phone?.trim() || "",
         password: form.password,
         role: form.role,
         ...(needsSecret ? { adminOtp: form.adminOtp } : {}),
       };
       const res = await authService.register(payload);
-      await persistSession(res);
-      return { status: "authenticated", action: "register" };
+      const responseData = res?.data || res;
+      if (responseData?.status === "pending_approval") {
+        setError(responseData.message || "Registration submitted. Admin approval is required before login.");
+        setActiveTab("login");
+        return { status: "pending_approval", action: "register", user: responseData.user };
+      }
+      const userData = await persistSession(res);
+      return { status: "authenticated", action: "register", user: userData };
     } catch (err) {
       setError(err?.response?.data?.message || err.message || "Authentication failed");
       return null;
@@ -318,6 +422,50 @@ export const useAuthFlow = ({
       setLoading(false);
     }
   }, [activeTab, allowedRoles, authService, cfg, form, needsSecret, persistSession, registerEnabled]);
+
+  const submitLoginOtp = useCallback(async () => {
+    if (!loginOtpStep) return { status: "error", message: "No verification session." };
+    setError(null);
+    setOtpLoading(true);
+    try {
+      if (typeof authService?.verifyLoginOtp !== "function") {
+        throw new Error("OTP login is not configured for this shell.");
+      }
+      const res = await authService.verifyLoginOtp({
+        verificationId: loginOtpStep.verificationId,
+        otp: otpCode.trim(),
+      });
+      const otpUserData = await persistSession(res);
+      setLoginOtpStep(null);
+      setOtpCode("");
+      return { status: "authenticated", action: "login", user: otpUserData };
+    } catch (err) {
+      setError(err?.response?.data?.message || err.message || "OTP verification failed");
+      return null;
+    } finally {
+      setOtpLoading(false);
+    }
+  }, [authService, loginOtpStep, otpCode, persistSession]);
+
+  const resendLoginOtpHandler = useCallback(async () => {
+    if (!loginOtpStep) return;
+    setError(null);
+    setOtpMessage(null);
+    setOtpLoading(true);
+    try {
+      if (typeof authService?.resendLoginOtp !== "function") {
+        throw new Error("OTP login is not configured for this shell.");
+      }
+      const res = await authService.resendLoginOtp({
+        verificationId: loginOtpStep.verificationId,
+      });
+      setOtpMessage(res?.data?.message || "New OTP generated.");
+    } catch (err) {
+      setError(err?.response?.data?.message || err.message || "Could not resend OTP.");
+    } finally {
+      setOtpLoading(false);
+    }
+  }, [authService, loginOtpStep]);
 
   const refresh = useMemo(() => createRefreshHandler({ authService, persistSession }), [authService, persistSession]);
 
@@ -344,5 +492,11 @@ export const useAuthFlow = ({
     requestRegistrationOtp,
     submitAuth,
     refresh,
+    loginOtpStep,
+    setLoginOtpStep,
+    otpCode,
+    setOtpCode,
+    submitLoginOtp,
+    resendLoginOtp: resendLoginOtpHandler,
   };
 };

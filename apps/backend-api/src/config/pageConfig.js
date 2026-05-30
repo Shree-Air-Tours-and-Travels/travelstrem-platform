@@ -69,6 +69,62 @@ export default {
             }
           }
         ]
+      },
+      "agent-services": {
+        "page": "agent-services",
+        "title": "Agent Services",
+        "description": "Manage agent-owned tours and agency-visible services.",
+        "widgets": [
+          {
+            "type": "agentServices",
+            "source": "agent-shell",
+            "props": {
+              "variant": "agent"
+            }
+          }
+        ]
+      },
+      "agent-dashboard": {
+        "page": "agent-dashboard",
+        "title": "Agent Dashboard",
+        "description": "View agent profile, approval status, and agency assignment.",
+        "widgets": [
+          {
+            "type": "agentProfile",
+            "source": "agent-shell",
+            "props": {
+              "variant": "agent"
+            }
+          }
+        ]
+      },
+      "agent-bookings": {
+        "page": "agent-bookings",
+        "title": "Agent Bookings",
+        "description": "Track bookings assigned to this agent or agency.",
+        "widgets": [
+          {
+            "type": "agentBookings",
+            "source": "agent-shell",
+            "props": {
+              "variant": "agent"
+            }
+          }
+        ]
+      },
+      "agent-agency": {
+        "page": "agent-agency",
+        "title": "Partner Agency",
+        "description": "Apply for or review the partner agency linked to this account.",
+        "widgets": [
+          {
+            "type": "partnerAgency",
+            "source": "agent-shell",
+            "props": {
+              "variant": "agent"
+            }
+          }
+        ]
       }
     }
   }

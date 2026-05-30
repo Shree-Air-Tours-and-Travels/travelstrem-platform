@@ -24,7 +24,8 @@ export const setFetchDataApiClient = (api) => {
 
 const readAuthUserFromStorage = () => {
   try {
-    const raw = localStorage.getItem("auth_user");
+    const prefix = typeof window !== "undefined" ? window.__TREM_AUTH_STORAGE_PREFIX__ : "";
+    const raw = prefix ? localStorage.getItem(`${prefix}:auth_user`) : localStorage.getItem("auth_user");
     return raw ? JSON.parse(raw) : null;
   } catch (err) {
     return null;

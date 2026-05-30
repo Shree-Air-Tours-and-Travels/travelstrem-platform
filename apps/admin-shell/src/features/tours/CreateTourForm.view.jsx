@@ -57,8 +57,8 @@ function ImageUploader({ uploading, uploadProgress, photo, photos = [], onUpload
     const [dragOver, setDragOver] = useState(false);
 
     const handleFile = useCallback(files => {
-        const file = files?.[0];
-        if (file) onUpload(file);
+        const selected = Array.from(files || []);
+        if (selected.length > 0) onUpload(selected);
     }, [onUpload]);
 
     const handleDrop = useCallback(e => {
@@ -103,11 +103,11 @@ function ImageUploader({ uploading, uploadProgress, photo, photos = [], onUpload
                 ) : (
                     <div className="ctf-dropzone-placeholder">
                         <span className="ctf-dropzone-icon">+</span>
-                        <span>Drop image here or click to browse</span>
+                        <span>Drop images here or click to browse</span>
                     </div>
                 )}
             </div>
-            <input ref={inputRef} type="file" accept="image/*" onChange={e => { handleFile(e.target.files); e.target.value = ''; }} hidden />
+            <input ref={inputRef} type="file" accept="image/*" multiple onChange={e => { handleFile(e.target.files); e.target.value = ''; }} hidden />
 
             {allPhotos.length > 0 && (
                 <div className="ctf-photo-grid">

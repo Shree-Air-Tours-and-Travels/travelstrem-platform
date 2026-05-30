@@ -22,7 +22,12 @@ export const getServices = async (req, res) => {
 
 export const createService = async (req, res) => {
     try {
-        const newService = new Service(req.body);
+        const allowed = ["id", "label", "shortDescription", "description", "fullDescription", "image", "coverImage", "features", "highlights", "cta", "disabled"];
+        const body = {};
+        for (const key of allowed) {
+            if (req.body[key] !== undefined) body[key] = req.body[key];
+        }
+        const newService = new Service(body);
 
         const savedService = await newService.save();
 

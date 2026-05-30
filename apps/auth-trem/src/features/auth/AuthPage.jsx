@@ -17,6 +17,9 @@ export default function AuthPage({
   afterAuthPath = "/",
   registerEnabled = true,
   showAdminSecret = true,
+  otpLoginEnabled = false,
+  adminShellUrl = "",
+  authStoragePrefix = "",
   className = "",
 }) {
   const navigate = useNavigate();
@@ -31,6 +34,7 @@ export default function AuthPage({
     setActiveTab,
     loading,
     error,
+    setError,
     otpLoading,
     otpMessage,
     remember,
@@ -46,6 +50,12 @@ export default function AuthPage({
     persistSession,
     requestRegistrationOtp,
     submitAuth,
+    loginOtpStep,
+    setLoginOtpStep,
+    otpCode,
+    setOtpCode,
+    submitLoginOtp,
+    resendLoginOtp,
   } = useAuthFlow({
     api,
     authService,
@@ -56,17 +66,40 @@ export default function AuthPage({
     defaultRole,
     registerEnabled,
     showAdminSecret,
+    otpLoginEnabled,
+    storagePrefix: authStoragePrefix,
   });
+
+  const isAdminRole = (role) => role && ["admin", "agent", "super_admin", "superadmin"].includes(String(role).toLowerCase());
+
+  const redirectAfterLogin = (result) => {
+    if (adminShellUrl && result?.user && isAdminRole(result.user.role)) {
+      window.location.assign(adminShellUrl);
+      return;
+    }
+    navigate(getReturnPath(location.state, afterAuthPath), { replace: true });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const result = await submitAuth();
     if (!result) return;
-    if (result.action === "login") {
-      navigate(getReturnPath(location.state, afterAuthPath), { replace: true });
-      return;
-    }
-    navigate(afterAuthPath, { replace: true });
+    if (result.status === "verify_otp") return;
+    if (result.status === "pending_approval") return;
+    redirectAfterLogin(result);
+  };
+
+  const handleOtpSubmit = async (e) => {
+    e.preventDefault();
+    const result = await submitLoginOtp();
+    if (!result) return;
+    redirectAfterLogin(result);
+  };
+
+  const handleOtpBack = () => {
+    setLoginOtpStep(null);
+    setOtpCode("");
+    setError(null);
   };
 
   if (cfgLoading || form === null) {
@@ -75,6 +108,70 @@ export default function AuthPage({
         <div className="auth-trem__card auth-trem__card--center">
           <div className="auth-trem__loader">Loading authentication configuration...</div>
           {cfgError && <div className="auth-trem__config-error">Config fallback active: {cfgError}</div>}
+        </div>
+      </div>
+    );
+  }
+
+  if (loginOtpStep) {
+    return (
+      <div className={`auth-trem ${className}`}>
+        <div className="auth-trem__card">
+          <header className="auth-trem__header">
+            <div>
+              <Paragraph primaryClassname="auth-trem__eyebrow">{appName}</Paragraph>
+              <Title primaryClassname="auth-trem__title" text="Verify your login" />
+              <Paragraph primaryClassname="auth-trem__sub">
+                Enter the OTP sent to {loginOtpStep.email}.
+              </Paragraph>
+            </div>
+            <div className="auth-trem__brand-icon">
+              <Icon name="shield" size={36} title="verification" />
+            </div>
+          </header>
+
+          <form className="auth-trem__form" onSubmit={handleOtpSubmit}>
+            <input
+              className="auth-trem__field auth-trem__field--otp"
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              placeholder="Enter 6-digit OTP"
+              value={otpCode}
+              onChange={(e) => setOtpCode(e.target.value)}
+              maxLength={6}
+              required
+              autoFocus
+            />
+
+            {error && <div className="auth-trem__error" role="alert">{error}</div>}
+            {otpMessage && <div className="auth-trem__otp-message">{otpMessage}</div>}
+
+            <Button
+              variant="solid"
+              color="primary"
+              type="submit"
+              text={otpLoading ? "Verifying..." : "Verify & Sign In"}
+              disabled={otpLoading || otpCode.trim().length < 4}
+              primaryClassName="auth-trem__primary"
+            />
+
+            <div className="auth-trem__otp-actions">
+              <Button
+                variant="text"
+                text={otpLoading ? "Sending..." : "Resend OTP"}
+                onClick={resendLoginOtp}
+                disabled={otpLoading}
+                primaryClassName="auth-trem__link"
+              />
+              <Button
+                variant="text"
+                text="Back to login"
+                onClick={handleOtpBack}
+                primaryClassName="auth-trem__link"
+              />
+            </div>
+          </form>
         </div>
       </div>
     );
@@ -108,6 +205,10 @@ export default function AuthPage({
 
           <input className="auth-trem__field" type="email" placeholder={cfg.strings?.placeholder?.email || "Email"} value={form.email} onChange={update("email")} required />
 
+          {activeTab === "register" && form.role === "admin" && (
+            <input className="auth-trem__field" type="tel" placeholder="Mobile number" value={form.phone || ""} onChange={update("phone")} />
+          )}
+
           <div className="auth-trem__field-wrap">
             <input className="auth-trem__field-input" type={showPassword ? "text" : "password"} placeholder={cfg.strings?.placeholder?.password || "Password"} value={form.password} onChange={update("password")} required />
             <Button variant="text" iconLeft={showPassword ? "eyeSlash" : "eye"} iconSize={16} onClick={() => setShowPassword((value) => !value)} aria-label="Toggle password visibility" primaryClassName="auth-trem__field-action" />
@@ -134,10 +235,10 @@ export default function AuthPage({
               {needsSecret && (
                 <div className="auth-trem__secret">
                   <div className="auth-trem__otp-row">
-                    <input className="auth-trem__field" type="text" inputMode="numeric" placeholder="Backend console OTP" value={form.adminOtp} onChange={update("adminOtp")} required />
+                    <input className="auth-trem__field" type="text" inputMode="numeric" placeholder="Registration OTP" value={form.adminOtp} onChange={update("adminOtp")} required />
                     <Button variant="outline" size="small" text={otpLoading ? "Sending..." : "Get OTP"} onClick={requestRegistrationOtp} disabled={otpLoading} primaryClassName="auth-trem__otp-button" />
                   </div>
-                  <div className="auth-trem__hint">Click Get OTP, then copy the code printed in the backend console.</div>
+                  <div className="auth-trem__hint">Enter the OTP from the registration record.</div>
                   {otpMessage && <div className="auth-trem__otp-message">{otpMessage}</div>}
                 </div>
               )}

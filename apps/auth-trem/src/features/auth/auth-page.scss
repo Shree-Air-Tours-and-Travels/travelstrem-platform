@@ -178,6 +178,20 @@
     align-items: center;
   }
 
+  &__field--otp {
+    font-size: 1.5rem;
+    letter-spacing: 0.5em;
+    text-align: center;
+    font-weight: $font-bold;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__otp-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
   &__otp-button {
     min-height: 44px;
     padding: 0 14px;
@@ -285,11 +299,13 @@
   &__actions {
     display: flex;
     justify-content: flex-end;
+    flex-wrap: wrap;
     gap: 10px;
     margin-top: 12px;
   }
 
   &__ghost,
+  &__secondary,
   &__primary {
     padding: 10px 14px;
     border-radius: 10px;
@@ -300,6 +316,13 @@
     border: 1px solid var(--border);
     background: transparent;
     color: var(--text);
+  }
+
+  &__secondary {
+    border: 1px solid var(--color-primary);
+    background: transparent;
+    color: var(--color-primary);
+    font-weight: $font-bold;
   }
 
   &__primary {

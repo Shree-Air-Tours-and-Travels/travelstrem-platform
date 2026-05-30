@@ -39,20 +39,6 @@ const config = {
             find: /^@packages\/trem-utils$/,
             replacement: path.join(repoRoot, "packages/trem-utils/src/index.js"),
           },
-          {
-            find: /^@storybook\/react\/dist\/entry-preview\.mjs$/,
-            replacement: path.join(
-              repoRoot,
-              "node_modules/.pnpm/@storybook+react@8.6.18_react-dom@18.3.1_react@18.3.1__react@18.3.1_storybook@8.6.18_typescript@4.9.5/node_modules/@storybook/react/dist/entry-preview.mjs",
-            ),
-          },
-          {
-            find: /^@storybook\/react\/dist\/entry-preview-docs\.mjs$/,
-            replacement: path.join(
-              repoRoot,
-              "node_modules/.pnpm/@storybook+react@8.6.18_react-dom@18.3.1_react@18.3.1__react@18.3.1_storybook@8.6.18_typescript@4.9.5/node_modules/@storybook/react/dist/entry-preview-docs.mjs",
-            ),
-          },
         ],
       },
       server: {

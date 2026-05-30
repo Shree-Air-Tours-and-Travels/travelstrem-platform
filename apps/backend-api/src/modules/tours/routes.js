@@ -6,13 +6,13 @@ import { uploadTourImage, uploadAndAttachPhotos } from "./controllers/uploadCont
 import { requireTourBody } from "./validators/create.validation.js";
 import { requireTourUpdateBody } from "./validators/update.validation.js";
 import { upload } from "../../services/cloudinary.js";
-import authMiddleware from "../../core/auth/authMiddleware.js";
+import authMiddleware from "../../shared/auth/middleware.js";
 
 const router = express.Router();
 
 // GET all tours
-router.get("/", getTours);        // Get all tours
-router.get("/favorites", getFavorites);
+router.get("/", authMiddleware, getTours);        // Get all tours
+router.get("/favorites", authMiddleware, getFavorites);
 router.get("/:id/price", getTourPricePreview);
 router.get("/:tourRef/widgets/:widgetFile.json", getTourDetailsWidget);
 router.get("/:tourRef", getTourByRef);  // Get single tour by id or slug ref

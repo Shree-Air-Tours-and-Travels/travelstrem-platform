@@ -1,0 +1,30 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "servicesTitle": "Tours",
+        "emptyTitle": "No tours yet",
+        "emptyDescription": "Assigned and agency-visible tours will appear here."
+      },
+      "urls": {}
+    },
+    "structure": {
+      "widgets": [
+        {
+          "type": "AgentServicesWorkspace",
+          "props": {
+            "serviceTypes": ["tours"],
+            "defaultServiceType": "tours"
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

@@ -47,7 +47,7 @@ const DEFAULT_CONFIG = {
   authActions: { login: { label: "Login", path: "/login" }, logout: { label: "Logout" } },
 };
 
-export default function Header({ headerConfig = DEFAULT_CONFIG, session = null, theme = "light", onToggleTheme, onLogout, onSettings, onNavigate, onFavoritesClick, notificationFetcher, showNotifications, className = "" }) {
+export default function Header({ headerConfig = DEFAULT_CONFIG, session = null, theme = "light", onToggleTheme, onLogout, onSettings, onNavigate, onFavoritesClick, notificationFetcher, showNotifications, showFavorites = true, className = "" }) {
   const navigate = useNavigate();
   const location = useLocation();
   const user = session?.user || null;
@@ -90,6 +90,7 @@ export default function Header({ headerConfig = DEFAULT_CONFIG, session = null, 
   const loginAction = config.authActions?.login || DEFAULT_CONFIG.authActions.login;
   const logoutAction = config.authActions?.logout || DEFAULT_CONFIG.authActions.logout;
   const notificationsEnabled = showNotifications ?? leftSection.showNotifications ?? true;
+  const favoritesEnabled = showFavorites && leftSection.showFavorites !== false;
 
   const navItems = useMemo(() => {
     const configuredMenu = Array.isArray(config.menu) && config.menu.length ? config.menu : config.navigation || [];
@@ -240,7 +241,7 @@ const NavItem = ({ item, isFirst, drawer, activePath, firstLinkRef, onNavClick, 
   }, [onFavoritesClick, onPathClick]);
 
   const renderActions = (wrapItems = true) => {
-    const favorites = user ? (
+    const favorites = favoritesEnabled && user ? (
       <Button variant="text" iconLeft="heart" primaryClassName="trem-header__action-btn" onClick={handleFavoritesClick} aria-label="Favorites" />
     ) : null;
     const notification = notificationsEnabled && user ? <NotificationBell fetcher={notificationFetcher} /> : null;
@@ -275,7 +276,7 @@ const NavItem = ({ item, isFirst, drawer, activePath, firstLinkRef, onNavClick, 
             <ul className="trem-header__menu trem-header__menu--start">{navItems.map((item, i) => <NavItem item={item} key={item.id} isFirst={i === 0} activePath={activePath} firstLinkRef={firstLinkRef} onNavClick={onNavClick} onClose={() => setOpen(false)} />)}</ul>
             <ul className="trem-header__menu trem-header__menu--end">{renderUserArea(false)}{renderActions()}</ul>
             <div className="trem-header__mobile-actions">
-              {user ? <Button variant="text" iconLeft="heart" primaryClassName="trem-header__action-btn" onClick={handleFavoritesClick} aria-label="Favorites" /> : null}
+              {favoritesEnabled && user ? <Button variant="text" iconLeft="heart" primaryClassName="trem-header__action-btn" onClick={handleFavoritesClick} aria-label="Favorites" /> : null}
               {notificationsEnabled && user ? <NotificationBell fetcher={notificationFetcher} variant="sidebar" /> : null}
             </div>
           </nav>

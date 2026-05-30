@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { QUOTE_STATUS, QUOTE_STATUS_LIST } from "../../../constants/enums.js";
 
 const { Schema } = mongoose;
 
@@ -28,7 +29,7 @@ const bookingQuoteSchema = new Schema({
   finalAmount: { type: Number, default: 0 },
   items: { type: [quoteItemSchema], default: [] },
   notes: { type: String, trim: true, default: "" },
-  status: { type: String, enum: ["DRAFT", "READY", "SENT", "ACCEPTED", "REJECTED", "EXPIRED"], default: "READY", index: true },
+  status: { type: String, enum: QUOTE_STATUS_LIST, default: QUOTE_STATUS.READY, index: true },
   createdBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
   sentAt: { type: Date, default: null },
   acceptedAt: { type: Date, default: null },

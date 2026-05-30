@@ -1,0 +1,85 @@
+{
+    "createTitle": "Create Tour",
+    "editTitle": "Edit Tour",
+    "steps": ["Basic", "Schedule", "Itinerary", "Pricing", "Logistics", "Content", "Review"],
+    "labels": {
+        "title": "Title",
+        "from": "From",
+        "to": "To",
+        "address": "Address",
+        "line1": "Line1",
+        "line2": "Line2",
+        "city": "City",
+        "state": "State",
+        "zip": "Zip",
+        "country": "Country",
+        "distance": "Distance (km)",
+        "startDate": "Start Date",
+        "endDate": "End Date",
+        "days": "Days",
+        "nights": "Nights",
+        "itineraryDays": "Itinerary Days",
+        "minPrice": "Min price",
+        "maxPrice": "Max price",
+        "seasonalPricing": "Seasonal Pricing",
+        "mainPhoto": "Main Photo",
+        "pasteUrl": "Paste URL",
+        "highlights": "Highlights",
+        "description": "Description",
+        "tags": "Tags",
+        "featured": "Featured",
+        "status": "Status",
+        "reviewSubmit": "Review & Submit",
+        "reviewHint": "Review all the information before submitting. Use the Back button to make changes."
+    },
+    "itineraryLabels": {
+        "activities": "Activities",
+        "meals": "Meals",
+        "accommodation": "Accommodation",
+        "location": "Location",
+        "notes": "Notes"
+    },
+    "placeholders": {
+        "mainPhotoUrl": "Main photo URL",
+        "galleryUrls": "Gallery URLs (comma separated)",
+        "addItem": "Add item",
+        "activity": "Add activity",
+        "meal": "Add meal",
+        "highlightTitle": "Title *",
+        "highlightShort": "Short description",
+        "highlightIcon": "Icon name or URL",
+        "seasonName": "name"
+    },
+    "buttons": {
+        "add": { "text": "Add" },
+        "remove": { "text": "Remove" },
+        "back": { "text": "Back" },
+        "next": { "text": "Next" },
+        "cancel": { "text": "Cancel" },
+        "submit": { "text": "Submit", "saving": "Saving\u2026" },
+        "addDay": { "text": "+ Add Day" },
+        "addSeason": { "text": "Add season" },
+        "addHighlight": { "text": "+ Add Highlight" }
+    },
+    "tooltips": {
+        "remove": "Remove",
+        "setMain": "Set as main",
+        "moveUp": "Move up",
+        "moveDown": "Move down"
+    },
+    "upload": {
+        "dropHint": "Drop images here or click to browse",
+        "uploading": "Uploading\u2026",
+        "progress": "%"
+    },
+    "statusOptions": [
+        { "value": "draft", "label": "draft" },
+        { "value": "published", "label": "published" },
+        { "value": "cancelled", "label": "cancelled" }
+    ],
+    "unsavedWarning": "You have unsaved changes. Discard them?",
+    "successMessages": {
+        "created": "Tour created successfully!",
+        "updated": "Tour updated successfully!"
+    }
+}

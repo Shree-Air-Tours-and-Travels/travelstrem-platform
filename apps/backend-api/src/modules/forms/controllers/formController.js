@@ -1,6 +1,8 @@
 // modules/forms/controller.js
 import ContactLeadRepository from "../repositories/ContactLeadRepository.js";
 import Tour from "../../tours/models/Tour.js";
+import User from "../../auth/models/User.js";
+import mailer from "../../../core/mailer/index.js";
 import axios from "axios";
 import pageDefinitionService from "../../../services/pageDefinitionService.js";
 
@@ -30,7 +32,7 @@ export const getForm = async (req, res) => {
         }
 
         return res.status(200).json({
-            ...pageDefinitionService.buildWidgetResponse("tours-remote/listing", "./widgets/contact-agent-form.json", {
+            ...pageDefinitionService.buildWidgetResponse("tours-remote/details", "./widgets/contact-agent-form.json", {
                 injectData: tour ? { tour } : {},
             }),
             message: "Contact form fetched",
@@ -55,14 +57,26 @@ export const submitForm = async (req, res) => {
             fields = {},
         } = req.body || {};
 
-        // Create and save lead
+        const createdAt = req.body.createdAt ? new Date(req.body.createdAt) : undefined;
+        const validatedCreatedAt = (createdAt && !Number.isNaN(createdAt.getTime())) ? createdAt : undefined;
+
+        const allowedFields = {};
+        const knownKeys = ["name", "email", "phone", "message", "preferredContact"];
+        if (fields && typeof fields === "object") {
+            for (const key of knownKeys) {
+                if (fields[key] !== undefined && fields[key] !== null) {
+                    allowedFields[key] = String(fields[key]).slice(0, 2000);
+                }
+            }
+        }
+
         const newLead = ContactLeadRepository.create({
             form: "contact-agent",
-            fields,
-            tourId,
-            tourTitle,
-            url,
-            createdAt: req.body.createdAt ? new Date(req.body.createdAt) : undefined,
+            fields: allowedFields,
+            tourId: String(tourId || "").slice(0, 100) || null,
+            tourTitle: String(tourTitle || "").slice(0, 500) || null,
+            url: String(url || "").slice(0, 2000) || null,
+            createdAt: validatedCreatedAt,
         });
 
         const savedLead = await newLead.save();
@@ -95,11 +109,31 @@ export const submitForm = async (req, res) => {
             }
         }
 
+        // Notify agent via email
+        if (tourId) {
+            try {
+                const tour = await Tour.findById(tourId).lean();
+                if (tour?.ownerAgent) {
+                    const agent = await User.findById(tour.ownerAgent).lean();
+                    if (agent?.email) {
+                        await mailer.sendMail({
+                            to: agent.email,
+                            subject: `New lead: ${tourTitle || "Tour inquiry"}`,
+                            text: `New contact request from ${fields.name}\n\nName: ${fields.name}\nEmail: ${fields.email}\nPhone: ${fields.phone || "N/A"}\nTour: ${tourTitle || "N/A"}\nURL: ${url || "N/A"}`,
+                            html: `<h3>New Contact Request</h3><table><tr><td><strong>Name:</strong></td><td>${fields.name}</td></tr><tr><td><strong>Email:</strong></td><td>${fields.email}</td></tr><tr><td><strong>Phone:</strong></td><td>${fields.phone || "N/A"}</td></tr><tr><td><strong>Tour:</strong></td><td>${tourTitle || "N/A"}</td></tr><tr><td><strong>URL:</strong></td><td>${url || "N/A"}</td></tr></table>`,
+                        });
+                    }
+                }
+            } catch (emailErr) {
+                console.error("Agent email notification failed:", emailErr?.message || emailErr);
+            }
+        }
+
         // respond with your JSON contract & componentData
         return res.status(200).json({
             status: "success",
             message: "Request submitted successfully",
-            ...pageDefinitionService.buildWidgetResponse("tours-remote/listing", "./widgets/contact-agent-form.json", {
+            ...pageDefinitionService.buildWidgetResponse("tours-remote/details", "./widgets/contact-agent-form.json", {
                 injectData: {
                     lead: {
                         id: savedLead._id,

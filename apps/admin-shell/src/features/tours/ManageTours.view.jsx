@@ -1,10 +1,13 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
-import { Button, EmptyState, Title, SubTitle, Paragraph, TourCard, BookingCard } from "@packages/trem-ui";
+import { Button, SubTitle, Title, Paragraph } from "@packages/trem-ui";
 import "./ManageTours.scss";
-import CreateTourForm from "./CreateTourForm";
-import TourView from "./TourView";
-import { TourCardSkeleton, BookingCardSkeleton, WidgetError } from "../../shared/Skeleton";
+import { adminWidgetRegistry } from "../../widgets/registry/widgetRegistry";
+
+const TAB_WIDGET_MAP = {
+    dashboard: "AdminDashboard",
+    tours: "AdminTourManagement",
+    agencies: "AgencyManagement",
+};
 
 export function ConfirmModal({ open, title = "Confirm", message = "Are you sure?", onCancel, onConfirm }) {
     if (!open) return null;
@@ -59,140 +62,62 @@ export function Toast({ toast, setToast }) {
 }
 
 export default function ManageToursView({
-    tab, tours, bookings, loading, loadingBookings, formOpen, viewOpen, editing,
+    tab, tours, admins, agents, partnerAgencies, loading, agencyLoading, formOpen, viewOpen, editing,
     viewTour, error, auth, setTab, openCreate, openEdit, openView, handleDelete,
-    handleDeleteAll, fetchTours, fetchBookings, handleConfirmBooking,
-    handleCancelBooking, handleUpdateTravelers, handleStatusTransition,
-    handleRecordPayment, handleRefund, setFormOpen, setViewOpen, setViewTour,
+    handleDeleteAll, fetchTours, fetchAgencyManagement, handleReviewAdmin, handleRemoveAdmin, handleReviewAgent, handleReviewPartnerAgency, setFormOpen, setViewOpen, setViewTour,
     confirmDelete, confirmMessage, handleConfirmDelete, handleCancelDelete,
     toast, setToast
 }) {
-    const navigate = useNavigate();
     return (
         <div className="mt-root">
             <header className="mt-toolbar">
-                <Title text="Admin , Manage" />
+                <Title text="Admin Operations" />
                 <div className="mt-actions">
-                    <Button primaryClassName="btn" variant="outline" onClick={() => setTab("tours")} text="Tours" />
-                    <Button primaryClassName="btn" variant="outline" onClick={() => setTab("bookings")} text="Bookings" />
+                    <Button primaryClassName={`btn ${tab === "dashboard" ? "is-active" : ""}`} variant={tab === "dashboard" ? "solid" : "outline"} onClick={() => setTab("dashboard")} text="Dashboard" />
+                    <Button primaryClassName={`btn ${tab === "tours" ? "is-active" : ""}`} variant={tab === "tours" ? "solid" : "outline"} onClick={() => setTab("tours")} text="Tours" />
+                    <Button primaryClassName={`btn ${tab === "agencies" ? "is-active" : ""}`} variant={tab === "agencies" ? "solid" : "outline"} onClick={() => setTab("agencies")} text="Agencies" />
                 </div>
             </header>
 
-            <div style={{ padding: 12 }}>
-                <strong>Signed in as:</strong> {auth.user?.name || auth.user?.email} · role: {auth.role}
+            <div className="mt-session-bar">
+                <strong>Signed in as:</strong> {auth.user?.name || auth.user?.email} · role: {auth.role} · admin: {auth.user?.adminLevel || "standard"}
             </div>
 
-            {tab === "tours" && (
-                <>
-                    <header className="mt-toolbar" style={{ marginTop: 8 }}>
-                        <div>
-                            <SubTitle text="Tours" />
-                        </div>
-                        <div className="mt-actions">
-                            <Button primaryClassName="btn" variant="solid" color="primary" onClick={openCreate} text="+ New Tour" />
-                            <Button primaryClassName="btn" variant="outline" onClick={fetchTours} text="Refresh" />
-                            <Button primaryClassName="btn" variant="outline" color="danger" onClick={handleDeleteAll} text="Delete All" />
-                        </div>
-                    </header>
-
-                    {error && <WidgetError message={error} />}
-
-                    <div className="mt-content">
-                        <section className="mt-grid" aria-live="polite">
-                            {loading ? (
-                                Array.from({ length: 4 }).map((_, i) => <TourCardSkeleton key={i} />)
-                            ) : tours.length === 0 ? (
-                                <div className="mt-empty">No tours yet</div>
-                            ) : (
-                                tours.map((t) => (
-                                    <TourCard
-                                        key={t._id || t.id}
-                                        tour={t}
-                                        isAdmin
-                                        onView={() => openView(t)}
-                                        onEdit={() => openEdit(t)}
-                                        onDelete={() => handleDelete(t._id || t.id)}
-                                    />
-                                ))
-                            )}
-                        </section>
-
-                        {(viewOpen || formOpen) && (
-                            <div className="mt-panels-overlay" role="dialog" aria-modal="true">
-                                {viewOpen && (
-                                    <TourView
-                                        tour={viewTour}
-                                        onClose={() => {
-                                            setViewOpen(false);
-                                            setViewTour(null);
-                                        }}
-                                        onEdit={(t) => {
-                                            setViewOpen(false);
-                                            openEdit(t);
-                                        }}
-                                    />
-                                )}
-
-                                {formOpen && (
-                                    <CreateTourForm
-                                        initial={editing}
-                                        onCancel={() => setFormOpen(false)}
-                                        onSaved={async () => {
-                                            setFormOpen(false);
-                                            await fetchTours();
-                                        }}
-                                    />
-                                )}
-                            </div>
-                        )}
-                    </div>
-                </>
-            )}
-
-            {tab === "bookings" && (
-                <>
-                    <header className="mt-toolbar" style={{ marginTop: 8 }}>
-                        <div>
-                            <SubTitle text="Bookings" />
-                            <Paragraph size="small" color="#666">Admins & agents can review requests, create quotes, and manage booking status.</Paragraph>
-                        </div>
-                        <div className="mt-actions">
-                            <Button primaryClassName="btn" variant="outline" onClick={fetchBookings} text="Refresh" />
-                        </div>
-                    </header>
-
-                    <div className="mt-content">
-                        {loadingBookings ? (
-                            Array.from({ length: 4 }).map((_, i) => <BookingCardSkeleton key={i} />)
-                        ) : bookings.length === 0 ? (
-                            <EmptyState
-                                icon="calendar"
-                                title="No bookings found"
-                                description="No booking requests yet. They will appear here once customers submit them."
-                            />
-                        ) : (
-                            <div style={{ display: "grid", gap: 12 }}>
-                                {bookings.map((b) => (
-                                    <BookingCard
-                                        key={b.id || b._id}
-                                        booking={b}
-                                        role={auth.role}
-                                        onCancel={() => handleCancelBooking(b.id || b._id)}
-                                        onGenerateQuote={(id, data) => handleConfirmBooking(id, data)}
-                                        onStatusTransition={(id, status) => handleStatusTransition(id, status)}
-                                        onRecordPayment={(id, amount, currency) => handleRecordPayment(id, amount, currency)}
-                                        onRefund={(id, amount, currency) => handleRefund(id, amount, currency)}
-                                        onUpdateTravelers={(travelers) => handleUpdateTravelers(b.id || b._id, travelers)}
-                                        onOpen={() => {
-                                            navigate(`/bookings/${b.id || b._id}`);
-                                        }}
-                                    />
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                </>
-            )}
+            {(() => {
+                const def = adminWidgetRegistry.get(TAB_WIDGET_MAP[tab]);
+                const Component = def?.component;
+                if (!Component) return null;
+                return (
+                    <Component
+                        tours={tours}
+                        admins={admins}
+                        agents={agents}
+                        partnerAgencies={partnerAgencies}
+                        loading={loading}
+                        agencyLoading={agencyLoading}
+                        formOpen={formOpen}
+                        viewOpen={viewOpen}
+                        editing={editing}
+                        viewTour={viewTour}
+                        error={error}
+                        auth={auth}
+                        openCreate={openCreate}
+                        openEdit={openEdit}
+                        openView={openView}
+                        handleDelete={handleDelete}
+                        handleDeleteAll={handleDeleteAll}
+                        fetchTours={fetchTours}
+                        fetchAgencyManagement={fetchAgencyManagement}
+                        handleReviewAdmin={handleReviewAdmin}
+                        handleRemoveAdmin={handleRemoveAdmin}
+                        handleReviewAgent={handleReviewAgent}
+                        handleReviewPartnerAgency={handleReviewPartnerAgency}
+                        setFormOpen={setFormOpen}
+                        setViewOpen={setViewOpen}
+                        setViewTour={setViewTour}
+                    />
+                );
+            })()}
 
             <Toast toast={toast} setToast={setToast} />
             <ConfirmModal

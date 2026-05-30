@@ -1,0 +1,25 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "applyTitle": "Apply for Partner Agency",
+        "reviewTitle": "Partner Agency"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "widgets": [
+        {
+          "type": "PartnerAgencyWorkspace"
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

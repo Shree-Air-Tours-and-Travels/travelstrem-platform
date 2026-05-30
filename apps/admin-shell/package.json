@@ -4,10 +4,12 @@
   "private": true,
   "dependencies": {
     "@apps/auth-trem": "workspace:*",
+    "@packages/trem-auth-core": "workspace:*",
     "@packages/trem-environment": "workspace:*",
     "@packages/trem-events": "workspace:*",
     "@packages/trem-runtime": "workspace:*",
     "@packages/trem-session": "workspace:*",
+    "@packages/trem-widget-contracts": "workspace:*",
     "@packages/trem-ui": "workspace:*",
     "@packages/trem-utils": "workspace:*",
     "@testing-library/dom": "^10.4.0",

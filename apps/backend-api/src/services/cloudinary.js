@@ -36,6 +36,8 @@ if (isConfigured) {
   storage = new CloudinaryStorage({
     cloudinary,
     params: {
+      folder: "travelstrem/tours",
+      resource_type: "image",
       allowed_formats: ["jpg", "jpeg", "png", "gif", "webp", "svg"],
       transformation: [{ width: 1600, crop: "limit", quality: "auto" }],
     },

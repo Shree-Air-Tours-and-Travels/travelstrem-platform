@@ -23,7 +23,12 @@ export const getHero = async (req, res) => {
 
 export const createHero = async (req, res) => {
   try {
-    const newHero = new Hero(req.body);
+    const allowed = ["title", "highlight", "description", "eyebrow", "buttonText", "secondaryButtonText", "featuredDestination", "stats", "visual", "images"];
+    const body = {};
+    for (const key of allowed) {
+        if (req.body[key] !== undefined) body[key] = req.body[key];
+    }
+    const newHero = new Hero(body);
     const savedHero = await newHero.save();
 
     res.status(201).json({

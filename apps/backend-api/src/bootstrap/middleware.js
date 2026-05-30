@@ -5,6 +5,7 @@ import morgan from "morgan";
 import rateLimit from "express-rate-limit";
 import path from "path";
 import config from "../config/index.js";
+import logger from "../shared/logger/index.js";
 
 const allowedOrigins = Array.isArray(config.FRONTENDS) ? config.FRONTENDS : [];
 
@@ -20,7 +21,7 @@ const corsOptions = {
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "x-ignore-cookie-auth"],
 };
 
 export default function registerMiddleware(app) {
@@ -36,7 +37,7 @@ export default function registerMiddleware(app) {
 
   if (config.DEBUG) {
     app.use((req, res, next) => {
-      console.log(new Date().toISOString(), req.method, req.originalUrl, "Origin:", req.headers.origin || "n/a");
+      logger.debug(new Date().toISOString(), req.method, req.originalUrl, "Origin:", req.headers.origin || "n/a");
       next();
     });
   }

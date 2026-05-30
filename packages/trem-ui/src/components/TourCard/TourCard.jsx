@@ -84,6 +84,10 @@ const TourCard = React.memo(function TourCard({
   onView,
   favorited,
   onFavorite,
+  withAgency = false,
+  agencyLogo = "",
+  ownerAgentName = "",
+  showOwner = false,
   isAdmin = false,
   onEdit,
   onDelete,
@@ -227,6 +231,12 @@ const TourCard = React.memo(function TourCard({
           <span className="tour-card__price-value">{priceText}</span>
         </div>
       )}
+
+      {withAgency && agencyLogo && (
+        <div className="tour-card__agency-logo">
+          <img src={agencyLogo} alt="Agency logo" />
+        </div>
+      )}
     </div>
   );
 
@@ -262,6 +272,12 @@ const TourCard = React.memo(function TourCard({
         <Icon name="mapPin" size={14} />
         <span>{locationText}</span>
       </div>
+      {showOwner && ownerAgentName && (
+        <div className="tour-card__owner">
+          <Icon name="user" size={13} />
+          <span>{ownerAgentName}</span>
+        </div>
+      )}
     </div>
   );
 
@@ -331,7 +347,7 @@ const TourCard = React.memo(function TourCard({
           </div>
         )}
 
-        {showActions && variant === "list" && onView && (
+        {showActions && variant === "list" && onView && !isAdmin && (
           <Button
             text="View tour"
             variant="solid"
@@ -349,6 +365,15 @@ const TourCard = React.memo(function TourCard({
             aria-label="admin actions"
             onClick={(e) => e.stopPropagation()}
           >
+            {onView && (
+              <Button
+                text="View"
+                variant="solid"
+                color="primary"
+                size="small"
+                onClick={handleView}
+              />
+            )}
             {onEdit && (
               <Button
                 text="Edit"

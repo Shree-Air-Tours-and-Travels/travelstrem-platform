@@ -65,15 +65,27 @@ describe('TourCard', () => {
 
   describe('Admin Actions', () => {
     it('shows admin actions when isAdmin and handlers provided', () => {
+      const onView = vi.fn();
       const onEdit = vi.fn();
       const onDelete = vi.fn();
       render(
         <MemoryRouter>
-          <TourCard tour={baseTour} isAdmin onEdit={onEdit} onDelete={onDelete} />
+          <TourCard tour={baseTour} isAdmin onView={onView} onEdit={onEdit} onDelete={onDelete} />
         </MemoryRouter>
       );
+      expect(screen.getByText('View')).toBeInTheDocument();
       expect(screen.getByText('Edit')).toBeInTheDocument();
       expect(screen.getByText('Delete')).toBeInTheDocument();
+    });
+
+    it('does not duplicate the customer View tour button for admin cards', () => {
+      render(
+        <MemoryRouter>
+          <TourCard tour={baseTour} isAdmin onView={vi.fn()} onEdit={vi.fn()} onDelete={vi.fn()} />
+        </MemoryRouter>
+      );
+      expect(screen.queryByText('View tour')).not.toBeInTheDocument();
+      expect(screen.getByText('View')).toBeInTheDocument();
     });
 
     it('does not show Edit button if onEdit is not provided', () => {

@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import config from "../config/index.js";
-import { API_ROUTES } from "../constants/routes.js";
+import { API_ROUTES } from "../shared/constants/index.js";
 import authRoutes from "../modules/auth/routes.js";
 import tourRoutes from "../modules/tours/routes.js";
 import heroRoutes from "../modules/portal/heroRoutes.js";

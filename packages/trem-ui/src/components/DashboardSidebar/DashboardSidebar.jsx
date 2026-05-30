@@ -27,7 +27,7 @@ function getSidebarIcon(icon) {
 }
 
 export default function DashboardSidebar({
-  profile = {},
+  profile: rawProfile = null,
   sections = [],
   activeId,
   collapsed = false,
@@ -40,6 +40,7 @@ export default function DashboardSidebar({
   onProfileAction,
   onCollapsedChange,
 }) {
+  const profile = rawProfile ?? {};
   const [expanded, setExpanded] = useState({});
   const isRail = collapsed && collapseMode === "rail";
   const isHidden = collapsed && collapseMode === "hidden";

@@ -1,0 +1,30 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "pageTitle": "Partner Agency",
+        "pageDescription": "Apply for or review the partner agency linked to this account."
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {
+        "titleRef": "pageTitle",
+        "descriptionRef": "pageDescription"
+      },
+      "widgets": [
+        {
+          "type": "PartnerAgencyWorkspace",
+          "widgetRef": "./widgets/agency-workspace.json"
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

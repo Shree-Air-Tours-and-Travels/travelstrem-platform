@@ -1,7 +1,14 @@
 // models/Tour.js
 import mongoose from "mongoose";
+import { PRICE_SOURCE, PRICE_SOURCE_LIST, TOUR_STATUS, TOUR_STATUS_LIST } from "../../../constants/enums.js";
 
 const { Schema } = mongoose;
+const INVENTORY_SOURCE = Object.freeze({
+    AGENT: "agent",
+    PROVIDER: "provider",
+    PLATFORM: "platform",
+});
+const INVENTORY_SOURCE_LIST = Object.values(INVENTORY_SOURCE);
 
 /* ---------- Sub-schemas ---------- */
 
@@ -34,7 +41,7 @@ const seasonalPricingSchema = new Schema({
     max: { type: Number, required: true },
     currency: { type: String, default: "INR" },
     isFinal: { type: Boolean, default: false }, // agent-confirmed or approximate
-    source: { type: String, enum: ["manual", "ai", "agent"], default: "manual" },
+    source: { type: String, enum: PRICE_SOURCE_LIST, default: PRICE_SOURCE.MANUAL },
     notes: { type: String, default: "" }, // e.g. "festival surcharge applies"
 }, { _id: true });
 
@@ -58,11 +65,11 @@ const highlightSchema = new Schema({
     order: { type: Number, default: 0 },
 }, { _id: true });
 
-// City from and top: 
+// City from and to
 const citySchema = new Schema({
-    from: { type: String, required: true }, // e.g. "Sunset boat ride"
-    to: { type: String, required: true}, // brief phrase
-}, { _id: true });
+    from: { type: String, required: true },
+    to: { type: String, required: true},
+}, { _id: false });
 
 /* ---------- Main tour schema ---------- */
 
@@ -80,7 +87,8 @@ const citySchema = new Schema({
 */
 
 const tourSchema = new Schema({
-    title: { type: String, required: true, unique: true },
+    title: { type: String, required: true },
+    agentRef: { type: String, trim: true, default: "", index: true },
     city: { type: citySchema, required: true },
     address: { type: addressSchema, required: true },
     distance: { type: Number, required: true },
@@ -102,7 +110,7 @@ const tourSchema = new Schema({
         max: { type: Number, required: true },
         currency: { type: String, default: "INR" },
         isFinal: { type: Boolean, default: false }, // if false => display "approx"
-        source: { type: String, enum: ["manual", "ai", "agent"], default: "manual" },
+        source: { type: String, enum: PRICE_SOURCE_LIST, default: PRICE_SOURCE.MANUAL },
     },
 
     // Seasonal pricing,overrides base price when date in range
@@ -134,10 +142,22 @@ const tourSchema = new Schema({
     reviews: [reviewSchema],
     featured: { type: Boolean, default: false },
 
+    ownerAgent: { type: Schema.Types.ObjectId, ref: "User", default: null, index: true },
+    agentTour: { type: Boolean, default: false },
+    agencyRef: { type: String, trim: true, default: "", index: true },
+    partnerAgencyRef: { type: String, trim: true, default: "", index: true },
+    inventorySource: {
+        type: String,
+        enum: INVENTORY_SOURCE_LIST,
+        default: INVENTORY_SOURCE.PLATFORM,
+        index: true,
+    },
+    providerName: { type: String, trim: true, default: "" },
+
     // tags and publishing
     tags: [{ type: String }],
     isPublished: { type: Boolean, default: true },
-    status: { type: String, enum: ["draft", "published", "cancelled"], default: "published" },
+    status: { type: String, enum: TOUR_STATUS_LIST, default: TOUR_STATUS.PUBLISHED },
 
 }, { timestamps: true });
 
@@ -182,7 +202,7 @@ tourSchema.methods.getCurrentPrice = function (date = new Date()) {
                 max: season.max,
                 currency: season.currency || this.price.currency,
                 isFinal: !!season.isFinal,
-                source: season.source || "manual",
+                source: season.source || PRICE_SOURCE.MANUAL,
                 matchedSeason: season.seasonName,
                 note: season.notes || "",
             };
@@ -195,7 +215,7 @@ tourSchema.methods.getCurrentPrice = function (date = new Date()) {
         max: this.price.max,
         currency: this.price.currency,
         isFinal: !!this.price.isFinal,
-        source: this.price.source || "manual",
+        source: this.price.source || PRICE_SOURCE.MANUAL,
         matchedSeason: null,
         note: "",
     };
@@ -208,6 +228,7 @@ tourSchema.set("toObject", { virtuals: true });
 /* ---------- Indexes (optional) ---------- */
 tourSchema.index({ city: 1, featured: -1, "price.min": 1 });
 tourSchema.index({ startDate: 1, endDate: 1 });
+tourSchema.index({ ownerAgent: 1, inventorySource: 1 });
 
 const Tour = mongoose.model("Tour", tourSchema);
 export default Tour;

@@ -245,17 +245,27 @@ export default function CreateTourForm({ initial = null, onCancel = () => { }, o
     function removeArrayItem(key, idx) { setDirty(true); setFormState(prev => { const copy = { ...prev }; copy[key] = (copy[key] || []).filter((_, i) => i !== idx); return copy; }); }
     function moveArrayItem(key, fromIdx, toIdx) { setDirty(true); setFormState(prev => { const copy = { ...prev }; const arr = [...(copy[key] || [])]; if (toIdx < 0 || toIdx >= arr.length) return prev; const [moved] = arr.splice(fromIdx, 1); arr.splice(toIdx, 0, moved); copy[key] = arr; return copy; }); }
 
-    async function handleUploadImage(file) {
+    async function handleUploadImage(fileOrFiles) {
+        const files = Array.isArray(fileOrFiles)
+            ? fileOrFiles
+            : Array.from(fileOrFiles?.length != null ? fileOrFiles : (fileOrFiles ? [fileOrFiles] : []));
+        if (files.length === 0) return null;
+
         setUploading(true);
         setUploadProgress(0);
         try {
-            const url = await uploadTourImage(file);
-            setUploadProgress(100);
+            const urls = [];
+            for (let i = 0; i < files.length; i += 1) {
+                const url = await uploadTourImage(files[i]);
+                urls.push(url);
+                setUploadProgress(Math.round(((i + 1) / files.length) * 100));
+            }
             setForm(prev => {
-                const photos = Array.isArray(prev.photos) ? [...prev.photos, url] : [url];
-                return { ...prev, photo: prev.photo || url, photos };
+                const existing = Array.isArray(prev.photos) ? prev.photos : [];
+                const photos = [...existing, ...urls].filter(Boolean);
+                return { ...prev, photo: prev.photo || urls[0] || '', photos };
             });
-            return url;
+            return urls.length === 1 ? urls[0] : urls;
         } catch (e) {
             console.error("Upload failed:", e);
             setError(e.message || "Upload failed");

@@ -52,7 +52,169 @@ function WidgetError({ message }) {
     );
 }
 
-export default function BookingDetailView({ booking, loading, error, navigate }) {
+function BookingActionsPanel({ booking, bookingId, actions, actionState }) {
+    const status = String(booking.status || "").toUpperCase();
+    const priceSnapshot = booking.priceSnapshot || {};
+    const paymentSummary = booking.paymentSummary || {};
+    const currency = priceSnapshot.currency || booking.currentQuote?.currency || "INR";
+    const remaining = Number(paymentSummary.remaining || priceSnapshot.total || 0);
+    const paid = Number(paymentSummary.paid || 0);
+    const isTerminal = ["CANCELLED", "COMPLETED", "REFUNDED"].includes(status);
+    const canGenerateQuote = ["DRAFT", "QUOTE_REQUESTED", "UNDER_REVIEW"].includes(status);
+    const statusActions = {
+        PAID: [{ label: "Confirm Booking", action: "confirm", target: "CONFIRMED" }],
+        CONFIRMED: [
+            { label: "Start Ticketing", action: "ticketing", target: "TICKETING" },
+            { label: "Mark Travel Ready", action: "travelReady", target: "TRAVEL_READY" },
+        ],
+        TICKETING: [{ label: "Mark Ticketed", action: "ticketed", target: "TICKETED" }],
+        TICKETED: [
+            { label: "Mark Travel Ready", action: "travelReady", target: "TRAVEL_READY" },
+            { label: "Mark Complete", action: "complete", target: "COMPLETED" },
+        ],
+        TRAVEL_READY: [{ label: "Mark Complete", action: "complete", target: "COMPLETED" }],
+    };
+
+    const [quoteAmount, setQuoteAmount] = React.useState(priceSnapshot.total || booking.currentQuote?.finalAmount || 0);
+    const [payAmount, setPayAmount] = React.useState(remaining || 0);
+    const [refundAmount, setRefundAmount] = React.useState(paid || 0);
+    const [showPayInput, setShowPayInput] = React.useState(false);
+    const [showRefundInput, setShowRefundInput] = React.useState(false);
+
+    React.useEffect(() => {
+        setQuoteAmount(priceSnapshot.total || booking.currentQuote?.finalAmount || 0);
+        setPayAmount(remaining || 0);
+        setRefundAmount(paid || 0);
+    }, [booking.currentQuote?.finalAmount, paid, priceSnapshot.total, remaining]);
+
+    const loadingAction = actionState?.loading || "";
+    const isLoading = Boolean(loadingAction);
+    const actionId = bookingId || booking.id || booking._id;
+
+    return (
+        <aside className="bd-actions-panel" aria-label="Booking actions">
+            <div className="bd-actions-panel__header">
+                <SubTitle text="Booking Actions" />
+                <span>{statusLabel(status)}</span>
+            </div>
+
+            {actionState?.message ? <div className="bd-action-note is-success">{actionState.message}</div> : null}
+            {actionState?.error ? <div className="bd-action-note is-error">{actionState.error}</div> : null}
+
+            {canGenerateQuote ? (
+                <div className="bd-action-group">
+                    <label htmlFor="quoteAmount">Quote amount</label>
+                    <input
+                        id="quoteAmount"
+                        type="number"
+                        min="0"
+                        value={quoteAmount}
+                        onChange={(event) => setQuoteAmount(event.target.value)}
+                    />
+                    <Button
+                        primaryClassName="bd-action-btn"
+                        variant="solid"
+                        color="primary"
+                        disabled={isLoading}
+                        onClick={() => actions?.generateQuote?.(actionId, { finalAmount: Number(quoteAmount) || 0, currency })}
+                        text={loadingAction === "quote" ? "Sending..." : "Generate & Send Quote"}
+                    />
+                </div>
+            ) : null}
+
+            {(statusActions[status] || []).map((item) => (
+                <Button
+                    key={item.action}
+                    primaryClassName="bd-action-btn"
+                    variant="solid"
+                    color="primary"
+                    disabled={isLoading}
+                    onClick={() => actions?.statusTransition?.(actionId, item.target)}
+                    text={loadingAction === item.target ? "Processing..." : item.label}
+                />
+            ))}
+
+            {!isTerminal && remaining > 0 ? (
+                <div className="bd-action-group">
+                    {showPayInput ? (
+                        <>
+                            <label htmlFor="payAmount">Payment amount</label>
+                            <input
+                                id="payAmount"
+                                type="number"
+                                min="0"
+                                value={payAmount}
+                                onChange={(event) => setPayAmount(event.target.value)}
+                            />
+                            <div className="bd-action-row">
+                                <Button primaryClassName="bd-action-btn" variant="outline" disabled={isLoading} onClick={() => setShowPayInput(false)} text="Cancel" />
+                                <Button
+                                    primaryClassName="bd-action-btn"
+                                    variant="solid"
+                                    color="primary"
+                                    disabled={isLoading}
+                                    onClick={async () => {
+                                        await actions?.recordPayment?.(actionId, Number(payAmount), currency);
+                                        setShowPayInput(false);
+                                    }}
+                                    text={loadingAction === "payment" ? "Recording..." : "Record"}
+                                />
+                            </div>
+                        </>
+                    ) : (
+                        <Button primaryClassName="bd-action-btn" variant="solid" disabled={isLoading} onClick={() => { setPayAmount(remaining); setShowPayInput(true); }} text="Record Payment" />
+                    )}
+                </div>
+            ) : null}
+
+            {!isTerminal && paid > 0 ? (
+                <div className="bd-action-group">
+                    {showRefundInput ? (
+                        <>
+                            <label htmlFor="refundAmount">Refund amount</label>
+                            <input
+                                id="refundAmount"
+                                type="number"
+                                min="0"
+                                value={refundAmount}
+                                onChange={(event) => setRefundAmount(event.target.value)}
+                            />
+                            <div className="bd-action-row">
+                                <Button primaryClassName="bd-action-btn" variant="outline" disabled={isLoading} onClick={() => setShowRefundInput(false)} text="Cancel" />
+                                <Button
+                                    primaryClassName="bd-action-btn"
+                                    variant="solid"
+                                    color="danger"
+                                    disabled={isLoading}
+                                    onClick={async () => {
+                                        await actions?.refund?.(actionId, Number(refundAmount), currency);
+                                        setShowRefundInput(false);
+                                    }}
+                                    text={loadingAction === "refund" ? "Refunding..." : "Refund"}
+                                />
+                            </div>
+                        </>
+                    ) : (
+                        <Button primaryClassName="bd-action-btn" variant="outline" color="danger" disabled={isLoading} onClick={() => setShowRefundInput(true)} text="Process Refund" />
+                    )}
+                </div>
+            ) : null}
+
+            {!isTerminal ? (
+                <Button
+                    primaryClassName="bd-action-btn"
+                    variant="outline"
+                    color="danger"
+                    disabled={isLoading}
+                    onClick={() => actions?.cancel?.(actionId)}
+                    text={loadingAction === "cancel" ? "Cancelling..." : "Cancel Booking"}
+                />
+            ) : null}
+        </aside>
+    );
+}
+
+export default function BookingDetailView({ booking, bookingId, loading, error, navigate, actions, actionState }) {
     if (loading) {
         return (
             <div className="bd-page">
@@ -130,94 +292,97 @@ export default function BookingDetailView({ booking, loading, error, navigate })
                     </div>
                 ) : null}
 
-                <div className="bd-grid">
-                    <div className="bd-card bd-card--tour">
-                        <Title text="Tour Details" />
-                        <Paragraph>{tour.desc || "No description available."}</Paragraph>
-                        <div className="bd-meta-grid">
-                            <div><span>Guests</span><strong>{booking.guestsCount || 1}</strong></div>
-                            <div><span>Per Person</span><strong>{formatCurrency(booking.priceSnapshot?.perPerson, booking.priceSnapshot?.currency)}</strong></div>
-                            <div><span>Total</span><strong>{formatCurrency(paymentSummary?.total || booking.priceSnapshot?.total, booking.priceSnapshot?.currency)}</strong></div>
-                            <div><span>Paid</span><strong className="bd-green">{formatCurrency(paymentSummary?.paid, booking.priceSnapshot?.currency)}</strong></div>
-                            <div><span>Remaining</span><strong>{formatCurrency(paymentSummary?.remaining, booking.priceSnapshot?.currency)}</strong></div>
-                            <div><span>Refunded</span><strong>{formatCurrency(paymentSummary?.refunded, booking.priceSnapshot?.currency)}</strong></div>
-                        </div>
-                        {booking.currentQuote ? (
-                            <div className="bd-quote-info">
-                                <strong>Latest Quote v{booking.currentQuote.version}</strong>
-                                <span>, {formatCurrency(booking.currentQuote.finalAmount, booking.currentQuote.currency)}</span>
-                                {booking.currentQuote.expirationDate ? <span> (valid until {toDateInput(booking.currentQuote.expirationDate)})</span> : null}
+                <div className="bd-content">
+                    <div className="bd-grid">
+                        <div className="bd-card bd-card--tour">
+                            <Title text="Tour Details" />
+                            <Paragraph>{tour.desc || "No description available."}</Paragraph>
+                            <div className="bd-meta-grid">
+                                <div><span>Guests</span><strong>{booking.guestsCount || 1}</strong></div>
+                                <div><span>Per Person</span><strong>{formatCurrency(booking.priceSnapshot?.perPerson, booking.priceSnapshot?.currency)}</strong></div>
+                                <div><span>Total</span><strong>{formatCurrency(paymentSummary?.total || booking.priceSnapshot?.total, booking.priceSnapshot?.currency)}</strong></div>
+                                <div><span>Paid</span><strong className="bd-green">{formatCurrency(paymentSummary?.paid, booking.priceSnapshot?.currency)}</strong></div>
+                                <div><span>Remaining</span><strong>{formatCurrency(paymentSummary?.remaining, booking.priceSnapshot?.currency)}</strong></div>
+                                <div><span>Refunded</span><strong>{formatCurrency(paymentSummary?.refunded, booking.priceSnapshot?.currency)}</strong></div>
                             </div>
-                        ) : null}
-                    </div>
-
-                    <div className="bd-card">
-                        <Title text="Contact" />
-                        <div className="bd-meta-grid">
-                            <div><span>Name</span><strong>{booking.primaryContact?.name || ","}</strong></div>
-                            <div><span>Email</span><strong>{booking.primaryContact?.email || ","}</strong></div>
-                            <div><span>Phone</span><strong>{booking.primaryContact?.phone || ","}</strong></div>
-                            <div><span>Start Date</span><strong>{toDateInput(booking.startDate)}</strong></div>
-                            <div><span>End Date</span><strong>{toDateInput(booking.endDate)}</strong></div>
+                            {booking.currentQuote ? (
+                                <div className="bd-quote-info">
+                                    <strong>Latest Quote v{booking.currentQuote.version}</strong>
+                                    <span>, {formatCurrency(booking.currentQuote.finalAmount, booking.currentQuote.currency)}</span>
+                                    {booking.currentQuote.expirationDate ? <span> (valid until {toDateInput(booking.currentQuote.expirationDate)})</span> : null}
+                                </div>
+                            ) : null}
                         </div>
-                    </div>
 
-                    <div className="bd-card">
-                        <Title text={`Travelers (${booking.travelers?.length || 0})`} />
-                        {booking.travelers?.length ? (
-                            <div className="bd-travelers">
-                                {booking.travelers.map((t, i) => (
-                                    <div key={t.id || t._id || i} className="bd-traveler">
-                                        <strong>{t.firstName || ""} {t.lastName || ""}</strong>
-                                        <span>{t.email || ""}</span>
-                                        {t.nationality ? <span>{t.nationality}</span> : null}
-                                    </div>
-                                ))}
+                        <div className="bd-card">
+                            <Title text="Contact" />
+                            <div className="bd-meta-grid">
+                                <div><span>Name</span><strong>{booking.primaryContact?.name || ","}</strong></div>
+                                <div><span>Email</span><strong>{booking.primaryContact?.email || ","}</strong></div>
+                                <div><span>Phone</span><strong>{booking.primaryContact?.phone || ","}</strong></div>
+                                <div><span>Start Date</span><strong>{toDateInput(booking.startDate)}</strong></div>
+                                <div><span>End Date</span><strong>{toDateInput(booking.endDate)}</strong></div>
                             </div>
-                        ) : (
-                            <Paragraph primaryClassname="bd-muted">No traveler details.</Paragraph>
-                        )}
-                    </div>
+                        </div>
 
-                    <div className="bd-card">
-                        <Title text="Payment History" />
-                        <div className="bd-payment-list">
-                            {booking.payments?.length ? (
-                                booking.payments.map((pmt, i) => (
-                                    <div key={pmt.id || pmt._id || i} className="bd-payment-item">
-                                        <span className="bd-payment-date">{toDateInput(pmt.paymentDate)}</span>
-                                        <span className="bd-payment-amount">{formatCurrency(pmt.amount, pmt.currency)}</span>
-                                        <span className={`bd-payment-status bd-payment-status--${(pmt.status || "").toLowerCase()}`}>{pmt.status}</span>
-                                        {pmt.transactionId ? <span className="bd-payment-txn">Txn: {pmt.transactionId}</span> : null}
-                                    </div>
-                                ))
+                        <div className="bd-card">
+                            <Title text={`Travelers (${booking.travelers?.length || 0})`} />
+                            {booking.travelers?.length ? (
+                                <div className="bd-travelers">
+                                    {booking.travelers.map((t, i) => (
+                                        <div key={t.id || t._id || i} className="bd-traveler">
+                                            <strong>{t.firstName || ""} {t.lastName || ""}</strong>
+                                            <span>{t.email || ""}</span>
+                                            {t.nationality ? <span>{t.nationality}</span> : null}
+                                        </div>
+                                    ))}
+                                </div>
                             ) : (
-                                <Paragraph primaryClassname="bd-muted">No payment records yet.</Paragraph>
+                                <Paragraph primaryClassname="bd-muted">No traveler details.</Paragraph>
                             )}
                         </div>
-                    </div>
 
-                    <div className="bd-card">
-                        <Title text="Journey Timeline" />
-                        <div className="bd-timeline">
-                            {(booking.timeline || booking.statusHistory || []).slice(0, 15).map((item) => (
-                                <div key={item.id || item._id || item.createdAt} className="bd-timeline-item">
-                                    <div className="bd-timeline-dot" />
-                                    <div>
-                                        <strong>{item.action || statusLabel(item.to || item.status)}</strong>
-                                        <time>{toDateInput(item.createdAt)}</time>
-                                        {item.metadata ? (
-                                            <div className="bd-timeline-meta">
-                                                {item.metadata.amount ? <span>Amount: {formatCurrency(item.metadata.amount)}</span> : null}
-                                                {item.metadata.version ? <span>Version: {item.metadata.version}</span> : null}
-                                            </div>
-                                        ) : null}
+                        <div className="bd-card">
+                            <Title text="Payment History" />
+                            <div className="bd-payment-list">
+                                {booking.payments?.length ? (
+                                    booking.payments.map((pmt, i) => (
+                                        <div key={pmt.id || pmt._id || i} className="bd-payment-item">
+                                            <span className="bd-payment-date">{toDateInput(pmt.paymentDate)}</span>
+                                            <span className="bd-payment-amount">{formatCurrency(pmt.amount, pmt.currency)}</span>
+                                            <span className={`bd-payment-status bd-payment-status--${(pmt.status || "").toLowerCase()}`}>{pmt.status}</span>
+                                            {pmt.transactionId ? <span className="bd-payment-txn">Txn: {pmt.transactionId}</span> : null}
+                                        </div>
+                                    ))
+                                ) : (
+                                    <Paragraph primaryClassname="bd-muted">No payment records yet.</Paragraph>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="bd-card">
+                            <Title text="Journey Timeline" />
+                            <div className="bd-timeline">
+                                {(booking.timeline || booking.statusHistory || []).slice(0, 15).map((item) => (
+                                    <div key={item.id || item._id || item.createdAt} className="bd-timeline-item">
+                                        <div className="bd-timeline-dot" />
+                                        <div>
+                                            <strong>{item.action || statusLabel(item.to || item.status)}</strong>
+                                            <time>{toDateInput(item.createdAt)}</time>
+                                            {item.metadata ? (
+                                                <div className="bd-timeline-meta">
+                                                    {item.metadata.amount ? <span>Amount: {formatCurrency(item.metadata.amount)}</span> : null}
+                                                    {item.metadata.version ? <span>Version: {item.metadata.version}</span> : null}
+                                                </div>
+                                            ) : null}
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
-                            {!(booking.timeline || booking.statusHistory || []).length ? <Paragraph primaryClassname="bd-muted">No timeline updates yet.</Paragraph> : null}
+                                ))}
+                                {!(booking.timeline || booking.statusHistory || []).length ? <Paragraph primaryClassname="bd-muted">No timeline updates yet.</Paragraph> : null}
+                            </div>
                         </div>
                     </div>
+                    <BookingActionsPanel booking={booking} bookingId={bookingId} actions={actions} actionState={actionState} />
                 </div>
             </div>
         </div>

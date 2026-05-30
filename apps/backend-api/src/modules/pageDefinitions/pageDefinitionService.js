@@ -1,8 +1,8 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import DataScopeResolver from "../../utils/dataScopeResolver.js";
-import { validatePageContract } from "../../middleware/pageContractValidator.js";
+import DataScopeResolver from "../../shared/utils/dataScopeResolver.js";
+import { validatePageContract } from "../../shared/validators/pageContractValidator.js";
 import Booking from "../bookings/models/Booking.js";
 
 const __filename = fileURLToPath(import.meta.url);

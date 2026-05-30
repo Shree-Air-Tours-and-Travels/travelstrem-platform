@@ -5,17 +5,20 @@ import sessionConfigTemplate from "../../../config/session.js";
 import pageConfigTemplate from "../../../config/pageConfig.js";
 import User from "../../auth/models/User.js";
 
-const JWT_SECRET = (config.JWT && config.JWT.accessSecret) || process.env.JWT_SECRET || "replace_this_in_production";
+const JWT_SECRET = (config.JWT && config.JWT.accessSecret) || process.env.JWT_SECRET;
 const COOKIE_NAME = config.IS_PRODUCTION ? "__Host-token" : "token";
+const MASTER_ADMIN_EMAIL = (config.MASTER_ADMIN_EMAIL || process.env.MASTER_ADMIN_EMAIL || "akshat.goyal@travelstrem.com")
+    .toString()
+    .trim()
+    .toLowerCase();
 
 
 const getBearerToken = (req) => {
-    const cookieToken = req.cookies?.[COOKIE_NAME] || req.cookies?.token;
-    if (cookieToken) return cookieToken;
-
     const authHeader = req.headers.authorization || req.headers.Authorization || "";
-    if (!authHeader.startsWith("Bearer ")) return null;
-    return authHeader.split(" ")[1] || null;
+    if (authHeader.startsWith("Bearer ")) return authHeader.split(" ")[1] || null;
+    if (req.headers["x-ignore-cookie-auth"] === "true") return null;
+
+    return req.cookies?.[COOKIE_NAME] || req.cookies?.token || null;
 };
 
 const getUserFromRequest = (req) => {
@@ -29,6 +32,12 @@ const getUserFromRequest = (req) => {
             name: payload.name || null,
             email: payload.email || null,
             role: payload.role || "member",
+            agentRef: payload.agentRef || "",
+            agencyRef: payload.agencyRef || "",
+            partnerAgencyRef: payload.partnerAgencyRef || "",
+            agentApprovalStatus: payload.agentApprovalStatus || "not_required",
+            adminLevel: payload.adminLevel || "none",
+            adminApprovalStatus: payload.adminApprovalStatus || "not_required",
         };
     } catch (error) {
         return null;
@@ -43,6 +52,12 @@ const toSafeUser = (user, fallback = {}) => {
         name: user?.name || fallback.name || null,
         email: user?.email || fallback.email || null,
         role: user?.role || fallback.role || "member",
+        agentRef: user?.agentRef || fallback.agentRef || "",
+        agencyRef: user?.agencyRef || fallback.agencyRef || "",
+        partnerAgencyRef: user?.partnerAgencyRef || fallback.partnerAgencyRef || "",
+        agentApprovalStatus: user?.agentApprovalStatus || fallback.agentApprovalStatus || "not_required",
+        adminLevel: user?.adminLevel || fallback.adminLevel || "none",
+        adminApprovalStatus: user?.adminApprovalStatus || fallback.adminApprovalStatus || "not_required",
     };
 };
 
@@ -59,7 +74,26 @@ const getSessionFromRequest = async (req) => {
     try {
         const payload = jwt.verify(token, JWT_SECRET);
         const userId = payload.sub || payload.id || payload.userId;
-        const dbUser = userId ? await User.findById(userId).select("name email role") : null;
+        const dbUser = userId ? await User.findById(userId).select("name email role agentRef agencyRef partnerAgencyRef agentApprovalStatus adminLevel adminApprovalStatus") : null;
+        if (dbUser?.role === "admin" && dbUser.email === MASTER_ADMIN_EMAIL && dbUser.adminLevel !== "master") {
+            dbUser.adminLevel = "master";
+            dbUser.adminApprovalStatus = "approved";
+            await dbUser.save();
+        }
+        if (dbUser?.role === "admin" && dbUser.adminApprovalStatus !== "approved") {
+            return {
+                user: null,
+                permissions: ["public"],
+                isAuthenticated: false,
+            };
+        }
+        if (dbUser?.role === "agent" && dbUser.agentApprovalStatus !== "approved") {
+            return {
+                user: null,
+                permissions: ["public"],
+                isAuthenticated: false,
+            };
+        }
         const user = toSafeUser(dbUser, payload);
         const role = user?.role || "member";
 
@@ -169,10 +203,169 @@ const applyEnvironmentRemotes = (headerConfig = {}) => {
     };
 };
 
+const buildAdminHeaderConfig = (baseConfig = {}) => ({
+    ...baseConfig,
+    brand: {
+        ...(baseConfig.brand || {}),
+        label: "AdminTREM",
+        homePath: "/manage/tours?tab=dashboard",
+    },
+    leftSection: {
+        ...(baseConfig.leftSection || {}),
+        welcome: true,
+        showLogout: true,
+        showStatus: true,
+        showNotifications: false,
+        showFavorites: false,
+    },
+    menu: [
+        {
+            id: "adminServices",
+            label: "Services",
+            type: "dropdown",
+            disabled: false,
+            items: [
+                {
+                    id: "adminTours",
+                    label: "Tour Management",
+                    app: "adminTREM",
+                    path: "/manage/tours?tab=tours",
+                    disabled: false,
+                },
+                {
+                    id: "agencyManagement",
+                    label: "Agency Management",
+                    app: "adminTREM",
+                    path: "/manage/tours?tab=agencies",
+                    disabled: false,
+                },
+            ],
+        },
+        {
+            id: "adminDashboard",
+            label: "Dashboard",
+            app: "adminTREM",
+            path: "/manage/tours?tab=dashboard",
+            disabled: false,
+        },
+    ],
+    navigation: [
+        { id: "services", label: "Services", path: "/manage/tours?tab=tours", access: "authenticated" },
+        { id: "dashboard", label: "Dashboard", path: "/manage/tours?tab=dashboard", access: "authenticated" },
+        { id: "agencies", label: "Agencies", path: "/manage/tours?tab=agencies", access: "roles", roles: ["admin"] },
+    ],
+    routeMap: {
+        "/manage/tours": "adminTREM",
+        "/admin/tours": "adminTREM",
+        "/bookings": "adminTREM",
+        "/login": "auth",
+    },
+    routes: [
+        { id: "login", path: "/login", component: "auth", access: "publicOnly", authenticatedRedirect: "/manage/tours?tab=dashboard" },
+        { id: "manageTours", path: "/manage/tours", component: "tourManagement", access: "roles", roles: ["admin"], preserveState: true },
+        { id: "adminTours", path: "/admin/tours", component: "tourManagement", access: "roles", roles: ["admin"], preserveState: true },
+        { id: "bookingDetail", path: "/bookings/:bookingId", component: "adminBookingDetail", access: "roles", roles: ["admin"], preserveState: true },
+    ],
+    fallbacks: {
+        authenticated: "/manage/tours?tab=dashboard",
+        anonymous: "/login",
+        unauthorized: "/login",
+    },
+});
+
+const buildAgentHeaderConfig = (baseConfig = {}) => ({
+    ...baseConfig,
+    brand: {
+        ...(baseConfig.brand || {}),
+        label: "AgentTREM",
+        homePath: "/agent/services",
+    },
+    leftSection: {
+        ...(baseConfig.leftSection || {}),
+        welcome: true,
+        showLogout: true,
+        showStatus: true,
+        showNotifications: false,
+        showFavorites: false,
+    },
+    menu: [
+        {
+            id: "agentServices",
+            label: "Services",
+            app: "agentTREM",
+            path: "/agent/services",
+            disabled: false,
+        },
+        {
+            id: "agentDashboard",
+            label: "Dashboard",
+            app: "agentTREM",
+            path: "/agent/dashboard",
+            disabled: false,
+        },
+        {
+            id: "agentBookings",
+            label: "Bookings",
+            app: "agentTREM",
+            path: "/agent/bookings",
+            disabled: false,
+        },
+        {
+            id: "agentAgency",
+            label: "Agency",
+            app: "agentTREM",
+            path: "/agent/agency",
+            disabled: false,
+        },
+    ],
+    navigation: [
+        { id: "services", label: "Services", path: "/agent/services", access: "roles", roles: ["agent"] },
+        { id: "dashboard", label: "Dashboard", path: "/agent/dashboard", access: "roles", roles: ["agent"] },
+        { id: "bookings", label: "Bookings", path: "/agent/bookings", access: "roles", roles: ["agent"] },
+        { id: "agency", label: "Agency", path: "/agent/agency", access: "roles", roles: ["agent"] },
+    ],
+    routeMap: {
+        "/agent/services": "agentTREM",
+        "/agent/dashboard": "agentTREM",
+        "/agent/bookings": "agentTREM",
+        "/agent/agency": "agentTREM",
+        "/agent/settings": "agentTREM",
+        "/agent/tours": "agentTREM",
+        "/bookings": "agentTREM",
+        "/login": "auth",
+    },
+    routes: [
+        { id: "login", path: "/login", component: "auth", access: "publicOnly", authenticatedRedirect: "/agent/services" },
+        { id: "agentServices", path: "/agent/services", component: "agentServices", access: "roles", roles: ["agent"], preserveState: true },
+        { id: "agentDashboard", path: "/agent/dashboard", component: "agentProfileDashboard", access: "roles", roles: ["agent"], preserveState: true },
+        { id: "agentBookings", path: "/agent/bookings", component: "agentBookings", access: "roles", roles: ["agent"], preserveState: true },
+        { id: "agentAgency", path: "/agent/agency", component: "partnerAgency", access: "roles", roles: ["agent"], preserveState: true },
+        { id: "agentSettings", path: "/agent/settings", component: "agentSettings", access: "roles", roles: ["agent"], preserveState: true },
+        { id: "bookingDetail", path: "/bookings/:bookingId", component: "agentBookingDetail", access: "roles", roles: ["agent"], preserveState: true },
+    ],
+    fallbacks: {
+        authenticated: "/agent/services",
+        anonymous: "/login",
+        unauthorized: "/login",
+    },
+});
+
 const resolvePageConfig = (req) => {
     const json = pageConfigTemplate;
     const pathname = req.query.pathname || "/";
-    const pageName = req.query.page || json.componentData?.pathMap?.[pathname] || json.componentData?.defaultPage || "home";
+    const agentPathMap = {
+        "/agent/services": "agent-services",
+        "/agent/tours": "agent-services",
+        "/agent/dashboard": "agent-dashboard",
+        "/agent/bookings": "agent-bookings",
+        "/agent/agency": "agent-agency",
+        "/agent/settings": "agent-dashboard",
+    };
+    const pageName = req.query.page
+        || (req.query.app === "agentTREM" ? agentPathMap[pathname] : null)
+        || json.componentData?.pathMap?.[pathname]
+        || json.componentData?.defaultPage
+        || "home";
     const pageConfig = json.componentData?.pages?.[pageName] || json.componentData?.pages?.home || {
         page: pageName,
         widgets: [],
@@ -245,7 +438,13 @@ export const getSession = async (req, res) => {
 export const getHeaderConfig = async (req, res) => {
     try {
         const json = headerConfigTemplate;
-        const headerConfig = applyEnvironmentRemotes(json.componentData);
+        const requestedApp = req.query.app || "";
+        const baseHeaderConfig = applyEnvironmentRemotes(json.componentData);
+        const headerConfig = requestedApp === "adminTREM"
+            ? buildAdminHeaderConfig(baseHeaderConfig)
+            : requestedApp === "agentTREM"
+                ? buildAgentHeaderConfig(baseHeaderConfig)
+                : baseHeaderConfig;
         const pathname = req.query.pathname || "/";
         const activePath = resolveActivePath(pathname, headerConfig);
         const pageConfig = resolvePageConfig(req);

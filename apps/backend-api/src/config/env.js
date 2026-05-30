@@ -116,9 +116,37 @@ const jwtAccessEnv = getSecret("JWT_ACCESS_SECRET", null);
 const jwtFallbackEnv = getSecret("JWT_SECRET", null); // allow JWT_SECRET as a fallback
 const jwtRefreshEnv = getSecret("JWT_REFRESH_SECRET", null);
 
+if (IS_PRODUCTION && !jwtAccessEnv && !jwtFallbackEnv) {
+    throw new Error(
+        "Missing JWT_ACCESS_SECRET (or JWT_SECRET) in production environment! " +
+        "Set JWT_ACCESS_SECRET in your environment variables."
+    );
+}
+
+if (IS_PRODUCTION && !jwtRefreshEnv) {
+    throw new Error(
+        "Missing JWT_REFRESH_SECRET in production environment! " +
+        "Set JWT_REFRESH_SECRET in your environment variables."
+    );
+}
+
+if (!jwtAccessEnv && !jwtFallbackEnv) {
+    throw new Error(
+        "Missing JWT_ACCESS_SECRET (or JWT_SECRET). " +
+        "Set JWT_ACCESS_SECRET in your environment variables."
+    );
+}
+
+if (!jwtRefreshEnv) {
+    throw new Error(
+        "Missing JWT_REFRESH_SECRET. " +
+        "Set JWT_REFRESH_SECRET in your environment variables."
+    );
+}
+
 const JWT = {
-    accessSecret: (jwtAccessEnv || jwtFallbackEnv || getSecret("JWT_SECRET_DEV", portalJsonConfig?.auth?.jwtAccessSecret || "dev_access_secret")).toString(),
-    refreshSecret: (jwtRefreshEnv || getSecret("JWT_REFRESH_SECRET_DEV", portalJsonConfig?.auth?.jwtRefreshSecret || "dev_refresh_secret")).toString(),
+    accessSecret: (jwtAccessEnv || jwtFallbackEnv).toString(),
+    refreshSecret: jwtRefreshEnv.toString(),
     accessExpires: get("ACCESS_TOKEN_EXPIRES_IN", get("JWT_EXPIRES_IN", portalJsonConfig?.auth?.accessTokenExpiresIn || "15m")),
     refreshExpires: get("REFRESH_TOKEN_EXPIRES_IN", portalJsonConfig?.auth?.refreshTokenExpiresIn || "30d"),
 };
@@ -128,13 +156,10 @@ const JWT = {
    - In production: require ADMIN_CREATION_SECRET
    - In non-production: allow ADMIN_CREATION_SECRET_DEV or fallback to dev secret
    ------------------------------ */
-const ADMIN_CREATION_SECRET = IS_PRODUCTION
-    ? (getSecret("ADMIN_CREATION_SECRET", portalJsonConfig?.auth?.adminCreationSecret || "")).toString().trim()
-    : (getSecret("ADMIN_CREATION_SECRET_DEV", getSecret("ADMIN_CREATION_SECRET", portalJsonConfig?.auth?.adminCreationSecret || "dev-secret-123"))).toString().trim();
+const ADMIN_CREATION_SECRET = (getSecret("ADMIN_CREATION_SECRET", "")).toString().trim();
 
-if (IS_PRODUCTION && !ADMIN_CREATION_SECRET) {
-    // Fail fast when missing in production
-    throw new Error("Missing ADMIN_CREATION_SECRET in production environment!");
+if (!ADMIN_CREATION_SECRET) {
+    throw new Error("Missing ADMIN_CREATION_SECRET environment variable!");
 }
 
 /* ------------------------------
@@ -198,7 +223,13 @@ process.env.CLOUDINARY_KEY = process.env.CLOUDINARY_KEY || CLOUDINARY_KEY || "";
 process.env.CLOUDINARY_SECRET = process.env.CLOUDINARY_SECRET || CLOUDINARY_SECRET || "";
 
 /* ------------------------------
-    12) Config summary helper
+    12) Master admin credentials (env only, no defaults)
+    ------------------------------ */
+const MASTER_ADMIN_EMAIL = (process.env.MASTER_ADMIN_EMAIL || "").toString().trim().toLowerCase();
+const MASTER_ADMIN_PHONE = (process.env.MASTER_ADMIN_PHONE || "").toString().trim();
+
+/* ------------------------------
+    13) Config summary helper
     ------------------------------ */
 function logConfigSummary() {
     if (!DEBUG) return;

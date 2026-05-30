@@ -34,7 +34,7 @@ const Button = ({
     ${className}
   `.trim();
 
-  const content = children || (
+  const content = children != null ? children : (
     <>
       {iconLeft && <span className="ui-button__icon"><Icon name={iconLeft} size={iconSize} /></span>}
       {text && <span>{text}</span>}

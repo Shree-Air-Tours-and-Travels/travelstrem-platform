@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Breadcrumbs, Button, GlobalLoader, Icon, FloatingActionBar, Title, Paragraph } from "@packages/trem-ui";
 import { ConfirmOverlay } from "@packages/trem-modals";
@@ -234,9 +234,38 @@ export default function BookingSummaryPage({ dispatchEvent } = {}) {
 
   const tour = booking?.tour || {};
   const status = String(booking?.status || "").toUpperCase();
+
+  const prevStatusRef = useRef(status);
+  useEffect(() => {
+    prevStatusRef.current = status;
+  }, [status]);
+
+  useEffect(() => {
+    if (loading || !booking?.id) return;
+    const cancelledStatuses = new Set(["CANCELLED", "REFUNDED", "REFUND_PENDING"]);
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetchData(`/bookings/${bookingId}/widgets/booking-hero.json?pageKey=tours-remote/booking-summary`);
+        if (res?.status === "success") {
+          const fresh = res.component?.data?.booking || {};
+          const freshStatus = String(fresh.status || "").toUpperCase();
+          const oldStatus = String(prevStatusRef.current || "").toUpperCase();
+          if (freshStatus !== oldStatus && cancelledStatuses.has(freshStatus)) {
+            setBooking((prev) => ({ ...prev, ...fresh, isProceedHide: true }));
+            setMessage("Booking has been cancelled.");
+            setShowDashboardPrompt(true);
+          }
+          prevStatusRef.current = freshStatus;
+        }
+      } catch {
+      }
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [loading, booking?.id, bookingId]);
+
   const canEdit = editableStatuses.has(status);
   const canCancel = booking && !terminalStatuses.has(status);
-  const canProceedToCheckout = checkoutStatuses.has(status) || Boolean(booking?.currentQuote || booking?.currentQuoteVersion);
+  const canProceedToCheckout = !booking?.isProceedHide && (checkoutStatuses.has(status) || Boolean(booking?.currentQuote || booking?.currentQuoteVersion));
   const hasChanges = form ? JSON.stringify(normalizeComparableForm(form)) !== originalFormSnapshot : false;
   const hasQuote = Boolean(booking?.currentQuote || booking?.currentQuoteVersion > 0);
   const hasPayment = (booking?.paymentSummary?.paid || 0) > 0;
@@ -468,8 +497,18 @@ export default function BookingSummaryPage({ dispatchEvent } = {}) {
           </div>
         ) : null}
 
-        {message ? <div className="booking-summary-alert is-success">{message}</div> : null}
-        {error ? <div className="booking-summary-alert is-error">{error}</div> : null}
+        {message ? (
+          <div className="booking-summary-alert is-success">
+            <span>{message}</span>
+            <button className="booking-summary-alert__close" onClick={() => setMessage("")} aria-label="Dismiss">&times;</button>
+          </div>
+        ) : null}
+        {error ? (
+          <div className="booking-summary-alert is-error">
+            <span>{error}</span>
+            <button className="booking-summary-alert__close" onClick={() => setError("")} aria-label="Dismiss">&times;</button>
+          </div>
+        ) : null}
 
         <section className="booking-summary-grid">
           <article className="booking-summary-card booking-summary-card--tour">
