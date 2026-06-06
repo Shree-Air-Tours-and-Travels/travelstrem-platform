@@ -16,6 +16,7 @@ const corsOptions = {
     if (config.IS_DEVELOPMENT && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return callback(null, true);
     if (/^https?:\/\/.*--.*\.netlify\.app$/.test(origin) || /\.netlify\.app$/.test(origin)) return callback(null, true);
     if (/\.onrender\.com$/.test(origin)) return callback(null, true);
+    if (/\.vercel\.app$/.test(origin)) return callback(null, true);
     return callback(new Error(`CORS blocked: ${origin}`));
   },
   credentials: true,
