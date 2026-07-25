@@ -5,12 +5,29 @@ import { getReturnPath, useAuthFlow } from "@packages/trem-auth-core";
 import { ForgotPasswordModal, ResetPasswordModal } from "./PasswordModals.jsx";
 import "./auth-page.scss";
 
+const isSafeReturnUrl = (value = "") => {
+  if (!value) return false;
+  if (value.startsWith("/") && !value.startsWith("//")) return true;
+
+  try {
+    const url = new URL(value);
+    const host = url.hostname.toLowerCase();
+    return (
+      url.protocol === "https:" && (host === "travelstrem.in" || host.endsWith(".travelstrem.in"))
+    ) || (
+      url.protocol === "http:" && ["localhost", "127.0.0.1"].includes(host)
+    );
+  } catch (error) {
+    return false;
+  }
+};
+
 export default function AuthPage({
   api,
   authService,
   emit,
   reload,
-  appName = "TravelsTREM",
+  appName = "TravelsTrem",
   allowedRoles = ["member"],
   roleOptions,
   defaultRole = "member",
@@ -71,13 +88,32 @@ export default function AuthPage({
   });
 
   const isAdminRole = (role) => role && ["admin", "agent", "super_admin", "superadmin"].includes(String(role).toLowerCase());
+  const searchParams = new URLSearchParams(location.search);
+  const queryReturnTo = searchParams.get("returnTo") || "";
+
+  React.useEffect(() => {
+    const mode = (searchParams.get("mode") || "").toLowerCase();
+    if (registerEnabled && ["register", "signup", "sign-up"].includes(mode)) {
+      setActiveTab("register");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search, registerEnabled]);
 
   const redirectAfterLogin = (result) => {
     if (adminShellUrl && result?.user && isAdminRole(result.user.role)) {
       window.location.assign(adminShellUrl);
       return;
     }
-    navigate(getReturnPath(location.state, afterAuthPath), { replace: true });
+    const nextPath = isSafeReturnUrl(queryReturnTo)
+      ? queryReturnTo
+      : getReturnPath(location.state, afterAuthPath);
+
+    if (/^https?:\/\//i.test(nextPath)) {
+      window.location.assign(nextPath);
+      return;
+    }
+
+    navigate(nextPath, { replace: true });
   };
 
   const handleSubmit = async (e) => {

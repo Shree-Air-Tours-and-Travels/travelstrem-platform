@@ -13,7 +13,7 @@ export default function AppLayout() {
             <Header />
             <Routers />
             {loading && (
-                <PortalPreloader type="app" text="Initializing AgentTREM lifecycle" />
+                <PortalPreloader type="app" text="Initializing Partner Portal lifecycle" />
             )}
             <Footer user={null} />
         </div>

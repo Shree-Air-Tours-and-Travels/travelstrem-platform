@@ -1,0 +1,56 @@
+{
+  "status": "success",
+  "component": {
+    "data": { "state": {} },
+    "dataScope": { "options": {} },
+    "elements": {
+      "labels": {
+        "whyEyebrow": "Why Trevio?",
+        "whyHeading": "Travel different.",
+        "whyHighlight": "Travel better.",
+        "whyDescription": "We don't just plan trips. We craft journeys that stay with you long after you're back.",
+        "whyFeature1Title": "Handcrafted itineraries",
+        "whyFeature1Description": "Every route, stay, and experience is curated by real travellers — not algorithms.",
+        "whyFeature1Icon": "compass",
+        "whyFeature2Title": "Small group energy",
+        "whyFeature2Description": "Intimate groups of 8–16 like-minded explorers. No crowds, real connections.",
+        "whyFeature2Icon": "usersRound",
+        "whyFeature3Title": "Local, not touristy",
+        "whyFeature3Description": "Hidden cafes, village homestays, and stories only locals know.",
+        "whyFeature3Icon": "mapPin",
+        "whyFeature4Title": "All-inclusive, no surprises",
+        "whyFeature4Description": "What you see is what you pay. Stays, meals, activities — all covered.",
+        "whyFeature4Icon": "shield",
+        "whyFeature5Title": "Flexible booking",
+        "whyFeature5Description": "Book with a token, pay in instalments. Plans change — we get it.",
+        "whyFeature5Icon": "calendar",
+        "whyFeature6Title": "24/7 on-trip support",
+        "whyFeature6Description": "Real people on the ground, not a chatbot. Always a call away.",
+        "whyFeature6Icon": "support"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "type": "whyWanderonSection",
+      "source": "trevio",
+      "features": [
+        {
+          "name": "whyWanderon",
+          "type": "whyWanderon",
+          "eyebrowRef": "whyEyebrow",
+          "headingRef": "whyHeading",
+          "highlightRef": "whyHighlight",
+          "descriptionRef": "whyDescription",
+          "items": [
+            { "titleRef": "whyFeature1Title", "descriptionRef": "whyFeature1Description", "iconNameRef": "whyFeature1Icon", "accent": "teal" },
+            { "titleRef": "whyFeature2Title", "descriptionRef": "whyFeature2Description", "iconNameRef": "whyFeature2Icon", "accent": "coral" },
+            { "titleRef": "whyFeature3Title", "descriptionRef": "whyFeature3Description", "iconNameRef": "whyFeature3Icon", "accent": "amber" },
+            { "titleRef": "whyFeature4Title", "descriptionRef": "whyFeature4Description", "iconNameRef": "whyFeature4Icon", "accent": "blue" },
+            { "titleRef": "whyFeature5Title", "descriptionRef": "whyFeature5Description", "iconNameRef": "whyFeature5Icon", "accent": "violet" },
+            { "titleRef": "whyFeature6Title", "descriptionRef": "whyFeature6Description", "iconNameRef": "whyFeature6Icon", "accent": "green" }
+          ]
+        }
+      ]
+    }
+  }
+}

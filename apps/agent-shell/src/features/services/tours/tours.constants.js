@@ -9,10 +9,8 @@ export const TOUR_CARD_CONFIG = {
 export const AVATAR_ICONS = ["user", "compass", "map", "globe", "plane", "train", "bus", "taxi", "hotel", "destination", "beach", "mountain", "camera", "heart", "star", "sun", "moon", "sparkles"];
 
 export const SERVICE_TYPES = [
-    { id: "tours", label: "Tours" },
-    { id: "flights", label: "Flights" },
-    { id: "hotels", label: "Hotels" },
-    { id: "cabs", label: "Cabs" },
+    { id: "trevio", label: "Trevio" },
+    { id: "trevista", label: "Trevista" },
 ];
 
 export const FORM_STEPS = ["Basic", "Schedule", "Itinerary", "Pricing", "Logistics", "Content", "Review"];
@@ -58,7 +56,7 @@ export const AGENT_NAV_SECTIONS = [
 ];
 
 export const FALLBACK_PROFILE = {
-    name: "Agent",
+    name: "Partner",
     role: "agent",
     agencyRef: "independent",
     agentRef: "unassigned",

@@ -1,0 +1,69 @@
+{
+    "status": "success",
+    "component": {
+        "data": {
+            "state": {}
+        },
+        "dataScope": {
+            "options": {}
+        },
+        "elements": {
+            "labels": {
+                "pageTitle": "Trevio",
+                "heroEyebrow": "Curated group adventures",
+                "heroHeading": "Trips that turn into",
+                "heroHighlight": "stories.",
+                "heroDescription": "Browse curated trips, open complete itineraries, personalise your package and reserve a seat through the TravelsTrem booking journey.",
+                "heroPrimaryAction": "Explore trips",
+                "heroSecondaryAction": "How it works",
+                "heroTrustVerified": "Verified stays",
+                "heroTrustCaptains": "Trip captains",
+                "heroTrustToken": "Secure token booking",
+                "featuredCardTitle": "Your next story starts here",
+                "featuredCardMeta": "India",
+                "featuredDefaultType": "Curated trip",
+                "featuredCtaAction": "View trip"
+            },
+            "urls": {
+                "tripsEndpoint": "/trevio/trips.json"
+            }
+        },
+        "structure": {
+            "type": "heroSection",
+            "source": "trevio",
+            "features": [
+                {
+                    "type": "static",
+                    "eyebrowRef": "heroEyebrow",
+                    "headingRef": "heroHeading",
+                    "highlightRef": "heroHighlight",
+                    "descriptionRef": "heroDescription",
+                    "primaryActionLabelRef": "heroPrimaryAction",
+                    "secondaryActionLabelRef": "heroSecondaryAction",
+                    "trustItems": [
+                        {
+                            "labelRef": "heroTrustVerified"
+                        },
+                        {
+                            "labelRef": "heroTrustCaptains"
+                        },
+                        {
+                            "labelRef": "heroTrustToken"
+                        }
+                    ]
+                },
+                {
+                    "name":"featuredTrip",
+                    "type": "featuredCard",
+                    "cardTitleRef": "featuredCardTitle",
+                    "cardMetaRef": "featuredCardMeta",
+                    "defaultTypeRef": "featuredDefaultType",
+                    "ctaActionLabelRef": "featuredCtaAction",
+                    "tripsEndpointUrlRef": "tripsEndpoint"
+                }
+            ],
+            "config": {},
+            "actions": []
+        }
+    }
+}

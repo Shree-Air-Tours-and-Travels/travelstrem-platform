@@ -1,0 +1,14 @@
+{
+  "rewrites": {
+    "beforeFiles": [
+      { "source": "/static/(.*)", "destination": "/static/$1" },
+      { "source": "/favicon.svg", "destination": "/favicon.svg" },
+      { "source": "/asset-manifest.json", "destination": "/asset-manifest.json" },
+      { "source": "/manifest.json", "destination": "/manifest.json" },
+      { "source": "/robots.txt", "destination": "/robots.txt" }
+    ],
+    "fallback": [
+      { "source": "/(.*)", "destination": "/index.html" }
+    ]
+  }
+}

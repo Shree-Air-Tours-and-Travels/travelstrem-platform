@@ -15,6 +15,9 @@ import notificationRoutes from "../modules/notifications/routes.js";
 import portalRoutes from "../modules/portal/routes.js";
 import pageDefinitionRoutes from "../modules/pageDefinitions/routes.js";
 import toursPageRoutes from "../modules/tours/pageRoutes.js";
+import trevioRoutes from "../modules/trevio/routes.js";
+import trevistaRoutes from "../modules/trevista/routes.js";
+import masterDataRoutes from "../modules/masterData/routes.js";
 
 const getDbHealth = () => {
   const readyState = mongoose.connection.readyState;
@@ -56,6 +59,9 @@ export default function registerRoutes(app) {
   app.use(API_ROUTES.TOURS, tourRoutes);
   app.use(API_ROUTES.HERO, heroRoutes);
   app.use(API_ROUTES.SERVICES, serviceRoutes);
+  app.use("/api/trevio", trevioRoutes);
+  app.use("/api/trevista", trevistaRoutes);
+  app.use("/api/master-data", masterDataRoutes);
   app.use(API_ROUTES.FEATURED_TOURS, featuredToursRoutes);
   app.use(API_ROUTES.CHAT, chatRoutes);
   app.use(API_ROUTES.API, formsRouter);

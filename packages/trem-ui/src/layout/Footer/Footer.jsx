@@ -4,12 +4,11 @@ import "./Footer.styles.scss";
 
 const defaultLinks = [
   { to: "/", label: "Home" },
-  { to: "/tours", label: "Tours" },
   { to: "/about", label: "About" },
   { to: "/contact", label: "Contact" },
 ];
 
-export default function Footer({ user, brand = "TravelsTREM", links = defaultLinks, showPortfolio = true }) {
+export default function Footer({ user, brand = "TravelsTrem", links = defaultLinks, showPortfolio = true }) {
   const year = new Date().getFullYear();
 
   return (
@@ -25,8 +24,14 @@ export default function Footer({ user, brand = "TravelsTREM", links = defaultLin
           <h3 id="footer-heading" className="ui-footer__title">Explore</h3>
           <ul className="ui-footer__list">
             {links.map((link) => (
-              <li className="ui-footer__item" key={`${link.to}-${link.label}`}>
-                <NavLink to={link.to} className="ui-footer__link">{link.label}</NavLink>
+              <li className="ui-footer__item" key={`${link.to || link.href}-${link.label}`}>
+                {link.href ? (
+                  <a className="ui-footer__link" href={link.href} target={link.target || "_self"} rel={link.rel}>
+                    {link.label}
+                  </a>
+                ) : (
+                  <NavLink to={link.to} className="ui-footer__link">{link.label}</NavLink>
+                )}
               </li>
             ))}
           </ul>

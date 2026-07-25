@@ -4,47 +4,42 @@ import { AnimatePresence, motion } from "framer-motion";
 import "./Services.styles.scss";
 import { Icon, Title, SubTitle, SmoothScroll, Button, Paragraph, ServiceCard, PortalPreloader } from "@packages/trem-ui";
 import { ContactAgentModal } from "@packages/trem-modals";
+import { getProduct } from "../../../../products/productCatalog";
 
 const travelChips = [
-    "AI itineraries",
-    "Luxury stays",
-    "24/7 concierge",
-    "Visa ready",
+    "Shared account",
+    "Wallet ready",
+    "AI services",
+    "Support layer",
 ];
 
 const heroStats = [
-    { label: "Routes planned", value: "12.8k" },
-    { label: "Avg. savings", value: "18%" },
-    { label: "Live trips", value: "426" },
+    { label: "Shared services", value: "12+" },
+    { label: "Active products", value: "2" },
+    { label: "Unified account", value: "SSO" },
 ];
 
 const itineraryItems = [
-    { city: "Delhi", time: "08:10", status: "Boarding" },
-    { city: "Dubai", time: "12:45", status: "Layover" },
-    { city: "Bali", time: "21:20", status: "Villa check-in" },
+    { city: "Trevio", time: "Live", status: "Community trips" },
+    { city: "Trevista", time: "Live", status: "Holiday planning" },
+    { city: "Platform", time: "Shared", status: "Auth, wallet and support" },
 ];
 
 const serviceRemoteTargets = {
-    "flights-hotels": {
-        label: "Open flights & hotels",
-        href: "/flights",
+    trevio: {
+        label: "Open Trevio",
+        href: getProduct("trevio").externalUrl,
     },
-    "travel-packages": {
-        label: "View packages",
-        href: "/tours",
+    trevista: {
+        label: "Open Trevista",
+        href: getProduct("trevista").externalUrl,
     },
-    "visa-passport": {
-        label: "Get assistance",
-        href: "/visa",
-    },
-    "corporate-packages": {
-        label: "Explore corporate plans",
-        href: "/dashboard",
-    },
-    "cab-services": {
-        label: "Book a cab",
-        href: "/cab",
-    },
+};
+
+const openProduct = (service) => {
+    const target = getServiceRemoteTarget(service);
+    if (!target.href || service?.disabled) return;
+    window.open(target.href, "_blank", "noopener,noreferrer");
 };
 
 const getServiceRemoteTarget = (service) => {
@@ -68,9 +63,9 @@ const getServiceRemoteTarget = (service) => {
 };
 
 const getContactModalData = (service) => ({
-    title: "Talk to our travel expert",
+    title: "Talk to TravelsTrem",
     description:
-        "Share your travel requirement and our team will get back to you.",
+        "Share what you need and our product team will guide you to the right TravelsTrem product.",
     structure: {
         submitText: "Send request",
         fields: [
@@ -79,19 +74,19 @@ const getContactModalData = (service) => ({
             { name: "phone", label: "Phone", type: "text", value: "" },
             {
                 name: "message",
-                label: "Travel requirement",
+                label: "Requirement",
                 type: "textarea",
                 value: "",
                 placeholder: service?.label
-                    ? `Tell us what you need for ${service.label}...`
-                    : "Destination, dates, travelers, budget...",
+                    ? `Tell us what you need from ${service.label}...`
+                    : "Product, use case, timeline, or support need...",
             },
         ],
     },
     data: [
         {
             _id: service?.id || "service-contact",
-            title: service?.label || "Service inquiry",
+            title: service?.label || "Product inquiry",
         },
     ],
 });
@@ -173,13 +168,13 @@ const FloatingTravelScreen = () => (
             <div className="ui-floating-screen__route">
                 <span>DEL</span>
                 <i />
-                <Icon name="plane" size={18} />
+                <Icon name="sparkles" size={18} />
                 <i />
                 <span>DPS</span>
             </div>
             <div className="ui-floating-screen__map-card">
                 <Icon name="map" size={18} />
-                <span>Bali coast preview</span>
+                <span>Product ecosystem preview</span>
             </div>
         </div>
 
@@ -215,7 +210,8 @@ const FloatingTravelScreen = () => (
 
 const ServiceModalHero = ({ service, onContactClick }) => {
     const remoteTarget = getServiceRemoteTarget(service);
-    const chips = service?.highlights?.length
+    // Ensure highlights is an array before using
+    const chips = Array.isArray(service?.highlights) && service.highlights.length > 0
         ? service.highlights
         : travelChips;
 
@@ -247,6 +243,8 @@ const ServiceModalHero = ({ service, onContactClick }) => {
                     <div className={`ui-service-modal__actions${service?.disabled ? ' ui-service-modal__actions--disabled' : ''}`}>
                         <a
                             href={remoteTarget.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className={`ui-service-modal__cta ui-service-modal__cta--primary${service?.disabled ? ' ui-service-modal__cta--disabled' : ''}`}
                         >
                             {remoteTarget.label}
@@ -265,20 +263,20 @@ const ServiceModalHero = ({ service, onContactClick }) => {
                 <div className="ui-service-modal__visual">
                     <TravelWidget
                         icon="calendarDays"
-                        label="Next departure"
-                        value="Fri 12 Jul"
+                        label="Product status"
+                        value="Active"
                     />
                     <FloatingTravelScreen />
                     <TravelWidget
-                        icon="hotel"
-                        label="Stay quality"
-                        value="5-star ready"
+                        icon="shieldCheck"
+                        label="Shared account"
+                        value="SSO"
                         tone="gold"
                     />
                     <TravelWidget
                         icon="compass"
-                        label="Route sync"
-                        value="Live"
+                        label="Platform layer"
+                        value="Shared"
                         tone="blue"
                     />
                 </div>
@@ -328,11 +326,11 @@ const ServiceListView = ({
         );
     }
 
-    const travelPackagesService =
+    const primaryProduct =
         services.find(
             (service) =>
-                service.id === "travel-packages" ||
-                service.label === "Travel Packages"
+                service.id === "trevio" ||
+                service.label === "Trevio"
         ) || services[0];
 
     const step = (
@@ -363,12 +361,12 @@ const ServiceListView = ({
                                 primaryClassName="ui-service__intro-cta"
                                 type="button"
                                 onClick={() =>
-                                    setSelectedService(
-                                        travelPackagesService
+                                    openProduct(
+                                        primaryProduct
                                     )
                                 }
                                 variant="text"
-                                text="Preview Travel Packages"
+                                text="Preview products"
                                 iconRight="arrowUpRight"
                             />
                         </div>
@@ -407,9 +405,7 @@ const ServiceListView = ({
                                     >
                                         <ServiceCard
                                             service={service}
-                                            onClick={
-                                                setSelectedService
-                                            }
+                                            onClick={openProduct}
                                         />
                                     </div>
                                 ))}

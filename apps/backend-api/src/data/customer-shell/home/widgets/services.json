@@ -7,9 +7,9 @@
     },
     "elements": {
       "labels": {
-        "servicesTitle": "Our Services",
-        "servicesDescription": "Curated travel experiences and premium travel solutions designed to make every journey seamless, elegant, and memorable.",
-        "servicesNote": "We currently offer only Travel Packages service. Other services listed are coming soon."
+        "servicesTitle": "Products",
+        "servicesDescription": "Choose the product that matches the journey. Trevio and Trevista are independent applications powered by the TravelsTrem platform.",
+        "servicesNote": "Each product opens in its own application with its own header, footer, and product experience."
       },
       "urls": {}
     },

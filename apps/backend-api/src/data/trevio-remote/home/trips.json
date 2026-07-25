@@ -1,0 +1,119 @@
+{
+    "status": "success",
+    "component": {
+        "data": {
+            "state": {}
+        },
+        "dataScope": {
+            "options": {}
+        },
+        "elements": {
+                "labels": {
+                    "pageTitle": "Trevio",
+                    "tripListEyebrow": "Explore Trevio",
+                    "tripListHeading": "Popular adventures",
+                    "tripListHighlight": "handpicked for groups.",
+                    "tripListDescription": "Every card, filter and action is connected.",
+                    "tripListPrimaryAction": "View all trips",
+                    "tripListSecondaryAction": "Talk to a trip expert",
+                    "tripListTrustVerified": "Verified experiences",
+                    "tripListTrustCaptains": "Led by trip captains",
+                    "tripListTrustToken": "Token-based reservation",
+                    "featuredCardTitle": "Adventure details coming soon",
+                    "featuredCardMeta": "India",
+                    "featuredDefaultType": "Curated trip",
+                    "featuredCtaAction": "View itinerary →",
+                    "upcomingHeading": "Upcoming trips",
+                    "upcomingHighlight": "starting soon.",
+                    "upcomingDescription": "Grab your spot before they fill up.",
+                    "upcomingCtaAction": "View all upcoming",
+                    "internationalEyebrow": "International",
+                    "internationalHeading": "Beyond borders",
+                    "internationalHighlight": "explore the world.",
+                    "internationalDescription": "Handpicked international escapes with curated experiences.",
+                    "internationalCtaAction": "View all international"
+                },
+                "urls": {
+                "tripsEndpoint": "/trevio/trips.json",
+                "internationalTripsEndpoint": "/trevio/international-trips.json"
+            }
+        },
+        "structure": {
+            "type": "tripListSection",
+            "source": "trevio",
+            "features": [
+                {
+                    "type":"static",
+                    "eyebrowRef": "tripListEyebrow",
+                    "headingRef": "tripListHeading",
+                    "highlightRef": "tripListHighlight",
+                    "descriptionRef": "tripListDescription",
+                    "primaryActionLabelRef": "tripListPrimaryAction",
+                    "secondaryActionLabelRef": "tripListSecondaryAction",
+                    "trustItems": [
+                        {
+                            "labelRef": "tripListTrustVerified"
+                        },
+                        {
+                            "labelRef": "tripListTrustCaptains"
+                        },
+                        {
+                            "labelRef": "tripListTrustToken"
+                        }
+                    ]
+                },
+                {
+                    "name": "quickChips",
+                    "type":"quickChips",
+                    "optionsRef": "quickChipOptions"
+
+                },
+                {
+                    "name": "adventureTrips",
+                    "type":"tripCardList",
+                    "cardTitleRef": "featuredCardTitle",
+                    "cardMetaRef": "featuredCardMeta",
+                    "defaultTypeRef": "featuredDefaultType",
+                    "ctaActionLabelRef": "featuredCtaAction",
+                    "tripsEndpointUrlRef": "tripsEndpoint",
+                    "pagination": {
+                        "strategy": "grid",
+                        "visibleItems": 3,
+                        "maxItems": 6
+                    }
+                },
+                {
+                    "name": "upcomingTrips",
+                    "type":"upcomingTrips",
+                    "headingRef": "upcomingHeading",
+                    "highlightRef": "upcomingHighlight",
+                    "descriptionRef": "upcomingDescription",
+                    "ctaActionLabelRef": "upcomingCtaAction",
+                    "tripsEndpointUrlRef": "tripsEndpoint",
+                    "pagination": {
+                        "strategy": "grid",
+                        "visibleItems": 2,
+                        "maxItems": 2
+                    }
+                },
+                {
+                    "name": "internationalTrips",
+                    "type":"internationalTrips",
+                    "eyebrowRef": "internationalEyebrow",
+                    "headingRef": "internationalHeading",
+                    "highlightRef": "internationalHighlight",
+                    "descriptionRef": "internationalDescription",
+                    "ctaActionLabelRef": "internationalCtaAction",
+                    "tripsEndpointUrlRef": "internationalTripsEndpoint",
+                    "pagination": {
+                        "strategy": "grid",
+                        "visibleItems": 3,
+                        "maxItems": 3
+                    }
+                }
+            ],
+            "config": {},
+            "actions": []
+        }
+    }
+}

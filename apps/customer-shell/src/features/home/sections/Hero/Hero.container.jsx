@@ -1,12 +1,8 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
 import { useComponentData } from "@packages/trem-utils";
-import { ROUTES, getTourListPath } from "@packages/trem-utils";
 import HeroSectionView from "./Hero.view";
 
-const HeroSection = ({ user }) => {
-    const navigate = useNavigate();
-
+const HeroSection = () => {
     const { loading, error, resolvedView } =
         useComponentData("/hero.json", {
             headers: {},
@@ -34,11 +30,7 @@ const HeroSection = ({ user }) => {
         : [];
 
     const handleHeroClick = () => {
-        if (user) {
-            navigate(getTourListPath());
-        } else {
-            navigate(ROUTES.login);
-        }
+        document.querySelector(".ui-service")?.scrollIntoView({ behavior: "smooth", block: "start" });
     };
 
     return (
@@ -49,8 +41,6 @@ const HeroSection = ({ user }) => {
             props={props}
             hero={hero}
             stats={stats}
-            user={user}
-            navigate={navigate}
             handleHeroClick={handleHeroClick}
         />
     );

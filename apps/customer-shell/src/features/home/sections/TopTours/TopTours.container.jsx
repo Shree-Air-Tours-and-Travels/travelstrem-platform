@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import {get, isArray} from "lodash";
+import { get } from "lodash";
 import {
     getTourDetailsPath,
     getTourListPath,

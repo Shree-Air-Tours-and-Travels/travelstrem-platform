@@ -4,11 +4,13 @@ import PropTypes from "prop-types";
 import "./chat.style.scss";
 import { Button } from "@packages/trem-ui";
 import { fetchData } from "@packages/trem-utils";
+import { usePortalConfig } from "../../app/providers/PortalProvider";
 
 export default function ChatWidget({ user = null, readonly = false, floating = false }) {
     const [open, setOpen] = useState(!floating);
     const [text, setText] = useState("");
     const [loading, setLoading] = useState(false);
+    const { product } = usePortalConfig();
 
     const [messages, setMessages] = useState([
         {
@@ -109,7 +111,7 @@ export default function ChatWidget({ user = null, readonly = false, floating = f
                         <>
                             <div className="chat-msg__text">{m.text}</div>
                             <div className="chat-options">
-                                {m.options.map((opt) => (
+                                {(Array.isArray(m.options) ? m.options : []).map((opt) => (
                                     <Button
                                         key={opt.value}
                                         primaryClassName="chat-option-btn"
@@ -153,7 +155,7 @@ export default function ChatWidget({ user = null, readonly = false, floating = f
                 aria-label="Chat widget"
             >
                 <div className="chat-widget__header">
-                    <div className="chat-widget__title">TravelsTREM , Virtual Assistant</div>
+                    <div className="chat-widget__title">{product?.brandLabel || "TravelsTrem"}, Virtual Assistant</div>
                     <div className="chat-widget__actions">
                         <Button
                             primaryClassName="chat-close-btn"

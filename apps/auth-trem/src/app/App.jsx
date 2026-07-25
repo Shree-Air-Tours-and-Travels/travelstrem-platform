@@ -7,7 +7,7 @@ import { createAuthApi, createAuthService } from "@packages/trem-auth-core";
 const api = createAuthApi();
 const authService = createAuthService(api);
 const authHeaderConfig = {
-  brand: { label: "TravelsTREM", homePath: "/" },
+  brand: { label: "TravelsTrem", homePath: "/" },
   leftSection: { welcome: false, showStatus: false, showNotifications: false },
   menu: [],
   authActions: {
@@ -18,6 +18,7 @@ const authHeaderConfig = {
 
 export default function AuthTremApp() {
   const { theme, toggleTheme } = useThemeMode();
+  const fallbackAfterAuthPath = process.env.REACT_APP_TRAVELSTREM_APP_URL || "/";
 
   return (
     <div className="auth-trem-shell">
@@ -25,10 +26,11 @@ export default function AuthTremApp() {
       <AuthPage
         api={api}
         authService={authService}
-        appName="authTREM"
+        appName="TravelsTrem"
         defaultRole="member"
         allowedRoles={["member"]}
-        afterAuthPath="/"
+        authStoragePrefix="travelstrem"
+        afterAuthPath={fallbackAfterAuthPath}
       />
     </div>
   );

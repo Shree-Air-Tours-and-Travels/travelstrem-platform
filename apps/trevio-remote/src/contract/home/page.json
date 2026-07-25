@@ -1,0 +1,172 @@
+{
+  "status": "success",
+  "component": {
+    "data": {
+      "state": {
+        "frames": [
+          {
+            "id": "spiti-valley",
+            "image": "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=600&q=80",
+            "location": "Spiti Valley",
+            "shape": "blob-1"
+          },
+          {
+            "id": "kerala-backwaters",
+            "image": "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=600&q=80",
+            "location": "Kerala Backwaters",
+            "shape": "hexagon"
+          },
+          {
+            "id": "ladakh-pass",
+            "image": "https://images.unsplash.com/photo-1589792923962-537704632910?w=600&q=80",
+            "location": "Ladakh Pass",
+            "shape": "diamond"
+          },
+          {
+            "id": "goa-beaches",
+            "image": "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=600&q=80",
+            "location": "Goa Beaches",
+            "shape": "blob-2"
+          },
+          {
+            "id": "meghalaya-caves",
+            "image": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80",
+            "location": "Meghalaya Caves",
+            "shape": "octagon"
+          },
+          {
+            "id": "rajasthan-desert",
+            "image": "https://images.unsplash.com/photo-1477587458883-47145ed94245?w=600&q=80",
+            "location": "Rajasthan Desert",
+            "shape": "blob-3"
+          },
+          {
+            "id": "himachal-villages",
+            "image": "https://images.unsplash.com/photo-1571401835393-8c5f35328320?w=600&q=80",
+            "location": "Himachal Villages",
+            "shape": "diamond"
+          },
+          {
+            "id": "sikkim-mountains",
+            "image": "https://images.unsplash.com/photo-1585409677983-0f6c41ca9c3b?w=600&q=80",
+            "location": "Sikkim Mountains",
+            "shape": "hexagon"
+          }
+        ],
+        "touchFeatures": [
+          {
+            "icon": "map",
+            "title": "Custom itineraries",
+            "description": "Tailored to your pace, interests and budget."
+          },
+          {
+            "icon": "users",
+            "title": "Expert local guides",
+            "description": "Passionate storytellers who know every hidden corner."
+          },
+          {
+            "icon": "shield",
+            "title": "Verified & safe",
+            "description": "Every trip is vetted. Secure payments, real reviews."
+          }
+        ]
+      }
+    },
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "pageTitle": "Trevio",
+        "brandSubtitle": "by TravelsTrem",
+        "brandMark": "T",
+        "navExplore": "Explore",
+        "navHowItWorks": "How it works",
+        "navWishlist": "Wishlist",
+        "navMyTrips": "My trips",
+        "profileAction": "Profile",
+        "signInAction": "Sign in",
+        "footerBrand": "Trevio by TravelsTrem",
+        "footerDescription": "Community trips, adventures and stories.",
+        "emptyTripList": "No listed Trevio trips found for this category.",
+        "tripNotFound": "Trip not found",
+        "detailOverviewTab": "Overview",
+        "detailItineraryTab": "Itinerary",
+        "detailInclusionsTab": "Inclusions",
+        "detailStayTab": "Stay & transport",
+        "detailPoliciesTab": "Policies",
+        "detailItineraryTitle": "Day-wise itinerary",
+        "detailOverviewTitle": "Trip overview",
+        "detailInclusionsTitle": "Inclusions",
+        "detailExclusionsTitle": "Exclusions",
+        "detailStayTitle": "Stay & transport",
+        "detailPoliciesTitle": "Booking policies",
+        "reserveTitle": "Reserve your seat",
+        "pricePerPerson": "Price per person",
+        "tokenAmount": "Token amount",
+        "nextDeparture": "Next departure",
+        "seatsLeft": "Seats left",
+        "bookTripAction": "Book this trip",
+        "saveAction": "♡ Save to wishlist",
+        "savedAction": "♥ Saved",
+        "backToTripsAction": "← Back to trips",
+        "profileTitle": "Traveller account",
+        "profileBookingsTab": "My bookings",
+        "profileWishlistTab": "Wishlist",
+        "profileDetailsTab": "Personal details",
+        "profileBookingsTitle": "My trips",
+        "profileBookingsDescription": "Your confirmed Trevio adventures will appear here once the backend booking flow creates them.",
+        "profileBookingsEmpty": "No confirmed Trevio bookings yet.",
+        "profileWishlistEmpty": "Save a trip to see it here.",
+        "profileDetailsTitle": "Personal details",
+        "profileDetailsDescription": "Profile data comes from the shared TravelsTrem account layer.",
+        "profileDetailsAccount": "Name, email and phone remain shared across products.",
+        "profileDetailsPlatform": "Wallet, rewards and support stay with TravelsTrem.",
+        "previousTripsAction": "Show previous trips",
+        "nextTripsAction": "Show next trips",
+        "framesEyebrow": "Journey in Frames",
+        "framesHeading": "Moments from the road.",
+        "framesDescription": "Real stories from real travellers. Every frame, a memory.",
+        "touchEyebrow": "Get in Touch",
+        "touchHeading": "Your next story starts with a conversation.",
+        "touchDescription": "Whether you have a question about pricing, itinerary customisation, group sizes or dates — our travel experts are one message away.",
+        "touchCtaLabel": "Enquire Now",
+        "touchBadge": "Usually replies within 2 hours"
+      },
+      "urls": {
+        "tripsEndpoint": "/trevio/trips.json"
+      }
+    },
+    "structure": {
+      "type": "TrevioHome",
+      "source": "trevio",
+      "header": {
+        "titleRef": "pageTitle"
+      },
+      "widgets": [
+        {
+          "name": "heroSection",
+          "path": "trevio-remote/home/hero.json"
+        },
+        {
+          "name": "adventureSection",
+          "path": "trevio-remote/home/popular-adventures.json"
+        },
+        {
+          "name": "journeyInFramesSection",
+          "path": "trevio-remote/home/journey-in-frames.json"
+        },
+        {
+          "name": "howToUseSection",
+          "path": "trevio-remote/home/how-to-do.json"
+        },
+        {
+          "name": "getInTouchSection",
+          "path": "trevio-remote/home/get-in-touch.json"
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

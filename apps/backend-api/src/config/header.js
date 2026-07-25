@@ -4,7 +4,7 @@ export default {
   "componentData": {
     "version": 2,
     "brand": {
-      "label": "TravelsTREM",
+      "label": "TravelsTrem",
       "logoSrc": "/logo-images/travelsTrem-header-logo.png",
       "homePath": "/"
     },
@@ -28,46 +28,33 @@ export default {
         "disabled": false
       },
       {
-        "label": "Services",
+        "label": "Products",
         "type": "dropdown",
         "disabled": false,
         "items": [
           {
-            "label": "Tours & Packages",
-            "app": "toursTREM",
-            "path": "/tours",
+            "label": "Trevio",
+            "type": "external",
+            "href": "http://localhost:3005",
+            "target": "_blank",
+            "rel": "noopener noreferrer",
             "disabled": false
           },
           {
-            "label": "Flights",
-            "app": "flightsTREM",
-            "path": "/flights",
-            "disabled": true
-          },
-          {
-            "label": "Hotels",
-            "app": "hotelsTREM",
-            "path": "/hotels",
-            "disabled": true
-          },
-          {
-            "label": "Cab",
-            "app": "cabTREM",
-            "path": "/cab",
-            "disabled": true
-          },
-          {
-            "label": "Visa & Passport",
-            "app": "visaTREM",
-            "path": "/visa",
-            "disabled": true
+            "label": "Trevista",
+            "type": "external",
+            "href": "http://localhost:3001",
+            "target": "_blank",
+            "rel": "noopener noreferrer",
+            "disabled": false
           }
         ]
       },
       {
         "label": "Dashboard",
-        "app": "customer-shell",
-        "path": "/dashboard",
+        "type": "external",
+        "href": "http://localhost:3006",
+        "target": "_self",
         "disabled": false
       },
       {
@@ -83,24 +70,13 @@ export default {
     "navigation": [
       { "id": "home", "label": "Home", "path": "/", "access": "public" },
       { "id": "about", "label": "About", "path": "/about", "access": "public" },
-      { "id": "tours", "label": "Tours & Packages", "path": "/tours", "access": "authenticated" },
-      { "id": "dashboard", "label": "Dashboard", "path": "/dashboard", "access": "authenticated" }
+      { "id": "dashboard", "label": "Dashboard", "path": "/dashboard", "access": "authenticated", "external": true }
     ],
     "authActions": {
       "login": { "label": "Login", "path": "/login" },
       "logout": { "label": "Logout", "eventName": "USER_LOGOUT", "redirectTo": "/login" }
     },
     "remotes": {
-      "toursTREM": {
-        "key": "toursTREM",
-        "label": "ToursTREM",
-        "routeBase": "/tours",
-        "remoteUrlEnv": "REACT_APP_TOURS_REMOTE_URL",
-        "defaultRemoteUrl": "http://localhost:3001",
-        "module": "toursTREM/ToursApp",
-        "exportName": "ToursApp",
-        "remoteProps": { "embedded": true, "basename": "/tours", "basePath": "/tours" }
-      },
       "adminTREM": {
         "key": "adminTREM",
         "label": "AdminTREM",
@@ -115,8 +91,7 @@ export default {
     "routeMap": {
       "/": "shell",
       "/about": "shell",
-      "/tours": "toursTREM",
-      "/dashboard": "shell",
+      "/dashboard": "external",
       "/admin": "adminTREM",
       "/checkout": "shell"
     },
@@ -126,9 +101,7 @@ export default {
       { "id": "search", "path": "/search", "component": "search", "access": "public" },
       { "id": "login", "path": "/login", "component": "auth", "access": "publicOnly", "authenticatedRedirect": "/" },
       { "id": "auth", "path": "/auth", "component": "auth", "access": "publicOnly", "authenticatedRedirect": "/" },
-      { "id": "tours", "path": "/tours/*", "remote": "toursTREM", "component": "remote.toursTREM", "access": "authenticated", "preserveState": true },
       { "id": "checkout", "path": "/checkout/:bookingId", "component": "checkout", "access": "authenticated", "preserveState": true },
-      { "id": "dashboard", "path": "/dashboard", "component": "dashboard", "access": "authenticated" },
       { "id": "admin", "path": "/admin/*", "remote": "adminTREM", "component": "remote.adminTREM", "access": "roles", "roles": ["admin"], "preserveState": true }
     ],
     "fallbacks": {

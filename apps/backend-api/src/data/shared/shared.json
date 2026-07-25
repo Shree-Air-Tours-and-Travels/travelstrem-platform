@@ -1,7 +1,7 @@
 {
   "elements": {
     "labels": {
-      "appName": "TravelsTREM",
+      "appName": "TravelsTrem",
       "loading": "Loading...",
       "error": "Something went wrong",
       "retry": "Retry",
