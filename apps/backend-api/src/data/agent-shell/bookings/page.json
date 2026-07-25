@@ -7,8 +7,8 @@
     },
     "elements": {
       "labels": {
-        "pageTitle": "Agent Bookings",
-        "pageDescription": "Track bookings assigned to this agent or agency."
+        "pageTitle": "Partner Bookings",
+        "pageDescription": "Track bookings assigned to this partner or agency."
       },
       "urls": {}
     },

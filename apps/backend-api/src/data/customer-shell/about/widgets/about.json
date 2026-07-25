@@ -20,7 +20,7 @@
         "missionTitle": "Our Mission",
         "visionTitle": "Our Vision",
         "ctaPrimaryLabel": "Contact Sales",
-        "ctaSecondaryLabel": "View Tours",
+        "ctaSecondaryLabel": "Explore Trevista",
         "contactModalTitle": "Talk to our travel expert",
         "contactModalDescription": "Share your travel requirement and our team will get back to you.",
         "contactModalSubmit": "Send request",
@@ -33,7 +33,7 @@
         "poweredByLabel": "Powered by",
         "sinceLabel": "Since",
         "locationLabel": "Jaipur, India",
-        "companyLogoAlt": "TravelsTREM",
+        "companyLogoAlt": "TravelsTrem",
         "heroLede": "A modern travel desk backed by 28+ years of trust, curated journeys, and concierge-style support for explorers, families, and businesses.",
         "valuesEyebrow": "Why travelers choose us",
         "valuesSubtitle": "Premium service, still personal.",
@@ -73,7 +73,7 @@
               "mapsLinkLabelRef": "mapsLinkLabel"
             },
             "company": {
-              "displayName": "TravelsTREM",
+              "displayName": "TravelsTrem",
               "firmName": "Shree Air Tours and Travels",
               "tagline": "Tours * Reservations * Experience * Management",
               "foundedYear": 1997,
@@ -85,19 +85,19 @@
             },
             "leadership": [
               {
-                "role": "Chair Person / Owner",
+                "role": "Chairperson & Owner",
                 "name": "Mrs. Nisha Goyal",
-                "bio": "Provides strategic leadership and organizational guidance while fostering a culture built on trust, integrity, and long-term vision."
+                "bio": "Steers the agency’s people-first culture, business stewardship, and long-term direction."
               },
               {
-                "role": "Founder / Managing Director",
+                "role": "Founder & Managing Director",
                 "name": "Mr. Shreekant Goyal",
-                "bio": "Founded the organization with a commitment to excellence, customer trust, and delivering reliable travel experiences through strong industry values."
+                "bio": "Established Shree Air Tours and Travels in 1997 and continues to guide its travel relationships, service standards, and growth."
               },
               {
-                "role": "CEO / Executive Director",
+                "role": "CEO & Technology Director",
                 "name": "Mr. Akshat Goyal",
-                "bio": "Leads product innovation and digital transformation initiatives, focused on building scalable technology solutions and delivering seamless travel experiences."
+                "bio": "Leads the TravelsTREM platform, connecting agency operations, internal travel products, and partner workflows."
               }
             ],
             "highlights": [
@@ -129,7 +129,7 @@
               "contactEmail": "akshat.goyal@travelstrem.com",
               "phone": "9057635580",
               "primary": { "labelRef": "ctaPrimaryLabel", "href": "/contact" },
-              "secondary": { "labelRef": "ctaSecondaryLabel", "href": "/tours" }
+              "secondary": { "labelRef": "ctaSecondaryLabel", "href": "trevista" }
             },
             "contactModal": {
               "titleRef": "contactModalTitle",

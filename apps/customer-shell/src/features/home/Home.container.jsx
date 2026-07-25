@@ -5,7 +5,6 @@ import HomeView from "./Home.view";
 const fallbackWidgets = [
     { type: "heroBanner", source: "shell" },
     { type: "services", source: "shell" },
-    { type: "featuredTours", source: "shell" },
 ];
 
 const HomeContainer = () => {

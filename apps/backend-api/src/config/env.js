@@ -94,7 +94,7 @@ const IS_PRODUCTION = NODE_ENV === "production";
 const IS_DEVELOPMENT = NODE_ENV === "development";
 const IS_TEST = NODE_ENV === "test";
 
-const APP_NAME = (get("APP_NAME", portalJsonConfig.appName || "TravelsTREM")).toString();
+const APP_NAME = (get("APP_NAME", portalJsonConfig.appName || "TravelsTrem")).toString();
 const PORT = Number(get("PORT", portalJsonConfig?.backend?.port || 5000));
 const BASE_URL = (get("BASE_URL", portalJsonConfig?.backend?.baseUrl || `http://localhost:${PORT}`)).toString();
 
@@ -103,7 +103,8 @@ const BASE_URL = (get("BASE_URL", portalJsonConfig?.backend?.baseUrl || `http://
    ------------------------------ */
 const frontendsRaw = get("FRONTENDS", JSON.stringify(portalJsonConfig?.cors?.frontends || [
     portalJsonConfig?.frontends?.shell?.baseUrl,
-    portalJsonConfig?.frontends?.toursTREM?.baseUrl,
+    portalJsonConfig?.frontends?.trevista?.baseUrl,
+    portalJsonConfig?.frontends?.trevio?.baseUrl,
     portalJsonConfig?.frontends?.adminTREM?.baseUrl,
 ].filter(Boolean)));
 const FRONTENDS = Array.isArray(frontendsRaw) ? frontendsRaw : parseFrontends(frontendsRaw);
@@ -204,6 +205,7 @@ const CLOUDINARY_SECRET = get("CLOUDINARY_SECRET", portalJsonConfig?.cloudinary?
     11) OTP and other application-level settings
     ------------------------------ */
 const OTP_TTL_MS = Number(get("OTP_TTL_MS", portalJsonConfig?.features?.otpTtlMs || 15 * 60 * 1000)); // 15 minutes by default
+const AUTH_COOKIE_DOMAIN = (get("AUTH_COOKIE_DOMAIN", portalJsonConfig?.auth?.cookieDomain || "") || "").toString().trim();
 
 process.env.MONGO_URI = process.env.MONGO_URI || MONGO_URI;
 process.env.JWT_SECRET = process.env.JWT_SECRET || JWT.accessSecret;
@@ -276,6 +278,7 @@ const config = {
     DEBUG,
     DEV_DELAY_MS,
     OTP_TTL_MS,
+    AUTH_COOKIE_DOMAIN,
     CLOUDINARY_NAME,
     CLOUDINARY_KEY,
     CLOUDINARY_SECRET,
@@ -302,6 +305,7 @@ export {
     DEBUG,
     DEV_DELAY_MS,
     OTP_TTL_MS,
+    AUTH_COOKIE_DOMAIN,
     CLOUDINARY_NAME,
     CLOUDINARY_KEY,
     CLOUDINARY_SECRET,

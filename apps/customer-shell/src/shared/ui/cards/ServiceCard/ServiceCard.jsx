@@ -16,28 +16,14 @@ const ServiceIcon = ({ id }) => {
     };
 
     switch (id) {
-        case "flights-hotels":
-            return (
-                <div className="ui-service-card__icon-stack">
-                    <Icon name="plane" {...iconProps} />
-                    <Icon name="hotel" {...iconProps} />
-                </div>
-            );
-
-        case "travel-packages":
+        case "trevio":
             return <Icon name="map" {...iconProps} />;
 
-        case "visa-passport":
-            return <Icon name="shieldCheck" {...iconProps} />;
-
-        case "corporate-packages":
+        case "trevista":
             return <Icon name="briefcaseBusiness" {...iconProps} />;
 
-        case "cab-services":
-            return <Icon name="carTaxiFront" {...iconProps} />;
-
         default:
-            return <Icon name="plane" {...iconProps} />;
+            return <Icon name="compass" {...iconProps} />;
     }
 };
 

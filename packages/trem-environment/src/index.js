@@ -26,7 +26,8 @@ const customerEnvironments = {
         backend: defaultBackend.development,
         frontends: {
             shell: { baseUrl: "http://localhost:3000" },
-            toursTREM: { baseUrl: "http://localhost:3001", remoteEntry: "http://localhost:3001/remoteEntry.js" },
+            trevista: { baseUrl: "http://localhost:3001", remoteEntry: "http://localhost:3001/remoteEntry.js" },
+            trevio: { baseUrl: "http://localhost:3005", remoteEntry: "http://localhost:3005/remoteEntry.js" },
             adminShell: { baseUrl: "http://localhost:3002" },
         },
         auth: { shellLoginPath: "/auth" },
@@ -101,7 +102,7 @@ export const createPortalEnvironment = ({
     };
 
     const getConfiguredRemoteOrigin = (key) => {
-        const envKey = key === "adminTREM" ? "REACT_APP_ADMIN_REMOTE_URL" : key === "toursTREM" ? "REACT_APP_TOURS_REMOTE_URL" : null;
+        const envKey = key === "adminTREM" ? "REACT_APP_ADMIN_REMOTE_URL" : key === "trevista" ? "REACT_APP_TREVISTA_REMOTE_URL" : key === "trevio" ? "REACT_APP_TREVIO_REMOTE_URL" : null;
         const envValue = allowEnvOverrides && envKey ? processEnv[envKey] : "";
         const app = portalEnvironment?.frontends?.[key] || {};
         return stripRemoteEntry(envValue || app.remoteEntry || app.baseUrl);

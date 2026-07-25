@@ -4,65 +4,65 @@
     "componentData": {
         "data": [],
         "structure": {
-            "title": "Traveling opens the door to creating",
-            "description": "Discover the world with TravelsTREM...",
-            "eyebrow": "Premium Travel Experiences",
-            "highlight": "memories",
-            "buttonText": "Explore Now",
-            "secondaryButtonText": "Watch story",
+            "title": "TravelsTrem powers independent",
+            "description": "TravelsTrem is the parent platform for Trevio and Trevista, with shared authentication, payments, wallet, rewards, support, AI services, analytics, and infrastructure.",
+            "eyebrow": "Parent company and platform",
+            "highlight": "travel products",
+            "buttonText": "Explore products",
+            "secondaryButtonText": "Partner with us",
             "featuredDestination": {
-                "label": "Top Destination",
-                "title": "Bali, Indonesia"
+                "label": "Active Products",
+                "title": "Trevio + Trevista"
             },
             "stats": [
                 {
-                    "value": "15K+",
-                    "label": "Happy Travelers"
+                    "value": "12+",
+                    "label": "Shared Services"
                 },
                 {
-                    "value": "120+",
-                    "label": "Destinations"
+                    "value": "2",
+                    "label": "Active Products"
                 },
                 {
-                    "value": "4.9",
-                    "label": "Average Rating"
+                    "value": "SSO",
+                    "label": "Unified Account"
                 }
             ],
             "visual": {
-                "headline": "Live route studio",
-                "subline": "Flights, stays, weather, and local moments balanced in one plan.",
+                "headline": "Shared platform layer",
+                "subline": "Auth, wallet, rewards, AI, payments, support, analytics, media, and shared APIs for every product.",
                 "orbitItems": [
                     {
-                        "label": "Flights",
-                        "icon": "plane"
+                        "label": "Auth",
+                        "icon": "sparkles"
                     },
                     {
-                        "label": "Stays",
-                        "icon": "hotel"
+                        "label": "Wallet",
+                        "icon": "map"
                     },
                     {
-                        "label": "Routes",
+                        "label": "AI",
                         "icon": "route"
                     },
                     {
-                        "label": "Weather",
+                        "label": "Support",
                         "icon": "cloud"
                     }
                 ],
                 "gallery": [
                     {
-                        "label": "Next window",
-                        "value": "Sep - Nov",
+                        "label": "Trevio",
+                        "value": "Community trips",
                         "icon": "calendar"
                     },
                     {
-                        "label": "Trip style",
-                        "value": "Slow luxury",
+                        "label": "Trevista",
+                        "value": "Holiday planning",
                         "icon": "sparkles"
                     },
                     {
-                        "label": "Mood",
-                        "value": "Island calm",
+                        "label": "Parent brand",
+                        "value": "TravelsTrem",
                         "icon": "compass"
                     }
                 ]
@@ -71,4 +71,3 @@
         "config": {}
     }
 }
-

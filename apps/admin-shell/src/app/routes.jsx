@@ -1,7 +1,7 @@
 import React from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 
-import { AuthPage } from "@apps/auth-trem";
+import { AuthPage } from "@apps/auth";
 import ManageTours from "../features/tours/ManageTours";
 import BookingDetail from "../features/tours/BookingDetail/BookingDetail";
 import ScrollToTop from "../shared/ui/ScrollToTop/ScrollToTop";

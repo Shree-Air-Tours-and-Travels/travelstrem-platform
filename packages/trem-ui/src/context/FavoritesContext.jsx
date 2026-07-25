@@ -73,6 +73,6 @@ export function FavoritesProvider({ children }) {
 
 export function useFavoritesContext() {
   const ctx = useContext(FavoritesContext);
-  if (!ctx) throw new Error("useFavoritesContext must be used within a FavoritesProvider");
+  if (!ctx) return { isFavorited: () => false, toggleFavorite: () => {} };
   return ctx;
 }

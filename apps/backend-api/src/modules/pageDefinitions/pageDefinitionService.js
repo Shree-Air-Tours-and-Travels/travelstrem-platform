@@ -40,6 +40,46 @@ class PageDefinitionService {
     return JSON.parse(raw);
   }
 
+  _deepMerge(target = {}, source = {}) {
+    const output = { ...(target || {}) };
+    Object.entries(source || {}).forEach(([key, value]) => {
+      if (
+        value &&
+        typeof value === "object" &&
+        !Array.isArray(value) &&
+        output[key] &&
+        typeof output[key] === "object" &&
+        !Array.isArray(output[key])
+      ) {
+        output[key] = this._deepMerge(output[key], value);
+        return;
+      }
+      output[key] = value;
+    });
+    return output;
+  }
+
+  _toWidgetEntry(entry = {}, widgetComponent = {}) {
+    const structure = widgetComponent?.structure || {};
+    const nestedWidgets = structure.widgets;
+
+    if (Array.isArray(nestedWidgets) && nestedWidgets.length) return nestedWidgets;
+
+    if (structure.type || Array.isArray(structure.features)) {
+      return [{
+        name: entry.name || structure.name || structure.type,
+        type: structure.type || entry.type || entry.name || "Section",
+        source: structure.source || entry.source || "",
+        props: {
+          ...(entry.props || {}),
+          ...(Array.isArray(structure.features) ? { features: structure.features } : {}),
+        },
+      }];
+    }
+
+    return [entry];
+  }
+
   _expandWidgetRefs(pageDefinition, pageFile) {
     const pageComponent = pageDefinition?.component || {};
     const widgetEntries = pageComponent?.structure?.widgets || [];
@@ -47,20 +87,24 @@ class PageDefinitionService {
     const widgetContracts = [];
 
     widgetEntries.forEach((entry) => {
-      if (!entry.widgetRef) {
+      const widgetRef = entry.widgetRef || entry.path;
+      if (!widgetRef) {
         expandedWidgets.push(entry);
         return;
       }
-      const widgetDefinition = this._loadWidgetDefinition(pageFile, entry.widgetRef);
+      const widgetDefinition = this._loadWidgetDefinition(pageFile, widgetRef);
       const widgetComponent = widgetDefinition?.component || {};
       widgetContracts.push(widgetComponent);
-      expandedWidgets.push(...(widgetComponent?.structure?.widgets || []));
+      expandedWidgets.push(...this._toWidgetEntry(entry, widgetComponent));
     });
 
     return {
       status: pageDefinition.status,
       component: {
-        data: { ...pageComponent.data },
+        data: this._deepMerge(
+          pageComponent.data || {},
+          widgetContracts.reduce((acc, widget) => this._deepMerge(acc, widget?.data || {}), {}),
+        ),
         dataScope: {
           options: Object.assign(
             {},

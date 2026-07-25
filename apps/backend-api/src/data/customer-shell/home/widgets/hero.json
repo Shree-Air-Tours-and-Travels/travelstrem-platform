@@ -7,29 +7,29 @@
     },
     "elements": {
       "labels": {
-        "heroTitle": "Travelling opens the door to creating",
-        "heroDescription": "Discover the world with TravelsTREM. Curated adventures, stunning destinations, and memories that last a lifetime.",
-        "heroEyebrow": "Premium Travel Experiences",
-        "heroHighlight": "memories",
-        "heroButtonText": "Explore Now",
-        "heroSecondaryButtonText": "Watch story",
-        "topDestinationLabel": "Top Destination",
-        "topDestinationTitle": "Bali, Indonesia",
-        "statsHappyTravelers": "Happy Travelers",
-        "statsDestinations": "Destinations",
-        "statsAvgRating": "Average Rating",
-        "visualHeadline": "Live route studio",
-        "visualSubline": "Flights, stays, weather, and local moments balanced in one plan.",
-        "orbitFlights": "Flights",
-        "orbitStays": "Stays",
-        "orbitRoutes": "Routes",
-        "orbitWeather": "Weather",
-        "galleryNextWindow": "Next window",
-        "sepNov": "Sep - Nov",
-        "galleryTripStyle": "Trip style",
-        "slowLuxury": "Slow luxury",
-        "galleryMood": "Mood",
-        "islandCalm": "Island calm"
+        "heroTitle": "TravelsTrem powers independent",
+        "heroDescription": "TravelsTrem is the shared platform for Trevio and Trevista, with authentication, accounts, payments, wallet, rewards, support, AI services, analytics, and shared infrastructure behind every product.",
+        "heroEyebrow": "Parent company and platform",
+        "heroHighlight": "travel products",
+        "heroButtonText": "Explore products",
+        "heroSecondaryButtonText": "Partner with us",
+        "topDestinationLabel": "Active Products",
+        "topDestinationTitle": "Trevio + Trevista",
+        "statsHappyTravelers": "Shared Services",
+        "statsDestinations": "Active Products",
+        "statsAvgRating": "Unified Account",
+        "visualHeadline": "Shared platform layer",
+        "visualSubline": "Auth, wallet, rewards, AI, payments, support, analytics, media, and shared APIs for every product.",
+        "orbitAuth": "Auth",
+        "orbitWallet": "Wallet",
+        "orbitAi": "AI",
+        "orbitSupport": "Support",
+        "galleryNextWindow": "Trevio",
+        "sepNov": "Community trips",
+        "galleryTripStyle": "Trevista",
+        "slowLuxury": "Holiday planning",
+        "galleryMood": "Parent brand",
+        "islandCalm": "TravelsTrem"
       },
       "urls": {}
     },
@@ -49,15 +49,15 @@
             "featuredDestinationTitleRef": "topDestinationTitle",
             "stats": [
               {
-                "value": "15K+",
+                "value": "12+",
                 "labelRef": "statsHappyTravelers"
               },
               {
-                "value": "120+",
+                "value": "2",
                 "labelRef": "statsDestinations"
               },
               {
-                "value": "4.9",
+                "value": "SSO",
                 "labelRef": "statsAvgRating"
               }
             ],
@@ -65,20 +65,20 @@
             "visualSublineRef": "visualSubline",
             "orbitItems": [
               {
-                "icon": "plane",
-                "labelRef": "orbitFlights"
+                "icon": "sparkles",
+                "labelRef": "orbitAuth"
               },
               {
-                "icon": "hotel",
-                "labelRef": "orbitStays"
+                "icon": "map",
+                "labelRef": "orbitWallet"
               },
               {
                 "icon": "route",
-                "labelRef": "orbitRoutes"
+                "labelRef": "orbitAi"
               },
               {
                 "icon": "cloud",
-                "labelRef": "orbitWeather"
+                "labelRef": "orbitSupport"
               }
             ],
             "gallery": [

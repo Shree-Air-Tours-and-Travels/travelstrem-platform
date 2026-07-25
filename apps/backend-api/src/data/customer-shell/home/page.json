@@ -7,8 +7,8 @@
     },
     "elements": {
       "labels": {
-        "pageTitle": "TravelsTREM — Curated Travel Experiences",
-        "pageDescription": "Discover the world with TravelsTREM. Curated adventures, stunning destinations, and memories that last a lifetime."
+        "pageTitle": "TravelsTrem — Product Ecosystem",
+        "pageDescription": "TravelsTrem is the parent platform powering independent travel products for communities, holiday planning, shared accounts, payments, support, and AI services."
       },
       "urls": {}
     },
@@ -27,11 +27,6 @@
           "type": "services",
           "source": "shell",
           "widgetRef": "./widgets/services.json"
-        },
-        {
-          "type": "featuredTours",
-          "source": "shell",
-          "widgetRef": "./widgets/featured-tours.json"
         }
       ],
       "config": {},

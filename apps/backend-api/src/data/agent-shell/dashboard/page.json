@@ -7,8 +7,8 @@
     },
     "elements": {
       "labels": {
-        "pageTitle": "Agent Dashboard",
-        "pageDescription": "View agent profile, approval status, and agency assignment."
+        "pageTitle": "Partner Dashboard",
+        "pageDescription": "View partner profile, approval status, and agency assignment."
       },
       "urls": {}
     },

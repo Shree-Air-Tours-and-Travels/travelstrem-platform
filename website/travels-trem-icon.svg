@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title">
+  <title id="title">TravelsTREM globe and airplane icon</title>
+  <defs>
+    <linearGradient id="globeGradient" x1="48" y1="30" x2="174" y2="190" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#16c4b1"/>
+      <stop offset=".52" stop-color="#0aa9bd"/>
+      <stop offset="1" stop-color="#165bd2"/>
+    </linearGradient>
+    <linearGradient id="orbitGradient" x1="34" y1="192" x2="188" y2="116" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#08a9ba"/>
+      <stop offset=".52" stop-color="#126bd1"/>
+      <stop offset="1" stop-color="#2855d8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Globe and latitude/longitude grid -->
+  <g fill="none" stroke="url(#globeGradient)" stroke-linecap="round" stroke-linejoin="round">
+    <path stroke-width="11" d="M166 57c-17-18-39-28-63-28-46 0-83 39-83 87 0 48 37 87 83 87 26 0 50-12 66-33"/>
+    <path stroke-width="9" d="M103 29c-27 26-39 54-39 87 0 34 13 63 39 87"/>
+    <path stroke-width="8" d="M105 29c27 26 39 54 39 87 0 15-2 28-7 41"/>
+    <path stroke-width="8" d="M28 111c24 10 50 15 77 15 16 0 31-2 46-5"/>
+    <path stroke-width="8" d="M38 66c21 13 44 20 68 20 16 0 30-2 43-6"/>
+    <path stroke-width="8" d="M45 163c18-9 39-14 61-14 15 0 29 2 42 6"/>
+  </g>
+
+  <!-- Airplane silhouette -->
+  <path fill="#061b40" d="M145 69 181 84l39-35c8-7 16-8 21-3 5 5 3 13-4 21l-39 42 12 48c3 11 0 19-7 22-7 2-13-3-17-13l-18-40-34 23 2 24c1 8-2 14-8 16l-12-11-3-31-22-13c-8-5-10-11-7-17 3-6 10-7 18-3l23 10 29-27-33-16c-9-4-12-10-9-16 3-6 10-8 18-4l32 15Z"/>
+
+  <!-- Sweeping travel orbit -->
+  <path fill="none" stroke="url(#orbitGradient)" stroke-linecap="round" stroke-width="13" d="M31 181c4 29 38 31 72 18 31-12 64-35 91-68"/>
+  <path fill="none" stroke="url(#orbitGradient)" stroke-linecap="round" stroke-width="11" d="M130 196c29-3 56-21 72-48"/>
+  <path fill="url(#orbitGradient)" d="M30 181c-5 17-2 30 9 37 12 7 28 1 41-10-19 4-34-2-42-14-4-6-6-12-8-13Z"/>
+</svg>

@@ -13,13 +13,15 @@ import User from "../models/User.js";
 
 const NODE_ENV = (config.NODE_ENV || process.env.NODE_ENV || "development").toString().trim();
 const IS_PRODUCTION = !!config.IS_PRODUCTION;
+const AUTH_COOKIE_DOMAIN = (config.AUTH_COOKIE_DOMAIN || process.env.AUTH_COOKIE_DOMAIN || "").toString().trim();
+const USE_SHARED_COOKIE_DOMAIN = IS_PRODUCTION && Boolean(AUTH_COOKIE_DOMAIN);
 
 // JWT config (use config.JWT which was normalized in server/config.js)
 const JWT_SECRET = (config.JWT && config.JWT.accessSecret) || process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = (config.JWT && config.JWT.accessExpires) || process.env.JWT_EXPIRES_IN || "15m";
 const JWT_REFRESH_SECRET = (config.JWT && config.JWT.refreshSecret) || process.env.JWT_REFRESH_SECRET;
 const JWT_REFRESH_EXPIRES_IN = (config.JWT && config.JWT.refreshExpires) || process.env.JWT_REFRESH_EXPIRES_IN || "30d";
-const REFRESH_COOKIE_NAME = IS_PRODUCTION ? "__Host-refresh-token" : "refresh_token";
+const REFRESH_COOKIE_NAME = IS_PRODUCTION && !USE_SHARED_COOKIE_DOMAIN ? "__Host-refresh-token" : "refresh_token";
 
 // Admin creation secret from config (production-safe)
 const ADMIN_CREATION_SECRET = (config.ADMIN_CREATION_SECRET || "").toString().trim();
@@ -57,15 +59,16 @@ const signTokenForUser = (user) =>
         { expiresIn: JWT_EXPIRES_IN }
     );
 
-const COOKIE_NAME = IS_PRODUCTION ? "__Host-token" : "token";
+const COOKIE_NAME = IS_PRODUCTION && !USE_SHARED_COOKIE_DOMAIN ? "__Host-token" : "token";
+const sharedCookieOptions = USE_SHARED_COOKIE_DOMAIN ? { domain: AUTH_COOKIE_DOMAIN } : {};
 
 const setTokenCookie = (res, token) => {
     res.cookie(COOKIE_NAME, token, {
         httpOnly: true,
         secure: IS_PRODUCTION,
-        sameSite: IS_PRODUCTION ? "strict" : "lax",
+        sameSite: IS_PRODUCTION && !USE_SHARED_COOKIE_DOMAIN ? "strict" : "lax",
         path: "/",
-        ...(IS_PRODUCTION ? {} : {}),
+        ...sharedCookieOptions,
         maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 };
@@ -74,8 +77,9 @@ const clearTokenCookie = (res) => {
     res.cookie(COOKIE_NAME, "", {
         httpOnly: true,
         secure: IS_PRODUCTION,
-        sameSite: IS_PRODUCTION ? "strict" : "lax",
+        sameSite: IS_PRODUCTION && !USE_SHARED_COOKIE_DOMAIN ? "strict" : "lax",
         path: "/",
+        ...sharedCookieOptions,
         maxAge: 0,
     });
 };
@@ -93,8 +97,9 @@ const setRefreshTokenCookie = (res, token) => {
     res.cookie(REFRESH_COOKIE_NAME, token, {
         httpOnly: true,
         secure: IS_PRODUCTION,
-        sameSite: IS_PRODUCTION ? "strict" : "lax",
+        sameSite: IS_PRODUCTION && !USE_SHARED_COOKIE_DOMAIN ? "strict" : "lax",
         path: "/api/auth",
+        ...sharedCookieOptions,
         maxAge: parseDuration(JWT_REFRESH_EXPIRES_IN),
     });
 };
@@ -103,8 +108,9 @@ const clearRefreshTokenCookie = (res) => {
     res.cookie(REFRESH_COOKIE_NAME, "", {
         httpOnly: true,
         secure: IS_PRODUCTION,
-        sameSite: IS_PRODUCTION ? "strict" : "lax",
+        sameSite: IS_PRODUCTION && !USE_SHARED_COOKIE_DOMAIN ? "strict" : "lax",
         path: "/api/auth",
+        ...sharedCookieOptions,
         maxAge: 0,
     });
 };

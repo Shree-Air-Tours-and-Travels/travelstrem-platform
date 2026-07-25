@@ -1,7 +1,7 @@
 import React from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 
-import { AuthPage } from "@apps/auth-trem";
+import { AuthPage } from "@apps/auth";
 import ManageTours from "../features/services/tours/ManageTours";
 import ServicesContainer from "../features/services/container";
 import BookingDetail from "../features/bookings/tours/BookingDetail/BookingDetail";
@@ -27,14 +27,14 @@ const Routers = () => {
             authService={authService}
             emit={emit}
             reload={reload}
-            appName="AgentTREM"
+            appName="Partner Portal"
             authStoragePrefix="agentTREM"
             allowedRoles={agentRoles}
             roleOptions={[
                 {
                     value: "agent",
-                    title: "Agent",
-                    subtitle: "Manage assigned bookings, quotes, and agency tours",
+                    title: "Partner",
+                    subtitle: "Manage assigned bookings, quotes, product inventory, and agency operations",
                     descriptor: "Operations",
                     requiresSecret: false,
                 },
@@ -47,7 +47,7 @@ const Routers = () => {
 
     const agentAuthGuard = session?.isAuthenticated && !isAllowedAgentRole(session) ? (
         <div className="agent-auth-page">
-            <div className="agent-auth-page__notice">This account does not have AgentTREM access.</div>
+            <div className="agent-auth-page__notice">This account does not have Partner Portal access.</div>
             {agentAuthPage}
         </div>
     ) : null;

@@ -1,0 +1,55 @@
+{
+  "status": "success",
+  "component": {
+    "data": {
+      "state": {
+        "bookingSteps": [
+          {
+            "id": "choose",
+            "title": "Choose a trip",
+            "description": "Open route, inclusions, stay and day-wise itinerary."
+          },
+          {
+            "id": "travellers",
+            "title": "Add travellers",
+            "description": "Use the shared traveller form with validation."
+          },
+          {
+            "id": "addons",
+            "title": "Pick add-ons",
+            "description": "Review package pricing through the booking engine."
+          },
+          {
+            "id": "request",
+            "title": "Submit request",
+            "description": "Send the request to the backend booking API."
+          }
+        ]
+      }
+    },
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "howEyebrow": "Simple booking journey",
+        "howHeading": "Book your adventure in four steps."
+      },
+      "urls": {}
+    },
+    "structure": {
+      "type": "howToUseSection",
+      "source": "trevio",
+      "features": [
+        {
+          "name": "bookingSteps",
+          "type": "stepList",
+          "eyebrowRef": "howEyebrow",
+          "headingRef": "howHeading"
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

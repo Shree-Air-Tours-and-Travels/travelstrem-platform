@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { debounce, clamp, max } from "lodash";
+import { debounce, clamp } from "lodash";
 import { useComponentData } from "@packages/trem-utils";
 import ServiceListView from "./Services.view";
 
@@ -132,10 +132,8 @@ const ServiceList = () => {
     ]);
 
     useEffect(() => {
-        const maxIndex = max([
-            0,
-            servicesCount - visibleCount,
-        ]);
+        // Use Math.max instead of lodash max to ensure we always get a number
+        const maxIndex = Math.max(0, servicesCount - visibleCount);
 
         setCurrent((prev) =>
             clamp(prev, 0, maxIndex)

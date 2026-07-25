@@ -7,7 +7,6 @@ export default {
     "pathMap": {
       "/": "home",
       "/about": "about",
-      "/tours": "tours",
       "/dashboard": "dashboard"
     },
     "pages": {
@@ -21,10 +20,6 @@ export default {
           {
             "type": "services",
             "source": "shell"
-          },
-          {
-            "type": "featuredTours",
-            "source": "shell"
           }
         ]
       },
@@ -34,20 +29,6 @@ export default {
           {
             "type": "aboutContent",
             "source": "shell"
-          }
-        ]
-      },
-      "tours": {
-        "page": "tours",
-        "widgets": [
-          {
-            "type": "microApp",
-            "source": "toursTREM",
-            "props": {
-              "embedded": true,
-              "basename": "/tours",
-              "basePath": "/tours"
-            }
           }
         ]
       },

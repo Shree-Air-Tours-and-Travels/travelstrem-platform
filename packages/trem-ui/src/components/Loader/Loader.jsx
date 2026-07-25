@@ -7,7 +7,7 @@ const FINISH_CALLBACK_DELAY = 550;
 export default function GlobalLoader({
   visible = true,
   size = 120,
-  text = "Preparing your TravelsTREM experience...",
+  text = "Preparing your TravelsTrem experience...",
   className = "",
   onFinish = () => {},
   autoHideAfter = null,
