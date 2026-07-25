@@ -3,6 +3,8 @@
 
 # TravelsTREM Platform
 
+Product architecture and migration rules are documented in [docs/product-architecture.md](docs/product-architecture.md). TravelsTREM is the parent platform; Trevio and Trevista are the active customer-facing products.
+
 A scalable monorepo architecture powering the TravelsTREM ecosystem using Micro Frontends (MFE), shared packages, and modular backend services.
 
 ---
@@ -11,7 +13,7 @@ A scalable monorepo architecture powering the TravelsTREM ecosystem using Micro 
 
 TravelsTREM is designed as a platform-level architecture consisting of:
 
-- Customer-facing applications
+- Parent company website and independent product applications
 - Admin operational platform
 - Shared backend API
 - Shared UI & utility packages
@@ -36,21 +38,26 @@ The system is built using:
 │                Frontend Layer               │
 ├──────────────────────────────────────────────┤
 │                                              │
-│  travelstrem.com                             │
-│  └── Customer Shell                          │
-│       ├── ToursTREM                          │
-│       ├── BookingTREM                        │
-│       ├── ProfileTREM                        │
-│       └── Future Customer MFEs               │
+│  travelstrem.in                              │
+│  └── TravelsTrem parent website              │
+│       ├── Product discovery                  │
+│       ├── About / Contact / Help             │
+│       └── Shared platform capabilities       │
 │                                              │
-│  admin.travelstrem.com                       │
-│  └── Admin Shell                             │
+│  trevio.travelstrem.in                       │
+│  └── Trevio                                  │
+│                                              │
+│  trevista.travelstrem.in                     │
+│  └── Trevista                                │
+│                                              │
+│  admin.travelstrem.in                        │
+│  └── Unified admin portal                    │
 │       ├── DashboardTREM                      │
-│       ├── TourManagementTREM                 │
-│       ├── BookingManagementTREM              │
-│       ├── UserManagementTREM                 │
-│       ├── AnalyticsTREM                      │
-│       └── Future Admin MFEs                  │
+│       ├── Trevio operations                  │
+│       ├── Trevista operations                │
+│       ├── Partners                           │
+│       ├── Payments                           │
+│       └── Support / Reports                  │
 │                                              │
 └──────────────────────────────────────────────┘
                     │
@@ -101,7 +108,7 @@ travelstrem-platform/
 │   │   ├── public/
 │   │   └── package.json
 │   │
-│   ├── tours-remote/
+│   ├── trevista-remote/
 │   │   ├── src/
 │   │   ├── federation/
 │   │   └── package.json
@@ -169,17 +176,15 @@ This architecture provides:
 
 # Application Responsibilities
 
-## Customer Shell
+## TravelsTrem Parent Website
 
 Handles:
 
-- landing pages
-- browsing tours
-- search
-- bookings
-- user profiles
-- reviews
-- payments
+- company homepage
+- product discovery
+- about, contact, help, and platform pages
+- authentication entry points
+- shared profile, wallet, rewards, support, and platform capabilities
 
 Domain:
 travelstrem.com
@@ -292,11 +297,10 @@ TravelsTREM uses Module Federation.
 
 Example:
 
-Customer Shell dynamically loads:
+The parent website routes users into independent products:
 
-- ToursTREM
-- BookingTREM
-- ProfileTREM
+- Trevio
+- Trevista
 
 Admin Shell may later dynamically load:
 
@@ -390,7 +394,7 @@ Example:
 |-------------|------------|
 | customer-shell | Vercel |
 | admin-shell | Vercel |
-| tours-remote | Vercel |
+| trevista-remote | Vercel |
 | backend-api | Render |
 | MongoDB | Atlas |
 
@@ -513,4 +517,3 @@ pnpm --filter customer-shell dev
 Run backend only:
 
 pnpm --filter backend-api dev
-

@@ -1,0 +1,31 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": { "options": {} },
+    "elements": {
+      "labels": {
+        "notifications": "Notifications",
+        "notificationPreTour": "Pre-Tour Information",
+        "notificationReschedule": "Rescheduling Notification",
+        "notificationConfirmation": "Booking Confirmation",
+        "notificationOffer": "Special Offer Notification"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "NotificationsPanel",
+          "props": {
+            "titleRef": "notifications",
+            "items": []
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

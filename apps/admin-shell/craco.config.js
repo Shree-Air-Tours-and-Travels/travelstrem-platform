@@ -54,8 +54,9 @@ module.exports = {
                 ...(webpackConfig.resolve.alias || {}),
                 react: path.resolve(__dirname, "node_modules/react"),
                 "react-dom": path.resolve(__dirname, "node_modules/react-dom"),
-                "@apps/auth-trem": path.resolve(__dirname, "../../apps/auth-trem/src/public-api.js"),
+                "@apps/auth": path.resolve(__dirname, "../../apps/auth-trem/src/public-api.js"),
                 "@packages/trem-auth-core": path.resolve(__dirname, "../../packages/trem-auth-core/src"),
+                "@packages/trem-modals": path.resolve(__dirname, "../../packages/trem-modals/src"),
                 "@packages/trem-ui": path.resolve(__dirname, "../../packages/trem-ui/src"),
                 "@packages/trem-utils": path.resolve(__dirname, "../../packages/trem-utils/src"),
             };

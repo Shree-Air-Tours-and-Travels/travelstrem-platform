@@ -1,11 +1,9 @@
 import React from "react";
 import { Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
 
-import { AuthPage } from "@apps/auth-trem";
+import { AuthPage } from "@apps/auth";
 import Home from "../features/home/Home";
 import About from "../features/about/About";
-import DashboardPage from "../features/dashboard/Dashboard";
-import FederatedToursApp from "../federation/FederatedToursApp";
 import SearchResultList from "../shared/ui/SEO/SearchResultList";
 import ScrollToTop from "../shared/ui/ScrollToTop/ScrollToTop";
 import { ROUTES } from "@packages/trem-utils";
@@ -25,8 +23,6 @@ const ConfigRedirect = ({ to }) => {
     const params = useParams();
     return <Navigate to={interpolatePath(to, params)} replace />;
 };
-
-const FavoritesRedirect = () => <Navigate to="/dashboard" state={{ activeNav: "favorites" }} replace />;
 
 const AdminShellRedirect = () => {
     React.useEffect(() => {
@@ -55,7 +51,7 @@ const Routers = () => {
             authService={authService}
             emit={emit}
             reload={reload}
-            appName="TravelsTREM"
+            appName="TravelsTrem"
             authStoragePrefix="customerTREM"
             allowedRoles={["member"]}
             roleOptions={[
@@ -78,13 +74,9 @@ const Routers = () => {
         about: <About />,
         search: <SearchResultList />,
         auth: user ? <Navigate to={redirectAfterAuth} replace /> : customerAuthPage,
-        dashboard: <DashboardPage />,
-        favorites: <FavoritesRedirect />,
         "remote.adminTREM": <AdminShellRedirect />,
         "remote.admin": <AdminShellRedirect />,
         admin: <AdminShellRedirect />,
-        "remote.toursTREM": <FederatedToursApp />,
-        "remote.tours": <FederatedToursApp />,
     };
 
     const protectRoute = (route, element) => {
@@ -145,18 +137,6 @@ const Routers = () => {
                         <Route
                             path="/auth"
                             element={user ? <Navigate to={redirectAfterAuth} replace /> : customerAuthPage}
-                        />
-                        <Route
-                            path="/tours/*"
-                            element={protectRoute({ access: "authenticated" }, <FederatedToursApp />)}
-                        />
-                        <Route
-                            path="/dashboard"
-                            element={protectRoute({ access: "authenticated" }, <DashboardPage />)}
-                        />
-                        <Route
-                            path="/favorites"
-                            element={protectRoute({ access: "authenticated" }, <FavoritesRedirect />)}
                         />
                         <Route
                             path="/admin/*"

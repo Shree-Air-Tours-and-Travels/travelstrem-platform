@@ -1,0 +1,91 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "pageTitle": "Trip Details",
+        "bookNow": "Book Now",
+        "enquire": "Enquire",
+        "backToTours": "Back to trips",
+        "backToLabel": "Back to",
+        "referrerTours": "Trips",
+        "confirmBookingTitle": "Book This Trip",
+        "confirmBookingNote": "Please note that this is a request for booking. Our team will get in touch with you to confirm your reservation.",
+        "confirmBookingConfirmLabel": "Request Booking",
+        "confirmBookingCancelLabel": "Cancel",
+        "tourNotFoundTitle": "Trip not found",
+        "tourNotFoundMessage": "The trip link is missing a valid reference.",
+        "tourErrorTitle": "Trip details could not load"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {
+        "titleRef": "pageTitle"
+      },
+      "widgets": [
+        {
+          "type": "TourGallery",
+          "source": "shell",
+          "widgetRef": "./widgets/tour-gallery.json"
+        },
+        {
+          "type": "TourOverview",
+          "source": "shell",
+          "widgetRef": "./widgets/tour-overview.json"
+        },
+        {
+          "type": "PricingCard",
+          "source": "shell",
+          "widgetRef": "./widgets/pricing-card.json"
+        },
+        {
+          "type": "ItineraryTimeline",
+          "source": "shell",
+          "widgetRef": "./widgets/itinerary-timeline.json"
+        },
+        {
+          "type": "InclusionsExclusions",
+          "source": "shell",
+          "widgetRef": "./widgets/inclusions-exclusions.json"
+        },
+        {
+          "type": "ReviewsSection",
+          "source": "shell",
+          "widgetRef": "./widgets/reviews-section.json"
+        }
+      ],
+      "floatingActionBar": {
+        "config": {
+          "variant": "floating",
+          "align": "left-right",
+          "showBg": true,
+          "mobileVisible": 2
+        },
+        "actions": [
+          {
+            "type": "ghost",
+            "refId": "enquire",
+            "config": {
+              "alignementOnBar": "left",
+              "iconLeft": "messageCircle"
+            }
+          },
+          {
+            "type": "submit",
+            "refId": "bookNow",
+            "config": {
+              "alignementOnBar": "right"
+            }
+          }
+        ]
+      },
+      "config": {},
+      "actions": []
+    }
+  }
+}

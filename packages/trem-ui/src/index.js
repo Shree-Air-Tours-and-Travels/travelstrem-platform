@@ -11,9 +11,12 @@ export { default as PortalPreloader } from "./components/PortalPreloader/PortalP
 export { default as Footer } from "./layout/Footer/Footer.jsx";
 export { default as ProfileActionMenu } from "./components/ProfileActionMenu/ProfileActionMenu.jsx";
 export { default as Header } from "./layout/Header/Header.jsx";
+export { default as ProductHeader } from "./layout/ProductHeader/ProductHeader.jsx";
 export { default as Dropdown } from "./components/Dropdown/Dropdown.jsx";
 export { default as SmoothScroll } from "./components/SmoothScroll/SmoothScroll.jsx";
 export { default as TourCard } from "./components/TourCard/TourCard.jsx";
+export { default as TrevioTripCard } from "./components/TrevioTripCard/TrevioTripCard.jsx";
+export { default as InternationalTripCard } from "./components/InternationalTripCard/InternationalTripCard.jsx";
 export { default as BookingSummaryCard } from "./components/BookingSummaryCard/BookingSummaryCard.jsx";
 export { default as BookingTable } from "./components/BookingTable/BookingTable.jsx";
 export { default as BottomSheet } from "./components/BottomSheet/BottomSheet.jsx";
@@ -21,6 +24,7 @@ export { default as Breadcrumbs } from "./components/Breadcrumbs/Breadcrumbs.jsx
 export { default as InputField } from "./components/InputField/InputField.jsx";
 export { default as FloatingActionBar } from "./components/FloatingActionBar/FloatingActionBar.jsx";
 export { default as EmptyState } from "./components/EmptyState/EmptyState.jsx";
+export { default as FeaturedCard } from "./components/FeaturedCard/FeaturedCard.jsx";
 export { default as Paragraph } from "./components/Paragraph/Paragraph.jsx";
 export { default as QuickChips } from "./components/QuickChips/QuickChips.jsx";
 export { default as DashboardSidebar } from "./components/DashboardSidebar/DashboardSidebar.jsx";
@@ -28,9 +32,13 @@ export { default as ReviewCard } from "./components/ReviewCard/ReviewCard.jsx";
 export { default as ServiceCard } from "./components/ServiceCard/ServiceCard.jsx";
 export { default as SearchBarCard } from "./components/SearchBarCard/SearchBarCard.jsx";
 export { default as BookingCard } from "./components/BookingCard/BookingCard.jsx";
+export { default as BookingJourneyCard } from "./components/BookingJourneyCard/BookingJourneyCard.jsx";
 export { default as PricingCard } from "./components/PricingCard/PricingCard.jsx";
+export { default as Dashboard } from "./components/Dashboard/Dashboard.jsx";
 
+export { default as TourDetailsPage } from "./features/tourDetails/ToursDetails.container.jsx";
 export { FavoritesProvider, useFavoritesContext } from "./context/FavoritesContext.jsx";
+export { ThemeProvider, useTheme } from "./context/ThemeContext.jsx";
 export {
   typography,
   colors,

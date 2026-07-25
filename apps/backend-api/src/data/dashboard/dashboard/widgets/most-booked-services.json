@@ -1,0 +1,25 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": { "options": {} },
+    "elements": {
+      "labels": { "mostBooked": "Most Booked Services" },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "MostBookedServices",
+          "props": {
+            "titleRef": "mostBooked",
+            "items": []
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

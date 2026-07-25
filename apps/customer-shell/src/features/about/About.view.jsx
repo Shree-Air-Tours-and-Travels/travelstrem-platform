@@ -3,6 +3,7 @@ import "./about.scss";
 import { NavLink } from "react-router-dom";
 import { Icon, Button, Title, SubTitle, Paragraph } from "@packages/trem-ui";
 import { ContactAgentModal } from "@packages/trem-modals";
+import { getProduct } from "../../products/productCatalog";
 
 const getInitials = (name) =>
     name
@@ -48,6 +49,10 @@ export default function AboutView({ loading, error, contactOpen, setContactOpen,
     } = aboutProps || {};
 
     const c = company || {};
+    const secondaryHref = ctas?.secondary?.href === "trevista" || ctas?.secondary?.href === "/trevista" || ctas?.secondary?.href === "/tours"
+        ? getProduct("trevista").externalUrl
+        : ctas?.secondary?.href || getProduct("trevista").externalUrl;
+    const secondaryIsExternal = /^https?:\/\//.test(secondaryHref);
 
     return (
         <>
@@ -97,9 +102,15 @@ export default function AboutView({ loading, error, contactOpen, setContactOpen,
                                         text={ctas?.primary?.label}
                                         iconRight="arrowUpRight"
                                     />
-                                    <NavLink className="about-page__btn about-page__btn--secondary" to={ctas?.secondary?.href || "/tours"}>
-                                        {ctas?.secondary?.label}
-                                    </NavLink>
+                                    {secondaryIsExternal ? (
+                                        <a className="about-page__btn about-page__btn--secondary" href={secondaryHref} target="_blank" rel="noopener noreferrer">
+                                            {ctas?.secondary?.label}
+                                        </a>
+                                    ) : (
+                                        <NavLink className="about-page__btn about-page__btn--secondary" to={secondaryHref}>
+                                            {ctas?.secondary?.label}
+                                        </NavLink>
+                                    )}
                                 </div>
                             </div>
 
@@ -107,7 +118,7 @@ export default function AboutView({ loading, error, contactOpen, setContactOpen,
                                 <img
                                     className="about-page__logo"
                                     src={c.logoUrl || "/logo-images/logo-theme-teal-main.png"}
-                                    alt={c.logoAlt || "TravelsTREM"}
+                                    alt={c.logoAlt || "TravelsTrem"}
                                 />
                                 <div className="about-page__panel-copy">
                                     <span>{text?.panelTitle}</span>

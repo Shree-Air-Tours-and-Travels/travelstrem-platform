@@ -94,7 +94,7 @@ const HeroOrbitVisual = ({ visual = {}, featuredDestination = {} }) => {
     );
 };
 
-const HeroSectionView = ({ loading, error, resolvedView, props, hero, stats, user, navigate, handleHeroClick }) => {
+const HeroSectionView = ({ loading, error, resolvedView, props, hero, stats, handleHeroClick }) => {
     if (loading) return <HeroPreloader />;
     if (error) {
         return (
@@ -104,6 +104,9 @@ const HeroSectionView = ({ loading, error, resolvedView, props, hero, stats, use
         );
     }
     if (!resolvedView) return null;
+
+    // Ensure stats is an array before mapping
+    const safeStats = Array.isArray(stats) ? stats : [];
 
     return (
         <section className="ui-home__main__hero">
@@ -149,7 +152,7 @@ const HeroSectionView = ({ loading, error, resolvedView, props, hero, stats, use
                     </SmoothScroll>
                     <SmoothScroll variant="fadeIn" delay={0.5}>
                         <div className="ui-home__main__hero__stats">
-                            {stats.map((stat, index) => (
+                            {safeStats.map((stat, index) => (
                                 <div className="ui-home__main__hero__stat" key={`${stat.label}-${index}`}>
                                     <Title text={stat.value} size="small" />
                                     <SubTitle text={stat.label} size="small" />

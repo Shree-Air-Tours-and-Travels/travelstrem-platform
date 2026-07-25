@@ -9,6 +9,10 @@ import {
     registerEventHandler,
     registerSessionCacheClearer,
 } from "@packages/trem-events";
+import { getProduct, resolveProductKey } from "../../products/productCatalog";
+import { buildGlobalDashboardUrl } from "@packages/trem-utils";
+
+const getProductLaunchUrl = (productKey) => getProduct(productKey).externalUrl || "/";
 
 const DEFAULT_SESSION = {
     user: null,
@@ -19,7 +23,9 @@ const DEFAULT_SESSION = {
 
 const DEFAULT_HEADER_CONFIG = {
     brand: {
-        label: "TravelsTREM",
+        label: "TravelsTrem",
+        productName: "TravelsTrem",
+        parentLabel: "TravelsTrem",
         homePath: "/",
     },
     leftSection: {
@@ -32,12 +38,15 @@ const DEFAULT_HEADER_CONFIG = {
         { label: "Home", type: "internal", path: "/", disabled: false },
         { label: "About", type: "internal", path: "/about", disabled: false },
         {
-            label: "Services",
+            label: "Products",
             type: "dropdown",
             disabled: false,
-            items: [{ label: "Tours & Packages", app: "toursTREM", path: "/tours", disabled: false }],
+            items: [
+                { label: "Trevio", type: "external", href: getProductLaunchUrl("trevio"), target: "_blank", rel: "noopener noreferrer", disabled: false },
+                { label: "Trevista", type: "external", href: getProductLaunchUrl("trevista"), target: "_blank", rel: "noopener noreferrer", disabled: false },
+            ],
         },
-        { label: "Dashboard", app: "customer-shell", path: "/dashboard", disabled: false },
+        { label: "Dashboard", type: "external", href: buildGlobalDashboardUrl(), target: "_self", disabled: false },
     ],
     authActions: {
         login: { label: "Login", path: "/login" },
@@ -52,6 +61,25 @@ const DEFAULT_HEADER_CONFIG = {
     },
 };
 
+const getActiveProduct = (location) => getProduct(resolveProductKey({
+    hostname: typeof window !== "undefined" ? window.location.hostname : "",
+    pathname: location?.pathname || "/",
+    configuredProduct: process.env.REACT_APP_PRODUCT_KEY,
+}));
+
+const applyProductBrand = (header, product) => ({
+    ...(header || DEFAULT_HEADER_CONFIG),
+    productKey: product.key,
+    brand: {
+        ...((header || DEFAULT_HEADER_CONFIG).brand || {}),
+        label: product.brandLabel,
+        productName: product.name,
+        parentLabel: "TravelsTrem",
+        domain: product.domain,
+        homePath: "/",
+    },
+});
+
 const DEFAULT_PAGE_CONFIG = {
     page: "home",
     widgets: [],
@@ -64,6 +92,7 @@ const PortalConfigContext = React.createContext({
     userSession: DEFAULT_SESSION,
     headerConfig: DEFAULT_HEADER_CONFIG,
     pageConfig: DEFAULT_PAGE_CONFIG,
+    product: getProduct("platform"),
     reload: () => Promise.resolve(),
     refreshHeader: () => Promise.resolve(),
     dispatchEvent: () => Promise.resolve(false),
@@ -83,12 +112,14 @@ export function PortalConfigProvider({ children }) {
     const lastHeaderRouteRef = React.useRef("");
     const sessionRef = React.useRef(DEFAULT_SESSION);
     const eventControllerRef = React.useRef(null);
+    const product = React.useMemo(() => getActiveProduct(location), [location.pathname]);
     const [state, setState] = React.useState({
         loading: true,
         error: null,
         session: DEFAULT_SESSION,
         headerConfig: DEFAULT_HEADER_CONFIG,
         pageConfig: DEFAULT_PAGE_CONFIG,
+        product,
     });
 
     React.useEffect(() => {
@@ -108,6 +139,7 @@ export function PortalConfigProvider({ children }) {
         lastHeaderRouteRef.current = routeKey;
         const params = {
             ...getPortalParams(nextLocation),
+            productKey: product.key,
             isAuthenticated: session?.isAuthenticated ? "true" : "false",
             role: session?.user?.role || "public",
             userName: session?.user?.name || "",
@@ -117,15 +149,18 @@ export function PortalConfigProvider({ children }) {
 
         setState((current) => ({
             ...current,
-            headerConfig: header || DEFAULT_HEADER_CONFIG,
+            headerConfig: applyProductBrand(header, product),
             pageConfig: header?.pageConfig || current.pageConfig,
         }));
 
         return header;
-    }, []);
+    }, [product]);
 
     const loadPortalConfig = React.useCallback(async ({ forceSession = false, location: nextLocation = null } = {}) => {
-        const params = getPortalParams(nextLocation || latestLocationRef.current);
+        const params = {
+            ...getPortalParams(nextLocation || latestLocationRef.current),
+            productKey: product.key,
+        };
 
         if (forceSession) {
             clearUserSessionCache();
@@ -143,8 +178,9 @@ export function PortalConfigProvider({ children }) {
                 loading: false,
                 error: null,
                 session: session || DEFAULT_SESSION,
-                headerConfig: header || DEFAULT_HEADER_CONFIG,
+                headerConfig: applyProductBrand(header, product),
                 pageConfig: pageConfig || DEFAULT_PAGE_CONFIG,
+                product,
             });
             sessionRef.current = session || DEFAULT_SESSION;
         })().catch((error) => {
@@ -153,13 +189,14 @@ export function PortalConfigProvider({ children }) {
                 loading: false,
                 error: error?.message || "init-app-failed",
                 session: DEFAULT_SESSION,
-                headerConfig: DEFAULT_HEADER_CONFIG,
+                headerConfig: applyProductBrand(DEFAULT_HEADER_CONFIG, product),
                 pageConfig: DEFAULT_PAGE_CONFIG,
+                product,
             });
         });
 
         return initOnceRef.current;
-    }, []);
+    }, [product]);
 
     if (!eventControllerRef.current) {
         eventControllerRef.current = createPortalEventController({
