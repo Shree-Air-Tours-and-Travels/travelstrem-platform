@@ -321,7 +321,6 @@ const buildAdminHeaderConfig = (baseConfig = {}) => ({
         welcome: true,
         showLogout: true,
         showStatus: true,
-        showNotifications: false,
         showFavorites: false,
     },
     menu: [
@@ -391,7 +390,6 @@ const buildAgentHeaderConfig = (baseConfig = {}) => ({
         welcome: true,
         showLogout: true,
         showStatus: true,
-        showNotifications: false,
         showFavorites: false,
     },
     menu: [

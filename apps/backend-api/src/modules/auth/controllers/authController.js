@@ -897,6 +897,41 @@ export const logout = async (req, res) => {
 };
 
 /**
+ * GET /auth/session
+ * Returns the current user AND a fresh access token so the frontend can
+ * store it in memory for Bearer-header auth (needed for cross-origin API
+ * calls where the httpOnly cookie is blocked by SameSite policy).
+ */
+export const getSession = async (req, res) => {
+    try {
+        if (!req.user) return res.status(401).json({ status: "error", message: "Unauthorized" });
+
+        const user = await UserRepository.findById(
+            req.user.sub,
+            "name email phone role agentRef agencyRef partnerAgencyRef agentApprovalStatus adminLevel adminApprovalStatus avatar"
+        );
+        if (!user) return res.status(404).json({ status: "error", message: "User not found" });
+
+        try {
+            await enforceActivePrivilegedUser(user);
+        } catch (statusErr) {
+            return res.status(statusErr.status || 403).json({ status: "error", message: statusErr.message });
+        }
+
+        const token = signTokenForUser(user);
+        setTokenCookie(res, token);
+
+        return res.json({
+            token,
+            user: safeAuthUser(user),
+        });
+    } catch (err) {
+        console.error("[getSession] error:", err && err.stack ? err.stack : err);
+        return res.status(500).json({ status: "error", message: "Server error" });
+    }
+};
+
+/**
  * GET /auth/me
  * Return current user (requires middleware that sets req.user from JWT)
  */

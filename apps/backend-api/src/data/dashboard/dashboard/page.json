@@ -88,11 +88,6 @@
           "widgetRef": "./widgets/most-booked-services.json"
         },
         {
-          "type": "NotificationsPanel",
-          "source": "shell",
-          "widgetRef": "./widgets/notifications.json"
-        },
-        {
           "type": "RecentInvoices",
           "source": "shell",
           "widgetRef": "./widgets/recent-invoices.json"

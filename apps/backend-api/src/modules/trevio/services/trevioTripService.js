@@ -17,6 +17,13 @@ const normalizeItinerary = (items = []) => (Array.isArray(items) ? items : []).m
   item.summary || (Array.isArray(item.activities) ? item.activities.join(", ") : ""),
 ]);
 
+const toISODate = (date) => {
+  if (!date) return "";
+  const d = new Date(date);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toISOString().slice(0, 10);
+};
+
 export const normalizeTrevioTrip = (doc = {}) => {
   const trip = asPlainObject(doc) || {};
   const price = trip.price || {};
@@ -33,6 +40,7 @@ export const normalizeTrevioTrip = (doc = {}) => {
     duration: trip.duration || "",
     price: price.amount || 0,
     token: price.tokenAmount || 1999,
+    cancellationPolicy: trip.cancellationPolicy || "",
     tag: trip.tag || trip.category || "Curated trip",
     rating: trip.rating || 0,
     image: trip.image || photos[0] || "",
@@ -47,6 +55,8 @@ export const normalizeTrevioTrip = (doc = {}) => {
     isListed: Boolean(trip.isListed),
     startDate: formatDate(trip.startDate),
     endDate: formatDate(trip.endDate),
+    startDateISO: toISODate(trip.startDate),
+    endDateISO: toISODate(trip.endDate),
     dates: Array.isArray(trip.dates) && trip.dates.length ? trip.dates : [formatDate(trip.startDate)].filter(Boolean),
     itinerary: normalizeItinerary(trip.itinerary),
     availability: trip.availability || { totalSeats: null, seatsAvailable: null },
@@ -88,6 +98,42 @@ const listedQuery = (filters = {}) => {
 };
 
 class TrevioTripService {
+  findBySlug(slug) {
+    return TrevioTripRepository.findBySlug(String(slug || "").trim().toLowerCase());
+  }
+
+  normalize(trip) {
+    return normalizeTrevioTrip(trip);
+  }
+
+  reserveSeats(slug, count) {
+    return TrevioTripRepository.findOneAndUpdate(
+      { slug: String(slug || "").trim().toLowerCase(), status: "listed", isListed: true, "availability.seatsAvailable": { $gte: count } },
+      { $inc: { "availability.seatsAvailable": -count } },
+      { new: true },
+    );
+  }
+
+  async checkAvailability(slug, count) {
+    const trip = await TrevioTripRepository.findOne({
+      slug: String(slug || "").trim().toLowerCase(),
+      status: "listed",
+      isListed: true,
+    });
+    if (!trip) return null;
+    const available = trip.availability?.seatsAvailable ?? null;
+    if (available === null) return trip;
+    return available >= count ? trip : null;
+  }
+
+  releaseSeats(slug, count) {
+    return TrevioTripRepository.findOneAndUpdate(
+      { slug: String(slug || "").trim().toLowerCase() },
+      { $inc: { "availability.seatsAvailable": count } },
+      { new: true },
+    );
+  }
+
   async listTrips(params = {}) {
     const page = Math.max(1, Number(params.page) || 1);
     const limit = Math.max(1, Math.min(Number(params.limit) || 4, 4));
@@ -109,10 +155,18 @@ class TrevioTripService {
 
     const query = listedQuery({ category, featuredOnly });
     const skip = (page - 1) * limit;
-    const [docs, total] = await Promise.all([
+    let [docs, total] = await Promise.all([
       TrevioTripRepository.find(query).sort({ featured: -1, sortOrder: 1, startDate: 1 }).skip(skip).limit(limit),
       TrevioTripRepository.countDocuments(query),
     ]);
+
+    if (!total) {
+      await this.seedTrips();
+      [docs, total] = await Promise.all([
+        TrevioTripRepository.find(query).sort({ featured: -1, sortOrder: 1, startDate: 1 }).skip(skip).limit(limit),
+        TrevioTripRepository.countDocuments(query),
+      ]);
+    }
     const trips = docs.map(normalizeTrevioTrip);
     const totalPages = Math.max(1, Math.ceil(total / limit));
 
@@ -126,6 +180,35 @@ class TrevioTripService {
         hasMore: page < totalPages,
       },
     };
+  }
+
+  async listInternationalTrips(params = {}) {
+    const limit = Math.max(1, Math.min(Number(params.limit) || 3, 10));
+
+    if (!isDbReady()) {
+      return { trips: [], total: 0 };
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const query = {
+      status: "listed",
+      isListed: true,
+      tags: "international",
+      $or: [{ endDate: null }, { endDate: { $gte: today } }],
+    };
+
+    let docs = await TrevioTripRepository.find(query).sort({ sortOrder: 1, startDate: 1 }).limit(limit);
+
+    if (!docs.length) {
+      await this.seedTrips();
+      docs = await TrevioTripRepository.find(query).sort({ sortOrder: 1, startDate: 1 }).limit(limit);
+    }
+    const total = await TrevioTripRepository.countDocuments(query);
+    const trips = docs.map(normalizeTrevioTrip);
+
+    return { trips, total };
   }
 
   async seedTrips() {

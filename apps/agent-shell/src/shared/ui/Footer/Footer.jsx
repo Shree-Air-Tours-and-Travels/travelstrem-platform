@@ -7,5 +7,5 @@ const FOOTER_LINKS = [
 ];
 
 export default function Footer({ user }) {
-  return <SharedFooter user={user} brand="TravelsTrem Partner Portal" links={FOOTER_LINKS} />;
+  return <SharedFooter user={user} productName="Partner portal · Travel partners" exploreLinks={FOOTER_LINKS} />;
 }

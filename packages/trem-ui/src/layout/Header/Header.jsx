@@ -3,7 +3,6 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import Button from "../../components/Button/Button.jsx";
 import Dropdown from "../../components/Dropdown/Dropdown.jsx";
 import Icon from "../../icons/Icon/Icon.jsx";
-import NotificationBell from "../../components/NotificationBell/NotificationBell.jsx";
 import ProfileActionMenu from "../../components/ProfileActionMenu/ProfileActionMenu.jsx";
 import "./Header.styles.scss";
 
@@ -42,12 +41,12 @@ const getUserInitials = (user) => {
 
 const DEFAULT_CONFIG = {
   brand: { label: "TravelsTrem", homePath: "/" },
-  leftSection: { welcome: true, showStatus: true, showNotifications: true },
+  leftSection: { welcome: true, showStatus: true },
   menu: [],
   authActions: { login: { label: "Login", path: "/login" }, logout: { label: "Logout" } },
 };
 
-export default function Header({ headerConfig = DEFAULT_CONFIG, session = null, theme = "light", onToggleTheme, onLogout, onSettings, onNavigate, onFavoritesClick, notificationFetcher, showNotifications, showFavorites = true, className = "" }) {
+export default function Header({ headerConfig = DEFAULT_CONFIG, session = null, theme = "light", onToggleTheme, onLogout, onSettings, onNavigate, onFavoritesClick, showFavorites = true, className = "" }) {
   const navigate = useNavigate();
   const location = useLocation();
   const user = session?.user || null;
@@ -115,7 +114,6 @@ export default function Header({ headerConfig = DEFAULT_CONFIG, session = null, 
   const leftSection = config.leftSection || DEFAULT_CONFIG.leftSection;
   const loginAction = config.authActions?.login || DEFAULT_CONFIG.authActions.login;
   const logoutAction = config.authActions?.logout || DEFAULT_CONFIG.authActions.logout;
-  const notificationsEnabled = showNotifications ?? leftSection.showNotifications ?? true;
   const favoritesEnabled = showFavorites && leftSection.showFavorites !== false;
 
   const navItems = useMemo(() => {
@@ -275,14 +273,12 @@ const NavItem = ({ item, isFirst, drawer, activePath, firstLinkRef, onNavClick, 
     const favorites = favoritesEnabled && user ? (
       <Button variant="text" iconLeft="heart" primaryClassName="trem-header__action-btn" onClick={handleFavoritesClick} aria-label="Favorites" />
     ) : null;
-    const notification = notificationsEnabled && user ? <NotificationBell fetcher={notificationFetcher} /> : null;
     const profile = <ProfileActionMenu user={user} isAuthenticated={session?.isAuthenticated} theme={theme} onToggleTheme={onToggleTheme} onSettings={onSettings} onLogout={onLogout} logoutLabel={logoutAction.label || "Logout"} />;
 
     if (!wrapItems) {
       return (
         <>
           {favorites}
-          {notification}
           {profile}
         </>
       );
@@ -291,7 +287,6 @@ const NavItem = ({ item, isFirst, drawer, activePath, firstLinkRef, onNavClick, 
     return (
       <>
         {favorites && <li>{favorites}</li>}
-        {notification && <li>{notification}</li>}
         <li>{profile}</li>
       </>
     );
@@ -308,7 +303,6 @@ const NavItem = ({ item, isFirst, drawer, activePath, firstLinkRef, onNavClick, 
             <ul className="trem-header__menu trem-header__menu--end">{renderUserArea(false)}{renderActions()}</ul>
             <div className="trem-header__mobile-actions">
               {favoritesEnabled && user ? <Button variant="text" iconLeft="heart" primaryClassName="trem-header__action-btn" onClick={handleFavoritesClick} aria-label="Favorites" /> : null}
-              {notificationsEnabled && user ? <NotificationBell fetcher={notificationFetcher} variant="sidebar" /> : null}
             </div>
           </nav>
         </div>

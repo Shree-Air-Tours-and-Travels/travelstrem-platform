@@ -23,6 +23,9 @@ const TrevioTripRepository = {
   countDocuments(query = {}) {
     return TrevioTrip.countDocuments(query);
   },
+  findOneAndUpdate(query = {}, update = {}, options = {}) {
+    return TrevioTrip.findOneAndUpdate(query, update, options);
+  },
 };
 
 export default TrevioTripRepository;

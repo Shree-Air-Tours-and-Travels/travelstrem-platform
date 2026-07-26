@@ -16,9 +16,15 @@ body {
 }
 
 .trevio-app {
+    display: flex;
+    flex-direction: column;
     min-height: 100vh;
     background: var(--bg);
     color: var(--text);
+
+    > footer {
+        margin-top: auto;
+    }
 }
 
 .trevio-app--embedded {
@@ -950,6 +956,186 @@ body {
     .trevio-touch__feature-icon svg {
         width: 20px;
         height: 20px;
+    }
+}
+
+.trevio-faq {
+    position: relative;
+    overflow: hidden;
+    padding: clamp($space-12, 8vw, $space-16) 0;
+    background: var(--surface-inset);
+}
+
+.trevio-faq__inner {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: clamp($space-8, 5vw, $space-14);
+    align-items: start;
+}
+
+.trevio-faq__left {
+    position: sticky;
+    top: 120px;
+    padding-top: $space-2;
+
+    .trevio-eyebrow {
+        display: inline-block;
+    }
+
+    h2 {
+        margin: $space-3 0 0;
+        font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+        letter-spacing: -0.04em;
+        line-height: $line-height-sm;
+        color: var(--title);
+
+        span {
+            color: var(--color-primary);
+        }
+    }
+
+    p {
+        margin: $space-3 0 0;
+        color: var(--muted);
+        font-size: $font-size-md;
+        line-height: $line-height-lg;
+        max-width: 380px;
+    }
+}
+
+.trevio-faq__right {
+    min-width: 0;
+}
+
+.trevio-faq__list {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: flex;
+    padding: 1rem;
+    flex-direction: column;
+}
+
+.trevio-faq__item {
+    border-bottom: 1px solid var(--border);
+    animation: trevio-faq-in 400ms ease both;
+    animation-delay: calc(var(--fi, 0) * 60ms);
+
+    &:last-child {
+        border-bottom: 0;
+    }
+}
+
+@keyframes trevio-faq-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.trevio-faq__question {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-4;
+    padding: $space-5 $space-1;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+
+    &:focus-visible {
+        outline: 2px solid var(--color-primary);
+        outline-offset: -2px;
+        border-radius: $radius-sm;
+    }
+}
+
+.trevio-faq__q-text {
+    font-size: $font-size-md;
+    font-weight: $font-semibold;
+    color: var(--title);
+    line-height: 1.45;
+    transition: color 160ms $ease-default;
+
+    .trevio-faq__question:hover & {
+        color: var(--color-primary);
+    }
+
+    .trevio-faq__item--open & {
+        color: var(--color-primary);
+    }
+}
+
+.trevio-faq__icon {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: $radius-full;
+    background: var(--primary-softer);
+    color: var(--color-primary);
+    transition: background 200ms $ease-default, transform 300ms $ease-default;
+
+    .trevio-faq__item--open & {
+        background: var(--color-primary);
+        color: var(--color-on-primary, #fff);
+        transform: rotate(135deg);
+    }
+}
+
+.trevio-faq__plus-h,
+.trevio-faq__plus-v {
+    transition: opacity 160ms $ease-default;
+}
+
+.trevio-faq__answer {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 300ms $ease-default;
+
+    .trevio-faq__item--open & {
+        grid-template-rows: 1fr;
+    }
+}
+
+.trevio-faq__answer-inner {
+    overflow: hidden;
+}
+
+.trevio-faq__answer p {
+    padding: 0 $space-1 $space-5;
+    color: var(--muted);
+    font-size: $font-size-sm;
+    line-height: $line-height-lg;
+    margin: 0;
+    max-width: 520px;
+}
+
+@media (max-width: $breakpoint-md) {
+    .trevio-faq__inner {
+        grid-template-columns: 1fr;
+        gap: $space-6;
+    }
+
+    .trevio-faq__left {
+        position: static;
+        text-align: center;
+
+        p {
+            margin-left: auto;
+            margin-right: auto;
+        }
     }
 }
 

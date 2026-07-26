@@ -23,7 +23,6 @@
         "navOffers": "Offers & Rewards",
         "navWallet": "Wallet",
         "navPayments": "Payments",
-        "navNotifications": "Notifications",
         "navSettings": "Settings",
         "navLogout": "Logout",
         "settingsTitle": "Settings",
@@ -71,7 +70,6 @@
                 { "id": "payments", "labelRef": "navPayments", "icon": "payments", "disabled": true }
               ]},
               { "sectionRef": "menuAccount", "items": [
-                { "id": "notifications", "labelRef": "navNotifications", "icon": "notifications", "badge": "05", "disabled": true },
                 { "id": "settings", "labelRef": "navSettings", "icon": "settings" },
                 { "id": "logout", "labelRef": "navLogout", "icon": "logout", "disabled": true }
               ]}
@@ -84,7 +82,6 @@
               { "type": "ServiceShortcuts", "widgetRef": "./widgets/service-shortcuts.json" },
               { "type": "BookingsChart", "widgetRef": "./widgets/bookings-chart.json" },
               { "type": "MostBookedServices", "widgetRef": "./widgets/most-booked-services.json" },
-              { "type": "NotificationsPanel", "widgetRef": "./widgets/notifications.json" },
               { "type": "RecentInvoices", "widgetRef": "./widgets/recent-invoices.json" },
               { "type": "BookingTable", "widgetRef": "./widgets/booking-table.json" },
               { "type": "SettingsForm", "widgetRef": "./widgets/settings-form.json" }

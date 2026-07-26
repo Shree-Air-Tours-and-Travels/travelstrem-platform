@@ -23,7 +23,7 @@ export const isAllowedAdminRole = (session) => adminRoles.includes(session?.user
 
 const DEFAULT_HEADER_CONFIG = {
     brand: { label: "AdminTREM", homePath: "/admin/tours" },
-    leftSection: { welcome: true, showStatus: true, showNotifications: false },
+    leftSection: { welcome: true, showStatus: true },
     menu: [
         { id: "adminTours", label: "Tours", path: "/admin/tours", access: "roles", roles: adminRoles },
         { id: "agentTours", label: "Agent", path: "/agent/tours", access: "roles", roles: adminRoles },

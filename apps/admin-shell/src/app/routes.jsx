@@ -67,7 +67,9 @@ const Routers = () => {
             <ScrollToTop />
             <Routes>
                 <Route path="/manage/tours" element={<ManageTours session={session} />} />
+                <Route path="/manage/trips" element={<ManageTours session={session} tab="trips" />} />
                 <Route path="/admin/tours" element={<ManageTours session={session} />} />
+                <Route path="/admin/trips" element={<ManageTours session={session} tab="trips" />} />
                 <Route path="/admin/agencies" element={<ManageTours session={session} />} />
                 <Route path="/bookings/:bookingId" element={<BookingDetail />} />
                 <Route path="*" element={<Navigate to="/manage/tours" replace />} />

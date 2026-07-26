@@ -27,13 +27,17 @@ const corsOptions = {
 
 export default function registerMiddleware(app) {
   app.set("trust proxy", true);
-  app.use(helmet());
+  app.use(cors(corsOptions));
+  app.options("*", cors(corsOptions));
+  app.use(helmet({
+    crossOriginEmbedderPolicy: false,
+    crossOriginOpenerPolicy: false,
+    crossOriginResourcePolicy: false,
+  }));
   app.use(app.express.json({ limit: "20mb" }));
   app.use(app.express.urlencoded({ extended: true }));
   app.use(cookieParser());
   app.use(morgan(config.DEBUG ? "dev" : "combined"));
-  app.use(cors(corsOptions));
-  app.options("*", cors(corsOptions));
   app.use("/uploads", app.express.static(path.resolve("uploads")));
 
   if (config.DEBUG) {

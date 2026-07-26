@@ -11,10 +11,11 @@ export default function Breadcrumbs({ items = [], className = "" }) {
       <ol>
         {items.map((item, i) => {
           const isLast = i === items.length - 1;
+          const isExternal = typeof item.path === "string" && /^https?:\/\//.test(item.path);
           return (
             <li key={item.label + i}>
               {item.path && !isLast ? (
-                <Link to={item.path} state={item.state}>{item.label}</Link>
+                isExternal ? <a href={item.path}>{item.label}</a> : <Link to={item.path} state={item.state}>{item.label}</Link>
               ) : (
                 <span aria-current={isLast ? "page" : undefined}>{item.label}</span>
               )}

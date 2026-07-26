@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { fetchData, useComponentData } from "@packages/trem-utils";
+import { buildGlobalBookingEngineUrl, fetchData, useComponentData } from "@packages/trem-utils";
 import { useFavoritesContext } from "../../context/FavoritesContext.jsx";
 import { ProductDetailProvider, WIDGET_API_OPTIONS } from "./context/ProductDetailContext.js";
 import ToursDetailsView, { DetailSkeleton, EmptyState } from "./ToursDetails.view";
@@ -107,16 +107,12 @@ export default function ToursDetailsContainer({ dispatchEvent, appKey = "trevist
         const selectedTour = activeTour;
         if (!selectedTour) return;
         const ref = slugifyTitle(selectedTour?.title) || selectedTour?._id || decodedRef;
-        const prefix = config.routePrefix ? `${config.routePrefix}/` : "";
-        if (typeof dispatchEvent === "function") {
-            dispatchEvent("navigateToBooking", {
-                tourRef: encodeURIComponent(ref),
-                state: { tour: selectedTour, from: referrer },
-            });
-            return;
-        }
-        navigate(`/${appKey}/${prefix}${encodeURIComponent(ref)}/book`, { state: { tour: selectedTour, from: referrer } });
-    }, [activeTour, appKey, config.routePrefix, decodedRef, dispatchEvent, navigate, referrer]);
+        window.location.assign(buildGlobalBookingEngineUrl({
+            product: productType === "trip" ? "trevio" : appKey,
+            tourRef: ref,
+            returnTo: window.location.href,
+        }));
+    }, [activeTour, appKey, decodedRef, productType]);
 
     const handleBookConfirmClose = useCallback(() => setBookConfirmOpen(false), []);
 

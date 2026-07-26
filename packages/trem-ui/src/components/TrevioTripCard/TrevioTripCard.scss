@@ -50,8 +50,8 @@
 
 .trevio-trip-card__rating {
     right: 14px;
-    background: var(--overlay-strong);
-    color: var(--color-on-surface);
+    background: var(--surface-glass-strong);
+    color: var(--text);
 }
 
 .trevio-trip-card__favorite {
@@ -183,4 +183,43 @@
     &:hover {
         opacity: 0.7;
     }
+}
+
+.trevio-trip-card--sold-out {
+    opacity: 0.82;
+
+    .trevio-trip-card__image::after {
+        content: "SOLD OUT";
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--surface-glass-strong);
+        color: var(--text);
+        font-size: $font-size-sm;
+        font-weight: $font-black;
+        letter-spacing: 0.12em;
+    }
+
+    .trevio-trip-card__link {
+        pointer-events: none;
+        color: var(--text-muted);
+    }
+}
+
+.trevio-trip-card__sold-out-note {
+    display: flex;
+    align-items: center;
+    gap: $space-1-5;
+    margin-top: $space-2;
+    padding: $space-2 $space-2-5;
+    border-radius: $radius-xs;
+    background: var(--danger-soft, rgba(185, 28, 28, 0.08));
+    border: 1px solid rgba(var(--color-danger-rgb, 185, 28, 28), 0.15);
+    color: var(--color-danger, #b91c1c);
+    font-size: $font-size-xs;
+    font-weight: $font-semibold;
+    line-height: 1.4;
+    flex-shrink: 0;
 }

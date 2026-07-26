@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button, Icon, Title, Paragraph } from "@packages/trem-ui";
-import { getReturnPath, useAuthFlow } from "@packages/trem-auth-core";
+import { getReturnPath, useAuthFlow, appendTokenToUrl } from "@packages/trem-auth-core";
 import { ForgotPasswordModal, ResetPasswordModal } from "./PasswordModals.jsx";
 import "./auth-page.scss";
 
@@ -13,7 +13,7 @@ const isSafeReturnUrl = (value = "") => {
     const url = new URL(value);
     const host = url.hostname.toLowerCase();
     return (
-      url.protocol === "https:" && (host === "travelstrem.in" || host.endsWith(".travelstrem.in"))
+      url.protocol === "https:" && (host === "travelstrem.com" || host.endsWith(".travelstrem.com"))
     ) || (
       url.protocol === "http:" && ["localhost", "127.0.0.1"].includes(host)
     );
@@ -99,9 +99,9 @@ export default function AuthPage({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search, registerEnabled]);
 
-  const redirectAfterLogin = (result) => {
+  const redirectAfterLogin = (result, token) => {
     if (adminShellUrl && result?.user && isAdminRole(result.user.role)) {
-      window.location.assign(adminShellUrl);
+      window.location.assign(appendTokenToUrl(adminShellUrl, token));
       return;
     }
     const nextPath = isSafeReturnUrl(queryReturnTo)
@@ -109,7 +109,7 @@ export default function AuthPage({
       : getReturnPath(location.state, afterAuthPath);
 
     if (/^https?:\/\//i.test(nextPath)) {
-      window.location.assign(nextPath);
+      window.location.assign(appendTokenToUrl(nextPath, token));
       return;
     }
 
@@ -122,14 +122,16 @@ export default function AuthPage({
     if (!result) return;
     if (result.status === "verify_otp") return;
     if (result.status === "pending_approval") return;
-    redirectAfterLogin(result);
+    const token = localStorage.getItem(cfg?.storageKeys?.token);
+    redirectAfterLogin(result, token);
   };
 
   const handleOtpSubmit = async (e) => {
     e.preventDefault();
     const result = await submitLoginOtp();
     if (!result) return;
-    redirectAfterLogin(result);
+    const token = localStorage.getItem(cfg?.storageKeys?.token);
+    redirectAfterLogin(result, token);
   };
 
   const handleOtpBack = () => {

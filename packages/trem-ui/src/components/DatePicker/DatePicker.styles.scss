@@ -1,0 +1,224 @@
+@import "@packages/trem-design-tokens/scss";
+
+.trem-datepicker {
+  position: relative;
+  width: 100%;
+
+  &__trigger {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: $radius-xs;
+    background: var(--surface);
+    padding: $space-2-5 $space-3;
+    font-size: $font-size-sm;
+    color: var(--text);
+    font-family: $font-primary;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 160ms $ease-default, box-shadow 160ms $ease-default;
+
+    &:hover {
+      border-color: var(--color-primary);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px var(--primary-soft);
+    }
+
+    &--disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+  }
+
+  &__placeholder {
+    color: var(--muted);
+  }
+
+  &__icon {
+    margin-left: auto;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+
+  &--error &__trigger {
+    border-color: $danger-color;
+
+    &:focus {
+      box-shadow: 0 0 0 3px color-mix(in srgb, $danger-color 12%, transparent);
+    }
+  }
+
+  &__dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    z-index: 100;
+    min-width: 280px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: $radius-md;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+    padding: $space-3;
+    animation: trem-dp-in 150ms $ease-default;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-1;
+    margin-bottom: $space-3;
+  }
+
+  &__title {
+    font-size: $font-size-sm;
+    font-weight: $font-bold;
+    color: var(--title);
+    flex: 1;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  &__nav-btn {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: $radius-xs;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 120ms $ease-default, color 120ms $ease-default;
+
+    &:hover {
+      background: var(--surface-inset);
+      color: var(--text);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: -2px;
+    }
+  }
+
+  &__weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0;
+    margin-bottom: $space-1;
+  }
+
+  &__weekday {
+    text-align: center;
+    font-size: $font-size-xs;
+    font-weight: $font-semibold;
+    color: var(--muted);
+    padding: $space-1 0;
+    user-select: none;
+  }
+
+  &__grid {
+    display: grid;
+    gap: 2px;
+  }
+
+  &__row {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+  }
+
+  &__cell {
+    display: grid;
+    place-items: center;
+    height: 32px;
+    font-size: $font-size-sm;
+
+    &--empty {
+      pointer-events: none;
+    }
+  }
+
+  &__day {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: $radius-xs;
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    font-size: $font-size-sm;
+    font-family: $font-primary;
+    transition: background 100ms $ease-default, color 100ms $ease-default;
+
+    &:hover:not(:disabled) {
+      background: var(--surface-inset);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: -2px;
+    }
+
+    &--selected {
+      background: var(--color-primary) !important;
+      color: var(--color-on-primary) !important;
+      font-weight: $font-bold;
+    }
+
+    &--today:not(&--selected) {
+      background: var(--primary-softer);
+      color: var(--color-primary);
+      font-weight: $font-bold;
+    }
+
+    &--disabled {
+      color: var(--muted);
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  &__footer {
+    display: flex;
+    justify-content: center;
+    padding-top: $space-2;
+    margin-top: $space-2;
+    border-top: 1px solid var(--border);
+  }
+
+  &__today-btn {
+    border: none;
+    background: transparent;
+    color: var(--color-primary);
+    font-size: $font-size-xs;
+    font-weight: $font-bold;
+    cursor: pointer;
+    padding: $space-1-5 $space-3;
+    border-radius: $radius-xs;
+    transition: background 120ms $ease-default;
+
+    &:hover {
+      background: var(--primary-softer);
+    }
+  }
+}
+
+@keyframes trem-dp-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

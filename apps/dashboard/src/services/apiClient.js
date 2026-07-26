@@ -2,7 +2,9 @@ import axios from "axios";
 import { getConfiguredApiBase } from "../core/config/portalEnvironment";
 import { registerAuthHeaderClearer } from "@packages/trem-events";
 import { setFetchDataApiClient } from "@packages/trem-utils";
-import { setupRefreshInterceptor } from "@packages/trem-auth-core";
+import { setupRefreshInterceptor, consumeUrlToken } from "@packages/trem-auth-core";
+
+consumeUrlToken({ token: "travelstrem:token" });
 
 function normalizeBase(raw) {
   if (raw == null || raw === "") return raw;
@@ -14,6 +16,7 @@ let RAW_BASE = getConfiguredApiBase();
 const BASE = normalizeBase(RAW_BASE) ?? "";
 const baseURL = (BASE.endsWith("/api") ? BASE : `${BASE}/api`).replace(/([^:]\/)\/+/g, "$1");
 const AUTH_STORAGE_PREFIX = "dashboardTREM";
+const SHARED_STORAGE_PREFIX = "travelstrem";
 if (typeof window !== "undefined") window.__TREM_AUTH_STORAGE_PREFIX__ = AUTH_STORAGE_PREFIX;
 
 const api = axios.create({
@@ -35,7 +38,7 @@ registerAuthHeaderClearer(clearApiAuthHeader);
 api.interceptors.request.use(
   (cfg) => {
     try {
-      const token = localStorage.getItem(`${AUTH_STORAGE_PREFIX}:token`);
+      const token = localStorage.getItem(`${AUTH_STORAGE_PREFIX}:token`) || localStorage.getItem(`${SHARED_STORAGE_PREFIX}:token`);
       if (token) {
         cfg.headers = cfg.headers || {};
         cfg.headers.Authorization = `Bearer ${token}`;

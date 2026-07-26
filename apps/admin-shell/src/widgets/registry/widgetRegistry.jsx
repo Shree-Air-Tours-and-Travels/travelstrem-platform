@@ -3,6 +3,7 @@ import { createWidgetDefinition, createWidgetRegistry } from "@packages/trem-wid
 import AdminDashboard from "../../features/dashboard/Dashboard";
 import ToursTabWidget from "../../features/tours/ToursTabWidget.view";
 import AgenciesTabWidget from "../../features/tours/AgenciesTabWidget.view";
+import TripsTabWidget from "../../features/trips/TripsTabWidget.view";
 
 const adminShellWidgetDefinitions = [
     createWidgetDefinition({
@@ -14,6 +15,11 @@ const adminShellWidgetDefinitions = [
         type: "AdminTourManagement",
         aliases: ["admin.tours", "tours"],
         component: ToursTabWidget,
+    }),
+    createWidgetDefinition({
+        type: "AdminTripManagement",
+        aliases: ["admin.trips", "trips"],
+        component: TripsTabWidget,
     }),
     createWidgetDefinition({
         type: "AgencyManagement",

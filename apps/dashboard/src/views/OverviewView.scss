@@ -1,0 +1,155 @@
+.dov__greeting {
+  margin-bottom: 28px;
+
+  h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--heading);
+    margin-bottom: 4px;
+  }
+
+  p {
+    font-size: 14px;
+    color: var(--muted);
+  }
+}
+
+.dov__stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dov__section {
+  margin-bottom: 24px;
+}
+
+.dov__section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--heading);
+  margin-bottom: 16px;
+}
+
+.dov__recent {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.dov__recent-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.dov__recent-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.dov__recent-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--heading);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dov__recent-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.dov__recent-product {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+
+  &--trevio {
+    background: var(--secondary-soft);
+    color: var(--color-secondary);
+  }
+
+  &--trevista {
+    background: var(--primary-soft);
+    color: var(--color-primary);
+  }
+}
+
+.dov__recent-status {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+
+  &--confirmed,
+  &--Paid,
+  &--COMPLETED,
+  &--CONFIRMED,
+  &--PAID,
+  &--Ticketed,
+  &--TICKETED,
+  &--Travel Ready,
+  &--TRAVEL_READY {
+    background: var(--success-soft);
+    color: var(--success-color);
+  }
+
+  &--pending,
+  &--Draft,
+  &--DRAFT,
+  &--QUOTE_REQUESTED,
+  &--Quote Requested,
+  &--UNDER_REVIEW,
+  &--Under Review,
+  &--QUOTE_READY,
+  &--Quote Ready,
+  &--QUOTE_SENT,
+  &--Quote Sent,
+  &--PAYMENT_PENDING,
+  &--Payment Pending,
+  &--PARTIALLY_PAID,
+  &--Partially Paid {
+    background: var(--warning-soft);
+    color: var(--color-warning);
+  }
+
+  &--cancelled,
+  &--CANCELLED,
+  &--Cancelled,
+  &--REFUNDED,
+  &--Refunded {
+    background: var(--danger-soft);
+    color: var(--color-danger);
+  }
+}

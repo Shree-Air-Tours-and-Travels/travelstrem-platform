@@ -1,0 +1,57 @@
+.dsc {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dsc__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dsc__label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.dsc__icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--surface-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+}
+
+.dsc__value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--heading);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.dsc__trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+
+  &--up {
+    color: var(--success-color);
+  }
+
+  &--down {
+    color: var(--color-danger);
+  }
+}

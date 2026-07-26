@@ -429,6 +429,12 @@ const Moon = (p) => (
   </Svg>
 );
 
+const Minus = (p) => (
+  <Svg {...p}>
+    <path d="M5 12h14" {...s} />
+  </Svg>
+);
+
 const Mountain = (p) => (
   <Svg {...p}>
     <path d="m2 22 7-12 5 7 4-6 4 11H2Z" {...s} />
@@ -486,6 +492,13 @@ const Plane = (p) => (
 const Play = (p) => (
   <Svg {...p}>
     <path d="m5 3 16 9-16 9V3Z" {...s} />
+  </Svg>
+);
+
+const Plus = (p) => (
+  <Svg {...p}>
+    <path d="M5 12h14" {...s} />
+    <path d="M12 5v14" {...s} />
   </Svg>
 );
 
@@ -743,6 +756,7 @@ const ICONS = {
   menuOpen: MenuOpen,
   messageCircle: MessageCircle,
   moon: Moon,
+  minus: Minus,
   mountain: Mountain,
   navigation: Navigation,
   passport: Passport,
@@ -751,6 +765,7 @@ const ICONS = {
   phoneCall: PhoneCall,
   plane: Plane,
   play: Play,
+  plus: Plus,
   premium: Premium,
   refreshCw: RefreshCw,
   reservations: Reservations,

@@ -38,19 +38,19 @@ The system is built using:
 │                Frontend Layer               │
 ├──────────────────────────────────────────────┤
 │                                              │
-│  travelstrem.in                              │
+│  travelstrem.com                              │
 │  └── TravelsTrem parent website              │
 │       ├── Product discovery                  │
 │       ├── About / Contact / Help             │
 │       └── Shared platform capabilities       │
 │                                              │
-│  trevio.travelstrem.in                       │
+│  trevio.travelstrem.com                       │
 │  └── Trevio                                  │
 │                                              │
-│  trevista.travelstrem.in                     │
+│  trevista.travelstrem.com                     │
 │  └── Trevista                                │
 │                                              │
-│  admin.travelstrem.in                        │
+│  admin.travelstrem.com                        │
 │  └── Unified admin portal                    │
 │       ├── DashboardTREM                      │
 │       ├── Trevio operations                  │

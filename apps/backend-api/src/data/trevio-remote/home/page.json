@@ -153,7 +153,11 @@
         "touchHeading": "Your next story starts with a conversation.",
         "touchDescription": "Whether you have a question about pricing, itinerary customisation, group sizes or dates — our travel experts are one message away.",
         "touchCtaLabel": "Enquire Now",
-        "touchBadge": "Usually replies within 2 hours"
+        "touchBadge": "Usually replies within 2 hours",
+        "faqEyebrow": "FAQ",
+        "faqHeading": "Got questions?",
+        "faqHighlight": "We've got answers.",
+        "faqDescription": "Everything you need to know before you book your first Trevio trip."
       },
       "urls": {
         "tripsEndpoint": "/trevio/trips.json",
@@ -186,6 +190,10 @@
         {
           "name": "journeyInFramesSection",
           "path": "trevio-remote/home/journey-in-frames.json"
+        },
+        {
+          "name": "faqSection",
+          "path": "trevio-remote/home/faq.json"
         },
         {
           "name": "getInTouchSection",

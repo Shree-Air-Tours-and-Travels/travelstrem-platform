@@ -1,4 +1,5 @@
 import axios from "axios";
+import { tokenStore } from "./tokenStore.js";
 
 const normalizeBase = (raw) => {
   if (raw == null || raw === "") return raw;
@@ -17,6 +18,79 @@ const createDefaultApi = () => {
 };
 
 let apiClient = createDefaultApi();
+
+// ── Request interceptor: attach Bearer token ──────────────────────
+apiClient.interceptors.request.use((config) => {
+  const token = tokenStore.get();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// ── 401 interceptor: refresh token and retry once ─────────────────
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach(({ resolve, reject }) => {
+    if (error) reject(error);
+    else resolve(token);
+  });
+  failedQueue = [];
+};
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Skip refresh for auth endpoints themselves or if already retried
+    if (
+      error.response?.status !== 401 ||
+      originalRequest._retry ||
+      originalRequest.url?.includes("/auth/login") ||
+      originalRequest.url?.includes("/auth/refresh") ||
+      originalRequest.url?.includes("/auth/register")
+    ) {
+      return Promise.reject(error);
+    }
+
+    if (isRefreshing) {
+      return new Promise((resolve, reject) => {
+        failedQueue.push({ resolve, reject });
+      }).then((token) => {
+        if (!token) return Promise.reject(error);
+        originalRequest.headers.Authorization = `Bearer ${token}`;
+        return apiClient(originalRequest);
+      }).catch(() => Promise.reject(error));
+    }
+
+    originalRequest._retry = true;
+    isRefreshing = true;
+
+    try {
+      // The httpOnly refresh-token cookie is sent automatically with withCredentials: true
+      const { data } = await apiClient.post("/auth/refresh");
+      const newToken = data?.token;
+      if (newToken) {
+        tokenStore.set(newToken);
+        processQueue(null, newToken);
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        return apiClient(originalRequest);
+      }
+      // No token in response — refresh cookie may still be valid
+      processQueue(error);
+      return Promise.reject(error);
+    } catch (refreshError) {
+      tokenStore.clear();
+      processQueue(error);
+      return Promise.reject(error);
+    } finally {
+      isRefreshing = false;
+    }
+  }
+);
 
 export const setFetchDataApiClient = (api) => {
   apiClient = api || apiClient;
@@ -73,22 +147,29 @@ export const fetchData = async (endpoint, options = {}) => {
   try {
     let res;
     const config = { params: finalParams, headers, signal };
+    const hasBody = finalBody !== null && finalBody !== undefined;
     if (methodUpper === "GET") {
       res = await apiClient.get(endpoint, config);
     } else if (methodUpper === "POST") {
-      res = await apiClient.post(endpoint, finalBody, config);
+      res = await apiClient.post(endpoint, hasBody ? finalBody : undefined, config);
     } else if (methodUpper === "PUT") {
-      res = await apiClient.put(endpoint, finalBody, config);
+      res = await apiClient.put(endpoint, hasBody ? finalBody : undefined, config);
     } else if (methodUpper === "PATCH") {
-      res = await apiClient.patch(endpoint, finalBody, config);
+      res = await apiClient.patch(endpoint, hasBody ? finalBody : undefined, config);
     } else if (methodUpper === "DELETE") {
-      res = await apiClient.delete(endpoint, { ...config, data: finalBody });
+      res = await apiClient.delete(endpoint, { ...config, data: hasBody ? finalBody : undefined });
     } else {
-      res = await apiClient.request({ url: endpoint, method: methodUpper, data: finalBody, ...config });
+      res = await apiClient.request({ url: endpoint, method: methodUpper, data: hasBody ? finalBody : undefined, ...config });
     }
 
     const { status, message, componentData, component } = res?.data || {};
     const data = componentData?.data ?? component?.data ?? null;
+
+    // Auto-capture token from auth responses
+    if (res?.data?.token) {
+      tokenStore.set(res.data.token);
+    }
+
     if (status === "success") return { status, message, componentData, component, data };
 
     return {
