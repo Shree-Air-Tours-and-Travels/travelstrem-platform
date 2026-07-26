@@ -1,18 +1,14 @@
 {
-  "rewrites": {
-    "beforeFiles": [
-      { "source": "/remoteEntry.js", "destination": "/remoteEntry.js" },
-      { "source": "/remoteEntry.js.map", "destination": "/remoteEntry.js.map" },
-      { "source": "/static/(.*)", "destination": "/static/$1" },
-      { "source": "/favicon.svg", "destination": "/favicon.svg" },
-      { "source": "/asset-manifest.json", "destination": "/asset-manifest.json" },
-      { "source": "/manifest.json", "destination": "/manifest.json" },
-      { "source": "/robots.txt", "destination": "/robots.txt" }
-    ],
-    "fallback": [
-      { "source": "/(.*)", "destination": "/index.html" }
-    ]
-  },
+  "rewrites": [
+    { "source": "/remoteEntry.js", "destination": "/remoteEntry.js" },
+    { "source": "/remoteEntry.js.map", "destination": "/remoteEntry.js.map" },
+    { "source": "/static/:path*", "destination": "/static/:path*" },
+    { "source": "/favicon.svg", "destination": "/favicon.svg" },
+    { "source": "/asset-manifest.json", "destination": "/asset-manifest.json" },
+    { "source": "/manifest.json", "destination": "/manifest.json" },
+    { "source": "/robots.txt", "destination": "/robots.txt" },
+    { "source": "/:path*", "destination": "/index.html" }
+  ],
   "headers": [
     { "source": "/remoteEntry.js", "headers": [{ "key": "Access-Control-Allow-Origin", "value": "*" }] }
   ]
