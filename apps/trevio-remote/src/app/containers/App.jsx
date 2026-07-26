@@ -1,13 +1,12 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { Route, Routes, Navigate, useNavigate } from "react-router-dom";
-import { BookingModal } from "@packages/trem-modals";
-import { fetchData, redirectToGlobalAuth, setComponentDataFetcher, createProductAuth, buildGlobalDashboardUrl } from "@packages/trem-utils";
+import { fetchData, redirectToGlobalAuth, setComponentDataFetcher, createProductAuth, buildGlobalDashboardUrl, getGlobalAuthBaseUrl, getCurrentReturnUrl } from "@packages/trem-utils";
 import { emit, registerSessionCacheClearer } from "@packages/trem-events";
-import { GlobalLoader, TourDetailsPage } from "@packages/trem-ui";
+import { consumeUrlToken, appendTokenToUrl } from "@packages/trem-auth-core";
+import { FavoritesProvider, GlobalLoader, TourDetailsPage, useFavoritesContext } from "@packages/trem-ui";
 import Shell from "./Shell";
 import Home from "../views/Home";
 import TripBookingPage from "../views/TripBookingPage";
-import Profile from "../views/Profile";
 import { tripId, responseTrips, resolvePageContent } from "../utils";
 import { initApp } from "../../core/initApp";
 import { API_BASE } from "../../services/configService";
@@ -15,6 +14,44 @@ import { clearUserSessionCache } from "../../services/userSession";
 import "../../main.scss";
 
 setComponentDataFetcher(fetchData);
+
+function AppShell({ embedded, session, headerConfig, pageModel, trips, activeFilter, loadingTrips, onFilterChange, buildAuthAction, basename }) {
+  const { favoritesCount } = useFavoritesContext();
+  const navigate = useNavigate();
+  const openWishlist = () => {
+    const token = localStorage.getItem("travelstrem:token") || localStorage.getItem("trem:token") || null;
+    window.location.assign(appendTokenToUrl(buildGlobalDashboardUrl({ product: "trevio" }), token));
+  };
+  const labels = pageModel?.labels || {};
+  const shellProps = {
+    labels,
+    headerConfig,
+    wishlistCount: favoritesCount,
+    userSession: session,
+    rootPath: basename || "/trevio",
+    onWishlist: openWishlist,
+    buildAuthAction,
+  };
+
+  return (
+    <Shell {...shellProps} embedded={embedded}>
+      {embedded ? (
+        <Routes>
+          <Route index element={pageModel ? <Home trips={trips} internationalTrips={pageModel.internationalTrips} featuredTrip={pageModel.featuredTrip} pageModel={pageModel} activeFilter={activeFilter} loadingTrips={loadingTrips} onFilterChange={onFilterChange} /> : <GlobalLoader visible text="Loading trips" />} />
+          <Route path="trip/:tripRef" element={<TourDetailsPage appKey="trevio" productType="trip" />} />
+          <Route path="trip/:tripRef/book" element={<TripBookingPage appKey="trevio" />} />
+        </Routes>
+      ) : (
+        <Routes>
+          <Route path="/" element={<Navigate to="/trevio" replace />} />
+          <Route path="/trevio" element={pageModel ? <Home trips={trips} internationalTrips={pageModel.internationalTrips} featuredTrip={pageModel.featuredTrip} pageModel={pageModel} activeFilter={activeFilter} loadingTrips={loadingTrips} onFilterChange={onFilterChange} /> : <GlobalLoader visible text="Loading trips" />} />
+          <Route path="/trevio/trip/:tripRef" element={<TourDetailsPage appKey="trevio" productType="trip" />} />
+          <Route path="/trevio/trip/:tripRef/book" element={<TripBookingPage appKey="trevio" />} />
+        </Routes>
+      )}
+    </Shell>
+  );
+}
 
 export default function App({ embedded = false, userSession: externalSession = null, basename = "" }) {
   const navigate = useNavigate();
@@ -25,12 +62,11 @@ export default function App({ embedded = false, userSession: externalSession = n
     headerConfig: null,
   });
   const [trips, setTrips] = useState([]);
-  const [wishlist, setWishlist] = useState([]);
-  const [modalTrip, setModalTrip] = useState(null);
   const [pageModel, setPageModel] = useState(null);
   const [tripsEndpoint, setTripsEndpoint] = useState("");
   const [activeFilter, setActiveFilter] = useState("");
   const [loadingTrips, setLoadingTrips] = useState(false);
+  const initOnceRef = useRef(false);
 
   const { buildAuthAction } = useMemo(
     () => createProductAuth({
@@ -45,6 +81,10 @@ export default function App({ embedded = false, userSession: externalSession = n
 
   useEffect(() => {
     if (embedded) return undefined;
+    if (initOnceRef.current) return undefined;
+    initOnceRef.current = true;
+
+    consumeUrlToken({ token: "travelstrem:token" });
 
     let active = true;
 
@@ -58,7 +98,11 @@ export default function App({ embedded = false, userSession: externalSession = n
         if (!active) return;
         setState({ loading: false, error: null, session, headerConfig: header });
         if (!session?.isAuthenticated) {
-          redirectToGlobalAuth({ app: "trevio" });
+          if (!getGlobalAuthBaseUrl()) {
+            setState({ loading: false, error: "REACT_APP_AUTH_APP_URL is not configured. Cannot redirect to login.", session: null, headerConfig: null });
+            return;
+          }
+          redirectToGlobalAuth({ app: "trevio", returnTo: getCurrentReturnUrl() });
         }
       })
       .catch((error) => {
@@ -123,11 +167,6 @@ export default function App({ embedded = false, userSession: externalSession = n
     }
   };
 
-  const toggleWishlist = (trip) => {
-    const id = tripId(trip);
-    setWishlist((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
-  };
-
   if (state.error) return <div className="app-status">Trevio initialization failed: {state.error}</div>;
   if (!embedded && state.loading) return <GlobalLoader visible text="Loading Trevio" />;
   if (!embedded && !state.session?.isAuthenticated) {
@@ -135,45 +174,25 @@ export default function App({ embedded = false, userSession: externalSession = n
   }
 
   const session = externalSession || state.session;
-  const headerConfig = state.headerConfig || {};
-  const productRoot = basename ? basename.replace(/\/$/, "") : "";
-  const openWishlist = () => window.location.assign(buildGlobalDashboardUrl({ product: "trevio" }));
-  const labels = pageModel?.labels || {};
-  const shellProps = {
-    labels,
-    headerConfig,
-    wishlistCount: wishlist.length,
-    userSession: session,
-    rootPath: basename || "/trevio",
-    onWishlist: openWishlist,
-    buildAuthAction,
-  };
 
   return (
     <>
       <GlobalLoader visible={state.loading} />
       <div className={embedded ? "trevio-app trevio-app--embedded" : "trevio-app"}>
-        <Shell {...shellProps} embedded={embedded}>
-            {embedded ? (
-              <Routes>
-                <Route index element={pageModel ? <Home trips={trips} internationalTrips={pageModel.internationalTrips} featuredTrip={pageModel.featuredTrip} wishlist={wishlist} toggleWishlist={toggleWishlist} pageModel={pageModel} activeFilter={activeFilter} loadingTrips={loadingTrips} onFilterChange={handleFilterChange} /> : <GlobalLoader visible text="Loading trips" />} />
-                <Route path="trip/:tripRef" element={<TourDetailsPage appKey="trevio" productType="trip" />} />
-                <Route path="trip/:tripRef/book" element={<TripBookingPage appKey="trevio" />} />
-                <Route path="tour/:tourRef" element={<TourDetailsPage appKey="trevio" />} />
-                <Route path="profile" element={<Profile trips={trips} labels={labels} wishlist={wishlist} />} />
-              </Routes>
-            ) : (
-              <Routes>
-                <Route path="/" element={<Navigate to="/trevio" replace />} />
-                <Route path="/trevio" element={pageModel ? <Home trips={trips} internationalTrips={pageModel.internationalTrips} featuredTrip={pageModel.featuredTrip} wishlist={wishlist} toggleWishlist={toggleWishlist} pageModel={pageModel} activeFilter={activeFilter} loadingTrips={loadingTrips} onFilterChange={handleFilterChange} /> : <GlobalLoader visible text="Loading trips" />} />
-                <Route path="/trevio/trip/:tripRef" element={<TourDetailsPage appKey="trevio" productType="trip" />} />
-                <Route path="/trevio/trip/:tripRef/book" element={<TripBookingPage appKey="trevio" />} />
-                <Route path="/trevio/tour/:tourRef" element={<TourDetailsPage appKey="trevio" />} />
-                <Route path="/trevio/profile" element={<Profile trips={trips} labels={labels} wishlist={wishlist} />} />
-              </Routes>
-            )}
-            <BookingModal open={Boolean(modalTrip)} tour={modalTrip} onClose={() => setModalTrip(null)} />
-        </Shell>
+        <FavoritesProvider product="trevio">
+          <AppShell
+            embedded={embedded}
+            session={session}
+            headerConfig={state.headerConfig}
+            pageModel={pageModel}
+            trips={trips}
+            activeFilter={activeFilter}
+            loadingTrips={loadingTrips}
+            onFilterChange={handleFilterChange}
+            buildAuthAction={buildAuthAction}
+            basename={basename}
+          />
+        </FavoritesProvider>
       </div>
     </>
   );

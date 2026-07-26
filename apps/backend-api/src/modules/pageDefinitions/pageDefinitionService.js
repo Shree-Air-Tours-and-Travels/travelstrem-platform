@@ -183,7 +183,7 @@ class PageDefinitionService {
     const pathEntry = registry.pathMap[pageKey];
     if (pathEntry && registry.pages[pathEntry]) return pathEntry;
 
-    return registry.defaultPage || "customer-shell/home";
+    return registry.defaultPage || "trevio-remote/home";
   }
 
   loadPageDefinition(pageKey, overrides = {}) {
@@ -271,7 +271,7 @@ class PageDefinitionService {
       };
     }
 
-    if (authUser?.userId && resolvedKey === "customer-shell/dashboard") {
+    if (authUser?.userId && resolvedKey === "dashboard/dashboard") {
       try {
         const { widgets: hydrated, labels: extraLabels } = await this._hydrateDashboardWidgets(
           payload.component.structure.widgets,

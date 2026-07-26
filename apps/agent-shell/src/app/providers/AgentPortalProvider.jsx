@@ -23,7 +23,7 @@ export const isAllowedAgentRole = (session) => agentRoles.includes(session?.user
 
 const DEFAULT_HEADER_CONFIG = {
     brand: { label: "Partner Portal", homePath: "/agent/services" },
-    leftSection: { welcome: true, showStatus: true, showNotifications: false },
+    leftSection: { welcome: true, showStatus: true },
     menu: [
         { id: "agentServices", label: "Services", path: "/agent/services", access: "roles", roles: agentRoles },
         { id: "agentDashboard", label: "Dashboard", path: "/agent/dashboard", access: "roles", roles: agentRoles },

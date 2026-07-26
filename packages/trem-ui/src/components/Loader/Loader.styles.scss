@@ -5,7 +5,7 @@ Place this file beside the component. It contains variables and a fade-out anima
 
 $primary-color: var(--color-primary);
 $white-color: var(--color-on-primary);
-$loader-overlay: var(--overlay-strong);
+$loader-overlay: var(--page-bg, #f8faf9);
 $loader-fade-duration: 0.45s;
 
 .tt-loader {

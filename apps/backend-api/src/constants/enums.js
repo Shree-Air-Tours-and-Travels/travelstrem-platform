@@ -22,7 +22,7 @@ export const BOOKING_STATUS = Object.freeze({
 export const BOOKING_STATUS_LIST = Object.values(BOOKING_STATUS);
 
 export const BOOKING_STATUS_TRANSITIONS = Object.freeze({
-  DRAFT: ["QUOTE_REQUESTED", "CANCELLED"],
+  DRAFT: ["QUOTE_REQUESTED", "CONFIRMED", "CANCELLED"],
   QUOTE_REQUESTED: ["UNDER_REVIEW", "CANCELLED"],
   UNDER_REVIEW: ["QUOTE_READY", "QUOTE_SENT", "CANCELLED"],
   QUOTE_READY: ["QUOTE_SENT", "UNDER_REVIEW", "CANCELLED"],
@@ -32,7 +32,7 @@ export const BOOKING_STATUS_TRANSITIONS = Object.freeze({
   PAYMENT_PENDING: ["PARTIALLY_PAID", "PAID", "CANCELLED"],
   PARTIALLY_PAID: ["PAID", "REFUND_PENDING", "CANCELLED"],
   PAID: ["CONFIRMED", "REFUND_PENDING"],
-  CONFIRMED: ["TICKETING", "TRAVEL_READY", "CANCELLED"],
+  CONFIRMED: ["PARTIALLY_PAID", "PAID", "TICKETING", "TRAVEL_READY", "CANCELLED"],
   TICKETING: ["TICKETED", "CANCELLED"],
   TICKETED: ["TRAVEL_READY", "COMPLETED", "REFUND_PENDING"],
   TRAVEL_READY: ["COMPLETED", "REFUND_PENDING"],
@@ -141,25 +141,6 @@ export const TIMELINE_ACTOR_TYPE = Object.freeze({
 
 export const TIMELINE_ACTOR_TYPE_LIST = Object.values(TIMELINE_ACTOR_TYPE);
 
-export const NOTIFICATION_RECIPIENT_TYPE = Object.freeze({
-  CUSTOMER: "customer",
-  ADMIN: "admin",
-  AGENT: "agent",
-  SUPPORT: "support",
-});
-
-export const NOTIFICATION_RECIPIENT_TYPE_LIST = Object.values(NOTIFICATION_RECIPIENT_TYPE);
-
-export const NOTIFICATION_CHANNEL = Object.freeze({
-  IN_APP: "in_app",
-  EMAIL: "email",
-  SMS: "sms",
-  PUSH: "push",
-  WHATSAPP: "whatsapp",
-});
-
-export const NOTIFICATION_CHANNEL_LIST = Object.values(NOTIFICATION_CHANNEL);
-
 export const TOUR_STATUS = Object.freeze({
   DRAFT: "draft",
   PUBLISHED: "published",
@@ -192,3 +173,27 @@ export const EDITABLE_TRAVELLER_STATUSES = Object.freeze([
   "UNDER_REVIEW",
   "PAYMENT_PENDING",
 ]);
+
+export const BOOKING_FLOW = Object.freeze({
+  TREVIO: "trevio",
+  TREVISTA: "trevista",
+});
+
+export const BOOKING_FLOW_LIST = Object.values(BOOKING_FLOW);
+
+export const MESSAGE_TYPE = Object.freeze({
+  TEXT: "text",
+  QUOTE_UPDATE: "quote_update",
+  DOCUMENT: "document",
+  SYSTEM: "system",
+});
+
+export const MESSAGE_TYPE_LIST = Object.values(MESSAGE_TYPE);
+
+export const MESSAGE_ACTOR_TYPE = Object.freeze({
+  CUSTOMER: "customer",
+  AGENT: "agent",
+  SYSTEM: "system",
+});
+
+export const MESSAGE_ACTOR_TYPE_LIST = Object.values(MESSAGE_ACTOR_TYPE);

@@ -1,0 +1,107 @@
+@import "@packages/trem-design-tokens/scss";
+
+.timeline-stepper {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+
+  &__item {
+    display: flex;
+    align-items: flex-start;
+    gap: $space-3;
+    min-height: 48px;
+    position: relative;
+  }
+
+  &__marker {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+    width: 28px;
+    padding-top: 2px;
+  }
+
+  &__dot {
+    width: 28px;
+    height: 28px;
+    border-radius: $radius-full;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-muted, #e5e7eb);
+    color: var(--text-muted, #9ca3af);
+    transition: all $duration-base $ease-default;
+    flex-shrink: 0;
+    border: 2px solid transparent;
+  }
+
+  &__line {
+    width: 2px;
+    flex: 1;
+    min-height: 20px;
+    background: var(--border, #e5e7eb);
+    margin: 4px 0;
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    padding-bottom: $space-4;
+    gap: 2px;
+  }
+
+  &__label {
+    font-size: $font-size-sm;
+    font-weight: $font-medium;
+    color: var(--text-muted, #6b7280);
+    line-height: $line-height-sm;
+  }
+
+  &__time {
+    font-size: $font-size-xs;
+    color: var(--text-light, #9ca3af);
+  }
+
+  &__item--current {
+    .timeline-stepper__dot {
+      background: var(--color-primary, $primary-color);
+      color: #fff;
+      border-color: var(--color-primary, $primary-color);
+      box-shadow: 0 0 0 4px rgba(15, 143, 134, 0.15);
+    }
+    .timeline-stepper__label {
+      color: var(--text, #111);
+      font-weight: $font-semibold;
+    }
+    .timeline-stepper__line {
+      background: var(--color-primary, $primary-color);
+      opacity: 0.3;
+    }
+  }
+
+  &__item--completed {
+    .timeline-stepper__dot {
+      background: var(--color-primary, $primary-color);
+      color: #fff;
+    }
+    .timeline-stepper__label {
+      color: var(--text, #111);
+    }
+    .timeline-stepper__line {
+      background: var(--color-primary, $primary-color);
+      opacity: 0.5;
+    }
+  }
+
+  &__item--pending {
+    .timeline-stepper__dot {
+      background: var(--surface-muted, #e5e7eb);
+      color: var(--text-muted, #9ca3af);
+    }
+    .timeline-stepper__label {
+      color: var(--text-muted, #9ca3af);
+    }
+  }
+}

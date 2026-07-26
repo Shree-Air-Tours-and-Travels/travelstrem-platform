@@ -1,5 +1,4 @@
 import React from "react";
-import { useLocation } from "react-router-dom";
 import { initApp } from "../../core/initApp";
 import { clearUserSessionCache } from "../../services/userSession";
 import {
@@ -7,12 +6,24 @@ import {
   registerSessionCacheClearer,
 } from "@packages/trem-events";
 
+const AUTH_STORAGE_PREFIX = "dashboardTREM";
+const SHARED_STORAGE_PREFIX = "travelstrem";
+
 const DEFAULT_SESSION = {
   user: null,
   permissions: ["public"],
   isAuthenticated: false,
   flags: { role: "public" },
 };
+
+function persistToken(session) {
+  try {
+    const token = session?.token;
+    if (!token) return;
+    localStorage.setItem(`${AUTH_STORAGE_PREFIX}:token`, token);
+    localStorage.setItem(`${SHARED_STORAGE_PREFIX}:token`, token);
+  } catch {}
+}
 
 const DashboardConfigContext = React.createContext({
   loading: true,
@@ -22,7 +33,6 @@ const DashboardConfigContext = React.createContext({
 });
 
 export function DashboardProvider({ children }) {
-  const location = useLocation();
   const initOnceRef = React.useRef(null);
   const sessionRef = React.useRef(DEFAULT_SESSION);
   const [state, setState] = React.useState({
@@ -46,17 +56,19 @@ export function DashboardProvider({ children }) {
 
     initOnceRef.current = (async () => {
       const { session } = await initApp({
-        pathname: location.pathname,
-        search: location.search,
-        hash: location.hash,
+        pathname: window.location.pathname,
+        search: window.location.search,
+        hash: window.location.hash,
       });
 
+      const resolved = session || DEFAULT_SESSION;
+      persistToken(resolved);
       setState({
         loading: false,
         error: null,
-        session: session || DEFAULT_SESSION,
+        session: resolved,
       });
-      sessionRef.current = session || DEFAULT_SESSION;
+      sessionRef.current = resolved;
     })().catch((error) => {
       console.warn("[DashboardProvider] initApp failed:", error?.message || error);
       setState({
@@ -67,7 +79,7 @@ export function DashboardProvider({ children }) {
     });
 
     return initOnceRef.current;
-  }, [location.pathname, location.search, location.hash]);
+  }, []);
 
   React.useEffect(() => {
     loadSession();

@@ -1,7 +1,8 @@
 export const normalizeSession = (data = {}) => ({
     user: data.user || null,
     permissions: Array.isArray(data.permissions) ? data.permissions : [],
-    isAuthenticated: Boolean(data.isAuthenticated),
+    isAuthenticated: Boolean(data.isAuthenticated || data.user || data.token),
+    token: data.token || null,
     flags: data.flags || {},
     config: data.config || {},
 });

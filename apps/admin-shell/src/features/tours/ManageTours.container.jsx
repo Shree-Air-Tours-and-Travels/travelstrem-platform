@@ -6,6 +6,9 @@ import {
     fetchAdmins,
     fetchAgents,
     fetchAdminTours,
+    fetchAdminTrips,
+    deleteTrip,
+    deleteAllTrips,
     fetchPartnerAgencies,
     removeAdmin,
     reviewAdmin,
@@ -14,28 +17,35 @@ import {
 } from "../../services/adminService";
 import ManageToursView from "./ManageTours.view";
 
-const VALID_TABS = new Set(["dashboard", "tours", "agencies"]);
+const VALID_TABS = new Set(["dashboard", "tours", "trips", "agencies"]);
 
 const getTabFromSearch = (search) => {
     const tab = new URLSearchParams(search || "").get("tab") || "dashboard";
     return VALID_TABS.has(tab) ? tab : "dashboard";
 };
 
-export default function ManageTours({ session }) {
+export default function ManageTours({ session, tab: tabProp }) {
     const location = useLocation();
     const navigate = useNavigate();
     const auth = {
         user: session?.user || null,
         role: session?.flags?.role || session?.user?.role || "member",
     };
-    const [tab, setTabState] = useState(() => getTabFromSearch(location.search));
+    const [tab, setTabState] = useState(() => {
+        const urlTab = getTabFromSearch(location.search);
+        if (urlTab !== "dashboard") return urlTab;
+        return tabProp && VALID_TABS.has(tabProp) ? tabProp : "dashboard";
+    });
     const [tours, setTours] = useState([]);
+    const [trips, setTrips] = useState([]);
     const [admins, setAdmins] = useState([]);
     const [agents, setAgents] = useState([]);
     const [partnerAgencies, setPartnerAgencies] = useState([]);
     const [agencyLoading, setAgencyLoading] = useState(false);
     const [loading, setLoading] = useState(false);
     const [formOpen, setFormOpen] = useState(false);
+    const [tripFormOpen, setTripFormOpen] = useState(false);
+    const [tripEditing, setTripEditing] = useState(null);
     const [viewOpen, setViewOpen] = useState(false);
     const [editing, setEditing] = useState(null);
     const [viewTour, setViewTour] = useState(null);
@@ -60,6 +70,7 @@ export default function ManageTours({ session }) {
 
     useEffect(() => {
         fetchTours();
+        fetchTrips();
         fetchAgencyManagement();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -92,6 +103,36 @@ export default function ManageTours({ session }) {
         } finally {
             if (requestSeq.current === seq) setLoading(false);
         }
+    }
+
+    async function fetchTrips() {
+        try {
+            const fetched = await fetchAdminTrips();
+            setTrips(Array.isArray(fetched) ? fetched : []);
+        } catch (e) {
+            console.error("fetchTrips error:", e);
+            showToast(e.message || "Failed to load trips", "error");
+        }
+    }
+
+    function handleTripDelete(id) {
+        setConfirmDelete(`trip:${id}`);
+        setConfirmMessage("Delete this trip? This action cannot be undone.");
+    }
+
+    function handleTripDeleteAll() {
+        setConfirmDelete("trips:ALL");
+        setConfirmMessage("Delete ALL trips? This is irreversible. Continue?");
+    }
+
+    function openTripCreate() {
+        setTripEditing(null);
+        setTripFormOpen(true);
+    }
+
+    function openTripEdit(t) {
+        setTripEditing(t);
+        setTripFormOpen(true);
     }
 
     async function fetchAgencyManagement() {
@@ -170,10 +211,18 @@ export default function ManageTours({ session }) {
         try {
             if (target === "ALL") {
                 await deleteAllTours();
+            } else if (target === "trips:ALL") {
+                await deleteAllTrips();
+            } else if (target?.startsWith("trip:")) {
+                await deleteTrip(target.replace("trip:", ""));
             } else {
                 await deleteTour(target);
             }
-            await fetchTours();
+            if (target?.startsWith("trip") || target === "trips:ALL") {
+                await fetchTrips();
+            } else {
+                await fetchTours();
+            }
         } catch (e) {
             console.error("handleConfirmDelete:", e);
             showToast(e.message || "Delete failed", "error");
@@ -202,12 +251,15 @@ export default function ManageTours({ session }) {
         <ManageToursView
             tab={tab}
             tours={tours}
+            trips={trips}
             admins={admins}
             agents={agents}
             partnerAgencies={partnerAgencies}
             loading={loading}
             agencyLoading={agencyLoading}
             formOpen={formOpen}
+            tripFormOpen={tripFormOpen}
+            tripEditing={tripEditing}
             viewOpen={viewOpen}
             editing={editing}
             viewTour={viewTour}
@@ -217,6 +269,11 @@ export default function ManageTours({ session }) {
             openCreate={openCreate}
             openEdit={openEdit}
             openView={openView}
+            openTripCreate={openTripCreate}
+            openTripEdit={openTripEdit}
+            handleTripDelete={handleTripDelete}
+            handleTripDeleteAll={handleTripDeleteAll}
+            fetchTrips={fetchTrips}
             confirmDelete={confirmDelete}
             confirmMessage={confirmMessage}
             handleDelete={handleDelete}
@@ -232,6 +289,7 @@ export default function ManageTours({ session }) {
             toast={toast}
             setToast={setToast}
             setFormOpen={setFormOpen}
+            setTripFormOpen={setTripFormOpen}
             setViewOpen={setViewOpen}
             setViewTour={setViewTour}
         />

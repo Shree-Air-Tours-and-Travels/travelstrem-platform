@@ -1,0 +1,92 @@
+.dpf {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.dpf__header {
+  margin-bottom: 24px;
+}
+
+.dpf__title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--heading);
+  margin-bottom: 4px;
+}
+
+.dpf__subtitle {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.dpf__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.dpf__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dpf__label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.dpf__input {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s ease;
+
+  &:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--primary-soft);
+  }
+
+  &::placeholder {
+    color: var(--text-light);
+  }
+}
+
+.dpf__footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.dpf__save {
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--color-primary-dark);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.dpf__saved {
+  font-size: 13px;
+  color: var(--success-color);
+  font-weight: 500;
+}

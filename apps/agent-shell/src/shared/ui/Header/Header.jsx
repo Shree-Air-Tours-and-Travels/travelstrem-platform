@@ -2,7 +2,7 @@ import React, { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header as TremHeader } from "@packages/trem-ui";
 import { emit } from "@packages/trem-events";
-import { fetchData, useThemeMode } from "@packages/trem-utils";
+import { useThemeMode } from "@packages/trem-utils";
 import { useAgentPortalConfig } from "../../../app/providers/AgentPortalProvider";
 import authService from "../../../services/authService";
 import { SERVICES_DROPDOWN, MENU_ALLOWLIST, EVENT_BY_PATH } from "./header.constants";
@@ -65,8 +65,6 @@ export default function Header() {
             onLogout={handleLogout}
             onSettings={handleSettings}
             onNavigate={handleNavigate}
-            notificationFetcher={fetchData}
-            showNotifications={false}
         />
     );
 }

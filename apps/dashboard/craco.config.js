@@ -5,8 +5,7 @@ const appSrc = path.resolve(__dirname, "src");
 const packagesSrc = path.resolve(__dirname, "../../packages");
 const backendTarget =
   process.env.REACT_APP_BACKEND_URL ||
-  process.env.REACT_APP_API_URL?.replace(/\/api\/?$/, "") ||
-  "http://localhost:5000";
+  process.env.REACT_APP_API_URL?.replace(/\/api\/?$/, "");
 
 function extendBabelIncludes(webpackConfig) {
   const oneOfRule = webpackConfig.module.rules.find((rule) => Array.isArray(rule.oneOf));
@@ -42,6 +41,7 @@ module.exports = {
         "@packages/trem-session": path.resolve(__dirname, "../../packages/trem-session/src"),
         "@packages/trem-ui": path.resolve(__dirname, "../../packages/trem-ui/src"),
         "@packages/trem-utils": path.resolve(__dirname, "../../packages/trem-utils/src"),
+        "@packages/trem-design-tokens": path.resolve(__dirname, "../../packages/trem-design-tokens/src"),
       };
       webpackConfig.resolve.plugins = (webpackConfig.resolve.plugins || []).filter(
         (plugin) => !(plugin instanceof ModuleScopePlugin)

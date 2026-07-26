@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Button, GlobalLoader, Icon, TourCard, Breadcrumbs, PortalPreloader, BottomSheet, EmptyState, QuickChips, Title, SubTitle, Paragraph, BookingTable as TremBookingTable, DashboardSidebar } from "@packages/trem-ui";
+import { Button, GlobalLoader, Icon, TourCard, TrevioTripCard, Breadcrumbs, PortalPreloader, BottomSheet, EmptyState, QuickChips, Title, SubTitle, Paragraph, BookingTable as TremBookingTable, DashboardSidebar } from "@packages/trem-ui";
 import "./Dashboard.styles.scss";
 
 const getLabel = (labels, ref, fallback = "") => (ref ? labels[ref] || fallback : fallback);
@@ -121,18 +121,29 @@ function DashboardMetrics({ widget, labels, bookingState }) {
     );
 }
 
-function RecentBookings({ widget, labels }) {
+function RecentBookings({ widget, labels, bookingState }) {
     const props = getWidgetProps(widget);
+    const hasRealData = bookingState && !bookingState.loading;
+    const recentRows = hasRealData ? (bookingState.rows || []).slice(0, 5) : [];
+    const items = recentRows.length > 0 ? recentRows.map((row) => ({
+        id: row.bookingId || row.id,
+        image: row.image,
+        name: row.tour,
+        type: row.type,
+        date: row.date,
+        time: "",
+        status: row.status,
+    })) : (props.items || []);
     return (
-        <Panel className="dashboard-recent-bookings" title={getLabel(labels, props.titleRef, "Recent Booking")} action={<Button variant="text" text="Plane" />}>
+        <Panel className="dashboard-recent-bookings" title={getLabel(labels, props.titleRef, "Recent Booking")} action={<Button variant="text" text="View All" />}>
             <div className="dashboard-list">
-                {(props.items || []).map((item) => (
+                {items.map((item) => (
                     <article className="dashboard-list-row" key={item.id}>
                         <img src={item.image} alt="" />
                         <div>
                             <strong>{item.name}</strong>
                             <span>{item.type}</span>
-                            <small>Date : {item.date} <i /> Time : {item.time}</small>
+                            <small>Date : {item.date} {item.time ? `· Time : ${item.time}` : ""}</small>
                         </div>
                         <b className={statusClass(item.status)}>{item.status}</b>
                     </article>
@@ -229,29 +240,8 @@ function CompactServiceList({ widget, labels, type }) {
     );
 }
 
-function NotificationsPanel({ widget, labels }) {
-    const props = getWidgetProps(widget);
-    return (
-        <Panel className="dashboard-notifications" title={getLabel(labels, props.titleRef, "Notifications")} action={<Button variant="text" text="All" />}>
-            {(props.items || []).map((item) => {
-                const title = getLabel(labels, item.titleRef, item.title);
-                return (
-                <article className={`dashboard-notification${getToneClass(item.tone)}`} key={item.titleRef || title}>
-                    <span><Icon name="bell" aria-hidden="true" /></span>
-                    <div>
-                        <strong>{title}</strong>
-                        <Paragraph text={item.body} />
-                    </div>
-                    <time>{item.time}</time>
-                </article>
-                );
-            })}
-        </Panel>
-    );
-}
-
-function FavoritesTourList({ labels, favoritesState, favoritesChips, loadFavorites, onViewTour }) {
-    const [activeChip, setActiveChip] = useState("trevista");
+function FavoritesTourList({ labels, favoritesState, favoritesChips, loadFavorites, onViewTour, onFavoriteToggle }) {
+    const [activeChip, setActiveChip] = useState("all");
     const [sort, setSort] = useState("recommended");
     const { loading, error, items: favorites } = favoritesState;
 
@@ -268,10 +258,14 @@ function FavoritesTourList({ labels, favoritesState, favoritesChips, loadFavorit
         [onViewTour]
     );
 
-    const sorted = [...favorites].sort((a, b) => {
-        if (sort === "price-asc") return (a.price?.min || 0) - (b.price?.min || 0);
-        if (sort === "price-desc") return (b.price?.min || 0) - (a.price?.min || 0);
-        if (sort === "rating") return (b.avgRating || 0) - (a.avgRating || 0);
+    const filtered = activeChip === "all"
+        ? favorites
+        : favorites.filter((item) => item.product === activeChip);
+
+    const sorted = [...filtered].sort((a, b) => {
+        if (sort === "price-asc") return (a.price?.min || a.priceInfo?.min || 0) - (b.price?.min || b.priceInfo?.min || 0);
+        if (sort === "price-desc") return (b.price?.min || b.priceInfo?.min || 0) - (a.price?.min || a.priceInfo?.min || 0);
+        if (sort === "rating") return (b.avgRating || b.rating || 0) - (a.avgRating || a.rating || 0);
         return 0;
     });
 
@@ -299,14 +293,14 @@ function FavoritesTourList({ labels, favoritesState, favoritesChips, loadFavorit
         );
     }
 
-    const hasFavorites = favorites.length > 0;
+    const hasFavorites = sorted.length > 0;
 
     return (
         <section className="dashboard-favorites">
             <div className="dashboard-favorites__container">
                 <header className="dashboard-favorites__header">
                     <Title primaryClassname="dashboard-favorites__title" text={getLabel(labels, "favoritesTitle", "My Favorites")} />
-                    {hasFavorites && <span className="dashboard-favorites__count">{favorites.length} {getLabel(labels, "favoritesSaved", "saved")}</span>}
+                    {favorites.length > 0 && <span className="dashboard-favorites__count">{favorites.length} {getLabel(labels, "favoritesSaved", "saved")}</span>}
                     <select className="dashboard-favorites__sort" value={sort} onChange={(e) => setSort(e.target.value)} aria-label="Sort tours">
                         <option value="recommended">{getLabel(labels, "navRecommended", "Recommended")}</option>
                         <option value="price-asc">{getLabel(labels, "navPriceLow", "Price: Low to High")}</option>
@@ -330,9 +324,29 @@ function FavoritesTourList({ labels, favoritesState, favoritesChips, loadFavorit
                     />
                 ) : (
                     <div className="dashboard-favorites__grid">
-                        {activeChip === "trevista" && sorted.map((tour) => (
-                            <TourCard key={tour._id || tour.id} tour={tour} variant="grid" onView={openTour} />
-                        ))}
+                        {sorted.map((item) => {
+                            if (item.product === "trevio") {
+                                return (
+                                    <TrevioTripCard
+                                        key={item._id || item.id}
+                                        trip={item}
+                                        favorited={true}
+                                        onFavorite={onFavoriteToggle}
+                                        onView={openTour}
+                                    />
+                                );
+                            }
+                            return (
+                                <TourCard
+                                    key={item._id || item.id}
+                                    tour={item}
+                                    variant="grid"
+                                    favorited={true}
+                                    onFavorite={onFavoriteToggle}
+                                    onView={openTour}
+                                />
+                            );
+                        })}
                     </div>
                 )}
             </div>
@@ -342,7 +356,7 @@ function FavoritesTourList({ labels, favoritesState, favoritesChips, loadFavorit
 
 function DashboardBookingTable({ widget, labels, options, bookingState, bookingQuery, onBookingQueryChange, onViewBooking }) {
     const props = getWidgetProps(widget);
-    const rows = bookingState?.rows?.length || bookingState?.loading || bookingState?.error ? (bookingState?.rows || []) : (props.rows || []);
+    const rows = bookingState ? (bookingState.rows || []) : (props.rows || []);
     const tableOptions = options || {};
     const total = Number(bookingState?.total || rows.length || 0);
     const limit = Number(bookingState?.limit || rows.length || 1);
@@ -456,12 +470,11 @@ function DashboardBookingTable({ widget, labels, options, bookingState, bookingQ
 const widgetRenderers = {
     DashboardAlert,
     DashboardMetrics,
-    RecentBookings,
+    RecentBookings: (props) => <RecentBookings {...props} bookingState={props.bookingState} />,
     BookingStatistics,
     ServiceShortcuts,
     BookingsChart,
     MostBookedServices: (props) => <CompactServiceList {...props} type="Most Booked Services" />,
-    NotificationsPanel,
     RecentInvoices: (props) => <CompactServiceList {...props} type="Recent Invoices" />,
     BookingTable: DashboardBookingTable,
     SettingsForm: () => null,
@@ -699,7 +712,10 @@ export default function Dashboard({
     onSavePassword,
     onViewTour,
     onViewBooking,
+    onFavoriteToggle,
     bannerText,
+    layout = "sidebar",
+    activeTab: controlledTab,
 }) {
     if (loading) return <GlobalLoader visible text="Loading dashboard" />;
     if (error) return <main className="customer-dashboard-page customer-dashboard-page--error">Error: {error}</main>;
@@ -709,18 +725,23 @@ export default function Dashboard({
     const shellProps = getWidgetProps(shellWidget);
     const navigation = shellProps?.navigation || [];
 
-    const [activeNav, setActiveNav] = useState(() => {
+    const [internalNav, setInternalNav] = useState(() => {
         const saved = sessionStorage.getItem(STORAGE_KEY);
         if (saved && NAV_TAB_MAP[saved]) return saved;
         if (initialNav && NAV_TAB_MAP[initialNav]) return initialNav;
         return "dashboard";
     });
 
-    useEffect(() => {
-        sessionStorage.setItem(STORAGE_KEY, activeNav);
-    }, [activeNav]);
+    const activeNav = controlledTab || internalNav;
+    const setActiveNav = controlledTab !== undefined ? () => {} : setInternalNav;
 
-    const activeTab = NAV_TAB_MAP[activeNav] || "dashboard";
+    useEffect(() => {
+        if (controlledTab === undefined) {
+            sessionStorage.setItem(STORAGE_KEY, internalNav);
+        }
+    }, [internalNav, controlledTab]);
+
+    const activeTab = controlledTab || NAV_TAB_MAP[activeNav] || "dashboard";
 
     const breadcrumbItems = (() => {
         if (activeNav === "tours") {
@@ -747,7 +768,7 @@ export default function Dashboard({
         ];
     })();
 
-    const filteredWidgets = activeTab === "dashboard"
+    const filteredWidgets = activeTab === "dashboard" || activeTab === "overview"
         ? (contentWidgets || []).filter((w) => w.type !== "BookingTable")
         : (contentWidgets || []).filter((w) => w.type === "BookingTable");
 
@@ -755,22 +776,11 @@ export default function Dashboard({
 
     const settingsWidget = (contentWidgets || []).find((w) => w.type === "SettingsForm");
 
-    return (
+    const renderContent = () => (
         <>
-        <CustomerDashboardShell
-            widget={shellWidget}
-            labels={labels}
-            user={mergedUser}
-            activeNav={activeNav}
-            onNavChange={(nav) => {
-                setActiveNav(nav);
-                onNavigate?.(nav);
-            }}
-            banner={activeTab === "dashboard" ? bannerText || getLabel(labels, "dashboardBanner", "Dashboard data is placeholder while we integrate real-time bookings.") : null}
-        >
             <Breadcrumbs items={breadcrumbItems} />
             {activeTab === "favorites" ? (
-                <FavoritesTourList labels={labels} favoritesState={favoritesState} favoritesChips={favoritesChips} loadFavorites={loadFavorites} onViewTour={onViewTour} />
+                <FavoritesTourList labels={labels} favoritesState={favoritesState} favoritesChips={favoritesChips} loadFavorites={loadFavorites} onViewTour={onViewTour} onFavoriteToggle={onFavoriteToggle} />
             ) : activeTab === "settings" ? (
                 <SettingsForm widget={settingsWidget} labels={labels} profile={profile} icons={icons} onSaveProfile={onSaveProfile} onSavePassword={onSavePassword} onProfileUpdate={onProfileUpdate} />
             ) : (
@@ -793,6 +803,34 @@ export default function Dashboard({
                     })}
                 </div>
             )}
+        </>
+    );
+
+    if (layout === "tabs") {
+        return (
+            <main className="dsh-content">
+                {bannerText && <div className="dsh-content__banner">{bannerText}</div>}
+                <div className="dsh-content__inner">
+                    {renderContent()}
+                </div>
+            </main>
+        );
+    }
+
+    return (
+        <>
+        <CustomerDashboardShell
+            widget={shellWidget}
+            labels={labels}
+            user={mergedUser}
+            activeNav={activeNav}
+            onNavChange={(nav) => {
+                setActiveNav(nav);
+                onNavigate?.(nav);
+            }}
+            banner={activeTab === "dashboard" ? bannerText || getLabel(labels, "dashboardBanner", "Showing data across all your TravelsTrem products.") : null}
+        >
+            {renderContent()}
         </CustomerDashboardShell>
         <MobileBottomNav navigation={navigation} labels={labels} activeNav={activeNav} onNavChange={(nav) => {
             setActiveNav(nav);

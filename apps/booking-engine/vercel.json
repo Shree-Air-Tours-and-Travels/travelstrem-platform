@@ -1,0 +1,11 @@
+{
+  "rewrites": {
+    "beforeFiles": [
+      { "source": "/static/(.*)", "destination": "/static/$1" },
+      { "source": "/asset-manifest.json", "destination": "/asset-manifest.json" }
+    ],
+    "fallback": [
+      { "source": "/(.*)", "destination": "/index.html" }
+    ]
+  }
+}

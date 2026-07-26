@@ -241,14 +241,29 @@
   .trem-product-header {
     &__inner {
       grid-template-columns: auto 1fr auto;
+      min-height: 56px;
+      gap: var(--space-3, 0.75rem);
+    }
+
+    &__mark,
+    &__logo {
+      width: 36px;
+      height: 36px;
+      flex: 0 0 36px;
+    }
+
+    &__brand-copy {
+      strong {
+        font-size: 0.95rem;
+      }
     }
 
     &__hamburger {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 44px;
-      height: 44px;
+      width: 40px;
+      height: 40px;
       padding: 0;
       border: 0;
       background: transparent;
@@ -263,8 +278,8 @@
       }
 
       svg {
-        width: 24px;
-        height: 24px;
+        width: 22px;
+        height: 22px;
       }
     }
 
@@ -276,12 +291,12 @@
       display: block;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
       opacity: 0;
       visibility: hidden;
-      transition: opacity 260ms ease, visibility 260ms ease;
+      transition: opacity 220ms ease, visibility 220ms ease;
       z-index: 49;
       pointer-events: none;
       -webkit-tap-highlight-color: transparent;
@@ -296,11 +311,14 @@
     &__drawer {
       display: flex;
       position: fixed;
-      inset: 0;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: min(340px, 85vw);
       background: var(--surface);
       box-shadow: var(--shadow-lg);
       transform: translateX(-110%);
-      transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1);
+      transition: transform 250ms cubic-bezier(0.16, 1, 0.3, 1);
       z-index: 50;
       padding: 0;
       overscroll-behavior: contain;
@@ -327,7 +345,7 @@
       align-items: center;
       justify-content: space-between;
       gap: 0.75rem;
-      padding: 1rem 1.25rem;
+      padding: 0.75rem 1rem;
       border-bottom: 1px solid var(--border);
       background: var(--surface);
       flex-shrink: 0;
@@ -581,24 +599,15 @@
   }
 }
 
-@media (min-width: 640px) and (max-width: 900px) {
-  .trem-product-header {
-    &__drawer {
-      width: min(420px, 82vw);
-    }
-  }
-}
-
 /* ─── Small mobile adjustments ─── */
 @media (max-width: 560px) {
   .trem-product-header {
     &__inner {
-      width: min(100% - 1rem, 1180px);
-      min-height: 66px;
-      gap: var(--space-3, 0.75rem);
+      min-height: 52px;
+      gap: var(--space-2, 0.5rem);
     }
 
-    &__brand-copy small {
+    &__brand-copy {
       display: none;
     }
 
@@ -607,8 +616,9 @@
     }
 
     &__action--primary {
-      min-height: 44px;
-      padding: 0 0.85rem;
+      min-height: 40px;
+      padding: 0 0.75rem;
+      font-size: 0.85rem;
     }
   }
 }

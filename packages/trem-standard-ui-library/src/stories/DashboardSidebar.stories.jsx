@@ -33,7 +33,6 @@ const sections = [
     id: "account",
     title: "Account",
     items: [
-      { id: "notifications", label: "Notifications", icon: "info", badge: "05", disabled: true },
       { id: "settings", label: "Settings", icon: "settings" },
       { id: "logout", label: "Logout", icon: "logout", disabled: true },
     ],

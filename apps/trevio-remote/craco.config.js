@@ -5,7 +5,7 @@ const path = require("path");
 
 const appSrc = path.resolve(__dirname, "src");
 const sharedPackageSrc = path.resolve(__dirname, "../../packages");
-const backendTarget = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
+const backendTarget = process.env.REACT_APP_BACKEND_URL;
 
 module.exports = {
     devServer: (config) => {

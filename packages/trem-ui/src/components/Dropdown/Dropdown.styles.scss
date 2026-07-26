@@ -1,4 +1,4 @@
-$breakpoint-mobile: 768px;
+@import "@packages/trem-design-tokens/scss";
 
 .trem-dropdown {
   position: relative;
@@ -15,13 +15,13 @@ $breakpoint-mobile: 768px;
     max-width: min(360px, calc(100vw - 24px));
     list-style: none;
     margin: 0;
-    padding: 8px;
+    padding: $space-2;
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: $radius-md;
     background: var(--surface);
-    box-shadow: var(--shadow-lg);
+    box-shadow: $shadow-lg;
     pointer-events: auto;
-    animation: trem-dropdown-in 140ms ease both;
+    animation: trem-dropdown-in 140ms $ease-default both;
   }
 
   &.align-left &__menu {
@@ -38,14 +38,14 @@ $breakpoint-mobile: 768px;
     background: transparent;
     color: var(--text);
     cursor: pointer;
-    padding: 10px 12px;
+    padding: $space-2-5 $space-3;
     text-align: left;
-    border-radius: 8px;
+    border-radius: $radius-xs;
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 0.875rem;
-    transition: background 120ms ease, color 120ms ease;
+    gap: $space-2;
+    font-size: $font-size-sm;
+    transition: background 120ms $ease-default, color 120ms $ease-default;
   }
 
   &__item:hover {
@@ -56,7 +56,7 @@ $breakpoint-mobile: 768px;
   &__item.is-active {
     background: var(--primary-soft);
     color: var(--color-primary);
-    font-weight: 600;
+    font-weight: $font-semibold;
   }
 
   &__item.is-disabled {
@@ -73,16 +73,16 @@ $breakpoint-mobile: 768px;
 
   &__item-badge {
     margin-left: auto;
-    font-size: 0.75rem;
+    font-size: $font-size-xs;
     padding: 2px 6px;
-    border-radius: 10px;
+    border-radius: $radius-full;
     background: var(--color-primary);
-    color: #fff;
+    color: $white-color;
     flex-shrink: 0;
   }
 
   &__separator {
-    margin: 6px 0;
+    margin: $space-1-5 0;
     border: 0;
     border-top: 1px solid var(--border);
   }
@@ -91,11 +91,11 @@ $breakpoint-mobile: 768px;
   &__search {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 0.65rem;
-    margin-bottom: 4px;
+    gap: $space-2;
+    padding: $space-2 $space-2-5;
+    margin-bottom: $space-1;
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: $radius-xs;
     background: var(--surface-inset);
 
     svg {
@@ -112,7 +112,7 @@ $breakpoint-mobile: 768px;
     border: 0;
     background: transparent;
     color: var(--text);
-    font-size: 0.875rem;
+    font-size: $font-size-sm;
     outline: 0;
 
     &::placeholder {
@@ -121,7 +121,7 @@ $breakpoint-mobile: 768px;
   }
 
   &__search-item {
-    padding: 0 0 4px;
+    padding: 0 0 $space-1;
   }
 }
 
@@ -144,13 +144,13 @@ $breakpoint-mobile: 768px;
     border: 0;
     border-radius: 0;
     box-shadow: none;
-    padding: 4px 8px 8px;
+    padding: $space-1 $space-3 $space-2;
     overflow-y: auto;
     pointer-events: auto;
     animation: none;
   }
 
   .trem-bottom-sheet .trem-dropdown__search {
-    margin: 4px 12px 0;
+    margin: $space-1 $space-3 0;
   }
 }

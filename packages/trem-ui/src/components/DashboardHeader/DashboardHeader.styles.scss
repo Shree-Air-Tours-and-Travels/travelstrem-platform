@@ -1,0 +1,341 @@
+@import "@packages/trem-design-tokens/scss";
+
+// ─── Dashboard Header ───────────────────────────────
+// Clean, minimal header for the business dashboard.
+// No login/logout — just brand, tabs, theme toggle, user.
+
+$dsh-height: 60px;
+$dsh-height-mobile: 56px;
+
+.dsh {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1100;
+  height: $dsh-height;
+  background: var(--bg, $white-color);
+  border-bottom: 1px solid var(--border, $border-color);
+
+  @include mq-max($breakpoint-mobile) {
+    height: $dsh-height-mobile;
+  }
+}
+
+// ─── Top Bar ────────────────────────────────────────
+.dsh__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+  max-width: $full-width;
+  margin: 0 auto;
+  padding: 0 $space-6;
+
+  @include mq-max($breakpoint-tablet) {
+    padding: 0 $space-4;
+  }
+}
+
+// ─── Left Section ───────────────────────────────────
+.dsh__left {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  min-width: 0;
+}
+
+.dsh__toggle {
+  display: none;
+
+  @include mq-max($breakpoint-tablet) {
+    display: inline-flex;
+  }
+}
+
+.dsh__back {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-1-5;
+  padding: $space-1-5 $space-3;
+  border: 1px solid var(--border, $border-color);
+  border-radius: $radius-full;
+  background: transparent;
+  color: var(--text-muted, $text-muted);
+  font-size: $font-size-xs;
+  font-weight: $font-medium;
+  font-family: $font-primary;
+  cursor: pointer;
+  transition: all $duration-base $ease-default;
+  white-space: nowrap;
+
+  &:hover {
+    border-color: var(--color-primary, $primary-color);
+    color: var(--color-primary, $primary-color);
+  }
+
+  @include mq-max($breakpoint-mobile) {
+    display: none;
+  }
+}
+
+.dsh__brand {
+  font-size: $font-size-lg;
+  font-weight: $font-bold;
+  color: var(--text, $text-dark);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+
+  @include mq-max($breakpoint-mobile) {
+    font-size: $font-size-md;
+  }
+}
+
+// ─── Center Tabs ────────────────────────────────────
+.dsh__tabs {
+  display: flex;
+  align-items: center;
+  gap: $space-1;
+
+  @include mq-max($breakpoint-tablet) {
+    display: none;
+  }
+}
+
+.dsh__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-1-5;
+  padding: $space-2 $space-3-5;
+  border: none;
+  border-radius: $radius-full;
+  background: transparent;
+  color: var(--text-muted, $text-muted);
+  font-size: $font-size-sm;
+  font-weight: $font-medium;
+  font-family: $font-primary;
+  cursor: pointer;
+  transition: all $duration-base $ease-default;
+  white-space: nowrap;
+
+  svg {
+    opacity: 0.6;
+    transition: opacity $duration-base $ease-default;
+  }
+
+  &:hover {
+    background: var(--surface-subtle, rgba(15, 143, 134, 0.04));
+    color: var(--text, $text-dark);
+
+    svg { opacity: 1; }
+  }
+
+  &.is-active {
+    background: var(--color-primary, $primary-color);
+    color: #fff;
+
+    svg { opacity: 1; }
+  }
+}
+
+// ─── Right Section ──────────────────────────────────
+.dsh__right {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+}
+
+.dsh__theme-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: $radius-full;
+  color: var(--text-muted, $text-muted);
+
+  &:hover {
+    background: var(--surface-subtle, rgba(15, 143, 134, 0.04));
+    color: var(--text, $text-dark);
+  }
+
+  @include mq-max($breakpoint-mobile) {
+    display: none;
+  }
+}
+
+.dsh__user {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+
+  @include mq-max($breakpoint-mobile) {
+    display: none;
+  }
+}
+
+.dsh__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: $radius-full;
+  background: var(--color-primary, $primary-color);
+  color: #fff;
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+  flex-shrink: 0;
+
+  &--lg {
+    width: 40px;
+    height: 40px;
+    font-size: $font-size-sm;
+  }
+}
+
+.dsh__name {
+  font-size: $font-size-sm;
+  font-weight: $font-medium;
+  color: var(--text, $text-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+
+// ─── Overlay ────────────────────────────────────────
+.dsh__overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1150;
+  opacity: 0;
+  transition: opacity $duration-base $ease-default;
+
+  &.is-visible {
+    opacity: 1;
+  }
+
+  @include mq-max($breakpoint-tablet) {
+    display: block;
+    pointer-events: none;
+
+    &.is-visible {
+      pointer-events: auto;
+    }
+  }
+}
+
+// ─── Mobile Drawer ──────────────────────────────────
+.dsh__drawer {
+  display: none;
+
+  @include mq-max($breakpoint-tablet) {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    background: var(--bg, $white-color);
+    z-index: 1200;
+    transform: translateX(-100%);
+    transition: transform $duration-slow $ease-out;
+    box-shadow: $shadow-lg;
+
+    &.is-open {
+      transform: translateX(0);
+    }
+  }
+}
+
+.dsh__drawer-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: $space-6 $space-4;
+}
+
+.dsh__drawer-user {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  padding-bottom: $space-5;
+  margin-bottom: $space-4;
+  border-bottom: 1px solid var(--border, $border-color);
+
+  strong {
+    display: block;
+    font-size: $font-size-md;
+    color: var(--text, $text-dark);
+  }
+
+  small {
+    display: block;
+    font-size: $font-size-xs;
+    color: var(--text-muted, $text-muted);
+    text-transform: capitalize;
+  }
+}
+
+.dsh__drawer-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+}
+
+.dsh__drawer-tab {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  width: 100%;
+  padding: $space-3 $space-4;
+  border: none;
+  border-radius: $radius-sm;
+  background: transparent;
+  color: var(--text-muted, $text-muted);
+  font-size: $font-size-md;
+  font-weight: $font-medium;
+  font-family: $font-primary;
+  text-align: left;
+  cursor: pointer;
+  transition: all $duration-base $ease-default;
+
+  &:hover {
+    background: var(--surface-subtle, rgba(15, 143, 134, 0.04));
+    color: var(--text, $text-dark);
+  }
+
+  &.is-active {
+    background: rgba(15, 143, 134, 0.08);
+    color: var(--color-primary, $primary-color);
+    font-weight: $font-semibold;
+  }
+}
+
+.dsh__drawer-footer {
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+  padding-top: $space-4;
+  border-top: 1px solid var(--border, $border-color);
+}
+
+.dsh__drawer-action {
+  justify-content: flex-start;
+  width: 100%;
+  color: var(--text-muted, $text-muted);
+
+  &:hover {
+    color: var(--text, $text-dark);
+  }
+}
+
+// ─── Spacer (for fixed header) ──────────────────────
+.dsh-spacer {
+  height: $dsh-height;
+
+  @include mq-max($breakpoint-mobile) {
+    height: $dsh-height-mobile;
+  }
+}

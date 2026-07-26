@@ -56,6 +56,35 @@ export const extractToken = (res) => res?.data?.token || res?.token || res?.data
 export const extractSafeUser = (res) =>
   res?.data?.user || res?.data?.data?.user || (res?.data && typeof res.data === "object" && res.data.user) || res?.user || null;
 
+export const TOKEN_URL_PARAM = "auth_token";
+
+export const appendTokenToUrl = (url, token) => {
+  if (!token || typeof url !== "string") return url;
+  try {
+    const parsed = new URL(url);
+    parsed.searchParams.set(TOKEN_URL_PARAM, token);
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+};
+
+export const consumeUrlToken = (storageKeys = {}) => {
+  if (typeof window === "undefined") return null;
+  try {
+    const url = new URL(window.location.href);
+    const token = url.searchParams.get(TOKEN_URL_PARAM);
+    if (!token) return null;
+    const tokenKey = storageKeys.token || "travelstrem:token";
+    localStorage.setItem(tokenKey, token);
+    url.searchParams.delete(TOKEN_URL_PARAM);
+    window.history.replaceState({}, "", url.toString());
+    return token;
+  } catch {
+    return null;
+  }
+};
+
 /** @deprecated Tokens are now stored in httpOnly cookies. Kept for backward compat during migration. */
 export const getStoredAuthToken = ({ storage = localStorage } = {}) => {
   if (!storage) return null;

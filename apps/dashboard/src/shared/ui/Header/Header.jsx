@@ -7,25 +7,20 @@ import { apiService } from "../../../services/apiService";
 import { clearUserSessionCache } from "../../../services/userSession";
 
 const PRODUCT_CATALOG = [
-  { key: "trevista", name: "Trevista", domain: "trevista.travelstrem.in", port: 3001 },
-  { key: "trevio", name: "Trevio", domain: "trevio.travelstrem.in", port: 3005 },
+  { key: "trevista", name: "Trevista", url: process.env.REACT_APP_TREVISTA_URL },
+  { key: "trevio", name: "Trevio", url: process.env.REACT_APP_TREVIO_URL },
 ];
 
 const getProductBaseUrl = (productKey) => {
   if (typeof window === "undefined") return "/";
   const product = PRODUCT_CATALOG.find((p) => p.key === productKey);
-  if (!product) return "/";
-  const host = window.location.hostname;
-  const parts = host.split(".");
-  if (parts.length > 2) {
-    return `https://${product.domain}`;
-  }
-  return `http://localhost:${product.port}`;
+  if (!product?.url) return "/";
+  return product.url;
 };
 
 const headerConfig = {
   brand: { label: "TravelsTrem Dashboard", homePath: "/" },
-  leftSection: { welcome: true, showStatus: false, showNotifications: false },
+  leftSection: { welcome: true, showStatus: false },
   menu: [],
   authActions: {
     login: { label: "Login", path: "/login" },
@@ -78,7 +73,6 @@ export default function Header() {
       }}
       session={session}
       onLogout={handleLogout}
-      showNotifications={false}
       showFavorites={false}
       theme="light"
     />

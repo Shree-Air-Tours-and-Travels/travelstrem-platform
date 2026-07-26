@@ -1,0 +1,67 @@
+@import "@packages/trem-design-tokens/scss";
+
+.trem-note {
+  display: flex;
+  align-items: flex-start;
+  gap: $space-2-5;
+  padding: $space-3 $space-3-5;
+  border-radius: $radius-sm;
+  font-size: $font-size-sm;
+  line-height: $line-height-md;
+
+  &--info {
+    background: var(--primary-soft, rgba(15, 143, 134, 0.08));
+    border: 1px solid rgba(var(--color-primary-rgb, 15, 143, 134), 0.18);
+    color: var(--text, $text-dark);
+  }
+
+  &--warning {
+    background: var(--tertiary-soft, rgba(216, 148, 42, 0.12));
+    border: 1px solid rgba(var(--color-tertiary-rgb, 216, 148, 42), 0.22);
+    color: var(--text, $text-dark);
+  }
+
+  &--danger {
+    background: var(--danger-soft, rgba(185, 28, 28, 0.08));
+    border: 1px solid rgba(var(--color-danger-rgb, 185, 28, 28), 0.18);
+    color: var(--text, $text-dark);
+  }
+
+  &--success {
+    background: var(--success-soft, rgba(22, 101, 52, 0.08));
+    border: 1px solid rgba(var(--color-success-rgb, 22, 101, 52), 0.18);
+    color: var(--text, $text-dark);
+  }
+
+  &__icon {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    margin-top: 1px;
+
+    .trem-note--info & { color: var(--color-primary, $primary-color); }
+    .trem-note--warning & { color: var(--color-tertiary, $tertiary-color); }
+    .trem-note--danger & { color: var(--color-danger, $danger-color); }
+    .trem-note--success & { color: var(--color-success, $success-color); }
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__title {
+    font-weight: $font-bold;
+    font-size: $font-size-sm;
+  }
+
+  &__text {
+    font-size: $font-size-xs;
+    color: var(--text-muted, $text-muted);
+  }
+}

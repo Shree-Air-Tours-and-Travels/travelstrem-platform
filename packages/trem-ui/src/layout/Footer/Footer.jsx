@@ -1,55 +1,97 @@
-import React from "react";
+import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
+import footerIcon from "../../assets/favicon.png";
 import "./Footer.styles.scss";
 
-const defaultLinks = [
-  { to: "/", label: "Home" },
-  { to: "/about", label: "About" },
-  { to: "/contact", label: "Contact" },
-];
+const FOOTER_DATA = {
+  brand: "TravelsTREM",
+  tagline: "Tours · Reservation · Experience · Management",
+  exploreLinks: [
+    { to: "/", label: "Home" },
+    { href: "https://travelstrem.com", label: "About" },
+    { href: "https://mail.google.com/mail/?view=cm&fs=1&to=akshat.goyal%40travelstrem.com", label: "Contact", target: "_blank" },
+  ],
+  connectLinks: [
+    { href: "tel:9057635580", label: "+91 90576 35580" },
+    { href: "https://www.google.com/maps/search/?api=1&query=G-108%20Shalimar%20Complex%20MI%20Road%20Jaipur", label: "Jaipur, India ↗", target: "_blank" },
+  ],
+  email: "akshat.goyal@travelstrem.com",
+  description: "Travel technology and engineering used by Shree Air Tours and Travels to plan, manage and support better journeys.",
+  owner: "Shree Air Tours and Travels",
+  subscribe: {
+    kicker: "STAY CONNECTED",
+    title: <>Travel ideas,<br /><em>from our desk to yours.</em></>,
+    note: "No spam. Just occasional travel and platform notes.",
+  },
+  bottomNote: "TravelsTREM is our internal technology platform.",
+};
 
-export default function Footer({ user, brand = "TravelsTrem", links = defaultLinks, showPortfolio = true }) {
+function FooterLink({ link }) {
+  if (link.href) {
+    return <a className="ui-footer__link" href={link.href} target={link.target || "_self"} rel={link.rel || (link.target === "_blank" ? "noopener noreferrer" : undefined)}>{link.label}</a>;
+  }
+  return <NavLink className="ui-footer__link" to={link.to || "/"}>{link.label}</NavLink>;
+}
+
+export default function Footer({
+  user,
+  brand = FOOTER_DATA.brand,
+  productName = "",
+  links,
+  exploreLinks = links || FOOTER_DATA.exploreLinks,
+  connectLinks = FOOTER_DATA.connectLinks,
+  email = FOOTER_DATA.email,
+  description = FOOTER_DATA.description,
+  owner = FOOTER_DATA.owner,
+  showSubscribe = true,
+}) {
+  const [emailValue, setEmailValue] = useState("");
+  const [status, setStatus] = useState("");
   const year = new Date().getFullYear();
+
+  const submitSubscription = (event) => {
+    event.preventDefault();
+    if (!emailValue.trim()) return;
+    setStatus("Thanks — your email app will open to complete the subscription.");
+    window.location.href = `mailto:${email}?subject=TravelsTREM%20newsletter%20subscription&body=Please%20subscribe%20${encodeURIComponent(emailValue.trim())}%20to%20TravelsTREM%20updates.`;
+  };
 
   return (
     <footer className="ui-footer" role="contentinfo" aria-labelledby="footer-heading">
-      <div className="ui-footer__container">
-        <div className="ui-footer__brand">
+      <div className="ui-footer__glow" aria-hidden="true" />
+      <div className="ui-footer__container ui-footer__main">
+        <div className="ui-footer__brand-column">
           <NavLink to="/" className="ui-footer__brand-link" aria-label={`${brand} home`}>
-            <span className="ui-footer__brand-text">{brand}</span>
+            <img className="ui-footer__brand-mark" src={footerIcon} alt="" aria-hidden="true" />
+            <span className="ui-footer__brand-lockup"><strong>{brand.replace("TREM", "")}<em>TREM</em></strong><small>{FOOTER_DATA.tagline}</small></span>
           </NavLink>
+          {productName ? <span className="ui-footer__product">{productName}</span> : null}
+          <p className="ui-footer__description">{description}</p>
+          <a className="ui-footer__email" href={`mailto:${email}`}>{email} ↗</a>
         </div>
 
-        <nav className="ui-footer__links" aria-label="Footer links">
-          <h3 id="footer-heading" className="ui-footer__title">Explore</h3>
-          <ul className="ui-footer__list">
-            {links.map((link) => (
-              <li className="ui-footer__item" key={`${link.to || link.href}-${link.label}`}>
-                {link.href ? (
-                  <a className="ui-footer__link" href={link.href} target={link.target || "_self"} rel={link.rel}>
-                    {link.label}
-                  </a>
-                ) : (
-                  <NavLink to={link.to} className="ui-footer__link">{link.label}</NavLink>
-                )}
-              </li>
-            ))}
-          </ul>
-        </nav>
-
-        <div className="ui-footer__social" aria-label="Social links">
-          <h3 className="ui-footer__title">Follow</h3>
-          <div className="ui-footer__social-items">
-            <a className="ui-footer__social-link" href="https://www.linkedin.com/in/akshatgoyal1105" target="_blank" rel="noopener noreferrer">LinkedIn</a>
-            <a className="ui-footer__social-link" href="https://github.com/AkshatGoyal621" target="_blank" rel="noopener noreferrer">GitHub</a>
-            {showPortfolio && <a className="ui-footer__social-link" href="https://akshats-portfolio.vercel.app/" target="_blank" rel="noopener noreferrer">Portfolio</a>}
+        {showSubscribe ? (
+          <div className="ui-footer__subscribe">
+            <p className="ui-footer__kicker">{FOOTER_DATA.subscribe.kicker}</p>
+            <h2 id="footer-heading">{FOOTER_DATA.subscribe.title}</h2>
+            <form className="ui-footer__subscribe-form" onSubmit={submitSubscription}>
+              <label className="ui-footer__sr-only" htmlFor="footer-email">Email address</label>
+              <input id="footer-email" name="email" type="email" value={emailValue} onChange={(event) => setEmailValue(event.target.value)} placeholder="Your email address" required />
+              <button type="submit" aria-label="Subscribe">→</button>
+            </form>
+            <p className="ui-footer__subscribe-note">{status || FOOTER_DATA.subscribe.note}</p>
           </div>
-        </div>
+        ) : null}
+
+        <nav className="ui-footer__links" aria-label="Footer navigation">
+          <div><p className="ui-footer__kicker">EXPLORE</p>{exploreLinks.map((link) => <FooterLink key={`${link.to || link.href}-${link.label}`} link={link} />)}</div>
+          <div><p className="ui-footer__kicker">CONNECT</p>{connectLinks.map((link) => <FooterLink key={`${link.to || link.href}-${link.label}`} link={link} />)}</div>
+        </nav>
       </div>
 
-      <div className="ui-footer__meta">
-        <p className="ui-footer__copyright">&copy; {year} <span className="ui-footer__owner">Akshat Goyal</span>. All rights reserved.</p>
-        <p className="ui-footer__note">{user?.name ? `Hi ${user.name}!` : ""}</p>
+      <div className="ui-footer__container ui-footer__bottom">
+        <span>© {year} {owner}. {FOOTER_DATA.bottomNote}</span>
+        <span><a href="/privacy">Privacy &amp; safety</a> · Shared platform footer</span>
       </div>
     </footer>
   );

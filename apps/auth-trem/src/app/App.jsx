@@ -1,5 +1,5 @@
 import React from "react";
-import { Header } from "@packages/trem-ui";
+import { Footer, Header } from "@packages/trem-ui";
 import { useThemeMode } from "@packages/trem-utils";
 import AuthPage from "../features/auth/AuthPage.jsx";
 import { createAuthApi, createAuthService } from "@packages/trem-auth-core";
@@ -8,7 +8,7 @@ const api = createAuthApi();
 const authService = createAuthService(api);
 const authHeaderConfig = {
   brand: { label: "TravelsTrem", homePath: "/" },
-  leftSection: { welcome: false, showStatus: false, showNotifications: false },
+  leftSection: { welcome: false, showStatus: false },
   menu: [],
   authActions: {
     login: { label: "Login", path: "/login" },
@@ -22,7 +22,7 @@ export default function AuthTremApp() {
 
   return (
     <div className="auth-trem-shell">
-      <Header headerConfig={authHeaderConfig} theme={theme} onToggleTheme={toggleTheme} showNotifications={false} />
+      <Header headerConfig={authHeaderConfig} theme={theme} onToggleTheme={toggleTheme} />
       <AuthPage
         api={api}
         authService={authService}
@@ -32,6 +32,7 @@ export default function AuthTremApp() {
         authStoragePrefix="travelstrem"
         afterAuthPath={fallbackAfterAuthPath}
       />
+      <Footer productName="Secure access · TravelsTREM" />
     </div>
   );
 }

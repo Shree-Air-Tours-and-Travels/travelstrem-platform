@@ -24,11 +24,8 @@ describe('FavoritesContext', () => {
     expect(screen.getByTestId('functions')).toHaveTextContent('function,function');
   });
 
-  it('throws when useFavoritesContext is used outside provider', () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    expect(() => render(<TestConsumer />)).toThrow(
-      'useFavoritesContext must be used within a FavoritesProvider'
-    );
-    consoleSpy.mockRestore();
+  it('returns defaults when useFavoritesContext is used outside provider', () => {
+    render(<TestConsumer />);
+    expect(screen.getByTestId('functions')).toHaveTextContent('function,function');
   });
 });
