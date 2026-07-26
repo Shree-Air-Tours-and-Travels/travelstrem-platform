@@ -7,5 +7,5 @@ const FOOTER_LINKS = [
 ];
 
 export default function Footer({ user }) {
-  return <SharedFooter user={user} brand="AdminTREM" links={FOOTER_LINKS} />;
+  return <SharedFooter user={user} productName="Admin portal · Operations" exploreLinks={FOOTER_LINKS} />;
 }

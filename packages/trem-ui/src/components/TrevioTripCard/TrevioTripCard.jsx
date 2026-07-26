@@ -15,9 +15,11 @@ export default function TrevioTripCard({ trip = {}, favorited = false, onFavorit
   const chips = trip.chips || trip.tags || [];
   const location = trip.location || trip.address?.city || trip.city?.to || "India";
   const duration = trip.duration || `${trip.period?.days || 0}D / ${trip.period?.nights || 0}N`;
+  const seatsAvailable = trip.availability?.seatsAvailable ?? trip.seatsAvailable;
+  const isSoldOut = seatsAvailable === 0;
 
   return (
-    <article className="trevio-trip-card">
+    <article className={`trevio-trip-card${isSoldOut ? " trevio-trip-card--sold-out" : ""}`}>
       <div className="trevio-trip-card__image" style={image ? { backgroundImage: `url("${image}")` } : undefined}>
         <span className="trevio-trip-card__tag">{trip.tag || trip.category || "Adventure"}</span>
         {trip.rating || trip.avgRating ? <span className="trevio-trip-card__rating">★ {trip.rating || trip.avgRating}</span> : null}
@@ -41,6 +43,12 @@ export default function TrevioTripCard({ trip = {}, favorited = false, onFavorit
         <div className="trevio-trip-card__chips">
           {chips.slice(0, 3).map((chip) => <span key={chip} className="trevio-trip-card__chip">{chip}</span>)}
         </div>
+        {isSoldOut && (
+          <div className="trevio-trip-card__sold-out-note">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 10.5v-5m0 3.5h.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            Spots full — join waitlist or contact agent
+          </div>
+        )}
         <div className="trevio-trip-card__footer">
           <div className="trevio-trip-card__price"><small>Per person</small><strong>{money(price, trip.priceInfo?.currency)}</strong></div>
           <button type="button" className="trevio-trip-card__link" onClick={() => onView?.(trip)}>View itinerary →</button>

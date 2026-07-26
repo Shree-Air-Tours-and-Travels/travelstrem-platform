@@ -73,7 +73,7 @@ export default function DashboardPageContainer() {
         elements,
         structure,
         resolvedView,
-    } = useComponentData("/pages/customer-shell/dashboard", {
+    } = useComponentData("/pages/dashboard/dashboard", {
         headers: {},
         params: {},
     });

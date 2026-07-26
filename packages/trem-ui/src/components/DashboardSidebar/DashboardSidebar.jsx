@@ -22,7 +22,6 @@ function getSidebarIcon(icon) {
     messages: "messageCircle",
     offers: "ticket",
     payments: "payment",
-    notifications: "bell",
   }[icon] || icon || "circleDot");
 }
 

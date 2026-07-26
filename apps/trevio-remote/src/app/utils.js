@@ -38,6 +38,7 @@ export const resolvePageContent = (pageResponse) => {
   const howWidget = findWidget(widgets, ["howToUseSection"]) || {};
   const framesWidget = findWidget(widgets, ["journeyInFramesSection"]) || {};
   const whyWidget = findWidget(widgets, ["whyWanderonSection"]) || {};
+  const faqWidget = findWidget(widgets, ["faqSection"]) || {};
   const touchWidget = findWidget(widgets, ["getInTouchSection"]) || {};
 
   const heroStatic = findFeature(heroWidget, ["static"]) || {};
@@ -50,6 +51,7 @@ export const resolvePageContent = (pageResponse) => {
   const stepsFeature = findFeature(howWidget, ["bookingSteps", "stepList"]) || {};
   const whyFeature = findFeature(whyWidget, ["whyWanderon"]) || {};
   const galleryFeature = findFeature(framesWidget, ["photoGallery", "gallery"]) || {};
+  const faqFeature = findFeature(faqWidget, ["faqList", "faq"]) || {};
   const touchFeature = findFeature(touchWidget, ["contactCTA", "contactForm"]) || {};
 
   return {
@@ -118,6 +120,13 @@ export const resolvePageContent = (pageResponse) => {
       heading: label(labels, galleryFeature.headingRef),
       description: label(labels, galleryFeature.descriptionRef),
       images: Array.isArray(state.frames) ? state.frames : [],
+    },
+    faq: {
+      eyebrow: label(labels, faqFeature.eyebrowRef),
+      heading: label(labels, faqFeature.headingRef),
+      highlight: label(labels, faqFeature.highlightRef),
+      description: label(labels, faqFeature.descriptionRef),
+      items: Array.isArray(state.faqItems) ? state.faqItems : [],
     },
     getInTouch: {
       eyebrow: label(labels, touchFeature.eyebrowRef),

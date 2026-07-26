@@ -1,14 +1,16 @@
 import React, { useCallback } from "react";
 import { Header as TremHeader } from "@packages/trem-ui";
 import { emit } from "@packages/trem-events";
-import { fetchData, useThemeMode } from "@packages/trem-utils";
+import { useThemeMode } from "@packages/trem-utils";
 import { useAdminPortalConfig } from "../../../app/providers/AdminPortalProvider";
 import authService from "../../../services/authService";
 
 const EVENT_BY_PATH = {
     "/admin/tours": "navigateToAdminTours",
+    "/admin/trips": "navigateToAdminTrips",
     "/agent/tours": "navigateToAgentTours",
     "/manage/tours": "navigateToManageTours",
+    "/manage/trips": "navigateToManageTrips",
     "/login": "proceedToLogin",
     "/auth": "proceedToLogin",
 };
@@ -60,8 +62,6 @@ export default function Header() {
             onLogout={handleLogout}
             onSettings={handleSettings}
             onNavigate={handleNavigate}
-            notificationFetcher={fetchData}
-            showNotifications={false}
         />
     );
 }

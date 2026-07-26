@@ -6,7 +6,7 @@ Positioning: Shree Air Tours and Travels owns and operates the travel agency. Tr
 
 Product links are currently configured for:
 
-- `https://trevio.travelstrem.in`
+- `https://trevio.travelstrem.com`
 - Trevista, TreCare and TreHub currently show an in-development message rather than linking to unavailable deployments.
 
 When those products are deployed, replace their `data-coming-soon` cards in `index.html` with their live URLs.

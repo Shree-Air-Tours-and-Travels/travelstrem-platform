@@ -1,54 +1,13 @@
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { buildGlobalAuthUrl, buildGlobalDashboardUrl } from "@packages/trem-utils";
-import { ProductHeader, useTheme } from "@packages/trem-ui";
+import { appendTokenToUrl } from "@packages/trem-auth-core";
+import { ProductHeader, Footer, ScrollToTopButton, useTheme } from "@packages/trem-ui";
 
-const getPlatformUrl = () => {
-  const host = window.location.hostname;
-  const parts = host.split(".");
-  if (parts.length > 2) return `https://${parts.slice(-2).join(".")}`;
-  return "/";
-};
-
-const getProductUrl = (product) => {
-  const platform = getPlatformUrl();
-  if (platform === "/") return `/${product}`;
-  return `${platform.replace(/\/$/, "")}/${product}`;
-};
-
-const buildNavItemsFromConfig = (headerConfig, onNavigate, currentPath) => {
-  const menu = headerConfig?.menu || [];
-  const normalizedPath = currentPath || "/";
-  let hasActive = false;
-  const items = menu.map((item) => {
-    if (item.type === "dropdown") {
-      return {
-        id: item.id || item.label,
-        type: "dropdown",
-        label: item.label,
-        items: (item.items || []).map((child) => ({
-          id: child.id || child.label,
-          label: child.label,
-          description: child.description,
-          icon: child.icon,
-          href: child.href || getProductUrl(child.label?.toLowerCase()),
-          target: child.target || "_self",
-        })),
-      };
-    }
-    const itemPath = item.path || "";
-    const isActive = itemPath && normalizedPath === itemPath;
-    if (isActive) hasActive = true;
-    return {
-      id: item.id || item.label,
-      label: item.label,
-      active: isActive,
-      onClick: item.path ? () => onNavigate(item.path) : undefined,
-      href: item.type === "external" ? item.href : undefined,
-    };
-  }).filter((item) => item.label);
-  if (!hasActive && items.length) items[0].active = true;
-  return items;
+const getTokenForRedirect = () => {
+  try {
+    return localStorage.getItem("travelstrem:token") || localStorage.getItem("trem:token") || null;
+  } catch { return null; }
 };
 
 export default function Shell({ children, labels, headerConfig, onWishlist, wishlistCount, userSession, rootPath = "/trevio", embedded = false, buildAuthAction }) {
@@ -57,7 +16,8 @@ export default function Shell({ children, labels, headerConfig, onWishlist, wish
   const { theme, toggleTheme } = useTheme();
   const productRoot = rootPath === "/" ? "" : rootPath.replace(/\/$/, "");
   const goToDashboard = () => {
-    window.location.assign(buildGlobalDashboardUrl({ product: "trevio" }));
+    const url = buildGlobalDashboardUrl({ product: "trevio" });
+    window.location.assign(appendTokenToUrl(url, getTokenForRedirect()));
   };
 
   const brand = headerConfig?.brand || {
@@ -66,8 +26,13 @@ export default function Shell({ children, labels, headerConfig, onWishlist, wish
     mark: labels.brandMark,
   };
 
-  const navItems = buildNavItemsFromConfig(headerConfig, (path) => navigate(path), location.pathname);
-  const activeTab = navItems.find((item) => item.active)?.id || "";
+  const aboutUrl = process.env.REACT_APP_ABOUT_URL;
+  const navItems = [
+    { id: "home", label: "Home", active: location.pathname === rootPath || location.pathname === `${rootPath}/`, onClick: () => navigate(rootPath) },
+    { id: "dashboard", label: "Dashboard", active: false, onClick: goToDashboard },
+    aboutUrl ? { id: "about", label: "About Us", href: aboutUrl, target: "_blank", rel: "noopener noreferrer" } : null,
+  ].filter(Boolean);
+  const activeTab = navItems.find((item) => item.active)?.id || "home";
 
   const authAction = buildAuthAction
     ? buildAuthAction(headerConfig, userSession)
@@ -101,11 +66,8 @@ export default function Shell({ children, labels, headerConfig, onWishlist, wish
         />
       )}
       {children}
-      {!embedded && (labels.footerBrand || labels.footerDescription) && (
-        <footer className="trevio-footer">
-          <div className="trevio-container"><strong>{labels.footerBrand}</strong><span>{labels.footerDescription}</span></div>
-        </footer>
-      )}
+      {!embedded && <Footer productName="Trevio · Community travel" />}
+      <ScrollToTopButton />
     </>
   );
 }

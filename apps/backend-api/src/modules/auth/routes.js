@@ -77,6 +77,11 @@ router.post("/logout", controller.logout);
 router.get("/me", authMiddleware, controller.getCurrentUser);
 
 /*
+  Session - returns current user + access token (for cross-origin Bearer auth)
+*/
+router.get("/session", authMiddleware, controller.getSession);
+
+/*
   Profile routes (authenticated)
 */
 router.get("/profile", authMiddleware, profileController.getProfile);

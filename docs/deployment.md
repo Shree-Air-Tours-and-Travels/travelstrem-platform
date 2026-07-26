@@ -69,8 +69,8 @@ Required:
 NODE_ENV=production
 ALLOW_ENV_OVERRIDES=true
 BASE_URL=https://travelstrem-api.onrender.com
-FRONTENDS=https://travelstrem.in,https://auth.travelstrem.in,https://admin.travelstrem.in,https://trevio.travelstrem.in,https://trevista.travelstrem.in
-AUTH_COOKIE_DOMAIN=.travelstrem.in
+FRONTENDS=https://travelstrem.com,https://auth.travelstrem.com,https://admin.travelstrem.com,https://trevio.travelstrem.com,https://trevista.travelstrem.com
+AUTH_COOKIE_DOMAIN=.travelstrem.com
 MONGO_URI=mongodb+srv://USER:PASSWORD@CLUSTER.mongodb.net/DB_NAME?retryWrites=true&w=majority
 JWT_ACCESS_SECRET=<long-random-secret>
 JWT_REFRESH_SECRET=<different-long-random-secret>
@@ -114,7 +114,7 @@ OAUTH_APPLE_URL=<full-apple-authorize-url>
 REDIS_URL=<redis-url-if-notification-queue-uses-redis>
 ```
 
-Important: for global login across `auth.travelstrem.in`, `trevio.travelstrem.in`, and `trevista.travelstrem.in`, the backend must be served from a TravelsTrem subdomain such as `api.travelstrem.in`. Browsers will reject `.travelstrem.in` cookies if they are set by a `*.onrender.com` host.
+Important: for global login across `auth.travelstrem.com`, `trevio.travelstrem.com`, and `trevista.travelstrem.com`, the backend must be served from a TravelsTrem subdomain such as `api.travelstrem.com`. Browsers will reject `.travelstrem.com` cookies if they are set by a `*.onrender.com` host.
 
 After Vercel deploys create real URLs, update `FRONTENDS` in Render to include every exact frontend origin. No trailing paths and no trailing slash.
 
@@ -137,9 +137,9 @@ Deploy Trevio and Trevista as independent product applications.
 
 ```env
 REACT_APP_PORTAL_ENV=production
-REACT_APP_API_URL=https://api.travelstrem.in/api
-REACT_APP_BACKEND_URL=https://api.travelstrem.in
-REACT_APP_AUTH_APP_URL=https://auth.travelstrem.in
+REACT_APP_API_URL=https://api.travelstrem.com/api
+REACT_APP_BACKEND_URL=https://api.travelstrem.com
+REACT_APP_AUTH_APP_URL=https://auth.travelstrem.com
 ```
 
 4. Deploy.
@@ -162,7 +162,7 @@ https://trevista.vercel.app
 
 ## 5. Deploy Auth App on Vercel
 
-Deploy the global auth app at `auth.travelstrem.in`.
+Deploy the global auth app at `auth.travelstrem.com`.
 
 | Setting | Value |
 | --- | --- |
@@ -176,14 +176,14 @@ Environment:
 
 ```env
 REACT_APP_PORTAL_ENV=production
-REACT_APP_API_URL=https://api.travelstrem.in/api
-REACT_APP_BACKEND_URL=https://api.travelstrem.in
-REACT_APP_TRAVELSTREM_APP_URL=https://travelstrem.in
+REACT_APP_API_URL=https://api.travelstrem.com/api
+REACT_APP_BACKEND_URL=https://api.travelstrem.com
+REACT_APP_TRAVELSTREM_APP_URL=https://travelstrem.com
 ```
 
 ## 6. Deploy Dashboard App on Vercel
 
-Deploy the common dashboard app at `dashboard.travelstrem.in`.
+Deploy the common dashboard app at `dashboard.travelstrem.com`.
 
 | Setting | Value |
 | --- | --- |
@@ -197,9 +197,9 @@ Environment:
 
 ```env
 REACT_APP_PORTAL_ENV=production
-REACT_APP_API_URL=https://api.travelstrem.in/api
-REACT_APP_BACKEND_URL=https://api.travelstrem.in
-REACT_APP_DASHBOARD_URL=https://dashboard.travelstrem.in
+REACT_APP_API_URL=https://api.travelstrem.com/api
+REACT_APP_BACKEND_URL=https://api.travelstrem.com
+REACT_APP_DASHBOARD_URL=https://dashboard.travelstrem.com
 ```
 
 ## 7. Deploy TravelsTrem Parent Website on Vercel
@@ -220,9 +220,9 @@ REACT_APP_DASHBOARD_URL=https://dashboard.travelstrem.in
 ```env
 REACT_APP_PORTAL_ENV=production
 REACT_APP_ALLOW_ENV_OVERRIDES=true
-REACT_APP_API_URL=https://api.travelstrem.in/api
-REACT_APP_BACKEND_URL=https://api.travelstrem.in
-REACT_APP_AUTH_APP_URL=https://auth.travelstrem.in
+REACT_APP_API_URL=https://api.travelstrem.com/api
+REACT_APP_BACKEND_URL=https://api.travelstrem.com
+REACT_APP_AUTH_APP_URL=https://auth.travelstrem.com
 REACT_APP_TREVIO_APP_URL=https://trevio.vercel.app
 REACT_APP_TREVISTA_APP_URL=https://trevista.vercel.app
 REACT_APP_ADMIN_SHELL_URL=https://admin-shell.vercel.app/admin/tours
@@ -307,15 +307,15 @@ If Vercel is using repo root for each project, also configure the same rewrite i
 6. Vercel admin portal.
 7. Update Render `FRONTENDS` and `AUTH_COOKIE_DOMAIN` with the final custom domains.
 8. Redeploy Render backend.
-9. Smoke test login from `auth.travelstrem.in`, dashboard access from products, Trevio/Trevista booking flows, image upload, and admin routes.
+9. Smoke test login from `auth.travelstrem.com`, dashboard access from products, Trevio/Trevista booking flows, image upload, and admin routes.
 
 ## 12. Common Issues
 
 - CORS blocked: update Render `FRONTENDS` with the exact Vercel/custom origin.
 - Frontend still calls old API: update `REACT_APP_API_URL` and redeploy the frontend.
 - Product click opens the wrong URL: check `REACT_APP_TREVIO_APP_URL` and `REACT_APP_TREVISTA_APP_URL`, then redeploy the parent website.
-- Dashboard link not working: verify `REACT_APP_DASHBOARD_URL` is set in all frontend apps and points to `https://dashboard.travelstrem.in`.
-- Product still asks users to login after auth success: verify the API is on a `travelstrem.in` subdomain and `AUTH_COOKIE_DOMAIN=.travelstrem.in` is set.
+- Dashboard link not working: verify `REACT_APP_DASHBOARD_URL` is set in all frontend apps and points to `https://dashboard.travelstrem.com`.
+- Product still asks users to login after auth success: verify the API is on a `travelstrem.com` subdomain and `AUTH_COOKIE_DOMAIN=.travelstrem.com` is set.
 - Backend ignores `FRONTENDS`/`BASE_URL`: make sure Render has `ALLOW_ENV_OVERRIDES=true`.
 - Mongo connection fails: verify `MONGO_URI`, Atlas database user permissions, and Atlas Network Access.
 - Refreshing product/admin/dashboard routes gives 404: add Vercel rewrites to `index.html`.

@@ -15,7 +15,7 @@ export default {
   args: {
     headerConfig: {
       brand: { label: "TravelsTREM", homePath: "/" },
-      leftSection: { welcome: true, showStatus: true, showNotifications: true },
+      leftSection: { welcome: true, showStatus: true },
       menu: headerNavItems,
       authActions: {
         login: { label: "Login", path: "/login" },
@@ -23,7 +23,6 @@ export default {
       },
     },
     theme: "light",
-    showNotifications: true,
   },
 };
 
@@ -35,7 +34,7 @@ export const LoggedOut = {
     <Header
       headerConfig={{
         brand: { label: "TravelsTREM", homePath: "/" },
-        leftSection: { welcome: true, showStatus: true, showNotifications: true },
+        leftSection: { welcome: true, showStatus: true },
         menu: headerNavItems,
         authActions: {
           login: { label: "Login", path: "/login" },
@@ -44,7 +43,6 @@ export const LoggedOut = {
       }}
       session={null}
       theme="light"
-      showNotifications={false}
     />
   ),
   parameters: { layout: "fullscreen" },
@@ -56,7 +54,7 @@ export const LoggedIn = {
     <Header
       headerConfig={{
         brand: { label: "TravelsTREM", homePath: "/" },
-        leftSection: { welcome: true, showStatus: true, showNotifications: true },
+        leftSection: { welcome: true, showStatus: true },
         menu: headerNavItems,
         authActions: {
           login: { label: "Login", path: "/login" },
@@ -79,7 +77,7 @@ export const Minimal = {
     <Header
       headerConfig={{
         brand: { label: "TravelsTREM", homePath: "/" },
-        leftSection: { welcome: false, showStatus: false, showNotifications: false },
+        leftSection: { welcome: false, showStatus: false },
         menu: [],
         authActions: {
           login: { label: "Login", path: "/login" },
@@ -88,7 +86,6 @@ export const Minimal = {
       }}
       session={null}
       theme="light"
-      showNotifications={false}
     />
   ),
   parameters: { layout: "fullscreen" },

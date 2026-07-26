@@ -1,10 +1,11 @@
 import React from "react";
-import { FavoritesProvider, ProductHeader, GlobalLoader, useTheme } from "@packages/trem-ui";
+import { FavoritesProvider, ProductHeader, GlobalLoader, Footer, ScrollToTopButton, useTheme, useFavoritesContext } from "@packages/trem-ui";
 import AppRoutes from "./routes";
 import { initApp } from "../core/initApp";
 import "../main.scss";
 import { redirectToGlobalAuth, setComponentDataFetcher, fetchData, createProductAuth, buildGlobalDashboardUrl } from "@packages/trem-utils";
 import { emit, registerSessionCacheClearer } from "@packages/trem-events";
+import { consumeUrlToken, appendTokenToUrl } from "@packages/trem-auth-core";
 import { API_BASE } from "../services/configService";
 import { clearUserSessionCache } from "../services/userSession";
 
@@ -65,8 +66,38 @@ const buildNavItemsFromConfig = (headerConfig, currentPath) => {
     return items;
 };
 
-function App({ dispatchEvent, embedded = false, userSession = null }) {
+function AppHeader({ headerConfig, state, navItems, activeTab, authAction, brand }) {
+    const { favoritesCount } = useFavoritesContext();
     const { theme, toggleTheme } = useTheme();
+
+    return (
+        <ProductHeader
+            brand={{
+                ...brand,
+                logoSrc: "/favicon.svg",
+                href: "/trevista",
+            }}
+            navItems={navItems}
+            activeTab={activeTab}
+            theme={theme}
+            onToggleTheme={toggleTheme}
+            wishlist={{
+                label: "Wishlist",
+                ariaLabel: "Wishlist",
+                icon: "heart",
+                count: favoritesCount,
+                href: appendTokenToUrl(buildGlobalDashboardUrl({ product: "trevista" }), localStorage.getItem("travelstrem:token") || null),
+            }}
+            profile={{
+                label: state.session?.user?.name || brand.label || "Dashboard",
+                href: appendTokenToUrl(buildGlobalDashboardUrl({ product: "trevista" }), localStorage.getItem("travelstrem:token") || null),
+            }}
+            authAction={authAction}
+        />
+    );
+}
+
+function App({ dispatchEvent, embedded = false, userSession = null }) {
     const [state, setState] = React.useState({
         loading: !embedded,
         error: null,
@@ -76,6 +107,8 @@ function App({ dispatchEvent, embedded = false, userSession = null }) {
 
     React.useEffect(() => {
         if (embedded) return undefined;
+
+        consumeUrlToken({ token: "travelstrem:token" });
 
         let active = true;
 
@@ -117,6 +150,8 @@ function App({ dispatchEvent, embedded = false, userSession = null }) {
         mark: "T",
     };
     const navItems = buildNavItemsFromConfig(headerConfig, window.location.pathname);
+    const aboutUrl = process.env.REACT_APP_ABOUT_URL;
+    if (aboutUrl) navItems.push({ id: "about", label: "About Us", href: aboutUrl, target: "_blank", rel: "noopener noreferrer" });
     const activeTab = navItems.find((item) => item.active)?.id || "";
     const authAction = buildAuthAction(headerConfig, state.session);
 
@@ -124,34 +159,21 @@ function App({ dispatchEvent, embedded = false, userSession = null }) {
         <>
             <GlobalLoader visible={state.loading} />
             <div className={embedded ? "tours-app-shell tours-app-shell--embedded" : "tours-app-shell"}>
-                {!embedded && (
-                    <ProductHeader
-                        brand={{
-                            ...brand,
-                            logoSrc: "/favicon.svg",
-                            href: "/trevista",
-                        }}
-                        navItems={navItems}
-                        activeTab={activeTab}
-                        theme={theme}
-                        onToggleTheme={toggleTheme}
-                        wishlist={{
-                            label: "Wishlist",
-                            ariaLabel: "Wishlist",
-                            icon: "heart",
-                            count: 0,
-                            href: buildGlobalDashboardUrl({ product: "trevista" }),
-                        }}
-                        profile={{
-                            label: state.session?.user?.name || brand.label || "Dashboard",
-                            href: buildGlobalDashboardUrl({ product: "trevista" }),
-                        }}
-                        authAction={authAction}
-                    />
-                )}
                 <FavoritesProvider>
+                    {!embedded && (
+                        <AppHeader
+                            headerConfig={headerConfig}
+                            state={state}
+                            navItems={navItems}
+                            activeTab={activeTab}
+                            authAction={authAction}
+                            brand={brand}
+                        />
+                    )}
                     <AppRoutes dispatchEvent={dispatchEvent} embedded={embedded} userSession={userSession || state.session} />
                 </FavoritesProvider>
+                {!embedded && <Footer productName="Trevista · Holiday planning" />}
+                <ScrollToTopButton />
             </div>
         </>
     );

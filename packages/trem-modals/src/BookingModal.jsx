@@ -1,6 +1,6 @@
 // src/components/booking/BookingModal.jsx
 import "./BookingModal.scss";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 import { Button, BookingSummaryCard } from "@packages/trem-ui";
@@ -97,6 +97,7 @@ export default function BookingModal({ open = false, onClose = () => { }, tour }
     const [contactEmail, setContactEmail] = useState("");
     const [contactPhone, setContactPhone] = useState("");
     const [pricePreview, setPricePreview] = useState(null);
+    const pricePreviewFetched = useRef(false);
 
     useEffect(() => {
         const storedUser = readStoredUser();
@@ -154,7 +155,11 @@ export default function BookingModal({ open = false, onClose = () => { }, tour }
                 // price preview is optional
             }
         }
-        fetchPreview();
+        if (pricePreviewFetched.current) {
+            fetchPreview();
+        } else {
+            pricePreviewFetched.current = true;
+        }
     }, [tour, startDate, guests]);
 
     const closeModal = useCallback(() => {
@@ -517,7 +522,11 @@ export default function BookingModal({ open = false, onClose = () => { }, tour }
                             />
                             <div className="bm-help-card">
                                 <strong>Need help?</strong>
-                                <span>Contact support at <a href="tel:+919057635580" className="bm-help-link">+91 9057635580</a></span>
+                                {process.env.REACT_APP_SUPPORT_PHONE ? (
+                                    <span>Contact support at <a href={`tel:${process.env.REACT_APP_SUPPORT_PHONE}`} className="bm-help-link">{process.env.REACT_APP_SUPPORT_PHONE}</a></span>
+                                ) : (
+                                    <span>Support not configured</span>
+                                )}
                                 <span>Cancellation: {tour?.cancellationPolicy || "Check terms on checkout"}</span>
                             </div>
                         </div>

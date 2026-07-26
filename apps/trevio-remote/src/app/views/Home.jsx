@@ -1,16 +1,18 @@
 import React, { useMemo, useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, FeaturedCard, InternationalTripCard, QuickChips, TrevioTripCard, Icon } from "@packages/trem-ui";
+import { Button, FeaturedCard, InternationalTripCard, QuickChips, TrevioTripCard, Icon, useFavoritesContext } from "@packages/trem-ui";
 import { ContactAgentModal } from "@packages/trem-modals";
 import { fetchData } from "@packages/trem-utils";
 import { tripId, tripPrice, tripCurrency, tripImage, tripLocation, tripDuration } from "../utils";
 
 const MOBILE_PAGE_SIZE = 3;
 
-export default function Home({ trips, internationalTrips = [], featuredTrip, wishlist, toggleWishlist, pageModel, activeFilter, loadingTrips, onFilterChange }) {
+export default function Home({ trips, internationalTrips = [], featuredTrip, pageModel, activeFilter, loadingTrips, onFilterChange }) {
+  const { isFavorited, toggleFavorite } = useFavoritesContext();
   const navigate = useNavigate();
   const [mobileVisibleCount, setMobileVisibleCount] = useState(MOBILE_PAGE_SIZE);
-  const { labels, content, tripList, upcoming, whyWanderon, international, howToUse, frames, getInTouch } = pageModel;
+  const { labels, content, tripList, upcoming, whyWanderon, international, howToUse, frames, faq, getInTouch } = pageModel;
+  const [openFaqIndex, setOpenFaqIndex] = useState(null);
   const maxItems = Number(tripList.pagination?.maxItems) || trips.length;
   const categories = useMemo(() => (
     Array.isArray(tripList.filters) ? tripList.filters : []
@@ -140,8 +142,8 @@ export default function Home({ trips, internationalTrips = [], featuredTrip, wis
               <TrevioTripCard
                 key={tripId(trip)}
                 trip={trip}
-                favorited={wishlist.includes(tripId(trip))}
-                onFavorite={() => toggleWishlist(trip)}
+                favorited={isFavorited(trip)}
+                onFavorite={toggleFavorite}
                 onView={() => navigate(`trip/${tripId(trip)}`)}
               />
             )) : (
@@ -172,8 +174,8 @@ export default function Home({ trips, internationalTrips = [], featuredTrip, wis
                 <TrevioTripCard
                   key={`upcoming-${tripId(trip)}`}
                   trip={trip}
-                  favorited={wishlist.includes(tripId(trip))}
-                  onFavorite={() => toggleWishlist(trip)}
+                  favorited={isFavorited(trip)}
+                  onFavorite={toggleFavorite}
                   onView={() => navigate(`trip/${tripId(trip)}`)}
                 />
               ))}
@@ -261,6 +263,45 @@ export default function Home({ trips, internationalTrips = [], featuredTrip, wis
                   {frame.location && <figcaption>{frame.location}</figcaption>}
                 </figure>
               ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {faq.items.length > 0 && (
+        <section className="trevio-faq" id="faq">
+          <div className="trevio-container trevio-faq__inner">
+            <div className="trevio-faq__left">
+              {faq.eyebrow && <span className="trevio-eyebrow">{faq.eyebrow}</span>}
+              <h2>{faq.heading} <span>{faq.highlight}</span></h2>
+              {faq.description && <p>{faq.description}</p>}
+            </div>
+            <div className="trevio-faq__right">
+              <div className="trevio-faq__list">
+                {faq.items.map((item, i) => (
+                  <div className={`trevio-faq__item${openFaqIndex === i ? " trevio-faq__item--open" : ""}`} key={i} style={{ "--fi": i }}>
+                    <button
+                      type="button"
+                      className="trevio-faq__question"
+                      onClick={() => setOpenFaqIndex(openFaqIndex === i ? null : i)}
+                      aria-expanded={openFaqIndex === i}
+                    >
+                      <span className="trevio-faq__q-text">{item.question}</span>
+                      <span className="trevio-faq__icon">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                          <path className="trevio-faq__plus-h" d="M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                          <path className="trevio-faq__plus-v" d="M8 3v10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                        </svg>
+                      </span>
+                    </button>
+                    <div className="trevio-faq__answer" role="region">
+                      <div className="trevio-faq__answer-inner">
+                        <p>{item.answer}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </section>

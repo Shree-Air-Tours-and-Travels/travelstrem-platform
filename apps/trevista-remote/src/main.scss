@@ -20,9 +20,15 @@ a {
 }
 
 .tours-app-shell {
+    display: flex;
+    flex-direction: column;
     min-height: 100vh;
     background: var(--page-bg);
     color: var(--text);
+
+    > footer {
+        margin-top: auto;
+    }
 }
 
 .tours-app-shell--embedded {

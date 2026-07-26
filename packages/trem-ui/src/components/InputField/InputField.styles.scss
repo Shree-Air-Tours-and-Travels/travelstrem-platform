@@ -1,22 +1,24 @@
+@import "@packages/trem-design-tokens/scss";
+
 .trem-input {
   display: flex;
   align-items: center;
   width: 100%;
-  border: 1px solid var(--border, #d1d5db);
-  border-radius: 8px;
-  background: var(--surface, #fff);
-  transition: border-color 160ms ease, box-shadow 160ms ease;
+  border: 1px solid var(--border);
+  border-radius: $radius-xs;
+  background: var(--surface);
+  transition: border-color 160ms $ease-default, box-shadow 160ms $ease-default;
   box-sizing: border-box;
 
   &:focus-within {
-    border-color: var(--color-primary, #1c7578);
-    box-shadow: 0 0 0 3px var(--primary-soft, rgba(28, 117, 120, 0.12));
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--primary-soft);
   }
 
   &--error {
-    border-color: #ef4444;
+    border-color: $danger-color;
     &:focus-within {
-      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+      box-shadow: 0 0 0 3px color-mix(in srgb, $danger-color 12%, transparent);
     }
   }
 
@@ -24,26 +26,26 @@
     display: flex;
     align-items: center;
     gap: 2px;
-    padding: 0.6rem 0.4rem 0.6rem 0.6rem;
+    padding: $space-2-5 $space-1-5 $space-2-5 $space-2-5;
     border: none;
-    border-right: 1px solid var(--border, #d1d5db);
+    border-right: 1px solid var(--border);
     background: transparent;
     cursor: pointer;
-    color: var(--text, #111);
-    font-size: 0.82rem;
-    font-weight: 600;
+    color: var(--text);
+    font-size: $font-size-xs;
+    font-weight: $font-semibold;
     white-space: nowrap;
     flex-shrink: 0;
-    transition: background 120ms ease;
+    transition: background 120ms $ease-default;
 
     &:hover {
-      background: var(--surface-inset, #f5f5f5);
+      background: var(--surface-inset);
     }
 
     .trem-icon {
-      color: var(--muted, #999);
+      color: var(--muted);
       font-size: 0.65rem;
-      transition: transform 200ms ease;
+      transition: transform 200ms $ease-default;
     }
 
     .trem-icon.is-open {
@@ -57,13 +59,13 @@
     border: none;
     outline: none;
     background: transparent;
-    padding: 0.6rem 0.75rem;
-    font-size: 0.85rem;
-    color: var(--text, #111);
-    font-family: inherit;
+    padding: $space-2-5 $space-3;
+    font-size: $font-size-sm;
+    color: var(--text);
+    font-family: $font-primary;
 
     &::placeholder {
-      color: var(--muted, #999);
+      color: var(--muted);
     }
 
     &:disabled {

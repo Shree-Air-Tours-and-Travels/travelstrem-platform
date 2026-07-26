@@ -6,6 +6,7 @@ import { adminWidgetRegistry } from "../../widgets/registry/widgetRegistry";
 const TAB_WIDGET_MAP = {
     dashboard: "AdminDashboard",
     tours: "AdminTourManagement",
+    trips: "AdminTripManagement",
     agencies: "AgencyManagement",
 };
 
@@ -62,11 +63,14 @@ export function Toast({ toast, setToast }) {
 }
 
 export default function ManageToursView({
-    tab, tours, admins, agents, partnerAgencies, loading, agencyLoading, formOpen, viewOpen, editing,
-    viewTour, error, auth, setTab, openCreate, openEdit, openView, handleDelete,
-    handleDeleteAll, fetchTours, fetchAgencyManagement, handleReviewAdmin, handleRemoveAdmin, handleReviewAgent, handleReviewPartnerAgency, setFormOpen, setViewOpen, setViewTour,
+    tab, tours, trips, admins, agents, partnerAgencies, loading, agencyLoading, formOpen, tripFormOpen, tripEditing,
+    viewOpen, editing, viewTour, error, auth, setTab, openCreate, openEdit, openView,
+    openTripCreate, openTripEdit, handleTripDelete, handleTripDeleteAll, fetchTrips,
+    handleDelete, handleDeleteAll, fetchTours, fetchAgencyManagement,
+    handleReviewAdmin, handleRemoveAdmin, handleReviewAgent, handleReviewPartnerAgency,
+    setFormOpen, setTripFormOpen, setViewOpen, setViewTour,
     confirmDelete, confirmMessage, handleConfirmDelete, handleCancelDelete,
-    toast, setToast
+    toast, setToast,
 }) {
     return (
         <div className="mt-root">
@@ -75,6 +79,7 @@ export default function ManageToursView({
                 <div className="mt-actions">
                     <Button primaryClassName={`btn ${tab === "dashboard" ? "is-active" : ""}`} variant={tab === "dashboard" ? "solid" : "outline"} onClick={() => setTab("dashboard")} text="Dashboard" />
                     <Button primaryClassName={`btn ${tab === "tours" ? "is-active" : ""}`} variant={tab === "tours" ? "solid" : "outline"} onClick={() => setTab("tours")} text="Tours" />
+                    <Button primaryClassName={`btn ${tab === "trips" ? "is-active" : ""}`} variant={tab === "trips" ? "solid" : "outline"} onClick={() => setTab("trips")} text="Trips" />
                     <Button primaryClassName={`btn ${tab === "agencies" ? "is-active" : ""}`} variant={tab === "agencies" ? "solid" : "outline"} onClick={() => setTab("agencies")} text="Agencies" />
                 </div>
             </header>
@@ -90,29 +95,31 @@ export default function ManageToursView({
                 return (
                     <Component
                         tours={tours}
+                        trips={trips}
                         admins={admins}
                         agents={agents}
                         partnerAgencies={partnerAgencies}
                         loading={loading}
                         agencyLoading={agencyLoading}
-                        formOpen={formOpen}
+                        formOpen={tab === "trips" ? tripFormOpen : formOpen}
                         viewOpen={viewOpen}
                         editing={editing}
                         viewTour={viewTour}
                         error={error}
                         auth={auth}
-                        openCreate={openCreate}
-                        openEdit={openEdit}
+                        openCreate={tab === "trips" ? openTripCreate : openCreate}
+                        openEdit={tab === "trips" ? openTripEdit : openEdit}
                         openView={openView}
-                        handleDelete={handleDelete}
-                        handleDeleteAll={handleDeleteAll}
-                        fetchTours={fetchTours}
+                        handleDelete={tab === "trips" ? handleTripDelete : handleDelete}
+                        handleDeleteAll={tab === "trips" ? handleTripDeleteAll : handleDeleteAll}
+                        fetchTrips={fetchTrips}
+                        fetchTours={fetchTrips}
                         fetchAgencyManagement={fetchAgencyManagement}
                         handleReviewAdmin={handleReviewAdmin}
                         handleRemoveAdmin={handleRemoveAdmin}
                         handleReviewAgent={handleReviewAgent}
                         handleReviewPartnerAgency={handleReviewPartnerAgency}
-                        setFormOpen={setFormOpen}
+                        setFormOpen={tab === "trips" ? setTripFormOpen : setFormOpen}
                         setViewOpen={setViewOpen}
                         setViewTour={setViewTour}
                     />

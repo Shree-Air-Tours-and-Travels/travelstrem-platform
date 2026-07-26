@@ -231,27 +231,6 @@ function CompactServiceList({ widget, labels, type }) {
     );
 }
 
-function NotificationsPanel({ widget, labels }) {
-    const props = getWidgetProps(widget);
-    return (
-        <Panel className="dashboard-notifications" title={getLabel(labels, props.titleRef, "Notifications")} action={<Button variant="text" text="All" />}>
-            {(props.items || []).map((item) => {
-                const title = getLabel(labels, item.titleRef, item.title);
-                return (
-                <article className={`dashboard-notification${getToneClass(item.tone)}`} key={item.titleRef || title}>
-                    <span><Icon name="bell" aria-hidden="true" /></span>
-                    <div>
-                        <strong>{title}</strong>
-                        <Paragraph text={item.body} />
-                    </div>
-                    <time>{item.time}</time>
-                </article>
-                );
-            })}
-        </Panel>
-    );
-}
-
 function FavoritesTourList({ labels, favoritesState, favoritesChips, loadFavorites }) {
     const navigate = useNavigate();
     const [activeChip, setActiveChip] = useState("tours");
@@ -464,7 +443,6 @@ const widgetRenderers = {
     ServiceShortcuts,
     BookingsChart,
     MostBookedServices: (props) => <CompactServiceList {...props} type="Most Booked Services" />,
-    NotificationsPanel,
     RecentInvoices: (props) => <CompactServiceList {...props} type="Recent Invoices" />,
     BookingTable: DashboardBookingTable,
     SettingsForm: () => null,

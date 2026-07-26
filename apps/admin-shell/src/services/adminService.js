@@ -215,3 +215,66 @@ export async function uploadTourImage(file) {
     if (!url) throw new Error(res?.message || "Upload returned no URL");
     return url;
 }
+
+const TRIP_BASE = "/trevio/admin/trips";
+
+function normalizeTripsResponse(res) {
+    if (!res || res.status !== "success") {
+        throw new Error(res?.message || "Failed to fetch trips");
+    }
+    return Array.isArray(res.componentData?.data) ? res.componentData.data : [];
+}
+
+export async function fetchAdminTrips() {
+    const res = await fetchData(TRIP_BASE);
+    return normalizeTripsResponse(res);
+}
+
+export async function saveTrip(payload) {
+    const method = payload._id ? "PUT" : "POST";
+    const url = payload._id ? `${TRIP_BASE}/${payload._id}` : TRIP_BASE;
+    const res = await expectSuccess(
+        fetchData(url, {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        }),
+        "Failed to save trip"
+    );
+    return res.componentData?.data || res;
+}
+
+export async function deleteTrip(id) {
+    await expectSuccess(
+        fetchData(`${TRIP_BASE}/${id}`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+        }),
+        "Delete trip failed"
+    );
+}
+
+export async function deleteAllTrips() {
+    await expectSuccess(
+        fetchData(TRIP_BASE, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({}),
+        }),
+        "Delete all trips failed"
+    );
+}
+
+export async function uploadTripImage(file) {
+    const fd = new FormData();
+    fd.append("image", file);
+    const response = await api.post("/tours.json/upload", fd);
+    const res = response?.data || {};
+    const url =
+        res?.componentData?.data?.url ||
+        res?.componentData?.url ||
+        res?.data?.url ||
+        res?.url;
+    if (!url) throw new Error(res?.message || "Upload returned no URL");
+    return url;
+}

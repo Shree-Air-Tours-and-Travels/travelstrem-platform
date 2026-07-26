@@ -55,6 +55,7 @@ const trevioTripSchema = new Schema({
   exclusions: [{ type: String, trim: true }],
   featured: { type: Boolean, default: false, index: true },
   isListed: { type: Boolean, default: true, index: true },
+  cancellationPolicy: { type: String, trim: true, default: "Full refund up to 7 days before departure; 50% refund within 7 days; no refund within 48 hours." },
   status: { type: String, enum: TREVIO_TRIP_STATUS_LIST, default: TREVIO_TRIP_STATUS.LISTED, index: true },
   sortOrder: { type: Number, default: 0 },
 }, { timestamps: true });

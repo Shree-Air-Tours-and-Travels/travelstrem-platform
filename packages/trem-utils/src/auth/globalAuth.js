@@ -1,16 +1,17 @@
 const normalizeBase = (value = "") => String(value || "").replace(/\/$/, "");
 
+const safeBase = (base) => {
+  if (base) return base;
+  if (typeof window !== "undefined") return window.location.origin;
+  return "/";
+};
+
 const isLocalHost = (hostname = "") => ["localhost", "127.0.0.1", "::1"].includes(hostname);
 
 export const getGlobalAuthBaseUrl = (override = "") => {
   const configured = override || process.env.REACT_APP_AUTH_APP_URL || process.env.REACT_APP_AUTH_URL || "";
   if (configured) return normalizeBase(configured);
-
-  if (typeof window !== "undefined" && isLocalHost(window.location.hostname)) {
-    return "http://localhost:3003";
-  }
-
-  return "https://auth.travelstrem.in";
+  return "";
 };
 
 export const getCurrentReturnUrl = () => {
@@ -20,11 +21,11 @@ export const getCurrentReturnUrl = () => {
 
 export const buildGlobalAuthUrl = ({
   authBaseUrl = "",
-  returnTo = getCurrentReturnUrl(),
+  returnTo = "",
   mode = "login",
   app = "",
 } = {}) => {
-  const url = new URL("/login", getGlobalAuthBaseUrl(authBaseUrl));
+  const url = new URL("/login", safeBase(getGlobalAuthBaseUrl(authBaseUrl)));
   if (returnTo) url.searchParams.set("returnTo", returnTo);
   if (mode) url.searchParams.set("mode", mode);
   if (app) url.searchParams.set("app", app);
@@ -39,21 +40,16 @@ export const redirectToGlobalAuth = (options = {}) => {
 export const getGlobalDashboardBaseUrl = (override = "") => {
   const configured = override || process.env.REACT_APP_DASHBOARD_URL || "";
   if (configured) return normalizeBase(configured);
-
-  if (typeof window !== "undefined" && isLocalHost(window.location.hostname)) {
-    return "http://localhost:3006";
-  }
-
-  return "https://dashboard.travelstrem.in";
+  return "";
 };
 
 export const buildGlobalDashboardUrl = ({
   dashboardBaseUrl = "",
-  returnTo = getCurrentReturnUrl(),
+  returnTo = "",
   product = "",
 } = {}) => {
   const base = getGlobalDashboardBaseUrl(dashboardBaseUrl);
-  const url = new URL("/", base);
+  const url = new URL("/", safeBase(base));
   if (product) url.searchParams.set("product", product);
   if (returnTo) url.searchParams.set("returnTo", returnTo);
   return url.toString();
@@ -62,4 +58,28 @@ export const buildGlobalDashboardUrl = ({
 export const redirectToGlobalDashboard = (options = {}) => {
   if (typeof window === "undefined") return;
   window.location.assign(buildGlobalDashboardUrl(options));
+};
+
+export const getGlobalBookingEngineBaseUrl = (override = "") => {
+  const configured = override || process.env.REACT_APP_BOOKING_ENGINE_URL || "";
+  if (configured) return normalizeBase(configured);
+  return "";
+};
+
+export const buildGlobalBookingEngineUrl = ({
+  bookingEngineBaseUrl = "",
+  product = "",
+  tourRef = "",
+  returnTo = "",
+} = {}) => {
+  const url = new URL("/", safeBase(getGlobalBookingEngineBaseUrl(bookingEngineBaseUrl)));
+  if (product) url.searchParams.set("product", product);
+  if (tourRef) url.searchParams.set("tourRef", tourRef);
+  if (returnTo) url.searchParams.set("returnTo", returnTo);
+  return url.toString();
+};
+
+export const redirectToGlobalBookingEngine = (options = {}) => {
+  if (typeof window === "undefined") return;
+  window.location.assign(buildGlobalBookingEngineUrl(options));
 };

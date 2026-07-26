@@ -5,14 +5,14 @@ const environment = createPortalEnvironment({
   environments: {
     development: {
       backend: {
-        baseUrl: "http://localhost:5000",
-        apiBaseUrl: "http://localhost:5000/api",
+        baseUrl: process.env.REACT_APP_BACKEND_URL,
+        apiBaseUrl: process.env.REACT_APP_API_URL,
       },
     },
     production: {
       backend: {
-        baseUrl: "https://travelstrem-testbe.onrender.com",
-        apiBaseUrl: "https://travelstrem-testbe.onrender.com/api",
+        baseUrl: process.env.REACT_APP_BACKEND_URL,
+        apiBaseUrl: process.env.REACT_APP_API_URL,
       },
     },
   },

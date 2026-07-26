@@ -20,7 +20,7 @@ export default function authMiddleware(req, res, next) {
   })();
 
   if (!token) {
-    return res.status(401).json({ message: "No token provided" });
+    return res.status(401).json({ status: "error", message: "No token provided" });
   }
 
   try {
@@ -29,6 +29,6 @@ export default function authMiddleware(req, res, next) {
     return next();
   } catch (err) {
     console.error("[authMiddleware] JWT verification failed:", err.message);
-    return res.status(401).json({ message: "Invalid or expired token" });
+    return res.status(401).json({ status: "error", message: "Invalid or expired token" });
   }
 }
