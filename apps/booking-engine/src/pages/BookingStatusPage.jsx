@@ -6,6 +6,7 @@ import StatusTracker from "../components/StatusTracker.jsx";
 import MessagePanel from "../components/MessagePanel.jsx";
 import ConfirmOverlay from "@packages/trem-modals/ConfirmOverlay.jsx";
 import { useBookingApi } from "../hooks/useBookingApi.js";
+import OfflinePaymentPanel from "../components/OfflinePaymentPanel.jsx";
 
 export default function BookingStatusPage() {
   const { bookingId } = useParams();
@@ -18,7 +19,6 @@ export default function BookingStatusPage() {
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showCancel, setShowCancel] = useState(false);
-  const [showPay, setShowPay] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
 
   const loadBooking = useCallback(async () => {
@@ -52,23 +52,9 @@ export default function BookingStatusPage() {
     }
   };
 
-  const handlePay = async (provider) => {
-    try {
-      if (product === "trevio") {
-        await api.payToken(bookingId, { provider });
-      } else {
-        await api.payFullAmount(bookingId, { provider });
-      }
-      setShowPay(false);
-      await loadBooking();
-    } catch (err) {
-      if (err?.message?.includes("Token already paid")) {
-        const dashboardUrl = process.env.REACT_APP_DASHBOARD_URL || "http://localhost:3006";
-        window.location.href = `${dashboardUrl}/bookings`;
-        return;
-      }
-      console.error(err);
-    }
+  const handlePaymentProof = async (paymentData) => {
+    await api.submitTokenProof(bookingId, paymentData);
+    await loadBooking();
   };
 
   const handleCancel = async () => {
@@ -107,7 +93,7 @@ export default function BookingStatusPage() {
   const steps = booking.flowSteps || [];
   const currentStepIdx = steps.findIndex((s) => s.status === "current");
   const cancellationPolicy = booking?.cancellationPolicy || "";
-  const isCancellable = ["DRAFT", "QUOTE_REQUESTED", "UNDER_REVIEW", "QUOTE_READY", "QUOTE_SENT", "PAYMENT_PENDING", "CONFIRMED"].includes(booking?.status);
+  const isCancellable = ["DRAFT", "QUOTE_REQUESTED", "UNDER_REVIEW", "QUOTE_READY", "QUOTE_SENT", "AWAITING_TOKEN_PAYMENT", "PAYMENT_PENDING", "CONFIRMED"].includes(booking?.status);
 
   return (
     <BookingLayout
@@ -122,9 +108,9 @@ export default function BookingStatusPage() {
             product={product}
             onAcceptQuote={handleAcceptQuote}
             onRejectQuote={handleRejectQuote}
-            onPay={() => setShowPay(true)}
             onCancel={() => setShowCancel(true)}
           />
+          <OfflinePaymentPanel booking={booking} onSubmit={handlePaymentProof} submitting={api.loading} />
         </div>
 
         {product === "trevista" && (
@@ -159,42 +145,6 @@ export default function BookingStatusPage() {
         />
       )}
 
-      {showPay && (
-        <div className="be-pay-overlay" onClick={() => setShowPay(false)}>
-          <div className="be-pay-overlay__content" onClick={(e) => e.stopPropagation()}>
-            <div className="be-pay-overlay__header">
-              <div className="be-pay-overlay__icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-              </div>
-              <h3 className="be-pay-overlay__title">Complete Payment</h3>
-              <p className="be-pay-overlay__subtitle">Choose your preferred payment method</p>
-            </div>
-            <div className="be-pay-overlay__methods">
-              <button type="button" className="be-pay-overlay__method" onClick={() => handlePay("razorpay")}>
-                <span className="be-pay-overlay__method-icon">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                </span>
-                <span className="be-pay-overlay__method-info">
-                  <span className="be-pay-overlay__method-name">Razorpay</span>
-                  <span className="be-pay-overlay__method-desc">Cards, Netbanking, Wallets</span>
-                </span>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-              </button>
-              <button type="button" className="be-pay-overlay__method" onClick={() => handlePay("upi")}>
-                <span className="be-pay-overlay__method-icon">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
-                </span>
-                <span className="be-pay-overlay__method-info">
-                  <span className="be-pay-overlay__method-name">UPI</span>
-                  <span className="be-pay-overlay__method-desc">GPay, PhonePe, Paytm</span>
-                </span>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-              </button>
-            </div>
-            <button type="button" className="be-pay-overlay__cancel" onClick={() => setShowPay(false)}>Cancel</button>
-          </div>
-        </div>
-      )}
     </BookingLayout>
   );
 }

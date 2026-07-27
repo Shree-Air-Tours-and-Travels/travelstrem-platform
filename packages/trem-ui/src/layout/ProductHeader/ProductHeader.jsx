@@ -220,8 +220,8 @@ function MobileDrawer({ open, onClose, brand, nav, actions, userLabel }) {
             <div className="trem-product-header__drawer-profile">
               <span className="trem-product-header__drawer-avatar">{initials}</span>
               <div className="trem-product-header__drawer-info">
-                <strong>{userLabel || brand?.label || "Menu"}</strong>
-                {brand?.subtitle ? <small>{brand.subtitle}</small> : null}
+                <strong>{brand?.label || "Menu"}</strong>
+                {userLabel ? <small>{userLabel}</small> : brand?.subtitle ? <small>{brand.subtitle}</small> : null}
               </div>
             </div>
             <button

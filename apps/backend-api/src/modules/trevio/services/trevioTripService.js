@@ -60,6 +60,13 @@ export const normalizeTrevioTrip = (doc = {}) => {
     dates: Array.isArray(trip.dates) && trip.dates.length ? trip.dates : [formatDate(trip.startDate)].filter(Boolean),
     itinerary: normalizeItinerary(trip.itinerary),
     availability: trip.availability || { totalSeats: null, seatsAvailable: null },
+    preferences: {
+      roomTypes: Array.isArray(trip.preferences?.roomTypes) ? trip.preferences.roomTypes : [],
+      mealPreferences: Array.isArray(trip.preferences?.mealPreferences) ? trip.preferences.mealPreferences : [],
+      packageTypes: Array.isArray(trip.preferences?.packageTypes) ? trip.preferences.packageTypes : [],
+      drinkTypes: Array.isArray(trip.preferences?.drinkTypes) ? trip.preferences.drinkTypes : [],
+    },
+    reviews: Array.isArray(trip.reviews) ? trip.reviews : [],
     priceInfo: {
       min: price.amount || 0,
       max: price.amount || 0,
@@ -136,7 +143,7 @@ class TrevioTripService {
 
   async listTrips(params = {}) {
     const page = Math.max(1, Number(params.page) || 1);
-    const limit = Math.max(1, Math.min(Number(params.limit) || 4, 4));
+    const limit = Math.max(1, Number(params.limit) || 20);
     const category = String(params.category || params.tag || "all").trim().toLowerCase();
     const featuredOnly = params.featured === "true" || params.featured === true;
 

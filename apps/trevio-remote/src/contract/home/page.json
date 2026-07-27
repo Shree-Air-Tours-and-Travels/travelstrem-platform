@@ -52,23 +52,6 @@
             "location": "Sikkim Mountains",
             "shape": "hexagon"
           }
-        ],
-        "touchFeatures": [
-          {
-            "icon": "map",
-            "title": "Custom itineraries",
-            "description": "Tailored to your pace, interests and budget."
-          },
-          {
-            "icon": "users",
-            "title": "Expert local guides",
-            "description": "Passionate storytellers who know every hidden corner."
-          },
-          {
-            "icon": "shield",
-            "title": "Verified & safe",
-            "description": "Every trip is vetted. Secure payments, real reviews."
-          }
         ]
       }
     },
@@ -89,6 +72,9 @@
         "footerBrand": "Trevio by TravelsTrem",
         "footerDescription": "Community trips, adventures and stories.",
         "emptyTripList": "No listed Trevio trips found for this category.",
+        "viewMoreAction": "View more",
+        "viewMoreRemaining": "remaining",
+        "contactAgentTitle": "Contact Agent",
         "tripNotFound": "Trip not found",
         "detailOverviewTab": "Overview",
         "detailItineraryTab": "Itinerary",

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button, Icon, BookingSummaryCard, GlobalLoader, FloatingActionBar, Breadcrumbs, Title, SubTitle, Paragraph } from "@packages/trem-ui";
 import { ConfirmOverlay } from "@packages/trem-modals";
 import BookingTripStep from "../widgets/BookingTripStep/BookingTripStep";
@@ -30,6 +30,8 @@ export default function BookingPageView({
   onStartDateChange,
   onEndDateChange,
   onGuestsChange,
+  onPackageTypeChange,
+  onMealPreferenceChange,
   onContactEmailChange,
   onContactPhoneChange,
   onTravelerChange,
@@ -40,6 +42,11 @@ export default function BookingPageView({
   onGoBack,
 }) {
   const [showConfirm, setShowConfirm] = useState(false);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [step]);
+
   if (loading) {
     return <GlobalLoader visible text={pageLabels.loadingText || "Loading booking page..."} />;
   }
@@ -122,6 +129,8 @@ export default function BookingPageView({
                     onStartDateChange={onStartDateChange}
                     onEndDateChange={onEndDateChange}
                     onGuestsChange={onGuestsChange}
+                    onPackageTypeChange={onPackageTypeChange}
+                    onMealPreferenceChange={onMealPreferenceChange}
                     onClearError={onClearError}
                   />
                 )}

@@ -159,7 +159,7 @@ export const TREVIO_SEED_TRIPS = [
     chips: ["Tempo traveller", "Local stays", "Trip captain"],
     tags: ["roadtrips", "mountains"],
     rating: 4.9,
-    featured: false,
+    featured: true,
     isListed: true,
     status: "listed",
     sortOrder: 30,
@@ -246,7 +246,7 @@ export const TREVIO_SEED_TRIPS = [
     chips: ["Villa stay", "Temple tours", "All meals", "Airport transfer"],
     tags: ["international", "culture", "spiritual"],
     rating: 4.8,
-    featured: false,
+    featured: true,
     isListed: true,
     status: "listed",
     sortOrder: 60,
@@ -375,6 +375,80 @@ export const TREVIO_SEED_TRIPS = [
       { day: 6, title: "Kakheti to Tbilisi", summary: "Leisurely drive back, evening free.", location: "Tbilisi", activities: ["Drive to Tbilisi", "Free evening"], meals: "Breakfast", accommodation: "Boutique Hotel" },
       { day: 7, title: "Tbilisi Free Day", summary: "Explore at your pace. Optional museum visits or cooking class.", location: "Tbilisi", activities: ["Free day", "Optional cooking class"], meals: "Breakfast", accommodation: "Boutique Hotel" },
       { day: 8, title: "Departure", summary: "Airport transfer. Trip ends.", location: "Tbilisi", activities: ["Airport transfer"], meals: "Breakfast", accommodation: "" }
+    ]
+  },
+  {
+    slug: "rajasthan-royal-odyssey",
+    title: "Rajasthan Royal Odyssey",
+    category: "roadtrips",
+    tag: "Heritage trail",
+    location: "Jaipur to Udaipur",
+    country: "India",
+    duration: "9D / 8N",
+    startDate: "2026-10-15",
+    endDate: "2026-10-23",
+    dates: ["15 Oct 2026", "05 Nov 2026", "19 Nov 2026"],
+    image: "https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=1200&q=85",
+    coverImage: "https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=800&q=80",
+    photos: [
+      "https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=1200&q=85",
+      "https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=1200&q=85",
+      "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=1200&q=85",
+      "https://images.unsplash.com/photo-1514222134-b57cbb8ce073?auto=format&fit=crop&w=1200&q=85"
+    ],
+    description: "A grand journey through Rajasthan's most majestic cities — from the pink walls of Jaipur to the lakeside palaces of Udaipur, with desert sunsets in Jaisalmer and blue lanes of Jodhpur in between.",
+    chips: ["Heritage havelis", "Desert safari", "Private transfers", "All meals", "Local guide"],
+    tags: ["roadtrips", "heritage", "culture", "desert"],
+    rating: 4.8,
+    featured: false,
+    isListed: true,
+    status: "listed",
+    sortOrder: 15,
+    price: { amount: 42999, currency: "INR", tokenAmount: 7999, isFinal: true },
+    availability: { totalSeats: 16, seatsAvailable: 6 },
+    cancellationPolicy: "Full refund up to 14 days before departure; 75% refund within 14-7 days; 50% refund within 7-3 days; no refund within 48 hours.",
+    inclusions: [
+      "AC sedan / SUV for entire trip",
+      "8 nights accommodation (3-star heritage hotels + 1 desert camp)",
+      "Daily breakfast and dinner",
+      "Camel safari in Jaisalmer desert",
+      "Guided tours of all forts and palaces",
+      "Boat ride on Lake Pichola, Udaipur",
+      "Airport transfers in Jaipur",
+      "All tolls, parking and driver allowance"
+    ],
+    exclusions: [
+      "Flight fare to Jaipur and from Udaipur",
+      "Lunch on all days",
+      "Personal expenses and tips",
+      "Camera fees at monuments",
+      "Optional activities like zip-lining, ATV",
+      "Anything not mentioned in inclusions"
+    ],
+    itinerary: [
+      { day: 1, title: "Arrive Jaipur", summary: "Airport pickup, check-in at heritage haveli. Evening explore Johari Bazaar and enjoy a traditional Rajasthani thali.", location: "Jaipur", activities: ["Airport transfer", "Heritage haveli check-in", "Johari Bazaar walk", "Rajasthani thali dinner"], meals: "Dinner", accommodation: "Heritage Haveli" },
+      { day: 2, title: "Jaipur sightseeing", summary: "Full day exploring Amber Fort, City Palace, Hawa Mahal and Jantar Mantar. Evening at Nahargarh Fort for sunset.", location: "Jaipur", activities: ["Amber Fort", "City Palace", "Hawa Mahal", "Jantar Mantar", "Nahargarh sunset"], meals: "Breakfast, Dinner", accommodation: "Heritage Haveli" },
+      { day: 3, title: "Jaipur to Jodhpur", summary: "Drive to Jodhpur. Afternoon visit Mehrangarh Fort and explore the blue city lanes on foot.", location: "Jodhpur", activities: ["Drive to Jodhpur", "Mehrangarh Fort", "Blue city walk", "Clock tower market"], meals: "Breakfast, Dinner", accommodation: "Heritage Hotel" },
+      { day: 4, title: "Jodhpur to Jaisalmer", summary: "Drive through Thar Desert to Jaisalmer. Evening at Gadisar Lake and local bazaars.", location: "Jaisalmer", activities: ["Desert drive", "Gadisar Lake", "Patwon Ki Haveli", "Local market"], meals: "Breakfast, Dinner", accommodation: "Heritage Hotel" },
+      { day: 5, title: "Jaisalmer desert camp", summary: "Morning explore Jaisalmer Fort and living fort. Afternoon camel safari into the dunes. Sunset, folk music and dinner under the stars.", location: "Jaisalmer", activities: ["Jaisalmer Fort", "Sam Sand Dunes", "Camel safari", "Desert camp", "Folk music night"], meals: "Breakfast, Dinner", accommodation: "Desert Camp" },
+      { day: 6, title: "Jaisalmer to Udaipur", summary: "Fly from Jaisalmer to Udaipur. Evening at Lake Pichola with a boat ride at sunset.", location: "Udaipur", activities: ["Flight to Udaipur", "Lake Pichola boat ride", "Sunset view"], meals: "Breakfast, Dinner", accommodation: "Lake-view Hotel" },
+      { day: 7, title: "Udaipur exploration", summary: "City Palace, Jagdish Temple, Saheliyon Ki Bari. Afternoon free for art galleries and rooftop cafés.", location: "Udaipur", activities: ["City Palace", "Jagdish Temple", "Saheliyon Ki Bari", "Art galleries"], meals: "Breakfast, Dinner", accommodation: "Lake-view Hotel" },
+      { day: 8, title: "Udaipur free day", summary: "Optional excursion to Kumbhalgarh Fort or Chittorgarh. Or simply unwind by the pool.", location: "Udaipur", activities: ["Optional Kumbhalgarh Fort", "Pool time", "Spa"], meals: "Breakfast, Dinner", accommodation: "Lake-view Hotel" },
+      { day: 9, title: "Departure", summary: "Morning at leisure. Transfer to Udaipur airport.", location: "Udaipur", activities: ["Airport transfer"], meals: "Breakfast", accommodation: "" }
+    ],
+    reviews: [
+      { name: "Priya Sharma", rating: 5, date: "28 Nov 2025", comment: "Absolutely magical trip! The desert camp night in Jaisalmer was the highlight — folk music, bonfire, and a sky full of stars. Every hotel was beautifully chosen." },
+      { name: "Rohan Mehta", rating: 5, date: "12 Nov 2025", comment: "We did this with our family of 5 and it was seamless. The private transfers meant we could stop anywhere for photos. Jodhpur's blue city walk was unforgettable." },
+      { name: "Sarah Mitchell", rating: 4.5, date: "01 Oct 2025", comment: "Beautifully curated itinerary. The havelis had so much character. Only suggestion: the Jaisalmer to Udaipur leg could use an extra day — it felt a bit rushed." },
+      { name: "Ankit Joshi", rating: 5, date: "18 Sep 2025", comment: "Third trip with Trevio and still blown away by the attention to detail. The boat ride at Udaipur sunset is something I'll never forget. Worth every rupee." },
+      { name: "Neha Kapoor", rating: 4.5, date: "05 Aug 2025", comment: "Great mix of culture, history and relaxation. The guide in Jaipur was incredibly knowledgeable. Would have loved more time in the desert but overall excellent." },
+      { name: "David Chen", rating: 5, date: "22 Jul 2025", comment: "As a solo traveler, I felt completely safe and well taken care of. The trip captain organized everything perfectly. Met amazing fellow travelers too!" },
+      { name: "Kavita Reddy", rating: 4, date: "15 Jun 2025", comment: "Lovely trip with great hotels. The camel safari was fun but a bit short. Mehrangarh Fort was the best fort I've seen in India. Food was outstanding everywhere." },
+      { name: "Amit Singh", rating: 5, date: "30 May 2025", comment: "Perfect honeymoon trip! The lake-view hotel in Udaipur was stunning. The team even arranged a surprise cake for us. Truly special experience." },
+      { name: "Lisa Fernandez", rating: 5, date: "18 Apr 2025", comment: "Came for the colors of Rajasthan and got so much more. The heritage walks, the food, the people — everything was curated with love. Highly recommend!" },
+      { name: "Vikram Patel", rating: 4.5, date: "02 Mar 2025", comment: "Excellent value for money. 9 days covering Jaipur, Jodhpur, Jaisalmer and Udaipur with premium stays. The only reason for not giving 5 stars is the long drive days." },
+      { name: "Meera Nair", rating: 5, date: "15 Feb 2025", comment: "The attention to detail was incredible — from the welcome drink at each hotel to the curated local experiences. This wasn't just a trip, it was a storybook journey." },
+      { name: "James Wilson", rating: 5, date: "28 Jan 2025", comment: "Best trip I've taken in India. The desert camp was magical, Udaipur was romantic, and Jaipur was vibrant. The team handled everything seamlessly. Will be back!" }
     ]
   }
 ];

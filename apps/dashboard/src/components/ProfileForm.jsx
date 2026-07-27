@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { InputField } from "@packages/trem-ui";
 import "./ProfileForm.scss";
 
 export default function ProfileForm({ user, onSave, loading }) {
@@ -8,17 +9,33 @@ export default function ProfileForm({ user, onSave, loading }) {
     phone: user?.phone || "",
   });
   const [saved, setSaved] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  const validate = () => {
+    const errs = {};
+    if (!form.name.trim()) errs.name = "Name is required";
+    if (!form.email.trim()) errs.email = "Email is required";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = "Invalid email address";
+    if (form.phone && !/^\+?[\d\s\-()]{7,15}$/.test(form.phone)) errs.phone = "Invalid phone number";
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaved(false);
-    await onSave?.(form);
+    if (!validate()) return;
+    await onSave?.({
+      name: form.name.trim(),
+      email: form.email.trim(),
+      phone: form.phone.trim(),
+    });
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };
 
   return (
-    <form className="dpf" onSubmit={handleSubmit}>
+    <form className="dpf" onSubmit={handleSubmit} noValidate>
       <div className="dpf__header">
         <h3 className="dpf__title">Personal Information</h3>
         <p className="dpf__subtitle">Update your account details</p>
@@ -27,35 +44,38 @@ export default function ProfileForm({ user, onSave, loading }) {
       <div className="dpf__fields">
         <div className="dpf__field">
           <label className="dpf__label" htmlFor="profile-name">Full Name</label>
-          <input
+          <InputField
             id="profile-name"
-            className="dpf__input"
-            type="text"
+            variant="text"
             value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            onChange={(val) => setForm({ ...form, name: val })}
             placeholder="Your name"
+            maxLength={100}
+            error={errors.name}
           />
         </div>
         <div className="dpf__field">
           <label className="dpf__label" htmlFor="profile-email">Email</label>
-          <input
+          <InputField
             id="profile-email"
-            className="dpf__input"
-            type="email"
+            variant="email"
             value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            onChange={(val) => setForm({ ...form, email: val })}
             placeholder="your@email.com"
+            maxLength={254}
+            error={errors.email}
           />
         </div>
         <div className="dpf__field">
           <label className="dpf__label" htmlFor="profile-phone">Phone</label>
-          <input
+          <InputField
             id="profile-phone"
-            className="dpf__input"
-            type="tel"
+            variant="tel"
             value={form.phone}
-            onChange={(e) => setForm({ ...form, phone: e.target.value })}
+            onChange={(val) => setForm({ ...form, phone: val })}
             placeholder="+91 XXXXX XXXXX"
+            maxLength={15}
+            error={errors.phone}
           />
         </div>
       </div>

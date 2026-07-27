@@ -2,9 +2,18 @@ import React from "react";
 
 const formatMoney = (v) => `₹${Number(v || 0).toLocaleString("en-IN")}`;
 
-export default function ReviewStep({ tour, trip, travellers, contact, pricing, product }) {
+export default function ReviewStep({ tour, trip, travellers, contact, pricing, product, seatsAvailable }) {
   const totalGuests = Number(trip.adults || 1) + Number(trip.children || 0) + Number(trip.infants || 0);
-  const perPerson = pricing?.perPerson || Math.round((pricing?.total || 0) / totalGuests) || 0;
+  const perPerson = pricing?.perPerson || 0;
+  const baseTripTotal = pricing?.baseTripTotal || (perPerson * totalGuests);
+  const totalPrefExtras = pricing?.totalPrefExtras || 0;
+  const roomTypeExtra = pricing?.roomTypeExtra || 0;
+  const perTravellerExtras = pricing?.perTravellerExtras || [];
+
+  const formatPrefValue = (val) => {
+    if (!val) return "—";
+    return val.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  };
 
   return (
     <div className="be-step be-step--review">
@@ -34,7 +43,7 @@ export default function ReviewStep({ tour, trip, travellers, contact, pricing, p
             </div>
             <div className="be-review__card-row">
               <span className="be-review__label">Room</span>
-              <span className="be-review__value">{trip.roomType || "—"}</span>
+              <span className="be-review__value">{formatPrefValue(trip.roomType)}</span>
             </div>
           </div>
         </section>
@@ -59,6 +68,13 @@ export default function ReviewStep({ tour, trip, travellers, contact, pricing, p
                 <span className="be-review__traveller-meta">
                   {t.nationality || "—"} · {t.email || "—"}
                 </span>
+                {(t.mealPreference || t.packageType || t.drinkType) && (
+                  <div className="be-review__traveller-prefs">
+                    {t.mealPreference && <span>Meal: {formatPrefValue(t.mealPreference)}</span>}
+                    {t.packageType && <span>Package: {formatPrefValue(t.packageType)}</span>}
+                    {t.drinkType && <span>Drink: {formatPrefValue(t.drinkType)}</span>}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -68,13 +84,28 @@ export default function ReviewStep({ tour, trip, travellers, contact, pricing, p
           <h3 className="be-review__heading">Price Breakdown</h3>
           <div className="be-review__pricing">
             <div className="be-review__price-row">
-              <span>Per person</span>
-              <span>{formatMoney(perPerson)}</span>
+              <span>Base price × {totalGuests} guests</span>
+              <span>{formatMoney(baseTripTotal)}</span>
             </div>
-            <div className="be-review__price-row">
-              <span>× {totalGuests} guests</span>
-              <span>{formatMoney(perPerson * totalGuests)}</span>
-            </div>
+            {roomTypeExtra !== 0 && (
+              <div className="be-review__price-row">
+                <span>Room preference</span>
+                <span className={roomTypeExtra > 0 ? "be-review__price-positive" : "be-review__price-negative"}>
+                  {roomTypeExtra > 0 ? `+${formatMoney(roomTypeExtra)}` : formatMoney(roomTypeExtra)}
+                </span>
+              </div>
+            )}
+            {perTravellerExtras.map((extra, i) => {
+              if (extra.total === 0) return null;
+              return (
+                <div key={i} className="be-review__price-row">
+                  <span>Traveller {i + 1} preferences</span>
+                  <span className={extra.total > 0 ? "be-review__price-positive" : "be-review__price-negative"}>
+                    {extra.total > 0 ? `+${formatMoney(extra.total)}` : formatMoney(extra.total)}
+                  </span>
+                </div>
+              );
+            })}
             {pricing?.convenienceFee > 0 && (
               <div className="be-review__price-row">
                 <span>Convenience fee</span>
@@ -89,7 +120,7 @@ export default function ReviewStep({ tour, trip, travellers, contact, pricing, p
             )}
             <div className="be-review__price-row be-review__price-row--total">
               <span>Total</span>
-              <span>{formatMoney(pricing?.total || perPerson * totalGuests)}</span>
+              <span>{formatMoney(pricing?.total || baseTripTotal)}</span>
             </div>
             {product === "trevio" && pricing?.tokenAmount > 0 && (
               <div className="be-review__price-row be-review__price-row--token">

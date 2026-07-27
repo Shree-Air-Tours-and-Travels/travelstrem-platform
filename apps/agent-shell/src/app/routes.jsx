@@ -5,7 +5,7 @@ import { AuthPage } from "@apps/auth";
 import ManageTours from "../features/services/tours/ManageTours";
 import ServicesContainer from "../features/services/container";
 import BookingDetail from "../features/bookings/tours/BookingDetail/BookingDetail";
-import ScrollToTop from "../shared/ui/ScrollToTop/ScrollToTop";
+import { ScrollToTop } from "@packages/trem-ui";
 import { useAgentPortalConfig, isAllowedAgentRole } from "./providers/AgentPortalProvider";
 import api from "../services/apiClient";
 import authService from "../services/authService";

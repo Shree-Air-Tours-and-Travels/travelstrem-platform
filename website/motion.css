@@ -88,6 +88,7 @@ body {
 
 .hero {
   position: relative;
+  overflow: hidden;
 }
 
 .hero::before {

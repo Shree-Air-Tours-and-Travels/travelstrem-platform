@@ -52,23 +52,6 @@
             "location": "Sikkim Mountains",
             "shape": "hexagon"
           }
-        ],
-        "touchFeatures": [
-          {
-            "icon": "map",
-            "title": "Custom itineraries",
-            "description": "Tailored to your pace, interests and budget."
-          },
-          {
-            "icon": "users",
-            "title": "Expert local guides",
-            "description": "Passionate storytellers who know every hidden corner."
-          },
-          {
-            "icon": "shield",
-            "title": "Verified & safe",
-            "description": "Every trip is vetted. Secure payments, real reviews."
-          }
         ]
       }
     },
@@ -89,6 +72,9 @@
         "footerBrand": "Trevio by TravelsTrem",
         "footerDescription": "Community trips, adventures and stories.",
         "emptyTripList": "No listed Trevio trips found for this category.",
+        "viewMoreAction": "View more",
+        "viewMoreRemaining": "remaining",
+        "contactAgentTitle": "Contact Agent",
         "tripNotFound": "Trip not found",
         "detailOverviewTab": "Overview",
         "detailItineraryTab": "Itinerary",
@@ -124,6 +110,11 @@
         "profileDetailsPlatform": "Wallet, rewards and support stay with TravelsTrem.",
         "previousTripsAction": "Show previous trips",
         "nextTripsAction": "Show next trips",
+        "intlPlanEyebrow": "Dream bigger",
+        "intlPlanHeading": "Plan your next",
+        "intlPlanHighlight": "international adventure.",
+        "intlPlanDescription": "From Bali's temples to Vietnam's streets - explore curated international escapes designed for small groups.",
+        "intlPlanCta": "Explore international trips",
         "framesEyebrow": "Journey in Frames",
         "framesHeading": "Moments from the road.",
         "framesDescription": "Real stories from real travellers. Every frame, a memory.",

@@ -9,7 +9,7 @@
 }
 
 html {
-  font-size: 16px;
+  font-size: $font-size-md;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -19,6 +19,7 @@ body {
   color: var(--text);
   background: var(--bg);
   line-height: $line-height-md;
+  overflow-x: hidden;
 }
 
 a {
@@ -61,41 +62,24 @@ select {
   left: 0;
   bottom: 0;
   z-index: 100;
-  transition: transform 0.2s ease;
 
-  @media (max-width: 768px) {
-    transform: translateX(-100%);
-
-    &.is-open {
-      transform: translateX(0);
-      box-shadow: var(--shadow-lg);
-    }
+  @media (max-width: $breakpoint-md) {
+    display: none;
   }
 }
 
 .dash-main {
   flex: 1;
+  min-width: 0;
   margin-left: 260px;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
 
-  @media (max-width: 768px) {
+  @media (max-width: $breakpoint-md) {
+    width: 100%;
     margin-left: 0;
   }
-}
-
-.dash-topbar {
-  height: 56px;
-  background: var(--card-bg);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  padding: 0 $space-6;
-  gap: $space-4;
-  position: sticky;
-  top: 0;
-  z-index: 90;
 }
 
 .dash-content {
@@ -104,69 +88,9 @@ select {
   max-width: $container-width;
   width: 100%;
   margin: 0 auto;
+  min-width: 0;
 
-  @media (max-width: 768px) {
+  @media (max-width: $breakpoint-md) {
     padding: $space-4;
-  }
-}
-
-.dash-mobile-toggle {
-  display: none;
-  width: 36px;
-  height: 36px;
-  align-items: center;
-  justify-content: center;
-  border-radius: $radius-sm;
-  color: var(--text);
-
-  &:hover {
-    background: var(--neutral-soft);
-  }
-
-  @media (max-width: 768px) {
-    display: flex;
-  }
-}
-
-.dash-page-title {
-  font-size: $font-size-lg;
-  font-weight: $font-semibold;
-  color: var(--heading);
-}
-
-.dash-topbar-actions {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: $space-2;
-}
-
-.dash-theme-toggle {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: $radius-sm;
-  color: var(--muted);
-  transition: all 0.15s ease;
-
-  &:hover {
-    background: var(--neutral-soft);
-    color: var(--text);
-  }
-}
-
-.dash-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: var(--overlay);
-  z-index: 99;
-
-  @media (max-width: 768px) {
-    &.is-visible {
-      display: block;
-    }
   }
 }

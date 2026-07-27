@@ -1,9 +1,9 @@
-import React, { useEffect, useState, useMemo, useRef } from "react";
+import React, { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { Route, Routes, Navigate, useNavigate } from "react-router-dom";
 import { fetchData, redirectToGlobalAuth, setComponentDataFetcher, createProductAuth, buildGlobalDashboardUrl, getGlobalAuthBaseUrl, getCurrentReturnUrl } from "@packages/trem-utils";
 import { emit, registerSessionCacheClearer } from "@packages/trem-events";
 import { consumeUrlToken, appendTokenToUrl } from "@packages/trem-auth-core";
-import { FavoritesProvider, GlobalLoader, TourDetailsPage, useFavoritesContext } from "@packages/trem-ui";
+import { FavoritesProvider, GlobalLoader, ErrorState, ScrollToTop, TourDetailsPage, useFavoritesContext } from "@packages/trem-ui";
 import Shell from "./Shell";
 import Home from "../views/Home";
 import TripBookingPage from "../views/TripBookingPage";
@@ -35,16 +35,17 @@ function AppShell({ embedded, session, headerConfig, pageModel, trips, activeFil
 
   return (
     <Shell {...shellProps} embedded={embedded}>
+      <ScrollToTop />
       {embedded ? (
         <Routes>
-          <Route index element={pageModel ? <Home trips={trips} internationalTrips={pageModel.internationalTrips} featuredTrip={pageModel.featuredTrip} pageModel={pageModel} activeFilter={activeFilter} loadingTrips={loadingTrips} onFilterChange={onFilterChange} /> : <GlobalLoader visible text="Loading trips" />} />
+          <Route index element={pageModel ? <Home trips={trips} internationalTrips={pageModel.internationalTrips} featuredTrips={pageModel.featuredTrips} pageModel={pageModel} activeFilter={activeFilter} loadingTrips={loadingTrips} onFilterChange={onFilterChange} /> : <GlobalLoader visible text="Loading trips" />} />
           <Route path="trip/:tripRef" element={<TourDetailsPage appKey="trevio" productType="trip" />} />
           <Route path="trip/:tripRef/book" element={<TripBookingPage appKey="trevio" />} />
         </Routes>
       ) : (
         <Routes>
           <Route path="/" element={<Navigate to="/trevio" replace />} />
-          <Route path="/trevio" element={pageModel ? <Home trips={trips} internationalTrips={pageModel.internationalTrips} featuredTrip={pageModel.featuredTrip} pageModel={pageModel} activeFilter={activeFilter} loadingTrips={loadingTrips} onFilterChange={onFilterChange} /> : <GlobalLoader visible text="Loading trips" />} />
+          <Route path="/trevio" element={pageModel ? <Home trips={trips} internationalTrips={pageModel.internationalTrips} featuredTrips={pageModel.featuredTrips} pageModel={pageModel} activeFilter={activeFilter} loadingTrips={loadingTrips} onFilterChange={onFilterChange} /> : <GlobalLoader visible text="Loading trips" />} />
           <Route path="/trevio/trip/:tripRef" element={<TourDetailsPage appKey="trevio" productType="trip" />} />
           <Route path="/trevio/trip/:tripRef/book" element={<TripBookingPage appKey="trevio" />} />
         </Routes>
@@ -66,7 +67,16 @@ export default function App({ embedded = false, userSession: externalSession = n
   const [tripsEndpoint, setTripsEndpoint] = useState("");
   const [activeFilter, setActiveFilter] = useState("");
   const [loadingTrips, setLoadingTrips] = useState(false);
-  const initOnceRef = useRef(false);
+  const [initKey, setInitKey] = useState(0);
+  const initRunRef = useRef(false);
+
+  const retryInit = useCallback(() => {
+    initRunRef.current = false;
+    setState({ loading: true, error: null, session: null, headerConfig: null });
+    setPageModel(null);
+    setTrips([]);
+    setInitKey((k) => k + 1);
+  }, []);
 
   const { buildAuthAction } = useMemo(
     () => createProductAuth({
@@ -81,8 +91,8 @@ export default function App({ embedded = false, userSession: externalSession = n
 
   useEffect(() => {
     if (embedded) return undefined;
-    if (initOnceRef.current) return undefined;
-    initOnceRef.current = true;
+    if (initRunRef.current) return undefined;
+    initRunRef.current = true;
 
     consumeUrlToken({ token: "travelstrem:token" });
 
@@ -111,7 +121,7 @@ export default function App({ embedded = false, userSession: externalSession = n
       });
 
     return () => { active = false; };
-  }, [embedded]);
+  }, [embedded, initKey]);
 
   useEffect(() => {
     if (state.loading || state.error) return;
@@ -146,7 +156,10 @@ export default function App({ embedded = false, userSession: externalSession = n
   const applyTripsResponse = (tripResponse) => {
     const received = responseTrips(tripResponse);
     setTrips(received);
-    setPageModel((current) => current ? { ...current, featuredTrip: current.featuredTrip || received.find((trip) => trip.featured) || received[0] || null } : current);
+    setPageModel((current) => current ? {
+      ...current,
+      featuredTrips: received.filter((trip) => trip.featured),
+    } : current);
   };
 
   const handleFilterChange = async (filterValue) => {
@@ -158,7 +171,6 @@ export default function App({ embedded = false, userSession: externalSession = n
       const response = await fetchData(tripsEndpoint, {
         params: {
           category: nextFilter,
-          limit: pageModel?.tripList.pagination?.maxItems,
         },
       });
       applyTripsResponse(response);
@@ -167,7 +179,17 @@ export default function App({ embedded = false, userSession: externalSession = n
     }
   };
 
-  if (state.error) return <div className="app-status">Trevio initialization failed: {state.error}</div>;
+  if (state.error) {
+    return (
+      <ErrorState
+        title="Trevio failed to start"
+        description="We couldn't connect to the Trevio service. Please check your connection and try again."
+        error={state.error}
+        retry={retryInit}
+        retryText="Retry"
+      />
+    );
+  }
   if (!embedded && state.loading) return <GlobalLoader visible text="Loading Trevio" />;
   if (!embedded && !state.session?.isAuthenticated) {
     return <div className="app-status">Redirecting to TravelsTrem secure login...</div>;

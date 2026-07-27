@@ -256,6 +256,28 @@ $mt-bg: var(--page-bg);
 }
 
 
+/* ---------- Panels Overlay (Tour/Trip view, Create/Edit forms) ---------- */
+
+.mt-panels-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1400;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  pointer-events: auto;
+  overflow-y: auto;
+  padding: $space-4;
+
+  @media (max-width: 768px) {
+    align-items: flex-start;
+    padding: $space-3;
+  }
+}
+
 /* ---------- Confirm Modal ---------- */
 
 .tm-modal-overlay {

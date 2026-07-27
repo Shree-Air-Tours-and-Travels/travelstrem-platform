@@ -107,6 +107,7 @@ const bookingSchema = new Schema({
   priceSnapshot: { type: priceSnapshotSchema, default: () => ({}) },
   paymentSummary: { type: paymentSummarySchema, default: () => ({}) },
   tokenAmount: { type: Number, min: 0, default: 0 },
+  paymentRejectionReason: { type: String, trim: true, default: "" },
 
   latestQuoteId: { type: Schema.Types.ObjectId, ref: "BookingQuote", default: null },
   currentQuoteVersion: { type: Number, default: 0 },

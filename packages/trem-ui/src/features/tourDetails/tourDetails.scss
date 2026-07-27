@@ -51,8 +51,6 @@
     }
   }
 
-  &__mobile-back { display: none; }
-
   /* ─── Hero Section (gallery + overview + pricing card) ─── */
   &__hero-section {
     display: grid;
@@ -844,33 +842,12 @@
 
 @media (max-width: 720px) {
   .tour-detail {
-    --td-header-offset: 64px;
-    padding: 0 0.85rem 5rem;
+    --td-header-offset: 56px;
+    padding: 0.75rem 0.85rem 5rem;
 
     &__shell { gap: 0.85rem; }
 
     &__breadcrumbs { display: none; }
-
-    &__mobile-back {
-      position: sticky;
-      top: var(--td-header-offset);
-      z-index: 55;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      min-height: 42px;
-      margin-inline: -0.85rem;
-      padding: 0.55rem 0.85rem;
-      border: 0;
-      border-bottom: 1px solid var(--border);
-      background: var(--surface-glass-strong);
-      color: var(--text);
-      font-size: 0.85rem;
-      font-weight: 700;
-      backdrop-filter: blur(12px);
-
-      svg { width: 18px; height: 18px; }
-    }
 
     &__hero {
       padding: 1rem;
@@ -903,6 +880,8 @@
 
 @media (max-width: 460px) {
   .tour-detail {
+    --td-header-offset: 52px;
+
     &__facts-bar {
       grid-template-columns: 1fr;
     }

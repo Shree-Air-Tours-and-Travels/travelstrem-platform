@@ -90,11 +90,6 @@ export default function ToursDetailsView({
       <div className="tour-detail__shell">
         <Breadcrumbs items={breadcrumbItems} className="tour-detail__breadcrumbs" />
 
-        <Button primaryClassName="tour-detail__mobile-back" variant="text" onClick={onBack}>
-          <Icon name="arrowLeft" />
-          {elements?.labels?.backToLabel || "Back to"} {referrerLabel || elements?.labels?.referrerTours || "Tours"}
-        </Button>
-
         <div className="tour-detail__hero-section">
           <div className="tour-detail__hero-main">
             {galleryWidget && renderWidget(galleryWidget, widgetProps)}
@@ -131,7 +126,7 @@ export default function ToursDetailsView({
       />
 
       <FloatingActionBar
-        structure={structure?.floatingActionBar}
+        align="stretch"
         text={elements?.labels}
         actions={[
           { label: elements?.labels?.bookNow || "Book now", variant: "primary", onClick: () => onBook(activeTour) },

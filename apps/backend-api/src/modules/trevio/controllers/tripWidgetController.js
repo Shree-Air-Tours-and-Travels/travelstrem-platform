@@ -71,6 +71,7 @@ const normalizeTripForWidget = (trip = {}) => {
     dates: normalized.dates,
     priceInfo: normalized.priceInfo,
     availability: normalized.availability,
+    preferences: normalized.preferences || {},
     itinerary: (trip.itinerary || []).map((item) => ({
       day: item.day || 1,
       title: item.title || item.location || "Experience day",
@@ -83,6 +84,8 @@ const normalizeTripForWidget = (trip = {}) => {
     })),
     inclusions: Array.isArray(trip.inclusions) ? trip.inclusions : [],
     exclusions: Array.isArray(trip.exclusions) ? trip.exclusions : [],
+    reviews: Array.isArray(trip.reviews) ? trip.reviews : normalized.reviews || [],
+    cancellationPolicy: trip.cancellationPolicy || normalized.cancellationPolicy || "",
   };
 };
 
@@ -121,7 +124,13 @@ export const getTripWidget = async (req, res) => {
               widget.component.data.tour = normalized;
               break;
             case "tour-facts.json":
-              widget.component.data.tour = normalized;
+              widget.component.data.tour = {
+                startDate: normalized.startDate || "",
+                endDate: normalized.endDate || "",
+                location: normalized.location || "",
+                availability: normalized.availability || {},
+                distance: tripObj.distance || null,
+              };
               break;
             case "tour-gallery.json":
               widget.component.data.photos = normalized.photos || [];
@@ -149,10 +158,10 @@ export const getTripWidget = async (req, res) => {
               widget.component.data.exclusions = normalized.exclusions || [];
               break;
             case "cancellation-policy.json":
-              widget.component.data.cancellationPolicy = "";
+              widget.component.data.cancellationPolicy = normalized.cancellationPolicy || "";
               break;
             case "reviews-section.json":
-              widget.component.data.reviews = [];
+              widget.component.data.reviews = normalized.reviews || [];
               widget.component.data.avgRating = normalized.rating || 0;
               break;
             case "similar-tours.json": {

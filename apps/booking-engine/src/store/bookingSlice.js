@@ -13,10 +13,19 @@ const TRAVELLER_FIELDS = [
   { name: "emergencyContact", label: "Emergency Contact", type: "tel" },
 ];
 
+const TRAVELLER_PREFERENCE_FIELDS = [
+  { name: "mealPreference", label: "Meal Preference", type: "select", optionsKey: "mealPreferences" },
+  { name: "packageType", label: "Package Type", type: "select", optionsKey: "packageTypes" },
+  { name: "drinkType", label: "Drink Type", type: "select", optionsKey: "drinkTypes" },
+];
+
 function emptyTraveller(index = 0) {
   const t = {};
   TRAVELLER_FIELDS.forEach((f) => { t[f.name] = f.defaultValue || ""; });
   t.title = index === 0 ? "Mr" : "Ms";
+  t.mealPreference = "";
+  t.packageType = "";
+  t.drinkType = "";
   return t;
 }
 
@@ -37,7 +46,7 @@ const STEP_CONFIG = {
 const initialState = {
   currentStep: 0,
   product: "trevista",
-  trip: { startDate: "", endDate: "", adults: 2, children: 0, infants: 0, roomType: "double" },
+  trip: { startDate: "", endDate: "", adults: 2, children: 0, infants: 0, roomType: "shared" },
   travellers: [emptyTraveller(0), emptyTraveller(1)],
   contact: { name: "", email: "", phone: "" },
   errors: {},
@@ -146,6 +155,6 @@ export const {
   hydrateFromProduct,
 } = bookingSlice.actions;
 
-export { TRAVELLER_FIELDS, STEP_CONFIG };
+export { TRAVELLER_FIELDS, TRAVELLER_PREFERENCE_FIELDS, STEP_CONFIG };
 
 export default bookingSlice.reducer;

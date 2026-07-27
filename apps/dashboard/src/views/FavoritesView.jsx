@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import FavoriteCard from "../components/FavoriteCard";
-import EmptyState from "../components/EmptyState";
+import { EmptyState, TourCard } from "@packages/trem-ui";
 import "./FavoritesView.scss";
 
 const PRODUCT_OPTIONS = ["all", "trevio", "trevista"];
@@ -40,17 +39,20 @@ export default function FavoritesView({ favorites, loading, onRemoveFavorite, on
       ) : filtered && filtered.length > 0 ? (
         <div className="dfv__grid">
           {filtered.map((fav, i) => (
-            <FavoriteCard
+            <TourCard
               key={fav._id || fav.tourId || i}
-              item={fav}
-              onRemove={onRemoveFavorite}
-              onView={onViewFavorite}
+              tour={fav}
+              variant="grid"
+              favorited
+              showActions={false}
+              onFavorite={() => onRemoveFavorite?.(fav)}
+              onView={() => onViewFavorite?.(fav)}
             />
           ))}
         </div>
       ) : (
         <EmptyState
-          icon="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+          icon="heart"
           title="No favorites yet"
           description={productFilter !== "all" ? "Try a different filter." : "Save trips you love and they'll appear here."}
         />

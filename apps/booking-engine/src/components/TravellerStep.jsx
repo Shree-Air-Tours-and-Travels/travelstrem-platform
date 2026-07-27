@@ -1,5 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FormField } from "./FormElements.jsx";
+import useGeoLocation from "../hooks/useGeoLocation.js";
+
+const DOMESTIC_NATIONALITIES = new Set(["India"]);
+
+function buildPrefOptions(options = []) {
+  if (!options.length) return [];
+  return options.map((opt) => ({
+    value: opt.value,
+    label: opt.extraPrice > 0
+      ? `${opt.label} (+₹${Number(opt.extraPrice).toLocaleString("en-IN")})`
+      : opt.extraPrice < 0
+        ? `${opt.label} (-₹${Math.abs(Number(opt.extraPrice)).toLocaleString("en-IN")})`
+        : opt.label,
+  }));
+}
 
 export default function TravellerStep({
   travellers,
@@ -8,8 +23,85 @@ export default function TravellerStep({
   updateContact,
   errors,
   TRAVELLER_FIELDS,
+  TRAVELLER_PREFERENCE_FIELDS,
+  trip,
+  productData,
 }) {
   const [expandedTraveller, setExpandedTraveller] = useState(0);
+  const { country: detectedCountry, loading: geoLoading } = useGeoLocation();
+
+  useEffect(() => {
+    if (detectedCountry && !geoLoading) {
+      travellers.forEach((t, i) => {
+        if (!t.nationality) {
+          updateTraveller(i, "nationality", detectedCountry);
+        }
+      });
+    }
+  }, [detectedCountry, geoLoading]);
+
+  const isInternational = travellers.some((t) => {
+    const nat = (t.nationality || "").toLowerCase();
+    return nat && !DOMESTIC_NATIONALITIES.has(nat);
+  });
+
+  const prefs = productData?.preferences || {};
+  const prefFieldOptions = {};
+  if (TRAVELLER_PREFERENCE_FIELDS) {
+    TRAVELLER_PREFERENCE_FIELDS.forEach((pf) => {
+      prefFieldOptions[pf.name] = buildPrefOptions(prefs[pf.optionsKey] || []);
+    });
+  }
+
+  const getDynamicFields = () => {
+    return TRAVELLER_FIELDS.map((field) => {
+      if (field.name === "passportNumber") {
+        return {
+          ...field,
+          required: isInternational,
+          placeholder: isInternational ? "Required for international travel" : "Optional for domestic travel",
+        };
+      }
+      if (field.name === "emergencyContact") {
+        return { ...field, required: false };
+      }
+      return field;
+    });
+  };
+
+  const dynamicFields = getDynamicFields();
+
+  const renderPreferences = (traveller, index) => {
+    if (!TRAVELLER_PREFERENCE_FIELDS || TRAVELLER_PREFERENCE_FIELDS.length === 0) return null;
+
+    const fieldsToShow = TRAVELLER_PREFERENCE_FIELDS.filter((pf) => {
+      const options = prefFieldOptions[pf.name];
+      return options && options.length > 0;
+    });
+
+    if (fieldsToShow.length === 0) return null;
+
+    return (
+      <div className="be-traveller__preferences">
+        <h4 className="be-traveller__pref-heading">Preferences</h4>
+        <div className="be-step__form-row be-step__form-row--compact">
+          {fieldsToShow.map((pf) => (
+            <FormField
+              key={pf.name}
+              field={{
+                name: pf.name,
+                label: pf.label,
+                type: pf.type || "select",
+                options: prefFieldOptions[pf.name] || [],
+              }}
+              value={traveller[pf.name] || ""}
+              onChange={(name, val) => updateTraveller(index, name, val)}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="be-step be-step--travellers">
@@ -61,7 +153,7 @@ export default function TravellerStep({
               {isExpanded && (
                 <div className="be-traveller__form">
                   <div className="be-step__form-row be-step__form-row--compact">
-                    {TRAVELLER_FIELDS.map((field) => (
+                    {dynamicFields.map((field) => (
                       <FormField
                         key={field.name}
                         field={field}
@@ -71,6 +163,7 @@ export default function TravellerStep({
                       />
                     ))}
                   </div>
+                  {renderPreferences(traveller, index)}
                 </div>
               )}
             </div>

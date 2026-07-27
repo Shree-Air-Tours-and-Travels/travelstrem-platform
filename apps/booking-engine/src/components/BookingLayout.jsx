@@ -5,7 +5,7 @@ import ScrollToTopButton from "@packages/trem-ui/components/ScrollToTopButton/Sc
 
 export default function BookingLayout({ steps, currentStep, product, children, sidebar, floatingBar, onExit }) {
   const [showExitConfirm, setShowExitConfirm] = useState(false);
-  const hasProgress = true;
+  const hasProgress = Array.isArray(steps) && steps.length > 0;
 
   const handleExitClick = useCallback(() => {
     setShowExitConfirm(true);
@@ -39,7 +39,7 @@ export default function BookingLayout({ steps, currentStep, product, children, s
         </div>
         <BookingProgress steps={steps} currentStep={currentStep} />
       </div>
-      <div className="be-layout__body">
+      <div className={`be-layout__body ${sidebar ? "" : "be-layout__body--single"}`}>
         <div className="be-layout__main">{children}</div>
         {sidebar && <aside className="be-layout__sidebar">{sidebar}</aside>}
       </div>

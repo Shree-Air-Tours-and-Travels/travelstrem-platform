@@ -33,7 +33,7 @@ export default function ProfileView({ user, onSaveProfile, saving }) {
             </div>
             <div className="dpv__detail">
               <span className="dpv__detail-label">User ID</span>
-              <span className="dpv__detail-value dpv__detail-value--mono">{user?._id?.slice(-8) || "—"}</span>
+              <span className="dpv__detail-value dpv__detail-value--mono">{user?.id?.slice(-8) || "—"}</span>
             </div>
           </div>
         </div>

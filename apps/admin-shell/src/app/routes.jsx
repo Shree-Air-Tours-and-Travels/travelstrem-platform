@@ -4,7 +4,7 @@ import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AuthPage } from "@apps/auth";
 import ManageTours from "../features/tours/ManageTours";
 import BookingDetail from "../features/tours/BookingDetail/BookingDetail";
-import ScrollToTop from "../shared/ui/ScrollToTop/ScrollToTop";
+import { ScrollToTop } from "@packages/trem-ui";
 import { useAdminPortalConfig } from "./providers/AdminPortalProvider";
 import api from "../services/apiClient";
 import authService from "../services/authService";
@@ -36,7 +36,7 @@ const Routers = () => {
                     title: "Admin",
                     subtitle: "Request admin access or bootstrap master admin",
                     descriptor: "Platform",
-                    requiresSecretForEmail: "akshat.goyal@travelstrem.com",
+                    requiresSecretForEmail: process.env.REACT_APP_MASTER_ADMIN_EMAIL || "",
                 },
             ]}
             defaultRole="admin"

@@ -15,6 +15,7 @@ const STATUS_MESSAGES = {
   QUOTE_SENT: { text: "Your quote has been sent. Please review the details and accept or reject.", icon: "send" },
   CUSTOMER_ACCEPTED: { text: "Quote accepted! Please complete the payment to confirm your booking.", icon: "check" },
   PAYMENT_PENDING: { text: "Payment is pending. Please complete the payment to proceed.", icon: "creditCard" },
+  AWAITING_TOKEN_PAYMENT: { text: "Your booking is created. Pay the token manually and upload the payment proof below.", icon: "creditCard" },
   PARTIALLY_PAID: { text: "Partial payment received. The remaining balance is due.", icon: "creditCard" },
   PAID: { text: "Payment complete! Your booking is now confirmed.", icon: "checkCircle" },
   CONFIRMED: { text: "Booking confirmed! You're all set for your trip.", icon: "checkCircle" },
@@ -43,12 +44,10 @@ export default function StatusTracker({ booking, product, onAcceptQuote, onRejec
   const tripLocation = tourData?.city || tourData?.location || "";
   const tripDuration = tourData?.duration || "";
 
-  const showPayButton = product === "trevio"
-    ? ["CONFIRMED"].includes(status) && paidAmount === 0
-    : ["PAYMENT_PENDING", "PARTIALLY_PAID"].includes(status);
+  const showPayButton = product !== "trevio" && ["PAYMENT_PENDING", "PARTIALLY_PAID"].includes(status);
 
   const showAcceptQuote = ["QUOTE_SENT", "QUOTE_READY"].includes(status) && product === "trevista";
-  const showCancel = ["DRAFT", "QUOTE_REQUESTED", "UNDER_REVIEW", "QUOTE_READY", "QUOTE_SENT", "PAYMENT_PENDING", "CONFIRMED"].includes(status);
+  const showCancel = ["DRAFT", "QUOTE_REQUESTED", "UNDER_REVIEW", "QUOTE_READY", "QUOTE_SENT", "AWAITING_TOKEN_PAYMENT", "PAYMENT_PENDING", "CONFIRMED"].includes(status);
 
   const statusInfo = STATUS_MESSAGES[status] || { text: "", icon: "info" };
 

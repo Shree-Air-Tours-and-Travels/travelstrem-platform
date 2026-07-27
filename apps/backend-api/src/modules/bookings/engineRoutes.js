@@ -5,8 +5,6 @@ import {
   submitBooking,
   getBookingStatus,
   getBookingDetail,
-  payToken,
-  payFullAmount,
   acceptQuote,
   rejectQuote,
   getMyBookings,
@@ -17,6 +15,11 @@ import {
   listAllBookings,
 } from "./controllers/bookingEngineController.js";
 import { sendMessage, getMessages } from "./controllers/messageController.js";
+import { upload } from "../../services/cloudinary.js";
+import {
+  getPaymentSettings,
+  submitTokenProof,
+} from "./controllers/paymentWorkflowController.js";
 
 const router = express.Router();
 
@@ -26,6 +29,7 @@ router.post("/create", authMiddleware, createBooking);
 // AUTHENTICATED — booking lifecycle
 router.get("/my-bookings", authMiddleware, getMyBookings);
 router.get("/admin/bookings", authMiddleware, listAllBookings);
+router.get("/payment-settings", authMiddleware, getPaymentSettings);
 
 router.get("/:id/status", authMiddleware, getBookingStatus);
 router.get("/:id/detail", authMiddleware, getBookingDetail);
@@ -37,9 +41,8 @@ router.post("/:id/confirm", authMiddleware, confirmBooking);
 router.post("/:id/quote/accept", authMiddleware, acceptQuote);
 router.post("/:id/quote/reject", authMiddleware, rejectQuote);
 
-// PAYMENT
-router.post("/:id/pay-token", authMiddleware, payToken);
-router.post("/:id/pay-full", authMiddleware, payFullAmount);
+// OFFLINE PAYMENT PROOF
+router.post("/:id/payments/token-proof", authMiddleware, upload.single("paymentScreenshot"), submitTokenProof);
 
 // MESSAGING
 router.post("/:id/message", authMiddleware, sendMessage);
