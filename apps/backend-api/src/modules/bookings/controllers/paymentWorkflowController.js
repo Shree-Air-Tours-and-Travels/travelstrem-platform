@@ -39,6 +39,19 @@ function proofUrl(file, req) {
   return req ? `${req.protocol}://${req.get("host")}${relative}` : relative;
 }
 
+function resolveStoredProofUrl(value) {
+  if (typeof value === "string") {
+    const normalized = value.trim();
+    return /^\[object Object\](?:\.html)?$/i.test(normalized) ? "" : normalized;
+  }
+  if (!value || typeof value !== "object") return "";
+  for (const key of ["secure_url", "secureUrl", "url", "href", "path", "downloadUrl", "receiptUrl", "paymentScreenshot", "file", "asset", "data"]) {
+    const resolved = resolveStoredProofUrl(value[key]);
+    if (resolved) return resolved;
+  }
+  return "";
+}
+
 async function getAuthorizedBooking(req, { admin = false } = {}) {
   const actor = actorFromReq(req);
   if (admin && !actor.privileged) throw new ApiError(403, "Admin access required");
@@ -196,11 +209,16 @@ export const submitTokenProof = asyncHandler(async (req, res) => {
 export const downloadPaymentProof = asyncHandler(async (req, res) => {
   const { booking } = await getAuthorizedBooking(req, { admin: true });
   const payment = await PaymentService.findForBooking(booking._id, req.params.paymentId);
-  if (!payment?.paymentScreenshot) throw new ApiError(404, "Payment proof not found");
+  const paymentScreenshot = resolveStoredProofUrl(payment?.paymentScreenshot)
+    || resolveStoredProofUrl(payment?.receiptUrl)
+    || resolveStoredProofUrl(payment?.raw?.paymentScreenshot)
+    || resolveStoredProofUrl(payment?.raw?.receiptUrl);
+  if (!payment) throw new ApiError(404, "Payment record not found for this booking");
+  if (!paymentScreenshot) throw new ApiError(404, "Payment record does not contain a proof URL");
 
   let parsed;
   try {
-    parsed = new URL(payment.paymentScreenshot, `${req.protocol}://${req.get("host")}`);
+    parsed = new URL(paymentScreenshot, `${req.protocol}://${req.get("host")}`);
   } catch {
     throw new ApiError(400, "Payment proof URL is invalid");
   }
@@ -210,12 +228,16 @@ export const downloadPaymentProof = asyncHandler(async (req, res) => {
   const safeReference = String(booking.bookingRef || booking._id).replace(/[^a-z0-9_-]/gi, "-");
   const filename = `payment-proof-${safeReference}${extension}`;
 
-  if (parsed.pathname.startsWith("/uploads/")) {
+  const requestOrigin = `${req.protocol}://${req.get("host")}`;
+  const isCurrentServerUpload = parsed.pathname.startsWith("/uploads/")
+    && parsed.origin === requestOrigin;
+
+  if (isCurrentServerUpload) {
     const localFile = path.resolve("uploads", path.basename(parsed.pathname));
     try {
       await fs.access(localFile);
     } catch {
-      throw new ApiError(404, "Payment proof file is no longer available");
+      throw new ApiError(404, `Payment proof file is no longer available: ${path.basename(parsed.pathname)}`);
     }
     return res.download(localFile, filename);
   }

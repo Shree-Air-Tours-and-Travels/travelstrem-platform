@@ -8,6 +8,19 @@ import StatusHistoryService from "./StatusHistoryService.js";
 import AuditService from "./AuditService.js";
 import AssignmentService from "./AssignmentService.js";
 
+const resolveProofUrl = (value) => {
+  if (typeof value === "string") {
+    const normalized = value.trim();
+    return /^\[object Object\](?:\.html)?$/i.test(normalized) ? "" : normalized;
+  }
+  if (!value || typeof value !== "object") return "";
+  for (const key of ["secure_url", "secureUrl", "url", "href", "path", "downloadUrl", "receiptUrl", "paymentScreenshot", "file", "asset", "data"]) {
+    const resolved = resolveProofUrl(value[key]);
+    if (resolved) return resolved;
+  }
+  return "";
+};
+
 export const BookingService = {
   priorityDueDates(priority = "MEDIUM") {
     const now = Date.now();
@@ -53,6 +66,19 @@ export const BookingService = {
       includeDeep ? AssignmentService.list(bookingId) : Promise.resolve([]),
     ]);
     const latestQuote = quotes[0] || null;
+    const normalizedPayments = payments.map((payment) => {
+      const record = typeof payment?.toJSON === "function" ? payment.toJSON() : { ...payment };
+      const storedProofUrl = resolveProofUrl(record.paymentScreenshot)
+        || resolveProofUrl(record.receiptUrl)
+        || resolveProofUrl(record.raw?.paymentScreenshot)
+        || resolveProofUrl(record.raw?.receiptUrl);
+      return {
+        ...record,
+        paymentScreenshot: storedProofUrl,
+        receiptUrl: storedProofUrl,
+        proofAvailable: Boolean(storedProofUrl),
+      };
+    });
     const BOOKING_PROCEED_HIDE_STATUSES = ["CANCELLED", "COMPLETED", "REFUNDED"];
     const isProceedHide = BOOKING_PROCEED_HIDE_STATUSES.includes(doc.status);
     return {
@@ -66,7 +92,7 @@ export const BookingService = {
       travellers: travelers,
       quotes,
       currentQuote: latestQuote,
-      payments,
+      payments: normalizedPayments,
       payment: {
         amountPaid: doc.paymentSummary?.paid || 0,
         currency: doc.priceSnapshot?.currency || "INR",

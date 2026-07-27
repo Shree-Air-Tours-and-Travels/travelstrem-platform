@@ -258,16 +258,20 @@ export default function BookingSummaryPage({ dispatchEvent, dashboardPath = "/da
           const fresh = res.component?.data?.booking || {};
           const freshStatus = String(fresh.status || "").toUpperCase();
           const oldStatus = String(prevStatusRef.current || "").toUpperCase();
-          if (freshStatus !== oldStatus && cancelledStatuses.has(freshStatus)) {
-            setBooking((prev) => ({ ...prev, ...fresh, isProceedHide: true }));
-            setMessage("Booking has been cancelled.");
-            setShowDashboardPrompt(true);
+          if (freshStatus !== oldStatus) {
+            const wasCancelled = cancelledStatuses.has(freshStatus);
+            setBooking((prev) => ({ ...prev, ...fresh, ...(wasCancelled ? { isProceedHide: true } : {}) }));
+            setMessage(wasCancelled
+              ? "Booking has been cancelled."
+              : `Booking updated: ${freshStatus.replace(/_/g, " ").toLowerCase()}.`
+            );
+            if (wasCancelled) setShowDashboardPrompt(true);
           }
           prevStatusRef.current = freshStatus;
         }
       } catch {
       }
-    }, 30000);
+    }, 15000);
     return () => clearInterval(interval);
   }, [loading, booking?.id, bookingId]);
 

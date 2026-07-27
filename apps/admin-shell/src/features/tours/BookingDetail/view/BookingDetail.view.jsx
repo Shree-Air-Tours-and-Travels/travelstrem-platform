@@ -13,6 +13,19 @@ const STATUS_PHASES = [
 
 const statusLabel = (s) => String(s || "").replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 
+const getProofUrl = (value) => {
+    if (typeof value === "string") {
+        const normalized = value.trim();
+        return /^\[object Object\](?:\.html)?$/i.test(normalized) ? "" : normalized;
+    }
+    if (!value || typeof value !== "object") return "";
+    for (const key of ["secure_url", "secureUrl", "url", "href", "path", "downloadUrl", "receiptUrl", "paymentScreenshot", "file", "asset", "data"]) {
+        const resolved = getProofUrl(value[key]);
+        if (resolved) return resolved;
+    }
+    return "";
+};
+
 const toDateInput = (v) => {
     if (!v) return ",";
     const d = new Date(v);
@@ -88,7 +101,7 @@ function BookingActionsPanel({ booking, bookingId, actions, actionState }) {
     return (
         <aside className="bd-actions-panel" aria-label="Booking actions">
             <div className="bd-actions-panel__header">
-                <SubTitle text="Booking Actions" />
+                <h2>Booking actions</h2>
                 <span>{statusLabel(paymentStatus)}</span>
             </div>
 
@@ -119,11 +132,11 @@ function BookingActionsPanel({ booking, bookingId, actions, actionState }) {
             {pendingProof ? (
                 <div className="bd-action-group">
                     <strong>Token proof awaiting review</strong>
-                    {pendingProof.paymentScreenshot ? (
-                        <button type="button" className="bd-proof-download" disabled={loadingAction === "downloadProof"} onClick={() => actions?.downloadProof?.(actionId, pendingProof.id || pendingProof._id)}>
+                    {getProofUrl(pendingProof.paymentScreenshot || pendingProof.receiptUrl) ? (
+                        <button type="button" className="bd-proof-download" disabled={loadingAction === "downloadProof"} onClick={() => actions?.downloadProof?.(actionId, pendingProof.id || pendingProof._id, getProofUrl(pendingProof.paymentScreenshot || pendingProof.receiptUrl))}>
                             {loadingAction === "downloadProof" ? "Downloading..." : "Download uploaded screenshot"}
                         </button>
-                    ) : null}
+                    ) : <span className="bd-proof-unavailable">The stored proof file is unavailable. Ask the customer to upload it again.</span>}
                     <Button
                         primaryClassName="bd-action-btn"
                         variant="solid"
@@ -324,12 +337,12 @@ export default function BookingDetailView({ booking, bookingId, loading, error, 
         <div className="bd-page">
             <div className="bd-shell">
                 <header className="bd-header">
-                    <div>
+                    <div className="bd-header__identity">
                         <Button primaryClassName="bd-back" variant="text" iconLeft="arrowLeft" onClick={() => navigate("/manage/tours")} text="Back to Manage" />
-                        <Title text={tour.title || "Booking Details"} variant="primary" size="large" />
-                        <div className="bd-ref">{booking.bookingRef}</div>
+                        <span className="bd-header__eyebrow">Booking {booking.bookingRef}</span>
+                        <h1>{tour.title || "Booking details"}</h1>
                     </div>
-                    <div>
+                    <div className="bd-header__status">
                         <div className="bd-status">{statusLabel(status)}</div>
                         <div className="bd-ref">Payment: {statusLabel(booking.paymentStatus)}</div>
                     </div>
@@ -368,7 +381,7 @@ export default function BookingDetailView({ booking, bookingId, loading, error, 
                 <div className="bd-content">
                     <div className="bd-grid">
                         <div className="bd-card bd-card--tour">
-                            <Title text={booking.product === "trevio" ? "Trip Details" : "Tour Details"} />
+                            <h2 className="bd-card__title">{booking.product === "trevio" ? "Trip details" : "Tour details"}</h2>
                             <Paragraph>{tour.desc || "No description available."}</Paragraph>
                             <div className="bd-meta-grid">
                                 <div><span>Guests</span><strong>{booking.guestsCount || 1}</strong></div>
@@ -388,7 +401,7 @@ export default function BookingDetailView({ booking, bookingId, loading, error, 
                         </div>
 
                         <div className="bd-card">
-                            <Title text="Contact" />
+                            <h2 className="bd-card__title">Contact</h2>
                             <div className="bd-meta-grid">
                                 <div><span>Name</span><strong>{booking.primaryContact?.name || ","}</strong></div>
                                 <div><span>Email</span><strong>{booking.primaryContact?.email || ","}</strong></div>
@@ -399,7 +412,7 @@ export default function BookingDetailView({ booking, bookingId, loading, error, 
                         </div>
 
                         <div className="bd-card">
-                            <Title text={`Travelers (${booking.travelers?.length || 0})`} />
+                            <h2 className="bd-card__title">Travelers <span>{booking.travelers?.length || 0}</span></h2>
                             {booking.travelers?.length ? (
                                 <div className="bd-travelers">
                                     {booking.travelers.map((t, i) => (
@@ -416,7 +429,7 @@ export default function BookingDetailView({ booking, bookingId, loading, error, 
                         </div>
 
                         <div className="bd-card">
-                            <Title text="Payment History" />
+                            <h2 className="bd-card__title">Payment history</h2>
                             <div className="bd-payment-list">
                                 {booking.payments?.length ? (
                                     booking.payments.map((pmt, i) => (
@@ -425,11 +438,11 @@ export default function BookingDetailView({ booking, bookingId, loading, error, 
                                             <span className="bd-payment-amount">{formatCurrency(pmt.amount, pmt.currency)}</span>
                                             <span className={`bd-payment-status bd-payment-status--${(pmt.status || "").toLowerCase()}`}>{pmt.status}</span>
                                             {pmt.transactionId ? <span className="bd-payment-txn">Txn: {pmt.transactionId}</span> : null}
-                                            {pmt.paymentScreenshot ? (
-                                                <button type="button" className="bd-proof-download" disabled={actionState?.loading === "downloadProof"} onClick={() => actions?.downloadProof?.(bookingId, pmt.id || pmt._id)}>
+                                            {getProofUrl(pmt.paymentScreenshot || pmt.receiptUrl) ? (
+                                                <button type="button" className="bd-proof-download" disabled={actionState?.loading === "downloadProof"} onClick={() => actions?.downloadProof?.(bookingId, pmt.id || pmt._id, getProofUrl(pmt.paymentScreenshot || pmt.receiptUrl))}>
                                                     {actionState?.loading === "downloadProof" ? "Downloading..." : "Download proof"}
                                                 </button>
-                                            ) : null}
+                                            ) : pmt.type === "TOKEN" ? <span className="bd-proof-unavailable">Proof unavailable</span> : null}
                                             {pmt.rejectionReason ? <span className="bd-payment-txn">Reason: {pmt.rejectionReason}</span> : null}
                                         </div>
                                     ))
@@ -440,13 +453,13 @@ export default function BookingDetailView({ booking, bookingId, loading, error, 
                         </div>
 
                         <div className="bd-card">
-                            <Title text="Journey Timeline" />
+                            <h2 className="bd-card__title">Journey timeline</h2>
                             <div className="bd-timeline">
                                 {(booking.paymentTimeline || booking.timeline || booking.statusHistory || []).slice(0, 15).map((item) => (
                                     <div key={item.id || item._id || item.createdAt} className="bd-timeline-item">
                                         <div className="bd-timeline-dot" />
                                         <div>
-                                            <strong>{item.action || statusLabel(item.to || item.status)}</strong>
+                                            <strong>{statusLabel(item.action || item.to || item.status)}</strong>
                                             <time>{toDateInput(item.createdAt)}</time>
                                             {item.metadata ? (
                                                 <div className="bd-timeline-meta">

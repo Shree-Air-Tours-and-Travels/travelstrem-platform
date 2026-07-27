@@ -117,7 +117,7 @@ export default function DashboardContainer({ productFilter = "all", activeTab = 
           tripsCompleted: data.filter((b) => COMPLETED_STATUSES.has(String(b.status || "").toUpperCase())).length,
         }));
       } catch {}
-    }, 30000);
+    }, 15000);
     return () => clearInterval(interval);
   }, [activeTab, productFilter]);
 

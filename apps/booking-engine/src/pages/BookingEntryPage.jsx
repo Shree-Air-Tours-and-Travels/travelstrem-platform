@@ -149,6 +149,7 @@ export default function BookingEntryPage() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [availability, setAvailability] = useState(null);
+  const [availabilityNotice, setAvailabilityNotice] = useState("");
   const [bookingConfirmed, setBookingConfirmed] = useState(() => {
     if (productRef) {
       const saved = loadConfirmation(product, productRef);
@@ -210,11 +211,21 @@ export default function BookingEntryPage() {
         if (data?.availability?.seatsAvailable != null) {
           setAvailability((prev) => {
             if (prev?.seatsAvailable === data.availability.seatsAvailable) return prev;
+            if (
+              prev?.seatsAvailable != null
+              && data.availability.seatsAvailable < prev.seatsAvailable
+            ) {
+              setAvailabilityNotice(
+                data.availability.seatsAvailable === 0
+                  ? "The remaining seats were just reserved by another customer."
+                  : `Availability changed: ${data.availability.seatsAvailable} seats are now left.`
+              );
+            }
             return { ...prev, seatsAvailable: data.availability.seatsAvailable, totalSeats: data.availability.totalSeats ?? prev?.totalSeats };
           });
         }
       }).catch(() => {});
-    }, 30000);
+    }, 15000);
     return () => clearInterval(poll);
   }, [productRef, product, isSoldOut]);
 
@@ -454,7 +465,7 @@ export default function BookingEntryPage() {
     ? `Only ${seatsAvailable} seat${seatsAvailable === 1 ? "" : "s"} available. Please reduce your group size.`
     : isLowSeats
       ? `Only ${seatsAvailable} spot${seatsAvailable === 1 ? "" : "s"} left!`
-      : null;
+      : availabilityNotice || null;
 
   const floatingBar = (
     <FloatingActionBar
