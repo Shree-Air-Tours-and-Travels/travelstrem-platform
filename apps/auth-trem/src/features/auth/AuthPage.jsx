@@ -10,6 +10,15 @@ const ALLOWED_RETURN_ORIGINS = String(process.env.REACT_APP_ALLOWED_RETURN_ORIGI
   .map((origin) => origin.trim().replace(/\/$/, "").toLowerCase())
   .filter(Boolean);
 
+const CONFIGURED_PRODUCT_RETURN_URLS = {
+  trevio: process.env.REACT_APP_TREVIO_URL || "",
+  trevista: process.env.REACT_APP_TREVISTA_URL || "",
+  dashboard: process.env.REACT_APP_DASHBOARD_URL || "",
+  booking: process.env.REACT_APP_BOOKING_ENGINE_URL || "",
+  "booking-engine": process.env.REACT_APP_BOOKING_ENGINE_URL || "",
+  admin: process.env.REACT_APP_ADMIN_SHELL_URL || "",
+};
+
 const isSafeReturnUrl = (value = "") => {
   if (!value) return false;
   if (value.startsWith("/") && !value.startsWith("//")) return true;
@@ -20,6 +29,37 @@ const isSafeReturnUrl = (value = "") => {
   } catch (error) {
     return false;
   }
+};
+
+const PRODUCT_HOST_LABELS = {
+  trevio: ["trevio"],
+  trevista: ["trevista"],
+  dashboard: ["dashboard"],
+  booking: ["booking"],
+  "booking-engine": ["booking"],
+  admin: ["admin"],
+};
+
+const getAllowedProductReturnUrl = (app = "") => {
+  const configured = CONFIGURED_PRODUCT_RETURN_URLS[app] || "";
+  if (isSafeReturnUrl(configured)) return configured;
+
+  const labels = PRODUCT_HOST_LABELS[app] || [];
+  if (!labels.length) return "";
+
+  return ALLOWED_RETURN_ORIGINS.find((origin) => {
+    try {
+      const hostname = new URL(origin).hostname.toLowerCase();
+      return labels.some((label) => hostname === label || hostname.startsWith(`${label}.`));
+    } catch (error) {
+      return false;
+    }
+  }) || "";
+};
+
+const getSafeReferrer = () => {
+  if (typeof document === "undefined") return "";
+  return isSafeReturnUrl(document.referrer) ? document.referrer : "";
 };
 
 export default function AuthPage({
@@ -90,6 +130,7 @@ export default function AuthPage({
   const isAdminRole = (role) => role && ["admin", "agent", "super_admin", "superadmin"].includes(String(role).toLowerCase());
   const searchParams = new URLSearchParams(location.search);
   const queryReturnTo = searchParams.get("returnTo") || "";
+  const requestingApp = (searchParams.get("app") || "").trim().toLowerCase();
 
   React.useEffect(() => {
     const mode = (searchParams.get("mode") || "").toLowerCase();
@@ -99,14 +140,30 @@ export default function AuthPage({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search, registerEnabled]);
 
+  const resolveReturnDestination = () => {
+    if (isSafeReturnUrl(queryReturnTo)) return queryReturnTo;
+
+    const productReturnUrl = getAllowedProductReturnUrl(requestingApp);
+    if (productReturnUrl) return productReturnUrl;
+
+    const referrer = getSafeReferrer();
+    if (referrer) return referrer;
+
+    if (requestingApp) return "";
+    return getReturnPath(location.state, afterAuthPath);
+  };
+
   const redirectAfterLogin = (result, token) => {
     if (adminShellUrl && result?.user && isAdminRole(result.user.role)) {
       window.location.assign(appendTokenToUrl(adminShellUrl, token));
       return;
     }
-    const nextPath = isSafeReturnUrl(queryReturnTo)
-      ? queryReturnTo
-      : getReturnPath(location.state, afterAuthPath);
+    const nextPath = resolveReturnDestination();
+
+    if (!nextPath) {
+      setError(`Signed in successfully, but the return URL for "${requestingApp}" is not configured.`);
+      return;
+    }
 
     if (/^https?:\/\//i.test(nextPath)) {
       window.location.assign(appendTokenToUrl(nextPath, token));
@@ -320,7 +377,8 @@ export default function AuthPage({
           <ResetPasswordModal open email={resetEmail} onClose={() => setShowResetModal(false)} authService={authService} onResetSuccess={async (data) => {
             await persistSession({ data });
             setShowResetModal(false);
-            navigate(afterAuthPath, { replace: true });
+            const token = localStorage.getItem(cfg?.storageKeys?.token);
+            redirectAfterLogin(data, token);
           }} />
         )}
       </div>
