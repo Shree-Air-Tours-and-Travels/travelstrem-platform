@@ -5,11 +5,11 @@ import { useAdminPortalConfig } from "./providers/AdminPortalProvider";
 import { PortalPreloader } from "@packages/trem-ui";
 
 export default function AppLayout() {
-    const { loading } = useAdminPortalConfig();
+    const { loading, session } = useAdminPortalConfig();
 
     return (
         <div className="admin-app-shell">
-            <Header />
+            {!session?.isAuthenticated && <Header />}
             <Routers />
             {loading && (
                 <PortalPreloader type="app" text="Initializing AdminTREM lifecycle" />
