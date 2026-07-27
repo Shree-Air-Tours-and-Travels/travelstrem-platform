@@ -78,7 +78,7 @@ export default function AdminPaymentsBookings({ bookings = [], loading, onViewBo
     const paymentId = proof.id || proof._id;
     setDownloadState({ paymentId, error: "" });
     try {
-      await downloadPaymentProof(bookingId, paymentId);
+      await downloadPaymentProof(bookingId, paymentId, proof.paymentScreenshot);
       setDownloadState({ paymentId: "", error: "" });
     } catch (error) {
       setDownloadState({ paymentId: "", error: error?.message || "Proof download failed" });
