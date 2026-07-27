@@ -25,8 +25,8 @@ export default function TripViewView({ trip, onClose, onEdit }) {
                         </div>
                     </div>
                     <div className="tv-actions">
-                        <Button primaryClassName="btn" variant="solid" color="primary" onClick={() => onEdit(trip)} text="Edit" />
-                        <Button primaryClassName="btn" variant="outline" onClick={onClose} text="Close" />
+                        <Button primaryClassName="tv-icon-action tv-icon-action--edit" variant="text" isCircular iconLeft="edit" onClick={() => onEdit(trip)} aria-label="Edit trip" title="Edit trip" />
+                        <Button primaryClassName="tv-icon-action tv-icon-action--close" variant="text" isCircular iconLeft="x" onClick={onClose} aria-label="Close trip details" title="Close" />
                     </div>
                 </header>
 

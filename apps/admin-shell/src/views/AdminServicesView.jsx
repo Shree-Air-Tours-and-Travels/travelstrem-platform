@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from "react";
 import { Button, EmptyState } from "@packages/trem-ui";
+import AgenciesTabWidget from "../features/tours/AgenciesTabWidget.view";
 import "./AdminServicesView.scss";
 
-const TYPE_FILTERS = ["all", "tours", "trips"];
+const TYPE_FILTERS = ["all", "tours", "trips", "agencies"];
 
 const TRIP_TYPE_OPTIONS = [
   { value: "", label: "All Types" },
@@ -41,6 +42,9 @@ export default function AdminServicesView({
   formOpen, tripFormOpen, viewOpen, tripViewOpen,
   setFormOpen, setTripFormOpen, setViewOpen, setTripViewOpen, setViewTour, setViewTrip,
   openTripCreate, openTripEdit,
+  admins, agents, partnerAgencies, agencyLoading, auth,
+  fetchAgencyManagement, handleReviewAdmin, handleRemoveAdmin,
+  handleReviewAgent, handleReviewPartnerAgency,
   children,
 }) {
   const [typeFilter, setTypeFilter] = useState("all");
@@ -69,18 +73,28 @@ export default function AdminServicesView({
 
   const tourCount = (tours || []).length;
   const tripCount = (trips || []).length;
+  const agencyCount = (admins || []).length + (agents || []).length + (partnerAgencies || []).length;
+  const showingAgencies = typeFilter === "agencies";
 
   return (
     <div className="asv">
       <div className="asv__header">
         <div>
           <h1 className="asv__title">Services</h1>
-          <p className="asv__subtitle">{allServices.length} service{allServices.length !== 1 ? "s" : ""} total</p>
+          <p className="asv__subtitle">
+            {showingAgencies
+              ? `${agencyCount} account${agencyCount !== 1 ? "s" : ""} to manage`
+              : `${allServices.length} service${allServices.length !== 1 ? "s" : ""} total`}
+          </p>
         </div>
         <div className="asv__actions">
-          <Button primaryClassName="btn" variant="solid" color="primary" onClick={onCreateTour} text="+ New Tour" />
-          <Button primaryClassName="btn" variant="solid" color="primary" onClick={onCreateTrip || openTripCreate} text="+ New Trip" />
-          <Button primaryClassName="btn" variant="outline" onClick={onRefresh} text="Refresh" />
+          {!showingAgencies && (
+            <>
+              <Button primaryClassName="btn" variant="solid" color="primary" onClick={onCreateTour} text="+ New Tour" />
+              <Button primaryClassName="btn" variant="solid" color="primary" onClick={onCreateTrip || openTripCreate} text="+ New Trip" />
+            </>
+          )}
+          <Button primaryClassName="btn" variant="outline" onClick={showingAgencies ? fetchAgencyManagement : onRefresh} text="Refresh" />
         </div>
       </div>
 
@@ -94,7 +108,7 @@ export default function AdminServicesView({
             >
               {f === "all" ? "All" : f.charAt(0).toUpperCase() + f.slice(1)}
               <span className="asv__filter-count">
-                {f === "all" ? tourCount + tripCount : f === "tours" ? tourCount : tripCount}
+                {f === "all" ? tourCount + tripCount : f === "tours" ? tourCount : f === "trips" ? tripCount : agencyCount}
               </span>
             </button>
           ))}
@@ -110,7 +124,21 @@ export default function AdminServicesView({
         )}
       </div>
 
-      {loading ? (
+      {showingAgencies ? (
+        <AgenciesTabWidget
+          admins={admins}
+          agents={agents}
+          partnerAgencies={partnerAgencies}
+          agencyLoading={agencyLoading}
+          auth={auth}
+          fetchAgencyManagement={fetchAgencyManagement}
+          handleReviewAdmin={handleReviewAdmin}
+          handleRemoveAdmin={handleRemoveAdmin}
+          handleReviewAgent={handleReviewAgent}
+          handleReviewPartnerAgency={handleReviewPartnerAgency}
+          hideHeader
+        />
+      ) : loading ? (
         <div className="asv__loading">
           <div className="asv__spinner" />
           <span>Loading services...</span>

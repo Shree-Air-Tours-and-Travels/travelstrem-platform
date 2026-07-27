@@ -67,6 +67,13 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+
+    small {
+      color: var(--muted);
+      font-size: $font-size-xs;
+      font-weight: $font-semibold;
+      letter-spacing: 0;
+    }
   }
 
   &__actions {
