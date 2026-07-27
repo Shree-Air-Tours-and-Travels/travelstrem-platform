@@ -26,7 +26,7 @@ export default function BookingDetailContainer() {
         if (!bookingId) return;
         const controller = new AbortController();
         let cancelled = false;
-        setLoading(true);
+        setLoading((current) => booking ? false : current);
         setError("");
 
         fetchData(`/engine/${bookingId}/detail`, { signal: controller.signal })
@@ -49,6 +49,21 @@ export default function BookingDetailContainer() {
         };
     }, [bookingId, reloadKey]);
 
+    useEffect(() => {
+        if (!bookingId) return undefined;
+        const refresh = () => {
+            if (document.visibilityState === "visible") setReloadKey((key) => key + 1);
+        };
+        const interval = window.setInterval(refresh, 15000);
+        window.addEventListener("focus", refresh);
+        document.addEventListener("visibilitychange", refresh);
+        return () => {
+            window.clearInterval(interval);
+            window.removeEventListener("focus", refresh);
+            document.removeEventListener("visibilitychange", refresh);
+        };
+    }, [bookingId]);
+
     const runAction = async (label, task) => {
         setActionState({ loading: label, message: "", error: "" });
         try {
@@ -60,10 +75,10 @@ export default function BookingDetailContainer() {
         }
     };
 
-    const runDownload = async (id, paymentId) => {
+    const runDownload = async (id, paymentId, proofUrl) => {
         setActionState({ loading: "downloadProof", message: "", error: "" });
         try {
-            await downloadPaymentProof(id, paymentId);
+            await downloadPaymentProof(id, paymentId, proofUrl);
             setActionState({ loading: "", message: "Payment proof downloaded", error: "" });
         } catch (err) {
             setActionState({ loading: "", message: "", error: err?.message || "Proof download failed" });

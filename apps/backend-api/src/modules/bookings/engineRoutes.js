@@ -17,6 +17,7 @@ import {
 import { sendMessage, getMessages } from "./controllers/messageController.js";
 import { upload } from "../../services/cloudinary.js";
 import {
+  downloadPaymentProof,
   getPaymentSettings,
   submitTokenProof,
 } from "./controllers/paymentWorkflowController.js";
@@ -43,6 +44,7 @@ router.post("/:id/quote/reject", authMiddleware, rejectQuote);
 
 // OFFLINE PAYMENT PROOF
 router.post("/:id/payments/token-proof", authMiddleware, upload.single("paymentScreenshot"), submitTokenProof);
+router.get("/:bookingId/payments/:paymentId/proof", authMiddleware, downloadPaymentProof);
 
 // MESSAGING
 router.post("/:id/message", authMiddleware, sendMessage);

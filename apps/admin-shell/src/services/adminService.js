@@ -166,17 +166,60 @@ export async function rejectTokenPayment(bookingId, paymentId, reason) {
     );
 }
 
-export async function downloadPaymentProof(bookingId, paymentId) {
-    const response = await api.get(
-        `/admin/bookings/${bookingId}/payments/${paymentId}/proof`,
-        { responseType: "blob" }
-    );
+function getProofUrl(value) {
+    if (typeof value === "string") {
+        const normalized = value.trim();
+        return /^\[object Object\](?:\.html)?$/i.test(normalized) ? "" : normalized;
+    }
+    if (!value || typeof value !== "object") return "";
+    for (const key of ["secure_url", "secureUrl", "url", "href", "path", "downloadUrl", "receiptUrl", "paymentScreenshot", "file", "asset", "data"]) {
+        const resolved = getProofUrl(value[key]);
+        if (resolved) return resolved;
+    }
+    return "";
+}
+
+export async function downloadPaymentProof(bookingId, paymentId, proofValue = "") {
+    let response;
+    let resolvedProofUrl = "";
+    const proofUrl = getProofUrl(proofValue);
+    if (proofUrl) {
+        try {
+            const apiBase = new URL(api.defaults.baseURL || "/", window.location.origin);
+            resolvedProofUrl = new URL(proofUrl, apiBase.origin).toString();
+        } catch {
+            resolvedProofUrl = "";
+        }
+    }
+    if (resolvedProofUrl) {
+        try {
+            const directResponse = await fetch(resolvedProofUrl, { mode: "cors", credentials: "omit" });
+            if (!directResponse.ok) throw new Error(`Stored proof returned ${directResponse.status}`);
+            const contentType = String(directResponse.headers.get("content-type") || "").toLowerCase();
+            if (!contentType.startsWith("image/") && contentType !== "application/octet-stream") {
+                throw new Error(`Stored proof returned ${contentType || "an unsupported file type"}`);
+            }
+            response = {
+                data: await directResponse.blob(),
+                headers: { "content-type": contentType || "image/jpeg" },
+            };
+        } catch {
+            response = null;
+        }
+    }
+    if (!response) {
+        response = await api.get(
+            `/engine/${bookingId}/payments/${paymentId}/proof`,
+            { responseType: "blob" }
+        );
+    }
     const disposition = String(response.headers?.["content-disposition"] || "");
     const encodedName = disposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
     const plainName = disposition.match(/filename="?([^";]+)"?/i)?.[1];
+    const sourceName = resolvedProofUrl ? resolvedProofUrl.split("?")[0].split("/").pop() : "";
     const filename = encodedName
         ? decodeURIComponent(encodedName)
-        : (plainName || `payment-proof-${bookingId}.jpg`);
+        : (plainName || sourceName || `payment-proof-${bookingId}.jpg`);
     const objectUrl = URL.createObjectURL(response.data);
     const link = document.createElement("a");
     link.href = objectUrl;

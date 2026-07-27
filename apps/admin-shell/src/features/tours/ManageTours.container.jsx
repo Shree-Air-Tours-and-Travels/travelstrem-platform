@@ -63,6 +63,7 @@ export default function ManageTours({ session, tab: tabProp }) {
     const [viewTrip, setViewTrip] = useState(null);
     const [error, setError] = useState(null);
     const requestSeq = useRef(0);
+    const verificationCountRef = useRef(null);
     const [confirmDelete, setConfirmDelete] = useState(null);
     const [confirmMessage, setConfirmMessage] = useState("");
     const [toast, setToast] = useState({ message: "", type: "info", visible: false });
@@ -131,13 +132,24 @@ export default function ManageTours({ session, tab: tabProp }) {
         }
     }
 
-    async function fetchBookings() {
-        setBookingsLoading(true);
+    async function fetchBookings({ silent = false } = {}) {
+        if (!silent) setBookingsLoading(true);
         try {
             const res = await fetchData("/engine/admin/bookings", { params: { limit: 100, skip: 0 } });
             if (res?.status === "success") {
                 const data = res.componentData?.data?.bookings || [];
                 setBookings(data);
+                const verificationCount = data.filter((booking) =>
+                    String(booking.paymentStatus || "").toUpperCase() === "TOKEN_VERIFICATION"
+                ).length;
+                if (
+                    silent
+                    && verificationCountRef.current !== null
+                    && verificationCount > verificationCountRef.current
+                ) {
+                    showToast("New payment proof submitted", "info", 5000);
+                }
+                verificationCountRef.current = verificationCount;
                 setStats((prev) => ({
                     ...prev,
                     activeBookings: data.filter((b) => !COMPLETED_STATUSES.has(String(b.status || "").toUpperCase())).length,
@@ -145,11 +157,26 @@ export default function ManageTours({ session, tab: tabProp }) {
                 }));
             }
         } catch {
-            setBookings([]);
+            if (!silent) setBookings([]);
         } finally {
-            setBookingsLoading(false);
+            if (!silent) setBookingsLoading(false);
         }
     }
+
+    useEffect(() => {
+        if (tab !== "bookings" && tab !== "overview") return undefined;
+        const refresh = () => {
+            if (document.visibilityState === "visible") fetchBookings({ silent: true });
+        };
+        const interval = window.setInterval(refresh, 15000);
+        window.addEventListener("focus", refresh);
+        document.addEventListener("visibilitychange", refresh);
+        return () => {
+            window.clearInterval(interval);
+            window.removeEventListener("focus", refresh);
+            document.removeEventListener("visibilitychange", refresh);
+        };
+    }, [tab]);
 
     async function fetchProfile() {
         try {

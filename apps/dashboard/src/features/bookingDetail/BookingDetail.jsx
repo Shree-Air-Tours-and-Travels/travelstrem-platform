@@ -61,6 +61,21 @@ export default function BookingDetail({ bookingId, onBack }) {
   useEffect(() => { loadBooking(); }, [loadBooking]);
 
   useEffect(() => {
+    if (!bookingId) return undefined;
+    const refresh = () => {
+      if (document.visibilityState === "visible") loadBooking();
+    };
+    const interval = window.setInterval(refresh, 15000);
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [bookingId, loadBooking]);
+
+  useEffect(() => {
     if (!paymentScreenshot) {
       setPaymentPreview("");
       return undefined;
