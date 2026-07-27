@@ -5,18 +5,18 @@ import { getReturnPath, useAuthFlow, appendTokenToUrl } from "@packages/trem-aut
 import { ForgotPasswordModal, ResetPasswordModal } from "./PasswordModals.jsx";
 import "./auth-page.scss";
 
+const ALLOWED_RETURN_ORIGINS = String(process.env.REACT_APP_ALLOWED_RETURN_ORIGINS || "")
+  .split(",")
+  .map((origin) => origin.trim().replace(/\/$/, "").toLowerCase())
+  .filter(Boolean);
+
 const isSafeReturnUrl = (value = "") => {
   if (!value) return false;
   if (value.startsWith("/") && !value.startsWith("//")) return true;
 
   try {
     const url = new URL(value);
-    const host = url.hostname.toLowerCase();
-    return (
-      url.protocol === "https:" && (host === "travelstrem.com" || host.endsWith(".travelstrem.com"))
-    ) || (
-      url.protocol === "http:" && ["localhost", "127.0.0.1"].includes(host)
-    );
+    return ALLOWED_RETURN_ORIGINS.includes(url.origin.toLowerCase());
   } catch (error) {
     return false;
   }
@@ -154,7 +154,7 @@ export default function AuthPage({
   if (loginOtpStep) {
     return (
       <div className={`auth-trem ${className}`}>
-        <div className="auth-trem__card">
+        <div className="auth-trem__card auth-trem__card--otp">
           <header className="auth-trem__header">
             <div>
               <Paragraph primaryClassname="auth-trem__eyebrow">{appName}</Paragraph>
@@ -210,6 +210,13 @@ export default function AuthPage({
               />
             </div>
           </form>
+
+          <div className="auth-trem__footer">
+            <span>
+              Trouble receiving?{" "}
+              <Button variant="text" color="primary" onClick={resendLoginOtp} text="Resend OTP" primaryClassName="auth-trem__link" />
+            </span>
+          </div>
         </div>
       </div>
     );

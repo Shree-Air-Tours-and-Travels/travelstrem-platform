@@ -3,16 +3,14 @@
 .dsb-brand {
   display: flex;
   align-items: center;
-  gap: $space-3;
-  padding: $space-5 $space-5 $space-4;
-  border-bottom: 1px solid var(--border);
+  padding: $space-5 $space-4;
 }
 
 .dsb-brand__logo {
-  width: 36px;
-  height: 36px;
+  width: 50px;
+  height: 50px;
   border-radius: $radius-sm;
-  object-fit: contain;
+  object-fit: cover;
   flex-shrink: 0;
 }
 
@@ -23,10 +21,10 @@
 }
 
 .dsb-brand__name {
-  font-weight: $font-semibold;
-  font-size: 15px;
+  font-weight: $font-bold;
+  font-size: $font-size-md;
   color: var(--heading);
-  line-height: 1.2;
+  line-height: 1.3;
 }
 
 .dsb-brand__sub {
@@ -37,25 +35,26 @@
 
 .dsb-nav {
   flex: 1;
-  padding: $space-3 $space-2;
+  padding: $space-2 $space-3;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: $space-1;
   overflow-y: auto;
 }
 
 .dsb-nav__item {
   display: flex;
   align-items: center;
-  gap: $space-2-5;
-  padding: $space-2-5 $space-3;
+  gap: $space-3;
+  padding: $space-3;
   border-radius: $radius-sm;
-  font-size: 14px;
+  font-size: $font-size-sm;
   font-weight: $font-medium;
   color: var(--nav-text);
-  transition: all 0.15s ease;
+  transition: all $duration-base $ease-default;
   text-align: left;
   width: 100%;
+  position: relative;
 
   &:hover {
     background: var(--neutral-soft);
@@ -65,12 +64,23 @@
   &.is-active {
     background: var(--primary-soft);
     color: var(--nav-text-active);
+
+    &::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 6px;
+      bottom: 6px;
+      width: 3px;
+      border-radius: $radius-full;
+      background: var(--color-primary);
+    }
   }
 }
 
 .dsb-nav__icon {
-  width: 20px;
-  height: 20px;
+  width: $space-5;
+  height: $space-5;
   flex-shrink: 0;
 }
 
@@ -80,27 +90,54 @@
 
 .dsb-footer {
   padding: $space-3;
-  border-top: 1px solid var(--border);
+}
+
+.dsb-back {
+  padding: 0 $space-3;
+  margin-bottom: $space-2;
+}
+
+.dsb-back__link {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  padding: $space-2 $space-3;
+  border-radius: $radius-sm;
+  font-size: $font-size-sm;
+  font-weight: $font-medium;
+  color: var(--nav-text);
+  transition: all $duration-base $ease-default;
+  text-decoration: none;
+
+  &:hover {
+    background: var(--neutral-soft);
+    color: var(--heading);
+  }
+}
+
+.dsb-back__label {
+  white-space: nowrap;
 }
 
 .dsb-user {
   display: flex;
   align-items: center;
-  gap: $space-2-5;
-  padding: $space-2;
+  gap: $space-3;
+  padding: $space-3;
   border-radius: $radius-sm;
+  background: var(--neutral-softer);
 }
 
 .dsb-user__avatar {
-  width: 32px;
-  height: 32px;
+  width: $space-8;
+  height: $space-8;
   border-radius: $radius-circle;
   background: var(--primary-soft);
   color: var(--color-primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: $font-semibold;
+  font-weight: $font-bold;
   font-size: 13px;
   flex-shrink: 0;
 }
@@ -112,8 +149,8 @@
 }
 
 .dsb-user__name {
-  font-size: 13px;
-  font-weight: $font-medium;
+  font-size: $font-size-sm;
+  font-weight: $font-semibold;
   color: var(--heading);
   white-space: nowrap;
   overflow: hidden;
@@ -121,34 +158,9 @@
 }
 
 .dsb-user__email {
-  font-size: 11px;
+  font-size: $font-size-xs;
   color: var(--muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.dsb-products {
-  padding: $space-2 $space-3;
-  border-top: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.dsb-product-link {
-  display: flex;
-  align-items: center;
-  gap: $space-2;
-  padding: $space-2 $space-3;
-  border-radius: $radius-sm;
-  font-size: 13px;
-  font-weight: $font-medium;
-  color: var(--muted);
-  transition: all 0.15s ease;
-
-  &:hover {
-    background: var(--neutral-soft);
-    color: var(--text);
-  }
 }

@@ -4,6 +4,7 @@ import { fileURLToPath } from "url";
 import DataScopeResolver from "../../shared/utils/dataScopeResolver.js";
 import { validatePageContract } from "../../shared/validators/pageContractValidator.js";
 import Booking from "../bookings/models/Booking.js";
+import config from "../../config/index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -437,7 +438,7 @@ class PageDefinitionService {
   }
 
   _bookingImage(booking) {
-    return booking.tour?.photo || "https://res.cloudinary.com/dofxshf3z/image/upload/v1779131576/tour-img01_tljj0m.jpg";
+    return booking.tour?.photo || config.DEFAULT_TOUR_IMAGE;
   }
 
   _hydrateBookingTable(widget, bookings) {

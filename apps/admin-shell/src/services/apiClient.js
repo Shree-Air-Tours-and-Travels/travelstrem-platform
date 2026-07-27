@@ -43,10 +43,6 @@ api.interceptors.request.use(
             } else if (cfg?.headers?.Authorization) {
                 delete cfg.headers.Authorization;
             }
-            if (!token) {
-                cfg.headers = cfg.headers || {};
-                cfg.headers["X-Ignore-Cookie-Auth"] = "true";
-            }
         } catch (err) {
             // ignore parse errors
         }

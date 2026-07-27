@@ -1,10 +1,11 @@
 import PDFDocument from "pdfkit";
+import config from "../config/index.js";
 
 const COMPANY = {
-  name: "Trem Travels",
-  tagline: "Your Journey, Our Passion",
-  email: "support@tremtravels.com",
-  phone: "+91 90576 35580",
+  name: config.COMPANY_NAME,
+  tagline: config.COMPANY_TAGLINE,
+  email: config.SUPPORT_EMAIL,
+  phone: config.SUPPORT_PHONE,
 };
 
 function header(doc, title) {

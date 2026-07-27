@@ -1,6 +1,6 @@
 import React from "react";
 
-const Svg = ({ size = 20, viewBox = "0 0 24 24", title, children, ...rest }) => (
+const Svg = ({ size = 24, viewBox = "0 0 24 24", title, children, ...rest }) => (
   <svg width={size} height={size} viewBox={viewBox} fill="none" aria-hidden={!title} {...rest}>
     {title ? <title>{title}</title> : null}
     {children}
@@ -791,7 +791,7 @@ const ICONS = {
   x: X,
 };
 
-export default function Icon({ name, size = 20, title, ...rest }) {
+export default function Icon({ name, size = 24, title, ...rest }) {
   const Component = ICONS[name] || Fallback;
   if (!Component) return null;
   return <Component size={size} title={title} {...rest} />;

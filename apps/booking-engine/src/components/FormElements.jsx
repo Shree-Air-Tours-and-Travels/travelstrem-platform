@@ -81,8 +81,9 @@ export function CounterField({ label, value, onChange, min = 0, max = 10 }) {
           className="be-counter__btn"
           onClick={() => onChange(Math.max(min, value - 1))}
           disabled={value <= min}
+          aria-label={`Decrease ${label}`}
         >
-          <Icon name="minus" size={14} />
+          <Icon name="minus" size={16} style={{ color: "currentColor" }} />
         </button>
         <span className="be-counter__value">{value}</span>
         <button
@@ -90,8 +91,9 @@ export function CounterField({ label, value, onChange, min = 0, max = 10 }) {
           className="be-counter__btn"
           onClick={() => onChange(Math.min(max, value + 1))}
           disabled={value >= max}
+          aria-label={`Increase ${label}`}
         >
-          <Icon name="plus" size={14} />
+          <Icon name="plus" size={16} style={{ color: "currentColor" }} />
         </button>
       </div>
     </div>

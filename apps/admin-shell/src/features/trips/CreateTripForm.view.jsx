@@ -28,7 +28,7 @@ function ChipInput({ value = [], onChange, placeholder = "Add item" }) {
     );
 }
 
-function ImageDropzone({ uploading, image, onUpload }) {
+function ImageDropzone({ uploading, onUpload }) {
     const inputRef = useRef(null);
     const [dragOver, setDragOver] = useState(false);
 
@@ -50,8 +50,6 @@ function ImageDropzone({ uploading, image, onUpload }) {
             >
                 {uploading ? (
                     <div className="ctf-upload-progress"><span className="ctf-upload-label">Uploading...</span></div>
-                ) : image ? (
-                    <img src={image} alt="Trip" className="ctf-dropzone-preview" />
                 ) : (
                     <div className="ctf-dropzone-placeholder">
                         <span className="ctf-dropzone-icon">+</span>
@@ -64,10 +62,27 @@ function ImageDropzone({ uploading, image, onUpload }) {
     );
 }
 
+function PhotoGrid({ photos, image, onRemove, onSetMain }) {
+    if (!photos || photos.length === 0) return null;
+    return (
+        <div className="ctf-photo-grid">
+            {photos.map((url, idx) => (
+                <div key={idx} className={`ctf-photo-thumb ${url === image ? "ctf-photo-thumb--main" : ""}`}>
+                    <img src={url} alt={`Photo ${idx + 1}`} />
+                    <button className="ctf-thumb-remove" type="button" onClick={() => onRemove(idx)} title="Remove">x</button>
+                    {url !== image && (
+                        <button className="ctf-thumb-setmain" type="button" onClick={() => onSetMain(idx)} title="Set as main">★</button>
+                    )}
+                </div>
+            ))}
+        </div>
+    );
+}
+
 export default function CreateTripFormView({
     form, step, saving, uploading, error, success, onCancel, submit, next, back,
-    setForm, setAt, addArrayItem, updateArrayItem, removeArrayItem, moveArrayItem,
-    handleUploadImage, TRIP_TAGS, TRIP_CATEGORIES,
+    setForm, setAt, handleDateChange, addArrayItem, updateArrayItem, removeArrayItem, moveArrayItem,
+    handleUploadImage, removePhoto, setMainPhoto, TRIP_TAGS, TRIP_CATEGORIES,
 }) {
     return (
         <aside className="ctf-root-overlay">
@@ -115,15 +130,15 @@ export default function CreateTripFormView({
                                         <input value={form.country} onChange={e => setForm({ ...form, country: e.target.value })} />
                                     </label>
                                 </div>
-                                <label>Duration
+                                <label>Duration (auto-calculated)
                                     <input value={form.duration} onChange={e => setForm({ ...form, duration: e.target.value })} placeholder="e.g. 3N/4D" />
                                 </label>
                                 <div className="ctf-row">
                                     <label>Start date
-                                        <input type="date" value={form.startDate ? form.startDate.substring(0, 10) : ""} onChange={e => setForm({ ...form, startDate: e.target.value || null })} />
+                                        <input type="date" value={form.startDate ? form.startDate.substring(0, 10) : ""} onChange={e => handleDateChange("startDate", e.target.value || null)} />
                                     </label>
                                     <label>End date
-                                        <input type="date" value={form.endDate ? form.endDate.substring(0, 10) : ""} onChange={e => setForm({ ...form, endDate: e.target.value || null })} />
+                                        <input type="date" value={form.endDate ? form.endDate.substring(0, 10) : ""} onChange={e => handleDateChange("endDate", e.target.value || null)} />
                                     </label>
                                 </div>
                             </section>
@@ -176,12 +191,13 @@ export default function CreateTripFormView({
                             <section className="ctf-section">
                                 <label>Description<textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} required /></label>
                                 <fieldset>
-                                    <legend>Main Image</legend>
-                                    <ImageDropzone uploading={uploading} image={form.image} onUpload={handleUploadImage} />
+                                    <legend>Photos</legend>
+                                    <ImageDropzone uploading={uploading} onUpload={handleUploadImage} />
                                     <details className="ctf-url-fallback" style={{ marginTop: 8 }}>
                                         <summary>Paste URL</summary>
-                                        <input value={form.image} onChange={e => setForm({ ...form, image: e.target.value })} placeholder="Image URL" />
+                                        <input value="" onChange={e => { if (e.target.value.trim()) { setForm(prev => ({ ...prev, photos: [...prev.photos, e.target.value.trim()], image: prev.image || e.target.value.trim() })); e.target.value = ""; } }} placeholder="Image URL" />
                                     </details>
+                                    <PhotoGrid photos={form.photos} image={form.image} onRemove={removePhoto} onSetMain={setMainPhoto} />
                                 </fieldset>
                                 <fieldset style={{ marginTop: 12 }}>
                                     <legend>Tags (select up to 4)</legend>

@@ -82,8 +82,8 @@
         "phaseCompleted": "Completed",
         "phaseCancelled": "Cancelled",
         "phaseRejected": "Rejected",
-        "contactPhoneUrl": "tel:+919057635580",
-        "supportPhone": "+91 9057635580"
+        "contactPhoneUrl": "",
+        "supportPhone": ""
       },
       "urls": {}
     },

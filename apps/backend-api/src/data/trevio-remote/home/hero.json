@@ -22,7 +22,9 @@
                 "featuredCardTitle": "Your next story starts here",
                 "featuredCardMeta": "India",
                 "featuredDefaultType": "Curated trip",
-                "featuredCtaAction": "View trip"
+                "featuredCtaAction": "View trip",
+                "featuredEmptyTitle": "Adventures are loading",
+                "featuredEmptyDescription": "We are curating your next escape. Check back soon for handpicked trips."
             },
             "urls": {
                 "tripsEndpoint": "/trevio/trips.json"

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { fetchData } from "@packages/trem-utils";
 import {
     deleteAllTours,
     deleteTour,
@@ -17,12 +18,20 @@ import {
 } from "../../services/adminService";
 import ManageToursView from "./ManageTours.view";
 
-const VALID_TABS = new Set(["dashboard", "tours", "trips", "agencies"]);
+const VALID_TABS = new Set(["overview", "bookings", "services", "profile"]);
 
 const getTabFromSearch = (search) => {
-    const tab = new URLSearchParams(search || "").get("tab") || "dashboard";
-    return VALID_TABS.has(tab) ? tab : "dashboard";
+    const tab = new URLSearchParams(search || "").get("tab") || "overview";
+    return VALID_TABS.has(tab) ? tab : "overview";
 };
+
+const COMPLETED_STATUSES = new Set([
+    "COMPLETED", "CONFIRMED", "PAID", "TICKETED", "TRAVEL_READY",
+]);
+const PENDING_STATUSES = new Set([
+    "DRAFT", "QUOTE_REQUESTED", "QUOTE_READY", "QUOTE_SENT",
+    "UNDER_REVIEW", "PAYMENT_PENDING", "PARTIALLY_PAID",
+]);
 
 export default function ManageTours({ session, tab: tabProp }) {
     const location = useLocation();
@@ -30,33 +39,37 @@ export default function ManageTours({ session, tab: tabProp }) {
     const auth = {
         user: session?.user || null,
         role: session?.flags?.role || session?.user?.role || "member",
+        adminLevel: session?.user?.adminLevel || "standard",
     };
-    const [tab, setTabState] = useState(() => {
-        const urlTab = getTabFromSearch(location.search);
-        if (urlTab !== "dashboard") return urlTab;
-        return tabProp && VALID_TABS.has(tabProp) ? tabProp : "dashboard";
-    });
+
+    const [tab, setTabState] = useState(() => getTabFromSearch(location.search));
     const [tours, setTours] = useState([]);
     const [trips, setTrips] = useState([]);
     const [admins, setAdmins] = useState([]);
     const [agents, setAgents] = useState([]);
     const [partnerAgencies, setPartnerAgencies] = useState([]);
+    const [bookings, setBookings] = useState([]);
+    const [profile, setProfile] = useState(null);
     const [agencyLoading, setAgencyLoading] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [bookingsLoading, setBookingsLoading] = useState(true);
     const [formOpen, setFormOpen] = useState(false);
     const [tripFormOpen, setTripFormOpen] = useState(false);
     const [tripEditing, setTripEditing] = useState(null);
     const [viewOpen, setViewOpen] = useState(false);
     const [editing, setEditing] = useState(null);
     const [viewTour, setViewTour] = useState(null);
+    const [tripViewOpen, setTripViewOpen] = useState(false);
+    const [viewTrip, setViewTrip] = useState(null);
     const [error, setError] = useState(null);
     const requestSeq = useRef(0);
     const [confirmDelete, setConfirmDelete] = useState(null);
     const [confirmMessage, setConfirmMessage] = useState("");
     const [toast, setToast] = useState({ message: "", type: "info", visible: false });
+    const [stats, setStats] = useState({ totalTours: 0, totalTrips: 0, activeBookings: 0, pendingReviews: 0 });
 
     const setTab = useCallback((nextTab) => {
-        const safeTab = VALID_TABS.has(nextTab) ? nextTab : "dashboard";
+        const safeTab = VALID_TABS.has(nextTab) ? nextTab : "overview";
         setTabState(safeTab);
         const params = new URLSearchParams(location.search);
         params.set("tab", safeTab);
@@ -72,7 +85,8 @@ export default function ManageTours({ session, tab: tabProp }) {
         fetchTours();
         fetchTrips();
         fetchAgencyManagement();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        fetchBookings();
+        fetchProfile();
     }, []);
 
     useEffect(() => {
@@ -94,10 +108,11 @@ export default function ManageTours({ session, tab: tabProp }) {
         try {
             const fetched = await fetchAdminTours();
             if (requestSeq.current !== seq) return;
-            setTours(Array.isArray(fetched) ? fetched : []);
+            const tourData = Array.isArray(fetched) ? fetched : [];
+            setTours(tourData);
+            setStats((prev) => ({ ...prev, totalTours: tourData.length }));
         } catch (e) {
             if (requestSeq.current !== seq) return;
-            console.error("fetchTours error:", e);
             setError(e.message || "Failed to load tours");
             setTours([]);
         } finally {
@@ -108,190 +123,143 @@ export default function ManageTours({ session, tab: tabProp }) {
     async function fetchTrips() {
         try {
             const fetched = await fetchAdminTrips();
-            setTrips(Array.isArray(fetched) ? fetched : []);
+            const tripData = Array.isArray(fetched) ? fetched : [];
+            setTrips(tripData);
+            setStats((prev) => ({ ...prev, totalTrips: tripData.length }));
         } catch (e) {
-            console.error("fetchTrips error:", e);
             showToast(e.message || "Failed to load trips", "error");
         }
     }
 
-    function handleTripDelete(id) {
-        setConfirmDelete(`trip:${id}`);
-        setConfirmMessage("Delete this trip? This action cannot be undone.");
+    async function fetchBookings() {
+        setBookingsLoading(true);
+        try {
+            const res = await fetchData("/engine/admin/bookings", { params: { limit: 100, skip: 0 } });
+            if (res?.status === "success") {
+                const data = res.componentData?.data?.bookings || [];
+                setBookings(data);
+                setStats((prev) => ({
+                    ...prev,
+                    activeBookings: data.filter((b) => !COMPLETED_STATUSES.has(String(b.status || "").toUpperCase())).length,
+                    pendingReviews: data.filter((b) => PENDING_STATUSES.has(String(b.status || "").toUpperCase())).length,
+                }));
+            }
+        } catch {
+            setBookings([]);
+        } finally {
+            setBookingsLoading(false);
+        }
     }
 
-    function handleTripDeleteAll() {
-        setConfirmDelete("trips:ALL");
-        setConfirmMessage("Delete ALL trips? This is irreversible. Continue?");
-    }
-
-    function openTripCreate() {
-        setTripEditing(null);
-        setTripFormOpen(true);
-    }
-
-    function openTripEdit(t) {
-        setTripEditing(t);
-        setTripFormOpen(true);
+    async function fetchProfile() {
+        try {
+            const res = await fetchData("/auth/profile").catch(() => null);
+            if (res?.status === "success") {
+                setProfile(res.componentData?.data || null);
+            }
+        } catch {}
     }
 
     async function fetchAgencyManagement() {
         setAgencyLoading(true);
         try {
-            const [nextAgents, nextAgencies] = await Promise.all([
-                fetchAgents(),
-                fetchPartnerAgencies(),
-            ]);
+            const [nextAgents, nextAgencies] = await Promise.all([fetchAgents(), fetchPartnerAgencies()]);
             const nextAdmins = auth.user?.adminLevel === "master" ? await fetchAdmins() : [];
             setAdmins(nextAdmins);
             setAgents(nextAgents);
             setPartnerAgencies(nextAgencies);
         } catch (e) {
             console.error("fetchAgencyManagement error:", e);
-            showToast(e.message || "Failed to load agency management", "error");
         } finally {
             setAgencyLoading(false);
         }
     }
 
     async function handleReviewAgent(id, status) {
-        try {
-            await reviewAgent(id, status);
-            showToast(`Agent ${status}`, "success");
-            await fetchAgencyManagement();
-        } catch (e) {
-            showToast(e.message || "Agent review failed", "error");
-        }
+        try { await reviewAgent(id, status); showToast(`Agent ${status}`, "success"); await fetchAgencyManagement(); }
+        catch (e) { showToast(e.message || "Agent review failed", "error"); }
     }
 
     async function handleReviewPartnerAgency(id, status) {
-        try {
-            await reviewPartnerAgency(id, status);
-            showToast(`Partner agency ${status}`, "success");
-            await fetchAgencyManagement();
-        } catch (e) {
-            showToast(e.message || "Partner review failed", "error");
-        }
+        try { await reviewPartnerAgency(id, status); showToast(`Partner agency ${status}`, "success"); await fetchAgencyManagement(); }
+        catch (e) { showToast(e.message || "Partner review failed", "error"); }
     }
 
     async function handleReviewAdmin(id, status) {
-        try {
-            await reviewAdmin(id, status);
-            showToast(`Admin ${status}`, "success");
-            await fetchAgencyManagement();
-        } catch (e) {
-            showToast(e.message || "Admin review failed", "error");
-        }
+        try { await reviewAdmin(id, status); showToast(`Admin ${status}`, "success"); await fetchAgencyManagement(); }
+        catch (e) { showToast(e.message || "Admin review failed", "error"); }
     }
 
     async function handleRemoveAdmin(id) {
-        try {
-            await removeAdmin(id);
-            showToast("Admin access removed", "success");
-            await fetchAgencyManagement();
-        } catch (e) {
-            showToast(e.message || "Admin removal failed", "error");
-        }
+        try { await removeAdmin(id); showToast("Admin access removed", "success"); await fetchAgencyManagement(); }
+        catch (e) { showToast(e.message || "Admin removal failed", "error"); }
     }
 
-    function handleDelete(id) {
-        setConfirmDelete(id);
-        setConfirmMessage("Delete this tour? This action cannot be undone.");
-    }
-
-    function handleDeleteAll() {
-        setConfirmDelete("ALL");
-        setConfirmMessage("Delete ALL tours? This is irreversible. Continue?");
-    }
+    function handleDelete(id) { setConfirmDelete(id); setConfirmMessage("Delete this tour? This action cannot be undone."); }
+    function handleDeleteAll() { setConfirmDelete("ALL"); setConfirmMessage("Delete ALL tours? This is irreversible. Continue?"); }
+    function handleTripDelete(id) { setConfirmDelete(`trip:${id}`); setConfirmMessage("Delete this trip? This action cannot be undone."); }
+    function handleTripDeleteAll() { setConfirmDelete("trips:ALL"); setConfirmMessage("Delete ALL trips? This is irreversible. Continue?"); }
 
     async function handleConfirmDelete() {
         const target = confirmDelete;
         setConfirmDelete(null);
         setConfirmMessage("");
         try {
-            if (target === "ALL") {
-                await deleteAllTours();
-            } else if (target === "trips:ALL") {
-                await deleteAllTrips();
-            } else if (target?.startsWith("trip:")) {
-                await deleteTrip(target.replace("trip:", ""));
-            } else {
-                await deleteTour(target);
-            }
-            if (target?.startsWith("trip") || target === "trips:ALL") {
-                await fetchTrips();
-            } else {
-                await fetchTours();
-            }
-        } catch (e) {
-            console.error("handleConfirmDelete:", e);
-            showToast(e.message || "Delete failed", "error");
-        }
+            if (target === "ALL") await deleteAllTours();
+            else if (target === "trips:ALL") await deleteAllTrips();
+            else if (target?.startsWith("trip:")) await deleteTrip(target.replace("trip:", ""));
+            else await deleteTour(target);
+            if (target?.startsWith("trip") || target === "trips:ALL") await fetchTrips();
+            else await fetchTours();
+        } catch (e) { showToast(e.message || "Delete failed", "error"); }
     }
 
-    function handleCancelDelete() {
-        setConfirmDelete(null);
-        setConfirmMessage("");
-    }
+    function handleCancelDelete() { setConfirmDelete(null); setConfirmMessage(""); }
+    function openCreate() { setEditing(null); setFormOpen(true); }
+    function openEdit(t) { setEditing(t); setFormOpen(true); }
+    function openView(t) { setViewTour(t); setViewOpen(true); }
+    function openTripCreate() { setTripEditing(null); setTripFormOpen(true); }
+    function openTripEdit(t) { setTripEditing(t); setTripFormOpen(true); }
+    function openTripView(t) { setViewTrip(t); setTripViewOpen(true); }
 
-    function openCreate() {
-        setEditing(null);
-        setFormOpen(true);
-    }
-    function openEdit(t) {
-        setEditing(t);
-        setFormOpen(true);
-    }
-    function openView(t) {
-        setViewTour(t);
-        setViewOpen(true);
-    }
+    const handleSaveProfile = useCallback(async (data) => {
+        try {
+            const res = await fetchData("/auth/profile", {
+                method: "PUT",
+                body: JSON.stringify(data),
+                headers: { "Content-Type": "application/json" },
+            });
+            if (res?.status === "success") { setProfile(res.componentData?.data); showToast("Profile updated", "success"); return { success: true }; }
+            return { success: false, message: res?.message || "Something went wrong" };
+        } catch { return { success: false, message: "Something went wrong" }; }
+    }, [showToast]);
+
+    const refreshAll = useCallback(async () => { await Promise.all([fetchTours(), fetchTrips(), fetchBookings()]); }, []);
 
     return (
         <ManageToursView
-            tab={tab}
-            tours={tours}
-            trips={trips}
-            admins={admins}
-            agents={agents}
-            partnerAgencies={partnerAgencies}
-            loading={loading}
-            agencyLoading={agencyLoading}
-            formOpen={formOpen}
-            tripFormOpen={tripFormOpen}
+            tab={tab} setTab={setTab}
+            tours={tours} trips={trips} bookings={bookings} profile={profile}
+            admins={admins} agents={agents} partnerAgencies={partnerAgencies}
+            loading={loading} bookingsLoading={bookingsLoading} agencyLoading={agencyLoading}
+            stats={stats} auth={auth} error={error}
+            formOpen={formOpen} setFormOpen={setFormOpen}
+            tripFormOpen={tripFormOpen} setTripFormOpen={setTripFormOpen}
             tripEditing={tripEditing}
-            viewOpen={viewOpen}
-            editing={editing}
-            viewTour={viewTour}
-            error={error}
-            auth={auth}
-            setTab={setTab}
-            openCreate={openCreate}
-            openEdit={openEdit}
-            openView={openView}
-            openTripCreate={openTripCreate}
-            openTripEdit={openTripEdit}
-            handleTripDelete={handleTripDelete}
-            handleTripDeleteAll={handleTripDeleteAll}
-            fetchTrips={fetchTrips}
-            confirmDelete={confirmDelete}
-            confirmMessage={confirmMessage}
-            handleDelete={handleDelete}
-            handleDeleteAll={handleDeleteAll}
-            handleConfirmDelete={handleConfirmDelete}
-            handleCancelDelete={handleCancelDelete}
-            fetchTours={fetchTours}
-            fetchAgencyManagement={fetchAgencyManagement}
-            handleReviewAdmin={handleReviewAdmin}
-            handleRemoveAdmin={handleRemoveAdmin}
-            handleReviewAgent={handleReviewAgent}
-            handleReviewPartnerAgency={handleReviewPartnerAgency}
-            toast={toast}
-            setToast={setToast}
-            setFormOpen={setFormOpen}
-            setTripFormOpen={setTripFormOpen}
-            setViewOpen={setViewOpen}
-            setViewTour={setViewTour}
+            viewOpen={viewOpen} setViewOpen={setViewOpen}
+            editing={editing} viewTour={viewTour} setViewTour={setViewTour}
+            openCreate={openCreate} openEdit={openEdit} openView={openView}
+            openTripCreate={openTripCreate} openTripEdit={openTripEdit} openTripView={openTripView}
+            handleDelete={handleDelete} handleDeleteAll={handleDeleteAll}
+            handleTripDelete={handleTripDelete} handleTripDeleteAll={handleTripDeleteAll}
+            handleConfirmDelete={handleConfirmDelete} handleCancelDelete={handleCancelDelete}
+            confirmDelete={confirmDelete} confirmMessage={confirmMessage}
+            fetchTours={fetchTours} fetchTrips={fetchTrips} fetchAgencyManagement={fetchAgencyManagement}
+            handleReviewAdmin={handleReviewAdmin} handleRemoveAdmin={handleRemoveAdmin}
+            handleReviewAgent={handleReviewAgent} handleReviewPartnerAgency={handleReviewPartnerAgency}
+            handleSaveProfile={handleSaveProfile}
+            refreshAll={refreshAll}
+            toast={toast} setToast={setToast}
         />
     );
 }

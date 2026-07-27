@@ -3,21 +3,28 @@ import React from "react";
 const formatMoney = (v) => `₹${Number(v || 0).toLocaleString("en-IN")}`;
 const formatDate = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—";
 
-export default function BookingSidebar({ product, productData, trip, guestsCount, tokenPerPerson, availability }) {
+export default function BookingSidebar({ product, productData, trip, guestsCount, availability, computedPricing }) {
   const data = productData || {};
   const title = data.title || data.name || "—";
   const location = data.city || data.location || "";
   const image = data.photo || data.image || "";
-  const pricePerPerson = product === "trevio"
+
+  const guests = Number(guestsCount || 1);
+  const isTrevio = product === "trevio";
+
+  const basePricePerPerson = isTrevio
     ? (data.price || trip.pricePerPerson || 0)
     : (data.price?.min || data.price || 0);
-  const totalPrice = Number(pricePerPerson || 0) * Number(guestsCount || 1);
-  const computedToken = product === "trevio" && tokenPerPerson > 0
-    ? Math.round(tokenPerPerson * (guestsCount || 1))
-    : 0;
+
+  const baseTripTotal = computedPricing?.baseTripTotal || (basePricePerPerson * guests);
+  const totalPrefExtras = computedPricing?.totalPrefExtras || 0;
+  const total = computedPricing?.total || (baseTripTotal + totalPrefExtras);
+  const tokenAmount = computedPricing?.tokenAmount || 0;
+  const tokenPercent = baseTripTotal > 0 ? Math.round((tokenAmount / baseTripTotal) * 100) : 0;
+
   const cancellationPolicy = data.cancellationPolicy || "";
   const seatsAvailable = availability?.seatsAvailable;
-  const isLowSeats = product === "trevio" && seatsAvailable != null && seatsAvailable > 0 && seatsAvailable <= 3;
+  const isLowSeats = isTrevio && seatsAvailable != null && seatsAvailable > 0 && seatsAvailable <= 3;
 
   return (
     <div className="be-sidebar">
@@ -52,7 +59,7 @@ export default function BookingSidebar({ product, productData, trip, guestsCount
             <span className="be-sidebar__value">{trip.roomType}</span>
           </div>
         )}
-        {product === "trevio" && seatsAvailable != null && (
+        {isTrevio && seatsAvailable != null && (
           <div className={`be-sidebar__row ${isLowSeats ? "be-sidebar__row--low-seats" : ""}`}>
             <span className="be-sidebar__label">Seats left</span>
             <span className="be-sidebar__value">{seatsAvailable}</span>
@@ -64,21 +71,27 @@ export default function BookingSidebar({ product, productData, trip, guestsCount
         <h4 className="be-sidebar__heading">Price</h4>
         <div className="be-sidebar__row">
           <span className="be-sidebar__label">Per person</span>
-          <span className="be-sidebar__value">{formatMoney(pricePerPerson)}</span>
+          <span className="be-sidebar__value">{formatMoney(basePricePerPerson)}</span>
         </div>
         <div className="be-sidebar__row">
-          <span className="be-sidebar__label">× {guestsCount || 1} guests</span>
-          <span className="be-sidebar__value">{formatMoney(totalPrice)}</span>
+          <span className="be-sidebar__label">× {guests} guest{guests !== 1 ? "s" : ""}</span>
+          <span className="be-sidebar__value">{formatMoney(baseTripTotal)}</span>
         </div>
-        {computedToken > 0 && (
+        {totalPrefExtras > 0 && (
+          <div className="be-sidebar__row">
+            <span className="be-sidebar__label">Preferences</span>
+            <span className="be-sidebar__value be-sidebar__value--positive">+{formatMoney(totalPrefExtras)}</span>
+          </div>
+        )}
+        {tokenAmount > 0 && (
           <div className="be-sidebar__row be-sidebar__row--token">
-            <span className="be-sidebar__label">Token (15%)</span>
-            <span className="be-sidebar__value">{formatMoney(computedToken)}</span>
+            <span className="be-sidebar__label">Token ({tokenPercent}% of trip)</span>
+            <span className="be-sidebar__value">{formatMoney(tokenAmount)}</span>
           </div>
         )}
         <div className="be-sidebar__row be-sidebar__row--total">
           <span className="be-sidebar__label">Total</span>
-          <span className="be-sidebar__value">{formatMoney(totalPrice)}</span>
+          <span className="be-sidebar__value">{formatMoney(total)}</span>
         </div>
       </div>
 

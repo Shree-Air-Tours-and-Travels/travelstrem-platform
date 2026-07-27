@@ -14,12 +14,26 @@ import {
   setProduct,
   hydrateFromProduct,
   TRAVELLER_FIELDS,
+  TRAVELLER_PREFERENCE_FIELDS,
   STEP_CONFIG,
 } from "../store/bookingSlice.js";
 
-function validateTraveller(traveller) {
+const DOMESTIC_NATIONALITIES = new Set(["India"]);
+
+function validateTraveller(traveller, allTravellers = []) {
   const errors = {};
   TRAVELLER_FIELDS.filter((f) => f.required).forEach((f) => {
+    if (f.name === "passportNumber") {
+      const isInternational = allTravellers.some((t) => {
+        const nat = (t.nationality || "").toLowerCase();
+        return nat && !DOMESTIC_NATIONALITIES.has(nat);
+      });
+      if (isInternational && !String(traveller[f.name] || "").trim()) {
+        errors[f.name] = "Passport number is required for international travel";
+      }
+      return;
+    }
+    if (f.name === "emergencyContact") return;
     if (!String(traveller[f.name] || "").trim()) errors[f.name] = `${f.label} is required`;
   });
   if (traveller.email && !/^\S+@\S+\.\S+$/.test(traveller.email)) errors.email = "Invalid email";
@@ -88,7 +102,7 @@ export function useBookingFlow({ product: productProp = "trevista", tour = null 
       stepErrors = validateTrip(trip);
     } else if (stepKey === "travellers") {
       travellers.forEach((t, i) => {
-        const tErrors = validateTraveller(t);
+        const tErrors = validateTraveller(t, travellers);
         Object.entries(tErrors).forEach(([k, v]) => { stepErrors[`travellers.${i}.${k}`] = v; });
       });
       const cErrors = validateContact(contact);
@@ -96,7 +110,7 @@ export function useBookingFlow({ product: productProp = "trevista", tour = null 
     } else if (stepKey === "review") {
       stepErrors = { ...validateTrip(trip), ...validateContact(contact) };
       travellers.forEach((t, i) => {
-        const tErrors = validateTraveller(t);
+        const tErrors = validateTraveller(t, travellers);
         Object.entries(tErrors).forEach(([k, v]) => { stepErrors[`travellers.${i}.${k}`] = v; });
       });
     }
@@ -145,5 +159,6 @@ export function useBookingFlow({ product: productProp = "trevista", tour = null 
     setTrip: (obj) => dispatch(setTrip(obj)),
     resetBooking: () => dispatch(resetBooking()),
     TRAVELLER_FIELDS,
+    TRAVELLER_PREFERENCE_FIELDS,
   };
 }

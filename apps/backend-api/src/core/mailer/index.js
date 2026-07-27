@@ -1,11 +1,12 @@
 // server/utils/mailer.js
 import nodemailer from "nodemailer";
+import config from "../../config/env.js";
 
-const SMTP_HOST = process.env.SMTP_HOST;
-const SMTP_PORT = process.env.SMTP_PORT;
-const SMTP_USER = process.env.SMTP_USER;
-const SMTP_PASS = process.env.SMTP_PASS;
-const SMTP_FROM = process.env.SMTP_FROM || process.env.SMTP_USER || "no-reply@example.com";
+const SMTP_HOST = config.SMTP.host;
+const SMTP_PORT = config.SMTP.port;
+const SMTP_USER = config.SMTP.user;
+const SMTP_PASS = config.SMTP.pass;
+const SMTP_FROM = config.SMTP.from || config.SMTP.user;
 
 let transporter = null;
 
@@ -26,7 +27,7 @@ if (SMTP_HOST && SMTP_PORT) {
 }
 
 const sendMail = async ({ to, subject, text, html }) => {
-  if (!transporter) {
+  if (!transporter || !SMTP_FROM) {
     // no SMTP configured , fallback to console (dev)
     console.info("[mailer] fallback sendMail: to=", to, "subject=", subject, "text=", text);
     return Promise.resolve();

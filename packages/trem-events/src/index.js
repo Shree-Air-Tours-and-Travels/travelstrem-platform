@@ -1,6 +1,6 @@
 const DEFAULT_SESSION_KEYS = ["auth_user"];
 
-export const createEventBus = (initialOptions = {}) => {
+const createEventBus = (initialOptions = {}) => {
     const listeners = {};
     let clearSessionCache = null;
     let clearAuthHeader = null;
@@ -335,7 +335,7 @@ export const createPortalEventController = ({
     };
 };
 
-export const configureEventBus = defaultEventBus.configure;
+const configureEventBus = defaultEventBus.configure;
 export const emit = defaultEventBus.emit;
 export const on = defaultEventBus.on;
 export const initEventBus = defaultEventBus.initEventBus;

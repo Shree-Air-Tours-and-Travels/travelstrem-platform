@@ -9,7 +9,7 @@ const safeBase = (base) => {
 const isLocalHost = (hostname = "") => ["localhost", "127.0.0.1", "::1"].includes(hostname);
 
 export const getGlobalAuthBaseUrl = (override = "") => {
-  const configured = override || process.env.REACT_APP_AUTH_APP_URL || process.env.REACT_APP_AUTH_URL || "";
+  const configured = override || process.env.REACT_APP_AUTH_APP_URL || "";
   if (configured) return normalizeBase(configured);
   return "";
 };

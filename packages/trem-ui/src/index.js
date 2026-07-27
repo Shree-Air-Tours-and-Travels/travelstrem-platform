@@ -25,8 +25,9 @@ export { default as InputField } from "./components/InputField/InputField.jsx";
 export { default as DatePicker } from "./components/DatePicker/DatePicker.jsx";
 export { default as FloatingActionBar } from "./components/FloatingActionBar/FloatingActionBar.jsx";
 export { default as ScrollToTopButton } from "./components/ScrollToTopButton/ScrollToTopButton.jsx";
-export { default as Note } from "./components/Note/Note.jsx";
+export { default as ScrollToTop } from "./components/ScrollToTop/ScrollToTop.jsx";
 export { default as EmptyState } from "./components/EmptyState/EmptyState.jsx";
+export { default as ErrorState } from "./components/ErrorState/ErrorState.jsx";
 export { default as FeaturedCard } from "./components/FeaturedCard/FeaturedCard.jsx";
 export { default as Paragraph } from "./components/Paragraph/Paragraph.jsx";
 export { default as QuickChips } from "./components/QuickChips/QuickChips.jsx";
@@ -37,19 +38,7 @@ export { default as SearchBarCard } from "./components/SearchBarCard/SearchBarCa
 export { default as BookingCard } from "./components/BookingCard/BookingCard.jsx";
 export { default as BookingJourneyCard } from "./components/BookingJourneyCard/BookingJourneyCard.jsx";
 export { default as PricingCard } from "./components/PricingCard/PricingCard.jsx";
-export { default as Dashboard } from "./components/Dashboard/Dashboard.jsx";
-export { default as DashboardHeader } from "./components/DashboardHeader/DashboardHeader.jsx";
 
 export { default as TourDetailsPage } from "./features/tourDetails/ToursDetails.container.jsx";
 export { FavoritesProvider, useFavoritesContext } from "./context/FavoritesContext.jsx";
 export { ThemeProvider, useTheme } from "./context/ThemeContext.jsx";
-export {
-  typography,
-  colors,
-  spacing,
-  radius,
-  breakpoints,
-  shadows,
-  motion,
-  themes,
-} from "@packages/trem-design-tokens";

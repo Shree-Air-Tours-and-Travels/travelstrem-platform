@@ -1,11 +1,11 @@
-export const normalizeEnvironment = (value, { supportStaging = false } = {}) => {
+const normalizeEnvironment = (value, { supportStaging = false } = {}) => {
     const raw = String(value || "").trim().toLowerCase();
     if (raw === "production" || raw === "prod") return "production";
     if (supportStaging && (raw === "staging" || raw === "stage")) return "staging";
     return "development";
 };
 
-export const stripRemoteEntry = (remoteEntry) =>
+const stripRemoteEntry = (remoteEntry) =>
     String(remoteEntry || "").replace(/\/remoteEntry\.js$/, "").replace(/\/$/, "");
 
 const normalizeUrl = (url) => String(url || "").replace(/\/$/, "");
@@ -18,39 +18,6 @@ const defaultBackend = {
     production: {
         baseUrl: process.env.REACT_APP_BACKEND_URL,
         apiBaseUrl: process.env.REACT_APP_API_URL,
-    },
-};
-
-const customerEnvironments = {
-    development: {
-        backend: defaultBackend.development,
-        frontends: {
-            shell: { baseUrl: process.env.REACT_APP_SHELL_URL },
-            ...(process.env.REACT_APP_TREVISTA_URL ? { trevista: { baseUrl: process.env.REACT_APP_TREVISTA_URL, remoteEntry: `${process.env.REACT_APP_TREVISTA_URL}/remoteEntry.js` } } : {}),
-            ...(process.env.REACT_APP_TREVIO_URL ? { trevio: { baseUrl: process.env.REACT_APP_TREVIO_URL, remoteEntry: `${process.env.REACT_APP_TREVIO_URL}/remoteEntry.js` } } : {}),
-            adminShell: { baseUrl: process.env.REACT_APP_ADMIN_SHELL_URL },
-        },
-        auth: { shellLoginPath: "/auth" },
-    },
-    staging: {
-        backend: defaultBackend.production,
-        frontends: {
-            shell: { baseUrl: process.env.REACT_APP_SHELL_URL },
-            ...(process.env.REACT_APP_TREVISTA_URL ? { trevista: { baseUrl: process.env.REACT_APP_TREVISTA_URL, remoteEntry: process.env.REACT_APP_TREVISTA_REMOTE_URL } } : {}),
-            ...(process.env.REACT_APP_TREVIO_URL ? { trevio: { baseUrl: process.env.REACT_APP_TREVIO_URL, remoteEntry: process.env.REACT_APP_TREVIO_REMOTE_URL } } : {}),
-            adminShell: { baseUrl: process.env.REACT_APP_ADMIN_SHELL_URL },
-        },
-        auth: { shellLoginPath: "/auth" },
-    },
-    production: {
-        backend: defaultBackend.production,
-        frontends: {
-            shell: { baseUrl: process.env.REACT_APP_SHELL_URL },
-            ...(process.env.REACT_APP_TREVISTA_URL ? { trevista: { baseUrl: process.env.REACT_APP_TREVISTA_URL, remoteEntry: process.env.REACT_APP_TREVISTA_REMOTE_URL } } : {}),
-            ...(process.env.REACT_APP_TREVIO_URL ? { trevio: { baseUrl: process.env.REACT_APP_TREVIO_URL, remoteEntry: process.env.REACT_APP_TREVIO_REMOTE_URL } } : {}),
-            adminShell: { baseUrl: process.env.REACT_APP_ADMIN_SHELL_URL },
-        },
-        auth: { shellLoginPath: "/auth" },
     },
 };
 
@@ -135,14 +102,6 @@ export const createPortalEnvironment = ({
         getShellLoginUrl,
     };
 };
-
-export const createCustomerPortalEnvironment = (processEnv = {}) =>
-    createPortalEnvironment({
-        processEnv,
-        environments: customerEnvironments,
-        supportStaging: true,
-        allowEnvOverrides: processEnv.REACT_APP_ALLOW_ENV_OVERRIDES === "true",
-    });
 
 export const createAdminPortalEnvironment = (processEnv = {}) =>
     createPortalEnvironment({

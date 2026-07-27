@@ -25,8 +25,8 @@ const REFRESH_COOKIE_NAME = IS_PRODUCTION && !USE_SHARED_COOKIE_DOMAIN ? "__Host
 
 // Admin creation secret from config (production-safe)
 const ADMIN_CREATION_SECRET = (config.ADMIN_CREATION_SECRET || "").toString().trim();
-const MASTER_ADMIN_EMAIL = (process.env.MASTER_ADMIN_EMAIL || "").toString().trim().toLowerCase();
-const MASTER_ADMIN_PHONE = (process.env.MASTER_ADMIN_PHONE || "").toString().trim();
+const MASTER_ADMIN_EMAIL = config.MASTER_ADMIN_EMAIL;
+const MASTER_ADMIN_PHONE = config.MASTER_ADMIN_PHONE;
 
 // OTP TTL (ms) - from config
 const OTP_TTL = Number(config.OTP_TTL_MS || 1000 * 60 * 5);
@@ -141,7 +141,7 @@ const revokeUserRefreshTokens = async (userId) => {
 };
 
 const isPrivilegedRole = (role) => role === "admin" || role === "agent";
-const TRAVELSTREM_AGENT_DOMAIN = "travelstrem.com";
+const TRAVELSTREM_AGENT_DOMAIN = config.AGENT_EMAIL_DOMAIN;
 
 const normalizePhone = (phone = "") => String(phone || "").replace(/[^\d]/g, "");
 const matchesMasterPhone = (phone = "") => {
@@ -183,6 +183,11 @@ const makeAgentRef = (email = "") => `agent-${slugRef(String(email).split("@")[0
 const getAgentRoleContext = async ({ requestedRole, normalizedEmail, body = {} }) => {
     if (requestedRole !== "agent") return {};
 
+    if (!TRAVELSTREM_AGENT_DOMAIN) {
+        const err = new Error("AGENT_EMAIL_DOMAIN is not configured.");
+        err.status = 503;
+        throw err;
+    }
     const domain = normalizedEmail.split("@")[1] || "";
     if (domain !== TRAVELSTREM_AGENT_DOMAIN) {
         const err = new Error(`Agent accounts must use an @${TRAVELSTREM_AGENT_DOMAIN} email address.`);

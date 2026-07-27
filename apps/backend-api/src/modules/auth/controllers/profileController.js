@@ -35,7 +35,7 @@ export const getProfile = async (req, res) => {
 export const updateProfile = async (req, res) => {
     try {
         const userId = req.user?.sub;
-        const { name, avatar } = req.body;
+        const { name, avatar, phone } = req.body;
         const updates = {};
         if (name !== undefined) updates.name = name;
         if (avatar !== undefined) {
@@ -44,6 +44,7 @@ export const updateProfile = async (req, res) => {
             }
             updates.avatar = avatar;
         }
+        if (phone !== undefined) updates.phone = phone;
         const user = await UserRepository.updateProfile(userId, updates);
         if (!user) return res.status(404).json({ status: "error", message: "User not found" });
         const data = {

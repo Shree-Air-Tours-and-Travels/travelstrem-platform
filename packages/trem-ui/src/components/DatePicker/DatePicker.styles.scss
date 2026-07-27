@@ -210,6 +210,32 @@
       background: var(--primary-softer);
     }
   }
+
+  &__calendar-sheet {
+    .trem-datepicker__grid,
+    .trem-datepicker__row {
+      display: grid;
+      gap: 2px;
+    }
+
+    .trem-datepicker__row {
+      grid-template-columns: repeat(7, 1fr);
+    }
+
+    .trem-datepicker__cell {
+      height: 44px;
+    }
+
+    .trem-datepicker__day {
+      font-size: $font-size-md;
+      border-radius: $radius-xs;
+
+      &--selected {
+        background: var(--color-primary) !important;
+        color: var(--color-on-primary) !important;
+      }
+    }
+  }
 }
 
 @keyframes trem-dp-in {

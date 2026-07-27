@@ -11,7 +11,6 @@ export {
   extractToken,
   filterRoles,
   getReturnPath,
-  getStoredAuthToken,
   hasAuthRole,
   normalizeAuthConfig,
   persistAuthSession,

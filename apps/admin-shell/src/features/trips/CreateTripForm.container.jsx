@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { saveTrip, uploadTripImage } from "../../services/adminService";
 import CreateTripFormView from "./CreateTripForm.view";
 
@@ -9,6 +9,39 @@ const TRIP_TAGS = ["weekends", "mountains", "roadtrips", "international"];
 const TRIP_CATEGORIES = [
     "weekend", "mountains", "beaches", "roadtrips", "international", "culture", "adventure",
 ];
+
+function coerceDuration(val) {
+    if (!val) return "";
+    if (typeof val === "string") return val;
+    if (typeof val === "object" && val !== null) {
+        const from = val.from || "";
+        const to = val.to || "";
+        if (from && to) return `${from} – ${to}`;
+        if (from) return String(from);
+        if (to) return String(to);
+    }
+    return String(val);
+}
+
+function calcDuration(startStr, endStr) {
+    if (!startStr || !endStr) return "";
+    const start = new Date(startStr);
+    const end = new Date(endStr);
+    if (isNaN(start) || isNaN(end) || end <= start) return "";
+    const diffMs = end - start;
+    const totalDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    const nights = Math.max(0, totalDays - 1);
+    return `${nights}N/${totalDays}D`;
+}
+
+function coercePhotos(initial) {
+    const photos = Array.isArray(initial?.photos) ? [...initial.photos] : [];
+    const image = initial?.image;
+    if (image && !photos.includes(image)) {
+        photos.unshift(image);
+    }
+    return photos;
+}
 
 export default function CreateTripForm({ initial = null, onCancel = () => {}, onSaved = () => {} }) {
     const [step, setStep] = useState(0);
@@ -46,7 +79,14 @@ export default function CreateTripForm({ initial = null, onCancel = () => {}, on
             status: "listed",
             sortOrder: 0,
         };
-        return initial ? { ...blank, ...initial } : blank;
+        if (!initial) return blank;
+        const merged = { ...blank, ...initial };
+        merged.duration = coerceDuration(initial.duration);
+        merged.photos = coercePhotos(initial);
+        merged.image = initial.image || merged.photos[0] || "";
+        merged.price = { ...blank.price, ...(initial.price || {}) };
+        merged.availability = { ...blank.availability, ...(initial.availability || {}) };
+        return merged;
     });
 
     function setForm(valueOrFn) {
@@ -80,6 +120,26 @@ export default function CreateTripForm({ initial = null, onCancel = () => {}, on
         return errs;
     }
 
+    const handleDateChange = useCallback((field, value) => {
+        setForm(prev => {
+            const next = { ...prev, [field]: value || null };
+            if (field === "startDate" || field === "endDate") {
+                const start = field === "startDate" ? value : prev.startDate;
+                const end = field === "endDate" ? value : prev.endDate;
+                next.duration = calcDuration(start, end);
+
+                if (end) {
+                    const endDate = new Date(end);
+                    const now = new Date();
+                    if (endDate < now && prev.status !== "completed" && prev.status !== "cancelled") {
+                        next.status = "completed";
+                    }
+                }
+            }
+            return next;
+        });
+    }, [setForm]);
+
     async function submit(e) {
         e?.preventDefault?.();
         setError(null);
@@ -111,6 +171,14 @@ export default function CreateTripForm({ initial = null, onCancel = () => {}, on
             payload.exclusions = Array.isArray(payload.exclusions) ? payload.exclusions : [];
             payload.photos = Array.isArray(payload.photos) ? payload.photos : [];
             payload.dates = Array.isArray(payload.dates) ? payload.dates : [];
+
+            if (payload.endDate) {
+                const endDate = new Date(payload.endDate);
+                const now = new Date();
+                if (endDate < now && payload.status !== "completed" && payload.status !== "cancelled") {
+                    payload.status = "completed";
+                }
+            }
 
             const saved = await saveTrip(payload);
             setDirty(false);
@@ -157,7 +225,10 @@ export default function CreateTripForm({ initial = null, onCancel = () => {}, on
         setUploading(true);
         try {
             const url = await uploadTripImage(file);
-            setForm(prev => ({ ...prev, image: url, photos: [...(prev.photos || []), url].filter(Boolean) }));
+            setForm(prev => {
+                const photos = [...(prev.photos || []), url].filter(Boolean);
+                return { ...prev, image: prev.image || url, photos };
+            });
             return url;
         } catch (e) {
             setError(e.message || "Upload failed");
@@ -165,6 +236,23 @@ export default function CreateTripForm({ initial = null, onCancel = () => {}, on
         } finally {
             setUploading(false);
         }
+    }
+
+    function removePhoto(idx) {
+        setForm(prev => {
+            const photos = prev.photos.filter((_, i) => i !== idx);
+            const image = prev.image === prev.photos[idx] ? (photos[0] || "") : prev.image;
+            return { ...prev, photos, image };
+        });
+    }
+
+    function setMainPhoto(idx) {
+        setForm(prev => {
+            const photos = [...prev.photos];
+            const [moved] = photos.splice(idx, 1);
+            photos.unshift(moved);
+            return { ...prev, photos, image: moved };
+        });
     }
 
     function handleCancel() {
@@ -193,11 +281,14 @@ export default function CreateTripForm({ initial = null, onCancel = () => {}, on
             back={back}
             setForm={setForm}
             setAt={setAt}
+            handleDateChange={handleDateChange}
             addArrayItem={addArrayItem}
             updateArrayItem={updateArrayItem}
             removeArrayItem={removeArrayItem}
             moveArrayItem={moveArrayItem}
             handleUploadImage={handleUploadImage}
+            removePhoto={removePhoto}
+            setMainPhoto={setMainPhoto}
             TRIP_TAGS={TRIP_TAGS}
             TRIP_CATEGORIES={TRIP_CATEGORIES}
         />

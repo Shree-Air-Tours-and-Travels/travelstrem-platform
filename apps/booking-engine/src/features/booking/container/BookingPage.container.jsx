@@ -61,6 +61,8 @@ export default function BookingPageContainer() {
   const [travelers, setTravelers] = useState([emptyTraveler()]);
   const [contactEmail, setContactEmail] = useState(user?.email || "");
   const [contactPhone, setContactPhone] = useState(user?.phone || user?.mobile || "");
+  const [packageType, setPackageType] = useState("");
+  const [mealPreference, setMealPreference] = useState("");
 
   useEffect(() => {
     if (tour) return;
@@ -90,6 +92,31 @@ export default function BookingPageContainer() {
     setStartDate(defaultStart);
     setEndDate(defaultEnd);
   }, [defaultStart, defaultEnd]);
+
+  useEffect(() => {
+    if (!tour || step !== 1) return;
+    const tourId = tour._id || tour.id;
+    if (!tourId) return;
+    let active = true;
+    const intervalId = setInterval(async () => {
+      try {
+        const res = await fetchData(`/tours.json/${encodeURIComponent(tourId)}`);
+        if (!active) return;
+        if (res?.status === "success") {
+          const data = res.componentData?.data || res.component?.data || res.data || {};
+          const updatedTour = data.tour || data;
+          const newSeats = updatedTour?.availability?.seatsAvailable;
+          const oldSeats = tour?.availability?.seatsAvailable;
+          if (newSeats != null && newSeats !== oldSeats) {
+            setTour((prev) => prev ? { ...prev, availability: { ...prev.availability, seatsAvailable: newSeats } } : prev);
+          }
+        }
+      } catch {
+        // polling failure is silent
+      }
+    }, 30000);
+    return () => { active = false; clearInterval(intervalId); };
+  }, [tour?._id, tour?.id, step]);
 
   useEffect(() => {
     const total = adults + children + infants;
@@ -253,8 +280,9 @@ export default function BookingPageContainer() {
         adultCount: adults,
         childCount: children,
         infantCount: infants,
-        roomType: "",
+        roomType: packageType || "",
         pickupCity: "",
+        mealPreference: mealPreference || "",
         specialRequests: "",
         termsAccepted: true,
         cancellationPolicyAccepted: true,
@@ -326,6 +354,8 @@ export default function BookingPageContainer() {
       onStartDateChange={setStartDate}
       onEndDateChange={setEndDate}
       onGuestsChange={handleGuestsChange}
+      onPackageTypeChange={setPackageType}
+      onMealPreferenceChange={setMealPreference}
       onContactEmailChange={setContactEmail}
       onContactPhoneChange={setContactPhone}
       onTravelerChange={handleTravelerChange}

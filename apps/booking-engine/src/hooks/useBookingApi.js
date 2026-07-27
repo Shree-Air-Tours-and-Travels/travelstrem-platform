@@ -75,16 +75,17 @@ export function useBookingApi() {
     }
   }, []);
 
-  const payToken = useCallback(async (bookingId, paymentData = {}) => {
+  const submitTokenProof = useCallback(async (bookingId, paymentData = {}) => {
     setLoading(true);
     setError("");
     try {
-      const response = await fetchData(`/engine/${bookingId}/pay-token`, {
+      const body = new FormData();
+      if (paymentData.screenshot) body.append("paymentScreenshot", paymentData.screenshot);
+      const response = await fetchData(`/engine/${bookingId}/payments/token-proof`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: paymentData,
+        body,
       });
-      if (response?.status !== "success") throw new Error(response?.message || "Payment failed");
+      if (response?.status !== "success") throw new Error(response?.message || "Payment proof submission failed");
       return unwrap(response);
     } catch (err) {
       setError(err.message);
@@ -250,7 +251,7 @@ export function useBookingApi() {
     submitBooking,
     getBookingStatus,
     getBookingDetail,
-    payToken,
+    submitTokenProof,
     payFullAmount,
     acceptQuote,
     rejectQuote,

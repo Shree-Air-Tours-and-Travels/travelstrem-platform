@@ -1,21 +1,34 @@
 import mongoose from "mongoose";
-import { PAYMENT_STATUS, PAYMENT_STATUS_LIST, PAYMENT_TYPE, PAYMENT_TYPE_LIST } from "../../../constants/enums.js";
+import {
+  PAYMENT_METHOD_LIST,
+  PAYMENT_RECORD_STATUS,
+  PAYMENT_RECORD_STATUS_LIST,
+  PAYMENT_TYPE,
+  PAYMENT_TYPE_LIST,
+} from "../../../constants/enums.js";
 
 const { Schema } = mongoose;
 
-export const BOOKING_PAYMENT_STATUSES = PAYMENT_STATUS_LIST;
+export const BOOKING_PAYMENT_STATUSES = PAYMENT_RECORD_STATUS_LIST;
 export const BOOKING_PAYMENT_TYPES = PAYMENT_TYPE_LIST;
 
 const bookingPaymentSchema = new Schema({
   bookingId: { type: Schema.Types.ObjectId, ref: "Booking", required: true, index: true },
   amount: { type: Number, required: true },
   currency: { type: String, trim: true, default: "INR" },
-  provider: { type: String, trim: true, default: "" },
+  paymentMethod: { type: String, enum: PAYMENT_METHOD_LIST, default: "UPI" },
+  provider: { type: String, trim: true, default: "manual" },
   transactionId: { type: String, trim: true, default: "" },
-  status: { type: String, enum: BOOKING_PAYMENT_STATUSES, default: PAYMENT_STATUS.PAID, index: true },
+  status: { type: String, enum: BOOKING_PAYMENT_STATUSES, default: PAYMENT_RECORD_STATUS.PENDING, index: true },
   paymentDate: { type: Date, default: Date.now },
+  submittedAt: { type: Date, default: null },
   receiptUrl: { type: String, trim: true, default: "" },
-  type: { type: String, enum: BOOKING_PAYMENT_TYPES, default: PAYMENT_TYPE.PARTIAL },
+  paymentScreenshot: { type: String, trim: true, default: "" },
+  remarks: { type: String, trim: true, default: "" },
+  rejectionReason: { type: String, trim: true, default: "" },
+  verifiedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
+  verifiedAt: { type: Date, default: null },
+  type: { type: String, enum: BOOKING_PAYMENT_TYPES, default: PAYMENT_TYPE.TOKEN },
   raw: { type: Schema.Types.Mixed, default: {} },
   createdBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
 }, { timestamps: true });
@@ -31,7 +44,20 @@ bookingPaymentSchema.set("toJSON", {
 });
 
 bookingPaymentSchema.index({ bookingId: 1, status: 1 });
-bookingPaymentSchema.index({ transactionId: 1 }, { sparse: true });
+bookingPaymentSchema.index(
+  { bookingId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      type: PAYMENT_TYPE.TOKEN,
+      status: PAYMENT_RECORD_STATUS.VERIFICATION,
+    },
+  }
+);
+bookingPaymentSchema.index(
+  { transactionId: 1 },
+  { unique: true, partialFilterExpression: { transactionId: { $exists: true, $type: "string", $gt: "" } } }
+);
 
 const BookingPayment = mongoose.models?.BookingPayment || mongoose.model("BookingPayment", bookingPaymentSchema);
 export default BookingPayment;

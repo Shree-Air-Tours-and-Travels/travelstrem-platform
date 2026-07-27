@@ -22,7 +22,25 @@ export const BookingService = {
 
   async hydrate(booking, { includeDeep = true } = {}) {
     if (!booking) return null;
-    const doc = typeof booking.toJSON === "function" ? booking.toJSON() : booking;
+    const rawDoc = typeof booking.toJSON === "function" ? booking.toJSON() : booking;
+    const doc = { ...rawDoc };
+    if (doc.product === "trevio") {
+      const bookingAliases = {
+        PAYMENT_PENDING: "AWAITING_TOKEN_PAYMENT",
+        PARTIALLY_PAID: "CONFIRMED",
+        PAID: "CONFIRMED",
+      };
+      const paymentAliases = {
+        UNPAID: "TOKEN_PENDING",
+        PARTIAL: "TOKEN_PAID",
+        PAID: "FULLY_PAID",
+      };
+      doc.status = bookingAliases[doc.status] || doc.status;
+      doc.paymentStatus = paymentAliases[doc.paymentStatus] || doc.paymentStatus;
+      if (!Number(doc.tokenAmount || 0) && Number(doc.paymentSummary?.total || doc.priceSnapshot?.total || 0) > 0) {
+        doc.tokenAmount = Math.round(Number(doc.paymentSummary?.total || doc.priceSnapshot?.total) * 0.15);
+      }
+    }
     const bookingId = booking._id || booking.id;
     const [travelers, quotes, payments, documents, timeline, statusHistory, auditLogs, assignments] = await Promise.all([
       TravellerService.list(bookingId),
@@ -39,6 +57,8 @@ export const BookingService = {
     const isProceedHide = BOOKING_PROCEED_HIDE_STATUSES.includes(doc.status);
     return {
       ...doc,
+      bookingStatus: doc.status,
+      remainingAmount: doc.paymentSummary?.remaining || 0,
       isProceedHide,
       startDate: doc.startDate || doc.travelWindow?.startDate,
       endDate: doc.endDate || doc.travelWindow?.endDate,

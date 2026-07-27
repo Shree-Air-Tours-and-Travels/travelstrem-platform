@@ -1,5 +1,5 @@
 import React from "react";
-import { Footer, Header } from "@packages/trem-ui";
+import { Header } from "@packages/trem-ui";
 import { useThemeMode } from "@packages/trem-utils";
 import AuthPage from "../features/auth/AuthPage.jsx";
 import { createAuthApi, createAuthService } from "@packages/trem-auth-core";
@@ -32,7 +32,6 @@ export default function AuthTremApp() {
         authStoragePrefix="travelstrem"
         afterAuthPath={fallbackAfterAuthPath}
       />
-      <Footer productName="Secure access · TravelsTREM" />
     </div>
   );
 }

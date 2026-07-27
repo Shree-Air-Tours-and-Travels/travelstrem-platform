@@ -1,3 +1,9 @@
+import config from "./env.js";
+
+const TREVIO_URL = config.TREVIO_URL;
+const TREVISTA_URL = config.TREVISTA_URL;
+const DASHBOARD_URL = config.DASHBOARD_URL;
+
 export default {
   "status": "success",
   "message": "Header and route config loaded",
@@ -34,7 +40,7 @@ export default {
           {
             "label": "Trevio",
             "type": "external",
-            "href": "http://localhost:3005",
+            "href": TREVIO_URL,
             "target": "_blank",
             "rel": "noopener noreferrer",
             "disabled": false
@@ -42,7 +48,7 @@ export default {
           {
             "label": "Trevista",
             "type": "external",
-            "href": "http://localhost:3001",
+            "href": TREVISTA_URL,
             "target": "_blank",
             "rel": "noopener noreferrer",
             "disabled": false
@@ -52,7 +58,7 @@ export default {
       {
         "label": "Dashboard",
         "type": "external",
-        "href": "http://localhost:3006",
+        "href": DASHBOARD_URL,
         "target": "_self",
         "disabled": false
       },
@@ -81,7 +87,7 @@ export default {
         "label": "AdminTREM",
         "routeBase": "/admin",
         "remoteUrlEnv": "REACT_APP_ADMIN_REMOTE_URL",
-        "defaultRemoteUrl": "http://localhost:3002",
+        "defaultRemoteUrl": config.ADMIN_REMOTE_URL,
         "module": "adminTREM/AdminApp",
         "exportName": "AdminApp",
         "remoteProps": { "embedded": true, "basename": "/admin", "basePath": "/admin" }
