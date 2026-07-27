@@ -20,7 +20,7 @@ function AppShell({ embedded, session, headerConfig, pageModel, trips, activeFil
   const navigate = useNavigate();
   const openWishlist = () => {
     const token = localStorage.getItem("travelstrem:token") || localStorage.getItem("trem:token") || null;
-    window.location.assign(appendTokenToUrl(buildGlobalDashboardUrl({ product: "trevio" }), token));
+    window.location.assign(appendTokenToUrl(buildGlobalDashboardUrl({ product: "trevio", tab: "favorites" }), token));
   };
   const labels = pageModel?.labels || {};
   const shellProps = {

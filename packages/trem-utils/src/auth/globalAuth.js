@@ -47,10 +47,12 @@ export const buildGlobalDashboardUrl = ({
   dashboardBaseUrl = "",
   returnTo = "",
   product = "",
+  tab = "",
 } = {}) => {
   const base = getGlobalDashboardBaseUrl(dashboardBaseUrl);
   const url = new URL("/", safeBase(base));
   if (product) url.searchParams.set("product", product);
+  if (tab) url.searchParams.set("tab", tab);
   if (returnTo) url.searchParams.set("returnTo", returnTo);
   return url.toString();
 };
