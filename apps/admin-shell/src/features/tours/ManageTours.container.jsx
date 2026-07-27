@@ -248,6 +248,8 @@ export default function ManageTours({ session, tab: tabProp }) {
             tripEditing={tripEditing}
             viewOpen={viewOpen} setViewOpen={setViewOpen}
             editing={editing} viewTour={viewTour} setViewTour={setViewTour}
+            tripViewOpen={tripViewOpen} setTripViewOpen={setTripViewOpen}
+            viewTrip={viewTrip} setViewTrip={setViewTrip}
             openCreate={openCreate} openEdit={openEdit} openView={openView}
             openTripCreate={openTripCreate} openTripEdit={openTripEdit} openTripView={openTripView}
             handleDelete={handleDelete} handleDeleteAll={handleDeleteAll}

@@ -1,5 +1,11 @@
 @import "@packages/trem-design-tokens/scss";
 
+.asv {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
 .asv__header {
   display: flex;
   align-items: flex-start;
@@ -34,16 +40,31 @@
   gap: $space-4;
   margin-bottom: $space-5;
   flex-wrap: wrap;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .asv__filter-tabs {
   display: flex;
+  flex: 1 1 auto;
   gap: $space-2;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
   border-bottom: 1px solid var(--border);
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 .asv__filter-tab {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   gap: $space-2;
   padding: 6px 14px;
@@ -60,6 +81,29 @@
   &.is-active {
     color: var(--heading);
     border-bottom-color: var(--color-primary);
+  }
+}
+
+@media (max-width: 640px) {
+  .asv,
+  .asv__filters {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .asv__filters {
+    display: block;
+    overflow: hidden;
+  }
+
+  .asv__filter-tabs {
+    width: 100%;
+    margin-bottom: $space-3;
+  }
+
+  .asv__trip-filter,
+  .asv__trip-select {
+    width: 100%;
   }
 }
 

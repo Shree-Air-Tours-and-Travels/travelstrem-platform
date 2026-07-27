@@ -1,4 +1,6 @@
-import React from "react";
+import React, { useCallback, useEffect } from "react";
+import { emit } from "@packages/trem-events";
+import authService from "../services/authService";
 import "./AdminSidebar.scss";
 
 const TABS = [
@@ -10,15 +12,46 @@ const TABS = [
 
 const TREVIO_URL = process.env.REACT_APP_TREVIO_URL || "";
 
-export default function Sidebar({ activeTab, onTabChange, user }) {
+export default function Sidebar({ activeTab, onTabChange, user, mobileOpen = false, onMobileClose = () => {} }) {
+  useEffect(() => {
+    if (!mobileOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const handleKey = (event) => {
+      if (event.key === "Escape") onMobileClose();
+    };
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [mobileOpen, onMobileClose]);
+
+  const handleLogout = useCallback(async () => {
+    await authService.logout().catch(() => {});
+    emit("USER_LOGOUT", { source: "admin-sidebar" }, { skipController: true });
+    window.location.href = "/login";
+  }, []);
+
+  const handleTabChange = (tabId) => {
+    onTabChange(tabId);
+    onMobileClose();
+  };
+
   return (
-    <aside className="dash-sidebar">
+    <>
+    <aside className={`dash-sidebar ${mobileOpen ? "is-mobile-open" : ""}`}>
       <div className="dsb-brand">
         <img className="dsb-brand__logo" src="/logo-images/logo-icon-only.png" alt="TravelsTrem" width="36" height="36" />
         <div className="dsb-brand__text">
           <span className="dsb-brand__name">TravelsTrem</span>
           <span className="dsb-brand__sub">Admin</span>
         </div>
+        <button className="dsb-close" onClick={onMobileClose} aria-label="Close navigation">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
       </div>
 
       <nav className="dsb-nav">
@@ -26,7 +59,7 @@ export default function Sidebar({ activeTab, onTabChange, user }) {
           <button
             key={tab.id}
             className={`dsb-nav__item ${activeTab === tab.id ? "is-active" : ""}`}
-            onClick={() => onTabChange(tab.id)}
+            onClick={() => handleTabChange(tab.id)}
           >
             <svg className="dsb-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d={tab.icon} />
@@ -59,7 +92,15 @@ export default function Sidebar({ activeTab, onTabChange, user }) {
             </div>
           </div>
         )}
+        <button className="dsb-signout" onClick={handleLogout}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
+          </svg>
+          <span>Sign out</span>
+        </button>
       </div>
     </aside>
+    {mobileOpen && <button className="dsb-backdrop" onClick={onMobileClose} aria-label="Close navigation" />}
+    </>
   );
 }

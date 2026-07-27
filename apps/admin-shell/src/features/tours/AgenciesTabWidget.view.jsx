@@ -1,22 +1,28 @@
 import React from "react";
 import { Button, SubTitle } from "@packages/trem-ui";
+import "./AgenciesTabWidget.scss";
 
 export default function AgenciesTabWidget({
     admins, agents, partnerAgencies, agencyLoading, auth,
     fetchAgencyManagement, handleReviewAdmin, handleRemoveAdmin,
-    handleReviewAgent, handleReviewPartnerAgency,
+    handleReviewAgent, handleReviewPartnerAgency, hideHeader = false,
 }) {
     return (
-        <section className="mt-content">
-            <header className="mt-toolbar" style={{ marginTop: 8 }}>
-                <SubTitle text="Agency Management" />
-                <Button primaryClassName="btn" variant="outline" onClick={fetchAgencyManagement} text="Refresh" />
-            </header>
+        <section className="mt-content agency-management">
+            {!hideHeader && (
+                <header className="mt-toolbar agency-management__header">
+                    <div>
+                        <SubTitle text="Agency Management" />
+                        <p>Review access requests and manage partner accounts.</p>
+                    </div>
+                    <Button primaryClassName="btn agency-button" variant="outline" onClick={fetchAgencyManagement} text="Refresh" />
+                </header>
+            )}
 
             {agencyLoading ? <div className="mt-empty">Loading agency approvals...</div> : null}
 
             <div className="mt-grid" style={{ gridTemplateColumns: "1fr", gap: 16 }}>
-                {auth.user?.adminLevel === "master" && (
+                {auth?.user?.adminLevel === "master" && (
                     <article className="mt-empty" style={{ textAlign: "left" }}>
                         <SubTitle text="Admin Approvals" />
                         {(admins || []).length === 0 ? <p>No admins found.</p> : (
@@ -24,7 +30,7 @@ export default function AgenciesTabWidget({
                                 {admins.map((admin) => {
                                     const id = admin.id || admin._id;
                                     const isMaster = admin.adminLevel === "master";
-                                    const isSelf = id && auth.user?.id && String(id) === String(auth.user.id);
+                                    const isSelf = id && auth?.user?.id && String(id) === String(auth.user.id);
                                     return (
                                         <div key={id} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "center", border: "1px solid #dbe7e4", borderRadius: 8, padding: 12 }}>
                                             <div>
@@ -34,13 +40,13 @@ export default function AgenciesTabWidget({
                                             </div>
                                             <div className="mt-actions">
                                                 {!isMaster && admin.adminApprovalStatus !== "approved" && (
-                                                    <Button primaryClassName="btn" variant="solid" onClick={() => handleReviewAdmin(id, "approved")} text="Approve" />
+                                                    <Button primaryClassName="btn agency-button agency-button--approve" variant="solid" onClick={() => handleReviewAdmin(id, "approved")} text="Approve" />
                                                 )}
                                                 {!isMaster && admin.adminApprovalStatus !== "rejected" && (
-                                                    <Button primaryClassName="btn" variant="outline" color="danger" onClick={() => handleReviewAdmin(id, "rejected")} text="Reject" />
+                                                    <Button primaryClassName="btn agency-button agency-button--danger" variant="outline" color="danger" onClick={() => handleReviewAdmin(id, "rejected")} text="Reject" />
                                                 )}
                                                 {!isMaster && !isSelf && admin.adminApprovalStatus !== "removed" && (
-                                                    <Button primaryClassName="btn" variant="outline" color="danger" onClick={() => handleRemoveAdmin(id)} text="Remove" />
+                                                    <Button primaryClassName="btn agency-button agency-button--danger" variant="outline" color="danger" onClick={() => handleRemoveAdmin(id)} text="Remove" />
                                                 )}
                                             </div>
                                         </div>
@@ -63,8 +69,8 @@ export default function AgenciesTabWidget({
                                         <small>agentRef: {agent.agentRef || "-"} · agencyRef: {agent.partnerAgencyRef || agent.agencyRef || "-"} · status: {agent.agentApprovalStatus}</small>
                                     </div>
                                     <div className="mt-actions">
-                                        <Button primaryClassName="btn" variant="solid" onClick={() => handleReviewAgent(agent.id || agent._id, "approved")} text="Approve" />
-                                        <Button primaryClassName="btn" variant="outline" color="danger" onClick={() => handleReviewAgent(agent.id || agent._id, "rejected")} text="Reject" />
+                                        <Button primaryClassName="btn agency-button agency-button--approve" variant="solid" onClick={() => handleReviewAgent(agent.id || agent._id, "approved")} text="Approve" />
+                                        <Button primaryClassName="btn agency-button agency-button--danger" variant="outline" color="danger" onClick={() => handleReviewAgent(agent.id || agent._id, "rejected")} text="Reject" />
                                     </div>
                                 </div>
                             ))}
@@ -84,8 +90,8 @@ export default function AgenciesTabWidget({
                                         <small>partnerAgencyRef: {agency.partnerAgencyRef} · status: {agency.status}</small>
                                     </div>
                                     <div className="mt-actions">
-                                        <Button primaryClassName="btn" variant="solid" onClick={() => handleReviewPartnerAgency(agency.id || agency._id, "approved")} text="Approve" />
-                                        <Button primaryClassName="btn" variant="outline" color="danger" onClick={() => handleReviewPartnerAgency(agency.id || agency._id, "rejected")} text="Reject" />
+                                        <Button primaryClassName="btn agency-button agency-button--approve" variant="solid" onClick={() => handleReviewPartnerAgency(agency.id || agency._id, "approved")} text="Approve" />
+                                        <Button primaryClassName="btn agency-button agency-button--danger" variant="outline" color="danger" onClick={() => handleReviewPartnerAgency(agency.id || agency._id, "rejected")} text="Reject" />
                                     </div>
                                 </div>
                             ))}

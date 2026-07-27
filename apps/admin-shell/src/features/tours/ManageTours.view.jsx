@@ -7,6 +7,11 @@ import AdminOverviewView from "../../views/AdminOverviewView";
 import AdminBookingsView from "../payments/AdminPaymentsBookings";
 import AdminServicesView from "../../views/AdminServicesView";
 import AdminProfileView from "../../views/AdminProfileView";
+import TourView from "./TourView";
+import CreateTourForm from "./CreateTourForm";
+import TripView from "../trips/TripView";
+import CreateTripForm from "../trips/CreateTripForm";
+import "./ManageTours.scss";
 
 export function ConfirmModal({ open, title = "Confirm", message = "Are you sure?", onCancel, onConfirm }) {
     if (!open) return null;
@@ -54,6 +59,7 @@ export function Toast({ toast, setToast }) {
 export default function ManageToursView({
     tab, setTab,
     tours, trips, bookings, profile,
+    admins, agents, partnerAgencies,
     loading, bookingsLoading, agencyLoading,
     stats, auth, error,
     formOpen, setFormOpen,
@@ -77,11 +83,19 @@ export default function ManageToursView({
     toast, setToast,
 }) {
     const { theme, toggleTheme } = useThemeMode();
+    const [mobileSidebarOpen, setMobileSidebarOpen] = React.useState(false);
     const mergedUser = { ...auth.user, ...(profile || {}) };
+    const closeMobileSidebar = React.useCallback(() => setMobileSidebarOpen(false), []);
 
     return (
         <div className="dash-layout">
-            <Sidebar activeTab={tab} onTabChange={setTab} user={mergedUser} />
+            <Sidebar
+                activeTab={tab}
+                onTabChange={setTab}
+                user={mergedUser}
+                mobileOpen={mobileSidebarOpen}
+                onMobileClose={closeMobileSidebar}
+            />
 
             <div className="dash-main">
                 <DashboardHeader
@@ -90,6 +104,7 @@ export default function ManageToursView({
                     user={mergedUser}
                     theme={theme}
                     onToggleTheme={toggleTheme}
+                    onMenuClick={() => setMobileSidebarOpen(true)}
                 />
 
                 <div className="dash-content">
@@ -116,79 +131,66 @@ export default function ManageToursView({
                         />
                     )}
                     {tab === "services" && (
-                        <AdminServicesView
-                            tours={tours}
-                            trips={trips}
-                            loading={loading}
-                            onEditTour={openEdit}
-                            onViewTour={openView}
-                            onDeleteTour={handleDelete}
-                            onEditTrip={openTripEdit}
-                            onViewTrip={openTripView}
-                            onDeleteTrip={handleTripDelete}
-                            onCreateTour={openCreate}
-                            onCreateTrip={openTripCreate}
-                            onRefresh={refreshAll}
-                            onDeleteAllTours={handleDeleteAll}
-                            onDeleteAllTrips={handleTripDeleteAll}
-                            formOpen={formOpen}
-                            tripFormOpen={tripFormOpen}
-                            viewOpen={viewOpen}
-                            tripViewOpen={tripViewOpen}
-                            setFormOpen={setFormOpen}
-                            setTripFormOpen={setTripFormOpen}
-                            setViewOpen={setViewOpen}
-                            setTripViewOpen={setTripViewOpen}
-                            setViewTour={setViewTour}
-                            setViewTrip={setViewTrip}
-                            openTripCreate={openTripCreate}
-                            openTripEdit={openTripEdit}
-                        >
-                            {viewOpen && (
-                                <div className="mt-panels-overlay" role="dialog" aria-modal="true">
-                                    <React.Suspense fallback={<div>Loading...</div>}>
-                                        {React.createElement(require("./TourView").default, {
-                                            tour: viewTour,
-                                            onClose: () => { setViewOpen(false); setViewTour(null); },
-                                            onEdit: (t) => { setViewOpen(false); openEdit(t); },
-                                        })}
-                                    </React.Suspense>
-                                </div>
+                        <>
+                            <AdminServicesView
+                                tours={tours}
+                                trips={trips}
+                                loading={loading}
+                                onEditTour={openEdit}
+                                onViewTour={openView}
+                                onDeleteTour={handleDelete}
+                                onEditTrip={openTripEdit}
+                                onViewTrip={openTripView}
+                                onDeleteTrip={handleTripDelete}
+                                onCreateTour={openCreate}
+                                onCreateTrip={openTripCreate}
+                                onRefresh={refreshAll}
+                                onDeleteAllTours={handleDeleteAll}
+                                onDeleteAllTrips={handleTripDeleteAll}
+                                admins={admins}
+                                agents={agents}
+                                partnerAgencies={partnerAgencies}
+                                agencyLoading={agencyLoading}
+                                auth={auth}
+                                fetchAgencyManagement={fetchAgencyManagement}
+                                handleReviewAdmin={handleReviewAdmin}
+                                handleRemoveAdmin={handleRemoveAdmin}
+                                handleReviewAgent={handleReviewAgent}
+                                handleReviewPartnerAgency={handleReviewPartnerAgency}
+                            />
+                            {viewOpen && createPortal(
+                                <TourView
+                                    tour={viewTour}
+                                    onClose={() => { setViewOpen(false); setViewTour(null); }}
+                                    onEdit={(tour) => { setViewOpen(false); openEdit(tour); }}
+                                />,
+                                document.body
                             )}
-                            {tripViewOpen && (
-                                <div className="mt-panels-overlay" role="dialog" aria-modal="true">
-                                    <React.Suspense fallback={<div>Loading...</div>}>
-                                        {React.createElement(require("../trips/TripView").default, {
-                                            trip: viewTrip,
-                                            onClose: () => { setTripViewOpen(false); setViewTrip(null); },
-                                            onEdit: (t) => { setTripViewOpen(false); openTripEdit(t); },
-                                        })}
-                                    </React.Suspense>
-                                </div>
+                            {tripViewOpen && createPortal(
+                                <TripView
+                                    trip={viewTrip}
+                                    onClose={() => { setTripViewOpen(false); setViewTrip(null); }}
+                                    onEdit={(trip) => { setTripViewOpen(false); openTripEdit(trip); }}
+                                />,
+                                document.body
                             )}
-                            {formOpen && (
-                                <div className="mt-panels-overlay" role="dialog" aria-modal="true">
-                                    <React.Suspense fallback={<div>Loading...</div>}>
-                                        {React.createElement(require("./CreateTourForm").default, {
-                                            initial: editing,
-                                            onCancel: () => setFormOpen(false),
-                                            onSaved: async () => { setFormOpen(false); await fetchTours(); },
-                                        })}
-                                    </React.Suspense>
-                                </div>
+                            {formOpen && createPortal(
+                                <CreateTourForm
+                                    initial={editing}
+                                    onCancel={() => setFormOpen(false)}
+                                    onSaved={async () => { setFormOpen(false); await fetchTours(); }}
+                                />,
+                                document.body
                             )}
-                            {tripFormOpen && (
-                                <div className="mt-panels-overlay" role="dialog" aria-modal="true">
-                                    <React.Suspense fallback={<div>Loading...</div>}>
-                                        {React.createElement(require("../trips/CreateTripForm").default, {
-                                            initial: tripEditing,
-                                            onCancel: () => setTripFormOpen(false),
-                                            onSaved: async () => { setTripFormOpen(false); await fetchTrips(); },
-                                        })}
-                                    </React.Suspense>
-                                </div>
+                            {tripFormOpen && createPortal(
+                                <CreateTripForm
+                                    initial={tripEditing}
+                                    onCancel={() => setTripFormOpen(false)}
+                                    onSaved={async () => { setTripFormOpen(false); await fetchTrips(); }}
+                                />,
+                                document.body
                             )}
-                        </AdminServicesView>
+                        </>
                     )}
                     {tab === "profile" && (
                         <AdminProfileView

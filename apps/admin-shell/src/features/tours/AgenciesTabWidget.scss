@@ -1,0 +1,94 @@
+@import "@packages/trem-design-tokens/scss";
+
+.agency-management {
+  display: grid;
+  gap: $space-4;
+  width: 100%;
+
+  .agency-management__header {
+    margin-top: $space-2;
+
+    p {
+      margin: $space-1 0 0;
+      color: var(--muted);
+      font-size: $font-size-sm;
+    }
+  }
+
+  > .mt-grid {
+    gap: $space-4 !important;
+  }
+
+  article.mt-empty {
+    margin: 0;
+    padding: $space-4;
+    border: 1px solid var(--border);
+    border-radius: $radius-md;
+    background: var(--card-bg);
+    box-shadow: none;
+  }
+
+  article.mt-empty > div {
+    margin-top: $space-3;
+  }
+
+  article.mt-empty > div > div {
+    border-color: var(--border) !important;
+    border-radius: $radius-sm !important;
+    background: var(--bg-2);
+  }
+
+  article strong {
+    color: var(--heading);
+  }
+
+  article small,
+  article strong + div {
+    color: var(--muted);
+  }
+
+  .mt-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: $space-2;
+  }
+
+  .agency-button.ui-button {
+    min-height: 2.25rem;
+    padding: 0.4rem 0.75rem;
+    border-radius: $radius-sm;
+    font-size: $font-size-xs;
+    box-shadow: none;
+  }
+
+  .agency-button--approve.ui-button {
+    border-color: var(--heading);
+    background: var(--heading);
+    color: var(--bg-2);
+  }
+
+  .agency-button--danger.ui-button {
+    border-color: var(--border);
+    background: transparent;
+    color: var(--color-danger);
+  }
+}
+
+@media (max-width: 640px) {
+  .agency-management {
+    article.mt-empty > div > div {
+      grid-template-columns: 1fr !important;
+    }
+
+    .mt-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      justify-content: stretch;
+    }
+
+    .agency-button.ui-button {
+      width: 100%;
+    }
+  }
+}
