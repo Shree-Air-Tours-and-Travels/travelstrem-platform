@@ -45,24 +45,16 @@ export const canAccessAuthRoute = (route = {}, session = null) => {
   return true;
 };
 
-export const normalizeBase = (raw) => {
-  if (raw == null || raw === "") return raw;
-  if (/^https?:\/\//i.test(raw)) return raw.replace(/\/$/, "");
-  return `https://${raw}`.replace(/\/$/, "");
-};
-
 export const extractToken = (res) => res?.data?.token || res?.token || res?.data?.data?.token || res?.data?.user?.token;
 
 export const extractSafeUser = (res) =>
   res?.data?.user || res?.data?.data?.user || (res?.data && typeof res.data === "object" && res.data.user) || res?.user || null;
 
-export const TOKEN_URL_PARAM = "auth_token";
-
 export const appendTokenToUrl = (url, token) => {
   if (!token || typeof url !== "string") return url;
   try {
     const parsed = new URL(url);
-    parsed.searchParams.set(TOKEN_URL_PARAM, token);
+    parsed.searchParams.set("auth_token", token);
     return parsed.toString();
   } catch {
     return url;
@@ -73,11 +65,11 @@ export const consumeUrlToken = (storageKeys = {}) => {
   if (typeof window === "undefined") return null;
   try {
     const url = new URL(window.location.href);
-    const token = url.searchParams.get(TOKEN_URL_PARAM);
+    const token = url.searchParams.get("auth_token");
     if (!token) return null;
     const tokenKey = storageKeys.token || "travelstrem:token";
     localStorage.setItem(tokenKey, token);
-    url.searchParams.delete(TOKEN_URL_PARAM);
+    url.searchParams.delete("auth_token");
     window.history.replaceState({}, "", url.toString());
     return token;
   } catch {
@@ -86,7 +78,7 @@ export const consumeUrlToken = (storageKeys = {}) => {
 };
 
 /** @deprecated Tokens are now stored in httpOnly cookies. Kept for backward compat during migration. */
-export const getStoredAuthToken = ({ storage = localStorage } = {}) => {
+const getStoredAuthToken = ({ storage = localStorage } = {}) => {
   if (!storage) return null;
   return storage.getItem("token") || storage.getItem("auth_token");
 };
@@ -210,6 +202,12 @@ export const createRefreshHandler = ({ authService, persistSession, onRefresh } 
   return session;
 };
 
+const normalizeBase = (raw) => {
+  if (raw == null || raw === "") return raw;
+  if (/^https?:\/\//i.test(raw)) return raw.replace(/\/$/, "");
+  return `https://${raw}`.replace(/\/$/, "");
+};
+
 export const createAuthApi = (base = process.env.REACT_APP_API_URL || "") => {
   const normalized = normalizeBase(base) ?? "";
   const baseURL = (normalized.endsWith("/api") ? normalized : `${normalized}/api`).replace(/([^:]\/)\/+/g, "$1");
@@ -265,7 +263,7 @@ export const normalizeAuthConfig = (remote, roleOptions, defaultRole, storagePre
   });
 };
 
-export const extractAuthConfig = (res) =>
+const extractAuthConfig = (res) =>
   res?.componentData?.structure || res?.data?.componentData?.structure || res?.data?.data?.componentData?.structure;
 
 export const useAuthConfig = ({ authService, roleOptions, defaultRole, storagePrefix = "" } = {}) => {

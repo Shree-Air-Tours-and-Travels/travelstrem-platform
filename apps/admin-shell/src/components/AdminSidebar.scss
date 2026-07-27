@@ -1,0 +1,153 @@
+@import "@packages/trem-design-tokens/scss";
+
+/* Admin Sidebar — uses same CSS variables as dashboard */
+
+.dsb-brand {
+  display: flex;
+  align-items: center;
+  padding: $space-5 $space-4;
+}
+
+.dsb-brand__logo {
+  width: 50px;
+  height: 50px;
+  border-radius: $radius-sm;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.dsb-brand__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dsb-brand__name {
+  font-weight: $font-bold;
+  font-size: $font-size-md;
+  color: var(--heading);
+  line-height: 1.3;
+}
+
+.dsb-brand__sub {
+  font-size: $font-size-xs;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.dsb-nav {
+  flex: 1;
+  padding: $space-2 $space-3;
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+  overflow-y: auto;
+}
+
+.dsb-nav__item {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  padding: $space-3;
+  border-radius: $radius-sm;
+  font-size: $font-size-sm;
+  font-weight: $font-medium;
+  color: var(--nav-text);
+  text-align: left;
+  width: 100%;
+  position: relative;
+  transition: color $duration-fast $ease-standard;
+
+  &:hover {
+    color: var(--heading);
+  }
+
+  &.is-active {
+    color: var(--color-primary);
+    border-right: 2px solid var(--color-primary);
+  }
+}
+
+.dsb-nav__icon {
+  width: $space-5;
+  height: $space-5;
+  flex-shrink: 0;
+}
+
+.dsb-nav__label {
+  white-space: nowrap;
+}
+
+.dsb-footer {
+  padding: $space-3;
+}
+
+.dsb-back {
+  padding: 0 $space-3;
+  margin-bottom: $space-2;
+}
+
+.dsb-back__link {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  padding: $space-2 $space-3;
+  border-radius: $radius-sm;
+  font-size: $font-size-sm;
+  font-weight: $font-medium;
+  color: var(--nav-text);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--heading);
+  }
+}
+
+.dsb-back__label {
+  white-space: nowrap;
+}
+
+.dsb-user {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  padding: $space-3;
+  border-radius: $radius-sm;
+}
+
+.dsb-user__avatar {
+  width: $space-8;
+  height: $space-8;
+  border-radius: $radius-circle;
+  background: var(--primary-soft);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: $font-bold;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.dsb-user__info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dsb-user__name {
+  font-size: $font-size-sm;
+  font-weight: $font-semibold;
+  color: var(--heading);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dsb-user__email {
+  font-size: $font-size-xs;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

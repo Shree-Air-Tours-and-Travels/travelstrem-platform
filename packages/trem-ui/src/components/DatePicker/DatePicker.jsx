@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import BottomSheet from "../BottomSheet/BottomSheet.jsx";
 import "./DatePicker.styles.scss";
 
 const DAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
@@ -42,6 +43,18 @@ function isBeforeDay(a, b) {
   return ta < tb;
 }
 
+function useIsMobile(breakpoint = 640) {
+  const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" && window.innerWidth <= breakpoint);
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${breakpoint}px)`);
+    const handler = (e) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    setIsMobile(mq.matches);
+    return () => mq.removeEventListener("change", handler);
+  }, [breakpoint]);
+  return isMobile;
+}
+
 export default function DatePicker({
   value = "",
   onChange,
@@ -65,6 +78,7 @@ export default function DatePicker({
   const [viewDate, setViewDate] = useState(() => selectedDate || today);
   const containerRef = useRef(null);
   const inputRef = useRef(null);
+  const isMobile = useIsMobile();
 
   const viewYear = viewDate.getFullYear();
   const viewMonth = viewDate.getMonth();
@@ -72,7 +86,10 @@ export default function DatePicker({
   const firstDay = getFirstDayOfMonth(viewYear, viewMonth);
 
   useEffect(() => {
-    if (!open) return;
+    // Mobile content is portalled outside containerRef. BottomSheet owns
+    // backdrop dismissal there; the desktop outside-click listener would
+    // otherwise treat every calendar interaction as an outside click.
+    if (!open || isMobile) return undefined;
     function handleClickOutside(e) {
       if (containerRef.current && !containerRef.current.contains(e.target)) {
         setOpen(false);
@@ -87,7 +104,7 @@ export default function DatePicker({
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleEscape);
     };
-  }, [open]);
+  }, [open, isMobile]);
 
   useEffect(() => {
     if (selectedDate) setViewDate(selectedDate);
@@ -139,6 +156,71 @@ export default function DatePicker({
     ? selectedDate.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
     : "";
 
+  const calendarContent = (
+    <>
+      <div className="trem-datepicker__header">
+        <button type="button" className="trem-datepicker__nav-btn" onClick={goToPrevYear} aria-label="Previous year">
+          <svg width="14" height="14" viewBox="0 0 14 14"><path d="M9 3L5 7l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /><path d="M5 3L1 7l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+        </button>
+        <button type="button" className="trem-datepicker__nav-btn" onClick={goToPrevMonth} aria-label="Previous month">
+          <svg width="14" height="14" viewBox="0 0 14 14"><path d="M9 3L5 7l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+        </button>
+        <span className="trem-datepicker__title">
+          {MONTHS[viewMonth]} {viewYear}
+        </span>
+        <button type="button" className="trem-datepicker__nav-btn" onClick={goToNextMonth} aria-label="Next month">
+          <svg width="14" height="14" viewBox="0 0 14 14"><path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+        </button>
+        <button type="button" className="trem-datepicker__nav-btn" onClick={goToNextYear} aria-label="Next year">
+          <svg width="14" height="14" viewBox="0 0 14 14"><path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /><path d="M9 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+        </button>
+      </div>
+
+      <div className="trem-datepicker__weekdays">
+        {DAYS.map((d) => (
+          <span key={d} className="trem-datepicker__weekday">{d}</span>
+        ))}
+      </div>
+
+      <div className="trem-datepicker__grid">
+        {weeks.map((week, wi) => (
+          <div key={wi} className="trem-datepicker__row">
+            {week.map((date, di) => {
+              if (!date) return <span key={`e-${di}`} className="trem-datepicker__cell trem-datepicker__cell--empty" />;
+              const disabled = isDateDisabled(date);
+              const selected = isSameDay(date, selectedDate);
+              const todayHighlight = isSameDay(date, today);
+              return (
+                <button
+                  key={toDateString(date)}
+                  type="button"
+                  className={[
+                    "trem-datepicker__cell",
+                    "trem-datepicker__day",
+                    selected ? "trem-datepicker__day--selected" : "",
+                    todayHighlight && !selected ? "trem-datepicker__day--today" : "",
+                    disabled ? "trem-datepicker__day--disabled" : "",
+                  ].filter(Boolean).join(" ")}
+                  onClick={() => !disabled && selectDate(date)}
+                  disabled={disabled}
+                  tabIndex={selected ? 0 : -1}
+                >
+                  {date.getDate()}
+                </button>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+
+      <div className="trem-datepicker__footer">
+        <button type="button" className="trem-datepicker__today-btn" onClick={() => { selectDate(today); setViewDate(today); }}>
+          Today
+        </button>
+      </div>
+    </>
+  );
+
   return (
     <div className={`trem-datepicker ${open ? "trem-datepicker--open" : ""} ${error ? "trem-datepicker--error" : ""} ${className}`} ref={containerRef}>
       <button
@@ -157,69 +239,12 @@ export default function DatePicker({
         </svg>
       </button>
 
-      {open && (
-        <div className="trem-datepicker__dropdown">
-          <div className="trem-datepicker__header">
-            <button type="button" className="trem-datepicker__nav-btn" onClick={goToPrevYear} aria-label="Previous year">
-              <svg width="14" height="14" viewBox="0 0 14 14"><path d="M9 3L5 7l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /><path d="M5 3L1 7l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
-            </button>
-            <button type="button" className="trem-datepicker__nav-btn" onClick={goToPrevMonth} aria-label="Previous month">
-              <svg width="14" height="14" viewBox="0 0 14 14"><path d="M9 3L5 7l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
-            </button>
-            <span className="trem-datepicker__title">
-              {MONTHS[viewMonth]} {viewYear}
-            </span>
-            <button type="button" className="trem-datepicker__nav-btn" onClick={goToNextMonth} aria-label="Next month">
-              <svg width="14" height="14" viewBox="0 0 14 14"><path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
-            </button>
-            <button type="button" className="trem-datepicker__nav-btn" onClick={goToNextYear} aria-label="Next year">
-              <svg width="14" height="14" viewBox="0 0 14 14"><path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /><path d="M9 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
-            </button>
-          </div>
-
-          <div className="trem-datepicker__weekdays">
-            {DAYS.map((d) => (
-              <span key={d} className="trem-datepicker__weekday">{d}</span>
-            ))}
-          </div>
-
-          <div className="trem-datepicker__grid">
-            {weeks.map((week, wi) => (
-              <div key={wi} className="trem-datepicker__row">
-                {week.map((date, di) => {
-                  if (!date) return <span key={`e-${di}`} className="trem-datepicker__cell trem-datepicker__cell--empty" />;
-                  const disabled = isDateDisabled(date);
-                  const selected = isSameDay(date, selectedDate);
-                  const todayHighlight = isSameDay(date, today);
-                  return (
-                    <button
-                      key={toDateString(date)}
-                      type="button"
-                      className={[
-                        "trem-datepicker__cell",
-                        "trem-datepicker__day",
-                        selected ? "trem-datepicker__day--selected" : "",
-                        todayHighlight && !selected ? "trem-datepicker__day--today" : "",
-                        disabled ? "trem-datepicker__day--disabled" : "",
-                      ].filter(Boolean).join(" ")}
-                      onClick={() => !disabled && selectDate(date)}
-                      disabled={disabled}
-                      tabIndex={selected ? 0 : -1}
-                    >
-                      {date.getDate()}
-                    </button>
-                  );
-                })}
-              </div>
-            ))}
-          </div>
-
-          <div className="trem-datepicker__footer">
-            <button type="button" className="trem-datepicker__today-btn" onClick={() => { selectDate(today); setViewDate(today); }}>
-              Today
-            </button>
-          </div>
-        </div>
+      {isMobile ? (
+        <BottomSheet open={open} onClose={() => setOpen(false)} title={placeholder}>
+          <div className="trem-datepicker__calendar-sheet">{calendarContent}</div>
+        </BottomSheet>
+      ) : (
+        open && <div className="trem-datepicker__dropdown">{calendarContent}</div>
       )}
     </div>
   );

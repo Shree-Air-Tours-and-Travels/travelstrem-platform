@@ -1,4 +1,4 @@
-export const normalizeSession = (data = {}) => ({
+const normalizeSession = (data = {}) => ({
     user: data.user || null,
     permissions: Array.isArray(data.permissions) ? data.permissions : [],
     isAuthenticated: Boolean(data.isAuthenticated || data.user || data.token),
@@ -8,7 +8,7 @@ export const normalizeSession = (data = {}) => ({
 });
 
 /** @deprecated Tokens are now stored in httpOnly cookies. */
-export const getStoredAuthToken = () => null;
+const getStoredAuthToken = () => null;
 
 const appendParams = (url, params = {}) => {
     Object.entries(params).forEach(([key, value]) => {

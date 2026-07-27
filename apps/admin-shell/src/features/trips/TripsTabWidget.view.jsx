@@ -19,7 +19,7 @@ const STATUS_COLORS = {
 
 export default function TripsTabWidget({
     trips, loading, error, formOpen, editing, auth,
-    openCreate, openEdit, handleDelete, handleDeleteAll,
+    openCreate, openEdit, openView, handleDelete, handleDeleteAll,
     fetchTrips, setFormOpen,
 }) {
     const [filter, setFilter] = React.useState("");
@@ -87,7 +87,7 @@ export default function TripsTabWidget({
                                     </div>
                                     <div className="tt-trip-card__meta">
                                         <span>{t.location}{t.country && t.country !== "India" ? `, ${t.country}` : ""}</span>
-                                        {t.duration && <span>{t.duration}</span>}
+                                        {t.duration && <span>{typeof t.duration === "object" ? `${t.duration.from || "—"} – ${t.duration.to || "—"}` : t.duration}</span>}
                                     </div>
                                     <div className="tt-trip-card__tags">
                                         {(t.tags || []).slice(0, 4).map((tag) => (
@@ -99,7 +99,7 @@ export default function TripsTabWidget({
                                         {t.price?.currency && t.price.currency !== "INR" ? ` ${t.price.currency}` : ""}
                                     </div>
                                     <div className="tt-trip-card__actions">
-                                        <Button primaryClassName="btn tt-btn-sm" variant="outline" onClick={() => openEdit(t)} text="Edit" />
+                                        <Button primaryClassName="btn tt-btn-sm" variant="outline" onClick={() => openView?.(t)} text="View" />
                                         <Button primaryClassName="btn tt-btn-sm tt-btn-danger" variant="outline" onClick={() => handleDelete(t._id)} text="Delete" />
                                     </div>
                                 </div>

@@ -1,32 +1,31 @@
 import React from "react";
-import { Button, SubTitle, Title, Paragraph } from "@packages/trem-ui";
-import "./ManageTours.scss";
-import { adminWidgetRegistry } from "../../widgets/registry/widgetRegistry";
-
-const TAB_WIDGET_MAP = {
-    dashboard: "AdminDashboard",
-    tours: "AdminTourManagement",
-    trips: "AdminTripManagement",
-    agencies: "AgencyManagement",
-};
+import { createPortal } from "react-dom";
+import { useThemeMode } from "@packages/trem-utils";
+import Sidebar from "../../components/AdminSidebar";
+import DashboardHeader from "../../components/AdminDashboardHeader";
+import AdminOverviewView from "../../views/AdminOverviewView";
+import AdminBookingsView from "../payments/AdminPaymentsBookings";
+import AdminServicesView from "../../views/AdminServicesView";
+import AdminProfileView from "../../views/AdminProfileView";
 
 export function ConfirmModal({ open, title = "Confirm", message = "Are you sure?", onCancel, onConfirm }) {
     if (!open) return null;
-    return (
+    return createPortal(
         <div className="tm-modal-overlay" role="dialog" aria-modal="true">
             <div className="tm-modal">
                 <div className="tm-modal-header">
-                    <SubTitle text={title} />
+                    <h4>{title}</h4>
                 </div>
                 <div className="tm-modal-body">
-                    <Paragraph>{message}</Paragraph>
+                    <p>{message}</p>
                 </div>
                 <div className="tm-modal-actions">
-                    <Button type="button" primaryClassName="btn tm-btn-cancel" variant="outline" onClick={onCancel} text="Cancel" />
-                    <Button type="button" primaryClassName="btn tm-btn-danger" variant="solid" color="danger" onClick={onConfirm} text="Confirm" />
+                    <button className="tm-btn-cancel" onClick={onCancel}>Cancel</button>
+                    <button className="tm-btn-danger" onClick={onConfirm}>Confirm</button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
 
@@ -37,94 +36,169 @@ export function Toast({ toast, setToast }) {
         <div
             className="tm-toast"
             style={{
-                position: "fixed",
-                top: 20,
-                right: 20,
-                zIndex: 9999,
-                background: bgMap[toast.type] || bgMap.info,
-                color: "#fff",
-                padding: "12px 20px",
-                borderRadius: 8,
-                boxShadow: "0 4px 20px rgba(0,0,0,0.25)",
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                fontSize: 14,
-                cursor: "pointer",
+                position: "fixed", top: 20, right: 20, zIndex: 9999,
+                background: bgMap[toast.type] || bgMap.info, color: "#fff",
+                padding: "12px 20px", borderRadius: 8, boxShadow: "0 4px 20px rgba(0,0,0,0.25)",
+                display: "flex", alignItems: "center", gap: 10, fontSize: 14, cursor: "pointer",
                 animation: "tm-toast-in 260ms ease",
             }}
             onClick={() => setToast({ message: "", type: "info", visible: false })}
             role="alert"
         >
             <span>{toast.message}</span>
-            <span style={{ fontSize: 18, lineHeight: 1, opacity: 0.8 }}>×</span>
+            <span style={{ fontSize: 18, lineHeight: 1, opacity: 0.8 }}>x</span>
         </div>
     );
 }
 
 export default function ManageToursView({
-    tab, tours, trips, admins, agents, partnerAgencies, loading, agencyLoading, formOpen, tripFormOpen, tripEditing,
-    viewOpen, editing, viewTour, error, auth, setTab, openCreate, openEdit, openView,
-    openTripCreate, openTripEdit, handleTripDelete, handleTripDeleteAll, fetchTrips,
-    handleDelete, handleDeleteAll, fetchTours, fetchAgencyManagement,
-    handleReviewAdmin, handleRemoveAdmin, handleReviewAgent, handleReviewPartnerAgency,
-    setFormOpen, setTripFormOpen, setViewOpen, setViewTour,
-    confirmDelete, confirmMessage, handleConfirmDelete, handleCancelDelete,
+    tab, setTab,
+    tours, trips, bookings, profile,
+    loading, bookingsLoading, agencyLoading,
+    stats, auth, error,
+    formOpen, setFormOpen,
+    tripFormOpen, setTripFormOpen,
+    tripEditing,
+    viewOpen, setViewOpen,
+    tripViewOpen, setTripViewOpen,
+    editing, viewTour, setViewTour,
+    viewTrip, setViewTrip,
+    openCreate, openEdit, openView,
+    openTripCreate, openTripEdit, openTripView,
+    handleDelete, handleDeleteAll,
+    handleTripDelete, handleTripDeleteAll,
+    handleConfirmDelete, handleCancelDelete,
+    confirmDelete, confirmMessage,
+    fetchTours, fetchTrips, fetchAgencyManagement,
+    handleReviewAdmin, handleRemoveAdmin,
+    handleReviewAgent, handleReviewPartnerAgency,
+    handleSaveProfile,
+    refreshAll,
     toast, setToast,
 }) {
+    const { theme, toggleTheme } = useThemeMode();
+    const mergedUser = { ...auth.user, ...(profile || {}) };
+
     return (
-        <div className="mt-root">
-            <header className="mt-toolbar">
-                <Title text="Admin Operations" />
-                <div className="mt-actions">
-                    <Button primaryClassName={`btn ${tab === "dashboard" ? "is-active" : ""}`} variant={tab === "dashboard" ? "solid" : "outline"} onClick={() => setTab("dashboard")} text="Dashboard" />
-                    <Button primaryClassName={`btn ${tab === "tours" ? "is-active" : ""}`} variant={tab === "tours" ? "solid" : "outline"} onClick={() => setTab("tours")} text="Tours" />
-                    <Button primaryClassName={`btn ${tab === "trips" ? "is-active" : ""}`} variant={tab === "trips" ? "solid" : "outline"} onClick={() => setTab("trips")} text="Trips" />
-                    <Button primaryClassName={`btn ${tab === "agencies" ? "is-active" : ""}`} variant={tab === "agencies" ? "solid" : "outline"} onClick={() => setTab("agencies")} text="Agencies" />
+        <div className="dash-layout">
+            <Sidebar activeTab={tab} onTabChange={setTab} user={mergedUser} />
+
+            <div className="dash-main">
+                <DashboardHeader
+                    activeTab={tab}
+                    onTabChange={setTab}
+                    user={mergedUser}
+                    theme={theme}
+                    onToggleTheme={toggleTheme}
+                />
+
+                <div className="dash-content">
+                    {tab === "overview" && (
+                        <AdminOverviewView
+                            user={mergedUser}
+                            stats={stats}
+                            recentBookings={bookings}
+                            onTabChange={setTab}
+                            onViewBooking={(b) => {
+                                const id = b.id || b._id;
+                                if (id) window.location.href = `/bookings/${id}`;
+                            }}
+                        />
+                    )}
+                    {tab === "bookings" && (
+                        <AdminBookingsView
+                            bookings={bookings}
+                            loading={bookingsLoading}
+                            onViewBooking={(b) => {
+                                const id = b.id || b._id;
+                                if (id) window.location.href = `/bookings/${id}`;
+                            }}
+                        />
+                    )}
+                    {tab === "services" && (
+                        <AdminServicesView
+                            tours={tours}
+                            trips={trips}
+                            loading={loading}
+                            onEditTour={openEdit}
+                            onViewTour={openView}
+                            onDeleteTour={handleDelete}
+                            onEditTrip={openTripEdit}
+                            onViewTrip={openTripView}
+                            onDeleteTrip={handleTripDelete}
+                            onCreateTour={openCreate}
+                            onCreateTrip={openTripCreate}
+                            onRefresh={refreshAll}
+                            onDeleteAllTours={handleDeleteAll}
+                            onDeleteAllTrips={handleTripDeleteAll}
+                            formOpen={formOpen}
+                            tripFormOpen={tripFormOpen}
+                            viewOpen={viewOpen}
+                            tripViewOpen={tripViewOpen}
+                            setFormOpen={setFormOpen}
+                            setTripFormOpen={setTripFormOpen}
+                            setViewOpen={setViewOpen}
+                            setTripViewOpen={setTripViewOpen}
+                            setViewTour={setViewTour}
+                            setViewTrip={setViewTrip}
+                            openTripCreate={openTripCreate}
+                            openTripEdit={openTripEdit}
+                        >
+                            {viewOpen && (
+                                <div className="mt-panels-overlay" role="dialog" aria-modal="true">
+                                    <React.Suspense fallback={<div>Loading...</div>}>
+                                        {React.createElement(require("./TourView").default, {
+                                            tour: viewTour,
+                                            onClose: () => { setViewOpen(false); setViewTour(null); },
+                                            onEdit: (t) => { setViewOpen(false); openEdit(t); },
+                                        })}
+                                    </React.Suspense>
+                                </div>
+                            )}
+                            {tripViewOpen && (
+                                <div className="mt-panels-overlay" role="dialog" aria-modal="true">
+                                    <React.Suspense fallback={<div>Loading...</div>}>
+                                        {React.createElement(require("../trips/TripView").default, {
+                                            trip: viewTrip,
+                                            onClose: () => { setTripViewOpen(false); setViewTrip(null); },
+                                            onEdit: (t) => { setTripViewOpen(false); openTripEdit(t); },
+                                        })}
+                                    </React.Suspense>
+                                </div>
+                            )}
+                            {formOpen && (
+                                <div className="mt-panels-overlay" role="dialog" aria-modal="true">
+                                    <React.Suspense fallback={<div>Loading...</div>}>
+                                        {React.createElement(require("./CreateTourForm").default, {
+                                            initial: editing,
+                                            onCancel: () => setFormOpen(false),
+                                            onSaved: async () => { setFormOpen(false); await fetchTours(); },
+                                        })}
+                                    </React.Suspense>
+                                </div>
+                            )}
+                            {tripFormOpen && (
+                                <div className="mt-panels-overlay" role="dialog" aria-modal="true">
+                                    <React.Suspense fallback={<div>Loading...</div>}>
+                                        {React.createElement(require("../trips/CreateTripForm").default, {
+                                            initial: tripEditing,
+                                            onCancel: () => setTripFormOpen(false),
+                                            onSaved: async () => { setTripFormOpen(false); await fetchTrips(); },
+                                        })}
+                                    </React.Suspense>
+                                </div>
+                            )}
+                        </AdminServicesView>
+                    )}
+                    {tab === "profile" && (
+                        <AdminProfileView
+                            user={mergedUser}
+                            onSaveProfile={handleSaveProfile}
+                            saving={false}
+                        />
+                    )}
                 </div>
-            </header>
-
-            <div className="mt-session-bar">
-                <strong>Signed in as:</strong> {auth.user?.name || auth.user?.email} · role: {auth.role} · admin: {auth.user?.adminLevel || "standard"}
             </div>
-
-            {(() => {
-                const def = adminWidgetRegistry.get(TAB_WIDGET_MAP[tab]);
-                const Component = def?.component;
-                if (!Component) return null;
-                return (
-                    <Component
-                        tours={tours}
-                        trips={trips}
-                        admins={admins}
-                        agents={agents}
-                        partnerAgencies={partnerAgencies}
-                        loading={loading}
-                        agencyLoading={agencyLoading}
-                        formOpen={tab === "trips" ? tripFormOpen : formOpen}
-                        viewOpen={viewOpen}
-                        editing={editing}
-                        viewTour={viewTour}
-                        error={error}
-                        auth={auth}
-                        openCreate={tab === "trips" ? openTripCreate : openCreate}
-                        openEdit={tab === "trips" ? openTripEdit : openEdit}
-                        openView={openView}
-                        handleDelete={tab === "trips" ? handleTripDelete : handleDelete}
-                        handleDeleteAll={tab === "trips" ? handleTripDeleteAll : handleDeleteAll}
-                        fetchTrips={fetchTrips}
-                        fetchTours={fetchTrips}
-                        fetchAgencyManagement={fetchAgencyManagement}
-                        handleReviewAdmin={handleReviewAdmin}
-                        handleRemoveAdmin={handleRemoveAdmin}
-                        handleReviewAgent={handleReviewAgent}
-                        handleReviewPartnerAgency={handleReviewPartnerAgency}
-                        setFormOpen={tab === "trips" ? setTripFormOpen : setFormOpen}
-                        setViewOpen={setViewOpen}
-                        setViewTour={setViewTour}
-                    />
-                );
-            })()}
 
             <Toast toast={toast} setToast={setToast} />
             <ConfirmModal

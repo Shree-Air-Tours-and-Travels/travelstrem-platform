@@ -59,6 +59,7 @@ module.exports = {
                 "@packages/trem-modals": path.resolve(__dirname, "../../packages/trem-modals/src"),
                 "@packages/trem-ui": path.resolve(__dirname, "../../packages/trem-ui/src"),
                 "@packages/trem-utils": path.resolve(__dirname, "../../packages/trem-utils/src"),
+                "@packages/trem-design-tokens": path.resolve(__dirname, "../../packages/trem-design-tokens/src"),
             };
             webpackConfig.resolve.plugins = (webpackConfig.resolve.plugins || []).filter(
                 (plugin) => !(plugin instanceof ModuleScopePlugin)

@@ -9,7 +9,7 @@ const loadTrevioTrips = async (req) => {
   try {
     const result = await trevioTripService.listTrips({
       ...req.query,
-      limit: req.query?.limit || 4,
+      limit: req.query?.limit || 100,
     });
     return {
       trips: result.trips,
@@ -21,7 +21,7 @@ const loadTrevioTrips = async (req) => {
       trips: [],
       pagination: {
         page: 1,
-        limit: 4,
+        limit: 100,
         total: 0,
         totalPages: 1,
         hasMore: false,
@@ -38,7 +38,7 @@ export const getTrevioHome = async (req, res) => {
     trevioTripService.listInternationalTrips({ limit: 3 }),
   ]);
   const trips = tripResult.trips || [];
-  const featuredTrip = trips.find((trip) => trip.featured) || trips[0] || null;
+  const featuredTrips = trips.filter((trip) => trip.featured);
 
   return res.status(200).json({
     ...page,
@@ -48,7 +48,7 @@ export const getTrevioHome = async (req, res) => {
         ...page.component.data,
         state: {
           ...(page.component.data.state || {}),
-          featuredTrip,
+          featuredTrips,
           adventureTrips: trips,
           tripPagination: tripResult.pagination,
           internationalTrips: intlResult.trips || [],

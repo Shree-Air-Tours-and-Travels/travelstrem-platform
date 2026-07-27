@@ -6,6 +6,7 @@ import BookingSidebar from "../components/BookingSidebar.jsx";
 import TripStep from "../components/TripStep.jsx";
 import TravellerStep from "../components/TravellerStep.jsx";
 import ReviewStep from "../components/ReviewStep.jsx";
+import BookingConfirmation from "../components/BookingPaymentConfirmation.jsx";
 import { useBookingFlow } from "../hooks/useBookingFlow.js";
 import { useBookingApi } from "../hooks/useBookingApi.js";
 import { useSelector } from "react-redux";
@@ -15,6 +16,46 @@ const LOW_SEAT_THRESHOLD = 3;
 
 const WHATSAPP_GROUP_URL = process.env.REACT_APP_WHATSAPP_GROUP_URL;
 const SUPPORT_PHONE = process.env.REACT_APP_SUPPORT_PHONE;
+
+const CONFIRMATION_STORAGE_PREFIX = "trem_booking_confirmation_";
+
+function getConfirmationStorageKey(product, productRef) {
+  return `${CONFIRMATION_STORAGE_PREFIX}${product}_${productRef}`;
+}
+
+function persistConfirmation(product, productRef, bookingData) {
+  try {
+    const key = getConfirmationStorageKey(product, productRef);
+    const tripTitle = bookingData?.trip?.title || bookingData?.tour?.title || "";
+    const minimal = {
+      id: bookingData?.id || bookingData?._id,
+      bookingRef: bookingData?.bookingRef,
+      status: bookingData?.status,
+      product,
+      createdAt: bookingData?.createdAt,
+      ...(tripTitle ? { trip: { title: tripTitle } } : {}),
+    };
+    localStorage.setItem(key, JSON.stringify(minimal));
+  } catch {}
+}
+
+function loadConfirmation(product, productRef) {
+  try {
+    const key = getConfirmationStorageKey(product, productRef);
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+function clearConfirmation(product, productRef) {
+  try {
+    const key = getConfirmationStorageKey(product, productRef);
+    localStorage.removeItem(key);
+  } catch {}
+}
 
 function computeToken(perPerson, guests) {
   return Math.round(perPerson * TOKEN_PERCENTAGE) * guests;
@@ -107,17 +148,26 @@ export default function BookingEntryPage() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [availability, setAvailability] = useState(null);
+  const [bookingConfirmed, setBookingConfirmed] = useState(() => {
+    if (productRef) {
+      const saved = loadConfirmation(product, productRef);
+      if (saved) return saved;
+    }
+    return null;
+  });
 
   const api = useBookingApi();
   const flow = useBookingFlow({ product, tour: productData });
+  const prevStepRef = useRef(flow.currentStep);
 
   const handleExit = useCallback(() => {
+    clearConfirmation(product, productRef);
     if (returnTo) {
       window.location.href = returnTo;
     } else {
       window.history.back();
     }
-  }, [returnTo]);
+  }, [returnTo, product, productRef]);
 
   const hasResetRef = useRef(false);
   const storedProduct = useSelector((state) => state.booking.product);
@@ -125,6 +175,7 @@ export default function BookingEntryPage() {
     if (!productRef || initialLoading || hasResetRef.current) return;
     if (product !== storedProduct) {
       hasResetRef.current = true;
+      clearConfirmation(product, productRef);
       flow.resetBooking();
     }
   }, [product, storedProduct, productRef, initialLoading]);
@@ -150,6 +201,28 @@ export default function BookingEntryPage() {
   const isSoldOut = product === "trevio" && seatsAvailable === 0;
   const isLowSeats = product === "trevio" && seatsAvailable != null && seatsAvailable > 0 && seatsAvailable <= LOW_SEAT_THRESHOLD;
   const guestsExceedSeats = product === "trevio" && seatsAvailable != null && flow.guestsCount > seatsAvailable;
+
+  useEffect(() => {
+    if (!productRef || product !== "trevio" || isSoldOut) return;
+    const poll = setInterval(() => {
+      api.loadProduct(product, productRef).then((data) => {
+        if (data?.availability?.seatsAvailable != null) {
+          setAvailability((prev) => {
+            if (prev?.seatsAvailable === data.availability.seatsAvailable) return prev;
+            return { ...prev, seatsAvailable: data.availability.seatsAvailable, totalSeats: data.availability.totalSeats ?? prev?.totalSeats };
+          });
+        }
+      }).catch(() => {});
+    }, 30000);
+    return () => clearInterval(poll);
+  }, [productRef, product, isSoldOut]);
+
+  useEffect(() => {
+    if (prevStepRef.current !== flow.currentStep) {
+      prevStepRef.current = flow.currentStep;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [flow.currentStep]);
 
   const handleSubmit = async () => {
     if (guestsExceedSeats) {
@@ -181,8 +254,9 @@ export default function BookingEntryPage() {
       if (!bookingId) throw new Error("No booking ID returned");
 
       const submitted = await api.submitBooking(bookingId);
-      flow.resetBooking();
-      navigate(`/bookings/${bookingId}?product=${product}`, { state: { booking: submitted } });
+      const confirmedData = submitted || { id: bookingId, product };
+      setBookingConfirmed(confirmedData);
+      persistConfirmation(product, productRef, confirmedData);
     } catch (err) {
       flow.setErrors({ submit: err.message });
     }
@@ -211,7 +285,7 @@ export default function BookingEntryPage() {
 
   const isLastStep = flow.stepKey === "review";
   const nextLabel = isLastStep
-    ? (product === "trevio" ? "Proceed to Payment" : "Submit Booking")
+    ? (product === "trevio" ? "Create Booking" : "Submit Booking")
     : "Continue";
 
   const fabActions = useMemo(() => [
@@ -226,6 +300,22 @@ export default function BookingEntryPage() {
   ], [flow.currentStep, handleBack, handleNext, nextLabel, api.loading, isSoldOut, product]);
 
   if (initialLoading) return <GlobalLoader visible text="Loading..." />;
+
+  if (bookingConfirmed) {
+    const dashboardUrl = process.env.REACT_APP_DASHBOARD_URL || "";
+    const handleGoToDashboard = dashboardUrl
+      ? () => { clearConfirmation(product, productRef); window.location.href = `${dashboardUrl}/bookings`; }
+      : undefined;
+    return (
+      <BookingLayout steps={[]} currentStep={0} product={product} floatingBar={null} onExit={handleExit}>
+        <BookingConfirmation
+          booking={bookingConfirmed}
+          product={product}
+          onGoToDashboard={handleGoToDashboard}
+        />
+      </BookingLayout>
+    );
+  }
 
   if (loadError || !productData) {
     return (
@@ -248,13 +338,43 @@ export default function BookingEntryPage() {
   }
 
   const productPrice = Number(productData?.price || productData?.priceInfo?.min || 0);
-  const tokenPerPerson = computeToken(productPrice, 1);
+  const guestCount = flow.guestsCount;
+
+  const getPrefExtraPrice = (prefArray, selectedValue) => {
+    if (!Array.isArray(prefArray) || !selectedValue) return 0;
+    const match = prefArray.find((opt) => opt.value === selectedValue);
+    return match?.extraPrice || 0;
+  };
+
+  const prefs = productData?.preferences || {};
+
+  const roomTypeExtra = getPrefExtraPrice(prefs.roomTypes, flow.trip.roomType);
+
+  const perTravellerExtras = flow.travellers.map((t) => {
+    const meal = getPrefExtraPrice(prefs.mealPreferences, t.mealPreference);
+    const pkg = getPrefExtraPrice(prefs.packageTypes, t.packageType);
+    const drink = getPrefExtraPrice(prefs.drinkTypes, t.drinkType);
+    return { meal, pkg, drink, total: meal + pkg + drink };
+  });
+
+  const totalTravellerExtras = perTravellerExtras.reduce((sum, t) => sum + t.total, 0);
+
+  const baseTripTotal = productPrice * guestCount;
+  const totalPrefExtras = roomTypeExtra + totalTravellerExtras;
+  const totalAmount = baseTripTotal + totalPrefExtras;
+  const tokenAmount = computeToken(productPrice, guestCount);
+
   const computedPricing = productData ? {
     perPerson: productPrice,
-    total: productPrice * flow.guestsCount,
+    roomTypeExtra,
+    perTravellerExtras,
+    totalTravellerExtras,
+    totalPrefExtras,
+    baseTripTotal,
+    total: totalAmount,
     currency: productData?.priceInfo?.currency || "INR",
-    tokenAmount: computeToken(productPrice, flow.guestsCount),
-    remainingBalance: Math.max(0, (productPrice * flow.guestsCount) - computeToken(productPrice, flow.guestsCount)),
+    tokenAmount,
+    remainingBalance: Math.max(0, totalAmount - tokenAmount),
   } : null;
 
   const sidebar = (
@@ -263,8 +383,8 @@ export default function BookingEntryPage() {
       productData={productData}
       trip={flow.trip}
       guestsCount={flow.guestsCount}
-      tokenPerPerson={tokenPerPerson}
       availability={availability}
+      computedPricing={computedPricing}
     />
   );
 
@@ -293,7 +413,7 @@ export default function BookingEntryPage() {
         isFirst={flow.currentStep === 0}
         product={product}
         seatsAvailable={seatsAvailable}
-        tokenPerPerson={tokenPerPerson}
+        tokenPerPerson={computeToken(productPrice, 1)}
       />
     ),
     travellers: (
@@ -304,6 +424,9 @@ export default function BookingEntryPage() {
         updateContact={flow.updateContact}
         errors={flow.errors}
         TRAVELLER_FIELDS={flow.TRAVELLER_FIELDS}
+        TRAVELLER_PREFERENCE_FIELDS={flow.TRAVELLER_PREFERENCE_FIELDS}
+        trip={flow.trip}
+        productData={productData}
       />
     ),
     review: (

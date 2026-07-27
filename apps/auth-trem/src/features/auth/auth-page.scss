@@ -30,6 +30,22 @@
       width: min(520px, 100%);
       text-align: center;
     }
+
+    &--otp {
+      display: flex;
+      flex-direction: column;
+      min-height: min(480px, calc(100vh - 48px));
+
+      .auth-trem__form {
+        flex: 1;
+      }
+
+      .auth-trem__footer {
+        margin-top: auto;
+        padding-top: 14px;
+        border-top: 1px solid var(--border);
+      }
+    }
   }
 
   &__header,

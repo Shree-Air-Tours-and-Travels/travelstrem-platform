@@ -1,19 +1,21 @@
+@import "@packages/trem-design-tokens/scss";
+
 .dpf {
   background: var(--card-bg);
   border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 24px;
+  border-radius: $radius-md;
+  padding: $space-6;
 }
 
 .dpf__header {
-  margin-bottom: 24px;
+  margin-bottom: $space-6;
 }
 
 .dpf__title {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: $font-size-md;
+  font-weight: $font-semibold;
   color: var(--heading);
-  margin-bottom: 4px;
+  margin-bottom: $space-1;
 }
 
 .dpf__subtitle {
@@ -35,19 +37,19 @@
 
 .dpf__label {
   font-size: 13px;
-  font-weight: 500;
+  font-weight: $font-medium;
   color: var(--muted);
 }
 
 .dpf__input {
-  padding: 10px 12px;
+  padding: $space-3 $space-3;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: $radius-sm;
   background: var(--surface);
-  font-size: 14px;
+  font-size: $font-size-sm;
   color: var(--text);
   outline: none;
-  transition: border-color 0.15s ease;
+  transition: border-color $duration-base $ease-standard;
 
   &:focus {
     border-color: var(--color-primary);
@@ -62,18 +64,18 @@
 .dpf__footer {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-top: 24px;
+  gap: $space-3;
+  margin-top: $space-6;
 }
 
 .dpf__save {
-  padding: 10px 20px;
-  border-radius: 10px;
+  padding: $space-3 $space-5;
+  border-radius: $radius-sm;
   background: var(--color-primary);
   color: var(--color-on-primary);
-  font-size: 14px;
-  font-weight: 500;
-  transition: background 0.15s ease;
+  font-size: $font-size-sm;
+  font-weight: $font-medium;
+  transition: background $duration-base $ease-standard;
 
   &:hover:not(:disabled) {
     background: var(--color-primary-dark);
@@ -88,5 +90,5 @@
 .dpf__saved {
   font-size: 13px;
   color: var(--success-color);
-  font-weight: 500;
+  font-weight: $font-medium;
 }

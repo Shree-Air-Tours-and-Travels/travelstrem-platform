@@ -1,25 +1,13 @@
 import React, { useState, useMemo } from "react";
+import { EmptyState } from "@packages/trem-ui";
 import "./BookingsView.scss";
 
 const STATUSES = [
   "All",
-  "Draft",
-  "Quote Requested",
-  "Under Review",
-  "Quote Ready",
-  "Quote Sent",
-  "Customer Accepted",
-  "Payment Pending",
-  "Partially Paid",
-  "Paid",
+  "Awaiting Token Payment",
   "Confirmed",
-  "Ticketing",
-  "Ticketed",
-  "Travel Ready",
   "Completed",
   "Cancelled",
-  "Refund Pending",
-  "Refunded",
 ];
 
 const PRODUCTS = ["All", "Trevio", "Trevista"];
@@ -70,7 +58,7 @@ function statusClass(status) {
   if (["CANCELLED", "REFUNDED"].includes(s)) return "cancelled";
   if (["QUOTE_REQUESTED", "QUOTE_READY", "QUOTE_SENT", "UNDER_REVIEW"].includes(s)) return "pending";
   if (["DRAFT"].includes(s)) return "draft";
-  if (["PAYMENT_PENDING", "PARTIALLY_PAID", "REFUND_PENDING"].includes(s)) return "warning";
+  if (["AWAITING_TOKEN_PAYMENT", "PAYMENT_PENDING", "PARTIALLY_PAID", "REFUND_PENDING"].includes(s)) return "warning";
   return "default";
 }
 
@@ -168,7 +156,7 @@ export default function BookingsView({ bookings, loading, onViewBooking }) {
               </thead>
               <tbody>
                 {paginated.map((b, i) => {
-                  const tour = b.tour || {};
+                  const tour = b.trip || b.tour || {};
                   const tripName = tour.title || b.tripSelection?.packageId || "Trip";
                   const product = b.product || "trevista";
                   const total = b.paymentSummary?.total || b.priceSnapshot?.total || 0;
@@ -197,6 +185,7 @@ export default function BookingsView({ bookings, loading, onViewBooking }) {
                       <td>
                         <span className={`dbv__status dbv__status--${statusClass(b.status)}`}>
                           {normalizeStatus(b.status)}
+                          <small>{normalizeStatus(b.paymentStatus)}</small>
                         </span>
                       </td>
                       <td className="dbv__td-date">
@@ -210,6 +199,64 @@ export default function BookingsView({ bookings, loading, onViewBooking }) {
                 })}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile cards */}
+          <div className="dbv__cards">
+            {paginated.map((b, i) => {
+              const tour = b.trip || b.tour || {};
+              const tripName = tour.title || b.tripSelection?.packageId || "Trip";
+              const product = b.product || "trevista";
+              const total = b.paymentSummary?.total || b.priceSnapshot?.total || 0;
+              const currency = b.priceSnapshot?.currency || "INR";
+
+              return (
+                <div
+                  key={b.id || b._id || i}
+                  className="dbv__card"
+                  onClick={() => onViewBooking?.(b)}
+                >
+                  <div className="dbv__card-top">
+                    <div className="dbv__card-trip">
+                      <span className="dbv__card-trip-name">{tripName}</span>
+                      {tour.city && <span className="dbv__trip-city">{tour.city}</span>}
+                    </div>
+                    <span className={`dbv__status dbv__status--${statusClass(b.status)}`}>
+                      {normalizeStatus(b.status)}
+                      <small>{normalizeStatus(b.paymentStatus)}</small>
+                    </span>
+                  </div>
+                  <div className="dbv__card-details">
+                    <div className="dbv__card-detail">
+                      <span className="dbv__card-detail-label">Trem ID</span>
+                      <span className="dbv__trem-id">{b.bookingRef || "—"}</span>
+                    </div>
+                    <div className="dbv__card-detail">
+                      <span className="dbv__card-detail-label">Product</span>
+                      <span className={`dbv__product-badge dbv__product-badge--${product}`}>
+                        {product === "trevio" ? "Trevio" : "Trevista"}
+                      </span>
+                    </div>
+                    <div className="dbv__card-detail">
+                      <span className="dbv__card-detail-label">Travel</span>
+                      <span>{dateRange(b.startDate || b.travelWindow?.startDate, b.endDate || b.travelWindow?.endDate)}</span>
+                    </div>
+                    <div className="dbv__card-detail">
+                      <span className="dbv__card-detail-label">Guests</span>
+                      <span>{b.guestsCount || "—"}</span>
+                    </div>
+                    <div className="dbv__card-detail">
+                      <span className="dbv__card-detail-label">Amount</span>
+                      <span className="dbv__card-amount">{formatCurrency(total, currency)}</span>
+                    </div>
+                    <div className="dbv__card-detail">
+                      <span className="dbv__card-detail-label">Created</span>
+                      <span>{formatDate(b.createdAt)}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           {/* Pagination */}
@@ -260,17 +307,15 @@ export default function BookingsView({ bookings, loading, onViewBooking }) {
           )}
         </>
       ) : (
-        <div className="dbv__empty">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" width="48" height="48">
-            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <h3>No bookings found</h3>
-          <p>
-            {statusFilter !== "All" || productFilterLocal !== "All"
+        <EmptyState
+          icon="calendar"
+          title="No bookings found"
+          description={
+            statusFilter !== "All" || productFilterLocal !== "All"
               ? "Try adjusting your filters."
-              : "When you book a trip, it will appear here."}
-          </p>
-        </div>
+              : "When you book a trip, it will appear here."
+          }
+        />
       )}
     </div>
   );

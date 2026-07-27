@@ -1,29 +1,31 @@
+@import "@packages/trem-design-tokens/scss";
+
 .dfv__header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 24px;
-  gap: 16px;
+  margin-bottom: $space-6;
+  gap: $space-4;
   flex-wrap: wrap;
 }
 
 .dfv__title {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: $font-size-xl;
+  font-weight: $font-bold;
   color: var(--heading);
-  margin-bottom: 4px;
+  margin-bottom: $space-1;
 }
 
 .dfv__subtitle {
-  font-size: 14px;
+  font-size: $font-size-sm;
   color: var(--muted);
 }
 
 .dfv__filters {
   display: flex;
-  gap: 4px;
+  gap: $space-1;
   background: var(--surface-muted);
-  border-radius: 10px;
+  border-radius: $radius-sm;
   padding: 3px;
 }
 
@@ -31,9 +33,9 @@
   padding: 6px 14px;
   border-radius: 8px;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: $font-medium;
   color: var(--muted);
-  transition: all 0.15s ease;
+  transition: all $duration-base $ease-standard;
 
   &:hover {
     color: var(--text);
@@ -49,7 +51,7 @@
 .dfv__grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  gap: $space-4;
 
   @media (max-width: 1024px) {
     grid-template-columns: repeat(2, 1fr);
@@ -64,15 +66,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 48px;
+  gap: $space-3;
+  padding: $space-12;
   color: var(--muted);
-  font-size: 14px;
+  font-size: $font-size-sm;
 }
 
 .dfv__spinner {
-  width: 20px;
-  height: 20px;
+  width: $space-5;
+  height: $space-5;
   border: 2px solid var(--border);
   border-top-color: var(--color-primary);
   border-radius: 50%;

@@ -82,8 +82,9 @@ export async function saveTour(payload) {
 }
 
 export async function fetchAdminBookings() {
-    const res = await fetchData("/bookings");
-    return normalizeBookingsResponse(res);
+    const res = await fetchData("/engine/admin/bookings", { params: { limit: 100, skip: 0 } });
+    if (!res || res.status !== "success") throw new Error(res?.message || "Failed to fetch bookings");
+    return res.componentData?.data?.bookings || [];
 }
 
 export async function confirmBooking(bookingId, finalPriceData = {}) {
@@ -144,6 +145,79 @@ export async function recordAdminPayment(bookingId, amount, currency = "INR", op
             }),
         }),
         "Payment recording failed"
+    );
+}
+
+export async function approveTokenPayment(bookingId, paymentId) {
+    return expectSuccess(
+        fetchData(`/admin/bookings/${bookingId}/payments/${paymentId}/approve`, { method: "POST" }),
+        "Token approval failed"
+    );
+}
+
+export async function rejectTokenPayment(bookingId, paymentId, reason) {
+    return expectSuccess(
+        fetchData(`/admin/bookings/${bookingId}/payments/${paymentId}/reject`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: { reason },
+        }),
+        "Token rejection failed"
+    );
+}
+
+export async function downloadPaymentProof(bookingId, paymentId) {
+    const response = await api.get(
+        `/admin/bookings/${bookingId}/payments/${paymentId}/proof`,
+        { responseType: "blob" }
+    );
+    const disposition = String(response.headers?.["content-disposition"] || "");
+    const encodedName = disposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+    const plainName = disposition.match(/filename="?([^";]+)"?/i)?.[1];
+    const filename = encodedName
+        ? decodeURIComponent(encodedName)
+        : (plainName || `payment-proof-${bookingId}.jpg`);
+    const objectUrl = URL.createObjectURL(response.data);
+    const link = document.createElement("a");
+    link.href = objectUrl;
+    link.download = filename;
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+}
+
+export async function markBookingTokenPaid(bookingId, details = {}) {
+    return expectSuccess(
+        fetchData(`/admin/bookings/${bookingId}/payments/token-paid`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: details,
+        }),
+        "Token payment update failed"
+    );
+}
+
+export async function markBookingBalancePaid(bookingId, details = {}) {
+    return expectSuccess(
+        fetchData(`/admin/bookings/${bookingId}/payments/balance-paid`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: details,
+        }),
+        "Balance update failed"
+    );
+}
+
+export async function refundBookingPayment(bookingId, details = {}) {
+    return expectSuccess(
+        fetchData(`/admin/bookings/${bookingId}/payments/refund`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: details,
+        }),
+        "Refund failed"
     );
 }
 

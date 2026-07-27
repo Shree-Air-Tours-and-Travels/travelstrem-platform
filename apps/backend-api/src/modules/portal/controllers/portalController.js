@@ -8,7 +8,7 @@ import User from "../../auth/models/User.js";
 const JWT_SECRET = (config.JWT && config.JWT.accessSecret) || process.env.JWT_SECRET;
 const USE_SHARED_COOKIE_DOMAIN = config.IS_PRODUCTION && Boolean((config.AUTH_COOKIE_DOMAIN || process.env.AUTH_COOKIE_DOMAIN || "").toString().trim());
 const COOKIE_NAME = config.IS_PRODUCTION && !USE_SHARED_COOKIE_DOMAIN ? "__Host-token" : "token";
-const MASTER_ADMIN_EMAIL = (config.MASTER_ADMIN_EMAIL || process.env.MASTER_ADMIN_EMAIL || "akshat.goyal@travelstrem.com")
+const MASTER_ADMIN_EMAIL = (config.MASTER_ADMIN_EMAIL || "")
     .toString()
     .trim()
     .toLowerCase();
@@ -175,9 +175,9 @@ const applyEnvironmentRemotes = (headerConfig = {}) => {
     const envFrontends = config.PORTAL_CONFIG?.frontends || {};
     const remotes = headerConfig.remotes || {};
 
-    const trevistaRemoteUrl = stripRemoteEntry(envFrontends.trevista?.remoteEntry || envFrontends.trevista?.baseUrl);
-    const trevioRemoteUrl = stripRemoteEntry(envFrontends.trevio?.remoteEntry || envFrontends.trevio?.baseUrl);
-    const adminRemoteUrl = stripRemoteEntry(envFrontends.adminTREM?.remoteEntry || envFrontends.adminTREM?.baseUrl);
+    const trevistaRemoteUrl = stripRemoteEntry(config.TREVISTA_URL || envFrontends.trevista?.remoteEntry || envFrontends.trevista?.baseUrl);
+    const trevioRemoteUrl = stripRemoteEntry(config.TREVIO_URL || envFrontends.trevio?.remoteEntry || envFrontends.trevio?.baseUrl);
+    const adminRemoteUrl = stripRemoteEntry(config.ADMIN_REMOTE_URL || envFrontends.adminTREM?.remoteEntry || envFrontends.adminTREM?.baseUrl);
     const productUrls = {
         Trevio: trevioRemoteUrl,
         Trevista: trevistaRemoteUrl,
@@ -232,7 +232,7 @@ const buildTrevioHeaderConfig = (baseConfig = {}) => ({
             type: "dropdown",
             disabled: false,
             items: [
-                { id: "trevista", label: "Trevista", type: "external", href: "http://localhost:3001", target: "_self", disabled: false },
+                { id: "trevista", label: "Trevista", type: "external", href: config.TREVISTA_URL, target: "_self", disabled: false },
             ],
         },
     ],
@@ -278,7 +278,7 @@ const buildTrevistaHeaderConfig = (baseConfig = {}) => ({
             type: "dropdown",
             disabled: false,
             items: [
-                { id: "trevio", label: "Trevio", type: "external", href: "http://localhost:3005", target: "_self", disabled: false },
+                { id: "trevio", label: "Trevio", type: "external", href: config.TREVIO_URL, target: "_self", disabled: false },
             ],
         },
     ],

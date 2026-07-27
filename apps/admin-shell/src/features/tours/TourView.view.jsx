@@ -24,7 +24,11 @@ export default function TourViewView({ tour, onClose, onEdit, panelRef }) {
         <header className="tv-header">
           <div className="tv-title">
             <SubTitle text={tour.title} variant="primary" size="large" />
-            <div className="tv-meta">{tour.city?.from} → {tour.city?.to}</div>
+            <div className="tv-meta">
+              {typeof tour.city === "object"
+                ? `${tour.city?.from || ""}${tour.city?.to ? ` → ${tour.city.to}` : ""}`
+                : tour.city || ""}
+            </div>
           </div>
 
           <div className="tv-actions">
@@ -42,7 +46,7 @@ export default function TourViewView({ tour, onClose, onEdit, panelRef }) {
           <main className="tv-main" aria-label="Tour content">
             <div className="tv-row">
               <div className="tv-summary">
-                <Paragraph><strong>Duration:</strong> {tour.period?.days}d / {tour.period?.nights}n</Paragraph>
+                <Paragraph><strong>Duration:</strong> {tour.period?.days != null ? String(tour.period.days) : "—"}d / {tour.period?.nights != null ? String(tour.period.nights) : "—"}n</Paragraph>
                 <Paragraph><strong>Distance:</strong> {tour.distance ?? ','} km</Paragraph>
                 <Paragraph><strong>Price:</strong> {tour.price ? `${tour.price.min}-${tour.price.max} ${tour.price.currency}` : ','}</Paragraph>
                 <Paragraph><strong>Seats:</strong> {tour.availability?.seatsAvailable ?? ','} / {tour.availability?.totalSeats ?? ','}</Paragraph>

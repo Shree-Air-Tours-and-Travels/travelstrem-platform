@@ -1,0 +1,156 @@
+@import "@packages/trem-design-tokens/scss";
+
+/* Admin Overview View */
+
+.aov__greeting {
+  margin-bottom: $space-7;
+
+  h1 {
+    font-size: $font-size-xl;
+    font-weight: $font-bold;
+    color: var(--heading);
+    margin-bottom: $space-1;
+  }
+
+  p {
+    font-size: $font-size-sm;
+    color: var(--muted);
+  }
+}
+
+.aov__stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $space-4;
+  margin-bottom: $space-8;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.aov__section {
+  margin-bottom: $space-6;
+}
+
+.aov__section-title {
+  font-size: $font-size-md;
+  font-weight: $font-semibold;
+  color: var(--heading);
+  margin-bottom: $space-4;
+}
+
+.aov__recent {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+  overflow: hidden;
+}
+
+.aov__recent-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px $space-4;
+  border-bottom: 1px solid var(--border);
+  gap: $space-3;
+  cursor: pointer;
+  transition: background $duration-fast $ease-standard;
+
+  &:hover {
+    background: var(--neutral-soft, var(--surface-inset));
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $space-2;
+  }
+}
+
+.aov__recent-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.aov__recent-name {
+  font-size: $font-size-sm;
+  font-weight: $font-medium;
+  color: var(--heading);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.aov__recent-meta {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  font-size: $font-size-xs;
+  color: var(--muted);
+}
+
+.aov__recent-product {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-1;
+  padding: 1px $space-2-5;
+  border-radius: $radius-full;
+  font-size: 11px;
+  font-weight: $font-medium;
+
+  &--trevio {
+    background: var(--secondary-soft);
+    color: var(--color-secondary);
+  }
+
+  &--trevista {
+    background: var(--primary-soft);
+    color: var(--color-primary);
+  }
+}
+
+.aov__recent-status {
+  font-size: $font-size-xs;
+  font-weight: $font-medium;
+  padding: 3px $space-2-5;
+  border-radius: $radius-full;
+  white-space: nowrap;
+
+  &--CONFIRMED,
+  &--PAID,
+  &--TICKETED,
+  &--TRAVEL_READY,
+  &--COMPLETED {
+    background: var(--success-soft);
+    color: var(--success-color);
+  }
+
+  &--DRAFT,
+  &--QUOTE_REQUESTED,
+  &--UNDER_REVIEW,
+  &--QUOTE_READY,
+  &--QUOTE_SENT,
+  &--PAYMENT_PENDING,
+  &--PARTIALLY_PAID {
+    background: var(--warning-soft);
+    color: var(--color-warning);
+  }
+
+  &--CANCELLED,
+  &--REFUNDED {
+    background: var(--danger-soft);
+    color: var(--color-danger);
+  }
+}

@@ -17,15 +17,15 @@ import dotenv from "dotenv";
 const RAW_NODE_ENV = (process.env.NODE_ENV || "development").toString().trim();
 const NODE_ENV = RAW_NODE_ENV || "development";
 
-// JSON config is the default source. Legacy .env loading is opt-in only.
+// Runtime environment variables are primary. Local dotenv loading is opt-in.
 const projectRoot = process.cwd();
 const envFileCandidate = path.join(projectRoot, `.env.${NODE_ENV}`);
 const USE_DOTENV = process.env.USE_DOTENV === "true";
-if (USE_DOTENV && NODE_ENV !== "production" && fs.existsSync(envFileCandidate)) {
+if (USE_DOTENV && fs.existsSync(envFileCandidate)) {
     dotenv.config({ path: envFileCandidate });
     // Note: don't log secrets; only presence
     // eslint-disable-next-line no-console
-    console.log(`✅ Loaded environment from ${envFileCandidate}`);
+    if (NODE_ENV !== "production") console.log(`✅ Loaded environment from ${envFileCandidate}`);
 } else {
     if (USE_DOTENV) dotenv.config();
     // eslint-disable-next-line no-console
@@ -35,9 +35,8 @@ if (USE_DOTENV && NODE_ENV !== "production" && fs.existsSync(envFileCandidate)) 
 /* ------------------------------
    2) Small helpers
    ------------------------------ */
-const ALLOW_ENV_OVERRIDES = process.env.ALLOW_ENV_OVERRIDES === "true";
 const hasEnv = (key) => typeof process.env[key] !== "undefined" && String(process.env[key]).trim() !== "";
-const get = (key, fallback) => (ALLOW_ENV_OVERRIDES && hasEnv(key) ? process.env[key] : fallback);
+const get = (key, fallback) => (hasEnv(key) ? process.env[key] : fallback);
 const getSecret = (keys, fallback) => {
     const candidates = Array.isArray(keys) ? keys : [keys];
     const key = candidates.find((candidate) => hasEnv(candidate));
@@ -96,7 +95,11 @@ const IS_TEST = NODE_ENV === "test";
 
 const APP_NAME = (get("APP_NAME", portalJsonConfig.appName || "TravelsTrem")).toString();
 const PORT = Number(get("PORT", portalJsonConfig?.backend?.port || 5000));
-const BASE_URL = (get("BASE_URL", portalJsonConfig?.backend?.baseUrl || `http://localhost:${PORT}`)).toString();
+const BASE_URL = String(get("BASE_URL", portalJsonConfig?.backend?.baseUrl || "") || "").trim();
+
+if (!BASE_URL) {
+    throw new Error("Missing BASE_URL environment variable.");
+}
 
 /* ------------------------------
    4) Frontends / CORS
@@ -108,6 +111,34 @@ const frontendsRaw = get("FRONTENDS", JSON.stringify(portalJsonConfig?.cors?.fro
     portalJsonConfig?.frontends?.adminTREM?.baseUrl,
 ].filter(Boolean)));
 const FRONTENDS = Array.isArray(frontendsRaw) ? frontendsRaw : parseFrontends(frontendsRaw);
+const parseList = (raw) => {
+    if (Array.isArray(raw)) return raw.map((value) => String(value).trim()).filter(Boolean);
+    if (!raw) return [];
+    try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed.map((value) => String(value).trim()).filter(Boolean);
+    } catch (err) {
+        // Comma-separated environment values are supported too.
+    }
+    return String(raw).split(",").map((value) => value.trim()).filter(Boolean);
+};
+
+const CORS_ALLOWED_DOMAIN_SUFFIXES = parseList(get("CORS_ALLOWED_DOMAIN_SUFFIXES", ""));
+const TREVIO_URL = String(get("TREVIO_URL", portalJsonConfig?.frontends?.trevio?.baseUrl || "") || "").trim();
+const TREVISTA_URL = String(get("TREVISTA_URL", portalJsonConfig?.frontends?.trevista?.baseUrl || "") || "").trim();
+const DASHBOARD_URL = String(get("DASHBOARD_URL", portalJsonConfig?.frontends?.dashboard?.baseUrl || "") || "").trim();
+const BOOKING_ENGINE_URL = String(get("BOOKING_ENGINE_URL", portalJsonConfig?.frontends?.booking?.baseUrl || "") || "").trim();
+const AUTH_APP_URL = String(get("AUTH_APP_URL", portalJsonConfig?.frontends?.auth?.baseUrl || "") || "").trim();
+const ADMIN_URL = String(get("ADMIN_URL", portalJsonConfig?.frontends?.adminTREM?.baseUrl || "") || "").trim();
+const ADMIN_REMOTE_URL = String(get("ADMIN_REMOTE_URL", portalJsonConfig?.frontends?.adminTREM?.remoteEntry || ADMIN_URL) || "").trim();
+const COMPANY_NAME = String(get("COMPANY_NAME", portalJsonConfig?.company?.name || APP_NAME) || "").trim();
+const COMPANY_TAGLINE = String(get("COMPANY_TAGLINE", portalJsonConfig?.company?.tagline || "") || "").trim();
+const SUPPORT_EMAIL = String(get("SUPPORT_EMAIL", portalJsonConfig?.company?.supportEmail || "") || "").trim();
+const SUPPORT_PHONE = String(get("SUPPORT_PHONE", portalJsonConfig?.company?.supportPhone || "") || "").trim();
+const DEFAULT_TOUR_IMAGE = String(get("DEFAULT_TOUR_IMAGE", portalJsonConfig?.assets?.defaultTourImage || "") || "").trim();
+const AGENT_EMAIL_DOMAIN = String(get("AGENT_EMAIL_DOMAIN", "") || "").trim().toLowerCase();
+const WHATSAPP_CHANNEL_URL = String(get("WHATSAPP_CHANNEL_URL", "") || "").trim();
+const WHATSAPP_CHANNEL_NAME = String(get("WHATSAPP_CHANNEL_NAME", "") || "").trim();
 
 /* ------------------------------
    5) JWT / Auth
@@ -168,7 +199,11 @@ if (!ADMIN_CREATION_SECRET) {
    ------------------------------ */
 const MONGO_URI = IS_PRODUCTION
     ? (getSecret("MONGO_URI", portalJsonConfig?.backend?.mongoUri || "")).toString().trim()
-    : (getSecret("MONGO_URI_DEV", getSecret("MONGO_URI", portalJsonConfig?.backend?.mongoUri || "mongodb://127.0.0.1:27017/travelstrem"))).toString().trim();
+    : (getSecret("MONGO_URI_DEV", getSecret("MONGO_URI", portalJsonConfig?.backend?.mongoUri || ""))).toString().trim();
+
+if (!MONGO_URI) {
+    throw new Error(`Missing ${IS_PRODUCTION ? "MONGO_URI" : "MONGO_URI_DEV (or MONGO_URI)"} environment variable.`);
+}
 
 const RATE_LIMIT = {
     windowMs: Number(get("RATE_WINDOW_MS", portalJsonConfig?.rateLimit?.windowMs || 60 * 1000)), // ms
@@ -231,7 +266,12 @@ const MASTER_ADMIN_EMAIL = (process.env.MASTER_ADMIN_EMAIL || "").toString().tri
 const MASTER_ADMIN_PHONE = (process.env.MASTER_ADMIN_PHONE || "").toString().trim();
 
 /* ------------------------------
-    13) Config summary helper
+    13) Redis
+    ------------------------------ */
+const REDIS_URL = (getSecret("REDIS_URL", portalJsonConfig?.redis?.url || "")).toString().trim();
+
+/* ------------------------------
+    14) Config summary helper
     ------------------------------ */
 function logConfigSummary() {
     if (!DEBUG) return;
@@ -268,6 +308,22 @@ const config = {
     PORT,
     BASE_URL,
     FRONTENDS,
+    CORS_ALLOWED_DOMAIN_SUFFIXES,
+    TREVIO_URL,
+    TREVISTA_URL,
+    DASHBOARD_URL,
+    BOOKING_ENGINE_URL,
+    AUTH_APP_URL,
+    ADMIN_URL,
+    ADMIN_REMOTE_URL,
+    COMPANY_NAME,
+    COMPANY_TAGLINE,
+    SUPPORT_EMAIL,
+    SUPPORT_PHONE,
+    DEFAULT_TOUR_IMAGE,
+    AGENT_EMAIL_DOMAIN,
+    WHATSAPP_CHANNEL_URL,
+    WHATSAPP_CHANNEL_NAME,
     JWT,
     ADMIN_CREATION_SECRET,
     MONGO_URI,
@@ -282,6 +338,9 @@ const config = {
     CLOUDINARY_NAME,
     CLOUDINARY_KEY,
     CLOUDINARY_SECRET,
+    REDIS_URL,
+    MASTER_ADMIN_EMAIL,
+    MASTER_ADMIN_PHONE,
     PORTAL_CONFIG: portalJsonConfig,
     logConfigSummary,
 };
@@ -295,6 +354,22 @@ export {
     PORT,
     BASE_URL,
     FRONTENDS,
+    CORS_ALLOWED_DOMAIN_SUFFIXES,
+    TREVIO_URL,
+    TREVISTA_URL,
+    DASHBOARD_URL,
+    BOOKING_ENGINE_URL,
+    AUTH_APP_URL,
+    ADMIN_URL,
+    ADMIN_REMOTE_URL,
+    COMPANY_NAME,
+    COMPANY_TAGLINE,
+    SUPPORT_EMAIL,
+    SUPPORT_PHONE,
+    DEFAULT_TOUR_IMAGE,
+    AGENT_EMAIL_DOMAIN,
+    WHATSAPP_CHANNEL_URL,
+    WHATSAPP_CHANNEL_NAME,
     JWT,
     ADMIN_CREATION_SECRET,
     MONGO_URI,
@@ -309,6 +384,9 @@ export {
     CLOUDINARY_NAME,
     CLOUDINARY_KEY,
     CLOUDINARY_SECRET,
+    REDIS_URL,
+    MASTER_ADMIN_EMAIL,
+    MASTER_ADMIN_PHONE,
     portalJsonConfig as PORTAL_CONFIG,
     logConfigSummary,
 };

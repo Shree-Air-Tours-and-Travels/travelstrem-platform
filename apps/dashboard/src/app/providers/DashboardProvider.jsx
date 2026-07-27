@@ -1,6 +1,7 @@
 import React from "react";
 import { initApp } from "../../core/initApp";
 import { clearUserSessionCache } from "../../services/userSession";
+import { clearCsrfToken } from "../../services/security";
 import {
   emit,
   registerSessionCacheClearer,
@@ -45,39 +46,53 @@ export function DashboardProvider({ children }) {
     registerSessionCacheClearer(clearUserSessionCache);
   }, []);
 
-  const loadSession = React.useCallback(async ({ forceSession = false } = {}) => {
+  const loadSession = React.useCallback(async ({ forceSession = false, _retryCount = 0 } = {}) => {
     if (forceSession) {
       clearUserSessionCache();
+      clearCsrfToken();
       initOnceRef.current = null;
     }
 
     if (initOnceRef.current) return initOnceRef.current;
     setState((current) => ({ ...current, loading: true, error: null }));
 
-    initOnceRef.current = (async () => {
-      const { session } = await initApp({
-        pathname: window.location.pathname,
-        search: window.location.search,
-        hash: window.location.hash,
-      });
+    const MAX_RETRIES = 2;
+    const RETRY_DELAY_MS = 1000;
 
-      const resolved = session || DEFAULT_SESSION;
-      persistToken(resolved);
-      setState({
-        loading: false,
-        error: null,
-        session: resolved,
-      });
-      sessionRef.current = resolved;
-    })().catch((error) => {
-      console.warn("[DashboardProvider] initApp failed:", error?.message || error);
-      setState({
-        loading: false,
-        error: error?.message || "init-app-failed",
-        session: DEFAULT_SESSION,
-      });
-    });
+    const attempt = async (retryCount) => {
+      try {
+        const { session } = await initApp({
+          pathname: window.location.pathname,
+          search: window.location.search,
+          hash: window.location.hash,
+        });
 
+        const resolved = session || DEFAULT_SESSION;
+        persistToken(resolved);
+        setState({
+          loading: false,
+          error: null,
+          session: resolved,
+        });
+        sessionRef.current = resolved;
+      } catch (error) {
+        console.warn(`[DashboardProvider] initApp failed (attempt ${retryCount + 1}/${MAX_RETRIES + 1}):`, error?.response?.data?.message || error?.message || error);
+
+        if (retryCount < MAX_RETRIES) {
+          initOnceRef.current = null;
+          await new Promise((r) => setTimeout(r, RETRY_DELAY_MS * (retryCount + 1)));
+          return attempt(retryCount + 1);
+        }
+
+        setState({
+          loading: false,
+          error: error?.message || "init-app-failed",
+          session: DEFAULT_SESSION,
+        });
+      }
+    };
+
+    initOnceRef.current = attempt(_retryCount);
     return initOnceRef.current;
   }, []);
 

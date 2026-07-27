@@ -1,19 +1,22 @@
-import React, { useMemo, useState, useCallback, useEffect } from "react";
+import React, { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, FeaturedCard, InternationalTripCard, QuickChips, TrevioTripCard, Icon, useFavoritesContext } from "@packages/trem-ui";
+import { Button, EmptyState, FeaturedCard, InternationalTripCard, QuickChips, TrevioTripCard, Icon, useFavoritesContext } from "@packages/trem-ui";
 import { ContactAgentModal } from "@packages/trem-modals";
 import { fetchData } from "@packages/trem-utils";
 import { tripId, tripPrice, tripCurrency, tripImage, tripLocation, tripDuration } from "../utils";
 
 const MOBILE_PAGE_SIZE = 3;
+const FEATURED_AUTO_INTERVAL = 5000;
 
-export default function Home({ trips, internationalTrips = [], featuredTrip, pageModel, activeFilter, loadingTrips, onFilterChange }) {
+export default function Home({ trips, internationalTrips = [], featuredTrips = [], pageModel, activeFilter, loadingTrips, onFilterChange }) {
   const { isFavorited, toggleFavorite } = useFavoritesContext();
   const navigate = useNavigate();
   const [mobileVisibleCount, setMobileVisibleCount] = useState(MOBILE_PAGE_SIZE);
-  const { labels, content, tripList, upcoming, whyWanderon, international, howToUse, frames, faq, getInTouch } = pageModel;
+  const { labels, content, tripList, upcoming, whyWanderon, international, howToUse, frames, faq, getInTouch, planInternational } = pageModel;
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
-  const maxItems = Number(tripList.pagination?.maxItems) || trips.length;
+  const [activeSlide, setActiveSlide] = useState(0);
+  const sliderRef = useRef(null);
+  const isHovered = useRef(false);
   const categories = useMemo(() => (
     Array.isArray(tripList.filters) ? tripList.filters : []
   ).map((option) => ({
@@ -21,13 +24,29 @@ export default function Home({ trips, internationalTrips = [], featuredTrip, pag
     label: option.title || option.label || option.name || option.value || "",
     disabled: Boolean(option.disabled) || loadingTrips,
   })).filter((option) => option.id), [tripList.filters, loadingTrips]);
-  const allTrips = trips.slice(0, maxItems);
-  const heroTrip = featuredTrip || trips[0] || null;
+  const allTrips = trips;
   const featuredConfig = content.featuredCard || {};
+  const sliderTrips = featuredTrips.length > 0 ? featuredTrips : [];
 
   useEffect(() => {
     setMobileVisibleCount(MOBILE_PAGE_SIZE);
   }, [trips]);
+
+  useEffect(() => {
+    if (sliderTrips.length <= 1) return;
+    const timer = setInterval(() => {
+      if (!isHovered.current) {
+        setActiveSlide((prev) => (prev + 1) % sliderTrips.length);
+      }
+    }, FEATURED_AUTO_INTERVAL);
+    return () => clearInterval(timer);
+  }, [sliderTrips.length]);
+
+  useEffect(() => {
+    if (!sliderRef.current || sliderTrips.length <= 1) return;
+    const slideWidth = sliderRef.current.offsetWidth;
+    sliderRef.current.scrollTo({ left: slideWidth * activeSlide, behavior: "smooth" });
+  }, [activeSlide, sliderTrips.length]);
 
   const loadMore = useCallback(() => {
     setMobileVisibleCount((prev) => prev + MOBILE_PAGE_SIZE);
@@ -44,16 +63,16 @@ export default function Home({ trips, internationalTrips = [], featuredTrip, pag
       const res = await fetchData("/form.json?form=contact-agent&tourId=trevio-home");
       if (res?.status === "success") {
         setContactFormData({
-          title: res.title || getInTouch.heading || "Contact Agent",
-          description: res.description || getInTouch.description || "",
+          title: res.title || getInTouch.heading,
+          description: res.description || getInTouch.description,
           structure: res.structure || {},
           data: res.data || [],
         });
       }
     } catch (_) {
       setContactFormData({
-        title: getInTouch.heading || "Contact Agent",
-        description: getInTouch.description || "",
+        title: getInTouch.heading,
+        description: getInTouch.description,
         structure: {},
         data: [],
       });
@@ -83,19 +102,70 @@ export default function Home({ trips, internationalTrips = [], featuredTrip, pag
               </div>
             )}
           </div>
-          {heroTrip && (
+          {sliderTrips.length > 1 ? (
+            <div
+              className="trevio-featured-slider"
+              onMouseEnter={() => { isHovered.current = true; }}
+              onMouseLeave={() => { isHovered.current = false; }}
+            >
+              <div className="trevio-featured-slider__viewport">
+                <div className="trevio-featured-slider__track" ref={sliderRef}>
+                  {sliderTrips.map((trip) => (
+                    <div className="trevio-featured-slider__slide" key={tripId(trip)}>
+                      <FeaturedCard
+                        image={tripImage(trip)}
+                        title={trip.title || featuredConfig.title}
+                        metaItems={[
+                          { icon: "mapPin", label: tripLocation(trip) || featuredConfig.meta },
+                          { icon: "calendar", label: tripDuration(trip) || featuredConfig.defaultType },
+                        ].filter((item) => item.label)}
+                        price={tripPrice(trip)}
+                        currency={tripCurrency(trip)}
+                        ctaLabel={featuredConfig.ctaLabel}
+                        onCtaClick={() => navigate(`trip/${tripId(trip)}`)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="trevio-featured-slider__dots">
+                {sliderTrips.map((trip, i) => (
+                  <button
+                    key={tripId(trip)}
+                    className={`trevio-featured-slider__dot${i === activeSlide ? " trevio-featured-slider__dot--active" : ""}`}
+                    onClick={() => setActiveSlide(i)}
+                    aria-label={`Go to slide ${i + 1}`}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : sliderTrips.length === 1 ? (
             <FeaturedCard
-              image={tripImage(heroTrip)}
-              title={heroTrip.title || featuredConfig.title}
+              image={tripImage(sliderTrips[0])}
+              title={sliderTrips[0].title || featuredConfig.title}
               metaItems={[
-                { icon: "mapPin", label: tripLocation(heroTrip) || featuredConfig.meta },
-                { icon: "calendar", label: tripDuration(heroTrip) || featuredConfig.defaultType },
+                { icon: "mapPin", label: tripLocation(sliderTrips[0]) || featuredConfig.meta },
+                { icon: "calendar", label: tripDuration(sliderTrips[0]) || featuredConfig.defaultType },
               ].filter((item) => item.label)}
-              price={tripPrice(heroTrip)}
-              currency={tripCurrency(heroTrip)}
+              price={tripPrice(sliderTrips[0])}
+              currency={tripCurrency(sliderTrips[0])}
               ctaLabel={featuredConfig.ctaLabel}
-              onCtaClick={() => navigate(`trip/${tripId(heroTrip)}`)}
+              onCtaClick={() => navigate(`trip/${tripId(sliderTrips[0])}`)}
             />
+          ) : (
+            <div className="trevio-featured-empty">
+              <div className="trevio-featured-empty__glow" aria-hidden="true" />
+              <div className="trevio-featured-empty__content">
+                <div className="trevio-featured-empty__icon">
+                  <Icon name="compass" size={48} />
+                </div>
+                <h3>{featuredConfig.emptyTitle}</h3>
+                <p>{featuredConfig.emptyDescription}</p>
+                <button className="trevio-button trevio-button--primary" onClick={() => document.getElementById("trip-section")?.scrollIntoView({ behavior: "smooth" })}>
+                  {featuredConfig.ctaLabel}
+                </button>
+              </div>
+            </div>
           )}
         </div>
       </section>
@@ -147,13 +217,13 @@ export default function Home({ trips, internationalTrips = [], featuredTrip, pag
                 onView={() => navigate(`trip/${tripId(trip)}`)}
               />
             )) : (
-              <div className="trevio-empty trevio-trip-grid__empty">{labels.emptyTripList}</div>
+              <EmptyState className="trevio-trip-grid__empty" icon="search" title={labels.emptyTripList} />
             )}
           </div>
           {hasMore && (
             <div className="trevio-trip-grid__more">
               <Button variant="outline" color="primary" onClick={loadMore}>
-                View more ({allTrips.length - visibleTrips.length} remaining)
+                {labels.viewMoreAction} ({allTrips.length - visibleTrips.length} {labels.viewMoreRemaining})
               </Button>
             </div>
           )}
@@ -170,7 +240,7 @@ export default function Home({ trips, internationalTrips = [], featuredTrip, pag
               </div>
             </div>
             <div className="trevio-trip-grid">
-              {trips.slice(0, Number(upcoming.pagination?.maxItems) || 2).map((trip) => (
+              {trips.length ? trips.slice(0, Number(upcoming.pagination?.maxItems) || 2).map((trip) => (
                 <TrevioTripCard
                   key={`upcoming-${tripId(trip)}`}
                   trip={trip}
@@ -178,7 +248,34 @@ export default function Home({ trips, internationalTrips = [], featuredTrip, pag
                   onFavorite={toggleFavorite}
                   onView={() => navigate(`trip/${tripId(trip)}`)}
                 />
-              ))}
+              )) : (
+                <EmptyState className="trevio-trip-grid__empty" icon="calendar" title={labels.emptyTripList} />
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {planInternational.heading && (
+        <section className="trevio-section trevio-plan-intl">
+          <div className="trevio-container">
+            <div className="trevio-plan-intl__inner">
+              <div className="trevio-plan-intl__content">
+                {planInternational.eyebrow && <span className="trevio-eyebrow">{planInternational.eyebrow}</span>}
+                <h2>{planInternational.heading} <span>{planInternational.highlight}</span></h2>
+                {planInternational.description && <p>{planInternational.description}</p>}
+                <button
+                  className="trevio-button trevio-button--primary"
+                  onClick={() => document.getElementById("international-section")?.scrollIntoView({ behavior: "smooth" })}
+                >
+                  {planInternational.ctaLabel}
+                </button>
+              </div>
+              <div className="trevio-plan-intl__visual">
+                <div className="trevio-plan-intl__orb trevio-plan-intl__orb--1" />
+                <div className="trevio-plan-intl__orb trevio-plan-intl__orb--2" />
+                <Icon name="globe" size={64} />
+              </div>
             </div>
           </div>
         </section>
@@ -200,7 +297,7 @@ export default function Home({ trips, internationalTrips = [], featuredTrip, pag
               {whyWanderon.items.map((item, i) => (
                 <div className={`trevio-why__card trevio-why__card--${item.accent || "teal"}`} key={item.title || i}>
                   <div className="trevio-why__card-icon">
-                    <Icon name={item.icon || "compass"} size={28} />
+                    <Icon name={item.icon || "info"} size={28} />
                   </div>
                   <h3 className="trevio-why__card-title">{item.title}</h3>
                   <p className="trevio-why__card-desc">{item.description}</p>
@@ -211,7 +308,7 @@ export default function Home({ trips, internationalTrips = [], featuredTrip, pag
         </section>
       )}
 
-      {international.heading && internationalTrips.length > 0 && (
+      {international.heading && (
         <section className="trevio-section" id="international-section">
           <div className="trevio-container">
             <div className="trevio-section-head">
@@ -222,13 +319,15 @@ export default function Home({ trips, internationalTrips = [], featuredTrip, pag
               </div>
             </div>
             <div className="trevio-intl-grid">
-              {internationalTrips.slice(0, Number(international.pagination?.maxItems) || 3).map((trip) => (
+              {internationalTrips.length ? internationalTrips.slice(0, Number(international.pagination?.maxItems) || 3).map((trip) => (
                 <InternationalTripCard
                   key={`intl-${tripId(trip)}`}
                   trip={trip}
                   onView={() => navigate(`trip/${tripId(trip)}`)}
                 />
-              ))}
+              )) : (
+                <EmptyState className="trevio-trip-grid__empty" icon="globe" title={labels.emptyTripList} />
+              )}
             </div>
           </div>
         </section>
@@ -318,7 +417,7 @@ export default function Home({ trips, internationalTrips = [], featuredTrip, pag
               <h2>{getInTouch.heading}</h2>
               {getInTouch.description && <p>{getInTouch.description}</p>}
               <button className="trevio-touch__cta" onClick={handleEnquire}>
-                <span className="trevio-touch__cta-text">{getInTouch.ctaLabel || "Enquire Now"}</span>
+                <span className="trevio-touch__cta-text">{getInTouch.ctaLabel}</span>
                 <svg className="trevio-touch__cta-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="5" y1="12" x2="19" y2="12" />
                   <polyline points="12 5 19 12 12 19" />
@@ -335,18 +434,7 @@ export default function Home({ trips, internationalTrips = [], featuredTrip, pag
               {getInTouch.features.map((feat, i) => (
                 <div className="trevio-touch__feature" key={feat.title || i} style={{ "--fi": i }}>
                   <div className="trevio-touch__feature-icon">
-                    {feat.icon === "map" && (
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
-                    )}
-                    {feat.icon === "users" && (
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                    )}
-                    {feat.icon === "shield" && (
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    )}
-                    {!["map", "users", "shield"].includes(feat.icon) && (
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-                    )}
+                    <Icon name={feat.icon || "info"} size={24} />
                   </div>
                   <div>
                     <h4>{feat.title}</h4>

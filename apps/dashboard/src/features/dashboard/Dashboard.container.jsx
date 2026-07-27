@@ -26,10 +26,15 @@ const PENDING_STATUSES = new Set([
   "UNDER_REVIEW", "PAYMENT_PENDING", "PARTIALLY_PAID",
 ]);
 
-export default function DashboardContainer({ productFilter = "all", activeTab = "overview" }) {
+export default function DashboardContainer({ productFilter = "all", activeTab = "overview", onTabChange }) {
   const { session } = useDashboardConfig();
   const user = session?.user || {};
   const [viewingBookingId, setViewingBookingId] = useState(null);
+
+  // Reset booking detail view when switching tabs
+  useEffect(() => {
+    setViewingBookingId(null);
+  }, [activeTab]);
 
   const [stats, setStats] = useState({
     totalBookings: 0,
@@ -66,11 +71,11 @@ export default function DashboardContainer({ productFilter = "all", activeTab = 
         const params = { limit: 100, skip: 0 };
         if (productFilter && productFilter !== "all") params.product = productFilter;
 
-        const res = await fetchData("/bookings", { params });
+        const res = await fetchData("/engine/my-bookings", { params });
         if (!res || res.status !== "success") throw new Error(res?.message || "Failed to load bookings");
 
-        const data = Array.isArray(res.componentData?.data) ? res.componentData.data : [];
-        const total = Number(res.componentData?.config?.total || data.length || 0);
+        const data = res.componentData?.data?.bookings || [];
+        const total = Number(res.componentData?.data?.total || data.length || 0);
 
         if (!cancelled) {
           setBookings(data);
@@ -90,6 +95,31 @@ export default function DashboardContainer({ productFilter = "all", activeTab = 
     loadBookings();
     return () => { cancelled = true; };
   }, [productFilter]);
+
+  useEffect(() => {
+    if (activeTab !== "bookings" && activeTab !== "overview") return;
+    const interval = setInterval(async () => {
+      try {
+        const params = { limit: 100, skip: 0 };
+        if (productFilter && productFilter !== "all") params.product = productFilter;
+
+        const res = await fetchData("/engine/my-bookings", { params });
+        if (!res || res.status !== "success") return;
+
+        const data = res.componentData?.data?.bookings || [];
+        const total = Number(res.componentData?.data?.total || data.length || 0);
+
+        setBookings(data);
+        setStats((prev) => ({
+          ...prev,
+          totalBookings: total,
+          pendingBookings: data.filter((b) => PENDING_STATUSES.has(String(b.status || "").toUpperCase())).length,
+          tripsCompleted: data.filter((b) => COMPLETED_STATUSES.has(String(b.status || "").toUpperCase())).length,
+        }));
+      } catch {}
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [activeTab, productFilter]);
 
   const loadFavorites = useCallback(async () => {
     setFavoritesLoading(true);
@@ -177,7 +207,7 @@ export default function DashboardContainer({ productFilter = "all", activeTab = 
   return (
     <div className="dashboard-page">
       {activeTab === "overview" && (
-        <OverviewView user={user} stats={stats} recentBookings={bookings} />
+        <OverviewView user={user} stats={stats} recentBookings={bookings} onTabChange={onTabChange} onViewBooking={handleViewBooking} />
       )}
       {activeTab === "bookings" && (
         <BookingsView

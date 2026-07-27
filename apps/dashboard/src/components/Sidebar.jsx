@@ -1,4 +1,5 @@
 import React from "react";
+import { Icon } from "@packages/trem-ui";
 import "./Sidebar.scss";
 
 const TABS = [
@@ -8,16 +9,11 @@ const TABS = [
   { id: "profile", label: "Profile", icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" },
 ];
 
-const PRODUCTS = [
-  { key: "trevio", label: "Trevio", url: process.env.REACT_APP_TREVIO_URL },
-  { key: "trevista", label: "Trevista", url: process.env.REACT_APP_TREVISTA_URL },
-];
+const TREVIO_URL = process.env.REACT_APP_TREVIO_URL || "";
 
-export default function Sidebar({ activeTab, onTabChange, user, isOpen, onClose }) {
-  const availableProducts = PRODUCTS.filter((p) => p.url);
-
+export default function Sidebar({ activeTab, onTabChange, user }) {
   return (
-    <aside className={`dash-sidebar ${isOpen ? "is-open" : ""}`}>
+    <aside className="dash-sidebar">
       <div className="dsb-brand">
         <img className="dsb-brand__logo" src="/logo-images/logo-icon-only.png" alt="TravelsTrem" width="36" height="36" />
         <div className="dsb-brand__text">
@@ -31,10 +27,7 @@ export default function Sidebar({ activeTab, onTabChange, user, isOpen, onClose 
           <button
             key={tab.id}
             className={`dsb-nav__item ${activeTab === tab.id ? "is-active" : ""}`}
-            onClick={() => {
-              onTabChange(tab.id);
-              onClose?.();
-            }}
+            onClick={() => onTabChange(tab.id)}
           >
             <svg className="dsb-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d={tab.icon} />
@@ -44,16 +37,12 @@ export default function Sidebar({ activeTab, onTabChange, user, isOpen, onClose 
         ))}
       </nav>
 
-      {availableProducts.length > 0 && (
-        <div className="dsb-products">
-          {availableProducts.map((p) => (
-            <a key={p.key} className="dsb-product-link" href={p.url}>
-              <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
-                <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
-              </svg>
-              Back to {p.label}
-            </a>
-          ))}
+      {TREVIO_URL && (
+        <div className="dsb-back">
+          <a className="dsb-back__link" href={TREVIO_URL} rel="noopener noreferrer">
+            <Icon name="arrowLeft" size={16} />
+            <span className="dsb-back__label">Back to Trevio</span>
+          </a>
         </div>
       )}
 

@@ -3,6 +3,7 @@ import { getConfiguredApiBase } from "../core/config/portalEnvironment";
 import { registerAuthHeaderClearer } from "@packages/trem-events";
 import { setFetchDataApiClient } from "@packages/trem-utils";
 import { setupRefreshInterceptor, consumeUrlToken } from "@packages/trem-auth-core";
+import { getCsrfToken, detectScriptInjection, detectPrivacyBreaches, auditLog_event, setCsrfBaseUrl } from "./security";
 
 consumeUrlToken({ token: "travelstrem:token" });
 
@@ -17,6 +18,8 @@ const BASE = normalizeBase(RAW_BASE) ?? "";
 const baseURL = (BASE.endsWith("/api") ? BASE : `${BASE}/api`).replace(/([^:]\/)\/+/g, "$1");
 const AUTH_STORAGE_PREFIX = "dashboardTREM";
 const SHARED_STORAGE_PREFIX = "travelstrem";
+
+setCsrfBaseUrl(BASE.endsWith("/api") ? BASE.slice(0, -4) : BASE || "");
 if (typeof window !== "undefined") window.__TREM_AUTH_STORAGE_PREFIX__ = AUTH_STORAGE_PREFIX;
 
 const api = axios.create({
@@ -36,7 +39,7 @@ export const clearApiAuthHeader = () => {
 registerAuthHeaderClearer(clearApiAuthHeader);
 
 api.interceptors.request.use(
-  (cfg) => {
+  async (cfg) => {
     try {
       const token = localStorage.getItem(`${AUTH_STORAGE_PREFIX}:token`) || localStorage.getItem(`${SHARED_STORAGE_PREFIX}:token`);
       if (token) {
@@ -46,6 +49,32 @@ api.interceptors.request.use(
         delete cfg.headers.Authorization;
       }
 
+      // CSRF protection for state-changing requests
+      if (["post", "put", "patch", "delete"].includes(cfg.method?.toLowerCase())) {
+        const csrf = await getCsrfToken();
+        if (csrf) {
+          cfg.headers = cfg.headers || {};
+          cfg.headers["X-CSRF-Token"] = csrf;
+        }
+      }
+
+      // Security audit for request body
+      const bodyStr = typeof cfg.data === "string" ? cfg.data : JSON.stringify(cfg.data || "");
+      if (bodyStr) {
+        if (detectScriptInjection(bodyStr)) {
+          auditLog_event("script_injection_blocked", { url: cfg.url, method: cfg.method });
+          return Promise.reject(new Error("Request blocked: potential script injection detected"));
+        }
+        const breaches = detectPrivacyBreaches(bodyStr);
+        if (breaches.length > 0) {
+          auditLog_event("privacy_breach_in_request", { url: cfg.url, breaches });
+        }
+      }
+
+      // Validate request URL
+      if (cfg.url && !cfg.url.startsWith("/") && !cfg.url.startsWith("http")) {
+        return Promise.reject(new Error("Invalid request URL"));
+      }
     } catch (err) {
       // ignore
     }

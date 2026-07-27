@@ -284,6 +284,7 @@ async function saveWithBookingRefRetry(booking, options = {}) {
 async function hydrateBooking(id, options = {}) {
     const booking = await BookingRepository.findById(id)
         .populate("tour")
+        .populate("trip")
         .populate("user", "name email role agentRef agencyRef partnerAgencyRef")
         .populate("assignedAgent", "name email role agentRef agencyRef partnerAgencyRef");
     return BookingService.hydrate(booking, options);
@@ -664,6 +665,7 @@ export const listBookings = async (req, res) => {
             .skip(skip)
             .limit(limit)
             .populate("tour", "title city photo photos price period tags _id")
+            .populate("trip", "title slug location image photos price duration _id")
             .populate("user", "name email role agentRef agencyRef partnerAgencyRef")
             .populate("assignedAgent", "name email role agentRef agencyRef partnerAgencyRef");
         const total = await BookingRepository.countDocuments(q);

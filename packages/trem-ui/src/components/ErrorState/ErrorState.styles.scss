@@ -1,0 +1,53 @@
+.tt-error-state {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 1rem;
+  text-align: center;
+  padding: 3rem 2rem;
+  min-height: 360px;
+}
+
+.tt-error-state__icon {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+  border-radius: 50%;
+  width: 96px;
+  height: 96px;
+  display: grid;
+  place-items: center;
+}
+
+.tt-error-state__title {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text, #14201d);
+}
+
+.tt-error-state__desc {
+  margin: 0;
+  max-width: 420px;
+  font-size: 0.95rem;
+  color: var(--muted, #64748b);
+  line-height: 1.6;
+}
+
+.tt-error-state__error {
+  margin: 0;
+  padding: 0.5rem 1rem;
+  max-width: 480px;
+  font-size: 0.82rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  color: #991b1b;
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  border-radius: 8px;
+  word-break: break-word;
+}
+
+.tt-error-state__actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}

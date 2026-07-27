@@ -1,3 +1,5 @@
+@import "@packages/trem-design-tokens/scss";
+
 .dashboard-page {
   width: 100%;
 }
@@ -7,57 +9,57 @@
   align-items: center;
   justify-content: center;
   min-height: 400px;
-  padding: 2rem;
-  color: #dc2626;
-  font-size: 1rem;
+  padding: $space-8;
+  color: var(--color-danger);
+  font-size: $font-size-md;
 }
 
 .dashboard-back-to-product {
-  padding: 0.75rem 1.5rem;
-  background: #eff6ff;
-  border-bottom: 1px solid #bfdbfe;
+  padding: $space-3 $space-6;
+  background: var(--primary-soft);
+  border-bottom: 1px solid var(--border);
 }
 
 .dashboard-back-to-product__link {
-  color: #2563eb;
-  font-size: 0.875rem;
-  font-weight: 500;
+  color: var(--color-primary);
+  font-size: $font-size-sm;
+  font-weight: $font-medium;
   text-decoration: none;
-  transition: color 0.15s ease;
+  transition: color $duration-base $ease-standard;
 
   &:hover {
-    color: #1d4ed8;
+    color: var(--color-primary-dark);
     text-decoration: underline;
   }
 }
 
 .dashboard-product-filter {
   display: flex;
-  gap: 0.5rem;
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
-  background: #f9fafb;
+  gap: $space-2;
+  padding: $space-4 $space-6;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-muted);
 }
 
 .dashboard-product-filter__btn {
-  padding: 0.5rem 1rem;
-  border: 1px solid #d1d5db;
-  border-radius: 9999px;
-  background: #fff;
-  color: #374151;
-  font-size: 0.875rem;
-  font-weight: 500;
+  padding: $space-2 $space-4;
+  border: 1px solid var(--border);
+  border-radius: $radius-full;
+  background: var(--card-bg);
+  color: var(--text);
+  font-size: $font-size-sm;
+  font-weight: $font-medium;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all $duration-base $ease-standard;
 
   &:hover {
-    border-color: #2563eb;
-    color: #2563eb;
+    border-color: var(--color-primary);
+    color: var(--color-primary);
   }
 
   &.is-active {
-    background: #2563eb;
-    border-color: #2563eb;
-    color: #fff;
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-on-primary);
   }
 }

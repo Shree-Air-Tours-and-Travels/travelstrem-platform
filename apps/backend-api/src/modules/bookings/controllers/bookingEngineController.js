@@ -11,6 +11,7 @@ import PaymentService from "../services/PaymentService.js";
 import TravellerService from "../services/TravellerService.js";
 import BookingTimelineService from "../services/BookingTimelineService.js";
 import MessageService from "../services/MessageService.js";
+import PaymentSettings from "../models/PaymentSettings.js";
 import { BOOKING_STATUS, PAYMENT_STATUS, BOOKING_FLOW } from "../../../constants/enums.js";
 
 function sendSuccess(res, data, message = "OK") {
@@ -77,7 +78,8 @@ async function resolveBookingAgent(tour) {
 
 function computeTokenAmount(booking, product) {
   if (product === BOOKING_FLOW.TREVIO) {
-    return booking.tokenAmount || 0;
+    return booking.tokenAmount
+      || Math.round(Number(booking.paymentSummary?.total || booking.priceSnapshot?.total || 0) * 0.15);
   }
   return 0;
 }
@@ -92,10 +94,12 @@ function buildFlowSteps(product) {
 function buildStatusTimeline(status, product) {
   const allSteps = product === BOOKING_FLOW.TREVIO
     ? [
-        { key: "booked", label: "Booking Submitted" },
+        { key: "booked", label: "Booking Created" },
+        { key: "payment_pending", label: "Awaiting Token Payment" },
+        { key: "token_verification", label: "Token Verification" },
         { key: "confirmed", label: "Booking Confirmed" },
-        { key: "token_paid", label: "Token Paid" },
-        { key: "completed", label: "Trip Completed" },
+        { key: "balance_pending", label: "Balance Pending" },
+        { key: "completed", label: "Fully Paid" },
       ]
     : [
         { key: "booked", label: "Booking Submitted" },
@@ -112,6 +116,8 @@ function buildStatusTimeline(status, product) {
     ? {
         DRAFT: "booked",
         QUOTE_REQUESTED: "booked",
+        AWAITING_TOKEN_PAYMENT: "payment_pending",
+        PAYMENT_PENDING: "payment_pending",
         CONFIRMED: "confirmed",
         PARTIALLY_PAID: "token_paid",
         PAID: "token_paid",
@@ -154,10 +160,32 @@ async function resolveProductEntity(product, ref) {
   return Tour.findOne({ $or: [...idQuery, { slug: ref }] });
 }
 
-function buildPriceSnapshotForProduct(product, entity, guestsCount) {
+function getPrefExtraPrice(prefArray, selectedValue) {
+  if (!Array.isArray(prefArray) || !selectedValue) return 0;
+  const match = prefArray.find((opt) => opt.value === selectedValue);
+  return match?.extraPrice || 0;
+}
+
+function buildPriceSnapshotForProduct(product, entity, guestsCount, preferences = {}, travellers = []) {
   if (product === BOOKING_FLOW.TREVIO) {
-    const pricePerPerson = entity?.price?.amount || 0;
-    const total = pricePerPerson * guestsCount;
+    const basePricePerPerson = entity?.price?.amount || 0;
+    const prefs = entity?.preferences || {};
+
+    const roomTypeExtra = getPrefExtraPrice(prefs.roomTypes, preferences.roomType);
+
+    const perTravellerExtras = travellers.map((t) => {
+      const meal = getPrefExtraPrice(prefs.mealPreferences, t.mealPreference);
+      const pkg = getPrefExtraPrice(prefs.packageTypes, t.packageType);
+      const drink = getPrefExtraPrice(prefs.drinkTypes, t.drinkType);
+      return { meal, pkg, drink, total: meal + pkg + drink };
+    });
+    const totalTravellerExtras = perTravellerExtras.reduce((sum, t) => sum + t.total, 0);
+
+    const baseTripTotal = basePricePerPerson * guestsCount;
+    const totalPrefExtras = roomTypeExtra + totalTravellerExtras;
+    const total = baseTripTotal + totalPrefExtras;
+    const tokenAmount = Math.round(basePricePerPerson * 0.15) * guestsCount;
+
     return {
       min: total,
       max: total,
@@ -166,9 +194,15 @@ function buildPriceSnapshotForProduct(product, entity, guestsCount) {
       source: "trip_price",
       matchedSeason: null,
       note: "",
-      perPerson: pricePerPerson,
+      perPerson: basePricePerPerson,
+      basePricePerPerson,
+      roomTypeExtra,
+      perTravellerExtras,
+      totalTravellerExtras,
+      totalPrefExtras,
+      baseTripTotal,
       total,
-      tokenAmount: entity?.price?.tokenAmount || 0,
+      tokenAmount,
     };
   }
   return Booking.buildPriceSnapshot(entity, new Date(), guestsCount);
@@ -219,7 +253,7 @@ export const createBooking = asyncHandler(async (req, res) => {
     if (existing) return sendSuccess(res, await BookingService.hydrate(existing), "Booking already exists");
   }
 
-  const priceSnapshot = buildPriceSnapshotForProduct(product, entity, guestsCount);
+  const priceSnapshot = buildPriceSnapshotForProduct(product, entity, guestsCount, { roomType }, travellers);
 
   const bookingData = {
     user: userId,
@@ -259,10 +293,12 @@ export const createBooking = asyncHandler(async (req, res) => {
 
   if (product === BOOKING_FLOW.TREVIO) {
     bookingData.trip = entity._id;
-    bookingData.tokenAmount = entity.price?.tokenAmount || 0;
+    bookingData.tokenAmount = entity.price?.tokenAmount || priceSnapshot.tokenAmount || 0;
     bookingData.seatsReserved = 0;
+    bookingData.paymentStatus = PAYMENT_STATUS.TOKEN_PENDING;
   } else {
     bookingData.tour = entity._id;
+    bookingData.paymentStatus = PAYMENT_STATUS.UNPAID;
   }
 
   const booking = await Booking.create(bookingData);
@@ -305,7 +341,7 @@ export const submitBooking = asyncHandler(async (req, res) => {
     if (booking.status !== BOOKING_STATUS.DRAFT) {
       throw new ApiError(400, `Booking is in ${booking.status} state and cannot be submitted`);
     }
-    booking.transitionStatus(BOOKING_STATUS.CONFIRMED);
+    booking.transitionStatus(BOOKING_STATUS.AWAITING_TOKEN_PAYMENT);
   } else {
     if (booking.status !== BOOKING_STATUS.DRAFT) {
       throw new ApiError(400, `Booking is in ${booking.status} state and cannot be submitted`);
@@ -350,6 +386,15 @@ export const submitBooking = asyncHandler(async (req, res) => {
       content: `Booking submitted. Our team will prepare a quote for you shortly.`,
       messageType: "system",
     });
+  } else {
+    await MessageService.send({
+      bookingId: booking._id,
+      senderType: "system",
+      senderName: "System",
+      content: `Booking created. Please submit proof for the token amount of ₹${booking.tokenAmount || 0}.`,
+      messageType: "system",
+      metadata: { event: "booking_created", channels: ["dashboard"] },
+    });
   }
 
   const hydrated = await BookingService.hydrate(booking);
@@ -386,6 +431,13 @@ export const getBookingStatus = asyncHandler(async (req, res) => {
   const unreadMessages = await MessageService.countUnread(id, privileged ? "agent" : "customer");
 
   const tokenAmount = computeTokenAmount(booking, product);
+  const paymentConfiguration = product === BOOKING_FLOW.TREVIO
+    ? await PaymentSettings.findOneAndUpdate(
+        { key: "default" },
+        { $setOnInsert: { key: "default" } },
+        { new: true, upsert: true }
+      ).lean()
+    : null;
 
   return sendSuccess(res, {
     ...hydrated,
@@ -394,6 +446,9 @@ export const getBookingStatus = asyncHandler(async (req, res) => {
     flowSteps: buildFlowSteps(product),
     unreadMessages,
     tokenAmount,
+    remainingAmount: booking.paymentSummary?.remaining || 0,
+    bookingStatus: booking.status,
+    paymentConfiguration,
     assignedAgent: booking.assignedAgent,
   });
 });
@@ -629,7 +684,10 @@ export const getMyBookings = asyncHandler(async (req, res) => {
   if (product) query.product = product;
 
   const [bookings, total] = await Promise.all([
-    Booking.find(query).sort(sort).skip(Number(skip)).limit(Math.min(Number(limit), 50)),
+    Booking.find(query)
+      .populate("tour", "title slug city photo photos")
+      .populate("trip", "title slug location image photos duration")
+      .sort(sort).skip(Number(skip)).limit(Math.min(Number(limit), 50)),
     Booking.countDocuments(query),
   ]);
 
@@ -750,7 +808,7 @@ export const cancelBooking = asyncHandler(async (req, res) => {
     throw new ApiError(403, "Not authorized");
   }
 
-  const cancellable = ["DRAFT", "QUOTE_REQUESTED", "UNDER_REVIEW", "QUOTE_READY", "QUOTE_SENT", "PAYMENT_PENDING", "CONFIRMED"];
+  const cancellable = ["DRAFT", "QUOTE_REQUESTED", "UNDER_REVIEW", "QUOTE_READY", "QUOTE_SENT", "AWAITING_TOKEN_PAYMENT", "PAYMENT_PENDING", "CONFIRMED"];
   if (!cancellable.includes(booking.status)) {
     throw new ApiError(400, `Cannot cancel booking in ${booking.status} state`);
   }
@@ -818,6 +876,13 @@ export const getBookingDetail = asyncHandler(async (req, res) => {
   const messages = await MessageService.list(booking._id, { limit: 50 });
   const unreadMessages = await MessageService.countUnread(booking._id, privileged ? "agent" : "customer");
   const tokenAmount = computeTokenAmount(booking, product);
+  const paymentConfiguration = product === BOOKING_FLOW.TREVIO
+    ? await PaymentSettings.findOneAndUpdate(
+        { key: "default" },
+        { $setOnInsert: { key: "default" } },
+        { new: true, upsert: true }
+      ).lean()
+    : null;
 
   return sendSuccess(res, {
     ...hydrated,
@@ -828,6 +893,10 @@ export const getBookingDetail = asyncHandler(async (req, res) => {
     messages,
     unreadMessages,
     tokenAmount,
+    remainingAmount: booking.paymentSummary?.remaining || 0,
+    bookingStatus: booking.status,
+    paymentConfiguration,
+    paymentTimeline: hydrated.timeline || [],
     assignedAgent: booking.assignedAgent,
   });
 });
@@ -891,7 +960,11 @@ export const listAllBookings = asyncHandler(async (req, res) => {
   }
 
   const [bookings, total] = await Promise.all([
-    Booking.find(query).sort(sort).skip(Number(skip)).limit(Math.min(Number(limit), 100)),
+    Booking.find(query)
+      .populate("tour", "title slug city photo photos")
+      .populate("trip", "title slug location image photos duration")
+      .populate("user", "name email phone")
+      .sort(sort).skip(Number(skip)).limit(Math.min(Number(limit), 100)),
     Booking.countDocuments(query),
   ]);
 
@@ -904,8 +977,6 @@ export default {
   submitBooking,
   getBookingStatus,
   getBookingDetail,
-  payToken,
-  payFullAmount,
   acceptQuote,
   rejectQuote,
   getMyBookings,

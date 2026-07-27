@@ -1,5 +1,6 @@
 import React from "react";
 import { Button, Dropdown, InputField, Icon, Paragraph } from "@packages/trem-ui";
+import MobileDateInput from "../../../../components/MobileDateInput.jsx";
 
 function toItems(options, currentValue, onChange) {
   return options.map((opt) => {
@@ -124,7 +125,7 @@ export default function BookingTravelerStepView({
           {
             label: labels.dob || "Date of birth",
             render: () => (
-              <InputField variant="date" value={traveler.dob} onChange={(v) => onTravelerChange(index, "dob", v)} />
+              <MobileDateInput value={traveler.dob} onChange={(v) => onTravelerChange(index, "dob", v)} />
             ),
           },
           {
@@ -305,9 +306,9 @@ export default function BookingTravelerStepView({
       <div className="booking-page__section-title">{labels.guests || "Number of Travelers"}</div>
       <div className="booking-page__guest-row" style={{ marginBottom: "1rem" }}>
         <div className="booking-page__qty-group">
-          <Button primaryClassName="booking-page__qty-btn" variant="text" onClick={() => onGuestsChange(Math.max(1, Number(guests) - 1))} disabled={Number(guests) <= 1} aria-label="Decrease travelers">−</Button>
+          <Button primaryClassName="booking-page__qty-btn" variant="text" onClick={() => onGuestsChange(Math.max(1, Number(guests) - 1))} disabled={Number(guests) <= 1} aria-label="Decrease travelers"><Icon name="minus" size={16} /></Button>
           <span className="booking-page__qty-num">{guests}</span>
-          <Button primaryClassName="booking-page__qty-btn" variant="text" onClick={() => onGuestsChange(Number(guests) + 1)} disabled={maxGuests && Number(guests) >= maxGuests} aria-label="Increase travelers">+</Button>
+          <Button primaryClassName="booking-page__qty-btn" variant="text" onClick={() => onGuestsChange(Number(guests) + 1)} disabled={maxGuests && Number(guests) >= maxGuests} aria-label="Increase travelers"><Icon name="plus" size={16} /></Button>
         </div>
       </div>
 

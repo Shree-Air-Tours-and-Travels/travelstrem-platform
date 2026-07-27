@@ -3,6 +3,28 @@ import TrevioTrip from "../models/TrevioTrip.js";
 const slugify = (value = "") =>
     String(value).trim().toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 
+// Strip HTML tags from a string
+const stripHtml = (str) => typeof str === "string" ? str.replace(/<[^>]*>/g, "").trim() : str;
+
+// Sanitize string fields in an object
+function sanitizeStrings(obj) {
+    if (!obj || typeof obj !== "object") return obj;
+    const result = { ...obj };
+    for (const key of Object.keys(result)) {
+        if (typeof result[key] === "string") {
+            result[key] = stripHtml(result[key]);
+        } else if (Array.isArray(result[key])) {
+            result[key] = result[key].map((item) =>
+                typeof item === "string" ? stripHtml(item) :
+                typeof item === "object" && item !== null ? sanitizeStrings(item) : item
+            );
+        } else if (typeof result[key] === "object" && result[key] !== null) {
+            result[key] = sanitizeStrings(result[key]);
+        }
+    }
+    return result;
+}
+
 function normalizeTrip(doc) {
     const obj = doc.toObject ? doc.toObject() : doc;
     return {
@@ -25,12 +47,14 @@ function normalizeTrip(doc) {
         rating: obj.rating,
         price: obj.price,
         availability: obj.availability,
+        preferences: obj.preferences || {},
         itinerary: obj.itinerary || [],
         inclusions: obj.inclusions || [],
         exclusions: obj.exclusions || [],
         featured: obj.featured,
         isListed: obj.isListed,
         cancellationPolicy: obj.cancellationPolicy,
+        reviews: obj.reviews || [],
         status: obj.status,
         sortOrder: obj.sortOrder,
         createdAt: obj.createdAt,
@@ -73,19 +97,47 @@ function sanitizeTripPayload(raw = {}) {
         };
     }
 
+    const sanitizePrefOptions = (arr) => Array.isArray(arr)
+        ? arr.map((opt) => ({
+            label: String(opt.label || "").trim(),
+            value: String(opt.value || "").trim().toLowerCase(),
+            extraPrice: Number(opt.extraPrice || 0),
+        })).filter((opt) => opt.label && opt.value)
+        : undefined;
+
+    if (p.preferences && typeof p.preferences === "object") {
+        const cleaned = {};
+        const roomTypes = sanitizePrefOptions(p.preferences.roomTypes);
+        const mealPreferences = sanitizePrefOptions(p.preferences.mealPreferences);
+        const packageTypes = sanitizePrefOptions(p.preferences.packageTypes);
+        const drinkTypes = sanitizePrefOptions(p.preferences.drinkTypes);
+        if (roomTypes) cleaned.roomTypes = roomTypes;
+        if (mealPreferences) cleaned.mealPreferences = mealPreferences;
+        if (packageTypes) cleaned.packageTypes = packageTypes;
+        if (drinkTypes) cleaned.drinkTypes = drinkTypes;
+        p.preferences = cleaned;
+    }
+
     p.tags = Array.isArray(p.tags) ? p.tags.map(String).map(t => t.trim().toLowerCase()) : [];
     p.chips = Array.isArray(p.chips) ? p.chips.map(String) : [];
     p.inclusions = Array.isArray(p.inclusions) ? p.inclusions.map(String) : [];
     p.exclusions = Array.isArray(p.exclusions) ? p.exclusions.map(String) : [];
     p.photos = Array.isArray(p.photos) ? p.photos.map(String) : [];
     p.dates = Array.isArray(p.dates) ? p.dates.map(String) : [];
+    p.reviews = Array.isArray(p.reviews) ? p.reviews.map((r) => ({
+        name: String(r.name || "Guest").trim(),
+        rating: Number(r.rating || 0),
+        date: String(r.date || "").trim(),
+        comment: String(r.comment || "").trim(),
+    })) : [];
     p.featured = !!p.featured;
     p.isListed = p.isListed !== false;
     p.status = p.status || "listed";
     p.sortOrder = Number(p.sortOrder || 0);
     p.rating = Number(p.rating || 0);
 
-    return p;
+    // Final pass: strip HTML from all string fields
+    return sanitizeStrings(p);
 }
 
 export async function listAdminTrips(req, res) {
