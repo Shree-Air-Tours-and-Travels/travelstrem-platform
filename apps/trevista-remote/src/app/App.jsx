@@ -3,7 +3,7 @@ import { FavoritesProvider, ProductHeader, GlobalLoader, Footer, ScrollToTopButt
 import AppRoutes from "./routes";
 import { initApp } from "../core/initApp";
 import "../main.scss";
-import { redirectToGlobalAuth, setComponentDataFetcher, fetchData, createProductAuth, buildGlobalDashboardUrl } from "@packages/trem-utils";
+import { redirectToGlobalAuth, setComponentDataFetcher, fetchData, createProductAuth, buildGlobalDashboardUrl, getCurrentReturnUrl } from "@packages/trem-utils";
 import { emit, registerSessionCacheClearer } from "@packages/trem-events";
 import { consumeUrlToken, appendTokenToUrl } from "@packages/trem-auth-core";
 import { API_BASE } from "../services/configService";
@@ -122,7 +122,7 @@ function App({ dispatchEvent, embedded = false, userSession = null }) {
                 if (!active) return;
                 setState({ loading: false, error: null, session, headerConfig: header });
                 if (!session?.isAuthenticated) {
-                    redirectToGlobalAuth({ app: "trevista" });
+                    redirectToGlobalAuth({ app: "trevista", returnTo: getCurrentReturnUrl() });
                 }
             })
             .catch((error) => {
