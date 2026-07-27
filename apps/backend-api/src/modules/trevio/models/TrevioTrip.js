@@ -43,7 +43,8 @@ const availabilitySchema = new Schema({
 const preferenceOptionSchema = new Schema({
   label: { type: String, required: true, trim: true },
   value: { type: String, required: true, trim: true, lowercase: true },
-  extraPrice: { type: Number, min: 0, default: 0 },
+  // Negative adjustments represent discounts (for example shared rooms).
+  extraPrice: { type: Number, default: 0 },
 }, { _id: false });
 
 const preferencesSchema = new Schema({

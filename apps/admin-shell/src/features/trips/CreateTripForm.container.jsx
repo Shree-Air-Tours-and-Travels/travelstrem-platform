@@ -43,12 +43,33 @@ function coercePhotos(initial) {
     return photos;
 }
 
+function slugify(value) {
+    return String(value || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+}
+
+function unwrapTripJson(value) {
+    if (!value || Array.isArray(value) || typeof value !== "object") return null;
+    for (const key of ["trip", "data", "result", "payload", "componentData"]) {
+        const candidate = value[key];
+        if (Array.isArray(candidate) && candidate.length === 1) return unwrapTripJson(candidate[0]);
+        if (candidate && !Array.isArray(candidate) && typeof candidate === "object") {
+            return unwrapTripJson(candidate);
+        }
+    }
+    return value;
+}
+
 export default function CreateTripForm({ initial = null, onCancel = () => {}, onSaved = () => {} }) {
     const [step, setStep] = useState(0);
     const [saving, setSaving] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
+    const [importingJson, setImportingJson] = useState(false);
     const [dirty, setDirty] = useState(false);
     const [form, setFormState] = useState(() => {
         const blank = {
@@ -108,6 +129,72 @@ export default function CreateTripForm({ initial = null, onCancel = () => {}, on
         });
     }
 
+    function handleImportJson(jsonText) {
+        if (!String(jsonText || "").trim()) {
+            setError("Paste a trip JSON object before importing.");
+            return false;
+        }
+        setError(null);
+        setSuccess(null);
+        setImportingJson(true);
+        try {
+            const parsed = JSON.parse(jsonText);
+            const imported = unwrapTripJson(parsed);
+            if (!imported) throw new Error("The JSON file must contain one trip object.");
+            if (!imported.title && !imported.slug) {
+                throw new Error("This does not look like a trip JSON file. A title or slug is required.");
+            }
+
+            setFormState(prev => {
+                const next = {
+                    ...prev,
+                    ...imported,
+                    price: {
+                        ...prev.price,
+                        ...(typeof imported.price === "number" ? { amount: imported.price } : (imported.price || {})),
+                    },
+                    availability: { ...prev.availability, ...(imported.availability || {}) },
+                    preferences: { ...(prev.preferences || {}), ...(imported.preferences || {}) },
+                };
+
+                next.slug = imported.slug || slugify(imported.title);
+                next.duration = coerceDuration(imported.duration)
+                    || calcDuration(imported.startDate, imported.endDate);
+                next.photos = coercePhotos(imported);
+                next.image = imported.image || next.photos[0] || "";
+                next.itinerary = Array.isArray(imported.itinerary) ? imported.itinerary : [];
+                next.dates = Array.isArray(imported.dates) ? imported.dates : [];
+                next.chips = Array.isArray(imported.chips) ? imported.chips : [];
+                next.tags = Array.isArray(imported.tags) ? imported.tags : [];
+                next.inclusions = Array.isArray(imported.inclusions) ? imported.inclusions : [];
+                next.exclusions = Array.isArray(imported.exclusions) ? imported.exclusions : [];
+                next.reviews = Array.isArray(imported.reviews) ? imported.reviews : [];
+
+                if (!initial?._id) {
+                    delete next._id;
+                    delete next.id;
+                    delete next.__v;
+                    delete next.createdAt;
+                    delete next.updatedAt;
+                } else {
+                    next._id = initial._id;
+                }
+                return next;
+            });
+            setDirty(true);
+            setStep(0);
+            setSuccess("JSON imported. Review every step before submitting.");
+            return true;
+        } catch (importError) {
+            setError(importError instanceof SyntaxError
+                ? "The pasted content is not valid JSON. Check commas, quotes, and brackets."
+                : (importError.message || "Could not import this trip JSON file."));
+            return false;
+        } finally {
+            setImportingJson(false);
+        }
+    }
+
     function next() { setStep(s => Math.min(STEPS.length - 1, s + 1)); }
     function back() { setStep(s => Math.max(0, s - 1)); }
 
@@ -159,11 +246,14 @@ export default function CreateTripForm({ initial = null, onCancel = () => {}, on
             payload.rating = Number(payload.rating || 0);
             payload.sortOrder = Number(payload.sortOrder || 0);
             payload.itinerary = (payload.itinerary || []).map((it, idx) => ({
+                ...it,
                 day: Number(it.day || idx + 1),
                 title: it.title || "",
                 summary: it.summary || "",
                 location: it.location || "",
                 activities: Array.isArray(it.activities) ? it.activities : [],
+                meals: it.meals || "",
+                accommodation: it.accommodation || "",
             }));
             payload.tags = Array.isArray(payload.tags) ? payload.tags : [];
             payload.chips = Array.isArray(payload.chips) ? payload.chips : [];
@@ -273,6 +363,7 @@ export default function CreateTripForm({ initial = null, onCancel = () => {}, on
             step={step}
             saving={saving}
             uploading={uploading}
+            importingJson={importingJson}
             error={error}
             success={success}
             onCancel={handleCancel}
@@ -287,6 +378,7 @@ export default function CreateTripForm({ initial = null, onCancel = () => {}, on
             removeArrayItem={removeArrayItem}
             moveArrayItem={moveArrayItem}
             handleUploadImage={handleUploadImage}
+            handleImportJson={handleImportJson}
             removePhoto={removePhoto}
             setMainPhoto={setMainPhoto}
             TRIP_TAGS={TRIP_TAGS}

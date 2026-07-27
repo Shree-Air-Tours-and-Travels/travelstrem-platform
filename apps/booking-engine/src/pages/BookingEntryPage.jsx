@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { GlobalLoader, FloatingActionBar, EmptyState } from "@packages/trem-ui";
+import { buildGlobalDashboardUrl } from "@packages/trem-utils";
 import BookingLayout from "../components/BookingLayout.jsx";
 import BookingSidebar from "../components/BookingSidebar.jsx";
 import TripStep from "../components/TripStep.jsx";
@@ -304,7 +305,14 @@ export default function BookingEntryPage() {
   if (bookingConfirmed) {
     const dashboardUrl = process.env.REACT_APP_DASHBOARD_URL || "";
     const handleGoToDashboard = dashboardUrl
-      ? () => { clearConfirmation(product, productRef); window.location.href = `${dashboardUrl}/bookings`; }
+      ? () => {
+          clearConfirmation(product, productRef);
+          window.location.assign(buildGlobalDashboardUrl({
+            dashboardBaseUrl: dashboardUrl,
+            product,
+            tab: "bookings",
+          }));
+        }
       : undefined;
     return (
       <BookingLayout steps={[]} currentStep={0} product={product} floatingBar={null} onExit={handleExit}>

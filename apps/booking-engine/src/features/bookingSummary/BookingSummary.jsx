@@ -108,7 +108,7 @@ export default function BookingSummaryPage({ dispatchEvent, dashboardPath = "/da
   const navigate = useNavigate();
   const location = useLocation();
   const [pageLabels, setPageLabels] = useState({});
-  const referrer = location.state?.from || { label: "Dashboard", path: dashboardPath, activeNav: "tours" };
+  const referrer = location.state?.from || { label: "Dashboard", path: dashboardPath, activeNav: "bookings" };
   const [booking, setBooking] = useState(null);
   const [form, setForm] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -125,16 +125,20 @@ export default function BookingSummaryPage({ dispatchEvent, dashboardPath = "/da
 
   const t = useCallback((key, fallback) => pageLabels?.[key] || fallback || key, [pageLabels]);
 
-  const goToDashboard = useCallback((activeNav = referrer.activeNav || "tours") => {
+  const goToDashboard = useCallback((activeNav = "bookings") => {
     if (typeof dispatchEvent === "function") {
       dispatchEvent("navigateToDashboard", { state: { activeNav } });
       return;
     }
-    if (/^https?:\/\//.test(referrer.path || "")) {
-      window.location.assign(referrer.path);
+    const targetPath = referrer.path || dashboardPath;
+    if (/^https?:\/\//.test(targetPath)) {
+      const targetUrl = new URL(targetPath);
+      targetUrl.searchParams.set("tab", activeNav);
+      window.location.assign(targetUrl.toString());
       return;
     }
-    navigate(referrer.path || dashboardPath, { state: { activeNav } });
+    const separator = targetPath.includes("?") ? "&" : "?";
+    navigate(`${targetPath}${separator}tab=${encodeURIComponent(activeNav)}`, { state: { activeNav } });
   }, [dispatchEvent, navigate, referrer, dashboardPath]);
 
   const hydrateForm = useCallback((data) => {
@@ -428,7 +432,7 @@ export default function BookingSummaryPage({ dispatchEvent, dashboardPath = "/da
           <Icon name="alertTriangle" />
           <Title text={t("bookingLoadError", "Booking could not load")} />
           <Paragraph text={error} />
-          <Button variant="outline" onClick={() => goToDashboard(referrer.activeNav)}>{t("backToDashboard", "Back to dashboard")}</Button>
+          <Button variant="outline" onClick={() => goToDashboard("bookings")}>{t("backToDashboard", "Back to dashboard")}</Button>
         </section>
       </main>
     );
@@ -452,7 +456,7 @@ export default function BookingSummaryPage({ dispatchEvent, dashboardPath = "/da
             <Paragraph text={booking?.bookingRef} />
           </div>
           <div className="booking-summary-hero__actions">
-            <Button variant="text" onClick={() => goToDashboard(referrer.activeNav || "tours")}>
+            <Button variant="text" onClick={() => goToDashboard("bookings")}>
               {t("dashboard", "Dashboard")}
             </Button>
             {canCancel ? <Button variant="solid" color="danger" primaryClassName="is-danger" onClick={() => setShowCancel(true)}>{t("cancelBooking", "Cancel Booking")}</Button> : null}
@@ -615,7 +619,7 @@ export default function BookingSummaryPage({ dispatchEvent, dashboardPath = "/da
             <Title text={t("bookingSubmitted", "Booking request submitted")} />
             <Paragraph text={t("submittedPrompt", "You can stay on this summary page to review details, or go to your dashboard. The dashboard View Booking action will bring you back here.")} />
             <div>
-              <Button variant="text" onClick={() => goToDashboard("tours")}>{t("goToDashboard", "Go to Dashboard")}</Button>
+              <Button variant="text" onClick={() => goToDashboard("bookings")}>{t("goToDashboard", "Go to Dashboard")}</Button>
               <Button variant="text" onClick={() => setShowDashboardPrompt(false)}>{t("stayHere", "Stay Here")}</Button>
             </div>
           </div>

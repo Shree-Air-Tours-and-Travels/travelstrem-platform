@@ -3,6 +3,12 @@ import { Button, SubTitle } from "@packages/trem-ui";
 import "../tours/CreateTourForm.scss";
 
 const STEPS = ['Basic', 'Journey', 'Inclusions', 'Content', 'Review'];
+const PREFERENCE_GROUPS = [
+    ["roomTypes", "Room types"],
+    ["mealPreferences", "Meal preferences"],
+    ["packageTypes", "Package types"],
+    ["drinkTypes", "Drink types"],
+];
 
 function ChipInput({ value = [], onChange, placeholder = "Add item" }) {
     const [input, setInput] = useState("");
@@ -79,11 +85,83 @@ function PhotoGrid({ photos, image, onRemove, onSetMain }) {
     );
 }
 
+function PreferenceEditor({ preferences = {}, onChange }) {
+    const updateGroup = (key, nextOptions) => onChange({ ...preferences, [key]: nextOptions });
+
+    return (
+        <div className="ctf-preferences">
+            <SubTitle text="Booking preferences" />
+            <p className="ctf-preferences__help">Price adjustments may be positive surcharges, zero, or negative discounts.</p>
+            {PREFERENCE_GROUPS.map(([key, label]) => {
+                const options = Array.isArray(preferences[key]) ? preferences[key] : [];
+                return (
+                    <fieldset key={key} className="ctf-preference-group">
+                        <legend>{label}</legend>
+                        {options.map((option, index) => (
+                            <div key={`${key}-${index}`} className="ctf-preference-option">
+                                <label>Label
+                                    <input
+                                        value={option.label || ""}
+                                        onChange={e => {
+                                            const next = [...options];
+                                            next[index] = { ...option, label: e.target.value };
+                                            updateGroup(key, next);
+                                        }}
+                                    />
+                                </label>
+                                <label>Value
+                                    <input
+                                        value={option.value || ""}
+                                        onChange={e => {
+                                            const next = [...options];
+                                            next[index] = { ...option, value: e.target.value };
+                                            updateGroup(key, next);
+                                        }}
+                                    />
+                                </label>
+                                <label>Price adjustment
+                                    <input
+                                        type="number"
+                                        value={option.extraPrice ?? 0}
+                                        onChange={e => {
+                                            const next = [...options];
+                                            next[index] = { ...option, extraPrice: Number(e.target.value || 0) };
+                                            updateGroup(key, next);
+                                        }}
+                                    />
+                                </label>
+                                <Button
+                                    type="button"
+                                    primaryClassName="btn ctf-preference-remove"
+                                    variant="text"
+                                    iconLeft="x"
+                                    aria-label={`Remove ${option.label || label} option`}
+                                    onClick={() => updateGroup(key, options.filter((_, itemIndex) => itemIndex !== index))}
+                                />
+                            </div>
+                        ))}
+                        <Button
+                            type="button"
+                            primaryClassName="btn"
+                            variant="outline"
+                            onClick={() => updateGroup(key, [...options, { label: "", value: "", extraPrice: 0 }])}
+                            text="+ Add option"
+                        />
+                    </fieldset>
+                );
+            })}
+        </div>
+    );
+}
+
 export default function CreateTripFormView({
-    form, step, saving, uploading, error, success, onCancel, submit, next, back,
+    form, step, saving, uploading, importingJson, error, success, onCancel, submit, next, back,
     setForm, setAt, handleDateChange, addArrayItem, updateArrayItem, removeArrayItem, moveArrayItem,
-    handleUploadImage, removePhoto, setMainPhoto, TRIP_TAGS, TRIP_CATEGORIES,
+    handleUploadImage, handleImportJson, removePhoto, setMainPhoto, TRIP_TAGS, TRIP_CATEGORIES,
 }) {
+    const [showJsonImport, setShowJsonImport] = useState(false);
+    const [jsonText, setJsonText] = useState("");
+
     return (
         <aside className="ctf-root-overlay">
             <div className="ctf-panel">
@@ -95,6 +173,18 @@ export default function CreateTripFormView({
                         </div>
                     </div>
                     <div className="ctf-header-actions">
+                        {!form._id && (
+                            <>
+                                <Button
+                                    type="button"
+                                    primaryClassName="btn ctf-json-import-button"
+                                    variant="outline"
+                                    onClick={() => setShowJsonImport(value => !value)}
+                                    disabled={importingJson}
+                                    text={showJsonImport ? "Hide JSON" : "Paste JSON"}
+                                />
+                            </>
+                        )}
                         <Button primaryClassName="btn" onClick={onCancel} text="Cancel" />
                     </div>
                 </header>
@@ -104,8 +194,58 @@ export default function CreateTripFormView({
                         {error && <div className="ctf-feedback ctf-feedback--error">{error}</div>}
                         {success && <div className="ctf-feedback ctf-feedback--ok">{success}</div>}
 
+                        {!form._id && showJsonImport && (
+                            <section className="ctf-json-import">
+                                <div className="ctf-json-import__heading">
+                                    <div>
+                                        <strong>Paste complete trip JSON</strong>
+                                        <span>The object can be direct or wrapped in data, trip, result, payload, or componentData.</span>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        primaryClassName="btn"
+                                        variant="text"
+                                        onClick={() => setJsonText("")}
+                                        disabled={!jsonText}
+                                        text="Clear"
+                                    />
+                                </div>
+                                <textarea
+                                    className="ctf-json-import__editor"
+                                    value={jsonText}
+                                    onChange={e => setJsonText(e.target.value)}
+                                    placeholder={'{\n  "title": "Ladakh High Altitude Adventure",\n  "slug": "ladakh-high-altitude-adventure",\n  "category": "adventure",\n  ...\n}'}
+                                    spellCheck={false}
+                                    aria-label="Trip JSON object"
+                                />
+                                <div className="ctf-json-import__actions">
+                                    <span>Your current form values are replaced only after valid JSON is parsed.</span>
+                                    <Button
+                                        type="button"
+                                        primaryClassName="btn"
+                                        variant="solid"
+                                        color="primary"
+                                        disabled={importingJson || !jsonText.trim()}
+                                        onClick={() => {
+                                            if (handleImportJson(jsonText)) {
+                                                setShowJsonImport(false);
+                                                setJsonText("");
+                                            }
+                                        }}
+                                        text={importingJson ? "Importing..." : "Apply JSON"}
+                                    />
+                                </div>
+                            </section>
+                        )}
+
                         {step === 0 && (
                             <section className="ctf-section">
+                                {!form._id && (
+                                    <div className="ctf-json-import-note">
+                                        <strong>Have a complete trip JSON?</strong>
+                                        <span>Use Paste JSON above to fill all supported fields, then review each step before submitting.</span>
+                                    </div>
+                                )}
                                 <label>Title
                                     <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} required />
                                 </label>
@@ -161,6 +301,10 @@ export default function CreateTripFormView({
                                         <label>Title<input value={day.title || ""} onChange={e => updateArrayItem("itinerary", idx, { ...day, title: e.target.value })} /></label>
                                         <label>Summary<textarea value={day.summary || ""} onChange={e => updateArrayItem("itinerary", idx, { ...day, summary: e.target.value })} /></label>
                                         <label>Location<input value={day.location || ""} onChange={e => updateArrayItem("itinerary", idx, { ...day, location: e.target.value })} /></label>
+                                        <div className="ctf-row">
+                                            <label>Meals<input value={day.meals || ""} onChange={e => updateArrayItem("itinerary", idx, { ...day, meals: e.target.value })} placeholder="e.g. Breakfast, Dinner" /></label>
+                                            <label>Accommodation<input value={day.accommodation || ""} onChange={e => updateArrayItem("itinerary", idx, { ...day, accommodation: e.target.value })} placeholder="e.g. Hotel" /></label>
+                                        </div>
                                         <fieldset><legend>Activities</legend>
                                             <ChipInput value={day.activities || []} onChange={v => updateArrayItem("itinerary", idx, { ...day, activities: v })} placeholder="Add activity" />
                                         </fieldset>
@@ -168,7 +312,7 @@ export default function CreateTripFormView({
                                 ))}
                                 <Button type="button" primaryClassName="btn" onClick={() => {
                                     const nextDay = ((form.itinerary || []).reduce((max, d) => Math.max(max, d.day || 0), 0)) + 1;
-                                    addArrayItem("itinerary", { day: nextDay, title: "", summary: "", location: "", activities: [] });
+                                    addArrayItem("itinerary", { day: nextDay, title: "", summary: "", location: "", activities: [], meals: "", accommodation: "" });
                                 }} text="+ Add Day" />
                             </section>
                         )}
@@ -184,6 +328,10 @@ export default function CreateTripFormView({
                                 <fieldset style={{ marginTop: 12 }}><legend>Dates</legend>
                                     <ChipInput value={form.dates || []} onChange={v => setForm({ ...form, dates: v })} placeholder="Add date string (e.g. Dec 15-18)" />
                                 </fieldset>
+                                <PreferenceEditor
+                                    preferences={form.preferences || {}}
+                                    onChange={preferences => setForm({ ...form, preferences })}
+                                />
                             </section>
                         )}
 
@@ -202,23 +350,34 @@ export default function CreateTripFormView({
                                 <fieldset style={{ marginTop: 12 }}>
                                     <legend>Tags (select up to 4)</legend>
                                     <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                                        {TRIP_TAGS.map(tag => (
-                                            <label key={tag} className="ctf-tag-toggle" style={{ cursor: "pointer" }}>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={(form.tags || []).includes(tag)}
-                                                    onChange={e => {
+                                        {[...new Set([...TRIP_TAGS, ...(form.tags || [])])].map(tag => {
+                                            const selectedTags = form.tags || [];
+                                            const isSelected = selectedTags.includes(tag);
+                                            const selectionFull = selectedTags.length >= 4;
+                                            return (
+                                                <button
+                                                    key={tag}
+                                                    type="button"
+                                                    className={`ctf-tag-toggle ${isSelected ? "is-selected" : ""}`}
+                                                    aria-pressed={isSelected}
+                                                    disabled={!isSelected && selectionFull}
+                                                    onClick={() => {
                                                         const current = form.tags || [];
-                                                        const next = e.target.checked
-                                                            ? [...current, tag].slice(0, 4)
-                                                            : current.filter(t => t !== tag);
-                                                        setForm({ ...form, tags: next });
+                                                        setForm({
+                                                            ...form,
+                                                            tags: isSelected
+                                                                ? current.filter(currentTag => currentTag !== tag)
+                                                                : [...current, tag],
+                                                        });
                                                     }}
-                                                />
-                                                <span className="ctf-tag">{tag}</span>
-                                            </label>
-                                        ))}
+                                                >
+                                                    {isSelected && <span aria-hidden="true">✓</span>}
+                                                    {tag}
+                                                </button>
+                                            );
+                                        })}
                                     </div>
+                                    {(form.tags || []).length >= 4 && <small className="ctf-tag-limit">Remove one selected tag to choose another.</small>}
                                 </fieldset>
                                 <div className="ctf-row" style={{ marginTop: 12 }}>
                                     <label><input type="checkbox" checked={!!form.featured} onChange={e => setForm({ ...form, featured: e.target.checked })} /> Featured</label>
