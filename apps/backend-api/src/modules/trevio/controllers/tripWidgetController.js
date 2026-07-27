@@ -3,7 +3,6 @@ import path from "path";
 import { fileURLToPath } from "url";
 import TrevioTripRepository from "../repositories/TrevioTripRepository.js";
 import { normalizeTrevioTrip } from "../services/trevioTripService.js";
-import { TREVIO_SEED_TRIPS } from "../data/seedTrips.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -24,10 +23,7 @@ const findTripByRef = async (tripRef) => {
     title: new RegExp(`^${escapeRegExp(ref.replace(/-/g, " ").trim())}$`, "i"),
   });
   if (byTitle) return byTitle;
-  const seedMatch = TREVIO_SEED_TRIPS.find(
-    (t) => t.slug === ref || t.title?.toLowerCase().replace(/[^a-z0-9]+/g, "-") === ref
-  );
-  return seedMatch || null;
+  return null;
 };
 
 function ensurePageContract(widget) {

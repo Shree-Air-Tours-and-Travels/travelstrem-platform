@@ -162,18 +162,11 @@ class TrevioTripService {
 
     const query = listedQuery({ category, featuredOnly });
     const skip = (page - 1) * limit;
-    let [docs, total] = await Promise.all([
+    const [docs, total] = await Promise.all([
       TrevioTripRepository.find(query).sort({ featured: -1, sortOrder: 1, startDate: 1 }).skip(skip).limit(limit),
       TrevioTripRepository.countDocuments(query),
     ]);
 
-    if (!total) {
-      await this.seedTrips();
-      [docs, total] = await Promise.all([
-        TrevioTripRepository.find(query).sort({ featured: -1, sortOrder: 1, startDate: 1 }).skip(skip).limit(limit),
-        TrevioTripRepository.countDocuments(query),
-      ]);
-    }
     const trips = docs.map(normalizeTrevioTrip);
     const totalPages = Math.max(1, Math.ceil(total / limit));
 
@@ -206,12 +199,7 @@ class TrevioTripService {
       $or: [{ endDate: null }, { endDate: { $gte: today } }],
     };
 
-    let docs = await TrevioTripRepository.find(query).sort({ sortOrder: 1, startDate: 1 }).limit(limit);
-
-    if (!docs.length) {
-      await this.seedTrips();
-      docs = await TrevioTripRepository.find(query).sort({ sortOrder: 1, startDate: 1 }).limit(limit);
-    }
+    const docs = await TrevioTripRepository.find(query).sort({ sortOrder: 1, startDate: 1 }).limit(limit);
     const total = await TrevioTripRepository.countDocuments(query);
     const trips = docs.map(normalizeTrevioTrip);
 
