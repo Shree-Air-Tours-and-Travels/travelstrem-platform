@@ -6,4 +6,5 @@ export const API_ROUTES = Object.freeze({
   BOOKINGS: "/api/bookings",
   ADMIN_BOOKINGS: "/api/admin/bookings",
   ENGINE: "/api/engine",
+  CLIENTS: "/api/clients",
 });

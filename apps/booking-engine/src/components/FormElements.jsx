@@ -47,6 +47,7 @@ export function FormField({ field, value, error, onChange }) {
           placeholder={field.placeholder || "Select date"}
           min={field.min}
           max={field.max}
+          mode={field.datePickerMode || "calendar"}
           disabled={field.disabled || field.readOnly}
           error={error}
         />

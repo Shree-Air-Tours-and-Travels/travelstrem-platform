@@ -36,6 +36,7 @@
 .ui-footer__main { display: grid; grid-template-columns: 1.05fr 1.25fr .8fr; gap: 4.4rem; padding-top: 4.6rem; padding-bottom: 3.6rem; }
 .ui-footer__brand-link { display: inline-flex; align-items: center; gap: .75rem; color: var(--text); text-decoration: none; }
 .ui-footer__brand-mark { display: block; width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
+.ui-footer__brand-lockup { display: grid; line-height: 1.05; }
 .ui-footer__brand-lockup strong { display: block; color: var(--text); font-size: 1.25rem; letter-spacing: -.04em; }
 .ui-footer__brand-lockup em { color: var(--color-primary); font-style: normal; }
 .ui-footer__brand-lockup small, .ui-footer__product { display: block; color: var(--muted); font-size: .58rem; letter-spacing: .17em; }

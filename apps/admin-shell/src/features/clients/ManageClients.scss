@@ -1,0 +1,72 @@
+.mc-loading, .mc-error, .mc-empty { padding: 3rem; text-align: center; color: var(--muted); }
+.mc-error { color: #ef4444; }
+.mc-error button { margin-top: 1rem; }
+
+.mc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+.mc-header h1 { margin: 0; font-size: 1.5rem; color: var(--title); }
+
+.mc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 1.25rem; }
+
+.mc-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  transition: box-shadow 0.15s ease;
+}
+.mc-card:hover { box-shadow: var(--shadow-md); }
+
+.mc-card__header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
+.mc-card__name { margin: 0; font-size: 1.1rem; color: var(--title); }
+.mc-card__slug { font-size: 0.75rem; color: var(--muted); }
+
+.mc-card__status {
+  font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+  padding: 0.2rem 0.6rem; border-radius: 999px;
+}
+.mc-card__status--active { background: #dcfce7; color: #166534; }
+.mc-card__status--inactive { background: #f3f4f6; color: #6b7280; }
+
+.mc-card__logos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1rem; }
+
+.client-logo-cell {
+  display: flex; flex-direction: column; align-items: center; gap: 0.35rem;
+  padding: 0.6rem; border: 1px dashed var(--border); border-radius: var(--radius-md);
+  cursor: pointer; transition: border-color 0.15s ease, background 0.15s ease;
+}
+.client-logo-cell:hover { border-color: var(--color-primary); background: var(--surface-inset); }
+
+.client-logo-cell__img { width: 40px; height: 40px; border-radius: var(--radius-sm); object-fit: cover; }
+.client-logo-cell__initial {
+  width: 40px; height: 40px; display: grid; place-items: center;
+  background: var(--color-primary); color: var(--color-on-primary);
+  border-radius: var(--radius-sm); font-weight: 700; font-size: 1rem;
+}
+.client-logo-cell__label { font-size: 0.65rem; color: var(--muted); text-align: center; }
+
+.mc-card__actions { display: flex; gap: 0.5rem; }
+
+.btn { border: 0; cursor: pointer; font: inherit; border-radius: var(--radius-md); padding: 0.5rem 1rem; font-weight: 600; transition: background 0.15s ease, transform 0.1s ease; }
+.btn--primary { background: var(--color-primary); color: var(--color-on-primary); }
+.btn--primary:hover { opacity: 0.9; }
+.btn--ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+.btn--ghost:hover { background: var(--surface-inset); }
+.btn--danger { background: #ef4444; color: #fff; }
+.btn--danger:hover { background: #dc2626; }
+.btn--sm { padding: 0.35rem 0.75rem; font-size: 0.8rem; }
+
+.modal-backdrop {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(0, 0, 0, 0.5); display: grid; place-items: center;
+}
+.modal-content {
+  background: var(--surface); border-radius: var(--radius-lg); padding: 2rem;
+  max-width: 420px; width: 90%; box-shadow: var(--shadow-lg);
+}
+.modal-content h3 { margin: 0 0 0.75rem; }
+.modal-actions { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1.5rem; }
+
+@media (max-width: 640px) {
+  .mc-grid { grid-template-columns: 1fr; }
+  .mc-card__logos { grid-template-columns: repeat(2, 1fr); }
+}

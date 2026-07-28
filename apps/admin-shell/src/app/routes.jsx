@@ -3,6 +3,7 @@ import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 
 import { AuthPage } from "@apps/auth";
 import ManageTours from "../features/tours/ManageTours";
+import ManageClients from "../features/clients/ManageClients";
 import BookingDetail from "../features/tours/BookingDetail/BookingDetail";
 import { ScrollToTop } from "@packages/trem-ui";
 import { useAdminPortalConfig } from "./providers/AdminPortalProvider";
@@ -71,6 +72,8 @@ const Routers = () => {
                 <Route path="/admin/tours" element={<ManageTours session={session} />} />
                 <Route path="/admin/trips" element={<ManageTours session={session} tab="trips" />} />
                 <Route path="/admin/agencies" element={<ManageTours session={session} />} />
+                <Route path="/admin/clients" element={<ManageClients session={session} />} />
+                <Route path="/manage/clients" element={<ManageClients session={session} />} />
                 <Route path="/bookings/:bookingId" element={<BookingDetail />} />
                 <Route path="*" element={<Navigate to="/manage/tours" replace />} />
             </Routes>

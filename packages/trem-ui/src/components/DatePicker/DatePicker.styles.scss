@@ -4,6 +4,18 @@
   position: relative;
   width: 100%;
 
+  &__visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
   &__trigger {
     display: flex;
     align-items: center;
@@ -85,6 +97,38 @@
     white-space: nowrap;
   }
 
+  &__month-year {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: $space-1-5;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__select {
+    width: 100%;
+    min-width: 0;
+    height: 34px;
+    padding: 0 $space-2;
+    border: 1px solid var(--border);
+    border-radius: $radius-xs;
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    font-size: $font-size-sm;
+    font-weight: $font-semibold;
+    cursor: pointer;
+
+    &--year {
+      width: 82px;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 1px;
+    }
+  }
+
   &__nav-btn {
     display: grid;
     place-items: center;
@@ -106,6 +150,11 @@
     &:focus-visible {
       outline: 2px solid var(--color-primary);
       outline-offset: -2px;
+    }
+
+    &:disabled {
+      opacity: 0.32;
+      cursor: not-allowed;
     }
   }
 
@@ -212,6 +261,23 @@
   }
 
   &__calendar-sheet {
+    .trem-datepicker__header--selectable {
+      gap: $space-2;
+    }
+
+    .trem-datepicker__month-year {
+      gap: $space-2;
+    }
+
+    .trem-datepicker__select {
+      height: 42px;
+      padding-inline: $space-3;
+    }
+
+    .trem-datepicker__select--year {
+      width: 94px;
+    }
+
     .trem-datepicker__grid,
     .trem-datepicker__row {
       display: grid;

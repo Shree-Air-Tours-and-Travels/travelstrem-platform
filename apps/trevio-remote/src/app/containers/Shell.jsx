@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { buildGlobalAuthUrl, buildGlobalDashboardUrl } from "@packages/trem-utils";
 import { appendTokenToUrl } from "@packages/trem-auth-core";
-import { ProductHeaderWithDropdown, Footer, ScrollToTopButton, useTheme } from "@packages/trem-ui";
+import { ProductHeaderWithDropdown, Footer, ScrollToTopButton, useTheme, BrandLogo } from "@packages/trem-ui";
 
 const getTokenForRedirect = () => {
   try {
@@ -24,6 +24,7 @@ export default function Shell({ children, labels, headerConfig, onWishlist, wish
     window.location.assign(appendTokenToUrl(url, getTokenForRedirect()));
   };
 
+  const logoConfig = headerConfig?.logos?.trevio || {};
   const brand = headerConfig?.brand || {
     label: labels.pageTitle || "Product",
     subtitle: labels.brandSubtitle,
@@ -50,7 +51,8 @@ export default function Shell({ children, labels, headerConfig, onWishlist, wish
         <ProductHeaderWithDropdown
           brand={{
             ...brand,
-            logoSrc: "/favicon.svg",
+            logoSrc: logoConfig.logoSrc || "",
+            logoAlt: logoConfig.name || brand.label,
             onClick: () => navigate(rootPath),
           }}
           navItems={navItems}
@@ -75,7 +77,7 @@ export default function Shell({ children, labels, headerConfig, onWishlist, wish
         />
       )}
       {children}
-      {!embedded && <Footer productName="Trevio · Community travel" />}
+      {!embedded && <Footer logoSrc={logoConfig.logoSrc || ""} productName="Trevio · Community travel" />}
       <ScrollToTopButton />
     </>
   );

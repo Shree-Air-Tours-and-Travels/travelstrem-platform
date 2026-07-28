@@ -2,10 +2,12 @@ import React from "react";
 
 const formatMoney = (v) => `₹${Number(v || 0).toLocaleString("en-IN")}`;
 
-export default function ReviewStep({ tour, trip, travellers, contact, pricing, product, seatsAvailable }) {
+export default function ReviewStep({ tour, trip, travellers, contact, pricing, product, addons = [], onEdit }) {
   const totalGuests = Number(trip.adults || 1) + Number(trip.children || 0) + Number(trip.infants || 0);
   const perPerson = pricing?.perPerson || 0;
-  const baseTripTotal = pricing?.baseTripTotal || (perPerson * totalGuests);
+  const baseTripTotal = product === "trevio"
+    ? Number(pricing?.baseTripTotal ?? pricing?.baseAmount ?? 0)
+    : Number(pricing?.baseTripTotal || perPerson);
   const totalPrefExtras = pricing?.totalPrefExtras || 0;
   const roomTypeExtra = pricing?.roomTypeExtra || 0;
   const perTravellerExtras = pricing?.perTravellerExtras || [];
@@ -19,7 +21,10 @@ export default function ReviewStep({ tour, trip, travellers, contact, pricing, p
     <div className="be-step be-step--review">
       <div className="be-review">
         <section className="be-review__section">
-          <h3 className="be-review__heading">Trip Summary</h3>
+          <header className="be-review__section-header">
+            <h3 className="be-review__heading">Trip Summary</h3>
+            <button type="button" onClick={() => onEdit?.("trip")}>Edit</button>
+          </header>
           <div className="be-review__card">
             <div className="be-review__card-row">
               <span className="be-review__label">Tour</span>
@@ -49,7 +54,10 @@ export default function ReviewStep({ tour, trip, travellers, contact, pricing, p
         </section>
 
         <section className="be-review__section">
-          <h3 className="be-review__heading">Contact</h3>
+          <header className="be-review__section-header">
+            <h3 className="be-review__heading">Contact</h3>
+            <button type="button" onClick={() => onEdit?.("contact")}>Edit</button>
+          </header>
           <div className="be-review__card">
             <div className="be-review__card-row"><span className="be-review__label">Name</span><span className="be-review__value">{contact.name || "—"}</span></div>
             <div className="be-review__card-row"><span className="be-review__label">Email</span><span className="be-review__value">{contact.email || "—"}</span></div>
@@ -58,7 +66,10 @@ export default function ReviewStep({ tour, trip, travellers, contact, pricing, p
         </section>
 
         <section className="be-review__section">
-          <h3 className="be-review__heading">Travellers ({travellers.length})</h3>
+          <header className="be-review__section-header">
+            <h3 className="be-review__heading">Travellers ({travellers.length})</h3>
+            <button type="button" onClick={() => onEdit?.("travellers")}>Edit</button>
+          </header>
           <div className="be-review__travellers">
             {travellers.map((t, i) => (
               <div key={i} className="be-review__traveller">
@@ -79,6 +90,33 @@ export default function ReviewStep({ tour, trip, travellers, contact, pricing, p
             ))}
           </div>
         </section>
+
+        {(product === "trevio" || addons.length > 0) && (
+          <section className="be-review__section">
+            <header className="be-review__section-header">
+              <h3 className="be-review__heading">Add-ons</h3>
+              <button type="button" onClick={() => onEdit?.("addons")}>Edit</button>
+            </header>
+            <div className="be-review__travellers">
+              {addons.filter((addon) => addon.selected).length ? (
+                addons.filter((addon) => addon.selected).map((addon) => (
+                  <div className="be-review__card-row" key={addon.id || addon.code || addon.name}>
+                    <span className="be-review__label">{addon.name || addon.label}</span>
+                    <span className="be-review__value">
+                      {formatMoney(
+                        pricing?.breakdown?.find(
+                          (row) => row.id === (addon.id || addon.code),
+                        )?.amount ?? addon.price ?? addon.amount,
+                      )}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <span className="be-review__empty-value">No add-ons selected</span>
+              )}
+            </div>
+          </section>
+        )}
 
         <section className="be-review__section">
           <h3 className="be-review__heading">Price Breakdown</h3>
@@ -118,9 +156,21 @@ export default function ReviewStep({ tour, trip, travellers, contact, pricing, p
                 <span>{formatMoney(pricing.tax)}</span>
               </div>
             )}
+            {pricing?.taxes >= 0 && pricing?.tax == null && (
+              <div className="be-review__price-row">
+                <span>Taxes &amp; GST</span>
+                <span>{formatMoney(pricing.taxes)}</span>
+              </div>
+            )}
+            {pricing?.discounts > 0 && (
+              <div className="be-review__price-row be-review__price-negative">
+                <span>Coupon discount</span>
+                <span>−{formatMoney(pricing.discounts)}</span>
+              </div>
+            )}
             <div className="be-review__price-row be-review__price-row--total">
               <span>Total</span>
-              <span>{formatMoney(pricing?.total || baseTripTotal)}</span>
+              <span>{formatMoney(pricing?.grandTotal ?? pricing?.total ?? baseTripTotal)}</span>
             </div>
             {product === "trevio" && pricing?.tokenAmount > 0 && (
               <div className="be-review__price-row be-review__price-row--token">

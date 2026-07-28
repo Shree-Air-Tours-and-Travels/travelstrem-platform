@@ -9,6 +9,15 @@
 
   @include mq-max($breakpoint-mobile) {
     padding: $space-3 0;
+    justify-content: flex-start;
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
 
   &__step {
@@ -57,7 +66,7 @@
     transition: background $duration-base $ease-default;
 
     @include mq-max($breakpoint-mobile) {
-      width: 24px;
+      width: 18px;
       margin: 0 $space-1;
     }
   }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Button, GlobalLoader, Icon, TourCard, Breadcrumbs, PortalPreloader, BottomSheet, EmptyState, QuickChips, Title, SubTitle, Paragraph, BookingTable as TremBookingTable, DashboardSidebar } from "@packages/trem-ui";
+import { Button, GlobalLoader, Icon, FavoriteCard, Breadcrumbs, PortalPreloader, BottomSheet, EmptyState, QuickChips, Title, SubTitle, Paragraph, BookingTable as TremBookingTable, DashboardSidebar } from "@packages/trem-ui";
 import { fetchData, getTourDetailsPath, slugify } from "@packages/trem-utils";
 import "./Dashboard.styles.scss";
 
@@ -315,7 +315,7 @@ function FavoritesTourList({ labels, favoritesState, favoritesChips, loadFavorit
                 ) : (
                     <div className="dashboard-favorites__grid">
                         {activeChip === "tours" && sorted.map((tour) => (
-                            <TourCard key={tour._id || tour.id} tour={tour} variant="grid" onView={openTour} />
+                            <FavoriteCard key={tour._id || tour.id} tour={tour} onView={openTour} />
                         ))}
                     </div>
                 )}

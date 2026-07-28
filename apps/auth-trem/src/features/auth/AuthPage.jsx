@@ -302,24 +302,24 @@ export default function AuthPage({
 
         <form className="auth-trem__form" onSubmit={handleSubmit}>
           {activeTab === "register" && (
-            <input className="auth-trem__field" placeholder={cfg.strings?.placeholder?.name || "Full name"} value={form.name} onChange={update("name")} required />
+            <input className="auth-trem__field" name="name" autoComplete="name" placeholder={cfg.strings?.placeholder?.name || "Full name"} value={form.name} onChange={update("name")} required />
           )}
 
-          <input className="auth-trem__field" type="email" placeholder={cfg.strings?.placeholder?.email || "Email"} value={form.email} onChange={update("email")} required />
+          <input className="auth-trem__field" name="email" type="email" inputMode="email" autoCapitalize="none" autoComplete="email" placeholder={cfg.strings?.placeholder?.email || "Email"} value={form.email} onChange={update("email")} required />
 
           {activeTab === "register" && form.role === "admin" && (
             <input className="auth-trem__field" type="tel" placeholder="Mobile number" value={form.phone || ""} onChange={update("phone")} />
           )}
 
           <div className="auth-trem__field-wrap">
-            <input className="auth-trem__field-input" type={showPassword ? "text" : "password"} placeholder={cfg.strings?.placeholder?.password || "Password"} value={form.password} onChange={update("password")} required />
+            <input className="auth-trem__field-input" name="password" type={showPassword ? "text" : "password"} autoComplete={activeTab === "register" ? "new-password" : "current-password"} placeholder={cfg.strings?.placeholder?.password || "Password"} value={form.password} onChange={update("password")} required />
             <Button variant="text" iconLeft={showPassword ? "eyeSlash" : "eye"} iconSize={16} onClick={() => setShowPassword((value) => !value)} aria-label="Toggle password visibility" primaryClassName="auth-trem__field-action" />
           </div>
 
           {activeTab === "register" && (
             <>
               <div className="auth-trem__field-wrap">
-                <input className="auth-trem__field-input" type={showConfirmPassword ? "text" : "password"} placeholder={cfg.strings?.placeholder?.confirmPassword || "Confirm password"} value={form.confirmPassword} onChange={update("confirmPassword")} required />
+                <input className="auth-trem__field-input" name="confirmPassword" type={showConfirmPassword ? "text" : "password"} autoComplete="new-password" placeholder={cfg.strings?.placeholder?.confirmPassword || "Confirm password"} value={form.confirmPassword} onChange={update("confirmPassword")} required />
                 <Button variant="text" iconLeft={showConfirmPassword ? "eyeSlash" : "eye"} iconSize={16} onClick={() => setShowConfirmPassword((value) => !value)} aria-label="Toggle confirm password visibility" primaryClassName="auth-trem__field-action" />
               </div>
 
@@ -347,12 +347,14 @@ export default function AuthPage({
             </>
           )}
 
-          <div className="auth-trem__row">
-            <label className="auth-trem__remember">
-              <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} /> Remember me
-            </label>
-            <Button variant="text" text={cfg.strings?.forgotPassword || "Forgot password?"} onClick={() => setShowForgotModal(true)} primaryClassName="auth-trem__link" />
-          </div>
+          {activeTab === "login" && (
+            <div className="auth-trem__row">
+              <label className="auth-trem__remember">
+                <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} /> Remember me
+              </label>
+              <Button variant="text" text={cfg.strings?.forgotPassword || "Forgot password?"} onClick={() => setShowForgotModal(true)} primaryClassName="auth-trem__link" />
+            </div>
+          )}
 
           {error && <div className="auth-trem__error" role="alert">{error}</div>}
 

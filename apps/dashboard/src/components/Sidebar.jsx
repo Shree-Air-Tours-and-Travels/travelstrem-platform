@@ -1,5 +1,5 @@
 import React from "react";
-import { Icon } from "@packages/trem-ui";
+import { Icon, BrandLogo } from "@packages/trem-ui";
 import "./Sidebar.scss";
 
 const TABS = [
@@ -15,11 +15,13 @@ export default function Sidebar({ activeTab, onTabChange, user }) {
   return (
     <aside className="dash-sidebar">
       <div className="dsb-brand">
-        <img className="dsb-brand__logo" src="/logo-images/logo-icon-only.png" alt="TravelsTrem" width="36" height="36" />
-        <div className="dsb-brand__text">
-          <span className="dsb-brand__name">TravelsTrem</span>
-          <span className="dsb-brand__sub">Dashboard</span>
-        </div>
+        <BrandLogo
+          logoSrc={process.env.REACT_APP_DASHBOARD_LOGO || ""}
+          name="TravelsTrem"
+          subtitle="Dashboard"
+          initial="T"
+          size="small"
+        />
       </div>
 
       <nav className="dsb-nav">
