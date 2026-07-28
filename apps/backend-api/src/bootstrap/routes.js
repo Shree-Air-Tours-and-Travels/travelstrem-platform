@@ -15,6 +15,7 @@ import toursPageRoutes from "../modules/tours/pageRoutes.js";
 import trevioRoutes from "../modules/trevio/routes.js";
 import trevistaRoutes from "../modules/trevista/routes.js";
 import masterDataRoutes from "../modules/masterData/routes.js";
+import clientRoutes from "../modules/clients/routes.js";
 
 const getDbHealth = () => {
   const readyState = mongoose.connection.readyState;
@@ -64,4 +65,5 @@ export default function registerRoutes(app) {
   app.use(API_ROUTES.BOOKINGS, bookingRoutes);
   app.use(API_ROUTES.ADMIN_BOOKINGS, adminBookingRoutes);
   app.use(API_ROUTES.ENGINE, engineRoutes);
+  app.use(API_ROUTES.CLIENTS, clientRoutes);
 }

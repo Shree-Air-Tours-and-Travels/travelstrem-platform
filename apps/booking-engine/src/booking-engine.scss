@@ -131,9 +131,24 @@ body {
 
     @include mq-max($breakpoint-md) {
       position: static;
-      order: -1;
+      order: initial;
     }
   }
+}
+
+.be-details-step {
+  display: flex;
+  flex-direction: column;
+  gap: $space-5;
+
+  &__trip {
+    order: 1;
+  }
+
+  &__travellers {
+    order: 2;
+  }
+
 }
 
 // ─── Steps ──────────────────────────────────────────
@@ -264,6 +279,69 @@ body {
     &--positive {
       color: #059669;
     }
+
+    &--discount {
+      color: var(--color-success, #16a34a);
+    }
+  }
+
+  &__coupon {
+    display: grid;
+    gap: $space-1-25;
+    padding: $space-3 0;
+    border-top: 1px solid var(--border, $border-color);
+
+    > label {
+      color: var(--text-muted, $text-muted);
+      font-size: $font-size-xs;
+      font-weight: $font-medium;
+    }
+
+    > div {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: $space-2;
+    }
+
+    input {
+      min-width: 0;
+      border: 1px solid var(--control-border, $border-color);
+      border-radius: $radius-xs;
+      background: var(--control-bg, $white-color);
+      color: var(--control-text, $text-dark);
+      padding: $space-2 $space-3;
+      font: inherit;
+      text-transform: uppercase;
+    }
+
+    button {
+      border: 1px solid var(--color-primary, $primary-color);
+      border-radius: $radius-xs;
+      background: transparent;
+      color: var(--color-primary, $primary-color);
+      padding: $space-2 $space-3;
+      font: inherit;
+      font-weight: $font-semibold;
+      cursor: pointer;
+
+      &:disabled {
+        cursor: not-allowed;
+        opacity: 0.45;
+      }
+    }
+
+    small {
+      font-size: $font-size-xs;
+
+      &.is-success { color: var(--color-success, #16a34a); }
+      &.is-error { color: var(--color-danger, $danger-color); }
+    }
+  }
+
+  &__tax-note {
+    margin: $space-1 0 0;
+    color: var(--text-muted, $text-muted);
+    font-size: $font-size-xs;
   }
 
   &__policy-text {
@@ -279,6 +357,127 @@ body {
     color: var(--text-muted, $text-muted);
     line-height: 1.5;
   }
+}
+
+// ─── Add-ons ────────────────────────────────────────
+.be-addons__intro {
+  margin-bottom: $space-5;
+
+  h2 {
+    margin: $space-1 0 $space-2;
+    color: var(--text, $text-dark);
+    font-size: $font-size-xl;
+  }
+
+  p {
+    margin: 0;
+    color: var(--text-muted, $text-muted);
+    line-height: 1.5;
+  }
+}
+
+.be-addons__eyebrow {
+  color: var(--color-primary, $primary-color);
+  font-size: $font-size-xs;
+  font-weight: $font-semibold;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.be-addons {
+  display: grid;
+  gap: $space-3;
+}
+
+.be-addon-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: $space-3;
+  padding: $space-4;
+  border: 1px solid var(--border, $border-color);
+  border-radius: $radius-sm;
+  background: var(--card-bg, $white-color);
+  cursor: pointer;
+  transition: border-color $duration-base $ease-default, background $duration-base $ease-default, box-shadow $duration-base $ease-default;
+
+  &:hover,
+  &.is-selected {
+    border-color: var(--color-primary, $primary-color);
+  }
+
+  &.is-selected {
+    background: var(--primary-soft, rgba(15, 143, 134, 0.06));
+    box-shadow: 0 0 0 3px rgba(15, 143, 134, 0.08);
+  }
+
+  input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  &__check {
+    width: 22px;
+    height: 22px;
+    border: 1.5px solid var(--border-strong, $border-color);
+    border-radius: 6px;
+    background: var(--surface, $white-color);
+
+    .is-selected & {
+      border-color: var(--color-primary, $primary-color);
+      background: var(--color-primary, $primary-color);
+      box-shadow: inset 0 0 0 5px var(--color-primary, $primary-color);
+
+      &::after {
+        content: "";
+        display: block;
+        width: 8px;
+        height: 4px;
+        margin: 6px 0 0 5px;
+        border: solid var(--color-on-primary, #fff);
+        border-width: 0 0 2px 2px;
+        transform: rotate(-45deg);
+      }
+    }
+  }
+
+  &__content {
+    display: grid;
+    gap: $space-1;
+
+    strong { color: var(--text, $text-dark); }
+    span {
+      color: var(--text-muted, $text-muted);
+      font-size: $font-size-sm;
+      line-height: 1.45;
+    }
+  }
+
+  &__price {
+    color: var(--text, $text-dark);
+    white-space: nowrap;
+  }
+
+  @include mq-max($breakpoint-mobile) {
+    grid-template-columns: auto minmax(0, 1fr);
+
+    &__price {
+      grid-column: 2;
+    }
+  }
+}
+
+.be-addons__empty {
+  display: grid;
+  gap: $space-1;
+  padding: $space-5;
+  border: 1px dashed var(--border, $border-color);
+  border-radius: $radius-sm;
+  color: var(--text-muted, $text-muted);
+
+  strong { color: var(--text, $text-dark); }
 }
 
 // ─── Steps ──────────────────────────────────────────
@@ -599,6 +798,102 @@ body {
   font-style: italic;
 }
 
+// Keep the trip controls dense and touch-friendly on narrow screens.
+// The desktop layout remains unchanged.
+@include mq-max($breakpoint-mobile) {
+  .be-step--trip {
+    .be-step__heading {
+      margin-bottom: $space-3;
+      padding-bottom: $space-2;
+    }
+
+    .be-step__seats-badge {
+      width: fit-content;
+      max-width: 100%;
+      margin-bottom: $space-5;
+      padding: $space-2 $space-3;
+      line-height: 1.35;
+    }
+
+    .be-step__counters {
+      display: grid;
+      gap: 0;
+      margin: 0 0 $space-5;
+      overflow: hidden;
+      border: 1px solid var(--border, $border-color);
+      border-radius: $radius-sm;
+      background: var(--surface-subtle, var(--card-bg, $white-color));
+    }
+
+    .be-counter {
+      width: 100%;
+      min-width: 0;
+      min-height: 58px;
+      gap: $space-3;
+      padding: $space-2 $space-3;
+      border-bottom: 1px solid var(--border, $border-color);
+
+      &:last-child {
+        border-bottom: 0;
+      }
+
+      &__label {
+        min-width: 0;
+        font-weight: $font-semibold;
+      }
+
+      &__controls {
+        flex: 0 0 auto;
+        gap: 0;
+        min-width: 126px;
+        height: 40px;
+        overflow: hidden;
+        border: 1px solid var(--control-border, var(--border, $border-color));
+        border-radius: $radius-full;
+        background: var(--control-bg, var(--card-bg, $white-color));
+      }
+
+      &__btn {
+        flex: 0 0 40px;
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+
+        &:hover:not(:disabled) {
+          background: var(--primary-soft, rgba(15, 143, 134, 0.1));
+          color: var(--color-primary, $primary-color);
+        }
+      }
+
+      &__value {
+        min-width: 44px;
+        color: var(--text, $text-dark);
+        font-size: $font-size-sm;
+        line-height: 40px;
+      }
+    }
+
+    .be-step__row {
+      gap: $space-3;
+      margin-bottom: $space-5;
+    }
+
+    .be-step__row .be-field {
+      width: 100%;
+      min-width: 0;
+      margin-bottom: 0;
+    }
+
+    .be-step__row .trem-dropdown,
+    .be-step__row .be-field__select {
+      width: 100%;
+    }
+  }
+}
+
 // WhatsApp note
 .be-step__whatsapp-note {
   display: flex;
@@ -743,6 +1038,33 @@ body {
     padding: $space-4;
   }
 
+  &__section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-3;
+    margin-bottom: $space-3;
+
+    .be-review__heading {
+      margin: 0;
+    }
+
+    button {
+      border: 0;
+      background: transparent;
+      color: var(--color-primary, $primary-color);
+      font: inherit;
+      font-size: $font-size-sm;
+      font-weight: $font-semibold;
+      cursor: pointer;
+    }
+  }
+
+  &__empty-value {
+    color: var(--text-muted, $text-muted);
+    font-size: $font-size-sm;
+  }
+
   &__heading {
     margin: 0 0 $space-3;
     font-size: $font-size-sm;
@@ -865,6 +1187,31 @@ body {
       flex-shrink: 0;
       margin-top: 2px;
       color: var(--color-primary, $primary-color);
+    }
+  }
+}
+
+.be-booking-fab {
+  .trem-fab__btn {
+    min-width: max-content;
+
+    span {
+      max-width: none;
+      overflow: visible;
+      text-overflow: clip;
+      white-space: nowrap;
+    }
+  }
+
+  @include mq-max($breakpoint-mobile) {
+    .trem-fab__btn {
+      min-width: 0;
+
+      span {
+        white-space: normal;
+        line-height: 1.2;
+        text-align: center;
+      }
     }
   }
 }

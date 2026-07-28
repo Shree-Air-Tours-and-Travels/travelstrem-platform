@@ -243,6 +243,19 @@ export function useBookingApi() {
     return loadTour(ref);
   }, [loadTour, loadTrip]);
 
+  const calculatePricing = useCallback(async (product, ref, payload = {}) => {
+    if (product !== "trevio") return null;
+    const response = await fetchData(`/trevio/trips/${encodeURIComponent(ref)}/pricing`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: payload,
+    });
+    if (response?.status !== "success") {
+      throw new Error(response?.message || "Failed to calculate booking price");
+    }
+    return unwrap(response);
+  }, []);
+
   return {
     loading,
     error,
@@ -262,5 +275,6 @@ export function useBookingApi() {
     loadTour,
     loadTrip,
     loadProduct,
+    calculatePricing,
   };
 }

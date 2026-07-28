@@ -162,15 +162,29 @@ export const fetchData = async (endpoint, options = {}) => {
       res = await apiClient.request({ url: endpoint, method: methodUpper, data: hasBody ? finalBody : undefined, ...config });
     }
 
-    const { status, message, componentData, component } = res?.data || {};
+    const rawResponse = res?.data || {};
+    const { status, message, componentData, component } = rawResponse;
     const data = componentData?.data ?? component?.data ?? null;
 
     // Auto-capture token from auth responses
-    if (res?.data?.token) {
-      tokenStore.set(res.data.token);
+    if (rawResponse.token) {
+      tokenStore.set(rawResponse.token);
     }
 
-    if (status === "success") return { status, message, componentData, component, data };
+    if (status === "success") {
+      return { ...rawResponse, status, message, componentData, component, data };
+    }
+
+    // Auth session responses historically used a compact { token, user }
+    // contract. Preserve those fields while exposing the normalized shape.
+    if (rawResponse.token && rawResponse.user) {
+      return {
+        ...rawResponse,
+        status: "success",
+        componentData: componentData || { data: { user: rawResponse.user } },
+        data: rawResponse.user,
+      };
+    }
 
     return {
       status: "error",

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { Icon } from "@packages/trem-ui";
+import { Icon, BrandLogo } from "@packages/trem-ui";
 import "./DashboardHeader.styles.scss";
 
 const TAB_TITLES = {
@@ -83,11 +83,13 @@ export default function DashboardHeader({ activeTab, onTabChange, user, theme, o
       >
         <div className="dh__mobile-panel-header">
           <div className="dh__mobile-panel-brand">
-            <img className="dh__mobile-panel-logo" src="/logo-images/logo-icon-only.png" alt="TravelsTrem" width="36" height="36" />
-            <div className="dh__mobile-panel-brand-text">
-              <span className="dh__mobile-panel-brand-name">TravelsTrem</span>
-              <span className="dh__mobile-panel-brand-sub">Dashboard</span>
-            </div>
+            <BrandLogo
+              logoSrc={process.env.REACT_APP_DASHBOARD_LOGO || ""}
+              name="TravelsTrem"
+              subtitle="Dashboard"
+              initial="T"
+              size="small"
+            />
           </div>
           <button
             className="dh__panel-close"
@@ -153,10 +155,13 @@ export default function DashboardHeader({ activeTab, onTabChange, user, theme, o
 
         {/* Mobile: persistent product branding; page title remains in page content */}
         <div className="dh__mobile-brand">
-          <img className="dh__mobile-logo" src="/logo-images/logo-icon-only.png" alt="TravelsTrem" width="32" height="32" />
-          <span className="dh__mobile-brand-copy">
-            <span className="dh__mobile-title">TravelsTrem</span>
-          </span>
+          <BrandLogo
+            logoSrc={process.env.REACT_APP_DASHBOARD_LOGO || ""}
+            name="TravelsTrem"
+            subtitle="Dashboard"
+            initial="T"
+            size="small"
+          />
         </div>
 
         <div className="dh__actions">

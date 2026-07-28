@@ -39,6 +39,8 @@ export { default as SearchBarCard } from "./components/SearchBarCard/SearchBarCa
 export { default as BookingCard } from "./components/BookingCard/BookingCard.jsx";
 export { default as BookingJourneyCard } from "./components/BookingJourneyCard/BookingJourneyCard.jsx";
 export { default as PricingCard } from "./components/PricingCard/PricingCard.jsx";
+export { default as FavoriteCard } from "./components/FavoriteCard/FavoriteCard.jsx";
+export { default as BrandLogo } from "./components/BrandLogo/BrandLogo.jsx";
 
 export { default as TourDetailsPage } from "./features/tourDetails/ToursDetails.container.jsx";
 export { FavoritesProvider, useFavoritesContext } from "./context/FavoritesContext.jsx";

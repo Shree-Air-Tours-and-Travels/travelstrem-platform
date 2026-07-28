@@ -15,13 +15,11 @@ function buildPrefOptions(options = []) {
   }));
 }
 
-export default function TripStep({ tour, trip, updateTrip, errors, isFirst, product, seatsAvailable, tokenPerPerson }) {
+export default function TripStep({ tour, trip, updateTrip, errors, isFirst, product, seatsAvailable, isLowSeats, availabilityMessage, pricing }) {
   const isTrevio = product === "trevio";
   const adultsMax = isTrevio && seatsAvailable != null ? seatsAvailable : 20;
-  const isLowSeats = isTrevio && seatsAvailable != null && seatsAvailable > 0 && seatsAvailable <= 3;
-  const computedToken = isTrevio && tokenPerPerson > 0
-    ? Math.round(tokenPerPerson * (Number(trip.adults || 1) + Number(trip.children || 0)))
-    : 0;
+  const computedToken = Number(pricing?.tokenAmount || 0);
+  const baseTripTotal = Number(pricing?.baseTripTotal ?? pricing?.baseAmount ?? 0);
 
   const prefs = isTrevio ? (tour?.preferences || {}) : {};
   const roomOptions = buildPrefOptions(prefs.roomTypes);
@@ -82,7 +80,7 @@ export default function TripStep({ tour, trip, updateTrip, errors, isFirst, prod
           {seatsAvailable != null && (
             <div className={`be-step__seats-badge ${isLowSeats ? "be-step__seats-badge--low" : ""}`}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
-              {isLowSeats ? `Only ${seatsAvailable} spot${seatsAvailable === 1 ? "" : "s"} left!` : `${seatsAvailable} seats available`}
+              {availabilityMessage || `${seatsAvailable} seats available`}
             </div>
           )}
 
@@ -109,7 +107,7 @@ export default function TripStep({ tour, trip, updateTrip, errors, isFirst, prod
           <div className="be-step__readonly-card">
             <div className="be-step__readonly-row">
               <span className="be-step__readonly-label">Base price × {Number(trip.adults || 1) + Number(trip.children || 0)} guests</span>
-              <span className="be-step__readonly-value">{formatMoney(trip.pricePerPerson * (Number(trip.adults || 1) + Number(trip.children || 0)))}</span>
+              <span className="be-step__readonly-value">{formatMoney(baseTripTotal)}</span>
             </div>
             {computedToken > 0 && (
               <div className="be-step__readonly-row be-step__readonly-row--highlight">

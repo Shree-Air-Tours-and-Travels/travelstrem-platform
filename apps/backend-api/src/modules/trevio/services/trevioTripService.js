@@ -34,6 +34,11 @@ export const normalizeTrevioTrip = (doc = {}) => {
     ? reviews.reduce((sum, review) => sum + Number(review.rating), 0) / reviews.length
     : 0;
   const avgRating = Math.round(rawAvgRating * 10) / 10;
+  const availability = trip.availability || { totalSeats: null, seatsAvailable: null };
+  const seatsAvailable = availability.seatsAvailable == null
+    ? null
+    : Number(availability.seatsAvailable);
+  const lowSeatThreshold = Math.max(0, Number(process.env.TREVIO_LOW_SEAT_THRESHOLD || 3));
 
   return {
     _id: trip._id || null,
@@ -67,7 +72,18 @@ export const normalizeTrevioTrip = (doc = {}) => {
     endDateISO: toISODate(trip.endDate),
     dates: Array.isArray(trip.dates) && trip.dates.length ? trip.dates : [formatDate(trip.startDate)].filter(Boolean),
     itinerary: normalizeItinerary(trip.itinerary),
-    availability: trip.availability || { totalSeats: null, seatsAvailable: null },
+    availability: {
+      ...availability,
+      isSoldOut: seatsAvailable === 0,
+      isLowSeats: seatsAvailable != null && seatsAvailable > 0 && seatsAvailable <= lowSeatThreshold,
+      availabilityMessage: seatsAvailable === 0
+        ? "This trip is currently sold out."
+        : seatsAvailable != null && seatsAvailable > 0 && seatsAvailable <= lowSeatThreshold
+          ? `Only ${seatsAvailable} spot${seatsAvailable === 1 ? "" : "s"} left!`
+          : seatsAvailable == null
+            ? ""
+            : `${seatsAvailable} seats available`,
+    },
     preferences: {
       roomTypes: Array.isArray(trip.preferences?.roomTypes) ? trip.preferences.roomTypes : [],
       mealPreferences: Array.isArray(trip.preferences?.mealPreferences) ? trip.preferences.mealPreferences : [],

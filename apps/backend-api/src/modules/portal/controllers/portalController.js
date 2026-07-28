@@ -543,8 +543,18 @@ export const getHeaderConfig = async (req, res) => {
     try {
         const json = headerConfigTemplate;
         const requestedApp = req.query.app || "";
+        const clientId = req.query.clientId || "";
         const baseHeaderConfig = applyEnvironmentRemotes(json.componentData);
-        const headerConfig = requestedApp === "trevio"
+
+        let clientBranding = null;
+        if (clientId) {
+            try {
+                const Client = (await import("../../clients/models/Client.js")).default;
+                clientBranding = await Client.findById(clientId).lean();
+            } catch (_) {}
+        }
+
+        let headerConfig = requestedApp === "trevio"
             ? buildTrevioHeaderConfig(baseHeaderConfig)
             : requestedApp === "trevista"
                 ? buildTrevistaHeaderConfig(baseHeaderConfig)
@@ -553,6 +563,28 @@ export const getHeaderConfig = async (req, res) => {
                     : requestedApp === "agentTREM"
                         ? buildAgentHeaderConfig(baseHeaderConfig)
                         : baseHeaderConfig;
+
+        if (clientBranding) {
+            const brandMap = clientBranding.branding instanceof Map
+                ? Object.fromEntries(clientBranding.branding)
+                : clientBranding.branding || {};
+
+            headerConfig.logos = headerConfig.logos || {};
+            for (const [product, overrides] of Object.entries(brandMap)) {
+                if (overrides && headerConfig.logos[product]) {
+                    headerConfig.logos[product] = { ...headerConfig.logos[product], ...overrides };
+                } else if (overrides) {
+                    headerConfig.logos[product] = overrides;
+                }
+            }
+
+            if (clientBranding.globalBrand) {
+                headerConfig.brand = {
+                    ...headerConfig.brand,
+                    ...clientBranding.globalBrand,
+                };
+            }
+        }
         const pathname = req.query.pathname || "/";
         const activePath = resolveActivePath(pathname, headerConfig);
         const pageConfig = resolvePageConfig(req);

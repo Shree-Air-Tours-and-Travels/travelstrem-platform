@@ -15,5 +15,8 @@
   },
   "devDependencies": {
     "turbo": "^2.9.9"
+  },
+  "dependencies": {
+    "@vercel/analytics": "^2.0.1"
   }
 }

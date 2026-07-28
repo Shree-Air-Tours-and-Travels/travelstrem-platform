@@ -927,8 +927,14 @@ export const getSession = async (req, res) => {
         setTokenCookie(res, token);
 
         return res.json({
+            status: "success",
             token,
             user: safeAuthUser(user),
+            componentData: {
+                data: {
+                    user: safeAuthUser(user),
+                },
+            },
         });
     } catch (err) {
         console.error("[getSession] error:", err && err.stack ? err.stack : err);

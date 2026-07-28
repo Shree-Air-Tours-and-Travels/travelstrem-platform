@@ -365,10 +365,24 @@
 
 @media (max-width: 580px) {
   .auth-trem {
-    padding: 18px;
+    align-items: flex-start;
+    justify-content: center;
+    width: 100%;
+    min-height: calc(100dvh - 64px);
+    height: auto;
+    padding: 18px max(14px, env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
 
     &__card {
+      width: 100%;
+      max-height: none;
+      overflow: visible;
       padding: 16px;
+    }
+
+    &__field,
+    &__field-input {
+      // iOS zooms focused controls whose computed font size is below 16px.
+      font-size: 16px;
     }
 
     &__brand-icon {

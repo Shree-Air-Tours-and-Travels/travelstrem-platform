@@ -395,3 +395,58 @@ export async function uploadTripImage(file) {
     if (!url) throw new Error(res?.message || "Upload returned no URL");
     return url;
 }
+
+// ── Client Management ──────────────────────────────────────────
+
+export async function fetchClients() {
+    const res = await fetchData("/clients");
+    if (!res || res.status !== "success") throw new Error(res?.message || "Failed to fetch clients");
+    return res.componentData?.data?.clients || [];
+}
+
+export async function fetchClient(id) {
+    const res = await fetchData(`/clients/${id}`);
+    if (!res || res.status !== "success") throw new Error(res?.message || "Failed to fetch client");
+    return res.componentData?.data?.client || null;
+}
+
+export async function createClient(payload) {
+    const res = await expectSuccess(
+        fetchData("/clients", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        }),
+        "Failed to create client"
+    );
+    return res.componentData?.data?.client || res;
+}
+
+export async function updateClient(id, payload) {
+    const res = await expectSuccess(
+        fetchData(`/clients/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        }),
+        "Failed to update client"
+    );
+    return res.componentData?.data?.client || res;
+}
+
+export async function deleteClient(id) {
+    await expectSuccess(
+        fetchData(`/clients/${id}`, { method: "DELETE" }),
+        "Failed to delete client"
+    );
+}
+
+export async function uploadClientLogo(clientId, product, file) {
+    const fd = new FormData();
+    fd.append("image", file);
+    const response = await api.post(`/clients/${clientId}/logo?product=${product}`, fd);
+    const res = response?.data || {};
+    const url = res?.componentData?.data?.url || res?.data?.url || res?.url;
+    if (!url) throw new Error(res?.message || "Upload returned no URL");
+    return { url, client: res?.componentData?.data?.client };
+}
