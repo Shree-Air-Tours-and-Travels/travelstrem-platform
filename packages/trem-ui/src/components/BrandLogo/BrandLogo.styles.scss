@@ -14,7 +14,7 @@
     object-fit: cover;
     display: block;
 
-    &--dark {
+    &#{&}--dark {
       display: none;
     }
   }
