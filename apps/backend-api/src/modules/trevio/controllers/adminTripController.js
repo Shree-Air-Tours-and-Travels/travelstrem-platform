@@ -44,7 +44,6 @@ function normalizeTrip(doc) {
         description: obj.description,
         chips: obj.chips || [],
         tags: obj.tags || [],
-        rating: obj.rating,
         price: obj.price,
         availability: obj.availability,
         preferences: obj.preferences || {},
@@ -134,7 +133,9 @@ function sanitizeTripPayload(raw = {}) {
     p.isListed = p.isListed !== false;
     p.status = p.status || "listed";
     p.sortOrder = Number(p.sortOrder || 0);
-    p.rating = Number(p.rating || 0);
+    // Ratings are customer-generated. Never accept a manually supplied aggregate
+    // rating from the admin form or imported trip JSON.
+    delete p.rating;
 
     // Final pass: strip HTML from all string fields
     return sanitizeStrings(p);

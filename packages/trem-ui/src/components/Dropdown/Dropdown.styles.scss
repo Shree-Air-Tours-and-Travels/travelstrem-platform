@@ -43,9 +43,15 @@
     border-radius: $radius-xs;
     display: flex;
     align-items: center;
+    justify-content: flex-start;
     gap: $space-2;
     font-size: $font-size-sm;
     transition: background 120ms $ease-default, color 120ms $ease-default;
+
+    .ui-button__icon {
+      width: 20px;
+      flex: 0 0 20px;
+    }
   }
 
   &__item:hover {

@@ -12,7 +12,7 @@
   backdrop-filter: blur(18px);
 
   &__inner {
-    width: min(1180px, calc(100% - 2rem));
+    width: min(1380px, calc(100% - clamp(2rem, 5vw, 5rem)));
     min-height: 72px;
     margin: 0 auto;
     display: grid;
@@ -207,6 +207,37 @@
       padding: 0 1.05rem;
     }
 
+    &--profile {
+      min-height: 48px;
+      justify-content: flex-start;
+      gap: 0.55rem;
+      padding: 0.35rem 0.65rem 0.35rem 0.4rem;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: var(--shadow-xs, 0 1px 2px rgba(15, 23, 42, 0.05));
+
+      &:hover {
+        border-color: var(--primary-focus);
+        background: var(--surface-elevated);
+        color: var(--color-primary-dark);
+      }
+
+      > svg {
+        color: var(--muted);
+        transition: transform 160ms ease;
+      }
+
+      &.is-open {
+        border-color: var(--primary-focus);
+        background: var(--surface-elevated);
+
+        > svg {
+          transform: rotate(180deg);
+        }
+      }
+    }
+
     &--primary {
       border: 1px solid var(--color-primary);
       background: var(--color-primary);
@@ -223,6 +254,54 @@
   &__count {
     min-width: 1ch;
     font-weight: $font-bold;
+  }
+
+  &__profile-avatar {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    display: inline-grid;
+    place-items: center;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--primary-softer, var(--surface-inset));
+    color: var(--color-primary-dark);
+    font-size: 0.72rem;
+    font-weight: $font-bold;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &__profile-copy {
+    min-width: 0;
+    display: grid;
+    gap: 0.05rem;
+    text-align: left;
+    line-height: 1.1;
+
+    strong {
+      max-width: 112px;
+      overflow: hidden;
+      color: var(--text);
+      font-size: 0.82rem;
+      font-weight: $font-bold;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    small {
+      color: var(--muted);
+      font-size: 0.66rem;
+      font-weight: $font-semibold;
+    }
+  }
+
+  &__profile-dropdown {
+    display: flex;
   }
 
   /* ─── Overlay (hidden on desktop) ─── */
@@ -284,6 +363,19 @@
     }
 
     &__nav {
+      display: none;
+    }
+
+    &__action--profile {
+      min-width: 42px;
+      padding: 0.25rem;
+
+      > svg {
+        display: none;
+      }
+    }
+
+    &__profile-copy {
       display: none;
     }
 
@@ -626,6 +718,10 @@
     }
 
     &__action--secondary {
+      display: none;
+    }
+
+    &__action--profile {
       display: none;
     }
 

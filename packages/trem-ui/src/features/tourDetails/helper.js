@@ -13,12 +13,12 @@ export const getRouteIdentityFromPath = (pathname = "") => {
 export const getCityDisplay = (tour = {}) => {
     tour = tour || {};
     const city = tour.city;
-    if (!city) return "Flexible route";
+    if (!city) return tour.location || tour.address?.city || "Route available on request";
     if (typeof city === "string") return city;
     const from = city.from || city.name || city.city;
     const to = city.to || tour.address?.city;
     if (from && to) return `${from} to ${to}`;
-    return from || to || "Flexible route";
+    return from || to || tour.location || "Route available on request";
 };
 
 export const getPhotos = (tour = {}) => {
@@ -55,11 +55,20 @@ export const getPriceText = (tour = {}) => {
     return `${formatter.format(min)} - ${formatter.format(max)}`;
 };
 
-export const getDurationText = (tour = {}) =>
-    tour?.period ? `${tour.period.days ?? "-"} days / ${tour.period.nights ?? "-"} nights` : "Flexible";
+export const getDurationText = (tour = {}) => {
+    if (tour?.duration) return String(tour.duration);
+    if (tour?.period?.days != null) {
+        const days = Number(tour.period.days);
+        const nights = tour.period.nights != null ? Number(tour.period.nights) : Math.max(0, days - 1);
+        return `${days} days / ${nights} nights`;
+    }
+    return "Duration available on request";
+};
 
 export const getRatingText = (tour = {}) =>
-    Number(tour?.avgRating) > 0 ? `${Number(tour.avgRating).toFixed(1)} / 5` : "New tour";
+    Number(tour?.avgRating) > 0
+        ? `${Number(tour.avgRating).toFixed(1)} / 5`
+        : "Be the first to review after your trip";
 
 export const formatTourDate = (value) => {
     if (!value) return "Flexible";
