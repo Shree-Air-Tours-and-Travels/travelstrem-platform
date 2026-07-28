@@ -87,7 +87,6 @@ export default function DashboardHeader({ activeTab, onTabChange, user, theme, o
               logoSrc={process.env.REACT_APP_DASHBOARD_LOGO || ""}
               name="TravelsTrem"
               subtitle="Dashboard"
-              initial="T"
               size="small"
             />
           </div>
@@ -159,7 +158,6 @@ export default function DashboardHeader({ activeTab, onTabChange, user, theme, o
             logoSrc={process.env.REACT_APP_DASHBOARD_LOGO || ""}
             name="TravelsTrem"
             subtitle="Dashboard"
-            initial="T"
             size="small"
           />
         </div>

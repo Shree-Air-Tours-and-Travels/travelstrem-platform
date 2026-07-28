@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const { Schema } = mongoose;
 
 const productBrandingSchema = new Schema({
-  logoSrc: { type: String, default: "" },
+  logoSrc: { type: String, default: "/favicon.png" },
   name: { type: String, default: "" },
   subtitle: { type: String, default: "" },
   initial: { type: String, default: "" },
@@ -21,17 +21,17 @@ const clientSchema = new Schema({
     type: Map,
     of: productBrandingSchema,
     default: new Map([
-      ["trevio", { logoSrc: "", name: "Trevio", subtitle: "by TravelsTrem", initial: "T" }],
-      ["trevista", { logoSrc: "", name: "Trevista", subtitle: "by TravelsTrem", initial: "Tv" }],
-      ["dashboard", { logoSrc: "", name: "TravelsTrem", subtitle: "Dashboard", initial: "T" }],
-      ["admin", { logoSrc: "", name: "TravelsTREM", subtitle: "Admin", initial: "T" }],
-      ["booking", { logoSrc: "", name: "TravelsTrem", subtitle: "Booking", initial: "T" }],
-      ["agent", { logoSrc: "", name: "TravelsTrem", subtitle: "Partner Portal", initial: "T" }],
+      ["trevio", { logoSrc: "/favicon.png", name: "Trevio", subtitle: "by TravelsTrem", initial: "" }],
+      ["trevista", { logoSrc: "/favicon.png", name: "Trevista", subtitle: "by TravelsTrem", initial: "" }],
+      ["dashboard", { logoSrc: "/favicon.png", name: "TravelsTrem", subtitle: "Dashboard", initial: "" }],
+      ["admin", { logoSrc: "/favicon.png", name: "TravelsTREM", subtitle: "Admin", initial: "" }],
+      ["booking", { logoSrc: "/favicon.png", name: "TravelsTrem", subtitle: "Booking", initial: "" }],
+      ["agent", { logoSrc: "/favicon.png", name: "TravelsTrem", subtitle: "Partner Portal", initial: "" }],
     ]),
   },
 
   globalBrand: {
-    logoSrc: { type: String, default: "" },
+    logoSrc: { type: String, default: "/favicon.png" },
     label: { type: String, default: "TravelsTrem" },
   },
 }, { timestamps: true });

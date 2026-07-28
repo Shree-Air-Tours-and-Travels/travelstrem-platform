@@ -18,6 +18,7 @@
     "sass": "^1.86.0"
   },
   "scripts": {
+    "prebuild": "node ../../scripts/sync-favicons.mjs booking-engine",
     "dev": "../trevista-remote/node_modules/.bin/cross-env PORT=3007 DISABLE_ESLINT_PLUGIN=true ../trevista-remote/node_modules/.bin/craco start",
     "start": "../trevista-remote/node_modules/.bin/cross-env PORT=3007 DISABLE_ESLINT_PLUGIN=true ../trevista-remote/node_modules/.bin/craco start",
     "build": "../trevista-remote/node_modules/.bin/cross-env DISABLE_ESLINT_PLUGIN=true ../trevista-remote/node_modules/.bin/craco build",

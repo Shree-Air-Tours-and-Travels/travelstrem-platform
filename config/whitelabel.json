@@ -23,11 +23,11 @@
     "key": "trevio",
     "name": "Trevio",
     "subtitle": "by TravelsTrem",
-    "brandMark": "T",
     "htmlTitle": "Trevio by Travels Trem",
     "description": "Curated group adventures, trips that turn into stories.",
-    "favicon": "/favicon.svg",
-    "logo": "/favicon.svg",
+    "favicon": "/favicon.png",
+    "logo": "/favicon.png",
+    "logoDark": "/favicon-dark.png",
     "primaryColor": "#0A8A83",
 
     "auth": {

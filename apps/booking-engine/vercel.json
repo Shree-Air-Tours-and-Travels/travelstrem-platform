@@ -5,6 +5,8 @@
   },
   "rewrites": [
     { "source": "/static/:path*", "destination": "/static/:path*" },
+    { "source": "/favicon.png", "destination": "/favicon.png" },
+    { "source": "/favicon-dark.png", "destination": "/favicon-dark.png" },
     { "source": "/asset-manifest.json", "destination": "/asset-manifest.json" },
     { "source": "/:path*", "destination": "/index.html" }
   ]

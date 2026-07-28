@@ -8,7 +8,8 @@
       { "source": "/remoteEntry.js", "destination": "/remoteEntry.js" },
       { "source": "/remoteEntry.js.map", "destination": "/remoteEntry.js.map" },
       { "source": "/static/(.*)", "destination": "/static/$1" },
-      { "source": "/favicon.svg", "destination": "/favicon.svg" },
+      { "source": "/favicon.png", "destination": "/favicon.png" },
+      { "source": "/favicon-dark.png", "destination": "/favicon-dark.png" },
       { "source": "/asset-manifest.json", "destination": "/asset-manifest.json" },
       { "source": "/manifest.json", "destination": "/manifest.json" },
       { "source": "/robots.txt", "destination": "/robots.txt" }

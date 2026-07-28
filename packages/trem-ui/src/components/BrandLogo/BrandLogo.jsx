@@ -1,16 +1,31 @@
 import React from "react";
 import "./BrandLogo.styles.scss";
 
-export default function BrandLogo({ logoSrc, name, subtitle, initial, size = "default", className }) {
-  const fallbackInitial = initial || (name ? name.charAt(0).toUpperCase() : "T");
+export default function BrandLogo({
+  logoSrc = "",
+  darkLogoSrc = "",
+  name,
+  subtitle,
+  size = "default",
+  className,
+}) {
+  const usesSharedLogo = !logoSrc || logoSrc === "/favicon.png";
+  const lightSource = logoSrc || "/favicon.png";
+  const darkSource = darkLogoSrc || (usesSharedLogo ? "/favicon-dark.png" : lightSource);
 
   return (
     <div className={`brand-logo brand-logo--${size}${className ? ` ${className}` : ""}`}>
-      {logoSrc ? (
-        <img className="brand-logo__image" src={logoSrc} alt={name || ""} />
-      ) : (
-        <span className="brand-logo__initial" aria-hidden="true">{fallbackInitial}</span>
-      )}
+      <img
+        className="brand-logo__image brand-logo__image--light"
+        src={lightSource}
+        alt={name || ""}
+      />
+      <img
+        className="brand-logo__image brand-logo__image--dark"
+        src={darkSource}
+        alt=""
+        aria-hidden="true"
+      />
       {name && (
         <div className="brand-logo__text">
           <span className="brand-logo__name">{name}</span>

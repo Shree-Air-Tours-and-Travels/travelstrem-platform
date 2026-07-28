@@ -4,6 +4,7 @@ import Button from "../../components/Button/Button.jsx";
 import Dropdown from "../../components/Dropdown/Dropdown.jsx";
 import Icon from "../../icons/Icon/Icon.jsx";
 import ProfileActionMenu from "../../components/ProfileActionMenu/ProfileActionMenu.jsx";
+import BrandLogo from "../../components/BrandLogo/BrandLogo.jsx";
 import "./Header.styles.scss";
 
 const getNavPath = (item) => item?.path || item?.href || "/";
@@ -297,7 +298,15 @@ const NavItem = ({ item, isFirst, drawer, activePath, firstLinkRef, onNavClick, 
       <header className={`trem-header ${open ? "is-open" : ""} ${className}`.trim()} role="banner">
         <div className="trem-header__container">
           <Button variant="text" iconLeft={open ? "menuClose" : "menuOpen"} onClick={() => setOpen((s) => !s)} aria-label={open ? "Close menu" : "Open menu"} aria-expanded={open} primaryClassName="trem-header__toggle" />
-          <Button variant="text" text={brand.label || "TravelsTrem"} onClick={() => onPathClick(brand.homePath || "/", brand.label || "TravelsTrem")} primaryClassName="trem-header__logo" />
+          <Button variant="text" onClick={() => onPathClick(brand.homePath || "/", brand.label || "TravelsTrem")} primaryClassName="trem-header__logo">
+            <BrandLogo
+              logoSrc={brand.logoSrc || ""}
+              darkLogoSrc={brand.darkLogoSrc || ""}
+              name=""
+              size="small"
+            />
+            <span>{brand.label || "TravelsTrem"}</span>
+          </Button>
           <nav className="trem-header__nav" role="navigation" aria-label="Main navigation">
             <ul className="trem-header__menu trem-header__menu--start">{navItems.map((item, i) => <NavItem item={item} key={item.id} isFirst={i === 0} activePath={activePath} firstLinkRef={firstLinkRef} onNavClick={onNavClick} onClose={() => setOpen(false)} />)}</ul>
             <ul className="trem-header__menu trem-header__menu--end">{renderUserArea(false)}{renderActions()}</ul>
