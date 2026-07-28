@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { buildGlobalAuthUrl, buildGlobalDashboardUrl } from "@packages/trem-utils";
 import { appendTokenToUrl } from "@packages/trem-auth-core";
-import { ProductHeader, Footer, ScrollToTopButton, useTheme } from "@packages/trem-ui";
+import { ProductHeaderWithDropdown, Footer, ScrollToTopButton, useTheme } from "@packages/trem-ui";
 
 const getTokenForRedirect = () => {
   try {
@@ -19,6 +19,10 @@ export default function Shell({ children, labels, headerConfig, onWishlist, wish
     const url = buildGlobalDashboardUrl({ product: "trevio" });
     window.location.assign(appendTokenToUrl(url, getTokenForRedirect()));
   };
+  const goToProfile = () => {
+    const url = buildGlobalDashboardUrl({ product: "trevio", tab: "profile" });
+    window.location.assign(appendTokenToUrl(url, getTokenForRedirect()));
+  };
 
   const brand = headerConfig?.brand || {
     label: labels.pageTitle || "Product",
@@ -27,10 +31,12 @@ export default function Shell({ children, labels, headerConfig, onWishlist, wish
   };
 
   const aboutUrl = process.env.REACT_APP_ABOUT_URL;
+  const headerLabels = headerConfig?.elements?.labels || headerConfig?.labels || {};
+  const headerLabel = (key, fallback) => headerLabels[key] || labels[key] || fallback;
   const navItems = [
-    { id: "home", label: "Home", active: location.pathname === rootPath || location.pathname === `${rootPath}/`, onClick: () => navigate(rootPath) },
-    { id: "dashboard", label: "Dashboard", active: false, onClick: goToDashboard },
-    aboutUrl ? { id: "about", label: "About Us", href: aboutUrl, target: "_blank", rel: "noopener noreferrer" } : null,
+    { id: "home", label: headerLabel("navHome", "Home"), active: location.pathname === rootPath || location.pathname === `${rootPath}/`, onClick: () => navigate(rootPath) },
+    { id: "dashboard", label: headerLabel("navDashboard", "Dashboard"), active: false, onClick: goToDashboard },
+    aboutUrl ? { id: "about", label: headerLabel("navAbout", "About Us"), href: aboutUrl, target: "_blank", rel: "noopener noreferrer" } : null,
   ].filter(Boolean);
   const activeTab = navItems.find((item) => item.active)?.id || "home";
 
@@ -41,7 +47,7 @@ export default function Shell({ children, labels, headerConfig, onWishlist, wish
   return (
     <>
       {!embedded && (
-        <ProductHeader
+        <ProductHeaderWithDropdown
           brand={{
             ...brand,
             logoSrc: "/favicon.svg",
@@ -58,10 +64,13 @@ export default function Shell({ children, labels, headerConfig, onWishlist, wish
             count: wishlistCount,
             onClick: onWishlist,
           }}
-          profile={{
-            label: userSession?.user?.name || brand.label || "Dashboard",
-            onClick: goToDashboard,
-          }}
+          profile={userSession?.isAuthenticated ? {
+            label: headerLabel("navProfile", "Profile"),
+            displayName: userSession?.user?.name || userSession?.user?.email || "My account",
+            ariaLabel: headerLabel("profileAriaLabel", "Open dashboard profile"),
+            menuLabel: headerLabel("viewProfile", "View profile"),
+            onClick: goToProfile,
+          } : null}
           authAction={authAction}
         />
       )}

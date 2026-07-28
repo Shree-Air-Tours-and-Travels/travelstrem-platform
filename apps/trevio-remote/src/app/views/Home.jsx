@@ -5,13 +5,13 @@ import { ContactAgentModal } from "@packages/trem-modals";
 import { fetchData } from "@packages/trem-utils";
 import { tripId, tripPrice, tripCurrency, tripImage, tripLocation, tripDuration } from "../utils";
 
-const MOBILE_PAGE_SIZE = 3;
+const TRIP_PAGE_SIZE = 4;
 const FEATURED_AUTO_INTERVAL = 5000;
 
 export default function Home({ trips, internationalTrips = [], featuredTrips = [], pageModel, activeFilter, loadingTrips, onFilterChange }) {
   const { isFavorited, toggleFavorite } = useFavoritesContext();
   const navigate = useNavigate();
-  const [mobileVisibleCount, setMobileVisibleCount] = useState(MOBILE_PAGE_SIZE);
+  const [visibleTripCount, setVisibleTripCount] = useState(TRIP_PAGE_SIZE);
   const { labels, content, tripList, upcoming, whyWanderon, international, howToUse, frames, faq, getInTouch, planInternational } = pageModel;
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
   const [activeSlide, setActiveSlide] = useState(0);
@@ -29,7 +29,7 @@ export default function Home({ trips, internationalTrips = [], featuredTrips = [
   const sliderTrips = featuredTrips.length > 0 ? featuredTrips : [];
 
   useEffect(() => {
-    setMobileVisibleCount(MOBILE_PAGE_SIZE);
+    setVisibleTripCount(TRIP_PAGE_SIZE);
   }, [trips]);
 
   useEffect(() => {
@@ -49,11 +49,11 @@ export default function Home({ trips, internationalTrips = [], featuredTrips = [
   }, [activeSlide, sliderTrips.length]);
 
   const loadMore = useCallback(() => {
-    setMobileVisibleCount((prev) => prev + MOBILE_PAGE_SIZE);
+    setVisibleTripCount((prev) => prev + TRIP_PAGE_SIZE);
   }, []);
 
-  const hasMore = mobileVisibleCount < allTrips.length;
-  const visibleTrips = allTrips.slice(0, mobileVisibleCount);
+  const hasMore = visibleTripCount < allTrips.length;
+  const visibleTrips = allTrips.slice(0, visibleTripCount);
 
   const [contactOpen, setContactOpen] = useState(false);
   const [contactFormData, setContactFormData] = useState(null);

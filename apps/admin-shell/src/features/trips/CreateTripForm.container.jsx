@@ -88,7 +88,6 @@ export default function CreateTripForm({ initial = null, onCancel = () => {}, on
             description: "",
             chips: [],
             tags: [],
-            rating: 0,
             price: { amount: 0, currency: "INR", tokenAmount: 1999, isFinal: true },
             availability: { totalSeats: null, seatsAvailable: null },
             itinerary: [],
@@ -243,7 +242,7 @@ export default function CreateTripForm({ initial = null, onCancel = () => {}, on
             const payload = JSON.parse(JSON.stringify(form));
             payload.price.amount = Number(payload.price.amount);
             payload.price.tokenAmount = Number(payload.price.tokenAmount || 1999);
-            payload.rating = Number(payload.rating || 0);
+            delete payload.rating;
             payload.sortOrder = Number(payload.sortOrder || 0);
             payload.itinerary = (payload.itinerary || []).map((it, idx) => ({
                 ...it,

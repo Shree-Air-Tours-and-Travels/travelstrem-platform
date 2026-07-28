@@ -15,7 +15,7 @@ const getInitials = (name) => {
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 };
 
-export default function ReviewsSectionView({ labels = {}, reviews = [] }) {
+export default function ReviewsSectionView({ labels = {}, reviews = [], avgRating = 0, reviewCount = 0 }) {
   const [page, setPage] = useState(0);
 
   const totalPages = Math.ceil(reviews.length / PER_PAGE);
@@ -24,17 +24,6 @@ export default function ReviewsSectionView({ labels = {}, reviews = [] }) {
     () => reviews.slice(page * PER_PAGE, (page + 1) * PER_PAGE),
     [page, reviews]
   );
-
-  const averageRating = useMemo(() => {
-    if (!reviews.length) return 0;
-
-    const total = reviews.reduce(
-      (sum, review) => sum + Number(review.rating || 0),
-      0
-    );
-
-    return (total / reviews.length).toFixed(1);
-  }, [reviews]);
 
   if (!reviews.length) {
     return (
@@ -61,13 +50,13 @@ export default function ReviewsSectionView({ labels = {}, reviews = [] }) {
         <div className="tour-detail__review-summary">
           <span className="tour-detail__review-summary-rating">
             <Icon name="star" />
-            {averageRating}
+            {Number(avgRating).toFixed(1)}
           </span>
 
           <span className="tour-detail__review-summary-divider">•</span>
 
           <span className="tour-detail__review-count">
-            {reviews.length} {reviews.length === 1 ? "Review" : "Reviews"}
+            {reviewCount} {reviewCount === 1 ? "Review" : "Reviews"}
           </span>
         </div>
       </div>

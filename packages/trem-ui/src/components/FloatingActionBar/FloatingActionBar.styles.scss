@@ -287,6 +287,8 @@
       right: auto;
       transform: translateX(-50%);
       bottom: 1.5rem;
+      width: max-content;
+      max-width: calc(100vw - 2rem);
       border-radius: 16px;
       border: 1px solid var(--border);
       background: var(--surface-elevated);
@@ -327,6 +329,7 @@
       }
 
       .trem-fab__inner {
+        width: 100%;
         border-radius: 0;
         border: none;
         background: transparent;
@@ -334,7 +337,20 @@
       }
 
       .trem-fab__btn {
+        flex: 0 0 auto;
+        min-width: max-content;
         border-radius: 10px;
+
+        > span:not(.ui-button__icon) {
+          max-width: none;
+          overflow: visible;
+          text-overflow: clip;
+        }
+      }
+
+      &.trem-fab--align-stretch .trem-fab__btn {
+        flex: 0 0 auto;
+        min-width: max-content;
       }
     }
 

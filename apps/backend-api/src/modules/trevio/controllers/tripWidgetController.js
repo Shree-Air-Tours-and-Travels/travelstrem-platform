@@ -60,6 +60,8 @@ const normalizeTripForWidget = (trip = {}) => {
     chips: normalized.chips,
     tags: normalized.tags,
     rating: normalized.rating,
+    avgRating: normalized.avgRating,
+    reviewCount: normalized.reviewCount,
     featured: normalized.featured,
     tag: normalized.tag,
     startDate: normalized.startDate,
@@ -158,7 +160,8 @@ export const getTripWidget = async (req, res) => {
               break;
             case "reviews-section.json":
               widget.component.data.reviews = normalized.reviews || [];
-              widget.component.data.avgRating = normalized.rating || 0;
+              widget.component.data.avgRating = normalized.avgRating || 0;
+              widget.component.data.reviewCount = normalized.reviewCount || 0;
               break;
             case "similar-tours.json": {
               const allTrips = await TrevioTripRepository.find({ status: "listed", isListed: true }).sort({ createdAt: -1 });

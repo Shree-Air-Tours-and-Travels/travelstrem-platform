@@ -3,6 +3,9 @@ import { Icon, Title, Paragraph } from "../../../../index.js";
 
 export default function TourOverviewView({ labels, tour, cityDisplay, title, description, durationText, ratingText, tags }) {
   if (!tour) return null;
+  const configuredGroupSize = Number(tour.maxGroupSize ?? tour.availability?.totalSeats);
+  const groupSize = configuredGroupSize > 0 ? configuredGroupSize : null;
+  const hasReviews = Number(tour.avgRating) > 0;
 
   return (
     <section className="tour-detail__hero" aria-label={labels.overview || "Tour overview"}>
@@ -19,13 +22,13 @@ export default function TourOverviewView({ labels, tour, cityDisplay, title, des
         </div>
         <div className="tour-detail__fact">
           <Icon name="star" />
-          <span>{labels.rating || "Rating"}</span>
+          <span>{hasReviews ? (labels.rating || "Rating") : "Reviews"}</span>
           <strong>{ratingText}</strong>
         </div>
         <div className="tour-detail__fact">
           <Icon name="usersRound" />
           <span>{labels.maxGroupSize || "Group size"}</span>
-          <strong>{tour.maxGroupSize ? `Up to ${tour.maxGroupSize}` : "Private options"}</strong>
+          <strong>{groupSize != null ? `Up to ${groupSize} travellers` : "Capacity available on request"}</strong>
         </div>
       </div>
       {tags.length ? (
