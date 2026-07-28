@@ -1,5 +1,14 @@
 export { slugify } from "./helpers/slugify.js";
-export { useThemeMode } from "./theme/useThemeMode.js";
+export {
+  THEME_CHANGE_EVENT,
+  THEME_COOKIE_KEY,
+  THEME_STORAGE_KEY,
+  applyThemeMode,
+  getPreferredTheme,
+  initializeThemeMode,
+  setPreferredTheme,
+  useThemeMode,
+} from "./theme/useThemeMode.js";
 export { default as useComponentData, setComponentDataFetcher } from "./data/useComponentData.js";
 export { default as fetchData, setFetchDataApiClient } from "./http/fetchData.js";
 export { tokenStore } from "./http/tokenStore.js";
