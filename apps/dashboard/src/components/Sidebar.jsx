@@ -19,7 +19,6 @@ export default function Sidebar({ activeTab, onTabChange, user }) {
           logoSrc={process.env.REACT_APP_DASHBOARD_LOGO || ""}
           name="TravelsTrem"
           subtitle="Dashboard"
-          initial="T"
           size="small"
         />
       </div>

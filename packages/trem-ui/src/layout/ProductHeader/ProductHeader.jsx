@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import PropTypes from "prop-types";
 import Icon from "../../icons/Icon/Icon.jsx";
 import Dropdown from "../../components/Dropdown/Dropdown.jsx";
+import BrandLogo from "../../components/BrandLogo/BrandLogo.jsx";
 import "./ProductHeader.styles.scss";
 
 const asArray = (value) => (Array.isArray(value) ? value : []);
@@ -352,7 +353,6 @@ export default function ProductHeader({
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const mark = brand?.mark || brand?.label?.charAt(0) || "T";
   const nav = asArray(navItems)
     .filter(Boolean)
     .map((item) => ({
@@ -414,11 +414,12 @@ export default function ProductHeader({
         </button>
 
         <HeaderButton item={brand} className="trem-product-header__brand" ariaLabel={`${brand?.label || "Product"} home`}>
-          {brand?.logoSrc ? (
-            <img className="trem-product-header__logo" src={brand.logoSrc} alt={brand.logoAlt || ""} />
-          ) : (
-            <span className="trem-product-header__mark" aria-hidden="true">{mark}</span>
-          )}
+          <BrandLogo
+            logoSrc={brand?.logoSrc || ""}
+            darkLogoSrc={brand?.darkLogoSrc || ""}
+            name=""
+            className="trem-product-header__brand-logo"
+          />
           <span className="trem-product-header__brand-copy">
             <strong>{brand?.label || "Product"}</strong>
             {brand?.subtitle ? <small>{brand.subtitle}</small> : null}
@@ -502,8 +503,8 @@ ProductHeader.propTypes = {
     href: PropTypes.string,
     label: PropTypes.string,
     logoAlt: PropTypes.string,
+    darkLogoSrc: PropTypes.string,
     logoSrc: PropTypes.string,
-    mark: PropTypes.string,
     navLabel: PropTypes.string,
     onClick: PropTypes.func,
     subtitle: PropTypes.string,
@@ -562,7 +563,7 @@ ProductHeader.propTypes = {
 };
 
 ProductHeader.defaultProps = {
-  brand: { label: "Trevio", subtitle: "by TravelsTrem", mark: "T" },
+  brand: { label: "Trevio", subtitle: "by TravelsTrem" },
   navItems: [],
   activeTab: "",
   wishlist: null,

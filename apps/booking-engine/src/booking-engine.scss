@@ -57,14 +57,12 @@ body {
   &__logo {
     width: 36px;
     height: 36px;
-    border-radius: $radius-sm;
-    background: var(--color-primary, $primary-color);
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: $font-bold;
-    font-size: $font-size-lg;
+
+    .brand-logo__image {
+      width: 36px;
+      height: 36px;
+      flex-basis: 36px;
+    }
   }
 
   &__title {

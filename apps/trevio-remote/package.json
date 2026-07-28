@@ -23,6 +23,7 @@
     "cross-env": "^7.0.3"
   },
   "scripts": {
+    "prebuild": "node ../../scripts/sync-favicons.mjs trevio-remote",
     "dev": "cross-env PUBLIC_URL=/ PORT=3005 DISABLE_ESLINT_PLUGIN=true craco start",
     "start": "cross-env PUBLIC_URL=/ PORT=3005 DISABLE_ESLINT_PLUGIN=true craco start",
     "build": "cross-env PUBLIC_URL=/ DISABLE_ESLINT_PLUGIN=true craco build",

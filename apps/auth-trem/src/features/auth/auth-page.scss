@@ -89,6 +89,12 @@
     border-radius: 12px;
     background: var(--surface-inset);
     color: var(--color-primary);
+
+    .brand-logo__image {
+      width: 48px;
+      height: 48px;
+      flex-basis: 48px;
+    }
   }
 
   &__tabs {

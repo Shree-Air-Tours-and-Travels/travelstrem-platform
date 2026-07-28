@@ -49,7 +49,6 @@ export default function Footer({
   const [emailValue, setEmailValue] = useState("");
   const [status, setStatus] = useState("");
   const year = new Date().getFullYear();
-  const initial = brand ? brand.charAt(0).toUpperCase() : "T";
 
   const submitSubscription = (event) => {
     event.preventDefault();
@@ -64,7 +63,7 @@ export default function Footer({
       <div className="ui-footer__container ui-footer__main">
         <div className="ui-footer__brand-column">
           <NavLink to="/" className="ui-footer__brand-link" aria-label={`${brand} home`}>
-            <BrandLogo logoSrc={logoSrc} name="" initial={initial} size="small" />
+            <BrandLogo logoSrc={logoSrc} name="" size="small" />
             <span className="ui-footer__brand-lockup"><strong>{brand.replace("TREM", "")}<em>TREM</em></strong><small>{FOOTER_DATA.tagline}</small></span>
           </NavLink>
           {productName ? <span className="ui-footer__product">{productName}</span> : null}

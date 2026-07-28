@@ -1,4 +1,5 @@
 import React, { useRef } from "react";
+import { BrandLogo } from "@packages/trem-ui";
 import "./ManageClients.scss";
 
 const PRODUCTS = ["trevio", "trevista", "dashboard", "admin", "booking", "agent"];
@@ -7,7 +8,6 @@ function LogoUploadCell({ client, product, onUpload }) {
   const inputRef = useRef(null);
   const branding = client.branding?.[product] || {};
   const logoSrc = branding.logoSrc || "";
-  const initial = branding.initial || branding.name?.charAt(0) || "T";
 
   const handleChange = async (e) => {
     const file = e.target.files?.[0];
@@ -22,11 +22,7 @@ function LogoUploadCell({ client, product, onUpload }) {
 
   return (
     <div className="client-logo-cell" onClick={() => inputRef.current?.click()}>
-      {logoSrc ? (
-        <img className="client-logo-cell__img" src={logoSrc} alt={branding.name || product} />
-      ) : (
-        <span className="client-logo-cell__initial">{initial}</span>
-      )}
+      <BrandLogo logoSrc={logoSrc} name="" size="small" />
       <input ref={inputRef} type="file" accept="image/*" onChange={handleChange} style={{ display: "none" }} />
       <span className="client-logo-cell__label">{branding.name || product}</span>
     </div>

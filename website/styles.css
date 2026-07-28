@@ -1019,3 +1019,9 @@ h2 em {
         display: block
     }
 }
+@media (prefers-color-scheme: dark) {
+  .brand-icon,
+  .theme-brand-icon {
+    content: url("favicon-dark.png");
+  }
+}

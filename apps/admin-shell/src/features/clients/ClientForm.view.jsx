@@ -54,7 +54,7 @@ export default function ClientFormView({ form, isEdit, saving, error, onChange, 
 
           <div className="cf-section">
             <h3>Product Branding</h3>
-            <p className="cf-note">Customize how each product appears. Leave logo empty to show initials.</p>
+            <p className="cf-note">Customize how each product appears. Leave logo empty to use the shared TravelsTrem favicon.</p>
             {PRODUCTS.map((product) => {
               const b = form.branding[product] || {};
               return (
@@ -71,10 +71,6 @@ export default function ClientFormView({ form, isEdit, saving, error, onChange, 
                     <label>
                       <span>Subtitle</span>
                       <input type="text" value={b.subtitle || ""} onChange={(e) => onBrandingChange(product, "subtitle", e.target.value)} />
-                    </label>
-                    <label>
-                      <span>Initial</span>
-                      <input type="text" value={b.initial || ""} onChange={(e) => onBrandingChange(product, "initial", e.target.value)} maxLength={3} style={{ width: 60 }} />
                     </label>
                   </div>
                 </div>

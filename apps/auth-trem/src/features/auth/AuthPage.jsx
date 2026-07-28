@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Button, Icon, Title, Paragraph } from "@packages/trem-ui";
+import { BrandLogo, Button, Title, Paragraph } from "@packages/trem-ui";
 import { getReturnPath, useAuthFlow, appendTokenToUrl } from "@packages/trem-auth-core";
 import { ForgotPasswordModal, ResetPasswordModal } from "./PasswordModals.jsx";
 import "./auth-page.scss";
@@ -221,7 +221,7 @@ export default function AuthPage({
               </Paragraph>
             </div>
             <div className="auth-trem__brand-icon">
-              <Icon name="shield" size={36} title="verification" />
+              <BrandLogo name="" className="brand-logo--icon-only" />
             </div>
           </header>
 
@@ -289,7 +289,7 @@ export default function AuthPage({
             <Paragraph primaryClassname="auth-trem__sub">{activeTab === "login" ? "Enter your details to continue." : "Create access for this shell."}</Paragraph>
           </div>
           <div className="auth-trem__brand-icon">
-            <Icon name="shield" size={36} title="authentication" />
+            <BrandLogo name="" className="brand-logo--icon-only" />
           </div>
         </header>
 

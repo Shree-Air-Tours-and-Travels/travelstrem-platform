@@ -30,7 +30,6 @@ export default function AdminDashboardHeader({ activeTab, theme, onToggleTheme, 
             logoSrc={process.env.REACT_APP_ADMIN_LOGO || ""}
             name="TravelsTREM"
             subtitle="Admin"
-            initial="T"
             size="small"
           />
         </div>

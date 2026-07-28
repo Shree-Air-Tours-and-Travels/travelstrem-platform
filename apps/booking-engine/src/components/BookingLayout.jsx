@@ -2,6 +2,7 @@ import React, { useState, useCallback } from "react";
 import BookingProgress from "@packages/trem-ui/components/BookingProgress/BookingProgress.jsx";
 import ConfirmOverlay from "@packages/trem-modals/ConfirmOverlay.jsx";
 import ScrollToTopButton from "@packages/trem-ui/components/ScrollToTopButton/ScrollToTopButton.jsx";
+import BrandLogo from "@packages/trem-ui/components/BrandLogo/BrandLogo.jsx";
 
 export default function BookingLayout({ steps, currentStep, product, children, sidebar, floatingBar, onExit }) {
   const [showExitConfirm, setShowExitConfirm] = useState(false);
@@ -24,7 +25,7 @@ export default function BookingLayout({ steps, currentStep, product, children, s
     <div className="be-layout">
       <div className="be-layout__header">
         <div className="be-layout__brand">
-          <span className="be-layout__logo">T</span>
+          <BrandLogo name="" size="small" className="be-layout__logo" />
           <span className="be-layout__title">{product === "trevio" ? "Trevio" : "Trevista"} Booking</span>
           {hasProgress && onExit && (
             <button type="button" className="be-layout__exit" onClick={handleExitClick} aria-label="Exit booking">
