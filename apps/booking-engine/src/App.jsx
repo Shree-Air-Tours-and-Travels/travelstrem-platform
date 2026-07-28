@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useLayoutEffect } from "react";
 import { Navigate, Route, Routes, useSearchParams } from "react-router-dom";
 import { fetchData, tokenStore } from "@packages/trem-utils";
 import { consumeUrlToken } from "@packages/trem-auth-core";
@@ -7,7 +7,7 @@ import BookingEntryPage from "./pages/BookingEntryPage.jsx";
 import BookingStatusPage from "./pages/BookingStatusPage.jsx";
 
 function useSessionInit() {
-  useEffect(() => {
+  useLayoutEffect(() => {
     consumeUrlToken({ token: "travelstrem:token" });
     if (tokenStore.has()) return;
     fetchData("/auth/session")

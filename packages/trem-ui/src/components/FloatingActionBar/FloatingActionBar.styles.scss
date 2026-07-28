@@ -109,8 +109,9 @@
 
       span {
         max-width: 100%;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        overflow: visible;
+        text-overflow: clip;
+        white-space: nowrap;
       }
 
       &:first-child {
@@ -181,8 +182,11 @@
 
       span {
         max-width: 100%;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        overflow: visible;
+        text-overflow: clip;
+        white-space: normal;
+        line-height: 1.2;
+        text-align: center;
       }
 
       &:last-child {

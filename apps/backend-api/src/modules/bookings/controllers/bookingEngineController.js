@@ -301,7 +301,40 @@ export const createBooking = asyncHandler(async (req, res) => {
     bookingData.paymentStatus = PAYMENT_STATUS.UNPAID;
   }
 
-  const booking = await Booking.create(bookingData);
+  let reservedSeats = 0;
+  const hasManagedInventory = product === BOOKING_FLOW.TREVIO
+    && entity.availability?.seatsAvailable != null;
+
+  if (hasManagedInventory) {
+    const reservedTrip = await TrevioTrip.findOneAndUpdate(
+      {
+        _id: entity._id,
+        status: "listed",
+        isListed: true,
+        "availability.seatsAvailable": { $gte: guestsCount },
+      },
+      { $inc: { "availability.seatsAvailable": -guestsCount } },
+      { new: true },
+    );
+    if (!reservedTrip) {
+      throw new ApiError(409, "The trip no longer has enough available seats");
+    }
+    reservedSeats = guestsCount;
+    bookingData.seatsReserved = reservedSeats;
+  }
+
+  let booking;
+  try {
+    booking = await Booking.create(bookingData);
+  } catch (error) {
+    if (reservedSeats > 0) {
+      await TrevioTrip.findByIdAndUpdate(
+        entity._id,
+        { $inc: { "availability.seatsAvailable": reservedSeats } },
+      );
+    }
+    throw error;
+  }
 
   if (travellers.length > 0) {
     for (const t of travellers) {
@@ -313,7 +346,13 @@ export const createBooking = asyncHandler(async (req, res) => {
     bookingId: booking._id,
     actor: { id: userId, type: "customer" },
     action: "booking_created",
-    metadata: { product, title: entity.title || entity.name, guestsCount, priceTotal: priceSnapshot.total },
+    metadata: {
+      product,
+      title: entity.title || entity.name,
+      guestsCount,
+      seatsReserved: reservedSeats,
+      priceTotal: priceSnapshot.total,
+    },
   });
 
   const hydrated = await BookingService.hydrate(booking);
@@ -497,22 +536,6 @@ export const payToken = asyncHandler(async (req, res) => {
   } else if (summary.paid > 0) {
     booking.transitionStatus(BOOKING_STATUS.PARTIALLY_PAID);
     booking.paymentStatus = PAYMENT_STATUS.PARTIAL;
-  }
-
-  if (booking.trip) {
-    try {
-      const seatsToReserve = booking.guestsCount || 1;
-      const reservedTrip = await TrevioTrip.findOneAndUpdate(
-        { _id: booking.trip, status: "listed", isListed: true, "availability.seatsAvailable": { $gte: seatsToReserve } },
-        { $inc: { "availability.seatsAvailable": -seatsToReserve } },
-        { new: true },
-      );
-      if (reservedTrip) {
-        booking.seatsReserved = seatsToReserve;
-      }
-    } catch (seatErr) {
-      console.error("Failed to reserve seats on token payment:", seatErr);
-    }
   }
 
   await booking.save();
@@ -809,24 +832,43 @@ export const cancelBooking = asyncHandler(async (req, res) => {
   }
 
   const cancellable = ["DRAFT", "QUOTE_REQUESTED", "UNDER_REVIEW", "QUOTE_READY", "QUOTE_SENT", "AWAITING_TOKEN_PAYMENT", "PAYMENT_PENDING", "CONFIRMED"];
-  if (!cancellable.includes(booking.status)) {
+  const retryingSeatRelease = booking.status === BOOKING_STATUS.CANCELLED
+    && booking.trip
+    && booking.seatsReserved > 0;
+  if (!cancellable.includes(booking.status) && !retryingSeatRelease) {
     throw new ApiError(400, `Cannot cancel booking in ${booking.status} state`);
   }
 
-  booking.transitionStatus(BOOKING_STATUS.CANCELLED);
-  booking.cancelledAt = new Date();
-  await booking.save();
+  if (!retryingSeatRelease) {
+    booking.transitionStatus(BOOKING_STATUS.CANCELLED);
+    booking.cancelledAt = new Date();
+    await booking.save();
+  }
 
   if (booking.trip && booking.seatsReserved > 0) {
-    try {
-      await TrevioTrip.findOneAndUpdate(
-        { _id: booking.trip },
-        { $inc: { "availability.seatsAvailable": booking.seatsReserved } },
-      );
-      booking.seatsReserved = 0;
-      await booking.save();
-    } catch (seatErr) {
-      console.error("Failed to release seats on cancellation:", seatErr);
+    const seatsToRelease = booking.seatsReserved;
+    const releaseClaim = await Booking.findOneAndUpdate(
+      { _id: booking._id, seatsReserved: seatsToRelease },
+      { $set: { seatsReserved: 0 } },
+      { new: true },
+    );
+
+    if (releaseClaim) {
+      try {
+        const releasedTrip = await TrevioTrip.findOneAndUpdate(
+          { _id: booking.trip },
+          { $inc: { "availability.seatsAvailable": seatsToRelease } },
+          { new: true },
+        );
+        if (!releasedTrip) throw new ApiError(404, "Trip inventory not found");
+        booking.seatsReserved = 0;
+      } catch (error) {
+        await Booking.updateOne(
+          { _id: booking._id, seatsReserved: 0 },
+          { $set: { seatsReserved: seatsToRelease } },
+        );
+        throw error;
+      }
     }
   }
 

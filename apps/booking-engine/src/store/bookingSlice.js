@@ -5,7 +5,7 @@ const TRAVELLER_FIELDS = [
   { name: "firstName", label: "First Name", type: "text", required: true },
   { name: "lastName", label: "Last Name", type: "text", required: true },
   { name: "gender", label: "Gender", type: "select", options: [{ value: "male", label: "Male" }, { value: "female", label: "Female" }], required: true },
-  { name: "dob", label: "Date of Birth", type: "date", required: true },
+  { name: "dob", label: "Date of Birth", type: "date", datePickerMode: "birthdate", required: true },
   { name: "nationality", label: "Nationality", type: "text", required: true },
   { name: "email", label: "Email", type: "email", required: true },
   { name: "phone", label: "Phone", type: "tel", required: true },
@@ -31,10 +31,12 @@ function emptyTraveller(index = 0) {
 
 const STEP_CONFIG = {
   trevio: [
-    { key: "trip", label: "Trip Details" },
+    { key: "trip", label: "Trip" },
     { key: "travellers", label: "Travellers" },
+    { key: "addons", label: "Add-ons" },
     { key: "review", label: "Review" },
     { key: "checkout", label: "Payment" },
+    { key: "complete", label: "Complete" },
   ],
   trevista: [
     { key: "trip", label: "Trip Details" },
@@ -46,8 +48,8 @@ const STEP_CONFIG = {
 const initialState = {
   currentStep: 0,
   product: "trevista",
-  trip: { startDate: "", endDate: "", adults: 2, children: 0, infants: 0, roomType: "shared" },
-  travellers: [emptyTraveller(0), emptyTraveller(1)],
+  trip: { startDate: "", endDate: "", adults: 1, children: 0, infants: 0, roomType: "" },
+  travellers: [emptyTraveller(0)],
   contact: { name: "", email: "", phone: "" },
   errors: {},
 };
@@ -68,8 +70,13 @@ const bookingSlice = createSlice({
       const { field, value } = action.payload;
       state.trip[field] = value;
 
-      if (field === "adults") {
-        const count = Math.max(1, Number(value) || 1);
+      if (["adults", "children", "infants"].includes(field)) {
+        const count = Math.max(
+          1,
+          Number(state.trip.adults || 0)
+            + Number(state.trip.children || 0)
+            + Number(state.trip.infants || 0),
+        );
         while (state.travellers.length < count) {
           state.travellers.push(emptyTraveller(state.travellers.length));
         }
@@ -136,6 +143,12 @@ const bookingSlice = createSlice({
       state.trip.endDate = product.endDateISO || state.trip.endDate;
       state.trip.pricePerPerson = product.price || state.trip.pricePerPerson;
       state.trip.tokenAmount = product.token || state.trip.tokenAmount;
+      const roomTypes = Array.isArray(product.preferences?.roomTypes)
+        ? product.preferences.roomTypes
+        : [];
+      state.trip.roomType = roomTypes.some((option) => option.value === state.trip.roomType)
+        ? state.trip.roomType
+        : roomTypes[0]?.value || "";
     },
   },
 });

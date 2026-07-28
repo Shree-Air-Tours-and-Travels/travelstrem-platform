@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
-import footerIcon from "../../assets/favicon.png";
+import BrandLogo from "../../components/BrandLogo/BrandLogo.jsx";
 import "./Footer.styles.scss";
 
 const FOOTER_DATA = {
@@ -36,6 +36,7 @@ function FooterLink({ link }) {
 export default function Footer({
   user,
   brand = FOOTER_DATA.brand,
+  logoSrc = "",
   productName = "",
   links,
   exploreLinks = links || FOOTER_DATA.exploreLinks,
@@ -48,6 +49,7 @@ export default function Footer({
   const [emailValue, setEmailValue] = useState("");
   const [status, setStatus] = useState("");
   const year = new Date().getFullYear();
+  const initial = brand ? brand.charAt(0).toUpperCase() : "T";
 
   const submitSubscription = (event) => {
     event.preventDefault();
@@ -62,7 +64,7 @@ export default function Footer({
       <div className="ui-footer__container ui-footer__main">
         <div className="ui-footer__brand-column">
           <NavLink to="/" className="ui-footer__brand-link" aria-label={`${brand} home`}>
-            <img className="ui-footer__brand-mark" src={footerIcon} alt="" aria-hidden="true" />
+            <BrandLogo logoSrc={logoSrc} name="" initial={initial} size="small" />
             <span className="ui-footer__brand-lockup"><strong>{brand.replace("TREM", "")}<em>TREM</em></strong><small>{FOOTER_DATA.tagline}</small></span>
           </NavLink>
           {productName ? <span className="ui-footer__product">{productName}</span> : null}

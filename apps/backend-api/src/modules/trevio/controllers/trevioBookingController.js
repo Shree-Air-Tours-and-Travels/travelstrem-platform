@@ -1,6 +1,7 @@
 import { customAlphabet } from "nanoid";
 import TrevioBooking from "../models/TrevioBooking.js";
 import trevioTripService from "../services/trevioTripService.js";
+import { calculateTrevioPricing } from "./trevioController.js";
 
 const code = customAlphabet("ABCDEFGHJKMNPQRSTUVWXYZ23456789", 10);
 export const createTrevioBooking = async (req, res) => {
@@ -17,7 +18,7 @@ export const createTrevioBooking = async (req, res) => {
     travellerCount = Math.max(1, travellers.length || Number(body.values?.travellers || 1));
     const availableTrip = await trevioTripService.checkAvailability(tripRef, travellerCount);
     if (!availableTrip) return res.status(409).json({ status: "error", message: "The selected trip no longer has enough seats available." });
-    const pricing = { ...(body.pricing || {}), availability: availableTrip.availability || {} };
+    const { pricing } = calculateTrevioPricing(availableTrip, body);
     const document = await TrevioBooking.create({
       bookingRef, quoteId, tripRef, trip: trevioTripService.normalize(availableTrip),
       travelWindow: { startDate: body.startDate || body.values?.startDate, endDate: body.endDate || body.values?.endDate },

@@ -1,6 +1,7 @@
 import React, { useCallback } from "react";
 import authService from "../services/authService";
 import { emit } from "@packages/trem-events";
+import { BrandLogo } from "@packages/trem-ui";
 import "./AdminDashboardHeader.scss";
 
 const TAB_TITLES = {
@@ -25,8 +26,13 @@ export default function AdminDashboardHeader({ activeTab, theme, onToggleTheme, 
         <h1 className="dh__title">{TAB_TITLES[activeTab] || "Admin"}</h1>
 
         <div className="dh__mobile-brand">
-          <img className="dh__mobile-logo" src="/logo-images/logo-icon-only.png" alt="" width="32" height="32" />
-          <span className="dh__mobile-title">TravelsTrem <small>Admin</small></span>
+          <BrandLogo
+            logoSrc={process.env.REACT_APP_ADMIN_LOGO || ""}
+            name="TravelsTREM"
+            subtitle="Admin"
+            initial="T"
+            size="small"
+          />
         </div>
 
         <div className="dh__actions">

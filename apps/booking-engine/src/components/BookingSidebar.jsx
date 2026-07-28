@@ -3,7 +3,18 @@ import React from "react";
 const formatMoney = (v) => `₹${Number(v || 0).toLocaleString("en-IN")}`;
 const formatDate = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—";
 
-export default function BookingSidebar({ product, productData, trip, guestsCount, availability, computedPricing }) {
+export default function BookingSidebar({
+  product,
+  productData,
+  trip,
+  guestsCount,
+  availability,
+  computedPricing,
+  couponCode = "",
+  couponStatus,
+  onCouponChange,
+  onApplyCoupon,
+}) {
   const data = productData || {};
   const title = data.title || data.name || "—";
   const location = data.city || data.location || "";
@@ -16,15 +27,22 @@ export default function BookingSidebar({ product, productData, trip, guestsCount
     ? (data.price || trip.pricePerPerson || 0)
     : (data.price?.min || data.price || 0);
 
-  const baseTripTotal = computedPricing?.baseTripTotal || (basePricePerPerson * guests);
+  const baseTripTotal = isTrevio
+    ? Number(computedPricing?.baseTripTotal ?? computedPricing?.baseAmount ?? 0)
+    : Number(computedPricing?.baseTripTotal || basePricePerPerson);
   const totalPrefExtras = computedPricing?.totalPrefExtras || 0;
-  const total = computedPricing?.total || (baseTripTotal + totalPrefExtras);
+  const addonAmount = Number(computedPricing?.addonAmount || 0);
+  const taxes = Number(computedPricing?.taxes ?? computedPricing?.tax ?? 0);
+  const discounts = Number(computedPricing?.discounts || 0);
+  const total = isTrevio
+    ? Number(computedPricing?.grandTotal ?? computedPricing?.total ?? 0)
+    : Number(computedPricing?.total ?? baseTripTotal);
   const tokenAmount = computedPricing?.tokenAmount || 0;
   const tokenPercent = baseTripTotal > 0 ? Math.round((tokenAmount / baseTripTotal) * 100) : 0;
 
   const cancellationPolicy = data.cancellationPolicy || "";
   const seatsAvailable = availability?.seatsAvailable;
-  const isLowSeats = isTrevio && seatsAvailable != null && seatsAvailable > 0 && seatsAvailable <= 3;
+  const isLowSeats = isTrevio && Boolean(availability?.isLowSeats);
 
   return (
     <div className="be-sidebar">
@@ -68,19 +86,54 @@ export default function BookingSidebar({ product, productData, trip, guestsCount
       </div>
 
       <div className="be-sidebar__section">
-        <h4 className="be-sidebar__heading">Price</h4>
+        <h4 className="be-sidebar__heading">Price summary</h4>
         <div className="be-sidebar__row">
           <span className="be-sidebar__label">Per person</span>
           <span className="be-sidebar__value">{formatMoney(basePricePerPerson)}</span>
         </div>
         <div className="be-sidebar__row">
-          <span className="be-sidebar__label">× {guests} guest{guests !== 1 ? "s" : ""}</span>
+          <span className="be-sidebar__label">Trip fare · {guests} guest{guests !== 1 ? "s" : ""}</span>
           <span className="be-sidebar__value">{formatMoney(baseTripTotal)}</span>
         </div>
         {totalPrefExtras > 0 && (
           <div className="be-sidebar__row">
             <span className="be-sidebar__label">Preferences</span>
             <span className="be-sidebar__value be-sidebar__value--positive">+{formatMoney(totalPrefExtras)}</span>
+          </div>
+        )}
+        <div className="be-sidebar__row">
+          <span className="be-sidebar__label">Add-ons</span>
+          <span className="be-sidebar__value">{formatMoney(addonAmount)}</span>
+        </div>
+        <div className="be-sidebar__row">
+          <span className="be-sidebar__label">Taxes &amp; GST</span>
+          <span className="be-sidebar__value">{formatMoney(taxes)}</span>
+        </div>
+        {discounts > 0 && (
+          <div className="be-sidebar__row">
+            <span className="be-sidebar__label">Coupon discount</span>
+            <span className="be-sidebar__value be-sidebar__value--discount">−{formatMoney(discounts)}</span>
+          </div>
+        )}
+        {typeof onApplyCoupon === "function" && (
+          <div className="be-sidebar__coupon">
+            <label htmlFor="booking-coupon">Coupon code</label>
+            <div>
+              <input
+                id="booking-coupon"
+                value={couponCode}
+                onChange={(event) => onCouponChange?.(event.target.value.toUpperCase())}
+                placeholder="Enter code"
+              />
+              <button type="button" onClick={onApplyCoupon} disabled={!couponCode.trim()}>
+                Apply
+              </button>
+            </div>
+            {couponStatus?.message && (
+              <small className={couponStatus.valid ? "is-success" : "is-error"}>
+                {couponStatus.message}
+              </small>
+            )}
           </div>
         )}
         {tokenAmount > 0 && (
@@ -93,6 +146,7 @@ export default function BookingSidebar({ product, productData, trip, guestsCount
           <span className="be-sidebar__label">Total</span>
           <span className="be-sidebar__value">{formatMoney(total)}</span>
         </div>
+        <p className="be-sidebar__tax-note">Inclusive of applicable tax</p>
       </div>
 
       {cancellationPolicy && (

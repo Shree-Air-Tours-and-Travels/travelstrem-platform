@@ -6,7 +6,8 @@ import { useAgentPortalConfig } from "./providers/AgentPortalProvider";
 import { PortalPreloader } from "@packages/trem-ui";
 
 export default function AppLayout() {
-    const { loading } = useAgentPortalConfig();
+    const { config, loading } = useAgentPortalConfig();
+    const logoSrc = config?.logos?.agent?.logoSrc || "";
 
     return (
         <div className="agent-app-shell">
@@ -15,7 +16,7 @@ export default function AppLayout() {
             {loading && (
                 <PortalPreloader type="app" text="Initializing Partner Portal lifecycle" />
             )}
-            <Footer user={null} />
+            <Footer user={null} logoSrc={logoSrc} />
         </div>
     );
 }

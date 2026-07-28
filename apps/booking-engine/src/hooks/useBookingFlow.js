@@ -107,7 +107,7 @@ export function useBookingFlow({ product: productProp = "trevista", tour = null 
       });
       const cErrors = validateContact(contact);
       Object.entries(cErrors).forEach(([k, v]) => { stepErrors[`contact.${k}`] = v; });
-    } else if (stepKey === "review") {
+    } else if (stepKey === "details" || stepKey === "review") {
       stepErrors = { ...validateTrip(trip), ...validateContact(contact) };
       travellers.forEach((t, i) => {
         const tErrors = validateTraveller(t, travellers);

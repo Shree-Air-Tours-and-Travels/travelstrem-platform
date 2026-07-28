@@ -74,7 +74,8 @@ function AppHeader({ headerConfig, state, navItems, activeTab, authAction, brand
         <ProductHeader
             brand={{
                 ...brand,
-                logoSrc: "/favicon.svg",
+                logoSrc: logoConfig.logoSrc || "",
+                logoAlt: logoConfig.name || brand.label,
                 href: "/trevista",
             }}
             navItems={navItems}
@@ -144,6 +145,7 @@ function App({ dispatchEvent, embedded = false, userSession = null }) {
     }
 
     const headerConfig = state.headerConfig || {};
+    const logoConfig = headerConfig.logos?.trevista || {};
     const brand = headerConfig.brand || {
         label: "Trevista",
         subtitle: "by TravelsTrem",
@@ -172,7 +174,7 @@ function App({ dispatchEvent, embedded = false, userSession = null }) {
                     )}
                     <AppRoutes dispatchEvent={dispatchEvent} embedded={embedded} userSession={userSession || state.session} />
                 </FavoritesProvider>
-                {!embedded && <Footer productName="Trevista · Holiday planning" />}
+                {!embedded && <Footer logoSrc={logoConfig.logoSrc || ""} productName="Trevista · Holiday planning" />}
                 <ScrollToTopButton />
             </div>
         </>
