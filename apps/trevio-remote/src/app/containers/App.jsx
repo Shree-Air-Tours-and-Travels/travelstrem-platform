@@ -4,6 +4,7 @@ import { fetchData, redirectToGlobalAuth, setComponentDataFetcher, createProduct
 import { emit, registerSessionCacheClearer } from "@packages/trem-events";
 import { consumeUrlToken, appendTokenToUrl } from "@packages/trem-auth-core";
 import { FavoritesProvider, GlobalLoader, ErrorState, ScrollToTop, TourDetailsPage, useFavoritesContext } from "@packages/trem-ui";
+import { Analytics } from "@vercel/analytics/react";
 import Shell from "./Shell";
 import Home from "../views/Home";
 import TripBookingPage from "../views/TripBookingPage";
@@ -216,6 +217,7 @@ export default function App({ embedded = false, userSession: externalSession = n
           />
         </FavoritesProvider>
       </div>
+      <Analytics />
     </>
   );
 }
