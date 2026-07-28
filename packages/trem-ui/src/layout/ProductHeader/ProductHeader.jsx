@@ -200,6 +200,11 @@ function MobileDrawer({ open, onClose, brand, nav, actions, userLabel }) {
   }, [onClose]);
 
   const initials = getInitials(userLabel || brand?.label);
+  const drawerActions = actions.flatMap((item) => (
+    item.variant === "profile" && Array.isArray(item.items) && item.items.length
+      ? item.items
+      : [item]
+  ));
 
   return (
     <>
@@ -258,7 +263,7 @@ function MobileDrawer({ open, onClose, brand, nav, actions, userLabel }) {
           </div>
 
           <div className="trem-product-header__drawer-bottom">
-            {actions.map((item) => (
+            {drawerActions.map((item) => (
               <button
                 key={item.id || item.label}
                 className={`trem-product-header__drawer-action${item.variant === "primary" ? " trem-product-header__drawer-action--primary" : ""}`}
@@ -366,9 +371,30 @@ export default function ProductHeader({
   const actions = [
     themeToggle,
     wishlist ? { ...wishlist, variant: wishlist.variant || "icon" } : null,
-    profile ? { ...profile, variant: profile.variant || "secondary" } : null,
+    profile ? { ...profile, variant: profile.variant || "profile" } : null,
     authAction ? { ...authAction, variant: authAction.variant || "primary" } : null,
   ].filter(Boolean);
+
+  const renderActionContent = (item, includeChevron = false) => (
+    item.variant === "profile" ? (
+      <>
+        <span className="trem-product-header__profile-avatar" aria-hidden="true">
+          {item.avatarUrl ? <img src={item.avatarUrl} alt="" /> : getInitials(item.displayName || item.label)}
+        </span>
+        <span className="trem-product-header__profile-copy">
+          <strong>{item.displayName || item.label}</strong>
+          <small>{item.label || "Profile"}</small>
+        </span>
+        {includeChevron ? <Icon name="chevronDown" size={15} /> : <Icon name="chevronRight" size={15} />}
+      </>
+    ) : (
+      <>
+        {item.icon ? <Icon name={item.icon} size={item.variant === "icon" ? 21 : 18} /> : null}
+        {item.count !== undefined ? <span className="trem-product-header__count">{item.count}</span> : null}
+        {item.variant !== "icon" ? <span>{item.label}</span> : null}
+      </>
+    )
+  );
 
   useEffect(() => {
     setDrawerOpen(false);
@@ -419,18 +445,42 @@ export default function ProductHeader({
 
         {actions.length ? (
           <div className="trem-product-header__actions">
-            {actions.map((item) => (
-              <HeaderButton
-                key={item.id || item.label}
-                item={item}
-                className={getActionClass(item.variant)}
-                ariaLabel={item.ariaLabel || item.label}
-              >
-                {item.icon ? <Icon name={item.icon} size={item.variant === "icon" ? 21 : 18} /> : null}
-                {item.count !== undefined ? <span className="trem-product-header__count">{item.count}</span> : null}
-                {item.variant !== "icon" ? <span>{item.label}</span> : null}
-              </HeaderButton>
-            ))}
+            {actions.map((item) => {
+              const hasDropdown = item.variant === "profile" && Array.isArray(item.items) && item.items.length > 0;
+              if (hasDropdown) {
+                return (
+                  <Dropdown
+                    key={item.id || item.label}
+                    align="right"
+                    hoverable={false}
+                    closeOnSelect
+                    className="trem-product-header__profile-dropdown"
+                    menuClassName="trem-product-header__profile-menu"
+                    trigger={({ open }) => (
+                      <button
+                        className={`${getActionClass(item.variant)}${open ? " is-open" : ""}`}
+                        type="button"
+                        aria-label={item.ariaLabel || item.label}
+                      >
+                        {renderActionContent(item, true)}
+                      </button>
+                    )}
+                    items={item.items}
+                  />
+                );
+              }
+
+              return (
+                <HeaderButton
+                  key={item.id || item.label}
+                  item={item}
+                  className={getActionClass(item.variant)}
+                  ariaLabel={item.ariaLabel || item.label}
+                >
+                  {renderActionContent(item)}
+                </HeaderButton>
+              );
+            })}
           </div>
         ) : null}
       </div>
@@ -441,7 +491,7 @@ export default function ProductHeader({
         brand={brand}
         nav={nav}
         actions={actions}
-        userLabel={profile?.label}
+        userLabel={profile?.displayName || profile?.label}
       />
     </header>
   );
@@ -487,6 +537,16 @@ ProductHeader.propTypes = {
     variant: PropTypes.string,
   }),
   profile: PropTypes.shape({
+    ariaLabel: PropTypes.string,
+    avatarUrl: PropTypes.string,
+    displayName: PropTypes.string,
+    icon: PropTypes.string,
+    items: PropTypes.arrayOf(PropTypes.shape({
+      id: PropTypes.string,
+      label: PropTypes.string.isRequired,
+      icon: PropTypes.string,
+      onClick: PropTypes.func,
+    })),
     label: PropTypes.string,
     onClick: PropTypes.func,
     variant: PropTypes.string,

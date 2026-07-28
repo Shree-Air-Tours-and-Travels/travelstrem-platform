@@ -7,6 +7,11 @@ export default function PricingCardView({ labels, tour, priceText, cityDisplay, 
   const isFav = isFavorited?.(tour) ?? false;
   const seatsAvailable = tour.availability?.seatsAvailable ?? tour.seatsAvailable;
   const isSoldOut = seatsAvailable === 0;
+  const hasExplicitRoute = Boolean(
+    typeof tour.city === "string"
+      ? tour.city.trim()
+      : (tour.city?.from && tour.city?.to)
+  );
 
   return (
     <aside className="tour-detail__booking-widget" aria-label={labels.pricingTitle || "Trip actions"}>
@@ -34,13 +39,15 @@ export default function PricingCardView({ labels, tour, priceText, cityDisplay, 
         </div>
         <div className="tour-detail__booking-meta">
           <div className="tour-detail__fact">
-            <span>{labels.route || "Route"}</span>
+            <span>{hasExplicitRoute ? (labels.route || "Route") : "Destination"}</span>
             <strong>{cityDisplay}</strong>
           </div>
-          <div className="tour-detail__fact">
-            <span>{labels.distance || "Distance"}</span>
-            <strong>{tour.distance ? `${tour.distance} ${labels.kmUnit || "km"}` : (labels.flexible || "Flexible")}</strong>
-          </div>
+          {tour.distance != null && Number(tour.distance) > 0 ? (
+            <div className="tour-detail__fact">
+              <span>{labels.distance || "Distance"}</span>
+              <strong>{tour.distance} {labels.kmUnit || "km"}</strong>
+            </div>
+          ) : null}
         </div>
       </div>
       <div className="tour-detail__booking-widget-footer">
@@ -50,7 +57,7 @@ export default function PricingCardView({ labels, tour, priceText, cityDisplay, 
           </Button>
           <Button primaryClassName="tour-detail__button tour-detail__button--outline" variant="outline" onClick={() => onContact(tour)}>
             <Icon name="messageCircle" />
-            {labels.contactAgent || "Enquire"}
+            {labels.enquire || "Enquire"}
           </Button>
         </div>
       </div>

@@ -12,6 +12,7 @@ export { default as Footer } from "./layout/Footer/Footer.jsx";
 export { default as ProfileActionMenu } from "./components/ProfileActionMenu/ProfileActionMenu.jsx";
 export { default as Header } from "./layout/Header/Header.jsx";
 export { default as ProductHeader } from "./layout/ProductHeader/ProductHeader.jsx";
+export { default as ProductHeaderWithDropdown } from "./layout/ProductHeader/ProductHeaderWithDropdown.jsx";
 export { default as Dropdown } from "./components/Dropdown/Dropdown.jsx";
 export { default as SmoothScroll } from "./components/SmoothScroll/SmoothScroll.jsx";
 export { default as TourCard } from "./components/TourCard/TourCard.jsx";

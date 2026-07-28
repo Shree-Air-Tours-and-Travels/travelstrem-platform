@@ -54,6 +54,12 @@ const corsOptions = {
   origin(origin, callback) {
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
+    if (
+      config.IS_DEVELOPMENT
+      && /^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?$/i.test(origin)
+    ) {
+      return callback(null, true);
+    }
     if (matchesAllowedDomainSuffix(origin)) return callback(null, true);
     return callback(new Error(`CORS blocked: ${origin}`));
   },

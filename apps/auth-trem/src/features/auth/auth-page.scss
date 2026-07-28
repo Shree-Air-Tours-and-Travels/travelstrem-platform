@@ -13,6 +13,7 @@
   min-height: 100%;
   padding: 24px;
   background: var(--page-bg);
+  height: calc(100dvh - 101px);
   color: var(--text);
   font-family: $font-primary;
 

@@ -17,12 +17,14 @@ export default function TrevioTripCard({ trip = {}, favorited = false, onFavorit
   const duration = trip.duration || `${trip.period?.days || 0}D / ${trip.period?.nights || 0}N`;
   const seatsAvailable = trip.availability?.seatsAvailable ?? trip.seatsAvailable;
   const isSoldOut = seatsAvailable === 0;
+  const rating = Number(trip.avgRating ?? trip.rating);
+  const ratingLabel = Number.isFinite(rating) && rating > 0 ? rating.toFixed(1) : "";
 
   return (
     <article className={`trevio-trip-card${isSoldOut ? " trevio-trip-card--sold-out" : ""}`}>
       <div className="trevio-trip-card__image" style={image ? { backgroundImage: `url("${image}")` } : undefined}>
         <span className="trevio-trip-card__tag">{trip.tag || trip.category || "Adventure"}</span>
-        {trip.rating || trip.avgRating ? <span className="trevio-trip-card__rating">★ {trip.rating || trip.avgRating}</span> : null}
+        {ratingLabel ? <span className="trevio-trip-card__rating">★ {ratingLabel}</span> : null}
         <button
           type="button"
           className={`trevio-trip-card__favorite${favorited ? " is-saved" : ""}`}

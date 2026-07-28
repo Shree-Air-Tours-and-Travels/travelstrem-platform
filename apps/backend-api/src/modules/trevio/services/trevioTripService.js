@@ -28,6 +28,12 @@ export const normalizeTrevioTrip = (doc = {}) => {
   const trip = asPlainObject(doc) || {};
   const price = trip.price || {};
   const photos = Array.isArray(trip.photos) ? trip.photos : [];
+  const reviews = (Array.isArray(trip.reviews) ? trip.reviews : [])
+    .filter((review) => Number(review?.rating) > 0);
+  const rawAvgRating = reviews.length
+    ? reviews.reduce((sum, review) => sum + Number(review.rating), 0) / reviews.length
+    : 0;
+  const avgRating = Math.round(rawAvgRating * 10) / 10;
 
   return {
     _id: trip._id || null,
@@ -42,7 +48,9 @@ export const normalizeTrevioTrip = (doc = {}) => {
     token: price.tokenAmount || 1999,
     cancellationPolicy: trip.cancellationPolicy || "",
     tag: trip.tag || trip.category || "Curated trip",
-    rating: trip.rating || 0,
+    rating: avgRating,
+    avgRating,
+    reviewCount: reviews.length,
     image: trip.image || photos[0] || "",
     photo: trip.image || photos[0] || "",
     photos,
@@ -66,7 +74,7 @@ export const normalizeTrevioTrip = (doc = {}) => {
       packageTypes: Array.isArray(trip.preferences?.packageTypes) ? trip.preferences.packageTypes : [],
       drinkTypes: Array.isArray(trip.preferences?.drinkTypes) ? trip.preferences.drinkTypes : [],
     },
-    reviews: Array.isArray(trip.reviews) ? trip.reviews : [],
+    reviews,
     priceInfo: {
       min: price.amount || 0,
       max: price.amount || 0,

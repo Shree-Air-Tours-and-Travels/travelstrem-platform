@@ -397,9 +397,6 @@ export default function CreateTripFormView({
                                     </label>
                                 </div>
                                 <div className="ctf-row">
-                                    <label>Rating
-                                        <input type="number" min={0} max={5} step={0.1} value={form.rating || 0} onChange={e => setForm({ ...form, rating: Number(e.target.value) })} />
-                                    </label>
                                     <label>Status
                                         <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
                                             <option value="draft">Draft</option>
