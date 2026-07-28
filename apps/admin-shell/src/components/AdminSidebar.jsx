@@ -48,7 +48,6 @@ export default function Sidebar({ activeTab, onTabChange, user, mobileOpen = fal
           logoSrc={process.env.REACT_APP_ADMIN_LOGO || ""}
           name="TravelsTREM"
           subtitle="Admin"
-          initial="T"
           size="small"
         />
         <button className="dsb-close" onClick={onMobileClose} aria-label="Close navigation">

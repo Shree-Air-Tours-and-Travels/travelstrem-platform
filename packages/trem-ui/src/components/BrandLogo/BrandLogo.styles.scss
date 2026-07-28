@@ -13,22 +13,10 @@
     border-radius: $radius-md;
     object-fit: cover;
     display: block;
-  }
 
-  &__initial {
-    width: 42px;
-    height: 42px;
-    flex: 0 0 42px;
-    display: grid;
-    place-items: center;
-    border-radius: $radius-md;
-    background: var(--color-primary);
-    color: var(--color-on-primary);
-    font-size: $font-size-lg;
-    font-weight: $font-bold;
-    line-height: 1;
-    transform: rotate(-6deg);
-    box-shadow: $shadow-sm;
+    &--dark {
+      display: none;
+    }
   }
 
   &__text {
@@ -58,8 +46,7 @@
   &--small {
     gap: $space-2;
 
-    .brand-logo__image,
-    .brand-logo__initial {
+    .brand-logo__image {
       width: 32px;
       height: 32px;
       flex: 0 0 32px;
@@ -80,5 +67,15 @@
     .brand-logo__text {
       display: none;
     }
+  }
+}
+
+.theme--dark {
+  .brand-logo__image--light {
+    display: none;
+  }
+
+  .brand-logo__image--dark {
+    display: block;
   }
 }

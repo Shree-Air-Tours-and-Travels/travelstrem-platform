@@ -61,7 +61,6 @@
     }
   }
 
-  &__mark,
   &__logo {
     width: 42px;
     height: 42px;
@@ -69,15 +68,8 @@
     border-radius: var(--radius-md);
   }
 
-  &__mark {
-    display: grid;
-    place-items: center;
-    background: var(--color-primary);
-    color: var(--color-on-primary);
-    font-weight: $font-bold;
-    line-height: 1;
-    transform: rotate(-6deg);
-    box-shadow: var(--shadow-sm);
+  &__brand-logo {
+    flex: 0 0 42px;
   }
 
   &__logo {

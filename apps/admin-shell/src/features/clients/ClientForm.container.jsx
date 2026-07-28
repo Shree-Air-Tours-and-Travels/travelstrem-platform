@@ -2,12 +2,12 @@ import React, { useState, useEffect } from "react";
 import ClientFormView from "./ClientForm.view";
 
 const DEFAULT_BRANDING = {
-  trevio: { logoSrc: "", name: "Trevio", subtitle: "by TravelsTrem", initial: "T" },
-  trevista: { logoSrc: "", name: "Trevista", subtitle: "by TravelsTrem", initial: "Tv" },
-  dashboard: { logoSrc: "", name: "TravelsTrem", subtitle: "Dashboard", initial: "T" },
-  admin: { logoSrc: "", name: "TravelsTREM", subtitle: "Admin", initial: "T" },
-  booking: { logoSrc: "", name: "TravelsTrem", subtitle: "Booking", initial: "T" },
-  agent: { logoSrc: "", name: "TravelsTrem", subtitle: "Partner Portal", initial: "T" },
+  trevio: { logoSrc: "/favicon.png", name: "Trevio", subtitle: "by TravelsTrem", initial: "" },
+  trevista: { logoSrc: "/favicon.png", name: "Trevista", subtitle: "by TravelsTrem", initial: "" },
+  dashboard: { logoSrc: "/favicon.png", name: "TravelsTrem", subtitle: "Dashboard", initial: "" },
+  admin: { logoSrc: "/favicon.png", name: "TravelsTREM", subtitle: "Admin", initial: "" },
+  booking: { logoSrc: "/favicon.png", name: "TravelsTrem", subtitle: "Booking", initial: "" },
+  agent: { logoSrc: "/favicon.png", name: "TravelsTrem", subtitle: "Partner Portal", initial: "" },
 };
 
 export default function ClientFormContainer({ client, onSave, onCancel }) {

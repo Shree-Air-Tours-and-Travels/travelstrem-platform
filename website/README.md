@@ -11,7 +11,7 @@ Product links are currently configured for:
 
 When those products are deployed, replace their `data-coming-soon` cards in `index.html` with their live URLs.
 
-The header, footer and browser tab use `favicon.png`, the shared globe-and-airplane brand icon.
+`favicon-light.png` is the rounded master brand asset shared by every app. The build sync derives `favicon-dark.png` from it with a navy background and light mark for dark themes.
 
 ## Security
 

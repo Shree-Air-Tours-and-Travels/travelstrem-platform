@@ -28,7 +28,6 @@ export default function Shell({ children, labels, headerConfig, onWishlist, wish
   const brand = headerConfig?.brand || {
     label: labels.pageTitle || "Product",
     subtitle: labels.brandSubtitle,
-    mark: labels.brandMark,
   };
 
   const aboutUrl = process.env.REACT_APP_ABOUT_URL;
