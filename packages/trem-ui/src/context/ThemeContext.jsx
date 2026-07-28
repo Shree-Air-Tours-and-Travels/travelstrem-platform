@@ -1,36 +1,17 @@
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useContext } from "react";
+import { useThemeMode } from "@packages/trem-utils";
 
-const THEME_STORAGE_KEY = "trem-theme";
-
-const getStoredTheme = () => {
-  try {
-    const stored = sessionStorage.getItem(THEME_STORAGE_KEY);
-    if (stored === "dark" || stored === "light") return stored;
-  } catch {}
-  return "light";
-};
-
-const ThemeContext = createContext({ theme: "light", toggleTheme: () => {} });
+const ThemeContext = createContext({
+  theme: "light",
+  setTheme: () => {},
+  toggleTheme: () => {},
+});
 
 export function ThemeProvider({ defaultTheme, children }) {
-  const [theme, setTheme] = useState(() => defaultTheme || getStoredTheme());
-
-  const toggleTheme = useCallback(() => {
-    setTheme((prev) => {
-      const next = prev === "dark" ? "light" : "dark";
-      try { sessionStorage.setItem(THEME_STORAGE_KEY, next); } catch {}
-      return next;
-    });
-  }, []);
-
-  useEffect(() => {
-    const root = document.documentElement;
-    root.classList.remove("theme--light", "theme--dark");
-    root.classList.add(`theme--${theme}`);
-  }, [theme]);
+  const themeMode = useThemeMode({ defaultTheme });
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={themeMode}>
       {children}
     </ThemeContext.Provider>
   );
