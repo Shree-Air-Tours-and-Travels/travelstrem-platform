@@ -3,8 +3,9 @@ SCSS: src/components/GlobalLoader/globalLoader.scss
 Place this file beside the component. It contains variables and a fade-out animation.
 */
 
-$primary-color: var(--color-primary);
-$white-color: var(--color-on-primary);
+$primary-color: var(--color-primary, #0f8f86);
+$loader-surface: var(--surface-elevated, #ffffff);
+$loader-text: var(--text, #132321);
 $loader-overlay: var(--page-bg, #f8faf9);
 $loader-fade-duration: 0.45s;
 
@@ -14,7 +15,8 @@ $loader-fade-duration: 0.45s;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: $loader-overlay;
+  background: color-mix(in srgb, #{$loader-overlay} 96%, #{$loader-surface} 4%);
+  color: $loader-text;
   z-index: 99999; /* high so it blocks everything */
   transition: opacity $loader-fade-duration ease,
     visibility 0s linear $loader-fade-duration;
@@ -34,16 +36,19 @@ $loader-fade-duration: 0.45s;
     align-items: center;
     justify-content: center;
     padding: 1.25rem 1.5rem;
+    min-width: min(280px, calc(100vw - 2rem));
+    border: 1px solid var(--border, rgba(19, 35, 33, 0.12));
     border-radius: 14px;
-    background: var(--neutral-softer);
-    backdrop-filter: blur(6px);
+    background: $loader-surface;
+    color: $loader-text;
+    backdrop-filter: blur(12px);
     box-shadow: var(--shadow-lg);
     pointer-events: none; /* prevent accidental focus traps inside box; svg will still show */
   }
 
   &__label {
     font-size: 1rem;
-    color: var(--color-on-primary);
+    color: $loader-text;
     margin-top: 0.5rem;
     font-weight: 600;
     letter-spacing: 0.2px;
@@ -64,11 +69,11 @@ $loader-fade-duration: 0.45s;
 }
 
 .tt-ring {
-  stroke: var(--primary-focus);
+  stroke: color-mix(in srgb, #{$primary-color} 30%, transparent);
   stroke-linecap: round;
 }
 .tt-orbit {
-  stroke: var(--primary-focus);
+  stroke: color-mix(in srgb, #{$primary-color} 28%, transparent);
   stroke-width: 1.8;
   stroke-dasharray: 3 6;
   transform-origin: 50% 50%;
@@ -76,7 +81,7 @@ $loader-fade-duration: 0.45s;
 }
 .tt-latitudes ellipse {
   fill: none;
-  stroke: var(--primary-focus);
+  stroke: color-mix(in srgb, #{$primary-color} 24%, transparent);
   stroke-width: 1.2;
 }
 .tt-continents path {
@@ -85,7 +90,7 @@ $loader-fade-duration: 0.45s;
   animation: tt-continents-float 2.6s ease-in-out infinite;
 }
 .tt-satellite {
-  fill: $white-color;
+  fill: $loader-surface;
   stroke: $primary-color;
   stroke-width: 0.6;
   animation: tt-satellite-orbit 1.6s linear infinite;

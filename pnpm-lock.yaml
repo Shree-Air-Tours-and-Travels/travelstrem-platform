@@ -609,6 +609,9 @@ importers:
       '@packages/trem-design-tokens':
         specifier: workspace:*
         version: link:../trem-design-tokens
+      '@packages/trem-utils':
+        specifier: workspace:*
+        version: link:../trem-utils
       prop-types:
         specifier: ^15.8.1
         version: 15.8.1
