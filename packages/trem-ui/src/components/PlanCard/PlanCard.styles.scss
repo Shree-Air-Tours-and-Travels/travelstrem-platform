@@ -1,0 +1,316 @@
+@import "../../styles/base/typography";
+
+.trem-plan-card {
+  position: relative;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+  background: var(--card-bg);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  text-decoration: none;
+  transition:
+    transform $duration-base $ease-standard,
+    border-color $duration-base $ease-standard,
+    box-shadow $duration-base $ease-standard;
+
+  &:hover {
+    border-color: var(--primary-focus);
+    box-shadow: var(--shadow-md);
+    color: var(--text);
+    transform: translateY(-$space-1);
+
+    .trem-plan-card__media img {
+      transform: scale(1.035);
+    }
+
+    .trem-plan-card__action {
+      background: var(--color-primary-dark);
+      transform: translateX($space-1);
+    }
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 4px var(--focus-ring), var(--shadow-md);
+  }
+
+  &__media {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    display: block;
+    overflow: hidden;
+    background: var(--surface-inset);
+  }
+
+  &__media img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    transition: transform $duration-slow $ease-standard;
+  }
+
+  &__mobile-icon {
+    display: none;
+  }
+
+  &__availability {
+    position: absolute;
+    top: $space-3;
+    right: $space-3;
+    padding: $space-1 $space-2-5;
+    border: 1px solid color-mix(in srgb, var(--color-primary) 28%, transparent);
+    border-radius: $radius-full;
+    background: color-mix(in srgb, var(--card-bg) 90%, transparent);
+    color: var(--color-primary-dark);
+    font-size: $font-size-xs;
+    font-weight: $font-bold;
+    letter-spacing: 0.02em;
+    backdrop-filter: blur(8px);
+  }
+
+  &__body {
+    min-height: 120px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: $space-3;
+    padding: $space-4;
+  }
+
+  &__copy {
+    min-width: 0;
+    display: grid;
+    gap: $space-1;
+  }
+
+  &__product {
+    width: fit-content;
+    display: inline-flex;
+    align-items: center;
+    padding: $space-1 $space-2;
+    border-radius: $radius-full;
+    background: var(--primary-soft);
+    color: var(--color-primary-dark);
+    font-size: 0.6875rem;
+    font-weight: $font-bold;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  &__title {
+    color: var(--card-title);
+    font-size: $font-size-md;
+    font-weight: $font-bold;
+    letter-spacing: -0.02em;
+    line-height: $line-height-md;
+  }
+
+  &__description {
+    color: var(--card-text);
+    font-size: $font-size-sm;
+    line-height: $line-height-md;
+  }
+
+  &__action {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    display: grid;
+    place-items: center;
+    border-radius: $radius-circle;
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    transition:
+      background $duration-base $ease-standard,
+      transform $duration-base $ease-standard;
+  }
+
+  &--disabled {
+    cursor: not-allowed;
+    box-shadow: none;
+
+    .trem-plan-card__media img {
+      filter: saturate(0.45);
+      opacity: 0.72;
+    }
+
+    .trem-plan-card__body {
+      opacity: 0.72;
+    }
+
+    &:hover {
+      border-color: var(--border);
+      box-shadow: none;
+      transform: none;
+
+      .trem-plan-card__media img {
+        transform: none;
+      }
+    }
+  }
+}
+
+.theme--dark .trem-plan-card {
+  background: var(--surface-elevated);
+
+  &__product {
+    color: var(--color-primary);
+  }
+
+  &__availability {
+    color: var(--color-primary);
+  }
+}
+
+@include mq-max($tablet-max) {
+  .trem-plan-card {
+    &__body {
+      min-height: 112px;
+    }
+  }
+}
+
+@include mq-max($mobile-max) {
+  .trem-plan-card {
+    min-height: 92px;
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr);
+    align-items: center;
+    gap: $space-3;
+    padding: $space-3;
+    border: 0;
+    border-radius: $radius-md;
+    background: var(--primary-softer, var(--primary-soft));
+    box-shadow: none;
+
+    &:hover {
+      border-color: transparent;
+      box-shadow: none;
+      transform: none;
+
+      .trem-plan-card__media img {
+        transform: none;
+      }
+    }
+
+    &__media {
+      width: 64px;
+      height: 64px;
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      border-radius: $radius-sm;
+      background: var(--primary-soft);
+    }
+
+    &__media img {
+      display: none;
+    }
+
+    &__mobile-icon {
+      display: grid;
+      place-items: center;
+      color: var(--color-primary);
+    }
+
+    &__body {
+      min-height: 0;
+      align-items: center;
+      padding: 0;
+    }
+
+    &__copy {
+      gap: 2px;
+    }
+
+    &__product {
+      display: none;
+    }
+
+    &__title {
+      font-size: $font-size-sm;
+    }
+
+    &__description {
+      overflow: hidden;
+      font-size: $font-size-xs;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    &__action {
+      width: 28px;
+      height: 28px;
+      flex-basis: 28px;
+      background: transparent;
+      color: var(--color-primary);
+    }
+
+    &__availability {
+      top: $space-2;
+      right: $space-2;
+      padding: 2px $space-2;
+      font-size: 0.625rem;
+    }
+
+    &--coming-soon .trem-plan-card__body {
+      padding-top: $space-2;
+    }
+
+    &--disabled {
+      cursor: not-allowed;
+
+      .trem-plan-card__media img {
+        opacity: 1;
+        filter: none;
+      }
+    }
+
+    &--olive {
+      background: var(--warning-soft);
+
+      .trem-plan-card__media {
+        background: color-mix(in srgb, var(--color-warning) 12%, var(--card-bg));
+      }
+
+      .trem-plan-card__mobile-icon,
+      .trem-plan-card__action {
+        color: var(--color-warning);
+      }
+    }
+
+    &--blue {
+      background: var(--secondary-soft);
+
+      .trem-plan-card__media {
+        background: color-mix(in srgb, var(--color-secondary) 12%, var(--card-bg));
+      }
+
+      .trem-plan-card__mobile-icon,
+      .trem-plan-card__action {
+        color: var(--color-secondary);
+      }
+    }
+
+    &--green {
+      background: var(--success-soft);
+
+      .trem-plan-card__media {
+        background: color-mix(in srgb, var(--success-color) 12%, var(--card-bg));
+      }
+
+      .trem-plan-card__mobile-icon,
+      .trem-plan-card__action {
+        color: var(--success-color);
+      }
+    }
+  }
+}

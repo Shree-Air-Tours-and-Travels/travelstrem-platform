@@ -1,0 +1,114 @@
+@import "../../styles/base/typography";
+
+.trem-metric-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+  background: var(--card-bg);
+  box-shadow: var(--shadow-sm);
+}
+
+.trem-metric-summary__item {
+  min-width: 0;
+  min-height: 88px;
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  padding: $space-4;
+  border: 0;
+  border-inline-start: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  text-align: start;
+
+  &:first-child {
+    border-inline-start: 0;
+  }
+
+  &.is-clickable {
+    cursor: pointer;
+    transition: background $duration-fast $ease-standard;
+
+    &:hover {
+      background: var(--surface-inset);
+    }
+
+    &:focus-visible {
+      position: relative;
+      z-index: 1;
+      outline: 2px solid var(--color-primary);
+      outline-offset: -2px;
+    }
+  }
+}
+
+.trem-metric-summary__icon {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  display: grid;
+  place-items: center;
+  border-radius: $radius-sm;
+  background: var(--primary-soft);
+  color: var(--color-primary);
+}
+
+.trem-metric-summary__copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  strong {
+    color: var(--heading, var(--text));
+    font-size: $font-size-xl;
+    font-weight: $font-bold;
+    line-height: $line-height-sm;
+  }
+
+  > span {
+    overflow: hidden;
+    color: var(--muted);
+    font-size: $font-size-xs;
+    font-weight: $font-medium;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: $tablet-max) {
+  .trem-metric-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .trem-metric-summary__item {
+    &:nth-child(odd) {
+      border-inline-start: 0;
+    }
+
+    &:nth-child(n + 3) {
+      border-top: 1px solid var(--border);
+    }
+  }
+}
+
+@media (max-width: $mobile-max) {
+  .trem-metric-summary__item {
+    min-height: 76px;
+    gap: $space-2-5;
+    padding: $space-3;
+  }
+
+  .trem-metric-summary__icon {
+    width: 32px;
+    height: 32px;
+    flex-basis: 32px;
+  }
+
+  .trem-metric-summary__copy strong {
+    font-size: $font-size-lg;
+  }
+}

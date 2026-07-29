@@ -1,5 +1,7 @@
 const path = require("path");
+const { container } = require("webpack");
 const ModuleScopePlugin = require("react-dev-utils/ModuleScopePlugin");
+const moduleFederationConfig = require("./modulefederation.config");
 
 const appSrc = path.resolve(__dirname, "src");
 const packagesSrc = path.resolve(__dirname, "../../packages");
@@ -14,6 +16,9 @@ module.exports = {
   },
   webpack: {
     configure: (config) => {
+      config.output.publicPath = "auto";
+      config.output.uniqueName = moduleFederationConfig.name;
+      config.optimization.runtimeChunk = false;
       config.resolve.alias = {
         ...(config.resolve.alias || {}),
         "@packages/trem-modals": path.resolve(__dirname, "../../packages/trem-modals/src"),
@@ -31,6 +36,7 @@ module.exports = {
         const include = Array.isArray(rule.include) ? rule.include : rule.include ? [rule.include] : [];
         rule.include = Array.from(new Set([...include, appSrc, packagesSrc, bookingSource]));
       });
+      config.plugins.push(new container.ModuleFederationPlugin(moduleFederationConfig));
       return config;
     },
   },

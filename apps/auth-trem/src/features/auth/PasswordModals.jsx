@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button, SubTitle, Paragraph } from "@packages/trem-ui";
+import { Button, Icon, SubTitle, Paragraph } from "@packages/trem-ui";
 
 const usePreventScroll = (open) => {
   useEffect(() => {
@@ -28,7 +28,8 @@ export function ForgotPasswordModal({ open, initialEmail = "", onClose, onOtpSen
 
   usePreventScroll(open);
 
-  const handleSendOtp = async () => {
+  const handleSendOtp = async (event) => {
+    event?.preventDefault();
     setMessage(null);
     if (!email || !email.includes("@")) {
       setVariant("error");
@@ -54,21 +55,24 @@ export function ForgotPasswordModal({ open, initialEmail = "", onClose, onOtpSen
 
   return (
     <div className="auth-modal" role="dialog" aria-modal="true" aria-label="Forgot password dialog">
-      <div className="auth-modal__card">
+      <form className="auth-modal__card" onSubmit={handleSendOtp}>
+        <button type="button" className="auth-modal__close" onClick={onClose} aria-label="Close forgot password dialog">
+          <Icon name="x" size={20} />
+        </button>
         <div className="auth-modal__header">
           <div>
             <SubTitle text="Forgot password" />
             <Paragraph>Enter your account email and we will send a secure OTP.</Paragraph>
           </div>
         </div>
-        <label className="auth-modal__label">Email</label>
-        <input className="auth-modal__field" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" type="email" autoFocus />
-        {message && <div className={`auth-modal__message auth-modal__message--${variant}`}>{message}</div>}
+        <label className="auth-modal__label" htmlFor="forgot-password-email">Email address</label>
+        <input id="forgot-password-email" className="auth-modal__field" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" type="email" autoComplete="email" autoFocus />
+        {message && <div className={`auth-modal__message auth-modal__message--${variant}`} role={variant === "error" ? "alert" : "status"}>{message}</div>}
         <div className="auth-modal__actions">
-          <Button variant="text" isCircular iconLeft="x" onClick={onClose} aria-label="Close" primaryClassName="auth-modal__ghost" />
-          <Button variant="solid" color="primary" text="Send OTP" onClick={handleSendOtp} disabled={loading} primaryClassName="auth-modal__primary" />
+          <Button variant="outline" text="Cancel" onClick={onClose} primaryClassName="auth-modal__ghost" />
+          <Button variant="solid" color="primary" text={loading ? "Sending..." : "Send secure code"} type="submit" disabled={loading} primaryClassName="auth-modal__primary" />
         </div>
-      </div>
+      </form>
     </div>
   );
 }
@@ -77,6 +81,8 @@ export function ResetPasswordModal({ open, email = "", onClose, onResetSuccess, 
   const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [message, setMessage] = useState(null);
@@ -87,6 +93,8 @@ export function ResetPasswordModal({ open, email = "", onClose, onResetSuccess, 
     setOtp("");
     setPassword("");
     setConfirm("");
+    setShowPassword(false);
+    setShowConfirm(false);
     setMessage(null);
     setLoading(false);
     setResending(false);
@@ -95,7 +103,8 @@ export function ResetPasswordModal({ open, email = "", onClose, onResetSuccess, 
 
   usePreventScroll(open);
 
-  const handleReset = async () => {
+  const handleReset = async (event) => {
+    event?.preventDefault();
     setMessage(null);
     if (!otp || !password) {
       setVariant("error");
@@ -152,26 +161,38 @@ export function ResetPasswordModal({ open, email = "", onClose, onResetSuccess, 
 
   return (
     <div className="auth-modal" role="dialog" aria-modal="true" aria-label="Reset password dialog">
-      <div className="auth-modal__card">
+      <form className="auth-modal__card" onSubmit={handleReset}>
+        <button type="button" className="auth-modal__close" onClick={onClose} aria-label="Close reset password dialog">
+          <Icon name="x" size={20} />
+        </button>
         <div className="auth-modal__header">
           <div>
             <SubTitle text="Reset password" />
             <Paragraph>OTP was sent to <strong>{email}</strong>.</Paragraph>
           </div>
         </div>
-        <label className="auth-modal__label">One-time code</label>
-        <input className="auth-modal__field" value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="123456" inputMode="numeric" autoComplete="one-time-code" />
-        <label className="auth-modal__label">New password</label>
-        <input className="auth-modal__field" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="New password" type="password" autoComplete="new-password" />
-        <label className="auth-modal__label">Confirm password</label>
-        <input className="auth-modal__field" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Confirm password" type="password" autoComplete="new-password" />
-        {message && <div className={`auth-modal__message auth-modal__message--${variant}`}>{message}</div>}
-        <div className="auth-modal__actions">
-          <Button variant="text" isCircular iconLeft="x" onClick={onClose} aria-label="Close" primaryClassName="auth-modal__ghost" />
-          <Button variant="outline" color="primary" text={resending ? "Sending..." : "Resend OTP"} onClick={handleResend} disabled={loading || resending} primaryClassName="auth-modal__secondary" />
-          <Button variant="solid" color="primary" text="Reset Password" type="submit" onClick={handleReset} disabled={loading} primaryClassName="auth-modal__primary" />
+        <label className="auth-modal__label" htmlFor="reset-password-otp">One-time code</label>
+        <input id="reset-password-otp" className="auth-modal__field auth-modal__field--otp" value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="000000" inputMode="numeric" pattern="[0-9]*" maxLength={6} autoComplete="one-time-code" autoFocus />
+        <label className="auth-modal__label" htmlFor="reset-password-new">New password</label>
+        <div className="auth-modal__field-wrap">
+          <input id="reset-password-new" className="auth-modal__field" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" type={showPassword ? "text" : "password"} autoComplete="new-password" />
+          <button type="button" className="auth-modal__field-action" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? "Hide new password" : "Show new password"}>
+            <Icon name={showPassword ? "eyeSlash" : "eye"} size={18} />
+          </button>
         </div>
-      </div>
+        <label className="auth-modal__label" htmlFor="reset-password-confirm">Confirm password</label>
+        <div className="auth-modal__field-wrap">
+          <input id="reset-password-confirm" className="auth-modal__field" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Repeat your new password" type={showConfirm ? "text" : "password"} autoComplete="new-password" />
+          <button type="button" className="auth-modal__field-action" onClick={() => setShowConfirm((value) => !value)} aria-label={showConfirm ? "Hide confirmed password" : "Show confirmed password"}>
+            <Icon name={showConfirm ? "eyeSlash" : "eye"} size={18} />
+          </button>
+        </div>
+        {message && <div className={`auth-modal__message auth-modal__message--${variant}`} role={variant === "error" ? "alert" : "status"}>{message}</div>}
+        <div className="auth-modal__actions">
+          <Button variant="outline" color="primary" text={resending ? "Sending..." : "Resend OTP"} onClick={handleResend} disabled={loading || resending} primaryClassName="auth-modal__secondary" />
+          <Button variant="solid" color="primary" text={loading ? "Resetting..." : "Reset password"} type="submit" disabled={loading} primaryClassName="auth-modal__primary" />
+        </div>
+      </form>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { Route, Routes, Navigate, useNavigate } from "react-router-dom";
-import { fetchData, redirectToGlobalAuth, setComponentDataFetcher, createProductAuth, buildGlobalDashboardUrl, getGlobalAuthBaseUrl, getCurrentReturnUrl } from "@packages/trem-utils";
+import { fetchData, redirectToGlobalAuth, setComponentDataFetcher, createProductAuth, buildGlobalDashboardUrl, getGlobalAuthBaseUrl, getCurrentReturnUrl, requestShellNavigation } from "@packages/trem-utils";
 import { emit, registerSessionCacheClearer } from "@packages/trem-events";
 import { consumeUrlToken, appendTokenToUrl } from "@packages/trem-auth-core";
 import { FavoritesProvider, GlobalLoader, ErrorState, ScrollToTop, TourDetailsPage, useFavoritesContext } from "@packages/trem-ui";
@@ -15,11 +15,16 @@ import { clearUserSessionCache } from "../../services/userSession";
 import "../../main.scss";
 
 setComponentDataFetcher(fetchData);
+const STANDALONE_ENABLED = false;
 
 function AppShell({ embedded, session, headerConfig, pageModel, trips, activeFilter, loadingTrips, onFilterChange, buildAuthAction, basename }) {
   const { favoritesCount } = useFavoritesContext();
   const navigate = useNavigate();
   const openWishlist = () => {
+    if (embedded) {
+      requestShellNavigation("favorites");
+      return;
+    }
     const token = localStorage.getItem("travelstrem:token") || localStorage.getItem("trem:token") || null;
     window.location.assign(appendTokenToUrl(buildGlobalDashboardUrl({ product: "trevio", tab: "favorites" }), token));
   };
@@ -40,8 +45,10 @@ function AppShell({ embedded, session, headerConfig, pageModel, trips, activeFil
       {embedded ? (
         <Routes>
           <Route index element={pageModel ? <Home trips={trips} internationalTrips={pageModel.internationalTrips} featuredTrips={pageModel.featuredTrips} pageModel={pageModel} activeFilter={activeFilter} loadingTrips={loadingTrips} onFilterChange={onFilterChange} /> : <GlobalLoader visible text="Loading trips" />} />
-          <Route path="trip/:tripRef" element={<TourDetailsPage appKey="trevio" productType="trip" />} />
-          <Route path="trip/:tripRef/book" element={<TripBookingPage appKey="trevio" />} />
+          <Route path="trip/:tripRef" element={<TourDetailsPage appKey="trevio" productType="trip" bookingBasePath="/booking" />} />
+          <Route path="trip/:tripRef/book" element={<TripBookingPage appKey="trevio" embedded />} />
+          <Route path=":tripRef" element={<TourDetailsPage appKey="trevio" productType="trip" bookingBasePath="/booking" />} />
+          <Route path=":tripRef/book" element={<TripBookingPage appKey="trevio" embedded />} />
         </Routes>
       ) : (
         <Routes>
@@ -91,7 +98,7 @@ export default function App({ embedded = false, userSession: externalSession = n
   );
 
   useEffect(() => {
-    if (embedded) return undefined;
+    if (embedded || !STANDALONE_ENABLED) return undefined;
     if (initRunRef.current) return undefined;
     initRunRef.current = true;
 
@@ -179,6 +186,17 @@ export default function App({ embedded = false, userSession: externalSession = n
       setLoadingTrips(false);
     }
   };
+
+  if (!embedded) {
+    return (
+      <ErrorState
+        title="Trevio now opens in TravelsTREM"
+        description="This product is part of the customer dashboard and is no longer available as a standalone application."
+        retry={() => window.location.assign(buildGlobalDashboardUrl({ product: "trevio", tab: "trevio" }))}
+        retryText="Go to customer shell"
+      />
+    );
+  }
 
   if (state.error) {
     return (

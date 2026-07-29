@@ -1,0 +1,239 @@
+@import "../../styles/base/typography";
+
+.trem-overview-rail {
+  display: grid;
+  gap: $space-5;
+}
+
+.trem-rail-card {
+  padding: $space-5;
+  border: 1px solid var(--border);
+  border-radius: $radius-lg;
+  background: var(--card-bg);
+  box-shadow: var(--shadow-sm);
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-3;
+    margin-bottom: $space-4;
+
+    h2 {
+      margin: 0;
+      color: var(--heading);
+      font-size: $font-size-md;
+      font-weight: $font-semibold;
+      line-height: $line-height-md;
+    }
+
+    a {
+      display: inline-flex;
+      align-items: center;
+      gap: $space-1;
+      color: var(--color-primary);
+      font-size: $font-size-sm;
+      font-weight: $font-semibold;
+      text-decoration: none;
+    }
+  }
+}
+
+.trem-upcoming-trip {
+  &__media {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: $radius-md;
+    background: var(--surface-inset);
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    span {
+      position: absolute;
+      top: $space-3;
+      right: $space-3;
+      padding: $space-1 $space-2;
+      border-radius: $radius-full;
+      color: var(--color-on-secondary);
+      background: color-mix(in srgb, var(--color-secondary) 88%, transparent);
+      font-size: $font-size-xs;
+      font-weight: $font-semibold;
+    }
+  }
+
+  > h3 {
+    margin: $space-4 0 $space-3;
+    color: var(--heading);
+    font-size: $font-size-md;
+    font-weight: $font-semibold;
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-3;
+    color: var(--muted);
+    font-size: $font-size-xs;
+
+    span {
+      display: inline-flex;
+      align-items: center;
+      gap: $space-2;
+    }
+
+    strong {
+      flex: 0 0 auto;
+      padding: $space-1 $space-2-5;
+      border-radius: $radius-full;
+      color: var(--color-primary);
+      background: var(--primary-soft);
+      font-weight: $font-semibold;
+    }
+  }
+
+  &__empty {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+    padding: $space-4;
+    border-radius: $radius-md;
+    color: var(--color-primary);
+    background: var(--primary-soft);
+
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h3 {
+      color: var(--heading);
+      font-size: $font-size-sm;
+    }
+
+    p {
+      margin-top: $space-1;
+      color: var(--muted);
+      font-size: $font-size-xs;
+    }
+  }
+}
+
+.trem-quick-actions {
+  nav {
+    display: grid;
+    gap: $space-1;
+  }
+
+  nav > a,
+  nav > div {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: $space-3;
+    padding: $space-2;
+    border-radius: $radius-md;
+    color: var(--muted);
+    text-decoration: none;
+    transition: background $duration-fast $ease-standard;
+
+    &:hover,
+    &:focus-visible {
+      background: var(--surface-inset);
+    }
+
+    &.is-disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+
+      &:hover,
+      &:focus-visible {
+        background: transparent;
+      }
+    }
+  }
+
+  &__icon {
+    display: grid;
+    width: 40px;
+    height: 40px;
+    place-items: center;
+    border-radius: $radius-md;
+    color: var(--color-primary);
+    background: var(--primary-soft);
+  }
+
+  &__copy {
+    display: grid;
+    min-width: 0;
+
+    strong {
+      color: var(--heading);
+      font-size: $font-size-sm;
+      font-weight: $font-semibold;
+    }
+
+    small {
+      overflow: hidden;
+      color: var(--muted);
+      font-size: $font-size-xs;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+}
+
+.trem-exclusive-offer {
+  &__content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 42%;
+    align-items: center;
+    gap: $space-3;
+    overflow: hidden;
+    padding: $space-4;
+    border: 1px dashed var(--color-primary);
+    border-radius: $radius-md;
+    background: var(--primary-soft);
+    color: var(--heading);
+    text-decoration: none;
+
+    img {
+      width: 100%;
+      height: 112px;
+      border-radius: $radius-md;
+      object-fit: cover;
+    }
+  }
+
+  &__copy {
+    display: grid;
+    gap: $space-1;
+    font-size: $font-size-sm;
+
+    > strong {
+      font-size: $font-size-md;
+      font-weight: $font-bold;
+    }
+  }
+
+  &__code {
+    margin-top: $space-3;
+    font-weight: $font-semibold;
+
+    em {
+      color: var(--color-primary);
+      font-style: normal;
+    }
+  }
+}
+
+@include mq-max($breakpoint-mobile) {
+  .trem-rail-card {
+    padding: $space-4;
+  }
+}

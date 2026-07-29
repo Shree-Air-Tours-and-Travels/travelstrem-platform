@@ -1,4 +1,5 @@
 const path = require("path");
+const { container } = require("webpack");
 const ModuleScopePlugin = require("react-dev-utils/ModuleScopePlugin");
 
 const appSrc = path.resolve(__dirname, "src");
@@ -6,6 +7,22 @@ const packagesSrc = path.resolve(__dirname, "../../packages");
 const backendTarget =
   process.env.REACT_APP_BACKEND_URL ||
   process.env.REACT_APP_API_URL?.replace(/\/api\/?$/, "");
+const remoteEntry = (explicitEntry, baseUrl, fallback) => {
+  const value = explicitEntry || baseUrl || fallback;
+  return value.endsWith("/remoteEntry.js")
+    ? value
+    : `${value.replace(/\/$/, "")}/remoteEntry.js`;
+};
+const trevioRemoteEntry = remoteEntry(
+  process.env.REACT_APP_TREVIO_REMOTE_ENTRY,
+  process.env.REACT_APP_TREVIO_URL,
+  "http://localhost:3005",
+);
+const bookingRemoteEntry = remoteEntry(
+  process.env.REACT_APP_BOOKING_ENGINE_REMOTE_ENTRY,
+  process.env.REACT_APP_BOOKING_ENGINE_URL,
+  "http://localhost:3007",
+);
 
 function extendBabelIncludes(webpackConfig) {
   const oneOfRule = webpackConfig.module.rules.find((rule) => Array.isArray(rule.oneOf));
@@ -31,6 +48,12 @@ module.exports = {
   },
   webpack: {
     configure: (webpackConfig) => {
+      // The dashboard is the browser-history shell. Its own assets must always
+      // resolve from the origin root when a remote route is refreshed directly
+      // (for example /trip/:slug), rather than relative to that nested route.
+      webpackConfig.output.publicPath = "/";
+      webpackConfig.output.uniqueName = "dashboard";
+      webpackConfig.optimization.runtimeChunk = false;
       webpackConfig.resolve.alias = {
         ...(webpackConfig.resolve.alias || {}),
         "@packages/trem-auth-core": path.resolve(__dirname, "../../packages/trem-auth-core/src"),
@@ -47,6 +70,18 @@ module.exports = {
         (plugin) => !(plugin instanceof ModuleScopePlugin)
       );
       extendBabelIncludes(webpackConfig);
+      webpackConfig.plugins.push(new container.ModuleFederationPlugin({
+        name: "dashboard",
+        remotes: {
+          trevio: `trevio@${trevioRemoteEntry}`,
+          bookingEngine: `bookingEngine@${bookingRemoteEntry}`,
+        },
+        shared: {
+          react: { singleton: true, requiredVersion: false },
+          "react-dom": { singleton: true, requiredVersion: false },
+          "react-router-dom": { singleton: true, requiredVersion: false },
+        },
+      }));
       return webpackConfig;
     },
   },

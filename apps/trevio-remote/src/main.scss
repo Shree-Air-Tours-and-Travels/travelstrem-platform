@@ -1,31 +1,16 @@
-@import "@packages/trem-ui/styles/base/typography";
+@import "@packages/trem-design-tokens/scss";
 
-* {
+.trevio-app,
+.trevio-app *,
+.trevio-app *::before,
+.trevio-app *::after {
     box-sizing: border-box;
 }
 
-html {
-    min-height: 100%;
-    background: var(--bg);
-    overscroll-behavior-y: none;
-}
-
-body {
-    min-height: 100vh;
-    min-height: 100dvh;
-    margin: 0;
+.trevio-app {
     font-family: $font-primary;
     background: var(--bg);
     color: var(--text);
-    overflow-x: hidden;
-    overscroll-behavior-y: none;
-}
-
-#root {
-    min-height: 100vh;
-    min-height: 100dvh;
-    display: flex;
-    flex-direction: column;
 }
 
 .trevio-app {
@@ -44,7 +29,45 @@ body {
 }
 
 .trevio-app--embedded {
+    width: 100%;
     min-height: auto;
+    container-name: trevio-shell;
+    container-type: inline-size;
+
+    .trevio-container {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        padding-inline: clamp(1rem, 2vw, 2rem);
+    }
+
+    .tour-detail {
+        --td-header-offset: 0px;
+        width: 100%;
+
+        &__shell {
+            width: 100%;
+            max-width: none;
+            margin: 0;
+        }
+    }
+}
+
+@container trevio-shell (max-width: 1100px) {
+    .tour-detail {
+        &__hero-section,
+        &__layout {
+            grid-template-columns: minmax(0, 1fr);
+        }
+
+        &__booking-widget {
+            position: static;
+        }
+
+        &__sidebar {
+            display: none;
+        }
+    }
 }
 
 .trevio-container {
@@ -290,15 +313,64 @@ body {
     font-size: $font-size-sm;
 }
 
-.trevio-hero h1 {
-    color: var(--title);
-    font-size: clamp(44px, 6vw, 76px);
-    line-height: 1.02;
-    letter-spacing: -0.07em;
-    margin: $space-6 0 $space-5;
+.trevio-hero__content {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1.5rem, 3vw, 2.5rem);
 }
 
-.trevio-hero h1 span {
+.trevio-hero__product {
+    display: flex;
+    flex-direction: column;
+    gap: $space-2;
+}
+
+.trevio-hero .trevio-hero__product-title {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 .22em;
+    max-width: 720px;
+    margin: 0;
+    color: var(--title);
+    font-size: clamp(40px, 5vw, 72px);
+    font-weight: $font-bold;
+    line-height: 1.02;
+    letter-spacing: -.065em;
+}
+
+.trevio-hero__product-name {
+    color: transparent;
+    background: linear-gradient(110deg, var(--color-primary), var(--color-secondary));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.trevio-hero__product-provider {
+    color: var(--color-secondary-dark);
+}
+
+.trevio-hero .trevio-hero__product-subtitle {
+    max-width: 580px;
+    margin: 0;
+    color: var(--muted);
+    font-size: clamp(.95rem, .3vw + .9rem, 1.1rem);
+    line-height: $line-height-md;
+}
+
+.trevio-hero__offering {
+    min-width: 0;
+}
+
+.trevio-hero__offering h2 {
+    color: var(--title);
+    font-size: clamp(1.55rem, 1.25vw + 1rem, 2.25rem);
+    line-height: $line-height-sm;
+    letter-spacing: -.035em;
+    margin: $space-4 0 $space-3;
+}
+
+.trevio-hero__offering h2 span {
     color: var(--color-primary);
 }
 
@@ -969,26 +1041,6 @@ body {
         object-fit: cover;
     }
 
-    figcaption {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        padding: $space-8 $space-4 $space-3;
-        background: linear-gradient(to top, rgba(0, 0, 0, .7), transparent);
-        color: #fff;
-        font-size: $font-size-sm;
-        font-weight: $font-semibold;
-        letter-spacing: 0.01em;
-        opacity: 0;
-        transform: translateY(4px);
-        transition: opacity $duration-base $ease-standard, transform $duration-base $ease-standard;
-    }
-
-    &:hover figcaption {
-        opacity: 1;
-        transform: translateY(0);
-    }
 }
 
 /* ─── Shape masks ──────────────────────────────────────── */

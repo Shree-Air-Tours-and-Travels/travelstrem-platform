@@ -1,10 +1,19 @@
 import React, { useEffect, useRef } from "react";
+import PropTypes from "prop-types";
 import { createPortal } from "react-dom";
 import Icon from "../../icons/Icon/Icon.jsx";
 import Button from "../Button/Button.jsx";
 import "./BottomSheet.styles.scss";
 
-export default function BottomSheet({ open, onClose, children, title, className = "" }) {
+export default function BottomSheet({
+  open,
+  onClose,
+  children,
+  title,
+  className = "",
+  variant = "default",
+  closeLabel = "Close",
+}) {
   const sheetRef = useRef(null);
 
   useEffect(() => {
@@ -26,15 +35,17 @@ export default function BottomSheet({ open, onClose, children, title, className 
   if (!open) return null;
 
   return createPortal(
-    <div className={`trem-bottom-sheet ${className}`.trim()} ref={sheetRef}>
+    <div className={`trem-bottom-sheet trem-bottom-sheet--${variant} ${className}`.trim()} ref={sheetRef}>
       <div className="trem-bottom-sheet__overlay" onClick={onClose} aria-hidden />
       <div className="trem-bottom-sheet__panel" role="dialog" aria-modal="true" aria-label={title || "Bottom sheet"}>
         <div className="trem-bottom-sheet__header">
-          <span />
+          {variant === "fullscreen" && title
+            ? <div className="trem-bottom-sheet__title trem-bottom-sheet__title--header">{title}</div>
+            : <span />}
           <div className="trem-bottom-sheet__handle" />
-          <Button variant="text" isCircular iconLeft="menuClose" onClick={onClose} aria-label="Close" primaryClassName="trem-bottom-sheet__close" />
+          <Button variant="text" isCircular iconLeft="menuClose" onClick={onClose} aria-label={closeLabel} primaryClassName="trem-bottom-sheet__close" />
         </div>
-        {title && <div className="trem-bottom-sheet__title">{title}</div>}
+        {title && variant !== "fullscreen" ? <div className="trem-bottom-sheet__title">{title}</div> : null}
         <div className="trem-bottom-sheet__body">
           {children}
         </div>
@@ -43,3 +54,13 @@ export default function BottomSheet({ open, onClose, children, title, className 
     document.body
   );
 }
+
+BottomSheet.propTypes = {
+  open: PropTypes.bool,
+  onClose: PropTypes.func,
+  children: PropTypes.node,
+  title: PropTypes.string,
+  className: PropTypes.string,
+  variant: PropTypes.oneOf(["default", "fullscreen"]),
+  closeLabel: PropTypes.string,
+};

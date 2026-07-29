@@ -84,23 +84,38 @@ export default function Home({ trips, internationalTrips = [], featuredTrips = [
     <main>
       <section className="trevio-hero">
         <div className="trevio-container trevio-hero__grid">
-          <div>
-            {content.eyebrow && <span className="trevio-eyebrow">✦ {content.eyebrow}</span>}
-            {(content.heading || content.highlight) && <h1>{content.heading} <span>{content.highlight}</span></h1>}
-            {content.description && <p>{content.description}</p>}
-            <div className="trevio-hero__actions">
-              {content.primaryActionLabel && (
-                <button className="trevio-button trevio-button--primary" onClick={() => document.getElementById("trip-section")?.scrollIntoView({ behavior: "smooth" })}>{content.primaryActionLabel}</button>
-              )}
-              {content.secondaryActionLabel && (
-                <button className="trevio-button trevio-button--secondary" onClick={() => document.getElementById("how")?.scrollIntoView({ behavior: "smooth" })}>{content.secondaryActionLabel}</button>
+          <div className="trevio-hero__content">
+            {(content.productTitlePrefix || content.productName || content.productProvider || content.productSubtitle) && (
+              <header className="trevio-hero__product">
+                {(content.productTitlePrefix || content.productName || content.productProvider) && (
+                  <h1 className="trevio-hero__product-title">
+                    {content.productTitlePrefix && <span>{content.productTitlePrefix}</span>}
+                    {content.productName && <span className="trevio-hero__product-name">{content.productName}</span>}
+                    {content.productConnector && <span>{content.productConnector}</span>}
+                    {content.productProvider && <span className="trevio-hero__product-provider">{content.productProvider}</span>}
+                  </h1>
+                )}
+                {content.productSubtitle && <p className="trevio-hero__product-subtitle">{content.productSubtitle}</p>}
+              </header>
+            )}
+            <div className="trevio-hero__offering">
+              {content.eyebrow && <span className="trevio-eyebrow">✦ {content.eyebrow}</span>}
+              {(content.heading || content.highlight) && <h2>{content.heading} <span>{content.highlight}</span></h2>}
+              {content.description && <p>{content.description}</p>}
+              <div className="trevio-hero__actions">
+                {content.primaryActionLabel && (
+                  <button className="trevio-button trevio-button--primary" onClick={() => document.getElementById("trip-section")?.scrollIntoView({ behavior: "smooth" })}>{content.primaryActionLabel}</button>
+                )}
+                {content.secondaryActionLabel && (
+                  <button className="trevio-button trevio-button--secondary" onClick={() => document.getElementById("how")?.scrollIntoView({ behavior: "smooth" })}>{content.secondaryActionLabel}</button>
+                )}
+              </div>
+              {content.trustItems.length > 0 && (
+                <div className="trevio-trust">
+                  {content.trustItems.map((item) => <span key={item}>{item}</span>)}
+                </div>
               )}
             </div>
-            {content.trustItems.length > 0 && (
-              <div className="trevio-trust">
-                {content.trustItems.map((item) => <span key={item}>{item}</span>)}
-              </div>
-            )}
           </div>
           {sliderTrips.length > 1 ? (
             <div
@@ -333,7 +348,7 @@ export default function Home({ trips, internationalTrips = [], featuredTrips = [
         </section>
       )}
 
-      {frames.images.length > 0 && (
+      {(frames.topImages.length > 0 || frames.bottomImages.length > 0) && (
         <section className="trevio-frames" id="frames">
           <div className="trevio-frames__bg" aria-hidden="true">
             <div className="trevio-frames__orb trevio-frames__orb--1" />
@@ -348,18 +363,16 @@ export default function Home({ trips, internationalTrips = [], featuredTrips = [
           </div>
           <div className="trevio-frames__viewport">
             <div className="trevio-frames__strip trevio-frames__strip--left" aria-hidden="true">
-              {[...frames.images, ...frames.images].map((frame, i) => (
+              {[...frames.topImages, ...frames.topImages].map((frame, i) => (
                 <figure className={`trevio-frames__item trevio-frames__item--${frame.shape || "blob-1"}`} key={`l-${frame.id || i}`}>
                   <img src={frame.image} alt={frame.location || ""} loading="lazy" />
-                  {frame.location && <figcaption>{frame.location}</figcaption>}
                 </figure>
               ))}
             </div>
             <div className="trevio-frames__strip trevio-frames__strip--right">
-              {[...frames.images, ...frames.images].slice(Math.floor(frames.images.length / 2)).concat([...frames.images, ...frames.images].slice(0, Math.floor(frames.images.length / 2))).map((frame, i) => (
+              {[...frames.bottomImages, ...frames.bottomImages].map((frame, i) => (
                 <figure className={`trevio-frames__item trevio-frames__item--${frame.shape || "blob-1"}`} key={`r-${frame.id || i}`}>
                   <img src={frame.image} alt={frame.location || ""} loading="lazy" />
-                  {frame.location && <figcaption>{frame.location}</figcaption>}
                 </figure>
               ))}
             </div>

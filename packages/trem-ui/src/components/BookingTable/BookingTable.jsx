@@ -2,7 +2,10 @@ import React, { useMemo, useState } from "react";
 import PropTypes from "prop-types";
 import Button from "../Button/Button.jsx";
 import Dropdown from "../Dropdown/Dropdown.jsx";
-import InputField from "../InputField/InputField.jsx";
+import NoDataFound from "../NoDataFound/NoDataFound.jsx";
+import SearchBar from "../SearchBar/SearchBar.jsx";
+import Spinner from "../Spinner/Spinner.jsx";
+import InfoCard from "../InfoCard/InfoCard.jsx";
 import Icon from "../../icons/Icon/Icon.jsx";
 import "./BookingTable.styles.scss";
 
@@ -40,15 +43,6 @@ function sortRows(rows, sortState, columns) {
     if (typeof left === "number" && typeof right === "number") return (left - right) * direction;
     return String(left).localeCompare(String(right), undefined, { numeric: true, sensitivity: "base" }) * direction;
   });
-}
-
-function SearchControl({ value, placeholder, onChange }) {
-  return (
-    <div className="booking-table__search">
-      <Icon name="search" size={20} />
-      <InputField value={value} placeholder={placeholder} onChange={onChange} className="booking-table__search-input" />
-    </div>
-  );
 }
 
 function SelectControl({ label, value, options, onChange }) {
@@ -135,13 +129,16 @@ function HeroBanner({ config = {} }) {
   );
 }
 
-function StatusBadge({ value, tone }) {
+function StatusBadge({ value, tone, secondary = "" }) {
   const resolvedTone = tone || STATUS_TONES[String(value).toLowerCase()] || "neutral";
 
   return (
     <span className={`booking-table__status booking-table__status--${resolvedTone}`}>
       <span aria-hidden="true" />
-      {value}
+      <span className="booking-table__status-copy">
+        {value}
+        {secondary ? <small>{secondary}</small> : null}
+      </span>
     </span>
   );
 }
@@ -187,13 +184,21 @@ function renderCell(column, row) {
 
   if (column.type === "status") {
     const tone = column.toneAccessor ? getValue(row, column.toneAccessor) : row.statusTone;
-    return wrapClickableCell(<StatusBadge value={value} tone={tone} />, column, row);
+    const secondary = column.secondaryAccessor ? getValue(row, column.secondaryAccessor) : "";
+    return wrapClickableCell(<StatusBadge value={value} tone={tone} secondary={secondary} />, column, row);
+  }
+
+  if (column.type === "badge") {
+    const tone = column.toneAccessor ? getValue(row, column.toneAccessor) : "neutral";
+    return wrapClickableCell((
+      <span className={`booking-table__badge booking-table__badge--${tone}`}>{value}</span>
+    ), column, row);
   }
 
   if (column.type === "actions") {
     const actions = column.actions || row.actions || [];
     return (
-      <div className="booking-table__row-actions">
+      <div className="booking-table__row-actions" onClick={(event) => event.stopPropagation()}>
         {actions.map((action) => (
           <Button
             key={action.id || action.label || action.icon}
@@ -217,6 +222,7 @@ function renderCell(column, row) {
 }
 
 export default function BookingTable({
+  pageHeader = null,
   heroBanner = null,
   table = {},
   columns = [],
@@ -236,16 +242,21 @@ export default function BookingTable({
   const [internalPage, setInternalPage] = useState(pagination.currentPage || 1);
   const [internalPageSize, setInternalPageSize] = useState(pagination.pageSize || pagination.pageSizeOptions?.[0] || rows.length || 10);
   const [columnSort, setColumnSort] = useState(sortingHeader.columnSort || null);
+  const [mobileControlsOpen, setMobileControlsOpen] = useState(false);
 
   const query = actions.search?.value ?? internalQuery;
   const sortValue = sortingHeader.value ?? internalSortValue;
-  const page = pagination.currentPage ?? internalPage;
-  const pageSize = pagination.pageSize ?? internalPageSize;
+  const pageIsControlled = pagination.currentPage != null && typeof pagination.onPageChange === "function";
+  const pageSizeIsControlled = pagination.pageSize != null && typeof pagination.onPageSizeChange === "function";
+  const page = pageIsControlled ? pagination.currentPage : internalPage;
+  const pageSize = pageSizeIsControlled ? pagination.pageSize : internalPageSize;
   const searchableKeys = (actions.search?.keys || columns.map((column) => column.accessor || column.id)).filter(Boolean);
   const sortOption = (sortingHeader.options || []).map(normalizeOption).find((option) => option.value === sortValue);
   const effectiveSort = sortOption?.sort || columnSort;
   const componentStyle = {
     "--booking-table-control-height": table.controlHeight,
+    "--booking-table-viewport-min-height": table.viewportMinHeight,
+    "--booking-table-mobile-viewport-height": table.mobileViewportHeight,
     width: table.width,
     maxWidth: table.maxWidth,
     minWidth: table.containerMinWidth,
@@ -274,6 +285,20 @@ export default function BookingTable({
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const currentPage = Math.min(page, totalPages);
   const visibleRows = pagination.enabled === false || isServerSide ? sortedRows : sortedRows.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const mobileCard = table.mobileCard || {};
+  const mobileFieldIds = mobileCard.fieldIds || columns
+    .filter((column) => !["mediaText", "status", "actions"].includes(column.type))
+    .map((column) => column.id);
+  const visiblePages = useMemo(() => {
+    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, index) => index + 1);
+    const pages = new Set([1, totalPages, currentPage - 1, currentPage, currentPage + 1]);
+    const ordered = [...pages].filter((item) => item >= 1 && item <= totalPages).sort((a, b) => a - b);
+    return ordered.reduce((result, item, index) => {
+      if (index && item - ordered[index - 1] > 1) result.push(`ellipsis-${item}`);
+      result.push(item);
+      return result;
+    }, []);
+  }, [currentPage, totalPages]);
 
   function resetPage() {
     setInternalPage(1);
@@ -299,14 +324,55 @@ export default function BookingTable({
 
   return (
     <section className={`booking-table ${className}`.trim()} aria-label={table.ariaLabel || table.title || "Booking table"} style={componentStyle}>
+      {pageHeader?.title || pageHeader?.description ? (
+        <header className="booking-table__page-header">
+          {pageHeader.title ? <h1>{pageHeader.title}</h1> : null}
+          {pageHeader.description ? <p>{pageHeader.description}</p> : null}
+        </header>
+      ) : null}
       <HeroBanner config={heroBanner || table.heroBanner || table.hero} />
 
       <div className="booking-table__panel">
-        {(table.title || actions.search || actions.filters?.length || sortingHeader.options?.length) && (
+        {(table.title
+          || table.description
+          || actions.search
+          || actions.filters?.length
+          || sortingHeader.options?.length
+          || (pagination.enabled !== false && pagination.showPageSize !== false)) && (
           <div className="booking-table__toolbar">
-            {table.title ? <h2>{table.title}</h2> : <span />}
-            <div className="booking-table__controls">
-              {actions.search ? <SearchControl value={query} placeholder={actions.search.placeholder || "Search"} onChange={updateSearch} /> : null}
+            <div className="booking-table__toolbar-heading">
+              {table.title || table.description ? (
+                <div className="booking-table__heading">
+                  {table.title ? <h1>{table.title}</h1> : null}
+                  {table.description ? <p>{table.description}</p> : null}
+                </div>
+              ) : <span />}
+              <button
+                className="booking-table__mobile-toggle"
+                type="button"
+                aria-expanded={mobileControlsOpen}
+                aria-controls="booking-table-mobile-controls"
+                onClick={() => setMobileControlsOpen((open) => !open)}
+              >
+                <Icon name="filter" size={18} aria-hidden="true" />
+                <span>{mobileControlsOpen ? (table.collapseFiltersLabel || "Hide filters") : (table.expandFiltersLabel || "Filters")}</span>
+                <Icon name={mobileControlsOpen ? "chevronDown" : "chevronRight"} size={17} aria-hidden="true" />
+              </button>
+            </div>
+            <div
+              id="booking-table-mobile-controls"
+              className={`booking-table__controls${mobileControlsOpen ? " is-mobile-open" : ""}`}
+            >
+              {actions.search ? (
+                <SearchBar
+                  value={query}
+                  placeholder={actions.search.placeholder || "Search"}
+                  ariaLabel={actions.search.ariaLabel}
+                  shortcut={actions.search.shortcut}
+                  onChange={updateSearch}
+                  className="booking-table__search"
+                />
+              ) : null}
               {(actions.filters || []).map((filter) => (
                 <SelectControl
                   key={filter.id}
@@ -320,6 +386,25 @@ export default function BookingTable({
                   }}
                 />
               ))}
+              {pagination.enabled !== false && pagination.showPageSize !== false ? (
+                <div className="booking-table__page-size">
+                  <span>{pagination.pageSizeLabel || "Rows per page"}</span>
+                  <SelectControl
+                    label={pagination.pageSizeSelectLabel || "Entries per page"}
+                    value={String(pageSize)}
+                    options={(pagination.pageSizeOptions || [10, 25, 50]).map((size) => ({
+                      label: String(size),
+                      value: String(size),
+                    }))}
+                    onChange={(value) => {
+                      const nextPageSize = Number(value);
+                      setInternalPageSize(nextPageSize);
+                      pagination.onPageSizeChange?.(nextPageSize);
+                      resetPage();
+                    }}
+                  />
+                </div>
+              ) : null}
               {sortingHeader.options?.length ? (
                 <div className="booking-table__sort">
                   <span>{sortingHeader.label || "Sort By :"}</span>
@@ -362,7 +447,7 @@ export default function BookingTable({
               {table.loading ? (
                 <tr>
                   <td colSpan={Math.max(1, columns.length)} className="booking-table__state">
-                    {table.loadingLabel || "Loading bookings..."}
+                    <Spinner size="lg" label={table.loadingLabel || "Loading bookings"} />
                   </td>
                 </tr>
               ) : null}
@@ -374,7 +459,11 @@ export default function BookingTable({
                 </tr>
               ) : null}
               {!table.loading && !table.error && visibleRows.map((row, rowIndex) => (
-                <tr key={row.id || row.bookingId || rowIndex} onClick={() => onRowClick?.(row)}>
+                <tr
+                  key={row.id || row.bookingId || rowIndex}
+                  className={onRowClick ? "booking-table__row--clickable" : ""}
+                  onClick={() => onRowClick?.(row)}
+                >
                   {columns.map((column) => (
                     <td
                       key={column.id}
@@ -390,10 +479,7 @@ export default function BookingTable({
                 <tr>
                   <td colSpan={Math.max(1, columns.length)} className="booking-table__state">
                     {table.emptyState ? (
-                      <span>
-                        <strong>{table.emptyState.title}</strong>
-                        {table.emptyState.description ? <small>{table.emptyState.description}</small> : null}
-                      </span>
+                      <NoDataFound {...table.emptyState} />
                     ) : (
                       "No records found"
                     )}
@@ -403,26 +489,44 @@ export default function BookingTable({
             </tbody>
           </table>
         </div>
-      </div>
+
+        {table.mobileCard ? <div className="booking-table__mobile">
+          {table.loading ? <Spinner size="lg" label={table.loadingLabel || "Loading bookings"} /> : null}
+          {!table.loading && table.error ? <p className="booking-table__mobile-error">{table.error}</p> : null}
+          {!table.loading && !table.error && visibleRows.map((row, rowIndex) => (
+            <InfoCard
+              key={row.id || row.bookingId || rowIndex}
+              title={getValue(row, mobileCard.titleAccessor || "tour") || "Booking"}
+              subtitle={getValue(row, mobileCard.subtitleAccessor || "tremId") || ""}
+              image={getValue(row, mobileCard.imageAccessor || "image") || ""}
+              badge={{
+                value: getValue(row, mobileCard.badgeAccessor || "status"),
+                tone: String(
+                  getValue(row, mobileCard.badgeToneAccessor)
+                  || getValue(row, mobileCard.badgeAccessor || "status")
+                  || "neutral",
+                ).toLowerCase(),
+              }}
+              fields={mobileFieldIds.map((fieldId) => {
+                const column = columns.find((item) => item.id === fieldId);
+                return {
+                  id: fieldId,
+                  label: column?.label || fieldId,
+                  value: getValue(row, column?.accessor || fieldId),
+                };
+              })}
+              actionLabel={mobileCard.actionLabel || ""}
+              onClick={onRowClick ? () => onRowClick(row) : undefined}
+            />
+          ))}
+          {!table.loading && !table.error && visibleRows.length === 0 && table.emptyState ? (
+            <NoDataFound {...table.emptyState} compact />
+          ) : null}
+        </div> : null}
 
       {pagination.enabled !== false ? (
         <div className="booking-table__pagination">
-          <div className="booking-table__page-size">
-            <span>{pagination.pageSizeLabel || "Show"}</span>
-            <SelectControl
-              label={pagination.pageSizeSelectLabel || "Entries per page"}
-              value={String(pageSize)}
-              options={(pagination.pageSizeOptions || [10, 25, 50]).map((size) => ({ label: String(size), value: String(size) }))}
-              onChange={(value) => {
-                const nextPageSize = Number(value);
-                setInternalPageSize(nextPageSize);
-                pagination.onPageSizeChange?.(nextPageSize);
-                resetPage();
-              }}
-            />
-            <span>{pagination.entriesLabel || "entries"}</span>
-          </div>
-          <div className="booking-table__pages" aria-label={pagination.ariaLabel || "Pagination"}>
+          <div className="booking-table__pages booking-table__pages--desktop" aria-label={pagination.ariaLabel || "Pagination"}>
             <Button
               variant="text"
               iconLeft="chevronLeft"
@@ -437,19 +541,24 @@ export default function BookingTable({
                 pagination.onPageChange?.(nextPage);
               }}
             />
-            {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
-              <Button
-                key={pageNumber}
-                variant={pageNumber === currentPage ? "solid" : "outline"}
-                color="primary"
-                text={String(pageNumber)}
-                isCircular
-                primaryClassName={`booking-table__page-number${pageNumber === currentPage ? " is-active" : ""}`}
-                onClick={() => {
-                  setInternalPage(pageNumber);
-                  pagination.onPageChange?.(pageNumber);
-                }}
-              />
+            {visiblePages.map((pageNumber) => (
+              typeof pageNumber === "string" ? (
+                <span key={pageNumber} className="booking-table__page-ellipsis" aria-hidden="true">…</span>
+              ) : (
+                <Button
+                  key={pageNumber}
+                  variant={pageNumber === currentPage ? "solid" : "outline"}
+                  color="primary"
+                  text={String(pageNumber)}
+                  isCircular
+                  aria-label={`Page ${pageNumber}`}
+                  primaryClassName={`booking-table__page-number${pageNumber === currentPage ? " is-active" : ""}`}
+                  onClick={() => {
+                    setInternalPage(pageNumber);
+                    pagination.onPageChange?.(pageNumber);
+                  }}
+                />
+              )
             ))}
             <Button
               variant="text"
@@ -466,8 +575,42 @@ export default function BookingTable({
               }}
             />
           </div>
+          <div className="booking-table__pages booking-table__pages--mobile" aria-label={pagination.ariaLabel || "Pagination"}>
+            <Button
+              variant="text"
+              iconLeft="chevronLeft"
+              iconSize={18}
+              isCircular
+              aria-label="Previous page"
+              disabled={currentPage <= 1}
+              primaryClassName="booking-table__page-nav"
+              onClick={() => {
+                const nextPage = Math.max(1, currentPage - 1);
+                setInternalPage(nextPage);
+                pagination.onPageChange?.(nextPage);
+              }}
+            />
+            <span className="booking-table__mobile-page-status">
+              {currentPage} / {totalPages}
+            </span>
+            <Button
+              variant="text"
+              iconLeft="chevronRight"
+              iconSize={18}
+              isCircular
+              aria-label="Next page"
+              disabled={currentPage >= totalPages}
+              primaryClassName="booking-table__page-nav"
+              onClick={() => {
+                const nextPage = Math.min(totalPages, currentPage + 1);
+                setInternalPage(nextPage);
+                pagination.onPageChange?.(nextPage);
+              }}
+            />
+          </div>
         </div>
       ) : null}
+      </div>
     </section>
   );
 }
@@ -481,6 +624,10 @@ const optionShape = PropTypes.oneOfType([
 ]);
 
 BookingTable.propTypes = {
+  pageHeader: PropTypes.shape({
+    title: PropTypes.string,
+    description: PropTypes.string,
+  }),
   heroBanner: PropTypes.object,
   table: PropTypes.object,
   columns: PropTypes.arrayOf(PropTypes.object),

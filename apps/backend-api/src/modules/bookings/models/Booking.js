@@ -1,5 +1,8 @@
 import mongoose from "mongoose";
-import { customAlphabet } from "nanoid";
+import {
+  createBookingReference,
+  toPublicBookingReference,
+} from "../utils/bookingReference.js";
 import {
   BOOKING_FLOW,
   BOOKING_FLOW_LIST,
@@ -15,7 +18,6 @@ import {
 } from "../../../constants/enums.js";
 
 const { Schema } = mongoose;
-const nano = customAlphabet("ABCDEFGHJKMNPQRSTUVWXYZ23456789", 12);
 const SOURCE_ATTRIBUTION = Object.freeze({
   WEBSITE: "website",
 });
@@ -151,10 +153,7 @@ bookingSchema.set("toJSON", {
   versionKey: false,
   transform: (_, ret) => {
     delete ret._id;
-    if (ret.bookingRef) {
-      const parts = ret.bookingRef.split("-");
-      if (parts.length >= 3) ret.bookingRef = `TREM-${parts[2]}`;
-    }
+    if (ret.bookingRef) ret.bookingRef = toPublicBookingReference(ret.bookingRef);
   },
 });
 
@@ -166,10 +165,7 @@ bookingSchema.pre("validate", function (next) {
     return next(new Error("Trevista bookings require a tour reference"));
   }
   if (!this.bookingRef) {
-    const now = new Date();
-    const datePart = now.toISOString().slice(0, 10).replace(/-/g, "");
-    const timePart = now.toISOString().slice(11, 16).replace(":", "");
-    this.bookingRef = `TREM-${datePart}-${timePart}-${nano()}`;
+    this.bookingRef = createBookingReference();
   }
   if (!this.guestsCount || this.guestsCount < 1) this.guestsCount = 1;
   if (this.product === "trevio") {

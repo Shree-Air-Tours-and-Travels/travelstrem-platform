@@ -1,5 +1,5 @@
 import React from "react";
-import { FavoritesProvider, ProductHeader, GlobalLoader, Footer, ScrollToTopButton, useTheme, useFavoritesContext } from "@packages/trem-ui";
+import { FavoritesProvider, ProductHeader, GlobalLoader, AppFooter, ScrollToTopButton, useTheme, useFavoritesContext } from "@packages/trem-ui";
 import AppRoutes from "./routes";
 import { initApp } from "../core/initApp";
 import "../main.scss";
@@ -174,7 +174,15 @@ function App({ dispatchEvent, embedded = false, userSession = null }) {
                     )}
                     <AppRoutes dispatchEvent={dispatchEvent} embedded={embedded} userSession={userSession || state.session} />
                 </FavoritesProvider>
-                {!embedded && <Footer logoSrc={logoConfig.logoSrc || ""} productName="Trevista · Holiday planning" />}
+                {!embedded && (
+                    <AppFooter
+                        config={{
+                            ...(headerConfig.footer || {}),
+                            productName: "Trevista by TravelsTrem",
+                            description: "Holiday packages and customized travel planning.",
+                        }}
+                    />
+                )}
                 <ScrollToTopButton />
             </div>
         </>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { fetchData, slugify } from "@packages/trem-utils";
 import { useDashboardConfig } from "../../app/providers/DashboardProvider";
 import OverviewView from "../../views/OverviewView";
@@ -10,7 +11,6 @@ import "./Dashboard.styles.scss";
 
 const PRODUCT_URLS = {
   trevista: process.env.REACT_APP_TREVISTA_URL,
-  trevio: process.env.REACT_APP_TREVIO_URL,
 };
 
 const getProductBaseUrl = (productKey) => {
@@ -27,14 +27,70 @@ const PENDING_STATUSES = new Set([
 ]);
 
 export default function DashboardContainer({ productFilter = "all", activeTab = "overview", onTabChange }) {
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { session } = useDashboardConfig();
   const user = session?.user || {};
   const [viewingBookingId, setViewingBookingId] = useState(null);
+  const [planCards, setPlanCards] = useState(null);
+  const [overviewRail, setOverviewRail] = useState(null);
+  const [metricsDefinition, setMetricsDefinition] = useState(null);
+  const [recentBookingsEmptyState, setRecentBookingsEmptyState] = useState(null);
+  const [bookingTableDefinition, setBookingTableDefinition] = useState(null);
+  const [overviewDefinitionLoading, setOverviewDefinitionLoading] = useState(true);
 
-  // Reset booking detail view when switching tabs
+  // Keep shareable booking-detail URLs in sync with the reusable bookings view.
   useEffect(() => {
-    setViewingBookingId(null);
-  }, [activeTab]);
+    setViewingBookingId(activeTab === "bookings" ? searchParams.get("bookingId") : null);
+  }, [activeTab, searchParams]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadOverviewDefinition() {
+      try {
+        const response = await fetchData("/pages/dashboard/dashboard");
+        const component = response?.component;
+        const widgets = component?.structure?.widgets || [];
+        const contentFor = (type) => {
+          const widget = widgets.find((item) => item?.type === type);
+          return widget?.props?.dataKey ? component?.data?.[widget.props.dataKey] : null;
+        };
+
+        if (!cancelled) {
+          setPlanCards(contentFor("PlanCards"));
+          setOverviewRail(contentFor("OverviewRail"));
+          const metricsWidget = widgets.find((item) => item?.type === "DashboardMetrics");
+          setMetricsDefinition(metricsWidget ? {
+            ...metricsWidget.props,
+            labels: component?.elements?.labels || {},
+          } : null);
+          setRecentBookingsEmptyState(component?.data?.recentBookingsEmptyState || null);
+          const bookingTableWidget = widgets.find((item) => item?.type === "BookingTable");
+          setBookingTableDefinition(bookingTableWidget ? {
+            props: bookingTableWidget.props,
+            labels: component?.elements?.labels || {},
+            options: component?.dataScope?.options || {},
+          } : null);
+        }
+      } catch {
+        if (!cancelled) {
+          setPlanCards(null);
+          setOverviewRail(null);
+          setMetricsDefinition(null);
+          setRecentBookingsEmptyState(null);
+          setBookingTableDefinition(null);
+        }
+      } finally {
+        if (!cancelled) setOverviewDefinitionLoading(false);
+      }
+    }
+
+    loadOverviewDefinition();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const [stats, setStats] = useState({
     totalBookings: 0,
@@ -183,23 +239,34 @@ export default function DashboardContainer({ productFilter = "all", activeTab = 
     if (!ref) return;
     const base = getProductBaseUrl(product);
     if (product === "trevio") {
-      window.open(`${base}/trevio/trip/${ref}`, "_blank", "noopener,noreferrer");
+      navigate(`/trip/${ref}`);
     } else {
       window.open(`${base}/trevista/${ref}`, "_blank", "noopener,noreferrer");
     }
-  }, []);
+  }, [navigate]);
 
   const handleViewBooking = useCallback((booking) => {
-    if (booking.id || booking._id) {
-      setViewingBookingId(booking.id || booking._id);
-    }
-  }, []);
+    const bookingId = booking.bookingId || booking.id || booking._id;
+    if (!bookingId) return;
+    const next = new URLSearchParams(searchParams);
+    next.set("tab", "bookings");
+    next.set("bookingId", bookingId);
+    setSearchParams(next);
+    setViewingBookingId(bookingId);
+  }, [searchParams, setSearchParams]);
+
+  const handleCloseBooking = useCallback(() => {
+    const next = new URLSearchParams(searchParams);
+    next.delete("bookingId");
+    setSearchParams(next);
+    setViewingBookingId(null);
+  }, [searchParams, setSearchParams]);
 
   if (viewingBookingId) {
     return (
       <BookingDetail
         bookingId={viewingBookingId}
-        onBack={() => setViewingBookingId(null)}
+        onBack={handleCloseBooking}
       />
     );
   }
@@ -207,12 +274,25 @@ export default function DashboardContainer({ productFilter = "all", activeTab = 
   return (
     <div className="dashboard-page">
       {activeTab === "overview" && (
-        <OverviewView user={user} stats={stats} recentBookings={bookings} onTabChange={onTabChange} onViewBooking={handleViewBooking} />
+        <OverviewView
+          user={user}
+          stats={stats}
+          metricsDefinition={metricsDefinition}
+          planCards={planCards}
+          overviewRail={overviewRail}
+          overviewDefinitionLoading={overviewDefinitionLoading}
+          overviewStatsLoading={bookingsLoading || favoritesLoading}
+          bookingsLoading={bookingsLoading}
+          recentBookingsEmptyState={recentBookingsEmptyState}
+          recentBookings={bookings}
+          onTabChange={onTabChange}
+          onViewBooking={handleViewBooking}
+        />
       )}
       {activeTab === "bookings" && (
         <BookingsView
-          bookings={bookings}
-          loading={bookingsLoading}
+          definition={bookingTableDefinition}
+          loading={overviewDefinitionLoading}
           onViewBooking={handleViewBooking}
         />
       )}

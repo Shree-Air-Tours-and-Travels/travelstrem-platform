@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter } from "react-router-dom";
 import { createRoot } from "react-dom/client";
-import { ThemeProvider } from "@packages/trem-ui";
+import { ScrollToTop, ThemeProvider } from "@packages/trem-ui";
 import { fetchData, setComponentDataFetcher } from "@packages/trem-utils";
 import App from "./App";
 import "../main.scss";
@@ -14,6 +14,7 @@ const root = createRoot(container);
 root.render(
     <BrowserRouter>
         <ThemeProvider>
+            <ScrollToTop />
             <App />
         </ThemeProvider>
     </BrowserRouter>

@@ -20,10 +20,9 @@ module.exports = {
     },
     webpack: {
         configure: (config) => {
-            // All runtime, chunk and Module Federation assets live at the app root.
-            // Using `auto` makes direct nested URLs resolve assets relative to
-            // `/trevio/trip/:tripRef`, which returns index.html instead of JS.
-            config.output.publicPath = "/";
+            // Derive chunks from the script origin so the container can run both
+            // standalone and as a cross-origin Dashboard remote.
+            config.output.publicPath = "auto";
             config.output.uniqueName = moduleFederationConfig.name;
             config.optimization.runtimeChunk = false;
             config.resolve.alias = {
@@ -35,6 +34,7 @@ module.exports = {
                 "@packages/trem-session": path.resolve(__dirname, "../../packages/trem-session/src"),
                 "@packages/trem-events": path.resolve(__dirname, "../../packages/trem-events/src"),
                 "@packages/trem-environment": path.resolve(__dirname, "../../packages/trem-environment/src"),
+                "@packages/trem-design-tokens": path.resolve(__dirname, "../../packages/trem-design-tokens/src"),
                 "prop-types": path.resolve(__dirname, "../../node_modules/.pnpm/prop-types@15.8.1/node_modules/prop-types"),
             };
             config.resolve.plugins = (config.resolve.plugins || []).filter(

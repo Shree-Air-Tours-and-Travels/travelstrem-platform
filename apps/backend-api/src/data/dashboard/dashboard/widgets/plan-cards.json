@@ -1,0 +1,96 @@
+{
+  "status": "success",
+  "component": {
+    "data": {
+      "planJourney": {
+        "title": "Plan a Journey",
+        "ariaLabel": "Plan a journey with TravelsTrem products",
+        "columns": 4,
+        "hideUnavailableOnMobile": false,
+        "items": [
+          {
+            "id": "trips-adventures",
+            "title": "Trips & Adventures",
+            "description": "Treks, expeditions & events",
+            "productName": "Trevio",
+            "image": "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=900&q=82&auto=format&fit=crop",
+            "imageAlt": "Travellers hiking through a mountain landscape",
+            "mobileIcon": "mountain",
+            "tone": "primary",
+            "href": "/?tab=trevio",
+            "target": "_self",
+            "ariaLabel": "Explore trips and adventures on Trevio"
+          },
+          {
+            "id": "holiday-packages",
+            "title": "Holiday Packages",
+            "description": "Domestic & international",
+            "productName": "Trevista",
+            "image": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=900&q=82&auto=format&fit=crop",
+            "imageAlt": "A tropical beach holiday destination",
+            "mobileIcon": "beach",
+            "tone": "olive",
+            "href": "https://trevista.travelstrem.com",
+            "target": "_self",
+            "ariaLabel": "Holiday Packages on Trevista, coming soon",
+            "disabled": true,
+            "comingSoon": true,
+            "comingSoonLabel": "Coming soon"
+          },
+          {
+            "id": "flights-hotels",
+            "title": "Flights & Hotels",
+            "description": "Flights, stays & transport",
+            "productName": "TreHub",
+            "image": "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=900&q=82&auto=format&fit=crop",
+            "imageAlt": "Passenger airplane flying above the clouds",
+            "mobileIcon": "plane",
+            "tone": "blue",
+            "href": "https://travelstrem.com/#contact",
+            "target": "_self",
+            "ariaLabel": "Flights and Hotels on TreHub, coming soon",
+            "disabled": true,
+            "comingSoon": true,
+            "comingSoonLabel": "Coming soon"
+          },
+          {
+            "id": "travel-services",
+            "title": "Travel Services",
+            "description": "Visa, passport & insurance",
+            "productName": "TreCare",
+            "image": "https://images.unsplash.com/photo-1526772662000-3f88f10405ff?w=900&q=82&auto=format&fit=crop",
+            "imageAlt": "Travel documents and planning essentials",
+            "mobileIcon": "passport",
+            "tone": "green",
+            "href": "https://travelstrem.com/#contact",
+            "target": "_self",
+            "ariaLabel": "Travel Services on TreCare, coming soon",
+            "disabled": true,
+            "comingSoon": true,
+            "comingSoonLabel": "Coming soon"
+          }
+        ]
+      }
+    },
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {},
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "PlanCards",
+          "props": {
+            "dataKey": "planJourney"
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

@@ -7,9 +7,11 @@
         },
         "elements": {
             "labels": {
+                "metricsAriaLabel": "Travel activity summary",
                 "metricTotalBookings": "Total Bookings",
-                "metricTotalTransactions": "Total Transactions",
-                "metricAverageValue": "Average Value"
+                "metricFavorites": "Favorites",
+                "metricTripsCompleted": "Trips Completed",
+                "metricPending": "Pending"
             },
             "urls": {}
         },
@@ -23,25 +25,33 @@
                             {
                                 "id": "bookings",
                                 "labelRef": "metricTotalBookings",
-                                "value": "0",
-                                "icon": "calendar",
-                                "tone": "danger"
+                                "valueKey": "totalBookings",
+                                "icon": "briefcaseBusiness",
+                                "target": "bookings"
                             },
                             {
-                                "id": "transactions",
-                                "labelRef": "metricTotalTransactions",
-                                "value": "$0",
-                                "icon": "coin",
-                                "tone": "olive"
+                                "id": "favorites",
+                                "labelRef": "metricFavorites",
+                                "valueKey": "totalFavorites",
+                                "icon": "heart",
+                                "target": "favorites"
                             },
                             {
-                                "id": "average",
-                                "labelRef": "metricAverageValue",
-                                "value": "$0",
-                                "icon": "wallet",
-                                "tone": "primary"
+                                "id": "completed",
+                                "labelRef": "metricTripsCompleted",
+                                "valueKey": "tripsCompleted",
+                                "icon": "shieldCheck",
+                                "target": "bookings"
+                            },
+                            {
+                                "id": "pending",
+                                "labelRef": "metricPending",
+                                "valueKey": "pendingBookings",
+                                "icon": "clock",
+                                "target": "bookings"
                             }
-                        ]
+                        ],
+                        "ariaLabelRef": "metricsAriaLabel"
                     }
                 }
             ],

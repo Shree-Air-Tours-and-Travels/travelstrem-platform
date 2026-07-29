@@ -1,0 +1,39 @@
+@import "../../styles/base/typography";
+
+.trem-plan-cards {
+  display: grid;
+  gap: $space-4;
+
+  &__title {
+    margin: 0;
+    color: var(--heading);
+    font-size: $font-size-md;
+    font-weight: $font-semibold;
+    line-height: $line-height-md;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(var(--trem-plan-cards-columns, 4), minmax(0, 1fr));
+    gap: $space-4;
+  }
+}
+
+@include mq-max($tablet-max) {
+  .trem-plan-cards__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@include mq-max($mobile-max) {
+  .trem-plan-cards__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .trem-plan-cards--hide-unavailable-mobile {
+    .trem-plan-card--disabled,
+    .trem-plan-card--coming-soon {
+      display: none;
+    }
+  }
+}

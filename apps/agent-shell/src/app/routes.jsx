@@ -5,7 +5,6 @@ import { AuthPage } from "@apps/auth";
 import ManageTours from "../features/services/tours/ManageTours";
 import ServicesContainer from "../features/services/container";
 import BookingDetail from "../features/bookings/tours/BookingDetail/BookingDetail";
-import { ScrollToTop } from "@packages/trem-ui";
 import { useAgentPortalConfig, isAllowedAgentRole } from "./providers/AgentPortalProvider";
 import api from "../services/apiClient";
 import authService from "../services/authService";
@@ -64,7 +63,6 @@ const Routers = () => {
 
     return (
         <>
-            <ScrollToTop />
             <Routes>
                 <Route path="/agent/services/*" element={<ServicesContainer />} />
                 <Route path="/agent/profile" element={<ManageTours session={session} />} />

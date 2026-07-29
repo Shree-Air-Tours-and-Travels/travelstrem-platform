@@ -255,6 +255,11 @@ export const normalizeAuthConfig = (remote, roleOptions, defaultRole, storagePre
   roles: Array.isArray(roleOptions) && roleOptions.length ? roleOptions : Array.isArray(remote?.roles) ? remote.roles : DEFAULT_AUTH_ROLES,
   socialProviders: Array.isArray(remote?.socialProviders) ? remote.socialProviders : [],
   strings: { ...(remote?.strings || {}) },
+  header: { ...(remote?.header || {}) },
+  company: {
+    ...(remote?.company || {}),
+    highlights: Array.isArray(remote?.company?.highlights) ? remote.company.highlights : [],
+  },
   storageKeys: {
     token: remote?.storageKeys?.token || `${prefix}token`,
     user: remote?.storageKeys?.user || `${prefix}auth_user`,

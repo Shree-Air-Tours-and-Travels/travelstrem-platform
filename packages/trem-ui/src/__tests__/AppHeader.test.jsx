@@ -1,0 +1,82 @@
+import React from "react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import "@testing-library/jest-dom/vitest";
+import AppHeader from "../components/AppHeader/AppHeader.jsx";
+
+const config = {
+  ariaLabel: "Dashboard application header",
+  brand: { name: "TravelsTREM", subtitle: "JAI · WORLD", logoSrc: "/favicon.png" },
+  mobileMenu: { openLabel: "Open navigation", closeLabel: "Close navigation" },
+  search: { placeholder: "Search trips and services...", ariaLabel: "Search travel services", enabled: false },
+  primaryAction: { label: "New Booking", icon: "plus", enabled: false },
+  notification: { label: "Notifications", icon: "bell", count: 3, enabled: false },
+  themeAction: {
+    lightLabel: "Switch to light mode",
+    darkLabel: "Switch to dark mode",
+    lightIcon: "sun",
+    darkIcon: "moon",
+  },
+  user: {
+    fallbackName: "Traveller",
+    menuLabel: "Open user menu",
+    menuEnabled: true,
+    items: [
+      { id: "about", label: "About Us", icon: "info", disabled: true },
+      { id: "logout", label: "Sign Out", icon: "logout", action: "logout" },
+    ],
+  },
+};
+
+afterEach(cleanup);
+
+describe("AppHeader", () => {
+  it("renders backend-driven placeholder controls without activating them", () => {
+    render(<AppHeader config={config} user={{ name: "Akshat Goyal" }} />);
+
+    expect(screen.getByLabelText("Search travel services")).toHaveAttribute("aria-disabled", "true");
+    expect(screen.getByRole("button", { name: "New Booking" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Notifications" })).toBeDisabled();
+    expect(screen.getByText("3")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Open user menu" })).toHaveTextContent("AG");
+  });
+
+  it("connects only theme and mobile navigation actions", () => {
+    const onMenuToggle = vi.fn();
+    const onToggleTheme = vi.fn();
+    render(
+      <AppHeader
+        config={config}
+        theme="dark"
+        menuOpen
+        onMenuToggle={onMenuToggle}
+        onToggleTheme={onToggleTheme}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Close navigation" }));
+    fireEvent.click(screen.getByRole("button", { name: "Switch to light mode" }));
+    expect(onMenuToggle).toHaveBeenCalledOnce();
+    expect(onToggleTheme).toHaveBeenCalledOnce();
+  });
+
+  it("uses the shared dropdown for backend-driven user actions", () => {
+    const onAction = vi.fn();
+    render(<AppHeader config={config} onAction={onAction} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Open user menu" }));
+    expect(screen.getByText("About Us")).toBeInTheDocument();
+    fireEvent.click(screen.getByText("Sign Out"));
+    expect(onAction).toHaveBeenCalledWith("logout", expect.objectContaining({ id: "logout" }));
+  });
+
+  it("applies the current sidebar width without coupling header state", () => {
+    const { container, rerender } = render(<AppHeader config={config} sidebarCollapsed={false} />);
+    expect(container.querySelector(".trem-app-header").style.getPropertyValue("--trem-app-header-sidebar-offset"))
+      .toBe("260px");
+
+    rerender(<AppHeader config={config} sidebarCollapsed />);
+    expect(container.querySelector(".trem-app-header").style.getPropertyValue("--trem-app-header-sidebar-offset"))
+      .toBe("76px");
+  });
+});

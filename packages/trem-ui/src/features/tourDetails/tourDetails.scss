@@ -28,7 +28,8 @@
     display: flex;
     align-items: center;
     gap: 0.45rem;
-    padding: 0.7rem 0;
+    min-height: 52px;
+    padding-block: 0.7rem;
     margin-inline: calc(-1 * clamp(1rem, 2.4vw, 2rem));
     padding-inline: clamp(1rem, 2.4vw, 2rem);
     color: var(--muted);
@@ -43,11 +44,21 @@
     }
 
     a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
       color: var(--color-primary);
-      font-weight: 600;
+      font-weight: 700;
       text-decoration: none;
 
-      &:hover { text-decoration: underline; }
+      &::before {
+        content: "←";
+        color: currentColor;
+        font-size: 1rem;
+        line-height: 1;
+      }
+
+      &:hover { color: var(--color-primary-hover); }
     }
   }
 
@@ -863,11 +874,26 @@
 @media (max-width: 720px) {
   .tour-detail {
     --td-header-offset: 56px;
-    padding: 0.75rem 0.85rem 5rem;
 
     &__shell { gap: 0.85rem; }
 
-    &__breadcrumbs { display: none; }
+    &__breadcrumbs {
+      display: flex;
+      min-width: 0;
+      margin-inline: -0.85rem;
+      padding-inline: 0.85rem;
+      white-space: nowrap;
+      overflow: hidden;
+
+      li {
+        min-width: 0;
+      }
+
+      li:last-child {
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
 
     &__hero {
       padding: 1rem;

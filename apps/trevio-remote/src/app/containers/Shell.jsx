@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { buildGlobalAuthUrl, buildGlobalDashboardUrl } from "@packages/trem-utils";
 import { appendTokenToUrl } from "@packages/trem-auth-core";
-import { ProductHeaderWithDropdown, Footer, ScrollToTopButton, useTheme, BrandLogo } from "@packages/trem-ui";
+import { ProductHeaderWithDropdown, AppFooter, ScrollToTopButton, useTheme } from "@packages/trem-ui";
 
 const getTokenForRedirect = () => {
   try {
@@ -76,7 +76,15 @@ export default function Shell({ children, labels, headerConfig, onWishlist, wish
         />
       )}
       {children}
-      {!embedded && <Footer logoSrc={logoConfig.logoSrc || ""} productName="Trevio · Community travel" />}
+      {!embedded && (
+        <AppFooter
+          config={{
+            ...(headerConfig?.footer || {}),
+            productName: labels.footerBrand || "Trevio by TravelsTrem",
+            description: labels.footerDescription || headerConfig?.footer?.description,
+          }}
+        />
+      )}
       <ScrollToTopButton />
     </>
   );

@@ -70,6 +70,14 @@ const BriefcaseBusiness = (p) => (
   </Svg>
 );
 
+const Home = (p) => (
+  <Svg {...p}>
+    <path d="m3 11 9-8 9 8" {...s} />
+    <path d="M5 10v11h14V10" {...s} />
+    <path d="M9 21v-7h6v7" {...s} />
+  </Svg>
+);
+
 const Building2 = (p) => (
   <Svg {...p}>
     <path d="M2 22h20" {...s} />
@@ -750,6 +758,7 @@ const ICONS = {
   guide: Guide,
   heart: Heart,
   hotel: Hotel,
+  home: Home,
   info: Info,
   insurance: Insurance,
   itinerary: Itinerary,

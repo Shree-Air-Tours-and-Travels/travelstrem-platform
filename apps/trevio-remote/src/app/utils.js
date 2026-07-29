@@ -57,6 +57,11 @@ export const resolvePageContent = (pageResponse) => {
   return {
     labels,
     content: {
+      productTitlePrefix: label(labels, heroStatic.productTitlePrefixRef),
+      productName: label(labels, heroStatic.productNameRef),
+      productConnector: label(labels, heroStatic.productConnectorRef),
+      productProvider: label(labels, heroStatic.productProviderRef),
+      productSubtitle: label(labels, heroStatic.productSubtitleRef),
       eyebrow: label(labels, heroStatic.eyebrowRef),
       heading: label(labels, heroStatic.headingRef),
       highlight: label(labels, heroStatic.highlightRef),
@@ -121,7 +126,8 @@ export const resolvePageContent = (pageResponse) => {
       eyebrow: label(labels, galleryFeature.eyebrowRef),
       heading: label(labels, galleryFeature.headingRef),
       description: label(labels, galleryFeature.descriptionRef),
-      images: Array.isArray(state.frames) ? state.frames : [],
+      topImages: Array.isArray(state.frameRows?.top) ? state.frameRows.top : [],
+      bottomImages: Array.isArray(state.frameRows?.bottom) ? state.frameRows.bottom : [],
     },
     faq: {
       eyebrow: label(labels, faqFeature.eyebrowRef),
