@@ -48,22 +48,18 @@ const Routers = ({ theme = "light", onToggleTheme }) => {
                 name: "AdminTREM",
                 tagline: "Travel Administration · Operations · Management",
             }}
+            formNotice={session?.isAuthenticated && !isAllowedAdminRole(session)
+                ? "This account does not have AdminTREM access."
+                : ""}
         />
     );
-
-    const adminAuthGuard = session?.isAuthenticated && !isAllowedAdminRole(session) ? (
-        <div className="admin-auth-page">
-            <div className="admin-auth-page__notice">This account does not have AdminTREM access.</div>
-            {adminAuthPage}
-        </div>
-    ) : null;
 
     if (loading) return null;
 
     if (!session?.isAuthenticated || !isAllowedAdminRole(session)) {
         return (
             <Routes>
-                <Route path="*" element={adminAuthGuard || adminAuthPage} />
+                <Route path="*" element={adminAuthPage} />
             </Routes>
         );
     }

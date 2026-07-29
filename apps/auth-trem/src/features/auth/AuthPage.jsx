@@ -144,6 +144,7 @@ export default function AuthPage({
   theme = "light",
   onToggleTheme,
   headerBrand,
+  formNotice = "",
 }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -359,6 +360,12 @@ export default function AuthPage({
   return (
     <AuthExperience cfg={cfg} theme={theme} onToggleTheme={onToggleTheme} headerBrand={headerBrand} className={className}>
       <div className="auth-trem__card">
+        {formNotice ? (
+          <div className="auth-trem__form-notice" role="alert">
+            <Icon name="alertTriangle" size={18} />
+            <span>{formNotice}</span>
+          </div>
+        ) : null}
         <header className="auth-trem__header">
           <div>
             <Paragraph primaryClassname="auth-trem__eyebrow">{appName}</Paragraph>
