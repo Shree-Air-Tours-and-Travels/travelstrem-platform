@@ -176,6 +176,26 @@
     }
   }
 
+  &__form-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 0 0 18px;
+    padding: 12px 14px;
+    border: 1px solid var(--danger-soft);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--color-danger) 8%, var(--surface));
+    color: var(--color-danger);
+    font-size: $font-size-sm;
+    font-weight: $font-semibold;
+    line-height: 1.45;
+
+    svg {
+      flex: 0 0 auto;
+      margin-top: 1px;
+    }
+  }
+
   &__eyebrow {
     display: inline-flex;
     align-items: center;
