@@ -1,6 +1,36 @@
 import { useEffect } from "react";
 import { auditLog_event, detectScriptInjection } from "../services/security";
 
+const configuredScriptOrigins = [
+  process.env.REACT_APP_TREVIO_REMOTE_ENTRY,
+  process.env.REACT_APP_TREVIO_URL,
+  process.env.REACT_APP_BOOKING_ENGINE_REMOTE_ENTRY,
+  process.env.REACT_APP_BOOKING_ENGINE_URL,
+].flatMap((value) => {
+  if (!value) return [];
+  try {
+    return [new URL(value, window.location.origin).origin];
+  } catch {
+    return [];
+  }
+});
+
+const isTrustedRuntimeScript = (node) => {
+  const source = node?.getAttribute?.("src");
+  if (!source) return false;
+  try {
+    const url = new URL(source, window.location.origin);
+    return url.origin === window.location.origin
+      || configuredScriptOrigins.includes(url.origin)
+      || (
+        process.env.NODE_ENV !== "production"
+        && ["localhost", "127.0.0.1"].includes(url.hostname)
+      );
+  } catch {
+    return false;
+  }
+};
+
 /**
  * SecurityMonitor - runs security checks on mount and listens for threats.
  * Place inside the DashboardProvider to activate.
@@ -27,6 +57,9 @@ export default function SecurityMonitor({ children }) {
         for (const node of mutation.addedNodes) {
           if (node.nodeType === 1) {
             const tag = node.tagName?.toLowerCase();
+            if (tag === "script" && isTrustedRuntimeScript(node)) {
+              continue;
+            }
             if (["script", "iframe", "object", "embed", "form"].includes(tag)) {
               auditLog_event("dangerous_dom_node_added", { tag, outerHTML: node.outerHTML?.slice(0, 100) });
               node.remove?.();

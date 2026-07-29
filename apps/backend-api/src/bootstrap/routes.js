@@ -16,6 +16,7 @@ import trevioRoutes from "../modules/trevio/routes.js";
 import trevistaRoutes from "../modules/trevista/routes.js";
 import masterDataRoutes from "../modules/masterData/routes.js";
 import clientRoutes from "../modules/clients/routes.js";
+import searchRoutes from "../modules/search/routes.js";
 
 const getDbHealth = () => {
   const readyState = mongoose.connection.readyState;
@@ -53,6 +54,7 @@ export default function registerRoutes(app) {
 
   app.use(API_ROUTES.AUTH, authRoutes);
   app.use(API_ROUTES.API, portalRoutes);
+  app.use(API_ROUTES.API, searchRoutes);
   app.use("/api/pages", pageDefinitionRoutes);
   app.use(API_ROUTES.TOURS, tourRoutes);
   app.use("/api/trevio", trevioRoutes);

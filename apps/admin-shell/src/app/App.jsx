@@ -1,14 +1,11 @@
 import React from "react";
 import { AdminPortalConfigProvider } from "./providers/AdminPortalProvider";
 import AppLayout from "./AppLayout";
-import { useThemeMode } from "@packages/trem-utils";
 
-const AdminApp = () => {
-    useThemeMode();
-
+const AdminApp = ({ embedded = false }) => {
     return (
         <AdminPortalConfigProvider>
-            <AppLayout />
+            <AppLayout embedded={embedded} />
         </AdminPortalConfigProvider>
     );
 };

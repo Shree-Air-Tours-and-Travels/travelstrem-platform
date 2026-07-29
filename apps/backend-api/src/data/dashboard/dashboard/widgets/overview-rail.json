@@ -1,0 +1,115 @@
+{
+  "status": "success",
+  "component": {
+    "data": {
+      "overviewRail": {
+        "ariaLabel": "Travel planning shortcuts and updates",
+        "widgets": [
+          {
+            "id": "upcoming-trip",
+            "type": "upcomingTrip",
+            "title": "Upcoming Trip",
+            "detailsLabel": "View details",
+            "detailsHref": "/?tab=bookings",
+            "detailsAriaLabel": "View upcoming trip details",
+            "emptyState": {
+              "icon": "calendar",
+              "title": "No upcoming trip",
+              "description": "Your next confirmed journey will appear here.",
+              "actionLabel": "Plan a trip",
+              "actionHref": "/?tab=trevio",
+              "actionAriaLabel": "Plan a new trip with Trevio"
+            },
+            "trip": null
+          },
+          {
+            "id": "quick-actions",
+            "type": "quickActions",
+            "title": "Quick Actions",
+            "items": [
+              {
+                "id": "plan-trip",
+                "title": "Plan a new trip",
+                "description": "Start planning your journey",
+                "icon": "map",
+                "href": "/?tab=trevio",
+                "target": "_self",
+                "ariaLabel": "Plan a new trip with Trevio"
+              },
+              {
+                "id": "visa-requirements",
+                "title": "Check visa requirements",
+                "description": "Get visa info for your destination",
+                "icon": "visa",
+                "href": "https://travelstrem.com/#contact",
+                "target": "_self",
+                "ariaLabel": "Ask about visa requirements",
+                "disabled": true
+              },
+              {
+                "id": "upload-documents",
+                "title": "Upload documents",
+                "description": "Keep your travel documents ready",
+                "icon": "passport",
+                "href": "/?tab=profile",
+                "target": "_self",
+                "ariaLabel": "Open your travel profile",
+                "disabled": true
+              },
+              {
+                "id": "contact-support",
+                "title": "Contact support",
+                "description": "We're here to help",
+                "icon": "phoneCall",
+                "href": "mailto:support@travelstrem.com",
+                "target": "_self",
+                "ariaLabel": "Email TravelsTrem support",
+                "disabled": true
+              }
+            ]
+          },
+          {
+            "id": "exclusive-offer",
+            "type": "exclusiveOffer",
+            "title": "Exclusive for You",
+            "available": false,
+            "emptyState": {
+              "icon": "ticket",
+              "title": "No coupons available",
+              "description": "New travel offers and coupon codes will appear here."
+            },
+            "headline": "Get up to 15% off",
+            "description": "on holiday packages",
+            "codeLabel": "Use code:",
+            "code": "TREM15",
+            "image": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=700&q=82&auto=format&fit=crop",
+            "imageAlt": "Tropical holiday resort by the sea",
+            "href": "https://trevista.travelstrem.com",
+            "target": "_self",
+            "ariaLabel": "Explore the exclusive Trevista holiday offer"
+          }
+        ]
+      }
+    },
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {},
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "OverviewRail",
+          "props": {
+            "dataKey": "overviewRail"
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

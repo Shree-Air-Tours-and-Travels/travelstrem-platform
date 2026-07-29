@@ -17,22 +17,39 @@
 }
 
 .dov__stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: $space-4;
   margin-bottom: $space-8;
+}
 
-  @media (max-width: 1024px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  @media (max-width: 480px) {
-    grid-template-columns: 1fr;
-  }
+.dov__stats-preloader {
+  margin-bottom: $space-8;
 }
 
 .dov__section {
   margin-bottom: $space-6;
+}
+
+.dov__content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(290px, 340px);
+  align-items: start;
+  gap: $space-6;
+
+  &--single {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.dov__main {
+  min-width: 0;
+}
+
+.dov__rail {
+  position: sticky;
+  top: $space-5;
+}
+
+.dov__plan-cards {
+  margin-bottom: $space-8;
 }
 
 .dov__section-title {
@@ -47,6 +64,15 @@
   border: 1px solid var(--border);
   border-radius: $radius-md;
   overflow: hidden;
+}
+
+.dov__bookings-loading {
+  display: grid;
+  min-height: 180px;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+  background: var(--card-bg);
 }
 
 .dov__recent-item {
@@ -71,6 +97,17 @@
     flex-direction: column;
     align-items: flex-start;
     gap: $space-2;
+  }
+}
+
+@media (max-width: 1100px) {
+  .dov__content {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dov__rail {
+    position: static;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
   }
 }
 

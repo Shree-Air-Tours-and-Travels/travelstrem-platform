@@ -3,7 +3,18 @@ import config from "../../../config/index.js";
 import headerConfigTemplate from "../../../config/header.js";
 import sessionConfigTemplate from "../../../config/session.js";
 import pageConfigTemplate from "../../../config/pageConfig.js";
+import sidebarConfigTemplate from "../../../config/sidebar.js";
+import appHeaderConfigTemplate from "../../../config/appHeader.js";
+import navigationConfigTemplate from "../../../config/navigation.js";
 import User from "../../auth/models/User.js";
+
+export const getNavigationConfig = (req, res) => {
+    res.status(200).json({
+        status: "success",
+        message: "Navigation config loaded",
+        componentData: navigationConfigTemplate,
+    });
+};
 
 const JWT_SECRET = (config.JWT && config.JWT.accessSecret) || process.env.JWT_SECRET;
 const USE_SHARED_COOKIE_DOMAIN = config.IS_PRODUCTION && Boolean((config.AUTH_COOKIE_DOMAIN || process.env.AUTH_COOKIE_DOMAIN || "").toString().trim());
@@ -617,6 +628,14 @@ export const getHeaderConfig = async (req, res) => {
         console.error("getHeaderConfig error:", error && error.stack ? error.stack : error);
         return res.status(500).json({ status: "error", message: "Failed to load header config" });
     }
+};
+
+export const getSidebarConfig = async (_req, res) => {
+    return res.json(sidebarConfigTemplate);
+};
+
+export const getAppHeaderConfig = async (_req, res) => {
+    return res.json(appHeaderConfigTemplate);
 };
 
 export const getPageConfig = async (req, res) => {

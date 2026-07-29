@@ -3,7 +3,8 @@
   "component": {
     "data": {
       "state": {
-        "frames": [
+        "frameRows": {
+          "top": [
           {
             "id": "spiti-valley",
             "image": "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=600&q=80",
@@ -27,7 +28,9 @@
             "image": "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=600&q=80",
             "location": "Goa Beaches",
             "shape": "blob-2"
-          },
+          }
+          ],
+          "bottom": [
           {
             "id": "meghalaya-caves",
             "image": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80",
@@ -52,7 +55,8 @@
             "location": "Sikkim Mountains",
             "shape": "hexagon"
           }
-        ]
+          ]
+        }
       }
     },
     "dataScope": {

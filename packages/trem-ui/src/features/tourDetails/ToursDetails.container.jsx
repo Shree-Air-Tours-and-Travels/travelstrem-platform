@@ -21,7 +21,13 @@ const PRODUCT_CONFIG = {
     },
 };
 
-export default function ToursDetailsContainer({ dispatchEvent, appKey = "trevista", productType = "tour", breadcrumbRoot: breadcrumbRootProp } = {}) {
+export default function ToursDetailsContainer({
+    dispatchEvent,
+    appKey = "trevista",
+    productType = "tour",
+    breadcrumbRoot: breadcrumbRootProp,
+    bookingBasePath = "",
+} = {}) {
     const params = useParams();
     const location = useLocation();
     const navigate = useNavigate();
@@ -107,12 +113,21 @@ export default function ToursDetailsContainer({ dispatchEvent, appKey = "trevist
         const selectedTour = activeTour;
         if (!selectedTour) return;
         const ref = slugifyTitle(selectedTour?.title) || selectedTour?._id || decodedRef;
+        if (bookingBasePath) {
+            const query = new URLSearchParams({
+                product: productType === "trip" ? "trevio" : appKey,
+                tourRef: ref,
+                returnTo: window.location.href,
+            });
+            navigate(`${bookingBasePath}?${query.toString()}`);
+            return;
+        }
         window.location.assign(buildGlobalBookingEngineUrl({
             product: productType === "trip" ? "trevio" : appKey,
             tourRef: ref,
             returnTo: window.location.href,
         }));
-    }, [activeTour, appKey, decodedRef, productType]);
+    }, [activeTour, appKey, bookingBasePath, decodedRef, navigate, productType]);
 
     const handleBookConfirmClose = useCallback(() => setBookConfirmOpen(false), []);
 

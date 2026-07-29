@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { BrandLogo, Button, Title, Paragraph } from "@packages/trem-ui";
+import { AuthHeader, Button, Icon, Title, Paragraph } from "@packages/trem-ui";
 import { getReturnPath, useAuthFlow, appendTokenToUrl } from "@packages/trem-auth-core";
 import { ForgotPasswordModal, ResetPasswordModal } from "./PasswordModals.jsx";
 import "./auth-page.scss";
@@ -62,6 +62,69 @@ const getSafeReferrer = () => {
   return isSafeReturnUrl(document.referrer) ? document.referrer : "";
 };
 
+function AuthExperience({ cfg, theme, onToggleTheme, headerBrand, children, loading = false, className = "" }) {
+  const company = cfg?.company || {};
+  const headerConfig = {
+    ...(cfg?.header || {}),
+    brand: {
+      ...(cfg?.header?.brand || {}),
+      ...(headerBrand || {}),
+    },
+  };
+
+  return (
+    <>
+      <AuthHeader config={headerConfig} theme={theme} onToggleTheme={onToggleTheme} />
+      <main className={`auth-trem${className ? ` ${className}` : ""}`}>
+        <div className={`auth-trem__experience${loading ? " auth-trem__experience--loading" : ""}`}>
+          {!loading && (
+            <section className="auth-trem__company" aria-label={company.title || "About TravelsTREM"}>
+              <Paragraph primaryClassname="auth-trem__company-eyebrow">
+                {company.eyebrow}
+              </Paragraph>
+              <Title
+                primaryClassname="auth-trem__company-title"
+                text={company.title}
+              />
+              <Paragraph primaryClassname="auth-trem__company-description">
+                {company.description}{" "}
+                {company.descriptionHighlight && (
+                  <strong className="auth-trem__company-description-highlight">
+                    {company.descriptionHighlight}
+                  </strong>
+                )}
+              </Paragraph>
+
+              <div className="auth-trem__highlights">
+                {(company.highlights || []).map((item) => (
+                  <article className="auth-trem__highlight" key={item.title}>
+                    <span className="auth-trem__highlight-icon">
+                      <Icon name={item.icon || "sparkles"} size={20} />
+                    </span>
+                    <span>
+                      <strong>{item.title}</strong>
+                      <small>{item.description}</small>
+                    </span>
+                  </article>
+                ))}
+              </div>
+
+              {(company.businessName || company.location) && (
+                <Paragraph primaryClassname="auth-trem__business">
+                  {[company.businessName, company.location].filter(Boolean).join(" · ")}
+                </Paragraph>
+              )}
+            </section>
+          )}
+          <section className="auth-trem__access" aria-label="Account access">
+            {children}
+          </section>
+        </div>
+      </main>
+    </>
+  );
+}
+
 export default function AuthPage({
   api,
   authService,
@@ -78,6 +141,9 @@ export default function AuthPage({
   adminShellUrl = "",
   authStoragePrefix = "",
   className = "",
+  theme = "light",
+  onToggleTheme,
+  headerBrand,
 }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -140,6 +206,16 @@ export default function AuthPage({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search, registerEnabled]);
 
+  React.useEffect(() => {
+    const rememberKey = cfg?.storageKeys?.rememberEmail;
+    if (!rememberKey || form === null) return;
+    if (remember && form.email?.trim()) {
+      localStorage.setItem(rememberKey, form.email.trim());
+    } else if (!remember) {
+      localStorage.removeItem(rememberKey);
+    }
+  }, [cfg?.storageKeys?.rememberEmail, form, remember]);
+
   const resolveReturnDestination = () => {
     if (isSafeReturnUrl(queryReturnTo)) return queryReturnTo;
 
@@ -199,18 +275,18 @@ export default function AuthPage({
 
   if (cfgLoading || form === null) {
     return (
-      <div className={`auth-trem ${className}`}>
+      <AuthExperience cfg={cfg} theme={theme} onToggleTheme={onToggleTheme} headerBrand={headerBrand} loading className={className}>
         <div className="auth-trem__card auth-trem__card--center">
           <div className="auth-trem__loader">Loading authentication configuration...</div>
           {cfgError && <div className="auth-trem__config-error">Config fallback active: {cfgError}</div>}
         </div>
-      </div>
+      </AuthExperience>
     );
   }
 
   if (loginOtpStep) {
     return (
-      <div className={`auth-trem ${className}`}>
+      <AuthExperience cfg={cfg} theme={theme} onToggleTheme={onToggleTheme} headerBrand={headerBrand} className={className}>
         <div className="auth-trem__card auth-trem__card--otp">
           <header className="auth-trem__header">
             <div>
@@ -220,24 +296,31 @@ export default function AuthPage({
                 Enter the OTP sent to {loginOtpStep.email}.
               </Paragraph>
             </div>
-            <div className="auth-trem__brand-icon">
-              <BrandLogo name="" className="brand-logo--icon-only" />
-            </div>
           </header>
 
           <form className="auth-trem__form" onSubmit={handleOtpSubmit}>
+            <label className="auth-trem__otp-label" htmlFor="auth-login-otp">
+              Verification code
+            </label>
             <input
+              id="auth-login-otp"
               className="auth-trem__field auth-trem__field--otp"
               type="text"
               inputMode="numeric"
               autoComplete="one-time-code"
-              placeholder="Enter 6-digit OTP"
+              enterKeyHint="done"
+              aria-describedby="auth-login-otp-hint"
+              placeholder="000000"
               value={otpCode}
-              onChange={(e) => setOtpCode(e.target.value)}
+              onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              pattern="[0-9]*"
               maxLength={6}
               required
               autoFocus
             />
+            <p className="auth-trem__otp-hint" id="auth-login-otp-hint">
+              Enter the six-digit code from your email.
+            </p>
 
             {error && <div className="auth-trem__error" role="alert">{error}</div>}
             {otpMessage && <div className="auth-trem__otp-message">{otpMessage}</div>}
@@ -247,49 +330,40 @@ export default function AuthPage({
               color="primary"
               type="submit"
               text={otpLoading ? "Verifying..." : "Verify & Sign In"}
-              disabled={otpLoading || otpCode.trim().length < 4}
+              disabled={otpLoading || otpCode.trim().length !== 6}
               primaryClassName="auth-trem__primary"
             />
 
             <div className="auth-trem__otp-actions">
               <Button
                 variant="text"
-                text={otpLoading ? "Sending..." : "Resend OTP"}
-                onClick={resendLoginOtp}
-                disabled={otpLoading}
+                text="Back to login"
+                iconLeft="arrowLeft"
+                onClick={handleOtpBack}
                 primaryClassName="auth-trem__link"
               />
               <Button
                 variant="text"
-                text="Back to login"
-                onClick={handleOtpBack}
+                text={otpLoading ? "Sending..." : "Resend code"}
+                onClick={resendLoginOtp}
+                disabled={otpLoading}
                 primaryClassName="auth-trem__link"
               />
             </div>
           </form>
-
-          <div className="auth-trem__footer">
-            <span>
-              Trouble receiving?{" "}
-              <Button variant="text" color="primary" onClick={resendLoginOtp} text="Resend OTP" primaryClassName="auth-trem__link" />
-            </span>
-          </div>
         </div>
-      </div>
+      </AuthExperience>
     );
   }
 
   return (
-    <div className={`auth-trem ${className}`}>
+    <AuthExperience cfg={cfg} theme={theme} onToggleTheme={onToggleTheme} headerBrand={headerBrand} className={className}>
       <div className="auth-trem__card">
         <header className="auth-trem__header">
           <div>
             <Paragraph primaryClassname="auth-trem__eyebrow">{appName}</Paragraph>
             <Title primaryClassname="auth-trem__title" text={activeTab === "login" ? cfg.strings?.signInWith || "Sign in" : cfg.strings?.signUpWith || "Create account"} />
             <Paragraph primaryClassname="auth-trem__sub">{activeTab === "login" ? "Enter your details to continue." : "Create access for this shell."}</Paragraph>
-          </div>
-          <div className="auth-trem__brand-icon">
-            <BrandLogo name="" className="brand-logo--icon-only" />
           </div>
         </header>
 
@@ -337,7 +411,20 @@ export default function AuthPage({
               {needsSecret && (
                 <div className="auth-trem__secret">
                   <div className="auth-trem__otp-row">
-                    <input className="auth-trem__field" type="text" inputMode="numeric" placeholder="Registration OTP" value={form.adminOtp} onChange={update("adminOtp")} required />
+                    <input
+                      className="auth-trem__field"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={6}
+                      placeholder="Registration OTP"
+                      value={form.adminOtp}
+                      onChange={(event) => setForm((state) => ({
+                        ...state,
+                        adminOtp: event.target.value.replace(/\D/g, "").slice(0, 6),
+                      }))}
+                      required
+                    />
                     <Button variant="outline" size="small" text={otpLoading ? "Sending..." : "Get OTP"} onClick={requestRegistrationOtp} disabled={otpLoading} primaryClassName="auth-trem__otp-button" />
                   </div>
                   <div className="auth-trem__hint">Enter the OTP from the registration record.</div>
@@ -384,6 +471,6 @@ export default function AuthPage({
           }} />
         )}
       </div>
-    </div>
+    </AuthExperience>
   );
 }

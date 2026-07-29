@@ -19,4 +19,5 @@ export { createProductAuth } from "./auth/createProductAuth.js";
 export {
   getTourDetailsPath,
 } from "./routes/routes.js";
+export { requestShellNavigation, SHELL_NAVIGATION_EVENT } from "./routes/shellNavigation.js";
 export { getActiveFilterCount, getOptionList, validateAll, validateFields } from "./filters/filterUtils.js";
