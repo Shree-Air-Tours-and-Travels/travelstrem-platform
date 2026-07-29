@@ -223,10 +223,12 @@ export default function AuthPage({
     const productReturnUrl = getAllowedProductReturnUrl(requestingApp);
     if (productReturnUrl) return productReturnUrl;
 
-    const referrer = getSafeReferrer();
-    if (referrer) return referrer;
+    if (requestingApp) {
+      const referrer = getSafeReferrer();
+      if (referrer) return referrer;
+      return "";
+    }
 
-    if (requestingApp) return "";
     return getReturnPath(location.state, afterAuthPath);
   };
 

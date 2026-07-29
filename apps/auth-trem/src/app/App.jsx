@@ -7,7 +7,10 @@ const api = createAuthApi();
 const authService = createAuthService(api);
 export default function AuthTremApp() {
   const { theme, toggleTheme } = useThemeMode();
-  const fallbackAfterAuthPath = process.env.REACT_APP_TRAVELSTREM_APP_URL || "/";
+  const fallbackAfterAuthPath =
+    process.env.REACT_APP_DASHBOARD_URL ||
+    process.env.REACT_APP_TRAVELSTREM_APP_URL ||
+    "/";
 
   return (
     <div className="auth-trem-shell">
