@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { GlobalLoader, FloatingActionBar, EmptyState } from "@packages/trem-ui";
-import { buildGlobalDashboardUrl, fetchData } from "@packages/trem-utils";
+import { fetchData, requestShellNavigation } from "@packages/trem-utils";
 import BookingLayout from "../components/BookingLayout.jsx";
 import BookingSidebar from "../components/BookingSidebar.jsx";
 import TripStep from "../components/TripStep.jsx";
@@ -243,11 +243,16 @@ export default function BookingEntryPage() {
   const handleExit = useCallback(() => {
     clearConfirmation(product, productRef);
     if (returnTo) {
-      window.location.href = returnTo;
+      const target = new URL(returnTo, window.location.origin);
+      if (target.origin === window.location.origin) {
+        navigate(`${target.pathname}${target.search}${target.hash}`);
+      } else {
+        window.location.assign(target.toString());
+      }
     } else {
-      window.history.back();
+      navigate(-1);
     }
-  }, [returnTo, product, productRef]);
+  }, [navigate, returnTo, product, productRef]);
 
   const hasResetRef = useRef(false);
   const storedProduct = useSelector((state) => state.booking.product);
@@ -284,31 +289,6 @@ export default function BookingEntryPage() {
   const isLowSeats = product === "trevio" && Boolean(availability?.isLowSeats);
   const guestsExceedSeats = product === "trevio" && serverPricing?.availability?.canBook === false;
   const availabilityValidationMessage = serverPricing?.availability?.validationMessage || "";
-
-  useEffect(() => {
-    if (!productRef || product !== "trevio" || isSoldOut) return;
-    const poll = setInterval(() => {
-      api.loadProduct(product, productRef).then((data) => {
-        if (data?.availability?.seatsAvailable != null) {
-          setAvailability((prev) => {
-            if (prev?.seatsAvailable === data.availability.seatsAvailable) return prev;
-            if (
-              prev?.seatsAvailable != null
-              && data.availability.seatsAvailable < prev.seatsAvailable
-            ) {
-              setAvailabilityNotice(
-                data.availability.seatsAvailable === 0
-                  ? "The remaining seats were just reserved by another customer."
-                  : `Availability changed: ${data.availability.seatsAvailable} seats are now left.`
-              );
-            }
-            return { ...prev, ...data.availability };
-          });
-        }
-      }).catch(() => {});
-    }, 15000);
-    return () => clearInterval(poll);
-  }, [productRef, product, isSoldOut]);
 
   useEffect(() => {
     if (prevStepRef.current !== flow.currentStep) {
@@ -398,17 +378,10 @@ export default function BookingEntryPage() {
   if (initialLoading) return <GlobalLoader visible text="Loading..." />;
 
   if (bookingConfirmed) {
-    const dashboardUrl = process.env.REACT_APP_DASHBOARD_URL || "";
-    const handleGoToDashboard = dashboardUrl
-      ? () => {
-          clearConfirmation(product, productRef);
-          window.location.assign(buildGlobalDashboardUrl({
-            dashboardBaseUrl: dashboardUrl,
-            product,
-            tab: "bookings",
-          }));
-        }
-      : undefined;
+    const handleGoToDashboard = () => {
+      clearConfirmation(product, productRef);
+      requestShellNavigation("bookings");
+    };
     return (
       <BookingLayout steps={flow.steps} currentStep={flow.steps.length - 1} product={product} floatingBar={null} onExit={handleExit}>
         <BookingConfirmation

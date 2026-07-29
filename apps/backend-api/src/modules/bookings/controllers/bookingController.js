@@ -12,6 +12,10 @@ import BookingTimelineService from "../services/BookingTimelineService.js";
 import AuditService from "../services/AuditService.js";
 import StatusHistoryService from "../services/StatusHistoryService.js";
 import AssignmentService from "../services/AssignmentService.js";
+import {
+    createBookingReference,
+    toPublicBookingReference,
+} from "../utils/bookingReference.js";
 
 function sendSuccess(res, dataPayload = {}, message = "OK", opts = {}) {
     const { title = "", description = "", structure = {}, config = {}, elements = {} } = opts;
@@ -269,10 +273,7 @@ async function saveWithBookingRefRetry(booking, options = {}) {
         } catch (err) {
             lastErr = err;
             if (err.code === 11000 && err.keyPattern?.bookingRef) {
-                const now = new Date();
-                const datePart = now.toISOString().slice(0, 10).replace(/-/g, "");
-                const timePart = now.toISOString().slice(11, 16).replace(":", "");
-                booking.bookingRef = `TREM-${datePart}-${timePart}-${Math.random().toString(36).slice(2, 14).toUpperCase()}`;
+                booking.bookingRef = createBookingReference();
                 continue;
             }
             throw err;
@@ -774,7 +775,7 @@ export const getCancelInfo = async (req, res) => {
         const totalAmount = booking.paymentSummary?.total || booking.priceSnapshot?.total || 0;
         const refundEstimate = booking.status === "CANCELLED" ? 0 : paidAmount;
 
-        const shortRef = (booking.bookingRef || "").split("-").length >= 3 ? `TREM-${booking.bookingRef.split("-")[2]}` : booking.bookingRef;
+        const shortRef = toPublicBookingReference(booking.bookingRef);
         return sendSuccess(res, {
             bookingRef: shortRef,
             status: booking.status,

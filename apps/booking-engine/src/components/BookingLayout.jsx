@@ -1,7 +1,6 @@
 import React, { useState, useCallback } from "react";
 import BookingProgress from "@packages/trem-ui/components/BookingProgress/BookingProgress.jsx";
 import ConfirmOverlay from "@packages/trem-modals/ConfirmOverlay.jsx";
-import ScrollToTopButton from "@packages/trem-ui/components/ScrollToTopButton/ScrollToTopButton.jsx";
 import BrandLogo from "@packages/trem-ui/components/BrandLogo/BrandLogo.jsx";
 
 export default function BookingLayout({ steps, currentStep, product, children, sidebar, floatingBar, onExit }) {
@@ -45,7 +44,6 @@ export default function BookingLayout({ steps, currentStep, product, children, s
         {sidebar && <aside className="be-layout__sidebar">{sidebar}</aside>}
       </div>
       {floatingBar}
-      <ScrollToTopButton />
 
       <ConfirmOverlay
         open={showExitConfirm}

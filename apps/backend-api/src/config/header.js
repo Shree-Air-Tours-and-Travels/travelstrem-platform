@@ -15,6 +15,20 @@ export default {
       "darkLogoSrc": "/favicon-dark.png",
       "homePath": "/"
     },
+    "footer": {
+      "brand": "TravelsTREM",
+      "owner": "Shree Air Tours and Travels",
+      "description": "Tours, Reservations, Experience & Management ",
+      "navigationLabel": "Business and legal information",
+      "contacts": [
+        { "id": "email", "label": "akshat.goyal@travelstrem.com", "href": "mailto:akshat.goyal@travelstrem.com" },
+        { "id": "phone", "label": "+91 90576 35580", "href": "tel:+919057635580" },
+        { "id": "location", "label": "Jaipur, India", "href": "https://www.google.com/maps/search/?api=1&query=Jaipur%2C%20India", "target": "_blank" }
+      ],
+      "legalLinks": [
+        { "id": "privacy", "label": "Privacy", "href": "/privacy" }
+      ]
+    },
     "logos": {
       "trevio": { "logoSrc": "/favicon.png", "name": "Trevio", "subtitle": "by TravelsTrem", "initial": "" },
       "trevista": { "logoSrc": "/favicon.png", "name": "Trevista", "subtitle": "by TravelsTrem", "initial": "" },

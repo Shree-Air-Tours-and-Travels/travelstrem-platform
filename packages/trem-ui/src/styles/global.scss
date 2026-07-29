@@ -1,0 +1,14 @@
+/*
+ * Scrollable regions keep their native scrolling behavior while scrollbar
+ * chrome stays hidden consistently across Trem UI consumers.
+ */
+* {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+}

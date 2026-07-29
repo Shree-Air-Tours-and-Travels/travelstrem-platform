@@ -24,6 +24,9 @@
         "tableHeaderPrice": "Price",
         "tableHeaderDate": "Date",
         "tableHeaderStatus": "Status",
+        "tableHeaderProduct": "Product",
+        "tableHeaderTravelDates": "Travel Dates",
+        "tableHeaderCreated": "Created",
         "tableExport": "Export",
         "mobileNavMore": "More",
         "summarySubtitleLabel": "No of Booking :",
@@ -61,6 +64,16 @@
           "type": "DashboardMetrics",
           "source": "shell",
           "widgetRef": "./widgets/metrics.json"
+        },
+        {
+          "type": "PlanCards",
+          "source": "shell",
+          "widgetRef": "./widgets/plan-cards.json"
+        },
+        {
+          "type": "OverviewRail",
+          "source": "shell",
+          "widgetRef": "./widgets/overview-rail.json"
         },
         {
           "type": "RecentBookings",

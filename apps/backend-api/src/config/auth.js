@@ -17,6 +17,46 @@ export default {
         { "id": "github", "label": "GitHub", "iconClass": "fab fa-github" },
         { "id": "apple", "label": "Apple", "iconClass": "fab fa-apple" }
       ],
+      "header": {
+        "ariaLabel": "TravelsTREM authentication",
+        "brand": {
+          "name": "TravelsTREM",
+          "tagline": "Tours · Reservations · Experiences · Management",
+          "logoSrc": "/favicon.png",
+          "darkLogoSrc": "/favicon-dark.png"
+        },
+        "themeAction": {
+          "darkLabel": "Switch to dark mode",
+          "lightLabel": "Switch to light mode",
+          "darkIcon": "moon",
+          "lightIcon": "sun"
+        }
+      },
+      "company": {
+        "eyebrow": "Travel, thoughtfully connected",
+        "title": "One account for every journey.",
+        "description": "Discover curated trips, manage reservations and keep every travel detail together with",
+        "descriptionHighlight": "TravelsTREM, the travel platform by Shree Air Tours and Travels.",
+        "highlights": [
+          {
+            "icon": "map",
+            "title": "Curated experiences",
+            "description": "Thoughtfully planned adventures and holiday packages."
+          },
+          {
+            "icon": "calendar",
+            "title": "Reservations in one place",
+            "description": "Keep bookings, payments and travel details together."
+          },
+          {
+            "icon": "support",
+            "title": "Travel support",
+            "description": "Helpful guidance from our Jaipur-based travel team."
+          }
+        ],
+        "businessName": "Shree Air Tours and Travels",
+        "location": "Jaipur, India"
+      },
       "strings": {
         "signInWith": "Sign In",
         "signUpWith": "Sign Up",

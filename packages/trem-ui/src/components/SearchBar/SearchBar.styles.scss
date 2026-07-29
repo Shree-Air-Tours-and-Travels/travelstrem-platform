@@ -1,0 +1,57 @@
+@import "../../styles/base/typography";
+
+.trem-search-bar {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  width: 100%;
+  min-height: 46px;
+  margin: 0;
+  padding: 0 $space-4;
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+  background: var(--surface);
+  color: var(--muted);
+  box-shadow: var(--shadow-sm);
+  transition:
+    border-color $duration-fast $ease-standard,
+    box-shadow $duration-fast $ease-standard;
+
+  &:focus-within {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--focus-ring);
+  }
+
+  input {
+    min-width: 0;
+    min-height: 44px;
+    flex: 1;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    box-shadow: none;
+    color: var(--text);
+    font: inherit;
+
+    &:focus {
+      border: 0;
+      box-shadow: none;
+    }
+
+    &::-webkit-search-cancel-button {
+      cursor: pointer;
+    }
+  }
+
+  kbd {
+    flex: 0 0 auto;
+    padding: $space-1 $space-2;
+    border: 0;
+    border-radius: $radius-xs;
+    background: var(--surface-inset);
+    color: var(--muted);
+    font-family: $font-primary;
+    font-size: $font-size-xs;
+  }
+}

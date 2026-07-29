@@ -10,10 +10,15 @@
         "elements": {
             "labels": {
                 "pageTitle": "Trevio",
+                "heroProductTitlePrefix": "Welcome to",
+                "heroProductName": "Trevio",
+                "heroProductConnector": "by",
+                "heroProductProvider": "TravelsTrem",
+                "heroProductSubtitle": "Your gateway to thoughtfully curated group adventures.",
                 "heroEyebrow": "Curated group adventures",
                 "heroHeading": "Trips that turn into",
                 "heroHighlight": "stories.",
-                "heroDescription": "Browse curated trips, open complete itineraries, personalise your package and reserve a seat through the TravelsTrem booking journey.",
+                "heroDescription": "Browse our trips, open complete itineraries, personalise your package and reserve a seat through the TravelsTrem booking journey.",
                 "heroPrimaryAction": "Explore trips",
                 "heroSecondaryAction": "How it works",
                 "heroTrustVerified": "Verified stays",
@@ -36,6 +41,11 @@
             "features": [
                 {
                     "type": "static",
+                    "productTitlePrefixRef": "heroProductTitlePrefix",
+                    "productNameRef": "heroProductName",
+                    "productConnectorRef": "heroProductConnector",
+                    "productProviderRef": "heroProductProvider",
+                    "productSubtitleRef": "heroProductSubtitle",
                     "eyebrowRef": "heroEyebrow",
                     "headingRef": "heroHeading",
                     "highlightRef": "heroHighlight",

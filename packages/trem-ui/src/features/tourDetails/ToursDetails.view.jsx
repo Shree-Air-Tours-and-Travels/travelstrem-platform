@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Icon, Breadcrumbs, FloatingActionBar, Title, Paragraph } from "../../index.js";
+import { Button, Breadcrumbs, FloatingActionBar, Title, Paragraph } from "../../index.js";
 import { ContactAgentModal, ConfirmOverlay } from "@packages/trem-modals";
 import TourOverview from "./widgets/TourOverview/TourOverview";
 import TourGallery from "./widgets/TourGallery/TourGallery";
@@ -72,7 +72,7 @@ export default function ToursDetailsView({
   tourRef, widgets, pageTitle, activeTour,
   structure, elements,
   contactOpen, contactFormData,
-  bookConfirmOpen, breadcrumbItems, referrerLabel,
+  bookConfirmOpen, breadcrumbItems,
   onTourLoad, onBack, onBook, onBookConfirm, onBookConfirmClose, onContact, onShare,
   isFavorited, onFavorite,
   setContactOpen,

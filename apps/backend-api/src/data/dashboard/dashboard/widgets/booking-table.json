@@ -4,16 +4,33 @@
     "data": {},
     "dataScope": {
       "options": {
-        "tourTypeOptions": ["All", "Adventure tourism", "Escorted tour", "Sightseeing tours", "Romantic"],
-        "statusOptions": ["All", "Upcoming", "Pending", "Cancelled", "Completed"],
-        "sortOptions": ["Recommended", "Newest", "Price: Low to High", "Price: High to Low"]
+        "productOptions": [
+          { "label": "All products", "value": "all" },
+          { "label": "Trevio", "value": "trevio" },
+          { "label": "Trevista", "value": "trevista" }
+        ],
+        "statusOptions": [
+          { "label": "All statuses", "value": "all" },
+          { "label": "Upcoming", "value": "Upcoming" },
+          { "label": "Pending", "value": "Pending" },
+          { "label": "Cancelled", "value": "Cancelled" },
+          { "label": "Completed", "value": "Completed" }
+        ],
+        "sortOptions": [
+          { "label": "Newest first", "value": "newest", "sort": { "columnId": "createdAt", "direction": "desc" } },
+          { "label": "Oldest first", "value": "oldest", "sort": { "columnId": "createdAt", "direction": "asc" } },
+          { "label": "Price: Low to High", "value": "priceLow", "sort": { "columnId": "price", "direction": "asc" } },
+          { "label": "Price: High to Low", "value": "priceHigh", "sort": { "columnId": "price", "direction": "desc" } }
+        ]
       }
     },
     "elements": {
       "labels": {
+        "bookingsPageTitle": "Bookings",
+        "bookingsPageDescription": "Search, filter, and manage your travel bookings.",
         "bookingList": "Booking List",
-        "tableSearch": "Search",
-        "tourType": "Tour Type",
+        "tableSearch": "Search by Trem ID, trip, product or status...",
+        "product": "Product",
         "status": "Status",
         "sortBy": "Sort By",
         "showEntries": "Show entries",
@@ -33,6 +50,10 @@
           "type": "BookingTable",
           "props": {
             "titleRef": "bookingList",
+            "pageHeader": {
+              "titleRef": "bookingsPageTitle",
+              "descriptionRef": "bookingsPageDescription"
+            },
             "heroBanner": {
               "titleRef": "tableSummaryTitle",
               "subtitleRef": "tableSummarySubtitle",
@@ -63,26 +84,43 @@
               "minHeight": "420px",
               "maxHeight": "760px",
               "controlHeight": "48px",
+              "viewportMinHeight": "420px",
+              "mobileViewportHeight": "calc(100dvh - 330px)",
+              "expandFiltersLabel": "Filters",
+              "collapseFiltersLabel": "Hide filters",
               "contentMinWidth": 1120,
-              "serverSide": true,
+              "serverSide": false,
               "loadingLabel": "Loading bookings...",
+              "mobileCard": {
+                "titleAccessor": "tour",
+                "subtitleAccessor": "tremId",
+                "imageAccessor": "image",
+                "badgeAccessor": "status",
+                "fieldIds": ["productLabel", "travelDates", "travellers", "price", "createdAt"],
+                "actionLabelRef": "viewBookingAction"
+              },
               "emptyState": {
+                "icon": "calendar",
                 "titleRef": "noBookingsFoundTitle",
-                "descriptionRef": "noBookingsFoundDescription"
+                "descriptionRef": "noBookingsFoundDescription",
+                "actionLabel": "Explore Trevio",
+                "actionHref": "/?tab=trevio"
               }
             },
             "actions": {
-              "serverSide": true,
+              "serverSide": false,
               "search": {
                 "placeholderRef": "tableSearch",
-                "keys": ["id", "tour", "type", "travellers", "status"]
+                "ariaLabelRef": "tableSearch",
+                "shortcut": "⌘ K",
+                "keys": ["tremId", "tour", "type", "productLabel", "status", "paymentStatus"]
               },
               "filters": [
                 {
-                  "id": "tourType",
-                  "labelRef": "tourType",
-                  "accessor": "type",
-                  "optionsKey": "tourTypeOptions"
+                  "id": "product",
+                  "labelRef": "product",
+                  "accessor": "product",
+                  "optionsKey": "productOptions"
                 },
                 {
                   "id": "status",
@@ -95,16 +133,17 @@
             "sortingHeader": {
               "labelRef": "sortBy",
               "selectLabelRef": "sortBy",
+              "defaultValue": "newest",
               "optionsKey": "sortOptions"
             },
             "pagination": {
-              "serverSide": true,
-              "pageSizeOptions": [8, 16, 24],
-              "pageSizeLabel": "Show",
-              "entriesLabel": "entries"
+              "serverSide": false,
+              "pageSizeOptions": [10, 20, 50],
+              "pageSize": 10,
+              "pageSizeLabel": "Rows per page"
             },
             "columns": [
-              { "id": "id", "labelRef": "tableHeaderId", "minWidth": 140, "emphasis": "danger", "clickable": true, "action": "viewBooking", "actionLabelRef": "viewBookingAction" },
+              { "id": "tremId", "labelRef": "tableHeaderId", "minWidth": 150, "emphasis": "danger", "clickable": true, "action": "viewBooking", "actionLabelRef": "viewBookingAction" },
               {
                 "id": "tour",
                 "labelRef": "tableHeaderTour",
@@ -114,18 +153,12 @@
                 "subtitleAccessor": "type",
                 "mediaAccessor": "image"
               },
-              { "id": "travellers", "labelRef": "tableHeaderTravellers", "minWidth": 180 },
-              { "id": "days", "labelRef": "tableHeaderDays", "minWidth": 120 },
-              { "id": "price", "labelRef": "tableHeaderPrice", "minWidth": 130 },
-              { "id": "date", "labelRef": "tableHeaderDate", "minWidth": 150 },
-              { "id": "status", "labelRef": "tableHeaderStatus", "type": "status", "minWidth": 150 },
-              {
-                "id": "actions",
-                "type": "actions",
-                "minWidth": 70,
-                "align": "right",
-                "actions": [{ "id": "view", "labelRef": "viewBookingAction", "icon": "eye" }]
-              }
+              { "id": "productLabel", "labelRef": "tableHeaderProduct", "type": "badge", "toneAccessor": "product", "minWidth": 120 },
+              { "id": "status", "labelRef": "tableHeaderStatus", "type": "status", "secondaryAccessor": "paymentStatus", "minWidth": 170 },
+              { "id": "travelDates", "labelRef": "tableHeaderTravelDates", "minWidth": 210 },
+              { "id": "travellers", "labelRef": "tableHeaderTravellers", "minWidth": 140 },
+              { "id": "price", "labelRef": "tableHeaderPrice", "sortAccessor": "priceValue", "sortable": true, "minWidth": 140 },
+              { "id": "createdAt", "labelRef": "tableHeaderCreated", "sortAccessor": "createdAtValue", "sortable": true, "minWidth": 150 }
             ],
             "rows": []
           }

@@ -1,4 +1,9 @@
 import React, { useCallback, useEffect, useState } from "react";
+import {
+  getScrollTargets,
+  getTargetScrollTop,
+  scrollTargetsToTop,
+} from "../ScrollToTop/scrollTargets.js";
 import "./ScrollToTopButton.styles.scss";
 
 const SCROLL_THRESHOLD = 400;
@@ -8,15 +13,18 @@ export default function ScrollToTopButton({ bottom = "1.5rem", right = "1.5rem" 
 
   useEffect(() => {
     function handleScroll() {
-      setVisible(window.scrollY > SCROLL_THRESHOLD);
+      setVisible(getScrollTargets().some(
+        (target) => getTargetScrollTop(target) > SCROLL_THRESHOLD,
+      ));
     }
-    window.addEventListener("scroll", handleScroll, { passive: true });
+    const targets = getScrollTargets();
+    targets.forEach((target) => target.addEventListener("scroll", handleScroll, { passive: true }));
     handleScroll();
-    return () => window.removeEventListener("scroll", handleScroll);
+    return () => targets.forEach((target) => target.removeEventListener("scroll", handleScroll));
   }, []);
 
   const handleClick = useCallback(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    scrollTargetsToTop("smooth");
   }, []);
 
   if (!visible) return null;

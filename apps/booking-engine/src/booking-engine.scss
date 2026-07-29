@@ -1,36 +1,164 @@
 @import "../../../packages/trem-design-tokens/src/scss/index";
 
-* { box-sizing: border-box; }
-
-html {
-  min-height: 100%;
-  background: var(--bg, $light-bg);
-  overscroll-behavior-y: none;
-}
-
-body {
+.booking-shell-notice {
+  display: grid;
+  place-items: center;
   min-height: 100vh;
   min-height: 100dvh;
-  margin: 0;
+  padding: clamp($space-4, 5vw, $space-8);
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 15% 15%, var(--primary-soft), transparent 34%),
+    radial-gradient(circle at 88% 86%, var(--secondary-soft), transparent 32%),
+    var(--page-bg);
+  color: var(--text);
+  font-family: $font-primary;
+
+  &__card {
+    width: min(680px, 100%);
+    padding: clamp($space-5, 5vw, $space-8);
+    border: 1px solid var(--border);
+    border-radius: $radius-lg;
+    background: color-mix(in srgb, var(--surface) 94%, transparent);
+    box-shadow: var(--shadow-lg);
+    text-align: center;
+    backdrop-filter: blur(18px);
+  }
+
+  &__brand {
+    display: flex;
+    justify-content: center;
+    margin-bottom: $space-6;
+    text-align: left;
+  }
+
+  &__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-2;
+    padding: $space-2 $space-3;
+    border: 1px solid color-mix(in srgb, var(--color-primary) 28%, var(--border));
+    border-radius: 999px;
+    background: var(--primary-soft);
+    color: var(--color-primary);
+    font-size: $font-size-xs;
+    font-weight: $font-bold;
+  }
+
+  h1 {
+    max-width: 560px;
+    margin: $space-5 auto $space-3;
+    color: var(--title);
+    font-size: clamp(2rem, 6vw, 3.65rem);
+    line-height: 1;
+    letter-spacing: -0.055em;
+  }
+
+  p {
+    max-width: 570px;
+    margin: 0 auto;
+    color: var(--muted);
+    font-size: clamp($font-size-sm, 2vw, $font-size-md);
+    line-height: 1.65;
+  }
+
+  &__features {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: $space-3;
+    margin: $space-6 0;
+
+    span {
+      display: inline-flex;
+      align-items: center;
+      gap: $space-2;
+      color: var(--text);
+      font-size: $font-size-xs;
+      font-weight: $font-semibold;
+    }
+
+    svg {
+      color: var(--color-primary);
+    }
+  }
+
+  &__action {
+    width: min(320px, 100%);
+    min-height: 50px;
+  }
+
+  small {
+    display: block;
+    margin-top: $space-3;
+    color: var(--muted);
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: $breakpoint-mobile) {
+  .booking-shell-notice {
+    align-items: stretch;
+    padding:
+      max($space-3, env(safe-area-inset-top))
+      max($space-3, env(safe-area-inset-right))
+      max($space-3, env(safe-area-inset-bottom))
+      max($space-3, env(safe-area-inset-left));
+
+    &__card {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: $space-5 $space-4;
+      border-radius: $radius-md;
+    }
+
+    &__brand {
+      margin-bottom: $space-5;
+    }
+
+    &__features {
+      display: grid;
+      justify-content: start;
+      width: min(300px, 100%);
+      margin-inline: auto;
+      text-align: left;
+    }
+  }
+}
+
+.booking-engine-app,
+.booking-engine-app *,
+.booking-engine-app *::before,
+.booking-engine-app *::after {
+  box-sizing: border-box;
+}
+
+.booking-engine-app {
   font-family: $font-primary;
   background: var(--bg, $light-bg);
   color: var(--text, $text-dark);
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
-  overscroll-behavior-y: none;
-}
-
-#root {
-  min-height: 100vh;
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
 }
 
 .booking-engine-app {
   min-height: 100vh;
   min-height: 100dvh;
   width: 100%;
+}
+
+.booking-engine-app--embedded {
+  min-height: 100%;
+  container-name: booking-shell;
+  container-type: inline-size;
+  overflow-x: clip;
+
+  .be-layout {
+    width: 100%;
+    max-width: none;
+    min-height: 100%;
+    margin: 0;
+  }
 }
 
 // ─── Layout ─────────────────────────────────────────
@@ -130,6 +258,63 @@ body {
     @include mq-max($breakpoint-md) {
       position: static;
       order: initial;
+    }
+  }
+}
+
+@container booking-shell (max-width: 900px) {
+  .be-layout {
+    padding-inline: $space-4;
+
+    &__brand {
+      flex-wrap: wrap;
+    }
+
+    &__body {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    &__sidebar {
+      position: static;
+      width: 100%;
+    }
+  }
+
+  .booking-progress {
+    max-width: 100%;
+    justify-content: flex-start;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+}
+
+@container booking-shell (max-width: 640px) {
+  .be-layout {
+    padding: $space-4 $space-3 $space-10;
+
+    &__header {
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    &__brand {
+      margin-bottom: $space-3;
+    }
+  }
+
+  .booking-progress {
+    &__label {
+      display: none;
+    }
+
+    &__connector {
+      width: 18px;
+      margin-inline: $space-1;
     }
   }
 }

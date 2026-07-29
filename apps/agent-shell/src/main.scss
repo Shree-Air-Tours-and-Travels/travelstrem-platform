@@ -25,12 +25,19 @@ body {
 
 .agent-app-shell {
     min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
     background: var(--page-bg);
     color: var(--text);
 }
 
 .agent-app-shell--embedded {
     min-height: auto;
+
+    > .trem-app-footer {
+        display: none;
+    }
 }
 
 .agent-auth-page {

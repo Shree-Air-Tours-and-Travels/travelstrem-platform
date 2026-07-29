@@ -5,7 +5,6 @@ import { AuthPage } from "@apps/auth";
 import ManageTours from "../features/tours/ManageTours";
 import ManageClients from "../features/clients/ManageClients";
 import BookingDetail from "../features/tours/BookingDetail/BookingDetail";
-import { ScrollToTop } from "@packages/trem-ui";
 import { useAdminPortalConfig } from "./providers/AdminPortalProvider";
 import api from "../services/apiClient";
 import authService from "../services/authService";
@@ -14,7 +13,7 @@ import { emit } from "@packages/trem-events";
 const adminRoles = ["admin"];
 const isAllowedAdminRole = (session) => adminRoles.includes(session?.user?.role);
 
-const Routers = () => {
+const Routers = ({ theme = "light", onToggleTheme }) => {
     const location = useLocation();
     const { loading, session, reload } = useAdminPortalConfig();
     const fromLocation = location.state?.from;
@@ -43,6 +42,12 @@ const Routers = () => {
             defaultRole="admin"
             afterAuthPath={afterAuthPath}
             otpLoginEnabled
+            theme={theme}
+            onToggleTheme={onToggleTheme}
+            headerBrand={{
+                name: "AdminTREM",
+                tagline: "Travel Administration · Operations · Management",
+            }}
         />
     );
 
@@ -65,7 +70,6 @@ const Routers = () => {
 
     return (
         <>
-            <ScrollToTop />
             <Routes>
                 <Route path="/manage/tours" element={<ManageTours session={session} />} />
                 <Route path="/manage/trips" element={<ManageTours session={session} tab="trips" />} />

@@ -40,7 +40,10 @@ export const redirectToGlobalAuth = (options = {}) => {
 export const getGlobalDashboardBaseUrl = (override = "") => {
   const configured = override || process.env.REACT_APP_DASHBOARD_URL || "";
   if (configured) return normalizeBase(configured);
-  return "";
+  if (typeof window !== "undefined" && isLocalHost(window.location.hostname)) {
+    return "http://localhost:3006";
+  }
+  return "https://app.travelstrem.com";
 };
 
 export const buildGlobalDashboardUrl = ({

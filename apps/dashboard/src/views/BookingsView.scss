@@ -7,6 +7,26 @@
   overflow-x: hidden;
 }
 
+@media (max-width: $breakpoint-md) {
+  .dbv {
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .dbv__header {
+    flex: 0 0 auto;
+    margin-bottom: $space-4;
+  }
+
+  .dbv__booking-table {
+    min-height: 0;
+    flex: 1 1 auto;
+  }
+}
+
 .dbv__back-banner {
   margin-bottom: $space-4;
 }
