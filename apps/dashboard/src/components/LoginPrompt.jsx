@@ -10,7 +10,7 @@ export default function LoginPrompt({ onLogin }) {
             <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
-        <h2 className="dlp__title">Welcome to Dashboard</h2>
+        <h2 className="dlp__title">Welcome to TravelsTrem</h2>
         <p className="dlp__desc">
           Sign in to view your bookings, manage favorites, and track your travel history.
         </p>

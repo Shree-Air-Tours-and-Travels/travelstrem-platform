@@ -50,7 +50,7 @@ class RemoteBoundary extends React.Component {
 function ProtectedRoute({ children }) {
   const { loading, session } = useDashboardConfig();
 
-  if (loading) return <GlobalLoader visible text="Loading dashboard" />;
+  if (loading) return <GlobalLoader visible text="Loading App" />;
 
   if (!session?.isAuthenticated) {
     const authUrl = process.env.REACT_APP_AUTH_APP_URL || "";
@@ -82,7 +82,7 @@ function DashboardShell() {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const { session } = useDashboardConfig();
+  const { loading, session } = useDashboardConfig();
   const { theme, toggleTheme } = useTheme();
   const user = session?.user || null;
   const [sidebarConfig, setSidebarConfig] = useState({});
@@ -201,6 +201,16 @@ function DashboardShell() {
     } catch {}
     window.location.assign(process.env.REACT_APP_AUTH_APP_URL || "/");
   }, []);
+
+  if (loading || !session?.isAuthenticated) {
+    return (
+      <div className="dash-auth-only">
+        <ProtectedRoute>
+          <></>
+        </ProtectedRoute>
+      </div>
+    );
+  }
 
   const remoteElement = destination.renderer === "trevio"
     ? <TrevioApp embedded userSession={session} basename={destination.path} />
