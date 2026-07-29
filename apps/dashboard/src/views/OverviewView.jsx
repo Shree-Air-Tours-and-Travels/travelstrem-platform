@@ -66,7 +66,7 @@ export default function OverviewView({
         <Preloader
           variant="stats"
           count={1}
-          label="Loading dashboard statistics"
+          label="Loading statistics"
           className="dov__stats-preloader"
         />
       ) : metricItems.length ? (
