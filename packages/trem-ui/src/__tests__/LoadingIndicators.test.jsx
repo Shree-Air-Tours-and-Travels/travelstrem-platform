@@ -13,10 +13,10 @@ describe("Trem loading indicators", () => {
 
   it("renders the configured preloader layout and count", () => {
     const { container } = render(
-      <Preloader variant="stats" count={4} label="Loading dashboard statistics" />,
+      <Preloader variant="stats" count={4} label="Loading statistics" />,
     );
 
-    expect(screen.getByRole("status", { name: "Loading dashboard statistics" }))
+    expect(screen.getByRole("status", { name: "Loading statistics" }))
       .toHaveAttribute("aria-busy", "true");
     expect(container.querySelectorAll(".trem-preloader__item")).toHaveLength(4);
   });

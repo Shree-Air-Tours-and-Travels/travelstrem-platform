@@ -240,14 +240,14 @@
 
   "dashboard": {
     "key": "dashboard",
-    "name": "TravelsTrem Dashboard",
+    "name": "TravelsTrem",
     "brandName": "TravelsTrem",
     "brandSubtitle": "Dashboard",
     "logo": "/logo-images/logo-icon-only.png",
-    "htmlTitle": "TravelsTrem Dashboard",
+    "htmlTitle": "TravelsTrem",
 
     "auth": {
-      "loginPromptTitle": "Welcome to Dashboard",
+      "loginPromptTitle": "Welcome to TravelsTrem",
       "loginPromptDescription": "Sign in to view your bookings, manage favorites, and track your travel history.",
       "loginButton": "Log in",
       "authParam": "dashboard",
@@ -426,7 +426,7 @@
     },
 
     "loading": {
-      "app": "Loading dashboard"
+      "app": "Loading App"
     },
 
     "api": {
@@ -849,7 +849,7 @@
     },
 
     "loading": {
-      "app": "Loading dashboard"
+      "app": "Loading App"
     },
 
     "errors": {

@@ -51,7 +51,7 @@ export default function DashboardPageView({ loading, error, labels, widgets, opt
         sessionStorage.setItem(STORAGE_KEY, activeNav);
     }, [activeNav]);
 
-    if (loading) return <GlobalLoader visible text="Loading dashboard" />;
+    if (loading) return <GlobalLoader visible text="Loading App" />;
     if (error) return <main className="customer-dashboard-page customer-dashboard-page--error">Error: {error}</main>;
 
     const shellWidget = widgets.find((widget) => widget.type === "CustomerDashboardShell");
