@@ -19,9 +19,9 @@ export default function BookingsView({ definition, loading, onViewBooking }) {
       },
       table: {
         ...(props.table || {}),
-        title: getLabel(props.table?.titleRef, getLabel(props.titleRef, "Booking List")),
+        title: getLabel(props.table?.titleRef, getLabel(props.titleRef, "My Journeys")),
         description: getLabel(props.table?.descriptionRef, ""),
-        ariaLabel: getLabel(props.table?.ariaLabelRef, "Booking List"),
+        ariaLabel: getLabel(props.table?.ariaLabelRef, "My Journeys"),
         emptyState: props.table?.emptyState ? {
           ...props.table.emptyState,
           title: getLabel(props.table.emptyState.titleRef, "No bookings found"),
