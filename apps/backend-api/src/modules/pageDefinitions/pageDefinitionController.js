@@ -14,12 +14,18 @@ const parseOverride = (raw) => {
 function extractOptionalUser(req) {
   if (req.user) return { userId: req.user.sub || req.user.id };
 
-  const authHeader = req.headers.authorization || req.headers.Authorization || "";
-  if (!authHeader || !authHeader.startsWith("Bearer ")) return null;
+  const token = (() => {
+    const authHeader = req.headers.authorization || req.headers.Authorization || "";
+    if (authHeader && authHeader.startsWith("Bearer ")) return authHeader.split(" ")[1];
+    if (req.headers["x-ignore-cookie-auth"] === "true") return null;
+    return req.cookies?.token || req.cookies?.["__Host-token"] || null;
+  })();
+
+  if (!token) return null;
 
   try {
     const secret = (config.JWT && config.JWT.accessSecret) || process.env.JWT_SECRET;
-    const payload = jwt.verify(authHeader.split(" ")[1], secret);
+    const payload = jwt.verify(token, secret);
     return { userId: payload.sub || payload.id };
   } catch {
     return null;

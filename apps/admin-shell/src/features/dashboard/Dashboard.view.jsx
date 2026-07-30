@@ -345,8 +345,8 @@ function DashboardBookingTable({ widget, labels, options, bookingState, bookingQ
     ));
     const table = {
         ...(props.table || {}),
-        title: getLabel(labels, props.table?.titleRef, getLabel(labels, props.titleRef, "Booking List")),
-        ariaLabel: getLabel(labels, props.table?.ariaLabelRef, "Booking List"),
+        title: getLabel(labels, props.table?.titleRef, getLabel(labels, props.titleRef, "My Journeys")),
+        ariaLabel: getLabel(labels, props.table?.ariaLabelRef, "My Journeys"),
         loading: Boolean(bookingState?.loading),
         error: bookingState?.error || "",
         emptyState: props.table?.emptyState ? {
