@@ -5,7 +5,8 @@ import Button from "@packages/trem-ui/components/Button/Button.jsx";
 import DatePicker from "@packages/trem-ui/components/DatePicker/DatePicker.jsx";
 import Icon from "@packages/trem-ui/icons/Icon/Icon.jsx";
 
-export function FormField({ field, value, error, onChange }) {
+export function FormField({ field, value, error, errorKey, onChange }) {
+  const fieldErrorKey = errorKey || field.name;
   if (field.type === "select") {
     const items = (field.options || []).map((opt) => ({
       id: opt.value ?? opt,
@@ -17,7 +18,7 @@ export function FormField({ field, value, error, onChange }) {
       (opt) => String(opt.value ?? opt) === String(value ?? "")
     )?.label || field.placeholder || "Select";
     return (
-      <label className="be-field" htmlFor={field.name}>
+      <label className="be-field" htmlFor={field.name} data-field-key={fieldErrorKey} data-invalid={Boolean(error)}>
         <span className="be-field__label">{field.label || field.name}{field.required ? " *" : ""}</span>
         <Dropdown
           variant="searchable"
@@ -39,7 +40,7 @@ export function FormField({ field, value, error, onChange }) {
 
   if (field.type === "date") {
     return (
-      <label className="be-field" htmlFor={field.name}>
+      <label className="be-field" htmlFor={field.name} data-field-key={fieldErrorKey} data-invalid={Boolean(error)}>
         <span className="be-field__label">{field.label || field.name}{field.required ? " *" : ""}</span>
         <DatePicker
           value={value ?? ""}
@@ -57,7 +58,7 @@ export function FormField({ field, value, error, onChange }) {
   }
 
   return (
-    <label className="be-field" htmlFor={field.name}>
+    <label className="be-field" htmlFor={field.name} data-field-key={fieldErrorKey} data-invalid={Boolean(error)}>
       <span className="be-field__label">{field.label || field.name}{field.required ? " *" : ""}</span>
       <InputField
         variant={field.type === "number" ? "number" : field.type === "email" ? "email" : field.type === "tel" ? "tel" : "text"}

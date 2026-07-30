@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { GlobalLoader, FloatingActionBar, EmptyState } from "@packages/trem-ui";
+import { GlobalLoader, FloatingActionBar, EmptyState, scrollTargetsToTop } from "@packages/trem-ui";
 import { fetchData, requestShellNavigation } from "@packages/trem-utils";
 import BookingLayout from "../components/BookingLayout.jsx";
 import BookingSidebar from "../components/BookingSidebar.jsx";
@@ -18,6 +18,16 @@ const WHATSAPP_GROUP_URL = process.env.REACT_APP_WHATSAPP_GROUP_URL;
 const SUPPORT_PHONE = process.env.REACT_APP_SUPPORT_PHONE;
 
 const CONFIRMATION_STORAGE_PREFIX = "trem_booking_confirmation_";
+
+function scrollToFirstError() {
+  window.setTimeout(() => {
+    const target = document.querySelector(
+      "[data-invalid='true'], .be-field__error, [role='alert']",
+    );
+    target?.scrollIntoView?.({ behavior: "smooth", block: "center", inline: "nearest" });
+    target?.querySelector?.("button, input, select, textarea")?.focus?.({ preventScroll: true });
+  }, 120);
+}
 
 function getConfirmationStorageKey(product, productRef) {
   return `${CONFIRMATION_STORAGE_PREFIX}${product}_${productRef}`;
@@ -293,7 +303,7 @@ export default function BookingEntryPage() {
   useEffect(() => {
     if (prevStepRef.current !== flow.currentStep) {
       prevStepRef.current = flow.currentStep;
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      scrollTargetsToTop("smooth");
     }
   }, [flow.currentStep]);
 
@@ -341,12 +351,14 @@ export default function BookingEntryPage() {
   const handleNext = useCallback(() => {
     if (guestsExceedSeats) {
       flow.setErrors({ adults: availabilityValidationMessage });
+      scrollToFirstError();
       return;
     }
     if (flow.stepKey === "review") {
       handleSubmit();
     } else {
-      flow.goNext();
+      const advanced = flow.goNext();
+      if (!advanced) scrollToFirstError();
     }
   }, [flow.stepKey, flow.goNext, guestsExceedSeats, seatsAvailable, addons, serverPricing]);
 
@@ -438,6 +450,7 @@ export default function BookingEntryPage() {
       product={product}
       productData={productData}
       trip={flow.trip}
+      travellers={flow.travellers}
       guestsCount={flow.guestsCount}
       availability={availability}
       computedPricing={computedPricing}

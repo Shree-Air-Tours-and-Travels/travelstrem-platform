@@ -33,6 +33,7 @@ export { default as DatePicker } from "./components/DatePicker/DatePicker.jsx";
 export { default as FloatingActionBar } from "./components/FloatingActionBar/FloatingActionBar.jsx";
 export { default as ScrollToTopButton } from "./components/ScrollToTopButton/ScrollToTopButton.jsx";
 export { default as ScrollToTop } from "./components/ScrollToTop/ScrollToTop.jsx";
+export { scrollTargetsToTop } from "./components/ScrollToTop/scrollTargets.js";
 export { default as EmptyState } from "./components/EmptyState/EmptyState.jsx";
 export { default as NoDataFound } from "./components/NoDataFound/NoDataFound.jsx";
 export { default as ErrorState } from "./components/ErrorState/ErrorState.jsx";
