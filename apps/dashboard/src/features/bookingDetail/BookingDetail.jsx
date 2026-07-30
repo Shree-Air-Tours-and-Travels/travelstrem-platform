@@ -185,27 +185,33 @@ export default function BookingDetail({ bookingId, onBack }) {
     && paymentStatus === "TOKEN_PENDING";
 
   return (
-    <div className="bd">
-      <div className="bd__nav">
+    <>
+          <nav className="bd__breadcrumbs" aria-label="Booking breadcrumb">
         <button type="button" className="bd__back" onClick={onBack}>
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-          Back to Bookings
+          <svg width="17" height="17" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          Bookings
         </button>
-      </div>
+        <span aria-hidden="true">/</span>
+        <span className="bd__breadcrumb-current">{tour?.title || "Booking details"}</span>
+      </nav>
+          <div className="bd">
 
-      <div className="bd__header">
-        <div className="bd__header-left">
-          <h1 className="bd__title">{tour?.title || "Booking"}</h1>
-          <div className="bd__meta">
-            <span className="bd__ref">{booking.bookingRef || "—"}</span>
-            <span className="bd__product">{product === "trevio" ? "Trip" : "Tour"}</span>
-            <StatusBadge value={booking.status} size="md" />
+
+      <div className="bd__shell">
+        <div className="bd__header">
+          <div className="bd__header-left">
+            <span className="bd__eyebrow">Booking summary</span>
+            <h1 className="bd__title">{tour?.title || "Booking"}</h1>
+            <div className="bd__meta">
+              <span className="bd__ref">{booking.bookingRef || "—"}</span>
+              <span className="bd__product">{product === "trevio" ? "Trevio trip" : "Custom tour"}</span>
+              <StatusBadge value={booking.status} size="md" />
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="bd__grid">
-        <div className="bd__main">
+        <div className="bd__grid">
+          <div className="bd__main">
           <section className="bd__card">
             <h3 className="bd__card-title">Status Timeline</h3>
             <TimelineStepper steps={timeline} />
@@ -355,9 +361,9 @@ export default function BookingDetail({ bookingId, onBack }) {
               {timelineEntries.length === 0 && <p className="bd__empty-text">No activity yet</p>}
             </div>
           </section>
-        </div>
+          </div>
 
-        <div className="bd__side">
+          <div className="bd__side">
           <section className="bd__card">
             <h3 className="bd__card-title">Trip Details</h3>
             <div className="bd__detail-list">
@@ -413,8 +419,11 @@ export default function BookingDetail({ bookingId, onBack }) {
               </div>
             </section>
           )}
+          </div>
         </div>
       </div>
     </div>
+    </>
+
   );
 }

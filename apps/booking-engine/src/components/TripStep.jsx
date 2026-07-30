@@ -23,6 +23,8 @@ export default function TripStep({ tour, trip, updateTrip, errors, isFirst, prod
 
   const prefs = isTrevio ? (tour?.preferences || {}) : {};
   const roomOptions = buildPrefOptions(prefs.roomTypes);
+  const selectedRoom = (prefs.roomTypes || []).find((option) => option.value === trip.roomType);
+  const preferenceTotal = Number(pricing?.totalPrefExtras || selectedRoom?.extraPrice || 0);
 
   return (
     <div className="be-step be-step--trip">
@@ -90,19 +92,24 @@ export default function TripStep({ tour, trip, updateTrip, errors, isFirst, prod
             <CounterField label="Children" value={trip.children} onChange={(v) => updateTrip("children", v)} min={0} max={10} />
             <CounterField label="Infants" value={trip.infants} onChange={(v) => updateTrip("infants", v)} min={0} max={5} />
           </div>
-          {errors.adults && <span className="be-field__error">{errors.adults}</span>}
+          {errors.adults && <span className="be-field__error" data-invalid="true">{errors.adults}</span>}
 
-          <h3 className="be-step__heading">Preferences</h3>
+          <div className="be-step__heading-row">
+            <h3 className="be-step__heading">Preferences</h3>
+            <strong className="be-step__preference-total">
+              {preferenceTotal > 0 ? `+${formatMoney(preferenceTotal)}` : formatMoney(0)}
+            </strong>
+          </div>
           <div className="be-step__row">
             {roomOptions.length > 0 && (
               <FormField
-                field={{ name: "roomType", label: "Room Type", type: "select", options: roomOptions }}
+                field={{ name: "roomType", label: "Room Type", type: "select", options: roomOptions, required: true, placeholder: "None" }}
                 value={trip.roomType}
+                error={errors.roomType}
                 onChange={updateTrip}
               />
             )}
           </div>
-
           <h3 className="be-step__heading">Price Breakdown</h3>
           <div className="be-step__readonly-card">
             <div className="be-step__readonly-row">
@@ -147,13 +154,13 @@ export default function TripStep({ tour, trip, updateTrip, errors, isFirst, prod
             <CounterField label="Children" value={trip.children} onChange={(v) => updateTrip("children", v)} min={0} max={10} />
             <CounterField label="Infants" value={trip.infants} onChange={(v) => updateTrip("infants", v)} min={0} max={5} />
           </div>
-          {errors.adults && <span className="be-field__error">{errors.adults}</span>}
+          {errors.adults && <span className="be-field__error" data-invalid="true">{errors.adults}</span>}
 
           <h3 className="be-step__heading">Preferences</h3>
           <div className="be-step__row">
             <FormField
               field={{
-                name: "roomType", label: "Room Type", type: "select",
+                name: "roomType", label: "Room Type", type: "select", required: true, placeholder: "None",
                 options: [
                   { value: "single", label: "Single" },
                   { value: "double", label: "Double" },
@@ -162,6 +169,7 @@ export default function TripStep({ tour, trip, updateTrip, errors, isFirst, prod
                 ],
               }}
               value={trip.roomType}
+              error={errors.roomType}
               onChange={updateTrip}
             />
           </div>

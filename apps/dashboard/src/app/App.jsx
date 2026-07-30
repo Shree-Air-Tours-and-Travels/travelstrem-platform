@@ -98,6 +98,8 @@ function DashboardShell() {
   const selectedTab = destination.tab || searchParams.get("tab") || "overview";
   const activeTab = destination.activeId || selectedTab;
   const isRemote = destination.kind === "remote";
+  const isBookingsScreen = destination.renderer === "dashboard" && activeTab === "bookings";
+  const isBookingDetail = isBookingsScreen && Boolean(searchParams.get("bookingId"));
   const productFilter = searchParams.get("product") || "all";
 
   const handleNavigation = useCallback((rawIntent) => {
@@ -249,7 +251,7 @@ function DashboardShell() {
           onMenuToggle={() => setMobileSidebarOpen((open) => !open)}
         />
 
-        <div data-scroll-root className={`dash-content${destination.renderer === "dashboard" && activeTab === "bookings" ? " dash-content--bookings" : ""}${isRemote ? " dash-content--remote" : ""}`}>
+        <div data-scroll-root className={`dash-content${isBookingsScreen ? " dash-content--bookings" : ""}${isBookingDetail ? " dash-content--booking-detail" : ""}${isRemote ? " dash-content--remote" : ""}`}>
           <ProtectedRoute>
             <RemoteBoundary resetKey={`${location.pathname}${location.search}`}>
               <Suspense fallback={<GlobalLoader visible text="Loading customer product" />}>
@@ -266,7 +268,7 @@ function DashboardShell() {
               </Suspense>
             </RemoteBoundary>
           </ProtectedRoute>
-          {destination.renderer !== "bookingEngine" ? (
+          {destination.renderer !== "bookingEngine" && !isBookingsScreen ? (
             <AppFooter config={appHeaderConfig.footer || {}} className="dash-app-footer" />
           ) : null}
         </div>
