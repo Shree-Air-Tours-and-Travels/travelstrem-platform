@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
+import BottomSheet from "@packages/trem-ui/components/BottomSheet/BottomSheet.jsx";
 
 const formatMoney = (v) => `₹${Number(v || 0).toLocaleString("en-IN")}`;
 const formatDate = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—";
@@ -14,7 +15,9 @@ export default function BookingSidebar({
   couponStatus,
   onCouponChange,
   onApplyCoupon,
+  travellers = [],
 }) {
+  const [preferenceHelpOpen, setPreferenceHelpOpen] = useState(false);
   const data = productData || {};
   const title = data.title || data.name || "—";
   const location = data.city || data.location || "";
@@ -43,6 +46,48 @@ export default function BookingSidebar({
   const cancellationPolicy = data.cancellationPolicy || "";
   const seatsAvailable = availability?.seatsAvailable;
   const isLowSeats = isTrevio && Boolean(availability?.isLowSeats);
+  const preferenceItems = useMemo(() => {
+    const preferences = data.preferences || {};
+    const items = [];
+    const room = (preferences.roomTypes || []).find((option) => option.value === trip.roomType);
+    if (room) items.push({ label: "Room type", value: room.label, amount: Number(room.extraPrice || 0) });
+
+    const travellerFields = [
+      ["mealPreference", "Meal", "mealPreferences"],
+      ["packageType", "Package", "packageTypes"],
+      ["drinkType", "Drink", "drinkTypes"],
+    ];
+    travellers.forEach((traveller, index) => {
+      travellerFields.forEach(([field, label, optionsKey]) => {
+        const selected = (preferences[optionsKey] || []).find((option) => option.value === traveller[field]);
+        if (selected) {
+          items.push({
+            label: `${travellers.length > 1 ? `Traveller ${index + 1} · ` : ""}${label}`,
+            value: selected.label,
+            amount: Number(selected.extraPrice || 0),
+          });
+        }
+      });
+    });
+    return items;
+  }, [data.preferences, travellers, trip.roomType]);
+  const preferenceDetails = (
+    <div className="be-preferences-help__content">
+      <p>These selections customise your trip and are included in the booking total.</p>
+      {preferenceItems.length ? preferenceItems.map((item, index) => (
+        <div key={`${item.label}-${index}`}>
+          <span>{item.label}</span>
+          <strong>{item.value}{item.amount ? ` · +${formatMoney(item.amount)}` : ""}</strong>
+        </div>
+      )) : (
+        <div><span>Selections</span><strong>Not selected</strong></div>
+      )}
+      <div className="be-preferences-help__total">
+        <span>Preference total</span>
+        <strong>{totalPrefExtras > 0 ? `+${formatMoney(totalPrefExtras)}` : formatMoney(0)}</strong>
+      </div>
+    </div>
+  );
 
   return (
     <div className="be-sidebar">
@@ -97,7 +142,22 @@ export default function BookingSidebar({
         </div>
         {totalPrefExtras > 0 && (
           <div className="be-sidebar__row">
-            <span className="be-sidebar__label">Preferences</span>
+            <div className="be-sidebar__label be-sidebar__label--with-info">
+              Preferences
+              <div className="be-preferences-help">
+                <button
+                  type="button"
+                  className="be-preferences-help__trigger"
+                  aria-label="View preference price breakdown"
+                  onClick={() => {
+                    if (window.matchMedia("(max-width: 768px)").matches) setPreferenceHelpOpen(true);
+                  }}
+                >
+                  i
+                </button>
+                <div className="be-preferences-help__tooltip" role="tooltip">{preferenceDetails}</div>
+              </div>
+            </div>
             <span className="be-sidebar__value be-sidebar__value--positive">+{formatMoney(totalPrefExtras)}</span>
           </div>
         )}
@@ -148,6 +208,9 @@ export default function BookingSidebar({
         </div>
         <p className="be-sidebar__tax-note">Inclusive of applicable tax</p>
       </div>
+      <BottomSheet open={preferenceHelpOpen} onClose={() => setPreferenceHelpOpen(false)} title="Preference breakdown">
+        {preferenceDetails}
+      </BottomSheet>
 
       {cancellationPolicy && (
         <div className="be-sidebar__section be-sidebar__section--policy">

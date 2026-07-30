@@ -1,19 +1,38 @@
 @import "@packages/trem-design-tokens/scss";
 
 .bd {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: $space-6 $space-4 $space-12;
+  width: 100%;
+  min-height: 100%;
+  background: var(--bg, #f7f8fb);
 
-  &__nav {
-    margin-bottom: $space-4;
+  &__shell {
+    width: min(1240px, 100%);
+    margin: 0 auto;
+    padding: $space-6 clamp($space-4, 3vw, $space-8) $space-12;
+  }
+
+  &__breadcrumbs {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    width: 100%;
+    min-height: 54px;
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    padding: $space-2 clamp($space-4, 3vw, $space-8);
+    margin: 0;
+    color: var(--text-muted, $text-muted);
+    background: var(--surface-glass-strong, rgba(255, 255, 255, 0.94));
+    border-bottom: 1px solid var(--border, $border-color);
+    backdrop-filter: blur(14px);
   }
 
   &__back {
     display: inline-flex;
     align-items: center;
     gap: $space-2;
-    padding: $space-2 $space-3;
+    padding: $space-2 0;
     border: none;
     background: none;
     color: var(--text-muted, $text-muted);
@@ -25,12 +44,36 @@
 
     &:hover {
       color: var(--color-primary, $primary-color);
-      background: var(--primary-soft, rgba(15, 143, 134, 0.08));
     }
   }
 
+  &__breadcrumb-current {
+    min-width: 0;
+    max-width: min(52vw, 460px);
+    overflow: hidden;
+    color: var(--text-muted, $text-muted);
+    font-size: $font-size-sm;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   &__header {
-    margin-bottom: $space-6;
+    margin-bottom: $space-5;
+    padding: $space-5;
+    border: 1px solid var(--border, $border-color);
+    border-radius: $radius-md;
+    background: linear-gradient(135deg, var(--card-bg, $white-color), var(--primary-soft, rgba(15, 143, 134, 0.06)));
+    box-shadow: $shadow-soft;
+  }
+
+  &__eyebrow {
+    display: block;
+    margin-bottom: $space-2;
+    color: var(--color-primary, $primary-color);
+    font-size: $font-size-xs;
+    font-weight: $font-bold;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
   }
 
   &__title {
@@ -70,7 +113,7 @@
 
   &__grid {
     display: grid;
-    grid-template-columns: 1fr 340px;
+    grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
     gap: $space-6;
     align-items: start;
 
@@ -83,8 +126,8 @@
     background: var(--card-bg, $white-color);
     border: 1px solid var(--border, $border-color);
     border-radius: $radius-md;
-    padding: $space-5;
-    margin-bottom: $space-4;
+    padding: clamp($space-4, 2vw, $space-6);
+    margin-bottom: $space-5;
     box-shadow: $shadow-soft;
 
     @include mq-max($breakpoint-mobile) {
@@ -93,7 +136,7 @@
 
     &--messages {
       position: sticky;
-      top: $space-6;
+      top: calc(54px + #{$space-4});
     }
   }
 
@@ -117,14 +160,20 @@
   &__detail-row {
     display: flex;
     justify-content: space-between;
-    padding: $space-2 0;
+    gap: $space-4;
+    padding: $space-3 0;
     font-size: $font-size-sm;
     border-bottom: 1px solid var(--border, rgba(17,17,17,0.06));
 
     &:last-child { border-bottom: none; }
 
     span:first-child { color: var(--text-muted, $text-muted); }
-    span:last-child { font-weight: $font-medium; color: var(--text, $text-dark); }
+    span:last-child {
+      min-width: 0;
+      font-weight: $font-medium;
+      color: var(--text, $text-dark);
+      text-align: right;
+    }
 
     &--remaining span:last-child {
       color: var(--color-warning, $tertiary-color);
@@ -479,5 +528,39 @@
     color: var(--text-muted, $text-muted);
 
     p { margin: 0 0 $space-4; }
+  }
+
+  @include mq-max($breakpoint-mobile) {
+    &__shell {
+      padding: $space-4 $space-3 $space-8;
+    }
+
+    &__breadcrumbs {
+      min-height: 50px;
+      padding-inline: $space-4;
+    }
+
+    &__header {
+      padding: $space-4;
+      margin-bottom: $space-4;
+    }
+
+    &__title {
+      line-height: 1.2;
+    }
+
+    &__grid {
+      gap: 0;
+    }
+
+    &__card {
+      margin-bottom: $space-4;
+      border-radius: $radius-sm;
+      box-shadow: none;
+    }
+
+    &__side {
+      display: contents;
+    }
   }
 }

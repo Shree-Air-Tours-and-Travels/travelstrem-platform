@@ -40,6 +40,13 @@ export default function TravellerStep({
     }
   }, [detectedCountry, geoLoading]);
 
+  useEffect(() => {
+    const firstTravellerError = Object.keys(errors).find((key) => key.startsWith("travellers."));
+    if (!firstTravellerError) return;
+    const errorIndex = Number(firstTravellerError.split(".")[1]);
+    if (Number.isInteger(errorIndex)) setExpandedTraveller(errorIndex);
+  }, [errors]);
+
   const isInternational = travellers.some((t) => {
     const nat = (t.nationality || "").toLowerCase();
     return nat && !DOMESTIC_NATIONALITIES.has(nat);
@@ -93,8 +100,11 @@ export default function TravellerStep({
                 label: pf.label,
                 type: pf.type || "select",
                 options: prefFieldOptions[pf.name] || [],
+                required: true,
               }}
               value={traveller[pf.name] || ""}
+              error={errors[`travellers.${index}.${pf.name}`]}
+              errorKey={`travellers.${index}.${pf.name}`}
               onChange={(name, val) => updateTraveller(index, name, val)}
             />
           ))}
@@ -111,18 +121,21 @@ export default function TravellerStep({
           field={{ name: "name", label: "Full Name", type: "text", required: true }}
           value={contact.name}
           error={errors["contact.name"]}
+          errorKey="contact.name"
           onChange={(name, val) => updateContact(name, val)}
         />
         <FormField
           field={{ name: "email", label: "Email", type: "email", required: true }}
           value={contact.email}
           error={errors["contact.email"]}
+          errorKey="contact.email"
           onChange={(name, val) => updateContact(name, val)}
         />
         <FormField
           field={{ name: "phone", label: "Phone", type: "tel", required: true }}
           value={contact.phone}
           error={errors["contact.phone"]}
+          errorKey="contact.phone"
           onChange={(name, val) => updateContact(name, val)}
         />
       </div>
@@ -159,6 +172,7 @@ export default function TravellerStep({
                         field={field}
                         value={traveller[field.name]}
                         error={errors[`travellers.${index}.${field.name}`]}
+                        errorKey={`travellers.${index}.${field.name}`}
                         onChange={(name, val) => updateTraveller(index, name, val)}
                       />
                     ))}

@@ -20,7 +20,7 @@ import {
 
 const DOMESTIC_NATIONALITIES = new Set(["India"]);
 
-function validateTraveller(traveller, allTravellers = []) {
+function validateTraveller(traveller, allTravellers = [], preferenceFields = []) {
   const errors = {};
   TRAVELLER_FIELDS.filter((f) => f.required).forEach((f) => {
     if (f.name === "passportNumber") {
@@ -36,11 +36,16 @@ function validateTraveller(traveller, allTravellers = []) {
     if (f.name === "emergencyContact") return;
     if (!String(traveller[f.name] || "").trim()) errors[f.name] = `${f.label} is required`;
   });
+  preferenceFields.forEach((field) => {
+    if (field.required && !String(traveller[field.name] || "").trim()) {
+      errors[field.name] = `${field.label} is required`;
+    }
+  });
   if (traveller.email && !/^\S+@\S+\.\S+$/.test(traveller.email)) errors.email = "Invalid email";
   return errors;
 }
 
-function validateTrip(trip) {
+function validateTrip(trip, roomRequired = true) {
   const errors = {};
   if (!trip.startDate) errors.startDate = "Start date is required";
   if (!trip.endDate) errors.endDate = "End date is required";
@@ -48,6 +53,7 @@ function validateTrip(trip) {
     errors.endDate = "End date must be after start date";
   }
   if (!trip.adults || trip.adults < 1) errors.adults = "At least 1 adult required";
+  if (roomRequired && !String(trip.roomType || "").trim()) errors.roomType = "Room type is required";
   return errors;
 }
 
@@ -69,6 +75,15 @@ export function useBookingFlow({ product: productProp = "trevista", tour = null 
 
   const steps = useMemo(() => STEP_CONFIG[product] || STEP_CONFIG.trevista, [product]);
   const stepKey = steps[currentStep]?.key;
+  const activePreferenceFields = useMemo(
+    () => TRAVELLER_PREFERENCE_FIELDS.filter(
+      (field) => Array.isArray(tour?.preferences?.[field.optionsKey])
+        && tour.preferences[field.optionsKey].length > 0,
+    ),
+    [tour],
+  );
+  const roomRequired = product !== "trevio"
+    || (Array.isArray(tour?.preferences?.roomTypes) && tour.preferences.roomTypes.length > 0);
 
   // Sync product to store if prop changes
   useEffect(() => {
@@ -99,25 +114,25 @@ export function useBookingFlow({ product: productProp = "trevista", tour = null 
     let stepErrors = {};
 
     if (stepKey === "trip") {
-      stepErrors = validateTrip(trip);
+      stepErrors = validateTrip(trip, roomRequired);
     } else if (stepKey === "travellers") {
       travellers.forEach((t, i) => {
-        const tErrors = validateTraveller(t, travellers);
+        const tErrors = validateTraveller(t, travellers, activePreferenceFields);
         Object.entries(tErrors).forEach(([k, v]) => { stepErrors[`travellers.${i}.${k}`] = v; });
       });
       const cErrors = validateContact(contact);
       Object.entries(cErrors).forEach(([k, v]) => { stepErrors[`contact.${k}`] = v; });
     } else if (stepKey === "details" || stepKey === "review") {
-      stepErrors = { ...validateTrip(trip), ...validateContact(contact) };
+      stepErrors = { ...validateTrip(trip, roomRequired), ...validateContact(contact) };
       travellers.forEach((t, i) => {
-        const tErrors = validateTraveller(t, travellers);
+        const tErrors = validateTraveller(t, travellers, activePreferenceFields);
         Object.entries(tErrors).forEach(([k, v]) => { stepErrors[`travellers.${i}.${k}`] = v; });
       });
     }
 
     dispatch(setErrors(stepErrors));
     return Object.keys(stepErrors).length === 0;
-  }, [stepKey, trip, travellers, contact, dispatch]);
+  }, [stepKey, trip, travellers, contact, activePreferenceFields, roomRequired, dispatch]);
 
   const goNext = useCallback(() => {
     if (!validateCurrentStep()) return false;

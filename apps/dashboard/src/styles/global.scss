@@ -142,6 +142,12 @@ select {
   }
 }
 
+.dash-content--booking-detail {
+  padding: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
 .dash-content > .dash-app-footer {
   width: calc(100% + #{$space-6 * 2});
   margin-right: -$space-6;
@@ -186,6 +192,14 @@ select {
       height: 100%;
       min-height: 0;
     }
+  }
+
+  .dash-content--booking-detail {
+    height: auto;
+    padding: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .dash-content > .dash-app-footer {

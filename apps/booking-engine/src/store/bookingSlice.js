@@ -14,9 +14,9 @@ const TRAVELLER_FIELDS = [
 ];
 
 const TRAVELLER_PREFERENCE_FIELDS = [
-  { name: "mealPreference", label: "Meal Preference", type: "select", optionsKey: "mealPreferences" },
-  { name: "packageType", label: "Package Type", type: "select", optionsKey: "packageTypes" },
-  { name: "drinkType", label: "Drink Type", type: "select", optionsKey: "drinkTypes" },
+  { name: "mealPreference", label: "Meal Preference", type: "select", optionsKey: "mealPreferences", required: true },
+  { name: "packageType", label: "Package Type", type: "select", optionsKey: "packageTypes", required: true },
+  { name: "drinkType", label: "Drink Type", type: "select", optionsKey: "drinkTypes", required: true },
 ];
 
 function emptyTraveller(index = 0) {
@@ -143,12 +143,7 @@ const bookingSlice = createSlice({
       state.trip.endDate = product.endDateISO || state.trip.endDate;
       state.trip.pricePerPerson = product.price || state.trip.pricePerPerson;
       state.trip.tokenAmount = product.token || state.trip.tokenAmount;
-      const roomTypes = Array.isArray(product.preferences?.roomTypes)
-        ? product.preferences.roomTypes
-        : [];
-      state.trip.roomType = roomTypes.some((option) => option.value === state.trip.roomType)
-        ? state.trip.roomType
-        : roomTypes[0]?.value || "";
+      state.trip.roomType = "";
     },
   },
 });
