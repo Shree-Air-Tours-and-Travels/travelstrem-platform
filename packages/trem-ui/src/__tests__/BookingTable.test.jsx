@@ -39,9 +39,9 @@ describe("BookingTable", () => {
   });
 
   it("renders configurable columns and rows", () => {
-    render(<BookingTable table={{ title: "Booking List" }} columns={columns} rows={rows} pagination={{ enabled: false }} />);
+    render(<BookingTable table={{ title: "My Journeys" }} columns={columns} rows={rows} pagination={{ enabled: false }} />);
 
-    expect(screen.getByText("Booking List")).toBeInTheDocument();
+    expect(screen.getByText("My Journeys")).toBeInTheDocument();
     expect(screen.getByText("Mountain Escape")).toBeInTheDocument();
     expect(screen.getByText("Hotel booking")).toBeInTheDocument();
   });
@@ -91,7 +91,7 @@ describe("BookingTable", () => {
     }));
     const { container } = render(
       <BookingTable
-        table={{ title: "Booking List" }}
+        table={{ title: "My Journeys" }}
         columns={columns}
         rows={manyRows}
         pagination={{ pageSize: 10, pageSizeOptions: [10, 20] }}
@@ -131,7 +131,7 @@ describe("BookingTable", () => {
     const { container } = render(
       <BookingTable
         table={{
-          title: "Booking List",
+          title: "My Journeys",
           description: "Search and manage bookings.",
           viewportMinHeight: "420px",
           emptyState: {
@@ -146,8 +146,8 @@ describe("BookingTable", () => {
       />,
     );
 
-    const table = screen.getByRole("region", { name: "Booking List" });
-    expect(screen.getByRole("heading", { name: "Booking List", level: 1 })).toBeInTheDocument();
+    const table = screen.getByRole("region", { name: "My Journeys" });
+    expect(screen.getByRole("heading", { name: "My Journeys", level: 1 })).toBeInTheDocument();
     expect(screen.getByText("Search and manage bookings.")).toBeInTheDocument();
     expect(table.style.getPropertyValue("--booking-table-viewport-min-height")).toBe("420px");
     expect(screen.getByRole("status")).toHaveTextContent("No bookings found");
@@ -159,7 +159,7 @@ describe("BookingTable", () => {
     render(
       <BookingTable
         table={{
-          title: "Booking List",
+          title: "My Journeys",
           mobileCard: { titleAccessor: "service.name" },
           expandFiltersLabel: "Filters",
           collapseFiltersLabel: "Hide filters",
