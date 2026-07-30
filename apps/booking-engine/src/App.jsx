@@ -1,9 +1,9 @@
 import React from "react";
-import { buildGlobalDashboardUrl } from "@packages/trem-utils";
+import { buildGlobalAppShellUrl } from "@packages/trem-utils";
 import { BrandLogo, Button, Icon } from "@packages/trem-ui";
 
 export default function App() {
-  const dashboardUrl = buildGlobalDashboardUrl({ tab: "overview" });
+  const dashboardUrl = buildGlobalAppShellUrl({ tab: "overview" });
 
   return (
     <main className="booking-shell-notice">

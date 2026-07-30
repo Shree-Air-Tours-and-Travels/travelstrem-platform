@@ -2,7 +2,7 @@ import config from "./env.js";
 
 const TREVIO_URL = config.TREVIO_URL;
 const TREVISTA_URL = config.TREVISTA_URL;
-const DASHBOARD_URL = config.DASHBOARD_URL;
+const SHELL_URL = config.SHELL_URL;
 
 export default {
   "status": "success",
@@ -32,7 +32,7 @@ export default {
     "logos": {
       "trevio": { "logoSrc": "/favicon.png", "name": "Trevio", "subtitle": "by TravelsTrem", "initial": "" },
       "trevista": { "logoSrc": "/favicon.png", "name": "Trevista", "subtitle": "by TravelsTrem", "initial": "" },
-      "dashboard": { "logoSrc": "/favicon.png", "name": "TravelsTrem", "subtitle": "Dashboard", "initial": "" },
+      "app-shell": { "logoSrc": "/favicon.png", "name": "TravelsTrem", "subtitle": "Dashboard", "initial": "" },
       "admin": { "logoSrc": "/favicon.png", "name": "TravelsTREM", "subtitle": "Admin", "initial": "" },
       "booking": { "logoSrc": "/favicon.png", "name": "TravelsTrem", "subtitle": "Booking", "initial": "" },
       "agent": { "logoSrc": "/favicon.png", "name": "TravelsTrem", "subtitle": "Partner Portal", "initial": "" }
@@ -81,7 +81,7 @@ export default {
       {
         "label": "Dashboard",
         "type": "external",
-        "href": DASHBOARD_URL,
+        "href": SHELL_URL,
         "target": "_self",
         "disabled": false
       },
@@ -98,7 +98,7 @@ export default {
     "navigation": [
       { "id": "home", "label": "Home", "path": "/", "access": "public" },
       { "id": "about", "label": "About", "path": "/about", "access": "public" },
-      { "id": "dashboard", "label": "Dashboard", "path": "/dashboard", "access": "authenticated", "external": true }
+      { "id": "app-shell", "label": "Dashboard", "path": "/app-shell", "access": "authenticated", "external": true }
     ],
     "authActions": {
       "login": { "label": "Login", "path": "/login" },
@@ -119,7 +119,7 @@ export default {
     "routeMap": {
       "/": "shell",
       "/about": "shell",
-      "/dashboard": "external",
+      "/app-shell": "external",
       "/admin": "adminTREM",
       "/checkout": "shell"
     },

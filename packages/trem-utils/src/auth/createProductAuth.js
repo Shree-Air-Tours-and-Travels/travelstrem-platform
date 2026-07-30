@@ -1,4 +1,5 @@
 import { buildGlobalAuthUrl } from "./globalAuth.js";
+import { clearAuthBrowserState, emitAuthEvent } from "@packages/trem-auth-core";
 
 const POST_JSON = (url) =>
   fetch(url, {
@@ -24,10 +25,12 @@ export const createProductAuth = ({
 
     await POST_JSON(`${apiBase}/auth/logout`);
 
+    clearAuthBrowserState({ prefixes: ["travelstrem"] });
     emit("USER_LOGOUT", { source: "header" }, { skipController: true });
+    emitAuthEvent({ type: "LOGOUT" });
 
     clearUserSessionCache?.();
-    window.location.assign(redirectTo);
+    window.location.replace(redirectTo);
   };
 
   const buildAuthAction = (headerConfig, session) => {

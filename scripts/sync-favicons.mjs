@@ -19,7 +19,7 @@ const appNames = [
   "agent-shell",
   "auth-trem",
   "booking-engine",
-  "dashboard",
+  "app-shell",
   "trevio-remote",
   "trevista-remote",
 ];

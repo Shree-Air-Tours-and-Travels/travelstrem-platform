@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { Breadcrumbs, Button, GlobalLoader, Icon, FloatingActionBar, Title, Paragraph, BookingJourneyCard } from "@packages/trem-ui";
+import { Breadcrumbs, Button, GlobalLoader, Icon, FloatingActionBar, Title, Paragraph, BookingJourneyCard, Spinner } from "@packages/trem-ui";
 import { ConfirmOverlay } from "@packages/trem-modals";
 import { fetchData } from "@packages/trem-utils";
 import "../booking/Booking.scss";
@@ -427,7 +427,13 @@ export default function BookingSummaryPage({ dispatchEvent, dashboardPath = "/da
     }
   };
 
-  if (loading) return <GlobalLoader visible text={t("loadingText", "Loading booking summary...")} />;
+  if (loading) return (
+    <main className="booking-summary-page">
+      <div className="booking-summary-page__loading">
+        <Spinner size="lg" label={t("loadingText", "Loading booking details...")} />
+      </div>
+    </main>
+  );
 
   if (error && !booking) {
     return (

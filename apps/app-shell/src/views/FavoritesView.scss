@@ -1,0 +1,92 @@
+@import "@packages/trem-design-tokens/scss";
+
+.dfv__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: $space-6;
+  gap: $space-4;
+  flex-wrap: wrap;
+}
+
+.dfv__title {
+  font-size: $font-size-xl;
+  font-weight: $font-bold;
+  color: var(--heading);
+  margin-bottom: $space-1;
+}
+
+.dfv__subtitle {
+  font-size: $font-size-sm;
+  color: var(--muted);
+}
+
+.dfv__filter-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: $font-medium;
+  color: var(--text-light);
+  transition: all $duration-base $ease-standard;
+
+  &:hover {
+    color: var(--heading);
+  }
+
+  &.is-open {
+    background: var(--surface-subtle);
+    color: var(--text);
+  }
+
+  svg {
+    width: 14px;
+    height: 14px;
+    transition: transform $duration-base $ease-standard;
+  }
+
+  &.is-open svg {
+    transform: rotate(180deg);
+  }
+}
+
+.dfv__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $space-4;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dfv__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-3;
+  padding: $space-12;
+  color: var(--muted);
+  font-size: $font-size-sm;
+}
+
+.dfv__spinner {
+  width: $space-5;
+  height: $space-5;
+  border: 2px solid var(--border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: dfv-spin 0.6s linear infinite;
+}
+
+@keyframes dfv-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

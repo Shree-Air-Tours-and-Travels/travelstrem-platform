@@ -238,8 +238,8 @@
     }
   },
 
-  "dashboard": {
-    "key": "dashboard",
+  "app-shell": {
+    "key": "app-shell",
     "name": "TravelsTrem",
     "brandName": "TravelsTrem",
     "brandSubtitle": "Dashboard",
@@ -250,7 +250,7 @@
       "loginPromptTitle": "Welcome to TravelsTrem",
       "loginPromptDescription": "Sign in to view your bookings, manage favorites, and track your travel history.",
       "loginButton": "Log in",
-      "authParam": "dashboard",
+      "authParam": "app-shell",
       "loginRateLimit": { "attempts": 5, "windowMs": 300000 }
     },
 
@@ -966,7 +966,7 @@
       "paymentProof": "/engine/:bid/payments/:pid/proof",
       "updateBooking": "/bookings/:id",
       "cancelBooking": "/bookings/:id/cancel",
-      "dashboardPage": "/pages/dashboard/dashboard"
+      "dashboardPage": "/pages/app-shell/app-shell"
     },
 
     "validation": {

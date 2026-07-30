@@ -1,8 +1,8 @@
 const normalizeSession = (data = {}) => ({
     user: data.user || null,
     permissions: Array.isArray(data.permissions) ? data.permissions : [],
-    isAuthenticated: Boolean(data.isAuthenticated || data.user || data.token),
-    token: data.token || null,
+    isAuthenticated: Boolean(data.isAuthenticated || data.authenticated || data.user),
+    sessionVersion: data.sessionVersion || data.user?.sessionVersion || null,
     flags: data.flags || {},
     config: data.config || {},
 });

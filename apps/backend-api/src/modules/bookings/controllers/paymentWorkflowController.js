@@ -34,8 +34,9 @@ function actorFromReq(req) {
 
 function proofUrl(file, req) {
   if (!file) return "";
-  if (/^https?:\/\//i.test(file.path || "")) return file.path;
-  const relative = `/uploads/${path.basename(file.path || file.filename || "")}`;
+  const url = file.secure_url || file.secureUrl || file.url || file.path || "";
+  if (/^https?:\/\//i.test(url)) return url;
+  const relative = `/uploads/${path.basename(url || file.filename || "")}`;
   return req ? `${req.protocol}://${req.get("host")}${relative}` : relative;
 }
 
@@ -72,7 +73,7 @@ async function notify(bookingId, content, event, actor, metadata = {}) {
       senderName: "System",
       content,
       messageType: "system",
-      metadata: { event, channels: ["dashboard"], ...metadata },
+      metadata: { event, channels: ["app-shell"], ...metadata },
     }),
   ]);
 }

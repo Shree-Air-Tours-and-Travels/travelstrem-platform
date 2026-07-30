@@ -8,13 +8,20 @@ export default function BrandLogo({
   subtitle,
   size = "default",
   className,
+  onClick,
 }) {
   const usesSharedLogo = !logoSrc || logoSrc === "/favicon.png";
   const lightSource = logoSrc || "/favicon.png";
   const darkSource = darkLogoSrc || (usesSharedLogo ? "/favicon-dark.png" : lightSource);
 
   return (
-    <div className={`brand-logo brand-logo--${size}${className ? ` ${className}` : ""}`}>
+    <div
+      className={`brand-logo brand-logo--${size}${className ? ` ${className}` : ""}${onClick ? " brand-logo--clickable" : ""}`}
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(e); } } : undefined}
+    >
       <img
         className="brand-logo__image brand-logo__image--light"
         src={lightSource}

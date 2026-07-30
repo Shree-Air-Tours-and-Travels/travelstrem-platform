@@ -1,6 +1,7 @@
 import React, { useCallback } from "react";
 import authService from "../services/authService";
 import { emit } from "@packages/trem-events";
+import { clearAuthBrowserState, emitAuthEvent } from "@packages/trem-auth-core";
 import { BrandLogo } from "@packages/trem-ui";
 import "./AdminDashboardHeader.scss";
 
@@ -16,8 +17,10 @@ export default function AdminDashboardHeader({ activeTab, theme, onToggleTheme, 
     try {
       await authService.logout().catch(() => {});
     } catch {}
+    clearAuthBrowserState({ prefixes: ["adminTREM", "travelstrem"] });
     emit("USER_LOGOUT", { source: "admin-header" }, { skipController: true });
-    window.location.href = "/login";
+    emitAuthEvent({ type: "LOGOUT" });
+    window.location.replace("/login");
   }, []);
 
   return (

@@ -115,6 +115,12 @@ const clearRefreshTokenCookie = (res) => {
     });
 };
 
+const setAuthNoStoreHeaders = (res) => {
+    res.setHeader("Cache-Control", "no-store");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Referrer-Policy", "no-referrer");
+};
+
 const generateRefreshToken = (user) => {
     const raw = crypto.randomBytes(48).toString("hex");
     const family = crypto.randomBytes(16).toString("hex");
@@ -138,6 +144,12 @@ const issueRefreshToken = async (user, res) => {
 
 const revokeUserRefreshTokens = async (userId) => {
     await RefreshToken.deleteMany({ userId });
+};
+
+const revokeCurrentRefreshToken = async (req) => {
+    const refreshTokenRaw = req.cookies?.[REFRESH_COOKIE_NAME] || req.cookies?.refresh_token;
+    if (!refreshTokenRaw) return;
+    await RefreshToken.deleteOne({ tokenHash: hashToken(refreshTokenRaw) });
 };
 
 const isPrivilegedRole = (role) => role === "admin" || role === "agent";
@@ -352,7 +364,9 @@ const issueUserToken = async (user, res) => {
     setTokenCookie(res, token);
     await issueRefreshToken(user, res);
     return {
-        token,
+        status: "success",
+        success: true,
+        authenticated: true,
         user: {
             id: user._id,
             name: user.name,
@@ -366,6 +380,8 @@ const issueUserToken = async (user, res) => {
             adminLevel: user.adminLevel || "none",
             adminApprovalStatus: user.adminApprovalStatus || "not_required",
         },
+        sessionVersion: String(user.tokenVersion || 0),
+        redirectTo: config.TRAVELSTREM_APP_URL || config.APP_URL || process.env.TRAVELSTREM_APP_URL || process.env.APP_URL || "https://app.travelstrem.com",
     };
 };
 
@@ -440,6 +456,7 @@ const enforceActivePrivilegedUser = async (user) => {
  * Load a local JSON config used by the frontend auth UI (if present).
  */
 export const getAuthConfig = async (req, res) => {
+    setAuthNoStoreHeaders(res);
     return res.json(authConfig);
 };
 
@@ -448,6 +465,7 @@ export const getAuthConfig = async (req, res) => {
  * Generates an OTP for admin/agent registration, stored in UserVerification collection.
  */
 export const requestAdminRegistrationOtp = async (req, res) => {
+    setAuthNoStoreHeaders(res);
     try {
         const { email, role, phone } = req.body || {};
         if (!email || typeof email !== "string") {
@@ -500,6 +518,7 @@ export const requestAdminRegistrationOtp = async (req, res) => {
  * POST /auth/register
  */
 export const register = async (req, res) => {
+    setAuthNoStoreHeaders(res);
     try {
         const { name, email, password, role } = req.body || {};
 
@@ -551,6 +570,7 @@ export const register = async (req, res) => {
             });
         }
 
+        await revokeCurrentRefreshToken(req);
         const result = await issueUserToken(user, res);
         return res.status(201).json(result);
     } catch (err) {
@@ -565,6 +585,7 @@ export const register = async (req, res) => {
  * before issuing a JWT. Member roles bypass OTP and get direct JWT.
  */
 export const login = async (req, res) => {
+    setAuthNoStoreHeaders(res);
     try {
         const { email, password } = req.body || {};
 
@@ -613,6 +634,7 @@ export const login = async (req, res) => {
             });
         }
 
+        await revokeCurrentRefreshToken(req);
         const result = await issueUserToken(user, res);
         return res.json(result);
     } catch (err) {
@@ -626,6 +648,7 @@ export const login = async (req, res) => {
  * Verifies the OTP for a login verificationId and issues a JWT.
  */
 export const verifyLoginOtp = async (req, res) => {
+    setAuthNoStoreHeaders(res);
     try {
         const { verificationId, otp } = req.body || {};
         if (!verificationId || !otp) {
@@ -681,6 +704,7 @@ export const verifyLoginOtp = async (req, res) => {
         verification.attempts += 1;
         await verification.save();
 
+        await revokeCurrentRefreshToken(req);
         const result = await issueUserToken(user, res);
         return res.json(result);
     } catch (err) {
@@ -694,6 +718,7 @@ export const verifyLoginOtp = async (req, res) => {
  * Generates a new OTP for an existing verification session.
  */
 export const resendLoginOtp = async (req, res) => {
+    setAuthNoStoreHeaders(res);
     try {
         const { verificationId } = req.body || {};
         if (!verificationId) {
@@ -744,6 +769,7 @@ export const resendLoginOtp = async (req, res) => {
 const isDev = process.env.NODE_ENV !== "production";
 
 export const forgotPassword = async (req, res) => {
+    setAuthNoStoreHeaders(res);
     try {
         const { email } = req.body || {};
         if (!email || typeof email !== "string") {
@@ -780,6 +806,7 @@ export const forgotPassword = async (req, res) => {
 
 
 export const resetPassword = async (req, res) => {
+    setAuthNoStoreHeaders(res);
     try {
         const { email, otp, password } = req.body || {};
         if (!email || !otp || !password) {
@@ -833,6 +860,7 @@ export const resetPassword = async (req, res) => {
         await user.save();
         await revokeUserRefreshTokens(user._id);
 
+        await revokeCurrentRefreshToken(req);
         const result = await issueUserToken(user, res);
         return res.json({ message: "Password reset successful.", ...result });
     } catch (err) {
@@ -847,8 +875,9 @@ export const resetPassword = async (req, res) => {
  * Validates refresh token from httpOnly cookie, rotates it, and issues new access + refresh tokens.
  */
 export const refreshTokenEndpoint = async (req, res) => {
+    setAuthNoStoreHeaders(res);
     try {
-        const refreshTokenRaw = req.cookies?.[REFRESH_COOKIE_NAME] || req.cookies?.refresh_token || req.body?.refreshToken;
+        const refreshTokenRaw = req.cookies?.[REFRESH_COOKIE_NAME] || req.cookies?.refresh_token;
         if (!refreshTokenRaw) {
             clearRefreshTokenCookie(res);
             return res.status(401).json({status: "error", message: "Refresh token not provided." });
@@ -886,6 +915,7 @@ export const refreshTokenEndpoint = async (req, res) => {
  * Clears the auth cookie and deletes refresh token.
  */
 export const logout = async (req, res) => {
+    setAuthNoStoreHeaders(res);
     clearTokenCookie(res);
 
     const refreshTokenRaw = req.cookies?.[REFRESH_COOKIE_NAME] || req.cookies?.refresh_token;
@@ -898,7 +928,55 @@ export const logout = async (req, res) => {
     }
 
     clearRefreshTokenCookie(res);
-    return res.json({ message: "Logged out successfully." });
+    return res.json({ success: true, message: "Logged out successfully." });
+};
+
+const readAccessTokenFromRequest = (req) =>
+    req.cookies?.[COOKIE_NAME] || req.cookies?.token || req.cookies?.["__Host-token"] || null;
+
+const findUserForPayload = async (payload) => {
+    if (!payload?.sub) return null;
+    return UserRepository.findById(
+        payload.sub,
+        "name email phone role agentRef agencyRef partnerAgencyRef agentApprovalStatus adminLevel adminApprovalStatus avatar tokenVersion"
+    );
+};
+
+const resolveSessionUser = async (req, res) => {
+    const accessToken = readAccessTokenFromRequest(req);
+    if (accessToken) {
+        try {
+            const payload = jwt.verify(accessToken, JWT_SECRET);
+            const user = await findUserForPayload(payload);
+            if (user) return user;
+        } catch (err) {
+            clearTokenCookie(res);
+        }
+    }
+
+    const refreshTokenRaw = req.cookies?.[REFRESH_COOKIE_NAME] || req.cookies?.refresh_token;
+    if (!refreshTokenRaw) return null;
+
+    await RefreshToken.cleanupExpired();
+    const stored = await RefreshToken.findOne({
+        tokenHash: hashToken(refreshTokenRaw),
+        expiresAt: { $gt: new Date() },
+    });
+    if (!stored) {
+        clearRefreshTokenCookie(res);
+        return null;
+    }
+
+    const user = await findUserForPayload({ sub: stored.userId });
+    if (!user) {
+        await RefreshToken.deleteMany({ userId: stored.userId });
+        clearRefreshTokenCookie(res);
+        return null;
+    }
+
+    await RefreshToken.deleteOne({ _id: stored._id });
+    await issueUserToken(user, res);
+    return user;
 };
 
 /**
@@ -908,14 +986,10 @@ export const logout = async (req, res) => {
  * calls where the httpOnly cookie is blocked by SameSite policy).
  */
 export const getSession = async (req, res) => {
+    setAuthNoStoreHeaders(res);
     try {
-        if (!req.user) return res.status(401).json({ status: "error", message: "Unauthorized" });
-
-        const user = await UserRepository.findById(
-            req.user.sub,
-            "name email phone role agentRef agencyRef partnerAgencyRef agentApprovalStatus adminLevel adminApprovalStatus avatar"
-        );
-        if (!user) return res.status(404).json({ status: "error", message: "User not found" });
+        const user = await resolveSessionUser(req, res);
+        if (!user) return res.json({ authenticated: false, user: null });
 
         try {
             await enforceActivePrivilegedUser(user);
@@ -923,13 +997,11 @@ export const getSession = async (req, res) => {
             return res.status(statusErr.status || 403).json({ status: "error", message: statusErr.message });
         }
 
-        const token = signTokenForUser(user);
-        setTokenCookie(res, token);
-
         return res.json({
             status: "success",
-            token,
+            authenticated: true,
             user: safeAuthUser(user),
+            sessionVersion: String(user.tokenVersion || 0),
             componentData: {
                 data: {
                     user: safeAuthUser(user),
@@ -947,6 +1019,7 @@ export const getSession = async (req, res) => {
  * Return current user (requires middleware that sets req.user from JWT)
  */
 export const getCurrentUser = async (req, res) => {
+    setAuthNoStoreHeaders(res);
     try {
         if (!req.user) return res.status(401).json({status: "error", message: "Unauthorized" });
 

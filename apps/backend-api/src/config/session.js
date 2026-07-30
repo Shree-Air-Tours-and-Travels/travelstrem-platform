@@ -22,7 +22,7 @@ export default {
       "about": "/about",
       "tours": "/tours",
       "tourDetails": "/tours/:tourRef",
-      "dashboard": "/dashboard",
+      "app-shell": "/app-shell",
       "checkout": "/checkout/:bookingId",
       "manageTours": "/manage/tours",
       "adminTours": "/admin/tours",
@@ -75,9 +75,8 @@ export default {
             "fallback": "home"
           },
           {
-            "pageName": "dashboard",
-            "event": "navigateToDashboard",
-            "type": "redirect",
+            "pageName": "app-shell",
+            "event": "navigateToAppShell",
             "title": "Dashboard",
             "renderConfig": {
               "context": {
@@ -96,7 +95,7 @@ export default {
                 "activeNav": "favorites"
               }
             },
-            "fallback": "dashboard"
+            "fallback": "app-shell"
           },
           {
             "pageName": "settings",
@@ -108,7 +107,7 @@ export default {
                 "activeNav": "settings"
               }
             },
-            "fallback": "dashboard"
+            "fallback": "app-shell"
           },
           {
             "pageName": "tours",
@@ -116,7 +115,7 @@ export default {
             "type": "redirect",
             "title": "Tours",
             "renderConfig": {},
-            "fallback": "dashboard"
+            "fallback": "app-shell"
           },
           {
             "pageName": "tourDetails",
@@ -152,7 +151,7 @@ export default {
                 "bookingId": "${bookingId}"
               }
             },
-            "fallback": "dashboard"
+            "fallback": "app-shell"
           },
           {
             "pageName": "bookingCheckout",
@@ -172,7 +171,7 @@ export default {
             "type": "redirect",
             "title": "Admin",
             "renderConfig": {},
-            "fallback": "dashboard"
+            "fallback": "app-shell"
           },
           {
             "pageName": "logout",
@@ -190,9 +189,9 @@ export default {
           "navigateToHome": "/",
           "navigateToAbout": "/about",
           "proceedToLogin": "/login",
-          "navigateToDashboard": "/dashboard",
-          "navigateToFavorites": "/dashboard",
-          "navigateToSettings": "/dashboard",
+          "navigateToDashboard": "/app-shell",
+          "navigateToFavorites": "/app-shell",
+          "navigateToSettings": "/app-shell",
           "navigateToTours": "/tours",
           "navigateToTourDetails": "/tours/${tourRef}",
           "navigateToBooking": "/tours/${tourRef}/book",
@@ -259,7 +258,7 @@ export default {
             "path": ""
           },
           {
-            "event": "dashboardListingUpdated",
+            "event": "appShellListingUpdated",
             "config": {
               "events": [
                 {

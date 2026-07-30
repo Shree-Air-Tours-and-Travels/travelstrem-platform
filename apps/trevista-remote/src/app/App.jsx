@@ -3,9 +3,8 @@ import { FavoritesProvider, ProductHeader, GlobalLoader, AppFooter, ScrollToTopB
 import AppRoutes from "./routes";
 import { initApp } from "../core/initApp";
 import "../main.scss";
-import { redirectToGlobalAuth, setComponentDataFetcher, fetchData, createProductAuth, buildGlobalDashboardUrl, getCurrentReturnUrl } from "@packages/trem-utils";
+import { redirectToGlobalAuth, setComponentDataFetcher, fetchData, createProductAuth, buildGlobalAppShellUrl, getCurrentReturnUrl } from "@packages/trem-utils";
 import { emit, registerSessionCacheClearer } from "@packages/trem-events";
-import { consumeUrlToken, appendTokenToUrl } from "@packages/trem-auth-core";
 import { API_BASE } from "../services/configService";
 import { clearUserSessionCache } from "../services/userSession";
 
@@ -87,11 +86,11 @@ function AppHeader({ headerConfig, state, navItems, activeTab, authAction, brand
                 ariaLabel: "Wishlist",
                 icon: "heart",
                 count: favoritesCount,
-                href: appendTokenToUrl(buildGlobalDashboardUrl({ product: "trevista" }), localStorage.getItem("travelstrem:token") || null),
+                href: buildGlobalAppShellUrl({ product: "trevista" }),
             }}
             profile={{
                 label: state.session?.user?.name || brand.label || "Dashboard",
-                href: appendTokenToUrl(buildGlobalDashboardUrl({ product: "trevista" }), localStorage.getItem("travelstrem:token") || null),
+                href: buildGlobalAppShellUrl({ product: "trevista" }),
             }}
             authAction={authAction}
         />
@@ -108,8 +107,6 @@ function App({ dispatchEvent, embedded = false, userSession = null }) {
 
     React.useEffect(() => {
         if (embedded) return undefined;
-
-        consumeUrlToken({ token: "travelstrem:token" });
 
         let active = true;
 

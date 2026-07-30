@@ -77,9 +77,9 @@ router.post("/logout", controller.logout);
 router.get("/me", authMiddleware, controller.getCurrentUser);
 
 /*
-  Session - returns current user + access token (for cross-origin Bearer auth)
+  Session - returns current cookie-backed user state without exposing credentials.
 */
-router.get("/session", authMiddleware, controller.getSession);
+router.get("/session", controller.getSession);
 
 /*
   Profile routes (authenticated)

@@ -273,7 +273,7 @@ class PageDefinitionService {
       };
     }
 
-    if (authUser?.userId && resolvedKey === "dashboard/dashboard") {
+    if (authUser?.userId && resolvedKey === "app-shell/app-shell") {
       try {
         const { widgets: hydrated, labels: extraLabels, data: hydratedData } = await this._hydrateDashboardWidgets(
           payload.component.structure.widgets,
