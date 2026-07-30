@@ -1,8 +1,7 @@
 import React, { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { Route, Routes, Navigate, useNavigate } from "react-router-dom";
-import { fetchData, redirectToGlobalAuth, setComponentDataFetcher, createProductAuth, buildGlobalDashboardUrl, getGlobalAuthBaseUrl, getCurrentReturnUrl, requestShellNavigation } from "@packages/trem-utils";
+import { fetchData, redirectToGlobalAuth, setComponentDataFetcher, createProductAuth, buildGlobalAppShellUrl, getGlobalAuthBaseUrl, getCurrentReturnUrl, requestShellNavigation } from "@packages/trem-utils";
 import { emit, registerSessionCacheClearer } from "@packages/trem-events";
-import { consumeUrlToken, appendTokenToUrl } from "@packages/trem-auth-core";
 import { FavoritesProvider, GlobalLoader, ErrorState, ScrollToTop, TourDetailsPage, useFavoritesContext } from "@packages/trem-ui";
 import { Analytics } from "@vercel/analytics/react";
 import Shell from "./Shell";
@@ -25,8 +24,7 @@ function AppShell({ embedded, session, headerConfig, pageModel, trips, activeFil
       requestShellNavigation("favorites");
       return;
     }
-    const token = localStorage.getItem("travelstrem:token") || localStorage.getItem("trem:token") || null;
-    window.location.assign(appendTokenToUrl(buildGlobalDashboardUrl({ product: "trevio", tab: "favorites" }), token));
+    window.location.assign(buildGlobalAppShellUrl({ product: "trevio", tab: "favorites" }));
   };
   const labels = pageModel?.labels || {};
   const shellProps = {
@@ -101,8 +99,6 @@ export default function App({ embedded = false, userSession: externalSession = n
     if (embedded || !STANDALONE_ENABLED) return undefined;
     if (initRunRef.current) return undefined;
     initRunRef.current = true;
-
-    consumeUrlToken({ token: "travelstrem:token" });
 
     let active = true;
 
@@ -192,7 +188,7 @@ export default function App({ embedded = false, userSession: externalSession = n
       <ErrorState
         title="Trevio now opens in TravelsTREM"
         description="This product is part of the customer dashboard and is no longer available as a standalone application."
-        retry={() => window.location.assign(buildGlobalDashboardUrl({ product: "trevio", tab: "trevio" }))}
+        retry={() => window.location.assign(buildGlobalAppShellUrl({ product: "trevio", tab: "trevio" }))}
         retryText="Go to customer shell"
       />
     );

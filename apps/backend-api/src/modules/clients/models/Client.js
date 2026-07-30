@@ -23,7 +23,7 @@ const clientSchema = new Schema({
     default: new Map([
       ["trevio", { logoSrc: "/favicon.png", name: "Trevio", subtitle: "by TravelsTrem", initial: "" }],
       ["trevista", { logoSrc: "/favicon.png", name: "Trevista", subtitle: "by TravelsTrem", initial: "" }],
-      ["dashboard", { logoSrc: "/favicon.png", name: "TravelsTrem", subtitle: "Dashboard", initial: "" }],
+      ["app-shell", { logoSrc: "/favicon.png", name: "TravelsTrem", subtitle: "Dashboard", initial: "" }],
       ["admin", { logoSrc: "/favicon.png", name: "TravelsTREM", subtitle: "Admin", initial: "" }],
       ["booking", { logoSrc: "/favicon.png", name: "TravelsTrem", subtitle: "Booking", initial: "" }],
       ["agent", { logoSrc: "/favicon.png", name: "TravelsTrem", subtitle: "Partner Portal", initial: "" }],

@@ -2,10 +2,10 @@
   "version": "1.0.0",
   "defaultPage": "trevio-remote/home",
   "pages": {
-    "dashboard/dashboard": {
-      "app": "dashboard",
-      "page": "dashboard",
-      "file": "./dashboard/dashboard/page.json"
+    "app-shell/app-shell": {
+      "app": "app-shell",
+      "page": "app-shell",
+      "file": "./app-shell/app-shell/page.json"
     },
     "tours-remote/listing": {
       "app": "tours-remote",
@@ -75,7 +75,7 @@
   },
   "pathMap": {
     "/": "trevio-remote/home",
-    "/dashboard": "dashboard/dashboard",
+    "/app-shell": "app-shell/app-shell",
     "/trevista": "tours-remote/listing",
     "/trevista/:tourRef": "tours-remote/details",
     "/trevista/:tourRef/book": "tours-remote/booking",

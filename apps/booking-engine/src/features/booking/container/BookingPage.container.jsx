@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { fetchData, useComponentData, validateFields } from "@packages/trem-utils";
 import BookingPageView from "../view/BookingPage.view";
-import { getDateInputValue, emptyTraveler, readStoredUser } from "../helper";
+import { getDateInputValue, emptyTraveler } from "../helper";
 
 const bookingFields = {
   trip: {
@@ -48,7 +48,6 @@ export default function BookingPageContainer() {
   const [pricePreview, setPricePreview] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const user = useMemo(() => readStoredUser(), []);
   const defaultStart = getDateInputValue(tour?.startDate);
   const defaultEnd = getDateInputValue(tour?.endDate);
 
@@ -59,10 +58,22 @@ export default function BookingPageContainer() {
   const [infants, setInfants] = useState(0);
   const guests = adults + children + infants;
   const [travelers, setTravelers] = useState([emptyTraveler()]);
-  const [contactEmail, setContactEmail] = useState(user?.email || "");
-  const [contactPhone, setContactPhone] = useState(user?.phone || user?.mobile || "");
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
   const [packageType, setPackageType] = useState("");
   const [mealPreference, setMealPreference] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const session = await fetchData("/auth/session");
+      const user = session?.user || session?.componentData?.data?.user;
+      if (cancelled || !user) return;
+      setContactEmail((current) => current || user.email || "");
+      setContactPhone((current) => current || user.phone || user.mobile || "");
+    })().catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     if (tour) return;

@@ -8,8 +8,8 @@ const authService = createAuthService(api);
 export default function AuthTremApp() {
   const { theme, toggleTheme } = useThemeMode();
   const fallbackAfterAuthPath =
-    process.env.REACT_APP_DASHBOARD_URL ||
     process.env.REACT_APP_TRAVELSTREM_APP_URL ||
+    process.env.REACT_APP_DASHBOARD_URL ||
     "/";
 
   return (

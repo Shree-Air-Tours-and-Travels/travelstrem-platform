@@ -1,14 +1,7 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { buildGlobalAuthUrl, buildGlobalDashboardUrl } from "@packages/trem-utils";
-import { appendTokenToUrl } from "@packages/trem-auth-core";
+import { buildGlobalAuthUrl, buildGlobalAppShellUrl } from "@packages/trem-utils";
 import { ProductHeaderWithDropdown, AppFooter, ScrollToTopButton, useTheme } from "@packages/trem-ui";
-
-const getTokenForRedirect = () => {
-  try {
-    return localStorage.getItem("travelstrem:token") || localStorage.getItem("trem:token") || null;
-  } catch { return null; }
-};
 
 export default function Shell({ children, labels, headerConfig, onWishlist, wishlistCount, userSession, rootPath = "/trevio", embedded = false, buildAuthAction }) {
   const navigate = useNavigate();
@@ -16,12 +9,12 @@ export default function Shell({ children, labels, headerConfig, onWishlist, wish
   const { theme, toggleTheme } = useTheme();
   const productRoot = rootPath === "/" ? "" : rootPath.replace(/\/$/, "");
   const goToDashboard = () => {
-    const url = buildGlobalDashboardUrl({ product: "trevio" });
-    window.location.assign(appendTokenToUrl(url, getTokenForRedirect()));
+    const url = buildGlobalAppShellUrl({ product: "trevio" });
+    window.location.assign(url);
   };
   const goToProfile = () => {
-    const url = buildGlobalDashboardUrl({ product: "trevio", tab: "profile" });
-    window.location.assign(appendTokenToUrl(url, getTokenForRedirect()));
+    const url = buildGlobalAppShellUrl({ product: "trevio", tab: "profile" });
+    window.location.assign(url);
   };
 
   const logoConfig = headerConfig?.logos?.trevio || {};

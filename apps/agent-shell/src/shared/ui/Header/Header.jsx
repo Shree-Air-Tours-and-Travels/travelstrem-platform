@@ -2,6 +2,7 @@ import React, { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Header as TremHeader } from "@packages/trem-ui";
 import { emit } from "@packages/trem-events";
+import { clearAuthBrowserState, emitAuthEvent } from "@packages/trem-auth-core";
 import { useThemeMode } from "@packages/trem-utils";
 import { useAgentPortalConfig } from "../../../app/providers/AgentPortalProvider";
 import authService from "../../../services/authService";
@@ -21,8 +22,10 @@ export default function Header() {
             console.warn("[Header] backend logout failed, clearing local session:", error?.message || error);
         });
 
+        clearAuthBrowserState({ prefixes: ["agentTREM", "travelstrem"] });
         emit(configuredEvent, { source: "header" }, { skipController: true });
         if (configuredEvent !== "USER_LOGOUT") emit("USER_LOGOUT", { source: "header" }, { skipController: true });
+        emitAuthEvent({ type: "LOGOUT" });
 
         await reload({
             forceSession: true,
