@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect } from "react";
 import { emit } from "@packages/trem-events";
+import { clearAuthBrowserState, emitAuthEvent } from "@packages/trem-auth-core";
 import { BrandLogo } from "@packages/trem-ui";
 import authService from "../services/authService";
 import "./AdminSidebar.scss";
@@ -31,8 +32,10 @@ export default function Sidebar({ activeTab, onTabChange, user, mobileOpen = fal
 
   const handleLogout = useCallback(async () => {
     await authService.logout().catch(() => {});
+    clearAuthBrowserState({ prefixes: ["adminTREM", "travelstrem"] });
     emit("USER_LOGOUT", { source: "admin-sidebar" }, { skipController: true });
-    window.location.href = "/login";
+    emitAuthEvent({ type: "LOGOUT" });
+    window.location.replace("/login");
   }, []);
 
   const handleTabChange = (tabId) => {

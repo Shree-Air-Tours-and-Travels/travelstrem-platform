@@ -15,7 +15,8 @@
 
 .booking-summary-page__empty,
 .booking-summary-hero,
-.booking-summary-card {
+.booking-summary-card,
+.booking-summary-page__loading {
   border: 1px solid var(--border, #dde7e3);
   border-radius: 8px;
   background: var(--surface, #fff);
@@ -30,6 +31,12 @@
   gap: 0.8rem;
   text-align: center;
   padding: 2rem;
+}
+
+.booking-summary-page__loading {
+  min-height: 420px;
+  display: grid;
+  place-items: center;
 }
 
 .booking-summary-hero {

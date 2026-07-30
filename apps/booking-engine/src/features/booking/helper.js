@@ -29,12 +29,3 @@ export const emptyTraveler = () => ({
   wheelchairRequired: false,
   visaStatus: "",
 });
-
-export const readStoredUser = () => {
-  try {
-    const rawUser = window.localStorage.getItem("auth_user");
-    return rawUser ? JSON.parse(rawUser) : null;
-  } catch {
-    return null;
-  }
-};

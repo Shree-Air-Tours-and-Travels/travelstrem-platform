@@ -432,7 +432,7 @@ export const submitBooking = asyncHandler(async (req, res) => {
       senderName: "System",
       content: `Booking created. Please submit proof for the token amount of ₹${booking.tokenAmount || 0}.`,
       messageType: "system",
-      metadata: { event: "booking_created", channels: ["dashboard"] },
+      metadata: { event: "booking_created", channels: ["app-shell"] },
     });
   }
 

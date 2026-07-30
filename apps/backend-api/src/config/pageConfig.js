@@ -7,7 +7,7 @@ export default {
     "pathMap": {
       "/": "home",
       "/about": "about",
-      "/dashboard": "dashboard"
+      "/app-shell": "app-shell"
     },
     "pages": {
       "home": {
@@ -32,13 +32,13 @@ export default {
           }
         ]
       },
-      "dashboard": {
-        "page": "dashboard",
+      "app-shell": {
+        "page": "app-shell",
         "title": "Customer Dashboard",
         "description": "Track trips, quote requests, payments, and traveller details.",
         "widgets": [
           {
-            "type": "dashboard",
+            "type": "app-shell",
             "source": "shell",
             "props": {
               "variant": "customer",

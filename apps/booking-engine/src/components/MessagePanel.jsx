@@ -65,8 +65,6 @@ export default function MessagePanel({ bookingId, isOwnRole = "customer" }) {
     }
   };
 
-  const currentUserId = JSON.parse(localStorage.getItem("auth_user") || "{}")?.id;
-
   return (
     <div className="be-messages">
       <div className="be-messages__header">

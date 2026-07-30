@@ -37,8 +37,8 @@ export const redirectToGlobalAuth = (options = {}) => {
   window.location.assign(buildGlobalAuthUrl(options));
 };
 
-export const getGlobalDashboardBaseUrl = (override = "") => {
-  const configured = override || process.env.REACT_APP_DASHBOARD_URL || "";
+export const getGlobalAppShellBaseUrl = (override = "") => {
+  const configured = override || process.env.REACT_APP_SHELL_URL || "";
   if (configured) return normalizeBase(configured);
   if (typeof window !== "undefined" && isLocalHost(window.location.hostname)) {
     return "http://localhost:3006";
@@ -46,13 +46,13 @@ export const getGlobalDashboardBaseUrl = (override = "") => {
   return "https://app.travelstrem.com";
 };
 
-export const buildGlobalDashboardUrl = ({
-  dashboardBaseUrl = "",
+export const buildGlobalAppShellUrl = ({
+  shellBaseUrl = "",
   returnTo = "",
   product = "",
   tab = "",
 } = {}) => {
-  const base = getGlobalDashboardBaseUrl(dashboardBaseUrl);
+  const base = getGlobalAppShellBaseUrl(shellBaseUrl);
   const url = new URL("/", safeBase(base));
   if (product) url.searchParams.set("product", product);
   if (tab) url.searchParams.set("tab", tab);
@@ -60,9 +60,9 @@ export const buildGlobalDashboardUrl = ({
   return url.toString();
 };
 
-export const redirectToGlobalDashboard = (options = {}) => {
+export const redirectToGlobalAppShell = (options = {}) => {
   if (typeof window === "undefined") return;
-  window.location.assign(buildGlobalDashboardUrl(options));
+  window.location.assign(buildGlobalAppShellUrl(options));
 };
 
 export const getGlobalBookingEngineBaseUrl = (override = "") => {

@@ -13,6 +13,10 @@
   color: var(--text);
   font-family: $font-primary;
 
+  &__company-details {
+    display: none;
+  }
+
   &__experience {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(420px, 0.88fr);
@@ -751,13 +755,18 @@
     }
 
     &__company-title {
-      font-size: clamp(2rem, 10.5vw, 3rem);
+      display: none;
     }
 
     &__company-description {
       margin-top: 14px;
       font-size: $font-size-sm;
       line-height: 1.55;
+    }
+
+    &__highlights,
+    &__business {
+      display: none;
     }
 
     &__highlights {

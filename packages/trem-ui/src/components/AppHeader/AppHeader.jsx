@@ -29,6 +29,7 @@ export default function AppHeader({
   onAction,
   onSearch,
   onSearchSelect,
+  onLogoClick,
 }) {
   const brand = config.brand || {};
   const search = config.search || {};
@@ -80,6 +81,7 @@ export default function AppHeader({
               name={brand.name || "TravelsTREM"}
               subtitle={brand.subtitle}
               size="small"
+              onClick={onLogoClick}
             />
           </div>
         </div>
@@ -158,4 +160,5 @@ AppHeader.propTypes = {
   onAction: PropTypes.func,
   onSearch: PropTypes.func,
   onSearchSelect: PropTypes.func,
+  onLogoClick: PropTypes.func,
 };

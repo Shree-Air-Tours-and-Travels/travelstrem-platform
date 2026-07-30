@@ -6,6 +6,10 @@
   gap: $space-3;
   min-width: 0;
 
+  &--clickable {
+    cursor: pointer;
+  }
+
   &__image {
     width: 42px;
     height: 42px;

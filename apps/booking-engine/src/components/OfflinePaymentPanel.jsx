@@ -55,7 +55,6 @@ export default function OfflinePaymentPanel({ booking, onSubmit, submitting }) {
       await onSubmit({ screenshot });
       setScreenshot(null);
       if (inputRef.current) inputRef.current.value = "";
-      setMessage("Your payment proof has been submitted and is awaiting admin verification.");
     } catch (error) {
       setMessage(error.message);
     }

@@ -159,12 +159,6 @@ select {
     border-color $duration-fast $ease-standard,
     box-shadow $duration-fast $ease-standard;
 
-  &:focus {
-    outline: none;
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 4px var(--focus-ring);
-  }
-
   &::placeholder {
     color: var(--muted);
     opacity: 0.9;
@@ -235,12 +229,7 @@ select {
   outline-offset: 3px;
 }
 
-a:focus,
-button:focus,
-input:focus {
-  box-shadow: 0 0 0 4px var(--focus-ring);
-  outline: none;
-}
+
 
 @media print {
   body {

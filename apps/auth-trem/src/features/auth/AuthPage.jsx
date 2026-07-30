@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { AuthHeader, Button, Icon, Title, Paragraph } from "@packages/trem-ui";
-import { getReturnPath, useAuthFlow, appendTokenToUrl } from "@packages/trem-auth-core";
+import { AuthHeader, Button, Icon, Preloader, Title, Paragraph } from "@packages/trem-ui";
+import { getReturnPath, useAuthFlow } from "@packages/trem-auth-core";
 import { ForgotPasswordModal, ResetPasswordModal } from "./PasswordModals.jsx";
 import "./auth-page.scss";
 
@@ -153,6 +153,7 @@ export default function AuthPage({
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
+  const [guestCheckLoading, setGuestCheckLoading] = useState(true);
   const {
     activeTab,
     setActiveTab,
@@ -232,9 +233,33 @@ export default function AuthPage({
     return getReturnPath(location.state, afterAuthPath);
   };
 
-  const redirectAfterLogin = (result, token) => {
+  React.useEffect(() => {
+    let cancelled = false;
+    const checkExistingSession = async () => {
+      setGuestCheckLoading(true);
+      try {
+        const response = await authService.getSession?.();
+        const session = response?.data || response;
+        if (!cancelled && (session?.authenticated || session?.isAuthenticated || session?.user)) {
+          const nextPath = resolveReturnDestination();
+          if (/^https?:\/\//i.test(nextPath)) window.location.replace(nextPath);
+          else navigate(nextPath || afterAuthPath || "/", { replace: true });
+          return;
+        }
+      } catch (error) {
+        // Unauthenticated users should see the auth page.
+      } finally {
+        if (!cancelled) setGuestCheckLoading(false);
+      }
+    };
+    checkExistingSession();
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authService, location.search]);
+
+  const redirectAfterLogin = (result) => {
     if (adminShellUrl && result?.user && isAdminRole(result.user.role)) {
-      window.location.assign(appendTokenToUrl(adminShellUrl, token));
+      window.location.replace(adminShellUrl);
       return;
     }
     const nextPath = resolveReturnDestination();
@@ -245,7 +270,7 @@ export default function AuthPage({
     }
 
     if (/^https?:\/\//i.test(nextPath)) {
-      window.location.assign(appendTokenToUrl(nextPath, token));
+      window.location.replace(nextPath);
       return;
     }
 
@@ -258,16 +283,14 @@ export default function AuthPage({
     if (!result) return;
     if (result.status === "verify_otp") return;
     if (result.status === "pending_approval") return;
-    const token = localStorage.getItem(cfg?.storageKeys?.token);
-    redirectAfterLogin(result, token);
+    redirectAfterLogin(result);
   };
 
   const handleOtpSubmit = async (e) => {
     e.preventDefault();
     const result = await submitLoginOtp();
     if (!result) return;
-    const token = localStorage.getItem(cfg?.storageKeys?.token);
-    redirectAfterLogin(result, token);
+    redirectAfterLogin(result);
   };
 
   const handleOtpBack = () => {
@@ -276,11 +299,11 @@ export default function AuthPage({
     setError(null);
   };
 
-  if (cfgLoading || form === null) {
+  if (guestCheckLoading || cfgLoading || form === null) {
     return (
       <AuthExperience cfg={cfg} theme={theme} onToggleTheme={onToggleTheme} headerBrand={headerBrand} loading className={className}>
         <div className="auth-trem__card auth-trem__card--center">
-          <div className="auth-trem__loader">Loading authentication configuration...</div>
+          <Preloader variant="cards" count={2} label="Loading authentication" />
           {cfgError && <div className="auth-trem__config-error">Config fallback active: {cfgError}</div>}
         </div>
       </AuthExperience>
@@ -475,8 +498,7 @@ export default function AuthPage({
           <ResetPasswordModal open email={resetEmail} onClose={() => setShowResetModal(false)} authService={authService} onResetSuccess={async (data) => {
             await persistSession({ data });
             setShowResetModal(false);
-            const token = localStorage.getItem(cfg?.storageKeys?.token);
-            redirectAfterLogin(data, token);
+            redirectAfterLogin(data);
           }} />
         )}
       </div>

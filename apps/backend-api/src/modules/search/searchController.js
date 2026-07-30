@@ -10,7 +10,7 @@ const NAVIGATION_ENTRIES = [
     title: "Home",
     description: "Dashboard overview",
     icon: "home",
-    keywords: ["home", "dashboard", "overview"],
+    keywords: ["home", "app-shell", "overview"],
     destination: "overview",
   },
   {
