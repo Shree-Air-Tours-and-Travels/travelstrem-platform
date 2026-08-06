@@ -44,6 +44,51 @@ export async function fetchAgentTours(opts = {}) {
     return normalizeToursResponse(res);
 }
 
+const TREVIO_TRIPS_URL = "/trevio/admin/trips";
+
+export async function fetchPartnerTrevioTrips(opts = {}) {
+    const res = await fetchData(TREVIO_TRIPS_URL, { signal: opts.signal });
+    if (!res || res.status !== "success") throw new Error(res?.message || "Failed to load Trevio trips");
+    return Array.isArray(res.componentData?.data) ? res.componentData.data : [];
+}
+
+export async function savePartnerTrevioTrip(payload, opts = {}) {
+    const isEdit = Boolean(payload?._id);
+    const res = await expectSuccess(fetchData(isEdit ? `${TREVIO_TRIPS_URL}/${payload._id}` : TREVIO_TRIPS_URL, {
+        method: isEdit ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        signal: opts.signal,
+    }), "Failed to save Trevio trip");
+    return res.componentData?.data || res;
+}
+
+export async function deletePartnerTrevioTrip(id, opts = {}) {
+    return expectSuccess(fetchData(`${TREVIO_TRIPS_URL}/${id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        signal: opts.signal,
+    }), "Failed to delete Trevio trip");
+}
+
+export async function approvePartnerTrevioTrip(trip, opts = {}) {
+    return savePartnerTrevioTrip({ ...trip, status: "listed", isListed: true }, opts);
+}
+
+export async function uploadTripImage(file, opts = {}) {
+    const fd = new FormData();
+    fd.append("image", file);
+    const response = await api.post("/tours.json/upload", fd, { signal: opts.signal });
+    const res = response?.data || {};
+    const url =
+        res?.componentData?.data?.url ||
+        res?.componentData?.url ||
+        res?.data?.url ||
+        res?.url;
+    if (!url) throw new Error(res?.message || "Upload returned no URL");
+    return url;
+}
+
 export async function deleteAgentTour(id, opts = {}) {
     await expectSuccess(
         fetchData(`/tours.json/${id}`, {
@@ -192,6 +237,17 @@ export async function checkPartnerApplication(email, opts = {}) {
     const res = response?.data || {};
     if (res.status !== "success") return null;
     return res?.data || null;
+}
+
+export async function fetchAgencyProfile(agencyId, opts = {}) {
+    const response = await api.get(`/tenancy/agencies/${encodeURIComponent(agencyId || "me")}`, { signal: opts.signal });
+    const data = response?.data?.componentData?.data;
+    return data?.agency || data || null;
+}
+
+export async function updateAgencyProfile(agencyId, data, opts = {}) {
+    const response = await api.patch(`/tenancy/agencies/${encodeURIComponent(agencyId || "me")}`, data, { signal: opts.signal });
+    return response?.data?.componentData?.data || null;
 }
 
 export async function updatePassword(data, opts = {}) {

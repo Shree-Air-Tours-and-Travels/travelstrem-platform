@@ -10,6 +10,8 @@ import {
     fetchAdminTrips,
     deleteTrip,
     deleteAllTrips,
+    verifyAdminTour,
+    verifyAdminTrip,
     fetchPartnerAgencies,
     removeAdmin,
     reviewAdmin,
@@ -18,7 +20,7 @@ import {
 } from "../../services/adminService";
 import ManageToursView from "./ManageTours.view";
 
-const VALID_TABS = new Set(["overview", "bookings", "services", "profile"]);
+const VALID_TABS = new Set(["overview", "bookings", "services", "tenancy", "profile"]);
 
 const getTabFromSearch = (search) => {
     const tab = new URLSearchParams(search || "").get("tab") || "overview";
@@ -245,6 +247,14 @@ export default function ManageTours({ session, tab: tabProp }) {
     function openCreate() { setEditing(null); setFormOpen(true); }
     function openEdit(t) { setEditing(t); setFormOpen(true); }
     function openView(t) { setViewTour(t); setViewOpen(true); }
+    async function verifyTour(id) {
+        try { await verifyAdminTour(id); showToast("Tour verified by TravelsTREM", "success"); await fetchTours(); }
+        catch (e) { showToast(e.message || "Could not verify tour", "error"); }
+    }
+    async function verifyTrip(id) {
+        try { await verifyAdminTrip(id); showToast("Trip verified by TravelsTREM", "success"); await fetchTrips(); }
+        catch (e) { showToast(e.message || "Could not verify trip", "error"); }
+    }
     function openTripCreate() { setTripEditing(null); setTripFormOpen(true); }
     function openTripEdit(t) { setTripEditing(t); setTripFormOpen(true); }
     function openTripView(t) { setViewTrip(t); setTripViewOpen(true); }
@@ -278,6 +288,7 @@ export default function ManageTours({ session, tab: tabProp }) {
             tripViewOpen={tripViewOpen} setTripViewOpen={setTripViewOpen}
             viewTrip={viewTrip} setViewTrip={setViewTrip}
             openCreate={openCreate} openEdit={openEdit} openView={openView}
+            verifyTour={verifyTour} verifyTrip={verifyTrip}
             openTripCreate={openTripCreate} openTripEdit={openTripEdit} openTripView={openTripView}
             handleDelete={handleDelete} handleDeleteAll={handleDeleteAll}
             handleTripDelete={handleTripDelete} handleTripDeleteAll={handleTripDeleteAll}

@@ -256,6 +256,18 @@ export function useBookingApi() {
     return unwrap(response);
   }, []);
 
+  const calculateTrevistaPricing = useCallback(async (tourRef, payload = {}) => {
+    const response = await fetchData("/engine/pricing", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: { ...payload, tourRef },
+    });
+    if (response?.status !== "success") {
+      throw new Error(response?.message || "Failed to calculate booking price");
+    }
+    return unwrap(response);
+  }, []);
+
   return {
     loading,
     error,
@@ -276,5 +288,6 @@ export function useBookingApi() {
     loadTrip,
     loadProduct,
     calculatePricing,
+    calculateTrevistaPricing,
   };
 }

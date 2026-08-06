@@ -1,15 +1,16 @@
 import React, { useRef, useState } from "react";
 import "../tours.scss";
-import HeroBanner from "../widgets/hero-banner/HeroBanner";
 import QuickFilters from "../widgets/quick-filters/QuickFilters";
 import Filters from "../widgets/filters/Filters";
 import Listing from "../widgets/listing/Listing";
-import { FloatingActionBar, BottomSheet, Button, Icon } from "@packages/trem-ui";
+import { Breadcrumbs, FloatingActionBar, BottomSheet, Button, Icon } from "@packages/trem-ui";
 
 const getLabel = (labels = {}, item = {}) => {
     if (item.labelRef && labels[item.labelRef]) return labels[item.labelRef];
     return item.label || item.id;
 };
+
+const BREADCRUMBS = [{ label: "Trevista", path: "/trevista" }, { label: "Tours" }];
 
 export default function ToursPageView({
     pageLabels,
@@ -37,6 +38,7 @@ export default function ToursPageView({
     onPageChange,
     filtersExpanded,
     onFiltersExpandedChange,
+    initialValues,
 }) {
     const listingLabels = widgetsData.listing?.elements?.labels || {};
     const listingProps = listingWidgetData?.structure?.widgets?.[0]?.props || {};
@@ -84,10 +86,10 @@ export default function ToursPageView({
     return (
         <main className="tours-page">
             <div className="tours-page__inner">
+                <div className="tours-page__crumbs">
+                    <Breadcrumbs items={BREADCRUMBS} />
+                </div>
                 {widgets.map((w) => {
-                    if (w.type === "HeroBanner") {
-                        return <HeroBanner key={w.type} widgetData={widgetsData.HeroBanner} pageTitle={pageTitle} />;
-                    }
                     if (w.type === "quickChips") {
                         return <QuickFilters key={w.type} widgetData={widgetsData.quickChips} onQuickFilter={onQuickFilter} />;
                     }
@@ -103,6 +105,7 @@ export default function ToursPageView({
                                             pageSize={8}
                                             expanded={filtersExpanded}
                                             onExpandedChange={onFiltersExpandedChange}
+                                            initialValues={initialValues}
                                         />
                                     </div>
                                 </aside>

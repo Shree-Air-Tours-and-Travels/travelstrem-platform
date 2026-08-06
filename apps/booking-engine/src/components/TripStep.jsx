@@ -1,5 +1,6 @@
 import React from "react";
 import { FormField, CounterField } from "./FormElements.jsx";
+import { formatTourLocation } from "../utils/format.js";
 
 const formatMoney = (v) => `₹${Number(v || 0).toLocaleString("en-IN")}`;
 
@@ -42,8 +43,8 @@ export default function TripStep({ tour, trip, updateTrip, errors, isFirst, prod
           <div className="be-step__tour-info">
             <h2 className="be-step__tour-title">{tour.title || tour.name}</h2>
             <p className="be-step__tour-location">
-              {tour.city || tour.location || ""}
-              {tour.address ? `, ${tour.address}` : ""}
+              {formatTourLocation(tour) || ""}
+              {tour.address?.city ? `, ${tour.address.city}` : ""}
             </p>
             {tour.duration && <span className="be-step__tour-period">{tour.duration}</span>}
             {isTrevio && trip.pricePerPerson > 0 && (

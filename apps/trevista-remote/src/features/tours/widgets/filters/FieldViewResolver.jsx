@@ -1,7 +1,7 @@
 // components/Filters/FieldViewResolver.jsx
 import React from "react";
 import PropTypes from "prop-types";
-import { Dropdown, Icon, Button } from "@packages/trem-ui";
+import { Dropdown, Button } from "@packages/trem-ui";
 
 export default function FieldViewResolver({
   name,
@@ -61,44 +61,33 @@ export default function FieldViewResolver({
 
     case "select": {
       const opts = getOptionList(field) || [];
-      const selectedOption = opts.find((o) => String(o.value) === String(inputValue));
       const hasAnyOption = opts.some((o) => String(o.value) === "");
 
       const items = [
-        ...(hasAnyOption ? [] : [{ id: "", label: `Any ${label.toLowerCase()}`, active: inputValue === "" }]),
+        ...(hasAnyOption ? [] : [{ id: "", label: `Any ${label.toLowerCase()}`, value: "" }]),
         ...opts
           .filter((o) => String(o.value) !== "")
           .map((o) => ({
             id: String(o.value),
+            value: o.value,
             label: o.label || o,
-            active: String(o.value) === String(inputValue),
             onClick: () => onInput(name, "select")({ target: { value: o.value || "" } }),
           })),
       ];
 
       return (
         <div className="fv-wrapper">
-          <label className="filters__label" key={name}>
-            <span className="filters__labelText">{label}</span>
-            <Dropdown
-              hoverable={false}
-              align="left"
-              closeOnSelect={true}
-              items={items}
-              trigger={({ open }) => (
-                <Button
-                  primaryClassName={`filters__input filters__select-trigger ${error ? "filters__input--error" : ""}`}
-                  type="button"
-                  aria-invalid={!!error}
-                  aria-describedby={describedBy}
-                  variant="text"
-                >
-                  <span>{selectedOption ? (selectedOption.label || selectedOption.value || selectedOption) : `Any ${label.toLowerCase()}`}</span>
-                  <Icon name="chevronDown" className={open ? "is-open" : ""} />
-                </Button>
-              )}
-            />
-          </label>
+          <Dropdown
+            variant="select"
+            label={label}
+            placeholder={`Any ${label.toLowerCase()}`}
+            value={inputValue}
+            items={items}
+            hoverable={false}
+            align="left"
+            closeOnSelect={true}
+            error={error || undefined}
+          />
           {error && <div className="filters__fieldError" id={describedBy}>{error}</div>}
         </div>
       );

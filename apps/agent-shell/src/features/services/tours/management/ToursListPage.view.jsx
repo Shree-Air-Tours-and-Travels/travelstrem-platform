@@ -1,9 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Button, Breadcrumbs, Dropdown, EmptyState, InputField, SubTitle, TourCard } from "@packages/trem-ui";
-import { deleteAgentTour, deleteAllAgentTours, fetchAgentTours } from "../../../../services/agentService";
+import { deleteAgentTour, deleteAllAgentTours, fetchAgentTours, getAgentTourById } from "../../../../services/agentService";
 import { TourCardSkeleton, WidgetError } from "../../../../shared/Skeleton";
 import { useAgentPortalConfig } from "../../../../app/providers/AgentPortalProvider";
+import CreateTourForm from "../CreateTourForm";
+import TourView from "../TourView";
 import { ADMIN_ROLE, AGENT_ROLE, TOUR_CARD_CONFIG } from "../tours.constants";
 import pageConfig from "./toursListPage.config.json";
 import "./ToursListPage.styles.scss";
@@ -21,6 +23,7 @@ const matchTour = (tour, query) => {
 
 export default function ToursListPage() {
     const navigate = useNavigate();
+    const location = useLocation();
     const { session } = useAgentPortalConfig();
     const [tours, setTours] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -28,6 +31,9 @@ export default function ToursListPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [sortBy, setSortBy] = useState("newest");
     const [sortOpen, setSortOpen] = useState(false);
+    const [editingTour, setEditingTour] = useState(null);
+    const [formOpen, setFormOpen] = useState(false);
+    const [viewTour, setViewTour] = useState(null);
 
     const sortOptions = useMemo(() =>
         pageConfig.sort.options.map((opt) => ({
@@ -60,20 +66,72 @@ export default function ToursListPage() {
 
     useEffect(() => { loadTours(); }, [loadTours]);
 
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        if (params.get("create") === "true") {
+            setEditingTour(null);
+            setFormOpen(true);
+            return undefined;
+        }
+
+        const editId = params.get("edit");
+        const viewId = params.get("view");
+        const requestedId = editId || viewId;
+        if (!requestedId) return undefined;
+
+        let active = true;
+        getAgentTourById(requestedId)
+            .then((tour) => {
+                if (!active || !tour) return;
+                if (editId) {
+                    setEditingTour(tour);
+                    setFormOpen(true);
+                } else {
+                    setViewTour(tour);
+                }
+            })
+            .catch((requestError) => active && setError(requestError.message || pageConfig.errors.loadFailed));
+        return () => { active = false; };
+    }, [location.search]);
+
+    const clearModalQuery = useCallback(() => {
+        const params = new URLSearchParams(location.search);
+        params.delete("create");
+        params.delete("edit");
+        params.delete("view");
+        const search = params.toString();
+        navigate(`${location.pathname}${search ? `?${search}` : ""}`, { replace: true });
+    }, [location.pathname, location.search, navigate]);
+
+    const closeForm = useCallback(() => {
+        setFormOpen(false);
+        setEditingTour(null);
+        clearModalQuery();
+    }, [clearModalQuery]);
+
+    const closeView = useCallback(() => {
+        setViewTour(null);
+        clearModalQuery();
+    }, [clearModalQuery]);
+
     const canDeleteTour = useCallback((tour) => {
         const ownerId = tour.ownerAgent?._id || tour.ownerAgent;
         return !!(isAdmin || (isAgent && userId && ownerId && String(ownerId) === String(userId)));
     }, [isAdmin, isAgent, userId]);
 
     const handleView = useCallback((tour) => {
-        const id = tour._id || tour.id;
-        if (id) navigate(`/agent/services/tours/${id}/manage`);
-    }, [navigate]);
+        setViewTour(tour);
+    }, []);
 
     const handleEdit = useCallback((tour) => {
-        const id = tour._id || tour.id;
-        if (id) navigate(`/agent/services/tours/edit/${id}`);
-    }, [navigate]);
+        setEditingTour(tour);
+        setFormOpen(true);
+    }, []);
+
+    const handleCreate = useCallback(() => {
+        setEditingTour(null);
+        setFormOpen(true);
+    }, []);
 
     const handleDelete = useCallback((tour) => {
         const id = tour._id || tour.id;
@@ -107,7 +165,7 @@ export default function ToursListPage() {
             <header className="services-tours-page__toolbar">
                 <SubTitle text={toolbar.title} />
                 <div className="services-tours-page__actions">
-                    <Button variant={toolbar.buttons.create.variant} iconLeft={toolbar.buttons.create.iconLeft} onClick={() => navigate("/agent/services/tours/create")} text={toolbar.buttons.create.text} />
+                    <Button variant={toolbar.buttons.create.variant} iconLeft={toolbar.buttons.create.iconLeft} onClick={handleCreate} text={toolbar.buttons.create.text} />
                     {isAdmin && <Button variant={toolbar.buttons.deleteAll.variant} color={toolbar.buttons.deleteAll.color} onClick={handleDeleteAll} text={toolbar.buttons.deleteAll.text} />}
                     <Button variant={toolbar.buttons.refresh.variant} iconLeft={toolbar.buttons.refresh.iconLeft} onClick={loadTours} text={toolbar.buttons.refresh.text} />
                 </div>
@@ -145,6 +203,8 @@ export default function ToursListPage() {
                             variant={pageConfig.tourCard.variant}
                             isAdmin={TOUR_CARD_CONFIG.isAdmin}
                             showOwner={TOUR_CARD_CONFIG.showOwner}
+                            ownershipMode="agent"
+                            ownershipLabels={{ agent: "Added by agent" }}
                             ownerAgentName={t.ownerAgentName || ""}
                             onView={handleView}
                             onEdit={handleEdit}
@@ -153,6 +213,27 @@ export default function ToursListPage() {
                     ))
                 )}
             </div>
+            {viewTour && (
+                <TourView
+                    tour={viewTour}
+                    onClose={closeView}
+                    onEdit={(tour) => {
+                        setViewTour(null);
+                        setEditingTour(tour);
+                        setFormOpen(true);
+                    }}
+                />
+            )}
+            {formOpen && (
+                <CreateTourForm
+                    initial={editingTour}
+                    onCancel={closeForm}
+                    onSaved={async () => {
+                        closeForm();
+                        await loadTours();
+                    }}
+                />
+            )}
         </section>
     );
 }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, SubTitle, Paragraph } from "@packages/trem-ui";
+import { Button, SubTitle, Paragraph, RecordReview } from "@packages/trem-ui";
 import pageConfig from "./tourView.config.json";
 import './TourView.scss';
 
@@ -171,6 +171,14 @@ const tvContent = (tour, onEdit, onClose, isPage) => {
           ))}
         </Section>
 
+        <ArraySection title="Included stays" items={tour.includedStays} renderItem={(stay) => <Paragraph><strong>{stay.propertyName || "Stay"}</strong> · {stay.location || "—"} · {stay.nights ?? 0} night(s) · {stay.roomType || "Room details not set"}{stay.meals?.length ? ` · ${stay.meals.join(", ")}` : ""}{stay.description ? ` — ${stay.description}` : ""}</Paragraph>} />
+        <ArraySection title="Hotel upgrades" items={tour.hotelOptions} renderItem={(option) => <Paragraph><strong>{option.title || "Upgrade"}</strong>{option.recommended ? " · Recommended" : ""} · {option.costLabel || "Cost"}: {option.cost || "—"}{option.description ? ` — ${option.description}` : ""}</Paragraph>} />
+        <ArraySection title="Optional extras" items={tour.extras} renderItem={(extra) => <Paragraph><strong>{extra.title || "Extra"}</strong> · {extra.included ? "Included" : `${extra.currency || tour.price?.currency || "INR"} ${extra.price ?? 0}`}{extra.priceLabel ? ` (${extra.priceLabel})` : ""}{extra.description ? ` — ${extra.description}` : ""}</Paragraph>} />
+        <Section title="Cancellation details" empty={!tour.cancellation?.policy && !tour.cancellation?.tiers?.length}>
+          {tour.cancellation?.policy && <Paragraph>{tour.cancellation.policy}</Paragraph>}
+          {(tour.cancellation?.tiers || []).map((tier, i) => <Paragraph key={tier._id || i}>{tier.label || "Refund"}: {tier.refundPercent ?? "—"}% · {tier.daysBefore ?? "—"} days before departure{tier.description ? ` — ${tier.description}` : ""}</Paragraph>)}
+        </Section>
+
         <Section title={sections.tags.title} empty={!Array.isArray(tour.tags) || tour.tags.length === 0}>
           <Paragraph>{(tour.tags || []).join(', ') || pageConfig.fallbackText}</Paragraph>
         </Section>
@@ -198,6 +206,12 @@ const tvContent = (tour, onEdit, onClose, isPage) => {
             {tour.updatedAt && <MetaBlock label="Updated" value={new Date(tour.updatedAt).toLocaleDateString('en-US', dateOpts)} />}
           </div>
         </Section>
+
+        <RecordReview
+          data={tour}
+          title="Complete tour record"
+          description="Every available tour value, including nested pricing, itinerary, ownership, and audit fields."
+        />
       </main>
     </div>
   </>

@@ -6,10 +6,328 @@
         {
           "type": "BookingTravelerStep",
           "props": {
-            "titleOptions": ["Mr","Ms","Mrs","Mx"],
-            "genderOptions": ["male","female","other","prefer_not_say"],
-            "travellerTypeOptions": ["adult","child","infant"],
-            "visaStatusOptions": ["","not_required","required","applied","approved"]
+            "layout": {
+              "columns": 2,
+              "expandable": true,
+              "defaultExpanded": true,
+              "showExpandAll": true,
+              "expandAllLabel": "Expand all",
+              "collapseAllLabel": "Collapse all"
+            },
+            "leadFields": [
+              {
+                "name": "contactEmail",
+                "type": "email",
+                "labelRef": "contactEmail",
+                "placeholderRef": "contactEmail",
+                "required": true,
+                "colSpan": 1,
+                "validation": {
+                  "messages": {
+                    "required": "Contact email is required"
+                  }
+                }
+              },
+              {
+                "name": "contactPhone",
+                "type": "tel",
+                "labelRef": "contactPhone",
+                "placeholderRef": "contactPhone",
+                "required": true,
+                "colSpan": 1,
+                "maxLength": 10,
+                "validation": {
+                  "messages": {
+                    "required": "Contact phone is required"
+                  }
+                }
+              },
+              {
+                "name": "guests",
+                "type": "counter",
+                "labelRef": "guests",
+                "colSpan": 2,
+                "min": 1,
+                "maxRef": "maxGuests",
+                "decrementLabel": "Decrease travelers",
+                "incrementLabel": "Increase travelers"
+              }
+            ],
+            "leadSectionTitleRef": "sectionContact",
+            "leadLayout": {
+              "columns": 2,
+              "expandable": false
+            },
+            "sections": [
+              {
+                "id": "personal",
+                "titleRef": "sectionPersonal",
+                "icon": "user",
+                "collapsible": true,
+                "defaultExpanded": true,
+                "fields": [
+                  {
+                    "name": "travellerType",
+                    "type": "select",
+                    "labelRef": "travellerType",
+                    "optionsRef": "travellerTypes",
+                    "required": true
+                  },
+                  {
+                    "name": "title",
+                    "type": "select",
+                    "labelRef": "title",
+                    "optionsRef": "titles"
+                  },
+                  {
+                    "name": "firstName",
+                    "type": "text",
+                    "labelRef": "firstName",
+                    "placeholderRef": "firstName",
+                    "required": true,
+                    "minLength": 2,
+                    "validation": {
+                      "messages": {
+                        "required": "First name is required"
+                      }
+                    }
+                  },
+                  {
+                    "name": "lastName",
+                    "type": "text",
+                    "labelRef": "lastName",
+                    "placeholderRef": "lastName",
+                    "required": true,
+                    "validation": {
+                      "messages": {
+                        "required": "Last name is required"
+                      }
+                    }
+                  },
+                  {
+                    "name": "middleName",
+                    "type": "text",
+                    "labelRef": "middleName",
+                    "placeholderRef": "middleName"
+                  },
+                  {
+                    "name": "gender",
+                    "type": "select",
+                    "labelRef": "gender",
+                    "optionsRef": "genders",
+                    "required": true,
+                    "validation": {
+                      "messages": {
+                        "required": "Gender is required"
+                      }
+                    }
+                  },
+                  {
+                    "name": "dob",
+                    "type": "date",
+                    "labelRef": "dob",
+                    "mode": "birthdate",
+                    "placeholder": "Select date"
+                  },
+                  {
+                    "name": "age",
+                    "type": "number",
+                    "labelRef": "age",
+                    "placeholderRef": "age",
+                    "required": true,
+                    "min": 1,
+                    "max": 120,
+                    "maxLength": 3,
+                    "validation": {
+                      "messages": {
+                        "required": "Age is required"
+                      }
+                    }
+                  },
+                  {
+                    "name": "nationality",
+                    "type": "select",
+                    "labelRef": "nationality",
+                    "optionsRef": "nationalities",
+                    "required": true,
+                    "colSpan": 2,
+                    "searchable": true,
+                    "validation": {
+                      "messages": {
+                        "required": "Nationality is required"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "contact",
+                "titleRef": "sectionContact",
+                "icon": "messageCircle",
+                "collapsible": true,
+                "defaultExpanded": true,
+                "fields": [
+                  {
+                    "name": "email",
+                    "type": "email",
+                    "labelRef": "email",
+                    "placeholderRef": "email",
+                    "required": true,
+                    "validation": {
+                      "messages": {
+                        "required": "Traveler email is required"
+                      }
+                    }
+                  },
+                  {
+                    "name": "phone",
+                    "type": "tel",
+                    "labelRef": "phone",
+                    "placeholderRef": "phone",
+                    "required": true,
+                    "maxLength": 10,
+                    "validation": {
+                      "messages": {
+                        "required": "Traveler phone is required"
+                      }
+                    }
+                  },
+                  {
+                    "name": "countryOfResidence",
+                    "type": "select",
+                    "labelRef": "countryOfResidence",
+                    "optionsRef": "countries",
+                    "colSpan": 2,
+                    "searchable": true
+                  }
+                ]
+              },
+              {
+                "id": "passport",
+                "titleRef": "sectionPassport",
+                "icon": "passport",
+                "collapsible": true,
+                "defaultExpanded": true,
+                "fields": [
+                  {
+                    "name": "passport",
+                    "type": "text",
+                    "labelRef": "passport",
+                    "placeholderRef": "passport",
+                    "required": true,
+                    "minLength": 5,
+                    "maxLength": 20,
+                    "pattern": "^[A-Za-z0-9]{5,20}$",
+                    "validation": {
+                      "messages": {
+                        "required": "Passport / ID is required",
+                        "pattern": "Passport must be 5\u201320 alphanumeric characters"
+                      }
+                    }
+                  },
+                  {
+                    "name": "passportIssueCountry",
+                    "type": "select",
+                    "labelRef": "passportIssueCountry",
+                    "optionsRef": "countries",
+                    "searchable": true
+                  },
+                  {
+                    "name": "passportExpiryDate",
+                    "type": "monthYear",
+                    "labelRef": "passportExpiryDate",
+                    "placeholderRef": "passportExpiryDate",
+                    "required": true,
+                    "validateType": "text",
+                    "minLength": 5,
+                    "pattern": "^\\d{2}/\\d{2}$",
+                    "validation": {
+                      "messages": {
+                        "required": "Passport expiry is required",
+                        "pattern": "Use MM/YY format"
+                      }
+                    }
+                  },
+                  {
+                    "name": "visaStatus",
+                    "type": "select",
+                    "labelRef": "visaStatus",
+                    "optionsRef": "visaStatuses"
+                  }
+                ]
+              },
+              {
+                "id": "emergency",
+                "titleRef": "sectionEmergency",
+                "icon": "phoneCall",
+                "collapsible": true,
+                "defaultExpanded": true,
+                "fields": [
+                  {
+                    "name": "emergencyContactName",
+                    "type": "text",
+                    "labelRef": "emergencyContactName",
+                    "placeholderRef": "emergencyContactName",
+                    "required": true,
+                    "validation": {
+                      "messages": {
+                        "required": "Emergency contact is required"
+                      }
+                    }
+                  },
+                  {
+                    "name": "emergencyContactRelation",
+                    "type": "select",
+                    "labelRef": "emergencyContactRelation",
+                    "optionsRef": "emergencyRelations",
+                    "searchable": true
+                  },
+                  {
+                    "name": "emergencyContactNumber",
+                    "type": "tel",
+                    "labelRef": "emergencyContactNumber",
+                    "placeholderRef": "emergencyContactNumber",
+                    "required": true,
+                    "colSpan": 2,
+                    "maxLength": 10,
+                    "validation": {
+                      "messages": {
+                        "required": "Emergency phone is required"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "additional",
+                "titleRef": "sectionAdditional",
+                "icon": "settings",
+                "collapsible": true,
+                "defaultExpanded": true,
+                "fields": [
+                  {
+                    "name": "dietaryPreferences",
+                    "type": "select",
+                    "labelRef": "dietaryPreferences",
+                    "optionsRef": "dietaryPreferences",
+                    "searchable": true
+                  },
+                  {
+                    "name": "medicalConditions",
+                    "type": "select",
+                    "labelRef": "medicalConditions",
+                    "optionsRef": "medicalConditions",
+                    "searchable": true
+                  },
+                  {
+                    "name": "wheelchairRequired",
+                    "type": "switch",
+                    "labelRef": "wheelchairRequired",
+                    "switchLabelRef": "yes"
+                  }
+                ]
+              }
+            ]
           }
         }
       ]

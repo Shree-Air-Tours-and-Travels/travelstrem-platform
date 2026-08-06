@@ -34,9 +34,12 @@ const extractToursFromResponse = (res) => {
 
 const extractResponseData = (res) => res?.component?.data || res?.componentData?.state?.data || {};
 
-export default function FiltersContainer({ onChange, widgetData, sortId = "recommended", pageSize = 8, expanded: externalExpanded, onExpandedChange }) {
+export default function FiltersContainer({ onChange, widgetData, sortId = "recommended", pageSize = 8, expanded: externalExpanded, onExpandedChange, initialValues }) {
     const [meta, setMeta] = useState(resolveMetaTitle(widgetData) || null);
-    const [values, setValues] = useState(() => (widgetData?.structure?.config?.defaults ? { ...widgetData.structure.config.defaults } : {}));
+    const [values, setValues] = useState(() => ({
+        ...(widgetData?.structure?.config?.defaults ? { ...widgetData.structure.config.defaults } : {}),
+        ...(initialValues || {}),
+    }));
     const [errors, setErrors] = useState({});
     const [loadingMeta, setLoadingMeta] = useState(!widgetData);
     const [loadingAction, setLoadingAction] = useState(false);
@@ -60,7 +63,10 @@ export default function FiltersContainer({ onChange, widgetData, sortId = "recom
     useEffect(() => {
         if (widgetData) {
             setMeta(resolveMetaTitle(widgetData));
-            setValues(widgetData?.structure?.config?.defaults ? { ...widgetData.structure.config.defaults } : {});
+            setValues({
+                ...(widgetData?.structure?.config?.defaults ? { ...widgetData.structure.config.defaults } : {}),
+                ...(initialValues || {}),
+            });
             setLoadingMeta(false);
         }
     }, [widgetData]);

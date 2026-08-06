@@ -4,7 +4,10 @@ const { Schema } = mongoose;
 
 export const TREVIO_TRIP_STATUS = Object.freeze({
   DRAFT: "draft",
+  PENDING_APPROVAL: "pending_approval",
   LISTED: "listed",
+  UNPUBLISHED: "unpublished",
+  ARCHIVED: "archived",
   COMPLETED: "completed",
   CANCELLED: "cancelled",
 });
@@ -47,6 +50,53 @@ const preferenceOptionSchema = new Schema({
   extraPrice: { type: Number, default: 0 },
 }, { _id: false });
 
+const includedStaySchema = new Schema({
+  nights: { type: Number, min: 0, default: 1 },
+  location: { type: String, trim: true, default: "" },
+  propertyName: { type: String, trim: true, default: "" },
+  propertyClass: { type: String, trim: true, default: "" },
+  roomType: { type: String, trim: true, default: "" },
+  meals: [{ type: String, trim: true }],
+  description: { type: String, trim: true, default: "" },
+}, { _id: true });
+
+const hotelOptionSchema = new Schema({
+  title: { type: String, trim: true, default: "" },
+  description: { type: String, trim: true, default: "" },
+  costLabel: { type: String, trim: true, default: "Upgrade cost" },
+  cost: { type: String, trim: true, default: "" },
+  recommended: { type: Boolean, default: false },
+}, { _id: true });
+
+const cancellationTierSchema = new Schema({
+  label: { type: String, trim: true, default: "" },
+  daysBefore: { type: Number, default: null },
+  refundPercent: { type: Number, default: null },
+  description: { type: String, trim: true, default: "" },
+}, { _id: false });
+
+const cancellationSchema = new Schema({
+  policy: { type: String, trim: true, default: "" },
+  freeCancellationUntil: { type: String, trim: true, default: "" },
+  refundPercent: { type: Number, default: 100 },
+  depositRequired: { type: Boolean, default: false },
+  depositPercent: { type: Number, default: null },
+  depositNote: { type: String, trim: true, default: "" },
+  note: { type: String, trim: true, default: "" },
+  tiers: [cancellationTierSchema],
+}, { _id: false });
+
+const extraSchema = new Schema({
+  title: { type: String, trim: true, default: "" },
+  description: { type: String, trim: true, default: "" },
+  price: { type: Number, default: 0 },
+  currency: { type: String, trim: true, default: "INR" },
+  priceLabel: { type: String, trim: true, default: "" },
+  perTraveller: { type: Boolean, default: false },
+  icon: { type: String, trim: true, default: "" },
+  included: { type: Boolean, default: false },
+}, { _id: true });
+
 const preferencesSchema = new Schema({
   roomTypes: { type: [preferenceOptionSchema], default: () => [
     { label: "Single", value: "single", extraPrice: 0 },
@@ -72,6 +122,12 @@ const preferencesSchema = new Schema({
 }, { _id: false });
 
 const trevioTripSchema = new Schema({
+  agencyId: { type: Schema.Types.ObjectId, ref: "PartnerAgency", default: null, index: true },
+  createdBy: { type: Schema.Types.ObjectId, ref: "User", default: null, index: true },
+  ownerAgent: { type: Schema.Types.ObjectId, ref: "User", default: null, index: true },
+  productKey: { type: String, default: "trevio", index: true },
+  visibility: { type: String, enum: ["public", "agency", "private"], default: "public" },
+  archivedAt: { type: Date, default: null },
   slug: { type: String, required: true, unique: true, trim: true, lowercase: true, index: true },
   title: { type: String, required: true, trim: true },
   category: { type: String, required: true, trim: true, lowercase: true, index: true },
@@ -94,16 +150,24 @@ const trevioTripSchema = new Schema({
   itinerary: [itineraryItemSchema],
   inclusions: [{ type: String, trim: true }],
   exclusions: [{ type: String, trim: true }],
+  includedStays: [includedStaySchema],
+  hotelOptions: [hotelOptionSchema],
+  cancellation: { type: cancellationSchema, default: () => ({}) },
+  extras: [extraSchema],
   featured: { type: Boolean, default: false, index: true },
   isListed: { type: Boolean, default: true, index: true },
   cancellationPolicy: { type: String, trim: true, default: "Full refund up to 7 days before departure; 50% refund within 7 days; no refund within 48 hours." },
   reviews: [reviewSchema],
   status: { type: String, enum: TREVIO_TRIP_STATUS_LIST, default: TREVIO_TRIP_STATUS.LISTED, index: true },
+  tremVerified: { type: Boolean, default: false, index: true },
+  tremVerifiedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
+  tremVerifiedAt: { type: Date, default: null },
   sortOrder: { type: Number, default: 0 },
 }, { timestamps: true });
 
 trevioTripSchema.index({ status: 1, isListed: 1, featured: -1, sortOrder: 1 });
 trevioTripSchema.index({ category: 1, status: 1, isListed: 1 });
+trevioTripSchema.index({ agencyId: 1, ownerAgent: 1, status: 1 });
 
 const TrevioTrip = mongoose.models?.TrevioTrip || mongoose.model("TrevioTrip", trevioTripSchema);
 

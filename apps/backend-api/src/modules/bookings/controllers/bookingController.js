@@ -85,8 +85,7 @@ function isPrivilegedFromReq(authUser, userRole, req) {
     add(authUser?.role);
     add(authUser?.roleName);
     if (Array.isArray(authUser?.roles)) authUser.roles.forEach(add);
-    const headerAdmin = req?.headers?.["x-admin"] === "1" || req?.headers?.["x-is-admin"] === "true";
-    if (headerAdmin || authUser?.isAdmin || authUser?.isAdministrator) return true;
+    if (authUser?.isAdmin || authUser?.isAdministrator) return true;
     return [...roles].some((role) => ["superadmin", "super_admin", "admin", "agent", "sales_agent", "operations", "finance", "support"].includes(role));
 }
 
@@ -125,8 +124,9 @@ async function resolveBookingAgent({ tour, actor }) {
 
 async function assignmentScopeForAgent(agentId) {
     if (!agentId) return {};
-    const agent = await User.findById(agentId).select("agentRef agencyRef partnerAgencyRef");
+    const agent = await User.findById(agentId).select("agentRef agencyRef partnerAgencyRef agencyId accountStatus agencyRole");
     return {
+        agencyId: agent?.agencyId || null,
         assignedAgentRef: agent?.agentRef || "",
         assignedAgencyRef: agent?.agencyRef || "",
         assignedPartnerAgencyRef: agent?.partnerAgencyRef || "",
@@ -302,11 +302,13 @@ async function findAuthorizedBooking(req, bookingId, action = "view") {
     }
     const effectiveRole = String(userRole || authUser?.role || "").toLowerCase();
     if (privileged && effectiveRole === "agent") {
-        const agent = await User.findById(userId).select("agencyRef partnerAgencyRef");
+        const agent = await User.findById(userId).select("agencyId agencyRole agencyRef partnerAgencyRef");
+        if (!agent?.agencyId || String(booking.agencyId || "") !== String(agent.agencyId)) return { error: { message: `Not authorized to ${action} this booking`, status: 403 } };
+        if (agent.agencyRole === "partner_admin") return { booking, actor: { id: normalizeObjectId(userId), role: userRole, type: "admin", privileged, authUser } };
         const sameAgent = String(booking.assignedAgent || "") === String(userId);
-        const sameAgency = agent?.agencyRef && booking.assignedAgencyRef && agent.agencyRef === booking.assignedAgencyRef;
-        const samePartner = agent?.partnerAgencyRef && booking.assignedPartnerAgencyRef && agent.partnerAgencyRef === booking.assignedPartnerAgencyRef;
-        if (!sameAgent && !sameAgency && !samePartner) {
+        // A regular Partner Agent is intentionally limited to the explicit
+        // assignment. Shared agency identifiers are not authorization grants.
+        if (!sameAgent) {
             return { error: { message: `Not authorized to ${action} this booking`, status: 403 } };
         }
     }
@@ -353,6 +355,7 @@ export const createDraftBooking = async (req, res) => {
         const dueDates = BookingService.priorityDueDates(priority);
         const assignedAgent = await resolveBookingAgent({ tour, actor });
         const assignmentScope = await assignmentScopeForAgent(assignedAgent);
+        const assignedAgentUser = assignedAgent ? await User.findById(assignedAgent).select("name email phone agentRef agencyId").lean() : null;
         const booking = new Booking({
             user: actor.id,
             tour: tourId,
@@ -375,6 +378,9 @@ export const createDraftBooking = async (req, res) => {
             updatedBy: actor.id,
             organizationId: normalizeObjectId(body.organizationId),
             tenantId: normalizeObjectId(body.tenantId),
+            agencyId: tour.agencyId || assignedAgentUser?.agencyId || null,
+            agencySnapshot: tour.agencyId ? { id: tour.agencyId, ref: tour.partnerAgencyRef || "", name: tour.providerName || "" } : null,
+            assignedAgentSnapshot: assignedAgentUser ? { id: assignedAgentUser._id, name: assignedAgentUser.name, email: assignedAgentUser.email, phone: assignedAgentUser.phone, ref: assignedAgentUser.agentRef } : null,
         });
 
         await saveWithBookingRefRetry(booking);
@@ -430,6 +436,7 @@ export const createBooking = async (req, res) => {
         const priority = String(body.priority || "MEDIUM").toUpperCase();
         const assignedAgent = await resolveBookingAgent({ tour, actor });
         const assignmentScope = await assignmentScopeForAgent(assignedAgent);
+        const assignedAgentUser = assignedAgent ? await User.findById(assignedAgent).select("name email phone agentRef agencyId").lean() : null;
         const booking = new Booking({
             user: actor.id,
             tour: tourId,
@@ -452,6 +459,9 @@ export const createBooking = async (req, res) => {
             updatedBy: actor.id,
             organizationId: normalizeObjectId(body.organizationId),
             tenantId: normalizeObjectId(body.tenantId),
+            agencyId: tour.agencyId || assignedAgentUser?.agencyId || null,
+            agencySnapshot: tour.agencyId ? { id: tour.agencyId, ref: tour.partnerAgencyRef || "", name: tour.providerName || "" } : null,
+            assignedAgentSnapshot: assignedAgentUser ? { id: assignedAgentUser._id, name: assignedAgentUser.name, email: assignedAgentUser.email, phone: assignedAgentUser.phone, ref: assignedAgentUser.agentRef } : null,
             termsAccepted: !!body.termsAccepted,
             cancellationPolicyAccepted: !!body.cancellationPolicyAccepted,
         });
@@ -623,14 +633,19 @@ export const listBookings = async (req, res) => {
         if (authUserId) {
             if (!privileged) {
                 q.user = authUserId;
-            } else if (String(userRole || authUser?.role || "").toLowerCase() === "admin") {
+            } else if (String(userRole || authUser?.role || "").toLowerCase() === "admin" && authUser?.adminLevel === "master") {
                 if (qUserId && String(qUserId).toLowerCase() !== "all") q.user = qUserId;
             } else {
-                const agent = await User.findById(authUserId).select("agencyRef partnerAgencyRef");
+                const agent = await User.findById(authUserId).select("agencyId agencyRole agencyRef partnerAgencyRef");
+                q.agencyId = agent?.agencyId || null;
+                if (agent?.agencyRole === "partner_admin") {
+                    // Partner Admins may view all bookings within their agency.
+                } else {
                 const visibility = [{ assignedAgent: authUserId }];
                 if (agent?.agencyRef) visibility.push({ assignedAgencyRef: agent.agencyRef });
                 if (agent?.partnerAgencyRef) visibility.push({ assignedPartnerAgencyRef: agent.partnerAgencyRef });
                 q.$and = [...(q.$and || []), { $or: visibility }];
+                }
             }
         } else if (qUserId) {
             q.user = qUserId;
@@ -943,6 +958,7 @@ export const assignBooking = async (req, res) => {
         const agentId = normalizeObjectId(req.body?.agentId || req.body?.assignedAgent);
         if (!agentId) return sendError(res, "agentId is required.", 400);
         const assignmentScope = await assignmentScopeForAgent(agentId);
+        if (!assignmentScope?.agencyId || String(assignmentScope.agencyId) !== String(booking.agencyId || "")) return sendError(res, "The assigned agent must belong to the booking agency.", 400);
         const before = booking.toObject();
         await AssignmentService.assign({ booking, newAgent: agentId, assignedBy: actor.id, reason: cleanString(req.body?.reason) });
         booking.assignedAgent = agentId;

@@ -7,7 +7,17 @@
     },
     "elements": {
       "labels": {
-        "cancellationPolicy": "Cancellation Policy"
+        "cancellationPolicy": "Cancellation Policy",
+        "extras": "Extras & Add-ons",
+        "freeCancellation": "Free cancellation",
+        "refund": "Refund",
+        "refundUpTo": "Refund up to",
+        "deposit": "Deposit",
+        "tiersTitle": "Refund timeline",
+        "note": "Note",
+        "included": "Included",
+        "perPerson": "/ person",
+        "addOn": "Add-on"
       },
       "urls": {}
     },

@@ -10,7 +10,7 @@ const defaultFields = [
     { name: "phone", label: "Phone", type: "tel", required: true, value: "" }
 ];
 
-const ContactAgentModal = ({ open, onClose, tourId, formData }) => {
+const ContactAgentModal = ({ open, onClose, tourId, formData, user = null }) => {
     const fieldsMeta = useMemo(() => (formData?.structure?.fields ?? defaultFields).map((field) => ({
         ...field,
         type: field.name === "email" ? "email" : field.name === "phone" ? "tel" : field.type,
@@ -20,9 +20,10 @@ const ContactAgentModal = ({ open, onClose, tourId, formData }) => {
 
     const initialForm = useMemo(() => {
         const obj = {};
-        fieldsMeta.forEach((f) => { obj[f.name] = f.value ?? ""; });
+        const profile = { name: user?.name || "", email: user?.email || "", phone: user?.phone || user?.phoneNumber || user?.mobile || "" };
+        fieldsMeta.forEach((f) => { obj[f.name] = profile[f.name] || f.value || ""; });
         return obj;
-    }, [fieldsMeta]);
+    }, [fieldsMeta, user]);
 
     const [form, setForm] = useState(initialForm);
     const [errors, setErrors] = useState({});
@@ -148,7 +149,8 @@ ContactAgentModal.propTypes = {
     open: PropTypes.bool,
     onClose: PropTypes.func,
     tourId: PropTypes.string,
-    formData: PropTypes.object
+    formData: PropTypes.object,
+    user: PropTypes.object
 };
 
 export default ContactAgentModal;

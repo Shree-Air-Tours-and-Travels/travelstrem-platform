@@ -7,6 +7,7 @@ const __dirname = path.dirname(__filename);
 const DATA_DIR = path.resolve(__dirname, "../../../data");
 
 const PAGE_FILES = {
+  home: "tours-remote/home/page.json",
   listing: "tours-remote/listing/page.json",
   details: "tours-remote/details/page.json",
   booking: "tours-remote/booking/page.json",
@@ -18,6 +19,19 @@ const PAGE_FILES = {
 const readJson = (...segments) => {
   const filePath = path.resolve(DATA_DIR, ...segments);
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
+};
+
+export const getToursHomePage = (req, res) => {
+  try {
+    const page = readJson(PAGE_FILES.home);
+    return res.status(200).json(page);
+  } catch (error) {
+    console.error("getToursHomePage error:", error);
+    return res.status(500).json({
+      status: "error",
+      message: "Failed to load page configuration",
+    });
+  }
 };
 
 export const getToursPage = (req, res) => {

@@ -1,18 +1,42 @@
 // modules/tours/controller.js
 const isObject = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
 const toString = (v) => String(v ?? "");
+const agencySummary = (value) => value && typeof value === "object" ? {
+    id: value._id || value.id || null,
+    name: value.agencyName || "",
+    reference: value.partnerAgencyRef || "",
+    logo: value.logo || "",
+    website: value.website || "",
+    location: [value.address?.city, value.address?.state, value.address?.country].filter(Boolean).join(", "),
+} : null;
 import TourRepository from "../repositories/TourRepository.js";
 import {
     getHandlerFromReq,
 } from "../services/tourService.js";
 import config from "../../../config/index.js";
 import pageDefinitionService from "../../../services/pageDefinitionService.js";
+import Booking from "../../bookings/models/Booking.js";
+import User from "../../auth/models/User.js";
+import { audit } from "../../tenancy/audit.service.js";
 const NODE_ENV = (config.nodeEnv || "development").toString().trim();
 const IS_DEVELOPMENT = NODE_ENV === "development";
 const DEFAULT_DELAY_MS = Number.isFinite(Number(config.devDelayMs))
     ? Number(config.devDelayMs)
     : 3000;
 const DEBUG = Boolean(config.enableDebugLogs || config.debug);
+const TOUR_TRANSITIONS = {
+    draft: new Set(["pending_approval", "published", "archived", "cancelled"]),
+    pending_approval: new Set(["draft", "published", "archived", "cancelled"]),
+    published: new Set(["unpublished", "archived", "cancelled"]),
+    unpublished: new Set(["published", "archived", "cancelled"]),
+    archived: new Set([]), cancelled: new Set([]),
+};
+const canPublishTour = (req) => req.access?.isMaster || req.access?.role === "partner_admin" || req.access?.agency?.settings?.tripPublishingPermissions?.agentCanPublish === true;
+const assertTourTransition = (from, to, req) => {
+    if (!to || from === to) return;
+    if (!TOUR_TRANSITIONS[from]?.has(to)) throw new Error(`Cannot move tour from ${from} to ${to}.`);
+    if (to === "published" && !canPublishTour(req)) throw Object.assign(new Error("This tour must be submitted for approval before publishing."), { status: 403 });
+};
 
 const sendJson = (res, statusCode, body, req) => {
     if (!IS_DEVELOPMENT) return res.status(statusCode).json(body);
@@ -138,6 +162,10 @@ export const normalizeTourForResponse = (tourObj = {}, priceInfo = null) => {
         seasonalPricing: Array.isArray(tourObj.seasonalPricing) ? tourObj.seasonalPricing : [],
         itinerary: Array.isArray(tourObj.itinerary) ? tourObj.itinerary : [],
         highlights: Array.isArray(tourObj.highlights) ? tourObj.highlights : [],
+        includedStays: Array.isArray(tourObj.includedStays) ? tourObj.includedStays : [],
+        hotelOptions: Array.isArray(tourObj.hotelOptions) ? tourObj.hotelOptions : [],
+        cancellation: tourObj.cancellation || null,
+        extras: Array.isArray(tourObj.extras) ? tourObj.extras : [],
         availability: tourObj.availability || { totalSeats: null, seatsAvailable: null },
         meetingPoint: tourObj.meetingPoint || "",
         inclusions: Array.isArray(tourObj.inclusions) ? tourObj.inclusions : [],
@@ -152,6 +180,8 @@ export const normalizeTourForResponse = (tourObj = {}, priceInfo = null) => {
         tags: Array.isArray(tourObj.tags) ? tourObj.tags : [],
         isPublished: typeof tourObj.isPublished === "boolean" ? tourObj.isPublished : true,
         status: tourObj.status || "published",
+        tremVerified: Boolean(tourObj.tremVerified),
+        tremVerifiedAt: tourObj.tremVerifiedAt || null,
         ownerAgent: isObject(tourObj.ownerAgent)
             ? toString(tourObj.ownerAgent._id)
             : toString(tourObj.ownerAgent) || null,
@@ -160,6 +190,7 @@ export const normalizeTourForResponse = (tourObj = {}, priceInfo = null) => {
         partnerAgencyRef: tourObj.partnerAgencyRef || "",
         inventorySource: tourObj.inventorySource || "platform",
         providerName: tourObj.providerName || "",
+        agency: agencySummary(tourObj.agencyId),
         ...extractOwnerInfo(tourObj.ownerAgent),
         createdAt: tourObj.createdAt || null,
         updatedAt: tourObj.updatedAt || null,
@@ -167,43 +198,6 @@ export const normalizeTourForResponse = (tourObj = {}, priceInfo = null) => {
          priceInfo: priceInfo || null,
      };
  };
-
-const normalizeTourCardForResponse = (tourObj = {}, priceInfo = null) => {
-    const reviews = Array.isArray(tourObj.reviews) ? tourObj.reviews : [];
-    const reviewCount = reviews.length;
-    const avgRating = tourObj.avgRating != null
-        ? tourObj.avgRating
-        : (reviewCount ? (reviews.reduce((a, r) => a + (Number(r.rating) || 0), 0) / reviewCount).toFixed(1) : 0);
-
-    return {
-        _id: tourObj._id || tourObj.id || null,
-        title: tourObj.title || "",
-        city: tourObj.city ? { from: tourObj.city.from, to: tourObj.city.to } : null,
-        address: tourObj.address ? { city: tourObj.address.city, country: tourObj.address.country } : null,
-        period: tourObj.period || null,
-        photo: tourObj.photo || "",
-        photos: Array.isArray(tourObj.photos) && tourObj.photos.length > 0 ? [tourObj.photos[0]] : [],
-        desc: tourObj.desc ? tourObj.desc.slice(0, 120) : "",
-        avgRating,
-        maxGroupSize: tourObj.maxGroupSize || null,
-        reviewCount,
-        reviews: [],
-        featured: !!tourObj.featured,
-        tags: Array.isArray(tourObj.tags) ? tourObj.tags.slice(0, 4) : [],
-        ownerAgent: isObject(tourObj.ownerAgent)
-            ? toString(tourObj.ownerAgent._id)
-            : toString(tourObj.ownerAgent) || null,
-        agentTour: !!tourObj.agentTour,
-        agencyRef: tourObj.agencyRef || "",
-        partnerAgencyRef: tourObj.partnerAgencyRef || "",
-        inventorySource: tourObj.inventorySource || "platform",
-        providerName: tourObj.providerName || "",
-        ...extractOwnerInfo(tourObj.ownerAgent),
-        createdAt: tourObj.createdAt || null,
-        updatedAt: tourObj.updatedAt || null,
-        priceInfo: priceInfo || null,
-    };
-};
 
 /* ----------------- Sanitizer + validator ----------------- */
 
@@ -214,6 +208,9 @@ const normalizeTourCardForResponse = (tourObj = {}, priceInfo = null) => {
  */
 const sanitizeTourPayload = (raw = {}) => {
     const p = { ...raw };
+    // Persistence and verification metadata is exclusively server-owned.
+    // Imports may contain these fields, but they must never affect a tour.
+    for (const key of ["_id", "id", "__v", "createdAt", "updatedAt", "tremVerified", "tremVerifiedBy", "tremVerifiedAt", "createdBy"]) delete p[key];
 
     // Required fields
     if (!p.title) throw new Error("Missing required field: title");
@@ -395,6 +392,7 @@ const sanitizeTourPayload = (raw = {}) => {
  */
 const sanitizeTourPayloadForUpdate = (raw = {}) => {
     const p = { ...raw };
+    for (const key of ["_id", "id", "__v", "createdAt", "updatedAt", "tremVerified", "tremVerifiedBy", "tremVerifiedAt", "createdBy"]) delete p[key];
     const result = {};
 
     if (p.title !== undefined) {
@@ -558,23 +556,29 @@ const sanitizeTourPayloadForUpdate = (raw = {}) => {
 /**
  * Check whether the requesting user can modify (update/delete) the given tour.
  * - Admins can modify any tour.
- * - Users matching the tour's partnerAgencyRef can modify tours under that agency.
+ * - Partner admins can modify every tour assigned to their agency.
  * - Agents can only modify tours they own (ownerAgent matches their user id).
  */
-export const canModifyTour = (user, tour) => {
-    if (!user || !tour) return false;
+export const canModifyTour = (user, tour, access = null) => {
+    if ((!user && !access?.user) || !tour) return false;
+
+    // loadAccessContext hydrates the current database user and agency. Prefer it
+    // over the JWT-shaped req.user, which may not contain agencyRole/agencyId.
+    const actor = access?.user || user;
+    const role = access?.role || actor?.agencyRole;
+    const actorAgencyId = access?.agencyId || actor?.agencyId || user?.agencyId;
+    const tourAgencyId = tour.agencyId?._id || tour.agencyId?.id || tour.agencyId;
 
     // Admin can modify any tour
-    if (user.role === "admin") return true;
+    if (access?.isMaster || (actor?.role === "admin" && actor?.adminLevel === "master")) return true;
 
-    // Partner agency user can modify tours linked to their agency
-    if (user.partnerAgencyRef && tour.partnerAgencyRef === user.partnerAgencyRef) return true;
+    if (role === "partner_admin" && actorAgencyId && toString(tourAgencyId) === toString(actorAgencyId)) return true;
 
     // Agent can only modify tours they own AND that are agent-scoped
-    if (user.role === "agent") {
-        if (tour.agentTour !== true && tour.inventorySource !== "agent") return false;
+    if (role === "partner_agent" || actor?.role === "agent") {
+        if (!actorAgencyId || toString(tourAgencyId) !== toString(actorAgencyId)) return false;
         const ownerId = toString(tour.ownerAgent?._id || tour.ownerAgent);
-        const userId = toString(user.sub || user.id);
+        const userId = toString(actor?._id || actor?.sub || actor?.id || user?.sub || user?.id);
         if (ownerId && userId && ownerId === userId) return true;
     }
 
@@ -608,6 +612,10 @@ export const getTours = async (req, res) => {
 
     try {
         const query = featuredOnly ? { featured: true } : {};
+        if (!(req.user?.role === "admin" && req.user?.adminLevel === "master")) {
+            query.agencyId = req.user?.agencyId || null;
+            if (req.user?.agencyRole !== "partner_admin") query.ownerAgent = req.user?.sub;
+        }
         let toursQuery = TourRepository.find(query).sort({ createdAt: -1 });
         if (limit) toursQuery = toursQuery.limit(limit);
 
@@ -616,7 +624,9 @@ export const getTours = async (req, res) => {
          const tours = (Array.isArray(toursRaw) ? toursRaw : []).map((doc) => {
              const tourObj = doc.toObject ? doc.toObject() : doc;
              const priceInfo = buildPriceInfo(doc, dateQuery);
-             const normalized = normalizeTourCardForResponse(tourObj, priceInfo);
+             // Management screens use this collection for View and Edit, so
+             // retain the complete schema instead of a display-card projection.
+             const normalized = normalizeTourForResponse(tourObj, priceInfo);
              return normalized;
          });
 
@@ -706,17 +716,38 @@ export const createTour = async (req, res) => {
     const handler = getHandlerFromReq(req);
     try {
         const sanitized = sanitizeTourPayload(req.body);
+        if (!req.access?.isMaster && !req.access?.agency?.productAccess?.includes("trevista")) {
+            return sendJson(res, 403, { status: "error", message: "Trevista is not assigned to this agency." }, req);
+        }
+        if (sanitized.startDate && sanitized.endDate && sanitized.startDate > sanitized.endDate) throw new Error("Tour end date must be after its start date.");
         if (req.user?.role === "agent") {
             sanitized.ownerAgent = req.user.sub || req.user.id || null;
+            sanitized.createdBy = req.user.sub || req.user.id || null;
+            sanitized.agencyId = req.user.agencyId || null;
             sanitized.agentTour = true;
             sanitized.agentRef = req.user.agentRef || "";
             sanitized.agencyRef = req.user.agencyRef || "";
             sanitized.partnerAgencyRef = req.user.partnerAgencyRef || "";
             sanitized.inventorySource = "agent";
+            sanitized.productKey = "trevista";
+            if (!canPublishTour(req) && sanitized.status === "published") {
+                sanitized.status = "pending_approval";
+                sanitized.isPublished = false;
+            }
+        } else if (req.access?.isMaster) {
+            if (req.body.agencyId) sanitized.agencyId = req.body.agencyId;
+            sanitized.createdBy = req.user.sub || req.user.id || null;
+            sanitized.productKey = "trevista";
+        }
+        if (req.access?.isMaster && sanitized.status === "published") {
+            sanitized.tremVerified = true;
+            sanitized.tremVerifiedBy = req.user.sub || req.user.id;
+            sanitized.tremVerifiedAt = new Date();
         }
 
         const newTour = TourRepository.create(sanitized);
         const savedTour = await newTour.save();
+        await audit(req, { action: "trip.created", entityType: "Tour", entityId: savedTour._id, agencyId: savedTour.agencyId, after: savedTour.toObject() });
 
         const priceInfo = buildPriceInfo(savedTour, new Date());
         const normalized = normalizeTourForResponse(savedTour.toObject ? savedTour.toObject() : savedTour, priceInfo);
@@ -730,7 +761,7 @@ export const createTour = async (req, res) => {
         }, req);
     } catch (error) {
         console.error("createTour error:", error);
-        return sendJson(res, 400, {
+        return sendJson(res, error.status || 400, {
             status: "error",
             message: "Failed to create tour",
             handler,
@@ -756,7 +787,7 @@ export const updateTour = async (req, res) => {
             }, req);
         }
 
-        if (!canModifyTour(req.user, existing)) {
+        if (!canModifyTour(req.user, existing, req.access)) {
             return sendJson(res, 403, {
                 status: "error",
                 message: "You do not have permission to modify this tour",
@@ -765,11 +796,39 @@ export const updateTour = async (req, res) => {
         }
 
         const sanitized = sanitizeTourPayloadForUpdate(req.body);
+        assertTourTransition(existing.status, sanitized.status, req);
+        const nextStart = sanitized.startDate !== undefined ? sanitized.startDate : existing.startDate;
+        const nextEnd = sanitized.endDate !== undefined ? sanitized.endDate : existing.endDate;
+        if (nextStart && nextEnd && nextStart > nextEnd) throw new Error("Tour end date must be after its start date.");
+        for (const key of ["agencyId", "createdBy", "productKey", "agencyRef", "partnerAgencyRef", "inventorySource"]) delete sanitized[key];
+        if (req.access?.isMaster && (sanitized.status || existing.status) === "published") {
+            sanitized.tremVerified = true;
+            sanitized.tremVerifiedBy = req.user.sub || req.user.id;
+            sanitized.tremVerifiedAt = new Date();
+        } else if (!req.access?.isMaster) {
+            sanitized.tremVerified = false;
+            sanitized.tremVerifiedBy = null;
+            sanitized.tremVerifiedAt = null;
+        }
+        if (req.body.ownerAgent !== undefined) {
+            const requestedOwnerId = toString(req.body.ownerAgent?._id || req.body.ownerAgent);
+            const existingOwnerId = toString(existing.ownerAgent?._id || existing.ownerAgent);
+            if (requestedOwnerId === existingOwnerId) delete sanitized.ownerAgent;
+            else if (!(req.access?.isMaster || req.access?.role === "partner_admin")) delete sanitized.ownerAgent;
+            else if (req.access?.isMaster && !existing.agencyId) sanitized.ownerAgent = null;
+            else if (!req.body.ownerAgent) sanitized.ownerAgent = null;
+            else {
+                const owner = await User.exists({ _id: requestedOwnerId, agencyId: existing.agencyId, agencyRole: "partner_agent", accountStatus: "active", agentApprovalStatus: "approved" });
+                if (!owner) return sendJson(res, 400, { status: "error", message: "Tour owner must be an active agent in the same agency." }, req);
+                sanitized.ownerAgent = requestedOwnerId;
+            }
+        }
 
         const updatedTour = await TourRepository.findByIdAndUpdate(id, sanitized, {
             new: true,
             runValidators: true,
         });
+        await audit(req, { action: "trip.updated", entityType: "Tour", entityId: updatedTour._id, agencyId: updatedTour.agencyId, before: existing.toObject(), after: updatedTour.toObject() });
 
         const priceInfo = buildPriceInfo(updatedTour, new Date());
         const normalized = normalizeTourForResponse(updatedTour.toObject ? updatedTour.toObject() : updatedTour, priceInfo);
@@ -783,12 +842,33 @@ export const updateTour = async (req, res) => {
         }, req);
     } catch (error) {
         console.error("updateTour error:", error);
-        return sendJson(res, 400, {
+        return sendJson(res, error.status || 400, {
             status: "error",
             message: "Failed to update tour",
             handler,
             error: error.message,
         }, req);
+    }
+};
+
+/** Master-admin approval is explicit and cannot be set through create/update payloads. */
+export const verifyTour = async (req, res) => {
+    const handler = getHandlerFromReq(req);
+    if (!req.access?.isMaster) {
+        return sendJson(res, 403, { status: "error", message: "Only a master admin can verify a tour.", handler }, req);
+    }
+    try {
+        const tour = await TourRepository.findByIdAndUpdate(req.params.id, {
+            tremVerified: true,
+            tremVerifiedBy: req.user.sub || req.user.id,
+            tremVerifiedAt: new Date(),
+        }, { new: true, runValidators: true });
+        if (!tour) return sendJson(res, 404, { status: "error", message: "Tour not found.", handler }, req);
+        await audit(req, { action: "trip.verified", entityType: "Tour", entityId: tour._id, agencyId: tour.agencyId, after: tour.toObject() });
+        const normalized = normalizeTourForResponse(tour.toObject(), buildPriceInfo(tour, new Date()));
+        return sendJson(res, 200, { status: "success", component: { data: { tour: normalized, tours: [normalized] } }, message: "Tour verified by TravelsTREM.", handler }, req);
+    } catch (error) {
+        return sendJson(res, 400, { status: "error", message: error.message || "Could not verify tour.", handler }, req);
     }
 };
 
@@ -808,7 +888,7 @@ export const deleteTour = async (req, res) => {
             }, req);
         }
 
-        if (!canModifyTour(req.user, existing)) {
+        if (!canModifyTour(req.user, existing, req.access)) {
             return sendJson(res, 403, {
                 status: "error",
                 message: "You do not have permission to delete this tour",
@@ -816,13 +896,28 @@ export const deleteTour = async (req, res) => {
             }, req);
         }
 
-        const deletedTour = await TourRepository.findByIdAndDelete(id);
+        const hasBookings = await Booking.exists({ tour: existing._id, deletedAt: null });
+        if (!hasBookings && (req.access?.isMaster || ["draft", "pending_approval"].includes(existing.status))) {
+            const before = existing.toObject();
+            await existing.deleteOne();
+            await audit(req, { action: "trip.deleted", entityType: "Tour", entityId: existing._id, agencyId: existing.agencyId, before });
+            return sendJson(res, 200, {
+                ...pageDefinitionService.buildPageResponse("tours-remote/listing", { injectData: { deletedTourId: id } }),
+                message: "Tour permanently deleted successfully",
+                handler,
+            }, req);
+        }
+        existing.status = "archived";
+        existing.isPublished = false;
+        existing.archivedAt = new Date();
+        const deletedTour = await existing.save();
+        await audit(req, { action: hasBookings ? "trip.archived_with_bookings" : "trip.archived", entityType: "Tour", entityId: existing._id, agencyId: existing.agencyId });
 
         return sendJson(res, 200, {
             ...pageDefinitionService.buildPageResponse("tours-remote/listing", {
                 injectData: { deletedTourId: id },
             }),
-            message: "Tour deleted successfully",
+            message: "Tour archived successfully",
             handler,
         }, req);
     } catch (error) {
@@ -842,17 +937,17 @@ export const deleteTour = async (req, res) => {
 export const deleteAllTours = async (req, res) => {
     const handler = getHandlerFromReq(req);
     try {
-        if (req.user?.role !== "admin") {
+        if (!(req.user?.role === "admin" && req.user?.adminLevel === "master")) {
             return sendJson(res, 403, {
                 status: "error",
                 message: "Only admins can delete all tours",
                 handler,
             }, req);
         }
-        const result = await TourRepository.deleteMany({});
+        const result = await TourRepository.updateMany({}, { $set: { status: "archived", isPublished: false, archivedAt: new Date() } });
         return sendJson(res, 200, {
             ...pageDefinitionService.buildPageResponse("tours-remote/listing", {
-                injectData: { deletedCount: result.deletedCount || 0 },
+                injectData: { deletedCount: result.modifiedCount || 0 },
             }),
             message: `Deleted ${result.deletedCount || 0} tours`,
             handler,

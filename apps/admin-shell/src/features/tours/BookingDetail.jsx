@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { fetchData } from "@packages/trem-utils";
-import { Button, Title, Paragraph } from "@packages/trem-ui";
+import { Button, Title, Paragraph, Spinner } from "@packages/trem-ui";
 import "./BookingDetail.scss";
 
 const STATUS_PHASES = [
@@ -92,7 +92,9 @@ export default function BookingDetail() {
   if (loading) {
     return (
       <div className="bd-page">
-        <div className="bd-loading">Loading booking details...</div>
+        <div className="bd-loading">
+          <Spinner direction="column" label="Loading booking details..." />
+        </div>
       </div>
     );
   }

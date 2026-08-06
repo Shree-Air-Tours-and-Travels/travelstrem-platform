@@ -34,6 +34,16 @@ function isPrivileged(authUser, userRole) {
   return [...roles].some((r) => ["admin", "agent", "super_admin", "support", "operations"].includes(r));
 }
 
+function canAccess(req, booking) {
+  const id = String(req.user?.sub || req.user?.id || "");
+  if (req.user?.role === "admin" && req.user?.adminLevel === "master") return true;
+  if (req.user?.role === "agent") {
+    if (!req.user?.agencyId || String(booking.agencyId || "") !== String(req.user.agencyId)) return false;
+    return req.user.agencyRole === "partner_admin" || String(booking.assignedAgent || "") === id;
+  }
+  return String(booking.user || "") === id;
+}
+
 export const sendMessage = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { content, messageType = "text", metadata = {} } = req.body;
@@ -46,6 +56,7 @@ export const sendMessage = asyncHandler(async (req, res) => {
 
   const booking = await Booking.findById(id);
   if (!booking) throw new ApiError(404, "Booking not found");
+  if (!canAccess(req, booking)) throw new ApiError(403, "Not authorized");
 
   const senderType = privileged ? "agent" : "customer";
   const senderName = authUser?.name || (privileged ? "Agent" : "Customer");
@@ -78,6 +89,7 @@ export const getMessages = asyncHandler(async (req, res) => {
 
   const booking = await Booking.findById(id);
   if (!booking) throw new ApiError(404, "Booking not found");
+  if (!canAccess(req, booking)) throw new ApiError(403, "Not authorized");
 
   const messages = await MessageService.list(id, {
     limit: Math.min(Number(limit), 100),

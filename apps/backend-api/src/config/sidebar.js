@@ -11,7 +11,7 @@ export default {
       logoSrc: "/favicon.png",
       darkLogoSrc: "/favicon-dark.png",
       name: "TravelsTREM",
-      subtitle: "JAI · WORLD",
+      subtitle: "Shree Air Tours & Travels",
       href: "/",
       ariaLabel: "TravelsTREM home",
     },
@@ -27,9 +27,9 @@ export default {
         title: "Plan a Journey",
         items: [
           { id: "trips", label: "Trips & Adventures", icon: "mountain", target: "trevio" },
-          { id: "holidays", label: "Holiday Packages", icon: "globe", disabled: true, comingSoon: true },
+          { id: "tours", label: "Tours & Packages", icon: "globe", target: "trevista" },
           { id: "flights", label: "Flights & Hotels", icon: "plane", disabled: true, comingSoon: true },
-          { id: "services", label: "Travel Services", icon: "passport", disabled: true, comingSoon: true },
+          { id: "services", label: "Visas & Insurance", icon: "passport", disabled: true, comingSoon: true },
         ],
       },
       {

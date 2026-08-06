@@ -38,11 +38,16 @@
   &:active { transform: translateY(1px); }
 
   &.is-disabled,
-  &:disabled,
   &[aria-disabled="true"] {
     cursor: not-allowed;
     opacity: 0.56;
     pointer-events: none;
+    filter: grayscale(6%);
+  }
+
+  &.ui-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.56;
     filter: grayscale(6%);
   }
 }
@@ -137,7 +142,7 @@
   padding: $space-2 $space-3;
   font-weight: $font-regular;
   color: var(--color-primary-dark);
-  &:hover { text-decoration: underline; color: var(--color-secondary-dark); }
+  &:hover { color: var(--color-secondary-dark); }
 }
 
 /* -------------------------

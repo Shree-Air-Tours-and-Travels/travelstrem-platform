@@ -17,6 +17,71 @@ function getFieldValue(obj, path) {
     return cur;
 }
 
+function unwrapTourJson(value) {
+    if (!value || Array.isArray(value) || typeof value !== "object") return null;
+    for (const key of ["tour", "data", "result", "payload", "componentData", "component"]) {
+        const candidate = value[key];
+        if (Array.isArray(candidate) && candidate.length === 1) return unwrapTourJson(candidate[0]);
+        if (candidate && !Array.isArray(candidate) && typeof candidate === "object") return unwrapTourJson(candidate);
+    }
+    return value;
+}
+
+// Native date inputs only accept YYYY-MM-DD. API records and AI-generated JSON
+// commonly use ISO timestamps, which otherwise render as an empty date field.
+function toDateInputValue(value) {
+    if (value == null || value === '') return null;
+    const raw = String(value).trim();
+    const isoDate = raw.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s].*)?$/);
+    if (isoDate) return `${isoDate[1]}-${isoDate[2]}-${isoDate[3]}`;
+
+    // Accept the common India-facing DD/MM/YYYY (or DD-MM-YYYY) format too.
+    const dayFirstDate = raw.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
+    if (dayFirstDate) {
+        const [, day, month, year] = dayFirstDate;
+        const parsed = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+        if (parsed.getUTCFullYear() === Number(year) && parsed.getUTCMonth() === Number(month) - 1 && parsed.getUTCDate() === Number(day)) {
+            return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        }
+    }
+
+    const parsed = new Date(raw);
+    return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString().slice(0, 10);
+}
+
+function normalizeSeasonalPricing(seasonalPricing) {
+    if (!Array.isArray(seasonalPricing)) return [];
+    return seasonalPricing.map((season) => ({
+        ...season,
+        startDate: toDateInputValue(season?.startDate),
+        endDate: toDateInputValue(season?.endDate),
+    }));
+}
+
+function cleanImportedTour(imported, current, initial) {
+    const price = typeof imported.price === "number"
+        ? { min: imported.price, max: imported.price }
+        : (imported.price || imported.priceInfo || {});
+    const next = {
+        ...current,
+        ...imported,
+        city: { ...current.city, ...(imported.city || {}) },
+        address: { ...current.address, ...(imported.address || {}) },
+        period: { ...current.period, ...(imported.period || {}) },
+        price: { ...current.price, ...price },
+        availability: { ...current.availability, ...(imported.availability || {}) },
+        desc: imported.desc ?? imported.description ?? current.desc,
+        photo: imported.photo || imported.image || current.photo,
+        photos: Array.isArray(imported.photos) ? imported.photos : current.photos,
+        startDate: imported.startDate != null ? toDateInputValue(imported.startDate) : current.startDate,
+        endDate: imported.endDate != null ? toDateInputValue(imported.endDate) : current.endDate,
+        seasonalPricing: Array.isArray(imported.seasonalPricing) ? normalizeSeasonalPricing(imported.seasonalPricing) : current.seasonalPricing,
+    };
+    if (!initial?._id) ["_id", "id", "__v", "createdAt", "updatedAt", "agencyId", "ownerAgent", "createdBy"].forEach((key) => delete next[key]);
+    else next._id = initial._id;
+    return next;
+}
+
 export default function CreateTourForm({ initial = null, onCancel = () => { }, onSaved = () => { } }) {
     const [step, setStep] = useState(0);
     const [saving, setSaving] = useState(false);
@@ -24,6 +89,7 @@ export default function CreateTourForm({ initial = null, onCancel = () => { }, o
     const [uploadProgress, setUploadProgress] = useState(0);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
+    const [importingJson, setImportingJson] = useState(false);
     const [dirty, setDirty] = useState(false);
     const [touched, setTouched] = useState({});
     const [fieldErrors, setFieldErrors] = useState({});
@@ -44,6 +110,10 @@ export default function CreateTourForm({ initial = null, onCancel = () => { }, o
             seasonalPricing: [],
             itinerary: [],
             highlights: [],
+            includedStays: [],
+            hotelOptions: [],
+            cancellation: { policy: '', freeCancellationUntil: '', refundPercent: 100, depositRequired: false, depositPercent: null, depositNote: '', note: '', tiers: [] },
+            extras: [],
             availability: { totalSeats: null, seatsAvailable: null },
             meetingPoint: '',
             inclusions: [],
@@ -59,7 +129,11 @@ export default function CreateTourForm({ initial = null, onCancel = () => { }, o
             isPublished: true,
             status: 'published',
         };
-        return initial ? { ...blank, ...initial } : blank;
+        const merged = initial ? { ...blank, ...initial } : blank;
+        merged.startDate = toDateInputValue(merged.startDate);
+        merged.endDate = toDateInputValue(merged.endDate);
+        merged.seasonalPricing = normalizeSeasonalPricing(merged.seasonalPricing);
+        return merged;
     });
 
     function setForm(valueOrFn) {
@@ -75,6 +149,21 @@ export default function CreateTourForm({ initial = null, onCancel = () => { }, o
             cur[parts[parts.length - 1]] = value;
             return copy;
         });
+    }
+
+    function handleImportJson(jsonText) {
+        if (!String(jsonText || "").trim()) { setError("Paste a tour JSON object before importing."); return false; }
+        setError(null); setSuccess(null); setImportingJson(true);
+        try {
+            const imported = unwrapTourJson(JSON.parse(jsonText));
+            if (!imported || !imported.title) throw new Error("This does not look like a tour JSON object. A title is required.");
+            setFormState((current) => cleanImportedTour(imported, current, initial));
+            setDirty(true); setStep(0); setSuccess("JSON imported. Review every step before submitting.");
+            return true;
+        } catch (importError) {
+            setError(importError instanceof SyntaxError ? "The pasted content is not valid JSON. Check commas, quotes, and brackets." : (importError.message || "Could not import this tour JSON."));
+            return false;
+        } finally { setImportingJson(false); }
     }
 
     function next() { setStep(s => Math.min(STEPS.length - 1, s + 1)); }
@@ -302,6 +391,7 @@ export default function CreateTourForm({ initial = null, onCancel = () => { }, o
             saving={saving}
             uploading={uploading}
             uploadProgress={uploadProgress}
+            importingJson={importingJson}
             error={error}
             success={success}
             touched={touched}
@@ -318,6 +408,7 @@ export default function CreateTourForm({ initial = null, onCancel = () => { }, o
             removeArrayItem={removeArrayItem}
             moveArrayItem={moveArrayItem}
             handleUploadImage={handleUploadImage}
+            handleImportJson={handleImportJson}
             handleBlur={handleBlur}
             onDismissSuccess={() => setSuccess(null)}
         />

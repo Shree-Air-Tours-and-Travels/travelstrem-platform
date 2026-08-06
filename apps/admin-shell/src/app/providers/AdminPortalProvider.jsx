@@ -49,7 +49,7 @@ const DEFAULT_PAGE_CONFIG = {
 
 const clearLocalAuthState = () => {
     try {
-        clearAuthBrowserState({ prefixes: ["adminTREM", "travelstrem"] });
+        clearAuthBrowserState({ prefixes: ["adminTREM"] });
     } catch {}
     clearUserSessionCache();
 };

@@ -51,7 +51,8 @@ export default function ServicesPage({
                                 isAdmin
                                 variant="list"
                                 className="agent-service-card"
-                                showOwner
+                                ownershipMode="agent"
+                                ownershipLabels={{ agent: "Added by agent" }}
                                 ownerAgentName={t.ownerAgentName || ""}
                                 onView={openView}
                                 onEdit={canEdit ? openEdit : undefined}

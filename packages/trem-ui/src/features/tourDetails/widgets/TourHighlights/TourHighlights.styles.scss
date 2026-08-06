@@ -1,0 +1,124 @@
+@import "../../../../styles/base/typography";
+
+.td-hl {
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 1.25rem 1.25rem 1.4rem;
+  box-shadow: 0 14px 34px -22px rgba(0, 0, 0, 0.35);
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 1.1rem;
+  }
+
+  &__spark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 10px;
+    background: var(--primary-soft);
+    color: var(--color-primary-dark);
+  }
+
+  &__title {
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 1.05rem;
+    letter-spacing: -0.01em;
+    color: var(--title);
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 0.9rem;
+  }
+
+  &__card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    transition:
+      transform $duration-medium $ease-standard,
+      border-color $duration-medium $ease-standard,
+      box-shadow $duration-medium $ease-standard;
+
+    &:hover {
+      transform: translateY(-3px);
+      border-color: var(--color-primary);
+      box-shadow: 0 16px 36px -18px var(--primary-shadow);
+    }
+  }
+
+  &__media {
+    height: 120px;
+    background-size: cover;
+    background-position: center;
+  }
+
+  &__card-body {
+    padding: 0.9rem 1rem 1rem;
+  }
+
+  &__card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.55rem;
+  }
+
+  &__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    color: var(--color-on-primary);
+    box-shadow: 0 8px 18px -8px var(--primary-shadow);
+
+    &--number {
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+    }
+  }
+
+  &__index {
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    opacity: 0.7;
+  }
+
+  &__card-title {
+    margin: 0 0 0.3rem;
+    font-size: 0.95rem;
+    line-height: 1.35;
+    color: var(--title);
+  }
+
+  &__card-text {
+    margin: 0;
+    font-size: 0.83rem;
+    line-height: 1.6;
+    color: var(--subtitle);
+  }
+}
+
+@media (max-width: 640px) {
+  .td-hl__grid {
+    grid-template-columns: 1fr;
+  }
+}

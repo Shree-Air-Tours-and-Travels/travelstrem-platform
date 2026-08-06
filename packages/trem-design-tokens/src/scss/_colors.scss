@@ -1,89 +1,112 @@
-// ─── Light theme (generated from colors.js) ───
-$primary-color: #1E3A8A;
-$primary-dark: #172554;
-$secondary-color: #7C3AED;
-$secondary-dark: #5B21B6;
-$tertiary-color: #D4A017;
-$tertiary-dark: #9A6C00;
-$accent-color: #111827;
-$success-color: #15803D;
-$danger-color: #DC2626;
-$warning-color: #D97706;
-$light-bg: #F8FAFC;
-$white-color: #FFFFFF;
-$surface-muted: #E0E7FF;
-$surface-subtle: #F0F4FF;
-$text-dark: #111827;
-$text-muted: #4B5563;
-$text-light: rgba(17, 24, 39, 0.65);
-$border-color: rgba(17, 24, 39, 0.10);
-$transparent-color: transparent;
-$overlay-color: rgba(17, 24, 39, 0.48);
+// ─── Light theme: Royal Jewel ───
+$primary-color: #243B8F; // Sapphire Blue
+$primary-dark: #15245F;
 
-// ─── Dark theme ───
-$dark-primary: #60A5FA;
-$dark-primary-dark: #3B82F6;
-$dark-secondary: #A78BFA;
+$secondary-color: #6D28D9; // Royal Amethyst
+$secondary-dark: #4C1D95;
+
+$tertiary-color: #BE185D; // Ruby Rose
+$tertiary-dark: #831843;
+
+$accent-color: #171429; // Midnight Ink
+
+$success-color: #2563EB;
+$danger-color: #E11D48;
+$warning-color: #9333EA;
+
+$light-bg: #F8F7FC;
+$white-color: #FFFFFF;
+$surface-muted: #ECEAF7;
+$surface-subtle: #F4F2FA;
+
+$text-dark: #171429;
+$text-muted: #625E72;
+$text-light: rgba(23, 20, 41, 0.64);
+
+$border-color: rgba(23, 20, 41, 0.11);
+$transparent-color: transparent;
+$overlay-color: rgba(13, 10, 31, 0.56);
+
+// ─── Dark theme: Midnight Jewel ───
+$dark-primary: #7C9CFF; // Bright Sapphire
+$dark-primary-dark: #5273E8;
+
+$dark-secondary: #B794F6; // Soft Amethyst
 $dark-secondary-dark: #8B5CF6;
-$dark-tertiary: #FCD34D;
-$dark-tertiary-dark: #D97706;
-$dark-accent: #ffffff;
-$dark-success: #4ADE80;
-$dark-danger: #FCA5A5;
-$dark-warning: #FCD34D;
-$dark-bg: #0B1120;
-$dark-surface: #111827;
-$dark-surface-muted: #1E293B;
-$dark-surface-subtle: #0F172A;
-$dark-text: #F9FAFB;
-$dark-text-muted: rgba(249, 250, 251, 0.74);
-$dark-text-light: rgba(249, 250, 251, 0.58);
-$dark-border: rgba(255, 255, 255, 0.1);
-$dark-overlay: rgba(0, 0, 0, 0.68);
+
+$dark-tertiary: #F472B6; // Luminous Ruby Rose
+$dark-tertiary-dark: #DB2777;
+
+$dark-accent: #FBFAFF;
+
+$dark-success: #60A5FA;
+$dark-danger: #FB7185;
+$dark-warning: #C084FC;
+
+$dark-bg: #090812;
+$dark-surface: #13111F;
+$dark-surface-muted: #211D35;
+$dark-surface-subtle: #181526;
+
+$dark-text: #FBFAFF;
+$dark-text-muted: rgba(251, 250, 255, 0.74);
+$dark-text-light: rgba(251, 250, 255, 0.56);
+
+$dark-border: rgba(235, 229, 255, 0.1);
+$dark-overlay: rgba(3, 2, 10, 0.78);
 
 // ─── Derived: light ───
-$hp-bg: #E0E7FF;
+$hp-bg: #ECEAF7;
+
 $hp-shimmer: linear-gradient(
   90deg,
   transparent 0%,
-  rgba(255, 255, 255, 0.92) 50%,
+  rgba(255, 255, 255, 0.94) 50%,
   transparent 100%
 );
 
 // ─── Derived: soft / surface variants (light) ───
-$primary-soft: rgba(30, 58, 138, 0.1);
-$primary-softer: rgba(30, 58, 138, 0.05);
-$primary-surface: rgba(30, 58, 138, 0.12);
-$primary-surface-hover: rgba(30, 58, 138, 0.2);
-$primary-focus: rgba(30, 58, 138, 0.18);
-$primary-shadow: rgba(30, 58, 138, 0.18);
-$secondary-soft: rgba(124, 58, 237, 0.1);
-$secondary-surface: rgba(124, 58, 237, 0.12);
-$secondary-surface-hover: rgba(124, 58, 237, 0.2);
-$tertiary-soft: rgba(212, 160, 23, 0.16);
-$tertiary-surface: rgba(212, 160, 23, 0.22);
-$tertiary-surface-hover: rgba(212, 160, 23, 0.32);
-$danger-soft: rgba(220, 38, 38, 0.08);
-$success-soft: rgba(21, 128, 61, 0.08);
-$warning-soft: rgba(217, 119, 6, 0.08);
-$neutral-soft: rgba(17, 24, 39, 0.06);
-$neutral-softer: rgba(17, 24, 39, 0.03);
+$primary-soft: rgba(36, 59, 143, 0.1);
+$primary-softer: rgba(36, 59, 143, 0.05);
+$primary-surface: rgba(36, 59, 143, 0.12);
+$primary-surface-hover: rgba(36, 59, 143, 0.2);
+$primary-focus: rgba(36, 59, 143, 0.18);
+$primary-shadow: rgba(36, 59, 143, 0.2);
+
+$secondary-soft: rgba(109, 40, 217, 0.1);
+$secondary-surface: rgba(109, 40, 217, 0.12);
+$secondary-surface-hover: rgba(109, 40, 217, 0.2);
+
+$tertiary-soft: rgba(190, 24, 93, 0.1);
+$tertiary-surface: rgba(190, 24, 93, 0.14);
+$tertiary-surface-hover: rgba(190, 24, 93, 0.22);
+
+$danger-soft: rgba(225, 29, 72, 0.08);
+$success-soft: rgba(37, 99, 235, 0.08);
+$warning-soft: rgba(147, 51, 234, 0.08);
+
+$neutral-soft: rgba(23, 20, 41, 0.06);
+$neutral-softer: rgba(23, 20, 41, 0.03);
 
 // ─── Derived: soft / surface variants (dark) ───
-$dark-primary-soft: rgba(96, 165, 250, 0.16);
-$dark-primary-softer: rgba(96, 165, 250, 0.08);
-$dark-primary-surface: rgba(96, 165, 250, 0.18);
-$dark-primary-surface-hover: rgba(96, 165, 250, 0.28);
-$dark-primary-focus: rgba(96, 165, 250, 0.26);
-$dark-primary-shadow: rgba(96, 165, 250, 0.22);
-$dark-secondary-soft: rgba(167, 139, 250, 0.14);
-$dark-secondary-surface: rgba(167, 139, 250, 0.16);
-$dark-secondary-surface-hover: rgba(167, 139, 250, 0.24);
-$dark-tertiary-soft: rgba(252, 211, 77, 0.14);
-$dark-tertiary-surface: rgba(252, 211, 77, 0.18);
-$dark-tertiary-surface-hover: rgba(252, 211, 77, 0.26);
-$dark-danger-soft: rgba(252, 165, 165, 0.14);
-$dark-success-soft: rgba(74, 222, 128, 0.14);
-$dark-warning-soft: rgba(252, 211, 77, 0.14);
-$dark-neutral-soft: rgba(255, 255, 255, 0.08);
-$dark-neutral-softer: rgba(255, 255, 255, 0.04);
+$dark-primary-soft: rgba(124, 156, 255, 0.16);
+$dark-primary-softer: rgba(124, 156, 255, 0.08);
+$dark-primary-surface: rgba(124, 156, 255, 0.18);
+$dark-primary-surface-hover: rgba(124, 156, 255, 0.28);
+$dark-primary-focus: rgba(124, 156, 255, 0.26);
+$dark-primary-shadow: rgba(124, 156, 255, 0.22);
+
+$dark-secondary-soft: rgba(183, 148, 246, 0.14);
+$dark-secondary-surface: rgba(183, 148, 246, 0.16);
+$dark-secondary-surface-hover: rgba(183, 148, 246, 0.24);
+
+$dark-tertiary-soft: rgba(244, 114, 182, 0.14);
+$dark-tertiary-surface: rgba(244, 114, 182, 0.18);
+$dark-tertiary-surface-hover: rgba(244, 114, 182, 0.26);
+
+$dark-danger-soft: rgba(251, 113, 133, 0.14);
+$dark-success-soft: rgba(96, 165, 250, 0.14);
+$dark-warning-soft: rgba(192, 132, 252, 0.14);
+
+$dark-neutral-soft: rgba(251, 250, 255, 0.08);
+$dark-neutral-softer: rgba(251, 250, 255, 0.04);

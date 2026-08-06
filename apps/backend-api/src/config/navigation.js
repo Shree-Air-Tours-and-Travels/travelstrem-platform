@@ -27,6 +27,16 @@ export default {
       patterns: ["/trevio/*", "/trip/*"],
     },
     {
+      id: "trevista",
+      kind: "remote",
+      renderer: "trevista",
+      tab: "trevista",
+      product: "trevista",
+      path: "/",
+      activeId: "tours",
+      patterns: ["/trevista/*", "/tour/*"],
+    },
+    {
       id: "booking-engine",
       kind: "remote",
       renderer: "bookingEngine",

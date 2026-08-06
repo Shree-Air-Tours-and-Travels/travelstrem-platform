@@ -36,7 +36,7 @@ function formatPrice(price) {
 export default function AdminServicesView({
   tours, trips, loading,
   onEditTour, onViewTour, onDeleteTour,
-  onEditTrip, onViewTrip, onDeleteTrip,
+  onEditTrip, onViewTrip, onDeleteTrip, onVerifyTour, onVerifyTrip,
   onCreateTour, onCreateTrip,
   onRefresh, onDeleteAllTours, onDeleteAllTrips,
   formOpen, tripFormOpen, viewOpen, tripViewOpen,
@@ -184,6 +184,10 @@ export default function AdminServicesView({
                       </span>
                     )}
                   </div>
+                  <div className="asv__card-provenance">
+                    <span><strong>Agency:</strong> {service.agency?.name || "TravelsTREM platform"}</span>
+                    <span><strong>Added by:</strong> {service.ownerAgentName || service.operator?.name || "Master admin"}{(service.ownerAgentRef || service.operator?.reference) ? ` · ${service.ownerAgentRef || service.operator.reference}` : ""}</span>
+                  </div>
                   <div className="asv__card-footer">
                     <span className="asv__card-price">{formatPrice(price)}</span>
                     <div className="asv__card-actions">
@@ -199,6 +203,9 @@ export default function AdminServicesView({
                         onClick={() => isTour ? onEditTour?.(service) : onEditTrip?.(service)}
                         text="Edit"
                       />
+                      {auth?.adminLevel === "master" && !service.tremVerified && (
+                        <Button primaryClassName="btn asv__btn-sm" variant="solid" color="primary" onClick={() => isTour ? onVerifyTour?.(service._id || service.id) : onVerifyTrip?.(service._id || service.id)} text="Verify" />
+                      )}
                       <Button
                         primaryClassName="btn asv__btn-sm asv__btn-danger"
                         variant="outline"

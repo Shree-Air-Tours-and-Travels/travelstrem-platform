@@ -21,19 +21,21 @@
 }
 
 /* Ensure the panel itself is the only scroll container */
-.tour-view-overlay .tour-view { max-height: calc(92vh - 72px); overflow: hidden; }
+.tour-view-overlay .tour-view { height: min(52rem, calc(100dvh - 2.5rem)); max-height: calc(100dvh - 2.5rem); overflow: hidden; }
 
 /* Reuse the tour-view root but make it panel-like */
 .tour-view {
   display: flex;
   flex-direction: column;
-  background: var(--bg-2);
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
   border-radius: 12px;
   box-shadow: var(--shadow-lg);
   overflow: hidden;
   width: min(1100px, 92vw);
-  height: auto;
-  max-height: calc(92vh - 72px);
+  height: min(52rem, calc(100dvh - 2.5rem));
+  max-height: calc(100dvh - 2.5rem);
 }
 
 .tour-view .tv-header,

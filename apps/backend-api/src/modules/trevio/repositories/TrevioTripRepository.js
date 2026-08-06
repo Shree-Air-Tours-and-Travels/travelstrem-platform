@@ -1,8 +1,14 @@
 import TrevioTrip from "../models/TrevioTrip.js";
 
+const AGENCY_POPULATE = {
+  path: "agencyId",
+  select: "agencyName partnerAgencyRef logo website address status",
+};
+const OWNER_POPULATE = { path: "ownerAgent", select: "name agentRef" };
+
 const TrevioTripRepository = {
   find(query = {}, projection) {
-    return TrevioTrip.find(query, projection);
+    return TrevioTrip.find(query, projection).populate(AGENCY_POPULATE).populate(OWNER_POPULATE);
   },
   findLean(query = {}) {
     return TrevioTrip.find(query).lean();
@@ -11,7 +17,7 @@ const TrevioTripRepository = {
     return TrevioTrip.findOne(query);
   },
   findBySlug(slug) {
-    return TrevioTrip.findOne({ slug });
+    return TrevioTrip.findOne({ slug }).populate(AGENCY_POPULATE).populate(OWNER_POPULATE);
   },
   upsertBySlug(slug, payload) {
     return TrevioTrip.findOneAndUpdate(

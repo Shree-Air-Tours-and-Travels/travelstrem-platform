@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { fetchData } from "@packages/trem-utils";
+import { Spinner } from "@packages/trem-ui";
 import { downloadPaymentProof } from "../../services/adminService";
 import "./AdminPaymentsBookings.scss";
 
@@ -97,7 +98,7 @@ export default function AdminPaymentsBookings({ bookings = [], loading, onViewBo
       </header>
       {downloadState.error ? <p className="apb__download-error" role="alert">{downloadState.error}</p> : null}
       <SettingsEditor />
-      {loading ? <p>Loading bookings...</p> : (
+      {loading ? <Spinner label="Loading bookings..." /> : (
         <div className="apb__table-wrap">
           <table>
             <thead><tr><th>Booking</th><th>Trip</th><th>Customer</th><th>Booking Status</th><th>Payment Status</th><th>Token</th><th>Proof</th><th>Submitted</th><th>Remaining</th></tr></thead>

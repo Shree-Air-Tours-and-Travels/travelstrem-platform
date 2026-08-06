@@ -11,7 +11,7 @@ const featuredTrip = {
 };
 
 export default {
-  title: "Trem UI/Data Display/FeaturedCard",
+  title: "Trem UI/Cards/FeaturedCard",
   component: FeaturedCard,
   tags: ["autodocs"],
   argTypes: {
@@ -33,14 +33,6 @@ export default {
       { icon: "calendar", label: featuredTrip.type },
     ],
   },
-};
-
-export const Playground = {
-  render: (args) => (
-    <div style={{ maxWidth: 720 }}>
-      <FeaturedCard {...args} onCtaClick={() => {}} />
-    </div>
-  ),
 };
 
 export const TrevioHeroCard = {

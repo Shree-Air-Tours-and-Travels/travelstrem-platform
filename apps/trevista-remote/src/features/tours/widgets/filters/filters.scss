@@ -108,7 +108,7 @@
 
   &__actions {
     position: sticky;
-    top: var(--filters-sticky-top);
+    top: calc(var(--td-header-offset) + var(--tours-crumb-height) + 12px);
     z-index: 21;
     display: flex;
     align-items: center;
@@ -193,54 +193,6 @@
   &--error {
     border-color: $danger-color;
     box-shadow: 0 0 0 3px var(--danger-soft);
-  }
-}
-
-.filters__select-trigger {
-  @include type-sm();
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  width: 100%;
-  min-height: 42px;
-  border: 1px solid var(--control-border);
-  border-radius: 8px;
-  background: var(--control-bg);
-  color: var(--control-text);
-  padding: 0.65rem 0.75rem;
-  outline: none;
-  cursor: pointer;
-  transition:
-    border-color 160ms ease,
-    box-shadow 160ms ease,
-    background 160ms ease;
-
-  &:focus {
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 4px var(--focus-ring);
-  }
-
-  &--error {
-    border-color: $danger-color;
-    box-shadow: 0 0 0 3px var(--danger-soft);
-  }
-
-  span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  svg {
-    flex-shrink: 0;
-    width: 16px;
-    height: 16px;
-    transition: transform 200ms ease;
-
-    &.is-open {
-      transform: rotate(180deg);
-    }
   }
 }
 

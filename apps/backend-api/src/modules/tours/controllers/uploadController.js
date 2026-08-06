@@ -47,7 +47,7 @@ export const uploadAndAttachPhotos = async (req, res) => {
       return res.status(404).json({status: "error", message: "Tour not found." });
     }
 
-    if (!canModifyTour(req.user, tour)) {
+    if (!canModifyTour(req.user, tour, req.access)) {
       return res.status(403).json({status: "error", message: "You do not have permission to modify this tour." });
     }
 

@@ -13,6 +13,7 @@ import {
   cancelBooking,
   confirmBooking,
   listAllBookings,
+  getTrevistaPricing,
 } from "./controllers/bookingEngineController.js";
 import { sendMessage, getMessages } from "./controllers/messageController.js";
 import { upload } from "../../services/cloudinary.js";
@@ -26,6 +27,9 @@ const router = express.Router();
 
 // PUBLIC — create booking (requires auth via header but no middleware)
 router.post("/create", authMiddleware, createBooking);
+
+// PUBLIC — trevista tour pricing (computed server-side, no client price input)
+router.post("/pricing", getTrevistaPricing);
 
 // AUTHENTICATED — booking lifecycle
 router.get("/my-bookings", authMiddleware, getMyBookings);

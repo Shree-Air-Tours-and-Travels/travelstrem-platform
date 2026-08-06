@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b756d" />
+  <title>TreHub Booking Engine — Flights & Hotels</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root{
+      --primary:#0b756d;
+      --primary-dark:#075d57;
+      --primary-soft:#dff7f2;
+      --ink:#122a29;
+      --muted:#687978;
+      --line:#dce8e6;
+      --soft:#f2f8f7;
+      --surface:#fff;
+      --danger:#c92b2b;
+      --danger-soft:#fff0f0;
+      --warning:#a55d05;
+      --warning-soft:#fff6df;
+      --success:#16803c;
+      --success-soft:#e8f8ee;
+      --shadow:0 16px 50px rgba(11,117,109,.12);
+      --shadow-sm:0 8px 26px rgba(17,42,41,.07);
+      --radius:20px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:#f7fbfa;color:var(--ink);font-family:Inter,system-ui,sans-serif}
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+    a{color:inherit}
+    .app{min-height:100vh}
+    .container{width:min(1200px,91vw);margin:auto}
+    .topbar{
+      height:72px;position:sticky;top:0;z-index:60;background:rgba(255,255,255,.94);
+      backdrop-filter:blur(18px);border-bottom:1px solid rgba(220,232,230,.9);
+      display:flex;align-items:center;justify-content:space-between;padding:0 5vw;
+    }
+    .brand{border:0;background:transparent;display:flex;gap:11px;align-items:center;padding:0;color:var(--ink)}
+    .brand-mark{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,var(--primary),#1ec7b7);color:white;display:grid;place-items:center;box-shadow:0 9px 22px rgba(11,117,109,.24)}
+    .brand-text{font-weight:800;font-size:17px;letter-spacing:-.3px;text-align:left}
+    .brand-text small{display:block;color:#728381;font-size:9px;letter-spacing:1.35px;margin-top:2px}
+    .nav{display:flex;gap:27px;align-items:center}
+    .nav button{border:0;background:transparent;color:#5b6d6b;font-size:13px;font-weight:700;padding:10px 0}
+    .nav button:hover,.nav button.active{color:var(--primary)}
+    .header-actions{display:flex;align-items:center;gap:9px}
+    .btn,.btn-icon{
+      border:0;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;gap:8px;
+      font-weight:800;transition:.2s ease;white-space:nowrap
+    }
+    .btn{padding:13px 17px}
+    .btn:hover{transform:translateY(-1px)}
+    .btn-primary{background:var(--primary);color:white;box-shadow:0 9px 22px rgba(11,117,109,.2)}
+    .btn-primary:hover{background:var(--primary-dark)}
+    .btn-secondary{background:var(--primary-soft);color:var(--primary)}
+    .btn-ghost{background:transparent;color:var(--ink)}
+    .btn-outline{background:white;color:var(--ink);border:1px solid var(--line)}
+    .btn-danger{background:var(--danger-soft);color:var(--danger)}
+    .btn-icon{width:41px;height:41px;background:var(--soft);color:var(--ink)}
+    .full-btn{width:100%}
+    .hero{
+      padding:56px 0 114px;background:
+      radial-gradient(circle at 88% 18%,rgba(25,198,182,.2),transparent 30%),
+      linear-gradient(180deg,#ecfcf8,#f7fbfa);
+    }
+    .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:46px;align-items:center}
+    .eyebrow{display:inline-flex;gap:8px;align-items:center;background:white;border:1px solid #cfeae5;color:var(--primary);font-size:12px;font-weight:800;padding:8px 12px;border-radius:999px}
+    h1,h2,h3,h4,p{margin-top:0}
+    h1{font-size:clamp(43px,5vw,70px);line-height:1.04;letter-spacing:-3px;margin:19px 0 17px}
+    h2{font-size:31px;letter-spacing:-1.1px}
+    h3{font-size:19px;letter-spacing:-.3px}
+    .hero-copy p{font-size:17px;color:var(--muted);line-height:1.7;max-width:620px}
+    .trust{display:flex;flex-wrap:wrap;gap:24px;margin-top:28px;color:#4f6260;font-size:13px;font-weight:700}
+    .trust span{display:flex;gap:8px;align-items:center}
+    .hero-visual{height:370px;border-radius:34px;position:relative;overflow:hidden;background:linear-gradient(135deg,#075d57,#21c7b7);box-shadow:var(--shadow)}
+    .orbit{position:absolute;width:370px;height:370px;border:1px solid rgba(255,255,255,.3);border-radius:50%;right:-140px;top:-130px}
+    .orbit:after{content:"✈";position:absolute;left:46px;bottom:40px;color:white;font-size:42px;transform:rotate(-16deg)}
+    .float-card{position:absolute;background:rgba(255,255,255,.97);border-radius:18px;padding:16px;box-shadow:var(--shadow-sm)}
+    .fc-a{top:26px;left:25px;width:238px}.fc-b{right:24px;bottom:25px;width:250px}.fc-c{left:52px;bottom:48px;background:#123c39;color:white;width:145px}
+    .label{font-size:10px;text-transform:uppercase;letter-spacing:.8px;font-weight:800;color:#788886}
+    .fc-c .label{color:#a7f3d0}
+    .big-number{font-size:25px;font-weight:800;margin-top:5px}
+    .search-wrap{margin-top:-70px;position:relative;z-index:10}
+    .search-card{background:white;border:1px solid #deebe8;border-radius:25px;padding:21px;box-shadow:var(--shadow)}
+    .tab-row{display:flex;gap:8px;margin-bottom:17px}
+    .tab{
+      border:0;border-radius:12px;background:var(--soft);padding:11px 16px;display:flex;gap:8px;align-items:center;
+      color:#596b69;font-weight:800
+    }
+    .tab.active{background:var(--ink);color:white}
+    .trip-types{display:flex;gap:18px;margin-bottom:15px;font-size:13px;font-weight:700;color:#60716f}
+    .search-grid{display:grid;grid-template-columns:1.25fr 1.25fr .95fr .95fr .82fr auto;gap:10px}
+    .hotel-grid{grid-template-columns:1.5fr 1fr 1fr 1fr auto}
+    .field{background:white;border:1px solid var(--line);border-radius:13px;padding:10px 12px;min-width:0}
+    .field label{display:block;font-size:9px;letter-spacing:.75px;text-transform:uppercase;color:#7b8c8a;font-weight:800;margin-bottom:6px}
+    .field input,.field select,.field textarea{border:0;outline:0;width:100%;background:transparent;color:var(--ink);font-weight:700;min-width:0}
+    .section{padding:64px 0}
+    .section-head{display:flex;justify-content:space-between;gap:20px;align-items:end;margin-bottom:24px}
+    .section-head p{color:var(--muted);margin-bottom:0}
+    .feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:19px}
+    .card{background:white;border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 9px 28px rgba(17,42,41,.04)}
+    .feature{padding:20px}
+    .feature-icon{width:46px;height:46px;border-radius:14px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;margin-bottom:17px}
+    .feature p{font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:0}
+    .page{padding:30px 0 84px}
+    .crumbs{display:flex;gap:8px;align-items:center;color:var(--muted);font-size:12px;margin-bottom:20px}
+    .crumbs button{border:0;background:transparent;padding:0;color:inherit}
+    .page-title{display:flex;justify-content:space-between;gap:20px;align-items:end;margin-bottom:20px}
+    .page-title p{color:var(--muted);font-size:13px;margin:6px 0 0}
+    .layout-filter{display:grid;grid-template-columns:274px 1fr;gap:22px}
+    .filters{padding:18px;height:max-content;position:sticky;top:90px}
+    .filter-group{padding:15px 0;border-bottom:1px solid #edf2f1}
+    .filter-group:last-child{border-bottom:0}
+    .filter-group h4{font-size:13px;margin-bottom:11px}
+    .check{display:flex;justify-content:space-between;gap:12px;padding:7px 0;color:#536462;font-size:12px}
+    .sort{border:1px solid var(--line);background:white;border-radius:11px;padding:10px 12px;font-weight:700}
+    .result-card{padding:17px;margin-bottom:14px}
+    .flight-result{display:grid;grid-template-columns:155px 1fr 185px;align-items:center;gap:20px}
+    .airline{display:flex;align-items:center;gap:10px}
+    .airline-logo{width:44px;height:44px;border-radius:13px;background:#edf9f6;color:var(--primary);display:grid;place-items:center;font-weight:900}
+    .route{display:flex;gap:16px;align-items:center}
+    .time strong{font-size:20px}.time small{display:block;color:var(--muted);margin-top:3px}
+    .route-line{height:1px;flex:1;background:#c8d7d4;position:relative;text-align:center}
+    .route-line span{position:relative;top:-18px;background:white;padding:0 7px;color:var(--muted);font-size:10px}
+    .price{text-align:right}.price strong{font-size:22px}.price small{display:block;color:var(--muted);margin:5px 0 11px}
+    .pill{display:inline-flex;padding:6px 9px;border-radius:999px;font-size:10px;font-weight:800}
+    .pill-success{background:var(--success-soft);color:var(--success)}
+    .pill-warning{background:var(--warning-soft);color:var(--warning)}
+    .hotel-result{display:grid;grid-template-columns:220px 1fr 185px;gap:18px}
+    .image{background-size:cover;background-position:center;background-color:#9fded5}
+    .hotel-thumb{height:166px;border-radius:15px}
+    .hotel-result h3{margin:5px 0 6px}
+    .rating{color:#efa719;font-size:12px}
+    .muted{color:var(--muted)}
+    .small{font-size:12px}
+    .amenities{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+    .amenity{background:var(--soft);color:#4f6260;border-radius:8px;padding:7px 9px;font-size:10px;font-weight:800}
+    .details-grid{display:grid;grid-template-columns:1fr 345px;gap:23px}
+    .sticky{position:sticky;top:90px;height:max-content}
+    .panel{padding:21px;margin-bottom:17px}
+    .gallery{display:grid;grid-template-columns:1.25fr .75fr .75fr;grid-template-rows:190px 190px;gap:9px;margin-bottom:22px}
+    .gallery div{border-radius:15px;overflow:hidden;position:relative}
+    .gallery .hero-img{grid-row:1/3}
+    .gallery .last:after{content:"View all 28 photos";position:absolute;inset:0;background:rgba(0,0,0,.48);display:grid;place-items:center;color:white;font-weight:800;font-size:13px}
+    .anchor-tabs{display:flex;gap:8px;overflow:auto;padding-bottom:4px;margin-bottom:17px}
+    .anchor-tabs button{border:1px solid var(--line);background:white;padding:10px 13px;border-radius:10px;font-size:11px;font-weight:800}
+    .anchor-tabs button.active{background:var(--primary-soft);border-color:#b9e8df;color:var(--primary)}
+    .overview-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    .overview-item{background:var(--soft);padding:13px;border-radius:12px;font-size:11px;color:#536462}
+    .overview-item strong{display:block;color:var(--ink);margin-top:6px;font-size:13px}
+    .info-list{display:grid;gap:12px}
+    .info-row{display:flex;gap:12px;align-items:flex-start}
+    .info-row i{color:var(--primary);flex:0 0 auto}
+    .info-row p{margin:3px 0 0;color:var(--muted);font-size:12px;line-height:1.55}
+    .room-card{padding:16px;margin-bottom:13px;display:grid;grid-template-columns:190px 1fr 180px;gap:17px}
+    .room-img{border-radius:14px;min-height:145px}
+    .included{display:grid;gap:7px;margin-top:10px;color:#4e615e;font-size:11px}
+    .included span{display:flex;gap:7px;align-items:center}
+    .review-card{padding:16px;border:1px solid var(--line);border-radius:14px;margin-top:10px}
+    .review-card p{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:0}
+    .map-placeholder{height:230px;border-radius:15px;background:
+      linear-gradient(45deg,transparent 48%,rgba(11,117,109,.09) 49%,rgba(11,117,109,.09) 51%,transparent 52%),
+      linear-gradient(-45deg,transparent 48%,rgba(11,117,109,.07) 49%,rgba(11,117,109,.07) 51%,transparent 52%),
+      #edf6f4;background-size:44px 44px;display:grid;place-items:center;color:var(--primary);font-weight:800}
+    .timeline{position:relative;padding-left:30px}
+    .timeline:before{content:"";position:absolute;left:10px;top:10px;bottom:10px;width:2px;background:#c8d9d6}
+    .timeline-stop{position:relative;padding-bottom:24px}
+    .timeline-stop:before{content:"";position:absolute;left:-25px;top:3px;width:12px;height:12px;border-radius:50%;background:white;border:3px solid var(--primary)}
+    .timeline-stop:last-child{padding-bottom:0}
+    .timeline-stop strong{font-size:17px}
+    .timeline-stop p{color:var(--muted);font-size:11px;margin:4px 0 0}
+    .fare-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}
+    .fare{padding:17px;border:1px solid var(--line);border-radius:16px;background:white}
+    .fare.selected{border:2px solid var(--primary);background:#fbfffe}
+    .fare h3{margin-bottom:5px}.fare .amount{font-size:23px;font-weight:800;margin:12px 0}
+    .fare ul{padding-left:17px;color:#526461;font-size:11px;line-height:1.8;min-height:92px}
+    .steps{display:flex;align-items:center;margin-bottom:25px;overflow:auto}
+    .step{display:flex;align-items:center;gap:8px;color:#83918f;font-size:11px;font-weight:800;white-space:nowrap}
+    .step-dot{width:28px;height:28px;border-radius:50%;background:#e7eeee;display:grid;place-items:center}
+    .step.active,.step.done{color:var(--primary)}
+    .step.active .step-dot,.step.done .step-dot{background:var(--primary);color:white}
+    .step-line{height:2px;background:#dae5e3;flex:1;min-width:30px;margin:0 8px}.step-line.done{background:var(--primary)}
+    .booking-grid{display:grid;grid-template-columns:1fr 350px;gap:22px}
+    .form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:13px}
+    .form-group label{display:block;font-size:11px;font-weight:800;margin-bottom:7px}
+    .form-group input,.form-group select,.form-group textarea{width:100%;border:1px solid var(--line);border-radius:11px;padding:12px;background:white;outline:0}
+    .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(11,117,109,.11)}
+    .full{grid-column:1/-1}
+    .summary{padding:20px}
+    .summary-box{background:var(--soft);padding:13px;border-radius:12px;margin:12px 0}
+    .line-item{display:flex;justify-content:space-between;gap:16px;padding:9px 0;color:#536462;font-size:12px}
+    .line-item.total{border-top:1px solid var(--line);margin-top:7px;padding-top:15px;color:var(--ink);font-size:17px;font-weight:800}
+    .seat-layout{display:grid;grid-template-columns:repeat(7,43px);gap:9px;justify-content:center;margin:20px 0}
+    .seat{height:43px;border:1px solid var(--line);background:white;border-radius:10px;font-size:10px;font-weight:800;color:#50615f}
+    .seat.aisle{visibility:hidden}.seat.selected{background:var(--primary);color:white;border-color:var(--primary)}.seat.blocked{background:#e5eceb;color:#a5b1b0;cursor:not-allowed}
+    .option-row{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;padding:14px 0;border-bottom:1px solid #edf2f1}
+    .option-row:last-child{border-bottom:0}
+    .selector{display:flex;gap:8px;align-items:center}
+    .selector button{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:white;font-weight:800}
+    .payment-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:18px}
+    .payment-tab{border:1px solid var(--line);background:white;border-radius:12px;padding:13px 8px;font-size:11px;font-weight:800}
+    .payment-tab.active{border-color:var(--primary);background:var(--primary-soft);color:var(--primary)}
+    .secure{display:flex;gap:11px;align-items:flex-start;background:var(--soft);padding:14px;border-radius:13px;color:#526461;font-size:11px}
+    .secure strong{color:var(--ink);display:block;margin-bottom:3px}
+    .status-wrap{max-width:760px;margin:30px auto;text-align:center}
+    .status-icon{width:82px;height:82px;border-radius:50%;display:grid;place-items:center;margin:0 auto 20px}
+    .success-icon{background:var(--success-soft);color:var(--success)}
+    .failure-icon{background:var(--danger-soft);color:var(--danger)}
+    .booking-list{display:grid;gap:14px}
+    .booking-card{padding:18px;display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center}
+    .booking-title{display:flex;gap:13px;align-items:center}
+    .booking-type{width:45px;height:45px;border-radius:13px;display:grid;place-items:center;background:var(--primary-soft);color:var(--primary)}
+    .action-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
+    .action-card{border:1px solid var(--line);background:white;border-radius:13px;padding:14px;text-align:left}
+    .action-card i{color:var(--primary);margin-bottom:8px}
+    .action-card strong{display:block;font-size:12px}.action-card span{font-size:10px;color:var(--muted)}
+    .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(10,30,29,.56);z-index:90;align-items:center;justify-content:center;padding:18px}
+    .modal-backdrop.show{display:flex}
+    .modal{background:white;border-radius:20px;padding:22px;width:min(520px,100%);box-shadow:var(--shadow)}
+    .toast{display:none;position:fixed;right:22px;bottom:22px;background:#122a29;color:white;padding:13px 17px;border-radius:12px;z-index:100;box-shadow:var(--shadow)}
+    .toast.show{display:block}
+    .mobile-nav{display:none}
+    @media(max-width:980px){
+      .nav{display:none}.hero-grid{grid-template-columns:1fr}.hero-visual{height:300px}
+      .search-grid,.hotel-grid{grid-template-columns:repeat(2,1fr)}.search-grid .btn,.hotel-grid .btn{grid-column:1/-1}
+      .layout-filter{grid-template-columns:1fr}.filters{display:none}
+      .flight-result{grid-template-columns:1fr}.price{text-align:left}
+      .hotel-result{grid-template-columns:180px 1fr}.hotel-result>.price{grid-column:2}
+      .details-grid,.booking-grid{grid-template-columns:1fr}.sticky{position:static}
+      .gallery{grid-template-columns:1fr 1fr;grid-template-rows:250px 130px}.gallery .hero-img{grid-column:1/3;grid-row:auto}
+      .gallery div:nth-child(4){display:none}
+      .room-card{grid-template-columns:170px 1fr}.room-card>.price{grid-column:2}
+      .fare-grid{grid-template-columns:1fr}
+    }
+    @media(max-width:680px){
+      body{padding-bottom:78px}.topbar{padding:0 17px}.header-actions .btn-ghost{display:none}.container{width:92vw}
+      .hero{padding-top:34px}.hero-visual{display:none}h1{font-size:43px;letter-spacing:-2px}
+      .search-wrap{margin-top:-74px}.search-card{padding:14px;border-radius:19px}
+      .search-grid,.hotel-grid,.feature-grid,.form-grid,.overview-grid{grid-template-columns:1fr}
+      .trip-types{overflow:auto;white-space:nowrap}.section{padding:44px 0}.section-head,.page-title{align-items:start;flex-direction:column}
+      .hotel-result,.room-card{grid-template-columns:1fr}.hotel-result>.price,.room-card>.price{grid-column:auto}.price{text-align:left}
+      .hotel-thumb{height:190px}.gallery{grid-template-columns:1fr;grid-template-rows:230px 110px}.gallery .hero-img{grid-column:auto}
+      .gallery div:nth-child(3),.gallery div:nth-child(4){display:none}
+      .flight-result{grid-template-columns:1fr}.route{gap:9px}.route-line span{font-size:9px}
+      .payment-tabs{grid-template-columns:1fr 1fr}.seat-layout{grid-template-columns:repeat(7,36px);gap:6px}.seat{height:37px}
+      .action-grid{grid-template-columns:1fr}.booking-card{grid-template-columns:1fr}
+      .mobile-nav{display:flex;position:fixed;left:11px;right:11px;bottom:11px;z-index:70;background:#122a29;color:white;border-radius:18px;padding:9px;justify-content:space-around;box-shadow:var(--shadow)}
+      .mobile-nav button{border:0;background:transparent;color:white;display:grid;gap:4px;justify-items:center;font-size:9px}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <button class="brand" onclick="navigate('home')">
+      <span class="brand-mark"><i data-lucide="route"></i></span>
+      <span class="brand-text">TreHub <small>BY TRAVELSTREM</small></span>
+    </button>
+    <nav class="nav">
+      <button onclick="navigate('home')" data-nav="home">Explore</button>
+      <button onclick="quickSearch('flight')" data-nav="flight">Flights</button>
+      <button onclick="quickSearch('hotel')" data-nav="hotel">Hotels</button>
+      <button onclick="navigate('bookings')" data-nav="bookings">My bookings</button>
+    </nav>
+    <div class="header-actions">
+      <button class="btn-icon" onclick="toast('No new notifications')"><i data-lucide="bell" size="18"></i></button>
+      <button class="btn btn-ghost"><i data-lucide="user-round" size="17"></i> Akshat</button>
+    </div>
+  </header>
+
+  <main id="view"></main>
+
+  <nav class="mobile-nav">
+    <button onclick="navigate('home')"><i data-lucide="compass" size="18"></i>Explore</button>
+    <button onclick="quickSearch('flight')"><i data-lucide="plane" size="18"></i>Flights</button>
+    <button onclick="quickSearch('hotel')"><i data-lucide="building-2" size="18"></i>Hotels</button>
+    <button onclick="navigate('bookings')"><i data-lucide="ticket-check" size="18"></i>Bookings</button>
+  </nav>
+
+  <div id="modal" class="modal-backdrop" onclick="closeModal(event)">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div style="display:flex;justify-content:space-between;gap:16px;align-items:center">
+        <h3 id="modalTitle" style="margin:0"></h3>
+        <button class="btn-icon" onclick="closeModal()"><i data-lucide="x" size="18"></i></button>
+      </div>
+      <div id="modalBody" style="margin-top:16px"></div>
+    </div>
+  </div>
+  <div id="toast" class="toast"></div>
+</div>
+
+<script>
+const hotelImages = {
+  main: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80",
+  lobby: "https://images.unsplash.com/photo-1564501049412-61c2a3083791?auto=format&fit=crop&w=800&q=80",
+  room: "https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=800&q=80",
+  pool: "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=800&q=80"
+};
+const state = {
+  searchType: "flight",
+  bookingType: "flight",
+  fare: "Flex",
+  fareAmount: 38339,
+  room: "Deluxe Marina View",
+  roomAmount: 49409,
+  seat: "12A",
+  meal: "Vegetarian meal",
+  baggage: 5,
+  travellers: 2,
+  paymentMethod: "Card",
+  bookingId: "TRH-2026-0842"
+};
+const fmt = n => "₹" + Number(n).toLocaleString("en-IN");
+const icon = (name,size=18) => `<i data-lucide="${name}" size="${size}"></i>`;
+
+function initIcons(){ setTimeout(()=>lucide.createIcons(),0); }
+function setView(html){ document.getElementById("view").innerHTML=html; window.scrollTo({top:0,behavior:"smooth"}); initIcons(); }
+function crumbs(items){
+  return `<div class="crumbs">${items.map((x,i)=> i===items.length-1 ? `<strong>${x.label}</strong>` : `<button onclick="${x.action}">${x.label}</button>${icon("chevron-right",13)}`).join("")}</div>`;
+}
+function steps(active){
+  const list=["Details","Add-ons","Review","Payment","Confirmation"];
+  return `<div class="steps">${list.map((s,i)=>{
+    const status=i<active?"done":i===active?"active":"";
+    return `${i?`<div class="step-line ${i<=active?"done":""}"></div>`:""}<div class="step ${status}"><span class="step-dot">${i<active?icon("check",14):i+1}</span><span>${s}</span></div>`;
+  }).join("")}</div>`;
+}
+function navigate(screen){
+  const routes={
+    home:renderHome, results:renderResults, "hotel-details":renderHotelDetails, "room-details":renderRoomDetails,
+    "flight-details":renderFlightDetails, travellers:renderTravellers, extras:renderExtras, review:renderReview,
+    payment:renderPayment, failure:renderFailure, confirmation:renderConfirmation, bookings:renderBookings,
+    "booking-details":renderBookingDetails
+  };
+  (routes[screen]||renderHome)();
+}
+function updateNav(key){
+  document.querySelectorAll("[data-nav]").forEach(b=>b.classList.toggle("active",b.dataset.nav===key));
+}
+function quickSearch(type){ state.searchType=type; state.bookingType=type; renderResults(); }
+function switchSearch(type){
+  state.searchType=type;
+  document.getElementById("flightSearch").style.display=type==="flight"?"block":"none";
+  document.getElementById("hotelSearch").style.display=type==="hotel"?"block":"none";
+  document.getElementById("flightTab").classList.toggle("active",type==="flight");
+  document.getElementById("hotelTab").classList.toggle("active",type==="hotel");
+}
+function renderHome(){
+  updateNav("home");
+  setView(`
+    <section class="hero">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <span class="eyebrow">${icon("sparkles",15)} Smarter booking. Better journeys.</span>
+          <h1>Flights and stays in one seamless flow.</h1>
+          <p>Compare trusted options, review every detail, customise the booking, and manage the journey from one clean travel workspace.</p>
+          <div class="trust">
+            <span>${icon("badge-check",18)} Verified partners</span>
+            <span>${icon("shield-check",18)} Secure checkout</span>
+            <span>${icon("headphones",18)} 24×7 assistance</span>
+          </div>
+        </div>
+        <div class="hero-visual">
+          <div class="orbit"></div>
+          <div class="float-card fc-a"><div class="label">Upcoming trip</div><strong style="display:block;margin:7px 0">Delhi → Dubai</strong><span class="small muted">03 Aug · 2 travellers</span></div>
+          <div class="float-card fc-b"><div class="label">Selected stay</div><strong style="display:block;margin:7px 0">Marina View Hotel</strong><span class="small muted">5 nights · Breakfast included</span></div>
+          <div class="float-card fc-c"><div class="label">Total savings</div><div class="big-number">₹8,420</div></div>
+        </div>
+      </div>
+    </section>
+    <div class="container search-wrap">
+      <div class="search-card">
+        <div class="tab-row">
+          <button id="flightTab" class="tab ${state.searchType==="flight"?"active":""}" onclick="switchSearch('flight')">${icon("plane",16)} Flights</button>
+          <button id="hotelTab" class="tab ${state.searchType==="hotel"?"active":""}" onclick="switchSearch('hotel')">${icon("building-2",16)} Hotels</button>
+        </div>
+        <div id="flightSearch" style="display:${state.searchType==="flight"?"block":"none"}">
+          <div class="trip-types"><label><input type="radio" checked> Round trip</label><label><input type="radio"> One way</label><label><input type="radio"> Multi-city</label></div>
+          <div class="search-grid">
+            <div class="field"><label>From</label><input value="Delhi (DEL)"></div>
+            <div class="field"><label>To</label><input value="Dubai (DXB)"></div>
+            <div class="field"><label>Departure</label><input type="date" value="2026-08-03"></div>
+            <div class="field"><label>Return</label><input type="date" value="2026-08-08"></div>
+            <div class="field"><label>Travellers</label><select><option>2 Adults</option><option>1 Adult</option><option>2 Adults, 1 Child</option></select></div>
+            <button class="btn btn-primary" onclick="quickSearch('flight')">${icon("search",17)} Search</button>
+          </div>
+        </div>
+        <div id="hotelSearch" style="display:${state.searchType==="hotel"?"block":"none"}">
+          <div class="search-grid hotel-grid">
+            <div class="field"><label>Destination</label><input value="Dubai, UAE"></div>
+            <div class="field"><label>Check-in</label><input type="date" value="2026-08-03"></div>
+            <div class="field"><label>Check-out</label><input type="date" value="2026-08-08"></div>
+            <div class="field"><label>Guests & rooms</label><select><option>2 Guests, 1 Room</option><option>1 Guest, 1 Room</option></select></div>
+            <button class="btn btn-primary" onclick="quickSearch('hotel')">${icon("search",17)} Search</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <section class="section">
+      <div class="container">
+        <div class="section-head"><div><h2>Book with complete visibility</h2><p>Pricing, inclusions, policies, and post-booking controls stay visible throughout.</p></div></div>
+        <div class="feature-grid">
+          <div class="card feature"><div class="feature-icon">${icon("scan-search")}</div><h3>Compare clearly</h3><p>Review timings, baggage, room inclusions, policies, and ratings without losing context.</p></div>
+          <div class="card feature"><div class="feature-icon">${icon("badge-indian-rupee")}</div><h3>Transparent total</h3><p>Base price, taxes, convenience fees, and selected add-ons are itemised before payment.</p></div>
+          <div class="card feature"><div class="feature-icon">${icon("calendar-check")}</div><h3>Manage bookings</h3><p>Download documents, request cancellation, check refund status, or contact support.</p></div>
+        </div>
+      </div>
+    </section>
+  `);
+}
+function filterSidebar(){
+  return `<aside class="card filters">
+    <strong>Filters</strong>
+    <div class="filter-group"><h4>Price range</h4><input type="range" min="5000" max="60000" value="35000" style="width:100%"><div class="check"><span>₹5,000</span><span>₹60,000</span></div></div>
+    <div class="filter-group"><h4>Popular filters</h4><label class="check"><span><input type="checkbox"> Refundable</span></label><label class="check"><span><input type="checkbox"> Best rated</span></label><label class="check"><span><input type="checkbox"> Breakfast included</span></label></div>
+    <div class="filter-group"><h4>Traveller rating</h4><label class="check"><span><input type="checkbox"> 4.5 and above</span></label><label class="check"><span><input type="checkbox"> 4.0 and above</span></label></div>
+  </aside>`;
+}
+function renderResults(){
+  updateNav(state.searchType);
+  const isFlight=state.searchType==="flight";
+  setView(`<section class="page"><div class="container">
+    ${crumbs([{label:"Home",action:"navigate('home')"},{label:isFlight?"Flight results":"Hotel results"}])}
+    <div class="page-title"><div><h2>${isFlight?"Delhi to Dubai":"Hotels in Dubai"}</h2><p>${isFlight?"12 combinations · Mon, 03 Aug – Sat, 08 Aug":"148 properties · 03–08 Aug · 2 guests"}</p></div><select class="sort"><option>Recommended</option><option>Lowest price</option><option>Best rated</option></select></div>
+    <div class="layout-filter">${filterSidebar()}<div>${isFlight?flightResults():hotelResults()}</div></div>
+  </div></section>`);
+}
+function flightResults(){
+  const flights=[
+    {logo:"AI",name:"Air India",no:"AI 995",start:"20:35",end:"22:55",duration:"3h 50m",price:18240,tag:"Best value"},
+    {logo:"6E",name:"IndiGo",no:"6E 1453",start:"08:20",end:"10:55",duration:"4h 05m",price:17680,tag:"Lowest fare"},
+    {logo:"EK",name:"Emirates",no:"EK 511",start:"11:00",end:"13:10",duration:"3h 40m",price:23950,tag:"Top rated"}
+  ];
+  return flights.map((f,i)=>`<div class="card result-card">
+    <div class="flight-result">
+      <div class="airline"><div class="airline-logo">${f.logo}</div><div><strong>${f.name}</strong><div class="label" style="margin-top:4px">${f.no}</div></div></div>
+      <div class="route"><div class="time"><strong>${f.start}</strong><small>DEL · Delhi</small></div><div class="route-line"><span>${f.duration} · Non-stop</span></div><div class="time"><strong>${f.end}</strong><small>DXB · Dubai</small></div></div>
+      <div class="price"><span class="pill ${i===0?"pill-success":"pill-warning"}">${f.tag}</span><strong style="display:block;margin-top:7px">${fmt(f.price)}</strong><small>per adult</small><button class="btn btn-primary" onclick="state.bookingType='flight';navigate('flight-details')">View flight</button></div>
+    </div>
+    <div style="border-top:1px dashed var(--line);margin-top:14px;padding-top:12px;display:flex;gap:18px;flex-wrap:wrap" class="small muted">
+      <span>${icon("briefcase-business",14)} 7 kg cabin</span><span>${icon("luggage",14)} 25 kg check-in</span><span>${icon("utensils",14)} Meal available</span>
+    </div>
+  </div>`).join("");
+}
+function hotelResults(){
+  const hotels=[
+    {name:"Marina View Hotel",loc:"Dubai Marina · 1.2 km from centre",price:8950,rating:"4.6",img:hotelImages.main,tag:"Top rated"},
+    {name:"Downtown Boulevard Suites",loc:"Downtown Dubai · Near Burj Khalifa",price:7480,rating:"4.3",img:hotelImages.lobby,tag:"Great location"},
+    {name:"Palm Horizon Resort",loc:"Palm Jumeirah · Private beach",price:12100,rating:"4.7",img:hotelImages.pool,tag:"Resort pick"}
+  ];
+  return hotels.map((h,i)=>`<div class="card result-card hotel-result">
+    <div class="hotel-thumb image" style="background-image:url('${h.img}')"></div>
+    <div><div class="rating">★★★★★ <span class="muted">${h.rating}/5</span></div><h3>${h.name}</h3><div class="small muted">${h.loc}</div><div class="amenities"><span class="amenity">Free cancellation</span><span class="amenity">Breakfast included</span><span class="amenity">Wi-Fi</span><span class="amenity">Pool</span></div></div>
+    <div class="price"><span class="pill pill-success">${h.tag}</span><strong style="display:block;margin-top:8px">${fmt(h.price)}</strong><small>per night + taxes</small><button class="btn btn-primary" onclick="state.bookingType='hotel';navigate('hotel-details')">View hotel</button></div>
+  </div>`).join("");
+}
+function renderHotelDetails(){
+  updateNav("hotel");
+  setView(`<section class="page"><div class="container">
+    ${crumbs([{label:"Home",action:"navigate('home')"},{label:"Hotel results",action:"quickSearch('hotel')"},{label:"Marina View Hotel"}])}
+    <div class="page-title">
+      <div><div class="rating">★★★★★ <span class="muted">4.6/5 · 1,248 reviews</span></div><h2 style="margin:5px 0">Marina View Hotel</h2><p>${icon("map-pin",14)} Dubai Marina, Dubai · 1.2 km from centre</p></div>
+      <button class="btn btn-outline" onclick="toast('Hotel saved to favourites')">${icon("heart",17)} Save</button>
+    </div>
+    <div class="gallery">
+      <div class="hero-img image" style="background-image:url('${hotelImages.main}')"></div>
+      <div class="image" style="background-image:url('${hotelImages.lobby}')"></div>
+      <div class="image" style="background-image:url('${hotelImages.room}')"></div>
+      <div class="image last" style="background-image:url('${hotelImages.pool}')"></div>
+    </div>
+    <div class="details-grid">
+      <div>
+        <div class="anchor-tabs">
+          <button class="active" onclick="scrollToId('overview')">Overview</button><button onclick="scrollToId('rooms')">Rooms</button><button onclick="scrollToId('amenities')">Amenities</button><button onclick="scrollToId('location')">Location</button><button onclick="scrollToId('reviews')">Reviews</button><button onclick="scrollToId('policies')">Policies</button>
+        </div>
+        <section id="overview" class="card panel">
+          <h3>Property overview</h3>
+          <div class="overview-grid">
+            <div class="overview-item">${icon("clock",17)}<strong>3 PM / 12 PM</strong>Check-in / out</div>
+            <div class="overview-item">${icon("wifi",17)}<strong>Free Wi-Fi</strong>All rooms</div>
+            <div class="overview-item">${icon("utensils",17)}<strong>Breakfast</strong>Included</div>
+            <div class="overview-item">${icon("waves",17)}<strong>Outdoor pool</strong>Marina view</div>
+          </div>
+          <p class="muted small" style="line-height:1.75;margin:18px 0 0">A modern waterfront property with spacious rooms, direct marina access, an outdoor pool, fitness centre, and easy connections to Dubai’s major attractions. Suitable for couples, families, and business travellers.</p>
+        </section>
+        <section id="rooms">
+          <div class="section-head" style="margin-top:25px"><div><h2 style="font-size:24px">Available rooms</h2><p>5 nights · 2 guests · 1 room</p></div></div>
+          ${roomCard("Deluxe Marina View",hotelImages.room,8950,"Breakfast included · Free cancellation")}
+          ${roomCard("Executive Suite",hotelImages.lobby,12950,"Breakfast and airport transfer included")}
+          ${roomCard("Family Marina Suite",hotelImages.main,15780,"Sleeps 4 · Two-room layout")}
+        </section>
+        <section id="amenities" class="card panel" style="margin-top:22px">
+          <h3>Popular amenities</h3>
+          <div class="overview-grid">
+            <div class="overview-item">${icon("wifi")}<strong>High-speed Wi-Fi</strong></div><div class="overview-item">${icon("waves")}<strong>Outdoor pool</strong></div><div class="overview-item">${icon("dumbbell")}<strong>Fitness centre</strong></div><div class="overview-item">${icon("car")}<strong>Airport transfer</strong></div>
+            <div class="overview-item">${icon("utensils")}<strong>Restaurant</strong></div><div class="overview-item">${icon("circle-parking")}<strong>Free parking</strong></div><div class="overview-item">${icon("concierge-bell")}<strong>Room service</strong></div><div class="overview-item">${icon("briefcase-business")}<strong>Business centre</strong></div>
+          </div>
+        </section>
+        <section id="location" class="card panel">
+          <h3>Location and nearby places</h3>
+          <div class="map-placeholder">${icon("map-pinned",28)} Interactive map placeholder</div>
+          <div class="info-list" style="margin-top:15px">
+            <div class="info-row">${icon("train-front")}<div><strong>Dubai Marina Metro</strong><p>8-minute walk</p></div></div>
+            <div class="info-row">${icon("shopping-bag")}<div><strong>Dubai Marina Mall</strong><p>1.1 km from the hotel</p></div></div>
+            <div class="info-row">${icon("plane")}<div><strong>Dubai International Airport</strong><p>31 km · approximately 30 minutes</p></div></div>
+          </div>
+        </section>
+        <section id="reviews" class="card panel">
+          <h3>Guest reviews</h3>
+          <div class="overview-grid"><div class="overview-item"><strong style="font-size:24px">4.6</strong>Overall rating</div><div class="overview-item"><strong>4.8</strong>Location</div><div class="overview-item"><strong>4.5</strong>Cleanliness</div><div class="overview-item"><strong>4.6</strong>Service</div></div>
+          <div class="review-card"><strong>Excellent marina location</strong><p>Clean rooms, helpful staff, and a good breakfast selection. The metro and promenade were easy to reach.</p></div>
+          <div class="review-card"><strong>Comfortable business stay</strong><p>Fast Wi-Fi, quiet room, and a smooth airport transfer. Check-in was efficient.</p></div>
+        </section>
+        <section id="policies" class="card panel">
+          <h3>Property policies</h3>
+          <div class="info-list">
+            <div class="info-row">${icon("calendar-x")}<div><strong>Cancellation</strong><p>Free cancellation until 31 July 2026, 11:59 PM. After that, the first night may be charged.</p></div></div>
+            <div class="info-row">${icon("user-check")}<div><strong>Check-in requirements</strong><p>Government-issued photo ID and a payment card are required at check-in.</p></div></div>
+            <div class="info-row">${icon("baby")}<div><strong>Children and extra beds</strong><p>Children are welcome. Extra beds are subject to availability and additional charges.</p></div></div>
+          </div>
+        </section>
+      </div>
+      <aside class="sticky">
+        <div class="card summary">
+          <div class="label">Selected dates</div><h3 style="margin:7px 0">03 Aug – 08 Aug</h3><div class="small muted">5 nights · 2 guests · 1 room</div>
+          <div class="summary-box"><strong>Prices start at ${fmt(8950)}</strong><div class="small muted" style="margin-top:4px">per night + taxes</div></div>
+          <button class="btn btn-primary full-btn" onclick="scrollToId('rooms')">Choose a room</button>
+          <button class="btn btn-outline full-btn" style="margin-top:9px" onclick="openDateModal()">Change dates</button>
+        </div>
+      </aside>
+    </div>
+  </div></section>`);
+}
+function roomCard(name,img,price,desc){
+  return `<div class="card room-card">
+    <div class="room-img image" style="background-image:url('${img}')"></div>
+    <div><h3>${name}</h3><div class="small muted">1 king bed · 34 m² · Sleeps 2</div><div class="included"><span>${icon("check",14)} ${desc}</span><span>${icon("check",14)} Pay securely online</span><span>${icon("check",14)} No booking fee</span></div><button class="btn btn-ghost" style="padding-left:0" onclick="state.room='${name}';state.roomAmount=${price*5+4659};navigate('room-details')">View room details ${icon("arrow-right",15)}</button></div>
+    <div class="price"><strong>${fmt(price)}</strong><small>per night + taxes</small><button class="btn btn-primary" onclick="state.room='${name}';state.roomAmount=${price*5+4659};navigate('room-details')">Select room</button></div>
+  </div>`;
+}
+function renderRoomDetails(){
+  updateNav("hotel");
+  setView(`<section class="page"><div class="container">
+    ${crumbs([{label:"Hotel results",action:"quickSearch('hotel')"},{label:"Marina View Hotel",action:"navigate('hotel-details')"},{label:state.room}])}
+    <div class="details-grid">
+      <div>
+        <div class="gallery" style="grid-template-rows:175px 175px">
+          <div class="hero-img image" style="background-image:url('${hotelImages.room}')"></div><div class="image" style="background-image:url('${hotelImages.lobby}')"></div><div class="image" style="background-image:url('${hotelImages.main}')"></div><div class="image last" style="background-image:url('${hotelImages.pool}')"></div>
+        </div>
+        <div class="card panel"><h2 style="font-size:27px">${state.room}</h2><p class="muted small">Marina and city views · High floor · Non-smoking</p>
+          <div class="overview-grid"><div class="overview-item">${icon("maximize")}<strong>34 m²</strong>Room size</div><div class="overview-item">${icon("bed-double")}<strong>1 king bed</strong>Bed type</div><div class="overview-item">${icon("users")}<strong>2 adults</strong>Occupancy</div><div class="overview-item">${icon("waves")}<strong>Marina view</strong>View</div></div>
+        </div>
+        <div class="card panel"><h3>Room facilities</h3><div class="overview-grid">
+          <div class="overview-item">${icon("snowflake")}<strong>Air conditioning</strong></div><div class="overview-item">${icon("bath")}<strong>Private bathroom</strong></div><div class="overview-item">${icon("coffee")}<strong>Tea and coffee</strong></div><div class="overview-item">${icon("tv")}<strong>Smart TV</strong></div><div class="overview-item">${icon("lock-keyhole")}<strong>In-room safe</strong></div><div class="overview-item">${icon("wifi")}<strong>Free Wi-Fi</strong></div><div class="overview-item">${icon("concierge-bell")}<strong>Room service</strong></div><div class="overview-item">${icon("shirt")}<strong>Ironing setup</strong></div>
+        </div></div>
+        <div class="card panel"><h3>Rate details</h3>
+          <div class="option-row"><div><strong>Breakfast included</strong><div class="small muted">Daily buffet breakfast for two guests</div></div>${icon("check-circle",20)}</div>
+          <div class="option-row"><div><strong>Free cancellation</strong><div class="small muted">Cancel before 31 July without penalty</div></div>${icon("check-circle",20)}</div>
+          <div class="option-row"><div><strong>Pay now</strong><div class="small muted">Secure online payment is required to confirm</div></div>${icon("credit-card",20)}</div>
+        </div>
+      </div>
+      <aside class="sticky"><div class="card summary"><div class="label">5-night total</div><div style="font-size:30px;font-weight:800;margin:8px 0">${fmt(state.roomAmount)}</div><div class="small muted">Includes estimated taxes and fees</div>
+        <div class="summary-box"><strong>03–08 Aug 2026</strong><div class="small muted" style="margin-top:5px">2 guests · 1 room</div></div>
+        <button class="btn btn-primary full-btn" onclick="state.bookingType='hotel';navigate('travellers')">Reserve this room</button>
+        <button class="btn btn-outline full-btn" style="margin-top:9px" onclick="navigate('hotel-details')">Back to all rooms</button>
+      </div></aside>
+    </div>
+  </div></section>`);
+}
+function renderFlightDetails(){
+  updateNav("flight");
+  setView(`<section class="page"><div class="container">
+    ${crumbs([{label:"Home",action:"navigate('home')"},{label:"Flight results",action:"quickSearch('flight')"},{label:"Flight details"}])}
+    <div class="page-title"><div><h2>Delhi → Dubai</h2><p>Round trip · 03–08 Aug · 2 adults</p></div><span class="pill pill-success">Recommended combination</span></div>
+    <div class="details-grid">
+      <div>
+        <div class="card panel">
+          <div style="display:flex;justify-content:space-between;gap:14px;align-items:center;margin-bottom:18px"><div><span class="pill pill-success">Outbound</span><h3 style="margin:9px 0 0">Delhi to Dubai</h3></div><div class="small muted">Mon, 03 Aug</div></div>
+          <div class="airline" style="margin-bottom:20px"><div class="airline-logo">AI</div><div><strong>Air India · AI 995</strong><div class="small muted">Economy · Airbus A320</div></div></div>
+          <div class="timeline"><div class="timeline-stop"><strong>20:35 · Delhi (DEL)</strong><p>Indira Gandhi International Airport · Terminal 3</p></div><div class="timeline-stop"><strong>22:55 · Dubai (DXB)</strong><p>Dubai International Airport · Terminal 1</p></div></div>
+          <div class="overview-grid" style="margin-top:20px"><div class="overview-item">${icon("clock")}<strong>3h 50m</strong>Duration</div><div class="overview-item">${icon("move-right")}<strong>Non-stop</strong>Stops</div><div class="overview-item">${icon("briefcase-business")}<strong>7 kg</strong>Cabin baggage</div><div class="overview-item">${icon("luggage")}<strong>25 kg</strong>Check-in</div></div>
+        </div>
+        <div class="card panel">
+          <div style="display:flex;justify-content:space-between;gap:14px;align-items:center;margin-bottom:18px"><div><span class="pill pill-warning">Return</span><h3 style="margin:9px 0 0">Dubai to Delhi</h3></div><div class="small muted">Sat, 08 Aug</div></div>
+          <div class="airline" style="margin-bottom:20px"><div class="airline-logo">AI</div><div><strong>Air India · AI 996</strong><div class="small muted">Economy · Airbus A320</div></div></div>
+          <div class="timeline"><div class="timeline-stop"><strong>23:40 · Dubai (DXB)</strong><p>Dubai International Airport · Terminal 1</p></div><div class="timeline-stop"><strong>04:25 +1 · Delhi (DEL)</strong><p>Indira Gandhi International Airport · Terminal 3</p></div></div>
+        </div>
+        <div class="section-head" style="margin-top:26px"><div><h2 style="font-size:24px">Choose your fare</h2><p>Fare rules apply to both outbound and return flights.</p></div></div>
+        <div class="fare-grid">
+          ${fareCard("Saver",35480,["7 kg cabin baggage","20 kg check-in baggage","Cancellation from ₹5,500"],false)}
+          ${fareCard("Flex",38339,["7 kg cabin baggage","25 kg check-in baggage","Free date change once","Cancellation from ₹3,500"],true)}
+          ${fareCard("Business",67450,["Priority check-in","40 kg check-in baggage","Lounge access","Flexible cancellation"],false)}
+        </div>
+      </div>
+      <aside class="sticky"><div class="card summary"><div class="label">Fare summary</div><h3 style="margin:7px 0">Round trip · 2 adults</h3>
+        <div class="line-item"><span>Base fare</span><strong>₹33,680</strong></div><div class="line-item"><span>Taxes and fees</span><strong>₹3,860</strong></div><div class="line-item"><span>Flex fare benefits</span><strong>₹799</strong></div><div class="line-item total"><span>Total</span><strong id="flightTotal">${fmt(state.fareAmount)}</strong></div>
+        <button class="btn btn-primary full-btn" onclick="state.bookingType='flight';navigate('travellers')">Continue with selected fare</button>
+        <button class="btn btn-outline full-btn" style="margin-top:9px" onclick="openFareRules()">View detailed fare rules</button>
+      </div></aside>
+    </div>
+  </div></section>`);
+}
+function fareCard(name,amount,features,selected){
+  return `<div id="fare-${name}" class="fare ${selected?"selected":""}"><span class="pill ${selected?"pill-success":"pill-warning"}">${selected?"Recommended":"Available"}</span><h3 style="margin-top:10px">${name}</h3><div class="amount">${fmt(amount)}</div><div class="small muted">total for 2 adults</div><ul>${features.map(x=>`<li>${x}</li>`).join("")}</ul><button class="btn ${selected?"btn-primary":"btn-outline"} full-btn" onclick="selectFare('${name}',${amount})">${selected?"Selected":"Select fare"}</button></div>`;
+}
+function selectFare(name,amount){
+  state.fare=name;state.fareAmount=amount;
+  document.querySelectorAll(".fare").forEach(x=>x.classList.remove("selected"));
+  const card=document.getElementById("fare-"+name); card.classList.add("selected");
+  document.querySelectorAll(".fare .btn").forEach(x=>{x.className="btn btn-outline full-btn";x.textContent="Select fare"});
+  const btn=card.querySelector(".btn");btn.className="btn btn-primary full-btn";btn.textContent="Selected";
+  document.getElementById("flightTotal").textContent=fmt(amount); toast(name+" fare selected");
+}
+function currentTotal(){
+  let total=state.bookingType==="flight"?state.fareAmount:state.roomAmount;
+  if(state.bookingType==="flight") total += state.baggage*300;
+  return total;
+}
+function renderTravellers(){
+  updateNav(state.bookingType);
+  const hotel=state.bookingType==="hotel";
+  setView(`<section class="page"><div class="container">
+    ${steps(0)}
+    <div class="booking-grid">
+      <div>
+        <div class="card panel"><h3>${hotel?"Primary guest":"Traveller 1 · Adult"}</h3>
+          <div class="form-grid">
+            <div class="form-group"><label>Title</label><select><option>Mr</option><option>Ms</option><option>Mrs</option></select></div>
+            <div class="form-group"><label>Full name</label><input value="Akshat Goyal"></div>
+            <div class="form-group"><label>Date of birth</label><input type="date" value="2001-01-10"></div>
+            <div class="form-group"><label>Nationality</label><select><option>Indian</option><option>Other</option></select></div>
+            ${hotel?"":`<div class="form-group"><label>Passport number</label><input value="N1234567"></div><div class="form-group"><label>Passport expiry</label><input type="date" value="2031-06-20"></div>`}
+          </div>
+        </div>
+        ${hotel?"":`<div class="card panel"><h3>Traveller 2 · Adult</h3><div class="form-grid"><div class="form-group"><label>Title</label><select><option>Mr</option><option>Ms</option></select></div><div class="form-group"><label>Full name</label><input placeholder="Enter full name"></div><div class="form-group"><label>Passport number</label><input placeholder="Passport number"></div><div class="form-group"><label>Passport expiry</label><input type="date"></div></div></div>`}
+        <div class="card panel"><h3>Contact information</h3><div class="form-grid"><div class="form-group"><label>Email</label><input type="email" value="akshat@example.com"></div><div class="form-group"><label>Mobile number</label><input value="+91 98765 43210"></div><div class="form-group full"><label>Special requests</label><textarea rows="3" placeholder="${hotel?"Room preference, accessibility, arrival time":"Assistance, dietary preference, or other request"}"></textarea></div></div></div>
+        <button class="btn btn-primary full-btn" onclick="navigate('${hotel?"review":"extras"}')">Continue ${icon("arrow-right",17)}</button>
+      </div>
+      ${summaryCard()}
+    </div>
+  </div></section>`);
+}
+function summaryCard(){
+  const hotel=state.bookingType==="hotel";
+  return `<aside class="card summary sticky"><div class="label">Your selection</div><h3 style="margin:7px 0">${hotel?"Marina View Hotel":"Delhi → Dubai"}</h3><div class="summary-box">${hotel?`${state.room}<br><span class="small muted">03–08 Aug · 5 nights</span>`:`Air India · Round trip<br><span class="small muted">03–08 Aug · ${state.fare} fare</span>`}</div><div class="line-item"><span>Booking subtotal</span><strong>${fmt(hotel?state.roomAmount:state.fareAmount)}</strong></div>${!hotel?`<div class="line-item"><span>Extra baggage</span><strong>${fmt(state.baggage*300)}</strong></div>`:""}<div class="line-item total"><span>Total</span><strong>${fmt(currentTotal())}</strong></div></aside>`;
+}
+function renderExtras(){
+  updateNav("flight");
+  const seats=[];
+  const blocked=["1A","1F","2C","4B","5E","8A","10F"];
+  for(let r=1;r<=12;r++){
+    ["A","B","C","X","D","E","F"].forEach(c=>{
+      if(c==="X")seats.push(`<span class="seat aisle"></span>`);
+      else{const s=r+c;seats.push(`<button class="seat ${blocked.includes(s)?"blocked":s===state.seat?"selected":""}" ${blocked.includes(s)?"disabled":""} onclick="selectSeat('${s}',this)">${s}</button>`)}
+    })
+  }
+  setView(`<section class="page"><div class="container">
+    ${steps(1)}
+    <div class="booking-grid">
+      <div>
+        <div class="card panel"><div class="section-head" style="margin-bottom:8px"><div><h3>Choose a seat</h3><p class="small">Outbound · DEL to DXB</p></div><span class="pill pill-success">Selected: <b id="seatLabel">${state.seat}</b></span></div>
+          <div class="seat-layout">${seats.join("")}</div><div style="display:flex;justify-content:center;gap:16px" class="small muted"><span>□ Available</span><span style="color:var(--primary)">■ Selected</span><span style="color:#a5b1b0">■ Occupied</span></div>
+        </div>
+        <div class="card panel"><h3>Meals</h3>
+          ${choiceRow("No meal","Light refreshments only","0","meal",state.meal==="No meal")}
+          ${choiceRow("Vegetarian meal","Indian vegetarian meal","499","meal",state.meal==="Vegetarian meal")}
+          ${choiceRow("Non-vegetarian meal","Chicken main course","599","meal",state.meal==="Non-vegetarian meal")}
+        </div>
+        <div class="card panel"><h3>Extra baggage</h3><div class="option-row"><div><strong>Additional check-in baggage</strong><div class="small muted">Current allowance: 25 kg per traveller</div></div><div class="selector"><button onclick="adjustBaggage(-5)">−</button><strong id="bagValue">${state.baggage} kg</strong><button onclick="adjustBaggage(5)">+</button></div></div><div class="small muted" style="margin-top:10px">₹300 per additional kg</div></div>
+        <button class="btn btn-primary full-btn" onclick="navigate('review')">Review booking ${icon("arrow-right",17)}</button>
+      </div>
+      ${summaryCard()}
+    </div>
+  </div></section>`);
+}
+function choiceRow(title,desc,price,key,checked){
+  return `<label class="option-row"><div><strong>${title}</strong><div class="small muted">${desc}</div></div><div style="display:flex;gap:11px;align-items:center"><strong>${price==="0"?"Included":fmt(price)}</strong><input type="radio" name="${key}" ${checked?"checked":""} onchange="state.${key}='${title}';toast('${title} selected')"></div></label>`;
+}
+function selectSeat(seat,el){document.querySelectorAll(".seat").forEach(x=>x.classList.remove("selected"));el.classList.add("selected");state.seat=seat;document.getElementById("seatLabel").textContent=seat;toast("Seat "+seat+" selected")}
+function adjustBaggage(delta){state.baggage=Math.max(0,Math.min(20,state.baggage+delta));document.getElementById("bagValue").textContent=state.baggage+" kg";renderExtras()}
+function renderReview(){
+  updateNav(state.bookingType);
+  const hotel=state.bookingType==="hotel";
+  setView(`<section class="page"><div class="container">
+    ${steps(2)}
+    <div class="booking-grid">
+      <div>
+        <div class="card panel"><div style="display:flex;justify-content:space-between;gap:15px"><div><div class="label">${hotel?"Stay":"Itinerary"}</div><h3 style="margin:7px 0">${hotel?"Marina View Hotel":"Delhi → Dubai → Delhi"}</h3></div><button class="btn btn-ghost" onclick="navigate('${hotel?"hotel-details":"flight-details"}')">Change</button></div>
+          ${hotel?`<div class="summary-box"><strong>${state.room}</strong><div class="small muted" style="margin-top:5px">03–08 Aug · 5 nights · Breakfast included</div></div>`:`<div class="summary-box"><strong>Air India · ${state.fare} fare</strong><div class="small muted" style="margin-top:5px">Outbound 03 Aug · Return 08 Aug</div></div>`}
+        </div>
+        <div class="card panel"><div style="display:flex;justify-content:space-between;gap:15px"><h3>Traveller and contact details</h3><button class="btn btn-ghost" onclick="navigate('travellers')">Edit</button></div>
+          <div class="line-item"><span>${hotel?"Primary guest":"Traveller 1"}</span><strong>Akshat Goyal</strong></div>${hotel?"":`<div class="line-item"><span>Traveller 2</span><strong>Guest traveller</strong></div>`}<div class="line-item"><span>Email</span><strong>akshat@example.com</strong></div><div class="line-item"><span>Mobile</span><strong>+91 98765 43210</strong></div>
+        </div>
+        ${hotel?"":`<div class="card panel"><div style="display:flex;justify-content:space-between;gap:15px"><h3>Flight add-ons</h3><button class="btn btn-ghost" onclick="navigate('extras')">Edit</button></div><div class="line-item"><span>Seat</span><strong>${state.seat}</strong></div><div class="line-item"><span>Meal</span><strong>${state.meal}</strong></div><div class="line-item"><span>Extra baggage</span><strong>${state.baggage} kg</strong></div></div>`}
+        <div class="card panel"><h3>Important information</h3><label class="check"><span><input id="terms" type="checkbox" checked> I agree to the booking conditions, fare/property rules, cancellation policy, and privacy terms.</span></label></div>
+        <button class="btn btn-primary full-btn" onclick="navigate('payment')">Proceed to secure payment ${icon("lock-keyhole",17)}</button>
+      </div>
+      ${summaryCard()}
+    </div>
+  </div></section>`);
+}
+function renderPayment(){
+  updateNav(state.bookingType);
+  setView(`<section class="page"><div class="container">
+    ${steps(3)}
+    <div class="booking-grid">
+      <div>
+        <div class="card panel"><h3>Choose payment method</h3>
+          <div class="payment-tabs"><button class="payment-tab active" onclick="selectPayment(this,'Card')">Card</button><button class="payment-tab" onclick="selectPayment(this,'UPI')">UPI</button><button class="payment-tab" onclick="selectPayment(this,'Net banking')">Net banking</button><button class="payment-tab" onclick="selectPayment(this,'Wallet')">Wallet</button></div>
+          <div id="paymentForm">
+            <div class="form-grid"><div class="form-group full"><label>Card number</label><input value="4242 4242 4242 4242"></div><div class="form-group"><label>Expiry</label><input value="12/29"></div><div class="form-group"><label>CVV</label><input value="123"></div><div class="form-group full"><label>Name on card</label><input value="AKSHAT GOYAL"></div></div>
+          </div>
+        </div>
+        <div class="secure">${icon("shield-check",21)}<div><strong>Secure checkout</strong>Your payment is protected with encrypted transmission. This prototype does not process or store actual card information.</div></div>
+        <button class="btn btn-primary full-btn" style="margin-top:15px" onclick="completePayment()">Pay ${fmt(currentTotal())}</button>
+        <button class="btn btn-outline full-btn" style="margin-top:9px" onclick="navigate('failure')">Simulate failed payment</button>
+      </div>
+      ${summaryCard()}
+    </div>
+  </div></section>`);
+}
+function selectPayment(el,name){document.querySelectorAll(".payment-tab").forEach(x=>x.classList.remove("active"));el.classList.add("active");state.paymentMethod=name;document.getElementById("paymentForm").innerHTML=name==="Card"?`<div class="form-grid"><div class="form-group full"><label>Card number</label><input value="4242 4242 4242 4242"></div><div class="form-group"><label>Expiry</label><input value="12/29"></div><div class="form-group"><label>CVV</label><input value="123"></div><div class="form-group full"><label>Name on card</label><input value="AKSHAT GOYAL"></div></div>`:`<div class="form-group"><label>${name} details</label><input placeholder="Enter ${name.toLowerCase()} information"></div>`}
+function completePayment(){toast("Payment authorised");setTimeout(()=>navigate("confirmation"),650)}
+function renderFailure(){
+  setView(`<section class="page"><div class="container status-wrap">
+    <div class="status-icon failure-icon">${icon("x",38)}</div><span class="pill pill-warning">Payment not completed</span><h1 style="font-size:45px;margin:17px 0">The payment could not be processed.</h1><p class="muted" style="line-height:1.7">No booking was created and no amount should be charged. Try again with the same method or choose another payment option.</p>
+    <div class="card panel" style="text-align:left;margin-top:25px"><div class="line-item"><span>Reference</span><strong>PAY-FAILED-0842</strong></div><div class="line-item"><span>Reason</span><strong>Bank declined the transaction</strong></div><div class="line-item"><span>Amount</span><strong>${fmt(currentTotal())}</strong></div></div>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn btn-primary" onclick="navigate('payment')">Retry payment</button><button class="btn btn-outline" onclick="navigate('review')">Review booking</button></div>
+  </div></section>`);
+}
+function renderConfirmation(){
+  updateNav("bookings");
+  const hotel=state.bookingType==="hotel";
+  setView(`<section class="page"><div class="container">
+    ${steps(4)}
+    <div class="status-wrap">
+      <div class="status-icon success-icon">${icon("check",38)}</div><span class="pill pill-success">Booking confirmed</span><h1 style="font-size:46px;margin:17px 0">Your ${hotel?"stay":"flight"} is confirmed.</h1><p class="muted" style="line-height:1.7">Confirmation, invoice, and ${hotel?"hotel voucher":"e-ticket"} have been sent to akshat@example.com.</p>
+      <div class="card panel" style="text-align:left;margin-top:25px"><div class="label">Booking ID</div><h2 style="font-size:26px;margin:7px 0 17px">${state.bookingId}</h2>
+        <div class="line-item"><span>${hotel?"Property":"Route"}</span><strong>${hotel?"Marina View Hotel":"Delhi ↔ Dubai"}</strong></div><div class="line-item"><span>Dates</span><strong>03–08 Aug 2026</strong></div><div class="line-item"><span>Lead traveller</span><strong>Akshat Goyal</strong></div><div class="line-item"><span>Payment</span><strong>Paid · ${fmt(currentTotal())}</strong></div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn btn-secondary" onclick="toast('${hotel?"Voucher":"E-ticket"} downloaded')">${icon("download",17)} Download ${hotel?"voucher":"e-ticket"}</button><button class="btn btn-primary" onclick="navigate('booking-details')">Manage booking</button><button class="btn btn-outline" onclick="navigate('home')">Book another trip</button></div>
+    </div>
+  </div></section>`);
+}
+function renderBookings(){
+  updateNav("bookings");
+  setView(`<section class="page"><div class="container">
+    ${crumbs([{label:"Home",action:"navigate('home')"},{label:"My bookings"}])}
+    <div class="page-title"><div><h2>My bookings</h2><p>View upcoming, completed, and cancelled bookings.</p></div><button class="btn btn-primary" onclick="navigate('home')">${icon("plus",17)} New booking</button></div>
+    <div class="tab-row"><button class="tab active">Upcoming</button><button class="tab">Completed</button><button class="tab">Cancelled</button></div>
+    <div class="booking-list">
+      <div class="card booking-card"><div class="booking-title"><div class="booking-type">${icon("plane")}</div><div><span class="pill pill-success">Confirmed</span><h3 style="margin:7px 0 4px">Delhi ↔ Dubai</h3><div class="small muted">03–08 Aug 2026 · Air India · ${state.bookingId}</div></div></div><button class="btn btn-outline" onclick="state.bookingType='flight';navigate('booking-details')">Manage</button></div>
+      <div class="card booking-card"><div class="booking-title"><div class="booking-type">${icon("building-2")}</div><div><span class="pill pill-success">Confirmed</span><h3 style="margin:7px 0 4px">Marina View Hotel</h3><div class="small muted">03–08 Aug 2026 · 5 nights · TRH-2026-0918</div></div></div><button class="btn btn-outline" onclick="state.bookingType='hotel';navigate('booking-details')">Manage</button></div>
+    </div>
+  </div></section>`);
+}
+function renderBookingDetails(){
+  updateNav("bookings");
+  const hotel=state.bookingType==="hotel";
+  setView(`<section class="page"><div class="container">
+    ${crumbs([{label:"My bookings",action:"navigate('bookings')"},{label:"Booking details"}])}
+    <div class="page-title"><div><span class="pill pill-success">Confirmed</span><h2 style="margin:9px 0 0">${hotel?"Marina View Hotel":"Delhi ↔ Dubai"}</h2><p>${state.bookingId} · Booked on 31 July 2026</p></div><button class="btn btn-secondary" onclick="toast('Document downloaded')">${icon("download",17)} Download ${hotel?"voucher":"e-ticket"}</button></div>
+    <div class="details-grid">
+      <div>
+        <div class="card panel"><div class="label">Booking summary</div><h3 style="margin:8px 0 15px">${hotel?state.room:"Air India · Round trip"}</h3>
+          <div class="line-item"><span>Dates</span><strong>03–08 Aug 2026</strong></div><div class="line-item"><span>${hotel?"Guests":"Travellers"}</span><strong>2 adults</strong></div><div class="line-item"><span>Lead traveller</span><strong>Akshat Goyal</strong></div><div class="line-item"><span>Payment status</span><strong>Paid</strong></div><div class="line-item total"><span>Total paid</span><strong>${fmt(currentTotal())}</strong></div>
+        </div>
+        <div class="card panel"><h3>Manage this booking</h3><div class="action-grid">
+          <button class="action-card" onclick="toast('Change request started')">${icon("calendar-cog")}<strong>Change booking</strong><span>${hotel?"Change dates or guest details":"Change date or flight"}</span></button>
+          <button class="action-card" onclick="toast('Support request opened')">${icon("headphones")}<strong>Contact support</strong><span>Get booking assistance</span></button>
+          <button class="action-card" onclick="openCancelModal()">${icon("calendar-x")}<strong>Cancel booking</strong><span>Review charges and refund</span></button>
+        </div></div>
+        <div class="card panel"><h3>Traveller details</h3><div class="line-item"><span>Primary traveller</span><strong>Akshat Goyal</strong></div><div class="line-item"><span>Email</span><strong>akshat@example.com</strong></div><div class="line-item"><span>Mobile</span><strong>+91 98765 43210</strong></div></div>
+      </div>
+      <aside class="sticky"><div class="card summary"><div class="label">Need assistance?</div><h3 style="margin:8px 0">TreHub support</h3><p class="small muted" style="line-height:1.6">Support agents can help with supplier policies, changes, cancellations, and documentation.</p><button class="btn btn-primary full-btn" onclick="toast('Support chat opened')">${icon("message-circle",17)} Start support chat</button></div></aside>
+    </div>
+  </div></section>`);
+}
+function openCancelModal(){
+  openModal("Cancel booking",`<p class="small muted" style="line-height:1.65">Review the estimated charges before submitting the cancellation request.</p><div class="summary-box"><div class="line-item"><span>Total paid</span><strong>${fmt(currentTotal())}</strong></div><div class="line-item"><span>Supplier cancellation fee</span><strong>₹3,500</strong></div><div class="line-item"><span>TreHub fee</span><strong>₹300</strong></div><div class="line-item total"><span>Estimated refund</span><strong>${fmt(currentTotal()-3800)}</strong></div></div><div class="form-group"><label>Reason for cancellation</label><select><option>Change of plan</option><option>Booked by mistake</option><option>Medical reason</option><option>Other</option></select></div><button class="btn btn-danger full-btn" style="margin-top:14px" onclick="closeModal();toast('Cancellation request submitted')">Submit cancellation request</button>`);
+}
+function openDateModal(){openModal("Change dates",`<div class="form-grid"><div class="form-group"><label>Check-in</label><input type="date" value="2026-08-03"></div><div class="form-group"><label>Check-out</label><input type="date" value="2026-08-08"></div></div><button class="btn btn-primary full-btn" style="margin-top:14px" onclick="closeModal();toast('Availability refreshed')">Check availability</button>`)}
+function openFareRules(){openModal("Detailed fare rules",`<div class="info-list"><div class="info-row">${icon("calendar-x")}<div><strong>Cancellation</strong><p>Charges start from ₹3,500 per passenger and may increase closer to departure.</p></div></div><div class="info-row">${icon("calendar-cog")}<div><strong>Date changes</strong><p>One change fee is waived on Flex fare; airline fare difference still applies.</p></div></div><div class="info-row">${icon("luggage")}<div><strong>Baggage</strong><p>7 kg cabin and 25 kg check-in baggage per adult are included.</p></div></div></div>`)}
+function scrollToId(id){document.getElementById(id)?.scrollIntoView({behavior:"smooth",block:"start"})}
+function openModal(title,body){document.getElementById("modalTitle").textContent=title;document.getElementById("modalBody").innerHTML=body;document.getElementById("modal").classList.add("show");initIcons()}
+function closeModal(e){if(e&&e.target.id!=="modal")return;document.getElementById("modal").classList.remove("show")}
+function toast(message){const t=document.getElementById("toast");t.textContent=message;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2100)}
+renderHome();
+</script>
+</body>
+</html>

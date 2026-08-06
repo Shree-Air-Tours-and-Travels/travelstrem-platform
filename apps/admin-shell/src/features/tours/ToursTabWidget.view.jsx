@@ -38,8 +38,8 @@ export default function ToursTabWidget({
                                 isAdmin
                                 variant="list"
                                 className="mt-admin-tour-card"
-                                showOwner
-                                ownerAgentName={t.ownerAgentName || ""}
+                                ownershipMode="agency"
+                                ownershipLabels={{ agency: "Added by agency", platformAgency: "TravelsTREM" }}
                                 onView={() => openView(t)}
                                 onEdit={() => openEdit(t)}
                                 onDelete={() => handleDelete(t._id || t.id)}

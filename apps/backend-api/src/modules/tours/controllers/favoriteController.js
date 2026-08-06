@@ -22,6 +22,24 @@ const normalizeTripForFavorites = (doc) => {
   };
 };
 
+const normalizeTourForFavorites = (doc) => {
+  const tour = doc?.toObject ? doc.toObject({ virtuals: true }) : doc || {};
+  const p = tour.price || {};
+  const min = Number(p.min ?? tour.priceInfo?.min ?? 0);
+  const max = Number(p.max ?? min);
+  return {
+    ...tour,
+    price: min,
+    priceInfo: {
+      min,
+      max,
+      currency: p.currency || "INR",
+      isFinal: !!p.isFinal,
+      source: p.source || "manual",
+    },
+  };
+};
+
 export const toggleFavorite = async (req, res) => {
   try {
     const { tourId, product = "trevista" } = req.body;
@@ -61,7 +79,7 @@ export const getFavorites = async (req, res) => {
       trevioIds.length && TrevioTrip ? TrevioTrip.find({ _id: { $in: trevioIds } }) : [],
     ]);
 
-    const tourMap = new Map(trevistaTours.map((t) => [String(t._id), t.toObject({ virtuals: true })]));
+    const tourMap = new Map(trevistaTours.map((t) => [String(t._id), normalizeTourForFavorites(t)]));
     const tripMap = new Map((trevioTrips || []).map((t) => [String(t._id), normalizeTripForFavorites(t)]));
 
     const ordered = favorites

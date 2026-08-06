@@ -97,24 +97,23 @@ export const getTrevioTrip = async (req, res) => {
   }
 };
 
-export const TREVIO_ADDONS = Object.freeze({
-  travelProtection: {
-    id: "travel_protection",
-    name: "Travel protection",
-    description: "Medical support, cancellation protection and baggage cover.",
-    price: Math.max(0, Number(process.env.TREVIO_TRAVEL_PROTECTION_PRICE || 2499)),
-    perTraveller: true,
-    selectionType: "multiple",
-  },
-  singleRoom: {
-    id: "single_room_upgrade",
-    name: "Single-room upgrade",
-    description: "Private room instead of twin sharing, subject to availability.",
-    price: Math.max(0, Number(process.env.TREVIO_SINGLE_ROOM_UPGRADE_PRICE || 4800)),
-    perTraveller: false,
-    selectionType: "multiple",
-  },
-});
+const normalizeTripAddons = (trip) => (Array.isArray(trip?.extras) ? trip.extras : [])
+  .filter((extra) => extra && !extra.included)
+  .map((extra, index) => {
+    const priceLabel = String(extra.priceLabel || "").trim();
+    return {
+      // An add-on's id must be stable because the client sends it back when
+      // recalculating and creating the booking.
+      id: String(extra._id || extra.id || extra.code || extra.title || `extra-${index}`),
+      name: extra.title || extra.name || "Optional add-on",
+      description: extra.description || "",
+      price: Math.max(0, Number(extra.price || extra.amount || 0)),
+      currency: extra.currency || "INR",
+      priceLabel,
+      perTraveller: Boolean(extra.perTraveller || extra.perPerson || /per\s*(person|travell?er)/i.test(priceLabel)),
+      selectionType: extra.selectionType || "multiple",
+    };
+  });
 
 export const calculateTrevioPricing = (trip, body = {}) => {
   const travellerList = Array.isArray(body.travellers || body.travelers)
@@ -124,7 +123,8 @@ export const calculateTrevioPricing = (trip, body = {}) => {
   const selected = (Array.isArray(body.addons) ? body.addons : [])
     .map((addon) => typeof addon === "string" ? addon : addon?.id || addon?.code)
     .filter(Boolean);
-  const addonsById = Object.values(TREVIO_ADDONS).reduce((result, addon) => {
+  const availableAddons = normalizeTripAddons(trip);
+  const addonsById = availableAddons.reduce((result, addon) => {
     result[addon.id] = addon;
     return result;
   }, {});
@@ -206,7 +206,7 @@ export const calculateTrevioPricing = (trip, body = {}) => {
       }
     : null;
 
-  return { pricing, addons: Object.values(TREVIO_ADDONS), coupon };
+  return { pricing, addons: availableAddons, coupon };
 };
 
 export const getTrevioPricing = async (req, res) => {

@@ -71,6 +71,57 @@ const citySchema = new Schema({
     to: { type: String, required: true},
 }, { _id: false });
 
+/* Included stays: structured accommodation included in the tour */
+const includedStaySchema = new Schema({
+    nights: { type: Number, min: 0, default: 1 },
+    location: { type: String, default: "" }, // e.g. "Ubud"
+    propertyName: { type: String, default: "" }, // e.g. "garden resort"
+    propertyClass: { type: String, default: "" }, // e.g. "4-star"
+    roomType: { type: String, default: "" }, // e.g. "Deluxe room"
+    meals: [{ type: String }], // e.g. ["Breakfast"]
+    description: { type: String, default: "" },
+}, { _id: true });
+
+/* Hotel upgrade options shown in the "Hotel options" modal */
+const hotelOptionSchema = new Schema({
+    title: { type: String, default: "" }, // e.g. "Premium upgrade"
+    description: { type: String, default: "" }, // e.g. "5-star Ubud resort + premium Seminyak property"
+    costLabel: { type: String, default: "Upgrade cost" },
+    cost: { type: String, default: "" }, // e.g. "Included" or "₹18,000 per room"
+    recommended: { type: Boolean, default: false },
+}, { _id: true });
+
+/* Cancellation tiers: refund windows sorted by days before departure */
+const cancellationTierSchema = new Schema({
+    label: { type: String, default: "" }, // e.g. "Free cancellation"
+    daysBefore: { type: Number, default: null }, // cutoff: refund applies when cancelling X+ days before
+    refundPercent: { type: Number, default: null }, // 0-100
+    description: { type: String, default: "" },
+}, { _id: false });
+
+/* Structured cancellation details */
+const cancellationSchema = new Schema({
+    policy: { type: String, default: "" }, // free text (mirrors cancellationPolicy)
+    freeCancellationUntil: { type: String, default: "" }, // e.g. "14 days before departure"
+    refundPercent: { type: Number, default: 100 }, // default refund % under free-cancel window
+    depositRequired: { type: Boolean, default: false },
+    depositPercent: { type: Number, default: null },
+    depositNote: { type: String, default: "" },
+    note: { type: String, default: "" },
+    tiers: [cancellationTierSchema],
+}, { _id: false });
+
+/* Optional extras / add-ons guests can purchase */
+const extraSchema = new Schema({
+    title: { type: String, default: "" }, // e.g. "Extra night"
+    description: { type: String, default: "" },
+    price: { type: Number, default: 0 },
+    currency: { type: String, default: "INR" },
+    priceLabel: { type: String, default: "" }, // e.g. "₹2,500 / night"
+    icon: { type: String, default: "" }, // icon name
+    included: { type: Boolean, default: false },
+}, { _id: true });
+
 /* ---------- Main tour schema ---------- */
 
 /*
@@ -87,6 +138,11 @@ const citySchema = new Schema({
 */
 
 const tourSchema = new Schema({
+    agencyId: { type: Schema.Types.ObjectId, ref: "PartnerAgency", default: null, index: true },
+    createdBy: { type: Schema.Types.ObjectId, ref: "User", default: null, index: true },
+    productKey: { type: String, default: "trevista", index: true },
+    visibility: { type: String, enum: ["public", "agency", "private"], default: "public" },
+    archivedAt: { type: Date, default: null },
     title: { type: String, required: true },
     agentRef: { type: String, trim: true, default: "", index: true },
     city: { type: citySchema, required: true },
@@ -119,6 +175,14 @@ const tourSchema = new Schema({
     // Itinerary and highlights
     itinerary: [itineraryItemSchema],
     highlights: [highlightSchema],
+
+    // Included accommodation + hotel upgrade options
+    includedStays: [includedStaySchema],
+    hotelOptions: [hotelOptionSchema],
+
+    // Structured cancellation details + optional extras
+    cancellation: { type: cancellationSchema, default: () => ({}) },
+    extras: [extraSchema],
 
     // Availability & capacity
     availability: {
@@ -158,8 +222,12 @@ const tourSchema = new Schema({
     tags: [{ type: String }],
     isPublished: { type: Boolean, default: true },
     status: { type: String, enum: TOUR_STATUS_LIST, default: TOUR_STATUS.PUBLISHED },
+    tremVerified: { type: Boolean, default: false, index: true },
+    tremVerifiedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
+    tremVerifiedAt: { type: Date, default: null },
 
 }, { timestamps: true });
+tourSchema.index({ agencyId: 1, ownerAgent: 1, status: 1 });
 
 /* ---------- Virtuals ---------- */
 

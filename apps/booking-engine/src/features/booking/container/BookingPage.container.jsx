@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { fetchData, useComponentData, validateFields } from "@packages/trem-utils";
 import BookingPageView from "../view/BookingPage.view";
 import { getDateInputValue, emptyTraveler } from "../helper";
+import { resolveConfig, buildValidationFields, LEAD_FIELD_NAMES, PAGE_KEY, WIDGET_ENDPOINT } from "../widgets/BookingTravelerStep/bookingSchema";
 
 const bookingFields = {
   trip: {
@@ -38,6 +39,35 @@ export default function BookingPageContainer() {
   const pageLabels = elements?.labels || {};
   const options = dataScope?.options || {};
   const maxGuests = config?.maxGuests || 10;
+
+  const { componentData: travelerWidgetData } = useComponentData(WIDGET_ENDPOINT, { params: { pageKey: PAGE_KEY } });
+  const travelerSchemaProps = useMemo(() => {
+    const structure = travelerWidgetData?.structure || {};
+    const widgetProps = structure.widgets?.[0]?.props || structure;
+    const { actions, ...props } = widgetProps;
+    return props;
+  }, [travelerWidgetData]);
+
+  const travelerConfig = useMemo(
+    () => resolveConfig(travelerSchemaProps, pageLabels, options, { maxGuests }),
+    [travelerSchemaProps, pageLabels, options, maxGuests]
+  );
+
+  const travelerValidation = useMemo(() => {
+    const allFields = buildValidationFields(travelerConfig, options);
+    const lead = {};
+    const traveler = {};
+    Object.entries(allFields).forEach(([name, field]) => {
+      if (LEAD_FIELD_NAMES.includes(name)) lead[name] = field;
+      else traveler[name] = field;
+    });
+    const hasSchema = !!(travelerConfig.sections?.length || Object.keys(lead).length);
+    return {
+      hasSchema,
+      lead: hasSchema && Object.keys(lead).length ? lead : bookingFields.contact,
+      traveler: hasSchema && Object.keys(traveler).length ? traveler : bookingFields.traveler,
+    };
+  }, [travelerConfig, options]);
 
     const [tour, setTour] = useState(location.state?.tour || null);
     const referrer = useMemo(() => location.state?.from || { label: "Trevista", path: "/trevista" }, [location.state?.from]);
@@ -192,16 +222,16 @@ export default function BookingPageContainer() {
   }, [startDate, endDate, adults, children, infants, tour]);
 
   const validateTravelerStep = useCallback(() => {
-    const nextErrors = { ...validateFields({ contactEmail, contactPhone }, bookingFields.contact).errors };
+    const nextErrors = { ...validateFields({ contactEmail, contactPhone }, travelerValidation.lead).errors };
     travelers.forEach((traveler, index) => {
-      const result = validateFields(traveler, bookingFields.traveler);
+      const result = validateFields(traveler, travelerValidation.traveler);
       Object.entries(result.errors).forEach(([field, message]) => {
         nextErrors[`travelers.${index}.${field}`] = message;
       });
     });
     setFieldErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
-  }, [contactEmail, contactPhone, travelers]);
+  }, [contactEmail, contactPhone, travelers, travelerValidation]);
 
   const handleNext = useCallback(() => {
     if (step === 1 && !validateTripStep()) return;

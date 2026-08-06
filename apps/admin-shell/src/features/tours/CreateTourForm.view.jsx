@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback } from "react";
-import { Button, SubTitle } from "@packages/trem-ui";
+import { Button, SubTitle, RecordReview } from "@packages/trem-ui";
+import { getTourJsonTemplate } from "@packages/trem-utils";
 import "./CreateTourForm.scss";
 
 const STEPS = ['Basic', 'Schedule', 'Itinerary', 'Pricing', 'Logistics', 'Content', 'Review'];
@@ -143,10 +144,12 @@ function ImageUploader({ uploading, uploadProgress, photo, photos = [], onUpload
 }
 
 export default function CreateTourFormView({
-    form, step, saving, uploading, uploadProgress, error, success, onCancel, submit, next, back,
+    form, step, saving, uploading, uploadProgress, importingJson, error, success, onCancel, submit, next, back,
     setForm, setAt, addArrayItem, updateArrayItem, removeArrayItem, moveArrayItem, handleUploadImage,
-    touched, fieldErrors, seasonOverlaps, handleBlur, onDismissSuccess,
+    touched, fieldErrors, seasonOverlaps, handleBlur, onDismissSuccess, handleImportJson,
 }) {
+    const [showJsonImport, setShowJsonImport] = useState(false);
+    const [jsonText, setJsonText] = useState("");
     React.useEffect(() => {
         if (success) {
             const t = setTimeout(onDismissSuccess, 4000);
@@ -164,6 +167,7 @@ export default function CreateTourFormView({
                         </div>
                     </div>
                     <div className="ctf-header-actions">
+                        <Button type="button" primaryClassName="btn ctf-json-import-button" variant="outline" onClick={() => setShowJsonImport((value) => !value)} disabled={importingJson} text={showJsonImport ? "Hide JSON" : "Paste JSON"} />
                         <Button primaryClassName="btn" onClick={onCancel} text="Cancel" />
                     </div>
                 </header>
@@ -173,8 +177,17 @@ export default function CreateTourFormView({
                         {error && <div className="ctf-feedback ctf-feedback--error">{error}</div>}
                         {success && <div className="ctf-feedback ctf-feedback--ok">{success}</div>}
 
+                        {showJsonImport && (
+                            <section className="ctf-json-import">
+                                <div className="ctf-json-import__heading"><div><strong>Paste complete tour JSON</strong><span>All supported schema fields will be added to the form. Review them before submitting.</span></div><Button type="button" primaryClassName="btn" variant="text" onClick={() => setJsonText("")} disabled={!jsonText} text="Clear" /></div>
+                                <textarea className="ctf-json-import__editor" value={jsonText} onChange={(event) => setJsonText(event.target.value)} placeholder={'{\n  "title": "Himalayan Escape",\n  "city": { "from": "Delhi", "to": "Manali" },\n  "price": { "min": 24999, "max": 29999 },\n  ...\n}'} spellCheck={false} aria-label="Tour JSON object" />
+                                <div className="ctf-json-import__actions"><span>Use a valid role-safe template for an AI or manual completion.</span><Button type="button" primaryClassName="btn" variant="outline" onClick={() => setJsonText(getTourJsonTemplate({ master: true }))} text="Get valid JSON object" /><Button type="button" primaryClassName="btn" variant="solid" color="primary" disabled={importingJson || !jsonText.trim()} onClick={() => { if (handleImportJson(jsonText)) { setShowJsonImport(false); setJsonText(""); } }} text={importingJson ? "Importing..." : "Apply JSON"} /></div>
+                            </section>
+                        )}
+
                         {step === 0 && (
                             <section className="ctf-section">
+                                <div className="ctf-json-import-note"><strong>Have a complete tour JSON?</strong><span>Use Paste JSON above to fill all supported fields, then review each step before submitting.</span></div>
                                 <label>Title
                                     <input
                                         value={form.title}
@@ -324,6 +337,8 @@ export default function CreateTourFormView({
                                     </label>
                                 </div>
                                 {fieldErr('price.min', touched, fieldErrors) || fieldErr('price.max', touched, fieldErrors)}
+                                <div className="ctf-row"><label>Currency<input value={form.price.currency || 'INR'} onChange={e => setAt('price.currency', e.target.value.toUpperCase())} /></label><label>Price source<input value={form.price.source || 'manual'} onChange={e => setAt('price.source', e.target.value)} /></label></div>
+                                <label><input type="checkbox" checked={!!form.price.isFinal} onChange={e => setAt('price.isFinal', e.target.checked)} /> Final price (not an estimate)</label>
                                 <fieldset>
                                     <legend>Seasonal Pricing</legend>
                                     {seasonOverlaps?.map((o, i) => (
@@ -336,6 +351,8 @@ export default function CreateTourFormView({
                                                 <input value={s.seasonName || ''} placeholder="name" onChange={e => updateArrayItem('seasonalPricing', idx, { ...s, seasonName: e.target.value })} />
                                                 <input type="date" value={s.startDate || ''} onChange={e => updateArrayItem('seasonalPricing', idx, { ...s, startDate: e.target.value })} />
                                                 <input type="date" value={s.endDate || ''} onChange={e => updateArrayItem('seasonalPricing', idx, { ...s, endDate: e.target.value })} />
+                                                <input type="number" min={0} value={s.min ?? form.price.min} placeholder="Min" onChange={e => updateArrayItem('seasonalPricing', idx, { ...s, min: Number(e.target.value) })} />
+                                                <input type="number" min={0} value={s.max ?? form.price.max} placeholder="Max" onChange={e => updateArrayItem('seasonalPricing', idx, { ...s, max: Number(e.target.value) })} />
                                                 <Button type="button" primaryClassName="btn" onClick={() => removeArrayItem('seasonalPricing', idx)} text="Remove" />
                                             </div>
                                         );
@@ -347,6 +364,27 @@ export default function CreateTourFormView({
 
                         {step === 4 && (
                             <section className="ctf-section">
+                                <fieldset><legend>Booking & logistics</legend>
+                                    <div className="ctf-row"><label>Meeting point<input value={form.meetingPoint || ''} onChange={e => setForm({ ...form, meetingPoint: e.target.value })} /></label><label>Maximum group size<input type="number" min={1} value={form.maxGroupSize} onChange={e => setForm({ ...form, maxGroupSize: Number(e.target.value) })} /></label></div>
+                                    <div className="ctf-row"><label>Total seats<input type="number" min={0} value={form.availability?.totalSeats ?? ''} onChange={e => setAt('availability.totalSeats', e.target.value === '' ? null : Number(e.target.value))} /></label><label>Seats available<input type="number" min={0} value={form.availability?.seatsAvailable ?? ''} onChange={e => setAt('availability.seatsAvailable', e.target.value === '' ? null : Number(e.target.value))} /></label></div>
+                                    <div className="ctf-row"><label>Minimum age<input type="number" min={0} value={form.minAge ?? ''} onChange={e => setForm({ ...form, minAge: e.target.value === '' ? null : Number(e.target.value) })} /></label><label>Maximum age<input type="number" min={0} value={form.maxAge ?? ''} onChange={e => setForm({ ...form, maxAge: e.target.value === '' ? null : Number(e.target.value) })} /></label></div>
+                                    <label>Languages<ChipInput value={form.languages || []} onChange={v => setForm({ ...form, languages: v })} placeholder="Add language" /></label>
+                                    <label>Inclusions<ChipInput value={form.inclusions || []} onChange={v => setForm({ ...form, inclusions: v })} placeholder="Add inclusion" /></label>
+                                    <label>Exclusions<ChipInput value={form.exclusions || []} onChange={v => setForm({ ...form, exclusions: v })} placeholder="Add exclusion" /></label>
+                                </fieldset>
+                                <fieldset><legend>Cancellation policy</legend>
+                                    <label>Policy<textarea value={form.cancellationPolicy || ''} onChange={e => setForm({ ...form, cancellationPolicy: e.target.value })} /></label>
+                                    <div className="ctf-row"><label>Free cancellation until<input value={form.cancellation?.freeCancellationUntil || ''} onChange={e => setAt('cancellation.freeCancellationUntil', e.target.value)} /></label><label>Refund percent<input type="number" min={0} max={100} value={form.cancellation?.refundPercent ?? 100} onChange={e => setAt('cancellation.refundPercent', Number(e.target.value))} /></label></div>
+                                    <label><input type="checkbox" checked={!!form.cancellation?.depositRequired} onChange={e => setAt('cancellation.depositRequired', e.target.checked)} /> Deposit required</label>
+                                    {form.cancellation?.depositRequired && <div className="ctf-row"><label>Deposit percent<input type="number" min={0} max={100} value={form.cancellation?.depositPercent ?? ''} onChange={e => setAt('cancellation.depositPercent', e.target.value === '' ? null : Number(e.target.value))} /></label><label>Deposit note<input value={form.cancellation?.depositNote || ''} onChange={e => setAt('cancellation.depositNote', e.target.value)} /></label></div>}
+                                    <label>Cancellation note<textarea value={form.cancellation?.note || ''} onChange={e => setAt('cancellation.note', e.target.value)} /></label>
+                                </fieldset>
+                                <fieldset><legend>Optional extras</legend>
+                                    {(form.extras || []).map((extra, idx) => <div className="ctf-array" key={idx}><input value={extra.title || ''} placeholder="Title" onChange={e => updateArrayItem('extras', idx, { ...extra, title: e.target.value })} /><input value={extra.description || ''} placeholder="Description" onChange={e => updateArrayItem('extras', idx, { ...extra, description: e.target.value })} /><input type="number" min={0} value={extra.price ?? 0} placeholder="Price" onChange={e => updateArrayItem('extras', idx, { ...extra, price: Number(e.target.value) })} /><input value={extra.currency || 'INR'} placeholder="Currency" onChange={e => updateArrayItem('extras', idx, { ...extra, currency: e.target.value })} /><input value={extra.priceLabel || ''} placeholder="e.g. Per person" onChange={e => updateArrayItem('extras', idx, { ...extra, priceLabel: e.target.value })} /><label><input type="checkbox" checked={!!extra.included} onChange={e => updateArrayItem('extras', idx, { ...extra, included: e.target.checked })} /> Included</label><Button type="button" primaryClassName="btn" onClick={() => removeArrayItem('extras', idx)} text="Remove" /></div>)}
+                                    <Button type="button" primaryClassName="btn" onClick={() => addArrayItem('extras', { title: '', description: '', price: 0, currency: 'INR', priceLabel: '', icon: '', included: false })} text="Add extra" />
+                                </fieldset>
+                                <fieldset><legend>Included stays</legend>{(form.includedStays || []).map((stay, idx) => <div className="ctf-array" key={idx}><input type="number" min={0} value={stay.nights ?? 1} placeholder="Nights" onChange={e => updateArrayItem('includedStays', idx, { ...stay, nights: Number(e.target.value) })} /><input value={stay.location || ''} placeholder="Location" onChange={e => updateArrayItem('includedStays', idx, { ...stay, location: e.target.value })} /><input value={stay.propertyName || ''} placeholder="Property name" onChange={e => updateArrayItem('includedStays', idx, { ...stay, propertyName: e.target.value })} /><input value={stay.propertyClass || ''} placeholder="Property class" onChange={e => updateArrayItem('includedStays', idx, { ...stay, propertyClass: e.target.value })} /><input value={stay.roomType || ''} placeholder="Room type" onChange={e => updateArrayItem('includedStays', idx, { ...stay, roomType: e.target.value })} /><Button type="button" primaryClassName="btn" onClick={() => removeArrayItem('includedStays', idx)} text="Remove" /></div>)}<Button type="button" primaryClassName="btn" onClick={() => addArrayItem('includedStays', { nights: 1, location: '', propertyName: '', propertyClass: '', roomType: '', meals: [], description: '' })} text="Add stay" /></fieldset>
+                                <fieldset><legend>Hotel upgrades</legend>{(form.hotelOptions || []).map((hotel, idx) => <div className="ctf-array" key={idx}><input value={hotel.title || ''} placeholder="Title" onChange={e => updateArrayItem('hotelOptions', idx, { ...hotel, title: e.target.value })} /><input value={hotel.description || ''} placeholder="Description" onChange={e => updateArrayItem('hotelOptions', idx, { ...hotel, description: e.target.value })} /><input value={hotel.costLabel || ''} placeholder="Cost label" onChange={e => updateArrayItem('hotelOptions', idx, { ...hotel, costLabel: e.target.value })} /><input value={hotel.cost || ''} placeholder="Cost" onChange={e => updateArrayItem('hotelOptions', idx, { ...hotel, cost: e.target.value })} /><label><input type="checkbox" checked={!!hotel.recommended} onChange={e => updateArrayItem('hotelOptions', idx, { ...hotel, recommended: e.target.checked })} /> Recommended</label><Button type="button" primaryClassName="btn" onClick={() => removeArrayItem('hotelOptions', idx)} text="Remove" /></div>)}<Button type="button" primaryClassName="btn" onClick={() => addArrayItem('hotelOptions', { title: '', description: '', costLabel: 'Upgrade cost', cost: '', recommended: false })} text="Add hotel upgrade" /></fieldset>
                                 <label>Description<textarea value={form.desc} onChange={e => setForm({ ...form, desc: e.target.value })} required /></label>
 
                                 <fieldset>
@@ -412,11 +450,6 @@ export default function CreateTourFormView({
                                     />
                                 </label>
                                 {fieldErr('desc', touched, fieldErrors)}
-                            </section>
-                        )}
-
-                        {step === 6 && (
-                            <section className="ctf-section">
                                 <label>Tags<input value={(form.tags || []).join(', ')} onChange={e => setForm({ ...form, tags: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })} /></label>
                                 <label><input type="checkbox" checked={!!form.featured} onChange={e => setForm({ ...form, featured: e.target.checked })} /> Featured</label>
                                 <label>Status
@@ -426,6 +459,13 @@ export default function CreateTourFormView({
                                         <option value="cancelled">cancelled</option>
                                     </select>
                                 </label>
+                            </section>
+                        )}
+
+                        {step === 6 && (
+                            <section className="ctf-section">
+                                <SubTitle text="Review & Submit" />
+                                <RecordReview data={form} title="Complete tour preview" description="Check every tour value below. Use Back to make changes before submitting." />
                             </section>
                         )}
                     </form>

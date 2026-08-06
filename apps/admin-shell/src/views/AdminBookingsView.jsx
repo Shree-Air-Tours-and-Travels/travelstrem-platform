@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { EmptyState } from "@packages/trem-ui";
+import { EmptyState, Spinner } from "@packages/trem-ui";
 import "./AdminBookingsView.scss";
 
 const STATUSES = [
@@ -137,8 +137,7 @@ export default function AdminBookingsView({ bookings, loading, onViewBooking }) 
 
       {loading ? (
         <div className="abv__loading">
-          <div className="abv__spinner" />
-          <span>Loading bookings...</span>
+          <Spinner label="Loading bookings..." />
         </div>
       ) : paginated.length > 0 ? (
         <>

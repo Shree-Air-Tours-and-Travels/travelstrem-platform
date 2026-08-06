@@ -6,6 +6,19 @@
   color: var(--text);
 }
 
+.auth-trem__activation-result {
+  display: grid;
+  justify-items: start;
+  gap: 1rem;
+  color: var(--color-text-primary);
+
+  p {
+    margin: 0;
+    color: var(--color-text-secondary);
+    line-height: 1.55;
+  }
+}
+
 .auth-trem {
   min-height: calc(100dvh - 77px);
   padding: clamp(24px, 5vw, 64px);
@@ -481,6 +494,36 @@
     margin-top: 14px;
     text-align: center;
     color: var(--muted);
+  }
+
+  &__access-request {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: $font-size-sm;
+    text-align: center;
+
+    a {
+      color: var(--color-primary);
+      font-weight: $font-semibold;
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
+
+      &:focus-visible {
+        border-radius: 4px;
+        outline: 3px solid var(--primary-soft);
+        outline-offset: 2px;
+      }
+    }
   }
 
   &__config-error {

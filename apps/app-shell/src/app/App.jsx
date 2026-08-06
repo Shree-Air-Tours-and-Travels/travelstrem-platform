@@ -17,6 +17,7 @@ import {
 import "../styles/global.scss";
 
 const TrevioApp = React.lazy(() => import("trevio/App"));
+const TrevistaApp = React.lazy(() => import("trevista/App"));
 const EmbeddedBookingEngine = React.lazy(() => import("bookingEngine/EmbeddedApp"));
 
 class RemoteBoundary extends React.Component {
@@ -220,9 +221,11 @@ function AppShell() {
 
   const remoteElement = destination.renderer === "trevio"
     ? <TrevioApp embedded userSession={session} basename={destination.path} />
-    : destination.renderer === "bookingEngine"
-      ? <EmbeddedBookingEngine />
-      : null;
+    : destination.renderer === "trevista"
+      ? <TrevistaApp embedded userSession={session} />
+      : destination.renderer === "bookingEngine"
+        ? <EmbeddedBookingEngine />
+        : null;
 
   return (
     <div className={`dash-layout${sidebarCollapsed ? " dash-layout--sidebar-collapsed" : ""}`}>

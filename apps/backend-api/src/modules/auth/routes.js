@@ -18,6 +18,7 @@ router.post("/login", validateLogin, controller.login);
 router.post("/verify-otp", controller.verifyLoginOtp);
 router.post("/resend-otp", controller.resendLoginOtp);
 router.post("/admin-registration-otp", controller.requestAdminRegistrationOtp);
+router.post("/verify-admin-registration-otp", controller.verifyAdminRegistrationOtp);
 router.post("/partner-agencies/apply", controller.applyPartnerAgency);
 router.get("/partner-agencies/check", controller.checkPartnerAgency);
 router.get("/partner-agencies", authMiddleware, controller.listPartnerAgencies);

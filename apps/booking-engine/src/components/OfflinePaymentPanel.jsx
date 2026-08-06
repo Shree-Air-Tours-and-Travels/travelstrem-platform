@@ -27,7 +27,7 @@ export default function OfflinePaymentPanel({ booking, onSubmit, submitting }) {
     return () => URL.revokeObjectURL(objectUrl);
   }, [screenshot]);
 
-  if (booking?.product !== "trevio") return null;
+  if (!["trevio", "trevista"].includes(booking?.product)) return null;
 
   const canSubmit = booking.status === "AWAITING_TOKEN_PAYMENT" && paymentStatus === "TOKEN_PENDING";
   const chooseScreenshot = (file) => {

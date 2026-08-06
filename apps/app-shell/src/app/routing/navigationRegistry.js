@@ -1,5 +1,5 @@
 const ID_PATTERN = /^[a-z0-9][a-z0-9._-]{0,63}$/i;
-const RENDERERS = new Set(["app-shell", "trevio", "bookingEngine"]);
+const RENDERERS = new Set(["app-shell", "trevio", "trevista", "bookingEngine"]);
 const KINDS = new Set(["tab", "remote", "internal", "external"]);
 
 export const FALLBACK_NAVIGATION_CONFIG = {
@@ -13,6 +13,7 @@ export const FALLBACK_NAVIGATION_CONFIG = {
     { id: "favorites", kind: "tab", renderer: "app-shell", tab: "favorites", path: "/", activeId: "favorites" },
     { id: "profile", kind: "tab", renderer: "app-shell", tab: "profile", path: "/", activeId: "profile" },
     { id: "trevio", kind: "remote", renderer: "trevio", tab: "trevio", product: "trevio", path: "/", activeId: "trips", patterns: ["/trevio/*", "/trip/*"] },
+    { id: "trevista", kind: "remote", renderer: "trevista", tab: "trevista", product: "trevista", path: "/", activeId: "tours", patterns: ["/trevista/*", "/tour/*"] },
     { id: "booking-engine", kind: "remote", renderer: "bookingEngine", path: "/booking", activeId: "bookings", patterns: ["/booking/*"] },
   ],
 };

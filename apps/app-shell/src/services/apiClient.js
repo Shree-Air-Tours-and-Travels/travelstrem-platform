@@ -17,12 +17,15 @@ const baseURL = (BASE.endsWith("/api") ? BASE : `${BASE}/api`).replace(/([^:]\/)
 const AUTH_STORAGE_PREFIX = "appShellTREM";
 
 setCsrfBaseUrl(BASE.endsWith("/api") ? BASE.slice(0, -4) : BASE || "");
-if (typeof window !== "undefined") window.__TREM_AUTH_STORAGE_PREFIX__ = AUTH_STORAGE_PREFIX;
+if (typeof window !== "undefined") {
+  window.__TREM_AUTH_STORAGE_PREFIX__ = AUTH_STORAGE_PREFIX;
+  window.__TREM_AUTH_PORTAL__ = "customer";
+}
 
 const api = axios.create({
   baseURL,
   withCredentials: true,
-  headers: { "Content-Type": "application/json" },
+  headers: { "Content-Type": "application/json", "X-Travelstrem-Portal": "customer" },
 });
 
 setFetchDataApiClient(api);

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Breadcrumbs, GlobalLoader, SubTitle, Paragraph } from "@packages/trem-ui";
 import { getAgentTourById } from "../../../../services/agentService";
 import TourView from "../TourView";
+import CreateTourForm from "../CreateTourForm";
 import pageConfig from "./manageTourPage.config.json";
 
 export default function ManageTourPage() {
@@ -11,6 +12,7 @@ export default function ManageTourPage() {
     const [tour, setTour] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [editOpen, setEditOpen] = useState(false);
 
     useEffect(() => {
         if (!tourId) return;
@@ -45,8 +47,18 @@ export default function ManageTourPage() {
                 variant="page"
                 tour={tour}
                 onClose={() => navigate("/agent/services/tours")}
-                onEdit={() => navigate(`/agent/services/tours/edit/${tourId}`)}
+                onEdit={() => setEditOpen(true)}
             />
+            {editOpen && (
+                <CreateTourForm
+                    initial={tour}
+                    onCancel={() => setEditOpen(false)}
+                    onSaved={(savedTour) => {
+                        setTour(savedTour || tour);
+                        setEditOpen(false);
+                    }}
+                />
+            )}
         </section>
     );
 }

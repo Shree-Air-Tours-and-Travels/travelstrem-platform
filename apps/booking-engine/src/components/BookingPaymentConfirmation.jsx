@@ -17,10 +17,11 @@ const money = (amount, currency = "INR") => {
   }
 };
 
-export default function BookingPaymentConfirmation({ booking, onGoToDashboard }) {
+export default function BookingPaymentConfirmation({ booking, product, onGoToDashboard }) {
   const title = booking?.trip?.title || booking?.tour?.title || "Your trip";
   const reference = booking?.bookingRef || booking?.id || booking?._id || "—";
   const tokenAmount = money(booking?.tokenAmount, booking?.priceSnapshot?.currency);
+  const isTrevio = product === "trevio";
 
   return (
     <div className="be-confirmation">
@@ -32,9 +33,11 @@ export default function BookingPaymentConfirmation({ booking, onGoToDashboard })
         </div>
         <div>
           <span className="be-confirmation__eyebrow">Request received</span>
-          <h2 className="be-confirmation__title">Your booking is created</h2>
+          <h2 className="be-confirmation__title">{isTrevio ? "Your booking is created" : "Your booking request is created"}</h2>
           <p className="be-confirmation__subtitle">
-            <strong>{title}</strong> is reserved while you complete the token payment.
+            {isTrevio
+              ? <><strong>{title}</strong> is reserved while you complete the token payment.</>
+              : <><strong>{title}</strong> is saved — our travel specialist will prepare a personalized quote for you.</>}
           </p>
         </div>
       </header>
@@ -55,8 +58,8 @@ export default function BookingPaymentConfirmation({ booking, onGoToDashboard })
             </div>
             <div>
               <span className="be-confirmation__status-icon is-pending" aria-hidden="true" />
-              <span><small>Next step</small><strong>Upload token payment proof</strong></span>
-              {tokenAmount ? <b>{tokenAmount}</b> : null}
+              <span><small>Next step</small><strong>{isTrevio ? "Upload token payment proof" : "Awaiting your personalized quote"}</strong></span>
+              {isTrevio && tokenAmount ? <b>{tokenAmount}</b> : null}
             </div>
             <div>
               <span className="be-confirmation__status-icon" aria-hidden="true" />
@@ -65,12 +68,14 @@ export default function BookingPaymentConfirmation({ booking, onGoToDashboard })
           </div>
 
           <p className="be-confirmation__help">
-            Payment details and the one-step proof upload are available in your dashboard.
+            {isTrevio
+              ? "Payment details and the one-step proof upload are available in your dashboard."
+              : "Track your quote and payment status in your dashboard."}
           </p>
 
           {onGoToDashboard && (
             <button type="button" className="be-confirmation__btn be-confirmation__btn--dashboard" onClick={onGoToDashboard}>
-              Continue to payment
+              {isTrevio ? "Continue to payment" : "Track booking status"}
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M3.75 9h10.5M10 4.75 14.25 9 10 13.25" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </button>
           )}

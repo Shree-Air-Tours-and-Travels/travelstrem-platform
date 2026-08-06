@@ -17,7 +17,7 @@ export const FORM_STEPS = ["Basic", "Schedule", "Itinerary", "Pricing", "Logisti
 
 export const REQUIRED_TOUR_FIELDS = ["title", "city.from", "city.to", "distance", "period.days", "period.nights", "desc", "maxGroupSize", "price.min", "price.max"];
 
-export const VALID_TABS = new Set(["profile", "partnerAgency", "bookings", "settings"]);
+export const VALID_TABS = new Set(["dashboard", "agents", "customers", "reports", "deletions", "notifications", "profile", "partnerAgency", "bookings", "settings"]);
 
 export const TAB_WIDGET_MAP = {
     profile: "AgentProfile",
@@ -27,21 +27,33 @@ export const TAB_WIDGET_MAP = {
 };
 
 export const PATH_BY_TAB = {
+    dashboard: "/agent/dashboard",
+    agents: "/agent/agents",
+    customers: "/agent/customers",
+    reports: "/agent/reports",
+    deletions: "/agent/deletion-requests",
+    notifications: "/agent/notifications",
     profile: "/agent/profile",
     partnerAgency: "/agent/partner-agency",
     bookings: "/agent/bookings",
     settings: "/agent/settings",
 };
 
-export const AGENT_NAV_SECTIONS = [
+export const getAgentNavSections = (isPartnerAdmin = false) => [
     {
         id: "agent-workspace",
         title: "Workspace",
         items: [
+            { id: "dashboard", label: "Dashboard", icon: "home" },
+            { id: "services", label: isPartnerAdmin ? "Agency Trips" : "My Trips", icon: "map" },
+            ...(isPartnerAdmin ? [{ id: "agents", label: "Agents", icon: "users" }] : []),
+            { id: "customers", label: isPartnerAdmin ? "Customers" : "My Customers", icon: "user" },
+            ...(isPartnerAdmin ? [{ id: "reports", label: "Reports", icon: "chart" }, { id: "deletions", label: "Deletion Requests", icon: "trash" }] : []),
             { id: "profile", label: "Profile", icon: "user" },
-            { id: "partnerAgency", label: "Partner Agency", icon: "building2" },
+            ...(isPartnerAdmin ? [{ id: "partnerAgency", label: "Agency Profile", icon: "building2" }] : []),
             { id: "settings", label: "Settings", icon: "settings" },
             { id: "bookings", label: "Bookings", icon: "calendar" },
+            { id: "notifications", label: "Notifications", icon: "bell" },
         ],
     },
     {
@@ -54,6 +66,8 @@ export const AGENT_NAV_SECTIONS = [
         ],
     },
 ];
+
+export const AGENT_NAV_SECTIONS = getAgentNavSections(false);
 
 export const FALLBACK_PROFILE = {
     name: "Partner",

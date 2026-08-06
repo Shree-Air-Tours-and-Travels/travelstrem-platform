@@ -37,8 +37,8 @@
   },
   "scripts": {
     "prebuild": "node ../../scripts/sync-favicons.mjs agent-shell",
-    "dev": "cross-env PORT=3004 DISABLE_ESLINT_PLUGIN=true craco start",
-    "start": "cross-env PORT=3004 DISABLE_ESLINT_PLUGIN=true craco start",
+    "dev": "cross-env BROWSER=none PORT=3004 DISABLE_ESLINT_PLUGIN=true craco start",
+    "start": "cross-env BROWSER=none PORT=3004 DISABLE_ESLINT_PLUGIN=true craco start",
     "build": "cross-env DISABLE_ESLINT_PLUGIN=true craco build",
     "lint": "eslint --ext .js,.jsx src/",
     "test": "craco test --watchAll=false",

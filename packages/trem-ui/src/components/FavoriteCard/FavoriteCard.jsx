@@ -5,15 +5,16 @@ import "./FavoriteCard.styles.scss";
 
 const money = (value, currency = "INR") => {
   try {
-    return new Intl.NumberFormat("en-IN", { style: "currency", currency, maximumFractionDigits: 0 }).format(Number(value || 0));
+    return new Intl.NumberFormat("en-IN", { style: "currency", currency, maximumFractionDigits: 0 }).format(Number(value));
   } catch {
-    return `${currency} ${Number(value || 0).toLocaleString("en-IN")}`;
+    return `${currency} ${Number(value).toLocaleString("en-IN")}`;
   }
 };
 
 export default function FavoriteCard({ tour = {}, onView, onRemove, className }) {
   const image = tour.image || tour.photo || tour.photos?.[0];
-  const price = tour.price ?? tour.priceInfo?.min;
+  const price = Number(tour.price);
+  const hasPrice = Number.isFinite(price);
   const currency = tour.priceInfo?.currency;
   const location = tour.location || tour.address?.city || tour.city?.to || "";
   const duration = tour.duration || (tour.period?.days || tour.period?.nights
@@ -51,7 +52,7 @@ export default function FavoriteCard({ tour = {}, onView, onRemove, className })
           </p>
         )}
         <div className="fav-card__footer">
-          {price != null && (
+          {hasPrice && (
             <span className="fav-card__price"><small>Per person</small><strong>{money(price, currency)}</strong></span>
           )}
           {onView && (

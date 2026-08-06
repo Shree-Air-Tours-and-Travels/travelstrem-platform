@@ -3,6 +3,7 @@ import StatusBadge from "@packages/trem-ui/components/StatusBadge/StatusBadge.js
 import TimelineStepper from "@packages/trem-ui/components/TimelineStepper/TimelineStepper.jsx";
 import QuoteDisplay from "@packages/trem-ui/components/QuoteDisplay/QuoteDisplay.jsx";
 import Button from "@packages/trem-ui/components/Button/Button.jsx";
+import { formatTourLocation } from "../utils/format.js";
 
 const formatMoney = (v) => `₹${Number(v || 0).toLocaleString("en-IN")}`;
 const formatDate = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—";
@@ -41,7 +42,7 @@ export default function StatusTracker({ booking, product, onAcceptQuote, onRejec
   const tourData = product === "trevio" ? booking?.trip : booking?.tour;
   const tripTitle = tourData?.title || tourData?.name || "";
   const tripImage = tourData?.photo || tourData?.image || "";
-  const tripLocation = tourData?.city || tourData?.location || "";
+  const tripLocation = formatTourLocation(tourData || {});
   const tripDuration = tourData?.duration || "";
 
   const showPayButton = product !== "trevio" && ["PAYMENT_PENDING", "PARTIALLY_PAID"].includes(status);

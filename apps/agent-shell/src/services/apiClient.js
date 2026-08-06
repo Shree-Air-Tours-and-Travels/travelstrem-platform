@@ -15,12 +15,15 @@ let RAW_BASE = getConfiguredApiBase();
 const BASE = normalizeBase(RAW_BASE) ?? "";
 const baseURL = (BASE.endsWith("/api") ? BASE : `${BASE}/api`).replace(/([^:]\/)\/+/g, "$1");
 const AUTH_STORAGE_PREFIX = "agentTREM";
-if (typeof window !== "undefined") window.__TREM_AUTH_STORAGE_PREFIX__ = AUTH_STORAGE_PREFIX;
+if (typeof window !== "undefined") {
+    window.__TREM_AUTH_STORAGE_PREFIX__ = AUTH_STORAGE_PREFIX;
+    window.__TREM_AUTH_PORTAL__ = "partner";
+}
 
 const api = axios.create({
     baseURL,
     withCredentials: true,
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "X-Travelstrem-Portal": "partner" },
 });
 
 setFetchDataApiClient(api);

@@ -9,11 +9,9 @@
     "build": "node --check src/server.js",
     "start": "cross-env NODE_ENV=production node src/server.js",
     "start:prod": "cross-env NODE_ENV=production node src/server.js",
-    "seed:tours:populate": "cross-env USE_DOTENV=true node src/scripts/populateTours.js",
-    "seed:master-data": "cross-env USE_DOTENV=true node src/scripts/seed-master-data.js",
-    "seed:trevio-trips": "cross-env USE_DOTENV=true node src/scripts/seed-trevio-trips.js",
-    "migrate:trevio-payments": "cross-env USE_DOTENV=true node src/scripts/migrate-trevio-offline-payments.js",
-    "test": "cross-env NODE_ENV=test jest --runInBand --passWithNoTests"
+    "test": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --runInBand --passWithNoTests"
+    ,"seed:tenancy": "cross-env NODE_ENV=development USE_DOTENV=true node src/scripts/seedTenancy.js"
+    ,"migrate:tenancy": "cross-env NODE_ENV=development USE_DOTENV=true node src/scripts/migrateTenancy.js"
   },
   "dependencies": {
     "axios": "^1.11.0",

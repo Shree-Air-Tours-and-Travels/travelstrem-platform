@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo, useRef, useCallback } from "react"
 import { Route, Routes, Navigate, useNavigate } from "react-router-dom";
 import { fetchData, redirectToGlobalAuth, setComponentDataFetcher, createProductAuth, buildGlobalAppShellUrl, getGlobalAuthBaseUrl, getCurrentReturnUrl, requestShellNavigation } from "@packages/trem-utils";
 import { emit, registerSessionCacheClearer } from "@packages/trem-events";
-import { FavoritesProvider, GlobalLoader, ErrorState, ScrollToTop, TourDetailsPage, useFavoritesContext } from "@packages/trem-ui";
+import { FavoritesProvider, ErrorState, ScrollToTop, TourDetailsPage, useFavoritesContext } from "@packages/trem-ui";
 import { Analytics } from "@vercel/analytics/react";
 import Shell from "./Shell";
 import Home from "../views/Home";
@@ -42,17 +42,17 @@ function AppShell({ embedded, session, headerConfig, pageModel, trips, activeFil
       <ScrollToTop />
       {embedded ? (
         <Routes>
-          <Route index element={pageModel ? <Home trips={trips} internationalTrips={pageModel.internationalTrips} featuredTrips={pageModel.featuredTrips} pageModel={pageModel} activeFilter={activeFilter} loadingTrips={loadingTrips} onFilterChange={onFilterChange} /> : <GlobalLoader visible text="Loading trips" />} />
-          <Route path="trip/:tripRef" element={<TourDetailsPage appKey="trevio" productType="trip" bookingBasePath="/booking" />} />
+          <Route index element={<Home user={session?.user} trips={trips} pageModel={pageModel} activeFilter={activeFilter} loadingTrips={loadingTrips} onFilterChange={onFilterChange} />} />
+          <Route path="trip/:tripRef" element={<TourDetailsPage userSession={session} appKey="trevio" productType="trip" bookingBasePath="/booking" />} />
           <Route path="trip/:tripRef/book" element={<TripBookingPage appKey="trevio" embedded />} />
-          <Route path=":tripRef" element={<TourDetailsPage appKey="trevio" productType="trip" bookingBasePath="/booking" />} />
+          <Route path=":tripRef" element={<TourDetailsPage userSession={session} appKey="trevio" productType="trip" bookingBasePath="/booking" />} />
           <Route path=":tripRef/book" element={<TripBookingPage appKey="trevio" embedded />} />
         </Routes>
       ) : (
         <Routes>
           <Route path="/" element={<Navigate to="/trevio" replace />} />
-          <Route path="/trevio" element={pageModel ? <Home trips={trips} internationalTrips={pageModel.internationalTrips} featuredTrips={pageModel.featuredTrips} pageModel={pageModel} activeFilter={activeFilter} loadingTrips={loadingTrips} onFilterChange={onFilterChange} /> : <GlobalLoader visible text="Loading trips" />} />
-          <Route path="/trevio/trip/:tripRef" element={<TourDetailsPage appKey="trevio" productType="trip" />} />
+          <Route path="/trevio" element={<Home user={session?.user} trips={trips} pageModel={pageModel} activeFilter={activeFilter} loadingTrips={loadingTrips} onFilterChange={onFilterChange} />} />
+          <Route path="/trevio/trip/:tripRef" element={<TourDetailsPage userSession={session} appKey="trevio" productType="trip" />} />
           <Route path="/trevio/trip/:tripRef/book" element={<TripBookingPage appKey="trevio" />} />
         </Routes>
       )}
@@ -205,7 +205,6 @@ export default function App({ embedded = false, userSession: externalSession = n
       />
     );
   }
-  if (!embedded && state.loading) return <GlobalLoader visible text="Loading Trevio" />;
   if (!embedded && !state.session?.isAuthenticated) {
     return <div className="app-status">Redirecting to TravelsTrem secure login...</div>;
   }
@@ -214,7 +213,6 @@ export default function App({ embedded = false, userSession: externalSession = n
 
   return (
     <>
-      <GlobalLoader visible={state.loading} />
       <div className={embedded ? "trevio-app trevio-app--embedded" : "trevio-app"}>
         <FavoritesProvider product="trevio">
           <AppShell

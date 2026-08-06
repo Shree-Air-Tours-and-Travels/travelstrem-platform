@@ -53,7 +53,7 @@ module.exports = {
         configure: (webpackConfig) => {
             // Keep runtime, chunk and Module Federation assets independent of
             // the current details/booking route being loaded directly.
-            webpackConfig.output.publicPath = "/";
+            webpackConfig.output.publicPath = "auto";
             webpackConfig.output.uniqueName = moduleFederationConfig.name;
             webpackConfig.optimization.runtimeChunk = false;
             webpackConfig.resolve.alias = {

@@ -52,23 +52,51 @@ export default function Dropdown({
   hoverable = true,
   className = "",
   menuClassName = "",
+  portalClassName = "",
   onToggle,
   variant = "default",
   maxHeight: propMaxHeight,
+  width: propWidth,
+  portalWidth,
   searchPlaceholder = "Search...",
   position = "auto",
+  label,
+  placeholder = "Select...",
+  value,
+  onChange,
+  error,
+  disabled = false,
+  renderItem: renderItemProp,
+  menuFooter,
+  portalZIndex,
 }) {
   const [open, setOpen] = useState(false);
   const [menuStyle, setMenuStyle] = useState({});
   const [search, setSearch] = useState("");
   const wrapperRef = useRef(null);
-  const menuRef = useRef(null);
+  const menuWrapperRef = useRef(null);
   const searchRef = useRef(null);
-  const isMounted = useRef(false);
 
-  const isSearchable = variant === "searchable";
-  const isScrollable = variant === "scrollable" || variant === "searchable";
+  const isSelect = variant === "select";
+  const useBuiltInTrigger = isSelect || !trigger;
+  const isAutoWidth = propWidth === "auto";
+  const fixedWidth = propWidth != null && !isAutoWidth;
+  const autoSearch = items.length > 10;
+  const isSearchable = variant === "searchable" || autoSearch;
+  const isScrollable = isSelect || variant === "scrollable" || variant === "searchable" || autoSearch;
   const showBottomSheet = isMobile() && open;
+
+  const selectedItem = useMemo(() => {
+    if (value === undefined || value === null || value === "") return null;
+    const key = String(value);
+    return items.find((item) => !item.separator && (String(item.value) === key || String(item.id) === key)) || null;
+  }, [items, value]);
+
+  const menuWidth = useMemo(() => {
+    const width = portalWidth ?? propWidth;
+    if (width == null || width === "auto") return 0;
+    return typeof width === "number" ? width : (parseInt(width, 10) || 240);
+  }, [portalWidth, propWidth]);
 
   const filteredItems = useMemo(() => {
     if (!isSearchable || !search) return items;
@@ -84,18 +112,27 @@ export default function Dropdown({
       setSearch("");
       return;
     }
-    isMounted.current = true;
     if (isSearchable && searchRef.current) {
       setTimeout(() => searchRef.current?.focus(), 50);
     }
   }, [open, isSearchable]);
 
+  const updatePosition = useCallback(() => {
+    if (!wrapperRef.current) return;
+    const vw = window.innerWidth;
+    const triggerWidth = wrapperRef.current.offsetWidth;
+    let w = menuWidth;
+    if (!w) {
+      w = Math.min(triggerWidth, vw - (VIEWPORT_MARGIN * 2));
+    }
+    const pos = calcPosition(wrapperRef.current, w, position !== "top");
+    setMenuStyle({ ...pos, width: w });
+  }, [menuWidth, position]);
+
   useEffect(() => {
     if (!open || showBottomSheet || !wrapperRef.current) return;
-    const menuWidth = Math.min(Math.max(wrapperRef.current.offsetWidth, 180), 360);
-    const pos = calcPosition(wrapperRef.current, menuWidth, position !== "top");
-    setMenuStyle(pos);
-  }, [open, showBottomSheet, position]);
+    updatePosition();
+  }, [open, showBottomSheet, updatePosition]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -104,19 +141,19 @@ export default function Dropdown({
         setOpen(false);
         return;
       }
-      if (isSearchable && (e.key === "Escape" || e.key === "Enter")) {
-        if (e.key === "Enter" && filteredItems.length === 1) {
-          const first = filteredItems[0];
-          if (!first?.separator && !first?.disabled) {
-            handleItemClick(first);
-          }
+      if (isSearchable && e.key === "Enter" && filteredItems.length === 1) {
+        const first = filteredItems[0];
+        if (!first?.separator && !first?.disabled) {
+          handleItemClick(first);
         }
-        return;
       }
     }
     function onClick(e) {
       if (showBottomSheet) return;
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target) && menuRef.current && !menuRef.current.contains(e.target)) {
+      if (
+        wrapperRef.current && !wrapperRef.current.contains(e.target) &&
+        menuWrapperRef.current && !menuWrapperRef.current.contains(e.target)
+      ) {
         setOpen(false);
       }
     }
@@ -130,69 +167,113 @@ export default function Dropdown({
 
   useEffect(() => {
     if (!open || showBottomSheet) return;
-    function onScrollOrResize() {
-      if (!wrapperRef.current) return;
-      const menuWidth = Math.min(Math.max(wrapperRef.current.offsetWidth, 180), 360);
-      const pos = calcPosition(wrapperRef.current, menuWidth, position !== "top");
-      setMenuStyle(pos);
-    }
-    window.addEventListener("scroll", onScrollOrResize, true);
-    window.addEventListener("resize", onScrollOrResize);
+    window.addEventListener("scroll", updatePosition, true);
+    window.addEventListener("resize", updatePosition);
     return () => {
-      window.removeEventListener("scroll", onScrollOrResize, true);
-      window.removeEventListener("resize", onScrollOrResize);
+      window.removeEventListener("scroll", updatePosition, true);
+      window.removeEventListener("resize", updatePosition);
     };
-  }, [open, showBottomSheet, position]);
+  }, [open, showBottomSheet, updatePosition]);
 
   const handleToggle = useCallback(() => {
+    if (disabled) return;
     setOpen((s) => {
       const next = !s;
       onToggle?.(next);
       if (next && wrapperRef.current) {
-        requestAnimationFrame(() => {
-          const wrapper = wrapperRef.current;
-          if (!wrapper) return;
-          const menuWidth = Math.min(Math.max(wrapper.offsetWidth, 180), 360);
-          const pos = calcPosition(wrapper, menuWidth, position !== "top");
-          setMenuStyle(pos);
-        });
+        requestAnimationFrame(updatePosition);
       }
       return next;
     });
-  }, [onToggle, position]);
+  }, [onToggle, updatePosition]);
 
   const handleItemClick = useCallback((item) => {
     if (item?.disabled) return;
     item.onClick?.();
+    onChange?.(item);
     if (closeOnSelect) setOpen(false);
-  }, [closeOnSelect]);
+  }, [closeOnSelect, onChange]);
 
-  const triggerEl = typeof trigger === "function" ? trigger({ open, isActive }) : trigger;
+  const triggerEl = useBuiltInTrigger
+    ? (
+      <Button
+        type="button"
+        variant="text"
+        primaryClassName={`trem-dropdown__select${error ? " trem-dropdown__select--error" : ""}`}
+        aria-invalid={!!error}
+        disabled={disabled}
+      >
+        <span className="trem-dropdown__select-inner">
+          {label ? <span className="trem-dropdown__select-label">{label}</span> : null}
+          <span className="trem-dropdown__select-value">
+            {selectedItem ? (selectedItem.label || selectedItem.value || placeholder) : placeholder}
+          </span>
+        </span>
+        <Icon name="chevronDown" className={`trem-dropdown__select-chevron${open ? " is-open" : ""}`} />
+      </Button>
+    )
+    : (typeof trigger === "function" ? trigger({ open, isActive }) : trigger);
+
+  const resolvedWidth = fixedWidth
+    ? (typeof propWidth === "number" ? `${propWidth}px` : propWidth)
+    : undefined;
+
+  const wrapperStyle = useMemo(() => {
+    if (propWidth == null) return undefined;
+    if (isAutoWidth) {
+      return useBuiltInTrigger
+        ? { width: "auto", display: "inline-flex", alignSelf: "flex-start" }
+        : { width: "auto", alignSelf: "flex-start" };
+    }
+    return { width: resolvedWidth };
+  }, [propWidth, isAutoWidth, resolvedWidth, useBuiltInTrigger]);
+
+  const menuPositionStyle = {
+    ...menuStyle,
+    ...(resolvedWidth ? { width: resolvedWidth } : {}),
+    ...(portalZIndex != null ? { zIndex: portalZIndex } : {}),
+  };
+
+  const menuListStyle = {
+    maxHeight: propMaxHeight || (isScrollable ? menuStyle.maxHeight || 240 : undefined),
+    overflowY: isScrollable || propMaxHeight ? "auto" : undefined,
+  };
 
   const menuContent = (
-    <ul
-      className={`trem-dropdown__menu ${menuClassName}`.trim()}
-      role="menu"
-      ref={menuRef}
-      style={{
-        ...menuStyle,
-        maxHeight: propMaxHeight || (isScrollable ? menuStyle.maxHeight || 240 : undefined),
-        overflowY: isScrollable || propMaxHeight ? "auto" : undefined,
-      }}
+    <div
+      className={`trem-dropdown__menu-wrapper trem-dropdown__menu-wrapper--matched ${portalClassName}`.trim()}
+      ref={menuWrapperRef}
+      style={menuPositionStyle}
     >
       {isSearchable && (
-        <li className="trem-dropdown__search-item" role="none">
-          <div className="trem-dropdown__search">
-            <Icon name="search" />
-            <input ref={searchRef} type="text" placeholder={searchPlaceholder} value={search} onChange={(e) => setSearch(e.target.value)} className="trem-dropdown__search-input" />
-          </div>
-        </li>
+        <div className="trem-dropdown__search">
+          <Icon name="search" />
+          <input
+            ref={searchRef}
+            type="text"
+            placeholder={searchPlaceholder}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="trem-dropdown__search-input"
+          />
+        </div>
       )}
-      {filteredItems.map((item, index) => renderItem(item, index))}
-    </ul>
+      <ul className={`trem-dropdown__menu ${menuClassName}`.trim()} role="menu" style={menuListStyle}>
+        {filteredItems.map((item, index) =>
+          item.separator || !renderItemProp
+            ? renderDefaultItem(item, index)
+            : (
+              <li role="none" key={item.key || item.id || `item-${index}`}>
+                {renderItemProp(item, index)}
+              </li>
+            )
+        )}
+      </ul>
+      {menuFooter}
+    </div>
   );
 
-  function renderItem(item, index) {
+  function renderDefaultItem(item, index) {
     if (item.separator) {
       return <li key={`sep-${index}`}><hr className="trem-dropdown__separator" /></li>;
     }
@@ -202,7 +283,7 @@ export default function Dropdown({
           variant="text"
           text={item.label}
           iconLeft={typeof item.icon === "string" ? item.icon : undefined}
-          primaryClassName={`trem-dropdown__item${item.active ? " is-active" : ""}${item.disabled ? " is-disabled" : ""}`}
+          primaryClassName={`trem-dropdown__item${item.active || (isSelect && selectedItem && String(item.value ?? item.id) === String(value)) ? " is-active" : ""}${item.disabled ? " is-disabled" : ""}`}
           disabled={item.disabled}
           role="menuitem"
           onClick={() => handleItemClick(item)}
@@ -214,24 +295,41 @@ export default function Dropdown({
   return (
     <>
       <div
-        className={`trem-dropdown ${open ? "is-open" : ""} ${hoverable ? "is-hoverable" : ""} ${isActive ? "is-active-trigger" : ""} align-${align} ${className}`.trim()}
+        className={`trem-dropdown ${open ? "is-open" : ""} ${hoverable ? "is-hoverable" : ""} ${isActive ? "is-active-trigger" : ""} ${useBuiltInTrigger ? "trem-dropdown--select" : ""} align-${align} ${className}`.trim()}
         ref={wrapperRef}
+        style={wrapperStyle}
       >
         <div className="trem-dropdown__trigger" onClick={handleToggle} role="button" tabIndex={0} aria-expanded={open}>
           {triggerEl}
         </div>
       </div>
       {open && !showBottomSheet && createPortal(menuContent, document.body)}
-      <BottomSheet open={showBottomSheet} onClose={() => setOpen(false)}>
+      <BottomSheet open={showBottomSheet} onClose={() => setOpen(false)} className={portalClassName}>
         {isSearchable && (
           <div className="trem-dropdown__search">
             <Icon name="search" />
-            <input ref={searchRef} type="text" placeholder={searchPlaceholder} value={search} onChange={(e) => setSearch(e.target.value)} className="trem-dropdown__search-input" />
+            <input
+              ref={searchRef}
+              type="text"
+              placeholder={searchPlaceholder}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="trem-dropdown__search-input"
+            />
           </div>
         )}
         <ul className={`trem-dropdown__menu ${menuClassName}`.trim()} role="menu">
-          {filteredItems.map((item, index) => renderItem(item, index))}
+          {filteredItems.map((item, index) =>
+            item.separator || !renderItemProp
+              ? renderDefaultItem(item, index)
+              : (
+                <li role="none" key={item.key || item.id || `item-${index}`}>
+                  {renderItemProp(item, index)}
+                </li>
+              )
+          )}
         </ul>
+        {menuFooter}
       </BottomSheet>
     </>
   );

@@ -1,16 +1,16 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const TRAVELLER_FIELDS = [
-  { name: "title", label: "Title", type: "select", options: [{ value: "Mr", label: "Mr" }, { value: "Mrs", label: "Mrs" }, { value: "Ms", label: "Ms" }], required: true },
+  { name: "title", label: "Title", type: "select", width: "auto", options: [{ value: "Mr", label: "Mr" }, { value: "Mrs", label: "Mrs" }, { value: "Ms", label: "Ms" }], required: true },
   { name: "firstName", label: "First Name", type: "text", required: true },
   { name: "lastName", label: "Last Name", type: "text", required: true },
-  { name: "gender", label: "Gender", type: "select", options: [{ value: "male", label: "Male" }, { value: "female", label: "Female" }], required: true },
+  { name: "gender", label: "Gender", type: "select", width: "auto", options: [{ value: "male", label: "Male" }, { value: "female", label: "Female" }], required: true },
   { name: "dob", label: "Date of Birth", type: "date", datePickerMode: "birthdate", required: true },
-  { name: "nationality", label: "Nationality", type: "text", required: true },
-  { name: "email", label: "Email", type: "email", required: true },
-  { name: "phone", label: "Phone", type: "tel", required: true },
-  { name: "passportNumber", label: "Passport Number", type: "text" },
-  { name: "emergencyContact", label: "Emergency Contact", type: "tel" },
+  { name: "nationality", label: "Nationality", type: "text", required: true, wide: true },
+  { name: "email", label: "Email", type: "email", required: true, wide: true },
+  { name: "phone", label: "Phone", type: "tel", required: true, wide: true },
+  { name: "passportNumber", label: "Passport Number", type: "text", wide: true },
+  { name: "emergencyContact", label: "Emergency Contact", type: "tel", wide: true },
 ];
 
 const TRAVELLER_PREFERENCE_FIELDS = [
@@ -39,16 +39,34 @@ const STEP_CONFIG = {
     { key: "complete", label: "Complete" },
   ],
   trevista: [
-    { key: "trip", label: "Trip Details" },
+    { key: "departure", label: "Departure" },
+    { key: "customize", label: "Customize" },
     { key: "travellers", label: "Travellers" },
-    { key: "review", label: "Review & Submit" },
+    { key: "review", label: "Review" },
+    { key: "checkout", label: "Payment" },
+    { key: "complete", label: "Complete" },
   ],
 };
 
 const initialState = {
   currentStep: 0,
   product: "trevista",
-  trip: { startDate: "", endDate: "", adults: 1, children: 0, infants: 0, roomType: "" },
+  trip: {
+    startDate: "",
+    endDate: "",
+    adults: 1,
+    children: 0,
+    infants: 0,
+    roomType: "",
+    roomPrice: 0,
+    transport: "",
+    transportPrice: 0,
+    departureCity: "",
+    addFlights: "",
+    mealPreference: "",
+    bedPreference: "",
+    notes: "",
+  },
   travellers: [emptyTraveller(0)],
   contact: { name: "", email: "", phone: "" },
   errors: {},
@@ -139,8 +157,8 @@ const bookingSlice = createSlice({
     hydrateFromProduct(state, action) {
       const product = action.payload;
       if (!product) return;
-      state.trip.startDate = product.startDateISO || state.trip.startDate;
-      state.trip.endDate = product.endDateISO || state.trip.endDate;
+      state.trip.startDate = product.startDateISO || product.startDate || state.trip.startDate;
+      state.trip.endDate = product.endDateISO || product.endDate || state.trip.endDate;
       state.trip.pricePerPerson = product.price || state.trip.pricePerPerson;
       state.trip.tokenAmount = product.token || state.trip.tokenAmount;
       state.trip.roomType = "";

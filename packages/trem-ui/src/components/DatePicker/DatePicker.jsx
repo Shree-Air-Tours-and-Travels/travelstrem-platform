@@ -1,6 +1,10 @@
 import React, { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import BottomSheet from "../BottomSheet/BottomSheet.jsx";
 import "./DatePicker.styles.scss";
+
+const MENU_GAP = 8;
+const VIEWPORT_MARGIN = 12;
 
 const DAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 const MONTHS = [
@@ -88,8 +92,10 @@ export default function DatePicker({
 
   const [open, setOpen] = useState(false);
   const [viewDate, setViewDate] = useState(initialViewDate);
+  const [menuStyle, setMenuStyle] = useState({});
   const containerRef = useRef(null);
-  const inputRef = useRef(null);
+  const triggerRef = useRef(null);
+  const menuRef = useRef(null);
   const isMobile = useIsMobile();
 
   const viewYear = viewDate.getFullYear();
@@ -112,7 +118,9 @@ export default function DatePicker({
     // otherwise treat every calendar interaction as an outside click.
     if (!open || isMobile) return undefined;
     function handleClickOutside(e) {
-      if (containerRef.current && !containerRef.current.contains(e.target)) {
+      const insideContainer = containerRef.current && containerRef.current.contains(e.target);
+      const insideMenu = menuRef.current && menuRef.current.contains(e.target);
+      if (!insideContainer && !insideMenu) {
         setOpen(false);
       }
     }
@@ -126,6 +134,40 @@ export default function DatePicker({
       document.removeEventListener("keydown", handleEscape);
     };
   }, [open, isMobile]);
+
+  const updateMenuPosition = useCallback(() => {
+    if (!triggerRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const width = Math.max(0, Math.min(rect.width, vw - VIEWPORT_MARGIN * 2));
+    const spaceBelow = vh - rect.bottom - VIEWPORT_MARGIN;
+    const spaceAbove = rect.top - VIEWPORT_MARGIN;
+    let top;
+    let placement;
+    if (spaceBelow < 280 && spaceAbove >= 280) {
+      placement = "top";
+      top = Math.max(VIEWPORT_MARGIN, rect.top - MENU_GAP);
+    } else {
+      placement = "bottom";
+      top = rect.bottom + MENU_GAP;
+    }
+    let left = rect.left;
+    if (left + width > vw - VIEWPORT_MARGIN) left = vw - width - VIEWPORT_MARGIN;
+    if (left < VIEWPORT_MARGIN) left = VIEWPORT_MARGIN;
+    setMenuStyle({ top, left, width, placement });
+  }, []);
+
+  useEffect(() => {
+    if (!open || isMobile) return undefined;
+    updateMenuPosition();
+    window.addEventListener("scroll", updateMenuPosition, true);
+    window.addEventListener("resize", updateMenuPosition);
+    return () => {
+      window.removeEventListener("scroll", updateMenuPosition, true);
+      window.removeEventListener("resize", updateMenuPosition);
+    };
+  }, [open, isMobile, updateMenuPosition]);
 
   useEffect(() => {
     if (selectedDate) setViewDate(selectedDate);
@@ -328,6 +370,7 @@ export default function DatePicker({
     <div className={`trem-datepicker ${open ? "trem-datepicker--open" : ""} ${error ? "trem-datepicker--error" : ""} ${className}`} ref={containerRef}>
       <button
         type="button"
+        ref={triggerRef}
         className={`trem-datepicker__trigger ${disabled ? "trem-datepicker__trigger--disabled" : ""}`}
         onClick={() => { if (!disabled) setOpen((o) => !o); }}
         disabled={disabled}
@@ -347,7 +390,16 @@ export default function DatePicker({
           <div className="trem-datepicker__calendar-sheet">{calendarContent}</div>
         </BottomSheet>
       ) : (
-        open && <div className="trem-datepicker__dropdown">{calendarContent}</div>
+        open && createPortal(
+          <div
+            ref={menuRef}
+            className={`trem-datepicker__menu-wrapper trem-datepicker__menu-wrapper--${menuStyle.placement || "bottom"}`}
+            style={{ top: menuStyle.top, left: menuStyle.left, width: menuStyle.width }}
+          >
+            <div className="trem-datepicker__dropdown">{calendarContent}</div>
+          </div>,
+          document.body,
+        )
       )}
     </div>
   );

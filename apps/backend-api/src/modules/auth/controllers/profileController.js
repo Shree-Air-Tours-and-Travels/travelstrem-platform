@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 import UserRepository from "../repositories/UserRepository.js";
 import RefreshToken from "../models/RefreshToken.js";
+import { audit } from "../../tenancy/audit.service.js";
 
 const PROFILE_ICONS = [
     "user", "compass", "map", "globe", "plane", "train",
@@ -45,8 +46,10 @@ export const updateProfile = async (req, res) => {
             updates.avatar = avatar;
         }
         if (phone !== undefined) updates.phone = phone;
+        const before = await UserRepository.findById(userId, "name phone avatar agencyId").lean();
         const user = await UserRepository.updateProfile(userId, updates);
         if (!user) return res.status(404).json({ status: "error", message: "User not found" });
+        await audit(req, { action: "user.profile_updated", entityType: "User", entityId: user._id, agencyId: user.agencyId, before, after: { name: user.name, phone: user.phone, avatar: user.avatar } });
         const data = {
             id: user.id,
             name: user.name,
@@ -72,8 +75,8 @@ export const updatePassword = async (req, res) => {
         if (!currentPassword || !newPassword) {
             return res.status(400).json({ status: "error", message: "Current password and new password are required" });
         }
-        if (newPassword.length < 6) {
-            return res.status(400).json({ status: "error", message: "New password must be at least 6 characters" });
+        if (newPassword.length < 8) {
+            return res.status(400).json({ status: "error", message: "New password must be at least 8 characters" });
         }
         const user = await UserRepository.findById(userId);
         if (!user) return res.status(404).json({ status: "error", message: "User not found" });
@@ -81,12 +84,13 @@ export const updatePassword = async (req, res) => {
         if (!isMatch) {
             return res.status(400).json({ status: "error", message: "Current password is incorrect" });
         }
-        const passwordHash = await bcrypt.hash(newPassword, 10);
+        const passwordHash = await bcrypt.hash(newPassword, 12);
         await UserRepository.updatePassword(userId, passwordHash);
 
         user.tokenVersion = (user.tokenVersion || 0) + 1;
         await user.save();
         await RefreshToken.deleteMany({ userId });
+        await audit(req, { action: "user.password_changed", entityType: "User", entityId: user._id, agencyId: user.agencyId });
 
         return res.status(200).json({ status: "success", message: "Password updated successfully" });
     } catch (error) {

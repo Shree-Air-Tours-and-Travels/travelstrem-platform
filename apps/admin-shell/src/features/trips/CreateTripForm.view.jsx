@@ -1,8 +1,10 @@
 import React, { useRef, useCallback, useState } from "react";
-import { Button, SubTitle } from "@packages/trem-ui";
+import { Button, SubTitle, RecordReview } from "@packages/trem-ui";
+import { getTripJsonTemplate } from "@packages/trem-utils";
 import "../tours/CreateTourForm.scss";
 
-const STEPS = ['Basic', 'Journey', 'Inclusions', 'Content', 'Review'];
+const STEPS = ['Basic', 'Journey', 'Inclusions', 'Content', 'Settings', 'Review'];
+
 const PREFERENCE_GROUPS = [
     ["roomTypes", "Room types"],
     ["mealPreferences", "Meal preferences"],
@@ -173,18 +175,14 @@ export default function CreateTripFormView({
                         </div>
                     </div>
                     <div className="ctf-header-actions">
-                        {!form._id && (
-                            <>
-                                <Button
-                                    type="button"
-                                    primaryClassName="btn ctf-json-import-button"
-                                    variant="outline"
-                                    onClick={() => setShowJsonImport(value => !value)}
-                                    disabled={importingJson}
-                                    text={showJsonImport ? "Hide JSON" : "Paste JSON"}
-                                />
-                            </>
-                        )}
+                        <Button
+                            type="button"
+                            primaryClassName="btn ctf-json-import-button"
+                            variant="outline"
+                            onClick={() => setShowJsonImport(value => !value)}
+                            disabled={importingJson}
+                            text={showJsonImport ? "Hide JSON" : "Paste JSON"}
+                        />
                         <Button primaryClassName="btn" onClick={onCancel} text="Cancel" />
                     </div>
                 </header>
@@ -194,7 +192,7 @@ export default function CreateTripFormView({
                         {error && <div className="ctf-feedback ctf-feedback--error">{error}</div>}
                         {success && <div className="ctf-feedback ctf-feedback--ok">{success}</div>}
 
-                        {!form._id && showJsonImport && (
+                        {showJsonImport && (
                             <section className="ctf-json-import">
                                 <div className="ctf-json-import__heading">
                                     <div>
@@ -219,7 +217,8 @@ export default function CreateTripFormView({
                                     aria-label="Trip JSON object"
                                 />
                                 <div className="ctf-json-import__actions">
-                                    <span>Your current form values are replaced only after valid JSON is parsed.</span>
+                                    <span>Use a valid role-safe template for an AI or manual completion.</span>
+                                    <Button type="button" primaryClassName="btn" variant="outline" onClick={() => setJsonText(getTripJsonTemplate({ master: true }))} text="Get valid JSON object" />
                                     <Button
                                         type="button"
                                         primaryClassName="btn"
@@ -240,12 +239,10 @@ export default function CreateTripFormView({
 
                         {step === 0 && (
                             <section className="ctf-section">
-                                {!form._id && (
-                                    <div className="ctf-json-import-note">
-                                        <strong>Have a complete trip JSON?</strong>
-                                        <span>Use Paste JSON above to fill all supported fields, then review each step before submitting.</span>
-                                    </div>
-                                )}
+                                <div className="ctf-json-import-note">
+                                    <strong>Have a complete trip JSON?</strong>
+                                    <span>Use Paste JSON above to fill all supported fields, then review each step before submitting.</span>
+                                </div>
                                 <label>Title
                                     <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} required />
                                 </label>
@@ -415,6 +412,13 @@ export default function CreateTripFormView({
                                         <input type="number" value={form.sortOrder || 0} onChange={e => setForm({ ...form, sortOrder: Number(e.target.value) })} />
                                     </label>
                                 </div>
+                            </section>
+                        )}
+
+                        {step === 5 && (
+                            <section className="ctf-section">
+                                <SubTitle text="Review & Submit" />
+                                <RecordReview data={form} title="Complete trip preview" description="Check every trip value below. Use Back to make changes before submitting." />
                             </section>
                         )}
                     </form>

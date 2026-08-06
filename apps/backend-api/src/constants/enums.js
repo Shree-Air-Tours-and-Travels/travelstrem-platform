@@ -171,7 +171,10 @@ export const TIMELINE_ACTOR_TYPE_LIST = Object.values(TIMELINE_ACTOR_TYPE);
 
 export const TOUR_STATUS = Object.freeze({
   DRAFT: "draft",
+  PENDING_APPROVAL: "pending_approval",
   PUBLISHED: "published",
+  UNPUBLISHED: "unpublished",
+  ARCHIVED: "archived",
   CANCELLED: "cancelled",
 });
 

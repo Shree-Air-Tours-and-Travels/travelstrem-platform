@@ -35,7 +35,7 @@ export default function CreateTourPage() {
             <Breadcrumbs items={breadcrumbs} />
             <SubTitle text={title} />
             <CreateTourForm
-                variant="page"
+                variant={isEdit ? "modal" : "page"}
                 initial={editTour}
                 onCancel={() => window.history.back()}
                 onSaved={() => window.history.back()}

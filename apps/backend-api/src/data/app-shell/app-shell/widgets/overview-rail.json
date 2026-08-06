@@ -61,7 +61,7 @@
                 "title": "Contact support",
                 "description": "We're here to help",
                 "icon": "phoneCall",
-                "href": "mailto:support@travelstrem.com",
+                "href": "mailto:akshat.goyal@travelstrem.com",
                 "target": "_self",
                 "ariaLabel": "Email TravelsTrem support",
                 "disabled": true

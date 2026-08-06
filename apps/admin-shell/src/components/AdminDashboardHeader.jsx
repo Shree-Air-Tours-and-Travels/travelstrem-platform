@@ -9,6 +9,7 @@ const TAB_TITLES = {
   overview: "Overview",
   bookings: "Bookings",
   services: "Services",
+  tenancy: "Partners & Agencies",
   profile: "Profile",
 };
 
@@ -17,7 +18,7 @@ export default function AdminDashboardHeader({ activeTab, theme, onToggleTheme, 
     try {
       await authService.logout().catch(() => {});
     } catch {}
-    clearAuthBrowserState({ prefixes: ["adminTREM", "travelstrem"] });
+    clearAuthBrowserState({ prefixes: ["adminTREM"] });
     emit("USER_LOGOUT", { source: "admin-header" }, { skipController: true });
     emitAuthEvent({ type: "LOGOUT" });
     window.location.replace("/login");

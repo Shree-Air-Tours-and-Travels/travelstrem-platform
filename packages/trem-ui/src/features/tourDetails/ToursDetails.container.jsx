@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { buildGlobalBookingEngineUrl, fetchData, useComponentData } from "@packages/trem-utils";
+import { buildGlobalBookingEngineUrl, fetchData, requestShellNavigation, useComponentData } from "@packages/trem-utils";
 import { useFavoritesContext } from "../../context/FavoritesContext.jsx";
 import { ProductDetailProvider, WIDGET_API_OPTIONS } from "./context/ProductDetailContext.js";
 import ToursDetailsView, { DetailSkeleton, EmptyState } from "./ToursDetails.view";
@@ -27,6 +27,8 @@ export default function ToursDetailsContainer({
     productType = "tour",
     breadcrumbRoot: breadcrumbRootProp,
     bookingBasePath = "",
+    embedded = false,
+    userSession = null,
 } = {}) {
     const params = useParams();
     const location = useLocation();
@@ -93,6 +95,8 @@ export default function ToursDetailsContainer({
                     fields: (widgetProps.fields || []).map((f) => ({
                         ...f,
                         label: labels[f.labelRef] || f.name,
+                        placeholder: labels[f.placeholderRef] || "",
+                        options: (f.options || []).map((option) => ({ ...option, label: labels[option.labelRef] || option.value })),
                         required: f.required ?? ["name", "email", "phone"].includes(f.name),
                     })),
                 },
@@ -113,21 +117,27 @@ export default function ToursDetailsContainer({
         const selectedTour = activeTour;
         if (!selectedTour) return;
         const ref = slugifyTitle(selectedTour?.title) || selectedTour?._id || decodedRef;
+        const product = productType === "trip" ? "trevio" : appKey;
+        const returnTo = window.location.href;
         if (bookingBasePath) {
             const query = new URLSearchParams({
-                product: productType === "trip" ? "trevio" : appKey,
+                product,
                 tourRef: ref,
-                returnTo: window.location.href,
+                returnTo,
             });
             navigate(`${bookingBasePath}?${query.toString()}`);
             return;
         }
+        if (embedded) {
+            requestShellNavigation("booking-engine", { query: { product, tourRef: ref, returnTo } });
+            return;
+        }
         window.location.assign(buildGlobalBookingEngineUrl({
-            product: productType === "trip" ? "trevio" : appKey,
+            product,
             tourRef: ref,
-            returnTo: window.location.href,
+            returnTo,
         }));
-    }, [activeTour, appKey, bookingBasePath, decodedRef, navigate, productType]);
+    }, [activeTour, appKey, bookingBasePath, decodedRef, embedded, navigate, productType]);
 
     const handleBookConfirmClose = useCallback(() => setBookConfirmOpen(false), []);
 
@@ -155,6 +165,7 @@ export default function ToursDetailsContainer({
     }
 
     const widgetApiOptions = WIDGET_API_OPTIONS[productType] || WIDGET_API_OPTIONS.tour;
+    const intermediateCrumb = productType === "tour" ? { label: "Tours", path: `/${appKey}/tours` } : null;
 
     return (
         <ProductDetailProvider value={widgetApiOptions}>
@@ -170,10 +181,8 @@ export default function ToursDetailsContainer({
             bookConfirmOpen={bookConfirmOpen}
             referrerLabel={referrer.label}
             breadcrumbItems={[
-                ...(referrer.path !== breadcrumbRoot.path
-                    ? [referrer, breadcrumbRoot]
-                    : [referrer]
-                ),
+                breadcrumbRoot,
+                ...(intermediateCrumb ? [intermediateCrumb] : []),
                 { label: activeTour?.title || pageLabels.pageTitle || slugifyTitle(decodedRef).replace(/-/g, " ") },
             ]}
             onTourLoad={handleTourLoad}
@@ -188,6 +197,7 @@ export default function ToursDetailsContainer({
             setContactOpen={setContactOpen}
             appKey={appKey}
             productType={productType}
+            user={userSession?.user || null}
         />
         </ProductDetailProvider>
     );

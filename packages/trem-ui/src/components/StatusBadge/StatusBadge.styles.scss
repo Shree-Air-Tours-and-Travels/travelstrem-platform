@@ -19,8 +19,8 @@
 }
 
 .status-badge--sm {
-  padding: 2px 8px;
-  font-size: 0.7rem;
+  padding: 0.125rem $space-2;
+  font-size: $font-size-xs;
 }
 .status-badge--sm .status-badge__dot {
   width: 4px;
@@ -42,31 +42,43 @@
 }
 
 .status-badge--neutral {
-  color: var(--muted, #64748b);
-  background: var(--surface, #f1f5f9);
+  color: var(--muted);
+  background: var(--surface-inset);
 }
 
 .status-badge--info {
-  color: var(--color-secondary, #2563eb);
-  background: var(--color-secondary-bg, #dbeafe);
+  color: var(--color-primary);
+  background: var(--primary-soft);
 }
 
 .status-badge--success {
-  color: var(--color-success, #166534);
-  background: var(--color-success-bg, #dcfce7);
+  color: var(--color-success);
+  background: var(--success-soft);
 }
 
 .status-badge--warning {
-  color: var(--color-tertiary, #92400e);
-  background: var(--color-tertiary-bg, #fef3c7);
+  color: var(--color-warning);
+  background: var(--warning-soft);
 }
 
 .status-badge--danger {
-  color: var(--color-danger, #991b1b);
-  background: var(--color-danger-bg, #fee2e2);
+  color: var(--color-danger);
+  background: var(--danger-soft);
 }
 
 .status-badge--secondary {
-  color: var(--color-secondary-variant, #6b21a8);
-  background: var(--color-secondary-variant-bg, #f3e8ff);
+  color: var(--color-secondary);
+  background: var(--secondary-soft);
+}
+
+.status-badge__subtitle {
+  font-weight: $font-bold;
+  font-size: 0.85em;
+  margin-left: $space-1-5;
+  padding-left: $space-1-5;
+  border-left: 1px solid currentColor;
+}
+
+.status-badge--with-subtitle {
+  gap: 0;
 }

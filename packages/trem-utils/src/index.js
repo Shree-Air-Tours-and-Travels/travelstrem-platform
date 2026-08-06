@@ -1,4 +1,5 @@
 export { slugify } from "./helpers/slugify.js";
+export { getTourJsonTemplate, getTripJsonTemplate } from "./helpers/jsonTemplates.js";
 export {
   THEME_CHANGE_EVENT,
   THEME_COOKIE_KEY,

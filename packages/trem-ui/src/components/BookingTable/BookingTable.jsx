@@ -7,14 +7,15 @@ import SearchBar from "../SearchBar/SearchBar.jsx";
 import Spinner from "../Spinner/Spinner.jsx";
 import InfoCard from "../InfoCard/InfoCard.jsx";
 import Icon from "../../icons/Icon/Icon.jsx";
+import TremStatusBadge from "../StatusBadge/StatusBadge.jsx";
 import "./BookingTable.styles.scss";
 
 const STATUS_TONES = {
-  upcoming: "blue",
-  pending: "olive",
-  cancelled: "red",
-  canceled: "red",
-  completed: "green",
+  upcoming: "info",
+  pending: "warning",
+  cancelled: "danger",
+  canceled: "danger",
+  completed: "success",
 };
 
 function getValue(row, accessor) {
@@ -129,18 +130,9 @@ function HeroBanner({ config = {} }) {
   );
 }
 
-function StatusBadge({ value, tone, secondary = "" }) {
+function BookingTableStatus({ value, tone, secondary = "" }) {
   const resolvedTone = tone || STATUS_TONES[String(value).toLowerCase()] || "neutral";
-
-  return (
-    <span className={`booking-table__status booking-table__status--${resolvedTone}`}>
-      <span aria-hidden="true" />
-      <span className="booking-table__status-copy">
-        {value}
-        {secondary ? <small>{secondary}</small> : null}
-      </span>
-    </span>
-  );
+  return <TremStatusBadge value={value} tone={resolvedTone} subtitle={secondary || undefined} showDot={false} />;
 }
 
 function wrapClickableCell(content, column, row) {
@@ -185,7 +177,7 @@ function renderCell(column, row) {
   if (column.type === "status") {
     const tone = column.toneAccessor ? getValue(row, column.toneAccessor) : row.statusTone;
     const secondary = column.secondaryAccessor ? getValue(row, column.secondaryAccessor) : "";
-    return wrapClickableCell(<StatusBadge value={value} tone={tone} secondary={secondary} />, column, row);
+    return wrapClickableCell(<BookingTableStatus value={value} tone={tone} secondary={secondary} />, column, row);
   }
 
   if (column.type === "badge") {

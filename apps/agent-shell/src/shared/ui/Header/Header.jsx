@@ -22,7 +22,7 @@ export default function Header() {
             console.warn("[Header] backend logout failed, clearing local session:", error?.message || error);
         });
 
-        clearAuthBrowserState({ prefixes: ["agentTREM", "travelstrem"] });
+        clearAuthBrowserState({ prefixes: ["agentTREM"] });
         emit(configuredEvent, { source: "header" }, { skipController: true });
         if (configuredEvent !== "USER_LOGOUT") emit("USER_LOGOUT", { source: "header" }, { skipController: true });
         emitAuthEvent({ type: "LOGOUT" });

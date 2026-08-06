@@ -1,0 +1,383 @@
+@import "@packages/trem-design-tokens/scss";
+
+.trem-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  &__toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    justify-content: flex-end;
+
+    &-btn {
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    &-status {
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  &__sections {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  &__section {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface-elevated);
+    overflow: hidden;
+
+    &-head {
+      display: flex;
+      align-items: stretch;
+    }
+
+    &-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 0.7rem 0.9rem;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      text-align: left;
+      color: var(--text);
+      transition: background 150ms ease;
+
+      &:hover {
+        background: var(--primary-softer);
+      }
+
+      &.is-static {
+        cursor: default;
+
+        &:hover {
+          background: transparent;
+        }
+      }
+
+      .trem-form__section-title {
+        flex: 1;
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--color-primary-dark);
+      }
+
+      .trem-form__section-chevron {
+        color: var(--muted);
+        transition: transform 200ms ease;
+
+        &.is-open {
+          transform: rotate(180deg);
+        }
+      }
+    }
+
+    &-desc {
+      margin: 0 0.9rem;
+      padding-bottom: 0.35rem;
+      font-size: 0.74rem;
+      color: var(--muted);
+      margin-top: -0.2rem;
+    }
+
+    &-body {
+      padding: 0.9rem;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+    }
+  }
+
+  &__grid {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(var(--trem-form-cols, 2), minmax(0, 1fr));
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+
+    &--span-1 { grid-column: span 1; }
+    &--span-2 { grid-column: span 2; }
+    &--span-3 { grid-column: span 3; }
+    &--span-4 { grid-column: span 4; }
+  }
+
+  &__label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+  }
+
+  &__required {
+    color: var(--color-danger);
+    font-size: 0.7rem;
+  }
+
+  &__help {
+    font-size: 0.7rem;
+    color: var(--text-light);
+    margin: 0;
+  }
+
+  &__control {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+
+    .trem-input,
+    .trem-datepicker__trigger,
+    .trem-dropdown__select {
+      min-height: 46px;
+      box-sizing: border-box;
+    }
+
+    // Labelled inputs contain both a label and their editable row. A fixed
+    // height squeezes that row and can place the phone country-code trigger
+    // over the input itself.
+    .trem-input--labelled {
+      height: auto;
+    }
+
+    .trem-dropdown__select {
+      min-height: 46px;
+      padding-top: 0.3rem;
+      padding-bottom: 0.3rem;
+      border-radius: $radius-xs;
+    }
+  }
+
+  &__error {
+    color: var(--color-danger);
+    font-size: 0.7rem;
+    line-height: 1.3;
+  }
+
+  &__field-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--control-border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 0.85rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 160ms ease, box-shadow 160ms ease;
+
+    &:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px var(--primary-focus);
+    }
+
+    &.has-error {
+      border-color: var(--color-danger);
+    }
+
+    &:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+  }
+
+  &__textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--control-border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 0.85rem;
+    font-family: inherit;
+    outline: none;
+    resize: vertical;
+    transition: border-color 160ms ease, box-shadow 160ms ease;
+
+    &:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px var(--primary-focus);
+    }
+
+    &.has-error {
+      border-color: var(--color-danger);
+    }
+  }
+
+  &__checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-top: 0.4rem;
+    cursor: pointer;
+
+    input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--color-primary);
+      cursor: pointer;
+    }
+
+    span {
+      font-size: 0.82rem;
+      color: var(--text);
+    }
+
+    &.is-disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+  }
+
+  &__switch {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-family: inherit;
+    align-self: flex-start;
+
+    &-track {
+      width: 40px;
+      height: 22px;
+      border-radius: 999px;
+      background: var(--neutral-soft);
+      border: 1px solid var(--control-border);
+      position: relative;
+      transition: background 160ms ease;
+      flex-shrink: 0;
+    }
+
+    &-thumb {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--surface-elevated);
+      box-shadow: var(--shadow-sm);
+      transition: transform 160ms ease;
+    }
+
+    &-label {
+      font-size: 0.82rem;
+      color: var(--text);
+    }
+
+    &.is-on {
+      .trem-form__switch-track {
+        background: var(--color-primary);
+        border-color: var(--color-primary);
+      }
+
+      .trem-form__switch-thumb {
+        transform: translateX(18px);
+      }
+    }
+
+    &.is-disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+  }
+
+  &__radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    padding-top: 0.4rem;
+  }
+
+  &__radio {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+
+    input[type="radio"] {
+      accent-color: var(--color-primary);
+      cursor: pointer;
+    }
+
+    span {
+      font-size: 0.82rem;
+      color: var(--text);
+    }
+  }
+
+  &__counter {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.2rem;
+    background: var(--surface-inset);
+    align-self: flex-start;
+
+    &-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      color: var(--color-primary);
+    }
+
+    &-value {
+      min-width: 28px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 0.95rem;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  .trem-input {
+    width: 100%;
+  }
+
+  .trem-input__field {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: $breakpoint-mobile) {
+  .trem-form__grid {
+    grid-template-columns: repeat(var(--trem-form-cols-mobile, 3), minmax(0, 1fr));
+  }
+
+  .trem-form__field {
+    grid-column: span 1 !important;
+  }
+
+  .trem-form__field--wide {
+    grid-column: 1 / -1 !important;
+  }
+}

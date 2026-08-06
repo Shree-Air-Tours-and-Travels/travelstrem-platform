@@ -8,6 +8,7 @@ import {
     fetchAgentBookings,
     fetchAgentTours,
     fetchAgentProfile,
+    fetchAgencyProfile,
     updateAvatar,
     updatePassword,
     updateProfile,
@@ -18,12 +19,18 @@ import pageConfig from "./manageToursPage.config.json";
 import ManageToursView from "./ManageTours.view";
 
 const getTabFromLocation = (pathname, search) => {
+    if (pathname.includes("/agent/dashboard")) return "dashboard";
+    if (pathname.includes("/agent/agents")) return "agents";
+    if (pathname.includes("/agent/customers")) return "customers";
+    if (pathname.includes("/agent/reports")) return "reports";
+    if (pathname.includes("/agent/deletion-requests")) return "deletions";
+    if (pathname.includes("/agent/notifications")) return "notifications";
     if (pathname.includes("/agent/profile")) return "profile";
     if (pathname.includes("/agent/bookings")) return "bookings";
     if (pathname.includes("/agent/settings")) return "settings";
     if (pathname.includes("/agent/partner-agency") || pathname.includes("/agent/agency")) return "partnerAgency";
-    const tab = new URLSearchParams(search || "").get("tab") || "profile";
-    return VALID_TABS.has(tab) ? tab : "profile";
+    const tab = new URLSearchParams(search || "").get("tab") || "dashboard";
+    return VALID_TABS.has(tab) ? tab : "dashboard";
 };
 
 const isRequestCancelled = (error) =>
@@ -102,7 +109,7 @@ export default function ManageTours({ session }) {
     }, []);
 
     const setTab = useCallback((nextTab) => {
-        const safeTab = VALID_TABS.has(nextTab) ? nextTab : "profile";
+        const safeTab = VALID_TABS.has(nextTab) ? nextTab : "dashboard";
         setTabState(safeTab);
         navigate(PATH_BY_TAB[safeTab], { replace: false });
     }, [navigate]);
@@ -161,7 +168,7 @@ export default function ManageTours({ session }) {
             setProfile({
                 name: profileUser.name || FALLBACK_PROFILE.name,
                 email: profileUser.email || "",
-                role: profileUser.role || auth.role,
+                role: profileUser.agencyRole === "partner_admin" ? "Partner Admin" : "Partner Agent",
                 agencyRef: profileUser.partnerAgencyRef || profileUser.agencyRef || FALLBACK_PROFILE.agencyRef,
                 agentRef: profileUser.agentRef || FALLBACK_PROFILE.agentRef,
                 approvalStatus: profileUser.agentApprovalStatus || "approved",
@@ -180,7 +187,9 @@ export default function ManageTours({ session }) {
             const userEmail = auth.user?.email || "";
             if (!userEmail) return;
             const controller = createRequestController("agency");
-            const application = await checkPartnerApplication(userEmail, { signal: controller.signal });
+            const application = auth.user?.agencyId
+                ? await fetchAgencyProfile(auth.user.agencyId, { signal: controller.signal })
+                : await checkPartnerApplication(userEmail, { signal: controller.signal });
             setAgencyApplication(application);
         } catch (e) {
             if (isRequestCancelled(e)) return;
@@ -189,7 +198,7 @@ export default function ManageTours({ session }) {
         } finally {
             setAgencyLoading(false);
         }
-    }, [auth.user?.email, createRequestController]);
+    }, [auth.user?.email, auth.user?.agencyId, createRequestController]);
 
     useEffect(() => {
         fetchServicesWidget();

@@ -1,3 +1,7 @@
+import config from "./env.js";
+
+const partnershipUrl = `${String(config.AUTH_APP_URL || config.SHELL_URL || "").replace(/\/$/, "")}/partnership`;
+
 export default {
   status: "success",
   message: "App header config loaded",
@@ -7,8 +11,8 @@ export default {
     brand: {
       logoSrc: "/favicon.png",
       darkLogoSrc: "/favicon-dark.png",
-      name: "TravelsTREM",
-      subtitle: "JAI · WORLD",
+      name: "Shree Air",
+      subtitle: "Tours & Travels",
       href: "/",
     },
     footer: {
@@ -71,6 +75,13 @@ export default {
       menuLabel: "Open user menu",
       menuEnabled: true,
       items: [
+        {
+          id: "partnership",
+          label: "Partner with us",
+          icon: "briefcaseBusiness",
+          type: "external",
+          href: partnershipUrl,
+        },
         {
           id: "about",
           label: "About Us",

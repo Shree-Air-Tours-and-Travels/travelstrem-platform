@@ -49,35 +49,6 @@ const getCategory = (tour) => {
   return tag ? `${tag.charAt(0).toUpperCase()}${tag.slice(1)}` : "Tour";
 };
 
-const renderStars = (rating) => {
-  const stars = [];
-  const fullStars = Math.floor(rating);
-  const hasHalf = rating % 1 >= 0.5;
-
-  for (let i = 0; i < 5; i++) {
-    if (i < fullStars) {
-      stars.push(
-        <span key={i} className="tour-card__star tour-card__star--filled">
-          <Icon name="star" size={12} />
-        </span>
-      );
-    } else if (i === fullStars && hasHalf) {
-      stars.push(
-        <span key={i} className="tour-card__star tour-card__star--half">
-          <Icon name="star" size={12} />
-        </span>
-      );
-    } else {
-      stars.push(
-        <span key={i} className="tour-card__star">
-          <Icon name="star" size={12} />
-        </span>
-      );
-    }
-  }
-  return stars;
-};
-
 const TourCard = React.memo(function TourCard({
   tour,
   path,
@@ -88,6 +59,8 @@ const TourCard = React.memo(function TourCard({
   agencyLogo = "",
   ownerAgentName = "",
   showOwner = false,
+  ownershipMode = "auto",
+  ownershipLabels = {},
   isAdmin = false,
   onEdit,
   onDelete,
@@ -124,6 +97,7 @@ const TourCard = React.memo(function TourCard({
   const routeText = getRouteText(tour);
   const locationText = getLocationText(tour);
   const category = getCategory(tour);
+  const resolvedOwnerName = ownerAgentName || t.ownerAgentName || (typeof t.ownerAgent === "object" ? t.ownerAgent?.name : "");
   const reviewCount =
     t.reviewCount != null
       ? Number(t.reviewCount)
@@ -206,11 +180,23 @@ const TourCard = React.memo(function TourCard({
         </span>
       )}
 
-      {isFeaturedCard && !isCompact && (
+      {t.tremVerified && (
+        <span className="tour-card__badge tour-card__badge--verified">
+          <Icon name="badgeCheck" size={14} /> TREM verified
+        </span>
+      )}
+
+      {!isCompact && (
         <span className="tour-card__badge tour-card__badge--category">
           {category}
         </span>
       )}
+
+      {availability?.seatsAvailable != null && !isCompact ? (
+        <span className={`tour-card__availability${Number(availability.seatsAvailable) === 0 ? " is-sold-out" : ""}`}>
+          {Number(availability.seatsAvailable) === 0 ? "Sold out" : `${availability.seatsAvailable} seats`}
+        </span>
+      ) : null}
 
       {imageSrc ? (
         <img
@@ -232,9 +218,9 @@ const TourCard = React.memo(function TourCard({
         </div>
       )}
 
-      {withAgency && agencyLogo && (
+      {(withAgency || t.agency?.logo) && (agencyLogo || t.agency?.logo) && (
         <div className="tour-card__agency-logo">
-          <img src={agencyLogo} alt="Agency logo" />
+          <img src={agencyLogo || t.agency.logo} alt="" />
         </div>
       )}
     </div>
@@ -261,9 +247,7 @@ const TourCard = React.memo(function TourCard({
   const cardMeta = (
     <div className="tour-card__meta">
       <div className="tour-card__rating-wrapper">
-        <div className="tour-card__stars">
-          {renderStars(numericRating || 0)}
-        </div>
+        <Icon name="star" size={13} />
         <span className="tour-card__rating-value">{displayRating}</span>
         <span className="tour-card__review-count">({reviewCount})</span>
       </div>
@@ -272,10 +256,16 @@ const TourCard = React.memo(function TourCard({
         <Icon name="mapPin" size={14} />
         <span>{locationText}</span>
       </div>
-      {showOwner && ownerAgentName && (
+      {(ownershipMode === "agency" || ownershipMode === "auto") && (t.agency?.name || ownershipLabels.platformAgency) ? (
+        <div className="tour-card__owner">
+          <Icon name="building2" size={13} />
+          <span><small>{ownershipLabels.agency || "Agency"}</small>{t.agency?.name || ownershipLabels.platformAgency}</span>
+        </div>
+      ) : null}
+      {(ownershipMode === "agent" || (ownershipMode === "auto" && showOwner)) && resolvedOwnerName && (
         <div className="tour-card__owner">
           <Icon name="user" size={13} />
-          <span>{ownerAgentName}</span>
+          <span><small>{ownershipLabels.agent || "Added by agent"}</small>{resolvedOwnerName}</span>
         </div>
       )}
     </div>

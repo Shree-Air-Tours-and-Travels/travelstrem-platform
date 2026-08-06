@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, EmptyState, FeaturedCard, InternationalTripCard, QuickChips, TrevioTripCard, Icon, useFavoritesContext } from "@packages/trem-ui";
+import { Button, EmptyState, FeaturedCard, InternationalTripCard, QuickChips, TrevioTripCard, Preloader, Icon, NoDataFound, useFavoritesContext } from "@packages/trem-ui";
 import { ContactAgentModal } from "@packages/trem-modals";
 import { fetchData } from "@packages/trem-utils";
 import { tripId, tripPrice, tripCurrency, tripImage, tripLocation, tripDuration } from "../utils";
@@ -8,11 +8,26 @@ import { tripId, tripPrice, tripCurrency, tripImage, tripLocation, tripDuration 
 const TRIP_PAGE_SIZE = 4;
 const FEATURED_AUTO_INTERVAL = 5000;
 
-export default function Home({ trips, internationalTrips = [], featuredTrips = [], pageModel, activeFilter, loadingTrips, onFilterChange }) {
+export default function Home({ user = null, trips, pageModel, activeFilter, loadingTrips, onFilterChange }) {
   const { isFavorited, toggleFavorite } = useFavoritesContext();
   const navigate = useNavigate();
   const [visibleTripCount, setVisibleTripCount] = useState(TRIP_PAGE_SIZE);
-  const { labels, content, tripList, upcoming, whyWanderon, international, howToUse, frames, faq, getInTouch, planInternational } = pageModel;
+  const {
+    labels = {},
+    content = {},
+    tripList = { filters: [] },
+    upcoming = {},
+    whyWanderon = { items: [] },
+    international = {},
+    howToUse = { steps: [] },
+    frames = { topImages: [], bottomImages: [] },
+    faq = { items: [] },
+    getInTouch = {},
+    planInternational = {},
+    featuredTrips: featuredTripsFromModel = [],
+    internationalTrips = [],
+  } = pageModel || {};
+  const featuredTrips = featuredTripsFromModel;
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
   const [activeSlide, setActiveSlide] = useState(0);
   const sliderRef = useRef(null);
@@ -61,12 +76,23 @@ export default function Home({ trips, internationalTrips = [], featuredTrips = [
   const handleEnquire = useCallback(async () => {
     try {
       const res = await fetchData("/form.json?form=contact-agent&tourId=trevio-home");
-      if (res?.status === "success") {
+      if (res?.status === "success" && res.component) {
+        const labels = res.component.elements?.labels || {};
+        const widgetProps = res.component.structure?.widgets?.[0]?.props || {};
+        const header = res.component.structure?.header || {};
         setContactFormData({
-          title: res.title || getInTouch.heading,
-          description: res.description || getInTouch.description,
-          structure: res.structure || {},
-          data: res.data || [],
+          title: labels[header.titleRef] || getInTouch.heading,
+          description: labels[header.descriptionRef] || getInTouch.description,
+          structure: {
+            submitText: labels[widgetProps.submitLabelRef] || "Send Request",
+            fields: (widgetProps.fields || []).map((field) => ({
+              ...field,
+              label: labels[field.labelRef] || field.name,
+              placeholder: labels[field.placeholderRef] || "",
+              options: (field.options || []).map((option) => ({ ...option, label: labels[option.labelRef] || option.value })),
+            })),
+          },
+          data: res.component.data?.tour ? [res.component.data.tour] : [],
         });
       }
     } catch (_) {
@@ -79,6 +105,29 @@ export default function Home({ trips, internationalTrips = [], featuredTrips = [
     }
     setContactOpen(true);
   }, [getInTouch]);
+
+  if (!pageModel) {
+    return (
+      <main>
+        <section className="trevio-hero">
+          <div className="trevio-container">
+            <Preloader variant="hero" label="Loading hero" />
+          </div>
+        </section>
+        <section className="trevio-section">
+          <div className="trevio-container">
+            <Preloader variant="grid" label="Loading featured" count={2} />
+          </div>
+        </section>
+        <section className="trevio-section" id="trip-section">
+          <div className="trevio-container">
+            <Preloader variant="filters" label="Loading filters" count={4} />
+            <Preloader variant="grid" label="Loading trips" count={4} />
+          </div>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main>
@@ -176,9 +225,11 @@ export default function Home({ trips, internationalTrips = [], featuredTrips = [
                 </div>
                 <h3>{featuredConfig.emptyTitle}</h3>
                 <p>{featuredConfig.emptyDescription}</p>
-                <button className="trevio-button trevio-button--primary" onClick={() => document.getElementById("trip-section")?.scrollIntoView({ behavior: "smooth" })}>
-                  {featuredConfig.ctaLabel}
-                </button>
+                {featuredConfig.emptyAction && (
+                  <button className="trevio-button trevio-button--primary" onClick={handleEnquire}>
+                    {featuredConfig.emptyAction}
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -227,12 +278,21 @@ export default function Home({ trips, internationalTrips = [], featuredTrips = [
               <TrevioTripCard
                 key={tripId(trip)}
                 trip={trip}
+                labels={tripList.cardLabels}
                 favorited={isFavorited(trip)}
                 onFavorite={toggleFavorite}
                 onView={() => navigate(`trip/${tripId(trip)}`)}
               />
             )) : (
-              <EmptyState className="trevio-trip-grid__empty" icon="search" title={labels.emptyTripList} />
+              <NoDataFound
+                className="trevio-trip-grid__empty"
+                icon="search"
+                title={labels.emptyTripList}
+                description="Looking for a custom trip or an upcoming one? Contact our travel agent and enquire with us."
+                actionLabel="Enquire us"
+                actionAriaLabel="Enquire with our travel agent"
+                onAction={handleEnquire}
+              />
             )}
           </div>
           {hasMore && (
@@ -259,6 +319,7 @@ export default function Home({ trips, internationalTrips = [], featuredTrips = [
                 <TrevioTripCard
                   key={`upcoming-${tripId(trip)}`}
                   trip={trip}
+                  labels={tripList.cardLabels}
                   favorited={isFavorited(trip)}
                   onFavorite={toggleFavorite}
                   onView={() => navigate(`trip/${tripId(trip)}`)}
@@ -465,6 +526,7 @@ export default function Home({ trips, internationalTrips = [], featuredTrips = [
         onClose={() => setContactOpen(false)}
         tourId="trevio-home"
         formData={contactFormData}
+        user={user}
       />
 
     </main>

@@ -7,6 +7,7 @@ import sidebarConfigTemplate from "../../../config/sidebar.js";
 import appHeaderConfigTemplate from "../../../config/appHeader.js";
 import navigationConfigTemplate from "../../../config/navigation.js";
 import User from "../../auth/models/User.js";
+import { getPortalScope, normalizePortalScope, readPortalAccessToken } from "../../../core/auth/portalSession.js";
 
 export const getNavigationConfig = (req, res) => {
     res.status(200).json({
@@ -17,8 +18,6 @@ export const getNavigationConfig = (req, res) => {
 };
 
 const JWT_SECRET = (config.JWT && config.JWT.accessSecret) || process.env.JWT_SECRET;
-const USE_SHARED_COOKIE_DOMAIN = config.IS_PRODUCTION && Boolean((config.AUTH_COOKIE_DOMAIN || process.env.AUTH_COOKIE_DOMAIN || "").toString().trim());
-const COOKIE_NAME = config.IS_PRODUCTION && !USE_SHARED_COOKIE_DOMAIN ? "__Host-token" : "token";
 const MASTER_ADMIN_EMAIL = (config.MASTER_ADMIN_EMAIL || "")
     .toString()
     .trim()
@@ -30,7 +29,7 @@ const getBearerToken = (req) => {
     if (authHeader.startsWith("Bearer ")) return authHeader.split(" ")[1] || null;
     if (req.headers["x-ignore-cookie-auth"] === "true") return null;
 
-    return req.cookies?.[COOKIE_NAME] || req.cookies?.token || req.cookies?.["__Host-token"] || null;
+    return readPortalAccessToken(req);
 };
 
 const getUserFromRequest = (req) => {
@@ -39,6 +38,7 @@ const getUserFromRequest = (req) => {
 
     try {
         const payload = jwt.verify(token, JWT_SECRET);
+        if (!payload.portal || normalizePortalScope(payload.portal) !== getPortalScope(req)) return null;
         return {
             id: payload.sub || payload.id || payload.userId || null,
             name: payload.name || null,
@@ -70,6 +70,12 @@ const toSafeUser = (user, fallback = {}) => {
         agentApprovalStatus: user?.agentApprovalStatus || fallback.agentApprovalStatus || "not_required",
         adminLevel: user?.adminLevel || fallback.adminLevel || "none",
         adminApprovalStatus: user?.adminApprovalStatus || fallback.adminApprovalStatus || "not_required",
+        agencyRole: user?.agencyRole || fallback.agencyRole || "none",
+        agencyId: user?.agencyId?.toString?.() || user?.agencyId || fallback.agencyId || null,
+        accountStatus: user?.accountStatus || fallback.accountStatus || "active",
+        productAccess: user?.productAccess || fallback.productAccess || [],
+        permissionGrants: user?.permissionGrants || fallback.permissionGrants || [],
+        permissionDenials: user?.permissionDenials || fallback.permissionDenials || [],
     };
 };
 
@@ -85,8 +91,11 @@ const getSessionFromRequest = async (req) => {
 
     try {
         const payload = jwt.verify(token, JWT_SECRET);
+        if (!payload.portal || normalizePortalScope(payload.portal) !== getPortalScope(req)) {
+            throw new Error("Portal session mismatch");
+        }
         const userId = payload.sub || payload.id || payload.userId;
-        const dbUser = userId ? await User.findById(userId).select("name email role agentRef agencyRef partnerAgencyRef agentApprovalStatus adminLevel adminApprovalStatus") : null;
+        const dbUser = userId ? await User.findById(userId).select("name email role agentRef agencyRef partnerAgencyRef agentApprovalStatus adminLevel adminApprovalStatus agencyRole agencyId accountStatus productAccess permissionGrants permissionDenials") : null;
         if (dbUser?.role === "admin" && dbUser.email === MASTER_ADMIN_EMAIL && dbUser.adminLevel !== "master") {
             dbUser.adminLevel = "master";
             dbUser.adminApprovalStatus = "approved";
@@ -100,6 +109,13 @@ const getSessionFromRequest = async (req) => {
             };
         }
         if (dbUser?.role === "agent" && dbUser.agentApprovalStatus !== "approved") {
+            return {
+                user: null,
+                permissions: ["public"],
+                isAuthenticated: false,
+            };
+        }
+        if (dbUser?.role === "agent" && dbUser.accountStatus !== "active") {
             return {
                 user: null,
                 permissions: ["public"],

@@ -1,7 +1,18 @@
 import React from "react";
 import PropTypes from "prop-types";
 import Icon from "../../icons/Icon/Icon.jsx";
+import StatusBadge from "../StatusBadge/StatusBadge.jsx";
 import "./InfoCard.styles.scss";
+
+const INFO_CARD_TONES = {
+  upcoming: "success",
+  confirmed: "success",
+  pending: "warning",
+  cancelled: "danger",
+  canceled: "danger",
+  completed: "info",
+  draft: "neutral",
+};
 
 export default function InfoCard({
   title,
@@ -15,6 +26,7 @@ export default function InfoCard({
   className = "",
 }) {
   const Tag = onClick ? "button" : "article";
+  const badgeTone = badge?.tone ? (INFO_CARD_TONES[badge.tone.toLowerCase()] || badge.tone) : undefined;
 
   return (
     <Tag
@@ -29,9 +41,7 @@ export default function InfoCard({
           {subtitle ? <small>{subtitle}</small> : null}
         </span>
         {badge?.value ? (
-          <span className={`trem-info-card__badge trem-info-card__badge--${badge.tone || "neutral"}`}>
-            {badge.value}
-          </span>
+          <StatusBadge value={badge.value} tone={badgeTone} size="sm" />
         ) : null}
       </span>
       <span className="trem-info-card__fields">

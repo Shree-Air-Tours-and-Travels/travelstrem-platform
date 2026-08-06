@@ -7,9 +7,15 @@ import { ScrollToTop, ThemeProvider } from "@packages/trem-ui";
 import { fetchData, setComponentDataFetcher } from "@packages/trem-utils";
 import { store, persistor } from "./store/index.js";
 import App from "./App";
+import EmbeddedBookingEngine from "./EmbeddedApp.jsx";
 import "./booking-engine.scss";
 
 setComponentDataFetcher(fetchData);
+
+const searchParams = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+const hasBookingIntent = Boolean(
+  searchParams.get("product") && (searchParams.get("tourRef") || searchParams.get("tripRef")),
+);
 
 createRoot(document.getElementById("root")).render(
   <Provider store={store}>
@@ -17,7 +23,7 @@ createRoot(document.getElementById("root")).render(
       <BrowserRouter>
         <ThemeProvider>
           <ScrollToTop />
-          <App />
+          {hasBookingIntent ? <EmbeddedBookingEngine /> : <App />}
         </ThemeProvider>
       </BrowserRouter>
     </PersistGate>

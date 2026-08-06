@@ -23,14 +23,13 @@ export default {
     value: { control: "select", options: Object.values(statusGroups).flat() },
     tone: { control: "select", options: ["neutral", "info", "success", "warning", "danger", "secondary", undefined] },
     size: { control: "select", options: ["sm", "md", "lg"] },
+    showDot: { control: "boolean" },
   },
   args: {
     value: "CONFIRMED",
     size: "md",
   },
 };
-
-export const Playground = {};
 
 export const Sizes = {
   render: () => (
@@ -90,4 +89,26 @@ export const AllStatuses = {
       ))}
     </div>
   ),
+};
+
+export const WithoutDot = {
+  args: {
+    value: "CONFIRMED",
+    showDot: false,
+  },
+};
+
+export const WithSubtitle = {
+  args: {
+    value: "CONFIRMED",
+    subtitle: "Pending review",
+  },
+};
+
+export const WithSubtitleNoDot = {
+  args: {
+    value: "CONFIRMED",
+    subtitle: "Pending review",
+    showDot: false,
+  },
 };

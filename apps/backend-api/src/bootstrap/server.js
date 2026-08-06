@@ -2,6 +2,7 @@ import app from "./app.js";
 import initializeDatabase from "./database.js";
 import config from "../config/index.js";
 import logger from "../shared/logger/index.js";
+import { verifyEmailConnection } from "../config/mail.js";
 
 const DEFAULT_SHUTDOWN_TIMEOUT_MS = 10_000;
 
@@ -10,6 +11,7 @@ export async function startServer({
   shutdownTimeoutMs = DEFAULT_SHUTDOWN_TIMEOUT_MS,
 } = {}) {
   await initializeDatabase();
+  await verifyEmailConnection();
 
   const server = app.listen(port, () => {
     logger.info(`Server running on port ${port} (env: ${config.NODE_ENV})`);
@@ -28,4 +30,3 @@ export async function startServer({
 }
 
 export default startServer;
-

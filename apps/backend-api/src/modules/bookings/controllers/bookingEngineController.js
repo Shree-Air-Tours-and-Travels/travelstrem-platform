@@ -10,9 +10,13 @@ import QuoteService from "../services/QuoteService.js";
 import PaymentService from "../services/PaymentService.js";
 import TravellerService from "../services/TravellerService.js";
 import BookingTimelineService from "../services/BookingTimelineService.js";
+import AuditService from "../services/AuditService.js";
 import MessageService from "../services/MessageService.js";
 import PaymentSettings from "../models/PaymentSettings.js";
+import { calculateTrevistaPricing } from "../services/trevistaPricingService.js";
 import { BOOKING_STATUS, PAYMENT_STATUS, BOOKING_FLOW } from "../../../constants/enums.js";
+import { sendBookingConfirmation, sendPaymentSuccess } from "../../../services/email.service.js";
+import config from "../../../config/index.js";
 
 function sendSuccess(res, data, message = "OK") {
   return res.json({ status: "success", message, componentData: { data } });
@@ -62,6 +66,32 @@ function actorFromReq(req) {
   };
 }
 
+const recordBookingAudit = (req, booking, action, before = null) => AuditService.record({
+  bookingId: booking._id,
+  action,
+  before,
+  after: booking.toObject(),
+  actor: actorFromReq(req),
+  reqMeta: { ip: req.ip || "", userAgent: req.headers?.["user-agent"] || "", correlationId: req.headers?.["x-request-id"] || "" },
+});
+
+function canAccessBooking(req, booking, { requireAgencyManager = false } = {}) {
+  const actorId = String(req.user?.sub || req.user?.id || "");
+  const isMaster = req.user?.role === "admin" && req.user?.adminLevel === "master";
+  if (isMaster) return true;
+  if (req.user?.role === "agent") {
+    if (!req.user?.agencyId || String(booking.agencyId || "") !== String(req.user.agencyId)) return false;
+    if (req.user.agencyRole === "partner_admin") return true;
+    if (requireAgencyManager) return false;
+    return String(booking.assignedAgent || "") === actorId;
+  }
+  return !requireAgencyManager && String(booking.user || "") === actorId;
+}
+
+function assertBookingAccess(req, booking, options) {
+  if (!canAccessBooking(req, booking, options)) throw new ApiError(403, "Not authorized to access this booking");
+}
+
 async function resolveBookingAgent(tour) {
   if (tour?.ownerAgent) return tour.ownerAgent;
   if (tour?.partnerAgencyRef) {
@@ -74,6 +104,15 @@ async function resolveBookingAgent(tour) {
   }
   const adminUser = await User.findOne({ role: "admin", adminLevel: "master" }).select("_id");
   return adminUser?._id || null;
+}
+
+async function ownershipSnapshot(entity) {
+  if (!entity?.agencyId) return {};
+  const [agency, agent] = await Promise.all([
+    mongoose.model("PartnerAgency").findById(entity.agencyId).select("agencyName partnerAgencyRef logo contactEmail contactPhone").lean(),
+    entity.ownerAgent ? User.findById(entity.ownerAgent).select("name email phone agentRef").lean() : null,
+  ]);
+  return { agencyId: entity.agencyId, agencySnapshot: agency ? { id: agency._id, name: agency.agencyName, ref: agency.partnerAgencyRef, logo: agency.logo, email: agency.contactEmail, phone: agency.contactPhone } : null, assignedAgent: agent?._id || null, assignedAgentRef: agent?.agentRef || "", assignedAgentSnapshot: agent ? { id: agent._id, name: agent.name, email: agent.email, phone: agent.phone, ref: agent.agentRef } : null };
 }
 
 function computeTokenAmount(booking, product) {
@@ -151,13 +190,31 @@ function buildStatusTimeline(status, product) {
   }));
 }
 
+const bookingLink = (booking) => `${String(config.SHELL_URL || "").replace(/\/$/, "")}/bookings/${booking._id}`;
+async function emailBooking(booking, payment = null) {
+  const to = booking.primaryContact?.email;
+  if (!to) return;
+  const entity = booking.trip || booking.tour;
+  const common = { to, customerName: booking.primaryContact?.name, bookingId: booking.bookingRef, tripName: entity?.title || "Trip", amount: payment?.amount || booking.paymentSummary?.total, bookingUrl: bookingLink(booking), agencyName: booking.agencySnapshot?.name, agentName: booking.assignedAgentSnapshot?.name, agentEmail: booking.assignedAgentSnapshot?.email, agentPhone: booking.assignedAgentSnapshot?.phone };
+  if (payment) await sendPaymentSuccess({ ...common, transactionId: payment.transactionId, paidAt: new Date().toLocaleString("en-IN") });
+  else await sendBookingConfirmation({ ...common, travelDates: `${new Date(booking.travelWindow.startDate).toLocaleDateString("en-IN")} – ${new Date(booking.travelWindow.endDate).toLocaleDateString("en-IN")}` });
+}
+
 async function resolveProductEntity(product, ref) {
   if (!ref) return null;
   const idQuery = mongoose.Types.ObjectId.isValid(ref) ? [{ _id: ref }] : [];
   if (product === BOOKING_FLOW.TREVIO) {
     return TrevioTrip.findOne({ $or: [...idQuery, { slug: ref }] });
   }
-  return Tour.findOne({ $or: [...idQuery, { slug: ref }] });
+  const titleCandidate = String(ref).replace(/-/g, " ").trim();
+  const escapedTitle = titleCandidate.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return Tour.findOne({
+    $or: [
+      ...idQuery,
+      { slug: ref },
+      { title: new RegExp(`^${escapedTitle}$`, "i") },
+    ],
+  });
 }
 
 function getPrefExtraPrice(prefArray, selectedValue) {
@@ -166,12 +223,18 @@ function getPrefExtraPrice(prefArray, selectedValue) {
   return match?.extraPrice || 0;
 }
 
-function buildPriceSnapshotForProduct(product, entity, guestsCount, preferences = {}, travellers = []) {
+function buildPriceSnapshotForProduct(product, entity, body = {}) {
+  const travellers = Array.isArray(body.travellers) ? body.travellers : [];
+  const guestsCount = Math.max(1, Number(body.adults || 1) + Number(body.children || 0) + Number(body.infants || 0));
+  const preferences = body.preferences || {};
+  const roomType = String(body.roomType || preferences.roomType || "");
+  const addons = Array.isArray(body.addons) ? body.addons : [];
+
   if (product === BOOKING_FLOW.TREVIO) {
     const basePricePerPerson = entity?.price?.amount || 0;
     const prefs = entity?.preferences || {};
 
-    const roomTypeExtra = getPrefExtraPrice(prefs.roomTypes, preferences.roomType);
+    const roomTypeExtra = getPrefExtraPrice(prefs.roomTypes, roomType);
 
     const perTravellerExtras = travellers.map((t) => {
       const meal = getPrefExtraPrice(prefs.mealPreferences, t.mealPreference);
@@ -205,6 +268,36 @@ function buildPriceSnapshotForProduct(product, entity, guestsCount, preferences 
       tokenAmount,
     };
   }
+
+  if (product === BOOKING_FLOW.TREVISTA) {
+    const calc = calculateTrevistaPricing(entity, {
+      adults: body.adults,
+      children: body.children,
+      infants: body.infants,
+      startDate: body.startDate,
+      roomType,
+      transport: String(preferences.transport || body.transport || ""),
+      addons,
+    });
+    const { pricing } = calc;
+    return {
+      min: pricing.baseTripTotal,
+      max: pricing.total,
+      currency: pricing.currency,
+      isFinal: false,
+      source: "engine_price",
+      matchedSeason: null,
+      note: "Estimated price from booking journey",
+      perPerson: pricing.perPerson,
+      baseTripTotal: pricing.baseTripTotal,
+      roomTypeExtra: pricing.roomTypeExtra,
+      transportExtra: pricing.transportExtra,
+      addonAmount: pricing.addonAmount,
+      total: pricing.total,
+      tokenAmount: pricing.tokenAmount,
+    };
+  }
+
   return Booking.buildPriceSnapshot(entity, new Date(), guestsCount);
 }
 
@@ -253,7 +346,7 @@ export const createBooking = asyncHandler(async (req, res) => {
     if (existing) return sendSuccess(res, await BookingService.hydrate(existing), "Booking already exists");
   }
 
-  const priceSnapshot = buildPriceSnapshotForProduct(product, entity, guestsCount, { roomType }, travellers);
+  const priceSnapshot = buildPriceSnapshotForProduct(product, entity, req.body);
 
   const bookingData = {
     user: userId,
@@ -264,8 +357,8 @@ export const createBooking = asyncHandler(async (req, res) => {
       childCount: Number(children),
       infantCount: Number(infants),
       roomType,
-      pickupCity,
-      specialRequirements,
+      pickupCity: pickupCity || preferences.pickupCity || "",
+      specialRequirements: specialRequirements || preferences.notes || "",
     },
     primaryContact: {
       name: contact?.name || "",
@@ -274,7 +367,10 @@ export const createBooking = asyncHandler(async (req, res) => {
     },
     tripPreferences: {
       mealPreference: preferences.mealPreference || "",
-      specialRequests: preferences.specialRequests || "",
+      bedType: preferences.bedPreference || "",
+      transport: preferences.transport || "",
+      addFlights: preferences.addFlights || "",
+      specialRequests: preferences.notes || preferences.specialRequests || "",
       airportTransferNeeded: preferences.airportTransferNeeded || false,
       roomSharingPreference: preferences.roomSharingPreference || "",
       extraActivities: preferences.extraActivities || [],
@@ -290,6 +386,7 @@ export const createBooking = asyncHandler(async (req, res) => {
     termsAccepted: true,
     idempotencyKey,
   };
+  Object.assign(bookingData, await ownershipSnapshot(entity));
 
   if (product === BOOKING_FLOW.TREVIO) {
     bookingData.trip = entity._id;
@@ -355,8 +452,24 @@ export const createBooking = asyncHandler(async (req, res) => {
     },
   });
 
+  await recordBookingAudit(req, booking, "booking.create");
+
   const hydrated = await BookingService.hydrate(booking);
   return sendSuccess(res, { ...hydrated, flowSteps: buildFlowSteps(product) }, "Booking created");
+});
+
+// ────────────────────────────────────────────
+// TREVISTA PRICING
+// ────────────────────────────────────────────
+export const getTrevistaPricing = asyncHandler(async (req, res) => {
+  const { tourRef } = req.body || {};
+  if (!tourRef) throw new ApiError(400, "Tour reference is required");
+
+  const entity = await resolveProductEntity(BOOKING_FLOW.TREVISTA, tourRef);
+  if (!entity) throw new ApiError(404, "Tour not found");
+
+  const calc = calculateTrevistaPricing(entity, req.body || {});
+  return sendSuccess(res, calc, "Pricing calculated");
 });
 
 // ────────────────────────────────────────────
@@ -370,9 +483,8 @@ export const submitBooking = asyncHandler(async (req, res) => {
     .populate("tour", "title slug city address distance period price photo photos cancellationPolicy")
     .populate("trip", "title slug location image price cancellationPolicy duration");
   if (!booking) throw new ApiError(404, "Booking not found");
-  if (String(booking.user) !== String(actor.id) && !actor.privileged) {
-    throw new ApiError(403, "Not authorized");
-  }
+  assertBookingAccess(req, booking);
+  const before = booking.toObject();
 
   const product = booking.product || BOOKING_FLOW.TREVISTA;
 
@@ -409,6 +521,7 @@ export const submitBooking = asyncHandler(async (req, res) => {
   }
 
   await booking.save();
+  await recordBookingAudit(req, booking, "booking.submit", before);
 
   await BookingTimelineService.record({
     bookingId: booking._id,
@@ -437,6 +550,7 @@ export const submitBooking = asyncHandler(async (req, res) => {
   }
 
   const hydrated = await BookingService.hydrate(booking);
+  await emailBooking(booking).catch((error) => console.error("Booking confirmation email failed:", error.message));
   const cancellationPolicy = product === BOOKING_FLOW.TREVIO
     ? (booking.trip?.cancellationPolicy || "")
     : (booking.tour?.cancellationPolicy || "");
@@ -459,10 +573,7 @@ export const getBookingStatus = asyncHandler(async (req, res) => {
 
   if (!booking) throw new ApiError(404, "Booking not found");
 
-  const { userId } = authInfoFromReq(req);
-  if (!privileged && String(booking.user) !== String(userId)) {
-    throw new ApiError(403, "Not authorized");
-  }
+  assertBookingAccess(req, booking);
 
   const hydrated = await BookingService.hydrate(booking);
   const product = booking.product || BOOKING_FLOW.TREVISTA;
@@ -472,8 +583,8 @@ export const getBookingStatus = asyncHandler(async (req, res) => {
   const tokenAmount = computeTokenAmount(booking, product);
   const paymentConfiguration = product === BOOKING_FLOW.TREVIO
     ? await PaymentSettings.findOneAndUpdate(
-        { key: "default" },
-        { $setOnInsert: { key: "default" } },
+        { key: "default", agencyId: booking.agencyId || null },
+        { $setOnInsert: { key: "default", agencyId: booking.agencyId || null } },
         { new: true, upsert: true }
       ).lean()
     : null;
@@ -503,7 +614,9 @@ export const payToken = asyncHandler(async (req, res) => {
 
   const booking = await Booking.findById(id);
   if (!booking) throw new ApiError(404, "Booking not found");
+  assertBookingAccess(req, booking);
   if (String(booking.user) !== String(actor.id)) throw new ApiError(403, "Not authorized");
+  const before = booking.toObject();
 
   const product = booking.product || BOOKING_FLOW.TREVISTA;
   if (product !== BOOKING_FLOW.TREVIO) {
@@ -539,6 +652,7 @@ export const payToken = asyncHandler(async (req, res) => {
   }
 
   await booking.save();
+  await recordBookingAudit(req, booking, "payment.token", before);
 
   await BookingTimelineService.record({
     bookingId: booking._id,
@@ -555,6 +669,9 @@ export const payToken = asyncHandler(async (req, res) => {
     messageType: "system",
   });
 
+  await booking.populate(["trip", "tour"]);
+  await emailBooking(booking, { amount: tokenAmount, transactionId }).catch((error) => console.error("Payment email failed:", error.message));
+
   const hydrated = await BookingService.hydrate(booking);
   return sendSuccess(res, { ...hydrated, tokenAmount, totalPaid: summary.paid }, "Token payment recorded");
 });
@@ -570,7 +687,9 @@ export const payFullAmount = asyncHandler(async (req, res) => {
 
   const booking = await Booking.findById(id);
   if (!booking) throw new ApiError(404, "Booking not found");
+  assertBookingAccess(req, booking);
   if (String(booking.user) !== String(actor.id)) throw new ApiError(403, "Not authorized");
+  const before = booking.toObject();
 
   const latestQuote = await QuoteService.latest(booking._id);
   const payAmount = amount || latestQuote?.finalAmount || booking.paymentSummary?.remaining || 0;
@@ -598,6 +717,7 @@ export const payFullAmount = asyncHandler(async (req, res) => {
   }
 
   await booking.save();
+  await recordBookingAudit(req, booking, "payment.full", before);
 
   await BookingTimelineService.record({
     bookingId: booking._id,
@@ -737,6 +857,8 @@ export const createQuote = asyncHandler(async (req, res) => {
 
   const booking = await Booking.findById(id);
   if (!booking) throw new ApiError(404, "Booking not found");
+  assertBookingAccess(req, booking);
+  const before = booking.toObject();
 
   if (booking.status !== BOOKING_STATUS.QUOTE_REQUESTED && booking.status !== BOOKING_STATUS.UNDER_REVIEW) {
     throw new ApiError(400, `Cannot create quote in ${booking.status} state`);
@@ -752,6 +874,7 @@ export const createQuote = asyncHandler(async (req, res) => {
   booking.transitionStatus(BOOKING_STATUS.QUOTE_READY);
   booking.transitionStatus(BOOKING_STATUS.QUOTE_SENT);
   await booking.save();
+  await recordBookingAudit(req, booking, "quote.create", before);
 
   await BookingTimelineService.record({
     bookingId: booking._id,
@@ -785,6 +908,8 @@ export const assignAgent = asyncHandler(async (req, res) => {
 
   const booking = await Booking.findById(id);
   if (!booking) throw new ApiError(404, "Booking not found");
+  assertBookingAccess(req, booking, { requireAgencyManager: true });
+  const before = booking.toObject();
 
   if (!agentId) {
     if (booking.tour) {
@@ -793,8 +918,9 @@ export const assignAgent = asyncHandler(async (req, res) => {
       if (resolved) booking.assignedAgent = resolved;
     }
   } else {
+    const agent = await User.findOne({ _id: agentId, agencyId: booking.agencyId, agencyRole: "partner_agent", accountStatus: "active" }).select("name agentRef agencyRef partnerAgencyRef agencyId");
+    if (!agent) throw new ApiError(400, "Agent must be active and belong to the booking agency");
     booking.assignedAgent = agentId;
-    const agent = await User.findById(agentId).select("name agentRef agencyRef partnerAgencyRef");
     if (agent) {
       booking.assignedAgentRef = agent.agentRef || "";
       booking.assignedAgencyRef = agent.agencyRef || "";
@@ -803,6 +929,7 @@ export const assignAgent = asyncHandler(async (req, res) => {
   }
 
   await booking.save();
+  await recordBookingAudit(req, booking, "booking.assign", before);
 
   await BookingTimelineService.record({
     bookingId: booking._id,
@@ -827,9 +954,8 @@ export const cancelBooking = asyncHandler(async (req, res) => {
   const booking = await Booking.findById(id);
   if (!booking) throw new ApiError(404, "Booking not found");
 
-  if (!actor.privileged && String(booking.user) !== String(actor.id)) {
-    throw new ApiError(403, "Not authorized");
-  }
+  assertBookingAccess(req, booking);
+  const before = booking.toObject();
 
   const cancellable = ["DRAFT", "QUOTE_REQUESTED", "UNDER_REVIEW", "QUOTE_READY", "QUOTE_SENT", "AWAITING_TOKEN_PAYMENT", "PAYMENT_PENDING", "CONFIRMED"];
   const retryingSeatRelease = booking.status === BOOKING_STATUS.CANCELLED
@@ -878,6 +1004,7 @@ export const cancelBooking = asyncHandler(async (req, res) => {
     action: "booking_cancelled",
     metadata: { reason },
   });
+  await recordBookingAudit(req, booking, "booking.cancel", before);
 
   await MessageService.send({
     bookingId: booking._id,
@@ -906,10 +1033,7 @@ export const getBookingDetail = asyncHandler(async (req, res) => {
 
   if (!booking) throw new ApiError(404, "Booking not found");
 
-  const { userId } = authInfoFromReq(req);
-  if (!privileged && String(booking.user) !== String(userId)) {
-    throw new ApiError(403, "Not authorized");
-  }
+  assertBookingAccess(req, booking);
 
   const hydrated = await BookingService.hydrate(booking);
   const product = booking.product || BOOKING_FLOW.TREVISTA;
@@ -920,8 +1044,8 @@ export const getBookingDetail = asyncHandler(async (req, res) => {
   const tokenAmount = computeTokenAmount(booking, product);
   const paymentConfiguration = product === BOOKING_FLOW.TREVIO
     ? await PaymentSettings.findOneAndUpdate(
-        { key: "default" },
-        { $setOnInsert: { key: "default" } },
+        { key: "default", agencyId: booking.agencyId || null },
+        { $setOnInsert: { key: "default", agencyId: booking.agencyId || null } },
         { new: true, upsert: true }
       ).lean()
     : null;
@@ -954,6 +1078,8 @@ export const confirmBooking = asyncHandler(async (req, res) => {
 
   const booking = await Booking.findById(id);
   if (!booking) throw new ApiError(404, "Booking not found");
+  assertBookingAccess(req, booking);
+  const before = booking.toObject();
 
   const confirmable = ["PAID", "TICKETED"];
   if (!confirmable.includes(booking.status)) {
@@ -962,6 +1088,7 @@ export const confirmBooking = asyncHandler(async (req, res) => {
 
   booking.transitionStatus(BOOKING_STATUS.CONFIRMED);
   await booking.save();
+  await recordBookingAudit(req, booking, "booking.confirm", before);
 
   await BookingTimelineService.record({
     bookingId: booking._id,
@@ -991,6 +1118,11 @@ export const listAllBookings = asyncHandler(async (req, res) => {
 
   const { limit = 20, skip = 0, status, product, sort = "-createdAt", search } = req.query;
   const query = { deletedAt: null };
+  if (!(authUser?.role === "admin" && authUser?.adminLevel === "master")) {
+    if (authUser?.role !== "agent" || !authUser?.agencyId) throw new ApiError(403, "Admin access required");
+    query.agencyId = authUser.agencyId;
+    if (authUser.agencyRole !== "partner_admin") query.assignedAgent = authUser.sub || authUser.id;
+  }
   if (status) query.status = Booking.normalizeStatus(status);
   if (product) query.product = product;
   if (search) {

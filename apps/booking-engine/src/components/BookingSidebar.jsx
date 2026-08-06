@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import BottomSheet from "@packages/trem-ui/components/BottomSheet/BottomSheet.jsx";
+import { formatTourLocation } from "../utils/format.js";
 
 const formatMoney = (v) => `₹${Number(v || 0).toLocaleString("en-IN")}`;
 const formatDate = (d) => d ? new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—";
@@ -20,7 +21,7 @@ export default function BookingSidebar({
   const [preferenceHelpOpen, setPreferenceHelpOpen] = useState(false);
   const data = productData || {};
   const title = data.title || data.name || "—";
-  const location = data.city || data.location || "";
+  const location = formatTourLocation(data);
   const image = data.photo || data.image || "";
 
   const guests = Number(guestsCount || 1);
@@ -35,6 +36,8 @@ export default function BookingSidebar({
     : Number(computedPricing?.baseTripTotal || basePricePerPerson);
   const totalPrefExtras = computedPricing?.totalPrefExtras || 0;
   const addonAmount = Number(computedPricing?.addonAmount || 0);
+  const roomTypeExtra = Number(computedPricing?.roomTypeExtra || 0);
+  const transportExtra = Number(computedPricing?.transportExtra || 0);
   const taxes = Number(computedPricing?.taxes ?? computedPricing?.tax ?? 0);
   const discounts = Number(computedPricing?.discounts || 0);
   const total = isTrevio
@@ -107,11 +110,23 @@ export default function BookingSidebar({
       <div className="be-sidebar__section">
         <h4 className="be-sidebar__heading">Trip Details</h4>
         <div className="be-sidebar__row">
-          <span className="be-sidebar__label">Dates</span>
+          <span className="be-sidebar__label">{isTrevio ? "Dates" : "Departure"}</span>
           <span className="be-sidebar__value">
-            {formatDate(trip.startDate)} → {formatDate(trip.endDate)}
+            {isTrevio ? `${formatDate(trip.startDate)} → ${formatDate(trip.endDate)}` : formatDate(trip.startDate)}
           </span>
         </div>
+        {!isTrevio && trip.departureCity && (
+          <div className="be-sidebar__row">
+            <span className="be-sidebar__label">Departure city</span>
+            <span className="be-sidebar__value">{trip.departureCity}</span>
+          </div>
+        )}
+        {!isTrevio && (
+          <div className="be-sidebar__row">
+            <span className="be-sidebar__label">Flights</span>
+            <span className="be-sidebar__value">{trip.addFlights === "flights" ? "Yes, include flights" : "Not now"}</span>
+          </div>
+        )}
         <div className="be-sidebar__row">
           <span className="be-sidebar__label">Guests</span>
           <span className="be-sidebar__value">{guestsCount || "—"}</span>
@@ -120,6 +135,12 @@ export default function BookingSidebar({
           <div className="be-sidebar__row">
             <span className="be-sidebar__label">Room</span>
             <span className="be-sidebar__value">{trip.roomType}</span>
+          </div>
+        )}
+        {!isTrevio && trip.transport && (
+          <div className="be-sidebar__row">
+            <span className="be-sidebar__label">Transfers</span>
+            <span className="be-sidebar__value">{trip.transport}</span>
           </div>
         )}
         {isTrevio && seatsAvailable != null && (
@@ -140,6 +161,18 @@ export default function BookingSidebar({
           <span className="be-sidebar__label">Trip fare · {guests} guest{guests !== 1 ? "s" : ""}</span>
           <span className="be-sidebar__value">{formatMoney(baseTripTotal)}</span>
         </div>
+        {!isTrevio && roomTypeExtra > 0 && (
+          <div className="be-sidebar__row">
+            <span className="be-sidebar__label">Room upgrade</span>
+            <span className="be-sidebar__value be-sidebar__value--positive">+{formatMoney(roomTypeExtra)}</span>
+          </div>
+        )}
+        {!isTrevio && transportExtra > 0 && (
+          <div className="be-sidebar__row">
+            <span className="be-sidebar__label">Transfer upgrade</span>
+            <span className="be-sidebar__value be-sidebar__value--positive">+{formatMoney(transportExtra)}</span>
+          </div>
+        )}
         {totalPrefExtras > 0 && (
           <div className="be-sidebar__row">
             <div className="be-sidebar__label be-sidebar__label--with-info">
@@ -162,13 +195,15 @@ export default function BookingSidebar({
           </div>
         )}
         <div className="be-sidebar__row">
-          <span className="be-sidebar__label">Add-ons</span>
+          <span className="be-sidebar__label">{isTrevio ? "Add-ons" : "Experiences"}</span>
           <span className="be-sidebar__value">{formatMoney(addonAmount)}</span>
         </div>
-        <div className="be-sidebar__row">
-          <span className="be-sidebar__label">Taxes &amp; GST</span>
-          <span className="be-sidebar__value">{formatMoney(taxes)}</span>
-        </div>
+        {isTrevio && (
+          <div className="be-sidebar__row">
+            <span className="be-sidebar__label">Taxes &amp; GST</span>
+            <span className="be-sidebar__value">{formatMoney(taxes)}</span>
+          </div>
+        )}
         {discounts > 0 && (
           <div className="be-sidebar__row">
             <span className="be-sidebar__label">Coupon discount</span>

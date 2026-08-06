@@ -19,8 +19,14 @@ const DEFAULT_SESSION = {
 };
 
 const agentRoles = ["agent"];
+const partnerAgencyRoles = ["partner_admin", "partner_agent"];
 
-export const isAllowedAgentRole = (session) => agentRoles.includes(session?.user?.role);
+export const isAllowedAgentRole = (session) => (
+    agentRoles.includes(session?.user?.role)
+    && partnerAgencyRoles.includes(session?.user?.agencyRole)
+    && session?.user?.accountStatus !== "deactivated"
+    && session?.user?.accountStatus !== "suspended"
+);
 
 const DEFAULT_HEADER_CONFIG = {
     brand: { label: "Partner Portal", homePath: "/agent/services" },
@@ -51,7 +57,7 @@ const DEFAULT_PAGE_CONFIG = {
 
 const clearLocalAuthState = () => {
     try {
-        clearAuthBrowserState({ prefixes: ["agentTREM", "travelstrem"] });
+        clearAuthBrowserState({ prefixes: ["agentTREM"] });
     } catch {}
     clearUserSessionCache();
 };

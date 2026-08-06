@@ -29,7 +29,7 @@ function actorFromReq(req) {
     .map((role) => String(role).toLowerCase());
   const privileged = roles.some((role) =>
     ["admin", "agent", "super_admin", "operations", "finance", "support"].includes(role));
-  return { id, type: privileged ? "admin" : "customer", privileged };
+  return { id, type: privileged ? "admin" : "customer", privileged, agencyId: user.agencyId || null, agencyRole: user.agencyRole || "none", isMaster: user.role === "admin" && user.adminLevel === "master" };
 }
 
 function proofUrl(file, req) {
@@ -60,6 +60,10 @@ async function getAuthorizedBooking(req, { admin = false } = {}) {
   if (!booking) throw new ApiError(404, "Booking not found");
   if (!actor.privileged && String(booking.user) !== String(actor.id)) {
     throw new ApiError(403, "Not authorized");
+  }
+  if (actor.privileged && !actor.isMaster) {
+    if (!actor.agencyId || String(booking.agencyId || "") !== String(actor.agencyId)) throw new ApiError(403, "Not authorized");
+    if (actor.agencyRole !== "partner_admin" && String(booking.assignedAgent || "") !== String(actor.id)) throw new ApiError(403, "Not authorized");
   }
   return { booking, actor };
 }
@@ -112,7 +116,7 @@ async function applyVerifiedTokenState(booking) {
 
 async function hydratedResponse(booking) {
   const hydrated = await BookingService.hydrate(booking);
-  const settings = await PaymentSettings.findOne({ key: "default" }).lean();
+  const settings = await PaymentSettings.findOne({ key: "default", agencyId: booking.agencyId || null }).lean();
   return {
     ...hydrated,
     bookingStatus: booking.status,
@@ -123,9 +127,11 @@ async function hydratedResponse(booking) {
 }
 
 export const getPaymentSettings = asyncHandler(async (req, res) => {
+  const actor = actorFromReq(req);
+  const agencyId = actor.isMaster ? (req.query.agencyId || null) : actor.agencyId;
   const settings = await PaymentSettings.findOneAndUpdate(
-    { key: "default" },
-    { $setOnInsert: { key: "default" } },
+    { key: "default", agencyId },
+    { $setOnInsert: { key: "default", agencyId } },
     { new: true, upsert: true }
   );
   return sendSuccess(res, settings);
@@ -133,7 +139,7 @@ export const getPaymentSettings = asyncHandler(async (req, res) => {
 
 export const updatePaymentSettings = asyncHandler(async (req, res) => {
   const actor = actorFromReq(req);
-  if (!actor.privileged) throw new ApiError(403, "Admin access required");
+  if (!actor.isMaster && actor.agencyRole !== "partner_admin") throw new ApiError(403, "Partner Admin access required");
   const methods = Array.isArray(req.body?.methods)
     ? req.body.methods.map((method) => ({
         code: String(method.code || "").toUpperCase(),
@@ -148,15 +154,18 @@ export const updatePaymentSettings = asyncHandler(async (req, res) => {
         ifsc: String(method.ifsc || "").trim().toUpperCase(),
       })).filter((method) => method.code && method.label)
     : [];
+  const agencyId = actor.isMaster ? (req.body.agencyId || null) : actor.agencyId;
   const settings = await PaymentSettings.findOneAndUpdate(
-    { key: "default" },
+    { key: "default", agencyId },
     {
       $set: {
         methods,
         instructions: String(req.body?.instructions || "").trim(),
+        merchantProvider: req.body?.merchantProvider === "razorpay" ? "razorpay" : "manual",
+        merchantAccountId: String(req.body?.merchantAccountId || "").trim(),
         updatedBy: actor.id,
       },
-      $setOnInsert: { key: "default" },
+      $setOnInsert: { key: "default", agencyId },
     },
     { new: true, upsert: true, runValidators: true }
   );
@@ -174,8 +183,8 @@ export const submitTokenProof = asyncHandler(async (req, res) => {
 
   const paymentScreenshot = proofUrl(req.file, req) || String(req.body?.paymentScreenshot || "").trim();
   const settings = await PaymentSettings.findOneAndUpdate(
-    { key: "default" },
-    { $setOnInsert: { key: "default" } },
+    { key: "default", agencyId: booking.agencyId || null },
+    { $setOnInsert: { key: "default", agencyId: booking.agencyId || null } },
     { new: true, upsert: true }
   );
   const requestedMethod = String(req.body?.paymentMethod || "").toUpperCase();
@@ -264,7 +273,10 @@ export const downloadPaymentProof = asyncHandler(async (req, res) => {
 export const listPaymentVerifications = asyncHandler(async (req, res) => {
   const actor = actorFromReq(req);
   if (!actor.privileged) throw new ApiError(403, "Admin access required");
+  const bookingScope = actor.isMaster ? {} : { agencyId: actor.agencyId, ...(actor.agencyRole === "partner_admin" ? {} : { assignedAgent: actor.id }) };
+  const visibleBookingIds = await Booking.find(bookingScope).distinct("_id");
   const payments = await BookingPayment.find({
+    bookingId: { $in: visibleBookingIds },
     type: PAYMENT_TYPE.TOKEN,
     status: PAYMENT_RECORD_STATUS.VERIFICATION,
   })

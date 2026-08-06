@@ -129,14 +129,19 @@ const TREVISTA_URL = String(get("TREVISTA_URL", portalJsonConfig?.frontends?.tre
 const SHELL_URL = String(get("SHELL_URL", portalJsonConfig?.frontends?.shell?.baseUrl || "") || "").trim();
 const BOOKING_ENGINE_URL = String(get("BOOKING_ENGINE_URL", portalJsonConfig?.frontends?.booking?.baseUrl || "") || "").trim();
 const AUTH_APP_URL = String(get("AUTH_APP_URL", portalJsonConfig?.frontends?.auth?.baseUrl || "") || "").trim();
+const PARTNER_URL = String(get("PARTNER_URL", portalJsonConfig?.frontends?.partnerTREM?.baseUrl || portalJsonConfig?.frontends?.agentTREM?.baseUrl || (IS_DEVELOPMENT ? "http://localhost:3004" : "")) || "").trim();
 const ADMIN_URL = String(get("ADMIN_URL", portalJsonConfig?.frontends?.adminTREM?.baseUrl || "") || "").trim();
 const ADMIN_REMOTE_URL = String(get("ADMIN_REMOTE_URL", portalJsonConfig?.frontends?.adminTREM?.remoteEntry || ADMIN_URL) || "").trim();
 const COMPANY_NAME = String(get("COMPANY_NAME", portalJsonConfig?.company?.name || APP_NAME) || "").trim();
 const COMPANY_TAGLINE = String(get("COMPANY_TAGLINE", portalJsonConfig?.company?.tagline || "") || "").trim();
 const SUPPORT_EMAIL = String(get("SUPPORT_EMAIL", portalJsonConfig?.company?.supportEmail || "") || "").trim();
+// Operational inbox that receives customer enquiry notifications. It can be
+// separated from public support later without changing form controllers.
+const ENQUIRY_EMAIL = String(get("ENQUIRY_EMAIL", SUPPORT_EMAIL) || "").trim();
 const SUPPORT_PHONE = String(get("SUPPORT_PHONE", portalJsonConfig?.company?.supportPhone || "") || "").trim();
 const DEFAULT_TOUR_IMAGE = String(get("DEFAULT_TOUR_IMAGE", portalJsonConfig?.assets?.defaultTourImage || "") || "").trim();
 const AGENT_EMAIL_DOMAIN = String(get("AGENT_EMAIL_DOMAIN", "") || "").trim().toLowerCase();
+const INVITATION_TTL_HOURS = Math.min(168, Math.max(1, Number(get("INVITATION_TTL_HOURS", 48)) || 48));
 const WHATSAPP_CHANNEL_URL = String(get("WHATSAPP_CHANNEL_URL", "") || "").trim();
 const WHATSAPP_CHANNEL_NAME = String(get("WHATSAPP_CHANNEL_NAME", "") || "").trim();
 
@@ -216,11 +221,16 @@ const RATE_LIMIT = {
 const SMTP = {
     host: get("SMTP_HOST", portalJsonConfig?.smtp?.host || "") || null,
     port: Number(get("SMTP_PORT", portalJsonConfig?.smtp?.port || 0)) || null,
+    secure: String(get("SMTP_SECURE", portalJsonConfig?.smtp?.secure ?? "")).toLowerCase() === "true"
+        || (!hasEnv("SMTP_SECURE") && Number(get("SMTP_PORT", portalJsonConfig?.smtp?.port || 0)) === 465),
     user: get("SMTP_USER", portalJsonConfig?.smtp?.user || "") || null,
     pass: get("SMTP_PASS", portalJsonConfig?.smtp?.pass || "") || null,
-    from: get("SMTP_FROM", portalJsonConfig?.smtp?.from || "") || null,
+    fromName: get("SMTP_FROM_NAME", portalJsonConfig?.smtp?.fromName || COMPANY_NAME) || null,
+    fromEmail: get("SMTP_FROM_EMAIL", get("SMTP_FROM", portalJsonConfig?.smtp?.fromEmail || ""))
+        || get("SMTP_USER", portalJsonConfig?.smtp?.user || "")
+        || null,
 };
-const SMTP_AVAILABLE = Boolean(SMTP.host && SMTP.port && SMTP.user && SMTP.pass);
+const SMTP_AVAILABLE = Boolean(SMTP.host && SMTP.port && SMTP.user && SMTP.pass && SMTP.fromEmail);
 
 /* ------------------------------
    9) Dev helpers & features
@@ -240,6 +250,9 @@ const CLOUDINARY_SECRET = get("CLOUDINARY_SECRET", portalJsonConfig?.cloudinary?
     11) OTP and other application-level settings
     ------------------------------ */
 const OTP_TTL_MS = Number(get("OTP_TTL_MS", portalJsonConfig?.features?.otpTtlMs || 15 * 60 * 1000)); // 15 minutes by default
+// In non-production environments the OTP flow is bypassed: no OTP emails are
+// sent and any submitted OTP is accepted. Production always keeps real OTPs.
+const DEV_OTP_BYPASS = get("DEV_OTP_BYPASS", IS_PRODUCTION ? "false" : "true").toString() === "true";
 const AUTH_COOKIE_DOMAIN = (get("AUTH_COOKIE_DOMAIN", portalJsonConfig?.auth?.cookieDomain || "") || "").toString().trim();
 
 process.env.MONGO_URI = process.env.MONGO_URI || MONGO_URI;
@@ -248,9 +261,11 @@ process.env.JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || JWT.accessSecre
 process.env.JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || JWT.refreshSecret;
 process.env.SMTP_HOST = process.env.SMTP_HOST || SMTP.host || "";
 process.env.SMTP_PORT = process.env.SMTP_PORT || (SMTP.port ? String(SMTP.port) : "");
+process.env.SMTP_SECURE = process.env.SMTP_SECURE || String(SMTP.secure);
 process.env.SMTP_USER = process.env.SMTP_USER || SMTP.user || "";
 process.env.SMTP_PASS = process.env.SMTP_PASS || SMTP.pass || "";
-process.env.SMTP_FROM = process.env.SMTP_FROM || SMTP.from || "";
+process.env.SMTP_FROM_NAME = process.env.SMTP_FROM_NAME || SMTP.fromName || "";
+process.env.SMTP_FROM_EMAIL = process.env.SMTP_FROM_EMAIL || SMTP.fromEmail || "";
 process.env.OAUTH_GOOGLE_URL = process.env.OAUTH_GOOGLE_URL || portalJsonConfig?.oauth?.googleUrl || "";
 process.env.OAUTH_GITHUB_URL = process.env.OAUTH_GITHUB_URL || portalJsonConfig?.oauth?.githubUrl || "";
 process.env.OAUTH_APPLE_URL = process.env.OAUTH_APPLE_URL || portalJsonConfig?.oauth?.appleUrl || "";
@@ -264,6 +279,14 @@ process.env.CLOUDINARY_SECRET = process.env.CLOUDINARY_SECRET || CLOUDINARY_SECR
     ------------------------------ */
 const MASTER_ADMIN_EMAIL = (process.env.MASTER_ADMIN_EMAIL || "").toString().trim().toLowerCase();
 const MASTER_ADMIN_PHONE = (process.env.MASTER_ADMIN_PHONE || "").toString().trim();
+const MASTER_ADMIN_PIN = getSecret("MASTER_ADMIN_PIN", IS_DEVELOPMENT ? "123456" : "").toString().trim();
+
+if (IS_PRODUCTION && !MASTER_ADMIN_PIN) {
+    throw new Error("Missing MASTER_ADMIN_PIN environment variable!");
+}
+if (MASTER_ADMIN_PIN && !/^\d{6}$/.test(MASTER_ADMIN_PIN)) {
+    throw new Error("MASTER_ADMIN_PIN must contain exactly 6 digits.");
+}
 
 /* ------------------------------
     13) Redis
@@ -314,14 +337,17 @@ const config = {
     SHELL_URL,
     BOOKING_ENGINE_URL,
     AUTH_APP_URL,
+    PARTNER_URL,
     ADMIN_URL,
     ADMIN_REMOTE_URL,
     COMPANY_NAME,
     COMPANY_TAGLINE,
     SUPPORT_EMAIL,
+    ENQUIRY_EMAIL,
     SUPPORT_PHONE,
     DEFAULT_TOUR_IMAGE,
     AGENT_EMAIL_DOMAIN,
+    INVITATION_TTL_HOURS,
     WHATSAPP_CHANNEL_URL,
     WHATSAPP_CHANNEL_NAME,
     JWT,
@@ -334,6 +360,7 @@ const config = {
     DEBUG,
     DEV_DELAY_MS,
     OTP_TTL_MS,
+    DEV_OTP_BYPASS,
     AUTH_COOKIE_DOMAIN,
     CLOUDINARY_NAME,
     CLOUDINARY_KEY,
@@ -341,6 +368,7 @@ const config = {
     REDIS_URL,
     MASTER_ADMIN_EMAIL,
     MASTER_ADMIN_PHONE,
+    MASTER_ADMIN_PIN,
     PORTAL_CONFIG: portalJsonConfig,
     logConfigSummary,
 };
@@ -360,14 +388,17 @@ export {
     SHELL_URL,
     BOOKING_ENGINE_URL,
     AUTH_APP_URL,
+    PARTNER_URL,
     ADMIN_URL,
     ADMIN_REMOTE_URL,
     COMPANY_NAME,
     COMPANY_TAGLINE,
     SUPPORT_EMAIL,
+    ENQUIRY_EMAIL,
     SUPPORT_PHONE,
     DEFAULT_TOUR_IMAGE,
     AGENT_EMAIL_DOMAIN,
+    INVITATION_TTL_HOURS,
     WHATSAPP_CHANNEL_URL,
     WHATSAPP_CHANNEL_NAME,
     JWT,
@@ -380,6 +411,7 @@ export {
     DEBUG,
     DEV_DELAY_MS,
     OTP_TTL_MS,
+    DEV_OTP_BYPASS,
     AUTH_COOKIE_DOMAIN,
     CLOUDINARY_NAME,
     CLOUDINARY_KEY,
@@ -387,6 +419,7 @@ export {
     REDIS_URL,
     MASTER_ADMIN_EMAIL,
     MASTER_ADMIN_PHONE,
+    MASTER_ADMIN_PIN,
     portalJsonConfig as PORTAL_CONFIG,
     logConfigSummary,
 };

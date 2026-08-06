@@ -17,6 +17,7 @@
         "filterMaxPrice": "Max price",
         "filterMinDays": "Min days",
         "filterMaxDays": "Max days",
+        "filterGroup": "Group size",
         "filterArrival": "Arrival",
         "filterReturn": "Return",
         "filterTags": "Interests",
@@ -87,6 +88,11 @@
               {
                 "name": "maxDays",
                 "labelRef": "filterMaxDays",
+                "type": "number"
+              },
+              {
+                "name": "groupSize",
+                "labelRef": "filterGroup",
                 "type": "number"
               },
               {

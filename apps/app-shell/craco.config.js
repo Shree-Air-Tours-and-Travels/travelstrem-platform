@@ -23,6 +23,11 @@ const bookingRemoteEntry = remoteEntry(
   process.env.REACT_APP_BOOKING_ENGINE_URL,
   "http://localhost:3007",
 );
+const trevistaRemoteEntry = remoteEntry(
+  process.env.REACT_APP_TREVISTA_REMOTE_ENTRY,
+  process.env.REACT_APP_TREVISTA_URL,
+  "http://localhost:3001",
+);
 
 function extendBabelIncludes(webpackConfig) {
   const oneOfRule = webpackConfig.module.rules.find((rule) => Array.isArray(rule.oneOf));
@@ -75,6 +80,7 @@ module.exports = {
         remotes: {
           trevio: `trevio@${trevioRemoteEntry}`,
           bookingEngine: `bookingEngine@${bookingRemoteEntry}`,
+          trevista: `trevista@${trevistaRemoteEntry}`,
         },
         shared: {
           react: { singleton: true, requiredVersion: false },

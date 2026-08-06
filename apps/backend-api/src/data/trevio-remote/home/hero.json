@@ -29,7 +29,8 @@
                 "featuredDefaultType": "Curated trip",
                 "featuredCtaAction": "View trip",
                 "featuredEmptyTitle": "Adventures are loading",
-                "featuredEmptyDescription": "We are curating your next escape. Check back soon for handpicked trips."
+                "featuredEmptyDescription": "We are curating your next escape. For your custom trips and upcoming trips, contact us to enquire.",
+                "featuredEmptyAction": "Enquire us"
             },
             "urls": {
                 "tripsEndpoint": "/trevio/trips.json"
@@ -71,6 +72,7 @@
                     "cardMetaRef": "featuredCardMeta",
                     "defaultTypeRef": "featuredDefaultType",
                     "ctaActionLabelRef": "featuredCtaAction",
+                    "emptyActionRef": "featuredEmptyAction",
                     "tripsEndpointUrlRef": "tripsEndpoint"
                 }
             ],

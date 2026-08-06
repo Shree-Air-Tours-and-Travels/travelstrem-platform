@@ -19,7 +19,13 @@
         "confirmBookingCancelLabel": "Cancel",
         "tourNotFoundTitle": "Trip not found",
         "tourNotFoundMessage": "The trip link is missing a valid reference.",
-        "tourErrorTitle": "Trip details could not load"
+        "tourErrorTitle": "Trip details could not load",
+        "agencyDetails": {
+          "ariaLabel": "Trip operator details",
+          "eyebrow": "Operated by",
+          "travelPartner": "Your travel partner",
+          "partnerReference": "Agency reference"
+        }
       },
       "urls": {}
     },
@@ -52,6 +58,16 @@
           "type": "InclusionsExclusions",
           "source": "shell",
           "widgetRef": "./widgets/inclusions-exclusions.json"
+        },
+        {
+          "type": "IncludedStays",
+          "source": "shell",
+          "widgetRef": "./widgets/included-stays.json"
+        },
+        {
+          "type": "CancellationPolicy",
+          "source": "shell",
+          "widgetRef": "./widgets/cancellation-policy.json"
         },
         {
           "type": "ReviewsSection",

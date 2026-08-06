@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import TrevioTripRepository from "../repositories/TrevioTripRepository.js";
-import { TREVIO_SEED_TRIPS } from "../data/seedTrips.js";
 
 const asPlainObject = (doc) => (doc?.toObject ? doc.toObject({ virtuals: true }) : doc);
 
@@ -39,6 +38,7 @@ export const normalizeTrevioTrip = (doc = {}) => {
     ? null
     : Number(availability.seatsAvailable);
   const lowSeatThreshold = Math.max(0, Number(process.env.TREVIO_LOW_SEAT_THRESHOLD || 3));
+  const agency = trip.agencyId && typeof trip.agencyId === "object" ? trip.agencyId : null;
 
   return {
     _id: trip._id || null,
@@ -66,6 +66,20 @@ export const normalizeTrevioTrip = (doc = {}) => {
     featured: Boolean(trip.featured),
     status: trip.status || "listed",
     isListed: Boolean(trip.isListed),
+    tremVerified: Boolean(trip.tremVerified),
+    tremVerifiedAt: trip.tremVerifiedAt || null,
+    agency: agency ? {
+      id: agency._id || agency.id || null,
+      name: agency.agencyName || "",
+      reference: agency.partnerAgencyRef || "",
+      logo: agency.logo || "",
+      website: agency.website || "",
+      location: [agency.address?.city, agency.address?.state, agency.address?.country].filter(Boolean).join(", "),
+    } : null,
+    operator: trip.ownerAgent && typeof trip.ownerAgent === "object" ? {
+      name: trip.ownerAgent.name || "",
+      reference: trip.ownerAgent.agentRef || "",
+    } : null,
     startDate: formatDate(trip.startDate),
     endDate: formatDate(trip.endDate),
     startDateISO: toISODate(trip.startDate),
@@ -91,6 +105,10 @@ export const normalizeTrevioTrip = (doc = {}) => {
       drinkTypes: Array.isArray(trip.preferences?.drinkTypes) ? trip.preferences.drinkTypes : [],
     },
     reviews,
+    includedStays: Array.isArray(trip.includedStays) ? trip.includedStays : [],
+    hotelOptions: Array.isArray(trip.hotelOptions) ? trip.hotelOptions : [],
+    cancellation: trip.cancellation || null,
+    extras: Array.isArray(trip.extras) ? trip.extras : [],
     priceInfo: {
       min: price.amount || 0,
       max: price.amount || 0,
@@ -228,14 +246,6 @@ class TrevioTripService {
     const trips = docs.map(normalizeTrevioTrip);
 
     return { trips, total };
-  }
-
-  async seedTrips() {
-    if (!isDbReady()) return { seeded: 0, skipped: true };
-    for (const trip of TREVIO_SEED_TRIPS) {
-      await TrevioTripRepository.upsertBySlug(trip.slug, trip);
-    }
-    return { seeded: TREVIO_SEED_TRIPS.length, skipped: false };
   }
 }
 

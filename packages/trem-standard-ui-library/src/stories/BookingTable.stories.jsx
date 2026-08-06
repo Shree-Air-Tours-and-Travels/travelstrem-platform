@@ -159,11 +159,6 @@ export default {
   },
 };
 
-export const Playground = {
-  name: "Booking Table / Playground",
-  render: (args) => <BookingTable {...args} />,
-};
-
 export const BookingList = {
   name: "Booking Table / My Journeys",
   render: () => <BookingTable {...bookingTableConfig} columns={bookingColumns} rows={bookingRows} />,

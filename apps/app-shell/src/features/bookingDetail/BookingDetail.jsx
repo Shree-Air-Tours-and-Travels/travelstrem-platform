@@ -5,6 +5,7 @@ import TimelineStepper from "@packages/trem-ui/components/TimelineStepper/Timeli
 import QuoteDisplay from "@packages/trem-ui/components/QuoteDisplay/QuoteDisplay.jsx";
 import Button from "@packages/trem-ui/components/Button/Button.jsx";
 import MessageBubble from "@packages/trem-ui/components/MessageBubble/MessageBubble.jsx";
+import Spinner from "@packages/trem-ui/components/Spinner/Spinner.jsx";
 import { sanitizeInput, detectScriptInjection, detectPrivacyBreaches, auditLog_event } from "../../services/security";
 import "./BookingDetail.scss";
 
@@ -167,7 +168,7 @@ export default function BookingDetail({ bookingId, onBack }) {
     }
   };
 
-  if (loading) return <div className="bd-loading">Loading booking details...</div>;
+  if (loading) return <div className="bd__loading"><Spinner direction="column" label="Loading booking details..." /></div>;
   if (error) return <div className="bd-error"><p>{error}</p><Button text="Go Back" onClick={onBack} variant="outline" /></div>;
   if (!booking) return <div className="bd-empty">Booking not found</div>;
 

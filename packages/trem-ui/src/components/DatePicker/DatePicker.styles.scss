@@ -66,12 +66,15 @@
     }
   }
 
+  &__menu-wrapper {
+    position: fixed;
+    z-index: 1500;
+    max-width: calc(100vw - 24px);
+    pointer-events: auto;
+  }
+
   &__dropdown {
-    position: absolute;
-    top: calc(100% + 4px);
-    left: 0;
-    z-index: 100;
-    min-width: 280px;
+    width: 100%;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: $radius-md;

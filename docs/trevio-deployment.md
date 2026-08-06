@@ -32,7 +32,8 @@ After deploy, you'll get a URL like https://trevio-xxxxx.vercel.app.
 Step 5: Update Render Backend
 In Render Dashboard → your backend service → Environment → add/update:
 FRONTENDS=https://trevio.vercel.app,https://trevista.vercel.app,https://dashboard.vercel.app,https://auth.vercel.app
-AUTH_COOKIE_DOMAIN=.vercel.app
+# Do not use .vercel.app as a cookie domain. Leave this empty until custom domains are configured.
+AUTH_COOKIE_DOMAIN=
 If using custom domains later, update these to https://trevio.travelstrem.com etc.
 Step 6: Add Custom Domain (Optional)
 1. Vercel → Trevio Project → Settings → Domains

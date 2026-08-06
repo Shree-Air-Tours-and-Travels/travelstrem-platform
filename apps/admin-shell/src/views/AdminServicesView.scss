@@ -246,6 +246,19 @@
   color: var(--muted);
 }
 
+.asv__card-provenance {
+  display: grid;
+  gap: 3px;
+  margin: -$space-1 0 $space-3;
+  padding: $space-2;
+  border-left: 2px solid var(--primary-focus);
+  background: var(--surface-inset);
+  color: var(--muted);
+  font-size: 11px;
+
+  strong { color: var(--text); font-weight: $font-semibold; }
+}
+
 .asv__card-tags {
   display: flex;
   gap: $space-1;

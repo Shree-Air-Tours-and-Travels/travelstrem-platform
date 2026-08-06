@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { FormField } from "./FormElements.jsx";
+import React, { useState, useEffect, useMemo } from "react";
+import { ConfigurableForm } from "@packages/trem-ui";
 import useGeoLocation from "../hooks/useGeoLocation.js";
 
 const DOMESTIC_NATIONALITIES = new Set(["India"]);
@@ -14,6 +14,49 @@ function buildPrefOptions(options = []) {
         ? `${opt.label} (-₹${Math.abs(Number(opt.extraPrice)).toLocaleString("en-IN")})`
         : opt.label,
   }));
+}
+
+function toFormField(field) {
+  const base = {
+    name: field.name,
+    label: field.label,
+    required: field.required,
+    disabled: field.disabled || field.readOnly,
+    placeholder: field.placeholder,
+    maxLength: field.maxLength,
+    width: field.width,
+    wide: field.wide,
+    colSpan: field.colSpan,
+  };
+  if (field.type === "date") {
+    return {
+      ...base,
+      type: "date",
+      mode: field.datePickerMode || "calendar",
+      minDate: field.min,
+      maxDate: field.max,
+    };
+  }
+  return {
+    ...base,
+    type: field.type || "text",
+    options: field.options,
+  };
+}
+
+function buildStaticConfig(sections, columns = 2, columnsMobile = 3) {
+  return {
+    layout: { columns, columnsMobile, expandable: false },
+    sections,
+  };
+}
+
+function prefixedErrors(errors, prefix) {
+  const scoped = {};
+  Object.keys(errors).forEach((key) => {
+    if (key.startsWith(prefix)) scoped[key.slice(prefix.length)] = errors[key];
+  });
+  return scoped;
 }
 
 export default function TravellerStep({
@@ -53,12 +96,28 @@ export default function TravellerStep({
   });
 
   const prefs = productData?.preferences || {};
-  const prefFieldOptions = {};
-  if (TRAVELLER_PREFERENCE_FIELDS) {
-    TRAVELLER_PREFERENCE_FIELDS.forEach((pf) => {
-      prefFieldOptions[pf.name] = buildPrefOptions(prefs[pf.optionsKey] || []);
-    });
-  }
+  const prefFieldOptions = useMemo(() => {
+    const options = {};
+    if (TRAVELLER_PREFERENCE_FIELDS) {
+      TRAVELLER_PREFERENCE_FIELDS.forEach((pf) => {
+        options[pf.name] = buildPrefOptions(prefs[pf.optionsKey] || []);
+      });
+    }
+    return options;
+  }, [TRAVELLER_PREFERENCE_FIELDS, prefs]);
+
+  const contactConfig = useMemo(() => buildStaticConfig([
+    {
+      id: "contact",
+      fields: [
+        { name: "name", label: "Full Name", type: "text", required: true },
+        { name: "email", label: "Email", type: "email", required: true },
+        { name: "phone", label: "Phone", type: "tel", required: true },
+      ],
+    },
+  ], 3, 1), []);
+
+  const contactErrors = useMemo(() => prefixedErrors(errors, "contact."), [errors]);
 
   const getDynamicFields = () => {
     return TRAVELLER_FIELDS.map((field) => {
@@ -76,67 +135,34 @@ export default function TravellerStep({
     });
   };
 
-  const dynamicFields = getDynamicFields();
+  const preferenceFields = (TRAVELLER_PREFERENCE_FIELDS || [])
+    .filter((pf) => (prefFieldOptions[pf.name] || []).length > 0)
+    .map((pf) => ({
+      name: pf.name,
+      label: pf.label,
+      type: "select",
+      options: prefFieldOptions[pf.name] || [],
+      required: true,
+    }));
 
-  const renderPreferences = (traveller, index) => {
-    if (!TRAVELLER_PREFERENCE_FIELDS || TRAVELLER_PREFERENCE_FIELDS.length === 0) return null;
-
-    const fieldsToShow = TRAVELLER_PREFERENCE_FIELDS.filter((pf) => {
-      const options = prefFieldOptions[pf.name];
-      return options && options.length > 0;
-    });
-
-    if (fieldsToShow.length === 0) return null;
-
-    return (
-      <div className="be-traveller__preferences">
-        <h4 className="be-traveller__pref-heading">Preferences</h4>
-        <div className="be-step__form-row be-step__form-row--compact">
-          {fieldsToShow.map((pf) => (
-            <FormField
-              key={pf.name}
-              field={{
-                name: pf.name,
-                label: pf.label,
-                type: pf.type || "select",
-                options: prefFieldOptions[pf.name] || [],
-                required: true,
-              }}
-              value={traveller[pf.name] || ""}
-              error={errors[`travellers.${index}.${pf.name}`]}
-              errorKey={`travellers.${index}.${pf.name}`}
-              onChange={(name, val) => updateTraveller(index, name, val)}
-            />
-          ))}
-        </div>
-      </div>
-    );
-  };
+  const travellerConfigs = useMemo(() => {
+    const detailsFields = getDynamicFields().map(toFormField);
+    const sections = [{ id: "details", fields: detailsFields }];
+    if (preferenceFields.length) {
+      sections.push({ id: "preferences", title: "Preferences", fields: preferenceFields });
+    }
+    return buildStaticConfig(sections, 2, 1);
+  }, [TRAVELLER_FIELDS, isInternational, prefFieldOptions]);
 
   return (
     <div className="be-step be-step--travellers">
       <h3 className="be-step__heading">Contact Information</h3>
       <div className="be-step__form-row">
-        <FormField
-          field={{ name: "name", label: "Full Name", type: "text", required: true }}
-          value={contact.name}
-          error={errors["contact.name"]}
-          errorKey="contact.name"
-          onChange={(name, val) => updateContact(name, val)}
-        />
-        <FormField
-          field={{ name: "email", label: "Email", type: "email", required: true }}
-          value={contact.email}
-          error={errors["contact.email"]}
-          errorKey="contact.email"
-          onChange={(name, val) => updateContact(name, val)}
-        />
-        <FormField
-          field={{ name: "phone", label: "Phone", type: "tel", required: true }}
-          value={contact.phone}
-          error={errors["contact.phone"]}
-          errorKey="contact.phone"
-          onChange={(name, val) => updateContact(name, val)}
+        <ConfigurableForm
+          config={contactConfig}
+          values={contact}
+          errors={contactErrors}
+          onChange={updateContact}
         />
       </div>
 
@@ -145,6 +171,7 @@ export default function TravellerStep({
         {travellers.map((traveller, index) => {
           const isExpanded = expandedTraveller === index;
           const hasErrors = Object.keys(errors).some((k) => k.startsWith(`travellers.${index}.`));
+          const travellerErrors = prefixedErrors(errors, `travellers.${index}.`);
           return (
             <div key={index} className={`be-traveller ${isExpanded ? "be-traveller--expanded" : ""}`}>
               <button
@@ -165,19 +192,12 @@ export default function TravellerStep({
               </button>
               {isExpanded && (
                 <div className="be-traveller__form">
-                  <div className="be-step__form-row be-step__form-row--compact">
-                    {dynamicFields.map((field) => (
-                      <FormField
-                        key={field.name}
-                        field={field}
-                        value={traveller[field.name]}
-                        error={errors[`travellers.${index}.${field.name}`]}
-                        errorKey={`travellers.${index}.${field.name}`}
-                        onChange={(name, val) => updateTraveller(index, name, val)}
-                      />
-                    ))}
-                  </div>
-                  {renderPreferences(traveller, index)}
+                  <ConfigurableForm
+                    config={travellerConfigs}
+                    values={traveller}
+                    errors={travellerErrors}
+                    onChange={(name, val) => updateTraveller(index, name, val)}
+                  />
                 </div>
               )}
             </div>

@@ -72,41 +72,6 @@
     }
   }
 
-  &__badge {
-    max-width: 112px;
-    overflow: hidden;
-    padding: $space-1 $space-2;
-    border-radius: $radius-full;
-    background: var(--surface-inset);
-    color: var(--muted);
-    font-size: 0.6875rem;
-    font-weight: $font-semibold;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-
-    &--upcoming,
-    &--confirmed {
-      background: var(--success-soft);
-      color: var(--success-color);
-    }
-
-    &--pending {
-      background: var(--warning-soft);
-      color: var(--color-warning);
-    }
-
-    &--cancelled,
-    &--canceled {
-      background: var(--danger-soft);
-      color: var(--color-danger);
-    }
-
-    &--completed {
-      background: var(--primary-soft);
-      color: var(--color-primary);
-    }
-  }
-
   &__fields {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -6,7 +6,7 @@ import TourView from "./TourView";
 import { agentWidgetRegistry } from "../../../widgets/registry/widgetRegistry";
 import { TAB_WIDGET_MAP } from "./tours.constants";
 import pageConfig from "./manageToursPage.config.json";
-import AgentWorkspaceSidebar from "./AgentWorkspaceSidebar.view";
+import PartnerWorkspace from "../../tenancy/PartnerWorkspace";
 
 export function ConfirmModal({ open, title = pageConfig.confirmModal.defaultTitle, message = pageConfig.confirmModal.defaultMessage, onCancel, onConfirm }) {
     if (!open) return null;
@@ -62,9 +62,9 @@ export default function ManageToursView({
             </header>
 
             <div className="agent-ops__body">
-                <AgentWorkspaceSidebar profile={profile} auth={auth} loading={profileLoading} activeNav={tab} onNavChange={setTab} onProfileAction={() => setTab("settings")} />
                 <section className="agent-ops__content">
                     {(() => {
+                        if (["dashboard", "agents", "customers", "reports", "deletions", "notifications"].includes(tab)) return <PartnerWorkspace tab={tab} user={auth.user} />;
                         const def = agentWidgetRegistry.get(TAB_WIDGET_MAP[tab]);
                         const Component = def?.component;
                         if (!Component) return null;

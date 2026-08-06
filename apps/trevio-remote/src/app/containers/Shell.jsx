@@ -73,7 +73,7 @@ export default function Shell({ children, labels, headerConfig, onWishlist, wish
         <AppFooter
           config={{
             ...(headerConfig?.footer || {}),
-            productName: labels.footerBrand || "Trevio by TravelsTrem",
+            productName: labels.footerBrand,
             description: labels.footerDescription || headerConfig?.footer?.description,
           }}
         />

@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Breadcrumbs, FloatingActionBar, Title, Paragraph } from "../../index.js";
+import { Button, Breadcrumbs, FloatingActionBar, Title, Paragraph, AgencyDetailsCard } from "../../index.js";
 import { ContactAgentModal, ConfirmOverlay } from "@packages/trem-modals";
 import TourOverview from "./widgets/TourOverview/TourOverview";
 import TourGallery from "./widgets/TourGallery/TourGallery";
@@ -7,6 +7,7 @@ import PricingCard from "./widgets/PricingCard/PricingCard";
 import TourHighlights from "./widgets/TourHighlights/TourHighlights";
 import ItineraryTimeline from "./widgets/ItineraryTimeline/ItineraryTimeline";
 import InclusionsExclusions from "./widgets/InclusionsExclusions/InclusionsExclusions";
+import IncludedStays from "./widgets/IncludedStays/IncludedStays";
 import CancellationPolicy from "./widgets/CancellationPolicy/CancellationPolicy";
 import ReviewsSection from "./widgets/ReviewsSection/ReviewsSection";
 import SimilarTours from "./widgets/SimilarTours/SimilarTours";
@@ -41,7 +42,7 @@ export const EmptyState = ({ title, message, onBack, backLabel = "Back to tours"
 );
 
 const HERO_WIDGETS = new Set(["TourOverview", "TourGallery", "PricingCard"]);
-const CONTENT_WIDGETS = new Set(["TourHighlights", "ItineraryTimeline", "InclusionsExclusions", "CancellationPolicy", "ReviewsSection", "SimilarTours"]);
+const CONTENT_WIDGETS = new Set(["TourHighlights", "ItineraryTimeline", "InclusionsExclusions", "IncludedStays", "CancellationPolicy", "ReviewsSection", "SimilarTours"]);
 
 const renderWidget = (widget, props) => {
   switch (widget.type) {
@@ -57,6 +58,8 @@ const renderWidget = (widget, props) => {
       return <ItineraryTimeline key={widget.type} tourRef={props.tourRef} />;
     case "InclusionsExclusions":
       return <InclusionsExclusions key={widget.type} tourRef={props.tourRef} />;
+    case "IncludedStays":
+      return <IncludedStays key={widget.type} tourRef={props.tourRef} />;
     case "CancellationPolicy":
       return <CancellationPolicy key={widget.type} tourRef={props.tourRef} />;
     case "ReviewsSection":
@@ -76,7 +79,7 @@ export default function ToursDetailsView({
   onTourLoad, onBack, onBook, onBookConfirm, onBookConfirmClose, onContact, onShare,
   isFavorited, onFavorite,
   setContactOpen,
-  appKey,
+  appKey, user,
 }) {
   const widgetProps = { tourRef, activeTour, onTourLoad, onBook, onContact, onShare, isFavorited, onFavorite, appKey };
   const heroWidgets = widgets.filter((widget) => HERO_WIDGETS.has(widget.type));
@@ -100,6 +103,12 @@ export default function ToursDetailsView({
 
         <TourFacts tourRef={tourRef} tour={activeTour} />
 
+        <AgencyDetailsCard
+          agency={activeTour?.agency}
+          operator={activeTour?.operator || (activeTour?.ownerName ? { name: activeTour.ownerName } : null)}
+          labels={elements?.labels?.agencyDetails || {}}
+        />
+
         <div className="tour-detail__content">
           {contentWidgets.map((widget) => renderWidget(widget, widgetProps))}
         </div>
@@ -111,6 +120,7 @@ export default function ToursDetailsView({
           tourId={activeTour._id}
           onClose={() => setContactOpen(false)}
           formData={contactFormData}
+          user={user}
         />
       ) : null}
 

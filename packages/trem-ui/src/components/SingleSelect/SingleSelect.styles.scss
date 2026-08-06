@@ -1,0 +1,67 @@
+@import "@packages/trem-design-tokens/scss";
+
+.trem-singleselect {
+  width: 100%;
+
+  &__clear {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: $radius-full;
+    color: var(--muted, var(--text-muted));
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: background 140ms $ease-default;
+
+    &:hover {
+      background: var(--surface-inset, var(--surface));
+      color: var(--text, var(--text-strong));
+    }
+  }
+
+  &__error {
+    margin-top: $space-1-5;
+    font-size: $font-size-xs;
+    line-height: 1.3;
+    color: var(--color-danger, #dc2626);
+  }
+
+  &--outlined .trem-dropdown__select {
+    border: 1px solid var(--control-border, var(--border));
+    background: var(--control-bg, var(--surface));
+  }
+
+  &--filled .trem-dropdown__select {
+    border: 1px solid transparent;
+    background: var(--surface-inset, var(--surface));
+  }
+
+  &--underlined .trem-dropdown__select {
+    border: 0;
+    border-bottom: 2px solid var(--control-border, var(--border));
+    border-radius: 0;
+    padding-left: 0;
+    padding-right: 0;
+    background: transparent;
+  }
+
+  &--sm .trem-dropdown__select {
+    min-height: 40px;
+    padding: 0.3rem 0.65rem;
+    font-size: $font-size-xs;
+  }
+
+  &--md .trem-dropdown__select {
+    min-height: 48px;
+    padding: 0.5rem 0.75rem;
+    font-size: $font-size-sm;
+  }
+
+  &--lg .trem-dropdown__select {
+    min-height: 56px;
+    padding: 0.6rem 0.9rem;
+    font-size: $font-size-md;
+  }
+}

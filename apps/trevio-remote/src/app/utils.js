@@ -78,6 +78,7 @@ export const resolvePageContent = (pageResponse) => {
         ctaLabel: label(labels, first(featuredCard.ctaActionLabelRef, featuredCard.ctaLabelRef)),
         emptyTitle: label(labels, featuredCard.emptyTitleRef) || label(labels, "featuredEmptyTitle"),
         emptyDescription: label(labels, featuredCard.emptyDescriptionRef) || label(labels, "featuredEmptyDescription"),
+        emptyAction: label(labels, featuredCard.emptyActionRef) || label(labels, "featuredEmptyAction"),
       },
     },
     tripList: {
@@ -86,6 +87,12 @@ export const resolvePageContent = (pageResponse) => {
       filters: options[quickChips.optionsRef] || [],
       ctaLabel: label(labels, tripCards.ctaActionLabelRef),
       pagination: tripCards.pagination || {},
+      cardLabels: {
+        agency: label(labels, "tripCardAgency"),
+        price: label(labels, "tripCardPrice"),
+        action: label(labels, "tripCardAction"),
+        soldOutAction: label(labels, "tripCardSoldOutAction"),
+      },
     },
     upcoming: {
       heading: label(labels, upcomingFeature.headingRef),

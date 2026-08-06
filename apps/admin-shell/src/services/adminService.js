@@ -81,6 +81,10 @@ export async function saveTour(payload) {
     return res.componentData?.state?.data?.tours?.[0] || res;
 }
 
+export async function verifyAdminTour(id) {
+    await expectSuccess(fetchData(`/tours.json/${id}/verify`, { method: "POST" }), "Failed to verify tour");
+}
+
 export async function fetchAdminBookings() {
     const res = await fetchData("/engine/admin/bookings", { params: { limit: 100, skip: 0 } });
     if (!res || res.status !== "success") throw new Error(res?.message || "Failed to fetch bookings");
@@ -359,6 +363,10 @@ export async function saveTrip(payload) {
         "Failed to save trip"
     );
     return res.componentData?.data || res;
+}
+
+export async function verifyAdminTrip(id) {
+    await expectSuccess(fetchData(`${TRIP_BASE}/${id}/verify`, { method: "POST" }), "Failed to verify trip");
 }
 
 export async function deleteTrip(id) {

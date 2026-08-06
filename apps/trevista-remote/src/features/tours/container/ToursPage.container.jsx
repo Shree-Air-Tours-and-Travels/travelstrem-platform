@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useComponentData, fetchData } from "@packages/trem-utils";
 import ToursPageView from "../view/ToursPage.view";
 import { slugifyTourTitle } from "../helper";
@@ -38,7 +38,11 @@ const getPaginationFromData = (data, fallbackTotal = 0) => {
 
 export default function ToursPageContainer({ dispatchEvent } = {}) {
     const navigate = useNavigate();
+    const location = useLocation();
     const { isFavorited, toggleFavorite } = useFavorites();
+
+    const initialFiltersRef = useRef(location.state?.initialFilters || null);
+    const appliedInitialFilters = useRef(false);
 
     const { loading: pageLoading, error: pageError, elements, structure } = useComponentData("/tours-page.json", { auto: true });
     const pageLabels = elements?.labels || {};
@@ -88,6 +92,7 @@ export default function ToursPageContainer({ dispatchEvent } = {}) {
 
     useEffect(() => {
         if (!widgetsData.listing) return;
+        if (initialFiltersRef.current) return;
         const tours = widgetsData.listing?.data?.tours || [];
         const nextPagination = getPaginationFromData(widgetsData.listing?.data || {}, tours.length);
         setDisplayed(tours);
@@ -136,16 +141,25 @@ export default function ToursPageContainer({ dispatchEvent } = {}) {
         }
     }, [activeFilters, sortId]);
 
+    useEffect(() => {
+        if (!widgetsData.listing || appliedInitialFilters.current) return;
+        const initial = initialFiltersRef.current;
+        if (!initial) return;
+        appliedInitialFilters.current = true;
+        setActiveFilters(initial);
+        requestTours({ filters: initial, page: 1, meta: { filters: initial } });
+    }, [widgetsData.listing, requestTours]);
+
     const onView = (tour) => {
         const ref = slugifyTourTitle(tour?.title) || tour?._id || tour?.id;
         if (typeof dispatchEvent === "function") {
             dispatchEvent("navigateToTourDetails", {
                 tourRef: encodeURIComponent(ref),
-                state: { tour, from: { label: "Trevista", path: "/trevista" } },
+                state: { tour, from: { label: "Tours", path: "/trevista/tours" } },
             });
             return;
         }
-            navigate(`/trevista/${encodeURIComponent(ref)}`, { state: { tour, from: { label: "Trevista", path: "/trevista" } } });
+        navigate(`/trevista/tours/${encodeURIComponent(ref)}`, { state: { tour, from: { label: "Tours", path: "/trevista/tours" } } });
     };
 
     const handleFilterChange = (tours, meta = {}) => {
@@ -213,6 +227,7 @@ export default function ToursPageContainer({ dispatchEvent } = {}) {
             onPageChange={handlePageChange}
             filtersExpanded={filtersExpanded}
             onFiltersExpandedChange={setFiltersExpanded}
+            initialValues={initialFiltersRef.current}
         />
     );
 }

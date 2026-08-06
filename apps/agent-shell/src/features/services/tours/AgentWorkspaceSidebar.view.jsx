@@ -1,6 +1,6 @@
 import React from "react";
 import { DashboardSidebar } from "@packages/trem-ui";
-import { AGENT_NAV_SECTIONS, FALLBACK_PROFILE } from "./tours.constants";
+import { getAgentNavSections, FALLBACK_PROFILE } from "./tours.constants";
 
 export default function AgentWorkspaceSidebar({ profile, auth, loading, activeNav, onNavChange, onProfileAction }) {
     const [collapsed, setCollapsed] = React.useState(false);
@@ -22,13 +22,13 @@ export default function AgentWorkspaceSidebar({ profile, auth, loading, activeNa
                     actionLabel: "Settings",
                     actionIcon: "settings",
                 }}
-                sections={AGENT_NAV_SECTIONS}
+                sections={getAgentNavSections(auth.user?.agencyRole === "partner_admin")}
                 activeId={activeNav}
                 collapsed={collapsed}
                 onCollapsedChange={setCollapsed}
                 variant="compact"
                 sticky={false}
-                onNavigate={(item) => onNavChange?.(item.id)}
+                onNavigate={(item) => item.id === "services" ? window.location.assign("/agent/services") : onNavChange?.(item.id)}
                 onProfileAction={onProfileAction}
                 className="agent-sidebar"
             />

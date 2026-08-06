@@ -1,6 +1,16 @@
 import React from "react";
-import { Button, Dropdown, Icon, EmptyState } from "@packages/trem-ui";
+import { Button, Dropdown, Icon, NoDataFound } from "@packages/trem-ui";
 import { TourListSkeleton } from "../../shared";
+
+const WHATSAPP_PHONE = process.env.REACT_APP_WHATSAPP_PHONE || "";
+const SUPPORT_PHONE = process.env.REACT_APP_SUPPORT_PHONE || "";
+
+const enquireHref = () => {
+    const base = WHATSAPP_PHONE ? `https://wa.me/${WHATSAPP_PHONE}` : "";
+    const text = "Hi TravelsTrem! I'd like to customise my own package. Could you help me with the details?";
+    if (!base) return SUPPORT_PHONE ? `tel:${SUPPORT_PHONE}` : "";
+    return `${base}?text=${encodeURIComponent(text)}`;
+};
 
 const getLabel = (labels = {}, item = {}) => {
     if (item.labelRef && labels[item.labelRef]) return labels[item.labelRef];
@@ -233,10 +243,14 @@ export default function ListingView({
                 </div>
             ) : null}
             {!initialLoading && !initialError && displayed.length === 0 && (
-                <EmptyState
+                <NoDataFound
                     icon="search"
-                    title={listingLabels.noToursFound || "No tours found"}
-                    description="Try adjusting your filters or check back later for new tours."
+                    title={listingLabels.noToursFound || "No tours available right now"}
+                    description={listingLabels.noToursDescription}
+                    actionLabel={listingLabels.enquireLabel || "Enquire now"}
+                    actionHref={enquireHref()}
+                    actionAriaLabel="Enquire with our travel agent on WhatsApp"
+                    className="tours-page__no-tours"
                 />
             )}
            

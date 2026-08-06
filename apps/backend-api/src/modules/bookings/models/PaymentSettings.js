@@ -16,7 +16,10 @@ const paymentMethodSchema = new Schema({
 }, { _id: false });
 
 const paymentSettingsSchema = new Schema({
-  key: { type: String, unique: true, default: "default" },
+  key: { type: String, default: "default" },
+  agencyId: { type: Schema.Types.ObjectId, ref: "PartnerAgency", default: null, index: true },
+  merchantProvider: { type: String, enum: ["manual", "razorpay"], default: "manual" },
+  merchantAccountId: { type: String, trim: true, default: "" },
   methods: {
     type: [paymentMethodSchema],
     default: () => [
@@ -27,6 +30,7 @@ const paymentSettingsSchema = new Schema({
   instructions: { type: String, trim: true, default: "" },
   updatedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
 }, { timestamps: true });
+paymentSettingsSchema.index({ agencyId: 1, key: 1 }, { unique: true });
 
 paymentSettingsSchema.set("toJSON", {
   versionKey: false,

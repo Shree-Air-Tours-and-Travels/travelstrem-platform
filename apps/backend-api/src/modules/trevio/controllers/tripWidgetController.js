@@ -63,12 +63,16 @@ const normalizeTripForWidget = (trip = {}) => {
     avgRating: normalized.avgRating,
     reviewCount: normalized.reviewCount,
     featured: normalized.featured,
+    tremVerified: normalized.tremVerified,
+    tremVerifiedAt: normalized.tremVerifiedAt,
     tag: normalized.tag,
     startDate: normalized.startDate,
     endDate: normalized.endDate,
     dates: normalized.dates,
     priceInfo: normalized.priceInfo,
     availability: normalized.availability,
+    agency: normalized.agency,
+    operator: normalized.operator,
     preferences: normalized.preferences || {},
     itinerary: (trip.itinerary || []).map((item) => ({
       day: item.day || 1,
@@ -82,6 +86,10 @@ const normalizeTripForWidget = (trip = {}) => {
     })),
     inclusions: Array.isArray(trip.inclusions) ? trip.inclusions : [],
     exclusions: Array.isArray(trip.exclusions) ? trip.exclusions : [],
+    includedStays: Array.isArray(trip.includedStays) ? trip.includedStays : [],
+    hotelOptions: Array.isArray(trip.hotelOptions) ? trip.hotelOptions : [],
+    cancellation: trip.cancellation || null,
+    extras: Array.isArray(trip.extras) ? trip.extras : [],
     reviews: Array.isArray(trip.reviews) ? trip.reviews : normalized.reviews || [],
     cancellationPolicy: trip.cancellationPolicy || normalized.cancellationPolicy || "",
   };
@@ -155,8 +163,14 @@ export const getTripWidget = async (req, res) => {
               widget.component.data.inclusions = normalized.inclusions || [];
               widget.component.data.exclusions = normalized.exclusions || [];
               break;
+            case "included-stays.json":
+              widget.component.data.stays = normalized.includedStays || [];
+              widget.component.data.hotelOptions = normalized.hotelOptions || [];
+              break;
             case "cancellation-policy.json":
               widget.component.data.cancellationPolicy = normalized.cancellationPolicy || "";
+              widget.component.data.cancellation = normalized.cancellation || null;
+              widget.component.data.extras = Array.isArray(normalized.extras) ? normalized.extras : [];
               break;
             case "reviews-section.json":
               widget.component.data.reviews = normalized.reviews || [];

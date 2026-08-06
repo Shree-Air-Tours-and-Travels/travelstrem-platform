@@ -34,6 +34,7 @@ export default function AppHeader({
   const brand = config.brand || {};
   const search = config.search || {};
   const primaryAction = config.primaryAction || {};
+  const productMenu = config.productMenu || {};
   const notification = config.notification || {};
   const themeAction = config.themeAction || {};
   const userConfig = config.user || {};
@@ -65,13 +66,20 @@ export default function AppHeader({
       else if (item.action) onAction?.(item.action, item);
     },
   }));
+  const productItems = (productMenu.items || []).map((item) => ({
+    id: item.id,
+    label: item.label,
+    icon: item.icon,
+    disabled: item.disabled,
+    onClick: item.onClick,
+  }));
 
   return (
     <>
       <header
         className="trem-app-header"
         aria-label={config.ariaLabel || "Application header"}
-        style={{ "--trem-app-header-sidebar-offset": sidebarCollapsed ? "76px" : "260px" }}
+        style={{ "--trem-app-header-sidebar-offset": sidebarCollapsed ? "76px" : "280px" }}
       >
         <div className="trem-app-header__mobile-row">
           <div className="trem-app-header__brand">
@@ -89,6 +97,14 @@ export default function AppHeader({
         <GlobalSearch config={search} onSearch={onSearch} onSelect={onSearchSelect} />
 
         <div className="trem-app-header__actions">
+          {productMenu.label && productItems.length ? (
+            <Dropdown
+              align="right"
+              hoverable={false}
+              items={productItems}
+              trigger={() => <button type="button" className="trem-app-header__product" aria-label={productMenu.ariaLabel || "Choose product"}><span>{productMenu.label}</span><Icon name="chevronDown" size={16} /></button>}
+            />
+          ) : null}
           {primaryAction.label ? (
             <button
               type="button"

@@ -237,11 +237,13 @@ export default function AppShellContainer({ productFilter = "all", activeTab = "
     const ref = slugify(item?.title || item?.name) || item?._id || item?.id;
     const product = item?.product || "trevista";
     if (!ref) return;
-    const base = getProductBaseUrl(product);
     if (product === "trevio") {
       navigate(`/trip/${ref}`);
+    } else if (product === "trevista") {
+      navigate(`/tour/${ref}`);
     } else {
-      window.open(`${base}/trevista/${ref}`, "_blank", "noopener,noreferrer");
+      const base = getProductBaseUrl(product);
+      window.open(`${base}/${product}/${ref}`, "_blank", "noopener,noreferrer");
     }
   }, [navigate]);
 

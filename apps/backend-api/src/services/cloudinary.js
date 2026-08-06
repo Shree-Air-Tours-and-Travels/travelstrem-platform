@@ -58,4 +58,14 @@ if (isConfigured) {
 
 export const upload = multer({ storage, fileFilter, limits });
 
+const documentFileFilter = (req, file, cb) => {
+  const allowed = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
+  cb(allowed.includes(file.mimetype) ? null : new Error(`Unsupported document type: ${file.mimetype}`), allowed.includes(file.mimetype));
+};
+const documentStorage = isConfigured ? new CloudinaryStorage({
+  cloudinary,
+  params: { folder: "travelstrem/partnership-documents", resource_type: "auto" },
+}) : storage;
+export const documentUpload = multer({ storage: documentStorage, fileFilter: documentFileFilter, limits: { fileSize: 8 * 1024 * 1024, files: 9 } });
+
 export default cloudinary;

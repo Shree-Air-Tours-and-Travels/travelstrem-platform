@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, SubTitle } from "@packages/trem-ui";
+import { Button, SubTitle, TrevioTripCard } from "@packages/trem-ui";
 import { WidgetError } from "../../shared/Skeleton";
 import CreateTripForm from "./CreateTripForm";
 import "./TripsTabWidget.scss";
@@ -9,13 +9,6 @@ const TRIP_TYPE_OPTIONS = [
     { value: "domestic", label: "Domestic" },
     { value: "international", label: "International" },
 ];
-
-const STATUS_COLORS = {
-    draft: "var(--muted)",
-    listed: "var(--color-primary)",
-    completed: "var(--success-color)",
-    cancelled: "var(--color-danger)",
-};
 
 export default function TripsTabWidget({
     trips, loading, error, formOpen, editing, auth,
@@ -67,44 +60,16 @@ export default function TripsTabWidget({
                     ) : filtered.length === 0 ? (
                         <div className="mt-empty">No trips yet</div>
                     ) : (
-                        filtered.map((t) => (
-                            <div key={t._id} className="tt-trip-card">
-                                <div className="tt-trip-card__img-wrap">
-                                    {t.image ? (
-                                        <img src={t.image} alt={t.title} className="tt-trip-card__img" />
-                                    ) : (
-                                        <div className="tt-trip-card__placeholder">{(t.title || "T")[0]}</div>
-                                    )}
-                                    <span className="tt-trip-card__badge" style={{ background: STATUS_COLORS[t.status] || STATUS_COLORS.draft }}>
-                                        {t.status}
-                                    </span>
-                                    {t.featured && <span className="tt-trip-card__featured">Featured</span>}
-                                </div>
-                                <div className="tt-trip-card__body">
-                                    <div className="tt-trip-card__top">
-                                        <h4 className="tt-trip-card__title">{t.title}</h4>
-                                        <span className="tt-trip-card__tag">{t.tag || t.category}</span>
-                                    </div>
-                                    <div className="tt-trip-card__meta">
-                                        <span>{t.location}{t.country && t.country !== "India" ? `, ${t.country}` : ""}</span>
-                                        {t.duration && <span>{typeof t.duration === "object" ? `${t.duration.from || "—"} – ${t.duration.to || "—"}` : t.duration}</span>}
-                                    </div>
-                                    <div className="tt-trip-card__tags">
-                                        {(t.tags || []).slice(0, 4).map((tag) => (
-                                            <span key={tag} className="tt-trip-card__chip">{tag}</span>
-                                        ))}
-                                    </div>
-                                    <div className="tt-trip-card__price">
-                                        {t.price?.amount != null ? `₹${Number(t.price.amount).toLocaleString("en-IN")}` : "—"}
-                                        {t.price?.currency && t.price.currency !== "INR" ? ` ${t.price.currency}` : ""}
-                                    </div>
-                                    <div className="tt-trip-card__actions">
-                                        <Button primaryClassName="btn tt-btn-sm" variant="outline" onClick={() => openView?.(t)} text="View" />
-                                        <Button primaryClassName="btn tt-btn-sm tt-btn-danger" variant="outline" onClick={() => handleDelete(t._id)} text="Delete" />
-                                    </div>
-                                </div>
-                            </div>
-                        ))
+                        filtered.map((trip) => <TrevioTripCard
+                            key={trip._id || trip.id}
+                            trip={trip}
+                            management
+                            ownershipMode="agency"
+                            labels={{ agency: "Added by agency", platformAgency: "TravelsTREM", price: "Per person" }}
+                            onView={openView}
+                            onEdit={openEdit}
+                            onDelete={(item) => handleDelete(item._id || item.id)}
+                        />)
                     )}
                 </section>
 

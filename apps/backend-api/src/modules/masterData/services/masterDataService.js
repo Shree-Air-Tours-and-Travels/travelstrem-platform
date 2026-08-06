@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import MasterOptionSet from "../models/MasterOptionSet.js";
-import { MASTER_OPTION_SET_SEEDS } from "../seedOptionSets.js";
 
 const normalizeOption = (option = {}) => ({
   name: option.name || option.value || "",
@@ -36,30 +35,6 @@ class MasterDataService {
   async getOptionSets(keys = []) {
     const entries = await Promise.all(keys.map(async (key) => [key, await this.getOptionSet(key)]));
     return Object.fromEntries(entries);
-  }
-
-  async seedDefaults() {
-    if (!isDbReady()) return { seeded: 0, skipped: true };
-
-    const entries = Object.entries(MASTER_OPTION_SET_SEEDS);
-    let seeded = 0;
-    for (const [key, options] of entries) {
-      await MasterOptionSet.findOneAndUpdate(
-        { key },
-        {
-          $setOnInsert: {
-            key,
-            product: key.split(".")[0] || "travels-trem",
-            description: `Default options for ${key}`,
-            active: true,
-            options: normalizeOptions(options),
-          },
-        },
-        { upsert: true, new: true },
-      );
-      seeded += 1;
-    }
-    return { seeded, skipped: false };
   }
 }
 

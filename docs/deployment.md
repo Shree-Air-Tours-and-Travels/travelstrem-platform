@@ -114,7 +114,7 @@ OAUTH_APPLE_URL=<full-apple-authorize-url>
 REDIS_URL=<redis-url-if-notification-queue-uses-redis>
 ```
 
-Important: for global login across `auth.travelstrem.com`, `trevio.travelstrem.com`, and `trevista.travelstrem.com`, the backend must be served from a TravelsTrem subdomain such as `api.travelstrem.com`. Browsers will reject `.travelstrem.com` cookies if they are set by a `*.onrender.com` host.
+Important: use a first-party API domain such as `api.travelstrem.com`. Authentication is intentionally isolated into customer, AdminTREM, and PartnerTREM cookie pairs. Signing into one portal must not replace another portal's user. `AUTH_COOKIE_DOMAIN=.travelstrem.com` is supported, but the separate cookie names still preserve this boundary. A host-only API cookie (leave `AUTH_COOKIE_DOMAIN` empty) is preferable when every frontend calls the same `api.travelstrem.com` host.
 
 After Vercel deploys create real URLs, update `FRONTENDS` in Render to include every exact frontend origin. No trailing paths and no trailing slash.
 
@@ -315,7 +315,8 @@ If Vercel is using repo root for each project, also configure the same rewrite i
 - Frontend still calls old API: update `REACT_APP_API_URL` and redeploy the frontend.
 - Product click opens the wrong URL: check `REACT_APP_TREVIO_APP_URL` and `REACT_APP_TREVISTA_APP_URL`, then redeploy the parent website.
 - Dashboard link not working: verify `REACT_APP_DASHBOARD_URL` is set in all frontend apps and points to `https://dashboard.travelstrem.com`.
-- Product still asks users to login after auth success: verify the API is on a `travelstrem.com` subdomain and `AUTH_COOKIE_DOMAIN=.travelstrem.com` is set.
+- Product still asks users to login after auth success: verify the API is on a `travelstrem.com` subdomain, credentials are enabled, and the frontend sends `X-Travelstrem-Portal: customer`.
+- AdminTREM changes the customer shown in TravelsTREM: redeploy the backend and both shells together, then sign in once per portal so the old shared cookie is replaced by portal-scoped cookies.
 - Backend ignores `FRONTENDS`/`BASE_URL`: make sure Render has `ALLOW_ENV_OVERRIDES=true`.
 - Mongo connection fails: verify `MONGO_URI`, Atlas database user permissions, and Atlas Network Access.
 - Refreshing product/admin/dashboard routes gives 404: add Vercel rewrites to `index.html`.

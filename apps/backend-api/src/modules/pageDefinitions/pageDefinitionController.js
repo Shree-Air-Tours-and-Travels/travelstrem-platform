@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import pageDefinitionService from "../../services/pageDefinitionService.js";
 import config from "../../config/index.js";
+import { getPortalScope, normalizePortalScope, readPortalAccessToken } from "../../core/auth/portalSession.js";
 
 const parseOverride = (raw) => {
   if (!raw) return undefined;
@@ -18,7 +19,7 @@ function extractOptionalUser(req) {
     const authHeader = req.headers.authorization || req.headers.Authorization || "";
     if (authHeader && authHeader.startsWith("Bearer ")) return authHeader.split(" ")[1];
     if (req.headers["x-ignore-cookie-auth"] === "true") return null;
-    return req.cookies?.token || req.cookies?.["__Host-token"] || null;
+    return readPortalAccessToken(req);
   })();
 
   if (!token) return null;
@@ -26,6 +27,7 @@ function extractOptionalUser(req) {
   try {
     const secret = (config.JWT && config.JWT.accessSecret) || process.env.JWT_SECRET;
     const payload = jwt.verify(token, secret);
+    if (!payload.portal || normalizePortalScope(payload.portal) !== getPortalScope(req)) return null;
     return { userId: payload.sub || payload.id };
   } catch {
     return null;

@@ -11,6 +11,7 @@ import TourView from "./TourView";
 import CreateTourForm from "./CreateTourForm";
 import TripView from "../trips/TripView";
 import CreateTripForm from "../trips/CreateTripForm";
+import TenancyManagement from "../tenancy/TenancyManagement";
 import "./ManageTours.scss";
 
 export function ConfirmModal({ open, title = "Confirm", message = "Are you sure?", onCancel, onConfirm }) {
@@ -69,7 +70,7 @@ export default function ManageToursView({
     tripViewOpen, setTripViewOpen,
     editing, viewTour, setViewTour,
     viewTrip, setViewTrip,
-    openCreate, openEdit, openView,
+    openCreate, openEdit, openView, verifyTour, verifyTrip,
     openTripCreate, openTripEdit, openTripView,
     handleDelete, handleDeleteAll,
     handleTripDelete, handleTripDeleteAll,
@@ -139,9 +140,11 @@ export default function ManageToursView({
                                 onEditTour={openEdit}
                                 onViewTour={openView}
                                 onDeleteTour={handleDelete}
+                                onVerifyTour={verifyTour}
                                 onEditTrip={openTripEdit}
                                 onViewTrip={openTripView}
                                 onDeleteTrip={handleTripDelete}
+                                onVerifyTrip={verifyTrip}
                                 onCreateTour={openCreate}
                                 onCreateTrip={openTripCreate}
                                 onRefresh={refreshAll}
@@ -199,6 +202,7 @@ export default function ManageToursView({
                             saving={false}
                         />
                     )}
+                    {tab === "tenancy" && auth.adminLevel === "master" && <TenancyManagement />}
                 </div>
             </div>
 

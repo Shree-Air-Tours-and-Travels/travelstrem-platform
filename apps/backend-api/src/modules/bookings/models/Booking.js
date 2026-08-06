@@ -53,6 +53,8 @@ const tripPreferencesSchema = new Schema({
   airportTransferNeeded: { type: Boolean, default: false },
   roomSharingPreference: { type: String, trim: true, default: "" },
   bedType: { type: String, trim: true, default: "" },
+  transport: { type: String, trim: true, default: "" },
+  addFlights: { type: String, trim: true, default: "" },
   smokingPreference: { type: String, trim: true, default: "" },
   mealPreference: { type: String, trim: true, default: "" },
   extraActivities: { type: [String], default: [] },
@@ -126,6 +128,10 @@ const bookingSchema = new Schema({
   updatedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
   organizationId: { type: Schema.Types.ObjectId, default: null },
   tenantId: { type: Schema.Types.ObjectId, default: null },
+  agencyId: { type: Schema.Types.ObjectId, ref: "PartnerAgency", default: null, index: true },
+  customerId: { type: Schema.Types.ObjectId, ref: "AgencyCustomer", default: null, index: true },
+  agencySnapshot: { type: Schema.Types.Mixed, default: null },
+  assignedAgentSnapshot: { type: Schema.Types.Mixed, default: null },
 
   termsAccepted: { type: Boolean, default: false },
   cancellationPolicyAccepted: { type: Boolean, default: false },
@@ -190,6 +196,7 @@ bookingSchema.index({ tour: 1, "travelWindow.startDate": 1 });
 bookingSchema.index({ trip: 1, "travelWindow.startDate": 1 });
 bookingSchema.index({ assignedAgent: 1, status: 1 });
 bookingSchema.index({ tenantId: 1 });
+bookingSchema.index({ agencyId: 1, assignedAgent: 1, status: 1 });
 bookingSchema.index(
   { idempotencyKey: 1, user: 1 },
   { unique: true, partialFilterExpression: { idempotencyKey: { $exists: true, $type: "string", $gt: "" } } }
@@ -234,7 +241,7 @@ bookingSchema.statics.buildPriceSnapshot = function (tourDoc, targetDate, travel
     ? tourDoc.getCurrentPrice(targetDate)
     : (tourDoc.price || { min: 0, max: 0, currency: "INR", isFinal: false, source: PRICE_SOURCE.MANUAL });
 
-  const perPerson = Math.round(((season.min || 0) + (season.max || 0)) / 2);
+  const perPerson = Math.round(season.min || 0);
   const total = perPerson * travellerCount;
 
   return {

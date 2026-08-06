@@ -14,6 +14,7 @@ const __dirname = path.dirname(__filename);
 const DATA_DIR = path.resolve(__dirname, "../../../data");
 
 const PAGE_DIR_MAP = {
+  "tours-remote/home": "tours-remote/home",
   "tours-remote/listing": "tours-remote/listing",
   "tours-remote/details": "tours-remote/details",
   "tours-remote/booking": "tours-remote/booking",
@@ -139,6 +140,8 @@ const normalizeTourCardForResponse = (tourObj = {}, priceInfo = null) => {
     reviewCount,
     reviews: [],
     featured: !!tourObj.featured,
+    tremVerified: Boolean(tourObj.tremVerified),
+    tremVerifiedAt: tourObj.tremVerifiedAt || null,
     tags: Array.isArray(tourObj.tags) ? tourObj.tags.slice(0, 4) : [],
     priceInfo: priceInfo || null,
   };
@@ -282,6 +285,24 @@ export const getWidget = async (req, res) => {
       };
     }
 
+    if (fileName === "featured-holiday-packages.json") {
+      const limit = Math.min(Math.max(Number(req.query.limit) || 4, 1), 8);
+      const toursRaw = await TourRepository.find({}).sort({ createdAt: -1 });
+      const packages = (Array.isArray(toursRaw) ? toursRaw : [])
+        .map((doc) => {
+          const tourObj = doc.toObject ? doc.toObject() : doc;
+          return normalizeTourCardForResponse(tourObj, buildPriceInfo(doc));
+        })
+        .filter((tour) => tour.title && tour.photo)
+        .sort(
+          (a, b) =>
+            Number(b.featured) - Number(a.featured) ||
+            Number(b.avgRating || 0) - Number(a.avgRating || 0)
+        )
+        .slice(0, limit);
+      widget.component.data.packages = packages;
+    }
+
     if (pageKey === "tours-remote/details") {
       const tourRef = req.query.tourRef;
       if (tourRef) {
@@ -317,8 +338,14 @@ export const getWidget = async (req, res) => {
               widget.component.data.inclusions = Array.isArray(normalized.inclusions) ? normalized.inclusions : [];
               widget.component.data.exclusions = Array.isArray(normalized.exclusions) ? normalized.exclusions : [];
               break;
+            case "included-stays.json":
+              widget.component.data.stays = Array.isArray(normalized.includedStays) ? normalized.includedStays : [];
+              widget.component.data.hotelOptions = Array.isArray(normalized.hotelOptions) ? normalized.hotelOptions : [];
+              break;
             case "cancellation-policy.json":
               widget.component.data.cancellationPolicy = normalized.cancellationPolicy || "";
+              widget.component.data.cancellation = normalized.cancellation || null;
+              widget.component.data.extras = Array.isArray(normalized.extras) ? normalized.extras : [];
               break;
             case "reviews-section.json":
               widget.component.data.reviews = Array.isArray(normalized.reviews) ? normalized.reviews : [];

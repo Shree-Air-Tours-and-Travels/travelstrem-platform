@@ -62,8 +62,12 @@ const getSafeReferrer = () => {
   return isSafeReturnUrl(document.referrer) ? document.referrer : "";
 };
 
-function AuthExperience({ cfg, theme, onToggleTheme, headerBrand, children, loading = false, className = "" }) {
-  const company = cfg?.company || {};
+function AuthExperience({ cfg, theme, onToggleTheme, headerBrand, companyContent, children, loading = false, className = "" }) {
+  const company = {
+    ...(cfg?.company || {}),
+    ...(companyContent || {}),
+    highlights: companyContent?.highlights || cfg?.company?.highlights || [],
+  };
   const headerConfig = {
     ...(cfg?.header || {}),
     brand: {
@@ -144,7 +148,10 @@ export default function AuthPage({
   theme = "light",
   onToggleTheme,
   headerBrand,
+  companyContent,
   formNotice = "",
+  skipExistingSessionRedirect = false,
+  accessRequest,
 }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -154,6 +161,7 @@ export default function AuthPage({
   const [showResetModal, setShowResetModal] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [guestCheckLoading, setGuestCheckLoading] = useState(true);
+  const [activation, setActivation] = useState({ password: "", confirm: "", loading: false, success: "", error: "" });
   const {
     activeTab,
     setActiveTab,
@@ -174,6 +182,8 @@ export default function AuthPage({
     update,
     persistSession,
     requestRegistrationOtp,
+    verifyRegistrationOtp,
+    adminRegistrationStep,
     submitAuth,
     loginOtpStep,
     setLoginOtpStep,
@@ -199,6 +209,7 @@ export default function AuthPage({
   const searchParams = new URLSearchParams(location.search);
   const queryReturnTo = searchParams.get("returnTo") || "";
   const requestingApp = (searchParams.get("app") || "").trim().toLowerCase();
+  const activationToken = searchParams.get("token") || "";
 
   React.useEffect(() => {
     const mode = (searchParams.get("mode") || "").toLowerCase();
@@ -236,6 +247,10 @@ export default function AuthPage({
   React.useEffect(() => {
     let cancelled = false;
     const checkExistingSession = async () => {
+      if (skipExistingSessionRedirect) {
+        setGuestCheckLoading(false);
+        return;
+      }
       setGuestCheckLoading(true);
       try {
         const response = await authService.getSession?.();
@@ -255,7 +270,7 @@ export default function AuthPage({
     checkExistingSession();
     return () => { cancelled = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authService, location.search]);
+  }, [authService, location.search, skipExistingSessionRedirect]);
 
   const redirectAfterLogin = (result) => {
     if (adminShellUrl && result?.user && isAdminRole(result.user.role)) {
@@ -299,9 +314,23 @@ export default function AuthPage({
     setError(null);
   };
 
+  const handleActivation = async (event) => {
+    event.preventDefault();
+    if (activation.password.length < 8) return setActivation((value) => ({ ...value, error: "Use at least 8 characters for your password." }));
+    if (activation.password !== activation.confirm) return setActivation((value) => ({ ...value, error: "Passwords do not match." }));
+    setActivation((value) => ({ ...value, loading: true, error: "" }));
+    try {
+      const response = await api.post("/tenancy/invitations/activate", { token: activationToken, password: activation.password });
+      const data = response?.data?.data || response?.data || response;
+      setActivation((value) => ({ ...value, loading: false, password: "", confirm: "", email: data?.email || "", success: "Your partner account is active. Continue to PartnerTREM sign in." }));
+    } catch (requestError) {
+      setActivation((value) => ({ ...value, loading: false, error: requestError?.response?.data?.message || "This invitation is invalid or has expired." }));
+    }
+  };
+
   if (guestCheckLoading || cfgLoading || form === null) {
     return (
-      <AuthExperience cfg={cfg} theme={theme} onToggleTheme={onToggleTheme} headerBrand={headerBrand} loading className={className}>
+      <AuthExperience cfg={cfg} theme={theme} onToggleTheme={onToggleTheme} headerBrand={headerBrand} companyContent={companyContent} loading className={className}>
         <div className="auth-trem__card auth-trem__card--center">
           <Preloader variant="cards" count={2} label="Loading authentication" />
           {cfgError && <div className="auth-trem__config-error">Config fallback active: {cfgError}</div>}
@@ -310,9 +339,43 @@ export default function AuthPage({
     );
   }
 
+  if (activationToken) {
+    return (
+      <AuthExperience cfg={cfg} theme={theme} onToggleTheme={onToggleTheme} headerBrand={headerBrand} companyContent={companyContent} className={className}>
+        <div className="auth-trem__card auth-trem__card--activation">
+          <header className="auth-trem__header">
+            <div>
+              <Paragraph primaryClassname="auth-trem__eyebrow">Partner account</Paragraph>
+              <Title primaryClassname="auth-trem__title" text="Activate your account" />
+              <Paragraph primaryClassname="auth-trem__sub">Create a secure password to finish accepting your invitation.</Paragraph>
+            </div>
+          </header>
+          {activation.success ? (
+            <div className="auth-trem__activation-result" role="status">
+              <Icon name="checkCircle" size={24} />
+              <p>{activation.success}</p>
+              <Button variant="solid" color="primary" text="Continue to PartnerTREM" onClick={() => {
+                setForm((value) => ({ ...value, email: activation.email || value.email }));
+                setActiveTab("login");
+                navigate("/login", { replace: true });
+              }} />
+            </div>
+          ) : (
+            <form className="auth-trem__form" onSubmit={handleActivation}>
+              <input className="auth-trem__field" type="password" autoComplete="new-password" placeholder="New password" value={activation.password} onChange={(event) => setActivation((value) => ({ ...value, password: event.target.value, error: "" }))} required minLength={8} />
+              <input className="auth-trem__field" type="password" autoComplete="new-password" placeholder="Confirm password" value={activation.confirm} onChange={(event) => setActivation((value) => ({ ...value, confirm: event.target.value, error: "" }))} required minLength={8} />
+              {activation.error && <div className="auth-trem__error" role="alert">{activation.error}</div>}
+              <Button variant="solid" color="primary" type="submit" text={activation.loading ? "Activating..." : "Activate account"} disabled={activation.loading} primaryClassName="auth-trem__primary" />
+            </form>
+          )}
+        </div>
+      </AuthExperience>
+    );
+  }
+
   if (loginOtpStep) {
     return (
-      <AuthExperience cfg={cfg} theme={theme} onToggleTheme={onToggleTheme} headerBrand={headerBrand} className={className}>
+      <AuthExperience cfg={cfg} theme={theme} onToggleTheme={onToggleTheme} headerBrand={headerBrand} companyContent={companyContent} className={className}>
         <div className="auth-trem__card auth-trem__card--otp">
           <header className="auth-trem__header">
             <div>
@@ -383,14 +446,8 @@ export default function AuthPage({
   }
 
   return (
-    <AuthExperience cfg={cfg} theme={theme} onToggleTheme={onToggleTheme} headerBrand={headerBrand} className={className}>
+    <AuthExperience cfg={cfg} theme={theme} onToggleTheme={onToggleTheme} headerBrand={headerBrand} companyContent={companyContent} className={className}>
       <div className="auth-trem__card">
-        {formNotice ? (
-          <div className="auth-trem__form-notice" role="alert">
-            <Icon name="alertTriangle" size={18} />
-            <span>{formNotice}</span>
-          </div>
-        ) : null}
         <header className="auth-trem__header">
           <div>
             <Paragraph primaryClassname="auth-trem__eyebrow">{appName}</Paragraph>
@@ -407,6 +464,12 @@ export default function AuthPage({
         </div>
 
         <form className="auth-trem__form" onSubmit={handleSubmit}>
+          {formNotice ? (
+            <div className="auth-trem__form-notice" role="alert">
+              <Icon name="alertTriangle" size={18} />
+              <span>{formNotice}</span>
+            </div>
+          ) : null}
           {activeTab === "register" && (
             <input className="auth-trem__field" name="name" autoComplete="name" placeholder={cfg.strings?.placeholder?.name || "Full name"} value={form.name} onChange={update("name")} required />
           )}
@@ -414,7 +477,7 @@ export default function AuthPage({
           <input className="auth-trem__field" name="email" type="email" inputMode="email" autoCapitalize="none" autoComplete="email" placeholder={cfg.strings?.placeholder?.email || "Email"} value={form.email} onChange={update("email")} required />
 
           {activeTab === "register" && form.role === "admin" && (
-            <input className="auth-trem__field" type="tel" placeholder="Mobile number" value={form.phone || ""} onChange={update("phone")} />
+            <input className="auth-trem__field" name="phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="Mobile number" value={form.phone || ""} onChange={update("phone")} required />
           )}
 
           <div className="auth-trem__field-wrap">
@@ -442,24 +505,50 @@ export default function AuthPage({
 
               {needsSecret && (
                 <div className="auth-trem__secret">
-                  <div className="auth-trem__otp-row">
-                    <input
-                      className="auth-trem__field"
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      maxLength={6}
-                      placeholder="Registration OTP"
-                      value={form.adminOtp}
-                      onChange={(event) => setForm((state) => ({
-                        ...state,
-                        adminOtp: event.target.value.replace(/\D/g, "").slice(0, 6),
-                      }))}
-                      required
-                    />
-                    <Button variant="outline" size="small" text={otpLoading ? "Sending..." : "Get OTP"} onClick={requestRegistrationOtp} disabled={otpLoading} primaryClassName="auth-trem__otp-button" />
-                  </div>
-                  <div className="auth-trem__hint">Enter the OTP from the registration record.</div>
+                  {adminRegistrationStep?.status !== "verified" ? (
+                    <>
+                      <div className="auth-trem__otp-row">
+                        <input
+                          className="auth-trem__field"
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          maxLength={6}
+                          placeholder="Registration OTP"
+                          value={form.adminOtp}
+                          onChange={(event) => setForm((state) => ({
+                            ...state,
+                            adminOtp: event.target.value.replace(/\D/g, "").slice(0, 6),
+                          }))}
+                          required
+                        />
+                        {adminRegistrationStep?.status === "otp_sent" ? (
+                          <Button variant="solid" size="small" text={otpLoading ? "Verifying..." : "Verify OTP"} onClick={verifyRegistrationOtp} disabled={otpLoading || form.adminOtp.length !== 6} primaryClassName="auth-trem__otp-button" />
+                        ) : (
+                          <Button variant="outline" size="small" text={otpLoading ? "Sending..." : "Get OTP"} onClick={requestRegistrationOtp} disabled={otpLoading} primaryClassName="auth-trem__otp-button" />
+                        )}
+                      </div>
+                      <div className="auth-trem__hint">Verify your mobile and email identity before setting up administrator access.</div>
+                    </>
+                  ) : (
+                    <>
+                      <input
+                        className="auth-trem__field"
+                        type="password"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        autoComplete="off"
+                        placeholder="Admin PIN"
+                        value={form.adminPin || ""}
+                        onChange={(event) => setForm((state) => ({
+                          ...state,
+                          adminPin: event.target.value.replace(/\D/g, "").slice(0, 6),
+                        }))}
+                        required
+                      />
+                      <div className="auth-trem__hint">Enter the private Admin PIN to complete master administrator registration.</div>
+                    </>
+                  )}
                   {otpMessage && <div className="auth-trem__otp-message">{otpMessage}</div>}
                 </div>
               )}
@@ -489,6 +578,13 @@ export default function AuthPage({
             )}
           </div>
         )}
+
+        {accessRequest?.href ? (
+          <div className="auth-trem__access-request">
+            <span>{accessRequest.prompt || "Need access?"}</span>
+            <a href={accessRequest.href}>{accessRequest.label || "Request access"}</a>
+          </div>
+        ) : null}
 
         {showForgotModal && (
           <ForgotPasswordModal open initialEmail={form.email} onClose={() => setShowForgotModal(false)} onOtpSent={(email) => { setResetEmail(email); setShowForgotModal(false); setShowResetModal(true); }} authService={authService} />

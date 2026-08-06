@@ -9,32 +9,24 @@ export function FormField({ field, value, error, errorKey, onChange }) {
   const fieldErrorKey = errorKey || field.name;
   if (field.type === "select") {
     const items = (field.options || []).map((opt) => ({
-      id: opt.value ?? opt,
+      value: String(opt.value ?? opt),
       label: opt.label ?? opt,
-      active: String(value ?? "") === String(opt.value ?? opt),
-      onClick: () => onChange(field.name, opt.value ?? opt),
     }));
-    const selectedLabel = (field.options || []).find(
-      (opt) => String(opt.value ?? opt) === String(value ?? "")
-    )?.label || field.placeholder || "Select";
     return (
-      <label className="be-field" htmlFor={field.name} data-field-key={fieldErrorKey} data-invalid={Boolean(error)}>
-        <span className="be-field__label">{field.label || field.name}{field.required ? " *" : ""}</span>
+      <div className="be-field" data-field-key={fieldErrorKey} data-invalid={Boolean(error)}>
         <Dropdown
-          variant="searchable"
-          searchPlaceholder="Search..."
+          variant="select"
+          label={field.required ? `${field.label || field.name} *` : field.label || field.name}
+          placeholder={field.placeholder || "Select"}
+          value={value ?? ""}
+          onChange={(item) => onChange(field.name, item?.value ?? item?.id)}
           items={items}
-          trigger={({ open }) => (
-            <button className="be-field__select" type="button" disabled={field.disabled}>
-              <span>{selectedLabel}</span>
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d={open ? "M3 9l4-4 4 4" : "M3 5l4 4 4-4"} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
-            </button>
-          )}
+          error={error}
+          disabled={field.disabled}
+          searchPlaceholder="Search..."
         />
         {error && <span className="be-field__error">{error}</span>}
-      </label>
+      </div>
     );
   }
 
@@ -58,18 +50,19 @@ export function FormField({ field, value, error, errorKey, onChange }) {
   }
 
   return (
-    <label className="be-field" htmlFor={field.name} data-field-key={fieldErrorKey} data-invalid={Boolean(error)}>
-      <span className="be-field__label">{field.label || field.name}{field.required ? " *" : ""}</span>
+    <div className="be-field" data-field-key={fieldErrorKey} data-invalid={Boolean(error)}>
       <InputField
         variant={field.type === "number" ? "number" : field.type === "email" ? "email" : field.type === "tel" ? "tel" : "text"}
         value={value ?? ""}
         placeholder={field.placeholder || ""}
+        label={field.label || field.name}
+        required={field.required}
         disabled={field.disabled || field.readOnly}
         error={error}
         onChange={(nextValue) => onChange(field.name, nextValue)}
       />
       {error && <span className="be-field__error">{error}</span>}
-    </label>
+    </div>
   );
 }
 

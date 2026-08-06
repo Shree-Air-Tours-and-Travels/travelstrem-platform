@@ -57,6 +57,21 @@ function validateTrip(trip, roomRequired = true) {
   return errors;
 }
 
+function validateDeparture(trip) {
+  const errors = {};
+  if (!trip.adults || trip.adults < 1) errors.adults = "At least 1 adult required";
+  if (!trip.startDate) errors.startDate = "Select a departure date";
+  if (!String(trip.departureCity || "").trim()) errors.departureCity = "Select a departure city";
+  return errors;
+}
+
+function validateCustomize(trip) {
+  const errors = {};
+  if (!String(trip.roomType || "").trim()) errors.roomType = "Select a room category";
+  if (!String(trip.transport || "").trim()) errors.transport = "Select a transport option";
+  return errors;
+}
+
 function validateContact(contact) {
   const errors = {};
   if (!contact.name?.trim()) errors.name = "Name is required";
@@ -92,11 +107,11 @@ export function useBookingFlow({ product: productProp = "trevista", tour = null 
     }
   }, [productProp, storedProduct, dispatch]);
 
-  // Hydrate trip dates from product data (for trevio)
+  // Hydrate trip dates from product data (for trevio and trevista)
   useEffect(() => {
-    if (product !== "trevio" || !tour) return;
+    if (!tour) return;
     dispatch(hydrateFromProduct(tour));
-  }, [product, tour?.slug, dispatch]);
+  }, [product, tour, dispatch]);
 
   const updateTrip = useCallback((field, value) => {
     dispatch(setTripField({ field, value }));
@@ -115,6 +130,10 @@ export function useBookingFlow({ product: productProp = "trevista", tour = null 
 
     if (stepKey === "trip") {
       stepErrors = validateTrip(trip, roomRequired);
+    } else if (stepKey === "departure") {
+      stepErrors = validateDeparture(trip);
+    } else if (stepKey === "customize") {
+      stepErrors = validateCustomize(trip);
     } else if (stepKey === "travellers") {
       travellers.forEach((t, i) => {
         const tErrors = validateTraveller(t, travellers, activePreferenceFields);
