@@ -26,21 +26,27 @@ export default function BookingSidebar({
 
   const guests = Number(guestsCount || 1);
   const isTrevio = product === "trevio";
+  const isV2 = !isTrevio && computedPricing?.moneyUnit === "PAISE";
+  const v2Items = isV2 ? (computedPricing.items || []) : [];
+  const v2Amount = (code) => Number(v2Items.find((item) => item.code === code)?.amountMinor || 0) / 100;
 
   const basePricePerPerson = isTrevio
     ? (data.price || trip.pricePerPerson || 0)
     : (data.price?.min || data.price || 0);
 
-  const baseTripTotal = isTrevio
+  const baseTripTotal = isV2 ? Number(computedPricing.tourSubtotalMinor || 0) / 100 : isTrevio
     ? Number(computedPricing?.baseTripTotal ?? computedPricing?.baseAmount ?? 0)
     : Number(computedPricing?.baseTripTotal || basePricePerPerson);
   const totalPrefExtras = computedPricing?.totalPrefExtras || 0;
-  const addonAmount = Number(computedPricing?.addonAmount || 0);
+  const addonAmount = isV2 ? Number(computedPricing.addonsSubtotalMinor || 0) / 100 : Number(computedPricing?.addonAmount || 0);
   const roomTypeExtra = Number(computedPricing?.roomTypeExtra || 0);
   const transportExtra = Number(computedPricing?.transportExtra || 0);
-  const taxes = Number(computedPricing?.taxes ?? computedPricing?.tax ?? 0);
-  const discounts = Number(computedPricing?.discounts || 0);
-  const total = isTrevio
+  const agentFee = isV2 ? Number(computedPricing.agencyFee?.customerAmountMinor || 0) / 100 : Number(computedPricing?.agentFee || 0);
+  const serviceFee = Number(computedPricing?.serviceFee || 0);
+  const platformFee = isV2 ? Number(computedPricing.platformFee?.amountMinor || 0) / 100 : Number(computedPricing?.platformFee || 0);
+  const taxes = isV2 ? Number(computedPricing.taxAmountMinor || 0) / 100 : Number(computedPricing?.taxes ?? computedPricing?.tax ?? 0);
+  const discounts = isV2 ? Number(computedPricing.discount?.amountMinor || 0) / 100 : Number(computedPricing?.discounts || 0);
+  const total = isV2 ? Number(computedPricing.finalPayableMinor || 0) / 100 : isTrevio
     ? Number(computedPricing?.grandTotal ?? computedPricing?.total ?? 0)
     : Number(computedPricing?.total ?? baseTripTotal);
   const tokenAmount = computedPricing?.tokenAmount || 0;
@@ -124,7 +130,7 @@ export default function BookingSidebar({
         {!isTrevio && (
           <div className="be-sidebar__row">
             <span className="be-sidebar__label">Flights</span>
-            <span className="be-sidebar__value">{trip.addFlights === "flights" ? "Yes, include flights" : "Not now"}</span>
+            <span className="be-sidebar__value">{trip.addFlights === "included" ? "Included" : trip.addFlights === "flights" ? "Yes, include flights" : "Not included"}</span>
           </div>
         )}
         <div className="be-sidebar__row">
@@ -153,21 +159,30 @@ export default function BookingSidebar({
 
       <div className="be-sidebar__section">
         <h4 className="be-sidebar__heading">Price summary</h4>
-        <div className="be-sidebar__row">
+        {!isTrevio && !isV2 ? (
+          <div className="be-customize__loading">Calculating your quote…</div>
+        ) : <>
+        {!isV2 && <div className="be-sidebar__row">
           <span className="be-sidebar__label">Per person</span>
           <span className="be-sidebar__value">{formatMoney(basePricePerPerson)}</span>
-        </div>
+        </div>}
         <div className="be-sidebar__row">
           <span className="be-sidebar__label">Trip fare · {guests} guest{guests !== 1 ? "s" : ""}</span>
           <span className="be-sidebar__value">{formatMoney(baseTripTotal)}</span>
         </div>
-        {!isTrevio && roomTypeExtra > 0 && (
+        {isV2 && v2Items.filter((item) => item.category === "ADDON").map((item) => (
+          <div className="be-sidebar__row" key={item.code}>
+            <span className="be-sidebar__label">{item.label}{item.quantity > 1 ? ` × ${item.quantity}` : ""}</span>
+            <span className="be-sidebar__value be-sidebar__value--positive">+{formatMoney(item.amountMinor / 100)}</span>
+          </div>
+        ))}
+        {!isTrevio && !isV2 && roomTypeExtra > 0 && (
           <div className="be-sidebar__row">
             <span className="be-sidebar__label">Room upgrade</span>
             <span className="be-sidebar__value be-sidebar__value--positive">+{formatMoney(roomTypeExtra)}</span>
           </div>
         )}
-        {!isTrevio && transportExtra > 0 && (
+        {!isTrevio && !isV2 && transportExtra > 0 && (
           <div className="be-sidebar__row">
             <span className="be-sidebar__label">Transfer upgrade</span>
             <span className="be-sidebar__value be-sidebar__value--positive">+{formatMoney(transportExtra)}</span>
@@ -194,11 +209,14 @@ export default function BookingSidebar({
             <span className="be-sidebar__value be-sidebar__value--positive">+{formatMoney(totalPrefExtras)}</span>
           </div>
         )}
-        <div className="be-sidebar__row">
+        {!isV2 && <div className="be-sidebar__row">
           <span className="be-sidebar__label">{isTrevio ? "Add-ons" : "Experiences"}</span>
           <span className="be-sidebar__value">{formatMoney(addonAmount)}</span>
-        </div>
-        {isTrevio && (
+        </div>}
+        {!isTrevio && agentFee > 0 && <div className="be-sidebar__row"><span className="be-sidebar__label">Agency service fee</span><span className="be-sidebar__value">{formatMoney(agentFee)}</span></div>}
+        {!isTrevio && serviceFee > 0 && <div className="be-sidebar__row"><span className="be-sidebar__label">Service fee</span><span className="be-sidebar__value">{formatMoney(serviceFee)}</span></div>}
+        {!isTrevio && platformFee > 0 && <div className="be-sidebar__row"><span className="be-sidebar__label">Platform fee</span><span className="be-sidebar__value">{formatMoney(platformFee)}</span></div>}
+        {(isTrevio || isV2) && taxes > 0 && (
           <div className="be-sidebar__row">
             <span className="be-sidebar__label">Taxes &amp; GST</span>
             <span className="be-sidebar__value">{formatMoney(taxes)}</span>
@@ -242,6 +260,7 @@ export default function BookingSidebar({
           <span className="be-sidebar__value">{formatMoney(total)}</span>
         </div>
         <p className="be-sidebar__tax-note">Inclusive of applicable tax</p>
+        </>}
       </div>
       <BottomSheet open={preferenceHelpOpen} onClose={() => setPreferenceHelpOpen(false)} title="Preference breakdown">
         {preferenceDetails}

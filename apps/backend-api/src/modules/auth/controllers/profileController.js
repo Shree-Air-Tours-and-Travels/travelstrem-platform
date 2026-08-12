@@ -78,8 +78,9 @@ export const updatePassword = async (req, res) => {
         if (newPassword.length < 8) {
             return res.status(400).json({ status: "error", message: "New password must be at least 8 characters" });
         }
-        const user = await UserRepository.findById(userId);
+        const user = await UserRepository.findById(userId, "+passwordHash");
         if (!user) return res.status(404).json({ status: "error", message: "User not found" });
+        if (!user.passwordHash) return res.status(400).json({ status: "error", code: "PASSWORD_NOT_SET", message: "This account does not have a password. Use a linked sign-in method." });
         const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
         if (!isMatch) {
             return res.status(400).json({ status: "error", message: "Current password is incorrect" });

@@ -1338,6 +1338,32 @@
       display: none
     }
 
+
+    .detail-stack { display:grid; gap:14px; }
+    .stay-card { overflow:hidden; }
+    .stay-head { display:grid; grid-template-columns:150px 1fr; gap:16px; align-items:stretch; }
+    .stay-photo { min-height:132px; background-size:cover; background-position:center; border-radius:14px; }
+    .stay-meta { display:flex; gap:7px; flex-wrap:wrap; margin:8px 0 12px; }
+    .spec-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin-top:13px; }
+    .spec { border:1px solid var(--line); border-radius:11px; padding:10px; background:#fbfefd; }
+    .spec span { display:block; font-size:9px; font-weight:800; color:#82918f; text-transform:uppercase; letter-spacing:.55px; margin-bottom:5px; }
+    .spec strong { font-size:11px; line-height:1.45; display:block; }
+    .notice { border:1px solid #cdebe5; background:var(--primary-faint); border-radius:13px; padding:13px 14px; font-size:11px; color:#46615e; line-height:1.6; }
+    .service-card { border:1px solid var(--line); border-radius:14px; padding:14px; background:white; }
+    .service-head { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
+    .service-head h4 { margin:0 0 4px; }
+    .service-details { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-top:12px; }
+    .service-details div { background:var(--soft); border-radius:9px; padding:9px; font-size:10px; color:var(--muted); }
+    .service-details strong { display:block; color:var(--ink); font-size:11px; margin-bottom:3px; }
+    .booking-alert { display:flex; gap:11px; align-items:flex-start; background:var(--warning-soft); border:1px solid #f4dfae; padding:13px; border-radius:13px; color:#785016; font-size:11px; line-height:1.55; }
+    .booking-alert i { flex:0 0 auto; }
+    .doc-status { display:flex; align-items:center; gap:8px; }
+    .contact-card { display:grid; grid-template-columns:42px 1fr auto; gap:11px; align-items:center; padding:12px 0; border-bottom:1px solid #edf2f1; }
+    .contact-card:last-child { border-bottom:0; }
+    .contact-icon { width:42px; height:42px; border-radius:12px; background:var(--primary-soft); color:var(--primary); display:grid; place-items:center; }
+    .mini-title { font-size:10px; text-transform:uppercase; letter-spacing:.65px; color:#80908d; font-weight:800; margin-bottom:7px; }
+    @media(max-width:700px){ .stay-head{grid-template-columns:1fr}.stay-photo{min-height:190px}.spec-grid,.service-details{grid-template-columns:1fr}.contact-card{grid-template-columns:42px 1fr}.contact-card>.btn{grid-column:1/-1} }
+
     @media(max-width:1020px) {
       .nav {
         display: none
@@ -1606,7 +1632,7 @@
 
     const state = {
       selectedPackage: "bali",
-      departure: "03 Aug 2026",
+      departure: "03 Sep 2026",
       roomType: "Deluxe Room",
       roomPrice: 0,
       transport: "Shared transfers",
@@ -1751,7 +1777,7 @@
     </div>
     <div class="details-grid">
       <div>
-        <div class="anchor-tabs"><button class="active" onclick="scrollToId('overview')">Overview</button><button onclick="scrollToId('itinerary')">Itinerary</button><button onclick="scrollToId('stays')">Hotels</button><button onclick="scrollToId('inclusions')">Inclusions</button><button onclick="scrollToId('policies')">Policies</button><button onclick="scrollToId('reviews')">Reviews</button></div>
+        <div class="anchor-tabs"><button class="active" onclick="scrollToId('overview')">Overview</button><button onclick="scrollToId('itinerary')">Itinerary</button><button onclick="scrollToId('stays')">Hotels</button><button onclick="scrollToId('services')">Services</button><button onclick="scrollToId('inclusions')">Inclusions</button><button onclick="scrollToId('policies')">Policies</button><button onclick="scrollToId('reviews')">Reviews</button></div>
 
         <section id="overview" class="card panel">
           <h3>Package overview</h3>
@@ -1775,12 +1801,23 @@
         </section>
 
         <section id="stays" class="card panel" style="margin-top:22px">
-          <h3>Included stays</h3>
-          <div class="info-list">
-            <div class="info-row">${icon("hotel")}<div><strong>3 nights · Ubud</strong><p>4-star garden resort · Deluxe room · Breakfast included</p></div></div>
-            <div class="info-row">${icon("waves")}<div><strong>2 nights · Seminyak</strong><p>4-star beach-area hotel · Superior room · Breakfast included</p></div></div>
+          <div style="display:flex;justify-content:space-between;gap:14px;align-items:flex-start"><div><h3 style="margin-bottom:5px">Your included stays</h3><p class="small muted">The exact stay, room, meal plan, occupancy and check-in details the traveller is booking.</p></div><span class="pill pill-success">2 hotels · 5 nights</span></div>
+          <div class="detail-stack" style="margin-top:15px">
+            <div class="service-card stay-card"><div class="stay-head"><div class="stay-photo" style="background-image:url('${packageImages.resort}')"></div><div><div class="service-head"><div><h4>Sthala Ubud Bali · a Tribute Portfolio Hotel</h4><div class="small muted">Lodtunduh, Ubud, Bali · Approx. 20 min from central Ubud</div></div><span class="pill pill-success">Included</span></div><div class="stay-meta"><span class="amenity">4-star</span><span class="amenity">Traveller rating 4.6/5</span><span class="amenity">Free Wi-Fi</span><span class="amenity">Pool</span><span class="amenity">24h front desk</span></div><div class="spec-grid"><div class="spec"><span>Stay</span><strong>03–06 Sep · 3 nights</strong></div><div class="spec"><span>Room</span><strong>Deluxe King · 1 room</strong></div><div class="spec"><span>Occupancy</span><strong>2 adults · twin sharing</strong></div><div class="spec"><span>Meal plan</span><strong>Daily breakfast</strong></div><div class="spec"><span>Check-in / out</span><strong>15:00 / 12:00</strong></div><div class="spec"><span>Cancellation</span><strong>Package policy applies</strong></div></div></div></div></div>
+            <div class="service-card stay-card"><div class="stay-head"><div class="stay-photo" style="background-image:url('${packageImages.room}')"></div><div><div class="service-head"><div><h4>Cross Paasha Bali Seminyak</h4><div class="small muted">Seminyak, Bali · Close to restaurants and beach-area attractions</div></div><span class="pill pill-success">Included</span></div><div class="stay-meta"><span class="amenity">4-star</span><span class="amenity">Traveller rating 4.7/5</span><span class="amenity">Breakfast</span><span class="amenity">Pool</span><span class="amenity">Fitness centre</span></div><div class="spec-grid"><div class="spec"><span>Stay</span><strong>06–08 Sep · 2 nights</strong></div><div class="spec"><span>Room</span><strong>Superior Room · 1 room</strong></div><div class="spec"><span>Occupancy</span><strong>2 adults · twin sharing</strong></div><div class="spec"><span>Meal plan</span><strong>Daily breakfast</strong></div><div class="spec"><span>Check-in / out</span><strong>14:00 / 12:00</strong></div><div class="spec"><span>Transfer</span><strong>Ubud → Seminyak included</strong></div></div></div></div></div>
           </div>
-          <button class="btn btn-outline" style="margin-top:15px" onclick="openHotelModal()">View hotel options</button>
+          <div class="notice" style="margin-top:13px"><strong>Hotel substitution rule:</strong> if an agent lists a hotel as “or similar”, Trevista must show the confirmed property before final payment whenever possible. Any replacement should be the same destination, category and meal plan, and material changes require traveller acceptance.</div>
+          <button class="btn btn-outline" style="margin-top:15px" onclick="openHotelModal()">Compare available hotel upgrades</button>
+        </section>
+
+        <section id="services" class="card panel">
+          <h3>Transfers, sightseeing and experiences</h3>
+          <div class="detail-stack">
+            <div class="service-card"><div class="service-head"><div><h4>Airport arrival transfer</h4><div class="small muted">Ngurah Rai International Airport → Ubud hotel</div></div><span class="pill pill-success">Included</span></div><div class="service-details"><div><strong>Vehicle</strong>Air-conditioned shared vehicle</div><div><strong>Pickup</strong>Arrival hall meeting point · flight-linked</div><div><strong>Waiting policy</strong>Up to 60 min after baggage collection</div><div><strong>Contact</strong>Driver details released before arrival</div></div></div>
+            <div class="service-card"><div class="service-head"><div><h4>Ubud highlights sightseeing</h4><div class="small muted">Rice terraces, selected temple, artisan village and Ubud market</div></div><span class="pill pill-success">Included</span></div><div class="service-details"><div><strong>Duration</strong>Approx. 8 hours</div><div><strong>Type</strong>Shared guided tour</div><div><strong>Tickets</strong>Listed attraction entry included</div><div><strong>Meals</strong>Breakfast only; lunch at own expense</div></div></div>
+            <div class="service-card"><div class="service-head"><div><h4>Nusa Penida day excursion</h4><div class="small muted">Hotel pickup, harbour transfer, fast boat and island sightseeing</div></div><span class="pill pill-success">Included</span></div><div class="service-details"><div><strong>Start</strong>Early morning pickup</div><div><strong>Boat</strong>Return fast-boat ticket</div><div><strong>Island vehicle</strong>Shared AC vehicle</div><div><strong>Important</strong>Sea conditions may change operation</div></div></div>
+            <div class="service-card"><div class="service-head"><div><h4>Uluwatu sunset tour</h4><div class="small muted">Optional experience currently selected in this prototype</div></div><span class="pill pill-blue">Add-on</span></div><div class="service-details"><div><strong>Price basis</strong>Per adult traveller</div><div><strong>Pickup</strong>Hotel pickup zone</div><div><strong>Entry</strong>Temple entry included</div><div><strong>Not included</strong>Dinner and personal expenses</div></div></div>
+          </div>
         </section>
 
         <section id="inclusions" class="card panel">
@@ -1794,6 +1831,14 @@
         <section id="policies" class="card panel">
           <h3>Booking and cancellation policies</h3>
           <div class="info-list"><div class="info-row">${icon("calendar-x")}<div><strong>Cancellation</strong><p>Cancellation charges depend on the number of days before departure and supplier conditions.</p></div></div><div class="info-row">${icon("calendar-cog")}<div><strong>Date changes</strong><p>Changes are subject to hotel, transport, and activity availability plus fare differences.</p></div></div><div class="info-row">${icon("badge-indian-rupee")}<div><strong>Price revalidation</strong><p>Final supplier price is revalidated before payment. Any difference is displayed before confirmation.</p></div></div></div>
+        </section>
+
+        <section class="card panel">
+          <h3>Before you book</h3>
+          <div class="included-grid">
+            <div><div class="mini-title">Traveller requirements</div><div class="info-list"><div class="info-row">${icon("book-open-check")}<div><strong>Passport</strong><p>Traveller names should match the passport. For international travel, validity rules depend on nationality and destination.</p></div></div><div class="info-row">${icon("stamp")}<div><strong>Visa / entry requirements</strong><p>Show whether visa is required, who is responsible for applying, and whether assistance is included or chargeable.</p></div></div><div class="info-row">${icon("heart-pulse")}<div><strong>Health and accessibility</strong><p>Declare mobility, medical, dietary or accessibility needs before confirmation so suppliers can validate them.</p></div></div></div></div>
+            <div><div class="mini-title">Operational information</div><div class="info-list"><div class="info-row">${icon("clock-3")}<div><strong>Reporting times</strong><p>Final pickup and reporting times appear on vouchers; missed services due to late arrival may be non-refundable.</p></div></div><div class="info-row">${icon("luggage")}<div><strong>Luggage</strong><p>Vehicle and domestic connection baggage limits should be shown where applicable.</p></div></div><div class="info-row">${icon("phone-call")}<div><strong>Emergency support</strong><p>Booking confirmation should expose Trevista support plus destination emergency/local operator contacts.</p></div></div></div></div>
+          </div>
         </section>
 
         <section id="reviews" class="card panel">
@@ -1824,12 +1869,12 @@
     ${steps(0)}
     <div class="booking-grid"><div>
       <div class="card panel"><h3>Select a departure</h3><div class="departure-grid">
-        ${departureCard("03 Aug 2026", "Available", "Best price", true)}
-        ${departureCard("10 Aug 2026", "Available", "Limited rooms")}
-        ${departureCard("17 Aug 2026", "Available", "Popular")}
-        ${departureCard("24 Aug 2026", "On request", "Supplier confirmation")}
-        ${departureCard("07 Sep 2026", "Available", "Good availability")}
-        ${departureCard("14 Sep 2026", "Available", "Early-booking offer")}
+        ${departureCard("03 Sep 2026", "Available", "Best price", true)}
+        ${departureCard("10 Sep 2026", "Available", "Limited rooms")}
+        ${departureCard("17 Sep 2026", "Available", "Popular")}
+        ${departureCard("24 Sep 2026", "On request", "Supplier confirmation")}
+        ${departureCard("01 Oct 2026", "Available", "Good availability")}
+        ${departureCard("08 Oct 2026", "Available", "Early-booking offer")}
       </div></div>
       <div class="card panel"><h3>Traveller count</h3><div class="option-row"><div><strong>Adults</strong><div class="small muted">12 years and above</div></div><div class="counter"><button onclick="changeCount('travellers',-1)">−</button><strong>${state.travellers}</strong><button onclick="changeCount('travellers',1)">+</button></div></div><div class="option-row"><div><strong>Children</strong><div class="small muted">2–11 years</div></div><div class="counter"><button onclick="changeCount('children',-1)">−</button><strong>${state.children}</strong><button onclick="changeCount('children',1)">+</button></div></div></div>
       <div class="card panel"><h3>Departure city</h3><div class="form-grid"><div class="form-group"><label>Starting city</label><select><option>Delhi</option><option>Mumbai</option><option>Jaipur</option><option>Bengaluru</option></select></div><div class="form-group"><label>Add flights?</label><select><option>Not now</option><option>Yes, include flights</option></select></div></div></div>
@@ -1905,10 +1950,23 @@
     ${steps(3)}
     <div class="booking-grid"><div>
       <div class="card panel"><div style="display:flex;justify-content:space-between;gap:15px"><div><div class="label">Holiday package</div><h3 style="margin:7px 0">${pkg().title}</h3></div><button class="btn btn-ghost" onclick="navigate('package-details')">Change</button></div><div class="summary-box"><strong>${state.departure} · ${pkg().duration}</strong><div class="small muted" style="margin-top:5px">${pkg().destination}</div></div></div>
-      <div class="card panel"><div style="display:flex;justify-content:space-between;gap:15px"><h3>Customisation</h3><button class="btn btn-ghost" onclick="navigate('customize')">Edit</button></div><div class="line-item"><span>Room</span><strong>${state.roomType}</strong></div><div class="line-item"><span>Transfers</span><strong>${state.transport}</strong></div><div class="line-item"><span>Experiences</span><strong>${state.addons.join(", ") || "None"}</strong></div></div>
+      <div class="card panel"><div style="display:flex;justify-content:space-between;gap:15px"><h3>What you are booking</h3><button class="btn btn-ghost" onclick="navigate('customize')">Edit</button></div>
+        <div class="line-item"><span>Ubud stay</span><strong>Sthala Ubud Bali · 3 nights</strong></div>
+        <div class="line-item"><span>Seminyak stay</span><strong>Cross Paasha Bali · 2 nights</strong></div>
+        <div class="line-item"><span>Room category</span><strong>${state.roomType} · 1 room · breakfast</strong></div>
+        <div class="line-item"><span>Local transfers</span><strong>${state.transport}</strong></div>
+        <div class="line-item"><span>Core sightseeing</span><strong>Ubud tour + Nusa Penida excursion</strong></div>
+        <div class="line-item"><span>Selected add-ons</span><strong>${state.addons.join(", ") || "None"}</strong></div>
+        <div class="booking-alert" style="margin-top:12px">${icon("circle-alert",18)}<div><strong>Supplier revalidation before payment</strong><br>Hotel inventory, activity operation and transport pricing are rechecked. Any material change should be shown here before the traveller authorises payment.</div></div>
+      </div>
       <div class="card panel"><div style="display:flex;justify-content:space-between;gap:15px"><h3>Travellers</h3><button class="btn btn-ghost" onclick="navigate('travellers')">Edit</button></div><div class="line-item"><span>Adults</span><strong>${state.travellers}</strong></div><div class="line-item"><span>Children</span><strong>${state.children}</strong></div><div class="line-item"><span>Lead traveller</span><strong>Akshat Goyal</strong></div><div class="line-item"><span>Contact</span><strong>akshat@example.com</strong></div></div>
-      <div class="card panel"><h3>Payment schedule</h3><div class="line-item"><span>Booking amount due now</span><strong>${fmt(Math.round(state.total * .3))}</strong></div><div class="line-item"><span>Balance due by 20 Jul 2026</span><strong>${fmt(Math.round(state.total * .7))}</strong></div><label class="check"><span><input type="checkbox" checked> Pay full amount now instead.</span></label></div>
-      <div class="card panel"><h3>Terms and declarations</h3><label class="check"><span><input type="checkbox" checked> I agree to package terms, supplier conditions, cancellation policy, passport/visa responsibilities, and privacy terms.</span></label></div>
+      <div class="card panel"><h3>Payment schedule</h3><div class="line-item"><span>Booking amount due now</span><strong>${fmt(Math.round(state.total * .3))}</strong></div><div class="line-item"><span>Balance due by 20 Aug 2026</span><strong>${fmt(Math.round(state.total * .7))}</strong></div><label class="check"><span><input type="checkbox" checked> Pay full amount now instead.</span></label></div>
+      <div class="card panel"><h3>Final declarations</h3>
+        <label class="check"><span><input type="checkbox" checked> Traveller names and dates of birth are correct and match travel documents.</span></label>
+        <label class="check"><span><input type="checkbox" checked> I reviewed hotels, room/meal basis, transfers, sightseeing, inclusions, exclusions and selected add-ons.</span></label>
+        <label class="check"><span><input type="checkbox" checked> I understand passport, visa, insurance and destination-entry responsibilities.</span></label>
+        <label class="check"><span><input type="checkbox" checked> I agree to package terms, supplier conditions, cancellation/refund policy and privacy terms.</span></label>
+      </div>
       <button class="btn btn-primary btn-full" onclick="navigate('payment')">Proceed to secure payment ${icon("lock-keyhole", 17)}</button>
     </div>${bookingSummary()}</div>
   </div></section>`)
@@ -1950,13 +2008,27 @@
       updateNav("bookings");
       setView(`<section class="page"><div class="container">
     ${crumbs([{ label: "My bookings", action: "navigate('bookings')" }, { label: "Booking details" }])}
-    <div class="page-title"><div><span class="pill pill-success">Confirmed</span><h2 style="margin:9px 0 0">${pkg().title}</h2><p>${state.bookingId} · Booked on 31 July 2026</p></div><button class="btn btn-secondary" onclick="toast('Voucher downloaded')">${icon("download", 17)} Download voucher</button></div>
+    <div class="page-title"><div><span class="pill pill-success">Confirmed</span><h2 style="margin:9px 0 0">${pkg().title}</h2><p>${state.bookingId} · Departure ${state.departure} · ${state.travellers + state.children} traveller(s)</p></div><button class="btn btn-secondary" onclick="toast('Complete travel pack downloaded')">${icon("download", 17)} Download travel pack</button></div>
     <div class="details-grid"><div>
-      <div class="card panel"><h3>Trip summary</h3><div class="line-item"><span>Destination</span><strong>${pkg().destination}</strong></div><div class="line-item"><span>Dates</span><strong>${state.departure} · ${pkg().duration}</strong></div><div class="line-item"><span>Travellers</span><strong>${state.travellers + state.children}</strong></div><div class="line-item"><span>Room</span><strong>${state.roomType}</strong></div><div class="line-item"><span>Transfers</span><strong>${state.transport}</strong></div><div class="line-item total"><span>Total paid</span><strong>${fmt(state.total)}</strong></div></div>
-      <div class="card panel"><h3>Pre-travel checklist</h3><div class="timeline"><div class="timeline-item"><strong>Traveller details completed</strong><p>All required traveller information has been submitted.</p></div><div class="timeline-item"><strong>Passport review pending</strong><p>Upload passport copies for all travellers before 10 July.</p></div><div class="timeline-item"><strong>Final hotel voucher</strong><p>Expected 7–10 days before departure.</p></div><div class="timeline-item"><strong>Driver and local contact</strong><p>Shared 24 hours before arrival.</p></div></div></div>
+      <div class="card panel"><h3>Booking status</h3><div class="overview-grid"><div class="overview-item">${icon("badge-check")}<strong>Confirmed</strong>Package</div><div class="overview-item">${icon("credit-card")}<strong>Paid</strong>Payment</div><div class="overview-item">${icon("hotel")}<strong>Confirmed</strong>Hotels</div><div class="overview-item">${icon("route")}<strong>Scheduled</strong>Services</div></div><div class="notice" style="margin-top:13px">This screen is the traveller's source of truth after booking: confirmed suppliers, timings, vouchers, contacts, pending actions and every requested change should appear here.</div></div>
+
+      <div class="card panel"><h3>Trip summary</h3><div class="line-item"><span>Destination</span><strong>${pkg().destination}</strong></div><div class="line-item"><span>Travel period</span><strong>${state.departure} · ${pkg().duration}</strong></div><div class="line-item"><span>Travellers</span><strong>${state.travellers} adult(s) · ${state.children} child(ren)</strong></div><div class="line-item"><span>Accommodation</span><strong>1 room · ${state.roomType}</strong></div><div class="line-item"><span>Transfers</span><strong>${state.transport}</strong></div><div class="line-item total"><span>Total paid</span><strong>${fmt(state.total)}</strong></div></div>
+
+      <div class="card panel"><h3>Confirmed hotels</h3><div class="detail-stack">
+        <div class="service-card"><div class="service-head"><div><h4>Sthala Ubud Bali · a Tribute Portfolio Hotel</h4><div class="small muted">Ubud · 03–06 Sep · 3 nights</div></div><span class="pill pill-success">Confirmed</span></div><div class="service-details"><div><strong>Confirmation no.</strong>UBD-TRM-84291</div><div><strong>Room</strong>${state.roomType} · 1 room</div><div><strong>Meal plan</strong>Breakfast included</div><div><strong>Check-in / out</strong>15:00 / 12:00</div></div></div>
+        <div class="service-card"><div class="service-head"><div><h4>Cross Paasha Bali Seminyak</h4><div class="small muted">Seminyak · 06–08 Sep · 2 nights</div></div><span class="pill pill-success">Confirmed</span></div><div class="service-details"><div><strong>Confirmation no.</strong>SMY-TRM-55104</div><div><strong>Room</strong>${state.roomType} · 1 room</div><div><strong>Meal plan</strong>Breakfast included</div><div><strong>Check-in / out</strong>14:00 / 12:00</div></div></div>
+      </div></div>
+
+      <div class="card panel"><h3>Day-wise booked services</h3><div class="timeline"><div class="timeline-item"><strong>Day 1 · Airport → Ubud</strong><p>Arrival meet-and-assist and ${state.transport.toLowerCase()}. Driver/vehicle details become visible before arrival.</p></div><div class="timeline-item"><strong>Day 2 · Ubud highlights</strong><p>Shared guided sightseeing. Breakfast included; attraction entries listed in the voucher are included.</p></div><div class="timeline-item"><strong>Day 3 · Nusa Penida</strong><p>Hotel pickup, return fast boat and island vehicle. Final pickup time appears in the service voucher.</p></div><div class="timeline-item"><strong>Day 4 · Uluwatu sunset experience</strong><p>${state.addons.includes("Uluwatu sunset tour") ? "Booked add-on for selected travellers." : "Not booked."}</p></div><div class="timeline-item"><strong>Day 6 · Hotel → airport</strong><p>Departure transfer scheduled according to flight/reporting details.</p></div></div></div>
+
+      <div class="card panel"><h3>Traveller & document checklist</h3><div class="option-row"><div class="doc-status">${icon("circle-check",18)}<div><strong>Traveller details</strong><div class="small muted">Names, DOB, nationality and contact</div></div></div><span class="pill pill-success">Complete</span></div><div class="option-row"><div class="doc-status">${icon("passport",18)}<div><strong>Passport copies</strong><div class="small muted">Required for international supplier records</div></div></div><button class="btn btn-outline" onclick="toast('Passport upload opened')">Upload</button></div><div class="option-row"><div class="doc-status">${icon("stamp",18)}<div><strong>Visa / entry documents</strong><div class="small muted">Traveller responsibility unless assistance is purchased</div></div></div><span class="pill pill-warning">Review</span></div><div class="option-row"><div class="doc-status">${icon("shield-check",18)}<div><strong>Travel insurance</strong><div class="small muted">Recommended for international travel</div></div></div><button class="btn btn-outline" onclick="toast('Insurance options opened')">View options</button></div></div>
+
+      <div class="card panel"><h3>Documents & vouchers</h3><div class="option-row"><div><strong>Master package voucher</strong><div class="small muted">Booking overview and inclusions</div></div><button class="btn btn-outline" onclick="toast('Master voucher downloaded')">Download</button></div><div class="option-row"><div><strong>Hotel vouchers</strong><div class="small muted">Property, room, meal plan and confirmation numbers</div></div><button class="btn btn-outline" onclick="toast('Hotel vouchers downloaded')">Download</button></div><div class="option-row"><div><strong>Transfer & activity vouchers</strong><div class="small muted">Meeting points, timings and operator instructions</div></div><button class="btn btn-outline" onclick="toast('Service vouchers downloaded')">Download</button></div><div class="option-row"><div><strong>Tax invoice / payment receipt</strong><div class="small muted">Booking payment document</div></div><button class="btn btn-outline" onclick="toast('Invoice downloaded')">Download</button></div></div>
+
+      <div class="card panel"><h3>Support & emergency contacts</h3><div class="contact-card"><div class="contact-icon">${icon("headphones",18)}</div><div><strong>Trevista trip support</strong><div class="small muted">Booking changes, documents and supplier coordination</div></div><button class="btn btn-outline" onclick="toast('Support chat opened')">Contact</button></div><div class="contact-card"><div class="contact-icon">${icon("map-pinned",18)}</div><div><strong>Destination operator</strong><div class="small muted">Local operations contact · released before travel</div></div><span class="pill pill-warning">Pending</span></div><div class="contact-card"><div class="contact-icon">${icon("car-front",18)}</div><div><strong>Arrival driver</strong><div class="small muted">Name, vehicle and mobile released before pickup</div></div><span class="pill pill-warning">Pending</span></div></div>
+
       <div class="card panel"><h3>Manage booking</h3><div class="action-grid"><button class="action-card" onclick="toast('Change request started')">${icon("calendar-cog")}<strong>Request changes</strong><span>Dates, rooms, travellers, add-ons</span></button><button class="action-card" onclick="toast('Support chat opened')">${icon("message-circle")}<strong>Contact trip support</strong><span>Ask about your package</span></button><button class="action-card" onclick="openCancelModal()">${icon("calendar-x")}<strong>Cancel booking</strong><span>Review charges and refund</span></button></div></div>
-      <div class="card panel"><h3>Documents</h3><div class="option-row"><div><strong>Package voucher</strong><div class="small muted">Available</div></div><button class="btn btn-outline" onclick="toast('Voucher downloaded')">Download</button></div><div class="option-row"><div><strong>Payment invoice</strong><div class="small muted">Available</div></div><button class="btn btn-outline" onclick="toast('Invoice downloaded')">Download</button></div><div class="option-row"><div><strong>Final hotel confirmations</strong><div class="small muted">Pending supplier release</div></div><span class="pill pill-warning">Pending</span></div></div>
-    </div><aside class="card summary sticky"><div class="label">Need assistance?</div><h3 style="margin:8px 0">Dedicated trip support</h3><p class="small muted" style="line-height:1.6">Get help with documents, itinerary, changes, supplier coordination, or destination questions.</p><button class="btn btn-primary btn-full" onclick="toast('Trip support chat opened')">${icon("headphones", 17)} Contact support</button><button class="btn btn-outline btn-full" style="margin-top:9px" onclick="navigate('enquiry')">Request a callback</button></aside></div>
+    </div><aside class="card summary sticky"><div class="label">Next action</div><h3 style="margin:8px 0">Complete travel documents</h3><p class="small muted" style="line-height:1.6">Upload passport copies and review destination entry requirements. Final operational contacts will appear here before departure.</p><button class="btn btn-primary btn-full" onclick="toast('Passport upload opened')">${icon("upload", 17)} Upload passports</button><button class="btn btn-outline btn-full" style="margin-top:9px" onclick="toast('Support chat opened')">Ask trip support</button><div class="summary-box"><div class="mini-title">Booking references</div><div class="line-item"><span>Booking</span><strong>${state.bookingId}</strong></div><div class="line-item"><span>Payment</span><strong>PAY-2842</strong></div><div class="line-item"><span>Status</span><strong>Confirmed</strong></div></div></aside></div>
   </div></section>`)
     }
     function openCancelModal() { openModal("Cancel holiday booking", `<p class="small muted" style="line-height:1.65">Cancellation charges depend on supplier policies and the number of days before departure.</p><div class="summary-box"><div class="line-item"><span>Total paid</span><strong>${fmt(state.total)}</strong></div><div class="line-item"><span>Estimated supplier charges</span><strong>₹18,500</strong></div><div class="line-item"><span>Trevista service fee</span><strong>₹1,500</strong></div><div class="line-item total"><span>Estimated refund</span><strong>${fmt(Math.max(0, state.total - 20000))}</strong></div></div><div class="form-group"><label>Reason for cancellation</label><select><option>Change of plan</option><option>Medical reason</option><option>Visa issue</option><option>Other</option></select></div><button class="btn btn-danger btn-full" style="margin-top:14px" onclick="closeModal();toast('Cancellation request submitted')">Submit cancellation request</button>`) }

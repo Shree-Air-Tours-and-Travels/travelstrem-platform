@@ -2,30 +2,23 @@
 import crypto from "crypto";
 import UserRepository from "../repositories/UserRepository.js";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import { sendLoginEmail, sendPasswordResetEmail } from "../../../services/email.service.js";
 import config from "../../../config/index.js";
 import authConfig from "../../../config/auth.js";
 import UserVerification from "../models/UserVerification.js";
-import RefreshToken from "../models/RefreshToken.js";
 import PartnerAgency from "../models/PartnerAgency.js";
 import PartnershipRequest from "../../tenancy/models/PartnershipRequest.js";
 import User from "../models/User.js";
+import { getPortalScope } from "../../../core/auth/portalSession.js";
 import {
-    getPortalCookieNames,
-    getPortalScope,
-    portalCookieOptions,
-    readPortalAccessToken,
-    readPortalRefreshToken,
-} from "../../../core/auth/portalSession.js";
-
-const NODE_ENV = (config.NODE_ENV || process.env.NODE_ENV || "development").toString().trim();
-
-// JWT config (use config.JWT which was normalized in server/config.js)
-const JWT_SECRET = (config.JWT && config.JWT.accessSecret) || process.env.JWT_SECRET;
-const JWT_EXPIRES_IN = (config.JWT && config.JWT.accessExpires) || process.env.JWT_EXPIRES_IN || "15m";
-const JWT_REFRESH_SECRET = (config.JWT && config.JWT.refreshSecret) || process.env.JWT_REFRESH_SECRET;
-const JWT_REFRESH_EXPIRES_IN = (config.JWT && config.JWT.refreshExpires) || process.env.JWT_REFRESH_EXPIRES_IN || "30d";
+    createSession,
+    getSessionUser,
+    revokeCurrentSession,
+    revokePresentedRefreshToken,
+    revokeUserSessions,
+    rotateSession,
+    safeAuthUser,
+} from "../services/session.service.js";
 
 // Admin creation secret from config (production-safe)
 const ADMIN_CREATION_SECRET = (config.ADMIN_CREATION_SECRET || "").toString().trim();
@@ -38,67 +31,8 @@ const OTP_TTL = Number(config.OTP_TTL_MS || 1000 * 60 * 5);
 const OTP_MAX_ATTEMPTS = Number(config.OTP_MAX_ATTEMPTS || 3);
 const OTP_RESEND_COOLDOWN_MS = Number(config.OTP_RESEND_COOLDOWN_MS || 30 * 1000);
 
-// Non-production bypass: never email OTPs and accept any submitted OTP.
+// Explicit legacy email-OTP development bypass. It defaults off and production rejects it.
 const DEV_OTP_BYPASS = !!config.DEV_OTP_BYPASS;
-
-// Debug flag
-const DEBUG = !!config.DEBUG;
-
-/**
- * signTokenForUser - create JWT for a user
- * payload contains sub (user id) and role/name/email for convenience
- */
-const signTokenForUser = (user, portal) =>
-    jwt.sign(
-        {
-            sub: user._id.toString(),
-            role: user.role,
-            name: user.name,
-            email: user.email,
-            tokenVersion: user.tokenVersion || 0,
-            agentRef: user.agentRef || "",
-            agencyRef: user.agencyRef || "",
-            partnerAgencyRef: user.partnerAgencyRef || "",
-            agentApprovalStatus: user.agentApprovalStatus || "not_required",
-            adminLevel: user.adminLevel || "none",
-            adminApprovalStatus: user.adminApprovalStatus || "not_required",
-            agencyRole: user.agencyRole || "none",
-            agencyId: user.agencyId || null,
-            productAccess: user.productAccess || [],
-            portal,
-        },
-        JWT_SECRET,
-        { expiresIn: JWT_EXPIRES_IN }
-    );
-
-const setTokenCookie = (res, token) => {
-    const { access } = getPortalCookieNames(res.req);
-    res.cookie(access, token, portalCookieOptions({ maxAge: 7 * 24 * 60 * 60 * 1000 }));
-};
-
-const clearTokenCookie = (res) => {
-    const { access } = getPortalCookieNames(res.req);
-    res.cookie(access, "", portalCookieOptions({ maxAge: 0 }));
-};
-
-const parseDuration = (duration) => {
-    const match = String(duration).match(/^(\d+)\s*(s|m|h|d)$/);
-    if (!match) return 30 * 24 * 60 * 60 * 1000;
-    const num = parseInt(match[1], 10);
-    const unit = match[2];
-    const multipliers = { s: 1000, m: 60000, h: 3600000, d: 86400000 };
-    return num * (multipliers[unit] || 86400000);
-};
-
-const setRefreshTokenCookie = (res, token) => {
-    const { refresh } = getPortalCookieNames(res.req);
-    res.cookie(refresh, token, portalCookieOptions({ maxAge: parseDuration(JWT_REFRESH_EXPIRES_IN) }));
-};
-
-const clearRefreshTokenCookie = (res) => {
-    const { refresh } = getPortalCookieNames(res.req);
-    res.cookie(refresh, "", portalCookieOptions({ maxAge: 0 }));
-};
 
 const setAuthNoStoreHeaders = (res) => {
     res.setHeader("Cache-Control", "no-store");
@@ -106,39 +40,16 @@ const setAuthNoStoreHeaders = (res) => {
     res.setHeader("Referrer-Policy", "no-referrer");
 };
 
-const generateRefreshToken = (user) => {
-    const raw = crypto.randomBytes(48).toString("hex");
-    const family = crypto.randomBytes(16).toString("hex");
-    const expiresAt = new Date(Date.now() + parseDuration(JWT_REFRESH_EXPIRES_IN));
-    return { raw, family, expiresAt };
-};
-
-const hashToken = (raw) => crypto.createHash("sha256").update(raw).digest("hex");
-
-const issueRefreshToken = async (user, res) => {
-    await RefreshToken.cleanupExpired();
-    const refresh = generateRefreshToken(user);
-    await RefreshToken.create({
-        userId: user._id,
-        portal: getPortalScope(res.req),
-        tokenHash: hashToken(refresh.raw),
-        family: refresh.family,
-        expiresAt: refresh.expiresAt,
-    });
-    setRefreshTokenCookie(res, refresh.raw);
-};
-
-const revokeUserRefreshTokens = async (userId, portal = null) => {
-    await RefreshToken.deleteMany({ userId, ...(portal ? { portal } : {}) });
-};
-
-const revokeCurrentRefreshToken = async (req) => {
-    const refreshTokenRaw = readPortalRefreshToken(req);
-    if (!refreshTokenRaw) return;
-    await RefreshToken.deleteOne({ tokenHash: hashToken(refreshTokenRaw) });
-};
+const issueUserToken = (user, res) => createSession({ user, req: res.req, res });
+const revokeUserRefreshTokens = revokeUserSessions;
+const revokeCurrentRefreshToken = revokePresentedRefreshToken;
 
 const isPrivilegedRole = (role) => role === "admin" || role === "agent";
+const portalAllowsRole = (portal, role) => ({
+    customer: ["member", "agent", "admin"],
+    admin: ["admin"],
+    partner: ["agent"],
+}[portal] || ["member"]).includes(role);
 
 const normalizePhone = (phone = "") => String(phone || "").replace(/[^\d]/g, "");
 // Compare the national number so "+91 98765 43210" and "9876543210" are equivalent.
@@ -343,56 +254,6 @@ const maskEmail = (email) => {
     return `${masked}@${domain}`;
 };
 
-const issueUserToken = async (user, res) => {
-    const portal = getPortalScope(res.req);
-    const token = signTokenForUser(user, portal);
-    setTokenCookie(res, token);
-    await issueRefreshToken(user, res);
-    return {
-        status: "success",
-        success: true,
-        authenticated: true,
-        portal,
-        user: {
-            id: user._id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            agentRef: user.agentRef || "",
-            agencyRef: user.agencyRef || "",
-            partnerAgencyRef: user.partnerAgencyRef || "",
-            agentApprovalStatus: user.agentApprovalStatus || "not_required",
-            phone: user.phone || "",
-            adminLevel: user.adminLevel || "none",
-            adminApprovalStatus: user.adminApprovalStatus || "not_required",
-            agencyRole: user.agencyRole || "none",
-            agencyId: user.agencyId || null,
-            productAccess: user.productAccess || [],
-        },
-        sessionVersion: String(user.tokenVersion || 0),
-        redirectTo: config.TRAVELSTREM_APP_URL || config.APP_URL || process.env.TRAVELSTREM_APP_URL || process.env.APP_URL || "https://app.travelstrem.com",
-    };
-};
-
-const safeAuthUser = (user) => ({
-    id: user._id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-    agentRef: user.agentRef || "",
-    agencyRef: user.agencyRef || "",
-    partnerAgencyRef: user.partnerAgencyRef || "",
-    agentApprovalStatus: user.agentApprovalStatus || "not_required",
-    phone: user.phone || "",
-    avatar: user.avatar || "user",
-    adminLevel: user.adminLevel || "none",
-    adminApprovalStatus: user.adminApprovalStatus || "not_required",
-    agencyRole: user.agencyRole || "none",
-    agencyId: user.agencyId || null,
-    accountStatus: user.accountStatus || "active",
-    productAccess: user.productAccess || [],
-});
-
 const assertApprovedAdmin = async (req, res) => {
     if (req.user?.role !== "admin") {
         res.status(403).json({status: "error", message: "Only approved admins can perform this action." });
@@ -572,6 +433,10 @@ export const register = async (req, res) => {
         }
 
         const requestedRole = role || "member";
+        const portal = getPortalScope(req);
+        if (!portalAllowsRole(portal, requestedRole)) {
+            return res.status(403).json({ status: "error", message: `This account type cannot register through the ${portal} portal.` });
+        }
         const adminContext = await getAdminRoleContext({ requestedRole, normalizedEmail, body: req.body || {} });
         if (requestedRole === "admin" && adminContext.adminLevel === "master") {
             const verification = await validateMasterAdminRegistration({
@@ -642,6 +507,11 @@ export const login = async (req, res) => {
             return res.status(401).json({status: "error", message: "Invalid credentials." });
         }
 
+        const portal = getPortalScope(req);
+        if (!portalAllowsRole(portal, user.role)) {
+            return res.status(403).json({ status: "error", message: `This account does not have access to the ${portal} portal.` });
+        }
+
         try {
             await enforceActivePrivilegedUser(user);
         } catch (statusErr) {
@@ -649,8 +519,7 @@ export const login = async (req, res) => {
         }
 
         if (!user.passwordHash || typeof user.passwordHash !== "string") {
-            console.error(`[login] user ${normalizedEmail} missing/invalid passwordHash`);
-            return res.status(500).json({status: "error", message: "User password is not configured correctly." });
+            return res.status(400).json({ status: "error", code: "PASSWORD_NOT_SET", message: "This account does not have a password. Use a linked sign-in method." });
         }
 
         const match = await bcrypt.compare(password, user.passwordHash);
@@ -838,8 +707,7 @@ export const forgotPassword = async (req, res) => {
         const user = await UserRepository.findByEmail(normalizedEmail);
 
         if (!user) {
-            // For security you might want to always return 200 , but original code returned 404.
-            return res.status(404).json({status: "error", message: "No account found with that email address." });
+            return res.json({ message: "If that email is registered, a password reset code has been sent." });
         }
 
         const { otp } = await createVerification({
@@ -855,7 +723,7 @@ export const forgotPassword = async (req, res) => {
             label: "password reset",
         });
 
-        return res.json({ message: "OTP sent to registered email address." });
+        return res.json({ message: "If that email is registered, a password reset code has been sent." });
     } catch (err) {
         console.error("Auth forgotPassword error:", err && err.stack ? err.stack : err);
         return res.status(500).json({status: "error", message: isDev ? `Server error: ${err.message}` : "Server error" });
@@ -869,6 +737,9 @@ export const resetPassword = async (req, res) => {
         const { email, otp, password } = req.body || {};
         if (!email || !otp || !password) {
             return res.status(400).json({status: "error", message: "Email, OTP and new password are required." });
+        }
+        if (!/^\d{6}$/.test(String(otp)) || typeof password !== "string" || password.length < 8 || password.length > 128) {
+            return res.status(400).json({ status: "error", code: "INVALID_PASSWORD_RESET", message: "Enter a valid reset code and a password between 8 and 128 characters." });
         }
 
         const normalizedEmail = email.toLowerCase().trim();
@@ -935,35 +806,8 @@ export const resetPassword = async (req, res) => {
 export const refreshTokenEndpoint = async (req, res) => {
     setAuthNoStoreHeaders(res);
     try {
-        const portal = getPortalScope(req);
-        const refreshTokenRaw = readPortalRefreshToken(req);
-        if (!refreshTokenRaw) {
-            clearRefreshTokenCookie(res);
-            return res.status(401).json({status: "error", message: "Refresh token not provided." });
-        }
-
-        await RefreshToken.cleanupExpired();
-
-        const tokenHash = hashToken(refreshTokenRaw);
-        const stored = await RefreshToken.findOne({ tokenHash, portal, expiresAt: { $gt: new Date() } });
-
-        if (!stored) {
-            clearRefreshTokenCookie(res);
-            return res.status(401).json({status: "error", message: "Invalid or expired refresh token." });
-        }
-
-        const user = await UserRepository.findById(stored.userId);
-        if (!user) {
-            await RefreshToken.deleteMany({ userId: stored.userId });
-            clearRefreshTokenCookie(res);
-            return res.status(401).json({status: "error", message: "User not found." });
-        }
-
-        await enforceActivePrivilegedUser(user);
-
-        await revokeUserRefreshTokens(user._id, portal);
-
-        const result = await issueUserToken(user, res);
+        const result = await rotateSession({ req, res });
+        if (!result) return res.status(401).json({ status: "error", code: "INVALID_REFRESH_TOKEN", message: "Invalid or expired refresh token." });
         return res.json(result);
     } catch (err) {
         console.error("refreshTokenEndpoint error:", err && err.stack ? err.stack : err);
@@ -977,70 +821,8 @@ export const refreshTokenEndpoint = async (req, res) => {
  */
 export const logout = async (req, res) => {
     setAuthNoStoreHeaders(res);
-    clearTokenCookie(res);
-
-    const refreshTokenRaw = readPortalRefreshToken(req);
-    if (refreshTokenRaw) {
-        try {
-            await RefreshToken.deleteOne({ tokenHash: hashToken(refreshTokenRaw) });
-        } catch (err) {
-            console.error("[logout] failed to delete refresh token:", err.message);
-        }
-    }
-
-    clearRefreshTokenCookie(res);
+    await revokeCurrentSession(req, res);
     return res.json({ success: true, message: "Logged out successfully." });
-};
-
-const readAccessTokenFromRequest = (req) => readPortalAccessToken(req);
-
-const findUserForPayload = async (payload) => {
-    if (!payload?.sub) return null;
-    return UserRepository.findById(
-        payload.sub,
-        "name email phone role agentRef agencyRef partnerAgencyRef agentApprovalStatus adminLevel adminApprovalStatus avatar tokenVersion agencyRole agencyId accountStatus productAccess permissionGrants permissionDenials"
-    );
-};
-
-const resolveSessionUser = async (req, res) => {
-    const accessToken = readAccessTokenFromRequest(req);
-    if (accessToken) {
-        try {
-            const payload = jwt.verify(accessToken, JWT_SECRET);
-            if (!payload.portal || payload.portal !== getPortalScope(req)) throw new Error("Portal session mismatch");
-            const user = await findUserForPayload(payload);
-            if (user && Number(user.tokenVersion || 0) === Number(payload.tokenVersion || 0)) return user;
-            throw new Error("Session has been revoked");
-        } catch (err) {
-            clearTokenCookie(res);
-        }
-    }
-
-    const portal = getPortalScope(req);
-    const refreshTokenRaw = readPortalRefreshToken(req);
-    if (!refreshTokenRaw) return null;
-
-    await RefreshToken.cleanupExpired();
-    const stored = await RefreshToken.findOne({
-        tokenHash: hashToken(refreshTokenRaw),
-        portal,
-        expiresAt: { $gt: new Date() },
-    });
-    if (!stored) {
-        clearRefreshTokenCookie(res);
-        return null;
-    }
-
-    const user = await findUserForPayload({ sub: stored.userId });
-    if (!user) {
-        await RefreshToken.deleteMany({ userId: stored.userId });
-        clearRefreshTokenCookie(res);
-        return null;
-    }
-
-    await RefreshToken.deleteOne({ _id: stored._id });
-    await issueUserToken(user, res);
-    return user;
 };
 
 /**
@@ -1052,7 +834,7 @@ const resolveSessionUser = async (req, res) => {
 export const getSession = async (req, res) => {
     setAuthNoStoreHeaders(res);
     try {
-        const user = await resolveSessionUser(req, res);
+        const user = await getSessionUser({ req, res });
         if (!user) return res.json({ authenticated: false, user: null });
 
         try {
@@ -1090,7 +872,7 @@ export const getCurrentUser = async (req, res) => {
 
         const user = await UserRepository.findById(
             req.user.sub,
-            "name email phone role agentRef agencyRef partnerAgencyRef agentApprovalStatus adminLevel adminApprovalStatus avatar agencyRole agencyId designation accountStatus productAccess permissionGrants permissionDenials tokenVersion"
+            "name email mobile phone emailVerified mobileVerified role agentRef agencyRef partnerAgencyRef agentApprovalStatus adminLevel adminApprovalStatus avatar agencyRole agencyId designation accountStatus productAccess permissionGrants permissionDenials tokenVersion"
         );
         if (!user) return res.status(404).json({status: "error", message: "User not found" });
         try {
@@ -1099,7 +881,8 @@ export const getCurrentUser = async (req, res) => {
             return res.status(statusErr.status || 403).json({status: "error", message: statusErr.message });
         }
 
-        return res.json(safeAuthUser(user));
+        const safeUser = safeAuthUser(user);
+        return res.json({ status: "success", user: safeUser, ...safeUser });
     } catch (err) {
         console.error("getCurrentUser error:", err && err.stack ? err.stack : err);
         return res.status(500).json({status: "error", message: "Server error" });

@@ -5,6 +5,7 @@ import "./DatePicker.styles.scss";
 
 const MENU_GAP = 8;
 const VIEWPORT_MARGIN = 12;
+const DEFAULT_CALENDAR_HEIGHT = 344;
 
 const DAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 const MONTHS = [
@@ -143,11 +144,12 @@ export default function DatePicker({
     const width = Math.max(0, Math.min(rect.width, vw - VIEWPORT_MARGIN * 2));
     const spaceBelow = vh - rect.bottom - VIEWPORT_MARGIN;
     const spaceAbove = rect.top - VIEWPORT_MARGIN;
+    const menuHeight = menuRef.current?.getBoundingClientRect().height || DEFAULT_CALENDAR_HEIGHT;
     let top;
     let placement;
-    if (spaceBelow < 280 && spaceAbove >= 280) {
+    if (spaceBelow < menuHeight && spaceAbove > spaceBelow) {
       placement = "top";
-      top = Math.max(VIEWPORT_MARGIN, rect.top - MENU_GAP);
+      top = rect.top - MENU_GAP;
     } else {
       placement = "bottom";
       top = rect.bottom + MENU_GAP;
@@ -155,7 +157,11 @@ export default function DatePicker({
     let left = rect.left;
     if (left + width > vw - VIEWPORT_MARGIN) left = vw - width - VIEWPORT_MARGIN;
     if (left < VIEWPORT_MARGIN) left = VIEWPORT_MARGIN;
-    setMenuStyle({ top, left, width, placement });
+    const availableHeight = Math.max(
+      220,
+      placement === "top" ? spaceAbove - MENU_GAP : spaceBelow - MENU_GAP,
+    );
+    setMenuStyle({ top, left, width, placement, maxHeight: availableHeight });
   }, []);
 
   useEffect(() => {
@@ -394,7 +400,7 @@ export default function DatePicker({
           <div
             ref={menuRef}
             className={`trem-datepicker__menu-wrapper trem-datepicker__menu-wrapper--${menuStyle.placement || "bottom"}`}
-            style={{ top: menuStyle.top, left: menuStyle.left, width: menuStyle.width }}
+            style={{ top: menuStyle.top, left: menuStyle.left, width: menuStyle.width, maxHeight: menuStyle.maxHeight }}
           >
             <div className="trem-datepicker__dropdown">{calendarContent}</div>
           </div>,

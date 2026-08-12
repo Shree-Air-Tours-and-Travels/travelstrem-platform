@@ -20,11 +20,13 @@ export default function HeroBannerContainer({ widgetData, pageTitle, onExplore, 
     }, []);
 
     const labels = widgetData?.elements?.labels || {};
+    const options = widgetData?.dataScope?.options || {};
     return (
         <HeroBannerView
             labels={labels}
             pageTitle={pageTitle}
             destinationOptions={destinationOptions}
+            searchOptions={options}
             onExplore={onExplore}
             onSearch={onSearch}
         />

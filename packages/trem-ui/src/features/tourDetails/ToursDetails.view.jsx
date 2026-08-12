@@ -59,7 +59,7 @@ const renderWidget = (widget, props) => {
     case "InclusionsExclusions":
       return <InclusionsExclusions key={widget.type} tourRef={props.tourRef} />;
     case "IncludedStays":
-      return <IncludedStays key={widget.type} tourRef={props.tourRef} />;
+      return <IncludedStays key={widget.type} tourRef={props.tourRef} selectedHotel={props.selectedHotel} onSelectHotel={props.onSelectHotel} />;
     case "CancellationPolicy":
       return <CancellationPolicy key={widget.type} tourRef={props.tourRef} />;
     case "ReviewsSection":
@@ -79,9 +79,12 @@ export default function ToursDetailsView({
   onTourLoad, onBack, onBook, onBookConfirm, onBookConfirmClose, onContact, onShare,
   isFavorited, onFavorite,
   setContactOpen,
-  appKey, user,
+  appKey, user, productType, selectedHotel, onSelectHotel,
 }) {
-  const widgetProps = { tourRef, activeTour, onTourLoad, onBook, onContact, onShare, isFavorited, onFavorite, appKey };
+  const widgetProps = {
+    tourRef, activeTour, onTourLoad, onBook, onContact, onShare, isFavorited, onFavorite, appKey,
+    selectedHotel, onSelectHotel: productType === "tour" ? onSelectHotel : undefined,
+  };
   const heroWidgets = widgets.filter((widget) => HERO_WIDGETS.has(widget.type));
   const contentWidgets = widgets.filter((widget) => CONTENT_WIDGETS.has(widget.type));
   const overviewWidget = heroWidgets.find((w) => w.type === "TourOverview");
@@ -105,7 +108,10 @@ export default function ToursDetailsView({
 
         <AgencyDetailsCard
           agency={activeTour?.agency}
-          operator={activeTour?.operator || (activeTour?.ownerName ? { name: activeTour.ownerName } : null)}
+          operator={activeTour?.operator || (activeTour?.ownerAgentName ? {
+            name: activeTour.ownerAgentName,
+            email: activeTour.ownerAgentEmail,
+          } : null)}
           labels={elements?.labels?.agencyDetails || {}}
         />
 

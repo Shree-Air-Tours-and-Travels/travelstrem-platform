@@ -1,6 +1,14 @@
 {
   "status": "success",
   "component": {
+    "dataScope": {
+      "options": {},
+      "optionSets": {
+        "titleOptions": "common.titleOptions",
+        "countryOptions": "common.countryOptions",
+        "paymentMethodOptions": "booking.paymentMethodOptions"
+      }
+    },
     "data": {
       "config": {
         "title": "Complete your booking",
@@ -10,12 +18,7 @@
         "pricingMethod": "GET",
         "submitEndpoint": "/bookings",
         "submitLabel": "Submit Quote",
-        "paymentMethods": [
-          { "code": "card", "label": "Debit / Credit Card" },
-          { "code": "upi", "label": "UPI" },
-          { "code": "qr", "label": "QR Scanner" },
-          { "code": "net_banking", "label": "Net Banking" }
-        ],
+        "paymentMethodsRef": "paymentMethodOptions",
         "steps": [
           {
             "key": "trip",
@@ -35,13 +38,13 @@
             "title": "Traveller details",
             "travellerLabel": "Traveller {number}",
             "fields": [
-              { "name": "title", "type": "select", "label": "Title", "options": [{ "value": "Mr", "label": "Mr" }, { "value": "Mrs", "label": "Mrs" }, { "value": "Ms", "label": "Ms" }, { "value": "Miss", "label": "Miss" }, { "value": "Dr", "label": "Dr" }], "required": true },
+              { "name": "title", "type": "select", "label": "Title", "optionsRef": "titleOptions", "required": true },
               { "name": "firstName", "type": "text", "label": "First name", "required": true, "validation": { "pattern": "^[A-Za-z ]+$", "minLength": 2, "maxLength": 60 } },
               { "name": "middleName", "type": "text", "label": "Middle name", "validation": { "pattern": "^[A-Za-z ]*$", "maxLength": 60 } },
               { "name": "lastName", "type": "text", "label": "Last name", "required": true, "validation": { "pattern": "^[A-Za-z ]+$", "minLength": 2, "maxLength": 60 } },
               { "name": "age", "type": "number", "label": "Age", "required": true, "validation": { "min": 1, "max": 120 } },
               { "name": "mobile", "type": "tel", "label": "Mobile number", "required": true, "validation": { "pattern": "^[0-9]{10}$" } },
-              { "name": "country", "type": "select", "label": "Country", "required": true, "options": [{ "value": "IN", "label": "India" }, { "value": "US", "label": "United States" }, { "value": "GB", "label": "United Kingdom" }] },
+              { "name": "country", "type": "select", "label": "Country", "required": true, "optionsRef": "countryOptions" },
               { "name": "aadhaar", "type": "file", "label": "Aadhaar card", "required": true, "accept": ".pdf,.jpg,.jpeg,.png", "validation": { "maxSize": 5242880 } }
             ]
           },

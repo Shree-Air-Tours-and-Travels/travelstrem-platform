@@ -409,6 +409,7 @@ export default function Home({ user = null, trips, pageModel, activeFilter, load
         </section>
       )}
 
+      {/* Journey in frames section — temporarily hidden on Trevio (code kept for later reuse)
       {(frames.topImages.length > 0 || frames.bottomImages.length > 0) && (
         <section className="trevio-frames" id="frames">
           <div className="trevio-frames__bg" aria-hidden="true">
@@ -440,6 +441,7 @@ export default function Home({ user = null, trips, pageModel, activeFilter, load
           </div>
         </section>
       )}
+      */}
 
       {faq.items.length > 0 && (
         <section className="trevio-faq" id="faq">

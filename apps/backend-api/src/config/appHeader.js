@@ -1,8 +1,9 @@
 import config from "./env.js";
+import applyHideFlags from "./visibility.js";
 
 const partnershipUrl = `${String(config.AUTH_APP_URL || config.SHELL_URL || "").replace(/\/$/, "")}/partnership`;
 
-export default {
+export default applyHideFlags({
   status: "success",
   message: "App header config loaded",
   componentData: {
@@ -98,4 +99,4 @@ export default {
       ],
     },
   },
-};
+});

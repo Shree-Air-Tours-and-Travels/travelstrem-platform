@@ -60,7 +60,7 @@ function HeroSelectField({ label, anyLabel, options, value, onSelect }) {
     );
 }
 
-export default function HeroBannerView({ labels, pageTitle, destinationOptions = [], onExplore, onSearch }) {
+export default function HeroBannerView({ labels, pageTitle, destinationOptions = [], searchOptions = {}, onExplore, onSearch }) {
     const [activeTab, setActiveTab] = React.useState("packages");
     const [destination, setDestination] = React.useState("");
     const [travelMonth, setTravelMonth] = React.useState("");
@@ -79,10 +79,10 @@ export default function HeroBannerView({ labels, pageTitle, destinationOptions =
     const customTabLabel = labels.customTabLabel || "Custom trip";
     const searchLabels = labels.searchLabels || {};
     const anyLabels = labels.anyLabels || {};
-    const travelMonthOptions = Array.isArray(labels.travelMonthOptions) ? labels.travelMonthOptions : [];
-    const travellerOptions = Array.isArray(labels.travellerOptions) ? labels.travellerOptions : [];
-    const tripStyleOptions = Array.isArray(labels.tripStyleOptions) ? labels.tripStyleOptions : [];
-    const budgetOptions = Array.isArray(labels.budgetOptions) ? labels.budgetOptions : [];
+    const travelMonthOptions = Array.isArray(searchOptions.travelMonthOptions) ? searchOptions.travelMonthOptions : [];
+    const travellerOptions = Array.isArray(searchOptions.travellerOptions) ? searchOptions.travellerOptions : [];
+    const tripStyleOptions = Array.isArray(searchOptions.tripStyleOptions) ? searchOptions.tripStyleOptions : [];
+    const budgetOptions = Array.isArray(searchOptions.budgetOptions) ? searchOptions.budgetOptions : [];
 
     const handleSearchSubmit = (event) => {
         event.preventDefault();

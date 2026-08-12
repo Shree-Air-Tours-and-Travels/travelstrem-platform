@@ -14,6 +14,7 @@ import {
   confirmBooking,
   listAllBookings,
   getTrevistaPricing,
+  createV2Quote,
 } from "./controllers/bookingEngineController.js";
 import { sendMessage, getMessages } from "./controllers/messageController.js";
 import { upload } from "../../services/cloudinary.js";
@@ -30,6 +31,7 @@ router.post("/create", authMiddleware, createBooking);
 
 // PUBLIC — trevista tour pricing (computed server-side, no client price input)
 router.post("/pricing", getTrevistaPricing);
+router.post("/quotes", createV2Quote);
 
 // AUTHENTICATED — booking lifecycle
 router.get("/my-bookings", authMiddleware, getMyBookings);

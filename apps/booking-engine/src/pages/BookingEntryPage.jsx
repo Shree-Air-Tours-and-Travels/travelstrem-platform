@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { GlobalLoader, FloatingActionBar, EmptyState, scrollTargetsToTop } from "@packages/trem-ui";
-import { fetchData, requestShellNavigation } from "@packages/trem-utils";
+import { fetchData, requestShellNavigation, useMasterOptions } from "@packages/trem-utils";
 import BookingLayout from "../components/BookingLayout.jsx";
 import BookingSidebar from "../components/BookingSidebar.jsx";
 import DepartureStep from "../components/DepartureStep.jsx";
-import CustomizeStep from "../components/CustomizeStep.jsx";
+import CustomizeStep from "../components/TrevistaCustomizeStep.jsx";
 import TripStep from "../components/TripStep.jsx";
 import TravellerStep from "../components/TravellerStep.jsx";
 import AddOnsStep from "../components/AddOnsStep.jsx";
@@ -15,12 +15,28 @@ import BookingConfirmation from "../components/BookingPaymentConfirmation.jsx";
 import { useBookingFlow } from "../hooks/useBookingFlow.js";
 import { useBookingApi } from "../hooks/useBookingApi.js";
 import { formatTourLocation } from "../utils/format.js";
-import { useSelector } from "react-redux";
 
 const WHATSAPP_GROUP_URL = process.env.REACT_APP_WHATSAPP_GROUP_URL;
 const SUPPORT_PHONE = process.env.REACT_APP_SUPPORT_PHONE;
 
 const CONFIRMATION_STORAGE_PREFIX = "trem_booking_confirmation_";
+const RESUME_STORAGE_KEY = "trem_booking_resume";
+
+const bookingKey = (product, productRef) => `${product}:${productRef}`;
+
+function getResumeKey() {
+  try { return sessionStorage.getItem(RESUME_STORAGE_KEY) || ""; } catch { return ""; }
+}
+
+function setResumeKey(key) {
+  try { sessionStorage.setItem(RESUME_STORAGE_KEY, key); } catch {}
+}
+
+function clearResumeKey(key = "") {
+  try {
+    if (!key || sessionStorage.getItem(RESUME_STORAGE_KEY) === key) sessionStorage.removeItem(RESUME_STORAGE_KEY);
+  } catch {}
+}
 
 function scrollToFirstError() {
   window.setTimeout(() => {
@@ -146,14 +162,16 @@ function SpotsFullView({ productData, totalSeats, onExit }) {
   );
 }
 
-export default function BookingEntryPage() {
+export default function BookingEntryPage({ userSession, onRequireAuth }) {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const product = searchParams.get("product") || "trevista";
   const productRef = searchParams.get("tripRef") || searchParams.get("tourRef") || "";
   const returnTo = searchParams.get("returnTo") || "";
+  const initialRoomType = searchParams.get("roomType") || "";
 
   const [productData, setProductData] = useState(null);
+  const [loadedBookingKey, setLoadedBookingKey] = useState("");
   const [initialLoading, setInitialLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [availability, setAvailability] = useState(null);
@@ -170,12 +188,24 @@ export default function BookingEntryPage() {
     }
     return null;
   });
+  const [flowReady, setFlowReady] = useState(false);
 
   const api = useBookingApi();
+  const { options: customizationMasterOptions, error: customizationOptionsError } = useMasterOptions(
+    product === "trevista" ? ["trevista.defaultRoomOptions", "trevista.transportOptions", "booking.travellerTypeOptions"] : [],
+  );
   const calculatePricing = api.calculatePricing;
-  const calculateTrevistaPricing = api.calculateTrevistaPricing;
+  const createBookingQuote = api.createBookingQuote;
+  const [activeQuoteId, setActiveQuoteId] = useState("");
   const flow = useBookingFlow({ product, tour: productData });
-  const pricingSelectionKey = flow.travellers
+  const flightInventoryManaged = product === "trevista" && Boolean(productData?.flights?.included && productData?.flights?.inventoryManaged);
+  const travellersRef = useRef(flow.travellers);
+  const addonsRef = useRef(addons);
+  const couponRef = useRef(couponCode);
+  travellersRef.current = flow.travellers;
+  addonsRef.current = addons;
+  couponRef.current = couponCode;
+  const trevioPreferenceKey = flow.travellers
     .map((traveller) => [
       traveller.mealPreference,
       traveller.packageType,
@@ -183,10 +213,20 @@ export default function BookingEntryPage() {
     ].join(":"))
     .join("|");
   const prevStepRef = useRef(flow.currentStep);
+  const quoteRequestRef = useRef({ signature: "", controller: null, sequence: 0 });
   const bookingAttemptKeyRef = useRef(
     globalThis.crypto?.randomUUID?.()
       || `${Date.now()}-${Math.random().toString(36).slice(2)}`,
   );
+  const guestSessionIdRef = useRef((() => {
+    try {
+      const existing = sessionStorage.getItem("trem_guest_booking_session");
+      if (existing) return existing;
+      const created = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      sessionStorage.setItem("trem_guest_booking_session", created);
+      return created;
+    } catch { return `${Date.now()}-${Math.random().toString(36).slice(2)}`; }
+  })());
 
   useEffect(() => {
     let cancelled = false;
@@ -214,32 +254,50 @@ export default function BookingEntryPage() {
   }, [productRef]);
 
   const refreshPricing = useCallback(async ({
-    nextAddons = addons,
-    nextCouponCode = couponCode,
+    nextAddons,
+    nextCouponCode,
     showCouponResult = false,
+    force = false,
   } = {}) => {
     if (!productRef || !productData) return null;
+    const effectiveAddons = nextAddons || addonsRef.current;
+    const effectiveCouponCode = nextCouponCode ?? couponRef.current;
+    const selectedAddonIds = effectiveAddons
+      .filter((addon) => addon.selected)
+      .map((addon) => addon.id || addon.code || addon.name);
+    const requestPayload = product === "trevio" ? {
+      travellers: travellersRef.current,
+      roomType: flow.trip.roomType,
+      addons: selectedAddonIds,
+      couponCode: effectiveCouponCode.trim(),
+    } : {
+      startDate: flow.trip.startDate,
+      endDate: flow.trip.endDate,
+      adults: flow.trip.adults,
+      children: flow.trip.children,
+      infants: flow.trip.infants,
+      hotelOptionId: flow.trip.roomType || undefined,
+      transportOptionId: flow.trip.transport || undefined,
+      selectedAddonIds,
+      couponCode: effectiveCouponCode.trim(),
+    };
+    const signature = JSON.stringify([product, productRef, requestPayload]);
+    if (!force && signature === quoteRequestRef.current.signature) return null;
+    quoteRequestRef.current.controller?.abort();
+    const controller = new AbortController();
+    const sequence = quoteRequestRef.current.sequence + 1;
+    quoteRequestRef.current = { signature, controller, sequence };
     try {
-      const selectedAddonIds = nextAddons
-        .filter((addon) => addon.selected)
-        .map((addon) => addon.id || addon.code || addon.name);
       const result = product === "trevio"
-        ? await calculatePricing(product, productRef, {
-            travellers: flow.travellers,
-            roomType: flow.trip.roomType,
-            addons: selectedAddonIds,
-            couponCode: nextCouponCode.trim(),
-          })
-        : await calculateTrevistaPricing(productRef, {
-            startDate: flow.trip.startDate,
-            adults: flow.trip.adults,
-            children: flow.trip.children,
-            infants: flow.trip.infants,
-            roomType: flow.trip.roomType,
-            transport: flow.trip.transport,
-            addons: selectedAddonIds,
-          });
-      if (result?.pricing) setServerPricing(result.pricing);
+        ? await calculatePricing(product, productRef, requestPayload)
+        : await createBookingQuote(productRef, requestPayload, controller.signal, guestSessionIdRef.current);
+      if (sequence !== quoteRequestRef.current.sequence) return null;
+      if (product === "trevista" && result?.quoteId) setActiveQuoteId(result.quoteId);
+      if (result) setServerPricing(product === "trevista" ? result : result.pricing);
+      if (product === "trevista" && result?.availability?.inventoryManaged) {
+        setAvailability((current) => ({ ...current, seatsAvailable: result.availability.seatsAvailable }));
+      }
+      setAvailabilityNotice("");
       if (Array.isArray(result?.roomOptions)) {
         setCustomizeOptions((current) => ({ ...current, roomOptions: result.roomOptions }));
       }
@@ -249,7 +307,7 @@ export default function BookingEntryPage() {
       if (Array.isArray(result?.addons)) {
         setAddons((current) => result.addons.map((addon) => ({
           ...addon,
-          selected: nextAddons.some(
+          selected: Boolean(addon.included) || effectiveAddons.some(
             (selectedAddon) =>
               selectedAddon.selected
               && (selectedAddon.id || selectedAddon.code || selectedAddon.name)
@@ -265,14 +323,21 @@ export default function BookingEntryPage() {
       }
       return result;
     } catch (pricingError) {
+      if (controller.signal.aborted) return null;
+      setAvailabilityNotice(pricingError.message || "Unable to refresh pricing");
+      if (/seat/i.test(pricingError.message || "")) {
+        setServerPricing((current) => ({ ...current, availability: { ...current?.availability, canBook: false, validationMessage: pricingError.message } }));
+      }
       if (showCouponResult) {
         setCouponStatus({ valid: false, message: pricingError.message });
       }
       return null;
     }
-  }, [addons, calculatePricing, calculateTrevistaPricing, couponCode, flow.travellers, flow.trip.roomType, flow.trip.transport, flow.trip.startDate, product, productData, productRef]);
+  }, [calculatePricing, createBookingQuote, flow.trip.roomType, flow.trip.transport, flow.trip.startDate, flow.trip.endDate, flow.trip.adults, flow.trip.children, flow.trip.infants, product, productData, productRef]);
 
   const handleExit = useCallback(() => {
+    // Exiting is the only action that marks this exact booking journey as resumable.
+    setResumeKey(bookingKey(product, productRef));
     clearConfirmation(product, productRef);
     if (returnTo) {
       const target = new URL(returnTo, window.location.origin);
@@ -286,22 +351,29 @@ export default function BookingEntryPage() {
     }
   }, [navigate, returnTo, product, productRef]);
 
-  const hasResetRef = useRef(false);
-  const storedProduct = useSelector((state) => state.booking.product);
+  const initializedBookingKeyRef = useRef("");
   useEffect(() => {
-    if (!productRef || initialLoading || hasResetRef.current) return;
-    if (product !== storedProduct) {
-      hasResetRef.current = true;
+    const currentKey = bookingKey(product, productRef);
+    if (initializedBookingKeyRef.current === currentKey) return;
+    setFlowReady(false);
+    if (!productRef || initialLoading || !productData || loadedBookingKey !== currentKey) return;
+    initializedBookingKeyRef.current = currentKey;
+    if (getResumeKey() !== currentKey) {
       clearConfirmation(product, productRef);
-      flow.resetBooking();
+      flow.startBooking({ product, tour: productData });
     }
-  }, [product, storedProduct, productRef, initialLoading]);
+    setFlowReady(true);
+  }, [product, productRef, initialLoading, productData, loadedBookingKey, flow.startBooking]);
 
   useEffect(() => {
+    setProductData(null);
+    setLoadedBookingKey("");
     if (!productRef) { setInitialLoading(false); setLoadError("No trip or tour reference provided."); return; }
+    setInitialLoading(true);
     api.loadProduct(product, productRef)
       .then((data) => {
         setProductData(data);
+        setLoadedBookingKey(bookingKey(product, productRef));
         if (data?.availability) {
           setAvailability(data.availability);
         }
@@ -310,17 +382,82 @@ export default function BookingEntryPage() {
       .finally(() => setInitialLoading(false));
   }, [productRef, product]);
 
+  const selectedAddonKey = addons.filter((addon) => addon.selected).map((addon) => addon.id || addon.code || addon.name).sort().join("|");
   useEffect(() => {
-    if (!productData) return;
-    refreshPricing();
-  }, [productData, product, flow.guestsCount, flow.trip.roomType, flow.trip.transport, flow.trip.startDate, pricingSelectionKey]);
+    if (!productData || !flowReady) return undefined;
+    if (product === "trevista") {
+      setActiveQuoteId("");
+      setServerPricing(null);
+    }
+    const timer = window.setTimeout(() => refreshPricing(), 350);
+    return () => window.clearTimeout(timer);
+  }, [productData, flowReady, product, flow.guestsCount, flow.trip.roomType, flow.trip.transport, flow.trip.startDate, flow.trip.endDate, selectedAddonKey, trevioPreferenceKey, refreshPricing]);
 
-  const seatsAvailable = availability?.seatsAvailable;
+  useEffect(() => () => quoteRequestRef.current.controller?.abort(), []);
+
+  useEffect(() => {
+    if (!flightInventoryManaged || !productRef) return undefined;
+    let active = true;
+    const refreshAvailability = async () => {
+      const data = await api.loadProduct(product, productRef).catch(() => null);
+      if (active && data?.availability) {
+        setAvailability(data.availability);
+        const available = data.availability.seatsAvailable;
+        if (available != null && travellersRef.current.length > Number(available)) {
+          const validationMessage = `Only ${available} flight seats are currently available`;
+          setServerPricing((current) => ({ ...current, availability: { ...current?.availability, canBook: false, validationMessage } }));
+          setAvailabilityNotice(validationMessage);
+        }
+      }
+    };
+    const interval = window.setInterval(refreshAvailability, 15000);
+    const onVisible = () => { if (document.visibilityState === "visible") refreshAvailability(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => { active = false; window.clearInterval(interval); document.removeEventListener("visibilitychange", onVisible); };
+  }, [flightInventoryManaged, product, productRef]);
+
+  // Selector metadata has its own endpoint and lifecycle. A failed/invalid
+  // quote must not leave the customization controls permanently loading.
+  useEffect(() => {
+    if (product !== "trevista" || !productData) return;
+    const tourRooms = Array.isArray(productData.hotelOptions) && productData.hotelOptions.length
+      ? productData.hotelOptions.filter((option) => option.active !== false).map((option) => ({
+          value: String(option._id || option.id || option.title),
+          label: option.title || option.label,
+          desc: option.description || option.desc || "",
+          price: Number(option.pricing?.amountMinor || 0) / 100,
+        }))
+      : customizationMasterOptions["trevista.defaultRoomOptions"];
+    const transportOptions = customizationMasterOptions["trevista.transportOptions"];
+    if (Array.isArray(tourRooms) || Array.isArray(transportOptions)) {
+      setCustomizeOptions((current) => ({
+        roomOptions: Array.isArray(tourRooms) ? tourRooms : current.roomOptions,
+        transportOptions: Array.isArray(transportOptions) ? transportOptions : current.transportOptions,
+      }));
+    }
+  }, [customizationMasterOptions, product, productData]);
+
+  // A hotel selected from Trevista's detail-page modal is represented by the
+  // same roomType field used by server-side pricing and the booking record.
+  useEffect(() => {
+    if (product !== "trevista" || !productData || !initialRoomType) return;
+    flow.updateTrip("roomType", initialRoomType);
+  }, [flow.updateTrip, initialRoomType, product, productData]);
+
+  // The base hotel included with a Trevista package is the default room
+  // selection. A hotel explicitly chosen on the details page always wins.
+  useEffect(() => {
+    if (product !== "trevista" || initialRoomType || flow.trip.roomType) return;
+    const includedRoom = customizeOptions.roomOptions?.find((option) => Number(option.price || 0) === 0);
+    if (includedRoom?.value) flow.updateTrip("roomType", includedRoom.value);
+  }, [customizeOptions.roomOptions, flow.trip.roomType, flow.updateTrip, initialRoomType, product]);
+
+  const seatsAvailable = product === "trevista" && !flightInventoryManaged ? null : availability?.seatsAvailable;
   const totalSeats = availability?.totalSeats;
   const isSoldOut = product === "trevio" && Boolean(availability?.isSoldOut);
   const isLowSeats = product === "trevio" && Boolean(availability?.isLowSeats);
-  const guestsExceedSeats = product === "trevio" && serverPricing?.availability?.canBook === false;
-  const availabilityValidationMessage = serverPricing?.availability?.validationMessage || "";
+  const guestsExceedSeats = Boolean(serverPricing?.availability?.canBook === false);
+  const availabilityValidationMessage = serverPricing?.availability?.validationMessage || (flightInventoryManaged && seatsAvailable != null ? `Only ${seatsAvailable} flight seats are available` : "");
 
   useEffect(() => {
     if (prevStepRef.current !== flow.currentStep) {
@@ -332,6 +469,10 @@ export default function BookingEntryPage() {
   const handleSubmit = async () => {
     if (guestsExceedSeats) {
       flow.setErrors({ submit: availabilityValidationMessage });
+      return;
+    }
+    if (!userSession?.isAuthenticated) {
+      onRequireAuth?.({ returnTo: window.location.href, reason: "create-booking" });
       return;
     }
     try {
@@ -354,17 +495,21 @@ export default function BookingEntryPage() {
             transport: flow.trip.transport,
             pickupCity: flow.trip.departureCity,
             addFlights: flow.trip.addFlights,
+            passportReminder: flow.trip.passportReminder,
+            visaAssistance: flow.trip.visaAssistance,
             notes: flow.trip.notes,
             extraActivities: selectedAddons.map((addon) => addon.name),
           } : {}),
         },
         ...(product === "trevista" ? {
+          quoteId: activeQuoteId,
           pickupCity: flow.trip.departureCity,
           specialRequirements: flow.trip.notes,
         } : {}),
         addons: selectedAddons,
         couponCode: couponCode.trim(),
         idempotencyKey: bookingAttemptKeyRef.current,
+        guestSessionId: guestSessionIdRef.current,
       };
 
       if (product === "trevio") {
@@ -381,6 +526,7 @@ export default function BookingEntryPage() {
       const confirmedData = submitted || { id: bookingId, product };
       setBookingConfirmed(confirmedData);
       persistConfirmation(product, productRef, confirmedData);
+      clearResumeKey(bookingKey(product, productRef));
     } catch (err) {
       flow.setErrors({ submit: err.message });
     }
@@ -419,11 +565,11 @@ export default function BookingEntryPage() {
       variant: "primary",
       align: "right",
       onClick: handleNext,
-      disabled: api.loading || (isSoldOut && product === "trevio"),
+      disabled: api.loading || (isSoldOut && product === "trevio") || (product === "trevista" && !activeQuoteId),
     },
-  ], [flow.currentStep, handleBack, handleNext, nextLabel, api.loading, isSoldOut, product]);
+  ], [flow.currentStep, handleBack, handleNext, nextLabel, api.loading, isSoldOut, product, activeQuoteId]);
 
-  if (initialLoading) return <GlobalLoader visible text="Loading..." />;
+  if (initialLoading || !flowReady) return <GlobalLoader visible text="Loading..." />;
 
   if (bookingConfirmed) {
     const handleGoToDashboard = () => {
@@ -466,11 +612,10 @@ export default function BookingEntryPage() {
   const handleAddonToggle = (addonId, selected) => {
     const nextAddons = addons.map((addon) =>
       (addon.id || addon.code || addon.name) === addonId
-        ? { ...addon, selected }
+        ? { ...addon, selected: addon.included ? true : selected }
         : addon,
     );
     setAddons(nextAddons);
-    refreshPricing({ nextAddons });
   };
 
   const sidebar = (
@@ -488,9 +633,7 @@ export default function BookingEntryPage() {
         setCouponCode(value);
         setCouponStatus(null);
       }}
-      onApplyCoupon={product === "trevio"
-        ? () => refreshPricing({ nextCouponCode: couponCode, showCouponResult: true })
-        : undefined}
+      onApplyCoupon={() => refreshPricing({ nextCouponCode: couponCode, showCouponResult: true, force: true })}
     />
   );
 
@@ -537,6 +680,8 @@ export default function BookingEntryPage() {
             TRAVELLER_PREFERENCE_FIELDS={flow.TRAVELLER_PREFERENCE_FIELDS}
             trip={flow.trip}
             productData={productData}
+            updateTrip={flow.updateTrip}
+            product={product}
           />
         </div>
       </div>
@@ -562,6 +707,8 @@ export default function BookingEntryPage() {
         updateTrip={flow.updateTrip}
         errors={flow.errors}
         availability={availability}
+        travellerTypes={customizationMasterOptions["booking.travellerTypeOptions"]}
+        optionsError={customizationOptionsError}
       />
     ),
     customize: (
@@ -574,6 +721,7 @@ export default function BookingEntryPage() {
         onToggleAddon={handleAddonToggle}
         roomOptions={customizeOptions.roomOptions}
         transportOptions={customizeOptions.transportOptions}
+        optionsError={customizationOptionsError}
       />
     ),
     travellers: (
@@ -587,6 +735,8 @@ export default function BookingEntryPage() {
         TRAVELLER_PREFERENCE_FIELDS={flow.TRAVELLER_PREFERENCE_FIELDS}
         trip={flow.trip}
         productData={productData}
+        updateTrip={flow.updateTrip}
+        product={product}
       />
     ),
     addons: (

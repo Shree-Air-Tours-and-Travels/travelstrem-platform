@@ -2,12 +2,23 @@ import React from "react";
 import Button from "../Button/Button.jsx";
 import "./QuickChips.styles.scss";
 
+const displayText = (value, fallback = "") => {
+  if (value == null) return fallback;
+  if (["string", "number", "boolean"].includes(typeof value)) return String(value);
+  if (typeof value === "object") {
+    return displayText(value.label ?? value.name ?? value.title)
+      || [value.city, value.country].map((item) => displayText(item)).filter(Boolean).join(", ")
+      || fallback;
+  }
+  return fallback;
+};
+
 export default function QuickChips({ title, filters = [], activeId, onClick, labels = {}, className = "" }) {
   if (!filters.length) return null;
 
   const getLabel = (f) => {
-    if (f.labelRef && labels[f.labelRef]) return labels[f.labelRef];
-    return f.label || f.id;
+    if (f.labelRef && labels[f.labelRef]) return displayText(labels[f.labelRef], String(f.id || ""));
+    return displayText(f.label, String(f.id || ""));
   };
 
   return (

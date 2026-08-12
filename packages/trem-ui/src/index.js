@@ -55,6 +55,8 @@ export { default as SearchBarCard } from "./components/SearchBarCard/SearchBarCa
 export { default as SearchBar } from "./components/SearchBar/SearchBar.jsx";
 export { default as SingleSelect } from "./components/SingleSelect/SingleSelect.jsx";
 export { default as MultiSelect } from "./components/MultiSelect/MultiSelect.jsx";
+export { default as Pagination } from "./components/Pagination/Pagination.jsx";
+export { default as FilterChips } from "./components/FilterChips/FilterChips.jsx";
 export { default as BookingCard } from "./components/BookingCard/BookingCard.jsx";
 export { default as BookingJourneyCard } from "./components/BookingJourneyCard/BookingJourneyCard.jsx";
 export { default as PricingCard } from "./components/PricingCard/PricingCard.jsx";

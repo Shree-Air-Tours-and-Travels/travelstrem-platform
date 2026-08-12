@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { Dropdown, EmptyState, FavoriteCard } from "@packages/trem-ui";
+import { useMasterOptions } from "@packages/trem-utils";
 import "./FavoritesView.scss";
-
-const PRODUCT_OPTIONS = ["all", "trevio", "trevista"];
 
 export default function FavoritesView({ favorites, loading, onRemoveFavorite, onViewFavorite }) {
   const [productFilter, setProductFilter] = useState("all");
+  const { options: masterOptions } = useMasterOptions(["appShell.bookingProductOptions"]);
+  const productOptions = masterOptions["appShell.bookingProductOptions"] || [];
 
   const filtered = productFilter === "all"
     ? favorites
@@ -21,11 +22,11 @@ export default function FavoritesView({ favorites, loading, onRemoveFavorite, on
         <Dropdown
           hoverable={false}
           align="right"
-          items={PRODUCT_OPTIONS.map((p) => ({
-            id: p,
-            label: p === "all" ? "All" : p.charAt(0).toUpperCase() + p.slice(1),
-            active: productFilter === p,
-            onClick: () => setProductFilter(p),
+          items={productOptions.map((option) => ({
+            id: option.value,
+            label: option.label,
+            active: productFilter === option.value,
+            onClick: () => setProductFilter(option.value),
           }))}
           trigger={({ open }) => (
             <button className={`dfv__filter-trigger${open ? " is-open" : ""}`} type="button">

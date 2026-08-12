@@ -8,9 +8,24 @@ export const optionValue = (option) => (
   typeof option === "string" ? option : option?.value ?? option?.id
 );
 
-export const optionLabel = (option) => (
-  typeof option === "string" ? option : option?.label ?? optionValue(option)
-);
+const readableOptionText = (value, fallback = "") => {
+  if (value == null) return fallback;
+  if (["string", "number", "boolean"].includes(typeof value)) return String(value);
+  if (Array.isArray(value)) {
+    return value.map((item) => readableOptionText(item)).filter(Boolean).join(", ") || fallback;
+  }
+  if (typeof value === "object") {
+    return readableOptionText(value.label ?? value.name ?? value.title)
+      || [value.city, value.country].map((item) => readableOptionText(item)).filter(Boolean).join(", ")
+      || fallback;
+  }
+  return fallback;
+};
+
+export const optionLabel = (option) => {
+  if (typeof option === "string") return option;
+  return readableOptionText(option?.label, readableOptionText(optionValue(option)));
+};
 
 const normalizeOptions = (options = []) => options.map((o) => ({
   value: String(optionValue(o)),

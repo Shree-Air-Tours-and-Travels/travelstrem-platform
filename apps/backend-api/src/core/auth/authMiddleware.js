@@ -20,17 +20,17 @@ export default async function authMiddleware(req, res, next) {
   })();
 
   if (!token) {
-    return res.status(401).json({ status: "error", message: "No token provided" });
+    return res.status(401).json({ status: "error", code: "AUTH_REQUIRED", message: "Authentication required." });
   }
 
   try {
     const payload = jwt.verify(token, JWT_SECRET);
     if (!payload.portal || normalizePortalScope(payload.portal) !== getPortalScope(req)) {
-      return res.status(401).json({ status: "error", message: "Session belongs to a different portal." });
+      return res.status(401).json({ status: "error", code: "INVALID_SESSION", message: "Session belongs to a different portal." });
     }
     const user = await User.findById(payload.sub).select("role adminLevel agencyRole agencyId partnerAgencyRef accountStatus tokenVersion productAccess permissionGrants permissionDenials").lean();
     if (!user || Number(user.tokenVersion || 0) !== Number(payload.tokenVersion || 0)) {
-      return res.status(401).json({ status: "error", message: "Session has been revoked." });
+      return res.status(401).json({ status: "error", code: "SESSION_REVOKED", message: "Session has been revoked." });
     }
     if ((user.accountStatus || "active") !== "active") {
       return res.status(403).json({ status: "error", message: `Account is ${user.accountStatus}.` });
@@ -42,7 +42,6 @@ export default async function authMiddleware(req, res, next) {
     req.user = { ...payload, ...user, sub: payload.sub };
     return next();
   } catch (err) {
-    console.error("[authMiddleware] JWT verification failed:", err.message);
-    return res.status(401).json({ status: "error", message: "Invalid or expired token" });
+    return res.status(401).json({ status: "error", code: "INVALID_SESSION", message: "Invalid or expired session." });
   }
 }

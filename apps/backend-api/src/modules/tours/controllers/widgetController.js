@@ -8,6 +8,8 @@ import TravellerService from "../../bookings/services/TravellerService.js";
 import BookingTimelineService from "../../bookings/services/BookingTimelineService.js";
 import StatusHistoryService from "../../bookings/services/StatusHistoryService.js";
 import QuoteService from "../../bookings/services/QuoteService.js";
+import { getTourDiscovery, searchToursFromRawRequest } from "../services/tourSearchService.js";
+import masterDataService from "../../masterData/services/masterDataService.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -34,6 +36,8 @@ const findTourByRef = async (tourRef) => {
     const byId = await TourRepository.findById(ref);
     if (byId) return byId;
   }
+  const bySlug = await TourRepository.findOne({ slug: slugifyTourTitle(ref) });
+  if (bySlug) return bySlug;
   const titleCandidate = ref.replace(/-/g, " ").trim();
   const directTitle = await TourRepository.findOne({
     title: new RegExp(`^${escapeRegExp(titleCandidate)}$`, "i"),
@@ -41,50 +45,6 @@ const findTourByRef = async (tourRef) => {
   if (directTitle) return directTitle;
   const tours = await TourRepository.find({});
   return tours.find((tour) => slugifyTourTitle(tour.title) === slugifyTourTitle(ref)) || null;
-};
-
-const numberRange = (values = []) => {
-  const nums = values.map(Number).filter(Number.isFinite);
-  if (!nums.length) return { min: 0, max: 0 };
-  return { min: Math.min(...nums), max: Math.max(...nums) };
-};
-
-const normalizePaging = (input = {}) => {
-  const page = Math.max(1, Number(input.page) || 1);
-  const limit = Math.max(1, Math.min(Number(input.limit) || 6, 30));
-  return { page, limit, skip: (page - 1) * limit };
-};
-
-const normalizeSort = (value = "recommended") => {
-  const normalized = String(value || "recommended").trim();
-  return ["recommended", "price_asc", "price_desc", "duration", "rating"].includes(normalized) ? normalized : "recommended";
-};
-
-const sortToursForResponse = (tours = [], sortId = "recommended") => {
-  if (sortId === "recommended") return tours;
-  const priceValue = (tour = {}) => {
-    const price = tour.priceInfo || tour.price || {};
-    const value = price.min ?? price.max;
-    const numberValue = Number(value);
-    return Number.isFinite(numberValue) ? numberValue : Number.MAX_SAFE_INTEGER;
-  };
-
-  return [...tours].sort((a, b) => {
-    if (sortId === "price_asc") return priceValue(a) - priceValue(b);
-    if (sortId === "price_desc") return priceValue(b) - priceValue(a);
-    if (sortId === "duration") return Number(a?.period?.days || 0) - Number(b?.period?.days || 0);
-    if (sortId === "rating") return Number(b?.avgRating || 0) - Number(a?.avgRating || 0);
-    return 0;
-  });
-};
-
-const uniqueOptions = (values = []) => {
-  const map = new Map();
-  values.forEach((value) => {
-    const normalized = String(value || "").trim();
-    if (normalized) map.set(normalized.toLowerCase(), { label: normalized, value: normalized });
-  });
-  return Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label));
 };
 
 const buildPriceInfo = (doc, date = new Date()) => {
@@ -147,6 +107,56 @@ const normalizeTourCardForResponse = (tourObj = {}, priceInfo = null) => {
   };
 };
 
+// Keep the Tour Facts endpoint deliberately narrow. The UI only renders these
+// fields, so returning the full tour leaks unrelated commercial and operational
+// data to a public detail-page request.
+const normalizeTourFactsForResponse = (tour = {}) => ({
+  city: tour.city && typeof tour.city === "object"
+    ? { from: String(tour.city.from || ""), to: String(tour.city.to || "") }
+    : String(tour.city || ""),
+  distance: Number(tour.distance) > 0 ? Number(tour.distance) : null,
+  startDate: tour.startDate || null,
+  endDate: tour.endDate || null,
+  availability: {
+    seatsAvailable: tour.availability?.seatsAvailable ?? null,
+  },
+});
+
+const normalizeTourOverviewForResponse = (tour = {}) => ({
+  // _id is required only for favourites, booking, and enquiry actions.
+  _id: tour._id || null,
+  title: String(tour.title || ""),
+  city: tour.city && typeof tour.city === "object"
+    ? { from: String(tour.city.from || ""), to: String(tour.city.to || "") }
+    : String(tour.city || ""),
+  desc: String(tour.desc || ""),
+  period: tour.period ? {
+    days: Number(tour.period.days || 0),
+    nights: Number(tour.period.nights || 0),
+  } : null,
+  avgRating: Number(tour.avgRating || 0),
+  maxGroupSize: Number(tour.maxGroupSize || 0) || null,
+  availability: { totalSeats: tour.availability?.totalSeats ?? null },
+  tags: Array.isArray(tour.tags) ? tour.tags.map(String).slice(0, 8) : [],
+});
+
+const normalizePricingCardForResponse = (tour = {}) => ({
+  // _id and title are action inputs; the remaining fields are displayed.
+  _id: tour._id || null,
+  title: String(tour.title || ""),
+  city: tour.city && typeof tour.city === "object"
+    ? { from: String(tour.city.from || ""), to: String(tour.city.to || "") }
+    : String(tour.city || ""),
+  distance: Number(tour.distance) > 0 ? Number(tour.distance) : null,
+  availability: { seatsAvailable: tour.availability?.seatsAvailable ?? null },
+  priceInfo: tour.priceInfo ? {
+    min: Number(tour.priceInfo.min || 0),
+    max: Number(tour.priceInfo.max || 0),
+    currency: String(tour.priceInfo.currency || "INR"),
+    isFinal: Boolean(tour.priceInfo.isFinal),
+  } : null,
+});
+
 export const getWidget = async (req, res) => {
   try {
     const pageKey = req.query.pageKey;
@@ -179,53 +189,23 @@ export const getWidget = async (req, res) => {
 
     const fileName = path.basename(resolvedPath);
 
+    // Filter choices are part of the widget contract. Resolve them for every
+    // request, including metadata requests, so consumers receive a complete
+    // DB-backed filter definition instead of reconstructing it client-side.
     if (fileName === "tour-filters.json") {
-      const tours = await TourRepository.findLean();
-      const prices = [];
-      const days = [];
-      const originCities = [];
-      const destinationCities = [];
-      const countries = [];
-      const tags = [];
-      const languages = [];
-      const groupSizes = [];
-      const starts = [];
-
-      tours.forEach((t) => {
-        if (t.price?.min != null) prices.push(t.price.min);
-        if (t.price?.max != null) prices.push(t.price.max);
-        if (t.period?.days != null) days.push(t.period.days);
-        if (t.maxGroupSize != null) groupSizes.push(t.maxGroupSize);
-        if (t.city?.from) originCities.push(t.city.from);
-        if (t.city?.to || t.address?.city) destinationCities.push(t.city?.to || t.address?.city);
-        if (t.address?.country) countries.push(t.address.country);
-        if (Array.isArray(t.tags)) tags.push(...t.tags);
-        if (Array.isArray(t.languages)) languages.push(...t.languages);
-        if (t.startDate) starts.push(t.startDate);
-      });
-
-      const dateValues = starts.map((d) => new Date(d).getTime()).filter(Number.isFinite);
-      const summary = {
-        totalTours: tours.length,
-        priceRange: numberRange(prices),
-        dayRange: numberRange(days),
-      };
+      const searchResult = await searchToursFromRawRequest({ page: 1, pageSize: 1 });
+      const { facets, pagination } = searchResult;
+      const option = (item) => ({ id: item.id, value: item.value, label: `${item.label} (${item.count})`, count: item.count });
+      const summary = { totalTours: pagination.totalItems, priceRange: facets.price, dayRange: { min: facets.duration.minDays, max: facets.duration.maxDays } };
       const options = {
-        originCityOptions: uniqueOptions(originCities),
-        destinationCityOptions: uniqueOptions(destinationCities),
-        countryOptions: uniqueOptions(countries),
-        tags: uniqueOptions(tags),
-        languages: uniqueOptions(languages),
-        featured: [
-          { label: "Any status", value: "" },
-          { label: "Featured only", value: "true" },
-          { label: "Standard tours", value: "false" },
-        ],
-        groupSizeRange: numberRange(groupSizes),
-        dateRange: {
-          earliest: dateValues.length ? new Date(Math.min(...dateValues)).toISOString().slice(0, 10) : "",
-          latest: "",
-        },
+        originCityOptions: facets.origins.map(option),
+        destinationCityOptions: facets.destinations.map(option),
+        countryOptions: facets.countries.map(option),
+        agencyOptions: facets.agencies.map(option),
+        tags: facets.tags.map(option),
+        featured: await masterDataService.getOptionSet("trevista.tourFeaturedOptions"),
+        priceRange: facets.price,
+        dayRange: summary.dayRange,
       };
 
       const resBody = {
@@ -241,48 +221,24 @@ export const getWidget = async (req, res) => {
       return res.status(200).json(ensurePageContract(resBody));
     }
 
+    // Quick-filter chips are part of this widget's data contract. Keep them in
+    // the widget response even for metadata requests so clients do not need to
+    // fetch and merge a second discovery payload.
     if (fileName === "quick-filters.json") {
-      const tours = await TourRepository.findLean();
-      const tagSet = new Set();
-      tours.forEach((t) => {
-        if (Array.isArray(t.tags)) t.tags.forEach((tag) => { const t = String(tag).trim().toLowerCase(); if (t) tagSet.add(t); });
-      });
-      const labels = widget.component.elements?.labels || {};
-      const filters = Array.from(tagSet).sort().map((tag) => {
-        const labelRef = `qkf_${tag}`;
-        labels[labelRef] = tag.charAt(0).toUpperCase() + tag.slice(1);
-        return { id: tag, tag, labelRef };
-      });
-      labels.qkf_all = "All Tours";
-      filters.unshift({ id: "all", tag: "", labelRef: "qkf_all" });
-
-      widget.component.data.filters = filters;
-      widget.component.elements.labels = labels;
+      const discovery = await getTourDiscovery();
+      widget.component.data.filters = discovery.chips;
     }
 
+    // The grid response owns its initial DB result set and facets. Returning an
+    // empty data object for metadata requests made the public widget contract
+    // misleading and forced the client to assemble it from another endpoint.
     if (fileName === "tour-grid.json") {
-      const paging = normalizePaging(req.query);
-      const sort = normalizeSort(req.query?.sort);
-      const toursRaw = await TourRepository.find({}).sort({ createdAt: -1 });
-      const dateQuery = req.query?.date ? new Date(req.query.date) : new Date();
-       const allTours = (Array.isArray(toursRaw) ? toursRaw : []).map((doc) => {
-         const tourObj = doc.toObject ? doc.toObject() : doc;
-         const priceInfo = buildPriceInfo(doc, dateQuery);
-         return normalizeTourCardForResponse(tourObj, priceInfo);
-       });
-      const sorted = sortToursForResponse(allTours, sort);
-      const total = sorted.length;
-      const totalPages = Math.max(1, Math.ceil(total / paging.limit));
-      const tours = sorted.slice(paging.skip, paging.skip + paging.limit);
-      widget.component.data.tours = tours;
-      widget.component.data.sort = sort;
-      widget.component.data.pagination = {
-        page: paging.page,
-        limit: paging.limit,
-        total,
-        totalPages,
-        hasMore: paging.page < totalPages,
-      };
+      const result = await searchToursFromRawRequest({ page: req.query.page, pageSize: req.query.limit, sort: req.query.sort });
+      widget.component.data.tours = result.items;
+      widget.component.data.items = result.items;
+      widget.component.data.facets = result.facets;
+      widget.component.data.sort = result.search.sort;
+      widget.component.data.pagination = result.pagination;
     }
 
     if (fileName === "featured-holiday-packages.json") {
@@ -313,10 +269,10 @@ export const getWidget = async (req, res) => {
           const normalized = normalizeTourForResponse(tourObj, priceInfo);
           switch (fileName) {
             case "tour-overview.json":
-              widget.component.data.tour = normalized;
+              widget.component.data.tour = normalizeTourOverviewForResponse(normalized);
               break;
             case "tour-facts.json":
-              widget.component.data.tour = normalized;
+              widget.component.data.tour = normalizeTourFactsForResponse(normalized);
               break;
             case "tour-gallery.json":
               widget.component.data.photos = Array.isArray(normalized.photos) ? normalized.photos : [];
@@ -324,9 +280,7 @@ export const getWidget = async (req, res) => {
               widget.component.data.city = normalized.city;
               break;
             case "pricing-card.json":
-              widget.component.data.tour = normalized;
-              widget.component.data.priceInfo = normalized.priceInfo;
-              widget.component.data.availability = normalized.availability;
+              widget.component.data.tour = normalizePricingCardForResponse(normalized);
               break;
             case "tour-highlights.json":
               widget.component.data.highlights = Array.isArray(normalized.highlights) ? normalized.highlights : [];
@@ -524,6 +478,7 @@ export const getWidget = async (req, res) => {
       }
     }
 
+    widget.component = await masterDataService.hydrateDataScope(widget.component);
     return res.status(200).json(ensurePageContract(widget));
   } catch (error) {
     console.error("getWidget error:", error);

@@ -4,6 +4,7 @@ import { initApp } from "../../core/initApp";
 import { getHeaderConfig } from "../../services/configService";
 import { clearUserSessionCache } from "../../services/userSession";
 import { clearAuthBrowserState, subscribeAuthEvents } from "@packages/trem-auth-core";
+import { buildGlobalAuthUrl } from "@packages/trem-utils";
 import {
     createPortalEventController,
     emit,
@@ -214,7 +215,7 @@ export function AgentPortalConfigProvider({ children }) {
                 headerConfig: DEFAULT_HEADER_CONFIG,
                 pageConfig: DEFAULT_PAGE_CONFIG,
             });
-            navigate("/login", { replace: true });
+            window.location.replace(buildGlobalAuthUrl({ app: "partner", returnTo: window.location.href }));
         };
         const unsubscribe = subscribeAuthEvents((message) => {
             if (message?.type === "LOGOUT") {
@@ -231,7 +232,7 @@ export function AgentPortalConfigProvider({ children }) {
             unsubscribe();
             window.removeEventListener("USER_LOGOUT", onWindowLogout);
         };
-    }, [loadPortalConfig, navigate]);
+    }, [loadPortalConfig]);
 
     React.useEffect(() => {
         if (state.loading) return;

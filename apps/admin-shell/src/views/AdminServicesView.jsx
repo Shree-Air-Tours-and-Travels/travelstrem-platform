@@ -1,15 +1,10 @@
 import React, { useState, useMemo } from "react";
 import { Button, EmptyState } from "@packages/trem-ui";
+import { useMasterOptions } from "@packages/trem-utils";
 import AgenciesTabWidget from "../features/tours/AgenciesTabWidget.view";
 import "./AdminServicesView.scss";
 
 const TYPE_FILTERS = ["all", "tours", "trips", "agencies"];
-
-const TRIP_TYPE_OPTIONS = [
-  { value: "", label: "All Types" },
-  { value: "domestic", label: "Domestic" },
-  { value: "international", label: "International" },
-];
 
 const STATUS_COLORS = {
   draft: "var(--muted)",
@@ -49,6 +44,8 @@ export default function AdminServicesView({
 }) {
   const [typeFilter, setTypeFilter] = useState("all");
   const [tripTypeFilter, setTripTypeFilter] = useState("");
+  const { options: masterOptions } = useMasterOptions(["common.tripTypeOptions"]);
+  const tripTypeOptions = (masterOptions["common.tripTypeOptions"] || []).map((option) => ({ ...option, value: option.value === "all" ? "" : option.value }));
 
   const filteredTrips = useMemo(() => {
     let result = trips || [];
@@ -116,7 +113,7 @@ export default function AdminServicesView({
         {(typeFilter === "all" || typeFilter === "trips") && (
           <div className="asv__trip-filter">
             <select className="asv__trip-select" value={tripTypeFilter} onChange={(e) => setTripTypeFilter(e.target.value)}>
-              {TRIP_TYPE_OPTIONS.map((o) => (
+              {tripTypeOptions.map((o) => (
                 <option key={o.value} value={o.value}>{o.label}</option>
               ))}
             </select>

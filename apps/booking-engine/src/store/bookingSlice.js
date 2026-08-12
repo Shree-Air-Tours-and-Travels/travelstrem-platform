@@ -1,10 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const TRAVELLER_FIELDS = [
-  { name: "title", label: "Title", type: "select", width: "auto", options: [{ value: "Mr", label: "Mr" }, { value: "Mrs", label: "Mrs" }, { value: "Ms", label: "Ms" }], required: true },
+  { name: "title", label: "Title", type: "select", width: "auto", optionsKey: "common.titleOptions", required: true },
   { name: "firstName", label: "First Name", type: "text", required: true },
   { name: "lastName", label: "Last Name", type: "text", required: true },
-  { name: "gender", label: "Gender", type: "select", width: "auto", options: [{ value: "male", label: "Male" }, { value: "female", label: "Female" }], required: true },
+  { name: "gender", label: "Gender", type: "select", width: "auto", optionsKey: "common.genderOptions", required: true },
   { name: "dob", label: "Date of Birth", type: "date", datePickerMode: "birthdate", required: true },
   { name: "nationality", label: "Nationality", type: "text", required: true, wide: true },
   { name: "email", label: "Email", type: "email", required: true, wide: true },
@@ -26,7 +26,16 @@ function emptyTraveller(index = 0) {
   t.mealPreference = "";
   t.packageType = "";
   t.drinkType = "";
+  t.type = "ADULT";
   return t;
+}
+
+function syncTravellerTypes(state) {
+  const adults = Number(state.trip.adults || 0);
+  const children = Number(state.trip.children || 0);
+  state.travellers.forEach((traveller, index) => {
+    traveller.type = index < adults ? "ADULT" : index < adults + children ? "CHILD" : "INFANT";
+  });
 }
 
 const STEP_CONFIG = {
@@ -65,6 +74,8 @@ const initialState = {
     addFlights: "",
     mealPreference: "",
     bedPreference: "",
+    passportReminder: true,
+    visaAssistance: false,
     notes: "",
   },
   travellers: [emptyTraveller(0)],
@@ -101,6 +112,7 @@ const bookingSlice = createSlice({
         if (state.travellers.length > count) {
           state.travellers = state.travellers.slice(0, count);
         }
+        syncTravellerTypes(state);
       }
 
       if (state.errors[field]) {
@@ -154,6 +166,24 @@ const bookingSlice = createSlice({
       return { ...initialState };
     },
 
+    startBooking(state, action) {
+      const { product = "trevista", tour = {} } = action.payload || {};
+      const fresh = {
+        ...initialState,
+        product,
+        trip: {
+          ...initialState.trip,
+          startDate: tour.startDateISO || tour.startDate || "",
+          endDate: tour.endDateISO || tour.endDate || "",
+          pricePerPerson: tour.price || 0,
+          tokenAmount: tour.token || 0,
+          departureCity: tour.city?.from || "",
+          addFlights: tour.flights?.included ? "included" : "",
+        },
+      };
+      return fresh;
+    },
+
     hydrateFromProduct(state, action) {
       const product = action.payload;
       if (!product) return;
@@ -161,6 +191,8 @@ const bookingSlice = createSlice({
       state.trip.endDate = product.endDateISO || product.endDate || state.trip.endDate;
       state.trip.pricePerPerson = product.price || state.trip.pricePerPerson;
       state.trip.tokenAmount = product.token || state.trip.tokenAmount;
+      state.trip.departureCity = product.city?.from || state.trip.departureCity;
+      state.trip.addFlights = product.flights?.included ? "included" : "";
       state.trip.roomType = "";
     },
   },
@@ -178,6 +210,7 @@ export const {
   setErrors,
   clearErrors,
   resetBooking,
+  startBooking,
   hydrateFromProduct,
 } = bookingSlice.actions;
 

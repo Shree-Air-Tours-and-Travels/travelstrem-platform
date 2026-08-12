@@ -4,3 +4,7 @@ node_modules
 .DS_Store
 build
 .turbo
+
+# Developer-specific secrets and OAuth credentials
+.env.local
+.env.*.local

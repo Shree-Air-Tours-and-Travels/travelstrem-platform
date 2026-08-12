@@ -2,7 +2,7 @@ import User from "../models/User.js";
 
 const UserRepository = {
   findByEmail(email) {
-    return User.findOne({ email });
+    return User.findOne({ email }).select("+passwordHash");
   },
   findById(id, projection) {
     const query = User.findById(id);

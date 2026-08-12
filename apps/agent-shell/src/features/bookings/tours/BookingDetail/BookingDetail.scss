@@ -270,6 +270,48 @@
   justify-content: center;
 }
 
+.bd-action-label {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--text-muted, #6b7280);
+}
+
+.bd-action-select,
+.bd-action-textarea {
+  width: 100%;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 8px;
+  padding: 0.5rem 0.7rem;
+  background: var(--surface, #fff);
+  color: var(--text, #1a1a2e);
+  font: inherit;
+}
+
+.bd-action-select {
+  min-height: 40px;
+}
+
+.bd-action-textarea {
+  min-height: 64px;
+  resize: vertical;
+}
+
+.bd-proof-download {
+  text-align: left;
+  white-space: normal;
+}
+
+.bd-payment-item .bd-proof-download {
+  margin-left: auto;
+  font-size: 0.8rem;
+}
+
+.bd-proof-unavailable {
+  font-size: 0.8rem;
+  color: var(--color-danger, #b91c1c);
+  font-weight: 600;
+}
+
 .bd-meta-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { useMasterOptions } from "@packages/trem-utils";
 import {
   setCurrentStep,
   setTripField,
@@ -11,6 +12,7 @@ import {
   setErrors,
   clearErrors,
   resetBooking,
+  startBooking,
   setProduct,
   hydrateFromProduct,
   TRAVELLER_FIELDS,
@@ -87,6 +89,11 @@ export function useBookingFlow({ product: productProp = "trevista", tour = null 
 
   const { currentStep, trip, travellers, contact, errors, product: storedProduct } = booking;
   const product = productProp || storedProduct;
+  const travellerOptionKeys = useMemo(() => TRAVELLER_FIELDS.map((field) => field.optionsKey).filter(Boolean), []);
+  const { options: travellerOptions } = useMasterOptions(travellerOptionKeys);
+  const travellerFields = useMemo(() => TRAVELLER_FIELDS.map((field) => (
+    field.optionsKey ? { ...field, options: travellerOptions[field.optionsKey] || [] } : field
+  )), [travellerOptions]);
 
   const steps = useMemo(() => STEP_CONFIG[product] || STEP_CONFIG.trevista, [product]);
   const stepKey = steps[currentStep]?.key;
@@ -192,7 +199,8 @@ export function useBookingFlow({ product: productProp = "trevista", tour = null 
     setContact: (obj) => dispatch(setContact(obj)),
     setTrip: (obj) => dispatch(setTrip(obj)),
     resetBooking: () => dispatch(resetBooking()),
-    TRAVELLER_FIELDS,
+    startBooking: (payload) => dispatch(startBooking(payload)),
+    TRAVELLER_FIELDS: travellerFields,
     TRAVELLER_PREFERENCE_FIELDS,
   };
 }

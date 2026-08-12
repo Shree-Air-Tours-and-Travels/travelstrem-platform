@@ -1,5 +1,45 @@
 @import "../../../../styles/base/typography";
 
+.td-ie-widget {
+  &__header {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: $space-4;
+    margin-bottom: $space-4;
+  }
+
+  &__eyebrow {
+    display: block;
+    margin-bottom: $space-1;
+    color: var(--color-primary-dark);
+    font-size: $font-size-xs;
+    font-weight: $font-bold;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  &__title {
+    margin: 0;
+    color: var(--title);
+    font-size: 1.35rem;
+    letter-spacing: -0.02em;
+  }
+
+  &__summary {
+    margin: 0;
+    color: var(--muted);
+    font-size: $font-size-sm;
+    white-space: nowrap;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: $space-2;
+  }
+}
+
 .td-ie {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -12,7 +52,7 @@
     border: 1px solid var(--border);
     background: var(--surface);
     overflow: hidden;
-    box-shadow: 0 14px 34px -22px rgba(0, 0, 0, 0.35);
+    box-shadow: var(--shadow-sm);
     transition:
       transform $duration-medium $ease-standard,
       border-color $duration-medium $ease-standard,
@@ -20,7 +60,7 @@
 
     &:hover {
       border-color: var(--ie-accent);
-      box-shadow: 0 18px 44px -24px color-mix(in srgb, var(--ie-accent) 60%, transparent);
+      box-shadow: var(--shadow-md);
     }
 
     &::after {
@@ -77,7 +117,7 @@
     border-radius: 12px;
     flex-shrink: 0;
     background: linear-gradient(135deg, var(--ie-from), var(--ie-to));
-    color: #ffffff;
+    color: var(--color-on-primary);
     box-shadow: 0 8px 18px -8px var(--ie-from);
   }
 
@@ -165,9 +205,52 @@
     line-height: 1.7;
     color: var(--muted);
   }
+
+  &__overflow-cue {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    margin-top: -$space-5;
+    padding: $space-6 $space-4-5 $space-1;
+    background: linear-gradient(to bottom, var(--color-transparent), var(--surface) 55%);
+    pointer-events: none;
+
+    span {
+      padding: $space-1 $space-2-5;
+      border: 1px solid var(--border);
+      border-radius: $radius-full;
+      background: var(--surface-inset);
+      color: var(--muted);
+      font-size: $font-size-xs;
+      font-weight: $font-bold;
+      box-shadow: var(--shadow-sm);
+    }
+  }
+
+  &__toggle {
+    min-height: auto;
+    color: var(--color-primary-dark);
+    font-weight: $font-bold;
+    text-decoration: underline;
+    text-underline-offset: $space-1;
+
+    &:hover {
+      color: var(--color-secondary-dark);
+    }
+
+    &--mobile {
+      margin: $space-1 $space-4-5 $space-4;
+    }
+  }
 }
 
 @media (max-width: 640px) {
+  .td-ie-widget__header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: $space-1;
+  }
+
   .td-ie {
     grid-template-columns: 1fr;
   }

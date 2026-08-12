@@ -54,3 +54,12 @@
     background: var(--color-primary-dark);
   }
 }
+
+.dlp__btn--guest {
+  margin-left: $space-3;
+  background: transparent;
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+
+  &:hover { background: var(--primary-soft); }
+}

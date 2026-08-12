@@ -112,6 +112,7 @@ export default function CreateTourForm({ initial = null, onCancel = () => { }, o
             cancellation: { policy: '', freeCancellationUntil: '', refundPercent: 100, depositRequired: false, depositPercent: null, depositNote: '', note: '', tiers: [] },
             extras: [],
             availability: { totalSeats: null, seatsAvailable: null },
+            flights: { included: false, inventoryManaged: false },
             meetingPoint: '',
             inclusions: [],
             exclusions: [],
@@ -215,7 +216,7 @@ export default function CreateTourForm({ initial = null, onCancel = () => { }, o
         if (form.startDate && form.endDate && new Date(form.startDate) > new Date(form.endDate)) {
             errs.startDate = 'Start date must be before end date';
         }
-        if (form.availability?.totalSeats != null && form.availability?.seatsAvailable != null
+        if (form.flights?.included && form.flights?.inventoryManaged && form.availability?.totalSeats != null && form.availability?.seatsAvailable != null
             && Number(form.availability.seatsAvailable) > Number(form.availability.totalSeats)) {
             errs['availability.seatsAvailable'] = 'Available seats cannot exceed total seats';
         }
@@ -319,6 +320,7 @@ export default function CreateTourForm({ initial = null, onCancel = () => { }, o
                 payload.availability.totalSeats = payload.availability.totalSeats != null ? Number(payload.availability.totalSeats) : null;
                 payload.availability.seatsAvailable = payload.availability.seatsAvailable != null ? Number(payload.availability.seatsAvailable) : null;
             }
+            payload.flights = { included: Boolean(payload.flights?.included), inventoryManaged: Boolean(payload.flights?.included && payload.flights?.inventoryManaged) };
 
             if (typeof payload.photos === 'string') payload.photos = payload.photos.split(',').map(s => s.trim()).filter(Boolean);
 

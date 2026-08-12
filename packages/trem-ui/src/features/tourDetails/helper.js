@@ -1,5 +1,34 @@
 const MONEY_FORMATTERS = new Map();
 
+/**
+ * Convert API values into safe display text. Some listing/detail payloads use
+ * structured places (for example { city: "Dubai", country: "UAE" }); React
+ * must never receive those objects as children.
+ */
+export const getDisplayText = (value, fallback = "") => {
+    if (value == null) return fallback;
+    if (typeof value === "string") return value.trim() || fallback;
+    if (typeof value === "number" || typeof value === "boolean") return String(value);
+    if (Array.isArray(value)) {
+        const text = value.map((item) => getDisplayText(item)).filter(Boolean).join(", ");
+        return text || fallback;
+    }
+    if (typeof value !== "object") return fallback;
+
+    const direct = value.label ?? value.name ?? value.title;
+    if (direct != null && direct !== value) return getDisplayText(direct, fallback);
+
+    const city = getDisplayText(value.city);
+    const country = getDisplayText(value.country);
+    if (city && country && city.toLowerCase() !== country.toLowerCase()) return `${city}, ${country}`;
+    if (city || country) return city || country;
+
+    const from = getDisplayText(value.from);
+    const to = getDisplayText(value.to);
+    if (from && to) return `${from} to ${to}`;
+    return from || to || fallback;
+};
+
 export const slugifyTitle = (value = "") =>
     String(value).trim().toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 
@@ -13,12 +42,13 @@ export const getRouteIdentityFromPath = (pathname = "") => {
 export const getCityDisplay = (tour = {}) => {
     tour = tour || {};
     const city = tour.city;
-    if (!city) return tour.location || tour.address?.city || "Route available on request";
+    const fallbackLocation = getDisplayText(tour.location) || getDisplayText(tour.address?.city);
+    if (!city) return fallbackLocation || "Route available on request";
     if (typeof city === "string") return city;
-    const from = city.from || city.name || city.city;
-    const to = city.to || tour.address?.city;
+    const from = getDisplayText(city.from ?? city.name ?? city.city);
+    const to = getDisplayText(city.to ?? tour.address?.city);
     if (from && to) return `${from} to ${to}`;
-    return from || to || tour.location || "Route available on request";
+    return from || to || fallbackLocation || "Route available on request";
 };
 
 export const getPhotos = (tour = {}) => {

@@ -11,6 +11,7 @@ export {
   useThemeMode,
 } from "./theme/useThemeMode.js";
 export { default as useComponentData, setComponentDataFetcher } from "./data/useComponentData.js";
+export { default as useMasterOptions } from "./data/useMasterOptions.js";
 export { default as fetchData, setFetchDataApiClient } from "./http/fetchData.js";
 export { tokenStore } from "./http/tokenStore.js";
 export { buildGlobalAuthUrl, getCurrentReturnUrl, getGlobalAuthBaseUrl, redirectToGlobalAuth } from "./auth/globalAuth.js";

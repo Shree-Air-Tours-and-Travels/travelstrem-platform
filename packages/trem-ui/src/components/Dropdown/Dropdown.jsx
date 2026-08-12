@@ -86,6 +86,11 @@ export default function Dropdown({
   const isScrollable = isSelect || variant === "scrollable" || variant === "searchable" || autoSearch;
   const showBottomSheet = isMobile() && open;
 
+  const changeOpen = useCallback((next) => {
+    setOpen(next);
+    onToggle?.(next);
+  }, [onToggle]);
+
   const selectedItem = useMemo(() => {
     if (value === undefined || value === null || value === "") return null;
     const key = String(value);
@@ -99,9 +104,10 @@ export default function Dropdown({
   }, [portalWidth, propWidth]);
 
   const filteredItems = useMemo(() => {
-    if (!isSearchable || !search) return items;
+    const visibleItems = items.filter((item) => !item.hide);
+    if (!isSearchable || !search) return visibleItems;
     const q = search.toLowerCase();
-    return items.filter((item) => {
+    return visibleItems.filter((item) => {
       if (item.separator) return true;
       return (item.label || "").toLowerCase().includes(q) || (item.searchText || "").toLowerCase().includes(q);
     });
@@ -138,7 +144,7 @@ export default function Dropdown({
     if (!open) return undefined;
     function onKey(e) {
       if (e.key === "Escape") {
-        setOpen(false);
+        changeOpen(false);
         return;
       }
       if (isSearchable && e.key === "Enter" && filteredItems.length === 1) {
@@ -154,7 +160,7 @@ export default function Dropdown({
         wrapperRef.current && !wrapperRef.current.contains(e.target) &&
         menuWrapperRef.current && !menuWrapperRef.current.contains(e.target)
       ) {
-        setOpen(false);
+        changeOpen(false);
       }
     }
     window.addEventListener("keydown", onKey);
@@ -163,7 +169,7 @@ export default function Dropdown({
       window.removeEventListener("keydown", onKey);
       document.removeEventListener("mousedown", onClick);
     };
-  }, [open, showBottomSheet, isSearchable, filteredItems]);
+  }, [open, showBottomSheet, isSearchable, filteredItems, changeOpen]);
 
   useEffect(() => {
     if (!open || showBottomSheet) return;
@@ -177,22 +183,19 @@ export default function Dropdown({
 
   const handleToggle = useCallback(() => {
     if (disabled) return;
-    setOpen((s) => {
-      const next = !s;
-      onToggle?.(next);
-      if (next && wrapperRef.current) {
-        requestAnimationFrame(updatePosition);
-      }
-      return next;
-    });
-  }, [onToggle, updatePosition]);
+    const next = !open;
+    changeOpen(next);
+    if (next && wrapperRef.current) {
+      requestAnimationFrame(updatePosition);
+    }
+  }, [changeOpen, disabled, open, updatePosition]);
 
   const handleItemClick = useCallback((item) => {
     if (item?.disabled) return;
     item.onClick?.();
     onChange?.(item);
-    if (closeOnSelect) setOpen(false);
-  }, [closeOnSelect, onChange]);
+    if (closeOnSelect) changeOpen(false);
+  }, [changeOpen, closeOnSelect, onChange]);
 
   const triggerEl = useBuiltInTrigger
     ? (
@@ -234,14 +237,19 @@ export default function Dropdown({
     ...(portalZIndex != null ? { zIndex: portalZIndex } : {}),
   };
 
+  const resolvedMenuFooter = typeof menuFooter === "function"
+    ? menuFooter({ close: () => changeOpen(false), open })
+    : menuFooter;
+  const menuChromeHeight = (isSearchable ? 60 : 0) + (resolvedMenuFooter ? 56 : 0) + 16;
+  const positionedListHeight = Math.max(120, (menuStyle.maxHeight || 240) - menuChromeHeight);
   const menuListStyle = {
-    maxHeight: propMaxHeight || (isScrollable ? menuStyle.maxHeight || 240 : undefined),
+    maxHeight: propMaxHeight || (isScrollable ? positionedListHeight : undefined),
     overflowY: isScrollable || propMaxHeight ? "auto" : undefined,
   };
 
   const menuContent = (
     <div
-      className={`trem-dropdown__menu-wrapper trem-dropdown__menu-wrapper--matched ${portalClassName}`.trim()}
+      className={`trem-dropdown__menu-wrapper trem-dropdown__menu-wrapper--matched trem-dropdown__menu-wrapper--${menuStyle.placement || "bottom"} ${portalClassName}`.trim()}
       ref={menuWrapperRef}
       style={menuPositionStyle}
     >
@@ -269,7 +277,7 @@ export default function Dropdown({
             )
         )}
       </ul>
-      {menuFooter}
+      {resolvedMenuFooter}
     </div>
   );
 
@@ -304,7 +312,7 @@ export default function Dropdown({
         </div>
       </div>
       {open && !showBottomSheet && createPortal(menuContent, document.body)}
-      <BottomSheet open={showBottomSheet} onClose={() => setOpen(false)} className={portalClassName}>
+      <BottomSheet open={showBottomSheet} onClose={() => changeOpen(false)} className={portalClassName}>
         {isSearchable && (
           <div className="trem-dropdown__search">
             <Icon name="search" />
@@ -329,7 +337,7 @@ export default function Dropdown({
               )
           )}
         </ul>
-        {menuFooter}
+        {resolvedMenuFooter}
       </BottomSheet>
     </>
   );

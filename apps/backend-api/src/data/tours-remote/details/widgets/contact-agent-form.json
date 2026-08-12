@@ -3,7 +3,8 @@
   "component": {
     "data": {},
     "dataScope": {
-      "options": {}
+      "options": {},
+      "optionSets": { "preferredContactOptions": "tours.preferredContactOptions" }
     },
     "elements": {
       "labels": {
@@ -41,7 +42,7 @@
               { "name": "name", "labelRef": "fullName", "type": "text", "required": true, "minLength": 2, "width": "half", "placeholderRef": "fullNamePlaceholder" },
               { "name": "email", "labelRef": "email", "type": "email", "required": true, "width": "half", "placeholderRef": "emailPlaceholder" },
               { "name": "phone", "labelRef": "phone", "type": "tel", "required": true, "width": "half", "maxLength": 10, "placeholderRef": "phonePlaceholder" },
-              { "name": "preferredContact", "labelRef": "preferredContact", "type": "select", "required": true, "width": "half", "options": [{ "labelRef": "contactWhatsApp", "value": "whatsapp" }, { "labelRef": "contactPhoneCall", "value": "phone" }, { "labelRef": "contactEmail", "value": "email" }] },
+              { "name": "preferredContact", "labelRef": "preferredContact", "type": "select", "required": true, "width": "half", "optionsRef": "preferredContactOptions" },
               { "name": "travellerCount", "labelRef": "travellerCount", "type": "number", "required": true, "min": 1, "max": 50, "integer": true, "width": "half", "placeholderRef": "travellerCountPlaceholder" },
               { "name": "preferredTravelDate", "labelRef": "preferredTravelDate", "type": "date", "required": false, "width": "half" },
               { "name": "message", "labelRef": "message", "type": "textarea", "required": true, "minLength": 10, "maxLength": 1000, "placeholderRef": "messagePlaceholder" }

@@ -51,13 +51,6 @@
       font-weight: 700;
       text-decoration: none;
 
-      &::before {
-        content: "←";
-        color: currentColor;
-        font-size: 1rem;
-        line-height: 1;
-      }
-
       &:hover { color: var(--color-primary-hover); }
     }
   }
@@ -836,7 +829,8 @@
 
 @media (max-width: 720px) {
   .tour-detail {
-    --td-header-offset: 56px;
+    // The mobile app header has two rows (brand/actions + search).
+    --td-header-offset: 120px;
 
     &__shell { gap: 0.85rem; }
 
@@ -847,6 +841,8 @@
       padding-inline: 0.85rem;
       white-space: nowrap;
       overflow: hidden;
+      z-index: 89;
+      box-shadow: 0 4px 16px color-mix(in srgb, var(--text) 7%, transparent);
 
       li {
         min-width: 0;
@@ -889,7 +885,7 @@
 
 @media (max-width: 460px) {
   .tour-detail {
-    --td-header-offset: 52px;
+    --td-header-offset: 120px;
 
     &__facts-bar {
       grid-template-columns: 1fr;

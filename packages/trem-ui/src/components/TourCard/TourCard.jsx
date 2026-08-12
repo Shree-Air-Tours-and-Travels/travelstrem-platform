@@ -175,21 +175,11 @@ const TourCard = React.memo(function TourCard({
       )}
 
       {featured && (
-        <span className="tour-card__badge tour-card__badge--featured">
-          <Icon name="sparkles" size={14} /> Trending
-        </span>
-      )}
-
-      {t.tremVerified && (
-        <span className="tour-card__badge tour-card__badge--verified">
-          <Icon name="badgeCheck" size={14} /> TREM verified
-        </span>
-      )}
-
-      {!isCompact && (
-        <span className="tour-card__badge tour-card__badge--category">
-          {category}
-        </span>
+        <div className="tour-card__status-badges" aria-label="Tour status">
+          <span className="tour-card__badge tour-card__badge--featured">
+            <Icon name="sparkles" size={14} /> Trending
+          </span>
+        </div>
       )}
 
       {availability?.seatsAvailable != null && !isCompact ? (
@@ -243,6 +233,17 @@ const TourCard = React.memo(function TourCard({
       </h3>
     </div>
   );
+
+  const cardLabels = !isCompact ? (
+    <div className="tour-card__content-badges" aria-label="Tour labels">
+      <span className="tour-card__content-badge">{category}</span>
+      {t.tremVerified ? (
+        <span className="tour-card__content-badge tour-card__content-badge--verified">
+          <Icon name="badgeCheck" size={13} /> TREM verified
+        </span>
+      ) : null}
+    </div>
+  ) : null;
 
   const cardMeta = (
     <div className="tour-card__meta">
@@ -390,6 +391,7 @@ const TourCard = React.memo(function TourCard({
 
   const cardBody = (
     <div className="tour-card__body">
+      {cardLabels}
       {cardHeader}
       {!isCompact && cardMeta}
       {cardDescription}
@@ -415,6 +417,7 @@ const TourCard = React.memo(function TourCard({
       <>
         {cardMedia}
         <div className="tour-card__content">
+          {cardLabels}
           {cardHeader}
           {cardMeta}
           {cardSummary}
@@ -432,7 +435,7 @@ const TourCard = React.memo(function TourCard({
 
   const baseClasses = `tour-card tour-card--${variant}${
     size !== "default" ? ` tour-card--${size}` : ""
-  }${featured ? " is-featured" : ""}${className ? ` ${className}` : ""}`;
+  }${featured ? " is-featured" : ""}${showHeart ? " has-favorite-control" : ""}${className ? ` ${className}` : ""}`;
 
   if (path) {
     return (

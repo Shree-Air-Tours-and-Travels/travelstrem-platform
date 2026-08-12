@@ -23,8 +23,8 @@
         "agencyDetails": {
           "ariaLabel": "Tour operator details",
           "eyebrow": "Operated by",
-          "travelPartner": "Your travel partner",
-          "partnerReference": "Agency reference"
+          "travelPartner": "Uploaded by agent",
+          "inventoryOwner": "Inventory owner"
         }
       },
       "urls": {}

@@ -1868,6 +1868,58 @@ body:has(.be-layout) .trem-scroll-top {
   .be-addons {
     margin-bottom: $space-3;
   }
+
+  .be-experiences {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: $space-3;
+    margin-bottom: $space-4;
+  }
+
+  .be-experience-card {
+    display: flex;
+    min-height: $space-20 * 2 + $space-7;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: $space-3;
+    border: 1px solid var(--border, $border-color);
+    border-radius: $radius-sm;
+    background: var(--surface, $white-color);
+    &.is-selected {
+      border-color: var(--color-primary, $primary-color);
+      background: var(--primary-soft, $primary-soft);
+      box-shadow: var(--shadow-sm, $shadow-sm);
+    }
+
+    &__badge {
+      padding: $space-1 $space-1-5;
+      border-radius: $radius-full;
+      background: var(--secondary-soft, $secondary-soft);
+      color: var(--color-secondary-dark, $secondary-dark);
+      font-size: $font-size-xs;
+      font-weight: $font-semibold;
+
+      &.is-included {
+        background: var(--primary-soft, $primary-soft);
+        color: var(--color-primary-dark, $primary-dark);
+      }
+    }
+    h3 { margin: $space-2 0 $space-1; color: var(--text, $text-dark); font-size: $font-size-sm; }
+    p { min-height: $space-8; margin: 0; color: var(--text-muted, $text-muted); font-size: $font-size-xs; line-height: $line-height-md; }
+    > strong { margin-top: auto; color: var(--text, $text-dark); font-size: $font-size-md; }
+    &__action { width: 100%; margin-top: $space-3; justify-content: center; }
+  }
+}
+
+.be-passport-support {
+  margin-top: $space-5;
+  padding: $space-5;
+  border: 2px solid var(--border, $border-color);
+  border-radius: $radius-lg;
+  background: var(--surface, $white-color);
+  h3 { margin: 0 0 $space-4; color: var(--text, $text-dark); font-size: $font-size-xl; }
+  .trem-form__section { margin: 0; }
+  .trem-form__checkbox { margin: $space-3 0; font-size: $font-size-md; color: var(--text-muted, $text-muted); }
 }
 
 @include mq-max($breakpoint-mobile) {
@@ -1881,6 +1933,7 @@ body:has(.be-layout) .trem-scroll-top {
     .be-customize__select-grid {
       grid-template-columns: 1fr;
     }
+    .be-experiences { grid-template-columns: 1fr; }
   }
 }
 

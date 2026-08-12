@@ -6,9 +6,10 @@
 }
 
 .tours-page {
+  --tours-page-gutter: clamp(1rem, 2.5vw, 2rem);
   width: 100%;
   min-height: 100vh;
-  padding: clamp(1rem, 2.5vw, 2rem);
+  padding: 0 var(--tours-page-gutter) var(--tours-page-gutter);
   background:
     linear-gradient(180deg, var(--primary-softer), var(--color-transparent) 320px),
     var(--page-bg);
@@ -22,15 +23,17 @@
   &__crumbs {
     position: sticky;
     top: var(--td-header-offset);
-    z-index: 30;
+    z-index: 50;
     display: flex;
     align-items: center;
+    width: calc(100% + (2 * var(--tours-page-gutter)));
     height: var(--tours-crumb-height);
-    padding: 0 0.75rem;
-    border: 1px solid var(--border-subtle, var(--border));
-    border-radius: 12px;
-    background: color-mix(in srgb, var(--page-bg) 88%, transparent);
-    backdrop-filter: blur(10px);
+    margin-inline: calc(-1 * var(--tours-page-gutter));
+    padding-inline: var(--tours-page-gutter);
+    border-bottom: 1px solid var(--border-subtle, var(--border));
+    background: color-mix(in srgb, var(--surface) 94%, transparent);
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--text) 8%, transparent);
+    backdrop-filter: blur(18px);
 
     .trem-breadcrumbs {
       ol {
@@ -50,7 +53,7 @@
 
   &__inner {
     width: min(1480px, 100%);
-    margin: 0 auto;
+    margin: 1.25rem auto 0;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
@@ -99,7 +102,7 @@
     position: relative;
     overflow: hidden;
     min-height: 610px;
-    padding: clamp(3rem, 6vw, 4.5rem) 0 clamp(5rem, 8vw, 7.75rem);
+    padding: clamp(3rem, 6vw, 4.5rem) clamp(1.25rem, 4vw, 3rem) clamp(5rem, 8vw, 7.75rem);
     border-radius: 20px;
     color: #ffffff;
     background:
@@ -371,6 +374,10 @@
     }
   }
 
+  &__active-filters {
+    margin-block: $space-4;
+  }
+
   &__body {
     display: grid;
     grid-template-columns: minmax(320px, 380px) minmax(0, 1fr);
@@ -387,34 +394,75 @@
     width: 100%;
   }
 
-  .filters-card__sticky {
-    position: sticky;
-    top: calc(var(--td-header-offset) + var(--tours-crumb-height) + 12px);
-    z-index: 20;
-  }
-
   &__listing {
     min-width: 0;
   }
 
-  &__listing-header {
+  &__grid-search {
+    position: relative;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 0.7rem;
-    padding: 0.55rem 0.2rem;
+    gap: 0.35rem;
+    min-width: 0;
+    min-height: 48px;
+    padding: 0 0.5rem 0 0.85rem;
     border: 1px solid var(--border);
-    border-width: 0 0 1px;
-    border-radius: 0;
-    background: color-mix(in srgb, var(--page-bg) 86%, transparent);
-    box-shadow: none;
+    border-radius: 10px;
+    background: var(--surface);
+    transition: border-color 160ms ease, box-shadow 160ms ease;
+
+    &:focus-within {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px var(--primary-soft);
+    }
+
+    > svg {
+      flex: 0 0 20px;
+      width: 20px;
+      height: 20px;
+      color: var(--muted);
+    }
+  }
+
+  &__grid-search-input {
+    flex: 1 1 auto;
+    min-width: 0;
+
+    &.trem-input {
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+  }
+
+  &__grid-search-clear {
+    flex: 0 0 auto;
+    width: 36px;
+    min-width: 36px;
+    height: 36px;
+    padding: 0;
+    color: var(--muted);
+  }
+
+  &__listing-header {
+    display: grid;
+    grid-template-columns: max-content minmax(240px, 1fr) max-content;
+    align-items: center;
+    gap: clamp(0.75rem, 2vw, 1.25rem);
+    margin-bottom: 0.85rem;
+    padding: 0.8rem 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
     backdrop-filter: blur(10px);
 
-    > div:first-child {
+    .tours-page__listing-count {
       display: inline-flex;
       align-items: baseline;
       gap: 0.4rem;
+      white-space: nowrap;
     }
 
     span {
@@ -443,62 +491,8 @@
   }
 
   &__sort {
-    @include type-xs();
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    color: var(--text);
-    font-weight: $font-semibold;
-    white-space: nowrap;
-  }
-
-  &__sort-dropdown {
-    display: inline-flex;
-  }
-
-  &__sort-trigger {
-    @include type-xs();
-    display: inline-flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.6rem;
-    min-width: 150px;
-    min-height: 34px;
-    padding: 0.4rem 0.7rem 0.4rem 0.8rem;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--surface);
-    color: var(--text);
-    font-weight: $font-semibold;
-    appearance: none;
-    cursor: pointer;
-    outline: none;
-    transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
-
-    svg {
-      width: 14px;
-      height: 14px;
-      color: var(--muted);
-      transition: transform 160ms ease;
-
-      &.is-open {
-        transform: rotate(180deg);
-      }
-    }
-
-    &:hover {
-      border-color: var(--color-primary-dark);
-      background: var(--surface-elevated);
-    }
-
-    &:focus {
-      border-color: var(--color-primary);
-      box-shadow: 0 0 0 3px var(--primary-focus);
-    }
-  }
-
-  &__sort-menu {
-    min-width: 190px;
+    width: clamp(180px, 18vw, 240px);
+    min-width: 0;
   }
 
   &__sort-note {
@@ -511,7 +505,7 @@
     border: 1px solid color-mix(in srgb, var(--color-primary) 28%, var(--border));
     border-radius: 8px;
     background: linear-gradient(90deg, var(--color-primary), var(--color-primary-dark));
-    color: var(--color-on-primary, #fff);
+    color: var(--color-on-primary);
     font-weight: $font-semibold;
     box-shadow: var(--shadow-sm);
 
@@ -520,6 +514,12 @@
       width: 18px;
       height: 18px;
       opacity: 0.9;
+    }
+
+    &--member {
+      border-color: var(--color-success);
+      background: var(--success-soft);
+      color: var(--color-success);
     }
   }
 
@@ -531,6 +531,8 @@
 
   &__card {
     min-width: 0;
+    container-type: inline-size;
+    container-name: tour-card-slot;
 
     .tour-card--list {
       height: 360px;
@@ -584,8 +586,10 @@
   .tour-listing-card {
     display: grid;
     grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+    height: 340px;
     min-width: 0;
-    min-height: 320px;
+    min-height: 340px;
+    max-height: 340px;
     overflow: hidden;
     border: 1px solid var(--border);
     border-radius: 8px;
@@ -610,7 +614,8 @@
 
     &__media {
       position: relative;
-      min-height: 100%;
+      height: 100%;
+      min-height: 0;
       background: var(--surface-inset);
 
       img,
@@ -659,11 +664,19 @@
       }
     }
 
-    &__badge {
+    &__badges {
       position: absolute;
       top: 1rem;
       right: 1rem;
       z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.4rem;
+      max-width: calc(100% - 5.5rem);
+    }
+
+    &__badge {
       display: inline-flex;
       align-items: center;
       gap: 0.4rem;
@@ -673,19 +686,90 @@
       background: var(--color-primary);
       color: var(--color-on-primary);
       font-weight: $font-bold;
+      white-space: nowrap;
 
       svg {
         width: 15px;
         height: 15px;
+      }
+
+      &--verified {
+        border: 1px solid var(--primary-focus);
+        background: var(--primary-softer);
+        color: var(--color-primary-dark);
       }
     }
 
     &__body {
       display: flex;
       min-width: 0;
+      min-height: 0;
       flex-direction: column;
       gap: 0.65rem;
+      overflow: hidden;
       padding: 1.25rem 1.35rem 1rem;
+    }
+
+    &__topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      min-width: 0;
+      min-height: 38px;
+    }
+
+    &__agency {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      min-width: 0;
+      max-width: 46%;
+      margin-left: auto;
+      padding: 0.3rem 0.55rem 0.3rem 0.35rem;
+      border: 1px solid var(--border-subtle, var(--border));
+      border-radius: 999px;
+      background: var(--surface-inset);
+    }
+
+    &__agency-logo {
+      display: inline-grid;
+      place-items: center;
+      flex: 0 0 28px;
+      width: 28px;
+      height: 28px;
+      overflow: hidden;
+      border-radius: 50%;
+      background: var(--color-primary-dark);
+      color: var(--color-on-primary);
+      font-size: 0.68rem;
+      font-weight: $font-bold;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+
+    &__agency-copy {
+      display: flex;
+      min-width: 0;
+      flex-direction: column;
+      line-height: 1.15;
+
+      small {
+        color: var(--muted);
+        font-size: 0.62rem;
+        font-weight: $font-semibold;
+      }
+
+      strong {
+        @include ellipsis();
+        color: var(--text);
+        font-size: 0.76rem;
+        font-weight: $font-bold;
+      }
     }
 
     &__eyebrow,
@@ -719,11 +803,17 @@
 
     h3 {
       margin: 0;
+      display: -webkit-box;
+      max-height: 2.4em;
+      overflow: hidden;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
       color: var(--title);
       font-size: clamp(1.2rem, 1.45vw, 1.55rem);
       line-height: 1.2;
       font-weight: $font-bold;
-      @include clamp-lines(2, 1.2);
+      overflow-wrap: anywhere;
+      text-overflow: ellipsis;
     }
 
     &__meta {
@@ -774,13 +864,15 @@
       font-size: 0.96rem;
       line-height: 1.5;
       font-weight: $font-medium;
-      @include clamp-lines(3, 1.5);
+      @include clamp-lines(2, 1.5);
     }
 
     &__tags {
       display: flex;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       gap: 0.4rem;
+      min-height: 27px;
+      overflow: hidden;
 
       span {
         @include type-xs();
@@ -790,13 +882,27 @@
         color: var(--text);
         font-weight: $font-bold;
       }
+
+      .tour-listing-card__verified-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        border: 1px solid var(--primary-focus);
+        background: var(--primary-softer);
+        color: var(--color-primary-dark);
+
+        svg {
+          width: 13px;
+          height: 13px;
+        }
+      }
     }
 
     &__footer {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 1rem;
+      gap: 0.75rem;
       margin-top: auto;
       padding-top: 0.8rem;
       border-top: 1px solid var(--border-subtle, var(--border));
@@ -805,7 +911,20 @@
     &__facts {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.6rem 1rem;
+      flex: 1 1 auto;
+      min-width: 0;
+      gap: 0.5rem 0.8rem;
+
+      span {
+        font-size: 0.84rem;
+        line-height: 1.2;
+      }
+
+      svg {
+        width: 14px;
+        height: 14px;
+        flex-basis: 14px;
+      }
     }
 
     &__price {
@@ -817,13 +936,16 @@
 
       small {
         color: var(--subtitle);
+        font-size: 0.7rem;
+        line-height: 1.2;
         font-weight: $font-semibold;
       }
 
       strong {
         color: var(--danger-color);
-        font-size: 1.25rem;
+        font-size: 1.1rem;
         line-height: 1.15;
+        white-space: nowrap;
       }
     }
 
@@ -831,69 +953,6 @@
       border-radius: 999px;
       white-space: nowrap;
     }
-  }
-
-  &__pagination {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.35rem;
-    padding: 1.5rem 0 1rem;
-  }
-
-  &__page-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    padding: 0;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--surface);
-    color: var(--text);
-    font-size: 0.875rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
-
-    &:hover:not(:disabled) {
-      border-color: var(--color-primary);
-      background: var(--primary-soft);
-      color: var(--color-primary);
-    }
-
-    &:disabled {
-      opacity: 0.35;
-      cursor: default;
-    }
-
-    svg {
-      width: 18px;
-      height: 18px;
-    }
-  }
-
-  &__page-num {
-    font-variant-numeric: tabular-nums;
-
-    &.is-active {
-      border-color: var(--color-primary);
-      background: var(--color-primary);
-      color: var(--color-on-primary);
-      cursor: default;
-    }
-  }
-
-  &__page-ellipsis {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 36px;
-    color: var(--muted);
-    font-size: 0.9rem;
-    font-weight: 600;
   }
 
   &__message {
@@ -969,9 +1028,83 @@
   }
 }
 
+// Browser zoom, DevTools, split-screen, and persistent navigation can make a
+// desktop viewport contain a narrow result column. Respond to the card slot.
+@container tour-card-slot (max-width: 700px) {
+  .tour-listing-card {
+    grid-template-columns: minmax(0, 1fr);
+    height: auto;
+    min-height: 0;
+    max-height: none;
+
+    &__media {
+      height: clamp(210px, 42cqi, 270px);
+      min-height: 0;
+    }
+
+    &__body {
+      gap: $space-2-5;
+      padding: $space-4;
+    }
+
+    &__agency {
+      max-width: min(100%, 320px);
+    }
+
+    &__footer {
+      gap: $space-2-5;
+    }
+  }
+}
+
+@container tour-card-slot (max-width: 540px) {
+  .tour-listing-card {
+    h3 {
+      max-height: 1.2em;
+      -webkit-line-clamp: 1;
+      white-space: normal;
+    }
+
+    &__footer {
+      align-items: center;
+    }
+
+    &__view {
+      display: none;
+    }
+  }
+}
+
 @keyframes tours-clean-shimmer {
   to {
     transform: translateX(100%);
+  }
+}
+
+// The hero needs to respond to its content width, which is narrower than the
+// viewport whenever it is rendered beside the application navigation.
+@media (max-width: 960px) {
+  .tours-page {
+    &__hero {
+      min-height: auto;
+      padding-block: clamp(2.5rem, 6vw, 3.5rem) clamp(4.5rem, 8vw, 6rem);
+    }
+
+    &__hero-inner {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 2rem;
+      align-items: start;
+    }
+
+    &__hero-copy {
+      max-width: 680px;
+    }
+
+    &__hero-panel {
+      width: min(100%, 700px);
+      max-width: none;
+      justify-self: start;
+    }
   }
 }
 
@@ -1058,7 +1191,9 @@
 
     .tour-listing-card {
       grid-template-columns: 1fr;
+      height: auto;
       min-height: 0;
+      max-height: none;
 
       &__media {
         height: 220px;
@@ -1072,6 +1207,10 @@
 
       &__eyebrow {
         display: none;
+      }
+
+      &__agency {
+        max-width: min(100%, 280px);
       }
 
       h3 {
@@ -1102,7 +1241,7 @@
 
 @media (max-width: $breakpoint-mini-tablet) {
   .tours-page {
-    padding: 0.85rem;
+    --tours-page-gutter: 0.85rem;
 
     &__hero {
       min-height: auto;
@@ -1123,8 +1262,13 @@
     }
 
     &__listing-header {
-      flex-wrap: wrap;
-      gap: 0.5rem;
+      grid-template-columns: minmax(0, 1fr) max-content;
+      gap: 0.75rem;
+    }
+
+    &__grid-search {
+      grid-column: 1 / -1;
+      grid-row: 2;
     }
 
     &__listing-controls {
@@ -1133,13 +1277,7 @@
     }
 
     &__sort {
-      flex-wrap: wrap;
-      gap: 0.35rem;
-    }
-
-    &__sort-dropdown,
-    &__sort-trigger {
-      min-width: 0;
+      width: min(100%, 220px);
     }
 
     &__loading-card {
@@ -1147,7 +1285,54 @@
     }
 
     &__list {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      // Tablet shells retain their sidebar, so the result pane is too narrow
+      // for a two-card grid even though the viewport itself is tablet-sized.
+      grid-template-columns: minmax(0, 1fr);
+      gap: $space-4;
+    }
+
+    &__card {
+      width: 100%;
+    }
+
+    .tour-listing-card {
+      &__media {
+        height: clamp(210px, 34vw, 260px);
+      }
+
+      &__body {
+        gap: $space-2-5;
+        padding: $space-4;
+      }
+
+      &__topline {
+        min-height: 36px;
+      }
+
+      &__agency {
+        max-width: min(100%, 320px);
+      }
+
+      h3 {
+        font-size: 1.12rem;
+      }
+
+      &__desc {
+        font-size: 0.9rem;
+        @include clamp-lines(3, 1.45);
+      }
+
+      &__footer {
+        gap: $space-2-5;
+      }
+
+      &__facts span {
+        font-size: $font-size-xs;
+      }
+
+      &__price strong {
+        font-size: $font-size-md;
+      }
     }
 
     &__loading-media {
@@ -1162,10 +1347,77 @@
   }
 
   .tours-page {
+    --tours-page-gutter: 0.75rem;
     --tours-crumb-height: 48px;
+    padding-bottom: calc(7.5rem + env(safe-area-inset-bottom, 0px));
+    scroll-padding-bottom: calc(7.5rem + env(safe-area-inset-bottom, 0px));
+
+    &__inner {
+      margin-top: 0.85rem;
+      gap: 1rem;
+    }
+
+    &__crumbs {
+      box-shadow: 0 4px 16px color-mix(in srgb, var(--text) 7%, transparent);
+
+      .trem-breadcrumbs {
+        max-width: 100%;
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+    }
+
+    &__listing-controls {
+      display: none;
+    }
+
+    &__listing-header {
+      grid-template-columns: minmax(0, 1fr);
+      padding: 0.7rem;
+    }
+
+    &__grid-search {
+      grid-column: 1;
+      grid-row: 1;
+    }
 
     &__hero {
-      padding: 2.5rem 0 4.5rem;
+      padding: 2rem 1rem 4rem;
+      border-radius: 14px;
+    }
+
+    &__hero-title {
+      margin: 1rem 0 0.75rem;
+      font-size: clamp(2rem, 11vw, 2.75rem);
+      line-height: 1.08;
+    }
+
+    &__hero-desc {
+      font-size: 0.95rem;
+      line-height: 1.55;
+    }
+
+    &__hero-eyebrow {
+      max-width: 100%;
+      border-radius: 14px;
+      line-height: 1.3;
+    }
+
+    &__hero-actions {
+      flex-direction: column;
+      align-items: stretch;
+      margin-top: 1.25rem;
+    }
+
+    &__hero-actions .tours-page__hero-btn {
+      width: 100%;
+      white-space: normal;
+    }
+
+    &__hero-panel {
+      width: 100%;
+      padding: 1rem;
+      border-radius: 20px;
     }
 
     &__hero-trust {
@@ -1181,6 +1433,7 @@
     &__hero-tabs .tours-page__hero-tab {
       padding: 0.6rem 0.6rem;
       font-size: 0.72rem;
+      white-space: normal;
     }
 
     &__list {
@@ -1216,6 +1469,14 @@
         padding: 0.85rem;
       }
 
+      &__topline {
+        align-items: flex-start;
+      }
+
+      &__agency {
+        max-width: 100%;
+      }
+
       &__meta {
         align-items: flex-start;
         gap: 0.5rem;
@@ -1234,11 +1495,33 @@
 
       &__footer {
         align-items: center;
-        flex-wrap: wrap;
+        gap: 0.6rem;
+      }
+
+      &__facts {
+        gap: 0.45rem 0.65rem;
+
+        span {
+          font-size: 0.78rem;
+        }
+
+        svg {
+          width: 13px;
+          height: 13px;
+          flex-basis: 13px;
+        }
       }
 
       &__price {
-        flex: 1 0 auto;
+        flex: 0 0 auto;
+
+        small {
+          font-size: 0.65rem;
+        }
+
+        strong {
+          font-size: 0.98rem;
+        }
       }
     }
 

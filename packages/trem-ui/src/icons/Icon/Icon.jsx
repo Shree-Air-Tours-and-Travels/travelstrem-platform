@@ -365,6 +365,14 @@ const LogOut = (p) => (
   </Svg>
 );
 
+const LogIn = (p) => (
+  <Svg {...p}>
+    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" {...s} />
+    <path d="m10 17 5-5-5-5" {...s} />
+    <path d="M15 12H3" {...s} />
+  </Svg>
+);
+
 const Luggage = (p) => (
   <Svg {...p}>
     <rect x="6" y="6" width="12" height="14" rx="2" {...s} />
@@ -764,6 +772,7 @@ const ICONS = {
   itinerary: Itinerary,
   location: Location,
   lock: Lock,
+  login: LogIn,
   logout: LogOut,
   luggage: Luggage,
   management: Management,

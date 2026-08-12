@@ -18,9 +18,9 @@ const money = (amount, currency = "INR") => {
 };
 
 export default function BookingPaymentConfirmation({ booking, product, onGoToDashboard }) {
-  const title = booking?.trip?.title || booking?.tour?.title || "Your trip";
+  const title = booking?.productTitle || booking?.trip?.title || booking?.tour?.title || "Your trip";
   const reference = booking?.bookingRef || booking?.id || booking?._id || "—";
-  const tokenAmount = money(booking?.tokenAmount, booking?.priceSnapshot?.currency);
+  const tokenAmount = money(booking?.tokenAmount, booking?.price?.currency || booking?.priceSnapshot?.currency);
   const isTrevio = product === "trevio";
 
   return (

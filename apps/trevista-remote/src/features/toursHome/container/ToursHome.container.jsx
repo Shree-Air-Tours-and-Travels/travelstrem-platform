@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useComponentData, fetchData } from "@packages/trem-utils";
 import ToursHomeView from "../view/ToursHome.view";
+import { createDefaultTourSearchState, mergeFlatFiltersIntoSearch, serializeTourSearchUrl } from "../../tours/search/tourSearchState";
 
 const PAGE_KEY = "tours-remote/home";
 
@@ -36,14 +37,14 @@ export const buildFiltersFromHero = (payload = {}) => {
     const filters = {};
 
     const destination = String(payload.destination || "").trim();
-    if (destination) filters.destinationCity = destination;
+    if (destination) filters.destinationCityIds = [destination];
 
     const travelMonth = String(payload.travelMonth || "").trim();
     const monthMatch = travelMonth.match(/([a-zA-Z]+)\s*(\d{4})/);
     if (monthMatch) {
         const monthIndex = new Date(`${monthMatch[1]} 1, ${monthMatch[2]}`).getMonth();
         if (Number.isFinite(monthIndex)) {
-            filters.arrivalDate = `${monthMatch[2]}-${String(monthIndex + 1).padStart(2, "0")}-01`;
+            filters.departureDate = `${monthMatch[2]}-${String(monthIndex + 1).padStart(2, "0")}-01`;
         }
     }
 
@@ -51,10 +52,10 @@ export const buildFiltersFromHero = (payload = {}) => {
     if (!Number.isFinite(travellerCount) || travellerCount <= 0) {
         travellerCount = Number(String(payload.travellers || "").match(/\d+/)?.[0]);
     }
-    if (Number.isFinite(travellerCount) && travellerCount > 0) filters.groupSize = travellerCount;
+    if (Number.isFinite(travellerCount) && travellerCount > 0) filters.travellers = travellerCount;
 
     const tripStyle = String(payload.tripStyle || "").trim();
-    if (tripStyle) filters.tags = [tripStyle];
+    if (tripStyle) filters.tagIds = [tripStyle];
 
     const price = parseBudget(payload.budget);
     if (Number.isFinite(price.min)) filters.minPrice = price.min;
@@ -68,7 +69,7 @@ export default function ToursHomeContainer({ dispatchEvent } = {}) {
 
     const { loading: pageLoading, error: pageError, elements, structure } = useComponentData("/tours-home-page.json", { auto: true });
     const pageLabels = elements?.labels || {};
-    const widgets = structure?.widgets || [];
+    const widgets = useMemo(() => structure?.widgets || [], [structure?.widgets]);
 
     const [widgetsData, setWidgetsData] = useState({});
     const [widgetsLoading, setWidgetsLoading] = useState(true);
@@ -94,9 +95,20 @@ export default function ToursHomeContainer({ dispatchEvent } = {}) {
     }, [widgets]);
 
     const goToTours = (filters) => {
-        navigate("/trevista/tours", {
-            state: filters && Object.keys(filters).length ? { initialFilters: filters } : undefined,
-        });
+        if (!filters || Object.keys(filters).length === 0) {
+            navigate("/trevista/tours");
+            return;
+        }
+        const defaults = createDefaultTourSearchState();
+        const query = serializeTourSearchUrl(mergeFlatFiltersIntoSearch(defaults, {
+            ...{
+                query: "", originCityIds: [], destinationCityIds: [], countryIds: [],
+                minPrice: "", maxPrice: "", minDays: "", maxDays: "", travellers: "",
+                departureDate: "", returnDate: "", tagIds: [], featured: "",
+            },
+            ...filters,
+        }));
+        navigate(`/trevista/tours${query ? `?${query}` : ""}`);
     };
 
     const handleExplore = () => goToTours();

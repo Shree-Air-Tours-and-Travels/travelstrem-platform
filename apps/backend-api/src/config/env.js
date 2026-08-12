@@ -9,6 +9,7 @@
 import fs from "fs";
 import path from "path";
 import dotenv from "dotenv";
+import { validateGoogleConfiguration, validateMobileDevelopmentMode } from "../modules/auth/services/authConfigValidation.js";
 
 /* ------------------------------
    1) Load environment file
@@ -20,6 +21,7 @@ const NODE_ENV = RAW_NODE_ENV || "development";
 // Runtime environment variables are primary. Local dotenv loading is opt-in.
 const projectRoot = process.cwd();
 const envFileCandidate = path.join(projectRoot, `.env.${NODE_ENV}`);
+const localEnvFileCandidate = path.join(projectRoot, `.env.${NODE_ENV}.local`);
 const USE_DOTENV = process.env.USE_DOTENV === "true";
 if (USE_DOTENV && fs.existsSync(envFileCandidate)) {
     dotenv.config({ path: envFileCandidate });
@@ -30,6 +32,10 @@ if (USE_DOTENV && fs.existsSync(envFileCandidate)) {
     if (USE_DOTENV) dotenv.config();
     // eslint-disable-next-line no-console
     if (USE_DOTENV && NODE_ENV !== "production") console.log(`⚠️ Loaded fallback .env (or none) for ${NODE_ENV}`);
+}
+if (USE_DOTENV && fs.existsSync(localEnvFileCandidate)) {
+    dotenv.config({ path: localEnvFileCandidate, override: true });
+    if (NODE_ENV !== "production") console.log(`✅ Loaded local environment overrides from ${localEnvFileCandidate}`);
 }
 
 /* ------------------------------
@@ -252,8 +258,27 @@ const CLOUDINARY_SECRET = get("CLOUDINARY_SECRET", portalJsonConfig?.cloudinary?
 const OTP_TTL_MS = Number(get("OTP_TTL_MS", portalJsonConfig?.features?.otpTtlMs || 15 * 60 * 1000)); // 15 minutes by default
 // In non-production environments the OTP flow is bypassed: no OTP emails are
 // sent and any submitted OTP is accepted. Production always keeps real OTPs.
-const DEV_OTP_BYPASS = get("DEV_OTP_BYPASS", IS_PRODUCTION ? "false" : "true").toString() === "true";
+const DEV_OTP_BYPASS = get("DEV_OTP_BYPASS", "false").toString() === "true";
+if (IS_PRODUCTION && DEV_OTP_BYPASS) throw new Error("DEV_OTP_BYPASS cannot be enabled in production.");
 const AUTH_COOKIE_DOMAIN = (get("AUTH_COOKIE_DOMAIN", portalJsonConfig?.auth?.cookieDomain || "") || "").toString().trim();
+
+const GOOGLE_AUTH_ENABLED = String(get("GOOGLE_AUTH_ENABLED", "false")).toLowerCase() === "true";
+const GOOGLE_CLIENT_ID = String(get("GOOGLE_CLIENT_ID", "") || "").trim();
+const GOOGLE_CLIENT_SECRET = String(get("GOOGLE_CLIENT_SECRET", "") || "").trim();
+const GOOGLE_CALLBACK_URL = String(get("GOOGLE_CALLBACK_URL", `${BASE_URL.replace(/\/$/, "")}/api/auth/google/callback`) || "").trim();
+const OAUTH_TRANSACTION_TTL_SECONDS = Math.min(900, Math.max(60, Number(get("OAUTH_TRANSACTION_TTL_SECONDS", 600)) || 600));
+
+validateGoogleConfiguration({ enabled: GOOGLE_AUTH_ENABLED, clientId: GOOGLE_CLIENT_ID, clientSecret: GOOGLE_CLIENT_SECRET, callbackUrl: GOOGLE_CALLBACK_URL });
+
+const MOBILE_AUTH_ENABLED = String(get("MOBILE_AUTH_ENABLED", "true")).toLowerCase() === "true";
+const MOBILE_AUTH_PROVIDER = String(get("MOBILE_AUTH_PROVIDER", "") || "").trim().toLowerCase();
+const MOBILE_AUTH_DEV_MODE = String(get("MOBILE_AUTH_DEV_MODE", "false")).toLowerCase() === "true";
+const MOBILE_AUTH_TEST_OTP = String(get("MOBILE_AUTH_TEST_OTP", "") || "").trim();
+const MOBILE_OTP_EXPIRY_SECONDS = Math.min(900, Math.max(60, Number(get("MOBILE_OTP_EXPIRY_SECONDS", 300)) || 300));
+const MOBILE_OTP_MAX_ATTEMPTS = Math.min(10, Math.max(3, Number(get("MOBILE_OTP_MAX_ATTEMPTS", 5)) || 5));
+const MOBILE_OTP_RESEND_COOLDOWN_SECONDS = Math.min(300, Math.max(15, Number(get("MOBILE_OTP_RESEND_COOLDOWN_SECONDS", 60)) || 60));
+
+validateMobileDevelopmentMode({ isProduction: IS_PRODUCTION, devMode: MOBILE_AUTH_DEV_MODE, testOtp: MOBILE_AUTH_TEST_OTP });
 
 process.env.MONGO_URI = process.env.MONGO_URI || MONGO_URI;
 process.env.JWT_SECRET = process.env.JWT_SECRET || JWT.accessSecret;
@@ -266,9 +291,6 @@ process.env.SMTP_USER = process.env.SMTP_USER || SMTP.user || "";
 process.env.SMTP_PASS = process.env.SMTP_PASS || SMTP.pass || "";
 process.env.SMTP_FROM_NAME = process.env.SMTP_FROM_NAME || SMTP.fromName || "";
 process.env.SMTP_FROM_EMAIL = process.env.SMTP_FROM_EMAIL || SMTP.fromEmail || "";
-process.env.OAUTH_GOOGLE_URL = process.env.OAUTH_GOOGLE_URL || portalJsonConfig?.oauth?.googleUrl || "";
-process.env.OAUTH_GITHUB_URL = process.env.OAUTH_GITHUB_URL || portalJsonConfig?.oauth?.githubUrl || "";
-process.env.OAUTH_APPLE_URL = process.env.OAUTH_APPLE_URL || portalJsonConfig?.oauth?.appleUrl || "";
 process.env.AGENT_WEBHOOK_URL = process.env.AGENT_WEBHOOK_URL || portalJsonConfig?.webhooks?.agentWebhookUrl || "";
 process.env.CLOUDINARY_NAME = process.env.CLOUDINARY_NAME || CLOUDINARY_NAME || "";
 process.env.CLOUDINARY_KEY = process.env.CLOUDINARY_KEY || CLOUDINARY_KEY || "";
@@ -362,6 +384,18 @@ const config = {
     OTP_TTL_MS,
     DEV_OTP_BYPASS,
     AUTH_COOKIE_DOMAIN,
+    GOOGLE_AUTH_ENABLED,
+    GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET,
+    GOOGLE_CALLBACK_URL,
+    OAUTH_TRANSACTION_TTL_SECONDS,
+    MOBILE_AUTH_ENABLED,
+    MOBILE_AUTH_PROVIDER,
+    MOBILE_AUTH_DEV_MODE,
+    MOBILE_AUTH_TEST_OTP,
+    MOBILE_OTP_EXPIRY_SECONDS,
+    MOBILE_OTP_MAX_ATTEMPTS,
+    MOBILE_OTP_RESEND_COOLDOWN_SECONDS,
     CLOUDINARY_NAME,
     CLOUDINARY_KEY,
     CLOUDINARY_SECRET,
@@ -413,6 +447,18 @@ export {
     OTP_TTL_MS,
     DEV_OTP_BYPASS,
     AUTH_COOKIE_DOMAIN,
+    GOOGLE_AUTH_ENABLED,
+    GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET,
+    GOOGLE_CALLBACK_URL,
+    OAUTH_TRANSACTION_TTL_SECONDS,
+    MOBILE_AUTH_ENABLED,
+    MOBILE_AUTH_PROVIDER,
+    MOBILE_AUTH_DEV_MODE,
+    MOBILE_AUTH_TEST_OTP,
+    MOBILE_OTP_EXPIRY_SECONDS,
+    MOBILE_OTP_MAX_ATTEMPTS,
+    MOBILE_OTP_RESEND_COOLDOWN_SECONDS,
     CLOUDINARY_NAME,
     CLOUDINARY_KEY,
     CLOUDINARY_SECRET,

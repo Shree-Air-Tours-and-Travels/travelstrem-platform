@@ -64,11 +64,15 @@ export default function ToursDetailsContainer({
     const [contactOpen, setContactOpen] = useState(false);
     const [contactFormData, setContactFormData] = useState(null);
     const [bookConfirmOpen, setBookConfirmOpen] = useState(false);
+    const [selectedHotel, setSelectedHotel] = useState("");
     const { isFavorited, toggleFavorite } = useFavoritesContext();
 
     const handleTourLoad = useCallback((tour) => {
         if (!tour?._id) return;
-        setActiveTour((current) => (current?._id === tour._id ? current : tour));
+        // The route state contains the lightweight listing card payload. Merge
+        // the detail response even when the id is unchanged so ownership and
+        // all other detail-only fields are not discarded.
+        setActiveTour((current) => (current?._id === tour._id ? { ...current, ...tour } : tour));
     }, []);
 
     const handleBack = useCallback(() => {
@@ -116,7 +120,7 @@ export default function ToursDetailsContainer({
     const handleBookConfirm = useCallback(() => {
         const selectedTour = activeTour;
         if (!selectedTour) return;
-        const ref = slugifyTitle(selectedTour?.title) || selectedTour?._id || decodedRef;
+        const ref = selectedTour?._id || decodedRef || slugifyTitle(selectedTour?.title);
         const product = productType === "trip" ? "trevio" : appKey;
         const returnTo = window.location.href;
         if (bookingBasePath) {
@@ -125,19 +129,21 @@ export default function ToursDetailsContainer({
                 tourRef: ref,
                 returnTo,
             });
+            if (selectedHotel) query.set("roomType", selectedHotel);
             navigate(`${bookingBasePath}?${query.toString()}`);
             return;
         }
         if (embedded) {
-            requestShellNavigation("booking-engine", { query: { product, tourRef: ref, returnTo } });
+            requestShellNavigation("booking-engine", { query: { product, tourRef: ref, returnTo, ...(selectedHotel ? { roomType: selectedHotel } : {}) } });
             return;
         }
         window.location.assign(buildGlobalBookingEngineUrl({
             product,
             tourRef: ref,
             returnTo,
+            roomType: selectedHotel,
         }));
-    }, [activeTour, appKey, bookingBasePath, decodedRef, embedded, navigate, productType]);
+    }, [activeTour, appKey, bookingBasePath, decodedRef, embedded, navigate, productType, selectedHotel]);
 
     const handleBookConfirmClose = useCallback(() => setBookConfirmOpen(false), []);
 
@@ -197,6 +203,8 @@ export default function ToursDetailsContainer({
             setContactOpen={setContactOpen}
             appKey={appKey}
             productType={productType}
+            selectedHotel={selectedHotel}
+            onSelectHotel={setSelectedHotel}
             user={userSession?.user || null}
         />
         </ProductDetailProvider>

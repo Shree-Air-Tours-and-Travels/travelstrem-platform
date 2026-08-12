@@ -44,8 +44,8 @@ export default function FiltersView({
                 <div className="filters-card__header">
                     <div className="filters-card__header-left">
                         <span className="filters-card__eyebrow">{summary.totalTours || 0} {labels.liveTours || "tours"}</span>
-                        <Title text={meta?.title || "Filters"} size="medium" primaryClassname="ui-filter-title" />
-                        {meta?.description && <SubTitle className="filters-card__desc" text={meta.description} />}
+                        <Title text={meta?.title || "Filters"} size="medium" align="left" primaryClassname="ui-filter-title" />
+                        {meta?.description && <SubTitle text={meta.description} variant="secondary" size="small" primaryClassname="filters-card__desc" />}
                     </div>
 
                     <div className="filters-card__header-right">
@@ -62,7 +62,6 @@ export default function FiltersView({
                 <div className="filters-card__quick-stats" aria-label="Filter ranges">
                     <span>{meta?.elements?.labels?.priceRange || "Price"}: {serverOptions?.priceRange?.min || 0} - {serverOptions?.priceRange?.max || 0}</span>
                     <span>{meta?.elements?.labels?.dayRange || "Duration"}: {serverOptions?.dayRange?.min || 1} - {serverOptions?.dayRange?.max || 1}</span>
-                    <span>{meta?.elements?.labels?.groupSize || "Group"}: {serverOptions?.groupSizeRange?.max || 0}</span>
                 </div>
 
                 {expanded && (

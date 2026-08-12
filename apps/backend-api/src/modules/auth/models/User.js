@@ -5,13 +5,17 @@ const userSchema = new mongoose.Schema({
     name: { type: String, required: true, trim: true },
     email: {
         type: String,
-        required: true,
+        default: undefined,
         unique: true,
+        sparse: true,
         lowercase: true,
         trim: true,
     },
     phone: { type: String, trim: true, default: "" },
-    passwordHash: { type: String, required: true },
+    mobile: { type: String, trim: true, default: undefined, unique: true, sparse: true },
+    emailVerified: { type: Boolean, default: false },
+    mobileVerified: { type: Boolean, default: false },
+    passwordHash: { type: String, default: null, select: false },
     role: {
         type: String,
         enum: ["member", "agent", "admin"],
@@ -50,8 +54,7 @@ const userSchema = new mongoose.Schema({
     approvedAt: { type: Date, default: null },
     avatar: { type: String, default: "user" },
     tokenVersion: { type: Number, default: 0 },
-    createdAt: { type: Date, default: Date.now },
-});
+}, { timestamps: true });
 
 userSchema.virtual("id").get(function () {
     return this._id.toHexString();

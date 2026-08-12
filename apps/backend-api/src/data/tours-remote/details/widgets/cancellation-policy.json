@@ -17,7 +17,12 @@
         "note": "Note",
         "included": "Included",
         "perPerson": "/ person",
-        "addOn": "Add-on"
+        "addOn": "Add-on",
+        "policyTerms": "Cancellation terms",
+        "policyApplies": "Policy applies to this booking",
+        "upfrontSuffix": "upfront",
+        "required": "Required",
+        "tierFallback": "Refund tier"
       },
       "urls": {}
     },
@@ -27,7 +32,18 @@
         {
           "type": "CancellationPolicy",
           "props": {
-            "titleRef": "cancellationPolicy"
+            "titleRef": "cancellationPolicy",
+            "locale": "en-IN",
+            "defaultCurrency": "INR",
+            "headerIcon": "shieldCheck",
+            "policySummaryIcon": "info",
+            "freeCancellationIcon": "badgeCheck",
+            "refundIcon": "wallet",
+            "depositIcon": "lock",
+            "timelineIcon": "clock",
+            "noteIcon": "info",
+            "extrasIcon": "sparkles",
+            "defaultExtraIcon": "ticket"
           }
         }
       ],

@@ -12,11 +12,6 @@ export default {
         { "value": "agent", "label": "Agent" },
         { "value": "admin", "label": "Admin" }
       ],
-      "socialProviders": [
-        { "id": "google", "label": "Google", "iconClass": "fab fa-google" },
-        { "id": "github", "label": "GitHub", "iconClass": "fab fa-github" },
-        { "id": "apple", "label": "Apple", "iconClass": "fab fa-apple" }
-      ],
       "header": {
         "ariaLabel": "TravelsTREM authentication",
         "brand": {

@@ -61,6 +61,15 @@ describe('TourCard', () => {
       );
       expect(screen.getByText('Trending')).toBeInTheDocument();
     });
+
+    it('shows the TREM verified badge for an admin-verified tour', () => {
+      render(
+        <MemoryRouter>
+          <TourCard tour={{ ...baseTour, tremVerified: true }} />
+        </MemoryRouter>
+      );
+      expect(screen.getByText('TREM verified')).toBeInTheDocument();
+    });
   });
 
   describe('Admin Actions', () => {

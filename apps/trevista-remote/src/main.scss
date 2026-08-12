@@ -34,6 +34,13 @@ a {
 .tours-app-shell--embedded {
     min-height: auto;
     --td-header-offset: 0px;
+
+    // The host shell already places the remote below its fixed app header.
+    // Keep detail breadcrumbs at the top of that scroll container instead of
+    // applying the standalone 120px mobile header offset a second time.
+    .tour-detail {
+        --td-header-offset: 0px;
+    }
 }
 
 .app-status {

@@ -79,4 +79,41 @@ describe("AppHeader", () => {
     expect(container.querySelector(".trem-app-header").style.getPropertyValue("--trem-app-header-sidebar-offset"))
       .toBe("76px");
   });
+
+  it("does not render items flagged with hide", () => {
+    const hiddenConfig = {
+      ...config,
+      primaryAction: { ...config.primaryAction, hide: true },
+      notification: { ...config.notification, hide: true },
+      productMenu: {
+        label: "Products",
+        ariaLabel: "Choose product",
+        items: [
+          { id: "visibleProduct", label: "Visible Product" },
+          { id: "hiddenProduct", label: "Hidden Product", hide: true },
+        ],
+      },
+      user: {
+        ...config.user,
+        items: [
+          { id: "visibleAction", label: "Visible Action", action: "visible" },
+          { id: "hiddenAction", label: "Hidden Action", action: "hidden", hide: true },
+        ],
+      },
+    };
+
+    render(<AppHeader config={hiddenConfig} />);
+
+    expect(screen.queryByRole("button", { name: "New Booking" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Notifications" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Hidden Product")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Choose product" }));
+    expect(screen.getByText("Visible Product")).toBeInTheDocument();
+    expect(screen.queryByText("Hidden Product")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Open user menu" }));
+    expect(screen.getByText("Visible Action")).toBeInTheDocument();
+    expect(screen.queryByText("Hidden Action")).not.toBeInTheDocument();
+  });
 });

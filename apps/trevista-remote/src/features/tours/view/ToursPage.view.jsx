@@ -3,7 +3,7 @@ import "../tours.scss";
 import QuickFilters from "../widgets/quick-filters/QuickFilters";
 import Filters from "../widgets/filters/Filters";
 import Listing from "../widgets/listing/Listing";
-import { Breadcrumbs, FloatingActionBar, BottomSheet, Button, Icon } from "@packages/trem-ui";
+import { Breadcrumbs, FilterChips, FloatingActionBar, BottomSheet, Icon } from "@packages/trem-ui";
 
 const getLabel = (labels = {}, item = {}) => {
     if (item.labelRef && labels[item.labelRef]) return labels[item.labelRef];
@@ -21,15 +21,15 @@ export default function ToursPageView({
     displayed,
     initialLoading,
     initialError,
-    filteredTours,
-    filterMeta,
     filterWidgetData,
     listingWidgetData,
+    isAuthenticated,
     onView,
     isFavorited,
     onFavorite,
     sortId,
     onSortChange,
+    onQueryChange,
     currentPage,
     totalPages,
     loadingMore,
@@ -38,7 +38,13 @@ export default function ToursPageView({
     onPageChange,
     filtersExpanded,
     onFiltersExpandedChange,
-    initialValues,
+    filterValues,
+    facets,
+    activeDiscoveryId,
+    discoveryOptions,
+    activeFilterChips,
+    onRemoveFilter,
+    onClearFilters,
 }) {
     const listingLabels = widgetsData.listing?.elements?.labels || {};
     const listingProps = listingWidgetData?.structure?.widgets?.[0]?.props || {};
@@ -75,27 +81,29 @@ export default function ToursPageView({
             variant: "outline",
             onClick: handleOpenFilters,
         },
-        {
+        ...(sortOptions.length > 0 ? [{
             label: getLabel(listingLabels, selectedSort),
             iconLeft: "arrowUpDown",
             variant: "outline",
             onClick: () => setSortSheetOpen(true),
-        },
+        }] : []),
     ];
 
     return (
         <main className="tours-page">
+            <div className="tours-page__crumbs">
+                <Breadcrumbs items={BREADCRUMBS} />
+            </div>
             <div className="tours-page__inner">
-                <div className="tours-page__crumbs">
-                    <Breadcrumbs items={BREADCRUMBS} />
-                </div>
                 {widgets.map((w) => {
                     if (w.type === "quickChips") {
-                        return <QuickFilters key={w.type} widgetData={widgetsData.quickChips} onQuickFilter={onQuickFilter} />;
+                        return <QuickFilters key={w.type} widgetData={widgetsData.quickChips} activeId={activeDiscoveryId} onQuickFilter={onQuickFilter} />;
                     }
                     if (w.type === "filters") {
                         return (
-                            <div key={w.type} className="tours-page__body" ref={filterSidebarRef}>
+                            <React.Fragment key={w.type}>
+                            <FilterChips items={activeFilterChips} onRemove={onRemoveFilter} onClearAll={onClearFilters} className="tours-page__active-filters" />
+                            <div className="tours-page__body" ref={filterSidebarRef}>
                                 <aside className="tours-page__sidebar">
                                     <div className="tours-page__sidebar-inner">
                                         <Filters
@@ -105,7 +113,11 @@ export default function ToursPageView({
                                             pageSize={8}
                                             expanded={filtersExpanded}
                                             onExpandedChange={onFiltersExpandedChange}
-                                            initialValues={initialValues}
+                                            values={filterValues}
+                                            facets={facets}
+                                            discoveryOptions={discoveryOptions}
+                                            totalResults={totalResults}
+                                            searching={loadingMore}
                                         />
                                     </div>
                                 </aside>
@@ -117,20 +129,24 @@ export default function ToursPageView({
                                         totalResults={totalResults}
                                         listingLabels={listingLabels}
                                         listingWidgetData={listingWidgetData}
-                                        filteredTours={filteredTours}
-                                        filterMeta={filterMeta}
+                                        isAuthenticated={isAuthenticated}
                                         onView={onView}
                                         isFavorited={isFavorited}
                                         onFavorite={onFavorite}
                                         sortId={sortId}
                                         onSortChange={onSortChange}
+                                        queryValue={filterValues.query || ""}
+                                        onQueryChange={onQueryChange}
                                         currentPage={currentPage}
                                         totalPages={totalPages}
                                         loadingMore={loadingMore}
                                         onPageChange={onPageChange}
+                                        hasActiveFilters={activeFilterChips.length > 0}
+                                        onClearFilters={onClearFilters}
                                     />
                                 </section>
                             </div>
+                            </React.Fragment>
                         );
                     }
                     return null;

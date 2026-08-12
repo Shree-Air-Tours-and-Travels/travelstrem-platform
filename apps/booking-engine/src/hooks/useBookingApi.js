@@ -268,6 +268,15 @@ export function useBookingApi() {
     return unwrap(response);
   }, []);
 
+  const createBookingQuote = useCallback(async (tourRef, payload = {}, signal, guestSessionId = "") => {
+    const response = await fetchData("/engine/quotes", {
+      method: "POST", headers: { "Content-Type": "application/json", "X-Guest-Session-Id": guestSessionId },
+      body: { ...payload, tourRef, guestSessionId }, signal,
+    });
+    if (response?.status !== "success") throw new Error(response?.message || "Failed to create booking quote");
+    return unwrap(response);
+  }, []);
+
   return {
     loading,
     error,
@@ -289,5 +298,6 @@ export function useBookingApi() {
     loadProduct,
     calculatePricing,
     calculateTrevistaPricing,
+    createBookingQuote,
   };
 }

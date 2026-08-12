@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Dropdown from "../Dropdown/Dropdown.jsx";
 import Button from "../Button/Button.jsx";
 import Icon from "../../icons/Icon/Icon.jsx";
@@ -22,6 +22,7 @@ export default function MultiSelect({
   maxDisplayChips = 2,
   selectAllLabel = "Select all",
   clearAllLabel = "Clear",
+  applyLabel = "Apply",
   emptyLabel = "No options",
   maxHeight,
   className = "",
@@ -41,16 +42,30 @@ export default function MultiSelect({
     return set;
   }, [value]);
 
-  const allSelected = normalized.length > 0 && selectedKeys.size === normalized.length;
+  const normalizedValueKey = JSON.stringify((value || []).map(String));
+  const normalizedValue = useMemo(() => JSON.parse(normalizedValueKey), [normalizedValueKey]);
+  const [draftValue, setDraftValue] = useState(normalizedValue);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const draftKeys = useMemo(() => new Set(draftValue), [draftValue]);
+  const allSelected = normalized.length > 0 && normalized.every((option) => draftKeys.has(option.value));
+
+  useEffect(() => {
+    if (!menuOpen) setDraftValue(normalizedValue);
+  }, [menuOpen, normalizedValue]);
+
+  const handleToggle = useCallback((open) => {
+    setMenuOpen(open);
+    setDraftValue(normalizedValue);
+  }, [normalizedValue]);
 
   const toggle = (key) => {
     if (disabled) return;
-    const has = selectedKeys.has(key);
-    if (!has && maxSelected != null && selectedKeys.size >= maxSelected) return;
+    const has = draftKeys.has(key);
+    if (!has && maxSelected != null && draftKeys.size >= maxSelected) return;
     const next = has
-      ? (value || []).filter((v) => String(v) !== key)
-      : [...(value || []), key];
-    onChange?.(next);
+      ? draftValue.filter((item) => item !== key)
+      : [...draftValue, key];
+    setDraftValue(next);
   };
 
   const items = normalized.map((o) => ({
@@ -87,13 +102,8 @@ export default function MultiSelect({
                 <span
                   key={item.value}
                   className="trem-multiselect__chip"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggle(item.value);
-                  }}
                 >
                   {item.label}
-                  <Icon name="x" size={11} />
                 </span>
               ))}
               {overflowCount > 0 && (
@@ -114,7 +124,7 @@ export default function MultiSelect({
   );
 
   const renderItem = (item) => {
-    const checked = selectedKeys.has(item.value);
+    const checked = draftKeys.has(item.value);
     return (
       <button
         type="button"
@@ -134,31 +144,47 @@ export default function MultiSelect({
 
   const menuFooter = normalized.length === 0 ? (
     <div className="trem-multiselect__footer trem-multiselect__footer--empty">{emptyLabel}</div>
-  ) : (
+  ) : ({ close }) => (
     <div className="trem-multiselect__footer">
-      <Button
-        type="button"
-        variant="text"
-        size="extra-small"
-        primaryClassName="trem-multiselect__footer-btn"
-        disabled={disabled || allSelected || normalized.length === 0}
-        onClick={() => onChange?.(normalized.map((o) => o.value))}
-      >
-        {selectAllLabel}
-      </Button>
-      {selectedKeys.size > 0 && (
+      <div className="trem-multiselect__footer-tools">
         <Button
           type="button"
           variant="text"
           size="extra-small"
-          color="danger"
           primaryClassName="trem-multiselect__footer-btn"
-          disabled={disabled}
-          onClick={() => onChange?.([])}
+          disabled={disabled || allSelected}
+          onClick={() => setDraftValue(normalized.filter((option) => !option.disabled).map((option) => option.value))}
         >
-          {clearAllLabel}
+          {selectAllLabel}
         </Button>
-      )}
+        {draftKeys.size > 0 && (
+          <Button
+            type="button"
+            variant="text"
+            size="extra-small"
+            color="danger"
+            primaryClassName="trem-multiselect__footer-btn"
+            disabled={disabled}
+            onClick={() => setDraftValue([])}
+          >
+            {clearAllLabel}
+          </Button>
+        )}
+      </div>
+      <Button
+        type="button"
+        variant="solid"
+        color="primary"
+        size="extra-small"
+        primaryClassName="trem-multiselect__apply"
+        disabled={disabled}
+        onClick={() => {
+          onChange?.(draftValue);
+          close();
+        }}
+      >
+        {applyLabel}
+      </Button>
     </div>
   );
 
@@ -173,6 +199,7 @@ export default function MultiSelect({
         closeOnSelect={false}
         hoverable={false}
         disabled={disabled}
+        onToggle={handleToggle}
         searchPlaceholder={searchPlaceholder}
         maxHeight={maxHeight}
       />

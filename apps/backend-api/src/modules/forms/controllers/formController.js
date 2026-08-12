@@ -7,6 +7,7 @@ import axios from "axios";
 import pageDefinitionService from "../../../services/pageDefinitionService.js";
 import config from "../../../config/env.js";
 import TrevioTrip from "../../trevio/models/TrevioTrip.js";
+import masterDataService from "../../masterData/services/masterDataService.js";
 
 const escapeHtml = (value) => String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -41,10 +42,12 @@ export const getForm = async (req, res) => {
             }
         }
 
-        return res.status(200).json({
-            ...pageDefinitionService.buildWidgetResponse("tours-remote/details", "./widgets/contact-agent-form.json", {
+        const response = pageDefinitionService.buildWidgetResponse("tours-remote/details", "./widgets/contact-agent-form.json", {
                 injectData: tour ? { tour } : {},
-            }),
+            });
+        response.component = await masterDataService.hydrateDataScope(response.component);
+        return res.status(200).json({
+            ...response,
             message: "Contact form fetched",
         });
     } catch (err) {
@@ -173,22 +176,24 @@ export const submitForm = async (req, res) => {
         }
 
         // respond with your JSON contract & componentData
+        const response = pageDefinitionService.buildWidgetResponse("tours-remote/details", "./widgets/contact-agent-form.json", {
+            injectData: {
+                lead: {
+                    id: savedLead._id,
+                    fields: savedLead.fields,
+                    tourId: savedLead.tourId,
+                    tourTitle: savedLead.tourTitle,
+                    url: savedLead.url,
+                    createdAt: savedLead.createdAt,
+                    notified: savedLead.notified || notified,
+                },
+            },
+        });
+        response.component = await masterDataService.hydrateDataScope(response.component);
         return res.status(200).json({
             status: "success",
             message: "Request submitted successfully",
-            ...pageDefinitionService.buildWidgetResponse("tours-remote/details", "./widgets/contact-agent-form.json", {
-                injectData: {
-                    lead: {
-                        id: savedLead._id,
-                        fields: savedLead.fields,
-                        tourId: savedLead.tourId,
-                        tourTitle: savedLead.tourTitle,
-                        url: savedLead.url,
-                        createdAt: savedLead.createdAt,
-                        notified: savedLead.notified || notified,
-                    },
-                },
-            }),
+            ...response,
         });
     } catch (err) {
         console.error("submitForm error:", err);

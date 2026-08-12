@@ -3,22 +3,23 @@
   "component": {
     "data": {},
     "dataScope": {
-      "options": {}
+      "options": {},
+      "optionSets": { "featured": "trevista.tourFeaturedOptions" }
     },
     "elements": {
       "labels": {
-        "filtersTitle": "Browse our curated collection of tours and travel packages.",
-        "searchTours": "Search tours",
-        "searchPlaceholder": "Jaipur, island, palace...",
+        "filtersHeading": "Filter tours",
+        "filtersTitle": "Narrow results by destination, dates, budget, and interests.",
         "filterFrom": "From",
         "filterTo": "To",
         "filterCountry": "Country",
+        "filterAgency": "Travel agency",
         "filterMinPrice": "Min price",
         "filterMaxPrice": "Max price",
         "filterMinDays": "Min days",
         "filterMaxDays": "Max days",
-        "filterGroup": "Group size",
-        "filterArrival": "Arrival",
+        "filterGroup": "Travellers",
+        "filterArrival": "Departure date",
         "filterReturn": "Return",
         "filterTags": "Interests",
         "filterFeatured": "Tour status",
@@ -44,59 +45,68 @@
         {
           "type": "TourFilters",
           "props": {
+            "titleRef": "filtersHeading",
             "descriptionRef": "filtersTitle",
             "fields": [
               {
-                "name": "search",
-                "labelRef": "searchTours",
-                "type": "text",
-                "placeholderRef": "searchPlaceholder"
-              },
-              {
-                "name": "originCity",
+                "name": "originCityIds",
                 "labelRef": "filterFrom",
-                "type": "select",
+                "type": "multiselect",
                 "optionsRef": "originCityOptions"
               },
               {
-                "name": "destinationCity",
+                "name": "destinationCityIds",
                 "labelRef": "filterTo",
-                "type": "select",
+                "type": "multiselect",
                 "optionsRef": "destinationCityOptions"
               },
               {
-                "name": "country",
+                "name": "countryIds",
                 "labelRef": "filterCountry",
-                "type": "select",
+                "type": "multiselect",
                 "optionsRef": "countryOptions"
+              },
+              {
+                "name": "agencyIds",
+                "labelRef": "filterAgency",
+                "type": "multiselect",
+                "optionsRef": "agencyOptions"
               },
               {
                 "name": "minPrice",
                 "labelRef": "filterMinPrice",
-                "type": "number"
+                "type": "number",
+                "min": 0
               },
               {
                 "name": "maxPrice",
                 "labelRef": "filterMaxPrice",
-                "type": "number"
+                "type": "number",
+                "min": 0
               },
               {
                 "name": "minDays",
                 "labelRef": "filterMinDays",
-                "type": "number"
+                "type": "number",
+                "min": 1,
+                "max": 365
               },
               {
                 "name": "maxDays",
                 "labelRef": "filterMaxDays",
-                "type": "number"
+                "type": "number",
+                "min": 1,
+                "max": 365
               },
               {
-                "name": "groupSize",
+                "name": "travellers",
                 "labelRef": "filterGroup",
-                "type": "number"
+                "type": "number",
+                "min": 1,
+                "max": 500
               },
               {
-                "name": "arrivalDate",
+                "name": "departureDate",
                 "labelRef": "filterArrival",
                 "type": "date"
               },
@@ -106,9 +116,10 @@
                 "type": "date"
               },
               {
-                "name": "tags",
+                "name": "tagIds",
                 "labelRef": "filterTags",
-                "type": "multiselect"
+                "type": "multiselect",
+                "optionsRef": "tags"
               },
               {
                 "name": "featured",
@@ -123,15 +134,11 @@
       "actions": [
         {
           "name": "apply",
-          "labelRef": "applyFilters",
-          "method": "POST",
-          "endpoint": "/tour-listing-updated"
+          "labelRef": "applyFilters"
         },
         {
           "name": "reset",
-          "labelRef": "resetFilters",
-          "method": "POST",
-          "endpoint": "/tour-listing-updated"
+          "labelRef": "resetFilters"
         }
       ]
     }

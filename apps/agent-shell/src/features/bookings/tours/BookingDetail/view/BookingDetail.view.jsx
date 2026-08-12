@@ -6,12 +6,25 @@ const STATUS_PHASES = [
     { statuses: ["DRAFT", "QUOTE_REQUESTED"], label: "Request" },
     { statuses: ["UNDER_REVIEW", "QUOTE_READY", "QUOTE_SENT"], label: "Quote" },
     { statuses: ["CUSTOMER_ACCEPTED", "CUSTOMER_REJECTED"], label: "Decision" },
-    { statuses: ["PAYMENT_PENDING", "PARTIALLY_PAID", "PAID"], label: "Payment" },
+    { statuses: ["AWAITING_TOKEN_PAYMENT", "PAYMENT_PENDING"], label: "Token" },
     { statuses: ["CONFIRMED", "TICKETING", "TICKETED", "TRAVEL_READY"], label: "Confirmed" },
     { statuses: ["COMPLETED"], label: "Completed" },
 ];
 
 const statusLabel = (s) => String(s || "").replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+
+const getProofUrl = (value) => {
+    if (typeof value === "string") {
+        const normalized = value.trim();
+        return /^\[object Object\](?:\.html)?$/i.test(normalized) ? "" : normalized;
+    }
+    if (!value || typeof value !== "object") return "";
+    for (const key of ["secure_url", "secureUrl", "url", "href", "path", "downloadUrl", "receiptUrl", "paymentScreenshot", "file", "asset", "data"]) {
+        const resolved = getProofUrl(value[key]);
+        if (resolved) return resolved;
+    }
+    return "";
+};
 
 const toDateInput = (v) => {
     if (!v) return ",";
@@ -54,6 +67,7 @@ function WidgetError({ message }) {
 
 function BookingActionsPanel({ booking, bookingId, actions, actionState }) {
     const status = String(booking.status || "").toUpperCase();
+    const paymentStatus = String(booking.paymentStatus || "").toUpperCase();
     const priceSnapshot = booking.priceSnapshot || {};
     const paymentSummary = booking.paymentSummary || {};
     const currency = priceSnapshot.currency || booking.currentQuote?.currency || "INR";
@@ -61,6 +75,8 @@ function BookingActionsPanel({ booking, bookingId, actions, actionState }) {
     const paid = Number(paymentSummary.paid || 0);
     const isTerminal = ["CANCELLED", "COMPLETED", "REFUNDED"].includes(status);
     const canGenerateQuote = ["DRAFT", "QUOTE_REQUESTED", "UNDER_REVIEW"].includes(status);
+    const pendingProof = (booking.payments || []).find((payment) => payment.status === "VERIFICATION" && ["TOKEN", "deposit"].includes(payment.type));
+    const isAwaitingToken = status === "AWAITING_TOKEN_PAYMENT" && paymentStatus === "TOKEN_PENDING";
     const statusActions = {
         PAID: [{ label: "Confirm Booking", action: "confirm", target: "CONFIRMED" }],
         CONFIRMED: [
@@ -76,16 +92,21 @@ function BookingActionsPanel({ booking, bookingId, actions, actionState }) {
     };
 
     const [quoteAmount, setQuoteAmount] = React.useState(priceSnapshot.total || booking.currentQuote?.finalAmount || 0);
-    const [payAmount, setPayAmount] = React.useState(remaining || 0);
     const [refundAmount, setRefundAmount] = React.useState(paid || 0);
-    const [showPayInput, setShowPayInput] = React.useState(false);
+    const [refundReason, setRefundReason] = React.useState("");
+    const [rejectReason, setRejectReason] = React.useState("");
+    const [tokenDetails, setTokenDetails] = React.useState({ amount: Number(booking.tokenAmount || 0), paymentMethod: "UPI", transactionId: "", remarks: "" });
+    const [balanceDetails, setBalanceDetails] = React.useState({ paymentMethod: "BANK", transactionId: "", remarks: "" });
+    const [showTokenInput, setShowTokenInput] = React.useState(false);
+    const [showBalanceInput, setShowBalanceInput] = React.useState(false);
+    const [showRejectInput, setShowRejectInput] = React.useState(false);
     const [showRefundInput, setShowRefundInput] = React.useState(false);
 
     React.useEffect(() => {
         setQuoteAmount(priceSnapshot.total || booking.currentQuote?.finalAmount || 0);
-        setPayAmount(remaining || 0);
         setRefundAmount(paid || 0);
-    }, [booking.currentQuote?.finalAmount, paid, priceSnapshot.total, remaining]);
+        setTokenDetails((value) => ({ ...value, amount: Number(booking.tokenAmount || 0) }));
+    }, [booking.currentQuote?.finalAmount, booking.tokenAmount, paid, priceSnapshot.total, remaining]);
 
     const loadingAction = actionState?.loading || "";
     const isLoading = Boolean(loadingAction);
@@ -95,7 +116,7 @@ function BookingActionsPanel({ booking, bookingId, actions, actionState }) {
         <aside className="bd-actions-panel" aria-label="Booking actions">
             <div className="bd-actions-panel__header">
                 <SubTitle text="Booking Actions" />
-                <span>{statusLabel(status)}</span>
+                <span>{statusLabel(paymentStatus)}</span>
             </div>
 
             {actionState?.message ? <div className="bd-action-note is-success">{actionState.message}</div> : null}
@@ -133,39 +154,146 @@ function BookingActionsPanel({ booking, bookingId, actions, actionState }) {
                 />
             ))}
 
-            {!isTerminal && remaining > 0 ? (
+            {pendingProof ? (
                 <div className="bd-action-group">
-                    {showPayInput ? (
+                    <span className="bd-action-label">Token proof awaiting review</span>
+                    {getProofUrl(pendingProof.paymentScreenshot || pendingProof.receiptUrl) ? (
+                        <Button
+                            primaryClassName="bd-action-btn bd-proof-download"
+                            variant="outline"
+                            disabled={loadingAction === "downloadProof"}
+                            onClick={() => actions?.downloadProof?.(actionId, pendingProof.id || pendingProof._id, getProofUrl(pendingProof.paymentScreenshot || pendingProof.receiptUrl))}
+                            text={loadingAction === "downloadProof" ? "Downloading..." : "Download uploaded screenshot"}
+                        />
+                    ) : <span className="bd-proof-unavailable">The stored proof file is unavailable. Ask the customer to upload it again.</span>}
+                    <Button
+                        primaryClassName="bd-action-btn"
+                        variant="solid"
+                        color="primary"
+                        disabled={isLoading}
+                        onClick={() => actions?.approveToken?.(actionId, pendingProof.id || pendingProof._id)}
+                        text={loadingAction === "approveToken" ? "Approving..." : "Approve Token"}
+                    />
+                    {showRejectInput ? (
                         <>
-                            <span className="bd-action-label">Payment amount</span>
+                            <span className="bd-action-label">Rejection reason</span>
                             <InputField
-                                variant="number"
-                                value={payAmount}
-                                onChange={setPayAmount}
-                                placeholder="Payment amount"
+                                variant="text"
+                                value={rejectReason}
+                                onChange={setRejectReason}
+                                placeholder="Rejection reason"
                             />
                             <div className="bd-action-row">
-                                <Button primaryClassName="bd-action-btn" variant="outline" disabled={isLoading} onClick={() => setShowPayInput(false)} text="Cancel" />
+                                <Button primaryClassName="bd-action-btn" variant="outline" disabled={isLoading} onClick={() => setShowRejectInput(false)} text="Cancel" />
+                                <Button
+                                    primaryClassName="bd-action-btn"
+                                    variant="solid"
+                                    color="danger"
+                                    disabled={isLoading || !rejectReason.trim()}
+                                    onClick={async () => {
+                                        await actions?.rejectToken?.(actionId, pendingProof.id || pendingProof._id, rejectReason.trim());
+                                        setShowRejectInput(false);
+                                    }}
+                                    text={loadingAction === "rejectToken" ? "Rejecting..." : "Reject Token"}
+                                />
+                            </div>
+                        </>
+                    ) : (
+                        <Button primaryClassName="bd-action-btn" variant="outline" color="danger" disabled={isLoading} onClick={() => setShowRejectInput(true)} text="Reject Token" />
+                    )}
+                </div>
+            ) : null}
+
+            {isAwaitingToken && !pendingProof ? (
+                <div className="bd-action-group">
+                    <span className="bd-action-label">Token due: {formatCurrency(tokenDetails.amount, currency)}</span>
+                    {showTokenInput ? (
+                        <>
+                            <span className="bd-action-label">Token amount</span>
+                            <InputField
+                                variant="number"
+                                value={tokenDetails.amount}
+                                onChange={(next) => setTokenDetails((value) => ({ ...value, amount: Number(next) }))}
+                                placeholder="Token amount"
+                            />
+                            <span className="bd-action-label">Payment method</span>
+                            <select className="bd-action-select" value={tokenDetails.paymentMethod} onChange={(event) => setTokenDetails((value) => ({ ...value, paymentMethod: event.target.value }))}>
+                                <option value="UPI">UPI</option>
+                                <option value="BANK">Bank transfer</option>
+                                <option value="CASH">Cash</option>
+                            </select>
+                            <span className="bd-action-label">Transaction/reference ID</span>
+                            <InputField
+                                variant="text"
+                                value={tokenDetails.transactionId}
+                                onChange={(next) => setTokenDetails((value) => ({ ...value, transactionId: next }))}
+                                placeholder="Optional for cash"
+                            />
+                            <span className="bd-action-label">Remarks</span>
+                            <textarea className="bd-action-textarea" value={tokenDetails.remarks} onChange={(event) => setTokenDetails((value) => ({ ...value, remarks: event.target.value }))} placeholder="How and when the token was received" />
+                            <div className="bd-action-row">
+                                <Button primaryClassName="bd-action-btn" variant="outline" disabled={isLoading} onClick={() => setShowTokenInput(false)} text="Cancel" />
+                                <Button
+                                    primaryClassName="bd-action-btn"
+                                    variant="solid"
+                                    color="primary"
+                                    disabled={isLoading || Number(tokenDetails.amount) <= 0}
+                                    onClick={async () => {
+                                        await actions?.markTokenPaid?.(actionId, tokenDetails);
+                                        setShowTokenInput(false);
+                                    }}
+                                    text={loadingAction === "token" ? "Updating..." : "Confirm Token Paid"}
+                                />
+                            </div>
+                        </>
+                    ) : (
+                        <Button primaryClassName="bd-action-btn" variant="solid" color="primary" disabled={isLoading} onClick={() => setShowTokenInput(true)} text="Mark Token Paid" />
+                    )}
+                </div>
+            ) : null}
+
+            {status === "CONFIRMED" && paymentStatus !== "FULLY_PAID" && remaining > 0 ? (
+                <div className="bd-action-group">
+                    <span className="bd-action-label">Balance due: {formatCurrency(remaining, currency)}</span>
+                    {showBalanceInput ? (
+                        <>
+                            <span className="bd-action-label">Payment method</span>
+                            <select className="bd-action-select" value={balanceDetails.paymentMethod} onChange={(event) => setBalanceDetails((value) => ({ ...value, paymentMethod: event.target.value }))}>
+                                <option value="UPI">UPI</option>
+                                <option value="BANK">Bank transfer</option>
+                                <option value="CASH">Cash</option>
+                            </select>
+                            <span className="bd-action-label">Transaction/reference ID</span>
+                            <InputField
+                                variant="text"
+                                value={balanceDetails.transactionId}
+                                onChange={(next) => setBalanceDetails((value) => ({ ...value, transactionId: next }))}
+                                placeholder="Optional for cash"
+                            />
+                            <span className="bd-action-label">Remarks</span>
+                            <textarea className="bd-action-textarea" value={balanceDetails.remarks} onChange={(event) => setBalanceDetails((value) => ({ ...value, remarks: event.target.value }))} />
+                            <div className="bd-action-row">
+                                <Button primaryClassName="bd-action-btn" variant="outline" disabled={isLoading} onClick={() => setShowBalanceInput(false)} text="Cancel" />
                                 <Button
                                     primaryClassName="bd-action-btn"
                                     variant="solid"
                                     color="primary"
                                     disabled={isLoading}
                                     onClick={async () => {
-                                        await actions?.recordPayment?.(actionId, Number(payAmount), currency);
-                                        setShowPayInput(false);
+                                        await actions?.markBalancePaid?.(actionId, balanceDetails);
+                                        setShowBalanceInput(false);
                                     }}
-                                    text={loadingAction === "payment" ? "Recording..." : "Record"}
+                                    text={loadingAction === "balance" ? "Updating..." : "Confirm Fully Paid"}
                                 />
                             </div>
                         </>
                     ) : (
-                        <Button primaryClassName="bd-action-btn" variant="solid" disabled={isLoading} onClick={() => { setPayAmount(remaining); setShowPayInput(true); }} text="Record Payment" />
+                        <Button primaryClassName="bd-action-btn" variant="solid" color="primary" disabled={isLoading} onClick={() => setShowBalanceInput(true)} text="Mark Balance Paid" />
                     )}
                 </div>
             ) : null}
 
-            {!isTerminal && paid > 0 ? (
+            {!isTerminal && paid > 0 && paymentStatus !== "REFUNDED" ? (
                 <div className="bd-action-group">
                     {showRefundInput ? (
                         <>
@@ -176,6 +304,8 @@ function BookingActionsPanel({ booking, bookingId, actions, actionState }) {
                                 onChange={setRefundAmount}
                                 placeholder="Refund amount"
                             />
+                            <span className="bd-action-label">Refund reason</span>
+                            <textarea className="bd-action-textarea" value={refundReason} onChange={(event) => setRefundReason(event.target.value)} />
                             <div className="bd-action-row">
                                 <Button primaryClassName="bd-action-btn" variant="outline" disabled={isLoading} onClick={() => setShowRefundInput(false)} text="Cancel" />
                                 <Button
@@ -184,7 +314,7 @@ function BookingActionsPanel({ booking, bookingId, actions, actionState }) {
                                     color="danger"
                                     disabled={isLoading}
                                     onClick={async () => {
-                                        await actions?.refund?.(actionId, Number(refundAmount), currency);
+                                        await actions?.refund?.(actionId, { amount: Number(refundAmount), currency, reason: refundReason });
                                         setShowRefundInput(false);
                                     }}
                                     text={loadingAction === "refund" ? "Refunding..." : "Refund"}
@@ -245,7 +375,7 @@ export default function BookingDetailView({ booking, bookingId, loading, error, 
         );
     }
 
-    const tour = booking.tour || {};
+    const tour = booking.trip || booking.tour || {};
     const status = String(booking.status || "").toUpperCase();
     const phaseIndex = getPhaseIndex(status);
     const { paymentSummary } = booking;
@@ -352,6 +482,16 @@ export default function BookingDetailView({ booking, bookingId, loading, error, 
                                             <span className="bd-payment-amount">{formatCurrency(pmt.amount, pmt.currency)}</span>
                                             <span className={`bd-payment-status bd-payment-status--${(pmt.status || "").toLowerCase()}`}>{pmt.status}</span>
                                             {pmt.transactionId ? <span className="bd-payment-txn">Txn: {pmt.transactionId}</span> : null}
+                                            {getProofUrl(pmt.paymentScreenshot || pmt.receiptUrl) ? (
+                                                <Button
+                                                    primaryClassName="bd-action-btn bd-proof-download"
+                                                    variant="text"
+                                                    disabled={actionState?.loading === "downloadProof"}
+                                                    onClick={() => actions?.downloadProof?.(bookingId, pmt.id || pmt._id, getProofUrl(pmt.paymentScreenshot || pmt.receiptUrl))}
+                                                    text={actionState?.loading === "downloadProof" ? "Downloading..." : "Download proof"}
+                                                />
+                                            ) : pmt.type === "TOKEN" ? <span className="bd-proof-unavailable">Proof unavailable</span> : null}
+                                            {pmt.rejectionReason ? <span className="bd-payment-txn">Reason: {pmt.rejectionReason}</span> : null}
                                         </div>
                                     ))
                                 ) : (
@@ -363,7 +503,7 @@ export default function BookingDetailView({ booking, bookingId, loading, error, 
                         <div className="bd-card">
                             <Title text="Journey Timeline" />
                             <div className="bd-timeline">
-                                {(booking.timeline || booking.statusHistory || []).slice(0, 15).map((item) => (
+                                {(booking.paymentTimeline || booking.timeline || booking.statusHistory || []).slice(0, 15).map((item) => (
                                     <div key={item.id || item._id || item.createdAt} className="bd-timeline-item">
                                         <div className="bd-timeline-dot" />
                                         <div>
@@ -378,7 +518,7 @@ export default function BookingDetailView({ booking, bookingId, loading, error, 
                                         </div>
                                     </div>
                                 ))}
-                                {!(booking.timeline || booking.statusHistory || []).length ? <Paragraph primaryClassname="bd-muted">No timeline updates yet.</Paragraph> : null}
+                                {!(booking.paymentTimeline || booking.timeline || booking.statusHistory || []).length ? <Paragraph primaryClassname="bd-muted">No timeline updates yet.</Paragraph> : null}
                             </div>
                         </div>
                     </div>

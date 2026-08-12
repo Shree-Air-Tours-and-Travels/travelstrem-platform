@@ -1,14 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { fetchData } from "@packages/trem-utils";
 import BookingDetailView from "../view/BookingDetail.view";
 import {
+    approveAgentTokenPayment,
     cancelBooking,
     confirmBooking,
-    processRefund,
-    recordAgentPayment,
-    updateBookingStatus,
+    downloadAgentPaymentProof,
+    fetchAgentBookingDetail,
     fetchAgentBookings,
+    markBookingBalancePaid,
+    markBookingTokenPaid,
+    processRefund,
+    rejectAgentTokenPayment,
+    updateBookingStatus,
 } from "../../../../../services/agentService";
 
 const isObjectId = (value = "") => /^[0-9a-fA-F]{24}$/.test(String(value));
@@ -56,33 +60,10 @@ export default function BookingDetailContainer({ backTarget }) {
         setLoading(true);
         setError("");
 
-        Promise.all([
-            fetchData(`/bookings/${resolvedBookingId}/widgets/booking-hero.json?pageKey=tours-remote/booking-summary`, { signal: controller.signal }),
-            fetchData(`/bookings/${resolvedBookingId}/widgets/booking-tour-details.json?pageKey=tours-remote/booking-summary`, { signal: controller.signal }),
-            fetchData(`/bookings/${resolvedBookingId}/widgets/booking-travelers.json?pageKey=tours-remote/booking-summary`, { signal: controller.signal }),
-            fetchData(`/bookings/${resolvedBookingId}/widgets/booking-timeline.json?pageKey=tours-remote/booking-summary`, { signal: controller.signal }),
-        ])
-            .then(([heroRes, tourRes, travelersRes, timelineRes]) => {
+        fetchAgentBookingDetail(resolvedBookingId, { signal: controller.signal })
+            .then((data) => {
                 if (cancelled) return;
-
-                const ok = (r) => r && r.status === "success";
-                if (!ok(heroRes) || !ok(tourRes)) throw new Error("Failed to load booking");
-
-                const hero = heroRes.component?.data?.booking || {};
-                const tourDetails = tourRes.component?.data?.booking || {};
-                const travelersData = travelersRes.component?.data?.booking || {};
-                const timelineData = timelineRes.component?.data?.booking || {};
-
-                setBooking({
-                    ...hero, ...tourDetails, ...travelersData, ...timelineData,
-                    tour: tourDetails.tour || hero.tour || {},
-                    priceSnapshot: tourDetails.priceSnapshot || {},
-                    paymentSummary: tourDetails.paymentSummary || {},
-                    currentQuote: tourDetails.currentQuote || null,
-                    travelers: travelersData.travelers || [],
-                    timeline: timelineData.timeline || [],
-                    statusHistory: timelineData.statusHistory || [],
-                });
+                setBooking(data || null);
             })
             .catch((err) => {
                 if (err.name === 'AbortError') return;
@@ -109,12 +90,26 @@ export default function BookingDetailContainer({ backTarget }) {
         }
     };
 
+    const runDownload = async (id, paymentId, proofUrl) => {
+        setActionState({ loading: "downloadProof", message: "", error: "" });
+        try {
+            await downloadAgentPaymentProof(id, paymentId, proofUrl);
+            setActionState({ loading: "", message: "Payment proof downloaded", error: "" });
+        } catch (err) {
+            setActionState({ loading: "", message: "", error: err?.message || "Proof download failed" });
+        }
+    };
+
     const actions = {
         generateQuote: (id, data) => runAction("quote", () => confirmBooking(id, data)),
         cancel: (id) => runAction("cancel", () => cancelBooking(id)),
         statusTransition: (id, status) => runAction(status, () => updateBookingStatus(id, status)),
-        recordPayment: (id, amount, currency) => runAction("payment", () => recordAgentPayment(id, amount, currency)),
-        refund: (id, amount, currency) => runAction("refund", () => processRefund(id, amount, currency)),
+        refund: (id, details) => runAction("refund", () => processRefund(id, details)),
+        approveToken: (id, paymentId) => runAction("approveToken", () => approveAgentTokenPayment(id, paymentId)),
+        downloadProof: runDownload,
+        rejectToken: (id, paymentId, reason) => runAction("rejectToken", () => rejectAgentTokenPayment(id, paymentId, reason)),
+        markTokenPaid: (id, details) => runAction("token", () => markBookingTokenPaid(id, details)),
+        markBalancePaid: (id, details) => runAction("balance", () => markBookingBalancePaid(id, details)),
     };
 
     return (

@@ -11,7 +11,10 @@ const isLocalHost = (hostname = "") => ["localhost", "127.0.0.1", "::1"].include
 export const getGlobalAuthBaseUrl = (override = "") => {
   const configured = override || process.env.REACT_APP_AUTH_APP_URL || "";
   if (configured) return normalizeBase(configured);
-  return "";
+  if (typeof window !== "undefined" && isLocalHost(window.location.hostname)) {
+    return "http://localhost:3003";
+  }
+  return "https://auth.travelstrem.com";
 };
 
 export const getCurrentReturnUrl = () => {
@@ -76,11 +79,13 @@ export const buildGlobalBookingEngineUrl = ({
   product = "",
   tourRef = "",
   returnTo = "",
+  roomType = "",
 } = {}) => {
   const url = new URL("/", safeBase(getGlobalBookingEngineBaseUrl(bookingEngineBaseUrl)));
   if (product) url.searchParams.set("product", product);
   if (tourRef) url.searchParams.set("tourRef", tourRef);
   if (returnTo) url.searchParams.set("returnTo", returnTo);
+  if (roomType) url.searchParams.set("roomType", roomType);
   return url.toString();
 };
 

@@ -3,6 +3,7 @@ import authService from "../services/authService";
 import { emit } from "@packages/trem-events";
 import { clearAuthBrowserState, emitAuthEvent } from "@packages/trem-auth-core";
 import { BrandLogo } from "@packages/trem-ui";
+import { buildGlobalAuthUrl } from "@packages/trem-utils";
 import "./AdminDashboardHeader.scss";
 
 const TAB_TITLES = {
@@ -21,7 +22,7 @@ export default function AdminDashboardHeader({ activeTab, theme, onToggleTheme, 
     clearAuthBrowserState({ prefixes: ["adminTREM"] });
     emit("USER_LOGOUT", { source: "admin-header" }, { skipController: true });
     emitAuthEvent({ type: "LOGOUT" });
-    window.location.replace("/login");
+    window.location.replace(buildGlobalAuthUrl({ app: "admin", returnTo: window.location.origin }));
   }, []);
 
   return (

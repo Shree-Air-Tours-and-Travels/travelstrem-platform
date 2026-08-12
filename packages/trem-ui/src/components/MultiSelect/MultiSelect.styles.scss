@@ -3,6 +3,12 @@
 .trem-multiselect {
   width: 100%;
 
+  // Keep the reusable control fluid instead of sizing to selected text.
+  .trem-dropdown,
+  .trem-dropdown__trigger {
+    width: 100%;
+  }
+
   &__selection {
     display: flex;
     flex-wrap: wrap;
@@ -28,14 +34,9 @@
     font-size: $font-size-xs;
     font-weight: $font-semibold;
     white-space: nowrap;
-    cursor: pointer;
-    transition: background 140ms $ease-default;
+    cursor: default;
 
     .trem-icon { flex-shrink: 0; }
-
-    &:hover {
-      background: var(--primary-surface, var(--color-primary-bg));
-    }
   }
 
   &__more {
@@ -134,6 +135,18 @@
       font-size: $font-size-xs;
       font-weight: $font-bold;
     }
+  }
+
+  &__footer-tools {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-1;
+    min-width: 0;
+  }
+
+  &__apply {
+    flex: 0 0 auto;
+    min-width: 72px;
   }
 
   &__error {

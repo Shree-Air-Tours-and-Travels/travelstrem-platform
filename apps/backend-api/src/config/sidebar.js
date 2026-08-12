@@ -1,4 +1,6 @@
-export default {
+import applyHideFlags from "./visibility.js";
+
+export default applyHideFlags({
   status: "success",
   message: "Sidebar config loaded",
   componentData: {
@@ -68,4 +70,4 @@ export default {
       actionTarget: "profile",
     },
   },
-};
+});

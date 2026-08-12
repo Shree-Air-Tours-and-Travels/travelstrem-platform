@@ -3,7 +3,13 @@
   "component": {
     "data": {},
     "dataScope": {
-      "options": {}
+      "options": {},
+      "optionSets": {
+        "travelMonthOptions": "trevista.travelMonthOptions",
+        "travellerOptions": "trevista.travellerCountOptions",
+        "tripStyleOptions": "trevista.tripStyleOptions",
+        "budgetOptions": "trevista.budgetOptions"
+      }
     },
     "elements": {
       "labels": {
@@ -35,24 +41,6 @@
           "tripStyle": "Any style",
           "budget": "Any budget"
         },
-        "travelMonthOptions": ["August 2026", "September 2026", "October 2026"],
-        "travellerOptions": [
-          { "label": "10 travellers", "value": "10" },
-          { "label": "20 travellers", "value": "20" },
-          { "label": "30 travellers", "value": "30" }
-        ],
-        "tripStyleOptions": [
-          { "label": "Adventure", "value": "adventure" },
-          { "label": "Beach", "value": "beach" },
-          { "label": "Culture", "value": "culture" },
-          { "label": "Family", "value": "family" },
-          { "label": "Heritage", "value": "heritage" },
-          { "label": "Luxury", "value": "luxury" },
-          { "label": "Romance", "value": "romance" },
-          { "label": "Wellness", "value": "wellness" },
-          { "label": "Trekking", "value": "trekking" }
-        ],
-        "budgetOptions": ["₹50k – ₹1L", "₹1L – ₹2L", "₹2L+"],
         "heroImage": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1800&q=85"
       },
       "urls": {}

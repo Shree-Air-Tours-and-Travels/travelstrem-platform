@@ -45,6 +45,18 @@ describe("SingleSelect", () => {
     expect(screen.getByText("Goa, India")).toBeInTheDocument();
   });
 
+  it("renders legacy object-shaped place labels as readable text", () => {
+    const { container } = render(
+      <SingleSelect
+        label="Destination"
+        options={[{ value: "dubai", label: { city: "Dubai", country: "UAE" } }]}
+      />,
+    );
+
+    openMenu(container);
+    expect(screen.getByRole("menuitem", { name: "Dubai, UAE" })).toBeInTheDocument();
+  });
+
   it("renders a clear button that resets the selection", () => {
     const onChange = vi.fn();
     render(

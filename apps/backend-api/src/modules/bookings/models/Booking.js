@@ -70,6 +70,13 @@ const priceSnapshotSchema = new Schema({
   matchedSeason: { type: String, default: null },
   note: { type: String, default: "" },
   perPerson: { type: Number, default: 0 },
+  baseTripTotal: { type: Number, default: 0 },
+  roomTypeExtra: { type: Number, default: 0 },
+  transportExtra: { type: Number, default: 0 },
+  addonAmount: { type: Number, default: 0 },
+  agentFee: { type: Number, default: 0 },
+  serviceFee: { type: Number, default: 0 },
+  platformFee: { type: Number, default: 0 },
   total: { type: Number, default: 0 },
 }, { _id: false });
 
@@ -109,6 +116,9 @@ const bookingSchema = new Schema({
   primaryContact: { type: primaryContactSchema, default: () => ({}) },
   tripPreferences: { type: tripPreferencesSchema, default: () => ({}) },
   priceSnapshot: { type: priceSnapshotSchema, default: () => ({}) },
+  pricingVersion: { type: String, enum: ["LEGACY", "V2"], default: "LEGACY", index: true },
+  quoteId: { type: Schema.Types.ObjectId, ref: "BookingQuote", default: null, index: true },
+  pricingSnapshot: { type: Schema.Types.Mixed, default: null },
   paymentSummary: { type: paymentSummarySchema, default: () => ({}) },
   tokenAmount: { type: Number, min: 0, default: 0 },
   paymentRejectionReason: { type: String, trim: true, default: "" },
@@ -177,7 +187,7 @@ bookingSchema.pre("validate", function (next) {
   if (this.product === "trevio") {
     if (this.seatsReserved == null) this.seatsReserved = 0;
   } else {
-    if (!this.seatsReserved || this.seatsReserved < 1) this.seatsReserved = this.guestsCount;
+    if (this.seatsReserved == null) this.seatsReserved = 0;
   }
   if (this.priceSnapshot?.total && !this.paymentSummary?.total) {
     this.paymentSummary = {

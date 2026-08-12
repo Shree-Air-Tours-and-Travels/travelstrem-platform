@@ -8,6 +8,7 @@ import { clearAuthBrowserState, emitAuthEvent } from "@packages/trem-auth-core";
 import LoginPrompt from "../components/LoginPrompt";
 import SecurityMonitor from "../components/SecurityMonitor";
 import { checkRateLimit } from "../services/security";
+import { clearGuestSession, enableGuestSession, isGuestSession } from "../services/guestSession";
 import {
   FALLBACK_NAVIGATION_CONFIG,
   normalizeNavigationConfig,
@@ -49,25 +50,27 @@ class RemoteBoundary extends React.Component {
   }
 }
 
-function ProtectedRoute({ children }) {
+function ProtectedRoute({ children, onContinueAsGuest, allowGuest = false }) {
   const { loading, session } = useAppShellConfig();
 
   if (loading) return <GlobalLoader visible text="Loading App" />;
 
-  if (!session?.isAuthenticated) {
+  if (!session?.isAuthenticated && !allowGuest) {
     const authUrl = process.env.REACT_APP_AUTH_APP_URL || "";
     const returnTo = window.location.href;
 
     if (!authUrl) {
       return (
-        <main className="dash-content" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
-          <p style={{ color: "var(--text-tertiary)", fontSize: "13px" }}>Authentication not configured.</p>
-        </main>
+        <LoginPrompt
+          onContinueAsGuest={onContinueAsGuest}
+          title="Explore TravelsTREM"
+          description="Authentication is unavailable, but you can continue as a guest to explore trips and tours."
+        />
       );
     }
 
     return (
-      <LoginPrompt onLogin={() => {
+      <LoginPrompt onContinueAsGuest={onContinueAsGuest} onLogin={() => {
         if (!checkRateLimit("login-attempt", 5, 300000)) {
           console.warn("[Security] Too many login attempts. Please wait.");
           return;
@@ -92,6 +95,7 @@ function AppShell() {
   const [navigationConfig, setNavigationConfig] = useState(() => normalizeNavigationConfig(FALLBACK_NAVIGATION_CONFIG));
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [guestMode, setGuestMode] = useState(() => isGuestSession());
 
   const destination = useMemo(
     () => resolveDestination(navigationConfig, location),
@@ -103,6 +107,22 @@ function AppShell() {
   const isBookingsScreen = destination.renderer === "app-shell" && activeTab === "bookings";
   const isBookingDetail = isBookingsScreen && Boolean(searchParams.get("bookingId"));
   const productFilter = searchParams.get("product") || "all";
+  const publicDestination = ["overview", "trevista", "trevio", "booking-engine"].includes(destination.id);
+  const continueAsGuest = useCallback(() => {
+    enableGuestSession();
+    setGuestMode(true);
+    navigate("/?tab=overview&guest=1");
+  }, [navigate]);
+  const requireAuthentication = useCallback(({ returnTo = window.location.href } = {}) => {
+    clearGuestSession();
+    window.location.assign(buildGlobalAuthUrl({ app: "app-shell", returnTo }));
+  }, []);
+
+  useEffect(() => {
+    if (!session?.isAuthenticated) return;
+    clearGuestSession();
+    setGuestMode(false);
+  }, [session?.isAuthenticated]);
 
   const handleNavigation = useCallback((rawIntent) => {
     const result = resolveNavigationIntent(navigationConfig, rawIntent, window.location.origin);
@@ -199,20 +219,28 @@ function AppShell() {
   }, [activeTab]);
 
   const handleSidebarAction = useCallback(async (action) => {
+    if (action === "login") {
+      requireAuthentication();
+      return;
+    }
     if (action !== "logout") return;
+    clearGuestSession();
     try {
       await fetchData("/auth/logout", { method: "POST" });
     } catch {}
     clearAuthBrowserState({ prefixes: ["appShellTREM", "travelstrem"] });
     window.dispatchEvent(new CustomEvent("USER_LOGOUT", { detail: { reason: "logout" } }));
     emitAuthEvent({ type: "LOGOUT" });
-    window.location.replace(process.env.REACT_APP_AUTH_APP_URL || "/");
-  }, []);
+    window.location.replace(buildGlobalAuthUrl({
+      app: "app-shell",
+      returnTo: `${window.location.origin}/?tab=overview`,
+    }));
+  }, [requireAuthentication]);
 
-  if (loading || !session?.isAuthenticated) {
+  if (loading || (!session?.isAuthenticated && !guestMode)) {
     return (
       <div className="dash-auth-only">
-        <ProtectedRoute>
+        <ProtectedRoute onContinueAsGuest={continueAsGuest}>
           <></>
         </ProtectedRoute>
       </div>
@@ -224,7 +252,7 @@ function AppShell() {
     : destination.renderer === "trevista"
       ? <TrevistaApp embedded userSession={session} />
       : destination.renderer === "bookingEngine"
-        ? <EmbeddedBookingEngine />
+        ? <EmbeddedBookingEngine userSession={session} onRequireAuth={requireAuthentication} />
         : null;
 
   return (
@@ -260,7 +288,7 @@ function AppShell() {
         />
 
         <div data-scroll-root className={`dash-content${isBookingsScreen ? " dash-content--bookings" : ""}${isBookingDetail ? " dash-content--booking-detail" : ""}${isRemote ? " dash-content--remote" : ""}`}>
-          <ProtectedRoute>
+          <ProtectedRoute allowGuest={publicDestination && guestMode}>
             <RemoteBoundary resetKey={`${location.pathname}${location.search}`}>
               {remoteElement ? (
                 <Suspense fallback={<GlobalLoader visible text="Loading customer product" />}>

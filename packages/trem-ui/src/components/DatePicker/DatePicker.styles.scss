@@ -71,6 +71,10 @@
     z-index: 1500;
     max-width: calc(100vw - 24px);
     pointer-events: auto;
+
+    &--top {
+      transform: translateY(-100%);
+    }
   }
 
   &__dropdown {
@@ -80,6 +84,8 @@
     border-radius: $radius-md;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
     padding: $space-3;
+    max-height: inherit;
+    overflow-y: auto;
     animation: trem-dp-in 150ms $ease-default;
   }
 

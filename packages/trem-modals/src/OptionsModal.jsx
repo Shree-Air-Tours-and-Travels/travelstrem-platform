@@ -17,9 +17,21 @@ export default function OptionsModal({
   icon = "hotel",
   options = [],
   recommendedLabel = "Recommended",
+  selectedLabel = "Selected",
+  confirmLabel = "Apply selection",
+  cancelLabel = "Cancel",
+  closeLabel = "Close",
+  selectedValue = "",
+  onConfirm,
   className = "",
 }) {
   const [mobile, setMobile] = useState(false);
+  const [draftValue, setDraftValue] = useState(selectedValue);
+  const selectable = typeof onConfirm === "function";
+
+  useEffect(() => {
+    if (open) setDraftValue(selectedValue);
+  }, [open, selectedValue]);
 
   useEffect(() => {
     setMobile(isMobile());
@@ -48,32 +60,63 @@ export default function OptionsModal({
 
   const list = (
     <div className="trem-options__list">
-      {options.map((option, i) => (
-        <div key={option.id || i} className="trem-options__item">
+      {options.map((option, i) => {
+        const optionValue = option.value || option.title || String(i);
+        const selected = selectable && draftValue === optionValue;
+        const Item = selectable ? "button" : "div";
+        return (
+        <Item
+          key={option.id || optionValue}
+          className={`trem-options__item${selected ? " is-selected" : ""}`}
+          {...(selectable ? {
+            type: "button",
+            onClick: () => setDraftValue(optionValue),
+            "aria-pressed": selected,
+          } : {})}
+        >
           <div className="trem-options__item-top">
             <span className="trem-options__badge">
               <Icon name={option.icon || (option.recommended ? "badgeCheck" : "hotel")} size={16} />
             </span>
             <strong className="trem-options__item-title">{option.title}</strong>
             {option.recommended && <span className="trem-options__pill">{recommendedLabel}</span>}
+            {selected && <span className="trem-options__pill trem-options__pill--selected">{selectedLabel}</span>}
           </div>
           {option.description && <p className="trem-options__item-desc">{option.description}</p>}
           <div className="trem-options__cost">
             <span className="trem-options__cost-label">{option.costLabel || "Upgrade cost"}</span>
             <span className="trem-options__cost-value">{option.cost}</span>
           </div>
-        </div>
-      ))}
+        </Item>
+      )})}
+    </div>
+  );
+
+  const selectionActions = selectable ? (
+    <div className="trem-options__actions">
+      <Button variant="text" color="primary" text={cancelLabel} onClick={onClose} />
+      <Button
+        variant="solid"
+        color="primary"
+        text={confirmLabel}
+        disabled={!draftValue}
+        onClick={() => onConfirm(options.find((option, index) => (option.value || option.title || String(index)) === draftValue))}
+      />
+    </div>
+  ) : null;
+
+  const content = (
+    <div className={`trem-options ${className}`.trim()}>
+      {subtitle && <p className="trem-options__subtitle">{subtitle}</p>}
+      {list}
+      {selectionActions}
     </div>
   );
 
   if (mobile) {
     return (
       <BottomSheet open={open} onClose={onClose} title={title}>
-        <div className={`trem-options ${className}`.trim()}>
-          {subtitle && <p className="trem-options__subtitle">{subtitle}</p>}
-          {list}
-        </div>
+        {content}
       </BottomSheet>
     );
   }
@@ -82,15 +125,14 @@ export default function OptionsModal({
     <div className={`trem-options-overlay ${className}`.trim()}>
       <div className="trem-options-overlay__backdrop" onClick={onClose} />
       <div className="trem-options-overlay__dialog" role="dialog" aria-modal="true" aria-label={title}>
-        <Button variant="text" isCircular iconLeft="x" onClick={onClose} aria-label="Close" primaryClassName="trem-options-overlay__close" />
+        <Button variant="text" isCircular iconLeft="x" onClick={onClose} aria-label={closeLabel} primaryClassName="trem-options-overlay__close" />
         <div className="trem-options-overlay__header">
           <span className="trem-options-overlay__icon">
             <Icon name={icon} size={22} />
           </span>
           <h3>{title}</h3>
         </div>
-        {subtitle && <p className="trem-options-overlay__subtitle">{subtitle}</p>}
-        {list}
+        {content}
       </div>
     </div>,
     document.body

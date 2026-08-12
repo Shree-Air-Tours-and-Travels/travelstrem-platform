@@ -29,7 +29,7 @@ export default function SideBar({
   const profileMeta = user?.[profile.metaKey || "membershipLabel"] || profile.fallbackMeta || "";
   const activeTargets = useMemo(() => new Set(
     sections.flatMap((section) => section.items || [])
-      .filter((item) => item.target === activeId)
+      .filter((item) => item.target === activeId && !item.hide)
       .map((item) => item.id),
   ), [activeId, sections]);
 
@@ -111,35 +111,39 @@ export default function SideBar({
         </header>
 
         <nav className="trem-sidebar__nav">
-          {sections.map((section) => (
-            <section className="trem-sidebar__section" key={section.id}>
-              {section.title ? <h2>{section.title}</h2> : null}
-              <div className="trem-sidebar__items">
-                {(section.items || []).map((item) => {
-                  const active = item.id === activeId || activeTargets.has(item.id);
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      disabled={item.disabled}
-                      title={item.comingSoon ? `${item.label} — Coming soon` : item.label}
-                      className={[
-                        "trem-sidebar__item",
-                        active ? "is-active" : "",
-                        item.disabled ? "is-disabled" : "",
-                      ].filter(Boolean).join(" ")}
-                      onClick={() => activate(item)}
-                    >
-                      <Icon name={item.icon} size={21} strokeWidth={1.8} />
-                      <span>{item.label}</span>
-                      {item.badge ? <small>{item.badge}</small> : null}
-                      {item.indicator ? <i aria-label="New activity" /> : null}
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
-          ))}
+          {sections.map((section) => {
+            const visibleItems = (section.items || []).filter((item) => !item.hide);
+            if (!visibleItems.length) return null;
+            return (
+              <section className="trem-sidebar__section" key={section.id}>
+                {section.title ? <h2>{section.title}</h2> : null}
+                <div className="trem-sidebar__items">
+                  {visibleItems.map((item) => {
+                    const active = item.id === activeId || activeTargets.has(item.id);
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        disabled={item.disabled}
+                        title={item.comingSoon ? `${item.label} — Coming soon` : item.label}
+                        className={[
+                          "trem-sidebar__item",
+                          active ? "is-active" : "",
+                          item.disabled ? "is-disabled" : "",
+                        ].filter(Boolean).join(" ")}
+                        onClick={() => activate(item)}
+                      >
+                        <Icon name={item.icon} size={21} strokeWidth={1.8} />
+                        <span>{item.label}</span>
+                        {item.badge ? <small>{item.badge}</small> : null}
+                        {item.indicator ? <i aria-label="New activity" /> : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+            );
+          })}
         </nav>
 
         <button

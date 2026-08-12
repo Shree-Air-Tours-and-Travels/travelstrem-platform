@@ -5,7 +5,13 @@ const refreshTokenSchema = new mongoose.Schema({
     portal: { type: String, enum: ["customer", "admin", "partner"], default: "customer", required: true, index: true },
     tokenHash: { type: String, required: true, index: true },
     family: { type: String, required: true, index: true },
+    sessionId: { type: String, required: true, unique: true, index: true },
     expiresAt: { type: Date, required: true, index: true },
+    revokedAt: { type: Date, default: null, index: true },
+    replacedBySessionId: { type: String, default: null },
+    userAgent: { type: String, default: "" },
+    ipAddress: { type: String, default: "" },
+    lastUsedAt: { type: Date, default: Date.now },
     createdAt: { type: Date, default: Date.now },
 });
 

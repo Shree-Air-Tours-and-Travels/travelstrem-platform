@@ -10,6 +10,13 @@ const INVENTORY_SOURCE = Object.freeze({
 });
 const INVENTORY_SOURCE_LIST = Object.values(INVENTORY_SOURCE);
 
+const slugifySearchValue = (value = "") => String(value)
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
 /* ---------- Sub-schemas ---------- */
 
 const addressSchema = new Schema({
@@ -89,6 +96,12 @@ const hotelOptionSchema = new Schema({
     costLabel: { type: String, default: "Upgrade cost" },
     cost: { type: String, default: "" }, // e.g. "Included" or "₹18,000 per room"
     recommended: { type: Boolean, default: false },
+    active: { type: Boolean, default: true },
+    pricing: {
+        unit: { type: String, enum: ["PER_PERSON", "PER_BOOKING", "PER_ROOM", "PER_NIGHT", "PER_ROOM_PER_NIGHT", "PER_VEHICLE", "PER_PERSON_PER_NIGHT"], default: null },
+        amountMinor: { type: Number, min: 0, default: null },
+        currency: { type: String, default: "INR" },
+    },
 }, { _id: true });
 
 /* Cancellation tiers: refund windows sorted by days before departure */
@@ -120,7 +133,34 @@ const extraSchema = new Schema({
     priceLabel: { type: String, default: "" }, // e.g. "₹2,500 / night"
     icon: { type: String, default: "" }, // icon name
     included: { type: Boolean, default: false },
+    active: { type: Boolean, default: true },
+    pricing: {
+        unit: { type: String, enum: ["PER_PERSON", "PER_BOOKING", "PER_ROOM", "PER_NIGHT", "PER_ROOM_PER_NIGHT", "PER_VEHICLE", "PER_PERSON_PER_NIGHT"], default: null },
+        amountMinor: { type: Number, min: 0, default: null },
+        currency: { type: String, default: "INR" },
+    },
 }, { _id: true });
+
+const searchDestinationSchema = new Schema({
+    destinationId: { type: String, trim: true, default: "" },
+    name: { type: String, trim: true, default: "" },
+    cityId: { type: String, trim: true, default: "" },
+    cityName: { type: String, trim: true, default: "" },
+    countryId: { type: String, trim: true, default: "" },
+    countryName: { type: String, trim: true, default: "" },
+    sortOrder: { type: Number, default: 0 },
+}, { _id: false });
+
+const searchTagSchema = new Schema({
+    id: { type: String, trim: true, default: "" },
+    slug: { type: String, trim: true, lowercase: true, default: "" },
+    name: { type: String, trim: true, default: "" },
+    type: {
+        type: String,
+        enum: ["DESTINATION", "ATTRACTION", "EXPERIENCE", "THEME", "ORIGIN", "SEASON", "AUDIENCE", "CUSTOM"],
+        default: "CUSTOM",
+    },
+}, { _id: false });
 
 /* ---------- Main tour schema ---------- */
 
@@ -143,7 +183,9 @@ const tourSchema = new Schema({
     productKey: { type: String, default: "trevista", index: true },
     visibility: { type: String, enum: ["public", "agency", "private"], default: "public" },
     archivedAt: { type: Date, default: null },
+    slug: { type: String, trim: true, lowercase: true, default: "", index: true },
     title: { type: String, required: true },
+    shortDescription: { type: String, trim: true, default: "" },
     agentRef: { type: String, trim: true, default: "", index: true },
     city: { type: citySchema, required: true },
     address: { type: addressSchema, required: true },
@@ -189,6 +231,10 @@ const tourSchema = new Schema({
         totalSeats: { type: Number, default: null }, // null = unlimited / not tracked
         seatsAvailable: { type: Number, default: null },
     },
+    flights: {
+        included: { type: Boolean, default: false },
+        inventoryManaged: { type: Boolean, default: false },
+    },
 
     // Logistics & marketing fields
     meetingPoint: { type: String, default: "" },
@@ -205,6 +251,28 @@ const tourSchema = new Schema({
     maxGroupSize: { type: Number, required: true },
     reviews: [reviewSchema],
     featured: { type: Boolean, default: false },
+    trending: { type: Boolean, default: false, index: true },
+
+    // Search metadata is additive and keeps legacy fields authoritative during migration.
+    group: {
+        min: { type: Number, min: 1, default: 1 },
+        max: { type: Number, min: 1, default: null },
+    },
+    rating: {
+        average: { type: Number, min: 0, max: 5, default: 0 },
+        count: { type: Number, min: 0, default: 0 },
+    },
+    primaryDestination: { type: searchDestinationSchema, default: () => ({}) },
+    destinations: [searchDestinationSchema],
+    tagIds: [{ type: String, trim: true, lowercase: true }],
+    searchTags: [searchTagSchema],
+    metrics: {
+        views: { type: Number, min: 0, default: 0 },
+        bookings: { type: Number, min: 0, default: 0 },
+        wishlists: { type: Number, min: 0, default: 0 },
+        popularityScore: { type: Number, default: 0 },
+        trendScore: { type: Number, default: 0 },
+    },
 
     ownerAgent: { type: Schema.Types.ObjectId, ref: "User", default: null, index: true },
     agentTour: { type: Boolean, default: false },
@@ -294,9 +362,74 @@ tourSchema.set("toJSON", { virtuals: true });
 tourSchema.set("toObject", { virtuals: true });
 
 /* ---------- Indexes (optional) ---------- */
-tourSchema.index({ city: 1, featured: -1, "price.min": 1 });
+tourSchema.index({ status: 1, isPublished: 1, visibility: 1, featured: -1, trending: -1, createdAt: -1 });
+tourSchema.index({ "city.from": 1, "city.to": 1, "address.country": 1, "period.days": 1 });
+tourSchema.index({ tags: 1, "searchTags.slug": 1 });
 tourSchema.index({ startDate: 1, endDate: 1 });
 tourSchema.index({ ownerAgent: 1, inventorySource: 1 });
+tourSchema.index({
+    title: "text",
+    "searchTags.name": "text",
+    "city.from": "text",
+    "city.to": "text",
+    "primaryDestination.cityName": "text",
+    "primaryDestination.countryName": "text",
+    "address.city": "text",
+    "address.state": "text",
+    "address.country": "text",
+    providerName: "text",
+}, {
+    name: "tour_discovery_text",
+    weights: {
+        title: 12,
+        "city.to": 10,
+        "primaryDestination.cityName": 10,
+        "address.city": 8,
+        "searchTags.name": 6,
+        "city.from": 5,
+        "primaryDestination.countryName": 4,
+        "address.state": 4,
+        "address.country": 4,
+        providerName: 2,
+    },
+});
+
+// Keep newly created and edited tours searchable without waiting for a migration.
+tourSchema.pre("validate", function normalizeSearchMetadata() {
+    if (!this.slug) this.slug = slugifySearchValue(this.title);
+    if (!this.shortDescription) this.shortDescription = String(this.desc || "").slice(0, 240);
+    if (this.group?.max == null && this.maxGroupSize != null) this.set("group.max", this.maxGroupSize);
+
+    const destinationName = this.city?.to || this.address?.city || "";
+    const countryName = this.address?.country || "";
+    if (!this.primaryDestination?.cityName && destinationName) {
+        this.primaryDestination = {
+            destinationId: slugifySearchValue(destinationName),
+            name: destinationName,
+            cityId: slugifySearchValue(destinationName),
+            cityName: destinationName,
+            countryId: slugifySearchValue(countryName),
+            countryName,
+            sortOrder: 0,
+        };
+    }
+
+    const reviews = Array.isArray(this.reviews) ? this.reviews : [];
+    const reviewTotal = reviews.reduce((sum, review) => sum + (Number(review.rating) || 0), 0);
+    this.rating = {
+        average: reviews.length ? Number((reviewTotal / reviews.length).toFixed(1)) : 0,
+        count: reviews.length,
+    };
+
+    if ((!this.searchTags || this.searchTags.length === 0) && Array.isArray(this.tags)) {
+        this.searchTags = this.tags.map((name) => {
+            const normalized = String(name || "").trim();
+            const slug = slugifySearchValue(normalized);
+            return { id: slug, slug, name: normalized, type: "CUSTOM" };
+        }).filter((tag) => tag.slug);
+        this.tagIds = this.searchTags.map((tag) => tag.slug);
+    }
+});
 
 const Tour = mongoose.model("Tour", tourSchema);
 export default Tour;

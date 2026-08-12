@@ -3,25 +3,12 @@
   "component": {
     "data": {},
     "dataScope": {
-      "options": {
-        "productOptions": [
-          { "label": "All products", "value": "all" },
-          { "label": "Trevio", "value": "trevio" },
-          { "label": "Trevista", "value": "trevista" }
-        ],
-        "statusOptions": [
-          { "label": "All statuses", "value": "all" },
-          { "label": "Upcoming", "value": "Upcoming" },
-          { "label": "Pending", "value": "Pending" },
-          { "label": "Cancelled", "value": "Cancelled" },
-          { "label": "Completed", "value": "Completed" }
-        ],
-        "sortOptions": [
-          { "label": "Newest first", "value": "newest", "sort": { "columnId": "createdAt", "direction": "desc" } },
-          { "label": "Oldest first", "value": "oldest", "sort": { "columnId": "createdAt", "direction": "asc" } },
-          { "label": "Price: Low to High", "value": "priceLow", "sort": { "columnId": "price", "direction": "asc" } },
-          { "label": "Price: High to Low", "value": "priceHigh", "sort": { "columnId": "price", "direction": "desc" } }
-        ]
+      "options": {},
+      "optionSets": {
+        "productOptions": "appShell.bookingProductOptions",
+        "statusOptions": "appShell.bookingStatusOptions",
+        "sortOptions": "appShell.bookingSortOptions",
+        "bookingExportOptions": "appShell.bookingExportOptions"
       }
     },
     "elements": {
@@ -69,10 +56,7 @@
                   "id": "export",
                   "icon": "share",
                   "labelRef": "tableExport",
-                  "options": [
-                    { "id": "csv", "labelRef": "exportCsv" },
-                    { "id": "pdf", "labelRef": "exportPdf" }
-                  ]
+                  "optionsRef": "bookingExportOptions"
                 }
               ]
             },

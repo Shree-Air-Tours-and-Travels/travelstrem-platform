@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from "react";
 import useTourDetailWidget from "../../hooks/useTourDetailWidget";
-import { getCityDisplay, getDurationText, getRatingText } from "../../helper";
+import { getCityDisplay, getDisplayText, getDurationText, getRatingText } from "../../helper";
 import { WidgetError, WidgetSkeleton } from "../../shared";
 import TourOverviewView from "./TourOverview.view";
 
@@ -17,11 +17,11 @@ export default function TourOverviewContainer({ tourRef, onTourLoad }) {
         labels,
         tour,
         cityDisplay: getCityDisplay(tour),
-        title: tour?.title || "Tour details",
-        description: tour?.desc || tour?.description || "",
+        title: getDisplayText(tour?.title, "Tour details"),
+        description: getDisplayText(tour?.desc ?? tour?.description),
         durationText: getDurationText(tour),
         ratingText: getRatingText(tour),
-        tags: Array.isArray(tour?.tags) ? tour.tags : [],
+        tags: Array.isArray(tour?.tags) ? tour.tags.map((tag) => getDisplayText(tag)).filter(Boolean) : [],
     }), [labels, tour]);
 
     if (loading && !tour) return <WidgetSkeleton />;

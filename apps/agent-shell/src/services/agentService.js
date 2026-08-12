@@ -39,6 +39,19 @@ async function expectSuccess(request, fallbackMessage) {
     return res;
 }
 
+function resolveStoredProofUrl(value) {
+    if (typeof value === "string") {
+        const normalized = value.trim();
+        return /^\[object Object\](?:\.html)?$/i.test(normalized) ? "" : normalized;
+    }
+    if (!value || typeof value !== "object") return "";
+    for (const key of ["secure_url", "secureUrl", "url", "href", "path", "downloadUrl", "receiptUrl", "paymentScreenshot", "file", "asset", "data"]) {
+        const resolved = resolveStoredProofUrl(value[key]);
+        if (resolved) return resolved;
+    }
+    return "";
+}
+
 export async function fetchAgentTours(opts = {}) {
     const res = await fetchData("/tours.json", { signal: opts.signal });
     return normalizeToursResponse(res);
@@ -187,16 +200,15 @@ export async function updateBookingStatus(bookingId, status, reason = "", opts =
 
 export async function recordAgentPayment(bookingId, amount, currency = "INR", options = {}, opts = {}) {
     await expectSuccess(
-        fetchData(`/admin/bookings/${bookingId}/payment`, {
+        fetchData(`/admin/bookings/${bookingId}/payments/token-paid`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 amount: Number(amount),
                 currency,
-                provider: options.provider || "agent_manual",
-                transactionId: options.transactionId || `AGT-PAY-${Date.now()}`,
-                status: "PAID",
-                type: options.type || "partial",
+                paymentMethod: options.paymentMethod || "CASH",
+                transactionId: options.transactionId || `AGT-TOKEN-${Date.now()}`,
+                remarks: options.remarks || "Token payment recorded by agent",
             }),
             signal: opts.signal,
         }),
@@ -204,20 +216,120 @@ export async function recordAgentPayment(bookingId, amount, currency = "INR", op
     );
 }
 
-export async function processRefund(bookingId, amount, currency = "INR", reason = "", opts = {}) {
+export async function processRefund(bookingId, details = {}, opts = {}) {
     await expectSuccess(
-        fetchData(`/admin/bookings/${bookingId}/refund`, {
+        fetchData(`/admin/bookings/${bookingId}/payments/refund`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                amount: Number(amount),
-                currency,
-                reason,
+                amount: Number(details.amount || 0),
+                currency: details.currency || "INR",
+                reason: details.reason || "",
             }),
             signal: opts.signal,
         }),
         "Refund processing failed"
     );
+}
+
+export async function fetchAgentBookingDetail(bookingId, opts = {}) {
+    const res = await fetchData(`/engine/${bookingId}/detail`, { signal: opts.signal });
+    if (!res || res.status !== "success") {
+        throw new Error(res?.message || "Failed to load booking");
+    }
+    return res.componentData?.data || null;
+}
+
+export async function approveAgentTokenPayment(bookingId, paymentId, opts = {}) {
+    await expectSuccess(
+        fetchData(`/admin/bookings/${bookingId}/payments/${paymentId}/approve`, { method: "POST", signal: opts.signal }),
+        "Token approval failed"
+    );
+}
+
+export async function rejectAgentTokenPayment(bookingId, paymentId, reason, opts = {}) {
+    await expectSuccess(
+        fetchData(`/admin/bookings/${bookingId}/payments/${paymentId}/reject`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ reason }),
+            signal: opts.signal,
+        }),
+        "Token rejection failed"
+    );
+}
+
+export async function markBookingTokenPaid(bookingId, details = {}, opts = {}) {
+    await expectSuccess(
+        fetchData(`/admin/bookings/${bookingId}/payments/token-paid`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(details),
+            signal: opts.signal,
+        }),
+        "Token payment update failed"
+    );
+}
+
+export async function markBookingBalancePaid(bookingId, details = {}, opts = {}) {
+    await expectSuccess(
+        fetchData(`/admin/bookings/${bookingId}/payments/balance-paid`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(details),
+            signal: opts.signal,
+        }),
+        "Balance update failed"
+    );
+}
+
+export async function downloadAgentPaymentProof(bookingId, paymentId, proofValue = "") {
+    let response;
+    let resolvedProofUrl = "";
+    const proofUrl = resolveStoredProofUrl(proofValue);
+    if (proofUrl) {
+        try {
+            const apiBase = new URL(api.defaults?.baseURL || "/", window.location.origin);
+            resolvedProofUrl = new URL(proofUrl, apiBase.origin).toString();
+        } catch {
+            resolvedProofUrl = "";
+        }
+    }
+    if (resolvedProofUrl) {
+        try {
+            const directResponse = await fetch(resolvedProofUrl, { mode: "cors", credentials: "omit" });
+            if (!directResponse.ok) throw new Error(`Stored proof returned ${directResponse.status}`);
+            const contentType = String(directResponse.headers.get("content-type") || "").toLowerCase();
+            if (!contentType.startsWith("image/") && contentType !== "application/octet-stream") {
+                throw new Error(`Stored proof returned ${contentType || "an unsupported file type"}`);
+            }
+            response = {
+                data: await directResponse.blob(),
+                headers: { "content-type": contentType || "image/jpeg" },
+            };
+        } catch {
+            response = null;
+        }
+    }
+    if (!response) {
+        response = await api.get(`/engine/${bookingId}/payments/${paymentId}/proof`, { responseType: "blob" });
+    }
+    const disposition = String(response.headers?.["content-disposition"] || "");
+    const encodedName = disposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+    const plainName = disposition.match(/filename="?([^";]+)"?/i)?.[1];
+    const sourceName = resolvedProofUrl ? resolvedProofUrl.split("?")[0].split("/").pop() : "";
+    const filename = encodedName
+        ? decodeURIComponent(encodedName)
+        : (plainName || sourceName || `payment-proof-${bookingId}.jpg`);
+    const objectUrl = URL.createObjectURL(response.data);
+    const link = document.createElement("a");
+    link.href = objectUrl;
+    link.download = filename;
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
 }
 
 export async function getAgentBooking(bookingId, opts = {}) {

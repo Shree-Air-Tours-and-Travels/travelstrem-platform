@@ -5,6 +5,7 @@ import Booking from "../models/Booking.js";
 import Tour from "../../tours/models/Tour.js";
 import TrevioTrip from "../../trevio/models/TrevioTrip.js";
 import User from "../../auth/models/User.js";
+import PartnerAgency from "../../auth/models/PartnerAgency.js";
 import BookingService from "../services/BookingService.js";
 import QuoteService from "../services/QuoteService.js";
 import PaymentService from "../services/PaymentService.js";
@@ -14,6 +15,8 @@ import AuditService from "../services/AuditService.js";
 import MessageService from "../services/MessageService.js";
 import PaymentSettings from "../models/PaymentSettings.js";
 import { calculateTrevistaPricing } from "../services/trevistaPricingService.js";
+import { createBookingQuote, consumeQuote, quoteDto } from "../services/BookingQuoteService.js";
+import masterDataService from "../../masterData/services/masterDataService.js";
 import { BOOKING_STATUS, PAYMENT_STATUS, BOOKING_FLOW } from "../../../constants/enums.js";
 import { sendBookingConfirmation, sendPaymentSuccess } from "../../../services/email.service.js";
 import config from "../../../config/index.js";
@@ -115,6 +118,18 @@ async function ownershipSnapshot(entity) {
   return { agencyId: entity.agencyId, agencySnapshot: agency ? { id: agency._id, name: agency.agencyName, ref: agency.partnerAgencyRef, logo: agency.logo, email: agency.contactEmail, phone: agency.contactPhone } : null, assignedAgent: agent?._id || null, assignedAgentRef: agent?.agentRef || "", assignedAgentSnapshot: agent ? { id: agent._id, name: agent.name, email: agent.email, phone: agent.phone, ref: agent.agentRef } : null };
 }
 
+async function agencyFeeSettings(entity) {
+  const defaults = { agentPercent: 2, servicePercent: 2, platformPercent: 2 };
+  if (!entity?.agencyId) return defaults;
+  const agency = await PartnerAgency.findById(entity.agencyId).select("settings.bookingFees").lean();
+  const fees = agency?.settings?.bookingFees || {};
+  return {
+    agentPercent: Number(fees.agentPercent ?? defaults.agentPercent),
+    servicePercent: Number(fees.servicePercent ?? defaults.servicePercent),
+    platformPercent: Number(fees.platformPercent ?? defaults.platformPercent),
+  };
+}
+
 function computeTokenAmount(booking, product) {
   if (product === BOOKING_FLOW.TREVIO) {
     return booking.tokenAmount
@@ -190,6 +205,22 @@ function buildStatusTimeline(status, product) {
   }));
 }
 
+// Create/submit are command endpoints. The booking journey only needs enough
+// data to continue or render its confirmation, not a hydrated booking record.
+const bookingCommandResponse = (booking, entity = null) => ({
+  id: String(booking._id),
+  bookingRef: booking.bookingRef,
+  product: booking.product,
+  status: booking.status,
+  paymentStatus: booking.paymentStatus,
+  tokenAmount: Number(booking.tokenAmount || 0),
+  price: {
+    total: Number(booking.priceSnapshot?.total || 0),
+    currency: booking.priceSnapshot?.currency || "INR",
+  },
+  productTitle: entity?.title || entity?.name || "",
+});
+
 const bookingLink = (booking) => `${String(config.SHELL_URL || "").replace(/\/$/, "")}/bookings/${booking._id}`;
 async function emailBooking(booking, payment = null) {
   const to = booking.primaryContact?.email;
@@ -223,7 +254,7 @@ function getPrefExtraPrice(prefArray, selectedValue) {
   return match?.extraPrice || 0;
 }
 
-function buildPriceSnapshotForProduct(product, entity, body = {}) {
+function buildPriceSnapshotForProduct(product, entity, body = {}, masterOptions = {}) {
   const travellers = Array.isArray(body.travellers) ? body.travellers : [];
   const guestsCount = Math.max(1, Number(body.adults || 1) + Number(body.children || 0) + Number(body.infants || 0));
   const preferences = body.preferences || {};
@@ -278,7 +309,7 @@ function buildPriceSnapshotForProduct(product, entity, body = {}) {
       roomType,
       transport: String(preferences.transport || body.transport || ""),
       addons,
-    });
+    }, masterOptions);
     const { pricing } = calc;
     return {
       min: pricing.baseTripTotal,
@@ -293,8 +324,10 @@ function buildPriceSnapshotForProduct(product, entity, body = {}) {
       roomTypeExtra: pricing.roomTypeExtra,
       transportExtra: pricing.transportExtra,
       addonAmount: pricing.addonAmount,
+      agentFee: pricing.agentFee,
+      serviceFee: pricing.serviceFee,
+      platformFee: pricing.platformFee,
       total: pricing.total,
-      tokenAmount: pricing.tokenAmount,
     };
   }
 
@@ -321,6 +354,7 @@ export const createBooking = asyncHandler(async (req, res) => {
     pickupCity = "",
     specialRequirements = "",
     idempotencyKey = "",
+    quoteId = "",
   } = req.body;
 
   const { userId } = authInfoFromReq(req);
@@ -346,7 +380,25 @@ export const createBooking = asyncHandler(async (req, res) => {
     if (existing) return sendSuccess(res, await BookingService.hydrate(existing), "Booking already exists");
   }
 
-  const priceSnapshot = buildPriceSnapshotForProduct(product, entity, req.body);
+  let v2Quote = null;
+  if (product === BOOKING_FLOW.TREVISTA) {
+    if (!quoteId) throw new ApiError(400, "A current booking quote is required");
+    v2Quote = await consumeQuote({ quoteId, userId, guestSessionId: cleanString(req.body.guestSessionId) });
+    if (String(v2Quote.tourId) !== String(entity._id)) throw new ApiError(400, "Quote does not belong to this tour");
+  }
+  const pricingOptionSets = product === BOOKING_FLOW.TREVISTA
+    ? await masterDataService.getOptionSets(["trevista.defaultRoomOptions", "trevista.transportOptions"])
+    : {};
+  if (product === BOOKING_FLOW.TREVISTA) pricingOptionSets.fees = await agencyFeeSettings(entity);
+  const priceSnapshot = v2Quote ? {
+    currency: v2Quote.pricing.currency,
+    total: Math.round(v2Quote.pricing.finalPayableMinor / 100),
+    perPerson: Math.round(v2Quote.pricing.tourSubtotalMinor / Math.max(1, guestsCount) / 100),
+    isFinal: true, source: "booking_quote_v2", note: "Immutable V2 quote snapshot",
+  } : buildPriceSnapshotForProduct(product, entity, req.body, {
+    roomOptions: pricingOptionSets["trevista.defaultRoomOptions"] || [],
+    transportOptions: pricingOptionSets["trevista.transportOptions"] || [],
+  });
 
   const bookingData = {
     user: userId,
@@ -376,6 +428,9 @@ export const createBooking = asyncHandler(async (req, res) => {
       extraActivities: preferences.extraActivities || [],
     },
     priceSnapshot,
+    pricingVersion: v2Quote ? "V2" : "LEGACY",
+    quoteId: v2Quote?._id || null,
+    pricingSnapshot: v2Quote?.pricing || null,
     paymentSummary: {
       total: priceSnapshot.total,
       paid: 0,
@@ -395,21 +450,23 @@ export const createBooking = asyncHandler(async (req, res) => {
     bookingData.paymentStatus = PAYMENT_STATUS.TOKEN_PENDING;
   } else {
     bookingData.tour = entity._id;
+    bookingData.seatsReserved = 0;
     bookingData.paymentStatus = PAYMENT_STATUS.UNPAID;
   }
 
   let reservedSeats = 0;
-  const hasManagedInventory = product === BOOKING_FLOW.TREVIO
-    && entity.availability?.seatsAvailable != null;
+  const hasManagedInventory = entity.availability?.seatsAvailable != null && (
+    product === BOOKING_FLOW.TREVIO
+    || (product === BOOKING_FLOW.TREVISTA && entity.flights?.included && entity.flights?.inventoryManaged)
+  );
 
   if (hasManagedInventory) {
-    const reservedTrip = await TrevioTrip.findOneAndUpdate(
-      {
-        _id: entity._id,
-        status: "listed",
-        isListed: true,
-        "availability.seatsAvailable": { $gte: guestsCount },
-      },
+    const inventoryModel = product === BOOKING_FLOW.TREVIO ? TrevioTrip : Tour;
+    const inventoryQuery = product === BOOKING_FLOW.TREVIO
+      ? { _id: entity._id, status: "listed", isListed: true, "availability.seatsAvailable": { $gte: guestsCount } }
+      : { _id: entity._id, status: "published", isPublished: { $ne: false }, "flights.included": true, "flights.inventoryManaged": true, "availability.seatsAvailable": { $gte: guestsCount } };
+    const reservedTrip = await inventoryModel.findOneAndUpdate(
+      inventoryQuery,
       { $inc: { "availability.seatsAvailable": -guestsCount } },
       { new: true },
     );
@@ -425,7 +482,8 @@ export const createBooking = asyncHandler(async (req, res) => {
     booking = await Booking.create(bookingData);
   } catch (error) {
     if (reservedSeats > 0) {
-      await TrevioTrip.findByIdAndUpdate(
+      const inventoryModel = product === BOOKING_FLOW.TREVIO ? TrevioTrip : Tour;
+      await inventoryModel.findByIdAndUpdate(
         entity._id,
         { $inc: { "availability.seatsAvailable": reservedSeats } },
       );
@@ -454,8 +512,7 @@ export const createBooking = asyncHandler(async (req, res) => {
 
   await recordBookingAudit(req, booking, "booking.create");
 
-  const hydrated = await BookingService.hydrate(booking);
-  return sendSuccess(res, { ...hydrated, flowSteps: buildFlowSteps(product) }, "Booking created");
+  return sendSuccess(res, bookingCommandResponse(booking, entity), "Booking created");
 });
 
 // ────────────────────────────────────────────
@@ -468,8 +525,22 @@ export const getTrevistaPricing = asyncHandler(async (req, res) => {
   const entity = await resolveProductEntity(BOOKING_FLOW.TREVISTA, tourRef);
   if (!entity) throw new ApiError(404, "Tour not found");
 
-  const calc = calculateTrevistaPricing(entity, req.body || {});
+  const optionSets = await masterDataService.getOptionSets(["trevista.defaultRoomOptions", "trevista.transportOptions"]);
+  const fees = await agencyFeeSettings(entity);
+  const calc = calculateTrevistaPricing(entity, req.body || {}, {
+    roomOptions: optionSets["trevista.defaultRoomOptions"] || [],
+    transportOptions: optionSets["trevista.transportOptions"] || [],
+    fees,
+  });
   return sendSuccess(res, calc, "Pricing calculated");
+});
+
+export const createV2Quote = asyncHandler(async (req, res) => {
+  const { userId } = authInfoFromReq(req);
+  const guestSessionId = cleanString(req.headers["x-guest-session-id"] || req.body?.guestSessionId);
+  if (!userId && !/^[a-zA-Z0-9-]{16,100}$/.test(guestSessionId)) throw new ApiError(400, "A valid guest session is required");
+  const quote = await createBookingQuote({ userId, guestSessionId, input: req.body || {} });
+  return sendSuccess(res, quoteDto(quote), "Booking quote created");
 });
 
 // ────────────────────────────────────────────
@@ -549,13 +620,9 @@ export const submitBooking = asyncHandler(async (req, res) => {
     });
   }
 
-  const hydrated = await BookingService.hydrate(booking);
   await emailBooking(booking).catch((error) => console.error("Booking confirmation email failed:", error.message));
-  const cancellationPolicy = product === BOOKING_FLOW.TREVIO
-    ? (booking.trip?.cancellationPolicy || "")
-    : (booking.tour?.cancellationPolicy || "");
-  const timeline = buildStatusTimeline(booking.status, product);
-  return sendSuccess(res, { ...hydrated, flowSteps: buildFlowSteps(product), cancellationPolicy, timeline }, "Booking submitted");
+  const entity = product === BOOKING_FLOW.TREVIO ? booking.trip : booking.tour;
+  return sendSuccess(res, bookingCommandResponse(booking, entity), "Booking submitted");
 });
 
 // ────────────────────────────────────────────
@@ -959,7 +1026,7 @@ export const cancelBooking = asyncHandler(async (req, res) => {
 
   const cancellable = ["DRAFT", "QUOTE_REQUESTED", "UNDER_REVIEW", "QUOTE_READY", "QUOTE_SENT", "AWAITING_TOKEN_PAYMENT", "PAYMENT_PENDING", "CONFIRMED"];
   const retryingSeatRelease = booking.status === BOOKING_STATUS.CANCELLED
-    && booking.trip
+    && (booking.trip || booking.tour)
     && booking.seatsReserved > 0;
   if (!cancellable.includes(booking.status) && !retryingSeatRelease) {
     throw new ApiError(400, `Cannot cancel booking in ${booking.status} state`);
@@ -971,7 +1038,7 @@ export const cancelBooking = asyncHandler(async (req, res) => {
     await booking.save();
   }
 
-  if (booking.trip && booking.seatsReserved > 0) {
+  if ((booking.trip || booking.tour) && booking.seatsReserved > 0) {
     const seatsToRelease = booking.seatsReserved;
     const releaseClaim = await Booking.findOneAndUpdate(
       { _id: booking._id, seatsReserved: seatsToRelease },
@@ -981,8 +1048,9 @@ export const cancelBooking = asyncHandler(async (req, res) => {
 
     if (releaseClaim) {
       try {
-        const releasedTrip = await TrevioTrip.findOneAndUpdate(
-          { _id: booking.trip },
+        const inventoryModel = booking.trip ? TrevioTrip : Tour;
+        const releasedTrip = await inventoryModel.findOneAndUpdate(
+          { _id: booking.trip || booking.tour },
           { $inc: { "availability.seatsAvailable": seatsToRelease } },
           { new: true },
         );
@@ -1159,4 +1227,5 @@ export default {
   cancelBooking,
   confirmBooking,
   listAllBookings,
+  createV2Quote,
 };

@@ -35,7 +35,7 @@ export default function Shell({ children, labels, headerConfig, onWishlist, wish
 
   const authAction = buildAuthAction
     ? buildAuthAction(headerConfig, userSession)
-    : { label: "Sign in", href: buildGlobalAuthUrl({ app: "trevio" }), variant: "primary" };
+    : { label: "Sign in", href: buildGlobalAuthUrl({ app: "trevio", returnTo: window.location.href }), variant: "primary" };
 
   return (
     <>

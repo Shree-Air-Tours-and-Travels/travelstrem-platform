@@ -69,6 +69,8 @@ export default function TravellerStep({
   TRAVELLER_PREFERENCE_FIELDS,
   trip,
   productData,
+  updateTrip,
+  product,
 }) {
   const [expandedTraveller, setExpandedTraveller] = useState(0);
   const { country: detectedCountry, loading: geoLoading } = useGeoLocation();
@@ -118,6 +120,10 @@ export default function TravellerStep({
   ], 3, 1), []);
 
   const contactErrors = useMemo(() => prefixedErrors(errors, "contact."), [errors]);
+  const passportSupportConfig = useMemo(() => buildStaticConfig([{ id: "passport-support", fields: [
+    { name: "passportReminder", type: "checkbox", checkboxLabel: "I want Trevista to remind me about passport validity and visa requirements." },
+    { name: "visaAssistance", type: "checkbox", checkboxLabel: "Add visa assistance from TreCare." },
+  ] }], 1, 1), []);
 
   const getDynamicFields = () => {
     return TRAVELLER_FIELDS.map((field) => {
@@ -204,6 +210,11 @@ export default function TravellerStep({
           );
         })}
       </div>
+
+      {product === "trevista" && updateTrip ? <section className="be-passport-support" aria-labelledby="passport-support-title">
+        <h3 id="passport-support-title">Passport and visa support</h3>
+        <ConfigurableForm config={passportSupportConfig} values={trip} errors={{}} onChange={updateTrip} />
+      </section> : null}
     </div>
   );
 }

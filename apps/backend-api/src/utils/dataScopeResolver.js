@@ -24,6 +24,7 @@ class DataScopeResolver {
     return this._cached("shared", () => ({
       dataScope: {
         options: { ...sharedData?.dataScope?.options },
+        optionSets: { ...sharedData?.dataScope?.optionSets },
       },
       elements: {
         labels: { ...sharedData?.elements?.labels },
@@ -38,6 +39,7 @@ class DataScopeResolver {
       data: { ...component?.data },
       dataScope: {
         options: { ...component?.dataScope?.options },
+        optionSets: { ...component?.dataScope?.optionSets },
       },
       elements: {
         labels: { ...component?.elements?.labels },
@@ -69,6 +71,7 @@ class DataScopeResolver {
     return {
       dataScope: {
         options: { ...remoteOverrides?.dataScope?.options },
+        optionSets: { ...remoteOverrides?.dataScope?.optionSets },
       },
       elements: {
         labels: { ...remoteOverrides?.elements?.labels },
@@ -82,6 +85,7 @@ class DataScopeResolver {
       data: { ...featureOverrides?.data },
       dataScope: {
         options: { ...featureOverrides?.dataScope?.options },
+        optionSets: { ...featureOverrides?.dataScope?.optionSets },
       },
       elements: {
         labels: { ...featureOverrides?.elements?.labels },
@@ -101,6 +105,10 @@ class DataScopeResolver {
 
   mergeOptions(...sources) {
     return Object.assign({}, ...sources.map((s) => s?.dataScope?.options || {}));
+  }
+
+  mergeOptionSets(...sources) {
+    return Object.assign({}, ...sources.map((s) => s?.dataScope?.optionSets || {}));
   }
 
   resolve(scopeTree = {}) {
@@ -126,6 +134,7 @@ class DataScopeResolver {
       environment
     );
     const options = this.mergeOptions(shared, page, remote, feature, environment);
+    const optionSets = this.mergeOptionSets(shared, page, remote, feature, environment);
 
     return {
       status: "success",
@@ -138,7 +147,7 @@ class DataScopeResolver {
             resolvedAt: new Date().toISOString(),
           },
         },
-        dataScope: { options },
+        dataScope: { options, optionSets },
         elements: { labels, urls },
         structure: Object.keys(feature.structure).length ? feature.structure : page.structure,
       },
@@ -156,6 +165,7 @@ class DataScopeResolver {
     const labels = this.mergeLabels(shared, page, remote, feature, environment);
     const urls = this.mergeUrls(shared, page, remote, feature, environment);
     const options = this.mergeOptions(shared, page, remote, feature, environment);
+    const optionSets = this.mergeOptionSets(shared, page, remote, feature, environment);
 
     return {
       shared,
@@ -166,6 +176,7 @@ class DataScopeResolver {
       mergedLabels: labels,
       mergedUrls: urls,
       mergedOptions: options,
+      mergedOptionSets: optionSets,
     };
   }
 

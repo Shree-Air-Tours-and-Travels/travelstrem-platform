@@ -3,6 +3,8 @@ import { initApp } from "../../core/initApp";
 import { clearUserSessionCache } from "../../services/userSession";
 import { clearCsrfToken } from "../../services/security";
 import { clearAuthBrowserState, subscribeAuthEvents } from "@packages/trem-auth-core";
+import { buildGlobalAuthUrl } from "@packages/trem-utils";
+import { isGuestSession } from "../../services/guestSession";
 import {
   registerSessionCacheClearer,
 } from "@packages/trem-events";
@@ -103,10 +105,13 @@ export function AppShellProvider({ children }) {
 
   React.useEffect(() => {
     const redirectToLogin = () => {
+      if (!sessionRef.current?.isAuthenticated && isGuestSession()) return;
       clearLocalAuthState();
       setState({ loading: false, error: null, session: DEFAULT_SESSION });
-      const authUrl = process.env.REACT_APP_AUTH_APP_URL || "/";
-      window.location.replace(authUrl);
+      window.location.replace(buildGlobalAuthUrl({
+        app: "app-shell",
+        returnTo: window.location.href,
+      }));
     };
     const unsubscribe = subscribeAuthEvents((message) => {
       if (message?.type === "LOGOUT") {
@@ -117,7 +122,10 @@ export function AppShellProvider({ children }) {
         loadSession({ background: true });
       }
     });
-    const onWindowLogout = () => redirectToLogin();
+    const onWindowLogout = () => {
+      if (!sessionRef.current?.isAuthenticated && isGuestSession()) return;
+      redirectToLogin();
+    };
     window.addEventListener("USER_LOGOUT", onWindowLogout);
     return () => {
       unsubscribe();

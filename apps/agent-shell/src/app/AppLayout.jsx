@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { AppHeader, PortalPreloader, SideBar } from "@packages/trem-ui";
 import { clearAuthBrowserState, emitAuthEvent } from "@packages/trem-auth-core";
 import { emit } from "@packages/trem-events";
-import { useThemeMode } from "@packages/trem-utils";
+import { buildGlobalAuthUrl, useThemeMode } from "@packages/trem-utils";
 import Routers from "./routes";
 import { isAllowedAgentRole, useAgentPortalConfig } from "./providers/AgentPortalProvider";
 import authService from "../services/authService";
@@ -23,7 +23,7 @@ function activeNavigation(pathname) {
 }
 
 export default function AppLayout({ embedded = false }) {
-    const { loading, session, reload } = useAgentPortalConfig();
+    const { loading, session } = useAgentPortalConfig();
     const { theme, toggleTheme } = useThemeMode();
     const navigate = useNavigate();
     const location = useLocation();
@@ -43,9 +43,8 @@ export default function AppLayout({ embedded = false }) {
         clearAuthBrowserState({ prefixes: ["agentTREM"] });
         emit("USER_LOGOUT", { source: "partner-shell" }, { skipController: true });
         emitAuthEvent({ type: "LOGOUT" });
-        await reload({ forceSession: true, location: { pathname: "/login", search: "", hash: "" } });
-        navigate("/login", { replace: true });
-    }, [navigate, reload]);
+        window.location.replace(buildGlobalAuthUrl({ app: "partner", returnTo: window.location.origin }));
+    }, []);
 
     const sections = useMemo(() => [
         {

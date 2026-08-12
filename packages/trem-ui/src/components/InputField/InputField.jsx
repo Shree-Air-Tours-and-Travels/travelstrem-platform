@@ -199,6 +199,11 @@ export default function InputField({
   disabled,
   className = "",
   maxLength,
+  min,
+  max,
+  step,
+  inputMode,
+  ariaLabel,
   countryCode: initialCountryCode = "+91",
   onCountryCodeChange,
 }) {
@@ -257,14 +262,19 @@ export default function InputField({
         )}
         <input
           className="trem-input__field"
-          type={isTel ? "tel" : variant === "number" || isMonthYear ? "text" : variant}
-          inputMode={variant === "number" || isTel || isMonthYear ? "numeric" : undefined}
+          type={isTel ? "tel" : isMonthYear ? "text" : variant}
+          inputMode={inputMode || (variant === "number" || isTel || isMonthYear ? "numeric" : undefined)}
           value={value}
           onChange={handleChange}
           placeholder={placeholder || (isMonthYear ? "MM/YY" : undefined)}
           disabled={disabled}
           maxLength={isTel ? maxLength || 10 : isMonthYear ? 5 : maxLength}
           autoComplete={isTel ? "tel" : variant === "email" ? "email" : "off"}
+          min={min}
+          max={max}
+          step={step}
+          aria-label={ariaLabel || label || placeholder}
+          aria-invalid={Boolean(error)}
         />
       </div>
     </div>

@@ -9,9 +9,13 @@
       "labels": {
         "title": "Included stays",
         "viewOptions": "View hotel options",
+        "updateHotel": "Update hotel",
         "optionsTitle": "Hotel options",
         "optionsSubtitle": "Choose how you'd like to stay. Upgrade costs are per room, per stay.",
         "recommended": "Recommended",
+        "selected": "Selected",
+        "applyHotel": "Apply hotel",
+        "cancel": "Cancel",
         "nightsLabel": "nights",
         "empty": "This tour does not include accommodation. Contact our team for hotel options."
       },

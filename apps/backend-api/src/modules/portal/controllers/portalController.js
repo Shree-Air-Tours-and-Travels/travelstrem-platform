@@ -646,12 +646,50 @@ export const getHeaderConfig = async (req, res) => {
     }
 };
 
-export const getSidebarConfig = async (_req, res) => {
-    return res.json(sidebarConfigTemplate);
+const withSessionAuthAction = (template, isAuthenticated, surface) => {
+    if (isAuthenticated) return template;
+
+    if (surface === "sidebar") {
+        return {
+            ...template,
+            componentData: {
+                ...template.componentData,
+                sections: (template.componentData?.sections || []).map((section) => ({
+                    ...section,
+                    items: (section.items || []).map((item) => (
+                        item.action === "logout"
+                            ? { ...item, id: "login", label: "Sign In", icon: "login", action: "login" }
+                            : item
+                    )),
+                })),
+            },
+        };
+    }
+
+    return {
+        ...template,
+        componentData: {
+            ...template.componentData,
+            user: {
+                ...template.componentData?.user,
+                items: (template.componentData?.user?.items || []).map((item) => (
+                    item.action === "logout"
+                        ? { ...item, id: "login", label: "Sign In", icon: "login", action: "login" }
+                        : item
+                )),
+            },
+        },
+    };
 };
 
-export const getAppHeaderConfig = async (_req, res) => {
-    return res.json(appHeaderConfigTemplate);
+export const getSidebarConfig = async (req, res) => {
+    const session = await getSessionFromRequest(req);
+    return res.json(withSessionAuthAction(sidebarConfigTemplate, session.isAuthenticated, "sidebar"));
+};
+
+export const getAppHeaderConfig = async (req, res) => {
+    const session = await getSessionFromRequest(req);
+    return res.json(withSessionAuthAction(appHeaderConfigTemplate, session.isAuthenticated, "header"));
 };
 
 export const getPageConfig = async (req, res) => {

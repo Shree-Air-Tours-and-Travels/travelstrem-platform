@@ -3,6 +3,13 @@
 .trem-singleselect {
   width: 100%;
 
+  // Custom select triggers still use Dropdown's generic inline wrapper.
+  // Stretch that wrapper so the control follows any parent/container width.
+  .trem-dropdown,
+  .trem-dropdown__trigger {
+    width: 100%;
+  }
+
   &__clear {
     display: inline-flex;
     align-items: center;

@@ -213,7 +213,17 @@ export const createAuthApi = (base = process.env.REACT_APP_API_URL || "", portal
 
 export const createAuthService = (api) => ({
   getConfig: () => api.get("/auth/config"),
+  getMethods: () => api.get("/auth/methods"),
   getSession: () => api.get("/auth/session"),
+  getCurrentUser: () => api.get("/auth/me"),
+  requestMobileOtp: (payload) => api.post("/auth/mobile/request-otp", payload),
+  verifyMobileOtp: (payload) => api.post("/auth/mobile/verify-otp", payload),
+  getGoogleAuthUrl: ({ portal = "customer", returnTo = "" } = {}) => {
+    const url = new URL(`${api.defaults.baseURL.replace(/\/$/, "")}/auth/google`, typeof window !== "undefined" ? window.location.origin : "http://localhost");
+    url.searchParams.set("portal", portal);
+    if (returnTo) url.searchParams.set("returnTo", returnTo);
+    return url.toString();
+  },
   requestAdminRegistrationOtp: (payload) => api.post("/auth/admin-registration-otp", payload, { headers: { "Content-Type": "application/json" } }),
   verifyAdminRegistrationOtp: (payload) => api.post("/auth/verify-admin-registration-otp", payload, { headers: { "Content-Type": "application/json" } }),
   login: (payload) => api.post("/auth/login", payload, { headers: { "Content-Type": "application/json" } }),
@@ -236,7 +246,6 @@ export const normalizeAuthConfig = (remote, roleOptions, defaultRole, storagePre
   return ({
   defaultRole: defaultRole || remote?.defaultRole || "member",
   roles: Array.isArray(roleOptions) && roleOptions.length ? roleOptions : Array.isArray(remote?.roles) ? remote.roles : DEFAULT_AUTH_ROLES,
-  socialProviders: Array.isArray(remote?.socialProviders) ? remote.socialProviders : [],
   strings: { ...(remote?.strings || {}) },
   header: { ...(remote?.header || {}) },
   company: {

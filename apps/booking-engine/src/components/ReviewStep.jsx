@@ -4,11 +4,15 @@ import { formatTourLocation } from "../utils/format.js";
 const formatMoney = (v) => `₹${Number(v || 0).toLocaleString("en-IN")}`;
 
 export default function ReviewStep({ tour, trip, travellers, contact, pricing, product, addons = [], onEdit }) {
+  const isV2 = product === "trevista" && pricing?.moneyUnit === "PAISE";
+  const fromMinor = (value) => Number(value || 0) / 100;
   const totalGuests = Number(trip.adults || 1) + Number(trip.children || 0) + Number(trip.infants || 0);
-  const perPerson = pricing?.perPerson || 0;
+  const perPerson = isV2
+    ? fromMinor(pricing?.items?.find((item) => item.code === "TOUR_BASE")?.unitAmountMinor)
+    : pricing?.perPerson || 0;
   const baseTripTotal = product === "trevio"
     ? Number(pricing?.baseTripTotal ?? pricing?.baseAmount ?? 0)
-    : Number(pricing?.baseTripTotal || perPerson);
+    : isV2 ? fromMinor(pricing?.tourSubtotalMinor) : Number(pricing?.baseTripTotal || perPerson);
   const totalPrefExtras = pricing?.totalPrefExtras || 0;
   const roomTypeExtra = pricing?.roomTypeExtra || 0;
   const perTravellerExtras = pricing?.perTravellerExtras || [];
@@ -52,7 +56,7 @@ export default function ReviewStep({ tour, trip, travellers, contact, pricing, p
             {product === "trevista" && (
               <div className="be-review__card-row">
                 <span className="be-review__label">Flights</span>
-                <span className="be-review__value">{trip.addFlights === "flights" ? "Yes, include flights" : "Not now"}</span>
+                <span className="be-review__value">{trip.addFlights === "included" ? "Included" : trip.addFlights === "flights" ? "Yes, include flights" : "Not included"}</span>
               </div>
             )}
             <div className="be-review__card-row">
@@ -171,6 +175,20 @@ export default function ReviewStep({ tour, trip, travellers, contact, pricing, p
         <section className="be-review__section">
           <h3 className="be-review__heading">Price Breakdown</h3>
           <div className="be-review__pricing">
+            {product === "trevista" && !isV2 && <div className="be-customize__loading">Waiting for the server quote…</div>}
+            {isV2 && pricing.items.map((item) => (
+              <div className={`be-review__price-row${item.category === "DISCOUNT" ? " be-review__price-negative" : ""}`} key={item.code}>
+                <span>{item.label}{item.quantity > 1 ? ` × ${item.quantity}` : ""}</span>
+                <span>{item.amountMinor < 0 ? "−" : ""}{formatMoney(Math.abs(fromMinor(item.amountMinor)))}</span>
+              </div>
+            ))}
+            {isV2 && (
+              <div className="be-review__price-row be-review__price-row--total">
+                <span>Total payable</span>
+                <span>{formatMoney(fromMinor(pricing.finalPayableMinor))}</span>
+              </div>
+            )}
+            {product !== "trevista" && <div className="be-review__pricing-legacy">
             <div className="be-review__price-row">
               <span>Base price × {totalGuests} guests</span>
               <span>{formatMoney(baseTripTotal)}</span>
@@ -195,6 +213,9 @@ export default function ReviewStep({ tour, trip, travellers, contact, pricing, p
                 <span className="be-review__price-positive">+{formatMoney(pricing.addonAmount)}</span>
               </div>
             )}
+            {product === "trevista" && Number(pricing?.agentFee || 0) > 0 && <div className="be-review__price-row"><span>Agent fee</span><span>{formatMoney(pricing.agentFee)}</span></div>}
+            {product === "trevista" && Number(pricing?.serviceFee || 0) > 0 && <div className="be-review__price-row"><span>Service fee</span><span>{formatMoney(pricing.serviceFee)}</span></div>}
+            {product === "trevista" && Number(pricing?.platformFee || 0) > 0 && <div className="be-review__price-row"><span>Platform fee</span><span>{formatMoney(pricing.platformFee)}</span></div>}
             {perTravellerExtras.map((extra, i) => {
               if (extra.total === 0) return null;
               return (
@@ -240,6 +261,7 @@ export default function ReviewStep({ tour, trip, travellers, contact, pricing, p
                 <span>{formatMoney(pricing.tokenAmount)}</span>
               </div>
             )}
+            </div>}
           </div>
         </section>
       </div>
@@ -247,33 +269,7 @@ export default function ReviewStep({ tour, trip, travellers, contact, pricing, p
       {product === "trevista" && (
         <div className="be-review__note">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.2" /><path d="M8 5v3.5M8 10.5v.01" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" /></svg>
-          After submission, our travel specialist will prepare a personalized quote for you.
-        </div>
-      )}
-      {product === "trevista" && (
-        <section className="be-review__section">
-          <h3 className="be-review__heading">Payment schedule</h3>
-          <div className="be-review__pricing">
-            <div className="be-review__price-row">
-              <span>Booking amount (due now, 30%)</span>
-              <span>{formatMoney(Math.round((pricing?.total || 0) * 0.3))}</span>
-            </div>
-            <div className="be-review__price-row">
-              <span>Balance (after quote confirmation)</span>
-              <span>{formatMoney(Math.round((pricing?.total || 0) * 0.7))}</span>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {product === "trevista" && (
-        <div className="be-review__terms">
-          <span className="be-review__terms-check">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="12" height="12" rx="3" fill="currentColor" /><path d="M4 7l2 2 4-4" stroke="#fff" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
-          </span>
-          <span>
-            I agree to the terms and understand that a refundable booking amount of ₹{Math.round((pricing?.total || 0) * 0.3).toLocaleString("en-IN")} will be charged now. The balance is payable after my quote is confirmed.
-          </span>
+          This price is calculated by TravelsTREM from your current selections and is stored with your booking.
         </div>
       )}
     </div>

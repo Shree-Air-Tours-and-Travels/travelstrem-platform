@@ -66,7 +66,15 @@ const corsOptions = {
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "x-ignore-cookie-auth", "X-CSRF-Token", "X-Travelstrem-Portal"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With",
+    "x-ignore-cookie-auth",
+    "X-CSRF-Token",
+    "X-Travelstrem-Portal",
+    "X-Guest-Session-Id",
+  ],
   exposedHeaders: ["Content-Disposition"],
 };
 

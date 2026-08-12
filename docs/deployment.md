@@ -108,11 +108,12 @@ Optional integrations:
 
 ```env
 AGENT_WEBHOOK_URL=<zapier-or-automation-webhook>
-OAUTH_GOOGLE_URL=<full-google-authorize-url>
-OAUTH_GITHUB_URL=<full-github-authorize-url>
-OAUTH_APPLE_URL=<full-apple-authorize-url>
 REDIS_URL=<redis-url-if-notification-queue-uses-redis>
 ```
+
+For backend-driven Google login, configure `GOOGLE_AUTH_ENABLED`, `GOOGLE_CLIENT_ID`,
+`GOOGLE_CLIENT_SECRET`, and the exact backend `GOOGLE_CALLBACK_URL` described in
+[`authentication.md`](./authentication.md). Do not put Google client secrets or provider tokens in a frontend environment.
 
 Important: use a first-party API domain such as `api.travelstrem.com`. Authentication is intentionally isolated into customer, AdminTREM, and PartnerTREM cookie pairs. Signing into one portal must not replace another portal's user. `AUTH_COOKIE_DOMAIN=.travelstrem.com` is supported, but the separate cookie names still preserve this boundary. A host-only API cookie (leave `AUTH_COOKIE_DOMAIN` empty) is preferable when every frontend calls the same `api.travelstrem.com` host.
 

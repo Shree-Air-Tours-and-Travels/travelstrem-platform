@@ -6,6 +6,7 @@ import { validatePageContract } from "../../shared/validators/pageContractValida
 import Booking from "../bookings/models/Booking.js";
 import config from "../../config/index.js";
 import { toPublicBookingReference } from "../bookings/utils/bookingReference.js";
+import masterDataService from "../masterData/services/masterDataService.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -112,6 +113,11 @@ class PageDefinitionService {
             {},
             pageComponent?.dataScope?.options || {},
             ...widgetContracts.map((widget) => widget?.dataScope?.options || {}),
+          ),
+          optionSets: Object.assign(
+            {},
+            pageComponent?.dataScope?.optionSets || {},
+            ...widgetContracts.map((widget) => widget?.dataScope?.optionSets || {}),
           ),
         },
         elements: {
@@ -252,6 +258,7 @@ class PageDefinitionService {
     }
     if (injectDataScope) {
       payload.component.dataScope = {
+        ...payload.component.dataScope,
         options: {
           ...payload.component.dataScope.options,
           ...injectDataScope.options,
@@ -272,6 +279,8 @@ class PageDefinitionService {
         ...injectUrls,
       };
     }
+
+    payload.component = await masterDataService.hydrateDataScope(payload.component);
 
     if (authUser?.userId && resolvedKey === "app-shell/app-shell") {
       try {
@@ -315,6 +324,7 @@ class PageDefinitionService {
           ...injectData,
         },
         dataScope: {
+          optionSets: { ...resolved.definition.component.dataScope.optionSets },
           options: {
             ...resolved.definition.component.dataScope.options,
             ...injectDataScope?.options,
@@ -367,6 +377,7 @@ class PageDefinitionService {
       component: {
         data: { ...merged.component.data, ...options.injectData },
         dataScope: {
+          optionSets: { ...merged.component.dataScope.optionSets },
           options: {
             ...merged.component.dataScope.options,
             ...options.injectDataScope?.options,

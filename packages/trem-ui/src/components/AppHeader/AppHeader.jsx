@@ -56,30 +56,34 @@ export default function AppHeader({
       <Icon name="chevronDown" size={17} />
     </button>
   );
-  const userItems = (userConfig.items || []).map((item) => ({
-    id: item.id,
-    label: item.label,
-    icon: item.icon,
-    disabled: item.disabled,
-    onClick: () => {
-      if (item.type === "external" && item.href) window.location.assign(item.href);
-      else if (item.action) onAction?.(item.action, item);
-    },
-  }));
-  const productItems = (productMenu.items || []).map((item) => ({
-    id: item.id,
-    label: item.label,
-    icon: item.icon,
-    disabled: item.disabled,
-    onClick: item.onClick,
-  }));
+  const userItems = (userConfig.items || [])
+    .filter((item) => !item.hide)
+    .map((item) => ({
+      id: item.id,
+      label: item.label,
+      icon: item.icon,
+      disabled: item.disabled,
+      onClick: () => {
+        if (item.type === "external" && item.href) window.location.assign(item.href);
+        else if (item.action) onAction?.(item.action, item);
+      },
+    }));
+  const productItems = (productMenu.items || [])
+    .filter((item) => !item.hide)
+    .map((item) => ({
+      id: item.id,
+      label: item.label,
+      icon: item.icon,
+      disabled: item.disabled,
+      onClick: item.onClick,
+    }));
 
   return (
     <>
       <header
         className="trem-app-header"
         aria-label={config.ariaLabel || "Application header"}
-        style={{ "--trem-app-header-sidebar-offset": sidebarCollapsed ? "76px" : "280px" }}
+        style={{ "--trem-app-header-sidebar-offset": sidebarCollapsed ? "76px" : "260px" }}
       >
         <div className="trem-app-header__mobile-row">
           <div className="trem-app-header__brand">
@@ -105,7 +109,7 @@ export default function AppHeader({
               trigger={() => <button type="button" className="trem-app-header__product" aria-label={productMenu.ariaLabel || "Choose product"}><span>{productMenu.label}</span><Icon name="chevronDown" size={16} /></button>}
             />
           ) : null}
-          {primaryAction.label ? (
+          {!primaryAction.hide && primaryAction.label ? (
             <button
               type="button"
               className="trem-app-header__primary"
@@ -117,16 +121,18 @@ export default function AppHeader({
             </button>
           ) : null}
 
-          <button
-            type="button"
-            className="trem-app-header__icon-button trem-app-header__notification"
-            aria-label={notification.label || "Notifications"}
-            disabled={notification.enabled === false}
-            onClick={notification.enabled ? notification.onClick : undefined}
-          >
-            <Icon name={notification.icon || "bell"} size={21} />
-            {notification.count ? <span>{notification.count > 9 ? "9+" : notification.count}</span> : null}
-          </button>
+          {!notification.hide ? (
+            <button
+              type="button"
+              className="trem-app-header__icon-button trem-app-header__notification"
+              aria-label={notification.label || "Notifications"}
+              disabled={notification.enabled === false}
+              onClick={notification.enabled ? notification.onClick : undefined}
+            >
+              <Icon name={notification.icon || "bell"} size={21} />
+              {notification.count ? <span>{notification.count > 9 ? "9+" : notification.count}</span> : null}
+            </button>
+          ) : null}
 
           <button
             type="button"

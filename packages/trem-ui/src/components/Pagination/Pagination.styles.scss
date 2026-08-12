@@ -1,0 +1,6 @@
+@import "../../styles/base/typography";
+
+.trem-pagination { display: flex; align-items: center; justify-content: center; gap: $space-2; padding-block: $space-4; }
+.trem-pagination__pages { display: flex; align-items: center; gap: $space-1; }
+.trem-pagination__page.ui-button { min-width: 2.25rem; }
+.trem-pagination__ellipsis { display: inline-grid; place-items: center; min-width: 1.5rem; color: var(--muted); }

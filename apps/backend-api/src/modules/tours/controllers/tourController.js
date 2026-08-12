@@ -1,13 +1,78 @@
 // modules/tours/controller.js
 const isObject = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
 const toString = (v) => String(v ?? "");
+const displayText = (value, fallback = "") => {
+    if (value == null) return fallback;
+    if (["string", "number", "boolean"].includes(typeof value)) return String(value).trim() || fallback;
+    if (Array.isArray(value)) return value.map((item) => displayText(item)).filter(Boolean).join(", ") || fallback;
+    if (!isObject(value)) return fallback;
+    const direct = value.label ?? value.name ?? value.title;
+    if (direct != null && direct !== value) return displayText(direct, fallback);
+    const city = displayText(value.city);
+    const country = displayText(value.country);
+    if (city && country && city.toLowerCase() !== country.toLowerCase()) return `${city}, ${country}`;
+    if (city || country) return city || country;
+    const from = displayText(value.from);
+    const to = displayText(value.to);
+    if (from && to) return `${from} to ${to}`;
+    return from || to || fallback;
+};
+const normalizeCity = (value) => {
+    if (!isObject(value)) return displayText(value) || null;
+    if (value.from != null || value.to != null) {
+        return { ...value, from: displayText(value.from), to: displayText(value.to) };
+    }
+    return displayText(value) || null;
+};
+const normalizeAddress = (value) => isObject(value)
+    ? Object.fromEntries(Object.entries(value).map(([key, item]) => [key, displayText(item)]))
+    : null;
+const normalizeTextList = (value) => Array.isArray(value)
+    ? value.map((item) => displayText(item)).filter(Boolean)
+    : [];
+const fallbackIncludedStays = (tour = {}) => {
+    const stays = new Map();
+    (Array.isArray(tour.itinerary) ? tour.itinerary : []).forEach((day) => {
+        const propertyName = displayText(day?.accommodation);
+        if (!propertyName || /^n\/?a$/i.test(propertyName)) return;
+        const location = displayText(day?.location, displayText(tour.city?.to));
+        const key = `${location}:${propertyName}`;
+        const stay = stays.get(key) || {
+            nights: 0,
+            location,
+            propertyName,
+            propertyClass: "Standard stay",
+            roomType: "Double or twin room",
+            meals: [],
+            description: "Accommodation included as per the itinerary.",
+        };
+        stay.nights += 1;
+        stay.meals = [...new Set([...stay.meals, ...normalizeTextList(day?.meals)])];
+        stays.set(key, stay);
+    });
+    const totalNights = Math.max(1, Number(tour.period?.nights || 1));
+    return [...stays.values()].map((stay) => ({ ...stay, nights: Math.min(stay.nights, totalNights) }));
+};
+const fallbackHotelOptions = (tour = {}) => {
+    const basePrice = Number(tour.price?.min || 0);
+    const upgradePrice = Math.max(1500, Math.round(basePrice * 0.3 / 500) * 500);
+    const premiumPrice = Math.max(3500, Math.round(basePrice * 0.65 / 500) * 500);
+    return [
+        { title: "Standard included stay", description: "The accommodation included in your package.", costLabel: "Package price", cost: "Included", recommended: false },
+        { title: "Comfort hotel upgrade", description: "Higher-category room and enhanced amenities, subject to availability.", costLabel: "Upgrade cost per room", cost: `₹${upgradePrice.toLocaleString("en-IN")}`, recommended: true },
+        { title: "Premium hotel upgrade", description: "Premium property selection and room category, subject to availability.", costLabel: "Upgrade cost per room", cost: `₹${premiumPrice.toLocaleString("en-IN")}`, recommended: false },
+    ];
+};
 const agencySummary = (value) => value && typeof value === "object" ? {
     id: value._id || value.id || null,
-    name: value.agencyName || "",
+    name: displayText(value.agencyName),
     reference: value.partnerAgencyRef || "",
     logo: value.logo || "",
     website: value.website || "",
-    location: [value.address?.city, value.address?.state, value.address?.country].filter(Boolean).join(", "),
+    location: [value.address?.city, value.address?.state, value.address?.country]
+        .map((item) => displayText(item))
+        .filter(Boolean)
+        .join(", "),
 } : null;
 import TourRepository from "../repositories/TourRepository.js";
 import {
@@ -88,6 +153,30 @@ const assertSeasonalPricingValid = (seasons = []) => {
     }
 };
 
+const sanitizeIncludedStays = (value) => {
+    if (!Array.isArray(value)) throw new Error("includedStays must be an array");
+    return value.map((stay) => ({
+        nights: Math.max(0, Number(stay?.nights || 0)),
+        location: displayText(stay?.location),
+        propertyName: displayText(stay?.propertyName),
+        propertyClass: displayText(stay?.propertyClass),
+        roomType: displayText(stay?.roomType),
+        meals: normalizeTextList(stay?.meals),
+        description: displayText(stay?.description),
+    }));
+};
+
+const sanitizeHotelOptions = (value) => {
+    if (!Array.isArray(value)) throw new Error("hotelOptions must be an array");
+    return value.map((option) => ({
+        title: displayText(option?.title),
+        description: displayText(option?.description),
+        costLabel: displayText(option?.costLabel),
+        cost: displayText(option?.cost),
+        recommended: Boolean(option?.recommended),
+    })).filter((option) => option.title);
+};
+
 const escapeRegExp = (value = "") => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const slugifyTourTitle = (value = "") =>
@@ -107,13 +196,16 @@ const findTourByRef = async (tourRef) => {
         if (byId) return byId;
     }
 
+    const bySlug = await TourRepository.findOne({ slug: slugifyTourTitle(ref) });
+    if (bySlug) return bySlug;
+
     const titleCandidate = ref.replace(/-/g, " ").trim();
     const directTitle = await TourRepository.findOne({
         title: new RegExp(`^${escapeRegExp(titleCandidate)}$`, "i"),
     });
     if (directTitle) return directTitle;
 
-    const tours = await TourRepository.find({}, "title city address distance period startDate endDate photo photos desc price seasonalPricing itinerary highlights availability meetingPoint inclusions exclusions languages cancellationPolicy minAge maxAge maxGroupSize reviews featured tags isPublished status ownerAgent createdAt updatedAt");
+    const tours = await TourRepository.find({}, "title city address distance period startDate endDate photo photos desc price seasonalPricing itinerary highlights includedStays hotelOptions cancellation extras availability flights meetingPoint inclusions exclusions languages cancellationPolicy minAge maxAge maxGroupSize reviews featured tags isPublished status ownerAgent createdAt updatedAt");
     return tours.find((tour) => slugifyTourTitle(tour.title) === slugifyTourTitle(ref)) || null;
 };
 
@@ -145,39 +237,77 @@ const buildPriceInfo = (doc, date = new Date()) => {
  * Accepts either mongoose doc or plain object (tourObj).
  */
 export const normalizeTourForResponse = (tourObj = {}, priceInfo = null) => {
+    const agency = agencySummary(tourObj.agencyId) || (displayText(tourObj.providerName) ? {
+        id: null,
+        name: displayText(tourObj.providerName),
+        reference: displayText(tourObj.partnerAgencyRef ?? tourObj.agencyRef),
+        logo: "",
+        website: "",
+        location: "",
+    } : null);
+    const ownerInfo = extractOwnerInfo(tourObj.ownerAgent);
+    const includedStays = Array.isArray(tourObj.includedStays) && tourObj.includedStays.length
+        ? tourObj.includedStays
+        : fallbackIncludedStays(tourObj);
+    const hotelOptions = Array.isArray(tourObj.hotelOptions) && tourObj.hotelOptions.length
+        ? tourObj.hotelOptions
+        : fallbackHotelOptions(tourObj);
+
     // defensive defaults
     return {
         _id: tourObj._id || tourObj.id || null,
-        title: tourObj.title || "",
-        city: tourObj.city || null,
-        address: tourObj.address || null,
+        title: displayText(tourObj.title),
+        city: normalizeCity(tourObj.city),
+        address: normalizeAddress(tourObj.address),
         distance: typeof tourObj.distance === "number" ? tourObj.distance : (tourObj.distance ? Number(tourObj.distance) : null),
         period: tourObj.period || null,
         startDate: tourObj.startDate || null,
         endDate: tourObj.endDate || null,
         photo: tourObj.photo || "",
         photos: Array.isArray(tourObj.photos) ? tourObj.photos : (tourObj.photos ? [tourObj.photos] : []),
-        desc: tourObj.desc || "",
+        desc: displayText(tourObj.desc ?? tourObj.description),
         price: tourObj.price || null,
         seasonalPricing: Array.isArray(tourObj.seasonalPricing) ? tourObj.seasonalPricing : [],
-        itinerary: Array.isArray(tourObj.itinerary) ? tourObj.itinerary : [],
-        highlights: Array.isArray(tourObj.highlights) ? tourObj.highlights : [],
-        includedStays: Array.isArray(tourObj.includedStays) ? tourObj.includedStays : [],
-        hotelOptions: Array.isArray(tourObj.hotelOptions) ? tourObj.hotelOptions : [],
+        itinerary: Array.isArray(tourObj.itinerary) ? tourObj.itinerary.map((item) => ({
+            ...item,
+            title: displayText(item?.title),
+            summary: displayText(item?.summary),
+            activities: normalizeTextList(item?.activities),
+            meals: normalizeTextList(item?.meals),
+            accommodation: displayText(item?.accommodation),
+            location: displayText(item?.location),
+            notes: displayText(item?.notes),
+        })) : [],
+        highlights: Array.isArray(tourObj.highlights) ? tourObj.highlights.map((item) => ({
+            ...item,
+            title: displayText(item?.title),
+            short: displayText(item?.short),
+        })) : [],
+        includedStays: includedStays.map((stay) => ({
+            ...stay,
+            location: displayText(stay?.location),
+            propertyName: displayText(stay?.propertyName),
+            propertyClass: displayText(stay?.propertyClass),
+            roomType: displayText(stay?.roomType),
+            meals: normalizeTextList(stay?.meals),
+            description: displayText(stay?.description),
+        })),
+        hotelOptions,
         cancellation: tourObj.cancellation || null,
         extras: Array.isArray(tourObj.extras) ? tourObj.extras : [],
         availability: tourObj.availability || { totalSeats: null, seatsAvailable: null },
-        meetingPoint: tourObj.meetingPoint || "",
-        inclusions: Array.isArray(tourObj.inclusions) ? tourObj.inclusions : [],
-        exclusions: Array.isArray(tourObj.exclusions) ? tourObj.exclusions : [],
-        languages: Array.isArray(tourObj.languages) ? tourObj.languages : [],
-        cancellationPolicy: tourObj.cancellationPolicy || "",
+        flights: tourObj.flights || { included: false, inventoryManaged: false },
+        meetingPoint: displayText(tourObj.meetingPoint),
+        inclusions: normalizeTextList(tourObj.inclusions),
+        exclusions: normalizeTextList(tourObj.exclusions),
+        languages: normalizeTextList(tourObj.languages),
+        cancellationPolicy: displayText(tourObj.cancellationPolicy),
         minAge: typeof tourObj.minAge === "number" ? tourObj.minAge : (tourObj.minAge ? Number(tourObj.minAge) : null),
         maxAge: typeof tourObj.maxAge === "number" ? tourObj.maxAge : (tourObj.maxAge ? Number(tourObj.maxAge) : null),
         maxGroupSize: tourObj.maxGroupSize || null,
         reviews: Array.isArray(tourObj.reviews) ? tourObj.reviews : [],
         featured: !!tourObj.featured,
-        tags: Array.isArray(tourObj.tags) ? tourObj.tags : [],
+        tags: normalizeTextList(tourObj.tags),
         isPublished: typeof tourObj.isPublished === "boolean" ? tourObj.isPublished : true,
         status: tourObj.status || "published",
         tremVerified: Boolean(tourObj.tremVerified),
@@ -190,8 +320,12 @@ export const normalizeTourForResponse = (tourObj = {}, priceInfo = null) => {
         partnerAgencyRef: tourObj.partnerAgencyRef || "",
         inventorySource: tourObj.inventorySource || "platform",
         providerName: tourObj.providerName || "",
-        agency: agencySummary(tourObj.agencyId),
-        ...extractOwnerInfo(tourObj.ownerAgent),
+        agency,
+        operator: ownerInfo.ownerAgentName ? {
+            name: ownerInfo.ownerAgentName,
+            email: ownerInfo.ownerAgentEmail,
+        } : null,
+        ...ownerInfo,
         createdAt: tourObj.createdAt || null,
         updatedAt: tourObj.updatedAt || null,
          avgRating: tourObj.avgRating != null ? tourObj.avgRating : (Array.isArray(tourObj.reviews) && tourObj.reviews.length ? (tourObj.reviews.reduce((a, r) => a + (Number(r.rating) || 0), 0) / tourObj.reviews.length).toFixed(1) : 0),
@@ -307,6 +441,10 @@ const sanitizeTourPayload = (raw = {}) => {
             seatsAvailable: p.availability.seatsAvailable == null ? null : Number(p.availability.seatsAvailable),
         };
     }
+    p.flights = {
+        included: Boolean(p.flights?.included),
+        inventoryManaged: Boolean(p.flights?.included && p.flights?.inventoryManaged),
+    };
 
     // Simple number validations
     if (p.maxGroupSize != null) {
@@ -341,6 +479,8 @@ const sanitizeTourPayload = (raw = {}) => {
     p.exclusions = Array.isArray(p.exclusions) ? p.exclusions.map(String) : (p.exclusions ? [String(p.exclusions)] : []);
     p.languages = Array.isArray(p.languages) ? p.languages.map(String) : (p.languages ? [String(p.languages)] : []);
     p.tags = Array.isArray(p.tags) ? p.tags.map(String) : (p.tags ? [String(p.tags)] : []);
+    p.includedStays = p.includedStays === undefined ? [] : sanitizeIncludedStays(p.includedStays);
+    p.hotelOptions = p.hotelOptions === undefined ? [] : sanitizeHotelOptions(p.hotelOptions);
     p.featured = !!p.featured;
     p.isPublished = typeof p.isPublished === "boolean" ? p.isPublished : true;
     p.status = p.status || "published";
@@ -362,7 +502,10 @@ const sanitizeTourPayload = (raw = {}) => {
         seasonalPricing: p.seasonalPricing || [],
         itinerary: p.itinerary || [],
         highlights: p.highlights || [],
+        includedStays: p.includedStays,
+        hotelOptions: p.hotelOptions,
         availability: p.availability || { totalSeats: null, seatsAvailable: null },
+        flights: p.flights,
         meetingPoint: p.meetingPoint || "",
         inclusions: p.inclusions || [],
         exclusions: p.exclusions || [],
@@ -473,6 +616,14 @@ const sanitizeTourPayloadForUpdate = (raw = {}) => {
         result.highlights.sort((a, b) => a.order - b.order);
     }
 
+    if (p.includedStays !== undefined) {
+        result.includedStays = sanitizeIncludedStays(p.includedStays);
+    }
+
+    if (p.hotelOptions !== undefined) {
+        result.hotelOptions = sanitizeHotelOptions(p.hotelOptions);
+    }
+
     if (p.period !== undefined) {
         result.period = {
             days: Number(p.period.days),
@@ -506,6 +657,12 @@ const sanitizeTourPayloadForUpdate = (raw = {}) => {
         result.availability = {
             totalSeats: p.availability.totalSeats == null ? null : Number(p.availability.totalSeats),
             seatsAvailable: p.availability.seatsAvailable == null ? null : Number(p.availability.seatsAvailable),
+        };
+    }
+    if (p.flights !== undefined) {
+        result.flights = {
+            included: Boolean(p.flights?.included),
+            inventoryManaged: Boolean(p.flights?.included && p.flights?.inventoryManaged),
         };
     }
 
@@ -589,14 +746,15 @@ export const canModifyTour = (user, tour, access = null) => {
  * Extract owner display info from a populated or raw ownerAgent field.
  */
 const extractOwnerInfo = (ownerAgent) => {
-    if (!ownerAgent) return { ownerAgentName: "", ownerAgentRef: "" };
+    if (!ownerAgent) return { ownerAgentName: "", ownerAgentRef: "", ownerAgentEmail: "" };
     if (isObject(ownerAgent) && ownerAgent._id) {
         return {
             ownerAgentName: ownerAgent.name || "",
             ownerAgentRef: ownerAgent.agentRef || "",
+            ownerAgentEmail: ownerAgent.email || "",
         };
     }
-    return { ownerAgentName: "", ownerAgentRef: "" };
+    return { ownerAgentName: "", ownerAgentRef: "", ownerAgentEmail: "" };
 };
 
 /* ----------------- Controller actions ----------------- */

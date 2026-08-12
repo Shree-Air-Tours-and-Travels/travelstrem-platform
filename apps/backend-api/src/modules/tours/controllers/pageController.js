@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import masterDataService from "../../masterData/services/masterDataService.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,10 +22,15 @@ const readJson = (...segments) => {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
 };
 
-export const getToursHomePage = (req, res) => {
+const sendPage = async (res, file) => {
+  const page = readJson(file);
+  page.component = await masterDataService.hydrateDataScope(page.component);
+  return res.status(200).json(page);
+};
+
+export const getToursHomePage = async (req, res) => {
   try {
-    const page = readJson(PAGE_FILES.home);
-    return res.status(200).json(page);
+    return await sendPage(res, PAGE_FILES.home);
   } catch (error) {
     console.error("getToursHomePage error:", error);
     return res.status(500).json({
@@ -34,10 +40,9 @@ export const getToursHomePage = (req, res) => {
   }
 };
 
-export const getToursPage = (req, res) => {
+export const getToursPage = async (req, res) => {
   try {
-    const page = readJson(PAGE_FILES.listing);
-    return res.status(200).json(page);
+    return await sendPage(res, PAGE_FILES.listing);
   } catch (error) {
     console.error("getToursPage error:", error);
     return res.status(500).json({
@@ -47,10 +52,9 @@ export const getToursPage = (req, res) => {
   }
 };
 
-export const getTourDetailsPage = (req, res) => {
+export const getTourDetailsPage = async (req, res) => {
   try {
-    const page = readJson(PAGE_FILES.details);
-    return res.status(200).json(page);
+    return await sendPage(res, PAGE_FILES.details);
   } catch (error) {
     console.error("getTourDetailsPage error:", error);
     return res.status(500).json({
@@ -60,10 +64,9 @@ export const getTourDetailsPage = (req, res) => {
   }
 };
 
-export const getBookingPage = (req, res) => {
+export const getBookingPage = async (req, res) => {
   try {
-    const page = readJson(PAGE_FILES.booking);
-    return res.status(200).json(page);
+    return await sendPage(res, PAGE_FILES.booking);
   } catch (error) {
     console.error("getBookingPage error:", error);
     return res.status(500).json({
@@ -73,10 +76,9 @@ export const getBookingPage = (req, res) => {
   }
 };
 
-export const getBookingSummaryPage = (req, res) => {
+export const getBookingSummaryPage = async (req, res) => {
   try {
-    const page = readJson(PAGE_FILES["booking-summary"]);
-    return res.status(200).json(page);
+    return await sendPage(res, PAGE_FILES["booking-summary"]);
   } catch (error) {
     console.error("getBookingSummaryPage error:", error);
     return res.status(500).json({
@@ -86,10 +88,9 @@ export const getBookingSummaryPage = (req, res) => {
   }
 };
 
-export const getBookingCheckoutPage = (req, res) => {
+export const getBookingCheckoutPage = async (req, res) => {
   try {
-    const page = readJson(PAGE_FILES["booking-checkout"]);
-    return res.status(200).json(page);
+    return await sendPage(res, PAGE_FILES["booking-checkout"]);
   } catch (error) {
     console.error("getBookingCheckoutPage error:", error);
     return res.status(500).json({
@@ -99,7 +100,7 @@ export const getBookingCheckoutPage = (req, res) => {
   }
 };
 
-export const getBookingEngineConfig = (req, res) => {
+export const getBookingEngineConfig = async (req, res) => {
   try {
     const page = readJson(PAGE_FILES["booking-engine"]);
     const product = String(req.query.product || "").toLowerCase();
@@ -111,6 +112,7 @@ export const getBookingEngineConfig = (req, res) => {
       page.component.data.config.submitEndpoint = "/trevio/bookings";
       page.component.data.config.paymentEndpoint = "/trevio/bookings/{bookingId}/payment";
     }
+    page.component = await masterDataService.hydrateDataScope(page.component);
     return res.status(200).json(page);
   } catch (error) {
     console.error("getBookingEngineConfig error:", error);

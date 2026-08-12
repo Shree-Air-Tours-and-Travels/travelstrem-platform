@@ -1,14 +1,9 @@
 import React from "react";
 import { Button, SubTitle, TrevioTripCard } from "@packages/trem-ui";
+import { useMasterOptions } from "@packages/trem-utils";
 import { WidgetError } from "../../shared/Skeleton";
 import CreateTripForm from "./CreateTripForm";
 import "./TripsTabWidget.scss";
-
-const TRIP_TYPE_OPTIONS = [
-    { value: "", label: "All" },
-    { value: "domestic", label: "Domestic" },
-    { value: "international", label: "International" },
-];
 
 export default function TripsTabWidget({
     trips, loading, error, formOpen, editing, auth,
@@ -16,6 +11,8 @@ export default function TripsTabWidget({
     fetchTrips, setFormOpen,
 }) {
     const [filter, setFilter] = React.useState("");
+    const { options: masterOptions } = useMasterOptions(["common.tripTypeOptions"]);
+    const tripTypeOptions = (masterOptions["common.tripTypeOptions"] || []).map((option) => ({ ...option, value: option.value === "all" ? "" : option.value }));
     const filtered = filter
         ? trips.filter((t) => {
             if (filter === "domestic") return !(t.tags || []).includes("international") && t.category !== "international";
@@ -33,7 +30,7 @@ export default function TripsTabWidget({
                 </div>
                 <div className="mt-actions">
                     <select className="tt-filter-select" value={filter} onChange={(e) => setFilter(e.target.value)}>
-                        {TRIP_TYPE_OPTIONS.map((o) => (
+                        {tripTypeOptions.map((o) => (
                             <option key={o.value} value={o.value}>{o.label}</option>
                         ))}
                     </select>

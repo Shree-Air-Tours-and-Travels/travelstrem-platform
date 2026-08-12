@@ -68,4 +68,33 @@ describe("SideBar", () => {
     expect(container.querySelector(".trem-sidebar")).toHaveClass("is-collapsed");
     expect(screen.getByRole("button", { name: "Expand sidebar" })).toBeInTheDocument();
   });
+
+  it("does not render items flagged with hide and skips empty sections", () => {
+    const hiddenConfig = {
+      ...config,
+      sections: [
+        { id: "main", items: [{ id: "overview", label: "Home", icon: "home", target: "overview" }] },
+        {
+          id: "plan",
+          title: "Plan a Journey",
+          items: [
+            { id: "holidays", label: "Holiday Packages", icon: "globe", disabled: true, comingSoon: true },
+            { id: "secret", label: "Secret Option", icon: "globe", hide: true },
+          ],
+        },
+        {
+          id: "support",
+          title: "Support & More",
+          items: [{ id: "hiddenSupport", label: "Hidden Support", icon: "bell", hide: true }],
+        },
+      ],
+    };
+
+    render(<SideBar config={hiddenConfig} />);
+
+    expect(screen.getByText("Holiday Packages")).toBeInTheDocument();
+    expect(screen.queryByText("Secret Option")).not.toBeInTheDocument();
+    expect(screen.queryByText("Hidden Support")).not.toBeInTheDocument();
+    expect(screen.queryByText("Support & More")).not.toBeInTheDocument();
+  });
 });
