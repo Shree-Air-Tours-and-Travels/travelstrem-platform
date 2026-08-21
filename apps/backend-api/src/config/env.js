@@ -253,6 +253,15 @@ const CLOUDINARY_KEY = get("CLOUDINARY_KEY", portalJsonConfig?.cloudinary?.key |
 const CLOUDINARY_SECRET = get("CLOUDINARY_SECRET", portalJsonConfig?.cloudinary?.secret || "") || null;
 
 /* ------------------------------
+    10.5) Cloudflare R2 / Object Storage
+    ------------------------------ */
+const R2_ACCOUNT_ID = get("R2_ACCOUNT_ID", "") || "";
+const R2_ACCESS_KEY_ID = get("R2_ACCESS_KEY_ID", "") || "";
+const R2_SECRET_ACCESS_KEY = get("R2_SECRET_ACCESS_KEY", "") || "";
+const R2_BUCKET_NAME = get("R2_BUCKET_NAME", "") || "";
+const R2_ENDPOINT = get("R2_ENDPOINT", R2_ACCOUNT_ID ? `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com` : "") || "";
+
+/* ------------------------------
     11) OTP and other application-level settings
     ------------------------------ */
 const OTP_TTL_MS = Number(get("OTP_TTL_MS", portalJsonConfig?.features?.otpTtlMs || 15 * 60 * 1000)); // 15 minutes by default
@@ -334,6 +343,7 @@ function logConfigSummary() {
         SMTP_AVAILABLE,
         ADMIN_CREATION_SECRET: ADMIN_CREATION_SECRET ? "***SET***" : "MISSING",
         CLOUDINARY: CLOUDINARY_NAME ? `***SET*** (${CLOUDINARY_NAME})` : "NOT_CONFIGURED (local fallback)",
+        R2: R2_BUCKET_NAME ? `***SET*** (${R2_BUCKET_NAME})` : "NOT_CONFIGURED",
         RATE_LIMIT,
         DEV_DELAY_MS,
         DEBUG,
@@ -399,6 +409,11 @@ const config = {
     CLOUDINARY_NAME,
     CLOUDINARY_KEY,
     CLOUDINARY_SECRET,
+    R2_ACCOUNT_ID,
+    R2_ACCESS_KEY_ID,
+    R2_SECRET_ACCESS_KEY,
+    R2_BUCKET_NAME,
+    R2_ENDPOINT,
     REDIS_URL,
     MASTER_ADMIN_EMAIL,
     MASTER_ADMIN_PHONE,
@@ -462,6 +477,11 @@ export {
     CLOUDINARY_NAME,
     CLOUDINARY_KEY,
     CLOUDINARY_SECRET,
+    R2_ACCOUNT_ID,
+    R2_ACCESS_KEY_ID,
+    R2_SECRET_ACCESS_KEY,
+    R2_BUCKET_NAME,
+    R2_ENDPOINT,
     REDIS_URL,
     MASTER_ADMIN_EMAIL,
     MASTER_ADMIN_PHONE,

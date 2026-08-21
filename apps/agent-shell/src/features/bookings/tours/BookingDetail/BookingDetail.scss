@@ -17,8 +17,6 @@
 }
 
 .bd-shell {
-  max-width: 1100px;
-  margin: 0 auto;
   display: grid;
   gap: 1rem;
 }
@@ -191,6 +189,12 @@
   box-shadow: 0 12px 30px color-mix(in srgb, #101827 10%, transparent);
 }
 
+.bd-content:has(.trem-quote-composer) { grid-template-columns: minmax(0, 1fr); }
+.bd-actions-panel:has(.trem-quote-composer) { position:static; max-height:none; }
+.bd-actions-panel .trem-quote-composer__caption { display:grid; gap:3px; padding:.75rem; border-radius:8px; background:linear-gradient(135deg,#f2efff,#f9f8ff); color:var(--text,#1a1a2e); }
+.bd-actions-panel .trem-quote-composer__caption span { color:var(--text-muted,#6b7280); font-size:.75rem; font-weight:500; }
+.bd-actions-panel .trem-quote-composer__footer { padding:.75rem 0; background:var(--surface,#fff); }
+
 .bd-actions-panel__header {
   display: flex;
   align-items: flex-start;
@@ -352,11 +356,19 @@
 
 .bd-traveler {
   display: grid;
-  gap: 0.1rem;
-  padding: 0.4rem 0.6rem;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem;
   border-radius: 6px;
   background: var(--surface-subtle, #f9fafb);
   font-size: 0.85rem;
+}
+
+.bd-traveler__details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-muted, #6b7280);
 }
 
 .bd-traveler span {
@@ -491,4 +503,105 @@
   .bd-grid { grid-template-columns: 1fr; }
   .bd-actions-panel { position: static; order: -1; }
   .bd-meta-grid { grid-template-columns: 1fr 1fr; }
+}
+
+.bd-quote-builder-card {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+}
+
+.bd-quote-builder-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.bd-quote-builder-card__header h2 {
+  margin: 0;
+  color: var(--text, #1a1a2e);
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.bd-quote-builder-card__header p {
+  max-width: 620px;
+  margin: 0.25rem 0 0;
+  color: var(--text-muted, #6b7280);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.bd-quote-builder-card__header span {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 0.85rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary, #0f766e) 12%, transparent);
+  color: var(--color-primary, #0f766e);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.bd-quote-builder-card .trem-quote-composer__caption {
+  display: none;
+}
+
+.bd-quote-builder-card .trem-quote-composer__footer {
+  padding: 1rem 0 0;
+  background: transparent;
+}
+
+.bd-quote-builder-card__actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 240px));
+  justify-content: end;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border, #e5e7eb);
+}
+
+@media (max-width: 768px) {
+  .bd-quote-builder-card {
+    padding: 1rem;
+  }
+
+  .bd-quote-builder-card__header {
+    flex-direction: column;
+  }
+
+  .bd-quote-builder-card__actions {
+    grid-template-columns: 1fr;
+    justify-content: stretch;
+  }
+}
+
+.bd-journey-card {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
+  background: var(--surface, #fff);
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.08));
+
+  .bd-card__title { margin-bottom: 0.75rem; }
+  .timeline-stepper { padding: 0; }
+}
+
+.bd-change-request {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(245,158,11,0.06);
+  border-left: 3px solid var(--color-warning, #f59e0b);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+
+  strong { color: var(--text, #111); }
+  span { color: var(--text-muted, #6b7280); &::after { content: " · "; } &:last-child::after { content: ""; } }
 }

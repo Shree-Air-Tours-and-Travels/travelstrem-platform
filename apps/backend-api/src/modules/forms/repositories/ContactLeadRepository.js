@@ -7,6 +7,9 @@ const ContactLeadRepository = {
   find(query = {}) {
     return ContactLead.find(query);
   },
+  findOne(query = {}) {
+    return ContactLead.findOne(query);
+  },
 };
 
 export default ContactLeadRepository;

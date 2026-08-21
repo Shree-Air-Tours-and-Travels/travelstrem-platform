@@ -90,8 +90,20 @@ export default function BookingPageContainer() {
   const [travelers, setTravelers] = useState([emptyTraveler()]);
   const [contactEmail, setContactEmail] = useState("");
   const [contactPhone, setContactPhone] = useState("");
-  const [packageType, setPackageType] = useState("");
+  const [packageType, setPackageType] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("roomType") || "";
+  });
   const [mealPreference, setMealPreference] = useState("");
+  const [addFlights, setAddFlights] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("addFlights") || "";
+  });
+  const [extraActivities, setExtraActivities] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get("extraActivities") || "";
+    return raw ? raw.split(",").filter(Boolean) : [];
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -324,6 +336,8 @@ export default function BookingPageContainer() {
         roomType: packageType || "",
         pickupCity: "",
         mealPreference: mealPreference || "",
+        addFlights: addFlights || "",
+        extraActivities: extraActivities,
         specialRequests: "",
         termsAccepted: true,
         cancellationPolicyAccepted: true,
@@ -357,7 +371,7 @@ export default function BookingPageContainer() {
     } finally {
       setSubmitting(false);
     }
-  }, [tour, startDate, endDate, adults, children, infants, travelers, contactEmail, contactPhone, user, validateTripStep, validateTravelerStep, navigate]);
+  }, [tour, startDate, endDate, adults, children, infants, travelers, contactEmail, contactPhone, user, validateTripStep, validateTravelerStep, navigate, packageType, addFlights, extraActivities]);
 
   const loading = pageLoading || tourLoading;
   const error = pageError || tourError;

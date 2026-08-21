@@ -6,11 +6,15 @@ import {
     approveTokenPayment,
     cancelBooking,
     confirmBooking,
+    downloadBookingQuote,
     downloadPaymentProof,
     markBookingBalancePaid,
     markBookingTokenPaid,
     refundBookingPayment,
+    saveBookingQuoteDraft,
     rejectTokenPayment,
+    updateBookingStatus,
+    uploadBookingQuote,
 } from "../../../../services/adminService";
 
 export default function BookingDetailContainer() {
@@ -49,29 +53,16 @@ export default function BookingDetailContainer() {
         };
     }, [bookingId, reloadKey]);
 
-    useEffect(() => {
-        if (!bookingId) return undefined;
-        const refresh = () => {
-            if (document.visibilityState === "visible") setReloadKey((key) => key + 1);
-        };
-        const interval = window.setInterval(refresh, 15000);
-        window.addEventListener("focus", refresh);
-        document.addEventListener("visibilitychange", refresh);
-        return () => {
-            window.clearInterval(interval);
-            window.removeEventListener("focus", refresh);
-            document.removeEventListener("visibilitychange", refresh);
-        };
-    }, [bookingId]);
-
     const runAction = async (label, task) => {
         setActionState({ loading: label, message: "", error: "" });
         try {
             await task();
             setActionState({ loading: "", message: "Booking updated", error: "" });
             setReloadKey((key) => key + 1);
+            return true;
         } catch (err) {
             setActionState({ loading: "", message: "", error: err?.message || "Action failed" });
+            return false;
         }
     };
 
@@ -87,6 +78,10 @@ export default function BookingDetailContainer() {
 
     const actions = {
         generateQuote: (id, data) => runAction("quote", () => confirmBooking(id, data)),
+        saveQuoteDraft: (id, data) => runAction("quoteDraft", () => saveBookingQuoteDraft(id, data)),
+        uploadQuote: (id, file, amount, currency) => runAction("uploadQuote", () => uploadBookingQuote(id, file, amount, currency)),
+        downloadQuote: (id, filename) => runAction("downloadQuote", () => downloadBookingQuote(id, filename)),
+        statusTransition: (id, status) => runAction(status, () => updateBookingStatus(id, status)),
         cancel: (id) => runAction("cancel", () => cancelBooking(id)),
         approveToken: (id, paymentId) => runAction("approveToken", () => approveTokenPayment(id, paymentId)),
         downloadProof: runDownload,

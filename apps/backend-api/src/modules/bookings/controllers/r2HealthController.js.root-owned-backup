@@ -1,0 +1,72 @@
+import DocumentStorageService from "../../services/r2/DocumentStorageService.js";
+import { generateQuoteDocumentKey, sanitizePathSegment } from "../../services/r2/objectKey.js";
+import { isR2Configured } from "../../services/r2/config.js";
+
+const TEST_PDF_CONTENT = Buffer.from("%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj 2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj 3 0 obj<</Type/Page/MediaBox[0 0 3 3]/Parent 2 0 R/Contents 4 0 R>>endobj 4 0 obj<</Length 44>>stream\nBT /Fj 1 Tf 0 0 0 rg 1 0 0 1 1 1 Tm (R2 Test) Tj ET\nendstream\nendobj\nxref\n0 5\n0000000000 65535 f \n0000000009 00000 n \n0000000058 00000 n \n0000000115 00000 n \n0000000206 00000 n \ntrailer<</Size 5/Root 1 0 R>>\nstartxref\n300\n%%EOF\n");
+
+export async function r2HealthCheck(req, res) {
+  try {
+    const results = { configured: isR2Configured(), steps: {} };
+
+    if (!results.configured) {
+      results.steps = { skipped: true, reason: "R2 is not configured" };
+      return res.json({ status: "success", data: results });
+    }
+
+    const testKey = generateQuoteDocumentKey({ agencyId: "test", bookingId: "test-quote", version: 1 });
+
+    results.steps.upload = "pending";
+    try {
+      const uploadResult = await DocumentStorageService.upload({
+        key: testKey,
+        body: TEST_PDF_CONTENT,
+        contentType: "application/pdf",
+      });
+      results.steps.upload = { success: true, key: uploadResult.key, size: uploadResult.size };
+    } catch (err) {
+      results.steps.upload = { success: false, error: err.message };
+    }
+
+    results.steps.exists = "pending";
+    try {
+      const exists = await DocumentStorageService.exists(testKey);
+      results.steps.exists = { success: true, exists };
+    } catch (err) {
+      results.steps.exists = { success: false, error: err.message };
+    }
+
+    results.steps.signedUrl = "pending";
+    try {
+      const signed = await DocumentStorageService.getSignedDownloadUrl(testKey, 60);
+      results.steps.signedUrl = { success: true, expiresIn: signed.expiresIn, urlPreview: signed.url.substring(0, 80) + "..." };
+    } catch (err) {
+      results.steps.signedUrl = { success: false, error: err.message };
+    }
+
+    results.steps.download = "pending";
+    try {
+      const downloaded = await DocumentStorageService.download(testKey);
+      results.steps.download = { success: true, size: downloaded.length };
+    } catch (err) {
+      results.steps.download = { success: false, error: err.message };
+    }
+
+    results.steps.delete = "pending";
+    try {
+      await DocumentStorageService.delete(testKey);
+      results.steps.delete = { success: true };
+    } catch (err) {
+      results.steps.delete = { success: false, error: err.message };
+    }
+
+    const allPassed = Object.values(results.steps).every(
+      (step) => step === "pending" || step?.success !== false
+    );
+    results.allPassed = allPassed;
+
+    return res.json({ status: allPassed ? "success" : "error", data: results });
+  } catch (err) {
+    console.error("r2HealthCheck error:", err);
+    return res.status(500).json({ status: "error", message: "R2 health check failed", error: err.message });
+  }
+}

@@ -32,14 +32,14 @@ async function deliverWithRetry(provider, message) {
  * Provider-neutral email utility. It always resolves with a result object so a
  * mail-provider outage cannot cause an unhandled rejection or crash the API.
  */
-export async function sendEmail({ to, subject, html, text, replyTo, from }, { provider } = {}) {
+export async function sendEmail({ to, subject, html, text, replyTo, from, attachments }, { provider } = {}) {
   try {
     if (!to) return { success: false, message: "Email recipient is required", code: "EMAIL_RECIPIENT_REQUIRED" };
     if (!subject) return { success: false, message: "Email subject is required", code: "EMAIL_SUBJECT_REQUIRED" };
     if (!html && !text) return { success: false, message: "Email content is required", code: "EMAIL_CONTENT_REQUIRED" };
 
     const activeProvider = provider || getEmailProvider();
-    const info = await deliverWithRetry(activeProvider, { to, subject, html, text, replyTo, from });
+    const info = await deliverWithRetry(activeProvider, { to, subject, html, text, replyTo, from, attachments });
     return {
       success: true,
       message: "Email sent successfully",

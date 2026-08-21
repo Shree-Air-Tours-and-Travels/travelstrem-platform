@@ -7,6 +7,7 @@ import {
   getBookingDetail,
   acceptQuote,
   rejectQuote,
+  requestQuoteChanges,
   getMyBookings,
   createQuote,
   assignAgent,
@@ -15,8 +16,8 @@ import {
   listAllBookings,
   getTrevistaPricing,
   createV2Quote,
+  updateTravellers,
 } from "./controllers/bookingEngineController.js";
-import { sendMessage, getMessages } from "./controllers/messageController.js";
 import { upload } from "../../services/cloudinary.js";
 import {
   downloadPaymentProof,
@@ -47,14 +48,14 @@ router.post("/:id/confirm", authMiddleware, confirmBooking);
 // QUOTE
 router.post("/:id/quote/accept", authMiddleware, acceptQuote);
 router.post("/:id/quote/reject", authMiddleware, rejectQuote);
+router.post("/:id/quote/request-changes", authMiddleware, requestQuoteChanges);
 
 // OFFLINE PAYMENT PROOF
 router.post("/:id/payments/token-proof", authMiddleware, upload.single("paymentScreenshot"), submitTokenProof);
 router.get("/:bookingId/payments/:paymentId/proof", authMiddleware, downloadPaymentProof);
 
-// MESSAGING
-router.post("/:id/message", authMiddleware, sendMessage);
-router.get("/:id/messages", authMiddleware, getMessages);
+// TRAVELLERS
+router.put("/:id/travellers", authMiddleware, updateTravellers);
 
 // ADMIN
 router.post("/:id/quote/create", authMiddleware, createQuote);

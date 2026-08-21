@@ -5,14 +5,17 @@ import {
     approveAgentTokenPayment,
     cancelBooking,
     confirmBooking,
+    downloadBookingQuote,
     downloadAgentPaymentProof,
     fetchAgentBookingDetail,
     fetchAgentBookings,
     markBookingBalancePaid,
     markBookingTokenPaid,
     processRefund,
+    saveBookingQuoteDraft,
     rejectAgentTokenPayment,
     updateBookingStatus,
+    uploadBookingQuote,
 } from "../../../../../services/agentService";
 
 const isObjectId = (value = "") => /^[0-9a-fA-F]{24}$/.test(String(value));
@@ -85,8 +88,10 @@ export default function BookingDetailContainer({ backTarget }) {
             await task();
             setActionState({ loading: "", message: "Booking updated", error: "" });
             setReloadKey((key) => key + 1);
+            return true;
         } catch (err) {
             setActionState({ loading: "", message: "", error: err?.message || "Action failed" });
+            return false;
         }
     };
 
@@ -102,6 +107,9 @@ export default function BookingDetailContainer({ backTarget }) {
 
     const actions = {
         generateQuote: (id, data) => runAction("quote", () => confirmBooking(id, data)),
+        saveQuoteDraft: (id, data) => runAction("quoteDraft", () => saveBookingQuoteDraft(id, data)),
+        uploadQuote: (id, file, amount, currency) => runAction("uploadQuote", () => uploadBookingQuote(id, file, amount, currency)),
+        downloadQuote: (id, filename) => runAction("downloadQuote", () => downloadBookingQuote(id, filename)),
         cancel: (id) => runAction("cancel", () => cancelBooking(id)),
         statusTransition: (id, status) => runAction(status, () => updateBookingStatus(id, status)),
         refund: (id, details) => runAction("refund", () => processRefund(id, details)),

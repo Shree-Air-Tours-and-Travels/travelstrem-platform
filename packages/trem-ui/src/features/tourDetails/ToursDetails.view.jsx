@@ -51,7 +51,7 @@ const renderWidget = (widget, props) => {
     case "TourGallery":
       return <TourGallery key={widget.type} tourRef={props.tourRef} tour={props.activeTour} />;
     case "PricingCard":
-      return <PricingCard key={widget.type} tourRef={props.tourRef} tour={props.activeTour} onBook={props.onBook} onContact={props.onContact} onShare={props.onShare} isFavorited={props.isFavorited} onFavorite={props.onFavorite} />;
+      return <PricingCard key={widget.type} tourRef={props.tourRef} tour={props.activeTour} onBook={props.onBook} onContact={props.onContact} onShare={props.onShare} isFavorited={props.isFavorited} onFavorite={props.onFavorite} selectedFlight={props.selectedFlight} onSelectFlight={props.onSelectFlight} selectedActivities={props.selectedActivities} onSelectActivity={props.onSelectActivity} selectedDeparture={props.selectedDeparture} onSelectDeparture={props.onSelectDeparture} />;
     case "TourHighlights":
       return <TourHighlights key={widget.type} tourRef={props.tourRef} />;
     case "ItineraryTimeline":
@@ -74,16 +74,20 @@ const renderWidget = (widget, props) => {
 export default function ToursDetailsView({
   tourRef, widgets, pageTitle, activeTour,
   structure, elements,
-  contactOpen, contactFormData,
+  contactOpen,
   bookConfirmOpen, breadcrumbItems,
   onTourLoad, onBack, onBook, onBookConfirm, onBookConfirmClose, onContact, onShare,
   isFavorited, onFavorite,
   setContactOpen,
   appKey, user, productType, selectedHotel, onSelectHotel,
+  selectedFlight, onSelectFlight, selectedActivities, onSelectActivity,
 }) {
+  const showBookNow = structure?.floatingActionBar?.config?.showBookNow === true;
   const widgetProps = {
     tourRef, activeTour, onTourLoad, onBook, onContact, onShare, isFavorited, onFavorite, appKey,
     selectedHotel, onSelectHotel: productType === "tour" ? onSelectHotel : undefined,
+    selectedFlight, onSelectFlight: productType === "tour" ? onSelectFlight : undefined,
+    selectedActivities, onSelectActivity: productType === "tour" ? onSelectActivity : undefined,
   };
   const heroWidgets = widgets.filter((widget) => HERO_WIDGETS.has(widget.type));
   const contentWidgets = widgets.filter((widget) => CONTENT_WIDGETS.has(widget.type));
@@ -111,7 +115,11 @@ export default function ToursDetailsView({
           operator={activeTour?.operator || (activeTour?.ownerAgentName ? {
             name: activeTour.ownerAgentName,
             email: activeTour.ownerAgentEmail,
-          } : null)}
+          } : (!activeTour?.operator && activeTour?.inventorySource === "platform" && activeTour?.providerName ? {
+            name: "TREM-AI",
+            email: "",
+          } : null))}
+          providerName={activeTour?.providerName || ""}
           labels={elements?.labels?.agencyDetails || {}}
         />
 
@@ -125,8 +133,8 @@ export default function ToursDetailsView({
           open={contactOpen}
           tourId={activeTour._id}
           onClose={() => setContactOpen(false)}
-          formData={contactFormData}
           user={user}
+          product={productType === "trip" ? "trevio" : "trevista"}
         />
       ) : null}
 
@@ -145,8 +153,8 @@ export default function ToursDetailsView({
         align="stretch"
         text={elements?.labels}
         actions={[
-          { label: elements?.labels?.bookNow || "Book now", variant: "primary", onClick: () => onBook(activeTour) },
           { label: elements?.labels?.enquire || "Enquire", variant: "ghost", iconLeft: "messageCircle", onClick: () => onContact(activeTour) },
+          ...(showBookNow ? [{ label: elements?.labels?.bookNow || "Book now", variant: "primary", onClick: () => onBook(activeTour) }] : []),
         ]}
       />
     </main>

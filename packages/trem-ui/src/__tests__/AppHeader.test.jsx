@@ -116,4 +116,57 @@ describe("AppHeader", () => {
     expect(screen.getByText("Visible Action")).toBeInTheDocument();
     expect(screen.queryByText("Hidden Action")).not.toBeInTheDocument();
   });
+
+  it("renders the journey dropdown from primary-action configuration", () => {
+    const onPrimaryActionSelect = vi.fn();
+    const journeyConfig = {
+      ...config,
+      primaryAction: {
+        label: "New Booking",
+        icon: "plus",
+        enabled: true,
+        menu: {
+          variant: "journey-menu",
+          title: "Plan a Journey",
+          items: [
+            { id: "trips", title: "Trips & Adventures", description: "Treks, expeditions & events", mobileIcon: "mountain", target: "trevio" },
+            { id: "flights", title: "Flights & Hotels", description: "Flights, stays & transport", mobileIcon: "plane", disabled: true, comingSoon: true, comingSoonLabel: "Coming soon" },
+          ],
+        },
+      },
+    };
+
+    render(<AppHeader config={journeyConfig} onPrimaryActionSelect={onPrimaryActionSelect} />);
+    fireEvent.click(screen.getByRole("button", { name: "New Booking" }));
+
+    expect(screen.getByText("Plan a Journey")).toBeInTheDocument();
+    expect(screen.getByText("Treks, expeditions & events")).toBeInTheDocument();
+    expect(screen.getByText("Coming soon")).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Flights & Hotels" })).toBeDisabled();
+
+    fireEvent.click(screen.getByRole("menuitem", { name: "Trips & Adventures" }));
+    expect(onPrimaryActionSelect).toHaveBeenCalledWith(expect.objectContaining({ id: "trips", target: "trevio" }));
+  });
+
+  it("switches the same journey dropdown to a bottom sheet on mobile", () => {
+    const previousWidth = window.innerWidth;
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: 430 });
+    const journeyConfig = {
+      ...config,
+      primaryAction: {
+        label: "New Booking",
+        enabled: true,
+        menu: {
+          variant: "journey-menu",
+          title: "Plan a Journey",
+          items: [{ id: "tours", title: "Tours & Packages", mobileIcon: "beach", target: "trevista" }],
+        },
+      },
+    };
+
+    render(<AppHeader config={journeyConfig} />);
+    fireEvent.click(screen.getByRole("button", { name: "New Booking" }));
+    expect(screen.getByRole("dialog", { name: "Plan a Journey" })).toBeInTheDocument();
+    Object.defineProperty(window, "innerWidth", { configurable: true, value: previousWidth });
+  });
 });

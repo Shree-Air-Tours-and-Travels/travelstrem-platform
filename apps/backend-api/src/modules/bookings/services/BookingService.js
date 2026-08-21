@@ -7,6 +7,7 @@ import BookingTimelineService from "./BookingTimelineService.js";
 import StatusHistoryService from "./StatusHistoryService.js";
 import AuditService from "./AuditService.js";
 import AssignmentService from "./AssignmentService.js";
+import { DOCUMENT_TYPE } from "../../../constants/enums.js";
 
 const resolveProofUrl = (value) => {
   if (typeof value === "string") {
@@ -38,19 +39,8 @@ export const BookingService = {
     const rawDoc = typeof booking.toJSON === "function" ? booking.toJSON() : booking;
     const doc = { ...rawDoc };
     if (doc.product === "trevio") {
-      const bookingAliases = {
-        PAYMENT_PENDING: "AWAITING_TOKEN_PAYMENT",
-        PARTIALLY_PAID: "CONFIRMED",
-        PAID: "CONFIRMED",
-      };
-      const paymentAliases = {
-        UNPAID: "TOKEN_PENDING",
-        PARTIAL: "TOKEN_PAID",
-        PAID: "FULLY_PAID",
-      };
-      doc.status = bookingAliases[doc.status] || doc.status;
-      doc.paymentStatus = paymentAliases[doc.paymentStatus] || doc.paymentStatus;
-      if (!Number(doc.tokenAmount || 0) && Number(doc.paymentSummary?.total || doc.priceSnapshot?.total || 0) > 0) {
+      const tokenStage = ["AWAITING_TOKEN_PAYMENT", "PAYMENT_PENDING", "PARTIALLY_PAID", "PAID", "CONFIRMED", "TICKETING", "TICKETED", "TRAVEL_READY", "COMPLETED"].includes(doc.status);
+      if (tokenStage && !Number(doc.tokenAmount || 0) && Number(doc.paymentSummary?.total || doc.priceSnapshot?.total || 0) > 0) {
         doc.tokenAmount = Math.round(Number(doc.paymentSummary?.total || doc.priceSnapshot?.total) * 0.15);
       }
     }
@@ -66,6 +56,8 @@ export const BookingService = {
       includeDeep ? AssignmentService.list(bookingId) : Promise.resolve([]),
     ]);
     const latestQuote = quotes[0] || null;
+    const quoteFile = documents.find((document) => document.type === DOCUMENT_TYPE.QUOTE) || null;
+    const normalizedQuoteFile = quoteFile && (typeof quoteFile.toJSON === "function" ? quoteFile.toJSON() : { ...quoteFile });
     const normalizedPayments = payments.map((payment) => {
       const record = typeof payment?.toJSON === "function" ? payment.toJSON() : { ...payment };
       const storedProofUrl = resolveProofUrl(record.paymentScreenshot)
@@ -92,6 +84,15 @@ export const BookingService = {
       travellers: travelers,
       quotes,
       currentQuote: latestQuote,
+      quoteDocument: normalizedQuoteFile ? {
+        available: true,
+        id: normalizedQuoteFile.id || normalizedQuoteFile._id,
+        filename: normalizedQuoteFile.fileName || `quote-${doc.bookingRef || bookingId}.pdf`,
+        downloadUrl: `/bookings/${bookingId}/downloads/quote`,
+        uploadedAt: normalizedQuoteFile.uploadedAt,
+        quoteAmount: normalizedQuoteFile.quoteAmount,
+        currency: normalizedQuoteFile.currency || doc.priceSnapshot?.currency || "INR",
+      } : null,
       payments: normalizedPayments,
       payment: {
         amountPaid: doc.paymentSummary?.paid || 0,

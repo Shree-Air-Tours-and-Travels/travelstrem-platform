@@ -61,11 +61,11 @@ function formatDate(d) {
 export function generateQuotePdf(booking, quote, tour, travelers) {
   const doc = new PDFDocument({ margin: 50, size: "A4" });
 
-  header(doc, "FARE QUOTE");
+  header(doc, "TRAVEL QUOTE");
   doc.moveDown(0.3);
 
   labelValue(doc, "Booking Ref:", booking.bookingRef);
-  labelValue(doc, "Quote Ref:", quote.quoteRef || `${booking.bookingRef}-Q${quote.version}`);
+  labelValue(doc, "Quote Ref / Version:", `${quote.quoteRef || `${booking.bookingRef}-Q${quote.version}`}  (v${quote.version || 1})`);
   labelValue(doc, "Date:", formatDate(quote.createdAt));
   labelValue(doc, "Valid Until:", formatDate(quote.expirationDate) || "7 days from issue");
   doc.moveDown(0.5);
@@ -84,17 +84,21 @@ export function generateQuotePdf(booking, quote, tour, travelers) {
   sectionTitle(doc, "Price Breakdown");
 
   const items = [];
-  if (quote.basePrice > 0) items.push(["Base Price", formatINR(quote.basePrice)]);
+  if (quote.basePrice > 0) items.push(["Base tour/package cost", formatINR(quote.basePrice)]);
   if (quote.hotelPrice > 0) items.push(["Hotel", formatINR(quote.hotelPrice)]);
+  if (quote.transferPrice > 0) items.push(["Transfers", formatINR(quote.transferPrice)]);
+  if (quote.activitiesPrice > 0) items.push(["Activities / experiences", formatINR(quote.activitiesPrice)]);
+  if (quote.mealsPrice > 0) items.push(["Meals", formatINR(quote.mealsPrice)]);
   if (quote.flightPrice > 0) items.push(["Flights", formatINR(quote.flightPrice)]);
   if (quote.visaFee > 0) items.push(["Visa Fee", formatINR(quote.visaFee)]);
   if (quote.insuranceFee > 0) items.push(["Insurance", formatINR(quote.insuranceFee)]);
   if (quote.taxes > 0) items.push(["Taxes & Surcharges", formatINR(quote.taxes)]);
   if (quote.serviceFee > 0) items.push(["Service Fee", formatINR(quote.serviceFee)]);
+  if (quote.platformFee > 0) items.push(["TravelsTREM platform fee", formatINR(quote.platformFee)]);
   if (quote.agentMarkup > 0) items.push(["Agent Markup", formatINR(quote.agentMarkup)]);
 
   if (quote.items?.length) {
-    quote.items.forEach((item) => {
+    quote.items.filter((item) => !item.code && (!item.optional || item.selected)).forEach((item) => {
       items.push([item.label || "Item", formatINR(item.amount)]);
     });
   }
@@ -119,9 +123,22 @@ export function generateQuotePdf(booking, quote, tour, travelers) {
   doc.text("Total Amount", 60, totalY + 8, { width: 300 });
   doc.text(formatINR(quote.finalAmount), 380, totalY + 8, { align: "right", width: 120 });
 
+  const paymentY = totalY + 42;
+  doc.fontSize(10).font("Helvetica-Bold").text("Payment summary", 60, paymentY);
+  doc.fontSize(9).font("Helvetica").text("Amount payable now", 60, paymentY + 18, { width: 250 });
+  doc.text(formatINR(quote.amountPayableNow || 0), 380, paymentY + 18, { align: "right", width: 120 });
+  doc.text("Remaining balance", 60, paymentY + 34, { width: 250 });
+  doc.text(formatINR(Math.max(0, Number(quote.finalAmount || 0) - Number(quote.amountPayableNow || 0))), 380, paymentY + 34, { align: "right", width: 120 });
+  if (quote.balanceDueDate) doc.text(`Balance due: ${formatDate(quote.balanceDueDate)}`, 60, paymentY + 50, { width: 480 });
+
   if (quote.notes) {
     sectionTitle(doc, "Notes");
     doc.fontSize(9).font("Helvetica").fillColor("#555").text(quote.notes);
+  }
+
+  if (quote.terms) {
+    sectionTitle(doc, "Terms / cancellation information");
+    doc.fontSize(8).font("Helvetica").fillColor("#555").text(quote.terms);
   }
 
   sectionTitle(doc, "Terms & Conditions");
@@ -139,6 +156,15 @@ export function generateQuotePdf(booking, quote, tour, travelers) {
   footer(doc);
   doc.end();
   return doc;
+}
+
+export function pdfDocumentToBuffer(doc) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    doc.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+    doc.on("end", () => resolve(Buffer.concat(chunks)));
+    doc.on("error", reject);
+  });
 }
 
 export function generateInvoicePdf(booking, payments, tour) {

@@ -3,7 +3,7 @@ import "../tours.scss";
 import QuickFilters from "../widgets/quick-filters/QuickFilters";
 import Filters from "../widgets/filters/Filters";
 import Listing from "../widgets/listing/Listing";
-import { Breadcrumbs, FilterChips, FloatingActionBar, BottomSheet, Icon } from "@packages/trem-ui";
+import { Breadcrumbs, FloatingActionBar, BottomSheet, Icon } from "@packages/trem-ui";
 
 const getLabel = (labels = {}, item = {}) => {
     if (item.labelRef && labels[item.labelRef]) return labels[item.labelRef];
@@ -40,11 +40,11 @@ export default function ToursPageView({
     onFiltersExpandedChange,
     filterValues,
     facets,
-    activeDiscoveryId,
+    activeDiscoveryIds,
     discoveryOptions,
     activeFilterChips,
-    onRemoveFilter,
     onClearFilters,
+    onEnquire,
 }) {
     const listingLabels = widgetsData.listing?.elements?.labels || {};
     const listingProps = listingWidgetData?.structure?.widgets?.[0]?.props || {};
@@ -97,12 +97,11 @@ export default function ToursPageView({
             <div className="tours-page__inner">
                 {widgets.map((w) => {
                     if (w.type === "quickChips") {
-                        return <QuickFilters key={w.type} widgetData={widgetsData.quickChips} activeId={activeDiscoveryId} onQuickFilter={onQuickFilter} />;
+                        return <QuickFilters key={w.type} widgetData={widgetsData.quickChips} activeIds={activeDiscoveryIds} onQuickFilter={onQuickFilter} />;
                     }
                     if (w.type === "filters") {
                         return (
                             <React.Fragment key={w.type}>
-                            <FilterChips items={activeFilterChips} onRemove={onRemoveFilter} onClearAll={onClearFilters} className="tours-page__active-filters" />
                             <div className="tours-page__body" ref={filterSidebarRef}>
                                 <aside className="tours-page__sidebar">
                                     <div className="tours-page__sidebar-inner">
@@ -143,6 +142,7 @@ export default function ToursPageView({
                                         onPageChange={onPageChange}
                                         hasActiveFilters={activeFilterChips.length > 0}
                                         onClearFilters={onClearFilters}
+                                        onEnquire={onEnquire}
                                     />
                                 </section>
                             </div>

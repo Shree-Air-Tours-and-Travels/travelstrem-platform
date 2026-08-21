@@ -6,7 +6,9 @@ import { createAuthApi, createAuthService } from "@packages/trem-auth-core";
 
 export default function AuthTremApp() {
   const { theme, toggleTheme } = useThemeMode();
-  const requestingApp = new URLSearchParams(window.location.search).get("app")?.trim().toLowerCase() || "app-shell";
+  const params = new URLSearchParams(window.location.search);
+  const requestingApp = params.get("app")?.trim().toLowerCase() || "app-shell";
+  const activationToken = params.get("token") || null;
   const portal = ["admin", "admintrem", "admin-trem"].includes(requestingApp)
     ? "admin"
     : ["agent", "agenttrem", "agent-trem", "partner", "partnertrem", "partner-trem"].includes(requestingApp)
@@ -70,6 +72,7 @@ export default function AuthTremApp() {
         afterAuthPath={fallbackAfterAuthPath}
         theme={theme}
         onToggleTheme={toggleTheme}
+        activationToken={activationToken}
         accessRequest={portal === "admin" ? null : {
           prompt: portal === "partner" ? "Need a PartnerTREM account?" : "Own or manage a travel agency?",
           label: portal === "partner" ? "Apply or register your agency" : "Partner with TravelsTREM",

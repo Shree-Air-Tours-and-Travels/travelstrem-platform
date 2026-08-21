@@ -15,7 +15,6 @@ import PaymentSettings from "../models/PaymentSettings.js";
 import TrevioTrip from "../../trevio/models/TrevioTrip.js";
 import BookingService from "../services/BookingService.js";
 import BookingTimelineService from "../services/BookingTimelineService.js";
-import MessageService from "../services/MessageService.js";
 import PaymentService from "../services/PaymentService.js";
 
 const sendSuccess = (res, data, message = "OK") =>
@@ -69,17 +68,7 @@ async function getAuthorizedBooking(req, { admin = false } = {}) {
 }
 
 async function notify(bookingId, content, event, actor, metadata = {}) {
-  await Promise.all([
-    BookingTimelineService.record({ bookingId, actor, action: event, metadata }),
-    MessageService.send({
-      bookingId,
-      senderType: "system",
-      senderName: "System",
-      content,
-      messageType: "system",
-      metadata: { event, channels: ["app-shell"], ...metadata },
-    }),
-  ]);
+  await BookingTimelineService.record({ bookingId, actor, action: event, metadata });
 }
 
 async function reserveBookingSeats(booking) {

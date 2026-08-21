@@ -148,7 +148,7 @@ input,
 textarea,
 select {
   font-family: inherit;
-  font-size: $font-size-md;
+  font-size: var(--control-font-size, #{$font-size-md});
   line-height: $line-height-md;
   color: var(--text);
   padding: 0.5rem 0.75rem;
@@ -211,9 +211,12 @@ select {
   margin: -1px;
 }
 
-@include mq-max($tablet-max) {
-  body {
-    font-size: 0.98rem;
+@include mq-max($breakpoint-md) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  textarea,
+  select {
+    // Keep field values aligned with the compact mobile typography scale.
+    font-size: var(--control-font-size) !important;
   }
 }
 

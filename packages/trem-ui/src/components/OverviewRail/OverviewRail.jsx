@@ -46,12 +46,15 @@ export function UpcomingTripCard({
   );
 }
 
-export function QuickActionsCard({ title, items = [] }) {
+export function QuickActionsCard({ title, items = [], hideDisabled = false }) {
+  const visibleItems = items.filter((item) => !item.hide && !(hideDisabled && item.disabled));
+  if (!visibleItems.length) return null;
+
   return (
     <section className="trem-rail-card trem-quick-actions">
       <header className="trem-rail-card__header"><h2>{title}</h2></header>
       <nav aria-label={title}>
-        {items.map((item) => {
+        {visibleItems.map((item) => {
           const Tag = item.disabled ? "div" : "a";
           return (
             <Tag
@@ -124,14 +127,15 @@ const WIDGET_COMPONENTS = {
 };
 
 export default function OverviewRail({ widgets = [], ariaLabel = "", className = "" }) {
-  if (!widgets.length) return null;
+  const visibleWidgets = widgets.filter((widget) => !widget.hide);
+  if (!visibleWidgets.length) return null;
 
   return (
     <aside
       className={`trem-overview-rail${className ? ` ${className}` : ""}`}
       aria-label={ariaLabel}
     >
-      {widgets.map(({ id, type, ...props }) => {
+      {visibleWidgets.map(({ id, type, ...props }) => {
         const Widget = WIDGET_COMPONENTS[type];
         return Widget ? <Widget key={id} {...props} /> : null;
       })}
@@ -149,11 +153,13 @@ const actionShape = PropTypes.shape({
   rel: PropTypes.string,
   ariaLabel: PropTypes.string,
   disabled: PropTypes.bool,
+  hide: PropTypes.bool,
 });
 
 QuickActionsCard.propTypes = {
   title: PropTypes.string.isRequired,
   items: PropTypes.arrayOf(actionShape),
+  hideDisabled: PropTypes.bool,
 };
 
 UpcomingTripCard.propTypes = {
@@ -193,6 +199,7 @@ OverviewRail.propTypes = {
   widgets: PropTypes.arrayOf(PropTypes.shape({
     id: PropTypes.string.isRequired,
     type: PropTypes.oneOf(Object.keys(WIDGET_COMPONENTS)).isRequired,
+    hide: PropTypes.bool,
   })),
   ariaLabel: PropTypes.string,
   className: PropTypes.string,

@@ -225,6 +225,7 @@ export default function BookingTable({
   className = "",
   onRowClick,
 }) {
+  const mobileScrollMode = table.mobileScrollMode === "page" ? "page" : "contained";
   const isServerSide = Boolean(table.serverSide || actions.serverSide || pagination.serverSide);
   const [internalQuery, setInternalQuery] = useState(actions.search?.value || "");
   const [filters, setFilters] = useState(() =>
@@ -315,7 +316,11 @@ export default function BookingTable({
   }
 
   return (
-    <section className={`booking-table ${className}`.trim()} aria-label={table.ariaLabel || table.title || "Booking table"} style={componentStyle}>
+    <section
+      className={`booking-table booking-table--mobile-scroll-${mobileScrollMode} ${className}`.trim()}
+      aria-label={table.ariaLabel || table.title || "Booking table"}
+      style={componentStyle}
+    >
       {pageHeader?.title || pageHeader?.description ? (
         <header className="booking-table__page-header">
           {pageHeader.title ? <h1>{pageHeader.title}</h1> : null}

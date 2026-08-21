@@ -11,7 +11,8 @@ export default function PlanCards({
   columns = 4,
   hideUnavailableOnMobile = false,
 }) {
-  if (!items.length) return null;
+  const visibleItems = items.filter((item) => !item.hide);
+  if (!visibleItems.length) return null;
 
   return (
     <section
@@ -25,7 +26,7 @@ export default function PlanCards({
     >
       <h2 className="trem-plan-cards__title">{title}</h2>
       <div className="trem-plan-cards__grid">
-        {items.map((item) => (
+        {visibleItems.map((item) => (
           <PlanCard key={item.id} {...item} />
         ))}
       </div>
@@ -47,6 +48,7 @@ PlanCards.propTypes = {
     rel: PropTypes.string,
     ariaLabel: PropTypes.string,
     disabled: PropTypes.bool,
+    hide: PropTypes.bool,
     comingSoon: PropTypes.bool,
     comingSoonLabel: PropTypes.string,
     mobileIcon: PropTypes.string,

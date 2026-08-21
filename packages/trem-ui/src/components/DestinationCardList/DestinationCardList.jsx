@@ -20,7 +20,8 @@ export default function DestinationCardList({
   onRetry,
   emptyTitle = "No destinations yet",
   emptyDescription = "Check back soon for handpicked holiday packages.",
-  emptyIcon = "route",
+  emptyIcon = "travelPackage",
+  emptyAction = null,
   cardProps = {},
   isFavorited,
   onFavorite,
@@ -56,6 +57,7 @@ export default function DestinationCardList({
         icon={emptyIcon}
         title={emptyTitle}
         description={emptyDescription}
+        action={emptyAction}
         className="trem-destination-card-list__state"
       />
     );
@@ -107,6 +109,7 @@ DestinationCardList.propTypes = {
   emptyTitle: PropTypes.string,
   emptyDescription: PropTypes.string,
   emptyIcon: PropTypes.string,
+  emptyAction: PropTypes.node,
   cardProps: PropTypes.object,
   isFavorited: PropTypes.func,
   onFavorite: PropTypes.func,

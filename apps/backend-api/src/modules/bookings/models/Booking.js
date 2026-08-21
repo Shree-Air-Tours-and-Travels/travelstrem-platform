@@ -12,6 +12,8 @@ import {
   BOOKING_STATUS_LIST,
   BOOKING_STATUS_TRANSITIONS as BOOKING_STATUS_TRANSITIONS_BY_STATUS,
   EDITABLE_TRAVELLER_STATUSES as EDITABLE_TRAVELLER_STATUS_LIST,
+  PACKAGE_TYPE,
+  PACKAGE_TYPE_LIST,
   PAYMENT_STATUS,
   PAYMENT_STATUS_LIST,
   PRICE_SOURCE,
@@ -97,10 +99,17 @@ const sourceAttributionSchema = new Schema({
 }, { _id: false });
 
 const bookingSchema = new Schema({
-  user: { type: Schema.Types.ObjectId, ref: "User", required: true },
+  // Enquiries may be submitted before the customer signs in. The booking is
+  // attached to a user when they claim the enquiry reference.
+  user: { type: Schema.Types.ObjectId, ref: "User", default: null },
+  contactLead: { type: Schema.Types.ObjectId, ref: "ContactLead", default: null },
+  enquiryRef: { type: String, trim: true, uppercase: true, default: "", index: true },
   tour: { type: Schema.Types.ObjectId, ref: "Tour", default: null },
   trip: { type: Schema.Types.ObjectId, ref: "TrevioTrip", default: null },
   product: { type: String, enum: BOOKING_FLOW_LIST, default: BOOKING_FLOW.TREVISTA, index: true },
+  packageType: { type: String, enum: PACKAGE_TYPE_LIST, default: PACKAGE_TYPE.FIXED_DEPARTURE, index: true },
+  departureId: { type: Schema.Types.ObjectId, default: null, index: true },
+  roomConfiguration: { type: Schema.Types.Mixed, default: null },
   assignedAgent: { type: Schema.Types.ObjectId, ref: "User", default: null },
   assignedAgentRef: { type: String, trim: true, default: "", index: true },
   assignedAgencyRef: { type: String, trim: true, default: "", index: true },
@@ -112,10 +121,14 @@ const bookingSchema = new Schema({
   paymentStatus: { type: String, enum: PAYMENT_STATUSES, default: PAYMENT_STATUS.UNPAID, index: true },
 
   travelWindow: { type: travelWindowSchema, required: true },
+  isTravelDateFlexible: { type: Boolean, default: false },
   tripSelection: { type: tripSelectionSchema, default: () => ({}) },
   primaryContact: { type: primaryContactSchema, default: () => ({}) },
   tripPreferences: { type: tripPreferencesSchema, default: () => ({}) },
   priceSnapshot: { type: priceSnapshotSchema, default: () => ({}) },
+  // Product pricing is only a staff-side reference for enquiries. It must not
+  // be presented to the customer as a quote until an organiser sends one.
+  catalogEstimate: { type: Schema.Types.Mixed, default: null },
   pricingVersion: { type: String, enum: ["LEGACY", "V2"], default: "LEGACY", index: true },
   quoteId: { type: Schema.Types.ObjectId, ref: "BookingQuote", default: null, index: true },
   pricingSnapshot: { type: Schema.Types.Mixed, default: null },
@@ -174,10 +187,10 @@ bookingSchema.set("toJSON", {
 });
 
 bookingSchema.pre("validate", function (next) {
-  if (this.product === BOOKING_FLOW.TREVIO && !this.trip) {
+  if (this.product === BOOKING_FLOW.TREVIO && !this.trip && !this.contactLead) {
     return next(new Error("Trevio bookings require a trip reference"));
   }
-  if (this.product === BOOKING_FLOW.TREVISTA && !this.tour) {
+  if (this.product === BOOKING_FLOW.TREVISTA && !this.tour && !this.contactLead) {
     return next(new Error("Trevista bookings require a tour reference"));
   }
   if (!this.bookingRef) {
@@ -201,6 +214,7 @@ bookingSchema.pre("validate", function (next) {
 });
 
 bookingSchema.index({ bookingRef: 1 }, { unique: true, partialFilterExpression: { bookingRef: { $exists: true, $type: "string" } } });
+bookingSchema.index({ contactLead: 1 }, { unique: true, partialFilterExpression: { contactLead: { $type: "objectId" } } });
 bookingSchema.index({ user: 1, createdAt: -1 });
 bookingSchema.index({ tour: 1, "travelWindow.startDate": 1 });
 bookingSchema.index({ trip: 1, "travelWindow.startDate": 1 });
@@ -246,7 +260,27 @@ bookingSchema.methods.transitionStatus = function (nextStatus) {
   return { from, to, changed: from !== to };
 };
 
-bookingSchema.statics.buildPriceSnapshot = function (tourDoc, targetDate, travellerCount = 1) {
+bookingSchema.statics.buildPriceSnapshot = function (tourDoc, targetDate, travellerCount = 1, departureId = null) {
+  // If a specific departure is provided, use its pricing
+  if (departureId && Array.isArray(tourDoc?.departures)) {
+    const departure = tourDoc.departures.id(departureId);
+    if (departure) {
+      const perPerson = Math.round(departure.pricing?.min || 0);
+      const total = perPerson * travellerCount;
+      return {
+        min: departure.pricing?.min || 0,
+        max: departure.pricing?.max || 0,
+        currency: departure.pricing?.currency || "INR",
+        isFinal: !!departure.pricing?.isFinal,
+        source: departure.pricing?.source || PRICE_SOURCE.MANUAL,
+        matchedSeason: departure.label || null,
+        note: departure.notes || "",
+        perPerson,
+        total,
+      };
+    }
+  }
+
   const season = typeof tourDoc.getCurrentPrice === "function"
     ? tourDoc.getCurrentPrice(targetDate)
     : (tourDoc.price || { min: 0, max: 0, currency: "INR", isFinal: false, source: PRICE_SOURCE.MANUAL });

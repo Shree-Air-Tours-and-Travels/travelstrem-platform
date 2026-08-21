@@ -4,10 +4,11 @@ import FeaturedHolidayPackagesView from "./FeaturedHolidayPackages.view";
 import useFeaturedHolidayPackages from "./hooks/useFeaturedHolidayPackages";
 import { mapHolidayPackagesToDestinationCards } from "./mappers/mapHolidayPackageToDestinationCard";
 
-export default function FeaturedHolidayPackages({ widgetData }) {
+export default function FeaturedHolidayPackages({ widgetData, onTourEnquiry }) {
   const labels = widgetData?.elements?.labels || {};
   const urls = widgetData?.elements?.urls || {};
   const widgetProps = widgetData?.structure?.widgets?.[0]?.props || {};
+  const configuredActions = widgetData?.structure?.actions || [];
 
   const eyebrow = labels.eyebrow || "";
   const title = labels.title || "Featured holiday packages";
@@ -28,6 +29,11 @@ export default function FeaturedHolidayPackages({ widgetData }) {
 
   const { packages, loading, error, retry } = useFeaturedHolidayPackages(widgetData?.data?.packages);
   const destinations = mapHolidayPackagesToDestinationCards(packages, { limit });
+  const emptyActions = configuredActions.map((action) => ({
+    ...action,
+    label: labels[action.labelRef] || "",
+    onClick: action.behavior === "openTourEnquiry" ? onTourEnquiry : undefined,
+  })).filter((action) => action.label);
 
   const { isFavorited, toggleFavorite } = useFavoritesContext();
 
@@ -54,6 +60,7 @@ export default function FeaturedHolidayPackages({ widgetData }) {
       cardProps={cardProps}
       isFavorited={(card) => isFavorited({ _id: card.id })}
       onFavorite={handleFavorite}
+      emptyActions={emptyActions}
     />
   );
 }

@@ -93,23 +93,54 @@ export async function fetchAdminBookings() {
 
 export async function confirmBooking(bookingId, finalPriceData = {}) {
     await expectSuccess(
-        fetchData(`/admin/bookings/${bookingId}/set-price`, {
+        fetchData(`/admin/bookings/${bookingId}/quote/generate-and-send`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                finalAmount: Number(finalPriceData.finalAmount || finalPriceData.amountPaid || 0),
                 currency: finalPriceData.currency || "INR",
-                basePrice: Number(finalPriceData.finalAmount || finalPriceData.amountPaid || 0),
+                basePrice: Number(finalPriceData.basePrice ?? finalPriceData.finalAmount ?? finalPriceData.amountPaid ?? 0),
+                flightPrice: Number(finalPriceData.flightPrice || 0), hotelPrice: Number(finalPriceData.hotelPrice || 0),
+                transferPrice: Number(finalPriceData.transferPrice || 0), activitiesPrice: Number(finalPriceData.activitiesPrice || 0), mealsPrice: Number(finalPriceData.mealsPrice || 0),
+                visaFee: Number(finalPriceData.visaFee || 0), insuranceFee: Number(finalPriceData.insuranceFee || 0), platformFee: Number(finalPriceData.platformFee || 0), serviceFee: Number(finalPriceData.serviceFee || 0), discount: Number(finalPriceData.discount || 0),
+                items: Array.isArray(finalPriceData.items) ? finalPriceData.items : [], amountPayableNow: Number(finalPriceData.amountPayableNow || 0), expirationDate: finalPriceData.expirationDate || null, balanceDueDate: finalPriceData.balanceDueDate || null,
                 notes: finalPriceData.notes || "",
-                sendNow: true,
+                terms: finalPriceData.terms || "",
             }),
         }),
         "Quote generation failed"
     );
 }
 
+export async function saveBookingQuoteDraft(bookingId, quote = {}) {
+    await expectSuccess(fetchData(`/admin/bookings/${bookingId}/quote`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(quote),
+    }), "Unable to save quote draft");
+}
+
+export async function uploadBookingQuote(bookingId, file, quoteAmount, currency = "INR") {
+    const form = new FormData();
+    form.append("quote", file);
+    form.append("quoteAmount", String(Number(quoteAmount || 0)));
+    form.append("currency", currency);
+    const response = await api.post(`/admin/bookings/${bookingId}/quote-document`, form);
+    if (response?.data?.status !== "success") throw new Error(response?.data?.message || "Quote PDF upload failed");
+    return response.data;
+}
+
 export async function cancelBooking(bookingId) {
     await expectSuccess(fetchData(`/bookings/${bookingId}/cancel`, { method: "POST" }), "Cancel failed");
+}
+
+export async function downloadBookingQuote(bookingId, filename = "") {
+    const response = await api.get(`/bookings/${bookingId}/downloads/quote`, { responseType: "blob" });
+    const objectUrl = URL.createObjectURL(response.data);
+    const link = document.createElement("a");
+    link.href = objectUrl;
+    link.download = filename || `quote-${bookingId}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
 }
 
 export async function updateBookingTravelers(bookingId, travelers) {
@@ -334,6 +365,18 @@ export async function uploadTourImage(file) {
         res?.data?.url ||
         res?.url;
     if (!url) throw new Error(res?.message || "Upload returned no URL");
+    return url;
+}
+
+export async function uploadTourImageUrl(sourceUrl) {
+    const response = await api.post("/tours.json/upload-url", { url: sourceUrl });
+    const res = response?.data || {};
+    const url =
+        res?.componentData?.data?.url ||
+        res?.componentData?.url ||
+        res?.data?.url ||
+        res?.url;
+    if (!url) throw new Error(res?.message || "Image import returned no URL");
     return url;
 }
 

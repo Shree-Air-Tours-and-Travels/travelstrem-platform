@@ -32,11 +32,7 @@ export async function validateCsrfToken(token) {
   if (!r) return true; // if Redis is down, allow (fail open for availability)
   try {
     const exists = await r.exists(`${CSRF_PREFIX}${token}`);
-    if (exists) {
-      await r.del(`${CSRF_PREFIX}${token}`);
-      return true;
-    }
-    return false;
+    return !!exists;
   } catch {
     return true; // fail open
   }

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useComponentData, fetchData } from "@packages/trem-utils";
 import ToursHomeView from "../view/ToursHome.view";
 import { createDefaultTourSearchState, mergeFlatFiltersIntoSearch, serializeTourSearchUrl } from "../../tours/search/tourSearchState";
+import { ContactAgentModal } from "@packages/trem-modals";
 
 const PAGE_KEY = "tours-remote/home";
 
@@ -64,7 +65,7 @@ export const buildFiltersFromHero = (payload = {}) => {
     return filters;
 };
 
-export default function ToursHomeContainer({ dispatchEvent } = {}) {
+export default function ToursHomeContainer({ dispatchEvent, userSession = null } = {}) {
     const navigate = useNavigate();
 
     const { loading: pageLoading, error: pageError, elements, structure } = useComponentData("/tours-home-page.json", { auto: true });
@@ -73,6 +74,7 @@ export default function ToursHomeContainer({ dispatchEvent } = {}) {
 
     const [widgetsData, setWidgetsData] = useState({});
     const [widgetsLoading, setWidgetsLoading] = useState(true);
+    const [contactOpen, setContactOpen] = useState(false);
 
     useEffect(() => {
         if (!widgets.length) return;
@@ -114,10 +116,13 @@ export default function ToursHomeContainer({ dispatchEvent } = {}) {
     const handleExplore = () => goToTours();
     const handleSearch = (payload) => goToTours(buildFiltersFromHero(payload));
 
+    const handleTourEnquiry = () => setContactOpen(true);
+
     const loading = pageLoading || widgetsLoading;
 
     return (
-        <ToursHomeView
+        <>
+          <ToursHomeView
             widgets={widgets}
             widgetsData={widgetsData}
             pageTitle={pageLabels.pageTitle}
@@ -125,6 +130,14 @@ export default function ToursHomeContainer({ dispatchEvent } = {}) {
             error={pageError}
             onExplore={handleExplore}
             onSearch={handleSearch}
-        />
+            onTourEnquiry={handleTourEnquiry}
+          />
+          <ContactAgentModal
+            open={contactOpen}
+            onClose={() => setContactOpen(false)}
+            user={userSession?.user || null}
+            product="trevista"
+          />
+        </>
     );
 }

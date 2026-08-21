@@ -27,6 +27,12 @@
         "dateRangeLabel": "Booking date range",
         "exportCsv": "Export CSV",
         "exportPdf": "Export PDF"
+        ,"enquiryLookupTitle": "Already sent an enquiry?"
+        ,"enquiryLookupDescription": "Enter the TravelsTREM enquiry ID from your confirmation email to add it here."
+        ,"enquiryLookupField": "Enquiry ID"
+        ,"enquiryLookupPlaceholder": "ENQ-ABC123"
+        ,"enquiryLookupAction": "Add enquiry"
+        ,"enquiryLookupSubmitting": "Adding…"
       },
       "urls": {}
     },
@@ -37,6 +43,15 @@
           "type": "BookingTable",
           "props": {
             "titleRef": "bookingList",
+            "enquiryLookup": {
+              "enabled": true,
+              "titleRef": "enquiryLookupTitle",
+              "descriptionRef": "enquiryLookupDescription",
+              "fieldLabelRef": "enquiryLookupField",
+              "placeholderRef": "enquiryLookupPlaceholder",
+              "actionLabelRef": "enquiryLookupAction",
+              "submittingLabelRef": "enquiryLookupSubmitting"
+            },
             "pageHeader": {
               "titleRef": "bookingsPageTitle",
               "descriptionRef": "bookingsPageDescription"
@@ -70,6 +85,7 @@
               "controlHeight": "48px",
               "viewportMinHeight": "420px",
               "mobileViewportHeight": "calc(100dvh - 330px)",
+              "mobileScrollMode": "page",
               "expandFiltersLabel": "Filters",
               "collapseFiltersLabel": "Hide filters",
               "contentMinWidth": 1120,

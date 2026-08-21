@@ -7,9 +7,15 @@ const V2_STATUSES = ["ACTIVE", "EXPIRED", "CONSUMED", "INVALIDATED"];
 
 const quoteItemSchema = new Schema({
   label: { type: String, trim: true, required: true },
-  amount: { type: Number, default: 0 },
+  code: { type: String, trim: true, default: "" },
+  pricingType: { type: String, enum: ["PER_PERSON", "PER_ADULT", "PER_CHILD", "PER_ROOM", "PER_NIGHT", "PER_BOOKING", "FIXED", "PERCENTAGE"], default: "FIXED" },
+  unitAmount: { type: Number, min: 0, default: 0 },
+  quantity: { type: Number, min: 0, default: 1 },
+  amount: { type: Number, default: 0 }, // Server-calculated extended amount.
   currency: { type: String, trim: true, default: "INR" },
-  category: { type: String, trim: true, default: "service" },
+  category: { type: String, trim: true, default: "inclusion" },
+  optional: { type: Boolean, default: false },
+  selected: { type: Boolean, default: true },
 }, { _id: true });
 
 // One collection supports historic agent quotes and checkout V2 quotes. The
@@ -18,7 +24,7 @@ const bookingQuoteSchema = new Schema({
   quoteType: { type: String, enum: ["LEGACY", "BOOKING_V2"], default: "LEGACY", index: true },
 
   // Legacy agent-created quote fields.
-  bookingId: { type: Schema.Types.ObjectId, ref: "Booking", default: null, index: true },
+  bookingId: { type: Schema.Types.ObjectId, ref: "Booking", default: null },
   version: { type: Number, default: null },
   quoteRef: { type: String, trim: true, default: "" },
   basePrice: { type: Number, default: 0 }, hotelPrice: { type: Number, default: 0 },
@@ -26,11 +32,24 @@ const bookingQuoteSchema = new Schema({
   insuranceFee: { type: Number, default: 0 }, taxes: { type: Number, default: 0 },
   serviceFee: { type: Number, default: 0 }, discount: { type: Number, default: 0 },
   agentMarkup: { type: Number, default: 0 }, couponDiscount: { type: Number, default: 0 },
+  platformFee: { type: Number, default: 0 }, transferPrice: { type: Number, default: 0 },
+  activitiesPrice: { type: Number, default: 0 }, mealsPrice: { type: Number, default: 0 },
+  amountPayableNow: { type: Number, default: 0 }, balanceDueDate: { type: Date, default: null },
+  terms: { type: String, trim: true, default: "" },
   currency: { type: String, trim: true, default: "INR" },
   expirationDate: { type: Date, default: null }, finalAmount: { type: Number, default: 0 },
   items: { type: [quoteItemSchema], default: [] }, notes: { type: String, trim: true, default: "" },
   createdBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
   sentAt: Date, acceptedAt: Date, rejectedAt: Date,
+  changeRequest: {
+    type: {
+      guestCountChange: { type: Number, default: 0 },
+      withFlights: { type: Boolean, default: null },
+      notes: { type: String, trim: true, default: "" },
+      requestedAt: { type: Date, default: null },
+    },
+    default: null,
+  },
 
   // Customer checkout V2 quote fields.
   quoteNumber: { type: String, default: () => `BQ-${nanoid(10).toUpperCase()}` },

@@ -13,6 +13,7 @@ export default function BottomSheet({
   className = "",
   variant = "default",
   closeLabel = "Close",
+  closeOnOutsideClick = true,
 }) {
   const sheetRef = useRef(null);
 
@@ -34,9 +35,15 @@ export default function BottomSheet({
 
   if (!open) return null;
 
+  const handleOverlayClick = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (closeOnOutsideClick) onClose?.();
+  };
+
   return createPortal(
     <div className={`trem-bottom-sheet trem-bottom-sheet--${variant} ${className}`.trim()} ref={sheetRef}>
-      <div className="trem-bottom-sheet__overlay" onClick={onClose} aria-hidden />
+      <div className="trem-bottom-sheet__overlay" onClick={handleOverlayClick} aria-hidden />
       <div className="trem-bottom-sheet__panel" role="dialog" aria-modal="true" aria-label={title || "Bottom sheet"}>
         <div className="trem-bottom-sheet__header">
           {variant === "fullscreen" && title
@@ -63,4 +70,5 @@ BottomSheet.propTypes = {
   className: PropTypes.string,
   variant: PropTypes.oneOf(["default", "fullscreen"]),
   closeLabel: PropTypes.string,
+  closeOnOutsideClick: PropTypes.bool,
 };

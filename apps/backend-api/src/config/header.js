@@ -66,7 +66,7 @@ export default {
             "href": TREVIO_URL,
             "target": "_blank",
             "rel": "noopener noreferrer",
-            "disabled": false
+            "disabled": true
           },
           {
             "label": "Trevista",

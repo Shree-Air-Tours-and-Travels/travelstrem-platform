@@ -53,8 +53,8 @@ export async function sendTenantNotificationEmail({ to, provider, ...data }) {
 }
 
 /** Supports operational emails while keeping controllers provider-agnostic. */
-export async function sendTransactionalEmail({ to, subject, html, text, replyTo, provider }) {
-  return sendEmail({ to, subject, html, text, replyTo }, { provider });
+export async function sendTransactionalEmail({ to, subject, html, text, replyTo, attachments, provider }) {
+  return sendEmail({ to, subject, html, text, replyTo, attachments }, { provider });
 }
 
 export default {

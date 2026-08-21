@@ -6,7 +6,7 @@ import FeaturedHolidayPackages from "../featuredHolidayPackages/FeaturedHolidayP
 import { bookingBenefits } from "../whyChooseTrevista/data";
 import { Preloader } from "@packages/trem-ui";
 
-export default function ToursHomeView({ widgets, widgetsData, pageTitle, loading, error, onExplore, onSearch }) {
+export default function ToursHomeView({ widgets, widgetsData, pageTitle, loading, error, onExplore, onSearch, onTourEnquiry }) {
     return (
         <main className="tours-page tours-page--home">
             <div className="tours-page__inner">
@@ -30,6 +30,7 @@ export default function ToursHomeView({ widgets, widgetsData, pageTitle, loading
                                 <FeaturedHolidayPackages
                                     key={w.type}
                                     widgetData={widgetsData.FeaturedHolidayPackages}
+                                    onTourEnquiry={onTourEnquiry}
                                 />
                             );
                         }

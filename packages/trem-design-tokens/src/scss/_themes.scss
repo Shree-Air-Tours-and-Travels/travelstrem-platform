@@ -80,7 +80,8 @@
   --shadow-md: #{$shadow-md};
   --shadow-lg: #{$shadow-lg};
   --container-width: #{$container-width};
-  --root-font-size: 16px;
+  --root-font-size: #{$root-font-size-desktop};
+  --control-font-size: #{$font-size-md};
   --tours-bg: var(--bg);
   --tours-surface: var(--bg-2);
   --tours-border: var(--border);
@@ -89,6 +90,19 @@
   --tours-accent: var(--color-primary);
   --tours-accent-dark: var(--color-primary-dark);
   --tours-shadow: var(--shadow-md);
+}
+
+@media (max-width: $breakpoint-lg) {
+  :root {
+    --root-font-size: #{$root-font-size-tablet};
+  }
+}
+
+@media (max-width: $breakpoint-md) {
+  :root {
+    --root-font-size: #{$root-font-size-mobile};
+    --control-font-size: #{$control-font-size-mobile};
+  }
 }
 
 .theme--light {

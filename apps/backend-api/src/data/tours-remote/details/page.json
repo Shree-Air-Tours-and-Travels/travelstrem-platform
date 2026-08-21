@@ -9,7 +9,7 @@
       "labels": {
         "pageTitle": "Tour Details",
         "bookNow": "Book now",
-        "enquire": "Enquire",
+        "enquire": "Get a quote",
         "backToTours": "Back to tours",
         "backToLabel": "Back to",
         "referrerTours": "Tours",
@@ -91,6 +91,7 @@
           "align": "left-right",
           "showBg": true,
           "mobileVisible": 2
+          ,"showBookNow": false
         },
         "actions": [
           {

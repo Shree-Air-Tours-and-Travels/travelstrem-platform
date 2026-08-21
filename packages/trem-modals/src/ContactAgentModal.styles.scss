@@ -1,68 +1,68 @@
-.ct-modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 2000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.5rem;
-}
-
-.ct-modal-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(2px);
-}
+@import "@packages/trem-design-tokens/scss";
 
 .ct-modal-card {
-  position: relative;
-  width: min(520px, 100%);
-  max-height: 90vh;
+  width: min(680px, 100%);
+  max-height: min(90dvh, 760px);
   overflow-y: auto;
-  background: var(--surface);
-  border-radius: 16px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  border-radius: $radius-lg;
+  box-shadow: var(--shadow-card);
   animation: ct-modal-in 180ms ease both;
 
   &__body {
-    padding: 1.75rem;
+    padding: $space-7;
   }
 
-  &__header {
-    margin-bottom: 1rem;
+  &__intro {
+    display: grid;
+    grid-template-columns: $space-12 minmax(0, 1fr);
+    align-items: start;
+    gap: $space-5;
+    margin: 0 0 $space-5;
   }
+
+  &__brand {
+    width: $space-12;
+    height: $space-12;
+    border-radius: $radius-circle;
+    object-fit: cover;
+    box-shadow: var(--shadow-md);
+  }
+
+  &__header { min-width: 0; }
 
   &__title {
-    margin: 0 0 0.25rem;
-    font-size: 1.15rem;
-    color: var(--title);
+    margin: 0 0 $space-1;
+    font-size: $font-size-xl;
+    color: var(--heading);
   }
 
   &__desc {
     margin: 0;
-    font-size: 0.85rem;
-    color: var(--subtitle);
-    line-height: 1.5;
+    font-size: $font-size-sm;
+    color: var(--muted);
+    line-height: $line-height-lg;
   }
 
   &__tour {
     display: flex;
-    gap: 0.75rem;
+    gap: $space-3;
     align-items: center;
-    padding: 0.75rem;
-    border-radius: 12px;
+    padding: $space-3 $space-4;
+    border-radius: $radius-md;
+    border: 1px solid var(--border);
     background: var(--surface-inset);
-    margin-bottom: 1.25rem;
+    margin: 0 0 $space-5;
   }
 
   &__tour-img {
     width: 56px;
     height: 56px;
-    border-radius: 10px;
+    border-radius: $radius-sm;
     overflow: hidden;
     flex-shrink: 0;
-    background: var(--border);
+    background: var(--surface-inset);
 
     img {
       width: 100%;
@@ -73,63 +73,99 @@
   }
 
   &__tour-info {
+    min-width: 0;
+    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 0.2rem;
+    gap: $space-1-5;
 
     strong {
-      font-size: 0.9rem;
-      color: var(--title);
+      font-size: $font-size-sm;
+      color: var(--heading);
     }
   }
 
   &__tour-price {
-    font-size: 0.82rem;
+    font-size: $font-size-xs;
     color: var(--color-primary);
     font-weight: 600;
   }
 
+  &__operator {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-2 $space-5;
+    margin-top: $space-1;
+
+    span {
+      display: inline-flex;
+      align-items: baseline;
+      gap: $space-1;
+      color: var(--text);
+      font-size: $font-size-xs;
+      font-weight: $font-medium;
+    }
+
+    small { color: var(--muted); font-size: $font-size-xs; font-weight: $font-regular; }
+  }
+
   &__msg {
-    margin-top: 0.75rem;
-    padding: 0.6rem 0.85rem;
-    border-radius: 8px;
-    font-size: 0.85rem;
+    margin-top: $space-3;
+    padding: $space-2 $space-3;
+    border-radius: $radius-sm;
+    font-size: $font-size-sm;
     font-weight: 600;
 
     &--success {
-      background: rgba(22, 163, 74, 0.1);
-      color: #16a34a;
+      background: var(--success-soft);
+      color: var(--color-success);
     }
 
     &--error {
-      background: rgba(220, 38, 38, 0.1);
-      color: #dc2626;
+      background: var(--danger-soft);
+      color: var(--color-danger);
     }
+  }
+
+  &__loader,
+  &__error {
+    min-height: 280px;
   }
 }
 
 .ct-modal-close {
-  position: sticky;
-  top: 0.75rem;
-  float: right;
-  margin: 0.75rem 0.75rem 0 0;
-  width: 34px;
-  height: 34px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: absolute;
+  top: $space-4;
+  right: $space-4;
+  width: $space-8;
+  height: $space-8;
   border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface);
+  border-radius: $radius-circle;
+  background: var(--card-bg);
   color: var(--muted);
   cursor: pointer;
-  z-index: 1;
-  transition: background 120ms ease, color 120ms ease;
+  z-index: 2;
+  transition: background $duration-fast $ease-standard, color $duration-fast $ease-standard;
 
   &:hover {
     background: var(--surface-inset);
     color: var(--text);
   }
+}
+
+@media (max-width: $breakpoint-mobile) {
+  .ct-modal-card { width: 100%; max-height: 92dvh; border-radius: $radius-lg $radius-lg $radius-sm $radius-sm; }
+  .ct-modal-card__body { padding: $space-7 $space-5; }
+  .ct-modal-card__header,
+  .ct-modal-card__intro,
+  .ct-modal-card__tour { max-width: none; }
+
+  .ct-modal-card__intro {
+    grid-template-columns: $space-12 minmax(0, 1fr);
+    gap: $space-3;
+  }
+
+  .ct-modal-card__brand { width: $space-12; height: $space-12; }
 }
 
 @keyframes ct-modal-in {

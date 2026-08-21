@@ -1,5 +1,3 @@
-import config from "./env.js";
-
 const isInactive = (value) => value === true || value === "true";
 
 const applyHideFlags = (node) => {
@@ -14,7 +12,7 @@ const applyHideFlags = (node) => {
     const isActive = hasDisabled
       ? !isInactive(next.disabled)
       : isInactive(next.enabled);
-    next.hide = config.IS_PRODUCTION ? !isActive : false;
+    next.hide = !isActive;
   }
 
   for (const key of Object.keys(next)) {

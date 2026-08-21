@@ -83,6 +83,8 @@ import pageDefinitionService from "../../../services/pageDefinitionService.js";
 import Booking from "../../bookings/models/Booking.js";
 import User from "../../auth/models/User.js";
 import { audit } from "../../tenancy/audit.service.js";
+import { localizeTourImageUrls } from "../../../services/cloudinary.js";
+import { syncDerivedTourDeparture } from "../services/tourDepartureSyncService.js";
 const NODE_ENV = (config.nodeEnv || "development").toString().trim();
 const IS_DEVELOPMENT = NODE_ENV === "development";
 const DEFAULT_DELAY_MS = Number.isFinite(Number(config.devDelayMs))
@@ -267,6 +269,10 @@ export const normalizeTourForResponse = (tourObj = {}, priceInfo = null) => {
         photos: Array.isArray(tourObj.photos) ? tourObj.photos : (tourObj.photos ? [tourObj.photos] : []),
         desc: displayText(tourObj.desc ?? tourObj.description),
         price: tourObj.price || null,
+        packageType: tourObj.packageType || "fixed_departure",
+        departures: Array.isArray(tourObj.departures) ? tourObj.departures : [],
+        flexibleConfig: tourObj.flexibleConfig || null,
+        customConfig: tourObj.customConfig || null,
         seasonalPricing: Array.isArray(tourObj.seasonalPricing) ? tourObj.seasonalPricing : [],
         itinerary: Array.isArray(tourObj.itinerary) ? tourObj.itinerary.map((item) => ({
             ...item,
@@ -486,6 +492,57 @@ const sanitizeTourPayload = (raw = {}) => {
     p.status = p.status || "published";
     p.inventorySource = ["agent", "provider", "platform"].includes(p.inventorySource) ? p.inventorySource : "platform";
 
+    // Package type
+    const validPackageTypes = ["fixed_departure", "flexible", "custom"];
+    p.packageType = validPackageTypes.includes(p.packageType) ? p.packageType : "fixed_departure";
+
+    // Departures for fixed departure tours
+    if (Array.isArray(p.departures)) {
+        p.departures = p.departures.map((dep, idx) => ({
+            label: dep.label || `Departure ${idx + 1}`,
+            departureDate: parseDate(dep.departureDate),
+            returnDate: parseDate(dep.returnDate),
+            status: ["scheduled", "active", "sold_out", "cancelled", "completed"].includes(dep.status) ? dep.status : "active",
+            capacity: dep.capacity == null ? null : Math.max(0, Number(dep.capacity)),
+            seatsAvailable: dep.seatsAvailable == null ? null : Math.max(0, Number(dep.seatsAvailable)),
+            pricing: {
+                min: Number(dep.pricing?.min || dep.min || p.price?.min || 0),
+                max: Number(dep.pricing?.max || dep.max || p.price?.max || 0),
+                currency: dep.pricing?.currency || p.price?.currency || "INR",
+                isFinal: !!dep.pricing?.isFinal,
+                source: dep.pricing?.source || "manual",
+            },
+            bookingOpensAt: dep.bookingOpensAt ? parseDate(dep.bookingOpensAt) : null,
+            bookingClosesAt: dep.bookingClosesAt ? parseDate(dep.bookingClosesAt) : null,
+            notes: dep.notes || "",
+        })).filter((dep) => dep.departureDate && dep.returnDate);
+    } else {
+        p.departures = [];
+    }
+
+    // Flexible config
+    if (p.flexibleConfig && typeof p.flexibleConfig === "object") {
+        p.flexibleConfig = {
+            earliestDeparture: p.flexibleConfig.earliestDeparture ? parseDate(p.flexibleConfig.earliestDeparture) : null,
+            latestReturn: p.flexibleConfig.latestReturn ? parseDate(p.flexibleConfig.latestReturn) : null,
+            blackoutDates: Array.isArray(p.flexibleConfig.blackoutDates) ? p.flexibleConfig.blackoutDates.map(parseDate).filter(Boolean) : [],
+            pricingModel: ["seasonal", "fixed", "on_request"].includes(p.flexibleConfig.pricingModel) ? p.flexibleConfig.pricingModel : "seasonal",
+            minAdvanceBookingDays: Math.max(0, Number(p.flexibleConfig.minAdvanceBookingDays || 0)),
+            maxAdvanceBookingDays: p.flexibleConfig.maxAdvanceBookingDays == null ? null : Math.max(0, Number(p.flexibleConfig.maxAdvanceBookingDays)),
+        };
+    }
+
+    // Custom config
+    if (p.customConfig && typeof p.customConfig === "object") {
+        p.customConfig = {
+            responseTimeframeHours: Math.max(1, Number(p.customConfig.responseTimeframeHours || 48)),
+            requireDates: typeof p.customConfig.requireDates === "boolean" ? p.customConfig.requireDates : true,
+            requireGroupSize: typeof p.customConfig.requireGroupSize === "boolean" ? p.customConfig.requireGroupSize : true,
+            allowAgentDraft: typeof p.customConfig.allowAgentDraft === "boolean" ? p.customConfig.allowAgentDraft : true,
+            questionnaireFields: Array.isArray(p.customConfig.questionnaireFields) ? p.customConfig.questionnaireFields.map(String) : [],
+        };
+    }
+
     // Keep other structural fields as-is (city, address)
     return {
         title: String(p.title),
@@ -499,6 +556,10 @@ const sanitizeTourPayload = (raw = {}) => {
         photos: p.photos || [],
         desc: p.desc || p.description || "",
         price: p.price,
+        packageType: p.packageType,
+        departures: p.departures,
+        flexibleConfig: p.flexibleConfig || null,
+        customConfig: p.customConfig || null,
         seasonalPricing: p.seasonalPricing || [],
         itinerary: p.itinerary || [],
         highlights: p.highlights || [],
@@ -707,6 +768,66 @@ const sanitizeTourPayloadForUpdate = (raw = {}) => {
         });
     }
 
+    // Package type
+    if (p.packageType !== undefined) {
+        const validPackageTypes = ["fixed_departure", "flexible", "custom"];
+        result.packageType = validPackageTypes.includes(p.packageType) ? p.packageType : "fixed_departure";
+    }
+
+    // Departures for fixed departure tours
+    if (p.departures !== undefined) {
+        if (!Array.isArray(p.departures)) throw new Error("departures must be an array");
+        result.departures = p.departures.map((dep, idx) => ({
+            label: dep.label || `Departure ${idx + 1}`,
+            departureDate: parseDate(dep.departureDate),
+            returnDate: parseDate(dep.returnDate),
+            status: ["scheduled", "active", "sold_out", "cancelled", "completed"].includes(dep.status) ? dep.status : "active",
+            capacity: dep.capacity == null ? null : Math.max(0, Number(dep.capacity)),
+            seatsAvailable: dep.seatsAvailable == null ? null : Math.max(0, Number(dep.seatsAvailable)),
+            pricing: {
+                min: Number(dep.pricing?.min || dep.min || 0),
+                max: Number(dep.pricing?.max || dep.max || 0),
+                currency: dep.pricing?.currency || "INR",
+                isFinal: !!dep.pricing?.isFinal,
+                source: dep.pricing?.source || "manual",
+            },
+            bookingOpensAt: dep.bookingOpensAt ? parseDate(dep.bookingOpensAt) : null,
+            bookingClosesAt: dep.bookingClosesAt ? parseDate(dep.bookingClosesAt) : null,
+            notes: dep.notes || "",
+        })).filter((dep) => dep.departureDate && dep.returnDate);
+    }
+
+    // Flexible config
+    if (p.flexibleConfig !== undefined) {
+        if (p.flexibleConfig && typeof p.flexibleConfig === "object") {
+            result.flexibleConfig = {
+                earliestDeparture: p.flexibleConfig.earliestDeparture ? parseDate(p.flexibleConfig.earliestDeparture) : null,
+                latestReturn: p.flexibleConfig.latestReturn ? parseDate(p.flexibleConfig.latestReturn) : null,
+                blackoutDates: Array.isArray(p.flexibleConfig.blackoutDates) ? p.flexibleConfig.blackoutDates.map(parseDate).filter(Boolean) : [],
+                pricingModel: ["seasonal", "fixed", "on_request"].includes(p.flexibleConfig.pricingModel) ? p.flexibleConfig.pricingModel : "seasonal",
+                minAdvanceBookingDays: Math.max(0, Number(p.flexibleConfig.minAdvanceBookingDays || 0)),
+                maxAdvanceBookingDays: p.flexibleConfig.maxAdvanceBookingDays == null ? null : Math.max(0, Number(p.flexibleConfig.maxAdvanceBookingDays)),
+            };
+        } else {
+            result.flexibleConfig = null;
+        }
+    }
+
+    // Custom config
+    if (p.customConfig !== undefined) {
+        if (p.customConfig && typeof p.customConfig === "object") {
+            result.customConfig = {
+                responseTimeframeHours: Math.max(1, Number(p.customConfig.responseTimeframeHours || 48)),
+                requireDates: typeof p.customConfig.requireDates === "boolean" ? p.customConfig.requireDates : true,
+                requireGroupSize: typeof p.customConfig.requireGroupSize === "boolean" ? p.customConfig.requireGroupSize : true,
+                allowAgentDraft: typeof p.customConfig.allowAgentDraft === "boolean" ? p.customConfig.allowAgentDraft : true,
+                questionnaireFields: Array.isArray(p.customConfig.questionnaireFields) ? p.customConfig.questionnaireFields.map(String) : [],
+            };
+        } else {
+            result.customConfig = null;
+        }
+    }
+
     return result;
 };
 
@@ -896,6 +1017,10 @@ export const createTour = async (req, res) => {
             if (req.body.agencyId) sanitized.agencyId = req.body.agencyId;
             sanitized.createdBy = req.user.sub || req.user.id || null;
             sanitized.productKey = "trevista";
+            if (!sanitized.agencyId) {
+                sanitized.providerName = sanitized.providerName || "TravelsTREM";
+                sanitized.inventorySource = "platform";
+            }
         }
         if (req.access?.isMaster && sanitized.status === "published") {
             sanitized.tremVerified = true;
@@ -903,17 +1028,26 @@ export const createTour = async (req, res) => {
             sanitized.tremVerifiedAt = new Date();
         }
 
+        // Resolve and validate the response contract before persisting. A bad
+        // page definition must never make a successful create look failed
+        // after the database write has already happened.
+        const listingResponse = pageDefinitionService.buildPageResponse("tours-remote/listing");
+        await localizeTourImageUrls(sanitized);
         const newTour = TourRepository.create(sanitized);
         const savedTour = await newTour.save();
+        await syncDerivedTourDeparture(savedTour);
         await audit(req, { action: "trip.created", entityType: "Tour", entityId: savedTour._id, agencyId: savedTour.agencyId, after: savedTour.toObject() });
 
         const priceInfo = buildPriceInfo(savedTour, new Date());
         const normalized = normalizeTourForResponse(savedTour.toObject ? savedTour.toObject() : savedTour, priceInfo);
 
+        listingResponse.component.data = {
+            ...listingResponse.component.data,
+            tours: [normalized],
+            tour: normalized,
+        };
         return sendJson(res, 201, {
-            ...pageDefinitionService.buildPageResponse("tours-remote/listing", {
-                injectData: { tours: [normalized], tour: normalized },
-            }),
+            ...listingResponse,
             message: "Tour created successfully",
             handler,
         }, req);
@@ -982,19 +1116,27 @@ export const updateTour = async (req, res) => {
             }
         }
 
+        // Preflight the response contract before applying the update so a
+        // contract configuration error cannot occur after the mutation.
+        const listingResponse = pageDefinitionService.buildPageResponse("tours-remote/listing");
+        await localizeTourImageUrls(sanitized);
         const updatedTour = await TourRepository.findByIdAndUpdate(id, sanitized, {
             new: true,
             runValidators: true,
         });
+        await syncDerivedTourDeparture(updatedTour);
         await audit(req, { action: "trip.updated", entityType: "Tour", entityId: updatedTour._id, agencyId: updatedTour.agencyId, before: existing.toObject(), after: updatedTour.toObject() });
 
         const priceInfo = buildPriceInfo(updatedTour, new Date());
         const normalized = normalizeTourForResponse(updatedTour.toObject ? updatedTour.toObject() : updatedTour, priceInfo);
 
+        listingResponse.component.data = {
+            ...listingResponse.component.data,
+            tours: [normalized],
+            tour: normalized,
+        };
         return sendJson(res, 200, {
-            ...pageDefinitionService.buildPageResponse("tours-remote/listing", {
-                injectData: { tours: [normalized], tour: normalized },
-            }),
+            ...listingResponse,
             message: "Tour updated successfully",
             handler,
         }, req);

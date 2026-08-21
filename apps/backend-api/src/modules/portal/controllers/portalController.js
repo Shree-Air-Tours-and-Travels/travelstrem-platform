@@ -7,13 +7,69 @@ import sidebarConfigTemplate from "../../../config/sidebar.js";
 import appHeaderConfigTemplate from "../../../config/appHeader.js";
 import navigationConfigTemplate from "../../../config/navigation.js";
 import User from "../../auth/models/User.js";
+import { getHiddenProductKeys, invalidateHiddenProductCache } from "../../../utils/hiddenProductCache.js";
 import { getPortalScope, normalizePortalScope, readPortalAccessToken } from "../../../core/auth/portalSession.js";
 
-export const getNavigationConfig = (req, res) => {
+const applyProductHiding = (config, hiddenKeys) => {
+    if (!hiddenKeys.length) return config;
+    const next = { ...config };
+
+    if (next.componentData?.sections) {
+        next.componentData = {
+            ...next.componentData,
+            sections: next.componentData.sections.map((section) => ({
+                ...section,
+                items: (section.items || []).map((item) => {
+                    const match = item.target && hiddenKeys.includes(item.target)
+                        || item.id && hiddenKeys.includes(item.id);
+                    return match ? { ...item, hide: true } : item;
+                }),
+            })),
+        };
+    }
+
+    if (next.componentData?.primaryAction?.menu?.items) {
+        next.componentData = {
+            ...next.componentData,
+            primaryAction: {
+                ...next.componentData.primaryAction,
+                menu: {
+                    ...next.componentData.primaryAction.menu,
+                    items: next.componentData.primaryAction.menu.items.map((item) => {
+                        const match = item.target && hiddenKeys.includes(item.target)
+                            || item.id && hiddenKeys.includes(item.id);
+                        return match ? { ...item, hide: true } : item;
+                    }),
+                },
+            },
+        };
+    }
+
+    return next;
+};
+
+const applyNavigationHiding = (config, hiddenKeys) => {
+    if (!hiddenKeys.length) return config;
+    return {
+        ...config,
+        destinations: (config.destinations || []).map((dest) => {
+            const match = dest.product && hiddenKeys.includes(dest.product);
+            return match ? { ...dest, disabled: true } : dest;
+        }),
+        mobileActionPanel: config.mobileActionPanel ? {
+            ...config.mobileActionPanel,
+            activeTargets: (config.mobileActionPanel.activeTargets || []).filter((t) => !hiddenKeys.includes(t)),
+        } : config.mobileActionPanel,
+    };
+};
+
+export const getNavigationConfig = async (req, res) => {
+    const hiddenKeys = await getHiddenProductKeys();
+    const navConfig = applyNavigationHiding(navigationConfigTemplate, hiddenKeys);
     res.status(200).json({
         status: "success",
         message: "Navigation config loaded",
-        componentData: navigationConfigTemplate,
+        componentData: navConfig,
     });
 };
 
@@ -683,13 +739,15 @@ const withSessionAuthAction = (template, isAuthenticated, surface) => {
 };
 
 export const getSidebarConfig = async (req, res) => {
-    const session = await getSessionFromRequest(req);
-    return res.json(withSessionAuthAction(sidebarConfigTemplate, session.isAuthenticated, "sidebar"));
+    const [session, hiddenKeys] = await Promise.all([getSessionFromRequest(req), getHiddenProductKeys()]);
+    const sidebarConfig = applyProductHiding(sidebarConfigTemplate, hiddenKeys);
+    return res.json(withSessionAuthAction(sidebarConfig, session.isAuthenticated, "sidebar"));
 };
 
 export const getAppHeaderConfig = async (req, res) => {
-    const session = await getSessionFromRequest(req);
-    return res.json(withSessionAuthAction(appHeaderConfigTemplate, session.isAuthenticated, "header"));
+    const [session, hiddenKeys] = await Promise.all([getSessionFromRequest(req), getHiddenProductKeys()]);
+    const appHeaderConfig = applyProductHiding(appHeaderConfigTemplate, hiddenKeys);
+    return res.json(withSessionAuthAction(appHeaderConfig, session.isAuthenticated, "header"));
 };
 
 export const getPageConfig = async (req, res) => {

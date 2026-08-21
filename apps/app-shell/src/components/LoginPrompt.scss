@@ -1,65 +1,132 @@
 @import "@packages/trem-design-tokens/scss";
 
-.dlp {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  min-height: 100dvh;
-  padding: $space-6;
-  background: var(--page-bg);
+.dlp__card {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax($space-20 * 3.5, 0.9fr);
+  width: min(100%, $container-width - $space-20 * 2);
+  min-height: $space-20 * 8;
+  border: 1px solid var(--border);
+  border-radius: $radius-lg;
+  background: var(--card-bg);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
 }
 
-.dlp__card {
-  text-align: center;
-  max-width: 400px;
+.dlp__close {
+  position: absolute;
+  z-index: 2;
+  top: $space-4;
+  right: $space-4;
+  display: grid;
+  place-items: center;
+  width: $space-8;
+  height: $space-8;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: $radius-circle;
+  background: var(--card-bg);
+  color: var(--muted);
+  cursor: pointer;
+
+  &:hover { background: var(--surface-inset); color: var(--heading); }
+}
+
+.dlp__content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: $space-12;
+  text-align: left;
+}
+
+.dlp__visual {
+  position: relative;
+  display: grid;
+  place-items: center;
+  background: var(--primary-soft);
+  overflow: hidden;
+}
+
+.dlp__brand {
+  margin-bottom: $space-6;
+  color: var(--color-primary);
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+  letter-spacing: 0.14em;
 }
 
 .dlp__icon {
   width: $space-16;
   height: $space-16;
   border-radius: $radius-circle;
-  background: var(--primary-soft);
-  color: var(--color-primary);
+  background: var(--page-bg);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto $space-5;
-}
+  margin: 0 0 $space-6;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
 
-.dlp__title {
-  font-size: $font-size-xl;
-  font-weight: $font-bold;
-  color: var(--heading);
-  margin-bottom: $space-2;
-}
-
-.dlp__desc {
-  font-size: 15px;
-  color: var(--muted);
-  line-height: 1.6;
-  margin-bottom: $space-7;
-}
-
-.dlp__btn {
-  padding: $space-3 $space-8;
-  border-radius: $radius-sm;
-  background: var(--color-primary);
-  color: var(--color-on-primary);
-  font-size: 15px;
-  font-weight: $font-semibold;
-  transition: background $duration-base $ease-standard;
-
-  &:hover {
-    background: var(--color-primary-dark);
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 }
 
-.dlp__btn--guest {
-  margin-left: $space-3;
-  background: transparent;
-  color: var(--color-primary);
-  border: 1px solid var(--color-primary);
+.dlp__title {
+  margin: 0 0 $space-3;
+}
 
-  &:hover { background: var(--primary-soft); }
+.dlp__desc {
+  color: var(--muted);
+  margin: 0 0 $space-8;
+}
+
+.dlp__actions {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: $space-3;
+}
+
+.dlp__btn {
+  min-width: $space-20 * 2;
+  justify-content: center;
+}
+
+.dlp__btn--guest { min-width: auto; }
+
+.dlp__visual-orbit,
+.dlp__visual-route {
+  position: absolute;
+  border: 1px solid var(--primary-focus);
+  border-radius: $radius-circle;
+}
+
+.dlp__visual-orbit { width: $space-20 * 4; height: $space-20 * 4; opacity: 0.55; }
+.dlp__visual-route { width: $space-20 * 6; height: $space-20 * 3; transform: rotate(-28deg); opacity: 0.35; }
+.dlp__visual-mark {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: $space-20 * 1.5;
+  height: $space-20 * 1.5;
+  border-radius: $radius-circle;
+  color: var(--color-on-primary);
+  background: var(--color-primary);
+  box-shadow: 0 $space-3 $space-8 var(--primary-shadow);
+}
+.dlp__visual-point { position: absolute; width: $space-3; height: $space-3; border-radius: $radius-circle; background: var(--color-primary); }
+.dlp__visual-point--start { top: 28%; left: 26%; }
+.dlp__visual-point--end { right: 22%; bottom: 27%; background: var(--color-secondary); }
+
+@media (max-width: $breakpoint-mobile) {
+  .dlp__card { grid-template-columns: 1fr; width: min(100%, $container-width / 2); }
+  .dlp__content { padding: $space-8 $space-6; align-items: center; text-align: center; }
+  .dlp__icon { margin-left: auto; margin-right: auto; }
+  .dlp__visual { display: none; }
+  .dlp__actions { grid-template-columns: 1fr; width: 100%; }
+  .dlp__btn { width: 100%; }
 }

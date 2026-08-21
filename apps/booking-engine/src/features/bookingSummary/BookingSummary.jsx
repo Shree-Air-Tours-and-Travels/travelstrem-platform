@@ -279,7 +279,7 @@ export default function BookingSummaryPage({ dispatchEvent, dashboardPath = "/da
   const canCancel = booking && !terminalStatuses.has(status);
   const canProceedToCheckout = !booking?.isProceedHide && (checkoutStatuses.has(status) || Boolean(booking?.currentQuote || booking?.currentQuoteVersion));
   const hasChanges = form ? JSON.stringify(normalizeComparableForm(form)) !== originalFormSnapshot : false;
-  const hasQuote = Boolean(booking?.currentQuote || booking?.currentQuoteVersion > 0);
+  const hasQuote = Boolean((booking?.currentQuote || booking?.currentQuoteVersion > 0) && booking?.quoteDocument?.available);
   const hasPayment = (booking?.paymentSummary?.paid || 0) > 0;
   const isConfirmedOrAfter = CONFIRMED_AND_AFTER.has(status);
 

@@ -2,7 +2,6 @@ import React, { useMemo, useState, useCallback, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom";
 import { Button, EmptyState, FeaturedCard, InternationalTripCard, QuickChips, TrevioTripCard, Preloader, Icon, NoDataFound, useFavoritesContext } from "@packages/trem-ui";
 import { ContactAgentModal } from "@packages/trem-modals";
-import { fetchData } from "@packages/trem-utils";
 import { tripId, tripPrice, tripCurrency, tripImage, tripLocation, tripDuration } from "../utils";
 
 const TRIP_PAGE_SIZE = 4;
@@ -71,40 +70,7 @@ export default function Home({ user = null, trips, pageModel, activeFilter, load
   const visibleTrips = allTrips.slice(0, visibleTripCount);
 
   const [contactOpen, setContactOpen] = useState(false);
-  const [contactFormData, setContactFormData] = useState(null);
-
-  const handleEnquire = useCallback(async () => {
-    try {
-      const res = await fetchData("/form.json?form=contact-agent&tourId=trevio-home");
-      if (res?.status === "success" && res.component) {
-        const labels = res.component.elements?.labels || {};
-        const widgetProps = res.component.structure?.widgets?.[0]?.props || {};
-        const header = res.component.structure?.header || {};
-        setContactFormData({
-          title: labels[header.titleRef] || getInTouch.heading,
-          description: labels[header.descriptionRef] || getInTouch.description,
-          structure: {
-            submitText: labels[widgetProps.submitLabelRef] || "Send Request",
-            fields: (widgetProps.fields || []).map((field) => ({
-              ...field,
-              label: labels[field.labelRef] || field.name,
-              placeholder: labels[field.placeholderRef] || "",
-              options: (field.options || []).map((option) => ({ ...option, label: labels[option.labelRef] || option.value })),
-            })),
-          },
-          data: res.component.data?.tour ? [res.component.data.tour] : [],
-        });
-      }
-    } catch (_) {
-      setContactFormData({
-        title: getInTouch.heading,
-        description: getInTouch.description,
-        structure: {},
-        data: [],
-      });
-    }
-    setContactOpen(true);
-  }, [getInTouch]);
+  const handleEnquire = useCallback(() => setContactOpen(true), []);
 
   if (!pageModel) {
     return (
@@ -526,9 +492,8 @@ export default function Home({ user = null, trips, pageModel, activeFilter, load
       <ContactAgentModal
         open={contactOpen}
         onClose={() => setContactOpen(false)}
-        tourId="trevio-home"
-        formData={contactFormData}
         user={user}
+        product="trevio"
       />
 
     </main>

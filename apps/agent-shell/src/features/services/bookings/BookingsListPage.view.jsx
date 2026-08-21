@@ -7,7 +7,18 @@ import pageConfig from "./bookingsListPage.config.json";
 import "./BookingsPage.styles.scss";
 
 const normalizeBookingRow = (booking = {}) => {
-    const tour = booking.tour || {};
+    if (booking.recordType === "ENQUIRY") {
+        const enquiryId = booking._id || booking.id;
+        return {
+            id: enquiryId, bookingId: enquiryId, isEnquiry: true,
+            displayId: booking.bookingRef || `ENQ-${String(enquiryId || "").slice(-6).toUpperCase()}`,
+            tour: booking.tourTitle || "Travel enquiry", type: `${booking.product === "trevio" ? "Trevio" : "Trevista"} enquiry`,
+            travellers: `${booking.guestsCount || 1} Guests`, days: "—", price: "—",
+            date: booking.createdAt ? new Date(booking.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "",
+            status: "New enquiry", statusTone: "olive",
+        };
+    }
+    const tour = booking.trip || booking.tour || {};
     const start = booking.startDate ? new Date(booking.startDate) : null;
     const end = booking.endDate ? new Date(booking.endDate) : null;
     const days = start && end ? `${Math.round((end - start) / 86400000)} Days` : "";
@@ -20,8 +31,8 @@ const normalizeBookingRow = (booking = {}) => {
         id: bookingId || booking.bookingRef,
         bookingId,
         displayId: booking.bookingRef || bookingId,
-        tour: tour.title || booking.tourTitle || "Tour booking",
-        type: Array.isArray(tour.tags) ? tour.tags[0] || "tour" : "tour",
+        tour: tour.title || booking.tourTitle || "Travel booking",
+        type: booking.product === "trevio" ? "trip" : (Array.isArray(tour.tags) ? tour.tags[0] || "tour" : "tour"),
         travellers: `${booking.guestsCount || booking.travelers?.length || 1} Guests`,
         days,
         price: formatter.format(price),
@@ -53,6 +64,7 @@ export default function BookingsListPage() {
     }
 
     const handleBookingClick = useCallback((row) => {
+        if (row?.isEnquiry) return;
         const id = row.bookingId || row.id;
         if (!id) return;
         navigate(`/agent/services/bookings/${id}`, {

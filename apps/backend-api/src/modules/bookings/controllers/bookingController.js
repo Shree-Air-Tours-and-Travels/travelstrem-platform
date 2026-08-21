@@ -1,8 +1,11 @@
 import mongoose from "mongoose";
+import fs from "fs/promises";
 import Booking, { BOOKING_STATUSES, PAYMENT_STATUSES } from "../models/Booking.js";
 import BookingRepository from "../repositories/BookingRepository.js";
 import Tour from "../../tours/models/Tour.js";
 import User from "../../auth/models/User.js";
+import ContactLead from "../../forms/models/ContactLead.js";
+import { deliverQuoteEmail } from "../services/QuoteDeliveryService.js";
 import BookingService from "../services/BookingService.js";
 import TravellerService from "../services/TravellerService.js";
 import QuoteService from "../services/QuoteService.js";
@@ -12,6 +15,11 @@ import BookingTimelineService from "../services/BookingTimelineService.js";
 import AuditService from "../services/AuditService.js";
 import StatusHistoryService from "../services/StatusHistoryService.js";
 import AssignmentService from "../services/AssignmentService.js";
+import { DOCUMENT_TYPE } from "../../../constants/enums.js";
+import { latestQuoteDocument } from "../services/QuoteDocumentStorage.js";
+import DocumentStorageService from "../../../services/r2/DocumentStorageService.js";
+import { quoteUploadDirectory } from "../services/QuoteDocumentStorage.js";
+import { generateQuoteDocument } from "../services/QuoteGenerationService.js";
 import {
     createBookingReference,
     toPublicBookingReference,
@@ -240,6 +248,8 @@ function normalizeTripPreferences(raw = {}) {
         airportTransferNeeded: !!prefs.airportTransferNeeded,
         roomSharingPreference: cleanString(prefs.roomSharingPreference),
         bedType: cleanString(prefs.bedType),
+        transport: cleanString(prefs.transport),
+        addFlights: cleanString(prefs.addFlights || raw.addFlights),
         smokingPreference: cleanString(prefs.smokingPreference),
         mealPreference: cleanString(prefs.mealPreference),
         extraActivities: Array.isArray(prefs.extraActivities) ? prefs.extraActivities.map(cleanString).filter(Boolean) : [],
@@ -303,9 +313,10 @@ async function findAuthorizedBooking(req, bookingId, action = "view") {
     const effectiveRole = String(userRole || authUser?.role || "").toLowerCase();
     if (privileged && effectiveRole === "agent") {
         const agent = await User.findById(userId).select("agencyId agencyRole agencyRef partnerAgencyRef");
+        const sameAgent = String(booking.assignedAgent || "") === String(userId);
+        if (sameAgent) return { booking, actor: { id: normalizeObjectId(userId), role: userRole, type: "admin", privileged, authUser } };
         if (!agent?.agencyId || String(booking.agencyId || "") !== String(agent.agencyId)) return { error: { message: `Not authorized to ${action} this booking`, status: 403 } };
         if (agent.agencyRole === "partner_admin") return { booking, actor: { id: normalizeObjectId(userId), role: userRole, type: "admin", privileged, authUser } };
-        const sameAgent = String(booking.assignedAgent || "") === String(userId);
         // A regular Partner Agent is intentionally limited to the explicit
         // assignment. Shared agency identifiers are not authorization grants.
         if (!sameAgent) {
@@ -426,7 +437,8 @@ export const createBooking = async (req, res) => {
         if (!travellerValidation.ok) return sendError(res, "Please fix traveller details.", 400, { config: { validation: { errors: travellerValidation.errors } } });
 
         const guestsCount = Math.max(travellerValidation.travellers.length, Number(body.guests || 0), 1);
-        const priceSnapshot = Booking.buildPriceSnapshot(tour, startDate, guestsCount);
+        const departureId = body.departureId || null;
+        const priceSnapshot = Booking.buildPriceSnapshot(tour, startDate, guestsCount, departureId);
         const idempotencyKey = cleanString(req.headers?.["idempotency-key"] || body.idempotencyKey);
         if (idempotencyKey) {
             const existing = await BookingRepository.findOne({ user: actor.id, idempotencyKey });
@@ -440,6 +452,8 @@ export const createBooking = async (req, res) => {
         const booking = new Booking({
             user: actor.id,
             tour: tourId,
+            packageType: tour.packageType || "fixed_departure",
+            departureId: departureId || null,
             assignedAgent,
             ...assignmentScope,
             idempotencyKey,
@@ -686,8 +700,31 @@ export const listBookings = async (req, res) => {
             .populate("assignedAgent", "name email role agentRef agencyRef partnerAgencyRef");
         const total = await BookingRepository.countDocuments(q);
         const hydrated = await BookingService.hydrateMany(bookings, { includeDeep: false });
+        // Enquiries are booking-intent records: surface them beside confirmed
+        // bookings so agents can act on every customer request in one place.
+        let enquiryQuery = null;
+        if (privileged && authUserId) {
+            const isMaster = String(userRole || authUser?.role || "").toLowerCase() === "admin" && authUser?.adminLevel === "master";
+            if (isMaster) enquiryQuery = {};
+            else {
+                const viewer = await User.findById(authUserId).select("agencyId agencyRole").lean();
+                enquiryQuery = viewer?.agencyRole === "partner_admin" ? { agencyId: viewer.agencyId } : { ownerAgent: authUserId };
+            }
+        }
+        const enquiries = enquiryQuery ? await ContactLead.find({ ...enquiryQuery, bookingId: null }).sort({ createdAt: -1 }).limit(limit).lean() : [];
+        const enquiryRecords = enquiries.map((lead) => ({
+            _id: lead._id,
+            bookingRef: `ENQ-${String(lead._id).slice(-6).toUpperCase()}`,
+            tourTitle: lead.tourTitle || "Travel enquiry",
+            product: lead.product || "trevista",
+            guestsCount: Number(lead.fields?.travellerCount || 1),
+            startDate: lead.fields?.preferredTravelDate || null,
+            status: "ENQUIRY",
+            recordType: "ENQUIRY",
+            createdAt: lead.createdAt,
+        }));
 
-        return sendSuccess(res, hydrated, "Bookings listed.", {
+        return sendSuccess(res, [...enquiryRecords, ...hydrated].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)), "Bookings listed.", {
             title: "Bookings",
             config: { total, skip, limit, filters: { status: qStatus, userId: q.user || null, tourId: qTourId, agentId: qAgentId, search: qSearch, tourType: qTourType, sort: sortKey } },
         });
@@ -771,6 +808,18 @@ export const cancelBooking = async (req, res) => {
         await transitionBookingStatus(booking, "CANCELLED", actor, cleanString(req.body?.reason || "Cancelled"));
         booking.cancelledAt = new Date();
         booking.updatedBy = actor.id;
+
+        // Release departure seats if applicable
+        if (booking.departureId && booking.tour && booking.seatsReserved > 0) {
+            try {
+                const { releaseDepartureSeats } = await import("../../tours/services/departureService.js");
+                await releaseDepartureSeats(booking.tour, booking.departureId, booking.seatsReserved);
+                booking.seatsReserved = 0;
+            } catch (seatErr) {
+                console.error("Failed to release departure seats:", seatErr);
+            }
+        }
+
         await booking.save();
         await AuditService.record({ bookingId: booking._id, action: "booking.cancel", before, after: booking.toObject(), actor, reqMeta: requestMeta(req) });
         return sendSuccess(res, await hydrateBooking(booking._id), "Booking cancelled.", { title: "Booking Cancelled" });
@@ -813,7 +862,8 @@ export const createQuote = async (req, res) => {
         if (!actor.privileged) return sendError(res, "Only admins/agents can create quotes.", 403);
 
         const before = booking.toObject();
-        const quote = await QuoteService.create(booking, req.body || {}, actor);
+        // A draft is editable in place. finalAmount is deliberately ignored and always calculated by QuoteService.
+        const quote = await QuoteService.saveDraft(booking, req.body || {}, actor);
         booking.currentQuoteVersion = quote.version;
         booking.latestQuoteId = quote._id;
         booking.priceSnapshot = {
@@ -829,15 +879,42 @@ export const createQuote = async (req, res) => {
 
         if (Booking.normalizeStatus(booking.status) === "QUOTE_REQUESTED") await transitionBookingStatus(booking, "UNDER_REVIEW", actor, "Quote preparation started");
         await transitionBookingStatus(booking, "QUOTE_READY", actor, "Quote created");
-        if (req.body?.sendNow) await transitionBookingStatus(booking, "QUOTE_SENT", actor, "Quote created and sent");
         booking.updatedBy = actor.id;
         await booking.save();
-        await BookingTimelineService.record({ bookingId: booking._id, actor, action: req.body?.sendNow ? "quote.sent" : "quote.created", metadata: { version: quote.version, finalAmount: quote.finalAmount, currency: quote.currency } });
+        await BookingTimelineService.record({ bookingId: booking._id, actor, action: "quote.draft.saved", metadata: { version: quote.version, finalAmount: quote.finalAmount, currency: quote.currency } });
         await AuditService.record({ bookingId: booking._id, action: "quote.create", before, after: booking.toObject(), actor, reqMeta: requestMeta(req) });
-        return sendSuccess(res, await hydrateBooking(booking._id), "Quote created.", { title: "Quote Created" });
+        return sendSuccess(res, await hydrateBooking(booking._id), "Quote draft saved.", { title: "Quote Draft Saved" });
     } catch (err) {
         console.error("createQuote:", err);
         return sendError(res, err.message || "Failed to create quote.", 500);
+    }
+};
+
+export const generateAndSendQuote = async (req, res) => {
+    try {
+        const { booking, actor, error } = await findAuthorizedBooking(req, req.params.bookingId || req.params.id, "generate quote");
+        if (error) return sendError(res, error.message, error.status);
+        if (!actor.privileged) return sendError(res, "Only admins/agents can generate quotes.", 403);
+        const before = booking.toObject();
+        const quote = await QuoteService.saveDraft(booking, req.body || {}, actor);
+        const document = await generateQuoteDocument({ bookingId: booking._id, quote, actor });
+        await QuoteService.markSent(booking._id, quote.version);
+        booking.currentQuoteVersion = quote.version;
+        booking.latestQuoteId = quote._id;
+        booking.priceSnapshot = { ...(booking.priceSnapshot?.toObject?.() || booking.priceSnapshot || {}), total: quote.finalAmount, perPerson: booking.guestsCount ? Math.round(quote.finalAmount / booking.guestsCount) : quote.finalAmount, currency: quote.currency, isFinal: true, source: "quote_engine", note: `Quote v${quote.version}` };
+        booking.paymentSummary = { total: quote.finalAmount, paid: booking.paymentSummary?.paid || 0, remaining: Math.max(0, quote.finalAmount - (booking.paymentSummary?.paid || 0)), refunded: booking.paymentSummary?.refunded || 0 };
+        if (Booking.normalizeStatus(booking.status) === "QUOTE_REQUESTED") await transitionBookingStatus(booking, "UNDER_REVIEW", actor, "Quote prepared");
+        await transitionBookingStatus(booking, "QUOTE_READY", actor, "Quote PDF generated");
+        await transitionBookingStatus(booking, "QUOTE_SENT", actor, "Quote generated and sent");
+        booking.updatedBy = actor.id;
+        await booking.save();
+        await BookingTimelineService.record({ bookingId: booking._id, actor, action: "quote.generated.sent", metadata: { version: quote.version, documentId: document._id, finalAmount: quote.finalAmount, currency: quote.currency } });
+        await AuditService.record({ bookingId: booking._id, action: "quote.generate_and_send", before, after: booking.toObject(), actor, reqMeta: requestMeta(req) });
+        const delivery = await deliverQuoteEmail(booking, { ...quote.toObject(), status: "SENT" });
+        return sendSuccess(res, { ...(await hydrateBooking(booking._id)), quoteDelivery: delivery }, delivery.success ? "Quote generated and sent." : "Quote generated; email delivery failed.", { title: "Quote Generated" });
+    } catch (err) {
+        console.error("generateAndSendQuote:", err);
+        return sendError(res, err.message || "Failed to generate quote.", 500);
     }
 };
 
@@ -846,15 +923,23 @@ export const sendQuote = async (req, res) => {
         const { booking, actor, error } = await findAuthorizedBooking(req, req.params.bookingId || req.params.id, "send quote");
         if (error) return sendError(res, error.message, error.status);
         if (!actor.privileged) return sendError(res, "Only admins/agents can send quotes.", 403);
-        const quote = await QuoteService.markSent(booking._id, Number(req.body?.version || booking.currentQuoteVersion));
+        const quoteVersion = Number(req.body?.version || booking.currentQuoteVersion);
+        const quote = await QuoteService.latest(booking._id);
         if (!quote) return sendError(res, "Quote not found.", 404);
+        const uploadedQuote = await latestQuoteDocument(booking._id);
+        if (!uploadedQuote) return sendError(res, "Upload the final quote PDF before sending it.", 400);
+        if (uploadedQuote.quoteAmount != null && Number(uploadedQuote.quoteAmount) !== Number(quote.finalAmount || 0)) {
+            return sendError(res, "The uploaded PDF amount does not match this quote. Upload the updated PDF first.", 400);
+        }
+        await QuoteService.markSent(booking._id, quoteVersion);
         const before = booking.toObject();
         await transitionBookingStatus(booking, "QUOTE_SENT", actor, "Quote sent to customer");
         booking.updatedBy = actor.id;
         await booking.save();
         await BookingTimelineService.record({ bookingId: booking._id, actor, action: "quote.sent", metadata: { version: quote.version } });
         await AuditService.record({ bookingId: booking._id, action: "quote.send", before, after: booking.toObject(), actor, reqMeta: requestMeta(req) });
-        return sendSuccess(res, await hydrateBooking(booking._id), "Quote sent.", { title: "Quote Sent" });
+        const delivery = await deliverQuoteEmail(booking, quote);
+        return sendSuccess(res, { ...(await hydrateBooking(booking._id)), quoteDelivery: delivery }, delivery.success ? "Quote sent." : "Quote saved, but email delivery failed.", { title: "Quote Sent" });
     } catch (err) {
         console.error("sendQuote:", err);
         return sendError(res, err.message || "Failed to send quote.", 500);
@@ -870,7 +955,12 @@ export const acceptQuote = async (req, res) => {
         const before = booking.toObject();
         await transitionBookingStatus(booking, "CUSTOMER_ACCEPTED", actor, "Customer accepted quote");
         await transitionBookingStatus(booking, "PAYMENT_PENDING", actor, "Payment is now pending");
-        booking.paymentStatus = "UNPAID";
+        if (booking.product === "trevio") {
+            booking.paymentStatus = "TOKEN_PENDING";
+            booking.tokenAmount = booking.tokenAmount || Math.round(Number(quote.finalAmount || booking.paymentSummary?.total || 0) * 0.15);
+        } else {
+            booking.paymentStatus = "UNPAID";
+        }
         booking.updatedBy = actor.id;
         await booking.save();
         await AuditService.record({ bookingId: booking._id, action: "quote.accept", before, after: booking.toObject(), actor, reqMeta: requestMeta(req) });
@@ -990,6 +1080,70 @@ export const uploadBookingDocument = async (req, res) => {
     } catch (err) {
         console.error("uploadBookingDocument:", err);
         return sendError(res, err.message || "Failed to upload document.", 500);
+    }
+};
+
+export const uploadQuoteDocument = async (req, res) => {
+    try {
+        const { booking, actor, error } = await findAuthorizedBooking(req, req.params.bookingId || req.params.id, "upload quote PDF");
+        if (error) {
+            return sendError(res, error.message, error.status);
+        }
+        if (!actor.privileged) {
+            return sendError(res, "Only admins/agents can upload quote PDFs.", 403);
+        }
+        if (!req.file) return sendError(res, "Choose a PDF quote to upload.", 400);
+        const quoteAmount = Number(req.body?.quoteAmount);
+        if (!Number.isFinite(quoteAmount) || quoteAmount <= 0) {
+            return sendError(res, "A valid quote amount is required.", 400);
+        }
+        const buffer = req.file.buffer;
+        if (!buffer || buffer.length < 5) {
+            return sendError(res, "The uploaded file is empty or too small.", 400);
+        }
+        const signature = buffer.subarray(0, 5).toString("ascii");
+        if (signature !== "%PDF-") {
+            return sendError(res, "The selected file is not a valid PDF.", 400);
+        }
+
+        let document;
+        if (DocumentStorageService.isConfigured()) {
+            const currentVersion = (booking.currentQuoteVersion || 0) + 1;
+            document = await DocumentService.uploadQuoteToR2({
+                bookingId: booking._id,
+                agencyId: booking.agencyId,
+                version: currentVersion,
+                buffer,
+                fileName: req.file.originalname,
+                quoteAmount,
+                currency: cleanString(req.body?.currency || "INR").toUpperCase(),
+                actor,
+            });
+        } else {
+            const fsSync = await import("fs");
+            fsSync.mkdirSync(quoteUploadDirectory, { recursive: true });
+            const bookingId = String(booking._id || "booking").replace(/[^a-z0-9_-]/gi, "-");
+            const original = (req.file.originalname || "quote").replace(/[^a-z0-9_-]/gi, "-").slice(0, 80);
+            const filename = `${bookingId}-${Date.now()}-${original}.pdf`;
+            const filePath = `${quoteUploadDirectory}/${filename}`;
+            await fs.writeFile(filePath, buffer);
+            document = await DocumentService.upload(booking._id, {
+                type: DOCUMENT_TYPE.QUOTE,
+                fileName: req.file.originalname,
+                url: `/uploads/quotes/${filename}`,
+                mimeType: "application/pdf",
+                size: req.file.size,
+                quoteAmount,
+                currency: cleanString(req.body?.currency || "INR").toUpperCase(),
+            }, actor);
+        }
+
+        await BookingTimelineService.record({ bookingId: booking._id, actor, action: "quote.document.uploaded", metadata: { documentId: document._id, fileName: document.fileName, quoteAmount, currency: document.currency } });
+        await AuditService.record({ bookingId: booking._id, action: "quote.document.upload", before: null, after: { document }, actor, reqMeta: requestMeta(req) });
+        return sendSuccess(res, await hydrateBooking(booking._id), "Quote PDF uploaded.", { title: "Quote PDF Uploaded" });
+    } catch (err) {
+        console.error("uploadQuoteDocument:", err);
+        return sendError(res, err.message || "Failed to upload quote PDF.", 500);
     }
 };
 

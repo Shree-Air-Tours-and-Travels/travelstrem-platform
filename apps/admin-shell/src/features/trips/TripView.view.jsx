@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, SubTitle, Paragraph } from "@packages/trem-ui";
+import { Button, SubTitle, Paragraph, RecordReview } from "@packages/trem-ui";
 import "../tours/TourView.scss";
 
 function displayDuration(d) {
@@ -9,14 +9,14 @@ function displayDuration(d) {
     return String(d);
 }
 
-export default function TripViewView({ trip, onClose, onEdit }) {
+export default function TripViewView({ trip, onClose, onEdit, panelRef }) {
     if (!trip) return null;
 
     const imageSrc = trip.image || (Array.isArray(trip.photos) && trip.photos[0]) || "";
 
     return (
         <div className="tour-view-overlay" role="dialog" aria-modal="true" aria-label={`${trip.title} details`} onClick={onClose}>
-            <aside className="tour-view" tabIndex={-1} onClick={(e) => e.stopPropagation()}>
+            <aside className="tour-view" ref={panelRef} tabIndex={-1} onClick={(e) => e.stopPropagation()}>
                 <header className="tv-header">
                     <div className="tv-title">
                         <SubTitle text={trip.title || "Untitled Trip"} variant="primary" size="large" />
@@ -25,23 +25,16 @@ export default function TripViewView({ trip, onClose, onEdit }) {
                         </div>
                     </div>
                     <div className="tv-actions">
-                        <Button primaryClassName="tv-icon-action tv-icon-action--edit" variant="text" isCircular iconLeft="edit" onClick={() => onEdit(trip)} aria-label="Edit trip" title="Edit trip" />
-                        <Button primaryClassName="tv-icon-action tv-icon-action--close" variant="text" isCircular iconLeft="x" onClick={onClose} aria-label="Close trip details" title="Close" />
+                        <Button primaryClassName="btn" variant="solid" color="primary" onClick={() => onEdit(trip)} text="Edit" />
+                        <Button primaryClassName="btn" variant="outline" onClick={onClose} aria-label="Close view" text="Close" />
                     </div>
                 </header>
 
                 <div className="tv-body">
                     <div className="tv-aside">
-                        <img src={imageSrc} alt={trip.title} className="tv-photo" />
-                        {trip.photos && trip.photos.length > 1 && (
-                            <div className="ctf-photo-grid" style={{ marginTop: 8 }}>
-                                {trip.photos.map((url, idx) => (
-                                    <div key={idx} className={`ctf-photo-thumb ${url === imageSrc ? "ctf-photo-thumb--main" : ""}`}>
-                                        <img src={url} alt={`Photo ${idx + 1}`} />
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                        {imageSrc
+                            ? <img src={imageSrc} alt={trip.title} className="tv-photo" />
+                            : <div className="tv-photo tv-photo--fallback" aria-label="No trip image">No image available</div>}
                     </div>
 
                     <main className="tv-main" aria-label="Trip content">
@@ -63,17 +56,16 @@ export default function TripViewView({ trip, onClose, onEdit }) {
                             <Paragraph>{trip.description || "No description available."}</Paragraph>
                         </section>
 
-                        {trip.itinerary && trip.itinerary.length > 0 && (
-                            <section className="tv-section">
-                                <SubTitle text="Itinerary" />
-                                {trip.itinerary.map((it, idx) => (
-                                    <div key={it._id || idx} className="tv-it">
-                                        <strong>Day {it.day || idx + 1}{it.title ? `, ${it.title}` : ""}</strong>
-                                        {it.summary && <Paragraph>{it.summary}</Paragraph>}
-                                    </div>
-                                ))}
-                            </section>
-                        )}
+                        <section className="tv-section">
+                            <SubTitle text="Itinerary" />
+                            {(trip.itinerary || []).length === 0 && <Paragraph>No itinerary provided.</Paragraph>}
+                            {(trip.itinerary || []).map((it, idx) => (
+                                <div key={it._id || idx} className="tv-it">
+                                    <strong>Day {it.day || idx + 1}{it.title ? `, ${it.title}` : ""}</strong>
+                                    {it.summary && <Paragraph>{it.summary}</Paragraph>}
+                                </div>
+                            ))}
+                        </section>
 
                         {trip.inclusions && trip.inclusions.length > 0 && (
                             <section className="tv-section">
@@ -99,6 +91,11 @@ export default function TripViewView({ trip, onClose, onEdit }) {
                         {trip.extras?.length > 0 && <section className="tv-section"><SubTitle text="Optional extras" />{trip.extras.map((extra, index) => <Paragraph key={extra._id || index}><strong>{extra.title || "Extra"}</strong> · {extra.included ? "Included" : `${extra.currency || trip.price?.currency || "INR"} ${extra.price ?? 0}`}{extra.priceLabel ? ` (${extra.priceLabel})` : ""}{extra.description ? ` — ${extra.description}` : ""}</Paragraph>)}</section>}
                         {(trip.cancellationPolicy || trip.cancellation?.policy || trip.cancellation?.tiers?.length) && <section className="tv-section"><SubTitle text="Cancellation" /><Paragraph>{trip.cancellationPolicy || trip.cancellation?.policy || "—"}</Paragraph>{trip.cancellation?.tiers?.map((tier, index) => <Paragraph key={tier._id || index}>{tier.label || "Refund"}: {tier.refundPercent ?? "—"}% · {tier.daysBefore ?? "—"} days before departure{tier.description ? ` — ${tier.description}` : ""}</Paragraph>)}</section>}
                         <section className="tv-section"><SubTitle text="Ownership & audit" /><Paragraph><strong>Agency:</strong> {trip.agency?.name || "TravelsTREM platform"}</Paragraph><Paragraph><strong>Agent:</strong> {trip.ownerAgentName || "Master admin"}{trip.ownerAgentRef ? ` · ${trip.ownerAgentRef}` : ""}</Paragraph><Paragraph><strong>Verification:</strong> {trip.tremVerified ? `TREM verified${trip.tremVerifiedAt ? ` on ${new Date(trip.tremVerifiedAt).toLocaleDateString()}` : ""}` : "Not verified"}</Paragraph><Paragraph><strong>Created:</strong> {trip.createdAt ? new Date(trip.createdAt).toLocaleString() : "—"}</Paragraph><Paragraph><strong>Last updated:</strong> {trip.updatedAt ? new Date(trip.updatedAt).toLocaleString() : "—"}</Paragraph></section>
+                        <RecordReview
+                            data={trip}
+                            title="Complete trip record"
+                            description="Every available trip value, including pricing, itinerary, preferences, ownership, verification, and audit fields."
+                        />
                     </main>
                 </div>
 

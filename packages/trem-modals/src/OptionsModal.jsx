@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
 import { Button, Icon, BottomSheet } from "@packages/trem-ui";
+import ModalShell from "./ModalShell.jsx";
 import "./OptionsModal.styles.scss";
 
 const MOBILE_BP = 768;
@@ -24,6 +24,7 @@ export default function OptionsModal({
   selectedValue = "",
   onConfirm,
   className = "",
+  closeOnOutsideClick = false,
 }) {
   const [mobile, setMobile] = useState(false);
   const [draftValue, setDraftValue] = useState(selectedValue);
@@ -39,22 +40,6 @@ export default function OptionsModal({
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
-
-  useEffect(() => {
-    if (!open || mobile) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
-  }, [open, mobile]);
-
-  useEffect(() => {
-    if (!open) return undefined;
-    function onKey(e) {
-      if (e.key === "Escape") onClose?.();
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
 
   if (!open) return null;
 
@@ -115,16 +100,14 @@ export default function OptionsModal({
 
   if (mobile) {
     return (
-      <BottomSheet open={open} onClose={onClose} title={title}>
+      <BottomSheet open={open} onClose={onClose} title={title} closeOnOutsideClick={closeOnOutsideClick}>
         {content}
       </BottomSheet>
     );
   }
 
-  return createPortal(
-    <div className={`trem-options-overlay ${className}`.trim()}>
-      <div className="trem-options-overlay__backdrop" onClick={onClose} />
-      <div className="trem-options-overlay__dialog" role="dialog" aria-modal="true" aria-label={title}>
+  return (
+    <ModalShell open={open} className={className} dialogClassName="trem-options-overlay__dialog" label={title} closeOnOutsideClick={closeOnOutsideClick} onClose={onClose}>
         <Button variant="text" isCircular iconLeft="x" onClick={onClose} aria-label={closeLabel} primaryClassName="trem-options-overlay__close" />
         <div className="trem-options-overlay__header">
           <span className="trem-options-overlay__icon">
@@ -133,8 +116,6 @@ export default function OptionsModal({
           <h3>{title}</h3>
         </div>
         {content}
-      </div>
-    </div>,
-    document.body
+    </ModalShell>
   );
 }

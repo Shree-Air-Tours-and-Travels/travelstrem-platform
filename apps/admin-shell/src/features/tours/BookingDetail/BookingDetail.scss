@@ -11,7 +11,6 @@
 }
 
 .bd-shell {
-  max-width: 1180px;
   gap: $space-4;
 }
 
@@ -151,6 +150,34 @@
   box-shadow: var(--shadow-md);
 }
 
+/* Quote authoring needs a calm, wide working surface instead of a narrow stack. */
+.bd-content:has(.trem-quote-composer) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.bd-actions-panel:has(.trem-quote-composer) {
+  position: static;
+  max-height: none;
+  padding: $space-4;
+}
+
+.bd-actions-panel .trem-quote-composer__caption {
+  display: grid;
+  gap: 3px;
+  padding: $space-3;
+  border-radius: $radius-sm;
+  background: linear-gradient(135deg, #f2efff, #f9f8ff);
+  color: var(--heading);
+}
+
+.bd-actions-panel .trem-quote-composer__caption span {
+  color: var(--muted);
+  font-size: $font-size-xs;
+  font-weight: $font-regular;
+}
+
+.bd-actions-panel .trem-quote-composer__footer { padding: $space-3 0; background: var(--card-bg); }
+
 .bd-actions-panel__header {
   align-items: center;
 }
@@ -271,6 +298,14 @@
   .bd-payment-item {
     grid-template-columns: 1fr auto;
   }
+
+  .bd-content:has(.trem-quote-composer) {
+    grid-template-columns: 1fr;
+  }
+
+  .bd-actions-panel:has(.trem-quote-composer) {
+    max-height: none;
+  }
 }
 
 /* Final component overrides: keep these after legacy rules. */
@@ -280,7 +315,6 @@
 }
 
 .bd-shell {
-  max-width: 1180px;
   gap: $space-4;
 }
 
@@ -571,8 +605,6 @@
 .bd-shell {
   width: 100%;
   min-width: 0;
-  max-width: 1100px;
-  margin: 0 auto;
   display: grid;
   gap: 1rem;
 }
@@ -919,11 +951,19 @@
 
 .bd-traveler {
   display: grid;
-  gap: 0.1rem;
-  padding: 0.4rem 0.6rem;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem;
   border-radius: 6px;
   background: var(--surface-subtle, #f9fafb);
   font-size: 0.85rem;
+}
+
+.bd-traveler__details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-muted, #6b7280);
 }
 
 .bd-traveler span {
@@ -1267,4 +1307,106 @@
   .bd-page .bd-payment-item {
     grid-template-columns: 1fr auto;
   }
+}
+
+.bd-page .bd-quote-builder-card {
+  display: grid;
+  gap: $space-4;
+  padding: $space-5;
+}
+
+.bd-page .bd-quote-builder-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-4;
+}
+
+.bd-page .bd-quote-builder-card__header h2 {
+  margin: 0;
+  color: var(--heading);
+  font-size: $font-size-lg;
+  font-weight: $font-bold;
+  line-height: 1.2;
+}
+
+.bd-page .bd-quote-builder-card__header p {
+  max-width: 620px;
+  margin: $space-1 0 0;
+  color: var(--muted);
+  font-size: $font-size-sm;
+  line-height: 1.55;
+}
+
+.bd-page .bd-quote-builder-card__header span {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 $space-3;
+  border-radius: $radius-full;
+  background: var(--primary-soft);
+  color: var(--color-primary-dark);
+  font-size: $font-size-xs;
+  font-weight: $font-semibold;
+}
+
+.bd-page .bd-quote-builder-card .trem-quote-composer__caption {
+  display: none;
+}
+
+.bd-page .bd-quote-builder-card .trem-quote-composer__footer {
+  padding: $space-4 0 0;
+  background: transparent;
+}
+
+.bd-page .bd-quote-builder-card__actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 240px));
+  justify-content: end;
+  gap: $space-3;
+  padding-top: $space-4;
+  border-top: 1px solid var(--border);
+}
+
+@media (max-width: 768px) {
+  .bd-page .bd-quote-builder-card {
+    padding: $space-3;
+  }
+
+  .bd-page .bd-quote-builder-card__header,
+  .bd-page .bd-quote-builder-card__actions {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+
+  .bd-page .bd-quote-builder-card__actions {
+    justify-content: stretch;
+  }
+}
+
+.bd-journey-card {
+  margin-bottom: $space-4;
+  padding: $space-4;
+  border-radius: $radius-sm;
+  background: var(--surface, #fff);
+  box-shadow: var(--shadow-sm);
+
+  .bd-card__title { margin-bottom: $space-3; }
+  .timeline-stepper { padding: 0; }
+}
+
+.bd-change-request {
+  margin-top: $space-3;
+  padding: $space-3;
+  background: rgba(245,158,11,0.06);
+  border-left: 3px solid var(--color-warning, #f59e0b);
+  border-radius: $radius-sm;
+  font-size: 0.85rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-2;
+
+  strong { color: var(--text, #111); }
+  span { color: var(--text-muted, #6b7280); &::after { content: " · "; } &:last-child::after { content: ""; } }
 }

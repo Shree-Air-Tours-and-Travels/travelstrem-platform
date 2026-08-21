@@ -131,23 +131,7 @@
 }
 
 .trem-options-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 2000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.5rem;
-
-  &__backdrop {
-    position: absolute;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.45);
-    backdrop-filter: blur(2px);
-  }
-
   &__dialog {
-    position: relative;
     width: min(520px, 100%);
     max-height: min(82vh, 640px);
     overflow-y: auto;

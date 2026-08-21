@@ -30,6 +30,9 @@ export default function AppHeader({
   onSearch,
   onSearchSelect,
   onLogoClick,
+  primaryActionOpen,
+  onPrimaryActionOpenChange,
+  onPrimaryActionSelect,
 }) {
   const brand = config.brand || {};
   const search = config.search || {};
@@ -77,6 +80,27 @@ export default function AppHeader({
       disabled: item.disabled,
       onClick: item.onClick,
     }));
+  const primaryActionMenu = primaryAction.menu || {};
+  const primaryActionItems = (primaryActionMenu.items || [])
+    .filter((item) => !item.hide)
+    .map((item) => ({
+      ...item,
+      label: item.label || item.title,
+      icon: item.icon || item.mobileIcon,
+      badge: item.badge || (item.comingSoon ? item.comingSoonLabel : ""),
+      onClick: () => onPrimaryActionSelect?.(item),
+    }));
+  const primaryActionTrigger = (
+    <button
+      type="button"
+      className="trem-app-header__primary"
+      disabled={primaryAction.enabled === false}
+      aria-label={primaryAction.ariaLabel || primaryAction.label}
+    >
+      <Icon name={primaryAction.icon || "plus"} size={19} />
+      <span>{primaryAction.label}</span>
+    </button>
+  );
 
   return (
     <>
@@ -109,7 +133,23 @@ export default function AppHeader({
               trigger={() => <button type="button" className="trem-app-header__product" aria-label={productMenu.ariaLabel || "Choose product"}><span>{productMenu.label}</span><Icon name="chevronDown" size={16} /></button>}
             />
           ) : null}
-          {!primaryAction.hide && primaryAction.label ? (
+          {!primaryAction.hide && primaryAction.label && primaryActionItems.length ? (
+            <Dropdown
+              align="right"
+              hoverable={false}
+              variant={primaryActionMenu.variant || "journey-menu"}
+              items={primaryActionItems}
+              menuTitle={primaryActionMenu.title}
+              menuAriaLabel={primaryActionMenu.ariaLabel}
+              portalWidth={primaryActionMenu.width}
+              portalClassName="trem-app-header__journey-menu"
+              className="trem-app-header__primary-dropdown"
+              open={primaryActionOpen}
+              onOpenChange={onPrimaryActionOpenChange}
+              disabled={primaryAction.enabled === false}
+              trigger={() => primaryActionTrigger}
+            />
+          ) : !primaryAction.hide && primaryAction.label ? (
             <button
               type="button"
               className="trem-app-header__primary"
@@ -183,4 +223,7 @@ AppHeader.propTypes = {
   onSearch: PropTypes.func,
   onSearchSelect: PropTypes.func,
   onLogoClick: PropTypes.func,
+  primaryActionOpen: PropTypes.bool,
+  onPrimaryActionOpenChange: PropTypes.func,
+  onPrimaryActionSelect: PropTypes.func,
 };

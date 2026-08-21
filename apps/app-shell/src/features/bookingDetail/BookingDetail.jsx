@@ -4,9 +4,8 @@ import StatusBadge from "@packages/trem-ui/components/StatusBadge/StatusBadge.js
 import TimelineStepper from "@packages/trem-ui/components/TimelineStepper/TimelineStepper.jsx";
 import QuoteDisplay from "@packages/trem-ui/components/QuoteDisplay/QuoteDisplay.jsx";
 import Button from "@packages/trem-ui/components/Button/Button.jsx";
-import MessageBubble from "@packages/trem-ui/components/MessageBubble/MessageBubble.jsx";
 import Spinner from "@packages/trem-ui/components/Spinner/Spinner.jsx";
-import { sanitizeInput, detectScriptInjection, detectPrivacyBreaches, auditLog_event } from "../../services/security";
+import api from "../../services/apiClient";
 import "./BookingDetail.scss";
 
 const formatMoney = (v, c = "INR") => {
@@ -29,14 +28,19 @@ export default function BookingDetail({ bookingId, onBack }) {
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [messages, setMessages] = useState([]);
-  const [messageInput, setMessageInput] = useState("");
-  const [sendingMessage, setSendingMessage] = useState(false);
   const [paymentScreenshot, setPaymentScreenshot] = useState(null);
   const [paymentPreview, setPaymentPreview] = useState("");
   const [paymentDragging, setPaymentDragging] = useState(false);
   const [paymentSubmitting, setPaymentSubmitting] = useState(false);
   const [paymentMessage, setPaymentMessage] = useState("");
+  const [bookingAction, setBookingAction] = useState({ loading: "", message: "" });
+  const [travellerForm, setTravellerForm] = useState({ firstName: "", lastName: "", age: "", nationality: "", passportNumber: "" });
+  const [travellerSubmitting, setTravellerSubmitting] = useState(false);
+  const [travellerMessage, setTravellerMessage] = useState("");
+  const [changeRequestOpen, setChangeRequestOpen] = useState(false);
+  const [changeRequestForm, setChangeRequestForm] = useState({ guestCountChange: 0, withFlights: null, notes: "" });
+  const [changeRequestSubmitting, setChangeRequestSubmitting] = useState(false);
+  const [changeRequestMessage, setChangeRequestMessage] = useState("");
   const paymentInputRef = useRef(null);
 
   const loadBooking = useCallback(async () => {
@@ -47,11 +51,6 @@ export default function BookingDetail({ bookingId, onBack }) {
       } else {
         setError(res?.message || "Failed to load booking");
       }
-      const msgRes = await fetchData(`/engine/${bookingId}/messages`);
-      if (msgRes?.status === "success") {
-        const data = unwrap(msgRes);
-        setMessages((data?.messages || []).reverse());
-      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -61,20 +60,6 @@ export default function BookingDetail({ bookingId, onBack }) {
 
   useEffect(() => { loadBooking(); }, [loadBooking]);
 
-  useEffect(() => {
-    if (!bookingId) return undefined;
-    const refresh = () => {
-      if (document.visibilityState === "visible") loadBooking();
-    };
-    const interval = window.setInterval(refresh, 15000);
-    window.addEventListener("focus", refresh);
-    document.addEventListener("visibilitychange", refresh);
-    return () => {
-      window.clearInterval(interval);
-      window.removeEventListener("focus", refresh);
-      document.removeEventListener("visibilitychange", refresh);
-    };
-  }, [bookingId, loadBooking]);
 
   useEffect(() => {
     if (!paymentScreenshot) {
@@ -100,37 +85,6 @@ export default function BookingDetail({ bookingId, onBack }) {
     setPaymentScreenshot(file);
   };
 
-  const handleSendMessage = async () => {
-    const raw = messageInput.trim();
-    if (!raw) return;
-
-    if (detectScriptInjection(raw)) {
-      auditLog_event("script_injection_blocked", { input: raw.slice(0, 100), bookingId });
-      return;
-    }
-
-    const privacyBreaches = detectPrivacyBreaches(raw);
-    if (privacyBreaches.length > 0) {
-      auditLog_event("privacy_breach_detected", { bookingId, privacyBreaches, input: raw.slice(0, 100) });
-    }
-
-    const safeContent = sanitizeInput(raw);
-    setSendingMessage(true);
-    try {
-      await fetchData(`/engine/${bookingId}/message`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: { content: safeContent },
-      });
-      setMessageInput("");
-      await loadBooking();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setSendingMessage(false);
-    }
-  };
-
   const handleAcceptQuote = async () => {
     try {
       await fetchData(`/engine/${bookingId}/quote/accept`, { method: "POST", headers: { "Content-Type": "application/json" } });
@@ -143,6 +97,115 @@ export default function BookingDetail({ bookingId, onBack }) {
       await fetchData(`/engine/${bookingId}/quote/reject`, { method: "POST", headers: { "Content-Type": "application/json" } });
       await loadBooking();
     } catch (err) { console.error(err); }
+  };
+
+  const handleAddTravellers = async () => {
+    if (!travellerForm.firstName.trim() || !travellerForm.age) {
+      setTravellerMessage("First name and age are required.");
+      return;
+    }
+    setTravellerSubmitting(true);
+    setTravellerMessage("");
+    try {
+      const existing = (booking.travellers || []).map((t) => ({
+        firstName: t.firstName,
+        lastName: t.lastName || "",
+        age: t.age,
+        gender: t.gender || "",
+        nationality: t.nationality || "",
+        passportNumber: t.passportNumber || "",
+      }));
+      const updated = [...existing, {
+        firstName: travellerForm.firstName.trim(),
+        lastName: travellerForm.lastName.trim(),
+        age: Number(travellerForm.age),
+        nationality: travellerForm.nationality.trim(),
+        passportNumber: travellerForm.passportNumber.trim(),
+      }];
+      const res = await fetchData(`/engine/${bookingId}/travellers`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: { travellers: updated },
+      });
+      if (res?.status === "error") {
+        setTravellerMessage(res?.message || "Failed to add traveller.");
+        return;
+      }
+      setTravellerForm({ firstName: "", lastName: "", age: "", nationality: "", passportNumber: "" });
+      setTravellerMessage("Traveller added.");
+      await loadBooking();
+    } catch (err) {
+      setTravellerMessage(err.message || "Failed to add traveller.");
+    } finally {
+      setTravellerSubmitting(false);
+    }
+  };
+
+  const handleSubmitChangeRequest = async () => {
+    setChangeRequestSubmitting(true);
+    setChangeRequestMessage("");
+    try {
+      const res = await fetchData(`/engine/${bookingId}/quote/request-changes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: changeRequestForm,
+      });
+      if (res?.status === "error") {
+        setChangeRequestMessage(res?.message || "Failed to submit request.");
+        return;
+      }
+      setChangeRequestOpen(false);
+      setChangeRequestForm({ guestCountChange: 0, withFlights: null, notes: "" });
+      setChangeRequestMessage("Change request submitted.");
+      await loadBooking();
+    } catch (err) {
+      setChangeRequestMessage(err.message || "Failed to submit request.");
+    } finally {
+      setChangeRequestSubmitting(false);
+    }
+  };
+
+  const handleDownloadQuote = async () => {
+    setBookingAction({ loading: "download", message: "" });
+    try {
+      const urlResponse = await api.get(`/bookings/${bookingId}/downloads/quote-url`);
+      if (urlResponse?.data?.status === "success" && urlResponse?.data?.data?.url) {
+        const { url, fileName } = urlResponse.data.data;
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = booking?.quoteDocument?.filename || fileName || `quote-${booking?.bookingRef || bookingId}.pdf`;
+        link.target = "_blank";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setBookingAction({ loading: "", message: "Quote PDF downloaded." });
+        return;
+      }
+      const response = await api.get(`/bookings/${bookingId}/downloads/quote`, { responseType: "blob" });
+      const objectUrl = URL.createObjectURL(response.data);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = booking?.quoteDocument?.filename || `quote-${booking?.bookingRef || bookingId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+      setBookingAction({ loading: "", message: "Quote PDF downloaded." });
+    } catch (err) {
+      setBookingAction({ loading: "", message: err?.response?.data?.message || "Could not download the quote PDF." });
+    }
+  };
+
+  const handleCancelBooking = async () => {
+    setBookingAction({ loading: "cancel", message: "" });
+    try {
+      const response = await fetchData(`/engine/${bookingId}/cancel`, { method: "POST", body: { reason: "Cancelled by customer" } });
+      if (response?.status !== "success") throw new Error(response?.message || "Unable to cancel booking");
+      setBookingAction({ loading: "", message: "Booking cancelled." });
+      await loadBooking();
+    } catch (err) {
+      setBookingAction({ loading: "", message: err?.message || "Unable to cancel booking." });
+    }
   };
 
   const handlePaymentProof = async (event) => {
@@ -178,11 +241,20 @@ export default function BookingDetail({ bookingId, onBack }) {
   const latestQuote = booking.latestQuote || booking.currentQuote;
   const payments = booking.payments || [];
   const timelineEntries = booking.paymentTimeline || [];
-  const paymentStatus = String(booking.paymentStatus || "TOKEN_PENDING").toUpperCase();
+  const paymentStatus = String(booking.paymentStatus || "UNPAID").toUpperCase();
   const paymentMethods = (booking.paymentConfiguration?.methods || []).filter((method) => method.enabled !== false);
   const canSubmitProof = product === "trevio"
     && booking.status === "AWAITING_TOKEN_PAYMENT"
     && paymentStatus === "TOKEN_PENDING";
+  const showTrevioPayment = product === "trevio" && [
+    "AWAITING_TOKEN_PAYMENT", "PAYMENT_PENDING", "PARTIALLY_PAID", "PAID",
+    "CONFIRMED", "TICKETING", "TICKETED", "TRAVEL_READY", "COMPLETED",
+  ].includes(String(booking.status || "").toUpperCase());
+  const awaitingQuote = Boolean(booking.enquiryRef || booking.contactLead) && !latestQuote;
+  const displayTitle = tour?.title || booking.tripSelection?.packageId || (booking.enquiryRef ? "Travel enquiry" : "Booking");
+  const travelDates = booking.isTravelDateFlexible
+    ? "Flexible dates"
+    : `${formatDate(booking.travelWindow?.startDate)} → ${formatDate(booking.travelWindow?.endDate)}`;
 
   return (
     <>
@@ -192,7 +264,7 @@ export default function BookingDetail({ bookingId, onBack }) {
           Bookings
         </button>
         <span aria-hidden="true">/</span>
-        <span className="bd__breadcrumb-current">{tour?.title || "Booking details"}</span>
+        <span className="bd__breadcrumb-current">{displayTitle}</span>
       </nav>
           <div className="bd">
 
@@ -201,7 +273,7 @@ export default function BookingDetail({ bookingId, onBack }) {
         <div className="bd__header">
           <div className="bd__header-left">
             <span className="bd__eyebrow">Booking summary</span>
-            <h1 className="bd__title">{tour?.title || "Booking"}</h1>
+            <h1 className="bd__title">{displayTitle}</h1>
             <div className="bd__meta">
               <span className="bd__ref">{booking.bookingRef || "—"}</span>
               <span className="bd__product">{product === "trevio" ? "Trevio trip" : "Custom tour"}</span>
@@ -210,14 +282,74 @@ export default function BookingDetail({ bookingId, onBack }) {
           </div>
         </div>
 
+        <section className="bd__card bd__journey-card">
+            <h3 className="bd__card-title">Booking progress</h3>
+            <TimelineStepper steps={timeline} />
+        </section>
+
         <div className="bd__grid">
           <div className="bd__main">
-          <section className="bd__card">
-            <h3 className="bd__card-title">Status Timeline</h3>
-            <TimelineStepper steps={timeline} />
-          </section>
+          {awaitingQuote && (
+            <section className="bd__card bd__quote-waiting">
+              <span className="bd__quote-waiting-icon" aria-hidden="true">✓</span>
+              <div>
+                <h2>Enquiry sent to the organiser</h2>
+                <p>No price or payment is due yet. The organiser must create and send the final quote before you can review or accept it.</p>
+              </div>
+            </section>
+          )}
 
-          {product === "trevio" && (
+          {["CUSTOMER_ACCEPTED", "PAYMENT_PENDING"].includes(String(booking.status || "").toUpperCase()) && (() => {
+            const guestCount = booking.guestsCount || 1;
+            const travellerCount = (booking.travellers || []).length;
+            const atCapacity = travellerCount >= guestCount;
+            return (
+            <section className="bd__card bd__travellers-card">
+              <h3 className="bd__card-title">Traveller Details</h3>
+              <p className="bd__traveller-count">{travellerCount} of {guestCount} travellers added</p>
+              {booking.travellers && booking.travellers.length > 0 && (
+                <div className="bd__traveller-list">
+                  {booking.travellers.map((t, i) => (
+                    <div key={t.id || i} className="bd__traveller-item">
+                      <strong>{t.firstName}{t.lastName ? ` ${t.lastName}` : ""}</strong>
+                      <div className="bd__traveller-meta">
+                        {t.age ? <span>Age {t.age}</span> : null}
+                        {t.nationality ? <span>{t.nationality}</span> : null}
+                        {t.passportNumber ? <span>Passport: {t.passportNumber}</span> : null}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {atCapacity ? (
+                <p className="bd__traveller-done">All traveller details have been added.</p>
+              ) : (
+                <>
+                  <p className="bd__traveller-hint">Add each traveller's details below. Name and age are required.</p>
+                  <div className="bd__traveller-form">
+                    <div className="bd__traveller-row">
+                      <input type="text" placeholder="First name *" value={travellerForm.firstName} onChange={(e) => setTravellerForm((f) => ({ ...f, firstName: e.target.value }))} className="bd__traveller-input" />
+                      <input type="text" placeholder="Last name" value={travellerForm.lastName} onChange={(e) => setTravellerForm((f) => ({ ...f, lastName: e.target.value }))} className="bd__traveller-input" />
+                    </div>
+                    <div className="bd__traveller-row">
+                      <input type="number" placeholder="Age *" min="0" max="120" value={travellerForm.age} onChange={(e) => setTravellerForm((f) => ({ ...f, age: e.target.value }))} className="bd__traveller-input bd__traveller-input--sm" />
+                      <input type="text" placeholder="Nationality" value={travellerForm.nationality} onChange={(e) => setTravellerForm((f) => ({ ...f, nationality: e.target.value }))} className="bd__traveller-input" />
+                    </div>
+                    <div className="bd__traveller-row">
+                      <input type="text" placeholder="Passport / ID number" value={travellerForm.passportNumber} onChange={(e) => setTravellerForm((f) => ({ ...f, passportNumber: e.target.value }))} className="bd__traveller-input" />
+                    </div>
+                    <button type="button" className="bd__traveller-add-btn" onClick={handleAddTravellers} disabled={travellerSubmitting}>
+                      {travellerSubmitting ? "Adding..." : "Add traveller"}
+                    </button>
+                    {travellerMessage && <p className="bd__traveller-message" role="status">{travellerMessage}</p>}
+                  </div>
+                </>
+              )}
+            </section>
+            );
+          })()}
+
+          {showTrevioPayment && (
             <section className="bd__card bd__payment-workflow">
               <h3 className="bd__card-title">Offline Payment</h3>
               <div className="bd__detail-list">
@@ -318,7 +450,7 @@ export default function BookingDetail({ bookingId, onBack }) {
             </section>
           )}
 
-          {latestQuote && ["QUOTE_SENT", "QUOTE_READY", "CUSTOMER_ACCEPTED", "PAYMENT_PENDING"].includes(booking.status) && (
+          {latestQuote && (
             <section className="bd__card">
               <h3 className="bd__card-title">Latest Quote</h3>
               <QuoteDisplay
@@ -326,8 +458,25 @@ export default function BookingDetail({ bookingId, onBack }) {
                 status={latestQuote.status}
                 onAccept={handleAcceptQuote}
                 onReject={handleRejectQuote}
-                showActions={["QUOTE_SENT", "QUOTE_READY"].includes(booking.status)}
+                onRequestChanges={() => setChangeRequestOpen(true)}
+                showActions={["QUOTE_SENT", "QUOTE_READY", "CUSTOMER_REJECTED"].includes(booking.status)}
               />
+              {latestQuote.changeRequest && latestQuote.changeRequest.requestedAt && (
+                <div className="bd__change-request">
+                  <strong>Change Request</strong>
+                  {latestQuote.changeRequest.guestCountChange !== 0 && <span>Guest count: {latestQuote.changeRequest.guestCountChange > 0 ? `+${latestQuote.changeRequest.guestCountChange}` : latestQuote.changeRequest.guestCountChange}</span>}
+                  {latestQuote.changeRequest.withFlights !== null && <span>Flights: {latestQuote.changeRequest.withFlights ? "Include" : "Exclude"}</span>}
+                  {latestQuote.changeRequest.notes && <span>{latestQuote.changeRequest.notes}</span>}
+                </div>
+              )}
+              {booking.quoteDocument?.available ? <div className="bd__quote-actions">
+                <Button
+                  variant="outline"
+                  text={bookingAction.loading === "download" ? "Preparing PDF..." : "Download quote PDF"}
+                  disabled={Boolean(bookingAction.loading)}
+                  onClick={handleDownloadQuote}
+                />
+              </div> : null}
             </section>
           )}
 
@@ -361,18 +510,42 @@ export default function BookingDetail({ bookingId, onBack }) {
               {timelineEntries.length === 0 && <p className="bd__empty-text">No activity yet</p>}
             </div>
           </section>
+
+          {!['CANCELLED', 'COMPLETED', 'REFUNDED'].includes(String(booking.status || '').toUpperCase()) && (
+            <section className="bd__card bd__card--danger">
+              <h3 className="bd__card-title">Booking actions</h3>
+              <p>You can cancel this enquiry or booking before it is completed.</p>
+              <Button
+                variant="outline"
+                color="danger"
+                text={bookingAction.loading === "cancel" ? "Cancelling..." : "Cancel booking"}
+                disabled={Boolean(bookingAction.loading)}
+                onClick={handleCancelBooking}
+              />
+              {bookingAction.message && <p className="bd__action-message" role="status">{bookingAction.message}</p>}
+            </section>
+          )}
           </div>
 
           <div className="bd__side">
           <section className="bd__card">
             <h3 className="bd__card-title">Trip Details</h3>
             <div className="bd__detail-list">
-              <div className="bd__detail-row"><span>Dates</span><span>{formatDate(booking.travelWindow?.startDate)} → {formatDate(booking.travelWindow?.endDate)}</span></div>
+              <div className="bd__detail-row"><span>Dates</span><span>{travelDates}</span></div>
               <div className="bd__detail-row"><span>Guests</span><span>{booking.guestsCount || 1}</span></div>
-              <div className="bd__detail-row"><span>Total</span><span>{formatMoney(booking.paymentSummary?.total)}</span></div>
-              <div className="bd__detail-row"><span>Paid</span><span>{formatMoney(booking.paymentSummary?.paid)}</span></div>
-              {booking.paymentSummary?.remaining > 0 && (
-                <div className="bd__detail-row bd__detail-row--remaining"><span>Remaining</span><span>{formatMoney(booking.paymentSummary?.remaining)}</span></div>
+              {awaitingQuote ? (
+                <div className="bd__detail-row"><span>Total</span><span>Awaiting organiser quote</span></div>
+              ) : (
+                <>
+                  {Number(latestQuote?.amountPayableNow || 0) > 0 && (
+                    <div className="bd__detail-row bd__detail-row--highlight"><span>Amount Due Now</span><span>{formatMoney(latestQuote.amountPayableNow, booking.priceSnapshot?.currency)}</span></div>
+                  )}
+                  <div className="bd__detail-row"><span>Total</span><span>{formatMoney(booking.paymentSummary?.total, booking.priceSnapshot?.currency)}</span></div>
+                  <div className="bd__detail-row"><span>Paid</span><span>{formatMoney(booking.paymentSummary?.paid, booking.priceSnapshot?.currency)}</span></div>
+                  {booking.paymentSummary?.remaining > 0 && (
+                    <div className="bd__detail-row bd__detail-row--remaining"><span>Remaining</span><span>{formatMoney(booking.paymentSummary?.remaining, booking.priceSnapshot?.currency)}</span></div>
+                  )}
+                </>
               )}
               {booking.assignedAgent && (
                 <div className="bd__detail-row"><span>Agent</span><span>{booking.assignedAgent.name || "—"}</span></div>
@@ -380,49 +553,49 @@ export default function BookingDetail({ bookingId, onBack }) {
             </div>
           </section>
 
-          {product === "trevista" && (
-            <section className="bd__card bd__card--messages">
-              <h3 className="bd__card-title">Messages</h3>
-              <div className="bd__msg-list">
-                {messages.map((msg) => (
-                  <MessageBubble
-                    key={msg._id || msg.id}
-                    content={msg.content}
-                    senderName={msg.senderName}
-                    senderType={msg.senderType}
-                    messageType={msg.messageType}
-                    timestamp={msg.createdAt}
-                    isOwn={msg.senderType === "customer"}
-                    metadata={msg.metadata}
-                  />
-                ))}
-                {messages.length === 0 && <p className="bd__empty-text">No messages yet</p>}
-              </div>
-              <div className="bd__msg-input">
-                <textarea
-                  className="bd__msg-textarea"
-                  placeholder="Type a message..."
-                  value={messageInput}
-                  onChange={(e) => setMessageInput(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } }}
-                  rows={1}
-                  maxLength={2000}
-                />
-                <button
-                  type="button"
-                  className="bd__msg-send"
-                  onClick={handleSendMessage}
-                  disabled={!messageInput.trim() || sendingMessage}
-                >
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 8l12-6-6 12v-6H2z" fill="currentColor" /></svg>
-                </button>
-              </div>
-            </section>
-          )}
           </div>
         </div>
       </div>
     </div>
+
+    {changeRequestOpen && (
+      <div className="bd__modal-overlay" onClick={() => setChangeRequestOpen(false)}>
+        <div className="bd__modal" onClick={(e) => e.stopPropagation()}>
+          <h3>Request Quote Changes</h3>
+          <p className="bd__modal-desc">Tell us what you'd like to change. The organiser will revise the quote and send it back.</p>
+          <div className="bd__change-form">
+            <label className="bd__change-label">
+              <span>Guest count change</span>
+              <div className="bd__change-stepper">
+                <button type="button" onClick={() => setChangeRequestForm((f) => ({ ...f, guestCountChange: f.guestCountChange - 1 }))}>−</button>
+                <span>{changeRequestForm.guestCountChange > 0 ? `+${changeRequestForm.guestCountChange}` : changeRequestForm.guestCountChange}</span>
+                <button type="button" onClick={() => setChangeRequestForm((f) => ({ ...f, guestCountChange: f.guestCountChange + 1 }))}>+</button>
+              </div>
+            </label>
+            {!(latestQuote?.flightPrice > 0) && (
+            <label className="bd__change-label">
+              <span>Flights</span>
+              <div className="bd__change-toggle">
+                <button type="button" className={!changeRequestForm.withFlights ? "is-active" : ""} onClick={() => setChangeRequestForm((f) => ({ ...f, withFlights: false }))}>Without flights</button>
+                <button type="button" className={changeRequestForm.withFlights === true ? "is-active" : ""} onClick={() => setChangeRequestForm((f) => ({ ...f, withFlights: true }))}>With flights</button>
+              </div>
+            </label>
+            )}
+            <label className="bd__change-label">
+              <span>Additional notes</span>
+              <textarea className="bd__change-notes" rows={3} placeholder="Any other changes you'd like..." value={changeRequestForm.notes} onChange={(e) => setChangeRequestForm((f) => ({ ...f, notes: e.target.value }))} />
+            </label>
+          </div>
+          {changeRequestMessage && <p className="bd__change-message" role="status">{changeRequestMessage}</p>}
+          <div className="bd__modal-actions">
+            <button type="button" className="bd__modal-cancel" onClick={() => setChangeRequestOpen(false)}>Cancel</button>
+            <button type="button" className="bd__modal-submit" onClick={handleSubmitChangeRequest} disabled={changeRequestSubmitting}>
+              {changeRequestSubmitting ? "Submitting..." : "Submit Request"}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     </>
 
   );

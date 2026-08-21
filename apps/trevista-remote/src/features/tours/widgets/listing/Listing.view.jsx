@@ -2,9 +2,6 @@ import React from "react";
 import { Button, Icon, InputField, NoDataFound, Pagination, SingleSelect } from "@packages/trem-ui";
 import { TourListSkeleton } from "../../shared";
 
-const WHATSAPP_PHONE = process.env.REACT_APP_WHATSAPP_PHONE || "";
-const SUPPORT_PHONE = process.env.REACT_APP_SUPPORT_PHONE || "";
-
 const displayText = (value, fallback = "") => {
     if (value == null) return fallback;
     if (["string", "number", "boolean"].includes(typeof value)) return String(value);
@@ -17,13 +14,6 @@ const displayText = (value, fallback = "") => {
             || fallback;
     }
     return fallback;
-};
-
-const enquireHref = () => {
-    const base = WHATSAPP_PHONE ? `https://wa.me/${WHATSAPP_PHONE}` : "";
-    const text = "Hi TravelsTrem! I'd like to customise my own package. Could you help me with the details?";
-    if (!base) return SUPPORT_PHONE ? `tel:${SUPPORT_PHONE}` : "";
-    return `${base}?text=${encodeURIComponent(text)}`;
 };
 
 const getLabel = (labels = {}, item = {}) => {
@@ -73,7 +63,7 @@ const getInitials = (value) => displayText(value)
     .map((part) => part.charAt(0).toUpperCase())
     .join("");
 
-function ListingTourCard({ tour, onView, favorited, onFavorite, agencyLabel }) {
+function ListingTourCard({ tour, onView, favorited, onFavorite, agencyLabel, hideDescription = false }) {
     const imageSrc = tour?.coverImage?.url || "";
     const priceText = getPriceText(tour);
     const rating = Number(tour?.rating?.average || 0);
@@ -146,7 +136,7 @@ function ListingTourCard({ tour, onView, favorited, onFavorite, agencyLabel }) {
                         <span>{getLocationText(tour)}</span>
                     </span>
                 </div>
-                <p className="tour-listing-card__desc">{description}</p>
+                {!hideDescription ? <p className="tour-listing-card__desc">{description}</p> : null}
                 <div className="tour-listing-card__tags">
                     {tour?.tremVerified ? <span className="tour-listing-card__verified-tag"><Icon name="badgeCheck" /> TREM verified</span> : null}
                     {tags.map((tag, index) => {
@@ -198,6 +188,7 @@ export default function ListingView({
     onPageChange,
     hasActiveFilters = false,
     onClearFilters,
+    onEnquire,
 }) {
     const listingProps = listingWidgetData?.structure?.widgets?.[0]?.props || {};
     const sortOptions = listingProps.sortOptions?.length ? listingProps.sortOptions : [];
@@ -210,6 +201,7 @@ export default function ListingView({
     const searchLabel = listingLabels[listingProps.searchLabelRef] || listingProps.searchLabel || "Search tours";
     const searchPlaceholder = listingLabels[listingProps.searchPlaceholderRef] || listingProps.searchPlaceholder || "Search tours...";
     const agencyLabel = listingLabels[listingProps.agencyLabelRef] || listingProps.agencyLabel || "Uploaded by";
+    const hideDescription = listingProps.hideDescription === true;
     const normalizedSortOptions = sortOptions.map((option) => ({
         value: option.id || option.value,
         label: getLabel(listingLabels, option),
@@ -275,9 +267,8 @@ export default function ListingView({
                     title={listingLabels.noToursFound || "No tours available right now"}
                     description={listingLabels.noToursDescription}
                     actionLabel={hasActiveFilters ? "Clear all filters" : (listingLabels.enquireLabel || "Enquire now")}
-                    actionHref={hasActiveFilters ? "" : enquireHref()}
-                    onAction={hasActiveFilters ? onClearFilters : undefined}
-                    actionAriaLabel={hasActiveFilters ? "Clear all tour filters" : "Enquire with our travel agent on WhatsApp"}
+                    onAction={hasActiveFilters ? onClearFilters : onEnquire}
+                    actionAriaLabel={hasActiveFilters ? "Clear all tour filters" : (listingLabels.enquireAriaLabel || "Open tour enquiry form")}
                     className="tours-page__no-tours"
                 />
             )}
@@ -285,7 +276,7 @@ export default function ListingView({
             <div className="tours-page__list" aria-live="polite">
                 {displayed.map((t) => (
                     <div className="tours-page__card" key={t._id || t.id}>
-                        <ListingTourCard tour={t} onView={onView} favorited={isFavorited(t)} onFavorite={onFavorite} agencyLabel={agencyLabel} />
+                        <ListingTourCard tour={t} onView={onView} favorited={isFavorited(t)} onFavorite={onFavorite} agencyLabel={agencyLabel} hideDescription={hideDescription} />
                     </div>
                 ))}
             </div>

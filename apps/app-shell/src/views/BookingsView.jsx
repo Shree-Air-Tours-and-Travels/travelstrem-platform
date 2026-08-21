@@ -1,8 +1,28 @@
-import React, { useMemo } from "react";
-import { BookingTable, Preloader } from "@packages/trem-ui";
+import React, { useMemo, useState } from "react";
+import { BookingTable, Button, InputField, Paragraph, Preloader, SubTitle } from "@packages/trem-ui";
+import { fetchData } from "@packages/trem-utils";
 import "./BookingsView.scss";
 
 export default function BookingsView({ definition, loading, onViewBooking }) {
+  const [enquiryRef, setEnquiryRef] = useState("");
+  const [claimMessage, setClaimMessage] = useState("");
+  const [claiming, setClaiming] = useState(false);
+  const lookup = definition?.props?.enquiryLookup;
+  const lookupLabels = definition?.labels || {};
+  const claimEnquiry = async (event) => {
+    event.preventDefault();
+    if (!enquiryRef.trim()) return;
+    setClaiming(true); setClaimMessage("");
+    try {
+      const response = await fetchData("/enquiries/claim", { method: "POST", body: { enquiryRef: enquiryRef.trim() } });
+      if (response?.status !== "success") throw new Error(response?.message);
+      setClaimMessage(response.message);
+      const bookingId = response.componentData?.data?.bookingId;
+      if (bookingId) onViewBooking?.({ bookingId });
+    } catch (error) {
+      setClaimMessage(error?.message || "");
+    } finally { setClaiming(false); }
+  };
   const tableDefinition = useMemo(() => {
     if (!definition) return null;
     const props = definition.props || {};
@@ -71,7 +91,7 @@ export default function BookingsView({ definition, loading, onViewBooking }) {
           };
         }
         if (column.action === "viewBooking") {
-          return { ...resolvedColumn, onClick: onViewBooking };
+          return { ...resolvedColumn, onClick: (row) => row?.isEnquiry ? undefined : onViewBooking(row) };
         }
         return resolvedColumn;
       }),
@@ -80,13 +100,24 @@ export default function BookingsView({ definition, loading, onViewBooking }) {
 
   return (
     <div className="dbv">
+      {lookup?.enabled ? <div className="dbv__enquiry-section">
+        <form id="enquiry-lookup" className="dbv__enquiry-lookup" onSubmit={claimEnquiry}>
+          <div>
+            <SubTitle text={lookupLabels[lookup.titleRef]} />
+            <Paragraph text={lookupLabels[lookup.descriptionRef]} size="small" />
+          </div>
+          <InputField label={lookupLabels[lookup.fieldLabelRef]} value={enquiryRef} placeholder={lookupLabels[lookup.placeholderRef]} onChange={setEnquiryRef} />
+          <Button type="submit" variant="solid" color="primary" text={claiming ? lookupLabels[lookup.submittingLabelRef] : lookupLabels[lookup.actionLabelRef]} disabled={claiming || !enquiryRef.trim()} />
+          {claimMessage ? <p role="status">{claimMessage}</p> : null}
+        </form>
+      </div> : null}
       {loading ? (
         <Preloader variant="cards" count={3} label="Loading booking table" />
       ) : tableDefinition ? (
         <BookingTable
           {...tableDefinition}
           heroBanner={null}
-          onRowClick={onViewBooking}
+          onRowClick={(row) => row?.isEnquiry ? undefined : onViewBooking(row)}
           className="dbv__booking-table"
         />
       ) : null}

@@ -363,6 +363,50 @@
   display: none;
 }
 
+// Keep the single-row header stable when the sidebar reduces tablet width.
+@media (min-width: #{$breakpoint-md + 1px}) and (max-width: $breakpoint-tablet-landscape) {
+  .trem-app-header {
+    grid-template-columns: minmax(180px, 1fr) auto;
+    gap: $space-3;
+    padding-inline: $space-3;
+  }
+
+  .trem-app-header__actions {
+    gap: $space-1;
+  }
+
+  .trem-app-header__search {
+    padding-inline: $space-3;
+
+    kbd {
+      display: none;
+    }
+  }
+
+  .trem-app-header__primary {
+    width: $space-11;
+    min-width: $space-11;
+    min-height: $space-11;
+    justify-content: center;
+    padding: 0;
+
+    > span {
+      display: none;
+    }
+  }
+
+  .trem-app-header__user {
+    width: 38px;
+    grid-template-columns: 38px;
+    padding: 0;
+
+    strong,
+    > svg {
+      display: none;
+    }
+  }
+}
+
 @media (max-width: $breakpoint-md) {
   .trem-app-header {
     left: 0;
@@ -427,6 +471,11 @@
   .trem-app-header__user strong,
   .trem-app-header__user > svg {
     display: none;
+  }
+
+  .trem-app-header__actions .trem-app-header__primary-dropdown {
+    display: none;
+    pointer-events: none;
   }
 
   .trem-app-header__actions {

@@ -1,5 +1,6 @@
 import {
   FALLBACK_NAVIGATION_CONFIG,
+  isGuestAccessibleDestination,
   buildDestinationLocation,
   normalizeNavigationConfig,
   resolveDestination,
@@ -13,6 +14,15 @@ describe("navigationRegistry", () => {
     expect(resolveDestination(config, { pathname: "/trip/bali", search: "" }).renderer).toBe("trevio");
     expect(resolveDestination(config, { pathname: "/", search: "?tab=favorites" }).id).toBe("favorites");
     expect(resolveDestination(config, { pathname: "/booking", search: "?product=trevio" }).renderer).toBe("bookingEngine");
+    expect(resolveDestination(config, { pathname: "/help/requests", search: "" }).id).toBe("support");
+  });
+
+  it("keeps booking and account destinations protected from guest mode", () => {
+    expect(isGuestAccessibleDestination({ id: "trevista" })).toBe(true);
+    expect(isGuestAccessibleDestination({ id: "trevio" })).toBe(true);
+    expect(isGuestAccessibleDestination({ id: "booking-engine" })).toBe(false);
+    expect(isGuestAccessibleDestination({ id: "bookings" })).toBe(false);
+    expect(isGuestAccessibleDestination({ id: "favorites" })).toBe(false);
   });
 
   it("builds a fresh destination query without leaking the current route", () => {
@@ -69,5 +79,44 @@ describe("navigationRegistry", () => {
     expect(buildDestinationLocation(orders, {
       params: { orderId: "TREM 1/2" },
     }).pathname).toBe("/orders/TREM%201%2F2");
+  });
+
+  it("keeps only valid backend mobile action-panel items", () => {
+    const normalized = normalizeNavigationConfig({
+      ...FALLBACK_NAVIGATION_CONFIG,
+      mobileActionPanel: {
+        variant: "mobile-navigation",
+        ariaLabel: "Primary navigation",
+        items: [
+          { id: "home", label: "Home", icon: "home", target: "overview" },
+          { id: "new-booking", label: "New booking", icon: "plus", action: "open-primary-action", emphasis: true },
+          { id: "unsafe", label: "Unsafe", icon: "home", target: "missing" },
+        ],
+      },
+    });
+
+    expect(normalized.mobileActionPanel).toEqual({
+      variant: "mobile-navigation",
+      ariaLabel: "Primary navigation",
+      items: [{
+        id: "home",
+        label: "Home",
+        icon: "home",
+        target: "overview",
+        action: "",
+        activeTargets: ["overview"],
+        emphasis: false,
+        disabled: false,
+      }, {
+        id: "new-booking",
+        label: "New booking",
+        icon: "plus",
+        target: "",
+        action: "open-primary-action",
+        activeTargets: [],
+        emphasis: true,
+        disabled: false,
+      }],
+    });
   });
 });

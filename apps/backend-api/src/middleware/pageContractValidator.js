@@ -1,4 +1,5 @@
-const isLabelRefKey = (key) => key.endsWith("Ref") && !/urlRef$/i.test(key) && key !== "iconRef" && key !== "optionsRef" && key !== "widgetRef";
+const isNamedOptionsRefKey = (key) => key !== "optionsRef" && /optionsRef$/i.test(key);
+const isLabelRefKey = (key) => key.endsWith("Ref") && !/urlRef$/i.test(key) && key !== "iconRef" && key !== "optionsRef" && !isNamedOptionsRefKey(key) && key !== "widgetRef";
 const isUrlRefKey = (key) => /urlRef$/i.test(key) || key === "iconRef";
 
 const isObject = (value) => Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -13,6 +14,7 @@ const collectRefs = (value, path = "structure", refs = []) => {
     const childPath = `${path}.${key}`;
     if (typeof child === "string" && isLabelRefKey(key)) refs.push({ kind: "label", ref: child, path: childPath });
     if (typeof child === "string" && isUrlRefKey(key)) refs.push({ kind: "url", ref: child, path: childPath });
+    if (typeof child === "string" && isNamedOptionsRefKey(key)) refs.push({ kind: "optionsOrLabel", ref: child, path: childPath });
     collectRefs(child, childPath, refs);
   });
   return refs;
@@ -60,6 +62,12 @@ export const validatePageContract = (payload = {}) => {
 
   if (component?.structure && component?.elements) {
     collectRefs(component.structure).forEach(({ kind, ref, path }) => {
+      if (kind === "optionsOrLabel") {
+        const hasOptions = ref in (component.dataScope?.options || {}) || ref in (component.dataScope?.optionSets || {});
+        const hasLabel = ref in (component.elements?.labels || {});
+        if (!hasOptions && !hasLabel) errors.push({ path, message: `Unresolved options or label ref "${ref}".` });
+        return;
+      }
       const bag = kind === "label" ? component.elements.labels : component.elements.urls;
       if (!(ref in bag)) errors.push({ path, message: `Unresolved ${kind} ref "${ref}".` });
     });

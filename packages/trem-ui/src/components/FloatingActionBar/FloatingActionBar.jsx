@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Button from "../Button/Button.jsx";
 import BottomSheet from "../BottomSheet/BottomSheet.jsx";
+import Icon from "../../icons/Icon/Icon.jsx";
 import "./FloatingActionBar.styles.scss";
 
 const MOBILE_BP = 768;
@@ -71,6 +72,7 @@ const FloatingActionBar = React.memo(function FloatingActionBar({
 }) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [mobile, setMobile] = useState(false);
+  const mobileNavigationRef = useRef(null);
 
   useEffect(() => {
     setMobile(isMobile());
@@ -113,6 +115,59 @@ const FloatingActionBar = React.memo(function FloatingActionBar({
       setSheetOpen(false);
     }
   };
+
+  useLayoutEffect(() => {
+    if (variant !== "mobile-navigation" || !mobileNavigationRef.current) return undefined;
+    const panel = mobileNavigationRef.current;
+    const layout = panel.closest(".dash-layout--mobile-action-panel");
+    if (!layout) return undefined;
+
+    const syncRenderedHeight = () => {
+      const height = Math.ceil(panel.getBoundingClientRect().height);
+      if (height > 0) layout.style.setProperty("--dash-mobile-action-panel-rendered-height", `${height}px`);
+    };
+
+    syncRenderedHeight();
+    const observer = typeof ResizeObserver === "function" ? new ResizeObserver(syncRenderedHeight) : null;
+    observer?.observe(panel);
+    window.addEventListener("resize", syncRenderedHeight);
+
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", syncRenderedHeight);
+      layout.style.removeProperty("--dash-mobile-action-panel-rendered-height");
+    };
+  }, [resolved.length, variant]);
+
+  if (variant === "mobile-navigation") {
+    return (
+      <nav
+        ref={mobileNavigationRef}
+        className={`trem-fab trem-fab--variant-mobile-navigation ${className}`.trim()}
+        aria-label={sheetTitle}
+      >
+        <div className="trem-fab__mobile-nav">
+          {resolved.map((action, index) => (
+            <Button
+              key={action.id || action.label || index}
+              variant="text"
+              color="primary"
+              onClick={action.onClick}
+              disabled={action.disabled}
+              aria-current={action.active ? "page" : undefined}
+              aria-label={action.label}
+              primaryClassName={`trem-fab__mobile-nav-item${action.active ? " is-active" : ""}${action.emphasis ? " is-emphasized" : ""}`}
+            >
+              <span className="trem-fab__mobile-nav-icon" aria-hidden="true">
+                {action.iconLeft ? <Icon name={action.iconLeft} size={action.emphasis ? 24 : 21} /> : null}
+              </span>
+              <span className="trem-fab__mobile-nav-label">{action.label}</span>
+            </Button>
+          ))}
+        </div>
+      </nav>
+    );
+  }
 
   const renderButtons = (items) =>
     items.map((action, i) => (

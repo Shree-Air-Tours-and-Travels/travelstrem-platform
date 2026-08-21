@@ -177,4 +177,21 @@ describe("BookingTable", () => {
     expect(screen.getByRole("button", { name: /Hide filters/i }))
       .toHaveAttribute("aria-expanded", "true");
   });
+
+  it("supports backend-configured page scrolling on mobile", () => {
+    const { container } = render(
+      <BookingTable
+        table={{
+          title: "My Journeys",
+          mobileScrollMode: "page",
+          mobileCard: { titleAccessor: "service.name" },
+        }}
+        columns={columns}
+        rows={rows}
+        pagination={{ enabled: false }}
+      />,
+    );
+
+    expect(container.querySelector(".booking-table--mobile-scroll-page")).toBeInTheDocument();
+  });
 });

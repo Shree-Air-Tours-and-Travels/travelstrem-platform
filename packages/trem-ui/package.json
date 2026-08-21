@@ -5,6 +5,7 @@
   "main": "src/index.js",
   "dependencies": {
     "@packages/trem-design-tokens": "workspace:*",
+    "@packages/trem-support-contracts": "workspace:*",
     "@packages/trem-utils": "workspace:*",
     "prop-types": "^15.8.1"
   },

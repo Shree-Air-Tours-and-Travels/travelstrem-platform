@@ -13,8 +13,12 @@ const displayText = (value, fallback = "") => {
   return fallback;
 };
 
-export default function QuickChips({ title, filters = [], activeId, onClick, labels = {}, className = "" }) {
+export default function QuickChips({ title, filters = [], activeId, activeIds = [], onClick, labels = {}, className = "" }) {
   if (!filters.length) return null;
+  const selectedIds = new Set([
+    ...(Array.isArray(activeIds) ? activeIds : []),
+    ...(activeId == null ? [] : [activeId]),
+  ].map(String));
 
   const getLabel = (f) => {
     if (f.labelRef && labels[f.labelRef]) return displayText(labels[f.labelRef], String(f.id || ""));
@@ -22,21 +26,23 @@ export default function QuickChips({ title, filters = [], activeId, onClick, lab
   };
 
   return (
-    <div className={`tt-quick-chips ${className}`} role="tablist" aria-label={title || "Filter by category"}>
+    <div className={`tt-quick-chips ${className}`} role="group" aria-label={title || "Filter by category"}>
       {title && <div className="tt-quick-chips__title">{title}</div>}
-      {filters.map((f) => (
+      {filters.map((f) => {
+        const isActive = selectedIds.has(String(f.id));
+        return (
         <Button
           key={f.id}
           variant="outline"
           size="small"
           text={getLabel(f)}
-          primaryClassName={`tt-quick-chips__chip${activeId === f.id ? " is-active" : ""}${f.disabled ? " is-disabled" : ""}`}
+          primaryClassName={`tt-quick-chips__chip${isActive ? " is-active" : ""}${f.disabled ? " is-disabled" : ""}`}
           disabled={f.disabled}
           onClick={() => !f.disabled && onClick?.(f.id)}
-          role="tab"
-          aria-pressed={activeId === f.id}
+          aria-pressed={isActive}
         />
-      ))}
+        );
+      })}
     </div>
   );
 }

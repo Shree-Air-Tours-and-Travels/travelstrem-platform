@@ -382,6 +382,16 @@ const Luggage = (p) => (
   </Svg>
 );
 
+const TravelPackage = (p) => (
+  <Svg {...p}>
+    <path d="M8 7V5.5A2.5 2.5 0 0 1 10.5 3h3A2.5 2.5 0 0 1 16 5.5V7" {...s} />
+    <rect x="3" y="7" width="18" height="14" rx="3" {...s} />
+    <path d="M8 7v14M16 7v14" {...s} />
+    <path d="M14.8 13.2c0 1.9-2.8 4.3-2.8 4.3s-2.8-2.4-2.8-4.3a2.8 2.8 0 1 1 5.6 0Z" {...s} />
+    <circle cx="12" cy="13.1" r=".75" fill="currentColor" />
+  </Svg>
+);
+
 const Management = (p) => (
   <Svg {...p}>
     <rect x="3" y="3" width="4" height="4" rx="1" {...s} />
@@ -811,6 +821,7 @@ const ICONS = {
   ticket: Ticket,
   tours: Tours,
   train: Train,
+  travelPackage: TravelPackage,
   user: User,
   usersRound: UsersRound,
   visa: Visa,

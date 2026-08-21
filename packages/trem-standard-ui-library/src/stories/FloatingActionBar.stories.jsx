@@ -120,3 +120,18 @@ export const NoBackground = {
     actions: sharedActions,
   },
 };
+
+export const MobileNavigation = {
+  args: {
+    variant: "mobile-navigation",
+    sheetTitle: "Primary mobile navigation",
+    actions: [
+      { id: "home", label: "Home", iconLeft: "home", active: true },
+      { id: "bookings", label: "Bookings", iconLeft: "calendar" },
+      { id: "new-booking", label: "New booking", iconLeft: "plus", emphasis: true },
+      { id: "wishlist", label: "Wishlist", iconLeft: "heart" },
+      { id: "profile", label: "Profile", iconLeft: "user" },
+    ],
+  },
+  parameters: { viewport: { defaultViewport: "mobile1" } },
+};

@@ -43,8 +43,13 @@ describe("Trevista canonical tour search state", () => {
 
     const tag = applyTourDiscoveryChip(origin, { type: "TAG", value: "burj-khalifa" });
     expect(tag.filters.tagIds).toEqual(["burj-khalifa"]);
-    const featured = applyTourDiscoveryChip(tag, { type: "FEATURED", value: true });
+    const secondTag = applyTourDiscoveryChip(tag, { type: "TAG", value: "family" });
+    expect(secondTag.filters.tagIds).toEqual(["burj-khalifa", "family"]);
+    const toggledTag = applyTourDiscoveryChip(secondTag, { type: "TAG", value: "burj-khalifa" });
+    expect(toggledTag.filters.tagIds).toEqual(["family"]);
+    const featured = applyTourDiscoveryChip(toggledTag, { type: "FEATURED", value: true });
     expect(featured.filters.featured).toBe(true);
+    expect(featured.filters.tagIds).toEqual(["family"]);
     const cleared = applyTourDiscoveryChip(featured, { type: "ALL", value: null });
     expect(cleared.filters.originCityIds).toEqual([]);
     expect(cleared.filters.tagIds).toEqual([]);

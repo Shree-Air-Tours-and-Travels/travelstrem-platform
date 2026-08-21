@@ -4,9 +4,10 @@ import { getCityDisplay, getPriceText } from "../../helper";
 import { WidgetError, WidgetSkeleton } from "../../shared";
 import PricingCardView from "./PricingCard.view";
 
-export default function PricingCardContainer({ tourRef, tour: fallbackTour, onBook, onContact, onShare, isFavorited, onFavorite }) {
+export default function PricingCardContainer({ tourRef, tour: fallbackTour, onBook, onContact, onShare, isFavorited, onFavorite, selectedFlight, onSelectFlight, selectedActivities, onSelectActivity, selectedDeparture, onSelectDeparture }) {
     const { loading, error, widgetData } = useTourDetailWidget(tourRef, "pricing-card.json");
     const labels = widgetData?.elements?.labels || {};
+    const config = widgetData?.structure?.widgets?.[0]?.props?.config || {};
     const tour = widgetData?.data?.tour || fallbackTour || null;
     const cityDisplay = useMemo(() => getCityDisplay(tour), [tour]);
     const priceText = useMemo(() => getPriceText(tour), [tour]);
@@ -17,6 +18,7 @@ export default function PricingCardContainer({ tourRef, tour: fallbackTour, onBo
     return (
         <PricingCardView
             labels={labels}
+            showBookNow={config.showBookNow === true}
             tour={tour}
             priceText={priceText}
             cityDisplay={cityDisplay}
@@ -25,6 +27,12 @@ export default function PricingCardContainer({ tourRef, tour: fallbackTour, onBo
             onShare={onShare}
             isFavorited={isFavorited}
             onFavorite={onFavorite}
+            selectedFlight={selectedFlight}
+            onSelectFlight={onSelectFlight}
+            selectedActivities={selectedActivities}
+            onSelectActivity={onSelectActivity}
+            selectedDeparture={selectedDeparture}
+            onSelectDeparture={onSelectDeparture}
         />
     );
 }

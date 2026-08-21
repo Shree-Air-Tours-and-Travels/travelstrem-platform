@@ -110,13 +110,10 @@ await Promise.all([
   Tour.deleteMany({ _id: { $in: removableTourIds } }),
 ]);
 
-const ownership = agency ? {
-  agencyId: agency._id, agencyRef: agency.partnerAgencyRef, partnerAgencyRef: agency.partnerAgencyRef,
-  providerName: agency.agencyName, ownerAgent: agent?._id || null,
-} : { providerName: "TravelsTREM", inventorySource: "platform", agentTour: false };
+const masterOwnership = { providerName: "TravelsTREM", inventorySource: "platform", agentTour: false, ownerAgent: null, agencyRef: "", partnerAgencyRef: "" };
 const tourDocuments = rawTours.map((tour) => {
   const searchTags = (tour.tags || []).map((name) => ({ id: slugify(name), slug: slugify(name), name, type: "CUSTOM" }));
-  const payload = { ...common, ...tour, ...ownership, searchTags, tagIds: searchTags.map((tag) => tag.slug) };
+  const payload = { ...common, ...tour, ...masterOwnership, searchTags, tagIds: searchTags.map((tag) => tag.slug) };
   delete payload.tags;
   return new Tour(payload);
 });

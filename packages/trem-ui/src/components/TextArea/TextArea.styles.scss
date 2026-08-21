@@ -1,0 +1,8 @@
+@import "@packages/trem-design-tokens/scss";
+.trem-textarea { display: grid; gap: $space-2; color: var(--text); }
+.trem-textarea__label { font-size: $font-size-sm; font-weight: $font-semibold; }
+.trem-textarea textarea { width: 100%; min-height: 120px; resize: vertical; padding: $space-3 $space-4; border: 1px solid var(--border); border-radius: $radius-sm; outline: 0; background: var(--surface); color: var(--text); line-height: $line-height-md; }
+.trem-textarea textarea:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--focus-ring); }
+.trem-textarea--error textarea { border-color: #b42318; }
+.trem-textarea__meta { min-height: 18px; display: flex; justify-content: space-between; gap: $space-3; color: var(--muted); font-size: $font-size-xs; }
+.trem-textarea__meta em { color: #b42318; font-style: normal; }

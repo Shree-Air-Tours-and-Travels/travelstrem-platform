@@ -42,6 +42,21 @@ describe("PlanCards", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
+  it("omits cards hidden by backend configuration", () => {
+    render(
+      <PlanCards
+        title="Plan a Journey"
+        items={[
+          items[0],
+          { ...items[0], id: "hidden", title: "Hidden product", hide: true },
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("Holiday Packages")).toBeInTheDocument();
+    expect(screen.queryByText("Hidden product")).not.toBeInTheDocument();
+  });
+
   it("renders a coming-soon card as disabled and non-navigable", () => {
     render(
       <PlanCards

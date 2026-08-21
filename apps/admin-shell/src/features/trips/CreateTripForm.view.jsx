@@ -426,11 +426,11 @@ export default function CreateTripFormView({
 
                 <footer className="ctf-panel-footer">
                     <div className="ctf-footer-left">
-                        <Button primaryClassName="btn" disabled={step === 0} onClick={back} text="Back" />
+                        <Button type="button" primaryClassName="btn" disabled={step === 0} onClick={back} text="Back" />
                     </div>
                     <div className="ctf-footer-actions">
                         {step < STEPS.length - 1 ? (
-                            <Button primaryClassName="btn" variant="solid" color="primary" onClick={next} text="Next" />
+                            <Button type="button" primaryClassName="btn" variant="solid" color="primary" onClick={next} text="Next" />
                         ) : (
                             <Button primaryClassName="btn" variant="solid" color="primary" type="submit" onClick={submit} disabled={saving} text={saving ? "Saving..." : "Submit"} />
                         )}

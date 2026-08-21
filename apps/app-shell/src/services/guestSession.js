@@ -21,3 +21,14 @@ export const enableGuestSession = (storage) => {
 export const clearGuestSession = (storage) => {
   try { (storage ?? browserStorage())?.removeItem(GUEST_SESSION_KEY); } catch {}
 };
+
+export const getGuestContinuationUrl = ({ href, keepCurrent = false } = {}) => {
+  if (!keepCurrent) return "/?tab=overview&guest=1";
+  try {
+    const current = new URL(href || window.location.href, window.location.origin);
+    current.searchParams.set("guest", "1");
+    return `${current.pathname}${current.search}${current.hash}`;
+  } catch {
+    return "/?tab=overview&guest=1";
+  }
+};

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { emit } from "@packages/trem-events";
 import { clearAuthBrowserState, emitAuthEvent } from "@packages/trem-auth-core";
 import { BrandLogo } from "@packages/trem-ui";
@@ -18,6 +18,18 @@ const TABS = [
 const TREVIO_URL = process.env.REACT_APP_TREVIO_URL || "";
 
 export default function Sidebar({ activeTab, onTabChange, user, mobileOpen = false, onMobileClose = () => {} }) {
+  const [trevioVisible, setTrevioVisible] = useState(Boolean(TREVIO_URL));
+
+  useEffect(() => {
+    if (!TREVIO_URL) return;
+    import("../services/apiClient").then(({ default: api }) => {
+      api.get("/tenancy/products").then((res) => {
+        const products = res?.data?.componentData?.data || res?.data?.data || [];
+        const trevio = products.find((p) => p.key === "trevio");
+        if (trevio?.hidden || trevio?.status === "inactive") setTrevioVisible(false);
+      }).catch(() => {});
+    }).catch(() => {});
+  }, []);
   useEffect(() => {
     if (!mobileOpen) return undefined;
     const previousOverflow = document.body.style.overflow;
@@ -77,7 +89,7 @@ export default function Sidebar({ activeTab, onTabChange, user, mobileOpen = fal
         ))}
       </nav>
 
-      {TREVIO_URL && (
+      {TREVIO_URL && trevioVisible && (
         <div className="dsb-back">
           <a className="dsb-back__link" href={TREVIO_URL} rel="noopener noreferrer">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

@@ -104,6 +104,7 @@ export default function AuthPage({
   theme = "light",
   onToggleTheme,
   accessRequest,
+  activationToken,
 }) {
   const location = useLocation();
   const params = useMemo(() => new URLSearchParams(location.search), [location.search]);
@@ -126,6 +127,10 @@ export default function AuthPage({
   const [adminRegistration, setAdminRegistration] = useState(null);
   const [emailOtpStep, setEmailOtpStep] = useState(null);
   const [resetForm, setResetForm] = useState({ otp: "", password: "", confirmPassword: "" });
+  const [activationEmail, setActivationEmail] = useState("");
+  const [activationCode, setActivationCode] = useState("");
+  const [activationForm, setActivationForm] = useState({ otp: "", password: "", confirmPassword: "" });
+  const [activationRequestSent, setActivationRequestSent] = useState(false);
   const otpRef = useRef(null);
   const isMasterAdminRegistration = isAdmin
     && emailMode === "register"
@@ -152,6 +157,34 @@ export default function AuthPage({
     const timer = window.setInterval(() => setCooldown((value) => Math.max(0, value - 1)), 1000);
     return () => window.clearInterval(timer);
   }, [cooldown]);
+
+  useEffect(() => {
+    if (!activationToken) return;
+    setLoading(true);
+    setScreen("activation");
+    setError("");
+    // Step 1: Exchange raw token for a short-lived authorization code
+    authService.activateValidate({ token: activationToken })
+      .then((validateResponse) => {
+        const { code, email } = validateResponse?.data || validateResponse;
+        setActivationCode(code);
+        setActivationEmail(email || "");
+        // Step 2: Request OTP using the code (never the raw token)
+        return authService.requestActivationOtp({ code });
+      })
+      .then((otpResponse) => {
+        const data = otpResponse?.data || otpResponse;
+        setActivationRequestSent(true);
+        setCooldown(Math.round((data.expiresInMs || 300000) / 1000));
+        setError(data.message || "A verification code has been sent to your email.");
+      })
+      .catch((err) => {
+        const message = err?.response?.data?.message || "Unable to send activation code. The link may be invalid or expired.";
+        setError(message);
+      })
+      .finally(() => setLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activationToken]);
 
   const redirectAfterAuth = () => window.location.replace(returnTo || afterAuthPath);
 
@@ -356,6 +389,45 @@ export default function AuthPage({
     }
   };
 
+  const requestActivationCode = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await authService.requestActivationOtp({ code: activationCode });
+      const data = response?.data || response;
+      setActivationEmail(data.email || activationEmail);
+      setActivationRequestSent(true);
+      setCooldown(Math.round((data.expiresInMs || 300000) / 1000));
+      setError(data.message || "A verification code has been sent to your email.");
+    } catch (err) {
+      setError(err?.response?.data?.message || "Unable to send the code. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const submitActivation = async (event) => {
+    event.preventDefault();
+    if (activationForm.password !== activationForm.confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      await authService.activateWithOtp({
+        code: activationCode,
+        otp: activationForm.otp,
+        password: activationForm.password,
+      });
+      redirectAfterAuth();
+    } catch (err) {
+      setError(err?.response?.data?.message || "The code is invalid or expired. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const continueAsGuest = () => {
     const shell = process.env.REACT_APP_SHELL_URL || returnTo || "/";
     const url = new URL(shell, window.location.origin);
@@ -387,14 +459,14 @@ export default function AuthPage({
           <section className="auth-trem__access" aria-label="Account access">
             <div className="auth-trem__card">
               <Paragraph primaryClassname="auth-trem__eyebrow">{appName}</Paragraph>
-              <Title primaryClassname="auth-trem__title" text={screen === "otp" ? "Verify your mobile" : screen === "emailOtp" ? "Verify your login" : screen === "resetPassword" ? "Reset your password" : screen === "mobile" ? "Your mobile number" : "Welcome"} />
+              <Title primaryClassname="auth-trem__title" text={screen === "otp" ? "Verify your mobile" : screen === "emailOtp" ? "Verify your login" : screen === "resetPassword" ? "Reset your password" : screen === "activation" ? "Set your password" : screen === "mobile" ? "Your mobile number" : "Welcome"} />
               <Paragraph primaryClassname="auth-trem__sub">
-                {screen === "otp" ? `We sent a verification code to ${phoneNumber}.` : screen === "emailOtp" ? `Enter the code sent to ${emailOtpStep?.email || "your email"}.` : screen === "resetPassword" ? `Enter the code sent to ${emailForm.email}.` : "Sign in or create your account securely."}
+                {screen === "otp" ? `We sent a verification code to ${phoneNumber}.` : screen === "emailOtp" ? `Enter the code sent to ${emailOtpStep?.email || "your email"}.` : screen === "resetPassword" ? `Enter the code sent to ${emailForm.email}.` : screen === "activation" ? `Enter the code sent to ${activationEmail || "your email"} and choose a password.` : "Sign in or create your account securely."}
               </Paragraph>
 
               {error ? <div className="auth-trem__error" role="alert">{error}</div> : null}
 
-              {screen === "methods" && isCustomer ? (
+              {screen === "methods" && isCustomer && !activationToken ? (
                 <div className="auth-trem__method-list">
                   <button type="button" className="auth-trem__google-button" onClick={loginWithGoogle} disabled={loading}>
                     <GoogleMark /><span>Continue with Google</span>
@@ -479,6 +551,18 @@ export default function AuthPage({
                   <SecretField autoComplete="new-password" placeholder="Confirm new password" value={resetForm.confirmPassword} onChange={(event) => setResetForm((value) => ({ ...value, confirmPassword: event.target.value }))} required minLength={8} />
                   <Button variant="solid" color="primary" type="submit" text={loading ? "Resetting…" : "Reset password"} disabled={loading || resetForm.otp.length !== 6} primaryClassName="auth-trem__primary" />
                   <Button variant="text" type="button" text="Send another code" disabled={loading} onClick={requestPasswordReset} />
+                  <Button variant="text" type="button" text="Back to login" onClick={() => { setError(""); setScreen(isCustomer ? "methods" : "email"); }} primaryClassName="auth-trem__guest-link" />
+                </form>
+              ) : null}
+
+              {screen === "activation" ? (
+                <form className="auth-trem__form" onSubmit={submitActivation}>
+                  <label className="auth-trem__mobile-label" htmlFor="activation-otp">6-digit verification code</label>
+                  <input id="activation-otp" className="auth-trem__field auth-trem__field--otp" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={activationForm.otp} onChange={(event) => setActivationForm((value) => ({ ...value, otp: event.target.value.replace(/\D/g, "").slice(0, 6) }))} required autoFocus />
+                  <SecretField autoComplete="new-password" placeholder="Choose a password" value={activationForm.password} onChange={(event) => setActivationForm((value) => ({ ...value, password: event.target.value }))} required minLength={8} />
+                  <SecretField autoComplete="new-password" placeholder="Confirm password" value={activationForm.confirmPassword} onChange={(event) => setActivationForm((value) => ({ ...value, confirmPassword: event.target.value }))} required minLength={8} />
+                  <Button variant="solid" color="primary" type="submit" text={loading ? "Activating…" : "Activate account"} disabled={loading || activationForm.otp.length !== 6 || !activationRequestSent} primaryClassName="auth-trem__primary" />
+                  <Button variant="text" type="button" text={cooldown ? `Resend code in ${cooldown}s` : "Resend code"} disabled={loading || cooldown > 0} onClick={requestActivationCode} />
                   <Button variant="text" type="button" text="Back to login" onClick={() => { setError(""); setScreen(isCustomer ? "methods" : "email"); }} primaryClassName="auth-trem__guest-link" />
                 </form>
               ) : null}

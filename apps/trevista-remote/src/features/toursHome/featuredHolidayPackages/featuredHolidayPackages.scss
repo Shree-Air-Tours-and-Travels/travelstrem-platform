@@ -53,6 +53,14 @@
   &__view-all {
     flex-shrink: 0;
   }
+
+  &__empty-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: $space-3;
+    margin-top: $space-2;
+  }
 }
 
 @include mq-max($breakpoint-mobile) {

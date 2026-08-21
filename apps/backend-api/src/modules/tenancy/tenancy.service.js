@@ -19,7 +19,8 @@ export async function inviteUser({ agency, actorId, name, email, phone, designat
   const expiresAt = invitationExpiry();
   const invitation = new Invitation({ email: normalizedEmail, agencyId: agency._id, userId: user._id, role: agencyRole, productKeys, permissions, tokenHash: hashToken(rawToken), expiresAt, invitedBy: actorId });
   await invitation.save({ session });
-  const activationUrl = `${String(config.PARTNER_URL || config.AUTH_APP_URL || config.SHELL_URL).replace(/\/$/, "")}/activate?token=${encodeURIComponent(rawToken)}`;
+  const authBase = String(config.AUTH_APP_URL || config.PARTNER_URL || config.SHELL_URL).replace(/\/$/, "");
+  const activationUrl = `${authBase}/?app=partner&token=${encodeURIComponent(rawToken)}`;
   const result = session ? { success: true, deferred: true } : await sendInvitationEmail({ to: normalizedEmail, recipientName: name, agencyName: agency.agencyName, roleLabel: agencyRole === "partner_admin" ? "Partner Admin" : "Partner Agent", activationUrl, expiresInHours: config.INVITATION_TTL_HOURS || 48 });
   return { user, invitation, emailSent: result.success, rawToken };
 }
@@ -55,7 +56,8 @@ export async function renewInvitation({ user, agency, actorId }) {
     productKeys: user.productAccess || [], permissions: user.permissionGrants || [],
     tokenHash: hashToken(rawToken), expiresAt: invitationExpiry(), invitedBy: actorId,
   });
-  const activationUrl = `${String(config.PARTNER_URL || config.AUTH_APP_URL || config.SHELL_URL).replace(/\/$/, "")}/activate?token=${encodeURIComponent(rawToken)}`;
+  const authBase = String(config.AUTH_APP_URL || config.PARTNER_URL || config.SHELL_URL).replace(/\/$/, "");
+  const activationUrl = `${authBase}/?app=partner&token=${encodeURIComponent(rawToken)}`;
   const email = await sendInvitationEmail({ to: user.email, recipientName: user.name, agencyName: agency.agencyName, roleLabel: user.agencyRole === "partner_admin" ? "Partner Admin" : "Partner Agent", activationUrl, expiresInHours: config.INVITATION_TTL_HOURS || 48 });
   return { invitation, emailSent: email.success };
 }

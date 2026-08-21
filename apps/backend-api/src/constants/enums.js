@@ -119,6 +119,7 @@ export const DOCUMENT_TYPE = Object.freeze({
   VACCINATION: "vaccination",
   TICKET: "ticket",
   VOUCHER: "voucher",
+  QUOTE: "quote",
   INVOICE: "invoice",
   OTHER: "other",
 });
@@ -202,6 +203,7 @@ export const EDITABLE_TRAVELLER_STATUSES = Object.freeze([
   "DRAFT",
   "QUOTE_REQUESTED",
   "UNDER_REVIEW",
+  "CUSTOMER_ACCEPTED",
   "AWAITING_TOKEN_PAYMENT",
   "PAYMENT_PENDING",
 ]);
@@ -212,6 +214,36 @@ export const BOOKING_FLOW = Object.freeze({
 });
 
 export const BOOKING_FLOW_LIST = Object.values(BOOKING_FLOW);
+
+export const PACKAGE_TYPE = Object.freeze({
+  FIXED_DEPARTURE: "fixed_departure",
+  FLEXIBLE: "flexible",
+  CUSTOM: "custom",
+});
+
+export const PACKAGE_TYPE_LIST = Object.values(PACKAGE_TYPE);
+
+export const DEPARTURE_STATUS = Object.freeze({
+  SCHEDULED: "scheduled",
+  ACTIVE: "active",
+  SOLD_OUT: "sold_out",
+  CANCELLED: "cancelled",
+  COMPLETED: "completed",
+});
+
+export const DEPARTURE_STATUS_LIST = Object.values(DEPARTURE_STATUS);
+
+export const CUSTOM_TOUR_REQUEST_STATUS = Object.freeze({
+  REQUESTED: "requested",
+  REVIEWING: "reviewing",
+  QUOTED: "quoted",
+  ACCEPTED: "accepted",
+  CONVERTED_TO_BOOKING: "converted_to_booking",
+  REJECTED: "rejected",
+  EXPIRED: "expired",
+});
+
+export const CUSTOM_TOUR_REQUEST_STATUS_LIST = Object.values(CUSTOM_TOUR_REQUEST_STATUS);
 
 export const MESSAGE_TYPE = Object.freeze({
   TEXT: "text",

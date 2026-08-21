@@ -69,8 +69,12 @@ export default function Dropdown({
   renderItem: renderItemProp,
   menuFooter,
   portalZIndex,
+  menuTitle,
+  menuAriaLabel,
+  open: controlledOpen,
+  onOpenChange,
 }) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
   const [menuStyle, setMenuStyle] = useState({});
   const [search, setSearch] = useState("");
   const wrapperRef = useRef(null);
@@ -78,6 +82,8 @@ export default function Dropdown({
   const searchRef = useRef(null);
 
   const isSelect = variant === "select";
+  const isJourneyMenu = variant === "journey-menu";
+  const open = controlledOpen ?? internalOpen;
   const useBuiltInTrigger = isSelect || !trigger;
   const isAutoWidth = propWidth === "auto";
   const fixedWidth = propWidth != null && !isAutoWidth;
@@ -87,9 +93,10 @@ export default function Dropdown({
   const showBottomSheet = isMobile() && open;
 
   const changeOpen = useCallback((next) => {
-    setOpen(next);
+    if (controlledOpen === undefined) setInternalOpen(next);
+    onOpenChange?.(next);
     onToggle?.(next);
-  }, [onToggle]);
+  }, [controlledOpen, onOpenChange, onToggle]);
 
   const selectedItem = useMemo(() => {
     if (value === undefined || value === null || value === "") return null;
@@ -99,9 +106,9 @@ export default function Dropdown({
 
   const menuWidth = useMemo(() => {
     const width = portalWidth ?? propWidth;
-    if (width == null || width === "auto") return 0;
+    if (width == null || width === "auto") return isJourneyMenu ? 440 : 0;
     return typeof width === "number" ? width : (parseInt(width, 10) || 240);
-  }, [portalWidth, propWidth]);
+  }, [isJourneyMenu, portalWidth, propWidth]);
 
   const filteredItems = useMemo(() => {
     const visibleItems = items.filter((item) => !item.hide);
@@ -216,6 +223,9 @@ export default function Dropdown({
       </Button>
     )
     : (typeof trigger === "function" ? trigger({ open, isActive }) : trigger);
+  const accessibleTriggerEl = React.isValidElement(triggerEl)
+    ? React.cloneElement(triggerEl, { "aria-expanded": open })
+    : triggerEl;
 
   const resolvedWidth = fixedWidth
     ? (typeof propWidth === "number" ? `${propWidth}px` : propWidth)
@@ -240,7 +250,7 @@ export default function Dropdown({
   const resolvedMenuFooter = typeof menuFooter === "function"
     ? menuFooter({ close: () => changeOpen(false), open })
     : menuFooter;
-  const menuChromeHeight = (isSearchable ? 60 : 0) + (resolvedMenuFooter ? 56 : 0) + 16;
+  const menuChromeHeight = (isSearchable ? 60 : 0) + (resolvedMenuFooter ? 56 : 0) + (isJourneyMenu && menuTitle ? 52 : 16);
   const positionedListHeight = Math.max(120, (menuStyle.maxHeight || 240) - menuChromeHeight);
   const menuListStyle = {
     maxHeight: propMaxHeight || (isScrollable ? positionedListHeight : undefined),
@@ -253,6 +263,7 @@ export default function Dropdown({
       ref={menuWrapperRef}
       style={menuPositionStyle}
     >
+      {isJourneyMenu && menuTitle ? <div className="trem-dropdown__menu-title">{menuTitle}</div> : null}
       {isSearchable && (
         <div className="trem-dropdown__search">
           <Icon name="search" />
@@ -266,7 +277,7 @@ export default function Dropdown({
           />
         </div>
       )}
-      <ul className={`trem-dropdown__menu ${menuClassName}`.trim()} role="menu" style={menuListStyle}>
+      <ul className={`trem-dropdown__menu ${menuClassName}`.trim()} role="menu" aria-label={menuAriaLabel} style={menuListStyle}>
         {filteredItems.map((item, index) =>
           item.separator || !renderItemProp
             ? renderDefaultItem(item, index)
@@ -284,6 +295,30 @@ export default function Dropdown({
   function renderDefaultItem(item, index) {
     if (item.separator) {
       return <li key={`sep-${index}`}><hr className="trem-dropdown__separator" /></li>;
+    }
+    if (isJourneyMenu) {
+      return (
+        <li key={item.key || item.id || index} role="none">
+          <Button
+            variant="text"
+            primaryClassName={`trem-dropdown__journey-item trem-dropdown__journey-item--${item.tone || "neutral"}${item.disabled ? " is-disabled" : ""}`}
+            disabled={item.disabled}
+            role="menuitem"
+            aria-label={item.ariaLabel || item.label}
+            onClick={() => handleItemClick(item)}
+          >
+            <span className="trem-dropdown__journey-icon" aria-hidden="true">
+              {typeof item.icon === "string" ? <Icon name={item.icon} size={30} /> : item.icon}
+            </span>
+            <span className="trem-dropdown__journey-copy">
+              <strong>{item.label}</strong>
+              {item.description ? <small>{item.description}</small> : null}
+            </span>
+            {item.badge ? <span className="trem-dropdown__journey-badge">{item.badge}</span> : null}
+            {!item.disabled ? <Icon name="chevronRight" size={22} className="trem-dropdown__journey-chevron" /> : null}
+          </Button>
+        </li>
+      );
     }
     return (
       <li key={item.key || item.id || index} role="none">
@@ -307,12 +342,17 @@ export default function Dropdown({
         ref={wrapperRef}
         style={wrapperStyle}
       >
-        <div className="trem-dropdown__trigger" onClick={handleToggle} role="button" tabIndex={0} aria-expanded={open}>
-          {triggerEl}
+        <div className="trem-dropdown__trigger" onClick={handleToggle}>
+          {accessibleTriggerEl}
         </div>
       </div>
       {open && !showBottomSheet && createPortal(menuContent, document.body)}
-      <BottomSheet open={showBottomSheet} onClose={() => changeOpen(false)} className={portalClassName}>
+      <BottomSheet
+        open={showBottomSheet}
+        onClose={() => changeOpen(false)}
+        className={`${portalClassName}${isJourneyMenu ? " trem-dropdown__journey-sheet" : ""}`.trim()}
+        title={menuTitle}
+      >
         {isSearchable && (
           <div className="trem-dropdown__search">
             <Icon name="search" />
@@ -326,7 +366,7 @@ export default function Dropdown({
             />
           </div>
         )}
-        <ul className={`trem-dropdown__menu ${menuClassName}`.trim()} role="menu">
+        <ul className={`trem-dropdown__menu ${menuClassName}`.trim()} role="menu" aria-label={menuAriaLabel}>
           {filteredItems.map((item, index) =>
             item.separator || !renderItemProp
               ? renderDefaultItem(item, index)

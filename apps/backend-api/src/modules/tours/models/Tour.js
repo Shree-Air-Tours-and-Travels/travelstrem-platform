@@ -1,6 +1,6 @@
 // models/Tour.js
 import mongoose from "mongoose";
-import { PRICE_SOURCE, PRICE_SOURCE_LIST, TOUR_STATUS, TOUR_STATUS_LIST } from "../../../constants/enums.js";
+import { DEPARTURE_STATUS, DEPARTURE_STATUS_LIST, PACKAGE_TYPE, PACKAGE_TYPE_LIST, PRICE_SOURCE, PRICE_SOURCE_LIST, TOUR_STATUS, TOUR_STATUS_LIST } from "../../../constants/enums.js";
 
 const { Schema } = mongoose;
 const INVENTORY_SOURCE = Object.freeze({
@@ -53,11 +53,22 @@ const seasonalPricingSchema = new Schema({
 }, { _id: true });
 
 /* Itinerary: structured per-day entries */
+const itineraryActivitySchema = new Schema({
+    name: { type: String, default: "" }, // e.g. "Snorkeling at Nusa Penida"
+    description: { type: String, default: "" },
+    duration: { type: String, default: "" }, // e.g. "3 hours"
+    price: { type: Number, min: 0, default: 0 }, // per-person price (0 = included in tour)
+    currency: { type: String, default: "INR" },
+    included: { type: Boolean, default: true }, // true = included in base price, false = optional add-on
+    bookable: { type: Boolean, default: false }, // can customer book this activity
+}, { _id: true });
+
 const itineraryItemSchema = new Schema({
     day: { type: Number, required: true, min: 1 }, // day index
     title: { type: String, default: "" }, // short title e.g. "Arrival & City Tour"
     summary: { type: String, default: "" }, // short summary
-    activities: [{ type: String }], // bullet activities
+    activities: [{ type: String }], // bullet activities (legacy string array)
+    structuredActivities: [itineraryActivitySchema], // structured activities with pricing
     meals: [{ type: String }], // e.g. ["Breakfast", "Lunch"]
     accommodation: { type: String, default: "" }, // hotel name / "Camping"
     location: { type: String, default: "" }, // city / site
@@ -87,6 +98,12 @@ const includedStaySchema = new Schema({
     roomType: { type: String, default: "" }, // e.g. "Deluxe room"
     meals: [{ type: String }], // e.g. ["Breakfast"]
     description: { type: String, default: "" },
+    tier: { type: String, enum: ["base", "standard", "premium", ""], default: "" }, // pricing tier
+    pricing: {
+        unit: { type: String, enum: ["PER_PERSON", "PER_BOOKING", "PER_ROOM", "PER_NIGHT", "PER_ROOM_PER_NIGHT", "PER_VEHICLE", "PER_PERSON_PER_NIGHT"], default: null },
+        amountMinor: { type: Number, min: 0, default: null }, // 0 = included in base price
+        currency: { type: String, default: "INR" },
+    },
 }, { _id: true });
 
 /* Hotel upgrade options shown in the "Hotel options" modal */
@@ -95,6 +112,7 @@ const hotelOptionSchema = new Schema({
     description: { type: String, default: "" }, // e.g. "5-star Ubud resort + premium Seminyak property"
     costLabel: { type: String, default: "Upgrade cost" },
     cost: { type: String, default: "" }, // e.g. "Included" or "₹18,000 per room"
+    tier: { type: String, enum: ["base", "standard", "premium", ""], default: "" }, // pricing tier
     recommended: { type: Boolean, default: false },
     active: { type: Boolean, default: true },
     pricing: {
@@ -132,6 +150,7 @@ const extraSchema = new Schema({
     currency: { type: String, default: "INR" },
     priceLabel: { type: String, default: "" }, // e.g. "₹2,500 / night"
     icon: { type: String, default: "" }, // icon name
+    category: { type: String, enum: ["activity", "transfer", "meal", "visa", "insurance", "other", ""], default: "" }, // add-on type
     included: { type: Boolean, default: false },
     active: { type: Boolean, default: true },
     pricing: {
@@ -160,6 +179,51 @@ const searchTagSchema = new Schema({
         enum: ["DESTINATION", "ATTRACTION", "EXPERIENCE", "THEME", "ORIGIN", "SEASON", "AUDIENCE", "CUSTOM"],
         default: "CUSTOM",
     },
+}, { _id: false });
+
+/* ---------- Package type sub-schemas ---------- */
+
+/* Fixed departure: embedded departure with its own pricing and capacity */
+const tourDepartureSchema = new Schema({
+    label: { type: String, default: "" }, // e.g. "Dec 2026 Batch"
+    departureDate: { type: Date, required: true },
+    returnDate: { type: Date, required: true },
+    status: { type: String, enum: DEPARTURE_STATUS_LIST, default: DEPARTURE_STATUS.ACTIVE, index: true },
+    capacity: { type: Number, min: 0, default: null }, // null = unlimited
+    seatsAvailable: { type: Number, min: 0, default: null }, // null = unlimited
+    pricing: {
+        min: { type: Number, required: true, min: 0 },
+        max: { type: Number, required: true, min: 0 },
+        currency: { type: String, default: "INR" },
+        isFinal: { type: Boolean, default: false },
+        source: { type: String, enum: PRICE_SOURCE_LIST, default: PRICE_SOURCE.MANUAL },
+    },
+    bookingOpensAt: { type: Date, default: null },
+    bookingClosesAt: { type: Date, default: null },
+    notes: { type: String, default: "" },
+}, { _id: true });
+
+/* Flexible tour: date-window config with seasonal/fixed/on-request pricing */
+const flexibleConfigSchema = new Schema({
+    earliestDeparture: { type: Date, default: null },
+    latestReturn: { type: Date, default: null },
+    blackoutDates: [{ type: Date }], // dates that cannot be booked
+    pricingModel: {
+        type: String,
+        enum: ["seasonal", "fixed", "on_request"],
+        default: "seasonal",
+    },
+    minAdvanceBookingDays: { type: Number, min: 0, default: 0 },
+    maxAdvanceBookingDays: { type: Number, min: 0, default: null },
+}, { _id: false });
+
+/* Custom tour: quote-based workflow config */
+const customConfigSchema = new Schema({
+    responseTimeframeHours: { type: Number, min: 1, default: 48 },
+    requireDates: { type: Boolean, default: true },
+    requireGroupSize: { type: Boolean, default: true },
+    allowAgentDraft: { type: Boolean, default: true },
+    questionnaireFields: [{ type: String }], // e.g. ["budget", "interests", "visaStatus"]
 }, { _id: false });
 
 /* ---------- Main tour schema ---------- */
@@ -231,9 +295,28 @@ const tourSchema = new Schema({
         totalSeats: { type: Number, default: null }, // null = unlimited / not tracked
         seatsAvailable: { type: Number, default: null },
     },
+
+    // Package type determines how dates, pricing, and bookings work
+    packageType: { type: String, enum: PACKAGE_TYPE_LIST, default: PACKAGE_TYPE.FIXED_DEPARTURE, index: true },
+
+    // Fixed departure tours: embedded departures with per-departure pricing & capacity
+    departures: [tourDepartureSchema],
+
+    // Flexible tours: date window and pricing model config
+    flexibleConfig: { type: flexibleConfigSchema, default: () => ({}) },
+
+    // Custom tours: quote-based workflow config
+    customConfig: { type: customConfigSchema, default: () => ({}) },
+
     flights: {
         included: { type: Boolean, default: false },
         inventoryManaged: { type: Boolean, default: false },
+        pricePerPerson: { type: Number, min: 0, default: 0 }, // per-person flight price (0 = included at no extra cost)
+        currency: { type: String, default: "INR" },
+        departureCity: { type: String, default: "" }, // e.g. "Delhi"
+        arrivalCity: { type: String, default: "" }, // e.g. "Bali"
+        airline: { type: String, default: "" }, // e.g. "IndiGo"
+        notes: { type: String, default: "" }, // e.g. "Direct flight"
     },
 
     // Logistics & marketing fields
@@ -320,6 +403,26 @@ Behavior:
 tourSchema.methods.getCurrentPrice = function (date = new Date()) {
     const target = date instanceof Date ? date : new Date(date);
 
+    // For fixed departure tours with embedded departures, look up by date
+    if (this.packageType === PACKAGE_TYPE.FIXED_DEPARTURE && Array.isArray(this.departures) && this.departures.length > 0) {
+        const match = this.departures.find((dep) => {
+            if (!dep.departureDate || !dep.returnDate) return false;
+            return target >= new Date(dep.departureDate) && target <= new Date(dep.returnDate);
+        });
+        if (match) {
+            return {
+                min: match.pricing.min,
+                max: match.pricing.max,
+                currency: match.pricing.currency || this.price?.currency || "INR",
+                isFinal: !!match.pricing.isFinal,
+                source: match.pricing.source || PRICE_SOURCE.MANUAL,
+                matchedSeason: match.label || null,
+                note: match.notes || "",
+                departureId: match._id,
+            };
+        }
+    }
+
     if (Array.isArray(this.seasonalPricing) && this.seasonalPricing.length > 0) {
         // find matching seasons where startDate <= date <= endDate
         const matches = this.seasonalPricing.filter(s => {
@@ -336,7 +439,7 @@ tourSchema.methods.getCurrentPrice = function (date = new Date()) {
             return {
                 min: season.min,
                 max: season.max,
-                currency: season.currency || this.price.currency,
+                currency: season.currency || this.price?.currency || "INR",
                 isFinal: !!season.isFinal,
                 source: season.source || PRICE_SOURCE.MANUAL,
                 matchedSeason: season.seasonName,
@@ -347,11 +450,11 @@ tourSchema.methods.getCurrentPrice = function (date = new Date()) {
 
     // fallback to base price
     return {
-        min: this.price.min,
-        max: this.price.max,
-        currency: this.price.currency,
-        isFinal: !!this.price.isFinal,
-        source: this.price.source || PRICE_SOURCE.MANUAL,
+        min: this.price?.min || 0,
+        max: this.price?.max || 0,
+        currency: this.price?.currency || "INR",
+        isFinal: !!this.price?.isFinal,
+        source: this.price?.source || PRICE_SOURCE.MANUAL,
         matchedSeason: null,
         note: "",
     };
@@ -363,8 +466,12 @@ tourSchema.set("toObject", { virtuals: true });
 
 /* ---------- Indexes (optional) ---------- */
 tourSchema.index({ status: 1, isPublished: 1, visibility: 1, featured: -1, trending: -1, createdAt: -1 });
+tourSchema.index({ packageType: 1, status: 1 });
+tourSchema.index({ "departures.departureDate": 1, "departures.status": 1 });
 tourSchema.index({ "city.from": 1, "city.to": 1, "address.country": 1, "period.days": 1 });
-tourSchema.index({ tags: 1, "searchTags.slug": 1 });
+// These are both array fields and cannot share a compound multikey index.
+tourSchema.index({ tags: 1 });
+tourSchema.index({ "searchTags.slug": 1 });
 tourSchema.index({ startDate: 1, endDate: 1 });
 tourSchema.index({ ownerAgent: 1, inventorySource: 1 });
 tourSchema.index({

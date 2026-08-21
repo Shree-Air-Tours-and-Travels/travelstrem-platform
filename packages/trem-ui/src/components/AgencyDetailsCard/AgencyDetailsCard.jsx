@@ -3,19 +3,26 @@ import PropTypes from "prop-types";
 import Icon from "../../icons/Icon/Icon.jsx";
 import "./AgencyDetailsCard.scss";
 
-export default function AgencyDetailsCard({ agency, operator, labels = {} }) {
-  if (!agency?.name && !operator?.name) return null;
-  const agencyName = agency?.name || labels.unknownAgency || "Independent tour operator";
+export default function AgencyDetailsCard({ agency, operator, providerName, labels = {} }) {
+  const effectiveAgency = agency?.name
+    ? agency
+    : providerName
+      ? { name: providerName, logo: "", location: "" }
+      : null;
+
+  if (!effectiveAgency && !operator?.name) return null;
+
+  const agencyName = effectiveAgency?.name || labels.unknownAgency || "Independent tour operator";
   const initials = agencyName.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
 
   return (
     <section className="trem-agency-card" aria-label={labels.ariaLabel}>
       <div className="trem-agency-card__identity">
-        {agency?.logo ? <img src={agency.logo} alt="" /> : <span aria-hidden="true">{initials}</span>}
+        {effectiveAgency?.logo ? <img src={effectiveAgency.logo} alt="" /> : <span aria-hidden="true">{initials}</span>}
         <div>
           <small>{labels.eyebrow || "Operated by"}</small>
           <h2>{agencyName}</h2>
-          {agency?.location ? <p><Icon name="mapPin" size={15} />{agency.location}</p> : null}
+          {effectiveAgency?.location ? <p><Icon name="mapPin" size={15} />{effectiveAgency.location}</p> : null}
         </div>
       </div>
       <div className="trem-agency-card__meta">
@@ -42,5 +49,6 @@ export default function AgencyDetailsCard({ agency, operator, labels = {} }) {
 AgencyDetailsCard.propTypes = {
   agency: PropTypes.shape({ name: PropTypes.string, logo: PropTypes.string, location: PropTypes.string }),
   operator: PropTypes.shape({ name: PropTypes.string, email: PropTypes.string }),
+  providerName: PropTypes.string,
   labels: PropTypes.object,
 };

@@ -44,7 +44,7 @@ const buildDepartureEligibility = (search) => {
   const returning = dateBounds(filters.returnDate);
   const originCandidates = slugCandidates(filters.originCityIds);
   const conditions = [
-    { $in: ["$$departure.status", ["active", "scheduled", "legacy"]] },
+    { $in: ["$$departure.status", ["active", "scheduled", "sold_out", "legacy"]] },
     {
       $or: [
         { $eq: ["$$departure.bookingOpensAt", null] },
@@ -116,6 +116,15 @@ const facetProjection = {
     min: "$_priceMin",
     max: "$_priceMax",
     isFinal: "$_priceIsFinal",
+  },
+  soldOut: {
+    $allElementsTrue: [{
+      $map: {
+        input: "$_eligibleDepartures",
+        as: "dep",
+        in: { $eq: ["$$dep.status", "sold_out"] },
+      },
+    }],
   },
   rating: { average: "$_ratingAverage", count: "$_ratingCount" },
   featured: { $ifNull: ["$featured", false] },

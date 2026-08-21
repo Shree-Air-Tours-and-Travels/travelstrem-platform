@@ -157,7 +157,7 @@ export default function AdminBookingsView({ bookings, loading, onViewBooking }) 
               </thead>
               <tbody>
                 {paginated.map((b, i) => {
-                  const tour = b.tour || {};
+                  const tour = b.trip || b.tour || {};
                   const tripName = tour.title || b.tripSelection?.packageId || "Trip";
                   const product = b.product || "trevista";
                   const total = b.paymentSummary?.total || b.priceSnapshot?.total || 0;
@@ -205,7 +205,7 @@ export default function AdminBookingsView({ bookings, loading, onViewBooking }) 
 
           <div className="abv__cards">
             {paginated.map((b, i) => {
-              const tour = b.tour || {};
+              const tour = b.trip || b.tour || {};
               const tripName = tour.title || b.tripSelection?.packageId || "Trip";
               const product = b.product || "trevista";
               const total = b.paymentSummary?.total || b.priceSnapshot?.total || 0;

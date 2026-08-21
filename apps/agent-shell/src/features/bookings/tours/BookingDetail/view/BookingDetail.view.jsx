@@ -1,5 +1,7 @@
 import React from "react";
 import { Button, InputField, Title, SubTitle, Paragraph } from "@packages/trem-ui";
+import TimelineStepper from "@packages/trem-ui/components/TimelineStepper/TimelineStepper.jsx";
+import { QuoteComposer, createQuoteDraft } from "@packages/trem-docengine";
 import "../BookingDetail.scss";
 
 const STATUS_PHASES = [
@@ -12,6 +14,9 @@ const STATUS_PHASES = [
 ];
 
 const statusLabel = (s) => String(s || "").replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+const getPaymentStageLabel = (booking = {}) => (booking.enquiryRef || booking.contactLead) && !booking.currentQuote
+    ? "Quote not sent"
+    : statusLabel(booking.paymentStatus);
 
 const getProofUrl = (value) => {
     if (typeof value === "string") {
@@ -46,6 +51,16 @@ const getPhaseIndex = (status) => {
     return -1;
 };
 
+function buildMilestoneSteps(status) {
+    const phaseIndex = getPhaseIndex(status);
+    const isCancelled = ["CANCELLED", "REFUNDED", "REFUND_PENDING"].includes(String(status || "").toUpperCase());
+    return STATUS_PHASES.map((phase, i) => ({
+        key: phase.label,
+        label: phase.label,
+        status: isCancelled ? "pending" : i < phaseIndex ? "completed" : i === phaseIndex ? "current" : "pending",
+    }));
+}
+
 function WidgetSkeleton() {
     return (
         <div className="bd-loading">
@@ -74,9 +89,9 @@ function BookingActionsPanel({ booking, bookingId, actions, actionState }) {
     const remaining = Number(paymentSummary.remaining || priceSnapshot.total || 0);
     const paid = Number(paymentSummary.paid || 0);
     const isTerminal = ["CANCELLED", "COMPLETED", "REFUNDED"].includes(status);
-    const canGenerateQuote = ["DRAFT", "QUOTE_REQUESTED", "UNDER_REVIEW"].includes(status);
     const pendingProof = (booking.payments || []).find((payment) => payment.status === "VERIFICATION" && ["TOKEN", "deposit"].includes(payment.type));
     const isAwaitingToken = status === "AWAITING_TOKEN_PAYMENT" && paymentStatus === "TOKEN_PENDING";
+    const paymentStageLabel = getPaymentStageLabel(booking);
     const statusActions = {
         PAID: [{ label: "Confirm Booking", action: "confirm", target: "CONFIRMED" }],
         CONFIRMED: [
@@ -91,7 +106,6 @@ function BookingActionsPanel({ booking, bookingId, actions, actionState }) {
         TRAVEL_READY: [{ label: "Mark Complete", action: "complete", target: "COMPLETED" }],
     };
 
-    const [quoteAmount, setQuoteAmount] = React.useState(priceSnapshot.total || booking.currentQuote?.finalAmount || 0);
     const [refundAmount, setRefundAmount] = React.useState(paid || 0);
     const [refundReason, setRefundReason] = React.useState("");
     const [rejectReason, setRejectReason] = React.useState("");
@@ -103,10 +117,9 @@ function BookingActionsPanel({ booking, bookingId, actions, actionState }) {
     const [showRefundInput, setShowRefundInput] = React.useState(false);
 
     React.useEffect(() => {
-        setQuoteAmount(priceSnapshot.total || booking.currentQuote?.finalAmount || 0);
         setRefundAmount(paid || 0);
         setTokenDetails((value) => ({ ...value, amount: Number(booking.tokenAmount || 0) }));
-    }, [booking.currentQuote?.finalAmount, booking.tokenAmount, paid, priceSnapshot.total, remaining]);
+    }, [booking.tokenAmount, paid]);
 
     const loadingAction = actionState?.loading || "";
     const isLoading = Boolean(loadingAction);
@@ -116,30 +129,20 @@ function BookingActionsPanel({ booking, bookingId, actions, actionState }) {
         <aside className="bd-actions-panel" aria-label="Booking actions">
             <div className="bd-actions-panel__header">
                 <SubTitle text="Booking Actions" />
-                <span>{statusLabel(paymentStatus)}</span>
+                <span>{paymentStageLabel}</span>
             </div>
 
             {actionState?.message ? <div className="bd-action-note is-success">{actionState.message}</div> : null}
             {actionState?.error ? <div className="bd-action-note is-error">{actionState.error}</div> : null}
 
-            {canGenerateQuote ? (
-                <div className="bd-action-group">
-                    <span className="bd-action-label">Quote amount</span>
-                    <InputField
-                        variant="number"
-                        value={quoteAmount}
-                        onChange={setQuoteAmount}
-                        placeholder="Quote amount"
-                    />
-                    <Button
-                        primaryClassName="bd-action-btn"
-                        variant="solid"
-                        color="primary"
-                        disabled={isLoading}
-                        onClick={() => actions?.generateQuote?.(actionId, { finalAmount: Number(quoteAmount) || 0, currency })}
-                        text={loadingAction === "quote" ? "Sending..." : "Generate & Send Quote"}
-                    />
-                </div>
+            {booking.currentQuote && booking.quoteDocument?.available ? (
+                <Button
+                    primaryClassName="bd-action-btn"
+                    variant="outline"
+                    disabled={isLoading}
+                    onClick={() => actions?.downloadQuote?.(actionId, booking.quoteDocument?.filename)}
+                    text={loadingAction === "downloadQuote" ? "Preparing PDF..." : "Download Quote PDF"}
+                />
             ) : null}
 
             {(statusActions[status] || []).map((item) => (
@@ -341,6 +344,80 @@ function BookingActionsPanel({ booking, bookingId, actions, actionState }) {
     );
 }
 
+const quoteNumber = (value) => Math.max(0, Number(value) || 0);
+const getQuoteLineQuantity = (item = {}, booking = {}) => {
+    const people = quoteNumber(booking.guestsCount || booking.tripSelection?.adultCount || 1);
+    const adults = quoteNumber(booking.tripSelection?.adultCount || booking.guestsCount || 1);
+    const children = quoteNumber(booking.tripSelection?.childCount);
+    const rooms = quoteNumber(booking.tripSelection?.roomCount || 1);
+    const start = new Date(booking.startDate || booking.travelWindow?.startDate);
+    const end = new Date(booking.endDate || booking.travelWindow?.endDate);
+    const nights = Math.max(1, Math.ceil((end - start) / 86400000) || 1);
+    if (item.pricingType === "PER_PERSON") return people;
+    if (item.pricingType === "PER_ADULT") return adults;
+    if (item.pricingType === "PER_CHILD") return children;
+    if (item.pricingType === "PER_ROOM") return rooms;
+    if (item.pricingType === "PER_NIGHT") return nights;
+    if (item.pricingType === "PER_BOOKING" || item.pricingType === "FIXED") return 1;
+    return quoteNumber(item.quantity || 1);
+};
+
+const getQuoteDraftTotal = (quote = {}, booking = {}) => {
+    const fieldsToAdd = ["basePrice", "flightPrice", "hotelPrice", "transferPrice", "activitiesPrice", "mealsPrice", "visaFee", "insuranceFee", "platformFee", "serviceFee"];
+    const fieldTotal = fieldsToAdd.reduce((sum, key) => sum + quoteNumber(quote[key]), 0);
+    const itemTotal = (quote.items || []).filter((item) => item.selected !== false).reduce((sum, item) => sum + quoteNumber(item.amount ?? quoteNumber(item.unitAmount) * getQuoteLineQuantity(item, booking)), 0);
+    return Math.max(0, fieldTotal + itemTotal - quoteNumber(quote.discount));
+};
+
+function QuoteBuilderCard({ booking, bookingId, actions, actionState }) {
+    const status = String(booking.status || "").toUpperCase();
+    const canGenerateQuote = !["CANCELLED", "REFUNDED", "REFUND_PENDING", "COMPLETED"].includes(status);
+    const priceSnapshot = booking.priceSnapshot || {};
+    const catalogEstimate = booking.catalogEstimate || {};
+    const [quoteDraft, setQuoteDraft] = React.useState(() => createQuoteDraft(booking, { ...booking.currentQuote, basePrice: booking.currentQuote?.basePrice || priceSnapshot.total || catalogEstimate.total || 0 }));
+
+    React.useEffect(() => {
+        setQuoteDraft(createQuoteDraft(booking, { ...booking.currentQuote, basePrice: booking.currentQuote?.basePrice || priceSnapshot.total || catalogEstimate.total || 0 }));
+    }, [booking, booking.currentQuote?.finalAmount, booking.tokenAmount, catalogEstimate.total, priceSnapshot.total]);
+
+    if (!canGenerateQuote) return null;
+
+    const loadingAction = actionState?.loading || "";
+    const isLoading = Boolean(loadingAction);
+    const actionId = bookingId || booking.id || booking._id;
+    const quoteAmount = getQuoteDraftTotal(quoteDraft, booking);
+
+    return (
+        <section className="bd-card bd-quote-builder-card" aria-label="Build customer quote">
+            <div className="bd-quote-builder-card__header">
+                <div>
+                    <h2>Build customer quote</h2>
+                    <p>Catalog values are prefilled. Verify pricing, payment dates, notes, and terms before sending.</p>
+                </div>
+                <span>{booking.currentQuote ? `Latest Quote v${booking.currentQuote.version}` : "Quote not sent"}</span>
+            </div>
+            <QuoteComposer booking={booking} value={quoteDraft} onChange={setQuoteDraft} />
+            <div className="bd-quote-builder-card__actions">
+                <Button
+                    primaryClassName="bd-action-btn"
+                    variant="outline"
+                    disabled={isLoading}
+                    onClick={() => actions?.saveQuoteDraft?.(actionId, quoteDraft)}
+                    text={loadingAction === "quoteDraft" ? "Saving..." : "Save Quote Draft"}
+                />
+                <Button
+                    primaryClassName="bd-action-btn"
+                    variant="solid"
+                    color="primary"
+                    disabled={isLoading || Number(quoteAmount) <= 0}
+                    onClick={() => actions?.generateQuote?.(actionId, quoteDraft)}
+                    text={loadingAction === "quote" ? "Sending..." : "Generate & Send Quote"}
+                />
+            </div>
+        </section>
+    );
+}
+
 export default function BookingDetailView({ booking, bookingId, loading, error, navigate, backTarget, actions, actionState }) {
     const backPath = backTarget?.path || "/agent/bookings";
     const backLabel = backTarget?.label ? `Back to ${backTarget.label}` : "Back to Bookings";
@@ -379,6 +456,7 @@ export default function BookingDetailView({ booking, bookingId, loading, error, 
     const status = String(booking.status || "").toUpperCase();
     const phaseIndex = getPhaseIndex(status);
     const { paymentSummary } = booking;
+    const catalogEstimate = booking.catalogEstimate || {};
 
     return (
         <div className="bd-page">
@@ -401,24 +479,9 @@ export default function BookingDetailView({ booking, bookingId, loading, error, 
                 ) : null}
 
                 {phaseIndex >= 0 ? (
-                    <div className="bd-progress">
-                        {STATUS_PHASES.map((phase, i) => {
-                            const isComplete = i < phaseIndex;
-                            const isCurrent = i === phaseIndex && !["CANCELLED", "REFUNDED", "REFUND_PENDING"].includes(status);
-                            return (
-                                <div key={phase.label} className={`bd-progress__step ${isComplete ? "is-complete" : ""} ${isCurrent ? "is-current" : ""}`}>
-                                    <div className="bd-progress__dot" />
-                                    <span className="bd-progress__label">{phase.label}</span>
-                                    {i < STATUS_PHASES.length - 1 ? <div className="bd-progress__line" /> : null}
-                                </div>
-                            );
-                        })}
-                        {["CANCELLED", "REFUNDED", "REFUND_PENDING"].includes(status) ? (
-                            <div className="bd-progress__step is-cancelled">
-                                <div className="bd-progress__dot" />
-                                <span className="bd-progress__label">Cancelled</span>
-                            </div>
-                        ) : null}
+                    <div className="bd-journey-card">
+                        <Title text="Booking Progress" />
+                        <TimelineStepper steps={buildMilestoneSteps(status)} />
                     </div>
                 ) : null}
 
@@ -429,17 +492,25 @@ export default function BookingDetailView({ booking, bookingId, loading, error, 
                             <Paragraph>{tour.desc || "No description available."}</Paragraph>
                             <div className="bd-meta-grid">
                                 <div><span>Guests</span><strong>{booking.guestsCount || 1}</strong></div>
-                                <div><span>Per Person</span><strong>{formatCurrency(booking.priceSnapshot?.perPerson, booking.priceSnapshot?.currency)}</strong></div>
-                                <div><span>Total</span><strong>{formatCurrency(paymentSummary?.total || booking.priceSnapshot?.total, booking.priceSnapshot?.currency)}</strong></div>
-                                <div><span>Paid</span><strong className="bd-green">{formatCurrency(paymentSummary?.paid, booking.priceSnapshot?.currency)}</strong></div>
-                                <div><span>Remaining</span><strong>{formatCurrency(paymentSummary?.remaining, booking.priceSnapshot?.currency)}</strong></div>
-                                <div><span>Refunded</span><strong>{formatCurrency(paymentSummary?.refunded, booking.priceSnapshot?.currency)}</strong></div>
+                                <div><span>{booking.currentQuote ? "Quoted per person" : "Catalog estimate / person"}</span><strong>{formatCurrency(booking.currentQuote ? booking.priceSnapshot?.perPerson : catalogEstimate.perPerson, booking.priceSnapshot?.currency || catalogEstimate.currency)}</strong></div>
+                                <div><span>{booking.currentQuote ? "Quoted total" : "Catalog estimate"}</span><strong>{formatCurrency(booking.currentQuote ? (paymentSummary?.total || booking.priceSnapshot?.total) : catalogEstimate.total, booking.priceSnapshot?.currency || catalogEstimate.currency)}</strong></div>
+                                {booking.currentQuote ? <div><span>Paid</span><strong className="bd-green">{formatCurrency(paymentSummary?.paid, booking.priceSnapshot?.currency)}</strong></div> : null}
+                                {booking.currentQuote ? <div><span>Remaining</span><strong>{formatCurrency(paymentSummary?.remaining, booking.priceSnapshot?.currency)}</strong></div> : null}
+                                {booking.currentQuote ? <div><span>Refunded</span><strong>{formatCurrency(paymentSummary?.refunded, booking.priceSnapshot?.currency)}</strong></div> : null}
                             </div>
                             {booking.currentQuote ? (
                                 <div className="bd-quote-info">
                                     <strong>Latest Quote v{booking.currentQuote.version}</strong>
                                     <span>, {formatCurrency(booking.currentQuote.finalAmount, booking.currentQuote.currency)}</span>
                                     {booking.currentQuote.expirationDate ? <span> (valid until {toDateInput(booking.currentQuote.expirationDate)})</span> : null}
+                                </div>
+                            ) : null}
+                            {booking.currentQuote?.changeRequest?.requestedAt ? (
+                                <div className="bd-change-request">
+                                    <strong>Customer Change Request</strong>
+                                    {booking.currentQuote.changeRequest.guestCountChange !== 0 && <span>Guests: {booking.currentQuote.changeRequest.guestCountChange > 0 ? `+${booking.currentQuote.changeRequest.guestCountChange}` : booking.currentQuote.changeRequest.guestCountChange}</span>}
+                                    {booking.currentQuote.changeRequest.withFlights !== null && <span>Flights: {booking.currentQuote.changeRequest.withFlights ? "Include" : "Exclude"}</span>}
+                                    {booking.currentQuote.changeRequest.notes && <span>{booking.currentQuote.changeRequest.notes}</span>}
                                 </div>
                             ) : null}
                         </div>
@@ -455,6 +526,19 @@ export default function BookingDetailView({ booking, bookingId, loading, error, 
                             </div>
                         </div>
 
+                        {(booking.tripPreferences?.addFlights || booking.tripSelection?.roomType || booking.tripPreferences?.mealPreference || booking.tripPreferences?.extraActivities?.length || booking.tripSelection?.specialRequirements || booking.tripPreferences?.specialRequests) && (
+                            <div className="bd-card">
+                                <Title text="Enquiry Details" />
+                                <div className="bd-meta-grid">
+                                    {booking.tripPreferences?.addFlights && <div><span>Flights</span><strong>{booking.tripPreferences.addFlights === "yes" ? "With flights" : "Without flights"}</strong></div>}
+                                    {booking.tripSelection?.roomType && <div><span>Room type</span><strong>{booking.tripSelection.roomType}</strong></div>}
+                                    {booking.tripPreferences?.mealPreference && <div><span>Meal preference</span><strong>{booking.tripPreferences.mealPreference}</strong></div>}
+                                    {booking.tripPreferences?.extraActivities?.length > 0 && <div><span>Activities</span><strong>{booking.tripPreferences.extraActivities.join(", ")}</strong></div>}
+                                    {(booking.tripSelection?.specialRequirements || booking.tripPreferences?.specialRequests) && <div><span>Notes</span><strong>{booking.tripPreferences?.specialRequests || booking.tripSelection?.specialRequirements}</strong></div>}
+                                </div>
+                            </div>
+                        )}
+
                         <div className="bd-card">
                             <Title text={`Travelers (${booking.travelers?.length || 0})`} />
                             {booking.travelers?.length ? (
@@ -462,8 +546,14 @@ export default function BookingDetailView({ booking, bookingId, loading, error, 
                                     {booking.travelers.map((t, i) => (
                                         <div key={t.id || t._id || i} className="bd-traveler">
                                             <strong>{t.firstName || ""} {t.lastName || ""}</strong>
-                                            <span>{t.email || ""}</span>
-                                            {t.nationality ? <span>{t.nationality}</span> : null}
+                                            <div className="bd-traveler__details">
+                                                {t.age ? <span>Age: {t.age}</span> : null}
+                                                {t.gender ? <span>{t.gender}</span> : null}
+                                                {t.nationality ? <span>{t.nationality}</span> : null}
+                                                {t.passportNumber ? <span>Passport: {t.passportNumber}</span> : null}
+                                                {t.email ? <span>{t.email}</span> : null}
+                                                {t.phone ? <span>{t.phone}</span> : null}
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -524,6 +614,7 @@ export default function BookingDetailView({ booking, bookingId, loading, error, 
                     </div>
                     <BookingActionsPanel booking={booking} bookingId={bookingId} actions={actions} actionState={actionState} />
                 </div>
+                <QuoteBuilderCard booking={booking} bookingId={bookingId} actions={actions} actionState={actionState} />
             </div>
         </div>
     );

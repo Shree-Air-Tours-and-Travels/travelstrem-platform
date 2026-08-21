@@ -374,10 +374,6 @@
     }
   }
 
-  &__active-filters {
-    margin-block: $space-4;
-  }
-
   &__body {
     display: grid;
     grid-template-columns: minmax(320px, 380px) minmax(0, 1fr);
@@ -586,10 +582,10 @@
   .tour-listing-card {
     display: grid;
     grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
-    height: 340px;
+    height: 290px;
     min-width: 0;
-    min-height: 340px;
-    max-height: 340px;
+    min-height: 290px;
+    max-height: 290px;
     overflow: hidden;
     border: 1px solid var(--border);
     border-radius: 8px;

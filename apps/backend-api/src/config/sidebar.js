@@ -28,7 +28,7 @@ export default applyHideFlags({
         id: "plan",
         title: "Plan a Journey",
         items: [
-          { id: "trips", label: "Trips & Adventures", icon: "mountain", target: "trevio" },
+          { id: "trips", label: "Trips & Adventures", icon: "mountain", target: "trevio", disabled: true, comingSoon: true },
           { id: "tours", label: "Tours & Packages", icon: "globe", target: "trevista" },
           { id: "flights", label: "Flights & Hotels", icon: "plane", disabled: true, comingSoon: true },
           { id: "services", label: "Visas & Insurance", icon: "passport", disabled: true, comingSoon: true },
@@ -49,7 +49,7 @@ export default applyHideFlags({
         title: "Support & More",
         items: [
           { id: "notifications", label: "Notifications", icon: "bell", disabled: true },
-          { id: "support", label: "Help & Support", icon: "support", disabled: true },
+          { id: "support", label: "Help & Support", icon: "support", target: "support" },
         ],
       },
       {

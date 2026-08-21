@@ -165,21 +165,6 @@ export default function ManageTours({ session, tab: tabProp }) {
         }
     }
 
-    useEffect(() => {
-        if (tab !== "bookings" && tab !== "overview") return undefined;
-        const refresh = () => {
-            if (document.visibilityState === "visible") fetchBookings({ silent: true });
-        };
-        const interval = window.setInterval(refresh, 15000);
-        window.addEventListener("focus", refresh);
-        document.addEventListener("visibilitychange", refresh);
-        return () => {
-            window.clearInterval(interval);
-            window.removeEventListener("focus", refresh);
-            document.removeEventListener("visibilitychange", refresh);
-        };
-    }, [tab]);
-
     async function fetchProfile() {
         try {
             const res = await fetchData("/auth/profile").catch(() => null);

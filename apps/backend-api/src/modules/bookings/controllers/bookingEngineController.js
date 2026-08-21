@@ -12,14 +12,17 @@ import PaymentService from "../services/PaymentService.js";
 import TravellerService from "../services/TravellerService.js";
 import BookingTimelineService from "../services/BookingTimelineService.js";
 import AuditService from "../services/AuditService.js";
-import MessageService from "../services/MessageService.js";
 import PaymentSettings from "../models/PaymentSettings.js";
 import { calculateTrevistaPricing } from "../services/trevistaPricingService.js";
 import { createBookingQuote, consumeQuote, quoteDto } from "../services/BookingQuoteService.js";
 import masterDataService from "../../masterData/services/masterDataService.js";
-import { BOOKING_STATUS, PAYMENT_STATUS, BOOKING_FLOW } from "../../../constants/enums.js";
+import { BOOKING_STATUS, PAYMENT_STATUS, BOOKING_FLOW, EDITABLE_TRAVELLER_STATUSES, PACKAGE_TYPE } from "../../../constants/enums.js";
 import { sendBookingConfirmation, sendPaymentSuccess } from "../../../services/email.service.js";
+import { deliverQuoteEmail } from "../services/QuoteDeliveryService.js";
+import { latestQuoteDocument } from "../services/QuoteDocumentStorage.js";
 import config from "../../../config/index.js";
+import ContactLead from "../../forms/models/ContactLead.js";
+import { claimEnquiryBooking } from "../../forms/services/enquiryBookingService.js";
 
 function sendSuccess(res, data, message = "OK") {
   return res.json({ status: "success", message, componentData: { data } });
@@ -83,6 +86,7 @@ function canAccessBooking(req, booking, { requireAgencyManager = false } = {}) {
   const isMaster = req.user?.role === "admin" && req.user?.adminLevel === "master";
   if (isMaster) return true;
   if (req.user?.role === "agent") {
+    if (String(booking.assignedAgent?._id || booking.assignedAgent || "") === actorId) return !requireAgencyManager;
     if (!req.user?.agencyId || String(booking.agencyId || "") !== String(req.user.agencyId)) return false;
     if (req.user.agencyRole === "partner_admin") return true;
     if (requireAgencyManager) return false;
@@ -132,10 +136,29 @@ async function agencyFeeSettings(entity) {
 
 function computeTokenAmount(booking, product) {
   if (product === BOOKING_FLOW.TREVIO) {
+    const tokenStages = [BOOKING_STATUS.AWAITING_TOKEN_PAYMENT, BOOKING_STATUS.PAYMENT_PENDING, BOOKING_STATUS.PARTIALLY_PAID, BOOKING_STATUS.PAID, BOOKING_STATUS.CONFIRMED, BOOKING_STATUS.TICKETING, BOOKING_STATUS.TICKETED, BOOKING_STATUS.TRAVEL_READY, BOOKING_STATUS.COMPLETED];
+    if (!tokenStages.includes(booking.status)) return 0;
     return booking.tokenAmount
       || Math.round(Number(booking.paymentSummary?.total || booking.priceSnapshot?.total || 0) * 0.15);
   }
   return 0;
+}
+
+function customerQuoteView(hydrated, latestQuote) {
+  const enquiryBooking = Boolean(hydrated?.contactLead || hydrated?.enquiryRef);
+  const delivered = latestQuote && ["SENT", "ACCEPTED", "REJECTED"].includes(String(latestQuote.status || "").toUpperCase());
+  if (!enquiryBooking || delivered) return { ...hydrated, latestQuote, currentQuote: latestQuote || hydrated.currentQuote };
+  return {
+    ...hydrated,
+    latestQuote: null,
+    currentQuote: null,
+    quotes: [],
+    quoteDocument: null,
+    tokenAmount: 0,
+    remainingAmount: 0,
+    priceSnapshot: { ...(hydrated.priceSnapshot || {}), min: 0, max: 0, perPerson: 0, baseTripTotal: 0, total: 0, isFinal: false, note: "Awaiting organiser quote" },
+    paymentSummary: { ...(hydrated.paymentSummary || {}), total: 0, remaining: 0 },
+  };
 }
 
 function buildFlowSteps(product) {
@@ -146,60 +169,102 @@ function buildFlowSteps(product) {
 }
 
 function buildStatusTimeline(status, product) {
-  const allSteps = product === BOOKING_FLOW.TREVIO
-    ? [
-        { key: "booked", label: "Booking Created" },
-        { key: "payment_pending", label: "Awaiting Token Payment" },
-        { key: "token_verification", label: "Token Verification" },
-        { key: "confirmed", label: "Booking Confirmed" },
-        { key: "balance_pending", label: "Balance Pending" },
-        { key: "completed", label: "Fully Paid" },
-      ]
-    : [
-        { key: "booked", label: "Booking Submitted" },
-        { key: "quote_requested", label: "Quote Requested" },
-        { key: "quote_sent", label: "Quote Sent" },
-        { key: "accepted", label: "Quote Accepted" },
-        { key: "payment_pending", label: "Payment Pending" },
-        { key: "paid", label: "Paid" },
-        { key: "confirmed", label: "Confirmed" },
-        { key: "completed", label: "Tour Completed" },
-      ];
+  if (product === BOOKING_FLOW.TREVIO) {
+    const allSteps = [
+      { key: "booked", label: "Created" },
+      { key: "quote", label: "Quote" },
+      { key: "accepted", label: "Accepted" },
+      { key: "token", label: "Token" },
+      { key: "confirmed", label: "Confirmed" },
+      { key: "completed", label: "Completed" },
+    ];
 
-  const statusToStep = product === BOOKING_FLOW.TREVIO
-    ? {
-        DRAFT: "booked",
-        QUOTE_REQUESTED: "booked",
-        AWAITING_TOKEN_PAYMENT: "payment_pending",
-        PAYMENT_PENDING: "payment_pending",
-        CONFIRMED: "confirmed",
-        PARTIALLY_PAID: "token_paid",
-        PAID: "token_paid",
-        COMPLETED: "completed",
-        CANCELLED: "booked",
-      }
-    : {
-        DRAFT: "booked",
-        QUOTE_REQUESTED: "quote_requested",
-        UNDER_REVIEW: "quote_requested",
-        QUOTE_READY: "quote_sent",
-        QUOTE_SENT: "quote_sent",
-        CUSTOMER_ACCEPTED: "accepted",
-        PAYMENT_PENDING: "payment_pending",
-        PARTIALLY_PAID: "paid",
-        PAID: "paid",
-        CONFIRMED: "confirmed",
-        TICKETING: "confirmed",
-        TICKETED: "confirmed",
-        TRAVEL_READY: "confirmed",
-        COMPLETED: "completed",
-        CANCELLED: "booked",
-      };
+    const statusToStep = {
+      DRAFT: "booked",
+      QUOTE_REQUESTED: "booked",
+      UNDER_REVIEW: "quote",
+      QUOTE_READY: "quote",
+      QUOTE_SENT: "quote",
+      CUSTOMER_ACCEPTED: "accepted",
+      CUSTOMER_REJECTED: "quote",
+      AWAITING_TOKEN_PAYMENT: "token",
+      PAYMENT_PENDING: "token",
+      PARTIALLY_PAID: "token",
+      PAID: "confirmed",
+      CONFIRMED: "confirmed",
+      TICKETING: "confirmed",
+      TICKETED: "confirmed",
+      TRAVEL_READY: "confirmed",
+      COMPLETED: "completed",
+      CANCELLED: "booked",
+    };
 
-  const currentStepKey = statusToStep[status] || "booked";
-  const currentIndex = allSteps.findIndex((s) => s.key === currentStepKey);
+    const currentStepKey = statusToStep[status] || "booked";
+    const currentIndex = allSteps.findIndex((s) => s.key === currentStepKey);
 
-  return allSteps.map((step, idx) => ({
+    return allSteps.map((step, idx) => ({
+      ...step,
+      status: idx < currentIndex ? "completed" : idx === currentIndex ? "current" : "pending",
+    }));
+  }
+
+  const quotePhase = [
+    { key: "booked", label: "Booking Submitted" },
+    { key: "quote_requested", label: "Quote Requested" },
+    { key: "quote_sent", label: "Quote Sent" },
+    { key: "accepted", label: "Quote Accepted" },
+  ];
+
+  const paymentPhase = [
+    { key: "payment_pending", label: "Payment Pending" },
+    { key: "paid", label: "Paid" },
+    { key: "confirmed", label: "Confirmed" },
+    { key: "completed", label: "Tour Completed" },
+  ];
+
+  const acceptedStatuses = new Set([
+    "CUSTOMER_ACCEPTED",
+    "PAYMENT_PENDING",
+    "PARTIALLY_PAID",
+    "PAID",
+    "CONFIRMED",
+    "TICKETING",
+    "TICKETED",
+    "TRAVEL_READY",
+    "COMPLETED",
+  ]);
+
+  const isAccepted = acceptedStatuses.has(status);
+  const steps = isAccepted ? paymentPhase : quotePhase;
+
+  const quotePhaseMap = {
+    DRAFT: "booked",
+    QUOTE_REQUESTED: "quote_requested",
+    UNDER_REVIEW: "quote_requested",
+    QUOTE_READY: "quote_sent",
+    QUOTE_SENT: "quote_sent",
+    CUSTOMER_REJECTED: "quote_sent",
+    CANCELLED: "booked",
+  };
+
+  const paymentPhaseMap = {
+    CUSTOMER_ACCEPTED: "payment_pending",
+    PAYMENT_PENDING: "payment_pending",
+    PARTIALLY_PAID: "paid",
+    PAID: "paid",
+    CONFIRMED: "confirmed",
+    TICKETING: "confirmed",
+    TICKETED: "confirmed",
+    TRAVEL_READY: "confirmed",
+    COMPLETED: "completed",
+    CANCELLED: "payment_pending",
+  };
+
+  const activeMap = isAccepted ? paymentPhaseMap : quotePhaseMap;
+  const currentStepKey = activeMap[status] || steps[0].key;
+  const currentIndex = steps.findIndex((s) => s.key === currentStepKey);
+
+  return steps.map((step, idx) => ({
     ...step,
     status: idx < currentIndex ? "completed" : idx === currentIndex ? "current" : "pending",
   }));
@@ -355,6 +420,7 @@ export const createBooking = asyncHandler(async (req, res) => {
     specialRequirements = "",
     idempotencyKey = "",
     quoteId = "",
+    departureId = "",
   } = req.body;
 
   const { userId } = authInfoFromReq(req);
@@ -450,17 +516,35 @@ export const createBooking = asyncHandler(async (req, res) => {
     bookingData.paymentStatus = PAYMENT_STATUS.TOKEN_PENDING;
   } else {
     bookingData.tour = entity._id;
+    bookingData.packageType = entity.packageType || PACKAGE_TYPE.FIXED_DEPARTURE;
+    if (departureId) bookingData.departureId = departureId;
     bookingData.seatsReserved = 0;
     bookingData.paymentStatus = PAYMENT_STATUS.UNPAID;
   }
 
   let reservedSeats = 0;
+  let departureSeatsReserved = false;
+
+  // Fixed departure: reserve seats on the embedded departure
+  if (product === BOOKING_FLOW.TREVISTA && departureId && entity.packageType === PACKAGE_TYPE.FIXED_DEPARTURE) {
+    const { reserveDepartureSeats } = await import("../../tours/services/departureService.js");
+    try {
+      await reserveDepartureSeats(entity._id, departureId, guestsCount);
+      reservedSeats = guestsCount;
+      departureSeatsReserved = true;
+      bookingData.seatsReserved = guestsCount;
+    } catch (error) {
+      throw new ApiError(409, error.message || "Departure has insufficient seats available");
+    }
+  }
+
+  // Legacy inventory: flights-managed or Trevio seat tracking
   const hasManagedInventory = entity.availability?.seatsAvailable != null && (
     product === BOOKING_FLOW.TREVIO
     || (product === BOOKING_FLOW.TREVISTA && entity.flights?.included && entity.flights?.inventoryManaged)
   );
 
-  if (hasManagedInventory) {
+  if (hasManagedInventory && !departureSeatsReserved) {
     const inventoryModel = product === BOOKING_FLOW.TREVIO ? TrevioTrip : Tour;
     const inventoryQuery = product === BOOKING_FLOW.TREVIO
       ? { _id: entity._id, status: "listed", isListed: true, "availability.seatsAvailable": { $gte: guestsCount } }
@@ -481,7 +565,15 @@ export const createBooking = asyncHandler(async (req, res) => {
   try {
     booking = await Booking.create(bookingData);
   } catch (error) {
-    if (reservedSeats > 0) {
+    if (departureSeatsReserved && departureId) {
+      try {
+        const { releaseDepartureSeats } = await import("../../tours/services/departureService.js");
+        await releaseDepartureSeats(entity._id, departureId, reservedSeats);
+      } catch (rollbackError) {
+        console.error("Failed to rollback departure seats:", rollbackError);
+      }
+    }
+    if (reservedSeats > 0 && !departureSeatsReserved) {
       const inventoryModel = product === BOOKING_FLOW.TREVIO ? TrevioTrip : Tour;
       await inventoryModel.findByIdAndUpdate(
         entity._id,
@@ -601,25 +693,6 @@ export const submitBooking = asyncHandler(async (req, res) => {
     metadata: { product, newStatus: booking.status },
   });
 
-  if (product === BOOKING_FLOW.TREVISTA) {
-    await MessageService.send({
-      bookingId: booking._id,
-      senderType: "system",
-      senderName: "System",
-      content: `Booking submitted. Our team will prepare a quote for you shortly.`,
-      messageType: "system",
-    });
-  } else {
-    await MessageService.send({
-      bookingId: booking._id,
-      senderType: "system",
-      senderName: "System",
-      content: `Booking created. Please submit proof for the token amount of ₹${booking.tokenAmount || 0}.`,
-      messageType: "system",
-      metadata: { event: "booking_created", channels: ["app-shell"] },
-    });
-  }
-
   await emailBooking(booking).catch((error) => console.error("Booking confirmation email failed:", error.message));
   const entity = product === BOOKING_FLOW.TREVIO ? booking.trip : booking.tour;
   return sendSuccess(res, bookingCommandResponse(booking, entity), "Booking submitted");
@@ -634,8 +707,8 @@ export const getBookingStatus = asyncHandler(async (req, res) => {
   const privileged = isPrivileged(authUser, userRole);
 
   const booking = await Booking.findById(id)
-    .populate("tour", "title slug city address photo photos price period cancellationPolicy")
-    .populate("trip", "title slug location image photos price cancellationPolicy duration")
+    .populate("tour", "title slug desc city address photo photos price period cancellationPolicy cancellation extras hotelOptions inclusions exclusions itinerary flights")
+    .populate("trip", "title slug desc location image photos price cancellationPolicy cancellation duration extras hotelOptions inclusions exclusions itinerary")
     .populate("assignedAgent", "name email");
 
   if (!booking) throw new ApiError(404, "Booking not found");
@@ -645,7 +718,6 @@ export const getBookingStatus = asyncHandler(async (req, res) => {
   const hydrated = await BookingService.hydrate(booking);
   const product = booking.product || BOOKING_FLOW.TREVISTA;
   const timeline = buildStatusTimeline(booking.status, product);
-  const unreadMessages = await MessageService.countUnread(id, privileged ? "agent" : "customer");
 
   const tokenAmount = computeTokenAmount(booking, product);
   const paymentConfiguration = product === BOOKING_FLOW.TREVIO
@@ -661,11 +733,10 @@ export const getBookingStatus = asyncHandler(async (req, res) => {
     product,
     timeline,
     flowSteps: buildFlowSteps(product),
-    unreadMessages,
-    tokenAmount,
-    remainingAmount: booking.paymentSummary?.remaining || 0,
+    tokenAmount: privileged ? tokenAmount : (visibleBooking.tokenAmount || 0),
+    remainingAmount: privileged ? (booking.paymentSummary?.remaining || 0) : (visibleBooking.remainingAmount || 0),
     bookingStatus: booking.status,
-    paymentConfiguration,
+    paymentConfiguration: privileged || tokenAmount > 0 ? paymentConfiguration : null,
     assignedAgent: booking.assignedAgent,
   });
 });
@@ -726,14 +797,6 @@ export const payToken = asyncHandler(async (req, res) => {
     actor,
     action: "token_paid",
     metadata: { amount: tokenAmount, provider, transactionId, totalPaid: summary.paid },
-  });
-
-  await MessageService.send({
-    bookingId: booking._id,
-    senderType: "system",
-    senderName: "System",
-    content: `Token payment of ₹${tokenAmount} received. Booking confirmed.`,
-    messageType: "system",
   });
 
   await booking.populate(["trip", "tour"]);
@@ -818,6 +881,12 @@ export const acceptQuote = asyncHandler(async (req, res) => {
 
   booking.transitionStatus(BOOKING_STATUS.CUSTOMER_ACCEPTED);
   booking.transitionStatus(BOOKING_STATUS.PAYMENT_PENDING);
+  if (booking.product === BOOKING_FLOW.TREVIO) {
+    booking.paymentStatus = PAYMENT_STATUS.TOKEN_PENDING;
+    booking.tokenAmount = booking.tokenAmount || Math.round(Number(latestQuote?.finalAmount || booking.paymentSummary?.total || 0) * 0.15);
+  } else {
+    booking.paymentStatus = PAYMENT_STATUS.UNPAID;
+  }
   await booking.save();
 
   await BookingTimelineService.record({
@@ -825,14 +894,6 @@ export const acceptQuote = asyncHandler(async (req, res) => {
     actor,
     action: "quote_accepted",
     metadata: { quoteVersion: latestQuote?.version, finalAmount: latestQuote?.finalAmount },
-  });
-
-  await MessageService.send({
-    bookingId: booking._id,
-    senderType: "system",
-    senderName: "System",
-    content: `Quote accepted. Please proceed with payment of ₹${latestQuote?.finalAmount || booking.paymentSummary?.total}.`,
-    messageType: "system",
   });
 
   const hydrated = await BookingService.hydrate(booking);
@@ -869,16 +930,53 @@ export const rejectQuote = asyncHandler(async (req, res) => {
     metadata: { reason, quoteVersion: latestQuote?.version },
   });
 
-  await MessageService.send({
+  const hydrated = await BookingService.hydrate(booking);
+  return sendSuccess(res, hydrated, "Quote rejected");
+});
+
+// ────────────────────────────────────────────
+// REQUEST QUOTE CHANGES (customer)
+// ────────────────────────────────────────────
+export const requestQuoteChanges = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { guestCountChange = 0, withFlights = null, notes = "" } = req.body;
+  const actor = actorFromReq(req);
+
+  const booking = await Booking.findById(id);
+  if (!booking) throw new ApiError(404, "Booking not found");
+  if (String(booking.user) !== String(actor.id)) throw new ApiError(403, "Not authorized");
+  if (!["QUOTE_SENT", "QUOTE_READY", "CUSTOMER_REJECTED"].includes(booking.status)) {
+    throw new ApiError(400, `Booking is in ${booking.status} state`);
+  }
+
+  const latestQuote = await QuoteService.latest(booking._id);
+  if (!latestQuote) throw new ApiError(400, "No quote to request changes on");
+
+  const changeRequest = {
+    guestCountChange: Number(guestCountChange) || 0,
+    withFlights: withFlights === null ? null : Boolean(withFlights),
+    notes: String(notes || "").trim(),
+    requestedAt: new Date(),
+  };
+
+  await QuoteService.saveChangeRequest(booking._id, latestQuote.version, changeRequest);
+
+  if (changeRequest.guestCountChange !== 0) {
+    const newCount = Math.max(1, (booking.guestsCount || 1) + changeRequest.guestCountChange);
+    booking.guestsCount = newCount;
+    booking.seatsReserved = newCount;
+    await booking.save();
+  }
+
+  await BookingTimelineService.record({
     bookingId: booking._id,
-    senderType: "system",
-    senderName: "System",
-    content: `Quote rejected${reason ? `: ${reason}` : ""}. Our team will follow up.`,
-    messageType: "system",
+    actor,
+    action: "quote_changes_requested",
+    metadata: { quoteVersion: latestQuote.version, changeRequest },
   });
 
   const hydrated = await BookingService.hydrate(booking);
-  return sendSuccess(res, hydrated, "Quote rejected");
+  return sendSuccess(res, hydrated, "Change request submitted");
 });
 
 // ────────────────────────────────────────────
@@ -887,6 +985,23 @@ export const rejectQuote = asyncHandler(async (req, res) => {
 export const getMyBookings = asyncHandler(async (req, res) => {
   const { userId } = authInfoFromReq(req);
   if (!userId) throw new ApiError(401, "Authentication required");
+
+  // A verified signed-in email is enough to connect older guest enquiries to
+  // the customer. The enquiry reference flow remains available as a fallback.
+  const customer = await User.findById(userId).select("email").lean();
+  if (customer?.email) {
+    const escapedEmail = String(customer.email).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const pendingLeads = await ContactLead.find({
+      $or: [{ claimedBy: null }, { claimedBy: userId }],
+      "fields.email": new RegExp(`^${escapedEmail}$`, "i"),
+    }).limit(50);
+    for (const lead of pendingLeads) {
+      if (lead.bookingId && lead.claimedBy && String(lead.claimedBy) === String(userId)) continue;
+      const EntityModel = lead.product === BOOKING_FLOW.TREVIO ? TrevioTrip : Tour;
+      const entity = lead.tourId ? await EntityModel.findById(lead.tourId) : null;
+      await claimEnquiryBooking(lead, userId, entity);
+    }
+  }
 
   const { limit = 20, skip = 0, status, product, sort = "-createdAt" } = req.query;
   const query = { user: userId, deletedAt: null };
@@ -903,11 +1018,14 @@ export const getMyBookings = asyncHandler(async (req, res) => {
 
   const hydrated = await BookingService.hydrateMany(bookings, { includeDeep: false });
 
-  const enriched = hydrated.map((b) => ({
-    ...b,
-    timeline: buildStatusTimeline(b.status, b.product || BOOKING_FLOW.TREVISTA),
-    tokenAmount: b.tokenAmount || 0,
-  }));
+  const enriched = hydrated.map((b) => {
+    const visible = customerQuoteView(b, b.currentQuote);
+    return {
+      ...visible,
+      timeline: buildStatusTimeline(visible.status, visible.product || BOOKING_FLOW.TREVISTA),
+      tokenAmount: visible.tokenAmount || 0,
+    };
+  });
 
   return sendSuccess(res, { bookings: enriched, total, hasMore: Number(skip) + bookings.length < total });
 });
@@ -931,15 +1049,38 @@ export const createQuote = asyncHandler(async (req, res) => {
     throw new ApiError(400, `Cannot create quote in ${booking.status} state`);
   }
 
+  const uploadedQuote = await latestQuoteDocument(booking._id);
+  if (!uploadedQuote) throw new ApiError(400, "Upload the final quote PDF before sending it");
+  if (uploadedQuote.quoteAmount != null && Number(uploadedQuote.quoteAmount) !== Number(finalAmount || 0)) {
+    throw new ApiError(400, "The uploaded PDF amount does not match the quote amount. Upload the updated PDF first");
+  }
+
   const quote = await QuoteService.create(booking, {
     items, basePrice, hotelPrice, flightPrice, visaFee, taxes, serviceFee, discount, notes, finalAmount,
   }, { id: actor.id });
 
   booking.latestQuoteId = quote._id;
   booking.currentQuoteVersion = quote.version;
+  booking.priceSnapshot = {
+    ...(booking.priceSnapshot?.toObject?.() || booking.priceSnapshot || {}),
+    total: quote.finalAmount,
+    perPerson: booking.guestsCount ? Math.round(quote.finalAmount / booking.guestsCount) : quote.finalAmount,
+    currency: quote.currency,
+    isFinal: true,
+    source: "quote_engine",
+    note: `Quote v${quote.version}`,
+  };
+  const alreadyPaid = Number(booking.paymentSummary?.paid || 0);
+  booking.paymentSummary = {
+    total: quote.finalAmount,
+    paid: alreadyPaid,
+    remaining: Math.max(0, quote.finalAmount - alreadyPaid),
+    refunded: Number(booking.paymentSummary?.refunded || 0),
+  };
 
   booking.transitionStatus(BOOKING_STATUS.QUOTE_READY);
   booking.transitionStatus(BOOKING_STATUS.QUOTE_SENT);
+  await QuoteService.markSent(booking._id, quote.version);
   await booking.save();
   await recordBookingAudit(req, booking, "quote.create", before);
 
@@ -950,17 +1091,10 @@ export const createQuote = asyncHandler(async (req, res) => {
     metadata: { quoteVersion: quote.version, finalAmount: quote.finalAmount },
   });
 
-  await MessageService.send({
-    bookingId: booking._id,
-    senderType: "system",
-    senderName: "System",
-    content: `A new quote of ₹${quote.finalAmount} has been prepared. Please review and accept.`,
-    messageType: "quote_update",
-    metadata: { quoteVersion: quote.version, finalAmount: quote.finalAmount },
-  });
+  const delivery = await deliverQuoteEmail(booking, quote);
 
   const hydrated = await BookingService.hydrate(booking);
-  return sendSuccess(res, hydrated, "Quote created and sent");
+  return sendSuccess(res, { ...hydrated, quoteDelivery: delivery }, delivery.success ? "Quote created and emailed to the customer" : "Quote created, but email delivery failed");
 });
 
 // ────────────────────────────────────────────
@@ -1048,13 +1182,19 @@ export const cancelBooking = asyncHandler(async (req, res) => {
 
     if (releaseClaim) {
       try {
-        const inventoryModel = booking.trip ? TrevioTrip : Tour;
-        const releasedTrip = await inventoryModel.findOneAndUpdate(
-          { _id: booking.trip || booking.tour },
-          { $inc: { "availability.seatsAvailable": seatsToRelease } },
-          { new: true },
-        );
-        if (!releasedTrip) throw new ApiError(404, "Trip inventory not found");
+        // Release departure seats if departureId is present
+        if (booking.departureId && booking.tour) {
+          const { releaseDepartureSeats } = await import("../../tours/services/departureService.js");
+          await releaseDepartureSeats(booking.tour, booking.departureId, seatsToRelease);
+        } else {
+          const inventoryModel = booking.trip ? TrevioTrip : Tour;
+          const releasedTrip = await inventoryModel.findOneAndUpdate(
+            { _id: booking.trip || booking.tour },
+            { $inc: { "availability.seatsAvailable": seatsToRelease } },
+            { new: true },
+          );
+          if (!releasedTrip) throw new ApiError(404, "Trip inventory not found");
+        }
         booking.seatsReserved = 0;
       } catch (error) {
         await Booking.updateOne(
@@ -1074,14 +1214,6 @@ export const cancelBooking = asyncHandler(async (req, res) => {
   });
   await recordBookingAudit(req, booking, "booking.cancel", before);
 
-  await MessageService.send({
-    bookingId: booking._id,
-    senderType: "system",
-    senderName: "System",
-    content: `Booking cancelled${reason ? `: ${reason}` : ""}.`,
-    messageType: "system",
-  });
-
   const hydrated = await BookingService.hydrate(booking);
   return sendSuccess(res, hydrated, "Booking cancelled");
 });
@@ -1095,8 +1227,8 @@ export const getBookingDetail = asyncHandler(async (req, res) => {
   const privileged = isPrivileged(authUser, userRole);
 
   const booking = await Booking.findById(id)
-    .populate("tour", "title slug city address distance period price photo photos itinerary highlights inclusions exclusions cancellationPolicy")
-    .populate("trip", "title slug location image photos price cancellationPolicy duration itinerary inclusions exclusions")
+    .populate("tour", "title slug desc city address distance period price photo photos itinerary highlights inclusions exclusions cancellationPolicy cancellation extras hotelOptions flights packageType departures flexibleConfig customConfig")
+    .populate("trip", "title slug desc location image photos price cancellationPolicy cancellation duration itinerary inclusions exclusions extras hotelOptions")
     .populate("assignedAgent", "name email phone");
 
   if (!booking) throw new ApiError(404, "Booking not found");
@@ -1107,8 +1239,6 @@ export const getBookingDetail = asyncHandler(async (req, res) => {
   const product = booking.product || BOOKING_FLOW.TREVISTA;
   const timeline = buildStatusTimeline(booking.status, product);
   const latestQuote = await QuoteService.latest(booking._id);
-  const messages = await MessageService.list(booking._id, { limit: 50 });
-  const unreadMessages = await MessageService.countUnread(booking._id, privileged ? "agent" : "customer");
   const tokenAmount = computeTokenAmount(booking, product);
   const paymentConfiguration = product === BOOKING_FLOW.TREVIO
     ? await PaymentSettings.findOneAndUpdate(
@@ -1118,14 +1248,13 @@ export const getBookingDetail = asyncHandler(async (req, res) => {
       ).lean()
     : null;
 
+  const visibleBooking = privileged ? { ...hydrated, latestQuote } : customerQuoteView(hydrated, latestQuote);
   return sendSuccess(res, {
-    ...hydrated,
+    ...visibleBooking,
     product,
     timeline,
     flowSteps: buildFlowSteps(product),
-    latestQuote,
-    messages,
-    unreadMessages,
+    latestQuote: visibleBooking.latestQuote || null,
     tokenAmount,
     remainingAmount: booking.paymentSummary?.remaining || 0,
     bookingStatus: booking.status,
@@ -1164,14 +1293,6 @@ export const confirmBooking = asyncHandler(async (req, res) => {
     action: "booking_confirmed",
   });
 
-  await MessageService.send({
-    bookingId: booking._id,
-    senderType: "system",
-    senderName: "System",
-    content: "Booking confirmed. Have a great trip!",
-    messageType: "system",
-  });
-
   const hydrated = await BookingService.hydrate(booking);
   return sendSuccess(res, hydrated, "Booking confirmed");
 });
@@ -1187,9 +1308,9 @@ export const listAllBookings = asyncHandler(async (req, res) => {
   const { limit = 20, skip = 0, status, product, sort = "-createdAt", search } = req.query;
   const query = { deletedAt: null };
   if (!(authUser?.role === "admin" && authUser?.adminLevel === "master")) {
-    if (authUser?.role !== "agent" || !authUser?.agencyId) throw new ApiError(403, "Admin access required");
-    query.agencyId = authUser.agencyId;
-    if (authUser.agencyRole !== "partner_admin") query.assignedAgent = authUser.sub || authUser.id;
+    if (authUser?.role !== "agent") throw new ApiError(403, "Admin access required");
+    if (authUser?.agencyId) query.agencyId = authUser.agencyId;
+    if (!authUser?.agencyId || authUser.agencyRole !== "partner_admin") query.assignedAgent = authUser.sub || authUser.id;
   }
   if (status) query.status = Booking.normalizeStatus(status);
   if (product) query.product = product;
@@ -1214,6 +1335,86 @@ export const listAllBookings = asyncHandler(async (req, res) => {
   return sendSuccess(res, { bookings: hydrated, total, hasMore: Number(skip) + bookings.length < total });
 });
 
+// ────────────────────────────────────────────
+// UPDATE TRAVELLERS (customer)
+// ────────────────────────────────────────────
+
+function normalizeTravellerInput(raw = {}) {
+  return {
+    firstName: String(raw.firstName || "").trim(),
+    lastName: String(raw.lastName || "").trim(),
+    age: raw.age != null ? Number(raw.age) : undefined,
+    gender: String(raw.gender || "").trim(),
+    nationality: String(raw.nationality || "").trim(),
+    passportNumber: String(raw.passportNumber || "").trim(),
+    email: String(raw.email || "").trim(),
+    phone: String(raw.phone || "").trim(),
+  };
+}
+
+function validateTravellersPayload(travellers = []) {
+  const errors = {};
+  if (!Array.isArray(travellers) || travellers.length < 1) {
+    errors.travellers = "At least one traveller is required.";
+    return { ok: false, errors, travellers: [] };
+  }
+  const normalized = travellers.map((t, i) => {
+    const item = normalizeTravellerInput(t);
+    if (!item.firstName || item.firstName.length < 2) errors[`travellers.${i}.firstName`] = "First name is required.";
+    if (item.age == null || !Number.isFinite(item.age) || item.age < 0 || item.age > 120) errors[`travellers.${i}.age`] = "Valid age is required.";
+    return item;
+  });
+  return { ok: Object.keys(errors).length === 0, errors, travellers: normalized };
+}
+
+export const updateTravellers = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { userRole, authUser } = authInfoFromReq(req);
+
+  const booking = await Booking.findById(id);
+  if (!booking) throw new ApiError(404, "Booking not found");
+  assertBookingAccess(req, booking);
+
+  if (!EDITABLE_TRAVELLER_STATUSES.includes(booking.status)) {
+    throw new ApiError(409, `Traveller edits are not allowed while the booking is ${booking.status}.`);
+  }
+
+  const validation = validateTravellersPayload(req.body.travellers || req.body);
+  if (!validation.ok) {
+    return res.status(400).json({ status: "error", message: "Please fix traveller details.", componentData: { data: null, validation: validation.errors } });
+  }
+
+  const expectedCount = booking.guestsCount || 1;
+  if (validation.travellers.length > expectedCount) {
+    return res.status(400).json({ status: "error", message: `Cannot add more than ${expectedCount} traveller${expectedCount > 1 ? "s" : ""} for this booking.` });
+  }
+
+  const before = booking.toObject();
+  await TravellerService.replaceForBooking(booking._id, validation.travellers);
+
+  const count = validation.travellers.length;
+  booking.updatedBy = authUser?.id || null;
+  await booking.save();
+
+  await BookingTimelineService.record({
+    bookingId: booking._id,
+    actor: { id: authUser?.id, type: isPrivileged(authUser, userRole) ? "agent" : "customer" },
+    action: "travellers.updated",
+    metadata: { travellerCount: count },
+  });
+  await AuditService.record({
+    bookingId: booking._id,
+    action: "travellers.update",
+    before,
+    after: booking.toObject(),
+    actor: { id: authUser?.id, type: isPrivileged(authUser, userRole) ? "agent" : "customer" },
+    reqMeta: { ip: req.ip, userAgent: req.headers["user-agent"] },
+  });
+
+  const hydrated = await BookingService.hydrate(booking);
+  return sendSuccess(res, hydrated, "Traveller details updated.");
+});
+
 export default {
   createBooking,
   submitBooking,
@@ -1228,4 +1429,5 @@ export default {
   confirmBooking,
   listAllBookings,
   createV2Quote,
+  updateTravellers,
 };

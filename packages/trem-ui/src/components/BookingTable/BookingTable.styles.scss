@@ -818,4 +818,28 @@
       flex-basis: 44px;
     }
   }
+
+  // Page mode delegates vertical movement to the application's main scroll
+  // region. It avoids competing touch scrollers beneath persistent navigation.
+  .booking-table--mobile-scroll-page {
+    height: auto;
+    overflow: visible;
+
+    .booking-table__panel {
+      height: auto;
+      overflow: visible;
+    }
+
+    .booking-table__toolbar,
+    .booking-table__pagination {
+      position: static;
+    }
+
+    .booking-table__mobile {
+      flex: 0 0 auto;
+      overflow: visible;
+      overscroll-behavior: auto;
+      -webkit-overflow-scrolling: auto;
+    }
+  }
 }

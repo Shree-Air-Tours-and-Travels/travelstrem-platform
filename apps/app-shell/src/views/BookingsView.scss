@@ -7,13 +7,40 @@
   overflow-x: hidden;
 }
 
+.dbv__enquiry-lookup {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  align-items: end;
+  gap: $space-3;
+  margin-bottom: $space-5;
+  padding: $space-4;
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+  background: var(--surface);
+
+  > div:first-child { display: grid; gap: $space-1; }
+  .ui-subtitle { margin: 0; color: var(--heading); font-size: $font-size-sm; text-align: start; }
+  .ui-paragraph, p { margin: 0; color: var(--muted); font-size: $font-size-sm; text-align: start; }
+  p { grid-column: 1 / -1; color: var(--color-primary); }
+
+  @media (max-width: $breakpoint-md) { grid-template-columns: 1fr; align-items: stretch; }
+}
+
+.dbv__enquiry-section {
+  display: grid;
+  justify-items: start;
+  gap: $space-3;
+  margin-bottom: $space-5;
+
+  .dbv__enquiry-lookup { width: 100%; margin-bottom: 0; }
+}
+
 @media (max-width: $breakpoint-md) {
   .dbv {
-    height: 100%;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+    height: auto;
+    min-height: 100%;
+    display: block;
+    overflow: visible;
   }
 
   .dbv__header {
@@ -22,8 +49,7 @@
   }
 
   .dbv__booking-table {
-    min-height: 0;
-    flex: 1 1 auto;
+    min-height: auto;
   }
 }
 

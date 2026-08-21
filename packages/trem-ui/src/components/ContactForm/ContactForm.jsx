@@ -20,6 +20,12 @@ const ContactForm = ({ fieldsMeta = [], formValues = {}, onChange, onSubmit, onC
     if (type === "textarea") {
       return <label className={`trem-contact-form__textarea-wrap${errors[field.name] ? " is-error" : ""}`}><span>{field.label}{field.required ? " *" : ""}</span><textarea value={value} maxLength={field.maxLength} placeholder={field.placeholder || ""} onChange={(event) => onChange(field.name, event.target.value)} aria-invalid={Boolean(errors[field.name])} /></label>;
     }
+    // The calendar field is intentionally parked while quote requests use
+    // backend-provided departure windows. Restore this branch when free-form
+    // travel dates are enabled again.
+    // if (type === "date") {
+    //   return <InputField variant="date" label={field.label} required={field.required} value={value} error={errors[field.name]} onChange={(next) => onChange(field.name, next)} />;
+    // }
     return <InputField variant={type} label={field.label} required={field.required} value={value} maxLength={field.maxLength} placeholder={field.placeholder || ""} error={errors[field.name]} onChange={(next) => onChange(field.name, next)} />;
   };
 

@@ -4,6 +4,7 @@ const schema = new mongoose.Schema({
   name: { type: String, required: true, trim: true },
   description: { type: String, trim: true, default: "" },
   status: { type: String, enum: ["active", "inactive"], default: "active", index: true },
+  hidden: { type: Boolean, default: false },
   metadata: { type: mongoose.Schema.Types.Mixed, default: {} },
 }, { timestamps: true });
 export default mongoose.models.Product || mongoose.model("Product", schema);

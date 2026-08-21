@@ -4,6 +4,7 @@ import { useComponentData, fetchData } from "@packages/trem-utils";
 import ToursPageView from "../view/ToursPage.view";
 import { slugifyTourTitle } from "../helper";
 import useFavorites from "../hooks/useFavorites";
+import { ContactAgentModal } from "@packages/trem-modals";
 import { fetchTourSearch } from "../search/tourSearch.service";
 import {
     flattenTourSearchState,
@@ -14,7 +15,6 @@ import {
     getUiSortId,
     mergeFlatFiltersIntoSearch,
     parseTourSearchUrl,
-    removeTourFilter,
     serializeTourSearchUrl,
 } from "../search/tourSearchState";
 
@@ -48,6 +48,7 @@ export default function ToursPageContainer({ dispatchEvent, userSession = null }
     const [searching, setSearching] = useState(true);
     const [searchError, setSearchError] = useState(null);
     const [filtersExpanded, setFiltersExpanded] = useState(() => typeof window !== "undefined" ? window.innerWidth > 900 : true);
+    const [contactOpen, setContactOpen] = useState(false);
     const previousQuery = useRef(searchState.query);
 
     useEffect(() => {
@@ -129,25 +130,27 @@ export default function ToursPageContainer({ dispatchEvent, userSession = null }
         navigate(`/trevista/tours/${encodeURIComponent(ref)}`, { state: { tour, from: { label: "Tours", path: "/trevista/tours" } } });
     }, [dispatchEvent, navigate]);
 
-    const activeDiscoveryId = useMemo(() => {
-        const match = discovery.find((chip) => (
-            (chip.type === "TAG" && searchState.filters.tagIds.length === 1 && searchState.filters.tagIds[0] === chip.value)
-            || (chip.type === "ORIGIN" && searchState.filters.originCityIds.length === 1 && searchState.filters.originCityIds[0] === chip.value)
-            || (chip.type === "DESTINATION" && searchState.filters.destinationCityIds.length === 1 && searchState.filters.destinationCityIds[0] === chip.value)
-            || (chip.type === "COUNTRY" && searchState.filters.countryIds.length === 1 && searchState.filters.countryIds[0] === chip.value)
+    const activeDiscoveryIds = useMemo(() => {
+        const matches = discovery.filter((chip) => (
+            (chip.type === "TAG" && searchState.filters.tagIds.includes(chip.value))
+            || (chip.type === "ORIGIN" && searchState.filters.originCityIds.includes(chip.value))
+            || (chip.type === "DESTINATION" && searchState.filters.destinationCityIds.includes(chip.value))
+            || (chip.type === "COUNTRY" && searchState.filters.countryIds.includes(chip.value))
             || (chip.type === "FEATURED" && searchState.filters.featured === (chip.value === true || chip.value === "true"))
         ));
-        return match?.id || "all";
+        return matches.length ? matches.map((chip) => chip.id) : ["all"];
     }, [discovery, searchState.filters]);
 
     const activeFilterChips = useMemo(() => getActiveTourFilterChips(searchState, result.facets), [result.facets, searchState]);
-    const handleRemoveFilter = useCallback((id) => commitSearch(removeTourFilter(searchState, id)), [commitSearch, searchState]);
     const handleClearFilters = useCallback(() => {
         const cleared = createDefaultTourSearchState();
         commitSearch({ ...cleared, sort: searchState.sort, pageSize: searchState.pageSize });
     }, [commitSearch, searchState.pageSize, searchState.sort]);
 
+    const handleEnquire = useCallback(() => setContactOpen(true), []);
+
     return (
+      <>
         <ToursPageView
             pageLabels={pageLabels}
             widgets={widgets}
@@ -175,12 +178,19 @@ export default function ToursPageContainer({ dispatchEvent, userSession = null }
             onFiltersExpandedChange={setFiltersExpanded}
             filterValues={flattenTourSearchState(searchState)}
             facets={result.facets}
-            activeDiscoveryId={activeDiscoveryId}
+            activeDiscoveryIds={activeDiscoveryIds}
             discoveryOptions={discovery}
             activeFilterChips={activeFilterChips}
-            onRemoveFilter={handleRemoveFilter}
             onClearFilters={handleClearFilters}
             handleFilterChange={handleFilterChange}
+            onEnquire={handleEnquire}
         />
+        <ContactAgentModal
+          open={contactOpen}
+          onClose={() => setContactOpen(false)}
+          user={userSession?.user || null}
+          product="trevista"
+        />
+      </>
     );
 }

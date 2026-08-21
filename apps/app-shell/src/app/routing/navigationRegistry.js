@@ -1,6 +1,10 @@
 const ID_PATTERN = /^[a-z0-9][a-z0-9._-]{0,63}$/i;
 const RENDERERS = new Set(["app-shell", "trevio", "trevista", "bookingEngine"]);
 const KINDS = new Set(["tab", "remote", "internal", "external"]);
+const GUEST_ACCESSIBLE_DESTINATIONS = new Set(["overview", "trevista", "trevio"]);
+const MOBILE_PANEL_ACTIONS = new Set(["open-primary-action"]);
+
+export const isGuestAccessibleDestination = (destination) => GUEST_ACCESSIBLE_DESTINATIONS.has(destination?.id);
 
 export const FALLBACK_NAVIGATION_CONFIG = {
   version: 1,
@@ -12,6 +16,7 @@ export const FALLBACK_NAVIGATION_CONFIG = {
     { id: "bookings", kind: "tab", renderer: "app-shell", tab: "bookings", path: "/", activeId: "bookings" },
     { id: "favorites", kind: "tab", renderer: "app-shell", tab: "favorites", path: "/", activeId: "favorites" },
     { id: "profile", kind: "tab", renderer: "app-shell", tab: "profile", path: "/", activeId: "profile" },
+    { id: "support", kind: "internal", renderer: "app-shell", path: "/help", activeId: "support", patterns: ["/help", "/help/*"] },
     { id: "trevio", kind: "remote", renderer: "trevio", tab: "trevio", product: "trevio", path: "/", activeId: "trips", patterns: ["/trevio/*", "/trip/*"] },
     { id: "trevista", kind: "remote", renderer: "trevista", tab: "trevista", product: "trevista", path: "/", activeId: "tours", patterns: ["/trevista/*", "/tour/*"] },
     { id: "booking-engine", kind: "remote", renderer: "bookingEngine", path: "/booking", activeId: "bookings", patterns: ["/booking/*"] },
@@ -73,6 +78,27 @@ export function normalizeNavigationConfig(value = {}) {
       }
     })
     : [];
+  const mobileActionPanelItems = (Array.isArray(value.mobileActionPanel?.items) ? value.mobileActionPanel.items : [])
+    .filter((item) => (
+      ID_PATTERN.test(String(item?.id || ""))
+      && (ids.has(String(item?.target || "")) || MOBILE_PANEL_ACTIONS.has(String(item?.action || "")))
+      && String(item?.label || "").trim()
+      && ID_PATTERN.test(String(item?.icon || ""))
+    ))
+    .slice(0, 5)
+    .map((item) => ({
+      id: String(item.id),
+      label: String(item.label).trim().slice(0, 30),
+      icon: String(item.icon),
+      target: ids.has(String(item.target || "")) ? String(item.target) : "",
+      action: MOBILE_PANEL_ACTIONS.has(String(item.action || "")) ? String(item.action) : "",
+      activeTargets: (Array.isArray(item.activeTargets) ? item.activeTargets : [item.target])
+        .map((target) => String(target || ""))
+        .filter((target) => ids.has(target))
+        .slice(0, 8),
+      emphasis: Boolean(item.emphasis),
+      disabled: Boolean(item.disabled),
+    }));
 
   return {
     version: Number(value.version) || 1,
@@ -80,6 +106,11 @@ export function normalizeNavigationConfig(value = {}) {
     notFoundDestination: ids.has(requestedNotFound) ? requestedNotFound : usable[0].id,
     security: { allowedExternalOrigins: origins, allowedExternalProtocols: protocols.length ? protocols : ["https:"] },
     destinations: usable,
+    mobileActionPanel: {
+      variant: value.mobileActionPanel?.variant === "mobile-navigation" ? "mobile-navigation" : "",
+      ariaLabel: String(value.mobileActionPanel?.ariaLabel || "").trim().slice(0, 80),
+      items: mobileActionPanelItems,
+    },
   };
 }
 

@@ -28,7 +28,7 @@ import {
     uploadBookingDocument,
 } from "./controllers/bookingController.js";
 import { getBookingWidget } from "../tours/controllers/widgetController.js";
-import { downloadQuote, downloadInvoice, downloadBookingPass } from "./controllers/documentController.js";
+import { downloadQuote, downloadInvoice, downloadBookingPass, downloadQuoteSignedUrl } from "./controllers/documentController.js";
 
 const router = express.Router();
 
@@ -58,6 +58,7 @@ router.delete("/:bookingId/travellers/:travelerId", authMiddleware, removeTravel
 
 // AUTHENTICATED — document downloads
 router.get("/:bookingId/downloads/quote", authMiddleware, downloadQuote);
+router.get("/:bookingId/downloads/quote-url", authMiddleware, downloadQuoteSignedUrl);
 router.get("/:bookingId/downloads/invoice", authMiddleware, downloadInvoice);
 router.get("/:bookingId/downloads/voucher", authMiddleware, downloadBookingPass);
 

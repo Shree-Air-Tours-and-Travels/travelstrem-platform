@@ -11,7 +11,7 @@
         "perPerson": "per person",
         "seasonalPricing": "Seasonal Pricing",
         "bookNow": "Book Now",
-        "contactAgent": "Contact Agent"
+        "contactAgent": "Get a quote"
       },
       "urls": {}
     },
@@ -26,6 +26,7 @@
             "seasonalTitleRef": "seasonalPricing",
             "ctaLabelRef": "bookNow",
             "secondaryCtaRef": "contactAgent"
+            ,"config": { "showBookNow": false }
           }
         }
       ],

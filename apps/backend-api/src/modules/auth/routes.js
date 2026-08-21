@@ -49,6 +49,16 @@ router.post("/admins/:id/remove", authMiddleware, controller.removeAdmin);
 router.post("/forgot-password", requireTrustedOrigin, controller.forgotPassword);
 router.post("/reset-password", requireTrustedOrigin, controller.resetPassword);
 
+/*
+  Agent activation flow
+  - POST /activate-validate     { token }                    -> validates invitation, returns short-lived code
+  - POST /request-activation-otp  { code }                   -> sends OTP to invited user's email
+  - POST /activate-with-otp       { code, otp, password }    -> verifies OTP, activates account
+*/
+router.post("/activate-validate", requireTrustedOrigin, controller.activateValidate);
+router.post("/request-activation-otp", requireTrustedOrigin, controller.requestActivationOtp);
+router.post("/activate-with-otp", requireTrustedOrigin, controller.activateWithOtp);
+
 router.get("/google", providerAuthController.startGoogle);
 router.get("/google/callback", providerAuthController.googleCallback);
 

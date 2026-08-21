@@ -1,4 +1,4 @@
-import { clearGuestSession, enableGuestSession, GUEST_SESSION_KEY, isGuestSession } from "./guestSession";
+import { clearGuestSession, enableGuestSession, getGuestContinuationUrl, GUEST_SESSION_KEY, isGuestSession } from "./guestSession";
 
 const storage = () => {
   const values = new Map();
@@ -14,6 +14,22 @@ test("guest=1 makes guest intent durable before the app shell initializes", () =
   expect(isGuestSession({ search: "?tab=overview&guest=1", storage: sessionStorage })).toBe(true);
   expect(sessionStorage.setItem).toHaveBeenCalledWith(GUEST_SESSION_KEY, "true");
   expect(isGuestSession({ search: "?tab=overview", storage: sessionStorage })).toBe(true);
+});
+
+describe("getGuestContinuationUrl", () => {
+  it("preserves a public product URL and its existing query/hash", () => {
+    expect(getGuestContinuationUrl({
+      href: "http://localhost:3006/trevista/tours/udaipur-complete-royal-escape?source=share#overview",
+      keepCurrent: true,
+    })).toBe("/trevista/tours/udaipur-complete-royal-escape?source=share&guest=1#overview");
+  });
+
+  it("uses overview when the current destination is protected", () => {
+    expect(getGuestContinuationUrl({
+      href: "http://localhost:3006/?tab=bookings",
+      keepCurrent: false,
+    })).toBe("/?tab=overview&guest=1");
+  });
 });
 
 test("guest intent can be explicitly enabled and cleared", () => {

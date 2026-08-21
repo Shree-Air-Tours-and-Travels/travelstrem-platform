@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { saveTour, uploadTourImage } from "../../services/adminService";
+import { saveTour, uploadTourImage, uploadTourImageUrl } from "../../services/adminService";
 import { validateFields } from "@packages/trem-utils";
 import CreateTourFormView from "./CreateTourForm.view";
 
@@ -76,6 +76,16 @@ function cleanImportedTour(imported, current, initial) {
         startDate: imported.startDate != null ? toDateInputValue(imported.startDate) : current.startDate,
         endDate: imported.endDate != null ? toDateInputValue(imported.endDate) : current.endDate,
         seasonalPricing: Array.isArray(imported.seasonalPricing) ? normalizeSeasonalPricing(imported.seasonalPricing) : current.seasonalPricing,
+        packageType: imported.packageType || current.packageType,
+        departures: Array.isArray(imported.departures) ? imported.departures.map((dep) => ({
+            ...dep,
+            departureDate: toDateInputValue(dep.departureDate),
+            returnDate: toDateInputValue(dep.returnDate),
+            bookingOpensAt: toDateInputValue(dep.bookingOpensAt),
+            bookingClosesAt: toDateInputValue(dep.bookingClosesAt),
+        })) : current.departures,
+        flexibleConfig: imported.flexibleConfig || current.flexibleConfig,
+        customConfig: imported.customConfig || current.customConfig,
     };
     if (!initial?._id) ["_id", "id", "__v", "createdAt", "updatedAt", "agencyId", "ownerAgent", "createdBy"].forEach((key) => delete next[key]);
     else next._id = initial._id;
@@ -103,6 +113,10 @@ export default function CreateTourForm({ initial = null, onCancel = () => { }, o
             period: { days: 1, nights: 0 },
             startDate: null,
             endDate: null,
+            packageType: 'fixed_departure',
+            departures: [],
+            flexibleConfig: { earliestDeparture: null, latestReturn: null, blackoutDates: [], pricingModel: 'seasonal', minAdvanceBookingDays: 0, maxAdvanceBookingDays: null },
+            customConfig: { responseTimeframeHours: 48, requireDates: true, requireGroupSize: true, allowAgentDraft: true, questionnaireFields: [] },
             photo: '',
             photos: [],
             desc: '',
@@ -230,6 +244,11 @@ export default function CreateTourForm({ initial = null, onCancel = () => { }, o
         setError(null);
         setSuccess(null);
 
+        if (uploading) {
+            setError("Wait for the image upload to finish before submitting.");
+            return;
+        }
+
         const errs = validateAll();
         if (Object.keys(errs).length > 0) {
             markAllTouched();
@@ -336,6 +355,15 @@ export default function CreateTourForm({ initial = null, onCancel = () => { }, o
     function removeArrayItem(key, idx) { setDirty(true); setFormState(prev => { const copy = { ...prev }; copy[key] = (copy[key] || []).filter((_, i) => i !== idx); return copy; }); }
     function moveArrayItem(key, fromIdx, toIdx) { setDirty(true); setFormState(prev => { const copy = { ...prev }; const arr = [...(copy[key] || [])]; if (toIdx < 0 || toIdx >= arr.length) return prev; const [moved] = arr.splice(fromIdx, 1); arr.splice(toIdx, 0, moved); copy[key] = arr; return copy; }); }
 
+    function appendUploadedPhotos(urls) {
+        const added = urls.filter(Boolean);
+        setForm(prev => {
+            const existing = Array.isArray(prev.photos) ? prev.photos : [];
+            const photos = [...new Set([...existing, ...added])];
+            return { ...prev, photo: prev.photo || added[0] || '', photos };
+        });
+    }
+
     async function handleUploadImage(fileOrFiles) {
         const files = Array.isArray(fileOrFiles)
             ? fileOrFiles
@@ -351,15 +379,33 @@ export default function CreateTourForm({ initial = null, onCancel = () => { }, o
                 urls.push(url);
                 setUploadProgress(Math.round(((i + 1) / files.length) * 100));
             }
-            setForm(prev => {
-                const existing = Array.isArray(prev.photos) ? prev.photos : [];
-                const photos = [...existing, ...urls].filter(Boolean);
-                return { ...prev, photo: prev.photo || urls[0] || '', photos };
-            });
+            appendUploadedPhotos(urls);
             return urls.length === 1 ? urls[0] : urls;
         } catch (e) {
             console.error("Upload failed:", e);
             setError(e.message || "Upload failed");
+            return null;
+        } finally {
+            setUploading(false);
+            setUploadProgress(0);
+        }
+    }
+
+    async function handleUploadImageUrl(sourceUrl) {
+        const url = String(sourceUrl || '').trim();
+        if (!url) return null;
+
+        setUploading(true);
+        setUploadProgress(10);
+        setError(null);
+        try {
+            const importedUrl = await uploadTourImageUrl(url);
+            setUploadProgress(100);
+            appendUploadedPhotos([importedUrl]);
+            return importedUrl;
+        } catch (e) {
+            console.error("URL image import failed:", e);
+            setError(e.response?.data?.message || e.message || "Could not import that image URL");
             return null;
         } finally {
             setUploading(false);
@@ -410,6 +456,7 @@ export default function CreateTourForm({ initial = null, onCancel = () => { }, o
             removeArrayItem={removeArrayItem}
             moveArrayItem={moveArrayItem}
             handleUploadImage={handleUploadImage}
+            handleUploadImageUrl={handleUploadImageUrl}
             handleImportJson={handleImportJson}
             handleBlur={handleBlur}
             onDismissSuccess={() => setSuccess(null)}

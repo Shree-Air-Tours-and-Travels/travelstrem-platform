@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { saveTrip, uploadTripImage } from "../../services/adminService";
 import CreateTripFormView from "./CreateTripForm.view";
 
-const STEPS = ['Basic', 'Journey', 'Inclusions', 'Content', 'Review'];
+const STEPS = ['Basic', 'Journey', 'Inclusions', 'Content', 'Settings', 'Review'];
 
 const TRIP_TAGS = ["weekends", "mountains", "roadtrips", "international"];
 

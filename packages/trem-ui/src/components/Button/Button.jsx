@@ -13,6 +13,7 @@ const Button = ({
   iconRight = null,
   iconSize = 18,
   isCircular = false,
+  fullWidth = false,
   onClick,
   href,
   target = "_self",
@@ -29,6 +30,7 @@ const Button = ({
     ui-button--${color} 
     ${secondaryColor ? `ui-button--secondary-${secondaryColor}` : ""} 
     ${isCircular ? "ui-button--circular" : ""} 
+    ${fullWidth ? "ui-button--full-width" : ""}
     ${iconLeft || iconRight ? "ui-button--has-icon" : ""}
     ${primaryClassName}
     ${className}

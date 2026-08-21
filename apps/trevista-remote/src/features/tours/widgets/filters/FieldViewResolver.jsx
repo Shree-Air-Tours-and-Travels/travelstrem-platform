@@ -81,7 +81,6 @@ export default function FieldViewResolver({
             value={inputValue}
             options={items}
             onChange={(next) => onInput(name, "select")(next)}
-            clearable
             error={error || undefined}
           />
           {error && <div className="filters__fieldError" id={describedBy}>{error}</div>}

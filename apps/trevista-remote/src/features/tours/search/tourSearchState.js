@@ -152,6 +152,9 @@ export const getApiSort = (sortId) => UI_SORT_TO_API[sortId] || TOUR_SORT.RECOMM
 export const applyTourDiscoveryChip = (state, chip) => {
   if (!chip) return state;
   const next = { ...state, page: 1, filters: { ...state.filters } };
+  const toggleValue = (values = [], value) => values.includes(value)
+    ? values.filter((item) => item !== value)
+    : [...values, value];
   if (chip.type === "ALL") {
     next.filters.originCityIds = [];
     next.filters.destinationCityIds = [];
@@ -159,11 +162,14 @@ export const applyTourDiscoveryChip = (state, chip) => {
     next.filters.agencyIds = [];
     next.filters.tagIds = [];
     next.filters.featured = null;
-  } else if (chip.type === "ORIGIN") next.filters.originCityIds = [chip.value];
-  else if (chip.type === "DESTINATION") next.filters.destinationCityIds = [chip.value];
-  else if (chip.type === "COUNTRY") next.filters.countryIds = [chip.value];
-  else if (chip.type === "TAG") next.filters.tagIds = [chip.value];
-  else if (chip.type === "FEATURED") next.filters.featured = chip.value === true || chip.value === "true";
+  } else if (chip.type === "ORIGIN") next.filters.originCityIds = toggleValue(state.filters.originCityIds, chip.value);
+  else if (chip.type === "DESTINATION") next.filters.destinationCityIds = toggleValue(state.filters.destinationCityIds, chip.value);
+  else if (chip.type === "COUNTRY") next.filters.countryIds = toggleValue(state.filters.countryIds, chip.value);
+  else if (chip.type === "TAG") next.filters.tagIds = toggleValue(state.filters.tagIds, chip.value);
+  else if (chip.type === "FEATURED") {
+    const value = chip.value === true || chip.value === "true";
+    next.filters.featured = state.filters.featured === value ? null : value;
+  }
   return next;
 };
 

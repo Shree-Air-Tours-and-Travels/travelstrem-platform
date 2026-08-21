@@ -12,8 +12,9 @@ export default function SimilarToursContainer({ tourRef, isFavorited, onFavorite
   const tours = Array.isArray(widgetData?.data?.tours) ? widgetData.data.tours : [];
 
   const handleView = (tour) => {
-    const ref = slugifyTitle(tour?.title) || tour?._id || tour?.id;
-    navigate(`/${appKey}/${encodeURIComponent(ref)}`, { state: { tour } });
+    const ref = tour?.slug || tour?._id || tour?.id || slugifyTitle(tour?.title);
+    if (!ref) return;
+    navigate(`/${appKey}/tours/${encodeURIComponent(ref)}`, { state: { tour } });
   };
 
   if (loading) return <WidgetSkeleton compact />;

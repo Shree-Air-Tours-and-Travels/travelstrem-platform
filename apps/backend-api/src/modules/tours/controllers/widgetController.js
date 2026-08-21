@@ -10,10 +10,48 @@ import StatusHistoryService from "../../bookings/services/StatusHistoryService.j
 import QuoteService from "../../bookings/services/QuoteService.js";
 import { getTourDiscovery, searchToursFromRawRequest } from "../services/tourSearchService.js";
 import masterDataService from "../../masterData/services/masterDataService.js";
+import { getHiddenProductKeys } from "../../../utils/hiddenProductCache.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DATA_DIR = path.resolve(__dirname, "../../../data");
+
+const HREF_PRODUCT_RE = /[?&]tab=([a-z]+)/i;
+const ITEM_PRODUCT_KEYS = ["trevio", "trevista", "trehub", "trecare"];
+
+const hideProductItems = (node, hiddenKeys) => {
+  if (!node || typeof node !== "object" || !hiddenKeys.length) return node;
+  if (Array.isArray(node)) return node.map((item) => hideProductItems(item, hiddenKeys));
+
+  const next = { ...node };
+
+  if (next.id && ITEM_PRODUCT_KEYS.includes(next.id) && hiddenKeys.includes(next.id)) {
+    next.hide = true;
+  }
+  if (next.productName && hiddenKeys.includes(String(next.productName).toLowerCase())) {
+    next.hide = true;
+  }
+  if (typeof next.href === "string") {
+    const tabMatch = next.href.match(HREF_PRODUCT_RE);
+    if (tabMatch && hiddenKeys.includes(tabMatch[1].toLowerCase())) {
+      next.hide = true;
+    }
+  }
+
+  for (const key of Object.keys(next)) {
+    if (key === "component") {
+      next[key] = hideProductItems(next[key], hiddenKeys);
+    } else if (key === "data" && typeof next[key] === "object") {
+      next[key] = hideProductItems(next[key], hiddenKeys);
+    } else if (key === "items" && Array.isArray(next[key])) {
+      next[key] = next[key].map((item) => hideProductItems(item, hiddenKeys));
+    } else if (key === "widgets" && Array.isArray(next[key])) {
+      next[key] = next[key].map((item) => hideProductItems(item, hiddenKeys));
+    }
+  }
+
+  return next;
+};
 
 const PAGE_DIR_MAP = {
   "tours-remote/home": "tours-remote/home",
@@ -138,6 +176,12 @@ const normalizeTourOverviewForResponse = (tour = {}) => ({
   maxGroupSize: Number(tour.maxGroupSize || 0) || null,
   availability: { totalSeats: tour.availability?.totalSeats ?? null },
   tags: Array.isArray(tour.tags) ? tour.tags.map(String).slice(0, 8) : [],
+  agency: tour.agency || null,
+  operator: tour.operator || null,
+  providerName: tour.providerName || "",
+  inventorySource: tour.inventorySource || "platform",
+  ownerAgentName: tour.ownerAgentName || "",
+  ownerAgentEmail: tour.ownerAgentEmail || "",
 });
 
 const normalizePricingCardForResponse = (tour = {}) => ({
@@ -479,6 +523,10 @@ export const getWidget = async (req, res) => {
     }
 
     widget.component = await masterDataService.hydrateDataScope(widget.component);
+    const hiddenKeys = await getHiddenProductKeys();
+    if (hiddenKeys.length) {
+      widget.component = hideProductItems(widget.component, hiddenKeys);
+    }
     return res.status(200).json(ensurePageContract(widget));
   } catch (error) {
     console.error("getWidget error:", error);

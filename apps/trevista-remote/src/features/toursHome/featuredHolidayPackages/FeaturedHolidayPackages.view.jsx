@@ -17,7 +17,24 @@ export default function FeaturedHolidayPackagesView({
   cardProps = {},
   isFavorited,
   onFavorite,
+  emptyActions = [],
 }) {
+  const emptyAction = emptyActions.length ? (
+    <div className="featured-holiday-packages__empty-actions">
+      {emptyActions.slice(0, 2).map((action) => (
+        <Button
+          key={action.id}
+          text={action.label}
+          iconLeft={action.iconLeft}
+          variant={action.variant}
+          color={action.color}
+          disabled={action.disabled}
+          onClick={action.onClick}
+        />
+      ))}
+    </div>
+  ) : null;
+
   return (
     <section className="featured-holiday-packages" aria-label={title}>
       <div className="featured-holiday-packages__inner">
@@ -49,6 +66,7 @@ export default function FeaturedHolidayPackagesView({
           cardProps={cardProps}
           isFavorited={isFavorited}
           onFavorite={onFavorite}
+          emptyAction={emptyAction}
         />
       </div>
     </section>

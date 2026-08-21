@@ -5,7 +5,7 @@
       "planJourney": {
         "title": "Plan a Journey",
         "ariaLabel": "Plan a journey with TravelsTrem products",
-        "columns": 4,
+        "columns": 2,
         "hideUnavailableOnMobile": false,
         "items": [
           {
@@ -19,7 +19,10 @@
             "tone": "primary",
             "href": "/?tab=trevio",
             "target": "_self",
-            "ariaLabel": "Explore trips and adventures on Trevio"
+            "ariaLabel": "Explore trips and adventures on Trevio, coming soon",
+            "disabled": true,
+            "comingSoon": true,
+            "comingSoonLabel": "Coming soon"
           },
           {
             "id": "tours-packages",
@@ -46,6 +49,7 @@
             "href": "https://travelstrem.com/#contact",
             "target": "_self",
             "ariaLabel": "Flights and Hotels on TreHub, coming soon",
+            "hide": true,
             "disabled": true,
             "comingSoon": true,
             "comingSoonLabel": "Coming soon"
@@ -62,6 +66,7 @@
             "href": "https://travelstrem.com/#contact",
             "target": "_self",
             "ariaLabel": "Travel Services on TreCare, coming soon",
+            "hide": true,
             "disabled": true,
             "comingSoon": true,
             "comingSoonLabel": "Coming soon"

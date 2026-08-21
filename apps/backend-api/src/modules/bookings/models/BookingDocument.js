@@ -13,7 +13,12 @@ const bookingDocumentSchema = new Schema({
   url: { type: String, trim: true, default: "" },
   mimeType: { type: String, trim: true, default: "" },
   size: { type: Number, default: 0 },
+  quoteAmount: { type: Number, default: null },
+  quoteVersion: { type: Number, default: null, index: true },
+  currency: { type: String, trim: true, uppercase: true, default: "" },
   status: { type: String, enum: DOCUMENT_STATUS_LIST, default: DOCUMENT_STATUS.UPLOADED, index: true },
+  storageProvider: { type: String, enum: ["LOCAL", "R2", "CLOUDINARY"], default: "LOCAL" },
+  storageKey: { type: String, trim: true, default: "" },
   uploadedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
   uploadedAt: { type: Date, default: Date.now },
 }, { timestamps: true });

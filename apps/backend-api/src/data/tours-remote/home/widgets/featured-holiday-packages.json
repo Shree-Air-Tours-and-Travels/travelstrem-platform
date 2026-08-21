@@ -12,7 +12,9 @@
         "eyebrow": "Handpicked for you",
         "title": "Featured holiday packages",
         "description": "Curated escapes with verified stays, transparent pricing and dedicated trip support.",
-        "viewAllLabel": "View all packages"
+        "viewAllLabel": "View all packages",
+        "enquireLabel": "Enquire now",
+        "customPackageLabel": "Customise your package"
       },
       "urls": {
         "viewAllUrl": "/trevista/tours"
@@ -35,7 +37,24 @@
         }
       ],
       "config": {},
-      "actions": []
+      "actions": [
+        {
+          "id": "tourEnquiry",
+          "labelRef": "enquireLabel",
+          "iconLeft": "messageCircle",
+          "variant": "solid",
+          "color": "primary",
+          "behavior": "openTourEnquiry"
+        },
+        {
+          "id": "customPackage",
+          "labelRef": "customPackageLabel",
+          "iconLeft": "sparkles",
+          "variant": "outline",
+          "color": "primary",
+          "disabled": true
+        }
+      ]
     }
   }
 }

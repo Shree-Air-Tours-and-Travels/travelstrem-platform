@@ -1,7 +1,7 @@
 import React from "react";
 import { QuickChips } from "@packages/trem-ui";
 
-export default function QuickFiltersView({ title, filters, labels, activeId, onFilterClick }) {
+export default function QuickFiltersView({ title, filters, labels, activeIds, onFilterClick }) {
     if (!filters.length) return null;
 
     return (
@@ -10,7 +10,7 @@ export default function QuickFiltersView({ title, filters, labels, activeId, onF
             <QuickChips
                 filters={filters}
                 labels={labels}
-                activeId={activeId}
+                activeIds={activeIds}
                 onClick={onFilterClick}
                 className="tours-page__quick-filters"
             />

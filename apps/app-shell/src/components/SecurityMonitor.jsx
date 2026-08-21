@@ -60,7 +60,11 @@ export default function SecurityMonitor({ children }) {
             if (tag === "script" && isTrustedRuntimeScript(node)) {
               continue;
             }
-            if (["script", "iframe", "object", "embed", "form"].includes(tag)) {
+            // Forms are first-class application UI and must not be treated as
+            // executable DOM. Blocking every dynamically mounted <form>
+            // removes React forms rendered through portals (including enquiry
+            // and login modals) immediately after React commits them.
+            if (["script", "iframe", "object", "embed"].includes(tag)) {
               auditLog_event("dangerous_dom_node_added", { tag, outerHTML: node.outerHTML?.slice(0, 100) });
               node.remove?.();
             }

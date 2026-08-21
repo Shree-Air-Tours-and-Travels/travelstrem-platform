@@ -22,6 +22,8 @@
         "showing": "Showing",
         "of": "of",
         "noToursFound": "No tours found matching your criteria.",
+        "enquireLabel": "Enquire now",
+        "enquireAriaLabel": "Open tour enquiry form",
         "loadingTours": "Loading tours...",
         "scrollForMore": "Scroll for more tours",
         "loadMore": "Load More Tours",
@@ -41,6 +43,7 @@
         {
           "type": "TourGrid",
           "props": {
+            "hideDescription": true,
             "searchLabelRef": "searchTours",
             "searchPlaceholderRef": "searchPlaceholder",
             "agencyLabelRef": "uploadedBy",

@@ -8,26 +8,35 @@
     },
     "elements": {
       "labels": {
-        "contactAgent": "Contact Agent",
-        "contactAgentDescription": "Tell us what you need and the trip specialist will contact you with the right options.",
+        "contactAgent": "Request a quote",
+        "contactAgentDescription": "Share your travel plans and a trip specialist will send the right quote and options.",
         "fullName": "Full name",
         "email": "Email",
         "phone": "Phone number",
         "preferredContact": "How should we contact you?",
         "travellerCount": "Number of travellers",
-        "preferredTravelDate": "Preferred travel date",
+        "preferredTravelDate": "Choose a departure",
+        "flightPreference": "Your quote",
         "message": "What would you like help with?",
         "fullNamePlaceholder": "Your full name",
         "emailPlaceholder": "you@example.com",
         "phonePlaceholder": "Mobile number",
         "travellerCountPlaceholder": "For example, 2",
+        "departurePlaceholder": "Select available dates",
+        "contactPlaceholder": "Select a contact method",
         "messagePlaceholder": "Share your dates, preferences, questions, or special requirements.",
         "contactWhatsApp": "WhatsApp",
         "contactPhoneCall": "Phone call",
         "contactEmail": "Email",
-        "sendRequest": "Send Request"
+        "quoteWithFlights": "Quote with flights",
+        "quoteWithoutFlights": "Quote without flights",
+        "sendRequest": "Request quote",
+        "operatedBy": "Operated by",
+        "travelSpecialist": "Travel specialist"
       },
-      "urls": {}
+      "urls": {
+        "brandLogo": "/favicon-dark.png"
+      }
     },
     "structure": {
       "header": {
@@ -42,10 +51,11 @@
               { "name": "name", "labelRef": "fullName", "type": "text", "required": true, "minLength": 2, "width": "half", "placeholderRef": "fullNamePlaceholder" },
               { "name": "email", "labelRef": "email", "type": "email", "required": true, "width": "half", "placeholderRef": "emailPlaceholder" },
               { "name": "phone", "labelRef": "phone", "type": "tel", "required": true, "width": "half", "maxLength": 10, "placeholderRef": "phonePlaceholder" },
-              { "name": "preferredContact", "labelRef": "preferredContact", "type": "select", "required": true, "width": "half", "optionsRef": "preferredContactOptions" },
               { "name": "travellerCount", "labelRef": "travellerCount", "type": "number", "required": true, "min": 1, "max": 50, "integer": true, "width": "half", "placeholderRef": "travellerCountPlaceholder" },
-              { "name": "preferredTravelDate", "labelRef": "preferredTravelDate", "type": "date", "required": false, "width": "half" },
-              { "name": "message", "labelRef": "message", "type": "textarea", "required": true, "minLength": 10, "maxLength": 1000, "placeholderRef": "messagePlaceholder" }
+              { "name": "flightPreference", "labelRef": "flightPreference", "type": "select", "required": true, "width": "half", "options": [{ "value": "with_flights", "labelRef": "quoteWithFlights" }, { "value": "without_flights", "labelRef": "quoteWithoutFlights" }] },
+              { "name": "preferredTravelDate", "labelRef": "preferredTravelDate", "type": "select", "required": false, "width": "half", "placeholderRef": "departurePlaceholder", "options": [] },
+              { "name": "message", "labelRef": "message", "type": "textarea", "required": true, "minLength": 10, "maxLength": 1000, "placeholderRef": "messagePlaceholder", "width": "full" },
+              { "name": "preferredContact", "labelRef": "preferredContact", "type": "select", "required": true, "width": "full", "placeholderRef": "contactPlaceholder", "optionsRef": "preferredContactOptions" }
             ],
             "submitLabelRef": "sendRequest"
           }

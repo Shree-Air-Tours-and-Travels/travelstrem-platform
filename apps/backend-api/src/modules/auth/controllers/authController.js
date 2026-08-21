@@ -8,6 +8,9 @@ import authConfig from "../../../config/auth.js";
 import UserVerification from "../models/UserVerification.js";
 import PartnerAgency from "../models/PartnerAgency.js";
 import PartnershipRequest from "../../tenancy/models/PartnershipRequest.js";
+import Invitation from "../../tenancy/models/Invitation.js";
+import ActivationSession from "../models/ActivationSession.js";
+import { hashToken } from "../../tenancy/tenancy.service.js";
 import User from "../models/User.js";
 import { getPortalScope } from "../../../core/auth/portalSession.js";
 import {
@@ -125,6 +128,10 @@ const getAdminRoleContext = async ({ requestedRole, normalizedEmail, body = {} }
 };
 
 const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
+
+// Short-lived authorization code for activation flow. Never exposed in URLs.
+const AUTH_CODE_TTL_MS = Number(config.ACTIVATION_AUTH_CODE_TTL_MS || 10 * 60 * 1000); // 10 min
+const generateAuthCode = () => crypto.randomBytes(32).toString("base64url");
 
 const sendOtpMail = async ({ email, otp, subject, label }) => {
     if (DEV_OTP_BYPASS) {
@@ -795,6 +802,187 @@ export const resetPassword = async (req, res) => {
     } catch (err) {
         console.error("Auth resetPassword error:", err && err.stack ? err.stack : err);
         return res.status(500).json({status: "error", message: isDev ? `Server error: ${err.message}` : "Server error resetting password." });
+    }
+};
+
+
+/**
+ * POST /auth/activate-validate
+ * Accepts a raw invitation token, validates it server-side, and returns a
+ * short-lived single-use authorization code. The raw token is NEVER exposed
+ * to the browser — only the opaque code is used going forward.
+ */
+export const activateValidate = async (req, res) => {
+    setAuthNoStoreHeaders(res);
+    try {
+        const { token } = req.body || {};
+        if (!token || typeof token !== "string") {
+            return res.status(400).json({ status: "error", message: "Activation token is required." });
+        }
+
+        const invitation = await Invitation.findOne({
+            tokenHash: hashToken(token),
+            usedAt: null,
+            revokedAt: null,
+            expiresAt: { $gt: new Date() },
+        }).lean();
+
+        if (!invitation) {
+            return res.status(400).json({ status: "error", message: "This invitation link is invalid or has expired. Please request a new one from your agency administrator." });
+        }
+
+        const user = await User.findById(invitation.userId).lean();
+        if (!user) {
+            return res.status(400).json({ status: "error", message: "Invited account is unavailable." });
+        }
+        if (user.accountStatus !== "invited") {
+            return res.status(409).json({ status: "error", message: "This account has already been activated. Please sign in." });
+        }
+
+        // Invalidate any prior activation sessions for this user
+        await ActivationSession.deleteMany({ userId: user._id, usedAt: null });
+
+        const code = generateAuthCode();
+        await ActivationSession.create({
+            code,
+            userId: user._id,
+            invitationId: invitation._id,
+            email: user.email,
+            expiresAt: new Date(Date.now() + AUTH_CODE_TTL_MS),
+        });
+
+        return res.json({ code, email: user.email });
+    } catch (err) {
+        console.error("activateValidate error:", err && err.stack ? err.stack : err);
+        return res.status(500).json({ status: "error", message: isDev ? `Server error: ${err.message}` : "Server error." });
+    }
+};
+
+
+/**
+ * POST /auth/request-activation-otp
+ * Accepts the authorization code (NOT the raw token) and sends an OTP
+ * to the invited user's email. The OTP verifies email ownership.
+ */
+export const requestActivationOtp = async (req, res) => {
+    setAuthNoStoreHeaders(res);
+    try {
+        const { code } = req.body || {};
+        if (!code || typeof code !== "string") {
+            return res.status(400).json({ status: "error", message: "Activation code is required." });
+        }
+
+        const session = await ActivationSession.findOne({
+            code,
+            usedAt: null,
+            expiresAt: { $gt: new Date() },
+        }).lean();
+
+        if (!session) {
+            return res.status(400).json({ status: "error", message: "Session expired. Please re-open your activation link." });
+        }
+
+        const user = await User.findById(session.userId).lean();
+        if (!user) {
+            return res.status(400).json({ status: "error", message: "Invited account is unavailable." });
+        }
+        if (user.accountStatus !== "invited") {
+            return res.status(409).json({ status: "error", message: "This account has already been activated. Please sign in." });
+        }
+
+        const { otp } = await createVerification({
+            email: user.email,
+            type: "activation",
+            metadata: { userId: user._id.toString(), invitationId: session.invitationId.toString() },
+        });
+
+        await sendOtpMail({
+            email: user.email,
+            otp,
+            subject: `Your ${config.COMPANY_NAME} account activation code`,
+            label: "password reset",
+        });
+
+        return res.json({
+            message: "Verification code sent.",
+            email: user.email,
+            expiresInMs: OTP_TTL,
+        });
+    } catch (err) {
+        console.error("requestActivationOtp error:", err && err.stack ? err.stack : err);
+        return res.status(500).json({ status: "error", message: isDev ? `Server error: ${err.message}` : "Server error." });
+    }
+};
+
+
+/**
+ * POST /auth/activate-with-otp
+ * Accepts the authorization code (NOT the raw token), verifies the OTP,
+ * and sets the user's password, completing account activation.
+ */
+export const activateWithOtp = async (req, res) => {
+    setAuthNoStoreHeaders(res);
+    try {
+        const { code, otp, password } = req.body || {};
+        if (!code || !otp || !password) {
+            return res.status(400).json({ status: "error", message: "Code, OTP and password are required." });
+        }
+        if (!/^\d{6}$/.test(String(otp))) {
+            return res.status(400).json({ status: "error", message: "Enter the 6-digit verification code." });
+        }
+        if (typeof password !== "string" || password.length < 8 || password.length > 128) {
+            return res.status(400).json({ status: "error", message: "Password must be between 8 and 128 characters." });
+        }
+
+        const activationSession = await ActivationSession.findOne({
+            code,
+            usedAt: null,
+            expiresAt: { $gt: new Date() },
+        });
+
+        if (!activationSession) {
+            return res.status(400).json({ status: "error", message: "Session expired. Please re-open your activation link." });
+        }
+
+        const user = await User.findById(activationSession.userId);
+        if (!user) {
+            return res.status(400).json({ status: "error", message: "Invited account is unavailable." });
+        }
+        if (user.accountStatus !== "invited") {
+            return res.status(409).json({ status: "error", message: "This account has already been activated. Please sign in." });
+        }
+
+        const verificationResult = await consumeVerificationOtp({
+            email: user.email,
+            type: "activation",
+            otp,
+        });
+        if (!verificationResult.ok) {
+            return res.status(verificationResult.status).json({ status: "error", message: verificationResult.message });
+        }
+
+        const passwordHash = await bcrypt.hash(password, 12);
+        user.passwordHash = passwordHash;
+        user.accountStatus = "active";
+        user.activatedAt = new Date();
+        user.tokenVersion = (user.tokenVersion || 0) + 1;
+        await user.save();
+
+        // Mark invitation as used
+        await Invitation.updateOne(
+            { _id: activationSession.invitationId },
+            { $set: { usedAt: new Date() } },
+        );
+
+        // Mark activation session as used
+        activationSession.usedAt = new Date();
+        await activationSession.save();
+
+        const result = await createSession({ user, req, res });
+        return res.json({ message: "Account activated successfully.", ...result });
+    } catch (err) {
+        console.error("activateWithOtp error:", err && err.stack ? err.stack : err);
+        return res.status(500).json({ status: "error", message: isDev ? `Server error: ${err.message}` : "Server error." });
     }
 };
 

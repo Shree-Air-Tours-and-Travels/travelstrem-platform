@@ -4,6 +4,8 @@ import { fileURLToPath } from "url";
 import DataScopeResolver from "../../shared/utils/dataScopeResolver.js";
 import { validatePageContract } from "../../shared/validators/pageContractValidator.js";
 import Booking from "../bookings/models/Booking.js";
+import ContactLead from "../forms/models/ContactLead.js";
+import User from "../auth/models/User.js";
 import config from "../../config/index.js";
 import { toPublicBookingReference } from "../bookings/utils/bookingReference.js";
 import masterDataService from "../masterData/services/masterDataService.js";
@@ -398,26 +400,26 @@ class PageDefinitionService {
 
   _mapBookingStatus(status) {
     const map = {
-      DRAFT: "Pending",
-      QUOTE_REQUESTED: "Pending",
-      UNDER_REVIEW: "Pending",
-      QUOTE_READY: "Pending",
-      QUOTE_SENT: "Pending",
-      CUSTOMER_ACCEPTED: "Upcoming",
-      CUSTOMER_REJECTED: "Cancelled",
-      PAYMENT_PENDING: "Pending",
-      PARTIALLY_PAID: "Upcoming",
-      PAID: "Upcoming",
-      CONFIRMED: "Upcoming",
-      TICKETING: "Upcoming",
-      TICKETED: "Upcoming",
-      TRAVEL_READY: "Upcoming",
+      DRAFT: "Draft",
+      QUOTE_REQUESTED: "Quote Requested",
+      UNDER_REVIEW: "Under Review",
+      QUOTE_READY: "Quote Ready",
+      QUOTE_SENT: "Quote Sent",
+      CUSTOMER_ACCEPTED: "Customer Accepted",
+      CUSTOMER_REJECTED: "Customer Rejected",
+      PAYMENT_PENDING: "Payment Pending",
+      PARTIALLY_PAID: "Partially Paid",
+      PAID: "Paid",
+      CONFIRMED: "Confirmed",
+      TICKETING: "Ticketing",
+      TICKETED: "Ticketed",
+      TRAVEL_READY: "Travel Ready",
       COMPLETED: "Completed",
       CANCELLED: "Cancelled",
-      REFUND_PENDING: "Cancelled",
-      REFUNDED: "Cancelled",
+      REFUND_PENDING: "Refund Pending",
+      REFUNDED: "Refunded",
     };
-    return map[status] || "Pending";
+    return map[status] || String(status || "Draft").replaceAll("_", " ").toLowerCase().replace(/\b\w/g, (character) => character.toUpperCase());
   }
 
   _formatPrice(amount) {
@@ -538,6 +540,18 @@ class PageDefinitionService {
             : widget.props.heroBanner?.dateRange,
         },
         rows: bookings.map((b) => {
+          if (b.recordType === "ENQUIRY") {
+            return {
+              bookingId: String(b._id), id: String(b._id), tremId: `ENQ-${String(b._id).slice(-6).toUpperCase()}`,
+              tour: b.tourTitle || "Travel enquiry", type: b.product === "trevio" ? "Trevio enquiry" : "Trevista enquiry",
+              travellers: `${b.fields?.travellerCount || 1} Guest${Number(b.fields?.travellerCount || 1) !== 1 ? "s" : ""}`,
+              days: "—", price: "—", priceValue: 0, travelDates: b.fields?.preferredTravelDate ? this._formatDate(b.fields.preferredTravelDate) : "Flexible",
+              createdAt: this._formatDate(b.createdAt), createdAtValue: new Date(b.createdAt).getTime() || 0,
+              status: "Enquiry sent", statusRaw: "ENQUIRY", paymentStatus: "Not applicable",
+              product: b.product || "trevista", productLabel: b.product === "trevio" ? "Trevio" : "Trevista", image: "", tourId: b.tourId || null,
+              isEnquiry: true,
+            };
+          }
           const tourId = b.tour?._id || null;
           const product = String(b.product || "trevista").toLowerCase();
           return {
@@ -645,11 +659,20 @@ class PageDefinitionService {
 
     let bookings;
     try {
-      bookings = await Booking.find({ user: userId })
+      const customer = await User.findById(userId).select("email").lean();
+      const [confirmedBookings, enquiries] = await Promise.all([
+        Booking.find({ user: userId })
         .populate("tour")
         .populate("trip")
         .sort({ createdAt: -1 })
-        .lean();
+        .lean(),
+        ContactLead.find({ bookingId: null, $or: [
+          { claimedBy: userId },
+          ...(customer?.email ? [{ "fields.email": new RegExp(`^${String(customer.email).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") }] : []),
+        ] }).sort({ createdAt: -1 }).lean(),
+      ]);
+      bookings = [...confirmedBookings, ...enquiries.map((lead) => ({ ...lead, recordType: "ENQUIRY" }))]
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     } catch (err) {
       console.error("[PageDefinitionService] Failed to fetch bookings:", err.message);
       return { widgets, labels: {}, data: {} };

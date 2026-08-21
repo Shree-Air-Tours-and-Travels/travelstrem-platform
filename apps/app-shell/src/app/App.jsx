@@ -1,12 +1,13 @@
 import React, { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { Navigate, Route, Routes, useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { AppHeader, ErrorState, GlobalLoader, ScrollToTop, SideBar, ThemeProvider, useTheme } from "@packages/trem-ui";
+import { AppHeader, ErrorState, FloatingActionBar, GlobalLoader, ScrollToTop, SideBar, ThemeProvider, useTheme } from "@packages/trem-ui";
 import { AppShellProvider, useAppShellConfig } from "./providers/AppShellProvider";
 import AppShellPage from "../features/app-shell/AppShell";
 import { buildGlobalAuthUrl, fetchData, SHELL_NAVIGATION_EVENT } from "@packages/trem-utils";
 import { clearAuthBrowserState, emitAuthEvent } from "@packages/trem-auth-core";
 import LoginPrompt from "../components/LoginPrompt";
 import SecurityMonitor from "../components/SecurityMonitor";
+import SupportRoutes from "../features/support/SupportRoutes";
 import { checkRateLimit } from "../services/security";
 import { clearGuestSession, enableGuestSession, isGuestSession } from "../services/guestSession";
 import {
@@ -14,6 +15,7 @@ import {
   normalizeNavigationConfig,
   resolveDestination,
   resolveNavigationIntent,
+  isGuestAccessibleDestination,
 } from "./routing/navigationRegistry";
 import "../styles/global.scss";
 
@@ -50,12 +52,13 @@ class RemoteBoundary extends React.Component {
   }
 }
 
-function ProtectedRoute({ children, onContinueAsGuest, allowGuest = false }) {
+function ProtectedRoute({ children, onContinueAsGuest, allowGuest = false, suppressPrompt = false }) {
   const { loading, session } = useAppShellConfig();
 
   if (loading) return <GlobalLoader visible text="Loading App" />;
 
   if (!session?.isAuthenticated && !allowGuest) {
+    if (suppressPrompt) return null;
     const authUrl = process.env.REACT_APP_AUTH_APP_URL || "";
     const returnTo = window.location.href;
 
@@ -96,6 +99,8 @@ function AppShell() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [guestMode, setGuestMode] = useState(() => isGuestSession());
+  const [authPromptDismissed, setAuthPromptDismissed] = useState(false);
+  const [primaryActionOpen, setPrimaryActionOpen] = useState(false);
 
   const destination = useMemo(
     () => resolveDestination(navigationConfig, location),
@@ -104,15 +109,18 @@ function AppShell() {
   const selectedTab = destination.tab || searchParams.get("tab") || "overview";
   const activeTab = destination.activeId || selectedTab;
   const isRemote = destination.kind === "remote";
+  const isSupportScreen = location.pathname === "/help" || location.pathname.startsWith("/help/");
   const isBookingsScreen = destination.renderer === "app-shell" && activeTab === "bookings";
   const isBookingDetail = isBookingsScreen && Boolean(searchParams.get("bookingId"));
   const productFilter = searchParams.get("product") || "all";
-  const publicDestination = ["overview", "trevista", "trevio", "booking-engine"].includes(destination.id);
+  const publicDestination = isGuestAccessibleDestination(destination);
+  const mobileActionPanel = navigationConfig.mobileActionPanel || {};
   const continueAsGuest = useCallback(() => {
+    setAuthPromptDismissed(true);
     enableGuestSession();
     setGuestMode(true);
-    navigate("/?tab=overview&guest=1");
-  }, [navigate]);
+    if (!publicDestination) navigate("/?tab=overview&guest=1", { replace: true });
+  }, [navigate, publicDestination]);
   const requireAuthentication = useCallback(({ returnTo = window.location.href } = {}) => {
     clearGuestSession();
     window.location.assign(buildGlobalAuthUrl({ app: "app-shell", returnTo }));
@@ -123,6 +131,10 @@ function AppShell() {
     clearGuestSession();
     setGuestMode(false);
   }, [session?.isAuthenticated]);
+
+  useEffect(() => {
+    if (publicDestination) setAuthPromptDismissed(false);
+  }, [publicDestination]);
 
   const handleNavigation = useCallback((rawIntent) => {
     const result = resolveNavigationIntent(navigationConfig, rawIntent, window.location.origin);
@@ -148,6 +160,20 @@ function AppShell() {
       targetWindow: item.target,
     })
   ), [handleNavigation]);
+
+  const mobileNavigationActions = useMemo(() => (
+    (mobileActionPanel.variant === "mobile-navigation" ? mobileActionPanel.items || [] : []).map((item) => ({
+      id: item.id,
+      label: item.label,
+      iconLeft: item.icon,
+      emphasis: item.emphasis,
+      disabled: item.disabled,
+      active: item.activeTargets.includes(destination.id),
+      onClick: item.action === "open-primary-action"
+        ? () => setPrimaryActionOpen(true)
+        : () => handleTabChange(item.target, item),
+    }))
+  ), [destination.id, handleTabChange, mobileActionPanel.items]);
 
   const handleGlobalSearch = useCallback(async (query, signal) => {
     const response = await fetchData(appHeaderConfig.search?.endpoint || "/search", {
@@ -237,7 +263,11 @@ function AppShell() {
     }));
   }, [requireAuthentication]);
 
-  if (loading || (!session?.isAuthenticated && !guestMode)) {
+  if (loading) {
+    return <GlobalLoader visible text="Loading App" />;
+  }
+
+  if (!session?.isAuthenticated && !guestMode && !authPromptDismissed) {
     return (
       <div className="dash-auth-only">
         <ProtectedRoute onContinueAsGuest={continueAsGuest}>
@@ -256,7 +286,7 @@ function AppShell() {
         : null;
 
   return (
-    <div className={`dash-layout${sidebarCollapsed ? " dash-layout--sidebar-collapsed" : ""}`}>
+    <div className={`dash-layout${sidebarCollapsed ? " dash-layout--sidebar-collapsed" : ""}${mobileNavigationActions.length ? " dash-layout--mobile-action-panel" : ""}`}>
       <SideBar
         config={sidebarConfig}
         activeId={activeTab}
@@ -285,12 +315,21 @@ function AppShell() {
           onLogoClick={() => handleNavigation({ destination: "overview" })}
           menuOpen={mobileSidebarOpen}
           onMenuToggle={() => setMobileSidebarOpen((open) => !open)}
+          primaryActionOpen={primaryActionOpen}
+          onPrimaryActionOpenChange={setPrimaryActionOpen}
+          onPrimaryActionSelect={(item) => handleTabChange(item.target, item)}
         />
 
-        <div data-scroll-root className={`dash-content${isBookingsScreen ? " dash-content--bookings" : ""}${isBookingDetail ? " dash-content--booking-detail" : ""}${isRemote ? " dash-content--remote" : ""}`}>
-          <ProtectedRoute allowGuest={publicDestination && guestMode}>
+        <div data-scroll-root className={`dash-content${isBookingsScreen ? " dash-content--bookings" : ""}${isBookingDetail ? " dash-content--booking-detail" : ""}${isRemote ? " dash-content--remote" : ""}${isSupportScreen ? " dash-content--support" : ""}`}>
+          <ProtectedRoute
+            allowGuest={publicDestination && guestMode}
+            suppressPrompt={authPromptDismissed}
+            onContinueAsGuest={continueAsGuest}
+          >
             <RemoteBoundary resetKey={`${location.pathname}${location.search}`}>
-              {remoteElement ? (
+              {isSupportScreen ? (
+                <SupportRoutes />
+              ) : remoteElement ? (
                 <Suspense fallback={<GlobalLoader visible text="Loading customer product" />}>
                   <Routes>
                     {(destination.patterns || []).map((pattern) => (
@@ -308,6 +347,15 @@ function AppShell() {
           </ProtectedRoute>
         </div>
       </div>
+
+      {mobileNavigationActions.length ? (
+        <FloatingActionBar
+          variant={mobileActionPanel.variant}
+          actions={mobileNavigationActions}
+          sheetTitle={mobileActionPanel.ariaLabel}
+          hideOnDesktop
+        />
+      ) : null}
     </div>
   );
 }

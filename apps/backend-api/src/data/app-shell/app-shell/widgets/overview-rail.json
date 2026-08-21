@@ -15,10 +15,7 @@
             "emptyState": {
               "icon": "calendar",
               "title": "No upcoming trip",
-              "description": "Your next confirmed journey will appear here.",
-              "actionLabel": "Plan a trip",
-              "actionHref": "/?tab=trevio",
-              "actionAriaLabel": "Plan a new trip with Trevio"
+              "description": "Your next confirmed journey will appear here."
             },
             "trip": null
           },
@@ -26,15 +23,16 @@
             "id": "quick-actions",
             "type": "quickActions",
             "title": "Quick Actions",
+            "hideDisabled": true,
             "items": [
               {
                 "id": "plan-trip",
                 "title": "Plan a new trip",
                 "description": "Start planning your journey",
                 "icon": "map",
-                "href": "/?tab=trevio",
+                "href": "/?tab=trevista",
                 "target": "_self",
-                "ariaLabel": "Plan a new trip with Trevio"
+                "ariaLabel": "Plan a new trip with Tours and Packages"
               },
               {
                 "id": "visa-requirements",
@@ -63,8 +61,7 @@
                 "icon": "phoneCall",
                 "href": "mailto:akshat.goyal@travelstrem.com",
                 "target": "_self",
-                "ariaLabel": "Email TravelsTrem support",
-                "disabled": true
+                "ariaLabel": "Email TravelsTrem support"
               }
             ]
           },

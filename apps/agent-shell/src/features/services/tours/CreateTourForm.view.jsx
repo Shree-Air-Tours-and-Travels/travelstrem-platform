@@ -53,9 +53,11 @@ const fieldErr = (name, touched, fieldErrors) =>
         <div className="ctf-field-err">{fieldErrors[name]}</div>
     ) : null;
 
-function ImageUploader({ uploading, uploadProgress, photo, photos = [], onUpload, onSetMain, onRemove }) {
+function ImageUploader({ uploading, uploadProgress, photo, photos = [], onUpload, onUploadUrl, onSetMain, onRemove }) {
     const inputRef = useRef(null);
     const [dragOver, setDragOver] = useState(false);
+    const [remoteUrl, setRemoteUrl] = useState('');
+    const [remoteError, setRemoteError] = useState('');
 
     const handleFile = useCallback(files => {
         const selected = Array.from(files || []);
@@ -80,6 +82,20 @@ function ImageUploader({ uploading, uploadProgress, photo, photos = [], onUpload
 
     const allPhotos = photo ? [photo, ...photos.filter(u => u !== photo)] : photos;
 
+    const handleRemoteUpload = useCallback(async e => {
+        e.preventDefault();
+        const value = remoteUrl.trim();
+        if (!value || uploading) return;
+        setRemoteError('');
+        try {
+            const importedUrl = await onUploadUrl(value);
+            if (importedUrl) setRemoteUrl('');
+            else setRemoteError('Could not import this image. Check that the URL is public.');
+        } catch (error) {
+            setRemoteError(error?.message || 'Could not import this image URL.');
+        }
+    }, [onUploadUrl, remoteUrl, uploading]);
+
     return (
         <div className="ctf-image-uploader">
             <div
@@ -90,7 +106,7 @@ function ImageUploader({ uploading, uploadProgress, photo, photos = [], onUpload
                 onClick={() => !uploading && inputRef.current?.click()}
                 role="button"
                 tabIndex={0}
-                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); inputRef.current?.click(); } }}
+                onKeyDown={e => { if (!uploading && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); inputRef.current?.click(); } }}
             >
                 {uploading ? (
                     <div className="ctf-upload-progress">
@@ -99,11 +115,10 @@ function ImageUploader({ uploading, uploadProgress, photo, photos = [], onUpload
                         </div>
                         <span className="ctf-upload-label">{pageConfig.upload.uploading} {uploadProgress}{pageConfig.upload.progress}</span>
                     </div>
-                ) : photo ? (
-                    <img src={photo} alt="Main" className="ctf-dropzone-preview" />
                 ) : (
                     <div className="ctf-dropzone-placeholder">
                         <span className="ctf-dropzone-icon">+</span>
+                        <strong>{allPhotos.length > 0 ? 'Add more images' : 'Upload images'}</strong>
                         <span>{pageConfig.upload.dropHint}</span>
                     </div>
                 )}
@@ -113,8 +128,9 @@ function ImageUploader({ uploading, uploadProgress, photo, photos = [], onUpload
             {allPhotos.length > 0 && (
                 <div className="ctf-photo-grid">
                     {allPhotos.map((url, i) => (
-                        <div key={i} className={`ctf-photo-thumb ${url === photo ? 'ctf-photo-thumb--main' : ''}`}>
+                        <div key={`${url}-${i}`} className={`ctf-photo-thumb ${url === photo ? 'ctf-photo-thumb--main' : ''}`}>
                             <img src={url} alt={`Photo ${i + 1}`} />
+                            {url === photo && <span className="ctf-main-photo-badge">Main</span>}
                             <Button
                                 type="button"
                                 primaryClassName="ctf-thumb-remove"
@@ -139,13 +155,31 @@ function ImageUploader({ uploading, uploadProgress, photo, photos = [], onUpload
                     ))}
                 </div>
             )}
+
+            <div className="ctf-url-importer">
+                <label htmlFor="ctf-agent-remote-image-url">Import from image URL</label>
+                <div className="ctf-url-importer-row">
+                    <input
+                        id="ctf-agent-remote-image-url"
+                        type="url"
+                        value={remoteUrl}
+                        onChange={e => { setRemoteUrl(e.target.value); setRemoteError(''); }}
+                        onKeyDown={e => { if (e.key === 'Enter') handleRemoteUpload(e); }}
+                        placeholder="https://images.unsplash.com/..."
+                        disabled={uploading}
+                    />
+                    <Button type="button" primaryClassName="btn" onClick={handleRemoteUpload} disabled={uploading || !remoteUrl.trim()} text="Import" />
+                </div>
+                <small>The image is copied to Cloudinary before it is added.</small>
+                {remoteError && <div className="ctf-field-err">{remoteError}</div>}
+            </div>
         </div>
     );
 }
 
 export default function CreateTourFormView({
     form, step, saving, uploading, uploadProgress, importingJson, error, success, onCancel, submit, next, back,
-    setForm, setAt, addArrayItem, updateArrayItem, removeArrayItem, moveArrayItem, handleUploadImage,
+    setForm, setAt, addArrayItem, updateArrayItem, removeArrayItem, moveArrayItem, handleUploadImage, handleUploadImageUrl,
     touched, fieldErrors, seasonOverlaps, handleBlur, onDismissSuccess, handleImportJson, variant = 'modal',
 }) {
     const [showJsonImport, setShowJsonImport] = useState(false);
@@ -250,10 +284,95 @@ export default function CreateTourFormView({
 
                     {step === 1 && (
                         <section className="ctf-section">
-                            <div className="ctf-row">
-                                <label>{pageConfig.labels.startDate}<input type="date" value={form.startDate || ''} onChange={e => setForm({ ...form, startDate: e.target.value || null })} /></label>
-                                <label>{pageConfig.labels.endDate}<input type="date" value={form.endDate || ''} onChange={e => setForm({ ...form, endDate: e.target.value || null })} /></label>
-                            </div>
+                            <label>Package Type
+                                <select value={form.packageType || 'fixed_departure'} onChange={e => setForm({ ...form, packageType: e.target.value })}>
+                                    <option value="fixed_departure">Fixed Departure</option>
+                                    <option value="flexible">Flexible</option>
+                                    <option value="custom">Custom (Quote-based)</option>
+                                </select>
+                            </label>
+
+                            {form.packageType === 'fixed_departure' && (
+                                <>
+                                    <div className="ctf-row">
+                                        <label>{pageConfig.labels.startDate}<input type="date" value={form.startDate || ''} onChange={e => setForm({ ...form, startDate: e.target.value || null })} /></label>
+                                        <label>{pageConfig.labels.endDate}<input type="date" value={form.endDate || ''} onChange={e => setForm({ ...form, endDate: e.target.value || null })} /></label>
+                                    </div>
+                                    <fieldset>
+                                        <legend>Departures</legend>
+                                        {(form.departures || []).map((dep, idx) => (
+                                            <div key={idx} className="ctf-card">
+                                                <div className="ctf-card-header">
+                                                    <strong>{dep.label || `Departure ${idx + 1}`}</strong>
+                                                    <Button type="button" primaryClassName="btn" onClick={() => removeArrayItem('departures', idx)} text={pageConfig.buttons.remove.text} />
+                                                </div>
+                                                <label>Label<input value={dep.label || ''} onChange={e => updateArrayItem('departures', idx, { ...dep, label: e.target.value })} placeholder="e.g. Dec 2026 Batch" /></label>
+                                                <div className="ctf-row">
+                                                    <label>Departure Date<input type="date" value={dep.departureDate ? dep.departureDate.slice(0, 10) : ''} onChange={e => updateArrayItem('departures', idx, { ...dep, departureDate: e.target.value })} required /></label>
+                                                    <label>Return Date<input type="date" value={dep.returnDate ? dep.returnDate.slice(0, 10) : ''} onChange={e => updateArrayItem('departures', idx, { ...dep, returnDate: e.target.value })} required /></label>
+                                                </div>
+                                                <div className="ctf-row">
+                                                    <label>Min Price<input type="number" min={0} value={dep.pricing?.min || dep.min || 0} onChange={e => updateArrayItem('departures', idx, { ...dep, pricing: { ...dep.pricing, min: Number(e.target.value) }, min: Number(e.target.value) })} /></label>
+                                                    <label>Max Price<input type="number" min={0} value={dep.pricing?.max || dep.max || 0} onChange={e => updateArrayItem('departures', idx, { ...dep, pricing: { ...dep.pricing, max: Number(e.target.value) }, max: Number(e.target.value) })} /></label>
+                                                </div>
+                                                <div className="ctf-row">
+                                                    <label>Capacity<input type="number" min={0} value={dep.capacity ?? ''} onChange={e => updateArrayItem('departures', idx, { ...dep, capacity: e.target.value === '' ? null : Number(e.target.value) })} placeholder="Unlimited" /></label>
+                                                    <label>Seats Available<input type="number" min={0} value={dep.seatsAvailable ?? ''} onChange={e => updateArrayItem('departures', idx, { ...dep, seatsAvailable: e.target.value === '' ? null : Number(e.target.value) })} placeholder="Same as capacity" /></label>
+                                                </div>
+                                                <label>Status
+                                                    <select value={dep.status || 'active'} onChange={e => updateArrayItem('departures', idx, { ...dep, status: e.target.value })}>
+                                                        <option value="scheduled">Scheduled</option>
+                                                        <option value="active">Active</option>
+                                                        <option value="sold_out">Sold Out</option>
+                                                        <option value="cancelled">Cancelled</option>
+                                                    </select>
+                                                </label>
+                                                <label>Notes<textarea value={dep.notes || ''} onChange={e => updateArrayItem('departures', idx, { ...dep, notes: e.target.value })} placeholder="Optional notes" /></label>
+                                            </div>
+                                        ))}
+                                        <Button type="button" primaryClassName="btn" onClick={() => addArrayItem('departures', {
+                                            label: '', departureDate: '', returnDate: '', status: 'active', capacity: null, seatsAvailable: null,
+                                            pricing: { min: form.price.min, max: form.price.max, currency: form.price.currency || 'INR', isFinal: false, source: 'manual' },
+                                        })} text="+ Add Departure" />
+                                    </fieldset>
+                                </>
+                            )}
+
+                            {form.packageType === 'flexible' && (
+                                <>
+                                    <div className="ctf-row">
+                                        <label>Earliest Departure<input type="date" value={form.flexibleConfig?.earliestDeparture ? form.flexibleConfig.earliestDeparture.slice(0, 10) : ''} onChange={e => setForm({ ...form, flexibleConfig: { ...form.flexibleConfig, earliestDeparture: e.target.value || null } })} /></label>
+                                        <label>Latest Return<input type="date" value={form.flexibleConfig?.latestReturn ? form.flexibleConfig.latestReturn.slice(0, 10) : ''} onChange={e => setForm({ ...form, flexibleConfig: { ...form.flexibleConfig, latestReturn: e.target.value || null } })} /></label>
+                                    </div>
+                                    <label>Pricing Model
+                                        <select value={form.flexibleConfig?.pricingModel || 'seasonal'} onChange={e => setForm({ ...form, flexibleConfig: { ...form.flexibleConfig, pricingModel: e.target.value } })}>
+                                            <option value="seasonal">Seasonal</option>
+                                            <option value="fixed">Fixed</option>
+                                            <option value="on_request">On Request</option>
+                                        </select>
+                                    </label>
+                                    <div className="ctf-row">
+                                        <label>Min Advance Days<input type="number" min={0} value={form.flexibleConfig?.minAdvanceBookingDays || 0} onChange={e => setForm({ ...form, flexibleConfig: { ...form.flexibleConfig, minAdvanceBookingDays: Number(e.target.value) } })} /></label>
+                                        <label>Max Advance Days<input type="number" min={0} value={form.flexibleConfig?.maxAdvanceBookingDays ?? ''} onChange={e => setForm({ ...form, flexibleConfig: { ...form.flexibleConfig, maxAdvanceBookingDays: e.target.value === '' ? null : Number(e.target.value) } })} placeholder="No limit" /></label>
+                                    </div>
+                                    <div className="ctf-row">
+                                        <label>{pageConfig.labels.startDate}<input type="date" value={form.startDate || ''} onChange={e => setForm({ ...form, startDate: e.target.value || null })} /></label>
+                                        <label>{pageConfig.labels.endDate}<input type="date" value={form.endDate || ''} onChange={e => setForm({ ...form, endDate: e.target.value || null })} /></label>
+                                    </div>
+                                </>
+                            )}
+
+                            {form.packageType === 'custom' && (
+                                <>
+                                    <p style={{ color: 'var(--text-secondary)', marginBottom: 12 }}>Custom tours are quote-based. Customers request a date range and group size, and an agent provides a tailored quote.</p>
+                                    <div className="ctf-row">
+                                        <label>Response Timeframe (hours)<input type="number" min={1} value={form.customConfig?.responseTimeframeHours || 48} onChange={e => setForm({ ...form, customConfig: { ...form.customConfig, responseTimeframeHours: Number(e.target.value) } })} /></label>
+                                    </div>
+                                    <label><input type="checkbox" checked={form.customConfig?.requireDates !== false} onChange={e => setForm({ ...form, customConfig: { ...form.customConfig, requireDates: e.target.checked } })} /> Require dates from customer</label>
+                                    <label><input type="checkbox" checked={form.customConfig?.requireGroupSize !== false} onChange={e => setForm({ ...form, customConfig: { ...form.customConfig, requireGroupSize: e.target.checked } })} /> Require group size from customer</label>
+                                </>
+                            )}
+
                             <div className="ctf-row">
                                 <label>{pageConfig.labels.days}
                                     <input
@@ -369,6 +488,8 @@ export default function CreateTourFormView({
                             <fieldset><legend>Booking & logistics</legend>
                                 <div className="ctf-row"><label>Meeting point<input value={form.meetingPoint || ''} onChange={e => setForm({ ...form, meetingPoint: e.target.value })} /></label><label>Maximum group size<input type="number" min={1} value={form.maxGroupSize} onChange={e => setForm({ ...form, maxGroupSize: Number(e.target.value) })} /></label></div>
                                 <label><input type="checkbox" checked={!!form.flights?.included} onChange={e => setAt('flights.included', e.target.checked)} /> Flights included in this tour</label>
+                                {form.flights?.included && <div className="ctf-row"><label>Flight price per person<input type="number" min={0} value={form.flights?.pricePerPerson ?? 0} onChange={e => setAt('flights.pricePerPerson', Number(e.target.value))} placeholder="0 = included at no extra cost" /></label><label>Departure city<input value={form.flights?.departureCity || ''} onChange={e => setAt('flights.departureCity', e.target.value)} placeholder="e.g. Delhi" /></label><label>Arrival city<input value={form.flights?.arrivalCity || ''} onChange={e => setAt('flights.arrivalCity', e.target.value)} placeholder="e.g. Bali" /></label></div>}
+                                {form.flights?.included && <div className="ctf-row"><label>Airline<input value={form.flights?.airline || ''} onChange={e => setAt('flights.airline', e.target.value)} placeholder="e.g. IndiGo" /></label><label>Notes<input value={form.flights?.notes || ''} onChange={e => setAt('flights.notes', e.target.value)} placeholder="e.g. Direct flight" /></label></div>}
                                 {form.flights?.included && <label><input type="checkbox" checked={!!form.flights?.inventoryManaged} onChange={e => setAt('flights.inventoryManaged', e.target.checked)} /> Limit travellers using live flight-seat inventory</label>}
                                 {form.flights?.included && form.flights?.inventoryManaged && <div className="ctf-row"><label>Total flight seats<input type="number" min={0} value={form.availability?.totalSeats ?? ''} onChange={e => setAt('availability.totalSeats', e.target.value === '' ? null : Number(e.target.value))} /></label><label>Flight seats available<input type="number" min={0} value={form.availability?.seatsAvailable ?? ''} onChange={e => setAt('availability.seatsAvailable', e.target.value === '' ? null : Number(e.target.value))} /></label></div>}
                                 <div className="ctf-row"><label>Minimum age<input type="number" min={0} value={form.minAge ?? ''} onChange={e => setForm({ ...form, minAge: e.target.value === '' ? null : Number(e.target.value) })} /></label><label>Maximum age<input type="number" min={0} value={form.maxAge ?? ''} onChange={e => setForm({ ...form, maxAge: e.target.value === '' ? null : Number(e.target.value) })} /></label></div>
@@ -384,11 +505,11 @@ export default function CreateTourFormView({
                                 <label>Cancellation note<textarea value={form.cancellation?.note || ''} onChange={e => setAt('cancellation.note', e.target.value)} /></label>
                             </fieldset>
                             <fieldset><legend>Optional extras</legend>
-                                {(form.extras || []).map((extra, idx) => <div className="ctf-array" key={extra._key || idx}><input value={extra.title || ''} placeholder="Title" onChange={e => updateArrayItem('extras', idx, { ...extra, title: e.target.value })} /><input value={extra.description || ''} placeholder="Description" onChange={e => updateArrayItem('extras', idx, { ...extra, description: e.target.value })} /><input type="number" min={0} value={extra.price ?? 0} placeholder="Price" onChange={e => updateArrayItem('extras', idx, { ...extra, price: Number(e.target.value) })} /><input value={extra.currency || 'INR'} placeholder="Currency" onChange={e => updateArrayItem('extras', idx, { ...extra, currency: e.target.value })} /><input value={extra.priceLabel || ''} placeholder="e.g. Per person" onChange={e => updateArrayItem('extras', idx, { ...extra, priceLabel: e.target.value })} /><label><input type="checkbox" checked={!!extra.included} onChange={e => updateArrayItem('extras', idx, { ...extra, included: e.target.checked })} /> Included</label><Button type="button" primaryClassName="btn" onClick={() => removeArrayItem('extras', idx)} text="Remove" /></div>)}
-                                <Button type="button" primaryClassName="btn" onClick={() => addArrayItem('extras', { title: '', description: '', price: 0, currency: 'INR', priceLabel: '', icon: '', included: false })} text="Add extra" />
+                                {(form.extras || []).map((extra, idx) => <div className="ctf-array" key={extra._key || idx}><input value={extra.title || ''} placeholder="Title" onChange={e => updateArrayItem('extras', idx, { ...extra, title: e.target.value })} /><select value={extra.category || ''} onChange={e => updateArrayItem('extras', idx, { ...extra, category: e.target.value })}><option value="">Category</option><option value="activity">Activity</option><option value="transfer">Transfer</option><option value="meal">Meal</option><option value="visa">Visa</option><option value="insurance">Insurance</option><option value="other">Other</option></select><input value={extra.description || ''} placeholder="Description" onChange={e => updateArrayItem('extras', idx, { ...extra, description: e.target.value })} /><input type="number" min={0} value={extra.price ?? 0} placeholder="Price" onChange={e => updateArrayItem('extras', idx, { ...extra, price: Number(e.target.value) })} /><input value={extra.currency || 'INR'} placeholder="Currency" onChange={e => updateArrayItem('extras', idx, { ...extra, currency: e.target.value })} /><input value={extra.priceLabel || ''} placeholder="e.g. Per person" onChange={e => updateArrayItem('extras', idx, { ...extra, priceLabel: e.target.value })} /><label><input type="checkbox" checked={!!extra.included} onChange={e => updateArrayItem('extras', idx, { ...extra, included: e.target.checked })} /> Included</label><Button type="button" primaryClassName="btn" onClick={() => removeArrayItem('extras', idx)} text="Remove" /></div>)}
+                                <Button type="button" primaryClassName="btn" onClick={() => addArrayItem('extras', { title: '', description: '', price: 0, currency: 'INR', priceLabel: '', icon: '', category: '', included: false })} text="Add extra" />
                             </fieldset>
-                            <fieldset><legend>Included stays</legend>{(form.includedStays || []).map((stay, idx) => <div className="ctf-array" key={stay._key || idx}><input type="number" min={0} value={stay.nights ?? 1} placeholder="Nights" onChange={e => updateArrayItem('includedStays', idx, { ...stay, nights: Number(e.target.value) })} /><input value={stay.location || ''} placeholder="Location" onChange={e => updateArrayItem('includedStays', idx, { ...stay, location: e.target.value })} /><input value={stay.propertyName || ''} placeholder="Property name" onChange={e => updateArrayItem('includedStays', idx, { ...stay, propertyName: e.target.value })} /><input value={stay.propertyClass || ''} placeholder="Property class" onChange={e => updateArrayItem('includedStays', idx, { ...stay, propertyClass: e.target.value })} /><input value={stay.roomType || ''} placeholder="Room type" onChange={e => updateArrayItem('includedStays', idx, { ...stay, roomType: e.target.value })} /><Button type="button" primaryClassName="btn" onClick={() => removeArrayItem('includedStays', idx)} text="Remove" /></div>)}<Button type="button" primaryClassName="btn" onClick={() => addArrayItem('includedStays', { nights: 1, location: '', propertyName: '', propertyClass: '', roomType: '', meals: [], description: '' })} text="Add stay" /></fieldset>
-                            <fieldset><legend>Hotel upgrades</legend>{(form.hotelOptions || []).map((hotel, idx) => <div className="ctf-array" key={hotel._key || idx}><input value={hotel.title || ''} placeholder="Title" onChange={e => updateArrayItem('hotelOptions', idx, { ...hotel, title: e.target.value })} /><input value={hotel.description || ''} placeholder="Description" onChange={e => updateArrayItem('hotelOptions', idx, { ...hotel, description: e.target.value })} /><input value={hotel.costLabel || ''} placeholder="Cost label" onChange={e => updateArrayItem('hotelOptions', idx, { ...hotel, costLabel: e.target.value })} /><input value={hotel.cost || ''} placeholder="Cost" onChange={e => updateArrayItem('hotelOptions', idx, { ...hotel, cost: e.target.value })} /><label><input type="checkbox" checked={!!hotel.recommended} onChange={e => updateArrayItem('hotelOptions', idx, { ...hotel, recommended: e.target.checked })} /> Recommended</label><Button type="button" primaryClassName="btn" onClick={() => removeArrayItem('hotelOptions', idx)} text="Remove" /></div>)}<Button type="button" primaryClassName="btn" onClick={() => addArrayItem('hotelOptions', { title: '', description: '', costLabel: 'Upgrade cost', cost: '', recommended: false })} text="Add hotel upgrade" /></fieldset>
+                            <fieldset><legend>Included stays</legend>{(form.includedStays || []).map((stay, idx) => <div className="ctf-array" key={stay._key || idx}><input type="number" min={0} value={stay.nights ?? 1} placeholder="Nights" onChange={e => updateArrayItem('includedStays', idx, { ...stay, nights: Number(e.target.value) })} /><input value={stay.location || ''} placeholder="Location" onChange={e => updateArrayItem('includedStays', idx, { ...stay, location: e.target.value })} /><input value={stay.propertyName || ''} placeholder="Property name" onChange={e => updateArrayItem('includedStays', idx, { ...stay, propertyName: e.target.value })} /><input value={stay.propertyClass || ''} placeholder="Property class" onChange={e => updateArrayItem('includedStays', idx, { ...stay, propertyClass: e.target.value })} /><input value={stay.roomType || ''} placeholder="Room type" onChange={e => updateArrayItem('includedStays', idx, { ...stay, roomType: e.target.value })} /><select value={stay.tier || ''} onChange={e => updateArrayItem('includedStays', idx, { ...stay, tier: e.target.value })}><option value="">Tier</option><option value="base">Base</option><option value="standard">Standard</option><option value="premium">Premium</option></select><Button type="button" primaryClassName="btn" onClick={() => removeArrayItem('includedStays', idx)} text="Remove" /></div>)}<Button type="button" primaryClassName="btn" onClick={() => addArrayItem('includedStays', { nights: 1, location: '', propertyName: '', propertyClass: '', roomType: '', tier: '', meals: [], description: '' })} text="Add stay" /></fieldset>
+                            <fieldset><legend>Hotel upgrades</legend>{(form.hotelOptions || []).map((hotel, idx) => <div className="ctf-array" key={hotel._key || idx}><input value={hotel.title || ''} placeholder="Title" onChange={e => updateArrayItem('hotelOptions', idx, { ...hotel, title: e.target.value })} /><select value={hotel.tier || ''} onChange={e => updateArrayItem('hotelOptions', idx, { ...hotel, tier: e.target.value })}><option value="">Tier</option><option value="base">Base</option><option value="standard">Standard</option><option value="premium">Premium</option></select><input value={hotel.description || ''} placeholder="Description" onChange={e => updateArrayItem('hotelOptions', idx, { ...hotel, description: e.target.value })} /><input value={hotel.costLabel || ''} placeholder="Cost label" onChange={e => updateArrayItem('hotelOptions', idx, { ...hotel, costLabel: e.target.value })} /><input value={hotel.cost || ''} placeholder="Cost" onChange={e => updateArrayItem('hotelOptions', idx, { ...hotel, cost: e.target.value })} /><label><input type="checkbox" checked={!!hotel.recommended} onChange={e => updateArrayItem('hotelOptions', idx, { ...hotel, recommended: e.target.checked })} /> Recommended</label><Button type="button" primaryClassName="btn" onClick={() => removeArrayItem('hotelOptions', idx)} text="Remove" /></div>)}<Button type="button" primaryClassName="btn" onClick={() => addArrayItem('hotelOptions', { title: '', description: '', costLabel: 'Upgrade cost', cost: '', tier: '', recommended: false })} text="Add hotel upgrade" /></fieldset>
                             <fieldset>
                                 <legend>{pageConfig.labels.mainPhoto}</legend>
                                 <ImageUploader
@@ -397,17 +518,13 @@ export default function CreateTourFormView({
                                     photo={form.photo}
                                     photos={form.photos}
                                     onUpload={handleUploadImage}
+                                    onUploadUrl={handleUploadImageUrl}
                                     onSetMain={url => setForm({ ...form, photo: url })}
                                     onRemove={url => {
                                         const next = (form.photos || []).filter(u => u !== url);
                                         setForm({ ...form, photo: form.photo === url ? (next[0] || '') : form.photo, photos: next });
                                     }}
                                 />
-                                <details className="ctf-url-fallback ctf-mt-8">
-                                    <summary>{pageConfig.labels.pasteUrl}</summary>
-                                    <input value={form.photo} onChange={e => setForm({ ...form, photo: e.target.value })} placeholder={pageConfig.placeholders.mainPhotoUrl} />
-                                    <input value={Array.isArray(form.photos) ? form.photos.join(', ') : form.photos || ''} onChange={e => setForm({ ...form, photos: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })} placeholder={pageConfig.placeholders.galleryUrls} className="ctf-mt-6" />
-                                </details>
                             </fieldset>
 
                             <fieldset className="ctf-mt-12">

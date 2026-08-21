@@ -65,6 +65,12 @@ export function calculateTrevistaPricing(tour, body = {}, masterOptions = {}) {
   const perPerson = Math.round(priceInfo.min || 0);
   const baseTripTotal = perPerson * guestsCount;
 
+  // Flight pricing (per-person, from tour.flights.pricePerPerson)
+  const flightIncluded = Boolean(tour?.flights?.included);
+  const flightPricePerPerson = flightIncluded ? Number(tour?.flights?.pricePerPerson || 0) : 0;
+  const wantsFlights = body.addFlights === "yes" || body.addFlights === true || (flightIncluded && body.addFlights !== "no" && body.addFlights !== false);
+  const flightTotal = wantsFlights ? flightPricePerPerson * guestsCount : 0;
+
   const roomOptions = buildRoomOptions(tour, masterOptions.roomOptions);
   const roomType = String(body.roomType || "");
   const roomTypeExtra = roomOptions.find((option) => option.value === roomType)?.price || 0;
@@ -83,7 +89,7 @@ export function calculateTrevistaPricing(tour, body = {}, masterOptions = {}) {
     0,
   );
 
-  const subtotal = baseTripTotal + roomTypeExtra + transportExtra + addonAmount;
+  const subtotal = baseTripTotal + flightTotal + roomTypeExtra + transportExtra + addonAmount;
   const feeRates = {
     agent: Number(masterOptions.fees?.agentPercent ?? 2),
     service: Number(masterOptions.fees?.servicePercent ?? 2),
@@ -96,6 +102,7 @@ export function calculateTrevistaPricing(tour, body = {}, masterOptions = {}) {
 
   const breakdown = [
     { id: "base", label: "Base Trip Price", amount: baseTripTotal },
+    ...(flightTotal ? [{ id: "flights", label: "Flights", amount: flightTotal }] : []),
     ...(roomTypeExtra ? [{ id: "room", label: "Room preference", amount: roomTypeExtra }] : []),
     ...(transportExtra ? [{ id: "transport", label: "Transfer upgrade", amount: transportExtra }] : []),
     ...(addonAmount ? [{ id: "addons", label: "Experiences", amount: addonAmount }] : []),
@@ -109,6 +116,7 @@ export function calculateTrevistaPricing(tour, body = {}, masterOptions = {}) {
       currency,
       perPerson,
       baseTripTotal,
+      flightTotal,
       roomTypeExtra,
       transportExtra,
       addonAmount,
