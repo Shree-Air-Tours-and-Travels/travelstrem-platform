@@ -4,6 +4,9 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// Load local overrides first, then the shared file; dotenv never overwrites
+// existing keys, so values in .env.development.local win.
+dotenv.config({ path: path.resolve(__dirname, "../.env.development.local") });
 dotenv.config({ path: path.resolve(__dirname, "../.env.development") });
 
 const uri = process.env.MONGO_URI_DEV || process.env.MONGO_URI;
@@ -13,7 +16,7 @@ const DRY_RUN = process.argv.includes("--dry-run");
 const CONFIRM = process.argv.includes("--yes");
 
 if (!uri) {
-  console.error("MONGO_URI / MONGO_URI_DEV not found in apps/backend-api/.env.development");
+  console.error("MONGO_URI / MONGO_URI_DEV not found in apps/backend-api/.env.development.local");
   process.exit(1);
 }
 
