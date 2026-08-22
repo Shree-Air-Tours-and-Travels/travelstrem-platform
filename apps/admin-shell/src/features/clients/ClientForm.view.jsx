@@ -1,7 +1,7 @@
 import React from "react";
 import "./ClientForm.scss";
 
-const PRODUCTS = ["trevio", "trevista", "dashboard", "admin", "booking", "agent"];
+const PRODUCTS = ["trevio", "trevista", "dashboard", "admin", "agent"];
 
 export default function ClientFormView({ form, isEdit, saving, error, onChange, onBrandingChange, onSubmit, onCancel }) {
   return (

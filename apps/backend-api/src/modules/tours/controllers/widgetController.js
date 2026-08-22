@@ -3,14 +3,10 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { normalizeTourForResponse } from "./tourController.js";
 import TourRepository from "../repositories/TourRepository.js";
-import BookingRepository from "../../bookings/repositories/BookingRepository.js";
-import TravellerService from "../../bookings/services/TravellerService.js";
-import BookingTimelineService from "../../bookings/services/BookingTimelineService.js";
-import StatusHistoryService from "../../bookings/services/StatusHistoryService.js";
-import QuoteService from "../../bookings/services/QuoteService.js";
 import { getTourDiscovery, searchToursFromRawRequest } from "../services/tourSearchService.js";
 import masterDataService from "../../masterData/services/masterDataService.js";
 import { getHiddenProductKeys } from "../../../utils/hiddenProductCache.js";
+import { calculateTourCustomizationPreview, calculateTourHotelUnitPrice } from "../../../core/financial-engine/services/tour-commercial.service.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -57,9 +53,6 @@ const PAGE_DIR_MAP = {
   "tours-remote/home": "tours-remote/home",
   "tours-remote/listing": "tours-remote/listing",
   "tours-remote/details": "tours-remote/details",
-  "tours-remote/booking": "tours-remote/booking",
-  "tours-remote/booking-summary": "tours-remote/booking-summary",
-  "tours-remote/booking-checkout": "tours-remote/booking-checkout",
 };
 
 const escapeRegExp = (s = "") => String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -71,17 +64,18 @@ const findTourByRef = async (tourRef) => {
   const ref = decodeURIComponent(String(tourRef || "")).trim();
   if (!ref) return null;
   if (/^[0-9a-fA-F]{24}$/.test(ref)) {
-    const byId = await TourRepository.findById(ref);
+    const byId = await TourRepository.findOne({ _id: ref, status: "published" });
     if (byId) return byId;
   }
-  const bySlug = await TourRepository.findOne({ slug: slugifyTourTitle(ref) });
+  const bySlug = await TourRepository.findOne({ slug: slugifyTourTitle(ref), status: "published" });
   if (bySlug) return bySlug;
   const titleCandidate = ref.replace(/-/g, " ").trim();
   const directTitle = await TourRepository.findOne({
     title: new RegExp(`^${escapeRegExp(titleCandidate)}$`, "i"),
+    status: "published",
   });
   if (directTitle) return directTitle;
-  const tours = await TourRepository.find({});
+  const tours = await TourRepository.find({ status: "published" });
   return tours.find((tour) => slugifyTourTitle(tour.title) === slugifyTourTitle(ref)) || null;
 };
 
@@ -161,7 +155,7 @@ const normalizeTourFactsForResponse = (tour = {}) => ({
 });
 
 const normalizeTourOverviewForResponse = (tour = {}) => ({
-  // _id is required only for favourites, booking, and enquiry actions.
+  // _id is required for favourites and enquiry actions.
   _id: tour._id || null,
   title: String(tour.title || ""),
   city: tour.city && typeof tour.city === "object"
@@ -184,6 +178,31 @@ const normalizeTourOverviewForResponse = (tour = {}) => ({
   ownerAgentEmail: tour.ownerAgentEmail || "",
 });
 
+const publicPackages = (tour = {}) => {
+  if (tour.commercial?.version !== "COMPONENTS_V1") return [];
+  const definitions = new Map((tour.commercial.packages || [])
+    .filter((item) => item?.enabled !== false)
+    .map((item) => [String(item.packageKey || ""), item]));
+  const components = new Map((tour.commercial.components || [])
+    .filter((item) => item?.active !== false)
+    .map((item) => [String(item.componentKey || ""), item]));
+  return (tour.commercial.derived?.packages || []).map((derived) => {
+    const definition = definitions.get(String(derived.packageKey || "")) || {};
+    const componentNames = (keys) => (keys || []).map((key) => components.get(String(key))?.name).filter(Boolean);
+    return {
+      packageKey: String(derived.packageKey || definition.packageKey || ""),
+      tier: String(derived.tier || definition.tier || ""),
+      name: String(derived.name || definition.name || "Package"),
+      description: String(definition.description || ""),
+      recommended: Boolean(definition.recommended),
+      included: componentNames(definition.includedComponentKeys),
+      optional: componentNames(definition.optionalComponentKeys),
+      sellingTotalMinor: Number(derived.sellingTotalMinor || 0),
+      requiresRepricing: Boolean(derived.requiresRepricing),
+    };
+  }).filter((item) => item.packageKey && item.sellingTotalMinor > 0);
+};
+
 const normalizePricingCardForResponse = (tour = {}) => ({
   // _id and title are action inputs; the remaining fields are displayed.
   _id: tour._id || null,
@@ -199,7 +218,120 @@ const normalizePricingCardForResponse = (tour = {}) => ({
     currency: String(tour.priceInfo.currency || "INR"),
     isFinal: Boolean(tour.priceInfo.isFinal),
   } : null,
+  commercialPricing: tour.commercial?.version === "COMPONENTS_V1" ? {
+    currency: String(tour.commercial.currency || tour.priceInfo?.currency || "INR"),
+    displayMode: String(tour.commercial.derived?.displayMode || "ESTIMATED"),
+    packages: publicPackages(tour),
+  } : null,
 });
+
+const normalizeStayPricing = (pricing, tour) => calculateTourHotelUnitPrice({ tour, pricing });
+const stayKeyFor = (option = {}) => String(option.stayKey || option.location || option.optionKey || option._id || "")
+  .trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+
+const normalizeHotelOptionsForResponse = (tour = {}, selectedPackageKey = "") => {
+  const packageNames = new Map((tour.commercial?.packages || []).map((item) => [String(item.packageKey || ""), String(item.name || "")]));
+  return (tour.hotelOptions || []).filter((option) => option?.active !== false).map((option, index) => {
+    const pricing = normalizeStayPricing(option.pricing, tour);
+    return {
+      id: String(option._id || option.optionKey || `hotel-${index + 1}`),
+      value: String(option.optionKey || option._id || `hotel-${index + 1}`),
+      stayKey: stayKeyFor(option),
+      title: String(option.title || option.propertyName || "Hotel option"),
+      propertyName: String(option.propertyName || option.title || ""),
+      propertyClass: String(option.propertyClass || ""),
+      location: String(option.location || ""),
+      address: String(option.address || ""),
+      nights: Math.max(0, Number(option.nights ?? 1)),
+      description: String(option.description || ""),
+      photos: (option.photos || []).map(String).slice(0, 20),
+      amenities: (option.amenities || []).map(String).slice(0, 30),
+      packageKeys: (option.packageKeys || []).map(String).slice(0, 10),
+      packageNames: (option.packageKeys || []).map((key) => packageNames.get(String(key))).filter(Boolean),
+      recommended: Boolean(option.recommended),
+      costLabel: String(option.costLabel || "Upgrade price"),
+      cost: "",
+      pricing,
+      pricePending: !pricing,
+      rooms: (option.rooms || []).filter((room) => room?.available !== false).map((room, roomIndex) => {
+        const roomPricing = normalizeStayPricing(room.pricing, tour);
+        const effectivePackageKeys = (room.packageKeys || []).length ? room.packageKeys : (option.packageKeys || []);
+        const requiresUpgrade = Boolean(selectedPackageKey && !effectivePackageKeys.map(String).includes(String(selectedPackageKey)));
+        let upgradePricing = null;
+        if (requiresUpgrade) {
+          try {
+            const preview = calculateTourCustomizationPreview({
+              tour,
+              packageKey: selectedPackageKey,
+              hotelOptionKey: String(option.optionKey || option._id || ""),
+              roomOptionKey: String(room.roomKey || room._id || ""),
+              travellerCount: 1,
+            });
+            if (preview.hotel?.supplement?.perPersonMinor != null) {
+              upgradePricing = { amountMinor: preview.hotel.supplement.perPersonMinor, currency: preview.currency, unit: "PER_PERSON" };
+            }
+          } catch {
+            upgradePricing = null;
+          }
+        }
+        return {
+          id: String(room._id || room.roomKey || `room-${roomIndex + 1}`),
+          value: String(room.roomKey || room._id || `room-${roomIndex + 1}`),
+          name: String(room.name || `Room ${roomIndex + 1}`),
+          description: String(room.description || ""),
+          bedType: String(room.bedType || ""),
+          maxAdults: Number(room.maxAdults || 2),
+          maxChildren: Number(room.maxChildren || 0),
+          meals: (room.meals || []).map(String).slice(0, 20),
+          amenities: (room.amenities || []).map(String).slice(0, 30),
+          photos: (room.photos || []).map(String).slice(0, 20),
+          packageKeys: effectivePackageKeys.map(String).slice(0, 10),
+          packageNames: effectivePackageKeys.map((key) => packageNames.get(String(key))).filter(Boolean),
+          includedInSelectedPackage: Boolean(selectedPackageKey && effectivePackageKeys.map(String).includes(String(selectedPackageKey))),
+          pricing: requiresUpgrade ? upgradePricing : (roomPricing || pricing),
+          pricePending: requiresUpgrade ? !upgradePricing : (!roomPricing && !pricing),
+        };
+      }),
+    };
+  });
+};
+
+const selectedPackageFor = (tour = {}, requestedKey = "") => {
+  const packages = (tour.commercial?.packages || []).filter((item) => item?.enabled !== false && item?.packageKey);
+  const requested = packages.find((item) => String(item.packageKey) === String(requestedKey || ""));
+  return String((requested || packages.find((item) => item.recommended) || packages[0])?.packageKey || "");
+};
+
+const resolvePackageStays = (tour = {}, packageKey = "") => {
+  const seenStays = new Set();
+  const resolved = (tour.hotelOptions || []).filter((option) => option?.active !== false).flatMap((option) => {
+    const stayKey = stayKeyFor(option);
+    if (seenStays.has(stayKey)) return [];
+    const room = (option.rooms || []).find((item) => item?.available !== false && (item.packageKeys || []).map(String).includes(String(packageKey)));
+    if (!room) return [];
+    seenStays.add(stayKey);
+    return [{
+      _id: `${String(option.optionKey || option._id)}:${String(room.roomKey || room._id)}`,
+      stayKey,
+      hotelOptionKey: String(option.optionKey || option._id || ""),
+      roomOptionKey: String(room.roomKey || room._id || ""),
+      nights: Math.max(0, Number(option.nights || 0)),
+      location: String(option.location || ""),
+      propertyName: String(option.propertyName || option.title || ""),
+      propertyClass: String(option.propertyClass || ""),
+      roomType: String(room.name || ""),
+      meals: (room.meals || []).map(String).slice(0, 20),
+      description: String(room.description || option.description || ""),
+      photos: (room.photos?.length ? room.photos : option.photos || []).map(String).slice(0, 20),
+      amenities: [...new Set([...(option.amenities || []), ...(room.amenities || [])].map(String))].slice(0, 30),
+      includedForPackageKey: packageKey,
+    }];
+  });
+  return resolved.length ? resolved : (Array.isArray(tour.includedStays) ? tour.includedStays.map((stay, index) => ({
+    ...stay,
+    stayKey: stayKeyFor({ stayKey: stay?.stayKey, location: stay?.location, optionKey: `stay-${index + 1}` }),
+  })) : []);
+};
 
 export const getWidget = async (req, res) => {
   try {
@@ -337,8 +469,11 @@ export const getWidget = async (req, res) => {
               widget.component.data.exclusions = Array.isArray(normalized.exclusions) ? normalized.exclusions : [];
               break;
             case "included-stays.json":
-              widget.component.data.stays = Array.isArray(normalized.includedStays) ? normalized.includedStays : [];
-              widget.component.data.hotelOptions = Array.isArray(normalized.hotelOptions) ? normalized.hotelOptions : [];
+              widget.component.data.selectedPackageKey = selectedPackageFor(tourObj, req.query.packageKey);
+              widget.component.data.selectedPackageName = String((tourObj.commercial?.packages || []).find((item) => String(item.packageKey) === widget.component.data.selectedPackageKey)?.name || "");
+              widget.component.data.stays = resolvePackageStays(tourObj, widget.component.data.selectedPackageKey);
+              widget.component.data.hotelOptions = normalizeHotelOptionsForResponse(tourObj, widget.component.data.selectedPackageKey);
+              widget.component.data.customizable = tourObj.packageType === "custom" && tourObj.customConfig?.allowCustomerCustomization === true;
               break;
             case "cancellation-policy.json":
               widget.component.data.cancellationPolicy = normalized.cancellationPolicy || "";
@@ -378,150 +513,6 @@ export const getWidget = async (req, res) => {
       }
     }
 
-    const isBookingPage = pageKey?.startsWith("tours-remote/booking");
-    if (isBookingPage) {
-      const bookingId = req.params.bookingId || req.query.bookingId;
-      if (bookingId) {
-        const bookingDoc = await BookingRepository.findById(bookingId).populate("tour").populate("assignedAgent", "name email role");
-        if (bookingDoc) {
-          const raw = typeof bookingDoc.toJSON === "function" ? bookingDoc.toJSON() : bookingDoc;
-          const tourRaw = raw.tour || {};
-          const tour = {
-            id: tourRaw.id || tourRaw._id,
-            title: tourRaw.title,
-            photo: tourRaw.photo,
-            photos: Array.isArray(tourRaw.photos) ? tourRaw.photos : [],
-            desc: tourRaw.desc,
-            city: tourRaw.city,
-            meetingPoint: tourRaw.meetingPoint,
-            cancellationPolicy: tourRaw.cancellationPolicy,
-            highlights: tourRaw.highlights,
-            period: tourRaw.period,
-            address: tourRaw.address,
-          };
-
-          const agentRaw = raw.assignedAgent || null;
-          const assignedAgent = agentRaw ? {
-            name: agentRaw.name,
-            email: agentRaw.email,
-            role: agentRaw.role,
-          } : null;
-
-          const BOOKING_PROCEED_HIDE_STATUSES = new Set(["CANCELLED", "COMPLETED", "REFUNDED"]);
-          const isProceedHide = BOOKING_PROCEED_HIDE_STATUSES.has(raw.status);
-
-          switch (fileName) {
-            case "booking-hero.json":
-            case "checkout-hero.json":
-              widget.component.data.booking = {
-                id: raw.id,
-                bookingRef: raw.bookingRef,
-                status: raw.status,
-                guestsCount: raw.guestsCount,
-                startDate: raw.startDate || raw.travelWindow?.startDate,
-                endDate: raw.endDate || raw.travelWindow?.endDate,
-                tour,
-                assignedAgent,
-                responseDueAt: raw.responseDueAt,
-                quoteDueAt: raw.quoteDueAt,
-                isProceedHide,
-              };
-              break;
-            case "booking-tour-details.json": {
-              const quotes = await QuoteService.list(bookingId);
-              const currentQuote = quotes?.[0] || null;
-              widget.component.data.booking = {
-                id: raw.id,
-                bookingRef: raw.bookingRef,
-                status: raw.status,
-                guestsCount: raw.guestsCount,
-                tour,
-                priceSnapshot: raw.priceSnapshot || {},
-                paymentSummary: raw.paymentSummary || {},
-                currentQuote,
-                currentQuoteVersion: raw.currentQuoteVersion || 0,
-                viewTourUrl: `/tours/${tour.id}`,
-                isProceedHide,
-              };
-              break;
-            }
-            case "booking-travel-details.json":
-              widget.component.data.booking = {
-                id: raw.id,
-                status: raw.status,
-                travelWindow: raw.travelWindow || { startDate: null, endDate: null },
-                primaryContact: raw.primaryContact || {},
-                tripPreferences: raw.tripPreferences || {},
-                tripSelection: raw.tripSelection || {},
-                isProceedHide,
-              };
-              break;
-            case "booking-travelers.json": {
-              const travelers = await TravellerService.list(bookingId);
-              widget.component.data.booking = {
-                id: raw.id,
-                status: raw.status,
-                guestsCount: raw.guestsCount,
-                travelers: (travelers || []).map((t) => ({
-                  id: t.id || t._id,
-                  travellerType: t.travellerType || "adult",
-                  firstName: t.firstName || "",
-                  lastName: t.lastName || "",
-                  email: t.email || "",
-                  phone: t.phone || "",
-                  age: t.age || "",
-                  nationality: t.nationality || "",
-                  passportNumber: t.passportNumber || "",
-                  emergencyContactName: t.emergencyContactName || "",
-                  emergencyContactNumber: t.emergencyContactNumber || "",
-                })),
-                isProceedHide,
-              };
-              break;
-            }
-            case "booking-timeline.json": {
-              const [timeline, statusHistory] = await Promise.all([
-                BookingTimelineService.list(bookingId, 8),
-                StatusHistoryService.list(bookingId, 8),
-              ]);
-              widget.component.data.booking = {
-                id: raw.id,
-                timeline: (timeline || []).map((item) => ({
-                  id: item.id || item._id,
-                  action: item.action,
-                  createdAt: item.createdAt,
-                  metadata: item.metadata,
-                })),
-                statusHistory: (statusHistory || []).map((item) => ({
-                  id: item.id || item._id,
-                  from: item.from,
-                  to: item.to,
-                  createdAt: item.createdAt,
-                })),
-                isProceedHide,
-              };
-              break;
-            }
-            case "checkout-payment-summary.json":
-            case "checkout-sidebar.json":
-              widget.component.data.booking = {
-                id: raw.id,
-                bookingRef: raw.bookingRef,
-                status: raw.status,
-                guestsCount: raw.guestsCount,
-                tour,
-                priceSnapshot: raw.priceSnapshot || {},
-                paymentSummary: raw.paymentSummary || {},
-                isProceedHide,
-              };
-              break;
-            default:
-              break;
-          }
-        }
-      }
-    }
-
     widget.component = await masterDataService.hydrateDataScope(widget.component);
     const hiddenKeys = await getHiddenProductKeys();
     if (hiddenKeys.length) {
@@ -540,10 +531,5 @@ export const getWidget = async (req, res) => {
 export const getTourDetailsWidget = (req, res) => {
   req.query.pageKey = "tours-remote/details";
   req.query.tourRef = req.params.tourRef;
-  return getWidget(req, res);
-};
-
-export const getBookingWidget = (req, res) => {
-  req.query.bookingId = req.params.id || req.params.bookingId;
   return getWidget(req, res);
 };

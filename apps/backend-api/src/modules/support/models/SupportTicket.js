@@ -20,7 +20,6 @@ const attachmentSchema = new Schema({
 const supportTicketSchema = new Schema({
   reference: { type: String, required: true, unique: true, index: true },
   user: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
-  booking: { type: Schema.Types.ObjectId, ref: "Booking", default: null, index: true },
   serviceId: { type: String, trim: true, lowercase: true, default: "", index: true },
   categoryId: { type: String, trim: true, lowercase: true, required: true, index: true },
   subcategoryId: { type: String, trim: true, lowercase: true, default: "" },

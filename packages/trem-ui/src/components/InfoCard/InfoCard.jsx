@@ -12,6 +12,9 @@ const INFO_CARD_TONES = {
   canceled: "danger",
   completed: "info",
   draft: "neutral",
+  new: "info",
+  sent: "info",
+  ready: "info",
 };
 
 export default function InfoCard({
@@ -34,7 +37,7 @@ export default function InfoCard({
       type={onClick ? "button" : undefined}
       onClick={onClick}
     >
-      <span className="trem-info-card__header">
+      <span className={`trem-info-card__header${image ? " trem-info-card__header--with-image" : ""}`}>
         {image ? <img src={image} alt={imageAlt} loading="lazy" /> : null}
         <span className="trem-info-card__identity">
           <strong>{title}</strong>

@@ -4,14 +4,12 @@ import { useThemeMode } from "@packages/trem-utils";
 import Sidebar from "../../components/AdminSidebar";
 import DashboardHeader from "../../components/AdminDashboardHeader";
 import AdminOverviewView from "../../views/AdminOverviewView";
-import AdminBookingsView from "../payments/AdminPaymentsBookings";
 import AdminServicesView from "../../views/AdminServicesView";
 import AdminProfileView from "../../views/AdminProfileView";
-import TourView from "./TourView";
-import CreateTourForm from "./CreateTourForm";
 import TripView from "../trips/TripView";
 import CreateTripForm from "../trips/CreateTripForm";
 import TenancyManagement from "../tenancy/TenancyManagement";
+import EnquiriesPage from "../enquiries/EnquiriesPage";
 import "./ManageTours.scss";
 
 export function ConfirmModal({ open, title = "Confirm", message = "Are you sure?", onCancel, onConfirm }) {
@@ -59,16 +57,13 @@ export function Toast({ toast, setToast }) {
 
 export default function ManageToursView({
     tab, setTab,
-    tours, trips, bookings, profile,
+    tours, trips, profile,
     admins, agents, partnerAgencies,
-    loading, bookingsLoading, agencyLoading,
+    loading, agencyLoading,
     stats, auth, error,
-    formOpen, setFormOpen,
     tripFormOpen, setTripFormOpen,
     tripEditing,
-    viewOpen, setViewOpen,
     tripViewOpen, setTripViewOpen,
-    editing, viewTour, setViewTour,
     viewTrip, setViewTrip,
     openCreate, openEdit, openView, verifyTour, verifyTrip,
     openTripCreate, openTripEdit, openTripView,
@@ -113,24 +108,10 @@ export default function ManageToursView({
                         <AdminOverviewView
                             user={mergedUser}
                             stats={stats}
-                            recentBookings={bookings}
                             onTabChange={setTab}
-                            onViewBooking={(b) => {
-                                const id = b.id || b._id;
-                                if (id) window.location.href = `/bookings/${id}`;
-                            }}
                         />
                     )}
-                    {tab === "bookings" && (
-                        <AdminBookingsView
-                            bookings={bookings}
-                            loading={bookingsLoading}
-                            onViewBooking={(b) => {
-                                const id = b.id || b._id;
-                                if (id) window.location.href = `/bookings/${id}`;
-                            }}
-                        />
-                    )}
+                    {tab === "enquiries" && <EnquiriesPage />}
                     {tab === "services" && (
                         <>
                             <AdminServicesView
@@ -161,27 +142,11 @@ export default function ManageToursView({
                                 handleReviewAgent={handleReviewAgent}
                                 handleReviewPartnerAgency={handleReviewPartnerAgency}
                             />
-                            {viewOpen && createPortal(
-                                <TourView
-                                    tour={viewTour}
-                                    onClose={() => { setViewOpen(false); setViewTour(null); }}
-                                    onEdit={(tour) => { setViewOpen(false); openEdit(tour); }}
-                                />,
-                                document.body
-                            )}
                             {tripViewOpen && createPortal(
                                 <TripView
                                     trip={viewTrip}
                                     onClose={() => { setTripViewOpen(false); setViewTrip(null); }}
                                     onEdit={(trip) => { setTripViewOpen(false); openTripEdit(trip); }}
-                                />,
-                                document.body
-                            )}
-                            {formOpen && createPortal(
-                                <CreateTourForm
-                                    initial={editing}
-                                    onCancel={() => setFormOpen(false)}
-                                    onSaved={async () => { setFormOpen(false); await fetchTours(); }}
                                 />,
                                 document.body
                             )}

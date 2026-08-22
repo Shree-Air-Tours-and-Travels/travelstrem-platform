@@ -33,7 +33,6 @@ export default function PartnerWorkspace({ tab, user }) {
   const metrics = state.value && !items.length ? Object.entries(state.value).filter(([, value]) => typeof value === "number") : [];
   const recentItems = tab === "dashboard" ? [
     ...(state.value?.recentTrips || []).map((item) => ({ ...item, workspaceKind: "Trip" })),
-    ...(state.value?.recentBookings || []).map((item) => ({ ...item, workspaceKind: "Booking" })),
     ...(state.value?.recentCustomers || []).map((item) => ({ ...item, workspaceKind: "Customer" })),
   ].slice(0, 12) : [];
 

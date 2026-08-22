@@ -48,7 +48,7 @@ export const resolvePageContent = (pageResponse) => {
   const tripCards = findFeature(adventureWidget, ["adventureTrips", "tripCardList"]) || {};
   const upcomingFeature = findFeature(adventureWidget, ["upcomingTrips"]) || {};
   const internationalFeature = findFeature(adventureWidget, ["internationalTrips"]) || {};
-  const stepsFeature = findFeature(howWidget, ["bookingSteps", "stepList"]) || {};
+  const stepsFeature = findFeature(howWidget, ["planningSteps", "stepList"]) || {};
   const whyFeature = findFeature(whyWidget, ["whyWanderon"]) || {};
   const galleryFeature = findFeature(framesWidget, ["photoGallery", "gallery"]) || {};
   const faqFeature = findFeature(faqWidget, ["faqList", "faq"]) || {};
@@ -113,7 +113,7 @@ export const resolvePageContent = (pageResponse) => {
     howToUse: {
       eyebrow: label(labels, stepsFeature.eyebrowRef),
       heading: label(labels, stepsFeature.headingRef),
-      steps: Array.isArray(state.bookingSteps) ? state.bookingSteps : [],
+      steps: Array.isArray(state.planningSteps) ? state.planningSteps : [],
     },
     whyWanderon: {
       eyebrow: label(labels, whyFeature.eyebrowRef),

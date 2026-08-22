@@ -5,7 +5,6 @@ import {
     checkPartnerApplication,
     deleteAllAgentTours,
     deleteAgentTour,
-    fetchAgentBookings,
     fetchAgentTours,
     fetchAgentProfile,
     fetchAgencyProfile,
@@ -13,8 +12,7 @@ import {
     updatePassword,
     updateProfile,
 } from "../../../services/agentService";
-import { VALID_TABS, PATH_BY_TAB, FALLBACK_PROFILE, DEFAULT_CURRENCY, DEFAULT_LOCALE } from "./tours.constants";
-import { FALLBACK_BOOKING_TOUR_TITLE, FALLBACK_BOOKING_TOUR_TYPE } from "../bookings/bookings.constants";
+import { VALID_TABS, PATH_BY_TAB, FALLBACK_PROFILE } from "./tours.constants";
 import pageConfig from "./manageToursPage.config.json";
 import ManageToursView from "./ManageTours.view";
 
@@ -26,7 +24,6 @@ const getTabFromLocation = (pathname, search) => {
     if (pathname.includes("/agent/deletion-requests")) return "deletions";
     if (pathname.includes("/agent/notifications")) return "notifications";
     if (pathname.includes("/agent/profile")) return "profile";
-    if (pathname.includes("/agent/bookings")) return "bookings";
     if (pathname.includes("/agent/settings")) return "settings";
     if (pathname.includes("/agent/partner-agency") || pathname.includes("/agent/agency")) return "partnerAgency";
     const tab = new URLSearchParams(search || "").get("tab") || "dashboard";
@@ -39,33 +36,6 @@ const isRequestCancelled = (error) =>
     error?.code === "ERR_CANCELED" ||
     error?.message === "Request cancelled";
 
-const normalizeBookingRow = (booking = {}) => {
-    const tour = booking.tour || {};
-    const amount = booking.paymentSummary?.total || booking.priceSnapshot?.total || booking.tripSelection?.amount || 0;
-    const currency = booking.priceSnapshot?.currency || booking.tripSelection?.currency || DEFAULT_CURRENCY;
-    const formatter = new Intl.NumberFormat(DEFAULT_LOCALE, { style: "currency", currency, maximumFractionDigits: 0 });
-    const status = String(booking.status || "PENDING").replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
-    const startDate = booking.startDate || booking.travelWindow?.startDate;
-    const endDate = booking.endDate || booking.travelWindow?.endDate;
-    const start = startDate ? new Date(startDate) : null;
-    const end = endDate ? new Date(endDate) : null;
-    const days = start && end && !Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())
-        ? `${Math.max(1, Math.round((end - start) / 86400000) + 1)} Days`
-        : "N/A";
-
-    return {
-        id: booking.bookingRef || booking._id || booking.id,
-        bookingId: booking._id || booking.id,
-        tour: tour.title || booking.tourTitle || FALLBACK_BOOKING_TOUR_TITLE,
-        type: Array.isArray(tour.tags) ? tour.tags[0] || FALLBACK_BOOKING_TOUR_TYPE : FALLBACK_BOOKING_TOUR_TYPE,
-        travellers: `${booking.guestsCount || booking.travelers?.length || 1} Guests`,
-        days,
-        price: formatter.format(Number(amount || 0)),
-        date: start && !Number.isNaN(start.getTime()) ? start.toLocaleDateString(DEFAULT_LOCALE, { day: "2-digit", month: "short", year: "numeric" }) : "N/A",
-        status,
-    };
-};
-
 export default function ManageTours({ session }) {
     const location = useLocation();
     const navigate = useNavigate();
@@ -75,17 +45,11 @@ export default function ManageTours({ session }) {
     };
     const [tab, setTabState] = useState(() => getTabFromLocation(location.pathname, location.search));
     const [tours, setTours] = useState([]);
-    const [bookings, setBookings] = useState([]);
     const [profile, setProfile] = useState(null);
     const [agencyApplication, setAgencyApplication] = useState(null);
     const [agencyLoading, setAgencyLoading] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [bookingLoading, setBookingLoading] = useState(false);
     const [profileLoading, setProfileLoading] = useState(false);
-    const [formOpen, setFormOpen] = useState(false);
-    const [viewOpen, setViewOpen] = useState(false);
-    const [editing, setEditing] = useState(null);
-    const [viewTour, setViewTour] = useState(null);
     const [error, setError] = useState(null);
     const requestSeq = useRef(0);
     const abortControllersRef = useRef({});
@@ -140,22 +104,6 @@ export default function ManageTours({ session }) {
         }
     }, []);
 
-    const fetchBookingsWidget = useCallback(async () => {
-        setBookingLoading(true);
-        try {
-            const controller = createRequestController("bookings");
-            const fetched = await fetchAgentBookings({ signal: controller.signal });
-            setBookings(Array.isArray(fetched) ? fetched.map(normalizeBookingRow) : []);
-        } catch (e) {
-            if (isRequestCancelled(e)) return;
-            console.error("fetchBookingsWidget error:", e);
-            showToast(e.message || "Failed to load bookings", "error");
-            setBookings([]);
-        } finally {
-            setBookingLoading(false);
-        }
-    }, [createRequestController, showToast]);
-
     const fetchProfileWidget = useCallback(async () => {
         setProfileLoading(true);
         try {
@@ -202,10 +150,9 @@ export default function ManageTours({ session }) {
 
     useEffect(() => {
         fetchServicesWidget();
-        fetchBookingsWidget();
         fetchProfileWidget();
         fetchAgencyWidget();
-    }, [fetchServicesWidget, fetchBookingsWidget, fetchProfileWidget, fetchAgencyWidget]);
+    }, [fetchServicesWidget, fetchProfileWidget, fetchAgencyWidget]);
 
     useEffect(() => {
         const nextTab = getTabFromLocation(location.pathname, location.search);
@@ -265,41 +212,29 @@ export default function ManageTours({ session }) {
     }, []);
 
     const openCreate = useCallback(() => {
-        setEditing(null);
-        setFormOpen(true);
-    }, []);
+        navigate("/agent/services/tours/builder");
+    }, [navigate]);
 
     const openEdit = useCallback((t) => {
-        setEditing(t);
-        setFormOpen(true);
-    }, []);
+        const id = t?._id || t?.id;
+        if (id) navigate(`/agent/services/tours/${encodeURIComponent(id)}/edit`);
+    }, [navigate]);
 
     const openView = useCallback((t) => {
-        setViewTour(t);
-        setViewOpen(true);
-    }, []);
-
-    const handleBookingClick = useCallback((booking) => {
-        const id = booking?.bookingId || booking?.id;
-        if (id) navigate(`/bookings/${id}`);
+        const id = t?._id || t?.id;
+        if (id) navigate(`/agent/services/tours/${encodeURIComponent(id)}/view`);
     }, [navigate]);
 
     return (
         <ManageToursView
             tab={tab}
             tours={tours}
-            bookings={bookings}
             profile={profile}
             agencyApplication={agencyApplication}
             agencyLoading={agencyLoading}
 
             loading={loading}
-            bookingLoading={bookingLoading}
             profileLoading={profileLoading}
-            formOpen={formOpen}
-            viewOpen={viewOpen}
-            editing={editing}
-            viewTour={viewTour}
             error={error}
             auth={auth}
             setTab={setTab}
@@ -313,7 +248,6 @@ export default function ManageTours({ session }) {
             handleConfirmDelete={handleConfirmDelete}
             handleCancelDelete={handleCancelDelete}
             fetchTours={fetchServicesWidget}
-            fetchBookings={fetchBookingsWidget}
             fetchProfile={fetchProfileWidget}
             fetchAgency={fetchAgencyWidget}
             onApplyAgency={handleApplyAgency}
@@ -322,10 +256,6 @@ export default function ManageTours({ session }) {
             onUpdateProfile={handleUpdateProfile}
             toast={toast}
             setToast={setToast}
-            setFormOpen={setFormOpen}
-            setViewOpen={setViewOpen}
-            setViewTour={setViewTour}
-            onBookingClick={handleBookingClick}
         />
     );
 }

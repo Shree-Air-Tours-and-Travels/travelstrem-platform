@@ -16,7 +16,7 @@ export default {
     ariaLabel: "Primary mobile navigation",
     items: [
       { id: "home", label: "Home", icon: "home", target: "overview", activeTargets: ["overview", "trevista"] },
-      { id: "bookings", label: "Bookings", icon: "calendar", target: "bookings" },
+      { id: "bookings", label: "My bookings", icon: "calendar", target: "bookings" },
       { id: "new-booking", label: "New booking", icon: "plus", action: "open-primary-action", emphasis: true },
       { id: "wishlist", label: "Wishlist", icon: "heart", target: "favorites" },
       { id: "profile", label: "Profile", icon: "user", target: "profile" },
@@ -24,8 +24,8 @@ export default {
   },
   destinations: [
     { id: "overview", kind: "tab", tab: "overview", path: "/", activeId: "overview" },
-    { id: "bookings", kind: "tab", tab: "bookings", path: "/", activeId: "bookings" },
     { id: "favorites", kind: "tab", tab: "favorites", path: "/", activeId: "favorites" },
+    { id: "bookings", kind: "tab", tab: "bookings", path: "/", activeId: "bookings" },
     { id: "profile", kind: "tab", tab: "profile", path: "/", activeId: "profile" },
     { id: "support", kind: "internal", renderer: "app-shell", path: "/help", activeId: "support", patterns: ["/help", "/help/*"] },
     {
@@ -48,14 +48,6 @@ export default {
       path: "/",
       activeId: "tours",
       patterns: ["/trevista/*", "/tour/*"],
-    },
-    {
-      id: "booking-engine",
-      kind: "remote",
-      renderer: "bookingEngine",
-      path: "/booking",
-      activeId: "bookings",
-      patterns: ["/booking/*"],
     },
   ],
 };

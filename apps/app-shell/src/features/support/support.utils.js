@@ -1,16 +1,6 @@
 import { SUPPORT_ACTION_TYPE, SUPPORT_ANALYTICS_EVENT } from "@packages/trem-support-contracts";
 
-export const formatDateRange = (dates) => {
-  if (!dates?.start) return "";
-  const start = new Date(dates.start);
-  const end = dates.end ? new Date(dates.end) : null;
-  const formatter = new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short", year: start.getFullYear() === new Date().getFullYear() ? undefined : "numeric" });
-  return end ? `${formatter.format(start)} – ${formatter.format(end)}` : formatter.format(start);
-};
-
 export const formatDateTime = (date) => date ? new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date(date)) : "";
-
-export const withBookingLabels = (booking) => ({ ...booking, dateLabel: formatDateRange(booking?.dates) });
 
 export const trackSupport = (event, metadata = {}) => {
   if (!Object.values(SUPPORT_ANALYTICS_EVENT).includes(event) || typeof window === "undefined") return;

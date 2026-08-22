@@ -1,4 +1,122 @@
 export const DEFAULT_OPTION_SETS = Object.freeze({
+  "trevista.tourBuilderSteps": {
+    product: "trevista",
+    description: "Ordered top-level steps for the agent/admin tour builder",
+    options: [
+      { value: "basic", label: "Basics", sortOrder: 0, metadata: { shortLabel: "Basics", helper: "Identity and location" } },
+      { value: "schedule", label: "Schedule", sortOrder: 10, metadata: { shortLabel: "Schedule", helper: "Dates and availability" } },
+      { value: "itinerary", label: "Itinerary", sortOrder: 20, metadata: { shortLabel: "Itinerary", helper: "One screen per day" } },
+      { value: "pricing", label: "Packages", sortOrder: 30, metadata: { shortLabel: "Packages", helper: "Components and package composition" } },
+      { value: "logistics", label: "Operations", sortOrder: 40, metadata: { shortLabel: "Operations", helper: "Booking, policies and inventory" } },
+      { value: "content", label: "Publish", sortOrder: 50, metadata: { shortLabel: "Publish", helper: "Description and visibility" } },
+      { value: "review", label: "Review", sortOrder: 60, metadata: { shortLabel: "Review", helper: "Check and submit" } },
+    ],
+  },
+  "trevista.tourBuilderRequiredFields": {
+    product: "trevista",
+    description: "Backend-owned required-field contract used by every tour CRUD client",
+    options: [
+      { value: "title", label: "Tour title", sortOrder: 0, metadata: { step: "basic" } },
+      { value: "city.from", label: "Departure city", sortOrder: 10, metadata: { step: "basic" } },
+      { value: "city.to", label: "Destination city", sortOrder: 20, metadata: { step: "basic" } },
+      { value: "distance", label: "Distance", sortOrder: 30, metadata: { step: "basic" } },
+      { value: "period.days", label: "Days", sortOrder: 40, metadata: { step: "schedule" } },
+      { value: "period.nights", label: "Nights", sortOrder: 50, metadata: { step: "schedule" } },
+      { value: "departures", label: "Departure details", sortOrder: 60, metadata: { step: "schedule", conditional: "when-present" } },
+      { value: "itinerary", label: "Itinerary day details", sortOrder: 70, metadata: { step: "itinerary", conditional: "when-present" } },
+      { value: "commercial", label: "Package pricing", sortOrder: 80, metadata: { step: "pricing" } },
+      { value: "maxGroupSize", label: "Maximum group size", sortOrder: 90, metadata: { step: "logistics" } },
+      { value: "desc", label: "Description", sortOrder: 100, metadata: { step: "content" } },
+    ],
+  },
+  "trevista.packageTypeOptions": {
+    product: "trevista",
+    options: [
+      { value: "fixed_departure", label: "Fixed departure", sortOrder: 0 },
+      { value: "flexible", label: "Flexible dates", sortOrder: 10 },
+      { value: "custom", label: "Custom / quote-based", sortOrder: 20 },
+    ],
+  },
+  "trevista.departureStatusOptions": {
+    product: "trevista",
+    options: ["scheduled", "active", "sold_out", "cancelled"].map((value, index) => ({ value, label: value.replaceAll("_", " "), sortOrder: index * 10 })),
+  },
+  "trevista.tourStatusOptions": {
+    product: "trevista",
+    options: ["draft", "pending_approval", "published", "unpublished", "cancelled"].map((value, index) => ({ value, label: value.replaceAll("_", " "), sortOrder: index * 10 })),
+  },
+  "trevista.extraCategoryOptions": {
+    product: "trevista",
+    options: ["activity", "transfer", "meal", "visa", "insurance", "other"].map((value, index) => ({ value, label: value, sortOrder: index * 10 })),
+  },
+  "trevista.commercialComponentTypeOptions": {
+    product: "trevista",
+    options: ["ACCOMMODATION", "FLIGHT", "ACTIVITY", "TRANSFER", "MEAL", "SIGHTSEEING", "VISA", "INSURANCE", "GUIDE", "TAX", "AGENT_CHARGE", "MISCELLANEOUS"].map((value, index) => ({ value, label: value.replaceAll("_", " "), sortOrder: index * 10 })),
+  },
+  "trevista.commercialPricingUnitOptions": {
+    product: "trevista",
+    options: ["PER_PERSON", "PER_ADULT", "PER_CHILD", "PER_INFANT", "PER_ROOM", "PER_NIGHT", "PER_ROOM_PER_NIGHT", "PER_PERSON_PER_NIGHT", "PER_VEHICLE", "PER_TRIP", "PER_DAY", "PER_GROUP", "PER_BOOKING", "FIXED"].map((value, index) => ({ value, label: value.replaceAll("_", " "), sortOrder: index * 10 })),
+  },
+  "trevista.commercialStatusOptions": {
+    product: "trevista",
+    options: ["CONFIRMED", "ESTIMATED", "REPRICE_REQUIRED"].map((value, index) => ({ value, label: value.replaceAll("_", " "), sortOrder: index * 10 })),
+  },
+  "trevista.packageTierOptions": {
+    product: "trevista",
+    options: [
+      { value: "BASIC", label: "Base", sortOrder: 0 },
+      { value: "STANDARD", label: "Standard", sortOrder: 10 },
+      { value: "PREMIUM", label: "Premium", sortOrder: 20 },
+    ],
+  },
+  "trevista.flexiblePricingModelOptions": {
+    product: "trevista",
+    options: [
+      { value: "seasonal", label: "Seasonal", sortOrder: 0 },
+      { value: "fixed", label: "Fixed", sortOrder: 10 },
+      { value: "on_request", label: "On request", sortOrder: 20 },
+    ],
+  },
+  "trevista.stayTierOptions": {
+    product: "trevista",
+    options: ["base", "standard", "premium"].map((value, index) => ({ value, label: value[0].toUpperCase() + value.slice(1), sortOrder: index * 10 })),
+  },
+  "common.currencyOptions": {
+    description: "Currencies enabled for prices entered by operations users",
+    options: [{ value: "INR", label: "INR - Indian Rupee", sortOrder: 0 }],
+  },
+  "trevista.priceSourceOptions": {
+    product: "trevista",
+    description: "Accepted provenance values for Tour price snapshots",
+    options: ["manual", "ai", "agent", "calculated", "component_calculation"].map((value, index) => ({ value, label: value.replaceAll("_", " "), sortOrder: index * 10 })),
+  },
+  "trevista.tourOperationsSectionOptions": {
+    product: "trevista",
+    options: ["booking", "cancellation", "extras", "stays", "hotels", "media", "highlights"].map((value, index) => ({ value, label: value === "hotels" ? "Upgrades" : value[0].toUpperCase() + value.slice(1), sortOrder: index * 10 })),
+  },
+  "trevista.commercialBasisFieldOptions": {
+    product: "trevista",
+    options: [
+      { value: "adults", label: "Adults", metadata: { minimum: 1 } },
+      { value: "children", label: "Children", metadata: { minimum: 0 } },
+      { value: "infants", label: "Infants", metadata: { minimum: 0 } },
+      { value: "rooms", label: "Rooms", metadata: { minimum: 1 } },
+      { value: "vehicles", label: "Vehicles", metadata: { minimum: 1 } },
+      { value: "nights", label: "Nights", metadata: { minimum: 0 } },
+      { value: "days", label: "Days", metadata: { minimum: 1 } },
+    ].map((option, index) => ({ ...option, sortOrder: index * 10 })),
+  },
+  "trevista.commercialComponentStepOptions": {
+    product: "trevista",
+    options: ["details", "pricing", "upgrade"].map((value, index) => ({ value, label: value[0].toUpperCase() + value.slice(1), sortOrder: index * 10 })),
+  },
+  "trevista.commercialPackageStepOptions": {
+    product: "trevista",
+    options: [
+      { value: "details", label: "Package details", sortOrder: 0 },
+      { value: "assignment", label: "Included components", sortOrder: 10 },
+    ],
+  },
   "trevio.quickChipOptions": {
     product: "trevio",
     description: "Trevio discovery shortcuts",
@@ -54,15 +172,6 @@ export const DEFAULT_OPTION_SETS = Object.freeze({
     product: "trevista",
     options: [10, 20, 30].map((value, index) => ({ value: String(value), label: `${value} travellers`, sortOrder: index * 10 })),
   },
-  "booking.travellerTypeOptions": {
-    product: "booking-engine",
-    description: "Traveller counters and age bands used by booking journeys",
-    options: [
-      { value: "ADULT", label: "Adults", sortOrder: 0, metadata: { stateField: "adults", ageLabel: "12 years and above", minimum: 1, maximum: 20 } },
-      { value: "CHILD", label: "Children", sortOrder: 10, metadata: { stateField: "children", ageLabel: "2–11 years", minimum: 0, maximum: 10 } },
-      { value: "INFANT", label: "Infants", sortOrder: 20, metadata: { stateField: "infants", ageLabel: "Under 2 years", minimum: 0, maximum: 10 } },
-    ],
-  },
   "trevista.tripStyleOptions": {
     product: "trevista",
     options: ["Adventure", "Beach", "Culture", "Family", "Heritage", "Luxury", "Romance", "Wellness", "Trekking"].map((label, index) => ({ value: label.toLowerCase(), label, sortOrder: index * 10 })),
@@ -87,15 +196,6 @@ export const DEFAULT_OPTION_SETS = Object.freeze({
       { value: "Shared transfers", label: "Shared transfers", sortOrder: 0, metadata: { desc: "Air-conditioned shared vehicle with fixed schedule", price: 0 } },
       { value: "Private sedan", label: "Private sedan", sortOrder: 10, metadata: { desc: "Private car for airport and itinerary transfers", price: 12000 } },
       { value: "Private SUV", label: "Private SUV", sortOrder: 20, metadata: { desc: "Private SUV for extra comfort and luggage", price: 19000 } },
-    ],
-  },
-  "booking.paymentMethodOptions": {
-    product: "booking-engine",
-    options: [
-      { value: "card", label: "Debit / Credit Card", sortOrder: 0 },
-      { value: "upi", label: "UPI", sortOrder: 10 },
-      { value: "qr", label: "QR Scanner", sortOrder: 20 },
-      { value: "net_banking", label: "Net Banking", sortOrder: 30 },
     ],
   },
   "common.titleOptions": {
@@ -125,14 +225,6 @@ export const DEFAULT_OPTION_SETS = Object.freeze({
       { value: "international", label: "International", sortOrder: 20 },
     ],
   },
-  "booking.mealOptions": {
-    product: "booking-engine",
-    options: ["Vegetarian", "Non-vegetarian", "Jain meals", "No preference"].map((value, index) => ({ value, label: value, sortOrder: index * 10 })),
-  },
-  "booking.bedOptions": {
-    product: "booking-engine",
-    options: ["Double bed", "Twin beds", "No preference"].map((value, index) => ({ value, label: value, sortOrder: index * 10 })),
-  },
   "tours.preferredContactOptions": {
     description: "Customer contact channel choices",
     options: [
@@ -141,32 +233,13 @@ export const DEFAULT_OPTION_SETS = Object.freeze({
       { value: "email", label: "Email", sortOrder: 20 },
     ],
   },
-  "appShell.bookingProductOptions": {
+  "appShell.favoriteProductOptions": {
     product: "app-shell",
+    description: "Product filters for saved travel items",
     options: [
       { value: "all", label: "All products", sortOrder: 0 },
       { value: "trevio", label: "Trevio", sortOrder: 10 },
       { value: "trevista", label: "Trevista", sortOrder: 20 },
-    ],
-  },
-  "appShell.bookingStatusOptions": {
-    product: "app-shell",
-    options: ["All statuses", "Upcoming", "Pending", "Cancelled", "Completed"].map((label, index) => ({ value: index ? label : "all", label, sortOrder: index * 10 })),
-  },
-  "appShell.bookingSortOptions": {
-    product: "app-shell",
-    options: [
-      { value: "newest", label: "Newest first", sortOrder: 0, metadata: { sort: { columnId: "createdAt", direction: "desc" } } },
-      { value: "oldest", label: "Oldest first", sortOrder: 10, metadata: { sort: { columnId: "createdAt", direction: "asc" } } },
-      { value: "priceLow", label: "Price: Low to High", sortOrder: 20, metadata: { sort: { columnId: "price", direction: "asc" } } },
-      { value: "priceHigh", label: "Price: High to Low", sortOrder: 30, metadata: { sort: { columnId: "price", direction: "desc" } } },
-    ],
-  },
-  "appShell.bookingExportOptions": {
-    product: "app-shell",
-    options: [
-      { value: "csv", label: "Export CSV", sortOrder: 0 },
-      { value: "pdf", label: "Export PDF", sortOrder: 10 },
     ],
   },
 });

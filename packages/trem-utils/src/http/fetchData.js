@@ -62,7 +62,11 @@ export const fetchData = async (endpoint, options = {}) => {
 
     const rawResponse = res?.data || {};
     const { status, message, componentData, component } = rawResponse;
-    const data = componentData?.data ?? component?.data ?? null;
+    // Newer domain endpoints return their payload directly at `data`, while
+    // legacy component endpoints wrap it in `componentData.data` or
+    // `component.data`. Preserve the direct payload instead of replacing it
+    // with null during normalization.
+    const data = componentData?.data ?? component?.data ?? rawResponse?.data ?? null;
 
     if (status === "success") {
       return { ...rawResponse, status, message, componentData, component, data };

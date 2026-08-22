@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@packages/tour-builder": "workspace:*",
     "@packages/trem-auth-core": "workspace:*",
     "@packages/trem-environment": "workspace:*",
     "@packages/trem-events": "workspace:*",

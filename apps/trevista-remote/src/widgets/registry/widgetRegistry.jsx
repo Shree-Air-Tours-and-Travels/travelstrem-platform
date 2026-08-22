@@ -6,16 +6,16 @@ import TourFilters from "../../features/tours/widgets/TourFilters/TourFilters";
 
 export const toursWidgetDefinitions = [
     createWidgetDefinition({
-        type: "tourCard",
-        aliases: ["TourCard", "tours.card"],
-        source: WIDGET_SOURCES.FEDERATED,
-        component: TourCard,
-    }),
-    createWidgetDefinition({
         type: "bookingWidget",
         aliases: ["BookingWidget", "tours.booking"],
         source: WIDGET_SOURCES.FEDERATED,
         component: BookingWidget,
+    }),
+    createWidgetDefinition({
+        type: "tourCard",
+        aliases: ["TourCard", "tours.card"],
+        source: WIDGET_SOURCES.FEDERATED,
+        component: TourCard,
     }),
     createWidgetDefinition({
         type: "reviewWidget",

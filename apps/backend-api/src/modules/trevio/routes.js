@@ -3,7 +3,6 @@ import { getTrevioHome, getTrevioTrips, getTrevioTrip, getTrevioPricing, getTrev
 import { getTripDetailsPage } from "./controllers/tripPageController.js";
 import { getTripDetailsWidget } from "./controllers/tripWidgetController.js";
 import { getInternationalTrips } from "./controllers/internationalTripsController.js";
-import { createTrevioBooking, getTrevioBooking, recordTrevioPayment } from "./controllers/trevioBookingController.js";
 import { listAdminTrips, createTrip, updateTrip, verifyTrip, deleteTrip, deleteAllTrips, duplicateTrip } from "./controllers/adminTripController.js";
 import authMiddleware from "../../shared/auth/middleware.js";
 import { loadAccessContext, requirePermission } from "../tenancy/policy.js";
@@ -16,9 +15,6 @@ router.get("/trips.json", getTrevioTrips);
 router.get("/trips/:tripRef.json", getTrevioTrip);
 router.post("/trips/:tripRef/pricing", getTrevioPricing);
 router.get("/trips/:tripRef/availability", getTrevioAvailability);
-router.post("/bookings", createTrevioBooking);
-router.get("/bookings/:bookingId", getTrevioBooking);
-router.post("/bookings/:bookingId/payment", recordTrevioPayment);
 router.get("/international-trips.json", getInternationalTrips);
 router.get("/trip-details-page.json", getTripDetailsPage);
 router.get("/trips.json/:tripRef/widgets/:widgetFile.json", getTripDetailsWidget);

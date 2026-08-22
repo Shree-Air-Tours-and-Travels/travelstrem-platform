@@ -33,19 +33,6 @@ export function TourCardSkeleton() {
     );
 }
 
-export function BookingCardSkeleton() {
-    return (
-        <div style={{ ...styles.tourCard, display: 'flex', gap: 16, alignItems: 'center' }}>
-            <Pulse width={48} height={48} style={{ borderRadius: '50%', flexShrink: 0 }} />
-            <div style={{ flex: 1 }}>
-                <Pulse width="60%" height={18} style={{ marginBottom: 6 }} />
-                <Pulse width="40%" height={14} />
-            </div>
-            <Pulse width={80} height={28} />
-        </div>
-    );
-}
-
 export function WidgetError({ message, onRetry }) {
     return (
         <div style={{

@@ -1,0 +1,238 @@
+@import "@packages/trem-ui/styles/base/typography";
+
+/* The trip editor is still modal-based and owns these styles. Tour creation,
+   editing and review no longer depend on this legacy surface. */
+.ctf-root-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  display: grid;
+  place-items: center;
+  padding: var(--space-5, 1.25rem);
+  overflow: hidden;
+  background: var(--overlay);
+  backdrop-filter: blur(4px);
+}
+
+.ctf-panel {
+  display: flex;
+  flex-direction: column;
+  width: min(56.25rem, 100%);
+  height: min(52rem, calc(100dvh - 2.5rem));
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 0.75rem);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+}
+
+.ctf-panel-header,
+.ctf-panel-footer {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3, 0.75rem);
+  padding: var(--space-4, 1rem) var(--space-5, 1.25rem);
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+.ctf-panel-header { border-bottom: 1px solid var(--border); }
+.ctf-panel-footer { border-top: 1px solid var(--border); }
+
+.ctf-header-actions,
+.ctf-json-import__heading,
+.ctf-json-import__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2, 0.5rem);
+}
+
+.ctf-steps-line {
+  display: flex;
+  gap: var(--space-2, 0.5rem);
+  margin-top: var(--space-2, 0.5rem);
+}
+
+.ctf-step {
+  display: inline-grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  color: var(--muted);
+  font-size: var(--font-size-sm, 0.875rem);
+  font-weight: 600;
+
+  &.done,
+  &.active {
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+  }
+}
+
+.ctf-panel-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--space-5, 1.25rem);
+  overscroll-behavior: contain;
+}
+
+.ctf-form-inner,
+.ctf-section,
+.ctf-preferences {
+  display: grid;
+  gap: var(--space-4, 1rem);
+}
+
+.ctf-section label,
+.ctf-preference-option label {
+  display: grid;
+  gap: var(--space-2, 0.5rem);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.ctf-section input:not([type="checkbox"]):not([type="radio"]),
+.ctf-section textarea,
+.ctf-section select,
+.ctf-preference-option input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 2.75rem;
+  padding: var(--space-3, 0.75rem);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 0.5rem);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.ctf-section textarea { min-height: 7.5rem; resize: vertical; }
+
+.ctf-section fieldset,
+.ctf-preference-group,
+.ctf-json-import,
+.ctf-json-import-note {
+  margin: 0;
+  padding: var(--space-4, 1rem);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 0.5rem);
+  background: var(--surface);
+}
+
+.ctf-section legend {
+  padding: 0 var(--space-2, 0.5rem);
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.ctf-row,
+.ctf-preference-option {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4, 1rem);
+}
+
+.ctf-preference-option {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  align-items: end;
+}
+
+.ctf-json-import,
+.ctf-json-import-note { display: grid; gap: var(--space-3, 0.75rem); }
+.ctf-json-import__heading > div { display: grid; flex: 1; gap: var(--space-1, 0.25rem); }
+.ctf-json-import__heading span,
+.ctf-json-import__actions span,
+.ctf-preferences__help,
+.ctf-tag-limit { color: var(--muted); font-size: var(--font-size-sm, 0.875rem); }
+
+.ctf-json-import__editor {
+  width: 100%;
+  min-height: 15rem;
+  box-sizing: border-box;
+  padding: var(--space-3, 0.75rem);
+  resize: vertical;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 0.5rem);
+  background: var(--surface-inset, var(--surface));
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.ctf-tag-list,
+.ctf-photo-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2, 0.5rem);
+  margin-top: var(--space-2, 0.5rem);
+}
+
+.ctf-tag,
+.ctf-tag-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1, 0.25rem);
+  min-height: 2.25rem;
+  padding: var(--space-2, 0.5rem) var(--space-3, 0.75rem);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 0.5rem);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.ctf-tag-toggle.is-selected {
+  border-color: var(--color-primary);
+  background: var(--primary-soft);
+  color: var(--color-primary-dark);
+}
+
+.ctf-dropzone {
+  display: grid;
+  min-height: 9rem;
+  place-items: center;
+  padding: var(--space-4, 1rem);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md, 0.5rem);
+  background: var(--surface-inset, var(--surface));
+  cursor: pointer;
+}
+
+.ctf-dropzone--over { border-color: var(--color-primary); background: var(--primary-soft); }
+.ctf-dropzone-placeholder { display: grid; place-items: center; gap: var(--space-2, 0.5rem); color: var(--muted); }
+.ctf-dropzone-icon { font-size: 2rem; color: var(--color-primary); }
+
+.ctf-photo-thumb {
+  position: relative;
+  width: 7rem;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border: 2px solid transparent;
+  border-radius: var(--radius-md, 0.5rem);
+
+  img { width: 100%; height: 100%; object-fit: cover; }
+}
+
+.ctf-photo-thumb--main { border-color: var(--color-primary); }
+.ctf-thumb-remove,
+.ctf-thumb-setmain { position: absolute; top: var(--space-1, 0.25rem); }
+.ctf-thumb-remove { right: var(--space-1, 0.25rem); }
+.ctf-thumb-setmain { left: var(--space-1, 0.25rem); }
+
+.ctf-feedback { padding: var(--space-3, 0.75rem); border-radius: var(--radius-md, 0.5rem); }
+.ctf-feedback--error { color: var(--color-danger); background: var(--danger-soft); }
+.ctf-feedback--ok { color: var(--color-success); background: var(--success-soft); }
+
+@media (max-width: 48rem) {
+  .ctf-root-overlay { padding: 0; }
+  .ctf-panel { height: 100dvh; max-height: none; border-radius: 0; }
+  .ctf-panel-header { align-items: flex-start; }
+  .ctf-row,
+  .ctf-preference-option { grid-template-columns: minmax(0, 1fr); }
+}

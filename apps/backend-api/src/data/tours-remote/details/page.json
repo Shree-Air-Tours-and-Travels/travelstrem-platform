@@ -13,10 +13,6 @@
         "backToTours": "Back to tours",
         "backToLabel": "Back to",
         "referrerTours": "Tours",
-        "confirmBookingTitle": "Book Your Spot",
-        "confirmBookingNote": "Please note that this is a request for booking. Our agent will get in touch with you to provide a final quote and confirm your reservation.",
-        "confirmBookingConfirmLabel": "Request Booking",
-        "confirmBookingCancelLabel": "Cancel",
         "tourNotFoundTitle": "Tour not found",
         "tourNotFoundMessage": "The tour link is missing a valid reference.",
         "tourErrorTitle": "Tour details could not load",
@@ -48,6 +44,11 @@
           "type": "TourHighlights",
           "source": "shell",
           "widgetRef": "./widgets/tour-highlights.json"
+        },
+        {
+          "type": "PackagePlans",
+          "source": "shell",
+          "widgetRef": "./widgets/pricing-card.json"
         },
         {
           "type": "PricingCard",

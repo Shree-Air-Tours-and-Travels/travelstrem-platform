@@ -35,8 +35,6 @@ const DEFAULT_HEADER_CONFIG = {
     menu: [
         { id: "agentServices", label: "Services", path: "/agent/services", access: "roles", roles: agentRoles },
         { id: "agentDashboard", label: "Dashboard", path: "/agent/dashboard", access: "roles", roles: agentRoles },
-        { id: "agentBookings", label: "Bookings", path: "/agent/bookings", access: "roles", roles: agentRoles },
-
     ],
     authActions: {
         login: { label: "Login", path: "/login" },

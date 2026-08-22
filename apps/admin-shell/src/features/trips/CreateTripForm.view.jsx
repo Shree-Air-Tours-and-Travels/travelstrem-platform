@@ -1,7 +1,7 @@
 import React, { useRef, useCallback, useState } from "react";
 import { Button, SubTitle, RecordReview } from "@packages/trem-ui";
 import { getTripJsonTemplate } from "@packages/trem-utils";
-import "../tours/CreateTourForm.scss";
+import "./TripEditor.scss";
 
 const STEPS = ['Basic', 'Journey', 'Inclusions', 'Content', 'Settings', 'Review'];
 

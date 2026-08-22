@@ -2,7 +2,6 @@ import config from "../config/env.js";
 import sendEmail from "../utils/sendEmail.js";
 import welcomeTemplate from "../templates/welcome.template.js";
 import loginTemplate from "../templates/login.template.js";
-import bookingTemplate from "../templates/booking.template.js";
 import paymentTemplate from "../templates/payment.template.js";
 import resetPasswordTemplate from "../templates/resetPassword.template.js";
 import invitationTemplate from "../templates/invitation.template.js";
@@ -33,10 +32,6 @@ export async function sendLoginEmail({ to, subject, provider, ...data }) {
   return deliver(to, loginTemplate({ ...brandDefaults(), ...data }), { subject, provider });
 }
 
-export async function sendBookingConfirmation({ to, provider, ...data }) {
-  return deliver(to, bookingTemplate({ ...brandDefaults(), ...data }), { provider });
-}
-
 export async function sendPaymentSuccess({ to, provider, ...data }) {
   return deliver(to, paymentTemplate({ ...brandDefaults(), ...data }), { provider });
 }
@@ -60,7 +55,6 @@ export async function sendTransactionalEmail({ to, subject, html, text, replyTo,
 export default {
   sendWelcomeEmail,
   sendLoginEmail,
-  sendBookingConfirmation,
   sendPaymentSuccess,
   sendPasswordResetEmail,
   sendInvitationEmail,

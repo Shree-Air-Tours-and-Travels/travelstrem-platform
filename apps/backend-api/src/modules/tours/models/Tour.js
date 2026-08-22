@@ -1,6 +1,7 @@
 // models/Tour.js
 import mongoose from "mongoose";
 import { DEPARTURE_STATUS, DEPARTURE_STATUS_LIST, PACKAGE_TYPE, PACKAGE_TYPE_LIST, PRICE_SOURCE, PRICE_SOURCE_LIST, TOUR_STATUS, TOUR_STATUS_LIST } from "../../../constants/enums.js";
+import { buildTourSearchMetadata } from "../services/tourSearchMetadata.service.js";
 
 const { Schema } = mongoose;
 const INVENTORY_SOURCE = Object.freeze({
@@ -9,6 +10,8 @@ const INVENTORY_SOURCE = Object.freeze({
     PLATFORM: "platform",
 });
 const INVENTORY_SOURCE_LIST = Object.values(INVENTORY_SOURCE);
+const COMMERCIAL_UNITS = ["FIXED", "PER_BOOKING", "PER_PERSON", "PER_ADULT", "PER_CHILD", "PER_INFANT", "PER_ROOM", "PER_NIGHT", "PER_ROOM_PER_NIGHT", "PER_PERSON_PER_NIGHT", "PER_VEHICLE", "PER_TRIP", "PER_DAY", "PER_GROUP"];
+const COMPONENT_TYPES = ["ACCOMMODATION", "FLIGHT", "ACTIVITY", "TRANSFER", "MEAL", "SIGHTSEEING", "VISA", "INSURANCE", "GUIDE", "TAX", "AGENT_CHARGE", "MISCELLANEOUS"];
 
 const slugifySearchValue = (value = "") => String(value)
     .trim()
@@ -98,6 +101,8 @@ const includedStaySchema = new Schema({
     roomType: { type: String, default: "" }, // e.g. "Deluxe room"
     meals: [{ type: String }], // e.g. ["Breakfast"]
     description: { type: String, default: "" },
+    photos: [{ type: String, trim: true }],
+    amenities: [{ type: String, trim: true }],
     tier: { type: String, enum: ["base", "standard", "premium", ""], default: "" }, // pricing tier
     pricing: {
         unit: { type: String, enum: ["PER_PERSON", "PER_BOOKING", "PER_ROOM", "PER_NIGHT", "PER_ROOM_PER_NIGHT", "PER_VEHICLE", "PER_PERSON_PER_NIGHT"], default: null },
@@ -106,10 +111,44 @@ const includedStaySchema = new Schema({
     },
 }, { _id: true });
 
+const hotelRoomOptionSchema = new Schema({
+    roomKey: { type: String, trim: true, required: true },
+    name: { type: String, trim: true, required: true },
+    description: { type: String, trim: true, default: "" },
+    bedType: { type: String, trim: true, default: "" },
+    maxAdults: { type: Number, min: 1, default: 2 },
+    maxChildren: { type: Number, min: 0, default: 0 },
+    meals: [{ type: String, trim: true }],
+    amenities: [{ type: String, trim: true }],
+    photos: [{ type: String, trim: true }],
+    packageKeys: [{ type: String, trim: true }],
+    available: { type: Boolean, default: true },
+    pricing: {
+        unit: { type: String, enum: ["PER_PERSON", "PER_BOOKING", "PER_ROOM", "PER_NIGHT", "PER_ROOM_PER_NIGHT", "PER_PERSON_PER_NIGHT"], default: "PER_ROOM_PER_NIGHT" },
+        amountMinor: { type: Number, min: 0, required: true },
+        currency: { type: String, default: "INR" },
+    },
+}, { _id: true });
+
 /* Hotel upgrade options shown in the "Hotel options" modal */
 const hotelOptionSchema = new Schema({
+    // Kept optional at schema level so older tours remain editable. The builder
+    // save boundary always generates and persists a stable key.
+    optionKey: { type: String, trim: true, default: "" },
+    // Groups interchangeable properties for one itinerary stay. A Jaipur
+    // hotel can only replace another Jaipur hotel carrying the same stayKey.
+    stayKey: { type: String, trim: true, default: "" },
     title: { type: String, default: "" }, // e.g. "Premium upgrade"
     description: { type: String, default: "" }, // e.g. "5-star Ubud resort + premium Seminyak property"
+    propertyName: { type: String, trim: true, default: "" },
+    propertyClass: { type: String, trim: true, default: "" },
+    location: { type: String, trim: true, default: "" },
+    address: { type: String, trim: true, default: "" },
+    nights: { type: Number, min: 0, default: 1 },
+    photos: [{ type: String, trim: true }],
+    amenities: [{ type: String, trim: true }],
+    packageKeys: [{ type: String, trim: true }],
+    rooms: [hotelRoomOptionSchema],
     costLabel: { type: String, default: "Upgrade cost" },
     cost: { type: String, default: "" }, // e.g. "Included" or "₹18,000 per room"
     tier: { type: String, enum: ["base", "standard", "premium", ""], default: "" }, // pricing tier
@@ -192,8 +231,8 @@ const tourDepartureSchema = new Schema({
     capacity: { type: Number, min: 0, default: null }, // null = unlimited
     seatsAvailable: { type: Number, min: 0, default: null }, // null = unlimited
     pricing: {
-        min: { type: Number, required: true, min: 0 },
-        max: { type: Number, required: true, min: 0 },
+        min: { type: Number, min: 0, default: 0 },
+        max: { type: Number, min: 0, default: 0 },
         currency: { type: String, default: "INR" },
         isFinal: { type: Boolean, default: false },
         source: { type: String, enum: PRICE_SOURCE_LIST, default: PRICE_SOURCE.MANUAL },
@@ -223,7 +262,65 @@ const customConfigSchema = new Schema({
     requireDates: { type: Boolean, default: true },
     requireGroupSize: { type: Boolean, default: true },
     allowAgentDraft: { type: Boolean, default: true },
+    allowCustomerCustomization: { type: Boolean, default: false },
     questionnaireFields: [{ type: String }], // e.g. ["budget", "interests", "visaStatus"]
+}, { _id: false });
+
+/* Cost-based commercial definition. Legacy price remains a derived projection. */
+const commercialComponentSchema = new Schema({
+    componentKey: { type: String, trim: true, required: true },
+    type: { type: String, enum: COMPONENT_TYPES, required: true },
+    name: { type: String, trim: true, required: true },
+    description: { type: String, trim: true, default: "" },
+    supplierRef: { type: String, trim: true, default: "" },
+    replacesComponentKey: { type: String, trim: true, default: "" },
+    active: { type: Boolean, default: true },
+    status: { type: String, enum: ["ESTIMATED", "CONFIRMED", "REPRICE_REQUIRED"], default: "CONFIRMED" },
+    pricing: {
+        unit: { type: String, enum: COMMERCIAL_UNITS, required: true },
+        costAmountMinor: { type: Number, min: 0, required: true },
+        sellingAmountMinor: { type: Number, min: 0, required: true },
+        currency: { type: String, default: "INR" },
+    },
+    details: { type: Schema.Types.Mixed, default: null },
+}, { _id: true });
+
+const commercialPackageSchema = new Schema({
+    packageKey: { type: String, trim: true, required: true },
+    tier: { type: String, enum: ["BASIC", "STANDARD", "PREMIUM"], required: true },
+    name: { type: String, trim: true, required: true },
+    description: { type: String, trim: true, default: "" },
+    enabled: { type: Boolean, default: true },
+    recommended: { type: Boolean, default: false },
+    includedComponentKeys: [{ type: String, trim: true }],
+    optionalComponentKeys: [{ type: String, trim: true }],
+}, { _id: true });
+
+const commercialSchema = new Schema({
+    version: { type: String, enum: ["LEGACY", "COMPONENTS_V1"], default: "LEGACY", index: true },
+    currency: { type: String, default: "INR" },
+    components: [commercialComponentSchema],
+    packages: [commercialPackageSchema],
+    defaultBasis: {
+        adults: { type: Number, min: 0, default: 1 }, children: { type: Number, min: 0, default: 0 },
+        infants: { type: Number, min: 0, default: 0 }, rooms: { type: Number, min: 1, default: 1 },
+        vehicles: { type: Number, min: 1, default: 1 }, nights: { type: Number, min: 0, default: 1 },
+        days: { type: Number, min: 1, default: 1 },
+    },
+    pricingPolicy: {
+        feeType: { type: String, enum: ["PERCENTAGE", "FIXED"], default: "PERCENTAGE" },
+        feePercent: { type: Number, min: 0, max: 100, default: 10 },
+        feeAmountMinor: { type: Number, min: 0, default: 0 },
+        gstPercent: { type: Number, min: 0, max: 100, default: 18 },
+        gstOn: { type: String, enum: ["AGENT_FEE"], default: "AGENT_FEE" },
+    },
+    derived: {
+        minAmountMinor: { type: Number, min: 0, default: null },
+        maxAmountMinor: { type: Number, min: 0, default: null },
+        calculatedAt: { type: Date, default: null },
+        displayMode: { type: String, enum: ["FINAL", "STARTING_FROM", "ESTIMATED"], default: "ESTIMATED" },
+        packages: { type: [Schema.Types.Mixed], default: [] },
+    },
 }, { _id: false });
 
 /* ---------- Main tour schema ---------- */
@@ -238,7 +335,7 @@ const customConfigSchema = new Schema({
   - cancellationPolicy: free-text policy
   - minAge / maxAge: optional age restrictions
   - tags: small array for quick filtering
-  - isPublished / status: lightweight publishing control
+  - status: publishing control (`isPublished` is a legacy derived mirror)
 */
 
 const tourSchema = new Schema({
@@ -264,7 +361,7 @@ const tourSchema = new Schema({
     photo: { type: String },
     photos: [{ type: String }],
 
-    desc: { type: String, required: true },
+    desc: { type: String, required() { return this.status !== "draft"; } },
 
     // Base price range
     price: {
@@ -274,6 +371,8 @@ const tourSchema = new Schema({
         isFinal: { type: Boolean, default: false }, // if false => display "approx"
         source: { type: String, enum: PRICE_SOURCE_LIST, default: PRICE_SOURCE.MANUAL },
     },
+
+    commercial: { type: commercialSchema, default: () => ({ version: "LEGACY" }) },
 
     // Seasonal pricing,overrides base price when date in range
     seasonalPricing: [seasonalPricingSchema],
@@ -371,8 +470,10 @@ const tourSchema = new Schema({
 
     // tags and publishing
     tags: [{ type: String }],
+    // Deprecated compatibility field. Never use this for visibility decisions.
     isPublished: { type: Boolean, default: true },
     status: { type: String, enum: TOUR_STATUS_LIST, default: TOUR_STATUS.PUBLISHED },
+    builderProcess: { type: Schema.Types.Mixed, default: null },
     tremVerified: { type: Boolean, default: false, index: true },
     tremVerifiedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
     tremVerifiedAt: { type: Date, default: null },
@@ -465,7 +566,7 @@ tourSchema.set("toJSON", { virtuals: true });
 tourSchema.set("toObject", { virtuals: true });
 
 /* ---------- Indexes (optional) ---------- */
-tourSchema.index({ status: 1, isPublished: 1, visibility: 1, featured: -1, trending: -1, createdAt: -1 });
+tourSchema.index({ status: 1, visibility: 1, featured: -1, trending: -1, createdAt: -1 });
 tourSchema.index({ packageType: 1, status: 1 });
 tourSchema.index({ "departures.departureDate": 1, "departures.status": 1 });
 tourSchema.index({ "city.from": 1, "city.to": 1, "address.country": 1, "period.days": 1 });
@@ -503,6 +604,7 @@ tourSchema.index({
 
 // Keep newly created and edited tours searchable without waiting for a migration.
 tourSchema.pre("validate", function normalizeSearchMetadata() {
+    this.isPublished = this.status === "published";
     if (!this.slug) this.slug = slugifySearchValue(this.title);
     if (!this.shortDescription) this.shortDescription = String(this.desc || "").slice(0, 240);
     if (this.group?.max == null && this.maxGroupSize != null) this.set("group.max", this.maxGroupSize);
@@ -528,13 +630,38 @@ tourSchema.pre("validate", function normalizeSearchMetadata() {
         count: reviews.length,
     };
 
-    if ((!this.searchTags || this.searchTags.length === 0) && Array.isArray(this.tags)) {
-        this.searchTags = this.tags.map((name) => {
-            const normalized = String(name || "").trim();
-            const slug = slugifySearchValue(normalized);
-            return { id: slug, slug, name: normalized, type: "CUSTOM" };
-        }).filter((tag) => tag.slug);
-        this.tagIds = this.searchTags.map((tag) => tag.slug);
+    const searchMetadata = buildTourSearchMetadata(this);
+    this.tags = searchMetadata.tags;
+    this.tagIds = searchMetadata.tagIds;
+    this.searchTags = searchMetadata.searchTags;
+
+    if (this.commercial?.version === "COMPONENTS_V1") {
+        const packageKeys = new Set((this.commercial.packages || []).map((item) => String(item.packageKey || "")).filter(Boolean));
+        const assignedStayPackages = new Set();
+        const stayGroups = new Map();
+        (this.hotelOptions || []).forEach((option, index) => {
+            const normalizedStayKey = String(option.stayKey || option.location || option.optionKey || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+            const normalizedLocation = String(option.location || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+            const stayGroup = stayGroups.get(normalizedStayKey);
+            if (stayGroup && stayGroup.location !== normalizedLocation) this.invalidate(`hotelOptions.${index}.stayKey`, `Hotels grouped under '${normalizedStayKey}' must be in the same location`);
+            if (stayGroup && stayGroup.nights !== Number(option.nights || 0)) this.invalidate(`hotelOptions.${index}.nights`, `Hotels grouped under '${normalizedStayKey}' must cover the same number of nights`);
+            if (!stayGroup && normalizedStayKey) stayGroups.set(normalizedStayKey, { location: normalizedLocation, nights: Number(option.nights || 0) });
+            const invalidKey = (option.packageKeys || []).map(String).find((key) => !packageKeys.has(key));
+            if (invalidKey) this.invalidate(`hotelOptions.${index}.packageKeys`, `Hotel option references unknown package '${invalidKey}'`);
+            const assignedPackages = new Set();
+            (option.rooms || []).forEach((room, roomIndex) => {
+                const invalidRoomKey = (room.packageKeys || []).map(String).find((key) => !packageKeys.has(key));
+                if (invalidRoomKey) this.invalidate(`hotelOptions.${index}.rooms.${roomIndex}.packageKeys`, `Room option references unknown package '${invalidRoomKey}'`);
+                (room.packageKeys || []).map(String).forEach((key) => {
+                    if (assignedPackages.has(key)) this.invalidate(`hotelOptions.${index}.rooms.${roomIndex}.packageKeys`, `Only one room per hotel can be included in package '${key}'`);
+                    assignedPackages.add(key);
+                    const stayKey = normalizedStayKey;
+                    const stayPackageKey = `${stayKey}:${key}`;
+                    if (stayKey && assignedStayPackages.has(stayPackageKey)) this.invalidate(`hotelOptions.${index}.rooms.${roomIndex}.packageKeys`, `Only one hotel room per stay can be included in package '${key}'`);
+                    if (stayKey) assignedStayPackages.add(stayPackageKey);
+                });
+            });
+        });
     }
 });
 

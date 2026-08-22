@@ -20,20 +20,12 @@ import {
 } from "../../services/adminService";
 import ManageToursView from "./ManageTours.view";
 
-const VALID_TABS = new Set(["overview", "bookings", "services", "tenancy", "profile"]);
+const VALID_TABS = new Set(["overview", "enquiries", "services", "tenancy", "profile"]);
 
 const getTabFromSearch = (search) => {
     const tab = new URLSearchParams(search || "").get("tab") || "overview";
     return VALID_TABS.has(tab) ? tab : "overview";
 };
-
-const COMPLETED_STATUSES = new Set([
-    "COMPLETED", "CONFIRMED", "PAID", "TICKETED", "TRAVEL_READY",
-]);
-const PENDING_STATUSES = new Set([
-    "DRAFT", "QUOTE_REQUESTED", "QUOTE_READY", "QUOTE_SENT",
-    "UNDER_REVIEW", "PAYMENT_PENDING", "PARTIALLY_PAID",
-]);
 
 export default function ManageTours({ session, tab: tabProp }) {
     const location = useLocation();
@@ -50,26 +42,19 @@ export default function ManageTours({ session, tab: tabProp }) {
     const [admins, setAdmins] = useState([]);
     const [agents, setAgents] = useState([]);
     const [partnerAgencies, setPartnerAgencies] = useState([]);
-    const [bookings, setBookings] = useState([]);
     const [profile, setProfile] = useState(null);
     const [agencyLoading, setAgencyLoading] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [bookingsLoading, setBookingsLoading] = useState(true);
-    const [formOpen, setFormOpen] = useState(false);
     const [tripFormOpen, setTripFormOpen] = useState(false);
     const [tripEditing, setTripEditing] = useState(null);
-    const [viewOpen, setViewOpen] = useState(false);
-    const [editing, setEditing] = useState(null);
-    const [viewTour, setViewTour] = useState(null);
     const [tripViewOpen, setTripViewOpen] = useState(false);
     const [viewTrip, setViewTrip] = useState(null);
     const [error, setError] = useState(null);
     const requestSeq = useRef(0);
-    const verificationCountRef = useRef(null);
     const [confirmDelete, setConfirmDelete] = useState(null);
     const [confirmMessage, setConfirmMessage] = useState("");
     const [toast, setToast] = useState({ message: "", type: "info", visible: false });
-    const [stats, setStats] = useState({ totalTours: 0, totalTrips: 0, activeBookings: 0, pendingReviews: 0 });
+    const [stats, setStats] = useState({ totalTours: 0, totalTrips: 0 });
 
     const setTab = useCallback((nextTab) => {
         const safeTab = VALID_TABS.has(nextTab) ? nextTab : "overview";
@@ -88,7 +73,6 @@ export default function ManageTours({ session, tab: tabProp }) {
         fetchTours();
         fetchTrips();
         fetchAgencyManagement();
-        fetchBookings();
         fetchProfile();
     }, []);
 
@@ -131,37 +115,6 @@ export default function ManageTours({ session, tab: tabProp }) {
             setStats((prev) => ({ ...prev, totalTrips: tripData.length }));
         } catch (e) {
             showToast(e.message || "Failed to load trips", "error");
-        }
-    }
-
-    async function fetchBookings({ silent = false } = {}) {
-        if (!silent) setBookingsLoading(true);
-        try {
-            const res = await fetchData("/engine/admin/bookings", { params: { limit: 100, skip: 0 } });
-            if (res?.status === "success") {
-                const data = res.componentData?.data?.bookings || [];
-                setBookings(data);
-                const verificationCount = data.filter((booking) =>
-                    String(booking.paymentStatus || "").toUpperCase() === "TOKEN_VERIFICATION"
-                ).length;
-                if (
-                    silent
-                    && verificationCountRef.current !== null
-                    && verificationCount > verificationCountRef.current
-                ) {
-                    showToast("New payment proof submitted", "info", 5000);
-                }
-                verificationCountRef.current = verificationCount;
-                setStats((prev) => ({
-                    ...prev,
-                    activeBookings: data.filter((b) => !COMPLETED_STATUSES.has(String(b.status || "").toUpperCase())).length,
-                    pendingReviews: data.filter((b) => PENDING_STATUSES.has(String(b.status || "").toUpperCase())).length,
-                }));
-            }
-        } catch {
-            if (!silent) setBookings([]);
-        } finally {
-            if (!silent) setBookingsLoading(false);
         }
     }
 
@@ -229,9 +182,15 @@ export default function ManageTours({ session, tab: tabProp }) {
     }
 
     function handleCancelDelete() { setConfirmDelete(null); setConfirmMessage(""); }
-    function openCreate() { setEditing(null); setFormOpen(true); }
-    function openEdit(t) { setEditing(t); setFormOpen(true); }
-    function openView(t) { setViewTour(t); setViewOpen(true); }
+    function openCreate() { navigate("/manage/tours/builder"); }
+    function openEdit(t) {
+        const id = t?._id || t?.id;
+        if (id) navigate(`/manage/tours/${encodeURIComponent(id)}/edit`);
+    }
+    function openView(t) {
+        const id = t?._id || t?.id;
+        if (id) navigate(`/manage/tours/${encodeURIComponent(id)}/view`);
+    }
     async function verifyTour(id) {
         try { await verifyAdminTour(id); showToast("Tour verified by TravelsTREM", "success"); await fetchTours(); }
         catch (e) { showToast(e.message || "Could not verify tour", "error"); }
@@ -256,20 +215,17 @@ export default function ManageTours({ session, tab: tabProp }) {
         } catch { return { success: false, message: "Something went wrong" }; }
     }, [showToast]);
 
-    const refreshAll = useCallback(async () => { await Promise.all([fetchTours(), fetchTrips(), fetchBookings()]); }, []);
+    const refreshAll = useCallback(async () => { await Promise.all([fetchTours(), fetchTrips()]); }, []);
 
     return (
         <ManageToursView
             tab={tab} setTab={setTab}
-            tours={tours} trips={trips} bookings={bookings} profile={profile}
+            tours={tours} trips={trips} profile={profile}
             admins={admins} agents={agents} partnerAgencies={partnerAgencies}
-            loading={loading} bookingsLoading={bookingsLoading} agencyLoading={agencyLoading}
+            loading={loading} agencyLoading={agencyLoading}
             stats={stats} auth={auth} error={error}
-            formOpen={formOpen} setFormOpen={setFormOpen}
             tripFormOpen={tripFormOpen} setTripFormOpen={setTripFormOpen}
             tripEditing={tripEditing}
-            viewOpen={viewOpen} setViewOpen={setViewOpen}
-            editing={editing} viewTour={viewTour} setViewTour={setViewTour}
             tripViewOpen={tripViewOpen} setTripViewOpen={setTripViewOpen}
             viewTrip={viewTrip} setViewTrip={setViewTrip}
             openCreate={openCreate} openEdit={openEdit} openView={openView}

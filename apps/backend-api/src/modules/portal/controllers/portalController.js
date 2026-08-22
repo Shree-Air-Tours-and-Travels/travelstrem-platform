@@ -354,7 +354,6 @@ const buildTrevistaHeaderConfig = (baseConfig = {}) => ({
     },
     menu: [
         { id: "home", label: "Home", type: "internal", path: "/trevista", disabled: false },
-        { id: "bookings", label: "My Bookings", type: "internal", path: "/trevista/bookings", disabled: false },
         {
             id: "explore",
             label: "Explore More",
@@ -367,7 +366,6 @@ const buildTrevistaHeaderConfig = (baseConfig = {}) => ({
     ],
     navigation: [
         { id: "home", label: "Home", path: "/trevista", access: "public" },
-        { id: "bookings", label: "My Bookings", path: "/trevista/bookings", access: "authenticated" },
         { id: "explore", label: "Explore More", path: "/trevio", access: "public" },
     ],
     authActions: {
@@ -376,13 +374,11 @@ const buildTrevistaHeaderConfig = (baseConfig = {}) => ({
     },
     routeMap: {
         "/trevista": "trevista",
-        "/trevista/bookings": "trevista",
         "/trevista/tour": "trevista",
         "/trevio": "trevio",
     },
     routes: [
         { id: "home", path: "/trevista", component: "home", access: "public" },
-        { id: "bookings", path: "/trevista/bookings", component: "bookings", access: "authenticated" },
         { id: "tourDetails", path: "/trevista/tour/:tourRef", component: "tourDetails", access: "public" },
     ],
     fallbacks: {
@@ -445,14 +441,12 @@ const buildAdminHeaderConfig = (baseConfig = {}) => ({
     routeMap: {
         "/manage/tours": "adminTREM",
         "/admin/tours": "adminTREM",
-        "/bookings": "adminTREM",
         "/login": "auth",
     },
     routes: [
         { id: "login", path: "/login", component: "auth", access: "publicOnly", authenticatedRedirect: "/manage/tours?tab=dashboard" },
         { id: "manageTours", path: "/manage/tours", component: "tourManagement", access: "roles", roles: ["admin"], preserveState: true },
         { id: "adminTours", path: "/admin/tours", component: "tourManagement", access: "roles", roles: ["admin"], preserveState: true },
-        { id: "bookingDetail", path: "/bookings/:bookingId", component: "adminBookingDetail", access: "roles", roles: ["admin"], preserveState: true },
     ],
     fallbacks: {
         authenticated: "/manage/tours?tab=dashboard",
@@ -491,13 +485,6 @@ const buildAgentHeaderConfig = (baseConfig = {}) => ({
             disabled: false,
         },
         {
-            id: "agentBookings",
-            label: "Bookings",
-            app: "agentTREM",
-            path: "/agent/bookings",
-            disabled: false,
-        },
-        {
             id: "agentAgency",
             label: "Partner Agency",
             app: "agentTREM",
@@ -508,27 +495,22 @@ const buildAgentHeaderConfig = (baseConfig = {}) => ({
     navigation: [
         { id: "services", label: "Services", path: "/agent/services", access: "roles", roles: ["agent"] },
         { id: "dashboard", label: "Dashboard", path: "/agent/dashboard", access: "roles", roles: ["agent"] },
-        { id: "bookings", label: "Bookings", path: "/agent/bookings", access: "roles", roles: ["agent"] },
         { id: "agency", label: "Partner Agency", path: "/agent/agency", access: "roles", roles: ["agent"] },
     ],
     routeMap: {
         "/agent/services": "agentTREM",
         "/agent/dashboard": "agentTREM",
-        "/agent/bookings": "agentTREM",
         "/agent/agency": "agentTREM",
         "/agent/settings": "agentTREM",
         "/agent/tours": "agentTREM",
-        "/bookings": "agentTREM",
         "/login": "auth",
     },
     routes: [
         { id: "login", path: "/login", component: "auth", access: "publicOnly", authenticatedRedirect: "/agent/services" },
         { id: "agentServices", path: "/agent/services", component: "agentServices", access: "roles", roles: ["agent"], preserveState: true },
         { id: "agentDashboard", path: "/agent/dashboard", component: "agentProfileDashboard", access: "roles", roles: ["agent"], preserveState: true },
-        { id: "agentBookings", path: "/agent/bookings", component: "agentBookings", access: "roles", roles: ["agent"], preserveState: true },
         { id: "agentAgency", path: "/agent/agency", component: "partnerAgency", access: "roles", roles: ["agent"], preserveState: true },
         { id: "agentSettings", path: "/agent/settings", component: "agentSettings", access: "roles", roles: ["agent"], preserveState: true },
-        { id: "bookingDetail", path: "/bookings/:bookingId", component: "agentBookingDetail", access: "roles", roles: ["agent"], preserveState: true },
     ],
     fallbacks: {
         authenticated: "/agent/services",
@@ -544,7 +526,6 @@ const resolvePageConfig = (req) => {
         "/agent/services": "agent-services",
         "/agent/tours": "agent-services",
         "/agent/dashboard": "agent-dashboard",
-        "/agent/bookings": "agent-bookings",
         "/agent/agency": "agent-agency",
         "/agent/settings": "agent-dashboard",
     };

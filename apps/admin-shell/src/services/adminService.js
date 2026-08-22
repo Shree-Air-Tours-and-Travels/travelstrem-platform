@@ -22,15 +22,6 @@ function normalizeToursResponse(res) {
     return nestedArray || [];
 }
 
-function normalizeBookingsResponse(res) {
-    if (!res || res.status !== "success") {
-        throw new Error(res?.message || "Failed to fetch bookings");
-    }
-
-    const data = res.componentData?.data || [];
-    return Array.isArray(data) ? data : data ? [data] : [];
-}
-
 async function expectSuccess(request, fallbackMessage) {
     const res = await request;
     if (!res || res.status !== "success") {
@@ -67,11 +58,10 @@ export async function deleteAllTours() {
 }
 
 export async function saveTour(payload) {
-    const method = payload._id ? "PUT" : "POST";
-    const url = payload._id ? `/tours.json/${payload._id}` : "/tours.json";
+    if (!payload?._id) throw new Error("Tour creation must use the Tour Builder.");
     const res = await expectSuccess(
-        fetchData(url, {
-            method,
+        fetchData(`/tours.json/${payload._id}`, {
+            method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
         }),
@@ -81,242 +71,18 @@ export async function saveTour(payload) {
     return res.componentData?.state?.data?.tours?.[0] || res;
 }
 
+export async function submitTourProcess({ tourId = null, nodeId, payload }) {
+    if (!tourId) throw new Error("Tour creation must use the Tour Builder.");
+    const res = await expectSuccess(fetchData("/tours.json/process/action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tourId, nodeId, payload }),
+    }), "Failed to save tour draft");
+    return res.componentData?.state?.data || res.component?.data || res;
+}
+
 export async function verifyAdminTour(id) {
     await expectSuccess(fetchData(`/tours.json/${id}/verify`, { method: "POST" }), "Failed to verify tour");
-}
-
-export async function fetchAdminBookings() {
-    const res = await fetchData("/engine/admin/bookings", { params: { limit: 100, skip: 0 } });
-    if (!res || res.status !== "success") throw new Error(res?.message || "Failed to fetch bookings");
-    return res.componentData?.data?.bookings || [];
-}
-
-export async function confirmBooking(bookingId, finalPriceData = {}) {
-    await expectSuccess(
-        fetchData(`/admin/bookings/${bookingId}/quote/generate-and-send`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                currency: finalPriceData.currency || "INR",
-                basePrice: Number(finalPriceData.basePrice ?? finalPriceData.finalAmount ?? finalPriceData.amountPaid ?? 0),
-                flightPrice: Number(finalPriceData.flightPrice || 0), hotelPrice: Number(finalPriceData.hotelPrice || 0),
-                transferPrice: Number(finalPriceData.transferPrice || 0), activitiesPrice: Number(finalPriceData.activitiesPrice || 0), mealsPrice: Number(finalPriceData.mealsPrice || 0),
-                visaFee: Number(finalPriceData.visaFee || 0), insuranceFee: Number(finalPriceData.insuranceFee || 0), platformFee: Number(finalPriceData.platformFee || 0), serviceFee: Number(finalPriceData.serviceFee || 0), discount: Number(finalPriceData.discount || 0),
-                items: Array.isArray(finalPriceData.items) ? finalPriceData.items : [], amountPayableNow: Number(finalPriceData.amountPayableNow || 0), expirationDate: finalPriceData.expirationDate || null, balanceDueDate: finalPriceData.balanceDueDate || null,
-                notes: finalPriceData.notes || "",
-                terms: finalPriceData.terms || "",
-            }),
-        }),
-        "Quote generation failed"
-    );
-}
-
-export async function saveBookingQuoteDraft(bookingId, quote = {}) {
-    await expectSuccess(fetchData(`/admin/bookings/${bookingId}/quote`, {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(quote),
-    }), "Unable to save quote draft");
-}
-
-export async function uploadBookingQuote(bookingId, file, quoteAmount, currency = "INR") {
-    const form = new FormData();
-    form.append("quote", file);
-    form.append("quoteAmount", String(Number(quoteAmount || 0)));
-    form.append("currency", currency);
-    const response = await api.post(`/admin/bookings/${bookingId}/quote-document`, form);
-    if (response?.data?.status !== "success") throw new Error(response?.data?.message || "Quote PDF upload failed");
-    return response.data;
-}
-
-export async function cancelBooking(bookingId) {
-    await expectSuccess(fetchData(`/bookings/${bookingId}/cancel`, { method: "POST" }), "Cancel failed");
-}
-
-export async function downloadBookingQuote(bookingId, filename = "") {
-    const response = await api.get(`/bookings/${bookingId}/downloads/quote`, { responseType: "blob" });
-    const objectUrl = URL.createObjectURL(response.data);
-    const link = document.createElement("a");
-    link.href = objectUrl;
-    link.download = filename || `quote-${bookingId}.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
-}
-
-export async function updateBookingTravelers(bookingId, travelers) {
-    await expectSuccess(
-        fetchData(`/bookings/${bookingId}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ travelers }),
-        }),
-        "Update failed"
-    );
-}
-
-export async function updateBookingStatus(bookingId, status, reason = "") {
-    await expectSuccess(
-        fetchData(`/admin/bookings/${bookingId}/status`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ status, reason }),
-        }),
-        `Status transition to ${status} failed`
-    );
-}
-
-export async function recordAdminPayment(bookingId, amount, currency = "INR", options = {}) {
-    await expectSuccess(
-        fetchData(`/admin/bookings/${bookingId}/payment`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                amount: Number(amount),
-                currency,
-                provider: options.provider || "admin_manual",
-                transactionId: options.transactionId || `ADM-PAY-${Date.now()}`,
-                status: "PAID",
-                type: options.type || "partial",
-            }),
-        }),
-        "Payment recording failed"
-    );
-}
-
-export async function approveTokenPayment(bookingId, paymentId) {
-    return expectSuccess(
-        fetchData(`/admin/bookings/${bookingId}/payments/${paymentId}/approve`, { method: "POST" }),
-        "Token approval failed"
-    );
-}
-
-export async function rejectTokenPayment(bookingId, paymentId, reason) {
-    return expectSuccess(
-        fetchData(`/admin/bookings/${bookingId}/payments/${paymentId}/reject`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: { reason },
-        }),
-        "Token rejection failed"
-    );
-}
-
-function getProofUrl(value) {
-    if (typeof value === "string") {
-        const normalized = value.trim();
-        return /^\[object Object\](?:\.html)?$/i.test(normalized) ? "" : normalized;
-    }
-    if (!value || typeof value !== "object") return "";
-    for (const key of ["secure_url", "secureUrl", "url", "href", "path", "downloadUrl", "receiptUrl", "paymentScreenshot", "file", "asset", "data"]) {
-        const resolved = getProofUrl(value[key]);
-        if (resolved) return resolved;
-    }
-    return "";
-}
-
-export async function downloadPaymentProof(bookingId, paymentId, proofValue = "") {
-    let response;
-    let resolvedProofUrl = "";
-    const proofUrl = getProofUrl(proofValue);
-    if (proofUrl) {
-        try {
-            const apiBase = new URL(api.defaults.baseURL || "/", window.location.origin);
-            resolvedProofUrl = new URL(proofUrl, apiBase.origin).toString();
-        } catch {
-            resolvedProofUrl = "";
-        }
-    }
-    if (resolvedProofUrl) {
-        try {
-            const directResponse = await fetch(resolvedProofUrl, { mode: "cors", credentials: "omit" });
-            if (!directResponse.ok) throw new Error(`Stored proof returned ${directResponse.status}`);
-            const contentType = String(directResponse.headers.get("content-type") || "").toLowerCase();
-            if (!contentType.startsWith("image/") && contentType !== "application/octet-stream") {
-                throw new Error(`Stored proof returned ${contentType || "an unsupported file type"}`);
-            }
-            response = {
-                data: await directResponse.blob(),
-                headers: { "content-type": contentType || "image/jpeg" },
-            };
-        } catch {
-            response = null;
-        }
-    }
-    if (!response) {
-        response = await api.get(
-            `/engine/${bookingId}/payments/${paymentId}/proof`,
-            { responseType: "blob" }
-        );
-    }
-    const disposition = String(response.headers?.["content-disposition"] || "");
-    const encodedName = disposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
-    const plainName = disposition.match(/filename="?([^";]+)"?/i)?.[1];
-    const sourceName = resolvedProofUrl ? resolvedProofUrl.split("?")[0].split("/").pop() : "";
-    const filename = encodedName
-        ? decodeURIComponent(encodedName)
-        : (plainName || sourceName || `payment-proof-${bookingId}.jpg`);
-    const objectUrl = URL.createObjectURL(response.data);
-    const link = document.createElement("a");
-    link.href = objectUrl;
-    link.download = filename;
-    link.style.display = "none";
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
-}
-
-export async function markBookingTokenPaid(bookingId, details = {}) {
-    return expectSuccess(
-        fetchData(`/admin/bookings/${bookingId}/payments/token-paid`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: details,
-        }),
-        "Token payment update failed"
-    );
-}
-
-export async function markBookingBalancePaid(bookingId, details = {}) {
-    return expectSuccess(
-        fetchData(`/admin/bookings/${bookingId}/payments/balance-paid`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: details,
-        }),
-        "Balance update failed"
-    );
-}
-
-export async function refundBookingPayment(bookingId, details = {}) {
-    return expectSuccess(
-        fetchData(`/admin/bookings/${bookingId}/payments/refund`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: details,
-        }),
-        "Refund failed"
-    );
-}
-
-export async function processRefund(bookingId, amount, currency = "INR", reason = "") {
-    await expectSuccess(
-        fetchData(`/admin/bookings/${bookingId}/refund`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                amount: Number(amount),
-                currency,
-                reason,
-            }),
-        }),
-        "Refund processing failed"
-    );
-}
-
-export async function adminGetBooking(bookingId) {
-    const res = await fetchData(`/admin/bookings/${bookingId}`);
-    return normalizeBookingsResponse(res);
 }
 
 export async function fetchPartnerAgencies(status = "") {

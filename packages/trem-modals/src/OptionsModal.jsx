@@ -18,21 +18,33 @@ export default function OptionsModal({
   options = [],
   recommendedLabel = "Recommended",
   selectedLabel = "Selected",
+  pricePendingLabel = "Price on request",
+  includedInLabel = "Included in",
+  includedForSelectedLabel = "Included in selected package",
+  includedPriceLabel = "Included",
+  availableRoomsLabel = "Available rooms",
   confirmLabel = "Apply selection",
   cancelLabel = "Cancel",
   closeLabel = "Close",
   selectedValue = "",
+  selectedRoomValue = "",
   onConfirm,
+  customizeLabel = "Customise this tour",
+  onCustomize,
   className = "",
   closeOnOutsideClick = false,
 }) {
   const [mobile, setMobile] = useState(false);
   const [draftValue, setDraftValue] = useState(selectedValue);
+  const [draftRoomValue, setDraftRoomValue] = useState(selectedRoomValue);
   const selectable = typeof onConfirm === "function";
 
   useEffect(() => {
-    if (open) setDraftValue(selectedValue);
-  }, [open, selectedValue]);
+    if (open) {
+      setDraftValue(selectedValue);
+      setDraftRoomValue(selectedRoomValue);
+    }
+  }, [open, selectedRoomValue, selectedValue]);
 
   useEffect(() => {
     setMobile(isMobile());
@@ -48,17 +60,34 @@ export default function OptionsModal({
       {options.map((option, i) => {
         const optionValue = option.value || option.title || String(i);
         const selected = selectable && draftValue === optionValue;
-        const Item = selectable ? "button" : "div";
+        const rooms = Array.isArray(option.rooms) ? option.rooms : [];
+        const selectedRoom = rooms.find((room, roomIndex) => (room.value || room.name || String(roomIndex)) === draftRoomValue);
+        const formatPrice = (pricing) => {
+          if (!pricing || !Number.isFinite(Number(pricing.amountMinor))) return "";
+          const amount = new Intl.NumberFormat("en-IN", { style: "currency", currency: pricing.currency || "INR", maximumFractionDigits: 0 }).format(Number(pricing.amountMinor) / 100);
+          const unit = {
+            PER_PERSON: "per person", PER_BOOKING: "per booking", PER_ROOM: "per room",
+            PER_NIGHT: "per night", PER_ROOM_PER_NIGHT: "per room / night", PER_PERSON_PER_NIGHT: "per person / night",
+          }[pricing.unit] || "";
+          return `${amount}${unit ? ` ${unit}` : ""}`;
+        };
         return (
-        <Item
+        <div
           key={option.id || optionValue}
           className={`trem-options__item${selected ? " is-selected" : ""}`}
-          {...(selectable ? {
-            type: "button",
-            onClick: () => setDraftValue(optionValue),
-            "aria-pressed": selected,
-          } : {})}
         >
+          {option.photos?.[0] ? <img className="trem-options__cover" src={option.photos[0]} alt={option.propertyName || option.title || "Hotel"} /> : null}
+          <button
+            type="button"
+            className="trem-options__option-button"
+            disabled={!selectable}
+            onClick={() => {
+              if (!selectable) return;
+              if (draftValue !== optionValue) setDraftRoomValue("");
+              setDraftValue(optionValue);
+            }}
+            aria-pressed={selected}
+          >
           <div className="trem-options__item-top">
             <span className="trem-options__badge">
               <Icon name={option.icon || (option.recommended ? "badgeCheck" : "hotel")} size={16} />
@@ -67,12 +96,43 @@ export default function OptionsModal({
             {option.recommended && <span className="trem-options__pill">{recommendedLabel}</span>}
             {selected && <span className="trem-options__pill trem-options__pill--selected">{selectedLabel}</span>}
           </div>
+          {(option.propertyName || option.propertyClass || option.location) && <p className="trem-options__property">
+            {[option.propertyName, option.propertyClass, option.location].filter(Boolean).join(" · ")}
+          </p>}
           {option.description && <p className="trem-options__item-desc">{option.description}</p>}
-          <div className="trem-options__cost">
+          {option.packageNames?.length ? <div className="trem-options__included-in">{includedInLabel} {option.packageNames.join(", ")}</div> : null}
+          {option.amenities?.length ? <div className="trem-options__chips">{option.amenities.slice(0, 8).map((item) => <span key={item}>{item}</span>)}</div> : null}
+          {!rooms.length && (option.cost || option.pricing || option.pricePending) && <div className="trem-options__cost">
             <span className="trem-options__cost-label">{option.costLabel || "Upgrade cost"}</span>
-            <span className="trem-options__cost-value">{option.cost}</span>
-          </div>
-        </Item>
+            <span className="trem-options__cost-value">{option.pricePending ? pricePendingLabel : (option.cost || formatPrice(option.pricing))}</span>
+          </div>}
+          </button>
+          {rooms.length ? <div className="trem-options__rooms" aria-label={availableRoomsLabel}>
+            <strong className="trem-options__rooms-title">{availableRoomsLabel}</strong>
+            {rooms.map((room, roomIndex) => {
+              const roomValue = room.value || room.name || String(roomIndex);
+              const roomSelected = selected && draftRoomValue === roomValue;
+              return <button
+                type="button"
+                className={`trem-options__room${roomSelected ? " is-selected" : ""}${room.includedInSelectedPackage ? " is-included" : ""}`}
+                key={room.id || roomValue}
+                disabled={!selectable}
+                onClick={() => { setDraftValue(optionValue); setDraftRoomValue(roomValue); }}
+                aria-pressed={roomSelected}
+              >
+                {room.photos?.[0] ? <img src={room.photos[0]} alt="" /> : null}
+                <span className="trem-options__room-copy">
+                  <strong>{room.name}</strong>
+                  {room.includedInSelectedPackage ? <em>{includedForSelectedLabel}</em> : null}
+                  <small>{[room.bedType, `Up to ${room.maxAdults || 2} adults`, ...(room.meals || [])].filter(Boolean).join(" · ")}</small>
+                  {room.amenities?.length ? <small>{room.amenities.slice(0, 5).join(" · ")}</small> : null}
+                  {room.packageNames?.length ? <small className="trem-options__room-packages">{includedInLabel}: {room.packageNames.join(" · ")}</small> : null}
+                </span>
+                <strong className="trem-options__room-price">{room.includedInSelectedPackage ? includedPriceLabel : (room.pricePending ? pricePendingLabel : formatPrice(room.pricing))}</strong>
+              </button>;
+            })}
+          </div> : null}
+        </div>
       )})}
     </div>
   );
@@ -84,23 +144,26 @@ export default function OptionsModal({
         variant="solid"
         color="primary"
         text={confirmLabel}
-        disabled={!draftValue}
-        onClick={() => onConfirm(options.find((option, index) => (option.value || option.title || String(index)) === draftValue))}
+        disabled={!draftValue || Boolean((options.find((option, index) => (option.value || option.title || String(index)) === draftValue)?.rooms || []).length && !draftRoomValue)}
+        onClick={() => onConfirm(options.find((option, index) => (option.value || option.title || String(index)) === draftValue), options.find((option, index) => (option.value || option.title || String(index)) === draftValue)?.rooms?.find((room, index) => (room.value || room.name || String(index)) === draftRoomValue) || null)}
       />
+      {typeof onCustomize === "function" ? <Button variant="outline" color="primary" text={customizeLabel} disabled={!draftValue} onClick={() => onCustomize(options.find((option, index) => (option.value || option.title || String(index)) === draftValue), options.find((option, index) => (option.value || option.title || String(index)) === draftValue)?.rooms?.find((room, index) => (room.value || room.name || String(index)) === draftRoomValue) || null)} /> : null}
     </div>
   ) : null;
 
   const content = (
     <div className={`trem-options ${className}`.trim()}>
-      {subtitle && <p className="trem-options__subtitle">{subtitle}</p>}
-      {list}
+      <div className="trem-options__scroll">
+        {subtitle && <p className="trem-options__subtitle">{subtitle}</p>}
+        {list}
+      </div>
       {selectionActions}
     </div>
   );
 
   if (mobile) {
     return (
-      <BottomSheet open={open} onClose={onClose} title={title} closeOnOutsideClick={closeOnOutsideClick}>
+      <BottomSheet open={open} onClose={onClose} title={title} className="trem-options-sheet" closeOnOutsideClick={closeOnOutsideClick}>
         {content}
       </BottomSheet>
     );

@@ -152,25 +152,11 @@ select {
   width: 100%;
 }
 
-.dash-content--booking-detail {
-  padding: 0;
-  padding-bottom: $space-6;
-  overflow-x: hidden;
-  overflow-y: auto;
-}
-
 @media (max-width: $breakpoint-md) {
   .dash-content--support {
     padding: 0;
   }
 
-  .dash-content--booking-detail {
-    padding: 0;
-    padding-bottom: $space-4;
-    overflow-x: hidden;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
 }
 
 .dash-content > .dash-app-footer {
@@ -218,29 +204,6 @@ select {
 }
 
 @media (max-width: $breakpoint-md) {
-  .dash-content--bookings {
-    height: auto;
-    min-height: 0;
-    overflow-x: hidden;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    touch-action: pan-y;
-
-    .app-shell-page {
-      height: auto;
-      min-height: 0;
-    }
-  }
-
-  .dash-content--booking-detail {
-    height: auto;
-    padding: 0;
-    padding-bottom: $space-4;
-    overflow-x: hidden;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
   .dash-content > .dash-app-footer {
     width: calc(100% + #{$space-4 * 2});
     margin-right: -$space-4;

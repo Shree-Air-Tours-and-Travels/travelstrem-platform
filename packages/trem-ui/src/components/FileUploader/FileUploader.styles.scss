@@ -1,0 +1,18 @@
+@import "@packages/trem-design-tokens/scss";
+
+.trem-uploader { display: grid; gap: $space-2; width: 100%;
+  &__dropzone { display: flex; align-items: center; gap: $space-3; min-height: 92px; padding: $space-4; border: 1px dashed var(--border-strong, var(--border)); border-radius: $radius-md; background: var(--surface-inset); color: var(--text); cursor: pointer; transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease; &:focus-visible { outline: none; box-shadow: var(--focus-ring); } }
+  &.is-dragging &__dropzone { border-color: var(--color-primary); background: var(--primary-softer); }
+  &.has-error &__dropzone { border-color: var(--color-danger); background: var(--danger-soft); }
+  &.is-disabled &__dropzone { cursor: not-allowed; opacity: var(--disabled-opacity, .58); }
+  &__input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  &__icon { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; width: $space-10; height: $space-10; border-radius: $radius-sm; background: var(--primary-soft); color: var(--color-primary); }
+  &__copy { display: grid; flex: 1; min-width: 0; gap: $space-1; } &__copy strong { @include type-md(); color: var(--text); } &__copy span { @include type-sm(); color: var(--text-muted); overflow-wrap: anywhere; }
+  &__progress { height: $space-1; overflow: hidden; border-radius: $radius-full; background: var(--surface-inset); } &__progress span { display: block; height: 100%; border-radius: inherit; background: var(--color-primary); transition: width 160ms ease; }
+  &__error { display: flex; align-items: center; gap: $space-1; margin: 0; color: var(--color-danger); @include type-sm(); }
+  &__files { display: grid; gap: $space-2; margin: 0; padding: 0; list-style: none; } &__files li { display: flex; align-items: center; gap: $space-2; min-width: 0; padding: $space-2 $space-3; border: 1px solid var(--border); border-radius: $radius-sm; background: var(--surface); }
+  &__files img { flex: 0 0 auto; width: $space-10; height: $space-10; border-radius: $radius-xs; object-fit: cover; } &__files span { display: grid; flex: 1; min-width: 0; overflow: hidden; color: var(--text); @include type-sm(); text-overflow: ellipsis; white-space: nowrap; } &__files small { color: var(--text-muted); }
+  &__files button { display: inline-flex; align-items: center; justify-content: center; border: 0; background: transparent; color: var(--text-muted); cursor: pointer; }
+  &--compact &__dropzone { min-height: 52px; padding: $space-2 $space-3; border-style: solid; } &--compact &__icon { width: $space-8; height: $space-8; } &--gallery &__dropzone { min-height: 140px; justify-content: center; text-align: center; flex-direction: column; }
+}
+@media (max-width: 640px) { .trem-uploader__dropzone { align-items: flex-start; } .trem-uploader__dropzone > .ui-button { display: none; } }

@@ -5,17 +5,6 @@ import TourDeparture from "../modules/tours/models/TourDeparture.js";
 import Favorite from "../modules/tours/models/Favorite.js";
 import PartnerAgency from "../modules/auth/models/PartnerAgency.js";
 import User from "../modules/auth/models/User.js";
-import Booking from "../modules/bookings/models/Booking.js";
-import BookingAssignment from "../modules/bookings/models/BookingAssignment.js";
-import BookingAuditLog from "../modules/bookings/models/BookingAuditLog.js";
-import BookingDocument from "../modules/bookings/models/BookingDocument.js";
-import BookingMessage from "../modules/bookings/models/BookingMessage.js";
-import BookingPayment from "../modules/bookings/models/BookingPayment.js";
-import BookingQuote from "../modules/bookings/models/BookingQuote.js";
-import BookingStatusHistory from "../modules/bookings/models/BookingStatusHistory.js";
-import BookingTimeline from "../modules/bookings/models/BookingTimeline.js";
-import BookingTraveller from "../modules/bookings/models/BookingTraveller.js";
-import TrevioBooking from "../modules/trevio/models/TrevioBooking.js";
 
 const slugify = (value) => String(value || "").trim().toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 const optionPricing = (unit, rupees) => ({ unit, amountMinor: rupees * 100, currency: "INR" });
@@ -91,8 +80,6 @@ const rawTours = [
 await mongoose.connect(config.MONGO_URI);
 const agency = await PartnerAgency.findOne({ status: { $in: ["active", "approved"] } }).sort({ createdAt: 1 });
 const agent = agency ? await User.findOne({ role: "agent", partnerAgencyRef: agency._id }).sort({ createdAt: 1 }) : null;
-const bookingIds = await Booking.distinct("_id");
-const linked = { bookingId: { $in: bookingIds } };
 const replacementSlugs = rawTours.map((tour) => tour.slug);
 const removableTours = await Tour.find({
   $or: [
@@ -102,9 +89,7 @@ const removableTours = await Tour.find({
   ],
 }).select("_id slug").lean();
 const removableTourIds = removableTours.map((tour) => tour._id);
-for (const model of [BookingAssignment, BookingAuditLog, BookingDocument, BookingMessage, BookingPayment, BookingStatusHistory, BookingTimeline, BookingTraveller]) await model.deleteMany(linked);
 await Promise.all([
-  BookingQuote.deleteMany({}), Booking.deleteMany({}), TrevioBooking.deleteMany({}),
   Favorite.deleteMany({ product: "trevista", tourId: { $in: removableTourIds } }),
   TourDeparture.deleteMany({ tourId: { $in: removableTourIds } }),
   Tour.deleteMany({ _id: { $in: removableTourIds } }),
@@ -135,5 +120,5 @@ await TourDeparture.insertMany(tours.map((tour) => ({
   pricing: { ...tour.price }, legacyDerived: false,
 })));
 
-console.log(JSON.stringify({ database: mongoose.connection.name, deletedBookings: bookingIds.length, deletedDemoTours: removableTours.map((tour) => tour.slug), toursCreated: tours.map((tour) => ({ slug: tour.slug, flights: tour.flights, inclusions: tour.inclusions.length, extras: tour.extras.length })) }, null, 2));
+console.log(JSON.stringify({ database: mongoose.connection.name, deletedDemoTours: removableTours.map((tour) => tour.slug), toursCreated: tours.map((tour) => ({ slug: tour.slug, flights: tour.flights, inclusions: tour.inclusions.length, extras: tour.extras.length })) }, null, 2));
 await mongoose.disconnect();

@@ -18,9 +18,21 @@ const formatMoney = (value, currency = "INR") => {
   }
 };
 
+const displayText = (value, fallback = "") => {
+  if (value == null) return fallback;
+  if (["string", "number", "boolean"].includes(typeof value)) return String(value);
+  if (Array.isArray(value)) return value.map((item) => displayText(item)).filter(Boolean).join(", ") || fallback;
+  if (typeof value === "object") {
+    return displayText(value.label ?? value.name ?? value.title ?? value.url)
+      || [value.city, value.country].map((item) => displayText(item)).filter(Boolean).join(", ")
+      || fallback;
+  }
+  return fallback;
+};
+
 const getPriceText = (tour) => {
   const t = tour || {};
-  const price = t.priceInfo || t.price;
+  const price = t.priceInfo || t.price || t.pricing;
   if (!price) return "Price on request";
   const currency = price.currency || "INR";
   if (Number(price.min) <= 0 && Number(price.max) <= 0) return "Price on request";
@@ -31,21 +43,21 @@ const getPriceText = (tour) => {
 
 const getRouteText = (tour) => {
   const t = tour || {};
-  const origin = t.city?.from || "Flexible start";
-  const destination = t.city?.to || t.address?.city || "Curated destination";
+  const origin = displayText(t.city?.from ?? t.route?.origin?.name, "Flexible start");
+  const destination = displayText(t.city?.to ?? t.route?.destination?.name ?? t.address?.city ?? t.location?.city, "Curated destination");
   return `${origin} to ${destination}`;
 };
 
 const getLocationText = (tour) => {
   const t = tour || {};
-  const city = t.address?.city || t.city?.to || t.city?.from;
-  const country = t.address?.country;
+  const city = displayText(t.address?.city ?? t.location?.city ?? t.city?.to ?? t.city?.from);
+  const country = displayText(t.address?.country ?? t.location?.country);
   return [city, country].filter(Boolean).join(", ") || "Curated destination";
 };
 
 const getCategory = (tour) => {
   const t = tour || {};
-  const tag = Array.isArray(t.tags) && t.tags.length ? t.tags[0] : "";
+  const tag = Array.isArray(t.tags) && t.tags.length ? displayText(t.tags[0]) : "";
   return tag ? `${tag.charAt(0).toUpperCase()}${tag.slice(1)}` : "Tour";
 };
 
@@ -64,31 +76,32 @@ const TourCard = React.memo(function TourCard({
   isAdmin = false,
   onEdit,
   onDelete,
+  onVerify,
   className = "",
   variant = "list",
   size = "default",
   showActions = true,
+  hideDescription = false,
+  labels = {},
 }) {
   const t = tour || {};
-  const {
-    _id,
-    title,
-    photo,
-    photos = [],
-    period = {},
-    desc,
-    avgRating,
-    maxGroupSize,
-    featured,
-    reviews = [],
-    tags = [],
-    highlights = [],
-    inclusions = [],
-    languages = [],
-    availability = {},
-  } = t;
-
-  const imageSrc = photo ? photo : photos?.length ? photos[0] : null;
+  const _id = t._id || t.id;
+  const title = displayText(t.title, "Untitled Tour");
+  const photos = Array.isArray(t.photos) ? t.photos : [];
+  const imageSrc = displayText(t.photo ?? photos[0] ?? t.coverImage?.url) || null;
+  const period = t.period || t.duration || {};
+  const desc = displayText(t.desc ?? t.shortDescription);
+  const avgRating = t.avgRating ?? t.rating?.average;
+  const maxGroupSize = t.maxGroupSize ?? t.group?.max;
+  const featured = Boolean(t.featured);
+  const trending = Boolean(t.trending);
+  const reviews = Array.isArray(t.reviews) ? t.reviews : [];
+  const tags = (Array.isArray(t.tags) ? t.tags : []).map((tag) => displayText(tag)).filter(Boolean);
+  const highlights = Array.isArray(t.highlights) ? t.highlights : [];
+  const inclusions = Array.isArray(t.inclusions) ? t.inclusions : [];
+  const languages = (Array.isArray(t.languages) ? t.languages : []).map((language) => displayText(language)).filter(Boolean);
+  const availability = t.availability || {};
+  const seatsAvailable = availability.seatsAvailable ?? availability.availableSeats;
   const numericRating = Number(avgRating);
   const displayRating = Number.isFinite(numericRating)
     ? numericRating.toFixed(1)
@@ -101,9 +114,9 @@ const TourCard = React.memo(function TourCard({
   const reviewCount =
     t.reviewCount != null
       ? Number(t.reviewCount)
-      : Array.isArray(reviews)
-        ? reviews.length
-        : 0;
+      : t.rating?.count != null
+        ? Number(t.rating.count)
+        : reviews.length;
   const truncatedDesc = desc
     ? `${desc.slice(0, 150)}${desc.length > 150 ? "..." : ""}`
     : "";
@@ -112,6 +125,17 @@ const TourCard = React.memo(function TourCard({
   const hasTags = Array.isArray(tags) && tags.length > 0;
   const isCompact = variant === "compact";
   const isFeaturedCard = variant === "featured";
+  const isManagement = variant === "management";
+  const isCustomerCard = isManagement && !isAdmin;
+  const status = String(t.status || (t.isPublished === false ? "draft" : "published")).toLowerCase();
+  const isDraft = status === "draft";
+  const isVerified = Boolean(t.tremVerified);
+  const copy = {
+    draft: "Draft", published: "Published", archived: "Archived",
+    featured: "Featured", trending: "Trending", verified: "TREM verified",
+    view: "View", viewTour: "View tour", edit: "Edit", continue: "Continue", remove: "Delete", verify: "Verify",
+    ...labels,
+  };
   const detailItems = [
     Array.isArray(highlights) && highlights[0]?.short
       ? { icon: highlights[0].icon || "sparkles", text: highlights[0].short }
@@ -122,8 +146,8 @@ const TourCard = React.memo(function TourCard({
     Array.isArray(languages) && languages[0]
       ? { icon: "guide", text: `${languages.slice(0, 2).join(", ")} guide` }
       : null,
-    availability?.seatsAvailable
-      ? { icon: "ticket", text: `${availability.seatsAvailable} seats left` }
+    seatsAvailable
+      ? { icon: "ticket", text: `${seatsAvailable} seats left` }
       : null,
   ].filter(Boolean).slice(0, 3);
 
@@ -161,6 +185,11 @@ const TourCard = React.memo(function TourCard({
     onDelete?.(tour);
   };
 
+  const handleVerify = (e) => {
+    e.stopPropagation();
+    onVerify?.(tour);
+  };
+
   const cardMedia = (
     <div className="tour-card__media" aria-hidden={!imageSrc}>
       {showHeart && (
@@ -174,17 +203,22 @@ const TourCard = React.memo(function TourCard({
         </button>
       )}
 
-      {featured && (
+      {(isAdmin || featured || trending) && (
         <div className="tour-card__status-badges" aria-label="Tour status">
-          <span className="tour-card__badge tour-card__badge--featured">
-            <Icon name="sparkles" size={14} /> Trending
-          </span>
+          {isAdmin && (
+            <span className={`tour-card__badge tour-card__badge--status tour-card__badge--${status}`}>
+              {copy[status] || status}
+            </span>
+          )}
+          {featured && <span className="tour-card__badge tour-card__badge--featured"><Icon name="star" size={13} /> {copy.featured}</span>}
+          {trending && <span className="tour-card__badge tour-card__badge--trending"><Icon name="sparkles" size={13} /> {copy.trending}</span>}
+          {isVerified && isAdmin && <span className="tour-card__badge tour-card__badge--verified"><Icon name="badgeCheck" size={13} /> {copy.verified}</span>}
         </div>
       )}
 
-      {availability?.seatsAvailable != null && !isCompact ? (
-        <span className={`tour-card__availability${Number(availability.seatsAvailable) === 0 ? " is-sold-out" : ""}`}>
-          {Number(availability.seatsAvailable) === 0 ? "Sold out" : `${availability.seatsAvailable} seats`}
+      {seatsAvailable != null && !isCompact ? (
+        <span className={`tour-card__availability${Number(seatsAvailable) === 0 ? " is-sold-out" : ""}`}>
+          {Number(seatsAvailable) === 0 ? "Sold out" : `${seatsAvailable} seats`}
         </span>
       ) : null}
 
@@ -237,7 +271,7 @@ const TourCard = React.memo(function TourCard({
   const cardLabels = !isCompact ? (
     <div className="tour-card__content-badges" aria-label="Tour labels">
       <span className="tour-card__content-badge">{category}</span>
-      {t.tremVerified ? (
+      {isVerified && (!isManagement || isCustomerCard) ? (
         <span className="tour-card__content-badge tour-card__content-badge--verified">
           <Icon name="badgeCheck" size={13} /> TREM verified
         </span>
@@ -272,7 +306,7 @@ const TourCard = React.memo(function TourCard({
     </div>
   );
 
-  const cardDescription = !isCompact && truncatedDesc ? (
+  const cardDescription = !isCompact && !hideDescription && truncatedDesc ? (
     <p className="tour-card__desc">{truncatedDesc}</p>
   ) : null;
 
@@ -331,16 +365,16 @@ const TourCard = React.memo(function TourCard({
       {cardFacts}
 
       <div className="tour-card__actions">
-        {(variant === "list" || isFeaturedCard) && priceText && (
+        {(variant === "list" || isFeaturedCard || isManagement) && priceText && (
           <div className="tour-card__price">
             <span className="tour-card__price-prefix">From</span>
             <span className="tour-card__price-amount">{priceText}</span>
           </div>
         )}
 
-        {showActions && variant === "list" && onView && !isAdmin && (
+        {showActions && (variant === "list" || isCustomerCard) && onView && !isAdmin && (
           <Button
-            text="View tour"
+            text={copy.viewTour}
             variant="solid"
             color="primary"
             size="small"
@@ -349,7 +383,7 @@ const TourCard = React.memo(function TourCard({
           />
         )}
 
-        {isAdmin && (
+        {isAdmin && showActions && (
           <div
             className="tour-card__admin"
             role="group"
@@ -358,7 +392,7 @@ const TourCard = React.memo(function TourCard({
           >
             {onView && (
               <Button
-                text="View"
+                text={copy.view}
                 variant="solid"
                 color="primary"
                 size="small"
@@ -367,16 +401,25 @@ const TourCard = React.memo(function TourCard({
             )}
             {onEdit && (
               <Button
-                text="Edit"
+                text={isDraft ? copy.continue : copy.edit}
                 variant="outline"
                 color="secondary"
                 size="small"
                 onClick={handleEdit}
               />
             )}
+            {onVerify && !isVerified && (
+              <Button
+                text={copy.verify}
+                variant="outline"
+                color="primary"
+                size="small"
+                onClick={handleVerify}
+              />
+            )}
             {onDelete && (
               <Button
-                text="Delete"
+                text={copy.remove}
                 variant="solid"
                 color="danger"
                 size="small"
@@ -435,7 +478,7 @@ const TourCard = React.memo(function TourCard({
 
   const baseClasses = `tour-card tour-card--${variant}${
     size !== "default" ? ` tour-card--${size}` : ""
-  }${featured ? " is-featured" : ""}${showHeart ? " has-favorite-control" : ""}${className ? ` ${className}` : ""}`;
+  }${isCustomerCard ? " tour-card--customer" : ""}${featured ? " is-featured" : ""}${showHeart ? " has-favorite-control" : ""}${className ? ` ${className}` : ""}`;
 
   if (path) {
     return (

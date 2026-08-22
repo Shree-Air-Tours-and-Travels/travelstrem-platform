@@ -194,4 +194,23 @@ describe("BookingTable", () => {
 
     expect(container.querySelector(".booking-table--mobile-scroll-page")).toBeInTheDocument();
   });
+
+  it("uses the configured column label when a mobile field references its accessor", () => {
+    const { container } = render(
+      <BookingTable
+        table={{
+          mobileCard: {
+            titleAccessor: "service.name",
+            badgeAccessor: "status",
+            fieldIds: ["createdDisplay"],
+          },
+        }}
+        columns={[{ id: "createdAt", label: "Created", accessor: "createdDisplay" }]}
+        rows={[{ id: "ENQ-1", service: { name: "Tour" }, status: "New", createdDisplay: "21 Aug 2026" }]}
+        pagination={{ enabled: false }}
+      />,
+    );
+
+    expect(container.querySelector(".trem-info-card__field small")).toHaveTextContent("Created");
+  });
 });

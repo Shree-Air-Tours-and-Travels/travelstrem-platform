@@ -6,7 +6,6 @@ const DEFAULT_BRANDING = {
   trevista: { logoSrc: "/favicon.png", name: "Trevista", subtitle: "by TravelsTrem", initial: "" },
   dashboard: { logoSrc: "/favicon.png", name: "TravelsTrem", subtitle: "Dashboard", initial: "" },
   admin: { logoSrc: "/favicon.png", name: "TravelsTREM", subtitle: "Admin", initial: "" },
-  booking: { logoSrc: "/favicon.png", name: "TravelsTrem", subtitle: "Booking", initial: "" },
   agent: { logoSrc: "/favicon.png", name: "TravelsTrem", subtitle: "Partner Portal", initial: "" },
 };
 

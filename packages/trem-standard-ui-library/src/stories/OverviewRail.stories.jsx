@@ -7,7 +7,7 @@ const sampleWidgets = [
     type: "upcomingTrip",
     title: "Upcoming Trip",
     detailsLabel: "View details",
-    detailsHref: "/bookings/trip-1",
+    detailsHref: "/trip/trip-1",
     trip: {
       id: "trip-1",
       title: "Himalayan Escape to Manali",
@@ -18,7 +18,7 @@ const sampleWidgets = [
     },
     emptyState: {
       title: "No upcoming trips",
-      description: "Book your next adventure to see it here.",
+      description: "Plan your next adventure to see it here.",
       actionLabel: "Browse tours",
       actionHref: "/tours",
     },
@@ -28,7 +28,7 @@ const sampleWidgets = [
     type: "quickActions",
     title: "Quick Actions",
     items: [
-      { id: "new-booking", title: "New Booking", description: "Create a new tour booking", icon: "plus", href: "/bookings/new" },
+      { id: "request-quote", title: "Request a quote", description: "Ask an agent to plan a tour", icon: "plus", href: "/support" },
       { id: "find-tours", title: "Find Tours", description: "Search available tours", icon: "search", href: "/tours" },
     ],
   },

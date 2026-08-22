@@ -185,6 +185,8 @@ export const PRICE_SOURCE = Object.freeze({
   MANUAL: "manual",
   AI: "ai",
   AGENT: "agent",
+  CALCULATED: "calculated",
+  COMPONENT_CALCULATION: "component_calculation",
 });
 
 export const PRICE_SOURCE_LIST = Object.values(PRICE_SOURCE);

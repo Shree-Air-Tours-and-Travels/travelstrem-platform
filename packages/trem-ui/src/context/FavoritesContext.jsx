@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
-import { fetchData } from "@packages/trem-utils";
+import React, { createContext, useContext, useState, useCallback, useRef } from "react";
+import { fetchData, notifyDataChanged, useRefreshOnActivation } from "@packages/trem-utils";
 
 const FavoritesContext = createContext(null);
 
@@ -9,26 +9,22 @@ export function FavoritesProvider({ children, product = "trevista" }) {
   const idsRef = useRef(favoriteIds);
   idsRef.current = favoriteIds;
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetchData("/tours.json/favorites");
-        if (cancelled) return;
-        if (res?.status === "success") {
-          const items = res.componentData?.data || [];
-          setFavoriteIds(new Set(items.map((t) => t._id || t.id).filter(Boolean)));
-          setFavorites(items);
-        }
-      } catch {
-        if (!cancelled) {
-          setFavoriteIds(new Set());
-          setFavorites([]);
-        }
+  const loadFavorites = useCallback(async () => {
+    try {
+      const res = await fetchData("/tours.json/favorites");
+      if (res?.status === "success") {
+        const items = res.componentData?.data || [];
+        const ids = new Set(items.map((t) => t._id || t.id).filter(Boolean));
+        setFavoriteIds(ids);
+        idsRef.current = ids;
+        setFavorites(items);
       }
-    })();
-    return () => { cancelled = true; };
+    } catch {
+      // Keep the last successful snapshot during a transient refresh failure.
+    }
   }, []);
+
+  useRefreshOnActivation(loadFavorites, { resource: "favorites" });
 
   const isFavorited = useCallback(
     (tour) => idsRef.current.has(tour?._id || tour?.id),
@@ -77,6 +73,7 @@ export function FavoritesProvider({ children, product = "trevista" }) {
           }
           return prev.filter((f) => (f._id || f.id) !== tourId);
         });
+        notifyDataChanged("favorites");
       }
     } catch {
       rollback(tourId, wasFav);

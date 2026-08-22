@@ -6,20 +6,6 @@
         "ariaLabel": "Travel planning shortcuts and updates",
         "widgets": [
           {
-            "id": "upcoming-trip",
-            "type": "upcomingTrip",
-            "title": "Upcoming Trip",
-            "detailsLabel": "View details",
-            "detailsHref": "/?tab=bookings",
-            "detailsAriaLabel": "View upcoming trip details",
-            "emptyState": {
-              "icon": "calendar",
-              "title": "No upcoming trip",
-              "description": "Your next confirmed journey will appear here."
-            },
-            "trip": null
-          },
-          {
             "id": "quick-actions",
             "type": "quickActions",
             "title": "Quick Actions",
@@ -79,7 +65,7 @@
             "description": "on holiday packages",
             "codeLabel": "Use code:",
             "code": "TREM15",
-            "image": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=700&q=82&auto=format&fit=crop",
+            "image": "https://images.unsplash.com/photo-1507525428034-b723cf961b3e?w=700&q=82&auto=format&fit=crop",
             "imageAlt": "Tropical holiday resort by the sea",
             "href": "https://trevista.travelstrem.com",
             "target": "_self",
@@ -88,21 +74,14 @@
         ]
       }
     },
-    "dataScope": {
-      "options": {}
-    },
-    "elements": {
-      "labels": {},
-      "urls": {}
-    },
+    "dataScope": { "options": {} },
+    "elements": { "labels": {}, "urls": {} },
     "structure": {
       "header": {},
       "widgets": [
         {
           "type": "OverviewRail",
-          "props": {
-            "dataKey": "overviewRail"
-          }
+          "props": { "dataKey": "overviewRail" }
         }
       ],
       "config": {},

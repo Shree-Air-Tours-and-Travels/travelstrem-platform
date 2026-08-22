@@ -1,5 +1,18 @@
 .trem-options {
-  padding: 0.25rem 0 0.5rem;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  padding: 0;
+
+  &__scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0.5rem 1.75rem 1.25rem;
+    scrollbar-gutter: stable;
+  }
 
   &__subtitle {
     margin: 0 0 1rem;
@@ -38,6 +51,28 @@
       background: var(--primary-soft);
       box-shadow: 0 0 0 2px var(--primary-focus);
     }
+  }
+
+  &__cover {
+    width: 100%;
+    height: 190px;
+    object-fit: cover;
+    display: block;
+    border-radius: 11px;
+    margin-bottom: 0.9rem;
+  }
+
+  &__option-button {
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+
+    &:disabled { cursor: default; }
   }
 
   &__item-top {
@@ -92,6 +127,86 @@
     color: var(--subtitle);
   }
 
+  &__property {
+    margin: 0.6rem 0 0;
+    color: var(--title);
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+
+  &__included-in {
+    display: inline-flex;
+    margin-top: 0.7rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 999px;
+    background: var(--success-soft, var(--primary-soft));
+    color: var(--success-dark, var(--color-primary-dark));
+    font-size: 0.72rem;
+    font-weight: 800;
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.7rem;
+
+    span {
+      padding: 0.24rem 0.5rem;
+      border-radius: 999px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--subtitle);
+      font-size: 0.7rem;
+    }
+  }
+
+  &__rooms {
+    display: grid;
+    gap: 0.55rem;
+    margin-top: 0.9rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--border);
+  }
+
+  &__rooms-title { color: var(--title); font-size: 0.78rem; }
+
+  &__room {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.7rem;
+    width: 100%;
+    padding: 0.7rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    color: inherit;
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+
+    img { width: 54px; height: 54px; object-fit: cover; border-radius: 9px; }
+    &.is-selected { border-color: var(--color-primary); box-shadow: 0 0 0 2px var(--primary-focus); }
+    &.is-included { background: var(--success-soft, var(--primary-soft)); }
+  }
+
+  &__room-copy { min-width: 0; display: grid; gap: 0.18rem; }
+  &__room-copy strong { color: var(--title); font-size: 0.82rem; }
+  &__room-copy small { color: var(--subtitle); font-size: 0.7rem; line-height: 1.4; }
+  &__room-copy em {
+    width: fit-content;
+    padding: 0.18rem 0.45rem;
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--success-dark, var(--color-primary-dark));
+    font-size: 0.66rem;
+    font-style: normal;
+    font-weight: 800;
+  }
+  &__room-copy &__room-packages { color: var(--color-primary-dark); font-weight: 700; }
+  &__room-price { color: var(--color-primary-dark); font-size: 0.8rem; text-align: right; }
+
   &__cost {
     margin-top: 0.7rem;
     padding-top: 0.7rem;
@@ -118,27 +233,33 @@
   }
 
   &__actions {
-    position: sticky;
-    bottom: 0;
     display: flex;
+    flex: 0 0 auto;
+    align-items: center;
     justify-content: flex-end;
+    flex-wrap: wrap;
     gap: 0.75rem;
-    margin-top: 1rem;
-    padding-top: 1rem;
+    margin: 0;
+    padding: 1rem 1.75rem calc(1rem + env(safe-area-inset-bottom, 0px));
     border-top: 1px solid var(--border);
     background: var(--surface);
+    box-shadow: 0 -12px 28px -24px var(--primary-shadow);
+    z-index: 2;
   }
 }
 
 .trem-options-overlay {
   &__dialog {
-    width: min(520px, 100%);
-    max-height: min(82vh, 640px);
-    overflow-y: auto;
+    width: min(820px, 100%);
+    height: min(88vh, 820px);
+    max-height: min(88vh, 820px);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
     background: var(--surface);
     border-radius: 18px;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
-    padding: 1.75rem;
+    padding: 0;
     animation: trem-options-in 180ms ease both;
   }
 
@@ -164,8 +285,11 @@
     display: flex;
     align-items: center;
     gap: 0.7rem;
-    margin-bottom: 0.4rem;
-    padding-right: 2rem;
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 1.4rem 4rem 1rem 1.75rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
 
     h3 {
       margin: 0;
@@ -192,6 +316,38 @@
     font-size: 0.88rem;
     line-height: 1.6;
     color: var(--subtitle);
+  }
+}
+
+.trem-options-sheet {
+  .trem-bottom-sheet__body {
+    min-height: 0;
+    overflow: hidden;
+    padding: 0;
+  }
+
+  .trem-options {
+    height: 100%;
+  }
+
+  .trem-options__scroll {
+    padding: 0.5rem 1rem 1rem;
+  }
+
+  .trem-options__actions {
+    padding: 0.85rem 1rem calc(0.85rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (max-width: 640px) {
+  .trem-options__actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    > :first-child {
+      grid-column: 1 / -1;
+      order: 3;
+    }
   }
 }
 

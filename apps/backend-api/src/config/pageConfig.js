@@ -35,18 +35,18 @@ export default {
       "app-shell": {
         "page": "app-shell",
         "title": "Customer Dashboard",
-        "description": "Track trips, quote requests, payments, and traveller details.",
+        "description": "Plan trips and manage your travel profile.",
         "widgets": [
           {
             "type": "app-shell",
             "source": "shell",
             "props": {
               "variant": "customer",
-              "title": "Your trips, quotes, and payments",
-              "description": "Track every journey from quote request to final confirmation.",
+              "title": "Your travel dashboard",
+              "description": "Explore journeys and keep your travel profile current.",
               "refreshLabel": "Refresh",
-              "emptyTitle": "No bookings found",
-              "emptyDescription": "Your upcoming trips and quote requests will appear here."
+              "emptyTitle": "No travel activity yet",
+              "emptyDescription": "Saved trips and planning tools will appear here."
             }
           }
         ]
@@ -72,20 +72,6 @@ export default {
         "widgets": [
           {
             "type": "agentProfile",
-            "source": "agent-shell",
-            "props": {
-              "variant": "agent"
-            }
-          }
-        ]
-      },
-      "agent-bookings": {
-        "page": "agent-bookings",
-        "title": "Agent Bookings",
-        "description": "Track bookings assigned to this agent or agency.",
-        "widgets": [
-          {
-            "type": "agentBookings",
             "source": "agent-shell",
             "props": {
               "variant": "agent"

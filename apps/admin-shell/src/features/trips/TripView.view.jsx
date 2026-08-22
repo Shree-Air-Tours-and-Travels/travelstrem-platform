@@ -1,6 +1,6 @@
 import React from "react";
 import { Button, SubTitle, Paragraph, RecordReview } from "@packages/trem-ui";
-import "../tours/TourView.scss";
+import "./TripView.scss";
 
 function displayDuration(d) {
     if (!d) return "—";

@@ -67,29 +67,3 @@ export const redirectToGlobalAppShell = (options = {}) => {
   if (typeof window === "undefined") return;
   window.location.assign(buildGlobalAppShellUrl(options));
 };
-
-export const getGlobalBookingEngineBaseUrl = (override = "") => {
-  const configured = override || process.env.REACT_APP_BOOKING_ENGINE_URL || "";
-  if (configured) return normalizeBase(configured);
-  return "";
-};
-
-export const buildGlobalBookingEngineUrl = ({
-  bookingEngineBaseUrl = "",
-  product = "",
-  tourRef = "",
-  returnTo = "",
-  roomType = "",
-} = {}) => {
-  const url = new URL("/", safeBase(getGlobalBookingEngineBaseUrl(bookingEngineBaseUrl)));
-  if (product) url.searchParams.set("product", product);
-  if (tourRef) url.searchParams.set("tourRef", tourRef);
-  if (returnTo) url.searchParams.set("returnTo", returnTo);
-  if (roomType) url.searchParams.set("roomType", roomType);
-  return url.toString();
-};
-
-export const redirectToGlobalBookingEngine = (options = {}) => {
-  if (typeof window === "undefined") return;
-  window.location.assign(buildGlobalBookingEngineUrl(options));
-};

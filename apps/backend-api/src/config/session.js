@@ -130,42 +130,6 @@ export default {
             "fallback": "tours"
           },
           {
-            "pageName": "booking",
-            "event": "navigateToBooking",
-            "type": "redirect",
-            "title": "Booking",
-            "renderConfig": {
-              "context": {
-                "tourRef": "${tourRef}"
-              }
-            },
-            "fallback": "tourDetails"
-          },
-          {
-            "pageName": "bookingSummary",
-            "event": "navigateToBookingSummary",
-            "type": "redirect",
-            "title": "Booking Summary",
-            "renderConfig": {
-              "context": {
-                "bookingId": "${bookingId}"
-              }
-            },
-            "fallback": "app-shell"
-          },
-          {
-            "pageName": "bookingCheckout",
-            "event": "navigateToBookingCheckout",
-            "type": "redirect",
-            "title": "Checkout",
-            "renderConfig": {
-              "context": {
-                "bookingId": "${bookingId}"
-              }
-            },
-            "fallback": "bookingSummary"
-          },
-          {
             "pageName": "admin",
             "event": "navigateToAdmin",
             "type": "redirect",
@@ -194,9 +158,6 @@ export default {
           "navigateToSettings": "/app-shell",
           "navigateToTours": "/tours",
           "navigateToTourDetails": "/tours/${tourRef}",
-          "navigateToBooking": "/tours/${tourRef}/book",
-          "navigateToBookingSummary": "/tours/bookings/${bookingId}",
-          "navigateToBookingCheckout": "/tours/bookings/${bookingId}/checkout",
           "navigateToAdmin": "/admin",
           "navigateToLogout": "/login"
         },
@@ -212,45 +173,6 @@ export default {
                 {
                   "name": "navigateToLogout",
                   "type": "redirect"
-                }
-              ]
-            },
-            "type": "translation",
-            "path": ""
-          },
-          {
-            "event": "navigateToBookingFlow",
-            "config": {
-              "events": [
-                {
-                  "name": "navigateToBookingCheckout",
-                  "type": "redirect",
-                  "triggerIf": {
-                    "actualValue": "checkout",
-                    "receivedValue": "${step}"
-                  },
-                  "eventData": {
-                    "request": {
-                      "context": {
-                        "bookingId": "${bookingId}"
-                      }
-                    }
-                  }
-                },
-                {
-                  "name": "navigateToBookingSummary",
-                  "type": "redirect",
-                  "triggerIf": {
-                    "actualValue": "summary",
-                    "receivedValue": "${step}"
-                  },
-                  "eventData": {
-                    "request": {
-                      "context": {
-                        "bookingId": "${bookingId}"
-                      }
-                    }
-                  }
                 }
               ]
             },
@@ -310,10 +232,6 @@ export default {
         "navigateToSettings": true,
         "navigateToTours": true,
         "navigateToTourDetails": true,
-        "navigateToBooking": true,
-        "navigateToBookingSummary": true,
-        "navigateToBookingCheckout": true,
-        "navigateToBookingFlow": true,
         "navigateToAdmin": true,
         "navigateToLogout": true,
         "dashboardListingUpdated": true,

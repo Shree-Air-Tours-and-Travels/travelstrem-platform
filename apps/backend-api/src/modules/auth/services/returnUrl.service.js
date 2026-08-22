@@ -12,7 +12,7 @@ const originOf = (value) => {
 };
 
 const portalAllowedOrigins = (portal) => new Set(({
-  customer: [config.SHELL_URL, config.TREVISTA_URL, config.TREVIO_URL, config.BOOKING_ENGINE_URL],
+  customer: [config.SHELL_URL, config.TREVISTA_URL, config.TREVIO_URL],
   admin: [config.ADMIN_URL],
   partner: [config.PARTNER_URL],
 }[normalizePortalScope(portal)] || []).map(originOf).filter(Boolean));

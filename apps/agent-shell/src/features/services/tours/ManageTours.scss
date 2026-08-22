@@ -196,41 +196,6 @@ $agent-gap: $space-3;
   padding-right: $space-2;
 }
 
-.agent-service-card.tour-card {
-  display: grid !important;
-  grid-template-columns: minmax(10rem, 13.75rem) minmax(0, 1fr) !important;
-  min-height: 9.375rem !important;
-  height: auto !important;
-  border-radius: var(--radius-sm) !important;
-  border-color: var(--border) !important;
-  background: var(--surface) !important;
-  color: var(--text) !important;
-  overflow: hidden !important;
-}
-
-.agent-service-card.tour-card .tour-card__media {
-  width: 100% !important;
-  min-height: 9.375rem !important;
-}
-
-.agent-service-card.tour-card .tour-card__img,
-.agent-service-card.tour-card .tour-card__placeholder {
-  height: 100% !important;
-  min-height: 9.375rem !important;
-  object-fit: cover !important;
-}
-
-.agent-service-card.tour-card .tour-card__body {
-  padding: 0.8rem !important;
-  gap: 0.45rem !important;
-  min-height: 9.375rem !important;
-  background: transparent !important;
-}
-
-.agent-service-card.tour-card .tour-card__footer {
-  margin-top: auto !important;
-}
-
 .agent-profile-grid {
   display: grid;
   gap: $space-4;
@@ -274,22 +239,6 @@ $agent-gap: $space-3;
     border: 1px solid var(--border);
     background: var(--surface-elevated);
   }
-}
-
-.agent-booking-table.booking-table {
-  color: var(--text);
-
-  .booking-table__panel,
-  .booking-table__pagination {
-    border-color: var(--border);
-    background: var(--surface);
-  }
-}
-
-.agent-bookings-footer {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: $agent-gap;
 }
 
 .tm-toast {
@@ -533,10 +482,6 @@ $agent-gap: $space-3;
 
   .agent-service-chips.tt-quick-chips {
     justify-content: flex-start;
-  }
-
-  .agent-service-card.tour-card {
-    grid-template-columns: 1fr !important;
   }
 
   .agent-profile-summary {

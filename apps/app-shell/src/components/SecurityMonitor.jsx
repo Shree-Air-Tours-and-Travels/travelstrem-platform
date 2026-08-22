@@ -4,8 +4,6 @@ import { auditLog_event, detectScriptInjection } from "../services/security";
 const configuredScriptOrigins = [
   process.env.REACT_APP_TREVIO_REMOTE_ENTRY,
   process.env.REACT_APP_TREVIO_URL,
-  process.env.REACT_APP_BOOKING_ENGINE_REMOTE_ENTRY,
-  process.env.REACT_APP_BOOKING_ENGINE_URL,
 ].flatMap((value) => {
   if (!value) return [];
   try {

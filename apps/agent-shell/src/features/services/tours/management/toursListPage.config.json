@@ -31,9 +31,6 @@
         "title": "No tours found",
         "description": "Get started by creating your first tour."
     },
-    "tourCard": {
-        "variant": "list"
-    },
     "errors": {
         "loadFailed": "Failed to load tours"
     }

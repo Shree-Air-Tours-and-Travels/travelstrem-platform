@@ -155,34 +155,6 @@ class TrevioTripService {
     return normalizeTrevioTrip(trip);
   }
 
-  reserveSeats(slug, count) {
-    return TrevioTripRepository.findOneAndUpdate(
-      { slug: String(slug || "").trim().toLowerCase(), status: "listed", isListed: true, "availability.seatsAvailable": { $gte: count } },
-      { $inc: { "availability.seatsAvailable": -count } },
-      { new: true },
-    );
-  }
-
-  async checkAvailability(slug, count) {
-    const trip = await TrevioTripRepository.findOne({
-      slug: String(slug || "").trim().toLowerCase(),
-      status: "listed",
-      isListed: true,
-    });
-    if (!trip) return null;
-    const available = trip.availability?.seatsAvailable ?? null;
-    if (available === null) return trip;
-    return available >= count ? trip : null;
-  }
-
-  releaseSeats(slug, count) {
-    return TrevioTripRepository.findOneAndUpdate(
-      { slug: String(slug || "").trim().toLowerCase() },
-      { $inc: { "availability.seatsAvailable": count } },
-      { new: true },
-    );
-  }
-
   async listTrips(params = {}) {
     const page = Math.max(1, Number(params.page) || 1);
     const limit = Math.max(1, Number(params.limit) || 20);

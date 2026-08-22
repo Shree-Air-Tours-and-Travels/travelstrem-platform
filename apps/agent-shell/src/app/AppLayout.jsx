@@ -15,7 +15,7 @@ function activeNavigation(pathname) {
     if (pathname.includes("/services/tours")) return "trevistaTours";
     if (pathname.includes("/agent/agents")) return "agents";
     if (pathname.includes("/agent/customers")) return "customers";
-    if (pathname.includes("/agent/bookings") || pathname.includes("/bookings/")) return "bookings";
+    if (pathname.includes("/agent/enquiries") || pathname.includes("/agent/bookings") || pathname.includes("/services/bookings")) return "enquiries";
     if (pathname.includes("/agent/partner-agency")) return "agency";
     if (pathname.includes("/agent/profile") || pathname.includes("/agent/settings")) return "profile";
     if (pathname.includes("/agent/reports")) return "reports";
@@ -52,7 +52,7 @@ export default function AppLayout({ embedded = false }) {
             title: "Workspace",
             items: [
                 { id: "dashboard", label: "Dashboard", icon: "home", path: "/agent/dashboard" },
-                { id: "bookings", label: "Bookings", icon: "calendar", path: "/agent/bookings" },
+                { id: "enquiries", label: "Bookings & enquiries", icon: "calendar", path: "/agent/bookings" },
                 { id: "customers", label: isPartnerAdmin ? "Customers" : "My Customers", icon: "usersRound", path: "/agent/customers" },
                 ...(isPartnerAdmin ? [{ id: "agents", label: "Agents", icon: "user", path: "/agent/agents" }] : []),
             ],
@@ -87,7 +87,7 @@ export default function AppLayout({ embedded = false }) {
     const headerConfig = useMemo(() => ({
         ariaLabel: "PartnerTREM application header",
         brand: { name: "PartnerTREM", subtitle: roleLabel(user) },
-        search: { enabled: false, placeholder: "Search trips, bookings and customers" },
+        search: { enabled: false, placeholder: "Search trips and customers" },
         productMenu: {
             label: hasTrevista && hasTrevio ? "Products" : (hasTrevio ? "Trevio" : hasTrevista ? "Trevista" : ""),
             ariaLabel: "Choose agency product",

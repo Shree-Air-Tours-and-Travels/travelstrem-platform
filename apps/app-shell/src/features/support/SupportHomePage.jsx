@@ -1,11 +1,11 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { Button, EmptyState, SearchBar, SupportBookingCard, SupportCategoryCard, SupportContactMethod, SupportTopicRow } from "@packages/trem-ui";
+import React, { useEffect, useState } from "react";
+import { Button, EmptyState, SearchBar, SupportCategoryCard, SupportContactMethod, SupportTopicRow } from "@packages/trem-ui";
 import { useNavigate } from "react-router-dom";
 import { SUPPORT_ANALYTICS_EVENT } from "@packages/trem-support-contracts";
 import { supportApi } from "./support.api";
 import { useSupportResource } from "./support.hooks";
 import { ResourceBoundary, SupportLayout, SupportSection } from "./SupportLayout";
-import { executeSupportAction, trackSupport, withBookingLabels } from "./support.utils";
+import { executeSupportAction, trackSupport } from "./support.utils";
 
 export default function SupportHomePage() {
   const navigate = useNavigate();
@@ -27,7 +27,6 @@ export default function SupportHomePage() {
     return () => { clearTimeout(timeout); controller.abort(); };
   }, [query]);
 
-  const bookings = useMemo(() => (data?.bookings || []).map(withBookingLabels), [data?.bookings]);
   const openAction = (action) => executeSupportAction(action, navigate);
 
   return (
@@ -38,10 +37,6 @@ export default function SupportHomePage() {
             <SearchBar value={query} onChange={setQuery} placeholder={data?.ui?.header?.searchPlaceholder} ariaLabel={data?.ui?.header?.searchPlaceholder} />
             {query.trim().length >= 2 ? <div className="support-search__results" aria-live="polite">{search.loading ? <p>Searching…</p> : search.error ? <p role="alert">{search.error}</p> : search.results.length ? search.results.map((result) => <SupportTopicRow key={`${result.type}-${result.id}`} topic={result} onSelect={() => openAction(result)} />) : <EmptyState {...data?.ui?.emptyStates?.search} />}</div> : null}
           </div>
-
-          <SupportSection title={data?.ui?.sections?.bookings?.title} action={<Button variant="text" text="View all" onClick={() => navigate("/help/bookings")} />}>
-            {bookings.length ? <div className="support-booking-list">{bookings.map((booking) => <SupportBookingCard key={booking.id} booking={booking} onSelect={() => { trackSupport(SUPPORT_ANALYTICS_EVENT.BOOKING_SELECTED, { bookingId: booking.id, serviceId: booking.service?.id }); navigate(`/help/booking/${booking.id}`); }} onAction={(action) => openAction(action)} />)}</div> : <EmptyState className="support-bookings-empty" {...data?.ui?.emptyStates?.bookings} />}
-          </SupportSection>
 
           <SupportSection title={data?.ui?.sections?.services?.title}>
             <div className="support-service-grid">{(data?.services || []).map((service) => <SupportCategoryCard key={service.id} className={`support-service-card support-service-card--${service.tone || "neutral"}`} item={{ ...service, label: service.name }} onSelect={() => navigate(`/help/service/${service.id}`)} />)}</div>

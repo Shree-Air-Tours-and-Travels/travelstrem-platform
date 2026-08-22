@@ -5,7 +5,7 @@ import { effectiveRole, permissionsFor } from "./permissions.js";
 export async function loadAccessContext(req, res, next) {
   try {
     const userId = req.user?.sub || req.user?.id;
-    const user = await User.findById(userId).select("name email role adminLevel agencyRole agencyId partnerAgencyRef accountStatus tokenVersion productAccess permissionGrants permissionDenials").lean();
+    const user = await User.findById(userId).select("name email role adminLevel agencyRole agencyId agentRef agencyRef partnerAgencyRef avatar accountStatus tokenVersion productAccess permissionGrants permissionDenials").lean();
     if (!user || Number(req.user?.tokenVersion || 0) !== Number(user.tokenVersion || 0)) return res.status(401).json({ status: "error", message: "Session is no longer valid." });
     if (!["active"].includes(user.accountStatus || "active")) return res.status(403).json({ status: "error", message: `Account is ${user.accountStatus}.` });
     let agency = null;

@@ -74,6 +74,7 @@ const corsOptions = {
     "X-CSRF-Token",
     "X-Travelstrem-Portal",
     "X-Guest-Session-Id",
+    "X-Idempotency-Key",
   ],
   exposedHeaders: ["Content-Disposition"],
 };
@@ -96,7 +97,7 @@ export default function registerMiddleware(app) {
   }));
 
   // ── 3. Body parsers (before anything that reads req.body) ──
-  app.use(app.express.json({ limit: "20mb" }));
+  app.use(app.express.json({ limit: "20mb", verify: (req, _res, buffer) => { if (req.originalUrl?.includes("/payments/webhooks/")) req.rawBody = Buffer.from(buffer); } }));
   app.use(app.express.urlencoded({ extended: true }));
 
   // ── 4. Cookie parser (before CSRF validation, before auth) ──

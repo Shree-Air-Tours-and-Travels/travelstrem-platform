@@ -505,7 +505,7 @@ export default function BookingTable({
                 ).toLowerCase(),
               }}
               fields={mobileFieldIds.map((fieldId) => {
-                const column = columns.find((item) => item.id === fieldId);
+                const column = columns.find((item) => item.id === fieldId || item.accessor === fieldId);
                 return {
                   id: fieldId,
                   label: column?.label || fieldId,

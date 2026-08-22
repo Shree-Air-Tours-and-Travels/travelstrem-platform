@@ -27,16 +27,8 @@
           "widgetRef": "./widgets/quick-actions.json"
         },
         {
-          "type": "BookingStatusChart",
-          "widgetRef": "./widgets/booking-status-chart.json"
-        },
-        {
           "type": "RevenueChart",
           "widgetRef": "./widgets/revenue-chart.json"
-        },
-        {
-          "type": "RecentBookingsList",
-          "widgetRef": "./widgets/recent-bookings-list.json"
         },
         {
           "type": "PopularDestinations",

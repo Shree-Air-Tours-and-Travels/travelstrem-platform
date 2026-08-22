@@ -2,7 +2,7 @@ import React, { Suspense, useCallback, useEffect, useMemo, useState } from "reac
 import { Navigate, Route, Routes, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { AppHeader, ErrorState, FloatingActionBar, GlobalLoader, ScrollToTop, SideBar, ThemeProvider, useTheme } from "@packages/trem-ui";
 import { AppShellProvider, useAppShellConfig } from "./providers/AppShellProvider";
-import AppShellPage from "../features/app-shell/AppShell";
+import AppShellPage from "../features/app-shell/AppShell.container";
 import { buildGlobalAuthUrl, fetchData, SHELL_NAVIGATION_EVENT } from "@packages/trem-utils";
 import { clearAuthBrowserState, emitAuthEvent } from "@packages/trem-auth-core";
 import LoginPrompt from "../components/LoginPrompt";
@@ -21,7 +21,6 @@ import "../styles/global.scss";
 
 const TrevioApp = React.lazy(() => import("trevio/App"));
 const TrevistaApp = React.lazy(() => import("trevista/App"));
-const EmbeddedBookingEngine = React.lazy(() => import("bookingEngine/EmbeddedApp"));
 
 class RemoteBoundary extends React.Component {
   state = { error: null };
@@ -110,8 +109,6 @@ function AppShell() {
   const activeTab = destination.activeId || selectedTab;
   const isRemote = destination.kind === "remote";
   const isSupportScreen = location.pathname === "/help" || location.pathname.startsWith("/help/");
-  const isBookingsScreen = destination.renderer === "app-shell" && activeTab === "bookings";
-  const isBookingDetail = isBookingsScreen && Boolean(searchParams.get("bookingId"));
   const productFilter = searchParams.get("product") || "all";
   const publicDestination = isGuestAccessibleDestination(destination);
   const mobileActionPanel = navigationConfig.mobileActionPanel || {};
@@ -281,9 +278,7 @@ function AppShell() {
     ? <TrevioApp embedded userSession={session} basename={destination.path} />
     : destination.renderer === "trevista"
       ? <TrevistaApp embedded userSession={session} />
-      : destination.renderer === "bookingEngine"
-        ? <EmbeddedBookingEngine userSession={session} onRequireAuth={requireAuthentication} />
-        : null;
+      : null;
 
   return (
     <div className={`dash-layout${sidebarCollapsed ? " dash-layout--sidebar-collapsed" : ""}${mobileNavigationActions.length ? " dash-layout--mobile-action-panel" : ""}`}>
@@ -320,7 +315,7 @@ function AppShell() {
           onPrimaryActionSelect={(item) => handleTabChange(item.target, item)}
         />
 
-        <div data-scroll-root className={`dash-content${isBookingsScreen ? " dash-content--bookings" : ""}${isBookingDetail ? " dash-content--booking-detail" : ""}${isRemote ? " dash-content--remote" : ""}${isSupportScreen ? " dash-content--support" : ""}`}>
+        <div data-scroll-root className={`dash-content${isRemote ? " dash-content--remote" : ""}${isSupportScreen ? " dash-content--support" : ""}`}>
           <ProtectedRoute
             allowGuest={publicDestination && guestMode}
             suppressPrompt={authPromptDismissed}

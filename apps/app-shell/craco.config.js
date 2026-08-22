@@ -18,11 +18,6 @@ const trevioRemoteEntry = remoteEntry(
   process.env.REACT_APP_TREVIO_URL,
   "http://localhost:3005",
 );
-const bookingRemoteEntry = remoteEntry(
-  process.env.REACT_APP_BOOKING_ENGINE_REMOTE_ENTRY,
-  process.env.REACT_APP_BOOKING_ENGINE_URL,
-  "http://localhost:3007",
-);
 const trevistaRemoteEntry = remoteEntry(
   process.env.REACT_APP_TREVISTA_REMOTE_ENTRY,
   process.env.REACT_APP_TREVISTA_URL,
@@ -79,7 +74,6 @@ module.exports = {
         name: "app_shell",
         remotes: {
           trevio: `trevio@${trevioRemoteEntry}`,
-          bookingEngine: `bookingEngine@${bookingRemoteEntry}`,
           trevista: `trevista@${trevistaRemoteEntry}`,
         },
         shared: {

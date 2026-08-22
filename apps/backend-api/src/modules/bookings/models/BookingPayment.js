@@ -14,7 +14,10 @@ export const BOOKING_PAYMENT_TYPES = PAYMENT_TYPE_LIST;
 
 const bookingPaymentSchema = new Schema({
   bookingId: { type: Schema.Types.ObjectId, ref: "Booking", required: true, index: true },
+  agencyId: { type: Schema.Types.ObjectId, ref: "PartnerAgency", default: null, index: true },
   amount: { type: Number, required: true },
+  amountMinor: { type: Number, min: 0, default: null },
+  moneyUnit: { type: String, enum: ["PAISE"], default: "PAISE" },
   currency: { type: String, trim: true, default: "INR" },
   paymentMethod: { type: String, enum: PAYMENT_METHOD_LIST, default: "UPI" },
   provider: { type: String, trim: true, default: "manual" },
@@ -30,6 +33,12 @@ const bookingPaymentSchema = new Schema({
   verifiedAt: { type: Date, default: null },
   type: { type: String, enum: BOOKING_PAYMENT_TYPES, default: PAYMENT_TYPE.TOKEN },
   raw: { type: Schema.Types.Mixed, default: {} },
+  quoteId: { type: Schema.Types.ObjectId, ref: "BookingQuote", default: null },
+  idempotencyKey: { type: String, trim: true, default: "", index: true },
+  providerEventId: { type: String, trim: true, default: "", index: true },
+  providerPaymentId: { type: String, trim: true, default: "" },
+  financialSnapshot: { type: Schema.Types.Mixed, default: null },
+  configSnapshot: { type: Schema.Types.Mixed, default: null },
   createdBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
 }, { timestamps: true });
 
@@ -54,6 +63,8 @@ bookingPaymentSchema.index(
     },
   }
 );
+bookingPaymentSchema.index({ idempotencyKey: 1 }, { unique: true, partialFilterExpression: { idempotencyKey: { $type: "string", $gt: "" } } });
+bookingPaymentSchema.index({ providerEventId: 1 }, { unique: true, partialFilterExpression: { providerEventId: { $type: "string", $gt: "" } } });
 bookingPaymentSchema.index(
   { transactionId: 1 },
   { unique: true, partialFilterExpression: { transactionId: { $exists: true, $type: "string", $gt: "" } } }

@@ -64,10 +64,6 @@
             grid-template-columns: minmax(0, 1fr);
         }
 
-        &__booking-widget {
-            position: static;
-        }
-
         &__sidebar {
             display: none;
         }
@@ -1510,8 +1506,7 @@
     margin: 0;
 }
 
-.trevio-detail-layout,
-.trevio-booking-grid {
+.trevio-detail-layout {
     display: grid;
     grid-template-columns: 1fr 360px;
     gap: $space-7;
@@ -1761,7 +1756,6 @@
 
     .trevio-hero__grid,
     .trevio-detail-layout,
-    .trevio-booking-grid,
     .trevio-profile {
         grid-template-columns: 1fr;
     }

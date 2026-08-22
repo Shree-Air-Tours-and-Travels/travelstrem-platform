@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { Button, EmptyState } from "@packages/trem-ui";
+import { Button, EmptyState, TourCard } from "@packages/trem-ui";
 import { useMasterOptions } from "@packages/trem-utils";
 import AgenciesTabWidget from "../features/tours/AgenciesTabWidget.view";
 import "./AdminServicesView.scss";
@@ -34,8 +34,6 @@ export default function AdminServicesView({
   onEditTrip, onViewTrip, onDeleteTrip, onVerifyTour, onVerifyTrip,
   onCreateTour, onCreateTrip,
   onRefresh, onDeleteAllTours, onDeleteAllTrips,
-  formOpen, tripFormOpen, viewOpen, tripViewOpen,
-  setFormOpen, setTripFormOpen, setViewOpen, setTripViewOpen, setViewTour, setViewTrip,
   openTripCreate, openTripEdit,
   admins, agents, partnerAgencies, agencyLoading, auth,
   fetchAgencyManagement, handleReviewAdmin, handleRemoveAdmin,
@@ -144,6 +142,24 @@ export default function AdminServicesView({
         <div className="asv__grid">
           {allServices.map((service) => {
             const isTour = service._serviceType === "tour";
+            if (isTour) {
+              return (
+                <TourCard
+                  key={service._id || service.id}
+                  tour={service}
+                  variant="management"
+                  isAdmin
+                  ownershipMode="agency"
+                  ownershipLabels={{ agency: "Agency", platformAgency: "TravelsTREM platform" }}
+                  ownerAgentName={service.ownerAgentName || ""}
+                  showOwner
+                  onView={() => onViewTour?.(service)}
+                  onEdit={() => onEditTour?.(service)}
+                  onVerify={auth?.adminLevel === "master" ? () => onVerifyTour?.(service._id || service.id) : undefined}
+                  onDelete={() => onDeleteTour?.(service._id || service.id)}
+                />
+              );
+            }
             const image = isTour ? (service.photo || service.photos?.[0]) : service.image;
             const title = service.title || "Untitled";
             const rawCity = service.city;
@@ -201,7 +217,7 @@ export default function AdminServicesView({
                         text="Edit"
                       />
                       {auth?.adminLevel === "master" && !service.tremVerified && (
-                        <Button primaryClassName="btn asv__btn-sm" variant="solid" color="primary" onClick={() => isTour ? onVerifyTour?.(service._id || service.id) : onVerifyTrip?.(service._id || service.id)} text="Verify" />
+                        <Button primaryClassName="btn asv__btn-sm" variant="solid" color="primary" onClick={() => onVerifyTrip?.(service._id || service.id)} text="Verify" />
                       )}
                       <Button
                         primaryClassName="btn asv__btn-sm asv__btn-danger"

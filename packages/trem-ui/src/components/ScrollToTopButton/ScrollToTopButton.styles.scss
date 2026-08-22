@@ -2,6 +2,8 @@
 
 .trem-scroll-top {
   position: fixed;
+  bottom: var(--trem-scroll-top-bottom, var(--trem-floating-action-clearance, #{$space-6}));
+  right: var(--trem-scroll-top-right, #{$space-6});
   z-index: 110;
   width: 44px;
   height: 44px;
@@ -34,8 +36,8 @@
   }
 
   @media (max-width: $breakpoint-mobile) {
-    bottom: 1rem !important;
-    right: 1rem !important;
+    bottom: var(--trem-scroll-top-bottom, var(--trem-floating-action-clearance, #{$space-4})) !important;
+    right: var(--trem-scroll-top-right, #{$space-4}) !important;
   }
 }
 

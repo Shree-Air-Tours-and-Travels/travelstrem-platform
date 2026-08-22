@@ -4,7 +4,9 @@ import BottomSheet from "../BottomSheet/BottomSheet.jsx";
 import Icon from "../../icons/Icon/Icon.jsx";
 import "./FloatingActionBar.styles.scss";
 
-const MOBILE_BP = 768;
+// Compact actions are reserved for phones and small tablets. Larger canvases
+// have room for every action and do not need an overflow sheet.
+const MOBILE_BP = 834;
 
 function isMobile() {
   return typeof window !== "undefined" && window.innerWidth <= MOBILE_BP;
@@ -73,6 +75,7 @@ const FloatingActionBar = React.memo(function FloatingActionBar({
   const [sheetOpen, setSheetOpen] = useState(false);
   const [mobile, setMobile] = useState(false);
   const mobileNavigationRef = useRef(null);
+  const floatingActionRef = useRef(null);
 
   useEffect(() => {
     setMobile(isMobile());
@@ -99,11 +102,25 @@ const FloatingActionBar = React.memo(function FloatingActionBar({
 
   const legacyAlign = structure ? "left-right" : align;
 
-  const forcedOverflow = mobile ? resolved.filter((a) => a.overflowMobile) : [];
-  const eligible = resolved.filter((a) => !(mobile && a.overflowMobile));
-  const maxVisible = mobile ? Math.min(mobileVisible, eligible.length) : eligible.length;
-  const visible = eligible.slice(0, maxVisible);
-  const overflow = [...eligible.slice(maxVisible), ...forcedOverflow];
+  const eligible = resolved.filter((action) => action.overflow !== true && !(mobile && action.overflowMobile));
+  let visible;
+  if (legacyAlign === "left-right" && mobile) {
+    const left = eligible.filter((action) => action.align !== "right");
+    const right = eligible.filter((action) => action.align === "right");
+    const primaryRight = right.find((action) => action.primary === true)
+      || [...right].reverse().find((action) => action.variant === "solid" && action.color === "primary")
+      || right[0];
+    visible = [...left.slice(0, 1), ...(primaryRight ? [primaryRight] : [])];
+  } else {
+    const maxVisible = mobile ? Math.min(mobileVisible, eligible.length) : eligible.length;
+    visible = eligible.slice(0, maxVisible);
+  }
+  const visibleSet = new Set(visible);
+  const overflow = resolved.filter((action) => !visibleSet.has(action) && (
+    action.overflow === true
+    || (mobile && action.overflowMobile)
+    || eligible.includes(action)
+  ));
   const hasOverflow = overflow.length > 0;
 
   const leftActions = visible.filter((a) => a.align !== "right");
@@ -138,6 +155,30 @@ const FloatingActionBar = React.memo(function FloatingActionBar({
       layout.style.removeProperty("--dash-mobile-action-panel-rendered-height");
     };
   }, [resolved.length, variant]);
+
+  useLayoutEffect(() => {
+    if (variant !== "floating" || !floatingActionRef.current) return undefined;
+    const panel = floatingActionRef.current;
+    const root = document.documentElement;
+
+    const syncClearance = () => {
+      const rect = panel.getBoundingClientRect();
+      if (rect.height <= 0 || !Number.isFinite(rect.top)) return;
+      const clearance = Math.max(0, Math.ceil(window.innerHeight - rect.top + 12));
+      root.style.setProperty("--trem-floating-action-clearance", `${clearance}px`);
+    };
+
+    syncClearance();
+    const observer = typeof ResizeObserver === "function" ? new ResizeObserver(syncClearance) : null;
+    observer?.observe(panel);
+    window.addEventListener("resize", syncClearance);
+
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", syncClearance);
+      root.style.removeProperty("--trem-floating-action-clearance");
+    };
+  }, [mobile, resolved.length, resolvedError, resolvedNote, variant]);
 
   if (variant === "mobile-navigation") {
     return (
@@ -192,6 +233,7 @@ const FloatingActionBar = React.memo(function FloatingActionBar({
   return (
     <>
       <div
+        ref={floatingActionRef}
         className={`trem-fab 
           ${resolvedError ? "trem-fab--has-error" : ""} 
           trem-fab--align-${legacyAlign} 
@@ -219,6 +261,19 @@ const FloatingActionBar = React.memo(function FloatingActionBar({
               </div>
               <div className="trem-fab__group trem-fab__group--right">
                 {renderButtons(rightActions)}
+                {hasOverflow && (
+                  <Button
+                    variant="text"
+                    size="small"
+                    isCircular
+                    iconLeft="moreVertical"
+                    iconSize={18}
+                    onClick={() => setSheetOpen(true)}
+                    primaryClassName="trem-fab__btn trem-fab__btn--more"
+                    aria-label="More actions"
+                    title="More actions"
+                  />
+                )}
               </div>
             </>
           ) : (
@@ -241,8 +296,8 @@ const FloatingActionBar = React.memo(function FloatingActionBar({
         </div>
       </div>
 
-      {hasOverflow && legacyAlign !== "left-right" && (
-        <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title={sheetTitle}>
+      {hasOverflow && (
+        <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title={sheetTitle} className="trem-fab__overflow-sheet">
           {renderOverflow ? (
             <div className="trem-fab__sheet-custom">
               {renderOverflow(overflow)}
@@ -261,6 +316,7 @@ const FloatingActionBar = React.memo(function FloatingActionBar({
                     iconSize={action.iconSize || 18}
                     text={action.label}
                     primaryClassName={`trem-fab__sheet-btn ${sheetVariant}`.trim()}
+                    disabled={action.disabled}
                     onClick={() => handleOverflowClick(action)}
                   />
                 );

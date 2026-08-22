@@ -21,11 +21,14 @@ const quoteItemSchema = new Schema({
 // One collection supports historic agent quotes and checkout V2 quotes. The
 // discriminator is quoteType; no historic financial record is rewritten.
 const bookingQuoteSchema = new Schema({
-  quoteType: { type: String, enum: ["LEGACY", "BOOKING_V2"], default: "LEGACY", index: true },
+  quoteType: { type: String, enum: ["LEGACY", "BOOKING_V2", "FINANCIAL"], default: "LEGACY", index: true },
+  contextType: { type: String, trim: true, default: "" },
+  contextId: { type: String, trim: true, default: "" },
 
   // Legacy agent-created quote fields.
   bookingId: { type: Schema.Types.ObjectId, ref: "Booking", default: null },
   version: { type: Number, default: null },
+  supersedesQuoteId: { type: Schema.Types.ObjectId, ref: "BookingQuote", default: null },
   quoteRef: { type: String, trim: true, default: "" },
   basePrice: { type: Number, default: 0 }, hotelPrice: { type: Number, default: 0 },
   flightPrice: { type: Number, default: 0 }, visaFee: { type: Number, default: 0 },
@@ -60,6 +63,10 @@ const bookingQuoteSchema = new Schema({
   departureId: { type: String, default: "" },
   selections: { type: Schema.Types.Mixed, default: null },
   pricing: { type: Schema.Types.Mixed, default: null },
+  moneyUnit: { type: String, enum: ["PAISE"], default: "PAISE" },
+  idempotencyKey: { type: String, trim: true, default: "", index: true },
+  configSnapshot: { type: Schema.Types.Mixed, default: null },
+  financialSnapshot: { type: Schema.Types.Mixed, default: null },
   pricingVersion: { type: String, default: "V2" },
   expiresAt: { type: Date, default: null }, consumedAt: { type: Date, default: null },
   status: { type: String, enum: [...new Set([...QUOTE_STATUS_LIST, ...V2_STATUSES])], default: "READY", index: true },
@@ -69,7 +76,8 @@ bookingQuoteSchema.pre("validate", function validateQuoteType(next) {
   if (this.quoteType === "BOOKING_V2") {
     if ((!this.userId && !this.guestSessionId) || !this.tourId || !this.pricing || !this.expiresAt) return next(new Error("V2 booking quote is incomplete"));
     if (!V2_STATUSES.includes(this.status)) this.status = "ACTIVE";
-  } else if (!this.bookingId || this.version == null) return next(new Error("Legacy booking quote is incomplete"));
+  } else if (this.quoteType === "LEGACY" && (!this.bookingId || this.version == null)) return next(new Error("Legacy booking quote is incomplete"));
+  else if (this.quoteType === "FINANCIAL" && (!this.contextType || !this.contextId || !this.financialSnapshot || !this.configSnapshot)) return next(new Error("Financial quote is incomplete"));
   return next();
 });
 
@@ -86,5 +94,6 @@ bookingQuoteSchema.index({ quoteNumber: 1 }, {
   partialFilterExpression: { quoteType: "BOOKING_V2", quoteNumber: { $type: "string" } },
 });
 bookingQuoteSchema.index({ expiresAt: 1 }, { name: "booking_quote_expiry", expireAfterSeconds: 0, partialFilterExpression: { quoteType: "BOOKING_V2" } });
+bookingQuoteSchema.index({ idempotencyKey: 1 }, { unique: true, partialFilterExpression: { idempotencyKey: { $type: "string", $gt: "" } } });
 
 export default mongoose.models?.BookingQuote || mongoose.model("BookingQuote", bookingQuoteSchema);

@@ -133,7 +133,6 @@ const CORS_ALLOWED_DOMAIN_SUFFIXES = parseList(get("CORS_ALLOWED_DOMAIN_SUFFIXES
 const TREVIO_URL = String(get("TREVIO_URL", portalJsonConfig?.frontends?.trevio?.baseUrl || "") || "").trim();
 const TREVISTA_URL = String(get("TREVISTA_URL", portalJsonConfig?.frontends?.trevista?.baseUrl || "") || "").trim();
 const SHELL_URL = String(get("SHELL_URL", portalJsonConfig?.frontends?.shell?.baseUrl || "") || "").trim();
-const BOOKING_ENGINE_URL = String(get("BOOKING_ENGINE_URL", portalJsonConfig?.frontends?.booking?.baseUrl || "") || "").trim();
 const AUTH_APP_URL = String(get("AUTH_APP_URL", portalJsonConfig?.frontends?.auth?.baseUrl || "") || "").trim();
 const PARTNER_URL = String(get("PARTNER_URL", portalJsonConfig?.frontends?.partnerTREM?.baseUrl || portalJsonConfig?.frontends?.agentTREM?.baseUrl || (IS_DEVELOPMENT ? "http://localhost:3004" : "")) || "").trim();
 const ADMIN_URL = String(get("ADMIN_URL", portalJsonConfig?.frontends?.adminTREM?.baseUrl || "") || "").trim();
@@ -367,7 +366,6 @@ const config = {
     TREVIO_URL,
     TREVISTA_URL,
     SHELL_URL,
-    BOOKING_ENGINE_URL,
     AUTH_APP_URL,
     PARTNER_URL,
     ADMIN_URL,
@@ -435,7 +433,6 @@ export {
     TREVIO_URL,
     TREVISTA_URL,
     SHELL_URL,
-    BOOKING_ENGINE_URL,
     AUTH_APP_URL,
     PARTNER_URL,
     ADMIN_URL,

@@ -85,6 +85,107 @@ export const Admin = {
   },
 };
 
+export const ManagementPublished = {
+  args: {
+    tour: { ...sampleTour, status: "published" },
+    variant: "management",
+    isAdmin: true,
+    onView: () => {},
+    onEdit: () => {},
+    onDelete: () => {},
+  },
+};
+
+export const CustomerListing = {
+  args: {
+    tour: {
+      id: "public-tour-1",
+      title: "Himalayan Escape to Manali",
+      coverImage: { url: sampleTour.photo },
+      shortDescription: sampleTour.desc,
+      pricing: sampleTour.priceInfo,
+      duration: sampleTour.period,
+      route: { origin: { name: "Delhi" }, destination: { name: "Manali" } },
+      location: sampleTour.address,
+      group: { max: sampleTour.maxGroupSize },
+      rating: { average: sampleTour.avgRating, count: sampleTour.reviewCount },
+      tags: sampleTour.tags,
+      availability: { availableSeats: 8 },
+      agency: { name: "Mountain Trails" },
+      featured: true,
+      tremVerified: true,
+    },
+    variant: "management",
+    favorited: false,
+    onFavorite: () => {},
+    onView: () => {},
+    ownershipMode: "agency",
+  },
+};
+
+export const ManagementDraft = {
+  args: {
+    tour: { ...sampleTour, status: "draft", featured: false },
+    variant: "management",
+    isAdmin: true,
+    onView: () => {},
+    onEdit: () => {},
+    onDelete: () => {},
+  },
+};
+
+export const FeaturedTrending = {
+  args: {
+    tour: { ...sampleTour, status: "published", featured: true, trending: true },
+    variant: "management",
+    isAdmin: true,
+    onView: () => {},
+    onEdit: () => {},
+  },
+};
+
+export const TremVerified = {
+  args: {
+    tour: { ...sampleTour, status: "published", featured: false, tremVerified: true },
+    variant: "management",
+    isAdmin: true,
+    onView: () => {},
+    onEdit: () => {},
+  },
+};
+
+export const Archived = {
+  args: {
+    tour: { ...sampleTour, status: "archived", featured: false },
+    variant: "management",
+    isAdmin: true,
+    onView: () => {},
+    onEdit: () => {},
+  },
+};
+
+export const AllBadges = {
+  args: {
+    tour: { ...sampleTour, status: "published", featured: true, trending: true, tremVerified: true },
+    variant: "management",
+    isAdmin: true,
+    onView: () => {},
+    onEdit: () => {},
+    onDelete: () => {},
+  },
+};
+
+export const AwaitingVerification = {
+  args: {
+    tour: { ...sampleTour, status: "published", featured: false, tremVerified: false },
+    variant: "management",
+    isAdmin: true,
+    onView: () => {},
+    onEdit: () => {},
+    onVerify: () => {},
+  },
+};
+
 export const Featured = {
   args: {
     tour: { ...sampleTour, featured: true },

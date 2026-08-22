@@ -11,11 +11,11 @@ describe("centralized customer authentication client", () => {
 
   test("starts Google authentication at the backend with a portal-scoped internal return URL", () => {
     const auth = createAuthService(api);
-    const url = new URL(auth.getGoogleAuthUrl({ portal: "customer", returnTo: "/bookings/123" }));
+    const url = new URL(auth.getGoogleAuthUrl({ portal: "customer", returnTo: "/favorites" }));
 
     expect(url.origin + url.pathname).toBe("http://localhost:5000/api/auth/google");
     expect(url.searchParams.get("portal")).toBe("customer");
-    expect(url.searchParams.get("returnTo")).toBe("/bookings/123");
+    expect(url.searchParams.get("returnTo")).toBe("/favorites");
   });
 
   test("uses backend-owned mobile and session endpoints", async () => {

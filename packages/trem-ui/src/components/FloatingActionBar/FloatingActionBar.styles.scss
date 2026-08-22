@@ -12,7 +12,7 @@
   &--has-bg {
     background: var(--surface-elevated);
     border-top: 1px solid var(--border);
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow-md);
   }
 
   &--no-bg {
@@ -59,7 +59,7 @@
   }
 
   &__error {
-    background: rgba(185, 28, 28, 0.1);
+    background: var(--danger-soft);
     color: var(--color-danger);
     padding: 0.65rem 0.9rem;
     font-size: 0.82rem;
@@ -68,7 +68,7 @@
     align-items: center;
     gap: 0.4rem;
     margin: 0 -1rem 0.75rem;
-    border-bottom: 1px solid rgba(185, 28, 28, 0.2);
+    border-bottom: 1px solid var(--color-danger);
   }
 
   &__note {
@@ -165,7 +165,7 @@
       border: 1px solid var(--border);
       border-radius: 14px;
       overflow: hidden;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      box-shadow: var(--shadow-md);
     }
   }
 
@@ -206,9 +206,10 @@
       height: 48px;
       padding: 0;
       justify-content: center;
-      background: transparent;
-      border-color: transparent;
-      color: var(--muted);
+      background: var(--surface-inset);
+      border: 1px solid var(--border);
+      color: var(--text);
+      box-shadow: var(--shadow-xs);
 
       @media (max-width: 768px) {
         height: 52px;
@@ -216,8 +217,9 @@
       }
 
       &:hover {
-        background: var(--surface-inset);
-        color: var(--text);
+        background: var(--primary-softer);
+        border-color: var(--color-primary);
+        color: var(--color-primary);
       }
     }
   }
@@ -231,6 +233,11 @@
 
   &__sheet-custom {
     padding: 0.75rem 0;
+  }
+
+  &__overflow-sheet .trem-bottom-sheet__panel {
+    height: auto;
+    max-height: 70vh;
   }
 
   &__sheet-btn {
@@ -302,7 +309,7 @@
       border-radius: 16px;
       border: 1px solid var(--border);
       background: var(--surface-elevated);
-      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
+      box-shadow: var(--shadow-lg);
 
       &.trem-fab--no-bg {
         background: transparent;
@@ -317,7 +324,7 @@
           margin: 0;
           padding: 0.55rem 1rem;
           border-radius: 16px 16px 0 0;
-          border-bottom: 1px solid rgba(185, 28, 28, 0.2);
+          border-bottom: 1px solid var(--color-danger);
         }
 
         .trem-fab__inner {
@@ -407,8 +414,8 @@
         .trem-fab__error {
           margin: 0;
           padding: 0.6rem 0.9rem;
-          background: rgba(185, 28, 28, 0.95);
-          color: #fff;
+          background: var(--color-danger);
+          color: var(--color-on-primary);
           border-bottom: none;
           border-radius: 14px 14px 0 0;
           font-weight: 600;

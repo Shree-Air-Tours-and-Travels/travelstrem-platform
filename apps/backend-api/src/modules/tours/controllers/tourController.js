@@ -53,16 +53,6 @@ const fallbackIncludedStays = (tour = {}) => {
     const totalNights = Math.max(1, Number(tour.period?.nights || 1));
     return [...stays.values()].map((stay) => ({ ...stay, nights: Math.min(stay.nights, totalNights) }));
 };
-const fallbackHotelOptions = (tour = {}) => {
-    const basePrice = Number(tour.price?.min || 0);
-    const upgradePrice = Math.max(1500, Math.round(basePrice * 0.3 / 500) * 500);
-    const premiumPrice = Math.max(3500, Math.round(basePrice * 0.65 / 500) * 500);
-    return [
-        { title: "Standard included stay", description: "The accommodation included in your package.", costLabel: "Package price", cost: "Included", recommended: false },
-        { title: "Comfort hotel upgrade", description: "Higher-category room and enhanced amenities, subject to availability.", costLabel: "Upgrade cost per room", cost: `₹${upgradePrice.toLocaleString("en-IN")}`, recommended: true },
-        { title: "Premium hotel upgrade", description: "Premium property selection and room category, subject to availability.", costLabel: "Upgrade cost per room", cost: `₹${premiumPrice.toLocaleString("en-IN")}`, recommended: false },
-    ];
-};
 const agencySummary = (value) => value && typeof value === "object" ? {
     id: value._id || value.id || null,
     name: displayText(value.agencyName),
@@ -75,12 +65,14 @@ const agencySummary = (value) => value && typeof value === "object" ? {
         .join(", "),
 } : null;
 import TourRepository from "../repositories/TourRepository.js";
+import { buildManagementTourQuery, isPrivateAgentDraft } from "../services/tourVisibility.service.js";
+import FinancialEngine from "../../../core/financial-engine/index.js";
+import { minorToDecimal } from "../../../core/financial-engine/utils/money.js";
 import {
     getHandlerFromReq,
 } from "../services/tourService.js";
 import config from "../../../config/index.js";
 import pageDefinitionService from "../../../services/pageDefinitionService.js";
-import Booking from "../../bookings/models/Booking.js";
 import User from "../../auth/models/User.js";
 import { audit } from "../../tenancy/audit.service.js";
 import { localizeTourImageUrls } from "../../../services/cloudinary.js";
@@ -165,18 +157,204 @@ const sanitizeIncludedStays = (value) => {
         roomType: displayText(stay?.roomType),
         meals: normalizeTextList(stay?.meals),
         description: displayText(stay?.description),
+        photos: normalizeTextList(stay?.photos).slice(0, 20),
+        amenities: normalizeTextList(stay?.amenities).slice(0, 30),
+        tier: ["base", "standard", "premium"].includes(stay?.tier) ? stay.tier : "",
+        pricing: sanitizeStayPricing(stay?.pricing, { required: false }),
     }));
+};
+
+const STAY_PRICING_UNITS = new Set(["PER_PERSON", "PER_BOOKING", "PER_ROOM", "PER_NIGHT", "PER_ROOM_PER_NIGHT", "PER_PERSON_PER_NIGHT"]);
+const sanitizeStayPricing = (pricing, { required = false } = {}) => {
+    if (!pricing || pricing.amountMinor == null || pricing.amountMinor === "") {
+        if (required) throw new Error("Room pricing amount is required");
+        return { unit: null, amountMinor: null, currency: "INR" };
+    }
+    const amountMinor = Number(pricing.amountMinor);
+    const unit = String(pricing.unit || "PER_ROOM_PER_NIGHT").toUpperCase();
+    if (!Number.isSafeInteger(amountMinor) || amountMinor < 0) throw new Error("Stay prices must be whole minor units, zero or more");
+    if (!STAY_PRICING_UNITS.has(unit)) throw new Error(`Unsupported stay pricing unit: ${unit}`);
+    return { unit, amountMinor, currency: String(pricing.currency || "INR").toUpperCase().slice(0, 3) };
+};
+
+const sanitizeHotelRooms = (rooms, optionIndex) => {
+    if (!Array.isArray(rooms)) return [];
+    const keys = new Set();
+    return rooms.map((room, roomIndex) => {
+        const roomKey = displayText(room?.roomKey) || `room-${roomIndex + 1}`;
+        if (keys.has(roomKey)) throw new Error(`hotelOptions[${optionIndex}] has duplicate room key "${roomKey}"`);
+        keys.add(roomKey);
+        const adults = Number(room?.maxAdults);
+        const children = Number(room?.maxChildren);
+        return {
+            roomKey,
+            name: displayText(room?.name) || `Room ${roomIndex + 1}`,
+            description: displayText(room?.description),
+            bedType: displayText(room?.bedType),
+            maxAdults: Number.isFinite(adults) ? Math.max(1, Math.min(20, adults)) : 2,
+            maxChildren: Number.isFinite(children) ? Math.max(0, Math.min(20, children)) : 0,
+            meals: normalizeTextList(room?.meals).slice(0, 20),
+            amenities: normalizeTextList(room?.amenities).slice(0, 30),
+            photos: normalizeTextList(room?.photos).slice(0, 20),
+            packageKeys: normalizeTextList(room?.packageKeys).slice(0, 10),
+            available: room?.available !== false,
+            pricing: sanitizeStayPricing(room?.pricing, { required: true }),
+        };
+    });
 };
 
 const sanitizeHotelOptions = (value) => {
     if (!Array.isArray(value)) throw new Error("hotelOptions must be an array");
-    return value.map((option) => ({
-        title: displayText(option?.title),
-        description: displayText(option?.description),
-        costLabel: displayText(option?.costLabel),
-        cost: displayText(option?.cost),
-        recommended: Boolean(option?.recommended),
-    })).filter((option) => option.title);
+    const keys = new Set();
+    return value.map((option, index) => {
+        const optionKey = displayText(option?.optionKey) || `hotel-${index + 1}`;
+        if (keys.has(optionKey)) throw new Error(`Duplicate hotel option key "${optionKey}"`);
+        keys.add(optionKey);
+        return {
+            optionKey,
+            stayKey: displayText(option?.stayKey) || displayText(option?.location).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || optionKey,
+            title: displayText(option?.title),
+            description: displayText(option?.description),
+            propertyName: displayText(option?.propertyName),
+            propertyClass: displayText(option?.propertyClass),
+            location: displayText(option?.location),
+            address: displayText(option?.address),
+            nights: Math.max(0, Number(option?.nights ?? 1)),
+            photos: normalizeTextList(option?.photos).slice(0, 20),
+            amenities: normalizeTextList(option?.amenities).slice(0, 30),
+            packageKeys: normalizeTextList(option?.packageKeys).slice(0, 10),
+            rooms: sanitizeHotelRooms(option?.rooms, index),
+            costLabel: displayText(option?.costLabel),
+            cost: displayText(option?.cost),
+            tier: ["base", "standard", "premium"].includes(option?.tier) ? option.tier : "",
+            recommended: Boolean(option?.recommended),
+            active: option?.active !== false,
+            pricing: sanitizeStayPricing(option?.pricing, { required: false }),
+        };
+    }).filter((option) => option.title);
+};
+
+const sanitizeCommercial = (value, { allowIncomplete = false } = {}) => {
+    if (!value || value.version !== "COMPONENTS_V1") return { version: "LEGACY" };
+    const components = Array.isArray(value.components) ? value.components.map((component, index) => ({
+        componentKey: displayText(component.componentKey) || `component-${index + 1}`,
+        type: displayText(component.type).toUpperCase(),
+        name: displayText(component.name),
+        description: displayText(component.description),
+        supplierRef: displayText(component.supplierRef),
+        replacesComponentKey: displayText(component.replacesComponentKey),
+        active: component.active !== false,
+        status: displayText(component.status, "CONFIRMED").toUpperCase(),
+        pricing: {
+            unit: displayText(component.pricing?.unit, "PER_BOOKING").toUpperCase(),
+            costAmountMinor: Number(component.pricing?.costAmountMinor),
+            // Selling totals are derived from cost + the tour pricing policy.
+            // Keep this compatibility field aligned with cost; never trust it
+            // as a client-authored total.
+            sellingAmountMinor: Number(component.pricing?.costAmountMinor),
+            currency: displayText(component.pricing?.currency || value.currency, "INR").toUpperCase(),
+        },
+        details: isObject(component.details) ? component.details : null,
+    })) : [];
+    const keys = components.map((item) => item.componentKey);
+    if (new Set(keys).size !== keys.length) throw new Error("Commercial component keys must be unique");
+    components.forEach((component) => {
+        if (!component.name) throw new Error(`Commercial component '${component.componentKey}' requires a name`);
+        if (!Number.isSafeInteger(component.pricing.costAmountMinor) || component.pricing.costAmountMinor < 0) throw new Error(`${component.componentKey} cost must be integer paise`);
+    });
+    const packages = Array.isArray(value.packages) ? value.packages.map((item, index) => ({
+        packageKey: displayText(item.packageKey) || `package-${index + 1}`,
+        tier: displayText(item.tier).toUpperCase(), name: displayText(item.name),
+        description: displayText(item.description), enabled: item.enabled !== false,
+        recommended: Boolean(item.recommended),
+        includedComponentKeys: [...new Set((item.includedComponentKeys || []).map(String).filter(Boolean))],
+        optionalComponentKeys: [...new Set((item.optionalComponentKeys || []).map(String).filter(Boolean))],
+    })) : [];
+    const enabled = packages.filter((item) => item.enabled);
+    if (!allowIncomplete && (enabled.length < 2 || enabled.length > 3)) throw new Error("Choose two or three enabled commercial packages");
+    if (new Set(packages.map((item) => item.packageKey)).size !== packages.length) throw new Error("Commercial package keys must be unique");
+    const known = new Set(keys);
+    packages.forEach((item) => {
+        if (!item.name || !["BASIC", "STANDARD", "PREMIUM"].includes(item.tier)) throw new Error(`Commercial package '${item.packageKey}' needs a valid tier and name`);
+        const optionalKeys = new Set(item.optionalComponentKeys);
+        const duplicateAssignment = item.includedComponentKeys.find((key) => optionalKeys.has(key));
+        if (duplicateAssignment) throw new Error(`Commercial package '${item.packageKey}' cannot include '${duplicateAssignment}' as both included and optional`);
+        [...item.includedComponentKeys, ...item.optionalComponentKeys].forEach((key) => {
+            if (!known.has(key)) throw new Error(`Commercial package '${item.packageKey}' references missing component '${key}'`);
+        });
+    });
+    const basis = value.defaultBasis || {};
+    const submittedPolicy = value.pricingPolicy || {};
+    const pricingPolicy = {
+        feeType: displayText(submittedPolicy.feeType, "PERCENTAGE").toUpperCase(),
+        feePercent: Number(submittedPolicy.feePercent ?? 10),
+        feeAmountMinor: Number(submittedPolicy.feeAmountMinor ?? 0),
+        gstPercent: Number(submittedPolicy.gstPercent ?? 18),
+        gstOn: "AGENT_FEE",
+    };
+    if (!["PERCENTAGE", "FIXED"].includes(pricingPolicy.feeType)) throw new Error("Agent fee method must be percentage or fixed");
+    if (!Number.isFinite(pricingPolicy.feePercent) || pricingPolicy.feePercent < 0 || pricingPolicy.feePercent > 100) throw new Error("Agent fee percentage must be between 0 and 100");
+    if (!Number.isSafeInteger(pricingPolicy.feeAmountMinor) || pricingPolicy.feeAmountMinor < 0) throw new Error("Fixed agent fee must be integer paise");
+    if (!Number.isFinite(pricingPolicy.gstPercent) || pricingPolicy.gstPercent < 0 || pricingPolicy.gstPercent > 100) throw new Error("GST percentage must be between 0 and 100");
+    return {
+        version: "COMPONENTS_V1", currency: displayText(value.currency, "INR").toUpperCase(), components, packages,
+        pricingPolicy,
+        defaultBasis: {
+            adults: Number(basis.adults ?? 1), children: Number(basis.children ?? 0), infants: Number(basis.infants ?? 0),
+            rooms: Number(basis.rooms ?? 1), vehicles: Number(basis.vehicles ?? 1),
+            nights: Number(basis.nights ?? 1), days: Number(basis.days ?? 1),
+        },
+    };
+};
+
+export const applyDerivedCommercialPrice = async (tour, req) => {
+    if (tour.commercial?.version !== "COMPONENTS_V1") return tour;
+    const summaries = [];
+    for (const packageOption of tour.commercial.packages.filter((item) => item.enabled !== false)) {
+        const result = await FinancialEngine.calculateBookingFinancials({
+            tour, packageKey: packageOption.packageKey, selections: tour.commercial.defaultBasis,
+            context: { agencyId: req?.access?.agencyId || req?.user?.agencyId || tour.agencyId, tourId: tour._id || null },
+        });
+        summaries.push({
+            packageKey: packageOption.packageKey, tier: packageOption.tier, name: packageOption.name,
+            costTotalMinor: result.commercial.costTotalMinor,
+            sellingTotalMinor: result.commercial.sellingTotalMinor,
+            agentFeeMinor: result.commercial.agentFeeMinor || 0,
+            agentGstMinor: result.commercial.agentGstMinor || 0,
+            marginMinor: result.commercial.componentMarginMinor,
+            requiresRepricing: result.commercial.requiresRepricing,
+        });
+    }
+    const amounts = summaries.map((item) => item.sellingTotalMinor);
+    const minAmountMinor = Math.min(...amounts);
+    const maxAmountMinor = Math.max(...amounts);
+    const publishing = tour.status === "published";
+    const hasFlights = tour.flights?.included === true || (tour.commercial.components || []).some((component) => component.active !== false && component.type === "FLIGHT");
+    const fixedWithFlights = tour.packageType === "fixed_departure" && hasFlights;
+    if (publishing && fixedWithFlights && summaries.length !== 3) throw new Error("Fixed-departure tours with flights require Base, Standard and Premium prices");
+    if (publishing && maxAmountMinor <= 0) throw new Error("Published component-priced tours require a positive calculated selling price");
+    if (publishing && summaries.some((item) => item.marginMinor < 0)) throw new Error("Published packages cannot have a negative component margin");
+    const displayMode = tour.packageType === "custom"
+        ? "STARTING_FROM"
+        : (fixedWithFlights && !summaries.some((item) => item.requiresRepricing) ? "FINAL" : "ESTIMATED");
+    tour.commercial.derived = { minAmountMinor, maxAmountMinor, displayMode, packages: summaries, calculatedAt: new Date() };
+    tour.price = {
+        min: Number(minorToDecimal(minAmountMinor)), max: Number(minorToDecimal(maxAmountMinor)),
+        currency: tour.commercial.currency || "INR", isFinal: displayMode === "FINAL", source: "calculated",
+    };
+    if (tour.packageType === "fixed_departure" && Array.isArray(tour.departures)) {
+        tour.departures = tour.departures.map((departure) => ({
+            ...(departure?.toObject?.() || departure),
+            pricing: {
+                currency: tour.price.currency,
+                min: tour.price.min,
+                max: tour.price.max,
+                isFinal: tour.price.isFinal,
+                source: "component_calculation",
+            },
+        }));
+    }
+    return tour;
 };
 
 const escapeRegExp = (value = "") => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -207,7 +385,7 @@ const findTourByRef = async (tourRef) => {
     });
     if (directTitle) return directTitle;
 
-    const tours = await TourRepository.find({}, "title city address distance period startDate endDate photo photos desc price seasonalPricing itinerary highlights includedStays hotelOptions cancellation extras availability flights meetingPoint inclusions exclusions languages cancellationPolicy minAge maxAge maxGroupSize reviews featured tags isPublished status ownerAgent createdAt updatedAt");
+    const tours = await TourRepository.find({}, "title city address distance period startDate endDate photo photos desc price commercial seasonalPricing itinerary highlights includedStays hotelOptions cancellation extras availability flights meetingPoint inclusions exclusions languages cancellationPolicy minAge maxAge maxGroupSize reviews featured tags isPublished status builderProcess ownerAgent createdAt updatedAt");
     return tours.find((tour) => slugifyTourTitle(tour.title) === slugifyTourTitle(ref)) || null;
 };
 
@@ -238,7 +416,7 @@ const buildPriceInfo = (doc, date = new Date()) => {
  * Normalize a tour object for API response and ensure all schema keys are present.
  * Accepts either mongoose doc or plain object (tourObj).
  */
-export const normalizeTourForResponse = (tourObj = {}, priceInfo = null) => {
+export const normalizeTourForResponse = (tourObj = {}, priceInfo = null, { includeCommercialCosts = false, includeBuilderProcess = false } = {}) => {
     const agency = agencySummary(tourObj.agencyId) || (displayText(tourObj.providerName) ? {
         id: null,
         name: displayText(tourObj.providerName),
@@ -253,7 +431,7 @@ export const normalizeTourForResponse = (tourObj = {}, priceInfo = null) => {
         : fallbackIncludedStays(tourObj);
     const hotelOptions = Array.isArray(tourObj.hotelOptions) && tourObj.hotelOptions.length
         ? tourObj.hotelOptions
-        : fallbackHotelOptions(tourObj);
+        : [];
 
     // defensive defaults
     return {
@@ -269,6 +447,19 @@ export const normalizeTourForResponse = (tourObj = {}, priceInfo = null) => {
         photos: Array.isArray(tourObj.photos) ? tourObj.photos : (tourObj.photos ? [tourObj.photos] : []),
         desc: displayText(tourObj.desc ?? tourObj.description),
         price: tourObj.price || null,
+        commercial: tourObj.commercial?.version === "COMPONENTS_V1" ? {
+            ...tourObj.commercial,
+            pricingPolicy: includeCommercialCosts ? tourObj.commercial.pricingPolicy : undefined,
+            components: (tourObj.commercial.components || []).map((component) => includeCommercialCosts ? component : {
+                ...component,
+                supplierRef: undefined,
+                pricing: { ...component.pricing, costAmountMinor: undefined },
+            }),
+            derived: includeCommercialCosts ? tourObj.commercial.derived : {
+                ...tourObj.commercial.derived,
+                packages: (tourObj.commercial.derived?.packages || []).map(({ costTotalMinor, marginMinor, ...item }) => item),
+            },
+        } : { version: "LEGACY" },
         packageType: tourObj.packageType || "fixed_departure",
         departures: Array.isArray(tourObj.departures) ? tourObj.departures : [],
         flexibleConfig: tourObj.flexibleConfig || null,
@@ -314,8 +505,10 @@ export const normalizeTourForResponse = (tourObj = {}, priceInfo = null) => {
         reviews: Array.isArray(tourObj.reviews) ? tourObj.reviews : [],
         featured: !!tourObj.featured,
         tags: normalizeTextList(tourObj.tags),
-        isPublished: typeof tourObj.isPublished === "boolean" ? tourObj.isPublished : true,
+        // Kept in the response temporarily for older clients; status is authoritative.
+        isPublished: tourObj.status === "published",
         status: tourObj.status || "published",
+        ...(includeBuilderProcess ? { builderProcess: tourObj.builderProcess || null } : {}),
         tremVerified: Boolean(tourObj.tremVerified),
         tremVerifiedAt: tourObj.tremVerifiedAt || null,
         ownerAgent: isObject(tourObj.ownerAgent)
@@ -356,7 +549,9 @@ const sanitizeTourPayload = (raw = {}) => {
     if (!p.title) throw new Error("Missing required field: title");
     if (!p.desc && !p.description) throw new Error("Missing required field: desc/description");
 
-    // Price
+    p.commercial = sanitizeCommercial(p.commercial);
+    // Legacy tours accept a manual range. Component tours derive this projection server-side.
+    if (!p.price && p.commercial.version === "COMPONENTS_V1") p.price = { min: 0, max: 0, currency: p.commercial.currency, source: "calculated" };
     if (!p.price) throw new Error("Missing price object (price.min & price.max required)");
     if (p.price.min == null || p.price.max == null) throw new Error("price.min and price.max are required");
     p.price = {
@@ -448,8 +643,13 @@ const sanitizeTourPayload = (raw = {}) => {
         };
     }
     p.flights = {
+        ...p.flights,
         included: Boolean(p.flights?.included),
         inventoryManaged: Boolean(p.flights?.included && p.flights?.inventoryManaged),
+        pricePerPerson: Number(p.flights?.pricePerPerson || 0),
+        currency: displayText(p.flights?.currency, "INR"),
+        departureCity: displayText(p.flights?.departureCity), arrivalCity: displayText(p.flights?.arrivalCity),
+        airline: displayText(p.flights?.airline), notes: displayText(p.flights?.notes),
     };
 
     // Simple number validations
@@ -488,8 +688,9 @@ const sanitizeTourPayload = (raw = {}) => {
     p.includedStays = p.includedStays === undefined ? [] : sanitizeIncludedStays(p.includedStays);
     p.hotelOptions = p.hotelOptions === undefined ? [] : sanitizeHotelOptions(p.hotelOptions);
     p.featured = !!p.featured;
-    p.isPublished = typeof p.isPublished === "boolean" ? p.isPublished : true;
     p.status = p.status || "published";
+    // Legacy storage mirror only. Clients control publication through status.
+    p.isPublished = p.status === "published";
     p.inventorySource = ["agent", "provider", "platform"].includes(p.inventorySource) ? p.inventorySource : "platform";
 
     // Package type
@@ -539,6 +740,7 @@ const sanitizeTourPayload = (raw = {}) => {
             requireDates: typeof p.customConfig.requireDates === "boolean" ? p.customConfig.requireDates : true,
             requireGroupSize: typeof p.customConfig.requireGroupSize === "boolean" ? p.customConfig.requireGroupSize : true,
             allowAgentDraft: typeof p.customConfig.allowAgentDraft === "boolean" ? p.customConfig.allowAgentDraft : true,
+            allowCustomerCustomization: p.customConfig.allowCustomerCustomization === true,
             questionnaireFields: Array.isArray(p.customConfig.questionnaireFields) ? p.customConfig.questionnaireFields.map(String) : [],
         };
     }
@@ -556,6 +758,7 @@ const sanitizeTourPayload = (raw = {}) => {
         photos: p.photos || [],
         desc: p.desc || p.description || "",
         price: p.price,
+        commercial: p.commercial,
         packageType: p.packageType,
         departures: p.departures,
         flexibleConfig: p.flexibleConfig || null,
@@ -589,12 +792,14 @@ const sanitizeTourPayload = (raw = {}) => {
 };
 
 /**
- * sanitizeTourPayloadForUpdate(raw)
+ * sanitizeTourPayloadForUpdate(raw, options)
  * - Only processes fields that are present in `raw`
  * - Does NOT throw on missing required fields (title, desc, price)
  * - Returns only the fields that were sent, safe for partial PUT
+ * - options.allowIncompleteCommercial: permits a component-priced commercial
+ *   block that does not yet have two or three enabled packages (draft checkpoints)
  */
-const sanitizeTourPayloadForUpdate = (raw = {}) => {
+export const sanitizeTourPayloadForUpdate = (raw = {}, { allowIncompleteCommercial = false } = {}) => {
     const p = { ...raw };
     for (const key of ["_id", "id", "__v", "createdAt", "updatedAt", "tremVerified", "tremVerifiedBy", "tremVerifiedAt", "createdBy"]) delete p[key];
     const result = {};
@@ -622,6 +827,8 @@ const sanitizeTourPayloadForUpdate = (raw = {}) => {
         if (Number.isNaN(result.price.min) || Number.isNaN(result.price.max)) throw new Error("price.min or price.max is not a number");
         if (result.price.min > result.price.max) throw new Error("price.min cannot be greater than price.max");
     }
+
+    if (p.commercial !== undefined) result.commercial = sanitizeCommercial(p.commercial, { allowIncomplete: allowIncompleteCommercial });
 
     if (p.seasonalPricing !== undefined) {
         if (!Array.isArray(p.seasonalPricing)) throw new Error("seasonalPricing must be an array");
@@ -704,8 +911,21 @@ const sanitizeTourPayloadForUpdate = (raw = {}) => {
     if (p.meetingPoint !== undefined) result.meetingPoint = p.meetingPoint || "";
     if (p.cancellationPolicy !== undefined) result.cancellationPolicy = p.cancellationPolicy || "";
     if (p.featured !== undefined) result.featured = !!p.featured;
-    if (p.isPublished !== undefined) result.isPublished = typeof p.isPublished === "boolean" ? p.isPublished : true;
-    if (p.status !== undefined) result.status = p.status || "published";
+    if (p.trending !== undefined) result.trending = !!p.trending;
+    if (p.group !== undefined) {
+        const min = p.group?.min == null ? 1 : Number(p.group.min);
+        const max = p.group?.max == null ? null : Number(p.group.max);
+        if (!Number.isFinite(min) || min < 1) throw new Error("group.min must be at least 1");
+        if (max != null && (!Number.isFinite(max) || max < min)) throw new Error("group.max must be greater than or equal to group.min");
+        result.group = { min, max };
+    }
+    if (p.status !== undefined) {
+        const status = String(p.status || "draft");
+        if (!Object.prototype.hasOwnProperty.call(TOUR_TRANSITIONS, status)) throw new Error(`Invalid tour status: ${status}`);
+        result.status = status;
+        // Keep the legacy field synchronized without exposing a second control.
+        result.isPublished = result.status === "published";
+    }
     if (p.ownerAgent !== undefined) result.ownerAgent = p.ownerAgent || null;
     if (p.agencyRef !== undefined) result.agencyRef = String(p.agencyRef || "");
     if (p.partnerAgencyRef !== undefined) result.partnerAgencyRef = String(p.partnerAgencyRef || "");
@@ -722,8 +942,13 @@ const sanitizeTourPayloadForUpdate = (raw = {}) => {
     }
     if (p.flights !== undefined) {
         result.flights = {
+            ...p.flights,
             included: Boolean(p.flights?.included),
             inventoryManaged: Boolean(p.flights?.included && p.flights?.inventoryManaged),
+            pricePerPerson: Number(p.flights?.pricePerPerson || 0),
+            currency: displayText(p.flights?.currency, "INR"),
+            departureCity: displayText(p.flights?.departureCity), arrivalCity: displayText(p.flights?.arrivalCity),
+            airline: displayText(p.flights?.airline), notes: displayText(p.flights?.notes),
         };
     }
 
@@ -821,6 +1046,7 @@ const sanitizeTourPayloadForUpdate = (raw = {}) => {
                 requireDates: typeof p.customConfig.requireDates === "boolean" ? p.customConfig.requireDates : true,
                 requireGroupSize: typeof p.customConfig.requireGroupSize === "boolean" ? p.customConfig.requireGroupSize : true,
                 allowAgentDraft: typeof p.customConfig.allowAgentDraft === "boolean" ? p.customConfig.allowAgentDraft : true,
+                allowCustomerCustomization: p.customConfig.allowCustomerCustomization === true,
                 questionnaireFields: Array.isArray(p.customConfig.questionnaireFields) ? p.customConfig.questionnaireFields.map(String) : [],
             };
         } else {
@@ -846,6 +1072,14 @@ export const canModifyTour = (user, tour, access = null) => {
     const role = access?.role || actor?.agencyRole;
     const actorAgencyId = access?.agencyId || actor?.agencyId || user?.agencyId;
     const tourAgencyId = tour.agencyId?._id || tour.agencyId?.id || tour.agencyId;
+    const ownerId = toString(tour.ownerAgent?._id || tour.ownerAgent);
+    const userId = toString(actor?._id || actor?.sub || actor?.id || user?.sub || user?.id);
+
+    // An in-progress Agent draft is a private workspace record. Elevated
+    // users receive it only after the Agent submits it for review.
+    if (isPrivateAgentDraft(tour)) {
+        return Boolean(ownerId && userId && ownerId === userId);
+    }
 
     // Admin can modify any tour
     if (access?.isMaster || (actor?.role === "admin" && actor?.adminLevel === "master")) return true;
@@ -855,8 +1089,6 @@ export const canModifyTour = (user, tour, access = null) => {
     // Agent can only modify tours they own AND that are agent-scoped
     if (role === "partner_agent" || actor?.role === "agent") {
         if (!actorAgencyId || toString(tourAgencyId) !== toString(actorAgencyId)) return false;
-        const ownerId = toString(tour.ownerAgent?._id || tour.ownerAgent);
-        const userId = toString(actor?._id || actor?.sub || actor?.id || user?.sub || user?.id);
         if (ownerId && userId && ownerId === userId) return true;
     }
 
@@ -890,11 +1122,7 @@ export const getTours = async (req, res) => {
     const featuredOnly = req.query?.featured === "true";
 
     try {
-        const query = featuredOnly ? { featured: true } : {};
-        if (!(req.user?.role === "admin" && req.user?.adminLevel === "master")) {
-            query.agencyId = req.user?.agencyId || null;
-            if (req.user?.agencyRole !== "partner_admin") query.ownerAgent = req.user?.sub;
-        }
+        const query = buildManagementTourQuery(req, featuredOnly);
         let toursQuery = TourRepository.find(query).sort({ createdAt: -1 });
         if (limit) toursQuery = toursQuery.limit(limit);
 
@@ -905,7 +1133,7 @@ export const getTours = async (req, res) => {
              const priceInfo = buildPriceInfo(doc, dateQuery);
              // Management screens use this collection for View and Edit, so
              // retain the complete schema instead of a display-card projection.
-             const normalized = normalizeTourForResponse(tourObj, priceInfo);
+             const normalized = normalizeTourForResponse(tourObj, priceInfo, { includeCommercialCosts: true, includeBuilderProcess: true });
              return normalized;
          });
 
@@ -957,6 +1185,9 @@ export const getTourByRef = async (req, res) => {
         }
 
         const tourObj = tourRaw.toObject ? tourRaw.toObject() : tourRaw;
+        if (tourObj.status !== "published") {
+            return sendJson(res, 404, { status: "error", message: "Tour not found", handler }, req);
+        }
         const priceInfo = buildPriceInfo(tourRaw, dateQuery);
         const normalized = normalizeTourForResponse(tourObj, priceInfo);
 
@@ -988,83 +1219,6 @@ export const getTourByRef = async (req, res) => {
     }
 };
 
-/**
- * POST /tours
- */
-export const createTour = async (req, res) => {
-    const handler = getHandlerFromReq(req);
-    try {
-        const sanitized = sanitizeTourPayload(req.body);
-        if (!req.access?.isMaster && !req.access?.agency?.productAccess?.includes("trevista")) {
-            return sendJson(res, 403, { status: "error", message: "Trevista is not assigned to this agency." }, req);
-        }
-        if (sanitized.startDate && sanitized.endDate && sanitized.startDate > sanitized.endDate) throw new Error("Tour end date must be after its start date.");
-        if (req.user?.role === "agent") {
-            sanitized.ownerAgent = req.user.sub || req.user.id || null;
-            sanitized.createdBy = req.user.sub || req.user.id || null;
-            sanitized.agencyId = req.user.agencyId || null;
-            sanitized.agentTour = true;
-            sanitized.agentRef = req.user.agentRef || "";
-            sanitized.agencyRef = req.user.agencyRef || "";
-            sanitized.partnerAgencyRef = req.user.partnerAgencyRef || "";
-            sanitized.inventorySource = "agent";
-            sanitized.productKey = "trevista";
-            if (!canPublishTour(req) && sanitized.status === "published") {
-                sanitized.status = "pending_approval";
-                sanitized.isPublished = false;
-            }
-        } else if (req.access?.isMaster) {
-            if (req.body.agencyId) sanitized.agencyId = req.body.agencyId;
-            sanitized.createdBy = req.user.sub || req.user.id || null;
-            sanitized.productKey = "trevista";
-            if (!sanitized.agencyId) {
-                sanitized.providerName = sanitized.providerName || "TravelsTREM";
-                sanitized.inventorySource = "platform";
-            }
-        }
-        if (req.access?.isMaster && sanitized.status === "published") {
-            sanitized.tremVerified = true;
-            sanitized.tremVerifiedBy = req.user.sub || req.user.id;
-            sanitized.tremVerifiedAt = new Date();
-        }
-
-        // Resolve and validate the response contract before persisting. A bad
-        // page definition must never make a successful create look failed
-        // after the database write has already happened.
-        const listingResponse = pageDefinitionService.buildPageResponse("tours-remote/listing");
-        await localizeTourImageUrls(sanitized);
-        const newTour = TourRepository.create(sanitized);
-        const savedTour = await newTour.save();
-        await syncDerivedTourDeparture(savedTour);
-        await audit(req, { action: "trip.created", entityType: "Tour", entityId: savedTour._id, agencyId: savedTour.agencyId, after: savedTour.toObject() });
-
-        const priceInfo = buildPriceInfo(savedTour, new Date());
-        const normalized = normalizeTourForResponse(savedTour.toObject ? savedTour.toObject() : savedTour, priceInfo);
-
-        listingResponse.component.data = {
-            ...listingResponse.component.data,
-            tours: [normalized],
-            tour: normalized,
-        };
-        return sendJson(res, 201, {
-            ...listingResponse,
-            message: "Tour created successfully",
-            handler,
-        }, req);
-    } catch (error) {
-        console.error("createTour error:", error);
-        return sendJson(res, error.status || 400, {
-            status: "error",
-            message: "Failed to create tour",
-            handler,
-            error: error.message,
-        }, req);
-    }
-};
-
-/**
- * PUT /tours/:id
- */
 export const updateTour = async (req, res) => {
     const handler = getHandlerFromReq(req);
     const { id } = req.params;
@@ -1116,6 +1270,13 @@ export const updateTour = async (req, res) => {
             }
         }
 
+        const recalculated = { ...existing.toObject(), ...sanitized };
+        await applyDerivedCommercialPrice(recalculated, req);
+        if (recalculated.commercial?.version === "COMPONENTS_V1") {
+            sanitized.commercial = recalculated.commercial;
+            sanitized.price = recalculated.price;
+        }
+
         // Preflight the response contract before applying the update so a
         // contract configuration error cannot occur after the mutation.
         const listingResponse = pageDefinitionService.buildPageResponse("tours-remote/listing");
@@ -1128,7 +1289,7 @@ export const updateTour = async (req, res) => {
         await audit(req, { action: "trip.updated", entityType: "Tour", entityId: updatedTour._id, agencyId: updatedTour.agencyId, before: existing.toObject(), after: updatedTour.toObject() });
 
         const priceInfo = buildPriceInfo(updatedTour, new Date());
-        const normalized = normalizeTourForResponse(updatedTour.toObject ? updatedTour.toObject() : updatedTour, priceInfo);
+        const normalized = normalizeTourForResponse(updatedTour.toObject ? updatedTour.toObject() : updatedTour, priceInfo, { includeCommercialCosts: true, includeBuilderProcess: true });
 
         listingResponse.component.data = {
             ...listingResponse.component.data,
@@ -1158,6 +1319,10 @@ export const verifyTour = async (req, res) => {
         return sendJson(res, 403, { status: "error", message: "Only a master admin can verify a tour.", handler }, req);
     }
     try {
+        const existing = await TourRepository.findById(req.params.id);
+        if (!existing || isPrivateAgentDraft(existing)) {
+            return sendJson(res, 404, { status: "error", message: "Tour not found.", handler }, req);
+        }
         const tour = await TourRepository.findByIdAndUpdate(req.params.id, {
             tremVerified: true,
             tremVerifiedBy: req.user.sub || req.user.id,
@@ -1165,7 +1330,7 @@ export const verifyTour = async (req, res) => {
         }, { new: true, runValidators: true });
         if (!tour) return sendJson(res, 404, { status: "error", message: "Tour not found.", handler }, req);
         await audit(req, { action: "trip.verified", entityType: "Tour", entityId: tour._id, agencyId: tour.agencyId, after: tour.toObject() });
-        const normalized = normalizeTourForResponse(tour.toObject(), buildPriceInfo(tour, new Date()));
+        const normalized = normalizeTourForResponse(tour.toObject(), buildPriceInfo(tour, new Date()), { includeCommercialCosts: true });
         return sendJson(res, 200, { status: "success", component: { data: { tour: normalized, tours: [normalized] } }, message: "Tour verified by TravelsTREM.", handler }, req);
     } catch (error) {
         return sendJson(res, 400, { status: "error", message: error.message || "Could not verify tour.", handler }, req);
@@ -1196,8 +1361,7 @@ export const deleteTour = async (req, res) => {
             }, req);
         }
 
-        const hasBookings = await Booking.exists({ tour: existing._id, deletedAt: null });
-        if (!hasBookings && (req.access?.isMaster || ["draft", "pending_approval"].includes(existing.status))) {
+        if (req.access?.isMaster || ["draft", "pending_approval"].includes(existing.status)) {
             const before = existing.toObject();
             await existing.deleteOne();
             await audit(req, { action: "trip.deleted", entityType: "Tour", entityId: existing._id, agencyId: existing.agencyId, before });
@@ -1211,7 +1375,7 @@ export const deleteTour = async (req, res) => {
         existing.isPublished = false;
         existing.archivedAt = new Date();
         const deletedTour = await existing.save();
-        await audit(req, { action: hasBookings ? "trip.archived_with_bookings" : "trip.archived", entityType: "Tour", entityId: existing._id, agencyId: existing.agencyId });
+        await audit(req, { action: "trip.archived", entityType: "Tour", entityId: existing._id, agencyId: existing.agencyId });
 
         return sendJson(res, 200, {
             ...pageDefinitionService.buildPageResponse("tours-remote/listing", {
@@ -1244,7 +1408,10 @@ export const deleteAllTours = async (req, res) => {
                 handler,
             }, req);
         }
-        const result = await TourRepository.updateMany({}, { $set: { status: "archived", isPublished: false, archivedAt: new Date() } });
+        const result = await TourRepository.updateMany(
+            { $nor: [{ status: "draft", agentTour: true, ownerAgent: { $ne: null } }] },
+            { $set: { status: "archived", isPublished: false, archivedAt: new Date() } },
+        );
         return sendJson(res, 200, {
             ...pageDefinitionService.buildPageResponse("tours-remote/listing", {
                 injectData: { deletedCount: result.modifiedCount || 0 },
@@ -1266,6 +1433,62 @@ export const deleteAllTours = async (req, res) => {
 /**
  * GET /tours/:id/price (getTourPricePreview)
  */
+export const calculateTourPackage = async (req, res) => {
+    try {
+        const tour = await findTourByRef(req.params.id);
+        if (!tour) return res.status(404).json({ status: "error", message: "Tour not found" });
+        if (isPrivateAgentDraft(tour) && !canModifyTour(req.user, tour, req.access)) {
+            return res.status(404).json({ status: "error", message: "Tour not found" });
+        }
+        if (tour.commercial?.version !== "COMPONENTS_V1") return res.status(409).json({ status: "error", message: "This legacy tour does not have component packages yet" });
+        const result = await FinancialEngine.calculateBookingFinancials({
+            tour, packageKey: req.body?.packageKey, selections: req.body?.selections || {},
+            context: { agencyId: tour.agencyId, tourId: tour._id },
+        });
+        const canViewCost = Boolean(req.access?.isMaster || req.access?.role === "partner_admin" || canModifyTour(req.user, tour, req.access));
+        const commercial = canViewCost ? result.commercial : {
+            ...result.commercial,
+            costTotalMinor: undefined, componentMarginMinor: undefined,
+            lines: result.commercial.lines.map(({ costUnitAmountMinor, costAmountMinor, marginMinor, ...line }) => line),
+        };
+        const { commercial: _privateCommercial, ...financials } = result;
+        return res.json({ status: "success", component: { data: { commercial, financials } } });
+    } catch (error) {
+        return res.status(error.status || 400).json({ status: "error", message: error.message || "Could not calculate package" });
+    }
+};
+
+/** Public, read-only quote preview. Money values are resolved from the tour. */
+export const previewTourCustomization = async (req, res) => {
+    try {
+        const tour = await findTourByRef(req.params.id);
+        if (!tour || tour.status !== "published") return res.status(404).json({ status: "error", message: "Tour not found" });
+        if (tour.commercial?.version !== "COMPONENTS_V1") return res.status(409).json({ status: "error", message: "Package comparison is not available for this tour" });
+        const preview = FinancialEngine.calculateTourCustomizationPreview({
+            tour,
+            packageKey: String(req.body?.packageKey || "").slice(0, 100),
+            hotelSelections: Array.isArray(req.body?.hotelSelections) ? req.body.hotelSelections.slice(0, 20).map((item) => ({
+                stayKey: String(item?.stayKey || "").slice(0, 100),
+                hotelOptionKey: String(item?.hotelOptionKey || "").slice(0, 100),
+                roomOptionKey: String(item?.roomOptionKey || "").slice(0, 100),
+            })) : [],
+            hotelRequests: Array.isArray(req.body?.hotelRequests) ? req.body.hotelRequests.slice(0, 12).map((item) => ({
+                stayKey: String(item?.stayKey || "").slice(0, 100),
+                propertyClass: String(item?.propertyClass || "").slice(0, 80),
+                roomType: String(item?.roomType || "").slice(0, 120),
+                budgetPerNight: String(item?.budgetPerNight || "").slice(0, 20),
+                requirements: String(item?.requirements || "").slice(0, 600),
+            })) : [],
+            hotelOptionKey: String(req.body?.hotelOptionKey || "").slice(0, 100),
+            roomOptionKey: String(req.body?.roomOptionKey || "").slice(0, 100),
+            travellerCount: Number(req.body?.travellerCount),
+        });
+        return res.status(200).json({ status: "success", component: { data: { preview } } });
+    } catch (error) {
+        return res.status(400).json({ status: "error", message: error?.message || "Could not compare package prices" });
+    }
+};
+
 export const getTourPricePreview = async (req, res) => {
     try {
         const { id } = req.params;
@@ -1278,7 +1501,7 @@ export const getTourPricePreview = async (req, res) => {
         }
 
         const doc = await TourRepository.findById(id);
-        if (!doc) {
+        if (!doc || doc.status !== "published") {
             return res.status(404).json({ status: "error", message: "Tour not found" });
         }
 

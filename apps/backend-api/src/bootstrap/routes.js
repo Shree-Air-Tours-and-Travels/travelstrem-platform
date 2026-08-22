@@ -6,10 +6,7 @@ import tourRoutes from "../modules/tours/routes.js";
 import formsRouter from "../modules/forms/routes.js";
 import filtersRoutes from "../modules/tours/filtersRoutes.js";
 import chatRoutes from "../modules/chat/routes.js";
-import bookingRoutes from "../modules/bookings/routes.js";
-import adminBookingRoutes from "../modules/bookings/adminRoutes.js";
 import quoteRoutes from "../modules/bookings/quoteRoutes.js";
-import engineRoutes from "../modules/bookings/engineRoutes.js";
 import portalRoutes from "../modules/portal/routes.js";
 import pageDefinitionRoutes from "../modules/pageDefinitions/routes.js";
 import toursPageRoutes from "../modules/tours/pageRoutes.js";
@@ -71,9 +68,6 @@ export default function registerRoutes(app) {
   app.use(API_ROUTES.API, formsRouter);
   app.use(API_ROUTES.API, filtersRoutes);
   app.use(API_ROUTES.API, toursPageRoutes);
-  app.use(API_ROUTES.BOOKINGS, bookingRoutes);
   app.use("/api/quotes", quoteRoutes);
-  app.use(API_ROUTES.ADMIN_BOOKINGS, adminBookingRoutes);
-  app.use(API_ROUTES.ENGINE, engineRoutes);
   app.use(API_ROUTES.CLIENTS, clientRoutes);
 }

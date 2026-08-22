@@ -14,12 +14,28 @@ const ContactLeadSchema = new mongoose.Schema({
     email: { type: String, default: "" },
     phone: { type: String, default: "" },
   },
+  selection: {
+    packageKey: { type: String, default: "" },
+    packageName: { type: String, default: "" },
+    hotelRoomKey: { type: String, default: "" },
+    hotelRoomName: { type: String, default: "" },
+    hotelSelections: { type: [mongoose.Schema.Types.Mixed], default: [] },
+    hotelRequests: { type: [mongoose.Schema.Types.Mixed], default: [] },
+    customizationPreference: { type: String, enum: ["package", "customize"], default: "package" },
+  },
+  customizationSnapshot: { type: mongoose.Schema.Types.Mixed, default: null },
+  customizationAnswers: { type: mongoose.Schema.Types.Mixed, default: {} },
   claimedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null, index: true },
   bookingId: { type: mongoose.Schema.Types.ObjectId, ref: "Booking", default: null, index: true },
+  status: {
+    type: String,
+    enum: ["new", "in_review", "responded", "closed"],
+    default: "new",
+    index: true,
+  },
   url: { type: String, default: null },
   notified: { type: Boolean, default: false },
-  createdAt: { type: Date, default: Date.now }
-});
+}, { timestamps: true });
 
 const ContactLead = mongoose.model("ContactLead", ContactLeadSchema);
 export default ContactLead;

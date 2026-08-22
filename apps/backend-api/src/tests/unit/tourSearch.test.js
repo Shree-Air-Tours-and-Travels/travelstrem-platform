@@ -2,10 +2,34 @@ import { getEligibleDeparturePrices, getLegacyTourPrice } from "../../modules/to
 import { buildTourSearchPipeline } from "../../modules/tours/search/tourSearch.pipeline.js";
 import { mapTourSearchResult } from "../../modules/tours/search/tourSearch.mapper.js";
 import { normalizeTourSearchRequest } from "../../modules/tours/validators/search.validation.js";
+import { buildTourSearchMetadata } from "../../modules/tours/services/tourSearchMetadata.service.js";
 
 const baseTour = { maxGroupSize: 30, group: { min: 1, max: 30 }, price: { min: 89999, max: 89999, currency: "INR" } };
 
 describe("tour discovery search rules", () => {
+  test("preserves explicit tag ids and derives domestic metadata from an India destination", () => {
+    const metadata = buildTourSearchMetadata({
+      address: { country: "India" },
+      tags: [],
+      tagIds: ["domestic"],
+      searchTags: [],
+    });
+
+    expect(metadata.tagIds).toEqual(["domestic"]);
+    expect(metadata.tags).toEqual(["Domestic"]);
+    expect(metadata.searchTags).toContainEqual(expect.objectContaining({ slug: "domestic", type: "THEME" }));
+  });
+
+  test("derives international while preserving agent-provided theme tags", () => {
+    const metadata = buildTourSearchMetadata({
+      primaryDestination: { countryName: "United Arab Emirates" },
+      tags: ["Family"],
+    });
+
+    expect(metadata.tagIds).toEqual(expect.arrayContaining(["family", "international"]));
+    expect(metadata.tags).toEqual(expect.arrayContaining(["Family", "International"]));
+  });
+
   test("rejects malformed paging, dates, prices, and arbitrary sort fields", () => {
     const result = normalizeTourSearchRequest({
       filters: { minPrice: -1, departureDate: "20/12/2026" },

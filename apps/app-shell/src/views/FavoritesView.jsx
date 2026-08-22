@@ -5,8 +5,8 @@ import "./FavoritesView.scss";
 
 export default function FavoritesView({ favorites, loading, onRemoveFavorite, onViewFavorite }) {
   const [productFilter, setProductFilter] = useState("all");
-  const { options: masterOptions } = useMasterOptions(["appShell.bookingProductOptions"]);
-  const productOptions = masterOptions["appShell.bookingProductOptions"] || [];
+  const { options: masterOptions } = useMasterOptions(["appShell.favoriteProductOptions"]);
+  const productOptions = masterOptions["appShell.favoriteProductOptions"] || [];
 
   const filtered = productFilter === "all"
     ? favorites

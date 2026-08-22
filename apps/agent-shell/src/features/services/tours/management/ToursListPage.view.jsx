@@ -1,11 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button, Breadcrumbs, Dropdown, EmptyState, InputField, SubTitle, TourCard } from "@packages/trem-ui";
-import { deleteAgentTour, deleteAllAgentTours, fetchAgentTours, getAgentTourById } from "../../../../services/agentService";
+import { deleteAgentTour, deleteAllAgentTours, fetchAgentTours } from "../../../../services/agentService";
 import { TourCardSkeleton, WidgetError } from "../../../../shared/Skeleton";
 import { useAgentPortalConfig } from "../../../../app/providers/AgentPortalProvider";
-import CreateTourForm from "../CreateTourForm";
-import TourView from "../TourView";
 import { ADMIN_ROLE, AGENT_ROLE, TOUR_CARD_CONFIG } from "../tours.constants";
 import pageConfig from "./toursListPage.config.json";
 import "./ToursListPage.styles.scss";
@@ -31,9 +29,6 @@ export default function ToursListPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [sortBy, setSortBy] = useState("newest");
     const [sortOpen, setSortOpen] = useState(false);
-    const [editingTour, setEditingTour] = useState(null);
-    const [formOpen, setFormOpen] = useState(false);
-    const [viewTour, setViewTour] = useState(null);
 
     const sortOptions = useMemo(() =>
         pageConfig.sort.options.map((opt) => ({
@@ -69,50 +64,12 @@ export default function ToursListPage() {
     useEffect(() => {
         const params = new URLSearchParams(location.search);
         if (params.get("create") === "true") {
-            setEditingTour(null);
-            setFormOpen(true);
+            navigate("/agent/services/tours/builder", { replace: true });
             return undefined;
         }
 
-        const editId = params.get("edit");
-        const viewId = params.get("view");
-        const requestedId = editId || viewId;
-        if (!requestedId) return undefined;
-
-        let active = true;
-        getAgentTourById(requestedId)
-            .then((tour) => {
-                if (!active || !tour) return;
-                if (editId) {
-                    setEditingTour(tour);
-                    setFormOpen(true);
-                } else {
-                    setViewTour(tour);
-                }
-            })
-            .catch((requestError) => active && setError(requestError.message || pageConfig.errors.loadFailed));
-        return () => { active = false; };
+        return undefined;
     }, [location.search]);
-
-    const clearModalQuery = useCallback(() => {
-        const params = new URLSearchParams(location.search);
-        params.delete("create");
-        params.delete("edit");
-        params.delete("view");
-        const search = params.toString();
-        navigate(`${location.pathname}${search ? `?${search}` : ""}`, { replace: true });
-    }, [location.pathname, location.search, navigate]);
-
-    const closeForm = useCallback(() => {
-        setFormOpen(false);
-        setEditingTour(null);
-        clearModalQuery();
-    }, [clearModalQuery]);
-
-    const closeView = useCallback(() => {
-        setViewTour(null);
-        clearModalQuery();
-    }, [clearModalQuery]);
 
     const canDeleteTour = useCallback((tour) => {
         const ownerId = tour.ownerAgent?._id || tour.ownerAgent;
@@ -120,18 +77,18 @@ export default function ToursListPage() {
     }, [isAdmin, isAgent, userId]);
 
     const handleView = useCallback((tour) => {
-        setViewTour(tour);
-    }, []);
+        const id = tour?._id || tour?.id;
+        if (id) navigate(`/agent/services/tours/${encodeURIComponent(id)}/view`);
+    }, [navigate]);
 
     const handleEdit = useCallback((tour) => {
-        setEditingTour(tour);
-        setFormOpen(true);
-    }, []);
+        const id = tour?._id || tour?.id;
+        if (id) navigate(`/agent/services/tours/${encodeURIComponent(id)}/edit`);
+    }, [navigate]);
 
     const handleCreate = useCallback(() => {
-        setEditingTour(null);
-        setFormOpen(true);
-    }, []);
+        navigate("builder");
+    }, [navigate]);
 
     const handleDelete = useCallback((tour) => {
         const id = tour._id || tour.id;
@@ -200,7 +157,7 @@ export default function ToursListPage() {
                         <TourCard
                             key={t._id || t.id}
                             tour={t}
-                            variant={pageConfig.tourCard.variant}
+                            variant="management"
                             isAdmin={TOUR_CARD_CONFIG.isAdmin}
                             showOwner={TOUR_CARD_CONFIG.showOwner}
                             ownershipMode="agent"
@@ -213,27 +170,6 @@ export default function ToursListPage() {
                     ))
                 )}
             </div>
-            {viewTour && (
-                <TourView
-                    tour={viewTour}
-                    onClose={closeView}
-                    onEdit={(tour) => {
-                        setViewTour(null);
-                        setEditingTour(tour);
-                        setFormOpen(true);
-                    }}
-                />
-            )}
-            {formOpen && (
-                <CreateTourForm
-                    initial={editingTour}
-                    onCancel={closeForm}
-                    onSaved={async () => {
-                        closeForm();
-                        await loadTours();
-                    }}
-                />
-            )}
         </section>
     );
 }

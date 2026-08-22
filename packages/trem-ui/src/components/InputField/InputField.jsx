@@ -206,6 +206,7 @@ export default function InputField({
   ariaLabel,
   countryCode: initialCountryCode = "+91",
   onCountryCodeChange,
+  ...rest
 }) {
   const isTel = variant === "tel";
   const isMonthYear = variant === "monthYear";
@@ -275,6 +276,7 @@ export default function InputField({
           step={step}
           aria-label={ariaLabel || label || placeholder}
           aria-invalid={Boolean(error)}
+          {...rest}
         />
       </div>
     </div>

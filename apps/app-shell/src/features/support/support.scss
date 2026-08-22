@@ -92,12 +92,10 @@
   letter-spacing: -.012em;
 }
 
-.support-booking-list,
 .support-list,
 .support-form,
 .support-review,
-.support-conversation,
-.support-eligibility {
+.support-conversation {
   display: grid;
   gap: $space-3;
 }
@@ -299,30 +297,6 @@
   gap: $space-2;
 }
 
-.support-bookings-empty {
-  min-height: 140px;
-  padding: $space-4;
-  border: 1px solid var(--border);
-  border-radius: $radius-lg;
-  background: linear-gradient(145deg, var(--surface), color-mix(in srgb, var(--color-primary) 3%, var(--surface)));
-}
-
-.support-bookings-empty .tt-empty-state__icon {
-  width: 52px;
-  height: 52px;
-  display: grid;
-  place-items: center;
-  margin: 0;
-  border-radius: $radius-md;
-  background: color-mix(in srgb, var(--color-primary) 9%, var(--surface));
-  color: var(--color-primary);
-}
-
-.support-bookings-empty .tt-empty-state__icon svg {
-  width: 28px;
-  height: 28px;
-}
-
 .support-service-card {
   min-height: 112px;
   align-items: flex-start;
@@ -363,12 +337,6 @@
 
 .support-service-card--tertiary {
   background: linear-gradient(145deg, var(--surface), color-mix(in srgb, #0891b2 8%, var(--surface)));
-}
-
-@media (min-width: #{$breakpoint-md + 1px}) {
-  .support-booking-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: $breakpoint-md) {

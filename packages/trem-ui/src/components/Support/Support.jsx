@@ -3,13 +3,6 @@ import Icon from "../../icons/Icon/Icon.jsx";
 import StatusBadge from "../StatusBadge/StatusBadge.jsx";
 import "./Support.styles.scss";
 
-const activate = (handler, disabled) => (event) => {
-  if (disabled) return;
-  if (event.type === "keydown" && !["Enter", " "].includes(event.key)) return;
-  event.preventDefault();
-  handler?.();
-};
-
 export function SupportActionCard({ action, onSelect, className = "" }) {
   const disabled = action?.enabled === false;
   return (
@@ -23,24 +16,6 @@ export function SupportActionCard({ action, onSelect, className = "" }) {
 export function SupportActionGrid({ actions = [], onSelect, className = "" }) {
   if (!actions.length) return null;
   return <div className={`trem-support-actions ${className}`}>{actions.map((action) => <SupportActionCard key={action.id} action={action} onSelect={onSelect} />)}</div>;
-}
-
-export function SupportBookingCard({ booking, onSelect, onAction, className = "" }) {
-  return (
-    <article className={`trem-support-booking ${className}`}>
-      <div className="trem-support-booking__main" role="button" tabIndex={0} onClick={() => onSelect?.(booking)} onKeyDown={activate(() => onSelect?.(booking), false)} aria-label={`Get help with ${booking?.title}`}>
-        {booking?.image ? <img className="trem-support-booking__image" src={booking.image} alt="" /> : <span className={`trem-support-booking__fallback trem-support-booking__fallback--${booking?.service?.tone || "neutral"}`}><Icon name={booking?.service?.icon || "support"} size={28} /></span>}
-        <div className="trem-support-booking__copy">
-          {booking?.service?.name ? <span className="trem-support-booking__service">{booking.service.name}</span> : null}
-          <h3>{booking?.title}</h3>
-          {booking?.dateLabel ? <p>{booking.dateLabel}</p> : null}
-          {booking?.provider?.label ? <small>{booking.provider.label}</small> : null}
-        </div>
-        {booking?.status ? <StatusBadge value={booking.status.label || booking.status.id} tone={booking.status.tone} size="sm" /> : null}
-      </div>
-      <SupportActionGrid actions={booking?.supportActions} onSelect={(action) => onAction?.(action, booking)} />
-    </article>
-  );
 }
 
 export function SupportCategoryCard({ item, onSelect, className = "" }) {
@@ -76,7 +51,6 @@ export function SupportTicketCard({ ticket, onSelect, className = "" }) {
       <span className="trem-support-ticket__copy">
         <span className="trem-support-ticket__reference">{ticket?.reference}</span>
         <strong>{ticket?.subject}</strong>
-        {ticket?.bookingLabel ? <small>{ticket.bookingLabel}</small> : null}
         {ticket?.updatedLabel ? <small>{ticket.updatedLabel}</small> : null}
       </span>
       <span className="trem-support-ticket__meta">

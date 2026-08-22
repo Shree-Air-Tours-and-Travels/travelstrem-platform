@@ -1,6 +1,6 @@
 import React from "react";
 import { Button, Breadcrumbs, FloatingActionBar, Title, Paragraph, AgencyDetailsCard } from "../../index.js";
-import { ContactAgentModal, ConfirmOverlay } from "@packages/trem-modals";
+import { ContactAgentModal } from "@packages/trem-modals";
 import TourOverview from "./widgets/TourOverview/TourOverview";
 import TourGallery from "./widgets/TourGallery/TourGallery";
 import PricingCard from "./widgets/PricingCard/PricingCard";
@@ -12,6 +12,7 @@ import CancellationPolicy from "./widgets/CancellationPolicy/CancellationPolicy"
 import ReviewsSection from "./widgets/ReviewsSection/ReviewsSection";
 import SimilarTours from "./widgets/SimilarTours/SimilarTours";
 import TourFacts from "./widgets/TourFacts/TourFacts";
+import PackagePlans from "./widgets/PackagePlans/PackagePlans";
 import "./tourDetails.scss";
 
 export const DetailSkeleton = () => (
@@ -42,7 +43,7 @@ export const EmptyState = ({ title, message, onBack, backLabel = "Back to tours"
 );
 
 const HERO_WIDGETS = new Set(["TourOverview", "TourGallery", "PricingCard"]);
-const CONTENT_WIDGETS = new Set(["TourHighlights", "ItineraryTimeline", "InclusionsExclusions", "IncludedStays", "CancellationPolicy", "ReviewsSection", "SimilarTours"]);
+const CONTENT_WIDGETS = new Set(["TourHighlights", "ItineraryTimeline", "InclusionsExclusions", "PackagePlans", "IncludedStays", "CancellationPolicy", "ReviewsSection", "SimilarTours"]);
 
 const renderWidget = (widget, props) => {
   switch (widget.type) {
@@ -59,7 +60,9 @@ const renderWidget = (widget, props) => {
     case "InclusionsExclusions":
       return <InclusionsExclusions key={widget.type} tourRef={props.tourRef} />;
     case "IncludedStays":
-      return <IncludedStays key={widget.type} tourRef={props.tourRef} selectedHotel={props.selectedHotel} onSelectHotel={props.onSelectHotel} />;
+      return <IncludedStays key={widget.type} tourRef={props.tourRef} selectedPackage={props.selectedPackage} hotelSelections={props.hotelSelections} onSelectHotel={props.onSelectHotel} onCustomize={props.onCustomize} onRequestHotel={props.onRequestHotel} />;
+    case "PackagePlans":
+      return <PackagePlans key={widget.type} tourRef={props.tourRef} selectedPackage={props.selectedPackage} onSelectPackage={props.onSelectPackage} />;
     case "CancellationPolicy":
       return <CancellationPolicy key={widget.type} tourRef={props.tourRef} />;
     case "ReviewsSection":
@@ -75,19 +78,18 @@ export default function ToursDetailsView({
   tourRef, widgets, pageTitle, activeTour,
   structure, elements,
   contactOpen,
-  bookConfirmOpen, breadcrumbItems,
-  onTourLoad, onBack, onBook, onBookConfirm, onBookConfirmClose, onContact, onShare,
+  breadcrumbItems,
+  onTourLoad, onBack, onContact, onShare,
   isFavorited, onFavorite,
   setContactOpen,
-  appKey, user, productType, selectedHotel, onSelectHotel,
-  selectedFlight, onSelectFlight, selectedActivities, onSelectActivity,
+  appKey, user, productType,
+  selectedPackage, hotelSelections, hotelRequests,
+  onSelectPackage, onSelectHotel, onCustomize, onRequestHotel,
 }) {
   const showBookNow = structure?.floatingActionBar?.config?.showBookNow === true;
   const widgetProps = {
-    tourRef, activeTour, onTourLoad, onBook, onContact, onShare, isFavorited, onFavorite, appKey,
-    selectedHotel, onSelectHotel: productType === "tour" ? onSelectHotel : undefined,
-    selectedFlight, onSelectFlight: productType === "tour" ? onSelectFlight : undefined,
-    selectedActivities, onSelectActivity: productType === "tour" ? onSelectActivity : undefined,
+    tourRef, activeTour, onTourLoad, onContact, onShare, isFavorited, onFavorite, appKey,
+    selectedPackage, hotelSelections, onSelectPackage, onSelectHotel, onCustomize, onRequestHotel,
   };
   const heroWidgets = widgets.filter((widget) => HERO_WIDGETS.has(widget.type));
   const contentWidgets = widgets.filter((widget) => CONTENT_WIDGETS.has(widget.type));
@@ -135,26 +137,16 @@ export default function ToursDetailsView({
           onClose={() => setContactOpen(false)}
           user={user}
           product={productType === "trip" ? "trevio" : "trevista"}
+          initialSelections={{ packageKey: selectedPackage, hotelSelections: Object.values(hotelSelections || {}), hotelRequests }}
         />
       ) : null}
-
-      <ConfirmOverlay
-        open={bookConfirmOpen}
-        onClose={onBookConfirmClose}
-        onConfirm={() => { onBookConfirmClose(); onBookConfirm(); }}
-        title={elements?.labels?.confirmBookingTitle || "Book Your Spot"}
-        note={elements?.labels?.confirmBookingNote || "Please note that this is a request for booking. Our agent will get in touch with you to provide a final quote and confirm your reservation."}
-        icon="calendar"
-        confirmLabel={elements?.labels?.confirmBookingConfirmLabel || "Request Booking"}
-        cancelLabel={elements?.labels?.confirmBookingCancelLabel || "Cancel"}
-      />
 
       <FloatingActionBar
         align="stretch"
         text={elements?.labels}
         actions={[
           { label: elements?.labels?.enquire || "Enquire", variant: "ghost", iconLeft: "messageCircle", onClick: () => onContact(activeTour) },
-          ...(showBookNow ? [{ label: elements?.labels?.bookNow || "Book now", variant: "primary", onClick: () => onBook(activeTour) }] : []),
+          ...(showBookNow ? [{ label: elements?.labels?.requestQuote || "Request quote", variant: "primary", onClick: () => onContact(activeTour) }] : []),
         ]}
       />
     </main>

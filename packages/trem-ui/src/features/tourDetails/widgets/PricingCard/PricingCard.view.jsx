@@ -3,35 +3,23 @@ import Button from "../../../../components/Button/Button.jsx";
 import Paragraph from "../../../../components/Paragraph/Paragraph.jsx";
 import Icon from "../../../../icons/Icon/Icon.jsx";
 
-export default function PricingCardView({ labels, tour, priceText, cityDisplay, onBook, onContact, onShare, isFavorited, onFavorite, showBookNow = false, selectedFlight, onSelectFlight, selectedActivities, onSelectActivity, selectedDeparture, onSelectDeparture }) {
+export default function PricingCardView({ labels, tour, priceText, packagePrices = [], priceDisplayMode, cityDisplay, onContact, onShare, isFavorited, onFavorite }) {
   if (!tour) return null;
 
   const isFav = isFavorited?.(tour) ?? false;
   const seatsAvailable = tour.availability?.seatsAvailable ?? tour.seatsAvailable;
   const isSoldOut = seatsAvailable === 0;
-  const packageType = tour.packageType || "fixed_departure";
-  const departures = Array.isArray(tour.departures) ? tour.departures : [];
-  const hasDepartures = packageType === "fixed_departure" && departures.length > 0;
-  const activeDepartures = departures.filter((d) => d.status !== "cancelled" && d.status !== "completed");
-  const actions = [
-    ...(showBookNow ? [{ id: "book" }] : []),
-    ...(packageType !== "custom" ? [{ id: "quote" }] : []),
-  ];
   const hasExplicitRoute = Boolean(
     typeof tour.city === "string"
       ? tour.city.trim()
       : (tour.city?.from && tour.city?.to)
   );
+  const priceLabel = priceDisplayMode === "FINAL"
+    ? (packagePrices.length > 1 ? "Final package prices" : (labels.confirmedRate || "Final price"))
+    : priceDisplayMode === "STARTING_FROM"
+      ? (labels.startingFrom || "Starting from")
+      : (labels.estimatedPrice || "Estimated price");
 
-  const flights = tour.flights || {};
-  const hasFlights = Boolean(flights.included);
-  const flightOptions = hasFlights ? [
-    { value: "no", label: "Without flights", price: 0 },
-    { value: "yes", label: `With flights${flights.pricePerPerson ? ` (+₹${flights.pricePerPerson.toLocaleString()}/person)` : " (included)"}`, price: flights.pricePerPerson || 0 },
-  ] : [];
-
-  const extras = Array.isArray(tour.extras) ? tour.extras : [];
-  const bookableActivities = extras.filter((e) => e.category === "activity" && e.active !== false);
 
   return (
     <aside className="tour-detail__booking-widget" aria-label={labels.pricingTitle || "Trip actions"}>
@@ -53,10 +41,21 @@ export default function PricingCardView({ labels, tour, priceText, cityDisplay, 
       )}
       <div className="tour-detail__booking-widget-body">
         <div className="tour-detail__booking-widget-price">
-          <span>{labels.startingFrom || "Starting from"}</span>
+          <span>{priceLabel}</span>
           <strong>{priceText}</strong>
           <Paragraph text={tour?.priceInfo?.isFinal ? (labels.confirmedRate || "Confirmed rate") : (labels.estimateNote || "Rate may vary by season and availability")} />
         </div>
+        {packagePrices.length > 0 && (
+          <div className="tour-detail__package-prices" aria-label={priceDisplayMode === "FINAL" ? "Final package prices" : "Package price estimates"}>
+            {packagePrices.map((item) => (
+              <div className="tour-detail__package-price" key={item.key}>
+                <span>{item.name}</span>
+                <strong>{item.priceText}</strong>
+                {item.requiresRepricing && <small>Repricing required</small>}
+              </div>
+            ))}
+          </div>
+        )}
         <div className="tour-detail__booking-meta">
           <div className="tour-detail__fact">
             <span>{hasExplicitRoute ? (labels.route || "Route") : "Destination"}</span>
@@ -69,63 +68,10 @@ export default function PricingCardView({ labels, tour, priceText, cityDisplay, 
             </div>
           ) : null}
         </div>
-        {hasDepartures && activeDepartures.length > 0 && (
-          <div className="tour-detail__booking-options">
-            <span className="tour-detail__booking-options-label">{labels.departureLabel || "Select Departure"}</span>
-            <div className="tour-detail__departure-list">
-              {activeDepartures.map((dep) => {
-                const depId = dep._id || dep.id;
-                const depDate = dep.departureDate ? new Date(dep.departureDate).toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" }) : "";
-                const returnDate = dep.returnDate ? new Date(dep.returnDate).toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" }) : "";
-                const seatsLeft = dep.seatsAvailable != null ? dep.seatsAvailable : null;
-                const isDepSoldOut = dep.status === "sold_out" || (seatsLeft !== null && seatsLeft <= 0);
-                return (
-                  <button key={depId} type="button" className={`tour-detail__departure-option${selectedDeparture === depId ? " is-selected" : ""}${isDepSoldOut ? " is-sold-out" : ""}`} onClick={() => !isDepSoldOut && onSelectDeparture?.(depId)} disabled={isDepSoldOut}>
-                    <span className="tour-detail__departure-dates">{dep.label || `${depDate} – ${returnDate}`}</span>
-                    {dep.pricing?.min != null && <span className="tour-detail__departure-price">₹{dep.pricing.min.toLocaleString("en-IN")}</span>}
-                    {seatsLeft !== null && <span className="tour-detail__departure-seats">{isDepSoldOut ? "Sold out" : `${seatsLeft} left`}</span>}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-        {flightOptions.length > 0 && (
-          <div className="tour-detail__booking-options">
-            <span className="tour-detail__booking-options-label">{labels.flightsLabel || "Flights"}</span>
-            <div className="tour-detail__booking-option-group">
-              {flightOptions.map((opt) => (
-                <button key={opt.value} type="button" className={`tour-detail__booking-option${selectedFlight === opt.value ? " is-selected" : ""}`} onClick={() => onSelectFlight?.(opt.value)}>
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-        {bookableActivities.length > 0 && (
-          <div className="tour-detail__booking-options">
-            <span className="tour-detail__booking-options-label">{labels.activitiesLabel || "Activities"}</span>
-            <div className="tour-detail__booking-activities">
-              {bookableActivities.map((activity, idx) => {
-                const isSelected = selectedActivities?.includes(activity.title);
-                return (
-                  <label key={idx} className={`tour-detail__booking-activity${isSelected ? " is-selected" : ""}`}>
-                    <input type="checkbox" checked={!!isSelected} onChange={() => onSelectActivity?.(activity.title)} />
-                    <span>{activity.title}</span>
-                    {activity.price > 0 && <span className="tour-detail__booking-activity-price">+₹{activity.price.toLocaleString()}</span>}
-                  </label>
-                );
-              })}
-            </div>
-          </div>
-        )}
       </div>
       <div className="tour-detail__booking-widget-footer">
-        <div className={`tour-detail__action-grid tour-detail__action-grid--${actions.length}`}>
-          {showBookNow && <Button fullWidth={actions.length === 1} primaryClassName="tour-detail__button tour-detail__button--primary" variant="solid" color="primary" onClick={() => onBook(tour)} disabled={isSoldOut}>
-            {isSoldOut ? (labels.waitlist || "Join Waitlist") : (labels.bookNow || "Book now")}
-          </Button>}
-          <Button fullWidth={actions.length === 1} primaryClassName="tour-detail__button tour-detail__button--outline" variant="outline" onClick={() => onContact(tour)}>
+        <div className="tour-detail__action-grid tour-detail__action-grid--1">
+          <Button fullWidth primaryClassName="tour-detail__button tour-detail__button--outline" variant="outline" onClick={() => onContact(tour)}>
             <Icon name="messageCircle" />
             {labels.enquire || labels.contactAgent || "Get a quote"}
           </Button>

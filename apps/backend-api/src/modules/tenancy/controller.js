@@ -12,7 +12,6 @@ import Role from "./models/Role.js";
 import ProductAccessRequest from "./models/ProductAccessRequest.js";
 import Tour from "../tours/models/Tour.js";
 import TrevioTrip from "../trevio/models/TrevioTrip.js";
-import Booking from "../bookings/models/Booking.js";
 import RefreshToken from "../auth/models/RefreshToken.js";
 import { audit } from "./audit.service.js";
 import { inviteUser, activateInvitation, revokeSessions, renewInvitation } from "./tenancy.service.js";
@@ -111,7 +110,7 @@ export async function convertPartnershipRequest(req, res) {
 export async function activate(req, res) { try { const user = await activateInvitation(req.body); await audit(req, { action: "user.activated", entityType: "User", entityId: user._id, agencyId: user.agencyId }); return ok(res, { email: user.email, accountStatus: user.accountStatus }, "Account activated."); } catch (error) { return fail(res, error); } }
 
 export async function listAgencies(req, res) { try { const { skip, limit } = page(req); const q = {}; if (req.query.status) q.status = req.query.status; if (req.query.search) q.$or = [{ agencyName: new RegExp(escapeRegex(req.query.search), "i") }, { contactEmail: new RegExp(escapeRegex(req.query.search), "i") }]; const [items, total] = await Promise.all([PartnerAgency.find(q).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(), PartnerAgency.countDocuments(q)]); return ok(res, { items, total, skip, limit }); } catch (error) { return fail(res, error); } }
-export async function getAgency(req, res) { try { const id = req.access.isMaster ? req.params.id : req.access.agencyId; const agency = await PartnerAgency.findById(id).lean(); if (!agency) return res.status(404).json({ status: "error", message: "Agency not found." }); const [admins, agents, trips, bookings, customers] = await Promise.all([User.countDocuments({ agencyId: id, agencyRole: "partner_admin" }), User.countDocuments({ agencyId: id, agencyRole: "partner_agent" }), TrevioTrip.countDocuments({ agencyId: id }), Booking.countDocuments({ agencyId: id }), AgencyCustomer.countDocuments({ agencyId: id })]); return ok(res, { agency, stats: { admins, agents, trips, bookings, customers } }); } catch (error) { return fail(res, error); } }
+export async function getAgency(req, res) { try { const id = req.access.isMaster ? req.params.id : req.access.agencyId; const agency = await PartnerAgency.findById(id).lean(); if (!agency) return res.status(404).json({ status: "error", message: "Agency not found." }); const [admins, agents, trips, customers] = await Promise.all([User.countDocuments({ agencyId: id, agencyRole: "partner_admin" }), User.countDocuments({ agencyId: id, agencyRole: "partner_agent" }), TrevioTrip.countDocuments({ agencyId: id }), AgencyCustomer.countDocuments({ agencyId: id })]); return ok(res, { agency, stats: { admins, agents, trips, customers } }); } catch (error) { return fail(res, error); } }
 export async function updateAgency(req, res) { try {
   const id = req.access.isMaster ? req.params.id : req.access.agencyId;
   const allowed = req.access.isMaster ? ["agencyName", "legalName", "contactName", "contactEmail", "contactPhone", "website", "address", "logo", "productAccess", "settings", "status"] : ["agencyName", "contactName", "contactPhone", "website", "address", "logo"];
@@ -210,12 +209,12 @@ export async function decideDeletionRequest(req, res) { try {
   if (!["approved", "rejected"].includes(decision)) return res.status(400).json({ status: "error", message: "Decision must be approved or rejected." });
   record.status = decision; record.decisionBy = req.access.user._id; record.decisionNotes = req.body.notes; record.decisionDate = new Date();
   if (decision === "approved") {
-    const [user, booking, trevioTrip, tour, customer] = await Promise.all([
-      User.findById(record.agentId), Booking.exists({ assignedAgent: record.agentId }), TrevioTrip.exists({ ownerAgent: record.agentId }),
+    const [user, trevioTrip, tour, customer] = await Promise.all([
+      User.findById(record.agentId), TrevioTrip.exists({ ownerAgent: record.agentId }),
       Tour.exists({ ownerAgent: record.agentId }), AgencyCustomer.exists({ ownerAgent: record.agentId }),
     ]);
     if (!user) return res.status(404).json({ status: "error", message: "Agent account no longer exists." });
-    if (booking || trevioTrip || tour || customer) {
+    if (trevioTrip || tour || customer) {
       user.name = "Former agent"; user.email = `anonymized-${user._id}@invalid.local`; user.phone = "";
       user.designation = ""; user.productAccess = []; user.permissionGrants = []; user.permissionDenials = [];
       user.accountStatus = "anonymized"; user.deactivatedAt = new Date(); await revokeSessions(user);
@@ -239,16 +238,14 @@ export async function reports(req, res) { try {
   const agencyId = req.access.isMaster ? req.query.agencyId : req.access.agencyId;
   if (!agencyId || !mongoose.isValidObjectId(agencyId)) return res.status(400).json({ status: "error", message: "A valid agencyId is required." });
   const agentScope = req.access.role === "partner_agent" ? { ownerAgent: req.access.user._id } : {};
-  const bookingScope = req.access.role === "partner_agent" ? { assignedAgent: req.access.user._id } : {};
   const customerQuery = req.access.isMaster ? { agencyId, deletedAt: null } : customerScope(req, { deletedAt: null });
-  const [activeAgents, inactiveAgents, totalTrips, publishedTrips, totalBookings, bookingStatuses, customers] = await Promise.all([
+  const [activeAgents, inactiveAgents, totalTrips, publishedTrips, customers] = await Promise.all([
     User.countDocuments({ agencyId, agencyRole: "partner_agent", accountStatus: "active" }),
     User.countDocuments({ agencyId, agencyRole: "partner_agent", accountStatus: { $ne: "active" } }),
     TrevioTrip.countDocuments({ agencyId, ...agentScope }), TrevioTrip.countDocuments({ agencyId, ...agentScope, status: { $in: ["listed", "published"] }, isListed: true }),
-    Booking.countDocuments({ agencyId, ...bookingScope }), Booking.aggregate([{ $match: { agencyId: new mongoose.Types.ObjectId(agencyId), ...bookingScope } }, { $group: { _id: "$status", count: { $sum: 1 }, value: { $sum: "$paymentSummary.total" } } }]),
     AgencyCustomer.countDocuments(customerQuery),
   ]);
-  return ok(res, { activeAgents, inactiveAgents, totalTrips, publishedTrips, totalBookings, bookingStatuses, customers });
+  return ok(res, { activeAgents, inactiveAgents, totalTrips, publishedTrips, customers });
 } catch (error) { return fail(res, error); } }
 export async function listAudit(req, res) { try { const { skip, limit } = page(req); const q = req.access.isMaster && req.query.agencyId ? { agencyId: req.query.agencyId } : req.access.isMaster ? {} : { agencyId: req.access.agencyId }; const [items, total] = await Promise.all([AuditLog.find(q).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(), AuditLog.countDocuments(q)]); return ok(res, { items, total, skip, limit }); } catch (error) { return fail(res, error); } }
 export async function listProducts(req, res) { try { return ok(res, await Product.find({}).sort({ name: 1 }).lean()); } catch (error) { return fail(res, error); } }
@@ -329,40 +326,37 @@ export async function transferAgentWork(req, res) {
     await session.withTransaction(async () => {
       const agents = await User.find({ _id: { $in: [fromAgentId, toAgentId] }, agencyId, agencyRole: "partner_agent" }).session(session);
       if (agents.length !== 2 || agents.find((item) => String(item._id) === String(toAgentId))?.accountStatus !== "active") throw Object.assign(new Error("Both agents must belong to the agency and the destination agent must be active."), { status: 409 });
-      const [trevio, trevista, bookings, customers] = await Promise.all([
+      const [trevio, trevista, customers] = await Promise.all([
         TrevioTrip.updateMany({ agencyId, ownerAgent: fromAgentId, status: { $nin: ["archived", "cancelled"] } }, { $set: { ownerAgent: toAgentId, updatedBy: req.access.user._id } }, { session }),
         Tour.updateMany({ agencyId, ownerAgent: fromAgentId, status: { $nin: ["archived", "cancelled"] } }, { $set: { ownerAgent: toAgentId, updatedBy: req.access.user._id } }, { session }),
-        Booking.updateMany({ agencyId, assignedAgent: fromAgentId, status: { $nin: ["COMPLETED", "CANCELLED", "REFUNDED"] } }, { $set: { assignedAgent: toAgentId, updatedBy: req.access.user._id } }, { session }),
         AgencyCustomer.updateMany({ agencyId, ownerAgent: fromAgentId, deletedAt: null }, { $set: { ownerAgent: toAgentId, updatedBy: req.access.user._id } }, { session }),
       ]);
-      counts = { trevioTrips: trevio.modifiedCount, trevistaTrips: trevista.modifiedCount, bookings: bookings.modifiedCount, customers: customers.modifiedCount };
+      counts = { trevioTrips: trevio.modifiedCount, trevistaTrips: trevista.modifiedCount, customers: customers.modifiedCount };
     });
     await audit(req, { action: "agent.work_transferred", entityType: "User", entityId: fromAgentId, agencyId, after: { toAgentId, counts } });
     return ok(res, counts, "Active work transferred.");
   } catch (error) { return fail(res, error, "Work transfer failed and was rolled back."); } finally { await session.endSession(); }
 }
 
-export async function getCustomer(req, res) { try { const customer = await AgencyCustomer.findOne(customerScope(req, { _id: req.params.id, deletedAt: null })).lean(); if (!customer) return res.status(404).json({ status: "error", message: "Customer not found." }); const bookings = await Booking.find({ agencyId: customer.agencyId, customerId: customer._id }).sort({ createdAt: -1 }).limit(50).lean(); return ok(res, { customer, bookings }); } catch (error) { return fail(res, error); } }
+export async function getCustomer(req, res) { try { const customer = await AgencyCustomer.findOne(customerScope(req, { _id: req.params.id, deletedAt: null })).lean(); if (!customer) return res.status(404).json({ status: "error", message: "Customer not found." }); return ok(res, { customer }); } catch (error) { return fail(res, error); } }
 export async function archiveCustomer(req, res) { try { const customer = await AgencyCustomer.findOne(customerScope(req, { _id: req.params.id, deletedAt: null })); if (!customer) return res.status(404).json({ status: "error", message: "Customer not found." }); customer.deletedAt = new Date(); customer.updatedBy = req.access.user._id; await customer.save(); await audit(req, { action: "customer.archived", entityType: "AgencyCustomer", entityId: customer._id, agencyId: customer.agencyId }); return ok(res, null, "Customer archived."); } catch (error) { return fail(res, error); } }
 
 export async function dashboard(req, res) { try {
   if (req.access.isMaster) {
-    const [pendingRequests, approvedAgencies, activeAgencies, suspendedAgencies, partnerAdmins, partnerAgents, trips, tours, bookings, recentApprovals, recentAudit] = await Promise.all([
-      PartnershipRequest.countDocuments({ status: { $in: ["submitted", "under_review", "additional_information_required"] } }), PartnerAgency.countDocuments({ status: { $in: ["approved", "active"] } }), PartnerAgency.countDocuments({ status: "active" }), PartnerAgency.countDocuments({ status: "suspended" }), User.countDocuments({ agencyRole: "partner_admin" }), User.countDocuments({ agencyRole: "partner_agent" }), TrevioTrip.countDocuments({}), Tour.countDocuments({}), Booking.countDocuments({}), PartnershipRequest.find({ status: { $in: ["approved", "converted"] } }).sort({ updatedAt: -1 }).limit(8).select("agencyName companyEmail status updatedAt").lean(), AuditLog.find({}).sort({ createdAt: -1 }).limit(10).lean(),
+    const [pendingRequests, approvedAgencies, activeAgencies, suspendedAgencies, partnerAdmins, partnerAgents, trips, tours, recentApprovals, recentAudit] = await Promise.all([
+      PartnershipRequest.countDocuments({ status: { $in: ["submitted", "under_review", "additional_information_required"] } }), PartnerAgency.countDocuments({ status: { $in: ["approved", "active"] } }), PartnerAgency.countDocuments({ status: "active" }), PartnerAgency.countDocuments({ status: "suspended" }), User.countDocuments({ agencyRole: "partner_admin" }), User.countDocuments({ agencyRole: "partner_agent" }), TrevioTrip.countDocuments({}), Tour.countDocuments({}), PartnershipRequest.find({ status: { $in: ["approved", "converted"] } }).sort({ updatedAt: -1 }).limit(8).select("agencyName companyEmail status updatedAt").lean(), AuditLog.find({}).sort({ createdAt: -1 }).limit(10).lean(),
     ]);
-    return ok(res, { pendingRequests, approvedAgencies, activeAgencies, suspendedAgencies, partnerAdmins, partnerAgents, totalTrips: trips + tours, totalBookings: bookings, recentApprovals, recentAudit });
+    return ok(res, { pendingRequests, approvedAgencies, activeAgencies, suspendedAgencies, partnerAdmins, partnerAgents, totalTrips: trips + tours, recentApprovals, recentAudit });
   }
   const agencyId = req.access.agencyId; const agent = req.access.role === "partner_agent" ? req.access.user._id : null;
-  const tripScope = agent ? { agencyId, ownerAgent: agent } : { agencyId }; const bookingScope = agent ? { agencyId, assignedAgent: agent } : { agencyId };
-  const [activeAgents, inactiveAgents, totalTrips, publishedTrips, draftTrips, upcomingTrips, totalBookings, bookingStatuses, pendingCustomerActions, recentTrips, recentBookings, recentCustomers, recentAgentActivity, productUsage] = await Promise.all([
+  const tripScope = agent ? { agencyId, ownerAgent: agent } : { agencyId };
+  const [activeAgents, inactiveAgents, totalTrips, publishedTrips, draftTrips, upcomingTrips, recentTrips, recentCustomers, recentAgentActivity] = await Promise.all([
     User.countDocuments({ agencyId, agencyRole: "partner_agent", accountStatus: "active" }), User.countDocuments({ agencyId, agencyRole: "partner_agent", accountStatus: { $ne: "active" } }),
     TrevioTrip.countDocuments(tripScope), TrevioTrip.countDocuments({ ...tripScope, status: "listed", isListed: true }), TrevioTrip.countDocuments({ ...tripScope, status: "draft" }), TrevioTrip.countDocuments({ ...tripScope, startDate: { $gte: new Date() }, status: { $in: ["listed", "pending_approval"] } }),
-    Booking.countDocuments(bookingScope), Booking.aggregate([{ $match: { ...bookingScope, agencyId: new mongoose.Types.ObjectId(agencyId) } }, { $group: { _id: "$status", count: { $sum: 1 } } }]), Booking.countDocuments({ ...bookingScope, status: { $in: ["QUOTE_REQUESTED", "CUSTOMER_ACCEPTED", "PAYMENT_PENDING", "AWAITING_TOKEN_PAYMENT"] } }),
-    TrevioTrip.find(tripScope).sort({ updatedAt: -1 }).limit(5).lean(), Booking.find(bookingScope).sort({ updatedAt: -1 }).limit(5).lean(), AgencyCustomer.find(customerScope(req, { deletedAt: null })).sort({ updatedAt: -1 }).limit(5).lean(),
+    TrevioTrip.find(tripScope).sort({ updatedAt: -1 }).limit(5).lean(), AgencyCustomer.find(customerScope(req, { deletedAt: null })).sort({ updatedAt: -1 }).limit(5).lean(),
     AuditLog.find({ agencyId, ...(agent ? { actorId: agent } : {}) }).sort({ createdAt: -1 }).limit(8).lean(),
-    Booking.aggregate([{ $match: { agencyId: new mongoose.Types.ObjectId(agencyId), ...bookingScope } }, { $group: { _id: "$product", bookings: { $sum: 1 }, value: { $sum: "$paymentSummary.total" } } }]),
   ]);
-  return ok(res, { activeAgents, inactiveAgents, totalTrips, publishedTrips, draftTrips, upcomingTrips, totalBookings, bookingStatuses, pendingCustomerActions, recentTrips, recentBookings, recentCustomers, recentAgentActivity, productUsage });
+  return ok(res, { activeAgents, inactiveAgents, totalTrips, publishedTrips, draftTrips, upcomingTrips, recentTrips, recentCustomers, recentAgentActivity });
 } catch (error) { return fail(res, error); } }
 
 export async function listNotifications(req, res) { try { const { skip, limit } = page(req); const q = { userId: req.access.user._id }; if (req.query.unread === "true") q.readAt = null; const [items, total, unread] = await Promise.all([Notification.find(q).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(), Notification.countDocuments(q), Notification.countDocuments({ userId: req.access.user._id, readAt: null })]); return ok(res, { items, total, unread, skip, limit }); } catch (error) { return fail(res, error); } }

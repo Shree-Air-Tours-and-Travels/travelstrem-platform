@@ -1,5 +1,4 @@
 import TrevioTrip from "../models/TrevioTrip.js";
-import Booking from "../../bookings/models/Booking.js";
 import { audit } from "../../tenancy/audit.service.js";
 import User from "../../auth/models/User.js";
 
@@ -379,17 +378,16 @@ export async function deleteTrip(req, res) {
         if (!existing) {
             return res.status(404).json({ status: "error", message: "Trip not found" });
         }
-        const hasBookings = await Booking.exists({ trip: existing._id, deletedAt: null });
-        const mayPermanentlyDelete = !hasBookings && (isMaster(req) || ["draft", "pending_approval"].includes(existing.status));
+        const mayPermanentlyDelete = isMaster(req) || ["draft", "pending_approval"].includes(existing.status);
         if (mayPermanentlyDelete) {
             const before = existing.toObject();
             await existing.deleteOne();
             await audit(req, { action: "trip.deleted", entityType: "TrevioTrip", entityId: existing._id, agencyId: existing.agencyId, before });
             return res.status(200).json({ status: "success", message: "Trip permanently deleted successfully." });
         }
-        existing.status = hasBookings ? "cancelled" : "archived"; existing.isListed = false; existing.archivedAt = new Date(); await existing.save();
-        await audit(req, { action: hasBookings ? "trip.cancelled" : "trip.archived", entityType: "TrevioTrip", entityId: existing._id, agencyId: existing.agencyId });
-        return res.status(200).json({ status: "success", message: hasBookings ? "Trip cancelled and preserved because bookings exist." : "Published trip archived successfully." });
+        existing.status = "archived"; existing.isListed = false; existing.archivedAt = new Date(); await existing.save();
+        await audit(req, { action: "trip.archived", entityType: "TrevioTrip", entityId: existing._id, agencyId: existing.agencyId });
+        return res.status(200).json({ status: "success", message: "Published trip archived successfully." });
     } catch (error) {
         console.error("deleteTrip error:", error);
         return res.status(500).json({ status: "error", message: error.message || "Failed to delete trip" });

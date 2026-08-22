@@ -1,0 +1,32 @@
+@import "@packages/trem-design-tokens/scss";
+
+.trem-icon-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax($space-20, 1fr));
+  gap: $space-2;
+}
+
+.trem-icon-picker__option {
+  min-width: 0;
+  min-height: $space-11;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: $space-2;
+  padding: $space-2 $space-3;
+  border: 1px solid var(--border);
+  border-radius: $radius-sm;
+  background: var(--surface);
+  color: var(--text-muted);
+  font: inherit;
+  cursor: pointer;
+  transition: border-color $duration-fast $ease-standard, background $duration-fast $ease-standard, color $duration-fast $ease-standard;
+
+  svg { display: block; flex: 0 0 auto; color: currentColor; }
+  span { overflow: hidden; font-size: $font-size-xs; font-weight: $font-semibold; text-overflow: ellipsis; white-space: nowrap; }
+
+  &:hover:not(:disabled), &:focus-visible { border-color: var(--color-primary); color: var(--color-primary); background: var(--primary-softer); }
+  &:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+  &.is-selected { border-color: var(--color-primary); background: var(--color-primary); color: var(--color-on-primary); }
+  &:disabled { cursor: default; opacity: var(--disabled-opacity, .58); }
+}

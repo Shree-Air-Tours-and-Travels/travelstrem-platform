@@ -112,23 +112,7 @@ export async function updateDeparture(tourId, departureId, updateData) {
   return tour;
 }
 
-/**
- * Remove a departure. Blocked if there are active bookings referencing it.
- */
 export async function removeDeparture(tourId, departureId) {
-  const Booking = (await import("../../bookings/models/Booking.js")).default;
-
-  const hasBookings = await Booking.exists({
-    tour: tourId,
-    departureId: departureId,
-    deletedAt: null,
-    status: { $nin: ["CANCELLED", "REFUNDED"] },
-  });
-
-  if (hasBookings) {
-    throw new Error("Cannot delete departure with active bookings. Cancel it instead.");
-  }
-
   const tour = await Tour.findById(tourId);
   if (!tour) throw new Error("Tour not found");
 

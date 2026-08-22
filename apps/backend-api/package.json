@@ -15,15 +15,18 @@
     "migrate:tour-search-index": "cross-env NODE_ENV=development USE_DOTENV=true node src/scripts/migrateTourSearchIndex.js",
     "migrate:travel-catalog": "cross-env NODE_ENV=development USE_DOTENV=true node src/scripts/backfillTravelCatalog.js --apply",
     "migrate:booking-quote-indexes": "cross-env NODE_ENV=development USE_DOTENV=true node src/scripts/migrateBookingQuoteIndexes.js",
-    "migrate:enquiry-bookings": "cross-env NODE_ENV=development USE_DOTENV=true node src/scripts/backfillEnquiryBookings.js",
-    "migrate:enquiry-quote-state": "cross-env NODE_ENV=development USE_DOTENV=true node src/scripts/fixPendingEnquiryQuoteState.js",
     "migrate:authentication": "cross-env NODE_ENV=development USE_DOTENV=true node src/scripts/migrateAuthentication.js",
+    "migrate:financial-engine-indexes": "cross-env NODE_ENV=development USE_DOTENV=true node src/scripts/migrateFinancialEngineIndexes.js",
+    "migrate:tour-commercial-pricing": "cross-env NODE_ENV=development USE_DOTENV=true node src/scripts/migrateTourCommercialPricing.js",
     "audit:empty-database": "cross-env NODE_ENV=development USE_DOTENV=true node src/scripts/clearOperationalData.js",
     "reset:empty-database": "cross-env NODE_ENV=development USE_DOTENV=true node src/scripts/clearOperationalData.js --apply",
-    "clear:bookings": "cross-env NODE_ENV=development USE_DOTENV=true node src/scripts/clearBookings.js",
-    "reset:travel-catalog": "cross-env NODE_ENV=development USE_DOTENV=true node src/scripts/resetTravelCatalog.js"
+    "reset:travel-catalog": "cross-env NODE_ENV=development USE_DOTENV=true node src/scripts/resetTravelCatalog.js",
+    "seed:master-customizable-tour": "cross-env NODE_ENV=development USE_DOTENV=true node src/scripts/seedMasterCustomizableTour.js",
+    "master-data:export": "cross-env USE_DOTENV=true node src/scripts/exportMasterData.js",
+    "master-data:import": "cross-env USE_DOTENV=true node src/scripts/importMasterData.js"
   },
   "dependencies": {
+    "@packages/trem-process-engine": "workspace:*",
     "@aws-sdk/client-s3": "^3.1114.0",
     "@aws-sdk/s3-request-presigner": "^3.1114.0",
     "@packages/trem-support-contracts": "workspace:*",

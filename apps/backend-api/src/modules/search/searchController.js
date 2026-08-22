@@ -1,7 +1,5 @@
 import mongoose from "mongoose";
-import Booking from "../bookings/models/Booking.js";
 import TrevioTrip from "../trevio/models/TrevioTrip.js";
-import { toPublicBookingReference } from "../bookings/utils/bookingReference.js";
 import asyncHandler from "../../shared/middleware/asyncHandler.js";
 
 const NAVIGATION_ENTRIES = [
@@ -12,14 +10,6 @@ const NAVIGATION_ENTRIES = [
     icon: "home",
     keywords: ["home", "app-shell", "overview"],
     destination: "overview",
-  },
-  {
-    id: "bookings",
-    title: "My Bookings",
-    description: "Search and manage your travel bookings",
-    icon: "calendar",
-    keywords: ["booking", "bookings", "reservation", "trips"],
-    destination: "bookings",
   },
   {
     id: "trevio",
@@ -66,10 +56,6 @@ const sortAndLimit = (results, query, limit) => results
   .slice(0, limit)
   .map(({ score, ...result }) => result);
 
-const userIdFromRequest = (req) => (
-  req.user?.sub || req.user?.id || req.user?._id || req.user?.userId || null
-);
-
 const searchTrips = async (query, limit) => {
   if (mongoose.connection.readyState !== 1) return [];
   const pattern = new RegExp(escapeRegExp(query), "i");
@@ -106,43 +92,6 @@ const searchTrips = async (query, limit) => {
   }));
 };
 
-const searchBookings = async (userId, query, limit) => {
-  if (!userId || mongoose.connection.readyState !== 1) return [];
-  const bookings = await Booking.find({ user: userId, deletedAt: null })
-    .populate("tour", "title city photo photos")
-    .populate("trip", "title location image photos")
-    .sort({ createdAt: -1 })
-    .limit(100)
-    .lean();
-
-  return bookings
-    .filter((booking) => includesQuery([
-      booking.bookingRef,
-      booking.status,
-      booking.paymentStatus,
-      booking.product,
-      booking.trip?.title,
-      booking.trip?.location,
-      booking.tour?.title,
-      booking.tour?.city,
-    ], query))
-    .slice(0, limit)
-    .map((booking) => {
-      const title = booking.trip?.title || booking.tour?.title || "Travel booking";
-      const publicReference = toPublicBookingReference(booking.bookingRef || booking._id);
-      return {
-        id: `booking:${booking._id}`,
-        type: "booking",
-        title,
-        description: [publicReference, booking.status].filter(Boolean).join(" · "),
-        image: booking.trip?.image || booking.trip?.photos?.[0] || booking.tour?.photo || booking.tour?.photos?.[0] || "",
-        icon: "calendar",
-        destination: "bookings",
-        query: { bookingId: String(booking._id) },
-      };
-    });
-};
-
 export const globalSearch = asyncHandler(async (req, res) => {
   const query = normalize(req.query.q).slice(0, 100);
   const limit = Math.min(Math.max(Number(req.query.limit) || 6, 1), 12);
@@ -157,7 +106,7 @@ export const globalSearch = asyncHandler(async (req, res) => {
           meta: { minimumQueryLength: 2, total: 0 },
           emptyState: {
             title: "Start typing to search",
-            description: "Search trips, bookings, and dashboard pages.",
+            description: "Search trips, destinations, and dashboard pages.",
           },
         },
       },
@@ -167,13 +116,9 @@ export const globalSearch = asyncHandler(async (req, res) => {
   const navigation = NAVIGATION_ENTRIES
     .filter((entry) => includesQuery([entry.title, entry.description, ...entry.keywords], query))
     .map(({ keywords, ...entry }) => ({ ...entry, type: "navigation" }));
-  const [trips, bookings] = await Promise.all([
-    searchTrips(query, limit),
-    searchBookings(userIdFromRequest(req), query, limit),
-  ]);
+  const trips = await searchTrips(query, limit);
   const groups = [
     { id: "trips", label: "Trevio trips", icon: "mountain", results: sortAndLimit(trips, query, limit) },
-    { id: "bookings", label: "My Bookings", icon: "calendar", results: sortAndLimit(bookings, query, limit) },
     { id: "navigation", label: "Dashboard", icon: "grid", results: sortAndLimit(navigation, query, limit) },
   ].filter((group) => group.results.length);
   const total = groups.reduce((count, group) => count + group.results.length, 0);
@@ -187,7 +132,7 @@ export const globalSearch = asyncHandler(async (req, res) => {
         meta: { minimumQueryLength: 2, total },
         emptyState: {
           title: "No results found",
-          description: "Try another trip, destination, booking ID, or dashboard page.",
+          description: "Try another trip, destination, or dashboard page.",
         },
       },
     },

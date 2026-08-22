@@ -1,11 +1,10 @@
 import React from "react";
-import { Button, EmptyState, SupportBookingCard, SupportCategoryCard, SupportContactMethod, SupportTopicRow } from "@packages/trem-ui";
+import { EmptyState, SupportCategoryCard, SupportContactMethod, SupportTopicRow } from "@packages/trem-ui";
 import { useNavigate, useParams } from "react-router-dom";
-import { SUPPORT_ANALYTICS_EVENT } from "@packages/trem-support-contracts";
 import { supportApi } from "./support.api";
 import { useSupportResource } from "./support.hooks";
 import { ResourceBoundary, SupportLayout, SupportSection } from "./SupportLayout";
-import { executeSupportAction, trackSupport, withBookingLabels } from "./support.utils";
+import { executeSupportAction } from "./support.utils";
 
 const ContentLists = ({ data, serviceId }) => {
   const navigate = useNavigate();
@@ -30,31 +29,9 @@ export function TopicSupportPage() {
   return <SupportLayout title={resource.data?.topic?.title || "Help topic"} subtitle={resource.data?.topic?.description}><ResourceBoundary {...resource}><ContentLists data={resource.data} /></ResourceBoundary></SupportLayout>;
 }
 
-export function BookingSupportPage() {
-  const { bookingId } = useParams();
-  const navigate = useNavigate();
-  const resource = useSupportResource((signal) => supportApi.booking(bookingId, signal), [bookingId]);
-  const booking = resource.data?.booking ? withBookingLabels(resource.data.booking) : null;
-  return <SupportLayout title={booking ? `Help with ${booking.title}` : "Booking support"} subtitle={booking?.reference}><ResourceBoundary {...resource}>{booking ? <>
-    <SupportBookingCard booking={{ ...booking, supportActions: [] }} onSelect={() => {}} />
-    <SupportSection title="What do you need help with?"><div className="support-card-grid">{(resource.data?.categories || []).map((category) => <SupportCategoryCard key={category.id} item={category} onSelect={() => {
-      const action = booking.supportActions?.find((item) => item.type === category.type);
-      trackSupport(SUPPORT_ANALYTICS_EVENT.TOPIC_OPENED, { categoryId: category.id, bookingId });
-      if (!executeSupportAction(action, navigate)) navigate(`/help/new-request?bookingId=${encodeURIComponent(bookingId)}&category=${encodeURIComponent(category.id)}`);
-    }} />)}</div></SupportSection>
-    <SupportSection title="Contact options"><div className="support-list">{(resource.data?.contactOptions || []).map((option) => <SupportContactMethod key={option.id} option={option} onSelect={() => executeSupportAction(option, navigate)} />)}</div></SupportSection>
-  </> : null}</ResourceBoundary></SupportLayout>;
-}
-
-export function BookingSupportListPage() {
-  const navigate = useNavigate();
-  const resource = useSupportResource((signal) => supportApi.bookings(signal), []);
-  return <SupportLayout title="Booking support" subtitle="Choose a booking to see the help available for it."><ResourceBoundary {...resource}>{resource.data?.bookings?.length ? <div className="support-booking-list">{resource.data.bookings.map((booking) => <SupportBookingCard key={booking.id} booking={withBookingLabels(booking)} onSelect={() => navigate(`/help/booking/${booking.id}`)} onAction={(action) => executeSupportAction(action, navigate)} />)}</div> : <EmptyState {...resource.data?.emptyState} />}</ResourceBoundary></SupportLayout>;
-}
-
 export function ContactSupportPage() {
   const navigate = useNavigate();
-  const resource = useSupportResource((signal) => supportApi.contacts(null, signal), []);
+  const resource = useSupportResource((signal) => supportApi.contacts(signal), []);
   return <SupportLayout title="Contact support" subtitle="Choose an available way to reach the right team."><ResourceBoundary {...resource}>{resource.data?.contactOptions?.length ? <div className="support-list">{resource.data.contactOptions.map((option) => <SupportContactMethod key={option.id} option={option} onSelect={() => executeSupportAction(option, navigate)} />)}</div> : <EmptyState {...resource.data?.emptyState} />}</ResourceBoundary></SupportLayout>;
 }
 

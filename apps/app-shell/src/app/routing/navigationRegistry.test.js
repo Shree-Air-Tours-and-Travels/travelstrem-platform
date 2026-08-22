@@ -13,15 +13,13 @@ describe("navigationRegistry", () => {
   it("resolves backend aliases and query tabs to registered destinations", () => {
     expect(resolveDestination(config, { pathname: "/trip/bali", search: "" }).renderer).toBe("trevio");
     expect(resolveDestination(config, { pathname: "/", search: "?tab=favorites" }).id).toBe("favorites");
-    expect(resolveDestination(config, { pathname: "/booking", search: "?product=trevio" }).renderer).toBe("bookingEngine");
+    expect(resolveDestination(config, { pathname: "/legacy-route", search: "?product=trevio" }).id).toBe("overview");
     expect(resolveDestination(config, { pathname: "/help/requests", search: "" }).id).toBe("support");
   });
 
-  it("keeps booking and account destinations protected from guest mode", () => {
+  it("keeps account destinations protected from guest mode", () => {
     expect(isGuestAccessibleDestination({ id: "trevista" })).toBe(true);
     expect(isGuestAccessibleDestination({ id: "trevio" })).toBe(true);
-    expect(isGuestAccessibleDestination({ id: "booking-engine" })).toBe(false);
-    expect(isGuestAccessibleDestination({ id: "bookings" })).toBe(false);
     expect(isGuestAccessibleDestination({ id: "favorites" })).toBe(false);
   });
 

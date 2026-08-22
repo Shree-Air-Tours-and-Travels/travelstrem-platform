@@ -1,0 +1,7 @@
+@import "../../styles/base/typography";
+
+.wizard-validation-summary { display: flex; align-items: center; gap: $space-2; padding: 10px 12px; border: 1px solid var(--color-danger, #dc2626); border-radius: var(--radius-md, 10px); background: var(--danger-soft, #fff1f2); color: var(--color-danger, #b91c1c); }
+.wizard-validation-summary strong { flex: 0 0 auto; font-size: $font-size-sm; }
+.wizard-validation-summary span { font-size: $font-size-xs; color: inherit; }
+
+@media (max-width: 640px) { .wizard-validation-summary { align-items: flex-start; flex-direction: column; } }

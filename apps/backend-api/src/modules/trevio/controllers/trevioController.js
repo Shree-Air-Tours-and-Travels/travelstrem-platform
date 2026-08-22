@@ -1,6 +1,8 @@
 import pageDefinitionService from "../../../services/pageDefinitionService.js";
 import masterDataService from "../../masterData/services/masterDataService.js";
 import trevioTripService from "../services/trevioTripService.js";
+import FinancialEngine from "../../../core/financial-engine/index.js";
+import { minorToDecimal, percentToBasisPoints, rupeesToMinor } from "../../../core/financial-engine/utils/money.js";
 
 const TREVIO_HOME_PAGE = "trevio-remote/home";
 const QUICK_CHIPS_KEY = "trevio.quickChipOptions";
@@ -115,7 +117,7 @@ const normalizeTripAddons = (trip) => (Array.isArray(trip?.extras) ? trip.extras
     };
   });
 
-export const calculateTrevioPricing = (trip, body = {}) => {
+export const calculateTrevioPricing = async (trip, body = {}) => {
   const travellerList = Array.isArray(body.travellers || body.travelers)
     ? (body.travellers || body.travelers)
     : [];
@@ -152,16 +154,15 @@ export const calculateTrevioPricing = (trip, body = {}) => {
     + travellerPreferenceRows.reduce((sum, row) => sum + row.amount, 0);
   const gstRate = Math.max(0, Number(process.env.TREVIO_GST_PERCENT || 0));
   const taxableAmount = Math.max(0, baseAmount + preferenceAmount + addonAmount);
-  const taxes = Math.round(taxableAmount * gstRate / 100);
   const requestedCoupon = String(body.couponCode || "").trim().toUpperCase();
   const configuredCoupon = String(process.env.TREVIO_COUPON_CODE || "").trim().toUpperCase();
   const couponPercent = Math.min(100, Math.max(0, Number(process.env.TREVIO_COUPON_DISCOUNT_PERCENT || 0)));
   const couponValid = Boolean(requestedCoupon && configuredCoupon && requestedCoupon === configuredCoupon && couponPercent > 0);
-  const discounts = couponValid
-    ? Math.round((taxableAmount + taxes) * couponPercent / 100)
-    : 0;
-  const grandTotal = Math.max(0, taxableAmount + taxes - discounts);
   const tokenAmount = Number(tripData.token || 0) * travellers;
+  const financialQuote = await FinancialEngine.calculateQuote({ subtotalMinor: rupeesToMinor(taxableAmount), taxRateBasisPoints: percentToBasisPoints(gstRate), discountRateBasisPoints: couponValid ? percentToBasisPoints(couponPercent) : 0, fixedTokenMinor: rupeesToMinor(tokenAmount), currency: tripData.priceInfo?.currency || "INR" });
+  const taxes = Number(minorToDecimal(financialQuote.pricing.taxAmountMinor));
+  const discounts = Number(minorToDecimal(financialQuote.pricing.discountMinor));
+  const grandTotal = Number(minorToDecimal(financialQuote.pricing.finalPayableMinor));
   const pricing = {
     currency: tripData.priceInfo?.currency || "INR",
     perPerson: Number(tripData.price || 0),
@@ -206,16 +207,17 @@ export const calculateTrevioPricing = (trip, body = {}) => {
       }
     : null;
 
-  return { pricing, addons: availableAddons, coupon };
+  return { pricing, addons: availableAddons, coupon, framework: { pricingSnapshot: financialQuote.pricing, financialSnapshot: financialQuote.financials, configSnapshot: financialQuote.config } };
 };
 
 export const getTrevioPricing = async (req, res) => {
   try {
     const trip = await trevioTripService.findBySlug(req.params.tripRef);
     if (!trip) return res.status(404).json({ status: "error", message: "Trip not found" });
+    const { framework, ...publicResult } = await calculateTrevioPricing(trip, req.body || {});
     return res.status(200).json({
       status: "success",
-      component: { data: calculateTrevioPricing(trip, req.body || {}) },
+      component: { data: publicResult },
     });
   } catch (error) {
     console.error("getTrevioPricing error:", error);

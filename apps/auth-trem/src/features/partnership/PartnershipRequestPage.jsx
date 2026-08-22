@@ -1,5 +1,5 @@
 import React from "react";
-import { AuthHeader, Button } from "@packages/trem-ui";
+import { AuthHeader, Button, FileUploader } from "@packages/trem-ui";
 import "./partnership-request.scss";
 
 const initialForm = {
@@ -60,7 +60,10 @@ export default function PartnershipRequestPage({ api, theme, onToggleTheme }) {
         <fieldset><legend>Primary contact</legend><div className="partner-request-page__grid">
           {[field("Full name", "contactName", { required: true }), field("Designation", "designation"), field("Work email", "contactEmail", { type: "email", required: true }), field("Mobile number", "contactMobile", { type: "tel" })].map(({ label, name, ...props }) => <label key={name}><span>{label}{props.required ? " *" : ""}</span><input name={name} value={form[name]} onChange={update} {...props} /></label>)}
         </div></fieldset>
-        <fieldset><legend>Branding and verification</legend><div className="partner-request-page__grid"><label><span>Agency logo (JPG, PNG or WebP)</span><input type="file" accept=".jpg,.jpeg,.png,.webp" onChange={(event) => setLogo(event.target.files?.[0] || null)} /></label><label><span>Documents (PDF, JPG, PNG or WebP; up to 8 MB each)</span><input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp" onChange={(event) => setDocuments(Array.from(event.target.files || []).slice(0, 8))} /></label></div><label><span>Notes</span><textarea name="notes" value={form.notes} onChange={update} rows="4" /></label></fieldset>
+        <fieldset><legend>Branding and verification</legend><div className="partner-request-page__grid">
+          <FileUploader variant="compact" label="Agency logo" description="JPG, PNG or WebP · up to 8 MB" accept=".jpg,.jpeg,.png,.webp" maxFileSize={8 * 1024 * 1024} value={logo} onChange={setLogo} selectionOnly autoUpload={false} />
+          <FileUploader variant="compact" label="Verification documents" description="PDF, JPG, PNG or WebP · up to 8 files, 8 MB each" accept=".pdf,.jpg,.jpeg,.png,.webp" maxFileSize={8 * 1024 * 1024} maxFiles={8} multiple value={documents} onChange={setDocuments} selectionOnly autoUpload={false} />
+        </div><label><span>Notes</span><textarea name="notes" value={form.notes} onChange={update} rows="4" /></label></fieldset>
         {state.error && <div className="partner-request-page__message partner-request-page__message--error" role="alert">{state.error}</div>}
         {state.success && <div className="partner-request-page__message partner-request-page__message--success" role="status">{state.success}</div>}
         <Button type="submit" text={state.loading ? "Submitting…" : "Submit partnership request"} disabled={state.loading} />

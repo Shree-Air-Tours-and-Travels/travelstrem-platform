@@ -38,9 +38,9 @@ beforeEach(() => jest.clearAllMocks());
 
 test("Google authorization creates state, nonce, and PKCE transaction", async () => {
   transactionModel.create.mockResolvedValue({});
-  await expect(beginGoogleAuthentication({ portal: "customer", returnTo: "http://localhost:3006/bookings" }))
+  await expect(beginGoogleAuthentication({ portal: "customer", returnTo: "http://localhost:3006/favorites" }))
     .resolves.toContain("accounts.google.com");
-  expect(transactionModel.create).toHaveBeenCalledWith(expect.objectContaining({ provider: "GOOGLE", codeVerifier: "verifier", returnTo: "http://localhost:3006/bookings" }));
+  expect(transactionModel.create).toHaveBeenCalledWith(expect.objectContaining({ provider: "GOOGLE", codeVerifier: "verifier", returnTo: "http://localhost:3006/favorites" }));
   expect(generateAuthUrl).toHaveBeenCalledWith(expect.objectContaining({ code_challenge: "challenge", code_challenge_method: "S256", scope: ["openid", "email", "profile"] }));
 });
 

@@ -52,7 +52,7 @@ if (current && sameWeights(current.weights, weights)) {
 }
 
 const matches = await Tour.find(
-  { $text: { $search: "jaipur" }, status: "published", isPublished: { $ne: false } },
+  { $text: { $search: "jaipur" }, status: "published" },
   { title: 1 },
 ).lean();
 console.log(`Jaipur verification matches: ${matches.map((tour) => tour.title).join(", ") || "none"}`);

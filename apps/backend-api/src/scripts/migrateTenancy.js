@@ -4,7 +4,6 @@ import PartnerAgency from "../modules/auth/models/PartnerAgency.js";
 import User from "../modules/auth/models/User.js";
 import Tour from "../modules/tours/models/Tour.js";
 import TrevioTrip from "../modules/trevio/models/TrevioTrip.js";
-import Booking from "../modules/bookings/models/Booking.js";
 import AgentDeletionRequest from "../modules/tenancy/models/AgentDeletionRequest.js";
 
 await mongoose.connect(config.MONGO_URI);
@@ -17,7 +16,6 @@ for (const agency of agencies) {
   const userIds = users.map((user) => user._id);
   await Tour.updateMany({ agencyId: null, $or: [{ partnerAgencyRef: agency.partnerAgencyRef }, { ownerAgent: { $in: userIds } }] }, { $set: { agencyId: agency._id } });
   await TrevioTrip.updateMany({ agencyId: null, ownerAgent: { $in: userIds } }, { $set: { agencyId: agency._id } });
-  await Booking.updateMany({ agencyId: null, assignedAgent: { $in: userIds } }, { $set: { agencyId: agency._id } });
 }
 const duplicateDeletionRequests = await AgentDeletionRequest.aggregate([
   { $match: { status: "pending" } },

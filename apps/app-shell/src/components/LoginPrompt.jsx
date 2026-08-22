@@ -43,7 +43,7 @@ export default function LoginPrompt({
         <Paragraph
           text={
             description ||
-            "Sign in to manage bookings and enquiries, or continue as a guest to discover travel services tailored to you."
+            "Sign in to manage favourites and enquiries, or continue as a guest to discover travel services tailored to you."
           }
           primaryClassname="dlp__desc"
         />

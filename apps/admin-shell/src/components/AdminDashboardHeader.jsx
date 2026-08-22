@@ -8,7 +8,7 @@ import "./AdminDashboardHeader.scss";
 
 const TAB_TITLES = {
   overview: "Overview",
-  bookings: "Bookings",
+  enquiries: "Bookings & enquiries",
   services: "Services",
   tenancy: "Partners & Agencies",
   profile: "Profile",

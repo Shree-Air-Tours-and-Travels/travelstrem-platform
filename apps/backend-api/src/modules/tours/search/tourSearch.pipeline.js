@@ -13,9 +13,16 @@ const dateBounds = (dateText) => {
   return { start, end: new Date(start.getTime() + DAY_MS) };
 };
 
+const firstNonBlankString = (values = []) => values.reduceRight((fallback, value) => ({
+  $cond: [
+    { $gt: [{ $strLenCP: { $trim: { input: { $ifNull: [value, ""] } } } }, 0] },
+    { $trim: { input: value } },
+    fallback,
+  ],
+}), "");
+
 const publicMatch = (query) => ({
   status: "published",
-  isPublished: { $ne: false },
   productKey: { $in: ["trevista", null] },
   visibility: { $in: ["public", null] },
   archivedAt: null,
@@ -147,6 +154,37 @@ export const buildTourSearchPipeline = (search, { departureCollection = "tourdep
   const priceDate = filters.departureDate
     ? new Date(`${filters.departureDate}T00:00:00.000Z`)
     : "$$NOW";
+  const countryNameExpression = firstNonBlankString([
+    "$primaryDestination.countryName",
+    "$primaryDestination.countryId",
+    "$address.country",
+  ]);
+  const storedTagSlugsExpression = {
+    $setUnion: [
+      { $map: { input: { $ifNull: ["$tags", []] }, as: "tag", in: { $toLower: "$$tag" } } },
+      { $map: { input: { $ifNull: ["$searchTags", []] }, as: "tag", in: { $toLower: "$$tag.slug" } } },
+      { $ifNull: ["$tagIds", []] },
+    ],
+  };
+  const travelScopeTagIdsExpression = {
+    $let: {
+      vars: { country: { $toLower: countryNameExpression } },
+      in: {
+        $cond: [
+          { $in: ["$$country", ["india", "in", "ind"]] },
+          ["domestic"],
+          { $cond: [{ $ne: ["$$country", ""] }, ["international"], []] },
+        ],
+      },
+    },
+  };
+  const storedTagDtosExpression = {
+    $cond: [
+      { $gt: [{ $size: { $ifNull: ["$searchTags", []] } }, 0] },
+      "$searchTags",
+      { $map: { input: { $ifNull: ["$tags", []] }, as: "tag", in: { id: { $toLower: "$$tag" }, slug: { $toLower: "$$tag" }, name: "$$tag", type: "CUSTOM" } } },
+    ],
+  };
 
   const pipeline = [
     { $match: publicMatch(search.query) },
@@ -180,8 +218,8 @@ export const buildTourSearchPipeline = (search, { departureCollection = "tourdep
         _originKey: { $toLower: { $ifNull: ["$city.from", ""] } },
         _destinationName: { $ifNull: ["$primaryDestination.cityName", { $ifNull: ["$city.to", "$address.city"] }] },
         _destinationKey: { $toLower: { $ifNull: ["$primaryDestination.cityId", { $ifNull: ["$city.to", "$address.city"] }] } },
-        _countryName: { $ifNull: ["$primaryDestination.countryName", { $ifNull: ["$address.country", ""] }] },
-        _countryKey: { $toLower: { $ifNull: ["$primaryDestination.countryId", { $ifNull: ["$address.country", ""] }] } },
+        _countryName: countryNameExpression,
+        _countryKey: { $toLower: countryNameExpression },
         _agencyName: { $ifNull: [{ $arrayElemAt: ["$_searchAgency.agencyName", 0] }, "$providerName"] },
         _agencyKey: { $toLower: { $ifNull: [{ $arrayElemAt: ["$_searchAgency.partnerAgencyRef", 0] }, { $ifNull: ["$partnerAgencyRef", "$agencyRef"] }] } },
         _agencyLogo: { $ifNull: [{ $arrayElemAt: ["$_searchAgency.logo", 0] }, ""] },
@@ -197,18 +235,32 @@ export const buildTourSearchPipeline = (search, { departureCollection = "tourdep
         },
         _ratingCount: { $ifNull: ["$rating.count", { $size: { $ifNull: ["$reviews", []] } }] },
         _tagSlugs: {
-          $setUnion: [
-            { $map: { input: { $ifNull: ["$tags", []] }, as: "tag", in: { $toLower: "$$tag" } } },
-            { $map: { input: { $ifNull: ["$searchTags", []] }, as: "tag", in: { $toLower: "$$tag.slug" } } },
-            { $ifNull: ["$tagIds", []] },
-          ],
+          $setUnion: [storedTagSlugsExpression, travelScopeTagIdsExpression],
         },
         _tagDtos: {
-          $cond: [
-            { $gt: [{ $size: { $ifNull: ["$searchTags", []] } }, 0] },
-            "$searchTags",
-            { $map: { input: { $ifNull: ["$tags", []] }, as: "tag", in: { id: { $toLower: "$$tag" }, slug: { $toLower: "$$tag" }, name: "$$tag", type: "CUSTOM" } } },
-          ],
+          $let: {
+            vars: {
+              storedDtos: storedTagDtosExpression,
+              missingScopeIds: { $setDifference: [travelScopeTagIdsExpression, storedTagSlugsExpression] },
+            },
+            in: {
+              $concatArrays: [
+                "$$storedDtos",
+                {
+                  $map: {
+                    input: "$$missingScopeIds",
+                    as: "tagId",
+                    in: {
+                      id: "$$tagId",
+                      slug: "$$tagId",
+                      name: { $cond: [{ $eq: ["$$tagId", "domestic"] }, "Domestic", "International"] },
+                      type: "THEME",
+                    },
+                  },
+                },
+              ],
+            },
+          },
         },
         _matchingSeasons: {
           $filter: {

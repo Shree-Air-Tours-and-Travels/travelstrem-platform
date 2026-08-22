@@ -6,7 +6,6 @@ import { FavoritesProvider, ErrorState, ScrollToTop, TourDetailsPage, useFavorit
 import { Analytics } from "@vercel/analytics/react";
 import Shell from "./Shell";
 import Home from "../views/Home";
-import TripBookingPage from "../views/TripBookingPage";
 import { tripId, responseTrips, resolvePageContent } from "../utils";
 import { initApp } from "../../core/initApp";
 import { API_BASE } from "../../services/configService";
@@ -43,17 +42,14 @@ function AppShell({ embedded, session, headerConfig, pageModel, trips, activeFil
       {embedded ? (
         <Routes>
           <Route index element={<Home user={session?.user} trips={trips} pageModel={pageModel} activeFilter={activeFilter} loadingTrips={loadingTrips} onFilterChange={onFilterChange} />} />
-          <Route path="trip/:tripRef" element={<TourDetailsPage userSession={session} appKey="trevio" productType="trip" bookingBasePath="/booking" />} />
-          <Route path="trip/:tripRef/book" element={<TripBookingPage appKey="trevio" embedded />} />
-          <Route path=":tripRef" element={<TourDetailsPage userSession={session} appKey="trevio" productType="trip" bookingBasePath="/booking" />} />
-          <Route path=":tripRef/book" element={<TripBookingPage appKey="trevio" embedded />} />
+          <Route path="trip/:tripRef" element={<TourDetailsPage userSession={session} appKey="trevio" productType="trip" />} />
+          <Route path=":tripRef" element={<TourDetailsPage userSession={session} appKey="trevio" productType="trip" />} />
         </Routes>
       ) : (
         <Routes>
           <Route path="/" element={<Navigate to="/trevio" replace />} />
           <Route path="/trevio" element={<Home user={session?.user} trips={trips} pageModel={pageModel} activeFilter={activeFilter} loadingTrips={loadingTrips} onFilterChange={onFilterChange} />} />
           <Route path="/trevio/trip/:tripRef" element={<TourDetailsPage userSession={session} appKey="trevio" productType="trip" />} />
-          <Route path="/trevio/trip/:tripRef/book" element={<TripBookingPage appKey="trevio" />} />
         </Routes>
       )}
     </Shell>

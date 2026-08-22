@@ -20,19 +20,21 @@ const ContactForm = ({ fieldsMeta = [], formValues = {}, onChange, onSubmit, onC
     if (type === "textarea") {
       return <label className={`trem-contact-form__textarea-wrap${errors[field.name] ? " is-error" : ""}`}><span>{field.label}{field.required ? " *" : ""}</span><textarea value={value} maxLength={field.maxLength} placeholder={field.placeholder || ""} onChange={(event) => onChange(field.name, event.target.value)} aria-invalid={Boolean(errors[field.name])} /></label>;
     }
-    // The calendar field is intentionally parked while quote requests use
-    // backend-provided departure windows. Restore this branch when free-form
-    // travel dates are enabled again.
-    // if (type === "date") {
-    //   return <InputField variant="date" label={field.label} required={field.required} value={value} error={errors[field.name]} onChange={(next) => onChange(field.name, next)} />;
-    // }
+    if (type === "date") {
+      return <InputField variant="date" label={field.label} required={field.required} value={value} error={errors[field.name]} onChange={(next) => onChange(field.name, next)} />;
+    }
     return <InputField variant={type} label={field.label} required={field.required} value={value} maxLength={field.maxLength} placeholder={field.placeholder || ""} error={errors[field.name]} onChange={(next) => onChange(field.name, next)} />;
   };
+
+  const visibleFields = fieldsMeta.filter((field) => {
+    if (!field.visibleWhen?.field) return true;
+    return formValues[field.visibleWhen.field] === field.visibleWhen.equals;
+  });
 
   return (
     <form className="trem-contact-form" noValidate onSubmit={onSubmit}>
       <div className="trem-contact-form__grid">
-        {fieldsMeta.map((field) => <div className={`trem-contact-form__field trem-contact-form__field--${field.width || "full"}`} key={field.name}>{renderField(field)}{errors[field.name] ? <p className="trem-contact-form__error">{errors[field.name]}</p> : null}</div>)}
+        {visibleFields.map((field) => <div className={`trem-contact-form__field trem-contact-form__field--${field.width || "full"}`} key={field.name}>{renderField(field)}{errors[field.name] ? <p className="trem-contact-form__error">{errors[field.name]}</p> : null}</div>)}
       </div>
       <div className="trem-contact-form__actions">
         <Btn type="submit" text={submitting ? "Sending..." : submitText} size="medium" variant="solid" color="primary" disabled={submitting} />

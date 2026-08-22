@@ -1,31 +1,11 @@
 import React from "react";
 import {
-  NoDataFound,
   MetricSummary,
   OverviewRail,
   PlanCards,
   Preloader,
-  Spinner,
 } from "@packages/trem-ui";
 import "./OverviewView.scss";
-
-function normalizeStatus(status) {
-  if (!status) return "Draft";
-  return status.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-function statusKey(status) {
-  return String(status || "").toUpperCase();
-}
-
-function formatDate(dateStr) {
-  if (!dateStr) return "";
-  try {
-    return new Date(dateStr).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-  } catch {
-    return dateStr;
-  }
-}
 
 function getTimeOfDay() {
   const h = new Date().getHours();
@@ -42,11 +22,7 @@ export default function OverviewView({
   overviewRail,
   overviewDefinitionLoading = false,
   overviewStatsLoading = false,
-  bookingsLoading = false,
-  recentBookingsEmptyState,
-  recentBookings,
   onTabChange,
-  onViewBooking,
 }) {
   const metricItems = (metricsDefinition?.items || []).map((item) => ({
     ...item,
@@ -90,41 +66,6 @@ export default function OverviewView({
             <PlanCards {...planCards} className="dov__plan-cards" />
           ) : null}
 
-          <div className="dov__section">
-            <h2 className="dov__section-title">Recent Bookings</h2>
-            {bookingsLoading ? (
-              <div className="dov__bookings-loading">
-                <Spinner size="lg" label="Loading bookings" />
-              </div>
-            ) : recentBookings && recentBookings.length > 0 ? (
-              <div className="dov__recent">
-                {recentBookings.slice(0, 5).map((b, i) => {
-                  const tour = b.tour || {};
-                  const tripName = tour.title || b.trip?.title || b.tripSelection?.packageId || "Trip";
-                  const product = b.product || "trevista";
-
-                  return (
-                    <div key={b.id || b._id || i} className="dov__recent-item" onClick={() => onViewBooking?.(b)}>
-                      <div className="dov__recent-info">
-                        <span className="dov__recent-name">{tripName}</span>
-                        <div className="dov__recent-meta">
-                          <span className={`dov__recent-product dov__recent-product--${product}`}>
-                            {product === "trevio" ? "Trevio" : "Trevista"}
-                          </span>
-                          <span>{formatDate(b.createdAt)}</span>
-                        </div>
-                      </div>
-                      <span className={`dov__recent-status dov__recent-status--${statusKey(b.status)}`}>
-                        {normalizeStatus(b.status)}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              recentBookingsEmptyState ? <NoDataFound {...recentBookingsEmptyState} /> : null
-            )}
-          </div>
         </main>
 
         {overviewDefinitionLoading ? (

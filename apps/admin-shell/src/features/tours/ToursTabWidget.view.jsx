@@ -1,13 +1,11 @@
 import React from "react";
 import { Button, SubTitle, TourCard } from "@packages/trem-ui";
 import { TourCardSkeleton, WidgetError } from "../../shared/Skeleton";
-import TourView from "./TourView";
-import CreateTourForm from "./CreateTourForm";
 
 export default function ToursTabWidget({
-    tours, loading, error, formOpen, viewOpen, editing, viewTour, auth,
+    tours, loading, error,
     openCreate, openEdit, openView, handleDelete, handleDeleteAll,
-    fetchTours, setFormOpen, setViewOpen, setViewTour,
+    fetchTours,
 }) {
     return (
         <>
@@ -36,8 +34,7 @@ export default function ToursTabWidget({
                                 key={t._id || t.id}
                                 tour={t}
                                 isAdmin
-                                variant="list"
-                                className="mt-admin-tour-card"
+                                variant="management"
                                 ownershipMode="agency"
                                 ownershipLabels={{ agency: "Added by agency", platformAgency: "TravelsTREM" }}
                                 onView={() => openView(t)}
@@ -47,25 +44,6 @@ export default function ToursTabWidget({
                         ))
                     )}
                 </section>
-
-                {(viewOpen || formOpen) && (
-                    <div className="mt-panels-overlay" role="dialog" aria-modal="true">
-                        {viewOpen && (
-                            <TourView
-                                tour={viewTour}
-                                onClose={() => { setViewOpen(false); setViewTour(null); }}
-                                onEdit={(t) => { setViewOpen(false); openEdit(t); }}
-                            />
-                        )}
-                        {formOpen && (
-                            <CreateTourForm
-                                initial={editing}
-                                onCancel={() => setFormOpen(false)}
-                                onSaved={async () => { setFormOpen(false); await fetchTours(); }}
-                            />
-                        )}
-                    </div>
-                )}
             </div>
         </>
     );

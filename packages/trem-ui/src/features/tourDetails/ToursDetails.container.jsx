@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { buildGlobalBookingEngineUrl, fetchData, requestShellNavigation, useComponentData } from "@packages/trem-utils";
+import { fetchData, useComponentData } from "@packages/trem-utils";
 import { useFavoritesContext } from "../../context/FavoritesContext.jsx";
 import { ProductDetailProvider, WIDGET_API_OPTIONS } from "./context/ProductDetailContext.js";
 import ToursDetailsView, { DetailSkeleton, EmptyState } from "./ToursDetails.view";
@@ -26,8 +26,6 @@ export default function ToursDetailsContainer({
     appKey = "trevista",
     productType = "tour",
     breadcrumbRoot: breadcrumbRootProp,
-    bookingBasePath = "",
-    embedded = false,
     userSession = null,
 } = {}) {
     const params = useParams();
@@ -62,11 +60,7 @@ export default function ToursDetailsContainer({
     }, [breadcrumbRootProp]);
 
     const [contactOpen, setContactOpen] = useState(false);
-    const [bookConfirmOpen, setBookConfirmOpen] = useState(false);
-    const [selectedHotel, setSelectedHotel] = useState("");
-    const [selectedFlight, setSelectedFlight] = useState("no");
-    const [selectedActivities, setSelectedActivities] = useState([]);
-    const [selectedDeparture, setSelectedDeparture] = useState(null);
+    const [selection, setSelection] = useState({ packageKey: "", hotelSelections: {}, hotelRequests: [] });
     const { isFavorited, toggleFavorite } = useFavoritesContext();
 
     useEffect(() => {
@@ -75,11 +69,7 @@ export default function ToursDetailsContainer({
         // while its complete backend detail payload is loading.
         setActiveTour(location.state?.tour || null);
         setContactOpen(false);
-        setBookConfirmOpen(false);
-        setSelectedHotel("");
-        setSelectedFlight("no");
-        setSelectedActivities([]);
-        setSelectedDeparture(null);
+        setSelection({ packageKey: "", hotelSelections: {}, hotelRequests: [] });
     }, [decodedRef, location.state?.tour]);
 
     const handleTourLoad = useCallback((tour) => {
@@ -105,36 +95,44 @@ export default function ToursDetailsContainer({
         setContactOpen(true);
     }, [activeTour]);
 
-    const handleBook = useCallback((tour) => {
-        const selectedTour = tour || activeTour;
-        if (selectedTour) setActiveTour(selectedTour);
-        setBookConfirmOpen(true);
-    }, [activeTour]);
+    const handleSelectPackage = useCallback((packageKey) => {
+        setSelection((current) => {
+            const nextPackageKey = String(packageKey || "");
+            if (current.packageKey === nextPackageKey) return current;
+            return { packageKey: nextPackageKey, hotelSelections: {}, hotelRequests: [] };
+        });
+    }, []);
 
-    const handleBookConfirm = useCallback(() => {
-        const selectedTour = activeTour;
-        if (!selectedTour) return;
-        const ref = selectedTour?._id || decodedRef || slugifyTitle(selectedTour?.title);
-        const product = productType === "trip" ? "trevio" : appKey;
-        const returnTo = window.location.href;
-        const extraParams = {};
-        if (selectedHotel) extraParams.roomType = selectedHotel;
-        if (selectedFlight === "yes") extraParams.addFlights = "yes";
-        else if (selectedFlight === "no") extraParams.addFlights = "no";
-        if (selectedActivities.length > 0) extraParams.extraActivities = selectedActivities.join(",");
-        if (bookingBasePath) {
-            const query = new URLSearchParams({ product, tourRef: ref, returnTo, ...extraParams });
-            navigate(`${bookingBasePath}?${query.toString()}`);
-            return;
-        }
-        if (embedded) {
-            requestShellNavigation("booking-engine", { query: { product, tourRef: ref, returnTo, ...extraParams } });
-            return;
-        }
-        window.location.assign(buildGlobalBookingEngineUrl({ product, tourRef: ref, returnTo, ...extraParams }));
-    }, [activeTour, appKey, bookingBasePath, decodedRef, embedded, navigate, productType, selectedHotel, selectedFlight, selectedActivities]);
+    const handleSelectHotel = useCallback((stayKey, hotelOptionKey, roomOptionKey, option = null) => {
+        const key = String(stayKey || option?.stayKey || "");
+        if (!key) return;
+        setSelection((current) => ({
+            ...current,
+            hotelSelections: {
+                ...current.hotelSelections,
+                [key]: {
+                    stayKey: key,
+                    location: String(option?.location || ""),
+                    hotelOptionKey: String(hotelOptionKey || ""),
+                    roomOptionKey: String(roomOptionKey || ""),
+                },
+            },
+        }));
+    }, []);
 
-    const handleBookConfirmClose = useCallback(() => setBookConfirmOpen(false), []);
+    const handleCustomize = useCallback((stayKey, hotel, room) => {
+        handleSelectHotel(stayKey, hotel?.value, room?.value, hotel);
+        if (activeTour?._id) setContactOpen(true);
+    }, [activeTour?._id, handleSelectHotel]);
+
+    const handleRequestHotel = useCallback((request) => {
+        if (!request?.stayKey || !activeTour?._id) return;
+        setSelection((current) => ({
+            ...current,
+            hotelRequests: [...(current.hotelRequests || []).filter((item) => item.stayKey !== request.stayKey), request],
+        }));
+        setContactOpen(true);
+    }, [activeTour?._id]);
 
     const handleShare = useCallback(async (tour) => {
         const shareUrl = window.location.href;
@@ -172,7 +170,6 @@ export default function ToursDetailsContainer({
             structure={structure}
             elements={elements}
             contactOpen={contactOpen}
-            bookConfirmOpen={bookConfirmOpen}
             referrerLabel={referrer.label}
             breadcrumbItems={[
                 breadcrumbRoot,
@@ -181,9 +178,6 @@ export default function ToursDetailsContainer({
             ]}
             onTourLoad={handleTourLoad}
             onBack={handleBack}
-            onBook={handleBook}
-            onBookConfirm={handleBookConfirm}
-            onBookConfirmClose={handleBookConfirmClose}
             onContact={handleContact}
             onShare={handleShare}
             isFavorited={isFavorited}
@@ -191,15 +185,14 @@ export default function ToursDetailsContainer({
             setContactOpen={setContactOpen}
             appKey={appKey}
             productType={productType}
-            selectedHotel={selectedHotel}
-            onSelectHotel={setSelectedHotel}
-            selectedFlight={selectedFlight}
-            onSelectFlight={setSelectedFlight}
-            selectedActivities={selectedActivities}
-            onSelectActivity={(title) => setSelectedActivities((prev) => prev.includes(title) ? prev.filter((t) => t !== title) : [...prev, title])}
-            selectedDeparture={selectedDeparture}
-            onSelectDeparture={setSelectedDeparture}
             user={userSession?.user || null}
+            selectedPackage={selection.packageKey}
+            hotelSelections={selection.hotelSelections}
+            hotelRequests={selection.hotelRequests}
+            onSelectPackage={handleSelectPackage}
+            onSelectHotel={handleSelectHotel}
+            onCustomize={handleCustomize}
+            onRequestHotel={handleRequestHotel}
         />
         </ProductDetailProvider>
     );

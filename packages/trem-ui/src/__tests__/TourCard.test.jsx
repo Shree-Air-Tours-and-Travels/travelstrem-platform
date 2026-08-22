@@ -59,7 +59,7 @@ describe('TourCard', () => {
           <TourCard tour={{ ...baseTour, featured: true }} />
         </MemoryRouter>
       );
-      expect(screen.getByText('Trending')).toBeInTheDocument();
+      expect(screen.getByText('Featured')).toBeInTheDocument();
     });
 
     it('shows the TREM verified badge for an admin-verified tour', () => {
@@ -73,6 +73,17 @@ describe('TourCard', () => {
   });
 
   describe('Admin Actions', () => {
+    it('marks a draft and changes Edit to Continue', () => {
+      render(
+        <MemoryRouter>
+          <TourCard tour={{ ...baseTour, status: 'draft' }} isAdmin onEdit={vi.fn()} />
+        </MemoryRouter>
+      );
+      expect(screen.getByText('Draft')).toBeInTheDocument();
+      expect(screen.getByText('Continue')).toBeInTheDocument();
+      expect(screen.queryByText('Edit')).not.toBeInTheDocument();
+    });
+
     it('shows admin actions when isAdmin and handlers provided', () => {
       const onView = vi.fn();
       const onEdit = vi.fn();

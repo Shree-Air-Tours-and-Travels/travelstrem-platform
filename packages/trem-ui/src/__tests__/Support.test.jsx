@@ -1,7 +1,7 @@
 import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
-import { SupportActionCard, SupportBookingCard, SupportCategoryCard, SupportTicketCard } from "../components/Support/Support.jsx";
+import { SupportActionCard, SupportCategoryCard, SupportTicketCard } from "../components/Support/Support.jsx";
 
 test("support action renders backend fields and forwards the record", () => {
   const onSelect = vi.fn();
@@ -9,11 +9,6 @@ test("support action renders backend fields and forwards the record", () => {
   render(<SupportActionCard action={action} onSelect={onSelect} />);
   fireEvent.click(screen.getByRole("button", { name: "Backend action" }));
   expect(onSelect).toHaveBeenCalledWith(action);
-});
-
-test("support booking exposes its actions", () => {
-  render(<SupportBookingCard booking={{ title: "Booking title", supportActions: [{ id: "x", label: "Action", enabled: true }] }} />);
-  expect(screen.getByRole("button", { name: "Action" })).toBeInTheDocument();
 });
 
 test("support ticket uses the supplied status label", () => {

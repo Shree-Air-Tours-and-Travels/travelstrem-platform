@@ -1,25 +1,6 @@
 import React from "react";
-import { EmptyState } from "@packages/trem-ui";
 import StatsCard from "../components/StatsCard";
 import "./AdminOverviewView.scss";
-
-function normalizeStatus(status) {
-  if (!status) return "Draft";
-  return status.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-function statusKey(status) {
-  return String(status || "").toUpperCase();
-}
-
-function formatDate(dateStr) {
-  if (!dateStr) return "";
-  try {
-    return new Date(dateStr).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-  } catch {
-    return dateStr;
-  }
-}
 
 function getTimeOfDay() {
   const h = new Date().getHours();
@@ -28,17 +9,15 @@ function getTimeOfDay() {
   return "evening";
 }
 
-export default function AdminOverviewView({ user, stats, recentBookings, onTabChange, onViewBooking }) {
+export default function AdminOverviewView({ user, stats, onTabChange }) {
   const tourCount = stats?.totalTours || 0;
   const tripCount = stats?.totalTrips || 0;
-  const bookingCount = stats?.activeBookings || 0;
-  const pendingCount = stats?.pendingReviews || 0;
 
   return (
     <div className="aov">
       <div className="aov__greeting">
         <h1>Good {getTimeOfDay()}, {user?.name?.split(" ")[0] || "Admin"}</h1>
-        <p>Here's what's happening with your platform</p>
+        <p>Here is your current travel catalogue overview.</p>
       </div>
 
       <div className="aov__stats">
@@ -54,54 +33,6 @@ export default function AdminOverviewView({ user, stats, recentBookings, onTabCh
           icon="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
           onClick={() => onTabChange?.("services")}
         />
-        <StatsCard
-          label="Active Bookings"
-          value={bookingCount}
-          icon="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-          onClick={() => onTabChange?.("bookings")}
-        />
-        <StatsCard
-          label="Pending Reviews"
-          value={pendingCount}
-          icon="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-          onClick={() => onTabChange?.("bookings")}
-        />
-      </div>
-
-      <div className="aov__section">
-        <h2 className="aov__section-title">Recent Bookings</h2>
-        {recentBookings && recentBookings.length > 0 ? (
-          <div className="aov__recent">
-            {recentBookings.slice(0, 5).map((b, i) => {
-              const tour = b.tour || {};
-              const tripName = tour.title || b.tripSelection?.packageId || "Trip";
-              const product = b.product || "trevista";
-
-              return (
-                <div key={b.id || b._id || i} className="aov__recent-item" onClick={() => onViewBooking?.(b)}>
-                  <div className="aov__recent-info">
-                    <span className="aov__recent-name">{tripName}</span>
-                    <div className="aov__recent-meta">
-                      <span className={`aov__recent-product aov__recent-product--${product}`}>
-                        {product === "trevio" ? "Trevio" : "Trevista"}
-                      </span>
-                      <span>{formatDate(b.createdAt)}</span>
-                    </div>
-                  </div>
-                  <span className={`aov__recent-status aov__recent-status--${statusKey(b.status)}`}>
-                    {normalizeStatus(b.status)}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <EmptyState
-            icon="calendar"
-            title="No bookings yet"
-            description="Bookings will appear here as they come in."
-          />
-        )}
       </div>
     </div>
   );

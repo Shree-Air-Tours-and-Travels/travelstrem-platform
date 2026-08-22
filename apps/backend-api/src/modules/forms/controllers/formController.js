@@ -9,7 +9,7 @@ import TrevioTrip from "../../trevio/models/TrevioTrip.js";
 import TourDeparture from "../../tours/models/TourDeparture.js";
 import masterDataService from "../../masterData/services/masterDataService.js";
 import { normalizeMongoId, resolveDepartureOption } from "../services/departureOptionService.js";
-import { claimEnquiryBooking, ensureBookingForEnquiry } from "../services/enquiryBookingService.js";
+import FinancialEngine from "../../../core/financial-engine/index.js";
 
 const escapeHtml = (value) => String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -28,6 +28,10 @@ const formatDate = (value) => {
         timeZone: "UTC",
     }).format(date);
 };
+
+const formatMinorMoney = (amountMinor, currency = "INR") => new Intl.NumberFormat("en-IN", {
+    style: "currency", currency, maximumFractionDigits: 0,
+}).format(Number(amountMinor || 0) / 100);
 
 const toIsoDate = (value) => {
     const date = value ? new Date(value) : null;
@@ -74,9 +78,32 @@ const getTourFormContext = async (tour, product) => {
         ? Boolean(tour?.flights?.included)
         : /\bflights?\b/i.test(inclusions) && !/\bflights?\b/i.test(exclusions);
 
+    const packageOptions = tour?.commercial?.version === "COMPONENTS_V1"
+        ? (tour.commercial.packages || []).filter((item) => item?.enabled !== false).map((item) => ({
+            value: String(item.packageKey || ""),
+            label: String(item.name || item.tier || "Package"),
+        })).filter((item) => item.value)
+        : [];
+    const hotelRoomOptions = (tour?.hotelOptions || []).filter((option) => option?.active !== false).flatMap((option, optionIndex) => {
+        const optionKey = String(option.optionKey || option._id || `hotel-${optionIndex + 1}`);
+        const rooms = (option.rooms || []).filter((room) => room?.available !== false);
+        if (!rooms.length) return [{ value: `${optionKey}|`, label: String(option.title || option.propertyName || "Hotel option") }];
+        return rooms.map((room, roomIndex) => ({
+            value: `${optionKey}|${String(room.roomKey || room._id || `room-${roomIndex + 1}`)}`,
+            label: [option.propertyName || option.title, room.name].filter(Boolean).join(" — "),
+        }));
+    });
+
     return {
         departureOptions: uniqueOptions,
         flightPreference: includesFlights ? "with_flights" : "without_flights",
+        packageType: String(tour?.packageType || "fixed_departure"),
+        packageOptions,
+        hotelRoomOptions,
+        allowCustomization: tour?.packageType === "custom" && tour?.customConfig?.allowCustomerCustomization === true,
+        customizationQuestions: tour?.packageType === "custom" && tour?.customConfig?.allowCustomerCustomization === true
+            ? (tour.customConfig.questionnaireFields || []).map(String).map((label) => label.trim()).filter(Boolean).slice(0, 20)
+            : [],
     };
 };
 
@@ -129,7 +156,7 @@ export const getForm = async (req, res) => {
             labels.sendRequest = "Send tour enquiry";
             const genericFields = response.component?.structure?.widgets?.[0]?.props?.fields || [];
             response.component.structure.widgets[0].props.fields = genericFields.filter(
-                (field) => field.name !== "preferredTravelDate",
+                (field) => !["packageKey", "hotelRoomKey", "preferredTravelDate", "preferredStartDate", "preferredEndDate", "customizationPreference"].includes(field.name),
             );
         }
         const fields = response.component?.structure?.widgets?.[0]?.props?.fields || [];
@@ -139,7 +166,37 @@ export const getForm = async (req, res) => {
                 field.required = formContext.departureOptions.length > 0;
             }
             if (field.name === "flightPreference") field.value = formContext.flightPreference;
+            if (field.name === "packageKey") {
+                field.options = formContext.packageOptions;
+                field.required = formContext.packageOptions.length > 0;
+            }
+            if (field.name === "hotelRoomKey") field.options = formContext.hotelRoomOptions;
         });
+        if (tour) {
+            const isFixed = formContext.packageType === "fixed_departure";
+            response.component.structure.widgets[0].props.fields = fields.filter((field) => {
+                if (field.name === "preferredTravelDate") return isFixed;
+                if (["preferredStartDate", "preferredEndDate"].includes(field.name)) return !isFixed;
+                if (field.name === "customizationPreference") return formContext.allowCustomization;
+                if (field.name === "packageKey") return formContext.packageOptions.length > 0;
+                if (field.name === "hotelRoomKey") return formContext.hotelRoomOptions.length > 0;
+                return true;
+            });
+            if (formContext.allowCustomization && formContext.customizationQuestions.length) {
+                response.component.structure.widgets[0].props.fields.push(...formContext.customizationQuestions.map((label, index) => ({
+                    name: `customQuestion_${index}`,
+                    label,
+                    type: "textarea",
+                    required: false,
+                    maxLength: 1000,
+                    width: "full",
+                    visibleWhen: { field: "customizationPreference", equals: "customize" },
+                })));
+            }
+            if (formContext.allowCustomization) {
+                response.component.structure.widgets[0].props.fields = response.component.structure.widgets[0].props.fields.filter((field) => field.name !== "hotelRoomKey");
+            }
+        }
         return res.status(200).json({
             ...response,
             message: "Contact form fetched",
@@ -163,13 +220,15 @@ export const submitForm = async (req, res) => {
             url = null,
             product: requestedProduct = null,
             fields = {},
+            hotelSelections: requestedHotelSelections = [],
+            hotelRequests: requestedHotelRequests = [],
         } = req.body || {};
 
         const createdAt = req.body.createdAt ? new Date(req.body.createdAt) : undefined;
         const validatedCreatedAt = (createdAt && !Number.isNaN(createdAt.getTime())) ? createdAt : undefined;
 
         const allowedFields = {};
-        const knownKeys = ["name", "email", "phone", "message", "preferredContact", "travellerCount", "preferredTravelDate", "flightPreference"];
+        const knownKeys = ["name", "email", "phone", "message", "preferredContact", "travellerCount", "preferredTravelDate", "preferredStartDate", "preferredEndDate", "flightPreference", "packageKey", "hotelRoomKey", "customizationPreference"];
         if (fields && typeof fields === "object") {
             for (const key of knownKeys) {
                 if (fields[key] !== undefined && fields[key] !== null) {
@@ -198,8 +257,31 @@ export const submitForm = async (req, res) => {
             ? (tour.productKey === "trevio" ? "trevio" : "trevista")
             : (["trevio", "trevista"].includes(requestedProductKey) ? requestedProductKey : "trevista");
         const formContext = await getTourFormContext(tour, product);
+        const selectedPackage = formContext.packageOptions.find((item) => item.value === allowedFields.packageKey) || null;
+        if (formContext.packageOptions.length && !selectedPackage) {
+            return res.status(400).json({ status: "error", message: "Please select an available tour package." });
+        }
+        const selectedHotelRoom = allowedFields.hotelRoomKey
+            ? formContext.hotelRoomOptions.find((item) => item.value === allowedFields.hotelRoomKey) || null
+            : null;
+        if (allowedFields.hotelRoomKey && !selectedHotelRoom) {
+            return res.status(400).json({ status: "error", message: "That hotel or room is no longer available." });
+        }
+        const hotelSelections = Array.isArray(requestedHotelSelections)
+            ? requestedHotelSelections.slice(0, 20).map((item) => ({
+                stayKey: String(item?.stayKey || "").slice(0, 100),
+                hotelOptionKey: String(item?.hotelOptionKey || "").slice(0, 100),
+                roomOptionKey: String(item?.roomOptionKey || "").slice(0, 100),
+            })).filter((item) => item.stayKey && item.hotelOptionKey)
+            : [];
+        if (allowedFields.customizationPreference && !["package", "customize"].includes(allowedFields.customizationPreference)) {
+            return res.status(400).json({ status: "error", message: "Please choose a valid tour preference." });
+        }
+        if (allowedFields.customizationPreference === "customize" && !formContext.allowCustomization) {
+            return res.status(400).json({ status: "error", message: "This tour is not available for full customisation." });
+        }
         const departureOptions = formContext.departureOptions;
-        if (departureOptions.length && !allowedFields.preferredTravelDate) {
+        if (formContext.packageType === "fixed_departure" && departureOptions.length && !allowedFields.preferredTravelDate) {
             return res.status(400).json({ status: "error", message: "Please select an available departure." });
         }
         const selectedDeparture = resolveDepartureOption(departureOptions, allowedFields.preferredTravelDate);
@@ -207,7 +289,33 @@ export const submitForm = async (req, res) => {
             return res.status(400).json({ status: "error", message: "That departure is no longer available. Please select another option." });
         }
         if (selectedDeparture) allowedFields.preferredTravelDate = selectedDeparture.value;
-        const selectedDepartureLabel = selectedDeparture?.label || "Flexible";
+        if (formContext.packageType !== "fixed_departure") {
+            const start = toIsoDate(allowedFields.preferredStartDate);
+            const end = toIsoDate(allowedFields.preferredEndDate);
+            if (!start || !end) return res.status(400).json({ status: "error", message: "Please provide suitable travel dates." });
+            if (end < start) return res.status(400).json({ status: "error", message: "The end date must be after the start date." });
+            const earliest = toIsoDate(tour?.flexibleConfig?.earliestDeparture);
+            const latest = toIsoDate(tour?.flexibleConfig?.latestReturn);
+            if ((earliest && start < earliest) || (latest && end > latest)) return res.status(400).json({ status: "error", message: "Those dates are outside this tour's available travel window." });
+            allowedFields.preferredStartDate = start;
+            allowedFields.preferredEndDate = end;
+        }
+        const selectedDepartureLabel = selectedDeparture?.label || [allowedFields.preferredStartDate, allowedFields.preferredEndDate].filter(Boolean).join(" – ") || "Flexible";
+        const customizationAnswers = formContext.allowCustomization && allowedFields.customizationPreference === "customize"
+            ? Object.fromEntries(formContext.customizationQuestions.map((question, index) => [question, String(fields?.[`customQuestion_${index}`] || "").trim().slice(0, 1000)]).filter(([, answer]) => answer))
+            : {};
+        const [hotelOptionKey = "", roomOptionKey = ""] = String(selectedHotelRoom?.value || "").split("|");
+        const customizationSnapshot = tour?.commercial?.version === "COMPONENTS_V1" && selectedPackage
+            ? FinancialEngine.calculateTourCustomizationPreview({
+                tour,
+                packageKey: selectedPackage.value,
+                hotelSelections,
+                hotelRequests: requestedHotelRequests,
+                hotelOptionKey,
+                roomOptionKey,
+                travellerCount,
+            })
+            : null;
         const agentSnapshot = agent ? {
             name: agent.name || "Your travel specialist",
             email: agent.email || "",
@@ -223,6 +331,25 @@ export const submitForm = async (req, res) => {
             ownerAgent: agentId,
             agencyId: tour?.agencyId || null,
             agentSnapshot,
+            selection: {
+                packageKey: selectedPackage?.value || "",
+                packageName: selectedPackage?.label || "",
+                hotelRoomKey: selectedHotelRoom?.value || "",
+                hotelRoomName: selectedHotelRoom?.label || "",
+                hotelSelections: (customizationSnapshot?.hotels || []).map((item) => ({
+                    stayKey: item.stayKey,
+                    location: item.location,
+                    hotelOptionKey: item.optionKey,
+                    hotelName: item.optionName,
+                    roomOptionKey: item.roomKey,
+                    roomName: item.roomName,
+                })),
+                hotelRequests: customizationSnapshot?.hotelRequests || [],
+                customizationPreference: customizationSnapshot?.quoteMode === "CUSTOMIZED" ? "customize" : (allowedFields.customizationPreference || "package"),
+            },
+            customizationSnapshot,
+            customizationAnswers,
+            claimedBy: req.user?.sub || req.user?.id || req.user?._id || null,
             url: String(url || "").slice(0, 2000) || null,
             createdAt: validatedCreatedAt,
         });
@@ -230,7 +357,6 @@ export const submitForm = async (req, res) => {
         const savedLead = await newLead.save();
         savedLead.enquiryRef = `ENQ-${String(savedLead._id).slice(-6).toUpperCase()}`;
         await savedLead.save();
-        const enquiryBooking = await ensureBookingForEnquiry(savedLead, tour);
 
         let notified = false;
         // Gmail is the only delivery channel for enquiries. Notify both the
@@ -253,12 +379,26 @@ export const submitForm = async (req, res) => {
                 const flightPreference = allowedFields.flightPreference === "with_flights" ? "Quote with flights" : "Quote without flights";
                 const requestedTour = tourTitle || "General tour enquiry";
                 const enquiryUrl = url || "Not provided";
+                const packageSummary = selectedPackage?.label || "To be discussed";
+                const hotelSummary = customizationSnapshot?.hotels?.length
+                    ? customizationSnapshot.hotels.map((item) => `${item.location || item.stayKey}: ${item.optionName}${item.roomName ? ` — ${item.roomName}` : ""}`).join("; ")
+                    : (selectedHotelRoom?.label || "Included package stays");
+                const hotelRequestSummary = customizationSnapshot?.hotelRequests?.length
+                    ? customizationSnapshot.hotelRequests.map((item) => `${item.location || item.stayKey}: ${[item.propertyClass, item.roomType].filter(Boolean).join(" · ") || "Agent recommendation"}${item.requirements ? ` — ${item.requirements}` : ""}`).join("; ")
+                    : "None";
+                const quoteMode = customizationSnapshot?.quoteMode === "CUSTOMIZED" ? "Customized package" : "Package";
+                const priceSummary = customizationSnapshot?.customized?.totalMinor != null
+                    ? `${formatMinorMoney(customizationSnapshot.customized.perPersonMinor, customizationSnapshot.currency)} per person · ${formatMinorMoney(customizationSnapshot.customized.totalMinor, customizationSnapshot.currency)} total`
+                    : "Agent confirmation required";
+                const alternativeSummary = customizationSnapshot?.recommendedAlternative
+                    ? `${customizationSnapshot.recommendedAlternative.packageName}: ${formatMinorMoney(customizationSnapshot.recommendedAlternative.perPersonMinor, customizationSnapshot.currency)} per person · ${formatMinorMoney(customizationSnapshot.recommendedAlternative.totalMinor, customizationSnapshot.currency)} total`
+                    : "None";
                 const emailResult = await sendTransactionalEmail({
                     to: [...recipients],
                     replyTo: allowedFields.email || undefined,
                     subject: `New TravelsTREM enquiry: ${requestedTour}`,
-                    text: `New customer enquiry\n\nName: ${customerName}\nEmail: ${customerEmail}\nPhone: ${customerPhone}\nPreferred contact: ${preferredContact}\nTravellers: ${travellerSummary}\nDeparture: ${preferredTravelDate}\nQuote type: ${flightPreference}\nTour: ${requestedTour}\nRequest: ${customerMessage}\nPage: ${enquiryUrl}`,
-                    html: `<div style="font-family:Arial,sans-serif;max-width:640px;margin:auto;color:#172033"><h2 style="color:#173b8f">New customer enquiry</h2><p>A customer has requested help from TravelsTREM.</p><table role="presentation" style="width:100%;border-collapse:collapse"><tr><td style="padding:8px 0;font-weight:700">Name</td><td>${escapeHtml(customerName)}</td></tr><tr><td style="padding:8px 0;font-weight:700">Email</td><td>${escapeHtml(customerEmail)}</td></tr><tr><td style="padding:8px 0;font-weight:700">Phone</td><td>${escapeHtml(customerPhone)}</td></tr><tr><td style="padding:8px 0;font-weight:700">Preferred contact</td><td>${escapeHtml(preferredContact)}</td></tr><tr><td style="padding:8px 0;font-weight:700">Travellers</td><td>${escapeHtml(travellerSummary)}</td></tr><tr><td style="padding:8px 0;font-weight:700">Departure</td><td>${escapeHtml(preferredTravelDate)}</td></tr><tr><td style="padding:8px 0;font-weight:700">Quote type</td><td>${escapeHtml(flightPreference)}</td></tr><tr><td style="padding:8px 0;font-weight:700">Tour</td><td>${escapeHtml(requestedTour)}</td></tr><tr><td style="padding:8px 0;font-weight:700">Request</td><td>${escapeHtml(customerMessage)}</td></tr><tr><td style="padding:8px 0;font-weight:700">Page</td><td>${escapeHtml(enquiryUrl)}</td></tr></table><p style="margin-top:24px;color:#667085">Reply to this email to contact the customer directly.</p></div>`,
+                    text: `New customer enquiry\n\nName: ${customerName}\nEmail: ${customerEmail}\nPhone: ${customerPhone}\nPreferred contact: ${preferredContact}\nTravellers: ${travellerSummary}\nDeparture: ${preferredTravelDate}\nPackage: ${packageSummary}\nHotel / room: ${hotelSummary}\nRequested hotel preferences: ${hotelRequestSummary}\nRequest type: ${quoteMode}\nCalculated price: ${priceSummary}\nPackage alternative: ${alternativeSummary}\nQuote type: ${flightPreference}\nTour: ${requestedTour}\nRequest: ${customerMessage}\nPage: ${enquiryUrl}`,
+                    html: `<div style="font-family:Arial,sans-serif;max-width:640px;margin:auto;color:#172033"><h2 style="color:#173b8f">New customer enquiry</h2><p>A customer has requested help from TravelsTREM.</p><table role="presentation" style="width:100%;border-collapse:collapse"><tr><td style="padding:8px 0;font-weight:700">Name</td><td>${escapeHtml(customerName)}</td></tr><tr><td style="padding:8px 0;font-weight:700">Email</td><td>${escapeHtml(customerEmail)}</td></tr><tr><td style="padding:8px 0;font-weight:700">Phone</td><td>${escapeHtml(customerPhone)}</td></tr><tr><td style="padding:8px 0;font-weight:700">Preferred contact</td><td>${escapeHtml(preferredContact)}</td></tr><tr><td style="padding:8px 0;font-weight:700">Travellers</td><td>${escapeHtml(travellerSummary)}</td></tr><tr><td style="padding:8px 0;font-weight:700">Departure</td><td>${escapeHtml(preferredTravelDate)}</td></tr><tr><td style="padding:8px 0;font-weight:700">Package</td><td>${escapeHtml(packageSummary)}</td></tr><tr><td style="padding:8px 0;font-weight:700">Hotel / room</td><td>${escapeHtml(hotelSummary)}</td></tr><tr><td style="padding:8px 0;font-weight:700">Request type</td><td>${escapeHtml(quoteMode)}</td></tr><tr><td style="padding:8px 0;font-weight:700">Calculated price</td><td>${escapeHtml(priceSummary)}</td></tr><tr><td style="padding:8px 0;font-weight:700">Package alternative</td><td>${escapeHtml(alternativeSummary)}</td></tr><tr><td style="padding:8px 0;font-weight:700">Quote type</td><td>${escapeHtml(flightPreference)}</td></tr><tr><td style="padding:8px 0;font-weight:700">Tour</td><td>${escapeHtml(requestedTour)}</td></tr><tr><td style="padding:8px 0;font-weight:700">Request</td><td>${escapeHtml(customerMessage)}</td></tr><tr><td style="padding:8px 0;font-weight:700">Page</td><td>${escapeHtml(enquiryUrl)}</td></tr></table><p style="margin-top:24px;color:#667085">Reply to this email to contact the customer directly.</p></div>`,
                 });
                 if (emailResult.success) {
                     savedLead.notified = true;
@@ -295,7 +435,6 @@ export const submitForm = async (req, res) => {
                     url: savedLead.url,
                     createdAt: savedLead.createdAt,
                     notified: savedLead.notified || notified,
-                    bookingId: enquiryBooking?._id || null,
                     agent: savedLead.agentSnapshot,
                 },
             },
@@ -325,13 +464,12 @@ export const claimEnquiry = async (req, res) => {
         const lead = await ContactLeadRepository.findOne({ enquiryRef });
         if (!lead) return res.status(404).json({ status: "error", message: "That enquiry ID was not found." });
         if (lead.claimedBy && String(lead.claimedBy) !== String(userId)) return res.status(409).json({ status: "error", message: "This enquiry is already linked to another account." });
-        const EntityModel = lead.product === "trevio" ? TrevioTrip : Tour;
-        const entity = lead.tourId ? await EntityModel.findById(lead.tourId) : null;
-        const booking = await claimEnquiryBooking(lead, userId, entity);
+        lead.claimedBy = userId;
+        await lead.save();
         return res.status(200).json({
             status: "success",
-            message: "Enquiry added to your bookings.",
-            componentData: { data: { enquiryRef, bookingId: String(booking._id) } },
+            message: "Enquiry linked to your account.",
+            componentData: { data: { enquiryRef } },
         });
     } catch (err) {
         return res.status(err?.status || 500).json({ status: "error", message: err?.message || "Could not add the enquiry." });
@@ -339,20 +477,98 @@ export const claimEnquiry = async (req, res) => {
 };
 
 // Optional: admin endpoint to fetch leads
+const OPERATOR_ROLES = new Set(["admin", "agent", "super_admin", "support", "operations"]);
+
+const enquiryAccess = async (req) => {
+    const userId = req.user?.sub || req.user?.id || req.user?._id;
+    if (!userId) throw Object.assign(new Error("Please sign in to view enquiries."), { status: 401 });
+    const role = String(req.user?.role || "member").toLowerCase();
+    if (!OPERATOR_ROLES.has(role)) {
+        const viewer = await User.findById(userId).select("email").lean();
+        const email = String(viewer?.email || "").trim();
+        const escapedEmail = email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const identities = [{ claimedBy: userId }];
+        if (escapedEmail) {
+            identities.push({
+                claimedBy: null,
+                "fields.email": { $regex: `^${escapedEmail}$`, $options: "i" },
+            });
+        }
+        return { userId, perspective: "sent", query: identities.length === 1 ? identities[0] : { $or: identities } };
+    }
+
+    const query = {};
+    if (!(role === "admin" && req.user?.adminLevel === "master") && role !== "super_admin") {
+        const viewer = await User.findById(userId).select("agencyId agencyRole").lean();
+        if (viewer?.agencyRole === "partner_admin" && viewer.agencyId) query.agencyId = viewer.agencyId;
+        else query.ownerAgent = userId;
+    }
+    return { userId, perspective: "received", query };
+};
+
+const enquiryView = (lead, perspective) => {
+    const fields = lead?.fields || {};
+    const isSent = perspective === "sent";
+    const counterpart = isSent
+        ? {
+            label: "Sent to",
+            name: lead?.agentSnapshot?.name || "TravelsTREM support team",
+            email: lead?.agentSnapshot?.email || "",
+            phone: lead?.agentSnapshot?.phone || "",
+        }
+        : {
+            label: "Received from",
+            name: fields.name || "Traveller",
+            email: fields.email || "",
+            phone: fields.phone || "",
+        };
+    const departure = fields.preferredTravelDate || [fields.preferredStartDate, fields.preferredEndDate].filter(Boolean).join(" – ") || "Flexible";
+    const flightPreference = fields.flightPreference === "with_flights" ? "With flights" : "Without flights";
+    return {
+        id: String(lead?._id || ""),
+        recordType: "enquiry",
+        enquiryRef: lead?.enquiryRef || "",
+        perspective,
+        directionLabel: isSent ? "Enquiry sent" : "Enquiry received",
+        status: lead?.status || "new",
+        statusLabel: String(lead?.status || "new").replaceAll("_", " "),
+        title: lead?.tourTitle || "General tour enquiry",
+        product: lead?.product || "trevista",
+        tourId: lead?.tourId || null,
+        counterpart,
+        request: {
+            message: fields.message || "",
+            travellers: fields.travellerCount || "",
+            departure,
+            flightPreference,
+            preferredContact: fields.preferredContact || "",
+            package: lead?.selection?.packageName || "",
+            hotelRoom: lead?.selection?.hotelSelections?.length
+                ? lead.selection.hotelSelections.map((item) => `${item.location || item.stayKey}: ${item.hotelName}${item.roomName ? ` — ${item.roomName}` : ""}`).join("; ")
+                : (lead?.selection?.hotelRoomName || ""),
+            hotelSelections: lead?.selection?.hotelSelections || [],
+            hotelRequests: lead?.selection?.hotelRequests || [],
+            customizationPreference: lead?.selection?.customizationPreference || "package",
+            quoteMode: lead?.customizationSnapshot?.quoteMode || "PACKAGE",
+            pricing: lead?.customizationSnapshot || null,
+            customizationAnswers: lead?.customizationAnswers || {},
+        },
+        submittedBy: isSent ? { name: fields.name || "You", email: fields.email || "", phone: fields.phone || "" } : counterpart,
+        recipient: isSent ? counterpart : {
+            name: lead?.agentSnapshot?.name || "Assigned travel specialist",
+            email: lead?.agentSnapshot?.email || "",
+            phone: lead?.agentSnapshot?.phone || "",
+        },
+        createdAt: lead?.createdAt,
+        createdLabel: formatDate(lead?.createdAt),
+        notified: Boolean(lead?.notified),
+    };
+};
+
 export const getLeads = async (req, res) => {
     try {
-        const userId = req.user?.sub || req.user?.id || req.user?._id;
-        const role = String(req.user?.role || "").toLowerCase();
-        if (!userId || !["admin", "agent", "super_admin", "support", "operations"].includes(role)) {
-            return res.status(403).json({ status: "error", message: "Admin or agent access required." });
-        }
-        const query = {};
-        if (!(role === "admin" && req.user?.adminLevel === "master") && role !== "super_admin") {
-            const viewer = await User.findById(userId).select("agencyId agencyRole").lean();
-            if (viewer?.agencyRole === "partner_admin" && viewer.agencyId) query.agencyId = viewer.agencyId;
-            else query.ownerAgent = userId;
-        }
-        const leads = await ContactLeadRepository.find(query)
+        const access = await enquiryAccess(req);
+        const leads = await ContactLeadRepository.find(access.query)
             .sort({ createdAt: -1 })
             .limit(200)
             .lean();
@@ -361,24 +577,19 @@ export const getLeads = async (req, res) => {
             status: "success",
             message: "Leads fetched",
             componentData: {
-                title: "Contact Leads",
-                description: "Recent contact leads",
-                data: leads.map((l) => ({
-                    id: l._id,
-                    fields: l.fields,
-                    tourId: l.tourId,
-                    tourTitle: l.tourTitle,
-                    url: l.url,
-                    createdAt: l.createdAt,
-                    notified: l.notified,
-                })),
+                title: access.perspective === "sent" ? "My bookings & enquiries" : "Bookings & enquiries received",
+                description: access.perspective === "sent"
+                    ? "Requests you have sent and bookings confirmed for your account."
+                    : "Requests received from travellers and their confirmed bookings.",
+                perspective: access.perspective,
+                data: leads.map((lead) => enquiryView(lead, access.perspective)),
                 structure: {},
                 config: {},
             },
         });
     } catch (err) {
         console.error("getLeads error:", err);
-        return res.status(500).json({
+        return res.status(err?.status || 500).json({
             status: "error",
             message: "Failed to fetch leads",
             componentData: {
@@ -390,5 +601,25 @@ export const getLeads = async (req, res) => {
             },
             error: err?.message,
         });
+    }
+};
+
+export const getEnquiry = async (req, res) => {
+    try {
+        const access = await enquiryAccess(req);
+        const identifier = String(req.params?.id || "").trim();
+        if (!/^ENQ-/i.test(identifier) && !Tour.db.base.Types.ObjectId.isValid(identifier)) {
+            return res.status(400).json({ status: "error", message: "Enter a valid enquiry ID." });
+        }
+        const identityQuery = /^ENQ-/i.test(identifier) ? { enquiryRef: identifier.toUpperCase() } : { _id: identifier };
+        const lead = await ContactLeadRepository.findOne({ ...access.query, ...identityQuery }).lean();
+        if (!lead) return res.status(404).json({ status: "error", message: "Enquiry not found." });
+        return res.status(200).json({
+            status: "success",
+            message: "Enquiry fetched",
+            componentData: { data: enquiryView(lead, access.perspective) },
+        });
+    } catch (err) {
+        return res.status(err?.status || 500).json({ status: "error", message: err?.message || "Failed to fetch enquiry." });
     }
 };

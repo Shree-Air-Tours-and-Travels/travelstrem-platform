@@ -33,11 +33,13 @@ body {
 }
 
 .partner-shell__content {
+    --wizard-host-offset: 0px;
     min-width: 0;
     flex: 1 1 auto;
 }
 
 .agent-app-shell.has-partner-navigation .partner-shell__content {
+    --wizard-host-offset: 280px;
     margin-left: 280px;
     transition: margin-left $duration-fast $ease-standard;
 }
@@ -49,12 +51,14 @@ body {
 }
 
 .agent-app-shell.has-partner-navigation.is-sidebar-collapsed .partner-shell__content {
+    --wizard-host-offset: 76px;
     margin-left: 76px;
 }
 
 @media (max-width: 900px) {
     .agent-app-shell.has-partner-navigation .partner-shell__content,
     .agent-app-shell.has-partner-navigation.is-sidebar-collapsed .partner-shell__content {
+        --wizard-host-offset: 0px;
         margin-left: 0;
     }
 

@@ -17,12 +17,11 @@ export const FORM_STEPS = ["Basic", "Schedule", "Itinerary", "Pricing", "Logisti
 
 export const REQUIRED_TOUR_FIELDS = ["title", "city.from", "city.to", "distance", "period.days", "period.nights", "desc", "maxGroupSize", "price.min", "price.max"];
 
-export const VALID_TABS = new Set(["dashboard", "agents", "customers", "reports", "deletions", "notifications", "profile", "partnerAgency", "bookings", "settings"]);
+export const VALID_TABS = new Set(["dashboard", "agents", "customers", "reports", "deletions", "notifications", "profile", "partnerAgency", "settings"]);
 
 export const TAB_WIDGET_MAP = {
     profile: "AgentProfile",
     partnerAgency: "AgentPartnerAgency",
-    bookings: "AgentBookingsTable",
     settings: "AgentSettings",
 };
 
@@ -35,7 +34,6 @@ export const PATH_BY_TAB = {
     notifications: "/agent/notifications",
     profile: "/agent/profile",
     partnerAgency: "/agent/partner-agency",
-    bookings: "/agent/bookings",
     settings: "/agent/settings",
 };
 
@@ -52,7 +50,6 @@ export const getAgentNavSections = (isPartnerAdmin = false) => [
             { id: "profile", label: "Profile", icon: "user" },
             ...(isPartnerAdmin ? [{ id: "partnerAgency", label: "Agency Profile", icon: "building2" }] : []),
             { id: "settings", label: "Settings", icon: "settings" },
-            { id: "bookings", label: "Bookings", icon: "calendar" },
             { id: "notifications", label: "Notifications", icon: "bell" },
         ],
     },
@@ -76,6 +73,3 @@ export const FALLBACK_PROFILE = {
     agentRef: "unassigned",
     avatar: "",
 };
-
-export const DEFAULT_CURRENCY = "INR";
-export const DEFAULT_LOCALE = "en-IN";
