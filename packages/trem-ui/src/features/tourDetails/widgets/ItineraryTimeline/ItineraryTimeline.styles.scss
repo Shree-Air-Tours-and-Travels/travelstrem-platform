@@ -17,22 +17,17 @@
   }
 }
 
-.itinerary-header__toggle {
-  padding: 0.4rem 0.75rem;
-  border: 1px solid var(--border);
-  border-radius: $radius-xs;
-  background: var(--surface);
-  color: var(--muted);
-  font-size: 0.78rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all $duration-base $ease-standard;
+.itinerary-header__toggle.ui-button {
+  min-height: auto;
+  padding: $space-2 $space-3;
+  color: var(--color-primary-dark);
+  font-weight: $font-bold;
+  text-decoration: underline;
+  text-underline-offset: $space-1;
   white-space: nowrap;
 
   &:hover {
-    border-color: var(--color-primary);
-    color: var(--color-primary);
-    background: var(--surface-inset);
+    color: var(--color-secondary-dark);
   }
 }
 
@@ -50,11 +45,7 @@
   top: 0;
   bottom: 0;
   width: 2px;
-  background: linear-gradient(
-    to bottom,
-    var(--color-primary) 0%,
-    var(--border) 100%
-  );
+  background: linear-gradient(to bottom, var(--color-primary) 0%, var(--border) 100%);
   opacity: 0.5;
 }
 
@@ -118,7 +109,7 @@
   .is-expanded & {
     background: var(--color-primary);
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 4px rgba(var(--color-primary-rgb, 37, 99, 235), 0.15);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary) 15%, transparent);
   }
 }
 
@@ -129,7 +120,7 @@
   line-height: 1;
 
   .is-expanded & {
-    color: var(--color-on-primary, #fff);
+    color: var(--color-on-primary);
   }
 }
 
@@ -255,8 +246,8 @@
   gap: 0.5rem;
   padding: 0.65rem 0.75rem;
   border-radius: $radius-sm;
-  background: rgba(var(--color-primary-rgb, 37, 99, 235), 0.06);
-  border: 1px solid rgba(var(--color-primary-rgb, 37, 99, 235), 0.15);
+  background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 15%, transparent);
 
   svg {
     flex-shrink: 0;

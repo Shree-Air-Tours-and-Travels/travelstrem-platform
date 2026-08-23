@@ -21,7 +21,9 @@
     gap: var(--space-6, 1.5rem);
   }
 
-  &__hamburger { display: none; }
+  &__hamburger {
+    display: none;
+  }
 
   &__brand,
   &__nav-item,
@@ -31,7 +33,12 @@
     font: inherit;
     text-decoration: none;
     cursor: pointer;
-    transition: color 160ms ease, border-color 160ms ease, background 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+    transition:
+      color 160ms ease,
+      border-color 160ms ease,
+      background 160ms ease,
+      transform 160ms ease,
+      box-shadow 160ms ease;
 
     &:focus-visible {
       outline: none;
@@ -380,7 +387,9 @@
       -webkit-backdrop-filter: blur(3px);
       opacity: 0;
       visibility: hidden;
-      transition: opacity 220ms ease, visibility 220ms ease;
+      transition:
+        opacity 220ms ease,
+        visibility 220ms ease;
       z-index: 49;
       pointer-events: none;
       -webkit-tap-highlight-color: transparent;
@@ -538,7 +547,9 @@
       font-weight: $font-semibold;
       padding: 0 0.9rem;
       border-radius: 10px;
-      transition: background 140ms ease, color 140ms ease;
+      transition:
+        background 140ms ease,
+        color 140ms ease;
 
       &:hover {
         background: var(--surface);
@@ -572,7 +583,9 @@
       background: transparent;
       cursor: pointer;
       text-align: left;
-      transition: background 140ms ease, color 140ms ease;
+      transition:
+        background 140ms ease,
+        color 140ms ease;
 
       &:hover {
         background: var(--surface);
@@ -614,7 +627,9 @@
       font-weight: $font-semibold;
       padding: 0 0.75rem;
       border-radius: 8px;
-      transition: background 140ms ease, color 140ms ease;
+      transition:
+        background 140ms ease,
+        color 140ms ease;
 
       &:hover {
         background: var(--surface);
@@ -653,7 +668,9 @@
       font-weight: $font-semibold;
       cursor: pointer;
       text-align: left;
-      transition: background 140ms ease, color 140ms ease;
+      transition:
+        background 140ms ease,
+        color 140ms ease;
 
       &:hover {
         background: var(--surface-inset);

@@ -8,6 +8,12 @@
   color: var(--muted);
   font-size: $font-size-sm;
 
+  &--column {
+    flex-direction: column;
+    gap: $space-3;
+    text-align: center;
+  }
+
   &__ring {
     width: $space-5;
     height: $space-5;
@@ -16,6 +22,10 @@
     border-top-color: var(--color-primary);
     border-radius: $radius-circle;
     animation: trem-spinner-rotate 700ms linear infinite;
+  }
+
+  &__label {
+    max-width: 26ch;
   }
 
   &--sm &__ring {

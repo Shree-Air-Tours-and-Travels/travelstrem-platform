@@ -40,44 +40,75 @@ export const hasAuthRole = (session, roles = []) => {
 
 export const canAccessAuthRoute = (route = {}, session = null) => {
   if (route.access === "authenticated") return Boolean(session?.isAuthenticated);
-  if (route.access === "roles") return Boolean(session?.isAuthenticated) && hasAuthRole(session, route.roles || []);
+  if (route.access === "roles")
+    return Boolean(session?.isAuthenticated) && hasAuthRole(session, route.roles || []);
   if (route.access === "publicOnly") return !session?.isAuthenticated;
   return true;
 };
 
 export const AUTH_CHANNEL_NAME = "travelstrem-auth";
 
+const currentAuthPortal = () => {
+  if (typeof window === "undefined") return "customer";
+  const explicit = String(window.__TREM_AUTH_PORTAL__ || "")
+    .trim()
+    .toLowerCase();
+  if (["admin", "partner", "customer"].includes(explicit)) return explicit;
+  const prefix = String(window.__TREM_AUTH_STORAGE_PREFIX__ || "").toLowerCase();
+  if (prefix.includes("admin")) return "admin";
+  if (prefix.includes("agent") || prefix.includes("partner")) return "partner";
+  return "customer";
+};
+
+const authChannelName = () => `${AUTH_CHANNEL_NAME}:${currentAuthPortal()}`;
+
 export const emitAuthEvent = (message = {}) => {
   if (typeof window === "undefined" || typeof BroadcastChannel === "undefined") return;
-  const channel = new BroadcastChannel(AUTH_CHANNEL_NAME);
-  channel.postMessage(message);
+  const portal = currentAuthPortal();
+  const channel = new BroadcastChannel(authChannelName());
+  channel.postMessage({ ...message, portal });
   channel.close();
 };
 
 export const subscribeAuthEvents = (handler) => {
-  if (typeof window === "undefined" || typeof BroadcastChannel === "undefined" || typeof handler !== "function") {
+  if (
+    typeof window === "undefined" ||
+    typeof BroadcastChannel === "undefined" ||
+    typeof handler !== "function"
+  ) {
     return () => {};
   }
-  const channel = new BroadcastChannel(AUTH_CHANNEL_NAME);
+  const channel = new BroadcastChannel(authChannelName());
   channel.onmessage = (event) => handler(event.data || {});
   return () => channel.close();
 };
 
 export const clearAuthBrowserState = ({ storage = localStorage, prefixes = [] } = {}) => {
-  const baseKeys = ["token", "auth_token", "auth_user", "auth_token_key_name", "travelstrem:token", "travelstrem:auth_user"];
+  const baseKeys = [
+    "token",
+    "auth_token",
+    "auth_user",
+    "auth_token_key_name",
+    "travelstrem:token",
+    "travelstrem:auth_user",
+  ];
   const prefixedKeys = prefixes.flatMap((prefix) => [
     `${prefix}:token`,
     `${prefix}:auth_user`,
     `${prefix}:auth_token`,
     `${prefix}:auth_token_key_name`,
   ]);
-  [...baseKeys, ...prefixedKeys].forEach((key) => storage?.removeItem(key));
+  (prefixes.length ? prefixedKeys : baseKeys).forEach((key) => storage?.removeItem(key));
 };
 
 export const extractToken = () => null;
 
 export const extractSafeUser = (res) =>
-  res?.data?.user || res?.data?.data?.user || (res?.data && typeof res.data === "object" && res.data.user) || res?.user || null;
+  res?.data?.user ||
+  res?.data?.data?.user ||
+  (res?.data && typeof res.data === "object" && res.data.user) ||
+  res?.user ||
+  null;
 
 export const appendTokenToUrl = (url, token) => {
   return typeof url === "string" ? url : "";
@@ -135,7 +166,15 @@ export const persistAuthSession = ({
 
 export const clearAuthSession = ({ api, storage = localStorage, storagePrefix = "" } = {}) => {
   const prefix = storagePrefix ? `${storagePrefix}:` : "";
-  [prefix + "token", "token", "auth_token", prefix + "auth_user", "auth_user", "auth_token_key_name"].forEach((key) => storage?.removeItem(key));
+  const keys = prefix
+    ? [
+        prefix + "token",
+        prefix + "auth_token",
+        prefix + "auth_user",
+        prefix + "auth_token_key_name",
+      ]
+    : ["token", "auth_token", "auth_user", "auth_token_key_name"];
+  keys.forEach((key) => storage?.removeItem(key));
   clearAuthHeader(api);
 };
 
@@ -159,20 +198,24 @@ export const setupRefreshInterceptor = (api, storagePrefix = "") => {
       clearAuthSession({ api, storagePrefix });
       emitAuthEvent({ type: "LOGOUT" });
       if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("USER_LOGOUT", { detail: { reason: "unauthorized" } }));
+        window.dispatchEvent(
+          new CustomEvent("USER_LOGOUT", { detail: { reason: "unauthorized" } }),
+        );
       }
       return Promise.reject(error);
-    }
+    },
   );
 };
 
-export const createRefreshHandler = ({ authService, persistSession, onRefresh } = {}) => async (payload = {}) => {
-  if (!authService?.refresh) return null;
-  const response = await authService.refresh(payload);
-  const session = await persistSession(response);
-  await onRefresh?.(session);
-  return session;
-};
+export const createRefreshHandler =
+  ({ authService, persistSession, onRefresh } = {}) =>
+  async (payload = {}) => {
+    if (!authService?.refresh) return null;
+    const response = await authService.refresh(payload);
+    const session = await persistSession(response);
+    await onRefresh?.(session);
+    return session;
+  };
 
 const normalizeBase = (raw) => {
   if (raw == null || raw === "") return raw;
@@ -180,30 +223,74 @@ const normalizeBase = (raw) => {
   return `https://${raw}`.replace(/\/$/, "");
 };
 
-export const createAuthApi = (base = process.env.REACT_APP_API_URL || "") => {
+export const createAuthApi = (base = process.env.REACT_APP_API_URL || "", portal = "customer") => {
   const normalized = normalizeBase(base) ?? "";
-  const baseURL = (normalized.endsWith("/api") ? normalized : `${normalized}/api`).replace(/([^:]\/)\/+/g, "$1");
+  const baseURL = (normalized.endsWith("/api") ? normalized : `${normalized}/api`).replace(
+    /([^:]\/)\/+/g,
+    "$1",
+  );
 
   const api = axios.create({
     baseURL,
     withCredentials: true,
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "X-Travelstrem-Portal": portal },
   });
+
+  if (typeof window !== "undefined") window.__TREM_AUTH_PORTAL__ = portal;
 
   return api;
 };
 
 export const createAuthService = (api) => ({
   getConfig: () => api.get("/auth/config"),
+  getMethods: () => api.get("/auth/methods"),
   getSession: () => api.get("/auth/session"),
-  requestAdminRegistrationOtp: (payload) => api.post("/auth/admin-registration-otp", payload, { headers: { "Content-Type": "application/json" } }),
-  login: (payload) => api.post("/auth/login", payload, { headers: { "Content-Type": "application/json" } }),
-  register: (payload) => api.post("/auth/register", payload, { headers: { "Content-Type": "application/json" } }),
-  forgotPassword: (payload) => api.post("/auth/forgot-password", payload, { headers: { "Content-Type": "application/json" } }),
-  resetPassword: (payload) => api.post("/auth/reset-password", payload, { headers: { "Content-Type": "application/json" } }),
-  verifyLoginOtp: (payload) => api.post("/auth/verify-otp", payload, { headers: { "Content-Type": "application/json" } }),
-  resendLoginOtp: (payload) => api.post("/auth/resend-otp", payload, { headers: { "Content-Type": "application/json" } }),
-  refresh: (payload = {}) => api.post("/auth/refresh", payload, { headers: { "Content-Type": "application/json" } }),
+  getCurrentUser: () => api.get("/auth/me"),
+  requestMobileOtp: (payload) => api.post("/auth/mobile/request-otp", payload),
+  verifyMobileOtp: (payload) => api.post("/auth/mobile/verify-otp", payload),
+  getGoogleAuthUrl: ({ portal = "customer", returnTo = "" } = {}) => {
+    const url = new URL(
+      `${api.defaults.baseURL.replace(/\/$/, "")}/auth/google`,
+      typeof window !== "undefined" ? window.location.origin : "http://localhost",
+    );
+    url.searchParams.set("portal", portal);
+    if (returnTo) url.searchParams.set("returnTo", returnTo);
+    return url.toString();
+  },
+  requestAdminRegistrationOtp: (payload) =>
+    api.post("/auth/admin-registration-otp", payload, {
+      headers: { "Content-Type": "application/json" },
+    }),
+  verifyAdminRegistrationOtp: (payload) =>
+    api.post("/auth/verify-admin-registration-otp", payload, {
+      headers: { "Content-Type": "application/json" },
+    }),
+  login: (payload) =>
+    api.post("/auth/login", payload, { headers: { "Content-Type": "application/json" } }),
+  register: (payload) =>
+    api.post("/auth/register", payload, { headers: { "Content-Type": "application/json" } }),
+  forgotPassword: (payload) =>
+    api.post("/auth/forgot-password", payload, { headers: { "Content-Type": "application/json" } }),
+  resetPassword: (payload) =>
+    api.post("/auth/reset-password", payload, { headers: { "Content-Type": "application/json" } }),
+  activateValidate: (payload) =>
+    api.post("/auth/activate-validate", payload, {
+      headers: { "Content-Type": "application/json" },
+    }),
+  requestActivationOtp: (payload) =>
+    api.post("/auth/request-activation-otp", payload, {
+      headers: { "Content-Type": "application/json" },
+    }),
+  activateWithOtp: (payload) =>
+    api.post("/auth/activate-with-otp", payload, {
+      headers: { "Content-Type": "application/json" },
+    }),
+  verifyLoginOtp: (payload) =>
+    api.post("/auth/verify-otp", payload, { headers: { "Content-Type": "application/json" } }),
+  resendLoginOtp: (payload) =>
+    api.post("/auth/resend-otp", payload, { headers: { "Content-Type": "application/json" } }),
+  refresh: (payload = {}) =>
+    api.post("/auth/refresh", payload, { headers: { "Content-Type": "application/json" } }),
 });
 
 export const getReturnPath = (locationState, fallback) => {
@@ -214,28 +301,42 @@ export const getReturnPath = (locationState, fallback) => {
 
 export const normalizeAuthConfig = (remote, roleOptions, defaultRole, storagePrefix = "") => {
   const prefix = storagePrefix ? `${storagePrefix}:` : "";
-  return ({
-  defaultRole: defaultRole || remote?.defaultRole || "member",
-  roles: Array.isArray(roleOptions) && roleOptions.length ? roleOptions : Array.isArray(remote?.roles) ? remote.roles : DEFAULT_AUTH_ROLES,
-  socialProviders: Array.isArray(remote?.socialProviders) ? remote.socialProviders : [],
-  strings: { ...(remote?.strings || {}) },
-  header: { ...(remote?.header || {}) },
-  company: {
-    ...(remote?.company || {}),
-    highlights: Array.isArray(remote?.company?.highlights) ? remote.company.highlights : [],
-  },
-  storageKeys: {
-    token: remote?.storageKeys?.token || `${prefix}token`,
-    user: remote?.storageKeys?.user || `${prefix}auth_user`,
-    rememberEmail: remote?.storageKeys?.rememberMe || remote?.storageKeys?.rememberEmail || `${prefix}remember_email`,
-  },
-  });
+  return {
+    defaultRole: defaultRole || remote?.defaultRole || "member",
+    roles:
+      Array.isArray(roleOptions) && roleOptions.length
+        ? roleOptions
+        : Array.isArray(remote?.roles)
+          ? remote.roles
+          : DEFAULT_AUTH_ROLES,
+    strings: { ...(remote?.strings || {}) },
+    header: { ...(remote?.header || {}) },
+    company: {
+      ...(remote?.company || {}),
+      highlights: Array.isArray(remote?.company?.highlights) ? remote.company.highlights : [],
+    },
+    storageKeys: {
+      token: remote?.storageKeys?.token || `${prefix}token`,
+      user: remote?.storageKeys?.user || `${prefix}auth_user`,
+      rememberEmail:
+        remote?.storageKeys?.rememberMe ||
+        remote?.storageKeys?.rememberEmail ||
+        `${prefix}remember_email`,
+    },
+  };
 };
 
 const extractAuthConfig = (res) =>
-  res?.componentData?.structure || res?.data?.componentData?.structure || res?.data?.data?.componentData?.structure;
+  res?.componentData?.structure ||
+  res?.data?.componentData?.structure ||
+  res?.data?.data?.componentData?.structure;
 
-export const useAuthConfig = ({ authService, roleOptions, defaultRole, storagePrefix = "" } = {}) => {
+export const useAuthConfig = ({
+  authService,
+  roleOptions,
+  defaultRole,
+  storagePrefix = "",
+} = {}) => {
   const [cfg, setCfg] = useState(null);
   const [cfgLoading, setCfgLoading] = useState(true);
   const [cfgError, setCfgError] = useState(null);
@@ -286,11 +387,17 @@ export const useAuthFlow = ({
   const [error, setError] = useState(null);
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpMessage, setOtpMessage] = useState(null);
+  const [adminRegistrationStep, setAdminRegistrationStep] = useState(null);
   const [remember, setRemember] = useState(false);
   const [form, setForm] = useState(null);
   const [loginOtpStep, setLoginOtpStep] = useState(null);
   const [otpCode, setOtpCode] = useState("");
-  const { cfg, cfgLoading, cfgError } = useAuthConfig({ authService, roleOptions, defaultRole, storagePrefix });
+  const { cfg, cfgLoading, cfgError } = useAuthConfig({
+    authService,
+    roleOptions,
+    defaultRole,
+    storagePrefix,
+  });
 
   const roles = useMemo(() => {
     const configured = cfg?.roles || roleOptions || DEFAULT_AUTH_ROLES;
@@ -301,7 +408,9 @@ export const useAuthFlow = ({
     if (!cfg) return;
     const remembered = localStorage.getItem(cfg.storageKeys.rememberEmail);
     if (remembered) setRemember(true);
-    const initialRole = roles.some((role) => role.value === cfg.defaultRole) ? cfg.defaultRole : roles[0]?.value || defaultRole;
+    const initialRole = roles.some((role) => role.value === cfg.defaultRole)
+      ? cfg.defaultRole
+      : roles[0]?.value || defaultRole;
     setForm({
       name: "",
       email: remembered || "",
@@ -310,31 +419,47 @@ export const useAuthFlow = ({
       confirmPassword: "",
       role: initialRole,
       adminOtp: "",
+      adminPin: "",
     });
   }, [cfg, defaultRole, roles]);
 
-  const update = useCallback((key) => (e) => setForm((state) => ({ ...state, [key]: e?.target?.value ?? e })), []);
+  const update = useCallback(
+    (key) => (e) => {
+      const value = e?.target?.value ?? e;
+      setForm((state) => ({ ...state, [key]: value }));
+      if (["email", "phone", "role"].includes(key)) {
+        setAdminRegistrationStep(null);
+        setOtpMessage(null);
+        setForm((state) => ({ ...state, adminOtp: "", adminPin: "" }));
+      }
+    },
+    [],
+  );
 
   const selectedRole = roles.find((role) => role.value === form?.role);
   const needsSecret = Boolean(
     showAdminSecret &&
-      (selectedRole?.requiresSecret ||
-        (selectedRole?.requiresSecretForEmail &&
-          form?.email?.trim().toLowerCase() === String(selectedRole.requiresSecretForEmail).trim().toLowerCase()))
+    (selectedRole?.requiresSecret ||
+      (selectedRole?.requiresSecretForEmail &&
+        form?.email?.trim().toLowerCase() ===
+          String(selectedRole.requiresSecretForEmail).trim().toLowerCase())),
   );
 
-  const persistSession = useCallback(async (response) => {
-    const session = persistAuthSession({
-      api,
-      response,
-      storageKeys: cfg.storageKeys,
-      remember,
-      rememberEmail: form.email.trim(),
-      emit,
-    });
-    await reload?.({ forceSession: true });
-    return session.user;
-  }, [api, cfg?.storageKeys, emit, form?.email, reload, remember]);
+  const persistSession = useCallback(
+    async (response) => {
+      const session = persistAuthSession({
+        api,
+        response,
+        storageKeys: cfg.storageKeys,
+        remember,
+        rememberEmail: form.email.trim(),
+        emit,
+      });
+      await reload?.({ forceSession: true });
+      return session.user;
+    },
+    [api, cfg?.storageKeys, emit, form?.email, reload, remember],
+  );
 
   const requestRegistrationOtp = useCallback(async () => {
     setError(null);
@@ -351,13 +476,44 @@ export const useAuthFlow = ({
         role: form.role,
         phone: form.phone?.trim() || "",
       });
+      setAdminRegistrationStep({ status: "otp_sent" });
       setOtpMessage(res?.data?.message || res?.message || "Registration OTP generated.");
     } catch (err) {
-      setError(err?.response?.data?.message || err.message || "Could not generate registration OTP.");
+      setError(
+        err?.response?.data?.message || err.message || "Could not generate registration OTP.",
+      );
     } finally {
       setOtpLoading(false);
     }
-  }, [authService, form?.email, form?.role]);
+  }, [authService, form?.email, form?.phone, form?.role]);
+
+  const verifyRegistrationOtp = useCallback(async () => {
+    setError(null);
+    setOtpMessage(null);
+    if (!/^\d{6}$/.test(form?.adminOtp || "")) {
+      setError("Enter the 6 digit registration OTP.");
+      return null;
+    }
+    setOtpLoading(true);
+    try {
+      const res = await authService.verifyAdminRegistrationOtp({
+        email: form.email.trim(),
+        phone: form.phone?.trim() || "",
+        otp: form.adminOtp,
+      });
+      const data = res?.data || res;
+      setAdminRegistrationStep({ status: "verified", verificationId: data.verificationId });
+      setOtpMessage(data.message || "OTP verified. Enter your Admin PIN.");
+      return data;
+    } catch (err) {
+      setError(
+        err?.response?.data?.message || err.message || "Could not verify the registration OTP.",
+      );
+      return null;
+    } finally {
+      setOtpLoading(false);
+    }
+  }, [authService, form?.adminOtp, form?.email, form?.phone]);
 
   const submitAuth = useCallback(async () => {
     setError(null);
@@ -373,7 +529,8 @@ export const useAuthFlow = ({
     setLoading(true);
     try {
       if (activeTab === "login") {
-        if (!form.email || !form.password) throw new Error(cfg.strings?.missingLoginFields || "Email and password are required.");
+        if (!form.email || !form.password)
+          throw new Error(cfg.strings?.missingLoginFields || "Email and password are required.");
         const res = await authService.login({ email: form.email.trim(), password: form.password });
         const responseData = res?.data || res;
         if (responseData?.status === "verify_otp") {
@@ -390,9 +547,16 @@ export const useAuthFlow = ({
       }
 
       if (!registerEnabled) throw new Error("Registration is not enabled for this shell.");
-      if (!form.name || !form.email || !form.password) throw new Error(cfg.strings?.missingRegisterFields || "Please fill name, email and password.");
-      if (form.password !== form.confirmPassword) throw new Error(cfg.strings?.passwordsMismatch || "Passwords do not match.");
-      if (needsSecret && !form.adminOtp) throw new Error("Console OTP is required for this role.");
+      if (!form.name || !form.email || !form.password)
+        throw new Error(
+          cfg.strings?.missingRegisterFields || "Please fill name, email and password.",
+        );
+      if (form.password !== form.confirmPassword)
+        throw new Error(cfg.strings?.passwordsMismatch || "Passwords do not match.");
+      if (needsSecret && adminRegistrationStep?.status !== "verified")
+        throw new Error("Verify the registration OTP before continuing.");
+      if (needsSecret && !/^\d{6}$/.test(form.adminPin || ""))
+        throw new Error("Enter the 6 digit Admin PIN.");
 
       const payload = {
         name: form.name.trim(),
@@ -400,12 +564,20 @@ export const useAuthFlow = ({
         phone: form.phone?.trim() || "",
         password: form.password,
         role: form.role,
-        ...(needsSecret ? { adminOtp: form.adminOtp } : {}),
+        ...(needsSecret
+          ? {
+              adminVerificationId: adminRegistrationStep.verificationId,
+              adminPin: form.adminPin,
+            }
+          : {}),
       };
       const res = await authService.register(payload);
       const responseData = res?.data || res;
       if (responseData?.status === "pending_approval") {
-        setError(responseData.message || "Registration submitted. Admin approval is required before login.");
+        setError(
+          responseData.message ||
+            "Registration submitted. Admin approval is required before login.",
+        );
         setActiveTab("login");
         return { status: "pending_approval", action: "register", user: responseData.user };
       }
@@ -417,7 +589,17 @@ export const useAuthFlow = ({
     } finally {
       setLoading(false);
     }
-  }, [activeTab, allowedRoles, authService, cfg, form, needsSecret, persistSession, registerEnabled]);
+  }, [
+    activeTab,
+    adminRegistrationStep,
+    allowedRoles,
+    authService,
+    cfg,
+    form,
+    needsSecret,
+    persistSession,
+    registerEnabled,
+  ]);
 
   const submitLoginOtp = useCallback(async () => {
     if (!loginOtpStep) return { status: "error", message: "No verification session." };
@@ -463,7 +645,10 @@ export const useAuthFlow = ({
     }
   }, [authService, loginOtpStep]);
 
-  const refresh = useMemo(() => createRefreshHandler({ authService, persistSession }), [authService, persistSession]);
+  const refresh = useMemo(
+    () => createRefreshHandler({ authService, persistSession }),
+    [authService, persistSession],
+  );
 
   return {
     activeTab,
@@ -486,6 +671,8 @@ export const useAuthFlow = ({
     update,
     persistSession,
     requestRegistrationOtp,
+    verifyRegistrationOtp,
+    adminRegistrationStep,
     submitAuth,
     refresh,
     loginOtpStep,

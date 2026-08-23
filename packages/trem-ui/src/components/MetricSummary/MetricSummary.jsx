@@ -3,7 +3,11 @@ import PropTypes from "prop-types";
 import Icon from "../../icons/Icon/Icon.jsx";
 import "./MetricSummary.styles.scss";
 
-export default function MetricSummary({ items = [], ariaLabel = "Overview summary", className = "" }) {
+export default function MetricSummary({
+  items = [],
+  ariaLabel = "Overview summary",
+  className = "",
+}) {
   return (
     <section className={`trem-metric-summary ${className}`.trim()} aria-label={ariaLabel}>
       {items.map((item) => {
@@ -30,13 +34,15 @@ export default function MetricSummary({ items = [], ariaLabel = "Overview summar
 }
 
 MetricSummary.propTypes = {
-  items: PropTypes.arrayOf(PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    label: PropTypes.string.isRequired,
-    value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-    icon: PropTypes.string,
-    onClick: PropTypes.func,
-  })),
+  items: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      label: PropTypes.string.isRequired,
+      value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+      icon: PropTypes.string,
+      onClick: PropTypes.func,
+    }),
+  ),
   ariaLabel: PropTypes.string,
   className: PropTypes.string,
 };

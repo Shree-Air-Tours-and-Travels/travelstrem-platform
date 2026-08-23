@@ -6,6 +6,19 @@
   color: var(--text);
 }
 
+.auth-trem__activation-result {
+  display: grid;
+  justify-items: start;
+  gap: 1rem;
+  color: var(--color-text-primary);
+
+  p {
+    margin: 0;
+    color: var(--color-text-secondary);
+    line-height: 1.55;
+  }
+}
+
 .auth-trem {
   min-height: calc(100dvh - 77px);
   padding: clamp(24px, 5vw, 64px);
@@ -458,8 +471,117 @@
   }
 
   &__error {
+    margin: 16px 0;
+    padding: 11px 13px;
+    border: 1px solid color-mix(in srgb, #d14343 30%, var(--border));
+    border-radius: 10px;
+    background: color-mix(in srgb, #d14343 7%, var(--surface));
     color: $danger-color;
     font-size: $font-size-sm;
+  }
+
+  &__method-list {
+    display: grid;
+    gap: 14px;
+    margin-top: 24px;
+  }
+
+  &__email-form {
+    margin-top: 18px;
+  }
+
+  &__forgot-link {
+    align-self: flex-end;
+    padding: 0;
+    color: var(--color-primary);
+  }
+
+  &__google-button,
+  &__mobile-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 50px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    font-weight: $font-semibold;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      border-color: var(--color-primary);
+      background: var(--primary-soft);
+    }
+  }
+
+  &__google-mark {
+    width: 21px;
+    height: 21px;
+    flex: 0 0 21px;
+  }
+
+  &__guest-link {
+    justify-content: center;
+    width: 100%;
+    color: var(--color-primary);
+  }
+
+  &__mobile-label {
+    color: var(--text);
+    font-size: $font-size-sm;
+    font-weight: $font-semibold;
+  }
+
+  &__mobile-input {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--control-bg);
+
+    &:focus-within {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px var(--primary-soft);
+    }
+
+    span {
+      padding: 13px;
+      border-right: 1px solid var(--border);
+      color: var(--muted);
+      font-size: $font-size-sm;
+    }
+
+    input {
+      min-width: 0;
+      padding: 13px;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--control-text);
+      font: inherit;
+    }
+  }
+
+  &__otp-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  &__dev-otp {
+    margin: 0;
+    padding: 9px 12px;
+    border-radius: 9px;
+    background: var(--surface-inset);
+    color: var(--muted);
+    font-size: $font-size-sm;
+    text-align: center;
   }
 
   &__primary {
@@ -477,10 +599,66 @@
     }
   }
 
+  &__guest-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--muted);
+    font-size: $font-size-sm;
+
+    &::before,
+    &::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+  }
+
+  &__guest-button {
+    width: 100%;
+    min-height: 44px;
+    border: 1px solid var(--color-primary);
+    border-radius: 12px;
+    background: transparent;
+    color: var(--color-primary);
+    font-weight: $font-bold;
+  }
+
   &__footer {
     margin-top: 14px;
     text-align: center;
     color: var(--muted);
+  }
+
+  &__access-request {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: $font-size-sm;
+    text-align: center;
+
+    a {
+      color: var(--color-primary);
+      font-weight: $font-semibold;
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
+
+      &:focus-visible {
+        border-radius: 4px;
+        outline: 3px solid var(--primary-soft);
+        outline-offset: 2px;
+      }
+    }
   }
 
   &__config-error {
@@ -730,7 +908,8 @@
   .auth-trem {
     width: 100%;
     min-height: calc(100dvh - 69px);
-    padding: 18px max(14px, env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+    padding: 18px max(14px, env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom))
+      max(14px, env(safe-area-inset-left));
 
     &__experience {
       display: flex;

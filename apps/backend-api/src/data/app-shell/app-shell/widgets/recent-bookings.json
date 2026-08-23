@@ -3,17 +3,17 @@
   "component": {
     "data": {
       "recentBookingsEmptyState": {
-        "icon": "calendar",
-        "title": "No bookings yet",
-        "description": "Your bookings will appear here after you reserve a trip.",
-        "actionLabel": "Explore Trevio",
+        "icon": "reservations",
+        "title": "No bookings or enquiries yet",
+        "description": "When you request a trip, your enquiries and bookings will appear here.",
+        "actionLabel": "Explore trips",
         "actionHref": "/?tab=trevio",
-        "actionAriaLabel": "Explore available Trevio trips"
+        "actionAriaLabel": "Explore available trips"
       }
     },
     "dataScope": { "options": {} },
     "elements": {
-      "labels": { "recentBookings": "Recent Booking" },
+      "labels": { "recentBookingsTitle": "Recent bookings & enquiries" },
       "urls": {}
     },
     "structure": {
@@ -22,7 +22,11 @@
         {
           "type": "RecentBookings",
           "props": {
-            "titleRef": "recentBookings",
+            "titleRef": "recentBookingsTitle",
+            "dataKey": "recentActivity",
+            "emptyStateKey": "recentBookingsEmptyState",
+            "targetTab": "bookings",
+            "limit": 5,
             "items": []
           }
         }

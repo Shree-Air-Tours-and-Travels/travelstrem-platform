@@ -10,11 +10,7 @@ const ThemeContext = createContext({
 export function ThemeProvider({ defaultTheme, children }) {
   const themeMode = useThemeMode({ defaultTheme });
 
-  return (
-    <ThemeContext.Provider value={themeMode}>
-      {children}
-    </ThemeContext.Provider>
-  );
+  return <ThemeContext.Provider value={themeMode}>{children}</ThemeContext.Provider>;
 }
 
 export const useTheme = () => useContext(ThemeContext);

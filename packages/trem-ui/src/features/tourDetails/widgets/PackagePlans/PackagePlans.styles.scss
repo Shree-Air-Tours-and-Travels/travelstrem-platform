@@ -1,0 +1,131 @@
+.td-plans {
+  padding: clamp(1.2rem, 2vw, 2rem);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: 0 16px 40px -30px var(--primary-shadow);
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+  &__eyebrow {
+    color: var(--color-primary);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  h2 {
+    margin: 0.25rem 0;
+    color: var(--title);
+    font-size: clamp(1.35rem, 2vw, 1.8rem);
+  }
+  &__header p {
+    margin: 0;
+    color: var(--subtitle);
+  }
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    align-items: stretch;
+  }
+  &__card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.15rem;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: var(--surface-inset);
+  }
+  &__card:hover {
+    border-color: var(--color-primary);
+  }
+  &__card.is-recommended {
+    border-color: var(--color-primary);
+  }
+  &__card.is-selected {
+    box-shadow: 0 0 0 3px var(--primary-focus);
+  }
+  &__recommended {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.28rem 0.55rem;
+    border-radius: 999px;
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+  &__card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+  &__card-head small {
+    color: var(--muted);
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+  &__card-head h3 {
+    margin: 0.15rem 0 0;
+    color: var(--title);
+    font-size: 1.12rem;
+  }
+  &__card-head > strong {
+    color: var(--color-primary-dark);
+    font-size: 1.15rem;
+    white-space: nowrap;
+  }
+  &__description {
+    margin: 0;
+    color: var(--subtitle);
+    line-height: 1.55;
+    font-size: 0.86rem;
+  }
+  &__features {
+    display: grid;
+    gap: 0.55rem;
+    flex: 1;
+  }
+  &__features span {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.45rem;
+    color: var(--text);
+    font-size: 0.82rem;
+  }
+  &__features svg {
+    flex: 0 0 auto;
+    color: var(--color-primary);
+    margin-top: 0.12rem;
+  }
+  &__optional {
+    color: var(--subtitle);
+    font-size: 0.78rem;
+  }
+  &__optional summary {
+    cursor: pointer;
+    color: var(--color-primary-dark);
+    font-weight: 700;
+  }
+  &__optional p {
+    margin: 0.5rem 0 0;
+    line-height: 1.5;
+  }
+}
+
+@media (max-width: 960px) {
+  .td-plans__grid {
+    grid-template-columns: 1fr;
+  }
+}

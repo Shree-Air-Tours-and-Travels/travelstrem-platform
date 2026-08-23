@@ -4,7 +4,7 @@ const userVerificationSchema = new mongoose.Schema({
     email: { type: String, required: true, lowercase: true, trim: true, index: true },
     type: {
         type: String,
-        enum: ["login", "registration", "password_reset"],
+        enum: ["login", "registration", "password_reset", "activation"],
         default: "login",
     },
     otp: { type: String, required: true },
@@ -21,7 +21,6 @@ userVerificationSchema.statics.cleanupExpired = function () {
 };
 
 const UserVerification =
-    mongoose.models?.UserVerification ||
-    mongoose.model("UserVerification", userVerificationSchema);
+    mongoose.models?.UserVerification || mongoose.model("UserVerification", userVerificationSchema);
 
 export default UserVerification;

@@ -2,12 +2,15 @@
 
 .trem-input {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   width: 100%;
   border: 1px solid var(--border);
   border-radius: $radius-xs;
   background: var(--surface);
-  transition: border-color 160ms $ease-default, box-shadow 160ms $ease-default;
+  transition:
+    border-color 160ms $ease-default,
+    box-shadow 160ms $ease-default;
   box-sizing: border-box;
 
   &:focus-within {
@@ -22,18 +25,46 @@
     }
   }
 
-  &__cc-trigger {
+  &__label {
+    font-size: $font-size-xs;
+    font-weight: $font-bold;
+    line-height: 1.2;
+    color: var(--muted);
+    padding: $space-1 $space-3 0;
+    user-select: none;
+  }
+
+  &__required {
+    color: $danger-color;
+  }
+
+  &__row {
     display: flex;
     align-items: center;
-    gap: 2px;
-    padding: $space-2-5 $space-1-5 $space-2-5 $space-2-5;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+  }
+
+  &__cc-trigger.ui-button {
+    align-self: stretch;
+    min-width: 70px;
+    min-height: 0;
+    height: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $space-1;
+    padding: 0 $space-2;
     border: none;
     border-right: 1px solid var(--border);
+    border-radius: 0;
     background: transparent;
     cursor: pointer;
     color: var(--text);
     font-size: $font-size-xs;
     font-weight: $font-semibold;
+    line-height: 1;
     white-space: nowrap;
     flex-shrink: 0;
     transition: background 120ms $ease-default;
@@ -71,6 +102,27 @@
     &:disabled {
       opacity: 0.55;
       cursor: not-allowed;
+    }
+  }
+
+  &__country-menu {
+    .trem-dropdown__item {
+      min-height: 38px;
+      padding: $space-2 $space-3;
+    }
+  }
+
+  &--labelled {
+    justify-content: center;
+
+    .trem-input__field {
+      padding-top: 2px;
+      padding-bottom: 2px;
+    }
+
+    .trem-input__cc-trigger {
+      padding-top: 2px;
+      padding-bottom: 2px;
     }
   }
 

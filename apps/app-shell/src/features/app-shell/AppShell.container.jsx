@@ -1,193 +1,109 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { fetchData, slugify } from "@packages/trem-utils";
+import React, { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  fetchData,
+  notifyDataChanged,
+  slugify,
+  useRefreshOnActivation,
+} from "@packages/trem-utils";
+import { useEnquiryRealtime, useRealtimeStatus } from "@packages/trem-ui";
 import { useAppShellConfig } from "../../app/providers/AppShellProvider";
 import OverviewView from "../../views/OverviewView";
-import BookingsView from "../../views/BookingsView";
 import FavoritesView from "../../views/FavoritesView";
 import ProfileView from "../../views/ProfileView";
-import BookingDetail from "../bookingDetail/BookingDetail.jsx";
+import BookingsView from "../../views/BookingsView";
 import "./AppShell.styles.scss";
 
-const PRODUCT_URLS = {
-  trevista: process.env.REACT_APP_TREVISTA_URL,
-};
+const PRODUCT_URLS = { trevista: process.env.REACT_APP_TREVISTA_URL };
 
-const getProductBaseUrl = (productKey) => {
-  if (typeof window === "undefined") return "/";
-  return PRODUCT_URLS[productKey] || "/";
-};
-
-const COMPLETED_STATUSES = new Set([
-  "COMPLETED", "CONFIRMED", "PAID", "TICKETED", "TRAVEL_READY",
-]);
-const PENDING_STATUSES = new Set([
-  "DRAFT", "QUOTE_REQUESTED", "QUOTE_READY", "QUOTE_SENT",
-  "UNDER_REVIEW", "PAYMENT_PENDING", "PARTIALLY_PAID",
-]);
-
-export default function AppShellContainer({ productFilter = "all", activeTab = "overview", onTabChange }) {
+export default function AppShellContainer({ activeTab = "overview", onTabChange }) {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
   const { session } = useAppShellConfig();
   const user = session?.user || {};
-  const [viewingBookingId, setViewingBookingId] = useState(null);
   const [planCards, setPlanCards] = useState(null);
   const [overviewRail, setOverviewRail] = useState(null);
   const [metricsDefinition, setMetricsDefinition] = useState(null);
-  const [recentBookingsEmptyState, setRecentBookingsEmptyState] = useState(null);
-  const [bookingTableDefinition, setBookingTableDefinition] = useState(null);
+  const [dashboardData, setDashboardData] = useState(null);
   const [overviewDefinitionLoading, setOverviewDefinitionLoading] = useState(true);
-
-  // Keep shareable booking-detail URLs in sync with the reusable bookings view.
-  useEffect(() => {
-    setViewingBookingId(activeTab === "bookings" ? searchParams.get("bookingId") : null);
-  }, [activeTab, searchParams]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadOverviewDefinition() {
-      try {
-        const response = await fetchData("/pages/app-shell/app-shell");
-        const component = response?.component;
-        const widgets = component?.structure?.widgets || [];
-        const contentFor = (type) => {
-          const widget = widgets.find((item) => item?.type === type);
-          return widget?.props?.dataKey ? component?.data?.[widget.props.dataKey] : null;
-        };
-
-        if (!cancelled) {
-          setPlanCards(contentFor("PlanCards"));
-          setOverviewRail(contentFor("OverviewRail"));
-          const metricsWidget = widgets.find((item) => item?.type === "DashboardMetrics");
-          setMetricsDefinition(metricsWidget ? {
-            ...metricsWidget.props,
-            labels: component?.elements?.labels || {},
-          } : null);
-          setRecentBookingsEmptyState(component?.data?.recentBookingsEmptyState || null);
-          const bookingTableWidget = widgets.find((item) => item?.type === "BookingTable");
-          setBookingTableDefinition(bookingTableWidget ? {
-            props: bookingTableWidget.props,
-            labels: component?.elements?.labels || {},
-            options: component?.dataScope?.options || {},
-          } : null);
-        }
-      } catch {
-        if (!cancelled) {
-          setPlanCards(null);
-          setOverviewRail(null);
-          setMetricsDefinition(null);
-          setRecentBookingsEmptyState(null);
-          setBookingTableDefinition(null);
-        }
-      } finally {
-        if (!cancelled) setOverviewDefinitionLoading(false);
-      }
-    }
-
-    loadOverviewDefinition();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const [stats, setStats] = useState({
-    totalBookings: 0,
-    totalFavorites: 0,
-    tripsCompleted: 0,
-    pendingBookings: 0,
-  });
-  const [bookings, setBookings] = useState([]);
-  const [bookingsLoading, setBookingsLoading] = useState(true);
   const [favorites, setFavorites] = useState([]);
   const [favoritesLoading, setFavoritesLoading] = useState(true);
   const [profile, setProfile] = useState(null);
   const [profileSaving, setProfileSaving] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function loadProfile() {
-      try {
-        const res = await fetchData("/auth/profile").catch(() => null);
-        if (!cancelled && res?.status === "success") {
-          setProfile(res.componentData?.data || null);
-        }
-      } catch {}
-    }
-    loadProfile();
-    return () => { cancelled = true; };
+  // The dashboard page definition carries user-scoped data (metrics, recent
+  // bookings & enquiries, upcoming trips) in the same response as the markup.
+  const loadOverview = useCallback(() => {
+    setOverviewDefinitionLoading(true);
+    return fetchData("/pages/app-shell/app-shell")
+      .then((response) => {
+        const component = response?.component;
+        const widgets = component?.structure?.widgets || [];
+        const widgetFor = (type) => widgets.find((item) => item?.type === type);
+        const contentFor = (type) => {
+          const widget = widgetFor(type);
+          return widget?.props?.dataKey ? component?.data?.[widget.props.dataKey] : null;
+        };
+        const emptyStateFor = (type) => {
+          const widget = widgetFor(type);
+          return widget?.props?.emptyStateKey
+            ? component?.data?.[widget.props.emptyStateKey]
+            : null;
+        };
+        const metricsWidget = widgetFor("DashboardMetrics");
+        if (!metricsWidget) return;
+        setMetricsDefinition({
+          items: metricsWidget.props?.items || [],
+          labels: component.elements.labels || {},
+          ariaLabelRef: metricsWidget.props?.ariaLabelRef,
+        });
+        setPlanCards(contentFor("PlanCards"));
+        setOverviewRail(contentFor("OverviewRail"));
+        setDashboardData({
+          metrics: component?.data?.metrics || {},
+          recentActivity: contentFor("RecentBookings") || [],
+          upcomingTrips: contentFor("UpcomingTrips") || [],
+          recentEmptyState: emptyStateFor("RecentBookings"),
+          upcomingEmptyState: emptyStateFor("UpcomingTrips"),
+        });
+      })
+      .catch(() => {
+        setPlanCards(null);
+        setOverviewRail(null);
+        setDashboardData(null);
+      })
+      .finally(() => setOverviewDefinitionLoading(false));
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
-    async function loadBookings() {
-      setBookingsLoading(true);
-      try {
-        const params = { limit: 100, skip: 0 };
-        if (productFilter && productFilter !== "all") params.product = productFilter;
+    loadOverview();
+  }, [loadOverview]);
 
-        const res = await fetchData("/engine/my-bookings", { params });
-        if (!res || res.status !== "success") throw new Error(res?.message || "Failed to load bookings");
-
-        const data = res.componentData?.data?.bookings || [];
-        const total = Number(res.componentData?.data?.total || data.length || 0);
-
-        if (!cancelled) {
-          setBookings(data);
-          setStats((prev) => ({
-            ...prev,
-            totalBookings: total,
-            pendingBookings: data.filter((b) => PENDING_STATUSES.has(String(b.status || "").toUpperCase())).length,
-            tripsCompleted: data.filter((b) => COMPLETED_STATUSES.has(String(b.status || "").toUpperCase())).length,
-          }));
-        }
-      } catch {
-        if (!cancelled) setBookings([]);
-      } finally {
-        if (!cancelled) setBookingsLoading(false);
-      }
-    }
-    loadBookings();
-    return () => { cancelled = true; };
-  }, [productFilter]);
+  // Keep dashboard numbers honest while the overview tab is visible: realtime
+  // events refresh instantly; focus/tab activation only runs as a fallback.
+  const { isConnected } = useRealtimeStatus();
+  useEnquiryRealtime(activeTab === "overview" ? loadOverview : null);
+  useRefreshOnActivation(loadOverview, {
+    enabled: activeTab === "overview" && !isConnected,
+    resource: "enquiries",
+  });
 
   useEffect(() => {
-    if (activeTab !== "bookings" && activeTab !== "overview") return;
-    const interval = setInterval(async () => {
-      try {
-        const params = { limit: 100, skip: 0 };
-        if (productFilter && productFilter !== "all") params.product = productFilter;
-
-        const res = await fetchData("/engine/my-bookings", { params });
-        if (!res || res.status !== "success") return;
-
-        const data = res.componentData?.data?.bookings || [];
-        const total = Number(res.componentData?.data?.total || data.length || 0);
-
-        setBookings(data);
-        setStats((prev) => ({
-          ...prev,
-          totalBookings: total,
-          pendingBookings: data.filter((b) => PENDING_STATUSES.has(String(b.status || "").toUpperCase())).length,
-          tripsCompleted: data.filter((b) => COMPLETED_STATUSES.has(String(b.status || "").toUpperCase())).length,
-        }));
-      } catch {}
-    }, 15000);
-    return () => clearInterval(interval);
-  }, [activeTab, productFilter]);
+    let cancelled = false;
+    fetchData("/auth/profile")
+      .then((res) => {
+        if (!cancelled && res?.status === "success") setProfile(res.componentData?.data || null);
+      })
+      .catch(() => null);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const loadFavorites = useCallback(async () => {
     setFavoritesLoading(true);
     try {
       const res = await fetchData("/tours.json/favorites");
-      if (res?.status === "success") {
-        const data = res.componentData?.data || [];
-        setFavorites(data);
-        setStats((prev) => ({ ...prev, totalFavorites: data.length }));
-      } else {
-        setFavorites([]);
-      }
+      setFavorites(res?.status === "success" ? res.componentData?.data || [] : []);
     } catch {
       setFavorites([]);
     } finally {
@@ -196,8 +112,12 @@ export default function AppShellContainer({ productFilter = "all", activeTab = "
   }, []);
 
   useEffect(() => {
-    loadFavorites();
-  }, [loadFavorites]);
+    if (activeTab === "overview") loadFavorites();
+  }, [activeTab, loadFavorites]);
+  useRefreshOnActivation(loadFavorites, {
+    enabled: activeTab === "favorites",
+    resource: "favorites",
+  });
 
   const handleSaveProfile = useCallback(async (data) => {
     setProfileSaving(true);
@@ -219,81 +139,51 @@ export default function AppShellContainer({ productFilter = "all", activeTab = "
 
   const handleRemoveFavorite = useCallback(async (item) => {
     const tourId = item?._id || item?.id;
-    const product = item?.product || "trevista";
     if (!tourId) return;
-    try {
-      await fetchData("/tours.json/favorite/toggle", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: { tourId, product },
-      });
-      loadFavorites();
-    } catch {
-      loadFavorites();
-    }
-  }, [loadFavorites]);
+    await fetchData("/tours.json/favorite/toggle", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: { tourId, product: item?.product || "trevista" },
+    }).catch(() => null);
+    notifyDataChanged("favorites");
+  }, []);
 
-  const handleViewFavorite = useCallback((item) => {
-    const ref = slugify(item?.title || item?.name) || item?._id || item?.id;
-    const product = item?.product || "trevista";
-    if (!ref) return;
-    const base = getProductBaseUrl(product);
-    if (product === "trevio") {
-      navigate(`/trip/${ref}`);
-    } else {
-      window.open(`${base}/trevista/${ref}`, "_blank", "noopener,noreferrer");
-    }
-  }, [navigate]);
-
-  const handleViewBooking = useCallback((booking) => {
-    const bookingId = booking.bookingId || booking.id || booking._id;
-    if (!bookingId) return;
-    const next = new URLSearchParams(searchParams);
-    next.set("tab", "bookings");
-    next.set("bookingId", bookingId);
-    setSearchParams(next);
-    setViewingBookingId(bookingId);
-  }, [searchParams, setSearchParams]);
-
-  const handleCloseBooking = useCallback(() => {
-    const next = new URLSearchParams(searchParams);
-    next.delete("bookingId");
-    setSearchParams(next);
-    setViewingBookingId(null);
-  }, [searchParams, setSearchParams]);
-
-  if (viewingBookingId) {
-    return (
-      <BookingDetail
-        bookingId={viewingBookingId}
-        onBack={handleCloseBooking}
-      />
-    );
-  }
+  const handleViewFavorite = useCallback(
+    (item) => {
+      const ref = slugify(item?.title || item?.name) || item?._id || item?.id;
+      const product = item?.product || "trevista";
+      if (!ref) return;
+      if (product === "trevio") navigate(`/trip/${ref}`);
+      else if (product === "trevista") navigate(`/tour/${ref}`);
+      else
+        window.open(
+          `${PRODUCT_URLS[product] || "/"}/${product}/${ref}`,
+          "_blank",
+          "noopener,noreferrer",
+        );
+    },
+    [navigate],
+  );
 
   return (
     <div className="app-shell-page">
       {activeTab === "overview" && (
         <OverviewView
           user={user}
-          stats={stats}
+          stats={{
+            ...(dashboardData?.metrics || {}),
+            totalFavorites: favorites.length,
+          }}
           metricsDefinition={metricsDefinition}
+          recentActivity={dashboardData?.recentActivity || []}
+          upcomingTrips={dashboardData?.upcomingTrips || []}
+          recentEmptyState={dashboardData?.recentEmptyState}
+          upcomingEmptyState={dashboardData?.upcomingEmptyState}
           planCards={planCards}
           overviewRail={overviewRail}
           overviewDefinitionLoading={overviewDefinitionLoading}
-          overviewStatsLoading={bookingsLoading || favoritesLoading}
-          bookingsLoading={bookingsLoading}
-          recentBookingsEmptyState={recentBookingsEmptyState}
-          recentBookings={bookings}
+          overviewStatsLoading={favoritesLoading && !metricsDefinition}
           onTabChange={onTabChange}
-          onViewBooking={handleViewBooking}
-        />
-      )}
-      {activeTab === "bookings" && (
-        <BookingsView
-          definition={bookingTableDefinition}
-          loading={overviewDefinitionLoading}
-          onViewBooking={handleViewBooking}
         />
       )}
       {activeTab === "favorites" && (
@@ -304,6 +194,7 @@ export default function AppShellContainer({ productFilter = "all", activeTab = "
           onViewFavorite={handleViewFavorite}
         />
       )}
+      {activeTab === "bookings" && <BookingsView />}
       {activeTab === "profile" && (
         <ProfileView
           user={profile || user}

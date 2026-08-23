@@ -1,3 +1,5 @@
+@import "@packages/trem-design-tokens/scss";
+
 .trem-fab {
   position: fixed;
   bottom: 0;
@@ -5,12 +7,15 @@
   right: 0;
   z-index: 100;
   padding: 0.75rem 1rem;
-  transition: background 200ms ease, box-shadow 200ms ease, padding 200ms ease;
+  transition:
+    background 200ms ease,
+    box-shadow 200ms ease,
+    padding 200ms ease;
 
   &--has-bg {
     background: var(--surface-elevated);
     border-top: 1px solid var(--border);
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow-md);
   }
 
   &--no-bg {
@@ -57,7 +62,7 @@
   }
 
   &__error {
-    background: rgba(185, 28, 28, 0.1);
+    background: var(--danger-soft);
     color: var(--color-danger);
     padding: 0.65rem 0.9rem;
     font-size: 0.82rem;
@@ -66,7 +71,7 @@
     align-items: center;
     gap: 0.4rem;
     margin: 0 -1rem 0.75rem;
-    border-bottom: 1px solid rgba(185, 28, 28, 0.2);
+    border-bottom: 1px solid var(--color-danger);
   }
 
   &__note {
@@ -163,7 +168,7 @@
       border: 1px solid var(--border);
       border-radius: 14px;
       overflow: hidden;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      box-shadow: var(--shadow-md);
     }
   }
 
@@ -204,9 +209,10 @@
       height: 48px;
       padding: 0;
       justify-content: center;
-      background: transparent;
-      border-color: transparent;
-      color: var(--muted);
+      background: var(--surface-inset);
+      border: 1px solid var(--border);
+      color: var(--text);
+      box-shadow: var(--shadow-xs);
 
       @media (max-width: 768px) {
         height: 52px;
@@ -214,8 +220,9 @@
       }
 
       &:hover {
-        background: var(--surface-inset);
-        color: var(--text);
+        background: var(--primary-softer);
+        border-color: var(--color-primary);
+        color: var(--color-primary);
       }
     }
   }
@@ -229,6 +236,11 @@
 
   &__sheet-custom {
     padding: 0.75rem 0;
+  }
+
+  &__overflow-sheet .trem-bottom-sheet__panel {
+    height: auto;
+    max-height: 70vh;
   }
 
   &__sheet-btn {
@@ -280,6 +292,10 @@
 
 @media (min-width: 769px) {
   .trem-fab {
+    &--variant-mobile-navigation {
+      display: none;
+    }
+
     padding: 0.75rem 2rem;
 
     &--hide-desktop {
@@ -296,7 +312,7 @@
       border-radius: 16px;
       border: 1px solid var(--border);
       background: var(--surface-elevated);
-      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
+      box-shadow: var(--shadow-lg);
 
       &.trem-fab--no-bg {
         background: transparent;
@@ -311,7 +327,7 @@
           margin: 0;
           padding: 0.55rem 1rem;
           border-radius: 16px 16px 0 0;
-          border-bottom: 1px solid rgba(185, 28, 28, 0.2);
+          border-bottom: 1px solid var(--color-danger);
         }
 
         .trem-fab__inner {
@@ -377,7 +393,7 @@
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: $breakpoint-md) {
   .trem-fab {
     padding: 0.75rem;
     padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
@@ -401,8 +417,8 @@
         .trem-fab__error {
           margin: 0;
           padding: 0.6rem 0.9rem;
-          background: rgba(185, 28, 28, 0.95);
-          color: #fff;
+          background: var(--color-danger);
+          color: var(--color-on-primary);
           border-bottom: none;
           border-radius: 14px 14px 0 0;
           font-weight: 600;
@@ -452,5 +468,110 @@
         padding: 0.5rem 0.75rem;
       }
     }
+
+    &--variant-mobile-navigation {
+      z-index: 300;
+      display: block;
+      padding: 0 0 env(safe-area-inset-bottom, 0px);
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      pointer-events: none;
+    }
+  }
+
+  .trem-fab__mobile-nav {
+    width: 100%;
+    min-height: $space-18;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    align-items: end;
+    padding: $space-1 $space-1-5 $space-1-5;
+    border: 1px solid var(--border);
+    border-radius: $radius-md $radius-md 0 0;
+    background: var(--surface-glass-strong);
+    box-shadow: var(--shadow-lg);
+    pointer-events: auto;
+    isolation: isolate;
+  }
+
+  .trem-fab__mobile-nav-item.ui-button {
+    min-width: 0;
+    min-height: $space-14;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: $space-1;
+    padding: $space-1 $space-1-25;
+    border: 0;
+    border-radius: $radius-sm;
+    color: var(--nav-text-muted);
+    background: transparent;
+    font-size: $font-size-sm;
+    font-weight: $font-medium;
+    line-height: $line-height-sm;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--nav-text-active);
+      background: var(--primary-softer);
+    }
+
+    &.is-active:not(.is-emphasized) {
+      color: var(--color-on-primary);
+      background: var(--color-primary);
+      box-shadow: var(--shadow-sm);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--focus-ring);
+      outline-offset: 1px;
+    }
+
+    &.is-emphasized {
+      justify-content: flex-end;
+      background: transparent;
+
+      &:hover,
+      &:focus-visible,
+      &.is-active {
+        background: transparent;
+      }
+
+      .trem-fab__mobile-nav-icon {
+        width: $space-12;
+        height: $space-12;
+        margin-top: -$space-5;
+        border: $space-1 solid var(--surface-elevated);
+        border-radius: $radius-circle;
+        background: var(--color-primary);
+        color: var(--color-on-primary);
+        box-shadow: var(--shadow-md);
+      }
+
+      .trem-fab__mobile-nav-label {
+        color: var(--nav-text-active);
+        font-weight: $font-semibold;
+      }
+    }
+  }
+
+  .trem-fab__mobile-nav-icon {
+    width: $space-7;
+    height: $space-6;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+  }
+
+  .trem-fab__mobile-nav-label {
+    width: 100%;
+    overflow: visible;
+    text-align: center;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: normal;
   }
 }

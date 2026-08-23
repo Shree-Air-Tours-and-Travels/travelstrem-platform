@@ -193,33 +193,47 @@ export default function InputField({
   value = "",
   onChange,
   placeholder,
+  label,
+  required,
   error,
   disabled,
   className = "",
   maxLength,
+  min,
+  max,
+  step,
+  inputMode,
+  ariaLabel,
   countryCode: initialCountryCode = "+91",
   onCountryCodeChange,
+  ...rest
 }) {
   const isTel = variant === "tel";
   const isMonthYear = variant === "monthYear";
   const [cc, setCc] = useState(initialCountryCode);
 
-  const handleChange = useCallback((e) => {
-    let val = e.target.value;
-    if (isTel) {
-      val = val.replace(/\D/g, "").slice(0, maxLength || 10);
-    }
-    if (isMonthYear) {
-      val = val.replace(/\D/g, "").slice(0, 4);
-      if (val.length >= 3) val = val.slice(0, 2) + "/" + val.slice(2);
-    }
-    onChange?.(val);
-  }, [isTel, isMonthYear, maxLength, onChange]);
+  const handleChange = useCallback(
+    (e) => {
+      let val = e.target.value;
+      if (isTel) {
+        val = val.replace(/\D/g, "").slice(0, maxLength || 10);
+      }
+      if (isMonthYear) {
+        val = val.replace(/\D/g, "").slice(0, 4);
+        if (val.length >= 3) val = val.slice(0, 2) + "/" + val.slice(2);
+      }
+      onChange?.(val);
+    },
+    [isTel, isMonthYear, maxLength, onChange],
+  );
 
-  const handleCountryCode = useCallback((code) => {
-    setCc(code);
-    onCountryCodeChange?.(code);
-  }, [onCountryCodeChange]);
+  const handleCountryCode = useCallback(
+    (code) => {
+      setCc(code);
+      onCountryCodeChange?.(code);
+    },
+    [onCountryCodeChange],
+  );
 
   const ccItems = DEFAULT_COUNTRY_CODES.map((c) => ({
     id: c.code,
@@ -229,30 +243,56 @@ export default function InputField({
   }));
 
   return (
-    <div className={`trem-input trem-input--${variant} ${error ? "trem-input--error" : ""} ${className}`.trim()}>
-      {isTel && (
-        <Dropdown
-          items={ccItems}
-          variant="searchable"
-          closeOnSelect
-          align="left"
-          searchPlaceholder="Search country code..."
-          trigger={({ open }) => (
-            <Button variant="text" primaryClassName="trem-input__cc-trigger" iconRight="chevronDown" text={cc} tabIndex={-1} />
-          )}
-        />
+    <div
+      className={`trem-input trem-input--${variant} ${label ? "trem-input--labelled" : ""} ${error ? "trem-input--error" : ""} ${className}`.trim()}
+    >
+      {label && (
+        <span className="trem-input__label">
+          {label}
+          {required && <span className="trem-input__required"> *</span>}
+        </span>
       )}
-      <input
-        className="trem-input__field"
-        type={isTel ? "tel" : variant === "number" || isMonthYear ? "text" : variant}
-        inputMode={variant === "number" || isTel || isMonthYear ? "numeric" : undefined}
-        value={value}
-        onChange={handleChange}
-        placeholder={placeholder || (isMonthYear ? "MM/YY" : undefined)}
-        disabled={disabled}
-        maxLength={isTel ? maxLength || 10 : isMonthYear ? 5 : maxLength}
-        autoComplete={isTel ? "tel" : variant === "email" ? "email" : "off"}
-      />
+      <div className="trem-input__row">
+        {isTel && (
+          <Dropdown
+            items={ccItems}
+            variant="searchable"
+            closeOnSelect
+            align="left"
+            portalWidth={280}
+            menuClassName="trem-input__country-menu"
+            searchPlaceholder="Search country code..."
+            trigger={({ open }) => (
+              <Button
+                variant="text"
+                primaryClassName="trem-input__cc-trigger"
+                iconRight="chevronDown"
+                text={cc}
+                tabIndex={-1}
+              />
+            )}
+          />
+        )}
+        <input
+          className="trem-input__field"
+          type={isTel ? "tel" : isMonthYear ? "text" : variant}
+          inputMode={
+            inputMode || (variant === "number" || isTel || isMonthYear ? "numeric" : undefined)
+          }
+          value={value}
+          onChange={handleChange}
+          placeholder={placeholder || (isMonthYear ? "MM/YY" : undefined)}
+          disabled={disabled}
+          maxLength={isTel ? maxLength || 10 : isMonthYear ? 5 : maxLength}
+          autoComplete={isTel ? "tel" : variant === "email" ? "email" : "off"}
+          min={min}
+          max={max}
+          step={step}
+          aria-label={ariaLabel || label || placeholder}
+          aria-invalid={Boolean(error)}
+          {...rest}
+        />
+      </div>
     </div>
   );
 }

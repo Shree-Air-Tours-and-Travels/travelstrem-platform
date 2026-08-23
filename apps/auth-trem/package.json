@@ -21,8 +21,8 @@
   },
   "scripts": {
     "prebuild": "node ../../scripts/sync-favicons.mjs auth-trem",
-    "dev": "cross-env PORT=3003 DISABLE_ESLINT_PLUGIN=true craco start",
-    "start": "cross-env PORT=3003 DISABLE_ESLINT_PLUGIN=true craco start",
+    "dev": "cross-env BROWSER=none PORT=3003 DISABLE_ESLINT_PLUGIN=true craco start",
+    "start": "cross-env BROWSER=none PORT=3003 DISABLE_ESLINT_PLUGIN=true craco start",
     "build": "DISABLE_ESLINT_PLUGIN=true craco build",
     "test": "craco test --watchAll=false",
     "eject": "react-scripts eject"

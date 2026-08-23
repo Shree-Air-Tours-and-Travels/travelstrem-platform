@@ -4,8 +4,6 @@ import { auditLog_event, detectScriptInjection } from "../services/security";
 const configuredScriptOrigins = [
   process.env.REACT_APP_TREVIO_REMOTE_ENTRY,
   process.env.REACT_APP_TREVIO_URL,
-  process.env.REACT_APP_BOOKING_ENGINE_REMOTE_ENTRY,
-  process.env.REACT_APP_BOOKING_ENGINE_URL,
 ].flatMap((value) => {
   if (!value) return [];
   try {
@@ -20,12 +18,11 @@ const isTrustedRuntimeScript = (node) => {
   if (!source) return false;
   try {
     const url = new URL(source, window.location.origin);
-    return url.origin === window.location.origin
-      || configuredScriptOrigins.includes(url.origin)
-      || (
-        process.env.NODE_ENV !== "production"
-        && ["localhost", "127.0.0.1"].includes(url.hostname)
-      );
+    return (
+      url.origin === window.location.origin ||
+      configuredScriptOrigins.includes(url.origin) ||
+      (process.env.NODE_ENV !== "production" && ["localhost", "127.0.0.1"].includes(url.hostname))
+    );
   } catch {
     return false;
   }
@@ -60,8 +57,15 @@ export default function SecurityMonitor({ children }) {
             if (tag === "script" && isTrustedRuntimeScript(node)) {
               continue;
             }
-            if (["script", "iframe", "object", "embed", "form"].includes(tag)) {
-              auditLog_event("dangerous_dom_node_added", { tag, outerHTML: node.outerHTML?.slice(0, 100) });
+            // Forms are first-class application UI and must not be treated as
+            // executable DOM. Blocking every dynamically mounted <form>
+            // removes React forms rendered through portals (including enquiry
+            // and login modals) immediately after React commits them.
+            if (["script", "iframe", "object", "embed"].includes(tag)) {
+              auditLog_event("dangerous_dom_node_added", {
+                tag,
+                outerHTML: node.outerHTML?.slice(0, 100),
+              });
               node.remove?.();
             }
           }

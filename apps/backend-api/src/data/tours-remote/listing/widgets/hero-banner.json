@@ -3,13 +3,45 @@
   "component": {
     "data": {},
     "dataScope": {
-      "options": {}
+      "options": {},
+      "optionSets": {
+        "travelMonthOptions": "trevista.travelMonthOptions",
+        "travellerOptions": "trevista.travellerCountOptions",
+        "tripStyleOptions": "trevista.tripStyleOptions",
+        "budgetOptions": "trevista.budgetOptions"
+      }
     },
     "elements": {
       "labels": {
-        "pageTitle": "Explore Curated Holiday Packages",
+        "pageTitle": "Discover, customise, and book complete holiday packages.",
         "pageSubtitle": "Trevista by TravelsTrem",
-        "pageDescription": "Handpicked getaways, personalised itineraries and seamless booking — all in one place. Discover your next unforgettable trip."
+        "eyebrow": "Curated holidays, customisable down to the details.",
+        "description": "Explore curated tours, compare hotels and inclusions, customise your itinerary, and manage the entire trip from one Trevista booking flow.",
+        "primaryActionLabel": "Explore packages",
+        "secondaryActionLabel": "Build a custom trip",
+        "trustItems": [
+          { "label": "Verified stays and experiences", "icon": "badgeCheck" },
+          { "label": "Transparent package pricing", "icon": "wallet" },
+          { "label": "Dedicated trip support", "icon": "support" }
+        ],
+        "searchTabLabel": "Holiday packages",
+        "customTabLabel": "Custom trip",
+        "searchLabels": {
+          "destination": "Destination",
+          "travelMonth": "Travel month",
+          "travellers": "Travellers",
+          "tripStyle": "Trip style",
+          "budget": "Budget",
+          "submit": "Search packages"
+        },
+        "anyLabels": {
+          "destination": "Any destination",
+          "travelMonth": "Any month",
+          "travellers": "Any group size",
+          "tripStyle": "Any style",
+          "budget": "Any budget"
+        },
+        "heroImage": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1800&q=85"
       },
       "urls": {}
     },

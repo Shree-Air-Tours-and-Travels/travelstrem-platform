@@ -15,6 +15,9 @@
     { "source": "/:path*", "destination": "/index.html" }
   ],
   "headers": [
-    { "source": "/remoteEntry.js", "headers": [{ "key": "Access-Control-Allow-Origin", "value": "*" }] }
+    {
+      "source": "/remoteEntry.js",
+      "headers": [{ "key": "Access-Control-Allow-Origin", "value": "*" }]
+    }
   ]
 }

@@ -25,7 +25,9 @@
   margin: 0 8px 8px 0;
   transform-style: preserve-3d;
   isolation: isolate;
-  transition: transform 300ms $ease-default, filter 300ms $ease-default;
+  transition:
+    transform 300ms $ease-default,
+    filter 300ms $ease-default;
 }
 
 .intl-card__back,
@@ -44,7 +46,9 @@
     linear-gradient(90deg, rgba(122, 77, 35, 0.09) 0, transparent 14%),
     repeating-linear-gradient(0deg, transparent 0 31px, rgba(23, 84, 76, 0.08) 31px 32px),
     color-mix(in srgb, var(--surface) 92%, #fff7e8 8%);
-  box-shadow: 5px 7px 0 color-mix(in srgb, var(--surface-inset) 75%, #d8c4a4 25%), var(--shadow-card);
+  box-shadow:
+    5px 7px 0 color-mix(in srgb, var(--surface-inset) 75%, #d8c4a4 25%),
+    var(--shadow-card);
 }
 
 .intl-card__back::after {
@@ -66,7 +70,9 @@
   text-transform: uppercase;
   opacity: 0;
   transform: translateY(-6px);
-  transition: opacity 260ms ease 180ms, transform 320ms ease 180ms;
+  transition:
+    opacity 260ms ease 180ms,
+    transform 320ms ease 180ms;
 }
 
 .intl-card__back-content {
@@ -82,7 +88,9 @@
   text-align: left;
   opacity: 0;
   transform: translateX(18px);
-  transition: opacity 280ms ease 150ms, transform 420ms cubic-bezier(0.2, 0.75, 0.2, 1) 120ms;
+  transition:
+    opacity 280ms ease 150ms,
+    transform 420ms cubic-bezier(0.2, 0.75, 0.2, 1) 120ms;
 }
 
 .intl-card__title {
@@ -180,16 +188,21 @@
   transform-origin: left center;
   border: 1px solid rgba(91, 67, 38, 0.12);
   border-radius: 2px $radius-sm $radius-sm 2px;
-  background:
-    repeating-linear-gradient(0deg, #fffdf7 0 5px, #eee8dc 5px 6px);
+  background: repeating-linear-gradient(0deg, #fffdf7 0 5px, #eee8dc 5px 6px);
   box-shadow: 2px 1px 3px rgba(41, 31, 21, 0.09);
   transition: transform 620ms cubic-bezier(0.2, 0.75, 0.2, 1);
   backface-visibility: hidden;
 }
 
-.intl-card__page--1 { transform: translateZ(3px); }
-.intl-card__page--2 { transform: translateZ(2px); }
-.intl-card__page--3 { transform: translateZ(1px); }
+.intl-card__page--1 {
+  transform: translateZ(3px);
+}
+.intl-card__page--2 {
+  transform: translateZ(2px);
+}
+.intl-card__page--3 {
+  transform: translateZ(1px);
+}
 
 .intl-card__cover {
   z-index: 5;
@@ -201,7 +214,9 @@
   border: 1px solid rgba(255, 255, 255, 0.18);
   background: var(--surface-inset);
   box-shadow: var(--shadow-card);
-  transition: transform 700ms cubic-bezier(0.2, 0.75, 0.2, 1), box-shadow 300ms ease;
+  transition:
+    transform 700ms cubic-bezier(0.2, 0.75, 0.2, 1),
+    box-shadow 300ms ease;
   will-change: transform;
 }
 
@@ -230,7 +245,12 @@
   inset: 0;
   background:
     linear-gradient(90deg, rgba(0, 0, 0, 0.3), transparent 14%),
-    linear-gradient(180deg, rgba(2, 18, 16, 0.08) 10%, rgba(2, 18, 16, 0.1) 38%, rgba(2, 18, 16, 0.84) 100%);
+    linear-gradient(
+      180deg,
+      rgba(2, 18, 16, 0.08) 10%,
+      rgba(2, 18, 16, 0.1) 38%,
+      rgba(2, 18, 16, 0.84) 100%
+    );
   pointer-events: none;
 }
 
@@ -347,7 +367,12 @@
   inset: 0 auto 0 0;
   width: 12px;
   border-radius: 3px 0 0 3px;
-  background: linear-gradient(90deg, rgba(0, 0, 0, 0.38), rgba(255, 255, 255, 0.1) 48%, rgba(0, 0, 0, 0.16));
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.38),
+    rgba(255, 255, 255, 0.1) 48%,
+    rgba(0, 0, 0, 0.16)
+  );
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
   pointer-events: none;
   transform: translateZ(8px);

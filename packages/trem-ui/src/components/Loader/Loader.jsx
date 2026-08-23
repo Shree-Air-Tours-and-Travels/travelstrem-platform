@@ -87,7 +87,7 @@ export default function GlobalLoader({
 
   return (
     <div
-      className={`tt-loader tt-loader--fullscreen ${hiding ? 'tt-loader--hiding' : ''} ${className}`}
+      className={`tt-loader tt-loader--fullscreen ${hiding ? "tt-loader--hiding" : ""} ${className}`}
       role="alert"
       aria-live="assertive"
       aria-busy={show}

@@ -20,12 +20,16 @@ export default function ScrollToTop({
 
     let activeField = null;
     let frame = 0;
-    const editableSelector = "input:not([type='hidden']):not([disabled]), textarea:not([disabled]), select:not([disabled]), [contenteditable='true']";
+    const editableSelector =
+      "input:not([type='hidden']):not([disabled]), textarea:not([disabled]), select:not([disabled]), [contenteditable='true']";
 
     const keepFieldVisible = () => {
       window.cancelAnimationFrame(frame);
       frame = window.requestAnimationFrame(() => {
-        const keyboardInset = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
+        const keyboardInset = Math.max(
+          0,
+          window.innerHeight - viewport.height - viewport.offsetTop,
+        );
         document.documentElement.style.setProperty("--trem-keyboard-inset", `${keyboardInset}px`);
 
         if (!activeField?.isConnected || keyboardInset < 80) return;

@@ -1,13 +1,31 @@
 import React from "react";
-import { TourCard, Title } from "../../../../index.js";
+import { Icon, TourCard } from "../../../../index.js";
 import "./SimilarTours.styles.scss";
 
 export default function SimilarToursView({ labels, tours, onView, isFavorited, onFavorite }) {
   if (!tours.length) return null;
 
   return (
-    <section className="tour-detail__section tour-detail__similar-section">
-      <Title text={labels.youMayAlsoLike || "You May Also Like"} />
+    <section
+      className="tour-detail__section tour-detail__similar-section"
+      aria-labelledby="similar-tours-title"
+    >
+      <header className="tour-detail__similar-header">
+        <span className="tour-detail__similar-header-icon" aria-hidden="true">
+          <Icon name="sparkles" size={20} />
+        </span>
+        <div className="tour-detail__similar-heading">
+          <span className="tour-detail__similar-eyebrow">Handpicked for your journey</span>
+          <h2 id="similar-tours-title">{labels.youMayAlsoLike || "You may also like"}</h2>
+          <p>
+            {labels.similarToursDescription ||
+              "More curated tours with destinations and experiences you may enjoy."}
+          </p>
+        </div>
+        <span className="tour-detail__similar-count">
+          {tours.length} {tours.length === 1 ? "tour" : "tours"}
+        </span>
+      </header>
       <div className="tour-detail__section-body">
         <div className="tour-detail__similar-scroll-wrapper">
           <div className="tour-detail__similar-scroll">
@@ -16,7 +34,7 @@ export default function SimilarToursView({ labels, tours, onView, isFavorited, o
                 <TourCard
                   tour={tour}
                   onView={onView}
-                  variant="grid"
+                  variant="list"
                   favorited={isFavorited?.(tour) ?? false}
                   onFavorite={onFavorite}
                 />
@@ -24,9 +42,10 @@ export default function SimilarToursView({ labels, tours, onView, isFavorited, o
             ))}
           </div>
         </div>
-        {tours.length > 3 && (
+        {tours.length > 1 && (
           <div className="tour-detail__similar-hint">
-            <span>Scroll to see more</span>
+            <Icon name="chevronRight" size={14} />
+            <span>Swipe to explore more tours</span>
           </div>
         )}
       </div>

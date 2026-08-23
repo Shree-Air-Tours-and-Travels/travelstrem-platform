@@ -5,9 +5,9 @@ import BottomSheet from "../BottomSheet/BottomSheet.jsx";
 import "./ListingDropdown.styles.scss";
 
 function useMobileLayout(breakpoint) {
-  const [mobile, setMobile] = useState(() => (
-    typeof window !== "undefined" && window.innerWidth <= breakpoint
-  ));
+  const [mobile, setMobile] = useState(
+    () => typeof window !== "undefined" && window.innerWidth <= breakpoint,
+  );
 
   useEffect(() => {
     const update = () => setMobile(window.innerWidth <= breakpoint);
@@ -68,7 +68,8 @@ export default function ListingDropdown({
   useEffect(() => {
     if (!open || mobile) return undefined;
     const handlePointer = (event) => {
-      if (anchorRef?.current?.contains(event.target) || panelRef.current?.contains(event.target)) return;
+      if (anchorRef?.current?.contains(event.target) || panelRef.current?.contains(event.target))
+        return;
       onClose?.();
     };
     const handleKey = (event) => {
@@ -86,19 +87,23 @@ export default function ListingDropdown({
     <>
       {loading ? loadingContent : null}
       {!loading && !groups.length ? emptyContent : null}
-      {!loading ? groups.map((group, groupIndex) => (
-        <section className="trem-listing-dropdown__group" key={group.id || groupIndex}>
-          {group.label ? <h2>{group.label}</h2> : null}
-          <div className="trem-listing-dropdown__list" role="group" aria-label={group.label}>
-            {group.items.map((item, itemIndex) => children({
-              item,
-              group,
-              groupIndex,
-              itemIndex,
-            }))}
-          </div>
-        </section>
-      )) : null}
+      {!loading
+        ? groups.map((group, groupIndex) => (
+            <section className="trem-listing-dropdown__group" key={group.id || groupIndex}>
+              {group.label ? <h2>{group.label}</h2> : null}
+              <div className="trem-listing-dropdown__list" role="group" aria-label={group.label}>
+                {group.items.map((item, itemIndex) =>
+                  children({
+                    item,
+                    group,
+                    groupIndex,
+                    itemIndex,
+                  }),
+                )}
+              </div>
+            </section>
+          ))
+        : null}
     </>
   );
 
@@ -115,7 +120,9 @@ export default function ListingDropdown({
         className={`trem-listing-dropdown__sheet ${className}`.trim()}
       >
         {mobileHeader}
-        <div className="trem-listing-dropdown__content" id={id}>{content}</div>
+        <div className="trem-listing-dropdown__content" id={id}>
+          {content}
+        </div>
       </BottomSheet>
     );
   }
@@ -138,11 +145,13 @@ export default function ListingDropdown({
 ListingDropdown.propTypes = {
   open: PropTypes.bool,
   anchorRef: PropTypes.object,
-  groups: PropTypes.arrayOf(PropTypes.shape({
-    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-    label: PropTypes.string,
-    items: PropTypes.array.isRequired,
-  })),
+  groups: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+      label: PropTypes.string,
+      items: PropTypes.array.isRequired,
+    }),
+  ),
   children: PropTypes.func.isRequired,
   mobileHeader: PropTypes.node,
   mobileTitle: PropTypes.string,

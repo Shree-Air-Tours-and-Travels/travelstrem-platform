@@ -38,6 +38,7 @@
 }
 
 .dash-main {
+  --wizard-host-offset: 260px;
   flex: 1;
   min-width: 0;
   max-width: calc(100vw - 260px);
@@ -48,6 +49,7 @@
   min-height: 100dvh;
 
   @media (max-width: 768px) {
+    --wizard-host-offset: 0px;
     width: 100%;
     max-width: 100vw;
     margin-left: 0;
