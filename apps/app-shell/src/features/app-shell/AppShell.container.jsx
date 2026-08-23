@@ -153,8 +153,7 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
       const ref = slugify(item?.title || item?.name) || item?._id || item?.id;
       const product = item?.product || "trevista";
       if (!ref) return;
-      if (product === "trevio") navigate(`/trip/${ref}`);
-      else if (product === "trevista") navigate(`/tour/${ref}`);
+      if (product === "trevista") navigate(`/tour/${ref}`);
       else
         window.open(
           `${PRODUCT_URLS[product] || "/"}/${product}/${ref}`,

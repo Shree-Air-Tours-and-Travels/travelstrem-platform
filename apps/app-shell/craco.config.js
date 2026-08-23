@@ -5,16 +5,13 @@ const ModuleScopePlugin = require("react-dev-utils/ModuleScopePlugin");
 const appSrc = path.resolve(__dirname, "src");
 const packagesSrc = path.resolve(__dirname, "../../packages");
 const backendTarget =
-  process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace(/\/api\/?$/, "");
+  process.env.REACT_APP_BACKEND_URL ||
+  process.env.REACT_APP_API_URL?.replace(/\/api\/?$/, "") ||
+  "http://localhost:5000";
 const remoteEntry = (explicitEntry, baseUrl, fallback) => {
   const value = explicitEntry || baseUrl || fallback;
   return value.endsWith("/remoteEntry.js") ? value : `${value.replace(/\/$/, "")}/remoteEntry.js`;
 };
-const trevioRemoteEntry = remoteEntry(
-  process.env.REACT_APP_TREVIO_REMOTE_ENTRY,
-  process.env.REACT_APP_TREVIO_URL,
-  "http://localhost:3005",
-);
 const trevistaRemoteEntry = remoteEntry(
   process.env.REACT_APP_TREVISTA_REMOTE_ENTRY,
   process.env.REACT_APP_TREVISTA_URL,
@@ -77,7 +74,6 @@ module.exports = {
         new container.ModuleFederationPlugin({
           name: "app_shell",
           remotes: {
-            trevio: `trevio@${trevioRemoteEntry}`,
             trevista: `trevista@${trevistaRemoteEntry}`,
           },
           shared: {

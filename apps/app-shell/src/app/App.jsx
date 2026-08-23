@@ -38,7 +38,6 @@ import {
 } from "./routing/navigationRegistry";
 import "../styles/global.scss";
 
-const TrevioApp = React.lazy(() => import("trevio/App"));
 const TrevistaApp = React.lazy(() => import("trevista/App"));
 
 class RemoteBoundary extends React.Component {
@@ -331,11 +330,7 @@ function AppShell() {
   }
 
   const remoteElement =
-    destination.renderer === "trevio" ? (
-      <TrevioApp embedded userSession={session} basename={destination.path} />
-    ) : destination.renderer === "trevista" ? (
-      <TrevistaApp embedded userSession={session} />
-    ) : null;
+    destination.renderer === "trevista" ? <TrevistaApp embedded userSession={session} /> : null;
 
   return (
     <div
