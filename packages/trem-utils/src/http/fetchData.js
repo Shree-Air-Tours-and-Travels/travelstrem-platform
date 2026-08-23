@@ -7,7 +7,9 @@ const normalizeBase = (raw) => {
 };
 
 const createDefaultApi = () => {
-  const normalized = normalizeBase(process.env.REACT_APP_API_URL || "") ?? "";
+  const configuredApiUrl = process.env.REACT_APP_API_URL;
+  const configuredBackendUrl = process.env.REACT_APP_BACKEND_URL;
+  const normalized = normalizeBase(configuredApiUrl || configuredBackendUrl || "") ?? "";
   const baseURL = (normalized.endsWith("/api") ? normalized : `${normalized}/api`).replace(
     /([^:]\/)\/+/g,
     "$1",
