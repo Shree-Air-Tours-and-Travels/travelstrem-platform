@@ -27,19 +27,51 @@ export const normalizePortalScope = (value) =>
 
 export const getPortalScope = (req) => normalizePortalScope(req?.headers?.[PORTAL_SESSION_HEADER]);
 
-const isProduction =
-    String(process.env.NODE_ENV || "development")
-        .trim()
-        .toLowerCase() === "production";
+/**
+ * Environment tiers:
+ * - production: hardened cookies (Secure + __Host-/Strict, or shared domain).
+ * - development: local machines; Lax over plain http keeps LAN device testing working.
+ * - test: HOSTED non-production (e.g. api-*.onrender.com behind
+ *   auth-dev.travelstrem.com). Frontend and API sit on different sites there,
+ *   and browsers discard Strict/Lax cookies on cross-site XHR — which surfaced
+ *   as "login succeeds but /session stays unauthenticated". This tier therefore
+ *   defaults to SameSite=None; Secure without the __Host- prefix.
+ */
+const rawNodeEnv = String(process.env.NODE_ENV || "development")
+    .trim()
+    .toLowerCase();
+export const ENV_TIER =
+    rawNodeEnv === "production" ? "production" : rawNodeEnv === "test" ? "test" : "development";
+const isProduction = ENV_TIER === "production";
+const isTestTier = ENV_TIER === "test";
+
 const sharedCookieDomain = String(process.env.AUTH_COOKIE_DOMAIN || "").trim();
 const useSharedCookieDomain = isProduction && Boolean(sharedCookieDomain);
+
+/**
+ * Optional explicit override for production deployments whose API lives on a
+ * different site than the frontends. Set AUTH_COOKIE_SAMESITE=none to emit
+ * SameSite=None; Secure cookies instead of __Host-/Strict.
+ */
+const configuredSameSite = String(process.env.AUTH_COOKIE_SAMESITE || "")
+    .trim()
+    .toLowerCase();
+const useCrossSiteCookies = ["none", "cross-site"].includes(configuredSameSite);
+
+const cookieSameSite =
+    useCrossSiteCookies || isTestTier
+        ? "none"
+        : isProduction && !useSharedCookieDomain
+          ? "strict"
+          : "lax";
 
 export const getPortalCookieNames = (reqOrScope) => {
     const scope =
         typeof reqOrScope === "string"
             ? normalizePortalScope(reqOrScope)
             : getPortalScope(reqOrScope);
-    const prefix = isProduction && !useSharedCookieDomain ? "__Host-" : "";
+    const prefix =
+        isProduction && !useSharedCookieDomain && cookieSameSite === "strict" ? "__Host-" : "";
     return {
         scope,
         access: `${prefix}trem-${scope}-token`,
@@ -49,8 +81,9 @@ export const getPortalCookieNames = (reqOrScope) => {
 
 export const portalCookieOptions = ({ maxAge = 0 } = {}) => ({
     httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction && !useSharedCookieDomain ? "strict" : "lax",
+    // SameSite=None requires the Secure attribute per spec.
+    secure: cookieSameSite === "none" ? true : isProduction,
+    sameSite: cookieSameSite,
     path: "/",
     ...(useSharedCookieDomain ? { domain: sharedCookieDomain } : {}),
     maxAge,

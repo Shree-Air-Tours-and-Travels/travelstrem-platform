@@ -1,11 +1,22 @@
 import {
     getPortalCookieNames,
     getPortalScope,
+    portalCookieOptions,
     readPortalAccessToken,
     readPortalRefreshToken,
 } from "../../core/auth/portalSession.js";
 
 describe("portal-scoped authentication sessions", () => {
+    test("hosted test tier defaults to cross-site friendly cookies", async () => {
+        const { ENV_TIER } = await import("../../core/auth/portalSession.js");
+        expect(ENV_TIER).toBe("test"); // Jest runs with NODE_ENV=test
+
+        const options = portalCookieOptions({ maxAge: 1000 });
+        expect(options.sameSite).toBe("none"); // survives cross-site XHR (frontend ≠ API site)
+        expect(options.secure).toBe(true); // mandatory pairing for SameSite=None
+        expect(options.httpOnly).toBe(true);
+        expect(getPortalCookieNames("customer").access).toBe("trem-customer-token"); // no __Host- prefix
+    });
     test("defaults unknown and missing portal headers to customer", () => {
         expect(getPortalScope({ headers: {} })).toBe("customer");
         expect(getPortalScope({ headers: { "x-travelstrem-portal": "unknown" } })).toBe("customer");
