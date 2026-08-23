@@ -11,8 +11,8 @@ describe("navigationRegistry", () => {
   const config = normalizeNavigationConfig(FALLBACK_NAVIGATION_CONFIG);
 
   it("resolves backend aliases and query tabs to registered destinations", () => {
-    expect(resolveDestination(config, { pathname: "/trip/bali", search: "" }).renderer).toBe(
-      "trevio",
+    expect(resolveDestination(config, { pathname: "/tour/bali", search: "" }).renderer).toBe(
+      "trevista",
     );
     expect(resolveDestination(config, { pathname: "/", search: "?tab=favorites" }).id).toBe(
       "favorites",
@@ -27,7 +27,7 @@ describe("navigationRegistry", () => {
 
   it("keeps account destinations protected from guest mode", () => {
     expect(isGuestAccessibleDestination({ id: "trevista" })).toBe(true);
-    expect(isGuestAccessibleDestination({ id: "trevio" })).toBe(true);
+    expect(isGuestAccessibleDestination({ id: "trevio" })).toBe(false);
     expect(isGuestAccessibleDestination({ id: "favorites" })).toBe(false);
   });
 
@@ -50,7 +50,7 @@ describe("navigationRegistry", () => {
   });
 
   it("allows same-origin paths and blocks non-allowlisted external origins", () => {
-    expect(resolveNavigationIntent(config, "/trip/bali", "https://dashboard.test").type).toBe(
+    expect(resolveNavigationIntent(config, "/tour/bali", "https://dashboard.test").type).toBe(
       "internal-path",
     );
     expect(

@@ -1,7 +1,7 @@
 const ID_PATTERN = /^[a-z0-9][a-z0-9._-]{0,63}$/i;
-const RENDERERS = new Set(["app-shell", "trevio", "trevista"]);
+const RENDERERS = new Set(["app-shell", "trevista"]);
 const KINDS = new Set(["tab", "remote", "internal", "external"]);
-const GUEST_ACCESSIBLE_DESTINATIONS = new Set(["overview", "trevista", "trevio"]);
+const GUEST_ACCESSIBLE_DESTINATIONS = new Set(["overview", "trevista"]);
 const MOBILE_PANEL_ACTIONS = new Set(["open-primary-action"]);
 
 export const isGuestAccessibleDestination = (destination) =>
@@ -75,16 +75,6 @@ export const FALLBACK_NAVIGATION_CONFIG = {
       path: "/help",
       activeId: "support",
       patterns: ["/help", "/help/*"],
-    },
-    {
-      id: "trevio",
-      kind: "remote",
-      renderer: "trevio",
-      tab: "trevio",
-      product: "trevio",
-      path: "/",
-      activeId: "trips",
-      patterns: ["/trevio/*", "/trip/*"],
     },
     {
       id: "trevista",
