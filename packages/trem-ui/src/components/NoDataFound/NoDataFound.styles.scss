@@ -1,0 +1,76 @@
+@import "../../styles/base/typography";
+
+.trem-no-data {
+  display: grid;
+  min-height: 220px;
+  place-items: center;
+  align-content: center;
+  gap: $space-3;
+  padding: $space-7;
+  border: 1px dashed var(--border);
+  border-radius: $radius-md;
+  background: var(--card-bg);
+  text-align: center;
+
+  &__icon {
+    display: grid;
+    width: 52px;
+    height: 52px;
+    place-items: center;
+    border-radius: $radius-circle;
+    color: var(--color-primary);
+    background: var(--primary-soft);
+  }
+
+  &__copy {
+    display: grid;
+    gap: $space-1;
+    max-width: 420px;
+
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h3 {
+      color: var(--heading);
+      font-size: $font-size-md;
+      font-weight: $font-semibold;
+    }
+
+    p {
+      color: var(--muted);
+      font-size: $font-size-sm;
+      line-height: $line-height-md;
+    }
+  }
+
+  &__action {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-1;
+    margin-top: $space-1;
+    color: var(--color-primary);
+    font-size: $font-size-sm;
+    font-weight: $font-semibold;
+    text-decoration: none;
+  }
+
+  &--compact {
+    min-height: 0;
+    grid-template-columns: auto minmax(0, 1fr);
+    place-items: center start;
+    gap: $space-3;
+    padding: $space-4;
+    text-align: left;
+
+    .trem-no-data__icon {
+      width: 40px;
+      height: 40px;
+    }
+
+    .trem-no-data__action {
+      grid-column: 2;
+    }
+  }
+}

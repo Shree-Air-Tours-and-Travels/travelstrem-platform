@@ -1,10 +1,10 @@
 import React from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 
-import { AuthPage } from "@apps/auth-trem";
+import { AuthPage } from "@apps/auth";
 import ManageTours from "../features/tours/ManageTours";
+import ManageClients from "../features/clients/ManageClients";
 import BookingDetail from "../features/tours/BookingDetail/BookingDetail";
-import ScrollToTop from "../shared/ui/ScrollToTop/ScrollToTop";
 import { useAdminPortalConfig } from "./providers/AdminPortalProvider";
 import api from "../services/apiClient";
 import authService from "../services/authService";
@@ -13,7 +13,7 @@ import { emit } from "@packages/trem-events";
 const adminRoles = ["admin"];
 const isAllowedAdminRole = (session) => adminRoles.includes(session?.user?.role);
 
-const Routers = () => {
+const Routers = ({ theme = "light", onToggleTheme }) => {
     const location = useLocation();
     const { loading, session, reload } = useAdminPortalConfig();
     const fromLocation = location.state?.from;
@@ -36,39 +36,44 @@ const Routers = () => {
                     title: "Admin",
                     subtitle: "Request admin access or bootstrap master admin",
                     descriptor: "Platform",
-                    requiresSecretForEmail: "akshat.goyal@travelstrem.com",
+                    requiresSecretForEmail: process.env.REACT_APP_MASTER_ADMIN_EMAIL || "",
                 },
             ]}
             defaultRole="admin"
             afterAuthPath={afterAuthPath}
             otpLoginEnabled
+            theme={theme}
+            onToggleTheme={onToggleTheme}
+            headerBrand={{
+                name: "AdminTREM",
+                tagline: "Travel Administration · Operations · Management",
+            }}
+            formNotice={session?.isAuthenticated && !isAllowedAdminRole(session)
+                ? "This account does not have AdminTREM access."
+                : ""}
         />
     );
-
-    const adminAuthGuard = session?.isAuthenticated && !isAllowedAdminRole(session) ? (
-        <div className="admin-auth-page">
-            <div className="admin-auth-page__notice">This account does not have AdminTREM access.</div>
-            {adminAuthPage}
-        </div>
-    ) : null;
 
     if (loading) return null;
 
     if (!session?.isAuthenticated || !isAllowedAdminRole(session)) {
         return (
             <Routes>
-                <Route path="*" element={adminAuthGuard || adminAuthPage} />
+                <Route path="*" element={adminAuthPage} />
             </Routes>
         );
     }
 
     return (
         <>
-            <ScrollToTop />
             <Routes>
                 <Route path="/manage/tours" element={<ManageTours session={session} />} />
+                <Route path="/manage/trips" element={<ManageTours session={session} tab="trips" />} />
                 <Route path="/admin/tours" element={<ManageTours session={session} />} />
+                <Route path="/admin/trips" element={<ManageTours session={session} tab="trips" />} />
                 <Route path="/admin/agencies" element={<ManageTours session={session} />} />
+                <Route path="/admin/clients" element={<ManageClients session={session} />} />
+                <Route path="/manage/clients" element={<ManageClients session={session} />} />
                 <Route path="/bookings/:bookingId" element={<BookingDetail />} />
                 <Route path="*" element={<Navigate to="/manage/tours" replace />} />
             </Routes>

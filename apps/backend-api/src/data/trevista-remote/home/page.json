@@ -1,0 +1,35 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "pageTitle": "Trevista",
+        "brandSubtitle": "by TravelsTrem",
+        "navHome": "Home",
+        "navMyBookings": "My Bookings",
+        "navExplore": "Explore More",
+        "profileAction": "Profile",
+        "signInAction": "Sign in",
+        "footerBrand": "Trevista by TravelsTrem",
+        "footerDescription": "Holiday packages and customized travel planning.",
+        "emptyTourList": "No tours found for this category.",
+        "tourNotFound": "Tour not found"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "type": "TrevistaHome",
+      "source": "trevista",
+      "header": {
+        "titleRef": "pageTitle"
+      },
+      "widgets": [],
+      "config": {},
+      "actions": []
+    }
+  }
+}

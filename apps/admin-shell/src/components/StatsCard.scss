@@ -1,0 +1,79 @@
+@import "@packages/trem-design-tokens/scss";
+
+.dsc {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+  padding: $space-5;
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  text-align: left;
+
+  &--clickable {
+    cursor: pointer;
+    transition: background $duration-fast $ease-standard, border-color $duration-fast $ease-standard, box-shadow $duration-fast $ease-standard;
+
+    &:hover {
+      background: var(--neutral-soft, var(--surface-inset));
+      border-color: var(--color-primary, var(--border));
+    }
+
+    &:active {
+      transform: scale(0.98);
+    }
+
+    &:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px var(--focus-ring, rgba(79, 70, 229, 0.3));
+    }
+  }
+}
+
+.dsc__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dsc__label {
+  font-size: 13px;
+  font-weight: $font-medium;
+  color: var(--muted);
+}
+
+.dsc__icon {
+  width: $space-8;
+  height: $space-8;
+  border-radius: $radius-sm;
+  background: var(--surface-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+}
+
+.dsc__value {
+  font-size: 1.75rem;
+  font-weight: $font-bold;
+  color: var(--heading);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.dsc__trend {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-1;
+  font-size: $font-size-xs;
+  font-weight: $font-medium;
+  color: var(--muted);
+
+  &--up {
+    color: var(--success-color);
+  }
+
+  &--down {
+    color: var(--color-danger);
+  }
+}

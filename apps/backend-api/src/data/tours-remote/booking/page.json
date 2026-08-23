@@ -154,7 +154,7 @@
         "saved": "Saved",
         "needHelp": "Need help?",
         "contactSupport": "Contact support at",
-        "supportPhone": "+91 9057635580",
+        "supportPhone": "",
         "cancellationNote": "Free cancellation within 24 hours of booking",
         "sectionPersonal": "Personal Information",
         "sectionContact": "Contact Details",
@@ -240,7 +240,7 @@
         "passportExpiryPattern": "Use MM/YY format",
         "requiredEmergencyName": "Emergency contact is required",
         "requiredEmergencyPhone": "Emergency phone is required",
-        "supportPhoneUrl": "tel:+919057635580"
+        "supportPhoneUrl": ""
       },
       "urls": {}
     },

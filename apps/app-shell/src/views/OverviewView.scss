@@ -1,0 +1,206 @@
+@import "@packages/trem-design-tokens/scss";
+
+.dov__greeting {
+  margin-bottom: $space-7;
+
+  h1 {
+    font-size: $font-size-xl;
+    font-weight: $font-bold;
+    color: var(--heading);
+    margin-bottom: $space-1;
+  }
+
+  p {
+    font-size: $font-size-sm;
+    color: var(--muted);
+  }
+}
+
+.dov__stats {
+  margin-bottom: $space-8;
+}
+
+.dov__stats-preloader {
+  margin-bottom: $space-8;
+}
+
+.dov__section {
+  margin-bottom: $space-6;
+}
+
+.dov__content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(290px, 340px);
+  align-items: start;
+  gap: $space-6;
+
+  &--single {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.dov__main {
+  min-width: 0;
+}
+
+.dov__rail {
+  position: sticky;
+  top: $space-5;
+}
+
+.dov__plan-cards {
+  margin-bottom: $space-8;
+}
+
+.dov__section-title {
+  font-size: $font-size-md;
+  font-weight: $font-semibold;
+  color: var(--heading);
+  margin-bottom: $space-4;
+}
+
+.dov__recent {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+  overflow: hidden;
+}
+
+.dov__bookings-loading {
+  display: grid;
+  min-height: 180px;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+  background: var(--card-bg);
+}
+
+.dov__recent-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px $space-4;
+  border-bottom: 1px solid var(--border);
+  gap: $space-3;
+  cursor: pointer;
+  transition: background $duration-fast $ease-standard;
+
+  &:hover {
+    background: var(--neutral-soft, var(--surface-inset));
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $space-2;
+  }
+}
+
+@media (max-width: 1100px) {
+  .dov__content {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dov__rail {
+    position: static;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  }
+}
+
+.dov__recent-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.dov__recent-name {
+  font-size: $font-size-sm;
+  font-weight: $font-medium;
+  color: var(--heading);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dov__recent-meta {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  font-size: $font-size-xs;
+  color: var(--muted);
+}
+
+.dov__recent-product {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-1;
+  padding: 1px $space-2;
+  border-radius: $radius-full;
+  font-size: 11px;
+  font-weight: $font-medium;
+
+  &--trevio {
+    background: var(--secondary-soft);
+    color: var(--color-secondary);
+  }
+
+  &--trevista {
+    background: var(--primary-soft);
+    color: var(--color-primary);
+  }
+}
+
+.dov__recent-status {
+  font-size: $font-size-xs;
+  font-weight: $font-medium;
+  padding: 3px $space-2-5;
+  border-radius: $radius-full;
+  white-space: nowrap;
+
+  &--confirmed,
+  &--Paid,
+  &--COMPLETED,
+  &--CONFIRMED,
+  &--PAID,
+  &--Ticketed,
+  &--TICKETED,
+  &--Travel Ready,
+  &--TRAVEL_READY {
+    background: var(--success-soft);
+    color: var(--success-color);
+  }
+
+  &--pending,
+  &--Draft,
+  &--DRAFT,
+  &--QUOTE_REQUESTED,
+  &--Quote Requested,
+  &--UNDER_REVIEW,
+  &--Under Review,
+  &--QUOTE_READY,
+  &--Quote Ready,
+  &--QUOTE_SENT,
+  &--Quote Sent,
+  &--PAYMENT_PENDING,
+  &--Payment Pending,
+  &--PARTIALLY_PAID,
+  &--Partially Paid {
+    background: var(--warning-soft);
+    color: var(--color-warning);
+  }
+
+  &--cancelled,
+  &--CANCELLED,
+  &--Cancelled,
+  &--REFUNDED,
+  &--Refunded {
+    background: var(--danger-soft);
+    color: var(--color-danger);
+  }
+}

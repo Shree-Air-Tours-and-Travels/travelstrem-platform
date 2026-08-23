@@ -82,8 +82,9 @@ export async function saveTour(payload) {
 }
 
 export async function fetchAdminBookings() {
-    const res = await fetchData("/bookings");
-    return normalizeBookingsResponse(res);
+    const res = await fetchData("/engine/admin/bookings", { params: { limit: 100, skip: 0 } });
+    if (!res || res.status !== "success") throw new Error(res?.message || "Failed to fetch bookings");
+    return res.componentData?.data?.bookings || [];
 }
 
 export async function confirmBooking(bookingId, finalPriceData = {}) {
@@ -144,6 +145,122 @@ export async function recordAdminPayment(bookingId, amount, currency = "INR", op
             }),
         }),
         "Payment recording failed"
+    );
+}
+
+export async function approveTokenPayment(bookingId, paymentId) {
+    return expectSuccess(
+        fetchData(`/admin/bookings/${bookingId}/payments/${paymentId}/approve`, { method: "POST" }),
+        "Token approval failed"
+    );
+}
+
+export async function rejectTokenPayment(bookingId, paymentId, reason) {
+    return expectSuccess(
+        fetchData(`/admin/bookings/${bookingId}/payments/${paymentId}/reject`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: { reason },
+        }),
+        "Token rejection failed"
+    );
+}
+
+function getProofUrl(value) {
+    if (typeof value === "string") {
+        const normalized = value.trim();
+        return /^\[object Object\](?:\.html)?$/i.test(normalized) ? "" : normalized;
+    }
+    if (!value || typeof value !== "object") return "";
+    for (const key of ["secure_url", "secureUrl", "url", "href", "path", "downloadUrl", "receiptUrl", "paymentScreenshot", "file", "asset", "data"]) {
+        const resolved = getProofUrl(value[key]);
+        if (resolved) return resolved;
+    }
+    return "";
+}
+
+export async function downloadPaymentProof(bookingId, paymentId, proofValue = "") {
+    let response;
+    let resolvedProofUrl = "";
+    const proofUrl = getProofUrl(proofValue);
+    if (proofUrl) {
+        try {
+            const apiBase = new URL(api.defaults.baseURL || "/", window.location.origin);
+            resolvedProofUrl = new URL(proofUrl, apiBase.origin).toString();
+        } catch {
+            resolvedProofUrl = "";
+        }
+    }
+    if (resolvedProofUrl) {
+        try {
+            const directResponse = await fetch(resolvedProofUrl, { mode: "cors", credentials: "omit" });
+            if (!directResponse.ok) throw new Error(`Stored proof returned ${directResponse.status}`);
+            const contentType = String(directResponse.headers.get("content-type") || "").toLowerCase();
+            if (!contentType.startsWith("image/") && contentType !== "application/octet-stream") {
+                throw new Error(`Stored proof returned ${contentType || "an unsupported file type"}`);
+            }
+            response = {
+                data: await directResponse.blob(),
+                headers: { "content-type": contentType || "image/jpeg" },
+            };
+        } catch {
+            response = null;
+        }
+    }
+    if (!response) {
+        response = await api.get(
+            `/engine/${bookingId}/payments/${paymentId}/proof`,
+            { responseType: "blob" }
+        );
+    }
+    const disposition = String(response.headers?.["content-disposition"] || "");
+    const encodedName = disposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+    const plainName = disposition.match(/filename="?([^";]+)"?/i)?.[1];
+    const sourceName = resolvedProofUrl ? resolvedProofUrl.split("?")[0].split("/").pop() : "";
+    const filename = encodedName
+        ? decodeURIComponent(encodedName)
+        : (plainName || sourceName || `payment-proof-${bookingId}.jpg`);
+    const objectUrl = URL.createObjectURL(response.data);
+    const link = document.createElement("a");
+    link.href = objectUrl;
+    link.download = filename;
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+}
+
+export async function markBookingTokenPaid(bookingId, details = {}) {
+    return expectSuccess(
+        fetchData(`/admin/bookings/${bookingId}/payments/token-paid`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: details,
+        }),
+        "Token payment update failed"
+    );
+}
+
+export async function markBookingBalancePaid(bookingId, details = {}) {
+    return expectSuccess(
+        fetchData(`/admin/bookings/${bookingId}/payments/balance-paid`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: details,
+        }),
+        "Balance update failed"
+    );
+}
+
+export async function refundBookingPayment(bookingId, details = {}) {
+    return expectSuccess(
+        fetchData(`/admin/bookings/${bookingId}/payments/refund`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: details,
+        }),
+        "Refund failed"
     );
 }
 
@@ -214,4 +331,122 @@ export async function uploadTourImage(file) {
         res?.url;
     if (!url) throw new Error(res?.message || "Upload returned no URL");
     return url;
+}
+
+const TRIP_BASE = "/trevio/admin/trips";
+
+function normalizeTripsResponse(res) {
+    if (!res || res.status !== "success") {
+        throw new Error(res?.message || "Failed to fetch trips");
+    }
+    return Array.isArray(res.componentData?.data) ? res.componentData.data : [];
+}
+
+export async function fetchAdminTrips() {
+    const res = await fetchData(TRIP_BASE);
+    return normalizeTripsResponse(res);
+}
+
+export async function saveTrip(payload) {
+    const method = payload._id ? "PUT" : "POST";
+    const url = payload._id ? `${TRIP_BASE}/${payload._id}` : TRIP_BASE;
+    const res = await expectSuccess(
+        fetchData(url, {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        }),
+        "Failed to save trip"
+    );
+    return res.componentData?.data || res;
+}
+
+export async function deleteTrip(id) {
+    await expectSuccess(
+        fetchData(`${TRIP_BASE}/${id}`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+        }),
+        "Delete trip failed"
+    );
+}
+
+export async function deleteAllTrips() {
+    await expectSuccess(
+        fetchData(TRIP_BASE, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({}),
+        }),
+        "Delete all trips failed"
+    );
+}
+
+export async function uploadTripImage(file) {
+    const fd = new FormData();
+    fd.append("image", file);
+    const response = await api.post("/tours.json/upload", fd);
+    const res = response?.data || {};
+    const url =
+        res?.componentData?.data?.url ||
+        res?.componentData?.url ||
+        res?.data?.url ||
+        res?.url;
+    if (!url) throw new Error(res?.message || "Upload returned no URL");
+    return url;
+}
+
+// ── Client Management ──────────────────────────────────────────
+
+export async function fetchClients() {
+    const res = await fetchData("/clients");
+    if (!res || res.status !== "success") throw new Error(res?.message || "Failed to fetch clients");
+    return res.componentData?.data?.clients || [];
+}
+
+export async function fetchClient(id) {
+    const res = await fetchData(`/clients/${id}`);
+    if (!res || res.status !== "success") throw new Error(res?.message || "Failed to fetch client");
+    return res.componentData?.data?.client || null;
+}
+
+export async function createClient(payload) {
+    const res = await expectSuccess(
+        fetchData("/clients", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        }),
+        "Failed to create client"
+    );
+    return res.componentData?.data?.client || res;
+}
+
+export async function updateClient(id, payload) {
+    const res = await expectSuccess(
+        fetchData(`/clients/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        }),
+        "Failed to update client"
+    );
+    return res.componentData?.data?.client || res;
+}
+
+export async function deleteClient(id) {
+    await expectSuccess(
+        fetchData(`/clients/${id}`, { method: "DELETE" }),
+        "Failed to delete client"
+    );
+}
+
+export async function uploadClientLogo(clientId, product, file) {
+    const fd = new FormData();
+    fd.append("image", file);
+    const response = await api.post(`/clients/${clientId}/logo?product=${product}`, fd);
+    const res = response?.data || {};
+    const url = res?.componentData?.data?.url || res?.data?.url || res?.url;
+    if (!url) throw new Error(res?.message || "Upload returned no URL");
+    return { url, client: res?.componentData?.data?.client };
 }

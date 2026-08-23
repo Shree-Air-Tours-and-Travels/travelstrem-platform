@@ -1,0 +1,103 @@
+@import "@packages/trem-design-tokens/scss";
+
+.booking-progress {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: $space-4 0;
+
+  @include mq-max($breakpoint-mobile) {
+    padding: $space-3 0;
+    justify-content: flex-start;
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  &__step {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+
+    &:last-child .booking-progress__connector {
+      display: none;
+    }
+  }
+
+  &__number {
+    width: 32px;
+    height: 32px;
+    border-radius: $radius-full;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: $font-size-sm;
+    font-weight: $font-semibold;
+    background: var(--surface-muted, #e5e7eb);
+    color: var(--text-muted, #9ca3af);
+    flex-shrink: 0;
+    transition: all $duration-base $ease-default;
+  }
+
+  &__label {
+    font-size: $font-size-sm;
+    font-weight: $font-medium;
+    color: var(--text-muted, #9ca3af);
+    white-space: nowrap;
+    transition: color $duration-base $ease-default;
+
+    @include mq-max($breakpoint-mobile) {
+      display: none;
+    }
+  }
+
+  &__connector {
+    width: 40px;
+    height: 2px;
+    background: var(--surface-muted, #e5e7eb);
+    margin: 0 $space-2;
+    flex-shrink: 0;
+    transition: background $duration-base $ease-default;
+
+    @include mq-max($breakpoint-mobile) {
+      width: 18px;
+      margin: 0 $space-1;
+    }
+  }
+
+  &__step--active {
+    .booking-progress__number {
+      background: var(--color-primary, $primary-color);
+      color: #fff;
+      box-shadow: 0 0 0 4px rgba(15, 143, 134, 0.15);
+    }
+    .booking-progress__label {
+      color: var(--text, #111);
+      font-weight: $font-semibold;
+    }
+    .booking-progress__connector {
+      background: var(--color-primary, $primary-color);
+      opacity: 0.3;
+    }
+  }
+
+  &__step--completed {
+    .booking-progress__number {
+      background: var(--color-primary, $primary-color);
+      color: #fff;
+    }
+    .booking-progress__label {
+      color: var(--text, #111);
+    }
+    .booking-progress__connector {
+      background: var(--color-primary, $primary-color);
+      opacity: 0.5;
+    }
+  }
+}

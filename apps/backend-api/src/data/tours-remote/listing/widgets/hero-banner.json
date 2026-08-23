@@ -7,7 +7,9 @@
     },
     "elements": {
       "labels": {
-        "pageTitle": "Discover Tours"
+        "pageTitle": "Explore Curated Holiday Packages",
+        "pageSubtitle": "Trevista by TravelsTrem",
+        "pageDescription": "Handpicked getaways, personalised itineraries and seamless booking — all in one place. Discover your next unforgettable trip."
       },
       "urls": {}
     },

@@ -77,6 +77,11 @@ router.post("/logout", controller.logout);
 router.get("/me", authMiddleware, controller.getCurrentUser);
 
 /*
+  Session - returns current cookie-backed user state without exposing credentials.
+*/
+router.get("/session", controller.getSession);
+
+/*
   Profile routes (authenticated)
 */
 router.get("/profile", authMiddleware, profileController.getProfile);

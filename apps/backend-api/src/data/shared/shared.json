@@ -1,7 +1,7 @@
 {
   "elements": {
     "labels": {
-      "appName": "TravelsTREM",
+      "appName": "TravelsTrem",
       "loading": "Loading...",
       "error": "Something went wrong",
       "retry": "Retry",
@@ -50,7 +50,7 @@
 
     "urls": {
       "logoUrl": "/logo-images/travelsTrem-header-logo.png",
-      "faviconUrl": "/favicon.ico",
+      "faviconUrl": "/favicon.png",
       "defaultAvatar": "/images/default-avatar.png",
       "placeholderImage": "/images/placeholder.jpg"
     }

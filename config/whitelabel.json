@@ -1,0 +1,991 @@
+{
+  "platform": {
+    "name": "TravelsTrem",
+    "tagline": "Community travel platform",
+    "domain": "travelstrem.com",
+    "supportEmail": "support@travelstrem.com",
+    "supportPhone": "+91 XXXXX XXXXX",
+    "defaultCurrency": "INR",
+    "currencySymbol": "₹",
+    "locale": "en-IN",
+    "dateFormat": { "day": "numeric", "month": "short", "year": "numeric" },
+    "dateTimeFormat": { "day": "numeric", "month": "short", "year": "numeric", "hour": "numeric", "minute": "2-digit" },
+    "storagePrefix": "travelstrem",
+    "authStorageKey": "travelstrem:token",
+    "fallbackAuthStorageKey": "trem:token",
+    "products": [
+      { "key": "trevio", "name": "Trevio", "type": "trips" },
+      { "key": "trevista", "name": "Trevista", "type": "tours" }
+    ]
+  },
+
+  "trevio": {
+    "key": "trevio",
+    "name": "Trevio",
+    "subtitle": "by TravelsTrem",
+    "htmlTitle": "Trevio by Travels Trem",
+    "description": "Curated group adventures, trips that turn into stories.",
+    "favicon": "/favicon.png",
+    "logo": "/favicon.png",
+    "logoDark": "/favicon-dark.png",
+    "primaryColor": "#0A8A83",
+
+    "auth": {
+      "signInLabel": "Sign in",
+      "signOutLabel": "Sign out",
+      "signInAction": "Sign in",
+      "profileAction": "Profile",
+      "authParam": "trevio",
+      "redirectMessage": "Redirecting to TravelsTrem secure login...",
+      "unconfiguredError": "Auth URL is not configured. Cannot redirect to login."
+    },
+
+    "navigation": {
+      "home": "Home",
+      "dashboard": "Dashboard",
+      "about": "About Us",
+      "explore": "Explore",
+      "howItWorks": "How it works",
+      "wishlist": "Wishlist",
+      "myTrips": "My trips",
+      "profile": "Profile",
+      "viewProfile": "View profile",
+      "backToTrips": "← Back to trips"
+    },
+
+    "hero": {
+      "eyebrow": "Curated group adventures",
+      "heading": "Trips that turn into",
+      "highlight": "stories.",
+      "description": "Browse our trips, open complete itineraries, personalise your package and reserve a seat through the TravelsTrem booking journey.",
+      "primaryCta": "Explore trips",
+      "secondaryCta": "How it works",
+      "trustItems": ["Verified stays", "Trip captains", "Secure token booking"]
+    },
+
+    "featuredCard": {
+      "title": "Your next story starts here",
+      "meta": "India",
+      "defaultType": "Curated trip",
+      "ctaLabel": "View trip",
+      "emptyTitle": "Adventures are loading",
+      "emptyDescription": "We are curating your next escape. Check back soon for handpicked trips."
+    },
+
+    "tripList": {
+      "eyebrow": "Explore Trevio",
+      "heading": "Popular adventures",
+      "highlight": "handpicked for groups.",
+      "description": "Every card, filter and action is connected.",
+      "primaryAction": "View all trips",
+      "secondaryAction": "Talk to a trip expert",
+      "trustVerified": "Verified experiences",
+      "trustCaptains": "Led by trip captains",
+      "trustToken": "Token-based reservation",
+      "emptyState": "No listed Trevio trips found for this category.",
+      "viewMore": "View more",
+      "viewMoreRemaining": "remaining",
+      "pageSize": 4,
+      "maxItems": 4
+    },
+
+    "howToBook": {
+      "eyebrow": "Simple booking journey",
+      "heading": "Book your adventure in four easy steps.",
+      "steps": [
+        {
+          "title": "Choose your trip",
+          "description": "Explore destinations, view itineraries, and pick the trip that fits you."
+        },
+        {
+          "title": "Add your travellers",
+          "description": "Enter traveller details once. They're saved for future bookings."
+        },
+        {
+          "title": "Customise your package",
+          "description": "Add extras like activities, meals, or insurance and see the price update live."
+        },
+        {
+          "title": "Confirm your booking",
+          "description": "Review your summary and submit. We'll handle the rest."
+        }
+      ]
+    },
+
+    "gallery": {
+      "eyebrow": "Journey in Frames",
+      "heading": "Moments from the road.",
+      "description": "Real stories from real travellers. Every frame, a memory.",
+      "frames": [
+        { "location": "Spiti Valley", "shape": "blob-1" },
+        { "location": "Kerala Backwaters", "shape": "hexagon" },
+        { "location": "Ladakh Pass", "shape": "diamond" },
+        { "location": "Goa Beaches", "shape": "blob-2" },
+        { "location": "Meghalaya Caves", "shape": "octagon" },
+        { "location": "Rajasthan Desert", "shape": "blob-3" },
+        { "location": "Himachal Villages", "shape": "diamond" },
+        { "location": "Sikkim Mountains", "shape": "hexagon" }
+      ]
+    },
+
+    "getInTouch": {
+      "eyebrow": "Get in Touch",
+      "heading": "Your next story starts with a conversation.",
+      "description": "Whether you have a question about pricing, itinerary customisation, group sizes or dates — our travel experts are one message away.",
+      "ctaLabel": "Enquire Now",
+      "badge": "Usually replies within 2 hours",
+      "formTitle": "Contact Agent"
+    },
+
+    "whyWanderon": {
+      "eyebrow": "Why Trevio",
+      "heading": "Travel with",
+      "highlight": "confidence.",
+      "description": "Built for travellers who want curated experiences without the hassle."
+    },
+
+    "detailPage": {
+      "tabs": {
+        "overview": "Overview",
+        "itinerary": "Itinerary",
+        "inclusions": "Inclusions",
+        "stay": "Stay & transport",
+        "policies": "Policies"
+      },
+      "itineraryTitle": "Day-wise itinerary",
+      "overviewTitle": "Trip overview",
+      "inclusionsTitle": "Inclusions",
+      "exclusionsTitle": "Exclusions",
+      "stayTitle": "Stay & transport",
+      "policiesTitle": "Booking policies",
+      "notFound": "Trip not found"
+    },
+
+    "booking": {
+      "reserveTitle": "Reserve your seat",
+      "pricePerPerson": "Price per person",
+      "tokenAmount": "Token amount",
+      "nextDeparture": "Next departure",
+      "seatsLeft": "Seats left",
+      "bookTripAction": "Book this trip",
+      "openingBooking": "Opening booking engine...",
+      "productType": "trip"
+    },
+
+    "wishlist": {
+      "saveAction": "♡ Save to wishlist",
+      "savedAction": "♥ Saved",
+      "removeLabel": "Remove from favorites",
+      "addLabel": "Add to favorites"
+    },
+
+    "profile": {
+      "title": "Traveller account",
+      "tabs": {
+        "bookings": "My bookings",
+        "wishlist": "Wishlist",
+        "details": "Personal details"
+      },
+      "bookingsTitle": "My trips",
+      "bookingsDescription": "Your confirmed Trevio adventures will appear here once the backend booking flow creates them.",
+      "bookingsEmpty": "No confirmed Trevio bookings yet.",
+      "wishlistEmpty": "Save a trip to see it here.",
+      "detailsTitle": "Personal details",
+      "detailsDescription": "Profile data comes from the shared TravelsTrem account layer.",
+      "detailsAccount": "Name, email and phone remain shared across products.",
+      "detailsPlatform": "Wallet, rewards and support stay with TravelsTrem."
+    },
+
+    "footer": {
+      "brand": "Trevio by TravelsTrem",
+      "tagline": "Trevio · Community travel",
+      "description": "Community trips, adventures and stories."
+    },
+
+    "loading": {
+      "app": "Loading Trevio",
+      "trips": "Loading trips",
+      "auth": "Redirecting to TravelsTrem secure login..."
+    },
+
+    "errors": {
+      "initFailed": "Trevio failed to start",
+      "initDescription": "We couldn't connect to the Trevio service. Please check your connection and try again.",
+      "retry": "Retry",
+      "initCode": "init-app-failed"
+    },
+
+    "pagination": {
+      "previousTrips": "Show previous trips",
+      "nextTrips": "Show next trips"
+    },
+
+    "api": {
+      "homeData": "/trevio/home.json",
+      "trips": "/trevio/trips.json",
+      "headerConfig": "/header-config",
+      "pageConfig": "/page-config",
+      "contactForm": "/form.json?form=contact-agent&tourId=trevio-home",
+      "authLogout": "/auth/logout",
+      "favorites": "/tours.json/favorites",
+      "favoriteToggle": "/tours.json/favorite/toggle"
+    },
+
+    "routes": {
+      "home": "/trevio",
+      "tripDetail": "/trevio/trip/:tripRef",
+      "tripBook": "/trevio/trip/:tripRef/book"
+    }
+  },
+
+  "app-shell": {
+    "key": "app-shell",
+    "name": "TravelsTrem",
+    "brandName": "TravelsTrem",
+    "brandSubtitle": "Dashboard",
+    "logo": "/logo-images/logo-icon-only.png",
+    "htmlTitle": "TravelsTrem",
+
+    "auth": {
+      "loginPromptTitle": "Welcome to TravelsTrem",
+      "loginPromptDescription": "Sign in to view your bookings, manage favorites, and track your travel history.",
+      "loginButton": "Log in",
+      "authParam": "app-shell",
+      "loginRateLimit": { "attempts": 5, "windowMs": 300000 }
+    },
+
+    "navigation": {
+      "tabs": {
+        "overview": "Overview",
+        "bookings": "Bookings",
+        "favorites": "Favorites",
+        "profile": "Profile"
+      },
+      "backToProduct": "Back to Trevio",
+      "themeToggle": {
+        "toLight": "Switch to light mode",
+        "toDark": "Switch to dark mode"
+      },
+      "mobileMenuOpen": "Open menu",
+      "mobileMenuClose": "Close menu"
+    },
+
+    "products": {
+      "options": ["all", "trevio", "trevista"],
+      "labels": {
+        "trevio": "Trevio",
+        "trevista": "Trevista"
+      },
+      "defaultProduct": "trevista"
+    },
+
+    "overview": {
+      "greeting": {
+        "morning": "Good morning",
+        "afternoon": "Good afternoon",
+        "evening": "Good evening"
+      },
+      "greetingSubtitle": "Here's what's happening with your travel plans",
+      "recentBookings": "Recent Bookings",
+      "emptyTitle": "No bookings yet",
+      "emptyDescription": "When you book a trip, it will appear here."
+    },
+
+    "bookings": {
+      "title": "Bookings",
+      "subtitle": "{count} booking(s)",
+      "emptyTitle": "No bookings found",
+      "emptyDescription": "Try adjusting your filters.",
+      "emptyDescriptionDefault": "When you book a trip, it will appear here.",
+      "loadingText": "Loading bookings...",
+      "statusFilters": ["All", "Awaiting Token Payment", "Confirmed", "Completed", "Cancelled"],
+      "productFilters": ["All", "Trevio", "Trevista"],
+      "pageSize": 10,
+      "fetchLimit": 100,
+      "pollingIntervalMs": 15000,
+      "columns": {
+        "tremId": "Trem ID",
+        "trip": "Trip",
+        "product": "Product",
+        "status": "Status",
+        "travelDates": "Travel Dates",
+        "guests": "Guests",
+        "amount": "Amount",
+        "created": "Created"
+      },
+      "statusMap": {
+        "confirmed": ["CONFIRMED", "PAID", "TICKETED", "TRAVEL_READY", "COMPLETED"],
+        "cancelled": ["CANCELLED", "REFUNDED"],
+        "pending": ["QUOTE_REQUESTED", "QUOTE_READY", "QUOTE_SENT", "UNDER_REVIEW"],
+        "draft": ["DRAFT"],
+        "warning": ["AWAITING_TOKEN_PAYMENT", "PAYMENT_PENDING", "PARTIALLY_PAID", "REFUND_PENDING"]
+      },
+      "completedStatuses": ["COMPLETED", "CONFIRMED", "PAID", "TICKETED", "TRAVEL_READY"],
+      "pendingStatuses": ["DRAFT", "QUOTE_REQUESTED", "QUOTE_READY", "QUOTE_SENT", "UNDER_REVIEW", "PAYMENT_PENDING", "PARTIALLY_PAID"]
+    },
+
+    "bookingDetail": {
+      "notFound": "Booking not found",
+      "goBack": "Go Back",
+      "backToBookings": "Back to Bookings",
+      "statusTimeline": "Status Timeline",
+      "offlinePayment": "Offline Payment",
+      "latestQuote": "Latest Quote",
+      "paymentHistory": "Payment History",
+      "activityTimeline": "Activity Timeline",
+      "tripDetails": "Trip Details",
+      "messages": "Messages",
+      "messagePlaceholder": "Type a message...",
+      "messageMaxLength": 2000,
+      "loadingText": "Loading booking details...",
+      "errorTitle": "Failed to load booking",
+      "productLabels": {
+        "trevio": "Trip",
+        "trevista": "Tour"
+      },
+      "detailLabels": {
+        "dates": "Dates",
+        "guests": "Guests",
+        "total": "Total",
+        "paid": "Paid",
+        "remaining": "Remaining",
+        "agent": "Agent",
+        "bookingStatus": "Booking status",
+        "paymentStatus": "Payment status",
+        "tokenAmount": "Token amount",
+        "remainingAmount": "Remaining amount"
+      },
+      "paymentProof": {
+        "title": "Upload payment screenshot",
+        "subtitle": "That's all we need — no transaction ID or form to fill.",
+        "stepLabel": "1 step",
+        "chooseButton": "Choose screenshot",
+        "dragText": "or drag and drop it here",
+        "fileTypes": "PNG, JPG or WebP — up to 10 MB",
+        "previewAlt": "Selected payment screenshot preview",
+        "clickToReplace": "Click to replace",
+        "removeButton": "Remove screenshot",
+        "uploading": "Uploading proof...",
+        "uploadNew": "Upload new proof",
+        "submitButton": "Submit payment proof",
+        "submittedMessage": "Your payment proof has been submitted and is awaiting admin verification.",
+        "verificationFailed": "Payment verification failed: ",
+        "proofUnavailable": "The stored proof file is unavailable. Ask the customer to upload it again.",
+        "tokenProofAwaiting": "Token proof awaiting review",
+        "proofMissing": "Proof unavailable",
+        "downloadButton": "Download proof",
+        "downloading": "Downloading...",
+        "maxSizeBytes": 10485760,
+        "allowedTypes": ["image/png", "image/jpeg", "image/webp"]
+      }
+    },
+
+    "favorites": {
+      "title": "Favorites",
+      "subtitle": "{count} saved trip(s)",
+      "emptyTitle": "No favorites yet",
+      "emptyDescriptionFiltered": "Try a different filter.",
+      "emptyDescriptionDefault": "Save trips you love and they'll appear here.",
+      "loadingText": "Loading favorites..."
+    },
+
+    "profile": {
+      "title": "Profile",
+      "subtitle": "Manage your account settings",
+      "formTitle": "Personal Information",
+      "formSubtitle": "Update your account details",
+      "accountDetails": "Account Details",
+      "fields": {
+        "fullName": "Full Name",
+        "email": "Email",
+        "phone": "Phone",
+        "phonePlaceholder": "+91 XXXXX XXXXX"
+      },
+      "saveButton": "Save Changes",
+      "savingButton": "Saving...",
+      "savedMessage": "Saved successfully"
+    },
+
+    "validation": {
+      "nameRequired": "Name is required",
+      "emailRequired": "Email is required",
+      "invalidEmail": "Invalid email address",
+      "invalidPhone": "Invalid phone number",
+      "authNotConfigured": "Authentication not configured.",
+      "somethingWentWrong": "Something went wrong"
+    },
+
+    "limits": {
+      "nameMaxLength": 100,
+      "emailMaxLength": 254,
+      "phoneMaxLength": 15,
+      "messageMaxLength": 2000,
+      "searchMaxLength": 200,
+      "notesMaxLength": 5000,
+      "profileSaveDebounceMs": 3000
+    },
+
+    "loading": {
+      "app": "Loading App"
+    },
+
+    "api": {
+      "session": "/auth/session",
+      "profile": "/auth/profile",
+      "logout": "/auth/logout",
+      "headerConfig": "/header-config",
+      "myBookings": "/engine/my-bookings",
+      "bookingDetail": "/engine/{bookingId}/detail",
+      "bookingMessages": "/engine/{bookingId}/messages",
+      "sendMessage": "/engine/{bookingId}/message",
+      "quoteAccept": "/engine/{bookingId}/quote/accept",
+      "quoteReject": "/engine/{bookingId}/quote/reject",
+      "tokenProof": "/engine/{bookingId}/payments/token-proof",
+      "favorites": "/tours.json/favorites",
+      "favoriteToggle": "/tours.json/favorite/toggle",
+      "csrfToken": "/api/csrf-token"
+    },
+
+    "security": {
+      "maxAuditEntries": 500,
+      "defaultRateLimit": { "attempts": 10, "windowMs": 60000 },
+      "cspNonceLength": 16,
+      "privacyPatterns": ["credit_card", "email", "phone_intl", "aadhaar", "pan", "ssn", "ip_address", "password", "api_key", "jwt_token"],
+      "monitoredDomTags": ["script", "iframe", "object", "embed", "form"]
+    }
+  },
+
+  "booking": {
+    "key": "booking",
+    "name": "TravelsTrem Booking Engine",
+    "htmlTitle": "Book your trip — TravelsTrem",
+    "logo": "/logo-images/logo-icon-only.png",
+
+    "products": {
+      "trevio": {
+        "name": "Trevio",
+        "type": "trip",
+        "tokenAmount": 1999,
+        "bookingParam": "trevio"
+      },
+      "trevista": {
+        "name": "Trevista",
+        "type": "tour",
+        "tokenAmount": 1999,
+        "bookingParam": "trevista"
+      }
+    },
+
+    "flow": {
+      "steps": [
+        { "id": "travelers", "label": "Traveller Details" },
+        { "id": "customize", "label": "Customise Package" },
+        { "id": "review", "label": "Review & Pay" },
+        { "id": "confirmation", "label": "Confirmation" }
+      ],
+      "defaultCurrency": "INR",
+      "defaultCountry": "India",
+      "paymentMethods": ["UPI", "Bank transfer", "Cash"],
+      "cancellationPolicy": "Full refund up to 7 days before departure; 50% refund within 7 days; no refund within 48 hours."
+    },
+
+    "statuses": {
+      "all": "All",
+      "draft": "Draft",
+      "quoteRequested": "Quote Requested",
+      "underReview": "Under Review",
+      "quoteReady": "Quote Ready",
+      "quoteSent": "Quote Sent",
+      "customerAccepted": "Customer Accepted",
+      "paymentPending": "Payment Pending",
+      "partiallyPaid": "Partially Paid",
+      "awaitingTokenPayment": "Awaiting Token Payment",
+      "tokenPending": "Token Pending",
+      "paid": "Paid",
+      "confirmed": "Confirmed",
+      "ticketing": "Ticketing",
+      "ticketed": "Ticketed",
+      "travelReady": "Travel Ready",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "refundPending": "Refund Pending",
+      "refunded": "Refunded"
+    },
+
+    "phases": [
+      { "id": "created", "label": "Created" },
+      { "id": "quote", "label": "Quote" },
+      { "id": "accepted", "label": "Accepted" },
+      { "id": "token", "label": "Token Payment" },
+      { "id": "confirmed", "label": "Confirmed" },
+      { "id": "completed", "label": "Completed" }
+    ],
+
+    "payment": {
+      "providers": ["admin_manual", "razorpay", "upi", "bank_transfer", "cash"],
+      "defaultProvider": "admin_manual",
+      "proofMaxSizeBytes": 10485760,
+      "proofAllowedTypes": ["image/png", "image/jpeg", "image/webp"],
+      "sendNowDefault": true
+    },
+
+    "api": {
+      "config": "/auth/config",
+      "login": "/auth/login",
+      "register": "/auth/register",
+      "logout": "/auth/logout",
+      "forgotPassword": "/auth/forgot-password",
+      "resetPassword": "/auth/reset-password",
+      "verifyOtp": "/auth/verify-otp",
+      "resendOtp": "/auth/resend-otp",
+      "adminRegistrationOtp": "/auth/admin-registration-otp",
+      "profile": "/auth/profile",
+      "password": "/auth/password"
+    }
+  },
+
+  "admin": {
+    "key": "admin",
+    "name": "AdminTREM",
+    "brandName": "TravelsTREM",
+    "brandSubtitle": "Admin",
+    "htmlTitle": "TravelsTREM",
+    "logo": "/logo-images/logo-icon-only.png",
+    "ogDescription": "TravelsTREM, discover curated tours, book experiences, and explore destinations...",
+    "ogTitle": "TravelsTREM, curated tours & travel packages",
+
+    "auth": {
+      "appName": "AdminTREM",
+      "storagePrefix": "adminTREM",
+      "roles": ["admin", "agent"],
+      "defaultRole": "admin",
+      "roleOptions": [
+        {
+          "value": "admin",
+          "title": "Admin",
+          "subtitle": "Request admin access or bootstrap master admin",
+          "descriptor": "Platform"
+        }
+      ],
+      "loginLabel": "Login",
+      "logoutLabel": "Logout",
+      "signOutLabel": "Sign out",
+      "masterAdminLevel": "master"
+    },
+
+    "navigation": {
+      "tabs": {
+        "overview": "Overview",
+        "bookings": "Bookings",
+        "services": "Services",
+        "profile": "Profile"
+      },
+      "headerMenus": [
+        { "id": "adminTours", "label": "Tours", "path": "/admin/tours" },
+        { "id": "agentTours", "label": "Agent", "path": "/agent/tours" }
+      ],
+      "backToProduct": "Back to Trevio",
+      "themeToggle": {
+        "toLight": "Switch to light mode",
+        "toDark": "Switch to dark mode"
+      },
+      "preloaderText": "Initializing AdminTREM lifecycle"
+    },
+
+    "overview": {
+      "greeting": {
+        "morning": "Good morning",
+        "afternoon": "Good afternoon",
+        "evening": "Good evening"
+      },
+      "greetingSubtitle": "Here's what's happening with your platform",
+      "statCards": {
+        "totalTours": "Total Tours",
+        "totalTrips": "Total Trips",
+        "activeBookings": "Active Bookings",
+        "pendingReviews": "Pending Reviews"
+      },
+      "recentBookings": "Recent Bookings",
+      "emptyTitle": "No bookings yet",
+      "emptyDescription": "Bookings will appear here as they come in.",
+      "productLabels": {
+        "trevio": "Trevio",
+        "trevista": "Trevista"
+      }
+    },
+
+    "bookings": {
+      "title": "Bookings",
+      "statusFilters": [
+        "All", "Draft", "Quote Requested", "Under Review", "Quote Ready",
+        "Quote Sent", "Customer Accepted", "Payment Pending", "Partially Paid",
+        "Paid", "Confirmed", "Ticketing", "Ticketed", "Travel Ready",
+        "Completed", "Cancelled", "Refund Pending", "Refunded"
+      ],
+      "productFilters": ["All", "Trevio", "Trevista"],
+      "defaultProduct": "trevista",
+      "emptyTitle": "No bookings found",
+      "emptyDescription": "Try adjusting your filters.",
+      "columns": {
+        "tremId": "Trem ID",
+        "trip": "Trip",
+        "product": "Product",
+        "status": "Status",
+        "travelDates": "Travel Dates",
+        "guests": "Guests",
+        "amount": "Amount",
+        "created": "Created"
+      },
+      "pollingIntervalMs": 15000,
+      "searchPlaceholder": "Search",
+      "sortLabel": "Sort By",
+      "sortOptions": [
+        { "value": "recommended", "label": "Recommended" },
+        { "value": "price-asc", "label": "Price: Low to High" },
+        { "value": "price-desc", "label": "Price: High to Low" },
+        { "value": "rating", "label": "Top Rated" }
+      ],
+      "paginationLabel": "Page {page} of {total}"
+    },
+
+    "bookingDetail": {
+      "eyebrow": "Booking {ref}",
+      "loadingText": "Loading booking details...",
+      "notFound": "Booking not found",
+      "errorTitle": "Failed to load booking",
+      "backToManage": "Back to Manage",
+      "sections": {
+        "tourDetails": "Tour details",
+        "tripDetails": "Trip details",
+        "contact": "Contact",
+        "travelers": "Travelers",
+        "paymentHistory": "Payment history",
+        "journeyTimeline": "Journey timeline"
+      },
+      "actions": {
+        "generateQuote": "Generate & Send Quote",
+        "approveToken": "Approve Token",
+        "rejectToken": "Reject Token",
+        "markTokenPaid": "Mark Token Paid",
+        "confirmTokenPaid": "Confirm Token Paid",
+        "markBalancePaid": "Mark Balance Paid",
+        "confirmFullyPaid": "Confirm Fully Paid",
+        "recordPayment": "Record Payment",
+        "processRefund": "Process Refund",
+        "cancelBooking": "Cancel Booking",
+        "actionsPanelTitle": "Booking actions",
+        "downloadProof": "Download proof",
+        "downloading": "Downloading..."
+      },
+      "paymentMethods": ["UPI", "Bank transfer", "Cash"],
+      "emptyStates": {
+        "noTravelers": "No traveler details.",
+        "noPayments": "No payment records yet.",
+        "noTimeline": "No timeline updates yet."
+      },
+      "phases": [
+        { "id": "created", "label": "Created" },
+        { "id": "quote", "label": "Quote" },
+        { "id": "accepted", "label": "Accepted" },
+        { "id": "token", "label": "Token Payment" },
+        { "id": "confirmed", "label": "Confirmed" },
+        { "id": "completed", "label": "Completed" }
+      ]
+    },
+
+    "services": {
+      "title": "Services",
+      "emptyTitle": "No services yet",
+      "emptyDescription": "Create your first tour or trip to get started.",
+      "typeFilters": ["All", "Domestic", "International"],
+      "productLabels": {
+        "tour": "Tour",
+        "trip": "Trip"
+      },
+      "statusColors": {
+        "draft": "var(--muted)",
+        "listed": "var(--color-primary)",
+        "active": "var(--color-primary)",
+        "completed": "var(--success-color)",
+        "cancelled": "var(--color-danger)"
+      },
+      "actions": {
+        "view": "View",
+        "edit": "Edit",
+        "delete": "Delete",
+        "newTour": "+ New Tour",
+        "newTrip": "+ New Trip",
+        "refresh": "Refresh",
+        "deleteAll": "Delete All"
+      }
+    },
+
+    "tours": {
+      "emptyTitle": "No tours yet",
+      "formSteps": ["Basic", "Schedule", "Itinerary", "Pricing", "Logistics", "Content", "Review"],
+      "statuses": ["published", "draft", "cancelled"],
+      "currency": "INR",
+      "priceSource": "manual",
+      "validation": {
+        "titleRequired": "Title is required",
+        "descriptionRequired": "Description is required",
+        "cityFromRequired": "City from is required",
+        "cityToRequired": "City to is required",
+        "distanceInvalid": "Distance must be 0 or more",
+        "daysInvalid": "Days must be at least 1",
+        "nightsInvalid": "Nights must be 0 or more",
+        "minPriceRequired": "Min price is required",
+        "maxPriceRequired": "Max price is required",
+        "maxMustBeGteMin": "Max must be >= min",
+        "maxGroupSizeInvalid": "Max group size must be at least 1",
+        "itineraryNotUnique": "Itinerary day numbers must be unique.",
+        "itineraryNotSequential": "Itinerary day numbers must be sequential (1, 2, 3, ...).",
+        "pricesNotNumbers": "Min and Max price must be valid numbers."
+      },
+      "successMessages": {
+        "created": "Tour created successfully!",
+        "updated": "Tour updated successfully!"
+      }
+    },
+
+    "trips": {
+      "emptyTitle": "No trips yet",
+      "formSteps": ["Basic", "Journey", "Inclusions", "Content", "Review"],
+      "statuses": ["listed", "draft", "completed", "cancelled"],
+      "currency": "INR",
+      "defaultTokenAmount": 1999,
+      "defaultCountry": "India",
+      "tags": ["weekends", "mountains", "roadtrips", "international"],
+      "categories": [
+        { "value": "weekend", "label": "Weekends" },
+        { "value": "mountains", "label": "Mountains" },
+        { "value": "beaches", "label": "Beaches" },
+        { "value": "roadtrips", "label": "Roadtrips" },
+        { "value": "international", "label": "International" },
+        { "value": "culture", "label": "Culture" },
+        { "value": "adventure", "label": "Adventure" }
+      ],
+      "preferenceGroups": ["roomTypes", "mealPreferences", "packageTypes", "drinkTypes"],
+      "preferenceHelp": "Price adjustments may be positive surcharges, zero, or negative discounts.",
+      "defaultCancellationPolicy": "Full refund up to 7 days before departure; 50% refund within 7 days; no refund within 48 hours.",
+      "validation": {
+        "titleRequired": "Title is required",
+        "locationRequired": "Location is required",
+        "categoryRequired": "Category is required",
+        "priceInvalid": "Price must be greater than 0"
+      },
+      "successMessages": {
+        "created": "Trip created!",
+        "updated": "Trip updated!"
+      },
+      "jsonImport": {
+        "pasteError": "Paste a trip JSON object before importing.",
+        "importSuccess": "JSON imported. Review every step before submitting."
+      }
+    },
+
+    "agencies": {
+      "title": "Agency Management",
+      "description": "Review access requests and manage partner accounts.",
+      "sections": {
+        "adminApprovals": "Admin Approvals",
+        "pendingAgents": "Pending / Registered Agents",
+        "partnerAgencies": "Partner Agency Applications"
+      },
+      "actions": {
+        "approve": "Approve",
+        "reject": "Reject",
+        "remove": "Remove"
+      },
+      "emptyStates": {
+        "noAdmins": "No admins found.",
+        "noAgents": "No agents found.",
+        "noAgencies": "No partner agency applications found.",
+        "noContact": "No contact",
+        "noEmail": "No email"
+      }
+    },
+
+    "favorites": {
+      "emptyTitle": "No favorites yet",
+      "emptyDescription": "Start exploring tours and save the ones you love. Your favorites will appear here."
+    },
+
+    "profile": {
+      "title": "Profile",
+      "subtitle": "Manage your admin account",
+      "formTitle": "Personal Information",
+      "formSubtitle": "Update your account details",
+      "accountDetails": "Account Details",
+      "fields": {
+        "fullName": "Full Name",
+        "email": "Email",
+        "phone": "Phone",
+        "role": "Role",
+        "adminLevel": "Admin Level",
+        "memberSince": "Member since",
+        "userId": "User ID"
+      },
+      "saveButton": "Save Changes",
+      "savingButton": "Saving...",
+      "savedMessage": "Saved successfully",
+      "passwordSection": {
+        "minLength": 6,
+        "mismatchError": "Passwords do not match",
+        "tooShortError": "Password must be at least 6 characters",
+        "updatedMessage": "Password updated successfully"
+      }
+    },
+
+    "confirmations": {
+      "deleteTour": "Delete this tour? This action cannot be undone.",
+      "deleteAllTours": "Delete ALL tours? This is irreversible. Continue?",
+      "deleteTrip": "Delete this trip? This action cannot be undone.",
+      "deleteAllTrips": "Delete ALL trips? This is irreversible. Continue?",
+      "unsavedChanges": "You have unsaved changes. Discard them?",
+      "discardChanges": "Discard unsaved changes?",
+      "confirm": "Confirm",
+      "areYouSure": "Are you sure?"
+    },
+
+    "loading": {
+      "app": "Loading App"
+    },
+
+    "errors": {
+      "somethingWentWrong": "Something went wrong",
+      "failedToLoadTours": "Failed to load tours",
+      "failedToLoadTrips": "Failed to load trips",
+      "failedToLoadBooking": "Failed to load booking",
+      "deleteFailed": "Delete failed",
+      "deleteAllFailed": "Delete all failed",
+      "deleteTripFailed": "Delete trip failed",
+      "deleteAllTripsFailed": "Delete all trips failed",
+      "failedToSaveTour": "Failed to save tour",
+      "failedToSaveTrip": "Failed to save trip",
+      "quoteGenerationFailed": "Quote generation failed",
+      "cancelFailed": "Cancel failed",
+      "paymentRecordingFailed": "Payment recording failed",
+      "tokenApprovalFailed": "Token approval failed",
+      "tokenRejectionFailed": "Token rejection failed",
+      "tokenPaymentUpdateFailed": "Token payment update failed",
+      "balanceUpdateFailed": "Balance update failed",
+      "refundFailed": "Refund failed",
+      "refundProcessingFailed": "Refund processing failed",
+      "uploadReturnedNoUrl": "Upload returned no URL",
+      "initFailed": "init-app-failed"
+    },
+
+    "toasts": {
+      "agentApproved": "Agent {status}",
+      "agencyApproved": "Partner agency {status}",
+      "adminApproved": "Admin {status}",
+      "adminRemoved": "Admin access removed",
+      "newPaymentProof": "New payment proof submitted",
+      "profileUpdated": "Profile updated successfully",
+      "passwordUpdated": "Password updated successfully",
+      "colors": {
+        "success": "#2e7d32",
+        "error": "#c62828",
+        "info": "#1565c0"
+      }
+    },
+
+    "tourCard": {
+      "flexibleStart": "Flexible start",
+      "curatedDestination": "Curated destination",
+      "priceOnRequest": "Price on request",
+      "featured": "Featured",
+      "imageAlt": "Tour image",
+      "untitledTour": "Untitled Tour",
+      "noDescription": "No description",
+      "noItinerary": "No itinerary provided.",
+      "noDescriptionAvailable": "No description available.",
+      "pricePrefix": "From",
+      "metaTemplate": "days / nights / up to travelers"
+    },
+
+    "widgets": {
+      "types": [
+        { "id": "AdminDashboard", "aliases": ["admin.dashboard", "dashboard"] },
+        { "id": "AdminTourManagement", "aliases": ["admin.tours", "tours"] },
+        { "id": "AdminTripManagement", "aliases": ["admin.trips", "trips"] },
+        { "id": "AgencyManagement", "aliases": ["admin.agencies", "agencies"] }
+      ]
+    },
+
+    "routes": {
+      "manageTours": "/manage/tours",
+      "manageTrips": "/manage/trips",
+      "adminTours": "/admin/tours",
+      "adminTrips": "/admin/trips",
+      "adminAgencies": "/admin/agencies",
+      "bookingDetail": "/bookings/:bookingId",
+      "default": "/manage/tours"
+    },
+
+    "api": {
+      "headerConfig": "/header-config",
+      "pageConfig": "/page-config",
+      "authConfig": "/auth/config",
+      "login": "/auth/login",
+      "register": "/auth/register",
+      "logout": "/auth/logout",
+      "forgotPassword": "/auth/forgot-password",
+      "resetPassword": "/auth/reset-password",
+      "verifyOtp": "/auth/verify-otp",
+      "resendOtp": "/auth/resend-otp",
+      "adminRegistrationOtp": "/auth/admin-registration-otp",
+      "profile": "/auth/profile",
+      "password": "/auth/password",
+      "partnerAgencies": "/auth/partner-agencies",
+      "agencyReview": "/auth/partner-agencies/:id/review",
+      "agents": "/auth/agents",
+      "agentReview": "/auth/agents/:id/review",
+      "admins": "/auth/admins",
+      "adminReview": "/auth/admins/:id/review",
+      "adminRemove": "/auth/admins/:id/remove",
+      "tours": "/tours.json",
+      "tourDetail": "/tours.json/:id",
+      "tourUpload": "/tours.json/upload",
+      "trips": "/trevio/admin/trips",
+      "tripDetail": "/trevio/admin/trips/:id",
+      "adminBookings": "/engine/admin/bookings",
+      "setPrice": "/admin/bookings/:id/set-price",
+      "updateStatus": "/admin/bookings/:id/status",
+      "recordPayment": "/admin/bookings/:id/payment",
+      "approvePayment": "/admin/bookings/:id/payments/:pid/approve",
+      "rejectPayment": "/admin/bookings/:id/payments/:pid/reject",
+      "tokenPaid": "/admin/bookings/:id/payments/token-paid",
+      "balancePaid": "/admin/bookings/:id/payments/balance-paid",
+      "refund": "/admin/bookings/:id/payments/refund",
+      "refundBooking": "/admin/bookings/:id/refund",
+      "bookingDetailAdmin": "/admin/bookings/:id",
+      "paymentSettings": "/admin/bookings/payment-settings",
+      "engineDetail": "/engine/:id/detail",
+      "paymentProof": "/engine/:bid/payments/:pid/proof",
+      "updateBooking": "/bookings/:id",
+      "cancelBooking": "/bookings/:id/cancel",
+      "dashboardPage": "/pages/app-shell/app-shell"
+    },
+
+    "validation": {
+      "nameMaxLength": 100,
+      "emailMaxLength": 254,
+      "phoneMaxLength": 15,
+      "messageMaxLength": 2000,
+      "searchMaxLength": 200,
+      "notesMaxLength": 5000,
+      "passwordMinLength": 6
+    },
+
+    "polling": {
+      "bookingRefreshMs": 15000,
+      "bookingDetailRefreshMs": 15000
+    },
+
+    "masterAdmin": {
+      "email": "akshat.goyal@travelstrem.com"
+    }
+  }
+}

@@ -5,7 +5,8 @@
   "main": "src/index.js",
   "dependencies": {
     "@packages/trem-ui": "workspace:*",
-    "@packages/trem-utils": "workspace:*"
+    "@packages/trem-utils": "workspace:*",
+    "prop-types": "^15.8.1"
   },
   "peerDependencies": {
     "react": "^18.3.1",

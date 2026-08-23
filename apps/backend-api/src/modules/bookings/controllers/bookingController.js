@@ -12,7 +12,10 @@ import BookingTimelineService from "../services/BookingTimelineService.js";
 import AuditService from "../services/AuditService.js";
 import StatusHistoryService from "../services/StatusHistoryService.js";
 import AssignmentService from "../services/AssignmentService.js";
-import NotificationService from "../../notifications/services/NotificationService.js";
+import {
+    createBookingReference,
+    toPublicBookingReference,
+} from "../utils/bookingReference.js";
 
 function sendSuccess(res, dataPayload = {}, message = "OK", opts = {}) {
     const { title = "", description = "", structure = {}, config = {}, elements = {} } = opts;
@@ -270,10 +273,7 @@ async function saveWithBookingRefRetry(booking, options = {}) {
         } catch (err) {
             lastErr = err;
             if (err.code === 11000 && err.keyPattern?.bookingRef) {
-                const now = new Date();
-                const datePart = now.toISOString().slice(0, 10).replace(/-/g, "");
-                const timePart = now.toISOString().slice(11, 16).replace(":", "");
-                booking.bookingRef = `TREM-${datePart}-${timePart}-${Math.random().toString(36).slice(2, 14).toUpperCase()}`;
+                booking.bookingRef = createBookingReference();
                 continue;
             }
             throw err;
@@ -285,6 +285,7 @@ async function saveWithBookingRefRetry(booking, options = {}) {
 async function hydrateBooking(id, options = {}) {
     const booking = await BookingRepository.findById(id)
         .populate("tour")
+        .populate("trip")
         .populate("user", "name email role agentRef agencyRef partnerAgencyRef")
         .populate("assignedAgent", "name email role agentRef agencyRef partnerAgencyRef");
     return BookingService.hydrate(booking, options);
@@ -321,14 +322,6 @@ async function transitionBookingStatus(booking, nextStatus, actor, reason = "") 
         actor,
         action: "booking.status.changed",
         metadata: { from: transition.from, to: transition.to, reason },
-    });
-    await NotificationService.notify({
-        userId: booking.user,
-        bookingId: booking._id,
-        event: "STATUS_CHANGED",
-        title: "Booking status updated",
-        body: `Booking ${booking.bookingRef} moved to ${transition.to.replace(/_/g, " ").toLowerCase()}.`,
-        metadata: { from: transition.from, to: transition.to },
     });
     return transition;
 }
@@ -394,7 +387,6 @@ export const createDraftBooking = async (req, res) => {
             });
         }
         await BookingTimelineService.record({ bookingId: booking._id, actor, action: "booking.created", metadata: { tourId, status: "DRAFT" } });
-        await NotificationService.notify({ userId: booking.user, bookingId: booking._id, event: "BOOKING_CREATED", title: "Draft booking created", body: "Your tour booking draft is ready.", metadata: { tourId } });
         return sendSuccess(res, await hydrateBooking(booking._id), "Draft booking created.", { title: "Draft Booking Created" });
     } catch (err) {
         console.error("createDraftBooking:", err);
@@ -477,14 +469,6 @@ export const createBooking = async (req, res) => {
         await BookingTimelineService.record({ bookingId: booking._id, actor, action: "booking.created", metadata: { tourId } });
         await BookingTimelineService.record({ bookingId: booking._id, actor, action: "quote.requested", metadata: { travellerCount: travellerValidation.travellers.length } });
         await StatusHistoryService.record({ bookingId: booking._id, from: "DRAFT", to: booking.status, actor, reason: "Initial quote request" });
-        await NotificationService.notify({
-            userId: booking.user,
-            bookingId: booking._id,
-            event: "QUOTE_REQUESTED",
-            title: "Quote request submitted",
-            body: "Your request is with our travel team. We will send a quote soon.",
-            metadata: { tourId },
-        });
         return sendSuccess(res, await hydrateBooking(booking._id), "Quote request submitted.", { title: "Booking Created" });
     } catch (err) {
         console.error("createBooking:", err);
@@ -682,6 +666,7 @@ export const listBookings = async (req, res) => {
             .skip(skip)
             .limit(limit)
             .populate("tour", "title city photo photos price period tags _id")
+            .populate("trip", "title slug location image photos price duration _id")
             .populate("user", "name email role agentRef agencyRef partnerAgencyRef")
             .populate("assignedAgent", "name email role agentRef agencyRef partnerAgencyRef");
         const total = await BookingRepository.countDocuments(q);
@@ -725,7 +710,6 @@ export const updateBooking = async (req, res) => {
             }
             await TravellerService.replaceForBooking(booking._id, travellerValidation.travellers);
             await BookingTimelineService.record({ bookingId: booking._id, actor, action: "traveller.updated", metadata: { travellerCount: booking.guestsCount } });
-            await NotificationService.notify({ userId: booking.user, bookingId: booking._id, event: "TRAVELLER_UPDATED", title: "Traveller details updated", body: "Traveller information was updated." });
         }
 
         if (updates.primaryContact || updates.contact) booking.primaryContact = normalizePrimaryContact(updates, [], actor.authUser);
@@ -774,7 +758,6 @@ export const cancelBooking = async (req, res) => {
         booking.updatedBy = actor.id;
         await booking.save();
         await AuditService.record({ bookingId: booking._id, action: "booking.cancel", before, after: booking.toObject(), actor, reqMeta: requestMeta(req) });
-        await NotificationService.notify({ userId: booking.user, bookingId: booking._id, event: "CANCELLATION_REQUESTED", title: "Booking cancelled", body: "Your booking request has been cancelled." });
         return sendSuccess(res, await hydrateBooking(booking._id), "Booking cancelled.", { title: "Booking Cancelled" });
     } catch (err) {
         console.error("cancelBooking:", err);
@@ -792,7 +775,7 @@ export const getCancelInfo = async (req, res) => {
         const totalAmount = booking.paymentSummary?.total || booking.priceSnapshot?.total || 0;
         const refundEstimate = booking.status === "CANCELLED" ? 0 : paidAmount;
 
-        const shortRef = (booking.bookingRef || "").split("-").length >= 3 ? `TREM-${booking.bookingRef.split("-")[2]}` : booking.bookingRef;
+        const shortRef = toPublicBookingReference(booking.bookingRef);
         return sendSuccess(res, {
             bookingRef: shortRef,
             status: booking.status,
@@ -835,7 +818,6 @@ export const createQuote = async (req, res) => {
         booking.updatedBy = actor.id;
         await booking.save();
         await BookingTimelineService.record({ bookingId: booking._id, actor, action: req.body?.sendNow ? "quote.sent" : "quote.created", metadata: { version: quote.version, finalAmount: quote.finalAmount, currency: quote.currency } });
-        await NotificationService.notify({ userId: booking.user, bookingId: booking._id, event: req.body?.sendNow ? "QUOTE_SENT" : "QUOTE_READY", title: "Your tour quote is ready", body: `Quote ${quote.quoteRef} is ready for review.`, metadata: { version: quote.version } });
         await AuditService.record({ bookingId: booking._id, action: "quote.create", before, after: booking.toObject(), actor, reqMeta: requestMeta(req) });
         return sendSuccess(res, await hydrateBooking(booking._id), "Quote created.", { title: "Quote Created" });
     } catch (err) {
@@ -856,7 +838,6 @@ export const sendQuote = async (req, res) => {
         booking.updatedBy = actor.id;
         await booking.save();
         await BookingTimelineService.record({ bookingId: booking._id, actor, action: "quote.sent", metadata: { version: quote.version } });
-        await NotificationService.notify({ userId: booking.user, bookingId: booking._id, event: "QUOTE_SENT", title: "Quote sent", body: "Your travel quote is ready to accept or reject.", metadata: { version: quote.version } });
         await AuditService.record({ bookingId: booking._id, action: "quote.send", before, after: booking.toObject(), actor, reqMeta: requestMeta(req) });
         return sendSuccess(res, await hydrateBooking(booking._id), "Quote sent.", { title: "Quote Sent" });
     } catch (err) {
@@ -877,7 +858,6 @@ export const acceptQuote = async (req, res) => {
         booking.paymentStatus = "UNPAID";
         booking.updatedBy = actor.id;
         await booking.save();
-        await NotificationService.notify({ userId: booking.user, bookingId: booking._id, event: "QUOTE_ACCEPTED", title: "Quote accepted", body: "Your quote has been accepted. Payment is pending.", metadata: { version: quote.version } });
         await AuditService.record({ bookingId: booking._id, action: "quote.accept", before, after: booking.toObject(), actor, reqMeta: requestMeta(req) });
         return sendSuccess(res, await hydrateBooking(booking._id), "Quote accepted.", { title: "Quote Accepted" });
     } catch (err) {
@@ -896,7 +876,6 @@ export const rejectQuote = async (req, res) => {
         await transitionBookingStatus(booking, "CUSTOMER_REJECTED", actor, cleanString(req.body?.reason || "Customer rejected quote"));
         booking.updatedBy = actor.id;
         await booking.save();
-        await NotificationService.notify({ userId: booking.user, bookingId: booking._id, event: "QUOTE_REJECTED", title: "Quote rejected", body: "Your quote was rejected. Our team can prepare a revised quote.", metadata: { version: quote.version } });
         await AuditService.record({ bookingId: booking._id, action: "quote.reject", before, after: booking.toObject(), actor, reqMeta: requestMeta(req) });
         return sendSuccess(res, await hydrateBooking(booking._id), "Quote rejected.", { title: "Quote Rejected" });
     } catch (err) {
@@ -922,7 +901,6 @@ export const recordPayment = async (req, res) => {
         if (booking.paymentStatus === "PAID" && actor.privileged) await transitionBookingStatus(booking, "CONFIRMED", actor, "Fully paid booking confirmed");
         booking.updatedBy = actor.id;
         await booking.save();
-        await NotificationService.notify({ userId: booking.user, bookingId: booking._id, event: "PAYMENT_RECEIVED", title: "Payment received", body: "Payment has been recorded against your booking.", metadata: { amount } });
         await AuditService.record({ bookingId: booking._id, action: "payment.record", before, after: booking.toObject(), actor, reqMeta: requestMeta(req) });
         return sendSuccess(res, await hydrateBooking(booking._id), "Payment recorded.", { title: "Payment Recorded" });
     } catch (err) {
@@ -949,7 +927,6 @@ export const confirmBooking = async (req, res) => {
         await StatusHistoryService.record({ bookingId: booking._id, from: before.status, to: "CONFIRMED", actor, reason: "Admin confirmed booking" });
         await booking.save();
         await BookingTimelineService.record({ bookingId: booking._id, actor, action: "booking.confirmed", metadata: {} });
-        await NotificationService.notify({ userId: booking.user, bookingId: booking._id, event: "BOOKING_CONFIRMED", title: "Booking confirmed", body: "Your tour booking is confirmed." });
         await AuditService.record({ bookingId: booking._id, action: "booking.confirm", before, after: booking.toObject(), actor, reqMeta: requestMeta(req) });
         return sendSuccess(res, await hydrateBooking(booking._id), "Booking confirmed.", { title: "Booking Confirmed" });
     } catch (err) {
@@ -992,7 +969,6 @@ export const uploadBookingDocument = async (req, res) => {
         const before = booking.toObject();
         const document = await DocumentService.upload(booking._id, body, actor);
         await BookingTimelineService.record({ bookingId: booking._id, actor, action: "document.uploaded", metadata: { type: document.type, fileName: document.fileName, travellerId: document.travellerId } });
-        await NotificationService.notify({ userId: booking.user, bookingId: booking._id, event: "DOCUMENT_UPLOADED", title: "Document uploaded", body: "A booking document was uploaded.", metadata: { type: document.type } });
         await AuditService.record({ bookingId: booking._id, action: "document.upload", before, after: { document }, actor, reqMeta: requestMeta(req) });
         return sendSuccess(res, await hydrateBooking(booking._id), "Document uploaded.", { title: "Document Uploaded" });
     } catch (err) {
@@ -1008,7 +984,6 @@ export const requestMoreDocs = async (req, res) => {
         if (!actor.privileged) return sendError(res, "Only admins/agents can request documents.", 403);
         const requested = Array.isArray(req.body?.documents) ? req.body.documents : [];
         await BookingTimelineService.record({ bookingId: booking._id, actor, action: "documents.requested", metadata: { documents: requested, message: cleanString(req.body?.message) } });
-        await NotificationService.notify({ userId: booking.user, bookingId: booking._id, event: "DOCUMENTS_REQUESTED", title: "More documents requested", body: cleanString(req.body?.message || "Please upload the requested travel documents."), metadata: { documents: requested } });
         return sendSuccess(res, await hydrateBooking(booking._id), "Document request sent.", { title: "Documents Requested" });
     } catch (err) {
         console.error("requestMoreDocs:", err);
@@ -1028,7 +1003,6 @@ export const refundBooking = async (req, res) => {
         await transitionBookingStatus(booking, req.body?.processed ? "REFUNDED" : "REFUND_PENDING", actor, cleanString(req.body?.reason || "Refund updated"));
         booking.updatedBy = actor.id;
         await booking.save();
-        await NotificationService.notify({ userId: booking.user, bookingId: booking._id, event: "REFUND_PROCESSED", title: "Refund updated", body: `Refund status: ${booking.paymentStatus}` });
         await AuditService.record({ bookingId: booking._id, action: "payment.refund", before, after: booking.toObject(), actor, reqMeta: requestMeta(req) });
         return sendSuccess(res, await hydrateBooking(booking._id), "Refund updated.", { title: "Refund Updated" });
     } catch (err) {

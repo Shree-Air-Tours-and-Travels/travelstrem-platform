@@ -256,6 +256,28 @@ $mt-bg: var(--page-bg);
 }
 
 
+/* ---------- Panels Overlay (Tour/Trip view, Create/Edit forms) ---------- */
+
+.mt-panels-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  pointer-events: auto;
+  overflow-y: auto;
+  padding: $space-4;
+
+  @media (max-width: 768px) {
+    align-items: flex-start;
+    padding: $space-3;
+  }
+}
+
 /* ---------- Confirm Modal ---------- */
 
 .tm-modal-overlay {
@@ -265,7 +287,7 @@ $mt-bg: var(--page-bg);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999; // sits above everything
+  z-index: 10000; // sits above the shell, headers and remote containers
   pointer-events: auto; // allow clicks to close only on modal actions
 }
 
@@ -350,6 +372,182 @@ $mt-bg: var(--page-bg);
 @keyframes tm-toast-in {
     from { opacity: 0; transform: translateX(40px); }
     to { opacity: 1; transform: translateX(0); }
+}
+
+/* ---------- Admin services visual hierarchy ----------
+   Reset the broad global button treatment inside navigation, filters and
+   service cards. Teal is reserved for primary actions and active accents.
+*/
+
+.dash-layout .dsb-nav__item {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--nav-text);
+
+  &:hover {
+    background: var(--neutral-soft);
+    color: var(--heading);
+    transform: none;
+  }
+
+  &.is-active {
+    color: var(--color-primary-dark);
+    background: var(--primary-soft);
+    box-shadow: inset 3px 0 0 var(--color-primary);
+  }
+}
+
+.asv {
+  .asv__filter-tab {
+    border: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    color: var(--muted);
+
+    &:hover {
+      background: transparent;
+      color: var(--heading);
+      transform: none;
+    }
+
+    &.is-active {
+      background: transparent;
+      color: var(--color-primary-dark);
+      border-bottom-color: var(--color-primary);
+    }
+  }
+
+  .asv__filter-count,
+  .asv__card-tag {
+    background: var(--neutral-soft);
+    color: var(--muted);
+  }
+
+  .asv__filter-tab.is-active .asv__filter-count {
+    background: var(--primary-soft);
+    color: var(--color-primary-dark);
+  }
+
+  .asv__card {
+    border-color: var(--border);
+    box-shadow: var(--shadow-sm);
+    transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      border-color: var(--primary-focus);
+      box-shadow: var(--shadow-md);
+    }
+  }
+
+  .asv__card-footer {
+    padding-top: $space-3;
+    border-top: 1px solid var(--border);
+  }
+
+  .asv__card-actions .asv__btn-sm {
+    min-height: 30px !important;
+    padding: 4px 10px !important;
+    border: 1px solid var(--border) !important;
+    background: var(--surface) !important;
+    color: var(--text) !important;
+    box-shadow: none !important;
+
+    &:hover {
+      background: var(--surface-subtle) !important;
+      border-color: var(--muted-border) !important;
+      transform: none !important;
+    }
+  }
+
+  .asv__card-actions .asv__btn-danger {
+    color: var(--color-danger) !important;
+    border-color: var(--danger-soft) !important;
+    background: var(--danger-soft) !important;
+  }
+
+  .asv__actions .ui-button--outline {
+    border-color: var(--border);
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: none;
+  }
+
+  @media (max-width: 640px) {
+    .asv__header {
+      align-items: stretch;
+      margin-bottom: $space-4;
+    }
+
+    .asv__actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      width: 100%;
+
+      .ui-button {
+        width: 100%;
+        min-height: 42px;
+      }
+
+      .ui-button:last-child {
+        grid-column: 1 / -1;
+      }
+    }
+
+    .asv__filters {
+      align-items: stretch;
+      gap: $space-3;
+    }
+
+    .asv__filter-tabs {
+      width: 100%;
+      overflow-x: auto;
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
+    }
+
+    .asv__filter-tab {
+      flex: 1 0 auto;
+      justify-content: center;
+      min-height: 42px;
+    }
+
+    .asv__trip-filter,
+    .asv__trip-select {
+      width: 100%;
+    }
+
+    .asv__trip-select {
+      min-height: 42px;
+    }
+
+    .asv__card-body {
+      padding: $space-3;
+    }
+
+    .asv__card-footer {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .asv__card-actions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      width: 100%;
+      gap: $space-2;
+
+      .asv__btn-sm {
+        width: 100%;
+        min-height: 38px !important;
+      }
+    }
+  }
 }
 
 /* End of ManageTours.scss , overlay/drawer/view styles are now component-scoped */

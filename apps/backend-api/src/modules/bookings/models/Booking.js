@@ -1,6 +1,11 @@
 import mongoose from "mongoose";
-import { customAlphabet } from "nanoid";
 import {
+  createBookingReference,
+  toPublicBookingReference,
+} from "../utils/bookingReference.js";
+import {
+  BOOKING_FLOW,
+  BOOKING_FLOW_LIST,
   BOOKING_PRIORITY,
   BOOKING_PRIORITY_LIST,
   BOOKING_STATUS,
@@ -13,7 +18,6 @@ import {
 } from "../../../constants/enums.js";
 
 const { Schema } = mongoose;
-const nano = customAlphabet("ABCDEFGHJKMNPQRSTUVWXYZ23456789", 12);
 const SOURCE_ATTRIBUTION = Object.freeze({
   WEBSITE: "website",
 });
@@ -85,7 +89,9 @@ const sourceAttributionSchema = new Schema({
 
 const bookingSchema = new Schema({
   user: { type: Schema.Types.ObjectId, ref: "User", required: true },
-  tour: { type: Schema.Types.ObjectId, ref: "Tour", required: true },
+  tour: { type: Schema.Types.ObjectId, ref: "Tour", default: null },
+  trip: { type: Schema.Types.ObjectId, ref: "TrevioTrip", default: null },
+  product: { type: String, enum: BOOKING_FLOW_LIST, default: BOOKING_FLOW.TREVISTA, index: true },
   assignedAgent: { type: Schema.Types.ObjectId, ref: "User", default: null },
   assignedAgentRef: { type: String, trim: true, default: "", index: true },
   assignedAgencyRef: { type: String, trim: true, default: "", index: true },
@@ -102,6 +108,8 @@ const bookingSchema = new Schema({
   tripPreferences: { type: tripPreferencesSchema, default: () => ({}) },
   priceSnapshot: { type: priceSnapshotSchema, default: () => ({}) },
   paymentSummary: { type: paymentSummarySchema, default: () => ({}) },
+  tokenAmount: { type: Number, min: 0, default: 0 },
+  paymentRejectionReason: { type: String, trim: true, default: "" },
 
   latestQuoteId: { type: Schema.Types.ObjectId, ref: "BookingQuote", default: null },
   currentQuoteVersion: { type: Number, default: 0 },
@@ -145,22 +153,26 @@ bookingSchema.set("toJSON", {
   versionKey: false,
   transform: (_, ret) => {
     delete ret._id;
-    if (ret.bookingRef) {
-      const parts = ret.bookingRef.split("-");
-      if (parts.length >= 3) ret.bookingRef = `TREM-${parts[2]}`;
-    }
+    if (ret.bookingRef) ret.bookingRef = toPublicBookingReference(ret.bookingRef);
   },
 });
 
 bookingSchema.pre("validate", function (next) {
+  if (this.product === BOOKING_FLOW.TREVIO && !this.trip) {
+    return next(new Error("Trevio bookings require a trip reference"));
+  }
+  if (this.product === BOOKING_FLOW.TREVISTA && !this.tour) {
+    return next(new Error("Trevista bookings require a tour reference"));
+  }
   if (!this.bookingRef) {
-    const now = new Date();
-    const datePart = now.toISOString().slice(0, 10).replace(/-/g, "");
-    const timePart = now.toISOString().slice(11, 16).replace(":", "");
-    this.bookingRef = `TREM-${datePart}-${timePart}-${nano()}`;
+    this.bookingRef = createBookingReference();
   }
   if (!this.guestsCount || this.guestsCount < 1) this.guestsCount = 1;
-  if (!this.seatsReserved || this.seatsReserved < 1) this.seatsReserved = this.guestsCount;
+  if (this.product === "trevio") {
+    if (this.seatsReserved == null) this.seatsReserved = 0;
+  } else {
+    if (!this.seatsReserved || this.seatsReserved < 1) this.seatsReserved = this.guestsCount;
+  }
   if (this.priceSnapshot?.total && !this.paymentSummary?.total) {
     this.paymentSummary = {
       total: this.priceSnapshot.total,
@@ -175,6 +187,7 @@ bookingSchema.pre("validate", function (next) {
 bookingSchema.index({ bookingRef: 1 }, { unique: true, partialFilterExpression: { bookingRef: { $exists: true, $type: "string" } } });
 bookingSchema.index({ user: 1, createdAt: -1 });
 bookingSchema.index({ tour: 1, "travelWindow.startDate": 1 });
+bookingSchema.index({ trip: 1, "travelWindow.startDate": 1 });
 bookingSchema.index({ assignedAgent: 1, status: 1 });
 bookingSchema.index({ tenantId: 1 });
 bookingSchema.index(

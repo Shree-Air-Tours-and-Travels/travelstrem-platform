@@ -8,6 +8,19 @@ import StatusHistoryService from "./StatusHistoryService.js";
 import AuditService from "./AuditService.js";
 import AssignmentService from "./AssignmentService.js";
 
+const resolveProofUrl = (value) => {
+  if (typeof value === "string") {
+    const normalized = value.trim();
+    return /^\[object Object\](?:\.html)?$/i.test(normalized) ? "" : normalized;
+  }
+  if (!value || typeof value !== "object") return "";
+  for (const key of ["secure_url", "secureUrl", "url", "href", "path", "downloadUrl", "receiptUrl", "paymentScreenshot", "file", "asset", "data"]) {
+    const resolved = resolveProofUrl(value[key]);
+    if (resolved) return resolved;
+  }
+  return "";
+};
+
 export const BookingService = {
   priorityDueDates(priority = "MEDIUM") {
     const now = Date.now();
@@ -22,7 +35,25 @@ export const BookingService = {
 
   async hydrate(booking, { includeDeep = true } = {}) {
     if (!booking) return null;
-    const doc = typeof booking.toJSON === "function" ? booking.toJSON() : booking;
+    const rawDoc = typeof booking.toJSON === "function" ? booking.toJSON() : booking;
+    const doc = { ...rawDoc };
+    if (doc.product === "trevio") {
+      const bookingAliases = {
+        PAYMENT_PENDING: "AWAITING_TOKEN_PAYMENT",
+        PARTIALLY_PAID: "CONFIRMED",
+        PAID: "CONFIRMED",
+      };
+      const paymentAliases = {
+        UNPAID: "TOKEN_PENDING",
+        PARTIAL: "TOKEN_PAID",
+        PAID: "FULLY_PAID",
+      };
+      doc.status = bookingAliases[doc.status] || doc.status;
+      doc.paymentStatus = paymentAliases[doc.paymentStatus] || doc.paymentStatus;
+      if (!Number(doc.tokenAmount || 0) && Number(doc.paymentSummary?.total || doc.priceSnapshot?.total || 0) > 0) {
+        doc.tokenAmount = Math.round(Number(doc.paymentSummary?.total || doc.priceSnapshot?.total) * 0.15);
+      }
+    }
     const bookingId = booking._id || booking.id;
     const [travelers, quotes, payments, documents, timeline, statusHistory, auditLogs, assignments] = await Promise.all([
       TravellerService.list(bookingId),
@@ -35,10 +66,25 @@ export const BookingService = {
       includeDeep ? AssignmentService.list(bookingId) : Promise.resolve([]),
     ]);
     const latestQuote = quotes[0] || null;
+    const normalizedPayments = payments.map((payment) => {
+      const record = typeof payment?.toJSON === "function" ? payment.toJSON() : { ...payment };
+      const storedProofUrl = resolveProofUrl(record.paymentScreenshot)
+        || resolveProofUrl(record.receiptUrl)
+        || resolveProofUrl(record.raw?.paymentScreenshot)
+        || resolveProofUrl(record.raw?.receiptUrl);
+      return {
+        ...record,
+        paymentScreenshot: storedProofUrl,
+        receiptUrl: storedProofUrl,
+        proofAvailable: Boolean(storedProofUrl),
+      };
+    });
     const BOOKING_PROCEED_HIDE_STATUSES = ["CANCELLED", "COMPLETED", "REFUNDED"];
     const isProceedHide = BOOKING_PROCEED_HIDE_STATUSES.includes(doc.status);
     return {
       ...doc,
+      bookingStatus: doc.status,
+      remainingAmount: doc.paymentSummary?.remaining || 0,
       isProceedHide,
       startDate: doc.startDate || doc.travelWindow?.startDate,
       endDate: doc.endDate || doc.travelWindow?.endDate,
@@ -46,7 +92,7 @@ export const BookingService = {
       travellers: travelers,
       quotes,
       currentQuote: latestQuote,
-      payments,
+      payments: normalizedPayments,
       payment: {
         amountPaid: doc.paymentSummary?.paid || 0,
         currency: doc.priceSnapshot?.currency || "INR",

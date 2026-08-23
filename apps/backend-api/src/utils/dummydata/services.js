@@ -260,7 +260,7 @@ const services = [
     ],
     cta: {
       label: "Explore Corporate Plans",
-      href: "/dashboard",
+      href: "/app-shell",
     },
   },
   {

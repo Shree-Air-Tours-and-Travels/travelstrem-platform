@@ -1,24 +1,45 @@
 import Favorite from "../models/Favorite.js";
 import Tour from "../models/Tour.js";
+import mongoose from "mongoose";
+
+const getTrevioTripModel = () => mongoose.models?.TrevioTrip || null;
+
+const normalizeTripForFavorites = (doc) => {
+  const trip = doc?.toObject ? doc.toObject({ virtuals: true }) : doc || {};
+  const p = trip.price || {};
+  const price = typeof p === "number" ? p : (p.amount || 0);
+  const currency = typeof p === "object" ? (p.currency || "INR") : "INR";
+  return {
+    ...trip,
+    price,
+    priceInfo: {
+      min: price,
+      max: price,
+      currency,
+      isFinal: typeof p === "object" ? p.isFinal !== false : true,
+      source: "trevio",
+    },
+  };
+};
 
 export const toggleFavorite = async (req, res) => {
   try {
-    const { tourId } = req.body;
+    const { tourId, product = "trevista" } = req.body;
     const userId = req.user?.sub || req.user?.id || req.user?._id || req.user?.userId;
 
     if (!tourId) {
       return res.status(400).json({ status: "error", message: "tourId is required" });
     }
 
-    const existing = await Favorite.findOne({ tourId, userId });
+    const existing = await Favorite.findOne({ tourId, userId, product });
 
     if (existing) {
       await Favorite.deleteOne({ _id: existing._id });
-      return res.status(200).json({ status: "success", data: { favorited: false } });
+      return res.status(200).json({ status: "success", componentData: { data: { favorited: false } } });
     }
 
-    await Favorite.create({ tourId, userId });
-    return res.status(200).json({ status: "success", data: { favorited: true } });
+    await Favorite.create({ tourId, userId, product });
+    return res.status(200).json({ status: "success", componentData: { data: { favorited: true } } });
   } catch (error) {
     console.error("toggleFavorite error:", error);
     return res.status(500).json({ status: "error", message: "Failed to toggle favorite" });
@@ -29,13 +50,31 @@ export const getFavorites = async (req, res) => {
   try {
     const userId = req.user?.sub || req.user?.id || req.user?._id || req.user?.userId;
     const favorites = await Favorite.find({ userId }).sort({ createdAt: -1 }).lean();
-    const tourIds = favorites.map((f) => f.tourId);
-    const tours = await Tour.find({ _id: { $in: tourIds } });
 
-    const ordered = tourIds
-      .map((id) => tours.find((t) => String(t._id) === String(id)))
-      .filter(Boolean)
-      .map((doc) => doc.toObject({ virtuals: true }));
+    const trevistaIds = favorites.filter((f) => f.product === "trevista").map((f) => f.tourId);
+    const trevioIds = favorites.filter((f) => f.product === "trevio").map((f) => f.tourId);
+
+    const TrevioTrip = getTrevioTripModel();
+
+    const [trevistaTours, trevioTrips] = await Promise.all([
+      trevistaIds.length ? Tour.find({ _id: { $in: trevistaIds } }) : [],
+      trevioIds.length && TrevioTrip ? TrevioTrip.find({ _id: { $in: trevioIds } }) : [],
+    ]);
+
+    const tourMap = new Map(trevistaTours.map((t) => [String(t._id), t.toObject({ virtuals: true })]));
+    const tripMap = new Map((trevioTrips || []).map((t) => [String(t._id), normalizeTripForFavorites(t)]));
+
+    const ordered = favorites
+      .map((fav) => {
+        const id = String(fav.tourId);
+        if (fav.product === "trevio") {
+          const trip = tripMap.get(id);
+          return trip ? { ...trip, product: "trevio" } : null;
+        }
+        const tour = tourMap.get(id);
+        return tour ? { ...tour, product: "trevista" } : null;
+      })
+      .filter(Boolean);
 
     return res.status(200).json({
       status: "success",
@@ -47,11 +86,9 @@ export const getFavorites = async (req, res) => {
               type: "favorites",
               props: {
                 chips: [
-                  { id: "tours", label: "Tours", active: true },
-                  { id: "flights", label: "Flights", disabled: true },
-                  { id: "hotels", label: "Hotels", disabled: true },
-                  { id: "experiences", label: "Experiences", disabled: true },
-                  { id: "visa", label: "Visa", disabled: true },
+                  { id: "all", label: "All Products", active: true },
+                  { id: "trevista", label: "Packages" },
+                  { id: "trevio", label: "Trips" },
                 ],
               },
             },

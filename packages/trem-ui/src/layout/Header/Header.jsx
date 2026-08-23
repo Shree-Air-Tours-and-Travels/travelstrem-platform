@@ -3,11 +3,11 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import Button from "../../components/Button/Button.jsx";
 import Dropdown from "../../components/Dropdown/Dropdown.jsx";
 import Icon from "../../icons/Icon/Icon.jsx";
-import NotificationBell from "../../components/NotificationBell/NotificationBell.jsx";
 import ProfileActionMenu from "../../components/ProfileActionMenu/ProfileActionMenu.jsx";
+import BrandLogo from "../../components/BrandLogo/BrandLogo.jsx";
 import "./Header.styles.scss";
 
-const getNavPath = (item) => item?.path || "/";
+const getNavPath = (item) => item?.path || item?.href || "/";
 const isPathActive = (path, pathname) => !path ? false : path === "/" ? pathname === "/" : pathname === path || pathname.startsWith(`${path}/`);
 const normalizeMenuItem = (item, index) => ({ ...item, id: item.id || `${item.label || "item"}-${index}`, type: item.type || (Array.isArray(item.items) ? "dropdown" : "internal"), path: getNavPath(item) });
 const getNavIcon = (item) => item?.icon || ({
@@ -15,7 +15,7 @@ const getNavIcon = (item) => item?.icon || ({
   About: "info",
   Services: "briefcaseBusiness",
   Dashboard: "user",
-  "Tours & Packages": "map",
+  Trevista: "map",
   Flights: "plane",
   Hotels: "hotel",
   Cab: "taxi",
@@ -41,13 +41,13 @@ const getUserInitials = (user) => {
 };
 
 const DEFAULT_CONFIG = {
-  brand: { label: "TravelsTREM", homePath: "/" },
-  leftSection: { welcome: true, showStatus: true, showNotifications: true },
+  brand: { label: "TravelsTrem", homePath: "/" },
+  leftSection: { welcome: true, showStatus: true },
   menu: [],
   authActions: { login: { label: "Login", path: "/login" }, logout: { label: "Logout" } },
 };
 
-export default function Header({ headerConfig = DEFAULT_CONFIG, session = null, theme = "light", onToggleTheme, onLogout, onSettings, onNavigate, onFavoritesClick, notificationFetcher, showNotifications, showFavorites = true, className = "" }) {
+export default function Header({ headerConfig = DEFAULT_CONFIG, session = null, theme = "light", onToggleTheme, onLogout, onSettings, onNavigate, onFavoritesClick, showFavorites = true, className = "" }) {
   const navigate = useNavigate();
   const location = useLocation();
   const user = session?.user || null;
@@ -78,10 +78,36 @@ export default function Header({ headerConfig = DEFAULT_CONFIG, session = null, 
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
   useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = open ? "hidden" : "";
-    if (open && firstLinkRef.current) firstLinkRef.current.focus();
-    return () => { document.body.style.overflow = prev; };
+    if (!open) return undefined;
+    const preventTouch = (e) => {
+      if (!drawerRef.current) return;
+      if (drawerRef.current.contains(e.target)) return;
+      e.preventDefault();
+    };
+    document.addEventListener("touchmove", preventTouch, { passive: false });
+    return () => document.removeEventListener("touchmove", preventTouch);
+  }, [open]);
+  useEffect(() => {
+    if (!open) return undefined;
+    const scrollY = window.scrollY;
+    const html = document.documentElement;
+    const body = document.body;
+    const prevHtmlOverflow = html.style.overflow;
+    const prevHtmlOverscroll = html.style.overscrollBehavior;
+    const prevBodyOverflow = body.style.overflow;
+    const prevBodyOverscroll = body.style.overscrollBehavior;
+    html.style.overflow = "hidden";
+    html.style.overscrollBehavior = "none";
+    body.style.overflow = "hidden";
+    body.style.overscrollBehavior = "none";
+    if (firstLinkRef.current) firstLinkRef.current.focus();
+    return () => {
+      html.style.overflow = prevHtmlOverflow;
+      html.style.overscrollBehavior = prevHtmlOverscroll;
+      body.style.overflow = prevBodyOverflow;
+      body.style.overscrollBehavior = prevBodyOverscroll;
+      window.scrollTo(0, scrollY);
+    };
   }, [open]);
 
   const config = headerConfig || DEFAULT_CONFIG;
@@ -89,7 +115,6 @@ export default function Header({ headerConfig = DEFAULT_CONFIG, session = null, 
   const leftSection = config.leftSection || DEFAULT_CONFIG.leftSection;
   const loginAction = config.authActions?.login || DEFAULT_CONFIG.authActions.login;
   const logoutAction = config.authActions?.logout || DEFAULT_CONFIG.authActions.logout;
-  const notificationsEnabled = showNotifications ?? leftSection.showNotifications ?? true;
   const favoritesEnabled = showFavorites && leftSection.showFavorites !== false;
 
   const navItems = useMemo(() => {
@@ -104,7 +129,12 @@ export default function Header({ headerConfig = DEFAULT_CONFIG, session = null, 
     if (item?.disabled) return;
     setOpen(false);
     if (item?.type === "external" && item.href) {
-      window.location.assign(item.href);
+      if (item.target === "_blank" || item.newTab) {
+        const features = String(item.rel || "noopener,noreferrer").replace(/\s+/g, ",");
+        window.open(item.href, "_blank", features);
+      } else {
+        window.location.assign(item.href);
+      }
       return;
     }
     const path = getNavPath(item);
@@ -244,14 +274,12 @@ const NavItem = ({ item, isFirst, drawer, activePath, firstLinkRef, onNavClick, 
     const favorites = favoritesEnabled && user ? (
       <Button variant="text" iconLeft="heart" primaryClassName="trem-header__action-btn" onClick={handleFavoritesClick} aria-label="Favorites" />
     ) : null;
-    const notification = notificationsEnabled && user ? <NotificationBell fetcher={notificationFetcher} /> : null;
     const profile = <ProfileActionMenu user={user} isAuthenticated={session?.isAuthenticated} theme={theme} onToggleTheme={onToggleTheme} onSettings={onSettings} onLogout={onLogout} logoutLabel={logoutAction.label || "Logout"} />;
 
     if (!wrapItems) {
       return (
         <>
           {favorites}
-          {notification}
           {profile}
         </>
       );
@@ -260,7 +288,6 @@ const NavItem = ({ item, isFirst, drawer, activePath, firstLinkRef, onNavClick, 
     return (
       <>
         {favorites && <li>{favorites}</li>}
-        {notification && <li>{notification}</li>}
         <li>{profile}</li>
       </>
     );
@@ -271,13 +298,20 @@ const NavItem = ({ item, isFirst, drawer, activePath, firstLinkRef, onNavClick, 
       <header className={`trem-header ${open ? "is-open" : ""} ${className}`.trim()} role="banner">
         <div className="trem-header__container">
           <Button variant="text" iconLeft={open ? "menuClose" : "menuOpen"} onClick={() => setOpen((s) => !s)} aria-label={open ? "Close menu" : "Open menu"} aria-expanded={open} primaryClassName="trem-header__toggle" />
-          <Button variant="text" text={brand.label || "TravelsTREM"} onClick={() => onPathClick(brand.homePath || "/", brand.label || "TravelsTREM")} primaryClassName="trem-header__logo" />
+          <Button variant="text" onClick={() => onPathClick(brand.homePath || "/", brand.label || "TravelsTrem")} primaryClassName="trem-header__logo">
+            <BrandLogo
+              logoSrc={brand.logoSrc || ""}
+              darkLogoSrc={brand.darkLogoSrc || ""}
+              name=""
+              size="small"
+            />
+            <span>{brand.label || "TravelsTrem"}</span>
+          </Button>
           <nav className="trem-header__nav" role="navigation" aria-label="Main navigation">
             <ul className="trem-header__menu trem-header__menu--start">{navItems.map((item, i) => <NavItem item={item} key={item.id} isFirst={i === 0} activePath={activePath} firstLinkRef={firstLinkRef} onNavClick={onNavClick} onClose={() => setOpen(false)} />)}</ul>
             <ul className="trem-header__menu trem-header__menu--end">{renderUserArea(false)}{renderActions()}</ul>
             <div className="trem-header__mobile-actions">
               {favoritesEnabled && user ? <Button variant="text" iconLeft="heart" primaryClassName="trem-header__action-btn" onClick={handleFavoritesClick} aria-label="Favorites" /> : null}
-              {notificationsEnabled && user ? <NotificationBell fetcher={notificationFetcher} variant="sidebar" /> : null}
             </div>
           </nav>
         </div>

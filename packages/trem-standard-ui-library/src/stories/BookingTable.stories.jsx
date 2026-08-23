@@ -47,8 +47,8 @@ const bookingTableConfig = {
     ],
   },
   table: {
-    title: "Booking List",
-    ariaLabel: "Travel service booking list",
+    title: "My Journeys",
+    ariaLabel: "Travel service my journeys",
     minWidth: 1120,
   },
   actions: {
@@ -165,7 +165,7 @@ export const Playground = {
 };
 
 export const BookingList = {
-  name: "Booking Table / Booking List",
+  name: "Booking Table / My Journeys",
   render: () => <BookingTable {...bookingTableConfig} columns={bookingColumns} rows={bookingRows} />,
 };
 

@@ -1,0 +1,27 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": { "options": {} },
+    "elements": {
+      "labels": {
+        "serviceTrevio": "Trevio",
+        "serviceTrevista": "Trevista"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "ServiceShortcuts",
+          "props": {
+            "items": []
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

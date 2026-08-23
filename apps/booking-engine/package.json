@@ -1,0 +1,43 @@
+{
+  "name": "@apps/booking-engine",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@packages/trem-auth-core": "workspace:*",
+    "@packages/trem-design-tokens": "workspace:*",
+    "@packages/trem-modals": "workspace:*",
+    "@packages/trem-ui": "workspace:*",
+    "@packages/trem-utils": "workspace:*",
+    "@reduxjs/toolkit": "^2.12.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-redux": "^9.3.0",
+    "react-router-dom": "^7.8.2",
+    "react-scripts": "5.0.1",
+    "redux-persist": "^6.0.0",
+    "sass": "^1.86.0"
+  },
+  "scripts": {
+    "prebuild": "node ../../scripts/sync-favicons.mjs booking-engine",
+    "dev": "../trevista-remote/node_modules/.bin/cross-env PORT=3007 DISABLE_ESLINT_PLUGIN=true ../trevista-remote/node_modules/.bin/craco start",
+    "start": "../trevista-remote/node_modules/.bin/cross-env PORT=3007 DISABLE_ESLINT_PLUGIN=true ../trevista-remote/node_modules/.bin/craco start",
+    "build": "../trevista-remote/node_modules/.bin/cross-env DISABLE_ESLINT_PLUGIN=true ../trevista-remote/node_modules/.bin/craco build",
+    "test": "craco test --watchAll=false"
+  },
+  "devDependencies": {
+    "@craco/craco": "^7.1.0",
+    "cross-env": "^7.0.3"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

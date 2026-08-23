@@ -3,11 +3,23 @@ import config from "../../../config/index.js";
 import headerConfigTemplate from "../../../config/header.js";
 import sessionConfigTemplate from "../../../config/session.js";
 import pageConfigTemplate from "../../../config/pageConfig.js";
+import sidebarConfigTemplate from "../../../config/sidebar.js";
+import appHeaderConfigTemplate from "../../../config/appHeader.js";
+import navigationConfigTemplate from "../../../config/navigation.js";
 import User from "../../auth/models/User.js";
 
+export const getNavigationConfig = (req, res) => {
+    res.status(200).json({
+        status: "success",
+        message: "Navigation config loaded",
+        componentData: navigationConfigTemplate,
+    });
+};
+
 const JWT_SECRET = (config.JWT && config.JWT.accessSecret) || process.env.JWT_SECRET;
-const COOKIE_NAME = config.IS_PRODUCTION ? "__Host-token" : "token";
-const MASTER_ADMIN_EMAIL = (config.MASTER_ADMIN_EMAIL || process.env.MASTER_ADMIN_EMAIL || "akshat.goyal@travelstrem.com")
+const USE_SHARED_COOKIE_DOMAIN = config.IS_PRODUCTION && Boolean((config.AUTH_COOKIE_DOMAIN || process.env.AUTH_COOKIE_DOMAIN || "").toString().trim());
+const COOKIE_NAME = config.IS_PRODUCTION && !USE_SHARED_COOKIE_DOMAIN ? "__Host-token" : "token";
+const MASTER_ADMIN_EMAIL = (config.MASTER_ADMIN_EMAIL || "")
     .toString()
     .trim()
     .toLowerCase();
@@ -18,7 +30,7 @@ const getBearerToken = (req) => {
     if (authHeader.startsWith("Bearer ")) return authHeader.split(" ")[1] || null;
     if (req.headers["x-ignore-cookie-auth"] === "true") return null;
 
-    return req.cookies?.[COOKIE_NAME] || req.cookies?.token || null;
+    return req.cookies?.[COOKIE_NAME] || req.cookies?.token || req.cookies?.["__Host-token"] || null;
 };
 
 const getUserFromRequest = (req) => {
@@ -174,19 +186,30 @@ const applyEnvironmentRemotes = (headerConfig = {}) => {
     const envFrontends = config.PORTAL_CONFIG?.frontends || {};
     const remotes = headerConfig.remotes || {};
 
-    const toursRemoteUrl = stripRemoteEntry(envFrontends.toursTREM?.remoteEntry || envFrontends.toursTREM?.baseUrl);
-    const adminRemoteUrl = stripRemoteEntry(envFrontends.adminTREM?.remoteEntry || envFrontends.adminTREM?.baseUrl);
+    const trevistaRemoteUrl = stripRemoteEntry(config.TREVISTA_URL || envFrontends.trevista?.remoteEntry || envFrontends.trevista?.baseUrl);
+    const trevioRemoteUrl = stripRemoteEntry(config.TREVIO_URL || envFrontends.trevio?.remoteEntry || envFrontends.trevio?.baseUrl);
+    const adminRemoteUrl = stripRemoteEntry(config.ADMIN_REMOTE_URL || envFrontends.adminTREM?.remoteEntry || envFrontends.adminTREM?.baseUrl);
+    const productUrls = {
+        Trevio: trevioRemoteUrl,
+        Trevista: trevistaRemoteUrl,
+    };
+    const menu = (headerConfig.menu || []).map((item) => {
+        if (!Array.isArray(item.items)) return item;
+        return {
+            ...item,
+            items: item.items.map((child) => (
+                productUrls[child.label]
+                    ? { ...child, href: productUrls[child.label] }
+                    : child
+            )),
+        };
+    });
 
     return {
         ...headerConfig,
+        menu,
         remotes: {
             ...remotes,
-            ...(remotes.toursTREM ? {
-                toursTREM: {
-                    ...remotes.toursTREM,
-                    defaultRemoteUrl: toursRemoteUrl || remotes.toursTREM.defaultRemoteUrl,
-                },
-            } : {}),
             ...(remotes.adminTREM ? {
                 adminTREM: {
                     ...remotes.adminTREM,
@@ -203,6 +226,100 @@ const applyEnvironmentRemotes = (headerConfig = {}) => {
     };
 };
 
+const buildTrevioHeaderConfig = (baseConfig = {}) => ({
+    ...baseConfig,
+    brand: {
+        label: "Trevio",
+        subtitle: "by TravelsTrem",
+        mark: "T",
+        homePath: "/trevio",
+    },
+    menu: [
+        { id: "home", label: "Home", type: "internal", path: "/trevio", disabled: false },
+        { id: "myTrips", label: "My Trips", type: "internal", path: "/trevio/profile", disabled: false },
+        {
+            id: "explore",
+            label: "Explore",
+            type: "dropdown",
+            disabled: false,
+            items: [
+                { id: "trevista", label: "Trevista", type: "external", href: config.TREVISTA_URL, target: "_self", disabled: false },
+            ],
+        },
+    ],
+    navigation: [
+        { id: "home", label: "Home", path: "/trevio", access: "public" },
+        { id: "my-trips", label: "My Trips", path: "/trevio/profile", access: "authenticated" },
+        { id: "explore", label: "Explore", path: "/trevista", access: "public" },
+    ],
+    authActions: {
+        login: { label: "Sign in", path: "/auth?app=trevio" },
+        logout: { label: "Logout", eventName: "USER_LOGOUT", redirectTo: "/trevio" },
+    },
+    routeMap: {
+        "/trevio": "trevio",
+        "/trevio/profile": "trevio",
+        "/trevista": "trevista",
+    },
+    routes: [
+        { id: "home", path: "/trevio", component: "home", access: "public" },
+        { id: "profile", path: "/trevio/profile", component: "profile", access: "authenticated" },
+    ],
+    fallbacks: {
+        authenticated: "/trevio",
+        anonymous: "/auth?app=trevio",
+        unauthorized: "/trevio",
+    },
+});
+
+const buildTrevistaHeaderConfig = (baseConfig = {}) => ({
+    ...baseConfig,
+    brand: {
+        label: "Trevista",
+        subtitle: "by TravelsTrem",
+        mark: "T",
+        homePath: "/trevista",
+    },
+    menu: [
+        { id: "home", label: "Home", type: "internal", path: "/trevista", disabled: false },
+        { id: "bookings", label: "My Bookings", type: "internal", path: "/trevista/bookings", disabled: false },
+        {
+            id: "explore",
+            label: "Explore More",
+            type: "dropdown",
+            disabled: false,
+            items: [
+                { id: "trevio", label: "Trevio", type: "external", href: config.TREVIO_URL, target: "_self", disabled: false },
+            ],
+        },
+    ],
+    navigation: [
+        { id: "home", label: "Home", path: "/trevista", access: "public" },
+        { id: "bookings", label: "My Bookings", path: "/trevista/bookings", access: "authenticated" },
+        { id: "explore", label: "Explore More", path: "/trevio", access: "public" },
+    ],
+    authActions: {
+        login: { label: "Sign in", path: "/auth?app=trevista" },
+        logout: { label: "Logout", eventName: "USER_LOGOUT", redirectTo: "/trevista" },
+    },
+    routeMap: {
+        "/trevista": "trevista",
+        "/trevista/bookings": "trevista",
+        "/trevista/tour": "trevista",
+        "/trevio": "trevio",
+    },
+    routes: [
+        { id: "home", path: "/trevista", component: "home", access: "public" },
+        { id: "bookings", path: "/trevista/bookings", component: "bookings", access: "authenticated" },
+        { id: "tourDetails", path: "/trevista/tour/:tourRef", component: "tourDetails", access: "public" },
+    ],
+    fallbacks: {
+        authenticated: "/trevista",
+        anonymous: "/auth?app=trevista",
+        unauthorized: "/trevista",
+    },
+});
+
 const buildAdminHeaderConfig = (baseConfig = {}) => ({
     ...baseConfig,
     brand: {
@@ -215,7 +332,6 @@ const buildAdminHeaderConfig = (baseConfig = {}) => ({
         welcome: true,
         showLogout: true,
         showStatus: true,
-        showNotifications: false,
         showFavorites: false,
     },
     menu: [
@@ -277,7 +393,7 @@ const buildAgentHeaderConfig = (baseConfig = {}) => ({
     ...baseConfig,
     brand: {
         ...(baseConfig.brand || {}),
-        label: "AgentTREM",
+        label: "Partner Portal",
         homePath: "/agent/services",
     },
     leftSection: {
@@ -285,7 +401,6 @@ const buildAgentHeaderConfig = (baseConfig = {}) => ({
         welcome: true,
         showLogout: true,
         showStatus: true,
-        showNotifications: false,
         showFavorites: false,
     },
     menu: [
@@ -312,7 +427,7 @@ const buildAgentHeaderConfig = (baseConfig = {}) => ({
         },
         {
             id: "agentAgency",
-            label: "Agency",
+            label: "Partner Agency",
             app: "agentTREM",
             path: "/agent/agency",
             disabled: false,
@@ -322,7 +437,7 @@ const buildAgentHeaderConfig = (baseConfig = {}) => ({
         { id: "services", label: "Services", path: "/agent/services", access: "roles", roles: ["agent"] },
         { id: "dashboard", label: "Dashboard", path: "/agent/dashboard", access: "roles", roles: ["agent"] },
         { id: "bookings", label: "Bookings", path: "/agent/bookings", access: "roles", roles: ["agent"] },
-        { id: "agency", label: "Agency", path: "/agent/agency", access: "roles", roles: ["agent"] },
+        { id: "agency", label: "Partner Agency", path: "/agent/agency", access: "roles", roles: ["agent"] },
     ],
     routeMap: {
         "/agent/services": "agentTREM",
@@ -439,12 +554,48 @@ export const getHeaderConfig = async (req, res) => {
     try {
         const json = headerConfigTemplate;
         const requestedApp = req.query.app || "";
+        const clientId = req.query.clientId || "";
         const baseHeaderConfig = applyEnvironmentRemotes(json.componentData);
-        const headerConfig = requestedApp === "adminTREM"
-            ? buildAdminHeaderConfig(baseHeaderConfig)
-            : requestedApp === "agentTREM"
-                ? buildAgentHeaderConfig(baseHeaderConfig)
-                : baseHeaderConfig;
+
+        let clientBranding = null;
+        if (clientId) {
+            try {
+                const Client = (await import("../../clients/models/Client.js")).default;
+                clientBranding = await Client.findById(clientId).lean();
+            } catch (_) {}
+        }
+
+        let headerConfig = requestedApp === "trevio"
+            ? buildTrevioHeaderConfig(baseHeaderConfig)
+            : requestedApp === "trevista"
+                ? buildTrevistaHeaderConfig(baseHeaderConfig)
+                : requestedApp === "adminTREM"
+                    ? buildAdminHeaderConfig(baseHeaderConfig)
+                    : requestedApp === "agentTREM"
+                        ? buildAgentHeaderConfig(baseHeaderConfig)
+                        : baseHeaderConfig;
+
+        if (clientBranding) {
+            const brandMap = clientBranding.branding instanceof Map
+                ? Object.fromEntries(clientBranding.branding)
+                : clientBranding.branding || {};
+
+            headerConfig.logos = headerConfig.logos || {};
+            for (const [product, overrides] of Object.entries(brandMap)) {
+                if (overrides && headerConfig.logos[product]) {
+                    headerConfig.logos[product] = { ...headerConfig.logos[product], ...overrides };
+                } else if (overrides) {
+                    headerConfig.logos[product] = overrides;
+                }
+            }
+
+            if (clientBranding.globalBrand) {
+                headerConfig.brand = {
+                    ...headerConfig.brand,
+                    ...clientBranding.globalBrand,
+                };
+            }
+        }
         const pathname = req.query.pathname || "/";
         const activePath = resolveActivePath(pathname, headerConfig);
         const pageConfig = resolvePageConfig(req);
@@ -477,6 +628,14 @@ export const getHeaderConfig = async (req, res) => {
         console.error("getHeaderConfig error:", error && error.stack ? error.stack : error);
         return res.status(500).json({ status: "error", message: "Failed to load header config" });
     }
+};
+
+export const getSidebarConfig = async (_req, res) => {
+    return res.json(sidebarConfigTemplate);
+};
+
+export const getAppHeaderConfig = async (_req, res) => {
+    return res.json(appHeaderConfigTemplate);
 };
 
 export const getPageConfig = async (req, res) => {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Button, GlobalLoader, Icon, TourCard, Breadcrumbs, PortalPreloader, BottomSheet, EmptyState, QuickChips, Title, SubTitle, Paragraph, BookingTable as TremBookingTable, DashboardSidebar } from "@packages/trem-ui";
+import { Button, GlobalLoader, Icon, FavoriteCard, Breadcrumbs, PortalPreloader, BottomSheet, EmptyState, QuickChips, Title, SubTitle, Paragraph, BookingTable as TremBookingTable, DashboardSidebar } from "@packages/trem-ui";
 import { fetchData, getTourDetailsPath, slugify } from "@packages/trem-utils";
 import "./Dashboard.styles.scss";
 
@@ -231,27 +231,6 @@ function CompactServiceList({ widget, labels, type }) {
     );
 }
 
-function NotificationsPanel({ widget, labels }) {
-    const props = getWidgetProps(widget);
-    return (
-        <Panel className="dashboard-notifications" title={getLabel(labels, props.titleRef, "Notifications")} action={<Button variant="text" text="All" />}>
-            {(props.items || []).map((item) => {
-                const title = getLabel(labels, item.titleRef, item.title);
-                return (
-                <article className={`dashboard-notification${getToneClass(item.tone)}`} key={item.titleRef || title}>
-                    <span><Icon name="bell" aria-hidden="true" /></span>
-                    <div>
-                        <strong>{title}</strong>
-                        <Paragraph text={item.body} />
-                    </div>
-                    <time>{item.time}</time>
-                </article>
-                );
-            })}
-        </Panel>
-    );
-}
-
 function FavoritesTourList({ labels, favoritesState, favoritesChips, loadFavorites }) {
     const navigate = useNavigate();
     const [activeChip, setActiveChip] = useState("tours");
@@ -336,7 +315,7 @@ function FavoritesTourList({ labels, favoritesState, favoritesChips, loadFavorit
                 ) : (
                     <div className="dashboard-favorites__grid">
                         {activeChip === "tours" && sorted.map((tour) => (
-                            <TourCard key={tour._id || tour.id} tour={tour} variant="grid" onView={openTour} />
+                            <FavoriteCard key={tour._id || tour.id} tour={tour} onView={openTour} />
                         ))}
                     </div>
                 )}
@@ -366,8 +345,8 @@ function DashboardBookingTable({ widget, labels, options, bookingState, bookingQ
     ));
     const table = {
         ...(props.table || {}),
-        title: getLabel(labels, props.table?.titleRef, getLabel(labels, props.titleRef, "Booking List")),
-        ariaLabel: getLabel(labels, props.table?.ariaLabelRef, "Booking List"),
+        title: getLabel(labels, props.table?.titleRef, getLabel(labels, props.titleRef, "My Journeys")),
+        ariaLabel: getLabel(labels, props.table?.ariaLabelRef, "My Journeys"),
         loading: Boolean(bookingState?.loading),
         error: bookingState?.error || "",
         emptyState: props.table?.emptyState ? {
@@ -464,7 +443,6 @@ const widgetRenderers = {
     ServiceShortcuts,
     BookingsChart,
     MostBookedServices: (props) => <CompactServiceList {...props} type="Most Booked Services" />,
-    NotificationsPanel,
     RecentInvoices: (props) => <CompactServiceList {...props} type="Recent Invoices" />,
     BookingTable: DashboardBookingTable,
     SettingsForm: () => null,
@@ -700,7 +678,7 @@ export default function DashboardPageView({ loading, error, labels, widgets, opt
         sessionStorage.setItem(STORAGE_KEY, activeNav);
     }, [activeNav]);
 
-    if (loading) return <GlobalLoader visible text="Loading dashboard" />;
+    if (loading) return <GlobalLoader visible text="Loading App" />;
     if (error) return <main className="customer-dashboard-page customer-dashboard-page--error">Error: {error}</main>;
 
     const shellWidget = widgets.find((widget) => widget.type === "CustomerDashboardShell");

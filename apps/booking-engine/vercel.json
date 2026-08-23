@@ -1,0 +1,23 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "git": {
+    "deploymentEnabled": true
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" }
+      ]
+    }
+  ],
+  "rewrites": [
+    { "source": "/remoteEntry.js", "destination": "/remoteEntry.js" },
+    { "source": "/remoteEntry.js.map", "destination": "/remoteEntry.js.map" },
+    { "source": "/static/:path*", "destination": "/static/:path*" },
+    { "source": "/favicon.png", "destination": "/favicon.png" },
+    { "source": "/favicon-dark.png", "destination": "/favicon-dark.png" },
+    { "source": "/asset-manifest.json", "destination": "/asset-manifest.json" },
+    { "source": "/:path*", "destination": "/index.html" }
+  ]
+}

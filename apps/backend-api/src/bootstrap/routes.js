@@ -3,18 +3,20 @@ import config from "../config/index.js";
 import { API_ROUTES } from "../shared/constants/index.js";
 import authRoutes from "../modules/auth/routes.js";
 import tourRoutes from "../modules/tours/routes.js";
-import heroRoutes from "../modules/portal/heroRoutes.js";
-import serviceRoutes from "../modules/services/routes.js";
-import featuredToursRoutes from "../modules/tours/featuredToursRoutes.js";
 import formsRouter from "../modules/forms/routes.js";
 import filtersRoutes from "../modules/tours/filtersRoutes.js";
 import chatRoutes from "../modules/chat/routes.js";
 import bookingRoutes from "../modules/bookings/routes.js";
 import adminBookingRoutes from "../modules/bookings/adminRoutes.js";
-import notificationRoutes from "../modules/notifications/routes.js";
+import engineRoutes from "../modules/bookings/engineRoutes.js";
 import portalRoutes from "../modules/portal/routes.js";
 import pageDefinitionRoutes from "../modules/pageDefinitions/routes.js";
 import toursPageRoutes from "../modules/tours/pageRoutes.js";
+import trevioRoutes from "../modules/trevio/routes.js";
+import trevistaRoutes from "../modules/trevista/routes.js";
+import masterDataRoutes from "../modules/masterData/routes.js";
+import clientRoutes from "../modules/clients/routes.js";
+import searchRoutes from "../modules/search/routes.js";
 
 const getDbHealth = () => {
   const readyState = mongoose.connection.readyState;
@@ -52,16 +54,18 @@ export default function registerRoutes(app) {
 
   app.use(API_ROUTES.AUTH, authRoutes);
   app.use(API_ROUTES.API, portalRoutes);
+  app.use(API_ROUTES.API, searchRoutes);
   app.use("/api/pages", pageDefinitionRoutes);
   app.use(API_ROUTES.TOURS, tourRoutes);
-  app.use(API_ROUTES.HERO, heroRoutes);
-  app.use(API_ROUTES.SERVICES, serviceRoutes);
-  app.use(API_ROUTES.FEATURED_TOURS, featuredToursRoutes);
+  app.use("/api/trevio", trevioRoutes);
+  app.use("/api/trevista", trevistaRoutes);
+  app.use("/api/master-data", masterDataRoutes);
   app.use(API_ROUTES.CHAT, chatRoutes);
   app.use(API_ROUTES.API, formsRouter);
   app.use(API_ROUTES.API, filtersRoutes);
   app.use(API_ROUTES.API, toursPageRoutes);
   app.use(API_ROUTES.BOOKINGS, bookingRoutes);
   app.use(API_ROUTES.ADMIN_BOOKINGS, adminBookingRoutes);
-  app.use(API_ROUTES.NOTIFICATIONS, notificationRoutes);
+  app.use(API_ROUTES.ENGINE, engineRoutes);
+  app.use(API_ROUTES.CLIENTS, clientRoutes);
 }

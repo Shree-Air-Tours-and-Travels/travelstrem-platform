@@ -1,5 +1,5 @@
 {
-  "name": "@apps/auth-trem",
+  "name": "@apps/auth",
   "version": "0.1.0",
   "private": true,
   "main": "src/public-api.js",
@@ -20,9 +20,10 @@
     "cross-env": "^7.0.3"
   },
   "scripts": {
+    "prebuild": "node ../../scripts/sync-favicons.mjs auth-trem",
     "dev": "cross-env PORT=3003 DISABLE_ESLINT_PLUGIN=true craco start",
     "start": "cross-env PORT=3003 DISABLE_ESLINT_PLUGIN=true craco start",
-    "build": "cross-env DISABLE_ESLINT_PLUGIN=true craco build",
+    "build": "DISABLE_ESLINT_PLUGIN=true craco build",
     "test": "craco test --watchAll=false",
     "eject": "react-scripts eject"
   },

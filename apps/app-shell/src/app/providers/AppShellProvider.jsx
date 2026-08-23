@@ -1,0 +1,148 @@
+import React from "react";
+import { initApp } from "../../core/initApp";
+import { clearUserSessionCache } from "../../services/userSession";
+import { clearCsrfToken } from "../../services/security";
+import { clearAuthBrowserState, subscribeAuthEvents } from "@packages/trem-auth-core";
+import {
+  registerSessionCacheClearer,
+} from "@packages/trem-events";
+
+const AUTH_STORAGE_PREFIX = "appShellTREM";
+const SHARED_STORAGE_PREFIX = "travelstrem";
+
+const DEFAULT_SESSION = {
+  user: null,
+  permissions: ["public"],
+  isAuthenticated: false,
+  flags: { role: "public" },
+};
+
+function clearLocalAuthState() {
+  try {
+    clearAuthBrowserState({ prefixes: [AUTH_STORAGE_PREFIX, SHARED_STORAGE_PREFIX] });
+  } catch {}
+  clearCsrfToken();
+  clearUserSessionCache();
+}
+
+const AppShellConfigContext = React.createContext({
+  loading: true,
+  error: null,
+  session: DEFAULT_SESSION,
+  reload: () => Promise.resolve(),
+});
+
+export function AppShellProvider({ children }) {
+  const initOnceRef = React.useRef(null);
+  const sessionRef = React.useRef(DEFAULT_SESSION);
+  const [state, setState] = React.useState({
+    loading: true,
+    error: null,
+    session: DEFAULT_SESSION,
+  });
+
+  React.useEffect(() => {
+    registerSessionCacheClearer(clearUserSessionCache);
+  }, []);
+
+  const loadSession = React.useCallback(async ({ forceSession = false, background = false, _retryCount = 0 } = {}) => {
+    if (forceSession || background) {
+      clearUserSessionCache();
+      clearCsrfToken();
+      initOnceRef.current = null;
+    }
+
+    if (initOnceRef.current) return initOnceRef.current;
+
+    if (!background) {
+      setState((current) => ({ ...current, loading: true, error: null }));
+    }
+
+    const MAX_RETRIES = 2;
+    const RETRY_DELAY_MS = 1000;
+
+    const attempt = async (retryCount) => {
+      try {
+        const { session } = await initApp({
+          pathname: window.location.pathname,
+          search: window.location.search,
+          hash: window.location.hash,
+        });
+
+        const resolved = session || DEFAULT_SESSION;
+        setState({
+          loading: false,
+          error: null,
+          session: resolved,
+        });
+        sessionRef.current = resolved;
+      } catch (error) {
+        console.warn(`[AppShellProvider] initApp failed (attempt ${retryCount + 1}/${MAX_RETRIES + 1}):`, error?.response?.data?.message || error?.message || error);
+
+        if (retryCount < MAX_RETRIES) {
+          initOnceRef.current = null;
+          await new Promise((r) => setTimeout(r, RETRY_DELAY_MS * (retryCount + 1)));
+          return attempt(retryCount + 1);
+        }
+
+        setState({
+          loading: false,
+          error: error?.message || "init-app-failed",
+          session: DEFAULT_SESSION,
+        });
+      }
+    };
+
+    initOnceRef.current = attempt(_retryCount);
+    return initOnceRef.current;
+  }, []);
+
+  React.useEffect(() => {
+    loadSession();
+  }, [loadSession]);
+
+  React.useEffect(() => {
+    const redirectToLogin = () => {
+      clearLocalAuthState();
+      setState({ loading: false, error: null, session: DEFAULT_SESSION });
+      const authUrl = process.env.REACT_APP_AUTH_APP_URL || "/";
+      window.location.replace(authUrl);
+    };
+    const unsubscribe = subscribeAuthEvents((message) => {
+      if (message?.type === "LOGOUT") {
+        redirectToLogin();
+        return;
+      }
+      if (message?.type === "LOGIN" || message?.type === "SESSION_CHANGED") {
+        loadSession({ background: true });
+      }
+    });
+    const onWindowLogout = () => redirectToLogin();
+    window.addEventListener("USER_LOGOUT", onWindowLogout);
+    return () => {
+      unsubscribe();
+      window.removeEventListener("USER_LOGOUT", onWindowLogout);
+    };
+  }, [loadSession]);
+
+  const reload = React.useCallback(
+    () => loadSession({ background: true }),
+    [loadSession]
+  );
+
+  const value = React.useMemo(
+    () => ({
+      ...state,
+      reload,
+    }),
+    [reload, state]
+  );
+
+  return (
+    <AppShellConfigContext.Provider value={value}>
+      {children}
+    </AppShellConfigContext.Provider>
+  );
+}
+
+export const useAppShellConfig = () => React.useContext(AppShellConfigContext);

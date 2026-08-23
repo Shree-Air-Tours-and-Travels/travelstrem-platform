@@ -3,9 +3,13 @@
 This repo is a pnpm/Turbo monorepo:
 
 - Backend API: `@apps/backend-api` -> deploy on Render
-- Customer frontend: `@apps/customer-shell` -> deploy on Vercel
-- Admin frontend: `@apps/admin-shell` -> deploy on Vercel
-- Tours remote/MFE: `@apps/tours-remote` -> deploy on Vercel
+- TravelsTrem parent website: `@apps/travelstrem` -> deploy on Vercel
+- Dashboard app: `@apps/dashboard` -> deploy on Vercel
+- Admin portal: `@apps/admin` -> deploy on Vercel
+- Partner portal: `@apps/partner` -> deploy on Vercel
+- Auth app/package: `@apps/auth`
+- Trevio product app: `@apps/trevio` -> deploy on Vercel
+- Trevista product app: `@apps/trevista` -> deploy on Vercel
 
 Use fresh production secrets. Do not reuse development values.
 
@@ -65,7 +69,8 @@ Required:
 NODE_ENV=production
 ALLOW_ENV_OVERRIDES=true
 BASE_URL=https://travelstrem-api.onrender.com
-FRONTENDS=https://customer-app.vercel.app,https://admin-app.vercel.app,https://tours-remote.vercel.app
+FRONTENDS=https://travelstrem.com,https://auth.travelstrem.com,https://admin.travelstrem.com,https://trevio.travelstrem.com,https://trevista.travelstrem.com
+AUTH_COOKIE_DOMAIN=.travelstrem.com
 MONGO_URI=mongodb+srv://USER:PASSWORD@CLUSTER.mongodb.net/DB_NAME?retryWrites=true&w=majority
 JWT_ACCESS_SECRET=<long-random-secret>
 JWT_REFRESH_SECRET=<different-long-random-secret>
@@ -109,11 +114,13 @@ OAUTH_APPLE_URL=<full-apple-authorize-url>
 REDIS_URL=<redis-url-if-notification-queue-uses-redis>
 ```
 
-Important: after Vercel deploys create real URLs, update `FRONTENDS` in Render to include every exact frontend origin. No trailing paths and no trailing slash.
+Important: for global login across `auth.travelstrem.com`, `trevio.travelstrem.com`, and `trevista.travelstrem.com`, the backend must be served from a TravelsTrem subdomain such as `api.travelstrem.com`. Browsers will reject `.travelstrem.com` cookies if they are set by a `*.onrender.com` host.
 
-## 4. Deploy Tours Remote on Vercel First
+After Vercel deploys create real URLs, update `FRONTENDS` in Render to include every exact frontend origin. No trailing paths and no trailing slash.
 
-Deploy this first because the customer shell loads its `remoteEntry.js`.
+## 4. Deploy Product Apps on Vercel
+
+Deploy Trevio and Trevista as independent product applications.
 
 1. Vercel -> Add New -> Project -> import the repo.
 2. Configure:
@@ -123,25 +130,79 @@ Deploy this first because the customer shell loads its `remoteEntry.js`.
 | Framework Preset | Create React App |
 | Root Directory | repo root |
 | Install Command | `pnpm install --frozen-lockfile` |
-| Build Command | `pnpm --filter @apps/tours-remote build` |
-| Output Directory | `apps/tours-remote/build` |
+| Build Command | `pnpm --filter @apps/trevio build` |
+| Output Directory | `apps/trevio-remote/build` |
 
 3. Add environment variables:
 
 ```env
 REACT_APP_PORTAL_ENV=production
-REACT_APP_API_URL=https://travelstrem-api.onrender.com/api
-REACT_APP_BACKEND_URL=https://travelstrem-api.onrender.com
+REACT_APP_API_URL=https://api.travelstrem.com/api
+REACT_APP_BACKEND_URL=https://api.travelstrem.com
+REACT_APP_AUTH_APP_URL=https://auth.travelstrem.com
 ```
 
 4. Deploy.
-5. Confirm this URL works:
+Repeat for Trevista:
+
+| Setting | Value |
+| --- | --- |
+| Framework Preset | Create React App |
+| Root Directory | repo root |
+| Install Command | `pnpm install --frozen-lockfile` |
+| Build Command | `pnpm --filter @apps/trevista build` |
+| Output Directory | `apps/trevista-remote/build` |
+
+Confirm both product app URLs load in the browser:
 
 ```text
-https://tours-remote.vercel.app/remoteEntry.js
+https://trevio.vercel.app
+https://trevista.vercel.app
 ```
 
-## 5. Deploy Customer Shell on Vercel
+## 5. Deploy Auth App on Vercel
+
+Deploy the global auth app at `auth.travelstrem.com`.
+
+| Setting | Value |
+| --- | --- |
+| Framework Preset | Create React App |
+| Root Directory | repo root |
+| Install Command | `pnpm install --frozen-lockfile` |
+| Build Command | `pnpm --filter @apps/auth build` |
+| Output Directory | `apps/auth-trem/build` |
+
+Environment:
+
+```env
+REACT_APP_PORTAL_ENV=production
+REACT_APP_API_URL=https://api.travelstrem.com/api
+REACT_APP_BACKEND_URL=https://api.travelstrem.com
+REACT_APP_TRAVELSTREM_APP_URL=https://travelstrem.com
+```
+
+## 6. Deploy Dashboard App on Vercel
+
+Deploy the common dashboard app at `dashboard.travelstrem.com`.
+
+| Setting | Value |
+| --- | --- |
+| Framework Preset | Create React App |
+| Root Directory | repo root |
+| Install Command | `pnpm install --frozen-lockfile` |
+| Build Command | `pnpm --filter @apps/dashboard build` |
+| Output Directory | `apps/dashboard/build` |
+
+Environment:
+
+```env
+REACT_APP_PORTAL_ENV=production
+REACT_APP_API_URL=https://api.travelstrem.com/api
+REACT_APP_BACKEND_URL=https://api.travelstrem.com
+REACT_APP_DASHBOARD_URL=https://dashboard.travelstrem.com
+```
+
+## 7. Deploy TravelsTrem Parent Website on Vercel
 
 1. Create another Vercel project from the same repo.
 2. Configure:
@@ -151,7 +212,7 @@ https://tours-remote.vercel.app/remoteEntry.js
 | Framework Preset | Create React App |
 | Root Directory | repo root |
 | Install Command | `pnpm install --frozen-lockfile` |
-| Build Command | `pnpm --filter @apps/customer-shell build` |
+| Build Command | `pnpm --filter @apps/travelstrem build` |
 | Output Directory | `apps/customer-shell/build` |
 
 3. Add environment variables:
@@ -159,15 +220,17 @@ https://tours-remote.vercel.app/remoteEntry.js
 ```env
 REACT_APP_PORTAL_ENV=production
 REACT_APP_ALLOW_ENV_OVERRIDES=true
-REACT_APP_API_URL=https://travelstrem-api.onrender.com/api
-REACT_APP_BACKEND_URL=https://travelstrem-api.onrender.com
-REACT_APP_TOURS_REMOTE_URL=https://tours-remote.vercel.app
+REACT_APP_API_URL=https://api.travelstrem.com/api
+REACT_APP_BACKEND_URL=https://api.travelstrem.com
+REACT_APP_AUTH_APP_URL=https://auth.travelstrem.com
+REACT_APP_TREVIO_APP_URL=https://trevio.vercel.app
+REACT_APP_TREVISTA_APP_URL=https://trevista.vercel.app
 REACT_APP_ADMIN_SHELL_URL=https://admin-shell.vercel.app/admin/tours
 ```
 
 4. Deploy.
 
-## 6. Deploy Admin Shell on Vercel
+## 8. Deploy Admin Shell on Vercel
 
 1. Create another Vercel project from the same repo.
 2. Configure:
@@ -177,7 +240,7 @@ REACT_APP_ADMIN_SHELL_URL=https://admin-shell.vercel.app/admin/tours
 | Framework Preset | Create React App |
 | Root Directory | repo root |
 | Install Command | `pnpm install --frozen-lockfile` |
-| Build Command | `pnpm --filter @apps/admin-shell build` |
+| Build Command | `pnpm --filter @apps/admin build` |
 | Output Directory | `apps/admin-shell/build` |
 
 3. Add environment variables:
@@ -191,11 +254,11 @@ REACT_APP_BACKEND_URL=https://travelstrem-api.onrender.com
 
 4. Deploy.
 
-## 7. Add Vercel Rewrites
+## 9. Add Vercel Rewrites
 
 Single-page React apps need all routes to serve `index.html`.
 
-`apps/tours-remote/vercel.json` already has rewrites and a `remoteEntry.js` CORS header.
+`apps/trevio-remote/vercel.json` and `apps/trevista-remote/vercel.json` should serve product routes through `index.html`.
 
 If customer/admin routes show 404 after refresh, add `vercel.json` files:
 
@@ -214,37 +277,45 @@ Add this file in:
 
 - `apps/customer-shell/vercel.json`
 - `apps/admin-shell/vercel.json`
+- `apps/dashboard/vercel.json`
 
 If Vercel is using repo root for each project, also configure the same rewrite in Vercel Project Settings or use a root-level Vercel config per project.
 
-## 8. Final Wiring Checklist
+## 10. Final Wiring Checklist
 
 1. Render `FRONTENDS` includes:
-   - Customer Vercel origin
+   - TravelsTrem parent website origin
+   - Dashboard app origin
    - Admin Vercel origin
-   - Tours remote Vercel origin
+   - Trevio product origin
+   - Trevista product origin
    - Any custom domains
-2. Customer Vercel `REACT_APP_TOURS_REMOTE_URL` points to the Tours remote origin.
-3. Every frontend `REACT_APP_API_URL` points to the Render backend with `/api`.
+2. Customer Vercel `REACT_APP_TREVIO_APP_URL` and `REACT_APP_TREVISTA_APP_URL` point to the product app origins.
+3. All frontend `REACT_APP_DASHBOARD_URL` points to the dashboard app origin.
+4. Every frontend `REACT_APP_API_URL` points to the Render backend with `/api`.
 4. MongoDB Atlas Network Access allows Render connections. For quick setup use `0.0.0.0/0`; for stricter production security use Render outbound IPs if your plan supports stable IPs.
 5. Redeploy frontends after changing any `REACT_APP_*` variable. CRA bakes these into the static build.
 6. Redeploy backend after changing backend env vars.
 
-## 9. Suggested Deploy Order
+## 11. Suggested Deploy Order
 
 1. Render backend with placeholder `FRONTENDS`.
-2. Vercel tours remote.
-3. Vercel customer shell.
-4. Vercel admin shell.
-5. Update Render `FRONTENDS` with the final Vercel/custom domains.
-6. Redeploy Render backend.
-7. Smoke test login, tour listing, booking flow, image upload, and admin routes.
+2. Vercel Auth app.
+3. Vercel Dashboard app.
+4. Vercel Trevio and Trevista product apps.
+5. Vercel TravelsTrem parent website.
+6. Vercel admin portal.
+7. Update Render `FRONTENDS` and `AUTH_COOKIE_DOMAIN` with the final custom domains.
+8. Redeploy Render backend.
+9. Smoke test login from `auth.travelstrem.com`, dashboard access from products, Trevio/Trevista booking flows, image upload, and admin routes.
 
-## 10. Common Issues
+## 12. Common Issues
 
 - CORS blocked: update Render `FRONTENDS` with the exact Vercel/custom origin.
 - Frontend still calls old API: update `REACT_APP_API_URL` and redeploy the frontend.
-- Customer shell cannot load tours: check `https://tours-remote.vercel.app/remoteEntry.js` and `REACT_APP_TOURS_REMOTE_URL`.
+- Product click opens the wrong URL: check `REACT_APP_TREVIO_APP_URL` and `REACT_APP_TREVISTA_APP_URL`, then redeploy the parent website.
+- Dashboard link not working: verify `REACT_APP_DASHBOARD_URL` is set in all frontend apps and points to `https://dashboard.travelstrem.com`.
+- Product still asks users to login after auth success: verify the API is on a `travelstrem.com` subdomain and `AUTH_COOKIE_DOMAIN=.travelstrem.com` is set.
 - Backend ignores `FRONTENDS`/`BASE_URL`: make sure Render has `ALLOW_ENV_OVERRIDES=true`.
 - Mongo connection fails: verify `MONGO_URI`, Atlas database user permissions, and Atlas Network Access.
-- Refreshing `/admin/...` or `/tours/...` gives 404: add Vercel rewrites to `index.html`.
+- Refreshing product/admin/dashboard routes gives 404: add Vercel rewrites to `index.html`.

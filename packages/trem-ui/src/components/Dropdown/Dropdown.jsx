@@ -150,8 +150,10 @@ export default function Dropdown({
       onToggle?.(next);
       if (next && wrapperRef.current) {
         requestAnimationFrame(() => {
-          const menuWidth = Math.min(Math.max(wrapperRef.current.offsetWidth, 180), 360);
-          const pos = calcPosition(wrapperRef.current, menuWidth, position !== "top");
+          const wrapper = wrapperRef.current;
+          if (!wrapper) return;
+          const menuWidth = Math.min(Math.max(wrapper.offsetWidth, 180), 360);
+          const pos = calcPosition(wrapper, menuWidth, position !== "top");
           setMenuStyle(pos);
         });
       }

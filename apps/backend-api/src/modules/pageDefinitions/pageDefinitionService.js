@@ -4,6 +4,8 @@ import { fileURLToPath } from "url";
 import DataScopeResolver from "../../shared/utils/dataScopeResolver.js";
 import { validatePageContract } from "../../shared/validators/pageContractValidator.js";
 import Booking from "../bookings/models/Booking.js";
+import config from "../../config/index.js";
+import { toPublicBookingReference } from "../bookings/utils/bookingReference.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -40,6 +42,46 @@ class PageDefinitionService {
     return JSON.parse(raw);
   }
 
+  _deepMerge(target = {}, source = {}) {
+    const output = { ...(target || {}) };
+    Object.entries(source || {}).forEach(([key, value]) => {
+      if (
+        value &&
+        typeof value === "object" &&
+        !Array.isArray(value) &&
+        output[key] &&
+        typeof output[key] === "object" &&
+        !Array.isArray(output[key])
+      ) {
+        output[key] = this._deepMerge(output[key], value);
+        return;
+      }
+      output[key] = value;
+    });
+    return output;
+  }
+
+  _toWidgetEntry(entry = {}, widgetComponent = {}) {
+    const structure = widgetComponent?.structure || {};
+    const nestedWidgets = structure.widgets;
+
+    if (Array.isArray(nestedWidgets) && nestedWidgets.length) return nestedWidgets;
+
+    if (structure.type || Array.isArray(structure.features)) {
+      return [{
+        name: entry.name || structure.name || structure.type,
+        type: structure.type || entry.type || entry.name || "Section",
+        source: structure.source || entry.source || "",
+        props: {
+          ...(entry.props || {}),
+          ...(Array.isArray(structure.features) ? { features: structure.features } : {}),
+        },
+      }];
+    }
+
+    return [entry];
+  }
+
   _expandWidgetRefs(pageDefinition, pageFile) {
     const pageComponent = pageDefinition?.component || {};
     const widgetEntries = pageComponent?.structure?.widgets || [];
@@ -47,20 +89,24 @@ class PageDefinitionService {
     const widgetContracts = [];
 
     widgetEntries.forEach((entry) => {
-      if (!entry.widgetRef) {
+      const widgetRef = entry.widgetRef || entry.path;
+      if (!widgetRef) {
         expandedWidgets.push(entry);
         return;
       }
-      const widgetDefinition = this._loadWidgetDefinition(pageFile, entry.widgetRef);
+      const widgetDefinition = this._loadWidgetDefinition(pageFile, widgetRef);
       const widgetComponent = widgetDefinition?.component || {};
       widgetContracts.push(widgetComponent);
-      expandedWidgets.push(...(widgetComponent?.structure?.widgets || []));
+      expandedWidgets.push(...this._toWidgetEntry(entry, widgetComponent));
     });
 
     return {
       status: pageDefinition.status,
       component: {
-        data: { ...pageComponent.data },
+        data: this._deepMerge(
+          pageComponent.data || {},
+          widgetContracts.reduce((acc, widget) => this._deepMerge(acc, widget?.data || {}), {}),
+        ),
         dataScope: {
           options: Object.assign(
             {},
@@ -139,7 +185,7 @@ class PageDefinitionService {
     const pathEntry = registry.pathMap[pageKey];
     if (pathEntry && registry.pages[pathEntry]) return pathEntry;
 
-    return registry.defaultPage || "customer-shell/home";
+    return registry.defaultPage || "trevio-remote/home";
   }
 
   loadPageDefinition(pageKey, overrides = {}) {
@@ -227,13 +273,18 @@ class PageDefinitionService {
       };
     }
 
-    if (authUser?.userId && resolvedKey === "customer-shell/dashboard") {
+    if (authUser?.userId && resolvedKey === "app-shell/app-shell") {
       try {
-        const { widgets: hydrated, labels: extraLabels } = await this._hydrateDashboardWidgets(
+        const { widgets: hydrated, labels: extraLabels, data: hydratedData } = await this._hydrateDashboardWidgets(
           payload.component.structure.widgets,
           authUser.userId,
+          payload.component.data,
         );
         payload.component.structure.widgets = hydrated;
+        payload.component.data = {
+          ...payload.component.data,
+          ...hydratedData,
+        };
         Object.assign(payload.component.elements.labels, extraLabels);
       } catch (err) {
         console.error("[PageDefinitionService] Dashboard hydration error:", err.message);
@@ -389,11 +440,78 @@ class PageDefinitionService {
   _bookingTourType(booking) {
     if (booking.tour?.tags && booking.tour.tags.length > 0) return booking.tour.tags[0];
     if (booking.tour?.city?.to) return `${booking.tour.city.to} Tour`;
+    if (booking.trip?.location) return booking.trip.location;
     return "Custom Tour";
   }
 
+  _formatBookingPrice(booking) {
+    const amount = Number(booking.paymentSummary?.total ?? booking.priceSnapshot?.total ?? 0);
+    const currency = booking.priceSnapshot?.currency || "INR";
+    try {
+      return new Intl.NumberFormat("en-IN", {
+        style: "currency",
+        currency,
+        maximumFractionDigits: amount % 1 ? 2 : 0,
+      }).format(amount);
+    } catch {
+      return `${currency} ${amount.toLocaleString("en-IN")}`;
+    }
+  }
+
   _bookingImage(booking) {
-    return booking.tour?.photo || "https://res.cloudinary.com/dofxshf3z/image/upload/v1779131576/tour-img01_tljj0m.jpg";
+    return booking.tour?.photo || booking.trip?.image || config.DEFAULT_TOUR_IMAGE;
+  }
+
+  _hydrateOverviewRail(rail, bookings) {
+    if (!rail?.widgets) return rail;
+
+    const eligibleStatuses = new Set([
+      "CUSTOMER_ACCEPTED",
+      "PAYMENT_PENDING",
+      "PARTIALLY_PAID",
+      "PAID",
+      "CONFIRMED",
+      "TICKETING",
+      "TICKETED",
+      "TRAVEL_READY",
+    ]);
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+
+    const upcoming = bookings
+      .filter((booking) => {
+        const start = new Date(booking.travelWindow?.startDate);
+        return eligibleStatuses.has(String(booking.status || "").toUpperCase())
+          && !isNaN(start.getTime())
+          && start >= now;
+      })
+      .sort((a, b) => new Date(a.travelWindow.startDate) - new Date(b.travelWindow.startDate))[0];
+
+    return {
+      ...rail,
+      widgets: rail.widgets.map((widget) => {
+        if (widget.type !== "upcomingTrip" || !upcoming) return widget;
+        const productName = String(upcoming.product || "trevista").toLowerCase() === "trevio"
+          ? "Trevio"
+          : "Trevista";
+
+        return {
+          ...widget,
+          trip: {
+            id: String(upcoming._id),
+            title: upcoming.tour?.title
+              || upcoming.trip?.title
+              || upcoming.tripSelection?.packageId
+              || "Upcoming journey",
+            image: this._bookingImage(upcoming),
+            imageAlt: `${productName} upcoming trip`,
+            dateRange: `${this._formatDate(upcoming.travelWindow.startDate)} – ${this._formatDate(upcoming.travelWindow.endDate)}`,
+            duration: this._calcDays(upcoming),
+            productName,
+          },
+        };
+      }),
+    };
   }
 
   _hydrateBookingTable(widget, bookings) {
@@ -410,16 +528,25 @@ class PageDefinitionService {
         },
         rows: bookings.map((b) => {
           const tourId = b.tour?._id || null;
+          const product = String(b.product || "trevista").toLowerCase();
           return {
             bookingId: String(b._id),
-            id: `#${b.bookingRef || b._id}`,
-            tour: b.tour?.title || "Unknown Tour",
+            id: String(b._id),
+            tremId: toPublicBookingReference(b.bookingRef) || String(b._id),
+            tour: b.tour?.title || b.trip?.title || b.tripSelection?.packageId || "Unknown Trip",
             type: this._bookingTourType(b),
             travellers: `${b.guestsCount || 1} Guest${(b.guestsCount || 1) !== 1 ? "s" : ""}`,
             days: this._calcDays(b),
-            price: this._formatPrice(b.priceSnapshot?.total),
-            date: this._formatDate(b.travelWindow?.startDate || b.createdAt),
+            price: this._formatBookingPrice(b),
+            priceValue: Number(b.paymentSummary?.total ?? b.priceSnapshot?.total ?? 0),
+            travelDates: `${this._formatDate(b.travelWindow?.startDate)} – ${this._formatDate(b.travelWindow?.endDate)}`,
+            createdAt: this._formatDate(b.createdAt),
+            createdAtValue: new Date(b.createdAt).getTime() || 0,
             status: this._mapBookingStatus(b.status),
+            statusRaw: b.status,
+            paymentStatus: String(b.paymentStatus || "").replaceAll("_", " ").toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase()),
+            product,
+            productLabel: product === "trevio" ? "Trevio" : "Trevista",
             image: this._bookingImage(b),
             tourId: tourId ? String(tourId) : null,
           };
@@ -448,6 +575,11 @@ class PageDefinitionService {
   }
 
   _hydrateMetrics(widget, bookings) {
+    const configuredItems = widget.props?.items || [];
+    if (configuredItems.some((item) => item.valueKey)) {
+      return widget;
+    }
+
     const totalBookings = bookings.length;
     const totalSpent = bookings.reduce((sum, b) => sum + (b.priceSnapshot?.total || 0), 0);
     const avgSpent = totalBookings > 0 ? totalSpent / totalBookings : 0;
@@ -497,18 +629,19 @@ class PageDefinitionService {
     };
   }
 
-  async _hydrateDashboardWidgets(widgets, userId) {
-    if (!widgets || !widgets.length) return { widgets, labels: {} };
+  async _hydrateDashboardWidgets(widgets, userId, componentData = {}) {
+    if (!widgets || !widgets.length) return { widgets, labels: {}, data: {} };
 
     let bookings;
     try {
       bookings = await Booking.find({ user: userId })
         .populate("tour")
+        .populate("trip")
         .sort({ createdAt: -1 })
         .lean();
     } catch (err) {
       console.error("[PageDefinitionService] Failed to fetch bookings:", err.message);
-      return { widgets, labels: {} };
+      return { widgets, labels: {}, data: {} };
     }
 
     const extraLabels = {};
@@ -528,7 +661,11 @@ class PageDefinitionService {
       }
     });
 
-    return { widgets: hydrated, labels: extraLabels };
+    const extraData = widgets.some((widget) => widget.type === "OverviewRail")
+      ? { overviewRail: this._hydrateOverviewRail(componentData.overviewRail, bookings) }
+      : {};
+
+    return { widgets: hydrated, labels: extraLabels, data: extraData };
   }
 
   clearCache() {

@@ -1,6 +1,6 @@
 import React from "react";
 
-const Svg = ({ size = 20, viewBox = "0 0 24 24", title, children, ...rest }) => (
+const Svg = ({ size = 24, viewBox = "0 0 24 24", title, children, ...rest }) => (
   <svg width={size} height={size} viewBox={viewBox} fill="none" aria-hidden={!title} {...rest}>
     {title ? <title>{title}</title> : null}
     {children}
@@ -67,6 +67,14 @@ const BriefcaseBusiness = (p) => (
     <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" {...s} />
     <path d="M2 9h20v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9Z" {...s} />
     <path d="M9 13h6" {...s} />
+  </Svg>
+);
+
+const Home = (p) => (
+  <Svg {...p}>
+    <path d="m3 11 9-8 9 8" {...s} />
+    <path d="M5 10v11h14V10" {...s} />
+    <path d="M9 21v-7h6v7" {...s} />
   </Svg>
 );
 
@@ -429,6 +437,12 @@ const Moon = (p) => (
   </Svg>
 );
 
+const Minus = (p) => (
+  <Svg {...p}>
+    <path d="M5 12h14" {...s} />
+  </Svg>
+);
+
 const Mountain = (p) => (
   <Svg {...p}>
     <path d="m2 22 7-12 5 7 4-6 4 11H2Z" {...s} />
@@ -486,6 +500,13 @@ const Plane = (p) => (
 const Play = (p) => (
   <Svg {...p}>
     <path d="m5 3 16 9-16 9V3Z" {...s} />
+  </Svg>
+);
+
+const Plus = (p) => (
+  <Svg {...p}>
+    <path d="M5 12h14" {...s} />
+    <path d="M12 5v14" {...s} />
   </Svg>
 );
 
@@ -675,6 +696,14 @@ const Wallet = (p) => (
   </Svg>
 );
 
+const Edit = (p) => (
+  <Svg {...p}>
+    <path d="M12 20h9" {...s} />
+    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" {...s} />
+    <path d="m15 5 4 4" {...s} />
+  </Svg>
+);
+
 const X = (p) => (
   <Svg {...p}>
     <path d="M18 6 6 18" {...s} />
@@ -717,6 +746,7 @@ const ICONS = {
   compass: Compass,
   destination: Destination,
   download: Download,
+  edit: Edit,
   experiences: Experiences,
   externalLink: ArrowUpRight,
   eye: Eye,
@@ -728,6 +758,7 @@ const ICONS = {
   guide: Guide,
   heart: Heart,
   hotel: Hotel,
+  home: Home,
   info: Info,
   insurance: Insurance,
   itinerary: Itinerary,
@@ -743,6 +774,7 @@ const ICONS = {
   menuOpen: MenuOpen,
   messageCircle: MessageCircle,
   moon: Moon,
+  minus: Minus,
   mountain: Mountain,
   navigation: Navigation,
   passport: Passport,
@@ -751,6 +783,7 @@ const ICONS = {
   phoneCall: PhoneCall,
   plane: Plane,
   play: Play,
+  plus: Plus,
   premium: Premium,
   refreshCw: RefreshCw,
   reservations: Reservations,
@@ -776,7 +809,7 @@ const ICONS = {
   x: X,
 };
 
-export default function Icon({ name, size = 20, title, ...rest }) {
+export default function Icon({ name, size = 24, title, ...rest }) {
   const Component = ICONS[name] || Fallback;
   if (!Component) return null;
   return <Component size={size} title={title} {...rest} />;

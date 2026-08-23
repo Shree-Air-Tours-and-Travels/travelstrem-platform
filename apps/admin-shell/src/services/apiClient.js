@@ -36,16 +36,8 @@ registerAuthHeaderClearer(clearApiAuthHeader);
 api.interceptors.request.use(
     (cfg) => {
         try {
-            const token = localStorage.getItem(`${AUTH_STORAGE_PREFIX}:token`);
-            if (token) {
-                cfg.headers = cfg.headers || {};
-                cfg.headers.Authorization = `Bearer ${token}`;
-            } else if (cfg?.headers?.Authorization) {
+            if (cfg?.headers?.Authorization) {
                 delete cfg.headers.Authorization;
-            }
-            if (!token) {
-                cfg.headers = cfg.headers || {};
-                cfg.headers["X-Ignore-Cookie-Auth"] = "true";
             }
         } catch (err) {
             // ignore parse errors

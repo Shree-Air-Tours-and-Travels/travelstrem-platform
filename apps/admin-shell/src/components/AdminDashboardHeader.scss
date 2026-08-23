@@ -1,0 +1,318 @@
+@import "@packages/trem-design-tokens/scss";
+
+/* Admin Dashboard Header — uses same CSS variables as dashboard */
+
+.dh {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: var(--surface-glass-strong, var(--surface));
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  &__inner {
+    width: 100%;
+    height: 56px;
+    padding: 0 $space-6;
+    display: flex;
+    align-items: center;
+    gap: $space-4;
+
+    @media (max-width: 768px) {
+      height: 60px;
+      padding: 0 $space-4;
+      gap: $space-3;
+    }
+  }
+
+  &__title {
+    font-size: $font-size-lg;
+    font-weight: $font-bold;
+    color: var(--heading);
+    letter-spacing: -0.02em;
+    line-height: 1;
+    margin: 0;
+    margin-left: 1rem;
+
+    @media (max-width: 768px) {
+      display: none;
+    }
+  }
+
+  &__mobile-brand {
+    display: none;
+
+    @media (max-width: 768px) {
+      display: flex;
+      align-items: center;
+      gap: $space-2;
+      min-width: 0;
+    }
+  }
+
+  &__mobile-logo {
+    width: 32px;
+    height: 32px;
+    border-radius: $radius-xs;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  &__mobile-title {
+    font-size: $font-size-lg;
+    font-weight: $font-bold;
+    color: var(--heading);
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    small {
+      color: var(--muted);
+      font-size: $font-size-xs;
+      font-weight: $font-semibold;
+      letter-spacing: 0;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: $space-1;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  &__action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+
+    &--icon {
+      border-radius: $radius-md;
+
+      &:hover {
+        background: var(--surface-inset);
+        color: var(--text);
+      }
+    }
+  }
+
+  &__hamburger {
+    display: none;
+
+    @media (max-width: 768px) {
+      display: inline-flex;
+    }
+  }
+
+  &__logout-btn {
+    @media (max-width: 768px) {
+      display: none;
+    }
+  }
+
+  /* Mobile slide-down panel */
+  &__mobile-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 200;
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+
+    @media (min-width: 769px) {
+      display: none !important;
+    }
+
+    transform: translateY(-100%);
+    &.is-open {
+      transform: translateY(0);
+    }
+  }
+
+  &__mobile-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $space-5 $space-4;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  &__mobile-panel-brand {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+  }
+
+  &__mobile-panel-logo {
+    width: 40px;
+    height: 40px;
+    border-radius: $radius-sm;
+    object-fit: cover;
+  }
+
+  &__mobile-panel-brand-text {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__mobile-panel-brand-name {
+    font-weight: $font-bold;
+    font-size: $font-size-md;
+    color: var(--heading);
+    line-height: 1.3;
+  }
+
+  &__mobile-panel-brand-sub {
+    font-size: $font-size-xs;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  &__panel-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: $radius-md;
+    color: var(--muted);
+
+    &:hover {
+      background: var(--surface-inset);
+      color: var(--text);
+    }
+  }
+
+  &__mobile-nav {
+    padding: $space-4;
+    display: flex;
+    flex-direction: column;
+    gap: $space-1;
+  }
+
+  &__mobile-nav-item {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+    padding: $space-3;
+    border-radius: $radius-sm;
+    font-size: $font-size-md;
+    font-weight: $font-medium;
+    color: var(--nav-text);
+    text-align: left;
+    width: 100%;
+    position: relative;
+
+    &.is-active {
+      color: var(--color-primary);
+      border-right: 3px solid var(--color-primary);
+    }
+  }
+
+  &__mobile-nav-icon {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+  }
+
+  &__mobile-nav-label {
+    white-space: nowrap;
+  }
+
+  &__mobile-footer {
+    margin-top: auto;
+    padding: $space-4;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: $space-3;
+  }
+
+  &__mobile-logout {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    padding: $space-3;
+    border-radius: $radius-sm;
+    border: none;
+    background: transparent;
+    color: var(--color-danger);
+    font-size: $font-size-sm;
+    font-weight: $font-medium;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+
+    &:hover {
+      background: var(--danger-soft);
+    }
+  }
+
+  &__mobile-user {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+    padding: $space-3;
+    border-radius: $radius-sm;
+    background: var(--neutral-softer);
+  }
+
+  &__mobile-user__avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: $radius-full;
+    background: var(--primary-soft);
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: $font-bold;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  &__mobile-user__info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__mobile-user__name {
+    font-size: $font-size-sm;
+    font-weight: $font-semibold;
+    color: var(--heading);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__mobile-user__email {
+    font-size: $font-size-xs;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__mobile-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 199;
+    background: var(--overlay);
+
+    @media (min-width: 769px) {
+      display: none !important;
+    }
+  }
+}

@@ -51,7 +51,6 @@ router.post("/:bookingId/cancel", authMiddleware, cancelBooking);
 router.get("/:bookingId/cancel-info", authMiddleware, getCancelInfo);
 router.post("/:bookingId/accept-quote", authMiddleware, acceptQuote);
 router.post("/:bookingId/reject-quote", authMiddleware, rejectQuote);
-router.post("/:bookingId/payment", authMiddleware, recordPayment);
 router.post("/:bookingId/upload", authMiddleware, uploadBookingDocument);
 router.post("/:bookingId/confirm", authMiddleware, confirmBooking);
 router.delete("/:bookingId/travelers/:travelerId", authMiddleware, removeTraveler);
@@ -70,8 +69,6 @@ router.post("/admin/bookings/:bookingId/set-price", authMiddleware, setPrice);
 router.post("/admin/bookings/:bookingId/quote", authMiddleware, createQuote);
 router.post("/admin/bookings/:bookingId/send-quote", authMiddleware, sendQuote);
 router.post("/admin/bookings/:bookingId/status", authMiddleware, changeBookingStatus);
-router.post("/admin/bookings/:bookingId/payment", authMiddleware, recordPayment);
 router.post("/admin/bookings/:bookingId/request-docs", authMiddleware, requestMoreDocs);
-router.post("/admin/bookings/:bookingId/refund", authMiddleware, refundBooking);
 
 export default router;

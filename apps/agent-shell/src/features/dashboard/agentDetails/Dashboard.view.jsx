@@ -10,7 +10,6 @@ import BookingStatistics from "./widgets/BookingStatistics";
 import ServiceShortcuts from "./widgets/ServiceShortcuts";
 import BookingsChart from "./widgets/BookingsChart";
 import CompactServiceList from "./widgets/CompactServiceList";
-import NotificationsPanel from "./widgets/NotificationsPanel";
 import FavoritesTourList from "./widgets/FavoritesTourList";
 import DashboardBookingTable from "./widgets/DashboardBookingTable";
 import MobileBottomNav from "./widgets/MobileBottomNav";
@@ -25,7 +24,6 @@ const widgetRenderers = {
     ServiceShortcuts,
     BookingsChart,
     MostBookedServices: (props) => <CompactServiceList {...props} type="Most Booked Services" />,
-    NotificationsPanel,
     RecentInvoices: (props) => <CompactServiceList {...props} type="Recent Invoices" />,
     BookingTable: DashboardBookingTable,
     SettingsForm: () => null,
@@ -53,7 +51,7 @@ export default function DashboardPageView({ loading, error, labels, widgets, opt
         sessionStorage.setItem(STORAGE_KEY, activeNav);
     }, [activeNav]);
 
-    if (loading) return <GlobalLoader visible text="Loading dashboard" />;
+    if (loading) return <GlobalLoader visible text="Loading App" />;
     if (error) return <main className="customer-dashboard-page customer-dashboard-page--error">Error: {error}</main>;
 
     const shellWidget = widgets.find((widget) => widget.type === "CustomerDashboardShell");

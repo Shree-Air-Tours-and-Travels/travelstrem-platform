@@ -1,26 +1,11 @@
 {
   "version": "1.0.0",
-  "defaultPage": "customer-shell/home",
+  "defaultPage": "trevio-remote/home",
   "pages": {
-    "customer-shell/home": {
-      "app": "customer-shell",
-      "page": "home",
-      "file": "./customer-shell/home/page.json"
-    },
-     "customer-shell/about": {
-      "app": "customer-shell",
-      "page": "about",
-      "file": "./customer-shell/about/page.json"
-    },
-    "customer-shell/checkout": {
-      "app": "customer-shell",
-      "page": "checkout",
-      "file": "./customer-shell/checkout/page.json"
-    },
-    "customer-shell/dashboard": {
-      "app": "customer-shell",
-      "page": "dashboard",
-      "file": "./customer-shell/dashboard/page.json"
+    "app-shell/app-shell": {
+      "app": "app-shell",
+      "page": "app-shell",
+      "file": "./app-shell/app-shell/page.json"
     },
     "tours-remote/listing": {
       "app": "tours-remote",
@@ -46,6 +31,16 @@
       "app": "tours-remote",
       "page": "booking-checkout",
       "file": "./tours-remote/booking-checkout/page.json"
+    },
+    "trevio-remote/home": {
+      "app": "trevio-remote",
+      "page": "home",
+      "file": "./trevio-remote/home/page.json"
+    },
+    "trevista-remote/home": {
+      "app": "trevista-remote",
+      "page": "home",
+      "file": "./trevista-remote/home/page.json"
     },
     "admin-shell/dashboard": {
       "app": "admin-shell",
@@ -79,15 +74,15 @@
     }
   },
   "pathMap": {
-    "/": "customer-shell/home",
-    "/about": "customer-shell/about",
-    "/dashboard": "customer-shell/dashboard",
-    "/checkout": "customer-shell/checkout",
-    "/tours": "tours-remote/listing",
-    "/tours/:tourRef": "tours-remote/details",
-    "/tours/:tourRef/book": "tours-remote/booking",
-    "/tours/bookings/:bookingId": "tours-remote/booking-summary",
-    "/tours/bookings/:bookingId/checkout": "tours-remote/booking-checkout",
+    "/": "trevio-remote/home",
+    "/app-shell": "app-shell/app-shell",
+    "/trevista": "tours-remote/listing",
+    "/trevista/:tourRef": "tours-remote/details",
+    "/trevista/:tourRef/book": "tours-remote/booking",
+    "/trevista/bookings/:bookingId": "tours-remote/booking-summary",
+    "/trevista/bookings/:bookingId/checkout": "tours-remote/booking-checkout",
+    "/trevista/home": "trevista-remote/home",
+    "/trevio": "trevio-remote/home",
     "/admin": "admin-shell/dashboard",
     "/admin/bookings": "admin-shell/bookings",
     "/agent/services": "agent-shell/services",
@@ -96,15 +91,13 @@
     "/agent/agency": "agent-shell/agency"
   },
   "aliases": {
-    "home": "customer-shell/home",
-    "about": "customer-shell/about",
-    "customer-dashboard": "customer-shell/dashboard",
-    "checkout": "customer-shell/checkout",
+    "home": "trevio-remote/home",
     "tour-listing": "tours-remote/listing",
     "tour-details": "tours-remote/details",
     "tour-booking": "tours-remote/booking",
     "tour-booking-summary": "tours-remote/booking-summary",
     "tour-booking-checkout": "tours-remote/booking-checkout",
+    "trevio": "trevio-remote/home",
     "dashboard": "admin-shell/dashboard",
     "bookings": "admin-shell/bookings",
     "agent-services": "agent-shell/services",

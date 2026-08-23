@@ -1,0 +1,72 @@
+@import "../../styles/base/typography";
+
+.trem-listing-dropdown {
+  position: fixed;
+  z-index: 650;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+  background: var(--card-bg);
+  color: var(--text);
+  box-shadow: var(--shadow-lg);
+}
+
+.trem-listing-dropdown__content {
+  max-height: inherit;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: $space-2;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.trem-listing-dropdown__group {
+  padding: $space-2;
+
+  h2 {
+    margin: 0 0 $space-2;
+    padding-inline: $space-2;
+    color: var(--muted);
+    font-size: $font-size-xs;
+    font-weight: $font-bold;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+}
+
+.trem-listing-dropdown__list {
+  display: grid;
+  gap: $space-1;
+}
+
+.trem-listing-dropdown__sheet {
+  .trem-bottom-sheet__panel {
+    height: min(78dvh, 680px);
+  }
+
+  .trem-bottom-sheet__body {
+    display: flex;
+    min-height: 0;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .trem-listing-dropdown__content {
+    flex: 1;
+    min-height: 0;
+    padding-inline: 0;
+  }
+}
+
+.trem-listing-dropdown__sheet.trem-bottom-sheet--fullscreen {
+  .trem-bottom-sheet__panel {
+    height: 100dvh;
+  }
+
+  .trem-bottom-sheet__body {
+    padding-top: $space-3;
+  }
+}

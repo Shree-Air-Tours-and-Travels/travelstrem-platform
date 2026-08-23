@@ -6,6 +6,6 @@ const FOOTER_LINKS = [
   { to: "/agent/tours", label: "Tours" },
 ];
 
-export default function Footer({ user }) {
-  return <SharedFooter user={user} brand="AgentTREM" links={FOOTER_LINKS} />;
+export default function Footer({ user, logoSrc = "" }) {
+  return <SharedFooter user={user} logoSrc={logoSrc} productName="Partner portal · Travel partners" exploreLinks={FOOTER_LINKS} />;
 }

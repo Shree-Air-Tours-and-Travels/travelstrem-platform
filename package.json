@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "packageManager": "pnpm@10.17.1",
   "scripts": {
+    "sync:favicons": "node scripts/sync-favicons.mjs",
+    "prebuild": "pnpm sync:favicons",
     "dev": "turbo run dev",
     "build": "turbo run build",
     "start": "turbo run start",
@@ -15,5 +17,8 @@
   },
   "devDependencies": {
     "turbo": "^2.9.9"
+  },
+  "dependencies": {
+    "@vercel/analytics": "^2.0.1"
   }
 }

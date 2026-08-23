@@ -1,21 +1,21 @@
-@import "../../styles/base/typography";
+@import "@packages/trem-design-tokens/scss";
 
 .ui-search-bar-card {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem;
+  gap: $space-4;
+  padding: $space-4;
   background: $primary-color;
   border: $primary-color solid 1px;
-  border-radius: 10px;
-  box-shadow: var(--shadow-sm);
+  border-radius: $radius-sm;
+  box-shadow: $shadow-sm;
   width: 100%;
   max-width: 800px;
 
   &__field {
     display: flex;
     flex-direction: column;
-    gap: 0.3rem;
+    gap: $space-1-25;
   }
 
   &__label {
@@ -25,12 +25,12 @@
   }
 
   &__input {
-    padding: 0.6rem;
+    padding: $space-2-5;
     font-size: $font-size-md;
     border: 1px solid $border-color;
-    border-radius: 5px;
+    border-radius: $radius-xs;
     outline: none;
-    transition: border 0.3s ease;
+    transition: border 0.3s $ease-default;
 
     &:focus {
       border-color: $primary-color;
@@ -41,12 +41,12 @@
     background: $primary-color;
     color: $light-bg;
     border: none;
-    padding: 0.8rem 1.5rem;
+    padding: $space-3-5 $space-5;
     font-size: $font-size-md;
     font-weight: $font-bold;
-    border-radius: 5px;
+    border-radius: $radius-xs;
     cursor: pointer;
-    transition: background 0.3s ease;
+    transition: background 0.3s $ease-default;
 
     &:hover {
       background: darken($primary-color, 10%);

@@ -10,7 +10,9 @@
     "start": "cross-env NODE_ENV=production node src/server.js",
     "start:prod": "cross-env NODE_ENV=production node src/server.js",
     "seed:tours:populate": "cross-env USE_DOTENV=true node src/scripts/populateTours.js",
-    "seed:services": "cross-env USE_DOTENV=true node src/scripts/seed-services.js",
+    "seed:master-data": "cross-env USE_DOTENV=true node src/scripts/seed-master-data.js",
+    "seed:trevio-trips": "cross-env USE_DOTENV=true node src/scripts/seed-trevio-trips.js",
+    "migrate:trevio-payments": "cross-env USE_DOTENV=true node src/scripts/migrate-trevio-offline-payments.js",
     "test": "cross-env NODE_ENV=test jest --runInBand --passWithNoTests"
   },
   "dependencies": {
@@ -23,6 +25,7 @@
     "express": "^4.21.2",
     "express-rate-limit": "^8.1.0",
     "helmet": "^8.1.0",
+    "ioredis": "^5.11.1",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.13.0",
     "morgan": "^1.10.0",

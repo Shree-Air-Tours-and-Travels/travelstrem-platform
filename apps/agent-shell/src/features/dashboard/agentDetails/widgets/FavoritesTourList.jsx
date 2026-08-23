@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, EmptyState, Icon, Paragraph, PortalPreloader, QuickChips, Title, TourCard } from "@packages/trem-ui";
+import { Button, EmptyState, FavoriteCard, Icon, Paragraph, PortalPreloader, QuickChips, Title } from "@packages/trem-ui";
 import { fetchData, getTourDetailsPath, slugify } from "@packages/trem-utils";
 import { getLabel } from "./_helpers";
 
@@ -88,7 +88,7 @@ export default function FavoritesTourList({ labels, favoritesState, favoritesChi
                 ) : (
                     <div className="dashboard-favorites__grid">
                         {activeChip === "tours" && sorted.map((tour) => (
-                            <TourCard key={tour._id || tour.id} tour={tour} variant="grid" onView={openTour} />
+                            <FavoriteCard key={tour._id || tour.id} tour={tour} onView={openTour} />
                         ))}
                     </div>
                 )}

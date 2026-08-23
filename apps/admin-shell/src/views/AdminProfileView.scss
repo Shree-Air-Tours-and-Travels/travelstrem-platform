@@ -1,0 +1,189 @@
+@import "@packages/trem-design-tokens/scss";
+
+.apv__header {
+  margin-bottom: $space-7;
+}
+
+.apv__title {
+  font-size: $font-size-xl;
+  font-weight: $font-bold;
+  color: var(--heading);
+  margin-bottom: $space-1;
+}
+
+.apv__subtitle {
+  font-size: $font-size-sm;
+  color: var(--muted);
+}
+
+.apv__grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: $space-6;
+  align-items: start;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.apv__card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+  padding: $space-6;
+}
+
+.apv__form {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+  padding: $space-6;
+}
+
+.apv__form-header {
+  margin-bottom: $space-5;
+}
+
+.apv__form-title {
+  font-size: $font-size-md;
+  font-weight: $font-semibold;
+  color: var(--heading);
+  margin-bottom: $space-1;
+}
+
+.apv__form-subtitle {
+  font-size: $font-size-sm;
+  color: var(--muted);
+}
+
+.apv__fields {
+  display: grid;
+  gap: $space-4;
+  margin-bottom: $space-5;
+}
+
+.apv__field {
+  display: grid;
+  gap: 6px;
+}
+
+.apv__label {
+  font-size: 13px;
+  font-weight: $font-semibold;
+  color: var(--muted);
+}
+
+.apv__form-footer {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+}
+
+.apv__save {
+  padding: 10px $space-5;
+  border: none;
+  border-radius: $radius-sm;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-size: $font-size-sm;
+  font-weight: $font-semibold;
+  cursor: pointer;
+  transition: opacity $duration-fast $ease-standard;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.apv__saved {
+  font-size: $font-size-sm;
+  font-weight: $font-medium;
+  color: var(--success-color);
+}
+
+.apv__avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--primary-soft);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: $font-size-xl;
+  font-weight: $font-bold;
+  margin: 0 auto $space-4;
+}
+
+.apv__name {
+  font-size: 18px;
+  font-weight: $font-semibold;
+  color: var(--heading);
+  text-align: center;
+  margin-bottom: $space-1;
+}
+
+.apv__email {
+  font-size: 13px;
+  color: var(--muted);
+  text-align: center;
+  margin-bottom: 2px;
+}
+
+.apv__phone {
+  font-size: 13px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.apv__card-title {
+  font-size: $font-size-sm;
+  font-weight: $font-semibold;
+  color: var(--heading);
+  margin-bottom: $space-4;
+}
+
+.apv__detail {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.apv__detail-label {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.apv__detail-value {
+  font-size: 13px;
+  font-weight: $font-medium;
+  color: var(--heading);
+
+  &--mono {
+    font-family: "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: $font-size-xs;
+  }
+
+  &--badge {
+    padding: 2px 10px;
+    border-radius: $radius-full;
+    background: var(--primary-soft);
+    color: var(--color-primary);
+    font-size: $font-size-xs;
+    text-transform: capitalize;
+  }
+}
+
+.apv__side {
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
+}

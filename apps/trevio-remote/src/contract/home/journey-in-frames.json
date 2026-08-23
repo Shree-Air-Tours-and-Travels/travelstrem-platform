@@ -1,0 +1,89 @@
+{
+  "status": "success",
+  "component": {
+    "data": {
+      "state": {
+        "frameRows": {
+          "top": [
+          {
+            "id": "spiti-valley",
+            "image": "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=600&q=80",
+            "location": "Spiti Valley",
+            "shape": "blob-1"
+          },
+          {
+            "id": "kerala-backwaters",
+            "image": "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=600&q=80",
+            "location": "Kerala Backwaters",
+            "shape": "hexagon"
+          },
+          {
+            "id": "ladakh-pass",
+            "image": "https://images.unsplash.com/photo-1589792923962-537704632910?w=600&q=80",
+            "location": "Ladakh Pass",
+            "shape": "diamond"
+          },
+          {
+            "id": "goa-beaches",
+            "image": "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=600&q=80",
+            "location": "Goa Beaches",
+            "shape": "blob-2"
+          }
+          ],
+          "bottom": [
+          {
+            "id": "meghalaya-caves",
+            "image": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80",
+            "location": "Meghalaya Caves",
+            "shape": "octagon"
+          },
+          {
+            "id": "rajasthan-desert",
+            "image": "https://images.unsplash.com/photo-1477587458883-47145ed94245?w=600&q=80",
+            "location": "Rajasthan Desert",
+            "shape": "blob-3"
+          },
+          {
+            "id": "himachal-villages",
+            "image": "https://images.unsplash.com/photo-1571401835393-8c5f35328320?w=600&q=80",
+            "location": "Himachal Villages",
+            "shape": "diamond"
+          },
+          {
+            "id": "sikkim-mountains",
+            "image": "https://images.unsplash.com/photo-1585409677983-0f6c41ca9c3b?w=600&q=80",
+            "location": "Sikkim Mountains",
+            "shape": "hexagon"
+          }
+          ]
+        }
+      }
+    },
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "framesEyebrow": "Journey in Frames",
+        "framesHeading": "Moments from the road.",
+        "framesDescription": "Real stories from real travellers. Every frame, a memory."
+      },
+      "urls": {}
+    },
+    "structure": {
+      "type": "journeyInFramesSection",
+      "source": "trevio",
+      "features": [
+        {
+          "name": "photoGallery",
+          "type": "gallery",
+          "eyebrowRef": "framesEyebrow",
+          "headingRef": "framesHeading",
+          "descriptionRef": "framesDescription"
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

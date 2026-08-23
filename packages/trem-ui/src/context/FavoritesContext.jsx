@@ -3,8 +3,9 @@ import { fetchData } from "@packages/trem-utils";
 
 const FavoritesContext = createContext(null);
 
-export function FavoritesProvider({ children }) {
+export function FavoritesProvider({ children, product = "trevista" }) {
   const [favoriteIds, setFavoriteIds] = useState(new Set());
+  const [favorites, setFavorites] = useState([]);
   const idsRef = useRef(favoriteIds);
   idsRef.current = favoriteIds;
 
@@ -15,11 +16,15 @@ export function FavoritesProvider({ children }) {
         const res = await fetchData("/tours.json/favorites");
         if (cancelled) return;
         if (res?.status === "success") {
-          const tours = res.componentData?.data || [];
-          setFavoriteIds(new Set(tours.map((t) => t._id || t.id).filter(Boolean)));
+          const items = res.componentData?.data || [];
+          setFavoriteIds(new Set(items.map((t) => t._id || t.id).filter(Boolean)));
+          setFavorites(items);
         }
       } catch {
-        if (!cancelled) setFavoriteIds(new Set());
+        if (!cancelled) {
+          setFavoriteIds(new Set());
+          setFavorites([]);
+        }
       }
     })();
     return () => { cancelled = true; };
@@ -29,6 +34,14 @@ export function FavoritesProvider({ children }) {
     (tour) => idsRef.current.has(tour?._id || tour?.id),
     [],
   );
+
+  const rollback = useCallback((tourId, wasFav) => {
+    const rolled = new Set(idsRef.current);
+    if (wasFav) rolled.add(tourId);
+    else rolled.delete(tourId);
+    setFavoriteIds(rolled);
+    idsRef.current = rolled;
+  }, []);
 
   const toggleFavorite = useCallback(async (tour) => {
     const tourId = tour?._id || tour?.id;
@@ -46,26 +59,32 @@ export function FavoritesProvider({ children }) {
       const res = await fetchData("/tours.json/favorite/toggle", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: { tourId },
+        body: { tourId, product },
       });
+      if (res?.status === "error") {
+        rollback(tourId, wasFav);
+        return;
+      }
       if (res?.status === "success" && typeof res.data?.favorited === "boolean") {
         const corrected = new Set(idsRef.current);
         if (res.data.favorited) corrected.add(tourId);
         else corrected.delete(tourId);
         setFavoriteIds(corrected);
         idsRef.current = corrected;
+        setFavorites((prev) => {
+          if (res.data.favorited) {
+            return prev.some((f) => (f._id || f.id) === tourId) ? prev : [...prev, tour];
+          }
+          return prev.filter((f) => (f._id || f.id) !== tourId);
+        });
       }
     } catch {
-      const rollback = new Set(idsRef.current);
-      if (wasFav) rollback.add(tourId);
-      else rollback.delete(tourId);
-      setFavoriteIds(rollback);
-      idsRef.current = rollback;
+      rollback(tourId, wasFav);
     }
-  }, []);
+  }, [product, rollback]);
 
   return (
-    <FavoritesContext.Provider value={{ isFavorited, toggleFavorite }}>
+    <FavoritesContext.Provider value={{ isFavorited, toggleFavorite, favoriteIds, favorites, favoritesCount: favoriteIds.size }}>
       {children}
     </FavoritesContext.Provider>
   );
@@ -73,6 +92,6 @@ export function FavoritesProvider({ children }) {
 
 export function useFavoritesContext() {
   const ctx = useContext(FavoritesContext);
-  if (!ctx) throw new Error("useFavoritesContext must be used within a FavoritesProvider");
+  if (!ctx) return { isFavorited: () => false, toggleFavorite: () => {}, favoriteIds: new Set(), favorites: [], favoritesCount: 0 };
   return ctx;
 }

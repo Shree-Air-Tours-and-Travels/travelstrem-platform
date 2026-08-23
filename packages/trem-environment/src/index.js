@@ -1,45 +1,23 @@
-export const normalizeEnvironment = (value, { supportStaging = false } = {}) => {
+const normalizeEnvironment = (value, { supportStaging = false } = {}) => {
     const raw = String(value || "").trim().toLowerCase();
     if (raw === "production" || raw === "prod") return "production";
     if (supportStaging && (raw === "staging" || raw === "stage")) return "staging";
     return "development";
 };
 
-export const stripRemoteEntry = (remoteEntry) =>
+const stripRemoteEntry = (remoteEntry) =>
     String(remoteEntry || "").replace(/\/remoteEntry\.js$/, "").replace(/\/$/, "");
 
 const normalizeUrl = (url) => String(url || "").replace(/\/$/, "");
 
 const defaultBackend = {
     development: {
-        baseUrl: "http://localhost:5000",
-        apiBaseUrl: "http://localhost:5000/api",
+        baseUrl: process.env.REACT_APP_BACKEND_URL,
+        apiBaseUrl: process.env.REACT_APP_API_URL,
     },
     production: {
-        baseUrl: "https://travelstrem-testbe.onrender.com",
-        apiBaseUrl: "https://travelstrem-testbe.onrender.com/api",
-    },
-};
-
-const customerEnvironments = {
-    development: {
-        backend: defaultBackend.development,
-        frontends: {
-            shell: { baseUrl: "http://localhost:3000" },
-            toursTREM: { baseUrl: "http://localhost:3001", remoteEntry: "http://localhost:3001/remoteEntry.js" },
-            adminShell: { baseUrl: "http://localhost:3002" },
-        },
-        auth: { shellLoginPath: "/auth" },
-    },
-    staging: {
-        backend: defaultBackend.production,
-        frontends: {},
-        auth: { shellLoginPath: "/auth" },
-    },
-    production: {
-        backend: defaultBackend.production,
-        frontends: {},
-        auth: { shellLoginPath: "/auth" },
+        baseUrl: process.env.REACT_APP_BACKEND_URL,
+        apiBaseUrl: process.env.REACT_APP_API_URL,
     },
 };
 
@@ -47,14 +25,14 @@ const adminEnvironments = {
     development: {
         backend: defaultBackend.development,
         frontends: {
-            adminShell: { baseUrl: "http://localhost:3002" },
+            adminShell: { baseUrl: process.env.REACT_APP_ADMIN_SHELL_URL },
         },
         auth: { shellLoginPath: "/auth" },
     },
     production: {
         backend: defaultBackend.production,
         frontends: {
-            adminShell: { baseUrl: "" },
+            adminShell: { baseUrl: process.env.REACT_APP_ADMIN_SHELL_URL },
         },
         auth: { shellLoginPath: "/auth" },
     },
@@ -101,7 +79,7 @@ export const createPortalEnvironment = ({
     };
 
     const getConfiguredRemoteOrigin = (key) => {
-        const envKey = key === "adminTREM" ? "REACT_APP_ADMIN_REMOTE_URL" : key === "toursTREM" ? "REACT_APP_TOURS_REMOTE_URL" : null;
+        const envKey = key === "adminTREM" ? "REACT_APP_ADMIN_REMOTE_URL" : key === "trevista" ? "REACT_APP_TREVISTA_REMOTE_URL" : key === "trevio" ? "REACT_APP_TREVIO_REMOTE_URL" : null;
         const envValue = allowEnvOverrides && envKey ? processEnv[envKey] : "";
         const app = portalEnvironment?.frontends?.[key] || {};
         return stripRemoteEntry(envValue || app.remoteEntry || app.baseUrl);
@@ -124,14 +102,6 @@ export const createPortalEnvironment = ({
         getShellLoginUrl,
     };
 };
-
-export const createCustomerPortalEnvironment = (processEnv = {}) =>
-    createPortalEnvironment({
-        processEnv,
-        environments: customerEnvironments,
-        supportStaging: true,
-        allowEnvOverrides: processEnv.REACT_APP_ALLOW_ENV_OVERRIDES === "true",
-    });
 
 export const createAdminPortalEnvironment = (processEnv = {}) =>
     createPortalEnvironment({

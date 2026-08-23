@@ -1,0 +1,62 @@
+{
+    "status": "success",
+    "component": {
+        "data": {},
+        "dataScope": {
+            "options": {}
+        },
+        "elements": {
+            "labels": {
+                "metricsAriaLabel": "Travel activity summary",
+                "metricTotalBookings": "Total Bookings",
+                "metricFavorites": "Favorites",
+                "metricTripsCompleted": "Trips Completed",
+                "metricPending": "Pending"
+            },
+            "urls": {}
+        },
+        "structure": {
+            "header": {},
+            "widgets": [
+                {
+                    "type": "DashboardMetrics",
+                    "props": {
+                        "items": [
+                            {
+                                "id": "bookings",
+                                "labelRef": "metricTotalBookings",
+                                "valueKey": "totalBookings",
+                                "icon": "briefcaseBusiness",
+                                "target": "bookings"
+                            },
+                            {
+                                "id": "favorites",
+                                "labelRef": "metricFavorites",
+                                "valueKey": "totalFavorites",
+                                "icon": "heart",
+                                "target": "favorites"
+                            },
+                            {
+                                "id": "completed",
+                                "labelRef": "metricTripsCompleted",
+                                "valueKey": "tripsCompleted",
+                                "icon": "shieldCheck",
+                                "target": "bookings"
+                            },
+                            {
+                                "id": "pending",
+                                "labelRef": "metricPending",
+                                "valueKey": "pendingBookings",
+                                "icon": "clock",
+                                "target": "bookings"
+                            }
+                        ],
+                        "ariaLabelRef": "metricsAriaLabel"
+                    }
+                }
+            ],
+            "config": {},
+            "actions": []
+        }
+    }
+}

@@ -45,7 +45,7 @@ const mapBookingRow = (booking) => {
     const tour = booking?.tour || {};
     const price = booking?.paymentSummary?.total || booking?.priceSnapshot?.total || 0;
     const currency = booking?.priceSnapshot?.currency || booking?.tripSelection?.currency || "INR";
-    const image = tour?.photo || tour?.photos?.[0] || "https://res.cloudinary.com/dofxshf3z/image/upload/v1779131576/tour-img01_tljj0m.jpg";
+    const image = tour?.photo || tour?.photos?.[0] || process.env.REACT_APP_DEFAULT_TOUR_IMAGE || "";
     const tags = Array.isArray(tour?.tags) ? tour.tags : [];
     return {
         bookingId: booking?.id || booking?._id,
@@ -73,7 +73,7 @@ export default function DashboardPageContainer() {
         elements,
         structure,
         resolvedView,
-    } = useComponentData("/pages/customer-shell/dashboard", {
+    } = useComponentData("/pages/dashboard/dashboard", {
         headers: {},
         params: {},
     });

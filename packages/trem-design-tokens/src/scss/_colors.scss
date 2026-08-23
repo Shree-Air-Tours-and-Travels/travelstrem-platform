@@ -1,25 +1,89 @@
-$primary-color: #0f8f86;
-$primary-dark: #07655f;
-$secondary-color: #1d4f91;
-$secondary-dark: #123565;
-$tertiary-color: #d8942a;
-$tertiary-dark: #8a5a10;
-$accent-color: #132321;
-$success-color: #166534;
-$danger-color: #b91c1c;
-$light-bg: #fcfcfd;
-$white-color: #ffffff;
-$surface-muted: #dcecea;
-$text-dark: #111111;
-$text-muted: #4b5563;
-$text-light: rgba(17, 17, 17, 0.62);
-$border-color: rgba(17, 17, 17, 0.12);
+// ─── Light theme (generated from colors.js) ───
+$primary-color: #1E3A8A;
+$primary-dark: #172554;
+$secondary-color: #7C3AED;
+$secondary-dark: #5B21B6;
+$tertiary-color: #D4A017;
+$tertiary-dark: #9A6C00;
+$accent-color: #111827;
+$success-color: #15803D;
+$danger-color: #DC2626;
+$warning-color: #D97706;
+$light-bg: #F8FAFC;
+$white-color: #FFFFFF;
+$surface-muted: #E0E7FF;
+$surface-subtle: #F0F4FF;
+$text-dark: #111827;
+$text-muted: #4B5563;
+$text-light: rgba(17, 24, 39, 0.65);
+$border-color: rgba(17, 24, 39, 0.10);
 $transparent-color: transparent;
-$overlay-color: rgba(17, 17, 17, 0.48);
-$hp-bg: #edf8f7;
+$overlay-color: rgba(17, 24, 39, 0.48);
+
+// ─── Dark theme ───
+$dark-primary: #60A5FA;
+$dark-primary-dark: #3B82F6;
+$dark-secondary: #A78BFA;
+$dark-secondary-dark: #8B5CF6;
+$dark-tertiary: #FCD34D;
+$dark-tertiary-dark: #D97706;
+$dark-accent: #ffffff;
+$dark-success: #4ADE80;
+$dark-danger: #FCA5A5;
+$dark-warning: #FCD34D;
+$dark-bg: #0B1120;
+$dark-surface: #111827;
+$dark-surface-muted: #1E293B;
+$dark-surface-subtle: #0F172A;
+$dark-text: #F9FAFB;
+$dark-text-muted: rgba(249, 250, 251, 0.74);
+$dark-text-light: rgba(249, 250, 251, 0.58);
+$dark-border: rgba(255, 255, 255, 0.1);
+$dark-overlay: rgba(0, 0, 0, 0.68);
+
+// ─── Derived: light ───
+$hp-bg: #E0E7FF;
 $hp-shimmer: linear-gradient(
   90deg,
   transparent 0%,
   rgba(255, 255, 255, 0.92) 50%,
   transparent 100%
 );
+
+// ─── Derived: soft / surface variants (light) ───
+$primary-soft: rgba(30, 58, 138, 0.1);
+$primary-softer: rgba(30, 58, 138, 0.05);
+$primary-surface: rgba(30, 58, 138, 0.12);
+$primary-surface-hover: rgba(30, 58, 138, 0.2);
+$primary-focus: rgba(30, 58, 138, 0.18);
+$primary-shadow: rgba(30, 58, 138, 0.18);
+$secondary-soft: rgba(124, 58, 237, 0.1);
+$secondary-surface: rgba(124, 58, 237, 0.12);
+$secondary-surface-hover: rgba(124, 58, 237, 0.2);
+$tertiary-soft: rgba(212, 160, 23, 0.16);
+$tertiary-surface: rgba(212, 160, 23, 0.22);
+$tertiary-surface-hover: rgba(212, 160, 23, 0.32);
+$danger-soft: rgba(220, 38, 38, 0.08);
+$success-soft: rgba(21, 128, 61, 0.08);
+$warning-soft: rgba(217, 119, 6, 0.08);
+$neutral-soft: rgba(17, 24, 39, 0.06);
+$neutral-softer: rgba(17, 24, 39, 0.03);
+
+// ─── Derived: soft / surface variants (dark) ───
+$dark-primary-soft: rgba(96, 165, 250, 0.16);
+$dark-primary-softer: rgba(96, 165, 250, 0.08);
+$dark-primary-surface: rgba(96, 165, 250, 0.18);
+$dark-primary-surface-hover: rgba(96, 165, 250, 0.28);
+$dark-primary-focus: rgba(96, 165, 250, 0.26);
+$dark-primary-shadow: rgba(96, 165, 250, 0.22);
+$dark-secondary-soft: rgba(167, 139, 250, 0.14);
+$dark-secondary-surface: rgba(167, 139, 250, 0.16);
+$dark-secondary-surface-hover: rgba(167, 139, 250, 0.24);
+$dark-tertiary-soft: rgba(252, 211, 77, 0.14);
+$dark-tertiary-surface: rgba(252, 211, 77, 0.18);
+$dark-tertiary-surface-hover: rgba(252, 211, 77, 0.26);
+$dark-danger-soft: rgba(252, 165, 165, 0.14);
+$dark-success-soft: rgba(74, 222, 128, 0.14);
+$dark-warning-soft: rgba(252, 211, 77, 0.14);
+$dark-neutral-soft: rgba(255, 255, 255, 0.08);
+$dark-neutral-softer: rgba(255, 255, 255, 0.04);

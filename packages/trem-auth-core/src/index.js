@@ -45,21 +45,55 @@ export const canAccessAuthRoute = (route = {}, session = null) => {
   return true;
 };
 
-export const normalizeBase = (raw) => {
-  if (raw == null || raw === "") return raw;
-  if (/^https?:\/\//i.test(raw)) return raw.replace(/\/$/, "");
-  return `https://${raw}`.replace(/\/$/, "");
+export const AUTH_CHANNEL_NAME = "travelstrem-auth";
+
+export const emitAuthEvent = (message = {}) => {
+  if (typeof window === "undefined" || typeof BroadcastChannel === "undefined") return;
+  const channel = new BroadcastChannel(AUTH_CHANNEL_NAME);
+  channel.postMessage(message);
+  channel.close();
 };
 
-export const extractToken = (res) => res?.data?.token || res?.token || res?.data?.data?.token || res?.data?.user?.token;
+export const subscribeAuthEvents = (handler) => {
+  if (typeof window === "undefined" || typeof BroadcastChannel === "undefined" || typeof handler !== "function") {
+    return () => {};
+  }
+  const channel = new BroadcastChannel(AUTH_CHANNEL_NAME);
+  channel.onmessage = (event) => handler(event.data || {});
+  return () => channel.close();
+};
+
+export const clearAuthBrowserState = ({ storage = localStorage, prefixes = [] } = {}) => {
+  const baseKeys = ["token", "auth_token", "auth_user", "auth_token_key_name", "travelstrem:token", "travelstrem:auth_user"];
+  const prefixedKeys = prefixes.flatMap((prefix) => [
+    `${prefix}:token`,
+    `${prefix}:auth_user`,
+    `${prefix}:auth_token`,
+    `${prefix}:auth_token_key_name`,
+  ]);
+  [...baseKeys, ...prefixedKeys].forEach((key) => storage?.removeItem(key));
+};
+
+export const extractToken = () => null;
 
 export const extractSafeUser = (res) =>
   res?.data?.user || res?.data?.data?.user || (res?.data && typeof res.data === "object" && res.data.user) || res?.user || null;
 
-/** @deprecated Tokens are now stored in httpOnly cookies. Kept for backward compat during migration. */
-export const getStoredAuthToken = ({ storage = localStorage } = {}) => {
-  if (!storage) return null;
-  return storage.getItem("token") || storage.getItem("auth_token");
+export const appendTokenToUrl = (url, token) => {
+  return typeof url === "string" ? url : "";
+};
+
+export const consumeUrlToken = (storageKeys = {}) => {
+  if (typeof window === "undefined") return null;
+  try {
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has("auth_token")) return null;
+    url.searchParams.delete("auth_token");
+    window.history.replaceState({}, "", url.toString());
+    return null;
+  } catch {
+    return null;
+  }
 };
 
 export const setAuthHeader = (api, token) => {
@@ -82,23 +116,21 @@ export const persistAuthSession = ({
   rememberEmail = "",
   emit,
 } = {}) => {
-  const token = extractToken(response);
-  if (!token) throw new Error("No token from server.");
-
   const safeUser = extractSafeUser(response);
   const rememberKey = storageKeys.rememberEmail || "remember_email";
-  const tokenKey = storageKeys.token || "token";
-  const userKey = storageKeys.user || "auth_user";
 
-  storage.setItem(tokenKey, token);
-  if (safeUser) storage.setItem(userKey, JSON.stringify(safeUser));
-  setAuthHeader(api, token);
+  clearAuthHeader(api);
 
   if (remember) storage.setItem(rememberKey, rememberEmail);
   else storage.removeItem(rememberKey);
 
-  emit?.("SESSION_TOKEN_READY", { token, user: safeUser });
-  return { token, user: safeUser };
+  emitAuthEvent({
+    type: "LOGIN",
+    userId: safeUser?.id || safeUser?._id || "",
+    sessionVersion: response?.data?.sessionVersion || response?.sessionVersion || "",
+  });
+  emit?.("SESSION_READY", { user: safeUser });
+  return { user: safeUser };
 };
 
 export const clearAuthSession = ({ api, storage = localStorage, storagePrefix = "" } = {}) => {
@@ -108,18 +140,6 @@ export const clearAuthSession = ({ api, storage = localStorage, storagePrefix = 
 };
 
 export const setupRefreshInterceptor = (api, storagePrefix = "") => {
-  const prefix = storagePrefix ? `${storagePrefix}:` : "";
-  let isRefreshing = false;
-  let failedQueue = [];
-
-  const processQueue = (error, token = null) => {
-    failedQueue.forEach(({ resolve, reject }) => {
-      if (error) reject(error);
-      else resolve(token);
-    });
-    failedQueue = [];
-  };
-
   api.interceptors.response.use(
     (response) => response,
     async (error) => {
@@ -136,39 +156,12 @@ export const setupRefreshInterceptor = (api, storagePrefix = "") => {
         return Promise.reject(error);
       }
 
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        }).then((token) => {
-          originalRequest.headers.Authorization = `Bearer ${token}`;
-          return api(originalRequest);
-        });
+      clearAuthSession({ api, storagePrefix });
+      emitAuthEvent({ type: "LOGOUT" });
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("USER_LOGOUT", { detail: { reason: "unauthorized" } }));
       }
-
-      originalRequest._retry = true;
-      isRefreshing = true;
-
-      try {
-        const response = await api.post("/auth/refresh");
-        const { token } = response.data;
-        if (token) {
-          localStorage.setItem(prefix + "token", token);
-          api.defaults.headers.common.Authorization = `Bearer ${token}`;
-          originalRequest.headers.Authorization = `Bearer ${token}`;
-          processQueue(null, token);
-          return api(originalRequest);
-        }
-        throw new Error("No token in refresh response");
-      } catch (refreshError) {
-        processQueue(refreshError, null);
-        clearAuthSession({ api, storagePrefix });
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(new CustomEvent("USER_LOGOUT", { detail: { reason: "refresh_failed" } }));
-        }
-        return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
-      }
+      return Promise.reject(error);
     }
   );
 };
@@ -181,6 +174,12 @@ export const createRefreshHandler = ({ authService, persistSession, onRefresh } 
   return session;
 };
 
+const normalizeBase = (raw) => {
+  if (raw == null || raw === "") return raw;
+  if (/^https?:\/\//i.test(raw)) return raw.replace(/\/$/, "");
+  return `https://${raw}`.replace(/\/$/, "");
+};
+
 export const createAuthApi = (base = process.env.REACT_APP_API_URL || "") => {
   const normalized = normalizeBase(base) ?? "";
   const baseURL = (normalized.endsWith("/api") ? normalized : `${normalized}/api`).replace(/([^:]\/)\/+/g, "$1");
@@ -191,20 +190,12 @@ export const createAuthApi = (base = process.env.REACT_APP_API_URL || "") => {
     headers: { "Content-Type": "application/json" },
   });
 
-  api.interceptors.request.use((cfg) => {
-    const token = getStoredAuthToken();
-    if (token) {
-      cfg.headers = cfg.headers || {};
-      cfg.headers.Authorization = `Bearer ${token}`;
-    }
-    return cfg;
-  });
-
   return api;
 };
 
 export const createAuthService = (api) => ({
   getConfig: () => api.get("/auth/config"),
+  getSession: () => api.get("/auth/session"),
   requestAdminRegistrationOtp: (payload) => api.post("/auth/admin-registration-otp", payload, { headers: { "Content-Type": "application/json" } }),
   login: (payload) => api.post("/auth/login", payload, { headers: { "Content-Type": "application/json" } }),
   register: (payload) => api.post("/auth/register", payload, { headers: { "Content-Type": "application/json" } }),
@@ -228,6 +219,11 @@ export const normalizeAuthConfig = (remote, roleOptions, defaultRole, storagePre
   roles: Array.isArray(roleOptions) && roleOptions.length ? roleOptions : Array.isArray(remote?.roles) ? remote.roles : DEFAULT_AUTH_ROLES,
   socialProviders: Array.isArray(remote?.socialProviders) ? remote.socialProviders : [],
   strings: { ...(remote?.strings || {}) },
+  header: { ...(remote?.header || {}) },
+  company: {
+    ...(remote?.company || {}),
+    highlights: Array.isArray(remote?.company?.highlights) ? remote.company.highlights : [],
+  },
   storageKeys: {
     token: remote?.storageKeys?.token || `${prefix}token`,
     user: remote?.storageKeys?.user || `${prefix}auth_user`,
@@ -236,7 +232,7 @@ export const normalizeAuthConfig = (remote, roleOptions, defaultRole, storagePre
   });
 };
 
-export const extractAuthConfig = (res) =>
+const extractAuthConfig = (res) =>
   res?.componentData?.structure || res?.data?.componentData?.structure || res?.data?.data?.componentData?.structure;
 
 export const useAuthConfig = ({ authService, roleOptions, defaultRole, storagePrefix = "" } = {}) => {

@@ -7,7 +7,7 @@ const FINISH_CALLBACK_DELAY = 550;
 export default function GlobalLoader({
   visible = true,
   size = 120,
-  text = "Preparing your TravelsTREM experience...",
+  text = "Preparing your TravelsTrem experience...",
   className = "",
   onFinish = () => {},
   autoHideAfter = null,
@@ -61,22 +61,25 @@ export default function GlobalLoader({
     };
   }, [autoHideAfter, completeHide, visible]);
 
-  // Lock body scroll & keyboard focus while visible
+  // Lock body scroll while visible
   useEffect(() => {
     if (show) {
       const prevOverflow = document.body.style.overflow;
-      const prevPointer = document.body.style.pointerEvents;
       document.body.style.overflow = "hidden";
-      document.body.style.pointerEvents = "none";
-      const overlay = document.querySelector('.tt-loader--fullscreen');
-      if (overlay) overlay.style.pointerEvents = 'auto';
 
       return () => {
         document.body.style.overflow = prevOverflow;
-        document.body.style.pointerEvents = prevPointer;
       };
     }
   }, [show]);
+
+  // Safety: always restore body styles on unmount
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = "";
+      document.body.style.pointerEvents = "";
+    };
+  }, []);
 
   if (!show) return null;
 

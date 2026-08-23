@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { initApp } from "../../core/initApp";
 import { getHeaderConfig } from "../../services/configService";
 import { clearUserSessionCache } from "../../services/userSession";
+import { clearAuthBrowserState, subscribeAuthEvents } from "@packages/trem-auth-core";
 import {
     createPortalEventController,
     emit,
@@ -23,7 +24,7 @@ export const isAllowedAdminRole = (session) => adminRoles.includes(session?.user
 
 const DEFAULT_HEADER_CONFIG = {
     brand: { label: "AdminTREM", homePath: "/admin/tours" },
-    leftSection: { welcome: true, showStatus: true, showNotifications: false },
+    leftSection: { welcome: true, showStatus: true },
     menu: [
         { id: "adminTours", label: "Tours", path: "/admin/tours", access: "roles", roles: adminRoles },
         { id: "agentTours", label: "Agent", path: "/agent/tours", access: "roles", roles: adminRoles },
@@ -44,6 +45,13 @@ const DEFAULT_HEADER_CONFIG = {
 const DEFAULT_PAGE_CONFIG = {
     page: "admin",
     widgets: [],
+};
+
+const clearLocalAuthState = () => {
+    try {
+        clearAuthBrowserState({ prefixes: ["adminTREM", "travelstrem"] });
+    } catch {}
+    clearUserSessionCache();
 };
 
 const AdminPortalConfigContext = React.createContext({
@@ -115,16 +123,19 @@ export function AdminPortalConfigProvider({ children }) {
         return header;
     }, []);
 
-    const loadPortalConfig = React.useCallback(async ({ forceSession = false, location: nextLocation = null } = {}) => {
+    const loadPortalConfig = React.useCallback(async ({ forceSession = false, background = false, location: nextLocation = null } = {}) => {
         const params = getPortalParams(nextLocation || latestLocationRef.current);
 
-        if (forceSession) {
+        if (forceSession || background) {
             clearUserSessionCache();
             initOnceRef.current = null;
         }
 
         if (initOnceRef.current) return initOnceRef.current;
-        setState((current) => ({ ...current, loading: true, error: null }));
+
+        if (!background) {
+            setState((current) => ({ ...current, loading: true, error: null }));
+        }
 
         initOnceRef.current = (async () => {
             const { session, header, pageConfig } = await initApp(params);
@@ -186,6 +197,35 @@ export function AdminPortalConfigProvider({ children }) {
     }, [loadPortalConfig]);
 
     React.useEffect(() => {
+        const redirectToLogin = () => {
+            clearLocalAuthState();
+            setState({
+                loading: false,
+                error: null,
+                session: DEFAULT_SESSION,
+                headerConfig: DEFAULT_HEADER_CONFIG,
+                pageConfig: DEFAULT_PAGE_CONFIG,
+            });
+            navigate("/login", { replace: true });
+        };
+        const unsubscribe = subscribeAuthEvents((message) => {
+            if (message?.type === "LOGOUT") {
+                redirectToLogin();
+                return;
+            }
+            if (message?.type === "LOGIN" || message?.type === "SESSION_CHANGED") {
+                loadPortalConfig({ background: true });
+            }
+        });
+        const onWindowLogout = () => redirectToLogin();
+        window.addEventListener("USER_LOGOUT", onWindowLogout);
+        return () => {
+            unsubscribe();
+            window.removeEventListener("USER_LOGOUT", onWindowLogout);
+        };
+    }, [loadPortalConfig, navigate]);
+
+    React.useEffect(() => {
         if (state.loading) return;
         const routeKey = `${location.pathname}${location.search}${location.hash}`;
         if (lastHeaderRouteRef.current === routeKey) return;
@@ -195,15 +235,20 @@ export function AdminPortalConfigProvider({ children }) {
         });
     }, [location, location.pathname, location.search, location.hash, refreshHeader, state.loading]);
 
+    const reload = React.useCallback(
+        () => loadPortalConfig({ background: true }),
+        [loadPortalConfig]
+    );
+
     const value = React.useMemo(
         () => ({
             ...state,
             userSession: state.session,
-            reload: loadPortalConfig,
+            reload,
             refreshHeader,
             dispatchEvent,
         }),
-        [dispatchEvent, loadPortalConfig, refreshHeader, state]
+        [dispatchEvent, loadPortalConfig, refreshHeader, reload, state]
     );
 
     return <AdminPortalConfigContext.Provider value={value}>{children}</AdminPortalConfigContext.Provider>;

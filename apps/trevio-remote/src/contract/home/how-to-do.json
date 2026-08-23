@@ -1,0 +1,55 @@
+{
+  "status": "success",
+  "component": {
+    "data": {
+      "state": {
+        "bookingSteps": [
+          {
+            "id": "choose",
+            "title": "Choose your trip",
+            "description": "Explore destinations, view itineraries, and pick the trip that fits you."
+          },
+          {
+            "id": "travellers",
+            "title": "Add your travellers",
+            "description": "Enter traveller details once. They're saved for future bookings."
+          },
+          {
+            "id": "addons",
+            "title": "Customise your package",
+            "description": "Add extras like activities, meals, or insurance and see the price update live."
+          },
+          {
+            "id": "request",
+            "title": "Confirm your booking",
+            "description": "Review your summary and submit. We'll handle the rest."
+          }
+        ]
+      }
+    },
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "howEyebrow": "Simple booking journey",
+        "howHeading": "Book your adventure in four easy steps."
+      },
+      "urls": {}
+    },
+    "structure": {
+      "type": "howToUseSection",
+      "source": "trevio",
+      "features": [
+        {
+          "name": "bookingSteps",
+          "type": "stepList",
+          "eyebrowRef": "howEyebrow",
+          "headingRef": "howHeading"
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

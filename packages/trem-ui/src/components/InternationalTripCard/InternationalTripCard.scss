@@ -1,0 +1,493 @@
+@import "../../styles/base/typography";
+
+.intl-card {
+  all: unset;
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  aspect-ratio: 5 / 6;
+  min-height: 390px;
+  cursor: pointer;
+  perspective: 1500px;
+  contain: layout paint;
+
+  &:focus-visible {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 5px;
+    border-radius: $radius-md;
+  }
+}
+
+.intl-card__book {
+  position: relative;
+  width: calc(100% - 8px);
+  height: calc(100% - 8px);
+  margin: 0 8px 8px 0;
+  transform-style: preserve-3d;
+  isolation: isolate;
+  transition: transform 300ms $ease-default, filter 300ms $ease-default;
+}
+
+.intl-card__back,
+.intl-card__cover,
+.intl-card__pages {
+  position: absolute;
+  inset: 0;
+  border-radius: 3px $radius-md $radius-md 3px;
+}
+
+.intl-card__back {
+  z-index: 1;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--border) 78%, #b98c56 22%);
+  background:
+    linear-gradient(90deg, rgba(122, 77, 35, 0.09) 0, transparent 14%),
+    repeating-linear-gradient(0deg, transparent 0 31px, rgba(23, 84, 76, 0.08) 31px 32px),
+    color-mix(in srgb, var(--surface) 92%, #fff7e8 8%);
+  box-shadow: 5px 7px 0 color-mix(in srgb, var(--surface-inset) 75%, #d8c4a4 25%), var(--shadow-card);
+}
+
+.intl-card__back::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 14%;
+  width: 1px;
+  background: rgba(184, 92, 92, 0.2);
+}
+
+.intl-card__back-kicker {
+  position: absolute;
+  top: $space-4;
+  right: $space-4;
+  color: var(--muted);
+  font-size: 0.66rem;
+  font-weight: $font-bold;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 260ms ease 180ms, transform 320ms ease 180ms;
+}
+
+.intl-card__back-content {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  padding: clamp($space-8, 9%, $space-12) $space-5 $space-6 20%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: $space-3;
+  text-align: left;
+  opacity: 0;
+  transform: translateX(18px);
+  transition: opacity 280ms ease 150ms, transform 420ms cubic-bezier(0.2, 0.75, 0.2, 1) 120ms;
+}
+
+.intl-card__title {
+  margin: 0;
+  color: var(--card-title);
+  font-size: clamp(1.15rem, 1.8vw, 1.55rem);
+  font-weight: $font-extrabold;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+.intl-card__location {
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: $space-1-5;
+  color: var(--muted);
+  font-size: $font-size-sm;
+  line-height: 1.45;
+
+  svg {
+    margin-top: 2px;
+    flex-shrink: 0;
+    color: var(--color-primary);
+  }
+}
+
+.intl-card__back-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-2;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-1;
+    padding: $space-1 $space-2;
+    border: 1px solid var(--border);
+    border-radius: $radius-full;
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+    color: var(--subtitle);
+    font-size: $font-size-xs;
+    font-weight: $font-semibold;
+  }
+
+  svg {
+    color: var(--color-primary);
+  }
+}
+
+.intl-card__price {
+  margin: $space-1 0 0;
+  display: grid;
+  gap: 0.1rem;
+}
+
+.intl-card__price-from {
+  color: var(--muted);
+  font-size: 0.66rem;
+  font-weight: $font-bold;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.intl-card__price-value {
+  color: var(--color-primary-dark);
+  font-size: clamp(1.1rem, 1.8vw, 1.45rem);
+  font-weight: $font-extrabold;
+  letter-spacing: -0.02em;
+}
+
+.intl-card__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-1-5;
+  margin-top: $space-1;
+  color: var(--color-primary);
+  font-size: $font-size-sm;
+  font-weight: $font-bold;
+
+  svg {
+    transition: transform 180ms $ease-default;
+  }
+}
+
+.intl-card__pages {
+  z-index: 3;
+  pointer-events: none;
+  transform-style: preserve-3d;
+}
+
+.intl-card__page {
+  position: absolute;
+  inset: 4px -5px 4px 8px;
+  transform-origin: left center;
+  border: 1px solid rgba(91, 67, 38, 0.12);
+  border-radius: 2px $radius-sm $radius-sm 2px;
+  background:
+    repeating-linear-gradient(0deg, #fffdf7 0 5px, #eee8dc 5px 6px);
+  box-shadow: 2px 1px 3px rgba(41, 31, 21, 0.09);
+  transition: transform 620ms cubic-bezier(0.2, 0.75, 0.2, 1);
+  backface-visibility: hidden;
+}
+
+.intl-card__page--1 { transform: translateZ(3px); }
+.intl-card__page--2 { transform: translateZ(2px); }
+.intl-card__page--3 { transform: translateZ(1px); }
+
+.intl-card__cover {
+  z-index: 5;
+  overflow: hidden;
+  transform: translateZ(5px);
+  transform-origin: 10px center;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: var(--surface-inset);
+  box-shadow: var(--shadow-card);
+  transition: transform 700ms cubic-bezier(0.2, 0.75, 0.2, 1), box-shadow 300ms ease;
+  will-change: transform;
+}
+
+.intl-card__cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: inherit;
+  box-shadow: inset 14px 0 20px rgba(0, 0, 0, 0.14);
+}
+
+.intl-card__cover-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.01);
+  transition: transform 700ms $ease-default;
+}
+
+.intl-card__cover-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.3), transparent 14%),
+    linear-gradient(180deg, rgba(2, 18, 16, 0.08) 10%, rgba(2, 18, 16, 0.1) 38%, rgba(2, 18, 16, 0.84) 100%);
+  pointer-events: none;
+}
+
+.intl-card__cover-content {
+  position: absolute;
+  z-index: 2;
+  top: $space-4;
+  left: $space-5;
+  right: $space-4;
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+}
+
+.intl-card__flag {
+  font-size: 1.7rem;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+}
+
+.intl-card__country {
+  color: #fff;
+  font-size: $font-size-sm;
+  font-weight: $font-bold;
+  letter-spacing: 0.12em;
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.55);
+  text-transform: uppercase;
+}
+
+.intl-card__cover-title {
+  position: absolute;
+  z-index: 2;
+  left: $space-5;
+  right: $space-5;
+  bottom: 4.4rem;
+  display: grid;
+  gap: $space-1-5;
+  color: #fff;
+  text-align: left;
+
+  > span {
+    font-size: 0.66rem;
+    font-weight: $font-bold;
+    letter-spacing: 0.1em;
+    opacity: 0.8;
+    text-transform: uppercase;
+  }
+
+  h3 {
+    margin: 0;
+    color: #fff;
+    font-size: clamp(1.15rem, 2vw, 1.6rem);
+    font-weight: $font-extrabold;
+    letter-spacing: -0.025em;
+    line-height: 1.12;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+  }
+
+  p {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: $space-1;
+    overflow: hidden;
+    font-size: $font-size-xs;
+    font-weight: $font-semibold;
+    opacity: 0.88;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  strong {
+    font-size: $font-size-md;
+    font-weight: $font-extrabold;
+  }
+}
+
+.intl-card__cover-footer {
+  position: absolute;
+  z-index: 2;
+  right: $space-5;
+  bottom: $space-4;
+  left: $space-5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-2;
+}
+
+.intl-card__tag {
+  overflow: hidden;
+  padding: $space-1 $space-2-5;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: $radius-full;
+  background: rgba(4, 24, 21, 0.7);
+  color: #fff;
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.intl-card__duration {
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: $font-size-xs;
+  font-weight: $font-semibold;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.intl-card__spine {
+  position: absolute;
+  z-index: 7;
+  inset: 0 auto 0 0;
+  width: 12px;
+  border-radius: 3px 0 0 3px;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.38), rgba(255, 255, 255, 0.1) 48%, rgba(0, 0, 0, 0.16));
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+  transform: translateZ(8px);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .intl-card:hover .intl-card__book,
+  .intl-card:focus-visible .intl-card__book {
+    transform: translateY(-7px) rotateX(1.2deg);
+    filter: drop-shadow(0 16px 18px rgba(0, 0, 0, 0.16));
+  }
+
+  .intl-card:hover .intl-card__cover,
+  .intl-card:focus-visible .intl-card__cover {
+    transform: translateZ(5px) rotateY(-83deg);
+    box-shadow: 12px 10px 30px rgba(0, 0, 0, 0.18);
+  }
+
+  .intl-card:hover .intl-card__back-content,
+  .intl-card:hover .intl-card__back-kicker,
+  .intl-card:focus-visible .intl-card__back-content,
+  .intl-card:focus-visible .intl-card__back-kicker {
+    opacity: 1;
+    transform: translate(0);
+  }
+
+  .intl-card:hover .intl-card__cover-img,
+  .intl-card:focus-visible .intl-card__cover-img {
+    transform: scale(1.06);
+  }
+
+  .intl-card:hover .intl-card__page--1,
+  .intl-card:focus-visible .intl-card__page--1 {
+    transform: translateZ(3px) rotateY(-81deg);
+    transition-delay: 45ms;
+  }
+
+  .intl-card:hover .intl-card__page--2,
+  .intl-card:focus-visible .intl-card__page--2 {
+    transform: translateZ(2px) rotateY(-85deg);
+    transition-delay: 90ms;
+  }
+
+  .intl-card:hover .intl-card__page--3,
+  .intl-card:focus-visible .intl-card__page--3 {
+    transform: translateZ(1px) rotateY(-88deg);
+    transition-delay: 135ms;
+  }
+
+  .intl-card:hover .intl-card__cta svg,
+  .intl-card:focus-visible .intl-card__cta svg {
+    transform: translateX(4px);
+  }
+}
+
+@media (max-width: $breakpoint-mobile) {
+  .intl-card {
+    min-height: 410px;
+  }
+
+  .intl-card__cover-title {
+    bottom: 4rem;
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .intl-card__cover::before {
+    content: "Tap to preview";
+    position: absolute;
+    z-index: 3;
+    top: $space-4;
+    right: $space-4;
+    padding: $space-1 $space-2;
+    border-radius: $radius-full;
+    background: rgba(4, 24, 21, 0.68);
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: $font-bold;
+  }
+
+  .intl-card.is-open .intl-card__book {
+    transform: translateY(-4px);
+    filter: drop-shadow(0 12px 16px rgba(0, 0, 0, 0.15));
+  }
+
+  .intl-card.is-open .intl-card__cover {
+    transform: translateZ(5px) rotateY(-83deg);
+    box-shadow: 12px 10px 30px rgba(0, 0, 0, 0.18);
+  }
+
+  .intl-card.is-open .intl-card__cover::before {
+    display: none;
+  }
+
+  .intl-card.is-open .intl-card__back-kicker::after {
+    content: " · Tap again to view";
+    color: var(--color-primary);
+  }
+
+  .intl-card.is-open .intl-card__page--1 {
+    transform: translateZ(3px) rotateY(-81deg);
+  }
+
+  .intl-card.is-open .intl-card__page--2 {
+    transform: translateZ(2px) rotateY(-85deg);
+  }
+
+  .intl-card.is-open .intl-card__page--3 {
+    transform: translateZ(1px) rotateY(-88deg);
+  }
+
+  .intl-card.is-open .intl-card__back-content,
+  .intl-card.is-open .intl-card__back-kicker {
+    opacity: 1;
+    transform: translate(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intl-card__cover,
+  .intl-card__cover-img,
+  .intl-card__page,
+  .intl-card__cta svg {
+    transition: none;
+  }
+
+  .intl-card:hover .intl-card__cover,
+  .intl-card:focus-visible .intl-card__cover {
+    transform: translateZ(5px);
+  }
+
+  .intl-card.is-open .intl-card__cover,
+  .intl-card.is-open .intl-card__pages,
+  .intl-card.is-open .intl-card__spine {
+    display: none;
+  }
+
+  .intl-card.is-open .intl-card__back-content,
+  .intl-card.is-open .intl-card__back-kicker {
+    opacity: 1;
+    transform: none;
+  }
+}
