@@ -3,10 +3,24 @@ import { StatusBadge } from "@packages/trem-ui";
 
 const statusGroups = {
   "Booking Statuses": [
-    "DRAFT", "QUOTE_REQUESTED", "UNDER_REVIEW", "QUOTE_READY", "QUOTE_SENT",
-    "CUSTOMER_ACCEPTED", "CUSTOMER_REJECTED", "PAYMENT_PENDING", "PARTIALLY_PAID",
-    "PAID", "CONFIRMED", "TICKETING", "TICKETED", "TRAVEL_READY", "COMPLETED",
-    "CANCELLED", "REFUND_PENDING", "REFUNDED",
+    "DRAFT",
+    "QUOTE_REQUESTED",
+    "UNDER_REVIEW",
+    "QUOTE_READY",
+    "QUOTE_SENT",
+    "CUSTOMER_ACCEPTED",
+    "CUSTOMER_REJECTED",
+    "PAYMENT_PENDING",
+    "PARTIALLY_PAID",
+    "PAID",
+    "CONFIRMED",
+    "TICKETING",
+    "TICKETED",
+    "TRAVEL_READY",
+    "COMPLETED",
+    "CANCELLED",
+    "REFUND_PENDING",
+    "REFUNDED",
   ],
   "Payment Statuses": ["UNPAID", "PARTIAL", "PAID", "REFUND_PENDING", "REFUNDED", "FAILED"],
   "Quote Statuses": ["DRAFT", "READY", "SENT", "ACCEPTED", "REJECTED", "EXPIRED"],
@@ -21,16 +35,18 @@ export default {
   tags: ["autodocs"],
   argTypes: {
     value: { control: "select", options: Object.values(statusGroups).flat() },
-    tone: { control: "select", options: ["neutral", "info", "success", "warning", "danger", "secondary", undefined] },
+    tone: {
+      control: "select",
+      options: ["neutral", "info", "success", "warning", "danger", "secondary", undefined],
+    },
     size: { control: "select", options: ["sm", "md", "lg"] },
+    showDot: { control: "boolean" },
   },
   args: {
     value: "CONFIRMED",
     size: "md",
   },
 };
-
-export const Playground = {};
 
 export const Sizes = {
   render: () => (
@@ -78,7 +94,16 @@ export const AllStatuses = {
     <div style={{ fontFamily: "sans-serif", maxWidth: 800 }}>
       {Object.entries(statusGroups).map(([group, statuses]) => (
         <div key={group} style={{ marginBottom: 24 }}>
-          <h3 style={{ margin: "0 0 8px", fontSize: 14, fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          <h3
+            style={{
+              margin: "0 0 8px",
+              fontSize: 14,
+              fontWeight: 700,
+              color: "#475569",
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+            }}
+          >
             {group}
           </h3>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -90,4 +115,26 @@ export const AllStatuses = {
       ))}
     </div>
   ),
+};
+
+export const WithoutDot = {
+  args: {
+    value: "CONFIRMED",
+    showDot: false,
+  },
+};
+
+export const WithSubtitle = {
+  args: {
+    value: "CONFIRMED",
+    subtitle: "Pending review",
+  },
+};
+
+export const WithSubtitleNoDot = {
+  args: {
+    value: "CONFIRMED",
+    subtitle: "Pending review",
+    showDot: false,
+  },
 };

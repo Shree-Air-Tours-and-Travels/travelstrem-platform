@@ -1,0 +1,38 @@
+{
+  "status": "success",
+  "component": {
+    "data": {
+      "upcomingTripsEmptyState": {
+        "icon": "plane",
+        "title": "No upcoming trips",
+        "description": "Once you accept a quote and complete payment, your booked trips will appear here.",
+        "actionLabel": "Explore trips",
+        "actionHref": "/?tab=trevista",
+        "actionAriaLabel": "Explore available trips"
+      }
+    },
+    "dataScope": { "options": {} },
+    "elements": {
+      "labels": { "upcomingTripsTitle": "Upcoming trips" },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "UpcomingTrips",
+          "props": {
+            "titleRef": "upcomingTripsTitle",
+            "dataKey": "upcomingTrips",
+            "emptyStateKey": "upcomingTripsEmptyState",
+            "targetTab": "bookings",
+            "limit": 5,
+            "items": []
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

@@ -36,18 +36,6 @@ export default {
   tags: ["autodocs"],
 };
 
-export const Playground = {
-  name: "Icon / Playground",
-  argTypes: {
-    name: { control: "select", options: iconNames },
-    size: { control: { type: "number", min: 12, max: 64, step: 2 } },
-  },
-  args: {
-    name: "heart",
-    size: 24,
-  },
-};
-
 export const Gallery = {
   name: "Icon / Gallery",
   render: () => (

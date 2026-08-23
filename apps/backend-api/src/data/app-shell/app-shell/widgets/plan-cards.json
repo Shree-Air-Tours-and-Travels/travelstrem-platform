@@ -5,7 +5,7 @@
       "planJourney": {
         "title": "Plan a Journey",
         "ariaLabel": "Plan a journey with TravelsTrem products",
-        "columns": 4,
+        "columns": 2,
         "hideUnavailableOnMobile": false,
         "items": [
           {
@@ -19,23 +19,24 @@
             "tone": "primary",
             "href": "/?tab=trevio",
             "target": "_self",
-            "ariaLabel": "Explore trips and adventures on Trevio"
+            "ariaLabel": "Explore trips and adventures on Trevio, coming soon",
+            "hide": true,
+            "disabled": true,
+            "comingSoon": true,
+            "comingSoonLabel": "Coming soon"
           },
           {
-            "id": "holiday-packages",
-            "title": "Holiday Packages",
+            "id": "tours-packages",
+            "title": "Tours & Packages",
             "description": "Domestic & international",
             "productName": "Trevista",
             "image": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=900&q=82&auto=format&fit=crop",
             "imageAlt": "A tropical beach holiday destination",
             "mobileIcon": "beach",
             "tone": "olive",
-            "href": "https://trevista.travelstrem.com",
+            "href": "/?tab=trevista",
             "target": "_self",
-            "ariaLabel": "Holiday Packages on Trevista, coming soon",
-            "disabled": true,
-            "comingSoon": true,
-            "comingSoonLabel": "Coming soon"
+            "ariaLabel": "Explore tours and packages on Trevista"
           },
           {
             "id": "flights-hotels",
@@ -49,13 +50,14 @@
             "href": "https://travelstrem.com/#contact",
             "target": "_self",
             "ariaLabel": "Flights and Hotels on TreHub, coming soon",
+            "hide": true,
             "disabled": true,
             "comingSoon": true,
             "comingSoonLabel": "Coming soon"
           },
           {
             "id": "travel-services",
-            "title": "Travel Services",
+            "title": "Visas & Insurance",
             "description": "Visa, passport & insurance",
             "productName": "TreCare",
             "image": "https://images.unsplash.com/photo-1526772662000-3f88f10405ff?w=900&q=82&auto=format&fit=crop",
@@ -65,6 +67,7 @@
             "href": "https://travelstrem.com/#contact",
             "target": "_self",
             "ariaLabel": "Travel Services on TreCare, coming soon",
+            "hide": true,
             "disabled": true,
             "comingSoon": true,
             "comingSoonLabel": "Coming soon"

@@ -1,218 +1,272 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useComponentData, fetchData } from "@packages/trem-utils";
+import { useTourCatalogRealtime } from "@packages/trem-ui";
 import ToursPageView from "../view/ToursPage.view";
 import { slugifyTourTitle } from "../helper";
 import useFavorites from "../hooks/useFavorites";
+import { ContactAgentModal } from "@packages/trem-modals";
+import { fetchTourSearch } from "../search/tourSearch.service";
+import {
+  flattenTourSearchState,
+  applyTourDiscoveryChip,
+  createDefaultTourSearchState,
+  getActiveTourFilterChips,
+  getApiSort,
+  getUiSortId,
+  mergeFlatFiltersIntoSearch,
+  parseTourSearchUrl,
+  serializeTourSearchUrl,
+} from "../search/tourSearchState";
 
-const PAGE_SIZE = 8;
 const PAGE_KEY = "tours-remote/listing";
 
-const fetchWidget = async (widgetRef) => {
-    const fileName = widgetRef.split('/').pop();
-    const pagingParams = fileName === "tour-grid.json" ? `&page=1&limit=${PAGE_SIZE}` : "";
-    const res = await fetchData(`/${fileName}?pageKey=${PAGE_KEY}${pagingParams}`);
-    return res?.component || null;
+const fetchWidgetMetadata = async (widgetRef) => {
+  const fileName = widgetRef.split("/").pop();
+  const response = await fetchData(`/${fileName}?pageKey=${PAGE_KEY}&metadataOnly=true`);
+  return response?.component || null;
 };
 
-const getResponseData = (res) => res?.component?.data || res?.componentData?.state?.data || res?.data || {};
+const sameState = (left, right) => serializeTourSearchUrl(left) === serializeTourSearchUrl(right);
 
-const getToursFromResponse = (res) => {
-    const data = getResponseData(res);
-    if (Array.isArray(data.tours)) return data.tours;
-    if (Array.isArray(res?.tours)) return res.tours;
-    if (Array.isArray(res?.results)) return res.results;
-    return [];
-};
+export default function ToursPageContainer({ dispatchEvent, userSession = null } = {}) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { isFavorited, toggleFavorite } = useFavorites();
+  const {
+    loading: pageLoading,
+    error: pageError,
+    elements,
+    structure,
+  } = useComponentData("/tours-page.json", { auto: true });
+  const widgets = useMemo(() => structure?.widgets || [], [structure?.widgets]);
+  const pageLabels = elements?.labels || {};
 
-const getPaginationFromData = (data, fallbackTotal = 0) => {
-    const source = data || {};
-    return source.pagination || {
-        page: 1,
-        limit: PAGE_SIZE,
-        total: fallbackTotal,
-        totalPages: Math.max(1, Math.ceil(fallbackTotal / PAGE_SIZE)),
-        hasMore: false,
+  const [widgetsData, setWidgetsData] = useState({});
+  const [widgetsLoading, setWidgetsLoading] = useState(true);
+  const [discovery, setDiscovery] = useState([]);
+  const [searchState, setSearchState] = useState(() => parseTourSearchUrl(location.search));
+  const [result, setResult] = useState({
+    items: [],
+    pagination: {
+      page: 1,
+      pageSize: 8,
+      totalItems: 0,
+      totalPages: 0,
+      hasNext: false,
+      hasPrevious: false,
+    },
+    facets: {
+      price: { min: 0, max: 0 },
+      duration: { minDays: 0, maxDays: 0 },
+      origins: [],
+      destinations: [],
+      countries: [],
+      agencies: [],
+      tags: [],
+    },
+  });
+  const [searching, setSearching] = useState(true);
+  const [searchError, setSearchError] = useState(null);
+  const [filtersExpanded, setFiltersExpanded] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth > 900 : true,
+  );
+  const [contactOpen, setContactOpen] = useState(false);
+  const previousQuery = useRef(searchState.query);
+  const [realtimeTick, setRealtimeTick] = useState(0);
+
+  // A new tour was published elsewhere (e.g. an agent saved the builder's
+  // publishing step): refetch listing + facets without any reload.
+  useTourCatalogRealtime(useCallback(() => setRealtimeTick((tick) => tick + 1), []));
+
+  useEffect(() => {
+    if (!widgets.length) return undefined;
+    let active = true;
+    Promise.all(
+      widgets.map(async (widget) => [
+        widget.type,
+        widget.widgetRef ? await fetchWidgetMetadata(widget.widgetRef) : null,
+      ]),
+    )
+      .then((widgetEntries) => {
+        if (!active) return;
+        const metadata = Object.fromEntries(widgetEntries);
+        const chips = metadata.quickChips?.data?.filters || [];
+        setWidgetsData(metadata);
+        setDiscovery(chips);
+        setWidgetsLoading(false);
+      })
+      .catch((error) => {
+        if (!active) return;
+        setSearchError(error.message || "Tour discovery could not be loaded");
+        setWidgetsLoading(false);
+      });
+    return () => {
+      active = false;
     };
-};
+  }, [widgets, realtimeTick]);
 
-export default function ToursPageContainer({ dispatchEvent } = {}) {
-    const navigate = useNavigate();
-    const { isFavorited, toggleFavorite } = useFavorites();
+  useEffect(() => {
+    const fromUrl = parseTourSearchUrl(location.search);
+    setSearchState((current) => (sameState(current, fromUrl) ? current : fromUrl));
+  }, [location.search]);
 
-    const { loading: pageLoading, error: pageError, elements, structure } = useComponentData("/tours-page.json", { auto: true });
-    const pageLabels = elements?.labels || {};
-    const widgets = structure?.widgets || [];
-
-    const [widgetsData, setWidgetsData] = useState({});
-    const [widgetsLoading, setWidgetsLoading] = useState(true);
-
-    useEffect(() => {
-        if (!widgets.length) return;
-        let cancelled = false;
-        (async () => {
-            const results = {};
-            await Promise.all(
-                widgets.map(async (w) => {
-                    if (!w.widgetRef) return;
-                    const data = await fetchWidget(w.widgetRef);
-                    if (!cancelled) results[w.type] = data;
-                })
-            );
-            if (!cancelled) {
-                setWidgetsData(results);
-                setWidgetsLoading(false);
-            }
-        })();
-        return () => { cancelled = true; };
-    }, [widgets]);
-
-    const initialPagination = widgetsData.listing?.data?.pagination || null;
-    const filterWidgetData = widgetsData.filters || null;
-
-    const initialLoading = pageLoading || widgetsLoading;
-    const initialError = pageError;
-
-    const [displayed, setDisplayed] = useState([]);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [filterMeta, setFilterMeta] = useState({ total: null, filters: {} });
-    const [sortId, setSortId] = useState("recommended");
-    const [activeFilters, setActiveFilters] = useState({});
-    const [pagination, setPagination] = useState(() => getPaginationFromData(initialPagination, 0));
-    const [listingLoading, setListingLoading] = useState(false);
-    const [listingError, setListingError] = useState(null);
-    const [filtersExpanded, setFiltersExpanded] = useState(() => typeof window !== "undefined" ? window.innerWidth > 900 : true);
-    const requestSeq = useRef(0);
-
-    const totalResults = pagination?.total ?? displayed.length;
-
-    useEffect(() => {
-        if (!widgetsData.listing) return;
-        const tours = widgetsData.listing?.data?.tours || [];
-        const nextPagination = getPaginationFromData(widgetsData.listing?.data || {}, tours.length);
-        setDisplayed(tours);
-        setPagination(nextPagination);
-        setCurrentPage(1);
-        setFilterMeta({ total: nextPagination.total, filters: {} });
-    }, [widgetsData.listing]);
-
-    const requestTours = useCallback(async ({ filters = activeFilters, sort = sortId, page = 1, meta = {} } = {}) => {
-        const seq = requestSeq.current + 1;
-        requestSeq.current = seq;
-        setListingLoading(true);
-        setListingError(null);
-
+  useEffect(() => {
+    const controller = new AbortController();
+    const queryChanged = previousQuery.current !== searchState.query;
+    previousQuery.current = searchState.query;
+    setSearching(true);
+    setSearchError(null);
+    const timer = window.setTimeout(
+      async () => {
         try {
-            const res = await fetchData("/tour-listing-updated", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: { filters, sort, page, limit: PAGE_SIZE },
-            });
-            if (requestSeq.current !== seq) return null;
-            if (res?.status === "error") {
-                setListingError(res.message || "Failed to load tours");
-                return null;
-            }
-
-            const data = getResponseData(res);
-            const tours = getToursFromResponse(res);
-            const nextPagination = getPaginationFromData(data, tours.length);
-            setDisplayed(tours);
-            setPagination(nextPagination);
-            setCurrentPage(page);
-            setFilterMeta({
-                ...meta,
-                filters,
-                total: nextPagination.total,
-                reset: meta.reset ?? false,
-            });
-            if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
-            return { tours, data, pagination: nextPagination };
-        } catch (err) {
-            if (requestSeq.current === seq) setListingError(err?.message || "Failed to load tours");
-            return null;
+          const next = await fetchTourSearch(searchState, controller.signal);
+          setResult(next);
+        } catch (error) {
+          if (!controller.signal.aborted)
+            setSearchError(error.message || "Tours could not be loaded");
         } finally {
-            if (requestSeq.current === seq) setListingLoading(false);
+          if (!controller.signal.aborted) setSearching(false);
         }
-    }, [activeFilters, sortId]);
-
-    const onView = (tour) => {
-        const ref = slugifyTourTitle(tour?.title) || tour?._id || tour?.id;
-        if (typeof dispatchEvent === "function") {
-            dispatchEvent("navigateToTourDetails", {
-                tourRef: encodeURIComponent(ref),
-                state: { tour, from: { label: "Trevista", path: "/trevista" } },
-            });
-            return;
-        }
-            navigate(`/trevista/${encodeURIComponent(ref)}`, { state: { tour, from: { label: "Trevista", path: "/trevista" } } });
-    };
-
-    const handleFilterChange = (tours, meta = {}) => {
-        const nextFilters = meta.filters || {};
-        const dataPagination = meta.pagination || getPaginationFromData(meta, Array.isArray(tours) ? tours.length : 0);
-
-        // On filter-panel reset, preserve quick filter (tags) and re-request
-        if (meta.reset && activeFilters.tags?.length) {
-            nextFilters.tags = activeFilters.tags;
-            requestTours({ filters: nextFilters, page: 1, meta: { ...meta, filters: nextFilters, reset: true } });
-            return;
-        }
-
-        setActiveFilters(nextFilters);
-        setDisplayed(Array.isArray(tours) ? tours : []);
-        setPagination(dataPagination);
-        setCurrentPage(1);
-        setFilterMeta({
-            ...meta,
-            total: dataPagination.total ?? meta.total ?? (Array.isArray(tours) ? tours.length : 0),
-            reset: meta.reset ?? false,
-        });
-        if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
-    };
-
-    const handlePageChange = useCallback((page) => {
-        requestTours({ page, meta: filterMeta });
-    }, [requestTours, filterMeta]);
-
-    const handleQuickFilter = useCallback((filterId) => {
-        const filters = filterId === "all" ? {} : { tags: [filterId] };
-        setActiveFilters(filters);
-        requestTours({ filters, page: 1, meta: { quickFilter: filterId, reset: filterId === "all" } });
-    }, [requestTours]);
-
-    const handleSortChange = useCallback((nextSortId) => {
-        setSortId(nextSortId);
-        requestTours({ sort: nextSortId, page: 1, meta: filterMeta });
-    }, [requestTours, filterMeta]);
-
-    return (
-        <ToursPageView
-            pageLabels={pageLabels}
-            widgets={widgets}
-            widgetsData={widgetsData}
-            pageTitle={pageLabels.pageTitle}
-            totalResults={totalResults}
-            displayed={displayed}
-            initialLoading={initialLoading || (listingLoading && displayed.length === 0)}
-            initialError={initialError || listingError}
-            filteredTours={Object.keys(activeFilters || {}).length ? displayed : null}
-            filterMeta={filterMeta}
-            filterWidgetData={filterWidgetData}
-            listingWidgetData={widgetsData.listing}
-            onView={onView}
-            isFavorited={isFavorited}
-            onFavorite={toggleFavorite}
-            sortId={sortId}
-            onSortChange={handleSortChange}
-            currentPage={currentPage}
-            totalPages={pagination?.totalPages || 1}
-            loadingMore={listingLoading}
-            handleFilterChange={handleFilterChange}
-            onQuickFilter={handleQuickFilter}
-            onPageChange={handlePageChange}
-            filtersExpanded={filtersExpanded}
-            onFiltersExpandedChange={setFiltersExpanded}
-        />
+      },
+      queryChanged ? 400 : 0,
     );
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [searchState, realtimeTick]);
+
+  const commitSearch = useCallback(
+    (nextState, { replace = false } = {}) => {
+      setSearchState(nextState);
+      const queryString = serializeTourSearchUrl(nextState);
+      navigate(`${location.pathname}${queryString ? `?${queryString}` : ""}`, { replace });
+    },
+    [location.pathname, navigate],
+  );
+
+  const handleFilterChange = useCallback(
+    (values) => {
+      commitSearch(mergeFlatFiltersIntoSearch(searchState, values));
+    },
+    [commitSearch, searchState],
+  );
+
+  const handleQuickFilter = useCallback(
+    (chip) => {
+      if (!chip) return;
+      commitSearch(applyTourDiscoveryChip(searchState, chip));
+    },
+    [commitSearch, searchState],
+  );
+
+  const handleSortChange = useCallback(
+    (sortId) => {
+      commitSearch({ ...searchState, sort: getApiSort(sortId), page: 1 });
+    },
+    [commitSearch, searchState],
+  );
+
+  const handleQueryChange = useCallback(
+    (query) => {
+      commitSearch({ ...searchState, query: String(query || ""), page: 1 }, { replace: true });
+    },
+    [commitSearch, searchState],
+  );
+
+  const handlePageChange = useCallback(
+    (page) => {
+      commitSearch({ ...searchState, page });
+      if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+    },
+    [commitSearch, searchState],
+  );
+
+  const onView = useCallback(
+    (tour) => {
+      const ref = tour?.slug || slugifyTourTitle(tour?.title) || tour?.id;
+      if (typeof dispatchEvent === "function") {
+        dispatchEvent("navigateToTourDetails", {
+          tourRef: encodeURIComponent(ref),
+          state: { tour, from: { label: "Tours", path: "/trevista/tours" } },
+        });
+        return;
+      }
+      navigate(`/trevista/tours/${encodeURIComponent(ref)}`, {
+        state: { tour, from: { label: "Tours", path: "/trevista/tours" } },
+      });
+    },
+    [dispatchEvent, navigate],
+  );
+
+  const activeDiscoveryIds = useMemo(() => {
+    const matches = discovery.filter(
+      (chip) =>
+        (chip.type === "TAG" && searchState.filters.tagIds.includes(chip.value)) ||
+        (chip.type === "ORIGIN" && searchState.filters.originCityIds.includes(chip.value)) ||
+        (chip.type === "DESTINATION" &&
+          searchState.filters.destinationCityIds.includes(chip.value)) ||
+        (chip.type === "COUNTRY" && searchState.filters.countryIds.includes(chip.value)) ||
+        (chip.type === "FEATURED" &&
+          searchState.filters.featured === (chip.value === true || chip.value === "true")),
+    );
+    return matches.length ? matches.map((chip) => chip.id) : ["all"];
+  }, [discovery, searchState.filters]);
+
+  const activeFilterChips = useMemo(
+    () => getActiveTourFilterChips(searchState, result.facets),
+    [result.facets, searchState],
+  );
+  const handleClearFilters = useCallback(() => {
+    const cleared = createDefaultTourSearchState();
+    commitSearch({ ...cleared, sort: searchState.sort, pageSize: searchState.pageSize });
+  }, [commitSearch, searchState.pageSize, searchState.sort]);
+
+  const handleEnquire = useCallback(() => setContactOpen(true), []);
+
+  return (
+    <>
+      <ToursPageView
+        pageLabels={pageLabels}
+        widgets={widgets}
+        widgetsData={widgetsData}
+        pageTitle={pageLabels.pageTitle}
+        displayed={result.items}
+        totalResults={result.pagination.totalItems}
+        initialLoading={(pageLoading || widgetsLoading || searching) && result.items.length === 0}
+        initialError={pageError || searchError}
+        filterWidgetData={widgetsData.filters}
+        listingWidgetData={widgetsData.listing}
+        isAuthenticated={Boolean(userSession?.isAuthenticated || userSession?.user)}
+        onView={onView}
+        isFavorited={isFavorited}
+        onFavorite={toggleFavorite}
+        sortId={getUiSortId(searchState.sort)}
+        onSortChange={handleSortChange}
+        onQueryChange={handleQueryChange}
+        currentPage={result.pagination.page}
+        totalPages={result.pagination.totalPages}
+        loadingMore={searching}
+        onQuickFilter={handleQuickFilter}
+        onPageChange={handlePageChange}
+        filtersExpanded={filtersExpanded}
+        onFiltersExpandedChange={setFiltersExpanded}
+        filterValues={flattenTourSearchState(searchState)}
+        facets={result.facets}
+        activeDiscoveryIds={activeDiscoveryIds}
+        discoveryOptions={discovery}
+        activeFilterChips={activeFilterChips}
+        onClearFilters={handleClearFilters}
+        handleFilterChange={handleFilterChange}
+        onEnquire={handleEnquire}
+      />
+      <ContactAgentModal
+        open={contactOpen}
+        onClose={() => setContactOpen(false)}
+        user={userSession?.user || null}
+        product="trevista"
+      />
+    </>
+  );
 }

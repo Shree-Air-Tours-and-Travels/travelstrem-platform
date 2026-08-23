@@ -33,7 +33,10 @@
     line-height: 0;
     padding: 0;
     cursor: pointer;
-    transition: border-color 160ms ease, color 160ms ease, transform 160ms ease;
+    transition:
+      border-color 160ms ease,
+      color 160ms ease,
+      transform 160ms ease;
 
     &:hover {
       border-color: var(--color-primary);

@@ -13,6 +13,7 @@ export default function BottomSheet({
   className = "",
   variant = "default",
   closeLabel = "Close",
+  closeOnOutsideClick = true,
 }) {
   const sheetRef = useRef(null);
 
@@ -20,7 +21,9 @@ export default function BottomSheet({
     if (!open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
+    return () => {
+      document.body.style.overflow = prev;
+    };
   }, [open]);
 
   useEffect(() => {
@@ -34,24 +37,47 @@ export default function BottomSheet({
 
   if (!open) return null;
 
+  const handleOverlayClick = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (closeOnOutsideClick) onClose?.();
+  };
+
   return createPortal(
-    <div className={`trem-bottom-sheet trem-bottom-sheet--${variant} ${className}`.trim()} ref={sheetRef}>
-      <div className="trem-bottom-sheet__overlay" onClick={onClose} aria-hidden />
-      <div className="trem-bottom-sheet__panel" role="dialog" aria-modal="true" aria-label={title || "Bottom sheet"}>
+    <div
+      className={`trem-bottom-sheet trem-bottom-sheet--${variant} ${className}`.trim()}
+      ref={sheetRef}
+    >
+      <div className="trem-bottom-sheet__overlay" onClick={handleOverlayClick} aria-hidden />
+      <div
+        className="trem-bottom-sheet__panel"
+        role="dialog"
+        aria-modal="true"
+        aria-label={title || "Bottom sheet"}
+      >
         <div className="trem-bottom-sheet__header">
-          {variant === "fullscreen" && title
-            ? <div className="trem-bottom-sheet__title trem-bottom-sheet__title--header">{title}</div>
-            : <span />}
+          {variant === "fullscreen" && title ? (
+            <div className="trem-bottom-sheet__title trem-bottom-sheet__title--header">{title}</div>
+          ) : (
+            <span />
+          )}
           <div className="trem-bottom-sheet__handle" />
-          <Button variant="text" isCircular iconLeft="menuClose" onClick={onClose} aria-label={closeLabel} primaryClassName="trem-bottom-sheet__close" />
+          <Button
+            variant="text"
+            isCircular
+            iconLeft="menuClose"
+            onClick={onClose}
+            aria-label={closeLabel}
+            primaryClassName="trem-bottom-sheet__close"
+          />
         </div>
-        {title && variant !== "fullscreen" ? <div className="trem-bottom-sheet__title">{title}</div> : null}
-        <div className="trem-bottom-sheet__body">
-          {children}
-        </div>
+        {title && variant !== "fullscreen" ? (
+          <div className="trem-bottom-sheet__title">{title}</div>
+        ) : null}
+        <div className="trem-bottom-sheet__body">{children}</div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }
 
@@ -63,4 +89,5 @@ BottomSheet.propTypes = {
   className: PropTypes.string,
   variant: PropTypes.oneOf(["default", "fullscreen"]),
   closeLabel: PropTypes.string,
+  closeOnOutsideClick: PropTypes.bool,
 };

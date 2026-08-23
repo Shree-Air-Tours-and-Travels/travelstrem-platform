@@ -61,7 +61,9 @@ export default function ProfileActionMenu({
       return;
     }
     if (fallbackEventName && typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent(fallbackEventName, { detail: { source: "profile-action-menu" } }));
+      window.dispatchEvent(
+        new CustomEvent(fallbackEventName, { detail: { source: "profile-action-menu" } }),
+      );
     }
   };
 
@@ -76,16 +78,40 @@ export default function ProfileActionMenu({
           <small>{isAuthenticated ? user?.role || "member" : "Guest"}</small>
         </span>
       </div>
-      <Button variant="text" iconLeft={themeIcon} text={themeLabel} primaryClassName="profile-action-menu__item" role="menuitem" onClick={() => runAction(onToggleTheme)} />
-      <Button variant="text" iconLeft="settings" text={settingsLabel} primaryClassName="profile-action-menu__item" role="menuitem" onClick={() => runAction(onSettings, "TREM_SETTINGS_REQUESTED")} />
+      <Button
+        variant="text"
+        iconLeft={themeIcon}
+        text={themeLabel}
+        primaryClassName="profile-action-menu__item"
+        role="menuitem"
+        onClick={() => runAction(onToggleTheme)}
+      />
+      <Button
+        variant="text"
+        iconLeft="settings"
+        text={settingsLabel}
+        primaryClassName="profile-action-menu__item"
+        role="menuitem"
+        onClick={() => runAction(onSettings, "TREM_SETTINGS_REQUESTED")}
+      />
       {isAuthenticated && (
-        <Button variant="text" iconLeft="logout" text={logoutLabel} primaryClassName="profile-action-menu__item profile-action-menu__item--danger" role="menuitem" onClick={() => runAction(onLogout)} />
+        <Button
+          variant="text"
+          iconLeft="logout"
+          text={logoutLabel}
+          primaryClassName="profile-action-menu__item profile-action-menu__item--danger"
+          role="menuitem"
+          onClick={() => runAction(onLogout)}
+        />
       )}
     </div>
   );
 
   return (
-    <div className={`profile-action-menu profile-action-menu--${align} ${className}`.trim()} ref={rootRef}>
+    <div
+      className={`profile-action-menu profile-action-menu--${align} ${className}`.trim()}
+      ref={rootRef}
+    >
       <Button
         variant="text"
         text={initials || undefined}

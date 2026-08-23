@@ -16,9 +16,8 @@ const formatMoney = (value, currency = "INR", locale = "en-IN") => {
   }
 };
 
-const normalizeMeta = (metaItems = []) => (
-  Array.isArray(metaItems) ? metaItems.filter((item) => item?.label || item?.value) : []
-);
+const normalizeMeta = (metaItems = []) =>
+  Array.isArray(metaItems) ? metaItems.filter((item) => item?.label || item?.value) : [];
 
 const CardAction = ({ href, label, onClick }) => {
   if (!label) return null;
@@ -78,7 +77,11 @@ export default function FeaturedCard({
               <div className="trem-featured-card__meta" aria-label="Featured trip details">
                 {meta.map((item, index) => (
                   <React.Fragment key={`${item.label || item.value}-${index}`}>
-                    {index > 0 ? <span className="trem-featured-card__separator" aria-hidden="true">·</span> : null}
+                    {index > 0 ? (
+                      <span className="trem-featured-card__separator" aria-hidden="true">
+                        ·
+                      </span>
+                    ) : null}
                     <span className="trem-featured-card__meta-item">
                       {item.icon ? <Icon name={item.icon} size={14} /> : null}
                       <span>{item.label || item.value}</span>
@@ -105,11 +108,13 @@ export default function FeaturedCard({
 FeaturedCard.propTypes = {
   image: PropTypes.string,
   title: PropTypes.string,
-  metaItems: PropTypes.arrayOf(PropTypes.shape({
-    icon: PropTypes.string,
-    label: PropTypes.string,
-    value: PropTypes.string,
-  })),
+  metaItems: PropTypes.arrayOf(
+    PropTypes.shape({
+      icon: PropTypes.string,
+      label: PropTypes.string,
+      value: PropTypes.string,
+    }),
+  ),
   price: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
   currency: PropTypes.string,
   priceLabel: PropTypes.string,

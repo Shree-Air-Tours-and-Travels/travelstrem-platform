@@ -160,16 +160,44 @@ export function withCsrfHeader(headers = {}) {
 // ─── Privacy Breach Detection ────────────────────────────────────────────────
 
 const SENSITIVE_PATTERNS = [
-  { name: "credit_card", regex: /\b(?:\d[ -]*?){13,19}\b/g, description: "Credit card number detected" },
-  { name: "email", regex: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, description: "Email address detected" },
-  { name: "phone_intl", regex: /\+\d{1,3}[\s-]?\d{4,14}\b/g, description: "International phone number detected" },
-  { name: "aadhaar", regex: /\b\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g, description: "Potential Aadhaar number detected" },
+  {
+    name: "credit_card",
+    regex: /\b(?:\d[ -]*?){13,19}\b/g,
+    description: "Credit card number detected",
+  },
+  {
+    name: "email",
+    regex: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
+    description: "Email address detected",
+  },
+  {
+    name: "phone_intl",
+    regex: /\+\d{1,3}[\s-]?\d{4,14}\b/g,
+    description: "International phone number detected",
+  },
+  {
+    name: "aadhaar",
+    regex: /\b\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g,
+    description: "Potential Aadhaar number detected",
+  },
   { name: "pan", regex: /\b[A-Z]{5}\d{4}[A-Z]\b/g, description: "Potential PAN number detected" },
   { name: "ssn", regex: /\b\d{3}-\d{2}-\d{4}\b/g, description: "Potential SSN detected" },
   { name: "ip_address", regex: /\b(?:\d{1,3}\.){3}\d{1,3}\b/g, description: "IP address detected" },
-  { name: "password", regex: /(?:password|passwd|pwd)\s*[:=]\s*\S+/gi, description: "Potential password in text detected" },
-  { name: "api_key", regex: /(?:api[_-]?key|apikey|secret[_-]?key)\s*[:=]\s*\S+/gi, description: "Potential API key detected" },
-  { name: "jwt_token", regex: /eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}/g, description: "JWT token detected" },
+  {
+    name: "password",
+    regex: /(?:password|passwd|pwd)\s*[:=]\s*\S+/gi,
+    description: "Potential password in text detected",
+  },
+  {
+    name: "api_key",
+    regex: /(?:api[_-]?key|apikey|secret[_-]?key)\s*[:=]\s*\S+/gi,
+    description: "Potential API key detected",
+  },
+  {
+    name: "jwt_token",
+    regex: /eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}/g,
+    description: "JWT token detected",
+  },
 ];
 
 /**
@@ -202,7 +230,10 @@ export function detectPrivacyBreaches(text) {
 export function maskSensitiveData(text) {
   if (typeof text !== "string") return "";
   let masked = text;
-  masked = masked.replace(/\b(?:\d[ -]*?){13,19}\b/g, (m) => "*".repeat(m.length - 4) + m.slice(-4));
+  masked = masked.replace(
+    /\b(?:\d[ -]*?){13,19}\b/g,
+    (m) => "*".repeat(m.length - 4) + m.slice(-4),
+  );
   masked = masked.replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, (m) => {
     const [user, domain] = m.split("@");
     return user[0] + "*".repeat(user.length - 1) + "@" + domain;
@@ -324,6 +355,7 @@ export function validateInputLength(field, value) {
   const max = INPUT_LIMITS[field];
   if (!max) return { valid: true };
   if (typeof value !== "string") return { valid: false, error: `${field} must be a string` };
-  if (value.length > max) return { valid: false, error: `${field} must be ${max} characters or less` };
+  if (value.length > max)
+    return { valid: false, error: `${field} must be ${max} characters or less` };
   return { valid: true };
 }

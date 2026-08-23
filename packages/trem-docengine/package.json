@@ -1,0 +1,14 @@
+{
+  "name": "@packages/trem-docengine",
+  "version": "0.1.0",
+  "private": true,
+  "main": "src/index.js",
+  "module": "src/index.js",
+  "dependencies": {
+    "@packages/trem-ui": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18"
+  }
+}

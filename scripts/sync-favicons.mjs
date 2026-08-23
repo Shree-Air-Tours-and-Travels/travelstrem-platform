@@ -108,8 +108,7 @@ function decodePng(buffer) {
       const raw = filtered[rowOffset + x + 1];
       const left = x >= channels ? pixels[outputOffset + x - channels] : 0;
       const above = y > 0 ? pixels[outputOffset + x - stride] : 0;
-      const upperLeft =
-        y > 0 && x >= channels ? pixels[outputOffset + x - stride - channels] : 0;
+      const upperLeft = y > 0 && x >= channels ? pixels[outputOffset + x - stride - channels] : 0;
       let value;
 
       if (filter === 0) value = raw;
@@ -221,9 +220,7 @@ const darkTemporary = `${masterFavicons[1].source}.${process.pid}.tmp`;
 await writeFile(darkTemporary, encodeDarkPng(lightSource));
 await rename(darkTemporary, masterFavicons[1].source);
 
-const requestedApp = process.argv.find(
-  (argument) => appNames.includes(argument),
-);
+const requestedApp = process.argv.find((argument) => appNames.includes(argument));
 const appsToSync = requestedApp ? [requestedApp] : appNames;
 
 for (const app of appsToSync) {

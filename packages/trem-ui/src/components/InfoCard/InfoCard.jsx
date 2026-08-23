@@ -1,7 +1,21 @@
 import React from "react";
 import PropTypes from "prop-types";
 import Icon from "../../icons/Icon/Icon.jsx";
+import StatusBadge from "../StatusBadge/StatusBadge.jsx";
 import "./InfoCard.styles.scss";
+
+const INFO_CARD_TONES = {
+  upcoming: "success",
+  confirmed: "success",
+  pending: "warning",
+  cancelled: "danger",
+  canceled: "danger",
+  completed: "info",
+  draft: "neutral",
+  new: "info",
+  sent: "info",
+  ready: "info",
+};
 
 export default function InfoCard({
   title,
@@ -15,6 +29,9 @@ export default function InfoCard({
   className = "",
 }) {
   const Tag = onClick ? "button" : "article";
+  const badgeTone = badge?.tone
+    ? INFO_CARD_TONES[badge.tone.toLowerCase()] || badge.tone
+    : undefined;
 
   return (
     <Tag
@@ -22,17 +39,15 @@ export default function InfoCard({
       type={onClick ? "button" : undefined}
       onClick={onClick}
     >
-      <span className="trem-info-card__header">
+      <span
+        className={`trem-info-card__header${image ? " trem-info-card__header--with-image" : ""}`}
+      >
         {image ? <img src={image} alt={imageAlt} loading="lazy" /> : null}
         <span className="trem-info-card__identity">
           <strong>{title}</strong>
           {subtitle ? <small>{subtitle}</small> : null}
         </span>
-        {badge?.value ? (
-          <span className={`trem-info-card__badge trem-info-card__badge--${badge.tone || "neutral"}`}>
-            {badge.value}
-          </span>
-        ) : null}
+        {badge?.value ? <StatusBadge value={badge.value} tone={badgeTone} size="sm" /> : null}
       </span>
       <span className="trem-info-card__fields">
         {fields.map((field) => (
@@ -61,11 +76,13 @@ InfoCard.propTypes = {
     value: PropTypes.node,
     tone: PropTypes.string,
   }),
-  fields: PropTypes.arrayOf(PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    label: PropTypes.node,
-    value: PropTypes.node,
-  })),
+  fields: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      label: PropTypes.node,
+      value: PropTypes.node,
+    }),
+  ),
   actionLabel: PropTypes.string,
   onClick: PropTypes.func,
   className: PropTypes.string,

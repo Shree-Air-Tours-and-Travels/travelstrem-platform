@@ -1,0 +1,110 @@
+@import "../../styles/base/typography";
+
+.trem-benefit-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: $space-3;
+  height: 100%;
+  padding: $space-5;
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+  background: var(--card-bg);
+  box-shadow: var(--shadow-soft);
+  transition:
+    transform $duration-base $ease-default,
+    box-shadow $duration-base $ease-default,
+    border-color $duration-base $ease-default,
+    background $duration-base $ease-default;
+
+  &:hover {
+    transform: translateY(-4px);
+    border-color: var(--primary-focus);
+    box-shadow: var(--shadow-card);
+  }
+
+  &__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    border-radius: $radius-sm;
+    background: var(--primary-softer);
+    color: var(--color-primary);
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: $space-1;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__title {
+    margin: 0;
+    text-align: left;
+    font-size: $font-size-lg;
+    color: var(--card-title) !important;
+  }
+
+  &__description {
+    margin: 0;
+    text-align: left;
+    color: var(--card-text) !important;
+  }
+
+  &--compact {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: $space-3;
+    padding: $space-3-5;
+    border-radius: $radius-sm;
+    box-shadow: none;
+
+    .trem-benefit-card__icon {
+      width: 40px;
+      height: 40px;
+    }
+
+    .trem-benefit-card__title {
+      font-size: $font-size-md;
+    }
+  }
+
+  &--outlined {
+    background: transparent;
+    box-shadow: none;
+    border-style: dashed;
+
+    &:hover {
+      transform: none;
+      box-shadow: none;
+      border-color: var(--color-primary);
+    }
+  }
+
+  &--highlighted {
+    background: linear-gradient(145deg, var(--primary-softer), var(--card-bg));
+    border-color: var(--primary-focus);
+
+    .trem-benefit-card__icon {
+      background: var(--color-primary);
+      color: var(--color-on-primary);
+    }
+
+    &:hover {
+      box-shadow:
+        0 0 0 4px var(--primary-softer),
+        var(--shadow-card);
+    }
+  }
+}
+
+@include mq-max($breakpoint-mobile) {
+  .trem-benefit-card {
+    padding: $space-4;
+  }
+}

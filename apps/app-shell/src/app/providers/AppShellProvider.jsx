@@ -3,9 +3,9 @@ import { initApp } from "../../core/initApp";
 import { clearUserSessionCache } from "../../services/userSession";
 import { clearCsrfToken } from "../../services/security";
 import { clearAuthBrowserState, subscribeAuthEvents } from "@packages/trem-auth-core";
-import {
-  registerSessionCacheClearer,
-} from "@packages/trem-events";
+import { buildGlobalAuthUrl } from "@packages/trem-utils";
+import { isGuestSession } from "../../services/guestSession";
+import { registerSessionCacheClearer } from "@packages/trem-events";
 
 const AUTH_STORAGE_PREFIX = "appShellTREM";
 const SHARED_STORAGE_PREFIX = "travelstrem";
@@ -45,57 +45,63 @@ export function AppShellProvider({ children }) {
     registerSessionCacheClearer(clearUserSessionCache);
   }, []);
 
-  const loadSession = React.useCallback(async ({ forceSession = false, background = false, _retryCount = 0 } = {}) => {
-    if (forceSession || background) {
-      clearUserSessionCache();
-      clearCsrfToken();
-      initOnceRef.current = null;
-    }
-
-    if (initOnceRef.current) return initOnceRef.current;
-
-    if (!background) {
-      setState((current) => ({ ...current, loading: true, error: null }));
-    }
-
-    const MAX_RETRIES = 2;
-    const RETRY_DELAY_MS = 1000;
-
-    const attempt = async (retryCount) => {
-      try {
-        const { session } = await initApp({
-          pathname: window.location.pathname,
-          search: window.location.search,
-          hash: window.location.hash,
-        });
-
-        const resolved = session || DEFAULT_SESSION;
-        setState({
-          loading: false,
-          error: null,
-          session: resolved,
-        });
-        sessionRef.current = resolved;
-      } catch (error) {
-        console.warn(`[AppShellProvider] initApp failed (attempt ${retryCount + 1}/${MAX_RETRIES + 1}):`, error?.response?.data?.message || error?.message || error);
-
-        if (retryCount < MAX_RETRIES) {
-          initOnceRef.current = null;
-          await new Promise((r) => setTimeout(r, RETRY_DELAY_MS * (retryCount + 1)));
-          return attempt(retryCount + 1);
-        }
-
-        setState({
-          loading: false,
-          error: error?.message || "init-app-failed",
-          session: DEFAULT_SESSION,
-        });
+  const loadSession = React.useCallback(
+    async ({ forceSession = false, background = false, _retryCount = 0 } = {}) => {
+      if (forceSession || background) {
+        clearUserSessionCache();
+        clearCsrfToken();
+        initOnceRef.current = null;
       }
-    };
 
-    initOnceRef.current = attempt(_retryCount);
-    return initOnceRef.current;
-  }, []);
+      if (initOnceRef.current) return initOnceRef.current;
+
+      if (!background) {
+        setState((current) => ({ ...current, loading: true, error: null }));
+      }
+
+      const MAX_RETRIES = 2;
+      const RETRY_DELAY_MS = 1000;
+
+      const attempt = async (retryCount) => {
+        try {
+          const { session } = await initApp({
+            pathname: window.location.pathname,
+            search: window.location.search,
+            hash: window.location.hash,
+          });
+
+          const resolved = session || DEFAULT_SESSION;
+          setState({
+            loading: false,
+            error: null,
+            session: resolved,
+          });
+          sessionRef.current = resolved;
+        } catch (error) {
+          console.warn(
+            `[AppShellProvider] initApp failed (attempt ${retryCount + 1}/${MAX_RETRIES + 1}):`,
+            error?.response?.data?.message || error?.message || error,
+          );
+
+          if (retryCount < MAX_RETRIES) {
+            initOnceRef.current = null;
+            await new Promise((r) => setTimeout(r, RETRY_DELAY_MS * (retryCount + 1)));
+            return attempt(retryCount + 1);
+          }
+
+          setState({
+            loading: false,
+            error: error?.message || "init-app-failed",
+            session: DEFAULT_SESSION,
+          });
+        }
+      };
+
+      initOnceRef.current = attempt(_retryCount);
+      return initOnceRef.current;
+    },
+    [],
+  );
 
   React.useEffect(() => {
     loadSession();
@@ -103,10 +109,15 @@ export function AppShellProvider({ children }) {
 
   React.useEffect(() => {
     const redirectToLogin = () => {
+      if (!sessionRef.current?.isAuthenticated && isGuestSession()) return;
       clearLocalAuthState();
       setState({ loading: false, error: null, session: DEFAULT_SESSION });
-      const authUrl = process.env.REACT_APP_AUTH_APP_URL || "/";
-      window.location.replace(authUrl);
+      window.location.replace(
+        buildGlobalAuthUrl({
+          app: "app-shell",
+          returnTo: window.location.href,
+        }),
+      );
     };
     const unsubscribe = subscribeAuthEvents((message) => {
       if (message?.type === "LOGOUT") {
@@ -117,7 +128,10 @@ export function AppShellProvider({ children }) {
         loadSession({ background: true });
       }
     });
-    const onWindowLogout = () => redirectToLogin();
+    const onWindowLogout = () => {
+      if (!sessionRef.current?.isAuthenticated && isGuestSession()) return;
+      redirectToLogin();
+    };
     window.addEventListener("USER_LOGOUT", onWindowLogout);
     return () => {
       unsubscribe();
@@ -125,24 +139,17 @@ export function AppShellProvider({ children }) {
     };
   }, [loadSession]);
 
-  const reload = React.useCallback(
-    () => loadSession({ background: true }),
-    [loadSession]
-  );
+  const reload = React.useCallback(() => loadSession({ background: true }), [loadSession]);
 
   const value = React.useMemo(
     () => ({
       ...state,
       reload,
     }),
-    [reload, state]
+    [reload, state],
   );
 
-  return (
-    <AppShellConfigContext.Provider value={value}>
-      {children}
-    </AppShellConfigContext.Provider>
-  );
+  return <AppShellConfigContext.Provider value={value}>{children}</AppShellConfigContext.Provider>;
 }
 
 export const useAppShellConfig = () => React.useContext(AppShellConfigContext);

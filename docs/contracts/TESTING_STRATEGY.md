@@ -28,12 +28,12 @@ Each package contains:
 - **Directory:** `src/__tests__/*.test.js` or `src/__tests__/*.test.jsx`
 - **Pure JS tests** (utils): no environment needed, run in Node.
   ```js
-  import {describe, it, expect} from "vitest";
+  import { describe, it, expect } from "vitest";
   ```
 - **React component tests** (UI): use `jsdom` environment + `@testing-library/react`.
   ```js
-  import {render, screen} from "@testing-library/react";
-  import {describe, it, expect} from "vitest";
+  import { render, screen } from "@testing-library/react";
+  import { describe, it, expect } from "vitest";
   ```
 
 ### What We Test

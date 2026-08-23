@@ -1,23 +1,45 @@
 import React, { Suspense, useCallback, useEffect, useMemo, useState } from "react";
-import { Navigate, Route, Routes, useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { AppHeader, ErrorState, GlobalLoader, ScrollToTop, SideBar, ThemeProvider, useTheme } from "@packages/trem-ui";
+import {
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
+import {
+  AppHeader,
+  ErrorState,
+  FloatingActionBar,
+  GlobalLoader,
+  ScrollToTop,
+  SideBar,
+  ThemeProvider,
+  useTheme,
+  RealtimeProvider,
+  Toaster,
+} from "@packages/trem-ui";
+import { initRealtimeNotifications } from "@packages/trem-events";
 import { AppShellProvider, useAppShellConfig } from "./providers/AppShellProvider";
-import AppShellPage from "../features/app-shell/AppShell";
+import AppShellPage from "../features/app-shell/AppShell.container";
 import { buildGlobalAuthUrl, fetchData, SHELL_NAVIGATION_EVENT } from "@packages/trem-utils";
 import { clearAuthBrowserState, emitAuthEvent } from "@packages/trem-auth-core";
 import LoginPrompt from "../components/LoginPrompt";
 import SecurityMonitor from "../components/SecurityMonitor";
+import SupportRoutes from "../features/support/SupportRoutes";
 import { checkRateLimit } from "../services/security";
+import { clearGuestSession, enableGuestSession, isGuestSession } from "../services/guestSession";
 import {
   FALLBACK_NAVIGATION_CONFIG,
   normalizeNavigationConfig,
   resolveDestination,
   resolveNavigationIntent,
+  isGuestAccessibleDestination,
 } from "./routing/navigationRegistry";
 import "../styles/global.scss";
 
 const TrevioApp = React.lazy(() => import("trevio/App"));
-const EmbeddedBookingEngine = React.lazy(() => import("bookingEngine/EmbeddedApp"));
+const TrevistaApp = React.lazy(() => import("trevista/App"));
 
 class RemoteBoundary extends React.Component {
   state = { error: null };
@@ -48,31 +70,42 @@ class RemoteBoundary extends React.Component {
   }
 }
 
-function ProtectedRoute({ children }) {
+function ProtectedRoute({
+  children,
+  onContinueAsGuest,
+  allowGuest = false,
+  suppressPrompt = false,
+}) {
   const { loading, session } = useAppShellConfig();
 
   if (loading) return <GlobalLoader visible text="Loading App" />;
 
-  if (!session?.isAuthenticated) {
+  if (!session?.isAuthenticated && !allowGuest) {
+    if (suppressPrompt) return null;
     const authUrl = process.env.REACT_APP_AUTH_APP_URL || "";
     const returnTo = window.location.href;
 
     if (!authUrl) {
       return (
-        <main className="dash-content" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
-          <p style={{ color: "var(--text-tertiary)", fontSize: "13px" }}>Authentication not configured.</p>
-        </main>
+        <LoginPrompt
+          onContinueAsGuest={onContinueAsGuest}
+          title="Explore TravelsTREM"
+          description="Authentication is unavailable, but you can continue as a guest to explore trips and tours."
+        />
       );
     }
 
     return (
-      <LoginPrompt onLogin={() => {
-        if (!checkRateLimit("login-attempt", 5, 300000)) {
-          console.warn("[Security] Too many login attempts. Please wait.");
-          return;
-        }
-        window.location.assign(buildGlobalAuthUrl({ app: "app-shell", returnTo }));
-      }} />
+      <LoginPrompt
+        onContinueAsGuest={onContinueAsGuest}
+        onLogin={() => {
+          if (!checkRateLimit("login-attempt", 5, 300000)) {
+            console.warn("[Security] Too many login attempts. Please wait.");
+            return;
+          }
+          window.location.assign(buildGlobalAuthUrl({ app: "app-shell", returnTo }));
+        }}
+      />
     );
   }
 
@@ -88,9 +121,14 @@ function AppShell() {
   const user = session?.user || null;
   const [sidebarConfig, setSidebarConfig] = useState({});
   const [appHeaderConfig, setAppHeaderConfig] = useState({});
-  const [navigationConfig, setNavigationConfig] = useState(() => normalizeNavigationConfig(FALLBACK_NAVIGATION_CONFIG));
+  const [navigationConfig, setNavigationConfig] = useState(() =>
+    normalizeNavigationConfig(FALLBACK_NAVIGATION_CONFIG),
+  );
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [guestMode, setGuestMode] = useState(() => isGuestSession());
+  const [authPromptDismissed, setAuthPromptDismissed] = useState(false);
+  const [primaryActionOpen, setPrimaryActionOpen] = useState(false);
 
   const destination = useMemo(
     () => resolveDestination(navigationConfig, location),
@@ -99,61 +137,112 @@ function AppShell() {
   const selectedTab = destination.tab || searchParams.get("tab") || "overview";
   const activeTab = destination.activeId || selectedTab;
   const isRemote = destination.kind === "remote";
-  const isBookingsScreen = destination.renderer === "app-shell" && activeTab === "bookings";
-  const isBookingDetail = isBookingsScreen && Boolean(searchParams.get("bookingId"));
+  const isSupportScreen = location.pathname === "/help" || location.pathname.startsWith("/help/");
   const productFilter = searchParams.get("product") || "all";
+  const publicDestination = isGuestAccessibleDestination(destination);
+  const mobileActionPanel = navigationConfig.mobileActionPanel || {};
+  const continueAsGuest = useCallback(() => {
+    setAuthPromptDismissed(true);
+    enableGuestSession();
+    setGuestMode(true);
+    if (!publicDestination) navigate("/?tab=overview&guest=1", { replace: true });
+  }, [navigate, publicDestination]);
+  const requireAuthentication = useCallback(({ returnTo = window.location.href } = {}) => {
+    clearGuestSession();
+    window.location.assign(buildGlobalAuthUrl({ app: "app-shell", returnTo }));
+  }, []);
 
-  const handleNavigation = useCallback((rawIntent) => {
-    const result = resolveNavigationIntent(navigationConfig, rawIntent, window.location.origin);
-    if (result.type === "internal" || result.type === "internal-path") {
-      navigate(result.location, { replace: result.replace });
-      return true;
-    }
-    if (result.type === "external") {
-      if (result.target === "_blank") {
-        window.open(result.url, "_blank", "noopener,noreferrer");
-      } else {
-        window.location.assign(result.url);
+  useEffect(() => {
+    if (!session?.isAuthenticated) return;
+    clearGuestSession();
+    setGuestMode(false);
+  }, [session?.isAuthenticated]);
+
+  useEffect(() => {
+    if (publicDestination) setAuthPromptDismissed(false);
+  }, [publicDestination]);
+
+  const handleNavigation = useCallback(
+    (rawIntent) => {
+      const result = resolveNavigationIntent(navigationConfig, rawIntent, window.location.origin);
+      if (result.type === "internal" || result.type === "internal-path") {
+        navigate(result.location, { replace: result.replace });
+        return true;
       }
-      return true;
-    }
-    console.warn(`[Navigation] ${result.reason}`);
-    return false;
-  }, [navigate, navigationConfig]);
+      if (result.type === "external") {
+        if (result.target === "_blank") {
+          window.open(result.url, "_blank", "noopener,noreferrer");
+        } else {
+          window.location.assign(result.url);
+        }
+        return true;
+      }
+      console.warn(`[Navigation] ${result.reason}`);
+      return false;
+    },
+    [navigate, navigationConfig],
+  );
 
-  const handleTabChange = useCallback((target, item = {}) => (
-    handleNavigation({
-      destination: target,
-      targetWindow: item.target,
-    })
-  ), [handleNavigation]);
+  const handleTabChange = useCallback(
+    (target, item = {}) =>
+      handleNavigation({
+        destination: target,
+        targetWindow: item.target,
+      }),
+    [handleNavigation],
+  );
 
-  const handleGlobalSearch = useCallback(async (query, signal) => {
-    const response = await fetchData(appHeaderConfig.search?.endpoint || "/search", {
-      params: {
-        q: query,
-        limit: appHeaderConfig.search?.resultLimit || 6,
-      },
-      signal,
-    });
-    if (response?.status !== "success") {
-      return { status: response?.status || "error", message: response?.message };
-    }
-    return {
-      status: "success",
-      ...(response.componentData?.data || {}),
-    };
-  }, [appHeaderConfig.search]);
+  const mobileNavigationActions = useMemo(
+    () =>
+      (mobileActionPanel.variant === "mobile-navigation" ? mobileActionPanel.items || [] : []).map(
+        (item) => ({
+          id: item.id,
+          label: item.label,
+          iconLeft: item.icon,
+          emphasis: item.emphasis,
+          disabled: item.disabled,
+          active: item.activeTargets.includes(destination.id),
+          onClick:
+            item.action === "open-primary-action"
+              ? () => setPrimaryActionOpen(true)
+              : () => handleTabChange(item.target, item),
+        }),
+      ),
+    [destination.id, handleTabChange, mobileActionPanel.items],
+  );
 
-  const handleGlobalSearchSelect = useCallback((result) => {
-    handleNavigation({
-      destination: result.destination,
-      path: result.path,
-      params: result.params,
-      query: result.query,
-      targetWindow: result.target,
-    });
-  }, [handleNavigation]);
+  const handleGlobalSearch = useCallback(
+    async (query, signal) => {
+      const response = await fetchData(appHeaderConfig.search?.endpoint || "/search", {
+        params: {
+          q: query,
+          limit: appHeaderConfig.search?.resultLimit || 6,
+        },
+        signal,
+      });
+      if (response?.status !== "success") {
+        return { status: response?.status || "error", message: response?.message };
+      }
+      return {
+        status: "success",
+        ...(response.componentData?.data || {}),
+      };
+    },
+    [appHeaderConfig.search],
+  );
+
+  const handleGlobalSearchSelect = useCallback(
+    (result) => {
+      handleNavigation({
+        destination: result.destination,
+        path: result.path,
+        params: result.params,
+        query: result.query,
+        targetWindow: result.target,
+      });
+    },
+    [handleNavigation],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -166,7 +255,11 @@ function AppShell() {
         if (!cancelled) {
           setSidebarConfig(sidebarResponse?.componentData || {});
           setAppHeaderConfig(headerResponse?.componentData || {});
-          setNavigationConfig(normalizeNavigationConfig(navigationResponse?.componentData || FALLBACK_NAVIGATION_CONFIG));
+          setNavigationConfig(
+            normalizeNavigationConfig(
+              navigationResponse?.componentData || FALLBACK_NAVIGATION_CONFIG,
+            ),
+          );
         }
       })
       .catch(() => {
@@ -175,7 +268,9 @@ function AppShell() {
           setAppHeaderConfig({});
         }
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -197,35 +292,55 @@ function AppShell() {
     setMobileSidebarOpen(false);
   }, [activeTab]);
 
-  const handleSidebarAction = useCallback(async (action) => {
-    if (action !== "logout") return;
-    try {
-      await fetchData("/auth/logout", { method: "POST" });
-    } catch {}
-    clearAuthBrowserState({ prefixes: ["appShellTREM", "travelstrem"] });
-    window.dispatchEvent(new CustomEvent("USER_LOGOUT", { detail: { reason: "logout" } }));
-    emitAuthEvent({ type: "LOGOUT" });
-    window.location.replace(process.env.REACT_APP_AUTH_APP_URL || "/");
-  }, []);
+  const handleSidebarAction = useCallback(
+    async (action) => {
+      if (action === "login") {
+        requireAuthentication();
+        return;
+      }
+      if (action !== "logout") return;
+      clearGuestSession();
+      try {
+        await fetchData("/auth/logout", { method: "POST" });
+      } catch {}
+      clearAuthBrowserState({ prefixes: ["appShellTREM", "travelstrem"] });
+      window.dispatchEvent(new CustomEvent("USER_LOGOUT", { detail: { reason: "logout" } }));
+      emitAuthEvent({ type: "LOGOUT" });
+      window.location.replace(
+        buildGlobalAuthUrl({
+          app: "app-shell",
+          returnTo: `${window.location.origin}/?tab=overview`,
+        }),
+      );
+    },
+    [requireAuthentication],
+  );
 
-  if (loading || !session?.isAuthenticated) {
+  if (loading) {
+    return <GlobalLoader visible text="Loading App" />;
+  }
+
+  if (!session?.isAuthenticated && !guestMode && !authPromptDismissed) {
     return (
       <div className="dash-auth-only">
-        <ProtectedRoute>
+        <ProtectedRoute onContinueAsGuest={continueAsGuest}>
           <></>
         </ProtectedRoute>
       </div>
     );
   }
 
-  const remoteElement = destination.renderer === "trevio"
-    ? <TrevioApp embedded userSession={session} basename={destination.path} />
-    : destination.renderer === "bookingEngine"
-      ? <EmbeddedBookingEngine />
-      : null;
+  const remoteElement =
+    destination.renderer === "trevio" ? (
+      <TrevioApp embedded userSession={session} basename={destination.path} />
+    ) : destination.renderer === "trevista" ? (
+      <TrevistaApp embedded userSession={session} />
+    ) : null;
 
   return (
-    <div className={`dash-layout${sidebarCollapsed ? " dash-layout--sidebar-collapsed" : ""}`}>
+    <div
+      className={`dash-layout${sidebarCollapsed ? " dash-layout--sidebar-collapsed" : ""}${mobileNavigationActions.length ? " dash-layout--mobile-action-panel" : ""}`}
+    >
       <SideBar
         config={sidebarConfig}
         activeId={activeTab}
@@ -254,12 +369,24 @@ function AppShell() {
           onLogoClick={() => handleNavigation({ destination: "overview" })}
           menuOpen={mobileSidebarOpen}
           onMenuToggle={() => setMobileSidebarOpen((open) => !open)}
+          primaryActionOpen={primaryActionOpen}
+          onPrimaryActionOpenChange={setPrimaryActionOpen}
+          onPrimaryActionSelect={(item) => handleTabChange(item.target, item)}
         />
 
-        <div data-scroll-root className={`dash-content${isBookingsScreen ? " dash-content--bookings" : ""}${isBookingDetail ? " dash-content--booking-detail" : ""}${isRemote ? " dash-content--remote" : ""}`}>
-          <ProtectedRoute>
+        <div
+          data-scroll-root
+          className={`dash-content${isRemote ? " dash-content--remote" : ""}${isSupportScreen ? " dash-content--support" : ""}`}
+        >
+          <ProtectedRoute
+            allowGuest={publicDestination && guestMode}
+            suppressPrompt={authPromptDismissed}
+            onContinueAsGuest={continueAsGuest}
+          >
             <RemoteBoundary resetKey={`${location.pathname}${location.search}`}>
-              {remoteElement ? (
+              {isSupportScreen ? (
+                <SupportRoutes />
+              ) : remoteElement ? (
                 <Suspense fallback={<GlobalLoader visible text="Loading customer product" />}>
                   <Routes>
                     {(destination.patterns || []).map((pattern) => (
@@ -270,28 +397,47 @@ function AppShell() {
                 </Suspense>
               ) : (
                 <Suspense fallback={<GlobalLoader visible text="Loading customer product" />}>
-                  <AppShellPage productFilter={productFilter} activeTab={selectedTab} onTabChange={handleTabChange} />
+                  <AppShellPage
+                    productFilter={productFilter}
+                    activeTab={selectedTab}
+                    onTabChange={handleTabChange}
+                  />
                 </Suspense>
               )}
             </RemoteBoundary>
           </ProtectedRoute>
         </div>
       </div>
+
+      {mobileNavigationActions.length ? (
+        <FloatingActionBar
+          variant={mobileActionPanel.variant}
+          actions={mobileNavigationActions}
+          sheetTitle={mobileActionPanel.ariaLabel}
+          hideOnDesktop
+        />
+      ) : null}
     </div>
   );
 }
 
 export default function App() {
+  // Backend-authored realtime toasts (e.g. enquiry created confirmation).
+  useEffect(() => initRealtimeNotifications(), []);
+
   return (
     <ThemeProvider>
       <AppShellProvider>
-        <SecurityMonitor>
-          <ScrollToTop />
-          <Routes>
-            <Route path="/*" element={<AppShell />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </SecurityMonitor>
+        <RealtimeProvider>
+          <Toaster />
+          <SecurityMonitor>
+            <ScrollToTop />
+            <Routes>
+              <Route path="/*" element={<AppShell />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </SecurityMonitor>
+        </RealtimeProvider>
       </AppShellProvider>
     </ThemeProvider>
   );

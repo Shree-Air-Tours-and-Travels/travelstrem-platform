@@ -4,8 +4,8 @@ import { initUserSession } from "../services/userSession";
 import { getHeaderConfig } from "../services/configService";
 
 export const initApp = createInitApp({
-    initEventBus,
-    initUserSession,
-    getHeaderConfig,
-    defaultPage: "trevio",
+  initEventBus,
+  initUserSession,
+  getHeaderConfig,
+  defaultPage: "trevio",
 });

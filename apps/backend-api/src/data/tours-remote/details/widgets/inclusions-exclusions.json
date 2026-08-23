@@ -7,8 +7,18 @@
     },
     "elements": {
       "labels": {
+        "eyebrow": "Package details",
+        "title": "What’s included",
+        "includedCount": "included",
+        "excludedCount": "not included",
         "inclusions": "Inclusions",
-        "exclusions": "Exclusions"
+        "exclusions": "Exclusions",
+        "ariaLabel": "What's included and what's not",
+        "inclusionsEmpty": "Inclusions will be confirmed before booking.",
+        "exclusionsEmpty": "Exclusions will be confirmed before booking.",
+        "viewAll": "View all",
+        "showLess": "Show less",
+        "moreItems": "+{count} more"
       },
       "urls": {}
     },
@@ -19,7 +29,15 @@
           "type": "InclusionsExclusions",
           "props": {
             "inclusionsTitleRef": "inclusions",
-            "exclusionsTitleRef": "exclusions"
+            "exclusionsTitleRef": "exclusions",
+            "ariaLabelRef": "ariaLabel",
+            "inclusionsEmptyLabelRef": "inclusionsEmpty",
+            "exclusionsEmptyLabelRef": "exclusionsEmpty",
+            "viewAllLabelRef": "viewAll",
+            "showLessLabelRef": "showLess",
+            "moreItemsLabelRef": "moreItems",
+            "initialVisibleCount": 5,
+            "separateControlsBreakpoint": 640
           }
         }
       ],

@@ -11,7 +11,9 @@ const ReviewCard = ({ review }) => {
       <div className="ui-review-card__content">
         <SubTitle primaryClassname="ui-review-card__name" text={review.name} />
         <Paragraph primaryClassname="ui-review-card__text" text={review.review} />
-        <span className="ui-review-card__rating"><Icon name="star" size={14} /> {review.rating}</span>
+        <span className="ui-review-card__rating">
+          <Icon name="star" size={14} /> {review.rating}
+        </span>
       </div>
     </div>
   );

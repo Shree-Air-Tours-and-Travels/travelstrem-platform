@@ -1,0 +1,197 @@
+@import "@packages/trem-design-tokens/scss";
+
+.trem-multiselect {
+  width: 100%;
+
+  // Keep the reusable control fluid instead of sizing to selected text.
+  .trem-dropdown,
+  .trem-dropdown__trigger {
+    width: 100%;
+  }
+
+  &__selection {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: $space-1-5;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__placeholder {
+    color: var(--muted, var(--text-muted));
+  }
+
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-1;
+    max-width: 150px;
+    padding: 2px $space-2;
+    border-radius: $radius-full;
+    background: var(--primary-soft, var(--primary-surface, var(--color-primary-bg)));
+    color: var(--color-primary-dark, var(--color-primary));
+    font-size: $font-size-xs;
+    font-weight: $font-semibold;
+    white-space: nowrap;
+    cursor: default;
+
+    .trem-icon {
+      flex-shrink: 0;
+    }
+  }
+
+  &__more {
+    font-size: $font-size-xs;
+    font-weight: $font-bold;
+    color: var(--muted, var(--text-muted));
+  }
+
+  &__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: $radius-full;
+    background: var(--color-primary, #2563eb);
+    color: var(--color-on-primary, #ffffff);
+    font-size: $font-size-xs;
+    font-weight: $font-bold;
+    flex-shrink: 0;
+  }
+
+  &__option {
+    display: flex;
+    align-items: center;
+    gap: $space-2-5;
+    width: 100%;
+    padding: $space-2 $space-2-5;
+    border: 0;
+    border-radius: $radius-xs;
+    background: transparent;
+    color: var(--text, var(--text-strong));
+    font-family: $font-primary;
+    font-size: $font-size-sm;
+    text-align: left;
+    cursor: pointer;
+    transition: background 120ms $ease-default;
+
+    &:hover:not(:disabled) {
+      background: var(--primary-soft, var(--primary-surface, var(--color-primary-bg)));
+    }
+
+    &.is-disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+  }
+
+  &__checkbox {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid var(--control-border, var(--border));
+    border-radius: $radius-xs;
+    background: var(--surface, var(--surface-2));
+    color: var(--color-on-primary, #ffffff);
+    flex-shrink: 0;
+    transition:
+      background 140ms $ease-default,
+      border-color 140ms $ease-default;
+
+    &.is-checked {
+      background: var(--color-primary, #2563eb);
+      border-color: var(--color-primary, #2563eb);
+    }
+  }
+
+  &__option-label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-2;
+    padding: $space-2 $space-1 $space-1;
+    margin-top: $space-1;
+    border-top: 1px solid var(--border, var(--surface-3));
+
+    &--empty {
+      justify-content: center;
+      padding: $space-3 $space-1;
+      color: var(--muted, var(--text-muted));
+      font-size: $font-size-xs;
+    }
+
+    &-btn {
+      font-size: $font-size-xs;
+      font-weight: $font-bold;
+    }
+  }
+
+  &__footer-tools {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-1;
+    min-width: 0;
+  }
+
+  &__apply {
+    flex: 0 0 auto;
+    min-width: 72px;
+  }
+
+  &__error {
+    margin-top: $space-1-5;
+    font-size: $font-size-xs;
+    line-height: 1.3;
+    color: var(--color-danger, #dc2626);
+  }
+
+  &--outlined .trem-dropdown__select {
+    border: 1px solid var(--control-border, var(--border));
+    background: var(--control-bg, var(--surface));
+  }
+
+  &--filled .trem-dropdown__select {
+    border: 1px solid transparent;
+    background: var(--surface-inset, var(--surface));
+  }
+
+  &--underlined .trem-dropdown__select {
+    border: 0;
+    border-bottom: 2px solid var(--control-border, var(--border));
+    border-radius: 0;
+    padding-left: 0;
+    padding-right: 0;
+    background: transparent;
+  }
+
+  &--sm .trem-dropdown__select {
+    min-height: 40px;
+    padding: 0.3rem 0.65rem;
+    font-size: $font-size-xs;
+  }
+
+  &--md .trem-dropdown__select {
+    min-height: 48px;
+    padding: 0.5rem 0.75rem;
+    font-size: $font-size-sm;
+  }
+
+  &--lg .trem-dropdown__select {
+    min-height: 56px;
+    padding: 0.6rem 0.9rem;
+    font-size: $font-size-md;
+  }
+}

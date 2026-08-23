@@ -16,7 +16,8 @@ export default function ProfileForm({ user, onSave, loading }) {
     if (!form.name.trim()) errs.name = "Name is required";
     if (!form.email.trim()) errs.email = "Email is required";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = "Invalid email address";
-    if (form.phone && !/^\+?[\d\s\-()]{7,15}$/.test(form.phone)) errs.phone = "Invalid phone number";
+    if (form.phone && !/^\+?[\d\s\-()]{7,15}$/.test(form.phone))
+      errs.phone = "Invalid phone number";
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -43,7 +44,9 @@ export default function ProfileForm({ user, onSave, loading }) {
 
       <div className="dpf__fields">
         <div className="dpf__field">
-          <label className="dpf__label" htmlFor="profile-name">Full Name</label>
+          <label className="dpf__label" htmlFor="profile-name">
+            Full Name
+          </label>
           <InputField
             id="profile-name"
             variant="text"
@@ -55,7 +58,9 @@ export default function ProfileForm({ user, onSave, loading }) {
           />
         </div>
         <div className="dpf__field">
-          <label className="dpf__label" htmlFor="profile-email">Email</label>
+          <label className="dpf__label" htmlFor="profile-email">
+            Email
+          </label>
           <InputField
             id="profile-email"
             variant="email"
@@ -67,7 +72,9 @@ export default function ProfileForm({ user, onSave, loading }) {
           />
         </div>
         <div className="dpf__field">
-          <label className="dpf__label" htmlFor="profile-phone">Phone</label>
+          <label className="dpf__label" htmlFor="profile-phone">
+            Phone
+          </label>
           <InputField
             id="profile-phone"
             variant="tel"

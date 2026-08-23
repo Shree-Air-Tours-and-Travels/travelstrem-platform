@@ -30,19 +30,23 @@ export default function AppHeader({
   onSearch,
   onSearchSelect,
   onLogoClick,
+  primaryActionOpen,
+  onPrimaryActionOpenChange,
+  onPrimaryActionSelect,
 }) {
   const brand = config.brand || {};
   const search = config.search || {};
   const primaryAction = config.primaryAction || {};
+  const productMenu = config.productMenu || {};
   const notification = config.notification || {};
   const themeAction = config.themeAction || {};
   const userConfig = config.user || {};
-  const themeLabel = theme === "dark"
-    ? (themeAction.lightLabel || "Switch to light mode")
-    : (themeAction.darkLabel || "Switch to dark mode");
-  const themeIcon = theme === "dark"
-    ? (themeAction.lightIcon || "sun")
-    : (themeAction.darkIcon || "moon");
+  const themeLabel =
+    theme === "dark"
+      ? themeAction.lightLabel || "Switch to light mode"
+      : themeAction.darkLabel || "Switch to dark mode";
+  const themeIcon =
+    theme === "dark" ? themeAction.lightIcon || "sun" : themeAction.darkIcon || "moon";
 
   const userTrigger = (
     <button
@@ -55,16 +59,48 @@ export default function AppHeader({
       <Icon name="chevronDown" size={17} />
     </button>
   );
-  const userItems = (userConfig.items || []).map((item) => ({
-    id: item.id,
-    label: item.label,
-    icon: item.icon,
-    disabled: item.disabled,
-    onClick: () => {
-      if (item.type === "external" && item.href) window.location.assign(item.href);
-      else if (item.action) onAction?.(item.action, item);
-    },
-  }));
+  const userItems = (userConfig.items || [])
+    .filter((item) => !item.hide)
+    .map((item) => ({
+      id: item.id,
+      label: item.label,
+      icon: item.icon,
+      disabled: item.disabled,
+      onClick: () => {
+        if (item.type === "external" && item.href) window.location.assign(item.href);
+        else if (item.action) onAction?.(item.action, item);
+      },
+    }));
+  const productItems = (productMenu.items || [])
+    .filter((item) => !item.hide)
+    .map((item) => ({
+      id: item.id,
+      label: item.label,
+      icon: item.icon,
+      disabled: item.disabled,
+      onClick: item.onClick,
+    }));
+  const primaryActionMenu = primaryAction.menu || {};
+  const primaryActionItems = (primaryActionMenu.items || [])
+    .filter((item) => !item.hide)
+    .map((item) => ({
+      ...item,
+      label: item.label || item.title,
+      icon: item.icon || item.mobileIcon,
+      badge: item.badge || (item.comingSoon ? item.comingSoonLabel : ""),
+      onClick: () => onPrimaryActionSelect?.(item),
+    }));
+  const primaryActionTrigger = (
+    <button
+      type="button"
+      className="trem-app-header__primary"
+      disabled={primaryAction.enabled === false}
+      aria-label={primaryAction.ariaLabel || primaryAction.label}
+    >
+      <Icon name={primaryAction.icon || "plus"} size={19} />
+      <span>{primaryAction.label}</span>
+    </button>
+  );
 
   return (
     <>
@@ -89,7 +125,40 @@ export default function AppHeader({
         <GlobalSearch config={search} onSearch={onSearch} onSelect={onSearchSelect} />
 
         <div className="trem-app-header__actions">
-          {primaryAction.label ? (
+          {productMenu.label && productItems.length ? (
+            <Dropdown
+              align="right"
+              hoverable={false}
+              items={productItems}
+              trigger={() => (
+                <button
+                  type="button"
+                  className="trem-app-header__product"
+                  aria-label={productMenu.ariaLabel || "Choose product"}
+                >
+                  <span>{productMenu.label}</span>
+                  <Icon name="chevronDown" size={16} />
+                </button>
+              )}
+            />
+          ) : null}
+          {!primaryAction.hide && primaryAction.label && primaryActionItems.length ? (
+            <Dropdown
+              align="right"
+              hoverable={false}
+              variant={primaryActionMenu.variant || "journey-menu"}
+              items={primaryActionItems}
+              menuTitle={primaryActionMenu.title}
+              menuAriaLabel={primaryActionMenu.ariaLabel}
+              portalWidth={primaryActionMenu.width}
+              portalClassName="trem-app-header__journey-menu"
+              className="trem-app-header__primary-dropdown"
+              open={primaryActionOpen}
+              onOpenChange={onPrimaryActionOpenChange}
+              disabled={primaryAction.enabled === false}
+              trigger={() => primaryActionTrigger}
+            />
+          ) : !primaryAction.hide && primaryAction.label ? (
             <button
               type="button"
               className="trem-app-header__primary"
@@ -101,16 +170,20 @@ export default function AppHeader({
             </button>
           ) : null}
 
-          <button
-            type="button"
-            className="trem-app-header__icon-button trem-app-header__notification"
-            aria-label={notification.label || "Notifications"}
-            disabled={notification.enabled === false}
-            onClick={notification.enabled ? notification.onClick : undefined}
-          >
-            <Icon name={notification.icon || "bell"} size={21} />
-            {notification.count ? <span>{notification.count > 9 ? "9+" : notification.count}</span> : null}
-          </button>
+          {!notification.hide ? (
+            <button
+              type="button"
+              className="trem-app-header__icon-button trem-app-header__notification"
+              aria-label={notification.label || "Notifications"}
+              disabled={notification.enabled === false}
+              onClick={notification.enabled ? notification.onClick : undefined}
+            >
+              <Icon name={notification.icon || "bell"} size={21} />
+              {notification.count ? (
+                <span>{notification.count > 9 ? "9+" : notification.count}</span>
+              ) : null}
+            </button>
+          ) : null}
 
           <button
             type="button"
@@ -129,14 +202,18 @@ export default function AppHeader({
               items={userItems}
               trigger={() => userTrigger}
             />
-          ) : userTrigger}
+          ) : (
+            userTrigger
+          )}
 
           <button
             type="button"
             className="trem-app-header__icon-button trem-app-header__menu"
-            aria-label={menuOpen
-              ? (config.mobileMenu?.closeLabel || "Close navigation")
-              : (config.mobileMenu?.openLabel || "Open navigation")}
+            aria-label={
+              menuOpen
+                ? config.mobileMenu?.closeLabel || "Close navigation"
+                : config.mobileMenu?.openLabel || "Open navigation"
+            }
             aria-expanded={menuOpen}
             onClick={onMenuToggle}
           >
@@ -161,4 +238,7 @@ AppHeader.propTypes = {
   onSearch: PropTypes.func,
   onSearchSelect: PropTypes.func,
   onLogoClick: PropTypes.func,
+  primaryActionOpen: PropTypes.bool,
+  onPrimaryActionOpenChange: PropTypes.func,
+  onPrimaryActionSelect: PropTypes.func,
 };

@@ -5,7 +5,10 @@
       "filters": []
     },
     "dataScope": {
-      "options": {}
+      "options": {},
+      "optionSets": {
+        "quickFilters": "trevista.discoveryChipOptions"
+      }
     },
     "elements": {
       "labels": {
@@ -20,7 +23,8 @@
         {
           "type": "quickChips",
           "props": {
-            "titleRef": "quickFiltersTitle"
+            "titleRef": "quickFiltersTitle",
+            "optionsRef": "quickFilters"
           }
         }
       ],

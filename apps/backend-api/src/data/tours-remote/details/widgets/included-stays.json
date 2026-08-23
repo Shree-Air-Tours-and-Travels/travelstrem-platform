@@ -1,0 +1,88 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "title": "Included stays",
+        "subtitle": "Your package accommodation, organised by destination.",
+        "stay": "stay",
+        "stays": "stays",
+        "forPackage": "Included with",
+        "room": "Room",
+        "meals": "Meals",
+        "included": "Included in your package",
+        "customizedStay": "Your selected stay",
+        "hotelOnRequest": "Hotel confirmed with your quote",
+        "locationOnRequest": "Location on request",
+        "requestTitle": "Need a hotel that is not listed?",
+        "requestDescription": "Tell the agent what you need for a specific destination and receive suitable choices in your quote.",
+        "requestHotel": "Request another hotel",
+        "closeRequest": "Close request",
+        "requestFormTitle": "Hotel request",
+        "requestFormDescription": "Your agent will check availability and price these preferences in the quote.",
+        "agentPriced": "Priced by agent",
+        "requestDestination": "Destination stay",
+        "requestCategory": "Hotel category",
+        "anyCategory": "Any suitable category",
+        "boutique": "Boutique",
+        "luxury": "Luxury",
+        "requestRoom": "Preferred room",
+        "requestRoomPlaceholder": "For example, deluxe room",
+        "requestBudget": "Budget per room / night",
+        "requestBudgetPlaceholder": "Optional budget",
+        "requestRequirements": "Hotel requirements",
+        "requestRequirementsPlaceholder": "Area, amenities, accessibility, bedding, or another preference",
+        "requestStayError": "Choose the destination stay you want to change.",
+        "requestDetailsError": "Add a hotel category, room type, or a short note for the agent.",
+        "requestPricingNote": "No price is accepted from this form. Your agent will price confirmed options.",
+        "continueRequest": "Continue to enquiry",
+        "perPerson": "per person",
+        "perBooking": "per booking",
+        "perRoom": "per room",
+        "perNight": "per night",
+        "perRoomNight": "per room / night",
+        "perPersonNight": "per person / night",
+        "navigation": "Stay navigation",
+        "previous": "Previous stays",
+        "next": "Next stays",
+        "viewAll": "View all stays",
+        "showLess": "Show less",
+        "viewOptions": "View hotel options",
+        "optionsTitle": "Hotel options",
+        "optionsSubtitle": "Compare hotels, room types, amenities and prices. Options included in your selected plan are clearly marked.",
+        "recommended": "Recommended",
+        "selected": "Selected",
+        "pricePending": "Price on request",
+        "includedIn": "Included in",
+        "includedForSelected": "Included in selected package",
+        "includedPrice": "Included",
+        "availableRooms": "Available rooms",
+        "viewRooms": "View rooms and package options",
+        "applyHotel": "Apply hotel",
+        "customize": "Customise this tour",
+        "cancel": "Cancel",
+        "nightsLabel": "nights",
+        "empty": "This tour does not include accommodation. Contact our team for hotel options."
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "IncludedStays",
+          "props": {
+            "titleRef": "title",
+            "viewOptionsRef": "viewOptions"
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

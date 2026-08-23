@@ -1,0 +1,62 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {},
+      "optionSets": {
+        "travelMonthOptions": "trevista.travelMonthOptions",
+        "travellerOptions": "trevista.travellerCountOptions",
+        "tripStyleOptions": "trevista.tripStyleOptions",
+        "budgetOptions": "trevista.budgetOptions"
+      }
+    },
+    "elements": {
+      "labels": {
+        "pageTitle": "Welcome to Trevista by TravelsTrem",
+        "pageSubtitle": "Trevista by TravelsTrem",
+        "eyebrow": "Curated holidays, customisable down to the details.",
+        "description": "Explore curated tours, compare hotels and inclusions, customise your itinerary, and manage the entire trip from one Trevista booking flow.",
+        "primaryActionLabel": "Explore packages",
+        "secondaryActionLabel": "Build a custom trip",
+        "trustItems": [
+          { "label": "Verified stays and experiences", "icon": "badgeCheck" },
+          { "label": "Transparent package pricing", "icon": "wallet" },
+          { "label": "Dedicated trip support", "icon": "support" }
+        ],
+        "searchTabLabel": "Holiday packages",
+        "customTabLabel": "Custom trip",
+        "searchLabels": {
+          "destination": "Destination",
+          "travelMonth": "Travel month",
+          "travellers": "Travellers",
+          "tripStyle": "Trip style",
+          "budget": "Budget",
+          "submit": "Search packages"
+        },
+        "anyLabels": {
+          "destination": "Any destination",
+          "travelMonth": "Any month",
+          "travellers": "Any group size",
+          "tripStyle": "Any style",
+          "budget": "Any budget"
+        },
+        "heroImage": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1800&q=85"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "HeroBanner",
+          "props": {
+            "titleRef": "pageTitle"
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

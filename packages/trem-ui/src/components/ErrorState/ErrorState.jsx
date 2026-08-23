@@ -14,9 +14,7 @@ export default function ErrorState({
   className = "",
   ...rest
 }) {
-  const renderedActions = actions || (retry ? (
-    <Button text={retryText} onClick={retry} />
-  ) : null);
+  const renderedActions = actions || (retry ? <Button text={retryText} onClick={retry} /> : null);
 
   return (
     <div className={`tt-error-state ${className}`} {...rest}>

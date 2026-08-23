@@ -1,7 +1,15 @@
 import React from "react";
 import "./Paragraph.styles.scss";
 
-const Paragraph = ({ text, children, variant = "body", size = "medium", color, align, primaryClassname }) => {
+const Paragraph = ({
+  text,
+  children,
+  variant = "body",
+  size = "medium",
+  color,
+  align,
+  primaryClassname,
+}) => {
   const content = text || children;
   return (
     <p

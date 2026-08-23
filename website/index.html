@@ -1,114 +1,603 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="TravelsTREM is the internal travel technology platform built for Shree Air Tours and Travels." />
-    <title>TravelsTREM</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="icon" type="image/png" href="favicon-light.png" media="(prefers-color-scheme: light)" />
-    <link rel="icon" type="image/png" href="favicon-dark.png" media="(prefers-color-scheme: dark)" />
+    <meta
+      name="description"
+      content="TravelsTREM is a connected travel platform that brings travellers, curated journeys, Shree Air Tours & Travels and approved partner agencies together through Trevio and Trevista."
+    />
+    <meta name="theme-color" content="#07111f" />
+    <title>TravelsTREM | Blog</title>
+    <link
+      rel="icon"
+      type="image/png"
+      href="favicon-light.png"
+      media="(prefers-color-scheme: light)"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      href="favicon-dark.png"
+      media="(prefers-color-scheme: dark)"
+    />
     <link rel="apple-touch-icon" href="favicon-light.png" />
-    <link rel="stylesheet" href="styles.css" />
-    <link rel="stylesheet" href="motion.css" />
-    <link rel="stylesheet" href="partnership.css" />
+    <link rel="stylesheet" href="tailwind.css" />
+    <link rel="stylesheet" href="landing.css" />
   </head>
-  <body>
-    <header class="site-header">
-      <a class="brand" href="#top" aria-label="TravelsTREM home">
-        <img class="brand-icon" src="favicon-light.png" alt="" aria-hidden="true" />
-        <span><strong>Travels<span>TREM</span></strong><small>Powered by Shree Air Tours and Travels</small></span>
-      </a>
-      <button class="menu-toggle" aria-label="Open navigation">☰</button>
-      <nav class="site-nav" aria-label="Primary navigation">
-        <a href="#agency">Agency</a><a href="#platform">Our Platform</a><a href="#engines">Technology</a><a href="#journal">Insights</a><a class="people-nav" href="#people"><span class="people-nav-avatars"><i>NG</i><i>SG</i><i>AG</i></span><span>Leadership</span></a><a class="nav-cta" href="#contact">Contact us</a>
+  <body class="bg-white text-slate-950 antialiased">
+    <a class="skip-link" data-link="main" href="#top">Skip to content</a>
+    <header class="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur-xl">
+      <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-6 lg:px-8">
+        <a
+          data-link="home"
+          href="#top"
+          class="flex items-center gap-3"
+          aria-label="TravelsTREM home"
+        >
+          <img
+            class="h-10 w-10 rounded-xl object-cover"
+            src="favicon-light.png"
+            alt=""
+            aria-hidden="true"
+          />
+          <span>
+            <strong class="block text-base font-extrabold tracking-tight">TravelsTREM</strong>
+            <small class="block text-[11px] text-slate-500"
+              >Operated by Shree Air Tours & Travels.</small
+            >
+          </span>
+        </a>
+
+        <button
+          id="menuButton"
+          class="rounded-lg border border-slate-200 px-3 py-2 text-lg font-bold text-slate-900 lg:hidden"
+          type="button"
+          aria-label="Open navigation"
+          aria-expanded="false"
+          aria-controls="mobileMenu"
+        >
+          ☰
+        </button>
+
+        <nav
+          class="hidden items-center gap-6 text-sm font-semibold lg:flex"
+          aria-label="Primary navigation"
+        >
+          <a class="hover:text-blue-600" data-link="about" href="#about">About</a>
+          <a class="hover:text-blue-600" data-link="products" href="#products">Products</a>
+          <a class="hover:text-blue-600" data-link="ecosystem" href="#ecosystem">How it works</a>
+          <a class="hover:text-blue-600" data-link="agency" href="#agency">Agency</a>
+          <a class="hover:text-blue-600" data-link="people" href="#people">Leadership</a>
+          <a
+            class="rounded-full bg-slate-950 px-5 py-2.5 text-white hover:bg-blue-600"
+            data-link="partnerApplication"
+            href="https://auth.travelstrem.com/partnership"
+            >Partner with us</a
+          >
+        </nav>
+      </div>
+
+      <nav
+        id="mobileMenu"
+        class="hidden border-t border-slate-200 bg-white px-5 py-4 lg:hidden"
+        aria-label="Mobile navigation"
+      >
+        <div class="mx-auto grid max-w-7xl gap-3 text-sm font-semibold">
+          <a data-link="about" href="#about">About</a>
+          <a data-link="products" href="#products">Products</a>
+          <a data-link="ecosystem" href="#ecosystem">How it works</a>
+          <a data-link="agency" href="#agency">Agency</a>
+          <a data-link="people" href="#people">Leadership</a>
+          <a data-link="trevio" href="https://app.travelstrem.com/?tab=trevio&amp;product=trevio"
+            >Explore Trevio ↗</a
+          >
+          <a
+            data-link="trevista"
+            href="https://app.travelstrem.com/?tab=trevista&amp;product=trevista"
+            >Explore Trevista ↗</a
+          >
+          <a
+            class="mt-1 rounded-xl bg-slate-950 px-4 py-3 text-center text-white"
+            data-link="partnerApplication"
+            href="https://auth.travelstrem.com/partnership"
+            >Partner with us</a
+          >
+        </div>
       </nav>
     </header>
 
     <main id="top">
-      <section class="hero section-wrap">
-        <div class="hero-copy">
-          <p class="eyebrow">TOURS · RESERVATIONS · EXPERIENCE · MANAGEMENT</p>
-          <h1>Travel is human.<br /><em>Technology should feel human too.</em></h1>
-          <p class="hero-lede"><strong>Shree Air Tours and Travels owns and operates the travel agency.</strong> TravelsTREM is the internal technology platform we build and use to run better journeys, connect with travel partners, and serve travellers with clarity and care.</p>
-          <div class="hero-actions"><a class="button button-primary" href="#platform">Explore TravelsTREM <span>↗</span></a><a class="text-link" href="#agency">Meet the agency <span>↓</span></a></div>
-          <div class="hero-note"><span class="pulse-dot"></span><span>28+ years of travel trust, now made digital.</span></div>
-        </div>
-        <div class="hero-art" aria-label="TravelsTREM travel platform illustration">
-          <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="globe">✈</div>
-          <div class="floating-card card-top"><span class="card-icon">⌁</span><span><b>One platform</b><small>many ways to travel</small></span></div>
-          <div class="floating-card card-bottom"><span class="card-icon">✓</span><span><b>Human support</b><small>from JAI to WORLD</small></span></div>
-          <div class="route-line"></div>
+      <section class="py-12 sm:py-14">
+        <div class="mx-auto grid max-w-7xl items-center gap-8 px-5 sm:px-6 lg:grid-cols-2 lg:px-8">
+          <div>
+            <p class="mb-3 text-xs font-extrabold uppercase tracking-[0.18em] text-blue-600">
+              A connected travel ecosystem
+            </p>
+            <h1
+              class="max-w-3xl text-5xl font-black leading-[0.95] tracking-[-0.055em] sm:text-6xl lg:text-7xl"
+            >
+              Travel is personal. <span class="text-blue-600">The platform should be too.</span>
+            </h1>
+            <p class="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
+              TravelsTREM connects travellers with trips and tours from Shree Air Tours &amp;
+              Travels and approved partner agencies through products such as Trevio and Trevista.
+            </p>
+            <div class="mt-7 flex flex-wrap gap-3">
+              <a
+                class="inline-flex items-center rounded-full bg-slate-950 px-5 py-3 font-bold text-white hover:bg-blue-600"
+                data-link="products"
+                href="#products"
+                >Explore our products ↗</a
+              >
+              <a
+                class="inline-flex items-center rounded-full border border-slate-300 bg-white px-5 py-3 font-bold text-slate-950 hover:border-slate-950"
+                data-link="partnerApplication"
+                href="https://auth.travelstrem.com/partnership"
+                >Become a partner</a
+              >
+            </div>
+            <p class="mt-6 text-sm font-semibold text-slate-500">
+              Built in Jaipur · Powered by travel experience · Designed for real journeys
+            </p>
+          </div>
+
+          <div
+            class="relative min-h-[390px] overflow-hidden rounded-[2rem] bg-slate-950 p-7 text-white shadow-2xl sm:min-h-[460px]"
+          >
+            <div
+              class="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-cyan-400/30 blur-2xl"
+            ></div>
+            <div
+              class="absolute -bottom-20 -left-16 h-72 w-72 rounded-full border border-white/10"
+            ></div>
+            <div
+              class="relative flex h-full min-h-[330px] flex-col justify-between sm:min-h-[400px]"
+            >
+              <div class="flex justify-between gap-4">
+                <div class="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
+                  <strong class="block">One platform</strong>
+                  <span class="text-sm text-slate-300">Multiple travel products</span>
+                </div>
+                <span
+                  class="grid h-16 w-16 place-items-center rounded-2xl bg-lime-300 text-2xl text-slate-950"
+                  >✈</span
+                >
+              </div>
+              <div>
+                <p class="text-sm font-bold uppercase tracking-[0.16em] text-cyan-200">
+                  TREM stands for:
+                </p>
+                <p class="text-sm font-extrabold uppercase tracking-[0.16em] text-cyan-300">
+                  TOURS → RESERVATIONS → EXPERIENCE → MANAGEMENT
+                </p>
+                <h2 class="mt-3 max-w-lg text-3xl font-black tracking-tight sm:text-4xl">
+                  Clear ownership from discovery to booking.
+                </h2>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section class="trust-strip"><div class="section-wrap trust-items"><span>Built in Jaipur</span><i></i><span>Designed for real journeys</span><i></i><span>Shared infrastructure</span><i></i><span>Human at every step</span></div></section>
-
-      <section class="section-wrap story section-pad" id="agency">
-        <div class="section-heading"><p class="eyebrow">SHREE AIR TOURS AND TRAVELS</p><h2>The travel agency<br />behind the journey.</h2><p class="heading-intro">A family-led travel business founded in Jaipur in 1997, creating and managing journeys for travellers, families, groups and organisations.</p></div>
-        <div class="story-grid"><div><p class="large-copy"><strong>We plan, arrange and support real travel.</strong></p><p>Shree Air Tours and Travels brings together holiday planning, group trips, curated itineraries, reservations, travel services and human support. Our roots are in personal service: understanding the traveller, choosing the right travel partner, making the details clear and being available when plans change.</p><a class="text-link" href="#people">Meet the people behind the agency <span>↓</span></a></div><aside class="quote-card"><span class="quote-mark">“</span><p>To make travel simple, memorable and responsible by crafting local-first experiences with global standards.</p><small>Our agency mission</small></aside></div>
-        <div class="stat-row"><div><strong>28+</strong><span>years of experience</span></div><div><strong>1,000+</strong><span>happy clients</span></div><div><strong>350+</strong><span>tours curated</span></div><div><strong>120+</strong><span>cities covered</span></div></div>
+      <section class="border-y border-slate-200 bg-slate-50 py-4">
+        <div
+          class="mx-auto flex max-w-7xl flex-wrap justify-center gap-x-8 gap-y-2 px-5 text-xs font-extrabold uppercase tracking-[0.12em] text-slate-600 sm:px-6 lg:px-8"
+        >
+          <span>Connected travel platform</span><span>Trusted agency marketplace</span
+          ><span>Partner ecosystem</span><span>Customer travel products</span>
+        </div>
       </section>
 
-      <section class="products section-pad" id="platform"><div class="section-wrap"><div class="section-heading split"><div><p class="eyebrow">TRAVELSTREM — THE INTERNAL PLATFORM</p><h2>Technology built<br />for our agency.</h2></div><p>TravelsTREM is the internal technology platform created and used by Shree Air Tours and Travels. Its products organise how our agency plans, manages and supports different kinds of journeys.</p></div><div class="product-grid">
-        <a class="product-card trevio" href="https://app.travelstrem.com/?tab=trevio&amp;product=trevio"><span class="product-number">01</span><div class="product-symbol product-logo"><img class="theme-brand-icon" src="favicon-light.png" alt="" aria-hidden="true" /></div><h3>Trevio</h3><p>Community trips, weekend adventures, treks, expeditions, events and memories made together.</p><span class="product-link">Explore Trevio ↗</span></a>
-        <a class="product-card trevista" href="#product-status" data-coming-soon="Trevista"><span class="product-number">02</span><div class="product-symbol">▣</div><h3>Trevista</h3><p>Holiday packages, thoughtful itineraries and customised planning for domestic and international travel.</p><span class="product-link">Coming soon <span aria-hidden="true">↗</span></span></a>
-        <a class="product-card trecare" href="#product-status" data-coming-soon="TreCare"><span class="product-number">03</span><div class="product-symbol">◇</div><h3>TreCare</h3><p>Visa, passport, airport transfers and travel insurance support for the parts around the trip.</p><span class="product-link">Coming soon <span aria-hidden="true">↗</span></span></a>
-        <a class="product-card trehub" href="#product-status" data-coming-soon="TreHub"><span class="product-number">04</span><div class="product-symbol">⌂</div><h3>TreHub</h3><p>Flights, hotels, taxis and travel services brought together for practical, everyday planning.</p><span class="product-link">Coming soon <span aria-hidden="true">↗</span></span></a>
-      </div></div></section>
+      <section id="about" class="bg-slate-50 py-12 sm:py-14">
+        <div class="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
+          <div class="mb-8 max-w-3xl">
+            <p class="mb-3 text-xs font-extrabold uppercase tracking-[0.18em] text-blue-600">
+              What TravelsTREM is
+            </p>
+            <h2 class="text-4xl font-black tracking-[-0.04em] sm:text-5xl">
+              One platform connecting the travel journey.
+            </h2>
+            <p class="mt-4 text-lg leading-8 text-slate-600">
+              TravelsTREM provides the technology bridge through which agencies publish trips,
+              travellers discover them, and bookings are managed with clear responsibility.
+            </p>
+          </div>
+          <div class="grid gap-4 md:grid-cols-3">
+            <article class="rounded-3xl border border-slate-200 bg-white p-6">
+              <span class="text-sm font-extrabold text-blue-600">01</span>
+              <h3 class="mt-8 text-xl font-extrabold">The platform</h3>
+              <p class="mt-2 text-slate-600">
+                Shared technology, partner onboarding, product access, trip management and booking
+                infrastructure.
+              </p>
+            </article>
+            <article class="rounded-3xl border border-slate-200 bg-white p-6">
+              <span class="text-sm font-extrabold text-blue-600">02</span>
+              <h3 class="mt-8 text-xl font-extrabold">The agencies</h3>
+              <p class="mt-2 text-slate-600">
+                Shree Air Tours &amp; Travels and approved partners create trips, manage agents and
+                serve customers.
+              </p>
+            </article>
+            <article class="rounded-3xl border border-slate-200 bg-white p-6">
+              <span class="text-sm font-extrabold text-blue-600">03</span>
+              <h3 class="mt-8 text-xl font-extrabold">The travellers</h3>
+              <p class="mt-2 text-slate-600">
+                Customers explore packages through Trevio or Trevista and connect with the
+                responsible agency and agent.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
 
-      <section class="section-wrap section-pad" id="engines"><div class="section-heading"><p class="eyebrow">TRAVELSTREM — THE ENGINE ROOM</p><h2>Five engines. One dependable<br />agency operating layer.</h2><p class="heading-intro">Our internal travel products may look different on the surface. Underneath, they share the capabilities that help the Shree Air Tours and Travels team plan, sell and support journeys more clearly and consistently.</p></div><div class="engine-grid">
-        <article><span>01</span><h3>Booking engine</h3><p>Turns intent into reservations with tours, travellers, availability and booking journeys that are easy to follow.</p></article>
-        <article><span>02</span><h3>Dashboard engine</h3><p>Gives travellers, partners and operators a useful view of what matters: bookings, actions, status and next steps.</p></article>
-        <article><span>03</span><h3>Form engine</h3><p>Captures the details travel requires without losing context, validation or the human conversation around it.</p></article>
-        <article><span>04</span><h3>Process engine</h3><p>Connects requests, reviews, approvals, payments and fulfilment into a visible operational flow.</p></article>
-        <article><span>05</span><h3>Pricing engine</h3><p>Supports transparent, flexible pricing for changing dates, guests, services and real-world travel constraints.</p></article>
-      </div><div class="engine-foundation"><div class="engine-foundation-copy"><p class="eyebrow">THE SHARED FOUNDATION</p><h3>Built once. Used across every journey.</h3><p>The technology underneath our engines keeps the agency’s products consistent, connected and dependable.</p></div><div class="engine-foundation-grid"><div><b>Common UI &amp; shared packages</b><span>Consistent patterns, components and behaviour</span></div><div><b>Storybook &amp; design system</b><span>Documented, reusable and accessible by default</span></div><div><b>Master DB &amp; backend API</b><span>One reliable source for shared travel data</span></div><div><b>Partner &amp; admin portals</b><span>Connected tools for partner and agency operations</span></div></div></div></section>
+      <section id="products" class="py-12 sm:py-14">
+        <div class="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
+          <div class="mb-8 max-w-3xl">
+            <p class="mb-3 text-xs font-extrabold uppercase tracking-[0.18em] text-blue-600">
+              Our products
+            </p>
+            <h2 class="text-4xl font-black tracking-[-0.04em] sm:text-5xl">
+              Focused travel experiences, powered by one platform.
+            </h2>
+            <p class="mt-4 text-lg leading-8 text-slate-600">
+              Each product serves a distinct traveller need while sharing trusted agencies,
+              operational tools and booking infrastructure.
+            </p>
+          </div>
+          <div class="grid gap-4 lg:grid-cols-2">
+            <article
+              class="relative overflow-hidden rounded-[2rem] bg-slate-950 p-7 text-white sm:p-9"
+            >
+              <span
+                class="absolute right-6 top-6 rounded-full bg-white/10 px-3 py-2 text-xs font-extrabold"
+                >LIVE / GROWING</span
+              >
+              <div class="pt-20">
+                <h3 class="text-5xl font-black tracking-[-0.05em]">Trevio</h3>
+                <p class="mt-4 max-w-lg text-slate-300">
+                  Community trips, group departures, weekend experiences, treks, expeditions and
+                  journeys made together.
+                </p>
+                <a
+                  class="mt-6 inline-flex rounded-full bg-white px-5 py-3 font-bold text-slate-950 hover:bg-lime-300"
+                  data-link="trevio"
+                  href="https://app.travelstrem.com/?tab=trevio&amp;product=trevio"
+                  >Explore Trevio ↗</a
+                >
+              </div>
+            </article>
+            <article
+              class="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-cyan-100 to-blue-100 p-7 sm:p-9"
+            >
+              <span
+                class="absolute right-6 top-6 rounded-full bg-white px-3 py-2 text-xs font-extrabold"
+                >EXPLORE</span
+              >
+              <div class="pt-20">
+                <h3 class="text-5xl font-black tracking-[-0.05em]">Trevista</h3>
+                <p class="mt-4 max-w-lg text-slate-700">
+                  Curated holidays, personalised itineraries and domestic or international travel
+                  planned with expert support.
+                </p>
+                <a
+                  class="mt-6 inline-flex rounded-full bg-slate-950 px-5 py-3 font-bold text-white hover:bg-blue-600"
+                  data-link="trevista"
+                  href="https://app.travelstrem.com/?tab=trevista&amp;product=trevista"
+                  >Explore Trevista ↗</a
+                >
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
 
-      <section class="architecture"><div class="section-wrap architecture-grid"><div><p class="eyebrow">PARTNER WITH OUR AGENCY</p><h2>Better journeys are<br /><em>built together.</em></h2><p>Shree Air Tours and Travels works with dependable travel businesses and local experts who care about service as much as we do. If you help travellers stay, move, explore or plan with confidence, we would like to hear from you.</p><a class="button button-light" href="#contact">Become a travel partner <span>↗</span></a></div><div class="stack partner-stack"><div><b>Hotels &amp; accommodation</b><span>Hotels, resorts, camps, homestays and distinctive local stays</span></div><div><b>Transport &amp; mobility</b><span>Drivers, taxi operators, coach providers and transfer partners</span></div><div><b>Destinations &amp; experiences</b><span>DMCs, guides, activity providers and on-ground local experts</span></div><div><b>Travel trade partners</b><span>Travel agents, agencies and specialists looking to collaborate</span></div></div></div></section>
+      <section id="ecosystem" class="bg-slate-950 py-12 text-white sm:py-14">
+        <div class="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
+          <div class="mb-8 max-w-3xl">
+            <p class="mb-3 text-xs font-extrabold uppercase tracking-[0.18em] text-cyan-300">
+              How it works
+            </p>
+            <h2 class="text-4xl font-black tracking-[-0.04em] sm:text-5xl">
+              A clear journey from partner to traveller.
+            </h2>
+            <p class="mt-4 text-lg leading-8 text-slate-300">
+              TravelsTREM keeps the platform, product, agency, agent, trip and booking connected.
+            </p>
+          </div>
+          <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <article class="rounded-3xl border border-white/10 bg-white/5 p-6">
+              <span class="text-xs font-extrabold text-cyan-300">STEP 01</span>
+              <h3 class="mt-8 text-xl font-extrabold">Agency joins</h3>
+              <p class="mt-2 text-slate-300">
+                An agency applies and is reviewed by the TravelsTREM team.
+              </p>
+            </article>
+            <article class="rounded-3xl border border-white/10 bg-white/5 p-6">
+              <span class="text-xs font-extrabold text-cyan-300">STEP 02</span>
+              <h3 class="mt-8 text-xl font-extrabold">Product access</h3>
+              <p class="mt-2 text-slate-300">
+                Approved agencies are enrolled in eligible products.
+              </p>
+            </article>
+            <article class="rounded-3xl border border-white/10 bg-white/5 p-6">
+              <span class="text-xs font-extrabold text-cyan-300">STEP 03</span>
+              <h3 class="mt-8 text-xl font-extrabold">Trips go live</h3>
+              <p class="mt-2 text-slate-300">Agency admins and agents publish and manage tours.</p>
+            </article>
+            <article class="rounded-3xl border border-white/10 bg-white/5 p-6">
+              <span class="text-xs font-extrabold text-cyan-300">STEP 04</span>
+              <h3 class="mt-8 text-xl font-extrabold">Traveller books</h3>
+              <p class="mt-2 text-slate-300">
+                The traveller books with the responsible agency and agent.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
 
-      <section class="section-wrap section-pad principles"><div class="section-heading split"><div><p class="eyebrow">A POINT OF VIEW</p><h2>What we do.<br />What we don’t.</h2></div><p>Technology is useful when it removes friction and earns trust. These are the boundaries we use to operate our agency and build its internal tools responsibly.</p></div><div class="principle-grid"><div class="do-list"><h3><span>✓</span> We do</h3><ul><li>Make complex travel easier to understand.</li><li>Keep pricing, process and ownership visible.</li><li>Build tools that help travellers, travel partners, agents and our team.</li><li>Use data to improve service, not replace care.</li><li>Design for the journey after the click.</li></ul></div><div class="dont-list"><h3><span>×</span> We don’t</h3><ul><li>Sell TravelsTREM as an off-the-shelf software product.</li><li>Hide important terms behind clever interfaces.</li><li>Promise a fully automated travel experience.</li><li>Treat travel partners, agents or agency partners as interchangeable inventory.</li><li>Forget that every booking represents a person.</li></ul></div></div></section>
+      <section id="agency" class="py-12 sm:py-14">
+        <div class="mx-auto grid max-w-7xl gap-6 px-5 sm:px-6 lg:grid-cols-[0.85fr_1.15fr] lg:px-8">
+          <aside class="rounded-[2rem] bg-gradient-to-br from-amber-50 to-orange-100 p-7 sm:p-8">
+            <p class="mb-3 text-xs font-extrabold uppercase tracking-[0.18em] text-blue-600">
+              Operating company
+            </p>
+            <h2 class="text-3xl font-black tracking-tight">Shree Air Tours &amp; Travels</h2>
+            <p class="mt-4 leading-7 text-slate-700">
+              It supports the business behind TravelsTREM through marketing, partner relationships,
+              legal services and offline operations. It also operates as a registered agency on the
+              platform.
+            </p>
+            <a
+              class="mt-6 inline-flex rounded-full bg-slate-950 px-5 py-3 font-bold text-white hover:bg-blue-600"
+              data-link="contact"
+              href="#contact"
+              >Talk to our team ↗</a
+            >
+          </aside>
+          <div>
+            <p class="mb-3 text-xs font-extrabold uppercase tracking-[0.18em] text-blue-600">
+              Clear separation by design
+            </p>
+            <h2 class="text-4xl font-black tracking-[-0.04em] sm:text-5xl">
+              Business leadership outside. Equal agency structure inside.
+            </h2>
+            <p class="mt-4 text-lg leading-8 text-slate-600">
+              This keeps TravelsTREM scalable while allowing Shree Air Tours &amp; Travels to
+              operate its own tours alongside partners.
+            </p>
+            <div class="mt-6 divide-y divide-slate-200 border-y border-slate-200">
+              <article class="py-5">
+                <h3 class="text-xl font-extrabold">Outside the platform</h3>
+                <p class="mt-2 text-slate-600">
+                  Partner outreach, marketing, legal agreements, finance coordination and offline
+                  support.
+                </p>
+              </article>
+              <article class="py-5">
+                <h3 class="text-xl font-extrabold">Inside the platform</h3>
+                <p class="mt-2 text-slate-600">
+                  A registered agency with its own admins, agents, trips, bookings and customers.
+                </p>
+              </article>
+              <article class="py-5">
+                <h3 class="text-xl font-extrabold">Platform governance</h3>
+                <p class="mt-2 text-slate-600">
+                  Master Admin controls approvals, product access, platform rules and permissions.
+                </p>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
 
-      <section class="journal" id="journal"><div class="section-wrap section-pad"><div class="section-heading split"><div><p class="eyebrow">FROM THE JOURNAL</p><h2>Notes on building<br />better travel.</h2></div><p>Ideas from the intersection of travel, product, engineering and the people who make a journey work.</p></div><div class="journal-grid"><article class="journal-card featured"><span class="journal-tag">Perspective · 6 min read</span><h3>Why a travel platform should feel like a good travel advisor</h3><p>Clarity, context and confidence are not nice-to-haves. They are the product.</p><a href="#contact">Read the story ↗</a></article><article class="journal-card"><span class="journal-tag">Engineering · 5 min read</span><h3>Five engines behind one connected travel experience</h3><p>How shared capabilities let focused products move faster.</p><a href="#platform">Explore the platform ↗</a></article><article class="journal-card"><span class="journal-tag">Business · 4 min read</span><h3>What 28 years of travel teaches you about trust</h3><p>The lessons we carry from a Jaipur travel desk into a digital ecosystem.</p><a href="#agency">Read the agency story ↗</a></article></div></div></section>
+      <section id="people" class="bg-slate-50 py-12 sm:py-14">
+        <div class="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
+          <div class="mb-8 max-w-3xl">
+            <p class="mb-3 text-xs font-extrabold uppercase tracking-[0.18em] text-blue-600">
+              The people behind the journey
+            </p>
+            <h2 class="text-4xl font-black tracking-[-0.04em] sm:text-5xl">
+              Travel experience, business leadership and technology working together.
+            </h2>
+            <p class="mt-4 text-lg leading-8 text-slate-600">
+              TravelsTREM grows from the travel legacy of Shree Air Tours &amp; Travels and the
+              people leading its service, operations and digital platform.
+            </p>
+          </div>
+          <div class="grid gap-4 md:grid-cols-3">
+            <article class="rounded-3xl border border-slate-200 bg-white p-6">
+              <div
+                class="grid h-20 w-20 place-items-center rounded-3xl bg-gradient-to-br from-slate-900 to-blue-600 text-xl font-black text-white"
+              >
+                NG
+              </div>
+              <span
+                class="mt-5 block text-xs font-extrabold uppercase tracking-[0.12em] text-blue-600"
+                >Chairperson &amp; Owner</span
+              >
+              <h3 class="mt-2 text-xl font-extrabold">Mrs. Nisha Goyal</h3>
+              <p class="mt-2 text-slate-600">
+                Guides the organisation’s culture of personal service, responsible stewardship and
+                long term direction.
+              </p>
+            </article>
+            <article class="rounded-3xl border border-slate-200 bg-white p-6">
+              <div
+                class="grid h-20 w-20 place-items-center rounded-3xl bg-gradient-to-br from-amber-400 to-orange-500 text-xl font-black text-white"
+              >
+                SG
+              </div>
+              <span
+                class="mt-5 block text-xs font-extrabold uppercase tracking-[0.12em] text-blue-600"
+                >Founder &amp; Managing Director</span
+              >
+              <h3 class="mt-2 text-xl font-extrabold">Mr. Shreekant Goyal</h3>
+              <p class="mt-2 text-slate-600">
+                Founded Shree Air Tours &amp; Travels in 1997 and leads its travel relationships and
+                agency operations.
+              </p>
+            </article>
+            <article class="rounded-3xl border border-slate-200 bg-white p-6">
+              <div
+                class="grid h-20 w-20 place-items-center rounded-3xl bg-gradient-to-br from-blue-600 to-cyan-400 text-xl font-black text-white"
+              >
+                AG
+              </div>
+              <span
+                class="mt-5 block text-xs font-extrabold uppercase tracking-[0.12em] text-blue-600"
+                >CEO &amp; Technology Director</span
+              >
+              <h3 class="mt-2 text-xl font-extrabold">Mr. Akshat Goyal</h3>
+              <p class="mt-2 text-slate-600">
+                Leads TravelsTREM’s product and technology vision across travellers, products and
+                partner workflows.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
 
-      <section class="people section-pad" id="people"><div class="section-wrap"><div class="section-heading"><p class="eyebrow">THE PEOPLE BEHIND THE BUSINESS</p><h2>One agency.<br />One technology vision.</h2><p class="people-intro">A family-led travel business, with a dedicated technology team turning decades of experience into a better way to plan and manage journeys.</p></div><div class="people-grid"><article><div class="person-top"><div class="avatar">NG</div><span class="person-index">01 / OWNERSHIP</span></div><span>Chairperson &amp; Owner</span><h3>Mrs. Nisha Goyal</h3><p>Steers the agency’s people-first culture, business stewardship and long-term direction.</p><div class="person-line"></div></article><article><div class="person-top"><div class="avatar">SG</div><span class="person-index">02 / AGENCY</span></div><span>Founder &amp; Managing Director</span><h3>Mr. Shreekant Goyal</h3><p>Established Shree Air Tours and Travels in 1997 and continues to guide its travel relationships, service standards and growth.</p><div class="person-line"></div></article><article><div class="person-top"><div class="avatar accent">AG</div><span class="person-index">03 / PLATFORM</span></div><span>CEO &amp; Technology Director</span><h3>Mr. Akshat Goyal</h3><p>Leads the TravelsTREM platform, connecting agency operations, internal travel products and partner workflows.</p><div class="person-line"></div></article></div></div></section>
+      <section
+        id="partners"
+        class="bg-gradient-to-br from-blue-700 to-sky-500 py-12 text-white sm:py-14"
+      >
+        <div class="mx-auto grid max-w-7xl items-center gap-8 px-5 sm:px-6 lg:grid-cols-2 lg:px-8">
+          <div>
+            <p class="mb-3 text-xs font-extrabold uppercase tracking-[0.18em] text-lime-300">
+              Partner with TravelsTREM
+            </p>
+            <h2 class="text-4xl font-black tracking-[-0.04em] sm:text-5xl">
+              Bring your best trips to more travellers.
+            </h2>
+            <p class="mt-4 max-w-2xl text-lg leading-8 text-blue-50">
+              Approved agencies can manage their teams, publish eligible tours and handle bookings
+              through the products they are enrolled in.
+            </p>
+            <a
+              class="mt-7 inline-flex rounded-full bg-white px-5 py-3 font-bold text-slate-950 shadow-lg hover:bg-lime-300"
+              data-link="partnerApplication"
+              href="https://auth.travelstrem.com/partnership"
+              >Apply as a partner agency ↗</a
+            >
+          </div>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="rounded-2xl border border-white/20 bg-white/10 p-5">
+              <strong class="block">Agency onboarding</strong
+              ><span class="mt-1 block text-sm text-blue-50">Structured review and approval</span>
+            </div>
+            <div class="rounded-2xl border border-white/20 bg-white/10 p-5">
+              <strong class="block">Product enrolment</strong
+              ><span class="mt-1 block text-sm text-blue-50">Access to Trevio or Trevista</span>
+            </div>
+            <div class="rounded-2xl border border-white/20 bg-white/10 p-5">
+              <strong class="block">Admin &amp; agent portals</strong
+              ><span class="mt-1 block text-sm text-blue-50"
+                >Secure agency operations for every role</span
+              >
+            </div>
+            <div class="rounded-2xl border border-white/20 bg-white/10 p-5">
+              <strong class="block">Trip &amp; booking tools</strong
+              ><span class="mt-1 block text-sm text-blue-50"
+                >Clear ownership from listing to service</span
+              >
+            </div>
+          </div>
+        </div>
+      </section>
 
-      <section class="contact section-pad" id="contact"><div class="section-wrap contact-inner"><p class="eyebrow">LET’S START A CONVERSATION</p><h2>Have a journey or<br />travel partnership in mind?</h2><p>We’re based in Jaipur and connected to the world. We welcome travellers, travel partners, agents and agency partners.</p><a class="button button-primary" href="mailto:akshat.goyal@travelstrem.com">Talk to TravelsTREM ↗</a><div class="contact-details"><span>G-108 Shalimar Complex, opposite Church Road,<br />MI Road, Jaipur, India</span><span><a href="mailto:akshat.goyal@travelstrem.com">akshat.goyal@travelstrem.com</a><br /><a href="tel:9057635580">+91 90576 35580</a></span></div></div></section>
-      <dialog class="product-status" id="product-status" aria-labelledby="product-status-title">
-        <button class="product-status-close" type="button" aria-label="Close message">×</button>
-        <span class="status-icon" aria-hidden="true">✦</span>
-        <p class="eyebrow">TRAVELSTREM ROADMAP</p>
-        <h2 id="product-status-title">We’re building this experience.</h2>
-        <p id="product-status-copy">This product is currently being developed for the Shree Air Tours and Travels ecosystem. We’ll share more when it is ready.</p>
-        <a class="button button-primary" href="mailto:akshat.goyal@travelstrem.com">Ask us about it ↗</a>
-      </dialog>
+      <section id="contact" class="py-12 sm:py-14">
+        <div class="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
+          <div
+            class="grid items-end gap-7 rounded-[2rem] bg-slate-100 p-7 sm:p-9 lg:grid-cols-[1.3fr_0.7fr]"
+          >
+            <div>
+              <p class="mb-3 text-xs font-extrabold uppercase tracking-[0.18em] text-blue-600">
+                Let’s connect
+              </p>
+              <h2 class="text-4xl font-black tracking-[-0.04em] sm:text-5xl">
+                Planning a journey or exploring a travel partnership?
+              </h2>
+            </div>
+            <div>
+              <p class="leading-7 text-slate-600">
+                Travellers, agencies and travel professionals can reach the TravelsTREM team through
+                Shree Air Tours &amp; Travels.
+              </p>
+              <a
+                class="mt-6 inline-flex rounded-full bg-slate-950 px-5 py-3 font-bold text-white hover:bg-blue-600"
+                data-link="email"
+                href="mailto:akshat.goyal@travelstrem.com"
+                >akshat.goyal@travelstrem.com ↗</a
+              >
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
-    <footer class="site-footer">
-      <div class="section-wrap footer-main">
-        <div class="footer-brand-column">
-          <a class="brand" href="#top"><img class="brand-icon" src="favicon-light.png" alt="" aria-hidden="true" /><span><strong>Travels<span>TREM</span></strong><small>JAI · WORLD</small></span></a>
-          <p>Travel technology and engineering solutions used by Shree Air Tours and Travels to plan, manage and support better journeys.</p>
-          <a class="footer-email" href="mailto:akshat.goyal@travelstrem.com">akshat.goyal@travelstrem.com ↗</a>
+
+    <footer class="bg-slate-950 py-10 text-white">
+      <div
+        class="mx-auto grid max-w-7xl gap-8 px-5 sm:px-6 md:grid-cols-[1.3fr_0.7fr_0.7fr] lg:px-8"
+      >
+        <div>
+          <a data-link="home" href="#top" class="flex items-center gap-3"
+            ><img
+              class="h-10 w-10 rounded-xl object-cover"
+              src="favicon-dark.png"
+              alt=""
+              aria-hidden="true"
+            /><span
+              ><strong class="block">TravelsTREM</strong
+              ><small class="text-slate-400">Travel, connected.</small></span
+            ></a
+          >
+          <p class="mt-4 max-w-md text-slate-400">
+            A connected travel platform that brings travellers together with Shree Air Tours &amp;
+            Travels and approved partner agencies.
+          </p>
         </div>
-        <div class="footer-subscribe">
-          <p class="footer-kicker">STAY CONNECTED</p>
-          <h2>Travel ideas,<br /><em>from our desk to yours.</em></h2>
-          <form class="subscribe-form" id="newsletter-form">
-            <label class="sr-only" for="newsletter-email">Email address</label>
-            <input id="newsletter-email" name="email" type="email" placeholder="Your email address" required />
-            <button type="submit" aria-label="Subscribe">→</button>
-          </form>
-          <p class="subscribe-note" id="newsletter-status">No spam. Just occasional travel and platform notes.</p>
+        <div>
+          <h3 class="font-extrabold">Explore</h3>
+          <div class="mt-3 grid gap-2 text-slate-400">
+            <a data-link="about" href="#about">About</a
+            ><a data-link="trevio" href="https://app.travelstrem.com/?tab=trevio&amp;product=trevio"
+              >Trevio ↗</a
+            ><a
+              data-link="trevista"
+              href="https://app.travelstrem.com/?tab=trevista&amp;product=trevista"
+              >Trevista ↗</a
+            ><a data-link="ecosystem" href="#ecosystem">How it works</a
+            ><a data-link="people" href="#people">Leadership</a
+            ><a data-link="partnerApplication" href="https://auth.travelstrem.com/partnership"
+              >Partner with us ↗</a
+            >
+          </div>
         </div>
-        <nav class="footer-links" aria-label="Footer navigation">
-          <div><p class="footer-kicker">EXPLORE</p><a href="#agency">Agency</a><a href="#platform">Our Platform</a><a href="#engines">Technology</a><a href="#journal">Insights</a></div>
-          <div><p class="footer-kicker">CONNECT</p><a href="#people">Leadership</a><a href="#contact">Travel partnerships</a><a href="tel:9057635580">+91 90576 35580</a><a href="https://www.google.com/maps/search/?api=1&query=G-108%20Shalimar%20Complex%20MI%20Road%20Jaipur" target="_blank" rel="noopener noreferrer">Jaipur, India ↗</a></div>
-        </nav>
+        <div>
+          <h3 class="font-extrabold">Contact</h3>
+          <div class="mt-3 grid gap-2 text-slate-400">
+            <a data-link="email" href="mailto:akshat.goyal@travelstrem.com">Email us</a
+            ><a data-link="phone" href="tel:+919057635580">+91 90576 35580</a
+            ><a
+              data-link="location"
+              href="https://www.google.com/maps/search/?api=1&amp;query=G-108%20Shalimar%20Complex%20MI%20Road%20Jaipur"
+              >Jaipur, India ↗</a
+            >
+          </div>
+        </div>
       </div>
-      <div class="section-wrap footer-bottom"><span>© <span id="year"></span> Shree Air Tours and Travels. TravelsTREM is our internal technology platform.</span><span><a href="#contact">Privacy &amp; safety</a> · Static website</span></div>
+      <div
+        class="mx-auto mt-8 flex max-w-7xl flex-col gap-2 border-t border-white/10 px-5 pt-6 text-sm text-slate-500 sm:px-6 md:flex-row md:justify-between lg:px-8"
+      >
+        <span
+          >© <span id="year"></span> TravelsTREM. Operated by Shree Air Tours &amp; Travels.</span
+        ><span>TravelsTREM currently operates as a managed travel platform.</span>
+      </div>
     </footer>
-    <script src="site.js"></script>
+
+    <script src="site-config.js"></script>
+    <script src="landing.js"></script>
   </body>
 </html>

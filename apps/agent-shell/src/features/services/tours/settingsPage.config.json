@@ -1,41 +1,44 @@
 {
-    "pageTitle": "Settings",
-    "sections": {
-        "profile": {
-            "title": "Profile",
-            "fields": {
-                "name": { "placeholder": "Your name", "label": "Name" }
-            },
-            "buttons": {
-                "save": { "text": "Save Profile", "saving": "Saving..." }
-            }
-        },
-        "password": {
-            "title": "Change Password",
-            "fields": {
-                "currentPassword": { "label": "Current Password", "placeholder": "Enter current password" },
-                "newPassword": { "label": "New Password", "placeholder": "Min 6 characters" },
-                "confirmPassword": { "label": "Confirm New Password", "placeholder": "Re-enter new password" }
-            },
-            "error": {
-                "minLength": "New password must be at least 6 characters.",
-                "mismatch": "Passwords do not match."
-            },
-            "buttons": {
-                "update": { "text": "Update Password", "updating": "Updating..." }
-            }
-        },
-        "avatar": {
-            "title": "Avatar",
-            "hint": "Choose an avatar icon"
-        }
+  "pageTitle": "Settings",
+  "sections": {
+    "profile": {
+      "title": "Profile",
+      "fields": {
+        "name": { "placeholder": "Your name", "label": "Name" }
+      },
+      "buttons": {
+        "save": { "text": "Save Profile", "saving": "Saving..." }
+      }
     },
-    "toast": {
-        "profileUpdated": { "message": "Profile updated.", "type": "success" },
-        "profileFailed": { "message": "Failed to update profile." },
-        "passwordUpdated": { "message": "Password updated successfully.", "type": "success" },
-        "passwordFailed": { "message": "Failed to update password." },
-        "avatarUpdated": { "message": "Avatar updated.", "type": "success" },
-        "avatarFailed": { "message": "Failed to update avatar." }
+    "password": {
+      "title": "Change Password",
+      "fields": {
+        "currentPassword": { "label": "Current Password", "placeholder": "Enter current password" },
+        "newPassword": { "label": "New Password", "placeholder": "Min 6 characters" },
+        "confirmPassword": {
+          "label": "Confirm New Password",
+          "placeholder": "Re-enter new password"
+        }
+      },
+      "error": {
+        "minLength": "New password must be at least 6 characters.",
+        "mismatch": "Passwords do not match."
+      },
+      "buttons": {
+        "update": { "text": "Update Password", "updating": "Updating..." }
+      }
+    },
+    "avatar": {
+      "title": "Avatar",
+      "hint": "Choose an avatar icon"
     }
+  },
+  "toast": {
+    "profileUpdated": { "message": "Profile updated.", "type": "success" },
+    "profileFailed": { "message": "Failed to update profile." },
+    "passwordUpdated": { "message": "Password updated successfully.", "type": "success" },
+    "passwordFailed": { "message": "Failed to update password." },
+    "avatarUpdated": { "message": "Avatar updated.", "type": "success" },
+    "avatarFailed": { "message": "Failed to update avatar." }
+  }
 }

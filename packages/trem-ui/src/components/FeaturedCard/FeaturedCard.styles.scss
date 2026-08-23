@@ -11,8 +11,7 @@
     padding: clamp(1rem, 2vw, 1.6rem);
     border: 1px solid var(--border);
     border-radius: clamp(1.5rem, 3vw, 2.4rem);
-    background:
-      linear-gradient(135deg, var(--primary-softer), var(--surface-inset)) center / cover;
+    background: linear-gradient(135deg, var(--primary-softer), var(--surface-inset)) center / cover;
     box-shadow: var(--shadow-lg);
     overflow: hidden;
   }
@@ -108,7 +107,10 @@
     text-decoration: none;
     white-space: nowrap;
     cursor: pointer;
-    transition: background $duration-base $ease-standard, border-color $duration-base $ease-standard, transform $duration-base $ease-standard;
+    transition:
+      background $duration-base $ease-standard,
+      border-color $duration-base $ease-standard,
+      transform $duration-base $ease-standard;
 
     &:hover {
       border-color: var(--color-primary-dark);

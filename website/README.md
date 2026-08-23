@@ -4,12 +4,15 @@ This folder is a dependency-free static company and blog website. Deploy the con
 
 Positioning: Shree Air Tours and Travels owns and operates the travel agency. TravelsTREM is the internal technology platform built for that agency; its products and five engines are used by the agency team and its travel partners, agents and agency partners. TravelsTREM is not presented as software sold to external customers.
 
-Product links are currently configured for:
+All website destinations are managed in `site-config.js`. The production defaults are:
 
 - `https://app.travelstrem.com/?tab=trevio&product=trevio`
-- Trevista, TreCare and TreHub currently show an in-development message rather than linking to unavailable deployments.
+- `https://app.travelstrem.com/?tab=trevista&product=trevista`
+- `https://auth.travelstrem.com/partnership`
 
-When those products are deployed, replace their `data-coming-soon` cards in `index.html` with their live URLs.
+Change a destination once in `site-config.js`; every matching header, mobile, product, CTA, contact and footer link will use it. The HTML keeps functional fallback URLs so important navigation still works if JavaScript is unavailable.
+
+`tailwind.css` is a compiled local stylesheet so the static page works with the production Content Security Policy. After changing utility classes in `index.html`, regenerate it from `tailwind-source.css` with Tailwind CSS 3.
 
 `favicon-light.png` is the rounded master brand asset shared by every app. The build sync derives `favicon-dark.png` from it with a navy background and light mark for dark themes.
 

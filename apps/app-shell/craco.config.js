@@ -5,23 +5,20 @@ const ModuleScopePlugin = require("react-dev-utils/ModuleScopePlugin");
 const appSrc = path.resolve(__dirname, "src");
 const packagesSrc = path.resolve(__dirname, "../../packages");
 const backendTarget =
-  process.env.REACT_APP_BACKEND_URL ||
-  process.env.REACT_APP_API_URL?.replace(/\/api\/?$/, "");
+  process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL?.replace(/\/api\/?$/, "");
 const remoteEntry = (explicitEntry, baseUrl, fallback) => {
   const value = explicitEntry || baseUrl || fallback;
-  return value.endsWith("/remoteEntry.js")
-    ? value
-    : `${value.replace(/\/$/, "")}/remoteEntry.js`;
+  return value.endsWith("/remoteEntry.js") ? value : `${value.replace(/\/$/, "")}/remoteEntry.js`;
 };
 const trevioRemoteEntry = remoteEntry(
   process.env.REACT_APP_TREVIO_REMOTE_ENTRY,
   process.env.REACT_APP_TREVIO_URL,
   "http://localhost:3005",
 );
-const bookingRemoteEntry = remoteEntry(
-  process.env.REACT_APP_BOOKING_ENGINE_REMOTE_ENTRY,
-  process.env.REACT_APP_BOOKING_ENGINE_URL,
-  "http://localhost:3007",
+const trevistaRemoteEntry = remoteEntry(
+  process.env.REACT_APP_TREVISTA_REMOTE_ENTRY,
+  process.env.REACT_APP_TREVISTA_URL,
+  "http://localhost:3001",
 );
 
 function extendBabelIncludes(webpackConfig) {
@@ -57,31 +54,39 @@ module.exports = {
       webpackConfig.resolve.alias = {
         ...(webpackConfig.resolve.alias || {}),
         "@packages/trem-auth-core": path.resolve(__dirname, "../../packages/trem-auth-core/src"),
-        "@packages/trem-environment": path.resolve(__dirname, "../../packages/trem-environment/src"),
+        "@packages/trem-environment": path.resolve(
+          __dirname,
+          "../../packages/trem-environment/src",
+        ),
         "@packages/trem-events": path.resolve(__dirname, "../../packages/trem-events/src"),
         "@packages/trem-modals": path.resolve(__dirname, "../../packages/trem-modals/src"),
         "@packages/trem-runtime": path.resolve(__dirname, "../../packages/trem-runtime/src"),
         "@packages/trem-session": path.resolve(__dirname, "../../packages/trem-session/src"),
         "@packages/trem-ui": path.resolve(__dirname, "../../packages/trem-ui/src"),
         "@packages/trem-utils": path.resolve(__dirname, "../../packages/trem-utils/src"),
-        "@packages/trem-design-tokens": path.resolve(__dirname, "../../packages/trem-design-tokens/src"),
+        "@packages/trem-design-tokens": path.resolve(
+          __dirname,
+          "../../packages/trem-design-tokens/src",
+        ),
       };
       webpackConfig.resolve.plugins = (webpackConfig.resolve.plugins || []).filter(
-        (plugin) => !(plugin instanceof ModuleScopePlugin)
+        (plugin) => !(plugin instanceof ModuleScopePlugin),
       );
       extendBabelIncludes(webpackConfig);
-      webpackConfig.plugins.push(new container.ModuleFederationPlugin({
-        name: "app_shell",
-        remotes: {
-          trevio: `trevio@${trevioRemoteEntry}`,
-          bookingEngine: `bookingEngine@${bookingRemoteEntry}`,
-        },
-        shared: {
-          react: { singleton: true, requiredVersion: false },
-          "react-dom": { singleton: true, requiredVersion: false },
-          "react-router-dom": { singleton: true, requiredVersion: false },
-        },
-      }));
+      webpackConfig.plugins.push(
+        new container.ModuleFederationPlugin({
+          name: "app_shell",
+          remotes: {
+            trevio: `trevio@${trevioRemoteEntry}`,
+            trevista: `trevista@${trevistaRemoteEntry}`,
+          },
+          shared: {
+            react: { singleton: true, requiredVersion: false },
+            "react-dom": { singleton: true, requiredVersion: false },
+            "react-router-dom": { singleton: true, requiredVersion: false },
+          },
+        }),
+      );
       return webpackConfig;
     },
   },

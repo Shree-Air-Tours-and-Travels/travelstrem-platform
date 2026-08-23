@@ -18,7 +18,8 @@ $loader-fade-duration: 0.45s;
   background: color-mix(in srgb, #{$loader-overlay} 96%, #{$loader-surface} 4%);
   color: $loader-text;
   z-index: 99999; /* high so it blocks everything */
-  transition: opacity $loader-fade-duration ease,
+  transition:
+    opacity $loader-fade-duration ease,
     visibility 0s linear $loader-fade-duration;
   opacity: 1;
   visibility: visible;

@@ -1,23 +1,24 @@
 import React from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import ToursListPage from "../tours/management/ToursListPage.view";
-import CreateTourPage from "../tours/management/CreateTourPage.view";
-import ManageTourPage from "../tours/management/ManageTourPage.view";
-import BookingsListPage from "../bookings/BookingsListPage.view";
-import BookingDetailPage from "../bookings/BookingDetailPage.view";
-import BookingSummaryPage from "../bookings/BookingSummaryPage.view";
+import TourBuilderPage from "../tours/TourBuilderPage";
+import EnquiriesPage from "../../enquiries/EnquiriesPage";
 
 export default function ServicesContainer() {
-    return (
-        <Routes>
-            <Route path="tours" element={<ToursListPage />} />
-            <Route path="tours/create" element={<CreateTourPage />} />
-            <Route path="tours/edit/:tourId" element={<CreateTourPage />} />
-            <Route path="tours/:tourId/manage" element={<ManageTourPage />} />
-            <Route path="bookings" element={<BookingsListPage />} />
-            <Route path="bookings/:bookingId" element={<BookingDetailPage />} />
-            <Route path="bookings/:bookingId/summary" element={<BookingSummaryPage />} />
-            <Route path="*" element={<Navigate to="tours" replace />} />
-        </Routes>
-    );
+  return (
+    <Routes>
+      <Route path="tours" element={<ToursListPage />} />
+      <Route path="tours/builder" element={<TourBuilderPage />} />
+      <Route path="bookings/*" element={<EnquiriesPage />} />
+      <Route
+        path="tours/create"
+        element={<Navigate to="/agent/services/tours/builder" replace />}
+      />
+      <Route path="tours/:tourId/edit" element={<TourBuilderPage mode="edit" />} />
+      <Route path="tours/:tourId/view" element={<TourBuilderPage mode="view" />} />
+      <Route path="tours/edit/:tourId" element={<TourBuilderPage mode="edit" />} />
+      <Route path="tours/:tourId/manage" element={<TourBuilderPage mode="view" />} />
+      <Route path="*" element={<Navigate to="tours" replace />} />
+    </Routes>
+  );
 }

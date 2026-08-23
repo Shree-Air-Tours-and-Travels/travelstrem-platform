@@ -5,7 +5,11 @@ import "./AdminProfileView.scss";
 function formatDate(dateStr) {
   if (!dateStr) return "—";
   try {
-    return new Date(dateStr).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+    return new Date(dateStr).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
   } catch {
     return "—";
   }
@@ -25,7 +29,8 @@ export default function AdminProfileView({ user, onSaveProfile, saving }) {
     if (!form.name.trim()) errs.name = "Name is required";
     if (!form.email.trim()) errs.email = "Email is required";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = "Invalid email address";
-    if (form.phone && !/^\+?[\d\s\-()]{7,15}$/.test(form.phone)) errs.phone = "Invalid phone number";
+    if (form.phone && !/^\+?[\d\s\-()]{7,15}$/.test(form.phone))
+      errs.phone = "Invalid phone number";
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -60,7 +65,9 @@ export default function AdminProfileView({ user, onSaveProfile, saving }) {
 
             <div className="apv__fields">
               <div className="apv__field">
-                <label className="apv__label" htmlFor="admin-name">Full Name</label>
+                <label className="apv__label" htmlFor="admin-name">
+                  Full Name
+                </label>
                 <InputField
                   id="admin-name"
                   variant="text"
@@ -72,7 +79,9 @@ export default function AdminProfileView({ user, onSaveProfile, saving }) {
                 />
               </div>
               <div className="apv__field">
-                <label className="apv__label" htmlFor="admin-email">Email</label>
+                <label className="apv__label" htmlFor="admin-email">
+                  Email
+                </label>
                 <InputField
                   id="admin-email"
                   variant="email"
@@ -84,7 +93,9 @@ export default function AdminProfileView({ user, onSaveProfile, saving }) {
                 />
               </div>
               <div className="apv__field">
-                <label className="apv__label" htmlFor="admin-phone">Phone</label>
+                <label className="apv__label" htmlFor="admin-phone">
+                  Phone
+                </label>
                 <InputField
                   id="admin-phone"
                   variant="tel"
@@ -120,12 +131,16 @@ export default function AdminProfileView({ user, onSaveProfile, saving }) {
             <h4 className="apv__card-title">Account Details</h4>
             <div className="apv__detail">
               <span className="apv__detail-label">Role</span>
-              <span className="apv__detail-value apv__detail-value--badge">{user?.role || "admin"}</span>
+              <span className="apv__detail-value apv__detail-value--badge">
+                {user?.role || "admin"}
+              </span>
             </div>
             {user?.adminLevel && (
               <div className="apv__detail">
                 <span className="apv__detail-label">Admin Level</span>
-                <span className="apv__detail-value apv__detail-value--badge">{user.adminLevel}</span>
+                <span className="apv__detail-value apv__detail-value--badge">
+                  {user.adminLevel}
+                </span>
               </div>
             )}
             <div className="apv__detail">
@@ -134,7 +149,9 @@ export default function AdminProfileView({ user, onSaveProfile, saving }) {
             </div>
             <div className="apv__detail">
               <span className="apv__detail-label">User ID</span>
-              <span className="apv__detail-value apv__detail-value--mono">{user?.id?.slice(-8) || "—"}</span>
+              <span className="apv__detail-value apv__detail-value--mono">
+                {user?.id?.slice(-8) || "—"}
+              </span>
             </div>
           </div>
         </div>

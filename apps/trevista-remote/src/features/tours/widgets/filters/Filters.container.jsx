@@ -1,272 +1,188 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { debounce } from "lodash";
-import { getActiveFilterCount, getOptionList, validateAll, fetchData } from "@packages/trem-utils";
+import { getActiveFilterCount, validateAll } from "@packages/trem-utils";
 import FiltersView from "./Filters.view";
 
 const isCompactViewport = () => typeof window !== "undefined" && window.innerWidth <= 900;
 
-const resolveMetaTitle = (data) => {
-    if (!data) return data;
-    const labels = data?.elements?.labels || {};
-    const props = data?.structure?.widgets?.[0]?.props || {};
-    const resolved = { ...data };
-    if (props.titleRef && labels[props.titleRef]) {
-        resolved.title = labels[props.titleRef];
-    }
-    if (props.descriptionRef && labels[props.descriptionRef]) {
-        resolved.description = labels[props.descriptionRef];
-    }
-    return resolved;
+const resolveWidgetMeta = (data) => {
+  if (!data) return null;
+  const labels = data.elements?.labels || {};
+  const component = data.structure?.widgets?.[0]?.props || {};
+  const title = labels[component.titleRef] || "Filters";
+  const rawDescription = labels[component.descriptionRef] || "";
+  const description =
+    rawDescription.trim().toLowerCase() === title.trim().toLowerCase() ? "" : rawDescription;
+  const fields = (component.fields || []).map((field) => ({
+    ...field,
+    label: labels[field.labelRef] || field.label || field.name,
+    placeholder: labels[field.placeholderRef] || field.placeholder,
+  }));
+  return {
+    ...data,
+    title,
+    description,
+    structure: {
+      ...data.structure,
+      widgets: [{ ...(data.structure?.widgets?.[0] || {}), props: { ...component, fields } }],
+    },
+  };
 };
 
-const extractToursFromResponse = (res) => {
-    if (!res) return [];
-    if (Array.isArray(res.component?.data?.tours)) return res.component.data.tours;
-    if (res.componentData && res.componentData.state && Array.isArray(res.componentData.state.data?.tours)) {
-        return res.componentData.state.data.tours;
-    }
-    if (Array.isArray(res.tours)) return res.tours;
-    if (Array.isArray(res.data)) return res.data;
-    if (Array.isArray(res.results)) return res.results;
-    if (res.componentData && res.componentData.state && Array.isArray(res.componentData.state.data)) return res.componentData.state.data;
-    return [];
+const facetOptions = (items = []) =>
+  items.map((item) => ({
+    id: item.id,
+    value: item.value,
+    label: `${item.label} (${item.count})`,
+    count: item.count,
+  }));
+
+const mergeInterestOptions = (configuredTags = [], facetTags = [], discoveryOptions = []) => {
+  const independentOptions = configuredTags.length ? configuredTags : facetOptions(facetTags);
+  const options = new Map(independentOptions.map((option) => [String(option.value), option]));
+  discoveryOptions
+    .filter((chip) => chip?.type === "TAG" && chip.value)
+    .forEach((chip) => {
+      const value = String(chip.value);
+      if (!options.has(value)) {
+        options.set(value, {
+          id: chip.id || value,
+          value,
+          label: chip.label,
+          count: chip.count || 0,
+        });
+      }
+    });
+  return [...options.values()];
 };
 
-const extractResponseData = (res) => res?.component?.data || res?.componentData?.state?.data || {};
+const configuredOrFaceted = (configured = [], facets = []) =>
+  Array.isArray(configured) && configured.length ? configured : facetOptions(facets);
 
-export default function FiltersContainer({ onChange, widgetData, sortId = "recommended", pageSize = 8, expanded: externalExpanded, onExpandedChange }) {
-    const [meta, setMeta] = useState(resolveMetaTitle(widgetData) || null);
-    const [values, setValues] = useState(() => (widgetData?.structure?.config?.defaults ? { ...widgetData.structure.config.defaults } : {}));
-    const [errors, setErrors] = useState({});
-    const [loadingMeta, setLoadingMeta] = useState(!widgetData);
-    const [loadingAction, setLoadingAction] = useState(false);
-    const [message, setMessage] = useState(null);
-    const [internalExpanded, setInternalExpanded] = useState(() => !isCompactViewport());
-    const [lastResultCount, setLastResultCount] = useState(null);
+const optionsFromFacets = (facets = {}, discoveryOptions = [], configuredOptions = {}) => ({
+  originCityOptions: configuredOrFaceted(configuredOptions.originCityOptions, facets.origins),
+  destinationCityOptions: configuredOrFaceted(
+    configuredOptions.destinationCityOptions,
+    facets.destinations,
+  ),
+  countryOptions: configuredOrFaceted(configuredOptions.countryOptions, facets.countries),
+  agencyOptions: configuredOrFaceted(configuredOptions.agencyOptions, facets.agencies),
+  tags: mergeInterestOptions(configuredOptions.tags || [], facets.tags, discoveryOptions),
+  featured: (configuredOptions.featured || []).map((option) => ({
+    ...option,
+    value: option.value === "all" ? "" : option.value,
+  })),
+  priceRange: facets.price || { min: 0, max: 0 },
+  dayRange: { min: facets.duration?.minDays || 0, max: facets.duration?.maxDays || 0 },
+});
 
-    const expanded = externalExpanded !== undefined ? externalExpanded : internalExpanded;
+export default function FiltersContainer({
+  onChange,
+  widgetData,
+  values,
+  facets,
+  discoveryOptions = [],
+  totalResults = 0,
+  searching = false,
+  expanded: externalExpanded,
+  onExpandedChange,
+}) {
+  const meta = useMemo(() => resolveWidgetMeta(widgetData), [widgetData]);
+  const [draft, setDraft] = useState(values || {});
+  const [errors, setErrors] = useState({});
+  const [internalExpanded, setInternalExpanded] = useState(() => !isCompactViewport());
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
 
-    const handleSetExpanded = React.useCallback((valueOrUpdater) => {
-        const nextValue = typeof valueOrUpdater === "function" ? valueOrUpdater(expanded) : valueOrUpdater;
-        if (onExpandedChange) {
-            onExpandedChange(nextValue);
-        } else {
-            setInternalExpanded(nextValue);
-        }
-    }, [expanded, onExpandedChange]);
+  useEffect(() => {
+    setDraft(values || {});
+  }, [values]);
 
-    const setExpanded = handleSetExpanded;
+  const debouncedChange = useMemo(() => debounce((next) => onChangeRef.current?.(next), 400), []);
+  useEffect(() => () => debouncedChange.cancel(), [debouncedChange]);
 
-    useEffect(() => {
-        if (widgetData) {
-            setMeta(resolveMetaTitle(widgetData));
-            setValues(widgetData?.structure?.config?.defaults ? { ...widgetData.structure.config.defaults } : {});
-            setLoadingMeta(false);
-        }
-    }, [widgetData]);
+  const expanded = externalExpanded !== undefined ? externalExpanded : internalExpanded;
+  const setExpanded = (valueOrUpdater) => {
+    const next = typeof valueOrUpdater === "function" ? valueOrUpdater(expanded) : valueOrUpdater;
+    if (onExpandedChange) onExpandedChange(next);
+    else setInternalExpanded(next);
+  };
 
-    const structure = meta?.structure || {};
-    const fieldsArr = Array.isArray(structure.widgets?.[0]?.props?.fields) ? structure.widgets[0].props.fields : [];
-    const actions = Array.isArray(structure.actions) ? structure.actions : [];
-    const rows = (structure.layout && structure.layout.rows) || [fieldsArr.map((f) => f.name)];
-    const serverOptions = meta?.dataScope?.options || {};
-    const defaults = meta?.structure?.config?.defaults || {};
-    const summary = meta?.data?.summary || {};
-    const activeCount = getActiveFilterCount(values, defaults);
+  const fieldsArr = useMemo(() => meta?.structure?.widgets?.[0]?.props?.fields || [], [meta]);
+  const fieldsMap = useMemo(
+    () => Object.fromEntries(fieldsArr.map((field) => [field.name, field])),
+    [fieldsArr],
+  );
+  // The discovery sidebar is intentionally a vertical form: one field per row.
+  const rows = fieldsArr.map((field) => [field.name]);
+  const configuredOptions = useMemo(() => meta?.dataScope?.options || {}, [meta]);
+  const serverOptions = useMemo(
+    () => optionsFromFacets(facets, discoveryOptions, configuredOptions),
+    [configuredOptions, discoveryOptions, facets],
+  );
+  const defaults = meta?.structure?.config?.defaults || {};
+  const activeCount = getActiveFilterCount(draft, defaults);
 
-    const fieldsMap = useMemo(() => {
-        const m = {};
-        (fieldsArr || []).forEach((f) => {
-            if (f && f.name) m[f.name] = f;
-        });
-        return m;
-    }, [JSON.stringify(fieldsArr)]);
+  const commit = (next, type) => {
+    if (["text", "number"].includes(type)) debouncedChange(next);
+    else {
+      debouncedChange.cancel();
+      onChangeRef.current?.(next);
+    }
+  };
 
-    const applyAction = useMemo(
-        () => actions.find((act) => act.name === "apply" || act.type === "apply"),
-        [actions]
-    );
+  const onInput = (name, type) => (eventOrValue) => {
+    let value = eventOrValue?.target ? eventOrValue.target.value : eventOrValue;
+    if (type === "checkbox") value = Boolean(eventOrValue?.target?.checked);
+    if (type === "number") value = value === "" ? "" : Number(value);
+    const next = { ...draft, [name]: value };
+    setDraft(next);
+    setErrors((current) => {
+      const copy = { ...current };
+      delete copy[name];
+      return copy;
+    });
+    commit(next, type);
+  };
 
-    const applyActionRef = useRef(applyAction);
-    applyActionRef.current = applyAction;
+  const handleActionClick = (action) => {
+    debouncedChange.cancel();
+    if (action?.name === "reset" || action?.type === "reset") {
+      setDraft({});
+      setErrors({});
+      onChangeRef.current?.({});
+      return;
+    }
+    const validation = validateAll(draft, fieldsMap, serverOptions);
+    if (!validation.ok) {
+      setErrors(validation.errors || {});
+      setExpanded(true);
+      return;
+    }
+    onChangeRef.current?.(draft);
+    if (isCompactViewport()) setExpanded(false);
+  };
 
-    const doApplyRef = useRef(null);
-
-    const debouncedApplyRef = useRef(null);
-
-    useEffect(() => {
-        if (!applyAction?.endpoint) return;
-
-        doApplyRef.current = doApply;
-
-        debouncedApplyRef.current = debounce((payload) => {
-            doApplyRef.current(payload, applyActionRef.current);
-        }, 400);
-
-        return () => {
-            debouncedApplyRef.current?.cancel();
-        };
-    }, [applyAction?.endpoint]);
-
-    const onInput = (name, type) => (e) => {
-        let val;
-        if (type === "checkbox") val = !!e.target.checked;
-        else if (type === "number") {
-            const raw = e.target.value;
-            val = raw === "" ? "" : Number(raw);
-        } else if (type === "multiselect") {
-            if (Array.isArray(e)) val = e;
-            else if (e?.target?.selectedOptions) {
-                val = Array.from(e.target.selectedOptions).map((o) => o.value);
-            } else val = e;
-        } else val = e.target ? e.target.value : e;
-
-        const next = { ...values, [name]: val };
-
-        setValues(next);
-        setErrors((prev) => {
-            const copy = { ...prev };
-            delete copy[name];
-            return copy;
-        });
-        setMessage(null);
-
-        if (!debouncedApplyRef.current) return;
-        debouncedApplyRef.current(next);
-    };
-
-    const doApply = async (payload, action) => {
-        if (!action?.endpoint) {
-            setMessage({ type: "error", text: "No apply endpoint configured" });
-            return;
-        }
-
-        setLoadingAction(true);
-        setMessage(null);
-
-        try {
-            const res = await fetchData(action.endpoint, {
-                method: action.method || "POST",
-                headers: { "Content-Type": "application/json" },
-                body: {
-                    filters: payload,
-                    sort: sortId,
-                    page: 1,
-                    limit: pageSize,
-                },
-            });
-
-            const tours = extractToursFromResponse(res);
-            const responseData = extractResponseData(res);
-            const serverErrors = responseData?.errors || res?.componentData?.config?.validation?.errors;
-            if (serverErrors && Object.keys(serverErrors).length) {
-                setErrors(serverErrors);
-                setExpanded(true);
-                setMessage({ type: "error", text: res.message || "Please fix validation errors" });
-                return;
-            }
-            const pagination = responseData.pagination || { total: tours.length, page: 1, limit: pageSize, hasMore: false };
-            setLastResultCount(pagination.total ?? tours.length);
-            if (typeof onChange === "function") {
-                onChange(tours, {
-                    filters: payload,
-                    pagination,
-                    total: pagination.total ?? tours.length,
-                });
-            }
-            setMessage({ type: "success", text: action.successMessage || `${pagination.total ?? tours.length} tours matched` });
-            if (isCompactViewport()) setExpanded(false);
-        } catch (err) {
-            setMessage({ type: "error", text: err?.message || "Failed to apply filters" });
-        } finally {
-            setLoadingAction(false);
-        }
-    };
-
-    const doReset = async (action) => {
-        setValues(meta?.structure?.config?.defaults ? { ...meta.structure.config.defaults } : {});
-        setErrors({});
-        setMessage(null);
-
-        if (!action?.endpoint) {
-            if (typeof onChange === "function") onChange([]);
-            if (isCompactViewport()) setExpanded(false);
-            return;
-        }
-
-        setLoadingAction(true);
-        try {
-            const res = await fetchData(action.endpoint, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: {
-                    filters: {},
-                    sort: sortId,
-                    page: 1,
-                    limit: pageSize,
-                },
-            });
-
-            const tours = extractToursFromResponse(res);
-            const responseData = extractResponseData(res);
-            const pagination = responseData.pagination || { total: tours.length, page: 1, limit: pageSize, hasMore: false };
-            setLastResultCount(null);
-            if (typeof onChange === "function") {
-                onChange(tours, {
-                    filters: {},
-                    pagination,
-                    total: pagination.total ?? tours.length,
-                    reset: true,
-                });
-            }
-            setMessage({ type: "success", text: action.successMessage || "Filters reset" });
-            if (isCompactViewport()) setExpanded(false);
-        } catch (err) {
-            setMessage({ type: "error", text: err?.message || "Reset failed" });
-        } finally {
-            setLoadingAction(false);
-        }
-    };
-
-    const handleActionClick = async (act) => {
-        if (!act) return;
-        debouncedApplyRef.current?.cancel();
-        if (act.name === "reset" || act.type === "reset") {
-            await doReset(act);
-            return;
-        }
-
-        const { ok, errors: validationErrors } = validateAll(values, fieldsMap, serverOptions);
-        if (!ok) {
-            setErrors(validationErrors || {});
-            setExpanded(true);
-            setMessage({ type: "error", text: "Please fix validation errors" });
-            return;
-        }
-
-        await doApply(values, act);
-    };
-
-    return (
-        <FiltersView
-            meta={meta}
-            values={values}
-            errors={errors}
-            loadingMeta={loadingMeta}
-            metaError={null}
-            loadingAction={loadingAction}
-            message={message}
-            expanded={expanded}
-            lastResultCount={lastResultCount}
-            activeCount={activeCount}
-            fieldsMap={fieldsMap}
-            rows={rows}
-            serverOptions={serverOptions}
-            summary={summary}
-            actions={actions}
-            onInput={onInput}
-            handleActionClick={handleActionClick}
-            setExpanded={setExpanded}
-        />
-    );
+  return (
+    <FiltersView
+      meta={meta}
+      values={draft}
+      errors={errors}
+      loadingMeta={!meta}
+      metaError={null}
+      loadingAction={searching}
+      message={null}
+      expanded={expanded}
+      lastResultCount={totalResults}
+      activeCount={activeCount}
+      fieldsMap={fieldsMap}
+      rows={rows}
+      serverOptions={serverOptions}
+      summary={{ totalTours: totalResults }}
+      actions={meta?.structure?.actions || []}
+      onInput={onInput}
+      handleActionClick={handleActionClick}
+      setExpanded={setExpanded}
+    />
+  );
 }

@@ -28,7 +28,11 @@
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
-  transition: background 160ms ease, color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+  transition:
+    background 160ms ease,
+    color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
 
   &:hover:not(.is-disabled) {
     background: var(--surface-elevated, #f1f5f9);
