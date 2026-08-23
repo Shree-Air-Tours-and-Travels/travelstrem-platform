@@ -36,13 +36,24 @@ const Button = ({
     ${className}
   `.trim();
 
-  const content = children != null ? children : (
-    <>
-      {iconLeft && <span className="ui-button__icon"><Icon name={iconLeft} size={iconSize} /></span>}
-      {text && <span>{text}</span>}
-      {iconRight && <span className="ui-button__icon"><Icon name={iconRight} size={iconSize} /></span>}
-    </>
-  );
+  const content =
+    children != null ? (
+      children
+    ) : (
+      <>
+        {iconLeft && (
+          <span className="ui-button__icon">
+            <Icon name={iconLeft} size={iconSize} />
+          </span>
+        )}
+        {text && <span>{text}</span>}
+        {iconRight && (
+          <span className="ui-button__icon">
+            <Icon name={iconRight} size={iconSize} />
+          </span>
+        )}
+      </>
+    );
 
   if (href) {
     return (
@@ -61,7 +72,6 @@ const Button = ({
 
 export default Button;
 
-
 // {/* Regular */}
 // <Button text="Solid Primary" variant="solid" color="primary" primaryClassName="my-custom-outline" />
 
@@ -70,16 +80,16 @@ export default Button;
 // <Button text="Text Link" variant="text" color="secondary" href="/docs" />
 
 // {/* Mixed */}
-// <Button 
-//   text="Solid + Outline" 
-//   variant="solid-outline" 
-//   color="primary" 
-//   secondaryColor="danger" 
+// <Button
+//   text="Solid + Outline"
+//   variant="solid-outline"
+//   color="primary"
+//   secondaryColor="danger"
 // />
 
-// <Button 
-//   text="Alt Mix" 
-//   variant="solid-outline" 
-//   color="secondary" 
-//   secondaryColor="white" 
+// <Button
+//   text="Alt Mix"
+//   variant="solid-outline"
+//   color="secondary"
+//   secondaryColor="white"
 // />

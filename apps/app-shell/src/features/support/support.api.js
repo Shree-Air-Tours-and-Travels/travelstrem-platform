@@ -2,13 +2,15 @@ import { fetchData } from "@packages/trem-utils";
 
 const read = async (path, params, signal) => {
   const response = await fetchData(`/support${path}`, { params, signal });
-  if (response?.status !== "success") throw new Error(response?.message || "Support content could not be loaded");
+  if (response?.status !== "success")
+    throw new Error(response?.message || "Support content could not be loaded");
   return response.data || {};
 };
 
 const write = async (path, body) => {
   const response = await fetchData(`/support${path}`, { method: "POST", body });
-  if (response?.status !== "success") throw new Error(response?.message || "Support request could not be completed");
+  if (response?.status !== "success")
+    throw new Error(response?.message || "Support request could not be completed");
   return response.data || {};
 };
 

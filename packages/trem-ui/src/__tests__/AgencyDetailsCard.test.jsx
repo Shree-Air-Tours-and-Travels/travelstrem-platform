@@ -10,13 +10,16 @@ describe("AgencyDetailsCard", () => {
         agency={{ name: "TravelsTREM Demo Agency" }}
         operator={{ name: "Akshat Goyal", email: "akshat@example.com" }}
         labels={{ eyebrow: "Operated by", travelPartner: "Uploaded by agent" }}
-      />
+      />,
     );
 
     expect(screen.getByText("TravelsTREM Demo Agency")).toBeInTheDocument();
     expect(screen.getByText("Uploaded by agent")).toBeInTheDocument();
     expect(screen.getByText("Akshat Goyal")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "akshat@example.com" })).toHaveAttribute("href", "mailto:akshat@example.com");
+    expect(screen.getByRole("link", { name: "akshat@example.com" })).toHaveAttribute(
+      "href",
+      "mailto:akshat@example.com",
+    );
   });
 
   it("shows provider-owned inventory when no uploader was recorded", () => {

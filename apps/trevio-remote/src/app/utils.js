@@ -9,19 +9,39 @@ export const money = (value, currency) => {
   }).format(Number(value || 0));
 };
 
-export const tripId = (trip) => String(trip?.id || trip?.slug || trip?._id || slugify(trip?.title || ""));
-export const tripPrice = (trip) => Number(trip?.price || trip?.priceInfo?.min || trip?.priceInfo?.perPerson || trip?.priceInfo?.total || 0);
+export const tripId = (trip) =>
+  String(trip?.id || trip?.slug || trip?._id || slugify(trip?.title || ""));
+export const tripPrice = (trip) =>
+  Number(
+    trip?.price ||
+      trip?.priceInfo?.min ||
+      trip?.priceInfo?.perPerson ||
+      trip?.priceInfo?.total ||
+      0,
+  );
 export const tripCurrency = (trip) => trip?.priceInfo?.currency || trip?.currency;
-export const tripImage = (trip) => trip?.image || trip?.photo || trip?.gallery?.[0]?.url || trip?.media?.heroImage || "";
+export const tripImage = (trip) =>
+  trip?.image || trip?.photo || trip?.gallery?.[0]?.url || trip?.media?.heroImage || "";
 export const tripLocation = (trip) => trip?.location || trip?.address?.city || trip?.city?.to || "";
-export const tripDuration = (trip) => trip?.duration || (trip?.period?.days ? `${trip.period.days}D / ${trip.period.nights || 0}N` : "");
+export const tripDuration = (trip) =>
+  trip?.duration ||
+  (trip?.period?.days ? `${trip.period.days}D / ${trip.period.nights || 0}N` : "");
 
 const label = (labels, ref) => (ref ? labels[ref] || "" : "");
-const first = (...values) => values.find((value) => value !== undefined && value !== null && value !== "");
-const findWidget = (widgets = [], names = []) => widgets.find((widget) => names.includes(widget.name) || names.includes(widget.type));
-const findFeature = (widget = {}, types = []) => (widget.props?.features || []).find((feature) => types.includes(feature.name) || types.includes(feature.type));
+const first = (...values) =>
+  values.find((value) => value !== undefined && value !== null && value !== "");
+const findWidget = (widgets = [], names = []) =>
+  widgets.find((widget) => names.includes(widget.name) || names.includes(widget.type));
+const findFeature = (widget = {}, types = []) =>
+  (widget.props?.features || []).find(
+    (feature) => types.includes(feature.name) || types.includes(feature.type),
+  );
 
-export const responseTrips = (response) => response?.data?.trips || response?.componentData?.data?.trips || response?.component?.data?.trips || [];
+export const responseTrips = (response) =>
+  response?.data?.trips ||
+  response?.componentData?.data?.trips ||
+  response?.component?.data?.trips ||
+  [];
 
 export const resolvePageContent = (pageResponse) => {
   const component = pageResponse?.componentData || pageResponse?.component;
@@ -76,9 +96,13 @@ export const resolvePageContent = (pageResponse) => {
         meta: label(labels, featuredCard.cardMetaRef),
         defaultType: label(labels, featuredCard.defaultTypeRef),
         ctaLabel: label(labels, first(featuredCard.ctaActionLabelRef, featuredCard.ctaLabelRef)),
-        emptyTitle: label(labels, featuredCard.emptyTitleRef) || label(labels, "featuredEmptyTitle"),
-        emptyDescription: label(labels, featuredCard.emptyDescriptionRef) || label(labels, "featuredEmptyDescription"),
-        emptyAction: label(labels, featuredCard.emptyActionRef) || label(labels, "featuredEmptyAction"),
+        emptyTitle:
+          label(labels, featuredCard.emptyTitleRef) || label(labels, "featuredEmptyTitle"),
+        emptyDescription:
+          label(labels, featuredCard.emptyDescriptionRef) ||
+          label(labels, "featuredEmptyDescription"),
+        emptyAction:
+          label(labels, featuredCard.emptyActionRef) || label(labels, "featuredEmptyAction"),
       },
     },
     tripList: {
@@ -121,12 +145,14 @@ export const resolvePageContent = (pageResponse) => {
       highlight: label(labels, whyFeature.highlightRef),
       description: label(labels, whyFeature.descriptionRef),
       items: Array.isArray(whyFeature.items)
-        ? whyFeature.items.map((item) => ({
-            title: label(labels, item.titleRef),
-            description: label(labels, item.descriptionRef),
-            icon: label(labels, item.iconNameRef),
-            accent: item.accent || "",
-          })).filter((item) => item.title)
+        ? whyFeature.items
+            .map((item) => ({
+              title: label(labels, item.titleRef),
+              description: label(labels, item.descriptionRef),
+              icon: label(labels, item.iconNameRef),
+              accent: item.accent || "",
+            }))
+            .filter((item) => item.title)
         : [],
     },
     frames: {
@@ -162,6 +188,7 @@ export const resolvePageContent = (pageResponse) => {
     trips: Array.isArray(state.adventureTrips) ? state.adventureTrips : [],
     internationalTrips: Array.isArray(state.internationalTrips) ? state.internationalTrips : [],
     tripPagination: state.tripPagination || {},
-    tripsEndpoint: urls[first(tripCards.tripsEndpointUrlRef, featuredCard.tripsEndpointUrlRef)] || "",
+    tripsEndpoint:
+      urls[first(tripCards.tripsEndpointUrlRef, featuredCard.tripsEndpointUrlRef)] || "",
   };
 };

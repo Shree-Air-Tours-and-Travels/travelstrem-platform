@@ -9,8 +9,18 @@ const DEFAULT_CALENDAR_HEIGHT = 344;
 
 const DAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
 function toDateString(date) {
@@ -38,7 +48,11 @@ function getFirstDayOfMonth(year, month) {
 
 function isSameDay(a, b) {
   if (!a || !b) return false;
-  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
 }
 
 function isBeforeDay(a, b) {
@@ -49,7 +63,9 @@ function isBeforeDay(a, b) {
 }
 
 function useIsMobile(breakpoint = 640) {
-  const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" && window.innerWidth <= breakpoint);
+  const [isMobile, setIsMobile] = useState(
+    () => typeof window !== "undefined" && window.innerWidth <= breakpoint,
+  );
   useEffect(() => {
     const mq = window.matchMedia(`(max-width: ${breakpoint}px)`);
     const handler = (e) => setIsMobile(e.matches);
@@ -85,9 +101,9 @@ export default function DatePicker({
     [isBirthDate, maxDate, today],
   );
   const initialViewDate = useMemo(
-    () => selectedDate || (isBirthDate
-      ? new Date(today.getFullYear() - 25, today.getMonth(), 1)
-      : today),
+    () =>
+      selectedDate ||
+      (isBirthDate ? new Date(today.getFullYear() - 25, today.getMonth(), 1) : today),
     [isBirthDate, selectedDate, today],
   );
 
@@ -183,10 +199,13 @@ export default function DatePicker({
     if (!selectedDate && isBirthDate) setViewDate(initialViewDate);
   }, [initialViewDate, isBirthDate, selectedDate]);
 
-  const selectDate = useCallback((date) => {
-    onChange?.(toDateString(date));
-    setOpen(false);
-  }, [onChange]);
+  const selectDate = useCallback(
+    (date) => {
+      onChange?.(toDateString(date));
+      setOpen(false);
+    },
+    [onChange],
+  );
 
   const goToPrevMonth = useCallback(() => {
     setViewDate((date) => {
@@ -199,7 +218,11 @@ export default function DatePicker({
   const goToNextMonth = useCallback(() => {
     setViewDate((date) => {
       const next = new Date(date.getFullYear(), date.getMonth() + 1, 1);
-      if (effectiveMaxDate && next > new Date(effectiveMaxDate.getFullYear(), effectiveMaxDate.getMonth(), 1)) return date;
+      if (
+        effectiveMaxDate &&
+        next > new Date(effectiveMaxDate.getFullYear(), effectiveMaxDate.getMonth(), 1)
+      )
+        return date;
       return next;
     });
   }, [effectiveMaxDate]);
@@ -212,35 +235,44 @@ export default function DatePicker({
     setViewDate((d) => new Date(d.getFullYear() + 1, d.getMonth(), 1));
   }, []);
 
-  const isDateDisabled = useCallback((date) => {
-    if (minDate && isBeforeDay(date, minDate)) return true;
-    if (effectiveMaxDate && isBeforeDay(effectiveMaxDate, date)) return true;
-    return false;
-  }, [minDate, effectiveMaxDate]);
+  const isDateDisabled = useCallback(
+    (date) => {
+      if (minDate && isBeforeDay(date, minDate)) return true;
+      if (effectiveMaxDate && isBeforeDay(effectiveMaxDate, date)) return true;
+      return false;
+    },
+    [minDate, effectiveMaxDate],
+  );
 
   const changeViewMonth = useCallback((event) => {
     const nextMonth = Number(event.target.value);
     setViewDate((date) => new Date(date.getFullYear(), nextMonth, 1));
   }, []);
 
-  const changeViewYear = useCallback((event) => {
-    const nextYear = Number(event.target.value);
-    setViewDate((date) => {
-      let nextMonth = date.getMonth();
-      if (minDate && nextYear === minDate.getFullYear()) {
-        nextMonth = Math.max(nextMonth, minDate.getMonth());
-      }
-      if (effectiveMaxDate && nextYear === effectiveMaxDate.getFullYear()) {
-        nextMonth = Math.min(nextMonth, effectiveMaxDate.getMonth());
-      }
-      return new Date(nextYear, nextMonth, 1);
-    });
-  }, [effectiveMaxDate, minDate]);
+  const changeViewYear = useCallback(
+    (event) => {
+      const nextYear = Number(event.target.value);
+      setViewDate((date) => {
+        let nextMonth = date.getMonth();
+        if (minDate && nextYear === minDate.getFullYear()) {
+          nextMonth = Math.max(nextMonth, minDate.getMonth());
+        }
+        if (effectiveMaxDate && nextYear === effectiveMaxDate.getFullYear()) {
+          nextMonth = Math.min(nextMonth, effectiveMaxDate.getMonth());
+        }
+        return new Date(nextYear, nextMonth, 1);
+      });
+    },
+    [effectiveMaxDate, minDate],
+  );
 
-  const canGoToPreviousMonth = !minDate
-    || new Date(viewYear, viewMonth - 1, 1) >= new Date(minDate.getFullYear(), minDate.getMonth(), 1);
-  const canGoToNextMonth = !effectiveMaxDate
-    || new Date(viewYear, viewMonth + 1, 1) <= new Date(effectiveMaxDate.getFullYear(), effectiveMaxDate.getMonth(), 1);
+  const canGoToPreviousMonth =
+    !minDate ||
+    new Date(viewYear, viewMonth - 1, 1) >= new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+  const canGoToNextMonth =
+    !effectiveMaxDate ||
+    new Date(viewYear, viewMonth + 1, 1) <=
+      new Date(effectiveMaxDate.getFullYear(), effectiveMaxDate.getMonth(), 1);
 
   const weeks = useMemo(() => {
     const cells = [];
@@ -263,14 +295,42 @@ export default function DatePicker({
 
   const calendarContent = (
     <>
-      <div className={`trem-datepicker__header ${isBirthDate ? "trem-datepicker__header--selectable" : ""}`}>
+      <div
+        className={`trem-datepicker__header ${isBirthDate ? "trem-datepicker__header--selectable" : ""}`}
+      >
         {!isBirthDate && (
-          <button type="button" className="trem-datepicker__nav-btn" onClick={goToPrevYear} aria-label="Previous year">
-            <svg width="14" height="14" viewBox="0 0 14 14"><path d="M9 3L5 7l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /><path d="M5 3L1 7l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+          <button
+            type="button"
+            className="trem-datepicker__nav-btn"
+            onClick={goToPrevYear}
+            aria-label="Previous year"
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14">
+              <path
+                d="M9 3L5 7l4 4"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+              <path
+                d="M5 3L1 7l4 4"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+            </svg>
           </button>
         )}
-        <button type="button" className="trem-datepicker__nav-btn" onClick={goToPrevMonth} aria-label="Previous month" disabled={!canGoToPreviousMonth}>
-          <svg width="14" height="14" viewBox="0 0 14 14"><path d="M9 3L5 7l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+        <button
+          type="button"
+          className="trem-datepicker__nav-btn"
+          onClick={goToPrevMonth}
+          aria-label="Previous month"
+          disabled={!canGoToPreviousMonth}
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14">
+            <path d="M9 3L5 7l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
         </button>
         {isBirthDate ? (
           <div className="trem-datepicker__month-year">
@@ -287,8 +347,12 @@ export default function DatePicker({
                     value={index}
                     key={month}
                     disabled={
-                      (minDate && viewYear === minDate.getFullYear() && index < minDate.getMonth())
-                      || (effectiveMaxDate && viewYear === effectiveMaxDate.getFullYear() && index > effectiveMaxDate.getMonth())
+                      (minDate &&
+                        viewYear === minDate.getFullYear() &&
+                        index < minDate.getMonth()) ||
+                      (effectiveMaxDate &&
+                        viewYear === effectiveMaxDate.getFullYear() &&
+                        index > effectiveMaxDate.getMonth())
                     }
                   >
                     {month}
@@ -305,7 +369,9 @@ export default function DatePicker({
                 onChange={changeViewYear}
               >
                 {selectableYears.map((year) => (
-                  <option value={year} key={year}>{year}</option>
+                  <option value={year} key={year}>
+                    {year}
+                  </option>
                 ))}
               </select>
             </label>
@@ -315,19 +381,47 @@ export default function DatePicker({
             {MONTHS[viewMonth]} {viewYear}
           </span>
         )}
-        <button type="button" className="trem-datepicker__nav-btn" onClick={goToNextMonth} aria-label="Next month" disabled={!canGoToNextMonth}>
-          <svg width="14" height="14" viewBox="0 0 14 14"><path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+        <button
+          type="button"
+          className="trem-datepicker__nav-btn"
+          onClick={goToNextMonth}
+          aria-label="Next month"
+          disabled={!canGoToNextMonth}
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14">
+            <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
         </button>
         {!isBirthDate && (
-          <button type="button" className="trem-datepicker__nav-btn" onClick={goToNextYear} aria-label="Next year">
-            <svg width="14" height="14" viewBox="0 0 14 14"><path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /><path d="M9 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+          <button
+            type="button"
+            className="trem-datepicker__nav-btn"
+            onClick={goToNextYear}
+            aria-label="Next year"
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14">
+              <path
+                d="M5 3l4 4-4 4"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+              <path
+                d="M9 3l4 4-4 4"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+            </svg>
           </button>
         )}
       </div>
 
       <div className="trem-datepicker__weekdays">
         {DAYS.map((d) => (
-          <span key={d} className="trem-datepicker__weekday">{d}</span>
+          <span key={d} className="trem-datepicker__weekday">
+            {d}
+          </span>
         ))}
       </div>
 
@@ -335,7 +429,13 @@ export default function DatePicker({
         {weeks.map((week, wi) => (
           <div key={wi} className="trem-datepicker__row">
             {week.map((date, di) => {
-              if (!date) return <span key={`e-${di}`} className="trem-datepicker__cell trem-datepicker__cell--empty" />;
+              if (!date)
+                return (
+                  <span
+                    key={`e-${di}`}
+                    className="trem-datepicker__cell trem-datepicker__cell--empty"
+                  />
+                );
               const disabled = isDateDisabled(date);
               const selected = isSameDay(date, selectedDate);
               const todayHighlight = isSameDay(date, today);
@@ -349,7 +449,9 @@ export default function DatePicker({
                     selected ? "trem-datepicker__day--selected" : "",
                     todayHighlight && !selected ? "trem-datepicker__day--today" : "",
                     disabled ? "trem-datepicker__day--disabled" : "",
-                  ].filter(Boolean).join(" ")}
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
                   onClick={() => !disabled && selectDate(date)}
                   disabled={disabled}
                   tabIndex={selected ? 0 : -1}
@@ -364,7 +466,14 @@ export default function DatePicker({
 
       {!isBirthDate && (
         <div className="trem-datepicker__footer">
-          <button type="button" className="trem-datepicker__today-btn" onClick={() => { selectDate(today); setViewDate(today); }}>
+          <button
+            type="button"
+            className="trem-datepicker__today-btn"
+            onClick={() => {
+              selectDate(today);
+              setViewDate(today);
+            }}
+          >
             Today
           </button>
         </div>
@@ -373,21 +482,37 @@ export default function DatePicker({
   );
 
   return (
-    <div className={`trem-datepicker ${open ? "trem-datepicker--open" : ""} ${error ? "trem-datepicker--error" : ""} ${className}`} ref={containerRef}>
+    <div
+      className={`trem-datepicker ${open ? "trem-datepicker--open" : ""} ${error ? "trem-datepicker--error" : ""} ${className}`}
+      ref={containerRef}
+    >
       <button
         type="button"
         ref={triggerRef}
         className={`trem-datepicker__trigger ${disabled ? "trem-datepicker__trigger--disabled" : ""}`}
-        onClick={() => { if (!disabled) setOpen((o) => !o); }}
+        onClick={() => {
+          if (!disabled) setOpen((o) => !o);
+        }}
         disabled={disabled}
       >
         <span className={!displayValue ? "trem-datepicker__placeholder" : ""}>
           {displayValue || placeholder}
         </span>
-        <svg className="trem-datepicker__icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <svg
+          className="trem-datepicker__icon"
+          width="16"
+          height="16"
+          viewBox="0 0 16 16"
+          fill="none"
+        >
           <rect x="2" y="3" width="12" height="11" rx="2" stroke="currentColor" strokeWidth="1.2" />
           <path d="M2 6.5h12" stroke="currentColor" strokeWidth="1.2" />
-          <path d="M5.5 1.5v3M10.5 1.5v3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+          <path
+            d="M5.5 1.5v3M10.5 1.5v3"
+            stroke="currentColor"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+          />
         </svg>
       </button>
 
@@ -396,11 +521,17 @@ export default function DatePicker({
           <div className="trem-datepicker__calendar-sheet">{calendarContent}</div>
         </BottomSheet>
       ) : (
-        open && createPortal(
+        open &&
+        createPortal(
           <div
             ref={menuRef}
             className={`trem-datepicker__menu-wrapper trem-datepicker__menu-wrapper--${menuStyle.placement || "bottom"}`}
-            style={{ top: menuStyle.top, left: menuStyle.left, width: menuStyle.width, maxHeight: menuStyle.maxHeight }}
+            style={{
+              top: menuStyle.top,
+              left: menuStyle.left,
+              width: menuStyle.width,
+              maxHeight: menuStyle.maxHeight,
+            }}
           >
             <div className="trem-datepicker__dropdown">{calendarContent}</div>
           </div>,

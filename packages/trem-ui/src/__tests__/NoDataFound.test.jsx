@@ -19,7 +19,9 @@ describe("NoDataFound", () => {
 
     expect(screen.getByRole("status")).toHaveTextContent("No bookings yet");
     expect(screen.getByText("Your bookings will appear here.")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Explore available trips" }))
-      .toHaveAttribute("href", "/trips");
+    expect(screen.getByRole("link", { name: "Explore available trips" })).toHaveAttribute(
+      "href",
+      "/trips",
+    );
   });
 });

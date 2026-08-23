@@ -17,9 +17,17 @@
   border-radius: var(--radius-md);
   background: var(--surface-elevated, var(--surface));
 
-  h3, p { margin: 0; }
-  h3 { font-size: $font-size-lg; }
-  p { margin-top: $space-1; color: var(--muted); }
+  h3,
+  p {
+    margin: 0;
+  }
+  h3 {
+    font-size: $font-size-lg;
+  }
+  p {
+    margin-top: $space-1;
+    color: var(--muted);
+  }
 }
 
 .record-review__count {
@@ -49,25 +57,88 @@
   background: var(--surface);
 }
 
-.record-review__field--wide { grid-column: 1 / -1; }
-.record-review__field--empty { opacity: .72; }
-.record-review__label { color: var(--muted); font-size: $font-size-xs; font-weight: $font-bold; letter-spacing: .04em; text-transform: uppercase; }
-.record-review__value { overflow-wrap: anywhere; white-space: pre-wrap; }
-.record-review__empty { color: var(--muted); font-style: italic; }
-.record-review__boolean { width: fit-content; padding: $space-1 $space-2; border-radius: 999px; font-size: $font-size-xs; font-weight: $font-bold; }
-.record-review__boolean--yes { background: var(--success-soft); color: var(--color-success); }
-.record-review__boolean--no { background: var(--surface-muted, var(--surface-elevated)); color: var(--muted); }
+.record-review__field--wide {
+  grid-column: 1 / -1;
+}
+.record-review__field--empty {
+  opacity: 0.72;
+}
+.record-review__label {
+  color: var(--muted);
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.record-review__value {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.record-review__empty {
+  color: var(--muted);
+  font-style: italic;
+}
+.record-review__boolean {
+  width: fit-content;
+  padding: $space-1 $space-2;
+  border-radius: 999px;
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+}
+.record-review__boolean--yes {
+  background: var(--success-soft);
+  color: var(--color-success);
+}
+.record-review__boolean--no {
+  background: var(--surface-muted, var(--surface-elevated));
+  color: var(--muted);
+}
 
-.record-review__collection { display: grid; gap: $space-3; margin-top: $space-1; }
-.record-review__item { display: grid; gap: $space-3; padding: $space-3; border-left: 3px solid var(--color-primary); border-radius: var(--radius-sm); background: var(--surface-elevated, var(--surface)); }
-.record-review__item > strong { color: var(--color-primary-dark, var(--color-primary)); }
-.record-review__item .record-review__fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.record-review__collection {
+  display: grid;
+  gap: $space-3;
+  margin-top: $space-1;
+}
+.record-review__item {
+  display: grid;
+  gap: $space-3;
+  padding: $space-3;
+  border-left: 3px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  background: var(--surface-elevated, var(--surface));
+}
+.record-review__item > strong {
+  color: var(--color-primary-dark, var(--color-primary));
+}
+.record-review__item .record-review__fields {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
 
-.record-review__chips { display: flex; flex-wrap: wrap; gap: $space-2; }
-.record-review__chips span { padding: $space-1 $space-2; border-radius: 999px; background: var(--primary-softer); color: var(--color-primary-dark, var(--color-primary)); }
-.record-review__image { display: block; width: min(100%, 18rem); max-height: 11rem; border-radius: var(--radius-sm); object-fit: cover; }
+.record-review__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-2;
+}
+.record-review__chips span {
+  padding: $space-1 $space-2;
+  border-radius: 999px;
+  background: var(--primary-softer);
+  color: var(--color-primary-dark, var(--color-primary));
+}
+.record-review__image {
+  display: block;
+  width: min(100%, 18rem);
+  max-height: 11rem;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+}
 
 @media (max-width: 640px) {
-  .record-review__header { flex-direction: column; }
-  .record-review__fields, .record-review__item .record-review__fields { grid-template-columns: 1fr; }
+  .record-review__header {
+    flex-direction: column;
+  }
+  .record-review__fields,
+  .record-review__item .record-review__fields {
+    grid-template-columns: 1fr;
+  }
 }

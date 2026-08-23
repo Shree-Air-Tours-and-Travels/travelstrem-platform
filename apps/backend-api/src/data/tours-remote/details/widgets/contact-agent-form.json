@@ -41,32 +41,32 @@
         "quoteWithoutFlights": "Quote without flights",
         "sendRequest": "Request quote",
         "operatedBy": "Operated by",
-        "travelSpecialist": "Travel specialist"
-        ,"quoteSummary": "Quote summary"
-        ,"calculatingPrice": "Updating your price…"
-        ,"customQuote": "Customized quote"
-        ,"packageQuote": "Package price"
-        ,"travellers": "travellers"
-        ,"rooms": "rooms"
-        ,"basePackage": "Selected package"
-        ,"includedUpgrade": "Already included"
-        ,"hotelUpgrade": "Hotel upgrade"
-        ,"yourPrice": "Your estimated price"
-        ,"customizedPlan": "Customized package"
-        ,"perPersonPrice": "per person"
-        ,"totalPrice": "total"
-        ,"saveWithPackage": "You can save by switching packages"
-        ,"comparePackage": "Compare with the package that includes this hotel"
-        ,"includesHotel": "recalculates all your selected stays"
-        ,"saves": "You save"
-        ,"priceDifference": "Price difference"
-        ,"repricing": "The agent will confirm availability and the final quote."
-        ,"choosePackage": "Choose {package}"
-        ,"alsoIncludes": "It also includes"
-        ,"alternativePrice": "Package price"
-        ,"pricePending": "Agent confirmation required"
-        ,"hotelRequestPending": "Your requested hotel preferences will be priced after the agent confirms suitable properties and rooms."
-        ,"hotelRequest": "Requested hotel"
+        "travelSpecialist": "Travel specialist",
+        "quoteSummary": "Quote summary",
+        "calculatingPrice": "Updating your price…",
+        "customQuote": "Customized quote",
+        "packageQuote": "Package price",
+        "travellers": "travellers",
+        "rooms": "rooms",
+        "basePackage": "Selected package",
+        "includedUpgrade": "Already included",
+        "hotelUpgrade": "Hotel upgrade",
+        "yourPrice": "Your estimated price",
+        "customizedPlan": "Customized package",
+        "perPersonPrice": "per person",
+        "totalPrice": "total",
+        "saveWithPackage": "You can save by switching packages",
+        "comparePackage": "Compare with the package that includes this hotel",
+        "includesHotel": "recalculates all your selected stays",
+        "saves": "You save",
+        "priceDifference": "Price difference",
+        "repricing": "The agent will confirm availability and the final quote.",
+        "choosePackage": "Choose {package}",
+        "alsoIncludes": "It also includes",
+        "alternativePrice": "Package price",
+        "pricePending": "Agent confirmation required",
+        "hotelRequestPending": "Your requested hotel preferences will be priced after the agent confirms suitable properties and rooms.",
+        "hotelRequest": "Requested hotel"
       },
       "urls": {
         "brandLogo": "/favicon-dark.png"
@@ -82,19 +82,126 @@
           "type": "ContactAgentForm",
           "props": {
             "fields": [
-              { "name": "name", "labelRef": "fullName", "type": "text", "required": true, "minLength": 2, "width": "half", "placeholderRef": "fullNamePlaceholder" },
-              { "name": "email", "labelRef": "email", "type": "email", "required": true, "width": "half", "placeholderRef": "emailPlaceholder" },
-              { "name": "phone", "labelRef": "phone", "type": "tel", "required": true, "width": "half", "maxLength": 10, "placeholderRef": "phonePlaceholder" },
-              { "name": "travellerCount", "labelRef": "travellerCount", "type": "number", "required": true, "min": 1, "max": 50, "integer": true, "width": "half", "placeholderRef": "travellerCountPlaceholder" },
-              { "name": "packageKey", "labelRef": "package", "type": "select", "required": false, "width": "half", "placeholderRef": "packagePlaceholder", "options": [] },
-              { "name": "hotelRoomKey", "labelRef": "hotelRoom", "type": "select", "required": false, "width": "half", "placeholderRef": "hotelRoomPlaceholder", "options": [] },
-              { "name": "customizationPreference", "labelRef": "customizationPreference", "type": "select", "required": true, "width": "full", "options": [{ "value": "package", "labelRef": "usePackage" }, { "value": "customize", "labelRef": "customizeTour" }], "value": "package" },
-              { "name": "flightPreference", "labelRef": "flightPreference", "type": "select", "required": true, "width": "half", "options": [{ "value": "with_flights", "labelRef": "quoteWithFlights" }, { "value": "without_flights", "labelRef": "quoteWithoutFlights" }] },
-              { "name": "preferredTravelDate", "labelRef": "preferredTravelDate", "type": "select", "required": false, "width": "half", "placeholderRef": "departurePlaceholder", "options": [] },
-              { "name": "preferredStartDate", "labelRef": "preferredStartDate", "type": "date", "required": true, "width": "half" },
-              { "name": "preferredEndDate", "labelRef": "preferredEndDate", "type": "date", "required": true, "width": "half" },
-              { "name": "message", "labelRef": "message", "type": "textarea", "required": true, "minLength": 10, "maxLength": 1000, "placeholderRef": "messagePlaceholder", "width": "full" },
-              { "name": "preferredContact", "labelRef": "preferredContact", "type": "select", "required": true, "width": "full", "placeholderRef": "contactPlaceholder", "optionsRef": "preferredContactOptions" }
+              {
+                "name": "name",
+                "labelRef": "fullName",
+                "type": "text",
+                "required": true,
+                "minLength": 2,
+                "width": "half",
+                "placeholderRef": "fullNamePlaceholder"
+              },
+              {
+                "name": "email",
+                "labelRef": "email",
+                "type": "email",
+                "required": true,
+                "width": "half",
+                "placeholderRef": "emailPlaceholder"
+              },
+              {
+                "name": "phone",
+                "labelRef": "phone",
+                "type": "tel",
+                "required": true,
+                "width": "half",
+                "maxLength": 10,
+                "placeholderRef": "phonePlaceholder"
+              },
+              {
+                "name": "travellerCount",
+                "labelRef": "travellerCount",
+                "type": "number",
+                "required": true,
+                "min": 1,
+                "max": 50,
+                "integer": true,
+                "width": "half",
+                "placeholderRef": "travellerCountPlaceholder"
+              },
+              {
+                "name": "packageKey",
+                "labelRef": "package",
+                "type": "select",
+                "required": false,
+                "width": "half",
+                "placeholderRef": "packagePlaceholder",
+                "options": []
+              },
+              {
+                "name": "hotelRoomKey",
+                "labelRef": "hotelRoom",
+                "type": "select",
+                "required": false,
+                "width": "half",
+                "placeholderRef": "hotelRoomPlaceholder",
+                "options": []
+              },
+              {
+                "name": "customizationPreference",
+                "labelRef": "customizationPreference",
+                "type": "select",
+                "required": true,
+                "width": "full",
+                "options": [
+                  { "value": "package", "labelRef": "usePackage" },
+                  { "value": "customize", "labelRef": "customizeTour" }
+                ],
+                "value": "package"
+              },
+              {
+                "name": "flightPreference",
+                "labelRef": "flightPreference",
+                "type": "select",
+                "required": true,
+                "width": "half",
+                "options": [
+                  { "value": "with_flights", "labelRef": "quoteWithFlights" },
+                  { "value": "without_flights", "labelRef": "quoteWithoutFlights" }
+                ]
+              },
+              {
+                "name": "preferredTravelDate",
+                "labelRef": "preferredTravelDate",
+                "type": "select",
+                "required": false,
+                "width": "half",
+                "placeholderRef": "departurePlaceholder",
+                "options": []
+              },
+              {
+                "name": "preferredStartDate",
+                "labelRef": "preferredStartDate",
+                "type": "date",
+                "required": true,
+                "width": "half"
+              },
+              {
+                "name": "preferredEndDate",
+                "labelRef": "preferredEndDate",
+                "type": "date",
+                "required": true,
+                "width": "half"
+              },
+              {
+                "name": "message",
+                "labelRef": "message",
+                "type": "textarea",
+                "required": true,
+                "minLength": 10,
+                "maxLength": 1000,
+                "placeholderRef": "messagePlaceholder",
+                "width": "full"
+              },
+              {
+                "name": "preferredContact",
+                "labelRef": "preferredContact",
+                "type": "select",
+                "required": true,
+                "width": "full",
+                "placeholderRef": "contactPlaceholder",
+                "optionsRef": "preferredContactOptions"
+              }
             ],
             "submitLabelRef": "sendRequest"
           }

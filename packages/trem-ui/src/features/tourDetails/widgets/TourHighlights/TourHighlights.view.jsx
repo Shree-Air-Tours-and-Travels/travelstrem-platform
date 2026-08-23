@@ -13,9 +13,7 @@ function HighlightBadge({ item, index }) {
     );
   }
   return (
-    <span className="td-hl__badge td-hl__badge--number">
-      {String(index + 1).padStart(2, "0")}
-    </span>
+    <span className="td-hl__badge td-hl__badge--number">{String(index + 1).padStart(2, "0")}</span>
   );
 }
 

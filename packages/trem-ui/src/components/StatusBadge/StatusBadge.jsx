@@ -52,11 +52,20 @@ function formatLabel(value) {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export default function StatusBadge({ value, subtitle, tone, size = "md", showDot = true, className = "" }) {
+export default function StatusBadge({
+  value,
+  subtitle,
+  tone,
+  size = "md",
+  showDot = true,
+  className = "",
+}) {
   const resolvedTone = tone || resolveTone(value);
 
   return (
-    <span className={`status-badge status-badge--${resolvedTone} status-badge--${size}${subtitle ? " status-badge--with-subtitle" : ""} ${className}`}>
+    <span
+      className={`status-badge status-badge--${resolvedTone} status-badge--${size}${subtitle ? " status-badge--with-subtitle" : ""} ${className}`}
+    >
       {showDot && <span className="status-badge__dot" aria-hidden="true" />}
       <span className="status-badge__label">{formatLabel(value)}</span>
       {subtitle && <span className="status-badge__subtitle">{subtitle}</span>}

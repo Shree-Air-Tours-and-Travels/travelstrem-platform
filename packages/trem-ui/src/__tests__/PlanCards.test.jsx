@@ -19,22 +19,19 @@ const items = [
 
 describe("PlanCards", () => {
   it("renders backend-provided card content and destination", () => {
-    render(
-      <PlanCards
-        title="Plan a Journey"
-        ariaLabel="Plan a journey"
-        items={items}
-      />,
-    );
+    render(<PlanCards title="Plan a Journey" ariaLabel="Plan a journey" items={items} />);
 
     expect(screen.getByRole("heading", { name: "Plan a Journey" })).toBeInTheDocument();
     expect(screen.getByText("Trevista")).toBeInTheDocument();
     expect(screen.getByText("Holiday Packages")).toBeInTheDocument();
     expect(screen.getByText("Domestic & international")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Explore holiday packages on Trevista" }))
-      .toHaveAttribute("href", "https://trevista.example.com");
-    expect(screen.getByRole("img", { name: "Tropical holiday destination" }))
-      .toHaveAttribute("src", "https://images.example.com/holiday.jpg");
+    expect(
+      screen.getByRole("link", { name: "Explore holiday packages on Trevista" }),
+    ).toHaveAttribute("href", "https://trevista.example.com");
+    expect(screen.getByRole("img", { name: "Tropical holiday destination" })).toHaveAttribute(
+      "src",
+      "https://images.example.com/holiday.jpg",
+    );
   });
 
   it("renders nothing when the backend supplies no cards", () => {
@@ -46,10 +43,7 @@ describe("PlanCards", () => {
     render(
       <PlanCards
         title="Plan a Journey"
-        items={[
-          items[0],
-          { ...items[0], id: "hidden", title: "Hidden product", hide: true },
-        ]}
+        items={[items[0], { ...items[0], id: "hidden", title: "Hidden product", hide: true }]}
       />,
     );
 
@@ -61,21 +55,26 @@ describe("PlanCards", () => {
     render(
       <PlanCards
         title="Plan a Journey"
-        items={[{
-          ...items[0],
-          disabled: true,
-          comingSoon: true,
-          comingSoonLabel: "Coming soon",
-          ariaLabel: "Holiday Packages, coming soon",
-        }]}
+        items={[
+          {
+            ...items[0],
+            disabled: true,
+            comingSoon: true,
+            comingSoonLabel: "Coming soon",
+            ariaLabel: "Holiday Packages, coming soon",
+          },
+        ]}
       />,
     );
 
     expect(screen.getByText("Coming soon")).toBeInTheDocument();
-    expect(screen.getByRole("group", { name: "Holiday Packages, coming soon" }))
-      .toHaveAttribute("aria-disabled", "true");
-    expect(screen.queryByRole("link", { name: "Holiday Packages, coming soon" }))
-      .not.toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Holiday Packages, coming soon" })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+    expect(
+      screen.queryByRole("link", { name: "Holiday Packages, coming soon" }),
+    ).not.toBeInTheDocument();
   });
 
   it("keeps the configured grid width and can hide unavailable cards on mobile", () => {

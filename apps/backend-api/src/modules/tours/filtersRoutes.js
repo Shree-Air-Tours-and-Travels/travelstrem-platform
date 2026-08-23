@@ -1,7 +1,11 @@
 // modules/tours/filtersRoutes.js
 import express from "express";
 import { getFilters } from "./controllers/filterController.js";
-import { getTourDiscoveryController, postLegacyTourSearch, postTourSearch } from "./controllers/searchController.js";
+import {
+    getTourDiscoveryController,
+    postLegacyTourSearch,
+    postTourSearch,
+} from "./controllers/searchController.js";
 import { requireTourSearchBody } from "./validators/search.validation.js";
 
 const router = express.Router();

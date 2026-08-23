@@ -30,7 +30,9 @@
     box-shadow: var(--shadow-md);
   }
 
-  &__header { min-width: 0; }
+  &__header {
+    min-width: 0;
+  }
 
   &__title {
     margin: 0 0 $space-1;
@@ -106,7 +108,11 @@
       font-weight: $font-medium;
     }
 
-    small { color: var(--muted); font-size: $font-size-xs; font-weight: $font-regular; }
+    small {
+      color: var(--muted);
+      font-size: $font-size-xs;
+      font-weight: $font-regular;
+    }
   }
 
   &__msg {
@@ -145,7 +151,9 @@
   color: var(--muted);
   cursor: pointer;
   z-index: 2;
-  transition: background $duration-fast $ease-standard, color $duration-fast $ease-standard;
+  transition:
+    background $duration-fast $ease-standard,
+    color $duration-fast $ease-standard;
 
   &:hover {
     background: var(--surface-inset);
@@ -154,18 +162,29 @@
 }
 
 @media (max-width: $breakpoint-mobile) {
-  .ct-modal-card { width: 100%; max-height: 92dvh; border-radius: $radius-lg $radius-lg $radius-sm $radius-sm; }
-  .ct-modal-card__body { padding: $space-7 $space-5; }
+  .ct-modal-card {
+    width: 100%;
+    max-height: 92dvh;
+    border-radius: $radius-lg $radius-lg $radius-sm $radius-sm;
+  }
+  .ct-modal-card__body {
+    padding: $space-7 $space-5;
+  }
   .ct-modal-card__header,
   .ct-modal-card__intro,
-  .ct-modal-card__tour { max-width: none; }
+  .ct-modal-card__tour {
+    max-width: none;
+  }
 
   .ct-modal-card__intro {
     grid-template-columns: $space-12 minmax(0, 1fr);
     gap: $space-3;
   }
 
-  .ct-modal-card__brand { width: $space-12; height: $space-12; }
+  .ct-modal-card__brand {
+    width: $space-12;
+    height: $space-12;
+  }
 }
 
 @keyframes ct-modal-in {

@@ -35,7 +35,10 @@ export function UpcomingTripCard({
           </div>
           <h3>{trip.title}</h3>
           <div className="trem-upcoming-trip__meta">
-            <span><Icon name="calendar" size={17} />{trip.dateRange}</span>
+            <span>
+              <Icon name="calendar" size={17} />
+              {trip.dateRange}
+            </span>
             <strong>{trip.duration}</strong>
           </div>
         </>
@@ -52,7 +55,9 @@ export function QuickActionsCard({ title, items = [], hideDisabled = false }) {
 
   return (
     <section className="trem-rail-card trem-quick-actions">
-      <header className="trem-rail-card__header"><h2>{title}</h2></header>
+      <header className="trem-rail-card__header">
+        <h2>{title}</h2>
+      </header>
       <nav aria-label={title}>
         {visibleItems.map((item) => {
           const Tag = item.disabled ? "div" : "a";
@@ -60,13 +65,15 @@ export function QuickActionsCard({ title, items = [], hideDisabled = false }) {
             <Tag
               key={item.id}
               href={item.disabled ? undefined : item.href}
-              target={item.disabled ? undefined : (item.target || "_self")}
+              target={item.disabled ? undefined : item.target || "_self"}
               rel={item.disabled ? undefined : linkRel(item.target, item.rel)}
               aria-label={item.ariaLabel || item.title}
               aria-disabled={item.disabled || undefined}
               className={item.disabled ? "is-disabled" : ""}
             >
-              <span className="trem-quick-actions__icon"><Icon name={item.icon} size={20} /></span>
+              <span className="trem-quick-actions__icon">
+                <Icon name={item.icon} size={20} />
+              </span>
               <span className="trem-quick-actions__copy">
                 <strong>{item.title}</strong>
                 <small>{item.description}</small>
@@ -97,7 +104,9 @@ export function ExclusiveOfferCard({
 }) {
   return (
     <section className="trem-rail-card trem-exclusive-offer">
-      <header className="trem-rail-card__header"><h2>{title}</h2></header>
+      <header className="trem-rail-card__header">
+        <h2>{title}</h2>
+      </header>
       {available ? (
         <a
           className="trem-exclusive-offer__content"
@@ -109,7 +118,9 @@ export function ExclusiveOfferCard({
           <span className="trem-exclusive-offer__copy">
             <strong>{headline}</strong>
             <span>{description}</span>
-            <span className="trem-exclusive-offer__code"><em>{codeLabel}</em> {code}</span>
+            <span className="trem-exclusive-offer__code">
+              <em>{codeLabel}</em> {code}
+            </span>
           </span>
           <img src={image} alt={imageAlt} loading="lazy" />
         </a>
@@ -196,11 +207,13 @@ ExclusiveOfferCard.propTypes = {
 };
 
 OverviewRail.propTypes = {
-  widgets: PropTypes.arrayOf(PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    type: PropTypes.oneOf(Object.keys(WIDGET_COMPONENTS)).isRequired,
-    hide: PropTypes.bool,
-  })),
+  widgets: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      type: PropTypes.oneOf(Object.keys(WIDGET_COMPONENTS)).isRequired,
+      hide: PropTypes.bool,
+    }),
+  ),
   ariaLabel: PropTypes.string,
   className: PropTypes.string,
 };

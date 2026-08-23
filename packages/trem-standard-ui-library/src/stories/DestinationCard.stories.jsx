@@ -8,7 +8,8 @@ const sampleCard = {
   image: {
     src: "https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=800&q=80",
     alt: "Jaipur cityscape",
-    fallbackSrc: "https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=800&q=60",
+    fallbackSrc:
+      "https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=800&q=60",
   },
   description: "The Pink City — a royal tapestry of forts, palaces, bazaars, and heritage hotels.",
   duration: { days: 5, nights: 4 },
@@ -22,7 +23,10 @@ export default {
   component: DestinationCard,
   tags: ["autodocs"],
   argTypes: {
-    variant: { control: "select", options: ["default", "compact", "wide", "featured", "minimal", "overlay", "interactive"] },
+    variant: {
+      control: "select",
+      options: ["default", "compact", "wide", "featured", "minimal", "overlay", "interactive"],
+    },
     size: { control: "select", options: ["small", "medium", "large"] },
     aspectRatio: { control: "select", options: ["portrait", "square", "landscape"] },
     overlay: { control: "select", options: ["light", "medium", "strong"] },

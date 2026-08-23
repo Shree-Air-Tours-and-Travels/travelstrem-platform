@@ -29,7 +29,9 @@
     font-family: $font-primary;
     text-align: left;
     cursor: pointer;
-    transition: border-color 160ms $ease-default, box-shadow 160ms $ease-default;
+    transition:
+      border-color 160ms $ease-default,
+      box-shadow 160ms $ease-default;
 
     &:hover {
       border-color: var(--color-primary);
@@ -82,7 +84,9 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: $radius-md;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.12),
+      0 2px 8px rgba(0, 0, 0, 0.06);
     padding: $space-3;
     max-height: inherit;
     overflow-y: auto;
@@ -149,7 +153,9 @@
     color: var(--muted);
     cursor: pointer;
     flex-shrink: 0;
-    transition: background 120ms $ease-default, color 120ms $ease-default;
+    transition:
+      background 120ms $ease-default,
+      color 120ms $ease-default;
 
     &:hover {
       background: var(--surface-inset);
@@ -215,7 +221,9 @@
     cursor: pointer;
     font-size: $font-size-sm;
     font-family: $font-primary;
-    transition: background 100ms $ease-default, color 100ms $ease-default;
+    transition:
+      background 100ms $ease-default,
+      color 100ms $ease-default;
 
     &:hover:not(:disabled) {
       background: var(--surface-inset);

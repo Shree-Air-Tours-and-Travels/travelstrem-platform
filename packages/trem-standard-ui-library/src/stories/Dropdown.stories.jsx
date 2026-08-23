@@ -17,11 +17,7 @@ export default {
 export const Default = {
   render: () => (
     <div style={{ maxWidth: 320 }}>
-      <Dropdown
-        label="Actions"
-        placeholder="Choose an action"
-        items={sampleItems}
-      />
+      <Dropdown label="Actions" placeholder="Choose an action" items={sampleItems} />
     </div>
   ),
 };

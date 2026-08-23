@@ -13,9 +13,9 @@ export default function ScrollToTopButton({ bottom, right }) {
 
   useEffect(() => {
     function handleScroll() {
-      setVisible(getScrollTargets().some(
-        (target) => getTargetScrollTop(target) > SCROLL_THRESHOLD,
-      ));
+      setVisible(
+        getScrollTargets().some((target) => getTargetScrollTop(target) > SCROLL_THRESHOLD),
+      );
     }
     const targets = getScrollTargets();
     targets.forEach((target) => target.addEventListener("scroll", handleScroll, { passive: true }));
@@ -41,7 +41,13 @@ export default function ScrollToTopButton({ bottom, right }) {
       }}
     >
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <path d="M10 16V4M10 4l-5 5M10 4l5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <path
+          d="M10 16V4M10 4l-5 5M10 4l5 5"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       </svg>
     </button>
   );

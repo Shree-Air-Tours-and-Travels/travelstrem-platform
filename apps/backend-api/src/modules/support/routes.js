@@ -1,8 +1,18 @@
 import express from "express";
 import { authMiddleware } from "../../shared/auth/index.js";
 import {
-  createTicket, getArticle, getCategories, getContacts, getHome, getService,
-  getServices, getTicket, getTopic, listTickets, replyToTicket, searchSupport,
+    createTicket,
+    getArticle,
+    getCategories,
+    getContacts,
+    getHome,
+    getService,
+    getServices,
+    getTicket,
+    getTopic,
+    listTickets,
+    replyToTicket,
+    searchSupport,
 } from "./support.controller.js";
 
 const router = express.Router();

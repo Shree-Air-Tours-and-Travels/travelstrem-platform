@@ -89,25 +89,33 @@ export default function Dropdown({
   const fixedWidth = propWidth != null && !isAutoWidth;
   const autoSearch = items.length > 10;
   const isSearchable = variant === "searchable" || autoSearch;
-  const isScrollable = isSelect || variant === "scrollable" || variant === "searchable" || autoSearch;
+  const isScrollable =
+    isSelect || variant === "scrollable" || variant === "searchable" || autoSearch;
   const showBottomSheet = isMobile() && open;
 
-  const changeOpen = useCallback((next) => {
-    if (controlledOpen === undefined) setInternalOpen(next);
-    onOpenChange?.(next);
-    onToggle?.(next);
-  }, [controlledOpen, onOpenChange, onToggle]);
+  const changeOpen = useCallback(
+    (next) => {
+      if (controlledOpen === undefined) setInternalOpen(next);
+      onOpenChange?.(next);
+      onToggle?.(next);
+    },
+    [controlledOpen, onOpenChange, onToggle],
+  );
 
   const selectedItem = useMemo(() => {
     if (value === undefined || value === null || value === "") return null;
     const key = String(value);
-    return items.find((item) => !item.separator && (String(item.value) === key || String(item.id) === key)) || null;
+    return (
+      items.find(
+        (item) => !item.separator && (String(item.value) === key || String(item.id) === key),
+      ) || null
+    );
   }, [items, value]);
 
   const menuWidth = useMemo(() => {
     const width = portalWidth ?? propWidth;
     if (width == null || width === "auto") return isJourneyMenu ? 440 : 0;
-    return typeof width === "number" ? width : (parseInt(width, 10) || 240);
+    return typeof width === "number" ? width : parseInt(width, 10) || 240;
   }, [isJourneyMenu, portalWidth, propWidth]);
 
   const filteredItems = useMemo(() => {
@@ -116,7 +124,10 @@ export default function Dropdown({
     const q = search.toLowerCase();
     return visibleItems.filter((item) => {
       if (item.separator) return true;
-      return (item.label || "").toLowerCase().includes(q) || (item.searchText || "").toLowerCase().includes(q);
+      return (
+        (item.label || "").toLowerCase().includes(q) ||
+        (item.searchText || "").toLowerCase().includes(q)
+      );
     });
   }, [items, search, isSearchable]);
 
@@ -136,7 +147,7 @@ export default function Dropdown({
     const triggerWidth = wrapperRef.current.offsetWidth;
     let w = menuWidth;
     if (!w) {
-      w = Math.min(triggerWidth, vw - (VIEWPORT_MARGIN * 2));
+      w = Math.min(triggerWidth, vw - VIEWPORT_MARGIN * 2);
     }
     const pos = calcPosition(wrapperRef.current, w, position !== "top");
     setMenuStyle({ ...pos, width: w });
@@ -164,8 +175,10 @@ export default function Dropdown({
     function onClick(e) {
       if (showBottomSheet) return;
       if (
-        wrapperRef.current && !wrapperRef.current.contains(e.target) &&
-        menuWrapperRef.current && !menuWrapperRef.current.contains(e.target)
+        wrapperRef.current &&
+        !wrapperRef.current.contains(e.target) &&
+        menuWrapperRef.current &&
+        !menuWrapperRef.current.contains(e.target)
       ) {
         changeOpen(false);
       }
@@ -197,38 +210,48 @@ export default function Dropdown({
     }
   }, [changeOpen, disabled, open, updatePosition]);
 
-  const handleItemClick = useCallback((item) => {
-    if (item?.disabled) return;
-    item.onClick?.();
-    onChange?.(item);
-    if (closeOnSelect) changeOpen(false);
-  }, [changeOpen, closeOnSelect, onChange]);
+  const handleItemClick = useCallback(
+    (item) => {
+      if (item?.disabled) return;
+      item.onClick?.();
+      onChange?.(item);
+      if (closeOnSelect) changeOpen(false);
+    },
+    [changeOpen, closeOnSelect, onChange],
+  );
 
-  const triggerEl = useBuiltInTrigger
-    ? (
-      <Button
-        type="button"
-        variant="text"
-        primaryClassName={`trem-dropdown__select${error ? " trem-dropdown__select--error" : ""}`}
-        aria-invalid={!!error}
-        disabled={disabled}
-      >
-        <span className="trem-dropdown__select-inner">
-          {label ? <span className="trem-dropdown__select-label">{label}</span> : null}
-          <span className="trem-dropdown__select-value">
-            {selectedItem ? (selectedItem.label || selectedItem.value || placeholder) : placeholder}
-          </span>
+  const triggerEl = useBuiltInTrigger ? (
+    <Button
+      type="button"
+      variant="text"
+      primaryClassName={`trem-dropdown__select${error ? " trem-dropdown__select--error" : ""}`}
+      aria-invalid={!!error}
+      disabled={disabled}
+    >
+      <span className="trem-dropdown__select-inner">
+        {label ? <span className="trem-dropdown__select-label">{label}</span> : null}
+        <span className="trem-dropdown__select-value">
+          {selectedItem ? selectedItem.label || selectedItem.value || placeholder : placeholder}
         </span>
-        <Icon name="chevronDown" className={`trem-dropdown__select-chevron${open ? " is-open" : ""}`} />
-      </Button>
-    )
-    : (typeof trigger === "function" ? trigger({ open, isActive }) : trigger);
+      </span>
+      <Icon
+        name="chevronDown"
+        className={`trem-dropdown__select-chevron${open ? " is-open" : ""}`}
+      />
+    </Button>
+  ) : typeof trigger === "function" ? (
+    trigger({ open, isActive })
+  ) : (
+    trigger
+  );
   const accessibleTriggerEl = React.isValidElement(triggerEl)
     ? React.cloneElement(triggerEl, { "aria-expanded": open })
     : triggerEl;
 
   const resolvedWidth = fixedWidth
-    ? (typeof propWidth === "number" ? `${propWidth}px` : propWidth)
+    ? typeof propWidth === "number"
+      ? `${propWidth}px`
+      : propWidth
     : undefined;
 
   const wrapperStyle = useMemo(() => {
@@ -247,10 +270,14 @@ export default function Dropdown({
     ...(portalZIndex != null ? { zIndex: portalZIndex } : {}),
   };
 
-  const resolvedMenuFooter = typeof menuFooter === "function"
-    ? menuFooter({ close: () => changeOpen(false), open })
-    : menuFooter;
-  const menuChromeHeight = (isSearchable ? 60 : 0) + (resolvedMenuFooter ? 56 : 0) + (isJourneyMenu && menuTitle ? 52 : 16);
+  const resolvedMenuFooter =
+    typeof menuFooter === "function"
+      ? menuFooter({ close: () => changeOpen(false), open })
+      : menuFooter;
+  const menuChromeHeight =
+    (isSearchable ? 60 : 0) +
+    (resolvedMenuFooter ? 56 : 0) +
+    (isJourneyMenu && menuTitle ? 52 : 16);
   const positionedListHeight = Math.max(120, (menuStyle.maxHeight || 240) - menuChromeHeight);
   const menuListStyle = {
     maxHeight: propMaxHeight || (isScrollable ? positionedListHeight : undefined),
@@ -263,7 +290,9 @@ export default function Dropdown({
       ref={menuWrapperRef}
       style={menuPositionStyle}
     >
-      {isJourneyMenu && menuTitle ? <div className="trem-dropdown__menu-title">{menuTitle}</div> : null}
+      {isJourneyMenu && menuTitle ? (
+        <div className="trem-dropdown__menu-title">{menuTitle}</div>
+      ) : null}
       {isSearchable && (
         <div className="trem-dropdown__search">
           <Icon name="search" />
@@ -277,15 +306,20 @@ export default function Dropdown({
           />
         </div>
       )}
-      <ul className={`trem-dropdown__menu ${menuClassName}`.trim()} role="menu" aria-label={menuAriaLabel} style={menuListStyle}>
+      <ul
+        className={`trem-dropdown__menu ${menuClassName}`.trim()}
+        role="menu"
+        aria-label={menuAriaLabel}
+        style={menuListStyle}
+      >
         {filteredItems.map((item, index) =>
-          item.separator || !renderItemProp
-            ? renderDefaultItem(item, index)
-            : (
-              <li role="none" key={item.key || item.id || `item-${index}`}>
-                {renderItemProp(item, index)}
-              </li>
-            )
+          item.separator || !renderItemProp ? (
+            renderDefaultItem(item, index)
+          ) : (
+            <li role="none" key={item.key || item.id || `item-${index}`}>
+              {renderItemProp(item, index)}
+            </li>
+          ),
         )}
       </ul>
       {resolvedMenuFooter}
@@ -294,7 +328,11 @@ export default function Dropdown({
 
   function renderDefaultItem(item, index) {
     if (item.separator) {
-      return <li key={`sep-${index}`}><hr className="trem-dropdown__separator" /></li>;
+      return (
+        <li key={`sep-${index}`}>
+          <hr className="trem-dropdown__separator" />
+        </li>
+      );
     }
     if (isJourneyMenu) {
       return (
@@ -315,7 +353,9 @@ export default function Dropdown({
               {item.description ? <small>{item.description}</small> : null}
             </span>
             {item.badge ? <span className="trem-dropdown__journey-badge">{item.badge}</span> : null}
-            {!item.disabled ? <Icon name="chevronRight" size={22} className="trem-dropdown__journey-chevron" /> : null}
+            {!item.disabled ? (
+              <Icon name="chevronRight" size={22} className="trem-dropdown__journey-chevron" />
+            ) : null}
           </Button>
         </li>
       );
@@ -366,15 +406,19 @@ export default function Dropdown({
             />
           </div>
         )}
-        <ul className={`trem-dropdown__menu ${menuClassName}`.trim()} role="menu" aria-label={menuAriaLabel}>
+        <ul
+          className={`trem-dropdown__menu ${menuClassName}`.trim()}
+          role="menu"
+          aria-label={menuAriaLabel}
+        >
           {filteredItems.map((item, index) =>
-            item.separator || !renderItemProp
-              ? renderDefaultItem(item, index)
-              : (
-                <li role="none" key={item.key || item.id || `item-${index}`}>
-                  {renderItemProp(item, index)}
-                </li>
-              )
+            item.separator || !renderItemProp ? (
+              renderDefaultItem(item, index)
+            ) : (
+              <li role="none" key={item.key || item.id || `item-${index}`}>
+                {renderItemProp(item, index)}
+              </li>
+            ),
           )}
         </ul>
         {resolvedMenuFooter}

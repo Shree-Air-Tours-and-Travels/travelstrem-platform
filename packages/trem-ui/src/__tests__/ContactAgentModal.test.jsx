@@ -22,17 +22,24 @@ const formResponse = {
     },
     structure: {
       header: { titleRef: "title", descriptionRef: "description" },
-      widgets: [{
-        type: "ContactAgentForm",
-        props: {
-          submitLabelRef: "submit",
-          fields: [
-            { name: "name", type: "text", labelRef: "fullName", required: true },
-            { name: "preferredContact", type: "select", labelRef: "contactMethod", options: [{ value: "whatsapp", labelRef: "whatsapp" }] },
-            { name: "message", type: "textarea", labelRef: "message" },
-          ],
+      widgets: [
+        {
+          type: "ContactAgentForm",
+          props: {
+            submitLabelRef: "submit",
+            fields: [
+              { name: "name", type: "text", labelRef: "fullName", required: true },
+              {
+                name: "preferredContact",
+                type: "select",
+                labelRef: "contactMethod",
+                options: [{ value: "whatsapp", labelRef: "whatsapp" }],
+              },
+              { name: "message", type: "textarea", labelRef: "message" },
+            ],
+          },
         },
-      }],
+      ],
     },
   },
 };
@@ -49,6 +56,9 @@ describe("ContactAgentModal", () => {
     expect(screen.getByText("How should we contact you?")).toBeInTheDocument();
     expect(screen.getByText("What kind of tour are you looking for?")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Send tour enquiry" })).toBeInTheDocument();
-    expect(get).toHaveBeenCalledWith("/form.json?form=contact-agent&product=trevio", expect.any(Object));
+    expect(get).toHaveBeenCalledWith(
+      "/form.json?form=contact-agent&product=trevio",
+      expect.any(Object),
+    );
   });
 });

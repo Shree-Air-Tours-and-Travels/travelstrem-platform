@@ -119,9 +119,17 @@
       border-radius: $radius-full;
       @include skeleton-shimmer(var(--surface-inset));
 
-      &--sm { width: 120px; height: $space-3; }
-      &--lg { width: 100%; height: $space-8; }
-      &--md { width: 72%; }
+      &--sm {
+        width: 120px;
+        height: $space-3;
+      }
+      &--lg {
+        width: 100%;
+        height: $space-8;
+      }
+      &--md {
+        width: 72%;
+      }
     }
 
     .trem-preloader__hero-actions {
@@ -172,10 +180,19 @@
       border-radius: $radius-full;
       @include skeleton-shimmer(var(--surface-inset));
 
-      &--lg { width: 72%; }
-      &--md { width: 54%; }
-      &--sm { width: 38%; }
-      &--xs { width: 28%; height: $space-4; }
+      &--lg {
+        width: 72%;
+      }
+      &--md {
+        width: 54%;
+      }
+      &--sm {
+        width: 38%;
+      }
+      &--xs {
+        width: 28%;
+        height: $space-4;
+      }
     }
 
     .trem-preloader__featured-dots {
@@ -221,9 +238,15 @@
       border-radius: $radius-full;
       @include skeleton-shimmer(var(--surface-inset));
 
-      &:nth-child(2) { width: 100px; }
-      &:nth-child(3) { width: 70px; }
-      &:nth-child(4) { width: 110px; }
+      &:nth-child(2) {
+        width: 100px;
+      }
+      &:nth-child(3) {
+        width: 70px;
+      }
+      &:nth-child(4) {
+        width: 110px;
+      }
     }
   }
 

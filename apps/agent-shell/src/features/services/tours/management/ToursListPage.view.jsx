@@ -1,175 +1,295 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Button, Breadcrumbs, Dropdown, EmptyState, InputField, SubTitle, TourCard } from "@packages/trem-ui";
-import { deleteAgentTour, deleteAllAgentTours, fetchAgentTours } from "../../../../services/agentService";
+import { fetchData } from "@packages/trem-utils";
+import {
+  Button,
+  Breadcrumbs,
+  Dropdown,
+  EmptyState,
+  InputField,
+  SubTitle,
+  TourCard,
+} from "@packages/trem-ui";
+import { deleteAgentTour, deleteAllAgentTours } from "../../../../services/agentService";
 import { TourCardSkeleton, WidgetError } from "../../../../shared/Skeleton";
 import { useAgentPortalConfig } from "../../../../app/providers/AgentPortalProvider";
-import { ADMIN_ROLE, AGENT_ROLE, TOUR_CARD_CONFIG } from "../tours.constants";
-import pageConfig from "./toursListPage.config.json";
+import { AGENT_ROLE, ADMIN_ROLE } from "../tours.constants";
 import "./ToursListPage.styles.scss";
 
-const matchTour = (tour, query) => {
-    if (!query) return true;
-    const q = query.toLowerCase();
-    const title = (tour.title || "").toLowerCase();
-    const desc = (tour.desc || "").toLowerCase();
-    const from = (tour.city?.from || "").toLowerCase();
-    const to = (tour.city?.to || "").toLowerCase();
-    const tags = Array.isArray(tour.tags) ? tour.tags.join(" ").toLowerCase() : "";
-    return title.includes(q) || desc.includes(q) || from.includes(q) || to.includes(q) || tags.includes(q);
-};
+const PAGE_KEY = "agent-shell/services/tours-management";
+
+const labelFor = (labels, ref) => (ref && labels?.[ref]) || "";
 
 export default function ToursListPage() {
-    const navigate = useNavigate();
-    const location = useLocation();
-    const { session } = useAgentPortalConfig();
-    const [tours, setTours] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [searchQuery, setSearchQuery] = useState("");
-    const [sortBy, setSortBy] = useState("newest");
-    const [sortOpen, setSortOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { session } = useAgentPortalConfig();
+  const [tours, setTours] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState("newest");
+  const [sortOpen, setSortOpen] = useState(false);
 
-    const sortOptions = useMemo(() =>
-        pageConfig.sort.options.map((opt) => ({
-            id: opt.id,
-            label: opt.label,
-            active: sortBy === opt.id,
-            onClick: () => { setSortBy(opt.id); setSortOpen(false); },
-        })),
-    [sortBy]);
+  /* Backend-driven page definition + widget metadata (labels live on the
+     server; this view only resolves refs and renders). The listing widget is
+     intentionally excluded here — it is fetched WITH its data in a single
+     call below, so no separate metadata round trip is made. */
+  const [pageStructure, setPageStructure] = useState(null);
+  const [filterWidget, setFilterWidget] = useState(null);
+  const [listingWidget, setListingWidget] = useState(null);
+  const [configError, setConfigError] = useState(null);
 
-    const role = session?.user?.role;
-    const isAgent = role === AGENT_ROLE;
-    const isAdmin = role === ADMIN_ROLE;
-    const userId = session?.user?.sub || session?.user?.id;
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const pageResponse = await fetchData("/tours-management-page.json");
+        const widgets = pageResponse?.component?.structure?.widgets || [];
+        const filterRef =
+          widgets.find((w) => w.type === "tourManagementFilters")?.widgetRef || null;
+        const filterResponse = filterRef
+          ? await fetchData(`/${filterRef.split("/").pop()}?pageKey=${PAGE_KEY}&metadataOnly=true`)
+          : null;
+        if (!active) return;
+        setPageStructure(pageResponse?.component?.structure || null);
+        setFilterWidget(filterResponse?.component || null);
+      } catch (e) {
+        if (active) setConfigError(e.message || "Page configuration could not be loaded");
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
 
-    const { breadcrumbs, toolbar, emptyState, search: searchConfig } = pageConfig;
+  /* Single data-bearing call: the listing widget returns labels + config +
+     the agent-scoped tours in one response. Re-run on search/sort changes
+     (debounced while typing) so filtering never needs a second endpoint. */
+  const loadListing = useCallback(
+    async ({ silent = false } = {}) => {
+      if (!silent) setLoading(true);
+      setError(null);
+      try {
+        const params = new URLSearchParams({
+          pageKey: PAGE_KEY,
+          query: searchQuery,
+          sort: sortBy,
+        });
+        const response = await fetchData(`/tour-management-listing.json?${params}`);
+        setTours(response?.component?.data?.tours || []);
+        setListingWidget(response?.component || null);
+      } catch (e) {
+        setError(e.message || "Failed to load tours");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [searchQuery, sortBy],
+  );
 
-    const loadTours = useCallback(async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const data = await fetchAgentTours();
-            setTours(Array.isArray(data) ? data : []);
-        } catch (e) {
-            setError(e.message || pageConfig.errors.loadFailed);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
+  const previousQuery = useRef(searchQuery);
+  useEffect(() => {
+    const queryChanged = previousQuery.current !== searchQuery;
+    previousQuery.current = searchQuery;
+    const timer = window.setTimeout(() => loadListing(), queryChanged ? 400 : 0);
+    return () => window.clearTimeout(timer);
+  }, [loadListing, searchQuery, sortBy]);
 
-    useEffect(() => { loadTours(); }, [loadTours]);
+  const filterLabels = useMemo(
+    () => filterWidget?.elements?.labels || {},
+    [filterWidget?.elements?.labels],
+  );
+  const listingLabels = useMemo(
+    () => listingWidget?.elements?.labels || {},
+    [listingWidget?.elements?.labels],
+  );
+  const filterActions = filterWidget?.structure?.actions || [];
+  const filterConfig = filterWidget?.structure?.config || {};
+  const listingConfig = listingWidget?.structure?.config || {};
 
-    useEffect(() => {
-        const params = new URLSearchParams(location.search);
-        if (params.get("create") === "true") {
-            navigate("/agent/services/tours/builder", { replace: true });
-            return undefined;
-        }
+  const sortOptions = useMemo(
+    () =>
+      (filterConfig.sort?.options || []).map((opt) => ({
+        id: opt.id,
+        label: labelFor(filterLabels, opt.labelRef),
+        active: sortBy === opt.id,
+        onClick: () => {
+          setSortBy(opt.id);
+          setSortOpen(false);
+        },
+      })),
+    [filterConfig.sort?.options, filterLabels, sortBy],
+  );
 
-        return undefined;
-    }, [location.search]);
+  const searchPlaceholder = useMemo(
+    () => labelFor(filterLabels, filterConfig.search?.placeholderRef),
+    [filterConfig.search?.placeholderRef, filterLabels],
+  );
 
-    const canDeleteTour = useCallback((tour) => {
-        const ownerId = tour.ownerAgent?._id || tour.ownerAgent;
-        return !!(isAdmin || (isAgent && userId && ownerId && String(ownerId) === String(userId)));
-    }, [isAdmin, isAgent, userId]);
+  const breadcrumbs = pageStructure?.config?.breadcrumbs || [];
+  const emptyState = {
+    icon: listingConfig.emptyState?.icon || "map",
+    title: labelFor(listingLabels, listingConfig.emptyState?.titleRef),
+    description: labelFor(listingLabels, listingConfig.emptyState?.descriptionRef),
+  };
+  const cardConfig = {
+    isAdmin: Boolean(listingConfig.card?.isAdmin),
+    showOwner: listingConfig.card?.showOwner !== false,
+    ownershipMode: listingConfig.card?.ownershipMode || "agent",
+    ownershipLabel:
+      labelFor(listingLabels, listingConfig.card?.ownershipLabelRef) || "Added by agent",
+  };
 
-    const handleView = useCallback((tour) => {
-        const id = tour?._id || tour?.id;
-        if (id) navigate(`/agent/services/tours/${encodeURIComponent(id)}/view`);
-    }, [navigate]);
+  const role = session?.user?.role;
+  const isAgent = role === AGENT_ROLE;
+  const isAdmin = role === ADMIN_ROLE;
+  const userId = session?.user?.sub || session?.user?.id;
 
-    const handleEdit = useCallback((tour) => {
-        const id = tour?._id || tour?.id;
-        if (id) navigate(`/agent/services/tours/${encodeURIComponent(id)}/edit`);
-    }, [navigate]);
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("create") === "true") {
+      navigate("/agent/services/tours/builder", { replace: true });
+      return undefined;
+    }
 
-    const handleCreate = useCallback(() => {
-        navigate("builder");
-    }, [navigate]);
+    return undefined;
+  }, [location.search, navigate]);
 
-    const handleDelete = useCallback((tour) => {
-        const id = tour._id || tour.id;
-        const name = tour.title || tour.name || id;
-        if (window.confirm(pageConfig.confirm.deleteSingle.replace("{{name}}", name))) {
-            deleteAgentTour(id).then(loadTours).catch((e) => setError(e.message));
-        }
-    }, [loadTours]);
+  const canDeleteTour = useCallback(
+    (tour) => {
+      const ownerId = tour.ownerAgent?._id || tour.ownerAgent;
+      return !!(isAdmin || (isAgent && userId && ownerId && String(ownerId) === String(userId)));
+    },
+    [isAdmin, isAgent, userId],
+  );
 
-    const handleDeleteAll = useCallback(() => {
-        if (window.confirm(pageConfig.confirm.deleteAll)) {
-            deleteAllAgentTours().then(loadTours).catch((e) => setError(e.message));
-        }
-    }, [loadTours]);
+  const handleView = useCallback(
+    (tour) => {
+      const id = tour?._id || tour?.id;
+      if (id) navigate(`/agent/services/tours/${encodeURIComponent(id)}/view`);
+    },
+    [navigate],
+  );
 
-    const filteredTours = useMemo(() => {
-        let result = tours.filter((t) => matchTour(t, searchQuery));
-        if (sortBy === "newest") {
-            result = [...result].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-        } else if (sortBy === "oldest") {
-            result = [...result].sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
-        } else if (sortBy === "title") {
-            result = [...result].sort((a, b) => (a.title || "").localeCompare(b.title || ""));
-        }
-        return result;
-    }, [tours, searchQuery, sortBy]);
+  const handleEdit = useCallback(
+    (tour) => {
+      const id = tour?._id || tour?.id;
+      if (id) navigate(`/agent/services/tours/${encodeURIComponent(id)}/edit`);
+    },
+    [navigate],
+  );
 
-    return (
-        <section className="services-tours-page">
-            <Breadcrumbs items={breadcrumbs} />
-            <header className="services-tours-page__toolbar">
-                <SubTitle text={toolbar.title} />
-                <div className="services-tours-page__actions">
-                    <Button variant={toolbar.buttons.create.variant} iconLeft={toolbar.buttons.create.iconLeft} onClick={handleCreate} text={toolbar.buttons.create.text} />
-                    {isAdmin && <Button variant={toolbar.buttons.deleteAll.variant} color={toolbar.buttons.deleteAll.color} onClick={handleDeleteAll} text={toolbar.buttons.deleteAll.text} />}
-                    <Button variant={toolbar.buttons.refresh.variant} iconLeft={toolbar.buttons.refresh.iconLeft} onClick={loadTours} text={toolbar.buttons.refresh.text} />
-                </div>
-            </header>
-            <div className="services-tours-page__filters">
-                <InputField
-                    value={searchQuery}
-                    onChange={(val) => setSearchQuery(val)}
-                    placeholder={searchConfig?.placeholder || "Search tours..."}
-                />
-                <div className="services-tours-page__sort">
-                    <Dropdown
-                        align="right"
-                        variant="default"
-                        isActive={sortOpen}
-                        onToggle={setSortOpen}
-                        trigger={
-                            <Button variant="outline" color="primary" iconRight="chevronDown" text={`${sortOptions.find(o => o.active)?.label}`} />
-                        }
-                        items={sortOptions}
-                    />
-                </div>
-            </div>
-            {error && <WidgetError message={error} />}
-            <div className="services-tours-page__list">
-                {loading ? (
-                    Array.from({ length: 4 }).map((_, i) => <TourCardSkeleton key={i} />)
-                ) : filteredTours.length === 0 ? (
-                    <EmptyState icon={emptyState.icon} title={emptyState.title} description={emptyState.description} />
-                ) : (
-                    filteredTours.map((t) => (
-                        <TourCard
-                            key={t._id || t.id}
-                            tour={t}
-                            variant="management"
-                            isAdmin={TOUR_CARD_CONFIG.isAdmin}
-                            showOwner={TOUR_CARD_CONFIG.showOwner}
-                            ownershipMode="agent"
-                            ownershipLabels={{ agent: "Added by agent" }}
-                            ownerAgentName={t.ownerAgentName || ""}
-                            onView={handleView}
-                            onEdit={handleEdit}
-                            onDelete={canDeleteTour(t) ? handleDelete : undefined}
-                        />
-                    ))
-                )}
-            </div>
-        </section>
-    );
+  const handleCreate = useCallback(() => {
+    navigate("builder");
+  }, [navigate]);
+
+  const handleDelete = useCallback(
+    (tour) => {
+      const id = tour._id || tour.id;
+      const name = tour.title || tour.name || id;
+      const template =
+        labelFor(listingLabels, "confirmDeleteSingle") ||
+        'Delete "{{name}}"? This cannot be undone.';
+      if (window.confirm(template.replace("{{name}}", name))) {
+        deleteAgentTour(id)
+          .then(() => loadListing())
+          .catch((e) => setError(e.message));
+      }
+    },
+    [loadListing, listingLabels],
+  );
+
+  const handleDeleteAll = useCallback(() => {
+    const template = labelFor(listingLabels, "confirmDeleteAll");
+    if (window.confirm(template)) {
+      deleteAllAgentTours()
+        .then(() => loadListing())
+        .catch((e) => setError(e.message));
+    }
+  }, [loadListing, listingLabels]);
+
+  const actionHandlers = useMemo(
+    () => ({
+      create: handleCreate,
+      deleteAll: handleDeleteAll,
+      refresh: () => loadListing(),
+    }),
+    [handleCreate, handleDeleteAll, loadListing],
+  );
+
+  return (
+    <section className="services-tours-page">
+      <Breadcrumbs items={breadcrumbs} className="services-tours-page__breadcrumbs" />
+      <header className="services-tours-page__toolbar">
+        <SubTitle text={labelFor(filterLabels, filterWidget?.structure?.header?.titleRef)} />
+        <div className="services-tours-page__actions">
+          {filterActions
+            .filter((action) => !action.requiresAdmin || isAdmin)
+            .map((action) => (
+              <Button
+                key={action.name}
+                variant={action.variant}
+                color={action.color}
+                iconLeft={action.iconLeft}
+                onClick={actionHandlers[action.name]}
+                text={labelFor(filterLabels, action.labelRef)}
+              />
+            ))}
+        </div>
+      </header>
+      <div className="services-tours-page__filters">
+        <InputField
+          value={searchQuery}
+          onChange={(val) => setSearchQuery(val)}
+          placeholder={searchPlaceholder}
+        />
+        <div className="services-tours-page__sort">
+          <Dropdown
+            align="right"
+            variant="default"
+            isActive={sortOpen}
+            onToggle={setSortOpen}
+            trigger={
+              <Button
+                variant="outline"
+                color="primary"
+                iconRight="chevronDown"
+                text={`${sortOptions.find((o) => o.active)?.label}`}
+              />
+            }
+            items={sortOptions}
+          />
+        </div>
+      </div>
+      {(configError || error) && <WidgetError message={configError || error} />}
+      <div className="services-tours-page__list">
+        {loading ? (
+          Array.from({ length: 4 }).map((_, i) => <TourCardSkeleton key={i} />)
+        ) : tours.length === 0 ? (
+          <EmptyState
+            icon={emptyState.icon}
+            title={emptyState.title}
+            description={emptyState.description}
+          />
+        ) : (
+          tours.map((t) => (
+            <TourCard
+              key={t._id || t.id}
+              tour={t}
+              variant="management"
+              isAdmin={cardConfig.isAdmin}
+              showOwner={cardConfig.showOwner}
+              ownershipMode={cardConfig.ownershipMode}
+              ownershipLabels={{ agent: cardConfig.ownershipLabel }}
+              ownerAgentName={t.ownerAgentName || ""}
+              onView={handleView}
+              onEdit={handleEdit}
+              onDelete={canDeleteTour(t) ? handleDelete : undefined}
+            />
+          ))
+        )}
+      </div>
+    </section>
+  );
 }

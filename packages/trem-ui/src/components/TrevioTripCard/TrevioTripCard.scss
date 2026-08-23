@@ -1,58 +1,312 @@
 @import "../../styles/base/typography";
 
 .trevio-trip-card {
-  display: flex; flex-direction: column; min-width: 0; min-height: 438px; overflow: hidden;
-  border: 1px solid var(--border); border-radius: $radius-xl; background: var(--surface); color: var(--text);
-  box-shadow: var(--shadow-sm); transition: transform 180ms $ease-default, box-shadow 180ms $ease-default, border-color 180ms $ease-default;
-  &:hover { transform: translateY(-3px); border-color: var(--primary-focus); box-shadow: var(--shadow-lg); }
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 438px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: $radius-xl;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+  transition:
+    transform 180ms $ease-default,
+    box-shadow 180ms $ease-default,
+    border-color 180ms $ease-default;
+  &:hover {
+    transform: translateY(-3px);
+    border-color: var(--primary-focus);
+    box-shadow: var(--shadow-lg);
+  }
 }
 .trevio-trip-card__image {
-  position: relative; flex: 0 0 196px; height: 196px; overflow: hidden;
-  background: linear-gradient(135deg, var(--surface-inset), var(--surface-muted)) center / cover no-repeat;
-  &::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8,18,40,.04) 45%, rgba(8,18,40,.38)); pointer-events: none; }
+  position: relative;
+  flex: 0 0 196px;
+  height: 196px;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--surface-inset), var(--surface-muted)) center / cover
+    no-repeat;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(8, 18, 40, 0.04) 45%, rgba(8, 18, 40, 0.38));
+    pointer-events: none;
+  }
 }
-.trevio-trip-card__badges { position: absolute; z-index: 2; inset: 12px 12px auto; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 8px; pointer-events: none; }
-.trevio-trip-card__badge-group { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; }
-.trevio-trip-card__verified { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; padding: 6px 9px; border: 1px solid var(--primary-focus); border-radius: 999px; background: var(--surface-glass-strong, var(--surface)); color: var(--color-primary-dark, var(--color-primary)); box-shadow: var(--shadow-xs); font-size: $font-size-xs; font-weight: $font-bold; line-height: 1; white-space: nowrap; backdrop-filter: blur(10px); }
-.trevio-trip-card__tag, .trevio-trip-card__rating {
-  display: inline-flex; align-items: center; gap: 4px; min-width: 0; min-height: 30px; padding: 6px 9px; border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); border-radius: 999px;
-  background: var(--surface-glass-strong, var(--surface)); color: var(--text); box-shadow: var(--shadow-xs); backdrop-filter: blur(10px);
-  font-size: $font-size-xs; font-weight: $font-bold; line-height: 1; white-space: nowrap;
+.trevio-trip-card__badges {
+  position: absolute;
+  z-index: 2;
+  inset: 12px 12px auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 8px;
+  pointer-events: none;
 }
-.trevio-trip-card__tag { max-width: min(16rem, 100%); overflow: hidden; text-overflow: ellipsis; }
-.trevio-trip-card__rating { justify-self: end; height: 30px; margin: 0; color: var(--heading); svg { color: var(--color-warning); fill: currentColor; } small { color: var(--muted); } }
+.trevio-trip-card__badge-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+.trevio-trip-card__verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 6px 9px;
+  border: 1px solid var(--primary-focus);
+  border-radius: 999px;
+  background: var(--surface-glass-strong, var(--surface));
+  color: var(--color-primary-dark, var(--color-primary));
+  box-shadow: var(--shadow-xs);
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+  line-height: 1;
+  white-space: nowrap;
+  backdrop-filter: blur(10px);
+}
+.trevio-trip-card__tag,
+.trevio-trip-card__rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  min-height: 30px;
+  padding: 6px 9px;
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  border-radius: 999px;
+  background: var(--surface-glass-strong, var(--surface));
+  color: var(--text);
+  box-shadow: var(--shadow-xs);
+  backdrop-filter: blur(10px);
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+  line-height: 1;
+  white-space: nowrap;
+}
+.trevio-trip-card__tag {
+  max-width: min(16rem, 100%);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.trevio-trip-card__rating {
+  justify-self: end;
+  height: 30px;
+  margin: 0;
+  color: var(--heading);
+  svg {
+    color: var(--color-warning);
+    fill: currentColor;
+  }
+  small {
+    color: var(--muted);
+  }
+}
 .trevio-trip-card__favorite {
-  position: absolute; z-index: 3; right: 12px; bottom: 12px; display: grid; place-items: center; width: 38px; height: 38px; padding: 0;
-  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); border-radius: $radius-full; background: var(--surface-glass-strong); color: var(--text); box-shadow: var(--shadow-sm);
-  &.is-saved { color: var(--color-danger); svg { fill: currentColor; } }
-  &:hover { transform: scale(1.06); }
+  position: absolute;
+  z-index: 3;
+  right: 12px;
+  bottom: 12px;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  border-radius: $radius-full;
+  background: var(--surface-glass-strong);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+  &.is-saved {
+    color: var(--color-danger);
+    svg {
+      fill: currentColor;
+    }
+  }
+  &:hover {
+    transform: scale(1.06);
+  }
 }
-.trevio-trip-card__body { display: flex; flex: 1; flex-direction: column; gap: 9px; min-height: 0; padding: 16px; }
-.trevio-trip-card__title { margin: 0; color: var(--title); font-size: 17px; font-weight: $font-bold; line-height: 1.3; @include clamp-lines(2, 1.3); }
-.trevio-trip-card__desc { margin: 0; color: var(--subtitle); font-size: 13px; line-height: 1.5; @include clamp-lines(2, 1.5); }
-.trevio-trip-card__facts { display: flex; flex-wrap: wrap; gap: 6px 12px; color: var(--muted); font-size: 12px; }
-.trevio-trip-card__facts span { display: inline-flex; align-items: center; gap: 4px; min-width: 0; }
-.trevio-trip-card__facts svg { flex: 0 0 auto; color: var(--color-primary); }
-.trevio-trip-card__agency { display: flex; align-items: center; gap: 8px; min-width: 0; color: var(--text); font-size: 12px; }
-.trevio-trip-card__agency img, .trevio-trip-card__agency-avatar { width: 26px; height: 26px; flex: 0 0 26px; border-radius: 8px; object-fit: cover; }
-.trevio-trip-card__agency-avatar { display: grid; place-items: center; background: var(--primary-softer); color: var(--color-primary); font-size: 10px; font-weight: $font-bold; }
-.trevio-trip-card__agency > span:last-child { display: flex; flex-direction: column; min-width: 0; }
-.trevio-trip-card__agency small { color: var(--muted); font-size: 10px; }
-.trevio-trip-card__agency strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
-.trevio-trip-card__agency em { color: var(--muted); font-size: 10px; font-style: normal; }
-.trevio-trip-card__chips { display: flex; gap: 6px; overflow: hidden; }
-.trevio-trip-card__chip { flex: 0 0 auto; max-width: 45%; overflow: hidden; padding: 5px 8px; border-radius: 7px; background: var(--primary-softer); color: var(--color-primary-dark); font-size: 11px; font-weight: $font-semibold; text-overflow: ellipsis; white-space: nowrap; }
-.trevio-trip-card__footer { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; margin-top: auto; padding-top: 11px; border-top: 1px solid var(--border); }
-.trevio-trip-card__price small { display: block; color: var(--muted); font-size: 10px; }
-.trevio-trip-card__price strong { display: block; color: var(--title); font-size: 18px; line-height: 1.25; }
-.trevio-trip-card__link { display: inline-flex; align-items: center; gap: 5px; padding: 0; border: 0; background: none; color: var(--color-primary); font-size: 12px; font-weight: $font-bold; white-space: nowrap; }
-.trevio-trip-card__link:disabled { cursor: not-allowed; opacity: .5; }
-.trevio-trip-card__management { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 11px; border-top: 1px solid var(--border); }
-.trevio-trip-card__management-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
-.trevio-trip-card__sold-out-note { position: absolute; z-index: 2; inset: auto 0 0; display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: var(--overlay-strong); color: var(--color-on-primary); font-size: 11px; font-weight: $font-semibold; }
-.trevio-trip-card--sold-out .trevio-trip-card__image { filter: saturate(.75); }
+.trevio-trip-card__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 9px;
+  min-height: 0;
+  padding: 16px;
+}
+.trevio-trip-card__title {
+  margin: 0;
+  color: var(--title);
+  font-size: 17px;
+  font-weight: $font-bold;
+  line-height: 1.3;
+  @include clamp-lines(2, 1.3);
+}
+.trevio-trip-card__desc {
+  margin: 0;
+  color: var(--subtitle);
+  font-size: 13px;
+  line-height: 1.5;
+  @include clamp-lines(2, 1.5);
+}
+.trevio-trip-card__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.trevio-trip-card__facts span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+.trevio-trip-card__facts svg {
+  flex: 0 0 auto;
+  color: var(--color-primary);
+}
+.trevio-trip-card__agency {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: var(--text);
+  font-size: 12px;
+}
+.trevio-trip-card__agency img,
+.trevio-trip-card__agency-avatar {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+.trevio-trip-card__agency-avatar {
+  display: grid;
+  place-items: center;
+  background: var(--primary-softer);
+  color: var(--color-primary);
+  font-size: 10px;
+  font-weight: $font-bold;
+}
+.trevio-trip-card__agency > span:last-child {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.trevio-trip-card__agency small {
+  color: var(--muted);
+  font-size: 10px;
+}
+.trevio-trip-card__agency strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+.trevio-trip-card__agency em {
+  color: var(--muted);
+  font-size: 10px;
+  font-style: normal;
+}
+.trevio-trip-card__chips {
+  display: flex;
+  gap: 6px;
+  overflow: hidden;
+}
+.trevio-trip-card__chip {
+  flex: 0 0 auto;
+  max-width: 45%;
+  overflow: hidden;
+  padding: 5px 8px;
+  border-radius: 7px;
+  background: var(--primary-softer);
+  color: var(--color-primary-dark);
+  font-size: 11px;
+  font-weight: $font-semibold;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.trevio-trip-card__footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 11px;
+  border-top: 1px solid var(--border);
+}
+.trevio-trip-card__price small {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+}
+.trevio-trip-card__price strong {
+  display: block;
+  color: var(--title);
+  font-size: 18px;
+  line-height: 1.25;
+}
+.trevio-trip-card__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: $font-bold;
+  white-space: nowrap;
+}
+.trevio-trip-card__link:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.trevio-trip-card__management {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 11px;
+  border-top: 1px solid var(--border);
+}
+.trevio-trip-card__management-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.trevio-trip-card__sold-out-note {
+  position: absolute;
+  z-index: 2;
+  inset: auto 0 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--overlay-strong);
+  color: var(--color-on-primary);
+  font-size: 11px;
+  font-weight: $font-semibold;
+}
+.trevio-trip-card--sold-out .trevio-trip-card__image {
+  filter: saturate(0.75);
+}
 
 @media (max-width: 640px) {
-  .trevio-trip-card { min-height: 410px; }
-  .trevio-trip-card__image { flex-basis: 180px; height: 180px; }
+  .trevio-trip-card {
+    min-height: 410px;
+  }
+  .trevio-trip-card__image {
+    flex-basis: 180px;
+    height: 180px;
+  }
 }

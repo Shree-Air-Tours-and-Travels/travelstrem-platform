@@ -263,7 +263,9 @@
     font-size: $font-size-sm;
     white-space: nowrap;
     overflow: hidden;
-    transition: background 120ms $ease-default, color 120ms $ease-default;
+    transition:
+      background 120ms $ease-default,
+      color 120ms $ease-default;
 
     > span:not(.ui-button__icon) {
       min-width: 0;

@@ -27,7 +27,9 @@ export const SUPPORT_CONTACT_AVAILABILITY = Object.freeze({
   LIMITED: "LIMITED",
 });
 
-export const SUPPORT_CONTACT_AVAILABILITY_LIST = Object.freeze(Object.values(SUPPORT_CONTACT_AVAILABILITY));
+export const SUPPORT_CONTACT_AVAILABILITY_LIST = Object.freeze(
+  Object.values(SUPPORT_CONTACT_AVAILABILITY),
+);
 
 export const SUPPORT_TICKET_STATUS = Object.freeze({
   OPEN: "OPEN",
@@ -90,7 +92,9 @@ export const SUPPORT_ELIGIBILITY_STATUS = Object.freeze({
   UNAVAILABLE: "UNAVAILABLE",
 });
 
-export const SUPPORT_ELIGIBILITY_STATUS_LIST = Object.freeze(Object.values(SUPPORT_ELIGIBILITY_STATUS));
+export const SUPPORT_ELIGIBILITY_STATUS_LIST = Object.freeze(
+  Object.values(SUPPORT_ELIGIBILITY_STATUS),
+);
 
 export const SUPPORT_SENDER_TYPE = Object.freeze({
   CUSTOMER: "customer",
@@ -113,6 +117,5 @@ export const SUPPORT_ANALYTICS_EVENT = Object.freeze({
   CANCELLATION_STARTED: "cancellation_started",
 });
 
-export const isSupportTicketTerminal = (status) => (
-  status === SUPPORT_TICKET_STATUS.RESOLVED || status === SUPPORT_TICKET_STATUS.CLOSED
-);
+export const isSupportTicketTerminal = (status) =>
+  status === SUPPORT_TICKET_STATUS.RESOLVED || status === SUPPORT_TICKET_STATUS.CLOSED;

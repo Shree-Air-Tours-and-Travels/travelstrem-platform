@@ -19,7 +19,15 @@ const config = {
     {
       id: "plan",
       title: "Plan a Journey",
-      items: [{ id: "holidays", label: "Holiday Packages", icon: "globe", disabled: true, comingSoon: true }],
+      items: [
+        {
+          id: "holidays",
+          label: "Holiday Packages",
+          icon: "globe",
+          disabled: true,
+          comingSoon: true,
+        },
+      ],
     },
   ],
   profile: { fallbackMeta: "TravelsTREM Member", actionTarget: "profile" },
@@ -41,14 +49,15 @@ describe("SideBar", () => {
     expect(screen.getByText("Plan a Journey")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Holiday Packages" })).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "Home" }));
-    expect(onNavigate).toHaveBeenCalledWith("overview", expect.objectContaining({ id: "overview" }));
+    expect(onNavigate).toHaveBeenCalledWith(
+      "overview",
+      expect.objectContaining({ id: "overview" }),
+    );
   });
 
   it("opens the same sidebar as a mobile drawer and closes from its backdrop", () => {
     const onClose = vi.fn();
-    const { container } = render(
-      <SideBar config={config} mobileOpen onClose={onClose} />,
-    );
+    const { container } = render(<SideBar config={config} mobileOpen onClose={onClose} />);
 
     expect(container.querySelector(".trem-sidebar")).toHaveClass("is-mobile-open");
     fireEvent.click(container.querySelector(".trem-sidebar__backdrop"));
@@ -73,12 +82,21 @@ describe("SideBar", () => {
     const hiddenConfig = {
       ...config,
       sections: [
-        { id: "main", items: [{ id: "overview", label: "Home", icon: "home", target: "overview" }] },
+        {
+          id: "main",
+          items: [{ id: "overview", label: "Home", icon: "home", target: "overview" }],
+        },
         {
           id: "plan",
           title: "Plan a Journey",
           items: [
-            { id: "holidays", label: "Holiday Packages", icon: "globe", disabled: true, comingSoon: true },
+            {
+              id: "holidays",
+              label: "Holiday Packages",
+              icon: "globe",
+              disabled: true,
+              comingSoon: true,
+            },
             { id: "secret", label: "Secret Option", icon: "globe", hide: true },
           ],
         },

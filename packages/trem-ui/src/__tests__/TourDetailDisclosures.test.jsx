@@ -15,14 +15,16 @@ describe("tour detail disclosure widgets", () => {
           expandAll: "Expand all",
           collapseAll: "Collapse all",
         }}
-        itinerary={[{
-          day: 1,
-          title: "Arrival",
-          summary: "Reach the hotel",
-          activities: ["Airport pickup"],
-        }]}
+        itinerary={[
+          {
+            day: 1,
+            title: "Arrival",
+            summary: "Reach the hotel",
+            activities: ["Airport pickup"],
+          },
+        ]}
         initialExpandedDays={0}
-      />
+      />,
     );
 
     expect(screen.queryByText("Airport pickup")).not.toBeInTheDocument();
@@ -46,7 +48,7 @@ describe("tour detail disclosure widgets", () => {
         inclusions={["One", "Two", "Three", "Four", "Five", "Six"]}
         exclusions={["A", "B", "C", "D", "E", "F"]}
         config={{ initialVisibleCount: 5, separateControlsBreakpoint: 640 }}
-      />
+      />,
     );
 
     expect(screen.queryByText("Six")).not.toBeInTheDocument();
@@ -77,7 +79,7 @@ describe("tour detail disclosure widgets", () => {
         inclusions={["One", "Two", "Three", "Four", "Five", "Six"]}
         exclusions={["A", "B", "C", "D", "E", "F"]}
         config={{ initialVisibleCount: 5, separateControlsBreakpoint: 640 }}
-      />
+      />,
     );
 
     expect(screen.getAllByRole("button", { name: "View all" })).toHaveLength(2);
@@ -98,7 +100,7 @@ describe("tour detail disclosure widgets", () => {
         }}
         policy="Cancel up to seven days before departure."
         config={{ headerIcon: "shieldCheck", policySummaryIcon: "info" }}
-      />
+      />,
     );
 
     expect(screen.getByText("Cancellation terms")).toBeInTheDocument();

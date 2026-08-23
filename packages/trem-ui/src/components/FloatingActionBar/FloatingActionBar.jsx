@@ -102,25 +102,30 @@ const FloatingActionBar = React.memo(function FloatingActionBar({
 
   const legacyAlign = structure ? "left-right" : align;
 
-  const eligible = resolved.filter((action) => action.overflow !== true && !(mobile && action.overflowMobile));
+  const eligible = resolved.filter(
+    (action) => action.overflow !== true && !(mobile && action.overflowMobile),
+  );
   let visible;
   if (legacyAlign === "left-right" && mobile) {
     const left = eligible.filter((action) => action.align !== "right");
     const right = eligible.filter((action) => action.align === "right");
-    const primaryRight = right.find((action) => action.primary === true)
-      || [...right].reverse().find((action) => action.variant === "solid" && action.color === "primary")
-      || right[0];
+    const primaryRight =
+      right.find((action) => action.primary === true) ||
+      [...right]
+        .reverse()
+        .find((action) => action.variant === "solid" && action.color === "primary") ||
+      right[0];
     visible = [...left.slice(0, 1), ...(primaryRight ? [primaryRight] : [])];
   } else {
     const maxVisible = mobile ? Math.min(mobileVisible, eligible.length) : eligible.length;
     visible = eligible.slice(0, maxVisible);
   }
   const visibleSet = new Set(visible);
-  const overflow = resolved.filter((action) => !visibleSet.has(action) && (
-    action.overflow === true
-    || (mobile && action.overflowMobile)
-    || eligible.includes(action)
-  ));
+  const overflow = resolved.filter(
+    (action) =>
+      !visibleSet.has(action) &&
+      (action.overflow === true || (mobile && action.overflowMobile) || eligible.includes(action)),
+  );
   const hasOverflow = overflow.length > 0;
 
   const leftActions = visible.filter((a) => a.align !== "right");
@@ -141,11 +146,13 @@ const FloatingActionBar = React.memo(function FloatingActionBar({
 
     const syncRenderedHeight = () => {
       const height = Math.ceil(panel.getBoundingClientRect().height);
-      if (height > 0) layout.style.setProperty("--dash-mobile-action-panel-rendered-height", `${height}px`);
+      if (height > 0)
+        layout.style.setProperty("--dash-mobile-action-panel-rendered-height", `${height}px`);
     };
 
     syncRenderedHeight();
-    const observer = typeof ResizeObserver === "function" ? new ResizeObserver(syncRenderedHeight) : null;
+    const observer =
+      typeof ResizeObserver === "function" ? new ResizeObserver(syncRenderedHeight) : null;
     observer?.observe(panel);
     window.addEventListener("resize", syncRenderedHeight);
 
@@ -169,7 +176,8 @@ const FloatingActionBar = React.memo(function FloatingActionBar({
     };
 
     syncClearance();
-    const observer = typeof ResizeObserver === "function" ? new ResizeObserver(syncClearance) : null;
+    const observer =
+      typeof ResizeObserver === "function" ? new ResizeObserver(syncClearance) : null;
     observer?.observe(panel);
     window.addEventListener("resize", syncClearance);
 
@@ -200,7 +208,9 @@ const FloatingActionBar = React.memo(function FloatingActionBar({
               primaryClassName={`trem-fab__mobile-nav-item${action.active ? " is-active" : ""}${action.emphasis ? " is-emphasized" : ""}`}
             >
               <span className="trem-fab__mobile-nav-icon" aria-hidden="true">
-                {action.iconLeft ? <Icon name={action.iconLeft} size={action.emphasis ? 24 : 21} /> : null}
+                {action.iconLeft ? (
+                  <Icon name={action.iconLeft} size={action.emphasis ? 24 : 21} />
+                ) : null}
               </span>
               <span className="trem-fab__mobile-nav-label">{action.label}</span>
             </Button>
@@ -250,9 +260,7 @@ const FloatingActionBar = React.memo(function FloatingActionBar({
             {resolvedError}
           </div>
         )}
-        {resolvedNote && (
-          <div className="trem-fab__note">{resolvedNote}</div>
-        )}
+        {resolvedNote && <div className="trem-fab__note">{resolvedNote}</div>}
         <div className="trem-fab__inner">
           {legacyAlign === "left-right" ? (
             <>
@@ -297,15 +305,23 @@ const FloatingActionBar = React.memo(function FloatingActionBar({
       </div>
 
       {hasOverflow && (
-        <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title={sheetTitle} className="trem-fab__overflow-sheet">
+        <BottomSheet
+          open={sheetOpen}
+          onClose={() => setSheetOpen(false)}
+          title={sheetTitle}
+          className="trem-fab__overflow-sheet"
+        >
           {renderOverflow ? (
-            <div className="trem-fab__sheet-custom">
-              {renderOverflow(overflow)}
-            </div>
+            <div className="trem-fab__sheet-custom">{renderOverflow(overflow)}</div>
           ) : (
             <div className="trem-fab__sheet">
               {overflow.map((action, i) => {
-                const sheetVariant = action.variant === "solid" && action.color === "primary" ? "trem-fab__sheet-btn--primary" : action.color === "danger" ? "trem-fab__sheet-btn--danger" : "";
+                const sheetVariant =
+                  action.variant === "solid" && action.color === "primary"
+                    ? "trem-fab__sheet-btn--primary"
+                    : action.color === "danger"
+                      ? "trem-fab__sheet-btn--danger"
+                      : "";
                 return (
                   <Button
                     key={i}

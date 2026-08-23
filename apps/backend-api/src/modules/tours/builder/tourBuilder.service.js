@@ -1,13 +1,28 @@
 import Tour from "../models/Tour.js";
 import TourDeparture from "../models/TourDeparture.js";
 import TourRepository from "../repositories/TourRepository.js";
-import { SERVER_IDENTITY_FIELDS, PLATFORM_PROVIDER_NAME, resolveAgencyIdentity, applyIdentity } from "./builderIdentity.service.js";
+import {
+    SERVER_IDENTITY_FIELDS,
+    PLATFORM_PROVIDER_NAME,
+    resolveAgencyIdentity,
+    applyIdentity,
+} from "./builderIdentity.service.js";
 import { canModifyTour, applyDerivedCommercialPrice } from "../controllers/tourController.js";
 import { sanitizeTourPayloadForUpdate } from "../controllers/tourController.js";
 import { getTourCheckpointPublishingState } from "../services/tourVisibility.service.js";
 import { syncDerivedTourDeparture } from "../services/tourDepartureSyncService.js";
-import { applyProcessAction, getProcessSnapshot, PROCESS_ACTION } from "@packages/trem-process-engine";
+import {
+    applyProcessAction,
+    getProcessSnapshot,
+    PROCESS_ACTION,
+} from "@packages/trem-process-engine";
 import { createBuilderLabelContract } from "./builderLabelContract.js";
+import {
+    REALTIME_EVENTS,
+    publishFanOut,
+    publishToCatalog,
+    tourDto,
+} from "../../../realtime/index.js";
 import {
     BUILDER_STEPS,
     TOUR_BUILDER_KEY,
@@ -23,10 +38,15 @@ import {
 
 const isObject = (value) => value && typeof value === "object" && !Array.isArray(value);
 
-export const getPath = (source, path = "") => String(path)
-    .split(".")
-    .filter(Boolean)
-    .reduce((cursor, segment) => (isObject(cursor) || Array.isArray(cursor) ? cursor?.[segment] : undefined), source);
+export const getPath = (source, path = "") =>
+    String(path)
+        .split(".")
+        .filter(Boolean)
+        .reduce(
+            (cursor, segment) =>
+                isObject(cursor) || Array.isArray(cursor) ? cursor?.[segment] : undefined,
+            source,
+        );
 
 export const setPath = (target, path, value) => {
     const segments = String(path).split(".").filter(Boolean);
@@ -64,16 +84,19 @@ export const pickOwnedPaths = (data = {}, ownedPaths = []) => {
  * before the first save.
  */
 const markServerManagedWidgets = (widgets = [], values, identity) => {
-    const walk = (list) => list.forEach((widget) => {
-        if (!widget?.path) return;
-        if (identity[widget.path] !== undefined) {
-            widget.readOnly = true;
-            widget.serverManaged = true;
-            if (!getPath(values, widget.path)) setPath(values, widget.path, identity[widget.path]);
-        }
-        if (widget.type === "REPEATER" || widget.type === "COLLECTION_REPEATER") walk(widget.itemWidgets || []);
-        if (widget.type === "OBJECT") walk(widget.widgets || []);
-    });
+    const walk = (list) =>
+        list.forEach((widget) => {
+            if (!widget?.path) return;
+            if (identity[widget.path] !== undefined) {
+                widget.readOnly = true;
+                widget.serverManaged = true;
+                if (!getPath(values, widget.path))
+                    setPath(values, widget.path, identity[widget.path]);
+            }
+            if (widget.type === "REPEATER" || widget.type === "COLLECTION_REPEATER")
+                walk(widget.itemWidgets || []);
+            if (widget.type === "OBJECT") walk(widget.widgets || []);
+        });
     walk(widgets);
     return values;
 };
@@ -81,9 +104,12 @@ const markServerManagedWidgets = (widgets = [], values, identity) => {
 const ownsPath = (stepKey, candidatePath) => {
     const step = findStepDefinition(stepKey);
     if (!step) return false;
-    return (step.ownedPaths || []).some((ownedPath) => candidatePath === ownedPath
-        || candidatePath.startsWith(`${ownedPath}.`)
-        || ownedPath.startsWith(`${candidatePath}.`));
+    return (step.ownedPaths || []).some(
+        (ownedPath) =>
+            candidatePath === ownedPath ||
+            candidatePath.startsWith(`${ownedPath}.`) ||
+            ownedPath.startsWith(`${candidatePath}.`),
+    );
 };
 
 /* ---------------------------- capabilities ------------------------------ */
@@ -95,7 +121,10 @@ const capabilitiesFor = (req, tour) => {
     return {
         isMaster: !!access.isMaster,
         canEdit: tour ? canModifyTour(req.user, tour, access) : true,
-        canPublish: !!access.isMaster || role === "partner_admin" || agencySettings?.tripPublishingPermissions?.agentCanPublish === true,
+        canPublish:
+            !!access.isMaster ||
+            role === "partner_admin" ||
+            agencySettings?.tripPublishingPermissions?.agentCanPublish === true,
         canVerify: !!access.isMaster,
         canEditMetrics: !!access.isMaster,
         canEditPlatformMeta: !!access.isMaster || role === "partner_admin",
@@ -113,26 +142,29 @@ const widgetAllowed = (widget, capabilities) => {
 };
 
 /** Remove widgets (and their values) the actor may not see or edit. */
-const redactWidgets = (widgets = [], capabilities) => widgets.reduce((acc, widget) => {
-    const readOnlyByCapability = Object.entries(widget.capabilities || {})
-        .some(([capability, needed]) => needed && capability in capabilities && !capabilities[capability]);
-    const next = { ...widget };
-    if (readOnlyByCapability) next.readOnly = true;
+const redactWidgets = (widgets = [], capabilities) =>
+    widgets.reduce((acc, widget) => {
+        const readOnlyByCapability = Object.entries(widget.capabilities || {}).some(
+            ([capability, needed]) =>
+                needed && capability in capabilities && !capabilities[capability],
+        );
+        const next = { ...widget };
+        if (readOnlyByCapability) next.readOnly = true;
 
-    if (next.type === "REPEATER" || next.type === "COLLECTION_REPEATER") {
-        next.itemWidgets = redactWidgets(next.itemWidgets || [], capabilities);
-    }
-    if ((next.type === "OBJECT") && Array.isArray(next.widgets)) {
-        next.widgets = redactWidgets(next.widgets, capabilities);
-    }
+        if (next.type === "REPEATER" || next.type === "COLLECTION_REPEATER") {
+            next.itemWidgets = redactWidgets(next.itemWidgets || [], capabilities);
+        }
+        if (next.type === "OBJECT" && Array.isArray(next.widgets)) {
+            next.widgets = redactWidgets(next.widgets, capabilities);
+        }
 
-    // Cost data is stripped rather than shown read-only for actors without viewCosts.
-    if (!capabilities.viewCosts) {
-        if (next.path === "supplierRef" || next.path === "costAmountMinor") return acc;
-    }
-    acc.push(next);
-    return acc;
-}, []);
+        // Cost data is stripped rather than shown read-only for actors without viewCosts.
+        if (!capabilities.viewCosts) {
+            if (next.path === "supplierRef" || next.path === "costAmountMinor") return acc;
+        }
+        acc.push(next);
+        return acc;
+    }, []);
 
 const stripWidgetValues = (widgets = [], values, capabilities) => {
     if (!isObject(values)) return values;
@@ -143,13 +175,24 @@ const stripWidgetValues = (widgets = [], values, capabilities) => {
         const parent = getPath(cleaned, segments.join("."));
         if (isObject(parent) || Array.isArray(parent)) delete parent[last];
     };
-    const walk = (list) => list.forEach((widget) => {
-        if (!widgetAllowed(widget, capabilities) && widget.path) return removeAt(widget.path);
-        if (!capabilities.viewCosts && (widget.path === "supplierRef" || widget.path.endsWith(".supplierRef"))) return removeAt(widget.path);
-        if (!capabilities.viewCosts && (widget.path === "costAmountMinor" || widget.path.endsWith("pricing.costAmountMinor"))) return removeAt(widget.path);
-        if (widget.type === "REPEATER" || widget.type === "COLLECTION_REPEATER") walk(widget.itemWidgets || []);
-        if (widget.type === "OBJECT") walk(widget.widgets || []);
-    });
+    const walk = (list) =>
+        list.forEach((widget) => {
+            if (!widgetAllowed(widget, capabilities) && widget.path) return removeAt(widget.path);
+            if (
+                !capabilities.viewCosts &&
+                (widget.path === "supplierRef" || widget.path.endsWith(".supplierRef"))
+            )
+                return removeAt(widget.path);
+            if (
+                !capabilities.viewCosts &&
+                (widget.path === "costAmountMinor" ||
+                    widget.path.endsWith("pricing.costAmountMinor"))
+            )
+                return removeAt(widget.path);
+            if (widget.type === "REPEATER" || widget.type === "COLLECTION_REPEATER")
+                walk(widget.itemWidgets || []);
+            if (widget.type === "OBJECT") walk(widget.widgets || []);
+        });
     walk(widgets);
     return cleaned;
 };
@@ -177,15 +220,25 @@ const sanitizeDepartureRecord = (raw = {}) => {
         },
         departureDate: dateOr(raw.departureDate),
         returnDate: dateOr(raw.returnDate),
-        status: ["scheduled", "active", "sold_out", "cancelled", "completed"].includes(raw.status) ? raw.status : "active",
-        capacity: raw.capacity == null || raw.capacity === "" ? null : Math.max(0, Number(raw.capacity)),
-        availableSeats: raw.availableSeats == null || raw.availableSeats === "" ? null : Math.max(0, Number(raw.availableSeats)),
+        status: ["scheduled", "active", "sold_out", "cancelled", "completed"].includes(raw.status)
+            ? raw.status
+            : "active",
+        capacity:
+            raw.capacity == null || raw.capacity === "" ? null : Math.max(0, Number(raw.capacity)),
+        availableSeats:
+            raw.availableSeats == null || raw.availableSeats === ""
+                ? null
+                : Math.max(0, Number(raw.availableSeats)),
         pricing: {
             currency: String(pricing.currency || "INR").toUpperCase(),
             min: Number(pricing.min ?? 0),
             max: Number(pricing.max ?? 0),
             isFinal: !!pricing.isFinal,
-            source: ["manual", "ai", "agent", "calculated", "component_calculation"].includes(pricing.source) ? pricing.source : "manual",
+            source: ["manual", "ai", "agent", "calculated", "component_calculation"].includes(
+                pricing.source,
+            )
+                ? pricing.source
+                : "manual",
         },
         bookingOpensAt: dateOr(raw.bookingOpensAt),
         bookingClosesAt: dateOr(raw.bookingClosesAt),
@@ -195,10 +248,16 @@ const sanitizeDepartureRecord = (raw = {}) => {
 
 const saveCollectionStep = async (req, tour, stepKey, data) => {
     const step = findStepDefinition(stepKey);
-    const repeater = step.substeps.flatMap((substep) => substep.children).flatMap((child) => child.widgets)
+    const repeater = step.substeps
+        .flatMap((substep) => substep.children)
+        .flatMap((child) => child.widgets)
         .find((widget) => widget.type === "COLLECTION_REPEATER");
     const recordKey = String(repeater.path || repeater.key).replace(/^\$/, "");
-    const records = Array.isArray(data?.[recordKey]) ? data[recordKey] : (Array.isArray(data?.[repeater.key]) ? data[repeater.key] : []);
+    const records = Array.isArray(data?.[recordKey])
+        ? data[recordKey]
+        : Array.isArray(data?.[repeater.key])
+          ? data[repeater.key]
+          : [];
 
     if (repeater.collection === "tour-departures") {
         const keptIds = [];
@@ -213,10 +272,16 @@ const saveCollectionStep = async (req, tour, stepKey, data) => {
                     source: "component_calculation",
                 };
             }
-            if (!sanitized.departureDate || !sanitized.returnDate) throw new Error("Each departure needs departure and return dates");
-            if (Number(sanitized.pricing.min) > Number(sanitized.pricing.max)) throw new Error("Departure max price must be >= min price");
+            if (!sanitized.departureDate || !sanitized.returnDate)
+                throw new Error("Each departure needs departure and return dates");
+            if (Number(sanitized.pricing.min) > Number(sanitized.pricing.max))
+                throw new Error("Departure max price must be >= min price");
             if (sanitized._id) {
-                await TourDeparture.findOneAndUpdate({ _id: sanitized._id, tourId: tour._id }, sanitized, { new: true, runValidators: true });
+                await TourDeparture.findOneAndUpdate(
+                    { _id: sanitized._id, tourId: tour._id },
+                    sanitized,
+                    { new: true, runValidators: true },
+                );
                 keptIds.push(String(sanitized._id));
             } else {
                 const created = await TourDeparture.create({ ...sanitized, tourId: tour._id });
@@ -224,8 +289,11 @@ const saveCollectionStep = async (req, tour, stepKey, data) => {
             }
         }
         const existing = await TourDeparture.find({ tourId: tour._id }, "_id");
-        const staleIds = existing.filter((doc) => !keptIds.includes(String(doc._id))).map((doc) => doc._id);
-        if (staleIds.length) await TourDeparture.deleteMany({ _id: { $in: staleIds }, tourId: tour._id });
+        const staleIds = existing
+            .filter((doc) => !keptIds.includes(String(doc._id)))
+            .map((doc) => doc._id);
+        if (staleIds.length)
+            await TourDeparture.deleteMany({ _id: { $in: staleIds }, tourId: tour._id });
         await syncDerivedTourDeparture(tour).catch(() => {});
         return loadCollectionRecords("tour-departures", tour._id);
     }
@@ -241,18 +309,28 @@ const buildPreviewData = (tourObj = {}) => ({
     city: tourObj.city,
     packageType: tourObj.packageType,
     price: tourObj.price,
-    commercial: tourObj.commercial?.version === "COMPONENTS_V1"
-        ? {
-            version: tourObj.commercial.version,
-            currency: tourObj.commercial.currency,
-            displayMode: tourObj.commercial.derived?.displayMode || "ESTIMATED",
-            packages: (tourObj.commercial.packages || []).map((pkg) => ({
-                ...pkg,
-                pricing: (tourObj.commercial.derived?.packages || []).find((item) => item.packageKey === pkg.packageKey) || null,
-            })),
-            components: (tourObj.commercial.components || []).filter((component) => component.active !== false).map((component) => ({ componentKey: component.componentKey, name: component.name, type: component.type })),
-        }
-        : { version: "LEGACY" },
+    commercial:
+        tourObj.commercial?.version === "COMPONENTS_V1"
+            ? {
+                  version: tourObj.commercial.version,
+                  currency: tourObj.commercial.currency,
+                  displayMode: tourObj.commercial.derived?.displayMode || "ESTIMATED",
+                  packages: (tourObj.commercial.packages || []).map((pkg) => ({
+                      ...pkg,
+                      pricing:
+                          (tourObj.commercial.derived?.packages || []).find(
+                              (item) => item.packageKey === pkg.packageKey,
+                          ) || null,
+                  })),
+                  components: (tourObj.commercial.components || [])
+                      .filter((component) => component.active !== false)
+                      .map((component) => ({
+                          componentKey: component.componentKey,
+                          name: component.name,
+                          type: component.type,
+                      })),
+              }
+            : { version: "LEGACY" },
 });
 
 const stepValuesForTour = (step, tourDoc) => {
@@ -268,7 +346,10 @@ const resolveStepDefinition = (step, req, tour) => {
     const capabilities = capabilitiesFor(req, tour);
     definition.substeps = definition.substeps.map((substep) => ({
         ...substep,
-        children: substep.children.map((child) => ({ ...child, widgets: redactWidgets(child.widgets || [], capabilities) })),
+        children: substep.children.map((child) => ({
+            ...child,
+            widgets: redactWidgets(child.widgets || [], capabilities),
+        })),
     }));
     if (definition.actions.next && capabilities.canEdit === false) definition.readOnlyStep = true;
     return { definition, capabilities };
@@ -284,12 +365,19 @@ export async function loadBuilderStep(req, { tourId, stepKey }) {
     if (tourId) {
         tour = await TourRepository.findById(tourId);
         if (!tour) throw Object.assign(new Error("Tour not found"), { status: 404 });
-        if (!canModifyTour(req.user, tour, req.access)) throw Object.assign(new Error("You cannot edit this tour"), { status: 403 });
+        if (!canModifyTour(req.user, tour, req.access))
+            throw Object.assign(new Error("You cannot edit this tour"), { status: 403 });
     }
 
     if (stepKey === "resume") {
-        if (!tour) throw Object.assign(new Error("Choose a saved tour before resuming the builder."), { status: 409 });
-        const process = getProcessSnapshot(getBuilderProcessDefinition(), tour.builderProcess || {});
+        if (!tour)
+            throw Object.assign(new Error("Choose a saved tour before resuming the builder."), {
+                status: 409,
+            });
+        const process = getProcessSnapshot(
+            getBuilderProcessDefinition(),
+            tour.builderProcess || {},
+        );
         const candidate = String(process.currentNodeId || "").split(".")[0];
         stepKey = findStepDefinition(candidate) ? candidate : "basics";
     }
@@ -297,7 +385,12 @@ export async function loadBuilderStep(req, { tourId, stepKey }) {
     const step = findStepDefinition(stepKey);
     if (!step) throw Object.assign(new Error(`Unknown builder step "${stepKey}"`), { status: 404 });
     if (step.stepKey === "review" && !tour) {
-        throw Object.assign(new Error("The saved tour draft could not be identified. Reopen the builder from Tours."), { status: 409 });
+        throw Object.assign(
+            new Error(
+                "The saved tour draft could not be identified. Reopen the builder from Tours.",
+            ),
+            { status: 409 },
+        );
     }
 
     const { definition, capabilities } = resolveStepDefinition(step, req, tour);
@@ -305,29 +398,54 @@ export async function loadBuilderStep(req, { tourId, stepKey }) {
     const identity = resolveAgencyIdentity(req);
     let values = {};
     if (step.collection) {
-        const repeater = definition.substeps.flatMap((substep) => substep.children)
+        const repeater = definition.substeps
+            .flatMap((substep) => substep.children)
             .flatMap((child) => child.widgets)
             .find((widget) => widget.type === "COLLECTION_REPEATER");
-        values = { [String(repeater?.path || repeater?.key || "records").replace(/^\$/, "")]: await loadCollectionRecords(step.collection, tour?._id) };
-    }
-    else if (step.stepKey === "review") values = stepValuesForTour(step, tour || {});
+        values = {
+            [String(repeater?.path || repeater?.key || "records").replace(/^\$/, "")]:
+                await loadCollectionRecords(step.collection, tour?._id),
+        };
+    } else if (step.stepKey === "review") values = stepValuesForTour(step, tour || {});
     else if (tour) values = stepValuesForTour(step, tour);
     if (step.stepKey === "commercial" && !tour) {
         values = {
             commercial: {
                 version: "COMPONENTS_V1",
                 currency: "INR",
-                defaultBasis: { adults: 1, children: 0, infants: 0, rooms: 1, vehicles: 1, nights: 1, days: 1 },
-                pricingPolicy: { feeType: "PERCENTAGE", feePercent: 10, feeAmountMinor: 0, gstPercent: 18, gstOn: "AGENT_FEE" },
+                defaultBasis: {
+                    adults: 1,
+                    children: 0,
+                    infants: 0,
+                    rooms: 1,
+                    vehicles: 1,
+                    nights: 1,
+                    days: 1,
+                },
+                pricingPolicy: {
+                    feeType: "PERCENTAGE",
+                    feePercent: 10,
+                    feeAmountMinor: 0,
+                    gstPercent: 18,
+                    gstOn: "AGENT_FEE",
+                },
                 components: [],
                 packages: [],
             },
         };
     }
-    values = stripWidgetValues(definition.substeps.flatMap((substep) => substep.children).flatMap((child) => child.widgets), values, capabilities);
-    definition.substeps.forEach((substep) => substep.children.forEach((child) => {
-        markServerManagedWidgets(child.widgets || [], values, identity);
-    }));
+    values = stripWidgetValues(
+        definition.substeps
+            .flatMap((substep) => substep.children)
+            .flatMap((child) => child.widgets),
+        values,
+        capabilities,
+    );
+    definition.substeps.forEach((substep) =>
+        substep.children.forEach((child) => {
+            markServerManagedWidgets(child.widgets || [], values, identity);
+        }),
+    );
 
     const neighbours = stepNeighbours(stepKey);
     const process = getProcessSnapshot(getBuilderProcessDefinition(), tour?.builderProcess || {});
@@ -351,11 +469,13 @@ export async function loadBuilderStep(req, { tourId, stepKey }) {
         meta: {
             tourStatus: tour?.status || null,
             isPublished: tour ? tour.status === "published" : false,
-            branding: req.access?.agency ? {
-                name: req.access.agency.agencyName || "",
-                logo: req.access.agency.logo || "",
-                ref: req.access.agency.partnerAgencyRef || "",
-            } : null,
+            branding: req.access?.agency
+                ? {
+                      name: req.access.agency.agencyName || "",
+                      logo: req.access.agency.logo || "",
+                      ref: req.access.agency.partnerAgencyRef || "",
+                  }
+                : null,
             process: {
                 status: process.status,
                 progress: process.progress,
@@ -368,12 +488,17 @@ export async function loadBuilderStep(req, { tourId, stepKey }) {
 
 /** Persist wizard position without accepting or mutating any tour fields. */
 export async function saveBuilderPosition(req, { tourId, stepKey }) {
-    if (!tourId) throw Object.assign(new Error("A saved tour is required to track builder position."), { status: 409 });
-    if (!findStepDefinition(stepKey)) throw Object.assign(new Error(`Unknown builder step "${stepKey}"`), { status: 404 });
+    if (!tourId)
+        throw Object.assign(new Error("A saved tour is required to track builder position."), {
+            status: 409,
+        });
+    if (!findStepDefinition(stepKey))
+        throw Object.assign(new Error(`Unknown builder step "${stepKey}"`), { status: 404 });
 
     const tour = await TourRepository.findById(tourId);
     if (!tour) throw Object.assign(new Error("Tour draft not found"), { status: 404 });
-    if (!canModifyTour(req.user, tour, req.access)) throw Object.assign(new Error("You cannot edit this tour"), { status: 403 });
+    if (!canModifyTour(req.user, tour, req.access))
+        throw Object.assign(new Error("You cannot edit this tour"), { status: 403 });
 
     const definition = getBuilderProcessDefinition();
     const process = getProcessSnapshot(definition, tour.builderProcess || {});
@@ -387,15 +512,47 @@ export async function saveBuilderPosition(req, { tourId, stepKey }) {
         data: tour.toObject ? tour.toObject() : tour,
     });
     if (!transition.ok) {
-        throw Object.assign(new Error(transition.errors?.process || "Could not update builder position"), { status: 422 });
+        throw Object.assign(
+            new Error(transition.errors?.process || "Could not update builder position"),
+            { status: 422 },
+        );
     }
 
     tour.builderProcess = { ...transition.process, updatedAt: new Date() };
     await tour.save();
-    return { success: true, tourId: tour._id.toString(), currentStepKey: transition.process.currentNodeId };
+    return {
+        success: true,
+        tourId: tour._id.toString(),
+        currentStepKey: transition.process.currentNodeId,
+    };
 }
 
 /* -------------------------------- saving -------------------------------- */
+
+/**
+ * Realtime fan-out for builder saves. A newly created draft nudges the owning
+ * agency + admins only; the moment a tour becomes publicly visible it is
+ * broadcast to the shared catalog room so open listing pages (e.g. the Trevista
+ * tours page) refresh without a reload. Safe DTOs only, never raw models.
+ */
+const publishBuilderTourRealtime = (previousStatus, savedTour) => {
+    try {
+        const dto = tourDto(savedTour);
+        if (!previousStatus) {
+            publishFanOut({ agencyId: dto.agencyId }, REALTIME_EVENTS.TOUR_CREATED, dto);
+        }
+        if (previousStatus !== "published" && savedTour?.status === "published") {
+            publishToCatalog(REALTIME_EVENTS.TOUR_PUBLISHED, dto);
+            publishFanOut(
+                { agencyId: dto.agencyId, skipAdmins: true },
+                REALTIME_EVENTS.TOUR_PUBLISHED,
+                dto,
+            );
+        }
+    } catch (error) {
+        console.error("[TourBuilder] realtime publish failed:", error?.message);
+    }
+};
 
 export async function saveBuilderStep(req, { tourId, stepKey, data }) {
     const step = findStepDefinition(stepKey);
@@ -405,17 +562,25 @@ export async function saveBuilderStep(req, { tourId, stepKey, data }) {
     if (tourId) {
         tour = await TourRepository.findById(tourId);
         if (!tour) throw Object.assign(new Error("Tour draft not found"), { status: 404 });
-        if (!canModifyTour(req.user, tour, req.access)) throw Object.assign(new Error("You cannot edit this tour"), { status: 403 });
+        if (!canModifyTour(req.user, tour, req.access))
+            throw Object.assign(new Error("You cannot edit this tour"), { status: 403 });
     }
 
     /* Collection-backed steps replace their document sets. */
     if (step.collection) {
-        if (!tour) throw Object.assign(new Error("Save earlier steps before managing this section"), { status: 409 });
+        if (!tour)
+            throw Object.assign(new Error("Save earlier steps before managing this section"), {
+                status: 409,
+            });
         const savedRecords = await saveCollectionStep(req, tour, stepKey, data);
-        const transition = applyProcessAction(getBuilderProcessDefinition(), tour.builderProcess || {}, {
-            nodeId: stepKey,
-            data: tour.toObject ? tour.toObject() : tour,
-        });
+        const transition = applyProcessAction(
+            getBuilderProcessDefinition(),
+            tour.builderProcess || {},
+            {
+                nodeId: stepKey,
+                data: tour.toObject ? tour.toObject() : tour,
+            },
+        );
         if (transition.ok) {
             tour.builderProcess = { ...transition.process, updatedAt: new Date() };
             await tour.save();
@@ -432,14 +597,26 @@ export async function saveBuilderStep(req, { tourId, stepKey, data }) {
 
     if (step.readOnlyStep) {
         if (!tour) {
-            throw Object.assign(new Error("The saved tour draft could not be identified. Reopen the builder from Tours."), { status: 409 });
+            throw Object.assign(
+                new Error(
+                    "The saved tour draft could not be identified. Reopen the builder from Tours.",
+                ),
+                { status: 409 },
+            );
         }
-        const transition = applyProcessAction(getBuilderProcessDefinition(), tour.builderProcess || {}, {
-            nodeId: stepKey,
-            data: tour.toObject ? tour.toObject() : tour,
-        });
+        const transition = applyProcessAction(
+            getBuilderProcessDefinition(),
+            tour.builderProcess || {},
+            {
+                nodeId: stepKey,
+                data: tour.toObject ? tour.toObject() : tour,
+            },
+        );
         if (!transition.ok) {
-            const error = Object.assign(new Error(transition.message || "Complete the required tour steps before review."), { status: 422 });
+            const error = Object.assign(
+                new Error(transition.message || "Complete the required tour steps before review."),
+                { status: 422 },
+            );
             error.details = transition.errors || {};
             throw error;
         }
@@ -467,13 +644,21 @@ export async function saveBuilderStep(req, { tourId, stepKey, data }) {
     };
     scanForeign(data, "");
     if (foreignPaths.length) {
-        throw Object.assign(new Error(`This step cannot modify: ${foreignPaths.slice(0, 5).join(", ")}`), { status: 422 });
+        throw Object.assign(
+            new Error(`This step cannot modify: ${foreignPaths.slice(0, 5).join(", ")}`),
+            { status: 422 },
+        );
     }
 
     const payload = pickOwnedPaths(data, step.ownedPaths || []);
     if (!Object.keys(payload).length) {
         const neighbours = stepNeighbours(stepKey);
-        return { success: true, saved: false, tourId: tour?._id?.toString() || null, ...neighbours };
+        return {
+            success: true,
+            saved: false,
+            tourId: tour?._id?.toString() || null,
+            ...neighbours,
+        };
     }
 
     if (stepKey === "commercial") {
@@ -487,18 +672,29 @@ export async function saveBuilderStep(req, { tourId, stepKey, data }) {
 
     // Capability gates re-checked server side.
     const capabilities = capabilitiesFor(req, tour);
-    if (sanitized.status !== undefined && sanitized.status !== tour?.status && !capabilities.canPublish) {
-        throw Object.assign(new Error("You do not have permission to change the tour publishing status."), { status: 403 });
+    if (
+        sanitized.status !== undefined &&
+        sanitized.status !== tour?.status &&
+        !capabilities.canPublish
+    ) {
+        throw Object.assign(
+            new Error("You do not have permission to change the tour publishing status."),
+            { status: 403 },
+        );
     }
-    if (sanitized.tremVerified !== undefined && !capabilities.canVerify) delete sanitized.tremVerified;
+    if (sanitized.tremVerified !== undefined && !capabilities.canVerify)
+        delete sanitized.tremVerified;
     if (sanitized.metrics !== undefined && !capabilities.canEditMetrics) delete sanitized.metrics;
     if (sanitized.slug !== undefined && !capabilities.canEditPlatformMeta) delete sanitized.slug;
-    if (sanitized.visibility !== undefined && !capabilities.canEditVisibility) delete sanitized.visibility;
+    if (sanitized.visibility !== undefined && !capabilities.canEditVisibility)
+        delete sanitized.visibility;
 
     /* Identity fields are server-owned: drop whatever the client sent
        (manual form or pasted JSON, including empty overrides). */
     const identity = resolveAgencyIdentity(req);
     SERVER_IDENTITY_FIELDS.forEach((field) => delete sanitized[field]);
+
+    const previousStatus = tour?.status ?? null;
 
     let savedTour = tour;
     if (!savedTour) {
@@ -513,7 +709,8 @@ export async function saveBuilderStep(req, { tourId, stepKey, data }) {
             price: sanitized.price || { min: 0, max: 0, currency: "INR" },
             maxGroupSize: sanitized.maxGroupSize ?? 1,
             agencyId: req.access?.agencyId || actor.agencyId || null,
-            ownerAgent: identity.agentRef !== undefined ? (actor._id || actor.sub || actor.id || null) : null,
+            ownerAgent:
+                identity.agentRef !== undefined ? actor._id || actor.sub || actor.id || null : null,
             createdBy: actor._id || actor.sub || actor.id || null,
             productKey: "trevista",
             agentTour: identity.agentRef !== undefined,
@@ -542,16 +739,22 @@ export async function saveBuilderStep(req, { tourId, stepKey, data }) {
             if (recalculated.departures) savedTour.departures = recalculated.departures;
         } catch (derivedError) {
             derivedError.status = derivedError.status || 422;
-            derivedError.details = derivedError.details || { "commercial.derived": derivedError.message };
+            derivedError.details = derivedError.details || {
+                "commercial.derived": derivedError.message,
+            };
             throw derivedError;
         }
     }
 
-    const transition = applyProcessAction(getBuilderProcessDefinition(), savedTour.builderProcess || {}, {
-        nodeId: stepKey,
-        data: savedTour.toObject ? savedTour.toObject() : savedTour,
-        context: { actor: req.user, access: req.access },
-    });
+    const transition = applyProcessAction(
+        getBuilderProcessDefinition(),
+        savedTour.builderProcess || {},
+        {
+            nodeId: stepKey,
+            data: savedTour.toObject ? savedTour.toObject() : savedTour,
+            context: { actor: req.user, access: req.access },
+        },
+    );
     if (!transition.ok) {
         const error = new Error(Object.values(transition.errors)[0] || "This step is incomplete");
         error.status = 422;
@@ -561,8 +764,14 @@ export async function saveBuilderStep(req, { tourId, stepKey, data }) {
     savedTour.builderProcess = { ...transition.process, updatedAt: new Date() };
     await savedTour.save();
 
-    if (stepKey !== "commercial" && (sanitized.commercial !== undefined || sanitized.seasonalPricing !== undefined
-        || sanitized.flights !== undefined || sanitized.packageType !== undefined || sanitized.period !== undefined)) {
+    if (
+        stepKey !== "commercial" &&
+        (sanitized.commercial !== undefined ||
+            sanitized.seasonalPricing !== undefined ||
+            sanitized.flights !== undefined ||
+            sanitized.packageType !== undefined ||
+            sanitized.period !== undefined)
+    ) {
         try {
             const recalculated = { ...savedTour.toObject(), ...sanitized };
             await applyDerivedCommercialPrice(recalculated, req);
@@ -573,7 +782,9 @@ export async function saveBuilderStep(req, { tourId, stepKey, data }) {
         } catch (derivedError) {
             if (savedTour.status === "published") {
                 derivedError.status = derivedError.status || 422;
-                derivedError.details = derivedError.details || { "commercial.derived": derivedError.message };
+                derivedError.details = derivedError.details || {
+                    "commercial.derived": derivedError.message,
+                };
                 throw derivedError;
             }
             // Other draft steps may change pricing context before commercial
@@ -584,6 +795,8 @@ export async function saveBuilderStep(req, { tourId, stepKey, data }) {
     if (Array.isArray(savedTour.departures) && savedTour.departures.length) {
         await syncDerivedTourDeparture(savedTour).catch(() => {});
     }
+
+    publishBuilderTourRealtime(previousStatus, savedTour);
 
     const neighbours = stepNeighbours(stepKey);
     return {
@@ -602,7 +815,11 @@ export async function saveBuilderStep(req, { tourId, stepKey, data }) {
  * the browser; this endpoint only returns a server-owned projection.
  */
 export async function previewBuilderPricing(req, { tourId, data }) {
-    if (!tourId) throw Object.assign(new Error("Save the earlier tour steps before calculating package prices"), { status: 409 });
+    if (!tourId)
+        throw Object.assign(
+            new Error("Save the earlier tour steps before calculating package prices"),
+            { status: 409 },
+        );
 
     const tour = await TourRepository.findById(tourId);
     if (!tour) throw Object.assign(new Error("Tour draft not found"), { status: 404 });
@@ -610,12 +827,20 @@ export async function previewBuilderPricing(req, { tourId, data }) {
         throw Object.assign(new Error("You cannot edit this tour"), { status: 403 });
     }
 
-    const sanitized = sanitizeTourPayloadForUpdate({ commercial: data?.commercial }, {
-        allowIncompleteCommercial: true,
-    });
-    const enabledPackages = (sanitized.commercial?.packages || []).filter((item) => item.enabled !== false);
+    const sanitized = sanitizeTourPayloadForUpdate(
+        { commercial: data?.commercial },
+        {
+            allowIncompleteCommercial: true,
+        },
+    );
+    const enabledPackages = (sanitized.commercial?.packages || []).filter(
+        (item) => item.enabled !== false,
+    );
     if (!sanitized.commercial?.components?.length || !enabledPackages.length) {
-        throw Object.assign(new Error("Add cost components and enable at least one package to calculate pricing"), { status: 422 });
+        throw Object.assign(
+            new Error("Add cost components and enable at least one package to calculate pricing"),
+            { status: 422 },
+        );
     }
 
     const preview = { ...tour.toObject(), commercial: sanitized.commercial };

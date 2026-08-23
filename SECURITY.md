@@ -8,9 +8,9 @@ TravelsTREM is continuously developed and updated. Security fixes are generally 
 
 | Version                     | Supported |
 | --------------------------- | --------- |
-| Current production version  | ✅         |
-| Current development version | ✅         |
-| Older/deprecated versions   | ❌         |
+| Current production version  | ✅        |
+| Current development version | ✅        |
+| Older/deprecated versions   | ❌        |
 
 Older or deprecated releases may no longer receive security patches. Users and deployment environments should use the latest supported version wherever possible.
 
@@ -20,12 +20,12 @@ If you discover a potential security vulnerability affecting TravelsTREM, please
 
 When submitting a vulnerability report, please include:
 
-* A clear description of the vulnerability.
-* The affected TravelsTREM product, service, page, API, or endpoint.
-* Steps required to reproduce the issue.
-* Screenshots, logs, proof-of-concept code, or other supporting information where relevant.
-* The potential security impact.
-* Any suggested mitigation, if available.
+- A clear description of the vulnerability.
+- The affected TravelsTREM product, service, page, API, or endpoint.
+- Steps required to reproduce the issue.
+- Screenshots, logs, proof-of-concept code, or other supporting information where relevant.
+- The potential security impact.
+- Any suggested mitigation, if available.
 
 Please avoid including unnecessary personal information, customer data, authentication credentials, or other sensitive information in your report.
 
@@ -56,14 +56,14 @@ We ask security researchers to provide TravelsTREM with reasonable time to inves
 
 Please do not:
 
-* Publicly disclose an unresolved vulnerability.
-* Access, modify, download, or delete data belonging to other users.
-* Perform denial-of-service or resource-exhaustion testing.
-* Use automated testing that significantly impacts platform availability.
-* Attempt social engineering, phishing, or physical attacks against TravelsTREM employees, partners, agencies, or users.
-* Attempt to obtain passwords, OTPs, payment credentials, API secrets, or other user credentials.
-* Exploit a vulnerability beyond what is reasonably necessary to demonstrate its existence.
-* Disrupt TravelsTREM services or the services of third-party providers used by the platform.
+- Publicly disclose an unresolved vulnerability.
+- Access, modify, download, or delete data belonging to other users.
+- Perform denial-of-service or resource-exhaustion testing.
+- Use automated testing that significantly impacts platform availability.
+- Attempt social engineering, phishing, or physical attacks against TravelsTREM employees, partners, agencies, or users.
+- Attempt to obtain passwords, OTPs, payment credentials, API secrets, or other user credentials.
+- Exploit a vulnerability beyond what is reasonably necessary to demonstrate its existence.
+- Disrupt TravelsTREM services or the services of third-party providers used by the platform.
 
 Security testing should only be performed against systems and accounts that you are authorized to access.
 
@@ -79,13 +79,13 @@ A reported vulnerability may be accepted when it presents a reproducible and mea
 
 A report may be declined when it:
 
-* Cannot be reproduced.
-* Does not demonstrate a meaningful security impact.
-* Relates exclusively to an unsupported or deprecated version.
-* Concerns functionality operating as intended without a security impact.
-* Is based solely on automated scanner output without demonstrating exploitability.
-* Relates exclusively to a third-party system outside TravelsTREM's control.
-* Requires unrealistic or already-compromised conditions to exploit.
+- Cannot be reproduced.
+- Does not demonstrate a meaningful security impact.
+- Relates exclusively to an unsupported or deprecated version.
+- Concerns functionality operating as intended without a security impact.
+- Is based solely on automated scanner output without demonstrating exploitability.
+- Relates exclusively to a third-party system outside TravelsTREM's control.
+- Requires unrealistic or already-compromised conditions to exploit.
 
 When practical, we will explain why a submitted report has been accepted or declined.
 
@@ -101,11 +101,11 @@ TravelsTREM supports responsible, good-faith security research conducted in acco
 
 Researchers who identify vulnerabilities should make reasonable efforts to:
 
-* Minimize privacy risks.
-* Avoid accessing unnecessary data.
-* Avoid service disruption.
-* Stop testing if sensitive customer or partner information becomes accessible.
-* Report the vulnerability promptly and confidentially.
+- Minimize privacy risks.
+- Avoid accessing unnecessary data.
+- Avoid service disruption.
+- Stop testing if sensitive customer or partner information becomes accessible.
+- Report the vulnerability promptly and confidentially.
 
 ## Contact
 

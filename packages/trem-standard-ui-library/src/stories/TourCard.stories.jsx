@@ -4,8 +4,11 @@ import { TourCard } from "@packages/trem-ui";
 const sampleTour = {
   _id: "tour-1",
   title: "Himalayan Escape to Manali",
-  photo: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=400&q=80",
-  photos: ["https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=400&q=80"],
+  photo:
+    "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=400&q=80",
+  photos: [
+    "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=400&q=80",
+  ],
   desc: "Embark on a breathtaking journey through the Himalayas. Experience pristine mountain views, lush valleys, and serene rivers.",
   avgRating: 4.5,
   reviewCount: 128,
@@ -67,7 +70,8 @@ export const WithAgency = {
     tour: sampleTour,
     variant: "list",
     withAgency: true,
-    agencyLogo: "https://images.unsplash.com/photo-1560179707-f14e90ef3623?auto=format&fit=crop&w=80&q=80",
+    agencyLogo:
+      "https://images.unsplash.com/photo-1560179707-f14e90ef3623?auto=format&fit=crop&w=80&q=80",
     ownerAgentName: "Priya Sharma",
     showOwner: true,
     onView: () => {},
@@ -166,7 +170,13 @@ export const Archived = {
 
 export const AllBadges = {
   args: {
-    tour: { ...sampleTour, status: "published", featured: true, trending: true, tremVerified: true },
+    tour: {
+      ...sampleTour,
+      status: "published",
+      featured: true,
+      trending: true,
+      tremVerified: true,
+    },
     variant: "management",
     isAdmin: true,
     onView: () => {},

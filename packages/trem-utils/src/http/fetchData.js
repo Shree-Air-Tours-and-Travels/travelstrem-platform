@@ -8,7 +8,10 @@ const normalizeBase = (raw) => {
 
 const createDefaultApi = () => {
   const normalized = normalizeBase(process.env.REACT_APP_API_URL || "") ?? "";
-  const baseURL = (normalized.endsWith("/api") ? normalized : `${normalized}/api`).replace(/([^:]\/)\/+/g, "$1");
+  const baseURL = (normalized.endsWith("/api") ? normalized : `${normalized}/api`).replace(
+    /([^:]\/)\/+/g,
+    "$1",
+  );
   return axios.create({
     baseURL,
     withCredentials: true,
@@ -25,7 +28,7 @@ apiClient.interceptors.response.use(
       window.dispatchEvent(new CustomEvent("USER_LOGOUT", { detail: { reason: "unauthorized" } }));
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export const setFetchDataApiClient = (api) => {
@@ -57,7 +60,12 @@ export const fetchData = async (endpoint, options = {}) => {
     } else if (methodUpper === "DELETE") {
       res = await apiClient.delete(endpoint, { ...config, data: hasBody ? finalBody : undefined });
     } else {
-      res = await apiClient.request({ url: endpoint, method: methodUpper, data: hasBody ? finalBody : undefined, ...config });
+      res = await apiClient.request({
+        url: endpoint,
+        method: methodUpper,
+        data: hasBody ? finalBody : undefined,
+        ...config,
+      });
     }
 
     const rawResponse = res?.data || {};
@@ -76,7 +84,13 @@ export const fetchData = async (endpoint, options = {}) => {
       status: "error",
       message: message || "Something went wrong",
       component,
-      componentData: componentData || { title: "", description: "", data: [], structure: {}, config: {} },
+      componentData: componentData || {
+        title: "",
+        description: "",
+        data: [],
+        structure: {},
+        config: {},
+      },
       data: null,
     };
   } catch (err) {
@@ -87,7 +101,13 @@ export const fetchData = async (endpoint, options = {}) => {
       status: "error",
       message: err?.response?.data?.message || err.message || "Network error",
       component: err?.response?.data?.component,
-      componentData: err?.response?.data?.componentData || { title: "", description: "", data: [], structure: {}, config: {} },
+      componentData: err?.response?.data?.componentData || {
+        title: "",
+        description: "",
+        data: [],
+        structure: {},
+        config: {},
+      },
       data: null,
     };
   }

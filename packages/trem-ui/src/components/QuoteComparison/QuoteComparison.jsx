@@ -9,13 +9,7 @@ const money = (amountMinor, currency) =>
     maximumFractionDigits: 0,
   }).format(Number(amountMinor || 0) / 100);
 
-const Amount = ({
-  value,
-  currency,
-  perPersonLabel,
-  totalLabel,
-  pendingLabel,
-}) => {
+const Amount = ({ value, currency, perPersonLabel, totalLabel, pendingLabel }) => {
   if (value?.perPersonMinor == null || value?.totalMinor == null) {
     return (
       <span className="trem-quote-comparison__amount is-pending">
@@ -57,8 +51,7 @@ export default function QuoteComparison({
   if (!preview) return null;
   const alternative = preview.recommendedAlternative;
   const hasDifference =
-    alternative?.absoluteDifferenceMinor != null &&
-    alternative?.differencePerPersonMinor != null;
+    alternative?.absoluteDifferenceMinor != null && alternative?.differencePerPersonMinor != null;
   const saves = hasDifference && Number(alternative.savingsMinor) > 0;
   const difference = hasDifference
     ? {
@@ -74,16 +67,11 @@ export default function QuoteComparison({
   };
 
   return (
-    <section
-      className="trem-quote-comparison"
-      aria-label={labels.summary || "Quote summary"}
-    >
+    <section className="trem-quote-comparison" aria-label={labels.summary || "Quote summary"}>
       <header>
         <span className="trem-quote-comparison__icon">
           <Icon
-            name={
-              preview.quoteMode === "CUSTOMIZED" ? "settings" : "travelPackage"
-            }
+            name={preview.quoteMode === "CUSTOMIZED" ? "settings" : "travelPackage"}
             size={18}
           />
         </span>
@@ -94,8 +82,8 @@ export default function QuoteComparison({
               : labels.packageQuote || "Package price"}
           </strong>
           <small>
-            {preview.travellers} {labels.travellers || "travellers"} ·{" "}
-            {preview.rooms} {labels.rooms || "rooms"}
+            {preview.travellers} {labels.travellers || "travellers"} · {preview.rooms}{" "}
+            {labels.rooms || "rooms"}
           </small>
         </div>
       </header>
@@ -107,28 +95,32 @@ export default function QuoteComparison({
           </span>
           <Amount value={preview.package} {...amountProps} />
         </div>
-        {(preview.hotels?.length ? preview.hotels : preview.hotel ? [preview.hotel] : []).map((hotel) => (
-          <div key={hotel.stayKey || hotel.optionKey}>
-            <span>
-              <small>
-                {hotel.included
-                  ? labels.includedUpgrade || "Already included"
-                  : labels.hotelUpgrade || "Hotel upgrade"}
-              </small>
-              <strong>
-                {[hotel.location, hotel.optionName, hotel.roomName]
-                  .filter(Boolean)
-                  .join(" · ")}
-              </strong>
-            </span>
-            <Amount value={hotel.supplement} {...amountProps} />
-          </div>
-        ))}
+        {(preview.hotels?.length ? preview.hotels : preview.hotel ? [preview.hotel] : []).map(
+          (hotel) => (
+            <div key={hotel.stayKey || hotel.optionKey}>
+              <span>
+                <small>
+                  {hotel.included
+                    ? labels.includedUpgrade || "Already included"
+                    : labels.hotelUpgrade || "Hotel upgrade"}
+                </small>
+                <strong>
+                  {[hotel.location, hotel.optionName, hotel.roomName].filter(Boolean).join(" · ")}
+                </strong>
+              </span>
+              <Amount value={hotel.supplement} {...amountProps} />
+            </div>
+          ),
+        )}
         {(preview.hotelRequests || []).map((request) => (
           <div key={`request-${request.stayKey}`}>
             <span>
               <small>{labels.hotelRequest || "Requested hotel"}</small>
-              <strong>{[request.location, request.propertyClass, request.roomType].filter(Boolean).join(" · ")}</strong>
+              <strong>
+                {[request.location, request.propertyClass, request.roomType]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </strong>
             </span>
             <Amount value={null} {...amountProps} />
           </div>
@@ -146,16 +138,13 @@ export default function QuoteComparison({
         </div>
       </div>
       {alternative ? (
-        <div
-          className={`trem-quote-comparison__recommendation${saves ? " is-saving" : ""}`}
-        >
+        <div className={`trem-quote-comparison__recommendation${saves ? " is-saving" : ""}`}>
           <Icon name={saves ? "sparkles" : "info"} size={18} />
           <div>
             <strong>
               {saves
                 ? labels.saveWithPackage || "You can save by switching packages"
-                : labels.comparePackage ||
-                  "Compare with the package that includes this hotel"}
+                : labels.comparePackage || "Compare with the package that includes this hotel"}
             </strong>
             <p>
               {alternative.packageName}{" "}
@@ -167,24 +156,18 @@ export default function QuoteComparison({
               </b>{" "}
               ·{" "}
               <b>
-                {money(alternative.totalMinor, preview.currency)}{" "}
-                {labels.total || "total"}
+                {money(alternative.totalMinor, preview.currency)} {labels.total || "total"}
               </b>
               {difference ? (
                 <>
-                  .{" "}
-                  {saves
-                    ? labels.saves || "You save"
-                    : labels.difference || "Price difference"}
-                  :{" "}
+                  . {saves ? labels.saves || "You save" : labels.difference || "Price difference"}:{" "}
                   <b>
                     {money(difference.perPersonMinor, preview.currency)}{" "}
                     {labels.perPerson || "per person"}
                   </b>{" "}
                   ·{" "}
                   <b>
-                    {money(difference.totalMinor, preview.currency)}{" "}
-                    {labels.total || "total"}
+                    {money(difference.totalMinor, preview.currency)} {labels.total || "total"}
                   </b>
                 </>
               ) : null}
@@ -197,10 +180,7 @@ export default function QuoteComparison({
               </p>
             ) : null}
             {typeof onSelectAlternative === "function" ? (
-              <button
-                type="button"
-                onClick={() => onSelectAlternative(alternative.packageKey)}
-              >
+              <button type="button" onClick={() => onSelectAlternative(alternative.packageKey)}>
                 {(labels.choosePackage || "Choose {package}").replace(
                   "{package}",
                   alternative.packageName,

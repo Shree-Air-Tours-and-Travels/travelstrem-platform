@@ -11,8 +11,7 @@ export const mapHolidayPackageToDestinationCard = (pkg = {}) => {
   const title = pkg.title || "";
   const imageSrc = pkg.photo || pkg.image?.src || pkg.coverImage || "";
   const href =
-    pkg.href ||
-    (id ? `/trevista/tours/${id}` : title ? `/trevista/tours/${slugify(title)}` : "");
+    pkg.href || (id ? `/trevista/tours/${id}` : title ? `/trevista/tours/${slugify(title)}` : "");
 
   if (!id || !title || !imageSrc || !href) return null;
 
@@ -31,7 +30,8 @@ export const mapHolidayPackageToDestinationCard = (pkg = {}) => {
   const rating = Number.isFinite(ratingNumber) && ratingNumber > 0 ? ratingNumber : null;
 
   const reviewCountNumber = Number(pkg.reviewCount ?? pkg.reviews?.length ?? 0);
-  const reviewCount = Number.isFinite(reviewCountNumber) && reviewCountNumber > 0 ? reviewCountNumber : null;
+  const reviewCount =
+    Number.isFinite(reviewCountNumber) && reviewCountNumber > 0 ? reviewCountNumber : null;
 
   const days = Number(pkg.period?.days);
   const nights = Number(pkg.period?.nights);
@@ -48,7 +48,8 @@ export const mapHolidayPackageToDestinationCard = (pkg = {}) => {
     id,
     title,
     description: pkg.desc || pkg.description || "",
-    location: [pkg.address?.city, pkg.address?.country].filter(Boolean).join(", ") || pkg.city?.to || "",
+    location:
+      [pkg.address?.city, pkg.address?.country].filter(Boolean).join(", ") || pkg.city?.to || "",
     image: {
       src: imageSrc,
       alt: pkg.image?.alt || title,

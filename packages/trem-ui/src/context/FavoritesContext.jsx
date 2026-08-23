@@ -26,10 +26,7 @@ export function FavoritesProvider({ children, product = "trevista" }) {
 
   useRefreshOnActivation(loadFavorites, { resource: "favorites" });
 
-  const isFavorited = useCallback(
-    (tour) => idsRef.current.has(tour?._id || tour?.id),
-    [],
-  );
+  const isFavorited = useCallback((tour) => idsRef.current.has(tour?._id || tour?.id), []);
 
   const rollback = useCallback((tourId, wasFav) => {
     const rolled = new Set(idsRef.current);
@@ -39,49 +36,60 @@ export function FavoritesProvider({ children, product = "trevista" }) {
     idsRef.current = rolled;
   }, []);
 
-  const toggleFavorite = useCallback(async (tour) => {
-    const tourId = tour?._id || tour?.id;
-    if (!tourId) return;
+  const toggleFavorite = useCallback(
+    async (tour) => {
+      const tourId = tour?._id || tour?.id;
+      if (!tourId) return;
 
-    const current = idsRef.current;
-    const wasFav = current.has(tourId);
-    const next = new Set(current);
-    if (wasFav) next.delete(tourId);
-    else next.add(tourId);
-    setFavoriteIds(next);
-    idsRef.current = next;
+      const current = idsRef.current;
+      const wasFav = current.has(tourId);
+      const next = new Set(current);
+      if (wasFav) next.delete(tourId);
+      else next.add(tourId);
+      setFavoriteIds(next);
+      idsRef.current = next;
 
-    try {
-      const res = await fetchData("/tours.json/favorite/toggle", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: { tourId, product },
-      });
-      if (res?.status === "error") {
-        rollback(tourId, wasFav);
-        return;
-      }
-      if (res?.status === "success" && typeof res.data?.favorited === "boolean") {
-        const corrected = new Set(idsRef.current);
-        if (res.data.favorited) corrected.add(tourId);
-        else corrected.delete(tourId);
-        setFavoriteIds(corrected);
-        idsRef.current = corrected;
-        setFavorites((prev) => {
-          if (res.data.favorited) {
-            return prev.some((f) => (f._id || f.id) === tourId) ? prev : [...prev, tour];
-          }
-          return prev.filter((f) => (f._id || f.id) !== tourId);
+      try {
+        const res = await fetchData("/tours.json/favorite/toggle", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: { tourId, product },
         });
-        notifyDataChanged("favorites");
+        if (res?.status === "error") {
+          rollback(tourId, wasFav);
+          return;
+        }
+        if (res?.status === "success" && typeof res.data?.favorited === "boolean") {
+          const corrected = new Set(idsRef.current);
+          if (res.data.favorited) corrected.add(tourId);
+          else corrected.delete(tourId);
+          setFavoriteIds(corrected);
+          idsRef.current = corrected;
+          setFavorites((prev) => {
+            if (res.data.favorited) {
+              return prev.some((f) => (f._id || f.id) === tourId) ? prev : [...prev, tour];
+            }
+            return prev.filter((f) => (f._id || f.id) !== tourId);
+          });
+          notifyDataChanged("favorites");
+        }
+      } catch {
+        rollback(tourId, wasFav);
       }
-    } catch {
-      rollback(tourId, wasFav);
-    }
-  }, [product, rollback]);
+    },
+    [product, rollback],
+  );
 
   return (
-    <FavoritesContext.Provider value={{ isFavorited, toggleFavorite, favoriteIds, favorites, favoritesCount: favoriteIds.size }}>
+    <FavoritesContext.Provider
+      value={{
+        isFavorited,
+        toggleFavorite,
+        favoriteIds,
+        favorites,
+        favoritesCount: favoriteIds.size,
+      }}
+    >
       {children}
     </FavoritesContext.Provider>
   );
@@ -89,6 +97,13 @@ export function FavoritesProvider({ children, product = "trevista" }) {
 
 export function useFavoritesContext() {
   const ctx = useContext(FavoritesContext);
-  if (!ctx) return { isFavorited: () => false, toggleFavorite: () => {}, favoriteIds: new Set(), favorites: [], favoritesCount: 0 };
+  if (!ctx)
+    return {
+      isFavorited: () => false,
+      toggleFavorite: () => {},
+      favoriteIds: new Set(),
+      favorites: [],
+      favoritesCount: 0,
+    };
   return ctx;
 }

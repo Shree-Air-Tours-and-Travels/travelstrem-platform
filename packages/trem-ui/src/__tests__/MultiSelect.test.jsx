@@ -43,7 +43,10 @@ describe("MultiSelect", () => {
 
     fireEvent.click(screen.getByRole("option", { name: "Free Wi-Fi" }));
     expect(onChange).not.toHaveBeenCalled();
-    expect(screen.getByRole("option", { name: "Free Wi-Fi" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("option", { name: "Free Wi-Fi" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
 
     fireEvent.click(screen.getByRole("option", { name: "Swimming pool" }));
     expect(onChange).not.toHaveBeenCalled();
@@ -138,8 +141,14 @@ describe("MultiSelect", () => {
     expect(onChange).not.toHaveBeenCalled();
 
     openMenu(container);
-    expect(screen.getByRole("option", { name: "Swimming pool" })).toHaveAttribute("aria-selected", "false");
-    expect(screen.getByRole("option", { name: "Free Wi-Fi" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("option", { name: "Swimming pool" })).toHaveAttribute(
+      "aria-selected",
+      "false",
+    );
+    expect(screen.getByRole("option", { name: "Free Wi-Fi" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
   });
 
   it("exposes the error message and marks the trigger invalid", () => {

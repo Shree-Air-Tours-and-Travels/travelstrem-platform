@@ -3,7 +3,8 @@ import { FeaturedCard } from "@packages/trem-ui";
 
 const featuredTrip = {
   title: "Jaipur Junction",
-  image: "https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=1200&q=85",
+  image:
+    "https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=1200&q=85",
   location: "India",
   type: "Curated trip",
   price: 19000,

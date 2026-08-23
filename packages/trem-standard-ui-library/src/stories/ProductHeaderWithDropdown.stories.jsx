@@ -7,7 +7,9 @@ const baseNav = [
   { id: "home", label: "Home", href: "/" },
   { id: "tours", label: "Tours", href: "/tours" },
   {
-    id: "more", label: "More", type: "dropdown",
+    id: "more",
+    label: "More",
+    type: "dropdown",
     items: [
       { id: "about", label: "About", href: "/about" },
       { id: "contact", label: "Contact", href: "/contact" },
@@ -34,9 +36,7 @@ export const Default = {
       onClick: () => {},
     },
     authAction: { label: "Sign out", onClick: () => {} },
-    accountItems: [
-      { id: "settings", label: "Settings", icon: "settings", onClick: () => {} },
-    ],
+    accountItems: [{ id: "settings", label: "Settings", icon: "settings", onClick: () => {} }],
   },
 };
 

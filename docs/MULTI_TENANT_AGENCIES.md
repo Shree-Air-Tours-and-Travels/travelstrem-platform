@@ -15,18 +15,18 @@ Primary modules:
 
 ## Roles and default permissions
 
-| Capability | Master Admin | Partner Admin | Partner Agent |
-|---|---:|---:|---:|
-| Partnership review and agency conversion | Yes | No | No |
-| Manage agency/legal/product settings | All agencies | Permitted profile fields, own agency | No |
-| Invite Partner Admins | Yes | No | No |
-| Invite/manage Partner Agents | All agencies | Own agency | No |
-| Permanently approve agent deletion | Yes | Request only | No |
-| Trips | All | All in own agency | Own only |
-| Publish trips | Yes | Yes | Only when agency policy permits |
-| Bookings | All | All in own agency | Assigned only |
-| Customers | All | All in own agency | Owned, or shared by agency policy |
-| Reports/audit | Platform | Own agency | No by default |
+| Capability                               | Master Admin |                        Partner Admin |                     Partner Agent |
+| ---------------------------------------- | -----------: | -----------------------------------: | --------------------------------: |
+| Partnership review and agency conversion |          Yes |                                   No |                                No |
+| Manage agency/legal/product settings     | All agencies | Permitted profile fields, own agency |                                No |
+| Invite Partner Admins                    |          Yes |                                   No |                                No |
+| Invite/manage Partner Agents             | All agencies |                           Own agency |                                No |
+| Permanently approve agent deletion       |          Yes |                         Request only |                                No |
+| Trips                                    |          All |                    All in own agency |                          Own only |
+| Publish trips                            |          Yes |                                  Yes |   Only when agency policy permits |
+| Bookings                                 |          All |                    All in own agency |                     Assigned only |
+| Customers                                |          All |                    All in own agency | Owned, or shared by agency policy |
+| Reports/audit                            |     Platform |                           Own agency |                     No by default |
 
 The canonical permission keys and mappings live in `permissions.js`. Per-user grants and denials support future Finance, Operations, Sales, and Support roles without adding insecure UI-only role checks.
 

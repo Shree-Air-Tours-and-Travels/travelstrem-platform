@@ -29,7 +29,9 @@ export default function DestinationCardList({
   className = "",
   id,
 }) {
-  const items = Array.isArray(destinations) ? destinations.filter((item) => item && (item.id != null || item.title)) : [];
+  const items = Array.isArray(destinations)
+    ? destinations.filter((item) => item && (item.id != null || item.title))
+    : [];
   const resolvedColumns = clampColumns(columns);
 
   let content;
@@ -83,7 +85,10 @@ export default function DestinationCardList({
     <div
       id={id}
       className={`trem-destination-card-list${horizontal ? " trem-destination-card-list--horizontal" : ""}${className ? ` ${className}` : ""}`}
-      style={{ "--destination-card-columns": resolvedColumns, "--destination-card-gap": `${gap}px` }}
+      style={{
+        "--destination-card-columns": resolvedColumns,
+        "--destination-card-gap": `${gap}px`,
+      }}
     >
       {content}
     </div>
@@ -96,7 +101,7 @@ DestinationCardList.propTypes = {
       id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
       title: PropTypes.string,
       href: PropTypes.string,
-    })
+    }),
   ),
   renderDestination: PropTypes.func,
   columns: PropTypes.number,

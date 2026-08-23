@@ -1,27 +1,29 @@
 /** Shared, Gmail-safe email layout. Templates pass escaped content into this shell. */
-export const escapeHtml = (value = "") => String(value)
-  .replaceAll("&", "&amp;")
-  .replaceAll("<", "&lt;")
-  .replaceAll(">", "&gt;")
-  .replaceAll('"', "&quot;")
-  .replaceAll("'", "&#039;");
+export const escapeHtml = (value = "") =>
+    String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
 
 export const renderEmailLayout = ({
-  companyName,
-  preheader = "",
-  title,
-  intro = "",
-  content = "",
-  action,
-  footerText = "",
+    companyName,
+    preheader = "",
+    title,
+    intro = "",
+    content = "",
+    action,
+    footerText = "",
 }) => {
-  const brand = escapeHtml(companyName);
-  const year = new Date().getFullYear();
-  const actionMarkup = action?.url && action?.label
-    ? `<tr><td style="padding:8px 32px 28px;"><a href="${escapeHtml(action.url)}" style="display:inline-block;padding:13px 22px;border-radius:8px;background:#183b8f;color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:700;text-decoration:none;">${escapeHtml(action.label)}</a></td></tr>`
-    : "";
+    const brand = escapeHtml(companyName);
+    const year = new Date().getFullYear();
+    const actionMarkup =
+        action?.url && action?.label
+            ? `<tr><td style="padding:8px 32px 28px;"><a href="${escapeHtml(action.url)}" style="display:inline-block;padding:13px 22px;border-radius:8px;background:#183b8f;color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:700;text-decoration:none;">${escapeHtml(action.label)}</a></td></tr>`
+            : "";
 
-  return `<!doctype html>
+    return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(title)}</title></head>
 <body style="margin:0;padding:0;background:#f4f6fa;color:#111827;">
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${escapeHtml(preheader)}</div>

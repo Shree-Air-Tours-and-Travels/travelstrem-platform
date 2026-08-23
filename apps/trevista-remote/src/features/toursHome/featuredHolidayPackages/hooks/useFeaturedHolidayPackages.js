@@ -6,9 +6,7 @@ const EMPTY = [];
 export default function useFeaturedHolidayPackages(preloadedPackages = EMPTY) {
   const preloaded = Array.isArray(preloadedPackages) ? preloadedPackages : EMPTY;
   const preloadedKey =
-    preloaded.length > 0
-      ? preloaded.map((pkg) => pkg._id || pkg.id || "").join("|")
-      : "empty";
+    preloaded.length > 0 ? preloaded.map((pkg) => pkg._id || pkg.id || "").join("|") : "empty";
 
   const memoPreloaded = useMemo(() => preloaded, [preloadedKey]);
 

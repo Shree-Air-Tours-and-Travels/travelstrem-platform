@@ -6,40 +6,147 @@ import { PERMISSIONS } from "./permissions.js";
 import * as controller from "./controller.js";
 
 const router = express.Router();
-router.post("/partnership-requests", documentUpload.fields([{ name: "documents", maxCount: 8 }, { name: "logo", maxCount: 1 }]), controller.submitPartnershipRequest);
+router.post(
+    "/partnership-requests",
+    documentUpload.fields([
+        { name: "documents", maxCount: 8 },
+        { name: "logo", maxCount: 1 },
+    ]),
+    controller.submitPartnershipRequest,
+);
 router.post("/invitations/activate", controller.activate);
 router.use(authMiddleware, loadAccessContext);
 router.get("/products", requirePermission(PERMISSIONS.AGENCY_CREATE), controller.listProducts);
-router.get("/product-access-requests", requirePermission(PERMISSIONS.AGENCY_VIEW), controller.listProductAccessRequests);
-router.post("/product-access-requests", requirePermission(PERMISSIONS.AGENCY_UPDATE), controller.createProductAccessRequest);
-router.patch("/product-access-requests/:id", requirePermission(PERMISSIONS.AGENCY_PRODUCT_MANAGE), controller.decideProductAccessRequest);
+router.get(
+    "/product-access-requests",
+    requirePermission(PERMISSIONS.AGENCY_VIEW),
+    controller.listProductAccessRequests,
+);
+router.post(
+    "/product-access-requests",
+    requirePermission(PERMISSIONS.AGENCY_UPDATE),
+    controller.createProductAccessRequest,
+);
+router.patch(
+    "/product-access-requests/:id",
+    requirePermission(PERMISSIONS.AGENCY_PRODUCT_MANAGE),
+    controller.decideProductAccessRequest,
+);
 router.get("/dashboard", controller.dashboard);
-router.get("/partnership-requests", requirePermission(PERMISSIONS.PARTNERSHIP_VIEW), controller.listPartnershipRequests);
-router.get("/partnership-requests/:id", requirePermission(PERMISSIONS.PARTNERSHIP_VIEW), controller.getPartnershipRequest);
-router.get("/partnership-requests/:id/documents/:documentId", requirePermission(PERMISSIONS.PARTNERSHIP_VIEW), controller.downloadPartnershipDocument);
-router.patch("/partnership-requests/:id/status", requirePermission(PERMISSIONS.PARTNERSHIP_REVIEW), controller.reviewPartnershipRequest);
-router.post("/partnership-requests/:id/convert", requirePermission(PERMISSIONS.AGENCY_CREATE), controller.convertPartnershipRequest);
+router.get(
+    "/partnership-requests",
+    requirePermission(PERMISSIONS.PARTNERSHIP_VIEW),
+    controller.listPartnershipRequests,
+);
+router.get(
+    "/partnership-requests/:id",
+    requirePermission(PERMISSIONS.PARTNERSHIP_VIEW),
+    controller.getPartnershipRequest,
+);
+router.get(
+    "/partnership-requests/:id/documents/:documentId",
+    requirePermission(PERMISSIONS.PARTNERSHIP_VIEW),
+    controller.downloadPartnershipDocument,
+);
+router.patch(
+    "/partnership-requests/:id/status",
+    requirePermission(PERMISSIONS.PARTNERSHIP_REVIEW),
+    controller.reviewPartnershipRequest,
+);
+router.post(
+    "/partnership-requests/:id/convert",
+    requirePermission(PERMISSIONS.AGENCY_CREATE),
+    controller.convertPartnershipRequest,
+);
 router.get("/agencies", requirePermission(PERMISSIONS.AGENCY_VIEW), controller.listAgencies);
 router.get("/agencies/:id", requirePermission(PERMISSIONS.AGENCY_VIEW), controller.getAgency);
-router.patch("/agencies/:id", requirePermission(PERMISSIONS.AGENCY_UPDATE, PERMISSIONS.AGENCY_SUSPEND), controller.updateAgency);
-router.get("/agencies/:agencyId/users", requirePermission(PERMISSIONS.AGENT_VIEW), controller.listAgents);
-router.post("/agencies/:agencyId/users/invite", requirePermission(PERMISSIONS.AGENT_CREATE, PERMISSIONS.AGENCY_ADMIN_CREATE), controller.inviteAgent);
-router.patch("/users/:id", requirePermission(PERMISSIONS.AGENT_UPDATE, PERMISSIONS.AGENT_DEACTIVATE), controller.updateAgent);
-router.post("/users/:id/resend-invitation", requirePermission(PERMISSIONS.AGENT_CREATE), controller.resendInvitation);
-router.post("/users/:id/deletion-request", requirePermission(PERMISSIONS.AGENT_DELETE_REQUEST), controller.createDeletionRequest);
-router.get("/deletion-requests", requirePermission(PERMISSIONS.AGENT_DELETE_REQUEST, PERMISSIONS.AGENT_DELETE_APPROVE), controller.listDeletionRequests);
-router.patch("/deletion-requests/:id", requirePermission(PERMISSIONS.AGENT_DELETE_APPROVE), controller.decideDeletionRequest);
-router.post("/deletion-requests/:id/cancel", requirePermission(PERMISSIONS.AGENT_DELETE_REQUEST), controller.cancelDeletionRequest);
-router.post("/agencies/:agencyId/transfer-work", requirePermission(PERMISSIONS.AGENT_UPDATE), controller.transferAgentWork);
-router.get("/customers", requirePermission(PERMISSIONS.CUSTOMER_VIEW_OWN, PERMISSIONS.CUSTOMER_VIEW_AGENCY), controller.listCustomers);
-router.post("/customers", requirePermission(PERMISSIONS.CUSTOMER_CREATE), controller.createCustomer);
-router.get("/customers/:id", requirePermission(PERMISSIONS.CUSTOMER_VIEW_OWN, PERMISSIONS.CUSTOMER_VIEW_AGENCY), controller.getCustomer);
-router.patch("/customers/:id", requirePermission(PERMISSIONS.CUSTOMER_UPDATE_OWN, PERMISSIONS.CUSTOMER_UPDATE_AGENCY), controller.updateCustomer);
-router.delete("/customers/:id", requirePermission(PERMISSIONS.CUSTOMER_UPDATE_OWN, PERMISSIONS.CUSTOMER_UPDATE_AGENCY), controller.archiveCustomer);
+router.patch(
+    "/agencies/:id",
+    requirePermission(PERMISSIONS.AGENCY_UPDATE, PERMISSIONS.AGENCY_SUSPEND),
+    controller.updateAgency,
+);
+router.get(
+    "/agencies/:agencyId/users",
+    requirePermission(PERMISSIONS.AGENT_VIEW),
+    controller.listAgents,
+);
+router.post(
+    "/agencies/:agencyId/users/invite",
+    requirePermission(PERMISSIONS.AGENT_CREATE, PERMISSIONS.AGENCY_ADMIN_CREATE),
+    controller.inviteAgent,
+);
+router.patch(
+    "/users/:id",
+    requirePermission(PERMISSIONS.AGENT_UPDATE, PERMISSIONS.AGENT_DEACTIVATE),
+    controller.updateAgent,
+);
+router.post(
+    "/users/:id/resend-invitation",
+    requirePermission(PERMISSIONS.AGENT_CREATE),
+    controller.resendInvitation,
+);
+router.post(
+    "/users/:id/deletion-request",
+    requirePermission(PERMISSIONS.AGENT_DELETE_REQUEST),
+    controller.createDeletionRequest,
+);
+router.get(
+    "/deletion-requests",
+    requirePermission(PERMISSIONS.AGENT_DELETE_REQUEST, PERMISSIONS.AGENT_DELETE_APPROVE),
+    controller.listDeletionRequests,
+);
+router.patch(
+    "/deletion-requests/:id",
+    requirePermission(PERMISSIONS.AGENT_DELETE_APPROVE),
+    controller.decideDeletionRequest,
+);
+router.post(
+    "/deletion-requests/:id/cancel",
+    requirePermission(PERMISSIONS.AGENT_DELETE_REQUEST),
+    controller.cancelDeletionRequest,
+);
+router.post(
+    "/agencies/:agencyId/transfer-work",
+    requirePermission(PERMISSIONS.AGENT_UPDATE),
+    controller.transferAgentWork,
+);
+router.get(
+    "/customers",
+    requirePermission(PERMISSIONS.CUSTOMER_VIEW_OWN, PERMISSIONS.CUSTOMER_VIEW_AGENCY),
+    controller.listCustomers,
+);
+router.post(
+    "/customers",
+    requirePermission(PERMISSIONS.CUSTOMER_CREATE),
+    controller.createCustomer,
+);
+router.get(
+    "/customers/:id",
+    requirePermission(PERMISSIONS.CUSTOMER_VIEW_OWN, PERMISSIONS.CUSTOMER_VIEW_AGENCY),
+    controller.getCustomer,
+);
+router.patch(
+    "/customers/:id",
+    requirePermission(PERMISSIONS.CUSTOMER_UPDATE_OWN, PERMISSIONS.CUSTOMER_UPDATE_AGENCY),
+    controller.updateCustomer,
+);
+router.delete(
+    "/customers/:id",
+    requirePermission(PERMISSIONS.CUSTOMER_UPDATE_OWN, PERMISSIONS.CUSTOMER_UPDATE_AGENCY),
+    controller.archiveCustomer,
+);
 router.get("/reports", requirePermission(PERMISSIONS.REPORTS_VIEW_AGENCY), controller.reports);
-router.get("/audit-logs", requirePermission(PERMISSIONS.AUDIT_VIEW_AGENCY, PERMISSIONS.AUDIT_VIEW_PLATFORM), controller.listAudit);
+router.get(
+    "/audit-logs",
+    requirePermission(PERMISSIONS.AUDIT_VIEW_AGENCY, PERMISSIONS.AUDIT_VIEW_PLATFORM),
+    controller.listAudit,
+);
 router.get("/notifications", controller.listNotifications);
 router.patch("/notifications/:id/read", controller.readNotification);
 router.get("/roles", controller.listRoles);
-router.put("/products/:key", requirePermission(PERMISSIONS.AGENCY_CREATE), controller.upsertProduct);
+router.put(
+    "/products/:key",
+    requirePermission(PERMISSIONS.AGENCY_CREATE),
+    controller.upsertProduct,
+);
 export default router;

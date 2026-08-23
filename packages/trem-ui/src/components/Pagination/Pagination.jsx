@@ -19,7 +19,17 @@ const getVisiblePages = (currentPage, totalPages, maxVisible) => {
   return pages;
 };
 
-export default function Pagination({ currentPage = 1, totalPages = 0, onPageChange, maxVisible = 5, previousLabel = "Previous page", nextLabel = "Next page", ariaLabel = "Pagination", disabled = false, className = "" }) {
+export default function Pagination({
+  currentPage = 1,
+  totalPages = 0,
+  onPageChange,
+  maxVisible = 5,
+  previousLabel = "Previous page",
+  nextLabel = "Next page",
+  ariaLabel = "Pagination",
+  disabled = false,
+  className = "",
+}) {
   if (totalPages <= 1) return null;
   const pages = getVisiblePages(currentPage, totalPages, maxVisible);
   const selectPage = (page) => {
@@ -27,13 +37,46 @@ export default function Pagination({ currentPage = 1, totalPages = 0, onPageChan
   };
   return (
     <nav className={`trem-pagination ${className}`.trim()} aria-label={ariaLabel}>
-      <Button variant="outline" size="small" isCircular iconLeft="chevronLeft" disabled={disabled || currentPage <= 1} onClick={() => selectPage(currentPage - 1)} aria-label={previousLabel} />
+      <Button
+        variant="outline"
+        size="small"
+        isCircular
+        iconLeft="chevronLeft"
+        disabled={disabled || currentPage <= 1}
+        onClick={() => selectPage(currentPage - 1)}
+        aria-label={previousLabel}
+      />
       <div className="trem-pagination__pages">
-        {pages.map((page) => typeof page === "number" ? (
-          <Button key={page} variant={page === currentPage ? "solid" : "text"} color={page === currentPage ? "primary" : undefined} size="small" primaryClassName="trem-pagination__page" onClick={() => selectPage(page)} aria-label={`Page ${page}`} aria-current={page === currentPage ? "page" : undefined} disabled={disabled} text={String(page)} />
-        ) : <span key={page} className="trem-pagination__ellipsis" aria-hidden="true">…</span>)}
+        {pages.map((page) =>
+          typeof page === "number" ? (
+            <Button
+              key={page}
+              variant={page === currentPage ? "solid" : "text"}
+              color={page === currentPage ? "primary" : undefined}
+              size="small"
+              primaryClassName="trem-pagination__page"
+              onClick={() => selectPage(page)}
+              aria-label={`Page ${page}`}
+              aria-current={page === currentPage ? "page" : undefined}
+              disabled={disabled}
+              text={String(page)}
+            />
+          ) : (
+            <span key={page} className="trem-pagination__ellipsis" aria-hidden="true">
+              …
+            </span>
+          ),
+        )}
       </div>
-      <Button variant="outline" size="small" isCircular iconLeft="chevronRight" disabled={disabled || currentPage >= totalPages} onClick={() => selectPage(currentPage + 1)} aria-label={nextLabel} />
+      <Button
+        variant="outline"
+        size="small"
+        isCircular
+        iconLeft="chevronRight"
+        disabled={disabled || currentPage >= totalPages}
+        onClick={() => selectPage(currentPage + 1)}
+        aria-label={nextLabel}
+      />
     </nav>
   );
 }

@@ -15,19 +15,26 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.10), 0 1px 4px rgba(0, 0, 0, 0.06);
-  transition: background 120ms $ease-default, transform 120ms $ease-default, box-shadow 120ms $ease-default;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.1),
+    0 1px 4px rgba(0, 0, 0, 0.06);
+  transition:
+    background 120ms $ease-default,
+    transform 120ms $ease-default,
+    box-shadow 120ms $ease-default;
   animation: trem-scroll-top-in 200ms $ease-out both;
 
   &:hover {
     background: var(--surface-inset, $surface-muted);
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14), 0 2px 6px rgba(0, 0, 0, 0.08);
+    box-shadow:
+      0 6px 20px rgba(0, 0, 0, 0.14),
+      0 2px 6px rgba(0, 0, 0, 0.08);
   }
 
   &:active {
     transform: translateY(0);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
 
   &:focus-visible {
@@ -36,7 +43,10 @@
   }
 
   @media (max-width: $breakpoint-mobile) {
-    bottom: var(--trem-scroll-top-bottom, var(--trem-floating-action-clearance, #{$space-4})) !important;
+    bottom: var(
+      --trem-scroll-top-bottom,
+      var(--trem-floating-action-clearance, #{$space-4})
+    ) !important;
     right: var(--trem-scroll-top-right, #{$space-4}) !important;
   }
 }

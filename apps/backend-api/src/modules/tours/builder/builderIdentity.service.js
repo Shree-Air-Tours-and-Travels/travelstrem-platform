@@ -26,7 +26,8 @@ export const resolveAgencyIdentity = (req) => {
     if (!agency) return {};
 
     const role = access.role || actor.agencyRole;
-    const isAgencyActor = actor.role === "agent" || ["partner_agent", "partner_admin"].includes(role);
+    const isAgencyActor =
+        actor.role === "agent" || ["partner_agent", "partner_admin"].includes(role);
     if (!isAgencyActor) return {};
 
     return {

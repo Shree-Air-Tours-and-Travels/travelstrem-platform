@@ -8,124 +8,129 @@
 @import "./shared/styles/base/global";
 
 @keyframes sk-pulse {
-    0%, 100% { opacity: 0.4; }
-    50% { opacity: 0.8; }
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.8;
+  }
 }
 
 * {
-    box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 body {
-    margin: 0;
-    font-family: $font-primary;
-    background: var(--page-bg);
-    color: var(--text);
+  margin: 0;
+  font-family: $font-primary;
+  background: var(--page-bg);
+  color: var(--text);
 }
 
 .agent-app-shell {
-    min-height: 100vh;
-    min-height: 100dvh;
-    display: flex;
-    flex-direction: column;
-    background: var(--page-bg);
-    color: var(--text);
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--page-bg);
+  color: var(--text);
 }
 
 .partner-shell__content {
-    --wizard-host-offset: 0px;
-    min-width: 0;
-    flex: 1 1 auto;
+  --wizard-host-offset: 0px;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .agent-app-shell.has-partner-navigation .partner-shell__content {
-    --wizard-host-offset: 280px;
-    margin-left: 280px;
-    transition: margin-left $duration-fast $ease-standard;
+  --wizard-host-offset: 280px;
+  margin-left: 280px;
+  transition: margin-left $duration-fast $ease-standard;
 }
 
 .agent-app-shell.has-partner-navigation > .trem-sidebar {
-    position: fixed;
-    inset: 0 auto 0 0;
-    z-index: 100;
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 100;
 }
 
 .agent-app-shell.has-partner-navigation.is-sidebar-collapsed .partner-shell__content {
-    --wizard-host-offset: 76px;
-    margin-left: 76px;
+  --wizard-host-offset: 76px;
+  margin-left: 76px;
 }
 
 @media (max-width: 900px) {
-    .agent-app-shell.has-partner-navigation .partner-shell__content,
-    .agent-app-shell.has-partner-navigation.is-sidebar-collapsed .partner-shell__content {
-        --wizard-host-offset: 0px;
-        margin-left: 0;
-    }
+  .agent-app-shell.has-partner-navigation .partner-shell__content,
+  .agent-app-shell.has-partner-navigation.is-sidebar-collapsed .partner-shell__content {
+    --wizard-host-offset: 0px;
+    margin-left: 0;
+  }
 
-    .agent-app-shell.has-partner-navigation > .trem-sidebar {
-        z-index: 301;
-    }
+  .agent-app-shell.has-partner-navigation > .trem-sidebar {
+    z-index: 301;
+  }
 }
 
 .agent-app-shell--embedded {
-    min-height: auto;
+  min-height: auto;
 
-    > .trem-app-footer {
-        display: none;
-    }
+  > .trem-app-footer {
+    display: none;
+  }
 }
 
 .micro-app-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    min-height: 72px;
-    padding: 0 1.5rem;
-    background: var(--surface-glass-strong);
-    border-bottom: 1px solid var(--border);
-    box-shadow: var(--shadow-sm);
-    backdrop-filter: blur(14px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 72px;
+  padding: 0 1.5rem;
+  background: var(--surface-glass-strong);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(14px);
 
-    &__brand,
-    &__theme-toggle {
-        border: 0;
-        background: var(--color-transparent);
-    }
+  &__brand,
+  &__theme-toggle {
+    border: 0;
+    background: var(--color-transparent);
+  }
 
-    &__brand {
-        color: var(--text);
-        font-weight: $font-bold;
-        font-size: $font-size-lg;
-    }
+  &__brand {
+    color: var(--text);
+    font-weight: $font-bold;
+    font-size: $font-size-lg;
+  }
 
-    &__theme-toggle {
-        color: var(--color-primary-dark);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-sm);
-        padding: 0.45rem 0.75rem;
-    }
+  &__theme-toggle {
+    color: var(--color-primary-dark);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.45rem 0.75rem;
+  }
 }
 
 .app-status {
-    padding: 1.5rem;
-    color: var(--text);
-    background: var(--page-bg);
+  padding: 1.5rem;
+  color: var(--text);
+  background: var(--page-bg);
 
-    &--center {
-        min-height: 50vh;
-        display: grid;
-        place-items: center;
-        text-align: center;
-    }
+  &--center {
+    min-height: 50vh;
+    display: grid;
+    place-items: center;
+    text-align: center;
+  }
 
-    &__title {
-        font-size: $font-size-lg;
-        font-weight: $font-semibold;
-        margin-bottom: 0.5rem;
-    }
+  &__title {
+    font-size: $font-size-lg;
+    font-weight: $font-semibold;
+    margin-bottom: 0.5rem;
+  }
 
-    &__muted {
-        color: var(--muted);
-    }
+  &__muted {
+    color: var(--muted);
+  }
 }

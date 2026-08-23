@@ -387,23 +387,102 @@ $agent-gap: $space-3;
 
 .agency-section__head h3,
 .agency-products__request h4,
-.agency-products__history h4 { margin: 0; }
-.agency-section__head p { margin: $space-1 0 0; color: var(--muted); font-size: $font-size-sm; }
-.agency-products__enabled { display: flex; flex-wrap: wrap; gap: $space-2; }
-.agency-products__enabled > span { padding: $space-2 $space-3; border: 1px solid var(--border); border-radius: var(--radius-full); background: var(--primary-soft); color: var(--color-primary); font-size: $font-size-xs; font-weight: $font-bold; }
-.agency-products__request { display: grid; gap: $space-3; margin-top: $space-5; padding: $space-4; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-elevated); }
-.agency-products__options { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: $space-3; }
-.agency-products__options label { display: flex; align-items: flex-start; gap: $space-3; padding: $space-3; border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; }
-.agency-products__options label:has(input:checked) { border-color: var(--color-primary); background: var(--primary-soft); }
-.agency-products__options input { width: auto; margin-top: $space-1; }
-.agency-products__options span { display: grid; gap: $space-1; }
-.agency-products__options small { color: var(--muted); font-weight: normal; }
-.agency-products__reason { display: grid; gap: $space-2; font-size: $font-size-sm; font-weight: $font-semibold; }
-.agency-products__reason textarea { padding: $space-3; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font: inherit; resize: vertical; }
-.agency-products__history { display: grid; gap: $space-2; margin-top: $space-5; }
-.agency-products__history article { display: flex; align-items: center; justify-content: space-between; gap: $space-3; padding: $space-3; border-bottom: 1px solid var(--border); }
-.agency-products__history article div { display: grid; gap: $space-1; }
-.agency-products__history article small { color: var(--muted); }
+.agency-products__history h4 {
+  margin: 0;
+}
+.agency-section__head p {
+  margin: $space-1 0 0;
+  color: var(--muted);
+  font-size: $font-size-sm;
+}
+.agency-products__enabled {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-2;
+}
+.agency-products__enabled > span {
+  padding: $space-2 $space-3;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--primary-soft);
+  color: var(--color-primary);
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+}
+.agency-products__request {
+  display: grid;
+  gap: $space-3;
+  margin-top: $space-5;
+  padding: $space-4;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-elevated);
+}
+.agency-products__options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: $space-3;
+}
+.agency-products__options label {
+  display: flex;
+  align-items: flex-start;
+  gap: $space-3;
+  padding: $space-3;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.agency-products__options label:has(input:checked) {
+  border-color: var(--color-primary);
+  background: var(--primary-soft);
+}
+.agency-products__options input {
+  width: auto;
+  margin-top: $space-1;
+}
+.agency-products__options span {
+  display: grid;
+  gap: $space-1;
+}
+.agency-products__options small {
+  color: var(--muted);
+  font-weight: normal;
+}
+.agency-products__reason {
+  display: grid;
+  gap: $space-2;
+  font-size: $font-size-sm;
+  font-weight: $font-semibold;
+}
+.agency-products__reason textarea {
+  padding: $space-3;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  resize: vertical;
+}
+.agency-products__history {
+  display: grid;
+  gap: $space-2;
+  margin-top: $space-5;
+}
+.agency-products__history article {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-3;
+  padding: $space-3;
+  border-bottom: 1px solid var(--border);
+}
+.agency-products__history article div {
+  display: grid;
+  gap: $space-1;
+}
+.agency-products__history article small {
+  color: var(--muted);
+}
 
 .agent-settings-widget .agent-settings-content {
   padding: $space-3 0;
@@ -451,7 +530,9 @@ $agent-gap: $space-3;
   background: var(--surface);
   color: var(--text);
   cursor: pointer;
-  transition: border-color $duration-fast $ease-standard, background $duration-fast $ease-standard;
+  transition:
+    border-color $duration-fast $ease-standard,
+    background $duration-fast $ease-standard;
 }
 
 .settings-avatar-option:hover {

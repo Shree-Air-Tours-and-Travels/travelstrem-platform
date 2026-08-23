@@ -4,1966 +4,2033 @@
 .trevio-app *,
 .trevio-app *::before,
 .trevio-app *::after {
-    box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 .trevio-app {
-    font-family: $font-primary;
-    background: var(--bg);
-    color: var(--text);
-    line-height: $line-height-md;
-    overscroll-behavior-y: none;
+  font-family: $font-primary;
+  background: var(--bg);
+  color: var(--text);
+  line-height: $line-height-md;
+  overscroll-behavior-y: none;
 }
 
 .trevio-app {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    min-height: 100dvh;
-    width: 100%;
-    background: var(--bg);
-    color: var(--text);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  background: var(--bg);
+  color: var(--text);
 
-    > footer {
-        margin-top: auto;
-        flex-shrink: 0;
-    }
+  > footer {
+    margin-top: auto;
+    flex-shrink: 0;
+  }
 }
 
 .trevio-app--embedded {
+  width: 100%;
+  height: 100%;
+  min-height: auto;
+  margin-bottom: $space-6;
+  container-name: trevio-shell;
+  container-type: inline-size;
+
+  .trevio-container {
     width: 100%;
-    height: 100%;
-    min-height: auto;
-    margin-bottom: $space-6;
-    container-name: trevio-shell;
-    container-type: inline-size;
+    max-width: none;
+    margin: 0;
+    padding-inline: clamp(1rem, 2vw, 2rem);
+  }
 
-    .trevio-container {
-        width: 100%;
-        max-width: none;
-        margin: 0;
-        padding-inline: clamp(1rem, 2vw, 2rem);
+  .tour-detail {
+    --td-header-offset: 0px;
+    width: 100%;
+
+    &__shell {
+      width: 100%;
+      max-width: none;
+      margin: 0;
     }
-
-    .tour-detail {
-        --td-header-offset: 0px;
-        width: 100%;
-
-        &__shell {
-            width: 100%;
-            max-width: none;
-            margin: 0;
-        }
-    }
+  }
 }
 
 @container trevio-shell (max-width: 1100px) {
-    .tour-detail {
-        &__hero-section,
-        &__layout {
-            grid-template-columns: minmax(0, 1fr);
-        }
-
-        &__sidebar {
-            display: none;
-        }
+  .tour-detail {
+    &__hero-section,
+    &__layout {
+      grid-template-columns: minmax(0, 1fr);
     }
+
+    &__sidebar {
+      display: none;
+    }
+  }
 }
 
 .trevio-container {
-    width: min(1380px, calc(100% - clamp(2rem, 5vw, 5rem)));
-    margin: auto;
+  width: min(1380px, calc(100% - clamp(2rem, 5vw, 5rem)));
+  margin: auto;
 }
 
 .trevio-button {
-    border: 0;
-    border-radius: var(--radius-sm);
-    padding: $space-3 $space-4;
-    font-weight: $font-bold;
-    cursor: pointer;
-    transition: background $duration-base $ease-standard, border-color $duration-base $ease-standard, transform $duration-base $ease-standard;
+  border: 0;
+  border-radius: var(--radius-sm);
+  padding: $space-3 $space-4;
+  font-weight: $font-bold;
+  cursor: pointer;
+  transition:
+    background $duration-base $ease-standard,
+    border-color $duration-base $ease-standard,
+    transform $duration-base $ease-standard;
 }
 
 .trevio-button:hover {
-    transform: translateY(-1px);
+  transform: translateY(-1px);
 }
 
 .trevio-button:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 $space-1 var(--focus-ring);
+  outline: none;
+  box-shadow: 0 0 0 $space-1 var(--focus-ring);
 }
 
 .trevio-button--secondary {
-    background: var(--surface);
-    color: var(--text);
-    border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
 }
 
 .trevio-button--primary {
-    background: var(--color-primary);
-    color: var(--color-on-primary);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
 }
 
 .trevio-button--primary:hover {
-    background: var(--color-primary-dark);
+  background: var(--color-primary-dark);
 }
 
 .trevio-full {
-    width: 100%;
-    margin-top: $space-2-5;
+  width: 100%;
+  margin-top: $space-2-5;
 }
 
 .trevio-hero {
-    padding: clamp(2.25rem, 4vw, 4rem) 0 clamp(1.75rem, 3vw, 2.5rem);
+  padding: clamp(2.25rem, 4vw, 4rem) 0 clamp(1.75rem, 3vw, 2.5rem);
 }
 
 .trevio-hero__grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1.04fr) minmax(320px, .96fr);
-    gap: clamp(2rem, 5vw, 4rem);
-    align-items: center;
+  display: grid;
+  grid-template-columns: minmax(0, 1.04fr) minmax(320px, 0.96fr);
+  gap: clamp(2rem, 5vw, 4rem);
+  align-items: center;
 }
 
 /* ─── Featured Slider ───────────────────────────────────── */
 
 .trevio-featured-slider {
-    position: relative;
-    width: 100%;
+  position: relative;
+  width: 100%;
 }
 
 .trevio-featured-slider__viewport {
-    border: 1px solid var(--border);
-    border-radius: clamp(1.5rem, 3vw, 2.4rem);
-    overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: clamp(1.5rem, 3vw, 2.4rem);
+  overflow: hidden;
 }
 
 .trevio-featured-slider__track {
-    display: flex;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
-    gap: 0;
-    scrollbar-width: none;
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  gap: 0;
+  scrollbar-width: none;
 
-    &::-webkit-scrollbar {
-        display: none;
-    }
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 .trevio-featured-slider__slide {
-    flex: 0 0 100%;
-    scroll-snap-align: start;
+  flex: 0 0 100%;
+  scroll-snap-align: start;
 }
 
 .trevio-featured-slider .trem-featured-card__media {
-    border: none;
-    border-radius: 0;
+  border: none;
+  border-radius: 0;
 }
 
 .trevio-featured-slider__dots {
-    display: flex;
-    justify-content: center;
-    gap: $space-2;
-    margin-top: $space-4;
+  display: flex;
+  justify-content: center;
+  gap: $space-2;
+  margin-top: $space-4;
 }
 
 .trevio-featured-slider__dot {
-    width: 8px;
-    height: 8px;
-    border-radius: $radius-full;
-    border: 0;
-    background: var(--border);
-    cursor: pointer;
-    padding: 0;
-    transition: background $duration-base $ease-standard, transform $duration-base $ease-standard;
+  width: 8px;
+  height: 8px;
+  border-radius: $radius-full;
+  border: 0;
+  background: var(--border);
+  cursor: pointer;
+  padding: 0;
+  transition:
+    background $duration-base $ease-standard,
+    transform $duration-base $ease-standard;
 
-    &:hover {
-        background: var(--muted);
-    }
+  &:hover {
+    background: var(--muted);
+  }
 
-    &--active {
-        background: var(--color-primary);
-        transform: scale(1.3);
-    }
+  &--active {
+    background: var(--color-primary);
+    transform: scale(1.3);
+  }
 }
 
 @media (max-width: $breakpoint-tablet) {
-    .trevio-featured-slider__viewport {
-        border-radius: clamp(1.25rem, 2.5vw, 1.8rem);
-    }
+  .trevio-featured-slider__viewport {
+    border-radius: clamp(1.25rem, 2.5vw, 1.8rem);
+  }
 
-    .trevio-featured-slider__track {
-        min-width: 0;
-    }
+  .trevio-featured-slider__track {
+    min-width: 0;
+  }
 }
 
 @media (max-width: $breakpoint-mobile) {
-    .trevio-featured-slider__viewport {
-        border-radius: 1.2rem;
-    }
+  .trevio-featured-slider__viewport {
+    border-radius: 1.2rem;
+  }
 
-    .trevio-featured-slider .trem-featured-card__media {
-        min-height: 400px;
-    }
+  .trevio-featured-slider .trem-featured-card__media {
+    min-height: 400px;
+  }
 
-    .trevio-featured-slider__dots {
-        margin-top: $space-3;
-    }
+  .trevio-featured-slider__dots {
+    margin-top: $space-3;
+  }
 
-    .trevio-featured-slider__dot {
-        width: 6px;
-        height: 6px;
-    }
+  .trevio-featured-slider__dot {
+    width: 6px;
+    height: 6px;
+  }
 }
 
 /* ─── Featured Empty State ──────────────────────────────── */
 
 .trevio-featured-empty {
-    position: relative;
-    min-height: clamp(420px, 46vw, 620px);
-    border-radius: var(--radius-xl);
-    overflow: hidden;
-    display: grid;
-    place-items: center;
-    background: linear-gradient(135deg, var(--surface) 0%, var(--primary-softer) 50%, var(--tertiary-soft) 100%);
-    border: 1px solid var(--border);
+  position: relative;
+  min-height: clamp(420px, 46vw, 620px);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(
+    135deg,
+    var(--surface) 0%,
+    var(--primary-softer) 50%,
+    var(--tertiary-soft) 100%
+  );
+  border: 1px solid var(--border);
 }
 
 .trevio-featured-empty__glow {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background:
-        radial-gradient(ellipse at 20% 20%, var(--primary-softer), transparent 50%),
-        radial-gradient(ellipse at 80% 80%, var(--tertiary-soft), transparent 50%);
-    opacity: .6;
-    animation: trevio-featured-glow 6s ease-in-out infinite alternate;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 20% 20%, var(--primary-softer), transparent 50%),
+    radial-gradient(ellipse at 80% 80%, var(--tertiary-soft), transparent 50%);
+  opacity: 0.6;
+  animation: trevio-featured-glow 6s ease-in-out infinite alternate;
 }
 
 @keyframes trevio-featured-glow {
-    0% { opacity: .4; transform: scale(1); }
-    100% { opacity: .7; transform: scale(1.05); }
+  0% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
 }
 
 .trevio-featured-empty__content {
-    position: relative;
-    text-align: center;
-    padding: $space-8;
-    max-width: 400px;
+  position: relative;
+  text-align: center;
+  padding: $space-8;
+  max-width: 400px;
 }
 
 .trevio-featured-empty__icon {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto $space-5;
-    border-radius: $radius-full;
-    background: var(--surface);
-    color: var(--color-primary);
-    display: grid;
-    place-items: center;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, .08);
-    animation: trevio-featured-icon-pulse 3s ease-in-out infinite;
+  width: 80px;
+  height: 80px;
+  margin: 0 auto $space-5;
+  border-radius: $radius-full;
+  background: var(--surface);
+  color: var(--color-primary);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  animation: trevio-featured-icon-pulse 3s ease-in-out infinite;
 }
 
 @keyframes trevio-featured-icon-pulse {
-    0%, 100% { transform: translateY(0); box-shadow: 0 8px 32px rgba(0, 0, 0, .08); }
-    50% { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0, 0, 0, .12); }
+  0%,
+  100% {
+    transform: translateY(0);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  }
+  50% {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  }
 }
 
 .trevio-featured-empty__content h3 {
-    margin: 0 0 $space-3;
-    color: var(--title);
-    font-size: clamp(1.5rem, 2.5vw, 2rem);
-    letter-spacing: -0.03em;
+  margin: 0 0 $space-3;
+  color: var(--title);
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  letter-spacing: -0.03em;
 }
 
 .trevio-featured-empty__content p {
-    margin: 0 0 $space-6;
-    color: var(--muted);
-    font-size: $font-size-md;
-    line-height: $line-height-lg;
+  margin: 0 0 $space-6;
+  color: var(--muted);
+  font-size: $font-size-md;
+  line-height: $line-height-lg;
 }
 
 @media (max-width: $breakpoint-mobile) {
-    .trevio-featured-empty {
-        min-height: 360px;
-    }
+  .trevio-featured-empty {
+    min-height: 360px;
+  }
 
-    .trevio-featured-empty__icon {
-        width: 64px;
-        height: 64px;
+  .trevio-featured-empty__icon {
+    width: 64px;
+    height: 64px;
 
-        svg {
-            width: 32px;
-            height: 32px;
-        }
+    svg {
+      width: 32px;
+      height: 32px;
     }
+  }
 }
 
 .trevio-eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: $space-2;
-    background: var(--primary-softer);
-    color: var(--color-primary-dark);
-    padding: $space-2 $space-3;
-    border-radius: $radius-full;
-    font-weight: $font-bold;
-    font-size: $font-size-sm;
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  background: var(--primary-softer);
+  color: var(--color-primary-dark);
+  padding: $space-2 $space-3;
+  border-radius: $radius-full;
+  font-weight: $font-bold;
+  font-size: $font-size-sm;
 }
 
 .trevio-hero__content {
-    display: flex;
-    flex-direction: column;
-    gap: clamp(1.5rem, 3vw, 2.5rem);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.5rem, 3vw, 2.5rem);
 }
 
 .trevio-hero__product {
-    display: flex;
-    flex-direction: column;
-    gap: $space-2;
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
 }
 
 .trevio-hero .trevio-hero__product-title {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0 .22em;
-    max-width: 720px;
-    margin: 0;
-    color: var(--title);
-    font-size: clamp(2.5rem, 5vw, 4.5rem);
-    font-weight: $font-bold;
-    line-height: 1.02;
-    letter-spacing: -.065em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 0.22em;
+  max-width: 720px;
+  margin: 0;
+  color: var(--title);
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  font-weight: $font-bold;
+  line-height: 1.02;
+  letter-spacing: -0.065em;
 }
 
 .trevio-hero__product-name {
-    color: transparent;
-    background: linear-gradient(110deg, var(--color-primary), var(--color-secondary));
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+  color: transparent;
+  background: linear-gradient(110deg, var(--color-primary), var(--color-secondary));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .trevio-hero__product-provider {
-    color: var(--color-secondary-dark);
+  color: var(--color-secondary-dark);
 }
 
 .trevio-hero .trevio-hero__product-subtitle {
-    max-width: 580px;
-    margin: 0;
-    color: var(--muted);
-    font-size: clamp(.95rem, .3vw + .9rem, 1.1rem);
-    line-height: $line-height-md;
+  max-width: 580px;
+  margin: 0;
+  color: var(--muted);
+  font-size: clamp(0.95rem, 0.3vw + 0.9rem, 1.1rem);
+  line-height: $line-height-md;
 }
 
 .trevio-hero__offering {
-    min-width: 0;
+  min-width: 0;
 }
 
 .trevio-hero__offering h2 {
-    color: var(--title);
-    font-size: clamp(1.55rem, 1.25vw + 1rem, 2.25rem);
-    line-height: $line-height-sm;
-    letter-spacing: -.035em;
-    margin: $space-4 0 $space-3;
+  color: var(--title);
+  font-size: clamp(1.55rem, 1.25vw + 1rem, 2.25rem);
+  line-height: $line-height-sm;
+  letter-spacing: -0.035em;
+  margin: $space-4 0 $space-3;
 }
 
 .trevio-hero__offering h2 span {
-    color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .trevio-hero p {
-    font-size: clamp(1rem, .4vw + .95rem, 1.18rem);
-    line-height: $line-height-lg;
-    color: var(--muted);
-    max-width: 650px;
+  font-size: clamp(1rem, 0.4vw + 0.95rem, 1.18rem);
+  line-height: $line-height-lg;
+  color: var(--muted);
+  max-width: 650px;
 }
 
 .trevio-hero__actions {
-    display: flex;
-    gap: $space-3;
-    flex-wrap: wrap;
-    margin: $space-6 0;
+  display: flex;
+  gap: $space-3;
+  flex-wrap: wrap;
+  margin: $space-6 0;
 }
 
 .trevio-trust {
-    display: flex;
-    gap: $space-5;
-    flex-wrap: wrap;
-    font-size: $font-size-sm;
-    font-weight: $font-bold;
-    color: var(--subtitle);
+  display: flex;
+  gap: $space-5;
+  flex-wrap: wrap;
+  font-size: $font-size-sm;
+  font-weight: $font-bold;
+  color: var(--subtitle);
 }
 
 .trevio-trust span:before {
-    content: "✓";
-    color: var(--color-primary);
-    margin-right: $space-2;
+  content: "✓";
+  color: var(--color-primary);
+  margin-right: $space-2;
 }
 
 .trevio-section {
-    padding: clamp(2.25rem, 4vw, 3.75rem) 0;
+  padding: clamp(2.25rem, 4vw, 3.75rem) 0;
 }
 
 .trevio-section-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: end;
-    gap: $space-5;
-    margin-bottom: $space-6;
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: $space-5;
+  margin-bottom: $space-6;
 }
 
 .trevio-section-head h2 {
-    font-size: $font-size-xxl;
-    letter-spacing: -1.2px;
-    margin: 0;
+  font-size: $font-size-xxl;
+  letter-spacing: -1.2px;
+  margin: 0;
 }
 
 .trevio-section-head p {
-    color: var(--muted);
-    margin: $space-1-5 0 0;
+  color: var(--muted);
+  margin: $space-1-5 0 0;
 }
 
 .trevio-filters {
-    display: flex;
-    gap: $space-2-5;
-    flex-wrap: wrap;
+  display: flex;
+  gap: $space-2-5;
+  flex-wrap: wrap;
 }
 
 .trevio-filters button {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    padding: $space-2-5 $space-3-5;
-    border-radius: $radius-full;
-    font-weight: $font-bold;
-    cursor: pointer;
-    transition: background $duration-base $ease-standard, color $duration-base $ease-standard, opacity $duration-base $ease-standard;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: $space-2-5 $space-3-5;
+  border-radius: $radius-full;
+  font-weight: $font-bold;
+  cursor: pointer;
+  transition:
+    background $duration-base $ease-standard,
+    color $duration-base $ease-standard,
+    opacity $duration-base $ease-standard;
 }
 
 .trevio-filters button:disabled {
-    cursor: wait;
-    opacity: .7;
+  cursor: wait;
+  opacity: 0.7;
 }
 
 .trevio-filters button.is-active {
-    background: var(--color-primary);
-    color: var(--color-on-primary);
-    border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  border-color: var(--color-primary);
 }
 
 .trevio-trip-grid {
-    position: relative;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: $space-5;
-    transition: opacity $duration-base $ease-standard;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $space-5;
+  transition: opacity $duration-base $ease-standard;
 
-    &.is-loading {
-        opacity: .52;
-    }
+  &.is-loading {
+    opacity: 0.52;
+  }
 }
 
 /* ─── Plan International CTA ───────────────────────────── */
 
 .trevio-plan-intl__inner {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: $space-8;
-    align-items: center;
-    padding: clamp(2rem, 4vw, 3.5rem);
-    background: linear-gradient(135deg, var(--primary-softer) 0%, var(--surface) 50%, var(--tertiary-soft) 100%);
-    border: 1px solid var(--border);
-    border-radius: clamp(1.25rem, 2.5vw, 2rem);
-    overflow: hidden;
-    position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: $space-8;
+  align-items: center;
+  padding: clamp(2rem, 4vw, 3.5rem);
+  background: linear-gradient(
+    135deg,
+    var(--primary-softer) 0%,
+    var(--surface) 50%,
+    var(--tertiary-soft) 100%
+  );
+  border: 1px solid var(--border);
+  border-radius: clamp(1.25rem, 2.5vw, 2rem);
+  overflow: hidden;
+  position: relative;
 }
 
 .trevio-plan-intl__content {
-    display: grid;
-    gap: $space-4;
-    max-width: 520px;
-    position: relative;
-    z-index: 1;
+  display: grid;
+  gap: $space-4;
+  max-width: 520px;
+  position: relative;
+  z-index: 1;
 
-    h2 {
-        margin: 0;
-        font-size: clamp(1.5rem, 2.5vw, 2.25rem);
-        font-weight: $font-bold;
-        letter-spacing: -0.03em;
-        line-height: $line-height-sm;
-        color: var(--title);
+  h2 {
+    margin: 0;
+    font-size: clamp(1.5rem, 2.5vw, 2.25rem);
+    font-weight: $font-bold;
+    letter-spacing: -0.03em;
+    line-height: $line-height-sm;
+    color: var(--title);
 
-        span {
-            color: var(--color-primary);
-        }
+    span {
+      color: var(--color-primary);
     }
+  }
 
-    p {
-        margin: 0;
-        color: var(--muted);
-        font-size: $font-size-md;
-        line-height: $line-height-sm;
-    }
+  p {
+    margin: 0;
+    color: var(--muted);
+    font-size: $font-size-md;
+    line-height: $line-height-sm;
+  }
 }
 
 .trevio-plan-intl__visual {
-    position: relative;
-    width: 140px;
-    height: 140px;
-    display: grid;
-    place-items: center;
-    color: var(--color-primary);
-    flex-shrink: 0;
+  position: relative;
+  width: 140px;
+  height: 140px;
+  display: grid;
+  place-items: center;
+  color: var(--color-primary);
+  flex-shrink: 0;
 }
 
 .trevio-plan-intl__orb {
-    position: absolute;
-    border-radius: $radius-full;
-    opacity: .25;
-    animation: trevio-plan-intl-pulse 4s ease-in-out infinite alternate;
+  position: absolute;
+  border-radius: $radius-full;
+  opacity: 0.25;
+  animation: trevio-plan-intl-pulse 4s ease-in-out infinite alternate;
 
-    &--1 {
-        width: 120px;
-        height: 120px;
-        background: var(--color-primary);
-    }
+  &--1 {
+    width: 120px;
+    height: 120px;
+    background: var(--color-primary);
+  }
 
-    &--2 {
-        width: 80px;
-        height: 80px;
-        background: var(--tertiary-soft);
-        animation-delay: 1.5s;
-    }
+  &--2 {
+    width: 80px;
+    height: 80px;
+    background: var(--tertiary-soft);
+    animation-delay: 1.5s;
+  }
 }
 
 @keyframes trevio-plan-intl-pulse {
-    0% { transform: scale(1); opacity: .2; }
-    100% { transform: scale(1.15); opacity: .35; }
+  0% {
+    transform: scale(1);
+    opacity: 0.2;
+  }
+  100% {
+    transform: scale(1.15);
+    opacity: 0.35;
+  }
 }
 
 .trevio-plan-intl__visual > svg,
 .trevio-plan-intl__visual > i {
-    position: relative;
-    z-index: 1;
+  position: relative;
+  z-index: 1;
 }
 
 @media (max-width: $breakpoint-mobile) {
-    .trevio-plan-intl__inner {
-        grid-template-columns: 1fr;
-        text-align: left;
-        padding: $space-6;
-    }
+  .trevio-plan-intl__inner {
+    grid-template-columns: 1fr;
+    text-align: left;
+    padding: $space-6;
+  }
 
-    .trevio-plan-intl__visual {
-        display: none;
-    }
+  .trevio-plan-intl__visual {
+    display: none;
+  }
 }
 
 .trevio-intl-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: $space-5;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $space-5;
 }
 
 .trevio-trip-grid__empty {
-    grid-column: 1 / -1;
-    background: var(--surface);
-    border: 1px dashed var(--border);
-    border-radius: var(--radius-lg);
-    padding: $space-6;
-    text-align: center;
+  grid-column: 1 / -1;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+  padding: $space-6;
+  text-align: center;
 }
 
 .trevio-trip-grid__more {
-    display: flex;
-    justify-content: center;
-    margin-top: $space-5;
+  display: flex;
+  justify-content: center;
+  margin-top: $space-5;
 }
 
 .trevio-journey {
-    position: relative;
-    overflow: hidden;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-md);
-    padding: clamp($space-6, 3.5vw, $space-10);
+  position: relative;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  padding: clamp($space-6, 3.5vw, $space-10);
 
-    &::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        background:
-            radial-gradient(ellipse at 0% 0%, var(--primary-softer), transparent 50%),
-            radial-gradient(ellipse at 100% 100%, var(--tertiary-soft), transparent 50%);
-        opacity: .6;
-    }
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse at 0% 0%, var(--primary-softer), transparent 50%),
+      radial-gradient(ellipse at 100% 100%, var(--tertiary-soft), transparent 50%);
+    opacity: 0.6;
+  }
 }
 
 .trevio-journey__header {
-    position: relative;
-    text-align: left;
-    max-width: 720px;
-    margin: 0 0 $space-8;
+  position: relative;
+  text-align: left;
+  max-width: 720px;
+  margin: 0 0 $space-8;
 }
 
 .trevio-journey h2 {
-    margin: $space-3 0 0;
-    color: var(--title);
-    font-size: clamp(1.75rem, 3vw, 2.5rem);
-    letter-spacing: -0.03em;
-    line-height: $line-height-sm;
+  margin: $space-3 0 0;
+  color: var(--title);
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  letter-spacing: -0.03em;
+  line-height: $line-height-sm;
 }
 
 .trevio-journey__track {
-    position: relative;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: $space-6;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $space-6;
 }
 
 .trevio-journey__line {
-    position: absolute;
-    top: 28px;
-    left: calc(12.5% + 12px);
-    right: calc(12.5% + 12px);
-    height: 2px;
-    background: linear-gradient(
-        90deg,
-        var(--color-primary) 0%,
-        var(--color-primary) 25%,
-        var(--border) 25%,
-        var(--border) 100%
-    );
-    border-radius: 1px;
-    z-index: 0;
+  position: absolute;
+  top: 28px;
+  left: calc(12.5% + 12px);
+  right: calc(12.5% + 12px);
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    var(--color-primary) 0%,
+    var(--color-primary) 25%,
+    var(--border) 25%,
+    var(--border) 100%
+  );
+  border-radius: 1px;
+  z-index: 0;
 
-    &::after {
-        content: "";
-        position: absolute;
-        top: 50%;
-        left: 25%;
-        width: 0;
-        height: 2px;
-        background: var(--color-primary);
-        border-radius: 1px;
-        transform: translateY(-50%);
-        transition: width 800ms cubic-bezier(0.2, 0, 0, 1);
-    }
+  &::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 25%;
+    width: 0;
+    height: 2px;
+    background: var(--color-primary);
+    border-radius: 1px;
+    transform: translateY(-50%);
+    transition: width 800ms cubic-bezier(0.2, 0, 0, 1);
+  }
 }
 
 .trevio-journey__step {
-    position: relative;
-    z-index: 1;
-    display: grid;
-    gap: $space-4;
-    align-content: start;
-    text-align: center;
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: $space-4;
+  align-content: start;
+  text-align: center;
 }
 
 .trevio-journey__step-marker {
-    width: 56px;
-    height: 56px;
-    margin: 0 auto;
-    display: grid;
-    place-items: center;
-    background: var(--surface);
-    border: 2px solid var(--border);
-    border-radius: $radius-full;
-    position: relative;
-    z-index: 2;
-    transition: border-color $duration-base $ease-standard,
-        background $duration-base $ease-standard,
-        box-shadow $duration-base $ease-standard;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto;
+  display: grid;
+  place-items: center;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: $radius-full;
+  position: relative;
+  z-index: 2;
+  transition:
+    border-color $duration-base $ease-standard,
+    background $duration-base $ease-standard,
+    box-shadow $duration-base $ease-standard;
 }
 
 .trevio-journey__step:hover .trevio-journey__step-marker {
-    border-color: var(--color-primary);
-    background: var(--color-primary);
-    box-shadow: 0 0 0 6px var(--primary-softer);
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  box-shadow: 0 0 0 6px var(--primary-softer);
 }
 
 .trevio-journey__step-num {
-    font-size: $font-size-sm;
-    font-weight: $font-black;
-    color: var(--muted);
-    transition: color $duration-base $ease-standard;
-    letter-spacing: 0.02em;
+  font-size: $font-size-sm;
+  font-weight: $font-black;
+  color: var(--muted);
+  transition: color $duration-base $ease-standard;
+  letter-spacing: 0.02em;
 }
 
 .trevio-journey__step:hover .trevio-journey__step-num {
-    color: var(--color-on-primary);
+  color: var(--color-on-primary);
 }
 
 .trevio-journey__step-content {
-    display: grid;
-    gap: $space-2;
+  display: grid;
+  gap: $space-2;
 }
 
 .trevio-journey__step h3 {
-    margin: 0;
-    color: var(--title);
-    font-size: $font-size-md;
-    font-weight: $font-bold;
-    line-height: $line-height-md;
+  margin: 0;
+  color: var(--title);
+  font-size: $font-size-md;
+  font-weight: $font-bold;
+  line-height: $line-height-md;
 }
 
 .trevio-journey__step p {
-    margin: 0;
-    color: var(--muted);
-    font-size: $font-size-sm;
-    line-height: $line-height-lg;
+  margin: 0;
+  color: var(--muted);
+  font-size: $font-size-sm;
+  line-height: $line-height-lg;
 }
 
 /* ─── Why WanderOn ──────────────────────────────────────── */
 
 .trevio-why {
-    position: relative;
-    overflow: hidden;
-    padding: clamp($space-9, 5vw, $space-14) 0;
-    background: var(--surface);
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+  padding: clamp($space-9, 5vw, $space-14) 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
 }
 
 .trevio-why__bg {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    overflow: hidden;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
 }
 
 .trevio-why__orb {
-    position: absolute;
-    border-radius: $radius-full;
-    filter: blur(100px);
-    opacity: .3;
+  position: absolute;
+  border-radius: $radius-full;
+  filter: blur(100px);
+  opacity: 0.3;
 }
 
 .trevio-why__orb--1 {
-    width: 600px;
-    height: 600px;
-    top: -20%;
-    left: -10%;
-    background: var(--primary-softer);
+  width: 600px;
+  height: 600px;
+  top: -20%;
+  left: -10%;
+  background: var(--primary-softer);
 }
 
 .trevio-why__orb--2 {
-    width: 500px;
-    height: 500px;
-    bottom: -25%;
-    right: -8%;
-    background: var(--tertiary-soft);
+  width: 500px;
+  height: 500px;
+  bottom: -25%;
+  right: -8%;
+  background: var(--tertiary-soft);
 }
 
 .trevio-why__head {
-    position: relative;
-    text-align: left;
-    max-width: 760px;
-    margin: 0 0 $space-8;
+  position: relative;
+  text-align: left;
+  max-width: 760px;
+  margin: 0 0 $space-8;
 }
 
 .trevio-why__head h2 {
-    margin: $space-3 0 0;
-    color: var(--title);
-    font-size: clamp(1.8rem, 3.5vw, 2.8rem);
-    letter-spacing: -0.04em;
-    line-height: $line-height-sm;
+  margin: $space-3 0 0;
+  color: var(--title);
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  letter-spacing: -0.04em;
+  line-height: $line-height-sm;
 }
 
 .trevio-why__head h2 span {
-    color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .trevio-why__head p {
-    margin: $space-3 0 0;
-    color: var(--muted);
-    font-size: $font-size-md;
-    line-height: $line-height-lg;
+  margin: $space-3 0 0;
+  color: var(--muted);
+  font-size: $font-size-md;
+  line-height: $line-height-lg;
 }
 
 .trevio-why__grid {
-    position: relative;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: $space-5;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $space-5;
 }
 
 .trevio-why__card {
-    position: relative;
-    padding: $space-6;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    transition: border-color $duration-base $ease-standard, box-shadow $duration-base $ease-standard, transform $duration-base $ease-standard;
-    animation: trevio-why-in 500ms ease both;
-    animation-delay: calc(var(--wi, 0) * 80ms);
+  position: relative;
+  padding: $space-6;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  transition:
+    border-color $duration-base $ease-standard,
+    box-shadow $duration-base $ease-standard,
+    transform $duration-base $ease-standard;
+  animation: trevio-why-in 500ms ease both;
+  animation-delay: calc(var(--wi, 0) * 80ms);
 }
 
-.trevio-why__card:nth-child(1) { --wi: 0; }
-.trevio-why__card:nth-child(2) { --wi: 1; }
-.trevio-why__card:nth-child(3) { --wi: 2; }
-.trevio-why__card:nth-child(4) { --wi: 3; }
-.trevio-why__card:nth-child(5) { --wi: 4; }
-.trevio-why__card:nth-child(6) { --wi: 5; }
+.trevio-why__card:nth-child(1) {
+  --wi: 0;
+}
+.trevio-why__card:nth-child(2) {
+  --wi: 1;
+}
+.trevio-why__card:nth-child(3) {
+  --wi: 2;
+}
+.trevio-why__card:nth-child(4) {
+  --wi: 3;
+}
+.trevio-why__card:nth-child(5) {
+  --wi: 4;
+}
+.trevio-why__card:nth-child(6) {
+  --wi: 5;
+}
 
 @keyframes trevio-why-in {
-    from {
-        opacity: 0;
-        transform: translateY(16px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .trevio-why__card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, .08);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
 }
 
 .trevio-why__card-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: var(--radius-md);
-    display: grid;
-    place-items: center;
-    margin-bottom: $space-4;
-    transition: transform $duration-base $ease-standard;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-md);
+  display: grid;
+  place-items: center;
+  margin-bottom: $space-4;
+  transition: transform $duration-base $ease-standard;
 }
 
 .trevio-why__card:hover .trevio-why__card-icon {
-    transform: scale(1.08);
+  transform: scale(1.08);
 }
 
 .trevio-why__card--teal .trevio-why__card-icon {
-    background: rgba(20, 184, 166, .1);
-    color: #14b8a6;
+  background: rgba(20, 184, 166, 0.1);
+  color: #14b8a6;
 }
 
 .trevio-why__card--coral .trevio-why__card-icon {
-    background: rgba(251, 113, 133, .1);
-    color: #fb7185;
+  background: rgba(251, 113, 133, 0.1);
+  color: #fb7185;
 }
 
 .trevio-why__card--amber .trevio-why__card-icon {
-    background: rgba(245, 158, 11, .1);
-    color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
 }
 
 .trevio-why__card--blue .trevio-why__card-icon {
-    background: rgba(59, 130, 246, .1);
-    color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
 }
 
 .trevio-why__card--violet .trevio-why__card-icon {
-    background: rgba(139, 92, 246, .1);
-    color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.1);
+  color: #8b5cf6;
 }
 
 .trevio-why__card--green .trevio-why__card-icon {
-    background: rgba(34, 197, 94, .1);
-    color: #22c55e;
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
 }
 
 .trevio-why__card:hover.trevio-why__card--teal {
-    border-color: rgba(20, 184, 166, .3);
-    box-shadow: 0 12px 40px rgba(20, 184, 166, .08);
+  border-color: rgba(20, 184, 166, 0.3);
+  box-shadow: 0 12px 40px rgba(20, 184, 166, 0.08);
 }
 
 .trevio-why__card:hover.trevio-why__card--coral {
-    border-color: rgba(251, 113, 133, .3);
-    box-shadow: 0 12px 40px rgba(251, 113, 133, .08);
+  border-color: rgba(251, 113, 133, 0.3);
+  box-shadow: 0 12px 40px rgba(251, 113, 133, 0.08);
 }
 
 .trevio-why__card:hover.trevio-why__card--amber {
-    border-color: rgba(245, 158, 11, .3);
-    box-shadow: 0 12px 40px rgba(245, 158, 11, .08);
+  border-color: rgba(245, 158, 11, 0.3);
+  box-shadow: 0 12px 40px rgba(245, 158, 11, 0.08);
 }
 
 .trevio-why__card:hover.trevio-why__card--blue {
-    border-color: rgba(59, 130, 246, .3);
-    box-shadow: 0 12px 40px rgba(59, 130, 246, .08);
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 12px 40px rgba(59, 130, 246, 0.08);
 }
 
 .trevio-why__card:hover.trevio-why__card--violet {
-    border-color: rgba(139, 92, 246, .3);
-    box-shadow: 0 12px 40px rgba(139, 92, 246, .08);
+  border-color: rgba(139, 92, 246, 0.3);
+  box-shadow: 0 12px 40px rgba(139, 92, 246, 0.08);
 }
 
 .trevio-why__card:hover.trevio-why__card--green {
-    border-color: rgba(34, 197, 94, .3);
-    box-shadow: 0 12px 40px rgba(34, 197, 94, .08);
+  border-color: rgba(34, 197, 94, 0.3);
+  box-shadow: 0 12px 40px rgba(34, 197, 94, 0.08);
 }
 
 .trevio-why__card-title {
-    margin: 0 0 $space-2;
-    color: var(--title);
-    font-size: $font-size-md;
-    font-weight: $font-bold;
-    line-height: $line-height-md;
+  margin: 0 0 $space-2;
+  color: var(--title);
+  font-size: $font-size-md;
+  font-weight: $font-bold;
+  line-height: $line-height-md;
 }
 
 .trevio-why__card-desc {
-    margin: 0;
-    color: var(--muted);
-    font-size: $font-size-sm;
-    line-height: $line-height-lg;
+  margin: 0;
+  color: var(--muted);
+  font-size: $font-size-sm;
+  line-height: $line-height-lg;
 }
 
 /* ─── Journey in Frames ──────────────────────────────────── */
 
 .trevio-frames {
-    position: relative;
-    overflow: hidden;
-    padding: clamp($space-9, 5vw, $space-14) 0;
-    background: var(--bg);
+  position: relative;
+  overflow: hidden;
+  padding: clamp($space-9, 5vw, $space-14) 0;
+  background: var(--bg);
 }
 
 .trevio-frames__bg {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    overflow: hidden;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
 }
 
 .trevio-frames__orb {
-    position: absolute;
-    border-radius: $radius-full;
-    filter: blur(80px);
-    opacity: .35;
+  position: absolute;
+  border-radius: $radius-full;
+  filter: blur(80px);
+  opacity: 0.35;
 }
 
 .trevio-frames__orb--1 {
-    width: 500px;
-    height: 500px;
-    top: -10%;
-    left: -5%;
-    background: var(--primary-softer);
+  width: 500px;
+  height: 500px;
+  top: -10%;
+  left: -5%;
+  background: var(--primary-softer);
 }
 
 .trevio-frames__orb--2 {
-    width: 400px;
-    height: 400px;
-    bottom: -15%;
-    right: -5%;
-    background: var(--tertiary-soft);
+  width: 400px;
+  height: 400px;
+  bottom: -15%;
+  right: -5%;
+  background: var(--tertiary-soft);
 }
 
 .trevio-frames__header {
-    position: relative;
-    text-align: left;
-    max-width: 720px;
-    margin: 0 0 $space-8;
+  position: relative;
+  text-align: left;
+  max-width: 720px;
+  margin: 0 0 $space-8;
 }
 
 .trevio-frames__header h2 {
-    margin: $space-3 0 0;
-    color: var(--title);
-    font-size: clamp(1.75rem, 3vw, 2.5rem);
-    letter-spacing: -0.03em;
-    line-height: $line-height-sm;
+  margin: $space-3 0 0;
+  color: var(--title);
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  letter-spacing: -0.03em;
+  line-height: $line-height-sm;
 }
 
 .trevio-frames__header p {
-    margin: $space-3 0 0;
-    color: var(--muted);
-    font-size: $font-size-md;
-    line-height: $line-height-lg;
+  margin: $space-3 0 0;
+  color: var(--muted);
+  font-size: $font-size-md;
+  line-height: $line-height-lg;
 }
 
 .trevio-frames__viewport {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: $space-5;
-    mask-image: linear-gradient(
-        to bottom,
-        transparent 0%,
-        black 12%,
-        black 88%,
-        transparent 100%
-    );
-    -webkit-mask-image: linear-gradient(
-        to bottom,
-        transparent 0%,
-        black 12%,
-        black 88%,
-        transparent 100%
-    );
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: $space-5;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%);
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 12%,
+    black 88%,
+    transparent 100%
+  );
 }
 
 .trevio-frames__strip {
-    display: flex;
-    gap: $space-5;
-    width: max-content;
+  display: flex;
+  gap: $space-5;
+  width: max-content;
 }
 
 .trevio-frames__strip--left {
-    animation: trevio-frames-scroll-left 40s linear infinite;
+  animation: trevio-frames-scroll-left 40s linear infinite;
 }
 
 .trevio-frames__strip--right {
-    animation: trevio-frames-scroll-right 45s linear infinite;
+  animation: trevio-frames-scroll-right 45s linear infinite;
 }
 
 @keyframes trevio-frames-scroll-left {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
 @keyframes trevio-frames-scroll-right {
-    0% { transform: translateX(-50%); }
-    100% { transform: translateX(0); }
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0);
+  }
 }
 
 .trevio-frames__item {
-    flex: 0 0 auto;
-    width: 260px;
-    margin: 0;
-    overflow: hidden;
-    position: relative;
-    transition: transform $duration-base $ease-standard;
+  flex: 0 0 auto;
+  width: 260px;
+  margin: 0;
+  overflow: hidden;
+  position: relative;
+  transition: transform $duration-base $ease-standard;
 
-    &:hover {
-        transform: scale(1.04);
-        z-index: 2;
-    }
+  &:hover {
+    transform: scale(1.04);
+    z-index: 2;
+  }
 
-    img {
-        display: block;
-        width: 100%;
-        height: 320px;
-        object-fit: cover;
-    }
-
+  img {
+    display: block;
+    width: 100%;
+    height: 320px;
+    object-fit: cover;
+  }
 }
 
 /* ─── Shape masks ──────────────────────────────────────── */
 
 .trevio-frames__item--blob-1 {
-    border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+  border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
 }
 
 .trevio-frames__item--blob-2 {
-    border-radius: 70% 30% 30% 70% / 70% 70% 30% 30%;
+  border-radius: 70% 30% 30% 70% / 70% 70% 30% 30%;
 }
 
 .trevio-frames__item--blob-3 {
-    border-radius: 50% 50% 20% 80% / 25% 80% 20% 75%;
+  border-radius: 50% 50% 20% 80% / 25% 80% 20% 75%;
 }
 
 .trevio-frames__item--hexagon {
-    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
 }
 
 .trevio-frames__item--diamond {
-    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
-    width: 220px;
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  width: 220px;
 
-    img {
-        height: 280px;
-    }
+  img {
+    height: 280px;
+  }
 }
 
 .trevio-frames__item--octagon {
-    clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+  clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
 }
 
 /* ─── Get in Touch ──────────────────────────────────────── */
 
 .trevio-touch {
-    position: relative;
-    overflow: hidden;
-    padding: clamp($space-9, 5vw, $space-14) 0;
-    background: var(--surface);
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+  padding: clamp($space-9, 5vw, $space-14) 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
 }
 
 .trevio-touch__glow {
-    position: absolute;
-    border-radius: $radius-full;
-    filter: blur(100px);
-    pointer-events: none;
+  position: absolute;
+  border-radius: $radius-full;
+  filter: blur(100px);
+  pointer-events: none;
 }
 
 .trevio-touch__glow--1 {
-    width: 600px;
-    height: 600px;
-    top: -30%;
-    left: -10%;
-    background: var(--primary-softer);
-    opacity: .4;
+  width: 600px;
+  height: 600px;
+  top: -30%;
+  left: -10%;
+  background: var(--primary-softer);
+  opacity: 0.4;
 }
 
 .trevio-touch__glow--2 {
-    width: 400px;
-    height: 400px;
-    bottom: -20%;
-    right: -5%;
-    background: var(--tertiary-soft);
-    opacity: .35;
+  width: 400px;
+  height: 400px;
+  bottom: -20%;
+  right: -5%;
+  background: var(--tertiary-soft);
+  opacity: 0.35;
 }
 
 .trevio-touch__glow--3 {
-    width: 250px;
-    height: 250px;
-    top: 20%;
-    right: 30%;
-    background: var(--primary-softer);
-    opacity: .2;
+  width: 250px;
+  height: 250px;
+  top: 20%;
+  right: 30%;
+  background: var(--primary-softer);
+  opacity: 0.2;
 }
 
 .trevio-touch__inner {
-    position: relative;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: clamp($space-8, 5vw, $space-12);
-    align-items: center;
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp($space-8, 5vw, $space-12);
+  align-items: center;
 }
 
 .trevio-touch__left {
-    display: grid;
-    gap: $space-5;
-    align-content: start;
+  display: grid;
+  gap: $space-5;
+  align-content: start;
 }
 
 .trevio-touch__left h2 {
-    margin: $space-3 0 0;
-    color: var(--title);
-    font-size: clamp(1.8rem, 3.5vw, 2.8rem);
-    letter-spacing: -0.04em;
-    line-height: $line-height-sm;
+  margin: $space-3 0 0;
+  color: var(--title);
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  letter-spacing: -0.04em;
+  line-height: $line-height-sm;
 }
 
 .trevio-touch__left p {
-    margin: 0;
-    color: var(--muted);
-    font-size: $font-size-md;
-    line-height: $line-height-lg;
-    max-width: 480px;
+  margin: 0;
+  color: var(--muted);
+  font-size: $font-size-md;
+  line-height: $line-height-lg;
+  max-width: 480px;
 }
 
 .trevio-touch__cta {
-    display: inline-flex;
-    align-items: center;
-    gap: $space-3;
-    background: var(--color-primary);
-    color: var(--color-on-primary);
-    border: 0;
-    border-radius: $radius-full;
-    padding: $space-4 $space-6;
-    font-size: $font-size-md;
-    font-weight: $font-bold;
-    cursor: pointer;
-    transition: background $duration-base $ease-standard, transform $duration-base $ease-standard, box-shadow $duration-base $ease-standard;
-    width: fit-content;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, .12);
+  display: inline-flex;
+  align-items: center;
+  gap: $space-3;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  border: 0;
+  border-radius: $radius-full;
+  padding: $space-4 $space-6;
+  font-size: $font-size-md;
+  font-weight: $font-bold;
+  cursor: pointer;
+  transition:
+    background $duration-base $ease-standard,
+    transform $duration-base $ease-standard,
+    box-shadow $duration-base $ease-standard;
+  width: fit-content;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
 }
 
 .trevio-touch__cta:hover {
-    background: var(--color-primary-dark);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, .18);
+  background: var(--color-primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
 }
 
 .trevio-touch__cta-arrow {
-    transition: transform $duration-base $ease-standard;
+  transition: transform $duration-base $ease-standard;
 }
 
 .trevio-touch__cta:hover .trevio-touch__cta-arrow {
-    transform: translateX(3px);
+  transform: translateX(3px);
 }
 
 .trevio-touch__badge {
-    display: inline-flex;
-    align-items: center;
-    gap: $space-2;
-    font-size: $font-size-sm;
-    color: var(--muted);
-    font-weight: $font-semibold;
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  font-size: $font-size-sm;
+  color: var(--muted);
+  font-weight: $font-semibold;
 }
 
 .trevio-touch__badge-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: $radius-full;
-    background: #22c55e;
-    animation: trevio-pulse 2s ease-in-out infinite;
+  width: 8px;
+  height: 8px;
+  border-radius: $radius-full;
+  background: #22c55e;
+  animation: trevio-pulse 2s ease-in-out infinite;
 }
 
 @keyframes trevio-pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: .5; transform: scale(1.3); }
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.3);
+  }
 }
 
 .trevio-touch__right {
-    display: grid;
-    gap: $space-4;
+  display: grid;
+  gap: $space-4;
 }
 
 .trevio-touch__feature {
-    display: grid;
-    grid-template-columns: 56px 1fr;
-    gap: $space-4;
-    padding: $space-5;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    transition: border-color $duration-base $ease-standard, box-shadow $duration-base $ease-standard, transform $duration-base $ease-standard;
-    animation: trevio-feature-in 500ms ease both;
-    animation-delay: calc(var(--fi) * 100ms);
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: $space-4;
+  padding: $space-5;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  transition:
+    border-color $duration-base $ease-standard,
+    box-shadow $duration-base $ease-standard,
+    transform $duration-base $ease-standard;
+  animation: trevio-feature-in 500ms ease both;
+  animation-delay: calc(var(--fi) * 100ms);
 }
 
 @keyframes trevio-feature-in {
-    from {
-        opacity: 0;
-        transform: translateY(12px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .trevio-touch__feature:hover {
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 4px var(--primary-softer);
-    transform: translateY(-2px);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px var(--primary-softer);
+  transform: translateY(-2px);
 }
 
 .trevio-touch__feature-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: var(--radius-md);
-    background: var(--primary-softer);
-    color: var(--color-primary);
-    display: grid;
-    place-items: center;
-    flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-md);
+  background: var(--primary-softer);
+  color: var(--color-primary);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
 }
 
 .trevio-touch__feature h4 {
-    margin: 0 0 $space-1;
-    color: var(--title);
-    font-size: $font-size-md;
-    font-weight: $font-bold;
+  margin: 0 0 $space-1;
+  color: var(--title);
+  font-size: $font-size-md;
+  font-weight: $font-bold;
 }
 
 .trevio-touch__feature p {
-    margin: 0;
-    color: var(--muted);
-    font-size: $font-size-sm;
-    line-height: $line-height-md;
+  margin: 0;
+  color: var(--muted);
+  font-size: $font-size-sm;
+  line-height: $line-height-md;
 }
 
 @media (max-width: $breakpoint-tablet) {
-    .trevio-touch__inner {
-        grid-template-columns: 1fr;
-        gap: $space-8;
-    }
+  .trevio-touch__inner {
+    grid-template-columns: 1fr;
+    gap: $space-8;
+  }
 
-    .trevio-touch__left {
-        text-align: left;
-        align-items: start;
-    }
+  .trevio-touch__left {
+    text-align: left;
+    align-items: start;
+  }
 
-    .trevio-touch__left p {
-        max-width: 100%;
-    }
+  .trevio-touch__left p {
+    max-width: 100%;
+  }
 }
 
 @media (max-width: $breakpoint-mobile) {
-    .trevio-touch {
-        padding: $space-8 0;
-    }
+  .trevio-touch {
+    padding: $space-8 0;
+  }
 
-    .trevio-touch__feature {
-        grid-template-columns: 48px 1fr;
-        gap: $space-3;
-        padding: $space-4;
-    }
+  .trevio-touch__feature {
+    grid-template-columns: 48px 1fr;
+    gap: $space-3;
+    padding: $space-4;
+  }
 
-    .trevio-touch__feature-icon {
-        width: 48px;
-        height: 48px;
-    }
+  .trevio-touch__feature-icon {
+    width: 48px;
+    height: 48px;
+  }
 
-    .trevio-touch__feature-icon svg {
-        width: 20px;
-        height: 20px;
-    }
+  .trevio-touch__feature-icon svg {
+    width: 20px;
+    height: 20px;
+  }
 }
 
 .trevio-faq {
-    position: relative;
-    overflow: hidden;
-    padding: clamp($space-9, 5vw, $space-14) 0;
-    background: var(--surface-inset);
+  position: relative;
+  overflow: hidden;
+  padding: clamp($space-9, 5vw, $space-14) 0;
+  background: var(--surface-inset);
 }
 
 .trevio-faq__inner {
-    position: relative;
-    display: grid;
-    grid-template-columns: 1fr 1.3fr;
-    gap: clamp($space-8, 5vw, $space-14);
-    align-items: start;
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: clamp($space-8, 5vw, $space-14);
+  align-items: start;
 }
 
 .trevio-faq__left {
-    position: sticky;
-    top: 120px;
-    padding-top: $space-2;
+  position: sticky;
+  top: 120px;
+  padding-top: $space-2;
 
-    .trevio-eyebrow {
-        display: inline-block;
+  .trevio-eyebrow {
+    display: inline-block;
+  }
+
+  h2 {
+    margin: $space-3 0 0;
+    font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+    letter-spacing: -0.04em;
+    line-height: $line-height-sm;
+    color: var(--title);
+
+    span {
+      color: var(--color-primary);
     }
+  }
 
-    h2 {
-        margin: $space-3 0 0;
-        font-size: clamp(1.8rem, 3.5vw, 2.8rem);
-        letter-spacing: -0.04em;
-        line-height: $line-height-sm;
-        color: var(--title);
-
-        span {
-            color: var(--color-primary);
-        }
-    }
-
-    p {
-        margin: $space-3 0 0;
-        color: var(--muted);
-        font-size: $font-size-md;
-        line-height: $line-height-lg;
-        max-width: 380px;
-    }
+  p {
+    margin: $space-3 0 0;
+    color: var(--muted);
+    font-size: $font-size-md;
+    line-height: $line-height-lg;
+    max-width: 380px;
+  }
 }
 
 .trevio-faq__right {
-    min-width: 0;
+  min-width: 0;
 }
 
 .trevio-faq__list {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    display: flex;
-    padding: 1rem;
-    flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  display: flex;
+  padding: 1rem;
+  flex-direction: column;
 }
 
 .trevio-faq__item {
-    border-bottom: 1px solid var(--border);
-    animation: trevio-faq-in 400ms ease both;
-    animation-delay: calc(var(--fi, 0) * 60ms);
+  border-bottom: 1px solid var(--border);
+  animation: trevio-faq-in 400ms ease both;
+  animation-delay: calc(var(--fi, 0) * 60ms);
 
-    &:last-child {
-        border-bottom: 0;
-    }
+  &:last-child {
+    border-bottom: 0;
+  }
 }
 
 @keyframes trevio-faq-in {
-    from {
-        opacity: 0;
-        transform: translateY(8px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .trevio-faq__question {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: $space-4;
-    padding: $space-5 $space-1;
-    border: 0;
-    background: none;
-    cursor: pointer;
-    text-align: left;
-    font-family: inherit;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-4;
+  padding: $space-5 $space-1;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
 
-    &:focus-visible {
-        outline: 2px solid var(--color-primary);
-        outline-offset: -2px;
-        border-radius: $radius-sm;
-    }
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+    border-radius: $radius-sm;
+  }
 }
 
 .trevio-faq__q-text {
-    font-size: $font-size-md;
-    font-weight: $font-semibold;
-    color: var(--title);
-    line-height: 1.45;
-    transition: color 160ms $ease-default;
+  font-size: $font-size-md;
+  font-weight: $font-semibold;
+  color: var(--title);
+  line-height: 1.45;
+  transition: color 160ms $ease-default;
 
-    .trevio-faq__question:hover & {
-        color: var(--color-primary);
-    }
+  .trevio-faq__question:hover & {
+    color: var(--color-primary);
+  }
 
-    .trevio-faq__item--open & {
-        color: var(--color-primary);
-    }
+  .trevio-faq__item--open & {
+    color: var(--color-primary);
+  }
 }
 
 .trevio-faq__icon {
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: $radius-full;
-    background: var(--primary-softer);
-    color: var(--color-primary);
-    transition: background 200ms $ease-default, transform 300ms $ease-default;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: $radius-full;
+  background: var(--primary-softer);
+  color: var(--color-primary);
+  transition:
+    background 200ms $ease-default,
+    transform 300ms $ease-default;
 
-    .trevio-faq__item--open & {
-        background: var(--color-primary);
-        color: var(--color-on-primary, #fff);
-        transform: rotate(135deg);
-    }
+  .trevio-faq__item--open & {
+    background: var(--color-primary);
+    color: var(--color-on-primary, #fff);
+    transform: rotate(135deg);
+  }
 }
 
 .trevio-faq__plus-h,
 .trevio-faq__plus-v {
-    transition: opacity 160ms $ease-default;
+  transition: opacity 160ms $ease-default;
 }
 
 .trevio-faq__answer {
-    display: grid;
-    grid-template-rows: 0fr;
-    transition: grid-template-rows 300ms $ease-default;
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 300ms $ease-default;
 
-    .trevio-faq__item--open & {
-        grid-template-rows: 1fr;
-    }
+  .trevio-faq__item--open & {
+    grid-template-rows: 1fr;
+  }
 }
 
 .trevio-faq__answer-inner {
-    overflow: hidden;
+  overflow: hidden;
 }
 
 .trevio-faq__answer p {
-    padding: 0 $space-1 $space-5;
-    color: var(--muted);
-    font-size: $font-size-sm;
-    line-height: $line-height-lg;
-    margin: 0;
-    max-width: 520px;
+  padding: 0 $space-1 $space-5;
+  color: var(--muted);
+  font-size: $font-size-sm;
+  line-height: $line-height-lg;
+  margin: 0;
+  max-width: 520px;
 }
 
 @media (max-width: $breakpoint-md) {
-    .trevio-faq__inner {
-        grid-template-columns: 1fr;
-        gap: $space-6;
-    }
+  .trevio-faq__inner {
+    grid-template-columns: 1fr;
+    gap: $space-6;
+  }
 
-    .trevio-faq__left {
-        position: static;
-        text-align: left;
-    }
+  .trevio-faq__left {
+    position: static;
+    text-align: left;
+  }
 }
 
 .trevio-detail-hero {
-    min-height: 440px;
-    background-size: cover;
-    background-position: center;
-    position: relative;
-    display: flex;
-    align-items: end;
-    padding: $space-10 max($space-4, calc((100% - $container-width) / 2));
-    color: var(--color-on-primary);
+  min-height: 440px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  display: flex;
+  align-items: end;
+  padding: $space-10 max($space-4, calc((100% - $container-width) / 2));
+  color: var(--color-on-primary);
 }
 
 .trevio-detail-hero:before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgba(0, 0, 0, .08), rgba(0, 0, 0, .68));
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.68));
 }
 
-.trevio-detail-hero>div {
-    position: relative;
+.trevio-detail-hero > div {
+  position: relative;
 }
 
 .trevio-detail-hero h1 {
-    font-size: $font-size-xxxl;
-    margin: $space-2-5 0;
+  font-size: $font-size-xxxl;
+  margin: $space-2-5 0;
 }
 
 .trevio-detail-hero p {
-    margin: 0;
+  margin: 0;
 }
 
 .trevio-detail-layout {
-    display: grid;
-    grid-template-columns: 1fr 360px;
-    gap: $space-7;
-    padding: $space-10 0;
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: $space-7;
+  padding: $space-10 0;
 }
 
 .trevio-content-card,
 .trevio-side-card,
 .trevio-form-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: $space-6;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: $space-6;
 }
 
 .trevio-side-card {
-    height: max-content;
-    position: sticky;
-    top: $space-10;
+  height: max-content;
+  position: sticky;
+  top: $space-10;
 }
 
 .trevio-tabs {
-    display: flex;
-    gap: $space-2;
-    overflow: auto;
-    margin-bottom: $space-5;
+  display: flex;
+  gap: $space-2;
+  overflow: auto;
+  margin-bottom: $space-5;
 }
 
 .trevio-tabs button,
 .trevio-option {
-    white-space: nowrap;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    padding: $space-2-5 $space-3-5;
-    border-radius: var(--radius-sm);
-    font-weight: $font-bold;
+  white-space: nowrap;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: $space-2-5 $space-3-5;
+  border-radius: var(--radius-sm);
+  font-weight: $font-bold;
 }
 
 .trevio-tabs button.is-active,
 .trevio-option.is-active {
-    background: var(--primary-softer);
-    color: var(--color-primary);
-    border-color: var(--color-primary);
+  background: var(--primary-softer);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .trevio-list {
-    display: grid;
-    gap: $space-2-5;
-    margin-top: $space-6;
+  display: grid;
+  gap: $space-2-5;
+  margin-top: $space-6;
 }
 
 .trevio-list div {
-    padding: $space-3;
-    background: var(--surface-inset);
-    border-radius: $radius-sm;
+  padding: $space-3;
+  background: var(--surface-inset);
+  border-radius: $radius-sm;
 }
 
 .trevio-timeline {
-    display: grid;
-    gap: $space-3;
-    margin-top: $space-4-5;
+  display: grid;
+  gap: $space-3;
+  margin-top: $space-4-5;
 }
 
 .trevio-day {
-    display: grid;
-    grid-template-columns: $space-12 1fr;
-    gap: $space-3;
+  display: grid;
+  grid-template-columns: $space-12 1fr;
+  gap: $space-3;
 }
 
 .trevio-day b {
-    width: $space-11;
-    height: $space-11;
-    border-radius: $radius-sm;
-    background: var(--primary-softer);
-    color: var(--color-primary);
-    display: grid;
-    place-items: center;
+  width: $space-11;
+  height: $space-11;
+  border-radius: $radius-sm;
+  background: var(--primary-softer);
+  color: var(--color-primary);
+  display: grid;
+  place-items: center;
 }
 
-.trevio-day>div {
-    border: 1px solid var(--border);
-    border-radius: $radius-md;
-    padding: $space-4;
+.trevio-day > div {
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+  padding: $space-4;
 }
 
 .trevio-day h4 {
-    margin: 0 0 $space-1-5;
+  margin: 0 0 $space-1-5;
 }
 
 .trevio-day p {
-    margin: 0;
-    color: var(--muted);
-    line-height: $line-height-md;
+  margin: 0;
+  color: var(--muted);
+  line-height: $line-height-md;
 }
 
 .trevio-summary-row {
-    display: flex;
-    justify-content: space-between;
-    gap: $space-4;
-    margin: $space-4 0;
-    color: var(--muted);
+  display: flex;
+  justify-content: space-between;
+  gap: $space-4;
+  margin: $space-4 0;
+  color: var(--muted);
 }
 
 .trevio-summary-row.total {
-    font-weight: $font-bold;
-    color: var(--text);
-    font-size: $font-size-lg;
-    border-top: 1px dashed var(--border);
-    padding-top: $space-4;
+  font-weight: $font-bold;
+  color: var(--text);
+  font-size: $font-size-lg;
+  border-top: 1px dashed var(--border);
+  padding-top: $space-4;
 }
 
 .trevio-text-button {
-    border: 0;
-    background: none;
-    color: var(--color-primary);
-    font-weight: $font-bold;
-    padding: $space-3 0;
-    cursor: pointer;
+  border: 0;
+  background: none;
+  color: var(--color-primary);
+  font-weight: $font-bold;
+  padding: $space-3 0;
+  cursor: pointer;
 }
 
 .trevio-progress {
-    display: flex;
-    gap: $space-2;
-    padding-top: $space-8-5;
+  display: flex;
+  gap: $space-2;
+  padding-top: $space-8-5;
 }
 
 .trevio-progress span {
-    height: $space-2;
-    flex: 1;
-    border-radius: $radius-full;
-    background: var(--surface-muted);
+  height: $space-2;
+  flex: 1;
+  border-radius: $radius-full;
+  background: var(--surface-muted);
 }
 
 .trevio-progress span.is-active {
-    background: var(--color-primary);
+  background: var(--color-primary);
 }
 
 .trevio-form-card label {
-    display: block;
-    font-size: $font-size-xs;
-    font-weight: $font-bold;
-    margin: $space-4 0;
+  display: block;
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+  margin: $space-4 0;
 }
 
 .trevio-form-card input,
 .trevio-form-card select {
-    display: block;
-    width: 100%;
-    border: 1px solid var(--border);
-    border-radius: $radius-sm;
-    padding: $space-3-5;
-    margin-top: $space-2;
-    background: var(--surface);
+  display: block;
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: $radius-sm;
+  padding: $space-3-5;
+  margin-top: $space-2;
+  background: var(--surface);
 }
 
 .trevio-option {
-    display: block;
-    margin: $space-2-5 0;
-    white-space: normal;
-    cursor: pointer;
+  display: block;
+  margin: $space-2-5 0;
+  white-space: normal;
+  cursor: pointer;
 }
 
 .trevio-option small {
-    display: block;
-    color: var(--muted);
-    margin-top: $space-1-5;
+  display: block;
+  color: var(--muted);
+  margin-top: $space-1-5;
 }
 
 .trevio-profile {
-    display: grid;
-    grid-template-columns: 270px 1fr;
-    gap: $space-6;
-    padding: $space-9 0;
+  display: grid;
+  grid-template-columns: 270px 1fr;
+  gap: $space-6;
+  padding: $space-9 0;
 }
 
 .trevio-profile-sidebar {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: $space-5;
-    display: grid;
-    gap: $space-2;
-    align-content: start;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: $space-5;
+  display: grid;
+  gap: $space-2;
+  align-content: start;
 }
 
 .trevio-profile-avatar {
-    width: $space-18;
-    height: $space-18;
-    border-radius: var(--radius-lg);
-    background: var(--color-primary);
-    color: var(--color-on-primary);
-    display: grid;
-    place-items: center;
-    font-size: $font-size-xl;
-    font-weight: $font-bold;
+  width: $space-18;
+  height: $space-18;
+  border-radius: var(--radius-lg);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  display: grid;
+  place-items: center;
+  font-size: $font-size-xl;
+  font-weight: $font-bold;
 }
 
 .trevio-profile-sidebar button {
-    border: 0;
-    background: transparent;
-    text-align: left;
-    padding: $space-3;
-    border-radius: $radius-sm;
-    font-weight: $font-bold;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  padding: $space-3;
+  border-radius: $radius-sm;
+  font-weight: $font-bold;
 }
 
 .trevio-profile-sidebar button.is-active {
-    background: var(--primary-softer);
-    color: var(--color-primary);
+  background: var(--primary-softer);
+  color: var(--color-primary);
 }
 
 .trevio-profile-row {
-    display: flex;
-    justify-content: space-between;
-    gap: $space-3;
-    border-bottom: 1px solid var(--border);
-    padding: $space-4 0;
+  display: flex;
+  justify-content: space-between;
+  gap: $space-3;
+  border-bottom: 1px solid var(--border);
+  padding: $space-4 0;
 }
 
 .trevio-profile-row span,
 .trevio-empty {
-    color: var(--muted);
+  color: var(--muted);
 }
 
 .trevio-footer {
-    border-top: 1px solid var(--border);
-    padding: $space-7 0;
-    color: var(--muted);
+  border-top: 1px solid var(--border);
+  padding: $space-7 0;
+  color: var(--muted);
 }
 
 .trevio-footer .trevio-container {
-    display: flex;
-    justify-content: space-between;
-    gap: $space-5;
-    flex-wrap: wrap;
+  display: flex;
+  justify-content: space-between;
+  gap: $space-5;
+  flex-wrap: wrap;
 }
 
 .trevio-footer strong {
-    color: var(--text);
+  color: var(--text);
 }
 
 .trevio-wishlist-link {
-    display: none;
+  display: none;
 }
 
 @media (max-width: $breakpoint-tablet) {
+  .trevio-hero__grid,
+  .trevio-detail-layout,
+  .trevio-profile {
+    grid-template-columns: 1fr;
+  }
 
-    .trevio-hero__grid,
-    .trevio-detail-layout,
-    .trevio-profile {
-        grid-template-columns: 1fr;
+  .trevio-hero {
+    overflow: hidden;
+  }
+
+  .trevio-hero__grid > * {
+    min-width: 0;
+  }
+
+  .trevio-trip-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: $space-3-5;
+  }
+
+  .trevio-intl-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: $space-3-5;
+  }
+
+  .trevio-journey__track {
+    grid-template-columns: repeat(2, 1fr);
+    gap: $space-6 $space-4;
+  }
+
+  .trevio-journey__line {
+    display: none;
+  }
+
+  .trevio-why__grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: $space-3-5;
+  }
+
+  .trevio-frames__item {
+    width: 220px;
+
+    img {
+      height: 280px;
     }
+  }
 
-    .trevio-hero {
-        overflow: hidden;
+  .trevio-frames__item--diamond {
+    width: 180px;
+
+    img {
+      height: 240px;
     }
+  }
 
-    .trevio-hero__grid > * {
-        min-width: 0;
-    }
-
-.trevio-trip-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: $space-3-5;
-    }
-
-    .trevio-intl-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: $space-3-5;
-    }
-
-    .trevio-journey__track {
-        grid-template-columns: repeat(2, 1fr);
-        gap: $space-6 $space-4;
-    }
-
-    .trevio-journey__line {
-        display: none;
-    }
-
-    .trevio-why__grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: $space-3-5;
-    }
-
-    .trevio-frames__item {
-        width: 220px;
-
-        img {
-            height: 280px;
-        }
-    }
-
-    .trevio-frames__item--diamond {
-        width: 180px;
-
-        img {
-            height: 240px;
-        }
-    }
-
-    .trevio-side-card {
-        position: static;
-    }
+  .trevio-side-card {
+    position: static;
+  }
 }
 
 @media (min-width: 1280px) {
-    #trip-section .trevio-trip-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
+  #trip-section .trevio-trip-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 
-    #upcoming-section .trevio-trip-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
+  #upcoming-section .trevio-trip-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .trevio-success {
-    max-width: 720px;
-    margin: $space-12 auto;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: $space-8-5;
-    text-align: center;
+  max-width: 720px;
+  margin: $space-12 auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: $space-8-5;
+  text-align: center;
 }
 
 .trevio-success__icon {
-    width: $space-19-5;
-    height: $space-19-5;
-    border-radius: $radius-circle;
-    background: var(--primary-softer);
-    color: var(--color-primary);
-    font-size: $font-size-xxl;
-    display: grid;
-    place-items: center;
-    margin: auto;
+  width: $space-19-5;
+  height: $space-19-5;
+  border-radius: $radius-circle;
+  background: var(--primary-softer);
+  color: var(--color-primary);
+  font-size: $font-size-xxl;
+  display: grid;
+  place-items: center;
+  margin: auto;
 }
 
 .trevio-pass {
-    margin: $space-6 auto;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: $space-5;
-    text-align: left;
+  margin: $space-6 auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: $space-5;
+  text-align: left;
 }
 
-.trevio-pass>strong {
-    display: block;
-    background: var(--color-primary);
-    color: var(--color-on-primary);
-    padding: $space-4;
-    margin: (-$space-5) (-$space-5) $space-5;
-    border-radius: $radius-lg $radius-lg 0 0;
+.trevio-pass > strong {
+  display: block;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  padding: $space-4;
+  margin: (-$space-5) (-$space-5) $space-5;
+  border-radius: $radius-lg $radius-lg 0 0;
 }
 
 .trevio-pass h2 {
-    margin-bottom: $space-2;
+  margin-bottom: $space-2;
 }
 
 @media (max-width: $breakpoint-mobile) {
+  .trevio-trip-grid {
+    grid-template-columns: 1fr;
+    gap: $space-4;
+  }
 
-    .trevio-trip-grid {
-        grid-template-columns: 1fr;
-        gap: $space-4;
+  .trevio-intl-grid {
+    grid-template-columns: 1fr;
+    gap: $space-4;
+  }
+
+  .trevio-why__grid {
+    grid-template-columns: 1fr;
+    gap: $space-3;
+  }
+
+  .trevio-why__card {
+    padding: $space-5;
+  }
+
+  .trevio-why {
+    padding: $space-8 0;
+  }
+
+  .trevio-journey {
+    padding: $space-6;
+    border-radius: var(--radius-lg);
+  }
+
+  .trevio-journey__track {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .trevio-journey__step {
+    grid-template-columns: 56px 1fr;
+    grid-template-rows: auto;
+    text-align: left;
+    gap: $space-3;
+    padding: $space-4 0;
+    border-bottom: 1px solid var(--border-subtle, var(--border));
+  }
+
+  .trevio-journey__step:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .trevio-journey__step:first-child {
+    padding-top: 0;
+  }
+
+  .trevio-journey__step-marker {
+    margin: 0;
+    width: 48px;
+    height: 48px;
+  }
+
+  .trevio-journey__step-num {
+    font-size: $font-size-xs;
+  }
+
+  .trevio-frames {
+    padding: $space-8 0;
+  }
+
+  .trevio-frames__item {
+    width: 180px;
+
+    img {
+      height: 240px;
     }
 
-    .trevio-intl-grid {
-        grid-template-columns: 1fr;
-        gap: $space-4;
+    figcaption {
+      opacity: 1;
+      transform: none;
     }
+  }
 
-    .trevio-why__grid {
-        grid-template-columns: 1fr;
-        gap: $space-3;
+  .trevio-frames__item--diamond {
+    width: 150px;
+
+    img {
+      height: 200px;
     }
+  }
 
-    .trevio-why__card {
-        padding: $space-5;
-    }
+  .trevio-hero {
+    padding-top: $space-8-5;
+  }
 
-    .trevio-why {
-        padding: $space-8 0;
-    }
+  .trevio-detail-hero h1 {
+    font-size: $font-size-xxl;
+  }
 
-    .trevio-journey {
-        padding: $space-6;
-        border-radius: var(--radius-lg);
-    }
-
-    .trevio-journey__track {
-        grid-template-columns: 1fr;
-        gap: 0;
-    }
-
-    .trevio-journey__step {
-        grid-template-columns: 56px 1fr;
-        grid-template-rows: auto;
-        text-align: left;
-        gap: $space-3;
-        padding: $space-4 0;
-        border-bottom: 1px solid var(--border-subtle, var(--border));
-    }
-
-    .trevio-journey__step:last-child {
-        border-bottom: none;
-        padding-bottom: 0;
-    }
-
-    .trevio-journey__step:first-child {
-        padding-top: 0;
-    }
-
-    .trevio-journey__step-marker {
-        margin: 0;
-        width: 48px;
-        height: 48px;
-    }
-
-    .trevio-journey__step-num {
-        font-size: $font-size-xs;
-    }
-
-    .trevio-frames {
-        padding: $space-8 0;
-    }
-
-    .trevio-frames__item {
-        width: 180px;
-
-        img {
-            height: 240px;
-        }
-
-        figcaption {
-            opacity: 1;
-            transform: none;
-        }
-    }
-
-    .trevio-frames__item--diamond {
-        width: 150px;
-
-        img {
-            height: 200px;
-        }
-    }
-
-    .trevio-hero {
-        padding-top: $space-8-5;
-    }
-
-    .trevio-detail-hero h1 {
-        font-size: $font-size-xxl;
-    }
-
-    .trevio-section-head {
-        align-items: flex-start;
-        flex-direction: column;
-    }
+  .trevio-section-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }

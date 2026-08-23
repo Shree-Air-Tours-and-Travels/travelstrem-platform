@@ -7,15 +7,30 @@ import { validateLogin, validateRegister } from "./validators/create.validation.
 import rateLimit from "express-rate-limit";
 import * as providerAuthController from "./controllers/providerAuthController.js";
 import config from "../../config/index.js";
- 
+
 const router = express.Router();
-const trustedOrigins = new Set((config.FRONTENDS || []).flatMap((value) => {
-  try { return [new URL(value).origin]; } catch { return []; }
-}));
+const trustedOrigins = new Set(
+    (config.FRONTENDS || []).flatMap((value) => {
+        try {
+            return [new URL(value).origin];
+        } catch {
+            return [];
+        }
+    }),
+);
 const requireTrustedOrigin = (req, res, next) => {
-  const origin = req.get("origin");
-  if (!origin || trustedOrigins.has(origin) || (config.IS_DEVELOPMENT && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin))) return next();
-  return res.status(403).json({ status: "error", code: "UNTRUSTED_ORIGIN", message: "Request origin is not allowed." });
+    const origin = req.get("origin");
+    if (
+        !origin ||
+        trustedOrigins.has(origin) ||
+        (config.IS_DEVELOPMENT && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin))
+    )
+        return next();
+    return res.status(403).json({
+        status: "error",
+        code: "UNTRUSTED_ORIGIN",
+        message: "Request origin is not allowed.",
+    });
 };
 
 // serve auth configuration to frontend
@@ -29,8 +44,16 @@ router.post("/register", requireTrustedOrigin, validateRegister, controller.regi
 router.post("/login", requireTrustedOrigin, validateLogin, controller.login);
 router.post("/verify-otp", requireTrustedOrigin, controller.verifyLoginOtp);
 router.post("/resend-otp", requireTrustedOrigin, controller.resendLoginOtp);
-router.post("/admin-registration-otp", requireTrustedOrigin, controller.requestAdminRegistrationOtp);
-router.post("/verify-admin-registration-otp", requireTrustedOrigin, controller.verifyAdminRegistrationOtp);
+router.post(
+    "/admin-registration-otp",
+    requireTrustedOrigin,
+    controller.requestAdminRegistrationOtp,
+);
+router.post(
+    "/verify-admin-registration-otp",
+    requireTrustedOrigin,
+    controller.verifyAdminRegistrationOtp,
+);
 router.post("/partner-agencies/apply", controller.applyPartnerAgency);
 router.get("/partner-agencies/check", controller.checkPartnerAgency);
 router.get("/partner-agencies", authMiddleware, controller.listPartnerAgencies);
@@ -63,21 +86,41 @@ router.get("/google", providerAuthController.startGoogle);
 router.get("/google/callback", providerAuthController.googleCallback);
 
 const mobileRequestLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
-  standardHeaders: true,
-  legacyHeaders: false,
-  handler: (_req, res) => res.status(429).json({ status: "error", code: "OTP_RATE_LIMITED", message: "Too many verification requests. Please try again later." }),
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: (_req, res) =>
+        res.status(429).json({
+            status: "error",
+            code: "OTP_RATE_LIMITED",
+            message: "Too many verification requests. Please try again later.",
+        }),
 });
 const mobileVerifyLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 30,
-  standardHeaders: true,
-  legacyHeaders: false,
-  handler: (_req, res) => res.status(429).json({ status: "error", code: "OTP_RATE_LIMITED", message: "Too many verification attempts. Please try again later." }),
+    windowMs: 15 * 60 * 1000,
+    max: 30,
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: (_req, res) =>
+        res.status(429).json({
+            status: "error",
+            code: "OTP_RATE_LIMITED",
+            message: "Too many verification attempts. Please try again later.",
+        }),
 });
-router.post("/mobile/request-otp", requireTrustedOrigin, mobileRequestLimiter, providerAuthController.requestOtp);
-router.post("/mobile/verify-otp", requireTrustedOrigin, mobileVerifyLimiter, providerAuthController.verifyOtp);
+router.post(
+    "/mobile/request-otp",
+    requireTrustedOrigin,
+    mobileRequestLimiter,
+    providerAuthController.requestOtp,
+);
+router.post(
+    "/mobile/verify-otp",
+    requireTrustedOrigin,
+    mobileVerifyLimiter,
+    providerAuthController.verifyOtp,
+);
 
 /*
   Logout - clears the auth cookie

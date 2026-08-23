@@ -15,8 +15,9 @@ describe("global AuthTREM routing", () => {
     globalThis.window = { location: { hostname: "localhost", origin: "http://localhost:3004" } };
 
     expect(getGlobalAuthBaseUrl()).toBe("http://localhost:3003");
-    expect(buildGlobalAuthUrl({ app: "partner", returnTo: "http://localhost:3004/" }))
-      .toBe("http://localhost:3003/login?returnTo=http%3A%2F%2Flocalhost%3A3004%2F&mode=login&app=partner");
+    expect(buildGlobalAuthUrl({ app: "partner", returnTo: "http://localhost:3004/" })).toBe(
+      "http://localhost:3003/login?returnTo=http%3A%2F%2Flocalhost%3A3004%2F&mode=login&app=partner",
+    );
   });
 
   it("uses the configured AuthTREM origin when supplied", () => {

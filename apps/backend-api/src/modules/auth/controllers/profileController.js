@@ -5,9 +5,24 @@ import RefreshToken from "../models/RefreshToken.js";
 import { audit } from "../../tenancy/audit.service.js";
 
 const PROFILE_ICONS = [
-    "user", "compass", "map", "globe", "plane", "train",
-    "bus", "taxi", "hotel", "destination", "beach", "mountain",
-    "camera", "heart", "star", "sun", "moon", "sparkles",
+    "user",
+    "compass",
+    "map",
+    "globe",
+    "plane",
+    "train",
+    "bus",
+    "taxi",
+    "hotel",
+    "destination",
+    "beach",
+    "mountain",
+    "camera",
+    "heart",
+    "star",
+    "sun",
+    "moon",
+    "sparkles",
 ];
 
 export const getProfile = async (req, res) => {
@@ -49,7 +64,14 @@ export const updateProfile = async (req, res) => {
         const before = await UserRepository.findById(userId, "name phone avatar agencyId").lean();
         const user = await UserRepository.updateProfile(userId, updates);
         if (!user) return res.status(404).json({ status: "error", message: "User not found" });
-        await audit(req, { action: "user.profile_updated", entityType: "User", entityId: user._id, agencyId: user.agencyId, before, after: { name: user.name, phone: user.phone, avatar: user.avatar } });
+        await audit(req, {
+            action: "user.profile_updated",
+            entityType: "User",
+            entityId: user._id,
+            agencyId: user.agencyId,
+            before,
+            after: { name: user.name, phone: user.phone, avatar: user.avatar },
+        });
         const data = {
             id: user.id,
             name: user.name,
@@ -73,17 +95,29 @@ export const updatePassword = async (req, res) => {
         const userId = req.user?.sub;
         const { currentPassword, newPassword } = req.body;
         if (!currentPassword || !newPassword) {
-            return res.status(400).json({ status: "error", message: "Current password and new password are required" });
+            return res.status(400).json({
+                status: "error",
+                message: "Current password and new password are required",
+            });
         }
         if (newPassword.length < 8) {
-            return res.status(400).json({ status: "error", message: "New password must be at least 8 characters" });
+            return res
+                .status(400)
+                .json({ status: "error", message: "New password must be at least 8 characters" });
         }
         const user = await UserRepository.findById(userId, "+passwordHash");
         if (!user) return res.status(404).json({ status: "error", message: "User not found" });
-        if (!user.passwordHash) return res.status(400).json({ status: "error", code: "PASSWORD_NOT_SET", message: "This account does not have a password. Use a linked sign-in method." });
+        if (!user.passwordHash)
+            return res.status(400).json({
+                status: "error",
+                code: "PASSWORD_NOT_SET",
+                message: "This account does not have a password. Use a linked sign-in method.",
+            });
         const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
         if (!isMatch) {
-            return res.status(400).json({ status: "error", message: "Current password is incorrect" });
+            return res
+                .status(400)
+                .json({ status: "error", message: "Current password is incorrect" });
         }
         const passwordHash = await bcrypt.hash(newPassword, 12);
         await UserRepository.updatePassword(userId, passwordHash);
@@ -91,9 +125,16 @@ export const updatePassword = async (req, res) => {
         user.tokenVersion = (user.tokenVersion || 0) + 1;
         await user.save();
         await RefreshToken.deleteMany({ userId });
-        await audit(req, { action: "user.password_changed", entityType: "User", entityId: user._id, agencyId: user.agencyId });
+        await audit(req, {
+            action: "user.password_changed",
+            entityType: "User",
+            entityId: user._id,
+            agencyId: user.agencyId,
+        });
 
-        return res.status(200).json({ status: "success", message: "Password updated successfully" });
+        return res
+            .status(200)
+            .json({ status: "success", message: "Password updated successfully" });
     } catch (error) {
         console.error("updatePassword error:", error);
         return res.status(500).json({ status: "error", message: "Failed to update password" });

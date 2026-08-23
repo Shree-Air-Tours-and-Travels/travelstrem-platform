@@ -1,32 +1,50 @@
-const SEARCH_TAG_TYPES = new Set(["DESTINATION", "ATTRACTION", "EXPERIENCE", "THEME", "ORIGIN", "SEASON", "AUDIENCE", "CUSTOM"]);
+const SEARCH_TAG_TYPES = new Set([
+    "DESTINATION",
+    "ATTRACTION",
+    "EXPERIENCE",
+    "THEME",
+    "ORIGIN",
+    "SEASON",
+    "AUDIENCE",
+    "CUSTOM",
+]);
 const INDIA_IDS = new Set(["india", "in", "ind"]);
 
-export const slugifyTourSearchValue = (value = "") => String(value)
-    .trim()
-    .toLowerCase()
-    .replace(/&/g, " and ")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+export const slugifyTourSearchValue = (value = "") =>
+    String(value)
+        .trim()
+        .toLowerCase()
+        .replace(/&/g, " and ")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
 
-const displayNameForSlug = (slug = "") => String(slug)
-    .split("-")
-    .filter(Boolean)
-    .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
-    .join(" ");
+const displayNameForSlug = (slug = "") =>
+    String(slug)
+        .split("-")
+        .filter(Boolean)
+        .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
+        .join(" ");
 
 const compactUnique = (values = []) => [...new Set(values.filter(Boolean))];
 
 export const deriveTravelScopeTagIds = (tour = {}) => {
     const destinations = Array.isArray(tour.destinations) ? tour.destinations : [];
-    const countryValues = compactUnique([
-        tour.primaryDestination?.countryId,
-        tour.primaryDestination?.countryName,
-        tour.address?.country,
-        ...destinations.flatMap((destination) => [destination?.countryId, destination?.countryName]),
-    ].map(slugifyTourSearchValue));
+    const countryValues = compactUnique(
+        [
+            tour.primaryDestination?.countryId,
+            tour.primaryDestination?.countryName,
+            tour.address?.country,
+            ...destinations.flatMap((destination) => [
+                destination?.countryId,
+                destination?.countryName,
+            ]),
+        ].map(slugifyTourSearchValue),
+    );
 
     if (!countryValues.length) return [];
-    return countryValues.every((country) => INDIA_IDS.has(country)) ? ["domestic"] : ["international"];
+    return countryValues.every((country) => INDIA_IDS.has(country))
+        ? ["domestic"]
+        : ["international"];
 };
 
 export const buildTourSearchMetadata = (tour = {}) => {
@@ -66,7 +84,9 @@ export const buildTourSearchMetadata = (tour = {}) => {
     });
 
     const searchTags = [...searchTagsBySlug.values()];
-    const existingNamesBySlug = new Map(sourceTags.map((name) => [slugifyTourSearchValue(name), String(name).trim()]));
+    const existingNamesBySlug = new Map(
+        sourceTags.map((name) => [slugifyTourSearchValue(name), String(name).trim()]),
+    );
     const tags = searchTags.map((tag) => existingNamesBySlug.get(tag.slug) || tag.name);
 
     return {

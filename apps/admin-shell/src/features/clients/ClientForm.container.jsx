@@ -45,7 +45,10 @@ export default function ClientFormContainer({ client, onSave, onCancel }) {
     setForm((prev) => {
       const next = { ...prev, [field]: value };
       if (field === "name" && !client) {
-        next.slug = value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+        next.slug = value
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, "");
       }
       return next;
     });

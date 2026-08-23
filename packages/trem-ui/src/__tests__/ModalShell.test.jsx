@@ -7,7 +7,13 @@ describe("ModalShell", () => {
   it("does not close from the shared backdrop by default", () => {
     const onClose = vi.fn();
     const onPageClick = vi.fn();
-    render(<div onClick={onPageClick}><ModalShell open label="Example modal" onClose={onClose}>Content</ModalShell></div>);
+    render(
+      <div onClick={onPageClick}>
+        <ModalShell open label="Example modal" onClose={onClose}>
+          Content
+        </ModalShell>
+      </div>,
+    );
 
     fireEvent.click(document.querySelector(".trem-modal-shell__backdrop"));
 
@@ -18,7 +24,11 @@ describe("ModalShell", () => {
 
   it("supports explicit outside-click dismissal", () => {
     const onClose = vi.fn();
-    render(<ModalShell open label="Example modal" closeOnOutsideClick onClose={onClose}>Content</ModalShell>);
+    render(
+      <ModalShell open label="Example modal" closeOnOutsideClick onClose={onClose}>
+        Content
+      </ModalShell>,
+    );
 
     fireEvent.click(document.querySelector(".trem-modal-shell__backdrop"));
 

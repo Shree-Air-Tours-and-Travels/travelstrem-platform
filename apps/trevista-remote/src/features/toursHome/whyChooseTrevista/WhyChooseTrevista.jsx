@@ -11,7 +11,12 @@ const WhyChooseTrevista = ({ benefits = [], title = "Why Choose Trevista", descr
         <header className="why-choose-trevista__head">
           <span className="why-choose-trevista__eyebrow">{title}</span>
           {description && (
-            <Paragraph primaryClassname="why-choose-trevista__desc" text={description} variant="body" size="medium" />
+            <Paragraph
+              primaryClassname="why-choose-trevista__desc"
+              text={description}
+              variant="body"
+              size="medium"
+            />
           )}
         </header>
         <div className="why-choose-trevista__grid">

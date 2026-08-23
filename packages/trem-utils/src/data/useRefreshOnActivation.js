@@ -4,10 +4,24 @@ export const DATA_CHANGED_EVENT = "trem:data-changed";
 
 export const notifyDataChanged = (resource) => {
   if (typeof window === "undefined") return;
-  window.dispatchEvent(new CustomEvent(DATA_CHANGED_EVENT, { detail: { resource: String(resource || "") } }));
+  window.dispatchEvent(
+    new CustomEvent(DATA_CHANGED_EVENT, { detail: { resource: String(resource || "") } }),
+  );
 };
 
-export default function useRefreshOnActivation(refresh, { enabled = true, resource = "", minimumIntervalMs = 750, refreshOnMount = true } = {}) {
+export default function useRefreshOnActivation(
+  refresh,
+  {
+    enabled = true,
+    // Gate for focus/pageshow/visibility refreshes ("clicking around"). When a
+    // live websocket already pushes changes, callers pass false to avoid
+    // redundant fetches; data-changed events and the mount load stay active.
+    activationEnabled = true,
+    resource = "",
+    minimumIntervalMs = 750,
+    refreshOnMount = true,
+  } = {},
+) {
   const refreshRef = useRef(refresh);
   const inFlightRef = useRef(false);
   const lastRunRef = useRef(0);
@@ -23,28 +37,41 @@ export default function useRefreshOnActivation(refresh, { enabled = true, resour
     Promise.resolve()
       .then(() => refreshRef.current())
       .catch(() => undefined)
-      .finally(() => { inFlightRef.current = false; });
+      .finally(() => {
+        inFlightRef.current = false;
+      });
   }, [enabled, minimumIntervalMs]);
 
   useEffect(() => {
     if (!enabled || typeof window === "undefined") return undefined;
     if (refreshOnMount) run();
-    const onVisibilityChange = () => { if (document.visibilityState === "visible") run(); };
     const onDataChanged = (event) => {
       const changedResource = String(event?.detail?.resource || "");
       if (!resource || !changedResource || changedResource === resource) run();
     };
-    window.addEventListener("focus", run);
-    window.addEventListener("pageshow", run);
     window.addEventListener(DATA_CHANGED_EVENT, onDataChanged);
-    document.addEventListener("visibilitychange", onVisibilityChange);
-    return () => {
+
+    let onVisibilityChange = null;
+    const activationWanted = activationEnabled && typeof document !== "undefined";
+    const detachActivation = () => {
       window.removeEventListener("focus", run);
       window.removeEventListener("pageshow", run);
-      window.removeEventListener(DATA_CHANGED_EVENT, onDataChanged);
       document.removeEventListener("visibilitychange", onVisibilityChange);
     };
-  }, [enabled, refreshOnMount, resource, run]);
+    if (activationWanted) {
+      onVisibilityChange = () => {
+        if (document.visibilityState === "visible") run();
+      };
+      window.addEventListener("focus", run);
+      window.addEventListener("pageshow", run);
+      document.addEventListener("visibilitychange", onVisibilityChange);
+    }
+
+    return () => {
+      window.removeEventListener(DATA_CHANGED_EVENT, onDataChanged);
+      if (activationWanted) detachActivation();
+    };
+  }, [activationEnabled, enabled, refreshOnMount, resource, run]);
 
   return run;
 }

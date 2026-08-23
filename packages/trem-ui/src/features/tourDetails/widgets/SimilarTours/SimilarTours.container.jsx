@@ -5,7 +5,12 @@ import { slugifyTitle } from "../../helper";
 import { WidgetError, WidgetSkeleton } from "../../shared";
 import SimilarToursView from "./SimilarTours.view";
 
-export default function SimilarToursContainer({ tourRef, isFavorited, onFavorite, appKey = "trevista" }) {
+export default function SimilarToursContainer({
+  tourRef,
+  isFavorited,
+  onFavorite,
+  appKey = "trevista",
+}) {
   const navigate = useNavigate();
   const { loading, error, widgetData } = useTourDetailWidget(tourRef, "similar-tours.json");
   const labels = widgetData?.elements?.labels || {};
@@ -19,5 +24,13 @@ export default function SimilarToursContainer({ tourRef, isFavorited, onFavorite
 
   if (loading) return <WidgetSkeleton compact />;
   if (error) return <WidgetError message={error} />;
-  return <SimilarToursView labels={labels} tours={tours} onView={handleView} isFavorited={isFavorited} onFavorite={onFavorite} />;
+  return (
+    <SimilarToursView
+      labels={labels}
+      tours={tours}
+      onView={handleView}
+      isFavorited={isFavorited}
+      onFavorite={onFavorite}
+    />
+  );
 }

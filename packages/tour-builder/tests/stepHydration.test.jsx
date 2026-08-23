@@ -7,10 +7,12 @@ import useStepForm from "../src/hooks/useStepForm.js";
 
 const definition = {
   stepKey: "packaging",
-  substeps: [{
-    substepKey: "type",
-    children: [{ childKey: "package-type", widgets: [] }],
-  }],
+  substeps: [
+    {
+      substepKey: "type",
+      children: [{ childKey: "package-type", widgets: [] }],
+    },
+  ],
 };
 
 describe("step form backend hydration", () => {

@@ -41,7 +41,7 @@ module.exports = {
         "@packages/trem-utils": path.resolve(__dirname, "../../packages/trem-utils/src"),
       };
       webpackConfig.resolve.plugins = (webpackConfig.resolve.plugins || []).filter(
-        (plugin) => !(plugin instanceof ModuleScopePlugin)
+        (plugin) => !(plugin instanceof ModuleScopePlugin),
       );
       extendBabelIncludes(webpackConfig);
       return webpackConfig;

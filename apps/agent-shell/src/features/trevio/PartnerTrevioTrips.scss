@@ -1,15 +1,69 @@
 @import "@packages/trem-ui/styles/base/typography";
 
-.partner-trips-page { min-height: calc(100dvh - 72px); padding: $space-5; background: var(--page-bg); color: var(--text); }
-.partner-trips-page__header { display: flex; justify-content: space-between; align-items: flex-end; gap: $space-4; margin-bottom: $space-4; }
-.partner-trips-page__header span, .partner-trip-form header span { color: var(--color-primary); font-size: $font-size-xs; font-weight: $font-bold; letter-spacing: .08em; }
-.partner-trips-page__header h1 { margin: $space-1 0; font-size: $font-size-xxl; }
-.partner-trips-page__header p { margin: 0; color: var(--muted); }
-.partner-trips-toolbar { display: grid; grid-template-columns: minmax(16rem, 1fr) 14rem auto; align-items: end; gap: $space-3; padding: $space-4; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); box-shadow: var(--shadow-sm); }
-.partner-trip-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(18rem, 24rem)); justify-content: start; gap: $space-4; margin-top: $space-4; align-items: start; }
-.partner-trips-page__create.ui-button { min-width: 8rem; background: linear-gradient(215deg, var(--color-primary), var(--color-secondary)); border-color: transparent; color: var(--color-on-primary, #fff) !important; font-weight: $font-bold; box-shadow: var(--primary-shadow); }
-.partner-trips-page__create.ui-button span, .partner-trips-page__create.ui-button svg { color: var(--color-on-primary, #fff) !important; fill: currentColor; }
-.partner-trips-page__create.ui-button:hover:not(:disabled) { color: var(--color-on-primary, #fff) !important; filter: brightness(1.06); }
+.partner-trips-page {
+  min-height: calc(100dvh - 72px);
+  padding: $space-5;
+  background: var(--page-bg);
+  color: var(--text);
+}
+.partner-trips-page__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: $space-4;
+  margin-bottom: $space-4;
+}
+.partner-trips-page__header span,
+.partner-trip-form header span {
+  color: var(--color-primary);
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+  letter-spacing: 0.08em;
+}
+.partner-trips-page__header h1 {
+  margin: $space-1 0;
+  font-size: $font-size-xxl;
+}
+.partner-trips-page__header p {
+  margin: 0;
+  color: var(--muted);
+}
+.partner-trips-toolbar {
+  display: grid;
+  grid-template-columns: minmax(16rem, 1fr) 14rem auto;
+  align-items: end;
+  gap: $space-3;
+  padding: $space-4;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+.partner-trip-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 24rem));
+  justify-content: start;
+  gap: $space-4;
+  margin-top: $space-4;
+  align-items: start;
+}
+.partner-trips-page__create.ui-button {
+  min-width: 8rem;
+  background: linear-gradient(215deg, var(--color-primary), var(--color-secondary));
+  border-color: transparent;
+  color: var(--color-on-primary, #fff) !important;
+  font-weight: $font-bold;
+  box-shadow: var(--primary-shadow);
+}
+.partner-trips-page__create.ui-button span,
+.partner-trips-page__create.ui-button svg {
+  color: var(--color-on-primary, #fff) !important;
+  fill: currentColor;
+}
+.partner-trips-page__create.ui-button:hover:not(:disabled) {
+  color: var(--color-on-primary, #fff) !important;
+  filter: brightness(1.06);
+}
 
 .partner-trip-grid .trevio-trip-card__management-actions .ui-button--outline {
   color: var(--color-primary-dark, var(--color-primary)) !important;
@@ -20,24 +74,144 @@
   background: var(--primary-softer);
   color: var(--color-primary-dark, var(--color-primary)) !important;
 }
-.partner-trip-card { overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); box-shadow: var(--shadow-sm); }
-.partner-trip-card__media { display: grid; place-items: center; height: 10rem; background: var(--surface-elevated); color: var(--color-primary); font-size: $font-size-xxl; font-weight: $font-bold; }
-.partner-trip-card__media img { width: 100%; height: 100%; object-fit: cover; }
-.partner-trip-card__body { padding: $space-4; }
-.partner-trip-card__top, .partner-trip-card__actions { display: flex; justify-content: space-between; align-items: center; gap: $space-2; }
-.partner-trip-card h2 { margin: $space-3 0 $space-1; font-size: $font-size-md; }
-.partner-trip-card p { min-height: 2.5rem; margin: 0 0 $space-3; color: var(--muted); }
-.partner-trip-card__actions { justify-content: flex-end; margin-top: $space-4; padding-top: $space-3; border-top: 1px solid var(--border); }
-.partner-trips-page__error, .partner-trip-form__error { margin-top: $space-3; padding: $space-3; border: 1px solid var(--color-danger); border-radius: var(--radius-sm); background: var(--danger-soft); color: var(--color-danger); }
-.partner-trips-page__loading { display: grid; place-items: center; min-height: 20rem; }
-.partner-trip-dialog { position: fixed; inset: 0; z-index: 5000; display: grid; place-items: center; padding: $space-4; background: var(--overlay-bg); }
-.partner-trip-form { width: min(58rem, 100%); max-height: 90dvh; overflow: auto; padding: $space-5; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-xl); }
-.partner-trip-form header, .partner-trip-form footer { display: flex; align-items: center; justify-content: space-between; gap: $space-3; }
-.partner-trip-form__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: $space-4; margin: $space-4 0; }
-.partner-trip-form__description { display: grid; gap: $space-2; color: var(--text); font-weight: $font-semibold; }
-.partner-trip-form__description textarea { resize: vertical; padding: $space-3; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font: inherit; }
-.partner-trip-form footer { justify-content: flex-end; margin-top: $space-5; padding-top: $space-4; border-top: 1px solid var(--border); }
-@media (max-width: 700px) { .partner-trips-page { padding: $space-3; } .partner-trips-page__header { align-items: stretch; flex-direction: column; } .partner-trips-page__create.ui-button { width: 100%; } .partner-trip-grid, .partner-trips-toolbar, .partner-trip-form__grid { grid-template-columns: 1fr; } .partner-trip-dialog { align-items: end; padding: 0; } .partner-trip-form { max-height: 94dvh; border-radius: var(--radius-lg) var(--radius-lg) 0 0; } }
+.partner-trip-card {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+.partner-trip-card__media {
+  display: grid;
+  place-items: center;
+  height: 10rem;
+  background: var(--surface-elevated);
+  color: var(--color-primary);
+  font-size: $font-size-xxl;
+  font-weight: $font-bold;
+}
+.partner-trip-card__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.partner-trip-card__body {
+  padding: $space-4;
+}
+.partner-trip-card__top,
+.partner-trip-card__actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: $space-2;
+}
+.partner-trip-card h2 {
+  margin: $space-3 0 $space-1;
+  font-size: $font-size-md;
+}
+.partner-trip-card p {
+  min-height: 2.5rem;
+  margin: 0 0 $space-3;
+  color: var(--muted);
+}
+.partner-trip-card__actions {
+  justify-content: flex-end;
+  margin-top: $space-4;
+  padding-top: $space-3;
+  border-top: 1px solid var(--border);
+}
+.partner-trips-page__error,
+.partner-trip-form__error {
+  margin-top: $space-3;
+  padding: $space-3;
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-sm);
+  background: var(--danger-soft);
+  color: var(--color-danger);
+}
+.partner-trips-page__loading {
+  display: grid;
+  place-items: center;
+  min-height: 20rem;
+}
+.partner-trip-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  display: grid;
+  place-items: center;
+  padding: $space-4;
+  background: var(--overlay-bg);
+}
+.partner-trip-form {
+  width: min(58rem, 100%);
+  max-height: 90dvh;
+  overflow: auto;
+  padding: $space-5;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-xl);
+}
+.partner-trip-form header,
+.partner-trip-form footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-3;
+}
+.partner-trip-form__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $space-4;
+  margin: $space-4 0;
+}
+.partner-trip-form__description {
+  display: grid;
+  gap: $space-2;
+  color: var(--text);
+  font-weight: $font-semibold;
+}
+.partner-trip-form__description textarea {
+  resize: vertical;
+  padding: $space-3;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+.partner-trip-form footer {
+  justify-content: flex-end;
+  margin-top: $space-5;
+  padding-top: $space-4;
+  border-top: 1px solid var(--border);
+}
+@media (max-width: 700px) {
+  .partner-trips-page {
+    padding: $space-3;
+  }
+  .partner-trips-page__header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .partner-trips-page__create.ui-button {
+    width: 100%;
+  }
+  .partner-trip-grid,
+  .partner-trips-toolbar,
+  .partner-trip-form__grid {
+    grid-template-columns: 1fr;
+  }
+  .partner-trip-dialog {
+    align-items: end;
+    padding: 0;
+  }
+  .partner-trip-form {
+    max-height: 94dvh;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+}
 
 /* ─── Trip create/edit wizard ──────────────────────────────────────────── */
 
@@ -72,8 +246,14 @@
 }
 
 @keyframes ptf-rise {
-  from { transform: translateY(12px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .ptf-panel-header {
@@ -189,7 +369,9 @@
     background: var(--surface);
     color: var(--text);
     font-weight: $font-regular;
-    transition: border-color 160ms ease, box-shadow 160ms ease;
+    transition:
+      border-color 160ms ease,
+      box-shadow 160ms ease;
 
     &:focus {
       outline: none;
@@ -297,7 +479,9 @@
   color: var(--muted);
   cursor: pointer;
   text-align: center;
-  transition: border-color 160ms ease, background 160ms ease;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease;
 
   &:hover,
   &.ptf-dropzone--over {
@@ -674,10 +858,28 @@
 }
 
 @media (max-width: 700px) {
-  .ptf-root { align-items: end; padding: 0; }
-  .ptf-panel { height: 96dvh; max-height: 96dvh; border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
-  .ptf-grid, .ptf-pref-option { grid-template-columns: 1fr; }
-  .ptf-panel-header { align-items: flex-start; flex-direction: column; }
-  .ptf-json-import__actions { align-items: flex-start; flex-direction: column; }
-  .ptf-json-import__actions .ui-button { align-self: flex-end; }
+  .ptf-root {
+    align-items: end;
+    padding: 0;
+  }
+  .ptf-panel {
+    height: 96dvh;
+    max-height: 96dvh;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+  .ptf-grid,
+  .ptf-pref-option {
+    grid-template-columns: 1fr;
+  }
+  .ptf-panel-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .ptf-json-import__actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .ptf-json-import__actions .ui-button {
+    align-self: flex-end;
+  }
 }

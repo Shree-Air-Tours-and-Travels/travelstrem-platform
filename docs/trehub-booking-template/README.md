@@ -3,6 +3,7 @@
 This is a responsive, zero-build frontend prototype for a production-style flight and hotel booking flow.
 
 ## Hotel flow
+
 1. Home search
 2. Hotel results
 3. Full hotel details
@@ -17,6 +18,7 @@ This is a responsive, zero-build frontend prototype for a production-style fligh
 12. Booking management and cancellation request
 
 ## Flight flow
+
 1. Home search
 2. Flight results
 3. Full outbound/return itinerary
@@ -33,9 +35,11 @@ This is a responsive, zero-build frontend prototype for a production-style fligh
 14. Booking management and cancellation request
 
 ## Running the template
+
 Open `index.html` directly in a browser. No build step is needed.
 
 ## Technical notes
+
 - Vanilla HTML, CSS, and JavaScript
 - Lucide icons loaded from CDN
 - Inter font loaded from Google Fonts
@@ -44,7 +48,9 @@ Open `index.html` directly in a browser. No build step is needed.
 - Payment actions are simulations only
 
 ## Backend integration points
+
 Replace local state and mock handlers with:
+
 - Flight/hotel availability APIs
 - Pricing and revalidation APIs
 - Fare and cancellation-rule APIs

@@ -1,11 +1,26 @@
-import { applyIdentity, resolveAgencyIdentity } from "../../modules/tours/builder/builderIdentity.service.js";
+import {
+    applyIdentity,
+    resolveAgencyIdentity,
+} from "../../modules/tours/builder/builderIdentity.service.js";
 
 const agencyActorReq = (overrides = {}) => ({
     access: {
         role: "partner_agent",
         agencyId: "agency-1",
-        user: { _id: "user-1", role: "agent", agentRef: "agent-abc123", agencyRef: "agency-ref-1", partnerAgencyRef: "partner-acme", ...overrides.user },
-        agency: { agencyName: "Acme Journeys", partnerAgencyRef: "partner-acme", logo: "https://cdn/acme.png", ...overrides.agency },
+        user: {
+            _id: "user-1",
+            role: "agent",
+            agentRef: "agent-abc123",
+            agencyRef: "agency-ref-1",
+            partnerAgencyRef: "partner-acme",
+            ...overrides.user,
+        },
+        agency: {
+            agencyName: "Acme Journeys",
+            partnerAgencyRef: "partner-acme",
+            logo: "https://cdn/acme.png",
+            ...overrides.agency,
+        },
     },
 });
 
@@ -21,13 +36,24 @@ describe("resolveAgencyIdentity", () => {
     });
 
     test("falls back to the agency ref when the user record lacks one", () => {
-        const identity = resolveAgencyIdentity(agencyActorReq({ user: { agencyRef: "", partnerAgencyRef: "" } }));
+        const identity = resolveAgencyIdentity(
+            agencyActorReq({ user: { agencyRef: "", partnerAgencyRef: "" } }),
+        );
         expect(identity.agencyRef).toBe("partner-acme");
         expect(identity.partnerAgencyRef).toBe("partner-acme");
     });
 
     test("platform actors (master admin without agency) stay manual", () => {
-        expect(resolveAgencyIdentity({ access: { isMaster: true, role: "master_admin", user: { role: "admin" }, agency: null } })).toEqual({});
+        expect(
+            resolveAgencyIdentity({
+                access: {
+                    isMaster: true,
+                    role: "master_admin",
+                    user: { role: "admin" },
+                    agency: null,
+                },
+            }),
+        ).toEqual({});
     });
 });
 

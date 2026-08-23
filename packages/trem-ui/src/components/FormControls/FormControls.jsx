@@ -30,13 +30,14 @@ export const FormInput = forwardRef(function FormInput(
   );
 });
 
-const childOptions = (children) => Children.toArray(children)
-  .filter((child) => React.isValidElement(child))
-  .map((child) => ({
-    value: child.props.value ?? "",
-    label: child.props.children,
-    disabled: child.props.disabled,
-  }));
+const childOptions = (children) =>
+  Children.toArray(children)
+    .filter((child) => React.isValidElement(child))
+    .map((child) => ({
+      value: child.props.value ?? "",
+      label: child.props.children,
+      disabled: child.props.disabled,
+    }));
 
 export function FormSelect({ children, options, onChange, ...props }) {
   const resolvedOptions = options || childOptions(children);
@@ -52,4 +53,3 @@ export function FormSelect({ children, options, onChange, ...props }) {
 export function FormTextArea({ onChange, ...props }) {
   return <TextArea onChange={(value) => onChange?.(asInputEvent(value))} {...props} />;
 }
-

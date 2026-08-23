@@ -35,15 +35,15 @@ Use different values for `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, and `ADMIN_C
 2. Connect the GitHub repo.
 3. Use these settings:
 
-| Setting | Value |
-| --- | --- |
-| Name | `travelstrem-api` |
-| Environment | `Node` |
-| Region | nearest to users |
-| Branch | `main` or your production branch |
-| Root Directory | leave empty / repo root |
-| Build Command | `pnpm install --frozen-lockfile && pnpm --filter @apps/backend-api build` |
-| Start Command | `pnpm --filter @apps/backend-api start` |
+| Setting        | Value                                                                     |
+| -------------- | ------------------------------------------------------------------------- |
+| Name           | `travelstrem-api`                                                         |
+| Environment    | `Node`                                                                    |
+| Region         | nearest to users                                                          |
+| Branch         | `main` or your production branch                                          |
+| Root Directory | leave empty / repo root                                                   |
+| Build Command  | `pnpm install --frozen-lockfile && pnpm --filter @apps/backend-api build` |
+| Start Command  | `pnpm --filter @apps/backend-api start`                                   |
 
 4. Add the backend environment variables below.
 5. Deploy.
@@ -126,13 +126,13 @@ Deploy Trevio and Trevista as independent product applications.
 1. Vercel -> Add New -> Project -> import the repo.
 2. Configure:
 
-| Setting | Value |
-| --- | --- |
-| Framework Preset | Create React App |
-| Root Directory | repo root |
-| Install Command | `pnpm install --frozen-lockfile` |
-| Build Command | `pnpm --filter @apps/trevio build` |
-| Output Directory | `apps/trevio-remote/build` |
+| Setting          | Value                              |
+| ---------------- | ---------------------------------- |
+| Framework Preset | Create React App                   |
+| Root Directory   | repo root                          |
+| Install Command  | `pnpm install --frozen-lockfile`   |
+| Build Command    | `pnpm --filter @apps/trevio build` |
+| Output Directory | `apps/trevio-remote/build`         |
 
 3. Add environment variables:
 
@@ -144,15 +144,15 @@ REACT_APP_AUTH_APP_URL=https://auth.travelstrem.com
 ```
 
 4. Deploy.
-Repeat for Trevista:
+   Repeat for Trevista:
 
-| Setting | Value |
-| --- | --- |
-| Framework Preset | Create React App |
-| Root Directory | repo root |
-| Install Command | `pnpm install --frozen-lockfile` |
-| Build Command | `pnpm --filter @apps/trevista build` |
-| Output Directory | `apps/trevista-remote/build` |
+| Setting          | Value                                |
+| ---------------- | ------------------------------------ |
+| Framework Preset | Create React App                     |
+| Root Directory   | repo root                            |
+| Install Command  | `pnpm install --frozen-lockfile`     |
+| Build Command    | `pnpm --filter @apps/trevista build` |
+| Output Directory | `apps/trevista-remote/build`         |
 
 Confirm both product app URLs load in the browser:
 
@@ -165,13 +165,13 @@ https://trevista.vercel.app
 
 Deploy the global auth app at `auth.travelstrem.com`.
 
-| Setting | Value |
-| --- | --- |
-| Framework Preset | Create React App |
-| Root Directory | repo root |
-| Install Command | `pnpm install --frozen-lockfile` |
-| Build Command | `pnpm --filter @apps/auth build` |
-| Output Directory | `apps/auth-trem/build` |
+| Setting          | Value                            |
+| ---------------- | -------------------------------- |
+| Framework Preset | Create React App                 |
+| Root Directory   | repo root                        |
+| Install Command  | `pnpm install --frozen-lockfile` |
+| Build Command    | `pnpm --filter @apps/auth build` |
+| Output Directory | `apps/auth-trem/build`           |
 
 Environment:
 
@@ -186,13 +186,13 @@ REACT_APP_TRAVELSTREM_APP_URL=https://travelstrem.com
 
 Deploy the common dashboard app at `dashboard.travelstrem.com`.
 
-| Setting | Value |
-| --- | --- |
-| Framework Preset | Create React App |
-| Root Directory | repo root |
-| Install Command | `pnpm install --frozen-lockfile` |
-| Build Command | `pnpm --filter @apps/dashboard build` |
-| Output Directory | `apps/dashboard/build` |
+| Setting          | Value                                 |
+| ---------------- | ------------------------------------- |
+| Framework Preset | Create React App                      |
+| Root Directory   | repo root                             |
+| Install Command  | `pnpm install --frozen-lockfile`      |
+| Build Command    | `pnpm --filter @apps/dashboard build` |
+| Output Directory | `apps/dashboard/build`                |
 
 Environment:
 
@@ -208,13 +208,13 @@ REACT_APP_DASHBOARD_URL=https://dashboard.travelstrem.com
 1. Create another Vercel project from the same repo.
 2. Configure:
 
-| Setting | Value |
-| --- | --- |
-| Framework Preset | Create React App |
-| Root Directory | repo root |
-| Install Command | `pnpm install --frozen-lockfile` |
-| Build Command | `pnpm --filter @apps/travelstrem build` |
-| Output Directory | `apps/customer-shell/build` |
+| Setting          | Value                                   |
+| ---------------- | --------------------------------------- |
+| Framework Preset | Create React App                        |
+| Root Directory   | repo root                               |
+| Install Command  | `pnpm install --frozen-lockfile`        |
+| Build Command    | `pnpm --filter @apps/travelstrem build` |
+| Output Directory | `apps/customer-shell/build`             |
 
 3. Add environment variables:
 
@@ -236,13 +236,13 @@ REACT_APP_ADMIN_SHELL_URL=https://admin-shell.vercel.app/admin/tours
 1. Create another Vercel project from the same repo.
 2. Configure:
 
-| Setting | Value |
-| --- | --- |
-| Framework Preset | Create React App |
-| Root Directory | repo root |
-| Install Command | `pnpm install --frozen-lockfile` |
-| Build Command | `pnpm --filter @apps/admin build` |
-| Output Directory | `apps/admin-shell/build` |
+| Setting          | Value                             |
+| ---------------- | --------------------------------- |
+| Framework Preset | Create React App                  |
+| Root Directory   | repo root                         |
+| Install Command  | `pnpm install --frozen-lockfile`  |
+| Build Command    | `pnpm --filter @apps/admin build` |
+| Output Directory | `apps/admin-shell/build`          |
 
 3. Add environment variables:
 
@@ -294,9 +294,9 @@ If Vercel is using repo root for each project, also configure the same rewrite i
 2. Customer Vercel `REACT_APP_TREVIO_APP_URL` and `REACT_APP_TREVISTA_APP_URL` point to the product app origins.
 3. All frontend `REACT_APP_DASHBOARD_URL` points to the dashboard app origin.
 4. Every frontend `REACT_APP_API_URL` points to the Render backend with `/api`.
-4. MongoDB Atlas Network Access allows Render connections. For quick setup use `0.0.0.0/0`; for stricter production security use Render outbound IPs if your plan supports stable IPs.
-5. Redeploy frontends after changing any `REACT_APP_*` variable. CRA bakes these into the static build.
-6. Redeploy backend after changing backend env vars.
+5. MongoDB Atlas Network Access allows Render connections. For quick setup use `0.0.0.0/0`; for stricter production security use Render outbound IPs if your plan supports stable IPs.
+6. Redeploy frontends after changing any `REACT_APP_*` variable. CRA bakes these into the static build.
+7. Redeploy backend after changing backend env vars.
 
 ## 11. Suggested Deploy Order
 

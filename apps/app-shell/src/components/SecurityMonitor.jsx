@@ -18,12 +18,11 @@ const isTrustedRuntimeScript = (node) => {
   if (!source) return false;
   try {
     const url = new URL(source, window.location.origin);
-    return url.origin === window.location.origin
-      || configuredScriptOrigins.includes(url.origin)
-      || (
-        process.env.NODE_ENV !== "production"
-        && ["localhost", "127.0.0.1"].includes(url.hostname)
-      );
+    return (
+      url.origin === window.location.origin ||
+      configuredScriptOrigins.includes(url.origin) ||
+      (process.env.NODE_ENV !== "production" && ["localhost", "127.0.0.1"].includes(url.hostname))
+    );
   } catch {
     return false;
   }
@@ -63,7 +62,10 @@ export default function SecurityMonitor({ children }) {
             // removes React forms rendered through portals (including enquiry
             // and login modals) immediately after React commits them.
             if (["script", "iframe", "object", "embed"].includes(tag)) {
-              auditLog_event("dangerous_dom_node_added", { tag, outerHTML: node.outerHTML?.slice(0, 100) });
+              auditLog_event("dangerous_dom_node_added", {
+                tag,
+                outerHTML: node.outerHTML?.slice(0, 100),
+              });
               node.remove?.();
             }
           }

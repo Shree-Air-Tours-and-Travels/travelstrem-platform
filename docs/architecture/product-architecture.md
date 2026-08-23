@@ -8,10 +8,10 @@ TravelsTREM is the parent platform, not a customer-facing travel product. It pro
 
 ## Products
 
-| Product | Domain | Ownership | Current state |
-| --- | --- | --- | --- |
-| Trevio | `trevio.travelstrem.com` | Community trips, adventures, treks, expeditions, events, and communities | Active product app |
-| Trevista | `trevista.travelstrem.com` | Holiday packages, itineraries, and customized planning | Active product app |
+| Product  | Domain                     | Ownership                                                                | Current state      |
+| -------- | -------------------------- | ------------------------------------------------------------------------ | ------------------ |
+| Trevio   | `trevio.travelstrem.com`   | Community trips, adventures, treks, expeditions, events, and communities | Active product app |
+| Trevista | `trevista.travelstrem.com` | Holiday packages, itineraries, and customized planning                   | Active product app |
 
 ## Implementation rules
 

@@ -8,7 +8,11 @@ const config = {
   ariaLabel: "Dashboard application header",
   brand: { name: "TravelsTREM", subtitle: "JAI · WORLD", logoSrc: "/favicon.png" },
   mobileMenu: { openLabel: "Open navigation", closeLabel: "Close navigation" },
-  search: { placeholder: "Search trips and services...", ariaLabel: "Search travel services", enabled: false },
+  search: {
+    placeholder: "Search trips and services...",
+    ariaLabel: "Search travel services",
+    enabled: false,
+  },
   primaryAction: { label: "New Booking", icon: "plus", enabled: false },
   notification: { label: "Notifications", icon: "bell", count: 3, enabled: false },
   themeAction: {
@@ -34,7 +38,10 @@ describe("AppHeader", () => {
   it("renders backend-driven placeholder controls without activating them", () => {
     render(<AppHeader config={config} user={{ name: "Akshat Goyal" }} />);
 
-    expect(screen.getByLabelText("Search travel services")).toHaveAttribute("aria-disabled", "true");
+    expect(screen.getByLabelText("Search travel services")).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
     expect(screen.getByRole("button", { name: "New Booking" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Notifications" })).toBeDisabled();
     expect(screen.getByText("3")).toBeInTheDocument();
@@ -72,12 +79,18 @@ describe("AppHeader", () => {
 
   it("applies the current sidebar width without coupling header state", () => {
     const { container, rerender } = render(<AppHeader config={config} sidebarCollapsed={false} />);
-    expect(container.querySelector(".trem-app-header").style.getPropertyValue("--trem-app-header-sidebar-offset"))
-      .toBe("260px");
+    expect(
+      container
+        .querySelector(".trem-app-header")
+        .style.getPropertyValue("--trem-app-header-sidebar-offset"),
+    ).toBe("260px");
 
     rerender(<AppHeader config={config} sidebarCollapsed />);
-    expect(container.querySelector(".trem-app-header").style.getPropertyValue("--trem-app-header-sidebar-offset"))
-      .toBe("76px");
+    expect(
+      container
+        .querySelector(".trem-app-header")
+        .style.getPropertyValue("--trem-app-header-sidebar-offset"),
+    ).toBe("76px");
   });
 
   it("does not render items flagged with hide", () => {
@@ -129,8 +142,22 @@ describe("AppHeader", () => {
           variant: "journey-menu",
           title: "Plan a Journey",
           items: [
-            { id: "trips", title: "Trips & Adventures", description: "Treks, expeditions & events", mobileIcon: "mountain", target: "trevio" },
-            { id: "flights", title: "Flights & Hotels", description: "Flights, stays & transport", mobileIcon: "plane", disabled: true, comingSoon: true, comingSoonLabel: "Coming soon" },
+            {
+              id: "trips",
+              title: "Trips & Adventures",
+              description: "Treks, expeditions & events",
+              mobileIcon: "mountain",
+              target: "trevio",
+            },
+            {
+              id: "flights",
+              title: "Flights & Hotels",
+              description: "Flights, stays & transport",
+              mobileIcon: "plane",
+              disabled: true,
+              comingSoon: true,
+              comingSoonLabel: "Coming soon",
+            },
           ],
         },
       },
@@ -145,7 +172,9 @@ describe("AppHeader", () => {
     expect(screen.getByRole("menuitem", { name: "Flights & Hotels" })).toBeDisabled();
 
     fireEvent.click(screen.getByRole("menuitem", { name: "Trips & Adventures" }));
-    expect(onPrimaryActionSelect).toHaveBeenCalledWith(expect.objectContaining({ id: "trips", target: "trevio" }));
+    expect(onPrimaryActionSelect).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "trips", target: "trevio" }),
+    );
   });
 
   it("switches the same journey dropdown to a bottom sheet on mobile", () => {
@@ -159,7 +188,9 @@ describe("AppHeader", () => {
         menu: {
           variant: "journey-menu",
           title: "Plan a Journey",
-          items: [{ id: "tours", title: "Tours & Packages", mobileIcon: "beach", target: "trevista" }],
+          items: [
+            { id: "tours", title: "Tours & Packages", mobileIcon: "beach", target: "trevista" },
+          ],
         },
       },
     };

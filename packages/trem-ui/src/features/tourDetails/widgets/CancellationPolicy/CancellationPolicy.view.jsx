@@ -13,7 +13,13 @@ const money = (price, currency, locale) => {
   }).format(Number(price));
 };
 
-export default function CancellationPolicyView({ labels = {}, policy = "", cancellation = null, extras = [], config = {} }) {
+export default function CancellationPolicyView({
+  labels = {},
+  policy = "",
+  cancellation = null,
+  extras = [],
+  config = {},
+}) {
   const policyText = policy || cancellation?.policy || "";
   const tiers = Array.isArray(cancellation?.tiers) ? cancellation.tiers : [];
   const freeUntil = cancellation?.freeCancellationUntil || "";
@@ -23,7 +29,9 @@ export default function CancellationPolicyView({ labels = {}, policy = "", cance
   const depositNote = cancellation?.depositNote || "";
   const note = cancellation?.note || "";
 
-  const hasSummary = Boolean(freeUntil || (refundPercent != null && refundPercent !== 100) || depositRequired);
+  const hasSummary = Boolean(
+    freeUntil || (refundPercent != null && refundPercent !== 100) || depositRequired,
+  );
   const hasAny =
     policyText || hasSummary || tiers.length > 0 || note || depositNote || extras.length > 0;
   if (!hasAny) return null;
@@ -83,7 +91,9 @@ export default function CancellationPolicyView({ labels = {}, policy = "", cance
                 <div className="td-cp__hero-text">
                   <span className="td-cp__hero-label">{labels.deposit}</span>
                   <span className="td-cp__hero-value">
-                    {depositPercent != null ? `${depositPercent}% ${labels.upfrontSuffix}` : labels.required}
+                    {depositPercent != null
+                      ? `${depositPercent}% ${labels.upfrontSuffix}`
+                      : labels.required}
                   </span>
                 </div>
               </div>
@@ -110,7 +120,9 @@ export default function CancellationPolicyView({ labels = {}, policy = "", cance
                 return (
                   <li className="td-cp__tier" key={i}>
                     <div className="td-cp__tier-track">
-                      <span className={`td-cp__tier-node${good ? " td-cp__tier-node--good" : partial ? " td-cp__tier-node--partial" : " td-cp__tier-node--none"}`}>
+                      <span
+                        className={`td-cp__tier-node${good ? " td-cp__tier-node--good" : partial ? " td-cp__tier-node--partial" : " td-cp__tier-node--none"}`}
+                      >
                         {good ? (
                           <Icon name="check" size={12} />
                         ) : partial ? (
@@ -122,7 +134,9 @@ export default function CancellationPolicyView({ labels = {}, policy = "", cance
                       {i < tiers.length - 1 && <span className="td-cp__tier-line" />}
                     </div>
                     <div className="td-cp__tier-body">
-                      <p className="td-cp__tier-label">{tier.label || `${labels.tierFallback} ${i + 1}`}</p>
+                      <p className="td-cp__tier-label">
+                        {tier.label || `${labels.tierFallback} ${i + 1}`}
+                      </p>
                       {tier.description && <p className="td-cp__tier-desc">{tier.description}</p>}
                     </div>
                     <span className={`td-cp__tier-pct${good ? " td-cp__tier-pct--good" : ""}`}>
@@ -167,14 +181,17 @@ export default function CancellationPolicyView({ labels = {}, policy = "", cance
               // Older trip records use priceLabel for the billing unit (for
               // example, "Per person") while keeping the numeric value in
               // price. Show both instead of letting the unit hide the price.
-              const priceLabel = rawPriceLabel && /[\d₹$€£]/.test(rawPriceLabel)
-                ? rawPriceLabel
-                : hasPrice
-                  ? [
-                    money(extra.price, extra.currency || config.defaultCurrency, config.locale),
-                    rawPriceLabel || (extra.perPerson ? labels.perPerson : ""),
-                  ].filter(Boolean).join(" ")
-                  : rawPriceLabel;
+              const priceLabel =
+                rawPriceLabel && /[\d₹$€£]/.test(rawPriceLabel)
+                  ? rawPriceLabel
+                  : hasPrice
+                    ? [
+                        money(extra.price, extra.currency || config.defaultCurrency, config.locale),
+                        rawPriceLabel || (extra.perPerson ? labels.perPerson : ""),
+                      ]
+                        .filter(Boolean)
+                        .join(" ")
+                    : rawPriceLabel;
               return (
                 <div className="td-cp__extra" key={i}>
                   <span className="td-cp__extra-icon">

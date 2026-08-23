@@ -17,9 +17,24 @@
       },
       "widgets": [
         {
+          "type": "DashboardMetrics",
+          "source": "shell",
+          "widgetRef": "./widgets/metrics.json"
+        },
+        {
+          "type": "UpcomingTrips",
+          "source": "shell",
+          "widgetRef": "./widgets/upcoming-trips.json"
+        },
+        {
           "type": "PlanCards",
           "source": "shell",
           "widgetRef": "./widgets/plan-cards.json"
+        },
+        {
+          "type": "RecentBookings",
+          "source": "shell",
+          "widgetRef": "./widgets/recent-bookings.json"
         },
         {
           "type": "OverviewRail",

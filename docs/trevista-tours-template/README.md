@@ -5,6 +5,7 @@ A responsive, production-style, zero-build UI prototype for the complete tours a
 ## Included customer flows
 
 ### Package discovery
+
 - Destination-focused home page
 - Holiday search form
 - Destination cards
@@ -14,6 +15,7 @@ A responsive, production-style, zero-build UI prototype for the complete tours a
 - Sort options
 
 ### Package details
+
 - Image gallery
 - Overview and package highlights
 - Day-wise expandable itinerary
@@ -24,6 +26,7 @@ A responsive, production-style, zero-build UI prototype for the complete tours a
 - Package enquiry
 
 ### Booking flow
+
 1. Departure selection
 2. Traveller-count selection
 3. Departure city and optional-flight choice
@@ -38,6 +41,7 @@ A responsive, production-style, zero-build UI prototype for the complete tours a
 12. Booking confirmation
 
 ### Custom trip
+
 - Destination, dates, duration, and traveller inputs
 - Trip style and interest selection
 - Hotel and transport preferences
@@ -46,6 +50,7 @@ A responsive, production-style, zero-build UI prototype for the complete tours a
 - Quote-request confirmation
 
 ### Package enquiry
+
 - Price and offer questions
 - Package-customisation request
 - Visa/passport/flight requirement help
@@ -53,12 +58,14 @@ A responsive, production-style, zero-build UI prototype for the complete tours a
 - WhatsApp placeholder
 
 ### Corporate and group tours
+
 - Team offsites
 - Incentive travel
 - Conference travel
 - Large-group proposal form
 
 ### Post-booking
+
 - My Bookings dashboard
 - Upcoming and enquiry states
 - Booking details
@@ -69,6 +76,7 @@ A responsive, production-style, zero-build UI prototype for the complete tours a
 - Cancellation and refund estimate
 
 ## Shared capabilities
+
 - Responsive desktop, tablet, and mobile design
 - Multi-step progress navigation
 - Dynamic price recalculation
@@ -80,9 +88,11 @@ A responsive, production-style, zero-build UI prototype for the complete tours a
 - Confirmation and failure states
 
 ## Run
+
 Open `index.html` directly in a browser. No build process is required.
 
 ## Technology
+
 - Vanilla HTML
 - Vanilla CSS
 - Vanilla JavaScript
@@ -91,7 +101,9 @@ Open `index.html` directly in a browser. No build process is required.
 - Unsplash image URLs for demo imagery
 
 ## Production integration points
+
 Replace mock data and simulated handlers with:
+
 - Package catalogue API
 - Availability and departure API
 - Hotel and room inventory

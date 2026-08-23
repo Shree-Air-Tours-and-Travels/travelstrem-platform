@@ -70,6 +70,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  background: none;
+  border: none;
   padding: 14px $space-4;
   border-bottom: 1px solid var(--border);
   gap: $space-3;
@@ -153,6 +158,8 @@
   padding: 3px $space-2-5;
   border-radius: $radius-full;
   white-space: nowrap;
+  background: var(--neutral-soft, var(--surface-inset));
+  color: var(--muted);
 
   &--confirmed,
   &--Paid,
@@ -193,5 +200,98 @@
   &--Refunded {
     background: var(--danger-soft);
     color: var(--color-danger);
+  }
+
+  /* Enquiry pipeline statuses */
+  &--new {
+    background: var(--primary-soft);
+    color: var(--color-primary);
+  }
+
+  &--in_review {
+    background: var(--warning-soft);
+    color: var(--color-warning);
+  }
+
+  &--responded {
+    background: var(--success-soft);
+    color: var(--success-color);
+  }
+}
+
+/* Upcoming trips strip */
+
+.dov__side {
+  display: flex;
+  flex-direction: column;
+  gap: $space-6;
+  min-width: 0;
+}
+
+.dov__trips-panel {
+  margin-bottom: $space-6;
+}
+
+.dov__trips {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.dov__trip-card {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+  padding: $space-3 $space-4;
+  cursor: pointer;
+  transition:
+    background $duration-fast $ease-standard,
+    border-color $duration-fast $ease-standard;
+
+  &:hover {
+    background: var(--neutral-soft, var(--surface-inset));
+    border-color: var(--color-primary);
+  }
+}
+
+.dov__trip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: $radius-md;
+  background: var(--primary-soft);
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.dov__trip-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+
+  strong {
+    font-size: $font-size-sm;
+    font-weight: $font-medium;
+    color: var(--heading);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  small {
+    font-size: $font-size-xs;
+    color: var(--muted);
   }
 }

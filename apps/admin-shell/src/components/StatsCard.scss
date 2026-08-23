@@ -12,7 +12,10 @@
 
   &--clickable {
     cursor: pointer;
-    transition: background $duration-fast $ease-standard, border-color $duration-fast $ease-standard, box-shadow $duration-fast $ease-standard;
+    transition:
+      background $duration-fast $ease-standard,
+      border-color $duration-fast $ease-standard,
+      box-shadow $duration-fast $ease-standard;
 
     &:hover {
       background: var(--neutral-soft, var(--surface-inset));

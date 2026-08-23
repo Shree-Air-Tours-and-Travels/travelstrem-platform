@@ -908,7 +908,8 @@
   .auth-trem {
     width: 100%;
     min-height: calc(100dvh - 69px);
-    padding: 18px max(14px, env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+    padding: 18px max(14px, env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom))
+      max(14px, env(safe-area-inset-left));
 
     &__experience {
       display: flex;

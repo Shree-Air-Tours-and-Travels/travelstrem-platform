@@ -13,7 +13,13 @@ describe("repeatable builder records", () => {
 
     render(
       <RepeaterWidget
-        widget={{ key: "records", path: "records", label: "Record", itemLabelPath: "title", itemWidgets: [] }}
+        widget={{
+          key: "records",
+          path: "records",
+          label: "Record",
+          itemLabelPath: "title",
+          itemWidgets: [],
+        }}
         root={{ records: [{ _id: "one", title: "First" }, second] }}
         basePath=""
         onChange={onChange}
@@ -78,10 +84,12 @@ describe("repeatable builder records", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Optional" }));
-    expect(onChange).toHaveBeenCalledWith("commercial.packages", [{
-      ...pkg,
-      includedComponentKeys: [],
-      optionalComponentKeys: ["hotel"],
-    }]);
+    expect(onChange).toHaveBeenCalledWith("commercial.packages", [
+      {
+        ...pkg,
+        includedComponentKeys: [],
+        optionalComponentKeys: ["hotel"],
+      },
+    ]);
   });
 });

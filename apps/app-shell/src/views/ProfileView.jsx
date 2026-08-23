@@ -33,7 +33,9 @@ export default function ProfileView({ user, onSaveProfile, saving }) {
             </div>
             <div className="dpv__detail">
               <span className="dpv__detail-label">User ID</span>
-              <span className="dpv__detail-value dpv__detail-value--mono">{user?.id?.slice(-8) || "—"}</span>
+              <span className="dpv__detail-value dpv__detail-value--mono">
+                {user?.id?.slice(-8) || "—"}
+              </span>
             </div>
           </div>
         </div>
@@ -45,7 +47,11 @@ export default function ProfileView({ user, onSaveProfile, saving }) {
 function formatDate(dateStr) {
   if (!dateStr) return "—";
   try {
-    return new Date(dateStr).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+    return new Date(dateStr).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
   } catch {
     return "—";
   }

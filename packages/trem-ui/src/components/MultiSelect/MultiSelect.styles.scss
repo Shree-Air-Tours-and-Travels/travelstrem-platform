@@ -36,7 +36,9 @@
     white-space: nowrap;
     cursor: default;
 
-    .trem-icon { flex-shrink: 0; }
+    .trem-icon {
+      flex-shrink: 0;
+    }
   }
 
   &__more {

@@ -21,11 +21,22 @@ const formatMoney = (value, currency = "INR") => {
 const displayText = (value, fallback = "") => {
   if (value == null) return fallback;
   if (["string", "number", "boolean"].includes(typeof value)) return String(value);
-  if (Array.isArray(value)) return value.map((item) => displayText(item)).filter(Boolean).join(", ") || fallback;
+  if (Array.isArray(value))
+    return (
+      value
+        .map((item) => displayText(item))
+        .filter(Boolean)
+        .join(", ") || fallback
+    );
   if (typeof value === "object") {
-    return displayText(value.label ?? value.name ?? value.title ?? value.url)
-      || [value.city, value.country].map((item) => displayText(item)).filter(Boolean).join(", ")
-      || fallback;
+    return (
+      displayText(value.label ?? value.name ?? value.title ?? value.url) ||
+      [value.city, value.country]
+        .map((item) => displayText(item))
+        .filter(Boolean)
+        .join(", ") ||
+      fallback
+    );
   }
   return fallback;
 };
@@ -44,7 +55,10 @@ const getPriceText = (tour) => {
 const getRouteText = (tour) => {
   const t = tour || {};
   const origin = displayText(t.city?.from ?? t.route?.origin?.name, "Flexible start");
-  const destination = displayText(t.city?.to ?? t.route?.destination?.name ?? t.address?.city ?? t.location?.city, "Curated destination");
+  const destination = displayText(
+    t.city?.to ?? t.route?.destination?.name ?? t.address?.city ?? t.location?.city,
+    "Curated destination",
+  );
   return `${origin} to ${destination}`;
 };
 
@@ -99,57 +113,66 @@ const TourCard = React.memo(function TourCard({
   const tags = (Array.isArray(t.tags) ? t.tags : []).map((tag) => displayText(tag)).filter(Boolean);
   const highlights = Array.isArray(t.highlights) ? t.highlights : [];
   const inclusions = Array.isArray(t.inclusions) ? t.inclusions : [];
-  const languages = (Array.isArray(t.languages) ? t.languages : []).map((language) => displayText(language)).filter(Boolean);
+  const languages = (Array.isArray(t.languages) ? t.languages : [])
+    .map((language) => displayText(language))
+    .filter(Boolean);
   const availability = t.availability || {};
   const seatsAvailable = availability.seatsAvailable ?? availability.availableSeats;
   const numericRating = Number(avgRating);
-  const displayRating = Number.isFinite(numericRating)
-    ? numericRating.toFixed(1)
-    : "0.0";
+  const displayRating = Number.isFinite(numericRating) ? numericRating.toFixed(1) : "0.0";
   const priceText = getPriceText(tour);
   const routeText = getRouteText(tour);
   const locationText = getLocationText(tour);
   const category = getCategory(tour);
-  const resolvedOwnerName = ownerAgentName || t.ownerAgentName || (typeof t.ownerAgent === "object" ? t.ownerAgent?.name : "");
+  const resolvedOwnerName =
+    ownerAgentName ||
+    t.ownerAgentName ||
+    (typeof t.ownerAgent === "object" ? t.ownerAgent?.name : "");
   const reviewCount =
     t.reviewCount != null
       ? Number(t.reviewCount)
       : t.rating?.count != null
         ? Number(t.rating.count)
         : reviews.length;
-  const truncatedDesc = desc
-    ? `${desc.slice(0, 150)}${desc.length > 150 ? "..." : ""}`
-    : "";
-  const showHeart =
-    typeof favorited === "boolean" && typeof onFavorite === "function";
+  const truncatedDesc = desc ? `${desc.slice(0, 150)}${desc.length > 150 ? "..." : ""}` : "";
+  const showHeart = typeof favorited === "boolean" && typeof onFavorite === "function";
   const hasTags = Array.isArray(tags) && tags.length > 0;
   const isCompact = variant === "compact";
   const isFeaturedCard = variant === "featured";
   const isManagement = variant === "management";
   const isCustomerCard = isManagement && !isAdmin;
-  const status = String(t.status || (t.isPublished === false ? "draft" : "published")).toLowerCase();
+  const status = String(
+    t.status || (t.isPublished === false ? "draft" : "published"),
+  ).toLowerCase();
   const isDraft = status === "draft";
   const isVerified = Boolean(t.tremVerified);
   const copy = {
-    draft: "Draft", published: "Published", archived: "Archived",
-    featured: "Featured", trending: "Trending", verified: "TREM verified",
-    view: "View", viewTour: "View tour", edit: "Edit", continue: "Continue", remove: "Delete", verify: "Verify",
+    draft: "Draft",
+    published: "Published",
+    archived: "Archived",
+    featured: "Featured",
+    trending: "Trending",
+    verified: "TREM verified",
+    view: "View",
+    viewTour: "View tour",
+    edit: "Edit",
+    continue: "Continue",
+    remove: "Delete",
+    verify: "Verify",
     ...labels,
   };
   const detailItems = [
     Array.isArray(highlights) && highlights[0]?.short
       ? { icon: highlights[0].icon || "sparkles", text: highlights[0].short }
       : null,
-    Array.isArray(inclusions) && inclusions[0]
-      ? { icon: "check", text: inclusions[0] }
-      : null,
+    Array.isArray(inclusions) && inclusions[0] ? { icon: "check", text: inclusions[0] } : null,
     Array.isArray(languages) && languages[0]
       ? { icon: "guide", text: `${languages.slice(0, 2).join(", ")} guide` }
       : null,
-    seatsAvailable
-      ? { icon: "ticket", text: `${seatsAvailable} seats left` }
-      : null,
-  ].filter(Boolean).slice(0, 3);
+    seatsAvailable ? { icon: "ticket", text: `${seatsAvailable} seats left` } : null,
+  ]
+    .filter(Boolean)
+    .slice(0, 3);
 
   const handleClick = () => {
     if (!path && typeof onView === "function") onView(tour);
@@ -206,29 +229,40 @@ const TourCard = React.memo(function TourCard({
       {(isAdmin || featured || trending) && (
         <div className="tour-card__status-badges" aria-label="Tour status">
           {isAdmin && (
-            <span className={`tour-card__badge tour-card__badge--status tour-card__badge--${status}`}>
+            <span
+              className={`tour-card__badge tour-card__badge--status tour-card__badge--${status}`}
+            >
               {copy[status] || status}
             </span>
           )}
-          {featured && <span className="tour-card__badge tour-card__badge--featured"><Icon name="star" size={13} /> {copy.featured}</span>}
-          {trending && <span className="tour-card__badge tour-card__badge--trending"><Icon name="sparkles" size={13} /> {copy.trending}</span>}
-          {isVerified && isAdmin && <span className="tour-card__badge tour-card__badge--verified"><Icon name="badgeCheck" size={13} /> {copy.verified}</span>}
+          {featured && (
+            <span className="tour-card__badge tour-card__badge--featured">
+              <Icon name="star" size={13} /> {copy.featured}
+            </span>
+          )}
+          {trending && (
+            <span className="tour-card__badge tour-card__badge--trending">
+              <Icon name="sparkles" size={13} /> {copy.trending}
+            </span>
+          )}
+          {isVerified && isAdmin && (
+            <span className="tour-card__badge tour-card__badge--verified">
+              <Icon name="badgeCheck" size={13} /> {copy.verified}
+            </span>
+          )}
         </div>
       )}
 
       {seatsAvailable != null && !isCompact ? (
-        <span className={`tour-card__availability${Number(seatsAvailable) === 0 ? " is-sold-out" : ""}`}>
+        <span
+          className={`tour-card__availability${Number(seatsAvailable) === 0 ? " is-sold-out" : ""}`}
+        >
           {Number(seatsAvailable) === 0 ? "Sold out" : `${seatsAvailable} seats`}
         </span>
       ) : null}
 
       {imageSrc ? (
-        <img
-          src={imageSrc}
-          alt={title || "Tour image"}
-          loading="lazy"
-          className="tour-card__img"
-        />
+        <img src={imageSrc} alt={title || "Tour image"} loading="lazy" className="tour-card__img" />
       ) : (
         <div className="tour-card__placeholder">
           <Icon name="mountain" size={48} />
@@ -259,10 +293,7 @@ const TourCard = React.memo(function TourCard({
         </div>
       )}
 
-      <h3
-        className="tour-card__title"
-        id={_id ? `tour-card-${_id}-title` : undefined}
-      >
+      <h3 className="tour-card__title" id={_id ? `tour-card-${_id}-title` : undefined}>
         {title || "Untitled Tour"}
       </h3>
     </div>
@@ -291,24 +322,33 @@ const TourCard = React.memo(function TourCard({
         <Icon name="mapPin" size={14} />
         <span>{locationText}</span>
       </div>
-      {(ownershipMode === "agency" || ownershipMode === "auto") && (t.agency?.name || ownershipLabels.platformAgency) ? (
+      {(ownershipMode === "agency" || ownershipMode === "auto") &&
+      (t.agency?.name || ownershipLabels.platformAgency) ? (
         <div className="tour-card__owner">
           <Icon name="building2" size={13} />
-          <span><small>{ownershipLabels.agency || "Agency"}</small>{t.agency?.name || ownershipLabels.platformAgency}</span>
+          <span>
+            <small>{ownershipLabels.agency || "Agency"}</small>
+            {t.agency?.name || ownershipLabels.platformAgency}
+          </span>
         </div>
       ) : null}
-      {(ownershipMode === "agent" || (ownershipMode === "auto" && showOwner)) && resolvedOwnerName && (
-        <div className="tour-card__owner">
-          <Icon name="user" size={13} />
-          <span><small>{ownershipLabels.agent || "Added by agent"}</small>{resolvedOwnerName}</span>
-        </div>
-      )}
+      {(ownershipMode === "agent" || (ownershipMode === "auto" && showOwner)) &&
+        resolvedOwnerName && (
+          <div className="tour-card__owner">
+            <Icon name="user" size={13} />
+            <span>
+              <small>{ownershipLabels.agent || "Added by agent"}</small>
+              {resolvedOwnerName}
+            </span>
+          </div>
+        )}
     </div>
   );
 
-  const cardDescription = !isCompact && !hideDescription && truncatedDesc ? (
-    <p className="tour-card__desc">{truncatedDesc}</p>
-  ) : null;
+  const cardDescription =
+    !isCompact && !hideDescription && truncatedDesc ? (
+      <p className="tour-card__desc">{truncatedDesc}</p>
+    ) : null;
 
   const cardSummary = !isCompact ? (
     <div className="tour-card__summary">
@@ -326,32 +366,36 @@ const TourCard = React.memo(function TourCard({
     </div>
   ) : null;
 
-  const cardDetails = !isCompact && detailItems.length ? (
-    <div className="tour-card__details">
-      {detailItems.map((item, index) => (
-        <span className="tour-card__detail" key={`${item.text}-${index}`}>
-          <Icon name={item.icon} size={13} />
-          <span>{item.text}</span>
-        </span>
-      ))}
-    </div>
-  ) : null;
+  const cardDetails =
+    !isCompact && detailItems.length ? (
+      <div className="tour-card__details">
+        {detailItems.map((item, index) => (
+          <span className="tour-card__detail" key={`${item.text}-${index}`}>
+            <Icon name={item.icon} size={13} />
+            <span>{item.text}</span>
+          </span>
+        ))}
+      </div>
+    ) : null;
 
-  const cardTags = !isCompact && hasTags ? (
-    <div className="tour-card__tags">
-      {tags.slice(0, isFeaturedCard ? 4 : 3).map((t, i) => (
-        <span key={i} className="tour-card__tag">
-          {t}
-        </span>
-      ))}
-    </div>
-  ) : null;
+  const cardTags =
+    !isCompact && hasTags ? (
+      <div className="tour-card__tags">
+        {tags.slice(0, isFeaturedCard ? 4 : 3).map((t, i) => (
+          <span key={i} className="tour-card__tag">
+            {t}
+          </span>
+        ))}
+      </div>
+    ) : null;
 
   const cardFacts = (
     <div className="tour-card__facts">
       <span className="tour-card__fact">
         <Icon name="calendar" size={14} />
-        <span>{period?.days ?? "-"}d {period?.nights ?? "-"}n</span>
+        <span>
+          {period?.days ?? "-"}d {period?.nights ?? "-"}n
+        </span>
       </span>
       <span className="tour-card__fact">
         <Icon name="usersRound" size={14} />

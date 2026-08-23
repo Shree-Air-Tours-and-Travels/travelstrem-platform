@@ -40,7 +40,8 @@ describe("InfoCard", () => {
       <InfoCard title="Tour" image="/tour.jpg" badge={{ value: "New", tone: "info" }} />,
     );
 
-    expect(container.querySelector(".trem-info-card__header"))
-      .toHaveClass("trem-info-card__header--with-image");
+    expect(container.querySelector(".trem-info-card__header")).toHaveClass(
+      "trem-info-card__header--with-image",
+    );
   });
 });

@@ -11,7 +11,8 @@ const sampleWidgets = [
     trip: {
       id: "trip-1",
       title: "Himalayan Escape to Manali",
-      image: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=400&q=80",
+      image:
+        "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=400&q=80",
       dateRange: "12 Jun – 16 Jun 2026",
       duration: "5 Days",
       productName: "TravelsTREM",
@@ -28,8 +29,20 @@ const sampleWidgets = [
     type: "quickActions",
     title: "Quick Actions",
     items: [
-      { id: "request-quote", title: "Request a quote", description: "Ask an agent to plan a tour", icon: "plus", href: "/support" },
-      { id: "find-tours", title: "Find Tours", description: "Search available tours", icon: "search", href: "/tours" },
+      {
+        id: "request-quote",
+        title: "Request a quote",
+        description: "Ask an agent to plan a tour",
+        icon: "plus",
+        href: "/support",
+      },
+      {
+        id: "find-tours",
+        title: "Find Tours",
+        description: "Search available tours",
+        icon: "search",
+        href: "/tours",
+      },
     ],
   },
   {
@@ -40,7 +53,8 @@ const sampleWidgets = [
     description: "20% off on all Himalayan packages. Book before July 31!",
     codeLabel: "Use code",
     code: "SUMMER20",
-    image: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=400&q=80",
+    image:
+      "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=400&q=80",
     href: "/offers/summer",
     available: true,
   },

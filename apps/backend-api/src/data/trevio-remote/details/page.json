@@ -76,8 +76,8 @@
           "variant": "floating",
           "align": "left-right",
           "showBg": true,
-          "mobileVisible": 2
-          ,"showBookNow": false
+          "mobileVisible": 2,
+          "showBookNow": false
         },
         "actions": [
           {

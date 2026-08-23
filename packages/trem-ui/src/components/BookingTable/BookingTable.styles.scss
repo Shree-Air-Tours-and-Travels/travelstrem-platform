@@ -202,7 +202,9 @@
   border: 1px solid var(--border);
   border-radius: $radius-sm;
   background: var(--surface);
-  transition: border-color $duration-base $ease-standard, box-shadow $duration-base $ease-standard;
+  transition:
+    border-color $duration-base $ease-standard,
+    box-shadow $duration-base $ease-standard;
 
   &:focus-within {
     border-color: var(--color-primary);

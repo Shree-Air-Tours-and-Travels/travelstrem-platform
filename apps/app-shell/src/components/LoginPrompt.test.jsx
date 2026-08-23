@@ -3,15 +3,23 @@ import { createRoot } from "react-dom/client";
 import LoginPrompt from "./LoginPrompt";
 
 jest.mock("@packages/trem-ui", () => ({
-  Button: ({ text, onClick }) => <button type="button" onClick={onClick}>{text}</button>,
+  Button: ({ text, onClick }) => (
+    <button type="button" onClick={onClick}>
+      {text}
+    </button>
+  ),
   Icon: () => null,
   Paragraph: ({ text }) => <p>{text}</p>,
   Title: ({ text }) => <h1>{text}</h1>,
 }));
 
-jest.mock("@packages/trem-modals", () => ({
-  ModalShell: ({ children }) => <div>{children}</div>,
-}), { virtual: true });
+jest.mock(
+  "@packages/trem-modals",
+  () => ({
+    ModalShell: ({ children }) => <div>{children}</div>,
+  }),
+  { virtual: true },
+);
 
 test("the welcome close action continues as guest exactly once", () => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true;

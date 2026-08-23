@@ -3,7 +3,14 @@ import { createPortal } from "react-dom";
 import QuoteDocumentPreview from "./QuoteDocumentPreview";
 import "./quoteDocument.css";
 
-export default function QuotePreviewDialog({ booking, quote, amount, currency, notes, companyName }) {
+export default function QuotePreviewDialog({
+  booking,
+  quote,
+  amount,
+  currency,
+  notes,
+  companyName,
+}) {
   const [open, setOpen] = React.useState(false);
 
   React.useEffect(() => {
@@ -15,22 +22,52 @@ export default function QuotePreviewDialog({ booking, quote, amount, currency, n
 
   return (
     <>
-      <button type="button" className="trem-docengine-preview-trigger" onClick={() => setOpen(true)}>
-        <span>Quote document</span><strong>Preview HTML layout</strong>
+      <button
+        type="button"
+        className="trem-docengine-preview-trigger"
+        onClick={() => setOpen(true)}
+      >
+        <span>Quote document</span>
+        <strong>Preview HTML layout</strong>
       </button>
-      {open && typeof document !== "undefined" ? createPortal(
-        <div className="trem-docengine-dialog" role="presentation" onMouseDown={() => setOpen(false)}>
-          <section className="trem-docengine-dialog__panel" role="dialog" aria-modal="true" aria-label="Quote document preview" onMouseDown={(event) => event.stopPropagation()}>
-            <div className="trem-docengine-dialog__bar">
-              <div><strong>Quote preview</strong><span>This is the HTML layout for the document engine.</span></div>
-              <button type="button" onClick={() => setOpen(false)} aria-label="Close preview">×</button>
-            </div>
-            <div className="trem-docengine-dialog__content">
-              <QuoteDocumentPreview booking={booking} quote={quote} amount={amount} currency={currency} notes={notes} companyName={companyName} />
-            </div>
-          </section>
-        </div>, document.body,
-      ) : null}
+      {open && typeof document !== "undefined"
+        ? createPortal(
+            <div
+              className="trem-docengine-dialog"
+              role="presentation"
+              onMouseDown={() => setOpen(false)}
+            >
+              <section
+                className="trem-docengine-dialog__panel"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Quote document preview"
+                onMouseDown={(event) => event.stopPropagation()}
+              >
+                <div className="trem-docengine-dialog__bar">
+                  <div>
+                    <strong>Quote preview</strong>
+                    <span>This is the HTML layout for the document engine.</span>
+                  </div>
+                  <button type="button" onClick={() => setOpen(false)} aria-label="Close preview">
+                    ×
+                  </button>
+                </div>
+                <div className="trem-docengine-dialog__content">
+                  <QuoteDocumentPreview
+                    booking={booking}
+                    quote={quote}
+                    amount={amount}
+                    currency={currency}
+                    notes={notes}
+                    companyName={companyName}
+                  />
+                </div>
+              </section>
+            </div>,
+            document.body,
+          )
+        : null}
     </>
   );
 }

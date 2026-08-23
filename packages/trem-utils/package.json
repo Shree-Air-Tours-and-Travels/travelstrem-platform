@@ -7,8 +7,13 @@
     "@packages/trem-auth-core": "workspace:*",
     "axios": "^1.8.4"
   },
-  "peerDependencies": { "react": "^18.3.1" },
+  "peerDependencies": {
+    "react": "^18.3.1"
+  },
   "devDependencies": {
+    "@testing-library/react": "^16.2.0",
+    "jsdom": "^26.0.0",
+    "react-dom": "^18.3.1",
     "vitest": "^3.2.6"
   },
   "scripts": {

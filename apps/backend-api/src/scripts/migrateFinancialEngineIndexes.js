@@ -9,8 +9,16 @@ import BookingPayment from "../modules/bookings/models/BookingPayment.js";
 import mongoose from "mongoose";
 
 await initializeDatabase();
-for (const model of [PaymentConfig, AgencyMerchantConfig, PaymentProviderConfig, FinancialLedgerEntry, FinancialSettlement, BookingQuote, BookingPayment]) {
-  const result = await model.syncIndexes();
-  console.log(`${model.modelName}:`, result);
+for (const model of [
+    PaymentConfig,
+    AgencyMerchantConfig,
+    PaymentProviderConfig,
+    FinancialLedgerEntry,
+    FinancialSettlement,
+    BookingQuote,
+    BookingPayment,
+]) {
+    const result = await model.syncIndexes();
+    console.log(`${model.modelName}:`, result);
 }
 await mongoose.disconnect();

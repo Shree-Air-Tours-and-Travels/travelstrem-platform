@@ -8,7 +8,9 @@
   border: 1px solid var(--border);
   border-radius: $radius-xs;
   background: var(--surface);
-  transition: border-color 160ms $ease-default, box-shadow 160ms $ease-default;
+  transition:
+    border-color 160ms $ease-default,
+    box-shadow 160ms $ease-default;
   box-sizing: border-box;
 
   &:focus-within {

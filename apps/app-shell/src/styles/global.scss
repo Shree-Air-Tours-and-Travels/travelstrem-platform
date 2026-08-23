@@ -156,7 +156,6 @@ select {
   .dash-content--support {
     padding: 0;
   }
-
 }
 
 .dash-content > .dash-app-footer {
@@ -193,9 +192,17 @@ select {
   }
 
   .dash-layout--mobile-action-panel {
-    --dash-mobile-action-panel-fallback-height: calc(#{$space-18} + env(safe-area-inset-bottom, 0px));
+    --dash-mobile-action-panel-fallback-height: calc(
+      #{$space-18} + env(safe-area-inset-bottom, 0px)
+    );
     --dash-mobile-action-panel-clearance: #{$space-4};
-    --dash-mobile-action-panel-space: calc(var(--dash-mobile-action-panel-rendered-height, var(--dash-mobile-action-panel-fallback-height)) + var(--dash-mobile-action-panel-clearance));
+    --dash-mobile-action-panel-space: calc(
+      var(
+          --dash-mobile-action-panel-rendered-height,
+          var(--dash-mobile-action-panel-fallback-height)
+        ) +
+        var(--dash-mobile-action-panel-clearance)
+    );
 
     .trem-fab:not(.trem-fab--variant-mobile-navigation) {
       bottom: var(--dash-mobile-action-panel-space);

@@ -1,0 +1,39 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "pageTitle": "Tours Management"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {
+        "titleRef": "pageTitle"
+      },
+      "widgets": [
+        {
+          "type": "tourManagementFilters",
+          "source": "shell",
+          "widgetRef": "./widgets/tour-management-filters.json"
+        },
+        {
+          "type": "tourManagementListing",
+          "source": "shell",
+          "widgetRef": "./widgets/tour-management-listing.json"
+        }
+      ],
+      "config": {
+        "breadcrumbs": [
+          { "label": "Services", "path": "/agent/services" },
+          { "label": "Tours Management" }
+        ]
+      },
+      "actions": []
+    }
+  }
+}

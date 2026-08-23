@@ -16,7 +16,9 @@ export default function AdminOverviewView({ user, stats, onTabChange }) {
   return (
     <div className="aov">
       <div className="aov__greeting">
-        <h1>Good {getTimeOfDay()}, {user?.name?.split(" ")[0] || "Admin"}</h1>
+        <h1>
+          Good {getTimeOfDay()}, {user?.name?.split(" ")[0] || "Admin"}
+        </h1>
         <p>Here is your current travel catalogue overview.</p>
       </div>
 

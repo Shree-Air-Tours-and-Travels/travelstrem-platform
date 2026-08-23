@@ -59,13 +59,17 @@ export default function CardWithSubEntity({
         </div>
         <div className="card-subentity__header-side">
           {headerMeta ? <span>{headerMeta}</span> : null}
-          {headerActions.length ? <div className="card-subentity__actions">{headerActions.map(renderAction)}</div> : null}
+          {headerActions.length ? (
+            <div className="card-subentity__actions">{headerActions.map(renderAction)}</div>
+          ) : null}
         </div>
       </header>
 
       {visibleItems.length ? (
         <div className="card-subentity__rows">
-          {visibleItems.map((item) => <ValueRow key={item.id || item.label} item={item} />)}
+          {visibleItems.map((item) => (
+            <ValueRow key={item.id || item.label} item={item} />
+          ))}
         </div>
       ) : null}
 
@@ -75,7 +79,9 @@ export default function CardWithSubEntity({
           {section.text ? <p>{section.text}</p> : null}
           {section.items?.length ? (
             <div className="card-subentity__rows">
-              {section.items.map((item) => <ValueRow key={item.id || item.label} item={item} />)}
+              {section.items.map((item) => (
+                <ValueRow key={item.id || item.label} item={item} />
+              ))}
             </div>
           ) : null}
         </section>
@@ -83,7 +89,9 @@ export default function CardWithSubEntity({
 
       {visibleTotals.length ? (
         <div className="card-subentity__totals">
-          {visibleTotals.map((item) => <ValueRow key={item.id || item.label} item={item} />)}
+          {visibleTotals.map((item) => (
+            <ValueRow key={item.id || item.label} item={item} />
+          ))}
         </div>
       ) : null}
 
@@ -91,8 +99,16 @@ export default function CardWithSubEntity({
 
       {footerActions.length || status ? (
         <footer className="card-subentity__footer">
-          {status ? <div className={`card-subentity__status ${status.tone ? `card-subentity__status--${status.tone}` : ""}`}>{status.label}</div> : null}
-          {footerActions.length ? <div className="card-subentity__footer-actions">{footerActions.map(renderAction)}</div> : null}
+          {status ? (
+            <div
+              className={`card-subentity__status ${status.tone ? `card-subentity__status--${status.tone}` : ""}`}
+            >
+              {status.label}
+            </div>
+          ) : null}
+          {footerActions.length ? (
+            <div className="card-subentity__footer-actions">{footerActions.map(renderAction)}</div>
+          ) : null}
         </footer>
       ) : null}
     </article>
@@ -114,12 +130,14 @@ CardWithSubEntity.propTypes = {
   headerMeta: PropTypes.node,
   headerActions: PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.node, PropTypes.object])),
   items: PropTypes.arrayOf(valueItemShape),
-  sections: PropTypes.arrayOf(PropTypes.shape({
-    id: PropTypes.string,
-    title: PropTypes.node,
-    text: PropTypes.node,
-    items: PropTypes.arrayOf(valueItemShape),
-  })),
+  sections: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string,
+      title: PropTypes.node,
+      text: PropTypes.node,
+      items: PropTypes.arrayOf(valueItemShape),
+    }),
+  ),
   totals: PropTypes.arrayOf(valueItemShape),
   text: PropTypes.node,
   footerActions: PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.node, PropTypes.object])),

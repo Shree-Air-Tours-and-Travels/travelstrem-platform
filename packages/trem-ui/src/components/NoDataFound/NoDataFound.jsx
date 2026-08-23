@@ -18,11 +18,9 @@ export default function NoDataFound({
   const showAction = Boolean(actionLabel && (onAction || actionHref));
   return (
     <div
-      className={[
-        "trem-no-data",
-        compact ? "trem-no-data--compact" : "",
-        className,
-      ].filter(Boolean).join(" ")}
+      className={["trem-no-data", compact ? "trem-no-data--compact" : "", className]
+        .filter(Boolean)
+        .join(" ")}
       role="status"
     >
       {icon ? (

@@ -25,13 +25,19 @@ export default function SideBar({
   const panelRef = useRef(null);
   const sections = config.sections || [];
   const profile = config.profile || {};
-  const profileName = user?.[profile.nameKey || "name"] || user?.name || profile.fallbackName || "Traveller";
+  const profileName =
+    user?.[profile.nameKey || "name"] || user?.name || profile.fallbackName || "Traveller";
   const profileMeta = user?.[profile.metaKey || "membershipLabel"] || profile.fallbackMeta || "";
-  const activeTargets = useMemo(() => new Set(
-    sections.flatMap((section) => section.items || [])
-      .filter((item) => item.target === activeId && !item.hide)
-      .map((item) => item.id),
-  ), [activeId, sections]);
+  const activeTargets = useMemo(
+    () =>
+      new Set(
+        sections
+          .flatMap((section) => section.items || [])
+          .filter((item) => item.target === activeId && !item.hide)
+          .map((item) => item.id),
+      ),
+    [activeId, sections],
+  );
 
   useEffect(() => {
     if (!mobileOpen) return undefined;
@@ -53,8 +59,7 @@ export default function SideBar({
     if (item.action) onAction?.(item.action, item);
     else if (item.type === "external" && item.href) {
       onNavigate?.(item.href, item);
-    }
-    else onNavigate?.(item.path || item.target || item.id, item);
+    } else onNavigate?.(item.path || item.target || item.id, item);
     onClose?.();
   }
 
@@ -73,7 +78,9 @@ export default function SideBar({
           mobileOpen ? "is-mobile-open" : "",
           collapsed ? "is-collapsed" : "",
           className,
-        ].filter(Boolean).join(" ")}
+        ]
+          .filter(Boolean)
+          .join(" ")}
         aria-label={config.ariaLabel || "Dashboard navigation"}
         aria-hidden={!mobileOpen ? undefined : false}
       >
@@ -98,12 +105,16 @@ export default function SideBar({
           <button
             type="button"
             className="trem-sidebar__collapse"
-            aria-label={collapsed
-              ? (config.expandLabel || "Expand sidebar")
-              : (config.collapseLabel || "Collapse sidebar")}
-            title={collapsed
-              ? (config.expandLabel || "Expand sidebar")
-              : (config.collapseLabel || "Collapse sidebar")}
+            aria-label={
+              collapsed
+                ? config.expandLabel || "Expand sidebar"
+                : config.collapseLabel || "Collapse sidebar"
+            }
+            title={
+              collapsed
+                ? config.expandLabel || "Expand sidebar"
+                : config.collapseLabel || "Collapse sidebar"
+            }
             onClick={() => onCollapsedChange?.(!collapsed)}
           >
             <Icon name={collapsed ? "chevronRight" : "chevronLeft"} size={18} />
@@ -130,7 +141,9 @@ export default function SideBar({
                           "trem-sidebar__item",
                           active ? "is-active" : "",
                           item.disabled ? "is-disabled" : "",
-                        ].filter(Boolean).join(" ")}
+                        ]
+                          .filter(Boolean)
+                          .join(" ")}
                         onClick={() => activate(item)}
                       >
                         <Icon name={item.icon} size={21} strokeWidth={1.8} />
@@ -151,9 +164,7 @@ export default function SideBar({
           className="trem-sidebar__profile"
           onClick={() => activate({ target: profile.actionTarget || "profile" })}
         >
-          <span className="trem-sidebar__avatar">
-            {initials(user, profileName)}
-          </span>
+          <span className="trem-sidebar__avatar">{initials(user, profileName)}</span>
           <span className="trem-sidebar__profile-copy">
             <strong>{profileName}</strong>
             {profileMeta ? <small>{profileMeta}</small> : null}

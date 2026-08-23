@@ -1,6 +1,25 @@
 import React, { Suspense, useCallback, useEffect, useMemo, useState } from "react";
-import { Navigate, Route, Routes, useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { AppHeader, ErrorState, FloatingActionBar, GlobalLoader, ScrollToTop, SideBar, ThemeProvider, useTheme } from "@packages/trem-ui";
+import {
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
+import {
+  AppHeader,
+  ErrorState,
+  FloatingActionBar,
+  GlobalLoader,
+  ScrollToTop,
+  SideBar,
+  ThemeProvider,
+  useTheme,
+  RealtimeProvider,
+  Toaster,
+} from "@packages/trem-ui";
+import { initRealtimeNotifications } from "@packages/trem-events";
 import { AppShellProvider, useAppShellConfig } from "./providers/AppShellProvider";
 import AppShellPage from "../features/app-shell/AppShell.container";
 import { buildGlobalAuthUrl, fetchData, SHELL_NAVIGATION_EVENT } from "@packages/trem-utils";
@@ -51,7 +70,12 @@ class RemoteBoundary extends React.Component {
   }
 }
 
-function ProtectedRoute({ children, onContinueAsGuest, allowGuest = false, suppressPrompt = false }) {
+function ProtectedRoute({
+  children,
+  onContinueAsGuest,
+  allowGuest = false,
+  suppressPrompt = false,
+}) {
   const { loading, session } = useAppShellConfig();
 
   if (loading) return <GlobalLoader visible text="Loading App" />;
@@ -72,13 +96,16 @@ function ProtectedRoute({ children, onContinueAsGuest, allowGuest = false, suppr
     }
 
     return (
-      <LoginPrompt onContinueAsGuest={onContinueAsGuest} onLogin={() => {
-        if (!checkRateLimit("login-attempt", 5, 300000)) {
-          console.warn("[Security] Too many login attempts. Please wait.");
-          return;
-        }
-        window.location.assign(buildGlobalAuthUrl({ app: "app-shell", returnTo }));
-      }} />
+      <LoginPrompt
+        onContinueAsGuest={onContinueAsGuest}
+        onLogin={() => {
+          if (!checkRateLimit("login-attempt", 5, 300000)) {
+            console.warn("[Security] Too many login attempts. Please wait.");
+            return;
+          }
+          window.location.assign(buildGlobalAuthUrl({ app: "app-shell", returnTo }));
+        }}
+      />
     );
   }
 
@@ -94,7 +121,9 @@ function AppShell() {
   const user = session?.user || null;
   const [sidebarConfig, setSidebarConfig] = useState({});
   const [appHeaderConfig, setAppHeaderConfig] = useState({});
-  const [navigationConfig, setNavigationConfig] = useState(() => normalizeNavigationConfig(FALLBACK_NAVIGATION_CONFIG));
+  const [navigationConfig, setNavigationConfig] = useState(() =>
+    normalizeNavigationConfig(FALLBACK_NAVIGATION_CONFIG),
+  );
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [guestMode, setGuestMode] = useState(() => isGuestSession());
@@ -133,71 +162,87 @@ function AppShell() {
     if (publicDestination) setAuthPromptDismissed(false);
   }, [publicDestination]);
 
-  const handleNavigation = useCallback((rawIntent) => {
-    const result = resolveNavigationIntent(navigationConfig, rawIntent, window.location.origin);
-    if (result.type === "internal" || result.type === "internal-path") {
-      navigate(result.location, { replace: result.replace });
-      return true;
-    }
-    if (result.type === "external") {
-      if (result.target === "_blank") {
-        window.open(result.url, "_blank", "noopener,noreferrer");
-      } else {
-        window.location.assign(result.url);
+  const handleNavigation = useCallback(
+    (rawIntent) => {
+      const result = resolveNavigationIntent(navigationConfig, rawIntent, window.location.origin);
+      if (result.type === "internal" || result.type === "internal-path") {
+        navigate(result.location, { replace: result.replace });
+        return true;
       }
-      return true;
-    }
-    console.warn(`[Navigation] ${result.reason}`);
-    return false;
-  }, [navigate, navigationConfig]);
+      if (result.type === "external") {
+        if (result.target === "_blank") {
+          window.open(result.url, "_blank", "noopener,noreferrer");
+        } else {
+          window.location.assign(result.url);
+        }
+        return true;
+      }
+      console.warn(`[Navigation] ${result.reason}`);
+      return false;
+    },
+    [navigate, navigationConfig],
+  );
 
-  const handleTabChange = useCallback((target, item = {}) => (
-    handleNavigation({
-      destination: target,
-      targetWindow: item.target,
-    })
-  ), [handleNavigation]);
+  const handleTabChange = useCallback(
+    (target, item = {}) =>
+      handleNavigation({
+        destination: target,
+        targetWindow: item.target,
+      }),
+    [handleNavigation],
+  );
 
-  const mobileNavigationActions = useMemo(() => (
-    (mobileActionPanel.variant === "mobile-navigation" ? mobileActionPanel.items || [] : []).map((item) => ({
-      id: item.id,
-      label: item.label,
-      iconLeft: item.icon,
-      emphasis: item.emphasis,
-      disabled: item.disabled,
-      active: item.activeTargets.includes(destination.id),
-      onClick: item.action === "open-primary-action"
-        ? () => setPrimaryActionOpen(true)
-        : () => handleTabChange(item.target, item),
-    }))
-  ), [destination.id, handleTabChange, mobileActionPanel.items]);
+  const mobileNavigationActions = useMemo(
+    () =>
+      (mobileActionPanel.variant === "mobile-navigation" ? mobileActionPanel.items || [] : []).map(
+        (item) => ({
+          id: item.id,
+          label: item.label,
+          iconLeft: item.icon,
+          emphasis: item.emphasis,
+          disabled: item.disabled,
+          active: item.activeTargets.includes(destination.id),
+          onClick:
+            item.action === "open-primary-action"
+              ? () => setPrimaryActionOpen(true)
+              : () => handleTabChange(item.target, item),
+        }),
+      ),
+    [destination.id, handleTabChange, mobileActionPanel.items],
+  );
 
-  const handleGlobalSearch = useCallback(async (query, signal) => {
-    const response = await fetchData(appHeaderConfig.search?.endpoint || "/search", {
-      params: {
-        q: query,
-        limit: appHeaderConfig.search?.resultLimit || 6,
-      },
-      signal,
-    });
-    if (response?.status !== "success") {
-      return { status: response?.status || "error", message: response?.message };
-    }
-    return {
-      status: "success",
-      ...(response.componentData?.data || {}),
-    };
-  }, [appHeaderConfig.search]);
+  const handleGlobalSearch = useCallback(
+    async (query, signal) => {
+      const response = await fetchData(appHeaderConfig.search?.endpoint || "/search", {
+        params: {
+          q: query,
+          limit: appHeaderConfig.search?.resultLimit || 6,
+        },
+        signal,
+      });
+      if (response?.status !== "success") {
+        return { status: response?.status || "error", message: response?.message };
+      }
+      return {
+        status: "success",
+        ...(response.componentData?.data || {}),
+      };
+    },
+    [appHeaderConfig.search],
+  );
 
-  const handleGlobalSearchSelect = useCallback((result) => {
-    handleNavigation({
-      destination: result.destination,
-      path: result.path,
-      params: result.params,
-      query: result.query,
-      targetWindow: result.target,
-    });
-  }, [handleNavigation]);
+  const handleGlobalSearchSelect = useCallback(
+    (result) => {
+      handleNavigation({
+        destination: result.destination,
+        path: result.path,
+        params: result.params,
+        query: result.query,
+        targetWindow: result.target,
+      });
+    },
+    [handleNavigation],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -210,7 +255,11 @@ function AppShell() {
         if (!cancelled) {
           setSidebarConfig(sidebarResponse?.componentData || {});
           setAppHeaderConfig(headerResponse?.componentData || {});
-          setNavigationConfig(normalizeNavigationConfig(navigationResponse?.componentData || FALLBACK_NAVIGATION_CONFIG));
+          setNavigationConfig(
+            normalizeNavigationConfig(
+              navigationResponse?.componentData || FALLBACK_NAVIGATION_CONFIG,
+            ),
+          );
         }
       })
       .catch(() => {
@@ -219,7 +268,9 @@ function AppShell() {
           setAppHeaderConfig({});
         }
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -241,24 +292,29 @@ function AppShell() {
     setMobileSidebarOpen(false);
   }, [activeTab]);
 
-  const handleSidebarAction = useCallback(async (action) => {
-    if (action === "login") {
-      requireAuthentication();
-      return;
-    }
-    if (action !== "logout") return;
-    clearGuestSession();
-    try {
-      await fetchData("/auth/logout", { method: "POST" });
-    } catch {}
-    clearAuthBrowserState({ prefixes: ["appShellTREM", "travelstrem"] });
-    window.dispatchEvent(new CustomEvent("USER_LOGOUT", { detail: { reason: "logout" } }));
-    emitAuthEvent({ type: "LOGOUT" });
-    window.location.replace(buildGlobalAuthUrl({
-      app: "app-shell",
-      returnTo: `${window.location.origin}/?tab=overview`,
-    }));
-  }, [requireAuthentication]);
+  const handleSidebarAction = useCallback(
+    async (action) => {
+      if (action === "login") {
+        requireAuthentication();
+        return;
+      }
+      if (action !== "logout") return;
+      clearGuestSession();
+      try {
+        await fetchData("/auth/logout", { method: "POST" });
+      } catch {}
+      clearAuthBrowserState({ prefixes: ["appShellTREM", "travelstrem"] });
+      window.dispatchEvent(new CustomEvent("USER_LOGOUT", { detail: { reason: "logout" } }));
+      emitAuthEvent({ type: "LOGOUT" });
+      window.location.replace(
+        buildGlobalAuthUrl({
+          app: "app-shell",
+          returnTo: `${window.location.origin}/?tab=overview`,
+        }),
+      );
+    },
+    [requireAuthentication],
+  );
 
   if (loading) {
     return <GlobalLoader visible text="Loading App" />;
@@ -274,14 +330,17 @@ function AppShell() {
     );
   }
 
-  const remoteElement = destination.renderer === "trevio"
-    ? <TrevioApp embedded userSession={session} basename={destination.path} />
-    : destination.renderer === "trevista"
-      ? <TrevistaApp embedded userSession={session} />
-      : null;
+  const remoteElement =
+    destination.renderer === "trevio" ? (
+      <TrevioApp embedded userSession={session} basename={destination.path} />
+    ) : destination.renderer === "trevista" ? (
+      <TrevistaApp embedded userSession={session} />
+    ) : null;
 
   return (
-    <div className={`dash-layout${sidebarCollapsed ? " dash-layout--sidebar-collapsed" : ""}${mobileNavigationActions.length ? " dash-layout--mobile-action-panel" : ""}`}>
+    <div
+      className={`dash-layout${sidebarCollapsed ? " dash-layout--sidebar-collapsed" : ""}${mobileNavigationActions.length ? " dash-layout--mobile-action-panel" : ""}`}
+    >
       <SideBar
         config={sidebarConfig}
         activeId={activeTab}
@@ -315,7 +374,10 @@ function AppShell() {
           onPrimaryActionSelect={(item) => handleTabChange(item.target, item)}
         />
 
-        <div data-scroll-root className={`dash-content${isRemote ? " dash-content--remote" : ""}${isSupportScreen ? " dash-content--support" : ""}`}>
+        <div
+          data-scroll-root
+          className={`dash-content${isRemote ? " dash-content--remote" : ""}${isSupportScreen ? " dash-content--support" : ""}`}
+        >
           <ProtectedRoute
             allowGuest={publicDestination && guestMode}
             suppressPrompt={authPromptDismissed}
@@ -335,7 +397,11 @@ function AppShell() {
                 </Suspense>
               ) : (
                 <Suspense fallback={<GlobalLoader visible text="Loading customer product" />}>
-                  <AppShellPage productFilter={productFilter} activeTab={selectedTab} onTabChange={handleTabChange} />
+                  <AppShellPage
+                    productFilter={productFilter}
+                    activeTab={selectedTab}
+                    onTabChange={handleTabChange}
+                  />
                 </Suspense>
               )}
             </RemoteBoundary>
@@ -356,16 +422,22 @@ function AppShell() {
 }
 
 export default function App() {
+  // Backend-authored realtime toasts (e.g. enquiry created confirmation).
+  useEffect(() => initRealtimeNotifications(), []);
+
   return (
     <ThemeProvider>
       <AppShellProvider>
-        <SecurityMonitor>
-          <ScrollToTop />
-          <Routes>
-            <Route path="/*" element={<AppShell />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </SecurityMonitor>
+        <RealtimeProvider>
+          <Toaster />
+          <SecurityMonitor>
+            <ScrollToTop />
+            <Routes>
+              <Route path="/*" element={<AppShell />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </SecurityMonitor>
+        </RealtimeProvider>
       </AppShellProvider>
     </ThemeProvider>
   );

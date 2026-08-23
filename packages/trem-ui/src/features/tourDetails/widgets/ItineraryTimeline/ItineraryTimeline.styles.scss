@@ -45,11 +45,7 @@
   top: 0;
   bottom: 0;
   width: 2px;
-  background: linear-gradient(
-    to bottom,
-    var(--color-primary) 0%,
-    var(--border) 100%
-  );
+  background: linear-gradient(to bottom, var(--color-primary) 0%, var(--border) 100%);
   opacity: 0.5;
 }
 

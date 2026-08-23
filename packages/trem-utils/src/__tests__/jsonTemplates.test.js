@@ -9,14 +9,26 @@ describe("tour JSON template", () => {
     expect(tour.commercial.version).toBe("COMPONENTS_V1");
     expect(tour.commercial.components.length).toBeGreaterThan(0);
     expect(tour.commercial.packages).toHaveLength(3);
-    expect(tour.commercial.components.every((item) => Number.isSafeInteger(item.pricing.costAmountMinor))).toBe(true);
-    expect(tour.commercial.components.every((item) => Number.isSafeInteger(item.pricing.sellingAmountMinor))).toBe(true);
+    expect(
+      tour.commercial.components.every((item) =>
+        Number.isSafeInteger(item.pricing.costAmountMinor),
+      ),
+    ).toBe(true);
+    expect(
+      tour.commercial.components.every((item) =>
+        Number.isSafeInteger(item.pricing.sellingAmountMinor),
+      ),
+    ).toBe(true);
     expect(tour.status).toBe("draft");
     expect(tour.inventorySource).toBeUndefined();
     expect(tour.customConfig.allowCustomerCustomization).toBe(true);
     expect(tour.hotelOptions).toHaveLength(2);
     expect(tour.hotelOptions[0].stayKey).toBe("destination-stay-1");
-    expect(tour.hotelOptions[0].rooms.map((room) => room.packageKeys)).toEqual([["basic"], ["standard"], ["premium"]]);
+    expect(tour.hotelOptions[0].rooms.map((room) => room.packageKeys)).toEqual([
+      ["basic"],
+      ["standard"],
+      ["premium"],
+    ]);
     expect(tour.hotelOptions[1].stayKey).toBe(tour.hotelOptions[0].stayKey);
     expect(tour.hotelOptions[1].rooms.every((room) => room.packageKeys.length === 0)).toBe(true);
   });

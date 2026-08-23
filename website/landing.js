@@ -55,9 +55,13 @@
     progress.style.setProperty("--scroll-progress", `${percent}%`);
     header?.classList.toggle("is-scrolled", window.scrollY > 12);
   };
-  window.addEventListener("scroll", () => {
-    if (!scrollFrame) scrollFrame = window.requestAnimationFrame(updateScrollState);
-  }, { passive: true });
+  window.addEventListener(
+    "scroll",
+    () => {
+      if (!scrollFrame) scrollFrame = window.requestAnimationFrame(updateScrollState);
+    },
+    { passive: true },
+  );
   window.addEventListener("resize", updateScrollState, { passive: true });
   updateScrollState();
 
@@ -71,13 +75,16 @@
 
   if (!reducedMotion && "IntersectionObserver" in window) {
     document.documentElement.classList.add("motion-ready");
-    const revealObserver = new IntersectionObserver((entries, observer) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-        entry.target.classList.add("is-visible");
-        observer.unobserve(entry.target);
-      });
-    }, { rootMargin: "0px 0px -8%", threshold: 0.08 });
+    const revealObserver = new IntersectionObserver(
+      (entries, observer) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add("is-visible");
+          observer.unobserve(entry.target);
+        });
+      },
+      { rootMargin: "0px 0px -8%", threshold: 0.08 },
+    );
     revealItems.forEach((item) => revealObserver.observe(item));
   } else {
     revealItems.forEach((item) => item.classList.add("is-visible"));
@@ -86,15 +93,21 @@
   const sectionLinks = [...document.querySelectorAll('a[data-link][href^="#"]')];
   const sections = [...document.querySelectorAll("main section[id]")];
   if ("IntersectionObserver" in window) {
-    const sectionObserver = new IntersectionObserver((entries) => {
-      const current = entries
-        .filter((entry) => entry.isIntersecting)
-        .sort((first, second) => second.intersectionRatio - first.intersectionRatio)[0];
-      if (!current) return;
-      sectionLinks.forEach((link) => {
-        link.classList.toggle("active-section-link", link.getAttribute("href") === `#${current.target.id}`);
-      });
-    }, { rootMargin: "-25% 0px -60%", threshold: [0.05, 0.25, 0.5] });
+    const sectionObserver = new IntersectionObserver(
+      (entries) => {
+        const current = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((first, second) => second.intersectionRatio - first.intersectionRatio)[0];
+        if (!current) return;
+        sectionLinks.forEach((link) => {
+          link.classList.toggle(
+            "active-section-link",
+            link.getAttribute("href") === `#${current.target.id}`,
+          );
+        });
+      },
+      { rootMargin: "-25% 0px -60%", threshold: [0.05, 0.25, 0.5] },
+    );
     sections.forEach((section) => sectionObserver.observe(section));
   }
 

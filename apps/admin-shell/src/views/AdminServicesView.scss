@@ -256,7 +256,10 @@
   color: var(--muted);
   font-size: 11px;
 
-  strong { color: var(--text); font-weight: $font-semibold; }
+  strong {
+    color: var(--text);
+    font-weight: $font-semibold;
+  }
 }
 
 .asv__card-tags {

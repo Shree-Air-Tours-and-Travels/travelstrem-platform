@@ -4,7 +4,11 @@ export const getBuilderDefinition = async (req, res) => {
         const result = await getBuilderOverview(req);
         return res.json(result);
     } catch (error) {
-        return res.status(error.status || 400).json({ status: "error", message: error.message, ...(error.details ? { errors: error.details } : {}) });
+        return res.status(error.status || 400).json({
+            status: "error",
+            message: error.message,
+            ...(error.details ? { errors: error.details } : {}),
+        });
     }
 };
 
@@ -17,7 +21,11 @@ export const getBuilderStep = async (req, res) => {
         });
         return res.json({ status: "success", builder: result.builder, ...result });
     } catch (error) {
-        return res.status(error.status || 400).json({ status: "error", message: error.message, ...(error.details ? { errors: error.details } : {}) });
+        return res.status(error.status || 400).json({
+            status: "error",
+            message: error.message,
+            ...(error.details ? { errors: error.details } : {}),
+        });
     }
 };
 
@@ -27,7 +35,11 @@ export const getBuilderTemplate = async (req, res) => {
         const result = getBuilderTemplatePayload({ stepKey: req.query.stepKey || null });
         return res.json({ status: "success", ...result });
     } catch (error) {
-        return res.status(error.status || 400).json({ status: "error", message: error.message, ...(error.details ? { errors: error.details } : {}) });
+        return res.status(error.status || 400).json({
+            status: "error",
+            message: error.message,
+            ...(error.details ? { errors: error.details } : {}),
+        });
     }
 };
 
@@ -40,7 +52,11 @@ export const updateBuilderPosition = async (req, res) => {
         });
         return res.json({ status: "success", ...result });
     } catch (error) {
-        return res.status(error.status || 400).json({ status: "error", message: error.message, ...(error.details ? { errors: error.details } : {}) });
+        return res.status(error.status || 400).json({
+            status: "error",
+            message: error.message,
+            ...(error.details ? { errors: error.details } : {}),
+        });
     }
 };
 
@@ -64,7 +80,11 @@ export const saveBuilderStep = async (req, res) => {
             ...(result.data ? { data: result.data } : {}),
         });
     } catch (error) {
-        return res.status(error.status || 400).json({ status: "error", message: error.message, ...(error.details ? { errors: error.details } : {}) });
+        return res.status(error.status || 400).json({
+            status: "error",
+            message: error.message,
+            ...(error.details ? { errors: error.details } : {}),
+        });
     }
 };
 

@@ -27,7 +27,9 @@ export default function PlanCard({
     comingSoon ? "trem-plan-card--coming-soon" : "",
     `trem-plan-card--${tone}`,
     className,
-  ].filter(Boolean).join(" ");
+  ]
+    .filter(Boolean)
+    .join(" ");
   const content = (
     <>
       <span className="trem-plan-card__media">

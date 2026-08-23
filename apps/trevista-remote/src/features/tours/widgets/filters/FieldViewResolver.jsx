@@ -11,7 +11,7 @@ export default function FieldViewResolver({
   getOptionList,
   maxGuests = { adults: 10, children: 10, infants: 4 },
   dateRange = {},
-  error = null
+  error = null,
 }) {
   if (!field) return null;
 
@@ -52,7 +52,11 @@ export default function FieldViewResolver({
             max={max}
             error={error || undefined}
           />
-          {error && <div className="filters__fieldError" id={describedBy}>{error}</div>}
+          {error && (
+            <div className="filters__fieldError" id={describedBy}>
+              {error}
+            </div>
+          )}
         </div>
       );
     }
@@ -83,7 +87,11 @@ export default function FieldViewResolver({
             onChange={(next) => onInput(name, "select")(next)}
             error={error || undefined}
           />
-          {error && <div className="filters__fieldError" id={describedBy}>{error}</div>}
+          {error && (
+            <div className="filters__fieldError" id={describedBy}>
+              {error}
+            </div>
+          )}
         </div>
       );
     }
@@ -103,7 +111,11 @@ export default function FieldViewResolver({
             searchable
             error={error || undefined}
           />
-          {error && <div className="filters__fieldError" id={describedBy}>{error}</div>}
+          {error && (
+            <div className="filters__fieldError" id={describedBy}>
+              {error}
+            </div>
+          )}
         </div>
       );
     }
@@ -122,7 +134,11 @@ export default function FieldViewResolver({
               error={error || undefined}
             />
           </label>
-          {error && <div className="filters__fieldError" id={describedBy}>{error}</div>}
+          {error && (
+            <div className="filters__fieldError" id={describedBy}>
+              {error}
+            </div>
+          )}
         </div>
       );
 
@@ -130,10 +146,21 @@ export default function FieldViewResolver({
       return (
         <div className="fv-wrapper">
           <label className="filters__label filters__checkbox" key={name}>
-            <input className={`filters__input ${error ? "filters__input--error" : ""}`} type="checkbox" checked={!!inputValue} onChange={onInput(name, "checkbox")} aria-invalid={!!error} aria-describedby={describedBy} />
+            <input
+              className={`filters__input ${error ? "filters__input--error" : ""}`}
+              type="checkbox"
+              checked={!!inputValue}
+              onChange={onInput(name, "checkbox")}
+              aria-invalid={!!error}
+              aria-describedby={describedBy}
+            />
             <span className="filters__labelText">{label}</span>
           </label>
-          {error && <div className="filters__fieldError" id={describedBy}>{error}</div>}
+          {error && (
+            <div className="filters__fieldError" id={describedBy}>
+              {error}
+            </div>
+          )}
         </div>
       );
 
@@ -150,7 +177,11 @@ export default function FieldViewResolver({
             onChange={onInput(name, "text")}
             error={error || undefined}
           />
-          {error && <div className="filters__fieldError" id={describedBy}>{error}</div>}
+          {error && (
+            <div className="filters__fieldError" id={describedBy}>
+              {error}
+            </div>
+          )}
         </div>
       );
   }
@@ -164,5 +195,5 @@ FieldViewResolver.propTypes = {
   getOptionList: PropTypes.func.isRequired,
   maxGuests: PropTypes.object,
   dateRange: PropTypes.object,
-  error: PropTypes.string
+  error: PropTypes.string,
 };

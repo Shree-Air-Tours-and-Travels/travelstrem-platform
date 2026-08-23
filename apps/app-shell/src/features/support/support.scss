@@ -46,7 +46,7 @@
 .support-page__intro h1 {
   font-size: clamp(1.65rem, 3vw, 2.2rem);
   line-height: 1.12;
-  letter-spacing: -.025em;
+  letter-spacing: -0.025em;
 }
 
 .support-page__intro p {
@@ -89,7 +89,7 @@
 .support-section__heading h2,
 .support-policy h2 {
   font-size: $font-size-lg;
-  letter-spacing: -.012em;
+  letter-spacing: -0.012em;
 }
 
 .support-list,
@@ -140,7 +140,7 @@
   box-shadow: var(--shadow-lg);
 }
 
-.support-search__results>p {
+.support-search__results > p {
   padding: $space-3;
   color: var(--muted);
 }
@@ -165,8 +165,8 @@
   font-size: $font-size-sm;
 }
 
-.support-review>div,
-.support-ticket-summary>div {
+.support-review > div,
+.support-ticket-summary > div {
   display: grid;
   gap: $space-1;
   padding: $space-3 0;
@@ -178,7 +178,7 @@
   color: var(--muted);
   font-size: $font-size-xs;
   text-transform: uppercase;
-  letter-spacing: .04em;
+  letter-spacing: 0.04em;
 }
 
 .support-review p {
@@ -217,7 +217,7 @@
   background: var(--surface);
 }
 
-.support-ticket-summary>div {
+.support-ticket-summary > div {
   border: 0;
   padding: 0;
 }
@@ -304,7 +304,11 @@
   overflow: hidden;
   padding: $space-4;
   border-radius: $radius-lg;
-  background: linear-gradient(145deg, var(--surface), color-mix(in srgb, var(--color-primary) 6%, var(--surface)));
+  background: linear-gradient(
+    145deg,
+    var(--surface),
+    color-mix(in srgb, var(--color-primary) 6%, var(--surface))
+  );
 }
 
 .support-service-card::after {
@@ -327,16 +331,24 @@
   font-size: $font-size-md;
 }
 
-.support-service-card>svg {
+.support-service-card > svg {
   margin-top: 11px;
 }
 
 .support-service-card--secondary {
-  background: linear-gradient(145deg, var(--surface), color-mix(in srgb, #8b5cf6 9%, var(--surface)));
+  background: linear-gradient(
+    145deg,
+    var(--surface),
+    color-mix(in srgb, #8b5cf6 9%, var(--surface))
+  );
 }
 
 .support-service-card--tertiary {
-  background: linear-gradient(145deg, var(--surface), color-mix(in srgb, #0891b2 8%, var(--surface)));
+  background: linear-gradient(
+    145deg,
+    var(--surface),
+    color-mix(in srgb, #0891b2 8%, var(--surface))
+  );
 }
 
 @media (max-width: $breakpoint-md) {
@@ -413,7 +425,7 @@
     align-self: stretch;
   }
 
-  .support-service-card>svg {
+  .support-service-card > svg {
     position: absolute;
     top: $space-3;
     right: $space-3;

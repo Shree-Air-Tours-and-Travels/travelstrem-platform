@@ -17,10 +17,11 @@ const FIELD_ROWS = [
   ["taxes", "Taxes & fees"],
 ];
 
-const normalizeKey = (value) => String(value || "")
-  .trim()
-  .toLowerCase()
-  .replace(/[^a-z0-9]+/g, "");
+const normalizeKey = (value) =>
+  String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
 
 const formatMoney = (value, currency = "INR") => {
   try {
@@ -56,14 +57,17 @@ const normalizeQuoteRows = (quote = {}) => {
     }));
 
   const itemKeys = new Set(itemRows.flatMap((row) => [row.codeKey, row.labelKey]).filter(Boolean));
-  const fieldRows = FIELD_ROWS
-    .filter(([field, label]) => Number(quote[field] || 0) !== 0 && !itemKeys.has(normalizeKey(field)) && !itemKeys.has(normalizeKey(label)))
-    .map(([field, label]) => ({
-      id: field,
-      label,
-      value: formatMoney(quote[field], quote.currency),
-      rawAmount: Number(quote[field] || 0),
-    }));
+  const fieldRows = FIELD_ROWS.filter(
+    ([field, label]) =>
+      Number(quote[field] || 0) !== 0 &&
+      !itemKeys.has(normalizeKey(field)) &&
+      !itemKeys.has(normalizeKey(label)),
+  ).map(([field, label]) => ({
+    id: field,
+    label,
+    value: formatMoney(quote[field], quote.currency),
+    rawAmount: Number(quote[field] || 0),
+  }));
 
   return [...fieldRows, ...itemRows].map((row) => ({
     id: row.id,
@@ -89,27 +93,34 @@ export default function QuoteDisplay({
   const currency = quote.currency || "INR";
   const rows = normalizeQuoteRows(quote);
   const adjustments = [
-    Number(quote.discount || 0) > 0 ? {
-      id: "discount",
-      label: "Discount",
-      value: `-${formatMoney(quote.discount, currency)}`,
-      tone: "negative",
-    } : null,
-    Number(quote.couponDiscount || 0) > 0 ? {
-      id: "coupon",
-      label: "Coupon",
-      value: `-${formatMoney(quote.couponDiscount, currency)}`,
-      tone: "negative",
-    } : null,
+    Number(quote.discount || 0) > 0
+      ? {
+          id: "discount",
+          label: "Discount",
+          value: `-${formatMoney(quote.discount, currency)}`,
+          tone: "negative",
+        }
+      : null,
+    Number(quote.couponDiscount || 0) > 0
+      ? {
+          id: "coupon",
+          label: "Coupon",
+          value: `-${formatMoney(quote.couponDiscount, currency)}`,
+          tone: "negative",
+        }
+      : null,
   ].filter(Boolean);
 
-  const footerActions = showActions && isPending ? [
-    { id: "decline", label: "Decline", onClick: onReject },
-    { id: "changes", label: "Request Changes", onClick: onRequestChanges },
-    { id: "accept", label: "Accept Quote", variant: "primary", onClick: onAccept },
-  ] : showActions && isRejected ? [
-    { id: "changes", label: "Request Changes", onClick: onRequestChanges },
-  ] : [];
+  const footerActions =
+    showActions && isPending
+      ? [
+          { id: "decline", label: "Decline", onClick: onReject },
+          { id: "changes", label: "Request Changes", onClick: onRequestChanges },
+          { id: "accept", label: "Accept Quote", variant: "primary", onClick: onAccept },
+        ]
+      : showActions && isRejected
+        ? [{ id: "changes", label: "Request Changes", onClick: onRequestChanges }]
+        : [];
 
   const hasChangeRequest = quote.changeRequest && quote.changeRequest.requestedAt;
   const statusBanner = isAccepted
@@ -143,7 +154,9 @@ export default function QuoteDisplay({
       badge={`Version ${quote.version || 1}`}
       headerMeta={quote.expirationDate ? `Valid until ${formatDate(quote.expirationDate)}` : ""}
       items={rows}
-      sections={adjustments.length ? [{ id: "adjustments", title: "Adjustments", items: adjustments }] : []}
+      sections={
+        adjustments.length ? [{ id: "adjustments", title: "Adjustments", items: adjustments }] : []
+      }
       totals={totals}
       text={quote.notes || ""}
       footerActions={footerActions}

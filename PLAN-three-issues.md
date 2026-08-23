@@ -19,9 +19,11 @@
 ## Issue 2: Unify Timeline Across Admin/Agent/Customer
 
 ### Approach
+
 Define a fixed set of milestone steps (matching the Trevista lifecycle) and derive progress from `booking.status`. Replace the custom `STATUS_PHASES` progress bars in admin/agent with the shared `TimelineStepper` component.
 
 ### Milestone Steps
+
 ```
 1. Enquiry Sent     — statuses: DRAFT, QUOTE_REQUESTED
 2. Quote Received   — statuses: UNDER_REVIEW, QUOTE_READY, QUOTE_SENT
@@ -46,6 +48,7 @@ Define a fixed set of milestone steps (matching the Trevista lifecycle) and deri
 ## Issue 3: Add "Add Traveller Details" After Quote Acceptance
 
 ### Decisions (per real-world standards)
+
 - **Fields**: name, age, nationality, passport number (standard international booking fields; gender and dateOfBirth optional)
 - **Multiple travellers**: Yes — customer can add one traveller at a time with an "Add another" button, and a "Done" button to finish
 - **Visual**: Prominent CTA card with a primary button, shown after acceptance (status `CUSTOMER_ACCEPTED` or `PAYMENT_PENDING`), before the payment section

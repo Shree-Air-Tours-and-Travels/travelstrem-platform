@@ -7,12 +7,21 @@ export default function TimelineStepper({ steps = [], className = "" }) {
   return (
     <div className={`timeline-stepper ${className}`}>
       {steps.map((step, idx) => (
-        <div key={step.key || idx} className={`timeline-stepper__item timeline-stepper__item--${step.status}`}>
+        <div
+          key={step.key || idx}
+          className={`timeline-stepper__item timeline-stepper__item--${step.status}`}
+        >
           <div className="timeline-stepper__marker">
             <span className="timeline-stepper__dot">
               {step.status === "completed" && (
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <path d="M2.5 6L5 8.5L9.5 3.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  <path
+                    d="M2.5 6L5 8.5L9.5 3.5"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               )}
             </span>

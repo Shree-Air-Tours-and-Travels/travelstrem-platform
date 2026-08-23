@@ -3,7 +3,13 @@ import { getConfiguredApiBase } from "../core/config/portalEnvironment";
 import { registerAuthHeaderClearer } from "@packages/trem-events";
 import { setFetchDataApiClient } from "@packages/trem-utils";
 import { setupRefreshInterceptor } from "@packages/trem-auth-core";
-import { getCsrfToken, detectScriptInjection, detectPrivacyBreaches, auditLog_event, setCsrfBaseUrl } from "./security";
+import {
+  getCsrfToken,
+  detectScriptInjection,
+  detectPrivacyBreaches,
+  auditLog_event,
+  setCsrfBaseUrl,
+} from "./security";
 
 function normalizeBase(raw) {
   if (raw == null || raw === "") return raw;
@@ -76,7 +82,7 @@ api.interceptors.request.use(
     }
     return cfg;
   },
-  (err) => Promise.reject(err)
+  (err) => Promise.reject(err),
 );
 
 setupRefreshInterceptor(api, AUTH_STORAGE_PREFIX);

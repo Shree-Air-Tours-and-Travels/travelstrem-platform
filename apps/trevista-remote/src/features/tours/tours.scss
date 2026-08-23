@@ -11,8 +11,7 @@
   min-height: 100vh;
   padding: 0 var(--tours-page-gutter) var(--tours-page-gutter);
   background:
-    linear-gradient(180deg, var(--primary-softer), var(--color-transparent) 320px),
-    var(--page-bg);
+    linear-gradient(180deg, var(--primary-softer), var(--color-transparent) 320px), var(--page-bg);
   color: var(--text);
 
   &--home {
@@ -76,7 +75,6 @@
       display: flex;
       flex-direction: column;
       gap: 0.35rem;
-
     }
 
     &__right {
@@ -405,7 +403,9 @@
     border: 1px solid var(--border);
     border-radius: 10px;
     background: var(--surface);
-    transition: border-color 160ms ease, box-shadow 160ms ease;
+    transition:
+      border-color 160ms ease,
+      box-shadow 160ms ease;
 
     &:focus-within {
       border-color: var(--color-primary);
@@ -536,7 +536,6 @@
     }
   }
 
-
   &__message {
     margin-bottom: 1rem;
     padding: 1rem;
@@ -584,7 +583,12 @@
       position: absolute;
       inset: 0;
       transform: translateX(-100%);
-      background: linear-gradient(90deg, var(--color-transparent), var(--surface-shimmer), var(--color-transparent));
+      background: linear-gradient(
+        90deg,
+        var(--color-transparent),
+        var(--surface-shimmer),
+        var(--color-transparent)
+      );
       animation: tours-clean-shimmer 1.2s infinite linear;
     }
   }
@@ -660,19 +664,7 @@
     }
 
     &__card {
-
-
-
-
-
-
-
-
-
-
-
     }
-
 
     &__loading-card:nth-child(n + 2) {
       display: none;
@@ -736,7 +728,6 @@
       width: 100%;
     }
 
-
     &__loading-media {
       height: 160px;
     }
@@ -751,8 +742,6 @@
   .tours-page {
     --tours-page-gutter: 0.75rem;
     --tours-crumb-height: 48px;
-    padding-bottom: calc(7.5rem + env(safe-area-inset-bottom, 0px));
-    scroll-padding-bottom: calc(7.5rem + env(safe-area-inset-bottom, 0px));
 
     &__inner {
       margin-top: 0.85rem;
@@ -843,11 +832,7 @@
     }
 
     &__card {
-
-
-
     }
-
 
     &__sort-sheet {
       display: flex;

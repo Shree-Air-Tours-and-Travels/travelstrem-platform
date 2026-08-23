@@ -20,7 +20,9 @@ export default function PlanCards({
         "trem-plan-cards",
         hideUnavailableOnMobile ? "trem-plan-cards--hide-unavailable-mobile" : "",
         className,
-      ].filter(Boolean).join(" ")}
+      ]
+        .filter(Boolean)
+        .join(" ")}
       aria-label={ariaLabel || title}
       style={{ "--trem-plan-cards-columns": columns }}
     >
@@ -36,24 +38,26 @@ export default function PlanCards({
 
 PlanCards.propTypes = {
   title: PropTypes.string.isRequired,
-  items: PropTypes.arrayOf(PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    title: PropTypes.string.isRequired,
-    description: PropTypes.string,
-    productName: PropTypes.string,
-    image: PropTypes.string.isRequired,
-    imageAlt: PropTypes.string,
-    href: PropTypes.string,
-    target: PropTypes.string,
-    rel: PropTypes.string,
-    ariaLabel: PropTypes.string,
-    disabled: PropTypes.bool,
-    hide: PropTypes.bool,
-    comingSoon: PropTypes.bool,
-    comingSoonLabel: PropTypes.string,
-    mobileIcon: PropTypes.string,
-    tone: PropTypes.string,
-  })),
+  items: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      title: PropTypes.string.isRequired,
+      description: PropTypes.string,
+      productName: PropTypes.string,
+      image: PropTypes.string.isRequired,
+      imageAlt: PropTypes.string,
+      href: PropTypes.string,
+      target: PropTypes.string,
+      rel: PropTypes.string,
+      ariaLabel: PropTypes.string,
+      disabled: PropTypes.bool,
+      hide: PropTypes.bool,
+      comingSoon: PropTypes.bool,
+      comingSoonLabel: PropTypes.string,
+      mobileIcon: PropTypes.string,
+      tone: PropTypes.string,
+    }),
+  ),
   ariaLabel: PropTypes.string,
   className: PropTypes.string,
   columns: PropTypes.number,

@@ -8,14 +8,22 @@ describe("FloatingActionBar mobile navigation variant", () => {
 
   it("renders all configured actions and exposes the active destination", () => {
     const onNewBooking = vi.fn();
-    render(<FloatingActionBar
-      variant="mobile-navigation"
-      sheetTitle="Primary navigation"
-      actions={[
-        { id: "home", label: "Home", iconLeft: "home", active: true },
-        { id: "new", label: "New booking", iconLeft: "plus", emphasis: true, onClick: onNewBooking },
-      ]}
-    />);
+    render(
+      <FloatingActionBar
+        variant="mobile-navigation"
+        sheetTitle="Primary navigation"
+        actions={[
+          { id: "home", label: "Home", iconLeft: "home", active: true },
+          {
+            id: "new",
+            label: "New booking",
+            iconLeft: "plus",
+            emphasis: true,
+            onClick: onNewBooking,
+          },
+        ]}
+      />,
+    );
 
     expect(screen.getByRole("navigation", { name: "Primary navigation" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Home" }).getAttribute("aria-current")).toBe("page");
@@ -34,8 +42,9 @@ describe("FloatingActionBar mobile navigation variant", () => {
       </div>,
     );
 
-    expect(container.firstChild.style.getPropertyValue("--dash-mobile-action-panel-rendered-height"))
-      .toBe("86px");
+    expect(
+      container.firstChild.style.getPropertyValue("--dash-mobile-action-panel-rendered-height"),
+    ).toBe("86px");
   });
 });
 
@@ -46,37 +55,45 @@ describe("FloatingActionBar action overflow", () => {
   });
 
   it("publishes enough clearance for viewport utilities to sit above it", () => {
-    Object.defineProperty(window, "innerHeight", { configurable: true, writable: true, value: 900 });
+    Object.defineProperty(window, "innerHeight", {
+      configurable: true,
+      writable: true,
+      value: 900,
+    });
     vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({
       top: 700,
       height: 80,
     });
 
-    const { unmount } = render(<FloatingActionBar
-      actions={[{ label: "Continue", variant: "primary" }]}
-    />);
+    const { unmount } = render(
+      <FloatingActionBar actions={[{ label: "Continue", variant: "primary" }]} />,
+    );
 
-    expect(document.documentElement.style.getPropertyValue("--trem-floating-action-clearance"))
-      .toBe("212px");
+    expect(
+      document.documentElement.style.getPropertyValue("--trem-floating-action-clearance"),
+    ).toBe("212px");
     unmount();
-    expect(document.documentElement.style.getPropertyValue("--trem-floating-action-clearance"))
-      .toBe("");
+    expect(
+      document.documentElement.style.getPropertyValue("--trem-floating-action-clearance"),
+    ).toBe("");
   });
 
   it("keeps one action on each side and moves secondary actions into a bottom sheet", () => {
     Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 800 });
     const onPaste = vi.fn();
-    const { container } = render(<FloatingActionBar
-      align="left-right"
-      sheetTitle="Builder actions"
-      actions={[
-        { label: "Back", variant: "outline", align: "left" },
-        { label: "Exit", variant: "ghost", align: "left" },
-        { label: "Paste JSON", variant: "ghost", align: "right", onClick: onPaste },
-        { label: "Cancel", variant: "ghost", align: "right" },
-        { label: "Save & continue", variant: "primary", align: "right", primary: true },
-      ]}
-    />);
+    const { container } = render(
+      <FloatingActionBar
+        align="left-right"
+        sheetTitle="Builder actions"
+        actions={[
+          { label: "Back", variant: "outline", align: "left" },
+          { label: "Exit", variant: "ghost", align: "left" },
+          { label: "Paste JSON", variant: "ghost", align: "right", onClick: onPaste },
+          { label: "Cancel", variant: "ghost", align: "right" },
+          { label: "Save & continue", variant: "primary", align: "right", primary: true },
+        ]}
+      />,
+    );
 
     expect(screen.getByRole("button", { name: "Back" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Save & continue" })).toBeTruthy();
@@ -92,16 +109,22 @@ describe("FloatingActionBar action overflow", () => {
   });
 
   it("shows every action without overflow above the mini-tablet breakpoint", () => {
-    Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 1024 });
-    render(<FloatingActionBar
-      align="left-right"
-      actions={[
-        { label: "Exit", variant: "ghost", align: "left" },
-        { label: "Paste JSON", variant: "ghost", align: "right", overflowMobile: true },
-        { label: "Cancel", variant: "ghost", align: "right", overflowMobile: true },
-        { label: "Save & continue", variant: "primary", align: "right", primary: true },
-      ]}
-    />);
+    Object.defineProperty(window, "innerWidth", {
+      configurable: true,
+      writable: true,
+      value: 1024,
+    });
+    render(
+      <FloatingActionBar
+        align="left-right"
+        actions={[
+          { label: "Exit", variant: "ghost", align: "left" },
+          { label: "Paste JSON", variant: "ghost", align: "right", overflowMobile: true },
+          { label: "Cancel", variant: "ghost", align: "right", overflowMobile: true },
+          { label: "Save & continue", variant: "primary", align: "right", primary: true },
+        ]}
+      />,
+    );
 
     expect(screen.getByRole("button", { name: "Exit" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Paste JSON" })).toBeTruthy();

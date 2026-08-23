@@ -35,7 +35,12 @@ export default function ConfirmOverlay({
 
   if (mobile) {
     return (
-      <BottomSheet open={open} onClose={onClose} title={title} closeOnOutsideClick={closeOnOutsideClick}>
+      <BottomSheet
+        open={open}
+        onClose={onClose}
+        title={title}
+        closeOnOutsideClick={closeOnOutsideClick}
+      >
         <div className={`trem-confirm ${className}`.trim()}>
           {note && (
             <div className="trem-confirm__note">
@@ -44,8 +49,20 @@ export default function ConfirmOverlay({
             </div>
           )}
           <div className="trem-confirm__actions">
-            <Button variant="outline" text={cancelLabel} onClick={onClose} primaryClassName="trem-confirm__btn trem-confirm__btn--cancel" />
-            <Button variant="solid" color="primary" text={confirmLabel} onClick={onConfirm} disabled={confirmDisabled} primaryClassName="trem-confirm__btn trem-confirm__btn--confirm" />
+            <Button
+              variant="outline"
+              text={cancelLabel}
+              onClick={onClose}
+              primaryClassName="trem-confirm__btn trem-confirm__btn--cancel"
+            />
+            <Button
+              variant="solid"
+              color="primary"
+              text={confirmLabel}
+              onClick={onConfirm}
+              disabled={confirmDisabled}
+              primaryClassName="trem-confirm__btn trem-confirm__btn--confirm"
+            />
           </div>
         </div>
       </BottomSheet>
@@ -53,21 +70,47 @@ export default function ConfirmOverlay({
   }
 
   return (
-    <ModalShell open={open} className={className} dialogClassName="trem-confirm-overlay__dialog" label={title} closeOnOutsideClick={closeOnOutsideClick} onClose={onClose}>
-        <Button variant="text" isCircular iconLeft="x" onClick={onClose} aria-label="Close" primaryClassName="trem-confirm-overlay__close" />
-        <div className="trem-confirm-overlay__header">
-          {icon && <Icon name={icon} size={24} />}
-          <h3>{title}</h3>
+    <ModalShell
+      open={open}
+      className={className}
+      dialogClassName="trem-confirm-overlay__dialog"
+      label={title}
+      closeOnOutsideClick={closeOnOutsideClick}
+      onClose={onClose}
+    >
+      <Button
+        variant="text"
+        isCircular
+        iconLeft="x"
+        onClick={onClose}
+        aria-label="Close"
+        primaryClassName="trem-confirm-overlay__close"
+      />
+      <div className="trem-confirm-overlay__header">
+        {icon && <Icon name={icon} size={24} />}
+        <h3>{title}</h3>
+      </div>
+      {note && (
+        <div className="trem-confirm-overlay__note">
+          <p>{note}</p>
         </div>
-        {note && (
-          <div className="trem-confirm-overlay__note">
-            <p>{note}</p>
-          </div>
-        )}
-        <div className="trem-confirm-overlay__actions">
-          <Button variant="outline" text={cancelLabel} onClick={onClose} primaryClassName="trem-confirm__btn trem-confirm__btn--cancel" />
-          <Button variant="solid" color="primary" text={confirmLabel} onClick={onConfirm} disabled={confirmDisabled} primaryClassName="trem-confirm__btn trem-confirm__btn--confirm" />
-        </div>
+      )}
+      <div className="trem-confirm-overlay__actions">
+        <Button
+          variant="outline"
+          text={cancelLabel}
+          onClick={onClose}
+          primaryClassName="trem-confirm__btn trem-confirm__btn--cancel"
+        />
+        <Button
+          variant="solid"
+          color="primary"
+          text={confirmLabel}
+          onClick={onConfirm}
+          disabled={confirmDisabled}
+          primaryClassName="trem-confirm__btn trem-confirm__btn--confirm"
+        />
+      </div>
     </ModalShell>
   );
 }

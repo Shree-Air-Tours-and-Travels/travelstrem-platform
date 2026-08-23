@@ -17,8 +17,7 @@ export const bookingBenefits = [
     id: "verified-partners",
     icon: "shieldCheck",
     title: "Verified partners",
-    description:
-      "Hotels, guides, transfers, and experience partners are validated before listing.",
+    description: "Hotels, guides, transfers, and experience partners are validated before listing.",
   },
   {
     id: "manage-after-booking",

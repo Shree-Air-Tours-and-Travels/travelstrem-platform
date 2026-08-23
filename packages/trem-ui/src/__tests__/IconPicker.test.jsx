@@ -25,7 +25,9 @@ describe("IconPicker", () => {
 
   it("allows an existing selection to be cleared", () => {
     const onChange = vi.fn();
-    render(<IconPicker value="map" options={[{ value: "map", label: "Map" }]} onChange={onChange} />);
+    render(
+      <IconPicker value="map" options={[{ value: "map", label: "Map" }]} onChange={onChange} />,
+    );
 
     const selected = screen.getByRole("option", { name: "Map" });
     expect(selected).toHaveAttribute("aria-selected", "true");

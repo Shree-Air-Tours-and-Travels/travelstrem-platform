@@ -4,9 +4,7 @@
   &__similar-section {
     overflow: hidden;
     border-color: var(--primary-focus);
-    background:
-      linear-gradient(135deg, var(--primary-softer), transparent 44%),
-      var(--surface);
+    background: linear-gradient(135deg, var(--primary-softer), transparent 44%), var(--surface);
 
     .tour-detail__section-body {
       display: flex;
@@ -140,12 +138,15 @@
       font-weight: $font-medium;
     }
 
-    svg { animation: similar-scroll-hint 1.5s ease-in-out infinite; }
+    svg {
+      animation: similar-scroll-hint 1.5s ease-in-out infinite;
+    }
   }
 }
 
 @keyframes similar-scroll-hint {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateX(0);
   }
   50% {
@@ -180,8 +181,12 @@
       height: 38px;
     }
 
-    &__similar-heading p { font-size: 0.78rem; }
-    &__similar-count { display: none; }
+    &__similar-heading p {
+      font-size: 0.78rem;
+    }
+    &__similar-count {
+      display: none;
+    }
 
     &__similar-card {
       flex: 0 0 100%;

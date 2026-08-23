@@ -27,19 +27,23 @@ export default function FeaturedHolidayPackages({ widgetData, onTourEnquiry }) {
     overlay: widgetProps.cardOverlay || "strong",
   };
 
-  const { packages, loading, error, retry } = useFeaturedHolidayPackages(widgetData?.data?.packages);
+  const { packages, loading, error, retry } = useFeaturedHolidayPackages(
+    widgetData?.data?.packages,
+  );
   const destinations = mapHolidayPackagesToDestinationCards(packages, { limit });
-  const emptyActions = configuredActions.map((action) => ({
-    ...action,
-    label: labels[action.labelRef] || "",
-    onClick: action.behavior === "openTourEnquiry" ? onTourEnquiry : undefined,
-  })).filter((action) => action.label);
+  const emptyActions = configuredActions
+    .map((action) => ({
+      ...action,
+      label: labels[action.labelRef] || "",
+      onClick: action.behavior === "openTourEnquiry" ? onTourEnquiry : undefined,
+    }))
+    .filter((action) => action.label);
 
   const { isFavorited, toggleFavorite } = useFavoritesContext();
 
   const handleFavorite = (card) => {
     const raw = (Array.isArray(packages) ? packages : []).find(
-      (pkg) => (pkg._id || pkg.id) === card.id
+      (pkg) => (pkg._id || pkg.id) === card.id,
     );
     if (raw) toggleFavorite(raw);
   };

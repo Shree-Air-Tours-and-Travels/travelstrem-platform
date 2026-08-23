@@ -19,17 +19,17 @@ The engine is independent of Express, request/response objects, and product cont
 The supported application-facing API is:
 
 ```js
-FinancialEngine.calculateBookingFinancials(input)
-FinancialEngine.calculateQuote(input)
-FinancialEngine.createQuote(input)
-FinancialEngine.createPayment(input)
-FinancialEngine.processPayment(input)
-FinancialEngine.calculateSettlement(input)
-FinancialEngine.createSettlement(input)
-FinancialEngine.calculateRefund(input)
-FinancialEngine.processRefund(input)
-FinancialEngine.resolveConfig(input)
-FinancialEngine.ledger.record(entry)
+FinancialEngine.calculateBookingFinancials(input);
+FinancialEngine.calculateQuote(input);
+FinancialEngine.createQuote(input);
+FinancialEngine.createPayment(input);
+FinancialEngine.processPayment(input);
+FinancialEngine.calculateSettlement(input);
+FinancialEngine.createSettlement(input);
+FinancialEngine.calculateRefund(input);
+FinancialEngine.processRefund(input);
+FinancialEngine.resolveConfig(input);
+FinancialEngine.ledger.record(entry);
 ```
 
 Product modules should not import financial persistence models to bypass these methods.
@@ -91,12 +91,7 @@ Platform margin          ₹10,000
 
 ```js
 {
-  agent,
-  platform,
-  customer,
-  gateway,
-  route,
-  settlement
+  (agent, platform, customer, gateway, route, settlement);
 }
 ```
 
@@ -224,27 +219,27 @@ Never commit real values to `.env.example`, source files, frontend bundles, logs
 
 ### Required application runtime variables
 
-| Variable | Required | Secret | Purpose |
-| --- | --- | --- | --- |
-| `NODE_ENV=production` | Yes | No | Enables production behavior. |
-| `BASE_URL` | Yes | No | Public HTTPS backend origin. |
-| `MONGO_URI` | Yes | Yes | Production MongoDB connection. Use a least-privilege database user. |
-| `JWT_ACCESS_SECRET` | Yes | Yes | Signs access tokens. `JWT_SECRET` is accepted only as a compatibility fallback. |
-| `JWT_REFRESH_SECRET` | Yes | Yes | Signs refresh tokens; must differ from the access secret. |
-| `ADMIN_CREATION_SECRET` | Yes | Yes | Protects privileged admin provisioning. |
-| `MASTER_ADMIN_PIN` | Yes | Yes | Six-digit production master-admin PIN. |
-| `FRONTENDS` | Yes | No | Exact allowed frontend origins. |
+| Variable                | Required | Secret | Purpose                                                                         |
+| ----------------------- | -------- | ------ | ------------------------------------------------------------------------------- |
+| `NODE_ENV=production`   | Yes      | No     | Enables production behavior.                                                    |
+| `BASE_URL`              | Yes      | No     | Public HTTPS backend origin.                                                    |
+| `MONGO_URI`             | Yes      | Yes    | Production MongoDB connection. Use a least-privilege database user.             |
+| `JWT_ACCESS_SECRET`     | Yes      | Yes    | Signs access tokens. `JWT_SECRET` is accepted only as a compatibility fallback. |
+| `JWT_REFRESH_SECRET`    | Yes      | Yes    | Signs refresh tokens; must differ from the access secret.                       |
+| `ADMIN_CREATION_SECRET` | Yes      | Yes    | Protects privileged admin provisioning.                                         |
+| `MASTER_ADMIN_PIN`      | Yes      | Yes    | Six-digit production master-admin PIN.                                          |
+| `FRONTENDS`             | Yes      | No     | Exact allowed frontend origins.                                                 |
 
 ### Required for Razorpay online payments
 
-| Variable | Required | Exposure | Purpose |
-| --- | --- | --- | --- |
-| `RAZORPAY_KEY_ID` | Yes | May be sent to checkout | Razorpay account identifier. Production must use a live-mode key. |
-| `RAZORPAY_KEY_SECRET` | Yes | Backend only | Authenticates server-to-server Razorpay API requests. |
-| `RAZORPAY_WEBHOOK_SECRET` | Yes | Backend only | Verifies webhook HMAC signatures. This is configured independently when creating the webhook. |
-| `RAZORPAY_API_BASE_URL` | Recommended | Backend only | Razorpay API root; defaults to the production API URL. |
-| `RAZORPAY_TIMEOUT_MS` | Recommended | Backend only | Server request timeout; defaults to 15000 ms. |
-| `BOOKING_QUOTE_TTL_MINUTES` | Recommended | Backend config | Quote lifetime; defaults to 20 minutes. |
+| Variable                    | Required    | Exposure                | Purpose                                                                                       |
+| --------------------------- | ----------- | ----------------------- | --------------------------------------------------------------------------------------------- |
+| `RAZORPAY_KEY_ID`           | Yes         | May be sent to checkout | Razorpay account identifier. Production must use a live-mode key.                             |
+| `RAZORPAY_KEY_SECRET`       | Yes         | Backend only            | Authenticates server-to-server Razorpay API requests.                                         |
+| `RAZORPAY_WEBHOOK_SECRET`   | Yes         | Backend only            | Verifies webhook HMAC signatures. This is configured independently when creating the webhook. |
+| `RAZORPAY_API_BASE_URL`     | Recommended | Backend only            | Razorpay API root; defaults to the production API URL.                                        |
+| `RAZORPAY_TIMEOUT_MS`       | Recommended | Backend only            | Server request timeout; defaults to 15000 ms.                                                 |
+| `BOOKING_QUOTE_TTL_MINUTES` | Recommended | Backend config          | Quote lifetime; defaults to 20 minutes.                                                       |
 
 Test and live Razorpay credentials are separate. Development keys normally start with `rzp_test_`; production must use the separately generated live credentials. Never copy test secrets into production or live secrets into developer machines.
 
@@ -252,14 +247,14 @@ Test and live Razorpay credentials are separate. Development keys normally start
 
 ### Strongly recommended production variables
 
-| Variable | Reason |
-| --- | --- |
-| `REDIS_URL` | Shared rate limiting, CSRF/session state, and multi-instance consistency. |
-| `PII_ENCRYPTION_KEY` | Protects sensitive stored fields where encryption is enabled. |
-| `AUTH_COOKIE_DOMAIN` | Correct secure-cookie scope across production applications. |
-| `RATE_WINDOW_MS`, `RATE_MAX` | Production abuse controls. |
-| SMTP variables | Required if payment receipts and transactional email are enabled. |
-| R2 or Cloudinary variables | Required for the selected production document/proof storage provider. |
+| Variable                     | Reason                                                                    |
+| ---------------------------- | ------------------------------------------------------------------------- |
+| `REDIS_URL`                  | Shared rate limiting, CSRF/session state, and multi-instance consistency. |
+| `PII_ENCRYPTION_KEY`         | Protects sensitive stored fields where encryption is enabled.             |
+| `AUTH_COOKIE_DOMAIN`         | Correct secure-cookie scope across production applications.               |
+| `RATE_WINDOW_MS`, `RATE_MAX` | Production abuse controls.                                                |
+| SMTP variables               | Required if payment receipts and transactional email are enabled.         |
+| R2 or Cloudinary variables   | Required for the selected production document/proof storage provider.     |
 
 Production must keep the following disabled:
 

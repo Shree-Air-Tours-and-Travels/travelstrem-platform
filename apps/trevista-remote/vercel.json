@@ -14,11 +14,12 @@
       { "source": "/manifest.json", "destination": "/manifest.json" },
       { "source": "/robots.txt", "destination": "/robots.txt" }
     ],
-    "fallback": [
-      { "source": "/(.*)", "destination": "/index.html" }
-    ]
+    "fallback": [{ "source": "/(.*)", "destination": "/index.html" }]
   },
   "headers": [
-    { "source": "/remoteEntry.js", "headers": [{ "key": "Access-Control-Allow-Origin", "value": "*" }] }
+    {
+      "source": "/remoteEntry.js",
+      "headers": [{ "key": "Access-Control-Allow-Origin", "value": "*" }]
+    }
   ]
 }

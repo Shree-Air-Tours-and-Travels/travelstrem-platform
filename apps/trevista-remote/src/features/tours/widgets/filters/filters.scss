@@ -22,8 +22,7 @@
     gap: 1rem;
     padding: 1rem;
     background:
-      linear-gradient(135deg, var(--primary-softer), var(--tertiary-soft)),
-      var(--surface);
+      linear-gradient(135deg, var(--primary-softer), var(--tertiary-soft)), var(--surface);
     border-bottom: 1px solid var(--border);
   }
 
@@ -287,7 +286,12 @@
       position: absolute;
       inset: 0;
       transform: translateX(-100%);
-      background: linear-gradient(90deg, var(--color-transparent), var(--surface-shimmer), var(--color-transparent));
+      background: linear-gradient(
+        90deg,
+        var(--color-transparent),
+        var(--surface-shimmer),
+        var(--color-transparent)
+      );
       animation: filters-clean-shimmer 1.2s linear infinite;
     }
   }

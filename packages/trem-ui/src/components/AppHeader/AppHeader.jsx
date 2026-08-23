@@ -41,12 +41,12 @@ export default function AppHeader({
   const notification = config.notification || {};
   const themeAction = config.themeAction || {};
   const userConfig = config.user || {};
-  const themeLabel = theme === "dark"
-    ? (themeAction.lightLabel || "Switch to light mode")
-    : (themeAction.darkLabel || "Switch to dark mode");
-  const themeIcon = theme === "dark"
-    ? (themeAction.lightIcon || "sun")
-    : (themeAction.darkIcon || "moon");
+  const themeLabel =
+    theme === "dark"
+      ? themeAction.lightLabel || "Switch to light mode"
+      : themeAction.darkLabel || "Switch to dark mode";
+  const themeIcon =
+    theme === "dark" ? themeAction.lightIcon || "sun" : themeAction.darkIcon || "moon";
 
   const userTrigger = (
     <button
@@ -130,7 +130,16 @@ export default function AppHeader({
               align="right"
               hoverable={false}
               items={productItems}
-              trigger={() => <button type="button" className="trem-app-header__product" aria-label={productMenu.ariaLabel || "Choose product"}><span>{productMenu.label}</span><Icon name="chevronDown" size={16} /></button>}
+              trigger={() => (
+                <button
+                  type="button"
+                  className="trem-app-header__product"
+                  aria-label={productMenu.ariaLabel || "Choose product"}
+                >
+                  <span>{productMenu.label}</span>
+                  <Icon name="chevronDown" size={16} />
+                </button>
+              )}
             />
           ) : null}
           {!primaryAction.hide && primaryAction.label && primaryActionItems.length ? (
@@ -170,7 +179,9 @@ export default function AppHeader({
               onClick={notification.enabled ? notification.onClick : undefined}
             >
               <Icon name={notification.icon || "bell"} size={21} />
-              {notification.count ? <span>{notification.count > 9 ? "9+" : notification.count}</span> : null}
+              {notification.count ? (
+                <span>{notification.count > 9 ? "9+" : notification.count}</span>
+              ) : null}
             </button>
           ) : null}
 
@@ -191,14 +202,18 @@ export default function AppHeader({
               items={userItems}
               trigger={() => userTrigger}
             />
-          ) : userTrigger}
+          ) : (
+            userTrigger
+          )}
 
           <button
             type="button"
             className="trem-app-header__icon-button trem-app-header__menu"
-            aria-label={menuOpen
-              ? (config.mobileMenu?.closeLabel || "Close navigation")
-              : (config.mobileMenu?.openLabel || "Open navigation")}
+            aria-label={
+              menuOpen
+                ? config.mobileMenu?.closeLabel || "Close navigation"
+                : config.mobileMenu?.openLabel || "Open navigation"
+            }
             aria-expanded={menuOpen}
             onClick={onMenuToggle}
           >

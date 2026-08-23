@@ -28,12 +28,13 @@ export default function MultiSelect({
   className = "",
 }) {
   const normalized = useMemo(
-    () => (options || []).map((o) => ({
-      value: String(optionValue(o)),
-      label: String(optionLabel(o)),
-      disabled: !!o?.disabled,
-    })),
-    [options]
+    () =>
+      (options || []).map((o) => ({
+        value: String(optionValue(o)),
+        label: String(optionLabel(o)),
+        disabled: !!o?.disabled,
+      })),
+    [options],
   );
 
   const selectedKeys = useMemo(() => {
@@ -47,24 +48,26 @@ export default function MultiSelect({
   const [draftValue, setDraftValue] = useState(normalizedValue);
   const [menuOpen, setMenuOpen] = useState(false);
   const draftKeys = useMemo(() => new Set(draftValue), [draftValue]);
-  const allSelected = normalized.length > 0 && normalized.every((option) => draftKeys.has(option.value));
+  const allSelected =
+    normalized.length > 0 && normalized.every((option) => draftKeys.has(option.value));
 
   useEffect(() => {
     if (!menuOpen) setDraftValue(normalizedValue);
   }, [menuOpen, normalizedValue]);
 
-  const handleToggle = useCallback((open) => {
-    setMenuOpen(open);
-    setDraftValue(normalizedValue);
-  }, [normalizedValue]);
+  const handleToggle = useCallback(
+    (open) => {
+      setMenuOpen(open);
+      setDraftValue(normalizedValue);
+    },
+    [normalizedValue],
+  );
 
   const toggle = (key) => {
     if (disabled) return;
     const has = draftKeys.has(key);
     if (!has && maxSelected != null && draftKeys.size >= maxSelected) return;
-    const next = has
-      ? draftValue.filter((item) => item !== key)
-      : [...draftValue, key];
+    const next = has ? draftValue.filter((item) => item !== key) : [...draftValue, key];
     setDraftValue(next);
   };
 
@@ -89,9 +92,7 @@ export default function MultiSelect({
     >
       <span className="trem-dropdown__select-inner">
         {label ? (
-          <span className="trem-dropdown__select-label">
-            {required ? `${label} *` : label}
-          </span>
+          <span className="trem-dropdown__select-label">{required ? `${label} *` : label}</span>
         ) : null}
         <span className="trem-multiselect__selection">
           {selectedLabels.length === 0 ? (
@@ -99,10 +100,7 @@ export default function MultiSelect({
           ) : (
             <>
               {visibleChips.map((item) => (
-                <span
-                  key={item.value}
-                  className="trem-multiselect__chip"
-                >
+                <span key={item.value} className="trem-multiselect__chip">
                   {item.label}
                 </span>
               ))}
@@ -142,54 +140,63 @@ export default function MultiSelect({
     );
   };
 
-  const menuFooter = normalized.length === 0 ? (
-    <div className="trem-multiselect__footer trem-multiselect__footer--empty">{emptyLabel}</div>
-  ) : ({ close }) => (
-    <div className="trem-multiselect__footer">
-      <div className="trem-multiselect__footer-tools">
-        <Button
-          type="button"
-          variant="text"
-          size="extra-small"
-          primaryClassName="trem-multiselect__footer-btn"
-          disabled={disabled || allSelected}
-          onClick={() => setDraftValue(normalized.filter((option) => !option.disabled).map((option) => option.value))}
-        >
-          {selectAllLabel}
-        </Button>
-        {draftKeys.size > 0 && (
+  const menuFooter =
+    normalized.length === 0 ? (
+      <div className="trem-multiselect__footer trem-multiselect__footer--empty">{emptyLabel}</div>
+    ) : (
+      ({ close }) => (
+        <div className="trem-multiselect__footer">
+          <div className="trem-multiselect__footer-tools">
+            <Button
+              type="button"
+              variant="text"
+              size="extra-small"
+              primaryClassName="trem-multiselect__footer-btn"
+              disabled={disabled || allSelected}
+              onClick={() =>
+                setDraftValue(
+                  normalized.filter((option) => !option.disabled).map((option) => option.value),
+                )
+              }
+            >
+              {selectAllLabel}
+            </Button>
+            {draftKeys.size > 0 && (
+              <Button
+                type="button"
+                variant="text"
+                size="extra-small"
+                color="danger"
+                primaryClassName="trem-multiselect__footer-btn"
+                disabled={disabled}
+                onClick={() => setDraftValue([])}
+              >
+                {clearAllLabel}
+              </Button>
+            )}
+          </div>
           <Button
             type="button"
-            variant="text"
+            variant="solid"
+            color="primary"
             size="extra-small"
-            color="danger"
-            primaryClassName="trem-multiselect__footer-btn"
+            primaryClassName="trem-multiselect__apply"
             disabled={disabled}
-            onClick={() => setDraftValue([])}
+            onClick={() => {
+              onChange?.(draftValue);
+              close();
+            }}
           >
-            {clearAllLabel}
+            {applyLabel}
           </Button>
-        )}
-      </div>
-      <Button
-        type="button"
-        variant="solid"
-        color="primary"
-        size="extra-small"
-        primaryClassName="trem-multiselect__apply"
-        disabled={disabled}
-        onClick={() => {
-          onChange?.(draftValue);
-          close();
-        }}
-      >
-        {applyLabel}
-      </Button>
-    </div>
-  );
+        </div>
+      )
+    );
 
   return (
-    <div className={`trem-multiselect trem-multiselect--${variant} trem-multiselect--${size}${className ? ` ${className}` : ""}`}>
+    <div
+      className={`trem-multiselect trem-multiselect--${variant} trem-multiselect--${size}${className ? ` ${className}` : ""}`}
+    >
       <Dropdown
         trigger={trigger}
         items={items}

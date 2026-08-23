@@ -10,20 +10,54 @@ import {
 
 describe("Trevista canonical tour search state", () => {
   test("round-trips shareable URL state", () => {
-    const state = parseTourSearchUrl("?origin=delhi&destination=abu-dhabi&agency=agency-north&tags=burj-khalifa,cultural-tour&maxPrice=150000&minDays=5&sort=price_asc&page=2");
-    expect(state.filters).toEqual(expect.objectContaining({ originCityIds: ["delhi"], destinationCityIds: ["abu-dhabi"], agencyIds: ["agency-north"], tagIds: ["burj-khalifa", "cultural-tour"] }));
+    const state = parseTourSearchUrl(
+      "?origin=delhi&destination=abu-dhabi&agency=agency-north&tags=burj-khalifa,cultural-tour&maxPrice=150000&minDays=5&sort=price_asc&page=2",
+    );
+    expect(state.filters).toEqual(
+      expect.objectContaining({
+        originCityIds: ["delhi"],
+        destinationCityIds: ["abu-dhabi"],
+        agencyIds: ["agency-north"],
+        tagIds: ["burj-khalifa", "cultural-tour"],
+      }),
+    );
     expect(parseTourSearchUrl(`?${serializeTourSearchUrl(state)}`)).toEqual(state);
   });
 
   test("filter updates reset pagination and create the API contract", () => {
     const state = { ...createDefaultTourSearchState(), page: 4 };
-    const next = mergeFlatFiltersIntoSearch(state, { query: "Dubai", originCityIds: ["delhi"], destinationCityIds: [], countryIds: [], agencyIds: ["agency-north"], minPrice: "", maxPrice: 100000, minDays: 5, maxDays: 7, travellers: 4, departureDate: "2026-12-20", returnDate: "2026-12-25", tagIds: [], featured: "true" });
+    const next = mergeFlatFiltersIntoSearch(state, {
+      query: "Dubai",
+      originCityIds: ["delhi"],
+      destinationCityIds: [],
+      countryIds: [],
+      agencyIds: ["agency-north"],
+      minPrice: "",
+      maxPrice: 100000,
+      minDays: 5,
+      maxDays: 7,
+      travellers: 4,
+      departureDate: "2026-12-20",
+      returnDate: "2026-12-25",
+      tagIds: [],
+      featured: "true",
+    });
     expect(next.page).toBe(1);
-    expect(next.filters).toEqual(expect.objectContaining({ agencyIds: ["agency-north"], price: { min: null, max: 100000 }, duration: { minDays: 5, maxDays: 7 }, travellers: 4, featured: true }));
+    expect(next.filters).toEqual(
+      expect.objectContaining({
+        agencyIds: ["agency-north"],
+        price: { min: null, max: 100000 },
+        duration: { minDays: 5, maxDays: 7 },
+        travellers: 4,
+        featured: true,
+      }),
+    );
   });
 
   test("removing one chip preserves unrelated filters", () => {
-    const state = parseTourSearchUrl("?origin=delhi&minPrice=1&tags=desert-safari,family&travellers=4");
+    const state = parseTourSearchUrl(
+      "?origin=delhi&minPrice=1&tags=desert-safari,family&travellers=4",
+    );
     const next = removeTourFilter(state, "tag:family");
     expect(next.filters.tagIds).toEqual(["desert-safari"]);
     expect(next.filters.originCityIds).toEqual(["delhi"]);

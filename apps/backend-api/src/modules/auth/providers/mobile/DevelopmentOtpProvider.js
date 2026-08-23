@@ -1,11 +1,11 @@
 export default class DevelopmentOtpProvider {
-  available = true;
+    available = true;
 
-  constructor({ testOtp }) {
-    this.testOtp = testOtp;
-  }
+    constructor({ testOtp }) {
+        this.testOtp = testOtp;
+    }
 
-  async sendOtp() {
-    return { provider: "development", accepted: true };
-  }
+    async sendOtp() {
+        return { provider: "development", accepted: true };
+    }
 }

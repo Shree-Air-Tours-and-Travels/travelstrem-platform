@@ -38,7 +38,7 @@ export default function SmoothScroll({
           setVisible(false);
         }
       },
-      { threshold }
+      { threshold },
     );
 
     observer.observe(el);
@@ -58,6 +58,6 @@ export default function SmoothScroll({
         transitionDelay: `${delay}s`,
       },
     },
-    children
+    children,
   );
 }

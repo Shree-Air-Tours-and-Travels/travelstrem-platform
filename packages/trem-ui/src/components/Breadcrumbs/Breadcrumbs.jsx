@@ -15,7 +15,13 @@ export default function Breadcrumbs({ items = [], className = "" }) {
           return (
             <li key={item.label + i}>
               {item.path && !isLast ? (
-                isExternal ? <a href={item.path}>{item.label}</a> : <Link to={item.path} state={item.state}>{item.label}</Link>
+                isExternal ? (
+                  <a href={item.path}>{item.label}</a>
+                ) : (
+                  <Link to={item.path} state={item.state}>
+                    {item.label}
+                  </Link>
+                )
               ) : (
                 <span aria-current={isLast ? "page" : undefined}>{item.label}</span>
               )}
@@ -34,7 +40,7 @@ Breadcrumbs.propTypes = {
       label: PropTypes.string.isRequired,
       path: PropTypes.string,
       state: PropTypes.object,
-    })
+    }),
   ),
   className: PropTypes.string,
 };

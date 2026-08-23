@@ -1,83 +1,83 @@
 {
-    "status": "success",
-    "component": {
-        "data": {
-            "state": {}
-        },
-        "dataScope": {
-            "options": {}
-        },
-        "elements": {
-            "labels": {
-                "pageTitle": "Trevio",
-                "heroProductTitlePrefix": "Welcome to",
-                "heroProductName": "Trevio",
-                "heroProductConnector": "by",
-                "heroProductProvider": "TravelsTrem",
-                "heroProductSubtitle": "Your gateway to thoughtfully curated group adventures.",
-                "heroEyebrow": "Curated group adventures",
-                "heroHeading": "Trips that turn into",
-                "heroHighlight": "stories.",
-                "heroDescription": "Browse trips, open complete itineraries, personalise your package, and send an enquiry to our travel team.",
-                "heroPrimaryAction": "Explore trips",
-                "heroSecondaryAction": "How it works",
-                "heroTrustVerified": "Verified stays",
-                "heroTrustCaptains": "Trip captains",
-                "heroTrustToken": "Expert trip support",
-                "featuredCardTitle": "Your next story starts here",
-                "featuredCardMeta": "India",
-                "featuredDefaultType": "Curated trip",
-                "featuredCtaAction": "View trip",
-                "featuredEmptyTitle": "Adventures are loading",
-                "featuredEmptyDescription": "We are curating your next escape. For your custom trips and upcoming trips, contact us to enquire.",
-                "featuredEmptyAction": "Enquire us"
+  "status": "success",
+  "component": {
+    "data": {
+      "state": {}
+    },
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "pageTitle": "Trevio",
+        "heroProductTitlePrefix": "Welcome to",
+        "heroProductName": "Trevio",
+        "heroProductConnector": "by",
+        "heroProductProvider": "TravelsTrem",
+        "heroProductSubtitle": "Your gateway to thoughtfully curated group adventures.",
+        "heroEyebrow": "Curated group adventures",
+        "heroHeading": "Trips that turn into",
+        "heroHighlight": "stories.",
+        "heroDescription": "Browse trips, open complete itineraries, personalise your package, and send an enquiry to our travel team.",
+        "heroPrimaryAction": "Explore trips",
+        "heroSecondaryAction": "How it works",
+        "heroTrustVerified": "Verified stays",
+        "heroTrustCaptains": "Trip captains",
+        "heroTrustToken": "Expert trip support",
+        "featuredCardTitle": "Your next story starts here",
+        "featuredCardMeta": "India",
+        "featuredDefaultType": "Curated trip",
+        "featuredCtaAction": "View trip",
+        "featuredEmptyTitle": "Adventures are loading",
+        "featuredEmptyDescription": "We are curating your next escape. For your custom trips and upcoming trips, contact us to enquire.",
+        "featuredEmptyAction": "Enquire us"
+      },
+      "urls": {
+        "tripsEndpoint": "/trevio/trips.json"
+      }
+    },
+    "structure": {
+      "type": "heroSection",
+      "source": "trevio",
+      "features": [
+        {
+          "type": "static",
+          "productTitlePrefixRef": "heroProductTitlePrefix",
+          "productNameRef": "heroProductName",
+          "productConnectorRef": "heroProductConnector",
+          "productProviderRef": "heroProductProvider",
+          "productSubtitleRef": "heroProductSubtitle",
+          "eyebrowRef": "heroEyebrow",
+          "headingRef": "heroHeading",
+          "highlightRef": "heroHighlight",
+          "descriptionRef": "heroDescription",
+          "primaryActionLabelRef": "heroPrimaryAction",
+          "secondaryActionLabelRef": "heroSecondaryAction",
+          "trustItems": [
+            {
+              "labelRef": "heroTrustVerified"
             },
-            "urls": {
-                "tripsEndpoint": "/trevio/trips.json"
+            {
+              "labelRef": "heroTrustCaptains"
+            },
+            {
+              "labelRef": "heroTrustToken"
             }
+          ]
         },
-        "structure": {
-            "type": "heroSection",
-            "source": "trevio",
-            "features": [
-                {
-                    "type": "static",
-                    "productTitlePrefixRef": "heroProductTitlePrefix",
-                    "productNameRef": "heroProductName",
-                    "productConnectorRef": "heroProductConnector",
-                    "productProviderRef": "heroProductProvider",
-                    "productSubtitleRef": "heroProductSubtitle",
-                    "eyebrowRef": "heroEyebrow",
-                    "headingRef": "heroHeading",
-                    "highlightRef": "heroHighlight",
-                    "descriptionRef": "heroDescription",
-                    "primaryActionLabelRef": "heroPrimaryAction",
-                    "secondaryActionLabelRef": "heroSecondaryAction",
-                    "trustItems": [
-                        {
-                            "labelRef": "heroTrustVerified"
-                        },
-                        {
-                            "labelRef": "heroTrustCaptains"
-                        },
-                        {
-                            "labelRef": "heroTrustToken"
-                        }
-                    ]
-                },
-                {
-                    "name":"featuredTrip",
-                    "type": "featuredCard",
-                    "cardTitleRef": "featuredCardTitle",
-                    "cardMetaRef": "featuredCardMeta",
-                    "defaultTypeRef": "featuredDefaultType",
-                    "ctaActionLabelRef": "featuredCtaAction",
-                    "emptyActionRef": "featuredEmptyAction",
-                    "tripsEndpointUrlRef": "tripsEndpoint"
-                }
-            ],
-            "config": {},
-            "actions": []
+        {
+          "name": "featuredTrip",
+          "type": "featuredCard",
+          "cardTitleRef": "featuredCardTitle",
+          "cardMetaRef": "featuredCardMeta",
+          "defaultTypeRef": "featuredDefaultType",
+          "ctaActionLabelRef": "featuredCtaAction",
+          "emptyActionRef": "featuredEmptyAction",
+          "tripsEndpointUrlRef": "tripsEndpoint"
         }
+      ],
+      "config": {},
+      "actions": []
     }
+  }
 }

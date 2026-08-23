@@ -2,24 +2,47 @@
 
 .customer-enquiries__claim {
   display: grid;
-  grid-template-columns: minmax(16rem, 1fr) minmax(14rem, .7fr) auto;
+  grid-template-columns: minmax(16rem, 1fr) minmax(14rem, 0.7fr) auto;
   align-items: end;
+  margin-bottom: 1.5rem;
   gap: $space-4;
-  width: min(calc(100% - #{$space-8}), 72rem);
-  margin: $space-6 auto 0;
+  width: 100%;
+
   padding: $space-5;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--surface);
 
-  h2, p { margin: 0; }
-  h2 { margin-bottom: $space-1; font-size: $font-size-lg; }
-  p { color: var(--muted); }
-  > p { grid-column: 1 / -1; }
-  .is-error { color: var(--color-danger); }
-  .is-success { color: var(--color-success); }
+  h2,
+  p {
+    margin: 0;
+  }
+
+  h2 {
+    margin-bottom: $space-1;
+    font-size: $font-size-lg;
+  }
+
+  p {
+    color: var(--muted);
+  }
+
+  > p {
+    grid-column: 1 / -1;
+  }
+
+  .is-error {
+    color: var(--color-danger);
+  }
+
+  .is-success {
+    color: var(--color-success);
+  }
 }
 
 @media (max-width: $breakpoint-md) {
-  .customer-enquiries__claim { grid-template-columns: 1fr; width: calc(100% - #{$space-8}); }
+  .customer-enquiries__claim {
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
 }

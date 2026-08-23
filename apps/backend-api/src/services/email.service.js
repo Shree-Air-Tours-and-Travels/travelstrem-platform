@@ -12,52 +12,67 @@ import tenantNotificationTemplate from "../templates/tenantNotification.template
  * therefore isolated from Nodemailer and the active delivery provider.
  */
 const brandDefaults = () => ({
-  companyName: config.COMPANY_NAME,
-  supportEmail: config.SUPPORT_EMAIL,
+    companyName: config.COMPANY_NAME,
+    supportEmail: config.SUPPORT_EMAIL,
 });
 
-const deliver = async (to, template, options = {}) => sendEmail({
-  to,
-  subject: options.subject || template.subject,
-  text: template.text,
-  html: template.html,
-  replyTo: options.replyTo,
-}, { provider: options.provider });
+const deliver = async (to, template, options = {}) =>
+    sendEmail(
+        {
+            to,
+            subject: options.subject || template.subject,
+            text: template.text,
+            html: template.html,
+            replyTo: options.replyTo,
+        },
+        { provider: options.provider },
+    );
 
 export async function sendWelcomeEmail({ to, provider, ...data }) {
-  return deliver(to, welcomeTemplate({ ...brandDefaults(), ...data }), { provider });
+    return deliver(to, welcomeTemplate({ ...brandDefaults(), ...data }), { provider });
 }
 
 export async function sendLoginEmail({ to, subject, provider, ...data }) {
-  return deliver(to, loginTemplate({ ...brandDefaults(), ...data }), { subject, provider });
+    return deliver(to, loginTemplate({ ...brandDefaults(), ...data }), { subject, provider });
 }
 
 export async function sendPaymentSuccess({ to, provider, ...data }) {
-  return deliver(to, paymentTemplate({ ...brandDefaults(), ...data }), { provider });
+    return deliver(to, paymentTemplate({ ...brandDefaults(), ...data }), { provider });
 }
 
 export async function sendPasswordResetEmail({ to, subject, provider, ...data }) {
-  return deliver(to, resetPasswordTemplate({ ...brandDefaults(), ...data }), { subject, provider });
+    return deliver(to, resetPasswordTemplate({ ...brandDefaults(), ...data }), {
+        subject,
+        provider,
+    });
 }
 export async function sendInvitationEmail({ to, provider, ...data }) {
-  return deliver(to, invitationTemplate({ ...brandDefaults(), ...data }), { provider });
+    return deliver(to, invitationTemplate({ ...brandDefaults(), ...data }), { provider });
 }
 
 export async function sendTenantNotificationEmail({ to, provider, ...data }) {
-  return deliver(to, tenantNotificationTemplate({ ...brandDefaults(), ...data }), { provider });
+    return deliver(to, tenantNotificationTemplate({ ...brandDefaults(), ...data }), { provider });
 }
 
 /** Supports operational emails while keeping controllers provider-agnostic. */
-export async function sendTransactionalEmail({ to, subject, html, text, replyTo, attachments, provider }) {
-  return sendEmail({ to, subject, html, text, replyTo, attachments }, { provider });
+export async function sendTransactionalEmail({
+    to,
+    subject,
+    html,
+    text,
+    replyTo,
+    attachments,
+    provider,
+}) {
+    return sendEmail({ to, subject, html, text, replyTo, attachments }, { provider });
 }
 
 export default {
-  sendWelcomeEmail,
-  sendLoginEmail,
-  sendPaymentSuccess,
-  sendPasswordResetEmail,
-  sendInvitationEmail,
-  sendTenantNotificationEmail,
-  sendTransactionalEmail,
+    sendWelcomeEmail,
+    sendLoginEmail,
+    sendPaymentSuccess,
+    sendPasswordResetEmail,
+    sendInvitationEmail,
+    sendTenantNotificationEmail,
+    sendTransactionalEmail,
 };

@@ -67,9 +67,11 @@ export default function DestinationCard({
   const badgeList = badges.filter((badge) => getBadgeLabel(badge));
 
   const ratingNumber = Number(rating);
-  const displayRating = Number.isFinite(ratingNumber) && ratingNumber > 0 ? ratingNumber.toFixed(1) : "";
+  const displayRating =
+    Number.isFinite(ratingNumber) && ratingNumber > 0 ? ratingNumber.toFixed(1) : "";
   const reviewCountNumber = Number(reviewCount);
-  const displayReviewCount = Number.isFinite(reviewCountNumber) && reviewCountNumber > 0 ? reviewCountNumber : "";
+  const displayReviewCount =
+    Number.isFinite(reviewCountNumber) && reviewCountNumber > 0 ? reviewCountNumber : "";
 
   const priceAmount = Number(price?.amount);
   const currencyValue = price?.currency || "INR";
@@ -79,7 +81,8 @@ export default function DestinationCard({
   const durationDays = Number(duration?.days);
   const durationNights = Number(duration?.nights);
   const durationText =
-    (Number.isFinite(durationDays) && durationDays > 0) || (Number.isFinite(durationNights) && durationNights > 0)
+    (Number.isFinite(durationDays) && durationDays > 0) ||
+    (Number.isFinite(durationNights) && durationNights > 0)
       ? `${durationDays > 0 ? durationDays : 0}d ${durationNights > 0 ? durationNights : 0}n`
       : "";
 
@@ -129,7 +132,12 @@ export default function DestinationCard({
 
   if (loading) {
     return (
-      <div className={`${baseClasses} is-loading`} role="status" aria-busy="true" aria-label="Loading destination card">
+      <div
+        className={`${baseClasses} is-loading`}
+        role="status"
+        aria-busy="true"
+        aria-label="Loading destination card"
+      >
         <div className="trem-destination-card__media">
           <div className="trem-destination-card__skeleton" />
         </div>
@@ -155,7 +163,13 @@ export default function DestinationCard({
     <>
       <div className="trem-destination-card__media">
         {visibleImage ? (
-          <img className="trem-destination-card__img" src={visibleImage} alt={imageAlt} loading="lazy" onError={handleImageError} />
+          <img
+            className="trem-destination-card__img"
+            src={visibleImage}
+            alt={imageAlt}
+            loading="lazy"
+            onError={handleImageError}
+          />
         ) : (
           <div className="trem-destination-card__placeholder">
             <Icon name="mountain" size={40} />
@@ -166,7 +180,10 @@ export default function DestinationCard({
         {badgeList.length > 0 && (
           <div className="trem-destination-card__badges">
             {badgeList.slice(0, 2).map((badge, index) => (
-              <span key={`${getBadgeLabel(badge)}-${index}`} className="trem-destination-card__badge">
+              <span
+                key={`${getBadgeLabel(badge)}-${index}`}
+                className="trem-destination-card__badge"
+              >
                 {getBadgeLabel(badge)}
               </span>
             ))}
@@ -279,7 +296,9 @@ DestinationCard.propTypes = {
     nights: PropTypes.number,
   }),
   location: PropTypes.string,
-  badges: PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.string, PropTypes.shape({ label: PropTypes.string })])),
+  badges: PropTypes.arrayOf(
+    PropTypes.oneOfType([PropTypes.string, PropTypes.shape({ label: PropTypes.string })]),
+  ),
   ctaLabel: PropTypes.string,
   href: PropTypes.string,
   onClick: PropTypes.func,

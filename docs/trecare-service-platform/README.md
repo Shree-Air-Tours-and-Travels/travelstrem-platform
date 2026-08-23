@@ -57,20 +57,23 @@ A responsive, production-style, zero-build UI prototype covering the complete Tr
    - Special-assistance inputs
 
 10. International Permits
-   - International driving permit
-   - Vehicle-border documents
-   - Restricted-area permits
-   - Document checklist and upload UI
+
+- International driving permit
+- Vehicle-border documents
+- Restricted-area permits
+- Document checklist and upload UI
 
 11. Travel Essentials
-   - Product catalogue
-   - Add-to-cart flow
-   - Cart modal and checkout handoff
+
+- Product catalogue
+- Add-to-cart flow
+- Cart modal and checkout handoff
 
 12. Emergency Support
-   - SOS activation
-   - Medical, lost-passport, safety, embassy, legal, and stranded-traveller workflows
-   - Saved emergency profile
+
+- SOS activation
+- Medical, lost-passport, safety, embassy, legal, and stranded-traveller workflows
+- Saved emergency profile
 
 ## Shared platform capabilities
 

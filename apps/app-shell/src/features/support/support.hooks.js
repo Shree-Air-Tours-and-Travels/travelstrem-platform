@@ -9,10 +9,12 @@ export function useSupportResource(loader, dependencies = []) {
   useEffect(() => {
     const controller = new AbortController();
     setState((current) => ({ ...current, loading: true, error: "" }));
-    loaderRef.current(controller.signal)
+    loaderRef
+      .current(controller.signal)
       .then((data) => setState({ data, loading: false, error: "" }))
       .catch((error) => {
-        if (error?.name !== "AbortError") setState({ data: null, loading: false, error: error?.message || "Something went wrong" });
+        if (error?.name !== "AbortError")
+          setState({ data: null, loading: false, error: error?.message || "Something went wrong" });
       });
     return () => controller.abort();
     // The caller owns the explicit dependency list, mirroring useEffect.

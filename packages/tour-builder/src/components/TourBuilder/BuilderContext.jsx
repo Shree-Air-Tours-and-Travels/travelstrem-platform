@@ -5,9 +5,9 @@ import { createContext, useContext } from "react";
  * uploader is injected by the host portal for IMAGE_UPLOAD widgets.
  */
 export const BuilderContext = createContext({
-    rootValues: {},
-    uploader: null,
-    runtime: {},
+  rootValues: {},
+  uploader: null,
+  runtime: {},
 });
 
 export const useBuilderContext = () => useContext(BuilderContext);

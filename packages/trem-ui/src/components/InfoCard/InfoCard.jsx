@@ -29,7 +29,9 @@ export default function InfoCard({
   className = "",
 }) {
   const Tag = onClick ? "button" : "article";
-  const badgeTone = badge?.tone ? (INFO_CARD_TONES[badge.tone.toLowerCase()] || badge.tone) : undefined;
+  const badgeTone = badge?.tone
+    ? INFO_CARD_TONES[badge.tone.toLowerCase()] || badge.tone
+    : undefined;
 
   return (
     <Tag
@@ -37,15 +39,15 @@ export default function InfoCard({
       type={onClick ? "button" : undefined}
       onClick={onClick}
     >
-      <span className={`trem-info-card__header${image ? " trem-info-card__header--with-image" : ""}`}>
+      <span
+        className={`trem-info-card__header${image ? " trem-info-card__header--with-image" : ""}`}
+      >
         {image ? <img src={image} alt={imageAlt} loading="lazy" /> : null}
         <span className="trem-info-card__identity">
           <strong>{title}</strong>
           {subtitle ? <small>{subtitle}</small> : null}
         </span>
-        {badge?.value ? (
-          <StatusBadge value={badge.value} tone={badgeTone} size="sm" />
-        ) : null}
+        {badge?.value ? <StatusBadge value={badge.value} tone={badgeTone} size="sm" /> : null}
       </span>
       <span className="trem-info-card__fields">
         {fields.map((field) => (
@@ -74,11 +76,13 @@ InfoCard.propTypes = {
     value: PropTypes.node,
     tone: PropTypes.string,
   }),
-  fields: PropTypes.arrayOf(PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    label: PropTypes.node,
-    value: PropTypes.node,
-  })),
+  fields: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      label: PropTypes.node,
+      value: PropTypes.node,
+    }),
+  ),
   actionLabel: PropTypes.string,
   onClick: PropTypes.func,
   className: PropTypes.string,

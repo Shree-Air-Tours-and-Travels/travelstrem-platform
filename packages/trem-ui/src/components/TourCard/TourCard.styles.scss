@@ -25,7 +25,9 @@
 
   &.is-featured {
     border-color: var(--primary-focus);
-    box-shadow: 0 0 0 1px var(--primary-focus), var(--shadow-md);
+    box-shadow:
+      0 0 0 1px var(--primary-focus),
+      var(--shadow-md);
   }
 
   // ─── Grid Variant (Vertical) ─────────────────────────────────────
@@ -208,11 +210,7 @@
         content: "";
         position: absolute;
         inset: 0;
-        background: linear-gradient(
-          90deg,
-          transparent 50%,
-          rgba(0, 0, 0, 0.15) 100%
-        );
+        background: linear-gradient(90deg, transparent 50%, rgba(0, 0, 0, 0.15) 100%);
         z-index: 1;
         pointer-events: none;
       }
@@ -253,11 +251,8 @@
   &__media {
     position: relative;
     overflow: hidden;
-    background: linear-gradient(
-        135deg,
-        var(--primary-soft, #e0f2fe),
-        var(--secondary-soft, #fae8ff)
-      ),
+    background:
+      linear-gradient(135deg, var(--primary-soft, #e0f2fe), var(--secondary-soft, #fae8ff)),
       var(--surface-inset);
     min-height: 200px;
     width: 100%;
@@ -297,7 +292,10 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: transform 160ms ease, color 160ms ease, background 160ms ease,
+    transition:
+      transform 160ms ease,
+      color 160ms ease,
+      background 160ms ease,
       box-shadow 160ms ease;
 
     &:hover {
@@ -401,7 +399,9 @@
       color: var(--color-primary-dark);
     }
 
-    svg { flex: 0 0 auto; }
+    svg {
+      flex: 0 0 auto;
+    }
   }
 
   &__agency-logo {
@@ -1308,9 +1308,17 @@
     height: 430px;
     border-radius: $radius-xl;
 
-    .tour-card__media { aspect-ratio: 16 / 9; min-height: 185px; }
-    .tour-card__content { gap: 0.6rem; padding: 1rem; }
-    .tour-card__summary .tour-card__desc { @include clamp-lines(2, 1.5); }
+    .tour-card__media {
+      aspect-ratio: 16 / 9;
+      min-height: 185px;
+    }
+    .tour-card__content {
+      gap: 0.6rem;
+      padding: 1rem;
+    }
+    .tour-card__summary .tour-card__desc {
+      @include clamp-lines(2, 1.5);
+    }
   }
 
   &__media::after {
@@ -1322,9 +1330,18 @@
     pointer-events: none;
   }
 
-  &__body { gap: 0.65rem; padding: 1.15rem 1.25rem; }
-  &__title { font-size: 1.08rem; letter-spacing: -0.01em; }
-  &__desc { color: var(--subtitle); @include clamp-lines(2, 1.5); }
+  &__body {
+    gap: 0.65rem;
+    padding: 1.15rem 1.25rem;
+  }
+  &__title {
+    font-size: 1.08rem;
+    letter-spacing: -0.01em;
+  }
+  &__desc {
+    color: var(--subtitle);
+    @include clamp-lines(2, 1.5);
+  }
 
   &__rating-wrapper {
     gap: 0.25rem;
@@ -1333,10 +1350,20 @@
     background: var(--primary-softer);
     color: var(--color-primary-dark);
 
-    > svg { color: var(--color-warning); fill: currentColor; }
+    > svg {
+      color: var(--color-warning);
+      fill: currentColor;
+    }
   }
-  &__rating-value, &__review-count { font-size: 0.72rem; }
-  &__location, &__owner { color: var(--muted); font-size: 0.78rem; }
+  &__rating-value,
+  &__review-count {
+    font-size: 0.72rem;
+  }
+  &__location,
+  &__owner {
+    color: var(--muted);
+    font-size: 0.78rem;
+  }
 
   &__badge--category {
     top: 0.8rem;
@@ -1347,8 +1374,12 @@
     box-shadow: var(--shadow-xs);
     backdrop-filter: blur(10px);
   }
-  &.has-favorite-control &__badge--category { left: 4.15rem; }
-  &__status-badges &__badge--featured { position: static; }
+  &.has-favorite-control &__badge--category {
+    left: 4.15rem;
+  }
+  &__status-badges &__badge--featured {
+    position: static;
+  }
 
   &__availability {
     position: absolute;
@@ -1364,12 +1395,25 @@
     font-weight: $font-bold;
     backdrop-filter: blur(10px);
 
-    &.is-sold-out { background: var(--color-danger); color: var(--color-on-primary); }
+    &.is-sold-out {
+      background: var(--color-danger);
+      color: var(--color-on-primary);
+    }
   }
 
-  &__tag, &__detail, &__fact { border-radius: 7px; }
-  &__footer { padding-top: 0.75rem; border-top: 1px solid var(--border); }
-  &__price-amount { color: var(--title); font-weight: $font-bold; }
+  &__tag,
+  &__detail,
+  &__fact {
+    border-radius: 7px;
+  }
+  &__footer {
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+  }
+  &__price-amount {
+    color: var(--title);
+    font-weight: $font-bold;
+  }
 }
 
 @media (max-width: $breakpoint-tablet) {
@@ -1390,14 +1434,23 @@
 }
 
 @media (max-width: $breakpoint-phablet) {
-  .tour-card--list, .tour-card--grid, .tour-card--featured {
+  .tour-card--list,
+  .tour-card--grid,
+  .tour-card--featured {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto;
     height: auto;
     min-height: 410px;
 
-    .tour-card__media { aspect-ratio: 16 / 9; min-height: 170px; }
-    .tour-card__body, .tour-card__content { min-height: 0; padding: 0.9rem; }
+    .tour-card__media {
+      aspect-ratio: 16 / 9;
+      min-height: 170px;
+    }
+    .tour-card__body,
+    .tour-card__content {
+      min-height: 0;
+      padding: 0.9rem;
+    }
   }
 
   .tour-card {
@@ -1641,8 +1694,14 @@
   .tour-card--management {
     min-height: 0;
 
-    .tour-card__media { min-height: 11rem; }
-    .tour-card__body { padding: $space-3; }
-    .tour-card__footer { align-items: stretch; }
+    .tour-card__media {
+      min-height: 11rem;
+    }
+    .tour-card__body {
+      padding: $space-3;
+    }
+    .tour-card__footer {
+      align-items: stretch;
+    }
   }
 }

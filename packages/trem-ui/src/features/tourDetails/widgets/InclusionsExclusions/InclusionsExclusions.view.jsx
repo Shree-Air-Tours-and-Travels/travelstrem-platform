@@ -22,7 +22,16 @@ function useSeparateControls(breakpoint) {
   return matches;
 }
 
-function InclusionsColumn({ title, emptyText, items, theme, labels, config, sharedExpanded, separateControls }) {
+function InclusionsColumn({
+  title,
+  emptyText,
+  items,
+  theme,
+  labels,
+  config,
+  sharedExpanded,
+  separateControls,
+}) {
   const hasItems = Array.isArray(items) && items.length > 0;
   const [locallyExpanded, setLocallyExpanded] = useState(false);
   const hasMore = items.length > config.initialVisibleCount;
@@ -80,7 +89,9 @@ function InclusionsColumn({ title, emptyText, items, theme, labels, config, shar
 export default function InclusionsExclusionsView({ labels, inclusions, exclusions, config }) {
   const [sharedExpanded, setSharedExpanded] = useState(false);
   const separateControls = useSeparateControls(config.separateControlsBreakpoint);
-  const hasSharedOverflow = inclusions.length > config.initialVisibleCount || exclusions.length > config.initialVisibleCount;
+  const hasSharedOverflow =
+    inclusions.length > config.initialVisibleCount ||
+    exclusions.length > config.initialVisibleCount;
 
   return (
     <section className="td-ie-widget" aria-label={labels.ariaLabel}>
@@ -90,7 +101,8 @@ export default function InclusionsExclusionsView({ labels, inclusions, exclusion
           <h2 className="td-ie-widget__title">{labels.title || "What’s included"}</h2>
         </div>
         <p className="td-ie-widget__summary">
-          {inclusions.length} {labels.includedCount || "included"} · {exclusions.length} {labels.excludedCount || "not included"}
+          {inclusions.length} {labels.includedCount || "included"} · {exclusions.length}{" "}
+          {labels.excludedCount || "not included"}
         </p>
       </header>
       {hasSharedOverflow && !separateControls ? (

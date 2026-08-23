@@ -1,83 +1,83 @@
 @import "@packages/trem-design-tokens/scss";
 
 .trem-contact-form__grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: $space-3;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $space-3;
 }
 
 .trem-contact-form__field--full {
-    grid-column: 1 / -1;
+  grid-column: 1 / -1;
 }
 
 .trem-contact-form__textarea-wrap {
-    display: flex;
-    flex-direction: column;
-    gap: $space-2;
-    color: var(--text);
-    font-size: $font-size-sm;
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  color: var(--text);
+  font-size: $font-size-sm;
 }
 
-.trem-contact-form__textarea-wrap>span {
-    font-weight: $font-semibold;
+.trem-contact-form__textarea-wrap > span {
+  font-weight: $font-semibold;
 }
 
 .trem-contact-form__textarea-wrap textarea {
-    width: 100%;
-    min-height: 112px;
-    resize: vertical;
-    padding: $space-3;
-    border: 1px solid var(--control-border);
-    border-radius: var(--radius-md);
-    background: var(--control-bg);
-    color: var(--control-text);
-    font: inherit;
-    box-sizing: border-box;
-    outline: none;
+  width: 100%;
+  min-height: 112px;
+  resize: vertical;
+  padding: $space-3;
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-md);
+  background: var(--control-bg);
+  color: var(--control-text);
+  font: inherit;
+  box-sizing: border-box;
+  outline: none;
 }
 
 .trem-contact-form__textarea-wrap textarea:focus {
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px var(--primary-focus);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--primary-focus);
 }
 
 .trem-contact-form__textarea-wrap.is-error textarea {
-    border-color: var(--color-danger);
+  border-color: var(--color-danger);
 }
 
 .trem-contact-form__error {
-    margin: $space-1 0 0;
-    color: var(--color-danger);
-    font-size: $font-size-xs;
+  margin: $space-1 0 0;
+  color: var(--color-danger);
+  font-size: $font-size-xs;
 }
 
 .trem-contact-form__actions {
-    display: flex;
-    gap: $space-2;
-    margin-top: $space-5;
+  display: flex;
+  gap: $space-2;
+  margin-top: $space-5;
 }
 
 @media (max-width: $breakpoint-mobile) {
-    .trem-contact-form__grid {
-        grid-template-columns: 1fr;
-    }
+  .trem-contact-form__grid {
+    grid-template-columns: 1fr;
+  }
 
-    .trem-contact-form__field {
-        grid-column: 1;
-    }
+  .trem-contact-form__field {
+    grid-column: 1;
+  }
 
-    .trem-contact-form__actions {
-        flex-direction: column;
-        align-items: stretch;
+  .trem-contact-form__actions {
+    flex-direction: column;
+    align-items: stretch;
 
-        >* {
-            width: 100%;
-            flex: 0 0 auto;
-        }
+    > * {
+      width: 100%;
+      flex: 0 0 auto;
     }
+  }
 }
 
 .trem-dropdown__menu-wrapper.trem-contact-form__dropdown-layer,
 .trem-bottom-sheet.trem-contact-form__dropdown-layer {
-    z-index: 2100;
+  z-index: 2100;
 }

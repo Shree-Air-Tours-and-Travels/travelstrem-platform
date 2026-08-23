@@ -76,9 +76,18 @@ export const ParagraphVariants = {
   name: "Paragraph / Variants",
   render: () => (
     <div className="trem-storybook-column">
-      <Paragraph text="Body paragraph — the default workhorse for most UI copy. Use it for descriptions, details, and general content." variant="body" />
-      <Paragraph text="Lead paragraph — a slightly larger style for introductory or highlighted text sections." variant="lead" />
-      <Paragraph text="Caption paragraph — smaller text for footnotes, labels, and auxiliary information." variant="caption" />
+      <Paragraph
+        text="Body paragraph — the default workhorse for most UI copy. Use it for descriptions, details, and general content."
+        variant="body"
+      />
+      <Paragraph
+        text="Lead paragraph — a slightly larger style for introductory or highlighted text sections."
+        variant="lead"
+      />
+      <Paragraph
+        text="Caption paragraph — smaller text for footnotes, labels, and auxiliary information."
+        variant="caption"
+      />
     </div>
   ),
 };
@@ -87,8 +96,14 @@ export const ParagraphSizes = {
   name: "Paragraph / Sizes",
   render: () => (
     <div className="trem-storybook-column">
-      <Paragraph text="Large paragraph size — suitable for hero sections or prominent copy." size="large" />
-      <Paragraph text="Medium paragraph size — the default balanced size for body content." size="medium" />
+      <Paragraph
+        text="Large paragraph size — suitable for hero sections or prominent copy."
+        size="large"
+      />
+      <Paragraph
+        text="Medium paragraph size — the default balanced size for body content."
+        size="medium"
+      />
       <Paragraph text="Small paragraph size — compact text for dense layouts." size="small" />
     </div>
   ),

@@ -77,8 +77,20 @@ export const LeftRight = {
     variant: "minimal",
     align: "left-right",
     actions: [
-      { label: "Back", variant: "text", color: "primary", iconLeft: "chevronLeft", onClick: () => {} },
-      { label: "Next", variant: "solid", color: "primary", iconRight: "chevronRight", onClick: () => {} },
+      {
+        label: "Back",
+        variant: "text",
+        color: "primary",
+        iconLeft: "chevronLeft",
+        onClick: () => {},
+      },
+      {
+        label: "Next",
+        variant: "solid",
+        color: "primary",
+        iconRight: "chevronRight",
+        onClick: () => {},
+      },
     ],
   },
 };

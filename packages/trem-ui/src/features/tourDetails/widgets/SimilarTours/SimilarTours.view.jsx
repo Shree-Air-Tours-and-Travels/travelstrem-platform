@@ -6,7 +6,10 @@ export default function SimilarToursView({ labels, tours, onView, isFavorited, o
   if (!tours.length) return null;
 
   return (
-    <section className="tour-detail__section tour-detail__similar-section" aria-labelledby="similar-tours-title">
+    <section
+      className="tour-detail__section tour-detail__similar-section"
+      aria-labelledby="similar-tours-title"
+    >
       <header className="tour-detail__similar-header">
         <span className="tour-detail__similar-header-icon" aria-hidden="true">
           <Icon name="sparkles" size={20} />
@@ -14,7 +17,10 @@ export default function SimilarToursView({ labels, tours, onView, isFavorited, o
         <div className="tour-detail__similar-heading">
           <span className="tour-detail__similar-eyebrow">Handpicked for your journey</span>
           <h2 id="similar-tours-title">{labels.youMayAlsoLike || "You may also like"}</h2>
-          <p>{labels.similarToursDescription || "More curated tours with destinations and experiences you may enjoy."}</p>
+          <p>
+            {labels.similarToursDescription ||
+              "More curated tours with destinations and experiences you may enjoy."}
+          </p>
         </div>
         <span className="tour-detail__similar-count">
           {tours.length} {tours.length === 1 ? "tour" : "tours"}

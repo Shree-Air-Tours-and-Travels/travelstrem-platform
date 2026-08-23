@@ -2,5 +2,13 @@
   "name": "@packages/trem-events",
   "version": "1.0.0",
   "private": true,
-  "main": "src/index.js"
+  "main": "src/index.js",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "jsdom": "^26.0.0",
+    "vitest": "^3.2.6"
+  }
 }

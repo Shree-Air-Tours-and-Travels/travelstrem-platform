@@ -9,34 +9,144 @@
   border-radius: $radius-md;
   background: var(--surface-inset);
 
-  > header { display: flex; align-items: center; gap: $space-3; }
-  > header > div { display: grid; gap: $space-1; }
-  > header strong { color: var(--heading); }
-  > header small { color: var(--muted); }
-  &__icon { display: inline-flex; align-items: center; justify-content: center; width: $space-10; height: $space-10; border-radius: $radius-sm; background: var(--primary-soft); color: var(--color-primary); }
-  &__rows { display: grid; gap: $space-2; }
-  &__rows > div { display: flex; align-items: center; justify-content: space-between; gap: $space-4; padding: $space-3; border: 1px solid var(--border); border-radius: $radius-sm; background: var(--surface); }
-  &__rows > div > span:first-child { display: grid; min-width: 0; gap: $space-1; }
-  &__rows small { color: var(--muted); font-size: $font-size-xs; }
-  &__rows strong { color: var(--heading); font-size: $font-size-sm; }
-  &__final { border-color: var(--color-primary) !important; background: var(--primary-soft) !important; }
-  &__amount { display: grid; flex: 0 0 auto; gap: $space-1; text-align: right; }
-  &__amount > strong { color: var(--color-primary-dark); font-size: $font-size-md; }
-  &__amount > strong small { color: inherit; font-weight: $font-regular; }
-  &__amount > span { color: var(--muted); font-size: $font-size-xs; }
-  &__amount.is-pending > strong { color: var(--color-warning-dark, var(--heading)); }
-  &__recommendation { display: flex; align-items: flex-start; gap: $space-2; padding: $space-3; border-radius: $radius-sm; background: var(--primary-soft); color: var(--color-primary-dark); }
-  &__recommendation svg { flex: 0 0 auto; margin-top: 2px; }
-  &__recommendation strong { font-size: $font-size-sm; }
-  &__recommendation p { margin: $space-1 0 0; color: var(--text); font-size: $font-size-xs; line-height: $line-height-lg; }
-  &__recommendation button { margin-top: $space-2; padding: $space-2 $space-3; border: 1px solid currentColor; border-radius: $radius-sm; background: var(--surface); color: inherit; font: inherit; font-size: $font-size-xs; font-weight: $font-semibold; cursor: pointer; }
-  &__recommendation.is-saving { background: var(--success-soft); color: var(--color-success); }
-  &__note { margin: 0; color: var(--muted); font-size: $font-size-xs; }
-  &.is-loading, &.is-error { color: var(--muted); font-size: $font-size-sm; }
-  &.is-error { border-color: var(--color-danger); color: var(--color-danger); }
+  > header {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+  }
+  > header > div {
+    display: grid;
+    gap: $space-1;
+  }
+  > header strong {
+    color: var(--heading);
+  }
+  > header small {
+    color: var(--muted);
+  }
+  &__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: $space-10;
+    height: $space-10;
+    border-radius: $radius-sm;
+    background: var(--primary-soft);
+    color: var(--color-primary);
+  }
+  &__rows {
+    display: grid;
+    gap: $space-2;
+  }
+  &__rows > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-4;
+    padding: $space-3;
+    border: 1px solid var(--border);
+    border-radius: $radius-sm;
+    background: var(--surface);
+  }
+  &__rows > div > span:first-child {
+    display: grid;
+    min-width: 0;
+    gap: $space-1;
+  }
+  &__rows small {
+    color: var(--muted);
+    font-size: $font-size-xs;
+  }
+  &__rows strong {
+    color: var(--heading);
+    font-size: $font-size-sm;
+  }
+  &__final {
+    border-color: var(--color-primary) !important;
+    background: var(--primary-soft) !important;
+  }
+  &__amount {
+    display: grid;
+    flex: 0 0 auto;
+    gap: $space-1;
+    text-align: right;
+  }
+  &__amount > strong {
+    color: var(--color-primary-dark);
+    font-size: $font-size-md;
+  }
+  &__amount > strong small {
+    color: inherit;
+    font-weight: $font-regular;
+  }
+  &__amount > span {
+    color: var(--muted);
+    font-size: $font-size-xs;
+  }
+  &__amount.is-pending > strong {
+    color: var(--color-warning-dark, var(--heading));
+  }
+  &__recommendation {
+    display: flex;
+    align-items: flex-start;
+    gap: $space-2;
+    padding: $space-3;
+    border-radius: $radius-sm;
+    background: var(--primary-soft);
+    color: var(--color-primary-dark);
+  }
+  &__recommendation svg {
+    flex: 0 0 auto;
+    margin-top: 2px;
+  }
+  &__recommendation strong {
+    font-size: $font-size-sm;
+  }
+  &__recommendation p {
+    margin: $space-1 0 0;
+    color: var(--text);
+    font-size: $font-size-xs;
+    line-height: $line-height-lg;
+  }
+  &__recommendation button {
+    margin-top: $space-2;
+    padding: $space-2 $space-3;
+    border: 1px solid currentColor;
+    border-radius: $radius-sm;
+    background: var(--surface);
+    color: inherit;
+    font: inherit;
+    font-size: $font-size-xs;
+    font-weight: $font-semibold;
+    cursor: pointer;
+  }
+  &__recommendation.is-saving {
+    background: var(--success-soft);
+    color: var(--color-success);
+  }
+  &__note {
+    margin: 0;
+    color: var(--muted);
+    font-size: $font-size-xs;
+  }
+  &.is-loading,
+  &.is-error {
+    color: var(--muted);
+    font-size: $font-size-sm;
+  }
+  &.is-error {
+    border-color: var(--color-danger);
+    color: var(--color-danger);
+  }
 }
 
 @media (max-width: $breakpoint-mobile) {
-  .trem-quote-comparison__rows > div { align-items: flex-start; flex-direction: column; }
-  .trem-quote-comparison__amount { width: 100%; text-align: left; }
+  .trem-quote-comparison__rows > div {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .trem-quote-comparison__amount {
+    width: 100%;
+    text-align: left;
+  }
 }

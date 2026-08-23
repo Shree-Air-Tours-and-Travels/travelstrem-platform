@@ -1,4 +1,8 @@
-import { selectStepErrors, TOUR_BUILDER_OPTION_KEYS, validateTourBuilderCollections } from "../data/useTourBuilderContract.js";
+import {
+  selectStepErrors,
+  TOUR_BUILDER_OPTION_KEYS,
+  validateTourBuilderCollections,
+} from "../data/useTourBuilderContract.js";
 import { describe, expect, test } from "vitest";
 
 describe("tour builder contract utilities", () => {
@@ -12,8 +16,9 @@ describe("tour builder contract utilities", () => {
       { value: "title", metadata: { step: "basic" } },
       { value: "desc", metadata: { step: "content" } },
     ];
-    expect(selectStepErrors({ title: "Required", desc: "Required" }, contract, "basic"))
-      .toEqual({ title: "Required" });
+    expect(selectStepErrors({ title: "Required", desc: "Required" }, contract, "basic")).toEqual({
+      title: "Required",
+    });
   });
 
   test("does not validate hidden fixed departures for a flexible tour", () => {

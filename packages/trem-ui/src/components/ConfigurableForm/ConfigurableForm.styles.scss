@@ -112,10 +112,18 @@
     gap: 0.25rem;
     min-width: 0;
 
-    &--span-1 { grid-column: span 1; }
-    &--span-2 { grid-column: span 2; }
-    &--span-3 { grid-column: span 3; }
-    &--span-4 { grid-column: span 4; }
+    &--span-1 {
+      grid-column: span 1;
+    }
+    &--span-2 {
+      grid-column: span 2;
+    }
+    &--span-3 {
+      grid-column: span 3;
+    }
+    &--span-4 {
+      grid-column: span 4;
+    }
   }
 
   &__label {
@@ -182,7 +190,9 @@
     font-size: 0.85rem;
     font-family: inherit;
     outline: none;
-    transition: border-color 160ms ease, box-shadow 160ms ease;
+    transition:
+      border-color 160ms ease,
+      box-shadow 160ms ease;
 
     &:focus {
       border-color: var(--color-primary);
@@ -211,7 +221,9 @@
     font-family: inherit;
     outline: none;
     resize: vertical;
-    transition: border-color 160ms ease, box-shadow 160ms ease;
+    transition:
+      border-color 160ms ease,
+      box-shadow 160ms ease;
 
     &:focus {
       border-color: var(--color-primary);

@@ -14,13 +14,15 @@ describe("OverviewRail", () => {
             id: "actions",
             type: "quickActions",
             title: "Quick Actions",
-            items: [{
-              id: "support",
-              title: "Contact support",
-              description: "We are here",
-              icon: "phoneCall",
-              href: "mailto:help@example.com",
-            }],
+            items: [
+              {
+                id: "support",
+                title: "Contact support",
+                description: "We are here",
+                icon: "phoneCall",
+                href: "mailto:help@example.com",
+              },
+            ],
           },
           {
             id: "trip",
@@ -48,19 +50,23 @@ describe("OverviewRail", () => {
   it("renders disabled quick actions without navigation", () => {
     render(
       <OverviewRail
-        widgets={[{
-          id: "actions",
-          type: "quickActions",
-          title: "Quick Actions",
-          items: [{
-            id: "documents",
-            title: "Upload documents",
-            description: "Coming later",
-            icon: "passport",
-            href: "/documents",
-            disabled: true,
-          }],
-        }]}
+        widgets={[
+          {
+            id: "actions",
+            type: "quickActions",
+            title: "Quick Actions",
+            items: [
+              {
+                id: "documents",
+                title: "Upload documents",
+                description: "Coming later",
+                icon: "passport",
+                href: "/documents",
+                disabled: true,
+              },
+            ],
+          },
+        ]}
       />,
     );
 
@@ -71,17 +77,24 @@ describe("OverviewRail", () => {
   it("can omit disabled and explicitly hidden quick actions from backend configuration", () => {
     render(
       <OverviewRail
-        widgets={[{
-          id: "actions",
-          type: "quickActions",
-          title: "Quick Actions",
-          hideDisabled: true,
-          items: [
-            { id: "support", title: "Contact support", icon: "phoneCall", href: "mailto:help@example.com" },
-            { id: "documents", title: "Upload documents", icon: "passport", disabled: true },
-            { id: "hidden", title: "Hidden action", icon: "eye", hide: true },
-          ],
-        }]}
+        widgets={[
+          {
+            id: "actions",
+            type: "quickActions",
+            title: "Quick Actions",
+            hideDisabled: true,
+            items: [
+              {
+                id: "support",
+                title: "Contact support",
+                icon: "phoneCall",
+                href: "mailto:help@example.com",
+              },
+              { id: "documents", title: "Upload documents", icon: "passport", disabled: true },
+              { id: "hidden", title: "Hidden action", icon: "eye", hide: true },
+            ],
+          },
+        ]}
       />,
     );
 

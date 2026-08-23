@@ -60,7 +60,13 @@ describe("SingleSelect", () => {
   it("renders a clear button that resets the selection", () => {
     const onChange = vi.fn();
     render(
-      <SingleSelect label="Destination" value="goa" options={options} onChange={onChange} clearable />,
+      <SingleSelect
+        label="Destination"
+        value="goa"
+        options={options}
+        onChange={onChange}
+        clearable
+      />,
     );
     fireEvent.click(screen.getByLabelText("Clear selection"));
     expect(onChange).toHaveBeenCalledWith("");
@@ -81,9 +87,7 @@ describe("SingleSelect", () => {
   });
 
   it("does not open the menu while disabled", () => {
-    const { container } = render(
-      <SingleSelect label="Destination" options={options} disabled />,
-    );
+    const { container } = render(<SingleSelect label="Destination" options={options} disabled />);
     openMenu(container);
     expect(container.querySelector(".trem-dropdown")).not.toHaveClass("is-open");
   });

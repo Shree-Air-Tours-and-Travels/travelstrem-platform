@@ -29,7 +29,12 @@ export const Fullscreen = {
     return (
       <>
         <Button text="Open fullscreen sheet" onClick={() => setOpen(true)} />
-        <BottomSheet open={open} onClose={() => setOpen(false)} title="Fullscreen" variant="fullscreen">
+        <BottomSheet
+          open={open}
+          onClose={() => setOpen(false)}
+          title="Fullscreen"
+          variant="fullscreen"
+        >
           <div style={{ padding: "1rem 0" }}>
             <p>Fullscreen bottom sheet content.</p>
           </div>

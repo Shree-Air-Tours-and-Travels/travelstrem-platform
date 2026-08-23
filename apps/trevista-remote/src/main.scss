@@ -1,50 +1,50 @@
 @import "@packages/trem-ui/styles/base/typography";
 
 * {
-    box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 body {
-    margin: 0;
-    font-family: $font-primary;
-    background: var(--page-bg);
-    color: var(--text);
+  margin: 0;
+  font-family: $font-primary;
+  background: var(--page-bg);
+  color: var(--text);
 }
 
 a {
-    color: inherit;
+  color: inherit;
 }
 
 #root {
-    min-height: 100vh;
+  min-height: 100vh;
 }
 
 .tours-app-shell {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    background: var(--page-bg);
-    color: var(--text);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--page-bg);
+  color: var(--text);
 
-    > footer {
-        margin-top: auto;
-    }
+  > footer {
+    margin-top: auto;
+  }
 }
 
 .tours-app-shell--embedded {
-    min-height: auto;
-    --td-header-offset: 0px;
+  min-height: auto;
+  --td-header-offset: 0px;
 
-    // The host shell already places the remote below its fixed app header.
-    // Keep detail breadcrumbs at the top of that scroll container instead of
-    // applying the standalone 120px mobile header offset a second time.
-    .tour-detail {
-        --td-header-offset: 0px;
-    }
+  // The host shell already places the remote below its fixed app header.
+  // Keep detail breadcrumbs at the top of that scroll container instead of
+  // applying the standalone 120px mobile header offset a second time.
+  .tour-detail {
+    --td-header-offset: 0px;
+  }
 }
 
 .app-status {
-    padding: 1.5rem;
-    color: var(--text);
-    background: var(--page-bg);
+  padding: 1.5rem;
+  color: var(--text);
+  background: var(--page-bg);
 }

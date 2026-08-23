@@ -10,12 +10,12 @@ export { default as StepRenderer } from "./components/TourBuilder/StepRenderer.j
 export { BuilderContext, useBuilderContext } from "./components/TourBuilder/BuilderContext.jsx";
 
 export {
-    default as WidgetRenderer,
-    widgetRegistry,
-    registerWidget,
-    getRegisteredTypes,
-    joinBase,
-    joinBase as joinWidgetPath,
+  default as WidgetRenderer,
+  widgetRegistry,
+  registerWidget,
+  getRegisteredTypes,
+  joinBase,
+  joinBase as joinWidgetPath,
 } from "./widgets/WidgetRenderer.jsx";
 
 export { WIDGET_TYPES, BUILDER_ACTIONS, DEFAULT_ACTIONS } from "./constants/widgetTypes.js";

@@ -212,22 +212,28 @@ export default function InputField({
   const isMonthYear = variant === "monthYear";
   const [cc, setCc] = useState(initialCountryCode);
 
-  const handleChange = useCallback((e) => {
-    let val = e.target.value;
-    if (isTel) {
-      val = val.replace(/\D/g, "").slice(0, maxLength || 10);
-    }
-    if (isMonthYear) {
-      val = val.replace(/\D/g, "").slice(0, 4);
-      if (val.length >= 3) val = val.slice(0, 2) + "/" + val.slice(2);
-    }
-    onChange?.(val);
-  }, [isTel, isMonthYear, maxLength, onChange]);
+  const handleChange = useCallback(
+    (e) => {
+      let val = e.target.value;
+      if (isTel) {
+        val = val.replace(/\D/g, "").slice(0, maxLength || 10);
+      }
+      if (isMonthYear) {
+        val = val.replace(/\D/g, "").slice(0, 4);
+        if (val.length >= 3) val = val.slice(0, 2) + "/" + val.slice(2);
+      }
+      onChange?.(val);
+    },
+    [isTel, isMonthYear, maxLength, onChange],
+  );
 
-  const handleCountryCode = useCallback((code) => {
-    setCc(code);
-    onCountryCodeChange?.(code);
-  }, [onCountryCodeChange]);
+  const handleCountryCode = useCallback(
+    (code) => {
+      setCc(code);
+      onCountryCodeChange?.(code);
+    },
+    [onCountryCodeChange],
+  );
 
   const ccItems = DEFAULT_COUNTRY_CODES.map((c) => ({
     id: c.code,
@@ -257,14 +263,22 @@ export default function InputField({
             menuClassName="trem-input__country-menu"
             searchPlaceholder="Search country code..."
             trigger={({ open }) => (
-              <Button variant="text" primaryClassName="trem-input__cc-trigger" iconRight="chevronDown" text={cc} tabIndex={-1} />
+              <Button
+                variant="text"
+                primaryClassName="trem-input__cc-trigger"
+                iconRight="chevronDown"
+                text={cc}
+                tabIndex={-1}
+              />
             )}
           />
         )}
         <input
           className="trem-input__field"
           type={isTel ? "tel" : isMonthYear ? "text" : variant}
-          inputMode={inputMode || (variant === "number" || isTel || isMonthYear ? "numeric" : undefined)}
+          inputMode={
+            inputMode || (variant === "number" || isTel || isMonthYear ? "numeric" : undefined)
+          }
           value={value}
           onChange={handleChange}
           placeholder={placeholder || (isMonthYear ? "MM/YY" : undefined)}

@@ -7,10 +7,8 @@ import "./ProductHeader.styles.scss";
 
 const asArray = (value) => (Array.isArray(value) ? value : []);
 
-const getActionClass = (variant = "secondary") => [
-  "trem-product-header__action",
-  `trem-product-header__action--${variant}`,
-].join(" ");
+const getActionClass = (variant = "secondary") =>
+  ["trem-product-header__action", `trem-product-header__action--${variant}`].join(" ");
 
 const runHandler = (event, item) => {
   if (item?.disabled) {
@@ -101,7 +99,9 @@ function DropdownNavItem({ item }) {
   return (
     <Dropdown
       trigger={({ isActive }) => (
-        <span className={`trem-product-header__nav-item trem-product-header__dropdown-trigger${isActive ? " is-active" : ""}`}>
+        <span
+          className={`trem-product-header__nav-item trem-product-header__dropdown-trigger${isActive ? " is-active" : ""}`}
+        >
           {item.label}
           <Icon name="chevronDown" size={14} />
         </span>
@@ -117,14 +117,16 @@ DropdownNavItem.propTypes = {
   item: PropTypes.shape({
     id: PropTypes.string,
     label: PropTypes.string.isRequired,
-    items: PropTypes.arrayOf(PropTypes.shape({
-      id: PropTypes.string,
-      label: PropTypes.string.isRequired,
-      href: PropTypes.string,
-      onClick: PropTypes.func,
-      icon: PropTypes.string,
-      description: PropTypes.string,
-    })),
+    items: PropTypes.arrayOf(
+      PropTypes.shape({
+        id: PropTypes.string,
+        label: PropTypes.string.isRequired,
+        href: PropTypes.string,
+        onClick: PropTypes.func,
+        icon: PropTypes.string,
+        description: PropTypes.string,
+      }),
+    ),
   }).isRequired,
 };
 
@@ -137,7 +139,9 @@ function MobileDrawer({ open, onClose, brand, nav, actions, userLabel }) {
     const handleKey = (e) => {
       if (e.key === "Escape") onClose();
       if (e.key === "Tab" && drawerRef.current) {
-        const focusable = drawerRef.current.querySelectorAll("a, button, [tabindex]:not([tabindex='-1'])");
+        const focusable = drawerRef.current.querySelectorAll(
+          "a, button, [tabindex]:not([tabindex='-1'])",
+        );
         if (!focusable.length) return;
         const first = focusable[0];
         const last = focusable[focusable.length - 1];
@@ -188,24 +192,27 @@ function MobileDrawer({ open, onClose, brand, nav, actions, userLabel }) {
     };
   }, [open]);
 
-  const handleItemClick = useCallback((item) => {
-    if (item?.disabled) return;
-    onClose();
-    if (typeof item?.onClick === "function") {
-      item.onClick();
-      return;
-    }
-    if (item?.href) {
-      window.location.assign(item.href);
-    }
-  }, [onClose]);
+  const handleItemClick = useCallback(
+    (item) => {
+      if (item?.disabled) return;
+      onClose();
+      if (typeof item?.onClick === "function") {
+        item.onClick();
+        return;
+      }
+      if (item?.href) {
+        window.location.assign(item.href);
+      }
+    },
+    [onClose],
+  );
 
   const initials = getInitials(userLabel || brand?.label);
-  const drawerActions = actions.flatMap((item) => (
+  const drawerActions = actions.flatMap((item) =>
     item.variant === "profile" && Array.isArray(item.items) && item.items.length
       ? item.items
-      : [item]
-  ));
+      : [item],
+  );
 
   return (
     <>
@@ -227,7 +234,11 @@ function MobileDrawer({ open, onClose, brand, nav, actions, userLabel }) {
               <span className="trem-product-header__drawer-avatar">{initials}</span>
               <div className="trem-product-header__drawer-info">
                 <strong>{brand?.label || "Menu"}</strong>
-                {userLabel ? <small>{userLabel}</small> : brand?.subtitle ? <small>{brand.subtitle}</small> : null}
+                {userLabel ? (
+                  <small>{userLabel}</small>
+                ) : brand?.subtitle ? (
+                  <small>{brand.subtitle}</small>
+                ) : null}
               </div>
             </div>
             <button
@@ -246,12 +257,19 @@ function MobileDrawer({ open, onClose, brand, nav, actions, userLabel }) {
                 {nav.map((item, i) => (
                   <li key={item.id || item.label}>
                     {item.type === "dropdown" ? (
-                      <MobileDropdownItem item={item} onItemClick={handleItemClick} firstLinkRef={i === 0 ? firstLinkRef : undefined} />
+                      <MobileDropdownItem
+                        item={item}
+                        onItemClick={handleItemClick}
+                        firstLinkRef={i === 0 ? firstLinkRef : undefined}
+                      />
                     ) : (
                       <a
                         href={item.href || "#"}
                         className={`trem-product-header__drawer-link${item.active ? " is-active" : ""}`}
-                        onClick={(e) => { e.preventDefault(); handleItemClick(item); }}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleItemClick(item);
+                        }}
                         ref={i === 0 ? firstLinkRef : undefined}
                       >
                         {item.label}
@@ -301,7 +319,9 @@ function MobileDropdownItem({ item, onItemClick, firstLinkRef }) {
   const isActive = asArray(item.items).some((child) => child.active);
 
   return (
-    <div className={`trem-product-header__drawer-dropdown${expanded || isActive ? " is-expanded" : ""}`}>
+    <div
+      className={`trem-product-header__drawer-dropdown${expanded || isActive ? " is-expanded" : ""}`}
+    >
       <button
         className={`trem-product-header__drawer-dropdown-trigger${isActive ? " is-active" : ""}`}
         type="button"
@@ -318,7 +338,10 @@ function MobileDropdownItem({ item, onItemClick, firstLinkRef }) {
               <a
                 href={child.href || "#"}
                 className={`trem-product-header__drawer-sublink${child.active ? " is-active" : ""}`}
-                onClick={(e) => { e.preventDefault(); onItemClick(child); }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  onItemClick(child);
+                }}
               >
                 {child.label}
               </a>
@@ -360,13 +383,16 @@ export default function ProductHeader({
       active: item.active || (activeTab && (item.id === activeTab || item.label === activeTab)),
     }));
 
-  const themeToggle = typeof onToggleTheme === "function" ? {
-    id: "theme-toggle",
-    label: theme === "dark" ? "Light mode" : "Dark mode",
-    icon: theme === "dark" ? "sun" : "moon",
-    onClick: onToggleTheme,
-    variant: "icon",
-  } : null;
+  const themeToggle =
+    typeof onToggleTheme === "function"
+      ? {
+          id: "theme-toggle",
+          label: theme === "dark" ? "Light mode" : "Dark mode",
+          icon: theme === "dark" ? "sun" : "moon",
+          onClick: onToggleTheme,
+          variant: "icon",
+        }
+      : null;
 
   const actions = [
     themeToggle,
@@ -375,26 +401,35 @@ export default function ProductHeader({
     authAction ? { ...authAction, variant: authAction.variant || "primary" } : null,
   ].filter(Boolean);
 
-  const renderActionContent = (item, includeChevron = false) => (
+  const renderActionContent = (item, includeChevron = false) =>
     item.variant === "profile" ? (
       <>
         <span className="trem-product-header__profile-avatar" aria-hidden="true">
-          {item.avatarUrl ? <img src={item.avatarUrl} alt="" /> : getInitials(item.displayName || item.label)}
+          {item.avatarUrl ? (
+            <img src={item.avatarUrl} alt="" />
+          ) : (
+            getInitials(item.displayName || item.label)
+          )}
         </span>
         <span className="trem-product-header__profile-copy">
           <strong>{item.displayName || item.label}</strong>
           <small>{item.label || "Profile"}</small>
         </span>
-        {includeChevron ? <Icon name="chevronDown" size={15} /> : <Icon name="chevronRight" size={15} />}
+        {includeChevron ? (
+          <Icon name="chevronDown" size={15} />
+        ) : (
+          <Icon name="chevronRight" size={15} />
+        )}
       </>
     ) : (
       <>
         {item.icon ? <Icon name={item.icon} size={item.variant === "icon" ? 21 : 18} /> : null}
-        {item.count !== undefined ? <span className="trem-product-header__count">{item.count}</span> : null}
+        {item.count !== undefined ? (
+          <span className="trem-product-header__count">{item.count}</span>
+        ) : null}
         {item.variant !== "icon" ? <span>{item.label}</span> : null}
       </>
-    )
-  );
+    );
 
   useEffect(() => {
     setDrawerOpen(false);
@@ -413,7 +448,11 @@ export default function ProductHeader({
           <Icon name={drawerOpen ? "menuClose" : "menuOpen"} size={24} />
         </button>
 
-        <HeaderButton item={brand} className="trem-product-header__brand" ariaLabel={`${brand?.label || "Product"} home`}>
+        <HeaderButton
+          item={brand}
+          className="trem-product-header__brand"
+          ariaLabel={`${brand?.label || "Product"} home`}
+        >
           <BrandLogo
             logoSrc={brand?.logoSrc || ""}
             darkLogoSrc={brand?.darkLogoSrc || ""}
@@ -427,7 +466,10 @@ export default function ProductHeader({
         </HeaderButton>
 
         {nav.length ? (
-          <nav className="trem-product-header__nav" aria-label={brand?.navLabel || "Product navigation"}>
+          <nav
+            className="trem-product-header__nav"
+            aria-label={brand?.navLabel || "Product navigation"}
+          >
             {nav.map((item) =>
               item.type === "dropdown" ? (
                 <DropdownNavItem key={item.id || item.label} item={item} />
@@ -439,7 +481,7 @@ export default function ProductHeader({
                 >
                   {item.label}
                 </HeaderButton>
-              )
+              ),
             )}
           </nav>
         ) : null}
@@ -447,7 +489,8 @@ export default function ProductHeader({
         {actions.length ? (
           <div className="trem-product-header__actions">
             {actions.map((item) => {
-              const hasDropdown = item.variant === "profile" && Array.isArray(item.items) && item.items.length > 0;
+              const hasDropdown =
+                item.variant === "profile" && Array.isArray(item.items) && item.items.length > 0;
               if (hasDropdown) {
                 return (
                   <Dropdown
@@ -509,25 +552,29 @@ ProductHeader.propTypes = {
     onClick: PropTypes.func,
     subtitle: PropTypes.string,
   }),
-  navItems: PropTypes.arrayOf(PropTypes.shape({
-    active: PropTypes.bool,
-    disabled: PropTypes.bool,
-    href: PropTypes.string,
-    id: PropTypes.string,
-    label: PropTypes.string.isRequired,
-    onClick: PropTypes.func,
-    rel: PropTypes.string,
-    target: PropTypes.string,
-    type: PropTypes.oneOf(["link", "dropdown"]),
-    items: PropTypes.arrayOf(PropTypes.shape({
+  navItems: PropTypes.arrayOf(
+    PropTypes.shape({
+      active: PropTypes.bool,
+      disabled: PropTypes.bool,
+      href: PropTypes.string,
       id: PropTypes.string,
       label: PropTypes.string.isRequired,
-      href: PropTypes.string,
       onClick: PropTypes.func,
-      icon: PropTypes.string,
-      description: PropTypes.string,
-    })),
-  })),
+      rel: PropTypes.string,
+      target: PropTypes.string,
+      type: PropTypes.oneOf(["link", "dropdown"]),
+      items: PropTypes.arrayOf(
+        PropTypes.shape({
+          id: PropTypes.string,
+          label: PropTypes.string.isRequired,
+          href: PropTypes.string,
+          onClick: PropTypes.func,
+          icon: PropTypes.string,
+          description: PropTypes.string,
+        }),
+      ),
+    }),
+  ),
   activeTab: PropTypes.string,
   wishlist: PropTypes.shape({
     ariaLabel: PropTypes.string,
@@ -542,12 +589,14 @@ ProductHeader.propTypes = {
     avatarUrl: PropTypes.string,
     displayName: PropTypes.string,
     icon: PropTypes.string,
-    items: PropTypes.arrayOf(PropTypes.shape({
-      id: PropTypes.string,
-      label: PropTypes.string.isRequired,
-      icon: PropTypes.string,
-      onClick: PropTypes.func,
-    })),
+    items: PropTypes.arrayOf(
+      PropTypes.shape({
+        id: PropTypes.string,
+        label: PropTypes.string.isRequired,
+        icon: PropTypes.string,
+        onClick: PropTypes.func,
+      }),
+    ),
     label: PropTypes.string,
     onClick: PropTypes.func,
     variant: PropTypes.string,

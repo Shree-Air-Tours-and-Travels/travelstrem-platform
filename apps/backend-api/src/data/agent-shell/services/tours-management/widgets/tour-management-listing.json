@@ -1,0 +1,43 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "emptyStateTitle": "No tours found",
+        "emptyStateDescription": "Get started by creating your first tour.",
+        "loadFailed": "Failed to load tours",
+        "confirmDeleteSingle": "Delete \"{{name}}\"? This cannot be undone.",
+        "confirmDeleteAll": "Delete ALL tours? This cannot be undone.",
+        "addedByAgent": "Added by agent"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "TourManagementListing",
+          "props": {}
+        }
+      ],
+      "config": {
+        "emptyState": {
+          "icon": "map",
+          "titleRef": "emptyStateTitle",
+          "descriptionRef": "emptyStateDescription"
+        },
+        "card": {
+          "isAdmin": false,
+          "showOwner": true,
+          "ownershipMode": "agent",
+          "ownershipLabelRef": "addedByAgent"
+        }
+      },
+      "actions": []
+    }
+  }
+}

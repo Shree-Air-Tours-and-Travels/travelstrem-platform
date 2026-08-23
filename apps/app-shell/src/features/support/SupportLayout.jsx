@@ -15,7 +15,10 @@ export function SupportLayout({ title, subtitle, children, actions }) {
       </header>
       <div className="support-page__body">
         <div className="support-page__intro">
-          <div className="support-page__title-copy"><h1>{title}</h1>{subtitle ? <p>{subtitle}</p> : null}</div>
+          <div className="support-page__title-copy">
+            <h1>{title}</h1>
+            {subtitle ? <p>{subtitle}</p> : null}
+          </div>
           {actions ? <div className="support-page__actions">{actions}</div> : null}
         </div>
         {children}
@@ -25,16 +28,28 @@ export function SupportLayout({ title, subtitle, children, actions }) {
 }
 
 export function SupportSection({ title, action, children, className = "" }) {
-  return <section className={`support-section ${className}`}><div className="support-section__heading"><h2>{title}</h2>{action}</div>{children}</section>;
+  return (
+    <section className={`support-section ${className}`}>
+      <div className="support-section__heading">
+        <h2>{title}</h2>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
 }
 
 export function ResourceBoundary({ loading, error, reload, children, rows = 3 }) {
   if (loading) return <SupportSkeleton rows={rows} />;
-  if (error) return <ErrorState title="Support is temporarily unavailable" description={error} retry={reload} />;
+  if (error)
+    return (
+      <ErrorState title="Support is temporarily unavailable" description={error} retry={reload} />
+    );
   return children;
 }
 
 export function DataEmpty({ value, fallback }) {
-  if (value) return <EmptyState icon={value.icon} title={value.title} description={value.description} />;
+  if (value)
+    return <EmptyState icon={value.icon} title={value.title} description={value.description} />;
   return <EmptyState icon="support" title={fallback} />;
 }

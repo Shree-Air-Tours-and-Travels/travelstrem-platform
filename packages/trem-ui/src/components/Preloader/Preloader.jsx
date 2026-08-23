@@ -11,7 +11,8 @@ export default function Preloader({
   className = "",
 }) {
   const isCardLike = variant === "cards" || variant === "stack" || variant === "stats";
-  const showMultiple = variant === "cards" || variant === "stack" || variant === "stats" || variant === "grid";
+  const showMultiple =
+    variant === "cards" || variant === "stack" || variant === "stats" || variant === "grid";
 
   return (
     <section
@@ -66,11 +67,15 @@ export default function Preloader({
           <div className="trem-preloader__grid" aria-hidden="true">
             {Array.from({ length: count }, (_, index) => (
               <div className="trem-preloader__item" key={index}>
-                {isCardLike && variant !== "stats" ? <span className="trem-preloader__media" /> : null}
+                {isCardLike && variant !== "stats" ? (
+                  <span className="trem-preloader__media" />
+                ) : null}
                 <span className="trem-preloader__body">
                   <span className="trem-preloader__line trem-preloader__line--strong" />
                   <span className="trem-preloader__line" />
-                  {isCardLike && variant !== "stats" ? <span className="trem-preloader__line trem-preloader__line--short" /> : null}
+                  {isCardLike && variant !== "stats" ? (
+                    <span className="trem-preloader__line trem-preloader__line--short" />
+                  ) : null}
                 </span>
               </div>
             ))}

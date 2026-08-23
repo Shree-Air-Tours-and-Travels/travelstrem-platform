@@ -20,6 +20,7 @@
             "href": "/?tab=trevio",
             "target": "_self",
             "ariaLabel": "Explore trips and adventures on Trevio, coming soon",
+            "hide": true,
             "disabled": true,
             "comingSoon": true,
             "comingSoonLabel": "Coming soon"

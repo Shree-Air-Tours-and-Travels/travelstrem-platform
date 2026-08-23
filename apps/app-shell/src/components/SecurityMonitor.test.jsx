@@ -16,7 +16,11 @@ test("keeps application forms while removing executable DOM nodes", async () => 
   const root = createRoot(container);
 
   await act(async () => {
-    root.render(<SecurityMonitor><main>Application</main></SecurityMonitor>);
+    root.render(
+      <SecurityMonitor>
+        <main>Application</main>
+      </SecurityMonitor>,
+    );
     await flushMutations();
   });
 

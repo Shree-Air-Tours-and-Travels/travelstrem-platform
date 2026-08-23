@@ -134,7 +134,6 @@ $mt-bg: var(--page-bg);
     border: 1px solid $mt-border;
     border-radius: 8px;
   }
-
 }
 
 /* accessibility: prefer reduced motion */
@@ -151,7 +150,6 @@ $mt-bg: var(--page-bg);
   padding: 2rem;
   text-align: center;
 }
-
 
 /* ---------- Panels Overlay (Tour/Trip view, Create/Edit forms) ---------- */
 
@@ -267,8 +265,14 @@ $mt-bg: var(--page-bg);
 
 /* ---------- Toast notification ---------- */
 @keyframes tm-toast-in {
-    from { opacity: 0; transform: translateX(40px); }
-    to { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 /* ---------- Admin services visual hierarchy ----------
@@ -331,7 +335,10 @@ $mt-bg: var(--page-bg);
   .asv__card {
     border-color: var(--border);
     box-shadow: var(--shadow-sm);
-    transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+    transition:
+      transform 180ms ease,
+      box-shadow 180ms ease,
+      border-color 180ms ease;
 
     &:hover {
       transform: translateY(-2px);

@@ -50,7 +50,15 @@ export const WithShortcut = {
 
 export const WithinCard = {
   render: () => (
-    <div style={{ maxWidth: 480, border: "1px solid var(--border, #e5e7eb)", borderRadius: 16, padding: 20, background: "var(--surface, #ffffff)" }}>
+    <div
+      style={{
+        maxWidth: 480,
+        border: "1px solid var(--border, #e5e7eb)",
+        borderRadius: 16,
+        padding: 20,
+        background: "var(--surface, #ffffff)",
+      }}
+    >
       <Stateful>
         {({ value, onChange }) => (
           <SearchBar

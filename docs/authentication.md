@@ -4,17 +4,17 @@ AuthTREM is the only authentication UI. Customer, admin, partner, Trevista, Trev
 
 ## API
 
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| `GET` | `/api/auth/methods` | Public availability of Google/mobile methods |
-| `GET` | `/api/auth/google` | Starts Google OIDC authorization-code flow |
-| `GET` | `/api/auth/google/callback` | Validates state, PKCE, nonce and Google ID token; creates the TravelsTREM session |
-| `POST` | `/api/auth/mobile/request-otp` | Normalizes an E.164 number and creates an expiring OTP challenge |
-| `POST` | `/api/auth/mobile/verify-otp` | Consumes a valid challenge and creates the same TravelsTREM session |
-| `POST` | `/api/auth/refresh` | Rotates a database-backed refresh session |
-| `POST` | `/api/auth/logout` | Revokes the current refresh session and clears cookies |
-| `GET` | `/api/auth/me` | Returns the authenticated internal user |
-| `GET` | `/api/auth/session` | Restores/rotates the browser session used by portal providers |
+| Method | Endpoint                       | Purpose                                                                           |
+| ------ | ------------------------------ | --------------------------------------------------------------------------------- |
+| `GET`  | `/api/auth/methods`            | Public availability of Google/mobile methods                                      |
+| `GET`  | `/api/auth/google`             | Starts Google OIDC authorization-code flow                                        |
+| `GET`  | `/api/auth/google/callback`    | Validates state, PKCE, nonce and Google ID token; creates the TravelsTREM session |
+| `POST` | `/api/auth/mobile/request-otp` | Normalizes an E.164 number and creates an expiring OTP challenge                  |
+| `POST` | `/api/auth/mobile/verify-otp`  | Consumes a valid challenge and creates the same TravelsTREM session               |
+| `POST` | `/api/auth/refresh`            | Rotates a database-backed refresh session                                         |
+| `POST` | `/api/auth/logout`             | Revokes the current refresh session and clears cookies                            |
+| `GET`  | `/api/auth/me`                 | Returns the authenticated internal user                                           |
+| `GET`  | `/api/auth/session`            | Restores/rotates the browser session used by portal providers                     |
 
 All sessions use portal-specific HttpOnly cookies. Provider tokens, OTPs, password hashes, and refresh-token values are never returned by user/session endpoints.
 

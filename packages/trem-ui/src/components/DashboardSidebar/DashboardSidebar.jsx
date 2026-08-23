@@ -14,15 +14,19 @@ function getItemLabel(item) {
 }
 
 function getSidebarIcon(icon) {
-  return ({
-    dashboard: "user",
-    profile: "user",
-    bookings: "calendar",
-    reviews: "star",
-    messages: "messageCircle",
-    offers: "ticket",
-    payments: "payment",
-  }[icon] || icon || "circleDot");
+  return (
+    {
+      dashboard: "user",
+      profile: "user",
+      bookings: "calendar",
+      reviews: "star",
+      messages: "messageCircle",
+      offers: "ticket",
+      payments: "payment",
+    }[icon] ||
+    icon ||
+    "circleDot"
+  );
 }
 
 export default function DashboardSidebar({
@@ -78,7 +82,9 @@ export default function DashboardSidebar({
         <Button
           variant="text"
           iconLeft={getSidebarIcon(item.icon)}
-          iconRight={!isRail && hasChildren ? (expandedItem ? "chevronDown" : "chevronRight") : undefined}
+          iconRight={
+            !isRail && hasChildren ? (expandedItem ? "chevronDown" : "chevronRight") : undefined
+          }
           text={!isRail ? title : undefined}
           title={title}
           aria-label={title}
@@ -88,7 +94,9 @@ export default function DashboardSidebar({
             depth > 0 ? "trem-dashboard-sidebar__item--child" : "",
             active ? "is-active" : "",
             item.disabled ? "is-disabled" : "",
-          ].filter(Boolean).join(" ")}
+          ]
+            .filter(Boolean)
+            .join(" ")}
           onClick={() => handleItemClick(item)}
         />
         {!isRail && hasChildren && expandedItem ? (
@@ -112,22 +120,32 @@ export default function DashboardSidebar({
         isRail ? "is-rail" : "",
         isHidden ? "is-hidden" : "",
         className,
-      ].filter(Boolean).join(" ")}
+      ]
+        .filter(Boolean)
+        .join(" ")}
       aria-label={labels.navigation || "Dashboard navigation"}
     >
       <Button
         variant="text"
         iconLeft={collapsed ? "chevronRight" : "chevronLeft"}
         isCircular
-        aria-label={collapsed ? labels.expand || "Expand sidebar" : labels.collapse || "Collapse sidebar"}
-        title={collapsed ? labels.expand || "Expand sidebar" : labels.collapse || "Collapse sidebar"}
+        aria-label={
+          collapsed ? labels.expand || "Expand sidebar" : labels.collapse || "Collapse sidebar"
+        }
+        title={
+          collapsed ? labels.expand || "Expand sidebar" : labels.collapse || "Collapse sidebar"
+        }
         primaryClassName="trem-dashboard-sidebar__collapse"
         onClick={() => onCollapsedChange?.(!collapsed)}
       />
 
       <div className="trem-dashboard-sidebar__profile">
         <span className="trem-dashboard-sidebar__avatar" aria-hidden="true">
-          {profile.image ? <img src={profile.image} alt="" /> : <Icon name={profile.avatar || "user"} size={28} />}
+          {profile.image ? (
+            <img src={profile.image} alt="" />
+          ) : (
+            <Icon name={profile.avatar || "user"} size={28} />
+          )}
         </span>
         {!isRail ? (
           <div className="trem-dashboard-sidebar__profile-text">
@@ -151,7 +169,10 @@ export default function DashboardSidebar({
 
       <nav className="trem-dashboard-sidebar__nav">
         {sectionList.map((section) => (
-          <section className="trem-dashboard-sidebar__section" key={section.id || section.title || section.sectionRef}>
+          <section
+            className="trem-dashboard-sidebar__section"
+            key={section.id || section.title || section.sectionRef}
+          >
             {!isRail && section.title ? (
               <Title
                 text={section.title}

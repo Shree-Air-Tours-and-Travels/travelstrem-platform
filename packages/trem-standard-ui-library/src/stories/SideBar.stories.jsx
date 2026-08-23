@@ -5,7 +5,8 @@ const sidebarConfig = {
   brand: { name: "TravelsTREM", subtitle: "Dashboard" },
   sections: [
     {
-      id: "main", title: "Main",
+      id: "main",
+      title: "Main",
       items: [
         { id: "overview", label: "Overview", icon: "compass", target: "overview" },
         { id: "bookings", label: "Bookings", icon: "tours", target: "bookings", badge: "12" },
@@ -13,7 +14,8 @@ const sidebarConfig = {
       ],
     },
     {
-      id: "admin", title: "Administration",
+      id: "admin",
+      title: "Administration",
       items: [
         { id: "settings", label: "Settings", icon: "settings", target: "settings" },
         { id: "reports", label: "Reports", icon: "filter", target: "reports", disabled: true },

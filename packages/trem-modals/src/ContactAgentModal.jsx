@@ -1,23 +1,8 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
-import {
-  Button,
-  ContactForm,
-  ErrorState,
-  Preloader,
-  QuoteComparison,
-} from "@packages/trem-ui";
-import {
-  fetchData,
-  notifyDataChanged,
-  validateFields,
-} from "@packages/trem-utils";
+import { Button, ContactForm, ErrorState, Preloader, QuoteComparison } from "@packages/trem-ui";
+import { fetchData, notifyDataChanged, validateFields } from "@packages/trem-utils";
+import { showRealtimeToast } from "@packages/trem-events";
 import ModalShell from "./ModalShell.jsx";
 import "./ContactAgentModal.styles.scss";
 
@@ -69,11 +54,7 @@ const normalizeFormData = (component) => {
         placeholder: labels[field.placeholderRef] || "",
         options: (field.options || []).map((option) => ({
           ...option,
-          label:
-            labels[option.labelRef] ||
-            option.label ||
-            option.title ||
-            option.value,
+          label: labels[option.labelRef] || option.label || option.title || option.value,
         })),
       })),
     },
@@ -103,18 +84,14 @@ const ContactAgentModal = ({
       if (tourId) query.set("tourId", tourId);
       const response = await fetchData(`/form.json?${query.toString()}`);
       if (response?.status !== "success" || !response.component) {
-        throw new Error(
-          response?.message || "The enquiry form could not be loaded.",
-        );
+        throw new Error(response?.message || "The enquiry form could not be loaded.");
       }
       if (requestId === requestIdRef.current) {
         setFormData(normalizeFormData(response.component));
       }
     } catch (error) {
       if (requestId === requestIdRef.current) {
-        setFormLoadError(
-          error?.message || "The enquiry form could not be loaded.",
-        );
+        setFormLoadError(error?.message || "The enquiry form could not be loaded.");
       }
     }
   }, [product, tourId]);
@@ -133,14 +110,8 @@ const ContactAgentModal = ({
     () =>
       (formData?.structure?.fields || []).map((field) => ({
         ...field,
-        type:
-          field.name === "email"
-            ? "email"
-            : field.name === "phone"
-              ? "tel"
-              : field.type,
-        required:
-          field.required ?? ["name", "email", "phone"].includes(field.name),
+        type: field.name === "email" ? "email" : field.name === "phone" ? "tel" : field.type,
+        required: field.required ?? ["name", "email", "phone"].includes(field.name),
       })),
     [formData?.structure?.fields],
   );
@@ -148,10 +119,7 @@ const ContactAgentModal = ({
   const selectedPackageKey = initialSelections?.packageKey || "";
   const selectedHotelSelections = useMemo(
     () =>
-      (Array.isArray(initialSelections?.hotelSelections)
-        ? initialSelections.hotelSelections
-        : []
-      )
+      (Array.isArray(initialSelections?.hotelSelections) ? initialSelections.hotelSelections : [])
         .filter((item) => item?.stayKey && item?.hotelOptionKey)
         .slice(0, 20),
     [initialSelections?.hotelSelections],
@@ -159,7 +127,10 @@ const ContactAgentModal = ({
   const selectedHotelOptionKey = initialSelections?.hotelOptionKey || "";
   const selectedRoomOptionKey = initialSelections?.roomOptionKey || "";
   const selectedHotelRequests = useMemo(
-    () => (Array.isArray(initialSelections?.hotelRequests) ? initialSelections.hotelRequests : []).filter((item) => item?.stayKey).slice(0, 12),
+    () =>
+      (Array.isArray(initialSelections?.hotelRequests) ? initialSelections.hotelRequests : [])
+        .filter((item) => item?.stayKey)
+        .slice(0, 12),
     [initialSelections?.hotelRequests],
   );
 
@@ -183,13 +154,7 @@ const ContactAgentModal = ({
       obj[f.name] = profile[f.name] || selectedValue || f.value || "";
     });
     return obj;
-  }, [
-    fieldsMeta,
-    selectedHotelOptionKey,
-    selectedPackageKey,
-    selectedRoomOptionKey,
-    user,
-  ]);
+  }, [fieldsMeta, selectedHotelOptionKey, selectedPackageKey, selectedRoomOptionKey, user]);
 
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState({});
@@ -215,10 +180,7 @@ const ContactAgentModal = ({
     return map;
   }, [fieldsMeta]);
 
-  const tour =
-    formData?.data && formData.data[0]
-      ? formData.data[0]
-      : { _id: tourId, title: "" };
+  const tour = formData?.data && formData.data[0] ? formData.data[0] : { _id: tourId, title: "" };
   const agency =
     tour?.agency ||
     (tour?.agencyId && typeof tour.agencyId === "object"
@@ -258,9 +220,7 @@ const ContactAgentModal = ({
       setQuotePreview({ loading: false, data: null, error: "" });
       return undefined;
     }
-    const [hotelOptionKey = "", roomOptionKey = ""] = String(
-      form.hotelRoomKey || "",
-    ).split("|");
+    const [hotelOptionKey = "", roomOptionKey = ""] = String(form.hotelRoomKey || "").split("|");
     const abortController = new AbortController();
     const timeoutId = window.setTimeout(async () => {
       setQuotePreview((current) => ({ ...current, loading: true, error: "" }));
@@ -346,25 +306,28 @@ const ContactAgentModal = ({
     };
 
     try {
-      const { status, message } = await fetchData(
-        "/submit.json?form=contact-agent",
-        { method: "POST", body: payload },
-      );
+      const response = await fetchData("/submit.json?form=contact-agent", {
+        method: "POST",
+        body: payload,
+      });
+      const { status, message, ui } = response;
       if (status === "success") {
         notifyDataChanged("enquiries");
-        setMsg({ type: "success", text: message });
-        setTimeout(() => onClose(), 1100);
+        // Backend-authored confirmation toast (title/subtitle/status come
+        // from the API; the dedupeKey collapses the socket echo on other tabs).
+        if (response.notify) showRealtimeToast(response.notify);
+        setMsg({ type: ui?.messageType || "success", text: message });
+        // The backend owns when the modal closes after success.
+        setTimeout(() => onClose(), ui?.closeAfterMs || 1100);
       } else {
-        setMsg({ type: "error", text: message });
+        setMsg({ type: ui?.messageType || "error", text: message });
       }
     } catch (err) {
       console.error("submit error", err?.response || err);
       setMsg({
         type: "error",
         text:
-          err?.response?.data?.message ||
-          err.message ||
-          "Something went wrong. Please try again.",
+          err?.response?.data?.message || err.message || "Something went wrong. Please try again.",
       });
     } finally {
       setSubmitting(false);
@@ -391,19 +354,11 @@ const ContactAgentModal = ({
       <div className="ct-modal-card__body">
         <div className="ct-modal-card__intro">
           {formData?.brandLogo ? (
-            <img
-              className="ct-modal-card__brand"
-              src={formData.brandLogo}
-              alt=""
-            />
+            <img className="ct-modal-card__brand" src={formData.brandLogo} alt="" />
           ) : null}
           <div className="ct-modal-card__header">
-            <h3 className="ct-modal-card__title">
-              {formData?.title || "Contact Agent"}
-            </h3>
-            {formData?.description && (
-              <p className="ct-modal-card__desc">{formData.description}</p>
-            )}
+            <h3 className="ct-modal-card__title">{formData?.title || "Contact Agent"}</h3>
+            {formData?.description && <p className="ct-modal-card__desc">{formData.description}</p>}
           </div>
         </div>
 
@@ -416,9 +371,7 @@ const ContactAgentModal = ({
             )}
             <div className="ct-modal-card__tour-info">
               <strong>{tour.title}</strong>
-              {priceStr && (
-                <span className="ct-modal-card__tour-price">{priceStr}</span>
-              )}
+              {priceStr && <span className="ct-modal-card__tour-price">{priceStr}</span>}
               {agency?.name || operator?.name ? (
                 <div className="ct-modal-card__operator">
                   {agency?.name ? (
@@ -461,9 +414,7 @@ const ContactAgentModal = ({
               loading={quotePreview.loading}
               error={quotePreview.error}
               labels={formData?.quoteLabels}
-              onSelectAlternative={(packageKey) =>
-                handleChange("packageKey", packageKey)
-              }
+              onSelectAlternative={(packageKey) => handleChange("packageKey", packageKey)}
             />
             <ContactForm
               fieldsMeta={fieldsMeta}
@@ -480,9 +431,7 @@ const ContactAgentModal = ({
         )}
 
         {msg && (
-          <div className={`ct-modal-card__msg ct-modal-card__msg--${msg.type}`}>
-            {msg.text}
-          </div>
+          <div className={`ct-modal-card__msg ct-modal-card__msg--${msg.type}`}>{msg.text}</div>
         )}
       </div>
     </ModalShell>

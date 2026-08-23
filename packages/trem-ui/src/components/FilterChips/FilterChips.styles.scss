@@ -1,5 +1,20 @@
 @import "../../styles/base/typography";
 
-.trem-filter-chips { display: flex; align-items: center; justify-content: space-between; gap: $space-3; flex-wrap: wrap; }
-.trem-filter-chips__items { display: flex; align-items: center; gap: $space-2; flex-wrap: wrap; }
-.trem-filter-chips__chip.ui-button { gap: $space-1; border-radius: 999px; color: var(--text); }
+.trem-filter-chips {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-3;
+  flex-wrap: wrap;
+}
+.trem-filter-chips__items {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  flex-wrap: wrap;
+}
+.trem-filter-chips__chip.ui-button {
+  gap: $space-1;
+  border-radius: 999px;
+  color: var(--text);
+}

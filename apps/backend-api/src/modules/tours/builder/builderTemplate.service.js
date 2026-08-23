@@ -44,10 +44,12 @@ const TYPE_DEFAULTS = new Map([
     [Schema.Types.Buffer, null],
 ]);
 
-const isSchemaLike = (value) => (
-    value instanceof Schema
-    || (value && typeof value === "object" && typeof value.tree === "object" && typeof value.path === "function")
-);
+const isSchemaLike = (value) =>
+    value instanceof Schema ||
+    (value &&
+        typeof value === "object" &&
+        typeof value.tree === "object" &&
+        typeof value.path === "function");
 
 /* Safety net: schema graphs are finite; exceeding this means a cycle leaked through. */
 const MAX_DEPTH = 64;
@@ -60,14 +62,17 @@ const MAX_DEPTH = 64;
  *   { kind: "list", element }         — array descriptor resolved to its element
  */
 const resolveDescriptor = (descriptor, depth) => {
-    if (depth > MAX_DEPTH) throw new Error("builderTemplate: schema nesting exceeded MAX_DEPTH (cycle?)");
+    if (depth > MAX_DEPTH)
+        throw new Error("builderTemplate: schema nesting exceeded MAX_DEPTH (cycle?)");
     if (typeof descriptor === "function") return { kind: "scalar", type: descriptor };
-    if (Array.isArray(descriptor)) return { kind: "list", element: resolveDescriptor(descriptor[0], depth + 1) };
+    if (Array.isArray(descriptor))
+        return { kind: "list", element: resolveDescriptor(descriptor[0], depth + 1) };
     if (!descriptor || typeof descriptor !== "object") return { kind: "scalar", type: String };
     if (isSchemaLike(descriptor)) return { kind: "schema", schema: descriptor };
     if ("type" in descriptor) {
         const inner = descriptor.type;
-        if (Array.isArray(inner)) return { kind: "list", element: resolveDescriptor(inner[0], depth + 1) };
+        if (Array.isArray(inner))
+            return { kind: "list", element: resolveDescriptor(inner[0], depth + 1) };
         if (typeof inner === "function") return { kind: "scalar", type: inner };
         if (isSchemaLike(inner)) return { kind: "schema", schema: inner };
         /* Non-type metadata object (shouldn't happen) — degrade to string. */
@@ -149,7 +154,9 @@ const harvestEnums = (schemaType, path, sink) => {
     }
 
     /* Document array ([subSchema]) — enumerate the embedded document's paths. */
-    const embedded = schemaType.$embeddedSchemaType || (schemaType.caster && schemaType.caster.schema ? schemaType.caster : null);
+    const embedded =
+        schemaType.$embeddedSchemaType ||
+        (schemaType.caster && schemaType.caster.schema ? schemaType.caster : null);
     if (embedded?.schema) collectEnumsFromSchema(embedded.schema, path, sink);
 };
 
@@ -192,12 +199,19 @@ const filterByOwnedPaths = (template, ownedPaths) => {
         let targetCursor = scoped;
         let reachable = true;
         segments.forEach((segment, index) => {
-            if (!reachable || sourceCursor == null || typeof sourceCursor !== "object" || !(segment in sourceCursor)) {
+            if (
+                !reachable ||
+                sourceCursor == null ||
+                typeof sourceCursor !== "object" ||
+                !(segment in sourceCursor)
+            ) {
                 reachable = false;
                 return;
             }
             const last = index === segments.length - 1;
-            targetCursor[segment] = last ? sourceCursor[segment] : { ...(targetCursor[segment] || {}) };
+            targetCursor[segment] = last
+                ? sourceCursor[segment]
+                : { ...(targetCursor[segment] || {}) };
             sourceCursor = sourceCursor[segment];
             targetCursor = targetCursor[segment];
         });
@@ -238,9 +252,36 @@ const addTourTemplateExamples = (template) => {
     if (template.commercial) {
         template.commercial.version = "COMPONENTS_V1";
         template.commercial.packages = [
-            { ...packageShape, packageKey: "basic", tier: "BASIC", name: "Basic", enabled: true, recommended: false, includedComponentKeys: [], optionalComponentKeys: [] },
-            { ...packageShape, packageKey: "standard", tier: "STANDARD", name: "Standard", enabled: true, recommended: true, includedComponentKeys: [], optionalComponentKeys: [] },
-            { ...packageShape, packageKey: "premium", tier: "PREMIUM", name: "Premium", enabled: true, recommended: false, includedComponentKeys: [], optionalComponentKeys: [] },
+            {
+                ...packageShape,
+                packageKey: "basic",
+                tier: "BASIC",
+                name: "Basic",
+                enabled: true,
+                recommended: false,
+                includedComponentKeys: [],
+                optionalComponentKeys: [],
+            },
+            {
+                ...packageShape,
+                packageKey: "standard",
+                tier: "STANDARD",
+                name: "Standard",
+                enabled: true,
+                recommended: true,
+                includedComponentKeys: [],
+                optionalComponentKeys: [],
+            },
+            {
+                ...packageShape,
+                packageKey: "premium",
+                tier: "PREMIUM",
+                name: "Premium",
+                enabled: true,
+                recommended: false,
+                includedComponentKeys: [],
+                optionalComponentKeys: [],
+            },
         ];
     }
     if (template.customConfig) template.customConfig.allowCustomerCustomization = true;
@@ -261,9 +302,24 @@ const addTourTemplateExamples = (template) => {
             amenities: ["Wi-Fi", "Restaurant", "Pool"],
             packageKeys: [],
             rooms: [
-                roomExample(roomShape, { roomKey: "primary-standard", name: "Standard room", packageKeys: ["basic"], amountMinor: 500000 }),
-                roomExample(roomShape, { roomKey: "primary-deluxe", name: "Deluxe room", packageKeys: ["standard"], amountMinor: 750000 }),
-                roomExample(roomShape, { roomKey: "primary-suite", name: "Suite", packageKeys: ["premium"], amountMinor: 1100000 }),
+                roomExample(roomShape, {
+                    roomKey: "primary-standard",
+                    name: "Standard room",
+                    packageKeys: ["basic"],
+                    amountMinor: 500000,
+                }),
+                roomExample(roomShape, {
+                    roomKey: "primary-deluxe",
+                    name: "Deluxe room",
+                    packageKeys: ["standard"],
+                    amountMinor: 750000,
+                }),
+                roomExample(roomShape, {
+                    roomKey: "primary-suite",
+                    name: "Suite",
+                    packageKeys: ["premium"],
+                    amountMinor: 1100000,
+                }),
             ],
             active: true,
         };
@@ -276,9 +332,24 @@ const addTourTemplateExamples = (template) => {
                 propertyName: "Alternative destination hotel",
                 photos: ["https://example.com/alternative-hotel.jpg"],
                 rooms: [
-                    roomExample(roomShape, { roomKey: "alternative-standard", name: "Alternative standard room", packageKeys: [], amountMinor: 600000 }),
-                    roomExample(roomShape, { roomKey: "alternative-deluxe", name: "Alternative deluxe room", packageKeys: [], amountMinor: 850000 }),
-                    roomExample(roomShape, { roomKey: "alternative-suite", name: "Alternative suite", packageKeys: [], amountMinor: 1250000 }),
+                    roomExample(roomShape, {
+                        roomKey: "alternative-standard",
+                        name: "Alternative standard room",
+                        packageKeys: [],
+                        amountMinor: 600000,
+                    }),
+                    roomExample(roomShape, {
+                        roomKey: "alternative-deluxe",
+                        name: "Alternative deluxe room",
+                        packageKeys: [],
+                        amountMinor: 850000,
+                    }),
+                    roomExample(roomShape, {
+                        roomKey: "alternative-suite",
+                        name: "Alternative suite",
+                        packageKeys: [],
+                        amountMinor: 1250000,
+                    }),
                 ],
                 recommended: false,
             },
@@ -309,7 +380,14 @@ const COLLECTION_MODELS = {
 export const getBuilderTemplatePayload = ({ stepKey } = {}) => {
     if (!stepKey) {
         const { template, enums } = buildFullTourTemplate();
-        return { scope: "tour", label: "Complete tour", schemaVersion: "TOUR_BUILDER_V2", tour: template, enums, rules: TOUR_TEMPLATE_RULES };
+        return {
+            scope: "tour",
+            label: "Complete tour",
+            schemaVersion: "TOUR_BUILDER_V2",
+            tour: template,
+            enums,
+            rules: TOUR_TEMPLATE_RULES,
+        };
     }
 
     const step = findStepDefinition(stepKey);
@@ -320,7 +398,14 @@ export const getBuilderTemplatePayload = ({ stepKey } = {}) => {
         const model = modelFactory ? modelFactory() : null;
         if (!model) {
             const { template, enums } = buildFullTourTemplate();
-            return { scope: "tour", label: step.title, schemaVersion: "TOUR_BUILDER_V2", tour: template, enums, rules: TOUR_TEMPLATE_RULES };
+            return {
+                scope: "tour",
+                label: step.title,
+                schemaVersion: "TOUR_BUILDER_V2",
+                tour: template,
+                enums,
+                rules: TOUR_TEMPLATE_RULES,
+            };
         }
         const { template, enums } = buildFromSchema(model);
         return {
@@ -348,6 +433,5 @@ export const getBuilderTemplatePayload = ({ stepKey } = {}) => {
 };
 
 /** Overview helper reused by definition consumers. */
-export const getBuilderStepSummary = () => (
-    getBuilderDefinition().steps.map(({ stepKey, title }) => ({ stepKey, title }))
-);
+export const getBuilderStepSummary = () =>
+    getBuilderDefinition().steps.map(({ stepKey, title }) => ({ stepKey, title }));

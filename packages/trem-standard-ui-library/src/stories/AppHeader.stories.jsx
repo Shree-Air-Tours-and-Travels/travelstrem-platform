@@ -6,7 +6,12 @@ const baseConfig = {
   search: { placeholder: "Search bookings, tours..." },
   primaryAction: { label: "Create Booking", enabled: true, onClick: () => {} },
   notification: { label: "Notifications", enabled: true, onClick: () => {}, count: 3 },
-  themeAction: { lightLabel: "Switch to light", darkLabel: "Switch to dark", lightIcon: "sun", darkIcon: "moon" },
+  themeAction: {
+    lightLabel: "Switch to light",
+    darkLabel: "Switch to dark",
+    lightIcon: "sun",
+    darkIcon: "moon",
+  },
   user: {
     menuLabel: "Open user menu",
     fallbackName: "Akshat Goyal",

@@ -21,7 +21,6 @@ userVerificationSchema.statics.cleanupExpired = function () {
 };
 
 const UserVerification =
-    mongoose.models?.UserVerification ||
-    mongoose.model("UserVerification", userVerificationSchema);
+    mongoose.models?.UserVerification || mongoose.model("UserVerification", userVerificationSchema);
 
 export default UserVerification;

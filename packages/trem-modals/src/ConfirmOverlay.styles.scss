@@ -41,7 +41,10 @@
     font-size: 0.88rem;
     font-weight: 700;
     cursor: pointer;
-    transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+    transition:
+      background 160ms ease,
+      border-color 160ms ease,
+      color 160ms ease;
     font-family: inherit;
     border: 1px solid var(--border);
 
@@ -49,7 +52,10 @@
       background: transparent;
       color: var(--muted);
       border-color: transparent;
-      &:hover { background: var(--surface-inset); color: var(--text); }
+      &:hover {
+        background: var(--surface-inset);
+        color: var(--text);
+      }
     }
 
     &--confirm {
@@ -57,8 +63,15 @@
       color: var(--color-on-primary);
       border-color: var(--color-primary);
       box-shadow: 0 2px 8px rgba(28, 117, 120, 0.2);
-      &:hover { background: var(--color-primary-dark); border-color: var(--color-primary-dark); }
-      &:disabled { opacity: 0.55; cursor: not-allowed; box-shadow: none; }
+      &:hover {
+        background: var(--color-primary-dark);
+        border-color: var(--color-primary-dark);
+      }
+      &:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
     }
   }
 }
@@ -88,7 +101,10 @@
     color: var(--muted);
     cursor: pointer;
     transition: background 120ms ease;
-    &:hover { background: var(--surface-inset); color: var(--text); }
+    &:hover {
+      background: var(--surface-inset);
+      color: var(--text);
+    }
   }
 
   &__header {
@@ -118,7 +134,9 @@
     background: var(--surface-inset);
     margin-bottom: 1.25rem;
 
-    p { margin: 0; }
+    p {
+      margin: 0;
+    }
   }
 
   &__actions {
