@@ -27,18 +27,28 @@ const ERROR_MESSAGES = {
 
 const portalForApp = (app) => APP_PORTALS[String(app || "").toLowerCase()] || "customer";
 
+// Deployments sometimes configure app URLs without a scheme ("app-dev.travelstrem.com").
+// `new URL(value, origin)` would then resolve them as RELATIVE PATHS on the auth
+// origin (auth-dev.travelstrem.com/app-dev.travelstrem.com). Normalize here so a
+// missing protocol can never turn an absolute redirect into an in-page path.
+const withScheme = (entry) => {
+  const value = String(entry || "").trim();
+  if (!value) return "";
+  return /^[a-z][a-z0-9+.-]*:\/\//i.test(value) ? value : `https://${value.replace(/^\/+/, "")}`;
+};
+
 const clientPortalOrigins = (portal, fallbackUrl) => {
   const configured =
     portal === "admin"
-      ? [process.env.REACT_APP_ADMIN_SHELL_URL]
+      ? [withScheme(process.env.REACT_APP_ADMIN_SHELL_URL)]
       : portal === "partner"
-        ? [process.env.REACT_APP_PARTNER_SHELL_URL]
+        ? [withScheme(process.env.REACT_APP_PARTNER_SHELL_URL)]
         : [
-            process.env.REACT_APP_SHELL_URL,
-            process.env.REACT_APP_TRAVELSTREM_APP_URL,
-            process.env.REACT_APP_TREVISTA_URL,
-            process.env.REACT_APP_TREVIO_URL,
-            process.env.REACT_APP_BOOKING_ENGINE_URL,
+            withScheme(process.env.REACT_APP_SHELL_URL),
+            withScheme(process.env.REACT_APP_TRAVELSTREM_APP_URL),
+            withScheme(process.env.REACT_APP_TREVISTA_URL),
+            withScheme(process.env.REACT_APP_TREVIO_URL),
+            withScheme(process.env.REACT_APP_BOOKING_ENGINE_URL),
           ];
   return new Set([
     fallbackUrl.origin,
@@ -53,7 +63,9 @@ const clientPortalOrigins = (portal, fallbackUrl) => {
 };
 
 const safeClientReturnUrl = (value, fallback, portal) => {
-  const fallbackUrl = new URL(fallback || "/", window.location.origin);
+  // Scheme-less configured URLs must resolve against their own https origin,
+  // never as a relative path on the auth origin.
+  const fallbackUrl = new URL(withScheme(fallback) || "/", window.location.origin);
   const allowedOrigins = clientPortalOrigins(portal, fallbackUrl);
   try {
     const resolved = new URL(value || fallbackUrl.toString(), fallbackUrl);
