@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { showRealtimeToast } from "@packages/trem-events";
 import {
   applyPartnerAgency,
   checkPartnerApplication,
@@ -15,19 +16,24 @@ import {
 import { VALID_TABS, PATH_BY_TAB, FALLBACK_PROFILE } from "./tours.constants";
 import pageConfig from "./manageToursPage.config.json";
 import ManageToursView from "./ManageTours.view";
+import { useAgentPortalConfig } from "../../../app/providers/AgentPortalProvider";
 
 const getTabFromLocation = (pathname, search) => {
   if (pathname.includes("/agent/dashboard")) return "dashboard";
-  if (pathname.includes("/agent/agents")) return "agents";
+  if (
+    pathname.includes("/agent/agency") ||
+    pathname.includes("/agent/agents") ||
+    pathname.includes("/agent/partner-agency")
+  )
+    return "agencyWorkspace";
   if (pathname.includes("/agent/customers")) return "customers";
   if (pathname.includes("/agent/reports")) return "reports";
   if (pathname.includes("/agent/deletion-requests")) return "deletions";
   if (pathname.includes("/agent/notifications")) return "notifications";
   if (pathname.includes("/agent/profile")) return "profile";
   if (pathname.includes("/agent/settings")) return "settings";
-  if (pathname.includes("/agent/partner-agency") || pathname.includes("/agent/agency"))
-    return "partnerAgency";
   const tab = new URLSearchParams(search || "").get("tab") || "dashboard";
+  if (["agents", "partnerAgency"].includes(tab)) return "agencyWorkspace";
   return VALID_TABS.has(tab) ? tab : "dashboard";
 };
 
@@ -37,7 +43,28 @@ const isRequestCancelled = (error) =>
   error?.code === "ERR_CANCELED" ||
   error?.message === "Request cancelled";
 
+const resolveEntityId = (value) => {
+  if (value == null) return "";
+  if (["string", "number"].includes(typeof value)) return String(value);
+  if (typeof value === "object") {
+    return (
+      resolveEntityId(value._id) ||
+      resolveEntityId(value.id) ||
+      resolveEntityId(value.$oid) ||
+      resolveEntityId(value.value)
+    );
+  }
+  return "";
+};
+
+const resolveTourId = (tourOrId) =>
+  resolveEntityId(tourOrId?._id) || resolveEntityId(tourOrId?.id) || resolveEntityId(tourOrId);
+
 export default function ManageTours({ session }) {
+  const {
+    reload: reloadPortalSession,
+    updateSessionUser,
+  } = useAgentPortalConfig();
   const location = useLocation();
   const navigate = useNavigate();
   const auth = {
@@ -83,13 +110,24 @@ export default function ManageTours({ session }) {
   );
 
   const showToast = useCallback((message, type = "info", durationMs = 3000) => {
-    setToast({ message, type, visible: true });
-    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = setTimeout(
-      () => setToast({ message: "", type: "info", visible: false }),
+    showRealtimeToast({
+      title: message,
+      status: type,
       durationMs,
-    );
+      dedupeKey: `agent:${type}:${message}`,
+    });
   }, []);
+
+  const handleToastState = useCallback(
+    (nextToast) => {
+      if (nextToast?.visible && nextToast.message) {
+        showToast(nextToast.message, nextToast.type || "info");
+        return;
+      }
+      setToast({ message: "", type: "info", visible: false });
+    },
+    [showToast],
+  );
 
   const fetchServicesWidget = useCallback(async () => {
     const seq = ++requestSeq.current;
@@ -177,27 +215,56 @@ export default function ManageTours({ session }) {
   );
 
   const handleUpdatePassword = useCallback(async (data) => {
-    return updatePassword(data);
-  }, []);
+    try {
+      const result = await updatePassword(data);
+      showToast("Password updated", "success");
+      return result;
+    } catch (error) {
+      showToast(error?.message || "Password update failed", "error");
+      throw error;
+    }
+  }, [showToast]);
 
   const handleUpdateProfile = useCallback(
     async (data) => {
-      const result = await updateProfile(data);
-      await fetchProfileWidget();
-      return result;
+      try {
+        const result = await updateProfile(data);
+        const updatedUser = result?.componentData?.data || result?.user || result?.data || data;
+        updateSessionUser?.(updatedUser);
+        await fetchProfileWidget();
+        await reloadPortalSession?.();
+        showToast("Profile updated", "success");
+        return result;
+      } catch (error) {
+        showToast(error?.message || "Profile update failed", "error");
+        throw error;
+      }
     },
-    [fetchProfileWidget],
+    [fetchProfileWidget, reloadPortalSession, showToast, updateSessionUser],
   );
 
   const handleUpdateAvatar = useCallback(
-    (avatar) => {
-      return handleUpdateProfile({ avatar });
+    async (avatar) => {
+      try {
+        const result = await updateAvatar(avatar);
+        const updatedUser = result?.componentData?.data || result?.user || result?.data || { avatar };
+        updateSessionUser?.(updatedUser);
+        await fetchProfileWidget();
+        await reloadPortalSession?.();
+        showToast("Avatar updated", "success");
+        return result;
+      } catch (error) {
+        showToast(error?.message || "Avatar update failed", "error");
+        throw error;
+      }
     },
-    [handleUpdateProfile],
+    [fetchProfileWidget, reloadPortalSession, showToast, updateSessionUser],
   );
 
   const handleDelete = useCallback((id) => {
-    setConfirmDelete(id);
+    const tourId = resolveTourId(id);
+    if (!tourId) return;
+    setConfirmDelete(tourId);
     setConfirmMessage(pageConfig.deleteConfirm.single);
   }, []);
 
@@ -234,7 +301,7 @@ export default function ManageTours({ session }) {
 
   const openEdit = useCallback(
     (t) => {
-      const id = t?._id || t?.id;
+      const id = resolveTourId(t);
       if (id) navigate(`/agent/services/tours/${encodeURIComponent(id)}/edit`);
     },
     [navigate],
@@ -242,7 +309,7 @@ export default function ManageTours({ session }) {
 
   const openView = useCallback(
     (t) => {
-      const id = t?._id || t?.id;
+      const id = resolveTourId(t);
       if (id) navigate(`/agent/services/tours/${encodeURIComponent(id)}/view`);
     },
     [navigate],
@@ -278,7 +345,7 @@ export default function ManageTours({ session }) {
       onUpdateAvatar={handleUpdateAvatar}
       onUpdateProfile={handleUpdateProfile}
       toast={toast}
-      setToast={setToast}
+      setToast={handleToastState}
     />
   );
 }

@@ -281,11 +281,61 @@ $agent-gap: $space-3;
 }
 
 .agency-status-card {
-  padding: $space-5;
+  display: grid;
+  gap: $space-5;
+  padding: $space-4;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-elevated);
 }
 
 .agency-status-badge {
-  margin-bottom: $space-4;
+  align-self: start;
+  justify-self: end;
+}
+
+.agency-status-card__intro {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: $space-3;
+
+  h3,
+  p {
+    margin: 0;
+  }
+
+  > div > span {
+    color: var(--color-primary);
+    font-size: $font-size-xs;
+    font-weight: $font-bold;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+  }
+
+  h3 {
+    margin-top: $space-1;
+    color: var(--text);
+    font-size: $font-size-lg;
+  }
+
+  p {
+    max-width: 48rem;
+    margin-top: $space-1;
+    color: var(--muted);
+    font-size: $font-size-sm;
+    line-height: 1.5;
+  }
+}
+
+.agency-status-card__icon {
+  width: 3rem;
+  height: 3rem;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  background: var(--primary-soft);
+  color: var(--color-primary);
 }
 
 .agency-details {
@@ -295,10 +345,37 @@ $agent-gap: $space-3;
   margin: 0;
 }
 
-.agency-details div {
-  padding: $space-3;
+.agency-details > .agency-details__item {
+  min-width: 0;
+  min-height: 5rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: $space-3;
+  padding: $space-3 $space-4;
   border: 1px solid var(--border);
-  background: var(--surface-elevated);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  transition: border-color $duration-fast $ease-standard;
+
+  &:focus-within,
+  &:hover {
+    border-color: var(--border-strong);
+  }
+}
+
+.agency-details__icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-xs);
+  background: var(--primary-softer);
+  color: var(--color-primary);
+}
+
+.agency-details__copy {
+  min-width: 0;
 }
 
 .agency-details dt {
@@ -313,6 +390,34 @@ $agent-gap: $space-3;
   font-size: $font-size-sm;
   color: var(--text);
   overflow-wrap: anywhere;
+
+  &.is-masked {
+    color: var(--muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    letter-spacing: 0.04em;
+  }
+}
+
+.agency-details__visibility {
+  width: 2.25rem;
+  height: 2.25rem;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-circle);
+  background: var(--surface-elevated);
+  color: var(--muted);
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible,
+  &[aria-pressed="true"] {
+    outline: 0;
+    border-color: var(--color-primary);
+    background: var(--primary-soft);
+    color: var(--color-primary);
+  }
 }
 
 .agency-notes {
@@ -566,6 +671,23 @@ $agent-gap: $space-3;
   }
 
   .agent-profile-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .agency-status-card {
+    padding: $space-3;
+  }
+
+  .agency-status-card__intro {
+    grid-template-columns: auto minmax(0, 1fr);
+
+    .agency-status-badge {
+      grid-column: 1 / -1;
+      justify-self: start;
+    }
+  }
+
+  .agency-details {
     grid-template-columns: 1fr;
   }
 }

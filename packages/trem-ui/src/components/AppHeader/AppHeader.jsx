@@ -3,6 +3,10 @@ import PropTypes from "prop-types";
 import BrandLogo from "../BrandLogo/BrandLogo.jsx";
 import Dropdown from "../Dropdown/Dropdown.jsx";
 import Icon from "../../icons/Icon/Icon.jsx";
+import {
+  isAccountAvatarIcon,
+  resolveAccountAvatar,
+} from "../AccountProfile/accountAvatar.constants.js";
 import GlobalSearch from "./GlobalSearch.jsx";
 import "./AppHeader.styles.scss";
 
@@ -16,6 +20,12 @@ function getFirstName(user, fallback) {
   const value = (user?.name || user?.email || fallback || "Traveller").trim();
   const firstPart = value.split(/\s+/)[0];
   return firstPart.includes("@") ? firstPart.split("@")[0] : firstPart;
+}
+
+function renderAvatar(user, fallback) {
+  const avatar = resolveAccountAvatar(user?.avatar);
+  if (isAccountAvatarIcon(avatar)) return <Icon name={avatar} size={20} />;
+  return getInitials(user, fallback);
 }
 
 export default function AppHeader({
@@ -41,6 +51,9 @@ export default function AppHeader({
   const notification = config.notification || {};
   const themeAction = config.themeAction || {};
   const userConfig = config.user || {};
+  const headerActions = (Array.isArray(config.actions) ? config.actions : []).filter(
+    (item) => !item.hide,
+  );
   const themeLabel =
     theme === "dark"
       ? themeAction.lightLabel || "Switch to light mode"
@@ -51,10 +64,10 @@ export default function AppHeader({
   const userTrigger = (
     <button
       type="button"
-      className="trem-app-header__user"
+      className={`trem-app-header__user${userConfig.variant === "outlined" ? " trem-app-header__user--outlined" : ""}`}
       aria-label={userConfig.menuLabel || "Open user menu"}
     >
-      <span>{getInitials(user, userConfig.fallbackName)}</span>
+      <span>{renderAvatar(user, userConfig.fallbackName)}</span>
       <strong>{getFirstName(user, userConfig.fallbackName)}</strong>
       <Icon name="chevronDown" size={17} />
     </button>
@@ -77,6 +90,7 @@ export default function AppHeader({
       id: item.id,
       label: item.label,
       icon: item.icon,
+      active: item.active,
       disabled: item.disabled,
       onClick: item.onClick,
     }));
@@ -105,7 +119,7 @@ export default function AppHeader({
   return (
     <>
       <header
-        className="trem-app-header"
+        className={`trem-app-header${config.variant ? ` trem-app-header--${config.variant}` : ""}${headerActions.some((item) => item.mobileOnly) ? " has-mobile-actions" : ""}`}
         aria-label={config.ariaLabel || "Application header"}
         style={{ "--trem-app-header-sidebar-offset": sidebarCollapsed ? "76px" : "260px" }}
       >
@@ -127,6 +141,7 @@ export default function AppHeader({
         <div className="trem-app-header__actions">
           {productMenu.label && productItems.length ? (
             <Dropdown
+              className="trem-app-header__product-dropdown"
               align="right"
               hoverable={false}
               items={productItems}
@@ -170,6 +185,24 @@ export default function AppHeader({
             </button>
           ) : null}
 
+          {headerActions.map((item) => (
+            <button
+              key={item.id || item.label}
+              type="button"
+              className={`trem-app-header__icon-button trem-app-header__action${item.mobileOnly ? " trem-app-header__action--mobile-only" : ""}${item.active ? " is-active" : ""}`.trim()}
+              aria-label={item.ariaLabel || item.label}
+              title={item.label}
+              disabled={item.disabled}
+              onClick={() => {
+                if (item.action) onAction?.(item.action, item);
+                else if (item.target) onAction?.("navigate", item);
+              }}
+            >
+              <Icon name={item.icon || "circle"} size={item.iconSize || 21} />
+              {item.count ? <span>{item.count > 9 ? "9+" : item.count}</span> : null}
+            </button>
+          ))}
+
           {!notification.hide ? (
             <button
               type="button"
@@ -197,9 +230,12 @@ export default function AppHeader({
 
           {userConfig.menuEnabled !== false && userItems.length ? (
             <Dropdown
+              className="trem-app-header__user-dropdown"
               align="right"
               hoverable={false}
               items={userItems}
+              portalWidth={280}
+              portalClassName="trem-app-header__user-menu"
               trigger={() => userTrigger}
             />
           ) : (
@@ -221,7 +257,10 @@ export default function AppHeader({
           </button>
         </div>
       </header>
-      <div className="trem-app-header__spacer" aria-hidden="true" />
+      <div
+        className={`trem-app-header__spacer${config.variant ? ` trem-app-header__spacer--${config.variant}` : ""}`}
+        aria-hidden="true"
+      />
     </>
   );
 }

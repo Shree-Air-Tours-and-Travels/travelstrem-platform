@@ -8,6 +8,7 @@ import config from "../config/index.js";
 import logger from "../shared/logger/index.js";
 import { getRedis, disconnectRedis } from "../shared/redis/client.js";
 import { generateCsrfToken, validateCsrfToken, appendAuditEvent } from "../shared/redis/store.js";
+import { sanitizeResponsePayload } from "../utils/sanitizeResponsePayload.js";
 
 const allowedOrigins = Array.isArray(config.FRONTENDS) ? config.FRONTENDS : [];
 const allowedDomainSuffixes = Array.isArray(config.CORS_ALLOWED_DOMAIN_SUFFIXES)
@@ -46,6 +47,12 @@ function sanitizeInputMiddleware(req, res, next) {
     next();
 }
 
+function sanitizeJsonResponseMiddleware(_req, res, next) {
+    const originalJson = res.json.bind(res);
+    res.json = (payload) => originalJson(sanitizeResponsePayload(payload));
+    next();
+}
+
 const corsOptions = {
     origin(origin, callback) {
         if (!origin) return callback(null, true);
@@ -71,6 +78,7 @@ const corsOptions = {
         "X-Travelstrem-Portal",
         "X-Guest-Session-Id",
         "X-Idempotency-Key",
+        "X-Partnership-Resume-Token",
     ],
     exposedHeaders: ["Content-Disposition"],
 };
@@ -125,7 +133,10 @@ export default function registerMiddleware(app) {
         next();
     });
 
-    // ── 8. Debug logging ──
+    // ── 8. Strip sensitive credential fields from every JSON response ──
+    app.use(sanitizeJsonResponseMiddleware);
+
+    // ── 9. Debug logging ──
     if (config.DEBUG) {
         app.use((req, res, next) => {
             logger.debug(
@@ -139,7 +150,7 @@ export default function registerMiddleware(app) {
         });
     }
 
-    // ── 9. CSRF token endpoint (after CORS so preflight passes) ──
+    // ── 10. CSRF token endpoint (after CORS so preflight passes) ──
     app.get("/api/csrf-token", async (req, res) => {
         try {
             const token = await generateCsrfToken();
@@ -150,7 +161,7 @@ export default function registerMiddleware(app) {
         }
     });
 
-    // ── 10. CSRF validation for state-changing requests (optional — skip if no header) ──
+    // ── 11. CSRF validation for state-changing requests (optional — skip if no header) ──
     app.use((req, res, next) => {
         if (["POST", "PUT", "PATCH", "DELETE"].includes(req.method)) {
             const csrfHeader = req.headers["x-csrf-token"];
@@ -181,10 +192,10 @@ export default function registerMiddleware(app) {
         }
     });
 
-    // ── 11. Input sanitization (after body parser) ──
+    // ── 12. Input sanitization (after body parser) ──
     app.use(sanitizeInputMiddleware);
 
-    // ── 12. Global rate limiter (production only) ──
+    // ── 13. Global rate limiter (production only) ──
     if (!config.IS_DEVELOPMENT) {
         app.use(
             rateLimit({
@@ -195,7 +206,7 @@ export default function registerMiddleware(app) {
         );
     }
 
-    // ── 13. Graceful shutdown ──
+    // ── 14. Graceful shutdown ──
     const shutdown = async () => {
         console.log("[Middleware] Shutting down Redis connection...");
         await disconnectRedis();

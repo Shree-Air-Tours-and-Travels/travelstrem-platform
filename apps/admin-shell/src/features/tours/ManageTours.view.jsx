@@ -1,8 +1,12 @@
-import React from "react";
+import React, { useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { useThemeMode } from "@packages/trem-utils";
-import Sidebar from "../../components/AdminSidebar";
-import DashboardHeader from "../../components/AdminDashboardHeader";
+import { useNavigate } from "react-router-dom";
+import { clearAuthBrowserState, emitAuthEvent } from "@packages/trem-auth-core";
+import { emit } from "@packages/trem-events";
+import { buildGlobalAuthUrl, useThemeMode } from "@packages/trem-utils";
+import { AppHeader, Breadcrumbs, SideBar } from "@packages/trem-ui";
+import { useAdminPortalConfig } from "../../app/providers/AdminPortalProvider";
+import authService from "../../services/authService";
 import AdminOverviewView from "../../views/AdminOverviewView";
 import AdminServicesView from "../../views/AdminServicesView";
 import AdminProfileView from "../../views/AdminProfileView";
@@ -10,6 +14,7 @@ import TripView from "../trips/TripView";
 import CreateTripForm from "../trips/CreateTripForm";
 import TenancyManagement from "../tenancy/TenancyManagement";
 import EnquiriesPage from "../enquiries/EnquiriesPage";
+import ManageClients from "../clients/ManageClients";
 import "./ManageTours.scss";
 
 export function ConfirmModal({
@@ -86,9 +91,11 @@ export default function ManageToursView({
   partnerAgencies,
   loading,
   agencyLoading,
-  stats,
+  dashboardDefinition,
+  dashboardLoading,
+  dashboardError,
+  refreshDashboard,
   auth,
-  error,
   tripFormOpen,
   setTripFormOpen,
   tripEditing,
@@ -112,7 +119,6 @@ export default function ManageToursView({
   handleCancelDelete,
   confirmDelete,
   confirmMessage,
-  fetchTours,
   fetchTrips,
   fetchAgencyManagement,
   handleReviewAdmin,
@@ -120,38 +126,167 @@ export default function ManageToursView({
   handleReviewAgent,
   handleReviewPartnerAgency,
   handleSaveProfile,
+  handleUpdatePassword,
+  handleUpdateAvatar,
+  profileSaving,
+  passwordSaving,
+  avatarSaving,
   refreshAll,
   toast,
   setToast,
 }) {
   const { theme, toggleTheme } = useThemeMode();
+  const { headerConfig: backendHeaderConfig } = useAdminPortalConfig();
+  const navigate = useNavigate();
   const [mobileSidebarOpen, setMobileSidebarOpen] = React.useState(false);
-  const mergedUser = { ...auth.user, ...(profile || {}) };
+  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
+  const mergedUser = useMemo(() => ({ ...auth.user, ...(profile || {}) }), [auth.user, profile]);
   const closeMobileSidebar = React.useCallback(() => setMobileSidebarOpen(false), []);
 
+  const logout = useCallback(async () => {
+    await authService.logout().catch(() => null);
+    clearAuthBrowserState({ prefixes: ["adminTREM"] });
+    emit("USER_LOGOUT", { source: "admin-shell" }, { skipController: true });
+    emitAuthEvent({ type: "LOGOUT" });
+    window.location.replace(buildGlobalAuthUrl({ app: "admin", returnTo: window.location.origin }));
+  }, []);
+
+  const onAction = useCallback(
+    (action) => {
+      if (action === "logout") return logout();
+      if (action === "createTour") return openCreate();
+      return setTab(action || "overview");
+    },
+    [logout, openCreate, setTab],
+  );
+
+  const navigationItems = useMemo(
+    () =>
+      (backendHeaderConfig?.adminNavigation || []).filter(
+        (item) => !item.masterOnly || auth.adminLevel === "master",
+      ),
+    [auth.adminLevel, backendHeaderConfig?.adminNavigation],
+  );
+
+  const sidebarConfig = useMemo(() => {
+    const byId = (ids) => navigationItems.filter((item) => ids.includes(item.id));
+    return {
+      ariaLabel: "AdminTREM navigation",
+      brand: {
+        name: backendHeaderConfig?.brand?.label || "AdminTREM",
+        fallbackSubtitle: backendHeaderConfig?.brand?.subtitle || "Platform Administration",
+      },
+      sections: [
+        { id: "workspace", title: "Workspace", items: byId(["overview", "enquiries"]) },
+        { id: "catalog", title: "Catalogue", items: byId(["services"]) },
+        { id: "governance", title: "Governance", items: byId(["tenancy", "clients"]) },
+        { id: "account", title: "Account", items: byId(["profile", "logout"]) },
+      ].filter((section) => section.items.length),
+      profile: {
+        metaKey: "adminRoleLabel",
+        actionTarget: "profile",
+        actionLabel: "View profile",
+      },
+    };
+  }, [backendHeaderConfig?.brand, navigationItems]);
+
+  const activeInventory = dashboardDefinition?.data?.inventory || [];
+  const primaryProduct = activeInventory[0];
+  const primaryCreateAction =
+    primaryProduct?.id === "trevio" ? openTripCreate : primaryProduct ? openCreate : null;
+
+  const headerConfig = useMemo(
+    () => ({
+      variant: "admin",
+      ariaLabel: "AdminTREM application header",
+      brand: {
+        name: backendHeaderConfig?.brand?.label || "AdminTREM",
+        subtitle: backendHeaderConfig?.brand?.subtitle || "Platform Administration",
+      },
+      search: { enabled: false },
+      primaryAction: {
+        label: primaryProduct
+          ? `Create ${primaryProduct.label} ${primaryProduct.id === "trevio" ? "trip" : "tour"}`
+          : "Create travel product",
+        icon: "plus",
+        enabled: Boolean(primaryCreateAction),
+        onClick: primaryCreateAction,
+      },
+      notification: { hide: true },
+      themeAction: {},
+      user: {
+        fallbackName: "Administrator",
+        variant: "outlined",
+        items: [
+          { id: "profile", label: "My profile", icon: "user", action: "profile" },
+          { id: "logout", label: "Sign out", icon: "logout", action: "logout" },
+        ],
+      },
+      mobileMenu: {
+        openLabel: "Open administration navigation",
+        closeLabel: "Close administration navigation",
+      },
+    }),
+    [backendHeaderConfig?.brand, primaryCreateAction, primaryProduct],
+  );
+
+  const adminUser = useMemo(
+    () => ({
+      ...mergedUser,
+      adminRoleLabel: auth.adminLevel === "master" ? "Master Admin" : "Administrator",
+    }),
+    [auth.adminLevel, mergedUser],
+  );
+
+  const breadcrumbItems = backendHeaderConfig?.adminBreadcrumbs?.[tab] || [];
+
   return (
-    <div className="dash-layout">
-      <Sidebar
-        activeTab={tab}
-        onTabChange={setTab}
-        user={mergedUser}
+    <div
+      className={`admin-dashboard-shell has-admin-navigation${sidebarCollapsed ? " is-sidebar-collapsed" : ""}`}
+    >
+      <SideBar
+        config={sidebarConfig}
+        user={adminUser}
+        activeId={tab}
         mobileOpen={mobileSidebarOpen}
-        onMobileClose={closeMobileSidebar}
+        collapsed={sidebarCollapsed}
+        onNavigate={(target) => {
+          if (String(target).startsWith("/")) navigate(target);
+          else setTab(target);
+          closeMobileSidebar();
+        }}
+        onAction={onAction}
+        onClose={closeMobileSidebar}
+        onCollapsedChange={setSidebarCollapsed}
+      />
+      <AppHeader
+        config={headerConfig}
+        user={adminUser}
+        theme={theme}
+        menuOpen={mobileSidebarOpen}
+        sidebarCollapsed={sidebarCollapsed}
+        onMenuToggle={() => setMobileSidebarOpen((open) => !open)}
+        onToggleTheme={toggleTheme}
+        onAction={onAction}
       />
 
-      <div className="dash-main">
-        <DashboardHeader
-          activeTab={tab}
-          onTabChange={setTab}
-          user={mergedUser}
-          theme={theme}
-          onToggleTheme={toggleTheme}
-          onMenuClick={() => setMobileSidebarOpen(true)}
-        />
-
-        <div className="dash-content">
+      <main className="admin-dashboard-shell__content">
+        {breadcrumbItems.length ? (
+          <div className="admin-dashboard-shell__breadcrumb">
+            <Breadcrumbs items={breadcrumbItems} />
+          </div>
+        ) : null}
+        <div className="admin-dashboard-shell__page">
           {tab === "overview" && (
-            <AdminOverviewView user={mergedUser} stats={stats} onTabChange={setTab} />
+            <AdminOverviewView
+              user={adminUser}
+              definition={dashboardDefinition}
+              loading={dashboardLoading}
+              error={dashboardError}
+              onRefresh={refreshDashboard}
+              onTabChange={setTab}
+              isMasterAdmin={auth.adminLevel === "master"}
+            />
           )}
           {tab === "enquiries" && <EnquiriesPage />}
           {tab === "services" && (
@@ -178,6 +313,7 @@ export default function ManageToursView({
                 partnerAgencies={partnerAgencies}
                 agencyLoading={agencyLoading}
                 auth={auth}
+                activeProducts={dashboardDefinition?.data?.inventory}
                 fetchAgencyManagement={fetchAgencyManagement}
                 handleReviewAdmin={handleReviewAdmin}
                 handleRemoveAdmin={handleRemoveAdmin}
@@ -214,11 +350,20 @@ export default function ManageToursView({
             </>
           )}
           {tab === "profile" && (
-            <AdminProfileView user={mergedUser} onSaveProfile={handleSaveProfile} saving={false} />
+            <AdminProfileView
+              user={mergedUser}
+              onSaveProfile={handleSaveProfile}
+              onUpdatePassword={handleUpdatePassword}
+              onUpdateAvatar={handleUpdateAvatar}
+              saving={profileSaving}
+              passwordSaving={passwordSaving}
+              avatarSaving={avatarSaving}
+            />
           )}
           {tab === "tenancy" && auth.adminLevel === "master" && <TenancyManagement />}
+          {tab === "clients" && <ManageClients embedded />}
         </div>
-      </div>
+      </main>
 
       <Toast toast={toast} setToast={setToast} />
       <ConfirmModal

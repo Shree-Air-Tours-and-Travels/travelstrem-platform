@@ -94,7 +94,7 @@ export default applyHideFlags({
             nameKey: "name",
             fallbackName: "Traveller",
             metaKey: "membershipLabel",
-            fallbackMeta: "TravelsTREM Member",
+            fallbackMeta: "TREM Member",
             actionLabel: "View Profile",
             actionTarget: "profile",
         },

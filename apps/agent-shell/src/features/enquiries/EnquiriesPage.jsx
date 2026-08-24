@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from "react";
-import { EnquiryCenter, useEnquiryRealtime, useRealtimeStatus } from "@packages/trem-ui";
+import { EnquiryCenter } from "@packages/trem-ui";
+import { useEnquiryRealtime, useRealtimeStatus } from "@packages/trem-events";
 import { fetchData, useRefreshOnActivation } from "@packages/trem-utils";
 
 export default function EnquiriesPage() {

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import { Button, ContactForm, ErrorState, Preloader, QuoteComparison } from "@packages/trem-ui";
 import { fetchData, notifyDataChanged, validateFields } from "@packages/trem-utils";
@@ -19,9 +19,35 @@ const normalizeFormData = (component) => {
       operatedBy: labels.operatedBy,
       travelSpecialist: labels.travelSpecialist,
     },
+    journeyLabels: {
+      ariaLabel: labels.quoteJourneyAriaLabel,
+      detailsStep: labels.quoteDetailsStep,
+      pricingStep: labels.quotePricingStep,
+      reviewStep: labels.quoteReviewStep,
+      detailsTitle: labels.quoteDetailsTitle,
+      detailsDescription: labels.quoteDetailsDescription,
+      pricingTitle: labels.quotePricingTitle,
+      pricingDescription: labels.quotePricingDescription,
+      reviewTitle: labels.quoteReviewTitle,
+      reviewDescription: labels.quoteReviewDescription,
+      cancel: labels.cancel,
+      continue: labels.continueToPricing,
+      continueToReview: labels.continueToReview,
+      continueWithoutSuggestion: labels.continueWithoutSuggestion,
+      backToDetails: labels.backToDetails,
+      backToPricing: labels.backToPricing,
+      sending: labels.sendingRequest,
+      validationError: labels.formValidationError,
+    },
     quoteLabels: {
       summary: labels.quoteSummary,
+      intelligenceTag: labels.intelligenceTag,
+      assistantTitle: labels.pricingAssistantTitle,
+      assistantDescription: labels.pricingAssistantDescription,
+      detailsProgress: labels.pricingDetailsProgress,
+      waitingForDetails: labels.pricingWaitingForDetails,
       calculating: labels.calculatingPrice,
+      calculatingDescription: labels.calculatingPriceDescription,
       customQuote: labels.customQuote,
       packageQuote: labels.packageQuote,
       travellers: labels.travellers,
@@ -71,14 +97,18 @@ const ContactAgentModal = ({
   initialSelections = null,
   closeOnOutsideClick = false,
 }) => {
+  const enquiryFormId = useId();
   const [formData, setFormData] = useState(null);
   const [formLoadError, setFormLoadError] = useState("");
+  const [activeStage, setActiveStage] = useState("details");
   const requestIdRef = useRef(0);
+  const bodyRef = useRef(null);
 
   const loadForm = useCallback(async () => {
     const requestId = ++requestIdRef.current;
     setFormData(null);
     setFormLoadError("");
+    setActiveStage("details");
     try {
       const query = new URLSearchParams({ form: "contact-agent", product });
       if (tourId) query.set("tourId", tourId);
@@ -170,6 +200,7 @@ const ContactAgentModal = ({
     setForm(initialForm);
     setErrors({});
     setMsg(null);
+    setActiveStage("details");
   }, [initialForm]);
 
   const fieldsMap = useMemo(() => {
@@ -179,6 +210,38 @@ const ContactAgentModal = ({
     });
     return map;
   }, [fieldsMeta]);
+
+  const pricingRequirements = useMemo(() => {
+    const pricingFieldNames = new Set([
+      "travellerCount",
+      "packageKey",
+      "flightPreference",
+      "preferredTravelDate",
+      "preferredStartDate",
+      "preferredEndDate",
+    ]);
+    const visiblePricingFields = fieldsMeta.filter((field) => {
+      if (!pricingFieldNames.has(field?.name) || !field.required) return false;
+      if (!field.visibleWhen?.field) return true;
+      return form[field.visibleWhen.field] === field.visibleWhen.equals;
+    });
+    return visiblePricingFields.map((field) => {
+      const value = form[field.name];
+      let complete = String(value ?? "").trim().length > 0;
+      if (field.name === "travellerCount") {
+        const count = Number(value);
+        complete = Number.isInteger(count) && count >= Number(field.min || 1) && count <= 50;
+      }
+      if (field.name === "preferredEndDate" && form.preferredStartDate && value) {
+        complete = String(value) >= String(form.preferredStartDate);
+      }
+      return { id: field.name, label: field.label, complete };
+    });
+  }, [fieldsMeta, form]);
+  const pricingReady =
+    Boolean(fieldsMap.packageKey) &&
+    pricingRequirements.length > 0 &&
+    pricingRequirements.every((item) => item.complete);
 
   const tour = formData?.data && formData.data[0] ? formData.data[0] : { _id: tourId, title: "" };
   const agency =
@@ -211,8 +274,10 @@ const ContactAgentModal = ({
     const previewTourId = typeof tour?._id === "string" ? tour._id : tourId;
     if (
       !open ||
+      activeStage !== "pricing" ||
       product !== "trevista" ||
       !previewTourId ||
+      !pricingReady ||
       !packageKey ||
       !Number.isInteger(travellerCount) ||
       travellerCount < 1
@@ -222,8 +287,8 @@ const ContactAgentModal = ({
     }
     const [hotelOptionKey = "", roomOptionKey = ""] = String(form.hotelRoomKey || "").split("|");
     const abortController = new AbortController();
+    setQuotePreview({ loading: true, data: null, error: "" });
     const timeoutId = window.setTimeout(async () => {
-      setQuotePreview((current) => ({ ...current, loading: true, error: "" }));
       const response = await fetchData(
         `/tours.json/${encodeURIComponent(previewTourId)}/customization-preview`,
         {
@@ -236,6 +301,10 @@ const ContactAgentModal = ({
             hotelOptionKey,
             roomOptionKey,
             travellerCount,
+            flightPreference: form.flightPreference,
+            preferredTravelDate: form.preferredTravelDate,
+            preferredStartDate: form.preferredStartDate,
+            preferredEndDate: form.preferredEndDate,
           },
         },
       );
@@ -261,9 +330,15 @@ const ContactAgentModal = ({
   }, [
     form.hotelRoomKey,
     form.packageKey,
+    form.flightPreference,
+    form.preferredEndDate,
+    form.preferredStartDate,
+    form.preferredTravelDate,
     form.travellerCount,
     open,
+    activeStage,
     product,
+    pricingReady,
     selectedHotelSelections,
     selectedHotelRequests,
     tour?._id,
@@ -281,12 +356,74 @@ const ContactAgentModal = ({
     });
   };
 
+  const hasPricingJourney = product === "trevista" && Boolean(fieldsMap.packageKey);
+  const journeyLabels = {
+    ariaLabel: formData?.journeyLabels?.ariaLabel || "Quote request progress",
+    detailsStep: formData?.journeyLabels?.detailsStep || "Trip details",
+    pricingStep: formData?.journeyLabels?.pricingStep || "Price options",
+    reviewStep: formData?.journeyLabels?.reviewStep || "Review request",
+    detailsTitle: formData?.journeyLabels?.detailsTitle || "Tell us about your trip",
+    detailsDescription:
+      formData?.journeyLabels?.detailsDescription || "Complete the details needed for your quote.",
+    pricingTitle: formData?.journeyLabels?.pricingTitle || "Review your intelligent price",
+    pricingDescription:
+      formData?.journeyLabels?.pricingDescription ||
+      "Compare your selected package with a suitable alternative.",
+    reviewTitle: formData?.journeyLabels?.reviewTitle || "Review your request",
+    reviewDescription:
+      formData?.journeyLabels?.reviewDescription ||
+      "Check your details before sending them to the travel specialist.",
+    cancel: formData?.journeyLabels?.cancel || "Cancel",
+    continue: formData?.journeyLabels?.continue || "Continue",
+    continueToReview: formData?.journeyLabels?.continueToReview || "Continue to review",
+    continueWithoutSuggestion:
+      formData?.journeyLabels?.continueWithoutSuggestion || "Continue without suggestion",
+    backToDetails: formData?.journeyLabels?.backToDetails || "Back to details",
+    backToPricing: formData?.journeyLabels?.backToPricing || "Back to price",
+    sending: formData?.journeyLabels?.sending || "Sending…",
+    validationError:
+      formData?.journeyLabels?.validationError || "Please fix the highlighted fields.",
+  };
+  const stages = hasPricingJourney
+    ? [
+        { id: "details", label: journeyLabels.detailsStep },
+        { id: "pricing", label: journeyLabels.pricingStep },
+        { id: "review", label: journeyLabels.reviewStep },
+      ]
+    : [
+        { id: "details", label: journeyLabels.detailsStep },
+        { id: "review", label: journeyLabels.reviewStep },
+      ];
+  const activeStageIndex = stages.findIndex((stage) => stage.id === activeStage);
+
+  const goToStage = (stage) => {
+    setMsg(null);
+    setActiveStage(stage);
+    window.requestAnimationFrame(() => {
+      if (typeof bodyRef.current?.scrollTo === "function") {
+        bodyRef.current.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    });
+  };
+
+  const handleDetailsContinue = () => {
+    const validation = validateFields(form, fieldsMap);
+    if (!validation.ok) {
+      setErrors(validation.errors);
+      setMsg({ type: "error", text: journeyLabels.validationError });
+      return;
+    }
+    setErrors({});
+    goToStage(hasPricingJourney ? "pricing" : "review");
+  };
+
   const handleSubmit = async (ev) => {
     ev?.preventDefault?.();
     const validation = validateFields(form, fieldsMap);
     if (!validation.ok) {
+      goToStage("details");
       setErrors(validation.errors);
-      setMsg({ type: "error", text: "Please fix the highlighted fields." });
+      setMsg({ type: "error", text: journeyLabels.validationError });
       return;
     }
 
@@ -351,7 +488,7 @@ const ContactAgentModal = ({
         primaryClassName="ct-modal-close"
       />
 
-      <div className="ct-modal-card__body">
+      <header className="ct-modal-card__header-bar">
         <div className="ct-modal-card__intro">
           {formData?.brandLogo ? (
             <img className="ct-modal-card__brand" src={formData.brandLogo} alt="" />
@@ -361,37 +498,9 @@ const ContactAgentModal = ({
             {formData?.description && <p className="ct-modal-card__desc">{formData.description}</p>}
           </div>
         </div>
+      </header>
 
-        {tour?.title && (
-          <div className="ct-modal-card__tour">
-            {tour?.image && (
-              <div className="ct-modal-card__tour-img">
-                <img src={tour.image} alt={tour.title} />
-              </div>
-            )}
-            <div className="ct-modal-card__tour-info">
-              <strong>{tour.title}</strong>
-              {priceStr && <span className="ct-modal-card__tour-price">{priceStr}</span>}
-              {agency?.name || operator?.name ? (
-                <div className="ct-modal-card__operator">
-                  {agency?.name ? (
-                    <span>
-                      <small>{formData?.contextLabels?.operatedBy}</small>
-                      {agency.name}
-                    </span>
-                  ) : null}
-                  {operator?.name ? (
-                    <span>
-                      <small>{formData?.contextLabels?.travelSpecialist}</small>
-                      {operator.name}
-                    </span>
-                  ) : null}
-                </div>
-              ) : null}
-            </div>
-          </div>
-        )}
-
+      <div className="ct-modal-card__body" ref={bodyRef}>
         {!formData && !formLoadError ? (
           <Preloader
             variant="stack"
@@ -408,32 +517,176 @@ const ContactAgentModal = ({
             className="ct-modal-card__error"
           />
         ) : (
-          <>
-            <QuoteComparison
-              preview={quotePreview.data}
-              loading={quotePreview.loading}
-              error={quotePreview.error}
-              labels={formData?.quoteLabels}
-              onSelectAlternative={(packageKey) => handleChange("packageKey", packageKey)}
-            />
-            <ContactForm
-              fieldsMeta={fieldsMeta}
-              formValues={form}
-              onChange={handleChange}
-              onSubmit={handleSubmit}
-              onCancel={onClose}
-              submitting={submitting}
-              submitText={submitText}
-              errors={errors}
-              Button={Button}
-            />
-          </>
+          <div className="ct-modal-card__workspace" data-stage={activeStage}>
+            <ol
+              className="ct-modal-card__steps"
+              aria-label={journeyLabels.ariaLabel}
+              style={{ "--ct-stage-count": stages.length }}
+            >
+              {stages.map((stage, index) => (
+                <li
+                  key={stage.id}
+                  className={index <= activeStageIndex ? "is-active" : ""}
+                  aria-current={stage.id === activeStage ? "step" : undefined}
+                >
+                  <span>{index + 1}</span>
+                  <strong>{stage.label}</strong>
+                </li>
+              ))}
+            </ol>
+
+            {tour?.title && (
+              <div className="ct-modal-card__tour">
+                  {tour?.image && (
+                    <div className="ct-modal-card__tour-img">
+                      <img src={tour.image} alt={tour.title} />
+                    </div>
+                  )}
+                  <div className="ct-modal-card__tour-info">
+                    <strong>{tour.title}</strong>
+                    {priceStr && <span className="ct-modal-card__tour-price">{priceStr}</span>}
+                    {agency?.name || operator?.name ? (
+                      <div className="ct-modal-card__operator">
+                        {agency?.name ? (
+                          <span>
+                            <small>{formData?.contextLabels?.operatedBy}</small>
+                            {agency.name}
+                          </span>
+                        ) : null}
+                        {operator?.name ? (
+                          <span>
+                            <small>{formData?.contextLabels?.travelSpecialist}</small>
+                            {operator.name}
+                          </span>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </div>
+              </div>
+            )}
+
+            {activeStage === "pricing" ? (
+              <section className="ct-modal-card__stage ct-modal-card__pricing-panel">
+                <header className="ct-modal-card__stage-heading">
+                  <span>{journeyLabels.pricingStep}</span>
+                  <h4>{journeyLabels.pricingTitle}</h4>
+                  <p>{journeyLabels.pricingDescription}</p>
+                </header>
+                <QuoteComparison
+                  preview={quotePreview.data}
+                  loading={quotePreview.loading}
+                  error={quotePreview.error}
+                  requirements={pricingRequirements}
+                  labels={formData?.quoteLabels}
+                  onSelectAlternative={(packageKey) => {
+                    handleChange("packageKey", packageKey);
+                    goToStage("review");
+                  }}
+                />
+              </section>
+            ) : (
+              <section className="ct-modal-card__stage ct-modal-card__form-panel">
+                <header className="ct-modal-card__stage-heading">
+                  <span>
+                    {activeStage === "review"
+                      ? journeyLabels.reviewStep
+                      : journeyLabels.detailsStep}
+                  </span>
+                  <h4>
+                    {activeStage === "review"
+                      ? journeyLabels.reviewTitle
+                      : journeyLabels.detailsTitle}
+                  </h4>
+                  <p>
+                    {activeStage === "review"
+                      ? journeyLabels.reviewDescription
+                      : journeyLabels.detailsDescription}
+                  </p>
+                </header>
+                <ContactForm
+                  formId={enquiryFormId}
+                  showActions={false}
+                  fieldsMeta={fieldsMeta}
+                  formValues={form}
+                  onChange={handleChange}
+                  onSubmit={handleSubmit}
+                  onCancel={onClose}
+                  submitting={submitting}
+                  submitText={submitText}
+                  errors={errors}
+                  Button={Button}
+                />
+              </section>
+            )}
+          </div>
         )}
 
         {msg && (
           <div className={`ct-modal-card__msg ct-modal-card__msg--${msg.type}`}>{msg.text}</div>
         )}
       </div>
+
+      {formData && !formLoadError ? (
+        <footer className="ct-modal-card__footer">
+          <Button
+            type="button"
+            text={
+              activeStage === "details"
+                ? journeyLabels.cancel
+                : activeStage === "pricing"
+                  ? journeyLabels.backToDetails
+                  : hasPricingJourney
+                    ? journeyLabels.backToPricing
+                    : journeyLabels.backToDetails
+            }
+            size="medium"
+            variant="outline"
+            color="primary"
+            onClick={
+              activeStage === "details"
+                ? onClose
+                : () =>
+                    goToStage(
+                      activeStage === "pricing"
+                        ? "details"
+                        : hasPricingJourney
+                          ? "pricing"
+                          : "details",
+                    )
+            }
+            disabled={submitting}
+          />
+          {activeStage === "review" ? (
+            <Button
+              type="submit"
+              form={enquiryFormId}
+              text={submitting ? journeyLabels.sending : submitText}
+              size="medium"
+              variant="solid"
+              color="primary"
+              disabled={submitting}
+            />
+          ) : (
+            <Button
+              type="button"
+              text={
+                activeStage === "pricing"
+                  ? quotePreview.data?.recommendedAlternative
+                    ? journeyLabels.continueWithoutSuggestion
+                    : journeyLabels.continueToReview
+                  : journeyLabels.continue
+              }
+              size="medium"
+              variant="solid"
+              color="primary"
+              onClick={() =>
+                activeStage === "pricing" ? goToStage("review") : handleDetailsContinue()
+              }
+              disabled={submitting || (activeStage === "pricing" && quotePreview.loading)}
+            />
+          )}
+        </footer>
+      ) : null}
     </ModalShell>
   );
 };

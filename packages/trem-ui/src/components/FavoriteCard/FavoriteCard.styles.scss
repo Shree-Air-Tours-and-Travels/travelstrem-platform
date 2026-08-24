@@ -9,7 +9,7 @@
   color: var(--text);
   display: flex;
   flex-direction: column;
-  height: 340px;
+  min-height: 370px;
   transition:
     transform $duration-base $ease-default,
     box-shadow $duration-base $ease-default,
@@ -46,6 +46,22 @@
   backdrop-filter: blur(8px);
 }
 
+.fav-card__product {
+  position: absolute;
+  left: $space-3;
+  bottom: $space-3;
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: $space-1 $space-2-5;
+  border-radius: $radius-full;
+  background: var(--surface-glass-strong);
+  color: var(--color-primary-dark, var(--color-primary));
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+  backdrop-filter: blur(8px);
+}
+
 .fav-card__remove {
   position: absolute;
   top: $space-3;
@@ -68,6 +84,19 @@
   &:hover {
     background: var(--danger-soft);
     color: var(--color-danger);
+  }
+
+  &:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: wait;
+  }
+
+  &.is-removing svg {
+    animation: fav-card-spin 0.75s linear infinite;
   }
 }
 
@@ -119,6 +148,15 @@
   color: var(--muted);
 }
 
+.fav-card__saved {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-1;
+  margin-top: $space-2;
+  color: var(--muted);
+  font-size: $font-size-xs;
+}
+
 .fav-card__footer {
   margin-top: auto;
   display: flex;
@@ -127,6 +165,11 @@
   gap: $space-2;
   padding-top: $space-3;
   border-top: 1px solid var(--border);
+}
+
+.fav-card__footer .ui-button {
+  min-width: 142px;
+  justify-content: center;
 }
 
 .fav-card__price {
@@ -142,5 +185,21 @@
     display: block;
     font-size: 17px;
     font-weight: $font-bold;
+  }
+}
+
+@keyframes fav-card-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: $breakpoint-mobile) {
+  .fav-card {
+    min-height: 350px;
+  }
+
+  .fav-card__footer {
+    align-items: center;
   }
 }

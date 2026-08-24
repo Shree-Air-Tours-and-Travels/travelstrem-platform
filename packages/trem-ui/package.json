@@ -5,11 +5,11 @@
   "main": "src/index.js",
   "dependencies": {
     "@packages/trem-design-tokens": "workspace:*",
+    "@packages/trem-events": "workspace:*",
     "@packages/trem-process-engine": "workspace:*",
     "@packages/trem-support-contracts": "workspace:*",
     "@packages/trem-utils": "workspace:*",
-    "prop-types": "^15.8.1",
-    "socket.io-client": "^4.8.3"
+    "prop-types": "^15.8.1"
   },
   "peerDependencies": {
     "react": "^18.3.1",

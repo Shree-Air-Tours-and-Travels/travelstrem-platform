@@ -240,4 +240,67 @@ select {
       pointer-events: none;
     }
   }
+
+  // Trevista listing/detail pages are visual/product-browsing screens. On
+  // phones, keep shell chrome accessible but stop it from permanently consuming
+  // the top and bottom of the viewport.
+  .dash-layout--trevista-immersive {
+    --dash-immersive-header-space: 120px;
+    --td-header-offset: var(--dash-immersive-header-space);
+
+    .trem-app-header {
+      transform: translateY(0);
+      transition:
+        transform 220ms ease,
+        opacity 180ms ease,
+        box-shadow 180ms ease;
+      will-change: transform;
+    }
+
+    .trem-app-header__spacer {
+      height: var(--dash-immersive-header-space);
+      flex-basis: var(--dash-immersive-header-space);
+      transition:
+        height 220ms ease,
+        flex-basis 220ms ease;
+    }
+
+    .dash-content--remote {
+      scroll-padding-top: $space-4;
+    }
+
+    .tours-app-shell--embedded,
+    .tours-app-shell--embedded .tour-detail,
+    .tours-app-shell--embedded .tours-page {
+      --td-header-offset: 0px;
+    }
+
+    .trem-fab--variant-mobile-navigation {
+      transition:
+        transform 220ms ease,
+        opacity 180ms ease;
+      will-change: transform;
+    }
+  }
+
+  .dash-layout--trevista-immersive.dash-layout--chrome-hidden {
+    --dash-mobile-action-panel-space: calc(#{$space-4} + env(safe-area-inset-bottom, 0px));
+    --dash-immersive-header-space: 0px;
+
+    .trem-app-header {
+      opacity: 0.08;
+      transform: translateY(calc(-100% + #{$space-2}));
+      box-shadow: none;
+    }
+
+    .trem-app-header__spacer {
+      height: 0;
+      flex-basis: 0;
+    }
+
+    .trem-fab--variant-mobile-navigation {
+      opacity: 0.1;
+      transform: translateY(calc(100% - #{$space-2}));
+    }
+  }
 }

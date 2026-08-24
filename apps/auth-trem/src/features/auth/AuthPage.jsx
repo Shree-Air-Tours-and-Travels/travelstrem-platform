@@ -27,6 +27,16 @@ const ERROR_MESSAGES = {
 
 const portalForApp = (app) => APP_PORTALS[String(app || "").toLowerCase()] || "customer";
 
+const secondsFromMs = (value, fallbackSeconds = 0) =>
+  Math.max(0, Math.ceil(Number(value || fallbackSeconds * 1000) / 1000));
+
+const formatOtpTimer = (seconds) => {
+  const value = Math.max(0, Number(seconds || 0));
+  const minutes = Math.floor(value / 60);
+  const remainingSeconds = value % 60;
+  return minutes ? `${minutes}:${String(remainingSeconds).padStart(2, "0")}` : `${remainingSeconds}s`;
+};
+
 // Deployments sometimes configure app URLs without a scheme ("app-dev.travelstrem.com").
 // `new URL(value, origin)` would then resolve them as RELATIVE PATHS on the auth
 // origin (auth-dev.travelstrem.com/app-dev.travelstrem.com). Normalize here so a
@@ -149,8 +159,17 @@ export default function AuthPage({
     .trim()
     .toLowerCase();
   const [methods, setMethods] = useState({
+    directAuth: true,
+    actions: {
+      emailLogin: true,
+      emailRegister: true,
+      forgotPassword: true,
+      google: false,
+      mobile: false,
+    },
+    email: { enabled: true, login: true, register: true, forgotPassword: true },
     google: { enabled: false },
-    mobile: { enabled: true, available: false },
+    mobile: { enabled: false, available: false },
   });
   const [screen, setScreen] = useState("methods");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -158,7 +177,8 @@ export default function AuthPage({
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(() => ERROR_MESSAGES[params.get("error")] || "");
-  const [cooldown, setCooldown] = useState(0);
+  const [otpExpiresIn, setOtpExpiresIn] = useState(0);
+  const [resendCooldown, setResendCooldown] = useState(0);
   const [emailMode, setEmailMode] = useState("login");
   const [emailForm, setEmailForm] = useState({
     name: "",
@@ -190,7 +210,17 @@ export default function AuthPage({
   useEffect(() => {
     Promise.all([authService.getMethods(), authService.getSession().catch(() => null)])
       .then(([methodsResponse, sessionResponse]) => {
-        setMethods((methodsResponse?.data || methodsResponse)?.methods || methods);
+        const methodsPayload = methodsResponse?.data || methodsResponse || {};
+        setMethods({
+          ...methods,
+          ...(methodsPayload.methods || {}),
+          directAuth: methodsPayload.directAuth ?? methodsPayload.methods?.directAuth ?? true,
+          actions: {
+            ...(methods.actions || {}),
+            ...(methodsPayload.actions || {}),
+            ...(methodsPayload.methods?.actions || {}),
+          },
+        });
         const session = sessionResponse?.data || sessionResponse;
         if (session?.authenticated || session?.isAuthenticated) redirectAfterAuth();
       })
@@ -203,10 +233,13 @@ export default function AuthPage({
   }, [screen]);
 
   useEffect(() => {
-    if (!cooldown) return undefined;
-    const timer = window.setInterval(() => setCooldown((value) => Math.max(0, value - 1)), 1000);
+    if (!otpExpiresIn && !resendCooldown) return undefined;
+    const timer = window.setInterval(() => {
+      setOtpExpiresIn((value) => Math.max(0, value - 1));
+      setResendCooldown((value) => Math.max(0, value - 1));
+    }, 1000);
     return () => window.clearInterval(timer);
-  }, [cooldown]);
+  }, [otpExpiresIn, resendCooldown]);
 
   useEffect(() => {
     if (!activationToken) return;
@@ -226,7 +259,8 @@ export default function AuthPage({
       .then((otpResponse) => {
         const data = otpResponse?.data || otpResponse;
         setActivationRequestSent(true);
-        setCooldown(Math.round((data.expiresInMs || 300000) / 1000));
+        setOtpExpiresIn(secondsFromMs(data.expiresInMs, 300));
+        setResendCooldown(secondsFromMs(data.resendAfterMs, 30));
         setError(data.message || "A verification code has been sent to your email.");
       })
       .catch((err) => {
@@ -241,9 +275,24 @@ export default function AuthPage({
 
   const redirectAfterAuth = () => window.location.replace(returnTo || afterAuthPath);
 
+  const authActions = methods.actions || {};
+  const emailMethod = methods.email || {};
+  const allowDirectAuth = methods.directAuth !== false;
+  const allowEmailLogin = allowDirectAuth && authActions.emailLogin !== false && emailMethod.login !== false;
+  const allowEmailRegister =
+    allowDirectAuth &&
+    registerEnabled &&
+    authActions.emailRegister !== false &&
+    emailMethod.register !== false;
+  const allowForgotPassword =
+    allowDirectAuth && authActions.forgotPassword !== false && emailMethod.forgotPassword !== false;
+  const allowGoogle = Boolean(authActions.google !== false && methods.google?.enabled);
+  const allowMobile = Boolean(authActions.mobile !== false && methods.mobile?.enabled);
+  const showExternalMethods = isCustomer && !activationToken && (allowGoogle || allowMobile);
+
   const loginWithGoogle = () => {
     setError("");
-    if (!methods.google?.enabled) {
+    if (!allowGoogle) {
       setError("Google authentication is not configured yet.");
       return;
     }
@@ -252,6 +301,11 @@ export default function AuthPage({
 
   const requestOtp = async (event) => {
     event?.preventDefault();
+    if (!allowMobile) {
+      setError("Mobile authentication is not available.");
+      setScreen("methods");
+      return;
+    }
     setLoading(true);
     setError("");
     try {
@@ -259,7 +313,8 @@ export default function AuthPage({
       const data = response?.data || response;
       setChallenge(data);
       setPhoneNumber(data.phoneNumber);
-      setCooldown(Number(data.resendAfter || 60));
+      setOtpExpiresIn(Number(data.expiresIn || data.expiresInSeconds || 300));
+      setResendCooldown(Number(data.resendAfter || data.resendAfterSeconds || 60));
       setScreen("otp");
     } catch (requestError) {
       const data = requestError?.response?.data || {};
@@ -293,6 +348,7 @@ export default function AuthPage({
     setError("");
     try {
       if (emailMode === "register") {
+        if (!allowEmailRegister) throw new Error("Registration is not available.");
         if (emailForm.password !== emailForm.confirmPassword)
           throw new Error("Passwords do not match.");
         if (isMasterAdminRegistration && adminRegistration?.status !== "verified")
@@ -324,6 +380,7 @@ export default function AuthPage({
         return;
       }
 
+      if (!allowEmailLogin) throw new Error("Email login is not available.");
       const response = await authService.login({
         email: emailForm.email.trim(),
         password: emailForm.password,
@@ -332,6 +389,8 @@ export default function AuthPage({
       if (data?.status === "verify_otp") {
         setEmailOtpStep({ verificationId: data.verificationId, email: data.email });
         setOtp("");
+        setOtpExpiresIn(secondsFromMs(data.expiresInMs, 300));
+        setResendCooldown(secondsFromMs(data.resendAfterMs, 30));
         setScreen("emailOtp");
         return;
       }
@@ -356,8 +415,11 @@ export default function AuthPage({
         phone: emailForm.phone.trim(),
         role: "admin",
       });
+      const data = response?.data || response;
       setAdminRegistration({ status: "otp_sent" });
-      setError((response?.data || response)?.message || "Registration code sent.");
+      setOtpExpiresIn(secondsFromMs(data.expiresInMs, 300));
+      setResendCooldown(secondsFromMs(data.resendAfterMs, 30));
+      setError(data.message || "Registration code sent.");
     } catch (registrationError) {
       setError(
         registrationError?.response?.data?.message || "Unable to send the registration code.",
@@ -382,6 +444,7 @@ export default function AuthPage({
       });
       const data = response?.data || response;
       setAdminRegistration({ status: "verified", verificationId: data.verificationId });
+      setOtpExpiresIn(secondsFromMs(data.expiresInMs, 300));
       setError(data.message || "Registration code verified. Enter the Admin PIN.");
     } catch (registrationError) {
       setError(
@@ -415,11 +478,14 @@ export default function AuthPage({
     setError("");
     try {
       const response = await authService.forgotPassword({ email: emailForm.email.trim() });
+      const data = response?.data || response;
       setError(
-        (response?.data || response)?.message ||
+        data?.message ||
           "If that email is registered, a password reset code has been sent.",
       );
       setResetForm({ otp: "", password: "", confirmPassword: "" });
+      setOtpExpiresIn(secondsFromMs(data?.expiresInMs, 300));
+      setResendCooldown(secondsFromMs(data?.resendAfterMs, 30));
       setScreen("resetPassword");
     } catch {
       setError("Unable to request a reset code right now. Please try again.");
@@ -457,8 +523,13 @@ export default function AuthPage({
       const response = await authService.resendLoginOtp({
         verificationId: emailOtpStep?.verificationId,
       });
-      setError((response?.data || response)?.message || "A new code has been sent.");
+      const data = response?.data || response;
+      setOtpExpiresIn(secondsFromMs(data.expiresInMs, 300));
+      setResendCooldown(secondsFromMs(data.resendAfterMs, 30));
+      setError(data.message || "A new code has been sent.");
     } catch (resendError) {
+      const retryAfterMs = resendError?.response?.data?.retryAfterMs;
+      if (retryAfterMs) setResendCooldown(secondsFromMs(retryAfterMs));
       setError(resendError?.response?.data?.message || "Unable to resend the code.");
     } finally {
       setLoading(false);
@@ -473,7 +544,8 @@ export default function AuthPage({
       const data = response?.data || response;
       setActivationEmail(data.email || activationEmail);
       setActivationRequestSent(true);
-      setCooldown(Math.round((data.expiresInMs || 300000) / 1000));
+      setOtpExpiresIn(secondsFromMs(data.expiresInMs, 300));
+      setResendCooldown(secondsFromMs(data.resendAfterMs, 30));
       setError(data.message || "A verification code has been sent to your email.");
     } catch (err) {
       setError(err?.response?.data?.message || "Unable to send the code. Please try again.");
@@ -605,36 +677,41 @@ export default function AuthPage({
                 </div>
               ) : null}
 
-              {screen === "methods" && isCustomer && !activationToken ? (
+              {screen === "methods" && showExternalMethods ? (
                 <div className="auth-trem__method-list">
-                  <button
-                    type="button"
-                    className="auth-trem__google-button"
-                    onClick={loginWithGoogle}
-                    disabled={loading}
-                  >
-                    <GoogleMark />
-                    <span>Continue with Google</span>
-                  </button>
-                  <Button
-                    variant="outline"
-                    iconLeft="phoneCall"
-                    text="Continue with Mobile Number"
-                    onClick={() => {
-                      setError("");
-                      setScreen("mobile");
-                    }}
-                    primaryClassName="auth-trem__mobile-button"
-                  />
+                  {allowGoogle ? (
+                    <button
+                      type="button"
+                      className="auth-trem__google-button"
+                      onClick={loginWithGoogle}
+                      disabled={loading}
+                    >
+                      <GoogleMark />
+                      <span>Continue with Google</span>
+                    </button>
+                  ) : null}
+                  {allowMobile ? (
+                    <Button
+                      variant="outline"
+                      iconLeft="phoneCall"
+                      text="Continue with Mobile Number"
+                      onClick={() => {
+                        setError("");
+                        setScreen("mobile");
+                      }}
+                      primaryClassName="auth-trem__mobile-button"
+                    />
+                  ) : null}
                   <div className="auth-trem__guest-divider">
                     <span>or use email</span>
                   </div>
                 </div>
               ) : null}
 
-              {screen === "methods" || screen === "email" ? (
+              {(screen === "methods" || screen === "email") &&
+              (allowEmailLogin || allowEmailRegister) ? (
                 <form className="auth-trem__form auth-trem__email-form" onSubmit={submitEmailAuth}>
-                  {registerEnabled ? (
+                  {allowEmailLogin && allowEmailRegister ? (
                     <div className="auth-trem__tabs">
                       <Button
                         variant="text"
@@ -723,37 +800,65 @@ export default function AuthPage({
                   {isMasterAdminRegistration ? (
                     <div className="auth-trem__secret">
                       {adminRegistration?.status !== "verified" ? (
-                        <div className="auth-trem__otp-row">
-                          <input
-                            className="auth-trem__field"
-                            inputMode="numeric"
-                            autoComplete="one-time-code"
-                            placeholder="Registration code"
-                            pattern="[0-9]{6}"
-                            maxLength={6}
-                            value={emailForm.adminOtp}
-                            onChange={(event) =>
-                              setEmailForm((value) => ({
-                                ...value,
-                                adminOtp: event.target.value.replace(/\D/g, "").slice(0, 6),
-                              }))
-                            }
-                          />
-                          <Button
-                            variant="outline"
-                            size="small"
-                            type="button"
-                            text={
-                              adminRegistration?.status === "otp_sent" ? "Verify code" : "Send code"
-                            }
-                            disabled={loading}
-                            onClick={
-                              adminRegistration?.status === "otp_sent"
-                                ? verifyAdminRegistrationOtp
-                                : requestAdminRegistrationOtp
-                            }
-                          />
-                        </div>
+                        <>
+                          <div className="auth-trem__otp-row">
+                            <input
+                              className="auth-trem__field"
+                              inputMode="numeric"
+                              autoComplete="one-time-code"
+                              placeholder="Registration code"
+                              pattern="[0-9]{6}"
+                              maxLength={6}
+                              value={emailForm.adminOtp}
+                              onChange={(event) =>
+                                setEmailForm((value) => ({
+                                  ...value,
+                                  adminOtp: event.target.value.replace(/\D/g, "").slice(0, 6),
+                                }))
+                              }
+                            />
+                            <Button
+                              variant="outline"
+                              size="small"
+                              type="button"
+                              text={
+                                adminRegistration?.status === "otp_sent"
+                                  ? "Verify code"
+                                  : "Send code"
+                              }
+                              disabled={
+                                loading ||
+                                (adminRegistration?.status === "otp_sent" &&
+                                  (otpExpiresIn <= 0 || emailForm.adminOtp.length !== 6))
+                              }
+                              onClick={
+                                adminRegistration?.status === "otp_sent"
+                                  ? verifyAdminRegistrationOtp
+                                  : requestAdminRegistrationOtp
+                              }
+                            />
+                          </div>
+                        {adminRegistration?.status === "otp_sent" ? (
+                          <>
+                            <div className="auth-trem__hint">
+                              {otpExpiresIn > 0
+                                ? `Registration code expires in ${formatOtpTimer(otpExpiresIn)}.`
+                                : "Registration code expired. Send a new code."}
+                            </div>
+                            <Button
+                              variant="text"
+                              type="button"
+                              text={
+                                resendCooldown
+                                  ? `Request another code in ${formatOtpTimer(resendCooldown)}`
+                                  : "Resend registration code"
+                              }
+                              disabled={loading || resendCooldown > 0}
+                              onClick={requestAdminRegistrationOtp}
+                            />
+                          </>
+                        ) : null}
+                        </>
                       ) : (
                         <SecretField
                           inputMode="numeric"
@@ -777,7 +882,7 @@ export default function AuthPage({
                       </div>
                     </div>
                   ) : null}
-                  {emailMode === "login" ? (
+                  {emailMode === "login" && allowForgotPassword ? (
                     <Button
                       variant="text"
                       type="button"
@@ -870,9 +975,14 @@ export default function AuthPage({
                     color="primary"
                     type="submit"
                     text={loading ? "Verifying…" : "Verify"}
-                    disabled={loading || otp.length !== 6}
+                    disabled={loading || otp.length !== 6 || otpExpiresIn <= 0}
                     primaryClassName="auth-trem__primary"
                   />
+                  <div className="auth-trem__hint">
+                    {otpExpiresIn > 0
+                      ? `Code expires in ${formatOtpTimer(otpExpiresIn)}.`
+                      : "Code expired. Request a new OTP."}
+                  </div>
                   {challenge?.developmentOtp ? (
                     <p className="auth-trem__dev-otp">
                       Development code: <strong>{challenge.developmentOtp}</strong>
@@ -882,8 +992,12 @@ export default function AuthPage({
                     <Button
                       variant="text"
                       type="button"
-                      text={cooldown ? `Resend in ${cooldown}s` : "Resend OTP"}
-                      disabled={loading || cooldown > 0}
+                      text={
+                        resendCooldown
+                          ? `Request another OTP in ${formatOtpTimer(resendCooldown)}`
+                          : "Resend OTP"
+                      }
+                      disabled={loading || resendCooldown > 0}
                       onClick={requestOtp}
                     />
                     <Button
@@ -922,14 +1036,23 @@ export default function AuthPage({
                     color="primary"
                     type="submit"
                     text={loading ? "Verifying…" : "Verify and continue"}
-                    disabled={loading || otp.length !== 6}
+                    disabled={loading || otp.length !== 6 || otpExpiresIn <= 0}
                     primaryClassName="auth-trem__primary"
                   />
+                  <div className="auth-trem__hint">
+                    {otpExpiresIn > 0
+                      ? `Code expires in ${formatOtpTimer(otpExpiresIn)}.`
+                      : "Code expired. Request a new code."}
+                  </div>
                   <Button
                     variant="text"
                     type="button"
-                    text="Resend code"
-                    disabled={loading}
+                    text={
+                      resendCooldown
+                        ? `Request another code in ${formatOtpTimer(resendCooldown)}`
+                        : "Resend code"
+                    }
+                    disabled={loading || resendCooldown > 0}
                     onClick={resendEmailLoginOtp}
                   />
                   <Button
@@ -993,14 +1116,23 @@ export default function AuthPage({
                     color="primary"
                     type="submit"
                     text={loading ? "Resetting…" : "Reset password"}
-                    disabled={loading || resetForm.otp.length !== 6}
+                    disabled={loading || resetForm.otp.length !== 6 || otpExpiresIn <= 0}
                     primaryClassName="auth-trem__primary"
                   />
+                  <div className="auth-trem__hint">
+                    {otpExpiresIn > 0
+                      ? `Reset code expires in ${formatOtpTimer(otpExpiresIn)}.`
+                      : "Reset code expired. Send another code."}
+                  </div>
                   <Button
                     variant="text"
                     type="button"
-                    text="Send another code"
-                    disabled={loading}
+                    text={
+                      resendCooldown
+                        ? `Request another code in ${formatOtpTimer(resendCooldown)}`
+                        : "Send another code"
+                    }
+                    disabled={loading || resendCooldown > 0}
                     onClick={requestPasswordReset}
                   />
                   <Button
@@ -1066,14 +1198,28 @@ export default function AuthPage({
                     color="primary"
                     type="submit"
                     text={loading ? "Activating…" : "Activate account"}
-                    disabled={loading || activationForm.otp.length !== 6 || !activationRequestSent}
+                    disabled={
+                      loading ||
+                      activationForm.otp.length !== 6 ||
+                      !activationRequestSent ||
+                      otpExpiresIn <= 0
+                    }
                     primaryClassName="auth-trem__primary"
                   />
+                  <div className="auth-trem__hint">
+                    {otpExpiresIn > 0
+                      ? `Verification code expires in ${formatOtpTimer(otpExpiresIn)}.`
+                      : "Verification code expired. Resend the code."}
+                  </div>
                   <Button
                     variant="text"
                     type="button"
-                    text={cooldown ? `Resend code in ${cooldown}s` : "Resend code"}
-                    disabled={loading || cooldown > 0}
+                    text={
+                      resendCooldown
+                        ? `Request another code in ${formatOtpTimer(resendCooldown)}`
+                        : "Resend code"
+                    }
+                    disabled={loading || resendCooldown > 0}
                     onClick={requestActivationCode}
                   />
                   <Button

@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import crypto from "node:crypto";
+import { applyProcessAction, getProcessSnapshot } from "@packages/trem-process-engine";
 import PartnershipRequest from "./models/PartnershipRequest.js";
 import Product from "./models/Product.js";
 import PartnerAgency from "../auth/models/PartnerAgency.js";
@@ -13,6 +15,11 @@ import ProductAccessRequest from "./models/ProductAccessRequest.js";
 import Tour from "../tours/models/Tour.js";
 import TrevioTrip from "../trevio/models/TrevioTrip.js";
 import RefreshToken from "../auth/models/RefreshToken.js";
+import ContactLead from "../forms/models/ContactLead.js";
+import {
+    buildPartnerDashboard,
+    partnerDashboardScopes,
+} from "./partnerDashboard.service.js";
 import { audit } from "./audit.service.js";
 import {
     inviteUser,
@@ -26,6 +33,19 @@ import { PERMISSIONS, ROLE_PERMISSIONS } from "./permissions.js";
 import { normalizeProductKeys } from "./productCatalog.js";
 import { invalidateHiddenProductCache } from "../../utils/hiddenProductCache.js";
 import { REALTIME_EVENTS, notificationDto, publishToUser } from "../../realtime/index.js";
+import {
+    CONTACT_METHODS,
+    CUSTOMER_STAGES,
+    CUSTOMER_STATUSES,
+    agencyCustomerOwners,
+    customerActivityMap,
+    customerDirectoryView,
+    customerDto,
+    escapeCustomerRegex,
+    normalizeEmail,
+    normalizePhone,
+    reconcileAgencyCustomers,
+} from "./customerDirectory.service.js";
 
 const ok = (res, data, message = "OK", status = 200) =>
     res.status(status).json({ status: "success", message, componentData: { data } });
@@ -65,6 +85,258 @@ const notifyByEmail = (payload) =>
         success: false,
         message: error.message,
     }));
+
+const PARTNERSHIP_WORKFLOW = {
+    key: "partnership-activation",
+    version: "PARTNERSHIP_ACTIVATION_V1",
+    title: "Agency partnership activation",
+    subtitle: "Complete each verified section. Your progress is saved securely after every step.",
+    steps: [
+        {
+            id: "business",
+            title: "Business identity",
+            description: "Tell us who the agency is and how customers know your business.",
+            widgets: [
+                { type: "text", path: "agencyName", label: "Agency trading name", required: true, maxLength: 120 },
+                { type: "text", path: "legalName", label: "Registered legal name", required: true, maxLength: 160 },
+                { type: "email", path: "companyEmail", label: "Company email", required: true },
+                { type: "tel", path: "companyPhone", label: "Company phone", required: true },
+                { type: "url", path: "website", label: "Website", placeholder: "https://" },
+            ],
+        },
+        {
+            id: "registration",
+            title: "Registration & address",
+            description: "Provide the legal identifiers and registered operating address.",
+            widgets: [
+                { type: "text", path: "registrationNumber", label: "Registration number", required: true },
+                { type: "text", path: "gstNumber", label: "GST number", required: true, pattern: "^[0-9A-Z]{15}$", patternMessage: "GSTIN must contain exactly 15 uppercase letters and numbers." },
+                { type: "text", path: "panNumber", label: "PAN number", required: true, pattern: "^[A-Z]{5}[0-9]{4}[A-Z]$", patternMessage: "PAN must use the format ABCDE1234F." },
+                { type: "text", path: "address.line1", label: "Address line 1", required: true },
+                { type: "text", path: "address.line2", label: "Address line 2" },
+                { type: "text", path: "address.city", label: "City", required: true },
+                { type: "text", path: "address.state", label: "State", required: true },
+                { type: "text", path: "address.postalCode", label: "Postal code", required: true },
+                { type: "text", path: "address.country", label: "Country", required: true },
+            ],
+        },
+        {
+            id: "operations",
+            title: "Agency operations",
+            description: "Help our activation team understand your operating scale and services.",
+            widgets: [
+                { type: "number", path: "yearsInBusiness", label: "Years in business", required: true, min: 0, max: 200 },
+                { type: "number", path: "numberOfEmployees", label: "Number of employees", required: true, min: 1 },
+                { type: "number", path: "approximateCustomerBase", label: "Approximate customer base", required: true, min: 0 },
+                { type: "textarea", path: "servicesOfferedText", label: "Services offered", required: true, placeholder: "Tours, corporate travel, visas…", maxLength: 500, fullWidth: true },
+            ],
+        },
+        {
+            id: "contact",
+            title: "Primary contact",
+            description: "This person will receive review updates and the activation invitation.",
+            widgets: [
+                { type: "text", path: "primaryContact.fullName", label: "Full name", required: true },
+                { type: "text", path: "primaryContact.designation", label: "Designation", required: true },
+                { type: "email", path: "primaryContact.email", label: "Work email", required: true },
+                { type: "tel", path: "primaryContact.mobile", label: "Mobile number", required: true },
+            ],
+        },
+        {
+            id: "verification",
+            title: "Verification",
+            description: "Attach branding and documents used by the platform governance team.",
+            widgets: [
+                { type: "logo", path: "logo", label: "Agency logo", accept: ".jpg,.jpeg,.png,.webp", maxFiles: 1 },
+                { type: "documents", path: "documents", label: "Verification documents", accept: ".pdf,.jpg,.jpeg,.png,.webp", maxFiles: 8, required: true },
+                { type: "textarea", path: "notes", label: "Applicant message", maxLength: 1000, fullWidth: true },
+            ],
+        },
+        {
+            id: "review",
+            title: "Review & submit",
+            description: "Confirm the application before it enters the platform activation queue.",
+            widgets: [{ type: "review", path: "review", label: "Application summary" }],
+        },
+    ],
+};
+PARTNERSHIP_WORKFLOW.steps.forEach((step) => {
+    step.requiredFields = step.widgets
+        .filter((widget) => widget.required && !["documents", "logo", "review"].includes(widget.type))
+        .map((widget) => ({
+            path: widget.path,
+            label: widget.label,
+            required: true,
+            min: widget.min,
+            max: widget.max,
+            pattern: widget.pattern,
+            message: widget.patternMessage,
+        }));
+});
+
+const tokenHash = (value) => crypto.createHash("sha256").update(String(value || "")).digest("hex");
+const draftToken = (req) => req.get("x-partnership-resume-token") || req.body?.resumeToken || "";
+const parsePayload = (req) => {
+    try {
+        return typeof req.body.payload === "string" ? JSON.parse(req.body.payload) : req.body.payload || req.body;
+    } catch {
+        throw Object.assign(new Error("Partnership request payload must be valid JSON."), { status: 400 });
+    }
+};
+const cleanPartnershipPayload = (body = {}) => ({
+    agencyName: String(body.agencyName || "").trim(),
+    legalName: String(body.legalName || "").trim(),
+    registrationNumber: String(body.registrationNumber || "").trim(),
+    gstNumber: String(body.gstNumber || "").trim().toUpperCase(),
+    panNumber: String(body.panNumber || "").trim().toUpperCase(),
+    website: String(body.website || "").trim(),
+    companyEmail: String(body.companyEmail || "").trim().toLowerCase(),
+    companyPhone: String(body.companyPhone || "").trim(),
+    address: {
+        line1: String(body.address?.line1 || "").trim(),
+        line2: String(body.address?.line2 || "").trim(),
+        country: String(body.address?.country || "").trim(),
+        state: String(body.address?.state || "").trim(),
+        city: String(body.address?.city || "").trim(),
+        postalCode: String(body.address?.postalCode || "").trim(),
+    },
+    yearsInBusiness: Number(body.yearsInBusiness) || 0,
+    numberOfEmployees: Number(body.numberOfEmployees) || 0,
+    approximateCustomerBase: Number(body.approximateCustomerBase) || 0,
+    servicesOffered: (body.servicesOffered || String(body.servicesOfferedText || "").split(","))
+        .map((value) => String(value).trim())
+        .filter(Boolean),
+    notes: String(body.notes || "").trim(),
+    primaryContact: {
+        fullName: String(body.primaryContact?.fullName || "").trim(),
+        designation: String(body.primaryContact?.designation || "").trim(),
+        email: String(body.primaryContact?.email || "").trim().toLowerCase(),
+        mobile: String(body.primaryContact?.mobile || "").trim(),
+    },
+});
+const validatePartnership = (body) => {
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phonePattern = /^\+?[0-9][0-9\s()-]{6,19}$/;
+    const required = [body.agencyName, body.legalName, body.companyEmail, body.companyPhone,
+        body.registrationNumber, body.gstNumber, body.panNumber, body.address.line1,
+        body.address.city, body.address.state, body.address.postalCode, body.address.country,
+        body.primaryContact.fullName, body.primaryContact.designation,
+        body.primaryContact.email, body.primaryContact.mobile];
+    if (required.some((value) => !String(value || "").trim()))
+        throw Object.assign(new Error("Complete every required partnership field before submitting."), { status: 400 });
+    if (!emailPattern.test(body.companyEmail) || !emailPattern.test(body.primaryContact.email))
+        throw Object.assign(new Error("Enter valid company and primary-contact email addresses."), { status: 400 });
+    if (!phonePattern.test(body.companyPhone) || !phonePattern.test(body.primaryContact.mobile))
+        throw Object.assign(new Error("Enter valid company and primary-contact phone numbers."), { status: 400 });
+    if (!/^[0-9A-Z]{15}$/.test(body.gstNumber))
+        throw Object.assign(new Error("GSTIN must contain exactly 15 uppercase letters and numbers."), { status: 400 });
+    if (!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(body.panNumber))
+        throw Object.assign(new Error("PAN must use the format ABCDE1234F."), { status: 400 });
+};
+
+export const getPartnershipWorkflow = (_req, res) => ok(res, PARTNERSHIP_WORKFLOW);
+
+export async function createPartnershipDraft(req, res) {
+    try {
+        const token = crypto.randomBytes(32).toString("base64url");
+        const request = await PartnershipRequest.create({
+            status: "draft",
+            workflowVersion: PARTNERSHIP_WORKFLOW.version,
+            resumeTokenHash: tokenHash(token),
+            draftExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+            history: [{ status: "draft", note: "Partnership application started." }],
+        });
+        return ok(res, { requestId: request.id, resumeToken: token, status: request.status }, "Application draft created.", 201);
+    } catch (error) {
+        return fail(res, error, "Failed to start partnership application.");
+    }
+}
+
+const findDraft = (req) => PartnershipRequest.findOne({
+    _id: req.params.id,
+    status: "draft",
+    resumeTokenHash: tokenHash(draftToken(req)),
+}).select("+resumeTokenHash");
+
+export async function getPartnershipDraft(req, res) {
+    try {
+        const record = await findDraft(req).lean();
+        if (!record) return res.status(404).json({ status: "error", message: "Application draft was not found or has expired." });
+        delete record.resumeTokenHash;
+        return ok(res, publicRequest(record));
+    } catch (error) {
+        return fail(res, error, "Failed to resume partnership application.");
+    }
+}
+
+export async function savePartnershipDraft(req, res) {
+    try {
+        const record = await findDraft(req);
+        if (!record) return res.status(404).json({ status: "error", message: "Application draft was not found or has expired." });
+        const payload = cleanPartnershipPayload(req.body.payload || {});
+        const nodeId = String(req.body.nodeId || record.currentStep || "business");
+        const transition = applyProcessAction(
+            PARTNERSHIP_WORKFLOW,
+            {
+                currentNodeId: record.currentStep,
+                completedStageIds: record.completedSteps,
+                completedNodeIds: record.completedSteps,
+            },
+            { nodeId, data: req.body.payload || {} },
+        );
+        if (!transition.ok)
+            return res.status(400).json({
+                status: "error",
+                message: "Complete the required fields before continuing.",
+                componentData: { data: { errors: transition.errors } },
+            });
+        Object.assign(record, payload, {
+            currentStep: transition.process.currentNodeId,
+            completedSteps: transition.process.completedStageIds,
+            draftExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        });
+        await record.save({ validateModifiedOnly: true });
+        return ok(res, { requestId: record.id, status: record.status, currentStep: record.currentStep, completedSteps: record.completedSteps, savedAt: record.updatedAt }, "Progress saved.");
+    } catch (error) {
+        return fail(res, error, "Failed to save partnership progress.");
+    }
+}
+
+export async function submitPartnershipDraft(req, res) {
+    try {
+        const record = await findDraft(req);
+        if (!record) return res.status(404).json({ status: "error", message: "Application draft was not found or has expired." });
+        const payload = cleanPartnershipPayload(parsePayload(req));
+        validatePartnership(payload);
+        const process = getProcessSnapshot(PARTNERSHIP_WORKFLOW, {
+            currentNodeId: record.currentStep,
+            completedStageIds: record.completedSteps,
+            completedNodeIds: record.completedSteps,
+        });
+        if (process.progress.completed < PARTNERSHIP_WORKFLOW.steps.length - 1)
+            return res.status(409).json({ status: "error", message: "Complete every activation step before submitting." });
+        if (!uploadedFiles(req, "documents").length)
+            return res.status(400).json({ status: "error", message: "Upload at least one verification document." });
+        const duplicate = await PartnershipRequest.exists({ _id: { $ne: record._id }, status: { $nin: ["rejected", "converted", "draft"] }, $or: [{ companyEmail: payload.companyEmail }, { registrationNumber: payload.registrationNumber }, { gstNumber: payload.gstNumber }, { panNumber: payload.panNumber }] });
+        if (duplicate) return res.status(409).json({ status: "error", message: "An active partnership request already exists for this business." });
+        Object.assign(record, payload, {
+            logo: uploadedFiles(req, "logo")[0] ? fileData(uploadedFiles(req, "logo")[0]).url : record.logo,
+            documents: uploadedFiles(req, "documents").map(fileData),
+            status: "submitted",
+            currentStep: "review",
+            completedSteps: PARTNERSHIP_WORKFLOW.steps.map((step) => step.id),
+            submittedAt: new Date(),
+            draftExpiresAt: null,
+        });
+        record.history.push({ status: "submitted", note: "Partnership request submitted." });
+        await record.save();
+        await audit(req, { action: "partnership_request.submitted", entityType: "PartnershipRequest", entityId: record._id, after: record.toObject() });
+        void notifyByEmail({ to: record.companyEmail, recipientName: record.primaryContact.fullName, title: "Partnership request received", message: `We received the partnership request for ${record.agencyName}. Our governance team will review it and send activation instructions by email.` });
+        return ok(res, { requestId: record.id, status: record.status, submittedAt: record.submittedAt, agencyName: record.agencyName, email: record.companyEmail }, "Partnership request submitted.");
+    } catch (error) {
+        return fail(res, error, "Failed to submit partnership request.");
+    }
+}
 
 // Persisted notifications stay the source of truth; realtime only pushes the
 // safe DTO to the owner's socket room so open dashboards refresh instantly.
@@ -178,6 +450,7 @@ export async function submitPartnershipRequest(req, res) {
             },
             documents: uploadedFiles(req, "documents").map(fileData),
             status: "submitted",
+            submittedAt: new Date(),
             history: [{ status: "submitted", note: "Partnership request submitted." }],
         });
         await audit(req, {
@@ -206,8 +479,12 @@ export async function submitPartnershipRequest(req, res) {
 export async function listPartnershipRequests(req, res) {
     try {
         const { skip, limit } = page(req);
-        const query = {};
-        if (req.query.status) query.status = req.query.status;
+        const requestedStatus = String(req.query.status || "").trim();
+        // Converted requests belong to agency history, not the active application queue.
+        // They remain available when a Master Admin explicitly selects Converted.
+        const query = {
+            status: requestedStatus || { $ne: "converted" },
+        };
         if (req.query.search)
             query.$or = ["agencyName", "companyEmail", "gstNumber", "panNumber"].map((key) => ({
                 [key]: new RegExp(escapeRegex(req.query.search), "i"),
@@ -259,10 +536,12 @@ export async function downloadPartnershipDocument(req, res) {
 }
 
 const requestTransitions = {
+    draft: ["under_review"],
     submitted: ["under_review"],
     under_review: ["additional_information_required", "approved", "rejected"],
     additional_information_required: ["submitted", "under_review"],
     approved: ["converted"],
+    rejected: ["draft"],
 };
 export async function reviewPartnershipRequest(req, res) {
     try {
@@ -277,13 +556,30 @@ export async function reviewPartnershipRequest(req, res) {
                 status: "error",
                 message: `Cannot move request from ${record.status} to ${next}.`,
             });
+        if (record.status === "draft" && next === "under_review" && !record.reopenedAt)
+            return res.status(409).json({
+                status: "error",
+                message: "An incomplete applicant draft must be submitted before formal review.",
+            });
         if (next === "rejected" && !String(req.body.reason || "").trim())
             return res
                 .status(400)
                 .json({ status: "error", message: "A rejection reason is required." });
+        if (record.status === "rejected" && next === "draft" && !String(req.body.reason || "").trim())
+            return res.status(400).json({
+                status: "error",
+                message: "Explain why this rejected application is being reopened.",
+            });
         const before = record.toObject();
+        const previousStatus = record.status;
         record.status = next;
         if (next === "rejected") record.rejectionReason = String(req.body.reason || "");
+        if (previousStatus === "rejected" && next === "draft") {
+            record.reopenedAt = new Date();
+            record.reopenedBy = req.access.user._id;
+            record.draftExpiresAt = null;
+            record.rejectionReason = "";
+        }
         if (req.body.internalNote)
             record.internalNotes.push({
                 note: req.body.internalNote,
@@ -318,6 +614,43 @@ export async function reviewPartnershipRequest(req, res) {
                     `Your partnership request for ${record.agencyName} is now ${next.replaceAll("_", " ")}.`,
             });
         return ok(res, publicRequest(record.toObject()), "Partnership request updated.");
+    } catch (error) {
+        return fail(res, error);
+    }
+}
+
+export async function deletePartnershipDraft(req, res) {
+    try {
+        const record = await PartnershipRequest.findById(req.params.id).lean();
+        if (!record)
+            return res
+                .status(404)
+                .json({ status: "error", message: "Partnership request not found." });
+        if (record.status !== "draft")
+            return res.status(409).json({
+                status: "error",
+                message: "Only incomplete draft partnership requests can be deleted.",
+            });
+
+        const result = await PartnershipRequest.deleteOne({ _id: record._id, status: "draft" });
+        if (!result.deletedCount)
+            return res.status(409).json({
+                status: "error",
+                message: "This draft changed before it could be deleted. Refresh and try again.",
+            });
+
+        await audit(req, {
+            action: "partnership_request.draft_deleted",
+            entityType: "PartnershipRequest",
+            entityId: record._id,
+            before: record,
+            after: null,
+        });
+        return ok(
+            res,
+            { requestId: String(record._id), deleted: true },
+            "Partnership draft permanently deleted.",
+        );
     } catch (error) {
         return fail(res, error);
     }
@@ -631,21 +964,63 @@ export async function updateAgency(req, res) {
 export async function listAgents(req, res) {
     try {
         const agencyId = req.access.isMaster ? req.params.agencyId : req.access.agencyId;
+        const scopedAgencyId = mongoose.Types.ObjectId.isValid(agencyId)
+            ? new mongoose.Types.ObjectId(agencyId)
+            : agencyId;
         const { skip, limit } = page(req);
-        const q = { agencyId, agencyRole: { $in: ["partner_admin", "partner_agent"] } };
-        if (req.query.status) q.accountStatus = req.query.status;
-        const [items, total] = await Promise.all([
+        const baseQuery = {
+            agencyId: scopedAgencyId,
+            agencyRole: { $in: ["partner_admin", "partner_agent"] },
+            accountStatus: { $ne: "anonymized" },
+        };
+        const q = { ...baseQuery };
+        const status = String(req.query.status || "").trim().toLowerCase();
+        const role = String(req.query.role || "").trim().toLowerCase();
+        const search = String(req.query.search || "").trim();
+        if (["active", "invited", "suspended", "deactivated"].includes(status)) {
+            q.accountStatus = status;
+        }
+        if (["partner_admin", "partner_agent"].includes(role)) q.agencyRole = role;
+        if (search) {
+            const pattern = new RegExp(escapeRegex(search), "i");
+            q.$or = [
+                { name: pattern },
+                { email: pattern },
+                { phone: pattern },
+                { designation: pattern },
+            ];
+        }
+        const sort =
+            req.query.sort === "name"
+                ? { name: 1, createdAt: -1 }
+                : req.query.sort === "oldest"
+                  ? { createdAt: 1 }
+                  : { createdAt: -1 };
+        const [items, total, statusCounts] = await Promise.all([
             User.find(q)
                 .select(
-                    "name email phone designation agencyRole accountStatus productAccess permissionGrants createdAt activatedAt",
+                    "name email phone designation agencyRole accountStatus avatar productAccess permissionGrants createdAt activatedAt",
                 )
-                .sort({ createdAt: -1 })
+                .sort(sort)
                 .skip(skip)
                 .limit(limit)
                 .lean(),
             User.countDocuments(q),
+            User.aggregate([
+                { $match: baseQuery },
+                { $group: { _id: "$accountStatus", count: { $sum: 1 } } },
+            ]),
         ]);
-        return ok(res, { items, total, skip, limit });
+        const counts = Object.fromEntries(
+            statusCounts.map((entry) => [entry._id || "unknown", entry.count]),
+        );
+        const summary = {
+            total: Object.values(counts).reduce((sum, count) => sum + count, 0),
+            active: counts.active || 0,
+            invited: counts.invited || 0,
+            inactive: (counts.suspended || 0) + (counts.deactivated || 0),
+        };
+        return ok(res, { items, total, skip, limit, summary });
     } catch (error) {
         return fail(res, error);
     }
@@ -966,25 +1341,177 @@ function customerScope(req, extra = {}) {
 export async function listCustomers(req, res) {
     try {
         const { skip, limit } = page(req);
-        const q = customerScope(req, { deletedAt: null });
-        const [items, total] = await Promise.all([
-            AgencyCustomer.find(q).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
-            AgencyCustomer.countDocuments(q),
-        ]);
-        return ok(res, { items, total, skip, limit });
+        const ownerScope =
+            req.access.role === "partner_agent" && !req.access.agency?.settings?.sharedCustomers
+                ? req.access.user._id
+                : null;
+        await reconcileAgencyCustomers({ agencyId: req.access.agencyId, ownerAgent: ownerScope });
+        const baseQuery = customerScope(req, { deletedAt: null });
+        const query = { ...baseQuery };
+        if (req.query.status && CUSTOMER_STATUSES.includes(req.query.status))
+            query.status = req.query.status;
+        if (req.query.lifecycleStage && CUSTOMER_STAGES.includes(req.query.lifecycleStage))
+            query.lifecycleStage = req.query.lifecycleStage;
+        if (
+            req.query.ownerAgent &&
+            req.access.permissions.has(PERMISSIONS.CUSTOMER_VIEW_AGENCY) &&
+            mongoose.isValidObjectId(req.query.ownerAgent)
+        )
+            query.ownerAgent = req.query.ownerAgent;
+        const search = String(req.query.search || "").trim().slice(0, 120);
+        if (search) {
+            const pattern = new RegExp(escapeCustomerRegex(search), "i");
+            const matchingLeads = await ContactLead.distinct("customerId", {
+                agencyId: req.access.agencyId,
+                customerId: { $ne: null },
+                $or: [{ enquiryRef: pattern }, { tourTitle: pattern }],
+            });
+            query.$or = [
+                { name: pattern },
+                { email: pattern },
+                { phone: pattern },
+                { tags: pattern },
+                { enquiryRefs: pattern },
+                ...(matchingLeads.length ? [{ _id: { $in: matchingLeads } }] : []),
+            ];
+        }
+        const sort =
+            {
+                follow_up: { followUpAt: 1, lastActivityAt: -1 },
+                newest: { createdAt: -1 },
+                name: { name: 1 },
+                recent_activity: { lastActivityAt: -1, createdAt: -1 },
+            }[req.query.sort] || { lastActivityAt: -1, createdAt: -1 };
+        const now = new Date();
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const [records, total, directoryTotal, active, followUpDue, newThisMonth, owners] =
+            await Promise.all([
+                AgencyCustomer.find(query)
+                    .populate("ownerAgent", "name email avatar agencyRole")
+                    .sort(sort)
+                    .skip(skip)
+                    .limit(limit)
+                    .lean(),
+                AgencyCustomer.countDocuments(query),
+                AgencyCustomer.countDocuments(baseQuery),
+                AgencyCustomer.countDocuments({ ...baseQuery, status: "active" }),
+                AgencyCustomer.countDocuments({
+                    ...baseQuery,
+                    status: "active",
+                    followUpAt: { $ne: null, $lte: now },
+                }),
+                AgencyCustomer.countDocuments({ ...baseQuery, createdAt: { $gte: monthStart } }),
+                agencyCustomerOwners(req.access.agencyId),
+            ]);
+        const activity = await customerActivityMap(records.map((record) => record._id));
+        const items = records.map((record) =>
+            customerDto(record, activity.get(String(record._id))),
+        );
+        return ok(res, {
+            items,
+            summaryCards: [
+                { id: "total", label: "Customers", value: directoryTotal, icon: "usersRound" },
+                { id: "active", label: "Active", value: active, icon: "shieldCheck" },
+                { id: "follow-up", label: "Follow-up due", value: followUpDue, icon: "clock" },
+                { id: "new", label: "New this month", value: newThisMonth, icon: "sparkles" },
+            ],
+            pagination: {
+                total,
+                skip,
+                limit,
+                page: Math.floor(skip / limit) + 1,
+                totalPages: Math.max(1, Math.ceil(total / limit)),
+                hasPrevious: skip > 0,
+                hasNext: skip + items.length < total,
+            },
+            view: customerDirectoryView(req.access, owners),
+        });
     } catch (error) {
-        return fail(res, error);
+        return fail(res, error, "Customer directory could not be loaded.");
     }
 }
+
+const customerPayload = (body = {}) => ({
+    name: String(body.name || "").trim().slice(0, 160),
+    email: normalizeEmail(body.email),
+    phone: String(body.phone || "").trim().slice(0, 40),
+    preferredContact: CONTACT_METHODS.includes(body.preferredContact)
+        ? body.preferredContact
+        : "any",
+    lifecycleStage: CUSTOMER_STAGES.includes(body.lifecycleStage) ? body.lifecycleStage : "lead",
+    status: CUSTOMER_STATUSES.includes(body.status) ? body.status : "active",
+    followUpAt: body.followUpAt ? new Date(body.followUpAt) : null,
+    lastContactedAt: body.lastContactedAt ? new Date(body.lastContactedAt) : null,
+    tags: Array.isArray(body.tags)
+        ? body.tags
+        : String(body.tags || "")
+              .split(",")
+              .map((tag) => tag.trim())
+              .filter(Boolean),
+    notes: String(body.notes || "").trim().slice(0, 4000),
+});
+
+const normalizeCustomerWriteError = (error) => {
+    if (error?.code === 11000) {
+        error.status = 409;
+        error.message = "A customer with this email or phone already exists.";
+    }
+    if (error?.name === "ValidationError" || error?.name === "CastError") {
+        error.status = 400;
+        error.message = "Review the customer details and try again.";
+    }
+    return error;
+};
+
+async function validateCustomerOwner(req, value) {
+    if (req.access.role !== "partner_admin" || !value) return req.access.user._id;
+    if (!mongoose.isValidObjectId(value))
+        throw Object.assign(new Error("Select a valid assigned agent."), { status: 400 });
+    const owner = await User.exists({
+        _id: value,
+        agencyId: req.access.agencyId,
+        agencyRole: { $in: ["partner_admin", "partner_agent"] },
+        accountStatus: "active",
+    });
+    if (!owner)
+        throw Object.assign(new Error("The assigned agent is not active in this agency."), {
+            status: 409,
+        });
+    return value;
+}
+
+async function assertUniqueCustomerIdentity(req, payload, excludeId = null) {
+    const identity = [];
+    if (payload.email)
+        identity.push({ normalizedEmail: payload.email }, { email: payload.email });
+    const phone = normalizePhone(payload.phone);
+    if (phone)
+        identity.push({ normalizedPhone: phone }, { phone: String(payload.phone || "").trim() });
+    if (!identity.length)
+        throw Object.assign(new Error("Provide an email address or phone number."), { status: 400 });
+    const duplicate = await AgencyCustomer.exists({
+        agencyId: req.access.agencyId,
+        deletedAt: null,
+        ...(excludeId ? { _id: { $ne: excludeId } } : {}),
+        $or: identity,
+    });
+    if (duplicate)
+        throw Object.assign(new Error("A customer with this email or phone already exists."), {
+            status: 409,
+        });
+}
+
 export async function createCustomer(req, res) {
     try {
+        const payload = customerPayload(req.body);
+        if (!payload.name)
+            throw Object.assign(new Error("Customer name is required."), { status: 400 });
+        await assertUniqueCustomerIdentity(req, payload);
         const customer = await AgencyCustomer.create({
-            ...req.body,
+            ...payload,
             agencyId: req.access.agencyId,
-            ownerAgent:
-                req.body.ownerAgent && req.access.role === "partner_admin"
-                    ? req.body.ownerAgent
-                    : req.access.user._id,
+            ownerAgent: await validateCustomerOwner(req, req.body.ownerAgent),
+            source: "manual",
             createdBy: req.access.user._id,
             updatedBy: req.access.user._id,
         });
@@ -994,9 +1521,10 @@ export async function createCustomer(req, res) {
             entityId: customer._id,
             agencyId: customer.agencyId,
         });
-        return ok(res, customer, "Customer created.", 201);
+        const populated = await customer.populate("ownerAgent", "name email avatar agencyRole");
+        return ok(res, customerDto(populated.toObject()), "Customer added to your agency.", 201);
     } catch (error) {
-        return fail(res, error);
+        return fail(res, normalizeCustomerWriteError(error), "Customer could not be created.");
     }
 }
 export async function updateCustomer(req, res) {
@@ -1006,10 +1534,13 @@ export async function updateCustomer(req, res) {
         );
         if (!customer)
             return res.status(404).json({ status: "error", message: "Customer not found." });
-        for (const key of ["name", "email", "phone", "notes"])
-            if (req.body[key] !== undefined) customer[key] = req.body[key];
-        if (req.body.ownerAgent && req.access.role === "partner_admin")
-            customer.ownerAgent = req.body.ownerAgent;
+        const payload = customerPayload({ ...customer.toObject(), ...req.body });
+        if (!payload.name)
+            throw Object.assign(new Error("Customer name is required."), { status: 400 });
+        await assertUniqueCustomerIdentity(req, payload, customer._id);
+        for (const [key, value] of Object.entries(payload)) customer[key] = value;
+        if (req.body.ownerAgent !== undefined && req.access.role === "partner_admin")
+            customer.ownerAgent = await validateCustomerOwner(req, req.body.ownerAgent);
         customer.updatedBy = req.access.user._id;
         await customer.save();
         await audit(req, {
@@ -1018,9 +1549,10 @@ export async function updateCustomer(req, res) {
             entityId: customer._id,
             agencyId: customer.agencyId,
         });
-        return ok(res, customer, "Customer updated.");
+        const populated = await customer.populate("ownerAgent", "name email avatar agencyRole");
+        return ok(res, customerDto(populated.toObject()), "Customer profile updated.");
     } catch (error) {
-        return fail(res, error);
+        return fail(res, normalizeCustomerWriteError(error), "Customer could not be updated.");
     }
 }
 
@@ -1400,12 +1932,38 @@ export async function getCustomer(req, res) {
     try {
         const customer = await AgencyCustomer.findOne(
             customerScope(req, { _id: req.params.id, deletedAt: null }),
-        ).lean();
+        )
+            .populate("ownerAgent", "name email avatar agencyRole")
+            .lean();
         if (!customer)
             return res.status(404).json({ status: "error", message: "Customer not found." });
-        return ok(res, { customer });
+        const [activityMap, timeline, owners] = await Promise.all([
+            customerActivityMap([customer._id]),
+            ContactLead.find({ customerId: customer._id })
+                .sort({ createdAt: -1 })
+                .limit(50)
+                .select("enquiryRef tourId tourTitle product status bookingId fields createdAt")
+                .lean(),
+            agencyCustomerOwners(req.access.agencyId),
+        ]);
+        return ok(res, {
+            customer: customerDto(customer, activityMap.get(String(customer._id))),
+            activity: timeline.map((item) => ({
+                id: String(item._id),
+                type: item.bookingId ? "booking" : "enquiry",
+                reference: item.enquiryRef,
+                title: item.tourTitle || "General travel enquiry",
+                product: item.product,
+                status: item.status,
+                travellers: Number(
+                    item.fields?.numberOfTravellers || item.fields?.travellerCount || 0,
+                ),
+                createdAt: item.createdAt,
+            })),
+            view: customerDirectoryView(req.access, owners),
+        });
     } catch (error) {
-        return fail(res, error);
+        return fail(res, error, "Customer profile could not be loaded.");
     }
 }
 export async function archiveCustomer(req, res) {
@@ -1424,7 +1982,7 @@ export async function archiveCustomer(req, res) {
             entityId: customer._id,
             agencyId: customer.agencyId,
         });
-        return ok(res, null, "Customer archived.");
+        return ok(res, null, "Customer archived from the active directory.");
     } catch (error) {
         return fail(res, error);
     }
@@ -1477,18 +2035,35 @@ export async function dashboard(req, res) {
             });
         }
         const agencyId = req.access.agencyId;
-        const agent = req.access.role === "partner_agent" ? req.access.user._id : null;
-        const tripScope = agent ? { agencyId, ownerAgent: agent } : { agencyId };
+        const scopes = partnerDashboardScopes(req.access);
+        const now = new Date();
+        const activityLimit = Math.min(24, Math.max(1, Number(req.query.activityLimit) || 6));
+        const activityPage = Math.max(1, Number(req.query.activityPage) || 1);
+        const activityFetchLimit = activityPage * activityLimit;
         const [
             activeAgents,
             inactiveAgents,
-            totalTrips,
-            publishedTrips,
-            draftTrips,
-            upcomingTrips,
-            recentTrips,
+            trevistaTotal,
+            trevistaPublished,
+            trevistaDraft,
+            trevistaPending,
+            trevistaUpcoming,
+            trevioTotal,
+            trevioPublished,
+            trevioDraft,
+            trevioPending,
+            trevioUpcoming,
+            customerTotal,
+            activeCustomers,
+            enquiryNew,
+            enquiryInReview,
+            enquiryResponded,
+            enquiryTotal,
+            unreadNotifications,
+            recentTrevista,
+            recentTrevio,
+            recentEnquiries,
             recentCustomers,
-            recentAgentActivity,
         ] = await Promise.all([
             User.countDocuments({ agencyId, agencyRole: "partner_agent", accountStatus: "active" }),
             User.countDocuments({
@@ -1496,35 +2071,99 @@ export async function dashboard(req, res) {
                 agencyRole: "partner_agent",
                 accountStatus: { $ne: "active" },
             }),
-            TrevioTrip.countDocuments(tripScope),
-            TrevioTrip.countDocuments({ ...tripScope, status: "listed", isListed: true }),
-            TrevioTrip.countDocuments({ ...tripScope, status: "draft" }),
+            Tour.countDocuments(scopes.products),
+            Tour.countDocuments({ ...scopes.products, status: "published" }),
+            Tour.countDocuments({ ...scopes.products, status: "draft" }),
+            Tour.countDocuments({ ...scopes.products, status: "pending_approval" }),
+            Tour.countDocuments({
+                ...scopes.products,
+                status: "published",
+                $or: [
+                    { startDate: { $gte: now } },
+                    { "departures.departureDate": { $gte: now } },
+                ],
+            }),
+            TrevioTrip.countDocuments(scopes.products),
+            TrevioTrip.countDocuments({ ...scopes.products, status: "listed", isListed: true }),
+            TrevioTrip.countDocuments({ ...scopes.products, status: "draft" }),
+            TrevioTrip.countDocuments({ ...scopes.products, status: "pending_approval" }),
             TrevioTrip.countDocuments({
-                ...tripScope,
-                startDate: { $gte: new Date() },
+                ...scopes.products,
+                startDate: { $gte: now },
                 status: { $in: ["listed", "pending_approval"] },
             }),
-            TrevioTrip.find(tripScope).sort({ updatedAt: -1 }).limit(5).lean(),
-            AgencyCustomer.find(customerScope(req, { deletedAt: null }))
+            AgencyCustomer.countDocuments(scopes.customers),
+            AgencyCustomer.countDocuments({ ...scopes.customers, status: "active" }),
+            ContactLead.countDocuments({ ...scopes.enquiries, status: "new" }),
+            ContactLead.countDocuments({ ...scopes.enquiries, status: "in_review" }),
+            ContactLead.countDocuments({ ...scopes.enquiries, status: "responded" }),
+            ContactLead.countDocuments(scopes.enquiries),
+            Notification.countDocuments({ userId: req.access.user._id, readAt: null }),
+            Tour.find(scopes.products)
                 .sort({ updatedAt: -1 })
-                .limit(5)
+                .limit(activityFetchLimit)
+                .select("title status updatedAt createdAt")
                 .lean(),
-            AuditLog.find({ agencyId, ...(agent ? { actorId: agent } : {}) })
-                .sort({ createdAt: -1 })
-                .limit(8)
+            TrevioTrip.find(scopes.products)
+                .sort({ updatedAt: -1 })
+                .limit(activityFetchLimit)
+                .select("title status updatedAt createdAt")
+                .lean(),
+            ContactLead.find(scopes.enquiries)
+                .sort({ updatedAt: -1 })
+                .limit(activityFetchLimit)
+                .select("tourTitle fields.name status updatedAt createdAt")
+                .lean(),
+            AgencyCustomer.find(scopes.customers)
+                .sort({ updatedAt: -1 })
+                .limit(activityFetchLimit)
+                .select("name status updatedAt createdAt")
                 .lean(),
         ]);
-        return ok(res, {
-            activeAgents,
-            inactiveAgents,
-            totalTrips,
-            publishedTrips,
-            draftTrips,
-            upcomingTrips,
-            recentTrips,
-            recentCustomers,
-            recentAgentActivity,
-        });
+        return ok(
+            res,
+            buildPartnerDashboard({
+                access: req.access,
+                counts: {
+                    agents: { active: activeAgents, inactive: inactiveAgents },
+                    customers: { total: customerTotal, active: activeCustomers },
+                    enquiries: {
+                        new: enquiryNew,
+                        inReview: enquiryInReview,
+                        responded: enquiryResponded,
+                    },
+                    notifications: { unread: unreadNotifications },
+                    trevista: {
+                        total: trevistaTotal,
+                        published: trevistaPublished,
+                        draft: trevistaDraft,
+                        pending: trevistaPending,
+                        upcoming: trevistaUpcoming,
+                    },
+                    trevio: {
+                        total: trevioTotal,
+                        published: trevioPublished,
+                        draft: trevioDraft,
+                        pending: trevioPending,
+                        upcoming: trevioUpcoming,
+                    },
+                },
+                records: {
+                    products: [
+                        ...recentTrevista.map((item) => ({ ...item, product: "trevista" })),
+                        ...recentTrevio.map((item) => ({ ...item, product: "trevio" })),
+                    ],
+                    enquiries: recentEnquiries,
+                    customers: recentCustomers,
+                },
+                activityPagination: {
+                    page: activityPage,
+                    limit: activityLimit,
+                    total: trevistaTotal + trevioTotal + enquiryTotal + customerTotal,
+                },
+                generatedAt: now,
+            }),
+        );
     } catch (error) {
         return fail(res, error);
     }

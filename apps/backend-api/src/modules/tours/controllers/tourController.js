@@ -80,7 +80,9 @@ const agencySummary = (value) =>
         : null;
 import TourRepository from "../repositories/TourRepository.js";
 import {
+    buildManagementTourListQuery,
     buildManagementTourQuery,
+    getManagementTourSort,
     isPrivateAgentDraft,
 } from "../services/tourVisibility.service.js";
 import FinancialEngine from "../../../core/financial-engine/index.js";
@@ -92,11 +94,14 @@ import User from "../../auth/models/User.js";
 import { audit } from "../../tenancy/audit.service.js";
 import { localizeTourImageUrls } from "../../../services/cloudinary.js";
 import { syncDerivedTourDeparture } from "../services/tourDepartureSyncService.js";
+import { evaluateTourIntelligence } from "../services/tourIntelligence.rules.js";
+import { refreshTourIntelligence } from "../services/tourIntelligence.service.js";
 import {
     REALTIME_EVENTS,
     publishFanOut,
     publishToCatalog,
     publishToTour,
+    realtimeNotify,
     tourDto,
 } from "../../../realtime/index.js";
 const NODE_ENV = (config.nodeEnv || "development").toString().trim();
@@ -565,6 +570,7 @@ export const normalizeTourForResponse = (
     priceInfo = null,
     { includeCommercialCosts = false, includeBuilderProcess = false } = {},
 ) => {
+    const normalizedId = toString(tourObj._id || tourObj.id) || null;
     const agency =
         agencySummary(tourObj.agencyId) ||
         (displayText(tourObj.providerName)
@@ -589,7 +595,8 @@ export const normalizeTourForResponse = (
 
     // defensive defaults
     return {
-        _id: tourObj._id || tourObj.id || null,
+        _id: normalizedId,
+        id: normalizedId,
         title: displayText(tourObj.title),
         city: normalizeCity(tourObj.city),
         address: normalizeAddress(tourObj.address),
@@ -694,6 +701,10 @@ export const normalizeTourForResponse = (
         maxGroupSize: tourObj.maxGroupSize || null,
         reviews: Array.isArray(tourObj.reviews) ? tourObj.reviews : [],
         featured: !!tourObj.featured,
+        trending: !!tourObj.trending,
+        featuredRequest: tourObj.featuredRequest || { requested: false, status: "not_requested" },
+        intelligence: tourObj.intelligence || { qualityScore: 0 },
+        metrics: tourObj.metrics || {},
         tags: normalizeTextList(tourObj.tags),
         // Kept in the response temporarily for older clients; status is authoritative.
         isPublished: tourObj.status === "published",
@@ -899,19 +910,9 @@ const sanitizeTourPayload = (raw = {}) => {
         if (Number.isNaN(p.maxAge) || p.maxAge < 0) throw new Error("maxAge must be >= 0");
     }
 
-    // Reviews (optional) - shallow validation
-    if (p.reviews) {
-        if (!Array.isArray(p.reviews)) throw new Error("reviews must be an array");
-        p.reviews = p.reviews.map((r, idx) => {
-            if (!r.name || r.rating == null)
-                throw new Error(`reviews[${idx}] requires name and rating`);
-            return {
-                name: String(r.name),
-                rating: Number(r.rating),
-                comment: r.comment || "",
-            };
-        });
-    }
+    // Reviews are platform-owned and will be written only by the completed-
+    // booking review journey. Tour authors cannot seed or replace them.
+    delete p.reviews;
 
     // Other arrays/strings
     p.photos = Array.isArray(p.photos) ? p.photos.map(String) : p.photos ? [String(p.photos)] : [];
@@ -1060,8 +1061,7 @@ const sanitizeTourPayload = (raw = {}) => {
         minAge: p.minAge != null ? p.minAge : null,
         maxAge: p.maxAge != null ? p.maxAge : null,
         maxGroupSize: p.maxGroupSize != null ? p.maxGroupSize : null,
-        reviews: p.reviews || [],
-        featured: !!p.featured,
+        featuredRequest: { requested: p.featuredRequest?.requested === true },
         tags: p.tags || [],
         isPublished: p.isPublished,
         status: p.status,
@@ -1224,8 +1224,9 @@ export const sanitizeTourPayloadForUpdate = (
     if (p.photo !== undefined) result.photo = p.photo || "";
     if (p.meetingPoint !== undefined) result.meetingPoint = p.meetingPoint || "";
     if (p.cancellationPolicy !== undefined) result.cancellationPolicy = p.cancellationPolicy || "";
-    if (p.featured !== undefined) result.featured = !!p.featured;
-    if (p.trending !== undefined) result.trending = !!p.trending;
+    if (p.featuredRequest !== undefined) {
+        result.featuredRequest = { requested: p.featuredRequest?.requested === true };
+    }
     if (p.group !== undefined) {
         const min = p.group?.min == null ? 1 : Number(p.group.min);
         const max = p.group?.max == null ? null : Number(p.group.max);
@@ -1323,19 +1324,6 @@ export const sanitizeTourPayloadForUpdate = (
     }
     if (p.tags !== undefined) {
         result.tags = Array.isArray(p.tags) ? p.tags.map(String) : p.tags ? [String(p.tags)] : [];
-    }
-
-    if (p.reviews !== undefined) {
-        if (!Array.isArray(p.reviews)) throw new Error("reviews must be an array");
-        result.reviews = p.reviews.map((r, idx) => {
-            if (!r.name || r.rating == null)
-                throw new Error(`reviews[${idx}] requires name and rating`);
-            return {
-                name: String(r.name),
-                rating: Number(r.rating),
-                comment: r.comment || "",
-            };
-        });
     }
 
     // Package type
@@ -1512,8 +1500,8 @@ export const getTours = async (req, res) => {
     const featuredOnly = req.query?.featured === "true";
 
     try {
-        const query = buildManagementTourQuery(req, featuredOnly);
-        let toursQuery = TourRepository.find(query).sort({ createdAt: -1 });
+        const query = buildManagementTourListQuery(req, featuredOnly);
+        let toursQuery = TourRepository.find(query).sort(getManagementTourSort(req.query?.sort));
         if (limit) toursQuery = toursQuery.limit(limit);
 
         const toursRaw = await toursQuery;
@@ -1644,7 +1632,24 @@ export const getTourByRef = async (req, res) => {
 const publishTourRealtimeEvents = (before, after) => {
     try {
         const dto = tourDto(after);
-        publishToTour(String(after._id), REALTIME_EVENTS.TOUR_UPDATED, dto);
+        const tourTitle = dto.title || "Tour";
+        const becameUnavailable = before?.status === "published" && after.status !== "published";
+        publishToTour(String(after._id), REALTIME_EVENTS.TOUR_UPDATED, dto, {
+            notify: realtimeNotify(
+                becameUnavailable ? "Tour is no longer available" : "Tour updated",
+                becameUnavailable
+                    ? `${tourTitle} was just unpublished. We will show the closest available alternatives.`
+                    : `${tourTitle} was updated.`,
+                becameUnavailable ? "info" : "success",
+                `tour:${dto.tourId || after._id}:${becameUnavailable ? "unavailable" : "updated"}`,
+            ),
+        });
+        // A tour that was visible in the public catalog must invalidate every
+        // open listing when its card data changes or when it is unpublished.
+        // Draft-only edits stay private.
+        if (before?.status === "published") {
+            publishToCatalog(REALTIME_EVENTS.TOUR_UPDATED, dto);
+        }
         const beforePrice = before?.price || {};
         const afterPrice = dto.price || {};
         if (
@@ -1659,13 +1664,28 @@ const publishTourRealtimeEvents = (before, after) => {
                     price: afterPrice,
                     previousPrice: { min: beforePrice.min ?? null, max: beforePrice.max ?? null },
                 },
+                {
+                    notify: realtimeNotify(
+                        "Tour price updated",
+                        `${tourTitle} pricing changed.`,
+                        "info",
+                        `tour:${dto.tourId || after._id}:price`,
+                    ),
+                },
             );
         }
         if (before?.status !== after.status && after.status === "published") {
             // Catalog broadcast: every connected client (open listing pages
             // included) learns a new tour just became publicly visible.
             publishToCatalog(REALTIME_EVENTS.TOUR_PUBLISHED, dto);
-            publishFanOut({ agencyId: dto.agencyId }, REALTIME_EVENTS.TOUR_PUBLISHED, dto);
+            publishFanOut({ agencyId: dto.agencyId }, REALTIME_EVENTS.TOUR_PUBLISHED, dto, {
+                notify: realtimeNotify(
+                    "Tour published",
+                    `${tourTitle} is now live.`,
+                    "success",
+                    `tour:${dto.tourId || after._id}:published`,
+                ),
+            });
         }
     } catch (error) {
         console.error("[TourController] realtime publish failed:", error?.message);
@@ -1705,6 +1725,26 @@ export const updateTour = async (req, res) => {
         }
 
         const sanitized = sanitizeTourPayloadForUpdate(req.body);
+        if (sanitized.featuredRequest !== undefined) {
+            const requested = sanitized.featuredRequest.requested === true;
+            sanitized.featuredRequest = {
+                ...(existing.featuredRequest?.toObject?.() || existing.featuredRequest || {}),
+                requested,
+                status: requested ? "pending" : "not_requested",
+                requestedAt: requested ? new Date() : null,
+                requestedBy: requested ? req.user.sub || req.user.id : null,
+                evaluatedAt: null,
+                reason: requested
+                    ? "Waiting for TravelsTREM intelligence review."
+                    : "Featured consideration has not been requested.",
+            };
+        }
+        // Never trust client-authored intelligence output fields.
+        delete sanitized.featured;
+        delete sanitized.trending;
+        delete sanitized.metrics;
+        delete sanitized.intelligence;
+        delete sanitized.reviews;
         assertTourTransition(existing.status, sanitized.status, req);
         const nextStart =
             sanitized.startDate !== undefined ? sanitized.startDate : existing.startDate;
@@ -1720,15 +1760,10 @@ export const updateTour = async (req, res) => {
             "inventorySource",
         ])
             delete sanitized[key];
-        if (req.access?.isMaster && (sanitized.status || existing.status) === "published") {
-            sanitized.tremVerified = true;
-            sanitized.tremVerifiedBy = req.user.sub || req.user.id;
-            sanitized.tremVerifiedAt = new Date();
-        } else if (!req.access?.isMaster) {
-            sanitized.tremVerified = false;
-            sanitized.tremVerifiedBy = null;
-            sanitized.tremVerifiedAt = null;
-        }
+        // Verification changes only through POST /:id/verify by a master admin.
+        delete sanitized.tremVerified;
+        delete sanitized.tremVerifiedBy;
+        delete sanitized.tremVerifiedAt;
         if (req.body.ownerAgent !== undefined) {
             const requestedOwnerId = toString(req.body.ownerAgent?._id || req.body.ownerAgent);
             const existingOwnerId = toString(existing.ownerAgent?._id || existing.ownerAgent);
@@ -1765,15 +1800,23 @@ export const updateTour = async (req, res) => {
             sanitized.commercial = recalculated.commercial;
             sanitized.price = recalculated.price;
         }
+        const intelligence = evaluateTourIntelligence(recalculated);
+        sanitized.featured = intelligence.featured;
+        sanitized.trending = intelligence.trending;
+        sanitized.metrics = intelligence.metrics;
+        sanitized.intelligence = intelligence.intelligence;
+        sanitized.featuredRequest = intelligence.featuredRequest;
 
         // Preflight the response contract before applying the update so a
         // contract configuration error cannot occur after the mutation.
         const listingResponse = pageDefinitionService.buildPageResponse("tours-remote/listing");
         await localizeTourImageUrls(sanitized);
-        const updatedTour = await TourRepository.findByIdAndUpdate(id, sanitized, {
+        let updatedTour = await TourRepository.findByIdAndUpdate(id, sanitized, {
             new: true,
             runValidators: true,
         });
+        await refreshTourIntelligence(updatedTour._id, { publish: false });
+        updatedTour = (await TourRepository.findById(updatedTour._id)) || updatedTour;
         await syncDerivedTourDeparture(updatedTour);
         await audit(req, {
             action: "trip.updated",
@@ -1845,12 +1888,25 @@ export const verifyTour = async (req, res) => {
                 req,
             );
         }
-        const tour = await TourRepository.findByIdAndUpdate(
+        const verificationAt = new Date();
+        const verificationState = {
+            ...existing.toObject(),
+            tremVerified: true,
+            tremVerifiedBy: req.user.sub || req.user.id,
+            tremVerifiedAt: verificationAt,
+        };
+        const intelligence = evaluateTourIntelligence(verificationState, verificationAt);
+        let tour = await TourRepository.findByIdAndUpdate(
             req.params.id,
             {
                 tremVerified: true,
                 tremVerifiedBy: req.user.sub || req.user.id,
-                tremVerifiedAt: new Date(),
+                tremVerifiedAt: verificationAt,
+                featured: intelligence.featured,
+                trending: intelligence.trending,
+                metrics: intelligence.metrics,
+                intelligence: intelligence.intelligence,
+                featuredRequest: intelligence.featuredRequest,
             },
             { new: true, runValidators: true },
         );
@@ -1861,6 +1917,8 @@ export const verifyTour = async (req, res) => {
                 { status: "error", message: "Tour not found.", handler },
                 req,
             );
+        await refreshTourIntelligence(tour._id, { publish: false });
+        tour = (await TourRepository.findById(tour._id)) || tour;
         await audit(req, {
             action: "trip.verified",
             entityType: "Tour",
@@ -1868,6 +1926,7 @@ export const verifyTour = async (req, res) => {
             agencyId: tour.agencyId,
             after: tour.toObject(),
         });
+        publishTourRealtimeEvents(existing, tour);
         const normalized = normalizeTourForResponse(
             tour.toObject(),
             buildPriceInfo(tour, new Date()),
@@ -1927,9 +1986,11 @@ export const deleteTour = async (req, res) => {
                 req,
             );
         }
+        const before = existing.toObject();
 
-        if (req.access?.isMaster || ["draft", "pending_approval"].includes(existing.status)) {
-            const before = existing.toObject();
+        // Public/history-bearing tours are archived so active viewers can be
+        // notified and recommendation intelligence retains a source profile.
+        if (["draft", "pending_approval"].includes(existing.status)) {
             await existing.deleteOne();
             await audit(req, {
                 action: "trip.deleted",
@@ -1954,6 +2015,11 @@ export const deleteTour = async (req, res) => {
         existing.status = "archived";
         existing.isPublished = false;
         existing.archivedAt = new Date();
+        const archiveIntelligence = evaluateTourIntelligence(existing.toObject());
+        existing.featured = archiveIntelligence.featured;
+        existing.trending = archiveIntelligence.trending;
+        existing.intelligence = archiveIntelligence.intelligence;
+        existing.featuredRequest = archiveIntelligence.featuredRequest;
         const deletedTour = await existing.save();
         await audit(req, {
             action: "trip.archived",
@@ -1961,6 +2027,7 @@ export const deleteTour = async (req, res) => {
             entityId: existing._id,
             agencyId: existing.agencyId,
         });
+        publishTourRealtimeEvents(before, deletedTour);
 
         return sendJson(
             res,

@@ -18,6 +18,16 @@ export { default as Spinner } from "./components/Spinner/Spinner.jsx";
 export { default as Preloader } from "./components/Preloader/Preloader.jsx";
 export { default as Footer } from "./layout/Footer/Footer.jsx";
 export { default as ProfileActionMenu } from "./components/ProfileActionMenu/ProfileActionMenu.jsx";
+export {
+  default as AccountProfile,
+  ACCOUNT_AVATAR_ICONS,
+} from "./components/AccountProfile/AccountProfile.jsx";
+export {
+  DEFAULT_ACCOUNT_AVATAR,
+  isAccountAvatarIcon,
+  isRemoteAccountAvatar,
+  resolveAccountAvatar,
+} from "./components/AccountProfile/accountAvatar.constants.js";
 export { default as Header } from "./layout/Header/Header.jsx";
 export { default as ProductHeader } from "./layout/ProductHeader/ProductHeader.jsx";
 export { default as ProductHeaderWithDropdown } from "./layout/ProductHeader/ProductHeaderWithDropdown.jsx";

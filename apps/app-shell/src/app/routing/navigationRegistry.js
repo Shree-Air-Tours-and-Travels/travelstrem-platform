@@ -7,6 +7,13 @@ const MOBILE_PANEL_ACTIONS = new Set(["open-primary-action"]);
 export const isGuestAccessibleDestination = (destination) =>
   GUEST_ACCESSIBLE_DESTINATIONS.has(destination?.id);
 
+export const buildTrevistaTourPath = (tourRef) => {
+  const normalizedRef = String(tourRef || "").trim();
+  return normalizedRef
+    ? `/trevista/tours/${encodeURIComponent(normalizedRef)}`
+    : "/trevista/tours";
+};
+
 export const FALLBACK_NAVIGATION_CONFIG = {
   version: 1,
   defaultDestination: "overview",
@@ -31,7 +38,7 @@ export const FALLBACK_NAVIGATION_CONFIG = {
         action: "open-primary-action",
         emphasis: true,
       },
-      { id: "wishlist", label: "Wishlist", icon: "heart", target: "favorites" },
+      { id: "support", label: "Support", icon: "support", target: "support" },
       { id: "profile", label: "Profile", icon: "user", target: "profile" },
     ],
   },

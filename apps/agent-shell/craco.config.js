@@ -55,6 +55,7 @@ module.exports = {
         react: path.resolve(__dirname, "node_modules/react"),
         "react-dom": path.resolve(__dirname, "node_modules/react-dom"),
         "@packages/trem-auth-core": path.resolve(__dirname, "../../packages/trem-auth-core/src"),
+        "@packages/trem-events": path.resolve(__dirname, "../../packages/trem-events/src"),
         "@packages/tour-builder": path.resolve(__dirname, "../../packages/tour-builder/src"),
         "@packages/trem-modals": path.resolve(__dirname, "../../packages/trem-modals/src"),
         "@packages/trem-ui": path.resolve(__dirname, "../../packages/trem-ui/src"),

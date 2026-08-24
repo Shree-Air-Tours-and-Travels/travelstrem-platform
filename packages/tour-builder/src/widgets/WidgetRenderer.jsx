@@ -24,6 +24,7 @@ import RepeaterWidget from "./composites/RepeaterWidget.jsx";
 import PackageComposerWidget from "./composites/PackageComposerWidget.jsx";
 import DerivedPricingWidget from "./composites/DerivedPricingWidget.jsx";
 import CustomerPreviewWidget from "./composites/CustomerPreviewWidget.jsx";
+import TourIntelligenceSummaryWidget from "./composites/TourIntelligenceSummaryWidget.jsx";
 
 export const joinBase = (basePath, relative) => {
   if (!relative) return basePath || "";
@@ -52,6 +53,7 @@ widgetRegistry.set(WIDGET_TYPES.JSON, JsonWidget);
 widgetRegistry.set(WIDGET_TYPES.IMAGE_UPLOAD, ImageUploadWidget);
 widgetRegistry.set(WIDGET_TYPES.OBJECT, ObjectWidget);
 widgetRegistry.set(WIDGET_TYPES.READONLY_OBJECT, ReadOnlyObjectWidget);
+widgetRegistry.set(WIDGET_TYPES.TOUR_INTELLIGENCE_SUMMARY, TourIntelligenceSummaryWidget);
 widgetRegistry.set(WIDGET_TYPES.REPEATER, RepeaterWidget);
 // Collection repeaters share the list engine; persistence differs server-side.
 widgetRegistry.set(WIDGET_TYPES.COLLECTION_REPEATER, RepeaterWidget);
@@ -69,6 +71,7 @@ const SCOPED_TYPES = [
   WIDGET_TYPES.PACKAGE_COMPOSER,
   WIDGET_TYPES.DERIVED_PRICING,
   WIDGET_TYPES.CUSTOMER_PREVIEW,
+  WIDGET_TYPES.TOUR_INTELLIGENCE_SUMMARY,
 ];
 
 /**

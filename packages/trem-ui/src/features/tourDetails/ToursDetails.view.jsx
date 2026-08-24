@@ -148,6 +148,7 @@ export default function ToursDetailsView({
   widgets,
   pageTitle,
   activeTour,
+  tourUnavailable,
   structure,
   elements,
   contactOpen,
@@ -192,6 +193,35 @@ export default function ToursDetailsView({
   const overviewWidget = heroWidgets.find((w) => w.type === "TourOverview");
   const galleryWidget = heroWidgets.find((w) => w.type === "TourGallery");
   const pricingWidget = heroWidgets.find((w) => w.type === "PricingCard");
+
+  if (tourUnavailable) {
+    return (
+      <main className="tour-detail" aria-label="Tour unavailable">
+        <div className="tour-detail__shell">
+          <Breadcrumbs items={breadcrumbItems} className="tour-detail__breadcrumbs" />
+          <section className="tour-detail__empty tour-detail__empty--unavailable">
+            <Title text="This tour is no longer available" />
+            <Paragraph text="The operator has unpublished this tour. TravelsTREM has checked the live catalog for the closest reliable alternatives." />
+            <Button
+              primaryClassName="tour-detail__button tour-detail__button--primary"
+              variant="solid"
+              color="primary"
+              onClick={onBack}
+            >
+              Back to tour filters
+            </Button>
+          </section>
+          <SimilarTours
+            tourRef={tourRef}
+            isFavorited={isFavorited}
+            onFavorite={onFavorite}
+            appKey={appKey}
+            showEmpty
+          />
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="tour-detail" aria-labelledby="tour-detail-title">

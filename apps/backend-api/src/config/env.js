@@ -20,6 +20,7 @@ import {
 // normalize node env early
 const RAW_NODE_ENV = (process.env.NODE_ENV || "development").toString().trim();
 const NODE_ENV = RAW_NODE_ENV || "development";
+const IS_PRODUCTION_LIKE_ENV = NODE_ENV === "production" || NODE_ENV === "test";
 
 // Runtime environment variables are primary. Local dotenv loading is opt-in.
 const projectRoot = process.cwd();
@@ -30,16 +31,16 @@ if (USE_DOTENV && fs.existsSync(envFileCandidate)) {
     dotenv.config({ path: envFileCandidate });
     // Note: don't log secrets; only presence
 
-    if (NODE_ENV !== "production") console.log(`✅ Loaded environment from ${envFileCandidate}`);
+    if (!IS_PRODUCTION_LIKE_ENV) console.log(`✅ Loaded environment from ${envFileCandidate}`);
 } else {
     if (USE_DOTENV) dotenv.config();
 
-    if (USE_DOTENV && NODE_ENV !== "production")
+    if (USE_DOTENV && !IS_PRODUCTION_LIKE_ENV)
         console.log(`⚠️ Loaded fallback .env (or none) for ${NODE_ENV}`);
 }
 if (USE_DOTENV && fs.existsSync(localEnvFileCandidate)) {
     dotenv.config({ path: localEnvFileCandidate, override: true });
-    if (NODE_ENV !== "production")
+    if (!IS_PRODUCTION_LIKE_ENV)
         console.log(`✅ Loaded local environment overrides from ${localEnvFileCandidate}`);
 }
 
@@ -75,7 +76,7 @@ const readPortalJsonConfig = () => {
 
     try {
         const parsed = JSON.parse(fs.readFileSync(configPath, "utf8"));
-        if (NODE_ENV !== "production") console.log(`✅ Loaded portal config from ${configPath}`);
+        if (!IS_PRODUCTION_LIKE_ENV) console.log(`✅ Loaded portal config from ${configPath}`);
         return parsed;
     } catch (err) {
         throw new Error(`Failed to parse portal config ${configPath}: ${err.message}`);
@@ -101,7 +102,7 @@ const parseFrontends = (raw) => {
 /* ------------------------------
    3) Core runtime settings
    ------------------------------ */
-const IS_PRODUCTION = NODE_ENV === "production";
+const IS_PRODUCTION = IS_PRODUCTION_LIKE_ENV;
 const IS_DEVELOPMENT = NODE_ENV === "development";
 const IS_TEST = NODE_ENV === "test";
 
@@ -336,8 +337,13 @@ const R2_ENDPOINT =
     11) OTP and other application-level settings
     ------------------------------ */
 const OTP_TTL_MS = Number(
-    get("OTP_TTL_MS", portalJsonConfig?.features?.otpTtlMs || 15 * 60 * 1000),
-); // 15 minutes by default
+    get("OTP_TTL_MS", portalJsonConfig?.features?.otpTtlMs || 5 * 60 * 1000),
+); // 5 minutes by default
+const OTP_MAX_ATTEMPTS = Math.min(10, Math.max(3, Number(get("OTP_MAX_ATTEMPTS", 3)) || 3));
+const OTP_RESEND_COOLDOWN_MS = Math.min(
+    5 * 60 * 1000,
+    Math.max(15 * 1000, Number(get("OTP_RESEND_COOLDOWN_MS", 30 * 1000)) || 30 * 1000),
+);
 // In non-production environments the OTP flow is bypassed: no OTP emails are
 // sent and any submitted OTP is accepted. Production always keeps real OTPs.
 const DEV_OTP_BYPASS = get("DEV_OTP_BYPASS", "false").toString() === "true";
@@ -501,6 +507,8 @@ const config = {
     DEBUG,
     DEV_DELAY_MS,
     OTP_TTL_MS,
+    OTP_MAX_ATTEMPTS,
+    OTP_RESEND_COOLDOWN_MS,
     DEV_OTP_BYPASS,
     AUTH_COOKIE_DOMAIN,
     GOOGLE_AUTH_ENABLED,
@@ -568,6 +576,8 @@ export {
     DEBUG,
     DEV_DELAY_MS,
     OTP_TTL_MS,
+    OTP_MAX_ATTEMPTS,
+    OTP_RESEND_COOLDOWN_MS,
     DEV_OTP_BYPASS,
     AUTH_COOKIE_DOMAIN,
     GOOGLE_AUTH_ENABLED,

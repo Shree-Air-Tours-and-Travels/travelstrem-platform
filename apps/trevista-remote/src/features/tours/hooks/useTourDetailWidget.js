@@ -1,15 +1,46 @@
 import { useEffect, useState } from "react";
 import { fetchData } from "@packages/trem-utils";
 
+const normalizeTourRef = (value) => {
+  if (!value) return "";
+  if (typeof value === "string" || typeof value === "number") {
+    const ref = String(value).trim();
+    const decoded = (() => {
+      try {
+        return decodeURIComponent(ref);
+      } catch {
+        return ref;
+      }
+    })();
+    return decoded === "[object Object]" ? "" : ref;
+  }
+  if (typeof value === "object") {
+    return normalizeTourRef(
+      value.slug ||
+        value.tourRef ||
+        value.value ||
+        value.label ||
+        value.name ||
+        value.title ||
+        value.en ||
+        value.default ||
+        value._id ||
+        value.id,
+    );
+  }
+  return "";
+};
+
 export default function useTourDetailWidget(tourRef, widgetFile) {
+  const normalizedTourRef = normalizeTourRef(tourRef);
   const [state, setState] = useState({
-    loading: Boolean(tourRef && widgetFile),
+    loading: Boolean(normalizedTourRef && widgetFile),
     error: null,
     widgetData: null,
   });
 
   useEffect(() => {
-    if (!tourRef || !widgetFile) {
+    if (!normalizedTourRef || !widgetFile) {
       setState({ loading: false, error: "Missing tour reference", widgetData: null });
       return undefined;
     }
@@ -18,7 +49,7 @@ export default function useTourDetailWidget(tourRef, widgetFile) {
     setState((current) => ({ ...current, loading: true, error: null }));
 
     (async () => {
-      const endpoint = `/tours.json/${encodeURIComponent(tourRef)}/widgets/${widgetFile}`;
+      const endpoint = `/tours.json/${encodeURIComponent(normalizedTourRef)}/widgets/${widgetFile}`;
       const res = await fetchData(endpoint);
       if (cancelled) return;
 
@@ -37,7 +68,7 @@ export default function useTourDetailWidget(tourRef, widgetFile) {
     return () => {
       cancelled = true;
     };
-  }, [tourRef, widgetFile]);
+  }, [normalizedTourRef, widgetFile]);
 
   return state;
 }

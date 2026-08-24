@@ -121,6 +121,16 @@ export default applyHideFlags({
             icon: "bell",
             enabled: false,
         },
+        actions: [
+            {
+                id: "wishlist",
+                label: "Wishlist",
+                ariaLabel: "Open wishlist",
+                icon: "heart",
+                target: "favorites",
+                mobileOnly: true,
+            },
+        ],
         themeAction: {
             lightLabel: "Switch to light mode",
             darkLabel: "Switch to dark mode",

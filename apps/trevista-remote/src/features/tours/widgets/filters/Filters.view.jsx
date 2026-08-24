@@ -36,11 +36,13 @@ export default function FiltersView({
   onInput,
   handleActionClick,
   setExpanded,
+  mode = "inline",
 }) {
   const labels = meta?.elements?.labels || {};
+  const isModal = mode === "modal";
   return (
     <div
-      className={`filters-card ${expanded ? "expanded" : "collapsed"}`}
+      className={`filters-card filters-card--${mode} ${expanded ? "expanded" : "collapsed"}`}
       role="region"
       aria-label={meta?.title || "Filters"}
     >
@@ -66,19 +68,21 @@ export default function FiltersView({
             )}
           </div>
 
-          <div className="filters-card__header-right">
-            <Button
-              text={
-                expanded
-                  ? labels.hideFilters || "Hide"
-                  : `${labels.showFilters || "Filters"}${activeCount ? ` (${activeCount})` : ""}`
-              }
-              onClick={() => setExpanded((s) => !s)}
-              size="small"
-              variant="outline"
-              aria-expanded={expanded}
-            />
-          </div>
+          {!isModal && (
+            <div className="filters-card__header-right">
+              <Button
+                text={
+                  expanded
+                    ? labels.hideFilters || "Hide"
+                    : `${labels.showFilters || "Filters"}${activeCount ? ` (${activeCount})` : ""}`
+                }
+                onClick={() => setExpanded((s) => !s)}
+                size="small"
+                variant="outline"
+                aria-expanded={expanded}
+              />
+            </div>
+          )}
         </div>
 
         <div className="filters-card__quick-stats" aria-label="Filter ranges">

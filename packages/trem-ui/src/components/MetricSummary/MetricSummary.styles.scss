@@ -10,6 +10,26 @@
   box-shadow: var(--shadow-sm);
 }
 
+.trem-metric-summary--cards {
+  gap: $space-4;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+
+  .trem-metric-summary__item {
+    border: 1px solid var(--border);
+    border-radius: $radius-md;
+    background: var(--card-bg);
+    box-shadow: var(--shadow-sm);
+
+    &:first-child {
+      border-inline-start: 1px solid var(--border);
+    }
+  }
+}
+
 .trem-metric-summary__item {
   min-width: 0;
   min-height: 88px;
@@ -77,6 +97,22 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+
+  small {
+    overflow: hidden;
+    color: var(--muted);
+    font-size: $font-size-xs;
+    font-style: normal;
+    line-height: $line-height-md;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.trem-metric-summary__trailing {
+  flex: 0 0 auto;
+  margin-inline-start: auto;
+  color: var(--muted);
 }
 
 @media (max-width: $tablet-max) {
@@ -92,6 +128,10 @@
     &:nth-child(n + 3) {
       border-top: 1px solid var(--border);
     }
+  }
+
+  .trem-metric-summary--cards .trem-metric-summary__item {
+    border: 1px solid var(--border);
   }
 }
 

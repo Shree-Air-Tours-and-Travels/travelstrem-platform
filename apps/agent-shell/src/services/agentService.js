@@ -31,7 +31,16 @@ async function expectSuccess(request, fallbackMessage) {
 }
 
 export async function fetchAgentTours(opts = {}) {
-  const res = await fetchData("/tours.json", { signal: opts.signal });
+  const res = await fetchData("/tours.json", {
+    signal: opts.signal,
+    params: {
+      scope: opts.scope || "mine",
+      query: opts.query || undefined,
+      sort: opts.sort || "newest",
+      status: opts.status || undefined,
+      limit: opts.limit || undefined,
+    },
+  });
   return normalizeToursResponse(res);
 }
 

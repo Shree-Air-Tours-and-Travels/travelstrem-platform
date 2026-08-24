@@ -1,5 +1,5 @@
 const slugify = (value = "") =>
-    String(value)
+    displayText(value)
         .trim()
         .toLowerCase()
         .replace(/&/g, " and ")
@@ -8,8 +8,10 @@ const slugify = (value = "") =>
 
 const displayText = (value, fallback = "") => {
     if (value == null) return fallback;
-    if (["string", "number", "boolean"].includes(typeof value))
-        return String(value).trim() || fallback;
+    if (["string", "number", "boolean"].includes(typeof value)) {
+        const text = String(value).trim();
+        return text && text !== "[object Object]" ? text : fallback;
+    }
     if (Array.isArray(value))
         return (
             value
@@ -18,7 +20,16 @@ const displayText = (value, fallback = "") => {
                 .join(", ") || fallback
         );
     if (typeof value === "object") {
-        const direct = value.label ?? value.name ?? value.title;
+        const direct =
+            value.slug ??
+            value.value ??
+            value.label ??
+            value.name ??
+            value.title ??
+            value.en ??
+            value.default ??
+            value._id ??
+            value.id;
         if (direct != null && direct !== value) return displayText(direct, fallback);
         return (
             [value.city, value.country]
@@ -51,10 +62,12 @@ const mapFacetOptions = (items = []) =>
 export const mapTourSearchCard = (item = {}) => {
     const route = item.route || {};
     const location = item.location || {};
+    const title = displayText(item.title);
+    const slug = slugify(displayText(item.slug) || title || item.id);
     return {
-        id: item.id,
-        slug: item.slug || slugify(item.title),
-        title: displayText(item.title),
+        id: displayText(item.id ?? item._id),
+        slug,
+        title,
         route: {
             origin: route.origin ? { ...route.origin, name: displayText(route.origin.name) } : null,
             destination: route.destination

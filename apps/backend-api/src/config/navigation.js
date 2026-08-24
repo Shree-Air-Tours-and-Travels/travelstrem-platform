@@ -30,7 +30,7 @@ export default {
                 action: "open-primary-action",
                 emphasis: true,
             },
-            { id: "wishlist", label: "Wishlist", icon: "heart", target: "favorites" },
+            { id: "support", label: "Support", icon: "support", target: "support" },
             { id: "profile", label: "Profile", icon: "user", target: "profile" },
         ],
     },

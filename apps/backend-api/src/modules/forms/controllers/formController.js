@@ -11,6 +11,7 @@ import masterDataService from "../../masterData/services/masterDataService.js";
 import { normalizeMongoId, resolveDepartureOption } from "../services/departureOptionService.js";
 import { enquiryView, formatDate } from "../mappers/enquiryView.js";
 import FinancialEngine from "../../../core/financial-engine/index.js";
+import { getPortalScope } from "../../../core/auth/portalSession.js";
 import {
     REALTIME_EVENTS,
     enquiryDto,
@@ -19,6 +20,8 @@ import {
     publishToUser,
     realtimeNotify,
 } from "../../../realtime/index.js";
+import { recordTourSignal } from "../../tours/services/tourIntelligence.service.js";
+import { upsertAgencyCustomerFromLead } from "../../tenancy/customerDirectory.service.js";
 
 const escapeHtml = (value) =>
     String(value ?? "")
@@ -545,6 +548,14 @@ export const submitForm = async (req, res) => {
         const savedLead = await newLead.save();
         savedLead.enquiryRef = `ENQ-${String(savedLead._id).slice(-6).toUpperCase()}`;
         await savedLead.save();
+        await upsertAgencyCustomerFromLead({ lead: savedLead }).catch((error) =>
+            console.error("[CustomerDirectory] enquiry sync failed:", error.message),
+        );
+        if (product === "trevista" && normalizedTourId) {
+            recordTourSignal(normalizedTourId, "enquiry").catch((error) =>
+                console.error("[TourIntelligence] enquiry signal failed:", error.message),
+            );
+        }
 
         // Backend-authored toast copy, one flavor per audience. The same
         // dedupeKey on the HTTP notify and any socket echo lets clients
@@ -788,22 +799,13 @@ const enquiryAccess = async (req) => {
     const userId = req.user?.sub || req.user?.id || req.user?._id;
     if (!userId)
         throw Object.assign(new Error("Please sign in to view enquiries."), { status: 401 });
+    const portal = getPortalScope(req);
     const role = String(req.user?.role || "member").toLowerCase();
-    if (!OPERATOR_ROLES.has(role)) {
-        const viewer = await User.findById(userId).select("email").lean();
-        const email = String(viewer?.email || "").trim();
-        const escapedEmail = email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        const identities = [{ claimedBy: userId }];
-        if (escapedEmail) {
-            identities.push({
-                claimedBy: null,
-                "fields.email": { $regex: `^${escapedEmail}$`, $options: "i" },
-            });
-        }
+    if (portal === "customer" || !OPERATOR_ROLES.has(role)) {
         return {
             userId,
             perspective: "sent",
-            query: identities.length === 1 ? identities[0] : { $or: identities },
+            query: { claimedBy: userId },
         };
     }
 

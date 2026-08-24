@@ -5,7 +5,9 @@ import "./StatusBadge.styles.scss";
 const TONE_MAP = {
   DRAFT: "neutral",
   QUOTE_REQUESTED: "info",
+  SUBMITTED: "info",
   UNDER_REVIEW: "info",
+  ADDITIONAL_INFORMATION_REQUIRED: "warning",
   QUOTE_READY: "warning",
   QUOTE_SENT: "warning",
   CUSTOMER_ACCEPTED: "success",
@@ -32,10 +34,16 @@ const TONE_MAP = {
   PENDING: "warning",
   UPLOADED: "info",
   APPROVED: "success",
+  CONVERTED: "success",
   COMPLETE: "success",
   published: "success",
   draft: "neutral",
   cancelled: "danger",
+  active: "success",
+  invited: "info",
+  suspended: "warning",
+  deactivated: "danger",
+  anonymized: "neutral",
 };
 
 function resolveTone(value) {

@@ -7,9 +7,10 @@ import {
     readPortalAccessToken,
 } from "../../core/auth/portalSession.js";
 import { buildDashboardSnapshot } from "./dashboardDataService.js";
+import { buildAdminDashboardSnapshot } from "./adminDashboardDataService.js";
 
 // Pages that carry user-specific injected data on top of the definition.
-const PERSONALIZED_PAGES = new Set(["app-shell/app-shell"]);
+const PERSONALIZED_PAGES = new Set(["app-shell/app-shell", "admin-shell/dashboard"]);
 
 const parseOverride = (raw) => {
     if (!raw) return undefined;
@@ -50,7 +51,10 @@ export const getPageDefinition = async (req, res) => {
     if (authUser?.userId && PERSONALIZED_PAGES.has(pageKey)) {
         // Metrics / recent activity / upcoming trips are user-scoped and ride
         // the same response as the definition (single round trip).
-        injectData = await buildDashboardSnapshot(authUser.userId);
+        injectData =
+            pageKey === "admin-shell/dashboard"
+                ? await buildAdminDashboardSnapshot()
+                : await buildDashboardSnapshot(authUser.userId);
     }
     return pageDefinitionService.resolvePage(req, res, pageKey, {
         remoteOverrides: parseOverride(req.query.remoteOverrides),

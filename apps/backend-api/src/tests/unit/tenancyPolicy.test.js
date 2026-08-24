@@ -6,6 +6,7 @@ describe("tenant RBAC policy", () => {
         const user = { role: "admin", adminLevel: "master" };
         expect(effectiveRole(user)).toBe("master_admin");
         expect(permissionsFor(user)).toContain(PERMISSIONS.AGENCY_CREATE);
+        expect(permissionsFor(user)).toContain(PERMISSIONS.PARTNERSHIP_DRAFT_DELETE);
     });
     test("partner agent does not receive agency-wide visibility", () => {
         const permissions = permissionsFor({ role: "agent", agencyRole: "partner_agent" });
@@ -38,6 +39,7 @@ describe("tenant RBAC policy", () => {
         expect(permissions).not.toContain(PERMISSIONS.AGENCY_CREATE);
         expect(permissions).not.toContain(PERMISSIONS.AGENT_DELETE_APPROVE);
         expect(permissions).not.toContain(PERMISSIONS.AUDIT_VIEW_PLATFORM);
+        expect(permissions).not.toContain(PERMISSIONS.PARTNERSHIP_DRAFT_DELETE);
     });
     test("master tenant queries deliberately remain platform-scoped", () => {
         expect(tenantQuery({ access: { isMaster: true } }, { status: "active" })).toEqual({

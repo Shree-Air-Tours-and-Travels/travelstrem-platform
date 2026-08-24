@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useComponentData, fetchData } from "@packages/trem-utils";
-import { useTourCatalogRealtime } from "@packages/trem-ui";
+import { useTourCatalogRealtime } from "@packages/trem-events";
 import ToursPageView from "../view/ToursPage.view";
-import { slugifyTourTitle } from "../helper";
+import { getTourRef } from "../helper";
 import useFavorites from "../hooks/useFavorites";
 import { ContactAgentModal } from "@packages/trem-modals";
 import { fetchTourSearch } from "../search/tourSearch.service";
@@ -75,8 +75,8 @@ export default function ToursPageContainer({ dispatchEvent, userSession = null }
   const previousQuery = useRef(searchState.query);
   const [realtimeTick, setRealtimeTick] = useState(0);
 
-  // A new tour was published elsewhere (e.g. an agent saved the builder's
-  // publishing step): refetch listing + facets without any reload.
+  // A tour was published or an existing public card changed elsewhere:
+  // refetch listing + facets from the API without any reload.
   useTourCatalogRealtime(useCallback(() => setRealtimeTick((tick) => tick + 1), []));
 
   useEffect(() => {
@@ -185,10 +185,11 @@ export default function ToursPageContainer({ dispatchEvent, userSession = null }
 
   const onView = useCallback(
     (tour) => {
-      const ref = tour?.slug || slugifyTourTitle(tour?.title) || tour?.id;
+      const ref = getTourRef(tour);
+      if (!ref) return;
       if (typeof dispatchEvent === "function") {
         dispatchEvent("navigateToTourDetails", {
-          tourRef: encodeURIComponent(ref),
+          tourRef: ref,
           state: { tour, from: { label: "Tours", path: "/trevista/tours" } },
         });
         return;

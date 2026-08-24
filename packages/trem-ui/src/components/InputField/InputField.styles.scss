@@ -38,6 +38,14 @@
     color: $danger-color;
   }
 
+  &__error {
+    padding: 0 $space-3 $space-2;
+    color: $danger-color;
+    font-size: $font-size-xs;
+    font-weight: $font-semibold;
+    line-height: 1.35;
+  }
+
   &__row {
     display: flex;
     align-items: center;

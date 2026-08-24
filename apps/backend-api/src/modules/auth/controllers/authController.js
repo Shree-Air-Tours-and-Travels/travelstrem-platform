@@ -2,7 +2,11 @@
 import crypto from "crypto";
 import UserRepository from "../repositories/UserRepository.js";
 import bcrypt from "bcryptjs";
-import { sendLoginEmail, sendPasswordResetEmail } from "../../../services/email.service.js";
+import {
+    sendLoginEmail,
+    sendPasswordResetEmail,
+    sendWelcomeEmail,
+} from "../../../services/email.service.js";
 import config from "../../../config/index.js";
 import authConfig from "../../../config/auth.js";
 import UserVerification from "../models/UserVerification.js";
@@ -26,6 +30,18 @@ import {
 // Admin creation secret from config (production-safe)
 const ADMIN_CREATION_SECRET = (config.ADMIN_CREATION_SECRET || "").toString().trim();
 const MASTER_ADMIN_EMAIL = config.MASTER_ADMIN_EMAIL;
+
+const sendRegistrationWelcomeEmail = async (user) => {
+    if (!config.ENABLE_EMAILS || !user?.email) return;
+    const result = await sendWelcomeEmail({
+        to: user.email,
+        customerName: user.name,
+        dashboardUrl: config.SHELL_URL,
+    });
+    if (!result?.success) {
+        console.warn("Welcome email was not sent:", result?.code || result?.message);
+    }
+};
 const MASTER_ADMIN_PHONE = config.MASTER_ADMIN_PHONE;
 const MASTER_ADMIN_PIN = (config.MASTER_ADMIN_PIN || "").toString().trim();
 
@@ -427,6 +443,7 @@ export const requestAdminRegistrationOtp = async (req, res) => {
         return res.json({
             message: "Registration OTP sent.",
             expiresInMs: OTP_TTL,
+            resendAfterMs: OTP_RESEND_COOLDOWN_MS,
         });
     } catch (err) {
         console.error("requestAdminRegistrationOtp error:", err && err.stack ? err.stack : err);
@@ -544,6 +561,10 @@ export const register = async (req, res) => {
 
         await user.save();
 
+        await sendRegistrationWelcomeEmail(user).catch((error) => {
+            console.warn("Welcome email failed:", error?.message || error);
+        });
+
         if (requestedRole === "admin" && adminContext.adminLevel === "master") {
             await UserVerification.deleteOne({ _id: req.body.adminVerificationId });
         }
@@ -637,12 +658,13 @@ export const login = async (req, res) => {
                 label: "login",
             });
 
-            return res.json({
-                status: "verify_otp",
-                verificationId: verification._id.toString(),
-                email: maskEmail(normalizedEmail),
-                expiresInMs: OTP_TTL,
-            });
+        return res.json({
+            status: "verify_otp",
+            verificationId: verification._id.toString(),
+            email: maskEmail(normalizedEmail),
+            expiresInMs: OTP_TTL,
+            resendAfterMs: OTP_RESEND_COOLDOWN_MS,
+        });
         }
 
         await revokeCurrentRefreshToken(req);
@@ -809,6 +831,7 @@ export const resendLoginOtp = async (req, res) => {
         return res.json({
             message: "New OTP sent.",
             expiresInMs: OTP_TTL,
+            resendAfterMs: OTP_RESEND_COOLDOWN_MS,
         });
     } catch (err) {
         console.error("resendLoginOtp error:", err && err.stack ? err.stack : err);
@@ -818,7 +841,7 @@ export const resendLoginOtp = async (req, res) => {
     }
 };
 
-const isDev = process.env.NODE_ENV !== "production";
+const isDev = config.IS_DEVELOPMENT;
 
 export const forgotPassword = async (req, res) => {
     setAuthNoStoreHeaders(res);
@@ -834,6 +857,8 @@ export const forgotPassword = async (req, res) => {
         if (!user) {
             return res.json({
                 message: "If that email is registered, a password reset code has been sent.",
+                expiresInMs: OTP_TTL,
+                resendAfterMs: OTP_RESEND_COOLDOWN_MS,
             });
         }
 
@@ -852,6 +877,8 @@ export const forgotPassword = async (req, res) => {
 
         return res.json({
             message: "If that email is registered, a password reset code has been sent.",
+            expiresInMs: OTP_TTL,
+            resendAfterMs: OTP_RESEND_COOLDOWN_MS,
         });
     } catch (err) {
         console.error("Auth forgotPassword error:", err && err.stack ? err.stack : err);
@@ -1076,6 +1103,7 @@ export const requestActivationOtp = async (req, res) => {
             message: "Verification code sent.",
             email: user.email,
             expiresInMs: OTP_TTL,
+            resendAfterMs: OTP_RESEND_COOLDOWN_MS,
         });
     } catch (err) {
         console.error("requestActivationOtp error:", err && err.stack ? err.stack : err);

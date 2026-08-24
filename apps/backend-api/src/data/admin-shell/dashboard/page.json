@@ -1,14 +1,53 @@
 {
   "status": "success",
   "component": {
-    "data": {},
+    "data": {
+      "metrics": {},
+      "inventory": [],
+      "governance": [],
+      "platform": {},
+      "recentActivity": [],
+      "generatedAt": null
+    },
     "dataScope": {
       "options": {}
     },
     "elements": {
       "labels": {
-        "dashboardTitle": "Admin Dashboard",
-        "dashboardDescription": "Overview of platform metrics and quick actions."
+        "eyebrow": "PLATFORM CONTROL CENTER",
+        "dashboardTitle": "TravelsTREM operations",
+        "dashboardDescription": "Monitor product publishing, traveller demand, partner governance and platform reach from one workspace.",
+        "refresh": "Refresh dashboard",
+        "metricsAriaLabel": "Platform overview",
+        "totalInventory": "Travel inventory",
+        "publishedInventory": "Live inventory",
+        "openEnquiries": "Open enquiries",
+        "pendingApprovals": "Needs approval",
+        "inventoryTitle": "Product health",
+        "inventoryDescription": "Publishing health across active TravelsTREM products.",
+        "governanceTitle": "Governance queue",
+        "governanceDescription": "Records waiting for an administrator decision.",
+        "platformTitle": "Platform reach",
+        "platformDescription": "Active products, partners and account coverage.",
+        "activeProducts": "Active products",
+        "activePartners": "Active partners",
+        "activeAgents": "Approved agents",
+        "activeMembers": "Active members",
+        "recentTitle": "Recent activity",
+        "recentDescription": "Latest changes across products, enquiries and partner records.",
+        "recentEmptyTitle": "No recent platform changes",
+        "recentEmptyDescription": "New publishing, enquiry and partner events will appear here.",
+        "quickActionsTitle": "Quick actions",
+        "quickActionsDescription": "Open common administration workflows.",
+        "manageInventory": "Manage travel inventory",
+        "manageInventoryDescription": "Review, verify and publish tours and trips.",
+        "reviewEnquiries": "Review enquiries",
+        "reviewEnquiriesDescription": "Monitor traveller requests and responses.",
+        "managePartners": "Manage partners",
+        "managePartnersDescription": "Review agencies, agents and platform access.",
+        "published": "Published",
+        "draft": "Draft",
+        "pending": "Pending"
       },
       "urls": {}
     },
@@ -19,24 +58,29 @@
       },
       "widgets": [
         {
-          "type": "StatsGrid",
-          "widgetRef": "./widgets/stats-grid.json"
+          "type": "AdminMetrics",
+          "props": {
+            "ariaLabelRef": "metricsAriaLabel",
+            "items": [
+              { "id": "inventory", "metric": "totalInventory", "labelRef": "totalInventory", "icon": "travelPackage", "target": "services" },
+              { "id": "live", "metric": "publishedInventory", "labelRef": "publishedInventory", "icon": "globe", "target": "services" },
+              { "id": "enquiries", "metric": "openEnquiries", "labelRef": "openEnquiries", "icon": "messageCircle", "target": "enquiries" },
+              { "id": "approvals", "metric": "pendingApprovals", "labelRef": "pendingApprovals", "icon": "shieldCheck", "target": "tenancy" }
+            ]
+          }
         },
-        {
-          "type": "QuickActions",
-          "widgetRef": "./widgets/quick-actions.json"
-        },
-        {
-          "type": "RevenueChart",
-          "widgetRef": "./widgets/revenue-chart.json"
-        },
-        {
-          "type": "PopularDestinations",
-          "widgetRef": "./widgets/popular-destinations.json"
-        }
+        { "type": "InventoryHealth", "props": { "titleRef": "inventoryTitle", "descriptionRef": "inventoryDescription", "dataKey": "inventory" } },
+        { "type": "GovernanceQueue", "props": { "titleRef": "governanceTitle", "descriptionRef": "governanceDescription", "dataKey": "governance" } },
+        { "type": "PlatformReach", "props": { "titleRef": "platformTitle", "descriptionRef": "platformDescription", "dataKey": "platform" } },
+        { "type": "RecentActivity", "props": { "titleRef": "recentTitle", "descriptionRef": "recentDescription", "dataKey": "recentActivity", "emptyTitleRef": "recentEmptyTitle", "emptyDescriptionRef": "recentEmptyDescription" } },
+        { "type": "QuickActions", "props": { "titleRef": "quickActionsTitle", "descriptionRef": "quickActionsDescription" } }
       ],
       "config": {},
-      "actions": []
+      "actions": [
+        { "id": "inventory", "labelRef": "manageInventory", "descriptionRef": "manageInventoryDescription", "icon": "map", "target": "services" },
+        { "id": "enquiries", "labelRef": "reviewEnquiries", "descriptionRef": "reviewEnquiriesDescription", "icon": "messageCircle", "target": "enquiries" },
+        { "id": "partners", "labelRef": "managePartners", "descriptionRef": "managePartnersDescription", "icon": "building2", "target": "tenancy", "masterOnly": true }
+      ]
     }
   }
 }

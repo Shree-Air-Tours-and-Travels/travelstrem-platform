@@ -29,6 +29,8 @@ body {
 }
 
 .agent-app-shell {
+  --partner-shell-gutter: #{$space-5};
+  --partner-shell-header-height: 72px;
   min-height: 100vh;
   min-height: 100dvh;
   display: flex;
@@ -41,6 +43,44 @@ body {
   --wizard-host-offset: 0px;
   min-width: 0;
   flex: 1 1 auto;
+}
+
+.partner-shell__breadcrumb {
+  position: sticky;
+  top: var(--partner-shell-header-height);
+  z-index: 80;
+  width: 100%;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  padding-inline: var(--partner-shell-gutter);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-glass-strong, var(--surface));
+  box-shadow: var(--shadow-xs);
+  backdrop-filter: blur(14px);
+}
+
+.partner-shell__content--margin {
+  width: 100%;
+  min-width: 0;
+  padding: $space-5 var(--partner-shell-gutter);
+}
+
+// The shell owns page gutters and breadcrumbs so every partner tab aligns to
+// the same content rail, including independently deployable product pages.
+.partner-shell__content--margin .agent-ops,
+.partner-shell__content--margin .services-tours-page,
+.partner-shell__content--margin .partner-trips-page {
+  width: 100%;
+  max-width: none;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.partner-shell__content--margin .services-tours-page__breadcrumbs,
+.partner-shell__content--margin .tour-detail__breadcrumbs {
+  display: none;
 }
 
 .agent-app-shell.has-partner-navigation .partner-shell__content {
@@ -61,6 +101,19 @@ body {
 }
 
 @media (max-width: 900px) {
+  .agent-app-shell {
+    --partner-shell-gutter: #{$space-3};
+    --partner-shell-header-height: 64px;
+  }
+
+  .partner-shell__breadcrumb {
+    min-height: 46px;
+  }
+
+  .partner-shell__content--margin {
+    padding-block: $space-3;
+  }
+
   .agent-app-shell.has-partner-navigation .partner-shell__content,
   .agent-app-shell.has-partner-navigation.is-sidebar-collapsed .partner-shell__content {
     --wizard-host-offset: 0px;

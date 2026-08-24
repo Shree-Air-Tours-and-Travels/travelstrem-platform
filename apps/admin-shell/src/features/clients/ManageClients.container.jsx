@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import ManageClientsView from "./ManageClients.view";
 import ClientForm from "./ClientForm";
-import Sidebar from "../../components/AdminSidebar";
 import {
   fetchClients,
   createClient,
@@ -10,11 +9,10 @@ import {
   uploadClientLogo,
 } from "../../services/adminService";
 
-export default function ManageClients({ session }) {
+export default function ManageClients({ embedded = false }) {
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
@@ -76,16 +74,8 @@ export default function ManageClients({ session }) {
     );
   };
 
-  return (
-    <div className="admin-app-shell__layout">
-      <Sidebar
-        activeTab="clients"
-        onTabChange={() => {}}
-        user={session?.user}
-        mobileOpen={mobileOpen}
-        onMobileClose={() => setMobileOpen(false)}
-      />
-      <main className="admin-app-shell__main">
+  const content = (
+    <>
         <ManageClientsView
           clients={clients}
           loading={loading}
@@ -124,7 +114,9 @@ export default function ManageClients({ session }) {
             </div>
           </div>
         )}
-      </main>
-    </div>
+    </>
   );
+
+  if (embedded) return content;
+  return <main className="admin-app-shell__main">{content}</main>;
 }

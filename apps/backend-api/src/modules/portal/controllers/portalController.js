@@ -7,6 +7,9 @@ import sidebarConfigTemplate from "../../../config/sidebar.js";
 import appHeaderConfigTemplate from "../../../config/appHeader.js";
 import navigationConfigTemplate from "../../../config/navigation.js";
 import User from "../../auth/models/User.js";
+import PartnerAgency from "../../auth/models/PartnerAgency.js";
+import { getSessionUser } from "../../auth/services/session.service.js";
+import { toSafePortalUser } from "../portalUser.serializer.js";
 import {
     getHiddenProductKeys,
     invalidateHiddenProductCache,
@@ -122,58 +125,9 @@ const getUserFromRequest = (req) => {
     }
 };
 
-const toSafeUser = (user, fallback = {}) => {
-    if (!user && !fallback) return null;
-
-    return {
-        id:
-            user?._id?.toString?.() ||
-            user?.id ||
-            fallback.sub ||
-            fallback.id ||
-            fallback.userId ||
-            null,
-        name: user?.name || fallback.name || null,
-        email: user?.email || fallback.email || null,
-        role: user?.role || fallback.role || "member",
-        agentRef: user?.agentRef || fallback.agentRef || "",
-        agencyRef: user?.agencyRef || fallback.agencyRef || "",
-        partnerAgencyRef: user?.partnerAgencyRef || fallback.partnerAgencyRef || "",
-        agentApprovalStatus:
-            user?.agentApprovalStatus || fallback.agentApprovalStatus || "not_required",
-        adminLevel: user?.adminLevel || fallback.adminLevel || "none",
-        adminApprovalStatus:
-            user?.adminApprovalStatus || fallback.adminApprovalStatus || "not_required",
-        agencyRole: user?.agencyRole || fallback.agencyRole || "none",
-        agencyId: user?.agencyId?.toString?.() || user?.agencyId || fallback.agencyId || null,
-        accountStatus: user?.accountStatus || fallback.accountStatus || "active",
-        productAccess: user?.productAccess || fallback.productAccess || [],
-        permissionGrants: user?.permissionGrants || fallback.permissionGrants || [],
-        permissionDenials: user?.permissionDenials || fallback.permissionDenials || [],
-    };
-};
-
-const getSessionFromRequest = async (req) => {
-    const token = getBearerToken(req);
-    if (!token) {
-        return {
-            user: null,
-            permissions: ["public"],
-            isAuthenticated: false,
-        };
-    }
-
+const getSessionFromRequest = async (req, res) => {
     try {
-        const payload = jwt.verify(token, JWT_SECRET);
-        if (!payload.portal || normalizePortalScope(payload.portal) !== getPortalScope(req)) {
-            throw new Error("Portal session mismatch");
-        }
-        const userId = payload.sub || payload.id || payload.userId;
-        const dbUser = userId
-            ? await User.findById(userId).select(
-                  "name email role agentRef agencyRef partnerAgencyRef agentApprovalStatus adminLevel adminApprovalStatus agencyRole agencyId accountStatus productAccess permissionGrants permissionDenials",
-              )
-            : null;
+        const dbUser = await getSessionUser({ req, res });
         if (
             dbUser?.role === "admin" &&
             dbUser.email === MASTER_ADMIN_EMAIL &&
@@ -204,7 +158,11 @@ const getSessionFromRequest = async (req) => {
                 isAuthenticated: false,
             };
         }
-        const user = toSafeUser(dbUser, payload);
+        const agency =
+            dbUser?.role === "agent" && dbUser?.agencyRole && dbUser?.agencyId
+            ? await PartnerAgency.findById(dbUser.agencyId).select("agencyName").lean()
+            : null;
+        const user = toSafePortalUser(dbUser, { agencyName: agency?.agencyName || "" });
         const role = user?.role || "member";
 
         return {
@@ -453,10 +411,40 @@ const buildTrevistaHeaderConfig = (baseConfig = {}) => ({
 
 const buildAdminHeaderConfig = (baseConfig = {}) => ({
     ...baseConfig,
+    variant: "admin",
     brand: {
         ...(baseConfig.brand || {}),
         label: "AdminTREM",
-        homePath: "/manage/tours?tab=dashboard",
+        subtitle: "Platform Administration",
+        homePath: "/manage/tours?tab=overview",
+    },
+    adminNavigation: [
+        { id: "overview", label: "Overview", icon: "home", target: "overview" },
+        {
+            id: "enquiries",
+            label: "Bookings & enquiries",
+            icon: "messageCircle",
+            target: "enquiries",
+        },
+        { id: "services", label: "Travel products", icon: "briefcaseBusiness", target: "services" },
+        {
+            id: "tenancy",
+            label: "Partners & agencies",
+            icon: "building2",
+            target: "tenancy",
+            masterOnly: true,
+        },
+        { id: "clients", label: "Clients", icon: "usersRound", target: "clients" },
+        { id: "profile", label: "My profile", icon: "user", target: "profile" },
+        { id: "logout", label: "Sign out", icon: "logout", action: "logout" },
+    ],
+    adminBreadcrumbs: {
+        overview: [{ label: "Administration", path: "/manage/tours?tab=overview" }, { label: "Overview" }],
+        enquiries: [{ label: "Administration", path: "/manage/tours?tab=overview" }, { label: "Bookings & enquiries" }],
+        services: [{ label: "Administration", path: "/manage/tours?tab=overview" }, { label: "Travel products" }],
+        tenancy: [{ label: "Administration", path: "/manage/tours?tab=overview" }, { label: "Partners & agencies" }],
+        clients: [{ label: "Administration", path: "/manage/tours?tab=overview" }, { label: "Clients" }],
+        profile: [{ label: "Administration", path: "/manage/tours?tab=overview" }, { label: "My profile" }],
     },
     leftSection: {
         ...(baseConfig.leftSection || {}),
@@ -476,14 +464,14 @@ const buildAdminHeaderConfig = (baseConfig = {}) => ({
                     id: "adminTours",
                     label: "Tour Management",
                     app: "adminTREM",
-                    path: "/manage/tours?tab=tours",
+                    path: "/manage/tours?tab=services",
                     disabled: false,
                 },
                 {
                     id: "agencyManagement",
                     label: "Agency Management",
                     app: "adminTREM",
-                    path: "/manage/tours?tab=agencies",
+                    path: "/manage/tours?tab=tenancy",
                     disabled: false,
                 },
             ],
@@ -492,7 +480,7 @@ const buildAdminHeaderConfig = (baseConfig = {}) => ({
             id: "adminDashboard",
             label: "Dashboard",
             app: "adminTREM",
-            path: "/manage/tours?tab=dashboard",
+            path: "/manage/tours?tab=overview",
             disabled: false,
         },
     ],
@@ -500,19 +488,19 @@ const buildAdminHeaderConfig = (baseConfig = {}) => ({
         {
             id: "services",
             label: "Services",
-            path: "/manage/tours?tab=tours",
+            path: "/manage/tours?tab=services",
             access: "authenticated",
         },
         {
             id: "dashboard",
             label: "Dashboard",
-            path: "/manage/tours?tab=dashboard",
+            path: "/manage/tours?tab=overview",
             access: "authenticated",
         },
         {
             id: "agencies",
             label: "Agencies",
-            path: "/manage/tours?tab=agencies",
+            path: "/manage/tours?tab=tenancy",
             access: "roles",
             roles: ["admin"],
         },
@@ -528,7 +516,7 @@ const buildAdminHeaderConfig = (baseConfig = {}) => ({
             path: "/login",
             component: "auth",
             access: "publicOnly",
-            authenticatedRedirect: "/manage/tours?tab=dashboard",
+            authenticatedRedirect: "/manage/tours?tab=overview",
         },
         {
             id: "manageTours",
@@ -548,7 +536,7 @@ const buildAdminHeaderConfig = (baseConfig = {}) => ({
         },
     ],
     fallbacks: {
-        authenticated: "/manage/tours?tab=dashboard",
+        authenticated: "/manage/tours?tab=overview",
         anonymous: "/login",
         unauthorized: "/login",
     },
@@ -556,6 +544,7 @@ const buildAdminHeaderConfig = (baseConfig = {}) => ({
 
 const buildAgentHeaderConfig = (baseConfig = {}) => ({
     ...baseConfig,
+    variant: "partner",
     brand: {
         ...(baseConfig.brand || {}),
         label: "Partner Portal",
@@ -612,6 +601,121 @@ const buildAgentHeaderConfig = (baseConfig = {}) => ({
             path: "/agent/agency",
             access: "roles",
             roles: ["agent"],
+        },
+    ],
+    partnerProducts: [
+        {
+            key: "trevista",
+            label: "Trevista",
+            menuLabel: "Trevista Tours",
+            icon: "map",
+            listPath: "/agent/services/tours",
+            createPath: "/agent/services/tours?create=true",
+            createLabel: "New Trevista Tour",
+        },
+        {
+            key: "trevio",
+            label: "Trevio",
+            menuLabel: "Trevio Trips",
+            icon: "mountain",
+            listPath: "/agent/trevio/trips",
+            createPath: "/agent/trevio/trips?create=true",
+            createLabel: "New Trevio Trip",
+        },
+    ],
+    partnerBreadcrumbs: [
+        {
+            match: "/agent/services/tours",
+            items: [
+                { label: "Products", path: "/agent/dashboard" },
+                { label: "Trevista Tours" },
+            ],
+        },
+        {
+            match: "/agent/trevio/trips",
+            items: [
+                { label: "Products", path: "/agent/dashboard" },
+                { label: "Trevio Trips" },
+            ],
+        },
+        {
+            match: "/agent/bookings",
+            items: [
+                { label: "Workspace", path: "/agent/dashboard" },
+                { label: "Bookings & enquiries" },
+            ],
+        },
+        {
+            match: "/agent/enquiries",
+            items: [
+                { label: "Workspace", path: "/agent/dashboard" },
+                { label: "Bookings & enquiries" },
+            ],
+        },
+        {
+            match: "/agent/customers",
+            items: [
+                { label: "Workspace", path: "/agent/dashboard" },
+                { label: "Customers" },
+            ],
+        },
+        {
+            match: "/agent/agency",
+            items: [
+                { label: "Workspace", path: "/agent/dashboard" },
+                { label: "Agency Workspace" },
+            ],
+        },
+        {
+            match: "/agent/agents",
+            items: [
+                { label: "Workspace", path: "/agent/dashboard" },
+                { label: "Agency Workspace", path: "/agent/agency" },
+                { label: "Team" },
+            ],
+        },
+        {
+            match: "/agent/partner-agency",
+            items: [
+                { label: "Workspace", path: "/agent/dashboard" },
+                { label: "Agency Workspace" },
+            ],
+        },
+        {
+            match: "/agent/reports",
+            items: [
+                { label: "Agency", path: "/agent/dashboard" },
+                { label: "Reports" },
+            ],
+        },
+        {
+            match: "/agent/profile",
+            items: [
+                { label: "Account", path: "/agent/dashboard" },
+                { label: "My Profile" },
+            ],
+        },
+        {
+            match: "/agent/settings",
+            items: [
+                { label: "Account", path: "/agent/dashboard" },
+                { label: "Settings" },
+            ],
+        },
+        {
+            match: "/agent/notifications",
+            items: [
+                { label: "Account", path: "/agent/dashboard" },
+                { label: "Notifications" },
+            ],
+        },
+        {
+            match: "/agent/services",
+            items: [{ label: "Workspace" }, { label: "Services" }],
+        },
+        {
+            match: "/agent/dashboard",
+            items: [{ label: "Workspace" }, { label: "Dashboard" }],
         },
     ],
     routeMap: {
@@ -736,7 +840,7 @@ export const getUserSession = async (req, res) => {
 
 export const getSession = async (req, res) => {
     try {
-        const session = await getSessionFromRequest(req);
+        const session = await getSessionFromRequest(req, res);
         const pageConfig = resolvePageConfig(req);
 
         return res.json({
@@ -884,7 +988,7 @@ const withSessionAuthAction = (template, isAuthenticated, surface) => {
 
 export const getSidebarConfig = async (req, res) => {
     const [session, hiddenKeys] = await Promise.all([
-        getSessionFromRequest(req),
+        getSessionFromRequest(req, res),
         getHiddenProductKeys(),
     ]);
     const sidebarConfig = applyProductHiding(sidebarConfigTemplate, hiddenKeys);
@@ -893,7 +997,7 @@ export const getSidebarConfig = async (req, res) => {
 
 export const getAppHeaderConfig = async (req, res) => {
     const [session, hiddenKeys] = await Promise.all([
-        getSessionFromRequest(req),
+        getSessionFromRequest(req, res),
         getHiddenProductKeys(),
     ]);
     const appHeaderConfig = applyProductHiding(appHeaderConfigTemplate, hiddenKeys);

@@ -14,6 +14,7 @@ import {
   emit,
   registerSessionCacheClearer,
   initRealtimeNotifications,
+  RealtimeProvider,
 } from "@packages/trem-events";
 import {
   FavoritesProvider,
@@ -21,7 +22,6 @@ import {
   ScrollToTop,
   TourDetailsPage,
   useFavoritesContext,
-  RealtimeProvider,
   Toaster,
 } from "@packages/trem-ui";
 import { Analytics } from "@vercel/analytics/react";

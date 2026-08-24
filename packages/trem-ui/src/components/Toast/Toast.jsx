@@ -39,6 +39,7 @@ const MAX_STACK = 4;
 const STATUS_ICON = {
   success: "check",
   error: "alertTriangle",
+  warning: "alertTriangle",
   info: "info",
 };
 
@@ -66,7 +67,8 @@ export const showToast = ({
   return detail.id;
 };
 
-const normalizeStatus = (value) => (["success", "error", "info"].includes(value) ? value : "info");
+const normalizeStatus = (value) =>
+  ["success", "error", "warning", "info"].includes(value) ? value : "info";
 
 const Toaster = ({ position = "top-right" }) => {
   const [isOwner, setIsOwner] = useState(

@@ -3,6 +3,13 @@
   "applyTitle": "Apply for Partner Agency",
   "loadingText": "Loading agency info...",
   "refreshAriaLabel": "Refresh agency",
+  "profileSummary": {
+    "eyebrow": "Verified agency profile",
+    "title": "Business details",
+    "description": "Sensitive registration and contact details stay concealed until you choose to reveal them.",
+    "showLabel": "Show",
+    "hideLabel": "Hide"
+  },
   "fields": [
     {
       "key": "agencyName",
@@ -27,13 +34,13 @@
     { "key": "gstNumber", "label": "GST Number", "placeholder": "GSTIN" }
   ],
   "details": [
-    { "key": "agencyName", "label": "Agency Name", "accessor": "agencyName" },
-    { "key": "agencyRef", "label": "Agency Ref", "accessor": "partnerAgencyRef" },
-    { "key": "contact", "label": "Contact", "accessor": "contactName" },
-    { "key": "email", "label": "Email", "accessor": "contactEmail" },
-    { "key": "phone", "label": "Phone", "accessor": "contactPhone" },
-    { "key": "website", "label": "Website", "accessor": "website" },
-    { "key": "gst", "label": "GST Number", "accessor": "gstNumber" }
+    { "key": "agencyName", "label": "Agency Name", "accessor": "agencyName", "icon": "building2" },
+    { "key": "agencyRef", "label": "Agency Ref", "accessor": "partnerAgencyRef", "icon": "shieldCheck", "sensitive": true, "mask": "reference" },
+    { "key": "contact", "label": "Contact", "accessor": "contactName", "icon": "user" },
+    { "key": "email", "label": "Email", "accessor": "contactEmail", "icon": "messageCircle", "sensitive": true, "mask": "email" },
+    { "key": "phone", "label": "Phone", "accessor": "contactPhone", "icon": "phoneCall", "sensitive": true, "mask": "phone" },
+    { "key": "website", "label": "Website", "accessor": "website", "icon": "globe" },
+    { "key": "gst", "label": "GST Number", "accessor": "gstNumber", "icon": "briefcaseBusiness", "sensitive": true, "mask": "reference" }
   ],
   "buttons": {
     "submit": { "text": "Submit Application", "submitting": "Submitting..." },

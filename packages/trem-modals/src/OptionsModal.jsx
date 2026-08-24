@@ -16,6 +16,8 @@ export default function OptionsModal({
   subtitle,
   icon = "hotel",
   options = [],
+  emptyTitle = "No options available",
+  emptyDescription = "There are no choices available for this selection yet.",
   recommendedLabel = "Recommended",
   selectedLabel = "Selected",
   pricePendingLabel = "Price on request",
@@ -38,6 +40,7 @@ export default function OptionsModal({
   const [draftValue, setDraftValue] = useState(selectedValue);
   const [draftRoomValue, setDraftRoomValue] = useState(selectedRoomValue);
   const selectable = typeof onConfirm === "function";
+  const hasOptions = Array.isArray(options) && options.length > 0;
 
   useEffect(() => {
     if (open) {
@@ -55,7 +58,7 @@ export default function OptionsModal({
 
   if (!open) return null;
 
-  const list = (
+  const list = hasOptions ? (
     <div className="trem-options__list">
       {options.map((option, i) => {
         const optionValue = option.value || option.title || String(i);
@@ -215,41 +218,53 @@ export default function OptionsModal({
         );
       })}
     </div>
+  ) : (
+    <div className="trem-options__empty" role="status">
+      <span className="trem-options__empty-icon" aria-hidden="true">
+        <Icon name={icon} size={28} />
+      </span>
+      <strong>{emptyTitle}</strong>
+      <p>{emptyDescription}</p>
+    </div>
   );
 
   const selectionActions = selectable ? (
     <div className="trem-options__actions">
       <Button variant="text" color="primary" text={cancelLabel} onClick={onClose} />
-      <Button
-        variant="solid"
-        color="primary"
-        text={confirmLabel}
-        disabled={
-          !draftValue ||
-          Boolean(
-            (
+      {hasOptions ? (
+        <Button
+          variant="solid"
+          color="primary"
+          text={confirmLabel}
+          disabled={
+            !draftValue ||
+            Boolean(
+              (
+                options.find(
+                  (option, index) =>
+                    (option.value || option.title || String(index)) === draftValue,
+                )?.rooms || []
+              ).length && !draftRoomValue,
+            )
+          }
+          onClick={() =>
+            onConfirm(
               options.find(
                 (option, index) => (option.value || option.title || String(index)) === draftValue,
-              )?.rooms || []
-            ).length && !draftRoomValue,
-          )
-        }
-        onClick={() =>
-          onConfirm(
-            options.find(
-              (option, index) => (option.value || option.title || String(index)) === draftValue,
-            ),
-            options
-              .find(
-                (option, index) => (option.value || option.title || String(index)) === draftValue,
-              )
-              ?.rooms?.find(
-                (room, index) => (room.value || room.name || String(index)) === draftRoomValue,
-              ) || null,
-          )
-        }
-      />
-      {typeof onCustomize === "function" ? (
+              ),
+              options
+                .find(
+                  (option, index) =>
+                    (option.value || option.title || String(index)) === draftValue,
+                )
+                ?.rooms?.find(
+                  (room, index) => (room.value || room.name || String(index)) === draftRoomValue,
+                ) || null,
+            )
+          }
+        />
+      ) : null}
+      {hasOptions && typeof onCustomize === "function" ? (
         <Button
           variant="outline"
           color="primary"
@@ -277,7 +292,7 @@ export default function OptionsModal({
   const content = (
     <div className={`trem-options ${className}`.trim()}>
       <div className="trem-options__scroll">
-        {subtitle && <p className="trem-options__subtitle">{subtitle}</p>}
+        {subtitle && hasOptions ? <p className="trem-options__subtitle">{subtitle}</p> : null}
         {list}
       </div>
       {selectionActions}

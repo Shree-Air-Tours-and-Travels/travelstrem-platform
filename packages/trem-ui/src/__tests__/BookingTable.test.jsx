@@ -185,7 +185,7 @@ describe("BookingTable", () => {
     ).toBeInTheDocument();
   });
 
-  it("expands and collapses mobile booking controls", () => {
+  it("opens mobile booking controls in a dismissible filter sheet", () => {
     render(
       <BookingTable
         table={{
@@ -208,6 +208,11 @@ describe("BookingTable", () => {
       "aria-expanded",
       "true",
     );
+    expect(screen.getByRole("dialog", { name: "Filter records" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Show results" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Show results" }));
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByRole("dialog", { name: "Filter records" })).not.toBeInTheDocument();
   });
 
   it("supports backend-configured page scrolling on mobile", () => {

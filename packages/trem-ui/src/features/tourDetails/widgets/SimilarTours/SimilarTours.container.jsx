@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import useTourDetailWidget from "../../hooks/useTourDetailWidget";
-import { slugifyTitle } from "../../helper";
+import { getDisplayText, slugifyTitle } from "../../helper";
 import { WidgetError, WidgetSkeleton } from "../../shared";
 import SimilarToursView from "./SimilarTours.view";
 
@@ -10,6 +10,7 @@ export default function SimilarToursContainer({
   isFavorited,
   onFavorite,
   appKey = "trevista",
+  showEmpty = false,
 }) {
   const navigate = useNavigate();
   const { loading, error, widgetData } = useTourDetailWidget(tourRef, "similar-tours.json");
@@ -17,7 +18,11 @@ export default function SimilarToursContainer({
   const tours = Array.isArray(widgetData?.data?.tours) ? widgetData.data.tours : [];
 
   const handleView = (tour) => {
-    const ref = tour?.slug || tour?._id || tour?.id || slugifyTitle(tour?.title);
+    const ref =
+      getDisplayText(tour?.slug) ||
+      getDisplayText(tour?.tourRef) ||
+      slugifyTitle(tour?.title || tour?.name) ||
+      getDisplayText(tour?._id || tour?.id);
     if (!ref) return;
     navigate(`/${appKey}/tours/${encodeURIComponent(ref)}`, { state: { tour } });
   };
@@ -31,6 +36,7 @@ export default function SimilarToursContainer({
       onView={handleView}
       isFavorited={isFavorited}
       onFavorite={onFavorite}
+      showEmpty={showEmpty}
     />
   );
 }

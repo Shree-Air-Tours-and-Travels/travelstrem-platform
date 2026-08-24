@@ -86,6 +86,7 @@ export default function FiltersContainer({
   searching = false,
   expanded: externalExpanded,
   onExpandedChange,
+  mode = "inline",
 }) {
   const meta = useMemo(() => resolveWidgetMeta(widgetData), [widgetData]);
   const [draft, setDraft] = useState(values || {});
@@ -160,7 +161,7 @@ export default function FiltersContainer({
       return;
     }
     onChangeRef.current?.(draft);
-    if (isCompactViewport()) setExpanded(false);
+    if (mode === "modal" || isCompactViewport()) setExpanded(false);
   };
 
   return (
@@ -183,6 +184,7 @@ export default function FiltersContainer({
       onInput={onInput}
       handleActionClick={handleActionClick}
       setExpanded={setExpanded}
+      mode={mode}
     />
   );
 }

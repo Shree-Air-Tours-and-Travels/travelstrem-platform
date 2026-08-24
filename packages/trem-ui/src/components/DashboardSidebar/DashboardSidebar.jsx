@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import Button from "../Button/Button.jsx";
 import Title from "../Title/Title.jsx";
 import Icon from "../../icons/Icon/Icon.jsx";
+import { resolveAccountAvatar } from "../AccountProfile/accountAvatar.constants.js";
 import "./DashboardSidebar.styles.scss";
 
 function hasActiveChild(item, activeId) {
@@ -141,11 +142,7 @@ export default function DashboardSidebar({
 
       <div className="trem-dashboard-sidebar__profile">
         <span className="trem-dashboard-sidebar__avatar" aria-hidden="true">
-          {profile.image ? (
-            <img src={profile.image} alt="" />
-          ) : (
-            <Icon name={profile.avatar || "user"} size={28} />
-          )}
+          <Icon name={resolveAccountAvatar(profile.avatar)} size={28} />
         </span>
         {!isRail ? (
           <div className="trem-dashboard-sidebar__profile-text">

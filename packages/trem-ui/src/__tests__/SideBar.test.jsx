@@ -30,13 +30,13 @@ const config = {
       ],
     },
   ],
-  profile: { fallbackMeta: "TravelsTREM Member", actionTarget: "profile" },
+  profile: { fallbackMeta: "TREM Member", actionTarget: "profile" },
 };
 
 describe("SideBar", () => {
   it("renders backend configuration and routes enabled items", () => {
     const onNavigate = vi.fn();
-    render(
+    const { container } = render(
       <SideBar
         config={config}
         user={{ name: "Akshat Goyal" }}
@@ -48,6 +48,8 @@ describe("SideBar", () => {
     expect(screen.getByLabelText("Customer navigation")).toBeInTheDocument();
     expect(screen.getByText("Plan a Journey")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Holiday Packages" })).toBeDisabled();
+    expect(container.querySelector(".trem-sidebar__avatar svg")).toBeInTheDocument();
+    expect(container.querySelector(".trem-sidebar__avatar")).not.toHaveTextContent("AG");
     fireEvent.click(screen.getByRole("button", { name: "Home" }));
     expect(onNavigate).toHaveBeenCalledWith(
       "overview",
@@ -76,6 +78,27 @@ describe("SideBar", () => {
     rerender(<SideBar config={config} collapsed onCollapsedChange={onCollapsedChange} />);
     expect(container.querySelector(".trem-sidebar")).toHaveClass("is-collapsed");
     expect(screen.getByRole("button", { name: "Expand sidebar" })).toBeInTheDocument();
+  });
+
+  it("resolves tenant branding from the signed-in user with a safe fallback", () => {
+    const tenantConfig = {
+      ...config,
+      brand: {
+        ...config.brand,
+        subtitle: undefined,
+        subtitleKey: "agencyName",
+        fallbackSubtitle: "Agency Operations",
+      },
+    };
+    const { rerender } = render(
+      <SideBar config={tenantConfig} user={{ name: "Partner", agencyName: "Shree Air Tours" }} />,
+    );
+
+    expect(screen.getByText("Shree Air Tours")).toBeInTheDocument();
+    expect(screen.queryByText("Agency Operations")).not.toBeInTheDocument();
+
+    rerender(<SideBar config={tenantConfig} user={{ name: "Partner" }} />);
+    expect(screen.getByText("Agency Operations")).toBeInTheDocument();
   });
 
   it("does not render items flagged with hide and skips empty sections", () => {
