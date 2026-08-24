@@ -5,6 +5,7 @@ import { agentWidgetRegistry } from "../../../widgets/registry/widgetRegistry";
 import { TAB_WIDGET_MAP } from "./tours.constants";
 import pageConfig from "./manageToursPage.config.json";
 import PartnerWorkspace from "../../tenancy/PartnerWorkspace";
+import AgencyWorkspace from "../../tenancy/AgencyWorkspace";
 
 export function ConfirmModal({
   open,
@@ -88,25 +89,40 @@ export default function ManageToursView({
   toast,
   setToast,
 }) {
+  const isWorkspaceTab = [
+    "dashboard",
+    "agents",
+    "customers",
+    "reports",
+    "deletions",
+    "notifications",
+    "agencyWorkspace",
+  ].includes(tab);
+  const showLegacyPageHeading = !isWorkspaceTab && !["profile", "settings"].includes(tab);
+
   return (
     <main className="agent-ops">
-      <header className="agent-ops__heading">
-        <SubTitle text={pageConfig.pageTitle} />
-      </header>
+      {showLegacyPageHeading ? (
+        <header className="agent-ops__heading">
+          <SubTitle text={pageConfig.pageTitle} />
+        </header>
+      ) : null}
 
       <div className="agent-ops__body">
         <section className="agent-ops__content">
           {(() => {
-            if (
-              [
-                "dashboard",
-                "agents",
-                "customers",
-                "reports",
-                "deletions",
-                "notifications",
-              ].includes(tab)
-            )
+            if (tab === "agencyWorkspace")
+              return (
+                <AgencyWorkspace
+                  user={auth.user}
+                  auth={auth}
+                  agencyApplication={agencyApplication}
+                  agencyLoading={agencyLoading}
+                  onApplyAgency={onApplyAgency}
+                  fetchAgency={fetchAgency}
+                />
+              );
+            if (isWorkspaceTab)
               return <PartnerWorkspace tab={tab} user={auth.user} />;
             const def = agentWidgetRegistry.get(TAB_WIDGET_MAP[tab]);
             const Component = def?.component;

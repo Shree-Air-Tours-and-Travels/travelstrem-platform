@@ -33,14 +33,18 @@ const Routers = () => {
         />
         <Route path="/agent/profile" element={<ManageTours session={session} />} />
         <Route path="/agent/dashboard" element={<ManageTours session={session} />} />
-        <Route path="/agent/agents" element={<ManageTours session={session} />} />
+        <Route path="/agent/agency" element={<ManageTours session={session} />} />
+        <Route path="/agent/agents" element={<Navigate to="/agent/agency?view=team" replace />} />
         <Route path="/agent/customers" element={<ManageTours session={session} />} />
         <Route path="/agent/enquiries" element={<EnquiriesPage />} />
         <Route path="/agent/bookings" element={<EnquiriesPage />} />
         <Route path="/agent/reports" element={<ManageTours session={session} />} />
         <Route path="/agent/deletion-requests" element={<ManageTours session={session} />} />
         <Route path="/agent/notifications" element={<ManageTours session={session} />} />
-        <Route path="/agent/partner-agency" element={<ManageTours session={session} />} />
+        <Route
+          path="/agent/partner-agency"
+          element={<Navigate to="/agent/agency?view=profile" replace />}
+        />
         <Route path="/agent/settings" element={<ManageTours session={session} />} />
         <Route path="/agent/trevio/trips" element={<PartnerTrevioTrips session={session} />} />
         <Route path="*" element={<Navigate to="/agent/dashboard" replace />} />

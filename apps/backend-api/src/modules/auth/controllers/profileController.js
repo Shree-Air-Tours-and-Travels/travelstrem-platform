@@ -3,44 +3,44 @@ import User from "../models/User.js";
 import UserRepository from "../repositories/UserRepository.js";
 import RefreshToken from "../models/RefreshToken.js";
 import { audit } from "../../tenancy/audit.service.js";
+import {
+    DEFAULT_PROFILE_AVATAR,
+    PROFILE_AVATAR_ICONS,
+    normalizeProfileAvatar,
+} from "../profileAvatar.constants.js";
 
-const PROFILE_ICONS = [
-    "user",
-    "compass",
-    "map",
-    "globe",
-    "plane",
-    "train",
-    "bus",
-    "taxi",
-    "hotel",
-    "destination",
-    "beach",
-    "mountain",
-    "camera",
-    "heart",
-    "star",
-    "sun",
-    "moon",
-    "sparkles",
-];
+const toSafeProfile = (user) => ({
+    id: user?._id?.toString?.() || user?.id?.toString?.() || "",
+    name: user.name,
+    email: user.email,
+    phone: user.phone || "",
+    mobile: user.mobile || "",
+    role: user.role,
+    agencyRole: user.agencyRole,
+    agencyId: user.agencyId?.toString?.() || user.agencyId || "",
+    agencyRef: user.agencyRef || "",
+    agentRef: user.agentRef || "",
+    partnerAgencyRef: user.partnerAgencyRef || "",
+    adminLevel: user.adminLevel,
+    adminApprovalStatus: user.adminApprovalStatus,
+    agentApprovalStatus: user.agentApprovalStatus,
+    accountStatus: user.accountStatus,
+    avatar: normalizeProfileAvatar(user.avatar),
+    createdAt: user.createdAt ? new Date(user.createdAt).toISOString() : null,
+});
 
 export const getProfile = async (req, res) => {
     try {
         const userId = req.user?.sub;
         const user = await UserRepository.findById(userId, "-passwordHash");
         if (!user) return res.status(404).json({ status: "error", message: "User not found" });
-        const data = {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            avatar: user.avatar || "user",
-            createdAt: user.createdAt,
-        };
+        const data = toSafeProfile(user);
         return res.status(200).json({
             status: "success",
-            componentData: { data, config: { icons: PROFILE_ICONS } },
+            componentData: {
+                data,
+                config: { icons: PROFILE_AVATAR_ICONS, defaultAvatar: DEFAULT_PROFILE_AVATAR },
+            },
         });
     } catch (error) {
         console.error("getProfile error:", error);
@@ -55,7 +55,7 @@ export const updateProfile = async (req, res) => {
         const updates = {};
         if (name !== undefined) updates.name = name;
         if (avatar !== undefined) {
-            if (!PROFILE_ICONS.includes(avatar)) {
+            if (!PROFILE_AVATAR_ICONS.includes(avatar)) {
                 return res.status(400).json({ status: "error", message: "Invalid avatar icon" });
             }
             updates.avatar = avatar;
@@ -72,17 +72,13 @@ export const updateProfile = async (req, res) => {
             before,
             after: { name: user.name, phone: user.phone, avatar: user.avatar },
         });
-        const data = {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            avatar: user.avatar || "user",
-            createdAt: user.createdAt,
-        };
+        const data = toSafeProfile(user);
         return res.status(200).json({
             status: "success",
-            componentData: { data, config: { icons: PROFILE_ICONS } },
+            componentData: {
+                data,
+                config: { icons: PROFILE_AVATAR_ICONS, defaultAvatar: DEFAULT_PROFILE_AVATAR },
+            },
         });
     } catch (error) {
         console.error("updateProfile error:", error);

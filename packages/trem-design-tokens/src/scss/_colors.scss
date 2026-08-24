@@ -1,112 +1,166 @@
 // ─── Light theme: Royal Jewel ───
-$primary-color: #243b8f; // Sapphire Blue
-$primary-dark: #15245f;
 
-$secondary-color: #6d28d9; // Royal Amethyst
-$secondary-dark: #4c1d95;
+$primary-color: #2847a8; // Sapphire Blue
 
-$tertiary-color: #be185d; // Ruby Rose
-$tertiary-dark: #831843;
+$primary-dark: #1b2f78;
 
-$accent-color: #171429; // Midnight Ink
+$secondary-color: #7540c9; // Royal Amethyst
 
-$success-color: #2563eb;
-$danger-color: #e11d48;
-$warning-color: #9333ea;
+$secondary-dark: #55269a;
 
-$light-bg: #f8f7fc;
+$tertiary-color: #b82f6f; // Ruby Rose
+
+$tertiary-dark: #84204f;
+
+$accent-color: #181a2d; // Midnight Ink
+
+$success-color: #2878c8;
+
+$danger-color: #d92f5c;
+
+$warning-color: #8a4ac7;
+
+$light-bg: #f8f9fd;
+
 $white-color: #ffffff;
-$surface-muted: #eceaf7;
-$surface-subtle: #f4f2fa;
 
-$text-dark: #171429;
-$text-muted: #625e72;
-$text-light: rgba(23, 20, 41, 0.64);
+$surface-muted: #eaedf8;
 
-$border-color: rgba(23, 20, 41, 0.11);
+$surface-subtle: #f3f5fb;
+
+$text-dark: #181a2d;
+
+$text-muted: #606579;
+
+$text-light: rgba(24, 26, 45, 0.64);
+
+$border-color: rgba(24, 26, 45, 0.1);
+
 $transparent-color: transparent;
-$overlay-color: rgba(13, 10, 31, 0.56);
+
+$overlay-color: rgba(10, 12, 28, 0.58);
 
 // ─── Dark theme: Midnight Jewel ───
-$dark-primary: #7c9cff; // Bright Sapphire
-$dark-primary-dark: #5273e8;
 
-$dark-secondary: #b794f6; // Soft Amethyst
-$dark-secondary-dark: #8b5cf6;
+$dark-primary: #8fa8ff; // Bright Sapphire
 
-$dark-tertiary: #f472b6; // Luminous Ruby Rose
-$dark-tertiary-dark: #db2777;
+$dark-primary-dark: #6682ed;
 
-$dark-accent: #fbfaff;
+$dark-secondary: #c1a0ff; // Soft Amethyst
 
-$dark-success: #60a5fa;
-$dark-danger: #fb7185;
-$dark-warning: #c084fc;
+$dark-secondary-dark: #986be8;
 
-$dark-bg: #090812;
-$dark-surface: #13111f;
-$dark-surface-muted: #211d35;
-$dark-surface-subtle: #181526;
+$dark-tertiary: #ff84ba; // Luminous Ruby Rose
 
-$dark-text: #fbfaff;
-$dark-text-muted: rgba(251, 250, 255, 0.74);
-$dark-text-light: rgba(251, 250, 255, 0.56);
+$dark-tertiary-dark: #de4f8e;
 
-$dark-border: rgba(235, 229, 255, 0.1);
-$dark-overlay: rgba(3, 2, 10, 0.78);
+$dark-accent: #f7f8ff;
+
+$dark-success: #6bb9ff;
+
+$dark-danger: #ff7895;
+
+$dark-warning: #cf93ff;
+
+$dark-bg: #070914;
+
+$dark-surface: #101420;
+
+$dark-surface-muted: #1d2336;
+
+$dark-surface-subtle: #151a2a;
+
+$dark-text: #f7f8ff;
+
+$dark-text-muted: rgba(235, 238, 255, 0.78);
+
+$dark-text-light: rgba(210, 216, 238, 0.6);
+
+$dark-border: rgba(222, 227, 255, 0.12);
+
+$dark-overlay: rgba(2, 3, 10, 0.82);
 
 // ─── Derived: light ───
-$hp-bg: #eceaf7;
+
+$hp-bg: #eaedf8;
 
 $hp-shimmer: linear-gradient(
   90deg,
   transparent 0%,
+
   rgba(255, 255, 255, 0.94) 50%,
+
   transparent 100%
 );
 
 // ─── Derived: soft / surface variants (light) ───
-$primary-soft: rgba(36, 59, 143, 0.1);
-$primary-softer: rgba(36, 59, 143, 0.05);
-$primary-surface: rgba(36, 59, 143, 0.12);
-$primary-surface-hover: rgba(36, 59, 143, 0.2);
-$primary-focus: rgba(36, 59, 143, 0.18);
-$primary-shadow: rgba(36, 59, 143, 0.2);
 
-$secondary-soft: rgba(109, 40, 217, 0.1);
-$secondary-surface: rgba(109, 40, 217, 0.12);
-$secondary-surface-hover: rgba(109, 40, 217, 0.2);
+$primary-soft: rgba(40, 71, 168, 0.1);
 
-$tertiary-soft: rgba(190, 24, 93, 0.1);
-$tertiary-surface: rgba(190, 24, 93, 0.14);
-$tertiary-surface-hover: rgba(190, 24, 93, 0.22);
+$primary-softer: rgba(40, 71, 168, 0.05);
 
-$danger-soft: rgba(225, 29, 72, 0.08);
-$success-soft: rgba(37, 99, 235, 0.08);
-$warning-soft: rgba(147, 51, 234, 0.08);
+$primary-surface: rgba(40, 71, 168, 0.12);
 
-$neutral-soft: rgba(23, 20, 41, 0.06);
-$neutral-softer: rgba(23, 20, 41, 0.03);
+$primary-surface-hover: rgba(40, 71, 168, 0.2);
+
+$primary-focus: rgba(40, 71, 168, 0.18);
+
+$primary-shadow: rgba(40, 71, 168, 0.2);
+
+$secondary-soft: rgba(117, 64, 201, 0.1);
+
+$secondary-surface: rgba(117, 64, 201, 0.12);
+
+$secondary-surface-hover: rgba(117, 64, 201, 0.2);
+
+$tertiary-soft: rgba(184, 47, 111, 0.1);
+
+$tertiary-surface: rgba(184, 47, 111, 0.14);
+
+$tertiary-surface-hover: rgba(184, 47, 111, 0.22);
+
+$danger-soft: rgba(217, 47, 92, 0.08);
+
+$success-soft: rgba(40, 120, 200, 0.08);
+
+$warning-soft: rgba(138, 74, 199, 0.08);
+
+$neutral-soft: rgba(24, 26, 45, 0.06);
+
+$neutral-softer: rgba(24, 26, 45, 0.03);
 
 // ─── Derived: soft / surface variants (dark) ───
-$dark-primary-soft: rgba(124, 156, 255, 0.16);
-$dark-primary-softer: rgba(124, 156, 255, 0.08);
-$dark-primary-surface: rgba(124, 156, 255, 0.18);
-$dark-primary-surface-hover: rgba(124, 156, 255, 0.28);
-$dark-primary-focus: rgba(124, 156, 255, 0.26);
-$dark-primary-shadow: rgba(124, 156, 255, 0.22);
 
-$dark-secondary-soft: rgba(183, 148, 246, 0.14);
-$dark-secondary-surface: rgba(183, 148, 246, 0.16);
-$dark-secondary-surface-hover: rgba(183, 148, 246, 0.24);
+$dark-primary-soft: rgba(143, 168, 255, 0.16);
 
-$dark-tertiary-soft: rgba(244, 114, 182, 0.14);
-$dark-tertiary-surface: rgba(244, 114, 182, 0.18);
-$dark-tertiary-surface-hover: rgba(244, 114, 182, 0.26);
+$dark-primary-softer: rgba(143, 168, 255, 0.08);
 
-$dark-danger-soft: rgba(251, 113, 133, 0.14);
-$dark-success-soft: rgba(96, 165, 250, 0.14);
-$dark-warning-soft: rgba(192, 132, 252, 0.14);
+$dark-primary-surface: rgba(143, 168, 255, 0.18);
 
-$dark-neutral-soft: rgba(251, 250, 255, 0.08);
-$dark-neutral-softer: rgba(251, 250, 255, 0.04);
+$dark-primary-surface-hover: rgba(143, 168, 255, 0.28);
+
+$dark-primary-focus: rgba(143, 168, 255, 0.26);
+
+$dark-primary-shadow: rgba(143, 168, 255, 0.22);
+
+$dark-secondary-soft: rgba(193, 160, 255, 0.14);
+
+$dark-secondary-surface: rgba(193, 160, 255, 0.16);
+
+$dark-secondary-surface-hover: rgba(193, 160, 255, 0.24);
+
+$dark-tertiary-soft: rgba(255, 132, 186, 0.14);
+
+$dark-tertiary-surface: rgba(255, 132, 186, 0.18);
+
+$dark-tertiary-surface-hover: rgba(255, 132, 186, 0.26);
+
+$dark-danger-soft: rgba(255, 120, 149, 0.14);
+
+$dark-success-soft: rgba(107, 185, 255, 0.14);
+
+$dark-warning-soft: rgba(207, 147, 255, 0.14);
+
+$dark-neutral-soft: rgba(247, 248, 255, 0.08);
+
+$dark-neutral-softer: rgba(247, 248, 255, 0.04);

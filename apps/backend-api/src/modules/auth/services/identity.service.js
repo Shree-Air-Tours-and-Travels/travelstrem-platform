@@ -1,5 +1,6 @@
 import AuthIdentity from "../models/AuthIdentity.js";
 import User from "../models/User.js";
+import { DEFAULT_PROFILE_AVATAR } from "../profileAvatar.constants.js";
 
 export class AuthServiceError extends Error {
     constructor(code, message, status = 400) {
@@ -76,7 +77,7 @@ export const authenticateWithGoogle = async ({ claims, portal = "customer" }) =>
                 name: String(claims.name || email.split("@")[0]).trim(),
                 email,
                 emailVerified: true,
-                avatar: String(claims.picture || "user"),
+                avatar: DEFAULT_PROFILE_AVATAR,
                 role: "member",
                 accountStatus: "active",
             });
@@ -103,7 +104,6 @@ export const authenticateWithGoogle = async ({ claims, portal = "customer" }) =>
     user.name = user.name || String(claims.name || email.split("@")[0]);
     user.email = user.email || email;
     user.emailVerified = Boolean(user.emailVerified || emailVerified);
-    if (claims.picture && (!user.avatar || user.avatar === "user")) user.avatar = claims.picture;
     await user.save();
     await AuthIdentity.updateOne(
         { _id: identity._id },

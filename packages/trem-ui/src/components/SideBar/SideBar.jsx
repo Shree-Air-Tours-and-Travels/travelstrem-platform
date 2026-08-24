@@ -2,12 +2,22 @@ import React, { useEffect, useMemo, useRef } from "react";
 import PropTypes from "prop-types";
 import BrandLogo from "../BrandLogo/BrandLogo.jsx";
 import Icon from "../../icons/Icon/Icon.jsx";
+import {
+  isAccountAvatarIcon,
+  resolveAccountAvatar,
+} from "../AccountProfile/accountAvatar.constants.js";
 import "./SideBar.styles.scss";
 
 function initials(user, fallback) {
   const value = (user?.name || user?.email || fallback || "T").trim();
   const words = value.split(/\s+/);
   return (words.length > 1 ? `${words[0][0]}${words.at(-1)[0]}` : value.slice(0, 2)).toUpperCase();
+}
+
+function renderAvatar(user, fallback) {
+  const avatar = resolveAccountAvatar(user?.avatar);
+  if (isAccountAvatarIcon(avatar)) return <Icon name={avatar} size={24} />;
+  return initials(user, fallback);
 }
 
 export default function SideBar({
@@ -28,6 +38,8 @@ export default function SideBar({
   const profileName =
     user?.[profile.nameKey || "name"] || user?.name || profile.fallbackName || "Traveller";
   const profileMeta = user?.[profile.metaKey || "membershipLabel"] || profile.fallbackMeta || "";
+  const brandSubtitle =
+    user?.[config.brand?.subtitleKey] || config.brand?.subtitle || config.brand?.fallbackSubtitle || "";
   const activeTargets = useMemo(
     () =>
       new Set(
@@ -90,7 +102,7 @@ export default function SideBar({
               logoSrc={config.brand?.logoSrc}
               darkLogoSrc={config.brand?.darkLogoSrc}
               name={config.brand?.name || "TravelsTREM"}
-              subtitle={config.brand?.subtitle}
+              subtitle={brandSubtitle}
               size="small"
             />
           </div>
@@ -164,7 +176,7 @@ export default function SideBar({
           className="trem-sidebar__profile"
           onClick={() => activate({ target: profile.actionTarget || "profile" })}
         >
-          <span className="trem-sidebar__avatar">{initials(user, profileName)}</span>
+          <span className="trem-sidebar__avatar">{renderAvatar(user, profileName)}</span>
           <span className="trem-sidebar__profile-copy">
             <strong>{profileName}</strong>
             {profileMeta ? <small>{profileMeta}</small> : null}

@@ -1,8 +1,23 @@
 import React from "react";
 import { get } from "lodash";
-import { Button, StatusBadge, SubTitle } from "@packages/trem-ui";
+import { Button, Icon, StatusBadge, SubTitle } from "@packages/trem-ui";
 import pageConfig from "./partnerAgencyPage.config.json";
 import api from "../../../services/apiClient";
+
+const maskValue = (value, type) => {
+  const text = String(value || "");
+  if (!text || text === "-") return "-";
+  if (type === "email") {
+    const [local = "", domain = ""] = text.split("@");
+    return `${local.slice(0, 2)}${"•".repeat(Math.max(4, local.length - 2))}${domain ? `@${domain}` : ""}`;
+  }
+  if (type === "phone") {
+    const visible = text.slice(-4);
+    return `${"•".repeat(Math.max(6, text.length - visible.length))}${visible}`;
+  }
+  const visible = text.slice(-4);
+  return `${"•".repeat(Math.max(6, text.length - visible.length))}${visible}`;
+};
 
 export default function PartnerAgencyPage({
   agencyApplication,
@@ -10,6 +25,7 @@ export default function PartnerAgencyPage({
   auth,
   onApplyAgency,
   fetchAgency,
+  embedded = false,
 }) {
   const [form, setForm] = React.useState({
     agencyName: "",
@@ -21,6 +37,7 @@ export default function PartnerAgencyPage({
   });
   const [submitting, setSubmitting] = React.useState(false);
   const [submitError, setSubmitError] = React.useState(null);
+  const [revealedFields, setRevealedFields] = React.useState(() => new Set());
   const [productState, setProductState] = React.useState({
     loading: false,
     products: [],
@@ -31,6 +48,15 @@ export default function PartnerAgencyPage({
   });
   const isLinked = auth.user?.partnerAgencyRef || get(agencyApplication, "status") === "approved";
   const isPartnerAdmin = auth.user?.agencyRole === "partner_admin";
+
+  const toggleFieldVisibility = (key) => {
+    setRevealedFields((current) => {
+      const next = new Set(current);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
 
   const loadProductRequests = React.useCallback(async () => {
     if (!isLinked || !isPartnerAdmin) return;
@@ -118,7 +144,7 @@ export default function PartnerAgencyPage({
       (product) => !enabledProducts.includes(product.key),
     );
     return (
-      <section className="agent-main-widget">
+      <section className={`agent-main-widget${embedded ? " is-agency-workspace-embedded" : ""}`}>
         <header className="agent-widget-toolbar">
           <SubTitle text={pageConfig.pageTitle} />
           <div className="agent-widget-actions">
@@ -134,14 +160,52 @@ export default function PartnerAgencyPage({
         </header>
         <div className="agency-section">
           <div className="agency-status-card">
-            <StatusBadge value={statusLabel} className="agency-status-badge" />
+            <div className="agency-status-card__intro">
+              <span className="agency-status-card__icon" aria-hidden="true">
+                <Icon name="shieldCheck" size={24} />
+              </span>
+              <div>
+                <span>{pageConfig.profileSummary.eyebrow}</span>
+                <h3>{pageConfig.profileSummary.title}</h3>
+                <p>{pageConfig.profileSummary.description}</p>
+              </div>
+              <StatusBadge value={statusLabel} className="agency-status-badge" />
+            </div>
             <dl className="agency-details">
-              {pageConfig.details.map((d) => (
-                <div key={d.key}>
-                  <dt>{d.label}</dt>
-                  <dd>{app[d.accessor] || auth.user?.[d.accessor] || "-"}</dd>
-                </div>
-              ))}
+              {pageConfig.details.map((detail) => {
+                const value = app[detail.accessor] || auth.user?.[detail.accessor] || "-";
+                const isRevealed = revealedFields.has(detail.key);
+                return (
+                  <div key={detail.key} className="agency-details__item">
+                    <span className="agency-details__icon" aria-hidden="true">
+                      <Icon name={detail.icon || "info"} size={18} />
+                    </span>
+                    <div className="agency-details__copy">
+                      <dt>{detail.label}</dt>
+                      <dd className={detail.sensitive && !isRevealed ? "is-masked" : ""}>
+                        {detail.sensitive && !isRevealed
+                          ? maskValue(value, detail.mask)
+                          : value}
+                      </dd>
+                    </div>
+                    {detail.sensitive && value !== "-" ? (
+                      <button
+                        type="button"
+                        className="agency-details__visibility"
+                        aria-label={`${
+                          isRevealed
+                            ? pageConfig.profileSummary.hideLabel
+                            : pageConfig.profileSummary.showLabel
+                        } ${detail.label}`}
+                        aria-pressed={isRevealed}
+                        onClick={() => toggleFieldVisibility(detail.key)}
+                      >
+                        <Icon name={isRevealed ? "eyeSlash" : "eye"} size={18} />
+                      </button>
+                    ) : null}
+                  </div>
+                );
+              })}
             </dl>
             {app.notes && <p className="agency-notes">Notes: {app.notes}</p>}
           </div>
@@ -252,7 +316,7 @@ export default function PartnerAgencyPage({
   }
 
   return (
-    <section className="agent-main-widget">
+    <section className={`agent-main-widget${embedded ? " is-agency-workspace-embedded" : ""}`}>
       <header className="agent-widget-toolbar">
         <SubTitle text={pageConfig.applyTitle} />
       </header>

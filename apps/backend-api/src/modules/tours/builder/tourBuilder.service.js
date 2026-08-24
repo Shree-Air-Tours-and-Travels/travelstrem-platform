@@ -12,6 +12,10 @@ import { sanitizeTourPayloadForUpdate } from "../controllers/tourController.js";
 import { getTourCheckpointPublishingState } from "../services/tourVisibility.service.js";
 import { syncDerivedTourDeparture } from "../services/tourDepartureSyncService.js";
 import {
+    applyTourIntelligence,
+    refreshTourIntelligence,
+} from "../services/tourIntelligence.service.js";
+import {
     applyProcessAction,
     getProcessSnapshot,
     PROCESS_ACTION,
@@ -21,6 +25,8 @@ import {
     REALTIME_EVENTS,
     publishFanOut,
     publishToCatalog,
+    publishToTour,
+    realtimeNotify,
     tourDto,
 } from "../../../realtime/index.js";
 import {
@@ -538,8 +544,36 @@ export async function saveBuilderPosition(req, { tourId, stepKey }) {
 const publishBuilderTourRealtime = (previousStatus, savedTour) => {
     try {
         const dto = tourDto(savedTour);
+        const tourTitle = dto.title || "Tour";
+        const becameUnavailable =
+            previousStatus === "published" && savedTour?.status !== "published";
+        if (previousStatus) {
+            publishToTour(String(savedTour._id), REALTIME_EVENTS.TOUR_UPDATED, dto, {
+                notify: realtimeNotify(
+                    becameUnavailable ? "Tour is no longer available" : "Tour updated",
+                    becameUnavailable
+                        ? `${tourTitle} was just unpublished. We will show the closest available alternatives.`
+                        : `${tourTitle} was updated.`,
+                    becameUnavailable ? "info" : "success",
+                    `tour:${dto.tourId || savedTour._id}:${becameUnavailable ? "unavailable" : "updated"}`,
+                ),
+            });
+
+            // Existing public tours must invalidate open catalog pages for
+            // card edits (featured/trending included) and unpublishing.
+            if (previousStatus === "published") {
+                publishToCatalog(REALTIME_EVENTS.TOUR_UPDATED, dto);
+            }
+        }
         if (!previousStatus) {
-            publishFanOut({ agencyId: dto.agencyId }, REALTIME_EVENTS.TOUR_CREATED, dto);
+            publishFanOut({ agencyId: dto.agencyId }, REALTIME_EVENTS.TOUR_CREATED, dto, {
+                notify: realtimeNotify(
+                    "Tour draft created",
+                    `${tourTitle} was saved as a draft.`,
+                    "success",
+                    `tour:${dto.tourId || savedTour._id}:created`,
+                ),
+            });
         }
         if (previousStatus !== "published" && savedTour?.status === "published") {
             publishToCatalog(REALTIME_EVENTS.TOUR_PUBLISHED, dto);
@@ -547,6 +581,14 @@ const publishBuilderTourRealtime = (previousStatus, savedTour) => {
                 { agencyId: dto.agencyId, skipAdmins: true },
                 REALTIME_EVENTS.TOUR_PUBLISHED,
                 dto,
+                {
+                    notify: realtimeNotify(
+                        "Tour published",
+                        `${tourTitle} is now live.`,
+                        "success",
+                        `tour:${dto.tourId || savedTour._id}:published`,
+                    ),
+                },
             );
         }
     } catch (error) {
@@ -682,9 +724,29 @@ export async function saveBuilderStep(req, { tourId, stepKey, data }) {
             { status: 403 },
         );
     }
-    if (sanitized.tremVerified !== undefined && !capabilities.canVerify)
-        delete sanitized.tremVerified;
-    if (sanitized.metrics !== undefined && !capabilities.canEditMetrics) delete sanitized.metrics;
+    // Merchandising and analytics are backend intelligence outputs. No portal
+    // role, including an agent or admin, may submit their resulting values.
+    delete sanitized.featured;
+    delete sanitized.trending;
+    delete sanitized.metrics;
+    delete sanitized.intelligence;
+    delete sanitized.tremVerified;
+    delete sanitized.reviews;
+    if (sanitized.featuredRequest !== undefined) {
+        const requested = sanitized.featuredRequest?.requested === true;
+        const actor = req.access?.user || req.user || {};
+        sanitized.featuredRequest = {
+            ...(tour?.featuredRequest?.toObject?.() || tour?.featuredRequest || {}),
+            requested,
+            status: requested ? "pending" : "not_requested",
+            requestedAt: requested ? new Date() : null,
+            requestedBy: requested ? actor._id || actor.sub || actor.id || null : null,
+            evaluatedAt: null,
+            reason: requested
+                ? "Waiting for TravelsTREM intelligence review."
+                : "Featured consideration has not been requested.",
+        };
+    }
     if (sanitized.slug !== undefined && !capabilities.canEditPlatformMeta) delete sanitized.slug;
     if (sanitized.visibility !== undefined && !capabilities.canEditVisibility)
         delete sanitized.visibility;
@@ -762,6 +824,7 @@ export async function saveBuilderStep(req, { tourId, stepKey, data }) {
         throw error;
     }
     savedTour.builderProcess = { ...transition.process, updatedAt: new Date() };
+    applyTourIntelligence(savedTour);
     await savedTour.save();
 
     if (
@@ -796,6 +859,7 @@ export async function saveBuilderStep(req, { tourId, stepKey, data }) {
         await syncDerivedTourDeparture(savedTour).catch(() => {});
     }
 
+    savedTour = (await refreshTourIntelligence(savedTour._id, { publish: false })) || savedTour;
     publishBuilderTourRealtime(previousStatus, savedTour);
 
     const neighbours = stepNeighbours(stepKey);

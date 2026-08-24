@@ -249,17 +249,18 @@
 
   &__item {
     width: 100%;
+    min-height: 46px;
     border: 0;
     background: transparent;
     color: var(--text);
     cursor: pointer;
-    padding: $space-2-5 $space-3;
+    padding: $space-2-5 $space-4;
     text-align: left;
     border-radius: $radius-xs;
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    gap: $space-2;
+    gap: $space-3;
     font-size: $font-size-sm;
     white-space: nowrap;
     overflow: hidden;
@@ -269,13 +270,16 @@
 
     > span:not(.ui-button__icon) {
       min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      overflow: visible;
+      text-overflow: clip;
+      white-space: nowrap;
     }
 
     .ui-button__icon {
-      width: 20px;
-      flex: 0 0 20px;
+      width: 22px;
+      flex: 0 0 22px;
+      display: inline-grid;
+      place-items: center;
     }
   }
 

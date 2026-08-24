@@ -14,7 +14,11 @@ describe("builderTemplate.service", () => {
         const tour = full();
         expect(tour.title).toBe("");
         expect(tour.distance).toBe(0);
-        expect(tour.featured).toBe(false);
+        expect(tour.featured).toBeUndefined();
+        expect(tour.trending).toBeUndefined();
+        expect(tour.tremVerified).toBeUndefined();
+        expect(tour.reviews).toBeUndefined();
+        expect(tour.featuredRequest).toEqual({ requested: false });
         expect(tour.startDate).toBe("YYYY-MM-DD");
         expect(tour.price).toEqual({
             min: 0,
@@ -84,6 +88,28 @@ describe("builderTemplate.service", () => {
         });
     });
 
+    test("does not expose nested Mongoose ids, virtuals or schema metadata", () => {
+        const forbidden = new Set(["_id", "path", "getters", "setters", "options"]);
+        const leaked = [];
+        const visit = (value, currentPath = "") => {
+            if (Array.isArray(value)) {
+                value.forEach((item, index) => visit(item, `${currentPath}[${index}]`));
+                return;
+            }
+            if (!value || typeof value !== "object") return;
+            Object.entries(value).forEach(([key, child]) => {
+                const childPath = currentPath ? `${currentPath}.${key}` : key;
+                if (forbidden.has(key)) leaked.push(childPath);
+                visit(child, childPath);
+            });
+        };
+
+        visit(full());
+        expect(leaked).toEqual([]);
+        // searchTags.id is an intentional business identifier, not a virtual.
+        expect(full().searchTags[0].id).toBe("");
+    });
+
     test("computed commercial.derived is nulled for shape only", () => {
         expect(full().commercial.derived).toBeNull();
     });
@@ -117,6 +143,8 @@ describe("builderTemplate.service", () => {
         });
         expect(payload.tour.title).toBeDefined();
         expect(payload.tour.commercial).toBeUndefined();
+        expect(Object.keys(payload.enums)).toEqual(["visibility"]);
+        expect(Object.keys(payload.enums)).not.toContain("commercial.packages.tier");
     });
 
     test("collection steps expose their backing record schema", () => {

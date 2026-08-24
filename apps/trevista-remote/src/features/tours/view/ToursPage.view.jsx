@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import "../tours.scss";
 import QuickFilters from "../widgets/quick-filters/QuickFilters";
 import Filters from "../widgets/filters/Filters";
@@ -51,20 +51,11 @@ export default function ToursPageView({
   const sortOptions = listingProps.sortOptions?.length ? listingProps.sortOptions : [];
   const sortLabel = listingLabels.sortBy || listingProps.sortLabel || "Sort by";
 
-  const filterSidebarRef = useRef(null);
   const [sortSheetOpen, setSortSheetOpen] = useState(false);
-
-  const scrollToFilters = () => {
-    if (filterSidebarRef.current) {
-      filterSidebarRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  };
+  const [filtersSheetOpen, setFiltersSheetOpen] = useState(false);
 
   const handleOpenFilters = () => {
-    scrollToFilters();
-    if (!filtersExpanded && onFiltersExpandedChange) {
-      onFiltersExpandedChange(true);
-    }
+    setFiltersSheetOpen(true);
   };
 
   const handleSortSelect = (optionId) => {
@@ -114,7 +105,7 @@ export default function ToursPageView({
           if (w.type === "filters") {
             return (
               <React.Fragment key={w.type}>
-                <div className="tours-page__body" ref={filterSidebarRef}>
+                <div className="tours-page__body">
                   <aside className="tours-page__sidebar">
                     <div className="tours-page__sidebar-inner">
                       <Filters
@@ -185,6 +176,30 @@ export default function ToursPageView({
           </div>
         </BottomSheet>
       )}
+
+      <BottomSheet
+        open={filtersSheetOpen}
+        onClose={() => setFiltersSheetOpen(false)}
+        title="Filter tours"
+        className="tours-page__filters-sheet"
+      >
+        <Filters
+          onChange={handleFilterChange}
+          widgetData={filterWidgetData}
+          sortId={sortId}
+          pageSize={8}
+          expanded
+          onExpandedChange={(next) => {
+            if (next === false) setFiltersSheetOpen(false);
+          }}
+          values={filterValues}
+          facets={facets}
+          discoveryOptions={discoveryOptions}
+          totalResults={totalResults}
+          searching={loadingMore}
+          mode="modal"
+        />
+      </BottomSheet>
 
       <FloatingActionBar
         actions={fabActions}

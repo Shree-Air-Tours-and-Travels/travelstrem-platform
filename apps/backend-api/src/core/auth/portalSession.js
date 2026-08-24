@@ -42,11 +42,11 @@ const rawNodeEnv = String(process.env.NODE_ENV || "development")
     .toLowerCase();
 export const ENV_TIER =
     rawNodeEnv === "production" ? "production" : rawNodeEnv === "test" ? "test" : "development";
-const isProduction = ENV_TIER === "production";
+const isProductionLike = ENV_TIER === "production" || ENV_TIER === "test";
 const isTestTier = ENV_TIER === "test";
 
 const sharedCookieDomain = String(process.env.AUTH_COOKIE_DOMAIN || "").trim();
-const useSharedCookieDomain = isProduction && Boolean(sharedCookieDomain);
+const useSharedCookieDomain = isProductionLike && Boolean(sharedCookieDomain);
 
 /**
  * Optional explicit override for production deployments whose API lives on a
@@ -61,7 +61,7 @@ const useCrossSiteCookies = ["none", "cross-site"].includes(configuredSameSite);
 const cookieSameSite =
     useCrossSiteCookies || isTestTier
         ? "none"
-        : isProduction && !useSharedCookieDomain
+        : isProductionLike && !useSharedCookieDomain
           ? "strict"
           : "lax";
 
@@ -71,7 +71,7 @@ export const getPortalCookieNames = (reqOrScope) => {
             ? normalizePortalScope(reqOrScope)
             : getPortalScope(reqOrScope);
     const prefix =
-        isProduction && !useSharedCookieDomain && cookieSameSite === "strict" ? "__Host-" : "";
+        isProductionLike && !useSharedCookieDomain && cookieSameSite === "strict" ? "__Host-" : "";
     return {
         scope,
         access: `${prefix}trem-${scope}-token`,
@@ -82,7 +82,7 @@ export const getPortalCookieNames = (reqOrScope) => {
 export const portalCookieOptions = ({ maxAge = 0 } = {}) => ({
     httpOnly: true,
     // SameSite=None requires the Secure attribute per spec.
-    secure: cookieSameSite === "none" ? true : isProduction,
+    secure: cookieSameSite === "none" ? true : isProductionLike,
     sameSite: cookieSameSite,
     path: "/",
     ...(useSharedCookieDomain ? { domain: sharedCookieDomain } : {}),

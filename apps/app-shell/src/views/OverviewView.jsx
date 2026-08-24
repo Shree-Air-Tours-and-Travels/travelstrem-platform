@@ -1,11 +1,13 @@
 import React from "react";
 import {
+  Button,
   Icon,
   MetricSummary,
   NoDataFound,
   OverviewRail,
   PlanCards,
   Preloader,
+  StatusBadge,
 } from "@packages/trem-ui";
 import "./OverviewView.scss";
 
@@ -19,6 +21,10 @@ function getTimeOfDay() {
 export default function OverviewView({
   user,
   stats,
+  copy = {},
+  journeyStage = "discover",
+  journeyHero,
+  sections = {},
   metricsDefinition,
   recentActivity = [],
   upcomingTrips = [],
@@ -32,38 +38,88 @@ export default function OverviewView({
 }) {
   const metricItems = (metricsDefinition?.items || []).map((item) => ({
     ...item,
-    label: metricsDefinition.labels?.[item.labelRef] || item.label || "",
+    label: item.label || "",
     value: stats?.[item.valueKey] ?? 0,
     onClick: item.target ? () => onTabChange?.(item.target) : undefined,
   }));
-  const recentItems = (recentActivity || []).slice(0, 5);
-  const tripItems = (upcomingTrips || []).slice(0, 5);
+  const recentItems = (recentActivity || []).slice(0, sections.recent?.limit || 5);
+  const tripItems = (upcomingTrips || []).slice(0, sections.upcoming?.limit || 5);
   const showTripsPanel = Boolean(upcomingEmptyState) || tripItems.length > 0;
   const showRecentPanel = Boolean(recentEmptyState) || recentItems.length > 0;
+  const heroState = journeyHero?.states?.[journeyStage] || journeyHero?.states?.discover;
+  const greetingKey = `greeting${getTimeOfDay().replace(/^./, (value) => value.toUpperCase())}`;
+  const firstName = user?.name?.trim()?.split(/\s+/)[0] || copy.greetingFallbackName || "";
+
+  const renderHeroAction = (action, variant) => {
+    if (!action?.label) return null;
+    return (
+      <Button
+        key={`${variant}-${action.targetTab || action.href || action.label}`}
+        text={action.label}
+        iconLeft={action.icon}
+        iconRight={variant === "solid" ? "chevronRight" : null}
+        variant={variant}
+        color="primary"
+        href={action.href}
+        onClick={action.targetTab ? () => onTabChange?.(action.targetTab) : undefined}
+        className="dov__hero-action"
+      />
+    );
+  };
 
   return (
     <div className="dov">
-      <div className="dov__greeting">
-        <h1>
-          Good {getTimeOfDay()}, {user?.name?.split(" ")[0] || "there"} 👋{" "}
-        </h1>
-        <p>Here's what's happening with your travel plans</p>
-      </div>
+      {heroState ? (
+        <section className="dov__hero" aria-label={journeyHero?.ariaLabel}>
+          <div className="dov__hero-copy">
+            <span className="dov__hero-eyebrow">
+              <Icon name="sparkles" size={16} />
+              {journeyHero?.eyebrow}
+            </span>
+            <p className="dov__hero-greeting">
+              {copy[greetingKey]}, {firstName} <span aria-hidden="true">👋</span>
+            </p>
+            <h1>{heroState.title}</h1>
+            <p className="dov__hero-description">{heroState.description}</p>
+            <div className="dov__hero-actions">
+              {renderHeroAction(heroState.primaryAction, "solid")}
+              {renderHeroAction(heroState.secondaryAction, "outline")}
+            </div>
+          </div>
+          <div className="dov__hero-visual" aria-hidden="true">
+            <span className="dov__hero-orbit dov__hero-orbit--outer" />
+            <span className="dov__hero-orbit dov__hero-orbit--inner" />
+            <span className="dov__hero-plane"><Icon name="plane" size={34} /></span>
+            <span className="dov__hero-pin dov__hero-pin--one"><Icon name="destination" size={18} /></span>
+            <span className="dov__hero-pin dov__hero-pin--two"><Icon name="heart" size={17} /></span>
+          </div>
+          <div className="dov__hero-trust">
+            {(journeyHero?.trustItems || []).map((item) => (
+              <span key={item.id}>
+                <Icon name={item.icon} size={15} />
+                {item.label}
+              </span>
+            ))}
+          </div>
+        </section>
+      ) : (
+        <div className="dov__greeting">
+          <h1>{copy[greetingKey]}, {firstName}</h1>
+          <p>{copy.greetingDescription}</p>
+        </div>
+      )}
 
       {overviewStatsLoading || overviewDefinitionLoading ? (
         <Preloader
           variant="stats"
           count={1}
-          label="Loading statistics"
+          label={copy.loadingStatistics}
           className="dov__stats-preloader"
         />
       ) : metricItems.length ? (
         <MetricSummary
           items={metricItems}
-          ariaLabel={
-            metricsDefinition.labels?.[metricsDefinition.ariaLabelRef] ||
-            metricsDefinition.ariaLabelRef
-          }
+          ariaLabel={metricsDefinition.ariaLabel}
           className="dov__stats"
         />
       ) : null}
@@ -74,7 +130,7 @@ export default function OverviewView({
             <Preloader
               variant="cards"
               count={3}
-              label="Loading journey planning options"
+              label={copy.loadingPlanning}
               className="dov__plan-cards"
             />
           ) : planCards ? (
@@ -82,8 +138,11 @@ export default function OverviewView({
           ) : null}
 
           {showRecentPanel && (
-            <section className="dov__section" aria-label="Recent bookings and enquiries">
-              <h2 className="dov__section-title">Recent bookings &amp; enquiries</h2>
+            <section className="dov__section dov__activity" aria-label={copy.recentSectionAriaLabel}>
+              <div className="dov__section-heading">
+                <span className="dov__section-icon"><Icon name="clock" size={18} /></span>
+                <h2 className="dov__section-title">{copy.recentBookingsTitle}</h2>
+              </div>
               {recentItems.length ? (
                 <ul className="dov__recent">
                   {recentItems.map((item) => (
@@ -91,21 +150,25 @@ export default function OverviewView({
                       <button
                         type="button"
                         className="dov__recent-item"
-                        onClick={() => onTabChange?.("bookings")}
-                        aria-label={`Open ${item.title || "enquiry"} in My Bookings`}
+                        onClick={() => onTabChange?.(sections.recent?.targetTab)}
+                        aria-label={`${copy.recentOpenAction}: ${item.title || copy.recentDefaultTitle}`}
                       >
+                        <span className="dov__recent-icon" aria-hidden="true">
+                          <Icon name={item.icon || "clock"} size={18} />
+                        </span>
                         <span className="dov__recent-info">
                           <span className="dov__recent-name">
-                            {item.title || "General tour enquiry"}
+                            {item.activityTitle || item.title || copy.recentDefaultTitle}
                           </span>
+                          {item.description ? (
+                            <span className="dov__recent-description">{item.description}</span>
+                          ) : null}
                           <span className="dov__recent-meta">
                             {item.enquiryRef && <span>{item.enquiryRef}</span>}
-                            <span>{item.request?.departure || ""}</span>
+                            <span>{item.title || item.request?.departure || ""}</span>
                           </span>
                         </span>
-                        <span className={`dov__recent-status dov__recent-status--${item.status}`}>
-                          {item.statusLabel || item.status}
-                        </span>
+                        <StatusBadge value={item.statusLabel || item.status} size="sm" />
                       </button>
                     </li>
                   ))}
@@ -113,7 +176,7 @@ export default function OverviewView({
               ) : (
                 <NoDataFound
                   icon={recentEmptyState?.icon}
-                  title={recentEmptyState?.title || "Nothing here yet"}
+                  title={recentEmptyState?.title}
                   description={recentEmptyState?.description}
                   actionLabel={recentEmptyState?.actionLabel}
                   actionHref={recentEmptyState?.actionHref}
@@ -126,7 +189,11 @@ export default function OverviewView({
 
         <div className="dov__side">
           {showTripsPanel && (
-            <section className="dov__section dov__trips-panel" aria-label="Upcoming trips">
+            <section className="dov__section dov__trips-panel" aria-label={copy.upcomingSectionAriaLabel}>
+              <div className="dov__section-heading">
+                <span className="dov__section-icon"><Icon name="calendarDays" size={18} /></span>
+                <h2 className="dov__section-title">{copy.upcomingTripsTitle}</h2>
+              </div>
               {tripItems.length ? (
                 <ul className="dov__trips">
                   {tripItems.map((trip) => (
@@ -134,8 +201,8 @@ export default function OverviewView({
                       <button
                         type="button"
                         className="dov__trip-card"
-                        onClick={() => onTabChange?.("bookings")}
-                        aria-label={`Open ${trip.title} in My Bookings`}
+                        onClick={() => onTabChange?.(sections.upcoming?.targetTab)}
+                        aria-label={`${copy.upcomingOpenAction}: ${trip.title}`}
                       >
                         <span className="dov__trip-icon">
                           <Icon name="plane" />
@@ -152,7 +219,7 @@ export default function OverviewView({
               ) : (
                 <NoDataFound
                   icon={upcomingEmptyState?.icon}
-                  title={upcomingEmptyState?.title || "No upcoming trips"}
+                  title={upcomingEmptyState?.title}
                   description={upcomingEmptyState?.description}
                   actionLabel={upcomingEmptyState?.actionLabel}
                   actionHref={upcomingEmptyState?.actionHref}
@@ -166,11 +233,15 @@ export default function OverviewView({
             <Preloader
               variant="stack"
               count={3}
-              label="Loading travel tools"
+              label={copy.loadingTools}
               className="dov__rail"
             />
           ) : overviewRail ? (
-            <OverviewRail {...overviewRail} className="dov__rail" />
+            <OverviewRail
+              {...overviewRail}
+              className="dov__rail"
+              onAction={(targetTab) => onTabChange?.(targetTab)}
+            />
           ) : null}
         </div>
       </div>

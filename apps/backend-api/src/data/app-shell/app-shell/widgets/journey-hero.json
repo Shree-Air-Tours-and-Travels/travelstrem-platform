@@ -1,0 +1,106 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": { "options": {} },
+    "elements": {
+      "labels": {
+        "heroAriaLabel": "Your travel planning overview",
+        "heroEyebrow": "YOUR JOURNEY HUB",
+        "heroDiscoverTitle": "Where will your next story begin?",
+        "heroDiscoverDescription": "Discover thoughtfully curated tours, save the ones you love, and request a personalised quote when you are ready.",
+        "heroAwaitingTitle": "Your travel request is moving forward",
+        "heroAwaitingDescription": "A travel specialist is reviewing your plans. You can track every response and update from your bookings workspace.",
+        "heroActiveTitle": "Keep shaping your next journey",
+        "heroActiveDescription": "Your travel conversations are saved in one place, ready whenever you want to compare or continue planning.",
+        "heroUpcomingTitle": "Your next adventure is getting closer",
+        "heroUpcomingDescription": "Review your upcoming trip details and keep everything you need for departure close at hand.",
+        "heroExploreAction": "Explore tours",
+        "heroBookingsAction": "View my requests",
+        "heroFavoritesAction": "Open wishlist",
+        "heroTrustOne": "Curated experiences",
+        "heroTrustTwo": "Verified travel partners",
+        "heroTrustThree": "Personalised planning"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "JourneyHero",
+          "props": {
+            "ariaLabelRef": "heroAriaLabel",
+            "eyebrowRef": "heroEyebrow",
+            "stageKey": "journeyStage",
+            "states": {
+              "discover": {
+                "titleRef": "heroDiscoverTitle",
+                "descriptionRef": "heroDiscoverDescription",
+                "primaryAction": {
+                  "labelRef": "heroExploreAction",
+                  "targetTab": "trevista",
+                  "icon": "map"
+                },
+                "secondaryAction": {
+                  "labelRef": "heroFavoritesAction",
+                  "targetTab": "favorites",
+                  "icon": "heart"
+                }
+              },
+              "awaiting": {
+                "titleRef": "heroAwaitingTitle",
+                "descriptionRef": "heroAwaitingDescription",
+                "primaryAction": {
+                  "labelRef": "heroBookingsAction",
+                  "targetTab": "bookings",
+                  "icon": "briefcaseBusiness"
+                },
+                "secondaryAction": {
+                  "labelRef": "heroExploreAction",
+                  "targetTab": "trevista",
+                  "icon": "map"
+                }
+              },
+              "active": {
+                "titleRef": "heroActiveTitle",
+                "descriptionRef": "heroActiveDescription",
+                "primaryAction": {
+                  "labelRef": "heroBookingsAction",
+                  "targetTab": "bookings",
+                  "icon": "briefcaseBusiness"
+                },
+                "secondaryAction": {
+                  "labelRef": "heroFavoritesAction",
+                  "targetTab": "favorites",
+                  "icon": "heart"
+                }
+              },
+              "upcoming": {
+                "titleRef": "heroUpcomingTitle",
+                "descriptionRef": "heroUpcomingDescription",
+                "primaryAction": {
+                  "labelRef": "heroBookingsAction",
+                  "targetTab": "bookings",
+                  "icon": "calendarDays"
+                },
+                "secondaryAction": {
+                  "labelRef": "heroExploreAction",
+                  "targetTab": "trevista",
+                  "icon": "map"
+                }
+              }
+            },
+            "trustItems": [
+              { "id": "curated", "labelRef": "heroTrustOne", "icon": "sparkles" },
+              { "id": "verified", "labelRef": "heroTrustTwo", "icon": "shield" },
+              { "id": "personalised", "labelRef": "heroTrustThree", "icon": "compass" }
+            ]
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

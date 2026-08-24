@@ -34,12 +34,47 @@ export default function QuoteComparison({
   labels = {},
   loading = false,
   error = "",
+  requirements = [],
   onSelectAlternative,
 }) {
+  const completedRequirements = requirements.filter((item) => item.complete).length;
+  const requirementProgress = requirements.length
+    ? Math.round((completedRequirements / requirements.length) * 100)
+    : 0;
+
   if (loading)
     return (
-      <section className="trem-quote-comparison is-loading" aria-live="polite">
-        {labels.calculating || "Updating your price…"}
+      <section
+        className="trem-quote-comparison trem-quote-comparison--calculation is-loading"
+        aria-live="polite"
+        aria-busy="true"
+      >
+        <div className="trem-quote-comparison__calculation-hero">
+          <span className="trem-quote-comparison__calculation-icon" aria-hidden="true">
+            <Icon name="sparkles" size={22} />
+          </span>
+          <div>
+            <strong>{labels.calculating || "Calculating your TREM price…"}</strong>
+            <p>
+              {labels.calculatingDescription ||
+                "Comparing package components, rooms and traveller pricing."}
+            </p>
+          </div>
+          {labels.intelligenceTag ? (
+            <span className="trem-quote-comparison__intelligence">
+              <Icon name="sparkles" size={14} />
+              {labels.intelligenceTag}
+            </span>
+          ) : null}
+        </div>
+        <div className="trem-quote-comparison__calculation-track" aria-hidden="true">
+          <span />
+        </div>
+        <div className="trem-quote-comparison__skeleton" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </div>
       </section>
     );
   if (error)
@@ -48,7 +83,65 @@ export default function QuoteComparison({
         {error}
       </section>
     );
-  if (!preview) return null;
+  if (!preview)
+    return (
+      <section
+        className="trem-quote-comparison trem-quote-comparison--calculation is-awaiting"
+        aria-label={labels.summary || "Quote summary"}
+      >
+        <div className="trem-quote-comparison__calculation-hero">
+          <span className="trem-quote-comparison__calculation-icon" aria-hidden="true">
+            <Icon name="sparkles" size={22} />
+          </span>
+          <div>
+            <strong>{labels.assistantTitle || "Build your intelligent price"}</strong>
+            <p>
+              {labels.assistantDescription ||
+                "Complete the trip details and TREM Intelligence will compare your options."}
+            </p>
+          </div>
+          {labels.intelligenceTag ? (
+            <span className="trem-quote-comparison__intelligence">
+              <Icon name="sparkles" size={14} />
+              {labels.intelligenceTag}
+            </span>
+          ) : null}
+        </div>
+        {requirements.length ? (
+          <>
+            <div className="trem-quote-comparison__progress-copy">
+              <span>{labels.detailsProgress || "Pricing details"}</span>
+              <strong>
+                {completedRequirements}/{requirements.length}
+              </strong>
+            </div>
+            <div
+              className="trem-quote-comparison__progress"
+              role="progressbar"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              aria-valuenow={requirementProgress}
+            >
+              <span style={{ width: `${requirementProgress}%` }} />
+            </div>
+            <ul className="trem-quote-comparison__requirements">
+              {requirements.map((item) => (
+                <li className={item.complete ? "is-complete" : ""} key={item.id || item.label}>
+                  <span aria-hidden="true">
+                    <Icon name={item.complete ? "check" : "circleDot"} size={14} />
+                  </span>
+                  {item.label}
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : null}
+        <p className="trem-quote-comparison__calculation-note">
+          {labels.waitingForDetails ||
+            "Your estimate will appear here when the required selections are ready."}
+        </p>
+      </section>
+    );
   const alternative = preview.recommendedAlternative;
   const hasDifference =
     alternative?.absoluteDifferenceMinor != null && alternative?.differencePerPersonMinor != null;
@@ -86,6 +179,12 @@ export default function QuoteComparison({
             {labels.rooms || "rooms"}
           </small>
         </div>
+        {labels.intelligenceTag ? (
+          <span className="trem-quote-comparison__intelligence">
+            <Icon name="sparkles" size={14} />
+            {labels.intelligenceTag}
+          </span>
+        ) : null}
       </header>
       <div className="trem-quote-comparison__rows">
         <div>

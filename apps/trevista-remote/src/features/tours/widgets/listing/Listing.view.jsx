@@ -169,6 +169,7 @@ export default function ListingView({
             <TourCard
               tour={t}
               variant="management"
+              size="dense"
               onView={onView}
               favorited={isFavorited(t)}
               onFavorite={onFavorite}
@@ -179,7 +180,7 @@ export default function ListingView({
                 featured: listingLabels.featured || "Featured",
                 trending: listingLabels.trending || "Trending",
                 verified: listingLabels.verified || "TREM verified",
-                viewTour: listingLabels.viewTour || "View tour",
+                viewTour: listingLabels.viewTour || "Explore this Tour",
               }}
             />
           </div>

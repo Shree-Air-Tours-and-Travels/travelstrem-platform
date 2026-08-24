@@ -285,6 +285,9 @@ importers:
       '@packages/trem-auth-core':
         specifier: workspace:*
         version: link:../../packages/trem-auth-core
+      '@packages/trem-events':
+        specifier: workspace:*
+        version: link:../../packages/trem-events
       '@packages/trem-ui':
         specifier: workspace:*
         version: link:../../packages/trem-ui
@@ -606,6 +609,16 @@ importers:
   packages/trem-environment: {}
 
   packages/trem-events:
+    dependencies:
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+      socket.io-client:
+        specifier: ^4.8.3
+        version: 4.8.3
     devDependencies:
       jsdom:
         specifier: ^26.0.0
@@ -701,6 +714,9 @@ importers:
       '@packages/trem-design-tokens':
         specifier: workspace:*
         version: link:../trem-design-tokens
+      '@packages/trem-events':
+        specifier: workspace:*
+        version: link:../trem-events
       '@packages/trem-process-engine':
         specifier: workspace:*
         version: link:../trem-process-engine
@@ -722,9 +738,6 @@ importers:
       react-router-dom:
         specifier: ^7.8.2
         version: 7.15.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      socket.io-client:
-        specifier: ^4.8.3
-        version: 4.8.3
     devDependencies:
       '@testing-library/jest-dom':
         specifier: ^6.6.3
@@ -744,6 +757,9 @@ importers:
       '@packages/trem-auth-core':
         specifier: workspace:*
         version: link:../trem-auth-core
+      '@packages/trem-events':
+        specifier: workspace:*
+        version: link:../trem-events
       axios:
         specifier: ^1.8.4
         version: 1.16.0

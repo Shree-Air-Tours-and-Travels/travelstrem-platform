@@ -3,9 +3,8 @@ import {
   Button,
   EnquiryCenter,
   InputField,
-  useEnquiryRealtime,
-  useRealtimeStatus,
 } from "@packages/trem-ui";
+import { useEnquiryRealtime, useRealtimeStatus } from "@packages/trem-events";
 import { fetchData, useRefreshOnActivation } from "@packages/trem-utils";
 import "./BookingsView.scss";
 

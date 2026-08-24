@@ -49,7 +49,7 @@ export function UpcomingTripCard({
   );
 }
 
-export function QuickActionsCard({ title, items = [], hideDisabled = false }) {
+export function QuickActionsCard({ title, items = [], hideDisabled = false, onAction }) {
   const visibleItems = items.filter((item) => !item.hide && !(hideDisabled && item.disabled));
   if (!visibleItems.length) return null;
 
@@ -60,16 +60,24 @@ export function QuickActionsCard({ title, items = [], hideDisabled = false }) {
       </header>
       <nav aria-label={title}>
         {visibleItems.map((item) => {
-          const Tag = item.disabled ? "div" : "a";
+          const useButton = !item.disabled && Boolean(item.targetTab);
+          const Tag = item.disabled ? "div" : useButton ? "button" : "a";
+          const interactionProps = item.disabled
+            ? {}
+            : useButton
+              ? { type: "button", onClick: () => onAction?.(item.targetTab, item) }
+              : {
+                  href: item.href,
+                  target: item.target || "_self",
+                  rel: linkRel(item.target, item.rel),
+                };
           return (
             <Tag
               key={item.id}
-              href={item.disabled ? undefined : item.href}
-              target={item.disabled ? undefined : item.target || "_self"}
-              rel={item.disabled ? undefined : linkRel(item.target, item.rel)}
               aria-label={item.ariaLabel || item.title}
               aria-disabled={item.disabled || undefined}
               className={item.disabled ? "is-disabled" : ""}
+              {...interactionProps}
             >
               <span className="trem-quick-actions__icon">
                 <Icon name={item.icon} size={20} />
@@ -137,7 +145,7 @@ const WIDGET_COMPONENTS = {
   exclusiveOffer: ExclusiveOfferCard,
 };
 
-export default function OverviewRail({ widgets = [], ariaLabel = "", className = "" }) {
+export default function OverviewRail({ widgets = [], ariaLabel = "", className = "", onAction }) {
   const visibleWidgets = widgets.filter((widget) => !widget.hide);
   if (!visibleWidgets.length) return null;
 
@@ -148,7 +156,7 @@ export default function OverviewRail({ widgets = [], ariaLabel = "", className =
     >
       {visibleWidgets.map(({ id, type, ...props }) => {
         const Widget = WIDGET_COMPONENTS[type];
-        return Widget ? <Widget key={id} {...props} /> : null;
+        return Widget ? <Widget key={id} {...props} onAction={onAction} /> : null;
       })}
     </aside>
   );
@@ -160,6 +168,7 @@ const actionShape = PropTypes.shape({
   description: PropTypes.string,
   icon: PropTypes.string,
   href: PropTypes.string,
+  targetTab: PropTypes.string,
   target: PropTypes.string,
   rel: PropTypes.string,
   ariaLabel: PropTypes.string,
@@ -171,6 +180,7 @@ QuickActionsCard.propTypes = {
   title: PropTypes.string.isRequired,
   items: PropTypes.arrayOf(actionShape),
   hideDisabled: PropTypes.bool,
+  onAction: PropTypes.func,
 };
 
 UpcomingTripCard.propTypes = {
@@ -216,4 +226,5 @@ OverviewRail.propTypes = {
   ),
   ariaLabel: PropTypes.string,
   className: PropTypes.string,
+  onAction: PropTypes.func,
 };

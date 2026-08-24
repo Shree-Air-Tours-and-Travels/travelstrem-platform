@@ -13,3 +13,10 @@ const userSession = createUserSession({
 
 export const initUserSession = userSession.initUserSession;
 export const clearUserSessionCache = userSession.clearUserSessionCache;
+export const validateUserSession = async (params = {}) => {
+  clearUserSessionCache();
+  return userSession.initUserSession({
+    ...params,
+    _sessionCheck: Date.now(),
+  });
+};

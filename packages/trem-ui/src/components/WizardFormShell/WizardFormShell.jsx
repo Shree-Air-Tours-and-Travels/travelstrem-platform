@@ -15,15 +15,30 @@ export default function WizardFormShell({
   canNavigate = true,
   onStepChange,
   headerActions,
+  railTitle = "Build your tour",
+  railSubtitle,
   children,
   actionBar,
   className = "",
 }) {
+  const mainRef = React.useRef(null);
   const currentIndex = Math.max(
     0,
     steps.findIndex((step) => step.id === activeStepId),
   );
   const current = steps[currentIndex] || {};
+
+  React.useLayoutEffect(() => {
+    const main = mainRef.current;
+    if (!main) return;
+    if (typeof main.scrollTo === "function") {
+      main.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      return;
+    }
+    main.scrollTop = 0;
+    main.scrollLeft = 0;
+  }, [activeStepId]);
+
   return (
     <section className={`wizard-shell ${className}`.trim()}>
       <header className="wizard-shell__topbar">
@@ -40,8 +55,8 @@ export default function WizardFormShell({
       <div className="wizard-shell__layout">
         <aside className="wizard-shell__rail">
           <div className="wizard-shell__rail-heading">
-            <strong>Build your tour</strong>
-            <span>{steps.length} guided steps</span>
+            <strong>{railTitle}</strong>
+            <span>{railSubtitle || `${steps.length} guided steps`}</span>
           </div>
           <nav aria-label="Creation steps">
             {steps.map((step, index) => {
@@ -68,7 +83,7 @@ export default function WizardFormShell({
             })}
           </nav>
         </aside>
-        <div className="wizard-shell__main">
+        <div ref={mainRef} className="wizard-shell__main">
           <header className="wizard-shell__step-header">
             <div>
               <span className="wizard-shell__step-count">

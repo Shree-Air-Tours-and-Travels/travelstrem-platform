@@ -97,7 +97,28 @@ export const CheckboxWidget = ({ widget, value, onChange, error }) => (
   </label>
 );
 
-export const SwitchWidget = CheckboxWidget;
+export const SwitchWidget = ({ widget, value, onChange, error }) => {
+  const disabled = !!widget.readOnly || !!widget.disabled;
+  return (
+    <label className={`tb-switch${disabled ? " tb-switch--disabled" : ""}`}>
+      <input
+        type="checkbox"
+        role="switch"
+        checked={!!value}
+        disabled={disabled}
+        onChange={(event) => onChange(widget.path, event.target.checked)}
+      />
+      <span className="tb-switch__track" aria-hidden="true">
+        <span className="tb-switch__thumb" />
+      </span>
+      <span className="tb-switch__copy">
+        <strong>{widget.label}</strong>
+        {widget.help ? <small>{widget.help}</small> : null}
+        {error?.length ? <small className="tb-field__error">{error[0]}</small> : null}
+      </span>
+    </label>
+  );
+};
 
 const toDateInput = (iso) => (iso ? String(iso).slice(0, 10) : "");
 const toTimeInput = (iso) =>

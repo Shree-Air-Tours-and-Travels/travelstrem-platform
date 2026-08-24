@@ -7,7 +7,6 @@ import {
   ScrollToTopButton,
   useTheme,
   useFavoritesContext,
-  RealtimeProvider,
   Toaster,
 } from "@packages/trem-ui";
 import AppRoutes from "./routes";
@@ -25,6 +24,7 @@ import {
   emit,
   registerSessionCacheClearer,
   initRealtimeNotifications,
+  RealtimeProvider,
 } from "@packages/trem-events";
 import { API_BASE } from "../services/configService";
 import { clearUserSessionCache } from "../services/userSession";

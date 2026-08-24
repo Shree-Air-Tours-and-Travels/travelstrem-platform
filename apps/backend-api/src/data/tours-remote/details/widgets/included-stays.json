@@ -54,6 +54,8 @@
         "viewOptions": "View hotel options",
         "optionsTitle": "Hotel options",
         "optionsSubtitle": "Compare hotels, room types, amenities and prices. Options included in your selected plan are clearly marked.",
+        "optionsEmptyTitle": "No alternate hotels available yet",
+        "optionsEmptyDescription": "This stay currently has no alternate hotel or room options. Request another hotel and your agent will confirm suitable choices in the quote.",
         "recommended": "Recommended",
         "selected": "Selected",
         "pricePending": "Price on request",
@@ -65,6 +67,7 @@
         "applyHotel": "Apply hotel",
         "customize": "Customise this tour",
         "cancel": "Cancel",
+        "close": "Close hotel options",
         "nightsLabel": "nights",
         "empty": "This tour does not include accommodation. Contact our team for hotel options."
       },
