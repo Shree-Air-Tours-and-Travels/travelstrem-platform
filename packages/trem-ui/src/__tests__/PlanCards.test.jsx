@@ -14,6 +14,11 @@ const items = [
     imageAlt: "Tropical holiday destination",
     href: "https://trevista.example.com",
     ariaLabel: "Explore holiday packages on Trevista",
+    highlights: [
+      { id: "curated", icon: "sparkles", label: "Curated itineraries" },
+      { id: "flexible", icon: "settings", label: "Flexible packages" },
+    ],
+    actionLabel: "Explore this product",
   },
 ];
 
@@ -25,6 +30,9 @@ describe("PlanCards", () => {
     expect(screen.getByText("Trevista")).toBeInTheDocument();
     expect(screen.getByText("Holiday Packages")).toBeInTheDocument();
     expect(screen.getByText("Domestic & international")).toBeInTheDocument();
+    expect(screen.getByText("Curated itineraries")).toBeInTheDocument();
+    expect(screen.getByText("Flexible packages")).toBeInTheDocument();
+    expect(screen.getByText("Explore this product")).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "Explore holiday packages on Trevista" }),
     ).toHaveAttribute("href", "https://trevista.example.com");
@@ -100,5 +108,15 @@ describe("PlanCards", () => {
     expect(section.style.getPropertyValue("--trem-plan-cards-columns")).toBe("4");
     expect(section).toHaveClass("trem-plan-cards--hide-unavailable-mobile");
     expect(container.querySelector(".trem-plan-card--disabled")).toBeInTheDocument();
+  });
+
+  it("supports a backend-selected horizontal product stack", () => {
+    const { container } = render(
+      <PlanCards title="Explore products" layout="horizontal-stack" items={items} />,
+    );
+
+    expect(container.querySelector(".trem-plan-cards")).toHaveClass(
+      "trem-plan-cards--horizontal-stack",
+    );
   });
 });

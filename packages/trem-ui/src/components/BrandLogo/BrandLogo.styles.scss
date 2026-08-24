@@ -41,10 +41,13 @@
   }
 
   &__subtitle {
+    overflow: hidden;
     color: var(--muted);
     font-size: $font-size-xs;
     font-weight: $font-medium;
     letter-spacing: 0.01em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   &--small {

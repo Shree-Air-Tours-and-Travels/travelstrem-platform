@@ -6,6 +6,18 @@ import { PERMISSIONS } from "./permissions.js";
 import * as controller from "./controller.js";
 
 const router = express.Router();
+router.get("/partnership-workflow", controller.getPartnershipWorkflow);
+router.post("/partnership-requests/drafts", controller.createPartnershipDraft);
+router.get("/partnership-requests/drafts/:id", controller.getPartnershipDraft);
+router.patch("/partnership-requests/drafts/:id", controller.savePartnershipDraft);
+router.post(
+    "/partnership-requests/drafts/:id/submit",
+    documentUpload.fields([
+        { name: "documents", maxCount: 8 },
+        { name: "logo", maxCount: 1 },
+    ]),
+    controller.submitPartnershipDraft,
+);
 router.post(
     "/partnership-requests",
     documentUpload.fields([
@@ -52,6 +64,11 @@ router.patch(
     "/partnership-requests/:id/status",
     requirePermission(PERMISSIONS.PARTNERSHIP_REVIEW),
     controller.reviewPartnershipRequest,
+);
+router.delete(
+    "/partnership-requests/:id",
+    requirePermission(PERMISSIONS.PARTNERSHIP_DRAFT_DELETE),
+    controller.deletePartnershipDraft,
 );
 router.post(
     "/partnership-requests/:id/convert",

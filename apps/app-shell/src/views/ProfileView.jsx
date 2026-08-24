@@ -1,58 +1,46 @@
 import React from "react";
-import ProfileForm from "../components/ProfileForm";
+import { AccountProfile } from "@packages/trem-ui";
 import "./ProfileView.scss";
 
-export default function ProfileView({ user, onSaveProfile, saving }) {
+export default function ProfileView({
+  user,
+  onSaveProfile,
+  onUpdatePassword,
+  onUpdateAvatar,
+  saving,
+  passwordSaving,
+  avatarSaving,
+}) {
+  const profileUser = { ...(user || {}), accountRole: "member" };
+  const meaningfulRole = (value, ignored) => {
+    const normalized = String(value || "").trim().toLowerCase();
+    return normalized && !ignored.includes(normalized);
+  };
+  const hasElevatedIdentity = Boolean(
+    meaningfulRole(user?.adminLevel, ["none", "not_required"]) ||
+      meaningfulRole(user?.agencyRole, ["none", "member", "not_required"]) ||
+      meaningfulRole(user?.agentApprovalStatus, ["none", "not_required"]) ||
+      user?.agentRef ||
+      user?.agencyRef ||
+      user?.partnerAgencyRef,
+  );
+
   return (
     <div className="dpv">
-      <div className="dpv__header">
-        <h1 className="dpv__title">Profile</h1>
-        <p className="dpv__subtitle">Manage your account settings</p>
-      </div>
-
-      <div className="dpv__grid">
-        <div className="dpv__main">
-          <ProfileForm user={user} onSave={onSaveProfile} loading={saving} />
-        </div>
-
-        <div className="dpv__side">
-          <div className="dpv__card">
-            <div className="dpv__avatar">
-              {(user?.name || user?.email || "U").charAt(0).toUpperCase()}
-            </div>
-            <h3 className="dpv__name">{user?.name || "User"}</h3>
-            <p className="dpv__email">{user?.email || ""}</p>
-            {user?.phone && <p className="dpv__phone">{user.phone}</p>}
-          </div>
-
-          <div className="dpv__card">
-            <h4 className="dpv__card-title">Account Details</h4>
-            <div className="dpv__detail">
-              <span className="dpv__detail-label">Member since</span>
-              <span className="dpv__detail-value">{formatDate(user?.createdAt)}</span>
-            </div>
-            <div className="dpv__detail">
-              <span className="dpv__detail-label">User ID</span>
-              <span className="dpv__detail-value dpv__detail-value--mono">
-                {user?.id?.slice(-8) || "—"}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
+      <AccountProfile
+        user={profileUser}
+        title="Profile"
+        subtitle="View and manage your TravelsTREM account."
+        portalLabel="Traveller"
+        roleLabel="Logged in as"
+        saving={saving}
+        passwordSaving={passwordSaving}
+        avatarSaving={avatarSaving}
+        showExtendedAccountDetails={hasElevatedIdentity}
+        onSaveProfile={onSaveProfile}
+        onUpdatePassword={onUpdatePassword}
+        onUpdateAvatar={onUpdateAvatar}
+      />
     </div>
   );
-}
-
-function formatDate(dateStr) {
-  if (!dateStr) return "—";
-  try {
-    return new Date(dateStr).toLocaleDateString("en-IN", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-  } catch {
-    return "—";
-  }
 }

@@ -9,6 +9,7 @@ export default function PlanCards({
   ariaLabel = "",
   className = "",
   columns = 4,
+  layout = "grid",
   hideUnavailableOnMobile = false,
 }) {
   const visibleItems = items.filter((item) => !item.hide);
@@ -18,6 +19,7 @@ export default function PlanCards({
     <section
       className={[
         "trem-plan-cards",
+        layout === "horizontal-stack" ? "trem-plan-cards--horizontal-stack" : "",
         hideUnavailableOnMobile ? "trem-plan-cards--hide-unavailable-mobile" : "",
         className,
       ]
@@ -56,10 +58,14 @@ PlanCards.propTypes = {
       comingSoonLabel: PropTypes.string,
       mobileIcon: PropTypes.string,
       tone: PropTypes.string,
+      highlights: PropTypes.arrayOf(PropTypes.object),
+      highlightsAriaLabel: PropTypes.string,
+      actionLabel: PropTypes.string,
     }),
   ),
   ariaLabel: PropTypes.string,
   className: PropTypes.string,
   columns: PropTypes.number,
+  layout: PropTypes.oneOf(["grid", "horizontal-stack"]),
   hideUnavailableOnMobile: PropTypes.bool,
 };

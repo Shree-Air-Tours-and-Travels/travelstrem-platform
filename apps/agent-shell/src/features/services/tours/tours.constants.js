@@ -57,13 +57,12 @@ export const REQUIRED_TOUR_FIELDS = [
 
 export const VALID_TABS = new Set([
   "dashboard",
-  "agents",
+  "agencyWorkspace",
   "customers",
   "reports",
   "deletions",
   "notifications",
   "profile",
-  "partnerAgency",
   "settings",
 ]);
 
@@ -75,13 +74,12 @@ export const TAB_WIDGET_MAP = {
 
 export const PATH_BY_TAB = {
   dashboard: "/agent/dashboard",
-  agents: "/agent/agents",
+  agencyWorkspace: "/agent/agency",
   customers: "/agent/customers",
   reports: "/agent/reports",
   deletions: "/agent/deletion-requests",
   notifications: "/agent/notifications",
   profile: "/agent/profile",
-  partnerAgency: "/agent/partner-agency",
   settings: "/agent/settings",
 };
 
@@ -92,7 +90,9 @@ export const getAgentNavSections = (isPartnerAdmin = false) => [
     items: [
       { id: "dashboard", label: "Dashboard", icon: "home" },
       { id: "services", label: isPartnerAdmin ? "Agency Trips" : "My Trips", icon: "map" },
-      ...(isPartnerAdmin ? [{ id: "agents", label: "Agents", icon: "users" }] : []),
+      ...(isPartnerAdmin
+        ? [{ id: "agencyWorkspace", label: "Agency Workspace", icon: "building2" }]
+        : []),
       { id: "customers", label: isPartnerAdmin ? "Customers" : "My Customers", icon: "user" },
       ...(isPartnerAdmin
         ? [
@@ -101,9 +101,6 @@ export const getAgentNavSections = (isPartnerAdmin = false) => [
           ]
         : []),
       { id: "profile", label: "Profile", icon: "user" },
-      ...(isPartnerAdmin
-        ? [{ id: "partnerAgency", label: "Agency Profile", icon: "building2" }]
-        : []),
       { id: "settings", label: "Settings", icon: "settings" },
       { id: "notifications", label: "Notifications", icon: "bell" },
     ],

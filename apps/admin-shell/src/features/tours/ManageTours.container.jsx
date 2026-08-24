@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { fetchData } from "@packages/trem-utils";
+import { showRealtimeToast } from "@packages/trem-events";
 import {
   deleteAllTours,
   deleteTour,
@@ -18,16 +19,42 @@ import {
   reviewAgent,
   reviewPartnerAgency,
 } from "../../services/adminService";
+import { useAdminPortalConfig } from "../../app/providers/AdminPortalProvider";
 import ManageToursView from "./ManageTours.view";
 
-const VALID_TABS = new Set(["overview", "enquiries", "services", "tenancy", "profile"]);
+const VALID_TABS = new Set([
+  "overview",
+  "enquiries",
+  "services",
+  "tenancy",
+  "clients",
+  "profile",
+]);
 
 const getTabFromSearch = (search) => {
   const tab = new URLSearchParams(search || "").get("tab") || "overview";
   return VALID_TABS.has(tab) ? tab : "overview";
 };
 
-export default function ManageTours({ session, tab: tabProp }) {
+const resolveEntityId = (value) => {
+  if (value == null) return "";
+  if (["string", "number"].includes(typeof value)) return String(value);
+  if (typeof value === "object") {
+    return (
+      resolveEntityId(value._id) ||
+      resolveEntityId(value.id) ||
+      resolveEntityId(value.$oid) ||
+      resolveEntityId(value.value)
+    );
+  }
+  return "";
+};
+
+const resolveTourId = (tourOrId) =>
+  resolveEntityId(tourOrId?._id) || resolveEntityId(tourOrId?.id) || resolveEntityId(tourOrId);
+
+export default function ManageTours({ session }) {
+  const { reload: reloadPortalSession } = useAdminPortalConfig();
   const location = useLocation();
   const navigate = useNavigate();
   const auth = {
@@ -43,6 +70,9 @@ export default function ManageTours({ session, tab: tabProp }) {
   const [agents, setAgents] = useState([]);
   const [partnerAgencies, setPartnerAgencies] = useState([]);
   const [profile, setProfile] = useState(null);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [avatarSaving, setAvatarSaving] = useState(false);
   const [agencyLoading, setAgencyLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [tripFormOpen, setTripFormOpen] = useState(false);
@@ -55,6 +85,9 @@ export default function ManageTours({ session, tab: tabProp }) {
   const [confirmMessage, setConfirmMessage] = useState("");
   const [toast, setToast] = useState({ message: "", type: "info", visible: false });
   const [stats, setStats] = useState({ totalTours: 0, totalTrips: 0 });
+  const [dashboardDefinition, setDashboardDefinition] = useState(null);
+  const [dashboardLoading, setDashboardLoading] = useState(true);
+  const [dashboardError, setDashboardError] = useState("");
 
   const setTab = useCallback(
     (nextTab) => {
@@ -68,16 +101,48 @@ export default function ManageTours({ session, tab: tabProp }) {
   );
 
   const showToast = useCallback((message, type = "info", durationMs = 3000) => {
-    setToast({ message, type, visible: true });
-    setTimeout(() => setToast({ message: "", type: "info", visible: false }), durationMs);
+    showRealtimeToast({
+      title: message,
+      status: type,
+      durationMs,
+      dedupeKey: `admin:${type}:${message}`,
+    });
   }, []);
+
+  const handleToastState = useCallback(
+    (nextToast) => {
+      if (nextToast?.visible && nextToast.message) {
+        showToast(nextToast.message, nextToast.type || "info");
+        return;
+      }
+      setToast({ message: "", type: "info", visible: false });
+    },
+    [reloadPortalSession, showToast],
+  );
 
   useEffect(() => {
     fetchTours();
     fetchTrips();
     fetchAgencyManagement();
     fetchProfile();
+    loadDashboard();
   }, []);
+
+  async function loadDashboard() {
+    setDashboardLoading(true);
+    setDashboardError("");
+    try {
+      const response = await fetchData("/pages/admin-shell/dashboard");
+      if (response?.status !== "success" || !response?.component) {
+        throw new Error(response?.message || "Dashboard data is unavailable");
+      }
+      setDashboardDefinition(response.component);
+    } catch (dashboardRequestError) {
+      setDashboardError(dashboardRequestError?.message || "Dashboard data is unavailable");
+    } finally {
+      setDashboardLoading(false);
+    }
+  }
 
   useEffect(() => {
     const nextTab = getTabFromSearch(location.search);
@@ -186,7 +251,9 @@ export default function ManageTours({ session, tab: tabProp }) {
   }
 
   function handleDelete(id) {
-    setConfirmDelete(id);
+    const tourId = resolveTourId(id);
+    if (!tourId) return;
+    setConfirmDelete(tourId);
     setConfirmMessage("Delete this tour? This action cannot be undone.");
   }
   function handleDeleteAll() {
@@ -194,7 +261,9 @@ export default function ManageTours({ session, tab: tabProp }) {
     setConfirmMessage("Delete ALL tours? This is irreversible. Continue?");
   }
   function handleTripDelete(id) {
-    setConfirmDelete(`trip:${id}`);
+    const tripId = resolveTourId(id);
+    if (!tripId) return;
+    setConfirmDelete(`trip:${tripId}`);
     setConfirmMessage("Delete this trip? This action cannot be undone.");
   }
   function handleTripDeleteAll() {
@@ -226,16 +295,18 @@ export default function ManageTours({ session, tab: tabProp }) {
     navigate("/manage/tours/builder");
   }
   function openEdit(t) {
-    const id = t?._id || t?.id;
+    const id = resolveTourId(t);
     if (id) navigate(`/manage/tours/${encodeURIComponent(id)}/edit`);
   }
   function openView(t) {
-    const id = t?._id || t?.id;
+    const id = resolveTourId(t);
     if (id) navigate(`/manage/tours/${encodeURIComponent(id)}/view`);
   }
   async function verifyTour(id) {
     try {
-      await verifyAdminTour(id);
+      const tourId = resolveTourId(id);
+      if (!tourId) return;
+      await verifyAdminTour(tourId);
       showToast("Tour verified by TravelsTREM", "success");
       await fetchTours();
     } catch (e) {
@@ -266,6 +337,7 @@ export default function ManageTours({ session, tab: tabProp }) {
 
   const handleSaveProfile = useCallback(
     async (data) => {
+      setProfileSaving(true);
       try {
         const res = await fetchData("/auth/profile", {
           method: "PUT",
@@ -274,19 +346,76 @@ export default function ManageTours({ session, tab: tabProp }) {
         });
         if (res?.status === "success") {
           setProfile(res.componentData?.data);
+          reloadPortalSession?.();
           showToast("Profile updated", "success");
           return { success: true };
         }
         return { success: false, message: res?.message || "Something went wrong" };
-      } catch {
-        return { success: false, message: "Something went wrong" };
+      } catch (error) {
+        const message = error?.response?.data?.message || error?.message || "Something went wrong";
+        showToast(message, "error");
+        return { success: false, message };
+      } finally {
+        setProfileSaving(false);
       }
     },
     [showToast],
   );
 
+  const handleUpdatePassword = useCallback(
+    async (data) => {
+      setPasswordSaving(true);
+      try {
+        const res = await fetchData("/auth/password", {
+          method: "PUT",
+          body: JSON.stringify(data),
+          headers: { "Content-Type": "application/json" },
+        });
+        if (res?.status === "success") {
+          showToast("Password updated", "success");
+          return { success: true };
+        }
+        return { success: false, message: res?.message || "Password update failed" };
+      } catch (error) {
+        const message = error?.response?.data?.message || error?.message || "Password update failed";
+        showToast(message, "error");
+        return { success: false, message };
+      } finally {
+        setPasswordSaving(false);
+      }
+    },
+    [showToast],
+  );
+
+  const handleUpdateAvatar = useCallback(
+    async (avatar) => {
+      setAvatarSaving(true);
+      try {
+        const res = await fetchData("/auth/profile", {
+          method: "PUT",
+          body: JSON.stringify({ avatar }),
+          headers: { "Content-Type": "application/json" },
+        });
+        if (res?.status === "success") {
+          setProfile(res.componentData?.data);
+          reloadPortalSession?.();
+          showToast("Avatar updated", "success");
+          return { success: true };
+        }
+        return { success: false, message: res?.message || "Avatar update failed" };
+      } catch (error) {
+        const message = error?.response?.data?.message || error?.message || "Avatar update failed";
+        showToast(message, "error");
+        return { success: false, message };
+      } finally {
+        setAvatarSaving(false);
+      }
+    },
+    [reloadPortalSession, showToast],
+  );
+
   const refreshAll = useCallback(async () => {
-    await Promise.all([fetchTours(), fetchTrips()]);
+    await Promise.all([fetchTours(), fetchTrips(), loadDashboard()]);
   }, []);
 
   return (
@@ -302,6 +431,10 @@ export default function ManageTours({ session, tab: tabProp }) {
       loading={loading}
       agencyLoading={agencyLoading}
       stats={stats}
+      dashboardDefinition={dashboardDefinition}
+      dashboardLoading={dashboardLoading}
+      dashboardError={dashboardError}
+      refreshDashboard={loadDashboard}
       auth={auth}
       error={error}
       tripFormOpen={tripFormOpen}
@@ -335,9 +468,14 @@ export default function ManageTours({ session, tab: tabProp }) {
       handleReviewAgent={handleReviewAgent}
       handleReviewPartnerAgency={handleReviewPartnerAgency}
       handleSaveProfile={handleSaveProfile}
+      handleUpdatePassword={handleUpdatePassword}
+      handleUpdateAvatar={handleUpdateAvatar}
+      profileSaving={profileSaving}
+      passwordSaving={passwordSaving}
+      avatarSaving={avatarSaving}
       refreshAll={refreshAll}
       toast={toast}
-      setToast={setToast}
+      setToast={handleToastState}
     />
   );
 }

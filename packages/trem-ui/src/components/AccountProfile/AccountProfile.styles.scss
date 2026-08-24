@@ -1,0 +1,351 @@
+@import "@packages/trem-design-tokens/scss";
+
+.trem-account-profile {
+  width: 100%;
+  color: var(--text);
+}
+
+.trem-account-profile__page-head {
+  display: grid;
+  gap: $space-3;
+  margin-bottom: $space-6;
+
+  h1 {
+    margin: 0 0 $space-1;
+    color: var(--heading);
+    font-size: clamp(1.75rem, 3vw, 2.35rem);
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+  }
+
+  p {
+    margin: 0;
+    color: var(--muted);
+    font-size: $font-size-sm;
+  }
+}
+
+.trem-account-profile__eyebrow {
+  width: max-content;
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  padding: $space-1-5 $space-3;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 24%, var(--border));
+  border-radius: $radius-full;
+  background: var(--primary-softer);
+  color: var(--color-primary);
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.trem-account-profile__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: $space-5;
+  align-items: start;
+}
+
+.trem-account-profile__main,
+.trem-account-profile__side {
+  min-width: 0;
+  display: grid;
+  gap: $space-4;
+}
+
+.trem-account-profile__card {
+  min-width: 0;
+  padding: $space-5;
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+  background: var(--card-bg);
+  box-shadow: var(--shadow-xs);
+}
+
+.trem-account-profile__identity-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-4;
+}
+
+.trem-account-profile__identity {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: $space-4;
+
+  h2,
+  p,
+  small {
+    margin: 0;
+  }
+
+  h2 {
+    color: var(--heading);
+    font-size: $font-size-lg;
+    line-height: $line-height-sm;
+  }
+
+  p,
+  small {
+    color: var(--muted);
+    font-size: $font-size-sm;
+  }
+}
+
+.trem-account-profile__avatar {
+  flex: 0 0 auto;
+  display: inline-grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 22%, transparent);
+  border-radius: $radius-circle;
+  background: linear-gradient(135deg, var(--primary-softer), var(--surface));
+  color: var(--color-primary);
+  font-weight: $font-bold;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  svg {
+    display: block;
+  }
+}
+
+.trem-account-profile__avatar--large {
+  width: $space-16;
+  height: $space-16;
+}
+
+.trem-account-profile__avatar--medium {
+  width: $space-12;
+  height: $space-12;
+}
+
+.trem-account-profile__actions,
+.trem-account-profile__form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-2;
+}
+
+.trem-account-profile__card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-4;
+  margin-bottom: $space-4;
+
+  h3,
+  p {
+    margin: 0;
+  }
+
+  h3 {
+    color: var(--heading);
+    font-size: $font-size-md;
+  }
+
+  p {
+    margin-top: $space-1;
+    color: var(--muted);
+    font-size: $font-size-sm;
+  }
+}
+
+.trem-account-profile__readonly,
+.trem-account-profile__form {
+  display: grid;
+  gap: $space-3;
+}
+
+.trem-account-profile__readonly {
+  margin: 0;
+}
+
+.trem-account-profile__detail {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-4;
+  padding: $space-3 0;
+  border-bottom: 1px solid var(--border);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  span {
+    color: var(--muted);
+    font-size: $font-size-sm;
+  }
+
+  strong {
+    color: var(--heading);
+    font-size: $font-size-sm;
+    font-weight: $font-semibold;
+    text-align: right;
+  }
+
+  .is-badge {
+    padding: 2px $space-2;
+    border-radius: $radius-full;
+    background: var(--primary-soft);
+    color: var(--color-primary);
+    font-size: $font-size-xs;
+    text-transform: capitalize;
+  }
+
+  .is-mono {
+    font-family: "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: $font-size-xs;
+  }
+}
+
+.trem-account-profile__form {
+  label {
+    display: grid;
+    gap: $space-1-5;
+
+    > span {
+      color: var(--muted);
+      font-size: $font-size-sm;
+      font-weight: $font-semibold;
+    }
+  }
+
+  input {
+    width: 100%;
+    min-height: 44px;
+    padding: 0 $space-3;
+    border: 1px solid var(--border);
+    border-radius: $radius-sm;
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+
+    &:focus {
+      outline: 0;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 16%, transparent);
+    }
+  }
+}
+
+.trem-account-profile__error {
+  margin: 0;
+  padding: $space-2 $space-3;
+  border: 1px solid color-mix(in srgb, var(--color-danger) 34%, transparent);
+  border-radius: $radius-sm;
+  background: var(--danger-soft);
+  color: var(--color-danger);
+  font-size: $font-size-sm;
+}
+
+.trem-account-profile__security-note {
+  display: flex;
+  align-items: flex-start;
+  gap: $space-3;
+  padding: $space-3;
+  border-radius: $radius-sm;
+  background: var(--surface-inset);
+  color: var(--muted);
+  font-size: $font-size-sm;
+}
+
+.trem-account-profile__summary {
+  display: grid;
+  justify-items: center;
+  gap: $space-2;
+  text-align: center;
+
+  h3,
+  p {
+    margin: 0;
+  }
+
+  h3 {
+    color: var(--heading);
+  }
+
+  p {
+    color: var(--muted);
+    font-size: $font-size-sm;
+  }
+}
+
+.trem-account-profile__side-title {
+  margin: 0 0 $space-3;
+  color: var(--heading);
+  font-size: $font-size-md;
+}
+
+.trem-account-profile__avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: $space-2;
+
+  button {
+    min-height: 44px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: $radius-sm;
+    background: var(--surface);
+    color: var(--muted);
+    line-height: 0;
+
+    svg {
+      display: block;
+    }
+
+    &:hover,
+    &:focus-visible,
+    &.is-active {
+      outline: 0;
+      border-color: var(--color-primary);
+      background: var(--primary-softer);
+      color: var(--color-primary);
+    }
+
+    &.is-active {
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 14%, transparent);
+    }
+  }
+}
+
+@media (max-width: 960px) {
+  .trem-account-profile__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .trem-account-profile__identity-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: $breakpoint-mobile) {
+  .trem-account-profile__card {
+    padding: $space-4;
+  }
+
+  .trem-account-profile__identity {
+    align-items: flex-start;
+  }
+
+  .trem-account-profile__card-head {
+    flex-direction: column;
+  }
+
+  .trem-account-profile__avatar-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

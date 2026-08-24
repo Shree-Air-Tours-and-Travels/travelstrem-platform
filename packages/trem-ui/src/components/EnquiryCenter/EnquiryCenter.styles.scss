@@ -159,11 +159,15 @@
 
 @media (max-width: 720px) {
   .trem-enquiries {
-    padding: $space-4;
+    gap: $space-4;
+    padding: 0;
   }
   .trem-enquiries__hero {
     align-items: flex-start;
     flex-direction: column;
+    gap: $space-3;
+    padding: $space-4;
+    border-radius: var(--radius-md);
   }
   .trem-enquiries__row {
     grid-template-columns: minmax(0, 1fr) auto;

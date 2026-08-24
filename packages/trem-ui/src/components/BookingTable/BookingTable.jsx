@@ -439,7 +439,26 @@ export default function BookingTable({
             <div
               id="booking-table-mobile-controls"
               className={`booking-table__controls${mobileControlsOpen ? " is-mobile-open" : ""}`}
+              role={mobileControlsOpen ? "dialog" : undefined}
+              aria-modal={mobileControlsOpen ? "true" : undefined}
+              aria-label={mobileControlsOpen ? table.filtersSheetTitle || "Filter records" : undefined}
             >
+              {mobileControlsOpen ? (
+                <div className="booking-table__sheet-header">
+                  <div>
+                    <span>{table.filtersSheetEyebrow || "Refine results"}</span>
+                    <strong>{table.filtersSheetTitle || "Filters and sorting"}</strong>
+                  </div>
+                  <button
+                    type="button"
+                    className="booking-table__sheet-close"
+                    aria-label={table.closeFiltersLabel || "Close filters"}
+                    onClick={() => setMobileControlsOpen(false)}
+                  >
+                    <Icon name="x" size={20} aria-hidden="true" />
+                  </button>
+                </div>
+              ) : null}
               {actions.search ? (
                 <SearchBar
                   value={query}
@@ -497,9 +516,47 @@ export default function BookingTable({
                   />
                 </div>
               ) : null}
+              {mobileControlsOpen ? (
+                <div className="booking-table__sheet-actions">
+                  <Button
+                    variant="outline"
+                    color="primary"
+                    text={table.clearFiltersLabel || "Clear filters"}
+                    onClick={() => {
+                      const resetFilters = (actions.filters || []).reduce(
+                        (acc, filter) => ({
+                          ...acc,
+                          [filter.id]: filter.defaultValue || "all",
+                        }),
+                        {},
+                      );
+                      setFilters(resetFilters);
+                      (actions.filters || []).forEach((filter) =>
+                        filter.onChange?.(resetFilters[filter.id]),
+                      );
+                      updateSearch("");
+                      resetPage();
+                    }}
+                  />
+                  <Button
+                    color="primary"
+                    text={table.applyFiltersLabel || "Show results"}
+                    onClick={() => setMobileControlsOpen(false)}
+                  />
+                </div>
+              ) : null}
             </div>
           </div>
         )}
+
+        {mobileControlsOpen ? (
+          <button
+            type="button"
+            className="booking-table__sheet-backdrop"
+            aria-label={table.closeFiltersLabel || "Close filters"}
+            onClick={() => setMobileControlsOpen(false)}
+          />
+        ) : null}
 
         <div className="booking-table__scroll" tabIndex={0}>
           <table

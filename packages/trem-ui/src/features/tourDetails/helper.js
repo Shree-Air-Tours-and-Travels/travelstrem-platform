@@ -7,7 +7,10 @@ const MONEY_FORMATTERS = new Map();
  */
 export const getDisplayText = (value, fallback = "") => {
   if (value == null) return fallback;
-  if (typeof value === "string") return value.trim() || fallback;
+  if (typeof value === "string") {
+    const text = value.trim();
+    return text && text !== "[object Object]" ? text : fallback;
+  }
   if (typeof value === "number" || typeof value === "boolean") return String(value);
   if (Array.isArray(value)) {
     const text = value
@@ -18,7 +21,17 @@ export const getDisplayText = (value, fallback = "") => {
   }
   if (typeof value !== "object") return fallback;
 
-  const direct = value.label ?? value.name ?? value.title;
+  const direct =
+    value.slug ??
+    value.tourRef ??
+    value.value ??
+    value.label ??
+    value.name ??
+    value.title ??
+    value.en ??
+    value.default ??
+    value._id ??
+    value.id;
   if (direct != null && direct !== value) return getDisplayText(direct, fallback);
 
   const city = getDisplayText(value.city);
@@ -33,7 +46,7 @@ export const getDisplayText = (value, fallback = "") => {
 };
 
 export const slugifyTitle = (value = "") =>
-  String(value)
+  getDisplayText(value)
     .trim()
     .toLowerCase()
     .replace(/&/g, " and ")

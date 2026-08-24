@@ -18,6 +18,7 @@
     "migrate:authentication": "cross-env NODE_ENV=development USE_DOTENV=true node src/scripts/migrateAuthentication.js",
     "migrate:financial-engine-indexes": "cross-env NODE_ENV=development USE_DOTENV=true node src/scripts/migrateFinancialEngineIndexes.js",
     "migrate:tour-commercial-pricing": "cross-env NODE_ENV=development USE_DOTENV=true node src/scripts/migrateTourCommercialPricing.js",
+    "migrate:tour-intelligence": "cross-env USE_DOTENV=true node src/scripts/recalculateTourIntelligence.js",
     "audit:empty-database": "cross-env NODE_ENV=development USE_DOTENV=true node src/scripts/clearOperationalData.js",
     "reset:empty-database": "cross-env NODE_ENV=development USE_DOTENV=true node src/scripts/clearOperationalData.js --apply",
     "reset:travel-catalog": "cross-env NODE_ENV=development USE_DOTENV=true node src/scripts/resetTravelCatalog.js",

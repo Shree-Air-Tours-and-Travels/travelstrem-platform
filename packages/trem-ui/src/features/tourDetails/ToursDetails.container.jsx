@@ -1,6 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { fetchData, useComponentData } from "@packages/trem-utils";
+import {
+  REALTIME_EVENTS,
+  useRealtimeEvent,
+  useTourRealtime,
+} from "@packages/trem-events";
 import { useFavoritesContext } from "../../context/FavoritesContext.jsx";
 import { ProductDetailProvider, WIDGET_API_OPTIONS } from "./context/ProductDetailContext.js";
 import ToursDetailsView, { DetailSkeleton, EmptyState } from "./ToursDetails.view";
@@ -29,6 +34,37 @@ const PRODUCT_CONFIG = {
   },
 };
 
+const normalizeRouteRef = (value) => {
+  if (!value) return "";
+  if (typeof value === "string" || typeof value === "number") {
+    const ref = String(value).trim();
+    const decoded = (() => {
+      try {
+        return decodeURIComponent(ref);
+      } catch {
+        return ref;
+      }
+    })();
+    return decoded === "[object Object]" ? "" : ref;
+  }
+  if (typeof value === "object") {
+    return normalizeRouteRef(
+      value.slug ||
+        value.tourRef ||
+        value.tripRef ||
+        value.value ||
+        value.label ||
+        value.name ||
+        value.title ||
+        value.en ||
+        value.default ||
+        value._id ||
+        value.id,
+    );
+  }
+  return "";
+};
+
 export default function ToursDetailsContainer({
   dispatchEvent,
   appKey = "trevista",
@@ -42,7 +78,7 @@ export default function ToursDetailsContainer({
   const config = PRODUCT_CONFIG[productType] || PRODUCT_CONFIG.tour;
   const routeRef =
     params[config.routeParam] || params.tourRef || getRouteIdentityFromPath(location.pathname);
-  const decodedRef = decodeURIComponent(String(routeRef || ""));
+  const decodedRef = decodeURIComponent(String(normalizeRouteRef(routeRef) || ""));
 
   const { loading, error, elements, structure } = useComponentData(config.pageConfigEndpoint, {
     auto: true,
@@ -56,6 +92,7 @@ export default function ToursDetailsContainer({
   );
 
   const [activeTour, setActiveTour] = useState(location.state?.tour || null);
+  const [tourUnavailable, setTourUnavailable] = useState(false);
   const [breadcrumbRoot, setBreadcrumbRoot] = useState(breadcrumbRootProp || defaultBreadcrumbRoot);
   const referrer = useMemo(
     () => location.state?.from || breadcrumbRoot,
@@ -86,9 +123,27 @@ export default function ToursDetailsContainer({
     // changes. Clear route-specific UI and adopt the newly selected card
     // while its complete backend detail payload is loading.
     setActiveTour(location.state?.tour || null);
+    setTourUnavailable(false);
     setContactOpen(false);
     setSelection({ packageKey: "", hotelSelections: {}, hotelRequests: [] });
   }, [decodedRef, location.state?.tour]);
+
+  const watchedTourId = productType === "tour" ? activeTour?._id || activeTour?.id : null;
+  useTourRealtime(watchedTourId);
+  useRealtimeEvent(
+    REALTIME_EVENTS.TOUR_UPDATED,
+    useCallback(
+      (envelope) => {
+        const updated = envelope?.data || {};
+        if (!watchedTourId || String(updated.tourId || "") !== String(watchedTourId)) return;
+        if (updated.isPublished === false || updated.status !== "published") {
+          setTourUnavailable(true);
+          setContactOpen(false);
+        }
+      },
+      [watchedTourId],
+    ),
+  );
 
   const handleTourLoad = useCallback((tour) => {
     if (!tour?._id) return;
@@ -221,6 +276,7 @@ export default function ToursDetailsContainer({
           activeTour?.title || pageLabels.pageTitle || slugifyTitle(decodedRef).replace(/-/g, " ")
         }
         activeTour={activeTour}
+        tourUnavailable={tourUnavailable}
         structure={structure}
         elements={elements}
         contactOpen={contactOpen}

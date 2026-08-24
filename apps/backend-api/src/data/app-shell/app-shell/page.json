@@ -6,7 +6,20 @@
     "elements": {
       "labels": {
         "pageTitle": "Dashboard",
-        "pageDescription": "Manage your profile and travel planning across TravelsTREM."
+        "pageDescription": "Manage your profile and travel planning across TravelsTREM.",
+        "greetingMorning": "Good morning",
+        "greetingAfternoon": "Good afternoon",
+        "greetingEvening": "Good evening",
+        "greetingFallbackName": "there",
+        "greetingDescription": "Here’s your personal travel overview.",
+        "recentSectionAriaLabel": "Recent bookings and enquiries",
+        "recentDefaultTitle": "General tour enquiry",
+        "recentOpenAction": "Open enquiry in My Bookings",
+        "upcomingSectionAriaLabel": "Upcoming trips",
+        "upcomingOpenAction": "Open trip in My Bookings",
+        "loadingStatistics": "Loading travel summary",
+        "loadingPlanning": "Loading journey planning options",
+        "loadingTools": "Loading travel tools"
       },
       "urls": {}
     },
@@ -16,6 +29,11 @@
         "descriptionRef": "pageDescription"
       },
       "widgets": [
+        {
+          "type": "JourneyHero",
+          "source": "shell",
+          "widgetRef": "./widgets/journey-hero.json"
+        },
         {
           "type": "DashboardMetrics",
           "source": "shell",

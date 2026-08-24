@@ -43,11 +43,19 @@
   }
 
   @media (max-width: $breakpoint-mobile) {
+    width: 40px;
+    height: 40px;
     bottom: var(
       --trem-scroll-top-bottom,
-      var(--trem-floating-action-clearance, #{$space-4})
+      calc(var(--dash-mobile-action-panel-space, #{$space-18}) + #{$space-3})
     ) !important;
-    right: var(--trem-scroll-top-right, #{$space-4}) !important;
+    right: var(--trem-scroll-top-right, #{$space-3}) !important;
+    z-index: 305;
+    border-color: color-mix(in srgb, var(--color-primary, #{$primary-color}) 24%, var(--border));
+    color: var(--color-primary, #{$primary-color});
+    background: var(--surface-glass-strong, var(--surface-elevated, #{$white-color}));
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
   }
 }
 

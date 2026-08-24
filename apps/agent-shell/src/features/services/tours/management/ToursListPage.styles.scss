@@ -1,11 +1,9 @@
 .services-tours-page {
   --tmg-header-offset: 72px;
-  padding: 24px;
-  max-width: 1200px;
+  padding: 0 clamp(16px, 2vw, 32px) 40px;
+  max-width: 1480px;
   margin: 0 auto;
 
-  /* Sticky breadcrumb rail — same treatment as the tour details page:
-     glass surface pinned directly below the fixed product header. */
   &__breadcrumbs {
     position: sticky;
     top: var(--tmg-header-offset);
@@ -13,50 +11,200 @@
     display: flex;
     align-items: center;
     min-height: 52px;
-    margin-inline: -24px;
-    padding-inline: 24px;
+    margin-inline: calc(clamp(16px, 2vw, 32px) * -1);
+    padding-inline: clamp(16px, 2vw, 32px);
+    border-bottom: 1px solid var(--border);
     background: var(--surface-glass-strong);
     backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border);
+  }
 
-    @media (max-width: 768px) {
-      top: 64px;
+  &__hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 16px;
+    margin: 18px 0 16px;
+    padding: 20px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background:
+      radial-gradient(
+        circle at top left,
+        color-mix(in srgb, var(--color-primary) 14%, transparent),
+        transparent 38%
+      ),
+      var(--surface);
+    box-shadow: var(--shadow-sm);
+  }
+
+  &__hero-copy {
+    min-width: 0;
+    text-align: left;
+
+    .ui-sub-title,
+    h1,
+    h2,
+    p {
+      margin: 0;
+      text-align: left;
+      justify-content: flex-start;
+    }
+
+    p {
+      max-width: 760px;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.5;
     }
   }
 
-  &__toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 16px;
+  &__eyebrow {
+    display: inline-flex;
+    margin-bottom: 8px;
+    color: var(--color-primary);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
   }
 
   &__actions {
     display: flex;
     align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
     gap: 8px;
   }
 
-  &__filters {
-    display: flex;
-    align-items: center;
+  &__stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 12px;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
   }
 
-  &__search {
-    width: 100%;
+  &__stat {
+    display: grid;
+    gap: 4px;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: var(--surface);
+    box-shadow: var(--shadow-xs);
+
+    span {
+      color: var(--title);
+      font-size: 1.45rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    small {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+  }
+
+  &__control-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: var(--surface);
+    box-shadow: var(--shadow-xs);
+  }
+
+  &__filters {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(260px, 1fr) auto;
+    align-items: center;
+    gap: 12px;
   }
 
   &__sort {
-    width: 100%;
+    min-width: 172px;
+  }
+
+  &__list-meta {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    padding: 0 8px;
+    color: var(--muted);
+    white-space: nowrap;
+
+    strong {
+      color: var(--title);
+      font-size: 1rem;
+    }
   }
 
   &__list {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  &__empty {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-height: min(50dvh, 480px);
+  }
+}
+
+@media (max-width: 900px) {
+  .services-tours-page {
+    &__hero,
+    &__control-card {
+      grid-template-columns: 1fr;
+      align-items: stretch;
+    }
+
+    &__stats {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    &__filters {
+      grid-template-columns: 1fr;
+    }
+
+    &__actions {
+      justify-content: flex-start;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .services-tours-page {
+    --tmg-header-offset: 120px;
+  }
+}
+
+@media (max-width: 560px) {
+  .services-tours-page {
+    padding-inline: 14px;
+
+    &__breadcrumbs {
+      margin-inline: -14px;
+      padding-inline: 14px;
+    }
+
+    &__hero {
+      padding: 16px;
+      border-radius: 16px;
+    }
+
+    &__stats,
+    &__list {
+      grid-template-columns: 1fr;
+    }
   }
 }

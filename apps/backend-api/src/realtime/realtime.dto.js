@@ -78,6 +78,10 @@ export const tourDto = (tour = {}) => {
         slug: tour.slug || null,
         title: tour.title || tour.name || null,
         status: tour.status || null,
+        isPublished: tour.status === "published",
+        featured: Boolean(tour.featured),
+        trending: Boolean(tour.trending),
+        tremVerified: Boolean(tour.tremVerified),
         agencyId: idOf(tour.agencyId),
         packageType: tour.packageType || null,
         price: {

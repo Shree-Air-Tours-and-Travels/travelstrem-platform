@@ -45,7 +45,11 @@ export default function BrandLogo({
       {name && (
         <div className="brand-logo__text">
           <span className="brand-logo__name">{name}</span>
-          {subtitle && <span className="brand-logo__subtitle">{subtitle}</span>}
+          {subtitle && (
+            <span className="brand-logo__subtitle" title={subtitle}>
+              {subtitle}
+            </span>
+          )}
         </div>
       )}
     </div>

@@ -8,6 +8,8 @@ import "./Dropdown.styles.scss";
 const MENU_GAP = 8;
 const VIEWPORT_MARGIN = 12;
 const MOBILE_BREAKPOINT = 768;
+const DEFAULT_MENU_WIDTH = 260;
+const JOURNEY_MENU_WIDTH = 440;
 
 function isMobile() {
   return typeof window !== "undefined" && window.innerWidth <= MOBILE_BREAKPOINT;
@@ -114,9 +116,13 @@ export default function Dropdown({
 
   const menuWidth = useMemo(() => {
     const width = portalWidth ?? propWidth;
-    if (width == null || width === "auto") return isJourneyMenu ? 440 : 0;
+    if (width == null || width === "auto") {
+      if (isJourneyMenu) return JOURNEY_MENU_WIDTH;
+      if (isSelect) return 0;
+      return DEFAULT_MENU_WIDTH;
+    }
     return typeof width === "number" ? width : parseInt(width, 10) || 240;
-  }, [isJourneyMenu, portalWidth, propWidth]);
+  }, [isJourneyMenu, isSelect, portalWidth, propWidth]);
 
   const filteredItems = useMemo(() => {
     const visibleItems = items.filter((item) => !item.hide);
@@ -147,11 +153,14 @@ export default function Dropdown({
     const triggerWidth = wrapperRef.current.offsetWidth;
     let w = menuWidth;
     if (!w) {
-      w = Math.min(triggerWidth, vw - VIEWPORT_MARGIN * 2);
+      w = Math.min(
+        Math.max(triggerWidth, isSelect ? triggerWidth : DEFAULT_MENU_WIDTH),
+        vw - VIEWPORT_MARGIN * 2,
+      );
     }
     const pos = calcPosition(wrapperRef.current, w, position !== "top");
     setMenuStyle({ ...pos, width: w });
-  }, [menuWidth, position]);
+  }, [isSelect, menuWidth, position]);
 
   useEffect(() => {
     if (!open || showBottomSheet || !wrapperRef.current) return;

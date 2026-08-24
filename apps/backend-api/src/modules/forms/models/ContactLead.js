@@ -52,6 +52,12 @@ const ContactLeadSchema = new mongoose.Schema(
             default: null,
             index: true,
         },
+        customerId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "AgencyCustomer",
+            default: null,
+            index: true,
+        },
         status: {
             type: String,
             enum: ["new", "in_review", "responded", "closed"],

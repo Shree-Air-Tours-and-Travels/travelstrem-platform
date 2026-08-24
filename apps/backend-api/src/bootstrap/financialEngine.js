@@ -16,6 +16,7 @@ import {
     publishToBooking,
     publishToPayment,
 } from "../realtime/index.js";
+import { recordTourSignal } from "../modules/tours/services/tourIntelligence.service.js";
 
 // Realtime fan-out for payment/quote state changes lives at this repository
 // layer because it is the single idempotent funnel every payment transition
@@ -136,6 +137,17 @@ const repositories = {
             // Emitted only after the database state actually changed — verified
             // gateway webhooks are the only path that reaches this transition.
             if (payment) publishPaymentEvent(REALTIME_EVENTS.PAYMENT_SUCCESS, payment);
+            if (payment?.quoteId) {
+                BookingQuote.findById(payment.quoteId)
+                    .select("tourId")
+                    .lean()
+                    .then((quote) =>
+                        quote?.tourId ? recordTourSignal(quote.tourId, "booking") : null,
+                    )
+                    .catch((error) =>
+                        console.error("[TourIntelligence] booking signal failed:", error.message),
+                    );
+            }
             return payment;
         },
     },

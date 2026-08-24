@@ -15,6 +15,8 @@ const ContactForm = ({
   submitText = "Send Request",
   errors = {},
   Button: CustomButton,
+  formId,
+  showActions = true,
 }) => {
   const Btn = CustomButton || Button;
 
@@ -79,6 +81,10 @@ const ContactForm = ({
         required={field.required}
         value={value}
         maxLength={field.maxLength}
+        min={field.min}
+        max={field.max}
+        step={field.integer ? 1 : field.step}
+        inputMode={field.type === "number" ? "numeric" : undefined}
         placeholder={field.placeholder || ""}
         error={errors[field.name]}
         onChange={(next) => onChange(field.name, next)}
@@ -92,7 +98,7 @@ const ContactForm = ({
   });
 
   return (
-    <form className="trem-contact-form" noValidate onSubmit={onSubmit}>
+    <form id={formId} className="trem-contact-form" noValidate onSubmit={onSubmit}>
       <div className="trem-contact-form__grid">
         {visibleFields.map((field) => (
           <div
@@ -106,25 +112,27 @@ const ContactForm = ({
           </div>
         ))}
       </div>
-      <div className="trem-contact-form__actions">
-        <Btn
-          type="submit"
-          text={submitting ? "Sending..." : submitText}
-          size="medium"
-          variant="solid"
-          color="primary"
-          disabled={submitting}
-        />
-        <Btn
-          type="button"
-          text="Cancel"
-          size="medium"
-          variant="outline"
-          color="primary"
-          onClick={onCancel}
-          disabled={submitting}
-        />
-      </div>
+      {showActions ? (
+        <div className="trem-contact-form__actions">
+          <Btn
+            type="submit"
+            text={submitting ? "Sending..." : submitText}
+            size="medium"
+            variant="solid"
+            color="primary"
+            disabled={submitting}
+          />
+          <Btn
+            type="button"
+            text="Cancel"
+            size="medium"
+            variant="outline"
+            color="primary"
+            onClick={onCancel}
+            disabled={submitting}
+          />
+        </div>
+      ) : null}
     </form>
   );
 };
@@ -139,5 +147,7 @@ ContactForm.propTypes = {
   submitText: PropTypes.string,
   errors: PropTypes.object,
   Button: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
+  formId: PropTypes.string,
+  showActions: PropTypes.bool,
 };
 export default ContactForm;

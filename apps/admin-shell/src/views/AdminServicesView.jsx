@@ -1,32 +1,59 @@
-import React, { useState, useMemo } from "react";
-import { Button, EmptyState, TourCard } from "@packages/trem-ui";
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  Button,
+  EmptyState,
+  FilterChips,
+  MetricSummary,
+  SearchBar,
+  SingleSelect,
+  TourCard,
+  TrevioTripCard,
+} from "@packages/trem-ui";
 import { useMasterOptions } from "@packages/trem-utils";
-import AgenciesTabWidget from "../features/tours/AgenciesTabWidget.view";
 import "./AdminServicesView.scss";
 
-const TYPE_FILTERS = ["all", "tours", "trips", "agencies"];
+const LIVE_STATUSES = new Set(["active", "listed", "published"]);
 
-const STATUS_COLORS = {
-  draft: "var(--muted)",
-  listed: "var(--color-primary)",
-  active: "var(--color-primary)",
-  completed: "var(--success-color)",
-  cancelled: "var(--color-danger)",
+const resolveEntityId = (value) => {
+  if (value == null) return "";
+  if (["string", "number"].includes(typeof value)) return String(value);
+  if (typeof value === "object") {
+    return (
+      resolveEntityId(value._id) ||
+      resolveEntityId(value.id) ||
+      resolveEntityId(value.$oid) ||
+      resolveEntityId(value.value)
+    );
+  }
+  return "";
 };
 
-function formatPrice(price) {
-  if (!price && price !== 0) return "—";
-  const value = Number(price);
-  try {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      maximumFractionDigits: 0,
-    }).format(value);
-  } catch {
-    return `₹${value.toLocaleString("en-IN")}`;
-  }
-}
+const resolveServiceId = (service) =>
+  resolveEntityId(service?._id) || resolveEntityId(service?.id);
+
+const serviceStatus = (service) => {
+  if (service?.status) return String(service.status).toLowerCase();
+  if (service?.isPublished || service?.isListed) return "published";
+  return "draft";
+};
+
+const searchableText = (service) =>
+  [
+    service.title,
+    service.slug,
+    service.city?.from,
+    service.city?.to,
+    typeof service.city === "string" ? service.city : "",
+    service.location,
+    service.category,
+    service.agency?.name,
+    service.ownerAgentName,
+    service.operator?.name,
+    ...(service.tags || []),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
 
 export default function AdminServicesView({
   tours,
@@ -43,293 +70,368 @@ export default function AdminServicesView({
   onCreateTour,
   onCreateTrip,
   onRefresh,
-  onDeleteAllTours,
-  onDeleteAllTrips,
-  openTripCreate,
-  openTripEdit,
-  admins,
-  agents,
-  partnerAgencies,
-  agencyLoading,
   auth,
-  fetchAgencyManagement,
-  handleReviewAdmin,
-  handleRemoveAdmin,
-  handleReviewAgent,
-  handleReviewPartnerAgency,
+  activeProducts,
   children,
 }) {
   const [typeFilter, setTypeFilter] = useState("all");
   const [tripTypeFilter, setTripTypeFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [query, setQuery] = useState("");
+  const [sortOrder, setSortOrder] = useState("updated_desc");
   const { options: masterOptions } = useMasterOptions(["common.tripTypeOptions"]);
-  const tripTypeOptions = (masterOptions["common.tripTypeOptions"] || []).map((option) => ({
-    ...option,
-    value: option.value === "all" ? "" : option.value,
-  }));
 
-  const filteredTrips = useMemo(() => {
-    let result = trips || [];
-    if (tripTypeFilter) {
-      result = result.filter((t) => {
-        if (tripTypeFilter === "domestic")
-          return !(t.tags || []).includes("international") && t.category !== "international";
-        if (tripTypeFilter === "international")
-          return (t.tags || []).includes("international") || t.category === "international";
-        return true;
-      });
-    }
-    return result;
-  }, [trips, tripTypeFilter]);
+  const productContractReady = Array.isArray(activeProducts);
+  const productIds = useMemo(
+    () => new Set((activeProducts || []).map((product) => product.id)),
+    [activeProducts],
+  );
+  const showTours = !productContractReady || productIds.has("trevista");
+  const showTrips = !productContractReady || productIds.has("trevio");
+  const productCount = Number(showTours) + Number(showTrips);
 
-  const allServices = useMemo(() => {
-    const tourItems = (tours || []).map((t) => ({ ...t, _serviceType: "tour" }));
-    const tripItems = filteredTrips.map((t) => ({ ...t, _serviceType: "trip" }));
-    const combined = [...tourItems, ...tripItems];
-    if (typeFilter === "tours") return tourItems;
-    if (typeFilter === "trips") return tripItems;
-    return combined;
-  }, [tours, filteredTrips, typeFilter]);
+  const tripTypeOptions = useMemo(
+    () =>
+      (masterOptions["common.tripTypeOptions"] || []).map((option) => ({
+        ...option,
+        value: option.value === "all" ? "" : option.value,
+      })),
+    [masterOptions],
+  );
 
-  const tourCount = (tours || []).length;
-  const tripCount = (trips || []).length;
-  const agencyCount =
-    (admins || []).length + (agents || []).length + (partnerAgencies || []).length;
-  const showingAgencies = typeFilter === "agencies";
+  const availableServices = useMemo(() => {
+    const tourItems = showTours
+      ? (tours || []).map((item) => ({ ...item, _serviceType: "tour" }))
+      : [];
+    const tripItems = showTrips
+      ? (trips || []).map((item) => ({ ...item, _serviceType: "trip" }))
+      : [];
+    return [...tourItems, ...tripItems];
+  }, [showTours, showTrips, tours, trips]);
+
+  const typeFilters = useMemo(() => {
+    const toursCount = availableServices.filter((item) => item._serviceType === "tour").length;
+    const tripsCount = availableServices.length - toursCount;
+    return [
+      { id: "all", label: "All products", count: availableServices.length },
+      ...(showTours ? [{ id: "tours", label: "Tours", count: toursCount }] : []),
+      ...(showTrips ? [{ id: "trips", label: "Trips", count: tripsCount }] : []),
+    ];
+  }, [availableServices, showTours, showTrips]);
+
+  useEffect(() => {
+    if (!typeFilters.some((item) => item.id === typeFilter)) setTypeFilter("all");
+  }, [typeFilter, typeFilters]);
+
+  const statusOptions = useMemo(
+    () =>
+      [...new Set(availableServices.map(serviceStatus))]
+        .filter(Boolean)
+        .sort((left, right) => left.localeCompare(right)),
+    [availableServices],
+  );
+  const statusSelectOptions = useMemo(
+    () => [
+      { value: "", label: "All statuses" },
+      ...statusOptions.map((status) => ({
+        value: status,
+        label: status.replaceAll("_", " "),
+      })),
+    ],
+    [statusOptions],
+  );
+  const sortOptions = useMemo(
+    () => [
+      { value: "updated_desc", label: "Recently updated" },
+      { value: "updated_asc", label: "Oldest updated" },
+      { value: "title", label: "By title" },
+    ],
+    [],
+  );
+
+  const filteredServices = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    const result = availableServices.filter((service) => {
+      if (typeFilter === "tours" && service._serviceType !== "tour") return false;
+      if (typeFilter === "trips" && service._serviceType !== "trip") return false;
+      if (statusFilter && serviceStatus(service) !== statusFilter) return false;
+      if (tripTypeFilter && service._serviceType === "trip") {
+        const international =
+          (service.tags || []).includes("international") ||
+          service.category === "international";
+        if (tripTypeFilter === "domestic" && international) return false;
+        if (tripTypeFilter === "international" && !international) return false;
+      }
+      return !normalizedQuery || searchableText(service).includes(normalizedQuery);
+    });
+
+    return [...result].sort((left, right) => {
+      if (sortOrder === "title")
+        return String(left.title || "").localeCompare(String(right.title || ""));
+      const leftTime = new Date(left.updatedAt || left.createdAt || 0).getTime();
+      const rightTime = new Date(right.updatedAt || right.createdAt || 0).getTime();
+      return sortOrder === "updated_asc" ? leftTime - rightTime : rightTime - leftTime;
+    });
+  }, [availableServices, query, sortOrder, statusFilter, tripTypeFilter, typeFilter]);
+
+  const summaryItems = useMemo(() => {
+    const live = availableServices.filter((item) => LIVE_STATUSES.has(serviceStatus(item))).length;
+    const pending = availableServices.filter(
+      (item) => serviceStatus(item) === "pending_approval",
+    ).length;
+    const verified = availableServices.filter((item) => item.tremVerified).length;
+    return [
+      {
+        id: "products",
+        label: "Active products",
+        value: productCount,
+        icon: "briefcaseBusiness",
+      },
+      {
+        id: "inventory",
+        label: "Total inventory",
+        value: availableServices.length,
+        icon: "map",
+      },
+      { id: "live", label: "Live catalogue", value: live, icon: "globe" },
+      { id: "pending", label: "Awaiting approval", value: pending, icon: "clock" },
+      { id: "verified", label: "TREM verified", value: verified, icon: "shieldCheck" },
+    ];
+  }, [availableServices, productCount]);
+
+  const clearFilters = () => {
+    setQuery("");
+    setStatusFilter("");
+    setTripTypeFilter("");
+    setTypeFilter("all");
+  };
+  const hasFilters = Boolean(query || statusFilter || tripTypeFilter || typeFilter !== "all");
+  const activeFilterChips = useMemo(
+    () => [
+      ...(query ? [{ id: "query", label: `Search: ${query}` }] : []),
+      ...(statusFilter
+        ? [{ id: "status", label: statusFilter.replaceAll("_", " ") }]
+        : []),
+      ...(tripTypeFilter
+        ? [
+            {
+              id: "tripType",
+              label:
+                tripTypeOptions.find((option) => option.value === tripTypeFilter)?.label ||
+                tripTypeFilter,
+            },
+          ]
+        : []),
+    ],
+    [query, statusFilter, tripTypeFilter, tripTypeOptions],
+  );
+  const removeFilter = (id) => {
+    if (id === "query") setQuery("");
+    if (id === "status") setStatusFilter("");
+    if (id === "tripType") setTripTypeFilter("");
+  };
 
   return (
     <div className="asv">
-      <div className="asv__header">
-        <div>
-          <h1 className="asv__title">Services</h1>
-          <p className="asv__subtitle">
-            {showingAgencies
-              ? `${agencyCount} account${agencyCount !== 1 ? "s" : ""} to manage`
-              : `${allServices.length} service${allServices.length !== 1 ? "s" : ""} total`}
+      <section className="asv__hero">
+        <div className="asv__hero-copy">
+          <span>TRAVEL CATALOGUE</span>
+          <h1>Travel product operations</h1>
+          <p>
+            Review publishing health, verify catalogue quality and manage every active
+            TravelsTREM product from one workspace.
           </p>
         </div>
         <div className="asv__actions">
-          {!showingAgencies && (
-            <>
-              <Button
-                primaryClassName="btn"
-                variant="solid"
-                color="primary"
-                onClick={onCreateTour}
-                text="+ New Tour"
-              />
-              <Button
-                primaryClassName="btn"
-                variant="solid"
-                color="primary"
-                onClick={onCreateTrip || openTripCreate}
-                text="+ New Trip"
-              />
-            </>
-          )}
+          {showTours ? (
+            <Button
+              variant="solid"
+              color="primary"
+              iconLeft="plus"
+              onClick={onCreateTour}
+              text="Create tour"
+            />
+          ) : null}
+          {showTrips ? (
+            <Button
+              variant="outline"
+              iconLeft="plus"
+              onClick={onCreateTrip}
+              text="Create trip"
+            />
+          ) : null}
           <Button
-            primaryClassName="btn"
             variant="outline"
-            onClick={showingAgencies ? fetchAgencyManagement : onRefresh}
+            iconLeft="refreshCw"
+            onClick={onRefresh}
             text="Refresh"
+            disabled={loading}
           />
         </div>
-      </div>
+      </section>
 
-      <div className="asv__filters">
-        <div className="asv__filter-tabs">
-          {TYPE_FILTERS.map((f) => (
-            <button
-              key={f}
-              className={`asv__filter-tab ${typeFilter === f ? "is-active" : ""}`}
-              onClick={() => setTypeFilter(f)}
-            >
-              {f === "all" ? "All" : f.charAt(0).toUpperCase() + f.slice(1)}
-              <span className="asv__filter-count">
-                {f === "all"
-                  ? tourCount + tripCount
-                  : f === "tours"
-                    ? tourCount
-                    : f === "trips"
-                      ? tripCount
-                      : agencyCount}
-              </span>
-            </button>
-          ))}
-        </div>
-        {(typeFilter === "all" || typeFilter === "trips") && (
-          <div className="asv__trip-filter">
-            <select
-              className="asv__trip-select"
-              value={tripTypeFilter}
-              onChange={(e) => setTripTypeFilter(e.target.value)}
-            >
-              {tripTypeOptions.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
+      <MetricSummary
+        className="asv__metrics"
+        variant="cards"
+        ariaLabel="Travel catalogue summary"
+        items={summaryItems}
+      />
+
+      <section className="asv__catalogue">
+        <header className="asv__catalogue-header">
+          <div>
+            <h2>Catalogue inventory</h2>
+            <p>
+              {filteredServices.length} of {availableServices.length} records in this view
+            </p>
           </div>
-        )}
-      </div>
+          <div className="asv__filter-tabs" role="tablist" aria-label="Product types">
+            {typeFilters.map((filter) => (
+              <button
+                key={filter.id}
+                type="button"
+                role="tab"
+                aria-selected={typeFilter === filter.id}
+                className={`asv__filter-tab ${typeFilter === filter.id ? "is-active" : ""}`}
+                onClick={() => setTypeFilter(filter.id)}
+              >
+                {filter.label}
+                <span className="asv__filter-count">{filter.count}</span>
+              </button>
+            ))}
+          </div>
+        </header>
 
-      {showingAgencies ? (
-        <AgenciesTabWidget
-          admins={admins}
-          agents={agents}
-          partnerAgencies={partnerAgencies}
-          agencyLoading={agencyLoading}
-          auth={auth}
-          fetchAgencyManagement={fetchAgencyManagement}
-          handleReviewAdmin={handleReviewAdmin}
-          handleRemoveAdmin={handleRemoveAdmin}
-          handleReviewAgent={handleReviewAgent}
-          handleReviewPartnerAgency={handleReviewPartnerAgency}
-          hideHeader
-        />
-      ) : loading ? (
-        <div className="asv__loading">
-          <div className="asv__spinner" />
-          <span>Loading services...</span>
+        <div className="asv__controls">
+          <SearchBar
+            className="asv__search"
+            value={query}
+            onChange={setQuery}
+            ariaLabel="Search travel catalogue"
+            placeholder="Search title, destination, agency, owner or tag"
+          />
+          <SingleSelect
+            className="asv__select"
+            label="Publishing status"
+            placeholder="All statuses"
+            value={statusFilter}
+            onChange={setStatusFilter}
+            options={statusSelectOptions}
+            size="sm"
+          />
+          {showTrips &&
+          (typeFilter === "all" || typeFilter === "trips") &&
+          tripTypeOptions.length ? (
+            <SingleSelect
+              className="asv__select"
+              label="Trip type"
+              placeholder="All trip types"
+              value={tripTypeFilter}
+              onChange={setTripTypeFilter}
+              options={tripTypeOptions}
+              size="sm"
+            />
+          ) : null}
+          <SingleSelect
+            className="asv__select"
+            label="Sort catalogue"
+            value={sortOrder}
+            onChange={setSortOrder}
+            options={sortOptions}
+            size="sm"
+          />
+          {hasFilters ? <Button variant="ghost" text="Clear" onClick={clearFilters} /> : null}
         </div>
-      ) : allServices.length > 0 ? (
-        <div className="asv__grid">
-          {allServices.map((service) => {
-            const isTour = service._serviceType === "tour";
-            if (isTour) {
+        <FilterChips
+          className="asv__active-filters"
+          items={activeFilterChips}
+          onRemove={removeFilter}
+          onClearAll={clearFilters}
+          clearLabel="Clear filters"
+          ariaLabel="Active catalogue filters"
+        />
+
+        {loading ? (
+          <div className="asv__loading">
+            <div className="asv__spinner" />
+            <span>Loading catalogue…</span>
+          </div>
+        ) : filteredServices.length ? (
+          <div className="asv__grid">
+            {filteredServices.map((service) => {
+              const isTour = service._serviceType === "tour";
+              if (isTour) {
+                return (
+                  <TourCard
+                    key={resolveServiceId(service)}
+                    tour={service}
+                    variant="management"
+                    isAdmin
+                    managementActions
+                    ownershipMode="agency"
+                    ownershipLabels={{
+                      agency: "Agency",
+                      platformAgency: "TravelsTREM platform",
+                    }}
+                    ownerAgentName={service.ownerAgentName || ""}
+                    showOwner
+                    onView={() => onViewTour?.(service)}
+                    onEdit={() => onEditTour?.(service)}
+                    onVerify={
+                      auth?.adminLevel === "master"
+                        ? () => onVerifyTour?.(resolveServiceId(service))
+                        : undefined
+                    }
+                    onDelete={() => onDeleteTour?.(resolveServiceId(service))}
+                  />
+                );
+              }
+
               return (
-                <TourCard
-                  key={service._id || service.id}
-                  tour={service}
-                  variant="management"
-                  isAdmin
+                <TrevioTripCard
+                  key={resolveServiceId(service)}
+                  trip={service}
+                  management
                   ownershipMode="agency"
-                  ownershipLabels={{ agency: "Agency", platformAgency: "TravelsTREM platform" }}
-                  ownerAgentName={service.ownerAgentName || ""}
-                  showOwner
-                  onView={() => onViewTour?.(service)}
-                  onEdit={() => onEditTour?.(service)}
-                  onVerify={
-                    auth?.adminLevel === "master"
-                      ? () => onVerifyTour?.(service._id || service.id)
+                  labels={{
+                    agency: "Agency",
+                    platformAgency: "TravelsTREM platform",
+                    price: "From",
+                  }}
+                  onView={() => onViewTrip?.(service)}
+                  onEdit={() => onEditTrip?.(service)}
+                  onApprove={
+                    auth?.adminLevel === "master" && !service.tremVerified
+                      ? () => onVerifyTrip?.(resolveServiceId(service))
                       : undefined
                   }
-                  onDelete={() => onDeleteTour?.(service._id || service.id)}
+                  approveLabel="Verify"
+                  onDelete={() => onDeleteTrip?.(resolveServiceId(service))}
                 />
               );
+            })}
+          </div>
+        ) : (
+          <EmptyState
+            icon={hasFilters ? "search" : "compass"}
+            title={
+              hasFilters
+                ? "No catalogue records match these filters"
+                : "No travel inventory yet"
             }
-            const image = isTour ? service.photo || service.photos?.[0] : service.image;
-            const title = service.title || "Untitled";
-            const rawCity = service.city;
-            const cityText =
-              rawCity && typeof rawCity === "object"
-                ? `${rawCity.from || ""} → ${rawCity.to || ""}`
-                : rawCity || "";
-            const location = service.location || cityText;
-            const status = service.status || "draft";
-            const price = isTour ? service.price?.min : service.price?.amount;
-
-            return (
-              <div
-                key={service._id || service.id}
-                className={`asv__card ${isTour ? "asv__card--tour" : "asv__card--trip"}`}
-              >
-                <div className="asv__card-img-wrap">
-                  {image ? (
-                    <img src={image} alt={title} className="asv__card-img" />
-                  ) : (
-                    <div className="asv__card-placeholder">{title.charAt(0)}</div>
-                  )}
-                  <span className="asv__card-type">{isTour ? "Tour" : "Trip"}</span>
-                  <span
-                    className="asv__card-status"
-                    style={{ background: STATUS_COLORS[status] || STATUS_COLORS.draft }}
-                  >
-                    {status}
-                  </span>
-                </div>
-                <div className="asv__card-body">
-                  <h3 className="asv__card-title">{title}</h3>
-                  {location && <p className="asv__card-location">{location}</p>}
-                  <div className="asv__card-meta">
-                    {service.duration && (
-                      <span>
-                        {typeof service.duration === "object"
-                          ? `${service.duration.from || "—"} – ${service.duration.to || "—"}`
-                          : service.duration}
-                      </span>
-                    )}
-                    {service.tags && service.tags.length > 0 && (
-                      <span className="asv__card-tags">
-                        {service.tags.slice(0, 3).map((tag) => (
-                          <span key={tag} className="asv__card-tag">
-                            {tag}
-                          </span>
-                        ))}
-                      </span>
-                    )}
-                  </div>
-                  <div className="asv__card-provenance">
-                    <span>
-                      <strong>Agency:</strong> {service.agency?.name || "TravelsTREM platform"}
-                    </span>
-                    <span>
-                      <strong>Added by:</strong>{" "}
-                      {service.ownerAgentName || service.operator?.name || "Master admin"}
-                      {service.ownerAgentRef || service.operator?.reference
-                        ? ` · ${service.ownerAgentRef || service.operator.reference}`
-                        : ""}
-                    </span>
-                  </div>
-                  <div className="asv__card-footer">
-                    <span className="asv__card-price">{formatPrice(price)}</span>
-                    <div className="asv__card-actions">
-                      <Button
-                        primaryClassName="btn asv__btn-sm"
-                        variant="outline"
-                        onClick={() => (isTour ? onViewTour?.(service) : onViewTrip?.(service))}
-                        text="View"
-                      />
-                      <Button
-                        primaryClassName="btn asv__btn-sm"
-                        variant="outline"
-                        onClick={() => (isTour ? onEditTour?.(service) : onEditTrip?.(service))}
-                        text="Edit"
-                      />
-                      {auth?.adminLevel === "master" && !service.tremVerified && (
-                        <Button
-                          primaryClassName="btn asv__btn-sm"
-                          variant="solid"
-                          color="primary"
-                          onClick={() => onVerifyTrip?.(service._id || service.id)}
-                          text="Verify"
-                        />
-                      )}
-                      <Button
-                        primaryClassName="btn asv__btn-sm asv__btn-danger"
-                        variant="outline"
-                        onClick={() =>
-                          isTour
-                            ? onDeleteTour?.(service._id || service.id)
-                            : onDeleteTrip?.(service._id)
-                        }
-                        text="Delete"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        <EmptyState
-          icon="compass"
-          title="No services yet"
-          description="Create your first tour or trip to get started."
-        />
-      )}
-
+            description={
+              hasFilters
+                ? "Clear or adjust the catalogue filters to see more records."
+                : "Create inventory for an active product to start building the live catalogue."
+            }
+            action={
+              hasFilters ? (
+                <Button variant="outline" text="Clear filters" onClick={clearFilters} />
+              ) : undefined
+            }
+          />
+        )}
+      </section>
       {children}
     </div>
   );

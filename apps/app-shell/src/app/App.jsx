@@ -16,10 +16,9 @@ import {
   SideBar,
   ThemeProvider,
   useTheme,
-  RealtimeProvider,
   Toaster,
 } from "@packages/trem-ui";
-import { initRealtimeNotifications } from "@packages/trem-events";
+import { initRealtimeNotifications, RealtimeProvider } from "@packages/trem-events";
 import { AppShellProvider, useAppShellConfig } from "./providers/AppShellProvider";
 import AppShellPage from "../features/app-shell/AppShell.container";
 import { buildGlobalAuthUrl, fetchData, SHELL_NAVIGATION_EVENT } from "@packages/trem-utils";
@@ -39,6 +38,7 @@ import {
 import "../styles/global.scss";
 
 const TrevistaApp = React.lazy(() => import("trevista/App"));
+const USER_PROFILE_UPDATED_EVENT = "USER_PROFILE_UPDATED";
 
 class RemoteBoundary extends React.Component {
   state = { error: null };
@@ -117,7 +117,12 @@ function AppShell() {
   const navigate = useNavigate();
   const { loading, session } = useAppShellConfig();
   const { theme, toggleTheme } = useTheme();
-  const user = session?.user || null;
+  const baseUser = session?.user || null;
+  const [profileUserPatch, setProfileUserPatch] = useState(null);
+  const user = useMemo(
+    () => (baseUser ? { ...baseUser, ...(profileUserPatch || {}) } : profileUserPatch),
+    [baseUser, profileUserPatch],
+  );
   const [sidebarConfig, setSidebarConfig] = useState({});
   const [appHeaderConfig, setAppHeaderConfig] = useState({});
   const [navigationConfig, setNavigationConfig] = useState(() =>
@@ -128,6 +133,22 @@ function AppShell() {
   const [guestMode, setGuestMode] = useState(() => isGuestSession());
   const [authPromptDismissed, setAuthPromptDismissed] = useState(false);
   const [primaryActionOpen, setPrimaryActionOpen] = useState(false);
+  const [immersiveChromeHidden, setImmersiveChromeHidden] = useState(false);
+
+  useEffect(() => {
+    setProfileUserPatch(null);
+  }, [baseUser?.id, baseUser?._id, baseUser?.email]);
+
+  useEffect(() => {
+    const onProfileUpdated = (event) => {
+      const nextUser = event?.detail?.user;
+      if (!nextUser || typeof nextUser !== "object") return;
+      setProfileUserPatch((current) => ({ ...(current || {}), ...nextUser }));
+    };
+    window.addEventListener(USER_PROFILE_UPDATED_EVENT, onProfileUpdated);
+    return () => window.removeEventListener(USER_PROFILE_UPDATED_EVENT, onProfileUpdated);
+  }, []);
+  const immersiveScrollRef = React.useRef(0);
 
   const destination = useMemo(
     () => resolveDestination(navigationConfig, location),
@@ -137,9 +158,32 @@ function AppShell() {
   const activeTab = destination.activeId || selectedTab;
   const isRemote = destination.kind === "remote";
   const isSupportScreen = location.pathname === "/help" || location.pathname.startsWith("/help/");
+  const isTrevistaBrowseScreen =
+    isRemote &&
+    destination.renderer === "trevista" &&
+    (location.pathname === "/trevista/tours" ||
+      location.pathname.startsWith("/trevista/tours/") ||
+      location.pathname.startsWith("/trevista/tour/") ||
+      location.pathname.startsWith("/tour/"));
   const productFilter = searchParams.get("product") || "all";
   const publicDestination = isGuestAccessibleDestination(destination);
   const mobileActionPanel = navigationConfig.mobileActionPanel || {};
+  const resolvedMobileActionPanelItems = useMemo(
+    () =>
+      (mobileActionPanel.items || []).map((item) =>
+        item.id === "wishlist" || item.target === "favorites"
+          ? {
+              ...item,
+              id: "support",
+              label: "Support",
+              icon: "support",
+              target: "support",
+              activeTargets: ["support"],
+            }
+          : item,
+      ),
+    [mobileActionPanel.items],
+  );
   const continueAsGuest = useCallback(() => {
     setAuthPromptDismissed(true);
     enableGuestSession();
@@ -160,6 +204,32 @@ function AppShell() {
   useEffect(() => {
     if (publicDestination) setAuthPromptDismissed(false);
   }, [publicDestination]);
+
+  useEffect(() => {
+    immersiveScrollRef.current = 0;
+    setImmersiveChromeHidden(false);
+  }, [location.pathname, location.search]);
+
+  const handleContentScroll = useCallback(
+    (event) => {
+      if (!isTrevistaBrowseScreen) return;
+      const nextTop = event.currentTarget.scrollTop || 0;
+      const previousTop = immersiveScrollRef.current;
+      const delta = nextTop - previousTop;
+      immersiveScrollRef.current = nextTop;
+
+      if (nextTop < 24 || delta < -10) {
+        setImmersiveChromeHidden(false);
+        return;
+      }
+      if (delta > 10) setImmersiveChromeHidden(true);
+    },
+    [isTrevistaBrowseScreen],
+  );
+
+  const revealImmersiveChrome = useCallback(() => {
+    if (isTrevistaBrowseScreen && immersiveChromeHidden) setImmersiveChromeHidden(false);
+  }, [immersiveChromeHidden, isTrevistaBrowseScreen]);
 
   const handleNavigation = useCallback(
     (rawIntent) => {
@@ -193,7 +263,7 @@ function AppShell() {
 
   const mobileNavigationActions = useMemo(
     () =>
-      (mobileActionPanel.variant === "mobile-navigation" ? mobileActionPanel.items || [] : []).map(
+      (mobileActionPanel.variant === "mobile-navigation" ? resolvedMobileActionPanelItems : []).map(
         (item) => ({
           id: item.id,
           label: item.label,
@@ -207,7 +277,7 @@ function AppShell() {
               : () => handleTabChange(item.target, item),
         }),
       ),
-    [destination.id, handleTabChange, mobileActionPanel.items],
+    [destination.id, handleTabChange, mobileActionPanel.variant, resolvedMobileActionPanelItems],
   );
 
   const handleGlobalSearch = useCallback(
@@ -315,6 +385,41 @@ function AppShell() {
     [requireAuthentication],
   );
 
+  const handleHeaderAction = useCallback(
+    (action, item = {}) => {
+      if (action === "navigate" && item.target) {
+        handleTabChange(item.target, item);
+        return;
+      }
+      if (navigationConfig.destinations.some((destinationItem) => destinationItem.id === action)) {
+        handleTabChange(action, item);
+        return;
+      }
+      handleSidebarAction(action, item);
+    },
+    [handleSidebarAction, handleTabChange, navigationConfig.destinations],
+  );
+
+  const resolvedAppHeaderConfig = useMemo(() => {
+    const existingActions = Array.isArray(appHeaderConfig.actions) ? appHeaderConfig.actions : [];
+    const actions = existingActions.filter((item) => item?.id !== "wishlist");
+    return {
+      ...appHeaderConfig,
+      actions: [
+        ...actions,
+        {
+          id: "wishlist",
+          label: "Wishlist",
+          ariaLabel: "Open wishlist",
+          icon: "heart",
+          target: "favorites",
+          mobileOnly: true,
+          active: activeTab === "favorites",
+        },
+      ],
+    };
+  }, [activeTab, appHeaderConfig]);
+
   if (loading) {
     return <GlobalLoader visible text="Loading App" />;
   }
@@ -334,7 +439,7 @@ function AppShell() {
 
   return (
     <div
-      className={`dash-layout${sidebarCollapsed ? " dash-layout--sidebar-collapsed" : ""}${mobileNavigationActions.length ? " dash-layout--mobile-action-panel" : ""}`}
+      className={`dash-layout${sidebarCollapsed ? " dash-layout--sidebar-collapsed" : ""}${mobileNavigationActions.length ? " dash-layout--mobile-action-panel" : ""}${isTrevistaBrowseScreen ? " dash-layout--trevista-immersive" : ""}${immersiveChromeHidden ? " dash-layout--chrome-hidden" : ""}`}
     >
       <SideBar
         config={sidebarConfig}
@@ -351,14 +456,18 @@ function AppShell() {
       <div className="dash-main">
         <AppHeader
           config={{
-            ...appHeaderConfig,
-            brand: sidebarConfig.brand || appHeaderConfig.brand,
+            ...resolvedAppHeaderConfig,
+            brand: sidebarConfig.brand || resolvedAppHeaderConfig.brand,
+            user: {
+              ...(resolvedAppHeaderConfig.user || {}),
+              variant: "outlined",
+            },
           }}
           user={user}
           theme={theme}
           sidebarCollapsed={sidebarCollapsed}
           onToggleTheme={toggleTheme}
-          onAction={handleSidebarAction}
+          onAction={handleHeaderAction}
           onSearch={handleGlobalSearch}
           onSearchSelect={handleGlobalSearchSelect}
           onLogoClick={() => handleNavigation({ destination: "overview" })}
@@ -372,6 +481,10 @@ function AppShell() {
         <div
           data-scroll-root
           className={`dash-content${isRemote ? " dash-content--remote" : ""}${isSupportScreen ? " dash-content--support" : ""}`}
+          onScroll={handleContentScroll}
+          onPointerDownCapture={revealImmersiveChrome}
+          onTouchStartCapture={revealImmersiveChrome}
+          onMouseDownCapture={revealImmersiveChrome}
         >
           <ProtectedRoute
             allowGuest={publicDestination && guestMode}

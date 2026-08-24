@@ -42,7 +42,10 @@ const user = {
     accountStatus: "active",
     tokenVersion: 0,
 };
-const userModel = { findById: jest.fn().mockResolvedValue(user) };
+const userModel = {
+    findById: jest.fn().mockResolvedValue(user),
+    updateOne: jest.fn().mockResolvedValue({ acknowledged: true }),
+};
 
 jest.unstable_mockModule("../../config/index.js", () => ({
     default: {
@@ -83,7 +86,9 @@ const makeRequest = (cookies = {}) => ({
 beforeEach(() => {
     sessions.length = 0;
     jest.clearAllMocks();
+    delete user.avatar;
     userModel.findById.mockResolvedValue(user);
+    userModel.updateOne.mockResolvedValue({ acknowledged: true });
 });
 
 test("session creation stores only a hashed refresh token and sets HttpOnly-cookie values", async () => {
@@ -95,6 +100,21 @@ test("session creation stores only a hashed refresh token and sets HttpOnly-cook
     expect(res.cookies[names.access]).toBeTruthy();
     expect(res.cookies[names.refresh]).toBeTruthy();
     expect(sessions[0].tokenHash).not.toBe(res.cookies[names.refresh]);
+});
+
+test("session creation applies and persists the first profile avatar when none exists", async () => {
+    const result = await createSession({
+        user,
+        req: makeRequest(),
+        res: makeResponse(),
+        portal: "customer",
+    });
+
+    expect(result.user.avatar).toBe("user");
+    expect(userModel.updateOne).toHaveBeenCalledWith(
+        { _id: user._id, avatar: null },
+        { $set: { avatar: "user" } },
+    );
 });
 
 test("refresh token rotates and the previous session is revoked", async () => {

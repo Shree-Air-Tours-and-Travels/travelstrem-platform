@@ -1,4 +1,5 @@
 import axios from "axios";
+import { showRealtimeToast } from "@packages/trem-events";
 
 const normalizeBase = (raw) => {
   if (raw == null || raw === "") return raw;
@@ -71,6 +72,7 @@ export const fetchData = async (endpoint, options = {}) => {
     }
 
     const rawResponse = res?.data || {};
+    if (rawResponse?.notify) showRealtimeToast(rawResponse.notify);
     const { status, message, componentData, component } = rawResponse;
     // Newer domain endpoints return their payload directly at `data`, while
     // legacy component endpoints wrap it in `componentData.data` or

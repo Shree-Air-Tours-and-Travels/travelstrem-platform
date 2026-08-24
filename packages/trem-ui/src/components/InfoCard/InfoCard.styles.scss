@@ -38,12 +38,12 @@
   &__header {
     min-width: 0;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) max-content;
     align-items: center;
     gap: $space-3;
 
     &--with-image {
-      grid-template-columns: auto minmax(0, 1fr) auto;
+      grid-template-columns: auto minmax(0, 1fr) max-content;
     }
 
     img {
@@ -54,15 +54,9 @@
     }
 
     > .status-badge {
-      min-width: 0;
-      max-width: min(45%, 10rem);
+      min-width: max-content;
+      max-width: none;
       justify-self: end;
-
-      .status-badge__label {
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
     }
   }
 

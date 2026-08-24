@@ -206,7 +206,7 @@ export const buildTourSearchPipeline = (
     const destinationCandidates = slugCandidates(filters.destinationCityIds);
     const countryCandidates = slugCandidates(filters.countryIds);
     const agencyCandidates = slugCandidates(filters.agencyIds);
-    const tagCandidateGroups = filters.tagIds.map((value) => slugCandidates([value]));
+    const tagCandidates = slugCandidates(filters.tagIds);
     const priceDate = filters.departureDate
         ? new Date(`${filters.departureDate}T00:00:00.000Z`)
         : "$$NOW";
@@ -499,10 +499,13 @@ export const buildTourSearchPipeline = (
         if (filters.price.max != null) dynamicMatch._priceMax = { $lte: filters.price.max };
     }
     if (Object.keys(dynamicMatch).length) pipeline.push({ $match: dynamicMatch });
-    if (tagCandidateGroups.length) {
+    if (tagCandidates.length) {
         pipeline.push({
             $match: {
-                $and: tagCandidateGroups.map((candidates) => ({ _tagSlugs: { $in: candidates } })),
+                // Values inside one facet family are alternatives. Selecting
+                // Domestic + International means either scope; independent
+                // filters such as destination, dates and price remain ANDed.
+                _tagSlugs: { $in: tagCandidates },
             },
         });
     }

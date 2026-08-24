@@ -1,5 +1,6 @@
 // server/models/User.js
 import mongoose from "mongoose";
+import { DEFAULT_PROFILE_AVATAR } from "../profileAvatar.constants.js";
 
 const userSchema = new mongoose.Schema(
     {
@@ -68,7 +69,7 @@ const userSchema = new mongoose.Schema(
         },
         approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
         approvedAt: { type: Date, default: null },
-        avatar: { type: String, default: "user" },
+        avatar: { type: String, trim: true, default: DEFAULT_PROFILE_AVATAR },
         tokenVersion: { type: Number, default: 0 },
     },
     { timestamps: true },

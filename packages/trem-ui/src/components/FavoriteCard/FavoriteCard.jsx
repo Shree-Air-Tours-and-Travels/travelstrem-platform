@@ -15,9 +15,20 @@ const money = (value, currency = "INR") => {
   }
 };
 
-export default function FavoriteCard({ tour = {}, onView, onRemove, className }) {
-  const image = tour.image || tour.photo || tour.photos?.[0];
-  const price = Number(tour.price);
+export default function FavoriteCard({
+  tour = {},
+  onView,
+  onRemove,
+  labels = {},
+  removing = false,
+  className,
+}) {
+  const rawImage = tour.image || tour.photo || tour.photos?.[0] || tour.images?.[0];
+  const image =
+    typeof rawImage === "string"
+      ? rawImage
+      : rawImage?.url || rawImage?.src || rawImage?.secure_url || "";
+  const price = Number(tour.priceInfo?.min ?? tour.price);
   const hasPrice = Number.isFinite(price);
   const currency = tour.priceInfo?.currency;
   const location = tour.location || tour.address?.city || tour.city?.to || "";
@@ -28,6 +39,11 @@ export default function FavoriteCard({ tour = {}, onView, onRemove, className })
       : "");
   const rating = Number(tour.avgRating ?? tour.rating);
   const ratingLabel = Number.isFinite(rating) && rating > 0 ? rating.toFixed(1) : "";
+  const savedDate = tour.savedAt
+    ? new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric" }).format(
+        new Date(tour.savedAt),
+      )
+    : "";
 
   return (
     <article className={`fav-card${className ? ` ${className}` : ""}`}>
@@ -35,6 +51,7 @@ export default function FavoriteCard({ tour = {}, onView, onRemove, className })
         className="fav-card__image"
         style={image ? { backgroundImage: `url("${image}")` } : undefined}
       >
+        {tour.productLabel ? <span className="fav-card__product">{tour.productLabel}</span> : null}
         {ratingLabel ? (
           <span className="fav-card__rating">
             <Icon name="star" size={12} /> {ratingLabel}
@@ -43,14 +60,16 @@ export default function FavoriteCard({ tour = {}, onView, onRemove, className })
         {onRemove && (
           <button
             type="button"
-            className="fav-card__remove"
-            aria-label="Remove from favorites"
+            className={`fav-card__remove${removing ? " is-removing" : ""}`}
+            aria-label={labels.remove || "Remove from saved journeys"}
+            title={labels.remove || "Remove from saved journeys"}
+            disabled={removing}
             onClick={(e) => {
               e.stopPropagation();
               onRemove(tour);
             }}
           >
-            <Icon name="x" size={14} />
+            <Icon name={removing ? "refreshCw" : "heart"} size={20} />
           </button>
         )}
       </div>
@@ -71,10 +90,15 @@ export default function FavoriteCard({ tour = {}, onView, onRemove, className })
             )}
           </p>
         )}
+        {savedDate ? (
+          <p className="fav-card__saved">
+            <Icon name="bookmark" size={13} /> {labels.savedOn || "Saved on"} {savedDate}
+          </p>
+        ) : null}
         <div className="fav-card__footer">
           {hasPrice && (
             <span className="fav-card__price">
-              <small>Per person</small>
+              <small>{labels.perPerson || "Per person"}</small>
               <strong>{money(price, currency)}</strong>
             </span>
           )}
@@ -83,8 +107,9 @@ export default function FavoriteCard({ tour = {}, onView, onRemove, className })
               variant="text"
               color="primary"
               size="small"
-              text="View"
+              text={labels.view || "Explore this tour"}
               iconRight="arrowUpRight"
+              disabled={removing}
               onClick={() => onView(tour)}
             />
           )}

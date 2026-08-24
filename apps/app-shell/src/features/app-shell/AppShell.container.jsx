@@ -6,8 +6,10 @@ import {
   slugify,
   useRefreshOnActivation,
 } from "@packages/trem-utils";
-import { useEnquiryRealtime, useRealtimeStatus } from "@packages/trem-ui";
+import { showRealtimeToast, useEnquiryRealtime, useRealtimeStatus } from "@packages/trem-events";
 import { useAppShellConfig } from "../../app/providers/AppShellProvider";
+import { buildTrevistaTourPath } from "../../app/routing/navigationRegistry";
+import resolveContractRefs from "../../core/config/resolveContractRefs";
 import OverviewView from "../../views/OverviewView";
 import FavoritesView from "../../views/FavoritesView";
 import ProfileView from "../../views/ProfileView";
@@ -15,20 +17,65 @@ import BookingsView from "../../views/BookingsView";
 import "./AppShell.styles.scss";
 
 const PRODUCT_URLS = { trevista: process.env.REACT_APP_TREVISTA_URL };
+const USER_PROFILE_UPDATED_EVENT = "USER_PROFILE_UPDATED";
+
+const textValue = (value) => {
+  if (!value) return "";
+  if (typeof value === "string" || typeof value === "number") {
+    const text = String(value).trim();
+    return text === "[object Object]" ? "" : text;
+  }
+  if (typeof value === "object") {
+    return textValue(
+      value.slug ||
+        value.tourRef ||
+        value.tripRef ||
+        value.value ||
+        value.label ||
+        value.name ||
+        value.title ||
+        value.en ||
+        value.default ||
+        value._id ||
+        value.id,
+    );
+  }
+  return "";
+};
+
+const resolveFavoriteRef = (item) => {
+  const directRef =
+    textValue(item?.slug) ||
+    textValue(item?.tourSlug) ||
+    textValue(item?.tripSlug) ||
+    textValue(item?.href).split("/").filter(Boolean).pop() ||
+    "";
+  if (directRef) return directRef;
+  const titleRef = slugify(textValue(item?.title) || textValue(item?.name));
+  return titleRef || textValue(item?._id) || textValue(item?.id);
+};
 
 export default function AppShellContainer({ activeTab = "overview", onTabChange }) {
   const navigate = useNavigate();
-  const { session } = useAppShellConfig();
+  const { session, reload: reloadShellSession } = useAppShellConfig();
   const user = session?.user || {};
   const [planCards, setPlanCards] = useState(null);
   const [overviewRail, setOverviewRail] = useState(null);
   const [metricsDefinition, setMetricsDefinition] = useState(null);
+  const [overviewCopy, setOverviewCopy] = useState({});
+  const [journeyHero, setJourneyHero] = useState(null);
+  const [overviewSections, setOverviewSections] = useState({});
   const [dashboardData, setDashboardData] = useState(null);
   const [overviewDefinitionLoading, setOverviewDefinitionLoading] = useState(true);
   const [favorites, setFavorites] = useState([]);
   const [favoritesLoading, setFavoritesLoading] = useState(true);
+  const [favoritesView, setFavoritesView] = useState({});
+  const [favoritesError, setFavoritesError] = useState("");
+  const [removingFavoriteIds, setRemovingFavoriteIds] = useState([]);
   const [profile, setProfile] = useState(null);
   const [profileSaving, setProfileSaving] = useState(false);
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [avatarSaving, setAvatarSaving] = useState(false);
 
   // The dashboard page definition carries user-scoped data (metrics, recent
   // bookings & enquiries, upcoming trips) in the same response as the markup.
@@ -37,29 +84,37 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
     return fetchData("/pages/app-shell/app-shell")
       .then((response) => {
         const component = response?.component;
+        const labels = component?.elements?.labels || {};
+        const urls = component?.elements?.urls || {};
+        const resolve = (value) => resolveContractRefs(value, labels, urls);
         const widgets = component?.structure?.widgets || [];
         const widgetFor = (type) => widgets.find((item) => item?.type === type);
         const contentFor = (type) => {
           const widget = widgetFor(type);
-          return widget?.props?.dataKey ? component?.data?.[widget.props.dataKey] : null;
+          return widget?.props?.dataKey ? resolve(component?.data?.[widget.props.dataKey]) : null;
         };
         const emptyStateFor = (type) => {
           const widget = widgetFor(type);
           return widget?.props?.emptyStateKey
-            ? component?.data?.[widget.props.emptyStateKey]
+            ? resolve(component?.data?.[widget.props.emptyStateKey])
             : null;
         };
         const metricsWidget = widgetFor("DashboardMetrics");
         if (!metricsWidget) return;
         setMetricsDefinition({
-          items: metricsWidget.props?.items || [],
-          labels: component.elements.labels || {},
-          ariaLabelRef: metricsWidget.props?.ariaLabelRef,
+          ...resolve(metricsWidget.props || {}),
+        });
+        setOverviewCopy(labels);
+        setJourneyHero(resolve(widgetFor("JourneyHero")?.props || null));
+        setOverviewSections({
+          recent: resolve(widgetFor("RecentBookings")?.props || {}),
+          upcoming: resolve(widgetFor("UpcomingTrips")?.props || {}),
         });
         setPlanCards(contentFor("PlanCards"));
         setOverviewRail(contentFor("OverviewRail"));
         setDashboardData({
           metrics: component?.data?.metrics || {},
+          journeyStage: component?.data?.journeyStage || "discover",
           recentActivity: contentFor("RecentBookings") || [],
           upcomingTrips: contentFor("UpcomingTrips") || [],
           recentEmptyState: emptyStateFor("RecentBookings"),
@@ -69,10 +124,13 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
       .catch(() => {
         setPlanCards(null);
         setOverviewRail(null);
+        setJourneyHero(null);
+        setOverviewSections({});
+        setOverviewCopy({});
         setDashboardData(null);
       })
       .finally(() => setOverviewDefinitionLoading(false));
-  }, []);
+  }, [reloadShellSession]);
 
   useEffect(() => {
     loadOverview();
@@ -101,18 +159,21 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
 
   const loadFavorites = useCallback(async () => {
     setFavoritesLoading(true);
+    setFavoritesError("");
     try {
       const res = await fetchData("/tours.json/favorites");
-      setFavorites(res?.status === "success" ? res.componentData?.data || [] : []);
-    } catch {
-      setFavorites([]);
+      if (res?.status !== "success") throw new Error(res?.message || "Favorites could not be loaded");
+      setFavorites(res.componentData?.data || []);
+      setFavoritesView(res.componentData?.view || {});
+    } catch (loadError) {
+      setFavoritesError(loadError?.message || "Favorites could not be loaded");
     } finally {
       setFavoritesLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    if (activeTab === "overview") loadFavorites();
+    if (activeTab === "overview" || activeTab === "favorites") loadFavorites();
   }, [activeTab, loadFavorites]);
   useRefreshOnActivation(loadFavorites, {
     enabled: activeTab === "favorites",
@@ -128,35 +189,155 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
         headers: { "Content-Type": "application/json" },
       });
       if (res?.status === "success") {
-        setProfile(res.componentData?.data);
+        const nextProfile = res.componentData?.data;
+        setProfile(nextProfile);
+        if (nextProfile && typeof window !== "undefined") {
+          window.dispatchEvent(
+            new CustomEvent(USER_PROFILE_UPDATED_EVENT, { detail: { user: nextProfile } }),
+          );
+        }
+        reloadShellSession?.();
+        showRealtimeToast({
+          title: "Profile updated",
+          subtitle: "Your account details were saved.",
+          status: "success",
+          dedupeKey: `profile:${Date.now()}`,
+        });
         return { success: true };
       }
       return { success: false, message: res?.message || "Something went wrong" };
+    } catch (error) {
+      const message = error?.response?.data?.message || error?.message || "Profile update failed";
+      showRealtimeToast({ title: "Profile update failed", subtitle: message, status: "error" });
+      return { success: false, message };
     } finally {
       setProfileSaving(false);
     }
   }, []);
 
-  const handleRemoveFavorite = useCallback(async (item) => {
-    const tourId = item?._id || item?.id;
-    if (!tourId) return;
-    await fetchData("/tours.json/favorite/toggle", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: { tourId, product: item?.product || "trevista" },
-    }).catch(() => null);
-    notifyDataChanged("favorites");
+  const handleUpdatePassword = useCallback(async (data) => {
+    setPasswordSaving(true);
+    try {
+      const res = await fetchData("/auth/password", {
+        method: "PUT",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      });
+      if (res?.status === "success") {
+        showRealtimeToast({
+          title: "Password updated",
+          subtitle: "Use the new password next time you sign in.",
+          status: "success",
+          dedupeKey: `password:${Date.now()}`,
+        });
+        return { success: true };
+      }
+      return { success: false, message: res?.message || "Password update failed" };
+    } catch (error) {
+      const message = error?.response?.data?.message || error?.message || "Password update failed";
+      showRealtimeToast({ title: "Password update failed", subtitle: message, status: "error" });
+      return { success: false, message };
+    } finally {
+      setPasswordSaving(false);
+    }
   }, []);
+
+  const handleUpdateAvatar = useCallback(
+    async (avatar) => {
+      setAvatarSaving(true);
+      try {
+        const res = await fetchData("/auth/profile", {
+          method: "PUT",
+          body: JSON.stringify({ avatar }),
+          headers: { "Content-Type": "application/json" },
+        });
+        if (res?.status === "success") {
+          const nextProfile = res.componentData?.data;
+          setProfile(nextProfile);
+          if (nextProfile && typeof window !== "undefined") {
+            window.dispatchEvent(
+              new CustomEvent(USER_PROFILE_UPDATED_EVENT, { detail: { user: nextProfile } }),
+            );
+          }
+          reloadShellSession?.();
+          showRealtimeToast({
+            title: "Avatar updated",
+            subtitle: "Your new avatar is visible across TravelsTREM.",
+            status: "success",
+            dedupeKey: `avatar:${Date.now()}`,
+          });
+          return { success: true };
+        }
+        return { success: false, message: res?.message || "Avatar update failed" };
+      } catch (error) {
+        const message = error?.response?.data?.message || error?.message || "Avatar update failed";
+        showRealtimeToast({ title: "Avatar update failed", subtitle: message, status: "error" });
+        return { success: false, message };
+      } finally {
+        setAvatarSaving(false);
+      }
+    },
+    [reloadShellSession],
+  );
+
+  const handleRemoveFavorite = useCallback(
+    async (item) => {
+      const tourId = textValue(item?.tourId) || textValue(item?._id) || textValue(item?.id);
+      const favoriteKey = textValue(item?.favoriteId) || tourId;
+      if (!tourId || !favoriteKey || removingFavoriteIds.includes(favoriteKey)) return;
+
+      const previousFavorites = favorites;
+      setRemovingFavoriteIds((current) => [...current, favoriteKey]);
+      setFavorites((current) =>
+        current.filter((favorite) => {
+          const currentKey =
+            textValue(favorite?.favoriteId) ||
+            textValue(favorite?.tourId) ||
+            textValue(favorite?._id);
+          return currentKey !== favoriteKey;
+        }),
+      );
+
+      try {
+        const response = await fetchData("/tours.json/favorite/toggle", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: { tourId, product: item?.product },
+        });
+        if (response?.status !== "success") throw new Error(response?.message || "Remove failed");
+        notifyDataChanged("favorites");
+        showRealtimeToast({
+          title: "Removed from saved journeys",
+          subtitle: item?.title || "Your shortlist has been updated.",
+          status: "success",
+          dedupeKey: `favorite-removed:${favoriteKey}`,
+        });
+      } catch (removeError) {
+        setFavorites(previousFavorites);
+        showRealtimeToast({
+          title: "Could not update saved journeys",
+          subtitle: removeError?.message || "Please try again.",
+          status: "error",
+          dedupeKey: `favorite-remove-error:${favoriteKey}`,
+        });
+      } finally {
+        setRemovingFavoriteIds((current) => current.filter((id) => id !== favoriteKey));
+      }
+    },
+    [favorites, removingFavoriteIds],
+  );
 
   const handleViewFavorite = useCallback(
     (item) => {
-      const ref = slugify(item?.title || item?.name) || item?._id || item?.id;
+      const ref = resolveFavoriteRef(item);
       const product = item?.product || "trevista";
       if (!ref) return;
-      if (product === "trevista") navigate(`/tour/${ref}`);
+      if (product === "trevista") {
+        navigate(buildTrevistaTourPath(ref));
+      }
       else
         window.open(
-          `${PRODUCT_URLS[product] || "/"}/${product}/${ref}`,
+          `${PRODUCT_URLS[product] || "/"}/${product}/${encodeURIComponent(ref)}`,
           "_blank",
           "noopener,noreferrer",
         );
@@ -171,8 +352,12 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
           user={user}
           stats={{
             ...(dashboardData?.metrics || {}),
-            totalFavorites: favorites.length,
+            ...(!favoritesLoading ? { totalFavorites: favorites.length } : {}),
           }}
+          copy={overviewCopy}
+          journeyStage={dashboardData?.journeyStage}
+          journeyHero={journeyHero}
+          sections={overviewSections}
           metricsDefinition={metricsDefinition}
           recentActivity={dashboardData?.recentActivity || []}
           upcomingTrips={dashboardData?.upcomingTrips || []}
@@ -181,14 +366,19 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
           planCards={planCards}
           overviewRail={overviewRail}
           overviewDefinitionLoading={overviewDefinitionLoading}
-          overviewStatsLoading={favoritesLoading && !metricsDefinition}
+          overviewStatsLoading={!metricsDefinition}
           onTabChange={onTabChange}
         />
       )}
       {activeTab === "favorites" && (
         <FavoritesView
           favorites={favorites}
+          view={favoritesView}
           loading={favoritesLoading}
+          error={favoritesError}
+          removingIds={removingFavoriteIds}
+          onRetry={loadFavorites}
+          onExplore={() => navigate("/trevista/tours")}
           onRemoveFavorite={handleRemoveFavorite}
           onViewFavorite={handleViewFavorite}
         />
@@ -198,7 +388,11 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
         <ProfileView
           user={profile || user}
           onSaveProfile={handleSaveProfile}
+          onUpdatePassword={handleUpdatePassword}
+          onUpdateAvatar={handleUpdateAvatar}
           saving={profileSaving}
+          passwordSaving={passwordSaving}
+          avatarSaving={avatarSaving}
         />
       )}
     </div>

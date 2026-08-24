@@ -1,5 +1,6 @@
 import {
   FALLBACK_NAVIGATION_CONFIG,
+  buildTrevistaTourPath,
   isGuestAccessibleDestination,
   buildDestinationLocation,
   normalizeNavigationConfig,
@@ -9,6 +10,13 @@ import {
 
 describe("navigationRegistry", () => {
   const config = normalizeNavigationConfig(FALLBACK_NAVIGATION_CONFIG);
+
+  it("builds the canonical embedded Trevista details route", () => {
+    expect(buildTrevistaTourPath("royal rajasthan/tour")).toBe(
+      "/trevista/tours/royal%20rajasthan%2Ftour",
+    );
+    expect(buildTrevistaTourPath("")).toBe("/trevista/tours");
+  });
 
   it("resolves backend aliases and query tabs to registered destinations", () => {
     expect(resolveDestination(config, { pathname: "/tour/bali", search: "" }).renderer).toBe(

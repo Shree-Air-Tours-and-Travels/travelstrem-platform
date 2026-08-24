@@ -1,64 +1,85 @@
 import React from "react";
-import { Icon, StatusBadge, SubTitle, Title, Paragraph } from "@packages/trem-ui";
-import pageConfig from "./profilePage.config.json";
+import { AccountProfile } from "@packages/trem-ui";
 
-export default function ProfilePage({ profile, auth, profileLoading, agencyApplication }) {
-  const data = profile || {};
-  const joinedDate = auth.user?.createdAt
-    ? new Date(auth.user.createdAt).toLocaleDateString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
-    : null;
-  const partnerStatus =
-    agencyApplication?.status || (auth.user?.partnerAgencyRef ? "approved" : null);
+export default function ProfilePage({
+  profile,
+  auth,
+  onUpdatePassword,
+  onUpdateAvatar,
+  onUpdateProfile,
+  title = "Agent profile",
+  subtitle = "View and manage your PartnerTREM account.",
+  portalLabel = "Partner",
+}) {
+  const [saving, setSaving] = React.useState(false);
+  const [passwordSaving, setPasswordSaving] = React.useState(false);
+  const [avatarSaving, setAvatarSaving] = React.useState(false);
+  const sourceUser = { ...(auth?.user || {}), ...(profile || {}) };
+  const accountRole =
+    sourceUser.agencyRole === "partner_admin"
+      ? "Partner admin"
+      : sourceUser.agencyRole === "partner_agent"
+        ? "Partner agent"
+        : "Agent";
+  const user = { ...sourceUser, accountRole };
+
+  const saveProfile = async (data) => {
+    setSaving(true);
+    try {
+      await onUpdateProfile?.(data);
+      return { success: true };
+    } catch (error) {
+      return { success: false, message: error?.message || "Profile update failed" };
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const updatePassword = async (data) => {
+    setPasswordSaving(true);
+    try {
+      await onUpdatePassword?.(data);
+      return { success: true };
+    } catch (error) {
+      return { success: false, message: error?.message || "Password update failed" };
+    } finally {
+      setPasswordSaving(false);
+    }
+  };
+
+  const updateAvatar = async (avatar) => {
+    setAvatarSaving(true);
+    try {
+      await onUpdateAvatar?.(avatar);
+      return { success: true };
+    } catch (error) {
+      return { success: false, message: error?.message || "Avatar update failed" };
+    } finally {
+      setAvatarSaving(false);
+    }
+  };
 
   return (
     <section className="agent-main-widget agent-profile-widget">
-      <header className="agent-widget-toolbar">
-        <SubTitle text={pageConfig.pageTitle} />
-      </header>
-      <div className="agent-profile-grid">
-        <article className="agent-profile-card-large">
-          <span className="agent-profile-card-large__avatar">
-            {(data.name || auth.user?.name || pageConfig.fallbackAvatarInitial)
-              .charAt(0)
-              .toUpperCase()}
-          </span>
-          <div>
-            <Title
-              text={
-                profileLoading
-                  ? pageConfig.loadingText
-                  : data.name || auth.user?.name || pageConfig.fallbackName
-              }
-            />
-            <Paragraph text={data.email || auth.user?.email || ""} />
-          </div>
-        </article>
-        <dl className="agent-profile-summary">
-          {pageConfig.fields.map((field) => {
-            if (field.key === "joined" && !joinedDate) return null;
-            const value =
-              field.key === "joined" ? joinedDate : data[field.accessor] || field.fallback;
-            return (
-              <div key={field.key}>
-                <dt>{field.label}</dt>
-                <dd>{value}</dd>
-              </div>
-            );
-          })}
-        </dl>
-      </div>
-      {partnerStatus && (
-        <div className="agent-partner-status">
-          <Icon name={partnerStatus === "approved" ? "checkCircle" : "clock"} size={18} />
-          <span>
-            {pageConfig.partnerStatus.label} <StatusBadge value={partnerStatus} />
-          </span>
-        </div>
-      )}
+      <AccountProfile
+        user={user}
+        title={title}
+        subtitle={subtitle}
+        portalLabel={portalLabel}
+        roleLabel="Logged in as"
+        saving={saving}
+        passwordSaving={passwordSaving}
+        avatarSaving={avatarSaving}
+        onSaveProfile={saveProfile}
+        onUpdatePassword={updatePassword}
+        onUpdateAvatar={updateAvatar}
+        showRole
+        showAdminLevel={false}
+        showAgencyRole={false}
+        showAgentStatus={false}
+        showUserId={false}
+        showExtraDetails={false}
+      />
     </section>
   );
 }

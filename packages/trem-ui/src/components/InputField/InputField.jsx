@@ -204,10 +204,14 @@ export default function InputField({
   step,
   inputMode,
   ariaLabel,
+  "aria-describedby": ariaDescribedBy,
   countryCode: initialCountryCode = "+91",
   onCountryCodeChange,
   ...rest
 }) {
+  const generatedErrorId = React.useId();
+  const errorId = `${generatedErrorId}-error`;
+  const describedBy = [ariaDescribedBy, error ? errorId : null].filter(Boolean).join(" ") || undefined;
   const isTel = variant === "tel";
   const isMonthYear = variant === "monthYear";
   const [cc, setCc] = useState(initialCountryCode);
@@ -290,9 +294,15 @@ export default function InputField({
           step={step}
           aria-label={ariaLabel || label || placeholder}
           aria-invalid={Boolean(error)}
+          aria-describedby={describedBy}
           {...rest}
         />
       </div>
+      {error ? (
+        <span className="trem-input__error" id={errorId} role="alert">
+          {error}
+        </span>
+      ) : null}
     </div>
   );
 }

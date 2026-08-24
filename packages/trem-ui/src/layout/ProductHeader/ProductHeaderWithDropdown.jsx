@@ -51,7 +51,7 @@ export default function ProductHeaderWithDropdown({
 ProductHeaderWithDropdown.propTypes = {
   profile: PropTypes.shape({
     ariaLabel: PropTypes.string,
-    avatarUrl: PropTypes.string,
+    avatar: PropTypes.string,
     displayName: PropTypes.string,
     label: PropTypes.string,
     menuLabel: PropTypes.string,

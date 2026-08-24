@@ -459,6 +459,8 @@ export default function IncludedStaysView({
               .join(" · ")}
             subtitle={labels.optionsSubtitle}
             icon="hotel"
+            emptyTitle={labels.optionsEmptyTitle}
+            emptyDescription={labels.optionsEmptyDescription}
             recommendedLabel={labels.recommended || "Recommended"}
             pricePendingLabel={labels.pricePending || "Price on request"}
             includedInLabel={labels.includedIn || "Included in"}
@@ -471,6 +473,7 @@ export default function IncludedStaysView({
             selectedLabel={labels.selected || "Selected"}
             confirmLabel={labels.applyHotel || "Apply hotel"}
             cancelLabel={labels.cancel || "Cancel"}
+            closeLabel={labels.close || "Close"}
             customizeLabel={labels.customize || "Customise this tour"}
             onCustomize={
               typeof onCustomize === "function"

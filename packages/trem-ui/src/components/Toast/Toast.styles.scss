@@ -47,6 +47,9 @@
   &[data-status="error"] .trem-toast__icon {
     background: var(--color-danger, #e11d48);
   }
+  &[data-status="warning"] .trem-toast__icon {
+    background: var(--color-warning, #f59e0b);
+  }
   &[data-status="info"] .trem-toast__icon {
     background: var(--muted, #64748b);
   }

@@ -41,6 +41,36 @@ const displayText = (value, fallback = "") => {
   return fallback;
 };
 
+const getBufferedEntityId = (value) => {
+  const buffer = value?.buffer;
+  if (!buffer || typeof buffer !== "object") return "";
+  const bytes = Array.isArray(buffer)
+    ? buffer
+    : Object.keys(buffer)
+        .filter((key) => /^\d+$/.test(key))
+        .sort((a, b) => Number(a) - Number(b))
+        .map((key) => buffer[key]);
+  if (bytes.length !== 12 || bytes.some((byte) => !Number.isInteger(byte) || byte < 0 || byte > 255))
+    return "";
+  return bytes.map((byte) => byte.toString(16).padStart(2, "0")).join("");
+};
+
+const getEntityId = (value) => {
+  if (value == null) return "";
+  if (["string", "number"].includes(typeof value)) return String(value);
+  if (typeof value === "object") {
+    if (typeof value.toHexString === "function") return value.toHexString();
+    return (
+      getEntityId(value._id) ||
+      getEntityId(value.id) ||
+      getEntityId(value.$oid) ||
+      getEntityId(value.value) ||
+      getBufferedEntityId(value)
+    );
+  }
+  return "";
+};
+
 const getPriceText = (tour) => {
   const t = tour || {};
   const price = t.priceInfo || t.price || t.pricing;
@@ -95,11 +125,12 @@ const TourCard = React.memo(function TourCard({
   variant = "list",
   size = "default",
   showActions = true,
+  managementActions = false,
   hideDescription = false,
   labels = {},
 }) {
   const t = tour || {};
-  const _id = t._id || t.id;
+  const _id = getEntityId(t._id) || getEntityId(t.id);
   const title = displayText(t.title, "Untitled Tour");
   const photos = Array.isArray(t.photos) ? t.photos : [];
   const imageSrc = displayText(t.photo ?? photos[0] ?? t.coverImage?.url) || null;
@@ -141,6 +172,9 @@ const TourCard = React.memo(function TourCard({
   const isFeaturedCard = variant === "featured";
   const isManagement = variant === "management";
   const isCustomerCard = isManagement && !isAdmin;
+  const hasManagementActions =
+    managementActions || isAdmin || (isManagement && Boolean(onEdit || onVerify || onDelete));
+  const isInteractiveCard = Boolean(!hasManagementActions && !path && typeof onView === "function");
   const status = String(
     t.status || (t.isPublished === false ? "draft" : "published"),
   ).toLowerCase();
@@ -154,7 +188,7 @@ const TourCard = React.memo(function TourCard({
     trending: "Trending",
     verified: "TREM verified",
     view: "View",
-    viewTour: "View tour",
+    viewTour: "Explore this Tour",
     edit: "Edit",
     continue: "Continue",
     remove: "Delete",
@@ -175,13 +209,13 @@ const TourCard = React.memo(function TourCard({
     .slice(0, 3);
 
   const handleClick = () => {
-    if (!path && typeof onView === "function") onView(tour);
+    if (isInteractiveCard) onView(tour);
   };
 
   const handleKeyDown = (e) => {
+    if (!isInteractiveCard) return;
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
-      if (path) return;
       onView?.(tour);
     }
   };
@@ -200,16 +234,19 @@ const TourCard = React.memo(function TourCard({
 
   const handleEdit = (e) => {
     e.stopPropagation();
+    e.preventDefault();
     onEdit?.(tour);
   };
 
   const handleDelete = (e) => {
     e.stopPropagation();
+    e.preventDefault();
     onDelete?.(tour);
   };
 
   const handleVerify = (e) => {
     e.stopPropagation();
+    e.preventDefault();
     onVerify?.(tour);
   };
 
@@ -416,7 +453,11 @@ const TourCard = React.memo(function TourCard({
           </div>
         )}
 
-        {showActions && (variant === "list" || isCustomerCard) && onView && !isAdmin && (
+        {showActions &&
+          (variant === "list" || isCustomerCard) &&
+          onView &&
+          !isAdmin &&
+          !hasManagementActions && (
           <Button
             text={copy.viewTour}
             variant="solid"
@@ -427,11 +468,11 @@ const TourCard = React.memo(function TourCard({
           />
         )}
 
-        {isAdmin && showActions && (
+        {showActions && hasManagementActions && (
           <div
             className="tour-card__admin"
             role="group"
-            aria-label="admin actions"
+            aria-label={isAdmin ? "admin actions" : "tour management actions"}
             onClick={(e) => e.stopPropagation()}
           >
             {onView && (
@@ -540,8 +581,8 @@ const TourCard = React.memo(function TourCard({
     <article
       className={baseClasses}
       aria-labelledby={_id ? `tour-card-${_id}-title` : undefined}
-      role="button"
-      tabIndex={0}
+      role={isInteractiveCard ? "button" : undefined}
+      tabIndex={isInteractiveCard ? 0 : undefined}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
     >

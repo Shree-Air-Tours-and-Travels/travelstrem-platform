@@ -4,6 +4,10 @@ import config from "../../../config/index.js";
 import RefreshToken from "../models/RefreshToken.js";
 import User from "../models/User.js";
 import {
+    DEFAULT_PROFILE_AVATAR,
+    normalizeProfileAvatar,
+} from "../profileAvatar.constants.js";
+import {
     getPortalCookieNames,
     getPortalScope,
     normalizePortalScope,
@@ -22,15 +26,27 @@ export const hashToken = (raw) => crypto.createHash("sha256").update(String(raw)
 const requestPortal = (req, override) =>
     normalizePortalScope(override || req?.authPortalOverride || getPortalScope(req));
 
+const toStringId = (value) => {
+    if (!value) return "";
+    if (typeof value === "string") return value;
+    if (typeof value === "number" || typeof value === "bigint") return String(value);
+    if (typeof value.toHexString === "function") return value.toHexString();
+    if (typeof value.toString === "function") {
+        const result = value.toString();
+        return result === "[object Object]" ? "" : result;
+    }
+    return "";
+};
+
 export const safeAuthUser = (user) => ({
-    id: user._id || user.id,
+    id: toStringId(user._id || user.id),
     name: user.name,
     email: user.email || null,
     mobile: user.mobile || user.phone || null,
     phone: user.mobile || user.phone || "",
     emailVerified: Boolean(user.emailVerified),
     mobileVerified: Boolean(user.mobileVerified),
-    avatar: user.avatar || "user",
+    avatar: normalizeProfileAvatar(user.avatar),
     role: user.role,
     accountStatus: user.accountStatus || "active",
     agentRef: user.agentRef || "",
@@ -40,8 +56,9 @@ export const safeAuthUser = (user) => ({
     adminLevel: user.adminLevel || "none",
     adminApprovalStatus: user.adminApprovalStatus || "not_required",
     agencyRole: user.agencyRole || "none",
-    agencyId: user.agencyId || null,
+    agencyId: toStringId(user.agencyId) || null,
     productAccess: user.productAccess || [],
+    createdAt: user.createdAt ? new Date(user.createdAt).toISOString() : null,
 });
 
 const signAccessToken = (user, portal, sessionId) =>
@@ -70,6 +87,15 @@ export const clearAuthCookies = (req, res, portalOverride) => {
 };
 
 export const createSession = async ({ user, req, res, portal: portalOverride, family = null }) => {
+    const normalizedAvatar = normalizeProfileAvatar(user.avatar);
+    if (user.avatar !== normalizedAvatar) {
+        const previousAvatar = user.avatar ?? null;
+        user.avatar = normalizedAvatar;
+        await User.updateOne(
+            { _id: user._id, avatar: previousAvatar },
+            { $set: { avatar: normalizedAvatar } },
+        );
+    }
     const portal = requestPortal(req, portalOverride);
     const rawRefreshToken = crypto.randomBytes(48).toString("base64url");
     const sessionId = crypto.randomUUID();

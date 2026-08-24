@@ -1,6 +1,6 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { AppHeader, PortalPreloader, SideBar } from "@packages/trem-ui";
+import { AppHeader, Breadcrumbs, PortalPreloader, SideBar } from "@packages/trem-ui";
 import { clearAuthBrowserState, emitAuthEvent } from "@packages/trem-auth-core";
 import { emit } from "@packages/trem-events";
 import { buildGlobalAuthUrl, useThemeMode } from "@packages/trem-utils";
@@ -14,7 +14,12 @@ const roleLabel = (user) =>
 function activeNavigation(pathname) {
   if (pathname.includes("/trevio/trips")) return "trevioTrips";
   if (pathname.includes("/services/tours")) return "trevistaTours";
-  if (pathname.includes("/agent/agents")) return "agents";
+  if (
+    pathname.includes("/agent/agency") ||
+    pathname.includes("/agent/agents") ||
+    pathname.includes("/agent/partner-agency")
+  )
+    return "agencyWorkspace";
   if (pathname.includes("/agent/customers")) return "customers";
   if (
     pathname.includes("/agent/enquiries") ||
@@ -22,27 +27,72 @@ function activeNavigation(pathname) {
     pathname.includes("/services/bookings")
   )
     return "enquiries";
-  if (pathname.includes("/agent/partner-agency")) return "agency";
   if (pathname.includes("/agent/profile") || pathname.includes("/agent/settings")) return "profile";
   if (pathname.includes("/agent/reports")) return "reports";
   return "dashboard";
 }
 
+const isRouteMatch = (pathname, route) =>
+  Boolean(route && (pathname === route || pathname.startsWith(`${route}/`)));
+
+export const resolvePartnerBreadcrumbs = (pathname, definitions = []) =>
+  definitions
+    .filter((definition) => isRouteMatch(pathname, definition?.match))
+    .sort((left, right) => right.match.length - left.match.length)[0]?.items || [];
+
 export default function AppLayout({ embedded = false }) {
-  const { loading, session } = useAgentPortalConfig();
+  const { loading, session, headerConfig: backendHeaderConfig } = useAgentPortalConfig();
   const { theme, toggleTheme } = useThemeMode();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [selectedProductKey, setSelectedProductKey] = useState("");
   const hasPartnerAccess = session?.isAuthenticated && isAllowedAgentRole(session);
-  const user = session?.user || {};
-  const products = Array.isArray(user.productAccess) ? user.productAccess : [];
+  const user = useMemo(() => session?.user || {}, [session?.user]);
+  const products = useMemo(
+    () => (Array.isArray(user.productAccess) ? user.productAccess : []),
+    [user.productAccess],
+  );
   const isPartnerAdmin = user.agencyRole === "partner_admin";
-  const hasTrevio = products.includes("trevio");
-  const hasTrevista = products.includes("trevista");
-  const isTrevistaPath = location.pathname.includes("/services/tours");
+  const productCatalog = useMemo(
+    () =>
+      (Array.isArray(backendHeaderConfig?.partnerProducts)
+        ? backendHeaderConfig.partnerProducts
+        : []
+      ).filter((product) => products.includes(product.key)),
+    [backendHeaderConfig?.partnerProducts, products],
+  );
+  const hasTrevio = productCatalog.some((product) => product.key === "trevio");
+  const hasTrevista = productCatalog.some((product) => product.key === "trevista");
   const partnerUser = useMemo(() => ({ ...user, partnerRoleLabel: roleLabel(user) }), [user]);
+
+  useEffect(() => {
+    const pathProduct = productCatalog.find((product) =>
+      isRouteMatch(location.pathname, product.listPath),
+    );
+    if (pathProduct) {
+      setSelectedProductKey(pathProduct.key);
+      return;
+    }
+    if (!productCatalog.some((product) => product.key === selectedProductKey)) {
+      setSelectedProductKey(productCatalog[0]?.key || "");
+    }
+  }, [location.pathname, productCatalog, selectedProductKey]);
+
+  const selectedProduct = useMemo(
+    () =>
+      productCatalog.find((product) => product.key === selectedProductKey) || productCatalog[0],
+    [productCatalog, selectedProductKey],
+  );
+  const breadcrumbItems = useMemo(
+    () =>
+      resolvePartnerBreadcrumbs(
+        location.pathname,
+        backendHeaderConfig?.partnerBreadcrumbs || [],
+      ),
+    [backendHeaderConfig?.partnerBreadcrumbs, location.pathname],
+  );
 
   const logout = useCallback(async () => {
     await authService.logout().catch(() => null);
@@ -74,7 +124,14 @@ export default function AppLayout({ embedded = false }) {
             path: "/agent/customers",
           },
           ...(isPartnerAdmin
-            ? [{ id: "agents", label: "Agents", icon: "user", path: "/agent/agents" }]
+            ? [
+                {
+                  id: "agencyWorkspace",
+                  label: "Agency Workspace",
+                  icon: "building2",
+                  path: "/agent/agency",
+                },
+              ]
             : []),
         ],
       },
@@ -109,16 +166,6 @@ export default function AppLayout({ embedded = false }) {
         title: "Agency",
         items: [
           ...(isPartnerAdmin
-            ? [
-                {
-                  id: "agency",
-                  label: "Agency Profile",
-                  icon: "building2",
-                  path: "/agent/partner-agency",
-                },
-              ]
-            : []),
-          ...(isPartnerAdmin
             ? [{ id: "reports", label: "Reports", icon: "management", path: "/agent/reports" }]
             : []),
           { id: "profile", label: "My Profile", icon: "user", path: "/agent/profile" },
@@ -132,7 +179,11 @@ export default function AppLayout({ embedded = false }) {
   const sidebarConfig = useMemo(
     () => ({
       ariaLabel: "PartnerTREM navigation",
-      brand: { name: "PartnerTREM", subtitle: "Agency Operations" },
+      brand: {
+        name: "PartnerTREM",
+        subtitleKey: "agencyName",
+        fallbackSubtitle: "Agency Operations",
+      },
       sections,
       profile: {
         metaKey: "partnerRoleLabel",
@@ -145,86 +196,68 @@ export default function AppLayout({ embedded = false }) {
 
   const headerConfig = useMemo(
     () => ({
+      variant: backendHeaderConfig?.variant || "partner",
       ariaLabel: "PartnerTREM application header",
-      brand: { name: "PartnerTREM", subtitle: roleLabel(user) },
+      brand: { name: "PartnerTREM", subtitle: user.agencyName || roleLabel(user) },
       search: { enabled: false, placeholder: "Search trips and customers" },
       productMenu: {
-        label:
-          hasTrevista && hasTrevio
-            ? "Products"
-            : hasTrevio
-              ? "Trevio"
-              : hasTrevista
-                ? "Trevista"
-                : "",
+        label: productCatalog.length > 1 ? selectedProduct?.label || "" : "",
         ariaLabel: "Choose agency product",
-        items: [
-          ...(hasTrevio
-            ? [
-                {
-                  id: "trevioTrips",
-                  label: "Trevio Trips",
-                  icon: "mountain",
-                  onClick: () => navigate("/agent/trevio/trips"),
-                },
-              ]
-            : []),
-          ...(hasTrevista
-            ? [
-                {
-                  id: "trevistaTours",
-                  label: "Trevista Tours",
-                  icon: "map",
-                  onClick: () => navigate("/agent/services/tours"),
-                },
-              ]
-            : []),
-        ],
+        items: productCatalog.map((product) => ({
+          id: product.key,
+          label: product.menuLabel || product.label,
+          icon: product.icon,
+          active: product.key === selectedProduct?.key,
+          onClick: () => {
+            setSelectedProductKey(product.key);
+            navigate(product.listPath);
+          },
+        })),
       },
-      primaryAction:
-        isTrevistaPath && hasTrevista
-          ? {
-              label: "New Trevista Tour",
-              icon: "plus",
-              enabled: true,
-              onClick: () => navigate("/agent/services/tours?create=true"),
-            }
-          : hasTrevio
-            ? {
-                label: "New Trevio Trip",
-                icon: "plus",
-                enabled: true,
-                onClick: () => navigate("/agent/trevio/trips?create=true"),
-              }
-            : hasTrevista
-              ? {
-                  label: "New Trevista Tour",
-                  icon: "plus",
-                  enabled: true,
-                  onClick: () => navigate("/agent/services/tours?create=true"),
-                }
-              : {},
-      notification: { enabled: false, label: "Notifications" },
+      primaryAction: selectedProduct
+        ? {
+            label: selectedProduct.createLabel,
+            icon: "plus",
+            enabled: true,
+            onClick: () => navigate(selectedProduct.createPath),
+          }
+        : {},
+      notification: { hide: true },
       themeAction: {},
       user: {
         fallbackName: "Partner",
+        variant: "outlined",
         items: [
           { id: "profile", label: "My Profile", icon: "user", action: "profile" },
           ...(isPartnerAdmin
-            ? [{ id: "agency", label: "Agency Profile", icon: "building2", action: "agency" }]
+            ? [
+                {
+                  id: "agency",
+                  label: "Agency Workspace",
+                  icon: "building2",
+                  action: "agency",
+                },
+              ]
             : []),
           { id: "logout", label: "Sign Out", icon: "logout", action: "logout" },
         ],
       },
       mobileMenu: { openLabel: "Open partner navigation", closeLabel: "Close partner navigation" },
     }),
-    [hasTrevio, hasTrevista, isPartnerAdmin, isTrevistaPath, navigate, user],
+    [
+      backendHeaderConfig?.variant,
+      isPartnerAdmin,
+      navigate,
+      productCatalog,
+      selectedProduct,
+      user,
+    ],
   );
 
   const onAction = useCallback(
     (action) => {
       if (action === "logout") return logout();
-      if (action === "agency") return navigate("/agent/partner-agency");
+      if (action === "agency") return navigate("/agent/agency");
       return navigate("/agent/profile");
     },
     [logout, navigate],
@@ -260,7 +293,14 @@ export default function AppLayout({ embedded = false }) {
         </>
       ) : null}
       <div className="partner-shell__content">
-        <Routers theme={theme} onToggleTheme={toggleTheme} />
+        {hasPartnerAccess && breadcrumbItems.length ? (
+          <div className="partner-shell__breadcrumb">
+            <Breadcrumbs items={breadcrumbItems} />
+          </div>
+        ) : null}
+        <div className="partner-shell__content--margin">
+          <Routers theme={theme} onToggleTheme={toggleTheme} />
+        </div>
       </div>
       {loading && <PortalPreloader type="app" text="Preparing your PartnerTREM workspace" />}
     </div>
