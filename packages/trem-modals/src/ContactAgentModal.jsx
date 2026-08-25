@@ -537,31 +537,31 @@ const ContactAgentModal = ({
 
             {tour?.title && (
               <div className="ct-modal-card__tour">
-                  {tour?.image && (
-                    <div className="ct-modal-card__tour-img">
-                      <img src={tour.image} alt={tour.title} />
-                    </div>
-                  )}
-                  <div className="ct-modal-card__tour-info">
-                    <strong>{tour.title}</strong>
-                    {priceStr && <span className="ct-modal-card__tour-price">{priceStr}</span>}
-                    {agency?.name || operator?.name ? (
-                      <div className="ct-modal-card__operator">
-                        {agency?.name ? (
-                          <span>
-                            <small>{formData?.contextLabels?.operatedBy}</small>
-                            {agency.name}
-                          </span>
-                        ) : null}
-                        {operator?.name ? (
-                          <span>
-                            <small>{formData?.contextLabels?.travelSpecialist}</small>
-                            {operator.name}
-                          </span>
-                        ) : null}
-                      </div>
-                    ) : null}
+                {tour?.image && (
+                  <div className="ct-modal-card__tour-img">
+                    <img src={tour.image} alt={tour.title} />
                   </div>
+                )}
+                <div className="ct-modal-card__tour-info">
+                  <strong>{tour.title}</strong>
+                  {priceStr && <span className="ct-modal-card__tour-price">{priceStr}</span>}
+                  {agency?.name || operator?.name ? (
+                    <div className="ct-modal-card__operator">
+                      {agency?.name ? (
+                        <span>
+                          <small>{formData?.contextLabels?.operatedBy}</small>
+                          {agency.name}
+                        </span>
+                      ) : null}
+                      {operator?.name ? (
+                        <span>
+                          <small>{formData?.contextLabels?.travelSpecialist}</small>
+                          {operator.name}
+                        </span>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
               </div>
             )}
 
