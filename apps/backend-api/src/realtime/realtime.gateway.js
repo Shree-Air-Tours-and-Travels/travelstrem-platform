@@ -179,7 +179,39 @@ function registerConnectionHandlers(io) {
  * Attaches the Socket.IO server to the existing TravelsTREM HTTP server.
  * Returns the io instance, or null when realtime is disabled/unavailable.
  */
-export function attachRealtime(httpServer) {
+const createAdapterRedisClient = (label) => {
+    const client = new Redis(config.REDIS_URL, {
+        lazyConnect: true,
+        connectTimeout: 10000,
+        maxRetriesPerRequest: null,
+        enableReadyCheck: true,
+        keepAlive: 10000,
+        retryStrategy: (attempt) => Math.min(attempt * 200, 5000),
+    });
+
+    client.on("error", (err) =>
+        logger.error(`[Realtime] Redis ${label} client error: ${err.message}`),
+    );
+    client.on("close", () => logger.warn(`[Realtime] Redis ${label} client connection closed`));
+    client.on("reconnecting", (delay) =>
+        logger.warn(`[Realtime] Redis ${label} client reconnecting in ${delay}ms`),
+    );
+    client.on("end", () => logger.warn(`[Realtime] Redis ${label} client connection ended`));
+
+    return client;
+};
+
+const closeAdapterRedisClient = async (client) => {
+    if (!client || client.status === "end") return;
+    try {
+        await client.quit();
+    } catch (err) {
+        logger.warn(`[Realtime] Redis adapter client shutdown failed: ${err.message}`);
+        client.disconnect();
+    }
+};
+
+export async function attachRealtime(httpServer) {
     if (!realtimeConfig.enabled) {
         logger.info("[Realtime] disabled by configuration");
         return null;
@@ -218,35 +250,29 @@ export function attachRealtime(httpServer) {
         }
     });
 
-    // Horizontal scaling: share rooms/events across instances via Redis when
-    // REDIS_URL is configured. Single-instance deployments run without it.
+    // Horizontal scaling is opt-in. Single-instance deployments use Socket.IO's
+    // default in-memory adapter even though auth/session Redis remains required.
     let pubClient = null;
     let subClient = null;
-    if (config.REDIS_URL) {
+    if (config.ENABLE_REDIS_SOCKET_ADAPTER) {
         try {
-            pubClient = new Redis(config.REDIS_URL, {
-                maxRetriesPerRequest: 3,
-                lazyConnect: false,
-            });
-            subClient = pubClient.duplicate();
+            pubClient = createAdapterRedisClient("publisher");
+            subClient = createAdapterRedisClient("subscriber");
+            await Promise.all([pubClient.connect(), subClient.connect()]);
+            await Promise.all([pubClient.ping(), subClient.ping()]);
             io.adapter(createAdapter(pubClient, subClient));
             logger.info("[Realtime] Redis adapter enabled (multi-instance ready)");
-            subClient.on("error", (err) =>
-                logger.error(`[Realtime] redis adapter error: ${err.message}`),
-            );
         } catch (err) {
             logger.error(
                 `[Realtime] failed to enable Redis adapter (${err?.message}) — continuing single-instance`,
             );
-            pubClient?.disconnect?.();
-            subClient?.disconnect?.();
+            pubClient?.disconnect();
+            subClient?.disconnect();
             pubClient = null;
             subClient = null;
         }
     } else {
-        logger.info(
-            "[Realtime] REDIS_URL not set — running single-instance (no cross-instance fan-out)",
-        );
+        logger.info("[Realtime] Redis adapter disabled — running single-instance");
     }
 
     registerConnectionHandlers(io);
@@ -256,8 +282,10 @@ export function attachRealtime(httpServer) {
     io.realtimeClose = async () => {
         io.disconnectSockets(true);
         await io.close();
-        if (pubClient) await pubClient.quit().catch(() => {});
-        if (subClient) await subClient.quit().catch(() => {});
+        await Promise.all([
+            closeAdapterRedisClient(pubClient),
+            closeAdapterRedisClient(subClient),
+        ]);
     };
 
     logger.info(`[Realtime] gateway attached at path ${realtimeConfig.path}`);

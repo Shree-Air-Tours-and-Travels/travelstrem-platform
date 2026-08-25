@@ -601,10 +601,11 @@ export const submitForm = async (req, res) => {
             );
         }
 
-        let notified = false;
         // Gmail is the only delivery channel for enquiries. Notify both the
-        // tour owner and the configured business contact, then acknowledge the customer.
-        try {
+        // tour owner and the configured business contact. Delivery is best-effort
+        // and must not delay the HTTP acknowledgement after the enquiry is saved.
+        void (async () => {
+            try {
             const recipients = new Set();
             if (config.ENQUIRY_EMAIL) recipients.add(config.ENQUIRY_EMAIL);
             if (agent?.email) recipients.add(agent.email);
@@ -665,7 +666,6 @@ export const submitForm = async (req, res) => {
                 if (emailResult.success) {
                     savedLead.notified = true;
                     await savedLead.save();
-                    notified = true;
                 } else {
                     console.error(
                         "Enquiry email notification failed:",
@@ -691,9 +691,10 @@ export const submitForm = async (req, res) => {
                 text: `Hi ${allowedFields.name},\n\nYour enquiry has been sent to ${specialist}. Your TravelsTREM enquiry ID is ${savedLead.enquiryRef}.\n\n${tourTitle ? `Trip: ${tourTitle}\n` : ""}Departure: ${customerDeparture}\nQuote type: ${customerQuoteType}\n${contactLines ? `Your travel specialist: ${specialist} (${contactLines})\n` : ""}${req.body.isAuthenticated ? "" : `\nSign in to TravelsTREM to track this enquiry and future bookings. After signing in, enter ${savedLead.enquiryRef} on My Bookings to add it to your account.\n`}\nThank you,\n${config.COMPANY_NAME}`,
                 html: `<div style="font-family:Arial,sans-serif;max-width:640px;margin:auto;color:#172033"><h2 style="color:#173b8f">Your enquiry is on its way</h2><p>Hi ${escapeHtml(allowedFields.name)},</p><p>Your enquiry has been sent to <strong>${escapeHtml(specialist)}</strong>.</p><p><strong>Your TravelsTREM enquiry ID:</strong> ${escapeHtml(savedLead.enquiryRef)}</p>${tourTitle ? `<p><strong>Trip:</strong> ${escapeHtml(tourTitle)}</p>` : ""}<p><strong>Departure:</strong> ${escapeHtml(customerDeparture)}<br/><strong>Quote type:</strong> ${escapeHtml(customerQuoteType)}</p>${contactLines ? `<p><strong>Your travel specialist:</strong> ${escapeHtml(specialist)}<br/>${escapeHtml(contactLines)}</p>` : ""}${req.body.isAuthenticated ? "" : `<p><a href="${escapeHtml(config.SHELL_URL)}">Sign in to TravelsTREM</a> to track this enquiry and future bookings. Once signed in, enter this enquiry ID on <strong>My Bookings</strong> to add it to your account.</p>`}<p>Thank you,<br/>${escapeHtml(config.COMPANY_NAME)}</p></div>`,
             });
-        } catch (emailErr) {
-            console.error("Enquiry email notification failed:", emailErr?.message || emailErr);
-        }
+            } catch (emailErr) {
+                console.error("Enquiry email notification failed:", emailErr?.message || emailErr);
+            }
+        })();
 
         // respond with your JSON contract & componentData
         const response = pageDefinitionService.buildWidgetResponse(
@@ -709,7 +710,7 @@ export const submitForm = async (req, res) => {
                         tourTitle: savedLead.tourTitle,
                         url: savedLead.url,
                         createdAt: savedLead.createdAt,
-                        notified: savedLead.notified || notified,
+                        notified: Boolean(savedLead.notified),
                         agent: savedLead.agentSnapshot,
                     },
                 },
@@ -721,7 +722,7 @@ export const submitForm = async (req, res) => {
             status: "success",
             message: "Request submitted successfully",
             ...response,
-            ui: { closeAfterMs: 5500 },
+            ui: { closeAfterMs: 0 },
         });
     } catch (err) {
         console.error("submitForm error:", err);
