@@ -3,63 +3,68 @@ import config from "../../config/index.js";
 
 let redis = null;
 
-/**
- * Get or create the Redis client singleton.
- * Falls back gracefully if Redis is unavailable.
- */
 export function getRedis() {
     if (redis) return redis;
 
     if (!config.REDIS_URL) {
-        console.warn("[Redis] REDIS_URL not configured — running without Redis");
+        console.warn("[Redis] REDIS_URL not configured");
         return null;
     }
 
-    try {
-        redis = new Redis(config.REDIS_URL, {
-            maxRetriesPerRequest: 3,
-            retryStrategy(times) {
-                if (times > 10) return null;
-                return Math.min(times * 200, 5000);
-            },
-            lazyConnect: true,
-            enableReadyCheck: true,
-            connectTimeout: 5000,
-        });
+    redis = new Redis(config.REDIS_URL, {
+        connectTimeout: 10000,
 
-        redis.on("connect", () => {
-            console.log("[Redis] Connected");
-        });
+        maxRetriesPerRequest: 3,
 
-        redis.on("ready", () => {
-            console.log("[Redis] Ready");
-        });
+        enableReadyCheck: true,
 
-        redis.on("error", (err) => {
-            console.error("[Redis] Error:", err.message);
-        });
+        keepAlive: 10000,
 
-        redis.on("close", () => {
-            console.warn("[Redis] Connection closed");
-        });
+        retryStrategy(times) {
+            const delay = Math.min(times * 200, 5000);
 
-        redis.connect().catch((err) => {
-            console.warn("[Redis] Initial connection failed:", err.message);
-        });
+            console.warn(`[Redis] Reconnecting attempt ${times} in ${delay}ms`);
 
-        return redis;
-    } catch (err) {
-        console.warn("[Redis] Failed to create client:", err.message);
-        return null;
-    }
+            return delay;
+        },
+    });
+
+    redis.on("connect", () => {
+        console.log("[Redis] Connected");
+    });
+
+    redis.on("ready", () => {
+        console.log("[Redis] Ready");
+    });
+
+    redis.on("error", (err) => {
+        console.error("[Redis] Error:", err.message);
+    });
+
+    redis.on("close", () => {
+        console.warn("[Redis] Connection closed");
+    });
+
+    redis.on("reconnecting", (delay) => {
+        console.warn(`[Redis] Reconnecting in ${delay}ms`);
+    });
+
+    redis.on("end", () => {
+        console.error("[Redis] Connection permanently ended");
+    });
+
+    return redis;
 }
 
-/**
- * Gracefully disconnect Redis on shutdown.
- */
 export async function disconnectRedis() {
-    if (redis) {
-        await redis.quit().catch(() => {});
+    if (!redis) return;
+
+    try {
+        await redis.quit();
+    } catch (err) {
+        console.warn("[Redis] Graceful quit failed:", err.message);
+        redis.disconnect();
+    } finally {
         redis = null;
     }
 }
