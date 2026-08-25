@@ -437,6 +437,8 @@ if (MASTER_ADMIN_PIN && !/^\d{6}$/.test(MASTER_ADMIN_PIN)) {
 const REDIS_URL = getSecret("REDIS_URL", portalJsonConfig?.redis?.url || "")
     .toString()
     .trim();
+const ENABLE_REDIS_SOCKET_ADAPTER =
+    get("ENABLE_REDIS_SOCKET_ADAPTER", "false").toString().trim().toLowerCase() === "true";
 
 /* ------------------------------
     14) Config summary helper
@@ -532,6 +534,7 @@ const config = {
     R2_BUCKET_NAME,
     R2_ENDPOINT,
     REDIS_URL,
+    ENABLE_REDIS_SOCKET_ADAPTER,
     MASTER_ADMIN_EMAIL,
     MASTER_ADMIN_PHONE,
     MASTER_ADMIN_PIN,
@@ -601,6 +604,7 @@ export {
     R2_BUCKET_NAME,
     R2_ENDPOINT,
     REDIS_URL,
+    ENABLE_REDIS_SOCKET_ADAPTER,
     MASTER_ADMIN_EMAIL,
     MASTER_ADMIN_PHONE,
     MASTER_ADMIN_PIN,

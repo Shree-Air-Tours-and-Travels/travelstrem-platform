@@ -6,7 +6,6 @@ import rateLimit from "express-rate-limit";
 import path from "path";
 import config from "../config/index.js";
 import logger from "../shared/logger/index.js";
-import { getRedis, disconnectRedis } from "../shared/redis/client.js";
 import { generateCsrfToken, validateCsrfToken, appendAuditEvent } from "../shared/redis/store.js";
 import { sanitizeResponsePayload } from "../utils/sanitizeResponsePayload.js";
 
@@ -85,9 +84,6 @@ const corsOptions = {
 
 export default function registerMiddleware(app) {
     app.set("trust proxy", true);
-
-    // Initialize Redis connection
-    getRedis();
 
     // ── 1. CORS + Preflight (FIRST — must handle OPTIONS before anything else) ──
     app.use(cors(corsOptions));
@@ -205,13 +201,4 @@ export default function registerMiddleware(app) {
             }),
         );
     }
-
-    // ── 14. Graceful shutdown ──
-    const shutdown = async () => {
-        console.log("[Middleware] Shutting down Redis connection...");
-        await disconnectRedis();
-        process.exit(0);
-    };
-    process.on("SIGINT", shutdown);
-    process.on("SIGTERM", shutdown);
 }
