@@ -419,6 +419,15 @@ const ContactAgentModal = ({
 
   const handleSubmit = async (ev) => {
     ev?.preventDefault?.();
+
+    // A form submit can also be triggered by Enter while completing details.
+    // Only the final review step is allowed to create the enquiry.
+    if (activeStage !== "review") {
+      if (activeStage === "details") handleDetailsContinue();
+      else goToStage("review");
+      return;
+    }
+
     const validation = validateFields(form, fieldsMap);
     if (!validation.ok) {
       goToStage("details");
@@ -454,8 +463,7 @@ const ContactAgentModal = ({
         // from the API; the dedupeKey collapses the socket echo on other tabs).
         if (response.notify) showRealtimeToast(response.notify);
         setMsg({ type: ui?.messageType || "success", text: message });
-        // The backend owns when the modal closes after success.
-        setTimeout(() => onClose(), ui?.closeAfterMs || 1100);
+        onClose();
       } else {
         setMsg({ type: ui?.messageType || "error", text: message });
       }

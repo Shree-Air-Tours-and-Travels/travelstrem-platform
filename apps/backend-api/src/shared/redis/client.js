@@ -2,32 +2,29 @@ import Redis from "ioredis";
 import config from "../../config/index.js";
 
 let redis = null;
+let disconnectPromise = null;
+
+const redisOptions = {
+    lazyConnect: true,
+    connectTimeout: 10000,
+    maxRetriesPerRequest: 3,
+    enableReadyCheck: true,
+    keepAlive: 10000,
+    retryStrategy(times) {
+        const delay = Math.min(times * 200, 5000);
+        console.warn(`[Redis] Reconnecting attempt ${times} in ${delay}ms`);
+        return delay;
+    },
+};
 
 export function getRedis() {
     if (redis) return redis;
 
     if (!config.REDIS_URL) {
-        console.warn("[Redis] REDIS_URL not configured");
-        return null;
+        throw new Error("REDIS_URL is required for authentication and session storage");
     }
 
-    redis = new Redis(config.REDIS_URL, {
-        connectTimeout: 10000,
-
-        maxRetriesPerRequest: 3,
-
-        enableReadyCheck: true,
-
-        keepAlive: 10000,
-
-        retryStrategy(times) {
-            const delay = Math.min(times * 200, 5000);
-
-            console.warn(`[Redis] Reconnecting attempt ${times} in ${delay}ms`);
-
-            return delay;
-        },
-    });
+    redis = new Redis(config.REDIS_URL, redisOptions);
 
     redis.on("connect", () => {
         console.log("[Redis] Connected");
@@ -56,15 +53,33 @@ export function getRedis() {
     return redis;
 }
 
+export async function initializeRedis() {
+    const client = getRedis();
+    if (client.status === "wait") await client.connect();
+
+    const response = await client.ping();
+    if (response !== "PONG") throw new Error(`Redis health check failed: ${response}`);
+
+    console.log("[Redis] Startup health check passed");
+    return client;
+}
+
 export async function disconnectRedis() {
     if (!redis) return;
+    if (disconnectPromise) return disconnectPromise;
 
-    try {
-        await redis.quit();
-    } catch (err) {
-        console.warn("[Redis] Graceful quit failed:", err.message);
-        redis.disconnect();
-    } finally {
-        redis = null;
-    }
+    const client = redis;
+    disconnectPromise = (async () => {
+        try {
+            if (client.status !== "end") await client.quit();
+        } catch (err) {
+            console.warn("[Redis] Graceful quit failed:", err.message);
+            client.disconnect();
+        } finally {
+            redis = null;
+            disconnectPromise = null;
+        }
+    })();
+
+    return disconnectPromise;
 }
