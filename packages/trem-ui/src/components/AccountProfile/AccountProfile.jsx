@@ -318,6 +318,13 @@ export default function AccountProfile({
             </div>
             {passwordOpen ? (
               <form className="trem-account-profile__form" onSubmit={submitPassword}>
+                <div className="trem-account-profile__password-help">
+                  <Icon name="info" size={18} />
+                  <span>
+                    If you do not remember your current password, sign out and use Forgot password
+                    from the sign-in page.
+                  </span>
+                </div>
                 {passwordError ? <p className="trem-account-profile__error">{passwordError}</p> : null}
                 <label>
                   <span>Current password</span>

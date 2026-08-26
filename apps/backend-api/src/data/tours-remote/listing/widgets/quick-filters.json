@@ -13,9 +13,13 @@
     "elements": {
       "labels": {
         "quickFilterAll": "All Tours",
-        "quickFiltersTitle": "Find your perfect adventure"
+        "quickFiltersTitle": "Find your perfect adventure",
+        "customTourPrompt": "Can't find a tour that fits?",
+        "customTourAction": "Create a custom journey."
       },
-      "urls": {}
+      "urls": {
+        "customTour": "/trevista/customise-tour"
+      }
     },
     "structure": {
       "header": {},
@@ -24,7 +28,10 @@
           "type": "quickChips",
           "props": {
             "titleRef": "quickFiltersTitle",
-            "optionsRef": "quickFilters"
+            "optionsRef": "quickFilters",
+            "customTourPromptRef": "customTourPrompt",
+            "customTourActionRef": "customTourAction",
+            "customTourPathRef": "customTour"
           }
         }
       ],

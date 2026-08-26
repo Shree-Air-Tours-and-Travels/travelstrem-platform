@@ -225,7 +225,8 @@ export const analyzeTourSimilarity = (source = {}, candidate = {}) => {
     score += Math.min(36, experienceMatches.length * 18);
     if (countryMatches.length) score += 4;
     if (originMatches.length) score += 3;
-    if (source.packageType && source.packageType === candidate.packageType) score += 5;
+    const sameTripStyle = source.packageType && source.packageType === candidate.packageType;
+    if (sameTripStyle) score += 5;
 
     const sourceDays = number(source.period?.days || source.duration?.days);
     const candidateDays = number(candidate.period?.days || candidate.duration?.days);
@@ -233,8 +234,10 @@ export const analyzeTourSimilarity = (source = {}, candidate = {}) => {
 
     const sourcePrice = number(source.price?.min);
     const candidatePrice = number(candidate.price?.min);
+    let similarBudget = false;
     if (sourcePrice && candidatePrice) {
         const ratio = Math.abs(sourcePrice - candidatePrice) / Math.max(sourcePrice, candidatePrice);
+        similarBudget = ratio <= 0.25;
         score += Math.max(0, 6 - ratio * 6);
     }
 
@@ -250,6 +253,8 @@ export const analyzeTourSimilarity = (source = {}, candidate = {}) => {
         reasons.push(
             `Shared interests: ${experienceMatches.slice(0, 2).map(displayIntent).join(", ")}`,
         );
+    if (sameTripStyle) reasons.push("Similar trip style");
+    if (similarBudget) reasons.push("Similar budget");
     return { score: Math.round(score * 100) / 100, reasons };
 };
 
@@ -258,7 +263,7 @@ export const scoreSimilarTour = (source = {}, candidate = {}) => {
     return result === -Infinity ? -Infinity : result.score;
 };
 
-export const rankSimilarTours = (source, candidates = [], limit = 3) =>
+export const rankSimilarTours = (source, candidates = [], limit = 4) =>
     candidates
         .map((tour) => {
             const analysis = analyzeTourSimilarity(source, tour);
@@ -270,7 +275,7 @@ export const rankSimilarTours = (source, candidates = [], limit = 3) =>
                 b.score - a.score ||
                 new Date(b.tour.updatedAt || 0) - new Date(a.tour.updatedAt || 0),
         )
-        .slice(0, Math.min(3, Math.max(0, Number(limit) || 0)))
+        .slice(0, Math.min(4, Math.max(0, Number(limit) || 0)))
         .map((item) => ({
             ...(item.tour?.toObject ? item.tour.toObject() : item.tour),
             similarity: { score: item.score, reasons: item.reasons },

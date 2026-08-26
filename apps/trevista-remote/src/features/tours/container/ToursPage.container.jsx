@@ -68,9 +68,7 @@ export default function ToursPageContainer({ dispatchEvent, userSession = null }
   });
   const [searching, setSearching] = useState(true);
   const [searchError, setSearchError] = useState(null);
-  const [filtersExpanded, setFiltersExpanded] = useState(() =>
-    typeof window !== "undefined" ? window.innerWidth > 900 : true,
-  );
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const previousQuery = useRef(searchState.query);
   const [realtimeTick, setRealtimeTick] = useState(0);
@@ -187,18 +185,19 @@ export default function ToursPageContainer({ dispatchEvent, userSession = null }
     (tour) => {
       const ref = getTourRef(tour);
       if (!ref) return;
+      const toursPath = `${location.pathname}${location.search || ""}`;
       if (typeof dispatchEvent === "function") {
         dispatchEvent("navigateToTourDetails", {
           tourRef: ref,
-          state: { tour, from: { label: "Tours", path: "/trevista/tours" } },
+          state: { tour, from: { label: "Tours", path: toursPath } },
         });
         return;
       }
       navigate(`/trevista/tours/${encodeURIComponent(ref)}`, {
-        state: { tour, from: { label: "Tours", path: "/trevista/tours" } },
+        state: { tour, from: { label: "Tours", path: toursPath } },
       });
     },
-    [dispatchEvent, navigate],
+    [dispatchEvent, location.pathname, location.search, navigate],
   );
 
   const activeDiscoveryIds = useMemo(() => {
@@ -219,6 +218,7 @@ export default function ToursPageContainer({ dispatchEvent, userSession = null }
     () => getActiveTourFilterChips(searchState, result.facets),
     [result.facets, searchState],
   );
+  const filterValues = useMemo(() => flattenTourSearchState(searchState), [searchState]);
   const handleClearFilters = useCallback(() => {
     const cleared = createDefaultTourSearchState();
     commitSearch({ ...cleared, sort: searchState.sort, pageSize: searchState.pageSize });
@@ -253,7 +253,7 @@ export default function ToursPageContainer({ dispatchEvent, userSession = null }
         onPageChange={handlePageChange}
         filtersExpanded={filtersExpanded}
         onFiltersExpandedChange={setFiltersExpanded}
-        filterValues={flattenTourSearchState(searchState)}
+        filterValues={filterValues}
         facets={result.facets}
         activeDiscoveryIds={activeDiscoveryIds}
         discoveryOptions={discovery}

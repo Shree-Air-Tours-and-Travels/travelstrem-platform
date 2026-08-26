@@ -17,56 +17,24 @@ const fetchWidget = async (widgetRef) => {
   return res?.component || null;
 };
 
-const parseBudget = (budget = "") => {
-  const s = String(budget)
-    .replace(/[₹,\s]/g, "")
-    .toLowerCase();
-  if (!s) return {};
-  const toNumber = (token) => {
-    if (!token) return null;
-    if (token.endsWith("l")) return Number(token.slice(0, -1)) * 100000;
-    if (token.endsWith("k")) return Number(token.slice(0, -1)) * 1000;
-    return Number(token);
-  };
-  const tokens = s.match(/\d+(?:\.\d+)?[kl]?/g) || [];
-  if (tokens.length >= 2) {
-    const min = toNumber(tokens[0]);
-    const max = toNumber(tokens[1]);
-    if (Number.isFinite(min) && Number.isFinite(max)) return { min, max };
-  } else if (tokens.length === 1) {
-    const min = toNumber(tokens[0]);
-    if (Number.isFinite(min)) return { min };
-  }
-  return {};
-};
-
 export const buildFiltersFromHero = (payload = {}) => {
   const filters = {};
 
   const destination = String(payload.destination || "").trim();
   if (destination) filters.destinationCityIds = [destination];
 
-  const travelMonth = String(payload.travelMonth || "").trim();
-  const monthMatch = travelMonth.match(/([a-zA-Z]+)\s*(\d{4})/);
-  if (monthMatch) {
-    const monthIndex = new Date(`${monthMatch[1]} 1, ${monthMatch[2]}`).getMonth();
-    if (Number.isFinite(monthIndex)) {
-      filters.departureDate = `${monthMatch[2]}-${String(monthIndex + 1).padStart(2, "0")}-01`;
-    }
-  }
+  const departureDate = String(payload.departureDate || "").trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(departureDate)) filters.departureDate = departureDate;
 
-  let travellerCount = Number(String(payload.travellers || "").trim());
-  if (!Number.isFinite(travellerCount) || travellerCount <= 0) {
-    travellerCount = Number(String(payload.travellers || "").match(/\d+/)?.[0]);
-  }
-  if (Number.isFinite(travellerCount) && travellerCount > 0) filters.travellers = travellerCount;
+  const travellerCount = Number(payload.travellers);
+  if (Number.isInteger(travellerCount) && travellerCount > 0) filters.travellers = travellerCount;
 
-  const tripStyle = String(payload.tripStyle || "").trim();
-  if (tripStyle) filters.tagIds = [tripStyle];
+  const interest = String(payload.interest || "").trim();
+  if (interest) filters.tagIds = [interest];
 
-  const price = parseBudget(payload.budget);
-  if (Number.isFinite(price.min)) filters.minPrice = price.min;
-  if (Number.isFinite(price.max)) filters.maxPrice = price.max;
+  const maxBudgetText = String(payload.maxBudget || "").trim();
+  const maxBudget = Number(maxBudgetText);
+  if (maxBudgetText && Number.isFinite(maxBudget) && maxBudget >= 0) filters.maxPrice = maxBudget;
 
   return filters;
 };
@@ -79,35 +47,56 @@ export default function ToursHomeContainer({ dispatchEvent, userSession = null }
     error: pageError,
     elements,
     structure,
+    refetch: refetchPage,
   } = useComponentData("/tours-home-page.json", { auto: true });
   const pageLabels = elements?.labels || {};
   const widgets = useMemo(() => structure?.widgets || [], [structure?.widgets]);
 
   const [widgetsData, setWidgetsData] = useState({});
   const [widgetsLoading, setWidgetsLoading] = useState(true);
+  const [widgetsError, setWidgetsError] = useState(null);
+  const [requestVersion, setRequestVersion] = useState(0);
   const [contactOpen, setContactOpen] = useState(false);
 
   useEffect(() => {
-    if (!widgets.length) return;
+    if (!widgets.length) {
+      if (!pageLoading) setWidgetsLoading(false);
+      return;
+    }
     let cancelled = false;
+    setWidgetsLoading(true);
+    setWidgetsError(null);
     (async () => {
-      const results = {};
-      await Promise.all(
-        widgets.map(async (w) => {
-          if (!w.widgetRef) return;
-          const data = await fetchWidget(w.widgetRef);
-          if (!cancelled) results[w.type] = data;
-        }),
-      );
-      if (!cancelled) {
-        setWidgetsData(results);
-        setWidgetsLoading(false);
+      try {
+        const results = {};
+        await Promise.all(
+          widgets.map(async (w) => {
+            if (!w.widgetRef) return;
+            const data = await fetchWidget(w.widgetRef);
+            if (!cancelled) results[w.type] = data;
+          }),
+        );
+        if (!cancelled) setWidgetsData(results);
+      } catch (loadError) {
+        if (!cancelled) {
+          setWidgetsError(loadError?.message || "Home content could not load");
+        }
+      } finally {
+        if (!cancelled) setWidgetsLoading(false);
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [widgets]);
+  }, [pageLoading, requestVersion, widgets]);
+
+  const retryHome = () => {
+    setWidgetsData({});
+    setWidgetsLoading(true);
+    setWidgetsError(null);
+    refetchPage();
+    setRequestVersion((current) => current + 1);
+  };
 
   const goToTours = (filters) => {
     if (!filters || Object.keys(filters).length === 0) {
@@ -140,6 +129,7 @@ export default function ToursHomeContainer({ dispatchEvent, userSession = null }
 
   const handleExplore = () => goToTours();
   const handleSearch = (payload) => goToTours(buildFiltersFromHero(payload));
+  const handleCustomise = () => navigate("/trevista/customise-tour");
 
   const handleTourEnquiry = () => setContactOpen(true);
 
@@ -152,9 +142,11 @@ export default function ToursHomeContainer({ dispatchEvent, userSession = null }
         widgetsData={widgetsData}
         pageTitle={pageLabels.pageTitle}
         loading={loading}
-        error={pageError}
+        error={pageError || widgetsError}
+        onRetry={retryHome}
         onExplore={handleExplore}
         onSearch={handleSearch}
+        onCustomise={handleCustomise}
         onTourEnquiry={handleTourEnquiry}
       />
       <ContactAgentModal

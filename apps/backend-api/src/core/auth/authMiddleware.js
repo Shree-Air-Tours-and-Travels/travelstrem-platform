@@ -36,7 +36,7 @@ export default async function authMiddleware(req, res, next) {
         }
         const user = await User.findById(payload.sub)
             .select(
-                "role adminLevel agencyRole agencyId partnerAgencyRef accountStatus tokenVersion productAccess permissionGrants permissionDenials",
+                "role adminLevel agencyRole agencyId partnerAgencyRef accountStatus tokenVersion productAccess permissionGrants permissionDenials internalTeamRoles",
             )
             .lean();
         if (!user || Number(user.tokenVersion || 0) !== Number(payload.tokenVersion || 0)) {

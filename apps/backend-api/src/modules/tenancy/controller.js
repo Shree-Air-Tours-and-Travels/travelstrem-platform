@@ -16,6 +16,7 @@ import Tour from "../tours/models/Tour.js";
 import TrevioTrip from "../trevio/models/TrevioTrip.js";
 import RefreshToken from "../auth/models/RefreshToken.js";
 import ContactLead from "../forms/models/ContactLead.js";
+import SupportTicket from "../support/models/SupportTicket.js";
 import {
     buildPartnerDashboard,
     partnerDashboardScopes,
@@ -863,6 +864,7 @@ export async function updateAgency(req, res) {
                   "address",
                   "logo",
                   "productAccess",
+                  "customTourPartner",
                   "settings",
                   "status",
               ]
@@ -903,6 +905,25 @@ export async function updateAgency(req, res) {
                     status: "error",
                     message: "One or more assigned products are invalid.",
                 });
+            if (!update.productAccess.includes("trevista")) update.customTourPartner = false;
+        }
+        if (update.customTourPartner !== undefined) {
+            update.customTourPartner = update.customTourPartner === true;
+            if (update.customTourPartner) {
+                if (before.status !== "active" || !before.productAccess?.includes("trevista"))
+                    return res.status(400).json({
+                        status: "error",
+                        message:
+                            "Only an active agency with Trevista access can be the custom-tour partner.",
+                    });
+                await PartnerAgency.updateMany(
+                    { _id: { $ne: before._id }, customTourPartner: true },
+                    { $set: { customTourPartner: false } },
+                );
+            }
+        }
+        if (["suspended", "deactivated", "rejected"].includes(update.status)) {
+            update.customTourPartner = false;
         }
         const agency = await PartnerAgency.findByIdAndUpdate(
             id,
@@ -2060,10 +2081,14 @@ export async function dashboard(req, res) {
             enquiryResponded,
             enquiryTotal,
             unreadNotifications,
+            openSupportTickets,
+            awaitingSupportTickets,
+            totalSupportTickets,
             recentTrevista,
             recentTrevio,
             recentEnquiries,
             recentCustomers,
+            recentSupportTickets,
         ] = await Promise.all([
             User.countDocuments({ agencyId, agencyRole: "partner_agent", accountStatus: "active" }),
             User.countDocuments({
@@ -2099,6 +2124,15 @@ export async function dashboard(req, res) {
             ContactLead.countDocuments({ ...scopes.enquiries, status: "responded" }),
             ContactLead.countDocuments(scopes.enquiries),
             Notification.countDocuments({ userId: req.access.user._id, readAt: null }),
+            SupportTicket.countDocuments({
+                user: req.access.user._id,
+                status: { $nin: ["RESOLVED", "CLOSED"] },
+            }),
+            SupportTicket.countDocuments({
+                user: req.access.user._id,
+                status: "AWAITING_SUPPORT",
+            }),
+            SupportTicket.countDocuments({ user: req.access.user._id }),
             Tour.find(scopes.products)
                 .sort({ updatedAt: -1 })
                 .limit(activityFetchLimit)
@@ -2119,6 +2153,11 @@ export async function dashboard(req, res) {
                 .limit(activityFetchLimit)
                 .select("name status updatedAt createdAt")
                 .lean(),
+            SupportTicket.find({ user: req.access.user._id })
+                .sort({ updatedAt: -1 })
+                .limit(activityFetchLimit)
+                .select("reference subject status updatedAt createdAt")
+                .lean(),
         ]);
         return ok(
             res,
@@ -2133,6 +2172,10 @@ export async function dashboard(req, res) {
                         responded: enquiryResponded,
                     },
                     notifications: { unread: unreadNotifications },
+                    support: {
+                        open: openSupportTickets,
+                        awaitingSupport: awaitingSupportTickets,
+                    },
                     trevista: {
                         total: trevistaTotal,
                         published: trevistaPublished,
@@ -2155,11 +2198,17 @@ export async function dashboard(req, res) {
                     ],
                     enquiries: recentEnquiries,
                     customers: recentCustomers,
+                    support: recentSupportTickets,
                 },
                 activityPagination: {
                     page: activityPage,
                     limit: activityLimit,
-                    total: trevistaTotal + trevioTotal + enquiryTotal + customerTotal,
+                    total:
+                        trevistaTotal +
+                        trevioTotal +
+                        enquiryTotal +
+                        customerTotal +
+                        totalSupportTickets,
                 },
                 generatedAt: now,
             }),

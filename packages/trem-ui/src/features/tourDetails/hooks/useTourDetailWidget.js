@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { fetchData } from "@packages/trem-utils";
 import { useProductDetailContext } from "../context/ProductDetailContext.js";
 
@@ -37,6 +37,7 @@ export default function useTourDetailWidget(productRef, widgetFile, query = {}) 
   const { apiPrefix } = useProductDetailContext();
   const normalizedProductRef = normalizeProductRef(productRef);
   const queryKey = JSON.stringify(query || {});
+  const [requestVersion, setRequestVersion] = useState(0);
   const [state, setState] = useState({
     loading: Boolean(normalizedProductRef && widgetFile),
     error: null,
@@ -75,7 +76,9 @@ export default function useTourDetailWidget(productRef, widgetFile, query = {}) 
     return () => {
       abortController.abort();
     };
-  }, [normalizedProductRef, widgetFile, apiPrefix, queryKey]);
+  }, [normalizedProductRef, widgetFile, apiPrefix, queryKey, requestVersion]);
 
-  return state;
+  const retry = useCallback(() => setRequestVersion((current) => current + 1), []);
+
+  return { ...state, retry };
 }

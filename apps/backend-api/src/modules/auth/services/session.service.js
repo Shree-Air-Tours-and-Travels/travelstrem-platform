@@ -22,6 +22,9 @@ const parseDuration = (duration, fallback = 30 * 86400000) => {
     return Number(match[1]) * ({ s: 1000, m: 60000, h: 3600000, d: 86400000 }[match[2]] || 1);
 };
 
+export const SESSION_INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000;
+const sessionPolicy = () => ({ inactivityTimeoutMs: SESSION_INACTIVITY_TIMEOUT_MS });
+
 export const hashToken = (raw) => crypto.createHash("sha256").update(String(raw)).digest("hex");
 const requestPortal = (req, override) =>
     normalizePortalScope(override || req?.authPortalOverride || getPortalScope(req));
@@ -58,6 +61,7 @@ export const safeAuthUser = (user) => ({
     agencyRole: user.agencyRole || "none",
     agencyId: toStringId(user.agencyId) || null,
     productAccess: user.productAccess || [],
+    internalTeamRoles: user.internalTeamRoles || [],
     createdAt: user.createdAt ? new Date(user.createdAt).toISOString() : null,
 });
 
@@ -126,6 +130,7 @@ export const createSession = async ({ user, req, res, portal: portalOverride, fa
         portal,
         user: safeAuthUser(user),
         sessionVersion: String(user.tokenVersion || 0),
+        config: { session: sessionPolicy() },
     };
 };
 
@@ -173,6 +178,16 @@ export const rotateSession = async ({ req, res, portal: portalOverride }) => {
     await RefreshToken.cleanupExpired();
     const stored = await RefreshToken.findOne({ tokenHash: hashToken(raw), portal });
     if (!stored || stored.expiresAt <= new Date()) {
+        clearAuthCookies(req, res, portal);
+        return null;
+    }
+
+    const lastActivityAt = new Date(stored.lastUsedAt || stored.createdAt || 0).getTime();
+    if (!lastActivityAt || Date.now() - lastActivityAt >= SESSION_INACTIVITY_TIMEOUT_MS) {
+        await RefreshToken.updateMany(
+            { family: stored.family, revokedAt: null },
+            { $set: { revokedAt: new Date() } },
+        );
         clearAuthCookies(req, res, portal);
         return null;
     }

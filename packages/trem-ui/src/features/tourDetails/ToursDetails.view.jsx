@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Button,
   Breadcrumbs,
@@ -21,6 +21,7 @@ import SimilarTours from "./widgets/SimilarTours/SimilarTours";
 import TourFacts from "./widgets/TourFacts/TourFacts";
 import PackagePlans from "./widgets/PackagePlans/PackagePlans";
 import "./tourDetails.scss";
+import { getCurrencyFormatter, getPackageDisplayName } from "./helper";
 
 export const DetailSkeleton = () => (
   <main
@@ -39,20 +40,32 @@ export const DetailSkeleton = () => (
   </main>
 );
 
-export const EmptyState = ({ title, message, onBack, backLabel = "Back to tours" }) => (
+export const EmptyState = ({ title, message, onRetry, onBack, backLabel = "Back to tours" }) => (
   <main className="tour-detail">
     <div className="tour-detail__shell">
       <section className="tour-detail__empty">
         <Title text={title} />
         <Paragraph text={message} />
-        <Button
-          primaryClassName="tour-detail__button tour-detail__button--primary"
-          variant="solid"
-          color="primary"
-          onClick={onBack}
-        >
-          {backLabel}
-        </Button>
+        <div className="tour-detail__empty-actions">
+          {onRetry ? (
+            <Button
+              primaryClassName="tour-detail__button tour-detail__button--primary"
+              variant="solid"
+              color="primary"
+              onClick={onRetry}
+            >
+              Retry
+            </Button>
+          ) : null}
+          <Button
+            primaryClassName="tour-detail__button"
+            variant={onRetry ? "outline" : "solid"}
+            color="primary"
+            onClick={onBack}
+          >
+            {backLabel}
+          </Button>
+        </div>
       </section>
     </div>
   </main>
@@ -68,6 +81,25 @@ const CONTENT_WIDGETS = new Set([
   "CancellationPolicy",
   "ReviewsSection",
   "SimilarTours",
+]);
+
+const SECTION_BY_WIDGET = Object.freeze({
+  PackagePlans: "packages",
+  ItineraryTimeline: "itinerary",
+  IncludedStays: "hotels",
+  InclusionsExclusions: "included",
+  CancellationPolicy: "policies",
+  ReviewsSection: "reviews",
+});
+
+const DETAIL_TABS = Object.freeze([
+  { id: "overview", label: "Overview" },
+  { id: "packages", label: "Packages" },
+  { id: "itinerary", label: "Itinerary" },
+  { id: "included", label: "Inclusions" },
+  { id: "hotels", label: "Hotels & stays" },
+  { id: "policies", label: "Policies" },
+  { id: "reviews", label: "Reviews" },
 ]);
 
 const renderWidget = (widget, props) => {
@@ -89,6 +121,7 @@ const renderWidget = (widget, props) => {
           onShare={props.onShare}
           isFavorited={props.isFavorited}
           onFavorite={props.onFavorite}
+          selectedPackage={props.selectedPackage}
           selectedFlight={props.selectedFlight}
           onSelectFlight={props.onSelectFlight}
           selectedActivities={props.selectedActivities}
@@ -164,14 +197,35 @@ export default function ToursDetailsView({
   user,
   productType,
   selectedPackage,
+  selectedPackageDetails,
   hotelSelections,
   hotelRequests,
   onSelectPackage,
   onSelectHotel,
   onCustomize,
+  onCustomizeJourney,
   onRequestHotel,
 }) {
   const showBookNow = structure?.floatingActionBar?.config?.showBookNow === true;
+  const selectedPackageData =
+    selectedPackageDetails ||
+    activeTour?.commercialPricing?.packages?.find(
+      (item) =>
+        String(item.packageKey || item.tier).toLowerCase() ===
+        String(selectedPackage || "").toLowerCase(),
+    );
+  const selectedPackageName = selectedPackageData && getPackageDisplayName(selectedPackageData);
+  const selectedPackagePrice = selectedPackageData
+    ? getCurrencyFormatter(activeTour?.commercialPricing?.currency || "INR").format(
+        Number(selectedPackageData.sellingTotalMinor || 0) / 100,
+      )
+    : "";
+  const floatingQuoteLabel = selectedPackageName
+    ? `${(elements?.labels?.continueWithPackage || "Continue with {package}").replace(
+        "{package}",
+        selectedPackageName,
+      )}${selectedPackagePrice ? ` · ${selectedPackagePrice}` : ""}`
+    : elements?.labels?.enquire || "Get a quote";
   const widgetProps = {
     tourRef,
     activeTour,
@@ -188,11 +242,67 @@ export default function ToursDetailsView({
     onCustomize,
     onRequestHotel,
   };
-  const heroWidgets = widgets.filter((widget) => HERO_WIDGETS.has(widget.type));
-  const contentWidgets = widgets.filter((widget) => CONTENT_WIDGETS.has(widget.type));
+  const heroWidgets = useMemo(
+    () => widgets.filter((widget) => HERO_WIDGETS.has(widget.type)),
+    [widgets],
+  );
+  const contentWidgets = useMemo(
+    () => widgets.filter((widget) => CONTENT_WIDGETS.has(widget.type)),
+    [widgets],
+  );
+  const availableTabs = useMemo(() => {
+    const sectionIds = new Set([
+      "overview",
+      ...contentWidgets.map((widget) => SECTION_BY_WIDGET[widget.type]).filter(Boolean),
+    ]);
+    const reviewCount = Number(
+      activeTour?.reviewCount ?? activeTour?.rating?.count ?? activeTour?.reviews?.length ?? 0,
+    );
+    return DETAIL_TABS.filter(
+      (tab) => sectionIds.has(tab.id) && (tab.id !== "reviews" || reviewCount > 0),
+    );
+  }, [activeTour, contentWidgets]);
+  const [activeSection, setActiveSection] = useState("overview");
+  const sectionNavRef = useRef(null);
   const overviewWidget = heroWidgets.find((w) => w.type === "TourOverview");
   const galleryWidget = heroWidgets.find((w) => w.type === "TourGallery");
   const pricingWidget = heroWidgets.find((w) => w.type === "PricingCard");
+
+  useEffect(() => {
+    const sections = availableTabs
+      .map((tab) => document.getElementById(`tour-detail-${tab.id}`))
+      .filter(Boolean);
+    if (!sections.length || typeof IntersectionObserver === "undefined") return undefined;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((left, right) => right.intersectionRatio - left.intersectionRatio)[0];
+        if (visible) setActiveSection(visible.target.id.replace("tour-detail-", ""));
+      },
+      { rootMargin: "-28% 0px -58%", threshold: [0.05, 0.25, 0.6] },
+    );
+    sections.forEach((section) => observer.observe(section));
+    return () => observer.disconnect();
+  }, [availableTabs]);
+
+  useEffect(() => {
+    const nav = sectionNavRef.current;
+    const activeButton = nav?.querySelector(`[data-section-id="${activeSection}"]`);
+    if (!nav || !activeButton) return;
+    nav.scrollTo({
+      left: activeButton.offsetLeft - (nav.clientWidth - activeButton.offsetWidth) / 2,
+      behavior: "smooth",
+    });
+  }, [activeSection]);
+
+  const scrollToSection = (sectionId) => {
+    setActiveSection(sectionId);
+    document.getElementById(`tour-detail-${sectionId}`)?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
 
   if (tourUnavailable) {
     return (
@@ -228,40 +338,75 @@ export default function ToursDetailsView({
       <div className="tour-detail__shell">
         <Breadcrumbs items={breadcrumbItems} className="tour-detail__breadcrumbs" />
 
-        <div className="tour-detail__hero-section">
-          <div className="tour-detail__hero-main">
-            {galleryWidget && renderWidget(galleryWidget, widgetProps)}
-            {overviewWidget && renderWidget(overviewWidget, widgetProps)}
+        <nav
+          ref={sectionNavRef}
+          className="tour-detail__section-nav"
+          aria-label="Tour details sections"
+        >
+          {availableTabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              className={activeSection === tab.id ? "is-active" : ""}
+              data-section-id={tab.id}
+              onClick={() => scrollToSection(tab.id)}
+              aria-current={activeSection === tab.id ? "location" : undefined}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </nav>
+
+        <div className="tour-detail__overview-anchor" id="tour-detail-overview">
+          <div className="tour-detail__hero-section">
+            <div className="tour-detail__hero-main">
+              {galleryWidget && renderWidget(galleryWidget, widgetProps)}
+              {overviewWidget && renderWidget(overviewWidget, widgetProps)}
+            </div>
+            {pricingWidget && renderWidget(pricingWidget, widgetProps)}
           </div>
-          {pricingWidget && renderWidget(pricingWidget, widgetProps)}
+
+          <TourFacts tourRef={tourRef} tour={activeTour} />
+
+          <AgencyDetailsCard
+            agency={activeTour?.agency}
+            operator={
+              activeTour?.operator ||
+              (activeTour?.ownerAgentName
+                ? {
+                    name: activeTour.ownerAgentName,
+                    email: activeTour.ownerAgentEmail,
+                  }
+                : !activeTour?.operator &&
+                    activeTour?.inventorySource === "platform" &&
+                    activeTour?.providerName
+                  ? {
+                      name: "TREM-AI",
+                      email: "",
+                    }
+                  : null)
+            }
+            providerName={activeTour?.providerName || ""}
+            labels={elements?.labels?.agencyDetails || {}}
+          />
         </div>
 
-        <TourFacts tourRef={tourRef} tour={activeTour} />
-
-        <AgencyDetailsCard
-          agency={activeTour?.agency}
-          operator={
-            activeTour?.operator ||
-            (activeTour?.ownerAgentName
-              ? {
-                  name: activeTour.ownerAgentName,
-                  email: activeTour.ownerAgentEmail,
-                }
-              : !activeTour?.operator &&
-                  activeTour?.inventorySource === "platform" &&
-                  activeTour?.providerName
-                ? {
-                    name: "TREM-AI",
-                    email: "",
-                  }
-                : null)
-          }
-          providerName={activeTour?.providerName || ""}
-          labels={elements?.labels?.agencyDetails || {}}
-        />
-
         <div className="tour-detail__content">
-          {contentWidgets.map((widget) => renderWidget(widget, widgetProps))}
+          {contentWidgets.map((widget) => {
+            const sectionId = SECTION_BY_WIDGET[widget.type];
+            const content = renderWidget(widget, widgetProps);
+            return sectionId ? (
+              <div
+                className="tour-detail__section-anchor"
+                id={`tour-detail-${sectionId}`}
+                key={widget.type}
+              >
+                {content}
+              </div>
+            ) : (
+              content
+            );
+          })}
         </div>
       </div>
 
@@ -277,6 +422,7 @@ export default function ToursDetailsView({
             hotelSelections: Object.values(hotelSelections || {}),
             hotelRequests,
           }}
+          onCustomizeJourney={productType === "tour" ? onCustomizeJourney : undefined}
         />
       ) : null}
 
@@ -285,7 +431,7 @@ export default function ToursDetailsView({
         text={elements?.labels}
         actions={[
           {
-            label: elements?.labels?.enquire || "Enquire",
+            label: floatingQuoteLabel,
             variant: "ghost",
             iconLeft: "messageCircle",
             onClick: () => onContact(activeTour),

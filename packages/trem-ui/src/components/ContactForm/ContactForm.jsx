@@ -1,8 +1,11 @@
 import React from "react";
 import PropTypes from "prop-types";
 import Button from "../Button/Button.jsx";
+import DatePicker from "../DatePicker/DatePicker.jsx";
 import Dropdown from "../Dropdown/Dropdown.jsx";
 import InputField from "../InputField/InputField.jsx";
+import LocationTypeahead from "../LocationTypeahead/LocationTypeahead.jsx";
+import MultiSelect from "../MultiSelect/MultiSelect.jsx";
 import "./ContactForm.scss";
 
 const ContactForm = ({
@@ -43,6 +46,39 @@ const ContactForm = ({
         />
       );
     }
+    if (type === "multiselect") {
+      return (
+        <MultiSelect
+          label={field.label}
+          placeholder={field.placeholder || "Select options"}
+          value={Array.isArray(value) ? value : []}
+          options={field.options || []}
+          required={field.required}
+          maxSelected={field.maxItems}
+          error={errors[field.name]}
+          onChange={(next) => onChange(field.name, next)}
+        />
+      );
+    }
+    if (type === "location") {
+      return (
+        <LocationTypeahead
+          label={field.label}
+          placeholder={field.placeholder}
+          value={value}
+          required={field.required}
+          error={errors[field.name]}
+          mode={field.locationMode || "place"}
+          countries={field.countries || []}
+          multiple={field.multiple}
+          maxItems={field.maxItems}
+          onChange={(next) => onChange(field.name, next)}
+          onPlaceChange={(place) => {
+            if (field.selectionName) onChange(field.selectionName, place);
+          }}
+        />
+      );
+    }
     if (type === "textarea") {
       return (
         <label
@@ -64,14 +100,18 @@ const ContactForm = ({
     }
     if (type === "date") {
       return (
-        <InputField
-          variant="date"
-          label={field.label}
-          required={field.required}
-          value={value}
-          error={errors[field.name]}
-          onChange={(next) => onChange(field.name, next)}
-        />
+        <label className="trem-contact-form__date-wrap">
+          <span>{field.label}</span>
+          <DatePicker
+            value={value}
+            placeholder={field.placeholder || field.label}
+            min={field.min}
+            max={field.max}
+            error={errors[field.name]}
+            portalZIndex={2100}
+            onChange={(next) => onChange(field.name, next)}
+          />
+        </label>
       );
     }
     return (
@@ -86,6 +126,9 @@ const ContactForm = ({
         step={field.integer ? 1 : field.step}
         inputMode={field.type === "number" ? "numeric" : undefined}
         placeholder={field.placeholder || ""}
+        countryCodeOptions={type === "tel" ? field.options : undefined}
+        dropdownPortalClassName="trem-contact-form__dropdown-layer"
+        dropdownPortalZIndex={2100}
         error={errors[field.name]}
         onChange={(next) => onChange(field.name, next)}
       />
@@ -106,7 +149,7 @@ const ContactForm = ({
             key={field.name}
           >
             {renderField(field)}
-            {errors[field.name] ? (
+            {["select", "textarea", "date"].includes(field.type) && errors[field.name] ? (
               <p className="trem-contact-form__error">{errors[field.name]}</p>
             ) : null}
           </div>

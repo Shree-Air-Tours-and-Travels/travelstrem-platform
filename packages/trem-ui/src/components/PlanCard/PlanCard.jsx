@@ -10,6 +10,7 @@ export default function PlanCard({
   image,
   imageAlt = "",
   href,
+  onClick,
   target = "_self",
   rel = "",
   ariaLabel = "",
@@ -93,6 +94,7 @@ export default function PlanCard({
     <a
       className={cardClassName}
       href={href}
+      onClick={onClick}
       target={target}
       rel={relationship}
       aria-label={ariaLabel || title}
@@ -109,6 +111,7 @@ PlanCard.propTypes = {
   image: PropTypes.string.isRequired,
   imageAlt: PropTypes.string,
   href: PropTypes.string,
+  onClick: PropTypes.func,
   target: PropTypes.string,
   rel: PropTypes.string,
   ariaLabel: PropTypes.string,

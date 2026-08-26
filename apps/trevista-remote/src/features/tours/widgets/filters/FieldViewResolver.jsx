@@ -64,9 +64,10 @@ export default function FieldViewResolver({
     case "select": {
       const opts = getOptionList(field) || [];
       const hasAnyOption = opts.some((o) => String(o.value) === "");
+      const selectPlaceholder = field.placeholder || `Any ${label.toLowerCase()}`;
 
       const items = [
-        ...(hasAnyOption ? [] : [{ id: "", label: `Any ${label.toLowerCase()}`, value: "" }]),
+        ...(hasAnyOption ? [] : [{ id: "", label: selectPlaceholder, value: "" }]),
         ...opts
           .filter((o) => String(o.value) !== "")
           .map((o) => ({
@@ -81,7 +82,7 @@ export default function FieldViewResolver({
         <div className="fv-wrapper">
           <SingleSelect
             label={label}
-            placeholder={`Any ${label.toLowerCase()}`}
+            placeholder={selectPlaceholder}
             value={inputValue}
             options={items}
             onChange={(next) => onInput(name, "select")(next)}
@@ -123,17 +124,14 @@ export default function FieldViewResolver({
     case "date":
       return (
         <div className="fv-wrapper">
-          <label className="filters__label" key={name}>
-            <span className="filters__labelText">{label}</span>
-            <DatePicker
-              min={dateRange.earliest || ""}
-              max={dateRange.latest || ""}
-              value={inputValue || ""}
-              onChange={(next) => onInput(name, "date")(next)}
-              placeholder={`Select ${label.toLowerCase()}`}
-              error={error || undefined}
-            />
-          </label>
+          <DatePicker
+            min={dateRange.earliest || ""}
+            max={dateRange.latest || ""}
+            value={inputValue || ""}
+            onChange={(next) => onInput(name, "date")(next)}
+            placeholder={`Select ${label.toLowerCase()}`}
+            error={error || undefined}
+          />
           {error && (
             <div className="filters__fieldError" id={describedBy}>
               {error}

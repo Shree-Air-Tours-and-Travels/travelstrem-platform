@@ -58,7 +58,12 @@ export const mapHolidayPackageToDestinationCard = (pkg = {}) => {
   if (!id || !title || !imageSrc || !href) return null;
 
   const priceInfo = pkg.priceInfo || pkg.price || pkg.pricing || {};
-  const priceAmount = priceInfo.min != null ? priceInfo.min : priceInfo.amount;
+  const priceAmount =
+    priceInfo.minMinor != null
+      ? Number(priceInfo.minMinor) / 100
+      : priceInfo.min != null
+        ? priceInfo.min
+        : priceInfo.amount;
   const price =
     priceAmount != null && Number.isFinite(Number(priceAmount)) && Number(priceAmount) > 0
       ? {

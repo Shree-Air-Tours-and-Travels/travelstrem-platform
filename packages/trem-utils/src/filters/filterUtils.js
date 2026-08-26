@@ -111,9 +111,9 @@ export function validateField(name, value, field = {}, serverOptions = {}) {
   }
 
   if (type === "tel" || type === "phone") {
-    const phone = String(value).trim();
-    if (!/^\+?[0-9][0-9\s-]{6,18}$/.test(phone))
-      return { ok: false, error: getMessage(field, "phone") };
+    const phone = String(value).replace(/\D/g, "");
+    if (phone.length !== 10)
+      return { ok: false, error: getMessage(field, "phone", "Enter a valid 10-digit phone number") };
     return { ok: true, error: null };
   }
 

@@ -18,6 +18,7 @@ import searchRoutes from "../modules/search/routes.js";
 import testEmailRoutes from "../modules/email/routes.js";
 import tenancyRoutes from "../modules/tenancy/routes.js";
 import supportRoutes from "../modules/support/routes.js";
+import locationRoutes from "../modules/locations/routes.js";
 
 const getDbHealth = () => {
     const readyState = mongoose.connection.readyState;
@@ -64,6 +65,7 @@ export default function registerRoutes(app) {
     app.use("/api/test/email", testEmailRoutes);
     app.use("/api/tenancy", tenancyRoutes);
     app.use("/api/support", supportRoutes);
+    app.use("/api/locations", locationRoutes);
     app.use("/api/pages", pageDefinitionRoutes);
     app.use(API_ROUTES.TOURS, tourRoutes);
     app.use("/api/trevio", trevioRoutes);

@@ -6,7 +6,7 @@ import {
   slugify,
   useRefreshOnActivation,
 } from "@packages/trem-utils";
-import { showRealtimeToast, useEnquiryRealtime, useRealtimeStatus } from "@packages/trem-events";
+import { showRealtimeToast, useEnquiryRealtime } from "@packages/trem-events";
 import { useAppShellConfig } from "../../app/providers/AppShellProvider";
 import { buildTrevistaTourPath } from "../../app/routing/navigationRegistry";
 import resolveContractRefs from "../../core/config/resolveContractRefs";
@@ -18,6 +18,10 @@ import "./AppShell.styles.scss";
 
 const PRODUCT_URLS = { trevista: process.env.REACT_APP_TREVISTA_URL };
 const USER_PROFILE_UPDATED_EVENT = "USER_PROFILE_UPDATED";
+let overviewResponseCache = null;
+let overviewResponseUserKey = "";
+let overviewRequest = null;
+let overviewRequestUserKey = "";
 
 const textValue = (value) => {
   if (!value) return "";
@@ -57,8 +61,9 @@ const resolveFavoriteRef = (item) => {
 
 export default function AppShellContainer({ activeTab = "overview", onTabChange }) {
   const navigate = useNavigate();
-  const { session, reload: reloadShellSession } = useAppShellConfig();
+  const { session } = useAppShellConfig();
   const user = session?.user || {};
+  const overviewUserKey = String(user.id || user._id || "guest");
   const [planCards, setPlanCards] = useState(null);
   const [overviewRail, setOverviewRail] = useState(null);
   const [metricsDefinition, setMetricsDefinition] = useState(null);
@@ -79,9 +84,26 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
 
   // The dashboard page definition carries user-scoped data (metrics, recent
   // bookings & enquiries, upcoming trips) in the same response as the markup.
-  const loadOverview = useCallback(() => {
+  const loadOverview = useCallback(({ force = false } = {}) => {
     setOverviewDefinitionLoading(true);
-    return fetchData("/pages/app-shell/app-shell")
+    const hasCurrentCache =
+      overviewResponseCache && overviewResponseUserKey === overviewUserKey;
+    const hasCurrentRequest = overviewRequest && overviewRequestUserKey === overviewUserKey;
+    let request;
+    if (!force && hasCurrentCache) {
+      request = Promise.resolve(overviewResponseCache);
+    } else if (hasCurrentRequest) {
+      request = overviewRequest;
+    } else {
+      request = fetchData("/pages/app-shell/app-shell").then((response) => {
+        overviewResponseCache = response;
+        overviewResponseUserKey = overviewUserKey;
+        return response;
+      });
+      overviewRequest = request;
+      overviewRequestUserKey = overviewUserKey;
+    }
+    return request
       .then((response) => {
         const component = response?.component;
         const labels = component?.elements?.labels || {};
@@ -122,6 +144,7 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
         });
       })
       .catch(() => {
+        if (overviewResponseCache && overviewResponseUserKey === overviewUserKey) return;
         setPlanCards(null);
         setOverviewRail(null);
         setJourneyHero(null);
@@ -129,21 +152,21 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
         setOverviewCopy({});
         setDashboardData(null);
       })
-      .finally(() => setOverviewDefinitionLoading(false));
-  }, [reloadShellSession]);
+      .finally(() => {
+        if (overviewRequest === request) {
+          overviewRequest = null;
+          overviewRequestUserKey = "";
+        }
+        setOverviewDefinitionLoading(false);
+      });
+  }, [overviewUserKey]);
 
   useEffect(() => {
     loadOverview();
   }, [loadOverview]);
 
-  // Keep dashboard numbers honest while the overview tab is visible: realtime
-  // events refresh instantly; focus/tab activation only runs as a fallback.
-  const { isConnected } = useRealtimeStatus();
-  useEnquiryRealtime(activeTab === "overview" ? loadOverview : null);
-  useRefreshOnActivation(loadOverview, {
-    enabled: activeTab === "overview" && !isConnected,
-    resource: "enquiries",
-  });
+  // Load once, then let realtime enquiry events update the overview.
+  useEnquiryRealtime(activeTab === "overview" ? () => loadOverview({ force: true }) : null);
 
   useEffect(() => {
     let cancelled = false;
@@ -196,7 +219,6 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
             new CustomEvent(USER_PROFILE_UPDATED_EVENT, { detail: { user: nextProfile } }),
           );
         }
-        reloadShellSession?.();
         showRealtimeToast({
           title: "Profile updated",
           subtitle: "Your account details were saved.",
@@ -259,7 +281,6 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
               new CustomEvent(USER_PROFILE_UPDATED_EVENT, { detail: { user: nextProfile } }),
             );
           }
-          reloadShellSession?.();
           showRealtimeToast({
             title: "Avatar updated",
             subtitle: "Your new avatar is visible across TravelsTREM.",
@@ -277,7 +298,7 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
         setAvatarSaving(false);
       }
     },
-    [reloadShellSession],
+    [],
   );
 
   const handleRemoveFavorite = useCallback(

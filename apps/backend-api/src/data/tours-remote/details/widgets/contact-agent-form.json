@@ -4,7 +4,10 @@
     "data": {},
     "dataScope": {
       "options": {},
-      "optionSets": { "preferredContactOptions": "tours.preferredContactOptions" }
+      "optionSets": {
+        "preferredContactOptions": "tours.preferredContactOptions",
+        "phoneCountryCodes": "common.phoneCountryCodes"
+      }
     },
     "elements": {
       "labels": {
@@ -22,6 +25,9 @@
         "customizationPreference": "How would you like to travel?",
         "usePackage": "Use the selected package",
         "customizeTour": "Customise this tour",
+        "customJourneyRedirectTitle": "Build the full journey in the custom tour planner",
+        "customJourneyRedirectDescription": "We will carry this tour's destinations, dates, duration, flights, and available preferences into the planner so you can tailor the complete trip.",
+        "customJourneyRedirectAction": "Continue to custom planner",
         "preferredTravelDate": "Choose a departure",
         "preferredStartDate": "Suitable start date",
         "preferredEndDate": "Suitable end date",
@@ -52,6 +58,7 @@
         "quoteReviewDescription": "Check your saved details and selected package before sending the request to your travel specialist.",
         "cancel": "Cancel",
         "continueToPricing": "Continue",
+        "continueWithPackage": "Continue with {package}",
         "continueToReview": "Continue to review",
         "continueWithoutSuggestion": "Continue without suggestion",
         "backToDetails": "Back to details",
@@ -130,6 +137,7 @@
                 "required": true,
                 "width": "half",
                 "maxLength": 10,
+                "optionsRef": "phoneCountryCodes",
                 "placeholderRef": "phonePlaceholder"
               },
               {

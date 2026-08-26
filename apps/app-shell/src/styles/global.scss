@@ -125,6 +125,27 @@ select {
   }
 }
 
+.dash-shell-breadcrumb {
+  position: sticky;
+  top: 0;
+  z-index: 80;
+  width: 100%;
+  min-height: 52px;
+  padding-inline: $space-6;
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-glass-strong, var(--surface));
+  box-shadow: var(--shadow-xs);
+  backdrop-filter: blur(14px);
+
+  @media (max-width: $breakpoint-md) {
+    min-height: 46px;
+    padding-inline: $space-4;
+  }
+}
+
 .dash-content--remote {
   width: 100%;
   max-width: none;
@@ -245,15 +266,18 @@ select {
   // phones, keep shell chrome accessible but stop it from permanently consuming
   // the top and bottom of the viewport.
   .dash-layout--trevista-immersive {
-    --dash-immersive-header-space: 120px;
+    --dash-immersive-header-space: 108px;
     --td-header-offset: var(--dash-immersive-header-space);
 
     .trem-app-header {
+      visibility: visible;
+      pointer-events: auto;
       transform: translateY(0);
       transition:
         transform 220ms ease,
         opacity 180ms ease,
-        box-shadow 180ms ease;
+        box-shadow 180ms ease,
+        visibility 0s linear 0s;
       will-change: transform;
     }
 
@@ -276,9 +300,12 @@ select {
     }
 
     .trem-fab--variant-mobile-navigation {
+      visibility: visible;
+      pointer-events: auto;
       transition:
         transform 220ms ease,
-        opacity 180ms ease;
+        opacity 180ms ease,
+        visibility 0s linear 0s;
       will-change: transform;
     }
   }
@@ -288,9 +315,12 @@ select {
     --dash-immersive-header-space: 0px;
 
     .trem-app-header {
-      opacity: 0.08;
-      transform: translateY(calc(-100% + #{$space-2}));
+      visibility: hidden;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(-100%);
       box-shadow: none;
+      transition-delay: 0s, 0s, 0s, 220ms;
     }
 
     .trem-app-header__spacer {
@@ -299,8 +329,26 @@ select {
     }
 
     .trem-fab--variant-mobile-navigation {
-      opacity: 0.1;
-      transform: translateY(calc(100% - #{$space-2}));
+      visibility: hidden;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(100%);
+      transition-delay: 0s, 0s, 220ms;
+    }
+
+    .tour-detail__breadcrumbs,
+    .tours-page__crumbs {
+      min-height: 0;
+      height: 0;
+      padding-block: 0;
+      border: 0;
+      overflow: hidden;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .tour-detail__section-nav {
+      top: 0;
     }
   }
 }

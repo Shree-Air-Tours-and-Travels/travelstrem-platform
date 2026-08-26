@@ -3,6 +3,7 @@ import {
   FavoritesProvider,
   ProductHeader,
   GlobalLoader,
+  ErrorState,
   AppFooter,
   ScrollToTopButton,
   useTheme,
@@ -166,7 +167,14 @@ function App({ dispatchEvent, embedded = false, userSession = null }) {
   }, [embedded]);
 
   if (state.error)
-    return <div className="app-status">Trevista initialization failed: {state.error}</div>;
+    return (
+      <ErrorState
+        title="Trevista could not start"
+        description="The tour experience is temporarily unavailable."
+        error={state.error}
+        retry={() => window.location.reload()}
+      />
+    );
 
   if (!embedded && state.loading) return <GlobalLoader visible text="Loading Trevista" />;
 
@@ -196,7 +204,6 @@ function App({ dispatchEvent, embedded = false, userSession = null }) {
 
   return (
     <>
-      <GlobalLoader visible={state.loading} />
       <div className={embedded ? "tours-app-shell tours-app-shell--embedded" : "tours-app-shell"}>
         {/* Shared singleton client: when embedded in the shell, the shell's
                     provider already owns the connection and this is a no-op. */}

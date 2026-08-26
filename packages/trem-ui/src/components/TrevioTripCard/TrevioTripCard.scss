@@ -11,15 +11,6 @@
   background: var(--surface);
   color: var(--text);
   box-shadow: var(--shadow-sm);
-  transition:
-    transform 180ms $ease-default,
-    box-shadow 180ms $ease-default,
-    border-color 180ms $ease-default;
-  &:hover {
-    transform: translateY(-3px);
-    border-color: var(--primary-focus);
-    box-shadow: var(--shadow-lg);
-  }
 }
 .trevio-trip-card__image {
   position: relative;

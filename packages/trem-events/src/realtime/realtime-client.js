@@ -72,11 +72,6 @@ const createRealtimeClient = () => {
     return "customer";
   };
 
-  const emitBrowserLogout = (reason = "realtime_unauthorized") => {
-    if (typeof window === "undefined") return;
-    window.dispatchEvent(new CustomEvent("USER_LOGOUT", { detail: { reason } }));
-  };
-
   const subscriptionKey = (resource, id) => `${resource}:${id}`;
 
   const rememberSubscription = (resource, id) => {
@@ -129,12 +124,11 @@ const createRealtimeClient = () => {
       setStatus(CONNECTION_STATUS.ERROR);
       if (AUTH_FAILURE_CODES.has(code)) {
         nextSocket.disconnect();
-        emitBrowserLogout("realtime_unauthorized");
       }
     });
     nextSocket.on("error", (error) => {
       const code = error?.code || error?.data?.code;
-      if (AUTH_FAILURE_CODES.has(code)) emitBrowserLogout("realtime_unauthorized");
+      if (AUTH_FAILURE_CODES.has(code)) nextSocket.disconnect();
     });
     return nextSocket;
   };
@@ -167,6 +161,18 @@ const createRealtimeClient = () => {
 
     getStatus() {
       return status;
+    },
+
+    reconnect() {
+      if (!socket) return this.connect();
+      socket.disconnect();
+      socket.connect();
+      return socket;
+    },
+
+    pause() {
+      if (socket) socket.disconnect();
+      setStatus(CONNECTION_STATUS.DISCONNECTED);
     },
 
     onStatusChange(listener) {

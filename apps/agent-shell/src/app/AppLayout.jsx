@@ -12,6 +12,7 @@ const roleLabel = (user) =>
   user?.agencyRole === "partner_admin" ? "Partner Admin" : "Partner Agent";
 
 function activeNavigation(pathname) {
+  if (pathname.includes("/agent/support")) return "support";
   if (pathname.includes("/trevio/trips")) return "trevioTrips";
   if (pathname.includes("/services/tours")) return "trevistaTours";
   if (
@@ -81,16 +82,12 @@ export default function AppLayout({ embedded = false }) {
   }, [location.pathname, productCatalog, selectedProductKey]);
 
   const selectedProduct = useMemo(
-    () =>
-      productCatalog.find((product) => product.key === selectedProductKey) || productCatalog[0],
+    () => productCatalog.find((product) => product.key === selectedProductKey) || productCatalog[0],
     [productCatalog, selectedProductKey],
   );
   const breadcrumbItems = useMemo(
     () =>
-      resolvePartnerBreadcrumbs(
-        location.pathname,
-        backendHeaderConfig?.partnerBreadcrumbs || [],
-      ),
+      resolvePartnerBreadcrumbs(location.pathname, backendHeaderConfig?.partnerBreadcrumbs || []),
     [backendHeaderConfig?.partnerBreadcrumbs, location.pathname],
   );
 
@@ -123,6 +120,7 @@ export default function AppLayout({ embedded = false }) {
             icon: "usersRound",
             path: "/agent/customers",
           },
+          { id: "support", label: "Help & Support", icon: "support", path: "/agent/support" },
           ...(isPartnerAdmin
             ? [
                 {
@@ -244,14 +242,7 @@ export default function AppLayout({ embedded = false }) {
       },
       mobileMenu: { openLabel: "Open partner navigation", closeLabel: "Close partner navigation" },
     }),
-    [
-      backendHeaderConfig?.variant,
-      isPartnerAdmin,
-      navigate,
-      productCatalog,
-      selectedProduct,
-      user,
-    ],
+    [backendHeaderConfig?.variant, isPartnerAdmin, navigate, productCatalog, selectedProduct, user],
   );
 
   const onAction = useCallback(

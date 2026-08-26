@@ -11,7 +11,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1.55fr) minmax(240px, 0.75fr);
   min-height: 330px;
-  margin-bottom: $space-6;
+  margin-bottom: var(--layout-section-gap, #{$space-5});
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--color-primary) 28%, var(--border));
   border-radius: $radius-lg;
@@ -185,7 +185,7 @@
 }
 
 .dov__stats {
-  margin-bottom: $space-6;
+  margin-bottom: var(--layout-section-gap, #{$space-5});
 }
 
 .dov__stats-preloader {
@@ -193,14 +193,14 @@
 }
 
 .dov__section {
-  margin-bottom: $space-6;
+  margin-bottom: var(--layout-section-gap, #{$space-5});
 }
 
 .dov__content {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(290px, 340px);
   align-items: start;
-  gap: $space-6;
+  gap: var(--layout-section-gap, #{$space-5});
 
   &--single {
     grid-template-columns: minmax(0, 1fr);
@@ -217,7 +217,7 @@
 }
 
 .dov__plan-cards {
-  margin-bottom: $space-8;
+  margin-bottom: var(--layout-section-gap, #{$space-5});
 }
 
 .dov__section-title {

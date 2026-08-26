@@ -1,333 +1,1169 @@
 @import "@packages/trem-design-tokens/scss";
 
+/* ========================================================================== */
+/* Root                                                                       */
+/* ========================================================================== */
+
 .trem-datepicker {
   position: relative;
+
   width: 100%;
+  min-width: 0;
 
-  &__visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
+  font-family: $font-primary;
+
+  /*
+   * Trigger can adapt its typography
+   * to the actual width of the component.
+   */
+  container-type: inline-size;
+
+  --dp-cell-size: 36px;
+  --dp-day-font-size: 13px;
+  --dp-weekday-font-size: 11px;
+  --dp-control-height: 34px;
+  --dp-option-height: 38px;
+  --dp-padding: 12px;
+  --dp-grid-gap: 2px;
+}
+
+/* ========================================================================== */
+/* Trigger                                                                    */
+/* ========================================================================== */
+
+.trem-datepicker__trigger {
+  position: relative;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    auto;
+
+  align-items: center;
+
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+
+  gap: $space-2;
+
+  padding: 0 $space-3;
+
+  border: 1px solid var(--border);
+
+  border-radius: $radius-sm;
+
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface) 98%, var(--color-primary) 2%),
+    var(--surface)
+  );
+
+  color: var(--text);
+
+  font-family: $font-primary;
+
+  /*
+   * Shrinks slightly inside narrow sidebar fields,
+   * but remains readable.
+   */
+  font-size: clamp(11px, 4cqw, #{$font-size-sm});
+
+  font-weight: $font-semibold;
+
+  line-height: 1.3;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.035);
+
+  transition:
+    border-color 150ms $ease-default,
+    background 150ms $ease-default,
+    box-shadow 150ms $ease-default;
+
+  &:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--color-primary) 30%, var(--border));
+
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--surface) 96%, var(--color-primary) 4%),
+      var(--surface)
+    );
   }
 
-  &__trigger {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    border: 1px solid var(--border);
-    border-radius: $radius-xs;
+  &:focus,
+  &:focus-visible {
+    outline: none;
+
+    border-color: var(--color-primary);
+
     background: var(--surface);
-    padding: $space-2-5 $space-3;
-    font-size: $font-size-sm;
-    color: var(--text);
-    font-family: $font-primary;
-    text-align: left;
-    cursor: pointer;
-    transition:
-      border-color 160ms $ease-default,
-      box-shadow 160ms $ease-default;
 
-    &:hover {
-      border-color: var(--color-primary);
-    }
-
-    &:focus {
-      outline: none;
-      border-color: var(--color-primary);
-      box-shadow: 0 0 0 3px var(--primary-soft);
-    }
-
-    &--disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
-      pointer-events: none;
-    }
-  }
-
-  &__placeholder {
-    color: var(--muted);
-  }
-
-  &__icon {
-    margin-left: auto;
-    color: var(--muted);
-    flex-shrink: 0;
-  }
-
-  &--error &__trigger {
-    border-color: $danger-color;
-
-    &:focus {
-      box-shadow: 0 0 0 3px color-mix(in srgb, $danger-color 12%, transparent);
-    }
-  }
-
-  &__menu-wrapper {
-    position: fixed;
-    z-index: 1500;
-    max-width: calc(100vw - 24px);
-    pointer-events: auto;
-
-    &--top {
-      transform: translateY(-100%);
-    }
-  }
-
-  &__dropdown {
-    width: 100%;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: $radius-md;
     box-shadow:
-      0 8px 32px rgba(0, 0, 0, 0.12),
-      0 2px 8px rgba(0, 0, 0, 0.06);
-    padding: $space-3;
-    max-height: inherit;
-    overflow-y: auto;
-    animation: trem-dp-in 150ms $ease-default;
+      0 0 0 3px var(--primary-soft),
+      0 3px 10px rgba(15, 23, 42, 0.045);
   }
 
-  &__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: $space-1;
-    margin-bottom: $space-3;
+  &:disabled {
+    opacity: 0.55;
+
+    cursor: not-allowed;
+
+    background: var(--surface-inset);
+
+    box-shadow: none;
+  }
+}
+
+.trem-datepicker--open {
+  .trem-datepicker__trigger {
+    border-color: var(--color-primary);
+
+    box-shadow: 0 0 0 3px var(--primary-soft);
   }
 
-  &__title {
-    font-size: $font-size-sm;
-    font-weight: $font-bold;
-    color: var(--title);
-    flex: 1;
-    text-align: center;
-    white-space: nowrap;
-  }
+  .trem-datepicker__trigger-icon {
+    background: color-mix(in srgb, var(--color-primary) 8%, var(--surface));
 
-  &__month-year {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: $space-1-5;
-    flex: 1;
-    min-width: 0;
-  }
-
-  &__select {
-    width: 100%;
-    min-width: 0;
-    height: 34px;
-    padding: 0 $space-2;
-    border: 1px solid var(--border);
-    border-radius: $radius-xs;
-    background: var(--surface);
-    color: var(--text);
-    font: inherit;
-    font-size: $font-size-sm;
-    font-weight: $font-semibold;
-    cursor: pointer;
-
-    &--year {
-      width: 82px;
-    }
-
-    &:focus-visible {
-      outline: 2px solid var(--color-primary);
-      outline-offset: 1px;
-    }
-  }
-
-  &__nav-btn {
-    display: grid;
-    place-items: center;
-    width: 28px;
-    height: 28px;
-    border: none;
-    border-radius: $radius-xs;
-    background: transparent;
-    color: var(--muted);
-    cursor: pointer;
-    flex-shrink: 0;
-    transition:
-      background 120ms $ease-default,
-      color 120ms $ease-default;
-
-    &:hover {
-      background: var(--surface-inset);
-      color: var(--text);
-    }
-
-    &:focus-visible {
-      outline: 2px solid var(--color-primary);
-      outline-offset: -2px;
-    }
-
-    &:disabled {
-      opacity: 0.32;
-      cursor: not-allowed;
-    }
-  }
-
-  &__weekdays {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 0;
-    margin-bottom: $space-1;
-  }
-
-  &__weekday {
-    text-align: center;
-    font-size: $font-size-xs;
-    font-weight: $font-semibold;
-    color: var(--muted);
-    padding: $space-1 0;
-    user-select: none;
-  }
-
-  &__grid {
-    display: grid;
-    gap: 2px;
-  }
-
-  &__row {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 2px;
-  }
-
-  &__cell {
-    display: grid;
-    place-items: center;
-    height: 32px;
-    font-size: $font-size-sm;
-
-    &--empty {
-      pointer-events: none;
-    }
-  }
-
-  &__day {
-    width: 100%;
-    height: 100%;
-    border: none;
-    border-radius: $radius-xs;
-    background: transparent;
-    color: var(--text);
-    cursor: pointer;
-    font-size: $font-size-sm;
-    font-family: $font-primary;
-    transition:
-      background 100ms $ease-default,
-      color 100ms $ease-default;
-
-    &:hover:not(:disabled) {
-      background: var(--surface-inset);
-    }
-
-    &:focus-visible {
-      outline: 2px solid var(--color-primary);
-      outline-offset: -2px;
-    }
-
-    &--selected {
-      background: var(--color-primary) !important;
-      color: var(--color-on-primary) !important;
-      font-weight: $font-bold;
-    }
-
-    &--today:not(&--selected) {
-      background: var(--primary-softer);
-      color: var(--color-primary);
-      font-weight: $font-bold;
-    }
-
-    &--disabled {
-      color: var(--muted);
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-  }
-
-  &__footer {
-    display: flex;
-    justify-content: center;
-    padding-top: $space-2;
-    margin-top: $space-2;
-    border-top: 1px solid var(--border);
-  }
-
-  &__today-btn {
-    border: none;
-    background: transparent;
     color: var(--color-primary);
-    font-size: $font-size-xs;
-    font-weight: $font-bold;
-    cursor: pointer;
-    padding: $space-1-5 $space-3;
-    border-radius: $radius-xs;
-    transition: background 120ms $ease-default;
-
-    &:hover {
-      background: var(--primary-softer);
-    }
   }
+}
 
-  &__calendar-sheet {
-    .trem-datepicker__header--selectable {
-      gap: $space-2;
-    }
+/* ========================================================================== */
+/* Trigger value                                                              */
+/* ========================================================================== */
 
-    .trem-datepicker__month-year {
-      gap: $space-2;
-    }
+.trem-datepicker__value,
+.trem-datepicker__placeholder {
+  display: block;
 
-    .trem-datepicker__select {
-      height: 42px;
-      padding-inline: $space-3;
-    }
+  min-width: 0;
 
-    .trem-datepicker__select--year {
-      width: 94px;
-    }
+  /*
+   * Do NOT ellipsis valid date text.
+   */
+  overflow: visible;
 
-    .trem-datepicker__grid,
-    .trem-datepicker__row {
-      display: grid;
-      gap: 2px;
-    }
+  text-overflow: clip;
 
-    .trem-datepicker__row {
-      grid-template-columns: repeat(7, 1fr);
-    }
+  white-space: nowrap;
+}
 
-    .trem-datepicker__cell {
-      height: 44px;
-    }
+.trem-datepicker__value {
+  color: var(--text);
 
-    .trem-datepicker__day {
-      font-size: $font-size-md;
-      border-radius: $radius-xs;
+  font-weight: $font-semibold;
 
-      &--selected {
-        background: var(--color-primary) !important;
-        color: var(--color-on-primary) !important;
-      }
+  font-variant-numeric: tabular-nums;
+}
+
+.trem-datepicker__placeholder {
+  color: var(--muted);
+
+  font-weight: $font-regular;
+}
+
+/* ========================================================================== */
+/* Trigger icon                                                               */
+/* ========================================================================== */
+
+.trem-datepicker__trigger-icon {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 30px;
+  height: 30px;
+
+  flex: 0 0 30px;
+
+  border-radius: $radius-xs;
+
+  color: var(--muted);
+
+  transition:
+    background 140ms $ease-default,
+    color 140ms $ease-default;
+}
+
+.trem-datepicker__trigger:hover:not(:disabled) {
+  .trem-datepicker__trigger-icon {
+    background: var(--surface-inset);
+
+    color: var(--text);
+  }
+}
+
+/* ========================================================================== */
+/* Error                                                                      */
+/* ========================================================================== */
+
+.trem-datepicker--error {
+  .trem-datepicker__trigger {
+    border-color: var(--color-danger);
+
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-danger) 3%, var(--surface)),
+      var(--surface)
+    );
+
+    &:focus,
+    &:focus-visible {
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-danger) 12%, transparent);
     }
   }
 }
 
-@keyframes trem-dp-in {
+/* ========================================================================== */
+/* Desktop portal                                                             */
+/* ========================================================================== */
+
+.trem-datepicker__menu-wrapper {
+  position: fixed;
+
+  z-index: 1500;
+
+  /*
+   * Absolutely no calendar scrolling.
+   */
+  overflow: visible;
+
+  max-width: calc(100vw - 24px);
+
+  pointer-events: auto;
+
+  transform-origin: top center;
+
+  animation: trem-datepicker-in 150ms $ease-default both;
+
+  &--top {
+    transform: translateY(-100%);
+
+    transform-origin: bottom center;
+
+    animation-name: trem-datepicker-in-top;
+  }
+}
+
+/* ========================================================================== */
+/* Calendar surface                                                           */
+/* ========================================================================== */
+
+.trem-datepicker__dropdown {
+  box-sizing: border-box;
+
+  width: 100%;
+  min-width: 0;
+
+  padding: var(--dp-padding);
+
+  /*
+   * No horizontal scrollbar.
+   * No vertical scrollbar.
+   */
+  overflow: hidden;
+
+  border: 1px solid color-mix(in srgb, var(--border) 88%, var(--color-primary) 12%);
+
+  border-radius: $radius-md;
+
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface) 98%, var(--color-primary) 2%),
+    var(--surface)
+  );
+
+  color: var(--text);
+
+  box-shadow:
+    0 18px 46px rgba(15, 23, 42, 0.14),
+    0 6px 14px rgba(15, 23, 42, 0.07),
+    0 1px 3px rgba(15, 23, 42, 0.05);
+
+  isolation: isolate;
+}
+
+/* ========================================================================== */
+/* Header                                                                     */
+/* ========================================================================== */
+
+.trem-datepicker__header {
+  display: grid;
+
+  grid-template-columns:
+    var(--dp-control-height)
+    minmax(0, 1fr)
+    var(--dp-control-height);
+
+  align-items: center;
+
+  width: 100%;
+  min-width: 0;
+
+  gap: clamp(3px, 1vw, 7px);
+
+  margin-bottom: clamp(5px, 1vw, 9px);
+}
+
+.trem-datepicker__header-center {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  min-width: 0;
+
+  text-align: center;
+}
+
+/* ========================================================================== */
+/* Header period                                                              */
+/* ========================================================================== */
+
+.trem-datepicker__period {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  min-width: 0;
+
+  gap: 2px;
+}
+
+.trem-datepicker__period-btn {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  min-width: 0;
+  min-height: var(--dp-control-height);
+
+  padding: 0 clamp(4px, 1.5vw, 8px);
+
+  border: 1px solid transparent;
+
+  border-radius: $radius-xs;
+
+  background: transparent;
+
+  color: var(--text);
+
+  font-family: $font-primary;
+
+  font-size: clamp(10px, var(--dp-day-font-size), #{$font-size-sm});
+
+  font-weight: $font-bold;
+
+  line-height: 1;
+
+  /*
+   * Important:
+   * full "September", "November", etc.
+   */
+  overflow: visible;
+
+  text-overflow: clip;
+
+  white-space: nowrap;
+
+  cursor: pointer;
+
+  transition:
+    background 120ms $ease-default,
+    border-color 120ms $ease-default,
+    color 120ms $ease-default;
+
+  &:hover {
+    background: color-mix(in srgb, var(--color-primary) 6%, var(--surface));
+
+    color: var(--color-primary);
+  }
+
+  &:focus-visible {
+    outline: none;
+
+    border-color: color-mix(in srgb, var(--color-primary) 32%, transparent);
+
+    box-shadow: 0 0 0 2px var(--primary-soft);
+  }
+
+  &--month {
+    /*
+     * Month gets enough width for
+     * September / November / December.
+     */
+    min-width: 72px;
+  }
+
+  &--year {
+    min-width: 48px;
+
+    font-variant-numeric: tabular-nums;
+  }
+
+  &--single {
+    min-width: 70px;
+  }
+}
+
+.trem-datepicker__period-range {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  min-height: var(--dp-control-height);
+
+  padding: 0 $space-2;
+
+  border: 0;
+
+  border-radius: $radius-xs;
+
+  background: transparent;
+
+  color: var(--text);
+
+  font-family: $font-primary;
+
+  font-size: var(--dp-day-font-size);
+
+  font-weight: $font-bold;
+
+  line-height: 1;
+
+  white-space: nowrap;
+
+  font-variant-numeric: tabular-nums;
+
+  cursor: pointer;
+
+  &:hover {
+    background: var(--surface-inset);
+  }
+}
+
+.trem-datepicker__title {
+  display: block;
+
+  width: 100%;
+
+  color: var(--title);
+
+  font-size: var(--dp-day-font-size);
+
+  font-weight: $font-bold;
+
+  line-height: 1;
+
+  text-align: center;
+
+  white-space: nowrap;
+}
+
+/* ========================================================================== */
+/* Header navigation                                                          */
+/* ========================================================================== */
+
+.trem-datepicker__nav-btn {
+  display: inline-grid;
+
+  width: var(--dp-control-height);
+
+  height: var(--dp-control-height);
+
+  padding: 0;
+
+  place-items: center;
+
+  border: 1px solid transparent;
+
+  border-radius: $radius-xs;
+
+  background: transparent;
+
+  color: var(--muted);
+
+  cursor: pointer;
+
+  transition:
+    background 120ms $ease-default,
+    border-color 120ms $ease-default,
+    color 120ms $ease-default;
+
+  &:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--border) 72%, transparent);
+
+    background: var(--surface-inset);
+
+    color: var(--text);
+  }
+
+  &:focus-visible {
+    outline: none;
+
+    border-color: var(--color-primary);
+
+    background: var(--primary-soft);
+
+    color: var(--color-primary);
+  }
+
+  &:disabled {
+    opacity: 0.25;
+
+    cursor: not-allowed;
+  }
+}
+
+/* ========================================================================== */
+/* Main content                                                               */
+/* ========================================================================== */
+
+.trem-datepicker__content {
+  width: 100%;
+  min-width: 0;
+
+  overflow: hidden;
+}
+
+/* ========================================================================== */
+/* Weekday header                                                             */
+/* ========================================================================== */
+
+.trem-datepicker__weekdays {
+  display: grid;
+
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+
+  width: 100%;
+
+  gap: var(--dp-grid-gap);
+
+  margin-bottom: clamp(2px, var(--dp-grid-gap), 5px);
+}
+
+.trem-datepicker__weekday {
+  display: grid;
+
+  place-items: center;
+
+  width: 100%;
+  min-width: 0;
+
+  height: clamp(17px, var(--dp-control-height), 23px);
+
+  padding: 0;
+
+  color: var(--muted);
+
+  font-size: var(--dp-weekday-font-size);
+
+  font-weight: $font-bold;
+
+  line-height: 1;
+
+  text-align: center;
+
+  user-select: none;
+}
+
+/* ========================================================================== */
+/* Date grid                                                                  */
+/* ========================================================================== */
+
+.trem-datepicker__grid {
+  display: grid;
+
+  width: 100%;
+  min-width: 0;
+
+  gap: var(--dp-grid-gap);
+
+  overflow: hidden;
+}
+
+.trem-datepicker__row {
+  display: grid;
+
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+
+  width: 100%;
+  min-width: 0;
+
+  gap: var(--dp-grid-gap);
+}
+
+/* ========================================================================== */
+/* Date cell                                                                  */
+/* ========================================================================== */
+
+.trem-datepicker__cell {
+  display: grid;
+
+  width: 100%;
+  min-width: 0;
+
+  height: var(--dp-cell-size);
+
+  place-items: center;
+
+  text-align: center;
+}
+
+.trem-datepicker__day {
+  position: relative;
+
+  display: grid;
+
+  width: 100%;
+  min-width: 0;
+
+  height: var(--dp-cell-size);
+
+  padding: 0;
+
+  place-items: center;
+
+  border: 1px solid transparent;
+
+  border-radius: clamp(5px, 1vw, #{$radius-xs});
+
+  background: transparent;
+
+  color: var(--text);
+
+  font-family: $font-primary;
+
+  font-size: var(--dp-day-font-size);
+
+  font-weight: $font-medium;
+
+  line-height: 1;
+
+  text-align: center;
+
+  font-variant-numeric: tabular-nums;
+
+  cursor: pointer;
+
+  overflow: visible;
+
+  transition:
+    background 110ms $ease-default,
+    border-color 110ms $ease-default,
+    color 110ms $ease-default,
+    box-shadow 110ms $ease-default,
+    transform 110ms $ease-default;
+
+  > span {
+    display: grid;
+
+    width: 100%;
+    height: 100%;
+
+    place-items: center;
+
+    text-align: center;
+
+    line-height: 1;
+  }
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--color-primary) 6%, var(--surface));
+
+    color: var(--color-primary-dark);
+
+    transform: translateY(-1px);
+  }
+
+  &:focus-visible {
+    outline: none;
+
+    border-color: color-mix(in srgb, var(--color-primary) 50%, transparent);
+
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-primary) 12%, transparent);
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Adjacent month                                                         */
+  /* ---------------------------------------------------------------------- */
+
+  &--outside {
+    color: color-mix(in srgb, var(--muted) 55%, transparent);
+
+    font-weight: $font-regular;
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Today                                                                  */
+  /* ---------------------------------------------------------------------- */
+
+  &--today:not(&--selected) {
+    background: color-mix(in srgb, var(--color-primary) 7%, var(--surface));
+
+    color: var(--color-primary);
+
+    font-weight: $font-bold;
+
+    &::after {
+      content: "";
+
+      position: absolute;
+
+      bottom: 3px;
+
+      width: 3px;
+      height: 3px;
+
+      border-radius: $radius-circle;
+
+      background: var(--color-primary);
+    }
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Selected                                                               */
+  /* ---------------------------------------------------------------------- */
+
+  &--selected {
+    border-color: color-mix(in srgb, var(--color-primary) 75%, transparent);
+
+    background: linear-gradient(
+      135deg,
+      var(--color-primary),
+      color-mix(in srgb, var(--color-primary) 78%, var(--color-secondary) 22%)
+    ) !important;
+
+    color: var(--color-on-primary) !important;
+
+    font-weight: $font-bold;
+
+    box-shadow: 0 3px 8px color-mix(in srgb, var(--color-primary) 18%, transparent);
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Disabled                                                               */
+  /* ---------------------------------------------------------------------- */
+
+  &--disabled,
+  &:disabled {
+    background: transparent;
+
+    color: var(--muted);
+
+    opacity: 0.3;
+
+    cursor: not-allowed;
+
+    pointer-events: none;
+  }
+}
+
+/* ========================================================================== */
+/* Month picker                                                               */
+/* ========================================================================== */
+
+.trem-datepicker__month-grid {
+  display: grid;
+
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  width: 100%;
+  min-width: 0;
+
+  gap: clamp(3px, var(--dp-grid-gap), 6px);
+
+  padding: clamp(2px, var(--dp-grid-gap), 5px) 0;
+}
+
+.trem-datepicker__month-option {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  min-width: 0;
+
+  height: var(--dp-option-height);
+
+  padding: 0 3px;
+
+  border: 1px solid transparent;
+
+  border-radius: $radius-xs;
+
+  background: transparent;
+
+  color: var(--text);
+
+  font-family: $font-primary;
+
+  /*
+   * Full month names:
+   * January, September, November...
+   */
+  font-size: clamp(9.5px, var(--dp-day-font-size), 12.5px);
+
+  font-weight: $font-semibold;
+
+  line-height: 1;
+
+  text-align: center;
+
+  white-space: nowrap;
+
+  overflow: visible;
+
+  text-overflow: clip;
+
+  cursor: pointer;
+
+  transition:
+    background 120ms $ease-default,
+    border-color 120ms $ease-default,
+    color 120ms $ease-default,
+    box-shadow 120ms $ease-default;
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--color-primary) 6%, var(--surface));
+
+    color: var(--color-primary);
+  }
+
+  &.is-selected {
+    border-color: color-mix(in srgb, var(--color-primary) 18%, transparent);
+
+    background: var(--primary-soft);
+
+    color: var(--color-primary);
+
+    font-weight: $font-bold;
+  }
+
+  &:focus-visible {
+    outline: none;
+
+    border-color: var(--color-primary);
+
+    box-shadow: 0 0 0 2px var(--primary-soft);
+  }
+
+  &:disabled {
+    opacity: 0.26;
+
+    cursor: not-allowed;
+  }
+}
+
+/* ========================================================================== */
+/* Year picker                                                                */
+/* ========================================================================== */
+
+.trem-datepicker__year-grid {
+  display: grid;
+
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  width: 100%;
+  min-width: 0;
+
+  gap: clamp(3px, var(--dp-grid-gap), 6px);
+
+  padding: clamp(2px, var(--dp-grid-gap), 5px) 0;
+}
+
+.trem-datepicker__year-option {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  min-width: 0;
+
+  height: var(--dp-option-height);
+
+  padding: 0 3px;
+
+  border: 1px solid transparent;
+
+  border-radius: $radius-xs;
+
+  background: transparent;
+
+  color: var(--text);
+
+  font-family: $font-primary;
+
+  font-size: clamp(10px, var(--dp-day-font-size), 13px);
+
+  font-weight: $font-semibold;
+
+  line-height: 1;
+
+  text-align: center;
+
+  white-space: nowrap;
+
+  font-variant-numeric: tabular-nums;
+
+  cursor: pointer;
+
+  transition:
+    background 120ms $ease-default,
+    border-color 120ms $ease-default,
+    color 120ms $ease-default,
+    box-shadow 120ms $ease-default;
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--color-primary) 6%, var(--surface));
+
+    color: var(--color-primary);
+  }
+
+  &.is-selected {
+    border-color: color-mix(in srgb, var(--color-primary) 18%, transparent);
+
+    background: var(--primary-soft);
+
+    color: var(--color-primary);
+
+    font-weight: $font-bold;
+  }
+
+  &:focus-visible {
+    outline: none;
+
+    border-color: var(--color-primary);
+
+    box-shadow: 0 0 0 2px var(--primary-soft);
+  }
+
+  &:disabled {
+    opacity: 0.24;
+
+    cursor: not-allowed;
+  }
+}
+
+/* ========================================================================== */
+/* Footer                                                                     */
+/* ========================================================================== */
+
+.trem-datepicker__footer {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  margin-top: clamp(5px, var(--dp-grid-gap), 8px);
+
+  padding-top: clamp(5px, var(--dp-grid-gap), 8px);
+
+  border-top: 1px solid color-mix(in srgb, var(--border) 75%, transparent);
+}
+
+.trem-datepicker__today-btn {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  min-height: 28px;
+
+  gap: $space-1;
+
+  padding: 0 $space-2;
+
+  border: 1px solid transparent;
+
+  border-radius: $radius-xs;
+
+  background: transparent;
+
+  color: var(--color-primary);
+
+  font-family: $font-primary;
+
+  font-size: clamp(10px, var(--dp-weekday-font-size), #{$font-size-xs});
+
+  font-weight: $font-bold;
+
+  cursor: pointer;
+
+  transition:
+    background 120ms $ease-default,
+    border-color 120ms $ease-default;
+
+  &:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
+
+    background: var(--primary-softer);
+  }
+
+  &:focus-visible {
+    outline: none;
+
+    box-shadow: 0 0 0 2px var(--primary-soft);
+  }
+
+  &:disabled {
+    opacity: 0.32;
+
+    cursor: not-allowed;
+  }
+}
+
+/* ========================================================================== */
+/* Mobile BottomSheet                                                         */
+/* ========================================================================== */
+
+.trem-datepicker__calendar-sheet {
+  width: 100%;
+
+  max-width: 460px;
+
+  margin-inline: auto;
+
+  /*
+   * DatePicker itself never scrolls.
+   */
+  overflow: hidden;
+
+  --dp-cell-size: clamp(32px, 10vw, 44px);
+
+  --dp-day-font-size: clamp(11px, 3.6vw, 14px);
+
+  --dp-weekday-font-size: clamp(9px, 3vw, 11px);
+
+  --dp-control-height: clamp(32px, 9vw, 40px);
+
+  --dp-option-height: clamp(34px, 10vw, 42px);
+
+  --dp-padding: 0;
+
+  --dp-grid-gap: clamp(1px, 0.5vw, 3px);
+
+  .trem-datepicker__header {
+    margin-bottom: $space-2;
+  }
+
+  .trem-datepicker__period-btn {
+    font-size: clamp(11px, 3.5vw, 14px);
+
+    &--month {
+      min-width: 78px;
+    }
+  }
+
+  .trem-datepicker__month-option {
+    font-size: clamp(10px, 3vw, 13px);
+  }
+
+  .trem-datepicker__year-option {
+    font-size: clamp(11px, 3.2vw, 14px);
+  }
+}
+
+/* ========================================================================== */
+/* Narrow phones                                                              */
+/* ========================================================================== */
+
+@media (max-width: 360px) {
+  .trem-datepicker__calendar-sheet {
+    --dp-cell-size: clamp(29px, 9.2vw, 34px);
+
+    --dp-day-font-size: clamp(10px, 3.3vw, 12px);
+
+    --dp-weekday-font-size: clamp(8.5px, 2.8vw, 10px);
+
+    --dp-control-height: 31px;
+
+    --dp-option-height: 33px;
+  }
+
+  .trem-datepicker__period-btn {
+    padding-inline: 4px;
+
+    &--month {
+      min-width: 68px;
+    }
+
+    &--year {
+      min-width: 42px;
+    }
+  }
+
+  .trem-datepicker__month-grid,
+  .trem-datepicker__year-grid {
+    gap: 2px;
+  }
+}
+
+/* ========================================================================== */
+/* Animations                                                                 */
+/* ========================================================================== */
+
+@keyframes trem-datepicker-in {
   from {
     opacity: 0;
-    transform: translateY(-4px);
+
+    transform: translateY(-5px) scale(0.985);
   }
+
   to {
     opacity: 1;
-    transform: translateY(0);
+
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes trem-datepicker-in-top {
+  from {
+    opacity: 0;
+
+    transform: translateY(calc(-100% + 5px)) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+
+    transform: translateY(-100%) scale(1);
+  }
+}
+
+/* ========================================================================== */
+/* Reduced motion                                                             */
+/* ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .trem-datepicker__menu-wrapper {
+    animation: none;
+  }
+
+  .trem-datepicker__trigger,
+  .trem-datepicker__trigger-icon,
+  .trem-datepicker__nav-btn,
+  .trem-datepicker__period-btn,
+  .trem-datepicker__day,
+  .trem-datepicker__month-option,
+  .trem-datepicker__year-option,
+  .trem-datepicker__today-btn {
+    transition: none;
+  }
+
+  .trem-datepicker__day:hover {
+    transform: none;
   }
 }

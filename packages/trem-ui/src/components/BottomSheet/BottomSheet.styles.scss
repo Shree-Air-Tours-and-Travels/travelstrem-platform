@@ -21,7 +21,8 @@
     right: 0;
     bottom: 0;
     z-index: 1;
-    height: min(82vh, 720px);
+    height: auto;
+    max-height: min(82dvh, 720px);
     border-radius: $radius-xl $radius-xl 0 0;
     background: var(--surface);
     box-shadow: 0 -4px 24px rgba(17, 17, 17, 0.12);
@@ -94,7 +95,8 @@
   }
 
   &__body {
-    flex: 1;
+    flex: 0 1 auto;
+    min-height: 0;
     overflow-y: auto;
     padding: $space-1 $space-4 calc($space-4 + env(safe-area-inset-bottom, 0px));
     -webkit-overflow-scrolling: touch;
@@ -134,6 +136,7 @@
     }
 
     .trem-bottom-sheet__body {
+      flex: 1 1 auto;
       padding-bottom: max($space-4, env(safe-area-inset-bottom, 0px));
     }
   }
@@ -150,6 +153,6 @@
 
 @media (max-height: 600px) {
   .trem-bottom-sheet:not(.trem-bottom-sheet--fullscreen) .trem-bottom-sheet__panel {
-    height: 90vh;
+    max-height: 90dvh;
   }
 }

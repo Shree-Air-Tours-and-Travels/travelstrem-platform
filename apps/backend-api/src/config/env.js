@@ -361,6 +361,10 @@ const GOOGLE_CLIENT_SECRET = String(get("GOOGLE_CLIENT_SECRET", "") || "").trim(
 const GOOGLE_CALLBACK_URL = String(
     get("GOOGLE_CALLBACK_URL", `${BASE_URL.replace(/\/$/, "")}/api/auth/google/callback`) || "",
 ).trim();
+const GOOGLE_PLACES_API_KEY = String(get("GOOGLE_PLACES_API_KEY", "") || "").trim();
+const GOOGLE_PLACES_API_BASE_URL = String(
+    get("GOOGLE_PLACES_API_BASE_URL", "https://places.googleapis.com/v1") || "",
+).replace(/\/$/, "");
 const OAUTH_TRANSACTION_TTL_SECONDS = Math.min(
     900,
     Math.max(60, Number(get("OAUTH_TRANSACTION_TTL_SECONDS", 600)) || 600),
@@ -517,6 +521,8 @@ const config = {
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
     GOOGLE_CALLBACK_URL,
+    GOOGLE_PLACES_API_KEY,
+    GOOGLE_PLACES_API_BASE_URL,
     OAUTH_TRANSACTION_TTL_SECONDS,
     MOBILE_AUTH_ENABLED,
     MOBILE_AUTH_PROVIDER,
@@ -587,6 +593,8 @@ export {
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
     GOOGLE_CALLBACK_URL,
+    GOOGLE_PLACES_API_KEY,
+    GOOGLE_PLACES_API_BASE_URL,
     OAUTH_TRANSACTION_TTL_SECONDS,
     MOBILE_AUTH_ENABLED,
     MOBILE_AUTH_PROVIDER,

@@ -11,7 +11,7 @@
 }
 
 .trem-metric-summary--cards {
-  gap: $space-4;
+  gap: var(--layout-card-gap, #{$space-4});
   overflow: visible;
   border: 0;
   border-radius: 0;

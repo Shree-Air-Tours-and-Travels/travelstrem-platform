@@ -16,12 +16,32 @@ const successResponse = (data, message) => ({
     },
 });
 
+const compactFacetOptions = (items = []) =>
+    items.map(({ value, label, count }) => ({ value, label, count }));
+
+const compactSearchFacets = (facets) => ({
+    price: facets.price,
+    duration: facets.duration,
+    origins: compactFacetOptions(facets.origins),
+    destinations: compactFacetOptions(facets.destinations),
+    countries: compactFacetOptions(facets.countries),
+    agencies: compactFacetOptions(facets.agencies),
+    tags: compactFacetOptions(facets.tags),
+});
+
 export const postTourSearch = async (req, res) => {
     try {
         const result = await searchTours(req.tourSearch);
-        return res
-            .status(200)
-            .json(successResponse(result, `${result.pagination.totalItems} tours matched`));
+        const data = {
+            items: result.items,
+            pagination: result.pagination,
+            facets: compactSearchFacets(result.facets),
+        };
+        return res.status(200).json({
+            status: "success",
+            message: `${result.pagination.totalItems} tours matched`,
+            data,
+        });
     } catch (error) {
         console.error("postTourSearch error:", error);
         return res.status(500).json({

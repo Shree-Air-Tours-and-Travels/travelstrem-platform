@@ -1,6 +1,11 @@
 import React, { useMemo } from "react";
 import useTourDetailWidget from "../../hooks/useTourDetailWidget";
-import { getCityDisplay, getCurrencyFormatter, getPriceText } from "../../helper";
+import {
+  getCityDisplay,
+  getCurrencyFormatter,
+  getPackageDisplayName,
+  getPriceText,
+} from "../../helper";
 import { WidgetError, WidgetSkeleton } from "../../shared";
 import PricingCardView from "./PricingCard.view";
 
@@ -11,8 +16,9 @@ export default function PricingCardContainer({
   onShare,
   isFavorited,
   onFavorite,
+  selectedPackage,
 }) {
-  const { loading, error, widgetData } = useTourDetailWidget(tourRef, "pricing-card.json");
+  const { loading, error, widgetData, retry } = useTourDetailWidget(tourRef, "pricing-card.json");
   const labels = widgetData?.elements?.labels || {};
   const config = widgetData?.structure?.widgets?.[0]?.props?.config || {};
   const tour = widgetData?.data?.tour || fallbackTour || null;
@@ -26,17 +32,15 @@ export default function PricingCardContainer({
       .filter((item) => Number(item.sellingTotalMinor) > 0)
       .map((item) => ({
         key: item.packageKey || item.tier,
-        name:
-          item.name ||
-          { BASIC: "Base", STANDARD: "Standard", PREMIUM: "Premium" }[item.tier] ||
-          "Package",
+        name: getPackageDisplayName(item),
+        recommended: item.recommended === true || getPackageDisplayName(item) === "Premium",
         priceText: formatter.format(Number(item.sellingTotalMinor) / 100),
         requiresRepricing: item.requiresRepricing === true,
       }));
   }, [tour]);
 
   if (loading && !tour) return <WidgetSkeleton />;
-  if (error && !tour) return <WidgetError message={error} />;
+  if (error && !tour) return <WidgetError message={error} retry={retry} />;
 
   return (
     <PricingCardView
@@ -45,8 +49,9 @@ export default function PricingCardContainer({
       tour={tour}
       priceText={priceText}
       packagePrices={packagePrices}
+      selectedPackage={selectedPackage}
       priceDisplayMode={
-        tour?.commercialPricing?.displayMode || (tour?.priceInfo?.isFinal ? "FINAL" : "ESTIMATED")
+        tour?.priceInfo?.isFinal ? "FINAL" : tour?.commercialPricing?.displayMode || "ESTIMATED"
       }
       cityDisplay={cityDisplay}
       onContact={onContact}

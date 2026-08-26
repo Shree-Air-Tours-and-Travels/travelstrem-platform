@@ -38,6 +38,10 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: $space-4;
   }
+
+  &__card {
+    padding-block: $space-4;
+  }
 }
 
 @include mq-max($tablet-max) {
@@ -53,5 +57,9 @@
 
   .why-choose-trevista__grid {
     grid-template-columns: 1fr;
+  }
+
+  .why-choose-trevista__card {
+    padding-block: $space-3;
   }
 }

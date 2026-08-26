@@ -47,6 +47,14 @@ const userSchema = new mongoose.Schema(
         productAccess: [{ type: String, trim: true, lowercase: true }],
         permissionGrants: [{ type: String, trim: true }],
         permissionDenials: [{ type: String, trim: true }],
+        internalTeamRoles: [
+            {
+                type: String,
+                enum: ["support"],
+                trim: true,
+                lowercase: true,
+            },
+        ],
         agentRef: { type: String, trim: true, default: "" },
         agencyRef: { type: String, trim: true, default: "" },
         partnerAgencyRef: { type: String, trim: true, default: "" },

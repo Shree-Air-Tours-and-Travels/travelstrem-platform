@@ -39,14 +39,8 @@ const Routers = () => {
           path="/manage/trips"
           element={<Navigate to="/manage/tours?tab=services" replace />}
         />
-        <Route
-          path="/admin/tours"
-          element={<Navigate to="/manage/tours?tab=services" replace />}
-        />
-        <Route
-          path="/admin/trips"
-          element={<Navigate to="/manage/tours?tab=services" replace />}
-        />
+        <Route path="/admin/tours" element={<Navigate to="/manage/tours?tab=services" replace />} />
+        <Route path="/admin/trips" element={<Navigate to="/manage/tours?tab=services" replace />} />
         <Route
           path="/admin/agencies"
           element={<Navigate to="/manage/tours?tab=tenancy" replace />}
@@ -58,6 +52,14 @@ const Routers = () => {
         <Route
           path="/admin/bookings"
           element={<Navigate to="/manage/tours?tab=enquiries" replace />}
+        />
+        <Route
+          path="/admin/support"
+          element={<Navigate to="/manage/tours?tab=support" replace />}
+        />
+        <Route
+          path="/admin/internal-team"
+          element={<Navigate to="/manage/tours?tab=internalTeam" replace />}
         />
         <Route
           path="/manage/bookings"

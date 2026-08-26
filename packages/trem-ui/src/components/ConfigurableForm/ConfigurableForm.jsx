@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Button from "../Button/Button.jsx";
 import Dropdown from "../Dropdown/Dropdown.jsx";
 import InputField from "../InputField/InputField.jsx";
+import LocationTypeahead from "../LocationTypeahead/LocationTypeahead.jsx";
 import DatePicker from "../DatePicker/DatePicker.jsx";
 import Icon from "../../icons/Icon/Icon.jsx";
 import "./ConfigurableForm.styles.scss";
@@ -51,6 +52,23 @@ function FieldControl({ field, value, error, onChange }) {
   const handleChange = useCallback((next) => onChange(next), [onChange]);
 
   switch (type) {
+    case "location":
+      return (
+        <LocationTypeahead
+          value={value}
+          onChange={handleChange}
+          label={field.label || field.name}
+          placeholder={placeholder}
+          required={field.required}
+          error={typeof error === "string" ? error : undefined}
+          disabled={field.disabled}
+          mode={field.locationMode || "place"}
+          countries={field.countries || []}
+          multiple={field.multiple}
+          maxItems={field.maxItems}
+        />
+      );
+
     case "select": {
       const label = field.label || field.name;
       return (
@@ -221,7 +239,15 @@ function FieldGroup({ field, value, error, onChange, columns }) {
   const span = Math.min(columns, Math.max(1, field.colSpan || 1));
   const type = field.type || "text";
   const inlineControl = ["checkbox", "switch", "radio"].includes(type);
-  const builtInLabel = ["select", "text", "email", "tel", "number", "monthYear"].includes(type);
+  const builtInLabel = [
+    "select",
+    "text",
+    "email",
+    "tel",
+    "number",
+    "monthYear",
+    "location",
+  ].includes(type);
   const wide = !!field.wide;
   return (
     <div
