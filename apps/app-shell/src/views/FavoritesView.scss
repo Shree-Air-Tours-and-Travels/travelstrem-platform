@@ -63,19 +63,24 @@
 
 .dfv__summary {
   display: flex;
-  gap: $space-2;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--border));
+  border-radius: $radius-lg;
+  background: color-mix(in srgb, var(--color-primary) 4%, var(--surface));
+  box-shadow: $shadow-sm;
 
   > span {
     min-width: 116px;
     display: grid;
     gap: $space-1;
     padding: $space-3;
-    border: 1px solid var(--border);
-    border-radius: $radius-lg;
-    background: var(--surface-glass-strong);
+    border-right: 1px solid var(--border);
     color: var(--muted);
     font-size: $font-size-xs;
-    backdrop-filter: blur(8px);
+
+    &:last-child {
+      border-right: 0;
+    }
   }
 
   strong {

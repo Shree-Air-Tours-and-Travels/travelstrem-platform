@@ -18,6 +18,18 @@
   font-size: $font-size-sm;
 }
 
+.trem-contact-form__date-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  color: var(--text);
+  font-size: $font-size-sm;
+
+  > span {
+    font-weight: $font-semibold;
+  }
+}
+
 .trem-contact-form__textarea-wrap > span {
   font-weight: $font-semibold;
 }
@@ -49,6 +61,10 @@
   margin: $space-1 0 0;
   color: var(--color-danger);
   font-size: $font-size-xs;
+}
+
+.trem-contact-form__field:has([aria-invalid="true"]) {
+  scroll-margin-block: $space-16;
 }
 
 .trem-contact-form__actions {

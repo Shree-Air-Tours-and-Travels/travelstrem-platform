@@ -1,125 +1,461 @@
 @import "../../styles/base/typography";
 
+/* ========================================================================== */
+/* Toast container                                                            */
+/* ========================================================================== */
+
 .trem-toaster {
   position: fixed;
+
   z-index: 9999;
+
   display: flex;
   flex-direction: column;
+
   gap: $space-2;
-  max-width: min(380px, calc(100vw - #{$space-6}));
+
+  width: min(390px, calc(100vw - #{$space-6}));
+  max-width: 390px;
+
   pointer-events: none;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Positions                                                                  */
+/* -------------------------------------------------------------------------- */
 
 .trem-toaster--top-right {
   top: $space-4;
   right: $space-4;
+
+  align-items: flex-end;
 }
+
 .trem-toaster--top-left {
   top: $space-4;
   left: $space-4;
+
+  align-items: flex-start;
 }
+
 .trem-toaster--bottom-right {
-  bottom: $space-4;
   right: $space-4;
+  bottom: $space-4;
+
+  align-items: flex-end;
 }
+
 .trem-toaster--bottom-left {
   bottom: $space-4;
   left: $space-4;
+
+  align-items: flex-start;
 }
+
+/* ========================================================================== */
+/* Toast                                                                      */
+/* ========================================================================== */
 
 .trem-toast {
-  pointer-events: auto;
-  // Icon, text column and close button share one start-aligned axis.
-  display: flex;
-  align-items: flex-start;
-  gap: $space-2;
-  padding: $space-3;
-  border-radius: $radius-md;
-  background: var(--card-bg, #ffffff);
-  color: var(--text, #172033);
-  box-shadow: $shadow-md;
-  border: 1px solid rgba(23, 32, 51, 0.1);
-  animation: trem-toast-in 180ms ease-out;
+  --toast-color: var(--color-primary);
+  --toast-soft: var(--primary-soft);
 
-  &[data-status="success"] .trem-toast__icon {
-    background: var(--color-success, #16a34a);
+  position: relative;
+
+  display: grid;
+
+  grid-template-columns: auto minmax(0, 1fr) auto;
+
+  align-items: start;
+
+  width: 100%;
+
+  gap: $space-3;
+
+  padding: $space-3;
+
+  overflow: hidden;
+
+  border: 1px solid color-mix(in srgb, var(--toast-color) 16%, var(--border));
+
+  border-radius: $radius-md;
+
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--toast-color) 5%, var(--card-bg)) 0%,
+    var(--card-bg) 50%
+  );
+
+  color: var(--text);
+
+  box-shadow:
+    0 16px 38px rgba(15, 23, 42, 0.13),
+    0 5px 12px rgba(15, 23, 42, 0.07),
+    0 1px 2px rgba(15, 23, 42, 0.05);
+
+  pointer-events: auto;
+
+  isolation: isolate;
+
+  animation: trem-toast-in 220ms $ease-standard both;
+
+  transition:
+    border-color 150ms $ease-standard,
+    box-shadow 150ms $ease-standard,
+    transform 150ms $ease-standard;
+
+  /*
+   * Status accent line.
+   */
+  &::before {
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    bottom: 0;
+    left: 0;
+
+    width: 3px;
+
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--toast-color) 75%, white),
+      var(--toast-color)
+    );
   }
-  &[data-status="error"] .trem-toast__icon {
-    background: var(--color-danger, #e11d48);
+
+  /*
+   * Subtle glow behind the status icon.
+   */
+  &::after {
+    content: "";
+
+    position: absolute;
+
+    z-index: -1;
+
+    top: -38px;
+    left: -38px;
+
+    width: 110px;
+    height: 110px;
+
+    border-radius: 50%;
+
+    background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--toast-color) 13%, transparent),
+      transparent 68%
+    );
+
+    pointer-events: none;
   }
-  &[data-status="warning"] .trem-toast__icon {
-    background: var(--color-warning, #f59e0b);
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--toast-color) 25%, var(--border));
+
+    box-shadow:
+      0 20px 46px rgba(15, 23, 42, 0.15),
+      0 6px 14px rgba(15, 23, 42, 0.07),
+      0 1px 2px rgba(15, 23, 42, 0.05);
+
+    transform: translateY(-1px);
   }
-  &[data-status="info"] .trem-toast__icon {
-    background: var(--muted, #64748b);
+
+  /* ---------------------------------------------------------------------- */
+  /* Statuses                                                                */
+  /* ---------------------------------------------------------------------- */
+
+  &[data-status="success"] {
+    --toast-color: var(--color-success);
+    --toast-soft: color-mix(in srgb, var(--color-success) 10%, transparent);
+  }
+
+  &[data-status="error"] {
+    --toast-color: var(--color-danger);
+    --toast-soft: color-mix(in srgb, var(--color-danger) 10%, transparent);
+  }
+
+  &[data-status="warning"] {
+    --toast-color: var(--color-warning);
+    --toast-soft: color-mix(in srgb, var(--color-warning) 10%, transparent);
+  }
+
+  &[data-status="info"] {
+    --toast-color: var(--color-primary);
+    --toast-soft: var(--primary-soft);
   }
 }
 
+/* ========================================================================== */
+/* Icon                                                                       */
+/* ========================================================================== */
+
 .trem-toast__icon {
+  position: relative;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+
+  width: 30px;
+  height: 30px;
+
+  margin-top: 1px;
+
+  flex: 0 0 30px;
+
+  border: 1px solid color-mix(in srgb, var(--toast-color) 22%, transparent);
+
   border-radius: $radius-circle;
-  color: var(--color-on-primary, #ffffff);
-  flex-shrink: 0;
+
+  background: color-mix(in srgb, var(--toast-color) 10%, var(--card-bg));
+
+  color: var(--toast-color);
+
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, white 10%, transparent);
+
+  svg {
+    display: block;
+  }
 }
 
-// Text column: everything starts flush with the icon.
+/* ========================================================================== */
+/* Content                                                                    */
+/* ========================================================================== */
+
 .trem-toast__body {
-  flex: 1;
-  min-width: 0;
   display: flex;
+
+  min-width: 0;
+
   flex-direction: column;
   align-items: flex-start;
+
+  padding-top: 1px;
+
   text-align: left;
 }
 
+/* -------------------------------------------------------------------------- */
+/* Title                                                                      */
+/* -------------------------------------------------------------------------- */
+
 .trem-toast__body .trem-toast__title {
+  width: 100%;
+
   margin: 0;
+
+  color: var(--text);
+
   font-size: $font-size-sm;
   font-weight: $font-bold;
-  line-height: $line-height-xs;
-  color: inherit;
-}
 
-.trem-toast__body .trem-toast__subtitle {
-  margin: 2px 0 0;
-  font-size: $font-size-xs;
-  line-height: $line-height-xs;
-  opacity: 0.75;
+  line-height: 1.35;
+
+  letter-spacing: -0.005em;
+
   word-break: break-word;
 }
 
-.trem-toast__close.ui-button {
-  width: 22px;
-  height: 22px;
-  min-width: 22px;
-  padding: 0;
-  margin: 0;
-  border-color: rgba(23, 32, 51, 0.14);
-  background: transparent;
-  flex-shrink: 0;
+/* -------------------------------------------------------------------------- */
+/* Subtitle                                                                   */
+/* -------------------------------------------------------------------------- */
 
-  &:hover {
-    background: rgba(23, 32, 51, 0.06);
+.trem-toast__body .trem-toast__subtitle {
+  width: 100%;
+
+  margin: 3px 0 0;
+
+  color: var(--muted);
+
+  font-size: $font-size-xs;
+  font-weight: $font-regular;
+
+  line-height: 1.45;
+
+  opacity: 0.88;
+
+  word-break: break-word;
+}
+
+/* ========================================================================== */
+/* Close button                                                               */
+/* ========================================================================== */
+
+.trem-toast__close.ui-button {
+  width: 28px;
+  height: 28px;
+
+  min-width: 28px;
+  min-height: 28px;
+
+  margin: -2px -2px 0 0;
+  padding: 0;
+
+  flex: 0 0 28px;
+
+  border: 1px solid transparent;
+
+  border-radius: $radius-circle;
+
+  background: transparent;
+
+  color: var(--muted);
+
+  box-shadow: none;
+
+  opacity: 0.7;
+
+  transition:
+    opacity 140ms $ease-standard,
+    color 140ms $ease-standard,
+    background 140ms $ease-standard,
+    transform 140ms $ease-standard;
+
+  &:hover:not(:disabled) {
+    border-color: transparent;
+
+    background: color-mix(in srgb, var(--text) 7%, transparent);
+
+    color: var(--text);
+
+    opacity: 1;
+
+    transform: none;
+
+    box-shadow: none;
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.92);
+  }
+
+  &:focus-visible {
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--toast-color) 18%, transparent);
   }
 }
 
-@keyframes trem-toast-in {
+/* ========================================================================== */
+/* Stack behavior                                                             */
+/* ========================================================================== */
+
+.trem-toaster {
+  .trem-toast:nth-last-child(2) {
+    opacity: 0.97;
+  }
+
+  .trem-toast:nth-last-child(3) {
+    opacity: 0.94;
+  }
+
+  .trem-toast:nth-last-child(4) {
+    opacity: 0.91;
+  }
+}
+
+/* ========================================================================== */
+/* Entrance animation                                                         */
+/* ========================================================================== */
+
+.trem-toaster--top-right,
+.trem-toaster--bottom-right {
+  .trem-toast {
+    animation-name: trem-toast-in-right;
+  }
+}
+
+.trem-toaster--top-left,
+.trem-toaster--bottom-left {
+  .trem-toast {
+    animation-name: trem-toast-in-left;
+  }
+}
+
+@keyframes trem-toast-in-right {
   from {
     opacity: 0;
-    transform: translateY(-6px);
+
+    transform: translateX(14px) translateY(-3px) scale(0.98);
   }
+
   to {
     opacity: 1;
-    transform: translateY(0);
+
+    transform: translateX(0) translateY(0) scale(1);
   }
 }
+
+@keyframes trem-toast-in-left {
+  from {
+    opacity: 0;
+
+    transform: translateX(-14px) translateY(-3px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+
+    transform: translateX(0) translateY(0) scale(1);
+  }
+}
+
+/* ========================================================================== */
+/* Mobile                                                                     */
+/* ========================================================================== */
+
+@media (max-width: 600px) {
+  .trem-toaster {
+    right: $space-3;
+    left: $space-3;
+
+    width: auto;
+    max-width: none;
+  }
+
+  .trem-toaster--top-right,
+  .trem-toaster--top-left {
+    top: $space-3;
+  }
+
+  .trem-toaster--bottom-right,
+  .trem-toaster--bottom-left {
+    bottom: calc(#{$space-3} + env(safe-area-inset-bottom));
+  }
+
+  .trem-toast {
+    gap: $space-2;
+
+    padding: $space-3;
+
+    border-radius: $radius-md;
+  }
+
+  .trem-toast__icon {
+    width: 28px;
+    height: 28px;
+
+    flex-basis: 28px;
+  }
+}
+
+/* ========================================================================== */
+/* Reduced motion                                                             */
+/* ========================================================================== */
 
 @media (prefers-reduced-motion: reduce) {
   .trem-toast {
     animation: none;
+
+    transition: none;
+
+    &:hover {
+      transform: none;
+    }
+  }
+
+  .trem-toast__close.ui-button {
+    transition: none;
   }
 }

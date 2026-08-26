@@ -1,10 +1,12 @@
 import React from "react";
 import { useFavoritesContext } from "@packages/trem-ui";
+import { useNavigate } from "react-router-dom";
 import FeaturedHolidayPackagesView from "./FeaturedHolidayPackages.view";
 import useFeaturedHolidayPackages from "./hooks/useFeaturedHolidayPackages";
 import { mapHolidayPackagesToDestinationCards } from "./mappers/mapHolidayPackageToDestinationCard";
 
 export default function FeaturedHolidayPackages({ widgetData, onTourEnquiry }) {
+  const navigate = useNavigate();
   const labels = widgetData?.elements?.labels || {};
   const urls = widgetData?.elements?.urls || {};
   const widgetProps = widgetData?.structure?.widgets?.[0]?.props || {};
@@ -30,7 +32,12 @@ export default function FeaturedHolidayPackages({ widgetData, onTourEnquiry }) {
   const { packages, loading, error, retry } = useFeaturedHolidayPackages(
     widgetData?.data?.packages,
   );
-  const destinations = mapHolidayPackagesToDestinationCards(packages, { limit });
+  const destinations = mapHolidayPackagesToDestinationCards(packages, { limit }).map(
+    ({ href, ...destination }) => ({ ...destination, navigationHref: href }),
+  );
+  const resolvedColumns = loading
+    ? Math.min(columns, 4)
+    : Math.min(Math.max(destinations.length, 1), columns, 4);
   const emptyActions = configuredActions
     .map((action) => ({
       ...action,
@@ -59,11 +66,12 @@ export default function FeaturedHolidayPackages({ widgetData, onTourEnquiry }) {
       loading={loading}
       error={error}
       onRetry={retry}
-      columns={columns}
+      columns={resolvedColumns}
       horizontal={horizontal}
       cardProps={cardProps}
       isFavorited={(card) => isFavorited({ _id: card.id })}
       onFavorite={handleFavorite}
+      onCardClick={(card) => card.navigationHref && navigate(card.navigationHref)}
       emptyActions={emptyActions}
     />
   );

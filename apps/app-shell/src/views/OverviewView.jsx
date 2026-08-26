@@ -134,7 +134,11 @@ export default function OverviewView({
               className="dov__plan-cards"
             />
           ) : planCards ? (
-            <PlanCards {...planCards} className="dov__plan-cards" />
+            <PlanCards
+              {...planCards}
+              className="dov__plan-cards"
+              onSelect={(item) => onTabChange?.(item.targetTab, item)}
+            />
           ) : null}
 
           {showRecentPanel && (

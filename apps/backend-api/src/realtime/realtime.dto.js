@@ -134,6 +134,7 @@ export const notificationDto = (notification = {}) => ({
 });
 
 export const supportTicketDto = (ticket = {}) => ({
+    id: idOf(ticket),
     ticketId: idOf(ticket),
     reference: ticket.reference || null,
     userId: idOf(ticket.user),
@@ -145,10 +146,12 @@ export const supportTicketDto = (ticket = {}) => ({
 });
 
 export const supportMessageDto = (message = {}) => ({
+    id: idOf(message),
     messageId: idOf(message),
     ticketId: idOf(message.ticket),
     senderType: message.senderType || null,
     senderName: message.senderName || null,
+    clientMessageId: message.clientMessageId || null,
     content: message.content || "",
     createdAt: message.createdAt || new Date().toISOString(),
 });

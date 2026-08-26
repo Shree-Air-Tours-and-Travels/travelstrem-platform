@@ -4,6 +4,7 @@ import ContactLead from "../forms/models/ContactLead.js";
 import Product from "../tenancy/models/Product.js";
 import Tour from "../tours/models/Tour.js";
 import TrevioTrip from "../trevio/models/TrevioTrip.js";
+import SupportTicket from "../support/models/SupportTicket.js";
 
 const RECENT_LIMIT = 6;
 
@@ -12,6 +13,7 @@ const emptySnapshot = () => ({
         totalInventory: 0,
         publishedInventory: 0,
         openEnquiries: 0,
+        openSupportTickets: 0,
         pendingApprovals: 0,
     },
     inventory: [],
@@ -39,7 +41,7 @@ const toActivity = ({ id, title, description, type, status, occurredAt, target }
 });
 
 const buildRecentActivity = async () => {
-    const [tours, trips, agencies, enquiries] = await Promise.all([
+    const [tours, trips, agencies, enquiries, supportTickets] = await Promise.all([
         Tour.find({}).select("title status updatedAt").sort({ updatedAt: -1 }).limit(RECENT_LIMIT).lean(),
         TrevioTrip.find({})
             .select("title status updatedAt")
@@ -53,6 +55,11 @@ const buildRecentActivity = async () => {
             .lean(),
         ContactLead.find({})
             .select("enquiryRef tourTitle product status updatedAt")
+            .sort({ updatedAt: -1 })
+            .limit(RECENT_LIMIT)
+            .lean(),
+        SupportTicket.find({})
+            .select("reference subject status updatedAt")
             .sort({ updatedAt: -1 })
             .limit(RECENT_LIMIT)
             .lean(),
@@ -103,6 +110,17 @@ const buildRecentActivity = async () => {
                 target: "enquiries",
             }),
         ),
+        ...supportTickets.map((item) =>
+            toActivity({
+                id: item._id,
+                title: item.subject || item.reference || "Support request",
+                description: `${item.reference} support request was updated.`,
+                type: "support",
+                status: item.status,
+                occurredAt: item.updatedAt,
+                target: "support",
+            }),
+        ),
     ]
         .sort(
             (left, right) =>
@@ -126,6 +144,8 @@ export const buildAdminDashboardSnapshot = async () => {
             totalEnquiries,
             newEnquiries,
             reviewEnquiries,
+            openSupportTickets,
+            awaitingSupportTickets,
             pendingPartners,
             activePartners,
             pendingAgents,
@@ -145,6 +165,8 @@ export const buildAdminDashboardSnapshot = async () => {
             count(ContactLead),
             count(ContactLead, { status: "new" }),
             count(ContactLead, { status: "in_review" }),
+            count(SupportTicket, { status: { $nin: ["RESOLVED", "CLOSED"] } }),
+            count(SupportTicket, { status: "AWAITING_SUPPORT" }),
             count(PartnerAgency, { status: "pending" }),
             count(PartnerAgency, { status: { $in: ["active", "approved"] } }),
             count(User, {
@@ -202,10 +224,18 @@ export const buildAdminDashboardSnapshot = async () => {
                 totalInventory,
                 publishedInventory,
                 openEnquiries: newEnquiries + reviewEnquiries,
+                openSupportTickets,
                 pendingApprovals,
             },
             inventory,
             governance: [
+                {
+                    id: "supportRequests",
+                    label: "Support requests waiting",
+                    value: awaitingSupportTickets,
+                    icon: "support",
+                    target: "support",
+                },
                 {
                     id: "tourApprovals",
                     label: "Tours awaiting approval",

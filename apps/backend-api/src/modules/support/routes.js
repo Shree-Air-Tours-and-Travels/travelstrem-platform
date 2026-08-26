@@ -8,11 +8,15 @@ import {
     getHome,
     getService,
     getServices,
+    getSupportDeskTicket,
     getTicket,
     getTopic,
     listTickets,
+    listSupportDeskTickets,
+    replyFromSupportDesk,
     replyToTicket,
     searchSupport,
+    updateSupportDeskTicket,
 } from "./support.controller.js";
 
 const router = express.Router();
@@ -25,6 +29,10 @@ router.get("/topics/:topicId", getTopic);
 router.get("/articles/:articleId", getArticle);
 router.get("/categories", getCategories);
 router.get("/contact-options", getContacts);
+router.get("/desk/tickets", listSupportDeskTickets);
+router.get("/desk/tickets/:ticketId", getSupportDeskTicket);
+router.post("/desk/tickets/:ticketId/messages", replyFromSupportDesk);
+router.patch("/desk/tickets/:ticketId", updateSupportDeskTicket);
 router.get("/tickets", listTickets);
 router.post("/tickets", createTicket);
 router.get("/tickets/:ticketId", getTicket);

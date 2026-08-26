@@ -1,11 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { fetchData, useComponentData } from "@packages/trem-utils";
-import {
-  REALTIME_EVENTS,
-  useRealtimeEvent,
-  useTourRealtime,
-} from "@packages/trem-events";
+import { REALTIME_EVENTS, useRealtimeEvent, useTourRealtime } from "@packages/trem-events";
 import { useFavoritesContext } from "../../context/FavoritesContext.jsx";
 import { ProductDetailProvider, WIDGET_API_OPTIONS } from "./context/ProductDetailContext.js";
 import ToursDetailsView, { DetailSkeleton, EmptyState } from "./ToursDetails.view";
@@ -65,6 +61,13 @@ const normalizeRouteRef = (value) => {
   return "";
 };
 
+const selectionFromTourCard = (tour = {}) => ({
+  packageKey: String(tour?.selectedPackageKey || ""),
+  packageData: tour?.selectedPackageDetails || null,
+  hotelSelections: {},
+  hotelRequests: [],
+});
+
 export default function ToursDetailsContainer({
   dispatchEvent,
   appKey = "trevista",
@@ -80,9 +83,10 @@ export default function ToursDetailsContainer({
     params[config.routeParam] || params.tourRef || getRouteIdentityFromPath(location.pathname);
   const decodedRef = decodeURIComponent(String(normalizeRouteRef(routeRef) || ""));
 
-  const { loading, error, elements, structure } = useComponentData(config.pageConfigEndpoint, {
-    auto: true,
-  });
+  const { loading, error, elements, structure, refetch } = useComponentData(
+    config.pageConfigEndpoint,
+    { auto: true },
+  );
   const widgets = useMemo(() => structure?.widgets || [], [structure?.widgets]);
   const pageLabels = elements?.labels || {};
 
@@ -111,11 +115,7 @@ export default function ToursDetailsContainer({
   }, [breadcrumbRootProp]);
 
   const [contactOpen, setContactOpen] = useState(false);
-  const [selection, setSelection] = useState({
-    packageKey: "",
-    hotelSelections: {},
-    hotelRequests: [],
-  });
+  const [selection, setSelection] = useState(() => selectionFromTourCard(location.state?.tour));
   const { isFavorited, toggleFavorite } = useFavoritesContext();
 
   useEffect(() => {
@@ -125,7 +125,7 @@ export default function ToursDetailsContainer({
     setActiveTour(location.state?.tour || null);
     setTourUnavailable(false);
     setContactOpen(false);
-    setSelection({ packageKey: "", hotelSelections: {}, hotelRequests: [] });
+    setSelection(selectionFromTourCard(location.state?.tour));
   }, [decodedRef, location.state?.tour]);
 
   const watchedTourId = productType === "tour" ? activeTour?._id || activeTour?.id : null;
@@ -171,11 +171,17 @@ export default function ToursDetailsContainer({
     [activeTour],
   );
 
-  const handleSelectPackage = useCallback((packageKey) => {
+  const handleSelectPackage = useCallback((packageKey, packageData = null) => {
     setSelection((current) => {
       const nextPackageKey = String(packageKey || "");
-      if (current.packageKey === nextPackageKey) return current;
-      return { packageKey: nextPackageKey, hotelSelections: {}, hotelRequests: [] };
+      if (current.packageKey === nextPackageKey && current.packageData === packageData)
+        return current;
+      return {
+        packageKey: nextPackageKey,
+        packageData,
+        hotelSelections: {},
+        hotelRequests: [],
+      };
     });
   }, []);
 
@@ -202,6 +208,16 @@ export default function ToursDetailsContainer({
       if (activeTour?._id) setContactOpen(true);
     },
     [activeTour?._id, handleSelectHotel],
+  );
+
+  const handleCustomizeJourney = useCallback(
+    ({ tourId } = {}) => {
+      const sourceTourId = String(tourId || activeTour?._id || "");
+      if (productType !== "tour" || !sourceTourId) return;
+      setContactOpen(false);
+      navigate(`/${appKey}/customise-tour?tourId=${encodeURIComponent(sourceTourId)}`);
+    },
+    [activeTour?._id, appKey, navigate, productType],
   );
 
   const handleRequestHotel = useCallback(
@@ -257,6 +273,7 @@ export default function ToursDetailsContainer({
       <EmptyState
         title={pageLabels.tourErrorTitle || config.defaultLabels.error}
         message={error}
+        onRetry={refetch}
         onBack={handleBack}
         backLabel={pageLabels.backToTours || config.defaultLabels.backTo}
       />
@@ -302,11 +319,13 @@ export default function ToursDetailsContainer({
         productType={productType}
         user={userSession?.user || null}
         selectedPackage={selection.packageKey}
+        selectedPackageDetails={selection.packageData}
         hotelSelections={selection.hotelSelections}
         hotelRequests={selection.hotelRequests}
         onSelectPackage={handleSelectPackage}
         onSelectHotel={handleSelectHotel}
         onCustomize={handleCustomize}
+        onCustomizeJourney={handleCustomizeJourney}
         onRequestHotel={handleRequestHotel}
       />
     </ProductDetailProvider>

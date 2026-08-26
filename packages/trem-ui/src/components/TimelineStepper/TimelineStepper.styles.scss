@@ -1,107 +1,1064 @@
 @import "@packages/trem-design-tokens/scss";
 
+/* ========================================================================== */
+/* Root                                                                       */
+/* ========================================================================== */
+
 .timeline-stepper {
+  --step-color: var(--muted);
+  --step-soft: var(--surface-inset);
+
+  --step-marker-size: 30px;
+  --step-marker-icon-size: 13px;
+
+  --step-gap: #{$space-3};
+  --step-content-gap: 3px;
+
+  --step-line-width: 2px;
+  --step-item-min-height: 54px;
+
   display: flex;
+
+  width: 100%;
+  min-width: 0;
+
+  padding: 0;
+  margin: 0;
+
+  font-family: $font-primary;
+
+  /* ======================================================================== */
+  /* Vertical                                                                 */
+  /* ======================================================================== */
+
+  &--vertical {
+    flex-direction: column;
+  }
+}
+
+/* ========================================================================== */
+/* Item                                                                       */
+/* ========================================================================== */
+
+.timeline-stepper__item {
+  --step-color: var(--muted);
+  --step-soft: var(--surface-inset);
+
+  position: relative;
+
+  display: flex;
+
+  width: 100%;
+  min-width: 0;
+  min-height: var(--step-item-min-height);
+
+  align-items: flex-start;
+
+  gap: var(--step-gap);
+
+  color: var(--text);
+
+  isolation: isolate;
+
+  &.is-disabled {
+    opacity: 0.45;
+
+    pointer-events: none;
+  }
+}
+
+/* ========================================================================== */
+/* Marker column                                                              */
+/* ========================================================================== */
+
+.timeline-stepper__marker {
+  position: relative;
+
+  display: flex;
+
+  width: var(--step-marker-size);
+
+  align-self: stretch;
+
+  flex: 0 0 var(--step-marker-size);
+
   flex-direction: column;
-  gap: 0;
+
+  align-items: center;
+
+  z-index: 1;
+}
+
+/* ========================================================================== */
+/* Dot / marker                                                               */
+/* ========================================================================== */
+
+.timeline-stepper__dot {
+  position: relative;
+
+  display: inline-grid;
+
+  width: var(--step-marker-size);
+
+  height: var(--step-marker-size);
+
+  min-width: var(--step-marker-size);
+
+  min-height: var(--step-marker-size);
+
   padding: 0;
 
-  &__item {
-    display: flex;
-    align-items: flex-start;
-    gap: $space-3;
-    min-height: 48px;
-    position: relative;
+  flex: 0 0 var(--step-marker-size);
+
+  place-items: center;
+
+  border: 1px solid color-mix(in srgb, var(--step-color) 16%, var(--border));
+
+  border-radius: $radius-circle;
+
+  background: color-mix(in srgb, var(--step-color) 5%, var(--surface));
+
+  color: var(--step-color);
+
+  font-family: $font-primary;
+
+  cursor: default;
+
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+
+  transition:
+    background 150ms $ease-default,
+    border-color 150ms $ease-default,
+    color 150ms $ease-default,
+    box-shadow 150ms $ease-default,
+    transform 150ms $ease-default;
+
+  svg {
+    display: block;
   }
 
-  &__marker {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    flex-shrink: 0;
-    width: 28px;
-    padding-top: 2px;
+  &:disabled {
+    opacity: 1;
+
+    cursor: default;
+  }
+}
+
+/* ========================================================================== */
+/* Connector                                                                  */
+/* ========================================================================== */
+
+.timeline-stepper__line {
+  position: relative;
+
+  width: var(--step-line-width);
+
+  min-height: 18px;
+
+  margin: 4px 0;
+
+  flex: 1;
+
+  border-radius: $radius-full;
+
+  background: color-mix(in srgb, var(--border) 86%, transparent);
+
+  transition:
+    background 180ms $ease-default,
+    opacity 180ms $ease-default;
+}
+
+/* ========================================================================== */
+/* Content                                                                    */
+/* ========================================================================== */
+
+.timeline-stepper__content {
+  display: flex;
+
+  min-width: 0;
+
+  flex: 1;
+
+  flex-direction: column;
+
+  gap: var(--step-content-gap);
+
+  padding: 3px 0 $space-4;
+
+  text-align: left;
+}
+
+.timeline-stepper__heading {
+  display: flex;
+
+  align-items: center;
+
+  min-width: 0;
+
+  gap: $space-2;
+}
+
+/* ========================================================================== */
+/* Label                                                                      */
+/* ========================================================================== */
+
+.timeline-stepper__label {
+  display: block;
+
+  min-width: 0;
+
+  color: var(--muted);
+
+  font-size: $font-size-sm;
+  font-weight: $font-semibold;
+
+  line-height: 1.35;
+
+  letter-spacing: -0.005em;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  transition: color 150ms $ease-default;
+}
+
+/* ========================================================================== */
+/* Description                                                                */
+/* ========================================================================== */
+
+.timeline-stepper__description {
+  display: block;
+
+  max-width: 52ch;
+
+  color: var(--muted);
+
+  font-size: $font-size-xs;
+  font-weight: $font-regular;
+
+  line-height: 1.45;
+
+  opacity: 0.84;
+}
+
+/* ========================================================================== */
+/* Time                                                                       */
+/* ========================================================================== */
+
+.timeline-stepper__time {
+  display: inline-flex;
+
+  width: fit-content;
+
+  align-items: center;
+
+  color: color-mix(in srgb, var(--muted) 80%, transparent);
+
+  font-size: $font-size-xs;
+  font-weight: $font-medium;
+
+  line-height: 1.35;
+
+  font-variant-numeric: tabular-nums;
+}
+
+/* ========================================================================== */
+/* Badge                                                                      */
+/* ========================================================================== */
+
+.timeline-stepper__badge {
+  display: inline-flex;
+
+  min-height: 20px;
+
+  padding: 0 7px;
+
+  flex: 0 0 auto;
+
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid color-mix(in srgb, var(--step-color) 14%, var(--border));
+
+  border-radius: $radius-full;
+
+  background: color-mix(in srgb, var(--step-color) 7%, var(--surface));
+
+  color: var(--step-color);
+
+  font-size: 10px;
+  font-weight: $font-bold;
+
+  line-height: 1;
+
+  white-space: nowrap;
+}
+
+/* ========================================================================== */
+/* Number                                                                     */
+/* ========================================================================== */
+
+.timeline-stepper__number {
+  font-size: 10px;
+  font-weight: $font-bold;
+
+  line-height: 1;
+
+  font-variant-numeric: tabular-nums;
+}
+
+/* ========================================================================== */
+/* Current marker                                                             */
+/* ========================================================================== */
+
+.timeline-stepper__current-dot {
+  width: 8px;
+  height: 8px;
+
+  border-radius: $radius-circle;
+
+  background: currentColor;
+
+  box-shadow: 0 0 0 4px color-mix(in srgb, currentColor 12%, transparent);
+}
+
+/* ========================================================================== */
+/* Plain dot                                                                  */
+/* ========================================================================== */
+
+.timeline-stepper__inner-dot {
+  width: 8px;
+  height: 8px;
+
+  border-radius: $radius-circle;
+
+  background: currentColor;
+}
+
+/* ========================================================================== */
+/* Skipped mark                                                               */
+/* ========================================================================== */
+
+.timeline-stepper__skip-mark {
+  width: 9px;
+  height: 1.5px;
+
+  border-radius: $radius-full;
+
+  background: currentColor;
+}
+
+/* ========================================================================== */
+/* Status: current                                                            */
+/* ========================================================================== */
+
+.timeline-stepper__item--current {
+  --step-color: var(--color-primary);
+
+  --step-soft: var(--primary-soft);
+
+  .timeline-stepper__dot {
+    border-color: color-mix(in srgb, var(--color-primary) 72%, transparent);
+
+    background: color-mix(in srgb, var(--color-primary) 10%, var(--surface));
+
+    color: var(--color-primary);
+
+    box-shadow:
+      0 0 0 4px color-mix(in srgb, var(--color-primary) 9%, transparent),
+      0 3px 8px color-mix(in srgb, var(--color-primary) 10%, transparent);
   }
 
-  &__dot {
-    width: 28px;
-    height: 28px;
-    border-radius: $radius-full;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--surface-muted, #e5e7eb);
-    color: var(--text-muted, #9ca3af);
-    transition: all $duration-base $ease-default;
-    flex-shrink: 0;
-    border: 2px solid transparent;
+  .timeline-stepper__label {
+    color: var(--text);
+
+    font-weight: $font-bold;
   }
 
-  &__line {
-    width: 2px;
-    flex: 1;
-    min-height: 20px;
-    background: var(--border, #e5e7eb);
-    margin: 4px 0;
+  .timeline-stepper__line {
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-primary) 36%, var(--border)),
+      var(--border)
+    );
+  }
+}
+
+/* ========================================================================== */
+/* Status: completed                                                          */
+/* ========================================================================== */
+
+.timeline-stepper__item--completed {
+  --step-color: var(--color-success);
+
+  --step-soft: var(--success-soft);
+
+  .timeline-stepper__dot {
+    border-color: var(--color-success);
+
+    background: var(--color-success);
+
+    color: var(--color-on-primary, #fff);
+
+    box-shadow: 0 2px 6px color-mix(in srgb, var(--color-success) 17%, transparent);
   }
 
-  &__content {
-    display: flex;
-    flex-direction: column;
-    padding-bottom: $space-4;
-    gap: 2px;
+  .timeline-stepper__label {
+    color: var(--text);
   }
 
-  &__label {
-    font-size: $font-size-sm;
-    font-weight: $font-medium;
-    color: var(--text-muted, #6b7280);
-    line-height: $line-height-sm;
+  .timeline-stepper__line {
+    background: color-mix(in srgb, var(--color-success) 42%, var(--border));
+  }
+}
+
+/* ========================================================================== */
+/* Status: pending                                                            */
+/* ========================================================================== */
+
+.timeline-stepper__item--pending {
+  --step-color: var(--muted);
+
+  --step-soft: var(--surface-inset);
+
+  .timeline-stepper__dot {
+    border-color: color-mix(in srgb, var(--muted) 22%, var(--border));
+
+    background: var(--surface);
+
+    color: color-mix(in srgb, var(--muted) 68%, transparent);
   }
 
-  &__time {
+  .timeline-stepper__label {
+    color: var(--muted);
+  }
+}
+
+/* ========================================================================== */
+/* Status: warning                                                            */
+/* ========================================================================== */
+
+.timeline-stepper__item--warning {
+  --step-color: var(--color-warning);
+
+  --step-soft: var(--warning-soft);
+
+  .timeline-stepper__dot {
+    border-color: color-mix(in srgb, var(--color-warning) 55%, transparent);
+
+    background: color-mix(in srgb, var(--color-warning) 9%, var(--surface));
+
+    color: var(--color-warning);
+  }
+
+  .timeline-stepper__label {
+    color: var(--text);
+  }
+
+  .timeline-stepper__line {
+    background: color-mix(in srgb, var(--color-warning) 32%, var(--border));
+  }
+}
+
+/* ========================================================================== */
+/* Status: error                                                              */
+/* ========================================================================== */
+
+.timeline-stepper__item--error,
+.timeline-stepper__item--cancelled {
+  --step-color: var(--color-danger);
+
+  --step-soft: var(--danger-soft);
+
+  .timeline-stepper__dot {
+    border-color: color-mix(in srgb, var(--color-danger) 55%, transparent);
+
+    background: color-mix(in srgb, var(--color-danger) 9%, var(--surface));
+
+    color: var(--color-danger);
+  }
+
+  .timeline-stepper__label {
+    color: var(--text);
+  }
+
+  .timeline-stepper__line {
+    background: color-mix(in srgb, var(--color-danger) 25%, var(--border));
+  }
+}
+
+/* ========================================================================== */
+/* Status: info                                                               */
+/* ========================================================================== */
+
+.timeline-stepper__item--info {
+  --step-color: var(--color-primary);
+
+  --step-soft: var(--primary-soft);
+
+  .timeline-stepper__dot {
+    border-color: color-mix(in srgb, var(--color-primary) 40%, var(--border));
+
+    background: var(--primary-soft);
+
+    color: var(--color-primary);
+  }
+
+  .timeline-stepper__label {
+    color: var(--text);
+  }
+}
+
+/* ========================================================================== */
+/* Status: skipped                                                            */
+/* ========================================================================== */
+
+.timeline-stepper__item--skipped {
+  --step-color: var(--muted);
+
+  .timeline-stepper__dot {
+    border-style: dashed;
+
+    background: var(--surface-inset);
+
+    color: var(--muted);
+  }
+
+  .timeline-stepper__label {
+    color: var(--muted);
+
+    text-decoration: line-through;
+
+    text-decoration-color: color-mix(in srgb, var(--muted) 35%, transparent);
+  }
+}
+
+/* ========================================================================== */
+/* Clickable                                                                  */
+/* ========================================================================== */
+
+.timeline-stepper__item.is-clickable {
+  .timeline-stepper__dot {
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      border-color: color-mix(in srgb, var(--step-color) 45%, var(--border));
+
+      background: color-mix(in srgb, var(--step-color) 10%, var(--surface));
+
+      transform: translateY(-1px);
+
+      box-shadow: 0 3px 8px color-mix(in srgb, var(--step-color) 12%, transparent);
+    }
+
+    &:focus-visible {
+      outline: none;
+
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--step-color) 12%, transparent);
+    }
+  }
+
+  .timeline-stepper__content {
+    cursor: pointer;
+  }
+
+  .timeline-stepper__content:hover {
+    .timeline-stepper__label {
+      color: var(--step-color);
+    }
+  }
+}
+
+/* ========================================================================== */
+/* Connector variants                                                         */
+/* ========================================================================== */
+
+.timeline-stepper--connector-dashed {
+  .timeline-stepper__line {
+    width: 0;
+
+    border-left: var(--step-line-width) dashed
+      color-mix(in srgb, var(--step-color) 28%, var(--border));
+
+    background: transparent;
+  }
+}
+
+.timeline-stepper--connector-subtle {
+  .timeline-stepper__line {
+    background: var(--border) !important;
+
+    opacity: 0.65;
+  }
+}
+
+/* ========================================================================== */
+/* Marker variant: dot                                                        */
+/* ========================================================================== */
+
+.timeline-stepper--marker-dot {
+  --step-marker-size: 20px;
+
+  .timeline-stepper__dot {
+    border-width: 1px;
+  }
+
+  .timeline-stepper__current-dot,
+  .timeline-stepper__inner-dot {
+    width: 7px;
+    height: 7px;
+  }
+}
+
+/* ========================================================================== */
+/* Size: small                                                                */
+/* ========================================================================== */
+
+.timeline-stepper--sm {
+  --step-marker-size: 24px;
+  --step-gap: #{$space-2};
+  --step-item-min-height: 44px;
+
+  .timeline-stepper__label {
     font-size: $font-size-xs;
-    color: var(--text-light, #9ca3af);
   }
 
-  &__item--current {
-    .timeline-stepper__dot {
-      background: var(--color-primary, $primary-color);
-      color: #fff;
-      border-color: var(--color-primary, $primary-color);
-      box-shadow: 0 0 0 4px rgba(15, 143, 134, 0.15);
+  .timeline-stepper__description,
+  .timeline-stepper__time {
+    font-size: 10px;
+  }
+
+  .timeline-stepper__content {
+    padding-bottom: $space-3;
+  }
+
+  .timeline-stepper__badge {
+    min-height: 18px;
+
+    font-size: 9px;
+  }
+}
+
+/* ========================================================================== */
+/* Size: medium                                                               */
+/* ========================================================================== */
+
+.timeline-stepper--md {
+  --step-marker-size: 30px;
+}
+
+/* ========================================================================== */
+/* Size: large                                                                */
+/* ========================================================================== */
+
+.timeline-stepper--lg {
+  --step-marker-size: 38px;
+  --step-gap: #{$space-4};
+  --step-item-min-height: 66px;
+
+  .timeline-stepper__label {
+    font-size: $font-size-md;
+  }
+
+  .timeline-stepper__description {
+    font-size: $font-size-sm;
+  }
+
+  .timeline-stepper__content {
+    gap: 4px;
+
+    padding-top: 5px;
+  }
+}
+
+/* ========================================================================== */
+/* Variant: soft                                                              */
+/* ========================================================================== */
+
+.timeline-stepper--soft {
+  gap: $space-1;
+
+  .timeline-stepper__item {
+    padding: $space-2 $space-2 0;
+
+    border-radius: $radius-md;
+
+    transition: background 150ms $ease-default;
+  }
+
+  .timeline-stepper__item--current {
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-primary) 7%, var(--surface)),
+      transparent
+    );
+  }
+
+  .timeline-stepper__item--completed {
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-success) 4%, var(--surface)),
+      transparent
+    );
+  }
+
+  .timeline-stepper__item--error,
+  .timeline-stepper__item--cancelled {
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-danger) 5%, var(--surface)),
+      transparent
+    );
+  }
+}
+
+/* ========================================================================== */
+/* Variant: cards                                                             */
+/* ========================================================================== */
+
+.timeline-stepper--cards {
+  gap: $space-2;
+
+  .timeline-stepper__item {
+    min-height: 64px;
+
+    padding: $space-3;
+
+    border: 1px solid color-mix(in srgb, var(--step-color) 10%, var(--border));
+
+    border-radius: $radius-md;
+
+    background: color-mix(in srgb, var(--step-color) 3%, var(--surface));
+
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.035);
+
+    transition:
+      border-color 150ms $ease-default,
+      box-shadow 150ms $ease-default,
+      transform 150ms $ease-default;
+
+    &.is-clickable:hover {
+      border-color: color-mix(in srgb, var(--step-color) 24%, var(--border));
+
+      box-shadow: 0 5px 14px rgba(15, 23, 42, 0.06);
+
+      transform: translateY(-1px);
     }
-    .timeline-stepper__label {
-      color: var(--text, #111);
-      font-weight: $font-semibold;
+  }
+
+  /*
+   * Cards should not visually connect through
+   * the middle of another card.
+   */
+  .timeline-stepper__line {
+    position: absolute;
+
+    top: calc(100% + 3px);
+
+    height: $space-2;
+    min-height: $space-2;
+
+    flex: none;
+
+    z-index: -1;
+  }
+
+  .timeline-stepper__content {
+    padding-bottom: 0;
+  }
+}
+
+/* ========================================================================== */
+/* Variant: minimal                                                           */
+/* ========================================================================== */
+
+.timeline-stepper--minimal {
+  --step-marker-size: 18px;
+  --step-gap: #{$space-2};
+
+  .timeline-stepper__dot {
+    border: 0;
+
+    background: transparent;
+
+    box-shadow: none;
+  }
+
+  .timeline-stepper__current-dot,
+  .timeline-stepper__inner-dot {
+    width: 7px;
+    height: 7px;
+  }
+
+  .timeline-stepper__line {
+    width: 1px;
+
+    opacity: 0.7;
+  }
+
+  .timeline-stepper__content {
+    padding-top: 0;
+  }
+}
+
+/* ========================================================================== */
+/* Horizontal                                                                 */
+/* ========================================================================== */
+
+.timeline-stepper--horizontal {
+  display: flex;
+
+  flex-direction: row;
+
+  align-items: flex-start;
+
+  width: 100%;
+
+  .timeline-stepper__item {
+    display: grid;
+
+    grid-template-rows:
+      auto
+      1fr;
+
+    flex: 1 1 0;
+
+    min-width: 0;
+    min-height: 0;
+
+    gap: $space-2;
+  }
+
+  .timeline-stepper__marker {
+    position: relative;
+
+    display: grid;
+
+    grid-template-columns:
+      var(--step-marker-size)
+      minmax(0, 1fr);
+
+    align-items: center;
+
+    width: 100%;
+
+    flex: none;
+
+    flex-direction: row;
+
+    align-self: auto;
+  }
+
+  .timeline-stepper__line {
+    width: auto;
+    height: var(--step-line-width);
+
+    min-height: 0;
+
+    margin: 0 $space-2;
+
+    align-self: center;
+  }
+
+  .timeline-stepper__content {
+    padding: 0 $space-3 0 0;
+
+    gap: 3px;
+  }
+
+  .timeline-stepper__heading {
+    align-items: flex-start;
+
+    flex-direction: column;
+
+    gap: 3px;
+  }
+
+  .timeline-stepper__label {
+    white-space: normal;
+
+    overflow: visible;
+
+    text-overflow: clip;
+  }
+
+  .timeline-stepper__description {
+    display: -webkit-box;
+
+    overflow: hidden;
+
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  /*
+   * Last item does not need the remaining
+   * connector column.
+   */
+  .timeline-stepper__item:last-child {
+    .timeline-stepper__marker {
+      grid-template-columns: var(--step-marker-size);
     }
+  }
+
+  &.timeline-stepper--connector-dashed {
     .timeline-stepper__line {
-      background: var(--color-primary, $primary-color);
-      opacity: 0.3;
+      width: auto;
+      height: 0;
+
+      border: 0;
+
+      border-top: var(--step-line-width) dashed
+        color-mix(in srgb, var(--step-color) 28%, var(--border));
     }
   }
+}
 
-  &__item--completed {
-    .timeline-stepper__dot {
-      background: var(--color-primary, $primary-color);
-      color: #fff;
+/* ========================================================================== */
+/* Horizontal cards                                                          */
+/* ========================================================================== */
+
+.timeline-stepper--horizontal.timeline-stepper--cards {
+  gap: $space-2;
+
+  .timeline-stepper__item {
+    display: flex;
+
+    min-height: 120px;
+
+    flex-direction: column;
+
+    padding: $space-3;
+  }
+
+  .timeline-stepper__marker {
+    grid-template-columns:
+      var(--step-marker-size)
+      minmax(0, 1fr);
+  }
+
+  .timeline-stepper__line {
+    position: static;
+
+    width: auto;
+    height: var(--step-line-width);
+
+    min-height: 0;
+
+    flex: 1;
+  }
+}
+
+/* ========================================================================== */
+/* Responsive                                                                 */
+/* ========================================================================== */
+
+@media (max-width: 640px) {
+  /*
+   * Horizontal steppers become vertical instead
+   * of introducing horizontal scrolling.
+   */
+  .timeline-stepper--horizontal {
+    flex-direction: column;
+
+    .timeline-stepper__item {
+      display: flex;
+
+      width: 100%;
+
+      flex-direction: row;
+
+      gap: var(--step-gap);
     }
-    .timeline-stepper__label {
-      color: var(--text, #111);
+
+    .timeline-stepper__marker {
+      display: flex;
+
+      width: var(--step-marker-size);
+
+      align-self: stretch;
+
+      flex: 0 0 var(--step-marker-size);
+
+      flex-direction: column;
+
+      align-items: center;
     }
+
     .timeline-stepper__line {
-      background: var(--color-primary, $primary-color);
-      opacity: 0.5;
+      width: var(--step-line-width);
+
+      height: auto;
+      min-height: 18px;
+
+      margin: 4px 0;
+
+      flex: 1;
+    }
+
+    .timeline-stepper__content {
+      padding: 3px 0 $space-3;
+
+      flex: 1;
+    }
+
+    .timeline-stepper__heading {
+      align-items: center;
+
+      flex-direction: row;
+    }
+
+    &.timeline-stepper--connector-dashed {
+      .timeline-stepper__line {
+        width: 0;
+        height: auto;
+
+        border-top: 0;
+
+        border-left: var(--step-line-width) dashed
+          color-mix(in srgb, var(--step-color) 28%, var(--border));
+      }
     }
   }
 
-  &__item--pending {
-    .timeline-stepper__dot {
-      background: var(--surface-muted, #e5e7eb);
-      color: var(--text-muted, #9ca3af);
+  .timeline-stepper--horizontal.timeline-stepper--cards {
+    .timeline-stepper__item {
+      min-height: 0;
+
+      flex-direction: row;
     }
-    .timeline-stepper__label {
-      color: var(--text-muted, #9ca3af);
+
+    .timeline-stepper__marker {
+      display: flex;
+
+      flex-direction: column;
     }
+
+    .timeline-stepper__line {
+      width: var(--step-line-width);
+
+      height: auto;
+
+      flex: 1;
+    }
+  }
+}
+
+/* ========================================================================== */
+/* Reduced motion                                                             */
+/* ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .timeline-stepper__dot,
+  .timeline-stepper__line,
+  .timeline-stepper__label,
+  .timeline-stepper__item {
+    transition: none !important;
+  }
+
+  .timeline-stepper__dot:hover,
+  .timeline-stepper__item:hover {
+    transform: none !important;
   }
 }

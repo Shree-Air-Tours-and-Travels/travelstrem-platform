@@ -11,8 +11,9 @@
   z-index: 20;
   width: 100%;
   padding: $space-2 $space-6;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 74%, transparent);
-  background: color-mix(in srgb, var(--bg) 96%, transparent);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-glass-strong, var(--surface));
+  box-shadow: var(--shadow-xs);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
@@ -192,24 +193,24 @@
   padding-bottom: $space-2;
 }
 
-.support-filter-row button {
+.support-filter-row .ui-button {
   flex: 0 0 auto;
   min-height: 40px;
-  padding: 0 $space-4;
-  border: 1px solid var(--border);
   border-radius: 999px;
-  background: var(--surface);
 }
 
-.support-filter-row button.is-active {
-  border-color: var(--color-primary);
-  background: var(--color-primary);
-  color: #fff;
+.support-results-loading {
+  min-height: 180px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: $radius-lg;
+  background: var(--surface);
 }
 
 .support-ticket-summary {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: $space-4;
   padding: $space-4;
   border: 1px solid var(--border);
@@ -231,14 +232,41 @@
 }
 
 .support-composer {
-  max-width: 680px;
+  width: 100%;
   display: grid;
   justify-items: end;
   gap: $space-3;
+  padding: $space-5;
+  border: 1px solid var(--border);
+  border-radius: $radius-lg;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
 }
 
 .support-composer .trem-textarea {
   width: 100%;
+}
+
+.support-page--ticket .support-page__body {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.support-ticket-detail {
+  display: grid;
+  gap: $space-6;
+}
+
+.support-ticket-detail__conversation .support-section__heading {
+  padding-inline: $space-1;
+}
+
+.support-ticket-detail__conversation .support-conversation {
+  min-height: 260px;
+  padding: $space-5;
+  border-radius: $radius-lg;
+  background: color-mix(in srgb, var(--color-primary) 3%, var(--surface));
+  box-shadow: var(--shadow-sm);
 }
 
 .support-closed-note,
@@ -400,9 +428,18 @@
   .support-ticket-summary {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  .support-ticket-detail__conversation .support-conversation,
+  .support-composer {
+    padding: $space-4;
+  }
 }
 
 @media (max-width: 440px) {
+  .support-service-grid {
+    grid-template-columns: 1fr;
+  }
+
   .support-page__intro {
     gap: $space-2;
   }

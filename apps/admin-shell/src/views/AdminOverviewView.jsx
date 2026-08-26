@@ -185,6 +185,8 @@ export default function AdminOverviewView({
                       name={
                         item.type === "partner"
                           ? "building2"
+                          : item.type === "support"
+                            ? "support"
                           : item.type === "enquiry"
                             ? "messageCircle"
                             : item.type === "trip"

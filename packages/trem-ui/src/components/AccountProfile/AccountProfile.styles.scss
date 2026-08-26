@@ -259,6 +259,24 @@
   font-size: $font-size-sm;
 }
 
+.trem-account-profile__password-help {
+  display: flex;
+  align-items: flex-start;
+  gap: $space-2;
+  padding: $space-3;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--border));
+  border-radius: $radius-sm;
+  background: var(--primary-softer);
+  color: var(--muted);
+  font-size: $font-size-sm;
+  line-height: $line-height-md;
+
+  svg {
+    flex: 0 0 auto;
+    color: var(--color-primary);
+  }
+}
+
 .trem-account-profile__summary {
   display: grid;
   justify-items: center;

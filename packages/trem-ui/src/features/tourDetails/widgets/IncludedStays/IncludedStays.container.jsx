@@ -2,6 +2,7 @@ import React from "react";
 import useTourDetailWidget from "../../hooks/useTourDetailWidget";
 import { WidgetError, WidgetSkeleton } from "../../shared";
 import IncludedStaysView from "./IncludedStays.view";
+import { getPackageDisplayName } from "../../helper";
 
 export default function IncludedStaysContainer({
   tourRef,
@@ -11,7 +12,7 @@ export default function IncludedStaysContainer({
   onCustomize,
   onRequestHotel,
 }) {
-  const { loading, error, widgetData } = useTourDetailWidget(tourRef, "included-stays.json", {
+  const { loading, error, widgetData, retry } = useTourDetailWidget(tourRef, "included-stays.json", {
     packageKey: selectedPackage,
   });
   const labels = widgetData?.elements?.labels || {};
@@ -20,10 +21,18 @@ export default function IncludedStaysContainer({
     ? widgetData.data.hotelOptions
     : [];
   const customizable = widgetData?.data?.customizable === true;
-  const selectedPackageName = widgetData?.data?.selectedPackageName || "";
+  const selectedPackageData = widgetData?.data?.tour?.commercialPricing?.packages?.find(
+    (item) => String(item.packageKey || item.tier) === String(selectedPackage || ""),
+  );
+  const rawSelectedPackageName = widgetData?.data?.selectedPackageName || "";
+  const selectedPackageName = selectedPackageData
+    ? getPackageDisplayName(selectedPackageData)
+    : rawSelectedPackageName
+      ? getPackageDisplayName({ tier: rawSelectedPackageName, name: rawSelectedPackageName })
+      : "";
 
   if (loading) return <WidgetSkeleton compact />;
-  if (error) return <WidgetError message={error} />;
+  if (error) return <WidgetError message={error} retry={retry} />;
   if (!stays.length && !hotelOptions.length) return null;
   return (
     <IncludedStaysView

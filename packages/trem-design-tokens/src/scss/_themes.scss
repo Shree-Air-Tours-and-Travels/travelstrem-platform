@@ -82,6 +82,8 @@
   --container-width: #{$container-width};
   --root-font-size: #{$root-font-size-desktop};
   --control-font-size: #{$font-size-md};
+  --layout-section-gap: #{$space-5};
+  --layout-card-gap: #{$space-4};
   --tours-bg: var(--bg);
   --tours-surface: var(--bg-2);
   --tours-border: var(--border);
@@ -102,6 +104,8 @@
   :root {
     --root-font-size: #{$root-font-size-mobile};
     --control-font-size: #{$control-font-size-mobile};
+    --layout-section-gap: #{$space-4};
+    --layout-card-gap: #{$space-3};
   }
 }
 
@@ -215,7 +219,7 @@
   --heading: #{$white-color};
   --title: #{$white-color};
   --title-accent: #{lighten($dark-primary, 8%)};
-  --subtitle: #{$dark-text-muted};
+  --subtitle: rgba(235, 238, 255, 0.84);
   --nav-text: #{rgba($dark-text, 0.9)};
   --nav-text-active: #{lighten($dark-primary, 8%)};
   --nav-text-muted: #{$dark-text-light};
@@ -223,9 +227,9 @@
   --card-text: #{rgba($dark-text, 0.76)};
   --icon: #{rgba($dark-text, 0.88)};
   --icon-active: #{$primary-dark};
-  --muted: #{$dark-text-muted};
-  --color-muted: #{$dark-text-muted};
-  --text-muted: #{$dark-text-muted};
+  --muted: rgba(235, 238, 255, 0.84);
+  --color-muted: rgba(235, 238, 255, 0.84);
+  --text-muted: rgba(235, 238, 255, 0.84);
   --text-light: #{$dark-text-light};
   --border: #{$dark-border};
   --muted-border: #{$dark-border};

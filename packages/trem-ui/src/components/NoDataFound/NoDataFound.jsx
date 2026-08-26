@@ -12,10 +12,11 @@ export default function NoDataFound({
   actionHref = "",
   actionAriaLabel = "",
   onAction,
+  actionDisabled = false,
   compact = false,
   className = "",
 }) {
-  const showAction = Boolean(actionLabel && (onAction || actionHref));
+  const showAction = Boolean(actionLabel && (actionDisabled || onAction || actionHref));
   return (
     <div
       className={["trem-no-data", compact ? "trem-no-data--compact" : "", className]
@@ -42,8 +43,9 @@ export default function NoDataFound({
           iconSize={17}
           className="trem-no-data__action"
           aria-label={actionAriaLabel || actionLabel}
-          href={onAction ? undefined : actionHref}
-          onClick={onAction || undefined}
+          disabled={actionDisabled}
+          href={!actionDisabled && !onAction ? actionHref : undefined}
+          onClick={!actionDisabled ? onAction || undefined : undefined}
         />
       ) : null}
     </div>
@@ -58,6 +60,7 @@ NoDataFound.propTypes = {
   actionHref: PropTypes.string,
   actionAriaLabel: PropTypes.string,
   onAction: PropTypes.func,
+  actionDisabled: PropTypes.bool,
   compact: PropTypes.bool,
   className: PropTypes.string,
 };

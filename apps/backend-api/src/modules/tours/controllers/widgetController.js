@@ -3,6 +3,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { normalizeTourForResponse } from "./tourController.js";
 import TourRepository from "../repositories/TourRepository.js";
+import TourDeparture from "../models/TourDeparture.js";
 import { getTourDiscovery, searchToursFromRawRequest } from "../services/tourSearchService.js";
 import {
     buildManagementTourListQuery,
@@ -196,6 +197,18 @@ const normalizeTourCardForResponse = (tourObj = {}, priceInfo = null) => {
         tags: Array.isArray(tourObj.tags) ? tourObj.tags.slice(0, 4) : [],
         similarity: tourObj.similarity || null,
         priceInfo: priceInfo || null,
+        packagePrices: publicPackages(tourObj).map((item) => ({
+            packageKey: item.packageKey,
+            tier: item.tier,
+            name: item.name,
+            sellingTotalMinor: item.sellingTotalMinor,
+            currency: String(tourObj.commercial?.currency || priceInfo?.currency || "INR"),
+            moneyUnit: "PAISE",
+        })),
+        availability: {
+            seatsAvailable: tourObj.availability?.seatsAvailable ?? null,
+            departureCount: Array.isArray(tourObj.departures) ? tourObj.departures.length : 0,
+        },
     };
 };
 
@@ -207,13 +220,28 @@ const normalizeTourFactsForResponse = (tour = {}) => ({
         tour.city && typeof tour.city === "object"
             ? { from: String(tour.city.from || ""), to: String(tour.city.to || "") }
             : String(tour.city || ""),
-    distance: Number(tour.distance) > 0 ? Number(tour.distance) : null,
+    period: tour.period
+        ? { days: Number(tour.period.days || 0), nights: Number(tour.period.nights || 0) }
+        : null,
     startDate: tour.startDate || null,
     endDate: tour.endDate || null,
+    departures: (Array.isArray(tour.departures) ? tour.departures : []).map((departure) => ({
+        id: String(departure?._id || departure?.id || ""),
+        departureDate: departure?.departureDate || null,
+        returnDate: departure?.returnDate || null,
+        status: String(departure?.status || "active"),
+        availableSeats: departure?.availableSeats ?? null,
+    })),
     availability: {
         seatsAvailable: tour.availability?.seatsAvailable ?? null,
     },
 });
+
+const normalizePublicPackageCopy = (value = "") =>
+    String(value).replace(
+        /\bBasic,\s*Standard(?:,|\s+and)\s*Premium packages\b/gi,
+        "Standard, Premium and Advance packages",
+    );
 
 const normalizeTourOverviewForResponse = (tour = {}) => ({
     // _id is required for favourites and enquiry actions.
@@ -224,7 +252,7 @@ const normalizeTourOverviewForResponse = (tour = {}) => ({
         tour.city && typeof tour.city === "object"
             ? { from: String(tour.city.from || ""), to: String(tour.city.to || "") }
             : String(tour.city || ""),
-    desc: String(tour.desc || ""),
+    desc: normalizePublicPackageCopy(tour.desc),
     period: tour.period
         ? {
               days: Number(tour.period.days || 0),
@@ -234,6 +262,7 @@ const normalizeTourOverviewForResponse = (tour = {}) => ({
     avgRating: Number(tour.avgRating || 0),
     maxGroupSize: Number(tour.maxGroupSize || 0) || null,
     availability: { totalSeats: tour.availability?.totalSeats ?? null },
+    reviewCount: Array.isArray(tour.reviews) ? tour.reviews.length : 0,
     tags: Array.isArray(tour.tags) ? tour.tags.map(String).slice(0, 8) : [],
     agency: tour.agency || null,
     operator: tour.operator || null,
@@ -242,6 +271,15 @@ const normalizeTourOverviewForResponse = (tour = {}) => ({
     ownerAgentName: tour.ownerAgentName || "",
     ownerAgentEmail: tour.ownerAgentEmail || "",
 });
+
+const PUBLIC_PACKAGE_NAMES = Object.freeze({
+    BASIC: "Standard",
+    STANDARD: "Premium",
+    PREMIUM: "Advance",
+});
+
+const publicPackageName = (item = {}) =>
+    PUBLIC_PACKAGE_NAMES[String(item.tier || "").toUpperCase()] || String(item.name || "Package");
 
 const publicPackages = (tour = {}) => {
     if (tour.commercial?.version !== "COMPONENTS_V1") return [];
@@ -263,9 +301,16 @@ const publicPackages = (tour = {}) => {
             return {
                 packageKey: String(derived.packageKey || definition.packageKey || ""),
                 tier: String(derived.tier || definition.tier || ""),
-                name: String(derived.name || definition.name || "Package"),
+                name: publicPackageName({
+                    tier: derived.tier || definition.tier,
+                    name: derived.name || definition.name,
+                }),
                 description: String(definition.description || ""),
-                recommended: Boolean(definition.recommended),
+                recommended:
+                    publicPackageName({
+                        tier: derived.tier || definition.tier,
+                        name: derived.name || definition.name,
+                    }) === "Premium",
                 included: componentNames(definition.includedComponentKeys),
                 optional: componentNames(definition.optionalComponentKeys),
                 sellingTotalMinor: Number(derived.sellingTotalMinor || 0),
@@ -283,7 +328,6 @@ const normalizePricingCardForResponse = (tour = {}) => ({
         tour.city && typeof tour.city === "object"
             ? { from: String(tour.city.from || ""), to: String(tour.city.to || "") }
             : String(tour.city || ""),
-    distance: Number(tour.distance) > 0 ? Number(tour.distance) : null,
     availability: { seatsAvailable: tour.availability?.seatsAvailable ?? null },
     priceInfo: tour.priceInfo
         ? {
@@ -315,7 +359,7 @@ const normalizeHotelOptionsForResponse = (tour = {}, selectedPackageKey = "") =>
     const packageNames = new Map(
         (tour.commercial?.packages || []).map((item) => [
             String(item.packageKey || ""),
-            String(item.name || ""),
+            publicPackageName(item),
         ]),
     );
     return (tour.hotelOptions || [])
@@ -665,6 +709,24 @@ export const getWidget = async (req, res) => {
             widget.component.data.packages = featuredResult.items;
         }
 
+        if (fileName === "hero-banner.json" && pageKey === "tours-remote/home") {
+            const { facets } = await searchToursFromRawRequest({ page: 1, pageSize: 1 });
+            const option = (item) => ({
+                id: item.id,
+                value: item.value,
+                label: `${item.label} (${item.count})`,
+                count: item.count,
+            });
+            widget.component.dataScope.options = {
+                destinationOptions: facets.destinations.map(option),
+                interestOptions: facets.tags.map(option),
+            };
+            widget.component.data.filterBounds = {
+                price: facets.price,
+                duration: facets.duration,
+            };
+        }
+
         if (pageKey === "tours-remote/details") {
             const tourRef = req.query.tourRef;
             if (tourRef) {
@@ -690,9 +752,19 @@ export const getWidget = async (req, res) => {
                                 ),
                             );
                             break;
-                        case "tour-facts.json":
-                            widget.component.data.tour = normalizeTourFactsForResponse(normalized);
+                        case "tour-facts.json": {
+                            const departures = await TourDeparture.find({
+                                tourId: tourObj._id,
+                                status: { $in: ["scheduled", "active", "sold_out"] },
+                            })
+                                .sort({ departureDate: 1 })
+                                .lean();
+                            widget.component.data.tour = normalizeTourFactsForResponse({
+                                ...normalized,
+                                departures: departures.length ? departures : normalized.departures,
+                            });
                             break;
+                        }
                         case "tour-gallery.json":
                             widget.component.data.photos = Array.isArray(normalized.photos)
                                 ? normalized.photos
@@ -761,10 +833,16 @@ export const getWidget = async (req, res) => {
                                 ? normalized.reviews
                                 : [];
                             widget.component.data.avgRating = normalized.avgRating || 0;
+                            // Completed customer bookings are not persisted in this service yet.
+                            // Keep review eligibility explicit and server-owned so public clients
+                            // cannot infer eligibility from local state or an enquiry status.
+                            widget.component.data.canReview = false;
+                            widget.component.data.reviewEligibilityReason =
+                                "COMPLETED_BOOKING_REQUIRED";
                             break;
                         case "similar-tours.json": {
                             const similarTours = await findIntelligentSimilarTours(tourRaw, {
-                                limit: 3,
+                                limit: 4,
                             });
                             widget.component.data.tours = similarTours.map((doc) => {
                                 const tourObj = doc.toObject ? doc.toObject() : doc;

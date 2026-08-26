@@ -6,8 +6,7 @@ import { fetchData, useRefreshOnActivation } from "@packages/trem-utils";
 export default function EnquiriesPage() {
   const [state, setState] = useState({
     enquiries: [],
-    title: "Bookings & enquiries received",
-    description: "Requests received from travellers and their confirmed bookings.",
+    view: {},
     loading: true,
     error: "",
   });
@@ -17,13 +16,11 @@ export default function EnquiriesPage() {
     setState((current) => ({ ...current, loading: true, error: "" }));
     try {
       const response = await fetchData("/enquiries");
-      if (response?.status !== "success")
-        throw new Error(response?.message || "Failed to load enquiries.");
+      if (response?.status !== "success") throw new Error(response?.message);
       const component = response.componentData || {};
       setState({
         enquiries: Array.isArray(component.data) ? component.data : [],
-        title: component.title,
-        description: component.description,
+        view: component,
         loading: false,
         error: "",
       });
@@ -31,7 +28,7 @@ export default function EnquiriesPage() {
       setState((current) => ({
         ...current,
         loading: false,
-        error: error?.message || "Failed to load enquiries.",
+        error: error?.message,
       }));
     }
   }, []);
@@ -45,8 +42,9 @@ export default function EnquiriesPage() {
 
   return (
     <EnquiryCenter
-      title={state.title}
-      description={state.description}
+      title={state.view.title}
+      description={state.view.description}
+      view={state.view}
       enquiries={state.enquiries}
       selectedId={selectedId}
       loading={state.loading}

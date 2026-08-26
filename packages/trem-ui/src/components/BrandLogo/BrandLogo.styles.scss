@@ -1,82 +1,276 @@
 @import "../../styles/base/typography";
 
+/* ========================================================================== */
+/* Root                                                                       */
+/* ========================================================================== */
+
 .brand-logo {
+  position: relative;
+
   display: inline-flex;
   align-items: center;
-  gap: $space-3;
+
+  width: fit-content;
+  max-width: 100%;
   min-width: 0;
+
+  gap: $space-3;
+
+  color: var(--text);
+
+  font-family: $font-primary;
+
+  vertical-align: middle;
+
+  user-select: none;
+
+  /* ---------------------------------------------------------------------- */
+  /* Clickable                                                               */
+  /* ---------------------------------------------------------------------- */
 
   &--clickable {
     cursor: pointer;
-  }
 
-  &__image {
-    width: 42px;
-    height: 42px;
-    flex: 0 0 42px;
-    border-radius: $radius-md;
-    object-fit: cover;
-    display: block;
+    border-radius: $radius-sm;
 
-    &#{&}--dark {
-      display: none;
-    }
-  }
+    outline: none;
 
-  &__text {
-    display: grid;
-    gap: 0.1rem;
-    line-height: 1.05;
-    min-width: 0;
-  }
+    transition:
+      opacity 140ms $ease-default,
+      transform 140ms $ease-default;
 
-  &__name {
-    color: var(--title);
-    font-size: clamp(1.08rem, 1vw + 0.82rem, 1.35rem);
-    font-weight: $font-bold;
-    letter-spacing: -0.04em;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+    &:hover {
+      .brand-logo__mark {
+        border-color: color-mix(in srgb, var(--color-primary) 24%, var(--border));
 
-  &__subtitle {
-    overflow: hidden;
-    color: var(--muted);
-    font-size: $font-size-xs;
-    font-weight: $font-medium;
-    letter-spacing: 0.01em;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+        box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 10%, transparent);
+      }
 
-  &--small {
-    gap: $space-2;
-
-    .brand-logo__image {
-      width: 32px;
-      height: 32px;
-      flex: 0 0 32px;
-      font-size: $font-size-sm;
-      border-radius: $radius-sm;
+      .brand-logo__name {
+        color: var(--color-primary);
+      }
     }
 
-    .brand-logo__name {
-      font-size: 1rem;
+    &:active {
+      transform: scale(0.985);
     }
 
-    .brand-logo__subtitle {
-      font-size: 0.7rem;
-    }
-  }
-
-  &--icon-only {
-    .brand-logo__text {
-      display: none;
+    &:focus-visible {
+      box-shadow: 0 0 0 3px var(--primary-soft);
     }
   }
 }
 
+/* ========================================================================== */
+/* Logo mark                                                                  */
+/* ========================================================================== */
+
+.brand-logo__mark {
+  position: relative;
+
+  display: grid;
+
+  width: 42px;
+  height: 42px;
+
+  flex: 0 0 42px;
+
+  place-items: center;
+
+  overflow: hidden;
+
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+
+  border-radius: $radius-md;
+
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--surface) 96%, var(--color-primary) 4%),
+    var(--surface)
+  );
+
+  box-shadow: 0 2px 5px rgba(15, 23, 42, 0.045);
+
+  isolation: isolate;
+
+  transition:
+    border-color 150ms $ease-default,
+    box-shadow 150ms $ease-default;
+
+  /*
+   * Very subtle brand highlight.
+   */
+  &::after {
+    content: "";
+
+    position: absolute;
+
+    z-index: 2;
+
+    top: 0;
+    right: 15%;
+    left: 15%;
+
+    height: 1px;
+
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--color-primary) 25%, transparent),
+      transparent
+    );
+
+    pointer-events: none;
+  }
+}
+
+/* ========================================================================== */
+/* Images                                                                     */
+/* ========================================================================== */
+
+.brand-logo__image {
+  position: absolute;
+
+  inset: 0;
+
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+  object-position: center;
+
+  border-radius: inherit;
+
+  pointer-events: none;
+
+  -webkit-user-drag: none;
+
+  &--light {
+    display: block;
+  }
+
+  &--dark {
+    display: none;
+  }
+}
+
+/* ========================================================================== */
+/* Text                                                                       */
+/* ========================================================================== */
+
+.brand-logo__text {
+  display: flex;
+
+  min-width: 0;
+  max-width: 100%;
+
+  flex-direction: column;
+  justify-content: center;
+
+  gap: 2px;
+
+  line-height: 1;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Name                                                                       */
+/* -------------------------------------------------------------------------- */
+
+.brand-logo__name {
+  display: block;
+
+  max-width: 100%;
+
+  overflow: hidden;
+
+  color: var(--title);
+
+  font-size: clamp(1.05rem, 0.75vw + 0.86rem, 1.3rem);
+
+  font-weight: $font-bold;
+
+  line-height: 1.1;
+
+  letter-spacing: -0.035em;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  transition: color 150ms $ease-default;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Subtitle                                                                   */
+/* -------------------------------------------------------------------------- */
+
+.brand-logo__subtitle {
+  display: block;
+
+  max-width: 100%;
+
+  overflow: hidden;
+
+  color: var(--muted);
+
+  font-size: $font-size-xs;
+  font-weight: $font-medium;
+
+  line-height: 1.25;
+
+  letter-spacing: 0.005em;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ========================================================================== */
+/* Small                                                                      */
+/* ========================================================================== */
+
+.brand-logo--small {
+  gap: $space-2;
+
+  .brand-logo__mark {
+    width: 32px;
+    height: 32px;
+
+    flex-basis: 32px;
+
+    border-radius: $radius-sm;
+  }
+
+  .brand-logo__name {
+    font-size: 0.95rem;
+
+    letter-spacing: -0.025em;
+  }
+
+  .brand-logo__subtitle {
+    font-size: 0.68rem;
+  }
+}
+
+/* ========================================================================== */
+/* Icon only                                                                  */
+/* ========================================================================== */
+
+.brand-logo--icon-only {
+  gap: 0;
+
+  .brand-logo__text {
+    display: none;
+  }
+}
+
+/* ========================================================================== */
+/* Dark theme                                                                 */
+/* ========================================================================== */
+
+/*
+ * Existing theme implementation.
+ */
 .theme--dark {
   .brand-logo__image--light {
     display: none;
@@ -84,5 +278,61 @@
 
   .brand-logo__image--dark {
     display: block;
+  }
+
+  .brand-logo__mark {
+    border-color: color-mix(in srgb, var(--border) 72%, transparent);
+
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+  }
+}
+
+/*
+ * Additional support if another portal uses
+ * data-theme instead of .theme--dark.
+ */
+[data-theme="dark"] {
+  .brand-logo__image--light {
+    display: none;
+  }
+
+  .brand-logo__image--dark {
+    display: block;
+  }
+}
+
+/* ========================================================================== */
+/* Compact available space                                                    */
+/* ========================================================================== */
+
+@container (max-width: 180px) {
+  .brand-logo__name {
+    font-size: 0.92rem;
+  }
+
+  .brand-logo__subtitle {
+    font-size: 0.65rem;
+  }
+}
+
+@container (max-width: 130px) {
+  .brand-logo__subtitle {
+    display: none;
+  }
+}
+
+/* ========================================================================== */
+/* Reduced motion                                                             */
+/* ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-logo--clickable,
+  .brand-logo__mark,
+  .brand-logo__name {
+    transition: none;
+  }
+
+  .brand-logo--clickable:active {
+    transform: none;
   }
 }

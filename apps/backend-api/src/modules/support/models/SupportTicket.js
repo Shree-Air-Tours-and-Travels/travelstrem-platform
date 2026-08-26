@@ -24,6 +24,12 @@ const supportTicketSchema = new Schema(
     {
         reference: { type: String, required: true, unique: true, index: true },
         user: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
+        requesterType: {
+            type: String,
+            enum: ["customer", "agent"],
+            default: "customer",
+            index: true,
+        },
         serviceId: { type: String, trim: true, lowercase: true, default: "", index: true },
         categoryId: { type: String, trim: true, lowercase: true, required: true, index: true },
         subcategoryId: { type: String, trim: true, lowercase: true, default: "" },
@@ -43,6 +49,7 @@ const supportTicketSchema = new Schema(
         },
         channel: { type: String, enum: SUPPORT_CHANNEL_LIST, default: SUPPORT_CHANNEL.WEB },
         assignedTeam: { type: String, trim: true, default: "" },
+        assignedAdmin: { type: Schema.Types.ObjectId, ref: "User", default: null, index: true },
         attachments: { type: [attachmentSchema], default: [] },
         lastActivityAt: { type: Date, default: Date.now, index: true },
         unreadByCustomer: { type: Boolean, default: false },
@@ -54,6 +61,7 @@ const supportTicketSchema = new Schema(
 
 supportTicketSchema.index({ user: 1, lastActivityAt: -1 });
 supportTicketSchema.index({ user: 1, status: 1, lastActivityAt: -1 });
+supportTicketSchema.index({ requesterType: 1, status: 1, lastActivityAt: -1 });
 
 supportTicketSchema.set("toJSON", {
     virtuals: true,

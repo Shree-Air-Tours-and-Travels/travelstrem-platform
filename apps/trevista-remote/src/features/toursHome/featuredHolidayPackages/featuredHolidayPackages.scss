@@ -61,6 +61,14 @@
     gap: $space-3;
     margin-top: $space-2;
   }
+
+  &__list--count-1 {
+    width: min(760px, 100%);
+  }
+
+  &__list--count-2 {
+    width: min(1080px, 100%);
+  }
 }
 
 @include mq-max($breakpoint-mobile) {

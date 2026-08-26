@@ -11,6 +11,7 @@ export default function PlanCards({
   columns = 4,
   layout = "grid",
   hideUnavailableOnMobile = false,
+  onSelect,
 }) {
   const visibleItems = items.filter((item) => !item.hide);
   if (!visibleItems.length) return null;
@@ -31,7 +32,18 @@ export default function PlanCards({
       <h2 className="trem-plan-cards__title">{title}</h2>
       <div className="trem-plan-cards__grid">
         {visibleItems.map((item) => (
-          <PlanCard key={item.id} {...item} />
+          <PlanCard
+            key={item.id}
+            {...item}
+            onClick={
+              item.targetTab && onSelect
+                ? (event) => {
+                    event.preventDefault();
+                    onSelect(item);
+                  }
+                : item.onClick
+            }
+          />
         ))}
       </div>
     </section>
@@ -61,6 +73,7 @@ PlanCards.propTypes = {
       highlights: PropTypes.arrayOf(PropTypes.object),
       highlightsAriaLabel: PropTypes.string,
       actionLabel: PropTypes.string,
+      targetTab: PropTypes.string,
     }),
   ),
   ariaLabel: PropTypes.string,
@@ -68,4 +81,5 @@ PlanCards.propTypes = {
   columns: PropTypes.number,
   layout: PropTypes.oneOf(["grid", "horizontal-stack"]),
   hideUnavailableOnMobile: PropTypes.bool,
+  onSelect: PropTypes.func,
 };

@@ -5,12 +5,12 @@ import { WidgetError, WidgetSkeleton } from "../../shared";
 import TourGalleryView from "./TourGallery.view";
 
 export default function TourGalleryContainer({ tourRef, tour }) {
-  const { loading, error, widgetData } = useTourDetailWidget(tourRef, "tour-gallery.json");
+  const { loading, error, widgetData, retry } = useTourDetailWidget(tourRef, "tour-gallery.json");
   const labels = widgetData?.elements?.labels || {};
   const photos = (widgetData?.data?.photos || tour?.photos || []).filter(Boolean);
 
   if (loading && !photos.length) return <WidgetSkeleton />;
-  if (error && !photos.length) return <WidgetError message={error} />;
+  if (error && !photos.length) return <WidgetError message={error} retry={retry} />;
 
   return (
     <TourGalleryView

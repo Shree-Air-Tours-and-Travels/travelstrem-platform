@@ -2,7 +2,7 @@
 
 .trem-plan-cards {
   display: grid;
-  gap: $space-4;
+  gap: var(--layout-card-gap, #{$space-4});
 
   &__title {
     margin: 0;
@@ -15,7 +15,7 @@
   &__grid {
     display: grid;
     grid-template-columns: repeat(var(--trem-plan-cards-columns, 4), minmax(0, 1fr));
-    gap: $space-4;
+    gap: var(--layout-card-gap, #{$space-4});
   }
 
   &--horizontal-stack &__grid {

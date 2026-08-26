@@ -22,6 +22,7 @@
         "totalInventory": "Travel inventory",
         "publishedInventory": "Live inventory",
         "openEnquiries": "Open enquiries",
+        "openSupportTickets": "Open support tickets",
         "pendingApprovals": "Needs approval",
         "inventoryTitle": "Product health",
         "inventoryDescription": "Publishing health across active TravelsTREM products.",
@@ -65,6 +66,7 @@
               { "id": "inventory", "metric": "totalInventory", "labelRef": "totalInventory", "icon": "travelPackage", "target": "services" },
               { "id": "live", "metric": "publishedInventory", "labelRef": "publishedInventory", "icon": "globe", "target": "services" },
               { "id": "enquiries", "metric": "openEnquiries", "labelRef": "openEnquiries", "icon": "messageCircle", "target": "enquiries" },
+              { "id": "support", "metric": "openSupportTickets", "labelRef": "openSupportTickets", "icon": "support", "target": "support" },
               { "id": "approvals", "metric": "pendingApprovals", "labelRef": "pendingApprovals", "icon": "shieldCheck", "target": "tenancy" }
             ]
           }
@@ -79,6 +81,7 @@
       "actions": [
         { "id": "inventory", "labelRef": "manageInventory", "descriptionRef": "manageInventoryDescription", "icon": "map", "target": "services" },
         { "id": "enquiries", "labelRef": "reviewEnquiries", "descriptionRef": "reviewEnquiriesDescription", "icon": "messageCircle", "target": "enquiries" },
+        { "id": "support", "labelRef": "openSupportTickets", "descriptionRef": "recentDescription", "icon": "support", "target": "support" },
         { "id": "partners", "labelRef": "managePartners", "descriptionRef": "managePartnersDescription", "icon": "building2", "target": "tenancy", "masterOnly": true }
       ]
     }

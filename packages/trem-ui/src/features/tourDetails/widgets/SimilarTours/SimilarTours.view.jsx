@@ -41,6 +41,11 @@ export default function SimilarToursView({
         </span>
       </header>
       <div className="tour-detail__section-body">
+        {tours.length > 1 ? (
+          <p className="tour-detail__similar-swipe-hint">
+            {labels.swipeHint || "Swipe to see more tours"}
+          </p>
+        ) : null}
         <div className="tour-detail__similar-scroll-wrapper">
           <div
             className="tour-detail__similar-scroll"

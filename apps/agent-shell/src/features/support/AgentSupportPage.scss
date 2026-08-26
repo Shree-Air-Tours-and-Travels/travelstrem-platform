@@ -1,0 +1,153 @@
+@import "@packages/trem-ui/styles/base/typography";
+
+.agent-support {
+  min-width: 0;
+  max-width: 1080px;
+  margin: 0 auto;
+  display: grid;
+  gap: $space-5;
+}
+
+.agent-support__header,
+.agent-support__detail > header,
+.agent-support__list button {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-4;
+}
+
+.agent-support__header > div > span,
+.agent-support__detail header small,
+.agent-support__list small {
+  color: var(--color-primary);
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.agent-support__header h1 {
+  margin-block: $space-1;
+  font-size: $font-size-xxl;
+}
+
+.agent-support__header p,
+.agent-support__detail header p,
+.agent-support__list em {
+  color: var(--text-secondary);
+}
+
+.agent-support__form,
+.agent-support__requests,
+.agent-support__detail {
+  min-width: 0;
+  display: grid;
+  gap: $space-4;
+  padding: $space-5;
+  border: 1px solid var(--border);
+  border-radius: $radius-lg;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.agent-support__form {
+  max-width: 760px;
+  justify-items: end;
+}
+
+.agent-support__form > * {
+  width: 100%;
+}
+
+.agent-support__filter {
+  width: min(280px, 100%);
+}
+
+.agent-support__list {
+  display: grid;
+  gap: $space-2;
+}
+
+.agent-support__list button {
+  width: 100%;
+  padding: $space-4;
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+}
+
+.agent-support__list button:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 45%, var(--border));
+  box-shadow: var(--shadow-sm);
+}
+
+.agent-support__list button > span {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.agent-support__list strong {
+  font-size: $font-size-md;
+}
+
+.agent-support__list em {
+  font-size: $font-size-xs;
+  font-style: normal;
+}
+
+.agent-support__detail > header {
+  padding-bottom: $space-4;
+  border-bottom: 1px solid var(--border);
+}
+
+.agent-support__detail {
+  overflow: hidden;
+}
+
+.agent-support__conversation {
+  width: 100%;
+  height: clamp(480px, calc(100dvh - 300px), 680px);
+  min-height: 0;
+}
+
+.agent-support__error,
+.agent-support__closed {
+  padding: $space-3;
+  border-radius: $radius-md;
+}
+
+.agent-support__error {
+  background: #fff1f0;
+  color: #b42318;
+}
+
+.agent-support__closed {
+  background: var(--surface-subtle, #f7f8fb);
+  color: var(--text-secondary);
+}
+
+@media (max-width: $breakpoint-md) {
+  .agent-support__header,
+  .agent-support__detail > header {
+    flex-direction: column;
+  }
+
+  .agent-support__form,
+  .agent-support__requests,
+  .agent-support__detail {
+    padding: $space-4;
+  }
+
+  .agent-support__detail {
+    overflow: visible;
+  }
+
+  .agent-support__conversation {
+    height: min(560px, calc(100dvh - 11rem - env(safe-area-inset-bottom, 0px)));
+    min-height: 360px;
+  }
+}

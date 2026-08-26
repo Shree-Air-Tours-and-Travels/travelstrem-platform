@@ -1,84 +1,359 @@
 @import "../../styles/base/typography";
 
+/* ========================================================================== */
+/* Base                                                                       */
+/* ========================================================================== */
+
 .status-badge {
+  --status-color: var(--muted);
+  --status-soft: var(--surface-inset);
+
+  position: relative;
+
   display: inline-flex;
   align-items: center;
+
+  width: fit-content;
+  max-width: 100%;
+  min-width: 0;
+  flex: 0 1 auto;
+
   gap: $space-2;
+
+  border: 1px solid color-mix(in srgb, var(--status-color) 18%, var(--border));
+
   border-radius: $radius-full;
-  font-weight: $font-bold;
-  line-height: $line-height-xs;
+
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--status-color) 7%, var(--surface)),
+    color-mix(in srgb, var(--status-color) 3%, var(--surface))
+  );
+
+  color: var(--status-color);
+
+  font-family: $font-primary;
+  font-weight: $font-semibold;
+  line-height: 1;
+
   white-space: nowrap;
+
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 22%, transparent),
+    0 1px 2px rgba(15, 23, 42, 0.035);
+
+  isolation: isolate;
 }
+
+/* ========================================================================== */
+/* Dot                                                                        */
+/* ========================================================================== */
 
 .status-badge__dot {
-  width: 6px;
-  height: 6px;
+  position: relative;
+
+  width: 7px;
+  height: 7px;
+
+  flex: 0 0 7px;
+
   border-radius: $radius-circle;
-  background: currentColor;
-  flex-shrink: 0;
+
+  background: var(--status-color);
+
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--status-color) 10%, transparent);
+
+  /*
+   * Tiny inner highlight keeps the dot from looking like
+   * a plain CSS circle.
+   */
+  &::after {
+    content: "";
+
+    position: absolute;
+
+    top: 1px;
+    left: 1px;
+
+    width: 2px;
+    height: 2px;
+
+    border-radius: 50%;
+
+    background: color-mix(in srgb, white 65%, transparent);
+  }
 }
 
-.status-badge--sm {
-  padding: 0.125rem $space-2;
-  font-size: $font-size-xs;
+/* ========================================================================== */
+/* Label                                                                      */
+/* ========================================================================== */
+
+.status-badge__label {
+  display: block;
+
+  min-width: 0;
+
+  overflow: hidden;
+
+  color: inherit;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  letter-spacing: 0.005em;
 }
-.status-badge--sm .status-badge__dot {
-  width: 4px;
-  height: 4px;
+
+/* ========================================================================== */
+/* Sizes                                                                      */
+/* ========================================================================== */
+
+.status-badge--sm {
+  min-height: 24px;
+
+  padding: 0 $space-2;
+
+  gap: $space-1;
+
+  font-size: 10px;
+
+  .status-badge__dot {
+    width: 5px;
+    height: 5px;
+
+    flex-basis: 5px;
+
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--status-color) 10%, transparent);
+
+    &::after {
+      display: none;
+    }
+  }
 }
 
 .status-badge--md {
-  padding: $space-1 $space-3;
+  min-height: 28px;
+
+  padding: 0 $space-3;
+
   font-size: $font-size-xs;
 }
 
 .status-badge--lg {
-  padding: $space-1-5 $space-4;
+  min-height: 34px;
+
+  padding: 0 $space-3;
+
+  gap: $space-2;
+
   font-size: $font-size-sm;
-}
-.status-badge--lg .status-badge__dot {
-  width: 8px;
-  height: 8px;
+
+  .status-badge__dot {
+    width: 8px;
+    height: 8px;
+
+    flex-basis: 8px;
+
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--status-color) 12%, transparent);
+  }
 }
 
+/* ========================================================================== */
+/* Tones                                                                      */
+/* ========================================================================== */
+
 .status-badge--neutral {
-  color: var(--muted);
-  background: var(--surface-inset);
+  --status-color: var(--muted);
+
+  border-color: color-mix(in srgb, var(--muted) 17%, var(--border));
+
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface-inset) 76%, var(--surface)),
+    color-mix(in srgb, var(--surface-inset) 55%, var(--surface))
+  );
 }
 
 .status-badge--info {
-  color: var(--color-primary);
-  background: var(--primary-soft);
+  --status-color: var(--color-primary);
+
+  border-color: color-mix(in srgb, var(--color-primary) 22%, var(--border));
+
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-primary) 9%, var(--surface)),
+    color-mix(in srgb, var(--color-primary) 4%, var(--surface))
+  );
 }
 
 .status-badge--success {
-  color: var(--color-success);
-  background: var(--success-soft);
+  --status-color: var(--color-success);
+
+  border-color: color-mix(in srgb, var(--color-success) 22%, var(--border));
+
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-success) 9%, var(--surface)),
+    color-mix(in srgb, var(--color-success) 4%, var(--surface))
+  );
 }
 
 .status-badge--warning {
-  color: var(--color-warning);
-  background: var(--warning-soft);
+  --status-color: var(--color-warning);
+
+  border-color: color-mix(in srgb, var(--color-warning) 24%, var(--border));
+
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-warning) 9%, var(--surface)),
+    color-mix(in srgb, var(--color-warning) 4%, var(--surface))
+  );
 }
 
 .status-badge--danger {
-  color: var(--color-danger);
-  background: var(--danger-soft);
+  --status-color: var(--color-danger);
+
+  border-color: color-mix(in srgb, var(--color-danger) 22%, var(--border));
+
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-danger) 9%, var(--surface)),
+    color-mix(in srgb, var(--color-danger) 4%, var(--surface))
+  );
 }
 
 .status-badge--secondary {
-  color: var(--color-secondary);
-  background: var(--secondary-soft);
+  --status-color: var(--color-secondary);
+
+  border-color: color-mix(in srgb, var(--color-secondary) 22%, var(--border));
+
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-secondary) 9%, var(--surface)),
+    color-mix(in srgb, var(--color-secondary) 4%, var(--surface))
+  );
 }
 
-.status-badge__subtitle {
-  font-weight: $font-bold;
-  font-size: 0.85em;
-  margin-left: $space-1-5;
-  padding-left: $space-1-5;
-  border-left: 1px solid currentColor;
-}
+/* ========================================================================== */
+/* Subtitle                                                                   */
+/* ========================================================================== */
 
 .status-badge--with-subtitle {
   gap: 0;
+
+  padding-right: $space-2;
+}
+
+.status-badge__subtitle {
+  position: relative;
+
+  display: inline-flex;
+  align-items: center;
+
+  min-height: 18px;
+
+  margin-left: $space-2;
+  padding-left: $space-2;
+
+  color: color-mix(in srgb, var(--status-color) 78%, var(--text));
+
+  font-size: 0.82em;
+  font-weight: $font-bold;
+
+  line-height: 1;
+
+  opacity: 0.82;
+
+  /*
+   * Softer than border-left: avoids making the badge
+   * look like two buttons joined together.
+   */
+  &::before {
+    content: "";
+
+    position: absolute;
+
+    left: 0;
+
+    width: 1px;
+    height: 12px;
+
+    border-radius: 999px;
+
+    background: color-mix(in srgb, var(--status-color) 25%, var(--border));
+  }
+}
+
+/* ========================================================================== */
+/* Important lifecycle statuses                                               */
+/* ========================================================================== */
+
+/*
+ * Gives final positive states slightly stronger visual confidence.
+ * Still works through the existing tone classes — no JSX required.
+ */
+
+.status-badge--success {
+  .status-badge__dot {
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--color-success) 10%, transparent),
+      0 0 8px color-mix(in srgb, var(--color-success) 14%, transparent);
+  }
+}
+
+.status-badge--danger {
+  .status-badge__dot {
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--color-danger) 10%, transparent),
+      0 0 8px color-mix(in srgb, var(--color-danger) 12%, transparent);
+  }
+}
+
+/* ========================================================================== */
+/* Long values                                                                */
+/* ========================================================================== */
+
+.status-badge {
+  .status-badge__label {
+    max-width: 220px;
+  }
+}
+
+/* ========================================================================== */
+/* Mobile                                                                     */
+/* ========================================================================== */
+
+@media (max-width: 768px) {
+  .status-badge--md {
+    min-height: 27px;
+
+    padding-inline: $space-2;
+  }
+
+  .status-badge--lg {
+    min-height: 32px;
+
+    padding-inline: $space-3;
+
+    font-size: $font-size-xs;
+  }
+
+  .status-badge {
+    .status-badge__label {
+      max-width: 160px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .status-badge {
+    gap: $space-1;
+  }
+
+  .status-badge--sm,
+  .status-badge--md,
+  .status-badge--lg {
+    min-height: 24px;
+    padding-inline: $space-2;
+    font-size: 10px;
+  }
 }

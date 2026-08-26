@@ -8,9 +8,9 @@ import { useAdminPortalConfig } from "./providers/AdminPortalProvider";
 import authService from "../services/authService";
 
 const SECTION_IDS = [
-  { id: "workspace", title: "Workspace", items: ["overview", "enquiries"] },
+  { id: "workspace", title: "Workspace", items: ["overview", "enquiries", "support"] },
   { id: "catalog", title: "Catalogue", items: ["services"] },
-  { id: "governance", title: "Governance", items: ["tenancy", "clients"] },
+  { id: "governance", title: "Governance", items: ["internalTeam", "tenancy", "clients"] },
   { id: "account", title: "Account", items: ["profile", "logout"] },
 ];
 
@@ -72,9 +72,7 @@ export default function AdminRouteFrame({
     clearAuthBrowserState({ prefixes: ["adminTREM"] });
     emit("USER_LOGOUT", { source: "admin-shell" }, { skipController: true });
     emitAuthEvent({ type: "LOGOUT" });
-    window.location.replace(
-      buildGlobalAuthUrl({ app: "admin", returnTo: window.location.origin }),
-    );
+    window.location.replace(buildGlobalAuthUrl({ app: "admin", returnTo: window.location.origin }));
   }, []);
 
   const goToWorkspace = useCallback(
@@ -163,9 +161,7 @@ export default function AdminRouteFrame({
             />
           ) : null}
         </div>
-        <div
-          className={`admin-dashboard-shell__page${pageClassName ? ` ${pageClassName}` : ""}`}
-        >
+        <div className={`admin-dashboard-shell__page${pageClassName ? ` ${pageClassName}` : ""}`}>
           {children}
         </div>
       </main>

@@ -40,6 +40,18 @@ export function RealtimeProvider({ children, enabled = true }) {
   }, [client]);
 
   useEffect(() => {
+    if (!client) return undefined;
+    const reconnect = () => client.reconnect();
+    const pause = () => client.pause();
+    window.addEventListener("TREM_SESSION_REFRESHED", reconnect);
+    window.addEventListener("TREM_SESSION_EXPIRED", pause);
+    return () => {
+      window.removeEventListener("TREM_SESSION_REFRESHED", reconnect);
+      window.removeEventListener("TREM_SESSION_EXPIRED", pause);
+    };
+  }, [client]);
+
+  useEffect(() => {
     if (!client) {
       setStatus(CONNECTION_STATUS.DISCONNECTED);
       return undefined;

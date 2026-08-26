@@ -1,7 +1,7 @@
 import React from "react";
 import { Breadcrumbs, EmptyState, ErrorState, SupportSkeleton } from "@packages/trem-ui";
 
-export function SupportLayout({ title, subtitle, children, actions }) {
+export function SupportLayout({ title, subtitle, children, actions, className = "" }) {
   const isHelpHome = title === "Help & Support";
   const breadcrumbs = [
     { label: "Home", path: "/" },
@@ -9,7 +9,7 @@ export function SupportLayout({ title, subtitle, children, actions }) {
     ...(!isHelpHome && title ? [{ label: title }] : []),
   ];
   return (
-    <main className="support-page">
+    <main className={`support-page ${className}`}>
       <header className="support-page__header">
         <Breadcrumbs items={breadcrumbs} className="support-page__breadcrumbs" />
       </header>

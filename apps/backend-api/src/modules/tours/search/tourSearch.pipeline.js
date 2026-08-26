@@ -169,11 +169,66 @@ const facetProjection = {
         departureCount: { $size: "$_eligibleDepartures" },
         nextDepartureDate: { $min: "$_eligibleDepartures.departureDate" },
     },
+    departures: {
+        $map: {
+            input: "$_eligibleDepartures",
+            as: "departure",
+            in: {
+                id: { $toString: "$$departure._id" },
+                departureDate: "$$departure.departureDate",
+                returnDate: "$$departure.returnDate",
+                status: "$$departure.status",
+                availableSeats: "$$departure.availableSeats",
+            },
+        },
+    },
     pricing: {
         currency: "$_currency",
         min: "$_priceMin",
         max: "$_priceMax",
         isFinal: "$_priceIsFinal",
+    },
+    packagePrices: {
+        $map: {
+            input: { $ifNull: ["$commercial.derived.packages", []] },
+            as: "package",
+            in: {
+                packageKey: "$$package.packageKey",
+                tier: {
+                    $ifNull: [
+                        "$$package.tier",
+                        {
+                            $let: {
+                                vars: {
+                                    definition: {
+                                        $arrayElemAt: [
+                                            {
+                                                $filter: {
+                                                    input: {
+                                                        $ifNull: ["$commercial.packages", []],
+                                                    },
+                                                    as: "definition",
+                                                    cond: {
+                                                        $eq: [
+                                                            "$$definition.packageKey",
+                                                            "$$package.packageKey",
+                                                        ],
+                                                    },
+                                                },
+                                            },
+                                            0,
+                                        ],
+                                    },
+                                },
+                                in: "$$definition.tier",
+                            },
+                        },
+                    ],
+                },
+                sellingTotalMinor: "$$package.sellingTotalMinor",
+                currency: { $ifNull: ["$commercial.currency", "$_currency"] },
+            },
+        },
     },
     soldOut: {
         $allElementsTrue: [

@@ -93,6 +93,21 @@ export const getCurrencyFormatter = (currency = "INR") => {
   return MONEY_FORMATTERS.get(currency);
 };
 
+const PACKAGE_DISPLAY_NAMES = Object.freeze({
+  BASIC: "Standard",
+  STANDARD: "Premium",
+  PREMIUM: "Advance",
+});
+
+export const getPackageDisplayName = (item = {}) =>
+  PACKAGE_DISPLAY_NAMES[String(item.tier || "").toUpperCase()] ||
+  getDisplayText(item.name, "Package");
+
+export const getPackageDisplayRank = (item = {}) => {
+  const name = getPackageDisplayName(item);
+  return ["Standard", "Premium", "Advance"].indexOf(name);
+};
+
 export const getPriceText = (tour = {}) => {
   tour = tour || {};
   const price = tour.priceInfo || tour.price || {};

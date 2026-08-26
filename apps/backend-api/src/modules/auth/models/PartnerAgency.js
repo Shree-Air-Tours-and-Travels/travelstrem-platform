@@ -32,6 +32,7 @@ const partnerAgencySchema = new mongoose.Schema(
         approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
         approvedAt: { type: Date, default: null },
         productAccess: [{ type: String, trim: true, lowercase: true }],
+        customTourPartner: { type: Boolean, default: false },
         settings: {
             timezone: { type: String, default: "Asia/Kolkata" },
             currency: { type: String, default: "INR" },
@@ -71,6 +72,11 @@ const partnerAgencySchema = new mongoose.Schema(
         deactivatedAt: Date,
     },
     { timestamps: true },
+);
+
+partnerAgencySchema.index(
+    { customTourPartner: 1 },
+    { unique: true, partialFilterExpression: { customTourPartner: true } },
 );
 
 partnerAgencySchema.virtual("id").get(function () {

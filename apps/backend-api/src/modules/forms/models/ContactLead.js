@@ -20,6 +20,12 @@ const ContactLeadSchema = new mongoose.Schema(
             default: null,
             index: true,
         },
+        assignmentRule: {
+            type: String,
+            enum: ["source_tour_owner", "custom_tour_partner", "master_admin_fallback", ""],
+            default: "",
+            index: true,
+        },
         agentSnapshot: {
             name: { type: String, default: "" },
             email: { type: String, default: "" },

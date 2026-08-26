@@ -1,45 +1,231 @@
+@import "../../styles/base/typography";
+
 .trem-breadcrumbs {
+  display: flex;
+  align-items: center;
+
+  width: 100%;
+  min-width: 0;
+
+  color: var(--muted);
+
+  font-family: $font-primary;
+  font-size: $font-size-xs;
+  line-height: 1;
+
+  /* ---------------------------------------------------------------------- */
+  /* List                                                                    */
+  /* ---------------------------------------------------------------------- */
+
   ol {
     display: flex;
     align-items: center;
-    gap: 0.45rem;
-    padding: 0;
+
+    min-width: 0;
+
     margin: 0;
+    padding: 0;
+
+    gap: 0;
+
     list-style: none;
-    flex-wrap: wrap;
+
+    overflow: hidden;
   }
 
   li {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 0.45rem;
-    font-size: 0.82rem;
-    color: var(--muted);
 
-    a {
-      color: var(--color-primary);
-      text-decoration: none;
-      font-weight: 500;
-      white-space: nowrap;
+    min-width: 0;
 
-      &:hover {
-        text-decoration: underline;
-      }
+    flex-shrink: 1;
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Links                                                                   */
+  /* ---------------------------------------------------------------------- */
+
+  a {
+    position: relative;
+
+    display: inline-flex;
+    align-items: center;
+
+    min-width: 0;
+    min-height: 28px;
+
+    padding: 0 $space-1;
+
+    border-radius: $radius-xs;
+
+    color: var(--color-primary);
+
+    font-size: $font-size-xs;
+    font-weight: $font-semibold;
+
+    text-decoration: none;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    transition:
+      color 140ms $ease-standard,
+      background 140ms $ease-standard;
+
+    &:hover {
+      color: var(--color-primary-dark);
+
+      background: color-mix(in srgb, var(--color-primary) 7%, transparent);
     }
 
-    span {
-      &:not(.trem-breadcrumbs__sep) {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 200px;
-      }
+    &:focus-visible {
+      outline: none;
+
+      color: var(--color-primary);
+
+      background: color-mix(in srgb, var(--color-primary) 7%, transparent);
+
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 18%, transparent);
     }
   }
 
+  /* ---------------------------------------------------------------------- */
+  /* Current page                                                            */
+  /* ---------------------------------------------------------------------- */
+
+  li:last-child > span:not(.trem-breadcrumbs__sep) {
+    display: inline-flex;
+    align-items: center;
+
+    min-width: 0;
+    min-height: 28px;
+
+    padding: 0 $space-1;
+
+    color: var(--text);
+
+    font-size: $font-size-xs;
+    font-weight: $font-bold;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Separator                                                               */
+  /* ---------------------------------------------------------------------- */
+
   &__sep {
-    color: var(--border);
-    pointer-events: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    flex: 0 0 auto;
+
+    width: 18px;
+
+    color: color-mix(in srgb, var(--muted) 48%, transparent);
+
+    font-size: 0;
+
     user-select: none;
+
+    /*
+     * Replaces the visually basic "/" with a slim chevron.
+     * JSX remains unchanged.
+     */
+    &::before {
+      content: "";
+
+      width: 5px;
+      height: 5px;
+
+      border-top: 1.5px solid currentColor;
+      border-right: 1.5px solid currentColor;
+
+      transform: rotate(45deg);
+    }
+  }
+}
+
+/* ========================================================================== */
+/* Responsive                                                                 */
+/* ========================================================================== */
+
+@media (max-width: 768px) {
+  .trem-breadcrumbs {
+    ol {
+      width: 100%;
+    }
+
+    li {
+      /*
+       * Earlier breadcrumbs can shrink.
+       * Current page receives more visual space.
+       */
+      max-width: 120px;
+
+      &:last-child {
+        max-width: min(55vw, 220px);
+      }
+    }
+
+    a,
+    li:last-child > span:not(.trem-breadcrumbs__sep) {
+      max-width: 100%;
+    }
+
+    &__sep {
+      width: 16px;
+    }
+  }
+}
+
+/* ========================================================================== */
+/* Very small devices                                                         */
+/* ========================================================================== */
+
+@media (max-width: 480px) {
+  .trem-breadcrumbs {
+    font-size: $font-size-xs;
+
+    /*
+     * Hide middle breadcrumb labels when the hierarchy becomes too long.
+     * Keep the first and current location available.
+     */
+    li:not(:first-child):not(:last-child) {
+      max-width: 82px;
+    }
+
+    a,
+    li:last-child > span:not(.trem-breadcrumbs__sep) {
+      min-height: 26px;
+
+      padding-inline: 3px;
+    }
+
+    &__sep {
+      width: 14px;
+
+      &::before {
+        width: 4px;
+        height: 4px;
+      }
+    }
+  }
+}
+
+/* ========================================================================== */
+/* Reduced motion                                                             */
+/* ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .trem-breadcrumbs a {
+    transition: none;
   }
 }

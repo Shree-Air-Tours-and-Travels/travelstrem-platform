@@ -2,7 +2,7 @@
 
 .trem-overview-rail {
   display: grid;
-  gap: $space-5;
+  gap: var(--layout-section-gap, #{$space-5});
 }
 
 .trem-rail-card {

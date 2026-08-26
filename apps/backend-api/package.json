@@ -23,6 +23,7 @@
     "reset:empty-database": "cross-env NODE_ENV=development USE_DOTENV=true node src/scripts/clearOperationalData.js --apply",
     "reset:travel-catalog": "cross-env NODE_ENV=development USE_DOTENV=true node src/scripts/resetTravelCatalog.js",
     "seed:master-customizable-tour": "cross-env NODE_ENV=development USE_DOTENV=true node src/scripts/seedMasterCustomizableTour.js",
+    "seed:tour-catalog": "cross-env NODE_ENV=development USE_DOTENV=true node src/scripts/seedTourCatalog.js",
     "master-data:export": "cross-env USE_DOTENV=true node src/scripts/exportMasterData.js",
     "master-data:import": "cross-env USE_DOTENV=true node src/scripts/importMasterData.js"
   },

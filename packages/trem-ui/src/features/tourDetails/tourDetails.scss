@@ -1,23 +1,81 @@
 @import "../../styles/base/typography";
 
 :root {
-  --td-header-offset: 72px;
+  --td-header-offset: 64px;
   --td-radius: 12px;
 }
 
 .tour-detail {
+  --td-page-gutter: clamp(1rem, 2.4vw, 2rem);
   width: 100%;
+  max-width: 100%;
   min-height: 100vh;
-  padding: 0 clamp(1rem, 2.4vw, 2rem) clamp(3rem, 5vw, 5rem);
+  overflow-x: clip;
+  padding: 0 var(--td-page-gutter);
   background: var(--page-bg);
   color: var(--text);
 
   &__shell {
     width: 100%;
+    min-width: 0;
+    max-width: 100%;
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
-    padding-bottom: 60px;
+  }
+
+  &__section-nav {
+    position: sticky;
+    top: calc(var(--td-header-offset) + 44px);
+    z-index: 54;
+    display: flex;
+    gap: 0.25rem;
+    padding: 0.45rem;
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--surface) 96%, transparent);
+    box-shadow: var(--shadow-sm);
+    scrollbar-width: none;
+    backdrop-filter: blur(14px);
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    button {
+      min-height: 36px;
+      padding: 0.45rem 0.75rem;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      white-space: nowrap;
+      cursor: pointer;
+
+      &:hover,
+      &.is-active {
+        background: var(--primary-soft);
+        color: var(--color-primary-dark);
+      }
+    }
+  }
+
+  &__overview-anchor {
+    min-width: 0;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    scroll-margin-top: calc(var(--td-header-offset) + 104px);
+  }
+
+  &__section-anchor {
+    min-width: 0;
+    scroll-margin-top: calc(var(--td-header-offset) + 104px);
   }
 
   /* ─── Breadcrumbs ─── */
@@ -28,10 +86,11 @@
     display: flex;
     align-items: center;
     gap: 0.45rem;
-    min-height: 52px;
-    padding-block: 0.7rem;
-    margin-inline: calc(-1 * clamp(1rem, 2.4vw, 2rem));
-    padding-inline: clamp(1rem, 2.4vw, 2rem);
+    min-height: 44px;
+    width: calc(100% + (2 * var(--td-page-gutter)));
+    padding-block: 0.45rem;
+    margin-inline: calc(-1 * var(--td-page-gutter));
+    padding-inline: var(--td-page-gutter);
     color: var(--muted);
     font-size: 0.82rem;
     background: var(--surface-glass-strong);
@@ -81,6 +140,24 @@
     .gallery__stage {
       max-height: 520px;
     }
+
+    .gallery {
+      gap: 0.4rem;
+    }
+
+    .gallery__thumbs {
+      gap: 0.35rem;
+    }
+
+    .gallery__thumb {
+      aspect-ratio: 16 / 9;
+
+      &.is-active {
+        border-width: 3px;
+        box-shadow: 0 0 0 2px var(--primary-soft);
+        transform: none;
+      }
+    }
   }
 
   /* ─── Tour Overview (overlay on gallery) ─── */
@@ -96,6 +173,7 @@
   }
 
   &__hero-copy {
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 0.6rem;
@@ -106,6 +184,7 @@
       font-size: clamp(1.6rem, 2.8vw, 2.4rem);
       line-height: 1.15;
       letter-spacing: -0.01em;
+      overflow-wrap: anywhere;
     }
   }
 
@@ -123,6 +202,7 @@
     font-size: 0.9rem;
     color: var(--subtitle);
     line-height: 1.7;
+    overflow-wrap: anywhere;
   }
 
   &__hero-facts {
@@ -593,6 +673,17 @@
     }
   }
 
+  &__departure-list {
+    display: grid;
+    gap: 0.2rem;
+
+    > span {
+      color: var(--text);
+      font-size: 0.82rem;
+      font-weight: $font-semibold;
+    }
+  }
+
   /* ─── Layout ─── */
   &__layout {
     display: grid;
@@ -718,6 +809,37 @@
     gap: 1rem;
   }
 
+  &__reviews-empty {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 1rem;
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    background: var(--surface-inset);
+
+    > span {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      background: var(--primary-soft);
+      color: var(--color-primary);
+    }
+
+    strong {
+      color: var(--title);
+    }
+
+    p {
+      margin: 0.2rem 0 0;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+  }
+
   /* ────────────────────────────────────────────────
    Review Card
 ──────────────────────────────────────────────── */
@@ -729,7 +851,6 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 18px;
-    transition: all 0.25s ease;
 
     &::before {
       content: "";
@@ -737,12 +858,6 @@
       inset: 0;
       background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.04), transparent 65%);
       pointer-events: none;
-    }
-
-    &:hover {
-      transform: translateY(-3px);
-      border-color: color-mix(in srgb, var(--color-primary) 25%, var(--border));
-      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
     }
 
     &-header {
@@ -912,6 +1027,27 @@
     }
   }
 
+  &__empty-actions,
+  &__widget-error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  &__widget-error {
+    min-height: 96px;
+    padding: 1rem;
+    border: 1px solid color-mix(in srgb, var(--color-danger, #dc2626) 22%, var(--border));
+    border-radius: var(--td-radius);
+    background: var(--surface);
+
+    p {
+      margin: 0;
+    }
+  }
+
   &__muted {
     font-size: 0.85rem;
     color: var(--muted);
@@ -966,28 +1102,34 @@
 @media (max-width: 720px) {
   .tour-detail {
     // The mobile app header has two rows (brand/actions + search).
-    --td-header-offset: 120px;
+    --td-header-offset: 108px;
+    --td-page-gutter: 0.75rem;
+    min-height: 0;
     padding-inline: 0.75rem;
-    padding-bottom: calc(
-      var(--trem-floating-action-clearance, 74px) +
-        var(--dash-mobile-action-panel-space, 0px) +
-        env(safe-area-inset-bottom, 0px) +
-        1rem
-    );
+    padding-bottom: var(--trem-floating-action-clearance, 74px);
 
     &__shell {
       gap: 0.75rem;
-      padding-bottom: calc(
-        var(--trem-floating-action-clearance, 74px) +
-          var(--dash-mobile-action-panel-space, 0px) +
-          0.75rem
-      );
+    }
+
+    &__section-nav {
+      top: calc(var(--td-header-offset) + 40px);
+      width: calc(100% + (2 * var(--td-page-gutter)));
+      margin-inline: calc(-1 * var(--td-page-gutter));
+      border-inline: 0;
+      border-radius: 0;
+      scrollbar-width: thin;
+
+      &::-webkit-scrollbar {
+        display: block;
+        height: 3px;
+      }
     }
 
     &__breadcrumbs {
       display: flex;
       min-width: 0;
-      min-height: 44px;
+      min-height: 40px;
       margin-inline: -0.75rem;
       padding: 0.5rem 0.75rem;
       white-space: nowrap;
@@ -1027,13 +1169,12 @@
     }
 
     /* Itinerary timeline mobile styles are in ItineraryTimeline.styles.scss */
-
   }
 }
 
 @media (max-width: 460px) {
   .tour-detail {
-    --td-header-offset: 120px;
+    --td-header-offset: 108px;
     --td-radius: 10px;
 
     &__facts-bar {
@@ -1043,6 +1184,5 @@
     &__highlight-grid {
       grid-template-columns: 1fr;
     }
-
   }
 }

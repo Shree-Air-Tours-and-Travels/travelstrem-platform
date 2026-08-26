@@ -1,18 +1,27 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Button,
   EmptyState,
   InputField,
-  MessageBubble,
   SingleSelect,
+  Spinner,
+  StatusBadge,
+  SupportComposer,
+  SupportConversation,
   SupportTicketCard,
   TextArea,
 } from "@packages/trem-ui";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { SUPPORT_ANALYTICS_EVENT } from "@packages/trem-support-contracts";
+import {
+  REALTIME_EVENTS,
+  useRealtimeEvent,
+  useRealtimeStatus,
+  useSupportRealtime,
+} from "@packages/trem-events";
 import { supportApi } from "./support.api";
 import { useSupportResource } from "./support.hooks";
-import { ResourceBoundary, SupportLayout, SupportSection } from "./SupportLayout";
+import { ResourceBoundary, SupportLayout } from "./SupportLayout";
 import { formatDateTime, trackSupport } from "./support.utils";
 
 export function NewSupportRequestPage() {
@@ -21,7 +30,6 @@ export function NewSupportRequestPage() {
   const [categoryId, setCategoryId] = useState(params.get("category") || "");
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
-  const [reviewing, setReviewing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [created, setCreated] = useState(null);
@@ -34,6 +42,7 @@ export function NewSupportRequestPage() {
       })),
     [categories.data],
   );
+  const ui = categories.data?.ui || {};
 
   const submit = async () => {
     setSubmitting(true);
@@ -59,96 +68,63 @@ export function NewSupportRequestPage() {
 
   if (created)
     return (
-      <SupportLayout
-        title="Request received"
-        subtitle="The support team will respond in your request history."
-      >
+      <SupportLayout title={ui.successTitle} subtitle={ui.successSubtitle}>
         <div className="support-confirmation">
           <span className="support-confirmation__icon">✓</span>
           <h2>{created.reference}</h2>
-          <p>Your support request has been created.</p>
-          <Button text="View request" onClick={() => navigate(`/help/requests/${created.id}`)} />
-          <Button variant="text" text="Back to Help & Support" onClick={() => navigate("/help")} />
+          <p>{ui.successMessage}</p>
+          <Button
+            text={ui.viewRequestLabel}
+            onClick={() => navigate(`/help/requests/${created.id}`)}
+          />
+          <Button variant="text" text={ui.backLabel} onClick={() => navigate("/help")} />
         </div>
       </SupportLayout>
     );
 
   return (
-    <SupportLayout
-      title="Create support request"
-      subtitle={
-        reviewing ? "Review the details before submitting." : "Tell us what you need help with."
-      }
-    >
+    <SupportLayout title={ui.title} subtitle={ui.subtitle}>
       <ResourceBoundary {...categories}>
         <form
           className="support-form"
           onSubmit={(event) => {
             event.preventDefault();
-            reviewing ? submit() : setReviewing(true);
+            submit();
           }}
         >
-          {!reviewing ? (
-            <>
-              <SingleSelect
-                label="Issue category"
-                placeholder="Choose a category"
-                value={categoryId}
-                onChange={setCategoryId}
-                options={categoryOptions}
-                required
-              />
-              <InputField
-                label="Subject"
-                value={subject}
-                onChange={setSubject}
-                maxLength={180}
-                required
-                placeholder="Briefly describe the issue"
-              />
-              <TextArea
-                label="Description"
-                value={description}
-                onChange={setDescription}
-                maxLength={5000}
-                required
-                placeholder="Include the details the support team needs to help."
-              />
-            </>
-          ) : (
-            <div className="support-review">
-              <div>
-                <span>Category</span>
-                <strong>{categoryOptions.find((item) => item.value === categoryId)?.label}</strong>
-              </div>
-              <div>
-                <span>Subject</span>
-                <strong>{subject}</strong>
-              </div>
-              <div>
-                <span>Description</span>
-                <p>{description}</p>
-              </div>
-            </div>
-          )}
+          <SingleSelect
+            label={ui.categoryLabel}
+            placeholder={ui.categoryPlaceholder}
+            value={categoryId}
+            onChange={setCategoryId}
+            options={categoryOptions}
+            required
+          />
+          <InputField
+            label={ui.subjectLabel}
+            value={subject}
+            onChange={setSubject}
+            maxLength={180}
+            required
+            placeholder={ui.subjectPlaceholder}
+          />
+          <TextArea
+            label={ui.descriptionLabel}
+            value={description}
+            onChange={setDescription}
+            maxLength={5000}
+            required
+            placeholder={ui.descriptionPlaceholder}
+          />
           {error ? (
             <p className="support-form__error" role="alert">
               {error}
             </p>
           ) : null}
           <div className="support-form__actions">
-            {reviewing ? (
-              <Button
-                type="button"
-                variant="outline"
-                text="Edit"
-                onClick={() => setReviewing(false)}
-                disabled={submitting}
-              />
-            ) : null}
             <Button
               type="submit"
-              text={reviewing ? (submitting ? "Submitting…" : "Submit request") : "Review request"}
+              text={submitting ? ui.submittingLabel : ui.submitLabel}
               disabled={!categoryId || !subject.trim() || !description.trim() || submitting}
             />
           </div>
@@ -163,59 +139,94 @@ export function SupportRequestsPage() {
   const [status, setStatus] = useState("");
   const resource = useSupportResource((signal) => supportApi.tickets(status, signal), [status]);
   const statuses = resource.data?.statuses || [];
+  const ui = resource.data?.ui || {};
   const labelByStatus = Object.fromEntries(statuses.map((item) => [item.id, item.label]));
+  useRealtimeEvent(REALTIME_EVENTS.SUPPORT_CONVERSATION_UPDATED, (envelope) => {
+    const update = envelope?.data;
+    const ticketId = String(update?.ticketId || update?.id || "");
+    if (!ticketId) return;
+    resource.updateData((current) => {
+      if (!current) return current;
+      const tickets = (current.tickets || [])
+        .map((ticket) =>
+          String(ticket.id || ticket._id) === ticketId
+            ? { ...ticket, ...update, id: ticketId }
+            : ticket,
+        )
+        .filter((ticket) => !status || ticket.status === status)
+        .sort((left, right) => new Date(right.lastActivityAt) - new Date(left.lastActivityAt));
+      return { ...current, tickets };
+    });
+  });
   return (
     <SupportLayout
-      title="My Support Requests"
-      subtitle="Track requests and replies from the support team."
+      title={ui.title || "My Support Requests"}
+      subtitle={ui.subtitle || "Track requests and replies from the support team."}
       actions={
-        <Button
-          text="New request"
-          onClick={() => {
-            trackSupport(SUPPORT_ANALYTICS_EVENT.TICKET_STARTED);
-            navigate("/help/new-request");
-          }}
-        />
+        ui.newRequestLabel ? (
+          <Button
+            text={ui.newRequestLabel}
+            onClick={() => {
+              trackSupport(SUPPORT_ANALYTICS_EVENT.TICKET_STARTED);
+              navigate("/help/new-request");
+            }}
+          />
+        ) : null
       }
     >
-      <ResourceBoundary {...resource}>
-        <div className="support-filter-row">
-          <button
-            type="button"
-            className={!status ? "is-active" : ""}
+      {statuses.length ? (
+        <div className="support-filter-row" aria-label="Filter support requests by status">
+          <Button
+            size="small"
+            variant={!status ? "solid" : "outline"}
+            text={ui.allLabel || "All"}
             onClick={() => setStatus("")}
-          >
-            All
-          </button>
+            aria-pressed={!status}
+          />
           {statuses.map((item) => (
-            <button
-              type="button"
+            <Button
+              size="small"
+              variant={status === item.id ? "solid" : "outline"}
               key={item.id}
-              className={status === item.id ? "is-active" : ""}
+              text={item.label.replaceAll("_", " ")}
               onClick={() => setStatus(item.id)}
-            >
-              {item.label.replaceAll("_", " ")}
-            </button>
+              aria-pressed={status === item.id}
+            />
           ))}
         </div>
-        {resource.data?.tickets?.length ? (
-          <div className="support-list">
-            {resource.data.tickets.map((ticket) => (
-              <SupportTicketCard
-                key={ticket.id}
-                ticket={{
-                  ...ticket,
-                  status: { id: ticket.status, label: labelByStatus[ticket.status] },
-                  updatedLabel: `Updated ${formatDateTime(ticket.lastActivityAt)}`,
-                }}
-                onSelect={() => navigate(`/help/requests/${ticket.id}`)}
-              />
-            ))}
-          </div>
-        ) : (
-          <EmptyState {...resource.data?.emptyState} />
-        )}
-      </ResourceBoundary>
+      ) : null}
+      {resource.loading && resource.data ? (
+        <div className="support-results-loading">
+          <Spinner label="Loading requests" />
+        </div>
+      ) : (
+        <ResourceBoundary {...resource}>
+          {resource.data?.tickets?.length ? (
+            <div className="support-list">
+              {resource.data.tickets.map((ticket) => (
+                <SupportTicketCard
+                  key={ticket.id}
+                  ticket={{
+                    ...ticket,
+                    status: { id: ticket.status, label: labelByStatus[ticket.status] },
+                    updatedLabel: `${ui.updatedPrefix} ${formatDateTime(ticket.lastActivityAt)}`,
+                  }}
+                  onSelect={() => navigate(`/help/requests/${ticket.id}`)}
+                />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              {...resource.data?.emptyState}
+              action={
+                ui.newRequestLabel ? (
+                  <Button text={ui.newRequestLabel} onClick={() => navigate("/help/new-request")} />
+                ) : null
+              }
+            />
+          )}
+        </ResourceBoundary>
+      )}
     </SupportLayout>
   );
 }
@@ -224,81 +235,150 @@ export function SupportTicketDetailPage() {
   const { ticketId } = useParams();
   const resource = useSupportResource((signal) => supportApi.ticket(ticketId, signal), [ticketId]);
   const [content, setContent] = useState("");
-  const [sending, setSending] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  const [history, setHistory] = useState({ messages: [], pagination: null });
+  const [liveMessages, setLiveMessages] = useState([]);
+  const [liveTicket, setLiveTicket] = useState(null);
   const [error, setError] = useState("");
-  const send = async (event) => {
-    event.preventDefault();
-    setSending(true);
+  const { isConnected } = useRealtimeStatus();
+  useEffect(() => {
+    setHistory({ messages: [], pagination: null });
+    setLiveMessages([]);
+    setLiveTicket(null);
+  }, [ticketId]);
+  const messages = useMemo(() => {
+    const byId = new Map();
+    [...history.messages, ...(resource.data?.messages || []), ...liveMessages].forEach(
+      (message) => {
+        const key = String(
+          message.clientMessageId || message.id || message._id || message.messageId,
+        );
+        byId.set(key, message);
+      },
+    );
+    return [...byId.values()].sort(
+      (left, right) => new Date(left.createdAt) - new Date(right.createdAt),
+    );
+  }, [history.messages, liveMessages, resource.data?.messages]);
+  const messagePagination = history.pagination || resource.data?.messagePagination || {};
+  const loadOlder = async () => {
+    if (!messagePagination.nextBefore || loadingOlder) return;
+    setLoadingOlder(true);
     setError("");
     try {
-      await supportApi.reply(ticketId, content);
-      setContent("");
-      resource.reload();
+      const data = await supportApi.ticket(ticketId, undefined, messagePagination.nextBefore);
+      setHistory((current) => ({
+        messages: [...(data.messages || []), ...current.messages],
+        pagination: data.messagePagination || null,
+      }));
     } catch (failure) {
       setError(failure.message);
     } finally {
-      setSending(false);
+      setLoadingOlder(false);
     }
   };
-  const ticket = resource.data?.ticket;
+  const send = async (event) => {
+    event.preventDefault();
+    const nextContent = content.trim();
+    if (!nextContent) return;
+    const clientMessageId =
+      globalThis.crypto?.randomUUID?.() || `support-${Date.now()}-${Math.random()}`;
+    const optimisticMessage = {
+      id: clientMessageId,
+      clientMessageId,
+      senderType: "customer",
+      senderName: "You",
+      content: nextContent,
+      createdAt: new Date().toISOString(),
+    };
+    setContent("");
+    setPendingCount((count) => count + 1);
+    setLiveMessages((current) => [...current, optimisticMessage]);
+    setError("");
+    try {
+      const data = await supportApi.reply(ticketId, nextContent, clientMessageId);
+      setLiveMessages((current) => [...current, data.message].filter(Boolean));
+      setLiveTicket(data.ticket || null);
+    } catch (failure) {
+      setLiveMessages((current) =>
+        current.filter((message) => message.clientMessageId !== clientMessageId),
+      );
+      setContent((current) => current || nextContent);
+      setError(failure.message);
+    } finally {
+      setPendingCount((count) => Math.max(0, count - 1));
+    }
+  };
+  const ticket = resource.data?.ticket
+    ? { ...resource.data.ticket, ...(liveTicket || {}) }
+    : resource.data?.ticket;
+  const ui = resource.data?.ui || {};
+  useSupportRealtime(ticketId);
+  useRealtimeEvent(REALTIME_EVENTS.SUPPORT_MESSAGE_CREATED, (envelope) => {
+    const message = envelope?.data;
+    if (String(message?.ticketId || "") !== String(ticketId || "")) return;
+    setLiveMessages((current) => [...current, message]);
+  });
+  useRealtimeEvent(REALTIME_EVENTS.SUPPORT_CONVERSATION_UPDATED, (envelope) => {
+    const nextTicket = envelope?.data;
+    if (String(nextTicket?.ticketId || "") !== String(ticketId || "")) return;
+    setLiveTicket((current) => ({ ...(current || {}), ...nextTicket }));
+  });
+  const canReply = !["RESOLVED", "CLOSED"].includes(ticket?.status);
   return (
-    <SupportLayout title={ticket?.subject || "Support request"} subtitle={ticket?.reference}>
+    <SupportLayout
+      title={ticket?.subject || ui.fallbackTitle}
+      subtitle={ticket?.reference}
+      className="support-page--ticket"
+    >
       <ResourceBoundary {...resource}>
         {ticket ? (
-          <>
+          <div className="support-ticket-detail">
             <div className="support-ticket-summary">
               <div>
-                <span>Status</span>
-                <strong>{resource.data?.status?.label}</strong>
+                <span>{ui.statusLabel}</span>
+                <StatusBadge value={String(ticket.status || "").replaceAll("_", " ")} size="sm" />
               </div>
               <div>
-                <span>Category</span>
+                <span>{ui.categoryLabel}</span>
                 <strong>{resource.data?.category?.label}</strong>
               </div>
               <div>
-                <span>Created</span>
+                <span>{ui.createdLabel}</span>
                 <strong>{formatDateTime(ticket.createdAt)}</strong>
               </div>
             </div>
-            <SupportSection title="Conversation">
-              <div className="support-conversation">
-                {(resource.data?.messages || []).map((message) => (
-                  <MessageBubble
-                    key={message.id}
-                    content={message.content}
-                    senderName={message.senderName}
-                    senderType={message.senderType}
-                    timestamp={message.createdAt}
-                    isOwn={message.senderType === "customer"}
-                  />
-                ))}
-              </div>
-            </SupportSection>
-            {resource.data?.canReply ? (
-              <form className="support-composer" onSubmit={send}>
-                <TextArea
-                  label="Reply"
+            <SupportConversation
+              title={ui.conversationTitle}
+              className="support-ticket-detail__conversation"
+              messages={messages}
+              ownSenderType="customer"
+              hasMore={Boolean(messagePagination.hasMore)}
+              loadingOlder={loadingOlder}
+              onLoadOlder={loadOlder}
+              live={isConnected}
+              composer={
+                <SupportComposer
                   value={content}
                   onChange={setContent}
-                  maxLength={5000}
-                  rows={3}
-                  placeholder="Write a reply"
+                  onSubmit={send}
+                  pendingCount={pendingCount}
+                  disabled={!canReply}
+                  label={ui.replyLabel}
+                  placeholder={ui.replyPlaceholder}
+                  sendLabel={ui.sendLabel}
+                  sendingLabel={ui.sendingLabel}
+                  closedMessage={ui.closedMessage}
                 />
-                {error ? (
-                  <p className="support-form__error" role="alert">
-                    {error}
-                  </p>
-                ) : null}
-                <Button
-                  type="submit"
-                  text={sending ? "Sending…" : "Send reply"}
-                  disabled={!content.trim() || sending}
-                />
-              </form>
-            ) : (
-              <p className="support-closed-note">This request no longer accepts replies.</p>
-            )}
-          </>
+              }
+            />
+            {error ? (
+              <p className="support-form__error" role="alert">
+                {error}
+              </p>
+            ) : null}
+          </div>
         ) : null}
       </ResourceBoundary>
     </SupportLayout>

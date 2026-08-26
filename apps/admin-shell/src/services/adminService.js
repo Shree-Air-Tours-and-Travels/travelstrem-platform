@@ -126,6 +126,11 @@ export async function removeAdmin(id) {
   return res?.data?.data;
 }
 
+export async function updateAdminInternalTeam(id, team, enabled) {
+  const res = await api.patch(`/auth/admins/${id}/internal-team`, { team, enabled });
+  return res?.data?.data;
+}
+
 export async function uploadTourImage(file) {
   const fd = new FormData();
   fd.append("image", file);

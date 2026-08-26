@@ -35,10 +35,13 @@ export default function ReviewsSectionView({
         </div>
 
         <div className="tour-detail__section-body">
-          <Paragraph
-            primaryClassname="tour-detail__muted"
-            text={labels.noReviewsYet || "No guest reviews yet."}
-          />
+          <div className="tour-detail__reviews-empty" role="status">
+            <span><Icon name="star" size={24} /></span>
+            <div>
+              <strong>{labels.noReviewsYet || "No guest reviews yet"}</strong>
+              <Paragraph text={labels.noReviewsMessage || "Reviews will appear after completed trips."} />
+            </div>
+          </div>
         </div>
       </section>
     );

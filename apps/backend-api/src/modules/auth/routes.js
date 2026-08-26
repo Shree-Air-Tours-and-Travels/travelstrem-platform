@@ -63,6 +63,7 @@ router.post("/agents/:id/review", authMiddleware, controller.reviewAgent);
 router.get("/admins", authMiddleware, controller.listAdmins);
 router.post("/admins/:id/review", authMiddleware, controller.reviewAdmin);
 router.post("/admins/:id/remove", authMiddleware, controller.removeAdmin);
+router.patch("/admins/:id/internal-team", authMiddleware, controller.updateAdminInternalTeam);
 
 /*
   Password reset flow

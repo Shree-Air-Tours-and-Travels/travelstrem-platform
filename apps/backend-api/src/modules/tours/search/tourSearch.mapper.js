@@ -59,6 +59,44 @@ const mapFacetOptions = (items = []) =>
         })
         .filter((item) => item.id && item.name);
 
+const toMinor = (value) => {
+    const amount = Number(value);
+    return Number.isFinite(amount) ? Math.round(amount * 100) : null;
+};
+
+const mapPublicPricing = (pricing = {}) => ({
+    currency: String(pricing.currency || "INR"),
+    minMinor: toMinor(pricing.min),
+    maxMinor: toMinor(pricing.max),
+    moneyUnit: "PAISE",
+    isFinal: Boolean(pricing.isFinal),
+});
+
+const PACKAGE_DISPLAY_NAMES = Object.freeze({
+    BASIC: "Standard",
+    STANDARD: "Premium",
+    PREMIUM: "Advance",
+});
+
+const mapPackagePrices = (items = []) =>
+    items
+        .map((item) => ({
+            packageKey: displayText(item.packageKey),
+            tier: displayText(item.tier).toUpperCase(),
+            name:
+                PACKAGE_DISPLAY_NAMES[displayText(item.tier).toUpperCase()] ||
+                displayText(item.name, "Package"),
+            sellingTotalMinor: Number(item.sellingTotalMinor || 0),
+            currency: String(item.currency || "INR"),
+            moneyUnit: "PAISE",
+        }))
+        .filter((item) => item.packageKey && item.sellingTotalMinor > 0)
+        .sort(
+            (left, right) =>
+                ["Standard", "Premium", "Advance"].indexOf(left.name) -
+                ["Standard", "Premium", "Advance"].indexOf(right.name),
+        );
+
 export const mapTourSearchCard = (item = {}) => {
     const route = item.route || {};
     const location = item.location || {};
@@ -87,7 +125,15 @@ export const mapTourSearchCard = (item = {}) => {
             departureCount: 0,
             nextDepartureDate: null,
         },
-        pricing: item.pricing || { currency: "INR", min: null, max: null, isFinal: false },
+        departures: (item.departures || []).map((departure) => ({
+            id: displayText(departure.id),
+            departureDate: departure.departureDate || null,
+            returnDate: departure.returnDate || null,
+            status: displayText(departure.status, "active"),
+            availableSeats: departure.availableSeats ?? null,
+        })),
+        pricing: mapPublicPricing(item.pricing),
+        packagePrices: mapPackagePrices(item.packagePrices),
         rating: item.rating || { average: 0, count: 0 },
         featured: Boolean(item.featured),
         trending: Boolean(item.trending),
@@ -121,8 +167,13 @@ export const mapTourSearchResult = (aggregation = {}, search) => {
         },
         facets: {
             price: aggregation.price?.[0]
-                ? { min: aggregation.price[0].min ?? 0, max: aggregation.price[0].max ?? 0 }
-                : { min: 0, max: 0 },
+                ? {
+                      minMinor: toMinor(aggregation.price[0].min) ?? 0,
+                      maxMinor: toMinor(aggregation.price[0].max) ?? 0,
+                      currency: "INR",
+                      moneyUnit: "PAISE",
+                  }
+                : { minMinor: 0, maxMinor: 0, currency: "INR", moneyUnit: "PAISE" },
             duration: aggregation.duration?.[0]
                 ? {
                       minDays: aggregation.duration[0].minDays ?? 0,

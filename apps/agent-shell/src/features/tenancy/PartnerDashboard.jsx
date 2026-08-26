@@ -2,7 +2,9 @@ import React, { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Icon, MetricSummary, NoDataFound, Pagination, StatusBadge } from "@packages/trem-ui";
 import {
+  REALTIME_EVENTS,
   useEnquiryRealtime,
+  useRealtimeEvent,
   useRealtimeStatus,
   useTourCatalogRealtime,
 } from "@packages/trem-events";
@@ -46,6 +48,7 @@ export default function PartnerDashboard({
   const refreshFromRealtime = useCallback(() => onRefresh?.({ preserveData: true }), [onRefresh]);
   useEnquiryRealtime(refreshFromRealtime);
   useTourCatalogRealtime(refreshFromRealtime);
+  useRealtimeEvent(REALTIME_EVENTS.SUPPORT_CONVERSATION_UPDATED, refreshFromRealtime);
 
   if (loading && !data) return <DashboardSkeleton />;
   if (error && !data) {

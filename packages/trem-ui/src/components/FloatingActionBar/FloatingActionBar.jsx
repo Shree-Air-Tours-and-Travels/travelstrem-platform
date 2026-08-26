@@ -179,10 +179,17 @@ const FloatingActionBar = React.memo(function FloatingActionBar({
     const observer =
       typeof ResizeObserver === "function" ? new ResizeObserver(syncClearance) : null;
     observer?.observe(panel);
+    const layout = panel.closest(".dash-layout");
+    const layoutObserver =
+      layout && typeof MutationObserver === "function"
+        ? new MutationObserver(syncClearance)
+        : null;
+    layoutObserver?.observe(layout, { attributes: true, attributeFilter: ["class", "style"] });
     window.addEventListener("resize", syncClearance);
 
     return () => {
       observer?.disconnect();
+      layoutObserver?.disconnect();
       window.removeEventListener("resize", syncClearance);
       root.style.removeProperty("--trem-floating-action-clearance");
     };

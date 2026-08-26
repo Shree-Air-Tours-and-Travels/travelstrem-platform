@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { fetchData } from "@packages/trem-utils";
-import { showRealtimeToast } from "@packages/trem-events";
+import { REALTIME_EVENTS, showRealtimeToast, useRealtimeEvent } from "@packages/trem-events";
 import {
   deleteAllTours,
   deleteTour,
@@ -16,6 +16,7 @@ import {
   fetchPartnerAgencies,
   removeAdmin,
   reviewAdmin,
+  updateAdminInternalTeam,
   reviewAgent,
   reviewPartnerAgency,
 } from "../../services/adminService";
@@ -25,6 +26,8 @@ import ManageToursView from "./ManageTours.view";
 const VALID_TABS = new Set([
   "overview",
   "enquiries",
+  "support",
+  "internalTeam",
   "services",
   "tenancy",
   "clients",
@@ -144,6 +147,10 @@ export default function ManageTours({ session }) {
     }
   }
 
+  useRealtimeEvent(REALTIME_EVENTS.ADMIN_SUPPORT_REQUEST_CREATED, () => {
+    if (tab === "overview") loadDashboard();
+  });
+
   useEffect(() => {
     const nextTab = getTabFromSearch(location.search);
     const params = new URLSearchParams(location.search);
@@ -199,7 +206,7 @@ export default function ManageTours({ session }) {
     setAgencyLoading(true);
     try {
       const [nextAgents, nextAgencies] = await Promise.all([fetchAgents(), fetchPartnerAgencies()]);
-      const nextAdmins = auth.user?.adminLevel === "master" ? await fetchAdmins() : [];
+      const nextAdmins = await fetchAdmins();
       setAdmins(nextAdmins);
       setAgents(nextAgents);
       setPartnerAgencies(nextAgencies);
@@ -247,6 +254,19 @@ export default function ManageTours({ session }) {
       await fetchAgencyManagement();
     } catch (e) {
       showToast(e.message || "Admin removal failed", "error");
+    }
+  }
+
+  async function handleUpdateAdminInternalTeam(id, team, enabled) {
+    try {
+      await updateAdminInternalTeam(id, team, enabled);
+      showToast(
+        enabled ? "Admin added to support team" : "Admin removed from support team",
+        "success",
+      );
+      await fetchAgencyManagement();
+    } catch (e) {
+      showToast(e.message || "Internal team update failed", "error");
     }
   }
 
@@ -377,7 +397,8 @@ export default function ManageTours({ session }) {
         }
         return { success: false, message: res?.message || "Password update failed" };
       } catch (error) {
-        const message = error?.response?.data?.message || error?.message || "Password update failed";
+        const message =
+          error?.response?.data?.message || error?.message || "Password update failed";
         showToast(message, "error");
         return { success: false, message };
       } finally {
@@ -465,6 +486,7 @@ export default function ManageTours({ session }) {
       fetchAgencyManagement={fetchAgencyManagement}
       handleReviewAdmin={handleReviewAdmin}
       handleRemoveAdmin={handleRemoveAdmin}
+      handleUpdateAdminInternalTeam={handleUpdateAdminInternalTeam}
       handleReviewAgent={handleReviewAgent}
       handleReviewPartnerAgency={handleReviewPartnerAgency}
       handleSaveProfile={handleSaveProfile}
