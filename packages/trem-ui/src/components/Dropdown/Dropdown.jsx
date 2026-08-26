@@ -1,49 +1,117 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+
 import { createPortal } from "react-dom";
+
 import Button from "../Button/Button.jsx";
 import Icon from "../../icons/Icon/Icon.jsx";
 import BottomSheet from "../BottomSheet/BottomSheet.jsx";
+
 import "./Dropdown.styles.scss";
 
 const MENU_GAP = 8;
 const VIEWPORT_MARGIN = 12;
 const MOBILE_BREAKPOINT = 768;
+
 const DEFAULT_MENU_WIDTH = 260;
 const JOURNEY_MENU_WIDTH = 440;
 
-function isMobile() {
+const MIN_MENU_HEIGHT = 120;
+const MAX_MENU_HEIGHT = 440;
+
+/* ========================================================================== */
+/* Utilities                                                                  */
+/* ========================================================================== */
+
+function getIsMobile() {
   return typeof window !== "undefined" && window.innerWidth <= MOBILE_BREAKPOINT;
 }
 
-function calcPosition(triggerEl, menuWidth, preferBelow = true) {
-  if (!triggerEl) return { top: 0, left: 0, maxHeight: 320, placement: "bottom" };
-  const rect = triggerEl.getBoundingClientRect();
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  const spaceBelow = vh - rect.bottom - VIEWPORT_MARGIN;
-  const spaceAbove = rect.top - VIEWPORT_MARGIN;
-  const preferBottom = preferBelow && spaceBelow >= 160;
-  const preferTop = !preferBelow || spaceBelow < 160;
-  let top, maxHeight, placement;
-  if (preferTop && spaceAbove >= 160) {
-    placement = "top";
-    top = rect.top - MENU_GAP;
-    maxHeight = Math.min(spaceAbove - MENU_GAP, 440);
-  } else {
-    placement = "bottom";
-    top = rect.bottom + MENU_GAP;
-    maxHeight = Math.min(spaceBelow - MENU_GAP, 440);
-  }
-  maxHeight = Math.max(maxHeight, 120);
-  let left = rect.left;
-  if (left + menuWidth > vw - VIEWPORT_MARGIN) {
-    left = vw - menuWidth - VIEWPORT_MARGIN;
-  }
-  if (left < VIEWPORT_MARGIN) {
-    left = VIEWPORT_MARGIN;
-  }
-  return { top, left, maxHeight, placement };
+function useMobileLayout() {
+  const [mobile, setMobile] = useState(getIsMobile);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    const update = () => {
+      setMobile(window.innerWidth <= MOBILE_BREAKPOINT);
+    };
+
+    update();
+
+    window.addEventListener("resize", update, {
+      passive: true,
+    });
+
+    return () => {
+      window.removeEventListener("resize", update);
+    };
+  }, []);
+
+  return mobile;
 }
+
+function toNumericWidth(value) {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : null;
+  }
+
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const parsed = Number.parseInt(value, 10);
+
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function resolveMenuPosition(
+  triggerElement,
+  menuWidth,
+  { preferBelow = true, align = "left" } = {},
+) {
+  if (!triggerElement || typeof window === "undefined") {
+    return {
+      top: 0,
+      left: 0,
+      maxHeight: 320,
+      placement: "bottom",
+    };
+  }
+
+  const rect = triggerElement.getBoundingClientRect();
+
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+
+  const spaceBelow = viewportHeight - rect.bottom - VIEWPORT_MARGIN;
+
+  const spaceAbove = rect.top - VIEWPORT_MARGIN;
+
+  const shouldUseTop = (!preferBelow || spaceBelow < 160) && spaceAbove >= 160;
+
+  const placement = shouldUseTop ? "top" : "bottom";
+
+  const top = placement === "top" ? rect.top - MENU_GAP : rect.bottom + MENU_GAP;
+
+  const availableHeight = placement === "top" ? spaceAbove - MENU_GAP : spaceBelow - MENU_GAP;
+
+  const maxHeight = Math.max(MIN_MENU_HEIGHT, Math.min(availableHeight, MAX_MENU_HEIGHT));
+
+  let left = align === "right" ? rect.right - menuWidth : rect.left;
+
+  left = Math.max(VIEWPORT_MARGIN, Math.min(left, viewportWidth - menuWidth - VIEWPORT_MARGIN));
+
+  return {
+    top,
+    left,
+    maxHeight,
+    placement,
+  };
+}
+
+/* ========================================================================== */
+/* Component                                                                  */
+/* ========================================================================== */
 
 export default function Dropdown({
   trigger,
@@ -60,6 +128,7 @@ export default function Dropdown({
   maxHeight: propMaxHeight,
   width: propWidth,
   portalWidth,
+  matchTriggerWidth = false,
   searchPlaceholder = "Search...",
   position = "auto",
   label,
@@ -76,186 +145,375 @@ export default function Dropdown({
   open: controlledOpen,
   onOpenChange,
 }) {
+  const menuId = useId();
+
   const [internalOpen, setInternalOpen] = useState(false);
+
   const [menuStyle, setMenuStyle] = useState({});
+
   const [search, setSearch] = useState("");
+
   const wrapperRef = useRef(null);
   const menuWrapperRef = useRef(null);
   const searchRef = useRef(null);
 
+  const mobile = useMobileLayout();
+
+  /* ------------------------------------------------------------------------ */
+  /* Variant state                                                            */
+  /* ------------------------------------------------------------------------ */
+
   const isSelect = variant === "select";
+
   const isJourneyMenu = variant === "journey-menu";
+
   const open = controlledOpen ?? internalOpen;
+
   const useBuiltInTrigger = isSelect || !trigger;
+
   const isAutoWidth = propWidth === "auto";
+
   const fixedWidth = propWidth != null && !isAutoWidth;
+
   const autoSearch = items.length > 10;
+
   const isSearchable = variant === "searchable" || autoSearch;
+
   const isScrollable =
     isSelect || variant === "scrollable" || variant === "searchable" || autoSearch;
-  const showBottomSheet = isMobile() && open;
+
+  const showBottomSheet = mobile && open;
+
+  /* ------------------------------------------------------------------------ */
+  /* Open state                                                               */
+  /* ------------------------------------------------------------------------ */
 
   const changeOpen = useCallback(
     (next) => {
-      if (controlledOpen === undefined) setInternalOpen(next);
+      if (disabled && next) return;
+
+      if (controlledOpen === undefined) {
+        setInternalOpen(next);
+      }
+
       onOpenChange?.(next);
       onToggle?.(next);
     },
-    [controlledOpen, onOpenChange, onToggle],
+    [controlledOpen, disabled, onOpenChange, onToggle],
   );
 
+  /* ------------------------------------------------------------------------ */
+  /* Selected item                                                            */
+  /* ------------------------------------------------------------------------ */
+
   const selectedItem = useMemo(() => {
-    if (value === undefined || value === null || value === "") return null;
+    if (value === undefined || value === null || value === "") {
+      return null;
+    }
+
     const key = String(value);
+
     return (
-      items.find(
-        (item) => !item.separator && (String(item.value) === key || String(item.id) === key),
-      ) || null
+      items.find((item) => {
+        if (item?.separator) {
+          return false;
+        }
+
+        return String(item?.value) === key || String(item?.id) === key;
+      }) || null
     );
   }, [items, value]);
 
+  /* ------------------------------------------------------------------------ */
+  /* Menu width                                                               */
+  /* ------------------------------------------------------------------------ */
+
   const menuWidth = useMemo(() => {
-    const width = portalWidth ?? propWidth;
-    if (width == null || width === "auto") {
-      if (isJourneyMenu) return JOURNEY_MENU_WIDTH;
-      if (isSelect) return 0;
+    const configuredWidth = portalWidth ?? propWidth;
+
+    if (matchTriggerWidth) {
+      return 0;
+    }
+
+    if (configuredWidth == null || configuredWidth === "auto") {
+      if (isJourneyMenu) {
+        return JOURNEY_MENU_WIDTH;
+      }
+
+      if (isSelect) {
+        return 0;
+      }
+
       return DEFAULT_MENU_WIDTH;
     }
-    return typeof width === "number" ? width : parseInt(width, 10) || 240;
-  }, [isJourneyMenu, isSelect, portalWidth, propWidth]);
+
+    return toNumericWidth(configuredWidth) || DEFAULT_MENU_WIDTH;
+  }, [isJourneyMenu, isSelect, matchTriggerWidth, portalWidth, propWidth]);
+
+  /* ------------------------------------------------------------------------ */
+  /* Search                                                                   */
+  /* ------------------------------------------------------------------------ */
 
   const filteredItems = useMemo(() => {
-    const visibleItems = items.filter((item) => !item.hide);
-    if (!isSearchable || !search) return visibleItems;
-    const q = search.toLowerCase();
+    const visibleItems = (items || []).filter((item) => !item?.hide);
+
+    if (!isSearchable || !search.trim()) {
+      return visibleItems;
+    }
+
+    const query = search.trim().toLowerCase();
+
     return visibleItems.filter((item) => {
-      if (item.separator) return true;
-      return (
-        (item.label || "").toLowerCase().includes(q) ||
-        (item.searchText || "").toLowerCase().includes(q)
-      );
+      if (item?.separator) {
+        return true;
+      }
+
+      const itemLabel = String(item?.label ?? "").toLowerCase();
+
+      const searchText = String(item?.searchText ?? "").toLowerCase();
+
+      return itemLabel.includes(query) || searchText.includes(query);
     });
   }, [items, search, isSearchable]);
 
-  useEffect(() => {
-    if (!open) {
-      setSearch("");
-      return;
-    }
-    if (isSearchable && searchRef.current) {
-      setTimeout(() => searchRef.current?.focus(), 50);
-    }
-  }, [open, isSearchable]);
+  const actionableFilteredItems = useMemo(
+    () => filteredItems.filter((item) => !item?.separator && !item?.disabled),
+    [filteredItems],
+  );
 
-  const updatePosition = useCallback(() => {
-    if (!wrapperRef.current) return;
-    const vw = window.innerWidth;
-    const triggerWidth = wrapperRef.current.offsetWidth;
-    let w = menuWidth;
-    if (!w) {
-      w = Math.min(
-        Math.max(triggerWidth, isSelect ? triggerWidth : DEFAULT_MENU_WIDTH),
-        vw - VIEWPORT_MARGIN * 2,
-      );
-    }
-    const pos = calcPosition(wrapperRef.current, w, position !== "top");
-    setMenuStyle({ ...pos, width: w });
-  }, [isSelect, menuWidth, position]);
-
-  useEffect(() => {
-    if (!open || showBottomSheet || !wrapperRef.current) return;
-    updatePosition();
-  }, [open, showBottomSheet, updatePosition]);
-
-  useEffect(() => {
-    if (!open) return undefined;
-    function onKey(e) {
-      if (e.key === "Escape") {
-        changeOpen(false);
-        return;
-      }
-      if (isSearchable && e.key === "Enter" && filteredItems.length === 1) {
-        const first = filteredItems[0];
-        if (!first?.separator && !first?.disabled) {
-          handleItemClick(first);
-        }
-      }
-    }
-    function onClick(e) {
-      if (showBottomSheet) return;
-      if (
-        wrapperRef.current &&
-        !wrapperRef.current.contains(e.target) &&
-        menuWrapperRef.current &&
-        !menuWrapperRef.current.contains(e.target)
-      ) {
-        changeOpen(false);
-      }
-    }
-    window.addEventListener("keydown", onKey);
-    document.addEventListener("mousedown", onClick);
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      document.removeEventListener("mousedown", onClick);
-    };
-  }, [open, showBottomSheet, isSearchable, filteredItems, changeOpen]);
-
-  useEffect(() => {
-    if (!open || showBottomSheet) return;
-    window.addEventListener("scroll", updatePosition, true);
-    window.addEventListener("resize", updatePosition);
-    return () => {
-      window.removeEventListener("scroll", updatePosition, true);
-      window.removeEventListener("resize", updatePosition);
-    };
-  }, [open, showBottomSheet, updatePosition]);
-
-  const handleToggle = useCallback(() => {
-    if (disabled) return;
-    const next = !open;
-    changeOpen(next);
-    if (next && wrapperRef.current) {
-      requestAnimationFrame(updatePosition);
-    }
-  }, [changeOpen, disabled, open, updatePosition]);
+  /* ------------------------------------------------------------------------ */
+  /* Item selection                                                           */
+  /* ------------------------------------------------------------------------ */
 
   const handleItemClick = useCallback(
     (item) => {
-      if (item?.disabled) return;
+      if (!item || item.disabled) {
+        return;
+      }
+
       item.onClick?.();
+
       onChange?.(item);
-      if (closeOnSelect) changeOpen(false);
+
+      if (closeOnSelect) {
+        changeOpen(false);
+      }
     },
     [changeOpen, closeOnSelect, onChange],
   );
 
-  const triggerEl = useBuiltInTrigger ? (
+  /* ------------------------------------------------------------------------ */
+  /* Search focus                                                             */
+  /* ------------------------------------------------------------------------ */
+
+  useEffect(() => {
+    if (!open) {
+      setSearch("");
+      return undefined;
+    }
+
+    if (!isSearchable) {
+      return undefined;
+    }
+
+    const timer = window.setTimeout(() => {
+      searchRef.current?.focus();
+    }, 40);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [open, isSearchable, showBottomSheet]);
+
+  /* ------------------------------------------------------------------------ */
+  /* Positioning                                                              */
+  /* ------------------------------------------------------------------------ */
+
+  const updatePosition = useCallback(() => {
+    if (typeof window === "undefined" || !wrapperRef.current || showBottomSheet) {
+      return;
+    }
+
+    const viewportWidth = window.innerWidth;
+
+    const triggerWidth = wrapperRef.current.getBoundingClientRect().width;
+
+    const availableWidth = Math.max(180, viewportWidth - VIEWPORT_MARGIN * 2);
+
+    let calculatedWidth = menuWidth;
+
+    if (!calculatedWidth) {
+      calculatedWidth = matchTriggerWidth
+        ? triggerWidth
+        : Math.max(triggerWidth, isSelect ? triggerWidth : DEFAULT_MENU_WIDTH);
+    }
+
+    calculatedWidth = Math.min(calculatedWidth, availableWidth);
+
+    const nextPosition = resolveMenuPosition(wrapperRef.current, calculatedWidth, {
+      preferBelow: position !== "top",
+
+      align,
+    });
+
+    setMenuStyle({
+      ...nextPosition,
+      width: calculatedWidth,
+    });
+  }, [align, isSelect, matchTriggerWidth, menuWidth, position, showBottomSheet]);
+
+  useEffect(() => {
+    if (!open || showBottomSheet || !wrapperRef.current) {
+      return undefined;
+    }
+
+    updatePosition();
+
+    const onScroll = () => updatePosition();
+
+    const onResize = () => updatePosition();
+
+    window.addEventListener("scroll", onScroll, true);
+
+    window.addEventListener("resize", onResize);
+
+    let resizeObserver;
+
+    if (typeof ResizeObserver !== "undefined") {
+      resizeObserver = new ResizeObserver(updatePosition);
+
+      resizeObserver.observe(wrapperRef.current);
+    }
+
+    return () => {
+      window.removeEventListener("scroll", onScroll, true);
+
+      window.removeEventListener("resize", onResize);
+
+      resizeObserver?.disconnect();
+    };
+  }, [open, showBottomSheet, updatePosition]);
+
+  /* ------------------------------------------------------------------------ */
+  /* Keyboard / outside click                                                 */
+  /* ------------------------------------------------------------------------ */
+
+  useEffect(() => {
+    if (!open) {
+      return undefined;
+    }
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        changeOpen(false);
+        return;
+      }
+
+      if (isSearchable && event.key === "Enter" && actionableFilteredItems.length === 1) {
+        event.preventDefault();
+
+        handleItemClick(actionableFilteredItems[0]);
+      }
+    };
+
+    const handleOutsideClick = (event) => {
+      if (showBottomSheet) {
+        return;
+      }
+
+      const clickedTrigger = wrapperRef.current?.contains(event.target);
+
+      const clickedMenu = menuWrapperRef.current?.contains(event.target);
+
+      if (!clickedTrigger && !clickedMenu) {
+        changeOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    document.addEventListener("mousedown", handleOutsideClick);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [open, showBottomSheet, isSearchable, actionableFilteredItems, handleItemClick, changeOpen]);
+
+  /* ------------------------------------------------------------------------ */
+  /* Trigger                                                                  */
+  /* ------------------------------------------------------------------------ */
+
+  const handleToggle = useCallback(() => {
+    if (disabled) {
+      return;
+    }
+
+    const next = !open;
+
+    changeOpen(next);
+
+    if (next && wrapperRef.current && !mobile) {
+      requestAnimationFrame(updatePosition);
+    }
+  }, [changeOpen, disabled, mobile, open, updatePosition]);
+
+  const triggerElement = useBuiltInTrigger ? (
     <Button
       type="button"
       variant="text"
-      primaryClassName={`trem-dropdown__select${error ? " trem-dropdown__select--error" : ""}`}
-      aria-invalid={!!error}
+      primaryClassName={[
+        "trem-dropdown__select",
+
+        open ? "is-open" : "",
+
+        selectedItem ? "has-value" : "is-placeholder",
+
+        error ? "trem-dropdown__select--error" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      aria-invalid={Boolean(error)}
+      aria-haspopup="menu"
       disabled={disabled}
     >
       <span className="trem-dropdown__select-inner">
         {label ? <span className="trem-dropdown__select-label">{label}</span> : null}
+
         <span className="trem-dropdown__select-value">
           {selectedItem ? selectedItem.label || selectedItem.value || placeholder : placeholder}
         </span>
       </span>
-      <Icon
-        name="chevronDown"
-        className={`trem-dropdown__select-chevron${open ? " is-open" : ""}`}
-      />
+
+      <span className="trem-dropdown__select-chevron-wrap" aria-hidden="true">
+        <Icon
+          name="chevronDown"
+          size={16}
+          className={`trem-dropdown__select-chevron${open ? " is-open" : ""}`}
+        />
+      </span>
     </Button>
   ) : typeof trigger === "function" ? (
-    trigger({ open, isActive })
+    trigger({
+      open,
+      isActive,
+    })
   ) : (
     trigger
   );
-  const accessibleTriggerEl = React.isValidElement(triggerEl)
-    ? React.cloneElement(triggerEl, { "aria-expanded": open })
-    : triggerEl;
+
+  const accessibleTriggerElement = React.isValidElement(triggerElement)
+    ? React.cloneElement(triggerElement, {
+        "aria-expanded": open,
+        "aria-controls": menuId,
+        "aria-haspopup": triggerElement.props["aria-haspopup"] || "menu",
+      })
+    : triggerElement;
+
+  /* ------------------------------------------------------------------------ */
+  /* Width                                                                    */
+  /* ------------------------------------------------------------------------ */
 
   const resolvedWidth = fixedWidth
     ? typeof propWidth === "number"
@@ -264,172 +522,307 @@ export default function Dropdown({
     : undefined;
 
   const wrapperStyle = useMemo(() => {
-    if (propWidth == null) return undefined;
+    if (propWidth == null) {
+      return undefined;
+    }
+
     if (isAutoWidth) {
       return useBuiltInTrigger
-        ? { width: "auto", display: "inline-flex", alignSelf: "flex-start" }
-        : { width: "auto", alignSelf: "flex-start" };
+        ? {
+            width: "auto",
+            display: "inline-flex",
+            alignSelf: "flex-start",
+          }
+        : {
+            width: "auto",
+            alignSelf: "flex-start",
+          };
     }
-    return { width: resolvedWidth };
+
+    return {
+      width: resolvedWidth,
+    };
   }, [propWidth, isAutoWidth, resolvedWidth, useBuiltInTrigger]);
 
   const menuPositionStyle = {
     ...menuStyle,
-    ...(resolvedWidth ? { width: resolvedWidth } : {}),
-    ...(portalZIndex != null ? { zIndex: portalZIndex } : {}),
+
+    ...(resolvedWidth
+      ? {
+          width: resolvedWidth,
+        }
+      : {}),
+
+    ...(portalZIndex != null
+      ? {
+          zIndex: portalZIndex,
+        }
+      : {}),
   };
+
+  /* ------------------------------------------------------------------------ */
+  /* Footer                                                                   */
+  /* ------------------------------------------------------------------------ */
+
+  const closeMenu = useCallback(() => changeOpen(false), [changeOpen]);
 
   const resolvedMenuFooter =
     typeof menuFooter === "function"
-      ? menuFooter({ close: () => changeOpen(false), open })
+      ? menuFooter({
+          close: closeMenu,
+          open,
+        })
       : menuFooter;
+
+  /* ------------------------------------------------------------------------ */
+  /* Menu height                                                              */
+  /* ------------------------------------------------------------------------ */
+
   const menuChromeHeight =
-    (isSearchable ? 60 : 0) +
+    (isSearchable ? 58 : 0) +
     (resolvedMenuFooter ? 56 : 0) +
-    (isJourneyMenu && menuTitle ? 52 : 16);
-  const positionedListHeight = Math.max(120, (menuStyle.maxHeight || 240) - menuChromeHeight);
+    (isJourneyMenu && menuTitle ? 50 : 14);
+
+  const positionedListHeight = Math.max(
+    MIN_MENU_HEIGHT,
+    (menuStyle.maxHeight || 240) - menuChromeHeight,
+  );
+
   const menuListStyle = {
     maxHeight: propMaxHeight || (isScrollable ? positionedListHeight : undefined),
+
     overflowY: isScrollable || propMaxHeight ? "auto" : undefined,
   };
 
-  const menuContent = (
-    <div
-      className={`trem-dropdown__menu-wrapper trem-dropdown__menu-wrapper--matched trem-dropdown__menu-wrapper--${menuStyle.placement || "bottom"} ${portalClassName}`.trim()}
-      ref={menuWrapperRef}
-      style={menuPositionStyle}
-    >
-      {isJourneyMenu && menuTitle ? (
-        <div className="trem-dropdown__menu-title">{menuTitle}</div>
-      ) : null}
-      {isSearchable && (
-        <div className="trem-dropdown__search">
-          <Icon name="search" />
-          <input
-            ref={searchRef}
-            type="text"
-            placeholder={searchPlaceholder}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="trem-dropdown__search-input"
-          />
-        </div>
-      )}
-      <ul
-        className={`trem-dropdown__menu ${menuClassName}`.trim()}
-        role="menu"
-        aria-label={menuAriaLabel}
-        style={menuListStyle}
-      >
-        {filteredItems.map((item, index) =>
-          item.separator || !renderItemProp ? (
-            renderDefaultItem(item, index)
-          ) : (
-            <li role="none" key={item.key || item.id || `item-${index}`}>
-              {renderItemProp(item, index)}
-            </li>
-          ),
-        )}
-      </ul>
-      {resolvedMenuFooter}
-    </div>
-  );
+  /* ------------------------------------------------------------------------ */
+  /* Default item renderer                                                    */
+  /* ------------------------------------------------------------------------ */
 
-  function renderDefaultItem(item, index) {
+  const renderDefaultItem = (item, index) => {
     if (item.separator) {
       return (
-        <li key={`sep-${index}`}>
+        <li key={`sep-${index}`} role="none">
           <hr className="trem-dropdown__separator" />
         </li>
       );
     }
+
+    const itemKey = item.key || item.id || `item-${index}`;
+
     if (isJourneyMenu) {
       return (
-        <li key={item.key || item.id || index} role="none">
+        <li key={itemKey} role="none">
           <Button
+            type="button"
             variant="text"
-            primaryClassName={`trem-dropdown__journey-item trem-dropdown__journey-item--${item.tone || "neutral"}${item.disabled ? " is-disabled" : ""}`}
+            primaryClassName={[
+              "trem-dropdown__journey-item",
+
+              `trem-dropdown__journey-item--${item.tone || "neutral"}`,
+
+              item.disabled ? "is-disabled" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
             disabled={item.disabled}
             role="menuitem"
             aria-label={item.ariaLabel || item.label}
             onClick={() => handleItemClick(item)}
           >
             <span className="trem-dropdown__journey-icon" aria-hidden="true">
-              {typeof item.icon === "string" ? <Icon name={item.icon} size={30} /> : item.icon}
+              {typeof item.icon === "string" ? <Icon name={item.icon} size={26} /> : item.icon}
             </span>
+
             <span className="trem-dropdown__journey-copy">
               <strong>{item.label}</strong>
+
               {item.description ? <small>{item.description}</small> : null}
             </span>
+
             {item.badge ? <span className="trem-dropdown__journey-badge">{item.badge}</span> : null}
+
             {!item.disabled ? (
-              <Icon name="chevronRight" size={22} className="trem-dropdown__journey-chevron" />
+              <Icon name="chevronRight" size={18} className="trem-dropdown__journey-chevron" />
             ) : null}
           </Button>
         </li>
       );
     }
+
+    const selected = Boolean(
+      item.active || (isSelect && selectedItem && String(item.value ?? item.id) === String(value)),
+    );
+
     return (
-      <li key={item.key || item.id || index} role="none">
+      <li key={itemKey} role="none">
         <Button
+          type="button"
           variant="text"
           text={item.label}
           iconLeft={typeof item.icon === "string" ? item.icon : undefined}
-          primaryClassName={`trem-dropdown__item${item.active || (isSelect && selectedItem && String(item.value ?? item.id) === String(value)) ? " is-active" : ""}${item.disabled ? " is-disabled" : ""}`}
+          primaryClassName={[
+            "trem-dropdown__item",
+
+            selected ? "is-active" : "",
+
+            item.disabled ? "is-disabled" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
           disabled={item.disabled}
           role="menuitem"
+          aria-current={selected ? "true" : undefined}
           onClick={() => handleItemClick(item)}
         />
       </li>
     );
-  }
+  };
+
+  /* ------------------------------------------------------------------------ */
+  /* Menu body                                                                */
+  /* ------------------------------------------------------------------------ */
+
+  const renderMenuItems = () =>
+    filteredItems.map((item, index) => {
+      if (item.separator || !renderItemProp) {
+        return renderDefaultItem(item, index);
+      }
+
+      return (
+        <li role="none" key={item.key || item.id || `item-${index}`}>
+          {renderItemProp(item, index)}
+        </li>
+      );
+    });
+
+  const resolvedMenuAriaLabel = menuAriaLabel || menuTitle || label || undefined;
+
+  const menuContent = (
+    <div
+      className={[
+        "trem-dropdown__menu-wrapper",
+
+        "trem-dropdown__menu-wrapper--matched",
+
+        `trem-dropdown__menu-wrapper--${menuStyle.placement || "bottom"}`,
+
+        `align-${align}`,
+
+        isJourneyMenu ? "trem-dropdown__menu-wrapper--journey" : "",
+
+        portalClassName,
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      ref={menuWrapperRef}
+      style={menuPositionStyle}
+    >
+      {isJourneyMenu && menuTitle ? (
+        <div className="trem-dropdown__menu-title">{menuTitle}</div>
+      ) : null}
+
+      {isSearchable ? (
+        <div className="trem-dropdown__search">
+          <Icon name="search" size={16} />
+
+          <input
+            ref={searchRef}
+            type="text"
+            placeholder={searchPlaceholder}
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            className="trem-dropdown__search-input"
+            aria-label={searchPlaceholder}
+            autoComplete="off"
+          />
+        </div>
+      ) : null}
+
+      <ul
+        id={menuId}
+        className={["trem-dropdown__menu", menuClassName].filter(Boolean).join(" ")}
+        role="menu"
+        aria-label={resolvedMenuAriaLabel}
+        style={menuListStyle}
+      >
+        {renderMenuItems()}
+      </ul>
+
+      {resolvedMenuFooter}
+    </div>
+  );
+
+  /* ------------------------------------------------------------------------ */
+  /* Render                                                                   */
+  /* ------------------------------------------------------------------------ */
 
   return (
     <>
       <div
-        className={`trem-dropdown ${open ? "is-open" : ""} ${hoverable ? "is-hoverable" : ""} ${isActive ? "is-active-trigger" : ""} ${useBuiltInTrigger ? "trem-dropdown--select" : ""} align-${align} ${className}`.trim()}
+        className={[
+          "trem-dropdown",
+
+          open ? "is-open" : "",
+
+          hoverable ? "is-hoverable" : "",
+
+          isActive ? "is-active-trigger" : "",
+
+          useBuiltInTrigger ? "trem-dropdown--select" : "",
+
+          `align-${align}`,
+
+          className,
+        ]
+          .filter(Boolean)
+          .join(" ")}
         ref={wrapperRef}
         style={wrapperStyle}
       >
         <div className="trem-dropdown__trigger" onClick={handleToggle}>
-          {accessibleTriggerEl}
+          {accessibleTriggerElement}
         </div>
       </div>
-      {open && !showBottomSheet && createPortal(menuContent, document.body)}
+
+      {open && !showBottomSheet && typeof document !== "undefined"
+        ? createPortal(menuContent, document.body)
+        : null}
+
       <BottomSheet
         open={showBottomSheet}
-        onClose={() => changeOpen(false)}
-        className={`${portalClassName}${isJourneyMenu ? " trem-dropdown__journey-sheet" : ""}`.trim()}
+        onClose={closeMenu}
+        zIndex={portalZIndex}
+        className={[portalClassName, isJourneyMenu ? "trem-dropdown__journey-sheet" : ""]
+          .filter(Boolean)
+          .join(" ")}
         title={menuTitle}
       >
-        {isSearchable && (
+        {isSearchable ? (
           <div className="trem-dropdown__search">
-            <Icon name="search" />
+            <Icon name="search" size={16} />
+
             <input
               ref={searchRef}
               type="text"
               placeholder={searchPlaceholder}
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(event) => setSearch(event.target.value)}
               className="trem-dropdown__search-input"
+              aria-label={searchPlaceholder}
+              autoComplete="off"
             />
           </div>
-        )}
+        ) : null}
+
         <ul
-          className={`trem-dropdown__menu ${menuClassName}`.trim()}
+          id={menuId}
+          className={["trem-dropdown__menu", menuClassName].filter(Boolean).join(" ")}
           role="menu"
-          aria-label={menuAriaLabel}
+          aria-label={resolvedMenuAriaLabel}
         >
-          {filteredItems.map((item, index) =>
-            item.separator || !renderItemProp ? (
-              renderDefaultItem(item, index)
-            ) : (
-              <li role="none" key={item.key || item.id || `item-${index}`}>
-                {renderItemProp(item, index)}
-              </li>
-            ),
-          )}
+          {renderMenuItems()}
         </ul>
+
         {resolvedMenuFooter}
       </BottomSheet>
     </>

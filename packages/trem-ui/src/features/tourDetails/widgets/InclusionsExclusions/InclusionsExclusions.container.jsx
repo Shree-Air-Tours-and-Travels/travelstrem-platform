@@ -4,7 +4,7 @@ import { WidgetError, WidgetSkeleton } from "../../shared";
 import InclusionsExclusionsView from "./InclusionsExclusions.view";
 
 export default function InclusionsExclusionsContainer({ tourRef }) {
-  const { loading, error, widgetData } = useTourDetailWidget(tourRef, "inclusions-exclusions.json");
+  const { loading, error, widgetData, retry } = useTourDetailWidget(tourRef, "inclusions-exclusions.json");
   const labels = widgetData?.elements?.labels || {};
   const inclusions = Array.isArray(widgetData?.data?.inclusions) ? widgetData.data.inclusions : [];
   const exclusions = Array.isArray(widgetData?.data?.exclusions) ? widgetData.data.exclusions : [];
@@ -15,7 +15,7 @@ export default function InclusionsExclusionsContainer({ tourRef }) {
   };
 
   if (loading) return <WidgetSkeleton compact />;
-  if (error) return <WidgetError message={error} />;
+  if (error) return <WidgetError message={error} retry={retry} />;
   return (
     <InclusionsExclusionsView
       labels={labels}

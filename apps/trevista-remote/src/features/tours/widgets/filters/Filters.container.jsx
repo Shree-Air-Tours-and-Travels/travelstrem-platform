@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { debounce } from "lodash";
 import { getActiveFilterCount, validateAll } from "@packages/trem-utils";
 import FiltersView from "./Filters.view";
 
@@ -31,48 +30,85 @@ const resolveWidgetMeta = (data) => {
 
 const facetOptions = (items = []) =>
   items.map((item) => ({
-    id: item.id,
+    id: item.id || item.value,
     value: item.value,
     label: `${item.label} (${item.count})`,
     count: item.count,
   }));
 
-const mergeInterestOptions = (configuredTags = [], facetTags = [], discoveryOptions = []) => {
-  const independentOptions = configuredTags.length ? configuredTags : facetOptions(facetTags);
-  const options = new Map(independentOptions.map((option) => [String(option.value), option]));
-  discoveryOptions
-    .filter((chip) => chip?.type === "TAG" && chip.value)
-    .forEach((chip) => {
-      const value = String(chip.value);
-      if (!options.has(value)) {
-        options.set(value, {
-          id: chip.id || value,
-          value,
-          label: chip.label,
-          count: chip.count || 0,
-        });
-      }
-    });
-  return [...options.values()];
+const withoutFacetCount = (label = "") => String(label).replace(/\s+\(\d+\)$/, "");
+
+const facetPriceRange = (price = {}) => ({
+  min: price.minMinor != null ? Number(price.minMinor) / 100 : Number(price.min || 0),
+  max: price.maxMinor != null ? Number(price.maxMinor) / 100 : Number(price.max || 0),
+});
+
+const contextualOptions = (configured = [], facets = [], selected = []) => {
+  const selectedValues = new Set((selected || []).map(String));
+  const available = new Map(facetOptions(facets).map((option) => [String(option.value), option]));
+  const configuredByValue = new Map(
+    (configured || []).map((option) => [String(option.value), option]),
+  );
+  const values = [...new Set([...configuredByValue.keys(), ...available.keys()])];
+
+  return values.map((value) => {
+    const live = available.get(value);
+    const fallback = configuredByValue.get(value) || {};
+    const count = live?.count || 0;
+    const label = withoutFacetCount(live?.label || fallback.label || fallback.value || value);
+    return {
+      ...fallback,
+      ...live,
+      id: live?.id || fallback.id || value,
+      value,
+      count,
+      label: `${label} (${count})`,
+      disabled: !live && !selectedValues.has(value),
+    };
+  });
 };
 
-const configuredOrFaceted = (configured = [], facets = []) =>
-  Array.isArray(configured) && configured.length ? configured : facetOptions(facets);
-
-const optionsFromFacets = (facets = {}, discoveryOptions = [], configuredOptions = {}) => ({
-  originCityOptions: configuredOrFaceted(configuredOptions.originCityOptions, facets.origins),
-  destinationCityOptions: configuredOrFaceted(
+const optionsFromFacets = (
+  facets = {},
+  discoveryOptions = [],
+  configuredOptions = {},
+  values = {},
+) => ({
+  originCityOptions: contextualOptions(
+    configuredOptions.originCityOptions,
+    facets.origins,
+    values.originCityIds,
+  ),
+  destinationCityOptions: contextualOptions(
     configuredOptions.destinationCityOptions,
     facets.destinations,
+    values.destinationCityIds,
   ),
-  countryOptions: configuredOrFaceted(configuredOptions.countryOptions, facets.countries),
-  agencyOptions: configuredOrFaceted(configuredOptions.agencyOptions, facets.agencies),
-  tags: mergeInterestOptions(configuredOptions.tags || [], facets.tags, discoveryOptions),
+  countryOptions: contextualOptions(
+    configuredOptions.countryOptions,
+    facets.countries,
+    values.countryIds,
+  ),
+  agencyOptions: contextualOptions(
+    configuredOptions.agencyOptions,
+    facets.agencies,
+    values.agencyIds,
+  ),
+  tags: contextualOptions(
+    [
+      ...(configuredOptions.tags || []),
+      ...discoveryOptions
+        .filter((chip) => chip?.type === "TAG" && chip.value)
+        .map((chip) => ({ id: chip.id, value: chip.value, label: chip.label })),
+    ],
+    facets.tags,
+    values.tagIds,
+  ),
   featured: (configuredOptions.featured || []).map((option) => ({
     ...option,
     value: option.value === "all" ? "" : option.value,
   })),
-  priceRange: facets.price || { min: 0, max: 0 },
+  priceRange: facetPriceRange(facets.price),
   dayRange: { min: facets.duration?.minDays || 0, max: facets.duration?.maxDays || 0 },
 });
 
@@ -91,16 +127,13 @@ export default function FiltersContainer({
   const meta = useMemo(() => resolveWidgetMeta(widgetData), [widgetData]);
   const [draft, setDraft] = useState(values || {});
   const [errors, setErrors] = useState({});
-  const [internalExpanded, setInternalExpanded] = useState(() => !isCompactViewport());
+  const [internalExpanded, setInternalExpanded] = useState(false);
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
 
   useEffect(() => {
     setDraft(values || {});
   }, [values]);
-
-  const debouncedChange = useMemo(() => debounce((next) => onChangeRef.current?.(next), 400), []);
-  useEffect(() => () => debouncedChange.cancel(), [debouncedChange]);
 
   const expanded = externalExpanded !== undefined ? externalExpanded : internalExpanded;
   const setExpanded = (valueOrUpdater) => {
@@ -114,23 +147,16 @@ export default function FiltersContainer({
     () => Object.fromEntries(fieldsArr.map((field) => [field.name, field])),
     [fieldsArr],
   );
-  // The discovery sidebar is intentionally a vertical form: one field per row.
-  const rows = fieldsArr.map((field) => [field.name]);
+  const rows =
+    mode === "panel" ? [fieldsArr.map((field) => field.name)] : fieldsArr.map((field) => [field.name]);
   const configuredOptions = useMemo(() => meta?.dataScope?.options || {}, [meta]);
   const serverOptions = useMemo(
-    () => optionsFromFacets(facets, discoveryOptions, configuredOptions),
-    [configuredOptions, discoveryOptions, facets],
+    () => optionsFromFacets(facets, discoveryOptions, configuredOptions, draft),
+    [configuredOptions, discoveryOptions, draft, facets],
   );
   const defaults = meta?.structure?.config?.defaults || {};
   const activeCount = getActiveFilterCount(draft, defaults);
-
-  const commit = (next, type) => {
-    if (["text", "number"].includes(type)) debouncedChange(next);
-    else {
-      debouncedChange.cancel();
-      onChangeRef.current?.(next);
-    }
-  };
+  const hasDraftChanges = JSON.stringify(draft) !== JSON.stringify(values || {});
 
   const onInput = (name, type) => (eventOrValue) => {
     let value = eventOrValue?.target ? eventOrValue.target.value : eventOrValue;
@@ -143,11 +169,9 @@ export default function FiltersContainer({
       delete copy[name];
       return copy;
     });
-    commit(next, type);
   };
 
   const handleActionClick = (action) => {
-    debouncedChange.cancel();
     if (action?.name === "reset" || action?.type === "reset") {
       setDraft({});
       setErrors({});
@@ -176,6 +200,7 @@ export default function FiltersContainer({
       expanded={expanded}
       lastResultCount={totalResults}
       activeCount={activeCount}
+      hasDraftChanges={hasDraftChanges}
       fieldsMap={fieldsMap}
       rows={rows}
       serverOptions={serverOptions}

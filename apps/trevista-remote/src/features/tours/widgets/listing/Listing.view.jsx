@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Button,
   Icon,
@@ -9,6 +9,17 @@ import {
   TourCard,
 } from "@packages/trem-ui";
 import { TourListSkeleton } from "../../shared";
+
+const MEMBER_NOTE_DISMISSED_KEY = "trevista.member-note-dismissed";
+
+const wasMemberNoteDismissed = () => {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.sessionStorage.getItem(MEMBER_NOTE_DISMISSED_KEY) === "true";
+  } catch {
+    return false;
+  }
+};
 
 const displayText = (value, fallback = "") => {
   if (value == null) return fallback;
@@ -62,7 +73,9 @@ export default function ListingView({
   hasActiveFilters = false,
   onClearFilters,
   onEnquire,
+  compactHeader = false,
 }) {
+  const [memberNoteDismissed, setMemberNoteDismissed] = useState(wasMemberNoteDismissed);
   const listingProps = listingWidgetData?.structure?.widgets?.[0]?.props || {};
   const sortOptions = listingProps.sortOptions?.length ? listingProps.sortOptions : [];
   const guestNoteLabelRef =
@@ -79,14 +92,22 @@ export default function ListingView({
     listingLabels[listingProps.searchPlaceholderRef] ||
     listingProps.searchPlaceholder ||
     "Search tours...";
-  const agencyLabel =
-    listingLabels[listingProps.agencyLabelRef] || listingProps.agencyLabel || "Uploaded by";
   const hideDescription = listingProps.hideDescription === true;
   const normalizedSortOptions = sortOptions.map((option) => ({
     value: option.id || option.value,
     label: getLabel(listingLabels, option),
     disabled: option.disabled,
   }));
+  const showSortNote = sortNote && (!isAuthenticated || !memberNoteDismissed);
+
+  const dismissMemberNote = () => {
+    setMemberNoteDismissed(true);
+    try {
+      window.sessionStorage.setItem(MEMBER_NOTE_DISMISSED_KEY, "true");
+    } catch {
+      // Dismiss for this render even when browser storage is unavailable.
+    }
+  };
 
   return (
     <>
@@ -96,35 +117,39 @@ export default function ListingView({
           {listingLabels.errorPrefix || "Error"}: {initialError}
         </div>
       )}
-      <div className="tours-page__listing-header">
+      <div
+        className={`tours-page__listing-header${compactHeader ? " tours-page__listing-header--compact" : ""}`}
+      >
         <div className="tours-page__listing-count">
           <span>{listingLabels.showing || "Showing"} </span>
           <strong>
             {displayed.length} {listingLabels.of || "of"} {totalResults}
           </strong>
         </div>
-        <div className="tours-page__grid-search">
-          <Icon name="search" aria-hidden="true" />
-          <InputField
-            variant="text"
-            ariaLabel={searchLabel}
-            placeholder={searchPlaceholder}
-            value={queryValue}
-            onChange={onQueryChange}
-            className="tours-page__grid-search-input"
-          />
-          {queryValue ? (
-            <Button
-              type="button"
+        {!compactHeader ? (
+          <div className="tours-page__grid-search">
+            <Icon name="search" aria-hidden="true" />
+            <InputField
               variant="text"
-              iconLeft="x"
-              onClick={() => onQueryChange?.("")}
-              primaryClassName="tours-page__grid-search-clear"
-              aria-label="Clear tour search"
+              ariaLabel={searchLabel}
+              placeholder={searchPlaceholder}
+              value={queryValue}
+              onChange={onQueryChange}
+              className="tours-page__grid-search-input"
             />
-          ) : null}
-        </div>
-        {normalizedSortOptions.length > 0 ? (
+            {queryValue ? (
+              <Button
+                type="button"
+                variant="text"
+                iconLeft="x"
+                onClick={() => onQueryChange?.("")}
+                primaryClassName="tours-page__grid-search-clear"
+                aria-label="Clear tour search"
+              />
+            ) : null}
+          </div>
+        ) : null}
+        {!compactHeader && normalizedSortOptions.length > 0 ? (
           <div className="tours-page__listing-controls">
             <SingleSelect
               label={sortLabel}
@@ -137,16 +162,27 @@ export default function ListingView({
           </div>
         ) : null}
       </div>
-      {sortNote ? (
+      {showSortNote ? (
         <div
           className={`tours-page__sort-note${isAuthenticated ? " tours-page__sort-note--member" : ""}`}
         >
           <Icon name={isAuthenticated ? "badgeCheck" : "info"} />
           <span>{sortNote}</span>
+          {isAuthenticated ? (
+            <button
+              type="button"
+              className="tours-page__sort-note-dismiss"
+              onClick={dismissMemberNote}
+              aria-label="Dismiss signed-in information"
+            >
+              <Icon name="x" size={14} aria-hidden="true" />
+            </button>
+          ) : null}
         </div>
       ) : null}
       {!initialLoading && !initialError && displayed.length === 0 && (
         <NoDataFound
+          compact
           icon="search"
           title={listingLabels.noToursFound || "No tours available right now"}
           description={listingLabels.noToursDescription}
@@ -173,8 +209,10 @@ export default function ListingView({
               onView={onView}
               favorited={isFavorited(t)}
               onFavorite={onFavorite}
-              ownershipMode="agency"
-              ownershipLabels={{ agency: agencyLabel }}
+              ownershipMode="none"
+              simplified
+              withAgency
+              packagePricesInteractive={false}
               hideDescription={hideDescription}
               labels={{
                 featured: listingLabels.featured || "Featured",

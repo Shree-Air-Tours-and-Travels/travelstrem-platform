@@ -1,90 +1,281 @@
 @import "@packages/trem-design-tokens/scss";
 
 .trem-input {
+  position: relative;
+
   display: flex;
   flex-direction: column;
   align-items: stretch;
+
   width: 100%;
+  min-height: 48px;
+
   border: 1px solid var(--border);
   border-radius: $radius-xs;
-  background: var(--surface);
+
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface) 98%, var(--color-primary) 2%),
+    var(--surface)
+  );
+
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 1px 1px rgba(15, 23, 42, 0.02);
+
+  overflow: hidden;
+
   transition:
     border-color 160ms $ease-default,
-    box-shadow 160ms $ease-default;
-  box-sizing: border-box;
+    box-shadow 160ms $ease-default,
+    background 160ms $ease-default,
+    transform 160ms $ease-default;
+
+  /* ---------------------------------------------------------------------- */
+  /* Hover                                                                   */
+  /* ---------------------------------------------------------------------- */
+
+  &:hover:not(:focus-within) {
+    border-color: color-mix(in srgb, var(--color-primary) 28%, var(--border));
+
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--surface) 96%, var(--color-primary) 4%),
+      var(--surface)
+    );
+
+    box-shadow:
+      0 2px 5px rgba(15, 23, 42, 0.05),
+      0 1px 2px rgba(15, 23, 42, 0.03);
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Focus                                                                   */
+  /* ---------------------------------------------------------------------- */
 
   &:focus-within {
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px var(--primary-soft);
-  }
 
-  &--error {
-    border-color: $danger-color;
-    &:focus-within {
-      box-shadow: 0 0 0 3px color-mix(in srgb, $danger-color 12%, transparent);
+    background: var(--surface);
+
+    box-shadow:
+      0 0 0 3px var(--primary-soft),
+      0 4px 12px rgba(15, 23, 42, 0.06);
+
+    .trem-input__label {
+      color: var(--color-primary);
     }
   }
 
+  /* ---------------------------------------------------------------------- */
+  /* Label                                                                   */
+  /* ---------------------------------------------------------------------- */
+
   &__label {
+    display: flex;
+    align-items: center;
+
+    width: 100%;
+
+    padding: $space-2 $space-3 0;
+
     font-size: $font-size-xs;
-    font-weight: $font-bold;
+    font-weight: $font-semibold;
     line-height: 1.2;
+
+    letter-spacing: 0.01em;
+
     color: var(--muted);
-    padding: $space-1 $space-3 0;
+
     user-select: none;
+
+    transition:
+      color 160ms $ease-default,
+      opacity 160ms $ease-default;
   }
 
   &__required {
+    margin-left: 2px;
+
     color: $danger-color;
+
+    font-weight: $font-bold;
   }
 
-  &__error {
-    padding: 0 $space-3 $space-2;
-    color: $danger-color;
-    font-size: $font-size-xs;
-    font-weight: $font-semibold;
-    line-height: 1.35;
-  }
+  /* ---------------------------------------------------------------------- */
+  /* Input Row                                                               */
+  /* ---------------------------------------------------------------------- */
 
   &__row {
+    position: relative;
+
     display: flex;
-    align-items: center;
+    align-items: stretch;
+
     flex: 1;
-    min-height: 0;
+
     width: 100%;
+    min-height: 46px;
   }
 
+  /* ---------------------------------------------------------------------- */
+  /* Input                                                                   */
+  /* ---------------------------------------------------------------------- */
+
+  &__field {
+    flex: 1;
+
+    width: 100%;
+    min-width: 0;
+
+    border: 0;
+    outline: 0;
+
+    padding: $space-2-5 $space-3;
+
+    background: transparent;
+
+    font-family: $font-primary;
+    font-size: $font-size-sm;
+    font-weight: $font-semibold;
+    line-height: 1.45;
+
+    color: var(--text);
+
+    caret-color: var(--color-primary);
+
+    transition:
+      color 160ms $ease-default,
+      opacity 160ms $ease-default;
+
+    &::placeholder {
+      color: color-mix(in srgb, var(--muted) 75%, transparent);
+      font-weight: 400;
+
+      opacity: 1;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+    }
+
+    &[type="number"] {
+      appearance: textfield;
+      -moz-appearance: textfield;
+
+      &::-webkit-inner-spin-button,
+      &::-webkit-outer-spin-button {
+        margin: 0;
+        appearance: none;
+        -webkit-appearance: none;
+      }
+    }
+
+    /*
+     * Prevent Chrome autofill from destroying
+     * the component background.
+     */
+    &:-webkit-autofill,
+    &:-webkit-autofill:hover,
+    &:-webkit-autofill:focus {
+      -webkit-text-fill-color: var(--text);
+
+      box-shadow: 0 0 0 1000px var(--surface) inset;
+
+      transition: background-color 9999s ease-in-out 0s;
+    }
+
+    /*
+     * Remove browser number controls.
+     */
+    &[type="number"] {
+      appearance: textfield;
+      -moz-appearance: textfield;
+
+      &::-webkit-inner-spin-button,
+      &::-webkit-outer-spin-button {
+        margin: 0;
+
+        appearance: none;
+        -webkit-appearance: none;
+      }
+    }
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Telephone Country Code                                                  */
+  /* ---------------------------------------------------------------------- */
+
   &__cc-trigger.ui-button {
+    position: relative;
+
     align-self: stretch;
-    min-width: 70px;
-    min-height: 0;
-    height: auto;
+
     display: flex;
     align-items: center;
     justify-content: center;
+
     gap: $space-1;
+
+    min-width: 76px;
+    min-height: 0;
+    height: auto;
+
+    margin: 0;
+
     padding: 0 $space-2;
+
     border: none;
     border-right: 1px solid var(--border);
     border-radius: 0;
-    background: transparent;
-    cursor: pointer;
+
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--surface-inset) 70%, transparent),
+      color-mix(in srgb, var(--surface-inset) 45%, transparent)
+    );
+
     color: var(--text);
+
     font-size: $font-size-xs;
-    font-weight: $font-semibold;
+    font-weight: $font-bold;
     line-height: 1;
+
     white-space: nowrap;
+
     flex-shrink: 0;
-    transition: background 120ms $ease-default;
+
+    cursor: pointer;
+
+    transition:
+      background 140ms $ease-default,
+      color 140ms $ease-default,
+      border-color 140ms $ease-default;
 
     &:hover {
-      background: var(--surface-inset);
+      background: color-mix(in srgb, var(--color-primary) 7%, var(--surface-inset));
+
+      color: var(--color-primary);
+    }
+
+    &:focus-visible {
+      outline: none;
+
+      background: color-mix(in srgb, var(--color-primary) 8%, var(--surface));
     }
 
     .trem-icon {
       color: var(--muted);
-      font-size: 0.65rem;
-      transition: transform 200ms $ease-default;
+
+      font-size: 0.7rem;
+
+      transition:
+        transform 200ms $ease-default,
+        color 160ms $ease-default;
+    }
+
+    &:hover .trem-icon {
+      color: var(--color-primary);
     }
 
     .trem-icon.is-open {
@@ -92,50 +283,150 @@
     }
   }
 
-  &__field {
-    flex: 1;
-    min-width: 0;
-    border: none;
-    outline: none;
-    background: transparent;
-    padding: $space-2-5 $space-3;
-    font-size: $font-size-sm;
-    color: var(--text);
-    font-family: $font-primary;
+  /* ---------------------------------------------------------------------- */
+  /* Labelled                                                                */
+  /* ---------------------------------------------------------------------- */
 
-    &::placeholder {
-      color: var(--muted);
+  &--labelled {
+    min-height: 58px;
+
+    justify-content: center;
+
+    .trem-input__row {
+      min-height: 34px;
     }
 
-    &:disabled {
-      opacity: 0.55;
+    .trem-input__field {
+      padding-top: $space-1;
+      padding-bottom: $space-2;
+    }
+
+    .trem-input__cc-trigger {
+      padding-top: $space-1;
+      padding-bottom: $space-1;
+    }
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Telephone                                                               */
+  /* ---------------------------------------------------------------------- */
+
+  &--tel {
+    .trem-input__field {
+      letter-spacing: 0.015em;
+    }
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Month / Year                                                            */
+  /* ---------------------------------------------------------------------- */
+
+  &--monthYear {
+    .trem-input__field {
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.04em;
+    }
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Error                                                                   */
+  /* ---------------------------------------------------------------------- */
+
+  &--error {
+    border-color: color-mix(in srgb, $danger-color 75%, var(--border));
+
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, $danger-color 3%, var(--surface)),
+      var(--surface)
+    );
+
+    &:hover {
+      border-color: $danger-color;
+    }
+
+    &:focus-within {
+      border-color: $danger-color;
+
+      box-shadow:
+        0 0 0 3px color-mix(in srgb, $danger-color 12%, transparent),
+        0 4px 12px rgba(15, 23, 42, 0.05);
+
+      .trem-input__label {
+        color: $danger-color;
+      }
+    }
+  }
+
+  &__error {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+
+    gap: $space-1;
+
+    width: 100%;
+
+    padding: 0 $space-3 $space-2;
+
+    color: $danger-color;
+
+    font-size: $font-size-xs;
+    font-weight: $font-semibold;
+    line-height: 1.35;
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Disabled                                                                */
+  /* ---------------------------------------------------------------------- */
+
+  &:has(.trem-input__field:disabled),
+  &--disabled {
+    opacity: 0.58;
+
+    cursor: not-allowed;
+
+    background: var(--surface-inset);
+
+    box-shadow: none;
+
+    &:hover {
+      border-color: var(--border);
+
+      background: var(--surface-inset);
+
+      box-shadow: none;
+    }
+
+    .trem-input__row,
+    .trem-input__field,
+    .trem-input__cc-trigger {
       cursor: not-allowed;
     }
   }
 
+  /* ---------------------------------------------------------------------- */
+  /* Dropdown                                                                */
+  /* ---------------------------------------------------------------------- */
+
   &__country-menu {
     .trem-dropdown__item {
-      min-height: 38px;
+      min-height: 42px;
+
       padding: $space-2 $space-3;
+
+      border-radius: $radius-xs;
+
+      font-size: $font-size-sm;
+
+      transition:
+        background 120ms $ease-default,
+        color 120ms $ease-default;
+
+      &:hover {
+        background: var(--surface-inset);
+      }
     }
-  }
-
-  &--labelled {
-    justify-content: center;
-
-    .trem-input__field {
-      padding-top: 2px;
-      padding-bottom: 2px;
-    }
-
-    .trem-input__cc-trigger {
-      padding-top: 2px;
-      padding-bottom: 2px;
-    }
-  }
-
-  &--disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
   }
 }

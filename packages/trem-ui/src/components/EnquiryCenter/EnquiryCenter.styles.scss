@@ -16,8 +16,10 @@
   padding: clamp($space-5, 4vw, $space-8);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  background: var(--surface-elevated, var(--surface));
-  box-shadow: var(--shadow-sm);
+  background:
+    radial-gradient(circle at 92% 0%, var(--primary-softer), transparent 38%),
+    linear-gradient(135deg, var(--surface), var(--surface-subtle));
+  box-shadow: var(--shadow-md);
 
   h1 {
     margin: $space-1 0 $space-2;
@@ -27,6 +29,26 @@
     max-width: 42rem;
     margin: 0;
     color: var(--muted);
+  }
+}
+
+.trem-enquiries__guidance {
+  position: relative;
+  padding: $space-4 $space-5 $space-4 calc(#{$space-5} + 4px);
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 22%, var(--border));
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-primary) 6%, var(--surface));
+  color: var(--text);
+  font-size: $font-size-sm;
+  line-height: $line-height-lg;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    background: linear-gradient(var(--color-primary), var(--color-secondary));
   }
 }
 
@@ -104,7 +126,7 @@
 .trem-enquiries__toolbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: $space-3;
 }
 
@@ -118,7 +140,12 @@
   padding: clamp($space-5, 3vw, $space-7);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  background: var(--surface);
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--color-primary) 3%, var(--surface)),
+    var(--surface) 62%
+  );
+  box-shadow: var(--shadow-sm);
 
   h2 {
     margin: 0 0 $space-5;
@@ -137,7 +164,8 @@
   min-width: 0;
   padding: $space-3;
   border-radius: var(--radius-sm);
-  background: var(--surface-elevated, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 2.5%, var(--surface));
 
   dt {
     margin-bottom: $space-1;

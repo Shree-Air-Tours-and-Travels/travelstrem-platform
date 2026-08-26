@@ -1,16 +1,20 @@
 import React from "react";
 import { initApp } from "../../core/initApp";
-import { clearUserSessionCache, validateUserSession } from "../../services/userSession";
+import { clearUserSessionCache } from "../../services/userSession";
 import { clearCsrfToken } from "../../services/security";
-import { clearAuthBrowserState, subscribeAuthEvents } from "@packages/trem-auth-core";
+import {
+  clearAuthBrowserState,
+  subscribeAuthEvents,
+  useSessionInactivity,
+} from "@packages/trem-auth-core";
 import { buildGlobalAuthUrl } from "@packages/trem-utils";
+import { SessionTimeoutModal } from "@packages/trem-ui";
 import { isGuestSession } from "../../services/guestSession";
 import { registerSessionCacheClearer } from "@packages/trem-events";
+import apiService from "../../services/apiService";
 
 const AUTH_STORAGE_PREFIX = "appShellTREM";
 const SHARED_STORAGE_PREFIX = "travelstrem";
-const SESSION_CHECK_INTERVAL_MS = 60 * 1000;
-const SESSION_FOCUS_STALE_MS = 15 * 1000;
 
 const DEFAULT_SESSION = {
   user: null,
@@ -41,6 +45,11 @@ export function AppShellProvider({ children }) {
     loading: true,
     error: null,
     session: DEFAULT_SESSION,
+  });
+  const [sessionExitBusy, setSessionExitBusy] = React.useState(false);
+  const sessionExpired = useSessionInactivity({
+    enabled: Boolean(state.session?.isAuthenticated),
+    timeoutMs: state.session?.config?.session?.inactivityTimeoutMs,
   });
 
   React.useEffect(() => {
@@ -141,63 +150,6 @@ export function AppShellProvider({ children }) {
     };
   }, [loadSession]);
 
-  React.useEffect(() => {
-    let cancelled = false;
-    let checking = false;
-    let lastCheckedAt = 0;
-
-    const expireSession = () => {
-      if (!sessionRef.current?.isAuthenticated) return;
-      clearLocalAuthState();
-      setState({ loading: false, error: null, session: DEFAULT_SESSION });
-      window.dispatchEvent(
-        new CustomEvent("USER_LOGOUT", { detail: { reason: "session_expired" } }),
-      );
-    };
-
-    const checkSession = async ({ force = false } = {}) => {
-      if (cancelled || checking || !sessionRef.current?.isAuthenticated) return;
-      const now = Date.now();
-      if (!force && now - lastCheckedAt < SESSION_FOCUS_STALE_MS) return;
-      checking = true;
-      lastCheckedAt = now;
-      try {
-        const session = await validateUserSession({
-          pathname: window.location.pathname,
-          search: window.location.search,
-          hash: window.location.hash,
-        });
-        if (cancelled) return;
-        if (!session?.isAuthenticated) {
-          expireSession();
-          return;
-        }
-        sessionRef.current = session;
-        setState((current) => ({ ...current, session }));
-      } catch {
-        if (!cancelled) expireSession();
-      } finally {
-        checking = false;
-      }
-    };
-
-    const onFocus = () => checkSession({ force: false });
-    const onVisibilityChange = () => {
-      if (document.visibilityState === "visible") checkSession({ force: false });
-    };
-
-    const interval = window.setInterval(() => checkSession({ force: true }), SESSION_CHECK_INTERVAL_MS);
-    window.addEventListener("focus", onFocus);
-    document.addEventListener("visibilitychange", onVisibilityChange);
-
-    return () => {
-      cancelled = true;
-      window.clearInterval(interval);
-      window.removeEventListener("focus", onFocus);
-      document.removeEventListener("visibilitychange", onVisibilityChange);
-    };
-  }, []);
-
   const reload = React.useCallback(() => loadSession({ background: true }), [loadSession]);
 
   const value = React.useMemo(
@@ -208,7 +160,22 @@ export function AppShellProvider({ children }) {
     [reload, state],
   );
 
-  return <AppShellConfigContext.Provider value={value}>{children}</AppShellConfigContext.Provider>;
+  const continueToLogin = React.useCallback(async () => {
+    setSessionExitBusy(true);
+    await apiService.post("/auth/logout").catch(() => null);
+    window.dispatchEvent(new CustomEvent("USER_LOGOUT", { detail: { reason: "inactivity" } }));
+  }, []);
+
+  return (
+    <AppShellConfigContext.Provider value={value}>
+      {children}
+      <SessionTimeoutModal
+        open={sessionExpired}
+        busy={sessionExitBusy}
+        onLogin={continueToLogin}
+      />
+    </AppShellConfigContext.Provider>
+  );
 }
 
 export const useAppShellConfig = () => React.useContext(AppShellConfigContext);

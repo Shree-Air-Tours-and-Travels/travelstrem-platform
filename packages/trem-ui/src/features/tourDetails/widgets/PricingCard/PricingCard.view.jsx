@@ -8,6 +8,7 @@ export default function PricingCardView({
   tour,
   priceText,
   packagePrices = [],
+  selectedPackage,
   priceDisplayMode,
   cityDisplay,
   onContact,
@@ -20,12 +21,21 @@ export default function PricingCardView({
   const isFav = isFavorited?.(tour) ?? false;
   const seatsAvailable = tour.availability?.seatsAvailable ?? tour.seatsAvailable;
   const isSoldOut = seatsAvailable === 0;
+  const selectedPackagePrice = packagePrices.find(
+    (item) => String(item.key).toLowerCase() === String(selectedPackage || "").toLowerCase(),
+  );
+  const selectedPackageName = selectedPackagePrice?.name;
+  const quoteLabel = selectedPackageName
+    ? (labels.packageQuote || "Get {package} quote").replace("{package}", selectedPackageName)
+    : labels.enquire || labels.contactAgent || "Get a quote";
   const hasExplicitRoute = Boolean(
     typeof tour.city === "string" ? tour.city.trim() : tour.city?.from && tour.city?.to,
   );
   const priceLabel =
     priceDisplayMode === "FINAL"
-      ? packagePrices.length > 1
+      ? selectedPackagePrice
+        ? "Final price"
+        : packagePrices.length > 1
         ? "Final package prices"
         : labels.confirmedRate || "Final price"
       : priceDisplayMode === "STARTING_FROM"
@@ -75,7 +85,7 @@ export default function PricingCardView({
       <div className="tour-detail__booking-widget-body">
         <div className="tour-detail__booking-widget-price">
           <span>{priceLabel}</span>
-          <strong>{priceText}</strong>
+          <strong>{selectedPackagePrice?.priceText || priceText}</strong>
           <Paragraph
             text={
               tour?.priceInfo?.isFinal
@@ -84,7 +94,7 @@ export default function PricingCardView({
             }
           />
         </div>
-        {packagePrices.length > 0 && (
+        {!selectedPackagePrice && packagePrices.length > 0 && (
           <div
             className="tour-detail__package-prices"
             aria-label={
@@ -93,7 +103,7 @@ export default function PricingCardView({
           >
             {packagePrices.map((item) => (
               <div className="tour-detail__package-price" key={item.key}>
-                <span>{item.name}</span>
+                <span>{item.recommended ? `${item.name} · Recommended` : item.name}</span>
                 <strong>{item.priceText}</strong>
                 {item.requiresRepricing && <small>Repricing required</small>}
               </div>
@@ -105,14 +115,14 @@ export default function PricingCardView({
             <span>{hasExplicitRoute ? labels.route || "Route" : "Destination"}</span>
             <strong>{cityDisplay}</strong>
           </div>
-          {tour.distance != null && Number(tour.distance) > 0 ? (
-            <div className="tour-detail__fact">
-              <span>{labels.distance || "Distance"}</span>
-              <strong>
-                {tour.distance} {labels.kmUnit || "km"}
-              </strong>
-            </div>
-          ) : null}
+          <div className="tour-detail__fact">
+            <span>{labels.availability || "Availability"}</span>
+            <strong>
+              {tour.availability?.seatsAvailable != null
+                ? `${tour.availability.seatsAvailable} ${labels.seats || "seats"}`
+                : labels.onRequest || "On request"}
+            </strong>
+          </div>
         </div>
       </div>
       <div className="tour-detail__booking-widget-footer">
@@ -124,7 +134,7 @@ export default function PricingCardView({
             onClick={() => onContact(tour)}
           >
             <Icon name="messageCircle" />
-            {labels.enquire || labels.contactAgent || "Get a quote"}
+            {quoteLabel}
           </Button>
         </div>
       </div>

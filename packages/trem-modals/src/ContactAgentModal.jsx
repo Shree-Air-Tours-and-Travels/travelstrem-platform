@@ -1,6 +1,13 @@
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
-import { Button, ContactForm, ErrorState, Preloader, QuoteComparison } from "@packages/trem-ui";
+import {
+  Button,
+  ContactForm,
+  ErrorState,
+  Preloader,
+  QuoteComparison,
+  TimelineStepper,
+} from "@packages/trem-ui";
 import { fetchData, notifyDataChanged, validateFields } from "@packages/trem-utils";
 import { showRealtimeToast } from "@packages/trem-events";
 import ModalShell from "./ModalShell.jsx";
@@ -32,12 +39,16 @@ const normalizeFormData = (component) => {
       reviewDescription: labels.quoteReviewDescription,
       cancel: labels.cancel,
       continue: labels.continueToPricing,
+      continueWithPackage: labels.continueWithPackage,
       continueToReview: labels.continueToReview,
       continueWithoutSuggestion: labels.continueWithoutSuggestion,
       backToDetails: labels.backToDetails,
       backToPricing: labels.backToPricing,
       sending: labels.sendingRequest,
       validationError: labels.formValidationError,
+      customJourneyRedirectTitle: labels.customJourneyRedirectTitle,
+      customJourneyRedirectDescription: labels.customJourneyRedirectDescription,
+      customJourneyRedirectAction: labels.customJourneyRedirectAction,
     },
     quoteLabels: {
       summary: labels.quoteSummary,
@@ -96,12 +107,14 @@ const ContactAgentModal = ({
   product = "trevista",
   initialSelections = null,
   closeOnOutsideClick = false,
+  onCustomizeJourney,
 }) => {
   const enquiryFormId = useId();
   const [formData, setFormData] = useState(null);
   const [formLoadError, setFormLoadError] = useState("");
   const [activeStage, setActiveStage] = useState("details");
   const requestIdRef = useRef(0);
+  const initializedFormDataRef = useRef(null);
   const bodyRef = useRef(null);
 
   const loadForm = useCallback(async () => {
@@ -132,6 +145,7 @@ const ContactAgentModal = ({
       return;
     }
     requestIdRef.current += 1;
+    initializedFormDataRef.current = null;
     setFormData(null);
     setFormLoadError("");
   }, [loadForm, open]);
@@ -147,21 +161,20 @@ const ContactAgentModal = ({
   );
   const submitText = formData?.structure?.submitText || "";
   const selectedPackageKey = initialSelections?.packageKey || "";
+  const hotelSelectionsKey = JSON.stringify(initialSelections?.hotelSelections || []);
   const selectedHotelSelections = useMemo(
     () =>
-      (Array.isArray(initialSelections?.hotelSelections) ? initialSelections.hotelSelections : [])
+      (JSON.parse(hotelSelectionsKey) || [])
         .filter((item) => item?.stayKey && item?.hotelOptionKey)
         .slice(0, 20),
-    [initialSelections?.hotelSelections],
+    [hotelSelectionsKey],
   );
   const selectedHotelOptionKey = initialSelections?.hotelOptionKey || "";
   const selectedRoomOptionKey = initialSelections?.roomOptionKey || "";
+  const hotelRequestsKey = JSON.stringify(initialSelections?.hotelRequests || []);
   const selectedHotelRequests = useMemo(
-    () =>
-      (Array.isArray(initialSelections?.hotelRequests) ? initialSelections.hotelRequests : [])
-        .filter((item) => item?.stayKey)
-        .slice(0, 12),
-    [initialSelections?.hotelRequests],
+    () => (JSON.parse(hotelRequestsKey) || []).filter((item) => item?.stayKey).slice(0, 12),
+    [hotelRequestsKey],
   );
 
   const initialForm = useMemo(() => {
@@ -169,7 +182,9 @@ const ContactAgentModal = ({
     const profile = {
       name: user?.name || "",
       email: user?.email || "",
-      phone: user?.phone || user?.phoneNumber || user?.mobile || "",
+      phone: String(user?.phone || user?.phoneNumber || user?.mobile || "")
+        .replace(/\D/g, "")
+        .slice(-10),
     };
     const selectedHotelRoom = selectedHotelOptionKey
       ? `${selectedHotelOptionKey}|${selectedRoomOptionKey}`
@@ -184,7 +199,17 @@ const ContactAgentModal = ({
       obj[f.name] = profile[f.name] || selectedValue || f.value || "";
     });
     return obj;
-  }, [fieldsMeta, selectedHotelOptionKey, selectedPackageKey, selectedRoomOptionKey, user]);
+  }, [
+    fieldsMeta,
+    selectedHotelOptionKey,
+    selectedPackageKey,
+    selectedRoomOptionKey,
+    user?.email,
+    user?.mobile,
+    user?.name,
+    user?.phone,
+    user?.phoneNumber,
+  ]);
 
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState({});
@@ -197,11 +222,23 @@ const ContactAgentModal = ({
   });
 
   useEffect(() => {
+    if (!Object.keys(errors).length) return undefined;
+    const frame = window.requestAnimationFrame(() => {
+      bodyRef.current
+        ?.querySelector('[aria-invalid="true"]')
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [activeStage, errors]);
+
+  useEffect(() => {
+    if (!formData || initializedFormDataRef.current === formData) return;
+    initializedFormDataRef.current = formData;
     setForm(initialForm);
     setErrors({});
     setMsg(null);
     setActiveStage("details");
-  }, [initialForm]);
+  }, [formData, initialForm]);
 
   const fieldsMap = useMemo(() => {
     const map = {};
@@ -289,37 +326,41 @@ const ContactAgentModal = ({
     const abortController = new AbortController();
     setQuotePreview({ loading: true, data: null, error: "" });
     const timeoutId = window.setTimeout(async () => {
-      const response = await fetchData(
-        `/tours.json/${encodeURIComponent(previewTourId)}/customization-preview`,
-        {
-          method: "POST",
-          signal: abortController.signal,
-          body: {
-            packageKey,
-            hotelSelections: selectedHotelSelections,
-            hotelRequests: selectedHotelRequests,
-            hotelOptionKey,
-            roomOptionKey,
-            travellerCount,
-            flightPreference: form.flightPreference,
-            preferredTravelDate: form.preferredTravelDate,
-            preferredStartDate: form.preferredStartDate,
-            preferredEndDate: form.preferredEndDate,
+      try {
+        const response = await fetchData(
+          `/tours.json/${encodeURIComponent(previewTourId)}/customization-preview`,
+          {
+            method: "POST",
+            signal: abortController.signal,
+            body: {
+              packageKey,
+              hotelSelections: selectedHotelSelections,
+              hotelRequests: selectedHotelRequests,
+              hotelOptionKey,
+              roomOptionKey,
+              travellerCount,
+              flightPreference: form.flightPreference,
+              preferredTravelDate: form.preferredTravelDate,
+              preferredStartDate: form.preferredStartDate,
+              preferredEndDate: form.preferredEndDate,
+            },
           },
-        },
-      );
-      if (abortController.signal.aborted) return;
-      if (response?.status === "success" && response?.data?.preview) {
+        );
+        if (abortController.signal.aborted) return;
+        if (response?.status !== "success" || !response?.data?.preview) {
+          throw new Error(response?.message || "Price comparison is unavailable.");
+        }
         setQuotePreview({
           loading: false,
           data: response.data.preview,
           error: "",
         });
-      } else {
+      } catch (error) {
+        if (abortController.signal.aborted) return;
         setQuotePreview({
           loading: false,
           data: null,
-          error: response?.message || "Price comparison is unavailable.",
+          error: error?.message || "Price comparison is unavailable.",
         });
       }
     }, 250);
@@ -356,6 +397,14 @@ const ContactAgentModal = ({
     });
   };
 
+  const continueToCustomJourney = () => {
+    if (!onCustomizeJourney) return;
+    onCustomizeJourney({
+      tourId: typeof tour?._id === "string" ? tour._id : tourId,
+      tour,
+    });
+  };
+
   const hasPricingJourney = product === "trevista" && Boolean(fieldsMap.packageKey);
   const journeyLabels = {
     ariaLabel: formData?.journeyLabels?.ariaLabel || "Quote request progress",
@@ -375,6 +424,7 @@ const ContactAgentModal = ({
       "Check your details before sending them to the travel specialist.",
     cancel: formData?.journeyLabels?.cancel || "Cancel",
     continue: formData?.journeyLabels?.continue || "Continue",
+    continueWithPackage: formData?.journeyLabels?.continueWithPackage || "Continue with {package}",
     continueToReview: formData?.journeyLabels?.continueToReview || "Continue to review",
     continueWithoutSuggestion:
       formData?.journeyLabels?.continueWithoutSuggestion || "Continue without suggestion",
@@ -383,7 +433,21 @@ const ContactAgentModal = ({
     sending: formData?.journeyLabels?.sending || "Sending…",
     validationError:
       formData?.journeyLabels?.validationError || "Please fix the highlighted fields.",
+    customJourneyRedirectTitle:
+      formData?.journeyLabels?.customJourneyRedirectTitle ||
+      "Build the full journey in the custom tour planner",
+    customJourneyRedirectDescription:
+      formData?.journeyLabels?.customJourneyRedirectDescription ||
+      "We will carry this tour's available details into the planner for you.",
+    customJourneyRedirectAction:
+      formData?.journeyLabels?.customJourneyRedirectAction || "Continue to custom planner",
   };
+  const selectedPackageLabel = fieldsMap.packageKey?.options?.find(
+    (option) => String(option.value) === String(form.packageKey || ""),
+  )?.label;
+  const detailsContinueLabel = selectedPackageLabel
+    ? journeyLabels.continueWithPackage.replace("{package}", selectedPackageLabel)
+    : journeyLabels.continue;
   const stages = hasPricingJourney
     ? [
         { id: "details", label: journeyLabels.detailsStep },
@@ -395,6 +459,12 @@ const ContactAgentModal = ({
         { id: "review", label: journeyLabels.reviewStep },
       ];
   const activeStageIndex = stages.findIndex((stage) => stage.id === activeStage);
+  const timelineSteps = stages.map((stage, index) => ({
+    id: stage.id,
+    label: stage.label,
+    status:
+      index < activeStageIndex ? "completed" : index === activeStageIndex ? "current" : "pending",
+  }));
 
   const goToStage = (stage) => {
     setMsg(null);
@@ -526,22 +596,17 @@ const ContactAgentModal = ({
           />
         ) : (
           <div className="ct-modal-card__workspace" data-stage={activeStage}>
-            <ol
+            <TimelineStepper
               className="ct-modal-card__steps"
-              aria-label={journeyLabels.ariaLabel}
-              style={{ "--ct-stage-count": stages.length }}
-            >
-              {stages.map((stage, index) => (
-                <li
-                  key={stage.id}
-                  className={index <= activeStageIndex ? "is-active" : ""}
-                  aria-current={stage.id === activeStage ? "step" : undefined}
-                >
-                  <span>{index + 1}</span>
-                  <strong>{stage.label}</strong>
-                </li>
-              ))}
-            </ol>
+              steps={timelineSteps}
+              ariaLabel={journeyLabels.ariaLabel}
+              orientation="horizontal"
+              variant="soft"
+              markerVariant="number"
+              connectorVariant="solid"
+              showStepNumbers
+              showTime={false}
+            />
 
             {tour?.title && (
               <div className="ct-modal-card__tour">
@@ -624,13 +689,35 @@ const ContactAgentModal = ({
                   errors={errors}
                   Button={Button}
                 />
+                {activeStage === "details" &&
+                form.customizationPreference === "customize" &&
+                onCustomizeJourney ? (
+                  <aside className="ct-modal-card__custom-journey" role="note">
+                    <div>
+                      <strong>{journeyLabels.customJourneyRedirectTitle}</strong>
+                      <p>{journeyLabels.customJourneyRedirectDescription}</p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="text"
+                      text={journeyLabels.customJourneyRedirectAction}
+                      iconRight="arrowUpRight"
+                      onClick={continueToCustomJourney}
+                    />
+                  </aside>
+                ) : null}
               </section>
             )}
           </div>
         )}
 
         {msg && (
-          <div className={`ct-modal-card__msg ct-modal-card__msg--${msg.type}`}>{msg.text}</div>
+          <div
+            className={`ct-modal-card__msg ct-modal-card__msg--${msg.type}`}
+            role={msg.type === "error" ? "alert" : "status"}
+          >
+            {msg.text}
+          </div>
         )}
       </div>
 
@@ -678,17 +765,26 @@ const ContactAgentModal = ({
             <Button
               type="button"
               text={
-                activeStage === "pricing"
-                  ? quotePreview.data?.recommendedAlternative
-                    ? journeyLabels.continueWithoutSuggestion
-                    : journeyLabels.continueToReview
-                  : journeyLabels.continue
+                activeStage === "details" &&
+                form.customizationPreference === "customize" &&
+                onCustomizeJourney
+                  ? journeyLabels.customJourneyRedirectAction
+                  : activeStage === "pricing"
+                    ? quotePreview.data?.recommendedAlternative
+                      ? journeyLabels.continueWithoutSuggestion
+                      : journeyLabels.continueToReview
+                    : detailsContinueLabel
               }
               size="medium"
               variant="solid"
               color="primary"
-              onClick={() =>
-                activeStage === "pricing" ? goToStage("review") : handleDetailsContinue()
+              onClick={
+                activeStage === "details" &&
+                form.customizationPreference === "customize" &&
+                onCustomizeJourney
+                  ? continueToCustomJourney
+                  : () =>
+                      activeStage === "pricing" ? goToStage("review") : handleDetailsContinue()
               }
               disabled={submitting || (activeStage === "pricing" && quotePreview.loading)}
             />
@@ -707,6 +803,7 @@ ContactAgentModal.propTypes = {
   product: PropTypes.oneOf(["trevista", "trevio"]),
   closeOnOutsideClick: PropTypes.bool,
   initialSelections: PropTypes.object,
+  onCustomizeJourney: PropTypes.func,
 };
 
 export default ContactAgentModal;

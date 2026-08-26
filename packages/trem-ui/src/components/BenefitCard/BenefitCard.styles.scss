@@ -11,17 +11,6 @@
   border-radius: $radius-md;
   background: var(--card-bg);
   box-shadow: var(--shadow-soft);
-  transition:
-    transform $duration-base $ease-default,
-    box-shadow $duration-base $ease-default,
-    border-color $duration-base $ease-default,
-    background $duration-base $ease-default;
-
-  &:hover {
-    transform: translateY(-4px);
-    border-color: var(--primary-focus);
-    box-shadow: var(--shadow-card);
-  }
 
   &__icon {
     display: inline-flex;
@@ -79,11 +68,6 @@
     box-shadow: none;
     border-style: dashed;
 
-    &:hover {
-      transform: none;
-      box-shadow: none;
-      border-color: var(--color-primary);
-    }
   }
 
   &--highlighted {
@@ -95,11 +79,6 @@
       color: var(--color-on-primary);
     }
 
-    &:hover {
-      box-shadow:
-        0 0 0 4px var(--primary-softer),
-        var(--shadow-card);
-    }
   }
 }
 

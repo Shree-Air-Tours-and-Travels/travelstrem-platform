@@ -1,4 +1,40 @@
+const PHONE_COUNTRY_CODES = `
++93|AF +355|AL +213|DZ +376|AD +244|AO +54|AR +374|AM +61|AU +43|AT +994|AZ
++973|BH +880|BD +375|BY +32|BE +501|BZ +229|BJ +975|BT +591|BO +387|BA +267|BW
++55|BR +673|BN +359|BG +226|BF +257|BI +855|KH +237|CM +1|CA +238|CV +236|CF
++235|TD +56|CL +86|CN +57|CO +269|KM +242|CG +506|CR +385|HR +53|CU +357|CY
++420|CZ +45|DK +253|DJ +593|EC +20|EG +503|SV +240|GQ +372|EE +251|ET +679|FJ
++358|FI +33|FR +241|GA +220|GM +995|GE +49|DE +233|GH +30|GR +502|GT +224|GN
++245|GW +592|GY +509|HT +504|HN +852|HK +36|HU +354|IS +91|IN +62|ID +98|IR
++964|IQ +353|IE +972|IL +39|IT +225|CI +81|JP +962|JO +7|KZ +254|KE +965|KW
++996|KG +856|LA +371|LV +961|LB +266|LS +231|LR +218|LY +423|LI +370|LT +352|LU
++853|MO +389|MK +261|MG +265|MW +60|MY +960|MV +223|ML +356|MT +222|MR +230|MU
++52|MX +691|FM +373|MD +377|MC +976|MN +382|ME +212|MA +258|MZ +95|MM +264|NA
++977|NP +31|NL +64|NZ +505|NI +227|NE +234|NG +850|KP +47|NO +968|OM +92|PK
++680|PW +970|PS +507|PA +675|PG +595|PY +51|PE +63|PH +48|PL +351|PT +974|QA
++40|RO +7|RU +250|RW +685|WS +378|SM +966|SA +221|SN +381|RS +248|SC +232|SL
++65|SG +421|SK +386|SI +677|SB +252|SO +27|ZA +82|KR +211|SS +34|ES +94|LK
++249|SD +597|SR +268|SZ +46|SE +41|CH +963|SY +886|TW +992|TJ +255|TZ +66|TH
++670|TL +228|TG +676|TO +216|TN +90|TR +993|TM +688|TV +256|UG +380|UA +971|AE
++44|GB +1|US +598|UY +998|UZ +678|VU +379|VA +58|VE +84|VN +967|YE +260|ZM +263|ZW
+`
+    .trim()
+    .split(/\s+/)
+    .map((entry, index) => {
+        const [dialCode, countryCode] = entry.split("|");
+        return {
+            value: `${countryCode}:${dialCode}`,
+            label: `${dialCode} ${countryCode}`,
+            sortOrder: index,
+            metadata: { dialCode, countryCode },
+        };
+    });
+
 export const DEFAULT_OPTION_SETS = Object.freeze({
+    "common.phoneCountryCodes": {
+        description: "International telephone country codes available in contact forms",
+        options: PHONE_COUNTRY_CODES,
+    },
     "trevista.tourBuilderSteps": {
         product: "trevista",
         description: "Ordered top-level steps for the agent/admin tour builder",
@@ -206,6 +242,83 @@ export const DEFAULT_OPTION_SETS = Object.freeze({
     "common.currencyOptions": {
         description: "Currencies enabled for prices entered by operations users",
         options: [{ value: "INR", label: "INR - Indian Rupee", sortOrder: 0 }],
+    },
+    "trevista.customTourJourneyTypeOptions": {
+        product: "trevista",
+        description: "Date flexibility choices for custom-tour enquiries",
+        options: [
+            { value: "fixed", label: "Fixed dates", sortOrder: 0 },
+            { value: "flexible", label: "Flexible dates", sortOrder: 10 },
+            { value: "custom", label: "Fully custom / dates undecided", sortOrder: 20 },
+        ],
+    },
+    "trevista.customTourFlightOptions": {
+        product: "trevista",
+        description: "Flight handling choices for custom-tour enquiries",
+        options: [
+            { value: "with_flights", label: "Include flights", sortOrder: 0 },
+            { value: "without_flights", label: "I will arrange flights", sortOrder: 10 },
+            {
+                value: "agent_recommendation",
+                label: "Let the specialist recommend",
+                sortOrder: 20,
+            },
+        ],
+    },
+    "trevista.customTourAccommodationOptions": {
+        product: "trevista",
+        description: "Accommodation preferences for custom-tour enquiries",
+        options: [
+            { value: "hotel", label: "Hotels", sortOrder: 0 },
+            { value: "resort", label: "Resorts", sortOrder: 10 },
+            { value: "villa", label: "Private villas", sortOrder: 20 },
+            { value: "homestay", label: "Homestays", sortOrder: 30 },
+            { value: "camp", label: "Camps / glamping", sortOrder: 40 },
+        ],
+    },
+    "trevista.customTourTransportOptions": {
+        product: "trevista",
+        description: "Transport preferences for custom-tour enquiries",
+        options: [
+            { value: "private_car", label: "Private car", sortOrder: 0 },
+            { value: "self_drive", label: "Self drive", sortOrder: 10 },
+            { value: "train", label: "Train", sortOrder: 20 },
+            { value: "coach", label: "Coach", sortOrder: 30 },
+            { value: "local_transit", label: "Local transport", sortOrder: 40 },
+        ],
+    },
+    "trevista.customTourInterestOptions": {
+        product: "trevista",
+        description: "Experience preferences for custom-tour enquiries",
+        options: [
+            { value: "culture", label: "Culture & heritage", sortOrder: 0 },
+            { value: "food", label: "Food & local experiences", sortOrder: 10 },
+            { value: "nature", label: "Nature & wildlife", sortOrder: 20 },
+            { value: "adventure", label: "Adventure", sortOrder: 30 },
+            { value: "wellness", label: "Wellness", sortOrder: 40 },
+            { value: "beaches", label: "Beaches", sortOrder: 50 },
+            { value: "nightlife", label: "Nightlife", sortOrder: 60 },
+            { value: "family", label: "Family activities", sortOrder: 70 },
+            { value: "shopping", label: "Shopping", sortOrder: 80 },
+        ],
+    },
+    "trevista.customTourPaceOptions": {
+        product: "trevista",
+        description: "Trip pace preferences for custom-tour enquiries",
+        options: [
+            { value: "relaxed", label: "Relaxed", sortOrder: 0 },
+            { value: "balanced", label: "Balanced", sortOrder: 10 },
+            { value: "packed", label: "See as much as possible", sortOrder: 20 },
+        ],
+    },
+    "trevista.customTourCurrencyOptions": {
+        product: "trevista",
+        description: "Currencies accepted for custom-tour enquiry budgets",
+        options: ["INR", "USD", "GBP", "EUR", "AED"].map((value, index) => ({
+            value,
+            label: value,
+            sortOrder: index * 10,
+        })),
     },
     "trevista.priceSourceOptions": {
         product: "trevista",

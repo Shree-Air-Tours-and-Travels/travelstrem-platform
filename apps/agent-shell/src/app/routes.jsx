@@ -6,6 +6,7 @@ import ManageTours from "../features/services/tours/ManageTours";
 import ServicesContainer from "../features/services/container";
 import PartnerTrevioTrips from "../features/trevio/PartnerTrevioTrips";
 import EnquiriesPage from "../features/enquiries/EnquiriesPage";
+import AgentSupportPage from "../features/support/AgentSupportPage";
 import { useAgentPortalConfig, isAllowedAgentRole } from "./providers/AgentPortalProvider";
 
 const Routers = () => {
@@ -38,6 +39,7 @@ const Routers = () => {
         <Route path="/agent/customers" element={<ManageTours session={session} />} />
         <Route path="/agent/enquiries" element={<EnquiriesPage />} />
         <Route path="/agent/bookings" element={<EnquiriesPage />} />
+        <Route path="/agent/support" element={<AgentSupportPage />} />
         <Route path="/agent/reports" element={<ManageTours session={session} />} />
         <Route path="/agent/deletion-requests" element={<ManageTours session={session} />} />
         <Route path="/agent/notifications" element={<ManageTours session={session} />} />

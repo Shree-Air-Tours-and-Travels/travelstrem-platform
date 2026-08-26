@@ -24,6 +24,7 @@ const productTarget = (key) =>
 const activityTarget = (item) => {
     if (item.kind === "enquiry") return "/agent/bookings";
     if (item.kind === "customer") return "/agent/customers";
+    if (item.kind === "support") return "/agent/support";
     if (item.product) return productTarget(item.product);
     return "/agent/dashboard";
 };
@@ -125,6 +126,16 @@ export function buildPartnerDashboard({
             occurredAt: safeDate(item.updatedAt || item.createdAt),
             target: "/agent/customers",
         })),
+        ...(records.support || []).map((item) => ({
+            id: `support-${idOf(item)}`,
+            kind: "support",
+            icon: "support",
+            title: item.subject || item.reference || "Support request",
+            description: `${item.reference} was updated by the support team.`,
+            status: item.status || "OPEN",
+            occurredAt: safeDate(item.updatedAt || item.createdAt),
+            target: "/agent/support",
+        })),
     ]
         .filter((item) => item.occurredAt)
         .sort((left, right) => new Date(right.occurredAt) - new Date(left.occurredAt));
@@ -210,6 +221,15 @@ export function buildPartnerDashboard({
                 tone: openEnquiries ? "warning" : "neutral",
                 target: "/agent/bookings",
             },
+            {
+                id: "support-tickets",
+                label: "Open support tickets",
+                value: safeCount(counts.support?.open),
+                helper: `${safeCount(counts.support?.awaitingSupport)} waiting for TravelsTREM`,
+                icon: "support",
+                tone: safeCount(counts.support?.open) ? "warning" : "neutral",
+                target: "/agent/support",
+            },
         ],
         workload: [
             {
@@ -248,6 +268,15 @@ export function buildPartnerDashboard({
                 icon: "bell",
                 target: "/agent/notifications",
             },
+            {
+                id: "support-follow-up",
+                label: "Support follow-ups",
+                value: safeCount(counts.support?.open),
+                description: "Your open requests with the TravelsTREM support team.",
+                status: safeCount(counts.support?.open) ? "in_progress" : "clear",
+                icon: "support",
+                target: "/agent/support",
+            },
         ],
         products,
         quickActions: [
@@ -277,6 +306,14 @@ export function buildPartnerDashboard({
                       variant: "secondary",
                   }]
                 : []),
+            {
+                id: "open-support",
+                label: "Help & Support",
+                description: "Track replies or ask TravelsTREM for help.",
+                icon: "support",
+                target: "/agent/support",
+                variant: "secondary",
+            },
             {
                 id: "view-customers",
                 label: "View customers",

@@ -17,9 +17,9 @@ export default function ErrorState({
   const renderedActions = actions || (retry ? <Button text={retryText} onClick={retry} /> : null);
 
   return (
-    <div className={`tt-error-state ${className}`} {...rest}>
+    <div className={`tt-error-state ${className}`} role="alert" {...rest}>
       <div className="tt-error-state__icon">
-        <Icon name={icon} size={56} />
+        <Icon name={icon} size={26} />
       </div>
       <h2 className="tt-error-state__title">{title}</h2>
       {description ? <p className="tt-error-state__desc">{description}</p> : null}

@@ -203,7 +203,7 @@ describe("ContactAgentModal", () => {
     fireEvent.change(screen.getByLabelText("Travellers"), { target: { value: "2" } });
     fireEvent.change(screen.getByLabelText("Start date"), { target: { value: "2026-10-10" } });
     fireEvent.change(screen.getByLabelText("End date"), { target: { value: "2026-10-17" } });
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue with Premium" }));
 
     await waitFor(() => expect(post).toHaveBeenCalledTimes(1));
     fireEvent.click(await screen.findByRole("button", { name: "Choose Standard" }));

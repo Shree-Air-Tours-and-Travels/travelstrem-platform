@@ -1,5 +1,5 @@
 .td-plans {
-  padding: clamp(1.2rem, 2vw, 2rem);
+  padding: clamp(1rem, 1.6vw, 1.5rem);
   border: 1px solid var(--border);
   border-radius: 20px;
   background: var(--surface);
@@ -37,23 +37,32 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    padding: 1.15rem;
+    gap: 0.75rem;
+    padding: 1rem;
     border: 1px solid var(--border);
     border-radius: 16px;
     background: var(--surface-inset);
-  }
-  &__card:hover {
-    border-color: var(--color-primary);
   }
   &__card.is-recommended {
     border-color: var(--color-primary);
   }
   &__card.is-selected {
+    border-color: var(--color-primary);
+    background: var(--primary-softer);
     box-shadow: 0 0 0 3px var(--primary-focus);
   }
+  &__plan-label {
+    min-height: 28px;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--title);
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
   &__recommended {
-    align-self: flex-start;
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
@@ -63,7 +72,7 @@
     color: var(--color-on-primary);
     font-size: 0.68rem;
     font-weight: 800;
-    text-transform: uppercase;
+    letter-spacing: 0;
   }
   &__card-head {
     display: flex;
@@ -71,13 +80,8 @@
     justify-content: space-between;
     gap: 0.75rem;
   }
-  &__card-head small {
-    color: var(--muted);
-    font-weight: 800;
-    text-transform: uppercase;
-  }
   &__card-head h3 {
-    margin: 0.15rem 0 0;
+    margin: 0;
     color: var(--title);
     font-size: 1.12rem;
   }
@@ -91,11 +95,17 @@
     color: var(--subtitle);
     line-height: 1.55;
     font-size: 0.86rem;
+    display: -webkit-box;
+    min-height: 2.7em;
+    overflow: hidden;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
   }
   &__features {
     display: grid;
     gap: 0.55rem;
-    flex: 1;
+    flex: 1 1 auto;
+    align-content: start;
   }
   &__features span {
     display: flex;
@@ -121,6 +131,9 @@
   &__optional p {
     margin: 0.5rem 0 0;
     line-height: 1.5;
+  }
+  .ui-button {
+    margin-top: auto;
   }
 }
 

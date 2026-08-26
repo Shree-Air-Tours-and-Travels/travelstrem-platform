@@ -4,7 +4,7 @@ import { WidgetError, WidgetSkeleton } from "../../shared";
 import CancellationPolicyView from "./CancellationPolicy.view";
 
 export default function CancellationPolicyContainer({ tourRef }) {
-  const { loading, error, widgetData } = useTourDetailWidget(tourRef, "cancellation-policy.json");
+  const { loading, error, widgetData, retry } = useTourDetailWidget(tourRef, "cancellation-policy.json");
   const labels = widgetData?.elements?.labels || {};
   const policy = widgetData?.data?.cancellationPolicy || "";
   const cancellation = widgetData?.data?.cancellation || null;
@@ -25,7 +25,7 @@ export default function CancellationPolicyContainer({ tourRef }) {
   };
 
   if (loading) return <WidgetSkeleton compact />;
-  if (error) return <WidgetError message={error} />;
+  if (error) return <WidgetError message={error} retry={retry} />;
   return (
     <CancellationPolicyView
       labels={labels}

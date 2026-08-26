@@ -22,9 +22,9 @@
         "filterArrival": "Departure date",
         "filterReturn": "Return",
         "filterTags": "Interests",
-        "filterFeatured": "Tour status",
-        "featuredAny": "Any status",
-        "featuredTrue": "Featured only",
+        "filterFeatured": "Tour type",
+        "featuredAny": "All tours",
+        "featuredTrue": "Featured tours",
         "featuredFalse": "Standard tours",
         "applyFilters": "Apply Filters",
         "resetFilters": "Reset",
@@ -61,28 +61,27 @@
                 "optionsRef": "destinationCityOptions"
               },
               {
+                "name": "departureDate",
+                "labelRef": "filterArrival",
+                "type": "date"
+              },
+              {
+                "name": "returnDate",
+                "labelRef": "filterReturn",
+                "type": "date"
+              },
+              {
                 "name": "countryIds",
                 "labelRef": "filterCountry",
                 "type": "multiselect",
                 "optionsRef": "countryOptions"
               },
               {
-                "name": "agencyIds",
-                "labelRef": "filterAgency",
-                "type": "multiselect",
-                "optionsRef": "agencyOptions"
-              },
-              {
-                "name": "minPrice",
-                "labelRef": "filterMinPrice",
+                "name": "travellers",
+                "labelRef": "filterGroup",
                 "type": "number",
-                "min": 0
-              },
-              {
-                "name": "maxPrice",
-                "labelRef": "filterMaxPrice",
-                "type": "number",
-                "min": 0
+                "min": 1,
+                "max": 500
               },
               {
                 "name": "minDays",
@@ -99,21 +98,22 @@
                 "max": 365
               },
               {
-                "name": "travellers",
-                "labelRef": "filterGroup",
+                "name": "minPrice",
+                "labelRef": "filterMinPrice",
                 "type": "number",
-                "min": 1,
-                "max": 500
+                "min": 0
               },
               {
-                "name": "departureDate",
-                "labelRef": "filterArrival",
-                "type": "date"
+                "name": "maxPrice",
+                "labelRef": "filterMaxPrice",
+                "type": "number",
+                "min": 0
               },
               {
-                "name": "returnDate",
-                "labelRef": "filterReturn",
-                "type": "date"
+                "name": "agencyIds",
+                "labelRef": "filterAgency",
+                "type": "multiselect",
+                "optionsRef": "agencyOptions"
               },
               {
                 "name": "tagIds",
@@ -124,6 +124,7 @@
               {
                 "name": "featured",
                 "labelRef": "filterFeatured",
+                "placeholderRef": "featuredAny",
                 "type": "select"
               }
             ]

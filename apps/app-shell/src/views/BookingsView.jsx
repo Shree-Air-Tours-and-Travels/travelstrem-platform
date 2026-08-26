@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Button,
   EnquiryCenter,
@@ -9,12 +10,10 @@ import { fetchData, useRefreshOnActivation } from "@packages/trem-utils";
 import "./BookingsView.scss";
 
 export default function BookingsView() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [enquiries, setEnquiries] = useState([]);
-  const [meta, setMeta] = useState({
-    title: "My bookings & enquiries",
-    description: "Requests you have sent and bookings confirmed for your account.",
-  });
-  const [selectedId, setSelectedId] = useState("");
+  const [view, setView] = useState({});
+  const selectedId = searchParams.get("enquiry") || "";
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [enquiryRef, setEnquiryRef] = useState("");
@@ -25,16 +24,12 @@ export default function BookingsView() {
     setError("");
     try {
       const response = await fetchData("/enquiries");
-      if (response?.status !== "success")
-        throw new Error(response?.message || "Failed to load enquiries.");
+      if (response?.status !== "success") throw new Error(response?.message);
       const component = response.componentData || {};
       setEnquiries(Array.isArray(component.data) ? component.data : []);
-      setMeta({
-        title: component.title || "My bookings & enquiries",
-        description: component.description || "",
-      });
+      setView(component);
     } catch (loadError) {
-      setError(loadError?.message || "Failed to load enquiries.");
+      setError(loadError?.message);
     } finally {
       setLoading(false);
     }
@@ -56,37 +51,44 @@ export default function BookingsView() {
         method: "POST",
         body: { enquiryRef: enquiryRef.trim() },
       });
-      if (response?.status !== "success")
-        throw new Error(response?.message || "Could not add enquiry.");
-      setClaimState({ saving: false, message: response.message || "Enquiry added.", error: false });
+      if (response?.status !== "success") throw new Error(response?.message);
+      setClaimState({ saving: false, message: response.message, error: false });
       setEnquiryRef("");
       await load();
     } catch (claimError) {
       setClaimState({
         saving: false,
-        message: claimError?.message || "Could not add enquiry.",
+        message: claimError?.message,
         error: true,
       });
     }
   };
 
+  const selectEnquiry = (item) => {
+    const next = new URLSearchParams(searchParams);
+    next.set("tab", "bookings");
+    next.set("enquiry", item.reference || item.enquiryRef || item.id);
+    setSearchParams(next);
+  };
+
   return (
     <div className="customer-enquiries">
-      {!selectedId ? (
+      {!selectedId && view.claim ? (
         <form className="customer-enquiries__claim" onSubmit={claim}>
           <div>
-            <h2>Add an enquiry</h2>
-            <p>Submitted before signing in? Enter the enquiry ID from your confirmation email.</p>
+            <h2>{view.claim.title}</h2>
+            <p>{view.claim.description}</p>
           </div>
           <InputField
-            label="Enquiry ID"
+            label={view.claim.fieldLabel}
             value={enquiryRef}
-            placeholder="ENQ-ABC123"
+            placeholder={view.claim.placeholder}
             onChange={setEnquiryRef}
           />
           <Button
             type="submit"
-            text={claimState.saving ? "Adding…" : "Add enquiry"}
+            primaryClassName="customer-enquiries__claim-submit"
+            text={claimState.saving ? view.claim.submitting : view.claim.submit}
             disabled={claimState.saving || !enquiryRef.trim()}
           />
           {claimState.message ? (
@@ -97,14 +99,15 @@ export default function BookingsView() {
         </form>
       ) : null}
       <EnquiryCenter
-        {...meta}
+        title={view.title}
+        description={view.description}
+        view={view}
         enquiries={enquiries}
         selectedId={selectedId}
         loading={loading}
         error={error}
         onRetry={load}
-        onSelect={(item) => setSelectedId(item.id)}
-        onBack={() => setSelectedId("")}
+        onSelect={selectEnquiry}
       />
     </div>
   );

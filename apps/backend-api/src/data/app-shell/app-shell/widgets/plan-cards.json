@@ -43,6 +43,7 @@
             "mobileIcon": "beach",
             "tone": "olive",
             "hrefRef": "trevistaHome",
+            "targetTab": "trevista",
             "target": "_self",
             "ariaLabelRef": "planToursAriaLabel"
           },

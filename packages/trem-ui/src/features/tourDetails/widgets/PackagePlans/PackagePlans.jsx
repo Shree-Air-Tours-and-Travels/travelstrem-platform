@@ -2,12 +2,16 @@ import React, { useEffect, useMemo } from "react";
 import Button from "../../../../components/Button/Button.jsx";
 import Icon from "../../../../icons/Icon/Icon.jsx";
 import useTourDetailWidget from "../../hooks/useTourDetailWidget";
-import { getCurrencyFormatter } from "../../helper";
+import {
+  getCurrencyFormatter,
+  getPackageDisplayName,
+  getPackageDisplayRank,
+} from "../../helper";
 import { WidgetError, WidgetSkeleton } from "../../shared";
 import "./PackagePlans.styles.scss";
 
 export default function PackagePlans({ tourRef, selectedPackage = "", onSelectPackage }) {
-  const { loading, error, widgetData } = useTourDetailWidget(tourRef, "pricing-card.json");
+  const { loading, error, widgetData, retry } = useTourDetailWidget(tourRef, "pricing-card.json");
   const labels = widgetData?.elements?.labels || {};
   const pricing = widgetData?.data?.tour?.commercialPricing;
   const plans = useMemo(() => {
@@ -16,19 +20,21 @@ export default function PackagePlans({ tourRef, selectedPackage = "", onSelectPa
     return pricing.packages
       .map((item) => ({
         ...item,
+        displayName: getPackageDisplayName(item),
         priceText: formatter.format(Number(item.sellingTotalMinor || 0) / 100),
       }))
-      .filter((item) => item.packageKey && Number(item.sellingTotalMinor) > 0);
+      .filter((item) => item.packageKey && Number(item.sellingTotalMinor) > 0)
+      .sort((left, right) => getPackageDisplayRank(left) - getPackageDisplayRank(right));
   }, [pricing]);
 
   useEffect(() => {
     if (!plans.length || plans.some((plan) => plan.packageKey === selectedPackage)) return;
-    const defaultPlan = plans.find((plan) => plan.recommended) || plans[0];
+    const defaultPlan = plans.find((plan) => plan.displayName === "Premium") || plans[0];
     onSelectPackage?.(defaultPlan.packageKey, defaultPlan);
   }, [onSelectPackage, plans, selectedPackage]);
 
   if (loading && !plans.length) return <WidgetSkeleton />;
-  if (error && !plans.length) return <WidgetError message={error} />;
+  if (error && !plans.length) return <WidgetError message={error} retry={retry} />;
   if (!plans.length) return null;
 
   return (
@@ -47,29 +53,30 @@ export default function PackagePlans({ tourRef, selectedPackage = "", onSelectPa
       <div className="td-plans__grid">
         {plans.map((plan) => {
           const selected = selectedPackage === plan.packageKey;
+          const recommended = plan.displayName === "Premium";
           return (
             <article
-              className={`td-plans__card${plan.recommended ? " is-recommended" : ""}${selected ? " is-selected" : ""}`}
+              className={`td-plans__card${recommended ? " is-recommended" : ""}${selected ? " is-selected" : ""}`}
               key={plan.packageKey}
             >
-              {plan.recommended ? (
-                <span className="td-plans__recommended">
+              <div className="td-plans__plan-label">
+                <span>{plan.displayName}</span>
+                {recommended ? (
+                  <span className="td-plans__recommended">
                   <Icon name="sparkles" size={14} />
                   {labels.recommended || "Recommended"}
-                </span>
-              ) : null}
+                  </span>
+                ) : null}
+              </div>
               <div className="td-plans__card-head">
-                <div>
-                  <small>{plan.tier}</small>
-                  <h3>{plan.name}</h3>
-                </div>
+                <h3>{plan.displayName}</h3>
                 <strong>{plan.priceText}</strong>
               </div>
               {plan.description ? (
                 <p className="td-plans__description">{plan.description}</p>
               ) : null}
               <div className="td-plans__features">
-                {(plan.included || []).slice(0, 8).map((item) => (
+                {(plan.included || []).slice(0, 5).map((item) => (
                   <span key={item}>
                     <Icon name="check" size={15} />
                     {item}

@@ -1,54 +1,295 @@
+@import "@packages/trem-design-tokens/scss";
+
+/* ========================================================================== */
+/* Root                                                                       */
+/* ========================================================================== */
+
 .tt-quick-chips {
+  position: relative;
+
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  align-items: center;
+  flex-direction: column;
+
+  width: 100%;
+  min-width: 0;
+
+  gap: $space-2;
 }
+
+/* ========================================================================== */
+/* Title                                                                      */
+/* ========================================================================== */
 
 .tt-quick-chips__title {
+  display: flex;
+  align-items: center;
+
   width: 100%;
-  margin: 0 0 0.65rem;
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--text, #14201d);
-  line-height: 1.4;
+
+  margin: 0;
+
+  color: var(--text);
+
+  font-family: $font-primary;
+  font-size: $font-size-sm;
+  font-weight: $font-bold;
+
+  line-height: 1.3;
+
+  letter-spacing: -0.005em;
 }
 
-.tt-quick-chips__chip {
+/* ========================================================================== */
+/* Chips container                                                            */
+/* ========================================================================== */
+
+.tt-quick-chips__list {
+  display: flex;
+  align-items: center;
+
+  width: 100%;
+  min-width: 0;
+
+  gap: $space-2;
+
+  flex-wrap: wrap;
+}
+
+/* ========================================================================== */
+/* Chip                                                                       */
+/* ========================================================================== */
+
+.tt-quick-chips__chip.ui-button {
+  --quick-chip-color: var(--color-primary);
+
+  position: relative;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 36px;
-  padding: 0.35rem 1rem;
-  border: 1px solid var(--border, #d1d9e6);
-  border-radius: 999px;
-  background: var(--surface, #fff);
-  color: var(--text, #14201d);
-  font-size: 0.88rem;
-  font-weight: 600;
-  white-space: nowrap;
-  cursor: pointer;
-  transition:
-    background 160ms ease,
-    color 160ms ease,
-    border-color 160ms ease,
-    box-shadow 160ms ease;
 
-  &:hover:not(.is-disabled) {
-    background: var(--surface-elevated, #f1f5f9);
-    border-color: var(--color-primary, #2563eb);
+  min-width: 0;
+  min-height: 34px;
+
+  padding: 0 $space-3;
+
+  overflow: hidden;
+
+  border: 1px solid color-mix(in srgb, var(--border) 86%, var(--quick-chip-color) 14%);
+
+  border-radius: $radius-full;
+
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface) 98%, var(--quick-chip-color) 2%),
+    var(--surface)
+  );
+
+  color: var(--text);
+
+  font-family: $font-primary;
+  font-size: $font-size-xs;
+  font-weight: $font-semibold;
+
+  line-height: 1;
+
+  white-space: nowrap;
+
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+
+  cursor: pointer;
+
+  transform: none;
+
+  transition:
+    color 140ms $ease-default,
+    background 140ms $ease-default,
+    border-color 140ms $ease-default,
+    box-shadow 140ms $ease-default,
+    transform 120ms $ease-default;
+
+  /*
+   * Button text
+   */
+  > span:not(.ui-button__icon) {
+    min-width: 0;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
+
+  /* ---------------------------------------------------------------------- */
+  /* Hover                                                                   */
+  /* ---------------------------------------------------------------------- */
+
+  &:hover:not(:disabled):not(.is-disabled) {
+    border-color: var(--quick-chip-color);
+
+    background: var(--surface);
+
+    color: var(--text);
+
+    box-shadow: none;
+
+    transform: none;
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Focus                                                                   */
+  /* ---------------------------------------------------------------------- */
+
+  &:focus-visible {
+    outline: none;
+
+    border-color: var(--quick-chip-color);
+
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--quick-chip-color) 12%, transparent);
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Active                                                                  */
+  /* ---------------------------------------------------------------------- */
 
   &.is-active {
-    background: var(--color-primary, #2563eb);
-    border-color: var(--color-primary, #2563eb);
-    color: var(--color-on-primary, #fff);
-    box-shadow: 0 0 0 1px var(--color-primary, #2563eb);
+    border-color: color-mix(in srgb, var(--quick-chip-color) 72%, transparent);
+
+    background: linear-gradient(
+      135deg,
+      var(--color-primary),
+      color-mix(in srgb, var(--color-primary) 78%, var(--color-secondary) 22%)
+    );
+
+    color: var(--color-on-primary);
+
+    font-weight: $font-bold;
+
+    box-shadow: 0 3px 8px color-mix(in srgb, var(--quick-chip-color) 16%, transparent);
+
+    &:hover:not(:disabled) {
+      border-color: var(--quick-chip-color);
+
+      background: linear-gradient(
+        135deg,
+        var(--color-primary),
+        color-mix(in srgb, var(--color-primary) 78%, var(--color-secondary) 22%)
+      );
+
+      color: var(--color-on-primary);
+
+      filter: none;
+
+      box-shadow: 0 3px 8px color-mix(in srgb, var(--quick-chip-color) 16%, transparent);
+
+      transform: none;
+    }
+
+    &:focus-visible {
+      box-shadow:
+        0 0 0 3px color-mix(in srgb, var(--quick-chip-color) 16%, transparent),
+        0 3px 8px color-mix(in srgb, var(--quick-chip-color) 16%, transparent);
+    }
   }
 
-  &.is-disabled {
-    opacity: 0.45;
+  /* ---------------------------------------------------------------------- */
+  /* Disabled                                                                */
+  /* ---------------------------------------------------------------------- */
+
+  &.is-disabled,
+  &:disabled {
+    opacity: 0.46;
+
     cursor: not-allowed;
+
+    transform: none;
+
+    box-shadow: none;
+
     pointer-events: none;
+  }
+}
+
+/* ========================================================================== */
+/* Compact groups                                                             */
+/* ========================================================================== */
+
+.tt-quick-chips--compact {
+  gap: $space-1;
+
+  .tt-quick-chips__list {
+    gap: $space-1;
+  }
+
+  .tt-quick-chips__chip.ui-button {
+    min-height: 30px;
+
+    padding-inline: $space-2;
+  }
+}
+
+/* ========================================================================== */
+/* Mobile                                                                     */
+/* ========================================================================== */
+
+@media (max-width: $breakpoint-mobile) {
+  .tt-quick-chips {
+    gap: $space-2;
+  }
+
+  .tt-quick-chips__title {
+    font-size: $font-size-xs;
+  }
+
+  /*
+   * Horizontal scrolling is cleaner than wrapping
+   * into 3-4 lines on narrow screens.
+   */
+  .tt-quick-chips__list {
+    width: calc(100% + #{$space-3});
+
+    margin-right: calc(#{$space-3} * -1);
+
+    padding-right: $space-3;
+    padding-bottom: 2px;
+
+    flex-wrap: nowrap;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    overscroll-behavior-x: contain;
+
+    scrollbar-width: none;
+
+    -webkit-overflow-scrolling: touch;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .tt-quick-chips__chip.ui-button {
+    min-height: 32px;
+
+    padding-inline: $space-3;
+
+    flex: 0 0 auto;
+
+    max-width: 190px;
+  }
+}
+
+/* ========================================================================== */
+/* Reduced motion                                                             */
+/* ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .tt-quick-chips__chip.ui-button {
+    transition: none;
+
+    &:hover {
+      transform: none;
+    }
   }
 }

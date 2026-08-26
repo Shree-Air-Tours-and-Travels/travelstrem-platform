@@ -1,283 +1,583 @@
-// styles/Stories/button.scss
-@import "../../styles/base/typography"; // trem-scss canonical file
+@import "../../styles/base/typography";
 
-// --------------------------------------------------
-// Base: ui-button (modernized to trem-scss tokens)
-// --------------------------------------------------
+/* ========================================================================== */
+/* Base                                                                       */
+/* ========================================================================== */
+
 .ui-button {
-  // base typography (replace mixin names if your trem-scss uses different names)
   @include type-md();
-  font-family: $font-primary;
-  font-weight: $font-bold;
+
+  position: relative;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: $space-3;
-  min-height: 40px;
-  box-sizing: border-box;
-  border: 2px solid var(--color-transparent);
-  border-radius: $radius-sm;
-  padding: 12px 14px; // default padding = medium
-  text-decoration: none;
-  cursor: pointer;
-  transition:
-    transform $duration-medium $ease-standard,
-    box-shadow $duration-slow $ease-standard,
-    filter $duration-base $ease-standard;
-  -webkit-tap-highlight-color: var(--color-transparent);
-  background-clip: padding-box;
-  user-select: none;
-  color: var(--color-on-surface);
 
-  // focus-visible (accessible)
+  gap: $space-2;
+
+  min-height: 40px;
+
+  box-sizing: border-box;
+
+  padding: 10px 16px;
+
+  border: 1px solid transparent;
+  border-radius: $radius-sm;
+
+  background: transparent;
+
+  font-family: $font-primary;
+  font-weight: $font-semibold;
+  line-height: 1;
+
+  text-decoration: none;
+  white-space: nowrap;
+
+  cursor: pointer;
+
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+
+  transition:
+    background 150ms $ease-standard,
+    border-color 150ms $ease-standard,
+    color 150ms $ease-standard,
+    box-shadow 150ms $ease-standard,
+    transform 120ms $ease-standard;
+
+  &:focus {
+    outline: none;
+  }
+
   &:focus-visible {
     outline: none;
-    box-shadow: 0 8px 20px var(--primary-shadow);
+
+    box-shadow: 0 0 0 3px var(--primary-soft);
   }
 
-  &:active {
-    transform: translateY(1px);
+  &:active:not(:disabled):not([aria-disabled="true"]) {
+    transform: translateY(1px) scale(0.99);
   }
 
+  &:disabled,
   &.is-disabled,
   &[aria-disabled="true"] {
-    cursor: not-allowed;
-    opacity: 0.56;
-    pointer-events: none;
-    filter: grayscale(6%);
-  }
+    opacity: 0.48;
 
-  &.ui-button:disabled {
     cursor: not-allowed;
-    opacity: 0.56;
-    filter: grayscale(6%);
+    pointer-events: none;
+
+    box-shadow: none;
+
+    transform: none;
   }
 }
+
+/* ========================================================================== */
+/* Width                                                                      */
+/* ========================================================================== */
 
 .ui-button--full-width {
   width: 100%;
 }
 
-/* -------------------------
-   Size variants
-   ------------------------- */
+/* ========================================================================== */
+/* Sizes                                                                      */
+/* ========================================================================== */
+
 .ui-button--xl {
-  @include type-xl();
-  padding: 16px 22px;
-  border-radius: 12px;
-}
-.ui-button--large {
   @include type-lg();
-  padding: 14px 18px;
+
+  min-height: 52px;
+
+  padding: 0 22px;
+
+  gap: $space-2;
+
+  border-radius: $radius-md;
+
+  font-weight: $font-bold;
 }
-.ui-button--medium {
+
+.ui-button--large {
   @include type-md();
-  padding: 12px 14px;
+
+  min-height: 46px;
+
+  padding: 0 18px;
+
+  gap: $space-2;
+
+  font-weight: $font-bold;
 }
+
+.ui-button--medium {
+  @include type-sm();
+
+  min-height: 40px;
+
+  padding: 0 15px;
+
+  gap: $space-2;
+
+  font-weight: $font-semibold;
+}
+
 .ui-button--small {
   @include type-sm();
-  padding: 8px 12px;
+
+  min-height: 34px;
+
+  padding: 0 12px;
+
+  gap: $space-1;
+
+  font-weight: $font-semibold;
 }
+
 .ui-button--extra-small,
 .ui-button--xs {
   @include type-xs();
-  padding: 6px 10px;
-  font-weight: $font-regular;
+
+  min-height: 28px;
+
+  padding: 0 9px;
+
+  gap: $space-1;
+
+  font-weight: $font-semibold;
 }
 
-/* circular icon button */
-.ui-button--circular {
-  width: 48px;
-  height: 48px;
-  padding: 0;
-  border-radius: 50%;
-  @include type-sm();
+/* ========================================================================== */
+/* Icon handling                                                              */
+/* ========================================================================== */
+
+.ui-button--has-icon {
+  .ui-button__icon {
+    flex-shrink: 0;
+  }
 }
 
-/* icon helper */
 .ui-button__icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
   line-height: 0;
+
+  color: currentColor;
+
   svg,
   img {
+    display: block;
+
     width: 1em;
     height: 1em;
-    display: block;
+
+    flex-shrink: 0;
   }
 }
 
-/* -------------------------
-   Variant: solid (primary look)
-   ------------------------- */
+/* slightly tighter edge spacing for icon buttons */
+
+.ui-button--has-icon {
+  &.ui-button--medium {
+    padding-inline: 13px;
+  }
+
+  &.ui-button--small {
+    padding-inline: 10px;
+  }
+
+  &.ui-button--xs,
+  &.ui-button--extra-small {
+    padding-inline: 8px;
+  }
+}
+
+/* ========================================================================== */
+/* Circular                                                                   */
+/* ========================================================================== */
+
+.ui-button--circular {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+
+  padding: 0;
+
+  border-radius: $radius-circle;
+
+  aspect-ratio: 1;
+
+  &.ui-button--xl {
+    width: 52px;
+    height: 52px;
+    min-width: 52px;
+    min-height: 52px;
+  }
+
+  &.ui-button--large {
+    width: 46px;
+    height: 46px;
+    min-width: 46px;
+    min-height: 46px;
+  }
+
+  &.ui-button--small {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+  }
+
+  &.ui-button--xs,
+  &.ui-button--extra-small {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+  }
+}
+
+/* ========================================================================== */
+/* SOLID                                                                      */
+/* ========================================================================== */
+
 .ui-button--solid {
-  // color classes will override below
+  color: var(--color-on-primary);
+
+  /* ---------------------------------------------------------------------- */
+  /* Primary                                                                 */
+  /* ---------------------------------------------------------------------- */
+
   &.ui-button--primary {
-    background: linear-gradient(215deg, var(--color-primary), var(--color-secondary));
+    border-color: color-mix(in srgb, var(--color-primary-dark) 16%, transparent);
+
+    background: linear-gradient(
+      135deg,
+      var(--color-primary) 0%,
+      color-mix(in srgb, var(--color-primary) 72%, var(--color-secondary) 28%) 100%
+    );
+
     color: var(--color-on-primary);
-    border-color: var(--color-transparent);
-    box-shadow: 0 8px 20px var(--primary-shadow);
-    &:hover {
-      transform: translateY(-2px);
-      filter: brightness(0.98);
+
+    box-shadow:
+      0 1px 2px rgba(15, 23, 42, 0.08),
+      0 4px 10px color-mix(in srgb, var(--color-primary) 16%, transparent);
+
+    &:hover:not(:disabled) {
+      transform: translateY(-1px);
+
+      box-shadow:
+        0 2px 4px rgba(15, 23, 42, 0.1),
+        0 7px 16px color-mix(in srgb, var(--color-primary) 20%, transparent);
+
+      filter: brightness(1.025);
     }
   }
 
-  &.ui-button--c {
-    // alternate (secondary)
-    background: linear-gradient(215deg, var(--color-secondary), var(--color-secondary-dark));
+  /* ---------------------------------------------------------------------- */
+  /* Secondary                                                               */
+  /* ---------------------------------------------------------------------- */
+
+  &.ui-button--secondary {
+    border-color: color-mix(in srgb, var(--color-secondary-dark) 16%, transparent);
+
+    background: linear-gradient(135deg, var(--color-secondary), var(--color-secondary-dark));
+
     color: var(--color-on-secondary);
-    border-color: var(--color-transparent);
-    box-shadow: 0 8px 18px var(--secondary-soft);
-    &:hover {
+
+    box-shadow:
+      0 1px 2px rgba(15, 23, 42, 0.07),
+      0 4px 10px color-mix(in srgb, var(--color-secondary) 14%, transparent);
+
+    &:hover:not(:disabled) {
       transform: translateY(-1px);
+
+      box-shadow:
+        0 2px 4px rgba(15, 23, 42, 0.1),
+        0 7px 16px color-mix(in srgb, var(--color-secondary) 18%, transparent);
+    }
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Danger                                                                  */
+  /* ---------------------------------------------------------------------- */
+
+  &.ui-button--danger {
+    border-color: color-mix(in srgb, var(--color-danger) 75%, var(--text) 25%);
+
+    background: linear-gradient(
+      135deg,
+      var(--color-danger),
+      color-mix(in srgb, var(--color-danger) 78%, var(--text) 22%)
+    );
+
+    color: var(--color-on-primary);
+
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--color-danger) 16%, transparent);
+
+    &:hover:not(:disabled) {
+      transform: translateY(-1px);
+
+      box-shadow: 0 6px 16px color-mix(in srgb, var(--color-danger) 20%, transparent);
+
+      filter: brightness(1.02);
+    }
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* White                                                                   */
+  /* ---------------------------------------------------------------------- */
+
+  &.ui-button--white {
+    border-color: var(--border);
+
+    background: linear-gradient(180deg, color-mix(in srgb, var(--bg-2) 98%, white 2%), var(--bg-2));
+
+    color: var(--text);
+
+    box-shadow:
+      0 1px 2px rgba(15, 23, 42, 0.05),
+      0 3px 8px rgba(15, 23, 42, 0.04);
+
+    &:hover:not(:disabled) {
+      border-color: color-mix(in srgb, var(--color-primary) 24%, var(--border));
+
+      background: color-mix(in srgb, var(--color-primary) 3%, var(--bg-2));
+
+      transform: translateY(-1px);
+    }
+  }
+}
+
+/* ========================================================================== */
+/* OUTLINE                                                                    */
+/* ========================================================================== */
+
+.ui-button--outline {
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.025);
+
+  &.ui-button--primary {
+    border-color: color-mix(in srgb, var(--color-primary) 35%, var(--border));
+
+    color: var(--color-primary-dark);
+
+    &:hover:not(:disabled) {
+      border-color: var(--color-primary);
+
+      background: color-mix(in srgb, var(--color-primary) 7%, var(--surface));
+
+      color: var(--color-primary);
+
+      box-shadow: 0 3px 8px color-mix(in srgb, var(--color-primary) 9%, transparent);
+    }
+  }
+
+  &.ui-button--secondary {
+    border-color: color-mix(in srgb, var(--color-secondary) 35%, var(--border));
+
+    color: var(--color-secondary-dark);
+
+    &:hover:not(:disabled) {
+      border-color: var(--color-secondary);
+
+      background: color-mix(in srgb, var(--color-secondary) 7%, var(--surface));
+
+      color: var(--color-secondary);
     }
   }
 
   &.ui-button--danger {
-    background: linear-gradient(
-      215deg,
-      var(--color-danger),
-      color-mix(in srgb, var(--color-danger) 70%, var(--text) 30%)
-    );
-    color: var(--color-on-primary);
-    border-color: var(--color-transparent);
-    box-shadow: 0 8px 18px var(--danger-soft);
-    &:hover {
-      filter: brightness(0.96);
+    border-color: color-mix(in srgb, var(--color-danger) 34%, var(--border));
+
+    color: var(--color-danger);
+
+    &:hover:not(:disabled) {
+      border-color: var(--color-danger);
+
+      background: color-mix(in srgb, var(--color-danger) 7%, var(--surface));
     }
   }
 
   &.ui-button--white {
-    background: var(--bg-2);
-    color: var(--color-primary-dark);
-    border-color: var(--color-on-primary);
-    box-shadow: var(--shadow-sm);
-    &:hover {
-      transform: translateY(-1px);
-      filter: brightness(0.99);
+    border-color: color-mix(in srgb, var(--color-on-primary) 32%, transparent);
+
+    background: color-mix(in srgb, var(--color-on-primary) 6%, transparent);
+
+    color: var(--color-on-primary);
+
+    &:hover:not(:disabled) {
+      border-color: color-mix(in srgb, var(--color-on-primary) 55%, transparent);
+
+      background: color-mix(in srgb, var(--color-on-primary) 12%, transparent);
     }
   }
 }
 
-/* -------------------------
-   Variant: outline
-   ------------------------- */
-.ui-button--outline {
-  background: var(--color-transparent);
-  color: var(--color-primary-dark);
-  border-width: 1px;
-  border-style: solid;
+/* ========================================================================== */
+/* TEXT                                                                       */
+/* ========================================================================== */
 
-  &.ui-button--primary {
+.ui-button--text {
+  min-height: 32px;
+
+  padding: $space-1 $space-2;
+
+  border: 0;
+
+  background: transparent;
+
+  color: var(--color-primary);
+
+  font-weight: $font-semibold;
+
+  box-shadow: none;
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--color-primary) 7%, transparent);
+
     color: var(--color-primary-dark);
-    border-color: var(--primary-shadow);
-    &:hover {
-      background: var(--primary-softer);
-      color: var(--color-primary-dark);
-    }
   }
+
+  &:active:not(:disabled) {
+    background: color-mix(in srgb, var(--color-primary) 11%, transparent);
+  }
+
   &.ui-button--secondary {
-    color: var(--color-secondary-dark);
-    border-color: var(--secondary-soft);
-    &:hover {
-      background: var(--secondary-soft);
+    color: var(--color-secondary);
+
+    &:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--color-secondary) 7%, transparent);
+
+      color: var(--color-secondary-dark);
     }
   }
+
   &.ui-button--danger {
     color: var(--color-danger);
-    border-color: var(--danger-soft);
-    &:hover {
-      background: var(--danger-soft);
+
+    &:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--color-danger) 7%, transparent);
     }
   }
+
   &.ui-button--white {
     color: var(--color-on-primary);
-    border-color: var(--primary-focus);
-    &:hover {
-      background: var(--neutral-soft);
+
+    &:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--color-on-primary) 10%, transparent);
     }
   }
 }
 
-/* -------------------------
-   Variant: text (link-like)
-   ------------------------- */
-.ui-button--text {
-  background: var(--color-transparent);
-  border: none;
-  padding: $space-2 $space-3;
-  font-weight: $font-regular;
-  color: var(--color-primary-dark);
-  &:hover {
-    color: var(--color-secondary-dark);
-  }
-}
+/* ========================================================================== */
+/* SOLID OUTLINE                                                              */
+/* ========================================================================== */
 
-/* -------------------------
-   Variant: solid-outline (solid fill + outline accent)
-   ------------------------- */
 .ui-button--solid-outline {
-  border-width: 2px;
+  border-width: 1px;
+
   font-weight: $font-bold;
 
   &.ui-button--primary {
-    background: var(--color-primary);
+    border-color: color-mix(in srgb, var(--color-secondary) 55%, var(--color-primary));
+
+    background: linear-gradient(
+      135deg,
+      var(--color-primary),
+      color-mix(in srgb, var(--color-primary) 80%, var(--color-secondary) 20%)
+    );
+
     color: var(--color-on-primary);
-    border-color: var(--color-secondary);
-    box-shadow: 0 8px 18px var(--primary-soft);
-    &:hover {
+
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--color-on-primary) 8%, transparent),
+      0 4px 12px color-mix(in srgb, var(--color-primary) 15%, transparent);
+
+    &:hover:not(:disabled) {
+      border-color: var(--color-secondary);
+
       transform: translateY(-1px);
-      filter: brightness(0.98);
-      border-color: var(--color-secondary-dark);
+
+      box-shadow:
+        inset 0 0 0 1px color-mix(in srgb, var(--color-on-primary) 12%, transparent),
+        0 7px 16px color-mix(in srgb, var(--color-primary) 20%, transparent);
     }
   }
 
   &.ui-button--secondary {
-    background: var(--color-secondary);
+    border-color: color-mix(in srgb, var(--color-primary) 55%, var(--color-secondary));
+
+    background: linear-gradient(135deg, var(--color-secondary), var(--color-secondary-dark));
+
     color: var(--color-on-secondary);
-    border-color: var(--color-primary);
-    &:hover {
-      border-color: var(--color-primary-dark);
+
+    &:hover:not(:disabled) {
+      border-color: var(--color-primary);
+      transform: translateY(-1px);
     }
   }
 
   &.ui-button--danger {
+    border-color: color-mix(in srgb, var(--color-on-primary) 38%, var(--color-danger));
+
     background: var(--color-danger);
+
     color: var(--color-on-primary);
-    border-color: var(--color-on-primary);
-    &:hover {
-      filter: brightness(0.96);
+
+    &:hover:not(:disabled) {
+      transform: translateY(-1px);
+
+      filter: brightness(1.025);
     }
   }
 
   &.ui-button--white {
+    border-color: color-mix(in srgb, var(--color-primary) 32%, var(--border));
+
     background: var(--bg-2);
+
     color: var(--color-primary-dark);
-    border-color: var(--color-danger);
-    &:hover {
-      filter: brightness(0.995);
+
+    &:hover:not(:disabled) {
+      border-color: var(--color-primary);
+
+      background: color-mix(in srgb, var(--color-primary) 4%, var(--bg-2));
+
+      transform: translateY(-1px);
     }
   }
 }
 
-/* -------------------------
-   Ghost / disabled visual tweak
-   ------------------------- */
+/* ========================================================================== */
+/* Ghost                                                                      */
+/* ========================================================================== */
+
 .ui-button--ghost {
-  background: var(--color-transparent);
-  color: var(--color-muted);
-  border: 1px dashed var(--neutral-soft);
-  cursor: default !important;
-  pointer-events: none;
-  opacity: 0.6;
+  border: 1px solid transparent;
+
+  background: transparent;
+
+  color: var(--muted);
+
+  box-shadow: none;
+
+  &:hover:not(:disabled) {
+    background: var(--surface-inset);
+
+    color: var(--text);
+  }
 }
 
-/* -------------------------
-   Secondary color helper (keeps your existing prop pattern)
-   e.g. ui-button--secondary-primary, ui-button--secondary-danger
-   ------------------------- */
+/* ========================================================================== */
+/* secondaryColor prop                                                        */
+/* ========================================================================== */
+
 @each $clr in (primary, secondary, danger, "white") {
   .ui-button--secondary-#{$clr} {
     @if $clr == primary {
@@ -292,17 +592,39 @@
   }
 }
 
-/* -------------------------
-   Utility: small visual tweak for icon-only anchor/button
-   ------------------------- */
+/* ========================================================================== */
+/* Icon-only compatibility                                                    */
+/* ========================================================================== */
+
 .ui-button.icon-only {
-  padding: 0;
   width: 40px;
   height: 40px;
+  min-width: 40px;
+
+  padding: 0;
+
   border-radius: $radius-circle;
 }
 
-/* Optional: allow you to keep old markup that used .btn classes */
+/* ========================================================================== */
+/* Legacy compatibility                                                       */
+/* ========================================================================== */
+
 .btn--compat {
   @extend .ui-button;
+}
+
+/* ========================================================================== */
+/* Reduced motion                                                             */
+/* ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-button {
+    transition: none;
+
+    &:hover,
+    &:active {
+      transform: none;
+    }
+  }
 }

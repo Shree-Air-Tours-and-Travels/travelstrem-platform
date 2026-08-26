@@ -84,6 +84,26 @@
     }
   }
 
+  &__subtitle-action {
+    width: fit-content;
+    max-width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-primary);
+    font: inherit;
+    font-size: $font-size-xs;
+    font-weight: $font-semibold;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
   &__fields {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -113,6 +133,7 @@
   }
 
   &__action {
+    width: 100%;
     display: flex;
     align-items: center;
     justify-content: flex-end;
@@ -122,5 +143,10 @@
     color: var(--color-primary);
     font-size: $font-size-xs;
     font-weight: $font-semibold;
+    cursor: pointer;
+
+    &:disabled {
+      cursor: default;
+    }
   }
 }

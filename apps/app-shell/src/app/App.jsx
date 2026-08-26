@@ -9,9 +9,11 @@ import {
 } from "react-router-dom";
 import {
   AppHeader,
+  Breadcrumbs,
   ErrorState,
   FloatingActionBar,
   GlobalLoader,
+  Preloader,
   ScrollToTop,
   SideBar,
   ThemeProvider,
@@ -77,7 +79,7 @@ function ProtectedRoute({
 }) {
   const { loading, session } = useAppShellConfig();
 
-  if (loading) return <GlobalLoader visible text="Loading App" />;
+  if (loading) return <Preloader variant="stack" count={3} label="Loading account" />;
 
   if (!session?.isAuthenticated && !allowGuest) {
     if (suppressPrompt) return null;
@@ -148,14 +150,13 @@ function AppShell() {
     window.addEventListener(USER_PROFILE_UPDATED_EVENT, onProfileUpdated);
     return () => window.removeEventListener(USER_PROFILE_UPDATED_EVENT, onProfileUpdated);
   }, []);
-  const immersiveScrollRef = React.useRef(0);
-
   const destination = useMemo(
     () => resolveDestination(navigationConfig, location),
     [location, navigationConfig],
   );
   const selectedTab = destination.tab || searchParams.get("tab") || "overview";
   const activeTab = destination.activeId || selectedTab;
+  const selectedEnquiryRef = activeTab === "bookings" ? searchParams.get("enquiry") || "" : "";
   const isRemote = destination.kind === "remote";
   const isSupportScreen = location.pathname === "/help" || location.pathname.startsWith("/help/");
   const isTrevistaBrowseScreen =
@@ -206,7 +207,6 @@ function AppShell() {
   }, [publicDestination]);
 
   useEffect(() => {
-    immersiveScrollRef.current = 0;
     setImmersiveChromeHidden(false);
   }, [location.pathname, location.search]);
 
@@ -214,22 +214,10 @@ function AppShell() {
     (event) => {
       if (!isTrevistaBrowseScreen) return;
       const nextTop = event.currentTarget.scrollTop || 0;
-      const previousTop = immersiveScrollRef.current;
-      const delta = nextTop - previousTop;
-      immersiveScrollRef.current = nextTop;
-
-      if (nextTop < 24 || delta < -10) {
-        setImmersiveChromeHidden(false);
-        return;
-      }
-      if (delta > 10) setImmersiveChromeHidden(true);
+      setImmersiveChromeHidden(nextTop > 8);
     },
     [isTrevistaBrowseScreen],
   );
-
-  const revealImmersiveChrome = useCallback(() => {
-    if (isTrevistaBrowseScreen && immersiveChromeHidden) setImmersiveChromeHidden(false);
-  }, [immersiveChromeHidden, isTrevistaBrowseScreen]);
 
   const handleNavigation = useCallback(
     (rawIntent) => {
@@ -420,6 +408,29 @@ function AppShell() {
     };
   }, [activeTab, appHeaderConfig]);
 
+  const shellBreadcrumbItems = useMemo(() => {
+    const items = (sidebarConfig.sections || []).flatMap((section) => section.items || []);
+    const home = items.find((item) => item.target === "overview" || item.id === "overview");
+    const current = items.find(
+      (item) => item.target === activeTab || item.id === activeTab || item.target === selectedTab,
+    );
+
+    if (!home) return [];
+    if (!current || current.id === home.id) return [{ label: home.label }];
+
+    const breadcrumbs = [
+      { label: home.label, path: "/?tab=overview" },
+      { label: current.label },
+    ];
+    return selectedEnquiryRef
+      ? [
+          { ...breadcrumbs[0] },
+          { ...breadcrumbs[1], path: "/?tab=bookings" },
+          { label: selectedEnquiryRef },
+        ]
+      : breadcrumbs;
+  }, [activeTab, selectedEnquiryRef, selectedTab, sidebarConfig.sections]);
+
   if (loading) {
     return <GlobalLoader visible text="Loading App" />;
   }
@@ -478,13 +489,19 @@ function AppShell() {
           onPrimaryActionSelect={(item) => handleTabChange(item.target, item)}
         />
 
+        {!isRemote &&
+        !isSupportScreen &&
+        activeTab !== "overview" &&
+        shellBreadcrumbItems.length ? (
+          <div className="dash-shell-breadcrumb">
+            <Breadcrumbs items={shellBreadcrumbItems} />
+          </div>
+        ) : null}
+
         <div
           data-scroll-root
           className={`dash-content${isRemote ? " dash-content--remote" : ""}${isSupportScreen ? " dash-content--support" : ""}`}
           onScroll={handleContentScroll}
-          onPointerDownCapture={revealImmersiveChrome}
-          onTouchStartCapture={revealImmersiveChrome}
-          onMouseDownCapture={revealImmersiveChrome}
         >
           <ProtectedRoute
             allowGuest={publicDestination && guestMode}
@@ -495,7 +512,11 @@ function AppShell() {
               {isSupportScreen ? (
                 <SupportRoutes />
               ) : remoteElement ? (
-                <Suspense fallback={<GlobalLoader visible text="Loading customer product" />}>
+                <Suspense
+                  fallback={
+                    <Preloader variant="grid" count={4} label="Loading customer product" />
+                  }
+                >
                   <Routes>
                     {(destination.patterns || []).map((pattern) => (
                       <Route key={pattern} path={pattern} element={remoteElement} />
@@ -504,7 +525,9 @@ function AppShell() {
                   </Routes>
                 </Suspense>
               ) : (
-                <Suspense fallback={<GlobalLoader visible text="Loading customer product" />}>
+                <Suspense
+                  fallback={<Preloader variant="stack" count={3} label="Loading page" />}
+                >
                   <AppShellPage
                     productFilter={productFilter}
                     activeTab={selectedTab}

@@ -47,7 +47,7 @@ body {
 
 .partner-shell__breadcrumb {
   position: sticky;
-  top: var(--partner-shell-header-height);
+  top: 0;
   z-index: 80;
   width: 100%;
   min-height: 52px;
@@ -100,7 +100,13 @@ body {
   margin-left: 76px;
 }
 
-@media (max-width: 900px) {
+@media (min-width: #{$breakpoint-md + 1px}) {
+  .agent-app-shell.has-partner-navigation > .trem-app-header--partner .trem-app-header__search {
+    margin-left: $space-3;
+  }
+}
+
+@media (max-width: $breakpoint-md) {
   .agent-app-shell {
     --partner-shell-gutter: #{$space-3};
     --partner-shell-header-height: 64px;

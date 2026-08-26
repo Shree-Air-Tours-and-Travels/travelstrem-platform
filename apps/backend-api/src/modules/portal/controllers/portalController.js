@@ -426,6 +426,13 @@ const buildAdminHeaderConfig = (baseConfig = {}) => ({
             icon: "messageCircle",
             target: "enquiries",
         },
+        { id: "support", label: "Support desk", icon: "support", target: "support" },
+        {
+            id: "internalTeam",
+            label: "Internal team",
+            icon: "shieldCheck",
+            target: "internalTeam",
+        },
         { id: "services", label: "Travel products", icon: "briefcaseBusiness", target: "services" },
         {
             id: "tenancy",
@@ -441,6 +448,8 @@ const buildAdminHeaderConfig = (baseConfig = {}) => ({
     adminBreadcrumbs: {
         overview: [{ label: "Administration", path: "/manage/tours?tab=overview" }, { label: "Overview" }],
         enquiries: [{ label: "Administration", path: "/manage/tours?tab=overview" }, { label: "Bookings & enquiries" }],
+        support: [{ label: "Administration", path: "/manage/tours?tab=overview" }, { label: "Support desk" }],
+        internalTeam: [{ label: "Administration", path: "/manage/tours?tab=overview" }, { label: "Internal team" }],
         services: [{ label: "Administration", path: "/manage/tours?tab=overview" }, { label: "Travel products" }],
         tenancy: [{ label: "Administration", path: "/manage/tours?tab=overview" }, { label: "Partners & agencies" }],
         clients: [{ label: "Administration", path: "/manage/tours?tab=overview" }, { label: "Clients" }],
@@ -657,6 +666,13 @@ const buildAgentHeaderConfig = (baseConfig = {}) => ({
             items: [
                 { label: "Workspace", path: "/agent/dashboard" },
                 { label: "Customers" },
+            ],
+        },
+        {
+            match: "/agent/support",
+            items: [
+                { label: "Workspace", path: "/agent/dashboard" },
+                { label: "Help & Support" },
             ],
         },
         {

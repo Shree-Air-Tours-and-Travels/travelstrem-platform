@@ -13,7 +13,7 @@ export default function SimilarToursContainer({
   showEmpty = false,
 }) {
   const navigate = useNavigate();
-  const { loading, error, widgetData } = useTourDetailWidget(tourRef, "similar-tours.json");
+  const { loading, error, widgetData, retry } = useTourDetailWidget(tourRef, "similar-tours.json");
   const labels = widgetData?.elements?.labels || {};
   const tours = Array.isArray(widgetData?.data?.tours) ? widgetData.data.tours : [];
 
@@ -28,7 +28,7 @@ export default function SimilarToursContainer({
   };
 
   if (loading) return <WidgetSkeleton compact />;
-  if (error) return <WidgetError message={error} />;
+  if (error) return <WidgetError message={error} retry={retry} />;
   return (
     <SimilarToursView
       labels={labels}

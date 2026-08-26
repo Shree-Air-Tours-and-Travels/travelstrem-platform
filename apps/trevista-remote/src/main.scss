@@ -40,6 +40,11 @@ a {
   // applying the standalone 120px mobile header offset a second time.
   .tour-detail {
     --td-header-offset: 0px;
+    min-height: auto;
+  }
+
+  .tours-page {
+    min-height: auto;
   }
 }
 

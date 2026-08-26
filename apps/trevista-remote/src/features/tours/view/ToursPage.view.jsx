@@ -3,7 +3,15 @@ import "../tours.scss";
 import QuickFilters from "../widgets/quick-filters/QuickFilters";
 import Filters from "../widgets/filters/Filters";
 import Listing from "../widgets/listing/Listing";
-import { Breadcrumbs, FloatingActionBar, BottomSheet, Icon } from "@packages/trem-ui";
+import {
+  Breadcrumbs,
+  FloatingActionBar,
+  BottomSheet,
+  Button,
+  Icon,
+  InputField,
+  SingleSelect,
+} from "@packages/trem-ui";
 
 const getLabel = (labels = {}, item = {}) => {
   if (item.labelRef && labels[item.labelRef]) return labels[item.labelRef];
@@ -55,7 +63,14 @@ export default function ToursPageView({
   const [filtersSheetOpen, setFiltersSheetOpen] = useState(false);
 
   const handleOpenFilters = () => {
-    setFiltersSheetOpen(true);
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia("(max-width: 768px)").matches
+    ) {
+      setFiltersSheetOpen(true);
+      return;
+    }
+    onFiltersExpandedChange?.(!filtersExpanded);
   };
 
   const handleSortSelect = (optionId) => {
@@ -65,6 +80,11 @@ export default function ToursPageView({
 
   const selectedSort = sortOptions.find((option) => option.id === sortId) ||
     sortOptions[0] || { id: sortId, label: sortId };
+  const normalizedSortOptions = sortOptions.map((option) => ({
+    value: option.id || option.value,
+    label: getLabel(listingLabels, option),
+    disabled: option.disabled,
+  }));
 
   const fabActions = [
     {
@@ -105,24 +125,71 @@ export default function ToursPageView({
           if (w.type === "filters") {
             return (
               <React.Fragment key={w.type}>
+                <section className="tours-page__discovery-toolbar" aria-label="Find tours">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    color="primary"
+                    iconLeft="filter"
+                    text={`Filters${activeFilterChips.length ? ` (${activeFilterChips.length})` : ""}`}
+                    onClick={handleOpenFilters}
+                    primaryClassName="tours-page__filter-toggle"
+                    aria-expanded={filtersExpanded || filtersSheetOpen}
+                  />
+                  <div className="tours-page__toolbar-search">
+                    <Icon name="search" aria-hidden="true" />
+                    <InputField
+                      variant="text"
+                      ariaLabel="Search tours"
+                      placeholder="Search by tour, destination, or experience..."
+                      value={filterValues.query || ""}
+                      onChange={onQueryChange}
+                      className="tours-page__toolbar-search-input"
+                    />
+                  </div>
+                  {normalizedSortOptions.length ? (
+                    <SingleSelect
+                      label={sortLabel}
+                      value={sortId}
+                      options={normalizedSortOptions}
+                      onChange={onSortChange}
+                      size="sm"
+                      className="tours-page__toolbar-sort"
+                    />
+                  ) : null}
+                  <div className="tours-page__toolbar-results" aria-live="polite">
+                    {loadingMore ? "Updating…" : `${totalResults} tours`}
+                  </div>
+                </section>
+
+                {filtersExpanded ? (
+                  <div className="tours-page__inline-filters">
+                    <Filters
+                      onChange={handleFilterChange}
+                      widgetData={filterWidgetData}
+                      sortId={sortId}
+                      pageSize={8}
+                      expanded
+                      onExpandedChange={onFiltersExpandedChange}
+                      values={filterValues}
+                      facets={facets}
+                      discoveryOptions={discoveryOptions}
+                      totalResults={totalResults}
+                      searching={loadingMore}
+                      mode="panel"
+                    />
+                    <Button
+                      type="button"
+                      variant="text"
+                      iconLeft="x"
+                      onClick={() => onFiltersExpandedChange?.(false)}
+                      primaryClassName="tours-page__inline-filters-close"
+                      aria-label="Close filters"
+                    />
+                  </div>
+                ) : null}
+
                 <div className="tours-page__body">
-                  <aside className="tours-page__sidebar">
-                    <div className="tours-page__sidebar-inner">
-                      <Filters
-                        onChange={handleFilterChange}
-                        widgetData={filterWidgetData}
-                        sortId={sortId}
-                        pageSize={8}
-                        expanded={filtersExpanded}
-                        onExpandedChange={onFiltersExpandedChange}
-                        values={filterValues}
-                        facets={facets}
-                        discoveryOptions={discoveryOptions}
-                        totalResults={totalResults}
-                        searching={loadingMore}
-                      />
-                    </div>
-                  </aside>
                   <section className="tours-page__listing" aria-label="Tours listing">
                     <Listing
                       initialLoading={initialLoading}
@@ -146,6 +213,7 @@ export default function ToursPageView({
                       hasActiveFilters={activeFilterChips.length > 0}
                       onClearFilters={onClearFilters}
                       onEnquire={onEnquire}
+                      compactHeader
                     />
                   </section>
                 </div>
@@ -180,7 +248,7 @@ export default function ToursPageView({
       <BottomSheet
         open={filtersSheetOpen}
         onClose={() => setFiltersSheetOpen(false)}
-        title="Filter tours"
+        title="Filters"
         className="tours-page__filters-sheet"
       >
         <Filters
@@ -201,15 +269,17 @@ export default function ToursPageView({
         />
       </BottomSheet>
 
-      <FloatingActionBar
-        actions={fabActions}
-        variant="compact"
-        align="center"
-        gap="medium"
-        showBg={true}
-        sheetTitle="Sort by"
-        hideOnDesktop
-      />
+      {!filtersSheetOpen && !sortSheetOpen ? (
+        <FloatingActionBar
+          actions={fabActions}
+          variant="compact"
+          align="center"
+          gap="medium"
+          showBg={true}
+          sheetTitle="Sort by"
+          hideOnDesktop
+        />
+      ) : null}
     </main>
   );
 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 
 export const DEFAULT_AUTH_ROLES = [
@@ -47,6 +47,10 @@ export const canAccessAuthRoute = (route = {}, session = null) => {
 };
 
 export const AUTH_CHANNEL_NAME = "travelstrem-auth";
+export const SESSION_EXPIRED_EVENT = "TREM_SESSION_EXPIRED";
+export const SESSION_REFRESHED_EVENT = "TREM_SESSION_REFRESHED";
+export const SESSION_KEEPALIVE_EVENT = "TREM_SESSION_KEEPALIVE";
+export const DEFAULT_SESSION_INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000;
 
 const currentAuthPortal = () => {
   if (typeof window === "undefined") return "customer";
@@ -179,6 +183,34 @@ export const clearAuthSession = ({ api, storage = localStorage, storagePrefix = 
 };
 
 export const setupRefreshInterceptor = (api, storagePrefix = "") => {
+  let refreshRequest = null;
+  const notifyExpired = () => {
+    clearAuthSession({ api, storagePrefix });
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent(SESSION_EXPIRED_EVENT, { detail: { reason: "session_expired" } }),
+      );
+    }
+  };
+  const refreshSession = async () => {
+    if (!refreshRequest) {
+      refreshRequest = api
+        .post("/auth/refresh", {}, { _skipAuthRefresh: true })
+        .finally(() => {
+          refreshRequest = null;
+        });
+    }
+    await refreshRequest;
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent(SESSION_REFRESHED_EVENT));
+    }
+  };
+
+  if (typeof window !== "undefined" && !api.__tremKeepAliveListener) {
+    api.__tremKeepAliveListener = () => refreshSession().catch(notifyExpired);
+    window.addEventListener(SESSION_KEEPALIVE_EVENT, api.__tremKeepAliveListener);
+  }
+
   api.interceptors.response.use(
     (response) => response,
     async (error) => {
@@ -195,17 +227,98 @@ export const setupRefreshInterceptor = (api, storagePrefix = "") => {
         return Promise.reject(error);
       }
 
-      clearAuthSession({ api, storagePrefix });
-      emitAuthEvent({ type: "LOGOUT" });
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(
-          new CustomEvent("USER_LOGOUT", { detail: { reason: "unauthorized" } }),
-        );
+      originalRequest._retry = true;
+      try {
+        await refreshSession();
+        return api(originalRequest);
+      } catch (refreshError) {
+        notifyExpired();
+        return Promise.reject(refreshError);
       }
-      return Promise.reject(error);
     },
   );
 };
+
+export function useSessionInactivity({
+  enabled = false,
+  timeoutMs = DEFAULT_SESSION_INACTIVITY_TIMEOUT_MS,
+  onExpired,
+} = {}) {
+  const [expired, setExpired] = useState(false);
+  const timerRef = useRef(null);
+  const lastActivityRef = useRef(Date.now());
+  const lastRecordedRef = useRef(0);
+  const lastKeepAliveRef = useRef(Date.now());
+  const expiredRef = useRef(false);
+  const onExpiredRef = useRef(onExpired);
+  onExpiredRef.current = onExpired;
+
+  useEffect(() => {
+    if (!enabled) {
+      expiredRef.current = false;
+      setExpired(false);
+      return undefined;
+    }
+
+    const limit = Math.max(60_000, Number(timeoutMs) || DEFAULT_SESSION_INACTIVITY_TIMEOUT_MS);
+    const clearTimer = () => window.clearTimeout(timerRef.current);
+    const expire = (reason = "inactivity") => {
+      if (expiredRef.current) return;
+      expiredRef.current = true;
+      clearTimer();
+      setExpired(true);
+      onExpiredRef.current?.(reason);
+      if (reason === "inactivity") {
+        window.dispatchEvent(new CustomEvent(SESSION_EXPIRED_EVENT, { detail: { reason } }));
+      }
+    };
+    const schedule = () => {
+      clearTimer();
+      const remaining = limit - (Date.now() - lastActivityRef.current);
+      if (remaining <= 0) return expire();
+      timerRef.current = window.setTimeout(() => expire(), remaining);
+    };
+    const recordActivity = ({ force = false } = {}) => {
+      if (expiredRef.current) return;
+      const now = Date.now();
+      if (!force && now - lastRecordedRef.current < 30_000) return;
+      lastRecordedRef.current = now;
+      lastActivityRef.current = now;
+      const keepAliveInterval = Math.min(8 * 60 * 1000, Math.floor(limit * 0.6));
+      if (now - lastKeepAliveRef.current >= keepAliveInterval) {
+        lastKeepAliveRef.current = now;
+        window.dispatchEvent(new CustomEvent(SESSION_KEEPALIVE_EVENT));
+      }
+      schedule();
+    };
+    const handleVisibility = () => {
+      if (document.visibilityState !== "visible") return;
+      if (Date.now() - lastActivityRef.current >= limit) expire();
+      else recordActivity({ force: true });
+    };
+    const handleSessionExpired = (event) => expire(event?.detail?.reason || "expired");
+    const activityEvents = ["pointerdown", "pointermove", "keydown", "touchstart", "scroll"];
+
+    expiredRef.current = false;
+    setExpired(false);
+    lastKeepAliveRef.current = Date.now();
+    recordActivity({ force: true });
+    activityEvents.forEach((eventName) =>
+      window.addEventListener(eventName, recordActivity, { passive: true }),
+    );
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+
+    return () => {
+      clearTimer();
+      activityEvents.forEach((eventName) => window.removeEventListener(eventName, recordActivity));
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+    };
+  }, [enabled, timeoutMs]);
+
+  return expired;
+}
 
 export const createRefreshHandler =
   ({ authService, persistSession, onRefresh } = {}) =>

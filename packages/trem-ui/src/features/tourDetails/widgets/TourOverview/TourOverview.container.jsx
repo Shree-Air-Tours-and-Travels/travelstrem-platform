@@ -5,7 +5,7 @@ import { WidgetError, WidgetSkeleton } from "../../shared";
 import TourOverviewView from "./TourOverview.view";
 
 export default function TourOverviewContainer({ tourRef, onTourLoad }) {
-  const { loading, error, widgetData } = useTourDetailWidget(tourRef, "tour-overview.json");
+  const { loading, error, widgetData, retry } = useTourDetailWidget(tourRef, "tour-overview.json");
   const tour = widgetData?.data?.tour || null;
   const labels = widgetData?.elements?.labels || {};
 
@@ -30,6 +30,6 @@ export default function TourOverviewContainer({ tourRef, onTourLoad }) {
   );
 
   if (loading && !tour) return <WidgetSkeleton />;
-  if (error && !tour) return <WidgetError message={error} />;
+  if (error && !tour) return <WidgetError message={error} retry={retry} />;
   return <TourOverviewView {...viewModel} />;
 }

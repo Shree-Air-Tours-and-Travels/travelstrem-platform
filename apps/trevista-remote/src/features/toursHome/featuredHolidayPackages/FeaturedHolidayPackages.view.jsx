@@ -17,6 +17,7 @@ export default function FeaturedHolidayPackagesView({
   cardProps = {},
   isFavorited,
   onFavorite,
+  onCardClick,
   emptyActions = [],
 }) {
   const emptyAction = emptyActions.length ? (
@@ -66,7 +67,9 @@ export default function FeaturedHolidayPackagesView({
           cardProps={cardProps}
           isFavorited={isFavorited}
           onFavorite={onFavorite}
+          onCardClick={onCardClick}
           emptyAction={emptyAction}
+          className={`featured-holiday-packages__list featured-holiday-packages__list--count-${Math.min(destinations.length, 4)}`}
         />
       </div>
     </section>

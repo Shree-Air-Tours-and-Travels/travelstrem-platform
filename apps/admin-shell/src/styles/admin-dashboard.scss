@@ -112,7 +112,7 @@
 
 .admin-dashboard-shell__breadcrumb {
   position: sticky;
-  top: var(--admin-shell-header-height);
+  top: 0;
   z-index: 80;
   width: 100%;
   min-height: 52px;
@@ -153,7 +153,7 @@
   }
 }
 
-@media (max-width: 900px) {
+@media (max-width: $breakpoint-md) {
   .admin-dashboard-shell {
     --admin-shell-gutter: #{$space-3};
     --admin-shell-header-height: 64px;

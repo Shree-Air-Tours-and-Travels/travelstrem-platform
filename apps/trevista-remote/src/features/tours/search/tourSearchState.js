@@ -194,8 +194,17 @@ export const applyTourDiscoveryChip = (state, chip) => {
   return next;
 };
 
-const facetLabel = (facets, group, value) =>
-  facets?.[group]?.find((item) => item.value === value)?.name || value;
+const facetLabel = (facets, group, value) => {
+  const facet = facets?.[group]?.find((item) => item.value === value);
+  return facet?.label || facet?.name || value;
+};
+
+const formatFilterCurrency = (value) =>
+  new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(Number(value) || 0);
 
 export const getActiveTourFilterChips = (state, facets = {}) => {
   const chips = [];
@@ -224,7 +233,11 @@ export const getActiveTourFilterChips = (state, facets = {}) => {
   if (state.filters.price.min != null || state.filters.price.max != null)
     chips.push({
       id: "price",
-      label: `Price ${state.filters.price.min ?? 0}–${state.filters.price.max ?? "any"}`,
+      label: `Price ${formatFilterCurrency(state.filters.price.min)}–${
+        state.filters.price.max == null
+          ? "any"
+          : formatFilterCurrency(state.filters.price.max)
+      }`,
     });
   if (state.filters.duration.minDays != null || state.filters.duration.maxDays != null)
     chips.push({

@@ -14,6 +14,8 @@ import TripView from "../trips/TripView";
 import CreateTripForm from "../trips/CreateTripForm";
 import TenancyManagement from "../tenancy/TenancyManagement";
 import EnquiriesPage from "../enquiries/EnquiriesPage";
+import SupportDeskPage from "../support/SupportDeskPage";
+import InternalTeamPage from "../internalTeam/InternalTeamPage";
 import ManageClients from "../clients/ManageClients";
 import "./ManageTours.scss";
 
@@ -123,6 +125,7 @@ export default function ManageToursView({
   fetchAgencyManagement,
   handleReviewAdmin,
   handleRemoveAdmin,
+  handleUpdateAdminInternalTeam,
   handleReviewAgent,
   handleReviewPartnerAgency,
   handleSaveProfile,
@@ -177,9 +180,13 @@ export default function ManageToursView({
         fallbackSubtitle: backendHeaderConfig?.brand?.subtitle || "Platform Administration",
       },
       sections: [
-        { id: "workspace", title: "Workspace", items: byId(["overview", "enquiries"]) },
+        { id: "workspace", title: "Workspace", items: byId(["overview", "enquiries", "support"]) },
         { id: "catalog", title: "Catalogue", items: byId(["services"]) },
-        { id: "governance", title: "Governance", items: byId(["tenancy", "clients"]) },
+        {
+          id: "governance",
+          title: "Governance",
+          items: byId(["internalTeam", "tenancy", "clients"]),
+        },
         { id: "account", title: "Account", items: byId(["profile", "logout"]) },
       ].filter((section) => section.items.length),
       profile: {
@@ -289,6 +296,19 @@ export default function ManageToursView({
             />
           )}
           {tab === "enquiries" && <EnquiriesPage />}
+          {tab === "support" && <SupportDeskPage />}
+          {tab === "internalTeam" && (
+            <InternalTeamPage
+              admins={admins}
+              currentUser={auth.user}
+              isMasterAdmin={auth.adminLevel === "master"}
+              loading={agencyLoading}
+              onRefresh={fetchAgencyManagement}
+              onReview={handleReviewAdmin}
+              onRemove={handleRemoveAdmin}
+              onUpdateTeam={handleUpdateAdminInternalTeam}
+            />
+          )}
           {tab === "services" && (
             <>
               <AdminServicesView
