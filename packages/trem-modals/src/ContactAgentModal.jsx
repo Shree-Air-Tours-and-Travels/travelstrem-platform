@@ -15,6 +15,7 @@ import "./ContactAgentModal.styles.scss";
 
 const normalizeFormData = (component) => {
   const labels = component?.elements?.labels || {};
+  const options = component?.dataScope?.options || {};
   const widgetProps = component?.structure?.widgets?.[0]?.props || {};
   const header = component?.structure?.header || {};
 
@@ -89,7 +90,7 @@ const normalizeFormData = (component) => {
         ...field,
         label: labels[field.labelRef] || field.label || field.name,
         placeholder: labels[field.placeholderRef] || "",
-        options: (field.options || []).map((option) => ({
+        options: (options[field.optionsRef] || field.options || []).map((option) => ({
           ...option,
           label: labels[option.labelRef] || option.label || option.title || option.value,
         })),

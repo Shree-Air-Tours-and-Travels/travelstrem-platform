@@ -37,6 +37,10 @@ import {
   resolveNavigationIntent,
   isGuestAccessibleDestination,
 } from "./routing/navigationRegistry";
+import {
+  resolveAuthReturnTo,
+  setActiveAuthReturnTo,
+} from "./routing/authReturnDestination";
 import "../styles/global.scss";
 
 const TrevistaApp = React.lazy(() => import("trevista/App"));
@@ -77,6 +81,7 @@ function ProtectedRoute({
   onContinueAsGuest,
   allowGuest = false,
   suppressPrompt = false,
+  returnTo,
 }) {
   const { loading, session } = useAppShellConfig();
 
@@ -85,7 +90,7 @@ function ProtectedRoute({
   if (!session?.isAuthenticated && !allowGuest) {
     if (suppressPrompt) return null;
     const authUrl = process.env.REACT_APP_AUTH_APP_URL || "";
-    const returnTo = window.location.href;
+    const resolvedReturnTo = returnTo || `${window.location.origin}/?tab=overview`;
 
     if (!authUrl) {
       return (
@@ -105,7 +110,9 @@ function ProtectedRoute({
             console.warn("[Security] Too many login attempts. Please wait.");
             return;
           }
-          window.location.assign(buildGlobalAuthUrl({ app: "app-shell", returnTo }));
+          window.location.assign(
+            buildGlobalAuthUrl({ app: "app-shell", returnTo: resolvedReturnTo }),
+          );
         }}
       />
     );
@@ -158,6 +165,7 @@ function AppShell() {
   const activeTab = destination.activeId || selectedTab;
   const selectedEnquiryRef = activeTab === "bookings" ? searchParams.get("enquiry") || "" : "";
   const isRemote = destination.kind === "remote";
+  const authReturnTo = resolveAuthReturnTo(destination);
   const isSupportScreen = location.pathname === "/help" || location.pathname.startsWith("/help/");
   const mobileShellPresentation = destination.shellPresentation?.mobile;
   const destinationMobileHeader = mobileShellPresentation?.appHeader;
@@ -186,10 +194,17 @@ function AppShell() {
     setGuestMode(true);
     if (!publicDestination) navigate("/?tab=overview&guest=1", { replace: true });
   }, [navigate, publicDestination]);
-  const requireAuthentication = useCallback(({ returnTo = window.location.href } = {}) => {
-    clearGuestSession();
-    window.location.assign(buildGlobalAuthUrl({ app: "app-shell", returnTo }));
-  }, []);
+  const requireAuthentication = useCallback(
+    ({ returnTo = authReturnTo } = {}) => {
+      clearGuestSession();
+      window.location.assign(buildGlobalAuthUrl({ app: "app-shell", returnTo }));
+    },
+    [authReturnTo],
+  );
+
+  useEffect(() => {
+    setActiveAuthReturnTo(authReturnTo);
+  }, [authReturnTo]);
 
   useEffect(() => {
     if (!session?.isAuthenticated) return;
@@ -350,11 +365,11 @@ function AppShell() {
       window.location.replace(
         buildGlobalAuthUrl({
           app: "app-shell",
-          returnTo: `${window.location.origin}/?tab=overview`,
+          returnTo: authReturnTo,
         }),
       );
     },
-    [requireAuthentication],
+    [authReturnTo, requireAuthentication],
   );
 
   const handleHeaderAction = useCallback(
@@ -423,7 +438,7 @@ function AppShell() {
   if (!session?.isAuthenticated && !guestMode && !authPromptDismissed) {
     return (
       <div className="dash-auth-only">
-        <ProtectedRoute onContinueAsGuest={continueAsGuest}>
+        <ProtectedRoute onContinueAsGuest={continueAsGuest} returnTo={authReturnTo}>
           <></>
         </ProtectedRoute>
       </div>
@@ -491,6 +506,7 @@ function AppShell() {
             allowGuest={publicDestination && guestMode}
             suppressPrompt={authPromptDismissed}
             onContinueAsGuest={continueAsGuest}
+            returnTo={authReturnTo}
           >
             <RemoteBoundary resetKey={`${location.pathname}${location.search}`}>
               {isSupportScreen ? (
