@@ -12,6 +12,7 @@ import { SessionTimeoutModal } from "@packages/trem-ui";
 import { isGuestSession } from "../../services/guestSession";
 import { registerSessionCacheClearer } from "@packages/trem-events";
 import apiService from "../../services/apiService";
+import { getActiveAuthReturnTo } from "../routing/authReturnDestination";
 
 const AUTH_STORAGE_PREFIX = "appShellTREM";
 const SHARED_STORAGE_PREFIX = "travelstrem";
@@ -126,7 +127,7 @@ export function AppShellProvider({ children }) {
       window.location.replace(
         buildGlobalAuthUrl({
           app: "app-shell",
-          returnTo: window.location.href,
+          returnTo: getActiveAuthReturnTo(),
         }),
       );
     };

@@ -10,6 +10,7 @@
       people: { href: "#people" },
       partners: { href: "#partners" },
       contact: { href: "#contact" },
+      partnership: { href: "partnership/index.html" },
       trevio: {
         href: "https://app.travelstrem.com/?tab=trevio&product=trevio",
         external: true,
@@ -22,10 +23,14 @@
         href: "https://auth.travelstrem.com/partnership",
         external: true,
       },
+      partnerDemo: {
+        href: "https://mail.google.com/mail/?view=cm&fs=1&to=akshat.goyal@travelstrem.com&su=PartnerTREM%20demo%20request&body=Hello%20PartnerTREM%20team%2C%0A%0AI%20would%20like%20to%20book%20a%20PartnerTREM%20demo.%0A%0AName%3A%20%0AAgency%3A%20%0APhone%3A%20%0APreferred%20date%20and%20time%3A%20%0A%0AThank%20you.",
+        external: true,
+      },
       email: { href: "mailto:akshat.goyal@travelstrem.com" },
-      phone: { href: "tel:+919057635580" },
+      phone: { href: "tel:+919602225763" },
       location: {
-        href: "https://www.google.com/maps/search/?api=1&query=G-108%20Shalimar%20Complex%20MI%20Road%20Jaipur",
+        href: "https://maps.app.goo.gl/ebvDhsdzAe27XRSn7",
         external: true,
       },
     },
@@ -40,4 +45,23 @@
       ...(supplied.links || {}),
     },
   };
+
+  const applyConfiguredLinks = () => {
+    document.querySelectorAll("a[data-link]").forEach((anchor) => {
+      const destination = global.TRAVELSTREM_SITE_CONFIG.links?.[anchor.dataset.link];
+      const link = typeof destination === "string" ? { href: destination } : destination;
+      if (!link?.href) return;
+      anchor.href = link.href;
+      if (link.external) {
+        anchor.target = "_blank";
+        anchor.rel = "noopener noreferrer";
+      }
+    });
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", applyConfiguredLinks, { once: true });
+  } else {
+    applyConfiguredLinks();
+  }
 })(window);

@@ -567,9 +567,8 @@ export const DEFAULT_OPTION_SETS = Object.freeze({
     "tours.preferredContactOptions": {
         description: "Customer contact channel choices",
         options: [
-            { value: "whatsapp", label: "WhatsApp", sortOrder: 0 },
-            { value: "phone", label: "Phone call", sortOrder: 10 },
-            { value: "email", label: "Email", sortOrder: 20 },
+            { value: "email", label: "Email", sortOrder: 0 },
+            { value: "phone", label: "Phone", sortOrder: 10 },
         ],
     },
     "appShell.favoriteProductOptions": {
