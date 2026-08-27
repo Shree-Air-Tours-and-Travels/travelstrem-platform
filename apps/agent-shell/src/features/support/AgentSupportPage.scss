@@ -69,6 +69,12 @@
   gap: $space-2;
 }
 
+.agent-support__list-loading {
+  display: grid;
+  min-height: 12rem;
+  place-items: center;
+}
+
 .agent-support__list button {
   width: 100%;
   padding: $space-4;

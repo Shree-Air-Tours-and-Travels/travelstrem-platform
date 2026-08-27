@@ -4,7 +4,7 @@ import { fileURLToPath } from "url";
 import { normalizeTourForResponse } from "./tourController.js";
 import TourRepository from "../repositories/TourRepository.js";
 import TourDeparture from "../models/TourDeparture.js";
-import { getTourDiscovery, searchToursFromRawRequest } from "../services/tourSearchService.js";
+import { searchToursFromRawRequest } from "../services/tourSearchService.js";
 import {
     buildManagementTourListQuery,
     getManagementTourSort,
@@ -672,14 +672,6 @@ export const getWidget = async (req, res) => {
             };
 
             return res.status(200).json(ensurePageContract(resBody));
-        }
-
-        // Quick-filter chips are part of this widget's data contract. Keep them in
-        // the widget response even for metadata requests so clients do not need to
-        // fetch and merge a second discovery payload.
-        if (fileName === "quick-filters.json") {
-            const discovery = await getTourDiscovery();
-            widget.component.data.filters = discovery.chips;
         }
 
         // The grid response owns its initial DB result set and facets. Returning an

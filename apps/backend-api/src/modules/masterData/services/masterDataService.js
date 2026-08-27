@@ -48,26 +48,6 @@ const createMissingOptionSet = async (key) => {
     }
 };
 
-const resolveOptionReferences = (value, options) => {
-    if (Array.isArray(value)) return value.map((item) => resolveOptionReferences(item, options));
-    if (!value || typeof value !== "object") return value;
-    const resolved = Object.fromEntries(
-        Object.entries(value).map(([key, child]) => [key, resolveOptionReferences(child, options)]),
-    );
-    if (typeof value.optionsRef === "string") resolved.options = options[value.optionsRef] || [];
-    Object.entries(value).forEach(([key, reference]) => {
-        if (
-            key !== "optionsRef" &&
-            key.endsWith("Ref") &&
-            typeof reference === "string" &&
-            Object.hasOwn(options, reference)
-        ) {
-            resolved[key.slice(0, -3)] = options[reference];
-        }
-    });
-    return resolved;
-};
-
 class MasterDataService {
     async getOptionSet(key) {
         if (!key || !isDbReady()) return [];
@@ -106,12 +86,10 @@ class MasterDataService {
         };
         return {
             ...component,
-            data: resolveOptionReferences(component.data || {}, options),
             dataScope: {
                 ...component.dataScope,
                 options,
             },
-            structure: resolveOptionReferences(component.structure || {}, options),
         };
     }
 

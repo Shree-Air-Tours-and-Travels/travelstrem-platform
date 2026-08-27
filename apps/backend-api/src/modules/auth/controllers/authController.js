@@ -60,7 +60,8 @@ const setAuthNoStoreHeaders = (res) => {
     res.setHeader("Referrer-Policy", "no-referrer");
 };
 
-const issueUserToken = (user, res) => createSession({ user, req: res.req, res });
+const issueUserToken = (user, res, { rememberMe = false } = {}) =>
+    createSession({ user, req: res.req, res, rememberMe });
 const revokeUserRefreshTokens = revokeUserSessions;
 const revokeCurrentRefreshToken = revokePresentedRefreshToken;
 
@@ -616,7 +617,7 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
     setAuthNoStoreHeaders(res);
     try {
-        const { email, password } = req.body || {};
+        const { email, password, rememberMe = false } = req.body || {};
 
         const normalizedEmail = email.toLowerCase().trim();
         const user = await UserRepository.findByEmail(normalizedEmail);
@@ -659,7 +660,11 @@ export const login = async (req, res) => {
             const { verification, otp } = await createVerification({
                 email: normalizedEmail,
                 type: "login",
-                metadata: { role: user.role, portal: getPortalScope(req) },
+                metadata: {
+                    role: user.role,
+                    portal: getPortalScope(req),
+                    rememberMe: rememberMe === true,
+                },
             });
 
             await sendOtpMail({
@@ -679,7 +684,7 @@ export const login = async (req, res) => {
         }
 
         await revokeCurrentRefreshToken(req);
-        const result = await issueUserToken(user, res);
+        const result = await issueUserToken(user, res, { rememberMe: rememberMe === true });
         return res.json(result);
     } catch (err) {
         console.error("Auth login error:", err && err.stack ? err.stack : err);
@@ -769,7 +774,9 @@ export const verifyLoginOtp = async (req, res) => {
         await verification.save();
 
         await revokeCurrentRefreshToken(req);
-        const result = await issueUserToken(user, res);
+        const result = await issueUserToken(user, res, {
+            rememberMe: verification.metadata?.rememberMe === true,
+        });
         return res.json(result);
     } catch (err) {
         console.error("verifyLoginOtp error:", err && err.stack ? err.stack : err);

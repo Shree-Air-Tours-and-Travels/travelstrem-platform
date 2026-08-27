@@ -102,6 +102,14 @@ const DETAIL_TABS = Object.freeze([
   { id: "reviews", label: "Reviews" },
 ]);
 
+const getSectionScrollRoot = (node) =>
+  node?.closest?.("[data-scroll-root]") || document.scrollingElement || document.documentElement;
+
+const getScrollEventTarget = (scrollRoot) =>
+  scrollRoot === document.scrollingElement || scrollRoot === document.documentElement
+    ? window
+    : scrollRoot;
+
 const renderWidget = (widget, props) => {
   switch (widget.type) {
     case "TourOverview":
@@ -264,27 +272,83 @@ export default function ToursDetailsView({
   }, [activeTour, contentWidgets]);
   const [activeSection, setActiveSection] = useState("overview");
   const sectionNavRef = useRef(null);
+  const programmaticScrollRef = useRef(false);
+  const programmaticScrollTimerRef = useRef(null);
   const overviewWidget = heroWidgets.find((w) => w.type === "TourOverview");
   const galleryWidget = heroWidgets.find((w) => w.type === "TourGallery");
   const pricingWidget = heroWidgets.find((w) => w.type === "PricingCard");
 
   useEffect(() => {
+    const nav = sectionNavRef.current;
     const sections = availableTabs
       .map((tab) => document.getElementById(`tour-detail-${tab.id}`))
       .filter(Boolean);
-    if (!sections.length || typeof IntersectionObserver === "undefined") return undefined;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((left, right) => right.intersectionRatio - left.intersectionRatio)[0];
-        if (visible) setActiveSection(visible.target.id.replace("tour-detail-", ""));
-      },
-      { rootMargin: "-28% 0px -58%", threshold: [0.05, 0.25, 0.6] },
-    );
-    sections.forEach((section) => observer.observe(section));
-    return () => observer.disconnect();
+    if (!nav || !sections.length) return undefined;
+
+    const scrollRoot = getSectionScrollRoot(nav);
+    const scrollTarget = getScrollEventTarget(scrollRoot);
+    let animationFrame = 0;
+
+    const updateActiveSection = () => {
+      animationFrame = 0;
+      if (programmaticScrollRef.current) return;
+
+      const rootTop = scrollTarget === window ? 0 : scrollRoot.getBoundingClientRect().top;
+      const stickyTop = Number.parseFloat(window.getComputedStyle(nav).top) || 0;
+      const activationLine = rootTop + stickyTop + nav.offsetHeight + 16;
+      let nextSection = sections[0];
+
+      sections.forEach((section) => {
+        if (section.getBoundingClientRect().top <= activationLine) nextSection = section;
+      });
+
+      const isAtEnd = scrollRoot.scrollTop + scrollRoot.clientHeight >= scrollRoot.scrollHeight - 2;
+      if (isAtEnd) nextSection = sections[sections.length - 1];
+
+      const nextId = nextSection.id.replace("tour-detail-", "");
+      setActiveSection((current) => (current === nextId ? current : nextId));
+    };
+
+    const scheduleUpdate = () => {
+      if (animationFrame) return;
+      animationFrame = window.requestAnimationFrame(updateActiveSection);
+    };
+
+    const releaseProgrammaticScroll = () => {
+      if (!programmaticScrollRef.current) return;
+      programmaticScrollRef.current = false;
+      if (programmaticScrollTimerRef.current) {
+        window.clearTimeout(programmaticScrollTimerRef.current);
+        programmaticScrollTimerRef.current = null;
+      }
+      scheduleUpdate();
+    };
+
+    scrollTarget.addEventListener("scroll", scheduleUpdate, { passive: true });
+    scrollTarget.addEventListener("scrollend", releaseProgrammaticScroll);
+    scrollTarget.addEventListener("touchstart", releaseProgrammaticScroll, { passive: true });
+    scrollTarget.addEventListener("wheel", releaseProgrammaticScroll, { passive: true });
+    window.addEventListener("resize", scheduleUpdate);
+    updateActiveSection();
+
+    return () => {
+      scrollTarget.removeEventListener("scroll", scheduleUpdate);
+      scrollTarget.removeEventListener("scrollend", releaseProgrammaticScroll);
+      scrollTarget.removeEventListener("touchstart", releaseProgrammaticScroll);
+      scrollTarget.removeEventListener("wheel", releaseProgrammaticScroll);
+      window.removeEventListener("resize", scheduleUpdate);
+      if (animationFrame) window.cancelAnimationFrame(animationFrame);
+    };
   }, [availableTabs]);
+
+  useEffect(
+    () => () => {
+      if (programmaticScrollTimerRef.current) {
+        window.clearTimeout(programmaticScrollTimerRef.current);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     const nav = sectionNavRef.current;
@@ -297,11 +361,34 @@ export default function ToursDetailsView({
   }, [activeSection]);
 
   const scrollToSection = (sectionId) => {
+    const nav = sectionNavRef.current;
+    const section = document.getElementById(`tour-detail-${sectionId}`);
+    if (!nav || !section) return;
+
+    const scrollRoot = getSectionScrollRoot(nav);
+    const scrollTarget = getScrollEventTarget(scrollRoot);
+    const rootTop = scrollTarget === window ? 0 : scrollRoot.getBoundingClientRect().top;
+    const stickyTop = Number.parseFloat(window.getComputedStyle(nav).top) || 0;
+    const targetTop = rootTop + stickyTop + nav.offsetHeight + 8;
+    const nextScrollTop = Math.max(
+      0,
+      scrollRoot.scrollTop + section.getBoundingClientRect().top - targetTop,
+    );
+
+    programmaticScrollRef.current = true;
     setActiveSection(sectionId);
-    document.getElementById(`tour-detail-${sectionId}`)?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
+    scrollRoot.scrollTo({
+      top: nextScrollTop,
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
     });
+
+    if (programmaticScrollTimerRef.current) {
+      window.clearTimeout(programmaticScrollTimerRef.current);
+    }
+    programmaticScrollTimerRef.current = window.setTimeout(() => {
+      programmaticScrollRef.current = false;
+      programmaticScrollTimerRef.current = null;
+    }, 900);
   };
 
   if (tourUnavailable) {

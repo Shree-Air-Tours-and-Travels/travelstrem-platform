@@ -180,6 +180,7 @@ export default function AuthPage({
   const [otpExpiresIn, setOtpExpiresIn] = useState(0);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [emailMode, setEmailMode] = useState("login");
+  const [rememberMe, setRememberMe] = useState(false);
   const [emailForm, setEmailForm] = useState({
     name: "",
     email: "",
@@ -384,6 +385,7 @@ export default function AuthPage({
       const response = await authService.login({
         email: emailForm.email.trim(),
         password: emailForm.password,
+        rememberMe,
       });
       const data = response?.data || response;
       if (data?.status === "verify_otp") {
@@ -882,14 +884,26 @@ export default function AuthPage({
                       </div>
                     </div>
                   ) : null}
-                  {emailMode === "login" && allowForgotPassword ? (
-                    <Button
-                      variant="text"
-                      type="button"
-                      text="Forgot password?"
-                      onClick={requestPasswordReset}
-                      primaryClassName="auth-trem__forgot-link"
-                    />
+                  {emailMode === "login" ? (
+                    <div className="auth-trem__login-options">
+                      <label className="auth-trem__remember">
+                        <input
+                          type="checkbox"
+                          checked={rememberMe}
+                          onChange={(event) => setRememberMe(event.target.checked)}
+                        />
+                        <span>Remember me</span>
+                      </label>
+                      {allowForgotPassword ? (
+                        <Button
+                          variant="text"
+                          type="button"
+                          text="Forgot password?"
+                          onClick={requestPasswordReset}
+                          primaryClassName="auth-trem__forgot-link"
+                        />
+                      ) : null}
+                    </div>
                   ) : null}
                   <Button
                     variant="solid"

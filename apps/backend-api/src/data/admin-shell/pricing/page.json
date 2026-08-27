@@ -1,0 +1,279 @@
+{
+  "status": "success",
+  "component": {
+    "data": { "pricingConfigs": [] },
+    "dataScope": {
+      "options": {
+        "scopeTypes": [
+          { "value": "GLOBAL", "labelRef": "scopeGlobal" },
+          { "value": "PRODUCT", "labelRef": "scopeProduct" },
+          { "value": "PAYMENT_PROVIDER", "labelRef": "scopePaymentProvider" },
+          { "value": "PAYMENT_METHOD", "labelRef": "scopePaymentMethod" },
+          { "value": "CURRENCY", "labelRef": "scopeCurrency" },
+          { "value": "COUNTRY", "labelRef": "scopeCountry" },
+          { "value": "CUSTOMER_TYPE", "labelRef": "scopeCustomerType" },
+          { "value": "AGENCY", "labelRef": "scopeAgency" },
+          { "value": "TOUR", "labelRef": "scopeTour" },
+          { "value": "BOOKING", "labelRef": "scopeBooking" }
+        ],
+        "feeTypes": [
+          { "value": "fixed", "labelRef": "feeTypeFixed" },
+          { "value": "percentage", "labelRef": "feeTypePercentage" }
+        ]
+      }
+    },
+    "elements": {
+      "labels": {
+        "heroEyebrow": "FINANCIAL GOVERNANCE",
+        "heroTitle": "TravelsTREM pricing controls",
+        "heroDescription": "Manage platform fees, tax and payment-gateway recovery from one versioned source of truth. New rules affect future quotes only.",
+        "masterAdminOnly": "Master Admin only",
+        "loading": "Loading pricing controls…",
+        "configurationTarget": "CONFIGURATION TARGET",
+        "createPricingRules": "Create pricing rules",
+        "editVersion": "Edit version {version}",
+        "version": "Version {version}",
+        "versionLabel": "Version",
+        "newScope": "New scope",
+        "applyPricingBy": "Apply pricing by",
+        "scopeIdentifier": "Scope identifier",
+        "scopeIdentifierPlaceholder": "Enter scope identifier",
+        "scopeGlobal": "Global default",
+        "scopeProduct": "Product",
+        "scopePaymentProvider": "Payment provider",
+        "scopePaymentMethod": "Payment method",
+        "scopeCurrency": "Currency",
+        "scopeCountry": "Country",
+        "scopeCustomerType": "Customer type",
+        "scopeAgency": "Agency",
+        "scopeTour": "Tour",
+        "scopeBooking": "Booking",
+        "scopeProductHint": "For example: tour, flight, hotel or trip",
+        "scopePaymentProviderHint": "For example: razorpay",
+        "scopePaymentMethodHint": "For example: UPI or CARD",
+        "scopeCurrencyHint": "Three-letter currency code, for example INR",
+        "scopeCountryHint": "Two-letter country code, for example IN",
+        "scopeCustomerTypeHint": "For example: RETAIL or CORPORATE",
+        "scopeAgencyHint": "Enter the agency ID",
+        "scopeTourHint": "Enter the tour ID",
+        "scopeBookingHint": "Enter the booking ID",
+        "platformFeeTitle": "TravelsTREM platform fee",
+        "platformFeeDescription": "Owned by TravelsTREM and never editable by an agent.",
+        "collectPlatformFee": "Collect platform fee",
+        "collectPlatformFeeDescription": "Add the configured TravelsTREM fee to new customer quotes.",
+        "feeType": "Fee type",
+        "feeTypeFixed": "Fixed amount",
+        "feeTypePercentage": "Percentage",
+        "feeAmount": "Fee amount",
+        "feePercentage": "Fee percentage",
+        "moneyPlaceholder": "0.00",
+        "percentagePlaceholder": "0",
+        "platformFeeGst": "GST on platform fee (%)",
+        "currency": "Currency",
+        "gatewayTitle": "Payment gateway recovery",
+        "gatewayDescription": "The customer bears the grossed-up gateway cost and its GST.",
+        "recoverGatewayCharges": "Recover gateway charges",
+        "recoverGatewayChargesDescription": "Gross up the payable so gateway deductions do not reduce settlement.",
+        "gatewayRate": "Gateway rate (%)",
+        "gatewayGst": "GST on gateway fee (%)",
+        "activationTitle": "Activation",
+        "activationDescription": "Publish immediately or schedule an effective window.",
+        "configurationActive": "Configuration active",
+        "configurationActiveDescription": "Inactive versions remain available for audit but are never resolved.",
+        "effectiveFrom": "Effective from",
+        "effectiveUntil": "Effective until",
+        "enabled": "Enabled",
+        "disabled": "Disabled",
+        "immutableVersionNote": "Saving creates a new immutable version; previous quotes are not repriced.",
+        "publish": "Publish pricing version",
+        "publishing": "Publishing…",
+        "auditTrail": "AUDIT TRAIL",
+        "pricingVersions": "Pricing versions",
+        "refresh": "Refresh",
+        "emptyTitle": "No pricing configuration yet",
+        "emptyDescription": "Publish the first global or scoped pricing version.",
+        "active": "Active",
+        "inactive": "Inactive",
+        "effective": "Effective",
+        "immediately": "Immediately",
+        "tremFeeSummary": "TREM fee",
+        "gatewaySummary": "Gateway",
+        "useAsNextVersion": "Use as next version",
+        "scopeRequired": "Select a scope and enter its identifier before saving.",
+        "loadError": "Pricing configuration could not be loaded",
+        "saveError": "Pricing configuration could not be saved"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {
+        "eyebrowRef": "heroEyebrow",
+        "titleRef": "heroTitle",
+        "descriptionRef": "heroDescription",
+        "accessLabelRef": "masterAdminOnly",
+        "accessIcon": "shieldCheck"
+      },
+      "widgets": [
+        {
+          "type": "PricingEditor",
+          "props": {
+            "eyebrowRef": "configurationTarget",
+            "createTitleRef": "createPricingRules",
+            "editTitleRef": "editVersion",
+            "versionRef": "version",
+            "newScopeRef": "newScope",
+            "recordTone": "info",
+            "newTone": "neutral",
+            "scopeFields": [
+              { "name": "scopeType", "component": "select", "labelRef": "applyPricingBy", "optionsRef": "scopeTypes", "maxHeight": 320 },
+              {
+                "name": "scopeId",
+                "component": "input",
+                "labelRef": "scopeIdentifier",
+                "placeholderRef": "scopeIdentifierPlaceholder",
+                "disabledWhen": { "field": "scopeType", "equals": "GLOBAL" },
+                "hintRefsByValue": {
+                  "PRODUCT": "scopeProductHint",
+                  "PAYMENT_PROVIDER": "scopePaymentProviderHint",
+                  "PAYMENT_METHOD": "scopePaymentMethodHint",
+                  "CURRENCY": "scopeCurrencyHint",
+                  "COUNTRY": "scopeCountryHint",
+                  "CUSTOMER_TYPE": "scopeCustomerTypeHint",
+                  "AGENCY": "scopeAgencyHint",
+                  "TOUR": "scopeTourHint",
+                  "BOOKING": "scopeBookingHint"
+                }
+              }
+            ],
+            "sections": [
+              {
+                "id": "platformFee",
+                "icon": "wallet",
+                "titleRef": "platformFeeTitle",
+                "descriptionRef": "platformFeeDescription",
+                "toggle": { "name": "tremFeeEnabled", "labelRef": "collectPlatformFee", "descriptionRef": "collectPlatformFeeDescription" },
+                "fields": [
+                  { "name": "tremFeeType", "component": "select", "labelRef": "feeType", "optionsRef": "feeTypes", "disabledWhen": { "field": "tremFeeEnabled", "equals": false } },
+                  {
+                    "name": "tremFeeValue",
+                    "component": "input",
+                    "inputMode": "decimal",
+                    "labelRefByValue": { "field": "tremFeeType", "map": { "fixed": "feeAmount", "percentage": "feePercentage" } },
+                    "placeholderRefByValue": { "field": "tremFeeType", "map": { "fixed": "moneyPlaceholder", "percentage": "percentagePlaceholder" } },
+                    "disabledWhen": { "field": "tremFeeEnabled", "equals": false }
+                  },
+                  { "name": "tremFeeGstRate", "component": "input", "inputMode": "decimal", "labelRef": "platformFeeGst", "placeholderRef": "percentagePlaceholder", "disabledWhen": { "field": "tremFeeEnabled", "equals": false } },
+                  { "name": "currency", "component": "input", "labelRef": "currency", "maxLength": 3 }
+                ]
+              },
+              {
+                "id": "gateway",
+                "icon": "payment",
+                "titleRef": "gatewayTitle",
+                "descriptionRef": "gatewayDescription",
+                "toggle": { "name": "gatewayEnabled", "labelRef": "recoverGatewayCharges", "descriptionRef": "recoverGatewayChargesDescription" },
+                "columns": 2,
+                "fields": [
+                  { "name": "gatewayRate", "component": "input", "inputMode": "decimal", "labelRef": "gatewayRate", "placeholderRef": "percentagePlaceholder", "disabledWhen": { "field": "gatewayEnabled", "equals": false } },
+                  { "name": "gatewayGstRate", "component": "input", "inputMode": "decimal", "labelRef": "gatewayGst", "placeholderRef": "percentagePlaceholder", "disabledWhen": { "field": "gatewayEnabled", "equals": false } }
+                ]
+              },
+              {
+                "id": "activation",
+                "icon": "calendar",
+                "titleRef": "activationTitle",
+                "descriptionRef": "activationDescription",
+                "toggle": { "name": "active", "labelRef": "configurationActive", "descriptionRef": "configurationActiveDescription" },
+                "columns": 2,
+                "fields": [
+                  { "name": "effectiveFrom", "component": "input", "variant": "datetime-local", "labelRef": "effectiveFrom" },
+                  { "name": "effectiveUntil", "component": "input", "variant": "datetime-local", "labelRef": "effectiveUntil" }
+                ]
+              }
+            ],
+            "footerNoteRef": "immutableVersionNote",
+            "footerIcon": "info",
+            "actionId": "publish"
+          }
+        },
+        {
+          "type": "PricingHistory",
+          "props": {
+            "eyebrowRef": "auditTrail",
+            "titleRef": "pricingVersions",
+            "emptyTitleRef": "emptyTitle",
+            "emptyDescriptionRef": "emptyDescription",
+            "emptyIcon": "wallet",
+            "scopeOptionsRef": "scopeTypes",
+            "refreshActionId": "refresh",
+            "versionRef": "versionLabel",
+            "effectiveRef": "effective",
+            "immediatelyRef": "immediately",
+            "activeRef": "active",
+            "inactiveRef": "inactive",
+            "activeTone": "success",
+            "inactiveTone": "neutral",
+            "dateFormat": { "dateStyle": "medium", "timeStyle": "short" },
+            "enabledRef": "enabled",
+            "disabledRef": "disabled",
+            "summaryItems": [
+              { "labelRef": "tremFeeSummary", "path": "editor.tremFeeEnabled" },
+              { "labelRef": "gatewaySummary", "path": "editor.gatewayEnabled" }
+            ],
+            "recordActionId": "useVersion"
+          }
+        }
+      ],
+      "config": {
+        "access": { "adminLevels": ["master"] },
+        "defaults": {
+          "scopeType": "GLOBAL",
+          "scopeId": "default",
+          "active": true,
+          "effectiveFrom": "",
+          "effectiveUntil": "",
+          "rules": {
+            "currency": "INR",
+            "tremFeeEnabled": false,
+            "tremFeeType": "fixed",
+            "tremFeeValue": "0",
+            "tremFeeGstRate": "0",
+            "gatewayEnabled": false,
+            "gatewayRate": "0",
+            "gatewayGstRate": "0"
+          }
+        },
+        "globalScope": { "type": "GLOBAL", "id": "default" },
+        "toggleStateRefs": {
+          "enabled": "enabled",
+          "disabled": "disabled",
+          "enabledIcon": "check",
+          "disabledIcon": "minus"
+        },
+        "payload": {
+          "scopeTypeField": "scopeType",
+          "scopeIdField": "scopeId",
+          "activeField": "active",
+          "effectiveFromField": "effectiveFrom",
+          "effectiveUntilField": "effectiveUntil",
+          "ruleFields": [
+            "currency",
+            "tremFeeEnabled",
+            "tremFeeType",
+            "tremFeeValue",
+            "tremFeeGstRate",
+            "gatewayEnabled",
+            "gatewayRate",
+            "gatewayGstRate"
+          ]
+        },
+        "messages": { "loadingRef": "loading", "scopeRequiredRef": "scopeRequired", "loadErrorRef": "loadError", "saveErrorRef": "saveError" }
+      },
+      "actions": [
+        { "id": "publish", "labelRef": "publish", "loadingLabelRef": "publishing", "icon": "shieldCheck", "type": "submit" },
+        { "id": "refresh", "labelRef": "refresh", "icon": "refreshCw", "variant": "secondary" },
+        { "id": "useVersion", "labelRef": "useAsNextVersion", "icon": "chevronRight", "variant": "text" }
+      ]
+    }
+  }
+}

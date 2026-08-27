@@ -33,6 +33,7 @@ export default function ListingDropdown({
   loadingContent,
   loading = false,
   mobileBreakpoint = 768,
+  desktopMaxHeight = 560,
   mobileVariant = "default",
   mobileCloseLabel = "Close",
   onClose,
@@ -53,7 +54,10 @@ export default function ListingDropdown({
         top: rect.bottom + 8,
         left,
         width,
-        maxHeight: Math.max(180, window.innerHeight - rect.bottom - 24),
+        maxHeight: Math.min(
+          Math.max(180, Number(desktopMaxHeight) || 560),
+          Math.max(180, window.innerHeight - rect.bottom - 24),
+        ),
       });
     };
     update();
@@ -63,7 +67,7 @@ export default function ListingDropdown({
       window.removeEventListener("resize", update);
       window.removeEventListener("scroll", update, true);
     };
-  }, [anchorRef, mobile, open]);
+  }, [anchorRef, desktopMaxHeight, mobile, open]);
 
   useEffect(() => {
     if (!open || mobile) return undefined;
@@ -162,6 +166,7 @@ ListingDropdown.propTypes = {
   loadingContent: PropTypes.node,
   loading: PropTypes.bool,
   mobileBreakpoint: PropTypes.number,
+  desktopMaxHeight: PropTypes.number,
   mobileVariant: PropTypes.oneOf(["default", "fullscreen"]),
   mobileCloseLabel: PropTypes.string,
   onClose: PropTypes.func,

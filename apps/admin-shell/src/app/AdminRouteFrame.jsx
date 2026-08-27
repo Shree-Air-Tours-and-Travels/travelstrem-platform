@@ -10,7 +10,11 @@ import authService from "../services/authService";
 const SECTION_IDS = [
   { id: "workspace", title: "Workspace", items: ["overview", "enquiries", "support"] },
   { id: "catalog", title: "Catalogue", items: ["services"] },
-  { id: "governance", title: "Governance", items: ["internalTeam", "tenancy", "clients"] },
+  {
+    id: "governance",
+    title: "Governance",
+    items: ["internalTeam", "tenancy", "clients", "pricing"],
+  },
   { id: "account", title: "Account", items: ["profile", "logout"] },
 ];
 

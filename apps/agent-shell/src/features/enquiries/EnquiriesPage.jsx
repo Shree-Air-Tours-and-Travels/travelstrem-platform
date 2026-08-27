@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from "react";
 import { EnquiryCenter } from "@packages/trem-ui";
-import { useEnquiryRealtime, useRealtimeStatus } from "@packages/trem-events";
+import { useEnquiryRealtime } from "@packages/trem-events";
 import { fetchData, useRefreshOnActivation } from "@packages/trem-utils";
 
 export default function EnquiriesPage() {
@@ -33,11 +33,7 @@ export default function EnquiriesPage() {
     }
   }, []);
 
-  // Live inbox: the socket is the single source of updates while connected.
-  const { isConnected } = useRealtimeStatus();
-  // Focus/tab-activation refetches run only as a fallback when realtime is
-  // down; data-changed events (real enquiry created in this tab) always load.
-  useRefreshOnActivation(load, { resource: "enquiries", activationEnabled: !isConnected });
+  useRefreshOnActivation(load, { resource: "enquiries" });
   useEnquiryRealtime(load);
 
   return (

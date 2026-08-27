@@ -630,6 +630,27 @@
     width: 36px;
     height: 36px;
   }
+
+  .trem-app-header--mobile-search-hidden .trem-app-header__search {
+    display: none;
+  }
+
+  .trem-app-header--mobile-profile-hidden {
+    .trem-app-header__user,
+    .trem-app-header__user-dropdown {
+      display: none;
+    }
+  }
+
+  .trem-app-header--mobile-compact {
+    height: 56px;
+    grid-template-rows: 40px;
+  }
+
+  .trem-app-header__spacer--mobile-compact {
+    height: 56px;
+    flex-basis: 56px;
+  }
 }
 
 @media (max-width: $breakpoint-mobile) {

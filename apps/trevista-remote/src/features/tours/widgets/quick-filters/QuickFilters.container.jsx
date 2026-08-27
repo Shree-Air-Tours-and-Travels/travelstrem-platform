@@ -3,7 +3,7 @@ import QuickFiltersView from "./QuickFilters.view";
 
 export default function QuickFiltersContainer({ widgetData, onQuickFilter, activeIds = ["all"] }) {
   const filters = useMemo(
-    () => widgetData?.data?.filters || widgetData?.structure?.widgets?.[0]?.props?.filters || [],
+    () => widgetData?.dataScope?.options?.quickFilters || [],
     [widgetData],
   );
   const labels = widgetData?.elements?.labels || {};

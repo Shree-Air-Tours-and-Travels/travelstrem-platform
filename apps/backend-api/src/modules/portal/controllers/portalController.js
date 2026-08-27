@@ -20,6 +20,13 @@ import {
     readPortalAccessToken,
 } from "../../../core/auth/portalSession.js";
 
+const setPublicConfigCacheHeaders = (res) => {
+    res.setHeader(
+        "Cache-Control",
+        "public, max-age=60, s-maxage=300, stale-while-revalidate=86400, stale-if-error=86400",
+    );
+};
+
 const applyProductHiding = (config, hiddenKeys) => {
     if (!hiddenKeys.length) return config;
     const next = { ...config };
@@ -82,6 +89,7 @@ const applyNavigationHiding = (config, hiddenKeys) => {
 export const getNavigationConfig = async (req, res) => {
     const hiddenKeys = await getHiddenProductKeys();
     const navConfig = applyNavigationHiding(navigationConfigTemplate, hiddenKeys);
+    setPublicConfigCacheHeaders(res);
     res.status(200).json({
         status: "success",
         message: "Navigation config loaded",
@@ -441,6 +449,13 @@ const buildAdminHeaderConfig = (baseConfig = {}) => ({
             target: "tenancy",
             masterOnly: true,
         },
+        {
+            id: "pricing",
+            label: "Pricing controls",
+            icon: "wallet",
+            target: "pricing",
+            masterOnly: true,
+        },
         { id: "clients", label: "Clients", icon: "usersRound", target: "clients" },
         { id: "profile", label: "My profile", icon: "user", target: "profile" },
         { id: "logout", label: "Sign out", icon: "logout", action: "logout" },
@@ -452,6 +467,7 @@ const buildAdminHeaderConfig = (baseConfig = {}) => ({
         internalTeam: [{ label: "Administration", path: "/manage/tours?tab=overview" }, { label: "Internal team" }],
         services: [{ label: "Administration", path: "/manage/tours?tab=overview" }, { label: "Travel products" }],
         tenancy: [{ label: "Administration", path: "/manage/tours?tab=overview" }, { label: "Partners & agencies" }],
+        pricing: [{ label: "Administration", path: "/manage/tours?tab=overview" }, { label: "Pricing controls" }],
         clients: [{ label: "Administration", path: "/manage/tours?tab=overview" }, { label: "Clients" }],
         profile: [{ label: "Administration", path: "/manage/tours?tab=overview" }, { label: "My profile" }],
     },
@@ -1023,6 +1039,8 @@ export const getAppHeaderConfig = async (req, res) => {
 export const getPageConfig = async (req, res) => {
     try {
         const pageConfig = resolvePageConfig(req);
+
+        setPublicConfigCacheHeaders(res);
 
         return res.json({
             status: "success",

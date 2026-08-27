@@ -6,6 +6,7 @@ export { default as Gallery } from "./components/Gallery/Gallery.jsx";
 export { default as HighlightSpan } from "./components/HighlightSpan/HighlightSpan.jsx";
 export { default as SubTitle } from "./components/SubTitle/SubTitle.jsx";
 export { default as Title } from "./components/Title/Title.jsx";
+export { default as TitleEnhancement } from "./components/TitleEnhancement/TitleEnhancement.jsx";
 export { default as Icon } from "./icons/Icon/Icon.jsx";
 export {
   default as IconPicker,

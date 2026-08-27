@@ -62,6 +62,10 @@ const Routers = () => {
           element={<Navigate to="/manage/tours?tab=internalTeam" replace />}
         />
         <Route
+          path="/admin/pricing"
+          element={<Navigate to="/manage/tours?tab=pricing" replace />}
+        />
+        <Route
           path="/manage/bookings"
           element={<Navigate to="/manage/tours?tab=enquiries" replace />}
         />

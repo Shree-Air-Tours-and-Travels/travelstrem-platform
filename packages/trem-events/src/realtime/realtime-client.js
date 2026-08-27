@@ -98,7 +98,7 @@ const createRealtimeClient = () => {
       // scope selects which cookie the backend reads during the handshake.
       withCredentials: true,
       auth: { portal: currentPortal },
-      transports: ["websocket", "polling"],
+      transports: ["websocket"],
       reconnection: true,
       reconnectionAttempts: Infinity,
       reconnectionDelay: 1000,

@@ -32,6 +32,11 @@
       "page": "dashboard",
       "file": "./admin-shell/dashboard/page.json"
     },
+    "admin-shell/pricing": {
+      "app": "admin-shell",
+      "page": "pricing",
+      "file": "./admin-shell/pricing/page.json"
+    },
     "agent-shell/services": {
       "app": "agent-shell",
       "page": "services",
@@ -56,6 +61,7 @@
     "/trevista/home": "trevista-remote/home",
     "/trevio": "trevio-remote/home",
     "/admin": "admin-shell/dashboard",
+    "/admin/pricing": "admin-shell/pricing",
     "/agent/services": "agent-shell/services",
     "/agent/dashboard": "agent-shell/dashboard",
     "/agent/agency": "agent-shell/agency"
@@ -66,6 +72,7 @@
     "tour-details": "tours-remote/details",
     "trevio": "trevio-remote/home",
     "dashboard": "admin-shell/dashboard",
+    "admin-pricing": "admin-shell/pricing",
     "agent-services": "agent-shell/services",
     "agent-dashboard": "agent-shell/dashboard",
     "agent-agency": "agent-shell/agency"

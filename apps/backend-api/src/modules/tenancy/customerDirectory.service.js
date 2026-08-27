@@ -167,8 +167,19 @@ export async function upsertAgencyCustomerFromLead({ lead, actorId = null }) {
     const email = normalizeEmail(lead.fields?.email);
     const phone = normalizePhone(lead.fields?.phone);
     const linkedUser = linkedCustomerUserId(lead);
-    const ownerAgent = lead.ownerAgent || actorId;
-    const createdBy = ownerAgent || lead.claimedBy;
+    let ownerAgent = lead.ownerAgent || null;
+    if (!ownerAgent) {
+        const partnerAdmin = await User.findOne({
+            agencyId: lead.agencyId,
+            agencyRole: "partner_admin",
+            accountStatus: "active",
+        })
+            .select("_id")
+            .sort({ createdAt: 1, _id: 1 })
+            .lean();
+        ownerAgent = partnerAdmin?._id || null;
+    }
+    const createdBy = ownerAgent || actorId || lead.claimedBy;
     if ((!email && !phone) || !createdBy) return null;
 
     // Authenticated member identity is authoritative. Contact details remain

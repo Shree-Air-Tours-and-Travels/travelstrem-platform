@@ -17,6 +17,7 @@ import EnquiriesPage from "../enquiries/EnquiriesPage";
 import SupportDeskPage from "../support/SupportDeskPage";
 import InternalTeamPage from "../internalTeam/InternalTeamPage";
 import ManageClients from "../clients/ManageClients";
+import PricingConfigurationPage from "../pricing/PricingConfigurationPage";
 import "./ManageTours.scss";
 
 export function ConfirmModal({
@@ -185,7 +186,7 @@ export default function ManageToursView({
         {
           id: "governance",
           title: "Governance",
-          items: byId(["internalTeam", "tenancy", "clients"]),
+          items: byId(["internalTeam", "tenancy", "clients", "pricing"]),
         },
         { id: "account", title: "Account", items: byId(["profile", "logout"]) },
       ].filter((section) => section.items.length),
@@ -381,6 +382,7 @@ export default function ManageToursView({
             />
           )}
           {tab === "tenancy" && auth.adminLevel === "master" && <TenancyManagement />}
+          {tab === "pricing" && <PricingConfigurationPage />}
           {tab === "clients" && <ManageClients embedded />}
         </div>
       </main>
