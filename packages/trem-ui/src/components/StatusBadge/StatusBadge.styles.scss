@@ -51,11 +51,13 @@
 
 .status-badge__dot {
   position: relative;
+  align-self: center;
 
   width: 7px;
   height: 7px;
 
   flex: 0 0 7px;
+  transform: translateY(1px);
 
   border-radius: $radius-circle;
 
@@ -89,7 +91,8 @@
 /* ========================================================================== */
 
 .status-badge__label {
-  display: block;
+  display: inline-flex;
+  align-items: center;
 
   min-width: 0;
 
@@ -101,6 +104,7 @@
   white-space: nowrap;
 
   letter-spacing: 0.005em;
+  line-height: 1;
 }
 
 /* ========================================================================== */

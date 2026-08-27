@@ -25,6 +25,15 @@ import {
 import { recordTourSignal } from "../../tours/services/tourIntelligence.service.js";
 import { upsertAgencyCustomerFromLead } from "../../tenancy/customerDirectory.service.js";
 
+const syncAgencyCustomerFromLead = async (lead) => {
+    try {
+        return await upsertAgencyCustomerFromLead({ lead });
+    } catch (error) {
+        if (error?.code !== 11000) throw error;
+        return upsertAgencyCustomerFromLead({ lead });
+    }
+};
+
 const escapeHtml = (value) =>
     String(value ?? "")
         .replaceAll("&", "&amp;")
@@ -598,7 +607,7 @@ export const submitForm = async (req, res) => {
         const savedLead = await newLead.save();
         savedLead.enquiryRef = `ENQ-${String(savedLead._id).slice(-6).toUpperCase()}`;
         await savedLead.save();
-        await upsertAgencyCustomerFromLead({ lead: savedLead }).catch((error) =>
+        await syncAgencyCustomerFromLead(savedLead).catch((error) =>
             console.error("[CustomerDirectory] enquiry sync failed:", error.message),
         );
         if (product === "trevista" && linkedTourId) {
@@ -855,6 +864,9 @@ export const claimEnquiry = async (req, res) => {
             });
         lead.claimedBy = userId;
         await lead.save();
+        await syncAgencyCustomerFromLead(lead).catch((error) =>
+            console.error("[CustomerDirectory] enquiry claim sync failed:", error.message),
+        );
 
         // Other tabs/devices refresh their list; the toast for THIS tab rides
         // the HTTP response below (same reasoning as enquiry creation).

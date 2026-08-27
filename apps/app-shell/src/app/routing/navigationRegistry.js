@@ -92,6 +92,16 @@ export const FALLBACK_NAVIGATION_CONFIG = {
       path: "/",
       activeId: "tours",
       patterns: ["/trevista/*", "/tour/*"],
+      shellPresentation: {
+        mobile: {
+          footer: "hidden",
+          appHeader: {
+            compact: true,
+            search: false,
+            profile: false,
+          },
+        },
+      },
     },
   ],
 };
@@ -121,6 +131,21 @@ const safePatterns = (patterns) =>
     .filter(Boolean)
     .slice(0, 20);
 
+const normalizeShellPresentation = (value = {}) => {
+  const mobile = value.mobile || {};
+  const appHeader = mobile.appHeader || {};
+  return {
+    mobile: {
+      footer: mobile.footer === "hidden" ? "hidden" : "navigation",
+      appHeader: {
+        compact: Boolean(appHeader.compact),
+        search: appHeader.search !== false,
+        profile: appHeader.profile !== false,
+      },
+    },
+  };
+};
+
 export function normalizeNavigationConfig(value = {}) {
   const rawDestinations = Array.isArray(value.destinations) ? value.destinations : [];
   const destinations = rawDestinations
@@ -138,6 +163,7 @@ export function normalizeNavigationConfig(value = {}) {
       activeId: ID_PATTERN.test(String(item.activeId || "")) ? item.activeId : item.id,
       path: safePath(item.path),
       patterns: safePatterns(item.patterns),
+      shellPresentation: normalizeShellPresentation(item.shellPresentation),
     }))
     .filter((item) => item.kind !== "remote" || item.renderer);
 

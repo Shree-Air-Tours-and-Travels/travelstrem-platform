@@ -347,8 +347,10 @@
 .tenant-console__review-sheet {
   .trem-bottom-sheet__panel {
     bottom: 0;
+    height: 100vh;
     height: 100dvh;
     left: auto;
+    max-height: none;
     max-width: 48rem;
     right: 0;
     top: 0;
@@ -358,7 +360,13 @@
   }
 
   .trem-bottom-sheet__handle { display: none; }
-  .trem-bottom-sheet__body { padding: $space-2 $space-5 $space-6; }
+  .trem-bottom-sheet__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: $space-2 $space-5 $space-6;
+  }
 }
 
 @keyframes tenant-console-slide-in {

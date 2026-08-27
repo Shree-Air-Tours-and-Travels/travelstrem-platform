@@ -1,5 +1,7 @@
 import React from "react";
+import { useMasterOptions } from "@packages/trem-utils";
 import Button from "../Button/Button.jsx";
+import BottomSheet from "../BottomSheet/BottomSheet.jsx";
 import Icon from "../../icons/Icon/Icon.jsx";
 import InputField from "../InputField/InputField.jsx";
 import {
@@ -12,6 +14,24 @@ import "./AccountProfile.styles.scss";
 export { ACCOUNT_AVATAR_ICONS } from "./accountAvatar.constants.js";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MOBILE_BREAKPOINT = 640;
+
+function useMobileLayout() {
+  const [mobile, setMobile] = React.useState(
+    () => typeof window !== "undefined" && window.innerWidth <= MOBILE_BREAKPOINT,
+  );
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    const query = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`);
+    const update = () => setMobile(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+
+  return mobile;
+}
 
 const normalizeId = (user) => {
   const raw = user?.id ?? user?._id;
@@ -100,11 +120,14 @@ export default function AccountProfile({
   showUserId = showExtendedAccountDetails,
   showExtraDetails = showExtendedAccountDetails,
 }) {
+  const { options: masterOptions } = useMasterOptions(["common.phoneCountryCodes"]);
+  const phoneCountryCodes = masterOptions["common.phoneCountryCodes"] || [];
   const [editing, setEditing] = React.useState(false);
   const [avatarOpen, setAvatarOpen] = React.useState(false);
   const [passwordOpen, setPasswordOpen] = React.useState(false);
   const [errors, setErrors] = React.useState({});
   const [passwordError, setPasswordError] = React.useState("");
+  const mobile = useMobileLayout();
   const [form, setForm] = React.useState({
     name: user?.name || "",
     email: user?.email || "",
@@ -188,6 +211,23 @@ export default function AccountProfile({
     const result = await onUpdateAvatar?.(avatar);
     if (result?.success !== false) setAvatarOpen(false);
   };
+
+  const avatarOptions = (
+    <div className="trem-account-profile__avatar-grid">
+      {ACCOUNT_AVATAR_ICONS.map((icon) => (
+        <button
+          key={icon}
+          type="button"
+          className={icon === user?.avatar ? "is-active" : ""}
+          onClick={() => selectAvatar(icon)}
+          disabled={avatarSaving}
+          aria-label={`Use ${icon} avatar`}
+        >
+          <Icon name={icon} size={23} />
+        </button>
+      ))}
+    </div>
+  );
 
   return (
     <section className="trem-account-profile">
@@ -280,6 +320,7 @@ export default function AccountProfile({
                       variant="tel"
                       value={form.phone}
                       onChange={(value) => setForm((current) => ({ ...current, phone: value }))}
+                      countryCodeOptions={phoneCountryCodes}
                       maxLength={15}
                       error={errors.phone}
                     />
@@ -382,7 +423,7 @@ export default function AccountProfile({
         </div>
 
         <aside className="trem-account-profile__side">
-          {avatarOpen ? (
+          {avatarOpen && !mobile ? (
             <article className="trem-account-profile__card">
               <div className="trem-account-profile__card-head">
                 <div>
@@ -390,20 +431,7 @@ export default function AccountProfile({
                   <p>Pick an icon for all portals.</p>
                 </div>
               </div>
-              <div className="trem-account-profile__avatar-grid">
-                {ACCOUNT_AVATAR_ICONS.map((icon) => (
-                  <button
-                    key={icon}
-                    type="button"
-                    className={icon === user?.avatar ? "is-active" : ""}
-                    onClick={() => selectAvatar(icon)}
-                    disabled={avatarSaving}
-                    aria-label={`Use ${icon} avatar`}
-                  >
-                    <Icon name={icon} size={23} />
-                  </button>
-                ))}
-              </div>
+              {avatarOptions}
             </article>
           ) : (
             <article className="trem-account-profile__card trem-account-profile__summary">
@@ -436,6 +464,18 @@ export default function AccountProfile({
           </article>
         </aside>
       </div>
+
+      <BottomSheet
+        open={avatarOpen && mobile}
+        onClose={() => setAvatarOpen(false)}
+        title="Choose avatar"
+        closeLabel="Close avatar picker"
+      >
+        <p className="trem-account-profile__avatar-sheet-copy">
+          Pick an icon for all portals.
+        </p>
+        {avatarOptions}
+      </BottomSheet>
     </section>
   );
 }

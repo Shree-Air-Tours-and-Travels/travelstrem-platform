@@ -266,3 +266,12 @@
   --shadow-md: 0 8px 22px rgba(0, 0, 0, 0.32);
   --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.44);
 }
+
+// Theme tokens must be committed in one paint. Component-level transitions can
+// otherwise interpolate foreground and surface colours at different speeds.
+.theme--switching,
+.theme--switching *,
+.theme--switching *::before,
+.theme--switching *::after {
+  transition: none !important;
+}

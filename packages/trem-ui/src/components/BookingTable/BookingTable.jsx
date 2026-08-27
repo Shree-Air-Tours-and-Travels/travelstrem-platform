@@ -149,6 +149,7 @@ function SelectControl({ label, value, options = [], onChange }) {
     <Dropdown
       align="right"
       hoverable={false}
+      portalZIndex={1610}
       items={normalizedOptions.map((option) => ({
         id: option.id ?? option.value,
 

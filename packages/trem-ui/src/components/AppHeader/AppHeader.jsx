@@ -51,6 +51,14 @@ export default function AppHeader({
   const notification = config.notification || {};
   const themeAction = config.themeAction || {};
   const userConfig = config.user || {};
+  const mobileConfig = config.mobile || {};
+  const mobileHeaderClasses = [
+    mobileConfig.compact ? "trem-app-header--mobile-compact" : "",
+    mobileConfig.search === false ? "trem-app-header--mobile-search-hidden" : "",
+    mobileConfig.profile === false ? "trem-app-header--mobile-profile-hidden" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
   const headerActions = (Array.isArray(config.actions) ? config.actions : []).filter(
     (item) => !item.hide,
   );
@@ -119,7 +127,7 @@ export default function AppHeader({
   return (
     <>
       <header
-        className={`trem-app-header${config.variant ? ` trem-app-header--${config.variant}` : ""}${headerActions.some((item) => item.mobileOnly) ? " has-mobile-actions" : ""}`}
+        className={`trem-app-header${config.variant ? ` trem-app-header--${config.variant}` : ""}${headerActions.some((item) => item.mobileOnly) ? " has-mobile-actions" : ""}${mobileHeaderClasses ? ` ${mobileHeaderClasses}` : ""}`}
         aria-label={config.ariaLabel || "Application header"}
         style={{ "--trem-app-header-sidebar-offset": sidebarCollapsed ? "76px" : "260px" }}
       >
@@ -258,7 +266,7 @@ export default function AppHeader({
         </div>
       </header>
       <div
-        className={`trem-app-header__spacer${config.variant ? ` trem-app-header__spacer--${config.variant}` : ""}`}
+        className={`trem-app-header__spacer${config.variant ? ` trem-app-header__spacer--${config.variant}` : ""}${mobileConfig.compact ? " trem-app-header__spacer--mobile-compact" : ""}`}
         aria-hidden="true"
       />
     </>

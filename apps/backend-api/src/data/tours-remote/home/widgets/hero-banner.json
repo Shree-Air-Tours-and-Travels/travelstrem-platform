@@ -7,8 +7,14 @@
     },
     "elements": {
       "labels": {
-        "pageTitle": "Welcome to Trevista by TravelsTrem",
-        "pageSubtitle": "Trevista by TravelsTrem",
+        "pageTitle": "Welcome to Trevista by TravelsTREM",
+        "titleSegments": [
+          { "text": "Welcome to " },
+          { "text": "Trevista", "tone": "product" },
+          { "text": " by " },
+          { "text": "TravelsTREM", "tone": "brand" }
+        ],
+        "pageSubtitle": "Trevista by TravelsTREM",
         "eyebrow": "Curated holidays, customisable down to the details.",
         "description": "Explore curated tours, compare hotels and inclusions, customise your itinerary, and manage the entire trip from one Trevista booking flow.",
         "primaryActionLabel": "Explore packages",

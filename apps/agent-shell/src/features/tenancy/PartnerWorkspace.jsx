@@ -398,6 +398,46 @@ export default function PartnerWorkspace({ tab, user, embedded = false }) {
 
   if (tab === "customers") return <CustomerDirectory embedded={embedded} />;
 
+  if (tab === "reports" && state.loading) {
+    return (
+      <div className="partner-workspace__state partner-workspace__state--panel">
+        <Spinner label="Loading reports" />
+      </div>
+    );
+  }
+
+  if (tab === "reports" && state.error) {
+    return (
+      <div className="partner-workspace__state partner-workspace__state--panel">
+        <strong>Unable to load reports</strong>
+        <span>{state.error}</span>
+        <Button text="Try again" onClick={load} />
+      </div>
+    );
+  }
+
+  if (tab === "reports" && state.value?.available === false) {
+    const reportView = state.value.view;
+    return (
+      <section className="partner-workspace partner-workspace--reports">
+        <header>
+          <div>
+            <p>{reportView.eyebrow}</p>
+            <h2>{reportView.title}</h2>
+            <span>{reportView.subtitle}</span>
+          </div>
+        </header>
+        <div className="partner-workspace__reports-notice">
+          <EmptyState
+            icon="chart"
+            title={reportView.emptyTitle}
+            description={reportView.emptyDescription}
+          />
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="partner-workspace">
       {tab === "agents" && state.loading && !state.value ? (

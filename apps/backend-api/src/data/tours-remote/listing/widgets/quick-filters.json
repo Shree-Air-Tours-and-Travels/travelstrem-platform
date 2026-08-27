@@ -1,9 +1,7 @@
 {
   "status": "success",
   "component": {
-    "data": {
-      "filters": []
-    },
+    "data": {},
     "dataScope": {
       "options": {},
       "optionSets": {

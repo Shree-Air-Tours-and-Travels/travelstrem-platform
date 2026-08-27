@@ -1,26 +1,60 @@
 import { LEDGER_ENTRY_TYPE } from "../constants/index.js";
 import { assertMinor, requireIdempotencyKey } from "../utils/money.js";
+import { immutableSnapshot } from "../utils/configResolver.js";
 
 export async function createPaymentRecord(input, { repositories, providers }) {
     if (!repositories.payments?.createPending)
         throw new Error("Payment repository is not configured");
-    if (!input.financialSnapshot || !input.configSnapshot)
-        throw new TypeError("Payment config and financial snapshots are required");
     const idempotencyKey = requireIdempotencyKey(input.idempotencyKey);
     const existing = await repositories.payments.findByIdempotencyKey?.(idempotencyKey);
     if (existing) return existing;
-    const amountMinor = assertMinor(
-        input.amountMinor ?? input.financialSnapshot?.customer?.payableMinor,
-        "amountMinor",
+    if (!input.quoteId) throw new TypeError("A stored pricing quote is required for payment");
+    const quote = await repositories.quotes?.findById?.(input.quoteId);
+    if (!quote) throw new Error("Pricing quote was not found");
+    if (quote?.expiresAt && new Date(quote.expiresAt).getTime() <= Date.now())
+        throw new Error("Pricing quote has expired");
+    if (["EXPIRED", "INVALIDATED", "CONSUMED"].includes(quote.status))
+        throw new Error("Pricing quote is not payable");
+
+    const financialSnapshot = quote.financialSnapshot;
+    const configSnapshot = quote.configSnapshot;
+    const pricingSnapshot = quote.pricing;
+    if (!financialSnapshot || !configSnapshot || !pricingSnapshot)
+        throw new TypeError("Payment pricing, config and financial snapshots are required");
+    const quotedPayableMinor = assertMinor(
+        pricingSnapshot.finalPayableMinor ?? financialSnapshot.customer?.payableMinor,
+        "quotedPayableMinor",
     );
-    const providerName = String(input.provider || "manual").toLowerCase();
+    if (input.amountMinor != null && input.amountMinor !== quotedPayableMinor)
+        throw new Error("Payment amount must match the stored quote final payable");
+
+    const amountMinor = quotedPayableMinor;
+    const quotedProvider =
+        pricingSnapshot.gateway?.provider || configSnapshot.resolution?.provider || null;
+    if (
+        input.provider &&
+        quotedProvider &&
+        String(input.provider).toLowerCase() !== String(quotedProvider).toLowerCase()
+    )
+        throw new Error("Payment provider must match the stored pricing quote");
+    const quotedPaymentMethod = pricingSnapshot.gateway?.paymentMethod || null;
+    if (
+        input.paymentMethod &&
+        quotedPaymentMethod &&
+        String(input.paymentMethod).toUpperCase() !== String(quotedPaymentMethod).toUpperCase()
+    )
+        throw new Error("Payment method must match the stored pricing quote");
+    const quotedCurrency = financialSnapshot.customer.currency;
+    if (input.currency && String(input.currency).toUpperCase() !== quotedCurrency)
+        throw new Error("Payment currency must match the stored pricing quote");
+    const providerName = String(quotedProvider || input.provider || "manual").toLowerCase();
     const provider = providers[providerName];
     if (providerName !== "manual" && !provider)
         throw new Error(`Payment provider '${providerName}' is not configured`);
     const providerPayment = provider
         ? await provider.createPayment({
               amountMinor,
-              currency: input.currency || input.financialSnapshot.customer.currency,
+              currency: quotedCurrency,
               reference: input.reference || idempotencyKey,
               metadata: input.metadata,
           })
@@ -28,6 +62,11 @@ export async function createPaymentRecord(input, { repositories, providers }) {
     return repositories.payments.createPending({
         ...input,
         amountMinor,
+        currency: quotedCurrency,
+        paymentMethod: quotedPaymentMethod || input.paymentMethod,
+        pricingSnapshot: immutableSnapshot(pricingSnapshot),
+        financialSnapshot: immutableSnapshot(financialSnapshot),
+        configSnapshot: immutableSnapshot(configSnapshot),
         idempotencyKey,
         provider: providerName,
         providerPaymentId: providerPayment?.id || input.providerPaymentId || "",
@@ -55,7 +94,7 @@ export async function processPaymentRecord(input, { repositories, providers, led
         if (!racedPayment) throw new Error("Payment could not be transitioned to processed");
         payment = racedPayment;
     }
-    const f = input.financialSnapshot || payment.financialSnapshot;
+    const f = payment.financialSnapshot;
     if (!f) throw new Error("Payment has no immutable financial snapshot");
     const bookingId = input.bookingId || payment.bookingId;
     const paymentId = payment.id || payment._id;

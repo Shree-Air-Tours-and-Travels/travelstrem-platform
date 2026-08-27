@@ -5,7 +5,7 @@ import {
   EnquiryCenter,
   InputField,
 } from "@packages/trem-ui";
-import { useEnquiryRealtime, useRealtimeStatus } from "@packages/trem-events";
+import { useEnquiryRealtime } from "@packages/trem-events";
 import { fetchData, useRefreshOnActivation } from "@packages/trem-utils";
 import "./BookingsView.scss";
 
@@ -35,11 +35,7 @@ export default function BookingsView() {
     }
   }, []);
 
-  // The socket is the single source of updates while connected; focus/
-  // tab-activation refetches only run as a realtime fallback. Data-changed
-  // events (enquiry submitted/claimed in this tab) always refresh.
-  const { isConnected } = useRealtimeStatus();
-  useRefreshOnActivation(load, { resource: "enquiries", activationEnabled: !isConnected });
+  useRefreshOnActivation(load, { resource: "enquiries" });
   useEnquiryRealtime(load);
 
   const claim = async (event) => {

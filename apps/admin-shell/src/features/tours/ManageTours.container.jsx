@@ -29,6 +29,7 @@ const VALID_TABS = new Set([
   "support",
   "internalTeam",
   "services",
+  "pricing",
   "tenancy",
   "clients",
   "profile",
@@ -57,7 +58,8 @@ const resolveTourId = (tourOrId) =>
   resolveEntityId(tourOrId?._id) || resolveEntityId(tourOrId?.id) || resolveEntityId(tourOrId);
 
 export default function ManageTours({ session }) {
-  const { reload: reloadPortalSession } = useAdminPortalConfig();
+  const { reload: reloadPortalSession, headerConfig: backendHeaderConfig } =
+    useAdminPortalConfig();
   const location = useLocation();
   const navigate = useNavigate();
   const auth = {
@@ -92,15 +94,26 @@ export default function ManageTours({ session }) {
   const [dashboardLoading, setDashboardLoading] = useState(true);
   const [dashboardError, setDashboardError] = useState("");
 
+  const canAccessTab = useCallback(
+    (nextTab) => {
+      const destination = (backendHeaderConfig?.adminNavigation || []).find(
+        (item) => item.target === nextTab || item.id === nextTab,
+      );
+      return !destination?.masterOnly || auth.adminLevel === "master";
+    },
+    [auth.adminLevel, backendHeaderConfig?.adminNavigation],
+  );
+
   const setTab = useCallback(
     (nextTab) => {
-      const safeTab = VALID_TABS.has(nextTab) ? nextTab : "overview";
+      const requestedTab = VALID_TABS.has(nextTab) ? nextTab : "overview";
+      const safeTab = canAccessTab(requestedTab) ? requestedTab : "overview";
       setTabState(safeTab);
       const params = new URLSearchParams(location.search);
       params.set("tab", safeTab);
       navigate(`${location.pathname}?${params.toString()}`, { replace: false });
     },
-    [location.pathname, location.search, navigate],
+    [canAccessTab, location.pathname, location.search, navigate],
   );
 
   const showToast = useCallback((message, type = "info", durationMs = 3000) => {
@@ -152,16 +165,20 @@ export default function ManageTours({ session }) {
   });
 
   useEffect(() => {
-    const nextTab = getTabFromSearch(location.search);
+    const requestedNextTab = getTabFromSearch(location.search);
+    const nextTab = canAccessTab(requestedNextTab) ? requestedNextTab : "overview";
     const params = new URLSearchParams(location.search);
     const requestedTab = params.get("tab");
-    if (requestedTab && !VALID_TABS.has(requestedTab)) {
+    if (
+      requestedTab &&
+      (!VALID_TABS.has(requestedTab) || !canAccessTab(requestedTab))
+    ) {
       params.set("tab", nextTab);
       navigate(`${location.pathname}?${params.toString()}`, { replace: true });
       return;
     }
     setTabState((current) => (current === nextTab ? current : nextTab));
-  }, [location.pathname, location.search, navigate]);
+  }, [canAccessTab, location.pathname, location.search, navigate]);
 
   async function fetchTours() {
     const seq = ++requestSeq.current;

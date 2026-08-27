@@ -79,14 +79,14 @@ export const getPortalCookieNames = (reqOrScope) => {
     };
 };
 
-export const portalCookieOptions = ({ maxAge = 0 } = {}) => ({
+export const portalCookieOptions = ({ maxAge } = {}) => ({
     httpOnly: true,
     // SameSite=None requires the Secure attribute per spec.
     secure: cookieSameSite === "none" ? true : isProductionLike,
     sameSite: cookieSameSite,
     path: "/",
     ...(useSharedCookieDomain ? { domain: sharedCookieDomain } : {}),
-    maxAge,
+    ...(maxAge === undefined ? {} : { maxAge }),
 });
 
 export const readPortalAccessToken = (req) => {

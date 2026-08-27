@@ -131,6 +131,26 @@ export async function updateAdminInternalTeam(id, team, enabled) {
   return res?.data?.data;
 }
 
+export async function fetchPricingConfigurations() {
+  const response = await api.get("/master-data/pricing-configs");
+  const payload = response?.data;
+  if (payload?.status !== "success" || !payload.component) {
+    throw new Error(payload?.message);
+  }
+  return payload.component;
+}
+
+export async function savePricingConfiguration(payload) {
+  const response = await api.put("/master-data/pricing-configs", payload);
+  if (response?.data?.status !== "success") {
+    throw new Error(response?.data?.message);
+  }
+  return {
+    record: response.data.data?.pricingConfig,
+    message: response.data.message,
+  };
+}
+
 export async function uploadTourImage(file) {
   const fd = new FormData();
   fd.append("image", file);

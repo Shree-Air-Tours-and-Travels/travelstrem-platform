@@ -199,27 +199,25 @@
 
   &__hero-title {
     margin: 1.25rem 0 1rem;
+    color: #ffffff;
     font-size: clamp(2.5rem, 4.4vw, 4.25rem);
     line-height: 1.05;
     letter-spacing: -0.03em;
     font-weight: $font-extrabold;
+    text-shadow: 0 2px 18px rgba(7, 42, 39, 0.34);
   }
 
-  &__hero-title-accent,
+  &__hero-title-product,
   &__hero-title-brand {
-    background-image: linear-gradient(100deg, var(--color-secondary), var(--color-secondary-dark));
+    background-image: linear-gradient(
+      100deg,
+      #{$dark-secondary},
+      color-mix(in srgb, #{$dark-secondary} 58%, #ffffff)
+    );
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-  }
-
-  .theme--light &__hero-title-accent,
-  .theme--light &__hero-title-brand {
-    background-image: linear-gradient(
-      60deg,
-      var(--color-secondary),
-      color-mix(in srgb, var(--color-on-secondary) 98%, var(--text))
-    );
+    filter: drop-shadow(0 2px 10px rgba(7, 42, 39, 0.32));
   }
 
   &__hero-desc {
@@ -338,6 +336,16 @@
 
   &__hero-field {
     min-width: 0;
+  }
+
+  &__hero-date {
+    .trem-datepicker__trigger {
+      min-height: 36px;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
   }
 
   &__hero-custom {
@@ -1014,8 +1022,7 @@
 
       .trem-breadcrumbs {
         max-width: 100%;
-        overflow-x: auto;
-        scrollbar-width: none;
+        overflow: hidden;
       }
     }
 
@@ -1050,9 +1057,17 @@
     }
 
     &__hero-eyebrow {
+      display: block;
+      width: fit-content;
       max-width: 100%;
       border-radius: 14px;
       line-height: 1.3;
+
+      svg {
+        display: inline-block;
+        margin-right: 0.5rem;
+        vertical-align: -0.15em;
+      }
     }
 
     &__hero-actions {

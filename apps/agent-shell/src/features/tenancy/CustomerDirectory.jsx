@@ -228,6 +228,29 @@ export default function CustomerDirectory({ embedded = false }) {
   const [detail, setDetail] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const overlayOpen = editor !== null || Boolean(detail);
+  useEffect(() => {
+    if (!overlayOpen) return undefined;
+    const scrollY = window.scrollY;
+    const { body, documentElement } = document;
+    const previousBody = {
+      overflow: body.style.overflow,
+      position: body.style.position,
+      top: body.style.top,
+      width: body.style.width,
+    };
+    const previousHtmlOverflow = documentElement.style.overflow;
+    body.style.overflow = "hidden";
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.width = "100%";
+    documentElement.style.overflow = "hidden";
+    return () => {
+      Object.assign(body.style, previousBody);
+      documentElement.style.overflow = previousHtmlOverflow;
+      window.scrollTo(0, scrollY);
+    };
+  }, [overlayOpen]);
   useEffect(() => {
     const timer = window.setTimeout(() => setFilters((current) => ({ ...current, search: search.trim(), page: 1 })), 300);
     return () => window.clearTimeout(timer);

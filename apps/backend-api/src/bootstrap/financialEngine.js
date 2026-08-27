@@ -82,11 +82,27 @@ const repositories = {
                 .lean(),
     },
     providerConfig: {
-        findActive: ({ provider }) =>
-            provider ? PaymentProviderConfig.findOne({ provider, active: true }).lean() : null,
+        findActive: ({ provider, paymentMethod }) =>
+            provider
+                ? PaymentProviderConfig.findOne({
+                      provider,
+                      active: true,
+                      ...(paymentMethod
+                          ? {
+                                $or: [
+                                    { paymentMethods: { $size: 0 } },
+                                    { paymentMethods: paymentMethod },
+                                ],
+                            }
+                          : {}),
+                  })
+                      .sort({ priority: -1 })
+                      .lean()
+                : null,
     },
     quotes: {
         findByIdempotencyKey: (idempotencyKey) => BookingQuote.findOne({ idempotencyKey }),
+        findById: (quoteId) => BookingQuote.findById(quoteId).lean(),
         create: async (data) => {
             const quote = await BookingQuote.create(data);
             publishQuoteEvent(quote);
