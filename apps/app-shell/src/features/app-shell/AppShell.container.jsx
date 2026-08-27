@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   fetchData,
-  notifyDataChanged,
   slugify,
   useRefreshOnActivation,
 } from "@packages/trem-utils";
@@ -71,7 +70,9 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
   const [journeyHero, setJourneyHero] = useState(null);
   const [overviewSections, setOverviewSections] = useState({});
   const [dashboardData, setDashboardData] = useState(null);
-  const [overviewDefinitionLoading, setOverviewDefinitionLoading] = useState(true);
+  const [overviewDefinitionLoading, setOverviewDefinitionLoading] = useState(
+    () => !(overviewResponseCache && overviewResponseUserKey === overviewUserKey),
+  );
   const [favorites, setFavorites] = useState([]);
   const [favoritesLoading, setFavoritesLoading] = useState(true);
   const [favoritesView, setFavoritesView] = useState({});
@@ -85,10 +86,10 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
   // The dashboard page definition carries user-scoped data (metrics, recent
   // bookings & enquiries, upcoming trips) in the same response as the markup.
   const loadOverview = useCallback(({ force = false } = {}) => {
-    setOverviewDefinitionLoading(true);
     const hasCurrentCache =
       overviewResponseCache && overviewResponseUserKey === overviewUserKey;
     const hasCurrentRequest = overviewRequest && overviewRequestUserKey === overviewUserKey;
+    setOverviewDefinitionLoading(!hasCurrentCache);
     let request;
     if (!force && hasCurrentCache) {
       request = Promise.resolve(overviewResponseCache);
@@ -180,8 +181,8 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
     };
   }, []);
 
-  const loadFavorites = useCallback(async () => {
-    setFavoritesLoading(true);
+  const loadFavorites = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setFavoritesLoading(true);
     setFavoritesError("");
     try {
       const res = await fetchData("/tours.json/favorites");
@@ -191,16 +192,16 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
     } catch (loadError) {
       setFavoritesError(loadError?.message || "Favorites could not be loaded");
     } finally {
-      setFavoritesLoading(false);
+      if (!silent) setFavoritesLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    if (activeTab === "overview" || activeTab === "favorites") loadFavorites();
-  }, [activeTab, loadFavorites]);
-  useRefreshOnActivation(loadFavorites, {
-    enabled: activeTab === "favorites",
+    loadFavorites();
+  }, [loadFavorites]);
+  useRefreshOnActivation(() => loadFavorites({ silent: true }), {
     resource: "favorites",
+    refreshOnMount: false,
   });
 
   const handleSaveProfile = useCallback(async (data) => {
@@ -326,7 +327,6 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
           body: { tourId, product: item?.product },
         });
         if (response?.status !== "success") throw new Error(response?.message || "Remove failed");
-        notifyDataChanged("favorites");
         showRealtimeToast({
           title: "Removed from saved journeys",
           subtitle: item?.title || "Your shortlist has been updated.",

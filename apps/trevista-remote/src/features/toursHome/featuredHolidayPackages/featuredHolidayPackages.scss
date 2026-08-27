@@ -20,18 +20,7 @@
   }
 
   &__eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: $space-2;
     margin-bottom: $space-3;
-    padding: $space-1 $space-3;
-    border-radius: $radius-full;
-    background: var(--primary-softer);
-    color: var(--color-primary-dark);
-    font-size: $font-size-xs;
-    font-weight: $font-semibold;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
   }
 
   &__title {

@@ -68,11 +68,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: $space-4;
 }
 
 .trem-account-profile__identity {
   min-width: 0;
+  flex: 1 1 280px;
   display: flex;
   align-items: center;
   gap: $space-4;
@@ -93,6 +95,7 @@
   small {
     color: var(--muted);
     font-size: $font-size-sm;
+    overflow-wrap: anywhere;
   }
 }
 
@@ -135,12 +138,23 @@
   gap: $space-2;
 }
 
+.trem-account-profile__identity-card > .trem-account-profile__actions {
+  flex: 1 1 240px;
+  justify-content: flex-end;
+}
+
 .trem-account-profile__card-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: $space-4;
   margin-bottom: $space-4;
+
+  > div {
+    min-width: 0;
+    flex: 1 1 280px;
+  }
 
   h3,
   p {
@@ -339,6 +353,12 @@
   }
 }
 
+.trem-account-profile__avatar-sheet-copy {
+  margin: 0 0 $space-4;
+  color: var(--muted);
+  font-size: $font-size-sm;
+}
+
 @media (max-width: 960px) {
   .trem-account-profile__grid {
     grid-template-columns: 1fr;
@@ -347,6 +367,17 @@
   .trem-account-profile__identity-card {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .trem-account-profile__identity {
+    width: 100%;
+    flex: none;
+  }
+
+  .trem-account-profile__identity-card > .trem-account-profile__actions {
+    width: 100%;
+    flex: none;
+    justify-content: flex-start;
   }
 }
 
@@ -361,6 +392,11 @@
 
   .trem-account-profile__card-head {
     flex-direction: column;
+
+    > div {
+      width: 100%;
+      flex: none;
+    }
   }
 
   .trem-account-profile__avatar-grid {

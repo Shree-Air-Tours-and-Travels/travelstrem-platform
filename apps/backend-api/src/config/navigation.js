@@ -67,6 +67,16 @@ export default {
             path: "/",
             activeId: "tours",
             patterns: ["/trevista/*", "/tour/*"],
+            shellPresentation: {
+                mobile: {
+                    footer: "hidden",
+                    appHeader: {
+                        compact: true,
+                        search: false,
+                        profile: false,
+                    },
+                },
+            },
         },
     ],
 };

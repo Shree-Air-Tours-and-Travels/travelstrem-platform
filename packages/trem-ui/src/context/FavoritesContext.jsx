@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useCallback, useRef } from "react";
-import { fetchData, notifyDataChanged, useRefreshOnActivation } from "@packages/trem-utils";
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
+import { fetchData, notifyDataChanged } from "@packages/trem-utils";
 
 const FavoritesContext = createContext(null);
 
@@ -24,7 +24,9 @@ export function FavoritesProvider({ children, product = "trevista" }) {
     }
   }, []);
 
-  useRefreshOnActivation(loadFavorites, { resource: "favorites" });
+  useEffect(() => {
+    loadFavorites();
+  }, [loadFavorites]);
 
   const isFavorited = useCallback((tour) => idsRef.current.has(tour?._id || tour?.id), []);
 

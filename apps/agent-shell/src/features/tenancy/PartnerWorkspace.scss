@@ -60,6 +60,17 @@
   place-content: center;
   text-align: center;
 }
+
+.partner-workspace__reports-notice {
+  display: grid;
+  min-height: min(30rem, calc(100dvh - 18rem));
+  place-items: center;
+  padding: $space-5;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
 .partner-agent-directory .partner-workspace__metrics {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
@@ -813,18 +824,25 @@
   z-index: 1200;
   inset: 0;
   display: grid;
-  place-items: center;
-  padding: $space-4;
+  place-items: stretch center;
+  width: 100vw;
+  height: 100dvh;
+  min-height: 100vh;
+  overflow: hidden;
+  overscroll-behavior: contain;
   background: var(--overlay-strong);
 }
 
 .customer-directory__dialog {
   display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   overflow: hidden;
-  width: min(94vw, 54rem);
-  max-height: min(90vh, 54rem);
+  width: min(100vw, 54rem);
+  height: 100dvh;
+  min-height: 0;
+  max-height: 100dvh;
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: 0;
   background: var(--surface);
   box-shadow: var(--shadow-lg);
 
@@ -879,7 +897,10 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: $space-4;
+  min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: $space-5;
 
   .customer-directory__textarea {
@@ -913,13 +934,16 @@
 }
 
 .customer-directory__dialog--detail {
-  width: min(94vw, 48rem);
+  width: min(100vw, 48rem);
 }
 
 .customer-directory__detail-body {
   display: grid;
   gap: $space-4;
+  min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: $space-5;
 }
 
@@ -1082,14 +1106,14 @@
   }
 
   .customer-directory__overlay {
-    align-items: end;
     padding: 0;
   }
 
   .customer-directory__dialog {
     width: 100%;
-    max-height: 94dvh;
-    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
 
     > header,
     > footer {

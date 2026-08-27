@@ -490,8 +490,15 @@
     margin-top: 18px;
   }
 
+  &__login-options {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
   &__forgot-link {
-    align-self: flex-end;
     padding: 0;
     color: var(--color-primary);
   }

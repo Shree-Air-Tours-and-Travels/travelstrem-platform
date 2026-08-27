@@ -1237,6 +1237,15 @@
     color-mix(in srgb, var(--color-secondary) 3%, var(--surface))
   );
   border-color: color-mix(in srgb, var(--color-primary) 18%, var(--border));
+
+  .trem-info-card__action {
+    justify-content: center;
+    padding: $space-3;
+    border: 0;
+    border-radius: $radius-sm;
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+  }
 }
 
 .booking-table__mobile-state {

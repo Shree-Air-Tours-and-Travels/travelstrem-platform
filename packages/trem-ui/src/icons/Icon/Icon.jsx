@@ -756,7 +756,6 @@ const MenuClose = (p) => (
 const MenuOpen = (p) => (
   <Svg {...p}>
     <path d="M4 6.5h16M4 12h12M4 17.5h16" {...s} />
-    <circle cx="19" cy="12" r="1" {...solid} />
   </Svg>
 );
 
@@ -776,8 +775,6 @@ const Moon = (p) => (
   <Svg {...p}>
     <path d="M20.5 14.2A8.8 8.8 0 1 1 9.8 3.5a7.2 7.2 0 0 0 10.7 10.7Z" {...tone} />
     <path d="M20.5 14.2A8.8 8.8 0 1 1 9.8 3.5a7.2 7.2 0 0 0 10.7 10.7Z" {...s} />
-
-    <circle cx="17.8" cy="5.2" r="1" {...solid} opacity=".45" />
   </Svg>
 );
 

@@ -1584,33 +1584,18 @@ export async function reports(req, res) {
             return res
                 .status(400)
                 .json({ status: "error", message: "A valid agencyId is required." });
-        const agentScope =
-            req.access.role === "partner_agent" ? { ownerAgent: req.access.user._id } : {};
-        const customerQuery = req.access.isMaster
-            ? { agencyId, deletedAt: null }
-            : customerScope(req, { deletedAt: null });
-        const [activeAgents, inactiveAgents, totalTrips, publishedTrips, customers] =
-            await Promise.all([
-                User.countDocuments({
-                    agencyId,
-                    agencyRole: "partner_agent",
-                    accountStatus: "active",
-                }),
-                User.countDocuments({
-                    agencyId,
-                    agencyRole: "partner_agent",
-                    accountStatus: { $ne: "active" },
-                }),
-                TrevioTrip.countDocuments({ agencyId, ...agentScope }),
-                TrevioTrip.countDocuments({
-                    agencyId,
-                    ...agentScope,
-                    status: { $in: ["listed", "published"] },
-                    isListed: true,
-                }),
-                AgencyCustomer.countDocuments(customerQuery),
-            ]);
-        return ok(res, { activeAgents, inactiveAgents, totalTrips, publishedTrips, customers });
+        return ok(res, {
+            available: false,
+            access: { tier: "premium", label: "Premium" },
+            view: {
+                eyebrow: "Partner Premium",
+                title: "Agency reports",
+                subtitle: "Booking and business performance insights for your agency.",
+                emptyTitle: "Reports are coming soon",
+                emptyDescription:
+                    "We are preparing reports for live bookings and agency performance. This feature will be available with the Premium subscription.",
+            },
+        });
     } catch (error) {
         return fail(res, error);
     }

@@ -90,7 +90,14 @@ export const clearAuthCookies = (req, res, portalOverride) => {
     setCookie(res, names.refresh, "", 0);
 };
 
-export const createSession = async ({ user, req, res, portal: portalOverride, family = null }) => {
+export const createSession = async ({
+    user,
+    req,
+    res,
+    portal: portalOverride,
+    family = null,
+    rememberMe = false,
+}) => {
     const normalizedAvatar = normalizeProfileAvatar(user.avatar);
     if (user.avatar !== normalizedAvatar) {
         const previousAvatar = user.avatar ?? null;
@@ -116,12 +123,23 @@ export const createSession = async ({ user, req, res, portal: portalOverride, fa
         userAgent: String(req.get?.("user-agent") || "").slice(0, 500),
         ipAddress: String(req.ip || "").slice(0, 100),
         lastUsedAt: new Date(),
+        rememberMe: rememberMe === true,
     });
 
     const accessToken = signAccessToken(user, portal, sessionId);
     const names = getPortalCookieNames(portal);
-    setCookie(res, names.access, accessToken, parseDuration(config.JWT.accessExpires, 15 * 60000));
-    setCookie(res, names.refresh, rawRefreshToken, parseDuration(config.JWT.refreshExpires));
+    setCookie(
+        res,
+        names.access,
+        accessToken,
+        rememberMe ? parseDuration(config.JWT.accessExpires, 15 * 60000) : undefined,
+    );
+    setCookie(
+        res,
+        names.refresh,
+        rawRefreshToken,
+        rememberMe ? parseDuration(config.JWT.refreshExpires) : undefined,
+    );
 
     return {
         status: "success",
@@ -213,7 +231,14 @@ export const rotateSession = async ({ req, res, portal: portalOverride }) => {
 
     stored.revokedAt = new Date();
     stored.lastUsedAt = new Date();
-    const result = await createSession({ user, req, res, portal, family: stored.family });
+    const result = await createSession({
+        user,
+        req,
+        res,
+        portal,
+        family: stored.family,
+        rememberMe: stored.rememberMe === true,
+    });
     const replacement = await RefreshToken.findOne({
         sessionId: { $ne: stored.sessionId },
         family: stored.family,

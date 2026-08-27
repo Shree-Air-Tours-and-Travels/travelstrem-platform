@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Dropdown, Icon, InputField } from "@packages/trem-ui";
+import { Button, DatePicker, Dropdown, Icon, InputField } from "@packages/trem-ui";
 
 const DEFAULT_HERO_IMAGE =
   "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1800&q=85";
@@ -16,28 +16,24 @@ const toOptionItems = (options, currentValue, onSelect) =>
     };
   });
 
-const DEFAULT_HERO_TITLE = "Welcome to Trevista by TravelsTrem";
+const TITLE_TONES = new Set(["product", "brand"]);
 
-const highlightBrand = (text) =>
-  String(text || "")
-    .split(/(Trevista|TravelsTrem)/g)
-    .map((part, index) => {
-      if (part === "Trevista") {
-        return (
-          <span key={index} className="tours-page__hero-title-accent">
-            {part}
-          </span>
-        );
-      }
-      if (part === "TravelsTrem") {
-        return (
-          <span key={index} className="tours-page__hero-title-brand">
-            {part}
-          </span>
-        );
-      }
-      return part;
-    });
+const renderTitle = (title, segments) => {
+  const titleSegments = Array.isArray(segments) && segments.length ? segments : [{ text: title }];
+
+  return titleSegments.map((segment, index) => {
+    const text = typeof segment === "string" ? segment : segment?.text;
+    const tone = typeof segment === "object" ? segment?.tone : null;
+
+    return TITLE_TONES.has(tone) ? (
+      <span key={`${tone}-${index}`} className={`tours-page__hero-title-${tone}`}>
+        {text}
+      </span>
+    ) : (
+      <React.Fragment key={`default-${index}`}>{text}</React.Fragment>
+    );
+  });
+};
 
 function HeroSelectField({ label, anyLabel, options, value, onSelect }) {
   const items = [
@@ -75,7 +71,8 @@ export default function HeroBannerView({
   const [interest, setInterest] = React.useState("");
   const [maxBudget, setMaxBudget] = React.useState("");
 
-  const heading = pageTitle || labels.pageTitle || DEFAULT_HERO_TITLE;
+  const heading = pageTitle || labels.pageTitle || "";
+  const titleSegments = labels.titleSegments;
   const eyebrow = labels.eyebrow || "";
   const description = labels.description || "";
   const primaryActionLabel = labels.primaryActionLabel || "Explore packages";
@@ -111,7 +108,7 @@ export default function HeroBannerView({
               {eyebrow}
             </span>
           )}
-          <h1 className="tours-page__hero-title">{highlightBrand(heading)}</h1>
+          <h1 className="tours-page__hero-title">{renderTitle(heading, titleSegments)}</h1>
           {description && <p className="tours-page__hero-desc">{description}</p>}
           <div className="tours-page__hero-actions">
             {primaryActionLabel && (
@@ -158,11 +155,15 @@ export default function HeroBannerView({
               value={destination}
               onSelect={setDestination}
             />
-            <div className="tours-page__hero-field">
-              <InputField
-                variant="date"
-                label={searchLabels.departureDate || "Departure date"}
+            <div
+              className="tours-page__hero-field trem-input trem-input--labelled tours-page__hero-date"
+            >
+              <span className="trem-input__label">
+                {searchLabels.departureDate || "Departure date"}
+              </span>
+              <DatePicker
                 value={departureDate}
+                placeholder={anyLabels.departureDate || "Any date"}
                 onChange={setDepartureDate}
               />
             </div>

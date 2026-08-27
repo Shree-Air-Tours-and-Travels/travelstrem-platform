@@ -4,6 +4,7 @@ import {
   EmptyState,
   InputField,
   SingleSelect,
+  Spinner,
   StatusBadge,
   SupportComposer,
   SupportConversation,
@@ -293,7 +294,11 @@ export default function AgentSupportPage() {
               ]}
             />
           </div>
-          {!busy && !tickets.length ? (
+          {busy ? (
+            <div className="agent-support__list-loading">
+              <Spinner label="Loading support requests" />
+            </div>
+          ) : !tickets.length ? (
             <EmptyState
               icon="support"
               title="No support requests"
@@ -301,18 +306,20 @@ export default function AgentSupportPage() {
               action={<Button text="Create request" onClick={() => setMode("create")} />}
             />
           ) : null}
-          <div className="agent-support__list">
-            {tickets.map((item) => (
-              <button type="button" key={idOf(item)} onClick={() => openTicket(idOf(item))}>
-                <span>
-                  <small>{item.reference}</small>
-                  <strong>{item.subject}</strong>
-                  <em>{dateTime(item.lastActivityAt)}</em>
-                </span>
-                <StatusBadge value={item.status} size="sm" />
-              </button>
-            ))}
-          </div>
+          {!busy ? (
+            <div className="agent-support__list">
+              {tickets.map((item) => (
+                <button type="button" key={idOf(item)} onClick={() => openTicket(idOf(item))}>
+                  <span>
+                    <small>{item.reference}</small>
+                    <strong>{item.subject}</strong>
+                    <em>{dateTime(item.lastActivityAt)}</em>
+                  </span>
+                  <StatusBadge value={item.status} size="sm" />
+                </button>
+              ))}
+            </div>
+          ) : null}
         </div>
       ) : null}
 

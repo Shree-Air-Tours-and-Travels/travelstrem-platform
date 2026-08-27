@@ -4,6 +4,7 @@ import {
   EmptyState,
   InputField,
   SingleSelect,
+  Spinner,
   StatusBadge,
   SupportComposer,
   SupportConversation,
@@ -252,7 +253,11 @@ export default function SupportDeskPage() {
       {error ? <p className="admin-support-desk__error">{error}</p> : null}
       <div className="admin-support-desk__workspace">
         <aside className="admin-support-desk__queue" aria-label="Support request queue">
-          {loading ? <p className="admin-support-desk__muted">Loading requests…</p> : null}
+          {loading ? (
+            <div className="admin-support-desk__queue-loading">
+              <Spinner label="Loading support requests" />
+            </div>
+          ) : null}
           {!loading && !tickets.length ? (
             <EmptyState
               icon="support"
@@ -260,7 +265,7 @@ export default function SupportDeskPage() {
               description={ui.emptyDescription}
             />
           ) : null}
-          {tickets.map((ticket) => {
+          {!loading ? tickets.map((ticket) => {
             const ticketId = idOf(ticket);
             const requester = ticket.user || {};
             return (
@@ -282,7 +287,7 @@ export default function SupportDeskPage() {
                 <small>{dateTime(ticket.lastActivityAt)}</small>
               </button>
             );
-          })}
+          }) : null}
         </aside>
 
         <article className="admin-support-desk__detail">

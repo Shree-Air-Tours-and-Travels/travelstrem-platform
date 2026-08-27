@@ -6,7 +6,6 @@ import {
   NoDataFound,
   OverviewRail,
   PlanCards,
-  Preloader,
   StatusBadge,
 } from "@packages/trem-ui";
 import "./OverviewView.scss";
@@ -49,6 +48,7 @@ export default function OverviewView({
   const heroState = journeyHero?.states?.[journeyStage] || journeyHero?.states?.discover;
   const greetingKey = `greeting${getTimeOfDay().replace(/^./, (value) => value.toUpperCase())}`;
   const firstName = user?.name?.trim()?.split(/\s+/)[0] || copy.greetingFallbackName || "";
+  const greetingText = [copy[greetingKey], firstName].filter(Boolean).join(", ");
 
   const renderHeroAction = (action, variant) => {
     if (!action?.label) return null;
@@ -76,9 +76,11 @@ export default function OverviewView({
               <Icon name="sparkles" size={16} />
               {journeyHero?.eyebrow}
             </span>
-            <p className="dov__hero-greeting">
-              {copy[greetingKey]}, {firstName} <span aria-hidden="true">👋</span>
-            </p>
+            {greetingText ? (
+              <p className="dov__hero-greeting">
+                {greetingText} <span aria-hidden="true">👋</span>
+              </p>
+            ) : null}
             <h1>{heroState.title}</h1>
             <p className="dov__hero-description">{heroState.description}</p>
             <div className="dov__hero-actions">
@@ -102,21 +104,14 @@ export default function OverviewView({
             ))}
           </div>
         </section>
-      ) : (
+      ) : !overviewDefinitionLoading && greetingText ? (
         <div className="dov__greeting">
-          <h1>{copy[greetingKey]}, {firstName}</h1>
-          <p>{copy.greetingDescription}</p>
+          <h1>{greetingText}</h1>
+          {copy.greetingDescription ? <p>{copy.greetingDescription}</p> : null}
         </div>
-      )}
+      ) : null}
 
-      {overviewStatsLoading || overviewDefinitionLoading ? (
-        <Preloader
-          variant="stats"
-          count={1}
-          label={copy.loadingStatistics}
-          className="dov__stats-preloader"
-        />
-      ) : metricItems.length ? (
+      {!overviewStatsLoading && !overviewDefinitionLoading && metricItems.length ? (
         <MetricSummary
           items={metricItems}
           ariaLabel={metricsDefinition.ariaLabel}
@@ -126,14 +121,7 @@ export default function OverviewView({
 
       <div className="dov__content">
         <main className="dov__main">
-          {overviewDefinitionLoading ? (
-            <Preloader
-              variant="cards"
-              count={3}
-              label={copy.loadingPlanning}
-              className="dov__plan-cards"
-            />
-          ) : planCards ? (
+          {planCards ? (
             <PlanCards
               {...planCards}
               className="dov__plan-cards"
@@ -233,14 +221,7 @@ export default function OverviewView({
             </section>
           )}
 
-          {overviewDefinitionLoading ? (
-            <Preloader
-              variant="stack"
-              count={3}
-              label={copy.loadingTools}
-              className="dov__rail"
-            />
-          ) : overviewRail ? (
+          {overviewRail ? (
             <OverviewRail
               {...overviewRail}
               className="dov__rail"

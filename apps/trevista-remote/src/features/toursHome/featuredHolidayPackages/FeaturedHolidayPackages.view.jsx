@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, DestinationCardList } from "@packages/trem-ui";
+import { Button, DestinationCardList, TitleEnhancement } from "@packages/trem-ui";
 import "./featuredHolidayPackages.scss";
 
 export default function FeaturedHolidayPackagesView({
@@ -41,7 +41,10 @@ export default function FeaturedHolidayPackagesView({
       <div className="featured-holiday-packages__inner">
         <header className="featured-holiday-packages__head">
           <div className="featured-holiday-packages__copy">
-            {eyebrow && <span className="featured-holiday-packages__eyebrow">{eyebrow}</span>}
+            <TitleEnhancement
+              text={eyebrow}
+              className="featured-holiday-packages__eyebrow"
+            />
             <h2 className="featured-holiday-packages__title">{title}</h2>
             {description && <p className="featured-holiday-packages__desc">{description}</p>}
           </div>

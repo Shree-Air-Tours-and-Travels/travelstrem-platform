@@ -40,6 +40,7 @@ import {
 import "../styles/global.scss";
 
 const TrevistaApp = React.lazy(() => import("trevista/App"));
+const REMOTE_RENDERERS = Object.freeze({ trevista: TrevistaApp });
 const USER_PROFILE_UPDATED_EVENT = "USER_PROFILE_UPDATED";
 
 class RemoteBoundary extends React.Component {
@@ -135,7 +136,6 @@ function AppShell() {
   const [guestMode, setGuestMode] = useState(() => isGuestSession());
   const [authPromptDismissed, setAuthPromptDismissed] = useState(false);
   const [primaryActionOpen, setPrimaryActionOpen] = useState(false);
-  const [immersiveChromeHidden, setImmersiveChromeHidden] = useState(false);
 
   useEffect(() => {
     setProfileUserPatch(null);
@@ -159,13 +159,8 @@ function AppShell() {
   const selectedEnquiryRef = activeTab === "bookings" ? searchParams.get("enquiry") || "" : "";
   const isRemote = destination.kind === "remote";
   const isSupportScreen = location.pathname === "/help" || location.pathname.startsWith("/help/");
-  const isTrevistaBrowseScreen =
-    isRemote &&
-    destination.renderer === "trevista" &&
-    (location.pathname === "/trevista/tours" ||
-      location.pathname.startsWith("/trevista/tours/") ||
-      location.pathname.startsWith("/trevista/tour/") ||
-      location.pathname.startsWith("/tour/"));
+  const mobileShellPresentation = destination.shellPresentation?.mobile;
+  const destinationMobileHeader = mobileShellPresentation?.appHeader;
   const productFilter = searchParams.get("product") || "all";
   const publicDestination = isGuestAccessibleDestination(destination);
   const mobileActionPanel = navigationConfig.mobileActionPanel || {};
@@ -205,19 +200,6 @@ function AppShell() {
   useEffect(() => {
     if (publicDestination) setAuthPromptDismissed(false);
   }, [publicDestination]);
-
-  useEffect(() => {
-    setImmersiveChromeHidden(false);
-  }, [location.pathname, location.search]);
-
-  const handleContentScroll = useCallback(
-    (event) => {
-      if (!isTrevistaBrowseScreen) return;
-      const nextTop = event.currentTarget.scrollTop || 0;
-      setImmersiveChromeHidden(nextTop > 8);
-    },
-    [isTrevistaBrowseScreen],
-  );
 
   const handleNavigation = useCallback(
     (rawIntent) => {
@@ -267,6 +249,8 @@ function AppShell() {
       ),
     [destination.id, handleTabChange, mobileActionPanel.variant, resolvedMobileActionPanelItems],
   );
+  const showMobileNavigation =
+    mobileNavigationActions.length > 0 && mobileShellPresentation?.footer !== "hidden";
 
   const handleGlobalSearch = useCallback(
     async (query, signal) => {
@@ -393,6 +377,7 @@ function AppShell() {
     const actions = existingActions.filter((item) => item?.id !== "wishlist");
     return {
       ...appHeaderConfig,
+      mobile: destinationMobileHeader,
       actions: [
         ...actions,
         {
@@ -406,7 +391,7 @@ function AppShell() {
         },
       ],
     };
-  }, [activeTab, appHeaderConfig]);
+  }, [activeTab, appHeaderConfig, destinationMobileHeader]);
 
   const shellBreadcrumbItems = useMemo(() => {
     const items = (sidebarConfig.sections || []).flatMap((section) => section.items || []);
@@ -445,12 +430,12 @@ function AppShell() {
     );
   }
 
-  const remoteElement =
-    destination.renderer === "trevista" ? <TrevistaApp embedded userSession={session} /> : null;
+  const RemoteRenderer = REMOTE_RENDERERS[destination.renderer] || null;
+  const remoteElement = RemoteRenderer ? <RemoteRenderer embedded userSession={session} /> : null;
 
   return (
     <div
-      className={`dash-layout${sidebarCollapsed ? " dash-layout--sidebar-collapsed" : ""}${mobileNavigationActions.length ? " dash-layout--mobile-action-panel" : ""}${isTrevistaBrowseScreen ? " dash-layout--trevista-immersive" : ""}${immersiveChromeHidden ? " dash-layout--chrome-hidden" : ""}`}
+      className={`dash-layout${sidebarCollapsed ? " dash-layout--sidebar-collapsed" : ""}${showMobileNavigation ? " dash-layout--mobile-action-panel" : ""}`}
     >
       <SideBar
         config={sidebarConfig}
@@ -501,7 +486,6 @@ function AppShell() {
         <div
           data-scroll-root
           className={`dash-content${isRemote ? " dash-content--remote" : ""}${isSupportScreen ? " dash-content--support" : ""}`}
-          onScroll={handleContentScroll}
         >
           <ProtectedRoute
             allowGuest={publicDestination && guestMode}
@@ -540,7 +524,7 @@ function AppShell() {
         </div>
       </div>
 
-      {mobileNavigationActions.length ? (
+      {showMobileNavigation ? (
         <FloatingActionBar
           variant={mobileActionPanel.variant}
           actions={mobileNavigationActions}

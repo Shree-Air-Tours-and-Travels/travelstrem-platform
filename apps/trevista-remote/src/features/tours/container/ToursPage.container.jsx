@@ -89,7 +89,7 @@ export default function ToursPageContainer({ dispatchEvent, userSession = null }
       .then((widgetEntries) => {
         if (!active) return;
         const metadata = Object.fromEntries(widgetEntries);
-        const chips = metadata.quickChips?.data?.filters || [];
+        const chips = metadata.quickChips?.dataScope?.options?.quickFilters || [];
         setWidgetsData(metadata);
         setDiscovery(chips);
         setWidgetsLoading(false);

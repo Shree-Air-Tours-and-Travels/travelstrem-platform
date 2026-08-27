@@ -189,6 +189,7 @@ export default function GlobalSearch({ config = {}, onSearch, onSelect }) {
         ariaLabel={config.dialogLabel || "Global search results"}
         mobileTitle={config.mobileTitle || "Search"}
         mobileBreakpoint={Number(config.mobileBreakpoint) || 768}
+        desktopMaxHeight={Number(config.desktopMaxHeight) || 560}
         mobileVariant={config.mobileSheetVariant || "fullscreen"}
         mobileCloseLabel={config.closeLabel || "Close search"}
         mobileHeader={searchInput(mobileInputRef, true)}

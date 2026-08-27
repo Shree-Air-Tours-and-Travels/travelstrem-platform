@@ -6,6 +6,9 @@ export const THEME_CHANGE_EVENT = "travelsTrem:theme-change";
 
 const LEGACY_THEME_STORAGE_KEYS = ["trem-theme"];
 const THEME_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
+const THEME_SWITCHING_CLASS = "theme--switching";
+
+let themeSwitchFrame = null;
 
 const normalizeTheme = (theme) => (theme === "dark" ? "dark" : "light");
 
@@ -81,6 +84,28 @@ export const applyThemeMode = (theme) => {
   return nextTheme;
 };
 
+const applyThemeModeAtomically = (theme) => {
+  if (typeof document === "undefined") return applyThemeMode(theme);
+
+  const root = document.documentElement;
+  root.classList.add(THEME_SWITCHING_CLASS);
+  const nextTheme = applyThemeMode(theme);
+
+  if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
+    if (themeSwitchFrame !== null) window.cancelAnimationFrame(themeSwitchFrame);
+    themeSwitchFrame = window.requestAnimationFrame(() => {
+      themeSwitchFrame = window.requestAnimationFrame(() => {
+        root.classList.remove(THEME_SWITCHING_CLASS);
+        themeSwitchFrame = null;
+      });
+    });
+  } else {
+    root.classList.remove(THEME_SWITCHING_CLASS);
+  }
+
+  return nextTheme;
+};
+
 const persistTheme = (theme) => {
   if (typeof window === "undefined") return;
 
@@ -101,7 +126,7 @@ const persistTheme = (theme) => {
 };
 
 export const setPreferredTheme = (theme) => {
-  const nextTheme = applyThemeMode(theme);
+  const nextTheme = applyThemeModeAtomically(theme);
   persistTheme(nextTheme);
 
   if (typeof window !== "undefined") {

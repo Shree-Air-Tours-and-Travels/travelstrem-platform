@@ -68,6 +68,14 @@
   background: color-mix(in srgb, var(--color-primary) 3%, var(--surface));
 }
 
+.admin-support-desk__queue-loading {
+  display: grid;
+  width: 100%;
+  min-height: 12rem;
+  flex: 1 0 100%;
+  place-items: center;
+}
+
 .admin-support-ticket {
   width: 100%;
   display: grid;
