@@ -691,26 +691,30 @@
         border-bottom: 1px solid var(--line);
       }
       .demo-tabset {
-        display: inline-flex;
-        gap: 5px;
-        padding: 4px;
-        border-radius: 13px;
-        background: #eef1f8;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(145px, 1fr));
+        gap: 10px;
+        width: min(100%, 760px);
+        padding: 10px;
+        border-radius: 24px;
+        background: #eef1f9;
       }
       .demo-tab {
         border: 0;
-        padding: 10px 14px;
-        border-radius: 10px;
+        padding: 16px 18px;
+        border-radius: 16px;
         background: transparent;
-        color: #69738b;
+        color: #5f6c86;
         cursor: pointer;
-        font-size: 12px;
+        font-size: 13px;
         font-weight: 850;
       }
       .demo-tab.active {
         color: var(--ink);
         background: white;
-        box-shadow: 0 4px 14px rgba(18, 28, 67, 0.08);
+        box-shadow:
+          0 0 0 5px #b9ccfa,
+          0 8px 20px rgba(18, 28, 67, 0.1);
       }
       .demo-caption {
         color: #798299;
@@ -1084,6 +1088,177 @@
         font-weight: 850;
       }
       .tour-detail-package-grid div:nth-child(2) button {
+        border-color: #3151b8;
+        background: #3151b8;
+        color: white;
+      }
+      .tour-booking-preview {
+        padding: 18px;
+      }
+      .tour-booking-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 18px 20px;
+        border: 1px solid #dde3ef;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #fff, #eef2ff);
+      }
+      .tour-booking-head small {
+        color: #3151b8;
+        font-size: 7px;
+        font-weight: 900;
+        letter-spacing: 0.1em;
+      }
+      .tour-booking-head h3 {
+        margin: 5px 0 2px;
+        font-size: 20px;
+      }
+      .tour-booking-head p {
+        margin: 0;
+        color: #737d92;
+        font-size: 8px;
+      }
+      .tour-booking-status {
+        padding: 8px 11px;
+        border: 1px solid #bdd4ca;
+        border-radius: 999px;
+        background: #effaf5;
+        color: #177b5b;
+        font-size: 8px;
+        font-weight: 900;
+        white-space: nowrap;
+      }
+      .tour-booking-layout {
+        display: grid;
+        grid-template-columns: 0.82fr 1.18fr;
+        gap: 12px;
+        margin-top: 12px;
+      }
+      .tour-booking-timeline,
+      .tour-booking-quote {
+        padding: 15px;
+        border: 1px solid #dde3ef;
+        border-radius: 14px;
+        background: white;
+      }
+      .tour-booking-timeline h4,
+      .tour-booking-quote h4 {
+        margin: 0 0 11px;
+        font-size: 12px;
+      }
+      .tour-booking-step {
+        position: relative;
+        min-height: 62px;
+        padding: 5px 8px 8px 34px;
+      }
+      .tour-booking-step::before {
+        position: absolute;
+        left: 3px;
+        top: 3px;
+        display: grid;
+        place-items: center;
+        width: 20px;
+        height: 20px;
+        border: 1px solid #d2d9e7;
+        border-radius: 50%;
+        background: white;
+        color: #78849b;
+        content: attr(data-step);
+        font-size: 7px;
+        font-weight: 900;
+      }
+      .tour-booking-step:not(:last-child)::after {
+        position: absolute;
+        left: 13px;
+        top: 27px;
+        width: 1px;
+        height: 34px;
+        background: #dce2ee;
+        content: "";
+      }
+      .tour-booking-step.done::before {
+        border-color: #3151b8;
+        background: #3151b8;
+        color: white;
+        content: "✓";
+      }
+      .tour-booking-step.current {
+        border-radius: 10px;
+        background: #f0f3ff;
+      }
+      .tour-booking-step.current::before {
+        border-color: #3151b8;
+        color: #3151b8;
+      }
+      .tour-booking-step b,
+      .tour-booking-step span {
+        display: block;
+      }
+      .tour-booking-step b {
+        font-size: 9px;
+      }
+      .tour-booking-step span {
+        margin-top: 3px;
+        color: #7a8498;
+        font-size: 7px;
+        line-height: 1.4;
+      }
+      .tour-booking-quote__intro {
+        padding: 12px;
+        border-radius: 10px;
+        background: #f2f4fa;
+      }
+      .tour-booking-quote__intro small {
+        color: #3151b8;
+        font-size: 6px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+      }
+      .tour-booking-quote__intro strong {
+        display: block;
+        margin-top: 4px;
+        font-size: 11px;
+      }
+      .tour-booking-price {
+        margin-top: 10px;
+        overflow: hidden;
+        border: 1px solid #e0e5ef;
+        border-radius: 10px;
+      }
+      .tour-booking-price div {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 9px 11px;
+        border-bottom: 1px solid #e8ebf2;
+        color: #5f6a80;
+        font-size: 8px;
+      }
+      .tour-booking-price div:last-child {
+        border: 0;
+        background: #eef2ff;
+        color: #16203a;
+        font-size: 10px;
+        font-weight: 900;
+      }
+      .tour-booking-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 7px;
+        margin-top: 11px;
+      }
+      .tour-booking-actions span {
+        padding: 8px 6px;
+        border: 1px solid #ccd5e7;
+        border-radius: 7px;
+        color: #3151b8;
+        text-align: center;
+        font-size: 7px;
+        font-weight: 850;
+      }
+      .tour-booking-actions span:last-child {
         border-color: #3151b8;
         background: #3151b8;
         color: white;
@@ -1851,6 +2026,17 @@
           align-items: flex-start;
           flex-direction: column;
         }
+        .demo-tabset {
+          display: flex;
+          width: 100%;
+          overflow-x: auto;
+          scroll-snap-type: x proximity;
+          scrollbar-width: thin;
+        }
+        .demo-tab {
+          flex: 0 0 auto;
+          scroll-snap-align: start;
+        }
         .demo-callout {
           position: static;
           max-width: none;
@@ -1895,6 +2081,9 @@
         }
         .tour-detail-highlight-grid div:nth-child(n + 3) {
           display: none;
+        }
+        .tour-booking-layout {
+          grid-template-columns: 1fr;
         }
         .journey-grid {
           grid-template-columns: repeat(2, 1fr);
@@ -2317,6 +2506,7 @@
                   </button>
                   <button class="demo-tab" type="button" data-demo="listing">Tour listing</button>
                   <button class="demo-tab" type="button" data-demo="details">Tour details</button>
+                  <button class="demo-tab" type="button" data-demo="booking">Tour booking</button>
                 </div>
                 <span class="demo-caption">TravelsTREM · Actual product interfaces</span>
               </div>
@@ -2600,6 +2790,61 @@
                             <li>Private sightseeing</li>
                           </ul>
                           <button type="button">Choose this plan</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="demo-screen" data-screen="booking">
+                  <div
+                    class="product-preview tour-booking-preview"
+                    role="img"
+                    aria-label="TravelsTREM tour booking journey interface"
+                  >
+                    <div class="tour-booking-head">
+                      <div>
+                        <small>YOUR JOURNEY</small>
+                        <h3>Andaman Island Discovery</h3>
+                        <p>Booking reference ENQ-A32BFA · Signature package</p>
+                      </div>
+                      <span class="tour-booking-status">Quote received</span>
+                    </div>
+                    <div class="tour-booking-layout">
+                      <div class="tour-booking-timeline">
+                        <h4>Your booking journey</h4>
+                        <div class="tour-booking-step done" data-step="1">
+                          <b>Enquiry completed</b>
+                          <span>Your travel requirements were shared with the partner.</span>
+                        </div>
+                        <div class="tour-booking-step current" data-step="2">
+                          <b>Review your quotation</b>
+                          <span>Download, request a change or accept the prepared quote.</span>
+                        </div>
+                        <div class="tour-booking-step" data-step="3">
+                          <b>Add traveller details</b>
+                          <span>Complete traveller information after accepting the quote.</span>
+                        </div>
+                        <div class="tour-booking-step" data-step="4">
+                          <b>Travel updates</b>
+                          <span>Follow documents, tickets and live booking progress.</span>
+                        </div>
+                      </div>
+                      <div class="tour-booking-quote">
+                        <h4>Your personalised quotation</h4>
+                        <div class="tour-booking-quote__intro">
+                          <small>PREPARED FOR YOUR REQUEST</small>
+                          <strong>Signature island journey for five travellers</strong>
+                        </div>
+                        <div class="tour-booking-price">
+                          <div><span>Journey prepared by your travel partner</span><b>₹3,28,552</b></div>
+                          <div><span>TravelsTREM service fee</span><b>₹3,286</b></div>
+                          <div><span>Applicable tax</span><b>₹591</b></div>
+                          <div><span>Total quotation</span><b>₹3,32,429</b></div>
+                        </div>
+                        <div class="tour-booking-actions">
+                          <span>Download PDF</span>
+                          <span>Request changes</span>
+                          <span>Accept quote</span>
                         </div>
                       </div>
                     </div>
@@ -2932,7 +3177,7 @@
             <div class="leaders reveal">
               <article class="leader">
                 <div class="avatar">NG</div>
-                <small>Chairperson &amp; Owner</small><strong>Mrs. Nisha Goyal</strong>
+                <small>Chairperson</small><strong>Mrs. Nisha Goyal</strong>
                 <p>
                   Guides the organisation’s service culture, stewardship and long-term direction.
                 </p>
@@ -2947,7 +3192,7 @@
               </article>
               <article class="leader">
                 <div class="avatar">AG</div>
-                <small>CEO &amp; Technology Director</small><strong>Mr. Akshat Goyal</strong>
+                <small>CEO &amp; Executive Director</small><strong>Mr. Akshat Goyal</strong>
                 <p>
                   Leads the TravelsTREM product and technology vision across traveller and partner
                   workflows.
@@ -3072,6 +3317,19 @@
 
         const demoTabs = document.querySelectorAll("[data-demo]");
         const demoScreens = document.querySelectorAll("[data-screen]");
+        const revealNextMobileTab = (tab) => {
+          if (!window.matchMedia("(max-width: 720px)").matches) return;
+          const nextTab = tab.nextElementSibling;
+          if (!nextTab) {
+            tab.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+            return;
+          }
+          const containerBounds = tab.parentElement.getBoundingClientRect();
+          const nextBounds = nextTab.getBoundingClientRect();
+          if (nextBounds.right > containerBounds.right || nextBounds.left < containerBounds.left) {
+            nextTab.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+          }
+        };
         demoTabs.forEach((tab) => {
           tab.addEventListener("click", () => {
             demoTabs.forEach((t) => t.classList.remove("active"));
@@ -3079,6 +3337,7 @@
             tab.classList.add("active");
             const screen = document.querySelector(`[data-screen="${tab.dataset.demo}"]`);
             if (screen) screen.classList.add("active");
+            revealNextMobileTab(tab);
           });
         });
 

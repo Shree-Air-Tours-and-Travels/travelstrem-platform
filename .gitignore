@@ -4,6 +4,8 @@ node_modules
 .DS_Store
 build
 .turbo
+private-uploads/
+apps/backend-api/private-uploads/
 
 # Developer-specific secrets and OAuth credentials
 .env

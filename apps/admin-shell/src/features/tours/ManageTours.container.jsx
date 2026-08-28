@@ -35,7 +35,8 @@ const VALID_TABS = new Set([
   "profile",
 ]);
 
-const getTabFromSearch = (search) => {
+const getTabFromSearch = (search, pathname = "") => {
+  if (pathname.startsWith("/manage/bookings")) return "enquiries";
   const tab = new URLSearchParams(search || "").get("tab") || "overview";
   return VALID_TABS.has(tab) ? tab : "overview";
 };
@@ -68,7 +69,7 @@ export default function ManageTours({ session }) {
     adminLevel: session?.user?.adminLevel || "standard",
   };
 
-  const [tab, setTabState] = useState(() => getTabFromSearch(location.search));
+  const [tab, setTabState] = useState(() => getTabFromSearch(location.search, location.pathname));
   const [tours, setTours] = useState([]);
   const [trips, setTrips] = useState([]);
   const [admins, setAdmins] = useState([]);
@@ -111,7 +112,10 @@ export default function ManageTours({ session }) {
       setTabState(safeTab);
       const params = new URLSearchParams(location.search);
       params.set("tab", safeTab);
-      navigate(`${location.pathname}?${params.toString()}`, { replace: false });
+      const destinationPath = location.pathname.startsWith("/manage/bookings")
+        ? "/manage/tours"
+        : location.pathname;
+      navigate(`${destinationPath}?${params.toString()}`, { replace: false });
     },
     [canAccessTab, location.pathname, location.search, navigate],
   );
@@ -165,7 +169,7 @@ export default function ManageTours({ session }) {
   });
 
   useEffect(() => {
-    const requestedNextTab = getTabFromSearch(location.search);
+    const requestedNextTab = getTabFromSearch(location.search, location.pathname);
     const nextTab = canAccessTab(requestedNextTab) ? requestedNextTab : "overview";
     const params = new URLSearchParams(location.search);
     const requestedTab = params.get("tab");

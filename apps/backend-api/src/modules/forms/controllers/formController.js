@@ -5,7 +5,7 @@ import User from "../../auth/models/User.js";
 import { sendTransactionalEmail } from "../../../services/email.service.js";
 import pageDefinitionService from "../../../services/pageDefinitionService.js";
 import config from "../../../config/env.js";
-import TrevioTrip from "../../trevio/models/TrevioTrip.js";
+import Trip from "../../trips/models/Trip.js";
 import TourDeparture from "../../tours/models/TourDeparture.js";
 import masterDataService from "../../masterData/services/masterDataService.js";
 import { normalizeMongoId, resolveDepartureOption } from "../services/departureOptionService.js";
@@ -13,6 +13,7 @@ import { normalizeCustomTourEnquiry } from "../services/customTourEnquiry.servic
 import { resolveCustomTourAssignment } from "../services/customTourAssignment.service.js";
 import { enquiryCenterView, enquiryView, formatDate } from "../mappers/enquiryView.js";
 import FinancialEngine from "../../../core/financial-engine/index.js";
+import BookingQuote from "../../bookings/models/BookingQuote.js";
 import { getPortalScope } from "../../../core/auth/portalSession.js";
 import {
     REALTIME_EVENTS,
@@ -115,40 +116,105 @@ const getTourFormContext = async (tour, product) => {
             ? Boolean(tour?.flights?.included)
             : /\bflights?\b/i.test(inclusions) && !/\bflights?\b/i.test(exclusions);
 
+    const commercialComponents = new Map(
+        (tour?.commercial?.components || [])
+            .filter((item) => item?.active !== false)
+            .map((item) => [String(item.componentKey || ""), item]),
+    );
+    const hasStructuredFlightComponents = [...commercialComponents.values()].some(
+        (component) => component?.type === "FLIGHT",
+    );
     const packageOptions =
         tour?.commercial?.version === "COMPONENTS_V1"
             ? (tour.commercial.packages || [])
                   .filter((item) => item?.enabled !== false)
-                  .map((item) => ({
-                      value: String(item.packageKey || ""),
-                      label: String(item.name || item.tier || "Package"),
-                  }))
+                  .map((item) => {
+                      const flightComponents = (item.includedComponentKeys || [])
+                          .map((key) => commercialComponents.get(String(key)))
+                          .filter((component) => component?.type === "FLIGHT");
+                      return {
+                          value: String(item.packageKey || ""),
+                          label: String(item.name || item.tier || "Package"),
+                          includesFlights: hasStructuredFlightComponents
+                              ? flightComponents.length > 0
+                              : Boolean(tour?.flights?.included),
+                          includedFlightNames: flightComponents.map((component) => component.name),
+                      };
+                  })
                   .filter((item) => item.value)
             : [];
-    const hotelRoomOptions = (tour?.hotelOptions || [])
+    const stayKeyFor = (option, index) => String(
+        option?.stayKey || option?.location || option?.optionKey || option?._id || `stay-${index + 1}`,
+    ).trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    const hotelCandidates = (tour?.hotelOptions || [])
         .filter((option) => option?.active !== false)
         .flatMap((option, optionIndex) => {
             const optionKey = String(option.optionKey || option._id || `hotel-${optionIndex + 1}`);
+            const stayKey = stayKeyFor(option, optionIndex);
             const rooms = (option.rooms || []).filter((room) => room?.available !== false);
-            if (!rooms.length)
-                return [
-                    {
-                        value: `${optionKey}|`,
-                        label: String(option.title || option.propertyName || "Hotel option"),
-                    },
-                ];
-            return rooms.map((room, roomIndex) => ({
-                value: `${optionKey}|${String(room.roomKey || room._id || `room-${roomIndex + 1}`)}`,
-                label: [option.propertyName || option.title, room.name].filter(Boolean).join(" — "),
+            const candidates = rooms.length ? rooms : [null];
+            return candidates.map((room, roomIndex) => ({
+                stayKey,
+                location: String(option.location || stayKey),
+                hotelOptionKey: optionKey,
+                roomOptionKey: room ? String(room.roomKey || room._id || `room-${roomIndex + 1}`) : "",
+                hotelName: String(option.propertyName || option.title || "Hotel option"),
+                roomName: String(room?.name || ""),
+                packageKeys: (room?.packageKeys?.length ? room.packageKeys : option.packageKeys || []).map(String),
             }));
         });
+    const packageHotelGroups = packageOptions.flatMap((packageOption) => {
+        const byStay = new Map();
+        hotelCandidates.forEach((candidate) => {
+            const items = byStay.get(candidate.stayKey) || [];
+            items.push(candidate);
+            byStay.set(candidate.stayKey, items);
+        });
+        return [...byStay.entries()].map(([stayKey, candidates]) => {
+            const included = candidates.find((candidate) => candidate.packageKeys.includes(packageOption.value));
+            const alternatives = candidates.filter((candidate) =>
+                candidate !== included && !candidate.packageKeys.includes(packageOption.value),
+            );
+            const includedLabel = [included?.hotelName, included?.roomName]
+                .filter(Boolean)
+                .join(" — ") || "the hotel included in your package";
+            return included ? {
+                packageKey: packageOption.value,
+                stayKey,
+                location: included.location,
+                question: included.location
+                    ? `Would you like to change your hotel in ${included.location}?`
+                    : "Would you like to change this included hotel?",
+                keepLabel: `No, keep ${includedLabel}`,
+                included: {
+                    hotelOptionKey: included.hotelOptionKey,
+                    roomOptionKey: included.roomOptionKey,
+                    hotelName: included.hotelName,
+                    roomName: included.roomName,
+                },
+                alternatives: alternatives.map((candidate) => ({
+                    hotelOptionKey: candidate.hotelOptionKey,
+                    roomOptionKey: candidate.roomOptionKey,
+                    hotelName: candidate.hotelName,
+                    roomName: candidate.roomName,
+                    label: [candidate.hotelName, candidate.roomName].filter(Boolean).join(" — "),
+                    selectionLabel: `Yes, change to ${[candidate.hotelName, candidate.roomName].filter(Boolean).join(" — ")}`,
+                })),
+            } : null;
+        }).filter(Boolean);
+    });
 
     return {
         departureOptions: uniqueOptions,
         flightPreference: includesFlights ? "with_flights" : "without_flights",
         packageType: String(tour?.packageType || "fixed_departure"),
         packageOptions,
-        hotelRoomOptions,
+        hotelRoomOptions: [],
+        quoteConfiguration: {
+            packages: packageOptions,
+            hotelGroups: packageHotelGroups,
+            hotelReplacementGroups: packageHotelGroups.filter((group) => group.alternatives.length),
+        },
         allowCustomization:
             tour?.packageType === "custom" &&
             tour?.customConfig?.allowCustomerCustomization === true,
@@ -188,7 +254,7 @@ export const getForm = async (req, res) => {
                         .lean();
                 }
                 if (!tour)
-                    tour = await TrevioTrip.findById(tourId)
+                    tour = await Trip.findById(tourId)
                         .populate("agencyId", "agencyName logo partnerAgencyRef")
                         .populate("ownerAgent", "name email agentRef")
                         .lean();
@@ -205,7 +271,7 @@ export const getForm = async (req, res) => {
             "tours-remote/details",
             "./widgets/contact-agent-form.json",
             {
-                injectData: serializedTour ? { tour: serializedTour } : {},
+                injectData: serializedTour ? { tour: serializedTour, quoteConfiguration: formContext.quoteConfiguration } : {},
             },
         );
         response.component = await masterDataService.hydrateDataScope(response.component);
@@ -242,7 +308,6 @@ export const getForm = async (req, res) => {
                 field.options = formContext.packageOptions;
                 field.required = formContext.packageOptions.length > 0;
             }
-            if (field.name === "hotelRoomKey") field.options = formContext.hotelRoomOptions;
         });
         if (tour) {
             const isFixed = formContext.packageType === "fixed_departure";
@@ -252,7 +317,7 @@ export const getForm = async (req, res) => {
                     return !isFixed;
                 if (field.name === "customizationPreference") return formContext.allowCustomization;
                 if (field.name === "packageKey") return formContext.packageOptions.length > 0;
-                if (field.name === "hotelRoomKey") return formContext.hotelRoomOptions.length > 0;
+                if (field.name === "hotelRoomKey") return false;
                 return true;
             });
             if (formContext.allowCustomization) {
@@ -383,13 +448,17 @@ export const submitForm = async (req, res) => {
         const normalizedTourId = normalizeMongoId(
             isCustomTourEnquiry ? allowedFields.sourceTourId : tourId,
         );
-        const tour =
-            normalizedTourId && Tour.db.base.Types.ObjectId.isValid(normalizedTourId)
-                ? isCustomTourEnquiry
-                    ? await Tour.findOne({ _id: normalizedTourId, status: "published" }).lean()
-                    : (await Tour.findById(normalizedTourId).lean()) ||
-                      (await TrevioTrip.findById(normalizedTourId).lean())
-                : null;
+        let journeyType = "tour";
+        let tour = null;
+        if (normalizedTourId && Tour.db.base.Types.ObjectId.isValid(normalizedTourId)) {
+            tour = isCustomTourEnquiry
+                ? await Tour.findOne({ _id: normalizedTourId, status: "published" }).lean()
+                : await Tour.findById(normalizedTourId).lean();
+            if (!tour && !isCustomTourEnquiry) {
+                tour = await Trip.findById(normalizedTourId).lean();
+                if (tour) journeyType = "trip";
+            }
+        }
         const linkedTourId = isCustomTourEnquiry
             ? tour
                 ? normalizedTourId
@@ -415,8 +484,9 @@ export const submitForm = async (req, res) => {
                 ? await User.findById(agentId).select("name email phone phoneNumber mobile").lean()
                 : null);
         const requestedProductKey = String(requestedProduct || "").toLowerCase();
+        if (!tour && requestedProductKey === "trevio") journeyType = "trip";
         const product = tour
-            ? tour.productKey === "trevio"
+            ? journeyType === "trip"
                 ? "trevio"
                 : "trevista"
             : ["trevio", "trevista"].includes(requestedProductKey)
@@ -432,17 +502,6 @@ export const submitForm = async (req, res) => {
                 message: "Please select an available tour package.",
             });
         }
-        const selectedHotelRoom = allowedFields.hotelRoomKey
-            ? formContext.hotelRoomOptions.find(
-                  (item) => item.value === allowedFields.hotelRoomKey,
-              ) || null
-            : null;
-        if (!isCustomTourEnquiry && allowedFields.hotelRoomKey && !selectedHotelRoom) {
-            return sendJson(res, 400, {
-                status: "error",
-                message: "That hotel or room is no longer available.",
-            });
-        }
         const hotelSelections = Array.isArray(requestedHotelSelections)
             ? requestedHotelSelections
                   .slice(0, 20)
@@ -453,6 +512,38 @@ export const submitForm = async (req, res) => {
                   }))
                   .filter((item) => item.stayKey && item.hotelOptionKey)
             : [];
+        const packageReplacementGroups = (formContext.quoteConfiguration?.hotelReplacementGroups || [])
+            .filter((group) => group.packageKey === selectedPackage?.value);
+        const packageHotelGroups = (formContext.quoteConfiguration?.hotelGroups || [])
+            .filter((group) => group.packageKey === selectedPackage?.value);
+        const replacementGroupsByStay = new Map(
+            packageReplacementGroups.map((group) => [group.stayKey, group]),
+        );
+        const seenReplacementStays = new Set();
+        for (const selection of hotelSelections) {
+            const group = replacementGroupsByStay.get(selection.stayKey);
+            const validAlternative = group?.alternatives?.some(
+                (alternative) =>
+                    alternative.hotelOptionKey === selection.hotelOptionKey &&
+                    alternative.roomOptionKey === selection.roomOptionKey,
+            );
+            if (!group || !validAlternative || seenReplacementStays.has(selection.stayKey))
+                return sendJson(res, 400, {
+                    status: "error",
+                    message: "Choose a valid hotel replacement for the selected package.",
+                });
+            seenReplacementStays.add(selection.stayKey);
+        }
+        if (!isCustomTourEnquiry && Array.isArray(requestedHotelRequests) && requestedHotelRequests.length)
+            return sendJson(res, 400, {
+                status: "error",
+                message: "Use the additional note for hotel requests that are not offered as package replacements.",
+            });
+        if (!isCustomTourEnquiry && selectedPackage?.includesFlights && allowedFields.flightPreference !== "with_flights")
+            return sendJson(res, 400, {
+                status: "error",
+                message: "Flights are already included in the selected package.",
+            });
         if (
             !isCustomTourEnquiry &&
             allowedFields.customizationPreference &&
@@ -539,21 +630,50 @@ export const submitForm = async (req, res) => {
                           .filter(([, answer]) => answer),
                   )
                 : {};
-        const [hotelOptionKey = "", roomOptionKey = ""] = String(
-            selectedHotelRoom?.value || "",
-        ).split("|");
-        const customizationSnapshot =
+        const calculatedCustomizationSnapshot =
             !isCustomTourEnquiry && tour?.commercial?.version === "COMPONENTS_V1" && selectedPackage
                 ? FinancialEngine.calculateTourCustomizationPreview({
                       tour,
                       packageKey: selectedPackage.value,
                       hotelSelections,
                       hotelRequests: requestedHotelRequests,
-                      hotelOptionKey,
-                      roomOptionKey,
+                      hotelOptionKey: "",
+                      roomOptionKey: "",
                       travellerCount,
                   })
                 : null;
+        const flightRequest = selectedPackage
+            ? selectedPackage.includesFlights
+                ? "KEEP_INCLUDED"
+                : allowedFields.flightPreference === "with_flights"
+                  ? "ADD"
+                  : "NONE"
+            : "UNSPECIFIED";
+        const packageBaseline = selectedPackage ? {
+            packageKey: selectedPackage.value,
+            packageName: selectedPackage.label,
+            includesFlights: selectedPackage.includesFlights,
+            includedFlightNames: selectedPackage.includedFlightNames || [],
+            hotels: packageHotelGroups.map((group) => ({
+                stayKey: group.stayKey,
+                location: group.location,
+                ...group.included,
+            })),
+        } : null;
+        const customizedRequest = hotelSelections.length > 0 || flightRequest === "ADD";
+        const customizationSnapshot = calculatedCustomizationSnapshot || packageBaseline
+            ? {
+                  ...(calculatedCustomizationSnapshot || {}),
+                  quoteMode: customizedRequest || calculatedCustomizationSnapshot?.quoteMode === "CUSTOMIZED"
+                      ? "CUSTOMIZED"
+                      : "PACKAGE",
+                  packageBaseline,
+                  flightRequest,
+                  requiresRepricing: Boolean(
+                      flightRequest === "ADD" || calculatedCustomizationSnapshot?.requiresRepricing,
+                  ),
+              }
+            : null;
         const agentSnapshot = agent
             ? {
                   name: agent.name || "Your travel specialist",
@@ -574,6 +694,7 @@ export const submitForm = async (req, res) => {
             tourId: linkedTourId.slice(0, 100) || null,
             tourTitle: submittedTourTitle || null,
             product,
+            journeyType,
             ownerAgent: agentId,
             agencyId: customAssignment?.agencyId || tour?.agencyId || agent?.agencyId || null,
             assignmentRule: customAssignment?.reason || "",
@@ -581,8 +702,8 @@ export const submitForm = async (req, res) => {
             selection: {
                 packageKey: selectedPackage?.value || "",
                 packageName: selectedPackage?.label || "",
-                hotelRoomKey: selectedHotelRoom?.value || "",
-                hotelRoomName: selectedHotelRoom?.label || "",
+                hotelRoomKey: "",
+                hotelRoomName: "",
                 hotelSelections: (customizationSnapshot?.hotels || []).map((item) => ({
                     stayKey: item.stayKey,
                     location: item.location,
@@ -697,12 +818,13 @@ export const submitForm = async (req, res) => {
                     const preferredContact = allowedFields.preferredContact || "Not provided";
                     const travellerSummary = allowedFields.travellerCount || "Not provided";
                     const preferredTravelDate = selectedDepartureLabel;
-                    const flightPreference =
-                        allowedFields.flightPreference === "with_flights"
-                            ? "Quote with flights"
-                            : allowedFields.flightPreference === "without_flights"
-                              ? "Quote without flights"
-                              : "Travel specialist recommendation";
+                    const flightPreference = customizationSnapshot?.flightRequest === "KEEP_INCLUDED"
+                        ? "Included in selected package"
+                        : customizationSnapshot?.flightRequest === "ADD"
+                          ? "Add flights to the quotation"
+                          : allowedFields.flightPreference === "agent_recommendation"
+                            ? "Travel specialist recommendation"
+                            : "Not included or requested";
                     const requestedTour = submittedTourTitle || "General tour enquiry";
                     const enquiryUrl = url || "Not provided";
                     const packageSummary = selectedPackage?.label || "To be discussed";
@@ -713,7 +835,7 @@ export const submitForm = async (req, res) => {
                                       `${item.location || item.stayKey}: ${item.optionName}${item.roomName ? ` — ${item.roomName}` : ""}`,
                               )
                               .join("; ")
-                        : selectedHotelRoom?.label || "Included package stays";
+                        : "Included package stays";
                     const hotelRequestSummary = customizationSnapshot?.hotelRequests?.length
                         ? customizationSnapshot.hotelRequests
                               .map(
@@ -864,6 +986,10 @@ export const claimEnquiry = async (req, res) => {
             });
         lead.claimedBy = userId;
         await lead.save();
+        await BookingQuote.updateMany(
+            { bookingId: lead._id, $or: [{ userId: null }, { userId: { $exists: false } }] },
+            { $set: { userId } },
+        );
         await syncAgencyCustomerFromLead(lead).catch((error) =>
             console.error("[CustomerDirectory] enquiry claim sync failed:", error.message),
         );
@@ -931,6 +1057,28 @@ export const getLeads = async (req, res) => {
             .sort({ createdAt: -1 })
             .limit(200)
             .lean();
+        const leadIds = leads.map((lead) => lead._id).filter(Boolean);
+        const leadIdStrings = leadIds.map(String);
+        const bookingIds = leads.map((lead) => lead.bookingId).filter(Boolean);
+        const quoteReferences = [...leadIds, ...bookingIds];
+        const quotes = quoteReferences.length
+            ? await BookingQuote.find({
+                  $or: [
+                      { inquiryId: { $in: leadIds } },
+                      { bookingId: { $in: quoteReferences } },
+                      { contextType: "ENQUIRY", contextId: { $in: leadIdStrings } },
+                  ],
+              })
+                  .sort({ version: -1, createdAt: -1 })
+                  .lean()
+            : [];
+        const quoteByEnquiryId = new Map();
+        quotes.forEach((quote) => {
+            const enquiryId = String(
+                quote.inquiryId || (quote.contextType === "ENQUIRY" ? quote.contextId : "") || quote.bookingId || "",
+            );
+            if (enquiryId && !quoteByEnquiryId.has(enquiryId)) quoteByEnquiryId.set(enquiryId, quote);
+        });
 
         return sendJson(res, 200, {
             status: "success",
@@ -938,7 +1086,15 @@ export const getLeads = async (req, res) => {
             componentData: {
                 ...enquiryCenterView(access.perspective),
                 perspective: access.perspective,
-                data: leads.map((lead) => enquiryView(lead, access.perspective)),
+                data: leads.map((lead) =>
+                    enquiryView(lead, access.perspective, {
+                        quote:
+                            quoteByEnquiryId.get(String(lead._id)) ||
+                            quoteByEnquiryId.get(String(lead.bookingId || "")) ||
+                            null,
+                        includeBookingJourney: true,
+                    }),
+                ),
                 structure: {},
                 config: {},
             },
@@ -974,11 +1130,23 @@ export const getEnquiry = async (req, res) => {
             ...identityQuery,
         }).lean();
         if (!lead) return sendJson(res, 404, { status: "error", message: "Enquiry not found." });
+        const quote = await BookingQuote.findOne({
+            $or: [
+                { inquiryId: lead._id },
+                { bookingId: { $in: [lead._id, lead.bookingId].filter(Boolean) } },
+                { contextType: "ENQUIRY", contextId: String(lead._id) },
+            ],
+        })
+            .sort({ version: -1, createdAt: -1 })
+            .lean();
         return sendJson(res, 200, {
             status: "success",
             message: "Enquiry fetched",
             componentData: {
-                data: enquiryView(lead, access.perspective),
+                data: enquiryView(lead, access.perspective, {
+                    quote,
+                    includeBookingJourney: true,
+                }),
                 view: enquiryCenterView(access.perspective),
             },
         });

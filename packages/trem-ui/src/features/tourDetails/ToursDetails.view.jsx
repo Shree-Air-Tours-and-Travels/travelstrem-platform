@@ -150,10 +150,7 @@ const renderWidget = (widget, props) => {
           key={widget.type}
           tourRef={props.tourRef}
           selectedPackage={props.selectedPackage}
-          hotelSelections={props.hotelSelections}
-          onSelectHotel={props.onSelectHotel}
-          onCustomize={props.onCustomize}
-          onRequestHotel={props.onRequestHotel}
+          allowEnquiryCustomization={false}
         />
       );
     case "PackagePlans":
@@ -206,13 +203,8 @@ export default function ToursDetailsView({
   productType,
   selectedPackage,
   selectedPackageDetails,
-  hotelSelections,
-  hotelRequests,
   onSelectPackage,
-  onSelectHotel,
-  onCustomize,
   onCustomizeJourney,
-  onRequestHotel,
 }) {
   const showBookNow = structure?.floatingActionBar?.config?.showBookNow === true;
   const selectedPackageData =
@@ -244,11 +236,7 @@ export default function ToursDetailsView({
     onFavorite,
     appKey,
     selectedPackage,
-    hotelSelections,
     onSelectPackage,
-    onSelectHotel,
-    onCustomize,
-    onRequestHotel,
   };
   const heroWidgets = useMemo(
     () => widgets.filter((widget) => HERO_WIDGETS.has(widget.type)),
@@ -506,8 +494,6 @@ export default function ToursDetailsView({
           product={productType === "trip" ? "trevio" : "trevista"}
           initialSelections={{
             packageKey: selectedPackage,
-            hotelSelections: Object.values(hotelSelections || {}),
-            hotelRequests,
           }}
           onCustomizeJourney={productType === "tour" ? onCustomizeJourney : undefined}
         />

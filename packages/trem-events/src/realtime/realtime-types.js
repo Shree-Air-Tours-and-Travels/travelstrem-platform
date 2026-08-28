@@ -8,6 +8,7 @@ export const REALTIME_EVENTS = Object.freeze({
   SYSTEM_CONNECTED: "system:connected",
 
   BOOKING_QUOTE_CREATED: "booking:quote-created",
+  BOOKING_QUOTE_UPDATED: "booking:quote-updated",
 
   ENQUIRY_CREATED: "enquiry:created",
   ENQUIRY_CLAIMED: "enquiry:claimed",

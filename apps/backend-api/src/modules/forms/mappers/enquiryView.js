@@ -1,5 +1,6 @@
 // Presentation mapping for ContactLead documents, shared by the forms
 // controllers (getLeads / getEnquiry) and the dashboard data service.
+import { presentBookingJourney } from "../../../../../booking-engine/server/index.mjs";
 
 export const formatDate = (value) => {
     const date = value ? new Date(value) : null;
@@ -31,6 +32,10 @@ const guidanceByStatus = {
         "Your request is being prepared for quotation. Final availability and pricing will be shared in the response.",
     quote_sent:
         "Your quotation is ready. Review the confirmed options before continuing with the booking.",
+    accepted: "You accepted this quotation. Your travel specialist can now continue the booking.",
+    rejected: "You rejected this quotation. It remains available here for your records.",
+    change_requested: "Your requested changes were sent to the travel specialist.",
+    cancelled: "You cancelled this booking request. Its quotation remains available for your records.",
     responded:
         "A travel specialist has responded to your enquiry. Review the latest update and available options.",
     closed: "This enquiry has been completed. Its submitted details remain available for your records.",
@@ -43,6 +48,10 @@ const receivedGuidanceByStatus = {
         "This enquiry is under review. Confirm availability and prepare the appropriate response.",
     quote_requested: "The traveller is waiting for a quotation based on the submitted request.",
     quote_sent: "A quotation has been sent to the traveller and is awaiting their decision.",
+    accepted: "The traveller accepted this quotation.",
+    rejected: "The traveller rejected this quotation.",
+    change_requested: "The traveller requested changes to this quotation.",
+    cancelled: "The traveller cancelled this booking request.",
     responded: "A response has been shared with the traveller. Further updates will appear here.",
     closed: "This enquiry is complete and remains available as a record of the request.",
 };
@@ -120,7 +129,7 @@ export const enquiryCenterView = (perspective = "sent") => {
     };
 };
 
-export const enquiryView = (lead, perspective) => {
+export const enquiryView = (lead, perspective, { quote = null, includeBookingJourney = false } = {}) => {
     const fields = lead?.fields || {};
     const isSent = perspective === "sent";
     const counterpart = isSent
@@ -185,6 +194,46 @@ export const enquiryView = (lead, perspective) => {
                           : ""),
               }
             : {};
+    const customerQuote = quote?._id
+        ? {
+              id: String(quote._id),
+              quoteRef: quote.quoteRef || "",
+              version: quote.version,
+              status: quote.status,
+              expirationDate: quote.expirationDate || quote.validity || quote.expiresAt,
+              currency: quote.currency || "INR",
+              basePrice: quote.basePrice || 0,
+              platformFee: quote.platformFee || 0,
+              taxes: quote.taxes || 0,
+              finalAmount: quote.finalAmount || 0,
+              items: quote.items || [],
+              notes: quote.notes || "",
+              terms: quote.terms || "",
+              acceptedAt: quote.acceptedAt || null,
+              rejectedAt: quote.rejectedAt || null,
+              cancelledAt: quote.cancelledAt || null,
+              changeRequest: quote.changeRequest || null,
+          }
+        : null;
+    const bookingJourney = includeBookingJourney
+        ? presentBookingJourney({
+              booking: {
+                  id: String(lead?._id || ""),
+                  reference: lead?.enquiryRef || "Enquiry",
+                  title: lead?.tourTitle || "Tour enquiry",
+                  status: lead?.status || "new",
+                  travellerCount: Number(fields.travellerCount || lead?.customizationSnapshot?.travellers || 1),
+                  requiresPassport:
+                      fields.flightPreference === "with_flights" ||
+                      lead?.customizationSnapshot?.flightRequest === "ADD" ||
+                      customerQuote?.items?.some((item) => String(item.category || "").toUpperCase() === "FLIGHT"),
+                  travellerDetails: lead?.travellerDetails || null,
+              },
+              quote: customerQuote,
+              actor: { role: isSent ? "user" : "agent" },
+          })
+        : null;
+
     return {
         id: String(lead?._id || ""),
         recordType: "enquiry",
@@ -203,6 +252,8 @@ export const enquiryView = (lead, perspective) => {
                 : "The submitted enquiry details and future updates are available here."),
         title: lead?.tourTitle || "General tour enquiry",
         product: lead?.product || "trevista",
+        journeyType:
+            lead?.journeyType || (String(lead?.product || "").toLowerCase() === "trevio" ? "trip" : "tour"),
         assignmentRule: lead?.assignmentRule || "",
         tourId: lead?.tourId || null,
         counterpart,
@@ -256,5 +307,6 @@ export const enquiryView = (lead, perspective) => {
         createdAt: lead?.createdAt,
         createdLabel: formatDate(lead?.createdAt),
         notified: Boolean(lead?.notified),
+        ...(bookingJourney ? { bookingJourney } : {}),
     };
 };

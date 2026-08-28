@@ -1,9 +1,10 @@
 const path = require("path");
-const { container } = require("webpack");
-const ModuleScopePlugin = require("react-dev-utils/ModuleScopePlugin");
+const reactScriptsDir = path.dirname(require.resolve("react-scripts/package.json"));
+const { container } = require(require.resolve("webpack", { paths: [reactScriptsDir] }));
 
 const appSrc = path.resolve(__dirname, "src");
 const packagesSrc = path.resolve(__dirname, "../../packages");
+const bookingEngineSrc = path.resolve(__dirname, "../booking-engine/src");
 const backendTarget =
   process.env.REACT_APP_BACKEND_URL ||
   process.env.REACT_APP_API_URL?.replace(/\/api\/?$/, "") ||
@@ -25,7 +26,7 @@ function extendBabelIncludes(webpackConfig) {
   oneOfRule.oneOf.forEach((rule) => {
     if (!rule.loader || !rule.loader.includes("babel-loader")) return;
     const include = Array.isArray(rule.include) ? rule.include : rule.include ? [rule.include] : [];
-    rule.include = Array.from(new Set([...include, appSrc, packagesSrc]));
+    rule.include = Array.from(new Set([...include, appSrc, packagesSrc, bookingEngineSrc]));
   });
 }
 
@@ -50,6 +51,7 @@ module.exports = {
       webpackConfig.optimization.runtimeChunk = false;
       webpackConfig.resolve.alias = {
         ...(webpackConfig.resolve.alias || {}),
+        "@apps/booking-engine": path.resolve(__dirname, "../booking-engine/src/library.js"),
         "@packages/trem-auth-core": path.resolve(__dirname, "../../packages/trem-auth-core/src"),
         "@packages/trem-environment": path.resolve(
           __dirname,
@@ -67,7 +69,7 @@ module.exports = {
         ),
       };
       webpackConfig.resolve.plugins = (webpackConfig.resolve.plugins || []).filter(
-        (plugin) => !(plugin instanceof ModuleScopePlugin),
+        (plugin) => plugin?.constructor?.name !== "ModuleScopePlugin",
       );
       extendBabelIncludes(webpackConfig);
       webpackConfig.plugins.push(

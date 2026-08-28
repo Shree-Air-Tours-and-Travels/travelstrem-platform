@@ -51,7 +51,7 @@ const Routers = () => {
         />
         <Route
           path="/admin/bookings"
-          element={<Navigate to="/manage/tours?tab=enquiries" replace />}
+          element={<Navigate to="/manage/bookings" replace />}
         />
         <Route
           path="/admin/support"
@@ -65,10 +65,7 @@ const Routers = () => {
           path="/admin/pricing"
           element={<Navigate to="/manage/tours?tab=pricing" replace />}
         />
-        <Route
-          path="/manage/bookings"
-          element={<Navigate to="/manage/tours?tab=enquiries" replace />}
-        />
+        <Route path="/manage/bookings/*" element={<ManageTours session={session} />} />
         <Route
           path="/manage/clients"
           element={<Navigate to="/manage/tours?tab=clients" replace />}

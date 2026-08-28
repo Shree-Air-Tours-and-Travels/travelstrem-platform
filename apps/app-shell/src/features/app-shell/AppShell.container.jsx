@@ -12,7 +12,7 @@ import resolveContractRefs from "../../core/config/resolveContractRefs";
 import OverviewView from "../../views/OverviewView";
 import FavoritesView from "../../views/FavoritesView";
 import ProfileView from "../../views/ProfileView";
-import BookingsView from "../../views/BookingsView";
+import { UserBookingJourney } from "@apps/booking-engine";
 import "./AppShell.styles.scss";
 
 const PRODUCT_URLS = { trevista: process.env.REACT_APP_TREVISTA_URL };
@@ -404,7 +404,7 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
           onViewFavorite={handleViewFavorite}
         />
       )}
-      {activeTab === "bookings" && <BookingsView />}
+      {activeTab === "bookings" && <UserBookingJourney />}
       {activeTab === "profile" && (
         <ProfileView
           user={profile || user}

@@ -194,6 +194,18 @@ export default function QuoteComparison({
           </span>
           <Amount value={preview.package} {...amountProps} />
         </div>
+        {preview.flight?.includedInPackage || preview.flight?.request === "ADD" ? (
+          <div>
+            <span>
+              <small>{labels.flights || "Flights"}</small>
+              <strong>
+                {preview.flight.includedInPackage
+                  ? labels.flightsIncluded || "Included in selected package"
+                  : labels.flightsAdded || "Added to quotation · Agent pricing required"}
+              </strong>
+            </span>
+          </div>
+        ) : null}
         {(preview.hotels?.length ? preview.hotels : preview.hotel ? [preview.hotel] : []).map(
           (hotel) => (
             <div key={hotel.stayKey || hotel.optionKey}>

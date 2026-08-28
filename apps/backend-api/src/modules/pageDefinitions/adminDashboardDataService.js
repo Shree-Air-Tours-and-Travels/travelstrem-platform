@@ -3,7 +3,7 @@ import PartnerAgency from "../auth/models/PartnerAgency.js";
 import ContactLead from "../forms/models/ContactLead.js";
 import Product from "../tenancy/models/Product.js";
 import Tour from "../tours/models/Tour.js";
-import TrevioTrip from "../trevio/models/TrevioTrip.js";
+import Trip from "../trips/models/Trip.js";
 import SupportTicket from "../support/models/SupportTicket.js";
 
 const RECENT_LIMIT = 6;
@@ -43,7 +43,7 @@ const toActivity = ({ id, title, description, type, status, occurredAt, target }
 const buildRecentActivity = async () => {
     const [tours, trips, agencies, enquiries, supportTickets] = await Promise.all([
         Tour.find({}).select("title status updatedAt").sort({ updatedAt: -1 }).limit(RECENT_LIMIT).lean(),
-        TrevioTrip.find({})
+        Trip.find({})
             .select("title status updatedAt")
             .sort({ updatedAt: -1 })
             .limit(RECENT_LIMIT)
@@ -158,10 +158,10 @@ export const buildAdminDashboardSnapshot = async () => {
             count(Tour, { status: "published" }),
             count(Tour, { status: "draft" }),
             count(Tour, { status: "pending_approval" }),
-            count(TrevioTrip),
-            count(TrevioTrip, { status: "listed", isListed: true }),
-            count(TrevioTrip, { status: "draft" }),
-            count(TrevioTrip, { status: "pending_approval" }),
+            count(Trip),
+            count(Trip, { status: "listed", isListed: true }),
+            count(Trip, { status: "draft" }),
+            count(Trip, { status: "pending_approval" }),
             count(ContactLead),
             count(ContactLead, { status: "new" }),
             count(ContactLead, { status: "in_review" }),

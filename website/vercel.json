@@ -3,20 +3,26 @@
   "git": {
     "deploymentEnabled": true
   },
+  "trailingSlash": false,
   "redirects": [
     {
+      "source": "/index.html",
+      "destination": "/",
+      "permanent": true
+    },
+    {
       "source": "/partnership/index.html",
-      "destination": "/partnership/",
+      "destination": "/partnership",
       "permanent": true
     },
     {
       "source": "/partner",
-      "destination": "/partnership/",
+      "destination": "/partnership",
       "permanent": true
     },
     {
       "source": "/partner/",
-      "destination": "/partnership/",
+      "destination": "/partnership",
       "permanent": true
     }
   ],

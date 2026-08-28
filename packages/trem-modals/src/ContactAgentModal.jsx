@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 
 import PropTypes from "prop-types";
 import {
   Button,
+  CardWithSubEntity,
   ContactForm,
   ErrorState,
   Preloader,
@@ -83,6 +84,9 @@ const normalizeFormData = (component) => {
       pricePending: labels.pricePending,
       hotelRequestPending: labels.hotelRequestPending,
       hotelRequest: labels.hotelRequest,
+      flights: labels.flights,
+      flightsIncluded: labels.flightsIncluded,
+      flightsAdded: labels.flightsAdded,
     },
     structure: {
       submitText: labels[widgetProps.submitLabelRef] || "",
@@ -96,6 +100,7 @@ const normalizeFormData = (component) => {
         })),
       })),
     },
+    quoteConfiguration: component?.data?.quoteConfiguration || { packages: [], hotelGroups: [], hotelReplacementGroups: [] },
     data: component?.data?.tour ? [component.data.tour] : [],
   };
 };
@@ -151,19 +156,40 @@ const ContactAgentModal = ({
     setFormLoadError("");
   }, [loadForm, open]);
 
-  const fieldsMeta = useMemo(
-    () =>
-      (formData?.structure?.fields || []).map((field) => ({
+  const fieldsMeta = useMemo(() => {
+    const baseFields = (formData?.structure?.fields || []).map((field) => ({
         ...field,
         type: field.name === "email" ? "email" : field.name === "phone" ? "tel" : field.type,
         required: field.required ?? ["name", "email", "phone"].includes(field.name),
-      })),
-    [formData?.structure?.fields],
-  );
+      }));
+    const replacementFields = (formData?.quoteConfiguration?.hotelReplacementGroups || []).map(
+      (group, index) => ({
+        name: `hotelReplacement_${index}`,
+        label: group.question || `Would you like to change your hotel in ${group.location || "this destination"}?`,
+        placeholder: group.keepLabel || `No, keep ${[group.included?.hotelName, group.included?.roomName].filter(Boolean).join(" — ") || "the included hotel"}`,
+        type: "select",
+        required: false,
+        width: "full",
+        visibleWhen: { field: "packageKey", equals: group.packageKey },
+        replacement: group,
+        options: (group.alternatives || []).map((alternative) => ({
+          value: `${alternative.hotelOptionKey}|${alternative.roomOptionKey}`,
+          label: alternative.selectionLabel || `Yes, change to ${alternative.label}`,
+        })),
+      }),
+    );
+    const flightIndex = baseFields.findIndex((field) => field.name === "flightPreference");
+    if (flightIndex < 0) return [...baseFields, ...replacementFields];
+    return [
+      ...baseFields.slice(0, flightIndex + 1),
+      ...replacementFields,
+      ...baseFields.slice(flightIndex + 1),
+    ];
+  }, [formData?.quoteConfiguration?.hotelReplacementGroups, formData?.structure?.fields]);
   const submitText = formData?.structure?.submitText || "";
   const selectedPackageKey = initialSelections?.packageKey || "";
   const hotelSelectionsKey = JSON.stringify(initialSelections?.hotelSelections || []);
-  const selectedHotelSelections = useMemo(
+  const initialHotelSelections = useMemo(
     () =>
       (JSON.parse(hotelSelectionsKey) || [])
         .filter((item) => item?.stayKey && item?.hotelOptionKey)
@@ -172,11 +198,6 @@ const ContactAgentModal = ({
   );
   const selectedHotelOptionKey = initialSelections?.hotelOptionKey || "";
   const selectedRoomOptionKey = initialSelections?.roomOptionKey || "";
-  const hotelRequestsKey = JSON.stringify(initialSelections?.hotelRequests || []);
-  const selectedHotelRequests = useMemo(
-    () => (JSON.parse(hotelRequestsKey) || []).filter((item) => item?.stayKey).slice(0, 12),
-    [hotelRequestsKey],
-  );
 
   const initialForm = useMemo(() => {
     const obj = {};
@@ -190,18 +211,30 @@ const ContactAgentModal = ({
     const selectedHotelRoom = selectedHotelOptionKey
       ? `${selectedHotelOptionKey}|${selectedRoomOptionKey}`
       : "";
+    const selectedPackageConfig = (formData?.quoteConfiguration?.packages || []).find(
+      (item) => String(item.value) === String(selectedPackageKey),
+    );
     fieldsMeta.forEach((f) => {
       const selectedValue =
         f.name === "hotelRoomKey"
           ? selectedHotelRoom
           : f.name === "packageKey"
             ? selectedPackageKey
+            : f.name === "flightPreference" && selectedPackageConfig
+              ? selectedPackageConfig.includesFlights ? "with_flights" : "without_flights"
+              : f.replacement
+                ? (() => {
+                    const selected = initialHotelSelections.find((item) => item.stayKey === f.replacement.stayKey);
+                    return selected ? `${selected.hotelOptionKey}|${selected.roomOptionKey || ""}` : "";
+                  })()
             : "";
       obj[f.name] = profile[f.name] || selectedValue || f.value || "";
     });
     return obj;
   }, [
     fieldsMeta,
+    formData?.quoteConfiguration?.packages,
+    initialHotelSelections,
     selectedHotelOptionKey,
     selectedPackageKey,
     selectedRoomOptionKey,
@@ -241,13 +274,53 @@ const ContactAgentModal = ({
     setActiveStage("details");
   }, [formData, initialForm]);
 
+  const selectedPackageConfig = useMemo(
+    () => (formData?.quoteConfiguration?.packages || []).find(
+      (item) => String(item.value) === String(form.packageKey || ""),
+    ) || null,
+    [form.packageKey, formData?.quoteConfiguration?.packages],
+  );
+  const selectedPackageHotelGroups = useMemo(
+    () => (formData?.quoteConfiguration?.hotelGroups || []).filter(
+      (group) => String(group.packageKey) === String(form.packageKey || ""),
+    ),
+    [form.packageKey, formData?.quoteConfiguration?.hotelGroups],
+  );
+  const selectedHotelSelections = useMemo(
+    () => fieldsMeta.filter((field) =>
+      field.replacement && field.visibleWhen?.equals === form.packageKey && form[field.name],
+    ).map((field) => {
+      const [hotelOptionKey = "", roomOptionKey = ""] = String(form[field.name]).split("|");
+      return { stayKey: field.replacement.stayKey, hotelOptionKey, roomOptionKey };
+    }),
+    [fieldsMeta, form],
+  );
+  const selectedHotelRequests = useMemo(() => [], []);
+  const effectiveFieldsMeta = useMemo(() => fieldsMeta.map((field) => {
+    if (field.name !== "flightPreference" || !selectedPackageConfig) return field;
+    return selectedPackageConfig.includesFlights
+      ? {
+          ...field,
+          label: `Flights · included in ${selectedPackageConfig.label}`,
+          options: [{ value: "with_flights", label: "Keep the included flights" }],
+        }
+      : {
+          ...field,
+          label: `Flights · not included in ${selectedPackageConfig.label}`,
+          options: [
+            { value: "without_flights", label: "Keep package without flights" },
+            { value: "with_flights", label: "Add flights to my quotation" },
+          ],
+        };
+  }), [fieldsMeta, selectedPackageConfig]);
+
   const fieldsMap = useMemo(() => {
     const map = {};
-    fieldsMeta.forEach((field) => {
+    effectiveFieldsMeta.forEach((field) => {
       if (field?.name) map[field.name] = field;
     });
     return map;
-  }, [fieldsMeta]);
+  }, [effectiveFieldsMeta]);
 
   const pricingRequirements = useMemo(() => {
     const pricingFieldNames = new Set([
@@ -258,7 +331,7 @@ const ContactAgentModal = ({
       "preferredStartDate",
       "preferredEndDate",
     ]);
-    const visiblePricingFields = fieldsMeta.filter((field) => {
+    const visiblePricingFields = effectiveFieldsMeta.filter((field) => {
       if (!pricingFieldNames.has(field?.name) || !field.required) return false;
       if (!field.visibleWhen?.field) return true;
       return form[field.visibleWhen.field] === field.visibleWhen.equals;
@@ -275,7 +348,7 @@ const ContactAgentModal = ({
       }
       return { id: field.name, label: field.label, complete };
     });
-  }, [fieldsMeta, form]);
+  }, [effectiveFieldsMeta, form]);
   const pricingReady =
     Boolean(fieldsMap.packageKey) &&
     pricingRequirements.length > 0 &&
@@ -390,7 +463,21 @@ const ContactAgentModal = ({
   if (!open) return null;
 
   const handleChange = (name, value) => {
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((prev) => {
+      if (name !== "packageKey") return { ...prev, [name]: value };
+      const packageConfig = (formData?.quoteConfiguration?.packages || []).find(
+        (item) => String(item.value) === String(value),
+      );
+      const next = {
+        ...prev,
+        packageKey: value,
+        flightPreference: packageConfig?.includesFlights ? "with_flights" : "without_flights",
+      };
+      fieldsMeta.forEach((field) => {
+        if (field.replacement) next[field.name] = "";
+      });
+      return next;
+    });
     setErrors((prev) => {
       const copy = { ...prev };
       delete copy[name];
@@ -677,10 +764,36 @@ const ContactAgentModal = ({
                       : journeyLabels.detailsDescription}
                   </p>
                 </header>
+                {selectedPackageConfig ? (
+                  <div className="ct-modal-card__package-baseline">
+                    <CardWithSubEntity
+                      title={`${selectedPackageConfig.label} package baseline`}
+                      subtitle={
+                        selectedPackageHotelGroups.some((group) => group.alternatives?.length)
+                          ? "Only the replacement choices offered below can be changed in this enquiry. Use the additional note for anything else."
+                          : "This package has no hotel alternatives. Its included hotels cannot be changed here; use the additional note for an exceptional request."
+                      }
+                      items={[
+                        {
+                          id: "flights",
+                          label: "Flights",
+                          value: selectedPackageConfig.includesFlights
+                            ? `Included${selectedPackageConfig.includedFlightNames?.length ? ` · ${selectedPackageConfig.includedFlightNames.join(", ")}` : ""}`
+                            : "Not included",
+                        },
+                        ...selectedPackageHotelGroups.map((group) => ({
+                          id: `hotel-${group.stayKey}`,
+                          label: `Included hotel · ${group.location || group.stayKey}`,
+                          value: [group.included?.hotelName, group.included?.roomName].filter(Boolean).join(" — ") || "Package hotel",
+                        })),
+                      ]}
+                    />
+                  </div>
+                ) : null}
                 <ContactForm
                   formId={enquiryFormId}
                   showActions={false}
-                  fieldsMeta={fieldsMeta}
+                  fieldsMeta={effectiveFieldsMeta}
                   formValues={form}
                   onChange={handleChange}
                   onSubmit={handleSubmit}

@@ -41,6 +41,7 @@ export { default as InternationalTripCard } from "./components/InternationalTrip
 export { default as MetricSummary } from "./components/MetricSummary/MetricSummary.jsx";
 export { default as InfoCard } from "./components/InfoCard/InfoCard.jsx";
 export { default as CardWithSubEntity } from "./components/CardWithSubEntity/CardWithSubEntity.jsx";
+export { default as QuoteDisplay } from "./components/QuoteDisplay/QuoteDisplay.jsx";
 export { default as CardWithSubEnitity } from "./components/CardWithSubEntity/CardWithSubEntity.jsx";
 export { default as AgencyDetailsCard } from "./components/AgencyDetailsCard/AgencyDetailsCard.jsx";
 export { default as BottomSheet } from "./components/BottomSheet/BottomSheet.jsx";
@@ -51,6 +52,7 @@ export { default as TextArea } from "./components/TextArea/TextArea.jsx";
 export { FormInput, FormSelect, FormTextArea } from "./components/FormControls/FormControls.jsx";
 export { default as DatePicker } from "./components/DatePicker/DatePicker.jsx";
 export { default as TimelineStepper } from "./components/TimelineStepper/TimelineStepper.jsx";
+export { default as TravellerDetailsForm } from "./components/TravellerDetailsForm/TravellerDetailsForm.jsx";
 export { default as ConfigurableForm } from "./components/ConfigurableForm/ConfigurableForm.jsx";
 export { default as FloatingActionBar } from "./components/FloatingActionBar/FloatingActionBar.jsx";
 export { default as FileUploader } from "./components/FileUploader/FileUploader.jsx";
