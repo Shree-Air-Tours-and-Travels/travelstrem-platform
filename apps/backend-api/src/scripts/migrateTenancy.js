@@ -3,7 +3,7 @@ import config from "../config/index.js";
 import PartnerAgency from "../modules/auth/models/PartnerAgency.js";
 import User from "../modules/auth/models/User.js";
 import Tour from "../modules/tours/models/Tour.js";
-import TrevioTrip from "../modules/trevio/models/TrevioTrip.js";
+import Trip from "../modules/trips/models/Trip.js";
 import AgentDeletionRequest from "../modules/tenancy/models/AgentDeletionRequest.js";
 
 await mongoose.connect(config.MONGO_URI);
@@ -26,7 +26,7 @@ for (const agency of agencies) {
         },
         { $set: { agencyId: agency._id } },
     );
-    await TrevioTrip.updateMany(
+    await Trip.updateMany(
         { agencyId: null, ownerAgent: { $in: userIds } },
         { $set: { agencyId: agency._id } },
     );

@@ -14,9 +14,9 @@ const Detail = ({ label, value, wide = false }) =>
 
 const statusTone = (status) => {
   const key = String(status || "").toLowerCase();
-  if (["confirmed", "completed", "paid", "closed", "responded"].includes(key)) return "success";
+  if (["accepted", "confirmed", "completed", "paid", "closed", "responded"].includes(key)) return "success";
   if (["cancelled", "canceled", "failed", "rejected"].includes(key)) return "danger";
-  if (["pending", "in_review", "quote_requested", "quote_sent"].includes(key)) return "warning";
+  if (["pending", "in_review", "quote_requested", "quote_sent", "change_requested"].includes(key)) return "warning";
   if (["new", "sent", "ready"].includes(key)) return "info";
   return "neutral";
 };
@@ -32,6 +32,10 @@ export default function EnquiryCenter({
   error = "",
   onSelect = () => {},
   onRetry = () => {},
+  renderDetailActions = null,
+  renderDetailContent = null,
+  renderDetailOverride = null,
+  showDetailPanels = true,
 }) {
   const labels = view.labels || {};
   const tableCopy = view.table || {};
@@ -75,6 +79,12 @@ export default function EnquiryCenter({
     );
 
   if (selected) {
+    const detailOverride = renderDetailOverride?.(selected);
+    if (detailOverride) return detailOverride;
+    const detailPanelsVisible = typeof showDetailPanels === "function"
+      ? showDetailPanels(selected)
+      : showDetailPanels;
+
     return (
       <section
         className="trem-enquiries trem-enquiries--detail"
@@ -93,6 +103,7 @@ export default function EnquiryCenter({
               {selected.reference} · {selected.createdDisplay}
             </p>
           </div>
+          {renderDetailActions?.(selected)}
         </header>
 
         {selected.guidance ? (
@@ -101,7 +112,9 @@ export default function EnquiryCenter({
           </div>
         ) : null}
 
-        <div className="trem-enquiries__detail-grid">
+        {renderDetailContent?.(selected)}
+
+        {detailPanelsVisible ? <div className="trem-enquiries__detail-grid">
           <article className="trem-enquiries__panel">
             <h2>{labels.contact}</h2>
             <dl className="trem-enquiries__details">
@@ -134,7 +147,7 @@ export default function EnquiryCenter({
               <Detail label={labels.message} value={selected.request?.message} wide />
             </dl>
           </article>
-        </div>
+        </div> : null}
       </section>
     );
   }

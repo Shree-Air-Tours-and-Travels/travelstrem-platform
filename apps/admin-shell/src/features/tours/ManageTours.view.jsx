@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { clearAuthBrowserState, emitAuthEvent } from "@packages/trem-auth-core";
 import { emit } from "@packages/trem-events";
 import { buildGlobalAuthUrl, useThemeMode } from "@packages/trem-utils";
@@ -13,7 +13,7 @@ import AdminProfileView from "../../views/AdminProfileView";
 import TripView from "../trips/TripView";
 import CreateTripForm from "../trips/CreateTripForm";
 import TenancyManagement from "../tenancy/TenancyManagement";
-import EnquiriesPage from "../enquiries/EnquiriesPage";
+import { AgentAdminBookingJourney } from "@apps/booking-engine";
 import SupportDeskPage from "../support/SupportDeskPage";
 import InternalTeamPage from "../internalTeam/InternalTeamPage";
 import ManageClients from "../clients/ManageClients";
@@ -141,6 +141,7 @@ export default function ManageToursView({
 }) {
   const { theme, toggleTheme } = useThemeMode();
   const { headerConfig: backendHeaderConfig } = useAdminPortalConfig();
+  const location = useLocation();
   const navigate = useNavigate();
   const [mobileSidebarOpen, setMobileSidebarOpen] = React.useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
@@ -279,7 +280,7 @@ export default function ManageToursView({
       />
 
       <main className="admin-dashboard-shell__content">
-        {breadcrumbItems.length ? (
+        {breadcrumbItems.length && !/\/(?:bookings|enquiries)\/[^/]+\/quotebuilder\/?$/.test(location.pathname) ? (
           <div className="admin-dashboard-shell__breadcrumb">
             <Breadcrumbs items={breadcrumbItems} />
           </div>
@@ -296,7 +297,7 @@ export default function ManageToursView({
               isMasterAdmin={auth.adminLevel === "master"}
             />
           )}
-          {tab === "enquiries" && <EnquiriesPage />}
+          {tab === "enquiries" && <AgentAdminBookingJourney />}
           {tab === "support" && <SupportDeskPage />}
           {tab === "internalTeam" && (
             <InternalTeamPage

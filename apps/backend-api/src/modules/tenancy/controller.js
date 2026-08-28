@@ -13,7 +13,7 @@ import Notification from "./models/Notification.js";
 import Role from "./models/Role.js";
 import ProductAccessRequest from "./models/ProductAccessRequest.js";
 import Tour from "../tours/models/Tour.js";
-import TrevioTrip from "../trevio/models/TrevioTrip.js";
+import Trip from "../trips/models/Trip.js";
 import RefreshToken from "../auth/models/RefreshToken.js";
 import ContactLead from "../forms/models/ContactLead.js";
 import SupportTicket from "../support/models/SupportTicket.js";
@@ -842,7 +842,7 @@ export async function getAgency(req, res) {
         const [admins, agents, trips, customers] = await Promise.all([
             User.countDocuments({ agencyId: id, agencyRole: "partner_admin" }),
             User.countDocuments({ agencyId: id, agencyRole: "partner_agent" }),
-            TrevioTrip.countDocuments({ agencyId: id }),
+            Trip.countDocuments({ agencyId: id }),
             AgencyCustomer.countDocuments({ agencyId: id }),
         ]);
         return ok(res, { agency, stats: { admins, agents, trips, customers } });
@@ -1304,7 +1304,7 @@ export async function decideDeletionRequest(req, res) {
         if (decision === "approved") {
             const [user, trevioTrip, tour, customer] = await Promise.all([
                 User.findById(record.agentId),
-                TrevioTrip.exists({ ownerAgent: record.agentId }),
+                Trip.exists({ ownerAgent: record.agentId }),
                 Tour.exists({ ownerAgent: record.agentId }),
                 AgencyCustomer.exists({ ownerAgent: record.agentId }),
             ]);
@@ -1889,7 +1889,7 @@ export async function transferAgentWork(req, res) {
                     { status: 409 },
                 );
             const [trevio, trevista, customers] = await Promise.all([
-                TrevioTrip.updateMany(
+                Trip.updateMany(
                     {
                         agencyId,
                         ownerAgent: fromAgentId,
@@ -2019,7 +2019,7 @@ export async function dashboard(req, res) {
                 PartnerAgency.countDocuments({ status: "suspended" }),
                 User.countDocuments({ agencyRole: "partner_admin" }),
                 User.countDocuments({ agencyRole: "partner_agent" }),
-                TrevioTrip.countDocuments({}),
+                Trip.countDocuments({}),
                 Tour.countDocuments({}),
                 PartnershipRequest.find({ status: { $in: ["approved", "converted"] } })
                     .sort({ updatedAt: -1 })
@@ -2093,11 +2093,11 @@ export async function dashboard(req, res) {
                     { "departures.departureDate": { $gte: now } },
                 ],
             }),
-            TrevioTrip.countDocuments(scopes.products),
-            TrevioTrip.countDocuments({ ...scopes.products, status: "listed", isListed: true }),
-            TrevioTrip.countDocuments({ ...scopes.products, status: "draft" }),
-            TrevioTrip.countDocuments({ ...scopes.products, status: "pending_approval" }),
-            TrevioTrip.countDocuments({
+            Trip.countDocuments(scopes.products),
+            Trip.countDocuments({ ...scopes.products, status: "listed", isListed: true }),
+            Trip.countDocuments({ ...scopes.products, status: "draft" }),
+            Trip.countDocuments({ ...scopes.products, status: "pending_approval" }),
+            Trip.countDocuments({
                 ...scopes.products,
                 startDate: { $gte: now },
                 status: { $in: ["listed", "pending_approval"] },
@@ -2123,7 +2123,7 @@ export async function dashboard(req, res) {
                 .limit(activityFetchLimit)
                 .select("title status updatedAt createdAt")
                 .lean(),
-            TrevioTrip.find(scopes.products)
+            Trip.find(scopes.products)
                 .sort({ updatedAt: -1 })
                 .limit(activityFetchLimit)
                 .select("title status updatedAt createdAt")

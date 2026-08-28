@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { clearAuthBrowserState, emitAuthEvent } from "@packages/trem-auth-core";
 import { emit } from "@packages/trem-events";
 import { buildGlobalAuthUrl, useThemeMode } from "@packages/trem-utils";
@@ -27,6 +27,7 @@ export default function AdminRouteFrame({
   children,
 }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { session, headerConfig: backendHeaderConfig } = useAdminPortalConfig();
   const { theme, toggleTheme } = useThemeMode();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -154,17 +155,19 @@ export default function AdminRouteFrame({
         onAction={goToWorkspace}
       />
       <main className="admin-dashboard-shell__content">
-        <div className="admin-dashboard-shell__breadcrumb admin-dashboard-shell__breadcrumb--action">
-          <Breadcrumbs items={breadcrumbs} />
-          {backTarget ? (
-            <Button
-              text={backLabel || "Back"}
-              iconLeft="arrowLeft"
-              variant="text"
-              onClick={() => navigate(backTarget)}
-            />
-          ) : null}
-        </div>
+        {!/\/(?:bookings|enquiries)\/[^/]+\/quotebuilder\/?$/.test(location.pathname) ? (
+          <div className="admin-dashboard-shell__breadcrumb admin-dashboard-shell__breadcrumb--action">
+            <Breadcrumbs items={breadcrumbs} />
+            {backTarget ? (
+              <Button
+                text={backLabel || "Back"}
+                iconLeft="arrowLeft"
+                variant="text"
+                onClick={() => navigate(backTarget)}
+              />
+            ) : null}
+          </div>
+        ) : null}
         <div className={`admin-dashboard-shell__page${pageClassName ? ` ${pageClassName}` : ""}`}>
           {children}
         </div>

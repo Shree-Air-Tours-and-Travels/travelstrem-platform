@@ -53,6 +53,10 @@
     min-width: 0;
   }
 
+  &__package-baseline {
+    margin-bottom: $space-5;
+  }
+
   &__title {
     margin: 0 0 $space-1;
     font-size: $font-size-xl;

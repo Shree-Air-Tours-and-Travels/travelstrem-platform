@@ -2,17 +2,26 @@
   "name": "@apps/booking-engine",
   "version": "0.1.0",
   "private": true,
+  "main": "src/library.js",
   "dependencies": {
+    "@packages/trem-docengine": "workspace:*",
+    "@packages/trem-form-engine": "workspace:*",
+    "@packages/trem-process-engine": "workspace:*",
+    "@packages/trem-design-tokens": "workspace:*",
+    "@packages/trem-events": "workspace:*",
+    "@packages/trem-ui": "workspace:*",
+    "@packages/trem-utils": "workspace:*",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-router-dom": "^7.8.2",
     "react-scripts": "5.0.1",
     "sass": "^1.86.0"
   },
   "scripts": {
     "prebuild": "node ../../scripts/sync-favicons.mjs booking-engine",
-    "dev": "../trevista-remote/node_modules/.bin/cross-env BROWSER=none PORT=3007 DISABLE_ESLINT_PLUGIN=true ../trevista-remote/node_modules/.bin/craco start",
-    "start": "../trevista-remote/node_modules/.bin/cross-env BROWSER=none PORT=3007 DISABLE_ESLINT_PLUGIN=true ../trevista-remote/node_modules/.bin/craco start",
-    "build": "../trevista-remote/node_modules/.bin/cross-env DISABLE_ESLINT_PLUGIN=true ../trevista-remote/node_modules/.bin/craco build",
+    "dev": "cross-env BROWSER=none PORT=3007 DISABLE_ESLINT_PLUGIN=true craco start",
+    "start": "cross-env BROWSER=none PORT=3007 DISABLE_ESLINT_PLUGIN=true craco start",
+    "build": "cross-env DISABLE_ESLINT_PLUGIN=true craco build",
     "test": "craco test --watchAll=false"
   },
   "devDependencies": {

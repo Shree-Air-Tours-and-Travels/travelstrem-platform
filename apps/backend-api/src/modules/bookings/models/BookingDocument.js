@@ -33,7 +33,11 @@ const bookingDocumentSchema = new Schema(
             default: DOCUMENT_STATUS.UPLOADED,
             index: true,
         },
-        storageProvider: { type: String, enum: ["LOCAL", "R2", "CLOUDINARY"], default: "LOCAL" },
+        storageProvider: {
+            type: String,
+            enum: ["LOCAL", "LOCAL_PRIVATE", "R2", "CLOUDINARY"],
+            default: "LOCAL",
+        },
         storageKey: { type: String, trim: true, default: "" },
         uploadedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
         uploadedAt: { type: Date, default: Date.now },
