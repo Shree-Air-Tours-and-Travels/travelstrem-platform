@@ -3,7 +3,7 @@ import CardWithSubEntity from "../CardWithSubEntity/CardWithSubEntity.jsx";
 import "./QuoteDisplay.styles.scss";
 
 const FIELD_ROWS = [
-  ["basePrice", "Base tour/package cost"],
+  ["basePrice", "Agent quotation"],
   ["flightPrice", "Flight cost"],
   ["hotelPrice", "Hotel cost"],
   ["transferPrice", "Transfers"],
@@ -11,10 +11,10 @@ const FIELD_ROWS = [
   ["mealsPrice", "Meals"],
   ["visaFee", "Visa"],
   ["insuranceFee", "Insurance"],
-  ["platformFee", "TravelsTREM platform fee"],
+  ["platformFee", "TravelsTREM fee"],
   ["serviceFee", "Agent/service fee"],
   ["agentMarkup", "Agent markup"],
-  ["taxes", "Taxes & fees"],
+  ["taxes", "GST on TravelsTREM fee"],
 ];
 
 const normalizeKey = (value) =>
@@ -43,15 +43,32 @@ const formatDate = (value) => {
 };
 
 const lineAmount = (item = {}) => Number(item.amount ?? item.unitAmount ?? 0) || 0;
+const priceBasis = (value) => ({
+  FIXED: "Fixed price",
+  PER_BOOKING: "Per booking",
+  PER_PERSON: "Per person",
+  PER_ROOM: "Per room",
+  PER_NIGHT: "Per night",
+  PER_ROOM_PER_NIGHT: "Per room per night",
+  PER_VEHICLE: "Per vehicle",
+  PER_DAY: "Per day",
+}[value] || value || "Fixed price");
 
 const normalizeQuoteRows = (quote = {}) => {
   const itemRows = (quote.items || [])
-    .filter((item) => item && item.selected !== false && lineAmount(item) !== 0)
+    .filter(
+      (item) =>
+        item &&
+        item.selected !== false &&
+        lineAmount(item) !== 0 &&
+        !item.description &&
+        !item.detailRows?.length,
+    )
     .map((item, index) => ({
       id: item._id || item.id || item.code || `${item.label}-${index}`,
       codeKey: normalizeKey(item.code),
       labelKey: normalizeKey(item.label),
-      label: item.label || "Quote item",
+      label: `${item.label || "Quote item"} · ${priceBasis(item.pricingType)}${Number(item.quantity || 1) > 1 ? ` × ${item.quantity}` : ""}`,
       value: formatMoney(lineAmount(item), item.currency || quote.currency),
       rawAmount: lineAmount(item),
     }));
@@ -83,6 +100,9 @@ export default function QuoteDisplay({
   onAccept,
   onReject,
   onRequestChanges,
+  onCancelBooking,
+  allowedActions,
+  actionLabels = {},
   showActions = true,
   className = "",
 }) {
@@ -92,6 +112,22 @@ export default function QuoteDisplay({
   const isRejected = statusValue === "REJECTED";
   const currency = quote.currency || "INR";
   const rows = normalizeQuoteRows(quote);
+  const itemSections = (quote.items || [])
+    .filter((item) => item?.selected !== false && (item?.description || item?.detailRows?.length))
+    .map((item, index) => {
+      const details = Array.isArray(item.detailRows) ? item.detailRows : [];
+      return {
+        id: item._id || item.id || item.code || `detail-${index}`,
+        title: item.label || "Quote item",
+        text: details.length ? "" : item.description,
+        items: [
+          ...details.map((detail, detailIndex) => ({ id: `change-${detailIndex}`, label: detail.label, value: detail.value })),
+          { id: "basis", label: "Price basis", value: priceBasis(item.pricingType) },
+          { id: "quantity", label: "Quantity", value: String(item.quantity || 1) },
+          { id: "line-total", label: "Line total", value: formatMoney(lineAmount(item), item.currency || quote.currency) },
+        ],
+      };
+    });
   const adjustments = [
     Number(quote.discount || 0) > 0
       ? {
@@ -111,20 +147,24 @@ export default function QuoteDisplay({
       : null,
   ].filter(Boolean);
 
-  const footerActions =
-    showActions && isPending
-      ? [
-          { id: "decline", label: "Decline", onClick: onReject },
-          { id: "changes", label: "Request Changes", onClick: onRequestChanges },
-          { id: "accept", label: "Accept Quote", variant: "primary", onClick: onAccept },
-        ]
-      : showActions && isRejected
-        ? [{ id: "changes", label: "Request Changes", onClick: onRequestChanges }]
-        : [];
+  const permitted = Array.isArray(allowedActions)
+    ? new Set(allowedActions.map((action) => String(action).toUpperCase()))
+    : null;
+  const can = (action) => permitted ? permitted.has(action) : (
+    action === "REQUEST_CHANGES" ? isPending || isRejected : isPending
+  );
+  const footerActions = showActions ? [
+    can("REJECT") ? { id: "reject", label: actionLabels.REJECT || "Reject quote", onClick: onReject } : null,
+    can("REQUEST_CHANGES") ? { id: "changes", label: actionLabels.REQUEST_CHANGES || "Request changes", onClick: onRequestChanges } : null,
+    can("CANCEL") ? { id: "cancel", label: actionLabels.CANCEL || "Cancel booking", variant: "danger", onClick: onCancelBooking } : null,
+    can("ACCEPT") ? { id: "accept", label: actionLabels.ACCEPT || "Accept quote", variant: "primary", onClick: onAccept } : null,
+  ].filter(Boolean) : [];
 
   const hasChangeRequest = quote.changeRequest && quote.changeRequest.requestedAt;
-  const statusBanner = isAccepted
-    ? { label: "Quote Accepted", tone: "success" }
+  const statusBanner = statusValue === "CANCELLED"
+    ? { label: "Booking Cancelled", tone: "danger" }
+    : isAccepted
+      ? { label: "Quote Accepted", tone: "success" }
     : isRejected
       ? { label: "Quote Declined", tone: "danger" }
       : hasChangeRequest
@@ -154,9 +194,10 @@ export default function QuoteDisplay({
       badge={`Version ${quote.version || 1}`}
       headerMeta={quote.expirationDate ? `Valid until ${formatDate(quote.expirationDate)}` : ""}
       items={rows}
-      sections={
-        adjustments.length ? [{ id: "adjustments", title: "Adjustments", items: adjustments }] : []
-      }
+      sections={[
+        ...itemSections,
+        ...(adjustments.length ? [{ id: "adjustments", title: "Adjustments", items: adjustments }] : []),
+      ]}
       totals={totals}
       text={quote.notes || ""}
       footerActions={footerActions}

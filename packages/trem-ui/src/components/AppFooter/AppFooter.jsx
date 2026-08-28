@@ -12,7 +12,7 @@ const DEFAULT_CONFIG = {
       label: "akshat.goyal@travelstrem.com",
       href: "mailto:akshat.goyal@travelstrem.com",
     },
-    { id: "phone", label: "+91 90576 35580", href: "tel:+919057635580" },
+    { id: "phone", label: "+91 90576 35580", href: "tel:+919602225763" },
     {
       id: "location",
       label: "Jaipur, India",

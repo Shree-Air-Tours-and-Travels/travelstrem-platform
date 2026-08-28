@@ -64,8 +64,6 @@ const normalizeRouteRef = (value) => {
 const selectionFromTourCard = (tour = {}) => ({
   packageKey: String(tour?.selectedPackageKey || ""),
   packageData: tour?.selectedPackageDetails || null,
-  hotelSelections: {},
-  hotelRequests: [],
 });
 
 export default function ToursDetailsContainer({
@@ -179,36 +177,9 @@ export default function ToursDetailsContainer({
       return {
         packageKey: nextPackageKey,
         packageData,
-        hotelSelections: {},
-        hotelRequests: [],
       };
     });
   }, []);
-
-  const handleSelectHotel = useCallback((stayKey, hotelOptionKey, roomOptionKey, option = null) => {
-    const key = String(stayKey || option?.stayKey || "");
-    if (!key) return;
-    setSelection((current) => ({
-      ...current,
-      hotelSelections: {
-        ...current.hotelSelections,
-        [key]: {
-          stayKey: key,
-          location: String(option?.location || ""),
-          hotelOptionKey: String(hotelOptionKey || ""),
-          roomOptionKey: String(roomOptionKey || ""),
-        },
-      },
-    }));
-  }, []);
-
-  const handleCustomize = useCallback(
-    (stayKey, hotel, room) => {
-      handleSelectHotel(stayKey, hotel?.value, room?.value, hotel);
-      if (activeTour?._id) setContactOpen(true);
-    },
-    [activeTour?._id, handleSelectHotel],
-  );
 
   const handleCustomizeJourney = useCallback(
     ({ tourId } = {}) => {
@@ -220,20 +191,6 @@ export default function ToursDetailsContainer({
     [activeTour?._id, appKey, navigate, productType],
   );
 
-  const handleRequestHotel = useCallback(
-    (request) => {
-      if (!request?.stayKey || !activeTour?._id) return;
-      setSelection((current) => ({
-        ...current,
-        hotelRequests: [
-          ...(current.hotelRequests || []).filter((item) => item.stayKey !== request.stayKey),
-          request,
-        ],
-      }));
-      setContactOpen(true);
-    },
-    [activeTour?._id],
-  );
 
   const handleShare = useCallback(
     async (tour) => {
@@ -320,13 +277,8 @@ export default function ToursDetailsContainer({
         user={userSession?.user || null}
         selectedPackage={selection.packageKey}
         selectedPackageDetails={selection.packageData}
-        hotelSelections={selection.hotelSelections}
-        hotelRequests={selection.hotelRequests}
         onSelectPackage={handleSelectPackage}
-        onSelectHotel={handleSelectHotel}
-        onCustomize={handleCustomize}
         onCustomizeJourney={handleCustomizeJourney}
-        onRequestHotel={handleRequestHotel}
       />
     </ProductDetailProvider>
   );

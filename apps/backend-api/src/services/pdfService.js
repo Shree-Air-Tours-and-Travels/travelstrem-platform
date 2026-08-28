@@ -208,6 +208,106 @@ export function pdfDocumentToBuffer(doc) {
     });
 }
 
+const formatMinorMoney = (minor, currency = "INR") =>
+    new Intl.NumberFormat("en-IN", { style: "currency", currency }).format(Number(minor || 0) / 100);
+
+const quoteSnapshotLines = (snapshot, formatter) => [
+    ...(snapshot?.base || []).map(formatter).filter(Boolean),
+    ...(snapshot?.customizations || []).map(formatter).filter(Boolean).map((item) => `Customization: ${item}`),
+];
+
+const renderQuoteList = (doc, title, lines) => {
+    if (!lines.length) return;
+    sectionTitle(doc, title);
+    doc.fontSize(9).font("Helvetica").fillColor("#333").text(lines.map((item) => `• ${item}`).join("\n"));
+};
+
+/** Renders the immutable, server-built trem-docengine quote snapshot. */
+export function generateQuoteDocumentPdf(model) {
+    const doc = new PDFDocument({ margin: 50, size: "A4" });
+    header(doc, "TRAVEL QUOTE");
+    labelValue(doc, "Enquiry:", model.enquiryRef);
+    labelValue(doc, "Quote:", `${model.quoteRef} (v${model.version})`);
+    labelValue(doc, "Valid until:", formatDate(model.validUntil));
+
+    sectionTitle(doc, model.title);
+    doc.fontSize(9).font("Helvetica").fillColor("#333").text(model.summary || "");
+    doc.moveDown(0.4);
+    labelValue(doc, "Traveller:", model.traveller?.name);
+    labelValue(doc, "Email:", model.traveller?.email);
+    labelValue(doc, "Travel dates:", model.travel?.dates);
+    labelValue(doc, "Travellers:", model.travel?.travellers);
+    labelValue(doc, "Package variant:", model.variant);
+
+    renderQuoteList(
+        doc,
+        "Itinerary",
+        quoteSnapshotLines(model.itinerarySnapshot, (item) =>
+            `Day ${item.day}: ${item.title || item.location || "Planned journey"}${item.summary ? ` — ${item.summary}` : ""}`,
+        ),
+    );
+    renderQuoteList(
+        doc,
+        "Hotels & rooms",
+        quoteSnapshotLines(model.hotelSnapshot, (item) =>
+            [item.propertyName || item.location || "Stay", item.roomType, item.nights ? `${item.nights} night(s)` : ""]
+                .filter(Boolean)
+                .join(" · "),
+        ),
+    );
+    renderQuoteList(
+        doc,
+        "Transfers",
+        quoteSnapshotLines(model.transferSnapshot, (item) => item.name || item.description || "Transfer service"),
+    );
+    renderQuoteList(
+        doc,
+        "Activities",
+        quoteSnapshotLines(model.activitySnapshot, (item) => item.name || item.description || `Day ${item.day || ""} activity`),
+    );
+
+    sectionTitle(doc, "Price breakdown");
+    (model.pricing?.lines || []).forEach((line) => {
+        const basis = String(line.pricingType || "FIXED").toLowerCase().replaceAll("_", " ");
+        const quantity = Number(line.quantity || 1);
+        doc.fontSize(9).font("Helvetica").fillColor("#333").text(
+            `${line.label} · ${basis}${quantity > 1 ? ` × ${quantity}` : ""}`,
+            { continued: true },
+        );
+        doc.font("Helvetica-Bold").fillColor("#000").text(
+            formatMinorMoney(line.amountMinor, model.pricing.currency),
+            { align: "right" },
+        );
+        if (line.description)
+            doc.fontSize(8).font("Helvetica").fillColor("#666").text(line.description);
+    });
+    doc.moveDown(0.3);
+    doc.fontSize(12).font("Helvetica-Bold").text("Customer total", { continued: true });
+    doc.text(formatMinorMoney(model.pricing.totalMinor, model.pricing.currency), {
+        align: "right",
+    });
+
+    if (model.inclusions?.length) {
+        sectionTitle(doc, "Inclusions");
+        doc.fontSize(9).font("Helvetica").text(model.inclusions.map((item) => `• ${item}`).join("\n"));
+    }
+    if (model.exclusions?.length) {
+        sectionTitle(doc, "Exclusions");
+        doc.fontSize(9).font("Helvetica").text(model.exclusions.map((item) => `• ${item}`).join("\n"));
+    }
+    sectionTitle(doc, "Payment terms");
+    doc.fontSize(8).font("Helvetica").text(model.terms?.payment || "");
+    sectionTitle(doc, "Cancellation terms");
+    doc.fontSize(8).font("Helvetica").text(model.terms?.cancellation || "");
+    if (model.terms?.notes) {
+        sectionTitle(doc, "Notes");
+        doc.fontSize(8).font("Helvetica").text(model.terms.notes);
+    }
+    footer(doc);
+    doc.end();
+    return doc;
+}
+
 export function generateInvoicePdf(booking, payments, tour) {
     const doc = new PDFDocument({ margin: 50, size: "A4" });
 

@@ -102,6 +102,7 @@ export const QUOTE_STATUS = Object.freeze({
     SENT: "SENT",
     ACCEPTED: "ACCEPTED",
     REJECTED: "REJECTED",
+    CANCELLED: "CANCELLED",
     EXPIRED: "EXPIRED",
 });
 

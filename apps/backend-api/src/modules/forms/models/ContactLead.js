@@ -8,6 +8,7 @@ const ContactLeadSchema = new mongoose.Schema(
         tourId: { type: String, default: null },
         tourTitle: { type: String, default: null },
         product: { type: String, enum: ["trevista", "trevio"], default: "trevista", index: true },
+        journeyType: { type: String, enum: ["tour", "trip"], default: "tour", index: true },
         ownerAgent: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
@@ -64,9 +65,13 @@ const ContactLeadSchema = new mongoose.Schema(
             default: null,
             index: true,
         },
+        // Backend-owned QuoteBuilder process snapshot. The definition and
+        // transition rules live in apps/booking-engine/server.
+        quoteBuilder: { type: mongoose.Schema.Types.Mixed, default: null },
+        travellerDetails: { type: mongoose.Schema.Types.Mixed, default: null },
         status: {
             type: String,
-            enum: ["new", "in_review", "responded", "closed"],
+            enum: ["new", "in_review", "quote_sent", "accepted", "rejected", "change_requested", "cancelled", "responded", "closed"],
             default: "new",
             index: true,
         },

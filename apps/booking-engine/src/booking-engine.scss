@@ -1,0 +1,108 @@
+@import "@packages/trem-design-tokens/scss";
+
+.booking-journey {
+  min-height: 100vh;
+  padding: $space-8 $space-5;
+  color: var(--text);
+  background: var(--page-bg);
+
+  &--centered {
+    display: grid;
+    place-items: center;
+  }
+
+  &__container {
+    width: min(100%, var(--container-width));
+    margin: 0 auto;
+  }
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: $space-6;
+    padding: $space-8 0 $space-6;
+
+    span {
+      display: block;
+      margin-bottom: $space-2;
+      color: var(--color-primary);
+      font-size: $font-size-sm;
+      font-weight: $font-semibold;
+    }
+
+    h1,
+    p {
+      margin: 0;
+    }
+
+    p {
+      max-width: 42rem;
+      margin-top: $space-2;
+      color: var(--text-muted);
+    }
+  }
+
+  &__content {
+    min-height: 18rem;
+  }
+
+  &__notice {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: $space-4;
+    max-width: 48rem;
+    padding: $space-5;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+
+    &--success {
+      border-color: var(--color-success);
+    }
+
+    h2,
+    p {
+      margin: 0;
+    }
+
+    p {
+      margin: $space-2 0 $space-4;
+      color: var(--text-muted);
+    }
+  }
+
+  &__notice-icon {
+    display: grid;
+    width: 2.75rem;
+    height: 2.75rem;
+    place-items: center;
+    border-radius: var(--radius-md);
+    color: var(--color-primary-dark);
+    background: var(--primary-soft);
+  }
+
+  &__notice-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-3;
+  }
+}
+
+@media (max-width: $breakpoint-md) {
+  .booking-journey {
+    padding: $space-5 $space-4;
+
+    &__header {
+      flex-direction: column;
+      padding-top: $space-6;
+    }
+
+    &__notice-heading {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+  }
+}

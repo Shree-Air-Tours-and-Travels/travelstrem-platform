@@ -11,6 +11,7 @@ export default function IncludedStaysContainer({
   onSelectHotel,
   onCustomize,
   onRequestHotel,
+  allowEnquiryCustomization = true,
 }) {
   const { loading, error, widgetData, retry } = useTourDetailWidget(tourRef, "included-stays.json", {
     packageKey: selectedPackage,
@@ -38,12 +39,12 @@ export default function IncludedStaysContainer({
     <IncludedStaysView
       labels={labels}
       stays={stays}
-      hotelOptions={hotelOptions}
+      hotelOptions={allowEnquiryCustomization ? hotelOptions : []}
       selectedPackageName={selectedPackageName}
       hotelSelections={hotelSelections}
-      onSelectHotel={onSelectHotel}
-      onCustomize={customizable ? onCustomize : undefined}
-      onRequestHotel={onRequestHotel}
+      onSelectHotel={allowEnquiryCustomization ? onSelectHotel : undefined}
+      onCustomize={allowEnquiryCustomization && customizable ? onCustomize : undefined}
+      onRequestHotel={allowEnquiryCustomization ? onRequestHotel : undefined}
     />
   );
 }

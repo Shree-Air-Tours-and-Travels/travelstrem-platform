@@ -97,7 +97,10 @@
         "alternativePrice": "Package price",
         "pricePending": "Agent confirmation required",
         "hotelRequestPending": "Your requested hotel preferences will be priced after the agent confirms suitable properties and rooms.",
-        "hotelRequest": "Requested hotel"
+        "hotelRequest": "Requested hotel",
+        "flights": "Flights",
+        "flightsIncluded": "Included in selected package",
+        "flightsAdded": "Added to quotation · Agent pricing required"
       },
       "urls": {
         "brandLogo": "/favicon-dark.png"

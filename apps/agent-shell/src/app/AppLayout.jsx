@@ -284,7 +284,7 @@ export default function AppLayout({ embedded = false }) {
         </>
       ) : null}
       <div className="partner-shell__content">
-        {hasPartnerAccess && breadcrumbItems.length ? (
+        {hasPartnerAccess && breadcrumbItems.length && !/\/(?:bookings|enquiries)\/[^/]+\/quotebuilder\/?$/.test(location.pathname) ? (
           <div className="partner-shell__breadcrumb">
             <Breadcrumbs items={breadcrumbItems} />
           </div>

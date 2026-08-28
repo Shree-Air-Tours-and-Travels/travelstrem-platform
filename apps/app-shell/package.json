@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@apps/booking-engine": "workspace:*",
     "@craco/craco": "^7.1.0",
     "@packages/trem-auth-core": "workspace:*",
     "@packages/trem-events": "workspace:*",

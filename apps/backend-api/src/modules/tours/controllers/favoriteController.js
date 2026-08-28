@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 import { recordTourSignal } from "../services/tourIntelligence.service.js";
 import Product from "../../tenancy/models/Product.js";
 
-const getTrevioTripModel = () => mongoose.models?.TrevioTrip || null;
+const getTripModel = () => mongoose.models?.TrevioTrip || null;
 
 const FAVORITES_COPY = Object.freeze({
     hero: {
@@ -156,11 +156,11 @@ export const getFavorites = async (req, res) => {
         const trevistaIds = favorites.filter((f) => f.product === "trevista").map((f) => f.tourId);
         const trevioIds = favorites.filter((f) => f.product === "trevio").map((f) => f.tourId);
 
-        const TrevioTrip = getTrevioTripModel();
+        const Trip = getTripModel();
 
         const [trevistaTours, trevioTrips] = await Promise.all([
             trevistaIds.length ? Tour.find({ _id: { $in: trevistaIds } }) : [],
-            trevioIds.length && TrevioTrip ? TrevioTrip.find({ _id: { $in: trevioIds } }) : [],
+            trevioIds.length && Trip ? Trip.find({ _id: { $in: trevioIds } }) : [],
         ]);
 
         const tourMap = new Map(

@@ -46,7 +46,8 @@
   /* Links                                                                   */
   /* ---------------------------------------------------------------------- */
 
-  a {
+  a,
+  button {
     position: relative;
 
     display: inline-flex;
@@ -57,11 +58,14 @@
 
     padding: 0 $space-1;
 
+    border: 0;
     border-radius: $radius-xs;
+    background: transparent;
 
     color: var(--color-primary);
 
     font-size: $font-size-xs;
+    font-family: inherit;
     font-weight: $font-semibold;
 
     text-decoration: none;
@@ -70,6 +74,7 @@
 
     overflow: hidden;
     text-overflow: ellipsis;
+    cursor: pointer;
 
     transition:
       color 140ms $ease-standard,
@@ -176,6 +181,7 @@
     }
 
     a,
+    button,
     li:last-child > span:not(.trem-breadcrumbs__sep) {
       max-width: 100%;
     }
@@ -203,6 +209,7 @@
     }
 
     a,
+    button,
     li:last-child > span:not(.trem-breadcrumbs__sep) {
       min-height: 26px;
 

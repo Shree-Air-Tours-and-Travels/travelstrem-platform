@@ -1,0 +1,23 @@
+@import "@packages/trem-design-tokens/scss";
+
+.trem-traveller-form {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.trem-traveller-form__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-4;
+  padding: $space-5;
+  border-bottom: 1px solid var(--border);
+
+  h2,
+  p { margin: 0; }
+  p { margin-top: $space-2; color: var(--muted); }
+}
+
+.trem-traveller-form .trem-form { padding: $space-5; }

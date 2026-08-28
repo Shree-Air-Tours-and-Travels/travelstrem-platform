@@ -3,7 +3,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { TourDetailsPage } from "@packages/trem-ui";
 import ToursListPage from "../tours/management/ToursListPage.view";
 import TourBuilderPage from "../tours/TourBuilderPage";
-import EnquiriesPage from "../../enquiries/EnquiriesPage";
+import { AgentAdminBookingJourney } from "@apps/booking-engine";
 
 const tourDetailsProps = {
   appKey: "agent/services",
@@ -15,7 +15,7 @@ export default function ServicesContainer() {
     <Routes>
       <Route path="tours" element={<ToursListPage />} />
       <Route path="tours/builder" element={<TourBuilderPage />} />
-      <Route path="bookings/*" element={<EnquiriesPage />} />
+      <Route path="bookings/*" element={<AgentAdminBookingJourney />} />
       <Route
         path="tours/create"
         element={<Navigate to="/agent/services/tours/builder" replace />}

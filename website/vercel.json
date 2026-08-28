@@ -3,6 +3,35 @@
   "git": {
     "deploymentEnabled": true
   },
+  "trailingSlash": false,
+  "redirects": [
+    {
+      "source": "/index.html",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/partnership/index.html",
+      "destination": "/partnership",
+      "permanent": true
+    },
+    {
+      "source": "/partner",
+      "destination": "/partnership",
+      "permanent": true
+    },
+    {
+      "source": "/partner/",
+      "destination": "/partnership",
+      "permanent": true
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/partnership",
+      "destination": "/partnership/index.html"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",

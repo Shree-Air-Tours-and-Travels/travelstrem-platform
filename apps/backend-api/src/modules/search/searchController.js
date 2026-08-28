@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import TrevioTrip from "../trevio/models/TrevioTrip.js";
+import Trip from "../trips/models/Trip.js";
 import Tour from "../tours/models/Tour.js";
 import ContactLead from "../forms/models/ContactLead.js";
 import SupportTicket from "../support/models/SupportTicket.js";
@@ -107,7 +107,7 @@ const searchTrips = async (query, limit) => {
     ];
     if (mongoose.Types.ObjectId.isValid(query)) match.push({ _id: query });
 
-    const trips = await TrevioTrip.find({
+    const trips = await Trip.find({
         status: "listed",
         isListed: true,
         $and: [{ $or: [{ endDate: null }, { endDate: { $gte: today } }] }, { $or: match }],
