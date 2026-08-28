@@ -29,7 +29,7 @@
   "rewrites": [
     {
       "source": "/partnership",
-      "destination": "/partnership/index.html"
+      "destination": "/partnership.html"
     }
   ],
   "headers": [

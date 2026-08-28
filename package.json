@@ -5,6 +5,7 @@
   "packageManager": "pnpm@10.17.1",
   "scripts": {
     "sync:favicons": "node scripts/sync-favicons.mjs",
+    "build:website": "node website/build.mjs",
     "prebuild": "pnpm sync:favicons",
     "dev": "turbo run dev",
     "build": "turbo run build",
