@@ -39,6 +39,7 @@ const { buildAuthAction } = createProductAuth({
   registerSessionCacheClearer,
   clearUserSessionCache,
 });
+const STANDALONE_ENABLED = false;
 
 const getPlatformUrl = () => {
   const host = window.location.hostname;
@@ -134,7 +135,7 @@ function App({ dispatchEvent, embedded = false, userSession = null }) {
   useEffect(() => initRealtimeNotifications(), []);
 
   React.useEffect(() => {
-    if (embedded) return undefined;
+    if (embedded || !STANDALONE_ENABLED) return undefined;
 
     let active = true;
 
@@ -165,6 +166,19 @@ function App({ dispatchEvent, embedded = false, userSession = null }) {
       active = false;
     };
   }, [embedded]);
+
+  if (!embedded) {
+    return (
+      <ErrorState
+        title="Trevista now opens in TravelsTREM"
+        description="Trevista is integrated with the TravelsTREM customer dashboard and is no longer available as a standalone application."
+        retry={() =>
+          window.location.assign(buildGlobalAppShellUrl({ product: "trevista", tab: "trevista" }))
+        }
+        retryText="Go to Trevista"
+      />
+    );
+  }
 
   if (state.error)
     return (
