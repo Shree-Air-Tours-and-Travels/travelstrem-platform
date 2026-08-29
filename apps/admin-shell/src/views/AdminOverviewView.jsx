@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Button, EmptyState, Icon, MetricSummary, StatusBadge } from "@packages/trem-ui";
+import { Button, EmptyState, Icon, MetricSummary, StatusBadge, TourPerformance } from "@packages/trem-ui";
 import "./AdminOverviewView.scss";
 
 const labelFor = (labels, ref, fallback = "") => labels?.[ref] || fallback;
@@ -114,6 +114,14 @@ export default function AdminOverviewView({
         variant="cards"
         ariaLabel={labelFor(labels, metricDefinition.ariaLabelRef, "Platform overview")}
         items={metrics}
+      />
+
+      <TourPerformance
+        data={data.tourAnalytics}
+        title="Platform tour performance"
+        description="Track traveller interest, conversion signals and automatically trending tours across the platform."
+        onTourClick={() => onTabChange?.("services")}
+        onViewAll={isMasterAdmin ? () => onTabChange?.("tracking") : undefined}
       />
 
       <div className="admin-overview__primary-grid">

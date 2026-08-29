@@ -7,6 +7,7 @@ import {
   RealtimeConnectionStatus,
   QuoteDisplay,
   showToast,
+  Spinner,
   StatusBadge,
   TextArea,
   TimelineStepper,
@@ -14,7 +15,12 @@ import {
 } from "@packages/trem-ui";
 import "./booking-workspace.scss";
 import QuoteBuilder from "../../quote-builder/QuoteBuilder.jsx";
-import { openQuoteDocument, saveTravellerDetails, updateQuoteDecision } from "../../services/bookingJourneyApi.js";
+import {
+  loadBookingJourney,
+  openQuoteDocument,
+  saveTravellerDetails,
+  updateQuoteDecision,
+} from "../../services/bookingJourneyApi.js";
 
 const referencedLabel = (journey, ref) => journey?.labels?.[ref] || "";
 
@@ -56,21 +62,61 @@ function JourneyNotice({ journey, block }) {
 
 export default function BookingEnquiryCenter(props) {
   const [journeyPage, setJourneyPage] = useState(null);
+  const [journey, setJourney] = useState(null);
+  const [journeyState, setJourneyState] = useState({ loading: false, error: "", revision: 0 });
   const [decision, setDecision] = useState(null);
   const [decisionState, setDecisionState] = useState({ saving: false, error: "" });
   const [activeStepId, setActiveStepId] = useState("enquiry");
   const [travellerValues, setTravellerValues] = useState({});
   const [travellerState, setTravellerState] = useState({ saving: false, error: "", errors: {} });
-  const selectedRecord = [...(props.enquiries || []), ...(props.bookings || [])].find(
+  const selectedListRecord = [...(props.enquiries || []), ...(props.bookings || [])].find(
     (item) => item.id === props.selectedId || item.enquiryRef === props.selectedId || item.reference === props.selectedId,
   );
-  const selectedTravellerForm = selectedRecord?.bookingJourney?.data?.travellerForm;
+  const activeJourney =
+    journey?.data?.bookingId === selectedListRecord?.id ? journey : null;
+  const selectedRecord = selectedListRecord
+    ? {
+        ...selectedListRecord,
+        ...(activeJourney?.data?.record || {}),
+        ...(activeJourney ? { bookingJourney: activeJourney } : {}),
+      }
+    : null;
+  const selectedTravellerForm = activeJourney?.data?.travellerForm;
 
   useEffect(() => {
     setJourneyPage(null);
+    setJourney(null);
     setDecision(null);
-    setActiveStepId(selectedRecord?.bookingJourney?.structure?.timeline?.currentStepId || "enquiry");
-  }, [props.selectedId, selectedRecord?.id]);
+    setActiveStepId("enquiry");
+  }, [props.selectedId, selectedListRecord?.id]);
+
+  useEffect(() => {
+    if (!selectedListRecord?.id) return;
+    let active = true;
+    setJourneyState((current) => ({ ...current, loading: true, error: "" }));
+    loadBookingJourney(selectedListRecord.id, window.location.pathname, activeStepId)
+      .then((response) => {
+        if (!active) return;
+        if (response?.status !== "success" || !response.componentData) {
+          throw new Error(response?.message || "This booking step could not be loaded.");
+        }
+        setJourney(response.componentData);
+        setActiveStepId(
+          response.componentData.structure?.timeline?.activeStepId || activeStepId,
+        );
+        setJourneyState((current) => ({ ...current, loading: false, error: "" }));
+      })
+      .catch((error) => {
+        if (active) {
+          setJourneyState((current) => ({
+            ...current,
+            loading: false,
+            error: error?.message || "This booking step could not be loaded.",
+          }));
+        }
+      });
+    return () => { active = false; };
+  }, [activeStepId, journeyState.revision, selectedListRecord?.id, selectedListRecord?.status]);
 
   useEffect(() => {
     if (!selectedTravellerForm) return;
@@ -92,6 +138,7 @@ export default function BookingEnquiryCenter(props) {
       setDecision(null);
       setDecisionState({ saving: false, error: "" });
       showToast({ title: response.message, status: "success" });
+      setJourneyState((current) => ({ ...current, revision: current.revision + 1 }));
       props.onRetry?.();
     } catch (error) {
       setDecisionState({ saving: false, error: error.message });
@@ -113,6 +160,7 @@ export default function BookingEnquiryCenter(props) {
       }
       setTravellerState({ saving: false, error: "", errors: {} });
       showToast({ title: response.message, status: "success" });
+      setJourneyState((current) => ({ ...current, revision: current.revision + 1 }));
       props.onRetry?.();
     } catch (error) {
       setTravellerState({ saving: false, error: error.message, errors: {} });
@@ -129,6 +177,12 @@ export default function BookingEnquiryCenter(props) {
   };
 
   const renderDetailContent = (selected) => {
+    if (journeyState.loading) {
+      return <div className="booking-engine-journey-loading"><Spinner size="md" label="Loading booking step…" /></div>;
+    }
+    if (journeyState.error) {
+      return <p className="is-error" role="alert">{journeyState.error}</p>;
+    }
     const journey = selected.bookingJourney || {};
     const timeline = journey.structure?.timeline;
     if (!timeline) {
@@ -161,7 +215,8 @@ export default function BookingEnquiryCenter(props) {
     let actions = [];
     if (activeStepId === "enquiry") {
       stageContent = noticeBlock ? <JourneyNotice journey={journey} block={noticeBlock} /> : null;
-      if (quote) actions = [{ label: referencedLabel(journey, "viewQuote"), variant: "primary", align: "right", iconRight: "chevronRight", onClick: () => setActiveStepId("quote") }];
+      const quoteStep = (timeline.steps || []).find((step) => step.id === "quote");
+      if (quoteStep && !quoteStep.disabled) actions = [{ label: referencedLabel(journey, "viewQuote"), variant: "primary", align: "right", iconRight: "chevronRight", onClick: () => setActiveStepId("quote") }];
     } else if (activeStepId === "quote" && quote) {
       stageContent = <div className="booking-engine-customer-quote">
           <QuoteDisplay
@@ -269,10 +324,16 @@ export default function BookingEnquiryCenter(props) {
   return (
     <EnquiryCenter
       {...props}
+      enquiries={(props.enquiries || []).map((item) =>
+        selectedRecord && item.id === selectedListRecord?.id ? selectedRecord : item,
+      )}
+      bookings={(props.bookings || []).map((item) =>
+        selectedRecord && item.id === selectedListRecord?.id ? selectedRecord : item,
+      )}
       renderDetailActions={() => null}
       renderDetailContent={renderDetailContent}
       renderDetailOverride={renderDetailOverride}
-      showDetailPanels={() => !selectedRecord?.bookingJourney?.structure?.timeline || activeStepId === "enquiry"}
+      showDetailPanels={() => !activeJourney?.structure?.timeline || activeStepId === "enquiry"}
     />
   );
 }

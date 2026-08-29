@@ -1,10 +1,27 @@
 import express from "express";
 import { authMiddleware } from "../../shared/auth/index.js";
-import { createQuoteBuilderHandlers } from "../../../../booking-engine/server/index.mjs";
-import quoteBuilderService, { saveCustomerTravellerDetails, updateCustomerQuoteDecision } from "./quoteBuilderAdapter.js";
+import {
+    createBookingJourneyHandler,
+    createQuoteBuilderHandlers,
+} from "../../../../booking-engine/server/index.mjs";
+import quoteBuilderService, {
+    findAuthorizedBookingJourney,
+    findCurrentBookingJourneyQuote,
+    saveCustomerTravellerDetails,
+    updateCustomerQuoteDecision,
+} from "./quoteBuilderAdapter.js";
 
 const router = express.Router();
 const handlers = createQuoteBuilderHandlers(quoteBuilderService);
+
+router.get(
+    "/bookings/:bookingId/journey",
+    authMiddleware,
+    createBookingJourneyHandler({
+        findAuthorizedBooking: findAuthorizedBookingJourney,
+        findCurrentQuote: findCurrentBookingJourneyQuote,
+    }),
+);
 
 router.get("/enquiries/:enquiryId/quote-builder", authMiddleware, handlers.load);
 router.patch("/enquiries/:enquiryId/quote-builder", authMiddleware, handlers.transition);

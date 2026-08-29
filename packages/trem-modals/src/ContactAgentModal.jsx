@@ -14,6 +14,24 @@ import { showRealtimeToast } from "@packages/trem-events";
 import ModalShell from "./ModalShell.jsx";
 import "./ContactAgentModal.styles.scss";
 
+const formatAddOnPrice = (addOn) => {
+  if (addOn?.priceLabel) return addOn.priceLabel;
+  const amount = Number(addOn?.pricing?.amountMinor || 0) / 100;
+  const price = new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: addOn?.pricing?.currency || "INR",
+    maximumFractionDigits: 0,
+  }).format(amount);
+  const units = {
+    PER_PERSON: "per person",
+    PER_BOOKING: "per booking",
+    PER_ROOM: "per room",
+    PER_NIGHT: "per night",
+    PER_ROOM_PER_NIGHT: "per room per night",
+  };
+  return [price, units[addOn?.pricing?.unit]].filter(Boolean).join(" ");
+};
+
 const normalizeFormData = (component) => {
   const labels = component?.elements?.labels || {};
   const options = component?.dataScope?.options || {};
@@ -31,10 +49,13 @@ const normalizeFormData = (component) => {
     journeyLabels: {
       ariaLabel: labels.quoteJourneyAriaLabel,
       detailsStep: labels.quoteDetailsStep,
+      changesStep: labels.quoteChangesStep,
       pricingStep: labels.quotePricingStep,
       reviewStep: labels.quoteReviewStep,
       detailsTitle: labels.quoteDetailsTitle,
       detailsDescription: labels.quoteDetailsDescription,
+      changesTitle: labels.quoteChangesTitle,
+      changesDescription: labels.quoteChangesDescription,
       pricingTitle: labels.quotePricingTitle,
       pricingDescription: labels.quotePricingDescription,
       reviewTitle: labels.quoteReviewTitle,
@@ -100,7 +121,12 @@ const normalizeFormData = (component) => {
         })),
       })),
     },
-    quoteConfiguration: component?.data?.quoteConfiguration || { packages: [], hotelGroups: [], hotelReplacementGroups: [] },
+    quoteConfiguration: component?.data?.quoteConfiguration || {
+      packages: [],
+      hotelGroups: [],
+      hotelReplacementGroups: [],
+      optionalAddOns: [],
+    },
     data: component?.data?.tour ? [component.data.tour] : [],
   };
 };
@@ -158,15 +184,19 @@ const ContactAgentModal = ({
 
   const fieldsMeta = useMemo(() => {
     const baseFields = (formData?.structure?.fields || []).map((field) => ({
-        ...field,
-        type: field.name === "email" ? "email" : field.name === "phone" ? "tel" : field.type,
-        required: field.required ?? ["name", "email", "phone"].includes(field.name),
-      }));
+      ...field,
+      type: field.name === "email" ? "email" : field.name === "phone" ? "tel" : field.type,
+      required: field.required ?? ["name", "email", "phone"].includes(field.name),
+    }));
     const replacementFields = (formData?.quoteConfiguration?.hotelReplacementGroups || []).map(
       (group, index) => ({
         name: `hotelReplacement_${index}`,
-        label: group.question || `Would you like to change your hotel in ${group.location || "this destination"}?`,
-        placeholder: group.keepLabel || `No, keep ${[group.included?.hotelName, group.included?.roomName].filter(Boolean).join(" — ") || "the included hotel"}`,
+        label:
+          group.question ||
+          `Would you like to change your hotel in ${group.location || "this destination"}?`,
+        placeholder:
+          group.keepLabel ||
+          `No, keep ${[group.included?.hotelName, group.included?.roomName].filter(Boolean).join(" — ") || "the included hotel"}`,
         type: "select",
         required: false,
         width: "full",
@@ -221,13 +251,19 @@ const ContactAgentModal = ({
           : f.name === "packageKey"
             ? selectedPackageKey
             : f.name === "flightPreference" && selectedPackageConfig
-              ? selectedPackageConfig.includesFlights ? "with_flights" : "without_flights"
+              ? selectedPackageConfig.includesFlights
+                ? "with_flights"
+                : "without_flights"
               : f.replacement
                 ? (() => {
-                    const selected = initialHotelSelections.find((item) => item.stayKey === f.replacement.stayKey);
-                    return selected ? `${selected.hotelOptionKey}|${selected.roomOptionKey || ""}` : "";
+                    const selected = initialHotelSelections.find(
+                      (item) => item.stayKey === f.replacement.stayKey,
+                    );
+                    return selected
+                      ? `${selected.hotelOptionKey}|${selected.roomOptionKey || ""}`
+                      : "";
                   })()
-            : "";
+                : "";
       obj[f.name] = profile[f.name] || selectedValue || f.value || "";
     });
     return obj;
@@ -254,6 +290,7 @@ const ContactAgentModal = ({
     data: null,
     error: "",
   });
+  const [selectedAddOnIds, setSelectedAddOnIds] = useState([]);
 
   useEffect(() => {
     if (!Object.keys(errors).length) return undefined;
@@ -272,47 +309,58 @@ const ContactAgentModal = ({
     setErrors({});
     setMsg(null);
     setActiveStage("details");
+    setSelectedAddOnIds([]);
   }, [formData, initialForm]);
 
   const selectedPackageConfig = useMemo(
-    () => (formData?.quoteConfiguration?.packages || []).find(
-      (item) => String(item.value) === String(form.packageKey || ""),
-    ) || null,
+    () =>
+      (formData?.quoteConfiguration?.packages || []).find(
+        (item) => String(item.value) === String(form.packageKey || ""),
+      ) || null,
     [form.packageKey, formData?.quoteConfiguration?.packages],
   );
   const selectedPackageHotelGroups = useMemo(
-    () => (formData?.quoteConfiguration?.hotelGroups || []).filter(
-      (group) => String(group.packageKey) === String(form.packageKey || ""),
-    ),
+    () =>
+      (formData?.quoteConfiguration?.hotelGroups || []).filter(
+        (group) => String(group.packageKey) === String(form.packageKey || ""),
+      ),
     [form.packageKey, formData?.quoteConfiguration?.hotelGroups],
   );
   const selectedHotelSelections = useMemo(
-    () => fieldsMeta.filter((field) =>
-      field.replacement && field.visibleWhen?.equals === form.packageKey && form[field.name],
-    ).map((field) => {
-      const [hotelOptionKey = "", roomOptionKey = ""] = String(form[field.name]).split("|");
-      return { stayKey: field.replacement.stayKey, hotelOptionKey, roomOptionKey };
-    }),
+    () =>
+      fieldsMeta
+        .filter(
+          (field) =>
+            field.replacement && field.visibleWhen?.equals === form.packageKey && form[field.name],
+        )
+        .map((field) => {
+          const [hotelOptionKey = "", roomOptionKey = ""] = String(form[field.name]).split("|");
+          return { stayKey: field.replacement.stayKey, hotelOptionKey, roomOptionKey };
+        }),
     [fieldsMeta, form],
   );
   const selectedHotelRequests = useMemo(() => [], []);
-  const effectiveFieldsMeta = useMemo(() => fieldsMeta.map((field) => {
-    if (field.name !== "flightPreference" || !selectedPackageConfig) return field;
-    return selectedPackageConfig.includesFlights
-      ? {
-          ...field,
-          label: `Flights · included in ${selectedPackageConfig.label}`,
-          options: [{ value: "with_flights", label: "Keep the included flights" }],
-        }
-      : {
-          ...field,
-          label: `Flights · not included in ${selectedPackageConfig.label}`,
-          options: [
-            { value: "without_flights", label: "Keep package without flights" },
-            { value: "with_flights", label: "Add flights to my quotation" },
-          ],
-        };
-  }), [fieldsMeta, selectedPackageConfig]);
+  const effectiveFieldsMeta = useMemo(
+    () =>
+      fieldsMeta.map((field) => {
+        if (field.name !== "flightPreference" || !selectedPackageConfig) return field;
+        return selectedPackageConfig.includesFlights
+          ? {
+              ...field,
+              label: `Flights · included in ${selectedPackageConfig.label}`,
+              options: [{ value: "with_flights", label: "Keep the included flights" }],
+            }
+          : {
+              ...field,
+              label: `Flights · not included in ${selectedPackageConfig.label}`,
+              options: [
+                { value: "without_flights", label: "Keep package without flights" },
+                { value: "with_flights", label: "Add flights to my quotation" },
+              ],
+            };
+      }),
+    [fieldsMeta, selectedPackageConfig],
+  );
 
   const fieldsMap = useMemo(() => {
     const map = {};
@@ -321,6 +369,30 @@ const ContactAgentModal = ({
     });
     return map;
   }, [effectiveFieldsMeta]);
+  const detailFieldNames = useMemo(
+    () =>
+      new Set([
+        "name",
+        "email",
+        "phone",
+        "travellerCount",
+        "packageKey",
+        "preferredTravelDate",
+        "preferredStartDate",
+        "preferredEndDate",
+        "preferredContact",
+      ]),
+    [],
+  );
+  const detailFields = useMemo(
+    () => effectiveFieldsMeta.filter((field) => detailFieldNames.has(field.name)),
+    [detailFieldNames, effectiveFieldsMeta],
+  );
+  const changeFields = useMemo(
+    () => effectiveFieldsMeta.filter((field) => !detailFieldNames.has(field.name)),
+    [detailFieldNames, effectiveFieldsMeta],
+  );
+  const mapFields = (fields) => Object.fromEntries(fields.map((field) => [field.name, field]));
 
   const pricingRequirements = useMemo(() => {
     const pricingFieldNames = new Set([
@@ -383,6 +455,7 @@ const ContactAgentModal = ({
     const packageKey = String(form.packageKey || "");
     const travellerCount = Number(form.travellerCount);
     const previewTourId = typeof tour?._id === "string" ? tour._id : tourId;
+    if (activeStage === "review") return undefined;
     if (
       !open ||
       activeStage !== "pricing" ||
@@ -413,6 +486,7 @@ const ContactAgentModal = ({
               hotelOptionKey,
               roomOptionKey,
               travellerCount,
+              addOnIds: selectedAddOnIds,
               flightPreference: form.flightPreference,
               preferredTravelDate: form.preferredTravelDate,
               preferredStartDate: form.preferredStartDate,
@@ -456,6 +530,7 @@ const ContactAgentModal = ({
     pricingReady,
     selectedHotelSelections,
     selectedHotelRequests,
+    selectedAddOnIds,
     tour?._id,
     tourId,
   ]);
@@ -497,12 +572,17 @@ const ContactAgentModal = ({
   const journeyLabels = {
     ariaLabel: formData?.journeyLabels?.ariaLabel || "Quote request progress",
     detailsStep: formData?.journeyLabels?.detailsStep || "Trip details",
-    pricingStep: formData?.journeyLabels?.pricingStep || "Price options",
+    changesStep: formData?.journeyLabels?.changesStep || "Changes & add-ons",
+    pricingStep: formData?.journeyLabels?.pricingStep || "Package price",
     reviewStep: formData?.journeyLabels?.reviewStep || "Review request",
     detailsTitle: formData?.journeyLabels?.detailsTitle || "Tell us about your trip",
     detailsDescription:
       formData?.journeyLabels?.detailsDescription || "Complete the details needed for your quote.",
-    pricingTitle: formData?.journeyLabels?.pricingTitle || "Review your intelligent price",
+    changesTitle: formData?.journeyLabels?.changesTitle || "Tailor your selected package",
+    changesDescription:
+      formData?.journeyLabels?.changesDescription ||
+      "Request only the changes and optional services you want the agent to quote.",
+    pricingTitle: formData?.journeyLabels?.pricingTitle || "Review your package price",
     pricingDescription:
       formData?.journeyLabels?.pricingDescription ||
       "Compare your selected package with a suitable alternative.",
@@ -539,6 +619,7 @@ const ContactAgentModal = ({
   const stages = hasPricingJourney
     ? [
         { id: "details", label: journeyLabels.detailsStep },
+        { id: "changes", label: journeyLabels.changesStep },
         { id: "pricing", label: journeyLabels.pricingStep },
         { id: "review", label: journeyLabels.reviewStep },
       ]
@@ -565,14 +646,25 @@ const ContactAgentModal = ({
   };
 
   const handleDetailsContinue = () => {
-    const validation = validateFields(form, fieldsMap);
+    const validation = validateFields(form, mapFields(detailFields));
     if (!validation.ok) {
       setErrors(validation.errors);
       setMsg({ type: "error", text: journeyLabels.validationError });
       return;
     }
     setErrors({});
-    goToStage(hasPricingJourney ? "pricing" : "review");
+    goToStage(hasPricingJourney ? "changes" : "review");
+  };
+
+  const handleChangesContinue = () => {
+    const validation = validateFields(form, mapFields(changeFields));
+    if (!validation.ok) {
+      setErrors(validation.errors);
+      setMsg({ type: "error", text: journeyLabels.validationError });
+      return;
+    }
+    setErrors({});
+    goToStage("pricing");
   };
 
   const handleSubmit = async (ev) => {
@@ -582,6 +674,7 @@ const ContactAgentModal = ({
     // Only the final review step is allowed to create the enquiry.
     if (activeStage !== "review") {
       if (activeStage === "details") handleDetailsContinue();
+      else if (activeStage === "changes") handleChangesContinue();
       else goToStage("review");
       return;
     }
@@ -606,6 +699,7 @@ const ContactAgentModal = ({
       fields: form,
       hotelSelections: selectedHotelSelections,
       hotelRequests: selectedHotelRequests,
+      addOnIds: selectedAddOnIds,
       createdAt: new Date().toISOString(),
     };
 
@@ -741,30 +835,103 @@ const ContactAgentModal = ({
                   labels={formData?.quoteLabels}
                   onSelectAlternative={(packageKey) => {
                     handleChange("packageKey", packageKey);
-                    goToStage("review");
+                    goToStage("changes");
                   }}
+                />
+              </section>
+            ) : activeStage === "review" ? (
+              <section className="ct-modal-card__stage ct-modal-card__review-panel">
+                <header className="ct-modal-card__stage-heading">
+                  <span>{journeyLabels.reviewStep}</span>
+                  <h4>{journeyLabels.reviewTitle}</h4>
+                  <p>{journeyLabels.reviewDescription}</p>
+                </header>
+                <CardWithSubEntity
+                  title="Traveller and tour request"
+                  subtitle="Nothing is sent until you select Request quote below."
+                  items={[
+                    { label: "Traveller", value: form.name || "—" },
+                    { label: "Travellers", value: form.travellerCount || "—" },
+                    { label: "Package", value: selectedPackageLabel || "—" },
+                    {
+                      label: "Travel dates",
+                      value:
+                        form.preferredTravelDate ||
+                        [form.preferredStartDate, form.preferredEndDate]
+                          .filter(Boolean)
+                          .join(" – ") ||
+                        "—",
+                    },
+                    {
+                      label: "Flights",
+                      value:
+                        form.flightPreference === "with_flights"
+                          ? selectedPackageConfig?.includesFlights
+                            ? "Included in package"
+                            : "Request flights from the agent"
+                          : "No flights requested",
+                    },
+                  ]}
+                  sections={[
+                    selectedHotelSelections.length
+                      ? {
+                          title: "Requested hotel changes",
+                          items: selectedHotelSelections.map((selection) => {
+                            const group = selectedPackageHotelGroups.find(
+                              (item) => item.stayKey === selection.stayKey,
+                            );
+                            const replacement = group?.alternatives?.find(
+                              (item) =>
+                                item.hotelOptionKey === selection.hotelOptionKey &&
+                                item.roomOptionKey === selection.roomOptionKey,
+                            );
+                            return {
+                              label: group?.location || selection.stayKey,
+                              value: `${[group?.included?.hotelName, group?.included?.roomName]
+                                .filter(Boolean)
+                                .join(" — ")} → ${replacement?.label || "Selected replacement"}`,
+                            };
+                          }),
+                        }
+                      : null,
+                    selectedAddOnIds.length
+                      ? {
+                          title: "Optional add-ons requested",
+                          items: (formData?.quoteConfiguration?.optionalAddOns || [])
+                            .filter((item) => selectedAddOnIds.includes(item.id))
+                            .map((item) => ({ label: item.title, value: formatAddOnPrice(item) })),
+                        }
+                      : null,
+                    form.message ? { title: "Additional request", text: form.message } : null,
+                  ].filter(Boolean)}
+                />
+                <QuoteComparison
+                  preview={quotePreview.data}
+                  error={quotePreview.error}
+                  requirements={pricingRequirements}
+                  labels={formData?.quoteLabels}
                 />
               </section>
             ) : (
               <section className="ct-modal-card__stage ct-modal-card__form-panel">
                 <header className="ct-modal-card__stage-heading">
                   <span>
-                    {activeStage === "review"
-                      ? journeyLabels.reviewStep
+                    {activeStage === "changes"
+                      ? journeyLabels.changesStep
                       : journeyLabels.detailsStep}
                   </span>
                   <h4>
-                    {activeStage === "review"
-                      ? journeyLabels.reviewTitle
+                    {activeStage === "changes"
+                      ? journeyLabels.changesTitle
                       : journeyLabels.detailsTitle}
                   </h4>
                   <p>
-                    {activeStage === "review"
-                      ? journeyLabels.reviewDescription
+                    {activeStage === "changes"
+                      ? journeyLabels.changesDescription
                       : journeyLabels.detailsDescription}
                   </p>
                 </header>
-                {selectedPackageConfig ? (
+                {activeStage === "changes" && selectedPackageConfig ? (
                   <div className="ct-modal-card__package-baseline">
                     <CardWithSubEntity
                       title={`${selectedPackageConfig.label} package baseline`}
@@ -784,7 +951,10 @@ const ContactAgentModal = ({
                         ...selectedPackageHotelGroups.map((group) => ({
                           id: `hotel-${group.stayKey}`,
                           label: `Included hotel · ${group.location || group.stayKey}`,
-                          value: [group.included?.hotelName, group.included?.roomName].filter(Boolean).join(" — ") || "Package hotel",
+                          value:
+                            [group.included?.hotelName, group.included?.roomName]
+                              .filter(Boolean)
+                              .join(" — ") || "Package hotel",
                         })),
                       ]}
                     />
@@ -793,7 +963,7 @@ const ContactAgentModal = ({
                 <ContactForm
                   formId={enquiryFormId}
                   showActions={false}
-                  fieldsMeta={effectiveFieldsMeta}
+                  fieldsMeta={activeStage === "changes" ? changeFields : detailFields}
                   formValues={form}
                   onChange={handleChange}
                   onSubmit={handleSubmit}
@@ -803,7 +973,45 @@ const ContactAgentModal = ({
                   errors={errors}
                   Button={Button}
                 />
-                {activeStage === "details" &&
+                {activeStage === "changes" &&
+                formData?.quoteConfiguration?.optionalAddOns?.length ? (
+                  <div className="ct-modal-card__addons">
+                    <div className="ct-modal-card__addons-heading">
+                      <strong>Optional add-ons</strong>
+                      <p>
+                        These services are not included in the package price. Select only what you
+                        want the agent to include.
+                      </p>
+                    </div>
+                    {(formData.quoteConfiguration.optionalAddOns || []).map((addOn) => {
+                      const selected = selectedAddOnIds.includes(addOn.id);
+                      return (
+                        <label
+                          className={`ct-modal-card__addon${selected ? " is-selected" : ""}`}
+                          key={addOn.id}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selected}
+                            onChange={() =>
+                              setSelectedAddOnIds((current) =>
+                                current.includes(addOn.id)
+                                  ? current.filter((id) => id !== addOn.id)
+                                  : [...current, addOn.id],
+                              )
+                            }
+                          />
+                          <span>
+                            <strong>{addOn.title}</strong>
+                            {addOn.description ? <small>{addOn.description}</small> : null}
+                          </span>
+                          <b>{formatAddOnPrice(addOn)}</b>
+                        </label>
+                      );
+                    })}
+                  </div>
+                ) : null}
+                {activeStage === "changes" &&
                 form.customizationPreference === "customize" &&
                 onCustomizeJourney ? (
                   <aside className="ct-modal-card__custom-journey" role="note">
@@ -842,11 +1050,13 @@ const ContactAgentModal = ({
             text={
               activeStage === "details"
                 ? journeyLabels.cancel
-                : activeStage === "pricing"
+                : activeStage === "changes"
                   ? journeyLabels.backToDetails
-                  : hasPricingJourney
-                    ? journeyLabels.backToPricing
-                    : journeyLabels.backToDetails
+                  : activeStage === "pricing"
+                    ? "Back to changes"
+                    : hasPricingJourney
+                      ? journeyLabels.backToPricing
+                      : journeyLabels.backToDetails
             }
             size="medium"
             variant="outline"
@@ -857,48 +1067,54 @@ const ContactAgentModal = ({
                 : () =>
                     goToStage(
                       activeStage === "pricing"
-                        ? "details"
-                        : hasPricingJourney
-                          ? "pricing"
-                          : "details",
+                        ? "changes"
+                        : activeStage === "changes"
+                          ? "details"
+                          : hasPricingJourney
+                            ? "pricing"
+                            : "details",
                     )
             }
             disabled={submitting}
           />
           {activeStage === "review" ? (
             <Button
-              type="submit"
-              form={enquiryFormId}
+              type="button"
               text={submitting ? journeyLabels.sending : submitText}
               size="medium"
               variant="solid"
               color="primary"
+              onClick={handleSubmit}
               disabled={submitting}
             />
           ) : (
             <Button
               type="button"
               text={
-                activeStage === "details" &&
+                activeStage === "changes" &&
                 form.customizationPreference === "customize" &&
                 onCustomizeJourney
                   ? journeyLabels.customJourneyRedirectAction
                   : activeStage === "pricing"
-                    ? quotePreview.data?.recommendedAlternative
-                      ? journeyLabels.continueWithoutSuggestion
-                      : journeyLabels.continueToReview
-                    : detailsContinueLabel
+                    ? journeyLabels.continueToReview
+                    : activeStage === "changes"
+                      ? "Continue to package price"
+                      : detailsContinueLabel
               }
               size="medium"
               variant="solid"
               color="primary"
               onClick={
-                activeStage === "details" &&
+                activeStage === "changes" &&
                 form.customizationPreference === "customize" &&
                 onCustomizeJourney
                   ? continueToCustomJourney
                   : () =>
-                      activeStage === "pricing" ? goToStage("review") : handleDetailsContinue()
+                      activeStage === "pricing"
+                        ? goToStage("review")
+                        : activeStage === "changes"
+                          ? handleChangesContinue()
+                          : handleDetailsContinue()
               }
               disabled={submitting || (activeStage === "pricing" && quotePreview.loading)}
             />

@@ -102,6 +102,12 @@ const percentageAmount = (amountMinor, percent, name) => {
 };
 
 const uniqueKeys = (values = []) => [...new Set(values.map(String).filter(Boolean))];
+const PACKAGE_TIER_RANK = Object.freeze({ BASIC: 1, STANDARD: 2, PREMIUM: 3 });
+const packageTierRank = (value) => PACKAGE_TIER_RANK[String(value || "").toUpperCase()] || 0;
+const containsEvery = (candidateValues, requiredValues) => {
+    const candidate = new Set(uniqueKeys(candidateValues));
+    return uniqueKeys(requiredValues).every((key) => candidate.has(key));
+};
 
 /**
  * Deterministically prices one configured tour package. All amounts are paise.
@@ -521,6 +527,7 @@ export function calculateTourCustomizationPreview({
     hotelOptionKey = "",
     roomOptionKey = "",
     travellerCount = 1,
+    selectedAddOnIds = [],
 } = {}) {
     if (!tour) throw new TypeError("Tour is required");
     const travellers = integer(travellerCount, "Traveller count", { min: 1 });
@@ -539,6 +546,37 @@ export function calculateTourCustomizationPreview({
         nights: Math.max(0, Number(tour.period?.nights ?? 0)),
         days: Math.max(1, Number(tour.period?.days || 1)),
     };
+    const requestedAddOnIds = uniqueKeys(selectedAddOnIds);
+    const availableAddOns = new Map(
+        (tour.extras || [])
+            .filter((item) => item?.active !== false && item?.included !== true)
+            .map((item) => [String(item?._id || ""), item]),
+    );
+    const invalidAddOn = requestedAddOnIds.find((id) => !availableAddOns.has(id));
+    if (invalidAddOn) throw new Error("Choose a valid optional add-on for this tour");
+    const addOns = requestedAddOnIds.map((id) => {
+        const item = availableAddOns.get(id);
+        const unit = String(item?.pricing?.unit || "PER_BOOKING");
+        const unitAmountMinor = integer(
+            item?.pricing?.amountMinor ?? Math.round(Number(item?.price || 0) * 100),
+            `${item?.title || "Add-on"} amountMinor`,
+        );
+        const quantity = quantityFor(unit, basis);
+        const totalMinor = multiply(unitAmountMinor, quantity, "Add-on amount");
+        return {
+            id,
+            title: String(item?.title || "Optional add-on"),
+            description: String(item?.description || ""),
+            unit,
+            quantity,
+            unitAmountMinor,
+            totalMinor,
+        };
+    });
+    const addOnTotalMinor = integer(
+        addOns.reduce((sum, item) => sum + item.totalMinor, 0),
+        "Add-on total",
+    );
     const selected = calculateTourCommercials({ tour, packageKey, selections: basis });
     const selectedKey = String(selected.package.packageKey);
     const pricedStays = priceStaySelections({
@@ -550,9 +588,14 @@ export function calculateTourCustomizationPreview({
     });
     const customizedTotalMinor = pricedStays.pending
         ? null
-        : selected.sellingTotalMinor + pricedStays.supplementTotalMinor;
+        : selected.sellingTotalMinor + pricedStays.supplementTotalMinor + addOnTotalMinor;
     const selectedComponentKeys = new Set(selected.lines.map((line) => String(line.componentKey)));
-    const alternatives = (tour.commercial?.packages || [])
+    const selectedPackageDefinition = (tour.commercial?.packages || []).find(
+        (item) => String(item.packageKey) === selectedKey,
+    );
+    const selectedTierRank = packageTierRank(selectedPackageDefinition?.tier);
+    const selectedIncludedStayCount = pricedStays.hotels.filter((item) => item.included).length;
+    const evaluatedAlternatives = (tour.commercial?.packages || [])
         .filter((item) => item?.enabled !== false && String(item.packageKey) !== selectedKey)
         .map((item) => {
             const commercial = calculateTourCommercials({
@@ -567,12 +610,21 @@ export function calculateTourCustomizationPreview({
                 travellers,
                 baseBasis: basis,
             });
-            const totalMinor = alternativeStays.pending
+            const pending = alternativeStays.pending || commercial.requiresRepricing;
+            const totalMinor = pending
                 ? null
-                : commercial.sellingTotalMinor + alternativeStays.supplementTotalMinor;
-            return { commercial, totalMinor, pending: alternativeStays.pending };
+                : commercial.sellingTotalMinor +
+                  alternativeStays.supplementTotalMinor +
+                  addOnTotalMinor;
+            return {
+                packageDefinition: item,
+                commercial,
+                totalMinor,
+                pending,
+                includedStayCount: alternativeStays.hotels.filter((hotel) => hotel.included).length,
+            };
         })
-        .map(({ commercial, totalMinor, pending }) => {
+        .map(({ packageDefinition, commercial, totalMinor, pending, includedStayCount }) => {
             const differenceMinor =
                 customizedTotalMinor == null || pending ? null : totalMinor - customizedTotalMinor;
             const absoluteDifferenceMinor =
@@ -591,6 +643,19 @@ export function calculateTourCustomizationPreview({
                         : Math.round(absoluteDifferenceMinor / travellers),
                 savingsMinor: differenceMinor == null ? null : Math.max(0, -differenceMinor),
                 additionalMinor: differenceMinor == null ? null : Math.max(0, differenceMinor),
+                tier: packageDefinition.tier,
+                tierDirection:
+                    packageTierRank(packageDefinition.tier) > selectedTierRank
+                        ? "UPGRADE"
+                        : "EQUIVALENT",
+                preservesSelectedPackage:
+                    packageTierRank(packageDefinition.tier) >= selectedTierRank &&
+                    (packageTierRank(packageDefinition.tier) > selectedTierRank ||
+                        containsEvery(
+                            packageDefinition.includedComponentKeys,
+                            selectedPackageDefinition?.includedComponentKeys,
+                        )),
+                includesMoreSelectedStays: includedStayCount > selectedIncludedStayCount,
                 additionalBenefits: commercial.lines
                     .filter((line) => !selectedComponentKeys.has(String(line.componentKey)))
                     .map((line) => line.name)
@@ -602,8 +667,44 @@ export function calculateTourCustomizationPreview({
                 (left.totalMinor ?? Number.MAX_SAFE_INTEGER) -
                 (right.totalMinor ?? Number.MAX_SAFE_INTEGER),
         );
-    const recommendedAlternative = alternatives.find((item) => item.totalMinor != null) || null;
-    const customized = pricedStays.hotels.some((item) => !item.included);
+    const alternatives = evaluatedAlternatives
+        .filter(
+            (item) =>
+                item.totalMinor != null &&
+                item.preservesSelectedPackage &&
+                (item.savingsMinor > 0 || item.includesMoreSelectedStays),
+        )
+        .map((item) => ({
+            ...item,
+            recommendationType: item.savingsMinor > 0 ? "BETTER_VALUE" : "MORE_INCLUDED",
+            recommendationTitle:
+                item.savingsMinor > 0
+                    ? "A comparable package may offer better value"
+                    : "A higher package includes more of your request",
+            recommendationReason:
+                item.savingsMinor > 0
+                    ? "This option keeps your selected package level and included services while reducing the calculated price."
+                    : "This option keeps all selected-package inclusions and covers more of your requested stays.",
+        }));
+    const recommendedAlternative =
+        customizedTotalMinor == null || selected.requiresRepricing ? null : alternatives[0] || null;
+    const recommendationDecision = recommendedAlternative
+        ? {
+              code: "SUITABLE_ALTERNATIVE",
+              message: recommendedAlternative.recommendationReason,
+          }
+        : customizedTotalMinor == null || selected.requiresRepricing
+          ? {
+                code: "PRICE_CONFIRMATION_REQUIRED",
+                message:
+                    "TREM Intelligence will not compare incomplete prices. Your selected package remains unchanged while the agent confirms requested items.",
+            }
+          : {
+                code: "SELECTED_PACKAGE_PRESERVED",
+                message:
+                    "Your selected package level and inclusions are being preserved. Lower-tier packages are not suggested as alternatives.",
+            };
+    const customized = pricedStays.hotels.some((item) => !item.included) || addOns.length > 0;
     const preview = {
         version: "TOUR_CUSTOMIZATION_V2",
         currency: selected.currency,
@@ -617,12 +718,15 @@ export function calculateTourCustomizationPreview({
         },
         hotels: pricedStays.hotels,
         hotel: pricedStays.hotels[0] || null,
+        addOns,
+        addOnTotalMinor,
         customized:
             customizedTotalMinor == null
                 ? { totalMinor: null, perPersonMinor: null, status: "PENDING_AGENT_QUOTE" }
                 : { ...publicAmount(customizedTotalMinor, travellers), status: "CALCULATED" },
         recommendedAlternative,
         alternatives,
+        recommendationDecision,
         pricingStatus: pricedStays.pending ? "PENDING_AGENT_QUOTE" : "CALCULATED",
         requiresRepricing: Boolean(selected.requiresRepricing || pricedStays.pending),
     };
@@ -635,6 +739,11 @@ export function calculateTourCustomizationPreview({
         customized: { totalMinor: null, perPersonMinor: null, status: "PENDING_AGENT_QUOTE" },
         recommendedAlternative: null,
         alternatives: [],
+        recommendationDecision: {
+            code: "PRICE_CONFIRMATION_REQUIRED",
+            message:
+                "TREM Intelligence will not compare incomplete prices. Your selected package remains unchanged while the agent confirms requested items.",
+        },
         pricingStatus: "PENDING_AGENT_QUOTE",
         requiresRepricing: true,
     };

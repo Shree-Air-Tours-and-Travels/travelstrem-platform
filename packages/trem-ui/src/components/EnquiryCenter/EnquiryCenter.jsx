@@ -14,9 +14,11 @@ const Detail = ({ label, value, wide = false }) =>
 
 const statusTone = (status) => {
   const key = String(status || "").toLowerCase();
-  if (["accepted", "confirmed", "completed", "paid", "closed", "responded"].includes(key)) return "success";
+  if (["accepted", "confirmed", "completed", "paid", "closed", "responded"].includes(key))
+    return "success";
   if (["cancelled", "canceled", "failed", "rejected"].includes(key)) return "danger";
-  if (["pending", "in_review", "quote_requested", "quote_sent", "change_requested"].includes(key)) return "warning";
+  if (["pending", "in_review", "quote_requested", "quote_sent", "change_requested"].includes(key))
+    return "warning";
   if (["new", "sent", "ready"].includes(key)) return "info";
   return "neutral";
 };
@@ -70,20 +72,13 @@ export default function EnquiryCenter({
     records.find((item) => item.id === selectedId || item.reference === selectedId) || null;
 
   if (error && !records.length)
-    return (
-      <ErrorState
-        title={states.loadErrorTitle}
-        description={error}
-        retry={onRetry}
-      />
-    );
+    return <ErrorState title={states.loadErrorTitle} description={error} retry={onRetry} />;
 
   if (selected) {
     const detailOverride = renderDetailOverride?.(selected);
     if (detailOverride) return detailOverride;
-    const detailPanelsVisible = typeof showDetailPanels === "function"
-      ? showDetailPanels(selected)
-      : showDetailPanels;
+    const detailPanelsVisible =
+      typeof showDetailPanels === "function" ? showDetailPanels(selected) : showDetailPanels;
 
     return (
       <section
@@ -114,40 +109,56 @@ export default function EnquiryCenter({
 
         {renderDetailContent?.(selected)}
 
-        {detailPanelsVisible ? <div className="trem-enquiries__detail-grid">
-          <article className="trem-enquiries__panel">
-            <h2>{labels.contact}</h2>
-            <dl className="trem-enquiries__details">
-              <Detail label={labels.name} value={selected.submittedBy?.name} />
-              <Detail label={labels.email} value={selected.submittedBy?.email} />
-              <Detail label={labels.phone} value={selected.submittedBy?.phone} />
-              <Detail label={labels.preferredContact} value={selected.request?.preferredContact} />
-              <Detail
-                label={labels.bookingAmount}
-                value={selected.amountDisplay || selected.priceDisplay}
-              />
-            </dl>
-          </article>
-          <article className="trem-enquiries__panel">
-            <h2>{labels.requested}</h2>
-            <dl className="trem-enquiries__details">
-              <Detail label={labels.travellers} value={selected.request?.travellers} />
-              <Detail label={labels.departure} value={selected.request?.departure} />
-              <Detail label={labels.flightPreference} value={selected.request?.flightPreference} />
-              <Detail label={labels.package} value={selected.request?.package} />
-              <Detail label={labels.hotelRoom} value={selected.request?.hotelRoom} wide />
-              {(selected.request?.hotelRequests || []).map((request) => (
-                <Detail key={request.stayKey} label={request.label} value={request.value} wide />
-              ))}
-              {Object.entries(selected.request?.customizationAnswers || {}).map(
-                ([question, answer]) => (
-                  <Detail key={question} label={question} value={answer} wide />
-                ),
-              )}
-              <Detail label={labels.message} value={selected.request?.message} wide />
-            </dl>
-          </article>
-        </div> : null}
+        {detailPanelsVisible ? (
+          <div className="trem-enquiries__detail-grid">
+            <article className="trem-enquiries__panel">
+              <h2>{labels.contact}</h2>
+              <dl className="trem-enquiries__details">
+                <Detail label={labels.name} value={selected.submittedBy?.name} />
+                <Detail label={labels.email} value={selected.submittedBy?.email} />
+                <Detail label={labels.phone} value={selected.submittedBy?.phone} />
+                <Detail
+                  label={labels.preferredContact}
+                  value={selected.request?.preferredContact}
+                />
+                <Detail
+                  label={labels.bookingAmount}
+                  value={selected.amountDisplay || selected.priceDisplay}
+                />
+              </dl>
+            </article>
+            <article className="trem-enquiries__panel">
+              <h2>{labels.requested}</h2>
+              <dl className="trem-enquiries__details">
+                <Detail label={labels.travellers} value={selected.request?.travellers} />
+                <Detail label={labels.departure} value={selected.request?.departure} />
+                <Detail
+                  label={labels.flightPreference}
+                  value={selected.request?.flightPreference}
+                />
+                <Detail label={labels.package} value={selected.request?.package} />
+                <Detail label={labels.hotelRoom} value={selected.request?.hotelRoom} wide />
+                {(selected.request?.hotelRequests || []).map((request) => (
+                  <Detail key={request.stayKey} label={request.label} value={request.value} wide />
+                ))}
+                {(selected.request?.addOns || []).map((addOn) => (
+                  <Detail
+                    key={addOn.id}
+                    label={`Optional add-on · ${addOn.label}`}
+                    value={addOn.value}
+                    wide
+                  />
+                ))}
+                {Object.entries(selected.request?.customizationAnswers || {}).map(
+                  ([question, answer]) => (
+                    <Detail key={question} label={question} value={answer} wide />
+                  ),
+                )}
+                <Detail label={labels.message} value={selected.request?.message} wide />
+              </dl>
+            </article>
+          </div>
+        ) : null}
       </section>
     );
   }

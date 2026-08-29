@@ -6,6 +6,13 @@ const text = (value) => String(value || "").trim();
 const hasCommercialPricing = (tour) =>
     number(tour?.price?.min) > 0 && number(tour?.price?.max ?? tour?.price?.min) > 0;
 
+export const TOUR_TRENDING_POLICY = Object.freeze({
+    minimumViews: 15,
+    minimumEnquiries: 3,
+    minimumBookings: 1,
+    minimumTrendScore: 25,
+});
+
 /**
  * Content completeness is deliberately deterministic and explainable. It is
  * used as a quality gate, never as a substitute for master-admin verification.
@@ -58,9 +65,10 @@ export const calculateEngagementScores = (tour = {}, now = new Date()) => {
     const popularityScore = Math.round(clamp(raw));
     const trending =
         tour.status === "published" &&
-        views >= 15 &&
-        (enquiries >= 3 || bookings >= 1) &&
-        trendScore >= 25;
+        views >= TOUR_TRENDING_POLICY.minimumViews &&
+        (enquiries >= TOUR_TRENDING_POLICY.minimumEnquiries ||
+            bookings >= TOUR_TRENDING_POLICY.minimumBookings) &&
+        trendScore >= TOUR_TRENDING_POLICY.minimumTrendScore;
 
     return { views, enquiries, bookings, wishlists, popularityScore, trendScore, trending };
 };

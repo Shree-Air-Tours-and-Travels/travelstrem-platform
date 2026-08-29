@@ -2185,15 +2185,23 @@ export const previewTourCustomization = async (req, res) => {
             hotelOptionKey: String(req.body?.hotelOptionKey || "").slice(0, 100),
             roomOptionKey: String(req.body?.roomOptionKey || "").slice(0, 100),
             travellerCount: Number(req.body?.travellerCount),
+            selectedAddOnIds: Array.isArray(req.body?.addOnIds)
+                ? req.body.addOnIds.slice(0, 20).map((id) => String(id || "").slice(0, 100))
+                : [],
         });
         const selectedPackage = (tour.commercial?.packages || []).find(
-            (item) => item.enabled !== false && String(item.packageKey || item.tier) === String(req.body?.packageKey || ""),
+            (item) =>
+                item.enabled !== false &&
+                String(item.packageKey || item.tier) === String(req.body?.packageKey || ""),
         );
         const components = new Map(
-            (tour.commercial?.components || []).filter((item) => item.active !== false)
+            (tour.commercial?.components || [])
+                .filter((item) => item.active !== false)
                 .map((item) => [String(item.componentKey || ""), item]),
         );
-        const hasStructuredFlights = [...components.values()].some((item) => item.type === "FLIGHT");
+        const hasStructuredFlights = [...components.values()].some(
+            (item) => item.type === "FLIGHT",
+        );
         const includedFlightComponents = (selectedPackage?.includedComponentKeys || [])
             .map((key) => components.get(String(key)))
             .filter((item) => item?.type === "FLIGHT");
@@ -2202,7 +2210,9 @@ export const previewTourCustomization = async (req, res) => {
             : Boolean(tour.flights?.included);
         const requestedFlights = String(req.body?.flightPreference || "without_flights");
         if (includesFlights && requestedFlights !== "with_flights")
-            return res.status(400).json({ status: "error", message: "Flights are already included in this package" });
+            return res
+                .status(400)
+                .json({ status: "error", message: "Flights are already included in this package" });
         const addFlights = !includesFlights && requestedFlights === "with_flights";
         const responsePreview = {
             ...preview,
@@ -2211,13 +2221,28 @@ export const previewTourCustomization = async (req, res) => {
                 request: includesFlights ? "KEEP_INCLUDED" : addFlights ? "ADD" : "NONE",
                 names: includedFlightComponents.map((item) => item.name),
             },
-            ...(addFlights ? {
-                quoteMode: "CUSTOMIZED",
-                customized: { totalMinor: null, perPersonMinor: null, status: "PENDING_AGENT_QUOTE" },
-                requiresRepricing: true,
-            } : {}),
+            ...(addFlights
+                ? {
+                      quoteMode: "CUSTOMIZED",
+                      customized: {
+                          totalMinor: null,
+                          perPersonMinor: null,
+                          status: "PENDING_AGENT_QUOTE",
+                      },
+                      recommendedAlternative: null,
+                      alternatives: [],
+                      recommendationDecision: {
+                          code: "PRICE_CONFIRMATION_REQUIRED",
+                          message:
+                              "TREM Intelligence will not compare incomplete prices. Your selected package remains unchanged while flight pricing is confirmed.",
+                      },
+                      requiresRepricing: true,
+                  }
+                : {}),
         };
-        return res.status(200).json({ status: "success", component: { data: { preview: responsePreview } } });
+        return res
+            .status(200)
+            .json({ status: "success", component: { data: { preview: responsePreview } } });
     } catch (error) {
         return res.status(400).json({
             status: "error",
