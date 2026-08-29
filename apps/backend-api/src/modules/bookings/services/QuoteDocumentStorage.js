@@ -7,9 +7,9 @@ import DocumentStorageService from "../../../services/r2/DocumentStorageService.
 export const quoteUploadDirectory = path.resolve("uploads", "quotes");
 export const privateQuoteUploadDirectory = path.resolve("private-uploads", "quotes");
 
-export async function latestQuoteDocument(bookingId, quoteVersion = null) {
+export async function latestQuoteDocument(resourceId, quoteVersion = null) {
     return BookingDocument.findOne({
-        bookingId,
+        $or: [{ bookingId: resourceId }, { enquiryId: resourceId }],
         type: DOCUMENT_TYPE.QUOTE,
         ...(quoteVersion == null ? {} : { quoteVersion: Number(quoteVersion) }),
     }).sort({ quoteVersion: -1, uploadedAt: -1 });

@@ -26,10 +26,11 @@ export async function getQuotePdfSignedUrl(req, res) {
         if (!quote) return sendError(res, "Quote not found", 404);
         if (!canAccessQuote(req, quote))
             return sendError(res, "Not authorized to download this quote", 403);
-        if (!quote.bookingId || quote.version == null)
+        const documentOwnerId = quote.bookingId || quote.inquiryId;
+        if (!documentOwnerId || quote.version == null)
             return sendError(res, "The generated quote PDF is unavailable", 404);
 
-        const quoteDocument = await latestQuoteDocument(quote.bookingId, quote.version);
+        const quoteDocument = await latestQuoteDocument(documentOwnerId, quote.version);
         if (!quoteDocument?.storageKey && !quoteDocument?.url) {
             return sendError(res, "The generated quote PDF is unavailable", 404);
         }
@@ -67,7 +68,13 @@ export async function downloadQuotePdf(req, res) {
         if (!quote) return sendError(res, "Quote not found", 404);
         if (!canAccessQuote(req, quote))
             return sendError(res, "Not authorized to download this quote", 403);
-        const document = await latestQuoteDocument(quote.bookingId, quote.version);
+        const documentOwnerId = quote.bookingId || quote.inquiryId;
+        if (!documentOwnerId || quote.version == null)
+            return sendError(res, "The generated quote PDF is unavailable", 404);
+        const document = await latestQuoteDocument(
+            documentOwnerId,
+            quote.version,
+        );
         const buffer = await readQuoteDocument(document);
         if (!buffer) return sendError(res, "The generated quote PDF is unavailable", 404);
         res.setHeader("Content-Type", "application/pdf");

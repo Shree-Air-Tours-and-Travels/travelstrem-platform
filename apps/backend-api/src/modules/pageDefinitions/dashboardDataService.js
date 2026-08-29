@@ -4,9 +4,8 @@ import BookingQuote from "../bookings/models/BookingQuote.js";
 import { enquiryView } from "../forms/mappers/enquiryView.js";
 
 // Builds the user-specific payload injected into the app-shell dashboard
-// page (metrics + recent bookings & enquiries). Enquiries are the
-// customer-facing booking pipeline today, so those sections derive from
-// ContactLeads that belong to the viewer.
+// page (metrics + recent bookings & enquiries). ContactLeads remain the
+// customer-owned source records; accepted enquiries link to Booking records.
 //
 // NOTE: upcomingTrips intentionally stays EMPTY. A trip only becomes
 // "upcoming" after the traveller accepts a quote AND completes payment —
@@ -36,9 +35,16 @@ const activityFromLead = (lead) => {
     };
 };
 
-const quoteActivities = (quotes, leadsByBookingId) =>
+const quoteActivities = (quotes, leadsById) =>
     quotes.flatMap((quote) => {
-        const lead = leadsByBookingId.get(String(quote?.bookingId || ""));
+        const lead = leadsById.get(
+            String(
+                quote?.inquiryId ||
+                    (quote?.contextType === "ENQUIRY" ? quote.contextId : "") ||
+                    quote?.bookingId ||
+                    "",
+            ),
+        );
         if (!lead) return [];
         const base = enquiryView(lead, "sent");
         const events = [];
@@ -111,19 +117,32 @@ export const buildDashboardSnapshot = async (userId) => {
                     .lean())(),
         ]);
 
+        const leadIds = recentLeads.map((lead) => lead?._id).filter(Boolean);
         const bookingIds = recentLeads.map((lead) => lead?.bookingId).filter(Boolean);
-        const recentQuotes = bookingIds.length
-            ? await BookingQuote.find({ bookingId: { $in: bookingIds } })
+        const recentQuotes = leadIds.length
+            ? await BookingQuote.find({
+                  $or: [
+                      { inquiryId: { $in: leadIds } },
+                      { bookingId: { $in: [...leadIds, ...bookingIds] } },
+                      {
+                          contextType: "ENQUIRY",
+                          contextId: { $in: leadIds.map(String) },
+                      },
+                  ],
+              })
                   .sort({ updatedAt: -1 })
                   .limit(RECENT_LIMIT * 2)
                   .lean()
             : [];
-        const leadsByBookingId = new Map(
-            recentLeads.filter((lead) => lead?.bookingId).map((lead) => [String(lead.bookingId), lead]),
+        const leadsById = new Map(
+            recentLeads.flatMap((lead) => [
+                [String(lead._id), lead],
+                ...(lead.bookingId ? [[String(lead.bookingId), lead]] : []),
+            ]),
         );
         const recentActivity = [
             ...recentLeads.map(activityFromLead),
-            ...quoteActivities(recentQuotes, leadsByBookingId),
+            ...quoteActivities(recentQuotes, leadsById),
         ]
             .sort(
                 (left, right) =>

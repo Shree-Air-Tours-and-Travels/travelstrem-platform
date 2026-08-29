@@ -59,6 +59,8 @@ export const enquiryDto = (lead = {}) => ({
 
 export const bookingQuoteDto = (quote = {}) => ({
     quoteId: idOf(quote),
+    enquiryId: idOf(quote.inquiryId),
+    bookingId: idOf(quote.bookingId),
     quoteNumber: quote.quoteNumber || null,
     userId: idOf(quote.userId),
     agencyId: idOf(quote.agencyId),

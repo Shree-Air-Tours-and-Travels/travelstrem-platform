@@ -14,6 +14,8 @@ import { resolveCustomTourAssignment } from "../services/customTourAssignment.se
 import { enquiryCenterView, enquiryView, formatDate } from "../mappers/enquiryView.js";
 import FinancialEngine from "../../../core/financial-engine/index.js";
 import BookingQuote from "../../bookings/models/BookingQuote.js";
+import Booking from "../../bookings/models/Booking.js";
+import { bookingView } from "../../bookings/mappers/bookingView.js";
 import { getPortalScope } from "../../../core/auth/portalSession.js";
 import {
     REALTIME_EVENTS,
@@ -1070,7 +1072,18 @@ export const claimEnquiry = async (req, res) => {
         lead.claimedBy = userId;
         await lead.save();
         await BookingQuote.updateMany(
-            { bookingId: lead._id, $or: [{ userId: null }, { userId: { $exists: false } }] },
+            {
+                $and: [
+                    {
+                        $or: [
+                            { inquiryId: lead._id },
+                            { bookingId: lead._id },
+                            { contextType: "ENQUIRY", contextId: String(lead._id) },
+                        ],
+                    },
+                    { $or: [{ userId: null }, { userId: { $exists: false } }] },
+                ],
+            },
             { $set: { userId } },
         );
         await syncAgencyCustomerFromLead(lead).catch((error) =>
@@ -1140,17 +1153,33 @@ export const getLeads = async (req, res) => {
             .sort({ createdAt: -1 })
             .limit(200)
             .lean();
+        const bookings = leads.length
+            ? await Booking.find({ sourceEnquiryId: { $in: leads.map((lead) => lead._id) } })
+                  .sort({ createdAt: -1 })
+                  .lean()
+            : [];
+        const bookingsByEnquiryId = new Map(
+            bookings.map((booking) => [String(booking.sourceEnquiryId), booking]),
+        );
+        const records = leads
+            .map((lead) => {
+                const booking = bookingsByEnquiryId.get(String(lead._id));
+                return booking
+                    ? bookingView(booking, lead, access.perspective, { summaryOnly: true })
+                    : enquiryView(lead, access.perspective, { summaryOnly: true });
+            })
+            .sort(
+                (left, right) =>
+                    new Date(right.createdAt || 0).getTime() -
+                    new Date(left.createdAt || 0).getTime(),
+            );
         return sendJson(res, 200, {
             status: "success",
             message: "Leads fetched",
             componentData: {
                 ...enquiryCenterView(access.perspective),
                 perspective: access.perspective,
-                data: leads.map((lead) =>
-                    enquiryView(lead, access.perspective, {
-                        summaryOnly: true,
-                    }),
-                ),
+                data: records,
             },
         });
     } catch (err) {
@@ -1171,22 +1200,44 @@ export const getEnquiry = async (req, res) => {
     try {
         const access = await enquiryAccess(req);
         const identifier = String(req.params?.id || "").trim();
-        if (!/^ENQ-/i.test(identifier) && !Tour.db.base.Types.ObjectId.isValid(identifier)) {
-            return sendJson(res, 400, { status: "error", message: "Enter a valid enquiry ID." });
+        const isEnquiryRef = /^ENQ-/i.test(identifier);
+        const isBookingRef = /^BKG-/i.test(identifier);
+        const isObjectId = Tour.db.base.Types.ObjectId.isValid(identifier);
+        if (!isEnquiryRef && !isBookingRef && !isObjectId) {
+            return sendJson(res, 400, {
+                status: "error",
+                message: "Enter a valid enquiry or booking ID.",
+            });
         }
-        const identityQuery = /^ENQ-/i.test(identifier)
-            ? { enquiryRef: identifier.toUpperCase() }
-            : { _id: identifier };
+        let booking = isBookingRef
+            ? await Booking.findOne({ bookingRef: identifier.toUpperCase() }).lean()
+            : isObjectId
+              ? await Booking.findById(identifier).lean()
+              : null;
+        if (isBookingRef && !booking)
+            return sendJson(res, 404, { status: "error", message: "Booking not found." });
+        const identityQuery = booking
+            ? { _id: booking.sourceEnquiryId }
+            : isEnquiryRef
+              ? { enquiryRef: identifier.toUpperCase() }
+              : { _id: identifier };
         const lead = await ContactLeadRepository.findOne({
             ...access.query,
             ...identityQuery,
         }).lean();
-        if (!lead) return sendJson(res, 404, { status: "error", message: "Enquiry not found." });
+        if (!lead)
+            return sendJson(res, 404, {
+                status: "error",
+                message: booking ? "Booking not found." : "Enquiry not found.",
+            });
+        if (!booking && lead.bookingId) booking = await Booking.findById(lead.bookingId).lean();
         return sendJson(res, 200, {
             status: "success",
-            message: "Enquiry fetched",
+            message: booking ? "Booking fetched" : "Enquiry fetched",
             componentData: {
-                data: enquiryView(lead, access.perspective),
+                data: booking
+                    ? bookingView(booking, lead, access.perspective)
+                    : enquiryView(lead, access.perspective),
                 view: enquiryCenterView(access.perspective),
             },
         });

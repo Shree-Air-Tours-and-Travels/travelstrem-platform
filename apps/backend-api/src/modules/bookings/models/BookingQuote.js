@@ -179,6 +179,17 @@ bookingQuoteSchema.index(
     },
 );
 bookingQuoteSchema.index(
+    { inquiryId: 1, version: 1 },
+    {
+        name: "inquiryId_1_version_1",
+        unique: true,
+        partialFilterExpression: {
+            inquiryId: { $type: "objectId" },
+            version: { $type: "number" },
+        },
+    },
+);
+bookingQuoteSchema.index(
     { quoteNumber: 1 },
     {
         name: "quoteNumber_1",

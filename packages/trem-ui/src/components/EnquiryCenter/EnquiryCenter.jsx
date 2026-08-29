@@ -86,7 +86,7 @@ export default function EnquiryCenter({
         aria-labelledby="enquiry-detail-title"
       >
         <div className="trem-enquiries__toolbar">
-          <StatusBadge value={selected.statusLabel || selected.status} />
+          <StatusBadge value={selected.statusLabel || selected.status} tone={selected.statusTone} />
         </div>
         <header className="trem-enquiries__hero">
           <div>
@@ -95,7 +95,11 @@ export default function EnquiryCenter({
             </span>
             <h1 id="enquiry-detail-title">{selected.service.name}</h1>
             <p>
-              {selected.reference} · {selected.createdDisplay}
+              {selected.reference}
+              {selected.sourceEnquiryRef
+                ? ` · ${labels.enquiry || "Enquiry"} ${selected.sourceEnquiryRef}`
+                : ""}{" "}
+              · {selected.createdDisplay}
             </p>
           </div>
           {renderDetailActions?.(selected)}

@@ -7,8 +7,8 @@ import BookingEnquiryCenter from "./BookingEnquiryCenter.jsx";
 
 export default function UserJourney({ journeyType = "" }) {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { enquiries, view, loading, error, load } = useEnquiryBookings(journeyType);
-  const selectedId = searchParams.get("enquiry") || "";
+  const { enquiries, bookings, view, loading, error, load } = useEnquiryBookings(journeyType);
+  const selectedId = searchParams.get("booking") || searchParams.get("enquiry") || "";
   const [enquiryRef, setEnquiryRef] = useState("");
   const [claimState, setClaimState] = useState({ saving: false, message: "", error: false });
 
@@ -33,7 +33,13 @@ export default function UserJourney({ journeyType = "" }) {
   const selectEnquiry = (item) => {
     const next = new URLSearchParams(searchParams);
     next.set("tab", "bookings");
-    next.set("enquiry", item.reference || item.enquiryRef || item.id);
+    if (item.recordType === "booking") {
+      next.set("booking", item.reference || item.bookingRef || item.id);
+      next.delete("enquiry");
+    } else {
+      next.set("enquiry", item.reference || item.enquiryRef || item.id);
+      next.delete("booking");
+    }
     setSearchParams(next);
   };
 
@@ -69,6 +75,7 @@ export default function UserJourney({ journeyType = "" }) {
         description={view.description}
         view={view}
         enquiries={enquiries}
+        bookings={bookings}
         selectedId={selectedId}
         loading={loading}
         error={error}

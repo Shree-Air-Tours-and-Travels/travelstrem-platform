@@ -36,6 +36,7 @@ export const DocumentService = {
 
     async uploadQuoteToR2({
         bookingId,
+        enquiryId,
         agencyId,
         version,
         buffer,
@@ -44,13 +45,15 @@ export const DocumentService = {
         currency,
         actor,
     }) {
-        const key = generateQuoteDocumentKey({ agencyId, bookingId, version });
+        const ownerId = bookingId || enquiryId;
+        const key = generateQuoteDocumentKey({ agencyId, bookingId: ownerId, version });
         const result = await DocumentStorageService.upload({
             key,
             body: buffer,
             contentType: "application/pdf",
             metadata: {
-                bookingId: String(bookingId),
+                bookingId: bookingId ? String(bookingId) : "",
+                enquiryId: enquiryId ? String(enquiryId) : "",
                 version: String(version),
                 quoteAmount: String(quoteAmount),
             },
@@ -59,6 +62,7 @@ export const DocumentService = {
         const [document] = await BookingDocument.create([
             {
                 bookingId,
+                enquiryId,
                 type: DOCUMENT_TYPE.QUOTE,
                 fileName: fileName || `quote-v${version}.pdf`,
                 url: "",
@@ -94,11 +98,13 @@ export const DocumentService = {
             }
         }
         await fs.mkdir(privateQuoteUploadDirectory, { recursive: true });
-        const safeName = `quote-${String(payload.bookingId)}-v${Number(payload.version) || 1}.pdf`;
+        const ownerId = payload.bookingId || payload.enquiryId;
+        const safeName = `quote-${String(ownerId)}-v${Number(payload.version) || 1}.pdf`;
         await fs.writeFile(path.join(privateQuoteUploadDirectory, safeName), payload.buffer);
         const [document] = await BookingDocument.create([
             {
                 bookingId: payload.bookingId,
+                enquiryId: payload.enquiryId,
                 type: DOCUMENT_TYPE.QUOTE,
                 fileName: payload.fileName || safeName,
                 url: safeName,
@@ -120,8 +126,11 @@ export const DocumentService = {
         return BookingDocument.find({ bookingId }).sort({ uploadedAt: -1 });
     },
 
-    latest(bookingId, type) {
-        return BookingDocument.findOne({ bookingId, ...(type ? { type } : {}) }).sort({
+    latest(resourceId, type) {
+        return BookingDocument.findOne({
+            $or: [{ bookingId: resourceId }, { enquiryId: resourceId }],
+            ...(type ? { type } : {}),
+        }).sort({
             uploadedAt: -1,
         });
     },

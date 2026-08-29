@@ -21,7 +21,7 @@ const baseStructure = (booking) => ({
 });
 
 const quoteWorkspace = (booking) => ({
-  data: { bookingId: booking.id, enquiryId: booking.id },
+  data: { bookingId: booking.id, enquiryId: booking.enquiryId || booking.id },
   labels: baseLabels(booking),
   structure: {
     ...baseStructure(booking),
@@ -31,7 +31,7 @@ const quoteWorkspace = (booking) => ({
     ],
     component: {
       type: "quote-builder",
-      enquiryId: booking.id,
+      enquiryId: booking.enquiryId || booking.id,
     },
   },
 });
@@ -112,7 +112,7 @@ const customerJourney = (booking, quote, requestedStep = "") => {
   return {
   data: {
     bookingId: booking.id,
-    enquiryId: booking.id,
+    enquiryId: booking.enquiryId || booking.id,
     ...(activeStepId === "enquiry" && booking.record ? { record: booking.record } : {}),
     ...(activeStepId === "quote" && quote ? { quote } : {}),
     ...(travellerForm ? { travellerForm } : {}),

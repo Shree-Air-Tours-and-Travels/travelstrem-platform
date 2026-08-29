@@ -26,6 +26,31 @@ router.get(
 router.get("/enquiries/:enquiryId/quote-builder", authMiddleware, handlers.load);
 router.patch("/enquiries/:enquiryId/quote-builder", authMiddleware, handlers.transition);
 router.post("/enquiries/:enquiryId/quote-builder/calculate", authMiddleware, handlers.preview);
+router.post(
+    "/enquiries/:enquiryId/quote-builder/preview-document",
+    authMiddleware,
+    async (req, res) => {
+        try {
+            const preview = await quoteBuilderService.previewDocument(
+                req.params.enquiryId,
+                req.user,
+                req.body,
+            );
+            res.setHeader("Content-Type", "application/pdf");
+            res.setHeader(
+                "Content-Disposition",
+                `inline; filename="${preview.fileName.replaceAll('"', "")}"`,
+            );
+            res.setHeader("Cache-Control", "no-store, private");
+            return res.send(preview.buffer);
+        } catch (error) {
+            return res.status(error?.status || 500).json({
+                status: "error",
+                message: error?.message || "The quotation preview could not be generated.",
+            });
+        }
+    },
+);
 router.post("/enquiries/:enquiryId/quote-builder/send", authMiddleware, handlers.send);
 router.post("/enquiries/:enquiryId/quotes/:quoteId/decision", authMiddleware, async (req, res) => {
     try {
@@ -36,14 +61,19 @@ router.post("/enquiries/:enquiryId/quotes/:quoteId/decision", authMiddleware, as
             action: req.body?.action,
             notes: req.body?.notes,
         });
+        const bookingCreated = String(req.body?.action || "").toUpperCase() === "ACCEPT";
         return res.status(200).json({
             status: "success",
-            message: "Your quote response has been saved.",
+            message: bookingCreated
+                ? `Booking ${result.booking.bookingRef} has been created from your accepted quotation.`
+                : "Your quote response has been saved.",
             componentData: {
                 data: {
                     quoteId: String(result.quote._id),
                     quoteStatus: result.quote.status,
                     enquiryStatus: result.enquiry.status,
+                    bookingId: result.booking ? String(result.booking._id) : null,
+                    bookingRef: result.booking?.bookingRef || null,
                 },
             },
         });

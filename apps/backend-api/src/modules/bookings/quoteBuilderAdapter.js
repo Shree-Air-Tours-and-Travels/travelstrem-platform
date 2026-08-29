@@ -1,5 +1,7 @@
 import User from "../auth/models/User.js";
+import PartnerAgency from "../auth/models/PartnerAgency.js";
 import ContactLead from "../forms/models/ContactLead.js";
+import Booking from "./models/Booking.js";
 import BookingQuote from "./models/BookingQuote.js";
 import Tour from "../tours/models/Tour.js";
 import { DOCUMENT_TYPE } from "../../constants/enums.js";
@@ -8,14 +10,36 @@ import { minorToDecimal } from "../../core/financial-engine/utils/money.js";
 import { buildServerQuoteDocumentModel } from "@packages/trem-docengine/server";
 import { generateQuoteDocumentPdf, pdfDocumentToBuffer } from "../../services/pdfService.js";
 import DocumentService from "./services/DocumentService.js";
+import { readQuoteDocument } from "./services/QuoteDocumentStorage.js";
 import { createQuoteBuilderService, resolveCustomerQuoteDecision, validateTravellerDetails } from "../../../../booking-engine/server/index.mjs";
 import { generateQuoteNarrative } from "../../core/trem-intelligence/quoteNarrative.service.js";
 import { sendTransactionalEmail } from "../../services/email.service.js";
-import { bookingQuoteDto, publishFanOut, REALTIME_EVENTS } from "../../realtime/index.js";
+import {
+    bookingQuoteDto,
+    enquiryDto,
+    publishFanOut,
+    REALTIME_EVENTS,
+} from "../../realtime/index.js";
 import { enquiryView } from "../forms/mappers/enquiryView.js";
+import { bookingView } from "./mappers/bookingView.js";
+import {
+    ensureBookingFromAcceptedQuote,
+    linkEnquiryArtifactsToBooking,
+} from "./services/EnquiryBookingConversionService.js";
+import { BOOKING_STATUS } from "../../constants/enums.js";
 
 const operatorRoles = new Set(["agent", "admin", "super_admin"]);
 const actorId = (actor) => actor?.sub || actor?.id || actor?._id;
+const bookingIdentity = (value) => {
+    const normalized = String(value || "").trim();
+    if (/^BKG-/i.test(normalized)) return { bookingRef: normalized.toUpperCase() };
+    return Booking.db.base.Types.ObjectId.isValid(normalized) ? { _id: normalized } : null;
+};
+
+const findBookingRecord = async (resourceId) => {
+    const identity = bookingIdentity(resourceId);
+    return identity ? Booking.findOne(identity) : null;
+};
 const escapeHtml = (value) => String(value ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
@@ -30,7 +54,8 @@ async function findAuthorizedEnquiry(enquiryId, actor) {
         throw Object.assign(new Error("Only agents and administrators can build quotes."), {
             status: 403,
         });
-    const query = { _id: enquiryId };
+    const booking = await findBookingRecord(enquiryId);
+    const query = { _id: booking?.sourceEnquiryId || enquiryId };
     const master = role === "super_admin" || (role === "admin" && actor?.adminLevel === "master");
     if (!master) {
         const viewer = await User.findById(userId).select("agencyId agencyRole").lean();
@@ -51,9 +76,11 @@ export async function findAuthorizedBookingJourney(enquiryId, actor) {
         });
     const role = String(actor?.role || "member").toLowerCase();
     const isOperator = operatorRoles.has(role);
+    const booking = await findBookingRecord(enquiryId);
+    const sourceEnquiryId = booking?.sourceEnquiryId || enquiryId;
     const enquiryDocument = isOperator
-        ? await findAuthorizedEnquiry(enquiryId, actor)
-        : await ContactLead.findOne({ _id: enquiryId, claimedBy: userId });
+        ? await findAuthorizedEnquiry(sourceEnquiryId, actor)
+        : await ContactLead.findOne({ _id: sourceEnquiryId, claimedBy: userId });
     if (!enquiryDocument)
         throw Object.assign(new Error("Enquiry not found."), { status: 404 });
     const enquiry = enquiryDocument.toObject();
@@ -63,22 +90,28 @@ export async function findAuthorizedBookingJourney(enquiryId, actor) {
         Number(enquiry.fields?.travellerCount || enquiry.customizationSnapshot?.travellers || 1),
     );
     return {
-        id: String(enquiry._id),
-        reference: enquiry.enquiryRef || "Enquiry",
-        title: enquiry.tourTitle || "Tour enquiry",
-        status: enquiry.status || "new",
+        id: String(booking?._id || enquiry._id),
+        enquiryId: String(enquiry._id),
+        reference: booking?.bookingRef || enquiry.enquiryRef || "Enquiry",
+        title: booking?.tourTitle || enquiry.tourTitle || "Tour enquiry",
+        status: booking?.status || enquiry.status || "new",
         travellerCount,
         requiresPassport:
             enquiry.fields?.flightPreference === "with_flights" ||
             enquiry.customizationSnapshot?.flightRequest === "ADD",
-        travellerDetails: enquiry.travellerDetails || null,
-        record: enquiryView(enquiry, perspective),
+        travellerDetails: booking?.travellerDetails || enquiry.travellerDetails || null,
+        record: booking
+            ? bookingView(booking.toObject(), enquiry, perspective)
+            : enquiryView(enquiry, perspective),
     };
 }
 
-export async function findCurrentBookingJourneyQuote(enquiryId) {
+export async function findCurrentBookingJourneyQuote(resourceId) {
+    const booking = await findBookingRecord(resourceId);
+    const enquiryId = booking?.sourceEnquiryId || resourceId;
     const quote = await BookingQuote.findOne({
         $or: [
+            ...(booking ? [{ _id: booking.acceptedQuoteId }, { bookingId: booking._id }] : []),
             { inquiryId: enquiryId },
             { bookingId: enquiryId },
             { contextType: "ENQUIRY", contextId: String(enquiryId) },
@@ -479,20 +512,103 @@ const quoteSnapshots = (context, data) => {
     };
 };
 
+async function loadQuoteProvider(enquiry) {
+    const [ownerAgent, agency] = await Promise.all([
+        enquiry.ownerAgent
+            ? User.findById(enquiry.ownerAgent).select("name designation email phone mobile").lean()
+            : null,
+        enquiry.agencyId
+            ? PartnerAgency.findById(enquiry.agencyId)
+                  .select(
+                      "agencyName legalName partnerAgencyRef contactName contactEmail contactPhone website address",
+                  )
+                  .lean()
+            : null,
+    ]);
+    const agentSnapshot = enquiry.agentSnapshot || {};
+    return {
+        agent: {
+            name: agentSnapshot.name || ownerAgent?.name || "Your travel specialist",
+            designation: ownerAgent?.designation || "Travel specialist",
+            email: agentSnapshot.email || ownerAgent?.email || "",
+            phone:
+                agentSnapshot.phone || ownerAgent?.phone || ownerAgent?.mobile || "",
+        },
+        agency: agency
+            ? {
+                  name: agency.agencyName || agency.legalName || "",
+                  reference: agency.partnerAgencyRef || "",
+                  contactName: agency.contactName || "",
+                  email: agency.contactEmail || "",
+                  phone: agency.contactPhone || "",
+                  website: agency.website || "",
+                  address: [
+                      agency.address?.line1,
+                      agency.address?.line2,
+                      agency.address?.city,
+                      agency.address?.state,
+                      agency.address?.postalCode,
+                      agency.address?.country,
+                  ]
+                      .filter(Boolean)
+                      .join(", "),
+              }
+            : null,
+    };
+}
+
+async function previewQuoteDocument({ enquiry, context, data, input, calculation }) {
+    const latest = await BookingQuote.findOne({
+        $or: [
+            { inquiryId: enquiry._id },
+            { contextType: "ENQUIRY", contextId: String(enquiry._id) },
+        ],
+    })
+        .sort({ version: -1 })
+        .select("version")
+        .lean();
+    const version = Number(latest?.version || 0) + 1;
+    const quoteRef = `${enquiry.enquiryRef}-Q${version}`;
+    const model = buildServerQuoteDocumentModel({
+        enquiry: enquiry.toObject(),
+        data,
+        pricing: calculation.pricing,
+        lines: input.lines,
+        quoteRef,
+        version,
+        snapshots: {
+            ...quoteSnapshots(context, data),
+            provider: await loadQuoteProvider(enquiry),
+        },
+    });
+    return {
+        buffer: await pdfDocumentToBuffer(generateQuoteDocumentPdf(model)),
+        fileName: `${quoteRef}-preview.pdf`,
+    };
+}
+
 async function finalizeQuote({ enquiry, actor, context, data, input, calculation, idempotencyKey }) {
     let quote = await BookingQuote.findOne({ idempotencyKey });
-    const existingQuote = Boolean(quote);
     let version;
     let quoteRef;
     let documentSnapshot;
     let pdfBuffer = null;
-    const snapshots = quoteSnapshots(context, data);
+    const snapshots = {
+        ...quoteSnapshots(context, data),
+        provider: await loadQuoteProvider(enquiry),
+    };
     if (quote) {
         version = quote.version;
         quoteRef = quote.quoteRef;
         documentSnapshot = quote.documentSnapshot;
     } else {
-        const latest = await BookingQuote.findOne({ bookingId: enquiry._id })
+        const latest = await BookingQuote.findOne({
+            $or: [
+                { inquiryId: enquiry._id },
+                { bookingId: enquiry._id },
+                { contextType: "ENQUIRY", contextId: String(enquiry._id) },
+            ],
+        })
             .sort({ version: -1 })
             .select("version")
             .lean();
@@ -515,7 +631,8 @@ async function finalizeQuote({ enquiry, actor, context, data, input, calculation
         const buffer = await pdfDocumentToBuffer(pdf);
         pdfBuffer = buffer;
         document = await DocumentService.uploadGeneratedQuote({
-            bookingId: enquiry._id,
+            bookingId: enquiry.bookingId || null,
+            enquiryId: enquiry._id,
             agencyId: enquiry.agencyId,
             version,
             buffer,
@@ -533,7 +650,7 @@ async function finalizeQuote({ enquiry, actor, context, data, input, calculation
             quoteType: "FINANCIAL",
             contextType: "ENQUIRY",
             contextId: String(enquiry._id),
-            bookingId: enquiry._id,
+            bookingId: enquiry.bookingId || null,
             inquiryId: enquiry._id,
             version,
             quoteRef,
@@ -578,14 +695,17 @@ async function finalizeQuote({ enquiry, actor, context, data, input, calculation
     await enquiry.save();
     let delivery = { emailStatus: "NOT_SENT", emailSentAt: null };
     const customerEmail = String(enquiry.fields?.email || "").trim();
-    if (!existingQuote && customerEmail && pdfBuffer) {
+    if (customerEmail) {
         try {
+            const attachment = pdfBuffer || (await readQuoteDocument(document));
+            if (!attachment)
+                throw new Error("The generated quotation PDF could not be read for delivery.");
             const mail = await sendTransactionalEmail({
                 to: customerEmail,
                 subject: `${quoteRef} · Your TravelsTREM quotation is ready`,
                 text: `Hello ${enquiry.fields?.name || "Traveller"},\n\nYour quotation ${quoteRef} for ${data.details.title} is ready. The PDF is attached. You can also review and respond from My Bookings.`,
                 html: `<div style="font-family:Arial,sans-serif;max-width:640px;margin:auto;color:#172033"><h2 style="color:#173b8f">Your quotation is ready</h2><p>Hello ${escapeHtml(enquiry.fields?.name || "Traveller")},</p><p>Your travel specialist has prepared <strong>${escapeHtml(data.details.title)}</strong>.</p><p>The quotation PDF is attached. Open <strong>My Bookings</strong> to accept, reject, request changes, or cancel.</p><p style="color:#667085">Reference: ${escapeHtml(quoteRef)}</p></div>`,
-                attachments: [{ filename: `${quoteRef}.pdf`, content: pdfBuffer, contentType: "application/pdf" }],
+                attachments: [{ filename: `${quoteRef}.pdf`, content: attachment, contentType: "application/pdf" }],
             });
             delivery = {
                 emailStatus: mail.success ? "SENT" : "FAILED",
@@ -595,20 +715,39 @@ async function finalizeQuote({ enquiry, actor, context, data, input, calculation
         } catch (error) {
             delivery = { emailStatus: "FAILED", emailSentAt: null, emailError: error?.message || "Email delivery failed." };
         }
+    } else {
+        delivery = {
+            emailStatus: "FAILED",
+            emailSentAt: null,
+            emailError: "The enquiry does not have a customer email address.",
+        };
     }
     try {
         const realtimeData = bookingQuoteDto(quote);
-        publishFanOut(
-            { userId: quote.userId || enquiry.claimedBy, agencyId: quote.agencyId || enquiry.agencyId },
-            REALTIME_EVENTS.BOOKING_QUOTE_UPDATED,
-            realtimeData,
-        );
-        if (!enquiry.agencyId && enquiry.ownerAgent)
-            publishFanOut(
-                { userId: enquiry.ownerAgent, includeAdmins: false },
-                REALTIME_EVENTS.BOOKING_QUOTE_UPDATED,
-                realtimeData,
-            );
+        const enquiryRealtimeData = enquiryDto(enquiry);
+        const audience = {
+            userId: enquiry.claimedBy || quote.userId,
+            agencyId: enquiry.agencyId || quote.agencyId,
+        };
+        await Promise.all([
+            publishFanOut(audience, REALTIME_EVENTS.BOOKING_QUOTE_UPDATED, realtimeData),
+            publishFanOut(audience, REALTIME_EVENTS.ENQUIRY_UPDATED, enquiryRealtimeData),
+        ]);
+        if (!enquiry.agencyId && enquiry.ownerAgent) {
+            const ownerAudience = { userId: enquiry.ownerAgent, includeAdmins: false };
+            await Promise.all([
+                publishFanOut(
+                    ownerAudience,
+                    REALTIME_EVENTS.BOOKING_QUOTE_UPDATED,
+                    realtimeData,
+                ),
+                publishFanOut(
+                    ownerAudience,
+                    REALTIME_EVENTS.ENQUIRY_UPDATED,
+                    enquiryRealtimeData,
+                ),
+            ]);
+        }
     } catch (error) {
         console.error("[QuoteBuilder] quote delivery realtime publish failed:", error?.message || error);
     }
@@ -618,11 +757,18 @@ async function finalizeQuote({ enquiry, actor, context, data, input, calculation
 export async function updateCustomerQuoteDecision({ enquiryId, quoteId, actor, action, notes }) {
     const userId = actorId(actor);
     if (!userId) throw Object.assign(new Error("Please sign in to respond to this quote."), { status: 401 });
-    const enquiry = await ContactLead.findOne({ _id: enquiryId, claimedBy: userId });
+    let booking = await findBookingRecord(enquiryId);
+    const sourceEnquiryId = booking?.sourceEnquiryId || enquiryId;
+    const enquiry = await ContactLead.findOne({ _id: sourceEnquiryId, claimedBy: userId });
     if (!enquiry) throw Object.assign(new Error("Enquiry not found."), { status: 404 });
+    if (!booking && enquiry.bookingId) booking = await Booking.findById(enquiry.bookingId);
     const quote = await BookingQuote.findOne({
         _id: quoteId,
-        $or: [{ inquiryId: enquiry._id }, { bookingId: enquiry._id }, { contextType: "ENQUIRY", contextId: String(enquiry._id) }],
+        $or: [
+            { inquiryId: enquiry._id },
+            { bookingId: booking?._id || enquiry._id },
+            { contextType: "ENQUIRY", contextId: String(enquiry._id) },
+        ],
     });
     if (!quote) throw Object.assign(new Error("Quote not found."), { status: 404 });
     const decision = resolveCustomerQuoteDecision({
@@ -637,6 +783,10 @@ export async function updateCustomerQuoteDecision({ enquiryId, quoteId, actor, a
         quote.acceptedAt = now;
         quote.rejectedAt = null;
         quote.changeRequest = null;
+        booking = await ensureBookingFromAcceptedQuote(enquiry, quote);
+        quote.bookingId = booking._id;
+        quote.inquiryId = enquiry._id;
+        enquiry.bookingId = booking._id;
     } else if (decision.action === "REJECT") {
         quote.rejectedAt = now;
         quote.acceptedAt = null;
@@ -646,9 +796,11 @@ export async function updateCustomerQuoteDecision({ enquiryId, quoteId, actor, a
         quote.rejectedAt = null;
     } else if (decision.action === "CANCEL") {
         quote.cancelledAt = now;
+        if (booking) booking.status = BOOKING_STATUS.CANCELLED;
     }
     enquiry.status = decision.enquiryStatus;
-    await Promise.all([quote.save(), enquiry.save()]);
+    await Promise.all([quote.save(), enquiry.save(), ...(booking ? [booking.save()] : [])]);
+    if (booking) await linkEnquiryArtifactsToBooking(enquiry, booking);
     try {
         const realtimeData = bookingQuoteDto(quote);
         publishFanOut(
@@ -665,17 +817,24 @@ export async function updateCustomerQuoteDecision({ enquiryId, quoteId, actor, a
     } catch (error) {
         console.error("[QuoteBuilder] quote decision realtime publish failed:", error?.message || error);
     }
-    return { quote, enquiry };
+    return { quote, enquiry, booking };
 }
 
 export async function saveCustomerTravellerDetails({ enquiryId, actor, values }) {
     const userId = actorId(actor);
     if (!userId) throw Object.assign(new Error("Please sign in to add traveller details."), { status: 401 });
-    const enquiry = await ContactLead.findOne({ _id: enquiryId, claimedBy: userId });
+    let booking = await findBookingRecord(enquiryId);
+    const sourceEnquiryId = booking?.sourceEnquiryId || enquiryId;
+    const enquiry = await ContactLead.findOne({ _id: sourceEnquiryId, claimedBy: userId });
     if (!enquiry) throw Object.assign(new Error("Enquiry not found."), { status: 404 });
+    if (!booking && enquiry.bookingId) booking = await Booking.findById(enquiry.bookingId);
     const quote = await BookingQuote.findOne({
         status: "ACCEPTED",
-        $or: [{ inquiryId: enquiry._id }, { bookingId: enquiry._id }, { contextType: "ENQUIRY", contextId: String(enquiry._id) }],
+        $or: [
+            { inquiryId: enquiry._id },
+            { bookingId: booking?._id || enquiry._id },
+            { contextType: "ENQUIRY", contextId: String(enquiry._id) },
+        ],
     }).sort({ version: -1, createdAt: -1 });
     if (!quote) throw Object.assign(new Error("Accept the quotation before adding traveller details."), { status: 409 });
     const count = Math.max(1, Number(enquiry.fields?.travellerCount || enquiry.customizationSnapshot?.travellers || 1));
@@ -692,7 +851,11 @@ export async function saveCustomerTravellerDetails({ enquiryId, actor, values })
         updatedAt: new Date(),
     };
     enquiry.markModified("travellerDetails");
-    await enquiry.save();
+    if (booking) {
+        booking.travellerDetails = enquiry.travellerDetails;
+        booking.markModified("travellerDetails");
+    }
+    await Promise.all([enquiry.save(), ...(booking ? [booking.save()] : [])]);
     try {
         const realtimeData = bookingQuoteDto(quote);
         publishFanOut(
@@ -709,7 +872,7 @@ export async function saveCustomerTravellerDetails({ enquiryId, actor, values })
     } catch (error) {
         console.error("[QuoteBuilder] traveller details realtime publish failed:", error?.message || error);
     }
-    return { status: 200, errors: {}, enquiry };
+    return { status: 200, errors: {}, enquiry, booking };
 }
 
 export const quoteBuilderService = createQuoteBuilderService({
@@ -718,6 +881,7 @@ export const quoteBuilderService = createQuoteBuilderService({
     saveProcess,
     calculateQuote: (input) => FinancialEngine.calculateQuote(input),
     finalizeQuote,
+    previewQuoteDocument,
 });
 
 export default quoteBuilderService;

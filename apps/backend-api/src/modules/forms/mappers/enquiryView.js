@@ -71,8 +71,8 @@ export const enquiryCenterView = (perspective = "sent") => {
     return {
         title: isSent ? "My bookings & enquiries" : "Bookings & enquiries received",
         description: isSent
-            ? "Track every request you have sent and any booking confirmed for your account."
-            : "Review traveller requests and the bookings confirmed from them.",
+            ? "Track your travel requests and the bookings created from accepted quotations."
+            : "Review traveller requests and the bookings created from accepted quotations.",
         labels: {
             listEyebrow: "Tour support",
             totalSuffix: "total",
@@ -104,7 +104,7 @@ export const enquiryCenterView = (perspective = "sent") => {
         },
         table: {
             title: "All records",
-            description: "Search your enquiries and confirmed bookings.",
+            description: "Search your enquiries and bookings.",
             searchPlaceholder: "Search by reference, tour or contact",
             recordType: "Record type",
             allRecords: "All records",
@@ -125,7 +125,7 @@ export const enquiryCenterView = (perspective = "sent") => {
         states: {
             loadErrorTitle: "Bookings and enquiries could not be loaded",
             emptyTitle: "No bookings or enquiries yet",
-            emptyDescription: "Your submitted enquiries and confirmed bookings will appear here.",
+            emptyDescription: "Your submitted enquiries and accepted bookings will appear here.",
         },
     };
 };

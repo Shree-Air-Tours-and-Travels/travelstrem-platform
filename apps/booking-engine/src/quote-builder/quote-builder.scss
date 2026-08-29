@@ -154,6 +154,7 @@
   &__quotation-group > h3 { margin: 0; font-size: $font-size-lg; }
 
   &__final-card {
+    order: 99;
     border-color: color-mix(in srgb, var(--color-primary) 32%, var(--border));
     box-shadow: 0 $space-2 $space-6 color-mix(in srgb, var(--color-primary) 10%, transparent);
   }

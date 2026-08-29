@@ -139,7 +139,16 @@ export default function BookingEnquiryCenter(props) {
       setDecisionState({ saving: false, error: "" });
       showToast({ title: response.message, status: "success" });
       setJourneyState((current) => ({ ...current, revision: current.revision + 1 }));
-      props.onRetry?.();
+      await props.onRetry?.();
+      const convertedBooking = response.componentData?.data;
+      if (convertedBooking?.bookingId && convertedBooking?.bookingRef) {
+        props.onSelect?.({
+          id: convertedBooking.bookingId,
+          bookingRef: convertedBooking.bookingRef,
+          reference: convertedBooking.bookingRef,
+          recordType: "booking",
+        });
+      }
     } catch (error) {
       setDecisionState({ saving: false, error: error.message });
     }
@@ -254,7 +263,7 @@ export default function BookingEnquiryCenter(props) {
         ...quoteActions.map((action) => ({
           label: referencedLabel(journey, action.labelRef),
           variant: action.id === "ACCEPT" ? "primary" : action.id === "CANCEL" || action.id === "REJECT" ? "danger" : "outline",
-          align: action.id === "ACCEPT" ? "right" : "left",
+          align: "right",
           onClick: () => beginDecision(action.id, selected, quote),
         })),
         ...(String(quote.status).toUpperCase() === "ACCEPTED" ? [{ label: referencedLabel(journey, "addTravellers"), variant: "primary", align: "right", iconRight: "chevronRight", onClick: () => setActiveStepId("travellers") }] : []),

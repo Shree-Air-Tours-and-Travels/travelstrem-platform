@@ -115,7 +115,13 @@ const FloatingActionBar = React.memo(function FloatingActionBar({
         .reverse()
         .find((action) => action.variant === "solid" && action.color === "primary") ||
       right[0];
-    visible = [...left.slice(0, 1), ...(primaryRight ? [primaryRight] : [])];
+    const visibleRight =
+      right.length <= 2
+        ? right
+        : right.filter(
+            (action) => action === primaryRight || action === right.find((item) => item !== primaryRight),
+          );
+    visible = [...left.slice(0, 1), ...visibleRight];
   } else {
     const maxVisible = mobile ? Math.min(mobileVisible, eligible.length) : eligible.length;
     visible = eligible.slice(0, maxVisible);
