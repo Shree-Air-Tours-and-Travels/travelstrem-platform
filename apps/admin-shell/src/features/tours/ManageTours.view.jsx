@@ -18,6 +18,7 @@ import SupportDeskPage from "../support/SupportDeskPage";
 import InternalTeamPage from "../internalTeam/InternalTeamPage";
 import ManageClients from "../clients/ManageClients";
 import PricingConfigurationPage from "../pricing/PricingConfigurationPage";
+import TourTrackingPage from "../analytics/TourTrackingPage";
 import "./ManageTours.scss";
 
 export function ConfirmModal({
@@ -187,7 +188,7 @@ export default function ManageToursView({
         {
           id: "governance",
           title: "Governance",
-          items: byId(["internalTeam", "tenancy", "clients", "pricing"]),
+          items: byId(["internalTeam", "tenancy", "clients", "pricing", "tracking"]),
         },
         { id: "account", title: "Account", items: byId(["profile", "logout"]) },
       ].filter((section) => section.items.length),
@@ -380,6 +381,12 @@ export default function ManageToursView({
               saving={profileSaving}
               passwordSaving={passwordSaving}
               avatarSaving={avatarSaving}
+            />
+          )}
+          {tab === "tracking" && auth.adminLevel === "master" && (
+            <TourTrackingPage
+              analytics={dashboardDefinition?.data?.tourAnalytics}
+              onOpenTours={() => setTab("services")}
             />
           )}
           {tab === "tenancy" && auth.adminLevel === "master" && <TenancyManagement />}

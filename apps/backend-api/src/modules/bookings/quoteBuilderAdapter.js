@@ -12,6 +12,7 @@ import { createQuoteBuilderService, resolveCustomerQuoteDecision, validateTravel
 import { generateQuoteNarrative } from "../../core/trem-intelligence/quoteNarrative.service.js";
 import { sendTransactionalEmail } from "../../services/email.service.js";
 import { bookingQuoteDto, publishFanOut, REALTIME_EVENTS } from "../../realtime/index.js";
+import { enquiryView } from "../forms/mappers/enquiryView.js";
 
 const operatorRoles = new Set(["agent", "admin", "super_admin"]);
 const actorId = (actor) => actor?.sub || actor?.id || actor?._id;
@@ -40,6 +41,71 @@ async function findAuthorizedEnquiry(enquiryId, actor) {
     const enquiry = await ContactLead.findOne(query);
     if (!enquiry) throw Object.assign(new Error("Enquiry not found."), { status: 404 });
     return enquiry;
+}
+
+export async function findAuthorizedBookingJourney(enquiryId, actor) {
+    const userId = actorId(actor);
+    if (!userId)
+        throw Object.assign(new Error("Please sign in to view this booking journey."), {
+            status: 401,
+        });
+    const role = String(actor?.role || "member").toLowerCase();
+    const isOperator = operatorRoles.has(role);
+    const enquiryDocument = isOperator
+        ? await findAuthorizedEnquiry(enquiryId, actor)
+        : await ContactLead.findOne({ _id: enquiryId, claimedBy: userId });
+    if (!enquiryDocument)
+        throw Object.assign(new Error("Enquiry not found."), { status: 404 });
+    const enquiry = enquiryDocument.toObject();
+    const perspective = isOperator ? "received" : "sent";
+    const travellerCount = Math.max(
+        1,
+        Number(enquiry.fields?.travellerCount || enquiry.customizationSnapshot?.travellers || 1),
+    );
+    return {
+        id: String(enquiry._id),
+        reference: enquiry.enquiryRef || "Enquiry",
+        title: enquiry.tourTitle || "Tour enquiry",
+        status: enquiry.status || "new",
+        travellerCount,
+        requiresPassport:
+            enquiry.fields?.flightPreference === "with_flights" ||
+            enquiry.customizationSnapshot?.flightRequest === "ADD",
+        travellerDetails: enquiry.travellerDetails || null,
+        record: enquiryView(enquiry, perspective),
+    };
+}
+
+export async function findCurrentBookingJourneyQuote(enquiryId) {
+    const quote = await BookingQuote.findOne({
+        $or: [
+            { inquiryId: enquiryId },
+            { bookingId: enquiryId },
+            { contextType: "ENQUIRY", contextId: String(enquiryId) },
+        ],
+    })
+        .sort({ version: -1, createdAt: -1 })
+        .lean();
+    if (!quote) return null;
+    return {
+        id: String(quote._id),
+        quoteRef: quote.quoteRef || "",
+        version: quote.version,
+        status: quote.status,
+        expirationDate: quote.expirationDate || quote.validity || quote.expiresAt,
+        currency: quote.currency || "INR",
+        basePrice: quote.basePrice || 0,
+        platformFee: quote.platformFee || 0,
+        taxes: quote.taxes || 0,
+        finalAmount: quote.finalAmount || 0,
+        items: quote.items || [],
+        notes: quote.notes || "",
+        terms: quote.terms || "",
+        acceptedAt: quote.acceptedAt || null,
+        rejectedAt: quote.rejectedAt || null,
+        cancelledAt: quote.cancelledAt || null,
+        changeRequest: quote.changeRequest || null,
+    };
 }
 
 async function saveProcess(enquiry, process) {

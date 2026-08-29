@@ -9,13 +9,22 @@ export function createBookingJourneyHandler({ findAuthorizedBooking, findCurrent
       }
 
       const quote = await findCurrentQuote(booking.id);
+      const journeyBooking = {
+        ...booking,
+        requiresPassport:
+          booking.requiresPassport ||
+          quote?.items?.some(
+            (item) => String(item?.category || "").toUpperCase() === "FLIGHT",
+          ),
+      };
       return res.json({
         status: "success",
         componentData: presentBookingJourney({
-          booking,
+          booking: journeyBooking,
           quote,
           actor: req.user,
           pathname: String(req.query.path || "").split("?")[0],
+          step: String(req.query.step || "").toLowerCase(),
         }),
       });
     } catch (error) {

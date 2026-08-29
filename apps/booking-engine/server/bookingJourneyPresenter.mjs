@@ -38,7 +38,7 @@ const quoteWorkspace = (booking) => ({
 
 const operatorJourney = (booking) => {
   return {
-    data: { bookingId: booking.id },
+    data: { bookingId: booking.id, ...(booking.record ? { record: booking.record } : {}) },
     labels: {
       ...baseLabels(booking),
       operatorEyebrow: "Quote management",
@@ -67,7 +67,7 @@ const operatorJourney = (booking) => {
   };
 };
 
-const customerJourney = (booking, quote) => {
+const customerJourney = (booking, quote, requestedStep = "") => {
   const status = String(quote?.status || "").toUpperCase();
   const hasChangeRequest = Boolean(quote?.changeRequest?.requestedAt);
   const state = status === "CANCELLED" ? "cancelled"
@@ -98,16 +98,24 @@ const customerJourney = (booking, quote) => {
     { id: "travellers", labelRef: "travellerStep", descriptionRef: travellerSaved ? "travellerSavedDescription" : "travellerStepDescription", status: quoteAccepted ? "current" : "pending", disabled: !quoteAccepted },
     { id: "review", labelRef: "reviewStep", descriptionRef: "reviewStepDescription", status: "pending", disabled: true },
   ];
+  const requestedTimelineStep = timelineSteps.find((step) => step.id === requestedStep);
+  const activeStepId = requestedTimelineStep && !requestedTimelineStep.disabled
+    ? requestedTimelineStep.id
+    : currentStepId;
+  const travellerForm = activeStepId === "travellers" && quoteAccepted
+    ? buildTravellerDetailsForm({
+        count: booking.travellerCount,
+        requiresPassport: booking.requiresPassport,
+        saved: booking.travellerDetails,
+      })
+    : null;
   return {
   data: {
     bookingId: booking.id,
     enquiryId: booking.id,
-    quote,
-    travellerForm: quoteAccepted ? buildTravellerDetailsForm({
-      count: booking.travellerCount,
-      requiresPassport: booking.requiresPassport,
-      saved: booking.travellerDetails,
-    }) : null,
+    ...(activeStepId === "enquiry" && booking.record ? { record: booking.record } : {}),
+    ...(activeStepId === "quote" && quote ? { quote } : {}),
+    ...(travellerForm ? { travellerForm } : {}),
   },
   labels: {
     ...baseLabels(booking),
@@ -144,8 +152,8 @@ const customerJourney = (booking, quote) => {
     ...baseStructure(booking),
     header: { eyebrowRef: "customerEyebrow", titleRef: "customerTitle" },
     live: { resource: "booking", events: ["booking:quote-created", "booking:quote-updated"] },
-    timeline: { currentStepId, steps: timelineSteps },
-    actions: quote?.id
+    timeline: { currentStepId, activeStepId, steps: timelineSteps },
+    actions: activeStepId === "quote" && quote?.id
       ? [
           {
             id: "download-quote",
@@ -156,7 +164,7 @@ const customerJourney = (booking, quote) => {
           },
         ]
       : [],
-    blocks: [
+    blocks: activeStepId === "enquiry" || activeStepId === "quote" || activeStepId === "review" ? [
       {
             id: quote?.id ? "quote-state" : "quote-pending",
             type: "notice",
@@ -176,24 +184,24 @@ const customerJourney = (booking, quote) => {
               },
             },
           },
-      ...(quote?.id ? [{
+      ...(activeStepId === "quote" && quote?.id ? [{
         id: "quote",
         type: "quote",
         dataPath: "quote",
         actions: allowedCustomerQuoteActions(status, hasChangeRequest).map((id) => ({ id, labelRef: actionLabelRefs[id] })),
       }] : []),
-    ],
+    ] : [],
   },
 };
 };
 
-export function presentBookingJourney({ booking, quote = null, actor, pathname = "" }) {
+export function presentBookingJourney({ booking, quote = null, actor, pathname = "", step = "" }) {
   const role = String(actor?.role || "").toLowerCase();
   const isOperator = OPERATOR_ROLES.has(role);
 
   if (isOperator && pathname.endsWith("/quotebuilder")) return quoteWorkspace(booking);
   if (isOperator) return operatorJourney(booking);
-  return customerJourney(booking, quote);
+  return customerJourney(booking, quote, step);
 }
 
 export default presentBookingJourney;

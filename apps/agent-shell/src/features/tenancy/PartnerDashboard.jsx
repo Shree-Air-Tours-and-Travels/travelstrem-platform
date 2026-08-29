@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, Icon, MetricSummary, NoDataFound, Pagination, StatusBadge } from "@packages/trem-ui";
+import { Button, Icon, MetricSummary, NoDataFound, Pagination, StatusBadge, TourPerformance } from "@packages/trem-ui";
 import {
   REALTIME_EVENTS,
   useEnquiryRealtime,
@@ -127,6 +127,11 @@ export default function PartnerDashboard({
           trailingIcon: metric.target ? "arrowUpRight" : "",
           onClick: metric.target ? () => open(metric.target) : undefined,
         }))}
+      />
+
+      <TourPerformance
+        data={data.tourAnalytics}
+        onTourClick={() => open("/agent/services/tours")}
       />
 
       <div className="partner-dashboard__primary-grid">

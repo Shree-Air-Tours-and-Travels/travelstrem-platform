@@ -1,8 +1,8 @@
 import { fetchData } from "@packages/trem-utils";
 
-export const loadBookingJourney = (bookingId, pathname) =>
+export const loadBookingJourney = (bookingId, pathname, step = "") =>
   fetchData(`/booking-engine/bookings/${encodeURIComponent(bookingId)}/journey`, {
-    params: { path: pathname },
+    params: { path: pathname, ...(step ? { step } : {}) },
   });
 
 export const openQuoteDocument = async (href) => {

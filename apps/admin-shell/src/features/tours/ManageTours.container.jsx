@@ -29,6 +29,7 @@ const VALID_TABS = new Set([
   "support",
   "internalTeam",
   "services",
+  "tracking",
   "pricing",
   "tenancy",
   "clients",

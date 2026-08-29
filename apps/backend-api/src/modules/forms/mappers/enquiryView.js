@@ -35,7 +35,8 @@ const guidanceByStatus = {
     accepted: "You accepted this quotation. Your travel specialist can now continue the booking.",
     rejected: "You rejected this quotation. It remains available here for your records.",
     change_requested: "Your requested changes were sent to the travel specialist.",
-    cancelled: "You cancelled this booking request. Its quotation remains available for your records.",
+    cancelled:
+        "You cancelled this booking request. Its quotation remains available for your records.",
     responded:
         "A travel specialist has responded to your enquiry. Review the latest update and available options.",
     closed: "This enquiry has been completed. Its submitted details remain available for your records.",
@@ -129,7 +130,11 @@ export const enquiryCenterView = (perspective = "sent") => {
     };
 };
 
-export const enquiryView = (lead, perspective, { quote = null, includeBookingJourney = false } = {}) => {
+export const enquiryView = (
+    lead,
+    perspective,
+    { quote = null, includeBookingJourney = false, summaryOnly = false } = {},
+) => {
     const fields = lead?.fields || {};
     const isSent = perspective === "sent";
     const counterpart = isSent
@@ -222,11 +227,15 @@ export const enquiryView = (lead, perspective, { quote = null, includeBookingJou
                   reference: lead?.enquiryRef || "Enquiry",
                   title: lead?.tourTitle || "Tour enquiry",
                   status: lead?.status || "new",
-                  travellerCount: Number(fields.travellerCount || lead?.customizationSnapshot?.travellers || 1),
+                  travellerCount: Number(
+                      fields.travellerCount || lead?.customizationSnapshot?.travellers || 1,
+                  ),
                   requiresPassport:
                       fields.flightPreference === "with_flights" ||
                       lead?.customizationSnapshot?.flightRequest === "ADD" ||
-                      customerQuote?.items?.some((item) => String(item.category || "").toUpperCase() === "FLIGHT"),
+                      customerQuote?.items?.some(
+                          (item) => String(item.category || "").toUpperCase() === "FLIGHT",
+                      ),
                   travellerDetails: lead?.travellerDetails || null,
               },
               quote: customerQuote,
@@ -234,7 +243,14 @@ export const enquiryView = (lead, perspective, { quote = null, includeBookingJou
           })
         : null;
 
-    return {
+    const guidance =
+        (isSent ? guidanceByStatus : receivedGuidanceByStatus)[
+            String(lead?.status || "new").toLowerCase()
+        ] ||
+        (isSent
+            ? "Your enquiry details are saved here. Updates will appear as the request progresses."
+            : "The submitted enquiry details and future updates are available here.");
+    const summary = {
         id: String(lead?._id || ""),
         recordType: "enquiry",
         recordTypeLabel: "Enquiry",
@@ -243,17 +259,24 @@ export const enquiryView = (lead, perspective, { quote = null, includeBookingJou
         directionLabel: isSent ? "Enquiry sent" : "Enquiry received",
         status: lead?.status || "new",
         statusLabel: String(lead?.status || "new").replaceAll("_", " "),
-        guidance:
-            (isSent ? guidanceByStatus : receivedGuidanceByStatus)[
-                String(lead?.status || "new").toLowerCase()
-            ] ||
-            (isSent
-                ? "Your enquiry details are saved here. Updates will appear as the request progresses."
-                : "The submitted enquiry details and future updates are available here."),
         title: lead?.tourTitle || "General tour enquiry",
         product: lead?.product || "trevista",
         journeyType:
-            lead?.journeyType || (String(lead?.product || "").toLowerCase() === "trevio" ? "trip" : "tour"),
+            lead?.journeyType ||
+            (String(lead?.product || "").toLowerCase() === "trevio" ? "trip" : "tour"),
+        counterpart: { name: counterpart.name },
+        request: {
+            travellers: fields.travellerCount || "",
+            departure,
+        },
+        createdAt: lead?.createdAt,
+        createdLabel: formatDate(lead?.createdAt),
+    };
+    if (summaryOnly) return summary;
+
+    return {
+        ...summary,
+        guidance,
         assignmentRule: lead?.assignmentRule || "",
         tourId: lead?.tourId || null,
         counterpart,
@@ -287,6 +310,18 @@ export const enquiryView = (lead, perspective, { quote = null, includeBookingJou
                     .filter(Boolean)
                     .join(" · "),
             })),
+            addOns: (lead?.customizationSnapshot?.addOns || []).map((item) => ({
+                id: item.id,
+                label: item.title || "Optional add-on",
+                value: [
+                    item.description,
+                    item.totalMinor == null
+                        ? "Agent pricing required"
+                        : formatMoney(item.totalMinor, lead?.customizationSnapshot?.currency),
+                ]
+                    .filter(Boolean)
+                    .join(" · "),
+            })),
             customizationPreference: lead?.selection?.customizationPreference || "package",
             quoteMode: lead?.customizationSnapshot?.quoteMode || "PACKAGE",
             customizationAnswers: {
@@ -304,8 +339,6 @@ export const enquiryView = (lead, perspective, { quote = null, includeBookingJou
                   email: lead?.agentSnapshot?.email || "",
                   phone: lead?.agentSnapshot?.phone || "",
               },
-        createdAt: lead?.createdAt,
-        createdLabel: formatDate(lead?.createdAt),
         notified: Boolean(lead?.notified),
         ...(bookingJourney ? { bookingJourney } : {}),
     };
