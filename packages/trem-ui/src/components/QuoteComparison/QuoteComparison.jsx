@@ -236,6 +236,21 @@ export default function QuoteComparison({
             <Amount value={null} {...amountProps} />
           </div>
         ))}
+        {(preview.addOns || []).map((addOn) => (
+          <div key={`addon-${addOn.id}`}>
+            <span>
+              <small>{labels.optionalAddOn || "Optional add-on"}</small>
+              <strong>{addOn.title}</strong>
+            </span>
+            <Amount
+              value={{
+                totalMinor: addOn.totalMinor,
+                perPersonMinor: Math.round(addOn.totalMinor / Math.max(1, preview.travellers)),
+              }}
+              {...amountProps}
+            />
+          </div>
+        ))}
         <div className="trem-quote-comparison__final">
           <span>
             <small>{labels.yourPrice || "Your estimated price"}</small>
@@ -253,10 +268,12 @@ export default function QuoteComparison({
           <Icon name={saves ? "sparkles" : "info"} size={18} />
           <div>
             <strong>
-              {saves
-                ? labels.saveWithPackage || "You can save by switching packages"
-                : labels.comparePackage || "Compare with the package that includes this hotel"}
+              {alternative.recommendationTitle ||
+                (saves
+                  ? labels.saveWithPackage || "You can save by switching packages"
+                  : labels.comparePackage || "Compare with the package that includes this hotel")}
             </strong>
+            {alternative.recommendationReason ? <p>{alternative.recommendationReason}</p> : null}
             <p>
               {alternative.packageName}{" "}
               {labels.includesHotel || "recalculates all your selected stays"}.{" "}
@@ -298,6 +315,15 @@ export default function QuoteComparison({
                 )}
               </button>
             ) : null}
+          </div>
+        </div>
+      ) : null}
+      {!alternative && preview.recommendationDecision?.message ? (
+        <div className="trem-quote-comparison__recommendation">
+          <Icon name="shieldCheck" size={18} />
+          <div>
+            <strong>{labels.intelligenceTag || "TREM intelligence"}</strong>
+            <p>{preview.recommendationDecision.message}</p>
           </div>
         </div>
       ) : null}

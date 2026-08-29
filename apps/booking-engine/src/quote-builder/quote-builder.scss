@@ -1,7 +1,39 @@
 @import "@packages/trem-design-tokens/scss";
 
 .quote-builder {
-  min-height: 38rem;
+  --quote-builder-viewport-offset: 10.5rem;
+  display: flex;
+  flex-direction: column;
+  height: calc(100dvh - var(--quote-builder-viewport-offset));
+  min-height: min(38rem, calc(100dvh - #{$space-8}));
+  padding-bottom: 0;
+
+  > .wizard-shell__topbar {
+    flex: 0 0 auto;
+  }
+
+  > .wizard-shell__layout {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .wizard-shell__rail {
+    position: static;
+    align-self: stretch;
+    height: auto;
+    min-height: 0;
+    padding-bottom: $space-20 + $space-4;
+    overscroll-behavior: contain;
+  }
+
+  .wizard-shell__main {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-bottom: $space-20 + $space-12;
+    scrollbar-gutter: stable;
+  }
 
   &__loading,
   &__error {
@@ -172,6 +204,27 @@
       padding-top: $space-4;
       border-top: 1px solid var(--border);
       font-size: $font-size-lg;
+    }
+  }
+}
+
+@media (max-width: 860px) {
+  .quote-builder {
+    --quote-builder-viewport-offset: 0rem;
+    height: 100dvh;
+    min-height: 100dvh;
+
+    > .wizard-shell__layout {
+      overflow-y: auto;
+    }
+
+    .wizard-shell__rail,
+    .wizard-shell__main {
+      overflow: visible;
+    }
+
+    .wizard-shell__main {
+      padding-bottom: $space-20 + $space-12;
     }
   }
 }

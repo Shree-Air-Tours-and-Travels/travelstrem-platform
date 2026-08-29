@@ -39,6 +39,7 @@ export { default as TourCard } from "./components/TourCard/TourCard.jsx";
 export { default as TrevioTripCard } from "./components/TrevioTripCard/TrevioTripCard.jsx";
 export { default as InternationalTripCard } from "./components/InternationalTripCard/InternationalTripCard.jsx";
 export { default as MetricSummary } from "./components/MetricSummary/MetricSummary.jsx";
+export { default as TourPerformance } from "./components/TourPerformance/TourPerformance.jsx";
 export { default as InfoCard } from "./components/InfoCard/InfoCard.jsx";
 export { default as CardWithSubEntity } from "./components/CardWithSubEntity/CardWithSubEntity.jsx";
 export { default as QuoteDisplay } from "./components/QuoteDisplay/QuoteDisplay.jsx";

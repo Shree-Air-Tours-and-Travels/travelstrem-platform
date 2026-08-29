@@ -5,6 +5,7 @@ import Product from "../tenancy/models/Product.js";
 import Tour from "../tours/models/Tour.js";
 import Trip from "../trips/models/Trip.js";
 import SupportTicket from "../support/models/SupportTicket.js";
+import { buildTourAnalyticsSnapshot } from "../tours/services/tourAnalytics.service.js";
 
 const RECENT_LIMIT = 6;
 
@@ -25,6 +26,7 @@ const emptySnapshot = () => ({
         activeMembers: 0,
     },
     recentActivity: [],
+    tourAnalytics: null,
     generatedAt: new Date().toISOString(),
 });
 
@@ -153,6 +155,7 @@ export const buildAdminDashboardSnapshot = async () => {
             activeMembers,
             enabledProducts,
             recentActivity,
+            tourAnalytics,
         ] = await Promise.all([
             count(Tour),
             count(Tour, { status: "published" }),
@@ -184,6 +187,7 @@ export const buildAdminDashboardSnapshot = async () => {
                 .sort({ name: 1 })
                 .lean(),
             buildRecentActivity(),
+            buildTourAnalyticsSnapshot({ scope: "platform" }),
         ]);
 
         const enabledProductKeys = new Set(enabledProducts.map((product) => product.key));
@@ -278,6 +282,7 @@ export const buildAdminDashboardSnapshot = async () => {
                 totalEnquiries,
             },
             recentActivity: visibleActivity,
+            tourAnalytics,
             generatedAt: new Date().toISOString(),
         };
     } catch (error) {

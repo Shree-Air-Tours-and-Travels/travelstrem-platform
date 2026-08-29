@@ -323,6 +323,7 @@ export function buildPartnerDashboard({
                 variant: "secondary",
             },
         ],
+        tourAnalytics: records.tourAnalytics || null,
         recentActivity: activities,
         recentActivityPagination: {
             page: activityPage,

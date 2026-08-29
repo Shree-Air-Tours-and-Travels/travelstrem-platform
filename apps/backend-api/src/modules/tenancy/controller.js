@@ -13,6 +13,7 @@ import Notification from "./models/Notification.js";
 import Role from "./models/Role.js";
 import ProductAccessRequest from "./models/ProductAccessRequest.js";
 import Tour from "../tours/models/Tour.js";
+import { buildTourAnalyticsSnapshot } from "../tours/services/tourAnalytics.service.js";
 import Trip from "../trips/models/Trip.js";
 import RefreshToken from "../auth/models/RefreshToken.js";
 import ContactLead from "../forms/models/ContactLead.js";
@@ -2074,6 +2075,7 @@ export async function dashboard(req, res) {
             recentEnquiries,
             recentCustomers,
             recentSupportTickets,
+            tourAnalytics,
         ] = await Promise.all([
             User.countDocuments({ agencyId, agencyRole: "partner_agent", accountStatus: "active" }),
             User.countDocuments({
@@ -2143,6 +2145,10 @@ export async function dashboard(req, res) {
                 .limit(activityFetchLimit)
                 .select("reference subject status updatedAt createdAt")
                 .lean(),
+            buildTourAnalyticsSnapshot({
+                query: scopes.products,
+                scope: req.access.role === "partner_admin" ? "agency" : "agent",
+            }),
         ]);
         return ok(
             res,
@@ -2184,6 +2190,7 @@ export async function dashboard(req, res) {
                     enquiries: recentEnquiries,
                     customers: recentCustomers,
                     support: recentSupportTickets,
+                    tourAnalytics,
                 },
                 activityPagination: {
                     page: activityPage,

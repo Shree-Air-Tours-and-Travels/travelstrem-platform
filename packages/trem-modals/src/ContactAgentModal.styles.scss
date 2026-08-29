@@ -227,6 +227,85 @@
     margin-bottom: 0;
   }
 
+  &__review-panel {
+    display: grid;
+    gap: $space-4;
+
+    .ct-modal-card__stage-heading {
+      margin-bottom: 0;
+    }
+  }
+
+  &__addons {
+    display: grid;
+    gap: $space-3;
+    margin-top: $space-5;
+  }
+
+  &__addons-heading {
+    strong,
+    p {
+      margin: 0;
+    }
+
+    strong {
+      color: var(--heading);
+      font-size: $font-size-md;
+    }
+
+    p {
+      margin-top: $space-1;
+      color: var(--muted);
+      font-size: $font-size-xs;
+      line-height: $line-height-lg;
+    }
+  }
+
+  &__addon {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: $space-3;
+    padding: $space-4;
+    border: 1px solid var(--border);
+    border-radius: $radius-md;
+    background: var(--card-bg);
+    cursor: pointer;
+
+    &.is-selected {
+      border-color: var(--color-primary);
+      background: var(--primary-soft);
+    }
+
+    input {
+      width: $space-5;
+      height: $space-5;
+      accent-color: var(--color-primary);
+    }
+
+    span {
+      display: grid;
+      gap: $space-1;
+      min-width: 0;
+    }
+
+    strong,
+    b {
+      color: var(--heading);
+      font-size: $font-size-sm;
+    }
+
+    small {
+      color: var(--muted);
+      line-height: $line-height-md;
+    }
+
+    b {
+      color: var(--color-primary);
+      white-space: nowrap;
+    }
+  }
+
   &__custom-journey {
     display: flex;
     align-items: center;
@@ -370,6 +449,14 @@
 
       .ui-button {
         justify-content: flex-start;
+      }
+    }
+
+    &__addon {
+      grid-template-columns: auto minmax(0, 1fr);
+
+      b {
+        grid-column: 2;
       }
     }
 

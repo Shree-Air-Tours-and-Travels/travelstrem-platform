@@ -23,6 +23,39 @@ $loader-fade-duration: 0.45s;
     visibility 0s linear $loader-fade-duration;
   opacity: 1;
   visibility: visible;
+  overflow: hidden;
+
+  &::before,
+  &::after {
+    position: absolute;
+    width: min(46vw, 38rem);
+    height: min(46vw, 38rem);
+    border-radius: 50%;
+    content: "";
+    filter: blur(12px);
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  &::before {
+    top: -18rem;
+    right: -10rem;
+    background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--color-primary) 24%, transparent),
+      transparent 68%
+    );
+  }
+
+  &::after {
+    bottom: -20rem;
+    left: -12rem;
+    background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--color-accent, #7867e8) 20%, transparent),
+      transparent 68%
+    );
+  }
 
   &--hiding {
     opacity: 0;
@@ -36,25 +69,182 @@ $loader-fade-duration: 0.45s;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 1.25rem 1.5rem;
-    min-width: min(280px, calc(100vw - 2rem));
+    padding: 2rem 2.25rem;
+    width: min(34rem, calc(100vw - 2rem));
     border: 1px solid var(--border, rgba(19, 35, 33, 0.12));
-    border-radius: 14px;
-    background: $loader-surface;
+    border-radius: 24px;
+    background: linear-gradient(
+      145deg,
+      color-mix(in srgb, #{$loader-surface} 92%, var(--primary-soft) 8%),
+      #{$loader-surface}
+    );
     color: $loader-text;
     backdrop-filter: blur(12px);
-    box-shadow: var(--shadow-lg);
+    box-shadow:
+      var(--shadow-lg),
+      0 28px 80px color-mix(in srgb, #{$primary-color} 12%, transparent);
     pointer-events: none; /* prevent accidental focus traps inside box; svg will still show */
   }
 
-  &__label {
-    font-size: 1rem;
-    color: $loader-text;
-    margin-top: 0.5rem;
-    font-weight: 600;
-    letter-spacing: 0.2px;
+  &__visual {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    width: 100%;
+  }
+
+  &__visual::before {
+    position: absolute;
+    top: 2.5rem;
+    width: 8rem;
+    height: 8rem;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle,
+      color-mix(in srgb, #{$primary-color} 24%, transparent),
+      transparent 70%
+    );
+    content: "";
+    animation: tt-aura 2.8s ease-in-out infinite;
+  }
+
+  &__eyebrow {
+    margin-bottom: 0.5rem;
+    color: var(--color-primary);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  &__copy {
     text-align: center;
-    max-width: 380px;
+  }
+
+  &__copy h1,
+  &__copy p {
+    margin: 0;
+  }
+
+  &__copy h1 {
+    color: var(--heading, #{$loader-text});
+    font-size: clamp(1.35rem, 4vw, 1.8rem);
+    letter-spacing: -0.025em;
+  }
+
+  &__copy p {
+    margin-top: 0.5rem;
+    color: var(--text-muted, #667085);
+    font-size: 0.92rem;
+    line-height: 1.55;
+  }
+
+  &__route {
+    position: relative;
+    width: min(15rem, 76%);
+    height: 1.2rem;
+    margin-top: -0.4rem;
+    border-top: 1px dashed color-mix(in srgb, #{$primary-color} 40%, transparent);
+  }
+
+  &__route span {
+    position: absolute;
+    top: -0.27rem;
+    width: 0.5rem;
+    height: 0.5rem;
+    border: 2px solid $loader-surface;
+    border-radius: 50%;
+    background: $primary-color;
+    box-shadow: 0 0 0 1px color-mix(in srgb, #{$primary-color} 24%, transparent);
+  }
+
+  &__route span:nth-child(1) {
+    left: 0;
+  }
+  &__route span:nth-child(2) {
+    left: calc(50% - 0.25rem);
+  }
+  &__route span:nth-child(3) {
+    right: 0;
+  }
+
+  &__route b {
+    position: absolute;
+    top: -0.75rem;
+    left: 0;
+    color: var(--color-primary);
+    animation: tt-route-flight 3s ease-in-out infinite;
+  }
+
+  &__progress {
+    width: 100%;
+    height: 0.35rem;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--surface-inset, #eef1f5);
+  }
+
+  &__progress span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-accent, #7867e8));
+    transition: width 700ms ease;
+  }
+
+  &__wake-note {
+    display: grid;
+    gap: 0.2rem;
+    width: 100%;
+    padding: 0.85rem 1rem;
+    border: 1px solid color-mix(in srgb, #{$primary-color} 22%, var(--border));
+    border-radius: 12px;
+    background: var(--primary-soft, rgba(15, 143, 134, 0.08));
+    text-align: left;
+  }
+
+  &__wake-note strong {
+    color: var(--heading, #{$loader-text});
+    font-size: 0.84rem;
+  }
+
+  &__wake-note span {
+    color: var(--text-muted, #667085);
+    font-size: 0.75rem;
+    line-height: 1.45;
+  }
+
+  &__milestones {
+    display: flex;
+    justify-content: center;
+    gap: 1.25rem;
+    width: 100%;
+    color: var(--text-muted, #667085);
+    font-size: 0.68rem;
+    font-weight: 700;
+  }
+
+  &__milestones span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    transition: color 200ms ease;
+  }
+
+  &__milestones i {
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 50%;
+    background: var(--border);
+  }
+
+  &__milestones span.is-active {
+    color: var(--color-primary);
+  }
+
+  &__milestones span.is-active i {
+    background: var(--color-primary);
+    box-shadow: 0 0 0 4px color-mix(in srgb, #{$primary-color} 12%, transparent);
   }
 }
 
@@ -136,12 +326,39 @@ $loader-fade-duration: 0.45s;
   }
 }
 
+@keyframes tt-route-flight {
+  0%,
+  10% {
+    left: 0;
+    transform: rotate(0deg) scale(0.85);
+  }
+  90%,
+  100% {
+    left: calc(100% - 1rem);
+    transform: rotate(180deg) scale(1.05);
+  }
+}
+
+@keyframes tt-aura {
+  0%,
+  100% {
+    transform: scale(0.9);
+    opacity: 0.65;
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+}
+
 /* Respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .tt-globe__group,
   .tt-orbit,
   .tt-continents path,
-  .tt-satellite {
+  .tt-satellite,
+  .tt-loader__route b,
+  .tt-loader__visual::before {
     animation: none !important;
   }
 }
@@ -149,11 +366,13 @@ $loader-fade-duration: 0.45s;
 /* small screens */
 @media (max-width: 520px) {
   .tt-loader__box {
-    padding: 1rem;
+    padding: 1.5rem 1.25rem;
+    border-radius: 18px;
   }
-  .tt-loader__label {
-    font-size: 0.95rem;
-    max-width: 260px;
+
+  .tt-loader__milestones {
+    gap: 0.65rem;
+    font-size: 0.62rem;
   }
 }
 

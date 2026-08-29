@@ -36,6 +36,7 @@ const TONE_MAP = {
   APPROVED: "success",
   CONVERTED: "success",
   COMPLETE: "success",
+  TRENDING: "success",
   published: "success",
   draft: "neutral",
   cancelled: "danger",
