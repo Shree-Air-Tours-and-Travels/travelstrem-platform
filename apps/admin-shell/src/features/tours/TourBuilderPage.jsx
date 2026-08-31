@@ -1,6 +1,7 @@
 import React, { useCallback } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import TourBuilder from "@packages/tour-builder";
+import { PRODUCT_TYPE } from "@packages/trem-ui";
 import { uploadTourImage } from "../../services/adminService";
 import AdminRouteFrame from "../../app/AdminRouteFrame";
 
@@ -14,6 +15,9 @@ export default function TourBuilderPage({ mode = "create" }) {
   const { tourId: routeTourId } = useParams();
   const query = new URLSearchParams(location.search);
   const tourId = routeTourId || query.get("tourId") || null;
+  const productKey = query.get("product") === PRODUCT_TYPE.TREVIO
+    ? PRODUCT_TYPE.TREVIO
+    : PRODUCT_TYPE.TREVISTA;
   const startStepKey =
     mode === "view" ? "review" : query.get("step") || (mode === "edit" ? "resume" : null);
   const exit = useCallback(() => navigate("/manage/tours?tab=services"), [navigate]);
@@ -42,6 +46,7 @@ export default function TourBuilderPage({ mode = "create" }) {
     >
       <TourBuilder
         mode={mode}
+        productKey={productKey}
         tourId={tourId}
         startStepKey={startStepKey}
         onLocationChange={syncBuilderLocation}

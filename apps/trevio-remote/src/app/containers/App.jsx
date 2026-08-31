@@ -19,6 +19,7 @@ import {
 import {
   FavoritesProvider,
   ErrorState,
+  PRODUCT_TYPE,
   ScrollToTop,
   TourDetailsPage,
   useFavoritesContext,
@@ -55,7 +56,7 @@ function AppShell({
       requestShellNavigation("favorites");
       return;
     }
-    window.location.assign(buildGlobalAppShellUrl({ product: "trevio", tab: "favorites" }));
+    window.location.assign(buildGlobalAppShellUrl({ product: PRODUCT_TYPE.TREVIO, tab: "favorites" }));
   };
   const labels = pageModel?.labels || {};
   const shellProps = {
@@ -88,11 +89,11 @@ function AppShell({
           />
           <Route
             path="trip/:tripRef"
-            element={<TourDetailsPage userSession={session} appKey="trevio" productType="trip" />}
+            element={<TourDetailsPage userSession={session} appKey={PRODUCT_TYPE.TREVIO} productType="trip" />}
           />
           <Route
             path=":tripRef"
-            element={<TourDetailsPage userSession={session} appKey="trevio" productType="trip" />}
+            element={<TourDetailsPage userSession={session} appKey={PRODUCT_TYPE.TREVIO} productType="trip" />}
           />
         </Routes>
       ) : (
@@ -113,7 +114,7 @@ function AppShell({
           />
           <Route
             path="/trevio/trip/:tripRef"
-            element={<TourDetailsPage userSession={session} appKey="trevio" productType="trip" />}
+            element={<TourDetailsPage userSession={session} appKey={PRODUCT_TYPE.TREVIO} productType="trip" />}
           />
         </Routes>
       )}
@@ -154,7 +155,7 @@ export default function App({
   const { buildAuthAction } = useMemo(
     () =>
       createProductAuth({
-        app: "trevio",
+        app: PRODUCT_TYPE.TREVIO,
         apiBase: API_BASE,
         emit,
         registerSessionCacheClearer,
@@ -174,7 +175,7 @@ export default function App({
       pathname: window.location.pathname,
       search: window.location.search,
       hash: window.location.hash,
-      app: "trevio",
+      app: PRODUCT_TYPE.TREVIO,
     })
       .then(({ session, header }) => {
         if (!active) return;
@@ -189,7 +190,7 @@ export default function App({
             });
             return;
           }
-          redirectToGlobalAuth({ app: "trevio", returnTo: getCurrentReturnUrl() });
+          redirectToGlobalAuth({ app: PRODUCT_TYPE.TREVIO, returnTo: getCurrentReturnUrl() });
         }
       })
       .catch((error) => {
@@ -280,7 +281,7 @@ export default function App({
         title="Trevio now opens in TravelsTREM"
         description="This product is part of the customer dashboard and is no longer available as a standalone application."
         retry={() =>
-          window.location.assign(buildGlobalAppShellUrl({ product: "trevio", tab: "trevio" }))
+          window.location.assign(buildGlobalAppShellUrl({ product: PRODUCT_TYPE.TREVIO, tab: PRODUCT_TYPE.TREVIO }))
         }
         retryText="Go to customer shell"
       />
@@ -311,7 +312,7 @@ export default function App({
             the socket; standalone runs get their own connection here. */}
         <RealtimeProvider>
           <Toaster />
-          <FavoritesProvider product="trevio">
+          <FavoritesProvider product={PRODUCT_TYPE.TREVIO}>
             <AppShell
               embedded={embedded}
               session={session}

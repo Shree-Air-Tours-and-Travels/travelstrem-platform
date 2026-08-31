@@ -261,8 +261,20 @@ export const getSessionUser = async ({ req, res, portal: portalOverride, allowRe
                 user &&
                 Number(user.tokenVersion || 0) === Number(payload.tokenVersion || 0) &&
                 user.accountStatus === "active"
-            )
+            ) {
+                if (payload.sid) {
+                    await RefreshToken.updateOne(
+                        { sessionId: payload.sid, portal, revokedAt: null },
+                        { $set: { lastUsedAt: new Date() } },
+                    ).catch((error) =>
+                        console.warn(
+                            "[auth] session activity touch failed:",
+                            error?.message || error,
+                        ),
+                    );
+                }
                 return user;
+            }
         } catch {
             const { access } = getPortalCookieNames(portal);
             setCookie(res, access, "", 0);

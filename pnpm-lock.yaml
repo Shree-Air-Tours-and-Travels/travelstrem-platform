@@ -437,6 +437,9 @@ importers:
       '@packages/trem-form-engine':
         specifier: workspace:*
         version: link:../../packages/trem-form-engine
+      '@packages/trem-modals':
+        specifier: workspace:*
+        version: link:../../packages/trem-modals
       '@packages/trem-process-engine':
         specifier: workspace:*
         version: link:../../packages/trem-process-engine

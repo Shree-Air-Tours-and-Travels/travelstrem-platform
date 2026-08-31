@@ -16,6 +16,8 @@ import { getActiveAuthReturnTo } from "../routing/authReturnDestination";
 
 const AUTH_STORAGE_PREFIX = "appShellTREM";
 const SHARED_STORAGE_PREFIX = "travelstrem";
+const SESSION_EXIT_REQUEST_TIMEOUT_MS = 2500;
+const SESSION_NAVIGATION_FALLBACK_MS = 5000;
 
 const DEFAULT_SESSION = {
   user: null,
@@ -42,6 +44,7 @@ const AppShellConfigContext = React.createContext({
 export function AppShellProvider({ children }) {
   const initOnceRef = React.useRef(null);
   const sessionRef = React.useRef(DEFAULT_SESSION);
+  const sessionExitStartedRef = React.useRef(false);
   const [state, setState] = React.useState({
     loading: true,
     error: null,
@@ -119,18 +122,21 @@ export function AppShellProvider({ children }) {
     loadSession();
   }, [loadSession]);
 
+  const redirectToLogin = React.useCallback(() => {
+    if (!sessionRef.current?.isAuthenticated && isGuestSession()) return;
+    clearLocalAuthState();
+    sessionRef.current = DEFAULT_SESSION;
+    setState({ loading: false, error: null, session: DEFAULT_SESSION });
+    window.setTimeout(() => window.location.reload(), SESSION_NAVIGATION_FALLBACK_MS);
+    window.location.replace(
+      buildGlobalAuthUrl({
+        app: "app-shell",
+        returnTo: getActiveAuthReturnTo(),
+      }),
+    );
+  }, []);
+
   React.useEffect(() => {
-    const redirectToLogin = () => {
-      if (!sessionRef.current?.isAuthenticated && isGuestSession()) return;
-      clearLocalAuthState();
-      setState({ loading: false, error: null, session: DEFAULT_SESSION });
-      window.location.replace(
-        buildGlobalAuthUrl({
-          app: "app-shell",
-          returnTo: getActiveAuthReturnTo(),
-        }),
-      );
-    };
     const unsubscribe = subscribeAuthEvents((message) => {
       if (message?.type === "LOGOUT") {
         redirectToLogin();
@@ -149,7 +155,7 @@ export function AppShellProvider({ children }) {
       unsubscribe();
       window.removeEventListener("USER_LOGOUT", onWindowLogout);
     };
-  }, [loadSession]);
+  }, [loadSession, redirectToLogin]);
 
   const reload = React.useCallback(() => loadSession({ background: true }), [loadSession]);
 
@@ -162,10 +168,19 @@ export function AppShellProvider({ children }) {
   );
 
   const continueToLogin = React.useCallback(async () => {
+    if (sessionExitStartedRef.current) return;
+    sessionExitStartedRef.current = true;
     setSessionExitBusy(true);
-    await apiService.post("/auth/logout").catch(() => null);
-    window.dispatchEvent(new CustomEvent("USER_LOGOUT", { detail: { reason: "inactivity" } }));
-  }, []);
+    await Promise.race([
+      apiService.post("/auth/logout").catch(() => null),
+      new Promise((resolve) => window.setTimeout(resolve, SESSION_EXIT_REQUEST_TIMEOUT_MS)),
+    ]);
+    redirectToLogin();
+  }, [redirectToLogin]);
+
+  React.useEffect(() => {
+    if (sessionExpired) continueToLogin();
+  }, [continueToLogin, sessionExpired]);
 
   return (
     <AppShellConfigContext.Provider value={value}>

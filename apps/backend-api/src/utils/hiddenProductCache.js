@@ -8,7 +8,11 @@ export const getHiddenProductKeys = async () => {
     const now = Date.now();
     if (cache && now - cacheAt < TTL_MS) return cache;
     try {
-        const docs = await Product.find({ hidden: true }).select("key").lean();
+        const docs = await Product.find({
+            $or: [{ hidden: true }, { status: { $ne: "active" } }],
+        })
+            .select("key")
+            .lean();
         cache = docs.map((doc) => doc.key);
         cacheAt = now;
     } catch {

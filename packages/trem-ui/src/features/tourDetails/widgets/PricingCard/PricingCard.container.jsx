@@ -17,6 +17,7 @@ export default function PricingCardContainer({
   isFavorited,
   onFavorite,
   selectedPackage,
+  productType,
 }) {
   const { loading, error, widgetData, retry } = useTourDetailWidget(tourRef, "pricing-card.json");
   const labels = widgetData?.elements?.labels || {};
@@ -50,6 +51,7 @@ export default function PricingCardContainer({
       priceText={priceText}
       packagePrices={packagePrices}
       selectedPackage={selectedPackage}
+      productType={productType}
       priceDisplayMode={
         tour?.priceInfo?.isFinal ? "FINAL" : tour?.commercialPricing?.displayMode || "ESTIMATED"
       }

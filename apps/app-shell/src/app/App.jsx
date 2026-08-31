@@ -20,7 +20,12 @@ import {
   useTheme,
   Toaster,
 } from "@packages/trem-ui";
-import { initRealtimeNotifications, RealtimeProvider } from "@packages/trem-events";
+import {
+  initRealtimeNotifications,
+  REALTIME_EVENTS,
+  RealtimeProvider,
+  useRealtimeEvent,
+} from "@packages/trem-events";
 import { AppShellProvider, useAppShellConfig } from "./providers/AppShellProvider";
 import AppShellPage from "../features/app-shell/AppShell.container";
 import { buildGlobalAuthUrl, fetchData, SHELL_NAVIGATION_EVENT } from "@packages/trem-utils";
@@ -44,8 +49,15 @@ import {
 import "../styles/global.scss";
 
 const TrevistaApp = React.lazy(() => import("trevista/App"));
-const REMOTE_RENDERERS = Object.freeze({ trevista: TrevistaApp });
+const TrevioApp = React.lazy(() => import("trevio/App"));
+const REMOTE_RENDERERS = Object.freeze({ trevio: TrevioApp, trevista: TrevistaApp });
 const USER_PROFILE_UPDATED_EVENT = "USER_PROFILE_UPDATED";
+const fetchShellConfiguration = ({ force = false } = {}) =>
+  Promise.all([
+    fetchData("/sidebar-config", force ? { params: { refresh: Date.now() } } : {}),
+    fetchData("/app-header-config", force ? { params: { refresh: Date.now() } } : {}),
+    fetchData("/navigation-config", force ? { params: { refresh: Date.now() } } : {}),
+  ]);
 
 class RemoteBoundary extends React.Component {
   state = { error: null };
@@ -144,6 +156,19 @@ function AppShell() {
   const [authPromptDismissed, setAuthPromptDismissed] = useState(false);
   const [primaryActionOpen, setPrimaryActionOpen] = useState(false);
 
+  const applyShellConfiguration = useCallback(
+    ([sidebarResponse, headerResponse, navigationResponse]) => {
+      setSidebarConfig(sidebarResponse?.componentData || {});
+      setAppHeaderConfig(headerResponse?.componentData || {});
+      setNavigationConfig(
+        normalizeNavigationConfig(
+          navigationResponse?.componentData || FALLBACK_NAVIGATION_CONFIG,
+        ),
+      );
+    },
+    [],
+  );
+
   useEffect(() => {
     setProfileUserPatch(null);
   }, [baseUser?.id, baseUser?._id, baseUser?.email]);
@@ -163,7 +188,10 @@ function AppShell() {
   );
   const selectedTab = destination.tab || searchParams.get("tab") || "overview";
   const activeTab = destination.activeId || selectedTab;
-  const selectedEnquiryRef = activeTab === "bookings" ? searchParams.get("enquiry") || "" : "";
+  const selectedBookingRecordRef =
+    activeTab === "bookings"
+      ? searchParams.get("booking") || searchParams.get("enquiry") || ""
+      : "";
   const isRemote = destination.kind === "remote";
   const authReturnTo = resolveAuthReturnTo(destination);
   const isSupportScreen = location.pathname === "/help" || location.pathname.startsWith("/help/");
@@ -302,21 +330,9 @@ function AppShell() {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([
-      fetchData("/sidebar-config"),
-      fetchData("/app-header-config"),
-      fetchData("/navigation-config"),
-    ])
-      .then(([sidebarResponse, headerResponse, navigationResponse]) => {
-        if (!cancelled) {
-          setSidebarConfig(sidebarResponse?.componentData || {});
-          setAppHeaderConfig(headerResponse?.componentData || {});
-          setNavigationConfig(
-            normalizeNavigationConfig(
-              navigationResponse?.componentData || FALLBACK_NAVIGATION_CONFIG,
-            ),
-          );
-        }
+    fetchShellConfiguration()
+      .then((responses) => {
+        if (!cancelled) applyShellConfiguration(responses);
       })
       .catch(() => {
         if (!cancelled) {
@@ -327,7 +343,11 @@ function AppShell() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [applyShellConfiguration]);
+
+  useRealtimeEvent(REALTIME_EVENTS.PRODUCT_CATALOG_UPDATED, () => {
+    fetchShellConfiguration({ force: true }).then(applyShellConfiguration).catch(() => null);
+  });
 
   useEffect(() => {
     const onShellNavigation = (event) => {
@@ -422,14 +442,14 @@ function AppShell() {
       { label: home.label, path: "/?tab=overview" },
       { label: current.label },
     ];
-    return selectedEnquiryRef
+    return selectedBookingRecordRef
       ? [
           { ...breadcrumbs[0] },
           { ...breadcrumbs[1], path: "/?tab=bookings" },
-          { label: selectedEnquiryRef },
+          { label: selectedBookingRecordRef },
         ]
       : breadcrumbs;
-  }, [activeTab, selectedEnquiryRef, selectedTab, sidebarConfig.sections]);
+  }, [activeTab, selectedBookingRecordRef, selectedTab, sidebarConfig.sections]);
 
   if (loading) {
     return <GlobalLoader visible text="Loading App" />;

@@ -286,6 +286,7 @@ export function presentQuoteBuilder({
       ? ["sent", "edit", "done", "sentDescription"]
       : ["draft", "save", "back", stage.id === "review-send" ? "send" : "next"]),
     ...(rows.length ? ["previewTitle", "previewDescription"] : []),
+    ...(stage.id === "review-send" ? ["previewQuote"] : []),
     ...definition.steps.flatMap((item) => [item.titleRef, item.descriptionRef]),
     ...stage.fields.flatMap((item) => [
       item.labelRef,
@@ -368,6 +369,10 @@ export function presentQuoteBuilder({
             calculate: ["customizations", "agent-pricing"].includes(stage.id)
               ? { id: "calculate", labelRef: "calculate" }
               : null,
+            preview:
+              stage.id === "review-send"
+                ? { id: "preview", labelRef: "previewQuote" }
+                : null,
             primary:
               stage.id === "review-send"
                 ? { id: "send", labelRef: "send" }

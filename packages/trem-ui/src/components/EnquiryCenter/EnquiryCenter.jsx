@@ -68,6 +68,20 @@ export default function EnquiryCenter({
       createdDisplay: item.createdLabel || item.createdDisplay || "",
     };
   });
+  const tableColumns = (tableCopy.columns || []).map((column) => ({
+    ...column,
+    ...(column.interaction === "open-record" ? { clickable: true, onClick: onSelect } : {}),
+    ...(Array.isArray(column.actions)
+      ? {
+          actions: column.actions.map((action) => ({
+            ...action,
+            ...(action.interaction === "open-record"
+              ? { clickable: true, onClick: onSelect }
+              : {}),
+          })),
+        }
+      : {}),
+  }));
   const selected =
     records.find((item) => item.id === selectedId || item.reference === selectedId) || null;
 
@@ -79,26 +93,63 @@ export default function EnquiryCenter({
     if (detailOverride) return detailOverride;
     const detailPanelsVisible =
       typeof showDetailPanels === "function" ? showDetailPanels(selected) : showDetailPanels;
+    const providerVisible = Boolean(
+      selected.assignedAgent?.name ||
+        selected.assignedAgent?.email ||
+        selected.agency?.name ||
+        selected.agency?.logo,
+    );
 
     return (
       <section
         className="trem-enquiries trem-enquiries--detail"
         aria-labelledby="enquiry-detail-title"
       >
-        <div className="trem-enquiries__toolbar">
-          <StatusBadge value={selected.statusLabel || selected.status} />
-        </div>
         <header className="trem-enquiries__hero">
-          <div>
+          <div className="trem-enquiries__hero-main">
             <span className="trem-enquiries__eyebrow">
               {selected.directionLabel || selected.recordTypeLabel}
             </span>
             <h1 id="enquiry-detail-title">{selected.service.name}</h1>
-            <p>
-              {selected.reference} · {selected.createdDisplay}
-            </p>
+            <div className="trem-enquiries__hero-meta">
+              <p>
+                {selected.reference}
+                {selected.sourceEnquiryRef
+                  ? ` · ${labels.enquiry || "Enquiry"} ${selected.sourceEnquiryRef}`
+                  : ""}{" "}
+                · {selected.createdDisplay}
+              </p>
+              <StatusBadge
+                value={selected.statusLabel || selected.status}
+                tone={selected.statusTone}
+              />
+            </div>
           </div>
-          {renderDetailActions?.(selected)}
+          <div className="trem-enquiries__hero-actions">
+            {providerVisible ? (
+              <div className="trem-enquiries__provider">
+                {selected.agency?.logo ? (
+                  <img
+                    className="trem-enquiries__provider-logo"
+                    src={selected.agency.logo}
+                    alt={selected.agency.name || "Agency"}
+                  />
+                ) : null}
+                <div className="trem-enquiries__provider-copy">
+                  <span>{selected.agency?.name || labels.travelSpecialist}</span>
+                  {selected.assignedAgent?.name ? (
+                    <strong>{selected.assignedAgent.name}</strong>
+                  ) : null}
+                  {selected.assignedAgent?.email ? (
+                    <small>
+                      {labels.agentEmail}: {selected.assignedAgent.email}
+                    </small>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
+            {renderDetailActions?.(selected)}
+          </div>
         </header>
 
         {selected.guidance ? (
@@ -189,117 +240,16 @@ export default function EnquiryCenter({
             title: states.emptyTitle,
             description: states.emptyDescription,
           },
-          mobileCard: {
-            titleAccessor: "service.name",
-            subtitleAccessor: "reference",
-            imageAccessor: "service.image",
-            badgeAccessor: "statusDisplay",
-            badgeToneAccessor: "statusTone",
-            fieldIds: ["recordTypeLabel", "party", "travelDate", "createdDisplay"],
-            actionLabel: tableCopy.viewDetails,
-            actionIcon: "eye",
-            subtitleClickable: true,
-            actionClickable: true,
-          },
+          mobileCard: tableCopy.mobileCard,
         }}
-        columns={[
-          {
-            id: "reference",
-            label: tableCopy.reference,
-            minWidth: 145,
-            sortable: true,
-            emphasis: "reference",
-            clickable: true,
-            onClick: onSelect,
-          },
-          {
-            id: "service",
-            label: tableCopy.tourService,
-            type: "mediaText",
-            titleAccessor: "service.name",
-            subtitleAccessor: "service.type",
-            mediaAccessor: "service.image",
-            sortAccessor: "service.name",
-            minWidth: 260,
-            sortable: true,
-          },
-          {
-            id: "recordTypeLabel",
-            label: tableCopy.type,
-            accessor: "recordTypeLabel",
-            minWidth: 120,
-          },
-          { id: "party", label: tableCopy.customerSpecialist, minWidth: 190 },
-          { id: "travellers", label: tableCopy.travellers, minWidth: 120 },
-          { id: "travelDate", label: tableCopy.travelDate, minWidth: 155 },
-          {
-            id: "statusDisplay",
-            label: tableCopy.status,
-            type: "status",
-            toneAccessor: "statusTone",
-            minWidth: 145,
-          },
-          {
-            id: "createdAt",
-            label: tableCopy.created,
-            accessor: "createdDisplay",
-            sortAccessor: "createdAt",
-            minWidth: 135,
-            sortable: true,
-          },
-          {
-            id: "actions",
-            label: "",
-            type: "actions",
-            minWidth: 64,
-            align: "right",
-            actions: [
-              {
-                id: "view",
-                label: tableCopy.viewDetails,
-                icon: "eye",
-                clickable: true,
-                onClick: onSelect,
-              },
-            ],
-          },
-        ]}
+        columns={tableColumns}
         rows={records}
         actions={{
-          search: {
-            placeholder: tableCopy.searchPlaceholder,
-            keys: ["reference", "service.name", "party", "statusDisplay"],
-          },
-          filters: [
-            {
-              id: "recordType",
-              label: tableCopy.recordType,
-              accessor: "recordType",
-              options: [
-                { label: tableCopy.allRecords, value: "all" },
-                { label: tableCopy.bookings, value: "booking" },
-                { label: tableCopy.enquiries, value: "enquiry" },
-              ],
-            },
-          ],
+          search: tableCopy.search,
+          filters: tableCopy.filters || [],
         }}
-        sortingHeader={{
-          label: tableCopy.sortBy,
-          defaultValue: "newest",
-          options: [
-            {
-              label: tableCopy.newest,
-              value: "newest",
-              sort: { columnId: "createdAt", direction: "desc" },
-            },
-            {
-              label: tableCopy.reference,
-              value: "reference",
-              sort: { columnId: "reference", direction: "asc" },
-            },
-          ],
-        }}
-        pagination={{ pageSize: 10, pageSizeOptions: [10, 25, 50] }}
+        sortingHeader={tableCopy.sorting || {}}
+        pagination={tableCopy.pagination || { enabled: false }}
         onRowClick={onSelect}
       />
     </section>

@@ -365,10 +365,14 @@ export default function ManageTours({ session }) {
     }
   }
   function openTripCreate() {
-    setTripEditing(null);
-    setTripFormOpen(true);
+    navigate("/manage/tours/builder?product=trevio");
   }
   function openTripEdit(t) {
+    const sourceId = resolveEntityId(t?.sourceTourId);
+    if (sourceId) {
+      navigate(`/manage/tours/builder?product=trevio&tourId=${sourceId}`);
+      return;
+    }
     setTripEditing(t);
     setTripFormOpen(true);
   }

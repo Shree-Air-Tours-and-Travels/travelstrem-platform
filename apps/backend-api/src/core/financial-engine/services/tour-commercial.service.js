@@ -702,7 +702,7 @@ export function calculateTourCustomizationPreview({
           : {
                 code: "SELECTED_PACKAGE_PRESERVED",
                 message:
-                    "Your selected package level and inclusions are being preserved. Lower-tier packages are not suggested as alternatives.",
+                    "Your selected stays and experiences are included, so you can continue with this package confidently.",
             };
     const customized = pricedStays.hotels.some((item) => !item.included) || addOns.length > 0;
     const preview = {

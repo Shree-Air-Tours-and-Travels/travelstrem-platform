@@ -6,6 +6,7 @@
   "dependencies": {
     "@packages/trem-docengine": "workspace:*",
     "@packages/trem-form-engine": "workspace:*",
+    "@packages/trem-modals": "workspace:*",
     "@packages/trem-process-engine": "workspace:*",
     "@packages/trem-design-tokens": "workspace:*",
     "@packages/trem-events": "workspace:*",

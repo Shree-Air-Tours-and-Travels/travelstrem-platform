@@ -10,6 +10,7 @@ import {
   Preloader,
   Icon,
   NoDataFound,
+  PRODUCT_TYPE,
   useFavoritesContext,
 } from "@packages/trem-ui";
 import { ContactAgentModal } from "@packages/trem-modals";
@@ -640,7 +641,7 @@ export default function Home({
         open={contactOpen}
         onClose={() => setContactOpen(false)}
         user={user}
-        product="trevio"
+        product={PRODUCT_TYPE.TREVIO}
       />
     </main>
   );

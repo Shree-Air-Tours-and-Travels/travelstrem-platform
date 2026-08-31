@@ -456,6 +456,7 @@ export const requestAdminRegistrationOtp = async (req, res) => {
             message: "Registration OTP sent.",
             expiresInMs: OTP_TTL,
             resendAfterMs: OTP_RESEND_COOLDOWN_MS,
+            ...(DEV_OTP_BYPASS ? { developmentOtp: otp } : {}),
         });
     } catch (err) {
         console.error("requestAdminRegistrationOtp error:", err && err.stack ? err.stack : err);
@@ -897,6 +898,7 @@ export const forgotPassword = async (req, res) => {
             message: "If that email is registered, a password reset code has been sent.",
             expiresInMs: OTP_TTL,
             resendAfterMs: OTP_RESEND_COOLDOWN_MS,
+            ...(DEV_OTP_BYPASS ? { developmentOtp: otp } : {}),
         });
     } catch (err) {
         console.error("Auth forgotPassword error:", err && err.stack ? err.stack : err);
@@ -1122,6 +1124,7 @@ export const requestActivationOtp = async (req, res) => {
             email: user.email,
             expiresInMs: OTP_TTL,
             resendAfterMs: OTP_RESEND_COOLDOWN_MS,
+            ...(DEV_OTP_BYPASS ? { developmentOtp: otp } : {}),
         });
     } catch (err) {
         console.error("requestActivationOtp error:", err && err.stack ? err.stack : err);

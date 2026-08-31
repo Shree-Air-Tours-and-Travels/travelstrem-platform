@@ -262,7 +262,24 @@ export async function customerActivityMap(customerIds) {
                 _id: "$customerId",
                 enquiries: { $sum: 1 },
                 openEnquiries: {
-                    $sum: { $cond: [{ $in: ["$status", ["new", "in_review"]] }, 1, 0] },
+                    $sum: {
+                        $cond: [
+                            {
+                                $in: [
+                                    "$status",
+                                    [
+                                        "new",
+                                        "enquiry_details_added",
+                                        "traveller_details_added",
+                                        "quote_requested",
+                                        "in_review",
+                                    ],
+                                ],
+                            },
+                            1,
+                            0,
+                        ],
+                    },
                 },
                 bookings: { $sum: { $cond: [{ $ne: ["$bookingId", null] }, 1, 0] } },
                 latestAt: { $max: "$createdAt" },

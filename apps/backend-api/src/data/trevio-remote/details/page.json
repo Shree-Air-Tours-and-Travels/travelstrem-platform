@@ -9,7 +9,7 @@
       "labels": {
         "pageTitle": "Trip Details",
         "bookNow": "Book Now",
-        "enquire": "Get a quote",
+        "enquire": "Enquire now",
         "backToTours": "Back to trips",
         "backToLabel": "Back to",
         "referrerTours": "Trips",
@@ -54,6 +54,11 @@
           "type": "InclusionsExclusions",
           "source": "shell",
           "widgetRef": "./widgets/inclusions-exclusions.json"
+        },
+        {
+          "type": "PackagePlans",
+          "source": "shell",
+          "widgetRef": "./widgets/pricing-card.json"
         },
         {
           "type": "IncludedStays",

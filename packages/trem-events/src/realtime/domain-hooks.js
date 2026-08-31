@@ -25,6 +25,7 @@ export const useSupportRealtime = (ticketId) => useResourceRealtime("support", t
 export const useEnquiryRealtime = (handler) => {
   useRealtimeEvent(REALTIME_EVENTS.ENQUIRY_CREATED, handler);
   useRealtimeEvent(REALTIME_EVENTS.ENQUIRY_CLAIMED, handler);
+  useRealtimeEvent(REALTIME_EVENTS.ENQUIRY_UPDATED, handler);
   useRealtimeEvent(REALTIME_EVENTS.BOOKING_QUOTE_CREATED, handler);
   useRealtimeEvent(REALTIME_EVENTS.BOOKING_QUOTE_UPDATED, handler);
   useRealtimeEvent(REALTIME_EVENTS.ADMIN_BOOKING_QUOTE_CREATED, handler);

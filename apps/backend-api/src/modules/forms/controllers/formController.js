@@ -2,6 +2,7 @@
 import ContactLeadRepository from "../repositories/ContactLeadRepository.js";
 import Tour from "../../tours/models/Tour.js";
 import User from "../../auth/models/User.js";
+import PartnerAgency from "../../auth/models/PartnerAgency.js";
 import { sendTransactionalEmail } from "../../../services/email.service.js";
 import pageDefinitionService from "../../../services/pageDefinitionService.js";
 import config from "../../../config/env.js";
@@ -14,6 +15,8 @@ import { resolveCustomTourAssignment } from "../services/customTourAssignment.se
 import { enquiryCenterView, enquiryView, formatDate } from "../mappers/enquiryView.js";
 import FinancialEngine from "../../../core/financial-engine/index.js";
 import BookingQuote from "../../bookings/models/BookingQuote.js";
+import Booking from "../../bookings/models/Booking.js";
+import { bookingView } from "../../bookings/mappers/bookingView.js";
 import { getPortalScope } from "../../../core/auth/portalSession.js";
 import {
     REALTIME_EVENTS,
@@ -97,9 +100,16 @@ const getTourFormContext = async (tour, product) => {
             if (option) options.push(option);
         });
     } else {
+        (tour?.departures || []).forEach((departure) => {
+            const option = makeDateRangeOption(departure?.departureDate, departure?.returnDate);
+            if (option) options.push(option);
+        });
         (tour?.dates || []).forEach((storedDate) => {
             const raw = String(storedDate || "").trim();
-            if (raw) options.push({ value: raw, label: raw });
+            if (!raw) return;
+            const [start, end] = raw.split("|");
+            const rangeOption = makeDateRangeOption(start, end || null);
+            options.push(rangeOption || { value: raw, label: raw });
         });
     }
 
@@ -124,8 +134,30 @@ const getTourFormContext = async (tour, product) => {
     const hasStructuredFlightComponents = [...commercialComponents.values()].some(
         (component) => component?.type === "FLIGHT",
     );
+    const trevioPackageSource = tour?.preferences?.packageTypes?.length
+        ? tour.preferences.packageTypes
+        : (tour?.commercial?.packages || []).map((item) => ({
+              value: item.packageKey,
+              label: item.name,
+              description: item.description,
+              includesFlights: (item.includedComponentKeys || []).some((key) =>
+                  commercialComponents.get(String(key))?.type === "FLIGHT",
+              ),
+          }));
     const packageOptions =
-        tour?.commercial?.version === "COMPONENTS_V1"
+        product === "trevio"
+            ? trevioPackageSource
+                  .map((item) => ({
+                      value: String(item.value || ""),
+                      label: String(item.label || "Trip package"),
+                      description: String(item.description || ""),
+                      includesFlights:
+                          Boolean(item.includesFlights) ||
+                          /\bwith[ -]?flights?\b/i.test(`${item.value} ${item.label}`),
+                      includedFlightNames: [],
+                  }))
+                  .filter((item) => item.value)
+            : tour?.commercial?.version === "COMPONENTS_V1"
             ? (tour.commercial.packages || [])
                   .filter((item) => item?.enabled !== false)
                   .map((item) => {
@@ -371,6 +403,94 @@ export const getForm = async (req, res) => {
                         (field) => field.name !== "hotelRoomKey",
                     );
             }
+            if (product === "trevio") {
+                const labels = response.component.elements.labels;
+                labels.contactAgent = `Create enquiry for ${tour.title || "this trip"}?`;
+                labels.contactAgentDescription =
+                    "Confirm to create an enquiry. You will add traveller details and request the quotation from My Bookings.";
+                labels.sendRequest = "Enquire now";
+                labels.quoteJourneyAriaLabel = "Trip enquiry progress";
+                labels.quoteChangesStep = "Preferences & add-ons";
+                labels.quoteDetailsDescription =
+                    "Tell the trip captain who is travelling and choose the fixed departure package.";
+                labels.quoteChangesTitle = "Choose trip preferences";
+                labels.quoteChangesDescription =
+                    "Select available room, meal and drink preferences, plus any optional add-ons.";
+                labels.quoteReviewTitle = "Review your enquiry";
+                labels.quoteReviewDescription =
+                    "Check your fixed trip selections before sending them to the trip captain.";
+                labels.travelSpecialist = "Trip captain";
+                labels.message = "Anything the trip captain should know?";
+                labels.messagePlaceholder =
+                    "Share dietary, accessibility, room-sharing or other important requirements.";
+
+                const optionField = (name, label, options, required = false) => ({
+                    name,
+                    label,
+                    type: "select",
+                    required,
+                    width: "half",
+                    placeholder: `Select ${label.toLowerCase()}`,
+                    options: (options || []).map((item) => ({
+                        value: item.value,
+                        label: item.label,
+                    })),
+                });
+                const currentFields = response.component.structure.widgets[0].props.fields;
+                const contactFields = currentFields.filter((field) =>
+                    ["name", "email", "phone", "preferredContact"].includes(field.name),
+                );
+                const journeyFields = currentFields.filter((field) =>
+                    ["packageKey", "preferredTravelDate", "message"].includes(field.name),
+                );
+                const preferences = tour.preferences || {};
+                response.component.structure.widgets[0].props.fields = [
+                    ...contactFields,
+                    {
+                        name: "adultCount",
+                        label: "Adults",
+                        type: "number",
+                        required: true,
+                        min: 1,
+                        max: 50,
+                        integer: true,
+                        width: "half",
+                        value: 1,
+                    },
+                    {
+                        name: "childCount",
+                        label: "Children",
+                        type: "number",
+                        required: false,
+                        min: 0,
+                        max: 49,
+                        integer: true,
+                        width: "half",
+                        value: 0,
+                    },
+                    {
+                        name: "infantCount",
+                        label: "Infants",
+                        type: "number",
+                        required: false,
+                        min: 0,
+                        max: 49,
+                        integer: true,
+                        width: "half",
+                        value: 0,
+                    },
+                    ...journeyFields.filter((field) => field.name !== "message"),
+                    optionField("roomType", "Room preference", preferences.roomTypes),
+                    optionField("mealPreference", "Meal preference", preferences.mealPreferences),
+                    optionField("drinkPreference", "Drink preference", preferences.drinkTypes),
+                    ...journeyFields.filter((field) => field.name === "message"),
+                ].filter((field) => field.name !== "packageKey" || formContext.packageOptions.length);
+            } else {
+                const labels = response.component.elements.labels;
+                labels.contactAgent = `Create enquiry for ${tour.title || "this tour"}?`;
+                labels.contactAgentDescription =
+                    "Confirm to create an enquiry. You will complete the tour and traveller details from My Bookings before requesting a quotation.";
+            }
         }
         return sendJson(res, 200, {
             ...response,
@@ -406,6 +526,10 @@ export const submitForm = async (req, res) => {
                 message: "Unknown form submitted",
             });
         const isCustomTourEnquiry = submittedForm === "custom-tour";
+        const isConfirmedBookingEnquiry =
+            !isCustomTourEnquiry &&
+            ["trevista", "trevio"].includes(String(requestedProduct || "").toLowerCase()) &&
+            req.body?.confirmed === true;
         let submittedTourTitle = isCustomTourEnquiry
             ? "Custom tour enquiry"
             : String(tourTitle || "").slice(0, 500);
@@ -431,6 +555,9 @@ export const submitForm = async (req, res) => {
                 "message",
                 "preferredContact",
                 "travellerCount",
+                "adultCount",
+                "childCount",
+                "infantCount",
                 "preferredTravelDate",
                 "preferredStartDate",
                 "preferredEndDate",
@@ -438,6 +565,9 @@ export const submitForm = async (req, res) => {
                 "packageKey",
                 "hotelRoomKey",
                 "customizationPreference",
+                "roomType",
+                "mealPreference",
+                "drinkPreference",
             ];
             if (fields && typeof fields === "object") {
                 for (const key of knownKeys) {
@@ -447,14 +577,46 @@ export const submitForm = async (req, res) => {
                 }
             }
 
+            if (isConfirmedBookingEnquiry) {
+                const userId = req.user?.sub || req.user?.id || req.user?._id;
+                if (!userId) {
+                    return sendJson(res, 401, {
+                        status: "error",
+                        message: "Please sign in before creating a trip enquiry.",
+                    });
+                }
+                const customer = await User.findById(userId)
+                    .select("name email phone phoneNumber mobile")
+                    .lean();
+                allowedFields = {
+                    name: allowedFields.name || customer?.name || req.user?.name || "Traveller",
+                    email: allowedFields.email || customer?.email || req.user?.email || "",
+                    phone:
+                        allowedFields.phone || customer?.phone || customer?.phoneNumber || customer?.mobile || "",
+                    preferredContact: allowedFields.preferredContact || "email",
+                    message: "Enquiry created. Journey and traveller details are pending.",
+                };
+            }
+
+            if (
+                String(requestedProduct || "").toLowerCase() === "trevio" &&
+                !isConfirmedBookingEnquiry
+            ) {
+                const adultCount = Number(allowedFields.adultCount || 0);
+                const childCount = Number(allowedFields.childCount || 0);
+                const infantCount = Number(allowedFields.infantCount || 0);
+                allowedFields.travellerCount = String(adultCount + childCount + infantCount);
+            }
             const requiredFields = [
                 "name",
                 "email",
-                "phone",
                 "message",
                 "preferredContact",
-                "travellerCount",
-                "flightPreference",
+                ...(!isConfirmedBookingEnquiry ? ["travellerCount"] : []),
+                "phone",
+                ...(isConfirmedBookingEnquiry || String(requestedProduct || "").toLowerCase() === "trevio"
+                    ? []
+                    : ["flightPreference"]),
             ];
             const missingField = requiredFields.find(
                 (key) => !String(allowedFields[key] || "").trim(),
@@ -469,19 +631,40 @@ export const submitForm = async (req, res) => {
                     status: "error",
                     message: "Please provide a valid email address.",
                 });
-            if (String(allowedFields.phone).replace(/\D/g, "").length !== 10)
+            if (
+                allowedFields.phone &&
+                String(allowedFields.phone).replace(/\D/g, "").length !== 10
+            )
                 return sendJson(res, 400, {
                     status: "error",
                     message: "Please provide a valid 10-digit phone number.",
                 });
+            const preferredContactOptions = await masterDataService.getOptionSet(
+                "tours.preferredContactOptions",
+            );
+            if (
+                preferredContactOptions.length &&
+                !preferredContactOptions.some(
+                    (option) => option.value === allowedFields.preferredContact,
+                )
+            )
+                return sendJson(res, 400, {
+                    status: "error",
+                    message: "Please choose an available contact method.",
+                });
         }
         const travellerCount = Number(allowedFields.travellerCount);
-        if (!Number.isInteger(travellerCount) || travellerCount < 1 || travellerCount > 50)
+        if (
+            !isConfirmedBookingEnquiry &&
+            (!Number.isInteger(travellerCount) || travellerCount < 1 || travellerCount > 50)
+        )
             return sendJson(res, 400, {
                 status: "error",
                 message: "Traveller count must be between 1 and 50.",
             });
         if (
+            !isConfirmedBookingEnquiry &&
+            String(requestedProduct || "").toLowerCase() !== "trevio" &&
             !["with_flights", "without_flights", "agent_recommendation"].includes(
                 allowedFields.flightPreference,
             )
@@ -532,21 +715,32 @@ export const submitForm = async (req, res) => {
         const requestedProductKey = String(requestedProduct || "").toLowerCase();
         if (!tour && requestedProductKey === "trevio") journeyType = "trip";
         const product = tour
-            ? journeyType === "trip"
+            ? tour.productKey === "trevio" || journeyType === "trip"
                 ? "trevio"
                 : "trevista"
             : ["trevio", "trevista"].includes(requestedProductKey)
               ? requestedProductKey
               : "trevista";
+        if (product === "trevio") journeyType = "trip";
         const formContext = await getTourFormContext(tour, product);
         const selectedPackage =
             formContext.packageOptions.find((item) => item.value === allowedFields.packageKey) ||
             null;
-        if (!isCustomTourEnquiry && formContext.packageOptions.length && !selectedPackage) {
+        if (
+            !isCustomTourEnquiry &&
+            !isConfirmedBookingEnquiry &&
+            formContext.packageOptions.length &&
+            !selectedPackage
+        ) {
             return sendJson(res, 400, {
                 status: "error",
                 message: "Please select an available tour package.",
             });
+        }
+        if (product === "trevio" && selectedPackage) {
+            allowedFields.flightPreference = selectedPackage?.includesFlights
+                ? "with_flights"
+                : "without_flights";
         }
         const hotelSelections = Array.isArray(requestedHotelSelections)
             ? requestedHotelSelections
@@ -631,6 +825,7 @@ export const submitForm = async (req, res) => {
         const departureOptions = formContext.departureOptions;
         if (
             !isCustomTourEnquiry &&
+            !isConfirmedBookingEnquiry &&
             formContext.packageType === "fixed_departure" &&
             departureOptions.length &&
             !allowedFields.preferredTravelDate
@@ -651,7 +846,11 @@ export const submitForm = async (req, res) => {
             });
         }
         if (selectedDeparture) allowedFields.preferredTravelDate = selectedDeparture.value;
-        if (!isCustomTourEnquiry && formContext.packageType !== "fixed_departure") {
+        if (
+            !isCustomTourEnquiry &&
+            !isConfirmedBookingEnquiry &&
+            formContext.packageType !== "fixed_departure"
+        ) {
             const start = toIsoDate(allowedFields.preferredStartDate);
             const end = toIsoDate(allowedFields.preferredEndDate);
             if (!start || !end)
@@ -761,6 +960,19 @@ export const submitForm = async (req, res) => {
                     phone: customAssignment.agency.contactPhone || "",
                 }
               : {};
+        const assignedAgencyId =
+            customAssignment?.agencyId || tour?.agencyId || agent?.agencyId || null;
+        const assignedAgency =
+            customAssignment?.agency ||
+            (assignedAgencyId
+                ? await PartnerAgency.findById(assignedAgencyId).select("agencyName logo").lean()
+                : null);
+        const agencySnapshot = assignedAgency
+            ? {
+                  name: assignedAgency.agencyName || "",
+                  logo: assignedAgency.logo || "",
+              }
+            : {};
 
         const newLead = ContactLeadRepository.create({
             form: submittedForm,
@@ -770,9 +982,10 @@ export const submitForm = async (req, res) => {
             product,
             journeyType,
             ownerAgent: agentId,
-            agencyId: customAssignment?.agencyId || tour?.agencyId || agent?.agencyId || null,
+            agencyId: assignedAgencyId,
             assignmentRule: customAssignment?.reason || "",
             agentSnapshot,
+            agencySnapshot,
             selection: {
                 packageKey: selectedPackage?.value || "",
                 packageName: selectedPackage?.label || "",
@@ -816,7 +1029,7 @@ export const submitForm = async (req, res) => {
         // collapse the duplicate toast on the submitting tab.
         const creatorNotify = realtimeNotify(
             "Enquiry received",
-            `${submittedTourTitle ? `${submittedTourTitle} — ` : ""}Your enquiry ID is ${savedLead.enquiryRef}. Save it to track this trip.`,
+            `${submittedTourTitle ? `${submittedTourTitle} — ` : ""}Your enquiry ID is ${savedLead.enquiryRef}. Save it to track this journey.`,
             "success",
             `enquiry:${savedLead.enquiryRef}`,
         );
@@ -890,7 +1103,12 @@ export const submitForm = async (req, res) => {
                     const customerPhone = allowedFields.phone || "Not provided";
                     const customerMessage = allowedFields.message || "No additional message";
                     const preferredContact = allowedFields.preferredContact || "Not provided";
-                    const travellerSummary = allowedFields.travellerCount || "Not provided";
+                    const travellerSummary =
+                        isConfirmedBookingEnquiry
+                            ? "To be provided in My Bookings"
+                            : product === "trevio"
+                            ? `${allowedFields.adultCount || 0} adults, ${allowedFields.childCount || 0} children, ${allowedFields.infantCount || 0} infants`
+                            : allowedFields.travellerCount || "Not provided";
                     const preferredTravelDate = selectedDepartureLabel;
                     const flightPreference =
                         customizationSnapshot?.flightRequest === "KEEP_INCLUDED"
@@ -928,7 +1146,9 @@ export const submitForm = async (req, res) => {
                               .join("; ")
                         : "None";
                     const quoteMode =
-                        isCustomTourEnquiry || customizationSnapshot?.quoteMode === "CUSTOMIZED"
+                        product === "trevio"
+                            ? "Fixed departure enquiry"
+                            : isCustomTourEnquiry || customizationSnapshot?.quoteMode === "CUSTOMIZED"
                             ? "Customized package"
                             : "Package";
                     const customTourSummary = isCustomTourEnquiry
@@ -985,17 +1205,20 @@ export const submitForm = async (req, res) => {
                     .filter(Boolean)
                     .join(" · ");
                 const customerDeparture = selectedDepartureLabel;
+                const customerOptionLabel = product === "trevio" ? "Selected package" : "Quote type";
                 const customerQuoteType =
-                    allowedFields.flightPreference === "with_flights"
-                        ? "Quote with flights"
-                        : allowedFields.flightPreference === "without_flights"
-                          ? "Quote without flights"
-                          : "Travel specialist recommendation";
+                    product === "trevio"
+                        ? selectedPackage?.label || "Fixed trip package"
+                        : allowedFields.flightPreference === "with_flights"
+                          ? "Quote with flights"
+                          : allowedFields.flightPreference === "without_flights"
+                            ? "Quote without flights"
+                            : "Travel specialist recommendation";
                 await sendTransactionalEmail({
                     to: allowedFields.email,
                     subject: `We received your enquiry${submittedTourTitle ? ` for ${submittedTourTitle}` : ""}`,
-                    text: `Hi ${allowedFields.name},\n\nYour enquiry has been sent to ${specialist}. Your TravelsTREM enquiry ID is ${savedLead.enquiryRef}.\n\n${submittedTourTitle ? `Trip: ${submittedTourTitle}\n` : ""}Departure: ${customerDeparture}\nQuote type: ${customerQuoteType}\n${contactLines ? `Your travel specialist: ${specialist} (${contactLines})\n` : ""}${req.body.isAuthenticated ? "" : `\nSign in to TravelsTREM to track this enquiry and future bookings. After signing in, enter ${savedLead.enquiryRef} on My Bookings to add it to your account.\n`}\nThank you,\n${config.COMPANY_NAME}`,
-                    html: `<div style="font-family:Arial,sans-serif;max-width:640px;margin:auto;color:#172033"><h2 style="color:#173b8f">Your enquiry is on its way</h2><p>Hi ${escapeHtml(allowedFields.name)},</p><p>Your enquiry has been sent to <strong>${escapeHtml(specialist)}</strong>.</p><p><strong>Your TravelsTREM enquiry ID:</strong> ${escapeHtml(savedLead.enquiryRef)}</p>${submittedTourTitle ? `<p><strong>Trip:</strong> ${escapeHtml(submittedTourTitle)}</p>` : ""}<p><strong>Departure:</strong> ${escapeHtml(customerDeparture)}<br/><strong>Quote type:</strong> ${escapeHtml(customerQuoteType)}</p>${contactLines ? `<p><strong>Your travel specialist:</strong> ${escapeHtml(specialist)}<br/>${escapeHtml(contactLines)}</p>` : ""}${req.body.isAuthenticated ? "" : `<p><a href="${escapeHtml(config.SHELL_URL)}">Sign in to TravelsTREM</a> to track this enquiry and future bookings. Once signed in, enter this enquiry ID on <strong>My Bookings</strong> to add it to your account.</p>`}<p>Thank you,<br/>${escapeHtml(config.COMPANY_NAME)}</p></div>`,
+                    text: `Hi ${allowedFields.name},\n\nYour enquiry has been sent to ${specialist}. Your TravelsTREM enquiry ID is ${savedLead.enquiryRef}.\n\n${submittedTourTitle ? `Trip: ${submittedTourTitle}\n` : ""}Departure: ${customerDeparture}\n${customerOptionLabel}: ${customerQuoteType}\n${contactLines ? `Your travel specialist: ${specialist} (${contactLines})\n` : ""}${req.body.isAuthenticated ? "" : `\nSign in to TravelsTREM to track this enquiry and future bookings. After signing in, enter ${savedLead.enquiryRef} on My Bookings to add it to your account.\n`}\nThank you,\n${config.COMPANY_NAME}`,
+                    html: `<div style="font-family:Arial,sans-serif;max-width:640px;margin:auto;color:#172033"><h2 style="color:#173b8f">Your enquiry is on its way</h2><p>Hi ${escapeHtml(allowedFields.name)},</p><p>Your enquiry has been sent to <strong>${escapeHtml(specialist)}</strong>.</p><p><strong>Your TravelsTREM enquiry ID:</strong> ${escapeHtml(savedLead.enquiryRef)}</p>${submittedTourTitle ? `<p><strong>Trip:</strong> ${escapeHtml(submittedTourTitle)}</p>` : ""}<p><strong>Departure:</strong> ${escapeHtml(customerDeparture)}<br/><strong>${escapeHtml(customerOptionLabel)}:</strong> ${escapeHtml(customerQuoteType)}</p>${contactLines ? `<p><strong>Your travel specialist:</strong> ${escapeHtml(specialist)}<br/>${escapeHtml(contactLines)}</p>` : ""}${req.body.isAuthenticated ? "" : `<p><a href="${escapeHtml(config.SHELL_URL)}">Sign in to TravelsTREM</a> to track this enquiry and future bookings. Once signed in, enter this enquiry ID on <strong>My Bookings</strong> to add it to your account.</p>`}<p>Thank you,<br/>${escapeHtml(config.COMPANY_NAME)}</p></div>`,
                 });
             } catch (emailErr) {
                 console.error("Enquiry email notification failed:", emailErr?.message || emailErr);
@@ -1070,7 +1293,18 @@ export const claimEnquiry = async (req, res) => {
         lead.claimedBy = userId;
         await lead.save();
         await BookingQuote.updateMany(
-            { bookingId: lead._id, $or: [{ userId: null }, { userId: { $exists: false } }] },
+            {
+                $and: [
+                    {
+                        $or: [
+                            { inquiryId: lead._id },
+                            { bookingId: lead._id },
+                            { contextType: "ENQUIRY", contextId: String(lead._id) },
+                        ],
+                    },
+                    { $or: [{ userId: null }, { userId: { $exists: false } }] },
+                ],
+            },
             { $set: { userId } },
         );
         await syncAgencyCustomerFromLead(lead).catch((error) =>
@@ -1137,20 +1371,38 @@ export const getLeads = async (req, res) => {
     try {
         const access = await enquiryAccess(req);
         const leads = await ContactLeadRepository.find(access.query)
+            .populate("agencyId", "agencyName logo")
+            .populate("ownerAgent", "name email agentRef")
             .sort({ createdAt: -1 })
             .limit(200)
             .lean();
+        const bookings = leads.length
+            ? await Booking.find({ sourceEnquiryId: { $in: leads.map((lead) => lead._id) } })
+                  .sort({ createdAt: -1 })
+                  .lean()
+            : [];
+        const bookingsByEnquiryId = new Map(
+            bookings.map((booking) => [String(booking.sourceEnquiryId), booking]),
+        );
+        const records = leads
+            .map((lead) => {
+                const booking = bookingsByEnquiryId.get(String(lead._id));
+                return booking
+                    ? bookingView(booking, lead, access.perspective, { summaryOnly: true })
+                    : enquiryView(lead, access.perspective, { summaryOnly: true });
+            })
+            .sort(
+                (left, right) =>
+                    new Date(right.createdAt || 0).getTime() -
+                    new Date(left.createdAt || 0).getTime(),
+            );
         return sendJson(res, 200, {
             status: "success",
             message: "Leads fetched",
             componentData: {
                 ...enquiryCenterView(access.perspective),
                 perspective: access.perspective,
-                data: leads.map((lead) =>
-                    enquiryView(lead, access.perspective, {
-                        summaryOnly: true,
-                    }),
-                ),
+                data: records,
             },
         });
     } catch (err) {
@@ -1171,22 +1423,47 @@ export const getEnquiry = async (req, res) => {
     try {
         const access = await enquiryAccess(req);
         const identifier = String(req.params?.id || "").trim();
-        if (!/^ENQ-/i.test(identifier) && !Tour.db.base.Types.ObjectId.isValid(identifier)) {
-            return sendJson(res, 400, { status: "error", message: "Enter a valid enquiry ID." });
+        const isEnquiryRef = /^ENQ-/i.test(identifier);
+        const isBookingRef = /^BKG-/i.test(identifier);
+        const isObjectId = Tour.db.base.Types.ObjectId.isValid(identifier);
+        if (!isEnquiryRef && !isBookingRef && !isObjectId) {
+            return sendJson(res, 400, {
+                status: "error",
+                message: "Enter a valid enquiry or booking ID.",
+            });
         }
-        const identityQuery = /^ENQ-/i.test(identifier)
-            ? { enquiryRef: identifier.toUpperCase() }
-            : { _id: identifier };
+        let booking = isBookingRef
+            ? await Booking.findOne({ bookingRef: identifier.toUpperCase() }).lean()
+            : isObjectId
+              ? await Booking.findById(identifier).lean()
+              : null;
+        if (isBookingRef && !booking)
+            return sendJson(res, 404, { status: "error", message: "Booking not found." });
+        const identityQuery = booking
+            ? { _id: booking.sourceEnquiryId }
+            : isEnquiryRef
+              ? { enquiryRef: identifier.toUpperCase() }
+              : { _id: identifier };
         const lead = await ContactLeadRepository.findOne({
             ...access.query,
             ...identityQuery,
-        }).lean();
-        if (!lead) return sendJson(res, 404, { status: "error", message: "Enquiry not found." });
+        })
+            .populate("agencyId", "agencyName logo")
+            .populate("ownerAgent", "name email agentRef")
+            .lean();
+        if (!lead)
+            return sendJson(res, 404, {
+                status: "error",
+                message: booking ? "Booking not found." : "Enquiry not found.",
+            });
+        if (!booking && lead.bookingId) booking = await Booking.findById(lead.bookingId).lean();
         return sendJson(res, 200, {
             status: "success",
-            message: "Enquiry fetched",
+            message: booking ? "Booking fetched" : "Enquiry fetched",
             componentData: {
-                data: enquiryView(lead, access.perspective),
+                data: booking
+                    ? bookingView(booking, lead, access.perspective)
+                    : enquiryView(lead, access.perspective),
                 view: enquiryCenterView(access.perspective),
             },
         });

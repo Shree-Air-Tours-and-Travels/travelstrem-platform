@@ -147,9 +147,13 @@ function SelectControl({ label, value, options = [], onChange }) {
 
   return (
     <Dropdown
+      variant="select"
+      className="booking-table__select-control"
       align="right"
       hoverable={false}
       portalZIndex={1610}
+      label={label}
+      value={selected?.value}
       items={normalizedOptions.map((option) => ({
         id: option.id ?? option.value,
 
@@ -163,18 +167,6 @@ function SelectControl({ label, value, options = [], onChange }) {
 
         onClick: () => onChange?.(option.value),
       }))}
-      trigger={() => (
-        <Button
-          type="button"
-          variant="outline"
-          color="primary"
-          text={selected?.label || label}
-          iconRight="chevronDown"
-          iconSize={14}
-          primaryClassName="booking-table__select"
-          aria-label={label}
-        />
-      )}
     />
   );
 }
@@ -983,10 +975,8 @@ export default function BookingTable({
 
               {pagination.enabled !== false && pagination.showPageSize !== false ? (
                 <div className="booking-table__page-size">
-                  <span>{pagination.pageSizeLabel || "Rows"}</span>
-
                   <SelectControl
-                    label={pagination.pageSizeSelectLabel || "Rows per page"}
+                    label={pagination.pageSizeLabel || "Rows"}
                     value={String(pageSize)}
                     options={(pagination.pageSizeOptions || [10, 25, 50]).map((size) => ({
                       label: String(size),
@@ -1008,10 +998,8 @@ export default function BookingTable({
 
               {sortingHeader.options?.length ? (
                 <div className="booking-table__sort">
-                  <span>{sortingHeader.label || "Sort"}</span>
-
                   <SelectControl
-                    label={sortingHeader.selectLabel || "Sort"}
+                    label={sortingHeader.label || "Sort"}
                     value={sortValue}
                     options={sortingHeader.options}
                     onChange={(nextValue) => {

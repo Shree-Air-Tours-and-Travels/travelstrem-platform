@@ -78,10 +78,7 @@ export default applyHideFlags({
                         mobileIcon: "mountain",
                         tone: "primary",
                         target: "trevio",
-                        disabled: true,
-                        comingSoon: true,
-                        comingSoonLabel: "Coming soon",
-                        ariaLabel: "Explore trips and adventures, coming soon",
+                        ariaLabel: "Explore trips and adventures",
                     },
                     {
                         id: "tours-packages",

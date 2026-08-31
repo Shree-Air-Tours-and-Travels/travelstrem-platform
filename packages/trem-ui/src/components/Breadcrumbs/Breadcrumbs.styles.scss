@@ -166,18 +166,18 @@
   .trem-breadcrumbs {
     ol {
       width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
     }
 
     li {
-      /*
-       * Earlier breadcrumbs can shrink.
-       * Current page receives more visual space.
-       */
-      max-width: 120px;
-
-      &:last-child {
-        max-width: min(55vw, 220px);
-      }
+      flex: 0 0 auto;
+      max-width: min(42vw, 180px);
     }
 
     a,
@@ -205,7 +205,7 @@
      * Keep the first and current location available.
      */
     li:not(:first-child):not(:last-child) {
-      max-width: 82px;
+      max-width: min(36vw, 140px);
     }
 
     a,

@@ -9,7 +9,13 @@ import {
   WizardFormShell,
   WizardValidationSummary,
 } from "@packages/trem-ui";
-import { calculateQuote, loadQuoteBuilder, sendQuote, transitionQuoteBuilder } from "./quoteBuilderApi.js";
+import {
+  calculateQuote,
+  loadQuoteBuilder,
+  previewQuoteDocument,
+  sendQuote,
+  transitionQuoteBuilder,
+} from "./quoteBuilderApi.js";
 import "./quote-builder.scss";
 
 const getPath = (source, path) =>
@@ -233,6 +239,24 @@ export default function QuoteBuilder({ enquiryId, onLoadedMeta, onExit }) {
     setSaving(false);
   };
 
+  const previewDocument = async () => {
+    const popup = window.open("about:blank", "_blank");
+    if (popup) popup.opener = null;
+    setSaving(true);
+    const response = await previewQuoteDocument(enquiryId, values);
+    setSaving(false);
+    if (response.status !== "success" || !response.data) {
+      popup?.close();
+      setError(response.message || "The quotation preview could not be generated.");
+      return;
+    }
+    setError("");
+    const url = URL.createObjectURL(response.data);
+    if (popup) popup.location.replace(url);
+    else window.location.assign(url);
+    window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  };
+
   if (loading) return <div className="quote-builder__loading"><Spinner /></div>;
   if (!view) return <div className="quote-builder__error" role="alert">{error || "Quote builder could not be loaded."}</div>;
 
@@ -281,6 +305,13 @@ export default function QuoteBuilder({ enquiryId, onLoadedMeta, onExit }) {
           label: labels[structure.actions.calculate.labelRef],
           variant: "outline",
           onClick: () => run("CALCULATE"),
+          disabled: saving,
+        }] : []),
+        ...(structure.actions?.preview ? [{
+          label: labels[structure.actions.preview.labelRef],
+          variant: "outline",
+          align: "right",
+          onClick: previewDocument,
           disabled: saving,
         }] : []),
         {

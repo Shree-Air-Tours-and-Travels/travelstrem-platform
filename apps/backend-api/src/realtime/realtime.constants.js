@@ -41,6 +41,7 @@ export const REALTIME_EVENTS = Object.freeze({
 
     ENQUIRY_CREATED: "enquiry:created",
     ENQUIRY_CLAIMED: "enquiry:claimed",
+    ENQUIRY_UPDATED: "enquiry:updated",
 
     PAYMENT_CREATED: "payment:created",
     PAYMENT_PENDING: "payment:pending",
@@ -56,6 +57,8 @@ export const REALTIME_EVENTS = Object.freeze({
 
     TRIP_UPDATED: "trip:updated",
     TRIP_AVAILABILITY_CHANGED: "trip:availability-changed",
+
+    PRODUCT_CATALOG_UPDATED: "product-catalog:updated",
 
     NOTIFICATION_CREATED: "notification:created",
 

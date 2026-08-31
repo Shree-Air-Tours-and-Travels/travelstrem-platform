@@ -1,8 +1,8 @@
 import React, { useRef } from "react";
-import { BrandLogo } from "@packages/trem-ui";
+import { BrandLogo, PRODUCT_TYPE } from "@packages/trem-ui";
 import "./ManageClients.scss";
 
-const PRODUCTS = ["trevio", "trevista", "dashboard", "admin", "agent"];
+const PRODUCTS = [PRODUCT_TYPE.TREVIO, PRODUCT_TYPE.TREVISTA, "dashboard", "admin", "agent"];
 
 function LogoUploadCell({ client, product, onUpload }) {
   const inputRef = useRef(null);

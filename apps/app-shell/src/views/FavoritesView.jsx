@@ -6,6 +6,7 @@ import {
   ErrorState,
   FavoriteCard,
   Icon,
+  PRODUCT_TYPE,
   Preloader,
   SearchBar,
 } from "@packages/trem-ui";
@@ -69,7 +70,7 @@ export default function FavoritesView({
       const matchesProduct =
         productFilter === "all" ||
         favorite.product === productFilter ||
-        (!favorite.product && productFilter === "trevista");
+        (!favorite.product && productFilter === PRODUCT_TYPE.TREVISTA);
       return matchesProduct && (!normalizedQuery || searchableText(favorite).includes(normalizedQuery));
     });
 

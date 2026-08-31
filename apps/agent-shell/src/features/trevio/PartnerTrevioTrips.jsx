@@ -5,6 +5,7 @@ import {
   Dropdown,
   EmptyState,
   InputField,
+  PRODUCT_TYPE,
   RecordReview,
   Spinner,
   SubTitle,
@@ -126,7 +127,7 @@ const blankTrip = {
       { label: "Single", value: "single", extraPrice: 0 },
       { label: "Double", value: "double", extraPrice: 0 },
       { label: "Triple", value: "triple", extraPrice: 0 },
-      { label: "Shared", value: "shared", extraPrice: -500 },
+      { label: "Shared room with another traveller", value: "shared", extraPrice: -500 },
     ],
     mealPreferences: [
       { label: "Vegetarian", value: "veg", extraPrice: 0 },
@@ -135,9 +136,20 @@ const blankTrip = {
       { label: "Jain", value: "jain", extraPrice: 0 },
     ],
     packageTypes: [
-      { label: "Standard", value: "standard", extraPrice: 0 },
-      { label: "Premium", value: "premium", extraPrice: 5000 },
-      { label: "Luxury", value: "luxury", extraPrice: 12000 },
+      {
+        label: "Trip without flights",
+        value: "without-flights",
+        description: "Fixed itinerary and standard facilities without flights.",
+        includesFlights: false,
+        extraPrice: 0,
+      },
+      {
+        label: "Trip with flights",
+        value: "with-flights",
+        description: "The same fixed itinerary and facilities with flights included.",
+        includesFlights: true,
+        extraPrice: 0,
+      },
     ],
     drinkTypes: [
       { label: "Non-Alcoholic", value: "non-alcoholic", extraPrice: 0 },
@@ -374,6 +386,33 @@ function PreferenceEditor({ preferences = {}, onChange }) {
                     }}
                   />
                 </label>
+                {key === "packageTypes" ? (
+                  <>
+                    <label>
+                      Package details
+                      <input
+                        value={option.description || ""}
+                        onChange={(e) => {
+                          const next = [...options];
+                          next[index] = { ...option, description: e.target.value };
+                          updateGroup(key, next);
+                        }}
+                      />
+                    </label>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={Boolean(option.includesFlights)}
+                        onChange={(e) => {
+                          const next = [...options];
+                          next[index] = { ...option, includesFlights: e.target.checked };
+                          updateGroup(key, next);
+                        }}
+                      />
+                      Flights included
+                    </label>
+                  </>
+                ) : null}
                 <Button
                   type="button"
                   primaryClassName="ptf-pref-remove"
@@ -1291,7 +1330,7 @@ export default function PartnerTrevioTrips({ session }) {
   const [editing, setEditing] = useState(null);
   const [viewing, setViewing] = useState(null);
   const [formOpen, setFormOpen] = useState(false);
-  const hasAccess = session?.user?.productAccess?.includes("trevio");
+  const hasAccess = session?.user?.productAccess?.includes(PRODUCT_TYPE.TREVIO);
   const canApprove = session?.user?.agencyRole === "partner_admin";
 
   const load = useCallback(async () => {
@@ -1310,10 +1349,8 @@ export default function PartnerTrevioTrips({ session }) {
   }, [hasAccess, load]);
   useEffect(() => {
     if (new URLSearchParams(location.search).get("create") !== "true") return;
-    setEditing(null);
-    setViewing(null);
-    setFormOpen(true);
-  }, [location.search]);
+    navigate("/agent/services/tours/builder?product=trevio", { replace: true });
+  }, [location.search, navigate]);
 
   const clearModalQuery = useCallback(() => {
     const params = new URLSearchParams(location.search);
@@ -1362,9 +1399,7 @@ export default function PartnerTrevioTrips({ session }) {
           variant="solid"
           color="primary"
           onClick={() => {
-            setEditing(null);
-            setViewing(null);
-            setFormOpen(true);
+            navigate("/agent/services/tours/builder?product=trevio");
           }}
           text="New trip"
         />
@@ -1418,6 +1453,10 @@ export default function PartnerTrevioTrips({ session }) {
               }
               onView={(item) => setViewing(item)}
               onEdit={(item) => {
+                if (item.sourceTourId) {
+                  navigate(`/agent/services/tours/builder?product=trevio&tourId=${item.sourceTourId}`);
+                  return;
+                }
                 setViewing(null);
                 setEditing(item);
                 setFormOpen(true);
@@ -1452,6 +1491,10 @@ export default function PartnerTrevioTrips({ session }) {
           trip={viewing}
           onClose={() => setViewing(null)}
           onEdit={(item) => {
+            if (item.sourceTourId) {
+              navigate(`/agent/services/tours/builder?product=trevio&tourId=${item.sourceTourId}`);
+              return;
+            }
             setViewing(null);
             setEditing(item);
             setFormOpen(true);

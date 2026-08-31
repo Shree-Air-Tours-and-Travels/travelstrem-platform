@@ -8,7 +8,7 @@ const CUSTOMER_QUOTE_ACTIONS = Object.freeze({
 export const allowedCustomerQuoteActions = (status, hasChangeRequest = false) => {
   const value = String(status || "").toUpperCase();
   if (["CANCELLED", "EXPIRED"].includes(value)) return [];
-  if (value === "ACCEPTED") return [CUSTOMER_QUOTE_ACTIONS.CANCEL];
+  if (value === "ACCEPTED") return [CUSTOMER_QUOTE_ACTIONS.REQUEST_CHANGES, CUSTOMER_QUOTE_ACTIONS.CANCEL];
   if (value === "REJECTED") return [CUSTOMER_QUOTE_ACTIONS.REQUEST_CHANGES, CUSTOMER_QUOTE_ACTIONS.CANCEL];
   if (hasChangeRequest) return [CUSTOMER_QUOTE_ACTIONS.CANCEL];
   return Object.values(CUSTOMER_QUOTE_ACTIONS);

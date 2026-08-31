@@ -64,6 +64,7 @@ export function buildServerQuoteDocumentModel({
     activitySnapshot: snapshots.activitySnapshot || null,
     inclusions: snapshots.inclusions || data.composition?.inclusions || [],
     exclusions: snapshots.exclusions || data.composition?.exclusions || [],
+    provider: snapshots.provider || null,
     pricing: {
       currency: pricing.currency,
       moneyUnit: "PAISE",
