@@ -6,10 +6,16 @@ import {
   ContactForm,
   ErrorState,
   Preloader,
+  PRODUCT_TYPE,
   QuoteComparison,
   TimelineStepper,
 } from "@packages/trem-ui";
-import { fetchData, notifyDataChanged, validateFields } from "@packages/trem-utils";
+import {
+  buildGlobalAppShellUrl,
+  fetchData,
+  notifyDataChanged,
+  validateFields,
+} from "@packages/trem-utils";
 import { showRealtimeToast } from "@packages/trem-events";
 import ModalShell from "./ModalShell.jsx";
 import "./ContactAgentModal.styles.scss";
@@ -136,7 +142,7 @@ const ContactAgentModal = ({
   onClose,
   tourId,
   user = null,
-  product = "trevista",
+  product = PRODUCT_TYPE.TREVISTA,
   initialSelections = null,
   closeOnOutsideClick = false,
   onCustomizeJourney,
@@ -144,7 +150,7 @@ const ContactAgentModal = ({
   const enquiryFormId = useId();
   const [formData, setFormData] = useState(null);
   const [formLoadError, setFormLoadError] = useState("");
-  const [activeStage, setActiveStage] = useState("details");
+  const [activeStage, setActiveStage] = useState("confirm");
   const requestIdRef = useRef(0);
   const initializedFormDataRef = useRef(null);
   const bodyRef = useRef(null);
@@ -153,7 +159,7 @@ const ContactAgentModal = ({
     const requestId = ++requestIdRef.current;
     setFormData(null);
     setFormLoadError("");
-    setActiveStage("details");
+    setActiveStage("confirm");
     try {
       const query = new URLSearchParams({ form: "contact-agent", product });
       if (tourId) query.set("tourId", tourId);
@@ -308,7 +314,7 @@ const ContactAgentModal = ({
     setForm(initialForm);
     setErrors({});
     setMsg(null);
-    setActiveStage("details");
+    setActiveStage("confirm");
     setSelectedAddOnIds([]);
   }, [formData, initialForm]);
 
@@ -376,6 +382,9 @@ const ContactAgentModal = ({
         "email",
         "phone",
         "travellerCount",
+        "adultCount",
+        "childCount",
+        "infantCount",
         "packageKey",
         "preferredTravelDate",
         "preferredStartDate",
@@ -391,6 +400,11 @@ const ContactAgentModal = ({
   const changeFields = useMemo(
     () => effectiveFieldsMeta.filter((field) => !detailFieldNames.has(field.name)),
     [detailFieldNames, effectiveFieldsMeta],
+  );
+  const confirmationFields = useMemo(
+    () => effectiveFieldsMeta.filter((field) =>
+      ["name", "email", "phone", "preferredContact"].includes(field.name)),
+    [effectiveFieldsMeta],
   );
   const mapFields = (fields) => Object.fromEntries(fields.map((field) => [field.name, field]));
 
@@ -459,7 +473,7 @@ const ContactAgentModal = ({
     if (
       !open ||
       activeStage !== "pricing" ||
-      product !== "trevista" ||
+      product !== PRODUCT_TYPE.TREVISTA ||
       !previewTourId ||
       !pricingReady ||
       !packageKey ||
@@ -568,7 +582,10 @@ const ContactAgentModal = ({
     });
   };
 
-  const hasPricingJourney = product === "trevista" && Boolean(fieldsMap.packageKey);
+  const hasPricingJourney = product === PRODUCT_TYPE.TREVISTA && Boolean(fieldsMap.packageKey);
+  const hasPreferenceJourney =
+    product === PRODUCT_TYPE.TREVIO &&
+    (changeFields.length > 0 || formData?.quoteConfiguration?.optionalAddOns?.length > 0);
   const journeyLabels = {
     ariaLabel: formData?.journeyLabels?.ariaLabel || "Quote request progress",
     detailsStep: formData?.journeyLabels?.detailsStep || "Trip details",
@@ -616,17 +633,7 @@ const ContactAgentModal = ({
   const detailsContinueLabel = selectedPackageLabel
     ? journeyLabels.continueWithPackage.replace("{package}", selectedPackageLabel)
     : journeyLabels.continue;
-  const stages = hasPricingJourney
-    ? [
-        { id: "details", label: journeyLabels.detailsStep },
-        { id: "changes", label: journeyLabels.changesStep },
-        { id: "pricing", label: journeyLabels.pricingStep },
-        { id: "review", label: journeyLabels.reviewStep },
-      ]
-    : [
-        { id: "details", label: journeyLabels.detailsStep },
-        { id: "review", label: journeyLabels.reviewStep },
-      ];
+  const stages = [{ id: "confirm", label: "Confirm enquiry" }];
   const activeStageIndex = stages.findIndex((stage) => stage.id === activeStage);
   const timelineSteps = stages.map((stage, index) => ({
     id: stage.id,
@@ -653,7 +660,7 @@ const ContactAgentModal = ({
       return;
     }
     setErrors({});
-    goToStage(hasPricingJourney ? "changes" : "review");
+    goToStage(hasPricingJourney || hasPreferenceJourney ? "changes" : "review");
   };
 
   const handleChangesContinue = () => {
@@ -664,11 +671,56 @@ const ContactAgentModal = ({
       return;
     }
     setErrors({});
-    goToStage("pricing");
+    goToStage(hasPricingJourney ? "pricing" : "review");
   };
 
   const handleSubmit = async (ev) => {
     ev?.preventDefault?.();
+
+    if (activeStage === "confirm") {
+      const validation = validateFields(form, mapFields(confirmationFields));
+      if (!validation.ok) {
+        setErrors(validation.errors);
+        setMsg({ type: "error", text: journeyLabels.validationError });
+        return;
+      }
+      setSubmitting(true);
+      setMsg(null);
+      try {
+        const response = await fetchData("/submit.json?form=contact-agent", {
+          method: "POST",
+          body: {
+            tourId: typeof tour?._id === "string" ? tour._id : tourId,
+            tourTitle: tour?.title || "Trevio trip",
+            product,
+            confirmed: true,
+            isAuthenticated: Boolean(user?.id || user?._id),
+            fields: Object.fromEntries(
+              confirmationFields.map((field) => [field.name, form[field.name] || ""]),
+            ),
+            url: window.location.href,
+            createdAt: new Date().toISOString(),
+          },
+        });
+        if (response?.status !== "success") {
+          throw new Error(response?.message || "The enquiry could not be created.");
+        }
+        notifyDataChanged("enquiries");
+        if (response.notify) showRealtimeToast(response.notify);
+        const enquiryRef =
+          response?.component?.data?.lead?.enquiryRef ||
+          response?.componentData?.data?.enquiryRef ||
+          response?.data?.lead?.enquiryRef;
+        if (!enquiryRef) throw new Error("The enquiry was created without a reference.");
+        const destination = new URL(buildGlobalAppShellUrl({ product, tab: "bookings" }));
+        destination.searchParams.set("enquiry", enquiryRef);
+        window.location.assign(destination.toString());
+      } catch (error) {
+        setMsg({ type: "error", text: error?.message || "The enquiry could not be created." });
+        setSubmitting(false);
+      }
+      return;
+    }
 
     // A form submit can also be triggered by Enter while completing details.
     // Only the final review step is allowed to create the enquiry.
@@ -735,7 +787,7 @@ const ContactAgentModal = ({
     <ModalShell
       open={open}
       label={formData?.title || "Contact Agent"}
-      dialogClassName="ct-modal-card"
+      dialogClassName={`ct-modal-card${activeStage === "confirm" ? " ct-modal-card--confirmation" : ""}`}
       closeOnOutsideClick={closeOnOutsideClick}
       onClose={onClose}
     >
@@ -778,17 +830,19 @@ const ContactAgentModal = ({
           />
         ) : (
           <div className="ct-modal-card__workspace" data-stage={activeStage}>
-            <TimelineStepper
-              className="ct-modal-card__steps"
-              steps={timelineSteps}
-              ariaLabel={journeyLabels.ariaLabel}
-              orientation="horizontal"
-              variant="soft"
-              markerVariant="number"
-              connectorVariant="solid"
-              showStepNumbers
-              showTime={false}
-            />
+            {activeStage !== "confirm" ? (
+              <TimelineStepper
+                className="ct-modal-card__steps"
+                steps={timelineSteps}
+                ariaLabel={journeyLabels.ariaLabel}
+                orientation="horizontal"
+                variant="soft"
+                markerVariant="number"
+                connectorVariant="solid"
+                showStepNumbers
+                showTime={false}
+              />
+            ) : null}
 
             {tour?.title && (
               <div className="ct-modal-card__tour">
@@ -820,7 +874,22 @@ const ContactAgentModal = ({
               </div>
             )}
 
-            {activeStage === "pricing" ? (
+            {activeStage === "confirm" ? (
+              <section className="ct-modal-card__stage ct-modal-card__review-panel">
+                <ContactForm
+                  formId={enquiryFormId}
+                  showActions={false}
+                  fieldsMeta={confirmationFields}
+                  formValues={form}
+                  onChange={handleChange}
+                  onSubmit={handleSubmit}
+                  onCancel={onClose}
+                  submitting={submitting}
+                  errors={errors}
+                  Button={Button}
+                />
+              </section>
+            ) : activeStage === "pricing" ? (
               <section className="ct-modal-card__stage ct-modal-card__pricing-panel">
                 <header className="ct-modal-card__stage-heading">
                   <span>{journeyLabels.pricingStep}</span>
@@ -847,11 +916,21 @@ const ContactAgentModal = ({
                   <p>{journeyLabels.reviewDescription}</p>
                 </header>
                 <CardWithSubEntity
-                  title="Traveller and tour request"
-                  subtitle="Nothing is sent until you select Request quote below."
+                  title={product === PRODUCT_TYPE.TREVIO ? "Traveller and trip enquiry" : "Traveller and tour request"}
+                  subtitle={
+                    product === PRODUCT_TYPE.TREVIO
+                      ? "Nothing is sent until you select Enquire now below."
+                      : "Nothing is sent until you select Request quote below."
+                  }
                   items={[
                     { label: "Traveller", value: form.name || "—" },
-                    { label: "Travellers", value: form.travellerCount || "—" },
+                    {
+                      label: "Travellers",
+                      value:
+                        product === PRODUCT_TYPE.TREVIO
+                          ? `${form.adultCount || 0} adult · ${form.childCount || 0} child · ${form.infantCount || 0} infant`
+                          : form.travellerCount || "—",
+                    },
                     { label: "Package", value: selectedPackageLabel || "—" },
                     {
                       label: "Travel dates",
@@ -862,7 +941,7 @@ const ContactAgentModal = ({
                           .join(" – ") ||
                         "—",
                     },
-                    {
+                    ...(product === PRODUCT_TYPE.TREVISTA ? [{
                       label: "Flights",
                       value:
                         form.flightPreference === "with_flights"
@@ -870,7 +949,14 @@ const ContactAgentModal = ({
                             ? "Included in package"
                             : "Request flights from the agent"
                           : "No flights requested",
-                    },
+                    }] : []),
+                    ...(product === PRODUCT_TYPE.TREVIO
+                      ? [
+                          { label: "Room", value: form.roomType || "No preference" },
+                          { label: "Meals", value: form.mealPreference || "No preference" },
+                          { label: "Drinks", value: form.drinkPreference || "No preference" },
+                        ]
+                      : []),
                   ]}
                   sections={[
                     selectedHotelSelections.length
@@ -905,12 +991,14 @@ const ContactAgentModal = ({
                     form.message ? { title: "Additional request", text: form.message } : null,
                   ].filter(Boolean)}
                 />
-                <QuoteComparison
-                  preview={quotePreview.data}
-                  error={quotePreview.error}
-                  requirements={pricingRequirements}
-                  labels={formData?.quoteLabels}
-                />
+                {product === PRODUCT_TYPE.TREVISTA ? (
+                  <QuoteComparison
+                    preview={quotePreview.data}
+                    error={quotePreview.error}
+                    requirements={pricingRequirements}
+                    labels={formData?.quoteLabels}
+                  />
+                ) : null}
               </section>
             ) : (
               <section className="ct-modal-card__stage ct-modal-card__form-panel">
@@ -1048,7 +1136,9 @@ const ContactAgentModal = ({
           <Button
             type="button"
             text={
-              activeStage === "details"
+              activeStage === "confirm"
+                ? "Cancel"
+                : activeStage === "details"
                 ? journeyLabels.cancel
                 : activeStage === "changes"
                   ? journeyLabels.backToDetails
@@ -1056,13 +1146,17 @@ const ContactAgentModal = ({
                     ? "Back to changes"
                     : hasPricingJourney
                       ? journeyLabels.backToPricing
-                      : journeyLabels.backToDetails
+                      : hasPreferenceJourney
+                        ? "Back to preferences"
+                        : journeyLabels.backToDetails
             }
             size="medium"
             variant="outline"
             color="primary"
             onClick={
-              activeStage === "details"
+              activeStage === "confirm"
+                ? onClose
+                : activeStage === "details"
                 ? onClose
                 : () =>
                     goToStage(
@@ -1072,12 +1166,24 @@ const ContactAgentModal = ({
                           ? "details"
                           : hasPricingJourney
                             ? "pricing"
-                            : "details",
+                            : hasPreferenceJourney
+                              ? "changes"
+                              : "details",
                     )
             }
             disabled={submitting}
           />
-          {activeStage === "review" ? (
+          {activeStage === "confirm" ? (
+            <Button
+              type="button"
+              text={submitting ? "Creating enquiry…" : "Confirm and continue"}
+              size="medium"
+              variant="solid"
+              color="primary"
+              onClick={handleSubmit}
+              disabled={submitting}
+            />
+          ) : activeStage === "review" ? (
             <Button
               type="button"
               text={submitting ? journeyLabels.sending : submitText}
@@ -1098,7 +1204,9 @@ const ContactAgentModal = ({
                   : activeStage === "pricing"
                     ? journeyLabels.continueToReview
                     : activeStage === "changes"
-                      ? "Continue to package price"
+                      ? hasPricingJourney
+                        ? "Continue to package price"
+                        : journeyLabels.continueToReview
                       : detailsContinueLabel
               }
               size="medium"
@@ -1130,7 +1238,7 @@ ContactAgentModal.propTypes = {
   onClose: PropTypes.func,
   tourId: PropTypes.string,
   user: PropTypes.object,
-  product: PropTypes.oneOf(["trevista", "trevio"]),
+  product: PropTypes.oneOf(Object.values(PRODUCT_TYPE)),
   closeOnOutsideClick: PropTypes.bool,
   initialSelections: PropTypes.object,
   onCustomizeJourney: PropTypes.func,

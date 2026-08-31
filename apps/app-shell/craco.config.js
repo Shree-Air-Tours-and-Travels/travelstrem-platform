@@ -18,6 +18,11 @@ const trevistaRemoteEntry = remoteEntry(
   process.env.REACT_APP_TREVISTA_URL,
   "http://localhost:3001",
 );
+const trevioRemoteEntry = remoteEntry(
+  process.env.REACT_APP_TREVIO_REMOTE_ENTRY,
+  process.env.REACT_APP_TREVIO_URL,
+  "http://localhost:3005",
+);
 
 function extendBabelIncludes(webpackConfig) {
   const oneOfRule = webpackConfig.module.rules.find((rule) => Array.isArray(rule.oneOf));
@@ -76,6 +81,7 @@ module.exports = {
         new container.ModuleFederationPlugin({
           name: "app_shell",
           remotes: {
+            trevio: `trevio@${trevioRemoteEntry}`,
             trevista: `trevista@${trevistaRemoteEntry}`,
           },
           shared: {

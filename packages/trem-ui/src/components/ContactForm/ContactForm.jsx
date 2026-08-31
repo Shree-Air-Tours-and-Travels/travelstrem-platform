@@ -100,10 +100,11 @@ const ContactForm = ({
     }
     if (type === "date") {
       return (
-        <label className="trem-contact-form__date-wrap">
-          <span>{field.label}</span>
+        <div className="trem-contact-form__date-wrap">
           <DatePicker
             value={value}
+            label={field.label}
+            required={field.required}
             placeholder={field.placeholder || field.label}
             min={field.min}
             max={field.max}
@@ -111,7 +112,7 @@ const ContactForm = ({
             portalZIndex={2100}
             onChange={(next) => onChange(field.name, next)}
           />
-        </label>
+        </div>
       );
     }
     return (

@@ -34,7 +34,12 @@ import config from "../../config/index.js";
 import { PERMISSIONS, ROLE_PERMISSIONS } from "./permissions.js";
 import { normalizeProductKeys } from "./productCatalog.js";
 import { invalidateHiddenProductCache } from "../../utils/hiddenProductCache.js";
-import { REALTIME_EVENTS, notificationDto, publishToUser } from "../../realtime/index.js";
+import {
+    REALTIME_EVENTS,
+    notificationDto,
+    publishToCatalog,
+    publishToUser,
+} from "../../realtime/index.js";
 import {
     CONTACT_METHODS,
     CUSTOMER_STAGES,
@@ -2273,6 +2278,11 @@ export async function upsertProduct(req, res) {
             entityType: "Product",
             entityId: product._id,
             after: product.toObject(),
+        });
+        await publishToCatalog(REALTIME_EVENTS.PRODUCT_CATALOG_UPDATED, {
+            key: product.key,
+            status: product.status,
+            hidden: product.hidden,
         });
         return ok(res, product, "Product saved.");
     } catch (error) {

@@ -179,6 +179,10 @@ const FloatingActionBar = React.memo(function FloatingActionBar({
       if (rect.height <= 0 || !Number.isFinite(rect.top)) return;
       const clearance = Math.max(0, Math.ceil(window.innerHeight - rect.top + 12));
       root.style.setProperty("--trem-floating-action-clearance", `${clearance}px`);
+      root.style.setProperty(
+        "--trem-floating-action-height",
+        `${Math.ceil(rect.height + 12)}px`,
+      );
     };
 
     syncClearance();
@@ -198,6 +202,7 @@ const FloatingActionBar = React.memo(function FloatingActionBar({
       layoutObserver?.disconnect();
       window.removeEventListener("resize", syncClearance);
       root.style.removeProperty("--trem-floating-action-clearance");
+      root.style.removeProperty("--trem-floating-action-height");
     };
   }, [mobile, resolved.length, resolvedError, resolvedNote, variant]);
 
@@ -287,7 +292,7 @@ const FloatingActionBar = React.memo(function FloatingActionBar({
                     variant="text"
                     size="small"
                     isCircular
-                    iconLeft="moreVertical"
+                    iconLeft="moreHorizontal"
                     iconSize={18}
                     onClick={() => setSheetOpen(true)}
                     primaryClassName="trem-fab__btn trem-fab__btn--more"
@@ -305,7 +310,7 @@ const FloatingActionBar = React.memo(function FloatingActionBar({
                   variant="text"
                   size="small"
                   isCircular
-                  iconLeft="moreVertical"
+                  iconLeft="moreHorizontal"
                   iconSize={18}
                   onClick={() => setSheetOpen(true)}
                   primaryClassName="trem-fab__btn trem-fab__btn--more"

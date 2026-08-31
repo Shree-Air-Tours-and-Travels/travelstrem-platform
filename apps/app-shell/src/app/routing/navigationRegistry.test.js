@@ -35,7 +35,7 @@ describe("navigationRegistry", () => {
 
   it("keeps account destinations protected from guest mode", () => {
     expect(isGuestAccessibleDestination({ id: "trevista" })).toBe(true);
-    expect(isGuestAccessibleDestination({ id: "trevio" })).toBe(false);
+    expect(isGuestAccessibleDestination({ id: "trevio" })).toBe(true);
     expect(isGuestAccessibleDestination({ id: "favorites" })).toBe(false);
   });
 

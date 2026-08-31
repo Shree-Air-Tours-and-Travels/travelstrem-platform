@@ -28,6 +28,10 @@ const guidanceByStatus = {
     sent: "Your enquiry has been sent successfully. You will be notified when a travel specialist responds.",
     in_review:
         "A travel specialist is reviewing your dates and preferences. You will be notified when the response is ready.",
+    enquiry_details_added:
+        "Your trip choices are saved. Complete the individual traveller details before requesting a quotation.",
+    traveller_details_added:
+        "Traveller details are saved. You can now ask the trip captain for a quotation.",
     quote_requested:
         "Your request is being prepared for quotation. Final availability and pricing will be shared in the response.",
     quote_sent:
@@ -47,6 +51,10 @@ const receivedGuidanceByStatus = {
     sent: "The enquiry was received and is waiting for a travel specialist to review it.",
     in_review:
         "This enquiry is under review. Confirm availability and prepare the appropriate response.",
+    enquiry_details_added:
+        "The traveller has selected the trip options and is completing individual traveller details.",
+    traveller_details_added:
+        "Traveller details are complete. The customer can now request a quotation.",
     quote_requested: "The traveller is waiting for a quotation based on the submitted request.",
     quote_sent: "A quotation has been sent to the traveller and is awaiting their decision.",
     accepted: "The traveller accepted this quotation.",
@@ -86,6 +94,8 @@ export const enquiryCenterView = (perspective = "sent") => {
             phone: "Phone",
             preferredContact: "Preferred contact",
             bookingAmount: "Booking amount",
+            travelSpecialist: "Travel specialist",
+            agentEmail: "Agent email",
             travellers: "Travellers",
             departure: "Travel dates",
             flightPreference: "Flight preference",
@@ -105,22 +115,129 @@ export const enquiryCenterView = (perspective = "sent") => {
         table: {
             title: "All records",
             description: "Search your enquiries and bookings.",
-            searchPlaceholder: "Search by reference, tour or contact",
-            recordType: "Record type",
-            allRecords: "All records",
-            bookings: "Bookings",
-            enquiries: "Enquiries",
-            sortBy: "Sort by",
-            newest: "Newest",
-            reference: "Reference",
-            tourService: "Tour or service",
-            type: "Type",
-            customerSpecialist: isSent ? "Travel specialist" : "Customer",
-            travellers: "Travellers",
-            travelDate: "Travel dates",
-            status: "Status",
-            created: "Created",
-            viewDetails: "View details",
+            search: {
+                placeholder: "Search by reference, tour or contact",
+                keys: ["reference", "service.name", "party", "statusDisplay"],
+            },
+            filters: [
+                {
+                    id: "recordType",
+                    label: "Record type",
+                    accessor: "recordType",
+                    options: [
+                        { label: "All records", value: "all" },
+                        { label: "Bookings", value: "booking" },
+                        { label: "Enquiries", value: "enquiry" },
+                    ],
+                },
+                {
+                    id: "product",
+                    label: "Product",
+                    accessor: "product",
+                    options: [
+                        { label: "All products", value: "all" },
+                        { label: "Trevista", value: "trevista" },
+                        { label: "Trevio", value: "trevio" },
+                    ],
+                },
+            ],
+            sorting: {
+                label: "Sort by",
+                defaultValue: "newest",
+                options: [
+                    {
+                        label: "Newest",
+                        value: "newest",
+                        sort: { columnId: "createdAt", direction: "desc" },
+                    },
+                    {
+                        label: "Reference",
+                        value: "reference",
+                        sort: { columnId: "reference", direction: "asc" },
+                    },
+                ],
+            },
+            pagination: {
+                pageSize: 10,
+                pageSizeLabel: "Rows",
+                pageSizeOptions: [10, 25, 50],
+            },
+            columns: [
+                {
+                    id: "reference",
+                    label: "Reference",
+                    minWidth: 145,
+                    sortable: true,
+                    emphasis: "reference",
+                    interaction: "open-record",
+                },
+                {
+                    id: "service",
+                    label: "Tour or service",
+                    type: "mediaText",
+                    titleAccessor: "service.name",
+                    subtitleAccessor: "service.type",
+                    mediaAccessor: "service.image",
+                    sortAccessor: "service.name",
+                    minWidth: 260,
+                    sortable: true,
+                },
+                {
+                    id: "recordTypeLabel",
+                    label: "Type",
+                    accessor: "recordTypeLabel",
+                    minWidth: 120,
+                },
+                {
+                    id: "party",
+                    label: isSent ? "Travel specialist" : "Customer",
+                    minWidth: 190,
+                },
+                { id: "travellers", label: "Travellers", minWidth: 120 },
+                { id: "travelDate", label: "Travel dates", minWidth: 155 },
+                {
+                    id: "statusDisplay",
+                    label: "Status",
+                    type: "status",
+                    toneAccessor: "statusTone",
+                    minWidth: 145,
+                },
+                {
+                    id: "createdAt",
+                    label: "Created",
+                    accessor: "createdDisplay",
+                    sortAccessor: "createdAt",
+                    minWidth: 135,
+                    sortable: true,
+                },
+                {
+                    id: "actions",
+                    label: "",
+                    type: "actions",
+                    minWidth: 64,
+                    align: "right",
+                    actions: [
+                        {
+                            id: "view",
+                            label: "View details",
+                            icon: "eye",
+                            interaction: "open-record",
+                        },
+                    ],
+                },
+            ],
+            mobileCard: {
+                titleAccessor: "service.name",
+                subtitleAccessor: "reference",
+                imageAccessor: "service.image",
+                badgeAccessor: "statusDisplay",
+                badgeToneAccessor: "statusTone",
+                fieldIds: ["recordTypeLabel", "party", "travelDate", "createdDisplay"],
+                actionLabel: "View details",
+                actionIcon: "eye",
+                subtitleClickable: true,
+                actionClickable: true,
+            },
         },
         states: {
             loadErrorTitle: "Bookings and enquiries could not be loaded",
@@ -137,6 +254,12 @@ export const enquiryView = (
 ) => {
     const fields = lead?.fields || {};
     const isSent = perspective === "sent";
+    const ownerAgent = lead?.ownerAgent && typeof lead.ownerAgent === "object"
+        ? lead.ownerAgent
+        : null;
+    const agency = lead?.agencyId && typeof lead.agencyId === "object"
+        ? lead.agencyId
+        : null;
     const counterpart = isSent
         ? {
               label: "Sent to",
@@ -339,6 +462,14 @@ export const enquiryView = (
                   email: lead?.agentSnapshot?.email || "",
                   phone: lead?.agentSnapshot?.phone || "",
               },
+        assignedAgent: {
+            name: lead?.agentSnapshot?.name || ownerAgent?.name || "",
+            email: lead?.agentSnapshot?.email || ownerAgent?.email || "",
+        },
+        agency: {
+            name: lead?.agencySnapshot?.name || agency?.agencyName || "",
+            logo: lead?.agencySnapshot?.logo || agency?.logo || "",
+        },
         notified: Boolean(lead?.notified),
         ...(bookingJourney ? { bookingJourney } : {}),
     };

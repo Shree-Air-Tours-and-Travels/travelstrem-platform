@@ -8,6 +8,7 @@ const enquirySnapshot = (enquiry) => ({
     form: enquiry.form || "contact-agent",
     fields: enquiry.fields || {},
     agentSnapshot: enquiry.agentSnapshot || {},
+    agencySnapshot: enquiry.agencySnapshot || {},
     createdAt: enquiry.createdAt || null,
 });
 

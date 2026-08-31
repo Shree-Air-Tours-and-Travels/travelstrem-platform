@@ -8,6 +8,7 @@ import {
   AgencyDetailsCard,
 } from "../../index.js";
 import { ContactAgentModal } from "@packages/trem-modals";
+import { PRODUCT_TYPE } from "../../constants/productTypes.js";
 import TourOverview from "./widgets/TourOverview/TourOverview";
 import TourGallery from "./widgets/TourGallery/TourGallery";
 import PricingCard from "./widgets/PricingCard/PricingCard";
@@ -136,6 +137,7 @@ const renderWidget = (widget, props) => {
           onSelectActivity={props.onSelectActivity}
           selectedDeparture={props.selectedDeparture}
           onSelectDeparture={props.onSelectDeparture}
+          productType={props.productType}
         />
       );
     case "TourHighlights":
@@ -160,6 +162,7 @@ const renderWidget = (widget, props) => {
           tourRef={props.tourRef}
           selectedPackage={props.selectedPackage}
           onSelectPackage={props.onSelectPackage}
+          productType={props.productType}
         />
       );
     case "CancellationPolicy":
@@ -220,12 +223,15 @@ export default function ToursDetailsView({
         Number(selectedPackageData.sellingTotalMinor || 0) / 100,
       )
     : "";
-  const floatingQuoteLabel = selectedPackageName
-    ? `${(elements?.labels?.continueWithPackage || "Continue with {package}").replace(
-        "{package}",
-        selectedPackageName,
-      )}${selectedPackagePrice ? ` · ${selectedPackagePrice}` : ""}`
-    : elements?.labels?.enquire || "Get a quote";
+  const floatingQuoteLabel =
+    productType === "trip"
+      ? elements?.labels?.enquire || "Enquire now"
+      : selectedPackageName
+        ? `${(elements?.labels?.continueWithPackage || "Continue with {package}").replace(
+            "{package}",
+            selectedPackageName,
+          )}${selectedPackagePrice ? ` · ${selectedPackagePrice}` : ""}`
+        : elements?.labels?.enquire || "Get a quote";
   const widgetProps = {
     tourRef,
     activeTour,
@@ -235,6 +241,7 @@ export default function ToursDetailsView({
     isFavorited,
     onFavorite,
     appKey,
+    productType,
     selectedPackage,
     onSelectPackage,
   };
@@ -491,7 +498,7 @@ export default function ToursDetailsView({
           tourId={activeTour._id}
           onClose={() => setContactOpen(false)}
           user={user}
-          product={productType === "trip" ? "trevio" : "trevista"}
+          product={productType === "trip" ? PRODUCT_TYPE.TREVIO : PRODUCT_TYPE.TREVISTA}
           initialSelections={{
             packageKey: selectedPackage,
           }}

@@ -6,6 +6,7 @@ import ManageTours from "../features/services/tours/ManageTours";
 import ServicesContainer from "../features/services/container";
 import PartnerTrevioTrips from "../features/trevio/PartnerTrevioTrips";
 import { AgentAdminBookingJourney } from "@apps/booking-engine";
+import { PRODUCT_TYPE } from "@packages/trem-ui";
 import AgentSupportPage from "../features/support/AgentSupportPage";
 import { useAgentPortalConfig, isAllowedAgentRole } from "./providers/AgentPortalProvider";
 
@@ -25,7 +26,7 @@ const Routers = () => {
         <Route
           path="/agent/services/*"
           element={
-            session?.user?.productAccess?.includes("trevista") ? (
+            session?.user?.productAccess?.includes(PRODUCT_TYPE.TREVISTA) ? (
               <ServicesContainer />
             ) : (
               <Navigate to="/agent/dashboard" replace />

@@ -32,6 +32,10 @@ const ContactLeadSchema = new mongoose.Schema(
             email: { type: String, default: "" },
             phone: { type: String, default: "" },
         },
+        agencySnapshot: {
+            name: { type: String, default: "" },
+            logo: { type: String, default: "" },
+        },
         selection: {
             packageKey: { type: String, default: "" },
             packageName: { type: String, default: "" },
@@ -71,7 +75,7 @@ const ContactLeadSchema = new mongoose.Schema(
         travellerDetails: { type: mongoose.Schema.Types.Mixed, default: null },
         status: {
             type: String,
-            enum: ["new", "in_review", "quote_sent", "accepted", "rejected", "change_requested", "cancelled", "responded", "closed"],
+            enum: ["new", "enquiry_details_added", "traveller_details_added", "quote_requested", "in_review", "quote_sent", "accepted", "rejected", "change_requested", "cancelled", "responded", "closed"],
             default: "new",
             index: true,
         },

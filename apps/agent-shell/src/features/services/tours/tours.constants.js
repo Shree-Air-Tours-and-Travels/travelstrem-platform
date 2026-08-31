@@ -28,8 +28,8 @@ export const AVATAR_ICONS = [
 ];
 
 export const SERVICE_TYPES = [
-  { id: "trevio", label: "Trevio" },
-  { id: "trevista", label: "Trevista" },
+  { id: PRODUCT_TYPE.TREVIO, label: "Trevio" },
+  { id: PRODUCT_TYPE.TREVISTA, label: "Trevista" },
 ];
 
 export const FORM_STEPS = [
@@ -125,3 +125,4 @@ export const FALLBACK_PROFILE = {
   agentRef: "unassigned",
   avatar: "",
 };
+import { PRODUCT_TYPE } from "@packages/trem-ui";

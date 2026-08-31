@@ -12,7 +12,13 @@ import { enquiryView } from "../forms/mappers/enquiryView.js";
 // that journey is not built yet, so the UI must keep showing the no-data
 // state until it ships.
 
-const AWAITING_STATUSES = ["new", "in_review"];
+const AWAITING_STATUSES = [
+    "new",
+    "enquiry_details_added",
+    "traveller_details_added",
+    "quote_requested",
+    "in_review",
+];
 const RECENT_LIMIT = 5;
 
 const ACTIVITY_COPY = Object.freeze({

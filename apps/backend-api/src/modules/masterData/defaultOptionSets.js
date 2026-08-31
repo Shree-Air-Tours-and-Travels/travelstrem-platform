@@ -557,6 +557,37 @@ export const DEFAULT_OPTION_SETS = Object.freeze({
             { value: "prefer_not_to_say", label: "Prefer not to say", sortOrder: 30 },
         ],
     },
+    "booking.mealPreferenceOptions": {
+        options: ["Vegetarian", "Non-vegetarian", "Vegan", "Jain", "No preference"].map(
+            (label, index) => ({
+                value: label.toLowerCase().replace(/[^a-z]+/g, "_"),
+                label,
+                sortOrder: index * 10,
+            }),
+        ),
+    },
+    "booking.drinkPreferenceOptions": {
+        options: ["Non-alcoholic", "Alcoholic", "No preference"].map((label, index) => ({
+            value: label.toLowerCase().replace(/[^a-z]+/g, "_"),
+            label,
+            sortOrder: index * 10,
+        })),
+    },
+    "booking.roomPreferenceOptions": {
+        options: [
+            { value: "couple_double", label: "Double bed with partner", sortOrder: 0 },
+            { value: "friends_shared", label: "Share with my friends", sortOrder: 10 },
+            { value: "stranger_allowed", label: "Can share with another traveller", sortOrder: 20 },
+            { value: "private_room", label: "Private room only", sortOrder: 30 },
+        ],
+    },
+    "booking.travelInsuranceOptions": {
+        options: [
+            { value: "required", label: "Add travel insurance", sortOrder: 0 },
+            { value: "not_required", label: "Travel insurance not required", sortOrder: 10 },
+            { value: "already_covered", label: "Already insured", sortOrder: 20 },
+        ],
+    },
     "common.tripTypeOptions": {
         options: [
             { value: "all", label: "All types", sortOrder: 0 },

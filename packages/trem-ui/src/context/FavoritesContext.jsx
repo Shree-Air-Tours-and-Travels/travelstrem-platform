@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { fetchData, notifyDataChanged } from "@packages/trem-utils";
+import { PRODUCT_TYPE } from "../constants/productTypes.js";
 
 const FavoritesContext = createContext(null);
 
-export function FavoritesProvider({ children, product = "trevista" }) {
+export function FavoritesProvider({ children, product = PRODUCT_TYPE.TREVISTA }) {
   const [favoriteIds, setFavoriteIds] = useState(new Set());
   const [favorites, setFavorites] = useState([]);
   const idsRef = useRef(favoriteIds);

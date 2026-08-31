@@ -76,7 +76,7 @@
   color: var(--control-text, var(--text));
 
   font-family: $font-primary;
-  font-size: $font-size-sm;
+  font-size: var(--trem-control-value-font-size, #{$font-size-sm});
 
   text-align: left;
 
@@ -175,7 +175,7 @@
 
   color: var(--muted);
 
-  font-size: $font-size-xs;
+  font-size: var(--trem-control-label-font-size, #{$font-size-xs});
   font-weight: $font-bold;
 
   line-height: 1.15;

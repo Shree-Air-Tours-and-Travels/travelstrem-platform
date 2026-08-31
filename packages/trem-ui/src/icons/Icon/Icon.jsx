@@ -746,6 +746,14 @@ const MoreVertical = (p) => (
   </Svg>
 );
 
+const MoreHorizontal = (p) => (
+  <Svg {...p}>
+    <circle cx="5" cy="12" r="1.5" {...solid} />
+    <circle cx="12" cy="12" r="1.5" {...solid} />
+    <circle cx="19" cy="12" r="1.5" {...solid} />
+  </Svg>
+);
+
 const MenuClose = (p) => (
   <Svg {...p}>
     <circle cx="12" cy="12" r="8.5" {...tone} />
@@ -1138,6 +1146,7 @@ const ICONS = {
   map: Map,
   mapPin: MapPin,
   menuClose: MenuClose,
+  moreHorizontal: MoreHorizontal,
   moreVertical: MoreVertical,
   menuOpen: MenuOpen,
   messageCircle: MessageCircle,

@@ -74,6 +74,7 @@ const normalizeTripForWidget = (trip = {}) => {
         agency: normalized.agency,
         operator: normalized.operator,
         preferences: normalized.preferences || {},
+        commercialPricing: normalized.commercialPricing || null,
         itinerary: (trip.itinerary || []).map((item) => ({
             day: item.day || 1,
             title: item.title || item.location || "Experience day",

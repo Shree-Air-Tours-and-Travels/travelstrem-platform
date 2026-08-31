@@ -6,6 +6,7 @@ import {
   ContactForm,
   ErrorState,
   NoDataFound,
+  PRODUCT_TYPE,
   Preloader,
   TimelineStepper,
 } from "@packages/trem-ui";
@@ -179,7 +180,7 @@ export default function CustomizeTour({ userSession = null }) {
         body: {
           form: "custom-tour",
           tourTitle: "Custom tour enquiry",
-          product: "trevista",
+          product: PRODUCT_TYPE.TREVISTA,
           isAuthenticated: Boolean(userSession?.user?.id || userSession?.user?._id),
           url: window.location.href,
           fields: form,

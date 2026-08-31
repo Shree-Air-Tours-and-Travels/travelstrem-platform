@@ -14,6 +14,7 @@ const optionLabel = (option) =>
   typeof option === "string" ? option : (option?.label ?? optionValue(option));
 
 const AUTO_WIDTH_MAX_LABEL = 16;
+const CONTROL_SIZES = new Set(["small", "medium", "large"]);
 
 const shouldAutoWidth = (field) => {
   if (field.width === "full") return false;
@@ -44,6 +45,12 @@ const normalizeFields = (fields, columns) => {
     }
   });
   return flat;
+};
+
+const isFieldVisible = (field, values) => {
+  if (!field.visibleWhen?.field) return true;
+  const accepted = field.visibleWhen.values || [field.visibleWhen.equals];
+  return accepted.includes(values[field.visibleWhen.field]);
 };
 
 function FieldControl({ field, value, error, onChange }) {
@@ -95,6 +102,8 @@ function FieldControl({ field, value, error, onChange }) {
         <DatePicker
           value={value}
           onChange={handleChange}
+          label={field.label || field.name}
+          required={field.required}
           mode={field.mode}
           min={field.minDate ?? field.min}
           max={field.maxDate ?? field.max}
@@ -196,7 +205,7 @@ function FieldControl({ field, value, error, onChange }) {
             primaryClassName="trem-form__counter-btn"
             variant="text"
             type="button"
-            disabled={numeric <= min}
+            disabled={field.disabled || numeric <= min}
             aria-label={field.decrementLabel || "Decrease"}
             onClick={() => handleChange(numeric - 1)}
           >
@@ -207,7 +216,7 @@ function FieldControl({ field, value, error, onChange }) {
             primaryClassName="trem-form__counter-btn"
             variant="text"
             type="button"
-            disabled={max != null && numeric >= max}
+            disabled={field.disabled || (max != null && numeric >= max)}
             aria-label={field.incrementLabel || "Increase"}
             onClick={() => handleChange(numeric + 1)}
           >
@@ -247,6 +256,7 @@ function FieldGroup({ field, value, error, onChange, columns }) {
     "number",
     "monthYear",
     "location",
+    "date",
   ].includes(type);
   const wide = !!field.wide;
   return (
@@ -279,7 +289,15 @@ function FormSection({
   onToggle,
   expandable,
 }) {
-  const fields = useMemo(() => normalizeFields(section.fields, columns), [section.fields, columns]);
+  const sectionColumns = Math.max(1, Math.min(4, section.columns || columns));
+  const sectionMobileColumns = Math.max(
+    1,
+    Math.min(4, section.columnsMobile || mobileColumns),
+  );
+  const fields = useMemo(
+    () => normalizeFields(section.fields, sectionColumns),
+    [section.fields, sectionColumns],
+  );
   const showHead = Boolean(section.title || section.icon);
   return (
     <section className="trem-form__section" data-section={section.id}>
@@ -314,16 +332,19 @@ function FormSection({
         <div className="trem-form__section-body" id={`trem-form-section-${section.id}`}>
           <div
             className="trem-form__grid"
-            style={{ "--trem-form-cols": columns, "--trem-form-cols-mobile": mobileColumns }}
+            style={{
+              "--trem-form-cols": sectionColumns,
+              "--trem-form-cols-mobile": sectionMobileColumns,
+            }}
           >
-            {fields.map((field) => (
+            {fields.filter((field) => isFieldVisible(field, values)).map((field) => (
               <FieldGroup
                 key={field.name}
                 field={field}
                 value={values[field.name]}
                 error={errors[field.name]}
                 onChange={(next) => onChange(field.name, next)}
-                columns={columns}
+                columns={sectionColumns}
               />
             ))}
           </div>
@@ -343,12 +364,13 @@ export default function ConfigurableForm({
   className = "",
 }) {
   const layout = config.layout || {};
+  const controlSize = CONTROL_SIZES.has(layout.controlSize) ? layout.controlSize : undefined;
   const columns = Math.max(1, Math.min(4, layout.columns || 2));
   const mobileColumns = Math.max(1, Math.min(4, layout.columnsMobile || 3));
   const expandable = layout.expandable !== false;
   const defaultExpanded = layout.defaultExpanded !== false;
-  const showExpandAll = layout.showExpandAll === true && (config.sections || []).length > 1;
-  const sections = config.sections || [];
+  const sections = useMemo(() => config.sections || [], [config.sections]);
+  const showExpandAll = layout.showExpandAll === true && sections.length > 1;
   const isControlled = typeof onOpenSectionsChange === "function";
 
   const defaultState = useMemo(() => {
@@ -377,7 +399,10 @@ export default function ConfigurableForm({
     });
   }, [sections, defaultExpanded]);
 
-  const openMap = isControlled ? controlledSections || {} : internalOpen;
+  const openMap = useMemo(
+    () => (isControlled ? controlledSections || {} : internalOpen),
+    [controlledSections, internalOpen, isControlled],
+  );
   const allOpen = sections.length > 0 && sections.every((section) => openMap[section.id] !== false);
   const anyOpen = sections.some((section) => openMap[section.id] !== false);
 
@@ -406,7 +431,7 @@ export default function ConfigurableForm({
       });
       onOpenSectionsChange(state);
     } else {
-      setInternalOpen((prev) => {
+      setInternalOpen(() => {
         const nextState = {};
         sections.forEach((section) => {
           nextState[section.id] = next;
@@ -417,7 +442,10 @@ export default function ConfigurableForm({
   }, [allOpen, isControlled, onOpenSectionsChange, sections]);
 
   return (
-    <div className={`trem-form${className ? ` ${className}` : ""}`}>
+    <div
+      className={`trem-form${className ? ` ${className}` : ""}`}
+      data-control-size={controlSize}
+    >
       {showExpandAll && (
         <div className="trem-form__toolbar">
           <Button

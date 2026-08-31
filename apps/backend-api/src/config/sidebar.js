@@ -31,8 +31,6 @@ export default applyHideFlags({
                         label: "Trips & Adventures",
                         icon: "mountain",
                         target: "trevio",
-                        disabled: true,
-                        comingSoon: true,
                     },
                     { id: "tours", label: "Tours & Packages", icon: "globe", target: "trevista" },
                     {

@@ -9,6 +9,7 @@ export default function PricingCardView({
   priceText,
   packagePrices = [],
   selectedPackage,
+  productType,
   priceDisplayMode,
   cityDisplay,
   onContact,
@@ -25,9 +26,14 @@ export default function PricingCardView({
     (item) => String(item.key).toLowerCase() === String(selectedPackage || "").toLowerCase(),
   );
   const selectedPackageName = selectedPackagePrice?.name;
-  const quoteLabel = selectedPackageName
-    ? (labels.packageQuote || "Get {package} quote").replace("{package}", selectedPackageName)
-    : labels.enquire || labels.contactAgent || "Get a quote";
+  const quoteLabel =
+    productType === "trip"
+      ? selectedPackageName
+        ? `Enquire about ${selectedPackageName}`
+        : "Enquire now"
+      : selectedPackageName
+        ? (labels.packageQuote || "Get {package} quote").replace("{package}", selectedPackageName)
+        : labels.enquire || labels.contactAgent || "Get a quote";
   const hasExplicitRoute = Boolean(
     typeof tour.city === "string" ? tour.city.trim() : tour.city?.from && tour.city?.to,
   );

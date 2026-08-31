@@ -82,32 +82,9 @@
   min-width: 0;
 }
 
-.booking-engine-quote-decision {
+.booking-engine-quotation-pending {
   display: grid;
-  gap: $space-3;
-  padding: $space-5;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-
-  h3,
-  p {
-    margin: 0;
-  }
-
-  p {
-    color: var(--muted);
-  }
-
-  .is-error {
-    color: var(--color-danger);
-  }
-}
-
-.booking-engine-quote-decision__actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: $space-3;
+  gap: $space-6;
 }
 
 .booking-engine-workspace__claim {
@@ -158,6 +135,7 @@
 @media (max-width: $breakpoint-md) {
   .booking-engine-customer-journey {
     grid-template-columns: 1fr;
+    margin-bottom: var(--trem-floating-action-height, 0);
 
     > aside { position: static; }
   }

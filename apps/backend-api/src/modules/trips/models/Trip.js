@@ -58,7 +58,9 @@ const availabilitySchema = new Schema(
 const preferenceOptionSchema = new Schema(
     {
         label: { type: String, required: true, trim: true },
-        value: { type: String, required: true, trim: true, lowercase: true },
+        value: { type: String, required: true, trim: true },
+        description: { type: String, trim: true, default: "" },
+        includesFlights: { type: Boolean, default: false },
         // Negative adjustments represent discounts (for example shared rooms).
         extraPrice: { type: Number, default: 0 },
     },
@@ -135,7 +137,11 @@ const preferencesSchema = new Schema(
                 { label: "Single", value: "single", extraPrice: 0 },
                 { label: "Double", value: "double", extraPrice: 0 },
                 { label: "Triple", value: "triple", extraPrice: 0 },
-                { label: "Shared", value: "shared", extraPrice: -500 },
+                {
+                    label: "Shared room with another traveller",
+                    value: "shared",
+                    extraPrice: -500,
+                },
             ],
         },
         mealPreferences: {
@@ -150,9 +156,20 @@ const preferencesSchema = new Schema(
         packageTypes: {
             type: [preferenceOptionSchema],
             default: () => [
-                { label: "Standard", value: "standard", extraPrice: 0 },
-                { label: "Premium", value: "premium", extraPrice: 5000 },
-                { label: "Luxury", value: "luxury", extraPrice: 12000 },
+                {
+                    label: "Trip without flights",
+                    value: "without-flights",
+                    description: "Fixed itinerary and standard trip facilities. Flights are not included.",
+                    includesFlights: false,
+                    extraPrice: 0,
+                },
+                {
+                    label: "Trip with flights",
+                    value: "with-flights",
+                    description: "The same fixed itinerary and facilities with flights included.",
+                    includesFlights: true,
+                    extraPrice: 0,
+                },
             ],
         },
         drinkTypes: {
@@ -168,6 +185,14 @@ const preferencesSchema = new Schema(
 
 const tripSchema = new Schema(
     {
+        sourceTourId: {
+            type: Schema.Types.ObjectId,
+            ref: "Tour",
+            default: null,
+            sparse: true,
+            unique: true,
+            index: true,
+        },
         agencyId: { type: Schema.Types.ObjectId, ref: "PartnerAgency", default: null, index: true },
         createdBy: { type: Schema.Types.ObjectId, ref: "User", default: null, index: true },
         ownerAgent: { type: Schema.Types.ObjectId, ref: "User", default: null, index: true },

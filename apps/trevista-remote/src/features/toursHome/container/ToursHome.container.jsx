@@ -8,6 +8,7 @@ import {
   serializeTourSearchUrl,
 } from "../../tours/search/tourSearchState";
 import { ContactAgentModal } from "@packages/trem-modals";
+import { PRODUCT_TYPE } from "@packages/trem-ui";
 
 const PAGE_KEY = "tours-remote/home";
 
@@ -153,7 +154,7 @@ export default function ToursHomeContainer({ dispatchEvent, userSession = null }
         open={contactOpen}
         onClose={() => setContactOpen(false)}
         user={userSession?.user || null}
-        product="trevista"
+        product={PRODUCT_TYPE.TREVISTA}
       />
     </>
   );

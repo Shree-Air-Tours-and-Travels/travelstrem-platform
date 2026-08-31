@@ -39,10 +39,44 @@ import {
     findStepDefinition,
     stepNeighbours,
 } from "./stepDefinitions.js";
+import { syncTrevioBuilderTrip } from "../../trips/services/tripBuilderProjection.service.js";
 
 /* ----------------------------- path helpers ----------------------------- */
 
 const isObject = (value) => value && typeof value === "object" && !Array.isArray(value);
+
+const resolveProductKey = (req, requestedProductKey, tour = null) => {
+    const requested = String(
+        requestedProductKey || req.query?.product || req.body?.productKey || "trevista",
+    ).toLowerCase();
+    if (!['trevista', 'trevio'].includes(requested)) {
+        throw Object.assign(new Error("Unsupported builder product"), { status: 422 });
+    }
+    if (tour?.productKey && tour.productKey !== requested) {
+        throw Object.assign(new Error("This item belongs to a different travel product"), {
+            status: 409,
+        });
+    }
+    return requested;
+};
+
+const applyProductDefinition = (definition, values, productKey) => {
+    if (productKey !== "trevio") return;
+    if (definition.stepKey === "packaging") {
+        setPath(values, "packageType", "fixed_departure");
+    }
+    definition.substeps.forEach((substep) =>
+        substep.children.forEach((child) =>
+            (child.widgets || []).forEach((widget) => {
+                if (widget.path === "packageType") {
+                    widget.readOnly = true;
+                    widget.serverManaged = true;
+                    widget.helpText = "Trevio trips use fixed departures. Add one or more dates below.";
+                }
+            }),
+        ),
+    );
+};
 
 export const getPath = (source, path = "") =>
     String(path)
@@ -363,7 +397,19 @@ const resolveStepDefinition = (step, req, tour) => {
 
 export async function getBuilderOverview(req) {
     const contract = createBuilderLabelContract(getBuilderDefinition());
-    return { status: "success", builder: contract.structure, elements: contract.elements };
+    const productKey = resolveProductKey(req, null, null);
+    return {
+        status: "success",
+        builder: {
+            ...contract.structure,
+            productKey,
+            constraints:
+                productKey === "trevio"
+                    ? { fixedDeparturesOnly: true, multipleDepartures: true }
+                    : {},
+        },
+        elements: contract.elements,
+    };
 }
 
 export async function loadBuilderStep(req, { tourId, stepKey }) {
@@ -374,6 +420,7 @@ export async function loadBuilderStep(req, { tourId, stepKey }) {
         if (!canModifyTour(req.user, tour, req.access))
             throw Object.assign(new Error("You cannot edit this tour"), { status: 403 });
     }
+    const productKey = resolveProductKey(req, null, tour);
 
     if (stepKey === "resume") {
         if (!tour)
@@ -414,6 +461,7 @@ export async function loadBuilderStep(req, { tourId, stepKey }) {
         };
     } else if (step.stepKey === "review") values = stepValuesForTour(step, tour || {});
     else if (tour) values = stepValuesForTour(step, tour);
+    applyProductDefinition(definition, values, productKey);
     if (step.stepKey === "commercial" && !tour) {
         values = {
             commercial: {
@@ -465,6 +513,7 @@ export async function loadBuilderStep(req, { tourId, stepKey }) {
             version: TOUR_BUILDER_VERSION,
             tourId: tour?._id?.toString() || tourId || null,
             currentStepKey: stepKey,
+            productKey,
             ...neighbours,
         },
         step: stepContract.structure,
@@ -473,6 +522,11 @@ export async function loadBuilderStep(req, { tourId, stepKey }) {
         navigation: neighbours,
         permissions: capabilities,
         meta: {
+            productKey,
+            constraints:
+                productKey === "trevio"
+                    ? { fixedDeparturesOnly: true, multipleDepartures: true }
+                    : {},
             tourStatus: tour?.status || null,
             isPublished: tour ? tour.status === "published" : false,
             branding: req.access?.agency
@@ -493,7 +547,7 @@ export async function loadBuilderStep(req, { tourId, stepKey }) {
 }
 
 /** Persist wizard position without accepting or mutating any tour fields. */
-export async function saveBuilderPosition(req, { tourId, stepKey }) {
+export async function saveBuilderPosition(req, { tourId, stepKey, productKey }) {
     if (!tourId)
         throw Object.assign(new Error("A saved tour is required to track builder position."), {
             status: 409,
@@ -505,6 +559,7 @@ export async function saveBuilderPosition(req, { tourId, stepKey }) {
     if (!tour) throw Object.assign(new Error("Tour draft not found"), { status: 404 });
     if (!canModifyTour(req.user, tour, req.access))
         throw Object.assign(new Error("You cannot edit this tour"), { status: 403 });
+    resolveProductKey(req, productKey, tour);
 
     const definition = getBuilderProcessDefinition();
     const process = getProcessSnapshot(definition, tour.builderProcess || {});
@@ -596,7 +651,7 @@ const publishBuilderTourRealtime = (previousStatus, savedTour) => {
     }
 };
 
-export async function saveBuilderStep(req, { tourId, stepKey, data }) {
+export async function saveBuilderStep(req, { tourId, stepKey, data, productKey: requestedProductKey }) {
     const step = findStepDefinition(stepKey);
     if (!step) throw Object.assign(new Error(`Unknown builder step "${stepKey}"`), { status: 404 });
 
@@ -606,6 +661,10 @@ export async function saveBuilderStep(req, { tourId, stepKey, data }) {
         if (!tour) throw Object.assign(new Error("Tour draft not found"), { status: 404 });
         if (!canModifyTour(req.user, tour, req.access))
             throw Object.assign(new Error("You cannot edit this tour"), { status: 403 });
+    }
+    const productKey = resolveProductKey(req, requestedProductKey, tour);
+    if (productKey === "trevio" && stepKey === "packaging") {
+        data = { ...(data || {}), packageType: "fixed_departure" };
     }
 
     /* Collection-backed steps replace their document sets. */
@@ -706,6 +765,22 @@ export async function saveBuilderStep(req, { tourId, stepKey, data }) {
     if (stepKey === "commercial") {
         payload.commercial = payload.commercial || {};
         payload.commercial.version = "COMPONENTS_V1";
+        if (productKey === "trevio") {
+            const enabledPackages = (payload.commercial.packages || []).filter(
+                (item) => item?.enabled !== false,
+            );
+            if (enabledPackages.length < 1 || enabledPackages.length > 2) {
+                const error = Object.assign(
+                    new Error("Trevio trips must offer one package or two package variants."),
+                    { status: 422 },
+                );
+                error.details = {
+                    "commercial.packages":
+                        "Add one package, or two variants such as without flights and with flights.",
+                };
+                throw error;
+            }
+        }
     }
     const checkpointState = getTourCheckpointPublishingState(tour);
     const sanitized = sanitizeTourPayloadForUpdate(payload, {
@@ -774,7 +849,7 @@ export async function saveBuilderStep(req, { tourId, stepKey, data }) {
             ownerAgent:
                 identity.agentRef !== undefined ? actor._id || actor.sub || actor.id || null : null,
             createdBy: actor._id || actor.sub || actor.id || null,
-            productKey: "trevista",
+            productKey,
             agentTour: identity.agentRef !== undefined,
             inventorySource: identity.agentRef !== undefined ? "agent" : "platform",
             status: "draft",
@@ -860,6 +935,7 @@ export async function saveBuilderStep(req, { tourId, stepKey, data }) {
     }
 
     savedTour = (await refreshTourIntelligence(savedTour._id, { publish: false })) || savedTour;
+    await syncTrevioBuilderTrip(savedTour);
     publishBuilderTourRealtime(previousStatus, savedTour);
 
     const neighbours = stepNeighbours(stepKey);
@@ -878,7 +954,7 @@ export async function saveBuilderStep(req, { tourId, stepKey, data }) {
  * used during persistence. Nothing is written and no price is trusted from
  * the browser; this endpoint only returns a server-owned projection.
  */
-export async function previewBuilderPricing(req, { tourId, data }) {
+export async function previewBuilderPricing(req, { tourId, data, productKey }) {
     if (!tourId)
         throw Object.assign(
             new Error("Save the earlier tour steps before calculating package prices"),
@@ -890,6 +966,7 @@ export async function previewBuilderPricing(req, { tourId, data }) {
     if (!canModifyTour(req.user, tour, req.access)) {
         throw Object.assign(new Error("You cannot edit this tour"), { status: 403 });
     }
+    resolveProductKey(req, productKey, tour);
 
     const sanitized = sanitizeTourPayloadForUpdate(
         { commercial: data?.commercial },

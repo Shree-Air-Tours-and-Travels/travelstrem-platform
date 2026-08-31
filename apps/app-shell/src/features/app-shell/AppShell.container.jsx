@@ -5,7 +5,12 @@ import {
   slugify,
   useRefreshOnActivation,
 } from "@packages/trem-utils";
-import { showRealtimeToast, useEnquiryRealtime } from "@packages/trem-events";
+import {
+  REALTIME_EVENTS,
+  showRealtimeToast,
+  useEnquiryRealtime,
+  useRealtimeEvent,
+} from "@packages/trem-events";
 import { useAppShellConfig } from "../../app/providers/AppShellProvider";
 import { buildTrevistaTourPath } from "../../app/routing/navigationRegistry";
 import resolveContractRefs from "../../core/config/resolveContractRefs";
@@ -13,9 +18,10 @@ import OverviewView from "../../views/OverviewView";
 import FavoritesView from "../../views/FavoritesView";
 import ProfileView from "../../views/ProfileView";
 import { UserBookingJourney } from "@apps/booking-engine";
+import { PRODUCT_TYPE } from "@packages/trem-ui";
 import "./AppShell.styles.scss";
 
-const PRODUCT_URLS = { trevista: process.env.REACT_APP_TREVISTA_URL };
+const PRODUCT_URLS = { [PRODUCT_TYPE.TREVISTA]: process.env.REACT_APP_TREVISTA_URL };
 const USER_PROFILE_UPDATED_EVENT = "USER_PROFILE_UPDATED";
 let overviewResponseCache = null;
 let overviewResponseUserKey = "";
@@ -168,6 +174,9 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
 
   // Load once, then let realtime enquiry events update the overview.
   useEnquiryRealtime(activeTab === "overview" ? () => loadOverview({ force: true }) : null);
+  useRealtimeEvent(REALTIME_EVENTS.PRODUCT_CATALOG_UPDATED, () =>
+    loadOverview({ force: true }),
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -351,9 +360,9 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
   const handleViewFavorite = useCallback(
     (item) => {
       const ref = resolveFavoriteRef(item);
-      const product = item?.product || "trevista";
+      const product = item?.product || PRODUCT_TYPE.TREVISTA;
       if (!ref) return;
-      if (product === "trevista") {
+      if (product === PRODUCT_TYPE.TREVISTA) {
         navigate(buildTrevistaTourPath(ref));
       }
       else

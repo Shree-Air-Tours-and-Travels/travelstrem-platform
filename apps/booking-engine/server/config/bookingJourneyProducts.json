@@ -1,0 +1,62 @@
+{
+  "trevista": {
+    "enquiry": {
+      "title": "Tour enquiry details",
+      "description": "Tell us who is travelling and how you would like this tour arranged before adding individual traveller details.",
+      "sectionTitle": "Your tour request",
+      "sectionDescription": "Your selections are saved with the enquiry and used by the travel specialist to prepare the quotation.",
+      "fields": [
+        { "name": "adultCount", "type": "counter", "label": "Adults", "required": true, "min": 1, "max": 50 },
+        { "name": "childCount", "type": "counter", "label": "Children", "required": true, "min": 0, "max": 49 },
+        { "name": "infantCount", "type": "counter", "label": "Infants", "required": true, "min": 0, "max": 49 },
+        { "name": "packageKey", "type": "select", "label": "Tour package", "requiredWhenOptions": true, "optionsRef": "packages", "width": "full" },
+        { "slot": "travelDates" },
+        { "name": "customizationPreference", "type": "select", "label": "Tour preference", "required": true, "width": "full", "options": [
+          { "value": "package", "label": "Use the selected package" },
+          { "value": "customize", "label": "Request package changes" }
+        ] },
+        { "name": "flightPreference", "type": "select", "label": "Flights", "required": true, "width": "full", "options": [
+          { "value": "without_flights", "label": "Without flights" },
+          { "value": "with_flights", "label": "Include flights" },
+          { "value": "agent_recommendation", "label": "Let my travel specialist recommend" }
+        ] },
+        { "slot": "customQuestions" },
+        { "slot": "hotelPreferences" },
+        { "slot": "addOns" },
+        { "name": "message", "type": "textarea", "label": "Note for the travel specialist", "required": false, "maxLength": 1200, "rows": 4, "colSpan": 2 }
+      ]
+    },
+    "traveller": {
+      "extraFields": []
+    }
+  },
+  "trevio": {
+    "enquiry": {
+      "title": "Trip enquiry details",
+      "description": "Tell us who is travelling and choose the fixed trip option before adding individual traveller details.",
+      "sectionTitle": "Your trip request",
+      "sectionDescription": "These choices determine how many traveller forms are created and what the trip captain should quote.",
+      "fields": [
+        { "name": "adultCount", "type": "counter", "label": "Adults", "required": true, "min": 1, "max": 50 },
+        { "name": "childCount", "type": "counter", "label": "Children", "required": true, "min": 0, "max": 49 },
+        { "name": "infantCount", "type": "counter", "label": "Infants", "required": true, "min": 0, "max": 49 },
+        { "name": "packageKey", "type": "select", "label": "Trip package", "requiredWhenOptions": true, "optionsRef": "packages", "width": "full" },
+        { "name": "flightPreference", "type": "select", "label": "Flights", "required": true, "width": "full", "options": [
+          { "value": "without_flights", "label": "Without flights" },
+          { "value": "with_flights", "label": "With flights" }
+        ] },
+        { "name": "preferredTravelDate", "type": "select", "label": "Fixed departure", "requiredWhenOptions": true, "optionsRef": "departures", "width": "full" },
+        { "name": "message", "type": "textarea", "label": "Note for the trip captain", "required": false, "maxLength": 1200, "rows": 4, "colSpan": 2 }
+      ]
+    },
+    "traveller": {
+      "extraFields": [
+        { "name": "mealPreference", "type": "select", "label": "Meal preference", "required": true, "width": "full", "optionsRef": "meals" },
+        { "name": "drinkPreference", "type": "select", "label": "Drink preference", "required": true, "width": "full", "optionsRef": "drinks" },
+        { "name": "roomPreference", "type": "select", "label": "Room sharing preference", "required": true, "width": "full", "optionsRef": "rooms" },
+        { "name": "travelInsurance", "type": "select", "label": "Travel insurance", "required": true, "width": "full", "optionsRef": "insurance" },
+        { "name": "specialRequirements", "type": "textarea", "label": "Dietary, accessibility or other requirements", "required": false, "maxLength": 500, "colSpan": 2 }
+      ]
+    }
+  }
+}

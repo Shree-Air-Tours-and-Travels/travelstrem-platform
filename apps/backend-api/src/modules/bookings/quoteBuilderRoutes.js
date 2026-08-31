@@ -8,6 +8,8 @@ import quoteBuilderService, {
     findAuthorizedBookingJourney,
     findCurrentBookingJourneyQuote,
     saveCustomerTravellerDetails,
+    saveCustomerEnquiryDetails,
+    requestCustomerQuotation,
     updateCustomerQuoteDecision,
 } from "./quoteBuilderAdapter.js";
 
@@ -100,6 +102,46 @@ router.post("/enquiries/:enquiryId/travellers", authMiddleware, async (req, res)
         return res.status(error?.status || 500).json({
             status: "error",
             message: error?.message || "Traveller details could not be saved.",
+        });
+    }
+});
+router.post("/enquiries/:enquiryId/details", authMiddleware, async (req, res) => {
+    try {
+        const result = await saveCustomerEnquiryDetails({
+            enquiryId: req.params.enquiryId,
+            actor: req.user,
+            values: req.body?.values,
+        });
+        return res.status(result.status).json({
+            status: result.status < 400 ? "success" : "error",
+            message:
+                result.status < 400
+                    ? "Enquiry details saved. Add the individual traveller details next."
+                    : "Check the highlighted enquiry details.",
+            componentData: { data: { errors: result.errors || {} } },
+        });
+    } catch (error) {
+        return res.status(error?.status || 500).json({
+            status: "error",
+            message: error?.message || "Enquiry details could not be saved.",
+        });
+    }
+});
+router.post("/enquiries/:enquiryId/request-quotation", authMiddleware, async (req, res) => {
+    try {
+        const enquiry = await requestCustomerQuotation({
+            enquiryId: req.params.enquiryId,
+            actor: req.user,
+        });
+        return res.status(200).json({
+            status: "success",
+            message: "Quotation requested. Your trip captain can now prepare the final price.",
+            componentData: { data: { enquiryStatus: enquiry.status } },
+        });
+    } catch (error) {
+        return res.status(error?.status || 500).json({
+            status: "error",
+            message: error?.message || "The quotation could not be requested.",
         });
     }
 });

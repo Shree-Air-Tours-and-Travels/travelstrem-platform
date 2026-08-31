@@ -68,7 +68,7 @@
    * Shrinks slightly inside narrow sidebar fields,
    * but remains readable.
    */
-  font-size: clamp(11px, 4cqw, #{$font-size-sm});
+  font-size: var(--trem-control-value-font-size, clamp(11px, 4cqw, #{$font-size-sm}));
 
   font-weight: $font-semibold;
 
@@ -117,6 +117,11 @@
 
     box-shadow: none;
   }
+
+  &--labelled {
+    min-height: 52px;
+    padding-block: 7px;
+  }
 }
 
 .trem-datepicker--open {
@@ -136,6 +141,36 @@
 /* ========================================================================== */
 /* Trigger value                                                              */
 /* ========================================================================== */
+
+.trem-datepicker__trigger-content {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.trem-datepicker__label {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: var(--trem-control-label-font-size, #{$font-size-xs});
+  font-weight: $font-bold;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 150ms $ease-default;
+}
+
+.trem-datepicker__required {
+  color: $danger-color;
+}
+
+.trem-datepicker--open .trem-datepicker__label {
+  color: var(--color-primary);
+}
+
+.trem-datepicker--error .trem-datepicker__label {
+  color: var(--color-danger);
+}
 
 .trem-datepicker__value,
 .trem-datepicker__placeholder {

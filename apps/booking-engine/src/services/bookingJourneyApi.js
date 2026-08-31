@@ -29,4 +29,15 @@ export const saveTravellerDetails = (enquiryId, values) =>
     body: { values },
   });
 
+export const saveEnquiryDetails = (enquiryId, values) =>
+  fetchData(`/booking-engine/enquiries/${encodeURIComponent(enquiryId)}/details`, {
+    method: "POST",
+    body: { values },
+  });
+
+export const requestQuotation = (enquiryId) =>
+  fetchData(`/booking-engine/enquiries/${encodeURIComponent(enquiryId)}/request-quotation`, {
+    method: "POST",
+  });
+
 export default loadBookingJourney;

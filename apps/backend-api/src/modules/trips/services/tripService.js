@@ -40,9 +40,32 @@ export const normalizeTrip = (doc = {}) => {
         availability.seatsAvailable == null ? null : Number(availability.seatsAvailable);
     const lowSeatThreshold = Math.max(0, Number(process.env.TREVIO_LOW_SEAT_THRESHOLD || 3));
     const agency = trip.agencyId && typeof trip.agencyId === "object" ? trip.agencyId : null;
+    const tripPackages = (Array.isArray(trip.preferences?.packageTypes)
+        ? trip.preferences.packageTypes
+        : []
+    ).map((item, index) => ({
+        packageKey: item.value,
+        tier: item.value,
+        name: item.label,
+        description: item.description || "",
+        includesFlights: Boolean(item.includesFlights),
+        sellingTotalMinor: Math.round(
+            Math.max(0, Number(price.amount || 0) + Number(item.extraPrice || 0)) * 100,
+        ),
+        included: [
+            item.includesFlights ? "Flights included" : "Flights not included",
+            ...(trip.inclusions || []).slice(0, 4),
+        ],
+        optional: (trip.extras || [])
+            .filter((extra) => !extra.included)
+            .slice(0, 4)
+            .map((extra) => extra.title),
+        sortOrder: index,
+    }));
 
     return {
         _id: trip._id || null,
+        sourceTourId: trip.sourceTourId || null,
         id: trip.slug || trip.id || trip._id,
         slug: trip.slug || trip.id || "",
         title: trip.title || "",
@@ -124,6 +147,10 @@ export const normalizeTrip = (doc = {}) => {
             drinkTypes: Array.isArray(trip.preferences?.drinkTypes)
                 ? trip.preferences.drinkTypes
                 : [],
+        },
+        commercialPricing: {
+            currency: price.currency || "INR",
+            packages: tripPackages,
         },
         reviews,
         includedStays: Array.isArray(trip.includedStays) ? trip.includedStays : [],

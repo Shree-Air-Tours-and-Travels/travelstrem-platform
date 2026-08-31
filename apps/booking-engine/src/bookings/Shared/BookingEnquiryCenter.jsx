@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Breadcrumbs,
   EnquiryCenter,
@@ -13,11 +13,14 @@ import {
   TimelineStepper,
   TravellerDetailsForm,
 } from "@packages/trem-ui";
+import { ConfirmOverlay } from "@packages/trem-modals";
 import "./booking-workspace.scss";
 import QuoteBuilder from "../../quote-builder/QuoteBuilder.jsx";
 import {
   loadBookingJourney,
   openQuoteDocument,
+  requestQuotation,
+  saveEnquiryDetails,
   saveTravellerDetails,
   updateQuoteDecision,
 } from "../../services/bookingJourneyApi.js";
@@ -69,19 +72,44 @@ export default function BookingEnquiryCenter(props) {
   const [activeStepId, setActiveStepId] = useState("enquiry");
   const [travellerValues, setTravellerValues] = useState({});
   const [travellerState, setTravellerState] = useState({ saving: false, error: "", errors: {} });
+  const [enquiryValues, setEnquiryValues] = useState({});
+  const [enquiryFormState, setEnquiryFormState] = useState({ saving: false, error: "", errors: {} });
+  const providerByRecordRef = useRef(new Map());
   const selectedListRecord = [...(props.enquiries || []), ...(props.bookings || [])].find(
     (item) => item.id === props.selectedId || item.enquiryRef === props.selectedId || item.reference === props.selectedId,
   );
   const activeJourney =
     journey?.data?.bookingId === selectedListRecord?.id ? journey : null;
+  const providerKey = selectedListRecord?.id || selectedListRecord?.reference;
+  const providerSource = activeJourney?.data?.record || selectedListRecord;
+  const providerValue = {
+    assignedAgent: providerSource?.assignedAgent || null,
+    agency: providerSource?.agency || null,
+  };
+  if (
+    providerKey &&
+    !providerByRecordRef.current.has(providerKey) &&
+    (providerValue.assignedAgent || providerValue.agency)
+  ) {
+    providerByRecordRef.current.set(providerKey, {
+      assignedAgent: providerValue.assignedAgent,
+      agency: providerValue.agency,
+    });
+  }
+  const stableProvider = providerKey ? providerByRecordRef.current.get(providerKey) : null;
   const selectedRecord = selectedListRecord
     ? {
         ...selectedListRecord,
         ...(activeJourney?.data?.record || {}),
+        ...(stableProvider?.assignedAgent
+          ? { assignedAgent: stableProvider.assignedAgent }
+          : {}),
+        ...(stableProvider?.agency ? { agency: stableProvider.agency } : {}),
         ...(activeJourney ? { bookingJourney: activeJourney } : {}),
       }
     : null;
   const selectedTravellerForm = activeJourney?.data?.travellerForm;
+  const selectedEnquiryForm = activeJourney?.data?.enquiryForm;
 
   useEffect(() => {
     setJourneyPage(null);
@@ -122,7 +150,13 @@ export default function BookingEnquiryCenter(props) {
     if (!selectedTravellerForm) return;
     setTravellerValues(selectedTravellerForm.values || {});
     setTravellerState({ saving: false, error: "", errors: {} });
-  }, [selectedTravellerForm?.completedAt, Boolean(selectedTravellerForm)]);
+  }, [selectedTravellerForm]);
+
+  useEffect(() => {
+    if (!selectedEnquiryForm) return;
+    setEnquiryValues(selectedEnquiryForm.values || {});
+    setEnquiryFormState({ saving: false, error: "", errors: {} });
+  }, [selectedEnquiryForm]);
 
   const submitDecision = async () => {
     if (!decision) return;
@@ -156,7 +190,13 @@ export default function BookingEnquiryCenter(props) {
 
   const beginDecision = (action, selected, quote) => {
     setDecisionState({ saving: false, error: "" });
-    setDecision({ action, enquiryId: selected.id, quoteId: quote.id, notes: "" });
+    setDecision({
+      action: action.id,
+      modal: action.modal || {},
+      enquiryId: selected.id,
+      quoteId: quote.id,
+      notes: "",
+    });
   };
 
   const submitTravellerDetails = async (selected) => {
@@ -173,6 +213,39 @@ export default function BookingEnquiryCenter(props) {
       props.onRetry?.();
     } catch (error) {
       setTravellerState({ saving: false, error: error.message, errors: {} });
+    }
+  };
+
+  const submitEnquiryDetails = async (selected) => {
+    setEnquiryFormState({ saving: true, error: "", errors: {} });
+    try {
+      const response = await saveEnquiryDetails(selected.id, enquiryValues);
+      if (response.status !== "success") {
+        setEnquiryFormState({ saving: false, error: response.message, errors: response.componentData?.data?.errors || {} });
+        return;
+      }
+      setEnquiryFormState({ saving: false, error: "", errors: {} });
+      showToast({ title: response.message, status: "success" });
+      setActiveStepId("travellers");
+      setJourneyState((current) => ({ ...current, revision: current.revision + 1 }));
+      props.onRetry?.();
+    } catch (error) {
+      setEnquiryFormState({ saving: false, error: error.message, errors: {} });
+    }
+  };
+
+  const submitQuotationRequest = async (selected) => {
+    setTravellerState((current) => ({ ...current, saving: true, error: "" }));
+    try {
+      const response = await requestQuotation(selected.id);
+      if (response.status !== "success") throw new Error(response.message || "The quotation could not be requested.");
+      showToast({ title: response.message, status: "success" });
+      setTravellerState({ saving: false, error: "", errors: {} });
+      setActiveStepId("quote");
+      setJourneyState((current) => ({ ...current, revision: current.revision + 1 }));
+      props.onRetry?.();
+    } catch (error) {
+      setTravellerState((current) => ({ ...current, saving: false, error: error.message }));
     }
   };
 
@@ -204,6 +277,7 @@ export default function BookingEnquiryCenter(props) {
           variant: index === actions.length - 1 ? "primary" : "outline",
           align: index === actions.length - 1 ? "right" : "left",
           onClick: () => runJourneyAction(action, selected),
+          disabled: action.disabled,
         }))} /> : null}
       </>;
     }
@@ -220,12 +294,68 @@ export default function BookingEnquiryCenter(props) {
       disabled: step.disabled,
       onClick: step.disabled ? undefined : () => setActiveStepId(step.id),
     }));
+    const mapJourneyAction = (action) => {
+      const mapped = {
+        label: referencedLabel(journey, action.labelRef),
+        variant: action.variant || "outline",
+        align: action.align,
+        iconLeft: action.iconLeft,
+        iconRight: action.iconRight,
+        disabled: Boolean(action.disabled),
+      };
+      if (action.type === "navigate-step") {
+        mapped.onClick = () => setActiveStepId(action.targetStepId);
+      } else if (action.type === "save-travellers") {
+        mapped.onClick = () => submitTravellerDetails(selected);
+        mapped.disabled = mapped.disabled || travellerState.saving;
+      } else if (action.type === "request-quotation") {
+        mapped.onClick = () => submitQuotationRequest(selected);
+        mapped.disabled = mapped.disabled || travellerState.saving;
+      }
+      return mapped;
+    };
     let stageContent = null;
     let actions = [];
     if (activeStepId === "enquiry") {
-      stageContent = noticeBlock ? <JourneyNotice journey={journey} block={noticeBlock} /> : null;
+      stageContent = journey.data?.enquiryForm ? (
+        <TravellerDetailsForm
+          form={journey.data.enquiryForm}
+          values={enquiryValues}
+          errors={enquiryFormState.errors}
+          onChange={(name, value) => setEnquiryValues((current) => ({ ...current, [name]: value }))}
+        />
+      ) : noticeBlock ? <JourneyNotice journey={journey} block={noticeBlock} /> : null;
+      const travellerStep = (timeline.steps || []).find((step) => step.id === "travellers");
       const quoteStep = (timeline.steps || []).find((step) => step.id === "quote");
-      if (quoteStep && !quoteStep.disabled) actions = [{ label: referencedLabel(journey, "viewQuote"), variant: "primary", align: "right", iconRight: "chevronRight", onClick: () => setActiveStepId("quote") }];
+      if (journey.data?.enquiryForm && journey.data?.canEditEnquiry) {
+        actions = [{ label: referencedLabel(journey, "saveEnquiryDetails"), variant: "primary", align: "right", iconRight: "chevronRight", onClick: () => submitEnquiryDetails(selected), disabled: enquiryFormState.saving }];
+      } else if (journey.data?.enquiryForm && quoteStep && !quoteStep.disabled) {
+        actions = [{ label: referencedLabel(journey, "viewQuotationStatus"), variant: "primary", align: "right", iconRight: "chevronRight", onClick: () => setActiveStepId("quote") }];
+      } else if (travellerStep && !travellerStep.disabled) {
+        actions = [{ label: referencedLabel(journey, "continueTravellerDetails"), variant: "primary", align: "right", iconRight: "chevronRight", onClick: () => setActiveStepId("travellers") }];
+      } else if (quoteStep && !quoteStep.disabled) actions = [{ label: referencedLabel(journey, "viewQuote"), variant: "primary", align: "right", iconRight: "chevronRight", onClick: () => setActiveStepId("quote") }];
+    } else if (activeStepId === "quote" && !quote) {
+      stageContent = (
+        <div className="booking-engine-quotation-pending">
+          {noticeBlock ? <JourneyNotice journey={journey} block={noticeBlock} /> : null}
+          {journey.data?.enquirySummaryForm ? (
+            <TravellerDetailsForm
+              form={journey.data.enquirySummaryForm}
+              values={journey.data.enquirySummaryForm.values || {}}
+              errors={{}}
+              onChange={() => {}}
+            />
+          ) : null}
+          {journey.data?.travellerSummaryForm ? (
+            <TravellerDetailsForm
+              form={journey.data.travellerSummaryForm}
+              values={journey.data.travellerSummaryForm.values || {}}
+              errors={{}}
+              onChange={() => {}}
+            />
+          ) : null}
+        </div>
+      );
     } else if (activeStepId === "quote" && quote) {
       stageContent = <div className="booking-engine-customer-quote">
           <QuoteDisplay
@@ -234,29 +364,6 @@ export default function BookingEnquiryCenter(props) {
             allowedActions={quoteActions.map((action) => action.id)}
             showActions={false}
           />
-          {decision?.quoteId === quote.id ? (
-            <section className="booking-engine-quote-decision" aria-live="polite">
-              <h3>{decision.action === "REQUEST_CHANGES" ? "What should we change?" : {
-                ACCEPT: "Accept this quotation?",
-                REJECT: "Reject this quotation?",
-                CANCEL: "Cancel this booking request?",
-              }[decision.action]}</h3>
-              <p>{decision.action === "REQUEST_CHANGES"
-                ? "Describe the exact hotel, room, flight, activity, date, or price change you need."
-                : "This response will be shared with your travel specialist immediately."}</p>
-              {decision.action === "REQUEST_CHANGES" ? (
-                <TextArea
-                  label="Changes required"
-                  value={decision.notes}
-                  onChange={(notes) => setDecision((current) => ({ ...current, notes }))}
-                  maxLength={1200}
-                  rows={4}
-                  required
-                  error={decisionState.error}
-                />
-              ) : decisionState.error ? <p className="is-error">{decisionState.error}</p> : null}
-            </section>
-          ) : null}
         </div>;
       actions = [
         ...(downloadAction ? [{ label: referencedLabel(journey, downloadAction.labelRef), variant: "outline", iconLeft: downloadAction.icon, onClick: () => runJourneyAction(downloadAction, selected) }] : []),
@@ -264,24 +371,9 @@ export default function BookingEnquiryCenter(props) {
           label: referencedLabel(journey, action.labelRef),
           variant: action.id === "ACCEPT" ? "primary" : action.id === "CANCEL" || action.id === "REJECT" ? "danger" : "outline",
           align: "right",
-          onClick: () => beginDecision(action.id, selected, quote),
+          onClick: () => beginDecision(action, selected, quote),
         })),
         ...(String(quote.status).toUpperCase() === "ACCEPTED" ? [{ label: referencedLabel(journey, "addTravellers"), variant: "primary", align: "right", iconRight: "chevronRight", onClick: () => setActiveStepId("travellers") }] : []),
-      ];
-      if (decision?.quoteId === quote.id) actions = [
-        {
-          label: "Keep reviewing",
-          variant: "outline",
-          onClick: () => { setDecision(null); setDecisionState({ saving: false, error: "" }); },
-          disabled: decisionState.saving,
-        },
-        {
-          label: decisionState.saving ? "Saving…" : decision.action === "REQUEST_CHANGES" ? "Send change request" : "Confirm",
-          variant: ["REJECT", "CANCEL"].includes(decision.action) ? "danger" : "primary",
-          align: "right",
-          onClick: submitDecision,
-          disabled: decisionState.saving || (decision.action === "REQUEST_CHANGES" && decision.notes.trim().length < 5),
-        },
       ];
     } else if (activeStepId === "travellers" && journey.data?.travellerForm) {
       stageContent = <TravellerDetailsForm
@@ -290,19 +382,58 @@ export default function BookingEnquiryCenter(props) {
         errors={travellerState.errors}
         onChange={(name, value) => setTravellerValues((current) => ({ ...current, [name]: value }))}
       />;
-      actions = [
-        { label: referencedLabel(journey, "saveTravellers"), variant: "outline", onClick: () => submitTravellerDetails(selected), disabled: travellerState.saving },
-        { label: referencedLabel(journey, "proceedPayment"), variant: "primary", align: "right", disabled: true },
-      ];
+      actions = (journey.structure?.stepActions || []).map(mapJourneyAction);
+    } else if (activeStepId === "payment") {
+      stageContent = noticeBlock ? <JourneyNotice journey={journey} block={noticeBlock} /> : null;
+      actions = [{
+        label: referencedLabel(journey, journey.data?.paymentEnabled ? "proceedPayment" : "paymentPending"),
+        variant: "primary",
+        align: "right",
+        disabled: !journey.data?.paymentEnabled,
+        onClick: journey.data?.paymentUrl ? () => window.location.assign(journey.data.paymentUrl) : undefined,
+      }];
     } else if (activeStepId === "review") {
       stageContent = noticeBlock ? <JourneyNotice journey={journey} block={noticeBlock} /> : null;
     }
+    const previousAction = journey.structure?.navigation?.previous;
+    if (previousAction && !decision) actions = [mapJourneyAction(previousAction), ...actions];
+    const decisionField = decision?.modal?.field;
+    const closeDecision = () => {
+      if (decisionState.saving) return;
+      setDecision(null);
+      setDecisionState({ saving: false, error: "" });
+    };
     return <>
       <section className="booking-engine-customer-journey">
         <aside><TimelineStepper steps={timelineItems} markerVariant="number" showStepNumbers showTime={false} ariaLabel="Booking journey" /></aside>
         <div className="booking-engine-customer-journey__stage">{stageContent}</div>
       </section>
-      {actions.length ? <FloatingActionBar align="left-right" actions={actions} error={travellerState.error || decisionState.error} /> : null}
+      {actions.length ? <FloatingActionBar align="left-right" actions={actions} error={enquiryFormState.error || travellerState.error || decisionState.error} /> : null}
+      <ConfirmOverlay
+        open={Boolean(decision?.quoteId && quote?.id && decision.quoteId === quote.id)}
+        title={referencedLabel(journey, decision?.modal?.titleRef)}
+        note={referencedLabel(journey, decision?.modal?.descriptionRef)}
+        cancelLabel={referencedLabel(journey, decision?.modal?.cancelLabelRef)}
+        confirmLabel={decisionState.saving
+          ? referencedLabel(journey, "savingDecision")
+          : referencedLabel(journey, decision?.modal?.confirmLabelRef)}
+        confirmColor={decision?.modal?.tone === "danger" ? "danger" : "primary"}
+        confirmDisabled={decisionState.saving || (decisionField?.required && decision.notes.trim().length < Number(decisionField.minLength || 1))}
+        onClose={closeDecision}
+        onConfirm={submitDecision}
+      >
+        {decisionField?.type === "textarea" ? (
+          <TextArea
+            label={referencedLabel(journey, decisionField.labelRef)}
+            value={decision?.notes || ""}
+            onChange={(notes) => setDecision((current) => ({ ...current, notes }))}
+            maxLength={decisionField.maxLength}
+            rows={decisionField.rows}
+            required={decisionField.required}
+            error={decisionState.error}
+          />
+        ) : decisionState.error ? <p className="is-error">{decisionState.error}</p> : null}
+      </ConfirmOverlay>
     </>;
   };
 
@@ -342,7 +473,7 @@ export default function BookingEnquiryCenter(props) {
       renderDetailActions={() => null}
       renderDetailContent={renderDetailContent}
       renderDetailOverride={renderDetailOverride}
-      showDetailPanels={() => !activeJourney?.structure?.timeline || activeStepId === "enquiry"}
+      showDetailPanels={() => !activeJourney?.structure?.timeline}
     />
   );
 }
