@@ -19,3 +19,4 @@ apps/**/.env.development
 apps/**/.env.production
 apps/**/.env.test
 !apps/**/.env.example
+api-dev.env

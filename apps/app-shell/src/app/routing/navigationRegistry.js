@@ -1,7 +1,9 @@
+import { PRODUCT_TYPE } from "@packages/trem-ui";
+
 const ID_PATTERN = /^[a-z0-9][a-z0-9._-]{0,63}$/i;
-const RENDERERS = new Set(["app-shell", "trevista"]);
+const RENDERERS = new Set(["app-shell", PRODUCT_TYPE.TREVIO, PRODUCT_TYPE.TREVISTA]);
 const KINDS = new Set(["tab", "remote", "internal", "external"]);
-const GUEST_ACCESSIBLE_DESTINATIONS = new Set(["overview", "trevista"]);
+const GUEST_ACCESSIBLE_DESTINATIONS = new Set(["overview", PRODUCT_TYPE.TREVIO, PRODUCT_TYPE.TREVISTA]);
 const MOBILE_PANEL_ACTIONS = new Set(["open-primary-action"]);
 
 export const isGuestAccessibleDestination = (destination) =>
@@ -19,6 +21,16 @@ export const FALLBACK_NAVIGATION_CONFIG = {
   defaultDestination: "overview",
   notFoundDestination: "overview",
   security: { allowedExternalOrigins: [], allowedExternalProtocols: ["https:"] },
+  remoteShellPresentation: {
+    mobile: {
+      footer: "hidden",
+      appHeader: {
+        compact: true,
+        search: false,
+        profile: false,
+      },
+    },
+  },
   mobileActionPanel: {
     variant: "mobile-navigation",
     ariaLabel: "Primary mobile navigation",
@@ -28,7 +40,7 @@ export const FALLBACK_NAVIGATION_CONFIG = {
         label: "Home",
         icon: "home",
         target: "overview",
-        activeTargets: ["overview", "trevista"],
+        activeTargets: ["overview", PRODUCT_TYPE.TREVIO, PRODUCT_TYPE.TREVISTA],
       },
       { id: "bookings", label: "Bookings", icon: "calendar", target: "bookings" },
       {
@@ -84,24 +96,24 @@ export const FALLBACK_NAVIGATION_CONFIG = {
       patterns: ["/help", "/help/*"],
     },
     {
-      id: "trevista",
+      id: PRODUCT_TYPE.TREVIO,
       kind: "remote",
-      renderer: "trevista",
-      tab: "trevista",
-      product: "trevista",
+      renderer: PRODUCT_TYPE.TREVIO,
+      tab: PRODUCT_TYPE.TREVIO,
+      product: PRODUCT_TYPE.TREVIO,
+      path: "/",
+      activeId: "trips",
+      patterns: ["/trevio/*", "/trip/*"],
+    },
+    {
+      id: PRODUCT_TYPE.TREVISTA,
+      kind: "remote",
+      renderer: PRODUCT_TYPE.TREVISTA,
+      tab: PRODUCT_TYPE.TREVISTA,
+      product: PRODUCT_TYPE.TREVISTA,
       path: "/",
       activeId: "tours",
       patterns: ["/trevista/*", "/tour/*"],
-      shellPresentation: {
-        mobile: {
-          footer: "hidden",
-          appHeader: {
-            compact: true,
-            search: false,
-            profile: false,
-          },
-        },
-      },
     },
   ],
 };
@@ -146,8 +158,20 @@ const normalizeShellPresentation = (value = {}) => {
   };
 };
 
+const mergeShellPresentation = (base = {}, override = {}) => ({
+  mobile: {
+    ...(base.mobile || {}),
+    ...(override.mobile || {}),
+    appHeader: {
+      ...(base.mobile?.appHeader || {}),
+      ...(override.mobile?.appHeader || {}),
+    },
+  },
+});
+
 export function normalizeNavigationConfig(value = {}) {
   const rawDestinations = Array.isArray(value.destinations) ? value.destinations : [];
+  const remoteShellPresentation = value.remoteShellPresentation || {};
   const destinations = rawDestinations
     .filter((item) => ID_PATTERN.test(String(item?.id || "")) && KINDS.has(item?.kind))
     .map((item) => ({
@@ -163,7 +187,12 @@ export function normalizeNavigationConfig(value = {}) {
       activeId: ID_PATTERN.test(String(item.activeId || "")) ? item.activeId : item.id,
       path: safePath(item.path),
       patterns: safePatterns(item.patterns),
-      shellPresentation: normalizeShellPresentation(item.shellPresentation),
+      shellPresentation: normalizeShellPresentation(
+        mergeShellPresentation(
+          item.kind === "remote" ? remoteShellPresentation : {},
+          item.shellPresentation,
+        ),
+      ),
     }))
     .filter((item) => item.kind !== "remote" || item.renderer);
 

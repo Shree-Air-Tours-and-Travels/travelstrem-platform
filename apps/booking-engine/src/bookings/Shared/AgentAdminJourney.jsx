@@ -5,7 +5,7 @@ import BookingEnquiryCenter from "./BookingEnquiryCenter.jsx";
 import QuoteBuilderRoute from "../../quote-builder/QuoteBuilderRoute.jsx";
 
 function AgentAdminJourneyList({ journeyType }) {
-  const { enquiries, view, loading, error, load } = useEnquiryBookings(journeyType);
+  const { enquiries, bookings, view, loading, error, load } = useEnquiryBookings(journeyType);
   const location = useLocation();
   const navigate = useNavigate();
   const [selectedId, setSelectedId] = useState("");
@@ -19,6 +19,7 @@ function AgentAdminJourneyList({ journeyType }) {
       description={view.description}
       view={view}
       enquiries={enquiries}
+      bookings={bookings}
       selectedId={selectedId}
       loading={loading}
       error={error}

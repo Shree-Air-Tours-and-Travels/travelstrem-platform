@@ -79,7 +79,7 @@
 
     padding: $space-2 $space-3 0;
 
-    font-size: $font-size-xs;
+    font-size: var(--trem-control-label-font-size, #{$font-size-xs});
     font-weight: $font-semibold;
     line-height: 1.2;
 
@@ -136,7 +136,7 @@
     background: transparent;
 
     font-family: $font-primary;
-    font-size: $font-size-sm;
+    font-size: var(--trem-control-value-font-size, #{$font-size-sm});
     font-weight: $font-semibold;
     line-height: 1.45;
 

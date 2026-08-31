@@ -10,7 +10,12 @@ import {
 import { WidgetError, WidgetSkeleton } from "../../shared";
 import "./PackagePlans.styles.scss";
 
-export default function PackagePlans({ tourRef, selectedPackage = "", onSelectPackage }) {
+export default function PackagePlans({
+  tourRef,
+  selectedPackage = "",
+  onSelectPackage,
+  productType,
+}) {
   const { loading, error, widgetData, retry } = useTourDetailWidget(tourRef, "pricing-card.json");
   const labels = widgetData?.elements?.labels || {};
   const pricing = widgetData?.data?.tour?.commercialPricing;
@@ -42,11 +47,17 @@ export default function PackagePlans({ tourRef, selectedPackage = "", onSelectPa
       <header className="td-plans__header">
         <div>
           <span className="td-plans__eyebrow">
-            {labels.planEyebrow || "Choose your stay and service level"}
+            {productType === "trip"
+              ? "Choose your fixed trip option"
+              : labels.planEyebrow || "Choose your stay and service level"}
           </span>
-          <h2 id="td-plans-title">{labels.planTitle || "Tour packages"}</h2>
+          <h2 id="td-plans-title">
+            {productType === "trip" ? "Trip packages" : labels.planTitle || "Tour packages"}
+          </h2>
           <p>
-            {labels.planDescription || "Compare what is included before requesting your quote."}
+            {productType === "trip"
+              ? "Compare the fixed facilities and flight inclusion for this departure. The itinerary remains unchanged."
+              : labels.planDescription || "Compare what is included before requesting your quote."}
           </p>
         </div>
       </header>
@@ -96,7 +107,9 @@ export default function PackagePlans({ tourRef, selectedPackage = "", onSelectPa
                 text={
                   selected
                     ? labels.selectedPlan || "Selected"
-                    : labels.selectPlan || "Choose this plan"
+                    : productType === "trip"
+                      ? "Choose this package"
+                      : labels.selectPlan || "Choose this plan"
                 }
                 onClick={() => onSelectPackage?.(plan.packageKey, plan)}
               />

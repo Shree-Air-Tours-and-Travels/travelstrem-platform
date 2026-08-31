@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Trip from "../trips/models/Trip.js";
 import Tour from "../tours/models/Tour.js";
 import ContactLead from "../forms/models/ContactLead.js";
+import Booking from "../bookings/models/Booking.js";
 import SupportTicket from "../support/models/SupportTicket.js";
 import asyncHandler from "../../shared/middleware/asyncHandler.js";
 
@@ -192,26 +193,69 @@ const searchBookingsAndEnquiries = async (query, limit, currentUserId) => {
         match.push({ _id: query }, { bookingId: query });
     }
 
-    const leads = await ContactLead.find({ claimedBy: currentUserId, $or: match })
+    const [leads, bookings] = await Promise.all([
+        ContactLead.find({ claimedBy: currentUserId, bookingId: null, $or: match })
         .select("enquiryRef tourTitle product status bookingId updatedAt")
         .sort({ updatedAt: -1 })
         .limit(limit)
-        .lean();
+        .lean(),
+        Booking.find({
+            userId: currentUserId,
+            $or: [
+                { bookingRef: pattern },
+                { tourTitle: pattern },
+                { "enquirySnapshot.enquiryRef": pattern },
+                { "enquirySnapshot.fields.name": pattern },
+                { "enquirySnapshot.fields.email": pattern },
+                ...(mongoose.Types.ObjectId.isValid(query) ? [{ _id: query }] : []),
+            ],
+        })
+            .select("bookingRef tourTitle product status sourceEnquiryId enquirySnapshot updatedAt")
+            .sort({ updatedAt: -1 })
+            .limit(limit)
+            .lean(),
+    ]);
 
-    return leads.map((lead) => {
+    const enquiryResults = leads.map((lead) => {
         const reference = lead.enquiryRef || String(lead._id);
-        const typeLabel = lead.bookingId ? "Booking" : "Enquiry";
         return {
-            id: `${lead.bookingId ? "booking" : "enquiry"}:${String(lead._id)}`,
+            id: `enquiry:${String(lead._id)}`,
             reference,
-            type: lead.bookingId ? "booking" : "enquiry",
+            type: "enquiry",
             title: lead.tourTitle || reference,
-            description: [reference, typeLabel, lead.status].filter(Boolean).join(" · "),
-            icon: lead.bookingId ? "calendar" : "messageCircle",
+            description: [reference, "Enquiry", lead.status].filter(Boolean).join(" · "),
+            icon: "messageCircle",
             destination: "bookings",
             query: { enquiry: reference },
+            updatedAt: lead.updatedAt,
         };
     });
+    const bookingResults = bookings.map((booking) => ({
+        id: `booking:${String(booking._id)}`,
+        reference: booking.bookingRef,
+        type: "booking",
+        title: booking.tourTitle || booking.bookingRef,
+        description: [
+            booking.bookingRef,
+            booking.enquirySnapshot?.enquiryRef,
+            "Booking",
+            String(booking.status || "").replaceAll("_", " "),
+        ]
+            .filter(Boolean)
+            .join(" · "),
+        icon: "calendar",
+        destination: "bookings",
+        query: { booking: booking.bookingRef },
+        updatedAt: booking.updatedAt,
+    }));
+
+    return [...bookingResults, ...enquiryResults]
+        .sort(
+            (left, right) =>
+                new Date(right.updatedAt || 0).getTime() -
+                new Date(left.updatedAt || 0).getTime(),
+        )
+        .slice(0, limit);
 };
 
 const searchSupportTickets = async (query, limit, currentUserId) => {

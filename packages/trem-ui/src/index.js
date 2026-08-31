@@ -1,5 +1,7 @@
 import "./styles/global.scss";
 
+export { PRODUCT_TYPE } from "./constants/productTypes.js";
+
 export { default as StatusBadge } from "./components/StatusBadge/StatusBadge.jsx";
 export { default as Button } from "./components/Button/Button.jsx";
 export { default as Gallery } from "./components/Gallery/Gallery.jsx";

@@ -48,6 +48,7 @@ export const quoteProcessLabels = Object.freeze({
   back: "Back",
   next: "Save & continue",
   send: "Generate & send quote",
+  previewQuote: "Preview quotation PDF",
   edit: "Edit quote",
   packageCost: "Package cost",
   customAddons: "Custom add-ons",

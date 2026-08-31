@@ -28,6 +28,13 @@ const TripRepository = {
             { upsert: true, new: true, setDefaultsOnInsert: true },
         );
     },
+    upsertBySourceTourId(sourceTourId, payload) {
+        return Trip.findOneAndUpdate(
+            { sourceTourId },
+            { $set: payload },
+            { upsert: true, new: true, setDefaultsOnInsert: true },
+        );
+    },
     countDocuments(query = {}) {
         return Trip.countDocuments(query);
     },

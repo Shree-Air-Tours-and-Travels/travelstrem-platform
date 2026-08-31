@@ -12,7 +12,13 @@ export const DOCUMENT_TYPES = DOCUMENT_TYPE_LIST;
 
 const bookingDocumentSchema = new Schema(
     {
-        bookingId: { type: Schema.Types.ObjectId, ref: "Booking", required: true, index: true },
+        bookingId: { type: Schema.Types.ObjectId, ref: "Booking", default: null, index: true },
+        enquiryId: {
+            type: Schema.Types.ObjectId,
+            ref: "ContactLead",
+            default: null,
+            index: true,
+        },
         travellerId: {
             type: Schema.Types.ObjectId,
             ref: "BookingTraveller",
@@ -45,6 +51,12 @@ const bookingDocumentSchema = new Schema(
     { timestamps: true },
 );
 
+bookingDocumentSchema.pre("validate", function validateOwner(next) {
+    if (!this.bookingId && !this.enquiryId)
+        return next(new Error("A booking document requires a booking or enquiry."));
+    return next();
+});
+
 bookingDocumentSchema.virtual("id").get(function () {
     return this._id.toHexString();
 });
@@ -58,6 +70,7 @@ bookingDocumentSchema.set("toJSON", {
 });
 
 bookingDocumentSchema.index({ bookingId: 1, type: 1 });
+bookingDocumentSchema.index({ enquiryId: 1, type: 1 });
 bookingDocumentSchema.index({ travellerId: 1, type: 1 });
 
 const BookingDocument =

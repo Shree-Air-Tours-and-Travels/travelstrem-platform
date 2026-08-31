@@ -4,12 +4,13 @@ import useTourDetailWidget from "../../hooks/useTourDetailWidget";
 import { getDisplayText, slugifyTitle } from "../../helper";
 import { WidgetError, WidgetSkeleton } from "../../shared";
 import SimilarToursView from "./SimilarTours.view";
+import { PRODUCT_TYPE } from "../../../../constants/productTypes.js";
 
 export default function SimilarToursContainer({
   tourRef,
   isFavorited,
   onFavorite,
-  appKey = "trevista",
+  appKey = PRODUCT_TYPE.TREVISTA,
   showEmpty = false,
 }) {
   const navigate = useNavigate();

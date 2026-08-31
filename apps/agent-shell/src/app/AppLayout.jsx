@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { AppHeader, Breadcrumbs, PortalPreloader, SideBar } from "@packages/trem-ui";
+import { AppHeader, Breadcrumbs, PRODUCT_TYPE, PortalPreloader, SideBar } from "@packages/trem-ui";
 import { clearAuthBrowserState, emitAuthEvent } from "@packages/trem-auth-core";
 import { emit } from "@packages/trem-events";
 import { buildGlobalAuthUrl, useThemeMode } from "@packages/trem-utils";
@@ -64,8 +64,8 @@ export default function AppLayout({ embedded = false }) {
       ).filter((product) => products.includes(product.key)),
     [backendHeaderConfig?.partnerProducts, products],
   );
-  const hasTrevio = productCatalog.some((product) => product.key === "trevio");
-  const hasTrevista = productCatalog.some((product) => product.key === "trevista");
+  const hasTrevio = productCatalog.some((product) => product.key === PRODUCT_TYPE.TREVIO);
+  const hasTrevista = productCatalog.some((product) => product.key === PRODUCT_TYPE.TREVISTA);
   const partnerUser = useMemo(() => ({ ...user, partnerRoleLabel: roleLabel(user) }), [user]);
 
   useEffect(() => {

@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { clearAuthBrowserState, emitAuthEvent } from "@packages/trem-auth-core";
 import { emit } from "@packages/trem-events";
 import { buildGlobalAuthUrl, useThemeMode } from "@packages/trem-utils";
-import { AppHeader, Breadcrumbs, SideBar } from "@packages/trem-ui";
+import { AppHeader, Breadcrumbs, PRODUCT_TYPE, SideBar } from "@packages/trem-ui";
 import { useAdminPortalConfig } from "../../app/providers/AdminPortalProvider";
 import authService from "../../services/authService";
 import AdminOverviewView from "../../views/AdminOverviewView";
@@ -203,7 +203,7 @@ export default function ManageToursView({
   const activeInventory = dashboardDefinition?.data?.inventory || [];
   const primaryProduct = activeInventory[0];
   const primaryCreateAction =
-    primaryProduct?.id === "trevio" ? openTripCreate : primaryProduct ? openCreate : null;
+    primaryProduct?.id === PRODUCT_TYPE.TREVIO ? openTripCreate : primaryProduct ? openCreate : null;
 
   const headerConfig = useMemo(
     () => ({
@@ -216,7 +216,7 @@ export default function ManageToursView({
       search: { enabled: false },
       primaryAction: {
         label: primaryProduct
-          ? `Create ${primaryProduct.label} ${primaryProduct.id === "trevio" ? "trip" : "tour"}`
+          ? `Create ${primaryProduct.label} ${primaryProduct.id === PRODUCT_TYPE.TREVIO ? "trip" : "tour"}`
           : "Create travel product",
         icon: "plus",
         enabled: Boolean(primaryCreateAction),

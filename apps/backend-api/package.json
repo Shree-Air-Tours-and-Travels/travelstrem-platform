@@ -15,6 +15,7 @@
     "migrate:tour-search-index": "cross-env NODE_ENV=development USE_DOTENV=true node src/scripts/migrateTourSearchIndex.js",
     "migrate:travel-catalog": "cross-env NODE_ENV=development USE_DOTENV=true node src/scripts/backfillTravelCatalog.js --apply",
     "migrate:booking-quote-indexes": "cross-env NODE_ENV=development USE_DOTENV=true node src/scripts/migrateBookingQuoteIndexes.js",
+    "migrate:enquiry-bookings": "cross-env NODE_ENV=development USE_DOTENV=true node src/scripts/migrateEnquiryBookings.js --apply",
     "migrate:authentication": "cross-env NODE_ENV=development USE_DOTENV=true node src/scripts/migrateAuthentication.js",
     "migrate:financial-engine-indexes": "cross-env NODE_ENV=development USE_DOTENV=true node src/scripts/migrateFinancialEngineIndexes.js",
     "migrate:tour-commercial-pricing": "cross-env NODE_ENV=development USE_DOTENV=true node src/scripts/migrateTourCommercialPricing.js",

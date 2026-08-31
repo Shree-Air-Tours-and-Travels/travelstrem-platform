@@ -9,7 +9,7 @@ import {
   useSessionInactivity,
 } from "@packages/trem-auth-core";
 import { buildGlobalAuthUrl } from "@packages/trem-utils";
-import { SessionTimeoutModal } from "@packages/trem-ui";
+import { PRODUCT_TYPE, SessionTimeoutModal } from "@packages/trem-ui";
 import apiService from "../../services/apiService";
 import {
   createPortalEventController,
@@ -30,7 +30,7 @@ const partnerAgencyRoles = ["partner_admin", "partner_agent"];
 
 const DEFAULT_PARTNER_PRODUCTS = [
   {
-    key: "trevista",
+    key: PRODUCT_TYPE.TREVISTA,
     label: "Trevista",
     menuLabel: "Trevista Tours",
     icon: "map",
@@ -39,7 +39,7 @@ const DEFAULT_PARTNER_PRODUCTS = [
     createLabel: "New Trevista Tour",
   },
   {
-    key: "trevio",
+    key: PRODUCT_TYPE.TREVIO,
     label: "Trevio",
     menuLabel: "Trevio Trips",
     icon: "mountain",

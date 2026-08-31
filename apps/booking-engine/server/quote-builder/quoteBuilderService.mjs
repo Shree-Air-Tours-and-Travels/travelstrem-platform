@@ -209,8 +209,8 @@ const pricingInput = (enquiry, data, context = {}) => {
   };
 };
 
-export function createQuoteBuilderService({ findAuthorizedEnquiry, loadQuoteContext, saveProcess, calculateQuote, finalizeQuote }) {
-  if (![findAuthorizedEnquiry, loadQuoteContext, saveProcess, calculateQuote, finalizeQuote].every((item) => typeof item === "function"))
+export function createQuoteBuilderService({ findAuthorizedEnquiry, loadQuoteContext, saveProcess, calculateQuote, finalizeQuote, previewQuoteDocument }) {
+  if (![findAuthorizedEnquiry, loadQuoteContext, saveProcess, calculateQuote, finalizeQuote, previewQuoteDocument].every((item) => typeof item === "function"))
     throw new TypeError("QuoteBuilder persistence, context, pricing and document adapters are required");
 
   const initialize = async (enquiry, actor) => {
@@ -266,6 +266,20 @@ export function createQuoteBuilderService({ findAuthorizedEnquiry, loadQuoteCont
       };
       await saveProcess(enquiry, next, actor);
       return { status: 200, componentData: presentQuoteBuilder({ enquiry, persisted: next, definition, context, pricing: calculated.pricing }) };
+    },
+
+    async previewDocument(enquiryId, actor, payload = {}) {
+      const enquiry = await findAuthorizedEnquiry(enquiryId, actor);
+      const { context, definition, process } = await initialize(enquiry, actor);
+      const state = createProcessState(definition, process);
+      const prerequisitesComplete = definition.steps.slice(0, -1).every((step) => state.completedStageIds.includes(step.id));
+      if (state.currentNodeId !== "review-send" || !prerequisitesComplete)
+        throw Object.assign(new Error("Complete every quote step before previewing the PDF."), { status: 409 });
+      const data = merge(process.data, payload.data || {});
+      const input = pricingInput(enquiry, data, context);
+      const calculation = await calculateQuote(input);
+      calculation.pricing = { ...calculation.pricing, quoteComposition: input.quoteComposition, quoteItems: input.lines };
+      return previewQuoteDocument({ enquiry, context, data, input, calculation });
     },
 
     async transition(enquiryId, actor, payload = {}) {

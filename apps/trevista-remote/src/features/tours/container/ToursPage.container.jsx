@@ -6,6 +6,7 @@ import ToursPageView from "../view/ToursPage.view";
 import { getTourRef } from "../helper";
 import useFavorites from "../hooks/useFavorites";
 import { ContactAgentModal } from "@packages/trem-modals";
+import { PRODUCT_TYPE } from "@packages/trem-ui";
 import { fetchTourSearch } from "../search/tourSearch.service";
 import {
   flattenTourSearchState,
@@ -266,7 +267,7 @@ export default function ToursPageContainer({ dispatchEvent, userSession = null }
         open={contactOpen}
         onClose={() => setContactOpen(false)}
         user={userSession?.user || null}
-        product="trevista"
+        product={PRODUCT_TYPE.TREVISTA}
       />
     </>
   );

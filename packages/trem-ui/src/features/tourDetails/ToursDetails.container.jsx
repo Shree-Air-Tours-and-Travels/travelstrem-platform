@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { fetchData, useComponentData } from "@packages/trem-utils";
 import { REALTIME_EVENTS, useRealtimeEvent, useTourRealtime } from "@packages/trem-events";
 import { useFavoritesContext } from "../../context/FavoritesContext.jsx";
+import { PRODUCT_TYPE } from "../../constants/productTypes.js";
 import { ProductDetailProvider, WIDGET_API_OPTIONS } from "./context/ProductDetailContext.js";
 import ToursDetailsView, { DetailSkeleton, EmptyState } from "./ToursDetails.view";
 import { getRouteIdentityFromPath, slugifyTitle } from "./helper";
@@ -68,7 +69,7 @@ const selectionFromTourCard = (tour = {}) => ({
 
 export default function ToursDetailsContainer({
   dispatchEvent,
-  appKey = "trevista",
+  appKey = PRODUCT_TYPE.TREVISTA,
   productType = "tour",
   breadcrumbRoot: breadcrumbRootProp,
   userSession = null,

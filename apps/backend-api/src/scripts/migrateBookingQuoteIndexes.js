@@ -18,6 +18,16 @@ if (
 )
     incompatible.push(legacy.name);
 
+const inquiry = byName("inquiryId_1_version_1");
+if (
+    inquiry &&
+    !(
+        inquiry.partialFilterExpression?.inquiryId?.$type === "objectId" &&
+        inquiry.partialFilterExpression?.version?.$type === "number"
+    )
+)
+    incompatible.push(inquiry.name);
+
 const quoteNumber = byName("quoteNumber_1");
 if (
     quoteNumber &&
@@ -45,7 +55,12 @@ const verified = await BookingQuote.collection.indexes();
 console.log(
     JSON.stringify(
         verified.filter((index) =>
-            ["bookingId_1_version_1", "quoteNumber_1", "booking_quote_expiry"].includes(index.name),
+            [
+                "bookingId_1_version_1",
+                "inquiryId_1_version_1",
+                "quoteNumber_1",
+                "booking_quote_expiry",
+            ].includes(index.name),
         ),
         null,
         2,

@@ -71,16 +71,18 @@ const applyNavigationHiding = (config, hiddenKeys) => {
     if (!hiddenKeys.length) return config;
     return {
         ...config,
-        destinations: (config.destinations || []).map((dest) => {
-            const match = dest.product && hiddenKeys.includes(dest.product);
-            return match ? { ...dest, disabled: true } : dest;
-        }),
+        destinations: (config.destinations || []).filter(
+            (dest) => !dest.product || !hiddenKeys.includes(dest.product),
+        ),
         mobileActionPanel: config.mobileActionPanel
             ? {
                   ...config.mobileActionPanel,
-                  activeTargets: (config.mobileActionPanel.activeTargets || []).filter(
-                      (t) => !hiddenKeys.includes(t),
-                  ),
+                  items: (config.mobileActionPanel.items || []).map((item) => ({
+                      ...item,
+                      activeTargets: (item.activeTargets || []).filter(
+                          (target) => !hiddenKeys.includes(target),
+                      ),
+                  })),
               }
             : config.mobileActionPanel,
     };

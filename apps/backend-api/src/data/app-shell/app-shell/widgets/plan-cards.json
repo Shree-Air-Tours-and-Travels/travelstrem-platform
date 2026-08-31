@@ -21,10 +21,7 @@
             "hrefRef": "trevioHome",
             "target": "_self",
             "ariaLabelRef": "planTripsAriaLabel",
-            "hide": true,
-            "disabled": true,
-            "comingSoon": true,
-            "comingSoonLabelRef": "comingSoon"
+            "actionLabelRef": "planTripsAction"
           },
           {
             "id": "tours-packages",
@@ -94,7 +91,8 @@
         "planTripsTitle": "Trips & Adventures",
         "planTripsDescription": "Treks, expeditions and events",
         "planTripsImageAlt": "Travellers hiking through a mountain landscape",
-        "planTripsAriaLabel": "Explore trips and adventures on Trevio, coming soon",
+        "planTripsAriaLabel": "Explore trips and adventures on Trevio",
+        "planTripsAction": "Explore Trevio trips and adventures",
         "planToursTitle": "Tours & Packages",
         "planToursDescription": "Curated domestic and international journeys",
         "planToursHighlightCurated": "Curated itineraries",

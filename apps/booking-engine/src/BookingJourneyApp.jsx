@@ -6,7 +6,7 @@ import loadBookingJourney from "./services/bookingJourneyApi.js";
 
 const bookingIdFromLocation = (location) => {
   const params = new URLSearchParams(location.search);
-  const queryId = params.get("bookingId") || params.get("enquiry");
+  const queryId = params.get("bookingId") || params.get("booking") || params.get("enquiry");
   if (queryId) return queryId;
 
   const segments = location.pathname.split("/").filter(Boolean);
@@ -15,7 +15,13 @@ const bookingIdFromLocation = (location) => {
 };
 
 const eventBookingId = (envelope) =>
-  String(envelope?.data?.bookingId || envelope?.bookingId || "");
+  String(
+    envelope?.data?.bookingId ||
+      envelope?.data?.enquiryId ||
+      envelope?.bookingId ||
+      envelope?.enquiryId ||
+      "",
+  );
 
 export default function BookingJourneyApp({
   bookingId: suppliedBookingId = "",

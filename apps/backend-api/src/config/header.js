@@ -98,7 +98,7 @@ export default {
                         href: TREVIO_URL,
                         target: "_blank",
                         rel: "noopener noreferrer",
-                        disabled: true,
+                        disabled: false,
                     },
                     {
                         label: "Trevista",

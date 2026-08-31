@@ -259,6 +259,9 @@ export default function AuthPage({
       })
       .then((otpResponse) => {
         const data = otpResponse?.data || otpResponse;
+        if (data.developmentOtp) {
+          setActivationForm((current) => ({ ...current, otp: data.developmentOtp }));
+        }
         setActivationRequestSent(true);
         setOtpExpiresIn(secondsFromMs(data.expiresInMs, 300));
         setResendCooldown(secondsFromMs(data.resendAfterMs, 30));
@@ -314,6 +317,7 @@ export default function AuthPage({
       const data = response?.data || response;
       setChallenge(data);
       setPhoneNumber(data.phoneNumber);
+      setOtp(data.developmentOtp || "");
       setOtpExpiresIn(Number(data.expiresIn || data.expiresInSeconds || 300));
       setResendCooldown(Number(data.resendAfter || data.resendAfterSeconds || 60));
       setScreen("otp");
@@ -418,6 +422,9 @@ export default function AuthPage({
         role: "admin",
       });
       const data = response?.data || response;
+      if (data.developmentOtp) {
+        setEmailForm((current) => ({ ...current, adminOtp: data.developmentOtp }));
+      }
       setAdminRegistration({ status: "otp_sent" });
       setOtpExpiresIn(secondsFromMs(data.expiresInMs, 300));
       setResendCooldown(secondsFromMs(data.resendAfterMs, 30));
@@ -485,7 +492,7 @@ export default function AuthPage({
         data?.message ||
           "If that email is registered, a password reset code has been sent.",
       );
-      setResetForm({ otp: "", password: "", confirmPassword: "" });
+      setResetForm({ otp: data?.developmentOtp || "", password: "", confirmPassword: "" });
       setOtpExpiresIn(secondsFromMs(data?.expiresInMs, 300));
       setResendCooldown(secondsFromMs(data?.resendAfterMs, 30));
       setScreen("resetPassword");
@@ -545,6 +552,9 @@ export default function AuthPage({
       const response = await authService.requestActivationOtp({ code: activationCode });
       const data = response?.data || response;
       setActivationEmail(data.email || activationEmail);
+      if (data.developmentOtp) {
+        setActivationForm((current) => ({ ...current, otp: data.developmentOtp }));
+      }
       setActivationRequestSent(true);
       setOtpExpiresIn(secondsFromMs(data.expiresInMs, 300));
       setResendCooldown(secondsFromMs(data.resendAfterMs, 30));

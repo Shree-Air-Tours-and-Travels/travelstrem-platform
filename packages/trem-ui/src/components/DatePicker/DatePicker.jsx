@@ -206,6 +206,8 @@ function useIsMobile(breakpoint = MOBILE_BREAKPOINT) {
 export default function DatePicker({
   value = "",
   onChange,
+  label,
+  required = false,
   placeholder = "Select date",
   min,
   max,
@@ -1142,6 +1144,8 @@ export default function DatePicker({
         className={[
           "trem-datepicker__trigger",
 
+          label ? "trem-datepicker__trigger--labelled" : "",
+
           disabled ? "trem-datepicker__trigger--disabled" : "",
         ]
           .filter(Boolean)
@@ -1151,9 +1155,18 @@ export default function DatePicker({
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-invalid={Boolean(error)}
+        aria-label={label || placeholder}
       >
-        <span className={displayValue ? "trem-datepicker__value" : "trem-datepicker__placeholder"}>
-          {displayValue || placeholder}
+        <span className="trem-datepicker__trigger-content">
+          {label ? (
+            <span className="trem-datepicker__label">
+              {label}
+              {required ? <span className="trem-datepicker__required"> *</span> : null}
+            </span>
+          ) : null}
+          <span className={displayValue ? "trem-datepicker__value" : "trem-datepicker__placeholder"}>
+            {displayValue || placeholder}
+          </span>
         </span>
 
         <span className="trem-datepicker__trigger-icon" aria-hidden="true">

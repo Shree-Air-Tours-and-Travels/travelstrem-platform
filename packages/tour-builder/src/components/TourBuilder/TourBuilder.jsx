@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button, EmptyState, FloatingActionBar, Spinner, WizardFormShell } from "@packages/trem-ui";
+import { Button, EmptyState, FloatingActionBar, PRODUCT_TYPE, Spinner, WizardFormShell } from "@packages/trem-ui";
 import { ConfirmOverlay } from "@packages/trem-modals";
 import useTourBuilder from "../../hooks/useTourBuilder.js";
 import useStepForm from "../../hooks/useStepForm.js";
@@ -22,6 +22,7 @@ export default function TourBuilder({
   headerExtra = null,
   onLocationChange = null,
   mode = "create",
+  productKey = PRODUCT_TYPE.TREVISTA,
 }) {
   const viewOnly = mode === "view";
   const builder = useTourBuilder({
@@ -31,6 +32,7 @@ export default function TourBuilder({
     onComplete,
     onLocationChange,
     trackPosition: !viewOnly,
+    productKey,
   });
   const [overview, setOverview] = useState({ steps: [], ui: {} });
   const [confirmExit, setConfirmExit] = useState(false);
@@ -40,13 +42,13 @@ export default function TourBuilder({
   useEffect(() => {
     let active = true;
     tourBuilderApi
-      .fetchDefinition()
+      .fetchDefinition(productKey)
       .then((definition) => active && setOverview(definition || { steps: [], ui: {} }))
       .catch(() => {});
     return () => {
       active = false;
     };
-  }, []);
+  }, [productKey]);
 
   /* Exit asks for confirmation only when the step has unsaved edits. */
   const requestExit = () => {
@@ -211,6 +213,7 @@ function StepWorkspace({
         const result = await tourBuilderApi.previewPricing({
           tourId: builder.tourId,
           data: { commercial },
+          productKey: builder.meta?.productKey,
           signal: controller.signal,
         });
         setPricingPreview({ loading: false, data: result, error: null });

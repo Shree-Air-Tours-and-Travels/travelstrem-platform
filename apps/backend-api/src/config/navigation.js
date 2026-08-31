@@ -11,6 +11,16 @@ export default {
         allowedExternalOrigins: externalOrigins,
         allowedExternalProtocols: ["https:"],
     },
+    remoteShellPresentation: {
+        mobile: {
+            footer: "hidden",
+            appHeader: {
+                compact: true,
+                search: false,
+                profile: false,
+            },
+        },
+    },
     mobileActionPanel: {
         variant: "mobile-navigation",
         ariaLabel: "Primary mobile navigation",
@@ -20,7 +30,7 @@ export default {
                 label: "Home",
                 icon: "home",
                 target: "overview",
-                activeTargets: ["overview", "trevista"],
+                activeTargets: ["overview", "trevio", "trevista"],
             },
             { id: "bookings", label: "Bookings", icon: "calendar", target: "bookings" },
             {
@@ -56,7 +66,6 @@ export default {
             path: "/",
             activeId: "trips",
             patterns: ["/trevio/*", "/trip/*"],
-            disabled: true,
         },
         {
             id: "trevista",
@@ -67,16 +76,6 @@ export default {
             path: "/",
             activeId: "tours",
             patterns: ["/trevista/*", "/tour/*"],
-            shellPresentation: {
-                mobile: {
-                    footer: "hidden",
-                    appHeader: {
-                        compact: true,
-                        search: false,
-                        profile: false,
-                    },
-                },
-            },
         },
     ],
 };

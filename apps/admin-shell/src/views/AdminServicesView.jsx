@@ -4,6 +4,7 @@ import {
   EmptyState,
   FilterChips,
   MetricSummary,
+  PRODUCT_TYPE,
   SearchBar,
   SingleSelect,
   TourCard,
@@ -86,8 +87,8 @@ export default function AdminServicesView({
     () => new Set((activeProducts || []).map((product) => product.id)),
     [activeProducts],
   );
-  const showTours = !productContractReady || productIds.has("trevista");
-  const showTrips = !productContractReady || productIds.has("trevio");
+  const showTours = !productContractReady || productIds.has(PRODUCT_TYPE.TREVISTA);
+  const showTrips = !productContractReady || productIds.has(PRODUCT_TYPE.TREVIO);
   const productCount = Number(showTours) + Number(showTrips);
 
   const tripTypeOptions = useMemo(

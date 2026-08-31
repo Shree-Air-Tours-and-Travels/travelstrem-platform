@@ -51,6 +51,8 @@ export const SESSION_EXPIRED_EVENT = "TREM_SESSION_EXPIRED";
 export const SESSION_REFRESHED_EVENT = "TREM_SESSION_REFRESHED";
 export const SESSION_KEEPALIVE_EVENT = "TREM_SESSION_KEEPALIVE";
 export const DEFAULT_SESSION_INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000;
+const SESSION_ACTIVITY_RECORD_INTERVAL_MS = 30 * 1000;
+const SESSION_RESUME_KEEPALIVE_AFTER_MS = 60 * 1000;
 
 const currentAuthPortal = () => {
   if (typeof window === "undefined") return "customer";
@@ -281,11 +283,18 @@ export function useSessionInactivity({
     const recordActivity = ({ force = false } = {}) => {
       if (expiredRef.current) return;
       const now = Date.now();
-      if (!force && now - lastRecordedRef.current < 30_000) return;
+      if (!force && now - lastRecordedRef.current < SESSION_ACTIVITY_RECORD_INTERVAL_MS) return;
+      const idleBeforeActivity = now - lastActivityRef.current;
       lastRecordedRef.current = now;
       lastActivityRef.current = now;
-      const keepAliveInterval = Math.min(8 * 60 * 1000, Math.floor(limit * 0.6));
-      if (now - lastKeepAliveRef.current >= keepAliveInterval) {
+      const keepAliveInterval = Math.max(
+        SESSION_RESUME_KEEPALIVE_AFTER_MS,
+        Math.min(4 * 60 * 1000, Math.floor(limit * 0.25)),
+      );
+      if (
+        idleBeforeActivity >= SESSION_RESUME_KEEPALIVE_AFTER_MS ||
+        now - lastKeepAliveRef.current >= keepAliveInterval
+      ) {
         lastKeepAliveRef.current = now;
         window.dispatchEvent(new CustomEvent(SESSION_KEEPALIVE_EVENT));
       }
@@ -297,6 +306,10 @@ export function useSessionInactivity({
       else recordActivity({ force: true });
     };
     const handleSessionExpired = (event) => expire(event?.detail?.reason || "expired");
+    const handleWindowFocus = () => {
+      if (Date.now() - lastActivityRef.current >= limit) expire();
+      else recordActivity({ force: true });
+    };
     const activityEvents = ["pointerdown", "pointermove", "keydown", "touchstart", "scroll"];
 
     expiredRef.current = false;
@@ -307,12 +320,14 @@ export function useSessionInactivity({
       window.addEventListener(eventName, recordActivity, { passive: true }),
     );
     document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("focus", handleWindowFocus);
     window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
 
     return () => {
       clearTimer();
       activityEvents.forEach((eventName) => window.removeEventListener(eventName, recordActivity));
       document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("focus", handleWindowFocus);
       window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
     };
   }, [enabled, timeoutMs]);

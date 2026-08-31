@@ -86,6 +86,7 @@ function normalizeTrip(doc) {
     const obj = doc.toObject ? doc.toObject() : doc;
     return {
         _id: obj._id,
+        sourceTourId: obj.sourceTourId || null,
         slug: obj.slug,
         title: obj.title,
         category: obj.category,
@@ -230,6 +231,8 @@ function sanitizeTripPayload(raw = {}) {
                       value: String(opt.value || "")
                           .trim()
                           .toLowerCase(),
+                      description: String(opt.description || "").trim(),
+                      includesFlights: Boolean(opt.includesFlights),
                       extraPrice: Number(opt.extraPrice || 0),
                   }))
                   .filter((opt) => opt.label && opt.value)
