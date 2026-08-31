@@ -3,71 +3,80 @@
   "component": {
     "data": {
       "planJourney": {
-        "title": "Plan a Journey",
-        "ariaLabel": "Plan a journey with TravelsTrem products",
-        "columns": 4,
+        "titleRef": "planJourneyTitle",
+        "ariaLabelRef": "planJourneyAriaLabel",
+        "columns": 2,
+        "layout": "horizontal-stack",
         "hideUnavailableOnMobile": false,
         "items": [
           {
             "id": "trips-adventures",
-            "title": "Trips & Adventures",
-            "description": "Treks, expeditions & events",
+            "titleRef": "planTripsTitle",
+            "descriptionRef": "planTripsDescription",
             "productName": "Trevio",
             "image": "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=900&q=82&auto=format&fit=crop",
-            "imageAlt": "Travellers hiking through a mountain landscape",
+            "imageAltRef": "planTripsImageAlt",
             "mobileIcon": "mountain",
             "tone": "primary",
-            "href": "/?tab=trevio",
+            "hrefRef": "trevioHome",
             "target": "_self",
-            "ariaLabel": "Explore trips and adventures on Trevio"
+            "ariaLabelRef": "planTripsAriaLabel",
+            "actionLabelRef": "planTripsAction"
           },
           {
-            "id": "holiday-packages",
-            "title": "Holiday Packages",
-            "description": "Domestic & international",
+            "id": "tours-packages",
+            "titleRef": "planToursTitle",
+            "descriptionRef": "planToursDescription",
+            "highlights": [
+              { "id": "curated", "icon": "sparkles", "labelRef": "planToursHighlightCurated" },
+              { "id": "flexible", "icon": "settings", "labelRef": "planToursHighlightFlexible" },
+              { "id": "partners", "icon": "shieldCheck", "labelRef": "planToursHighlightPartners" }
+            ],
+            "highlightsAriaLabelRef": "planToursHighlightsAriaLabel",
+            "actionLabelRef": "planToursAction",
             "productName": "Trevista",
             "image": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=900&q=82&auto=format&fit=crop",
-            "imageAlt": "A tropical beach holiday destination",
+            "imageAltRef": "planToursImageAlt",
             "mobileIcon": "beach",
             "tone": "olive",
-            "href": "https://trevista.travelstrem.com",
+            "hrefRef": "trevistaHome",
+            "targetTab": "trevista",
             "target": "_self",
-            "ariaLabel": "Holiday Packages on Trevista, coming soon",
-            "disabled": true,
-            "comingSoon": true,
-            "comingSoonLabel": "Coming soon"
+            "ariaLabelRef": "planToursAriaLabel"
           },
           {
             "id": "flights-hotels",
-            "title": "Flights & Hotels",
-            "description": "Flights, stays & transport",
+            "titleRef": "planFlightsTitle",
+            "descriptionRef": "planFlightsDescription",
             "productName": "TreHub",
             "image": "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=900&q=82&auto=format&fit=crop",
-            "imageAlt": "Passenger airplane flying above the clouds",
+            "imageAltRef": "planFlightsImageAlt",
             "mobileIcon": "plane",
             "tone": "blue",
-            "href": "https://travelstrem.com/#contact",
+            "hrefRef": "contactTravelstrem",
             "target": "_self",
-            "ariaLabel": "Flights and Hotels on TreHub, coming soon",
+            "ariaLabelRef": "planFlightsAriaLabel",
+            "hide": true,
             "disabled": true,
             "comingSoon": true,
-            "comingSoonLabel": "Coming soon"
+            "comingSoonLabelRef": "comingSoon"
           },
           {
             "id": "travel-services",
-            "title": "Travel Services",
-            "description": "Visa, passport & insurance",
+            "titleRef": "planServicesTitle",
+            "descriptionRef": "planServicesDescription",
             "productName": "TreCare",
             "image": "https://images.unsplash.com/photo-1526772662000-3f88f10405ff?w=900&q=82&auto=format&fit=crop",
-            "imageAlt": "Travel documents and planning essentials",
+            "imageAltRef": "planServicesImageAlt",
             "mobileIcon": "passport",
             "tone": "green",
-            "href": "https://travelstrem.com/#contact",
+            "hrefRef": "contactTravelstrem",
             "target": "_self",
-            "ariaLabel": "Travel Services on TreCare, coming soon",
+            "ariaLabelRef": "planServicesAriaLabel",
+            "hide": true,
             "disabled": true,
             "comingSoon": true,
-            "comingSoonLabel": "Coming soon"
+            "comingSoonLabelRef": "comingSoon"
           }
         ]
       }
@@ -76,8 +85,38 @@
       "options": {}
     },
     "elements": {
-      "labels": {},
-      "urls": {}
+      "labels": {
+        "planJourneyTitle": "Explore TravelsTREM",
+        "planJourneyAriaLabel": "Plan a journey with TravelsTREM products",
+        "planTripsTitle": "Trips & Adventures",
+        "planTripsDescription": "Treks, expeditions and events",
+        "planTripsImageAlt": "Travellers hiking through a mountain landscape",
+        "planTripsAriaLabel": "Explore trips and adventures on Trevio",
+        "planTripsAction": "Explore Trevio trips and adventures",
+        "planToursTitle": "Tours & Packages",
+        "planToursDescription": "Curated domestic and international journeys",
+        "planToursHighlightCurated": "Curated itineraries",
+        "planToursHighlightFlexible": "Flexible packages and stays",
+        "planToursHighlightPartners": "Verified travel partners",
+        "planToursHighlightsAriaLabel": "Trevista product highlights",
+        "planToursAction": "Explore tours and build your journey",
+        "planToursImageAlt": "A tropical beach holiday destination",
+        "planToursAriaLabel": "Explore tours and packages on Trevista",
+        "planFlightsTitle": "Flights & Hotels",
+        "planFlightsDescription": "Flights, stays and transport",
+        "planFlightsImageAlt": "Passenger airplane flying above the clouds",
+        "planFlightsAriaLabel": "Flights and hotels on TreHub, coming soon",
+        "planServicesTitle": "Visas & Insurance",
+        "planServicesDescription": "Visa, passport and insurance services",
+        "planServicesImageAlt": "Travel documents and planning essentials",
+        "planServicesAriaLabel": "Travel services on TreCare, coming soon",
+        "comingSoon": "Coming soon"
+      },
+      "urls": {
+        "trevioHome": "/?tab=trevio",
+        "trevistaHome": "/?tab=trevista",
+        "contactTravelstrem": "https://travelstrem.com/#contact"
+      }
     },
     "structure": {
       "header": {},

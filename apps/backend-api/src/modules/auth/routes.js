@@ -4,20 +4,56 @@ import * as controller from "./controllers/authController.js";
 import * as profileController from "./controllers/profileController.js";
 import authMiddleware from "../../shared/auth/middleware.js";
 import { validateLogin, validateRegister } from "./validators/create.validation.js";
- 
+import rateLimit from "express-rate-limit";
+import * as providerAuthController from "./controllers/providerAuthController.js";
+import config from "../../config/index.js";
+
 const router = express.Router();
+const trustedOrigins = new Set(
+    (config.FRONTENDS || []).flatMap((value) => {
+        try {
+            return [new URL(value).origin];
+        } catch {
+            return [];
+        }
+    }),
+);
+const requireTrustedOrigin = (req, res, next) => {
+    const origin = req.get("origin");
+    if (
+        !origin ||
+        trustedOrigins.has(origin) ||
+        (config.IS_DEVELOPMENT && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin))
+    )
+        return next();
+    return res.status(403).json({
+        status: "error",
+        code: "UNTRUSTED_ORIGIN",
+        message: "Request origin is not allowed.",
+    });
+};
 
 // serve auth configuration to frontend
 router.get("/config", controller.getAuthConfig);
+router.get("/methods", providerAuthController.getAuthMethods);
 
 /*
   Public auth endpoints
 */
-router.post("/register", validateRegister, controller.register);
-router.post("/login", validateLogin, controller.login);
-router.post("/verify-otp", controller.verifyLoginOtp);
-router.post("/resend-otp", controller.resendLoginOtp);
-router.post("/admin-registration-otp", controller.requestAdminRegistrationOtp);
+router.post("/register", requireTrustedOrigin, validateRegister, controller.register);
+router.post("/login", requireTrustedOrigin, validateLogin, controller.login);
+router.post("/verify-otp", requireTrustedOrigin, controller.verifyLoginOtp);
+router.post("/resend-otp", requireTrustedOrigin, controller.resendLoginOtp);
+router.post(
+    "/admin-registration-otp",
+    requireTrustedOrigin,
+    controller.requestAdminRegistrationOtp,
+);
+router.post(
+    "/verify-admin-registration-otp",
+    requireTrustedOrigin,
+    controller.verifyAdminRegistrationOtp,
+);
 router.post("/partner-agencies/apply", controller.applyPartnerAgency);
 router.get("/partner-agencies/check", controller.checkPartnerAgency);
 router.get("/partner-agencies", authMiddleware, controller.listPartnerAgencies);
@@ -27,49 +63,71 @@ router.post("/agents/:id/review", authMiddleware, controller.reviewAgent);
 router.get("/admins", authMiddleware, controller.listAdmins);
 router.post("/admins/:id/review", authMiddleware, controller.reviewAdmin);
 router.post("/admins/:id/remove", authMiddleware, controller.removeAdmin);
+router.patch("/admins/:id/internal-team", authMiddleware, controller.updateAdminInternalTeam);
 
 /*
   Password reset flow
   - POST /forgot-password  { email }        -> sends reset email (generic response)
-  - POST /reset-password   { token, password } -> resets password and logs user in
+  - POST /reset-password   { email, otp, password } -> resets password and logs user in
 */
-router.post("/forgot-password", controller.forgotPassword);
-router.post("/reset-password", controller.resetPassword);
+router.post("/forgot-password", requireTrustedOrigin, controller.forgotPassword);
+router.post("/reset-password", requireTrustedOrigin, controller.resetPassword);
 
 /*
-  OAuth entry points (frontend expects /auth/google, /auth/github, /auth/apple)
-  These are lightweight placeholders. For production you should replace them
-  with a proper OAuth implementation (e.g. Passport, or your own redirect flow)
-  that issues tokens or sets cookies after successful auth.
+  Agent activation flow
+  - POST /activate-validate     { token }                    -> validates invitation, returns short-lived code
+  - POST /request-activation-otp  { code }                   -> sends OTP to invited user's email
+  - POST /activate-with-otp       { code, otp, password }    -> verifies OTP, activates account
 */
-const oauthRedirectMap = {
-  google: process.env.OAUTH_GOOGLE_URL || null,
-  github: process.env.OAUTH_GITHUB_URL || null,
-  apple: process.env.OAUTH_APPLE_URL || null,
-};
+router.post("/activate-validate", requireTrustedOrigin, controller.activateValidate);
+router.post("/request-activation-otp", requireTrustedOrigin, controller.requestActivationOtp);
+router.post("/activate-with-otp", requireTrustedOrigin, controller.activateWithOtp);
 
-const makeOAuthHandler = (provider) => (req, res) => {
-  const redirectTo = oauthRedirectMap[provider];
-  if (redirectTo) {
-    // Redirect to configured provider endpoint (could be an endpoint on your backend that starts OAuth)
-    return res.redirect(redirectTo);
-  }
+router.get("/google", providerAuthController.startGoogle);
+router.get("/google/callback", providerAuthController.googleCallback);
 
-  // Not implemented , return a clear HTTP error so callers know to implement OAuth
-  return res.status(501).json({
-    message: `OAuth for "${provider}" is not implemented on the server. Set OAUTH_${provider.toUpperCase()}_URL or implement the provider flow.`,
-  });
-};
-
-router.get("/google", makeOAuthHandler("google"));
-router.get("/github", makeOAuthHandler("github"));
-router.get("/apple", makeOAuthHandler("apple"));
+const mobileRequestLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: (_req, res) =>
+        res.status(429).json({
+            status: "error",
+            code: "OTP_RATE_LIMITED",
+            message: "Too many verification requests. Please try again later.",
+        }),
+});
+const mobileVerifyLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 30,
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: (_req, res) =>
+        res.status(429).json({
+            status: "error",
+            code: "OTP_RATE_LIMITED",
+            message: "Too many verification attempts. Please try again later.",
+        }),
+});
+router.post(
+    "/mobile/request-otp",
+    requireTrustedOrigin,
+    mobileRequestLimiter,
+    providerAuthController.requestOtp,
+);
+router.post(
+    "/mobile/verify-otp",
+    requireTrustedOrigin,
+    mobileVerifyLimiter,
+    providerAuthController.verifyOtp,
+);
 
 /*
   Logout - clears the auth cookie
 */
-router.post("/refresh", controller.refreshTokenEndpoint);
-router.post("/logout", controller.logout);
+router.post("/refresh", requireTrustedOrigin, controller.refreshTokenEndpoint);
+router.post("/logout", requireTrustedOrigin, controller.logout);
 
 /*
   Protected route - returns current user info (requires jwtAuth middleware)

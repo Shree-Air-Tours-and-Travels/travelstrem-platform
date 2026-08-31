@@ -1,20 +1,35 @@
-import React from "react";
-import { Button, Breadcrumbs, FloatingActionBar, Title, Paragraph } from "../../index.js";
-import { ContactAgentModal, ConfirmOverlay } from "@packages/trem-modals";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import {
+  Button,
+  Breadcrumbs,
+  FloatingActionBar,
+  Title,
+  Paragraph,
+  AgencyDetailsCard,
+} from "../../index.js";
+import { ContactAgentModal } from "@packages/trem-modals";
+import { PRODUCT_TYPE } from "../../constants/productTypes.js";
 import TourOverview from "./widgets/TourOverview/TourOverview";
 import TourGallery from "./widgets/TourGallery/TourGallery";
 import PricingCard from "./widgets/PricingCard/PricingCard";
 import TourHighlights from "./widgets/TourHighlights/TourHighlights";
 import ItineraryTimeline from "./widgets/ItineraryTimeline/ItineraryTimeline";
 import InclusionsExclusions from "./widgets/InclusionsExclusions/InclusionsExclusions";
+import IncludedStays from "./widgets/IncludedStays/IncludedStays";
 import CancellationPolicy from "./widgets/CancellationPolicy/CancellationPolicy";
 import ReviewsSection from "./widgets/ReviewsSection/ReviewsSection";
 import SimilarTours from "./widgets/SimilarTours/SimilarTours";
 import TourFacts from "./widgets/TourFacts/TourFacts";
+import PackagePlans from "./widgets/PackagePlans/PackagePlans";
 import "./tourDetails.scss";
+import { getCurrencyFormatter, getPackageDisplayName } from "./helper";
 
 export const DetailSkeleton = () => (
-  <main className="tour-detail tour-detail--loading" role="status" aria-label="Loading tour details">
+  <main
+    className="tour-detail tour-detail--loading"
+    role="status"
+    aria-label="Loading tour details"
+  >
     <div className="tour-detail__shell">
       <div className="tour-detail__skeleton tour-detail__skeleton--hero" />
       <div className="tour-detail__skeleton-grid">
@@ -26,82 +41,454 @@ export const DetailSkeleton = () => (
   </main>
 );
 
-export const EmptyState = ({ title, message, onBack, backLabel = "Back to tours" }) => (
+export const EmptyState = ({ title, message, onRetry, onBack, backLabel = "Back to tours" }) => (
   <main className="tour-detail">
     <div className="tour-detail__shell">
       <section className="tour-detail__empty">
         <Title text={title} />
         <Paragraph text={message} />
-        <Button primaryClassName="tour-detail__button tour-detail__button--primary" variant="solid" color="primary" onClick={onBack}>
-          {backLabel}
-        </Button>
+        <div className="tour-detail__empty-actions">
+          {onRetry ? (
+            <Button
+              primaryClassName="tour-detail__button tour-detail__button--primary"
+              variant="solid"
+              color="primary"
+              onClick={onRetry}
+            >
+              Retry
+            </Button>
+          ) : null}
+          <Button
+            primaryClassName="tour-detail__button"
+            variant={onRetry ? "outline" : "solid"}
+            color="primary"
+            onClick={onBack}
+          >
+            {backLabel}
+          </Button>
+        </div>
       </section>
     </div>
   </main>
 );
 
 const HERO_WIDGETS = new Set(["TourOverview", "TourGallery", "PricingCard"]);
-const CONTENT_WIDGETS = new Set(["TourHighlights", "ItineraryTimeline", "InclusionsExclusions", "CancellationPolicy", "ReviewsSection", "SimilarTours"]);
+const CONTENT_WIDGETS = new Set([
+  "TourHighlights",
+  "ItineraryTimeline",
+  "InclusionsExclusions",
+  "PackagePlans",
+  "IncludedStays",
+  "CancellationPolicy",
+  "ReviewsSection",
+  "SimilarTours",
+]);
+
+const SECTION_BY_WIDGET = Object.freeze({
+  PackagePlans: "packages",
+  ItineraryTimeline: "itinerary",
+  IncludedStays: "hotels",
+  InclusionsExclusions: "included",
+  CancellationPolicy: "policies",
+  ReviewsSection: "reviews",
+});
+
+const DETAIL_TABS = Object.freeze([
+  { id: "overview", label: "Overview" },
+  { id: "packages", label: "Packages" },
+  { id: "itinerary", label: "Itinerary" },
+  { id: "included", label: "Inclusions" },
+  { id: "hotels", label: "Hotels & stays" },
+  { id: "policies", label: "Policies" },
+  { id: "reviews", label: "Reviews" },
+]);
+
+const getSectionScrollRoot = (node) =>
+  node?.closest?.("[data-scroll-root]") || document.scrollingElement || document.documentElement;
+
+const getScrollEventTarget = (scrollRoot) =>
+  scrollRoot === document.scrollingElement || scrollRoot === document.documentElement
+    ? window
+    : scrollRoot;
 
 const renderWidget = (widget, props) => {
   switch (widget.type) {
     case "TourOverview":
-      return <TourOverview key={widget.type} tourRef={props.tourRef} onTourLoad={props.onTourLoad} />;
+      return (
+        <TourOverview key={widget.type} tourRef={props.tourRef} onTourLoad={props.onTourLoad} />
+      );
     case "TourGallery":
       return <TourGallery key={widget.type} tourRef={props.tourRef} tour={props.activeTour} />;
     case "PricingCard":
-      return <PricingCard key={widget.type} tourRef={props.tourRef} tour={props.activeTour} onBook={props.onBook} onContact={props.onContact} onShare={props.onShare} isFavorited={props.isFavorited} onFavorite={props.onFavorite} />;
+      return (
+        <PricingCard
+          key={widget.type}
+          tourRef={props.tourRef}
+          tour={props.activeTour}
+          onBook={props.onBook}
+          onContact={props.onContact}
+          onShare={props.onShare}
+          isFavorited={props.isFavorited}
+          onFavorite={props.onFavorite}
+          selectedPackage={props.selectedPackage}
+          selectedFlight={props.selectedFlight}
+          onSelectFlight={props.onSelectFlight}
+          selectedActivities={props.selectedActivities}
+          onSelectActivity={props.onSelectActivity}
+          selectedDeparture={props.selectedDeparture}
+          onSelectDeparture={props.onSelectDeparture}
+          productType={props.productType}
+        />
+      );
     case "TourHighlights":
       return <TourHighlights key={widget.type} tourRef={props.tourRef} />;
     case "ItineraryTimeline":
       return <ItineraryTimeline key={widget.type} tourRef={props.tourRef} />;
     case "InclusionsExclusions":
       return <InclusionsExclusions key={widget.type} tourRef={props.tourRef} />;
+    case "IncludedStays":
+      return (
+        <IncludedStays
+          key={widget.type}
+          tourRef={props.tourRef}
+          selectedPackage={props.selectedPackage}
+          allowEnquiryCustomization={false}
+        />
+      );
+    case "PackagePlans":
+      return (
+        <PackagePlans
+          key={widget.type}
+          tourRef={props.tourRef}
+          selectedPackage={props.selectedPackage}
+          onSelectPackage={props.onSelectPackage}
+          productType={props.productType}
+        />
+      );
     case "CancellationPolicy":
       return <CancellationPolicy key={widget.type} tourRef={props.tourRef} />;
     case "ReviewsSection":
       return <ReviewsSection key={widget.type} tourRef={props.tourRef} />;
     case "SimilarTours":
-      return <SimilarTours key={widget.type} tourRef={props.tourRef} isFavorited={props.isFavorited} onFavorite={props.onFavorite} appKey={props.appKey} />;
+      return (
+        <SimilarTours
+          key={widget.type}
+          tourRef={props.tourRef}
+          isFavorited={props.isFavorited}
+          onFavorite={props.onFavorite}
+          appKey={props.appKey}
+        />
+      );
     default:
       return null;
   }
 };
 
 export default function ToursDetailsView({
-  tourRef, widgets, pageTitle, activeTour,
-  structure, elements,
-  contactOpen, contactFormData,
-  bookConfirmOpen, breadcrumbItems,
-  onTourLoad, onBack, onBook, onBookConfirm, onBookConfirmClose, onContact, onShare,
-  isFavorited, onFavorite,
+  tourRef,
+  widgets,
+  pageTitle,
+  activeTour,
+  tourUnavailable,
+  structure,
+  elements,
+  contactOpen,
+  breadcrumbItems,
+  onTourLoad,
+  onBack,
+  onContact,
+  onShare,
+  isFavorited,
+  onFavorite,
   setContactOpen,
   appKey,
+  user,
+  productType,
+  selectedPackage,
+  selectedPackageDetails,
+  onSelectPackage,
+  onCustomizeJourney,
 }) {
-  const widgetProps = { tourRef, activeTour, onTourLoad, onBook, onContact, onShare, isFavorited, onFavorite, appKey };
-  const heroWidgets = widgets.filter((widget) => HERO_WIDGETS.has(widget.type));
-  const contentWidgets = widgets.filter((widget) => CONTENT_WIDGETS.has(widget.type));
+  const showBookNow = structure?.floatingActionBar?.config?.showBookNow === true;
+  const selectedPackageData =
+    selectedPackageDetails ||
+    activeTour?.commercialPricing?.packages?.find(
+      (item) =>
+        String(item.packageKey || item.tier).toLowerCase() ===
+        String(selectedPackage || "").toLowerCase(),
+    );
+  const selectedPackageName = selectedPackageData && getPackageDisplayName(selectedPackageData);
+  const selectedPackagePrice = selectedPackageData
+    ? getCurrencyFormatter(activeTour?.commercialPricing?.currency || "INR").format(
+        Number(selectedPackageData.sellingTotalMinor || 0) / 100,
+      )
+    : "";
+  const floatingQuoteLabel =
+    productType === "trip"
+      ? elements?.labels?.enquire || "Enquire now"
+      : selectedPackageName
+        ? `${(elements?.labels?.continueWithPackage || "Continue with {package}").replace(
+            "{package}",
+            selectedPackageName,
+          )}${selectedPackagePrice ? ` · ${selectedPackagePrice}` : ""}`
+        : elements?.labels?.enquire || "Get a quote";
+  const widgetProps = {
+    tourRef,
+    activeTour,
+    onTourLoad,
+    onContact,
+    onShare,
+    isFavorited,
+    onFavorite,
+    appKey,
+    productType,
+    selectedPackage,
+    onSelectPackage,
+  };
+  const heroWidgets = useMemo(
+    () => widgets.filter((widget) => HERO_WIDGETS.has(widget.type)),
+    [widgets],
+  );
+  const contentWidgets = useMemo(
+    () => widgets.filter((widget) => CONTENT_WIDGETS.has(widget.type)),
+    [widgets],
+  );
+  const availableTabs = useMemo(() => {
+    const sectionIds = new Set([
+      "overview",
+      ...contentWidgets.map((widget) => SECTION_BY_WIDGET[widget.type]).filter(Boolean),
+    ]);
+    const reviewCount = Number(
+      activeTour?.reviewCount ?? activeTour?.rating?.count ?? activeTour?.reviews?.length ?? 0,
+    );
+    return DETAIL_TABS.filter(
+      (tab) => sectionIds.has(tab.id) && (tab.id !== "reviews" || reviewCount > 0),
+    );
+  }, [activeTour, contentWidgets]);
+  const [activeSection, setActiveSection] = useState("overview");
+  const sectionNavRef = useRef(null);
+  const programmaticScrollRef = useRef(false);
+  const programmaticScrollTimerRef = useRef(null);
   const overviewWidget = heroWidgets.find((w) => w.type === "TourOverview");
   const galleryWidget = heroWidgets.find((w) => w.type === "TourGallery");
   const pricingWidget = heroWidgets.find((w) => w.type === "PricingCard");
+
+  useEffect(() => {
+    const nav = sectionNavRef.current;
+    const sections = availableTabs
+      .map((tab) => document.getElementById(`tour-detail-${tab.id}`))
+      .filter(Boolean);
+    if (!nav || !sections.length) return undefined;
+
+    const scrollRoot = getSectionScrollRoot(nav);
+    const scrollTarget = getScrollEventTarget(scrollRoot);
+    let animationFrame = 0;
+
+    const updateActiveSection = () => {
+      animationFrame = 0;
+      if (programmaticScrollRef.current) return;
+
+      const rootTop = scrollTarget === window ? 0 : scrollRoot.getBoundingClientRect().top;
+      const stickyTop = Number.parseFloat(window.getComputedStyle(nav).top) || 0;
+      const activationLine = rootTop + stickyTop + nav.offsetHeight + 16;
+      let nextSection = sections[0];
+
+      sections.forEach((section) => {
+        if (section.getBoundingClientRect().top <= activationLine) nextSection = section;
+      });
+
+      const isAtEnd = scrollRoot.scrollTop + scrollRoot.clientHeight >= scrollRoot.scrollHeight - 2;
+      if (isAtEnd) nextSection = sections[sections.length - 1];
+
+      const nextId = nextSection.id.replace("tour-detail-", "");
+      setActiveSection((current) => (current === nextId ? current : nextId));
+    };
+
+    const scheduleUpdate = () => {
+      if (animationFrame) return;
+      animationFrame = window.requestAnimationFrame(updateActiveSection);
+    };
+
+    const releaseProgrammaticScroll = () => {
+      if (!programmaticScrollRef.current) return;
+      programmaticScrollRef.current = false;
+      if (programmaticScrollTimerRef.current) {
+        window.clearTimeout(programmaticScrollTimerRef.current);
+        programmaticScrollTimerRef.current = null;
+      }
+      scheduleUpdate();
+    };
+
+    scrollTarget.addEventListener("scroll", scheduleUpdate, { passive: true });
+    scrollTarget.addEventListener("scrollend", releaseProgrammaticScroll);
+    scrollTarget.addEventListener("touchstart", releaseProgrammaticScroll, { passive: true });
+    scrollTarget.addEventListener("wheel", releaseProgrammaticScroll, { passive: true });
+    window.addEventListener("resize", scheduleUpdate);
+    updateActiveSection();
+
+    return () => {
+      scrollTarget.removeEventListener("scroll", scheduleUpdate);
+      scrollTarget.removeEventListener("scrollend", releaseProgrammaticScroll);
+      scrollTarget.removeEventListener("touchstart", releaseProgrammaticScroll);
+      scrollTarget.removeEventListener("wheel", releaseProgrammaticScroll);
+      window.removeEventListener("resize", scheduleUpdate);
+      if (animationFrame) window.cancelAnimationFrame(animationFrame);
+    };
+  }, [availableTabs]);
+
+  useEffect(
+    () => () => {
+      if (programmaticScrollTimerRef.current) {
+        window.clearTimeout(programmaticScrollTimerRef.current);
+      }
+    },
+    [],
+  );
+
+  useEffect(() => {
+    const nav = sectionNavRef.current;
+    const activeButton = nav?.querySelector(`[data-section-id="${activeSection}"]`);
+    if (!nav || !activeButton) return;
+    nav.scrollTo({
+      left: activeButton.offsetLeft - (nav.clientWidth - activeButton.offsetWidth) / 2,
+      behavior: "smooth",
+    });
+  }, [activeSection]);
+
+  const scrollToSection = (sectionId) => {
+    const nav = sectionNavRef.current;
+    const section = document.getElementById(`tour-detail-${sectionId}`);
+    if (!nav || !section) return;
+
+    const scrollRoot = getSectionScrollRoot(nav);
+    const scrollTarget = getScrollEventTarget(scrollRoot);
+    const rootTop = scrollTarget === window ? 0 : scrollRoot.getBoundingClientRect().top;
+    const stickyTop = Number.parseFloat(window.getComputedStyle(nav).top) || 0;
+    const targetTop = rootTop + stickyTop + nav.offsetHeight + 8;
+    const nextScrollTop = Math.max(
+      0,
+      scrollRoot.scrollTop + section.getBoundingClientRect().top - targetTop,
+    );
+
+    programmaticScrollRef.current = true;
+    setActiveSection(sectionId);
+    scrollRoot.scrollTo({
+      top: nextScrollTop,
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+    });
+
+    if (programmaticScrollTimerRef.current) {
+      window.clearTimeout(programmaticScrollTimerRef.current);
+    }
+    programmaticScrollTimerRef.current = window.setTimeout(() => {
+      programmaticScrollRef.current = false;
+      programmaticScrollTimerRef.current = null;
+    }, 900);
+  };
+
+  if (tourUnavailable) {
+    return (
+      <main className="tour-detail" aria-label="Tour unavailable">
+        <div className="tour-detail__shell">
+          <Breadcrumbs items={breadcrumbItems} className="tour-detail__breadcrumbs" />
+          <section className="tour-detail__empty tour-detail__empty--unavailable">
+            <Title text="This tour is no longer available" />
+            <Paragraph text="The operator has unpublished this tour. TravelsTREM has checked the live catalog for the closest reliable alternatives." />
+            <Button
+              primaryClassName="tour-detail__button tour-detail__button--primary"
+              variant="solid"
+              color="primary"
+              onClick={onBack}
+            >
+              Back to tour filters
+            </Button>
+          </section>
+          <SimilarTours
+            tourRef={tourRef}
+            isFavorited={isFavorited}
+            onFavorite={onFavorite}
+            appKey={appKey}
+            showEmpty
+          />
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="tour-detail" aria-labelledby="tour-detail-title">
       <div className="tour-detail__shell">
         <Breadcrumbs items={breadcrumbItems} className="tour-detail__breadcrumbs" />
 
-        <div className="tour-detail__hero-section">
-          <div className="tour-detail__hero-main">
-            {galleryWidget && renderWidget(galleryWidget, widgetProps)}
-            {overviewWidget && renderWidget(overviewWidget, widgetProps)}
+        <nav
+          ref={sectionNavRef}
+          className="tour-detail__section-nav"
+          aria-label="Tour details sections"
+        >
+          {availableTabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              className={activeSection === tab.id ? "is-active" : ""}
+              data-section-id={tab.id}
+              onClick={() => scrollToSection(tab.id)}
+              aria-current={activeSection === tab.id ? "location" : undefined}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </nav>
+
+        <div className="tour-detail__overview-anchor" id="tour-detail-overview">
+          <div className="tour-detail__hero-section">
+            <div className="tour-detail__hero-main">
+              {galleryWidget && renderWidget(galleryWidget, widgetProps)}
+              {overviewWidget && renderWidget(overviewWidget, widgetProps)}
+            </div>
+            {pricingWidget && renderWidget(pricingWidget, widgetProps)}
           </div>
-          {pricingWidget && renderWidget(pricingWidget, widgetProps)}
+
+          <TourFacts tourRef={tourRef} tour={activeTour} />
+
+          <AgencyDetailsCard
+            agency={activeTour?.agency}
+            operator={
+              activeTour?.operator ||
+              (activeTour?.ownerAgentName
+                ? {
+                    name: activeTour.ownerAgentName,
+                    email: activeTour.ownerAgentEmail,
+                  }
+                : !activeTour?.operator &&
+                    activeTour?.inventorySource === "platform" &&
+                    activeTour?.providerName
+                  ? {
+                      name: "TREM-AI",
+                      email: "",
+                    }
+                  : null)
+            }
+            providerName={activeTour?.providerName || ""}
+            labels={elements?.labels?.agencyDetails || {}}
+          />
         </div>
 
-        <TourFacts tourRef={tourRef} tour={activeTour} />
-
         <div className="tour-detail__content">
-          {contentWidgets.map((widget) => renderWidget(widget, widgetProps))}
+          {contentWidgets.map((widget) => {
+            const sectionId = SECTION_BY_WIDGET[widget.type];
+            const content = renderWidget(widget, widgetProps);
+            return sectionId ? (
+              <div
+                className="tour-detail__section-anchor"
+                id={`tour-detail-${sectionId}`}
+                key={widget.type}
+              >
+                {content}
+              </div>
+            ) : (
+              content
+            );
+          })}
         </div>
       </div>
 
@@ -110,27 +497,34 @@ export default function ToursDetailsView({
           open={contactOpen}
           tourId={activeTour._id}
           onClose={() => setContactOpen(false)}
-          formData={contactFormData}
+          user={user}
+          product={productType === "trip" ? PRODUCT_TYPE.TREVIO : PRODUCT_TYPE.TREVISTA}
+          initialSelections={{
+            packageKey: selectedPackage,
+          }}
+          onCustomizeJourney={productType === "tour" ? onCustomizeJourney : undefined}
         />
       ) : null}
-
-      <ConfirmOverlay
-        open={bookConfirmOpen}
-        onClose={onBookConfirmClose}
-        onConfirm={() => { onBookConfirmClose(); onBookConfirm(); }}
-        title={elements?.labels?.confirmBookingTitle || "Book Your Spot"}
-        note={elements?.labels?.confirmBookingNote || "Please note that this is a request for booking. Our agent will get in touch with you to provide a final quote and confirm your reservation."}
-        icon="calendar"
-        confirmLabel={elements?.labels?.confirmBookingConfirmLabel || "Request Booking"}
-        cancelLabel={elements?.labels?.confirmBookingCancelLabel || "Cancel"}
-      />
 
       <FloatingActionBar
         align="stretch"
         text={elements?.labels}
         actions={[
-          { label: elements?.labels?.bookNow || "Book now", variant: "primary", onClick: () => onBook(activeTour) },
-          { label: elements?.labels?.enquire || "Enquire", variant: "ghost", iconLeft: "messageCircle", onClick: () => onContact(activeTour) },
+          {
+            label: floatingQuoteLabel,
+            variant: "ghost",
+            iconLeft: "messageCircle",
+            onClick: () => onContact(activeTour),
+          },
+          ...(showBookNow
+            ? [
+                {
+                  label: elements?.labels?.requestQuote || "Request quote",
+                  variant: "primary",
+                  onClick: () => onContact(activeTour),
+                },
+              ]
+            : []),
         ]}
       />
     </main>

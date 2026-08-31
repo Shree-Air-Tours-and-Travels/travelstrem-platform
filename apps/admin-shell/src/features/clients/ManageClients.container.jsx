@@ -1,14 +1,18 @@
 import React, { useState, useEffect, useCallback } from "react";
 import ManageClientsView from "./ManageClients.view";
 import ClientForm from "./ClientForm";
-import Sidebar from "../../components/AdminSidebar";
-import { fetchClients, createClient, updateClient, deleteClient, uploadClientLogo } from "../../services/adminService";
+import {
+  fetchClients,
+  createClient,
+  updateClient,
+  deleteClient,
+  uploadClientLogo,
+} from "../../services/adminService";
 
-export default function ManageClients({ session }) {
+export default function ManageClients({ embedded = false }) {
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
@@ -26,7 +30,9 @@ export default function ManageClients({ session }) {
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const handleCreate = () => {
     setEditingClient(null);
@@ -62,14 +68,14 @@ export default function ManageClients({ session }) {
   const handleLogoUpload = async (clientId, product, file) => {
     const result = await uploadClientLogo(clientId, product, file);
     setClients((prev) =>
-      prev.map((c) => (c._id === clientId ? { ...c, branding: result.client?.branding || c.branding } : c))
+      prev.map((c) =>
+        c._id === clientId ? { ...c, branding: result.client?.branding || c.branding } : c,
+      ),
     );
   };
 
-  return (
-    <div className="admin-app-shell__layout">
-      <Sidebar activeTab="clients" onTabChange={() => {}} user={session?.user} mobileOpen={mobileOpen} onMobileClose={() => setMobileOpen(false)} />
-      <main className="admin-app-shell__main">
+  const content = (
+    <>
         <ManageClientsView
           clients={clients}
           loading={loading}
@@ -84,22 +90,33 @@ export default function ManageClients({ session }) {
           <ClientForm
             client={editingClient}
             onSave={handleSave}
-            onCancel={() => { setShowForm(false); setEditingClient(null); }}
+            onCancel={() => {
+              setShowForm(false);
+              setEditingClient(null);
+            }}
           />
         )}
         {deleteConfirm && (
           <div className="modal-backdrop" onClick={() => setDeleteConfirm(null)}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
               <h3>Delete Client</h3>
-              <p>Are you sure you want to delete <strong>{deleteConfirm.name}</strong>?</p>
+              <p>
+                Are you sure you want to delete <strong>{deleteConfirm.name}</strong>?
+              </p>
               <div className="modal-actions">
-                <button className="btn btn--ghost" onClick={() => setDeleteConfirm(null)}>Cancel</button>
-                <button className="btn btn--danger" onClick={() => handleDelete(deleteConfirm)}>Delete</button>
+                <button className="btn btn--ghost" onClick={() => setDeleteConfirm(null)}>
+                  Cancel
+                </button>
+                <button className="btn btn--danger" onClick={() => handleDelete(deleteConfirm)}>
+                  Delete
+                </button>
               </div>
             </div>
           </div>
         )}
-      </main>
-    </div>
+    </>
   );
+
+  if (embedded) return content;
+  return <main className="admin-app-shell__main">{content}</main>;
 }

@@ -5,6 +5,7 @@
   "packageManager": "pnpm@10.17.1",
   "scripts": {
     "sync:favicons": "node scripts/sync-favicons.mjs",
+    "build:website": "node website/build.mjs",
     "prebuild": "pnpm sync:favicons",
     "dev": "turbo run dev",
     "build": "turbo run build",
@@ -12,10 +13,21 @@
     "test": "turbo run test",
     "clean": "turbo run clean",
     "apps": "turbo run dev --filter='./apps/*'",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "fix": "npm run format && npm run lint:fix",
     "storybook": "pnpm --filter @packages/trem-standard-ui-library storybook",
     "build:storybook": "pnpm --filter @packages/trem-standard-ui-library build-storybook"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.9.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.11.0",
+    "prettier": "^3.9.6",
     "turbo": "^2.9.9"
   },
   "dependencies": {

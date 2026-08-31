@@ -1,0 +1,65 @@
+@import "@packages/trem-ui/styles/base/typography";
+
+.why-choose-trevista {
+  padding: $space-8 0;
+
+  &__inner {
+    @include app-container($container-width);
+  }
+
+  &__head {
+    text-align: left;
+    margin-bottom: $space-6;
+  }
+
+  &__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-2;
+    margin-bottom: $space-3;
+    padding: $space-1 $space-3;
+    border-radius: $radius-full;
+    background: var(--primary-softer);
+    color: var(--color-primary-dark);
+    font-size: $font-size-xs;
+    font-weight: $font-semibold;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  &__desc {
+    margin: $space-3 0 0;
+    text-align: left;
+    color: var(--muted);
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: $space-4;
+  }
+
+  &__card {
+    padding-block: $space-4;
+  }
+}
+
+@include mq-max($tablet-max) {
+  .why-choose-trevista__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@include mq-max($breakpoint-mobile) {
+  .why-choose-trevista {
+    padding: $space-6 0;
+  }
+
+  .why-choose-trevista__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .why-choose-trevista__card {
+    padding-block: $space-3;
+  }
+}

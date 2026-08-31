@@ -2,14 +2,7 @@ import React from "react";
 import Icon from "../../icons/Icon/Icon.jsx";
 import "./EmptyState.styles.scss";
 
-export default function EmptyState({
-  icon,
-  title,
-  description,
-  action,
-  className = "",
-  ...rest
-}) {
+export default function EmptyState({ icon, title, description, action, className = "", ...rest }) {
   return (
     <div className={`tt-empty-state ${className}`} {...rest}>
       {icon ? (

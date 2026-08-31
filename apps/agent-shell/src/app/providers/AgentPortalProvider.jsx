@@ -3,257 +3,369 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { initApp } from "../../core/initApp";
 import { getHeaderConfig } from "../../services/configService";
 import { clearUserSessionCache } from "../../services/userSession";
-import { clearAuthBrowserState, subscribeAuthEvents } from "@packages/trem-auth-core";
 import {
-    createPortalEventController,
-    emit,
-    registerEventHandler,
-    registerSessionCacheClearer,
+  clearAuthBrowserState,
+  subscribeAuthEvents,
+  useSessionInactivity,
+} from "@packages/trem-auth-core";
+import { buildGlobalAuthUrl } from "@packages/trem-utils";
+import { PRODUCT_TYPE, SessionTimeoutModal } from "@packages/trem-ui";
+import apiService from "../../services/apiService";
+import {
+  createPortalEventController,
+  emit,
+  registerEventHandler,
+  registerSessionCacheClearer,
 } from "@packages/trem-events";
 
 const DEFAULT_SESSION = {
-    user: null,
-    permissions: ["public"],
-    isAuthenticated: false,
-    flags: { role: "public" },
+  user: null,
+  permissions: ["public"],
+  isAuthenticated: false,
+  flags: { role: "public" },
 };
 
 const agentRoles = ["agent"];
+const partnerAgencyRoles = ["partner_admin", "partner_agent"];
 
-export const isAllowedAgentRole = (session) => agentRoles.includes(session?.user?.role);
+const DEFAULT_PARTNER_PRODUCTS = [
+  {
+    key: PRODUCT_TYPE.TREVISTA,
+    label: "Trevista",
+    menuLabel: "Trevista Tours",
+    icon: "map",
+    listPath: "/agent/services/tours",
+    createPath: "/agent/services/tours?create=true",
+    createLabel: "New Trevista Tour",
+  },
+  {
+    key: PRODUCT_TYPE.TREVIO,
+    label: "Trevio",
+    menuLabel: "Trevio Trips",
+    icon: "mountain",
+    listPath: "/agent/trevio/trips",
+    createPath: "/agent/trevio/trips?create=true",
+    createLabel: "New Trevio Trip",
+  },
+];
+
+const DEFAULT_PARTNER_BREADCRUMBS = [
+  {
+    match: "/agent/services/tours",
+    items: [{ label: "Products", path: "/agent/dashboard" }, { label: "Trevista Tours" }],
+  },
+  {
+    match: "/agent/trevio/trips",
+    items: [{ label: "Products", path: "/agent/dashboard" }, { label: "Trevio Trips" }],
+  },
+  {
+    match: "/agent/agency",
+    items: [{ label: "Workspace", path: "/agent/dashboard" }, { label: "Agency Workspace" }],
+  },
+  {
+    match: "/agent/dashboard",
+    items: [{ label: "Workspace" }, { label: "Dashboard" }],
+  },
+];
+
+export const isAllowedAgentRole = (session) =>
+  agentRoles.includes(session?.user?.role) &&
+  partnerAgencyRoles.includes(session?.user?.agencyRole) &&
+  session?.user?.accountStatus !== "deactivated" &&
+  session?.user?.accountStatus !== "suspended";
 
 const DEFAULT_HEADER_CONFIG = {
-    brand: { label: "Partner Portal", homePath: "/agent/services" },
-    leftSection: { welcome: true, showStatus: true },
-    menu: [
-        { id: "agentServices", label: "Services", path: "/agent/services", access: "roles", roles: agentRoles },
-        { id: "agentDashboard", label: "Dashboard", path: "/agent/dashboard", access: "roles", roles: agentRoles },
-        { id: "agentBookings", label: "Bookings", path: "/agent/bookings", access: "roles", roles: agentRoles },
-
-    ],
-    authActions: {
-        login: { label: "Login", path: "/login" },
-        logout: { label: "Logout" },
+  variant: "partner",
+  brand: { label: "Partner Portal", homePath: "/agent/services" },
+  leftSection: { welcome: true, showStatus: true },
+  menu: [
+    {
+      id: "agentServices",
+      label: "Services",
+      path: "/agent/services",
+      access: "roles",
+      roles: agentRoles,
     },
-    routes: [],
-    remotes: {},
-    fallbacks: {
-        authenticated: "/agent/services",
-        anonymous: "/login",
-        unauthorized: "/login",
+    {
+      id: "agentDashboard",
+      label: "Dashboard",
+      path: "/agent/dashboard",
+      access: "roles",
+      roles: agentRoles,
     },
+  ],
+  authActions: {
+    login: { label: "Login", path: "/login" },
+    logout: { label: "Logout" },
+  },
+  partnerProducts: DEFAULT_PARTNER_PRODUCTS,
+  partnerBreadcrumbs: DEFAULT_PARTNER_BREADCRUMBS,
+  routes: [],
+  remotes: {},
+  fallbacks: {
+    authenticated: "/agent/services",
+    anonymous: "/login",
+    unauthorized: "/login",
+  },
 };
 
 const DEFAULT_PAGE_CONFIG = {
-    page: "agent",
-    widgets: [],
+  page: "agent",
+  widgets: [],
 };
 
 const clearLocalAuthState = () => {
-    try {
-        clearAuthBrowserState({ prefixes: ["agentTREM", "travelstrem"] });
-    } catch {}
-    clearUserSessionCache();
+  try {
+    clearAuthBrowserState({ prefixes: ["agentTREM"] });
+  } catch {}
+  clearUserSessionCache();
 };
 
 const AgentPortalConfigContext = React.createContext({
-    loading: true,
-    error: null,
-    session: DEFAULT_SESSION,
-    userSession: DEFAULT_SESSION,
-    headerConfig: DEFAULT_HEADER_CONFIG,
-    pageConfig: DEFAULT_PAGE_CONFIG,
-    reload: () => Promise.resolve(),
-    refreshHeader: () => Promise.resolve(),
-    dispatchEvent: () => Promise.resolve(false),
+  loading: true,
+  error: null,
+  session: DEFAULT_SESSION,
+  userSession: DEFAULT_SESSION,
+  headerConfig: DEFAULT_HEADER_CONFIG,
+  pageConfig: DEFAULT_PAGE_CONFIG,
+  reload: () => Promise.resolve(),
+  updateSessionUser: () => {},
+  refreshHeader: () => Promise.resolve(),
+  dispatchEvent: () => Promise.resolve(false),
 });
 
 const getPortalParams = ({ pathname, search, hash }) => ({
-    pathname,
-    search,
-    hash,
-    app: "agentTREM",
+  pathname,
+  search,
+  hash,
+  app: "agentTREM",
 });
 
 export function AgentPortalConfigProvider({ children }) {
-    const location = useLocation();
-    const navigate = useNavigate();
-    const initOnceRef = React.useRef(null);
-    const latestLocationRef = React.useRef(location);
-    const lastHeaderRouteRef = React.useRef("");
-    const sessionRef = React.useRef(DEFAULT_SESSION);
-    const eventControllerRef = React.useRef(null);
-    const [state, setState] = React.useState({
-        loading: true,
+  const location = useLocation();
+  const navigate = useNavigate();
+  const initOnceRef = React.useRef(null);
+  const latestLocationRef = React.useRef(location);
+  const lastHeaderRouteRef = React.useRef("");
+  const sessionRef = React.useRef(DEFAULT_SESSION);
+  const eventControllerRef = React.useRef(null);
+  const [state, setState] = React.useState({
+    loading: true,
+    error: null,
+    session: DEFAULT_SESSION,
+    headerConfig: DEFAULT_HEADER_CONFIG,
+    pageConfig: DEFAULT_PAGE_CONFIG,
+  });
+  const [sessionExitBusy, setSessionExitBusy] = React.useState(false);
+  const sessionExpired = useSessionInactivity({
+    enabled: Boolean(state.session?.isAuthenticated),
+    timeoutMs: state.session?.config?.session?.inactivityTimeoutMs,
+  });
+
+  React.useEffect(() => {
+    latestLocationRef.current = location;
+  }, [location]);
+
+  React.useEffect(() => {
+    sessionRef.current = state.session;
+  }, [state.session]);
+
+  React.useEffect(() => {
+    registerSessionCacheClearer(clearUserSessionCache);
+  }, []);
+
+  const refreshHeader = React.useCallback(
+    async (nextLocation = latestLocationRef.current, session = sessionRef.current) => {
+      const routeKey = `${nextLocation.pathname}${nextLocation.search}${nextLocation.hash}`;
+      lastHeaderRouteRef.current = routeKey;
+      const params = {
+        ...getPortalParams(nextLocation),
+        isAuthenticated: session?.isAuthenticated ? "true" : "false",
+        app: "agentTREM",
+        role: session?.user?.role || "public",
+        userName: session?.user?.name || "",
+        userEmail: session?.user?.email || "",
+      };
+      const header = await getHeaderConfig(params);
+
+      setState((current) => ({
+        ...current,
+        headerConfig: header || DEFAULT_HEADER_CONFIG,
+        pageConfig: header?.pageConfig || current.pageConfig,
+      }));
+
+      return header;
+    },
+    [],
+  );
+
+  const loadPortalConfig = React.useCallback(
+    async ({ forceSession = false, background = false, location: nextLocation = null } = {}) => {
+      const params = getPortalParams(nextLocation || latestLocationRef.current);
+
+      if (forceSession || background) {
+        clearUserSessionCache();
+        initOnceRef.current = null;
+      }
+
+      if (initOnceRef.current) return initOnceRef.current;
+
+      if (!background) {
+        setState((current) => ({ ...current, loading: true, error: null }));
+      }
+
+      initOnceRef.current = (async () => {
+        const { session, header, pageConfig } = await initApp(params);
+        lastHeaderRouteRef.current = `${params.pathname}${params.search}${params.hash}`;
+
+        setState({
+          loading: false,
+          error: null,
+          session: session || DEFAULT_SESSION,
+          headerConfig: header || DEFAULT_HEADER_CONFIG,
+          pageConfig: pageConfig || DEFAULT_PAGE_CONFIG,
+        });
+        sessionRef.current = session || DEFAULT_SESSION;
+      })().catch((error) => {
+        console.warn(
+          "[AgentPortalConfig] initApp failed, using shell fallbacks:",
+          error?.message || error,
+        );
+        setState({
+          loading: false,
+          error: error?.message || "init-app-failed",
+          session: DEFAULT_SESSION,
+          headerConfig: DEFAULT_HEADER_CONFIG,
+          pageConfig: DEFAULT_PAGE_CONFIG,
+        });
+      });
+
+      return initOnceRef.current;
+    },
+    [],
+  );
+
+  if (!eventControllerRef.current) {
+    eventControllerRef.current = createPortalEventController({
+      navigate,
+      emit,
+      reload: loadPortalConfig,
+      getLocation: () => latestLocationRef.current,
+      getSession: () => sessionRef.current,
+    });
+  }
+
+  React.useEffect(() => {
+    eventControllerRef.current.configure({
+      sessionConfig: state.session?.config || {},
+      headerConfig: state.headerConfig || DEFAULT_HEADER_CONFIG,
+    });
+  }, [state.headerConfig, state.session]);
+
+  React.useEffect(() => {
+    const unsubscribe = registerEventHandler((eventName, payload, meta) =>
+      eventControllerRef.current.dispatch(eventName, payload, meta),
+    );
+
+    return unsubscribe;
+  }, []);
+
+  const dispatchEvent = React.useCallback(
+    (eventName, payload = {}, meta = {}) =>
+      eventControllerRef.current.dispatch(eventName, payload, meta),
+    [],
+  );
+
+  React.useEffect(() => {
+    loadPortalConfig();
+  }, [loadPortalConfig]);
+
+  React.useEffect(() => {
+    const redirectToLogin = () => {
+      clearLocalAuthState();
+      setState({
+        loading: false,
         error: null,
         session: DEFAULT_SESSION,
         headerConfig: DEFAULT_HEADER_CONFIG,
         pageConfig: DEFAULT_PAGE_CONFIG,
+      });
+      window.location.replace(
+        buildGlobalAuthUrl({ app: "partner", returnTo: window.location.href }),
+      );
+    };
+    const unsubscribe = subscribeAuthEvents((message) => {
+      if (message?.type === "LOGOUT") {
+        redirectToLogin();
+        return;
+      }
+      if (message?.type === "LOGIN" || message?.type === "SESSION_CHANGED") {
+        loadPortalConfig({ background: true });
+      }
     });
+    const onWindowLogout = () => redirectToLogin();
+    window.addEventListener("USER_LOGOUT", onWindowLogout);
+    return () => {
+      unsubscribe();
+      window.removeEventListener("USER_LOGOUT", onWindowLogout);
+    };
+  }, [loadPortalConfig]);
 
-    React.useEffect(() => {
-        latestLocationRef.current = location;
-    }, [location]);
+  React.useEffect(() => {
+    if (state.loading) return;
+    const routeKey = `${location.pathname}${location.search}${location.hash}`;
+    if (lastHeaderRouteRef.current === routeKey) return;
 
-    React.useEffect(() => {
-        sessionRef.current = state.session;
-    }, [state.session]);
+    refreshHeader(location).catch((error) => {
+      console.warn("[AgentPortalConfig] header refresh failed:", error?.message || error);
+    });
+  }, [location, location.pathname, location.search, location.hash, refreshHeader, state.loading]);
 
-    React.useEffect(() => {
-        registerSessionCacheClearer(clearUserSessionCache);
-    }, []);
+  const reload = React.useCallback(
+    () => loadPortalConfig({ background: true }),
+    [loadPortalConfig],
+  );
 
-    const refreshHeader = React.useCallback(async (nextLocation = latestLocationRef.current, session = sessionRef.current) => {
-        const routeKey = `${nextLocation.pathname}${nextLocation.search}${nextLocation.hash}`;
-        lastHeaderRouteRef.current = routeKey;
-        const params = {
-            ...getPortalParams(nextLocation),
-            isAuthenticated: session?.isAuthenticated ? "true" : "false",
-            app: "agentTREM",
-            role: session?.user?.role || "public",
-            userName: session?.user?.name || "",
-            userEmail: session?.user?.email || "",
-        };
-        const header = await getHeaderConfig(params);
+  const updateSessionUser = React.useCallback((userPatch) => {
+    if (!userPatch || typeof userPatch !== "object") return;
+    setState((current) => {
+      const nextSession = {
+        ...current.session,
+        user: { ...(current.session?.user || {}), ...userPatch },
+      };
+      sessionRef.current = nextSession;
+      return { ...current, session: nextSession };
+    });
+  }, []);
 
-        setState((current) => ({
-            ...current,
-            headerConfig: header || DEFAULT_HEADER_CONFIG,
-            pageConfig: header?.pageConfig || current.pageConfig,
-        }));
+  const value = React.useMemo(
+    () => ({
+      ...state,
+      userSession: state.session,
+      reload,
+      updateSessionUser,
+      refreshHeader,
+      dispatchEvent,
+    }),
+    [dispatchEvent, refreshHeader, reload, state, updateSessionUser],
+  );
 
-        return header;
-    }, []);
+  const continueToLogin = React.useCallback(async () => {
+    setSessionExitBusy(true);
+    await apiService.post("/auth/logout").catch(() => null);
+    window.dispatchEvent(new CustomEvent("USER_LOGOUT", { detail: { reason: "inactivity" } }));
+  }, []);
 
-    const loadPortalConfig = React.useCallback(async ({ forceSession = false, background = false, location: nextLocation = null } = {}) => {
-        const params = getPortalParams(nextLocation || latestLocationRef.current);
-
-        if (forceSession || background) {
-            clearUserSessionCache();
-            initOnceRef.current = null;
-        }
-
-        if (initOnceRef.current) return initOnceRef.current;
-
-        if (!background) {
-            setState((current) => ({ ...current, loading: true, error: null }));
-        }
-
-        initOnceRef.current = (async () => {
-            const { session, header, pageConfig } = await initApp(params);
-            lastHeaderRouteRef.current = `${params.pathname}${params.search}${params.hash}`;
-
-            setState({
-                loading: false,
-                error: null,
-                session: session || DEFAULT_SESSION,
-                headerConfig: header || DEFAULT_HEADER_CONFIG,
-                pageConfig: pageConfig || DEFAULT_PAGE_CONFIG,
-            });
-            sessionRef.current = session || DEFAULT_SESSION;
-        })().catch((error) => {
-            console.warn("[AgentPortalConfig] initApp failed, using shell fallbacks:", error?.message || error);
-            setState({
-                loading: false,
-                error: error?.message || "init-app-failed",
-                session: DEFAULT_SESSION,
-                headerConfig: DEFAULT_HEADER_CONFIG,
-                pageConfig: DEFAULT_PAGE_CONFIG,
-            });
-        });
-
-        return initOnceRef.current;
-    }, []);
-
-    if (!eventControllerRef.current) {
-        eventControllerRef.current = createPortalEventController({
-            navigate,
-            emit,
-            reload: loadPortalConfig,
-            getLocation: () => latestLocationRef.current,
-            getSession: () => sessionRef.current,
-        });
-    }
-
-    React.useEffect(() => {
-        eventControllerRef.current.configure({
-            sessionConfig: state.session?.config || {},
-            headerConfig: state.headerConfig || DEFAULT_HEADER_CONFIG,
-        });
-    }, [state.headerConfig, state.session]);
-
-    React.useEffect(() => {
-        const unsubscribe = registerEventHandler((eventName, payload, meta) =>
-            eventControllerRef.current.dispatch(eventName, payload, meta)
-        );
-
-        return unsubscribe;
-    }, []);
-
-    const dispatchEvent = React.useCallback((eventName, payload = {}, meta = {}) => (
-        eventControllerRef.current.dispatch(eventName, payload, meta)
-    ), []);
-
-    React.useEffect(() => {
-        loadPortalConfig();
-    }, [loadPortalConfig]);
-
-    React.useEffect(() => {
-        const redirectToLogin = () => {
-            clearLocalAuthState();
-            setState({
-                loading: false,
-                error: null,
-                session: DEFAULT_SESSION,
-                headerConfig: DEFAULT_HEADER_CONFIG,
-                pageConfig: DEFAULT_PAGE_CONFIG,
-            });
-            navigate("/login", { replace: true });
-        };
-        const unsubscribe = subscribeAuthEvents((message) => {
-            if (message?.type === "LOGOUT") {
-                redirectToLogin();
-                return;
-            }
-            if (message?.type === "LOGIN" || message?.type === "SESSION_CHANGED") {
-                loadPortalConfig({ background: true });
-            }
-        });
-        const onWindowLogout = () => redirectToLogin();
-        window.addEventListener("USER_LOGOUT", onWindowLogout);
-        return () => {
-            unsubscribe();
-            window.removeEventListener("USER_LOGOUT", onWindowLogout);
-        };
-    }, [loadPortalConfig, navigate]);
-
-    React.useEffect(() => {
-        if (state.loading) return;
-        const routeKey = `${location.pathname}${location.search}${location.hash}`;
-        if (lastHeaderRouteRef.current === routeKey) return;
-
-        refreshHeader(location).catch((error) => {
-            console.warn("[AgentPortalConfig] header refresh failed:", error?.message || error);
-        });
-    }, [location, location.pathname, location.search, location.hash, refreshHeader, state.loading]);
-
-    const reload = React.useCallback(
-        () => loadPortalConfig({ background: true }),
-        [loadPortalConfig]
-    );
-
-    const value = React.useMemo(
-        () => ({
-            ...state,
-            userSession: state.session,
-            reload,
-            refreshHeader,
-            dispatchEvent,
-        }),
-        [dispatchEvent, loadPortalConfig, refreshHeader, reload, state]
-    );
-
-    return <AgentPortalConfigContext.Provider value={value}>{children}</AgentPortalConfigContext.Provider>;
+  return (
+    <AgentPortalConfigContext.Provider value={value}>
+      {children}
+      <SessionTimeoutModal
+        open={sessionExpired}
+        busy={sessionExitBusy}
+        onLogin={continueToLogin}
+      />
+    </AgentPortalConfigContext.Provider>
+  );
 }
 
 export const useAgentPortalConfig = () => React.useContext(AgentPortalConfigContext);

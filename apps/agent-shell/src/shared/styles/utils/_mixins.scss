@@ -32,7 +32,12 @@
     position: absolute;
     inset: 0;
     transform: translateX(-100%);
-    background: linear-gradient(90deg, var(--color-transparent), var(--surface-shimmer), var(--color-transparent));
+    background: linear-gradient(
+      90deg,
+      var(--color-transparent),
+      var(--surface-shimmer),
+      var(--color-transparent)
+    );
     animation: trem-shimmer 1.2s infinite linear;
   }
 }

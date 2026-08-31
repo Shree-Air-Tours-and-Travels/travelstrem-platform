@@ -1,168 +1,33 @@
 @import "@packages/trem-design-tokens/scss";
 
 .quote-display {
-  background: var(--card-bg, #fff);
-  border: 1px solid var(--border, rgba(17,17,17,0.12));
-  border-radius: $radius-md;
-  overflow: hidden;
-
-  &--accepted { border-color: var(--color-success, $success-color); }
-  &--rejected { opacity: 0.7; }
-
-  &__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: $space-3 $space-4;
-    background: var(--surface, #f9fafb);
-    border-bottom: 1px solid var(--border, rgba(17,17,17,0.08));
+  &.card-subentity {
+    box-shadow: none;
   }
 
-  &__header-left {
-    display: flex;
-    align-items: center;
-    gap: $space-3;
+  .card-subentity__row {
+    min-height: 52px;
   }
 
-  &__ref {
+  .card-subentity__row-label {
     font-size: $font-size-sm;
-    font-weight: $font-semibold;
-    color: var(--text, #111);
-    font-family: "SF Mono", "Fira Code", monospace;
   }
 
-  &__version {
-    font-size: $font-size-xs;
-    color: var(--text-muted, #6b7280);
-    background: var(--surface-muted, #e5e7eb);
-    padding: 2px 8px;
-    border-radius: $radius-full;
-  }
-
-  &__expiry {
-    font-size: $font-size-xs;
-    color: var(--text-muted, #6b7280);
-  }
-
-  &__body {
-    padding: $space-4;
-  }
-
-  &__breakdown,
-  &__items {
-    margin-bottom: $space-3;
-  }
-
-  &__row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: $space-2 0;
+  .card-subentity__row-value {
     font-size: $font-size-sm;
-
-    &:not(:last-child) {
-      border-bottom: 1px solid var(--border, rgba(17,17,17,0.06));
-    }
   }
 
-  &__row-label {
-    color: var(--text-muted, #6b7280);
+  .card-subentity__totals {
+    margin-top: $space-5;
   }
 
-  &__row-amount {
-    font-weight: $font-medium;
-    color: var(--text, #111);
+  .card-subentity__footer-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
 
-  &__row--discount &__row-amount {
-    color: var(--color-success, $success-color);
-  }
-
-  &__discount {
-    padding-top: $space-2;
-    border-top: 1px solid var(--border, rgba(17,17,17,0.08));
-    margin-top: $space-2;
-  }
-
-  &__total {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: $space-3 0 0;
-    border-top: 2px solid var(--text, #111);
-    margin-top: $space-2;
-  }
-
-  &__total-label {
-    font-size: $font-size-md;
-    font-weight: $font-bold;
-    color: var(--text, #111);
-  }
-
-  &__total-amount {
-    font-size: $font-size-xl;
-    font-weight: $font-bold;
-    color: var(--text, #111);
-  }
-
-  &__notes {
-    margin: $space-3 0 0;
-    padding: $space-3;
-    background: var(--surface, #f9fafb);
-    border-radius: $radius-sm;
-    font-size: $font-size-sm;
-    color: var(--text-muted, #6b7280);
-    line-height: $line-height-md;
-  }
-
-  &__actions {
-    display: flex;
-    gap: $space-3;
-    padding: $space-4;
-    border-top: 1px solid var(--border, rgba(17,17,17,0.08));
-  }
-
-  &__btn {
-    flex: 1;
-    padding: $space-3 $space-4;
-    border-radius: $radius-sm;
-    font-size: $font-size-sm;
-    font-weight: $font-semibold;
-    cursor: pointer;
-    transition: all $duration-base $ease-default;
-    border: 1px solid transparent;
-
-    &--accept {
-      background: var(--color-primary, $primary-color);
-      color: #fff;
-      &:hover { background: var(--color-primary-dark, $primary-dark); }
-    }
-
-    &--reject {
-      background: transparent;
-      border-color: var(--border, rgba(17,17,17,0.15));
-      color: var(--text-muted, #6b7280);
-      &:hover { background: var(--surface, #f3f4f6); color: var(--text, #111); }
-    }
-  }
-
-  &__status-banner {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: $space-2;
-    padding: $space-3;
-    font-size: $font-size-sm;
-    font-weight: $font-semibold;
-
-    &--accepted {
-      background: rgba(22, 101, 52, 0.08);
-      color: var(--color-success, $success-color);
-    }
-
-    &--rejected {
-      background: rgba(185, 28, 28, 0.08);
-      color: var(--color-danger, $danger-color);
-    }
+@media (max-width: 700px) {
+  .quote-display .card-subentity__footer-actions {
+    grid-template-columns: 1fr;
   }
 }

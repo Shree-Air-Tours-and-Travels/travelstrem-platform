@@ -1,137 +1,55 @@
 @import "@packages/trem-ui/styles/base/typography";
 
 * {
-    box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 body {
-    margin: 0;
-    font-family: $font-primary;
-    background: var(--page-bg);
-    color: var(--text);
+  margin: 0;
+  font-family: $font-primary;
+  background: var(--page-bg);
+  color: var(--text);
 }
 
 a {
-    color: inherit;
+  color: inherit;
 }
 
 #root {
-    min-height: 100vh;
+  min-height: 100vh;
 }
 
 .tours-app-shell {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    background: var(--page-bg);
-    color: var(--text);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--page-bg);
+  color: var(--text);
 
-    > footer {
-        margin-top: auto;
-    }
+  > footer {
+    margin-top: auto;
+  }
 }
 
 .tours-app-shell--embedded {
+  min-height: auto;
+  --td-header-offset: 0px;
+
+  // The host shell already places the remote below its fixed app header.
+  // Keep detail breadcrumbs at the top of that scroll container instead of
+  // applying the standalone 120px mobile header offset a second time.
+  .tour-detail {
+    --td-header-offset: 0px;
     min-height: auto;
+  }
+
+  .tours-page {
+    min-height: auto;
+  }
 }
 
 .app-status {
-    padding: 1.5rem;
-    color: var(--text);
-    background: var(--page-bg);
-}
-
-.booking-summary-page {
-    .trem-fab--align-stretch {
-        .trem-fab__inner {
-            justify-content: center;
-            gap: 0.6rem;
-        }
-
-        .trem-fab__btn {
-            flex: 0 0 auto;
-            min-width: max-content;
-            max-width: 220px;
-            border: 1px solid var(--border, #dde7e3);
-            border-radius: 10px;
-            box-shadow: none;
-
-            span {
-                min-width: 0;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-            }
-        }
-
-        .trem-fab__btn:first-child,
-        .trem-fab__btn:last-child:not(.trem-fab__btn--more),
-        .trem-fab__btn:only-child {
-            border-radius: 10px;
-            border-left-width: 1px;
-        }
-    }
-
-    .trem-fab__btn.ui-button--solid.ui-button--primary {
-        background: #123047 !important;
-        color: #ffffff !important;
-        border-color: #123047 !important;
-        box-shadow: none !important;
-    }
-
-    .trem-fab__btn.ui-button--solid.ui-button--danger {
-        background: #fff5f5 !important;
-        color: #b42318 !important;
-        border-color: #f3c5c0 !important;
-        box-shadow: none !important;
-    }
-
-    .trem-fab__btn.ui-button--text {
-        color: var(--text-muted, #62736e) !important;
-        background: #ffffff !important;
-
-        &:hover {
-            color: var(--text, #14201d) !important;
-            background: var(--surface-subtle, #f7faf9) !important;
-            text-decoration: none !important;
-        }
-    }
-
-    .trem-fab__btn:disabled,
-    .trem-fab__btn[aria-disabled="true"] {
-        background: #eef4f2 !important;
-        color: #7a8b86 !important;
-        border-color: #dbe6e2 !important;
-        box-shadow: none !important;
-        filter: none !important;
-        opacity: 1 !important;
-
-        .ui-button__icon,
-        svg {
-            color: #7a8b86 !important;
-        }
-    }
-}
-
-@media (min-width: 769px) {
-    .booking-summary-page {
-        .trem-fab--variant-floating {
-            width: min(calc(100vw - 2rem), 1120px);
-        }
-
-        .trem-fab__inner {
-            flex-wrap: wrap;
-        }
-    }
-}
-
-@media (max-width: 768px) {
-    .booking-summary-page {
-        .trem-fab--align-stretch .trem-fab__btn {
-            flex: 1 1 0;
-            min-width: 0;
-            max-width: none;
-            border-radius: 0;
-        }
-    }
+  padding: 1.5rem;
+  color: var(--text);
+  background: var(--page-bg);
 }

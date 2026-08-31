@@ -10,6 +10,7 @@ export default function PlanCard({
   image,
   imageAlt = "",
   href,
+  onClick,
   target = "_self",
   rel = "",
   ariaLabel = "",
@@ -19,6 +20,9 @@ export default function PlanCard({
   comingSoonLabel = "",
   mobileIcon = "",
   tone = "primary",
+  highlights = [],
+  highlightsAriaLabel = "",
+  actionLabel = "",
 }) {
   const relationship = rel || (target === "_blank" ? "noopener noreferrer" : undefined);
   const cardClassName = [
@@ -27,7 +31,9 @@ export default function PlanCard({
     comingSoon ? "trem-plan-card--coming-soon" : "",
     `trem-plan-card--${tone}`,
     className,
-  ].filter(Boolean).join(" ");
+  ]
+    .filter(Boolean)
+    .join(" ");
   const content = (
     <>
       <span className="trem-plan-card__media">
@@ -46,6 +52,21 @@ export default function PlanCard({
           {productName ? <span className="trem-plan-card__product">{productName}</span> : null}
           <strong className="trem-plan-card__title">{title}</strong>
           {description ? <span className="trem-plan-card__description">{description}</span> : null}
+          {highlights.length ? (
+            <span className="trem-plan-card__highlights" aria-label={highlightsAriaLabel || undefined}>
+              {highlights.map((highlight) => (
+                <span key={highlight.id || highlight.label}>
+                  {highlight.icon ? (
+                    <Icon name={highlight.icon} size={16} strokeWidth={2} aria-hidden="true" />
+                  ) : null}
+                  {highlight.label}
+                </span>
+              ))}
+            </span>
+          ) : null}
+          {actionLabel && !disabled ? (
+            <span className="trem-plan-card__action-label">{actionLabel}</span>
+          ) : null}
         </span>
         {!disabled ? (
           <span className="trem-plan-card__action" aria-hidden="true">
@@ -73,6 +94,7 @@ export default function PlanCard({
     <a
       className={cardClassName}
       href={href}
+      onClick={onClick}
       target={target}
       rel={relationship}
       aria-label={ariaLabel || title}
@@ -89,6 +111,7 @@ PlanCard.propTypes = {
   image: PropTypes.string.isRequired,
   imageAlt: PropTypes.string,
   href: PropTypes.string,
+  onClick: PropTypes.func,
   target: PropTypes.string,
   rel: PropTypes.string,
   ariaLabel: PropTypes.string,
@@ -98,4 +121,13 @@ PlanCard.propTypes = {
   comingSoonLabel: PropTypes.string,
   mobileIcon: PropTypes.string,
   tone: PropTypes.string,
+  highlights: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string,
+      label: PropTypes.string.isRequired,
+      icon: PropTypes.string,
+    }),
+  ),
+  highlightsAriaLabel: PropTypes.string,
+  actionLabel: PropTypes.string,
 };

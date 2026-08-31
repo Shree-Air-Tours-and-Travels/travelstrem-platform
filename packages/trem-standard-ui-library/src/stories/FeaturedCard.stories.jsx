@@ -3,7 +3,8 @@ import { FeaturedCard } from "@packages/trem-ui";
 
 const featuredTrip = {
   title: "Jaipur Junction",
-  image: "https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=1200&q=85",
+  image:
+    "https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=1200&q=85",
   location: "India",
   type: "Curated trip",
   price: 19000,
@@ -11,7 +12,7 @@ const featuredTrip = {
 };
 
 export default {
-  title: "Trem UI/Data Display/FeaturedCard",
+  title: "Trem UI/Cards/FeaturedCard",
   component: FeaturedCard,
   tags: ["autodocs"],
   argTypes: {
@@ -33,14 +34,6 @@ export default {
       { icon: "calendar", label: featuredTrip.type },
     ],
   },
-};
-
-export const Playground = {
-  render: (args) => (
-    <div style={{ maxWidth: 720 }}>
-      <FeaturedCard {...args} onCtaClick={() => {}} />
-    </div>
-  ),
 };
 
 export const TrevioHeroCard = {

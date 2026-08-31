@@ -7,8 +7,12 @@ const DEFAULT_CONFIG = {
   owner: "Shree Air Tours and Travels",
   description: "Tours, Reservations, Experience & Management ",
   contacts: [
-    { id: "email", label: "akshat.goyal@travelstrem.com", href: "mailto:akshat.goyal@travelstrem.com" },
-    { id: "phone", label: "+91 90576 35580", href: "tel:+919057635580" },
+    {
+      id: "email",
+      label: "akshat.goyal@travelstrem.com",
+      href: "mailto:akshat.goyal@travelstrem.com",
+    },
+    { id: "phone", label: "+91 90576 35580", href: "tel:+919602225763" },
     {
       id: "location",
       label: "Jaipur, India",
@@ -48,13 +52,20 @@ export default function AppFooter({ config = {}, className = "" }) {
           <small>{value.description}</small>
         </span>
 
-        <nav className="trem-app-footer__links" aria-label={value.navigationLabel || "Business and legal information"}>
-          {value.contacts.filter((item) => item?.label && item?.href).map((item) => (
-            <AppFooterLink key={item.id || item.href} item={item} />
-          ))}
-          {value.legalLinks.filter((item) => item?.label && item?.href).map((item) => (
-            <AppFooterLink key={item.id || item.href} item={item} />
-          ))}
+        <nav
+          className="trem-app-footer__links"
+          aria-label={value.navigationLabel || "Business and legal information"}
+        >
+          {value.contacts
+            .filter((item) => item?.label && item?.href)
+            .map((item) => (
+              <AppFooterLink key={item.id || item.href} item={item} />
+            ))}
+          {value.legalLinks
+            .filter((item) => item?.label && item?.href)
+            .map((item) => (
+              <AppFooterLink key={item.id || item.href} item={item} />
+            ))}
         </nav>
 
         <span className="trem-app-footer__copyright">

@@ -3,28 +3,11 @@ import { HighlightSpan, Paragraph, SubTitle, Title } from "@packages/trem-ui";
 
 export default {
   title: "Trem UI/Foundation/Typography",
-  tags: ["autodocs"],
 };
 
 //
 // ─── TITLE ─────────────────────────────────────────────────────────────────────
 //
-
-export const TitlePlayground = {
-  name: "Title / Playground",
-  component: Title,
-  argTypes: {
-    variant: { control: "select", options: ["primary", "light", "secondary"] },
-    size: { control: "select", options: ["small", "large"] },
-    align: { control: "select", options: ["left", "center", "right"] },
-    text: { control: "text" },
-  },
-  args: {
-    text: "Travel components for every flow",
-    variant: "primary",
-    size: "large",
-  },
-};
 
 export const TitleVariants = {
   name: "Title / Variants",
@@ -62,21 +45,6 @@ export const TitleAlignments = {
 // ─── SUBTITLE ──────────────────────────────────────────────────────────────────
 //
 
-export const SubTitlePlayground = {
-  name: "SubTitle / Playground",
-  component: SubTitle,
-  argTypes: {
-    variant: { control: "select", options: ["primary", "secondary", "tertiary", "light"] },
-    size: { control: "select", options: ["small", "medium", "large"] },
-    text: { control: "text" },
-  },
-  args: {
-    text: "Reusable system pieces for portals, tours, booking, and customer journeys.",
-    variant: "tertiary",
-    size: "medium",
-  },
-};
-
 export const SubTitleVariants = {
   name: "SubTitle / Variants",
   render: () => (
@@ -104,30 +72,22 @@ export const SubTitleSizes = {
 // ─── PARAGRAPH ─────────────────────────────────────────────────────────────────
 //
 
-export const ParagraphPlayground = {
-  name: "Paragraph / Playground",
-  component: Paragraph,
-  argTypes: {
-    text: { control: "text" },
-    variant: { control: "select", options: ["body", "caption", "lead"] },
-    size: { control: "select", options: ["small", "medium", "large"] },
-    color: { control: "color" },
-    align: { control: "select", options: ["left", "center", "right"] },
-  },
-  args: {
-    text: "The mountains are calling, and I must go. A journey through the Himalayas offers breathtaking views, serene landscapes, and unforgettable experiences.",
-    variant: "body",
-    size: "medium",
-  },
-};
-
 export const ParagraphVariants = {
   name: "Paragraph / Variants",
   render: () => (
     <div className="trem-storybook-column">
-      <Paragraph text="Body paragraph — the default workhorse for most UI copy. Use it for descriptions, details, and general content." variant="body" />
-      <Paragraph text="Lead paragraph — a slightly larger style for introductory or highlighted text sections." variant="lead" />
-      <Paragraph text="Caption paragraph — smaller text for footnotes, labels, and auxiliary information." variant="caption" />
+      <Paragraph
+        text="Body paragraph — the default workhorse for most UI copy. Use it for descriptions, details, and general content."
+        variant="body"
+      />
+      <Paragraph
+        text="Lead paragraph — a slightly larger style for introductory or highlighted text sections."
+        variant="lead"
+      />
+      <Paragraph
+        text="Caption paragraph — smaller text for footnotes, labels, and auxiliary information."
+        variant="caption"
+      />
     </div>
   ),
 };
@@ -136,8 +96,14 @@ export const ParagraphSizes = {
   name: "Paragraph / Sizes",
   render: () => (
     <div className="trem-storybook-column">
-      <Paragraph text="Large paragraph size — suitable for hero sections or prominent copy." size="large" />
-      <Paragraph text="Medium paragraph size — the default balanced size for body content." size="medium" />
+      <Paragraph
+        text="Large paragraph size — suitable for hero sections or prominent copy."
+        size="large"
+      />
+      <Paragraph
+        text="Medium paragraph size — the default balanced size for body content."
+        size="medium"
+      />
       <Paragraph text="Small paragraph size — compact text for dense layouts." size="small" />
     </div>
   ),

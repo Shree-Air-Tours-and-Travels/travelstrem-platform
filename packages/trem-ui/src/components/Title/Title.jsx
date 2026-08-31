@@ -1,13 +1,20 @@
 import React from "react";
 import "./Title.styles.scss";
 
-const Title = ({ text, variant = "primary", size = "large", color, primaryClassname = "", align }) => {
+const Title = ({
+  text,
+  variant = "primary",
+  size = "large",
+  color,
+  primaryClassname = "",
+  align,
+}) => {
   return (
     <h1
       className={`ui-title ui-title--${variant} ui-title--${size} ${primaryClassname}`}
-        style={{
+      style={{
         ...(color ? { color } : {}),
-        ...(align ? { textAlign: align }: {}),
+        ...(align ? { textAlign: align } : {}),
       }}
     >
       {text}

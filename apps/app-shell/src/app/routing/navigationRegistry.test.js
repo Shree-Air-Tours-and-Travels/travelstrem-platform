@@ -1,5 +1,7 @@
 import {
   FALLBACK_NAVIGATION_CONFIG,
+  buildTrevistaTourPath,
+  isGuestAccessibleDestination,
   buildDestinationLocation,
   normalizeNavigationConfig,
   resolveDestination,
@@ -9,10 +11,32 @@ import {
 describe("navigationRegistry", () => {
   const config = normalizeNavigationConfig(FALLBACK_NAVIGATION_CONFIG);
 
+  it("builds the canonical embedded Trevista details route", () => {
+    expect(buildTrevistaTourPath("royal rajasthan/tour")).toBe(
+      "/trevista/tours/royal%20rajasthan%2Ftour",
+    );
+    expect(buildTrevistaTourPath("")).toBe("/trevista/tours");
+  });
+
   it("resolves backend aliases and query tabs to registered destinations", () => {
-    expect(resolveDestination(config, { pathname: "/trip/bali", search: "" }).renderer).toBe("trevio");
-    expect(resolveDestination(config, { pathname: "/", search: "?tab=favorites" }).id).toBe("favorites");
-    expect(resolveDestination(config, { pathname: "/booking", search: "?product=trevio" }).renderer).toBe("bookingEngine");
+    expect(resolveDestination(config, { pathname: "/tour/bali", search: "" }).renderer).toBe(
+      "trevista",
+    );
+    expect(resolveDestination(config, { pathname: "/", search: "?tab=favorites" }).id).toBe(
+      "favorites",
+    );
+    expect(
+      resolveDestination(config, { pathname: "/legacy-route", search: "?product=trevio" }).id,
+    ).toBe("overview");
+    expect(resolveDestination(config, { pathname: "/help/requests", search: "" }).id).toBe(
+      "support",
+    );
+  });
+
+  it("keeps account destinations protected from guest mode", () => {
+    expect(isGuestAccessibleDestination({ id: "trevista" })).toBe(true);
+    expect(isGuestAccessibleDestination({ id: "trevio" })).toBe(true);
+    expect(isGuestAccessibleDestination({ id: "favorites" })).toBe(false);
   });
 
   it("builds a fresh destination query without leaking the current route", () => {
@@ -26,14 +50,20 @@ describe("navigationRegistry", () => {
 
   it("rejects backend attempts to mount an unknown renderer", () => {
     const normalized = normalizeNavigationConfig({
-      destinations: [{ id: "unsafe", kind: "remote", renderer: "https://evil.test/app.js", path: "/" }],
+      destinations: [
+        { id: "unsafe", kind: "remote", renderer: "https://evil.test/app.js", path: "/" },
+      ],
     });
     expect(normalized.destinations.some((item) => item.id === "unsafe")).toBe(false);
   });
 
   it("allows same-origin paths and blocks non-allowlisted external origins", () => {
-    expect(resolveNavigationIntent(config, "/trip/bali", "https://dashboard.test").type).toBe("internal-path");
-    expect(resolveNavigationIntent(config, "https://evil.test/path", "https://dashboard.test").type).toBe("blocked");
+    expect(resolveNavigationIntent(config, "/tour/bali", "https://dashboard.test").type).toBe(
+      "internal-path",
+    );
+    expect(
+      resolveNavigationIntent(config, "https://evil.test/path", "https://dashboard.test").type,
+    ).toBe("blocked");
   });
 
   it("allows explicitly configured HTTPS external origins", () => {
@@ -44,11 +74,13 @@ describe("navigationRegistry", () => {
         allowedExternalOrigins: ["https://support.travelstrem.com"],
       },
     });
-    expect(resolveNavigationIntent(
-      externalConfig,
-      "https://support.travelstrem.com/help",
-      "https://dashboard.test",
-    ).type).toBe("external");
+    expect(
+      resolveNavigationIntent(
+        externalConfig,
+        "https://support.travelstrem.com/help",
+        "https://dashboard.test",
+      ).type,
+    ).toBe("external");
   });
 
   it("matches parameterized paths and safely encodes generated parameters", () => {
@@ -64,10 +96,62 @@ describe("navigationRegistry", () => {
         },
       ],
     });
-    expect(resolveDestination(dynamic, { pathname: "/orders/TREM-1", search: "" }).id).toBe("orders");
+    expect(resolveDestination(dynamic, { pathname: "/orders/TREM-1", search: "" }).id).toBe(
+      "orders",
+    );
     const orders = dynamic.destinations.find((item) => item.id === "orders");
-    expect(buildDestinationLocation(orders, {
-      params: { orderId: "TREM 1/2" },
-    }).pathname).toBe("/orders/TREM%201%2F2");
+    expect(
+      buildDestinationLocation(orders, {
+        params: { orderId: "TREM 1/2" },
+      }).pathname,
+    ).toBe("/orders/TREM%201%2F2");
+  });
+
+  it("keeps only valid backend mobile action-panel items", () => {
+    const normalized = normalizeNavigationConfig({
+      ...FALLBACK_NAVIGATION_CONFIG,
+      mobileActionPanel: {
+        variant: "mobile-navigation",
+        ariaLabel: "Primary navigation",
+        items: [
+          { id: "home", label: "Home", icon: "home", target: "overview" },
+          {
+            id: "new-booking",
+            label: "New booking",
+            icon: "plus",
+            action: "open-primary-action",
+            emphasis: true,
+          },
+          { id: "unsafe", label: "Unsafe", icon: "home", target: "missing" },
+        ],
+      },
+    });
+
+    expect(normalized.mobileActionPanel).toEqual({
+      variant: "mobile-navigation",
+      ariaLabel: "Primary navigation",
+      items: [
+        {
+          id: "home",
+          label: "Home",
+          icon: "home",
+          target: "overview",
+          action: "",
+          activeTargets: ["overview"],
+          emphasis: false,
+          disabled: false,
+        },
+        {
+          id: "new-booking",
+          label: "New Booking",
+          icon: "plus",
+          target: "",
+          action: "open-primary-action",
+          activeTargets: [],
+          emphasis: true,
+          disabled: false,
+        },
+      ],
+    });
   });
 });

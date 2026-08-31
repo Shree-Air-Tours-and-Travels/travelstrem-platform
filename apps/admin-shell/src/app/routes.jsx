@@ -1,84 +1,79 @@
 import React from "react";
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
+import { TourDetailsPage } from "@packages/trem-ui";
 
-import { AuthPage } from "@apps/auth";
+import { buildGlobalAuthUrl } from "@packages/trem-utils";
 import ManageTours from "../features/tours/ManageTours";
-import ManageClients from "../features/clients/ManageClients";
-import BookingDetail from "../features/tours/BookingDetail/BookingDetail";
+import TourBuilderPage from "../features/tours/TourBuilderPage";
 import { useAdminPortalConfig } from "./providers/AdminPortalProvider";
-import api from "../services/apiClient";
-import authService from "../services/authService";
-import { emit } from "@packages/trem-events";
 
 const adminRoles = ["admin"];
 const isAllowedAdminRole = (session) => adminRoles.includes(session?.user?.role);
+const tourDetailsProps = {
+  appKey: "manage",
+  breadcrumbRoot: { label: "AdminTREM", path: "/manage/tours" },
+};
 
-const Routers = ({ theme = "light", onToggleTheme }) => {
-    const location = useLocation();
-    const { loading, session, reload } = useAdminPortalConfig();
-    const fromLocation = location.state?.from;
-    const afterAuthPath = fromLocation
-        ? `${fromLocation.pathname || "/manage/tours"}${fromLocation.search || ""}${fromLocation.hash || ""}`
-        : "/manage/tours";
+const Routers = () => {
+  const { loading, session } = useAdminPortalConfig();
 
-    const adminAuthPage = (
-        <AuthPage
-            api={api}
-            authService={authService}
-            emit={emit}
-            reload={reload}
-            appName="AdminTREM"
-            authStoragePrefix="adminTREM"
-            allowedRoles={adminRoles}
-            roleOptions={[
-                {
-                    value: "admin",
-                    title: "Admin",
-                    subtitle: "Request admin access or bootstrap master admin",
-                    descriptor: "Platform",
-                    requiresSecretForEmail: process.env.REACT_APP_MASTER_ADMIN_EMAIL || "",
-                },
-            ]}
-            defaultRole="admin"
-            afterAuthPath={afterAuthPath}
-            otpLoginEnabled
-            theme={theme}
-            onToggleTheme={onToggleTheme}
-            headerBrand={{
-                name: "AdminTREM",
-                tagline: "Travel Administration · Operations · Management",
-            }}
-            formNotice={session?.isAuthenticated && !isAllowedAdminRole(session)
-                ? "This account does not have AdminTREM access."
-                : ""}
+  if (loading) return null;
+
+  if (!session?.isAuthenticated || !isAllowedAdminRole(session)) {
+    window.location.replace(buildGlobalAuthUrl({ app: "admin", returnTo: window.location.href }));
+    return null;
+  }
+
+  return (
+    <>
+      <Routes>
+        <Route path="/manage/tours" element={<ManageTours session={session} />} />
+        <Route path="/manage/tours/builder" element={<TourBuilderPage />} />
+        <Route path="/manage/tours/:tourId/edit" element={<TourBuilderPage mode="edit" />} />
+        <Route
+          path="/manage/tours/:tourRef/view"
+          element={<TourDetailsPage {...tourDetailsProps} />}
         />
-    );
-
-    if (loading) return null;
-
-    if (!session?.isAuthenticated || !isAllowedAdminRole(session)) {
-        return (
-            <Routes>
-                <Route path="*" element={adminAuthPage} />
-            </Routes>
-        );
-    }
-
-    return (
-        <>
-            <Routes>
-                <Route path="/manage/tours" element={<ManageTours session={session} />} />
-                <Route path="/manage/trips" element={<ManageTours session={session} tab="trips" />} />
-                <Route path="/admin/tours" element={<ManageTours session={session} />} />
-                <Route path="/admin/trips" element={<ManageTours session={session} tab="trips" />} />
-                <Route path="/admin/agencies" element={<ManageTours session={session} />} />
-                <Route path="/admin/clients" element={<ManageClients session={session} />} />
-                <Route path="/manage/clients" element={<ManageClients session={session} />} />
-                <Route path="/bookings/:bookingId" element={<BookingDetail />} />
-                <Route path="*" element={<Navigate to="/manage/tours" replace />} />
-            </Routes>
-        </>
-    );
+        <Route path="/manage/tours/:tourRef" element={<TourDetailsPage {...tourDetailsProps} />} />
+        <Route
+          path="/manage/trips"
+          element={<Navigate to="/manage/tours?tab=services" replace />}
+        />
+        <Route path="/admin/tours" element={<Navigate to="/manage/tours?tab=services" replace />} />
+        <Route path="/admin/trips" element={<Navigate to="/manage/tours?tab=services" replace />} />
+        <Route
+          path="/admin/agencies"
+          element={<Navigate to="/manage/tours?tab=tenancy" replace />}
+        />
+        <Route
+          path="/admin/clients"
+          element={<Navigate to="/manage/tours?tab=clients" replace />}
+        />
+        <Route
+          path="/admin/bookings"
+          element={<Navigate to="/manage/bookings" replace />}
+        />
+        <Route
+          path="/admin/support"
+          element={<Navigate to="/manage/tours?tab=support" replace />}
+        />
+        <Route
+          path="/admin/internal-team"
+          element={<Navigate to="/manage/tours?tab=internalTeam" replace />}
+        />
+        <Route
+          path="/admin/pricing"
+          element={<Navigate to="/manage/tours?tab=pricing" replace />}
+        />
+        <Route path="/manage/bookings/*" element={<ManageTours session={session} />} />
+        <Route
+          path="/manage/clients"
+          element={<Navigate to="/manage/tours?tab=clients" replace />}
+        />
+        <Route path="*" element={<Navigate to="/manage/tours" replace />} />
+      </Routes>
+    </>
+  );
 };
 
 export default Routers;

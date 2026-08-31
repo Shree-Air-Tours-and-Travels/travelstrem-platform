@@ -6,7 +6,6 @@ const DEFAULT_BRANDING = {
   trevista: { logoSrc: "/favicon.png", name: "Trevista", subtitle: "by TravelsTrem", initial: "" },
   dashboard: { logoSrc: "/favicon.png", name: "TravelsTrem", subtitle: "Dashboard", initial: "" },
   admin: { logoSrc: "/favicon.png", name: "TravelsTREM", subtitle: "Admin", initial: "" },
-  booking: { logoSrc: "/favicon.png", name: "TravelsTrem", subtitle: "Booking", initial: "" },
   agent: { logoSrc: "/favicon.png", name: "TravelsTrem", subtitle: "Partner Portal", initial: "" },
 };
 
@@ -46,7 +45,10 @@ export default function ClientFormContainer({ client, onSave, onCancel }) {
     setForm((prev) => {
       const next = { ...prev, [field]: value };
       if (field === "name" && !client) {
-        next.slug = value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+        next.slug = value
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, "");
       }
       return next;
     });

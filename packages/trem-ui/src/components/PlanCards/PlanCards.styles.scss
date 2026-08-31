@@ -2,7 +2,7 @@
 
 .trem-plan-cards {
   display: grid;
-  gap: $space-4;
+  gap: var(--layout-card-gap, #{$space-4});
 
   &__title {
     margin: 0;
@@ -15,7 +15,41 @@
   &__grid {
     display: grid;
     grid-template-columns: repeat(var(--trem-plan-cards-columns, 4), minmax(0, 1fr));
-    gap: $space-4;
+    gap: var(--layout-card-gap, #{$space-4});
+  }
+
+  &--horizontal-stack &__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  &--horizontal-stack .trem-plan-card {
+    display: grid;
+    grid-template-columns: minmax(15rem, 0.42fr) minmax(0, 0.58fr);
+    min-height: 15rem;
+
+    &__media {
+      height: 100%;
+      aspect-ratio: auto;
+    }
+
+    &__body {
+      min-height: 100%;
+      align-items: center;
+      padding: $space-6;
+    }
+
+    &__copy {
+      gap: $space-2;
+    }
+
+    &__title {
+      font-size: $font-size-xl;
+    }
+
+    &__description {
+      font-size: $font-size-md;
+      line-height: $line-height-lg;
+    }
   }
 }
 
@@ -34,6 +68,29 @@
     .trem-plan-card--disabled,
     .trem-plan-card--coming-soon {
       display: none;
+    }
+  }
+
+  .trem-plan-cards--horizontal-stack .trem-plan-card {
+    min-height: 92px;
+    grid-template-columns: 64px minmax(0, 1fr);
+
+    &__media {
+      height: 64px;
+    }
+
+    &__body {
+      min-height: 0;
+      padding: 0;
+    }
+
+    &__title {
+      font-size: $font-size-sm;
+    }
+
+    &__description {
+      font-size: $font-size-xs;
+      line-height: $line-height-md;
     }
   }
 }

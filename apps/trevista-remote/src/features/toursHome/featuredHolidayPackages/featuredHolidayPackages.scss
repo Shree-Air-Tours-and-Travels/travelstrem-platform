@@ -1,0 +1,73 @@
+@import "@packages/trem-ui/styles/base/typography";
+
+.featured-holiday-packages {
+  padding: $space-8 0 0;
+
+  &__inner {
+    @include app-container($container-width);
+  }
+
+  &__head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: $space-4;
+    margin-bottom: $space-6;
+  }
+
+  &__copy {
+    min-width: 0;
+  }
+
+  &__eyebrow {
+    margin-bottom: $space-3;
+  }
+
+  &__title {
+    margin: 0;
+    color: var(--title);
+    font-size: clamp(1.6rem, 3vw, 2.25rem);
+    font-weight: $font-bold;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+  }
+
+  &__desc {
+    margin: $space-2 0 0;
+    color: var(--muted);
+    font-size: $font-size-md;
+    line-height: $line-height-lg;
+  }
+
+  &__view-all {
+    flex-shrink: 0;
+  }
+
+  &__empty-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: $space-3;
+    margin-top: $space-2;
+  }
+
+  &__list--count-1 {
+    width: min(760px, 100%);
+  }
+
+  &__list--count-2 {
+    width: min(1080px, 100%);
+  }
+}
+
+@include mq-max($breakpoint-mobile) {
+  .featured-holiday-packages {
+    padding-top: $space-6;
+
+    &__head {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: $space-4;
+    }
+  }
+}

@@ -1,0 +1,235 @@
+@import "@packages/trem-design-tokens/scss";
+
+.admin-support-desk {
+  min-width: 0;
+  display: grid;
+  gap: $space-5;
+}
+
+.admin-support-desk__header,
+.admin-support-detail__header,
+.admin-support-ticket__topline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-4;
+}
+
+.admin-support-desk__header h1 {
+  margin-top: $space-1;
+  font-size: $font-size-xxl;
+}
+
+.admin-support-desk__header p,
+.admin-support-detail__header p,
+.admin-support-desk__muted {
+  color: var(--text-secondary);
+}
+
+.admin-support-desk__eyebrow {
+  color: var(--color-primary);
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-support-desk__filters {
+  display: grid;
+  grid-template-columns: minmax(240px, 1.6fr) repeat(2, minmax(180px, 1fr));
+  gap: $space-3;
+  padding: $space-4;
+  border: 1px solid var(--border);
+  border-radius: $radius-lg;
+  background: var(--surface);
+}
+
+.admin-support-desk__workspace {
+  height: clamp(560px, calc(100dvh - 240px), 760px);
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(300px, 0.75fr) minmax(0, 1.6fr);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: $radius-lg;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.admin-support-desk__queue {
+  max-height: 760px;
+  overflow-y: auto;
+  display: grid;
+  align-content: start;
+  gap: $space-2;
+  padding: $space-3;
+  border-right: 1px solid var(--border);
+  background: color-mix(in srgb, var(--color-primary) 3%, var(--surface));
+}
+
+.admin-support-desk__queue-loading {
+  display: grid;
+  width: 100%;
+  min-height: 12rem;
+  flex: 1 0 100%;
+  place-items: center;
+}
+
+.admin-support-ticket {
+  width: 100%;
+  display: grid;
+  gap: $space-1;
+  padding: $space-3;
+  border: 1px solid transparent;
+  border-radius: $radius-md;
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+}
+
+.admin-support-ticket:hover,
+.admin-support-ticket.is-active {
+  border-color: color-mix(in srgb, var(--color-primary) 42%, var(--border));
+  box-shadow: var(--shadow-sm);
+}
+
+.admin-support-ticket.is-active {
+  background: color-mix(in srgb, var(--color-primary) 7%, var(--surface));
+}
+
+.admin-support-ticket__subject {
+  font-weight: $font-semibold;
+}
+
+.admin-support-ticket__meta,
+.admin-support-ticket small {
+  color: var(--text-secondary);
+  font-size: $font-size-xs;
+}
+
+.admin-support-desk__detail {
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  align-content: stretch;
+  gap: $space-4;
+  overflow: hidden;
+  padding: $space-5;
+}
+
+.admin-support-detail__conversation {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.admin-support-detail__header > div:first-child {
+  min-width: 0;
+}
+
+.admin-support-detail__header > div:first-child > span {
+  color: var(--color-primary);
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+}
+
+.admin-support-detail__header h2 {
+  margin-block: $space-1;
+  font-size: $font-size-xl;
+}
+
+.admin-support-detail__header .trem-singleselect {
+  width: 210px;
+  flex: 0 0 210px;
+}
+
+.admin-support-detail__meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: $space-3;
+  padding: $space-3;
+  border-radius: $radius-md;
+  background: var(--surface-subtle, #f7f8fb);
+}
+
+.admin-support-detail__meta span {
+  display: grid;
+  gap: 2px;
+}
+
+.admin-support-detail__meta small {
+  color: var(--text-secondary);
+}
+
+.admin-support-detail__closed,
+.admin-support-desk__error {
+  padding: $space-3;
+  border-radius: $radius-md;
+}
+
+.admin-support-detail__closed {
+  background: var(--surface-subtle, #f7f8fb);
+  color: var(--text-secondary);
+}
+
+.admin-support-desk__error {
+  background: #fff1f0;
+  color: #b42318;
+}
+
+@media (max-width: $breakpoint-lg) {
+  .admin-support-desk__workspace {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .admin-support-desk__queue {
+    max-height: 154px;
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: thin;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .admin-support-ticket {
+    min-width: min(300px, 82vw);
+  }
+}
+
+@media (max-width: $breakpoint-md) {
+  .admin-support-desk__workspace {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .admin-support-desk__filters,
+  .admin-support-detail__meta {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-support-desk__header,
+  .admin-support-detail__header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-support-detail__header .trem-singleselect {
+    width: 100%;
+    flex-basis: auto;
+  }
+
+  .admin-support-desk__detail {
+    overflow: visible;
+    padding: $space-3;
+  }
+
+  .admin-support-detail__conversation {
+    height: min(560px, calc(100dvh - 11rem - env(safe-area-inset-bottom, 0px)));
+    min-height: 360px;
+  }
+}

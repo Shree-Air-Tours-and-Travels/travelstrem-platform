@@ -22,9 +22,20 @@ export default function MessageBubble({
     return (
       <div className={`message-bubble message-bubble--system ${className}`}>
         <div className="message-bubble__system-content">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="message-bubble__system-icon">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 14 14"
+            fill="none"
+            className="message-bubble__system-icon"
+          >
             <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.2" />
-            <path d="M7 4v3M7 9.5v.01" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+            <path
+              d="M7 4v3M7 9.5v.01"
+              stroke="currentColor"
+              strokeWidth="1.2"
+              strokeLinecap="round"
+            />
           </svg>
           <span>{content}</span>
         </div>
@@ -37,8 +48,19 @@ export default function MessageBubble({
     return (
       <div className={`message-bubble message-bubble--quote ${className}`}>
         <div className="message-bubble__quote-header">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="message-bubble__quote-icon">
-            <path d="M2 4h12M2 8h8M2 12h10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            className="message-bubble__quote-icon"
+          >
+            <path
+              d="M2 4h12M2 8h8M2 12h10"
+              stroke="currentColor"
+              strokeWidth="1.2"
+              strokeLinecap="round"
+            />
           </svg>
           <span className="message-bubble__quote-label">Quote Updated</span>
         </div>
@@ -52,10 +74,10 @@ export default function MessageBubble({
   }
 
   return (
-    <div className={`message-bubble ${isOwn ? "message-bubble--own" : "message-bubble--other"} ${className}`}>
-      {!isOwn && senderName && (
-        <span className="message-bubble__sender">{senderName}</span>
-      )}
+    <div
+      className={`message-bubble ${isOwn ? "message-bubble--own" : "message-bubble--other"} ${className}`}
+    >
+      {!isOwn && senderName && <span className="message-bubble__sender">{senderName}</span>}
       <div className="message-bubble__bubble">
         <p className="message-bubble__text">{content}</p>
       </div>

@@ -5,7 +5,9 @@ import "./StatusBadge.styles.scss";
 const TONE_MAP = {
   DRAFT: "neutral",
   QUOTE_REQUESTED: "info",
+  SUBMITTED: "info",
   UNDER_REVIEW: "info",
+  ADDITIONAL_INFORMATION_REQUIRED: "warning",
   QUOTE_READY: "warning",
   QUOTE_SENT: "warning",
   CUSTOMER_ACCEPTED: "success",
@@ -32,10 +34,17 @@ const TONE_MAP = {
   PENDING: "warning",
   UPLOADED: "info",
   APPROVED: "success",
+  CONVERTED: "success",
   COMPLETE: "success",
+  TRENDING: "success",
   published: "success",
   draft: "neutral",
   cancelled: "danger",
+  active: "success",
+  invited: "info",
+  suspended: "warning",
+  deactivated: "danger",
+  anonymized: "neutral",
 };
 
 function resolveTone(value) {
@@ -52,20 +61,32 @@ function formatLabel(value) {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export default function StatusBadge({ value, tone, size = "md", className = "" }) {
+export default function StatusBadge({
+  value,
+  subtitle,
+  tone,
+  size = "md",
+  showDot = true,
+  className = "",
+}) {
   const resolvedTone = tone || resolveTone(value);
 
   return (
-    <span className={`status-badge status-badge--${resolvedTone} status-badge--${size} ${className}`}>
-      <span className="status-badge__dot" aria-hidden="true" />
+    <span
+      className={`status-badge status-badge--${resolvedTone} status-badge--${size}${subtitle ? " status-badge--with-subtitle" : ""} ${className}`}
+    >
+      {showDot && <span className="status-badge__dot" aria-hidden="true" />}
       <span className="status-badge__label">{formatLabel(value)}</span>
+      {subtitle && <span className="status-badge__subtitle">{subtitle}</span>}
     </span>
   );
 }
 
 StatusBadge.propTypes = {
   value: PropTypes.string,
+  subtitle: PropTypes.string,
   tone: PropTypes.oneOf(["neutral", "info", "success", "warning", "danger", "secondary"]),
   size: PropTypes.oneOf(["sm", "md", "lg"]),
+  showDot: PropTypes.bool,
   className: PropTypes.string,
 };

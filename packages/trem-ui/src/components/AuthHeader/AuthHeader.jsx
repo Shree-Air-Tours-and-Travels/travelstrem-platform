@@ -4,17 +4,13 @@ import BrandLogo from "../BrandLogo/BrandLogo.jsx";
 import Icon from "../../icons/Icon/Icon.jsx";
 import "./AuthHeader.styles.scss";
 
-export default function AuthHeader({
-  config = {},
-  theme = "light",
-  onToggleTheme,
-}) {
+export default function AuthHeader({ config = {}, theme = "light", onToggleTheme }) {
   const brand = config.brand || {};
   const themeAction = config.themeAction || {};
   const isDark = theme === "dark";
   const themeLabel = isDark
-    ? (themeAction.lightLabel || "Switch to light mode")
-    : (themeAction.darkLabel || "Switch to dark mode");
+    ? themeAction.lightLabel || "Switch to light mode"
+    : themeAction.darkLabel || "Switch to dark mode";
 
   return (
     <header className="trem-auth-header" aria-label={config.ariaLabel || "Authentication header"}>
@@ -33,7 +29,7 @@ export default function AuthHeader({
           onClick={onToggleTheme}
         >
           <Icon
-            name={isDark ? (themeAction.lightIcon || "sun") : (themeAction.darkIcon || "moon")}
+            name={isDark ? themeAction.lightIcon || "sun" : themeAction.darkIcon || "moon"}
             size={21}
           />
         </button>

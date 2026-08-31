@@ -1,0 +1,188 @@
+@import "@packages/trem-design-tokens/scss";
+
+.trem-location-typeahead {
+  position: relative;
+  width: 100%;
+
+  &__label {
+    position: absolute;
+    z-index: 1;
+    top: $space-2;
+    left: $space-3;
+    font-size: $font-size-xs;
+    font-weight: $font-semibold;
+    color: var(--muted);
+
+    span {
+      color: var(--color-danger);
+    }
+  }
+
+  &__control {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    min-height: 66px;
+    border: 1px solid var(--border);
+    border-radius: $radius-xs;
+    background: var(--surface);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+
+    &:focus-within {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px var(--primary-soft);
+    }
+
+    input {
+      flex: 1;
+      min-width: 160px;
+      min-height: 46px;
+      padding: $space-2-5 $space-3;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--text);
+      font-family: $font-primary;
+      font-size: $font-size-sm;
+      font-weight: $font-semibold;
+
+      &::placeholder {
+        color: color-mix(in srgb, var(--muted) 75%, transparent);
+        font-weight: 400;
+      }
+    }
+  }
+
+  &.is-labelled &__control {
+    padding-top: $space-3;
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-1;
+    padding: $space-2 $space-2 0;
+  }
+
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-1;
+    padding: $space-1 $space-2;
+    border-radius: $radius-full;
+    background: var(--primary-soft);
+    color: var(--color-primary);
+    font-size: $font-size-xs;
+    font-weight: $font-semibold;
+
+    button {
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      font: inherit;
+    }
+  }
+
+  &__spinner {
+    width: 16px;
+    height: 16px;
+    margin-right: $space-3;
+    border: 2px solid var(--border);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: trem-location-spin 700ms linear infinite;
+  }
+
+  &__menu {
+    position: absolute;
+    z-index: 2200;
+    top: calc(100% + #{$space-1});
+    right: 0;
+    left: 0;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: $radius-xs;
+    background: var(--surface-elevated);
+    box-shadow: var(--shadow-lg);
+
+    ul {
+      max-height: 280px;
+      margin: 0;
+      padding: $space-1;
+      overflow-y: auto;
+      list-style: none;
+    }
+
+    li button {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      width: 100%;
+      padding: $space-2 $space-3;
+      border: 0;
+      border-radius: $radius-xs;
+      background: transparent;
+      color: var(--text);
+      text-align: left;
+      cursor: pointer;
+
+      &:hover,
+      &:focus {
+        background: var(--primary-soft);
+        outline: 0;
+      }
+
+      strong {
+        font-size: $font-size-sm;
+      }
+
+      span {
+        color: var(--muted);
+        font-size: $font-size-xs;
+      }
+    }
+
+    li[aria-selected="true"] button {
+      background: var(--primary-soft);
+    }
+
+    > p {
+      margin: 0;
+      padding: $space-3;
+      color: var(--muted);
+      font-size: $font-size-sm;
+    }
+  }
+
+  &__attribution {
+    display: block;
+    padding: $space-1 $space-3 $space-2;
+    color: #5e5e5e;
+    font-family: Roboto, sans-serif;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 400;
+    letter-spacing: normal;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  &__error {
+    display: block;
+    margin-top: $space-1;
+    color: var(--color-danger);
+    font-size: $font-size-xs;
+  }
+
+  &.is-error &__control {
+    border-color: var(--color-danger);
+  }
+}
+
+@keyframes trem-location-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

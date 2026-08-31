@@ -9,17 +9,19 @@
       "labels": {
         "pageTitle": "Trip Details",
         "bookNow": "Book Now",
-        "enquire": "Enquire",
+        "enquire": "Enquire now",
         "backToTours": "Back to trips",
         "backToLabel": "Back to",
         "referrerTours": "Trips",
-        "confirmBookingTitle": "Book This Trip",
-        "confirmBookingNote": "Please note that this is a request for booking. Our team will get in touch with you to confirm your reservation.",
-        "confirmBookingConfirmLabel": "Request Booking",
-        "confirmBookingCancelLabel": "Cancel",
         "tourNotFoundTitle": "Trip not found",
         "tourNotFoundMessage": "The trip link is missing a valid reference.",
-        "tourErrorTitle": "Trip details could not load"
+        "tourErrorTitle": "Trip details could not load",
+        "agencyDetails": {
+          "ariaLabel": "Trip operator details",
+          "eyebrow": "Operated by",
+          "travelPartner": "Your travel partner",
+          "partnerReference": "Agency reference"
+        }
       },
       "urls": {}
     },
@@ -54,6 +56,21 @@
           "widgetRef": "./widgets/inclusions-exclusions.json"
         },
         {
+          "type": "PackagePlans",
+          "source": "shell",
+          "widgetRef": "./widgets/pricing-card.json"
+        },
+        {
+          "type": "IncludedStays",
+          "source": "shell",
+          "widgetRef": "./widgets/included-stays.json"
+        },
+        {
+          "type": "CancellationPolicy",
+          "source": "shell",
+          "widgetRef": "./widgets/cancellation-policy.json"
+        },
+        {
           "type": "ReviewsSection",
           "source": "shell",
           "widgetRef": "./widgets/reviews-section.json"
@@ -64,7 +81,8 @@
           "variant": "floating",
           "align": "left-right",
           "showBg": true,
-          "mobileVisible": 2
+          "mobileVisible": 2,
+          "showBookNow": false
         },
         "actions": [
           {

@@ -1,0 +1,294 @@
+@import "@packages/trem-design-tokens/scss";
+
+.trem-support-conversation {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: clamp(480px, 64dvh, 720px);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 16%, var(--border));
+  border-radius: $radius-lg;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.trem-support-conversation__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-3;
+  padding: $space-3 $space-4;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--color-primary) 4%, var(--surface));
+}
+
+.trem-support-conversation__header > div {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+}
+
+.trem-support-conversation__header strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trem-support-conversation__header small {
+  flex: 0 0 auto;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.trem-support-conversation__presence {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--text-secondary) 10%, transparent);
+}
+
+.trem-support-conversation__presence.is-live {
+  background: #16a34a;
+  box-shadow: 0 0 0 4px rgb(22 163 74 / 12%);
+}
+
+.trem-support-conversation__viewport {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  padding: $space-4;
+  scrollbar-gutter: stable;
+  background:
+    radial-gradient(
+      circle at 12% 8%,
+      color-mix(in srgb, var(--color-primary) 5%, transparent),
+      transparent 24%
+    ),
+    color-mix(in srgb, var(--color-primary) 2%, var(--surface));
+  scroll-behavior: smooth;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-primary) 35%, var(--border)) transparent;
+}
+
+.trem-support-conversation__viewport::-webkit-scrollbar {
+  width: 8px;
+}
+
+.trem-support-conversation__viewport::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.trem-support-conversation__viewport::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: $radius-full;
+  background: color-mix(in srgb, var(--color-primary) 35%, var(--border));
+  background-clip: padding-box;
+}
+
+.trem-support-conversation__history-action {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  align-self: center;
+  margin-bottom: $space-3;
+  padding: 2px $space-2;
+  border: 1px solid var(--border);
+  border-radius: $radius-full;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(10px);
+}
+
+.trem-support-conversation__history-action .ui-button {
+  min-height: 30px;
+  font-size: $font-size-xs;
+}
+
+.trem-support-conversation__day {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  margin: $space-3 0;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: $font-semibold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.trem-support-conversation__day::before,
+.trem-support-conversation__day::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: var(--border);
+}
+
+.trem-support-conversation__day span {
+  padding: $space-1 $space-2;
+  border-radius: $radius-full;
+  background: var(--surface);
+}
+
+.trem-support-conversation__message {
+  max-width: min(76%, 680px);
+  overflow-wrap: anywhere;
+}
+
+.trem-support-conversation__message.message-bubble--own .message-bubble__bubble {
+  background: linear-gradient(
+    135deg,
+    var(--color-primary),
+    color-mix(in srgb, var(--color-primary) 78%, #5b4bdb)
+  );
+  box-shadow: 0 7px 18px color-mix(in srgb, var(--color-primary) 18%, transparent);
+}
+
+.trem-support-conversation__message.message-bubble--other .message-bubble__bubble {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: $shadow-sm;
+}
+
+.trem-support-conversation__empty {
+  margin: auto;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.trem-support-conversation__latest.ui-button {
+  position: absolute;
+  right: $space-4;
+  bottom: calc(var(--trem-support-composer-height, 0px) + #{$space-4});
+  z-index: 3;
+  min-height: 36px;
+  border-radius: $radius-full;
+  box-shadow: var(--shadow-md);
+}
+
+.trem-support-composer {
+  display: grid;
+  gap: $space-3;
+  padding: $space-4;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 14%, var(--border));
+  border-radius: $radius-lg;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.trem-support-conversation__composer {
+  position: relative;
+  z-index: 4;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.trem-support-conversation__composer .trem-support-composer,
+.trem-support-conversation__composer .trem-support-composer__closed {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.trem-support-conversation:has(.trem-support-conversation__composer) {
+  --trem-support-composer-height: 148px;
+}
+
+.trem-support-composer .trem-textarea {
+  width: 100%;
+}
+
+.trem-support-composer__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-3;
+}
+
+.trem-support-composer__footer > span {
+  color: var(--text-secondary);
+  font-size: $font-size-xs;
+}
+
+.trem-support-composer__email-option {
+  width: fit-content;
+  max-width: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  color: var(--text-secondary);
+  font-size: $font-size-sm;
+  cursor: pointer;
+}
+
+.trem-support-composer__email-option input {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  margin: 0;
+  accent-color: var(--color-primary);
+}
+
+.trem-support-composer__closed {
+  margin: 0;
+  padding: $space-4;
+  border: 1px solid var(--border);
+  border-radius: $radius-lg;
+  background: color-mix(in srgb, var(--color-primary) 4%, var(--surface));
+  color: var(--text-secondary);
+}
+
+@media (max-width: $breakpoint-md) {
+  .trem-support-conversation {
+    height: min(560px, calc(100dvh - 11rem - env(safe-area-inset-bottom, 0px)));
+    min-height: 360px;
+    border-radius: $radius-md;
+  }
+
+  .trem-support-conversation__viewport {
+    padding: $space-3;
+    scrollbar-width: none;
+  }
+
+  .trem-support-conversation__viewport::-webkit-scrollbar {
+    display: none;
+  }
+
+  .trem-support-conversation__message {
+    max-width: 88%;
+  }
+
+  .trem-support-conversation__header {
+    padding-inline: $space-3;
+  }
+
+  .trem-support-composer__footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .trem-support-composer__footer .ui-button {
+    width: 100%;
+  }
+
+  .trem-support-conversation__composer .trem-support-composer {
+    gap: $space-2;
+    padding: $space-3;
+  }
+
+  .trem-support-conversation__composer .trem-textarea textarea {
+    min-height: 64px;
+    max-height: 112px;
+  }
+
+  .trem-support-conversation:has(.trem-support-conversation__composer) {
+    --trem-support-composer-height: 186px;
+  }
+}

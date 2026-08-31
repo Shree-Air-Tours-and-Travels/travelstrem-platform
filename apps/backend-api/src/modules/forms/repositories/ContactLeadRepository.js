@@ -1,12 +1,18 @@
 import ContactLead from "../models/ContactLead.js";
 
 const ContactLeadRepository = {
-  create(payload) {
-    return new ContactLead(payload);
-  },
-  find(query = {}) {
-    return ContactLead.find(query);
-  },
+    create(payload) {
+        return new ContactLead(payload);
+    },
+    find(query = {}) {
+        return ContactLead.find(query);
+    },
+    findOne(query = {}) {
+        return ContactLead.findOne(query);
+    },
+    countDocuments(query = {}) {
+        return ContactLead.countDocuments(query);
+    },
 };
 
 export default ContactLeadRepository;

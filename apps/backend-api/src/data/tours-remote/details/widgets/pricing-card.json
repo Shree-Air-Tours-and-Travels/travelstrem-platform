@@ -11,7 +11,15 @@
         "perPerson": "per person",
         "seasonalPricing": "Seasonal Pricing",
         "bookNow": "Book Now",
-        "contactAgent": "Contact Agent"
+        "contactAgent": "Get a quote",
+        "packageQuote": "Get {package} quote",
+        "planEyebrow": "Choose your experience",
+        "planTitle": "Tour packages",
+        "planDescription": "Compare every package and choose the option that suits your trip. Your final quote will use this selection.",
+        "recommended": "Recommended",
+        "optionalExtras": "Optional extras",
+        "selectPlan": "Choose this plan",
+        "selectedPlan": "Selected"
       },
       "urls": {}
     },
@@ -25,7 +33,8 @@
             "priceLabelRef": "perPerson",
             "seasonalTitleRef": "seasonalPricing",
             "ctaLabelRef": "bookNow",
-            "secondaryCtaRef": "contactAgent"
+            "secondaryCtaRef": "contactAgent",
+            "config": { "showBookNow": false }
           }
         }
       ],

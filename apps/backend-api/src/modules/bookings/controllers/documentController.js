@@ -1,82 +1,91 @@
-import BookingRepository from "../repositories/BookingRepository.js";
-import BookingService from "../services/BookingService.js";
-import { QuoteService } from "../services/QuoteService.js";
-import { PaymentService } from "../services/PaymentService.js";
-import TravellerService from "../services/TravellerService.js";
-import { generateQuotePdf, generateInvoicePdf, generateBookingPassPdf } from "../../../services/pdfService.js";
+import BookingQuote from "../models/BookingQuote.js";
+import {
+    latestQuoteDocument,
+    getQuoteDocumentSignedUrl,
+    readQuoteDocument,
+} from "../services/QuoteDocumentStorage.js";
 
 function sendError(res, message, status = 400) {
-  return res.status(status).json({ status: "error", message });
+    return res.status(status).json({ status: "error", message });
 }
 
-function notFound(res) {
-  return sendError(res, "Booking not found", 404);
+function canAccessQuote(req, quote) {
+    const userId = String(req.user?.sub || req.user?.id || req.user?._id || "");
+    const role = String(req.user?.role || "").toLowerCase();
+    if (!userId) return false;
+    if (["admin", "agent", "super_admin"].includes(role)) return true;
+    return [quote.userId, quote.createdBy].some((value) => value && String(value) === userId);
 }
 
-async function loadBooking(id) {
-  const booking = await BookingRepository.findById(id)
-    .populate("tour")
-    .populate("user", "name email role")
-    .populate("assignedAgent", "name email role");
-  if (!booking) return null;
-  return BookingService.hydrate(booking, {});
+// Quote-centric document endpoint. It returns only a short-lived URL and keeps
+// storage keys and credentials private. The future booking engine can reuse it
+// without inheriting any legacy booking orchestration.
+export async function getQuotePdfSignedUrl(req, res) {
+    try {
+        const quote = await BookingQuote.findById(req.params.quoteId).lean();
+        if (!quote) return sendError(res, "Quote not found", 404);
+        if (!canAccessQuote(req, quote))
+            return sendError(res, "Not authorized to download this quote", 403);
+        const documentOwnerId = quote.bookingId || quote.inquiryId;
+        if (!documentOwnerId || quote.version == null)
+            return sendError(res, "The generated quote PDF is unavailable", 404);
+
+        const quoteDocument = await latestQuoteDocument(documentOwnerId, quote.version);
+        if (!quoteDocument?.storageKey && !quoteDocument?.url) {
+            return sendError(res, "The generated quote PDF is unavailable", 404);
+        }
+
+        if (quoteDocument.storageProvider === "LOCAL_PRIVATE") {
+            return res.json({
+                status: "success",
+                data: {
+                    url: `/api/quotes/${quote.id || quote._id}/pdf/file`,
+                    expiresIn: null,
+                    fileName: quoteDocument.fileName,
+                },
+            });
+        }
+
+        const signedUrl = await getQuoteDocumentSignedUrl(quoteDocument);
+        if (!signedUrl) return sendError(res, "Unable to generate download URL", 500);
+        return res.json({
+            status: "success",
+            data: {
+                url: signedUrl.url,
+                expiresIn: signedUrl.expiresIn,
+                fileName: quoteDocument.fileName,
+            },
+        });
+    } catch (error) {
+        console.error("getQuotePdfSignedUrl error:", error);
+        return sendError(res, "Failed to generate quote download URL", 500);
+    }
 }
 
-export async function downloadQuote(req, res) {
-  try {
-    const booking = await loadBooking(req.params.id);
-    if (!booking) return notFound(res);
-
-    const quote = await QuoteService.latest(booking._id);
-    if (!quote) return sendError(res, "No quote found for this booking", 404);
-
-    const travelers = await TravellerService.list(booking._id);
-    const tour = booking.tour || {};
-
-    const doc = generateQuotePdf(booking, quote, tour, travelers);
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename="quote-${booking.bookingRef}.pdf"`);
-    doc.pipe(res);
-  } catch (err) {
-    console.error("downloadQuote error:", err);
-    sendError(res, "Failed to generate quote PDF", 500);
-  }
-}
-
-export async function downloadInvoice(req, res) {
-  try {
-    const booking = await loadBooking(req.params.id);
-    if (!booking) return notFound(res);
-
-    const payments = await PaymentService.list(booking._id);
-    if (!payments?.length) return sendError(res, "No payments found for this booking", 404);
-
-    const tour = booking.tour || {};
-
-    const doc = generateInvoicePdf(booking, payments, tour);
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename="invoice-${booking.bookingRef}.pdf"`);
-    doc.pipe(res);
-  } catch (err) {
-    console.error("downloadInvoice error:", err);
-    sendError(res, "Failed to generate invoice PDF", 500);
-  }
-}
-
-export async function downloadBookingPass(req, res) {
-  try {
-    const booking = await loadBooking(req.params.id);
-    if (!booking) return notFound(res);
-
-    const travelers = await TravellerService.list(booking._id);
-    const tour = booking.tour || {};
-
-    const doc = generateBookingPassPdf(booking, travelers, tour);
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename="voucher-${booking.bookingRef}.pdf"`);
-    doc.pipe(res);
-  } catch (err) {
-    console.error("downloadBookingPass error:", err);
-    sendError(res, "Failed to generate booking pass PDF", 500);
-  }
+export async function downloadQuotePdf(req, res) {
+    try {
+        const quote = await BookingQuote.findById(req.params.quoteId).lean();
+        if (!quote) return sendError(res, "Quote not found", 404);
+        if (!canAccessQuote(req, quote))
+            return sendError(res, "Not authorized to download this quote", 403);
+        const documentOwnerId = quote.bookingId || quote.inquiryId;
+        if (!documentOwnerId || quote.version == null)
+            return sendError(res, "The generated quote PDF is unavailable", 404);
+        const document = await latestQuoteDocument(
+            documentOwnerId,
+            quote.version,
+        );
+        const buffer = await readQuoteDocument(document);
+        if (!buffer) return sendError(res, "The generated quote PDF is unavailable", 404);
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader(
+            "Content-Disposition",
+            `inline; filename="${String(document.fileName || "quote.pdf").replace(/[\r\n"]/g, "")}"`,
+        );
+        res.setHeader("Cache-Control", "private, no-store");
+        return res.send(buffer);
+    } catch (error) {
+        console.error("downloadQuotePdf error:", error);
+        return sendError(res, "Failed to download quote", 500);
+    }
 }

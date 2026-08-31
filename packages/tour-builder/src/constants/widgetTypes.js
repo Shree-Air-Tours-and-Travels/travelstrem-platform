@@ -1,0 +1,34 @@
+/** Stable widget type keys resolved through the WidgetRegistry. */
+export const WIDGET_TYPES = Object.freeze({
+  TEXT: "TEXT",
+  TEXTAREA: "TEXTAREA",
+  NUMBER: "NUMBER",
+  SELECT: "SELECT",
+  MULTI_SELECT: "MULTI_SELECT",
+  CHECKBOX: "CHECKBOX",
+  SWITCH: "SWITCH",
+  DATE: "DATE",
+  DATETIME: "DATETIME",
+  TAGS: "TAGS",
+  ICON: "ICON",
+  IMAGE_UPLOAD: "IMAGE_UPLOAD",
+  JSON: "JSON",
+  OBJECT: "OBJECT",
+  READONLY_OBJECT: "READONLY_OBJECT",
+  TOUR_INTELLIGENCE_SUMMARY: "TOUR_INTELLIGENCE_SUMMARY",
+  REPEATER: "REPEATER",
+  COLLECTION_REPEATER: "COLLECTION_REPEATER",
+  PACKAGE_COMPOSER: "PACKAGE_COMPOSER",
+  DERIVED_PRICING: "DERIVED_PRICING",
+  DESTINATION: "DESTINATION",
+  CUSTOMER_PREVIEW: "CUSTOMER_PREVIEW",
+});
+
+export const BUILDER_ACTIONS = Object.freeze({
+  EXIT: "exit",
+  CANCEL: "cancel",
+  BACK: "back",
+  NEXT: "next",
+});
+
+export const DEFAULT_ACTIONS = Object.freeze({ exit: true, cancel: true, back: true, next: true });

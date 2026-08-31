@@ -1,0 +1,184 @@
+@import "@packages/trem-design-tokens/scss";
+
+.trem-support-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $space-2;
+}
+.trem-support-action {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  padding: $space-3;
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  font-size: $font-size-sm;
+  font-weight: $font-semibold;
+  transition:
+    border-color 0.18s ease,
+    transform 0.18s ease;
+}
+.trem-support-action:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
+}
+.trem-support-action:focus-visible,
+.trem-support-category:focus-visible,
+.trem-support-contact:focus-visible,
+.trem-support-ticket:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-primary) 28%, transparent);
+  outline-offset: 2px;
+}
+.trem-support-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.trem-support-action__icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  border-radius: $radius-sm;
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--surface));
+  color: var(--color-primary);
+}
+.trem-support-action--danger {
+  border-color: color-mix(in srgb, #d73535 35%, var(--border));
+  color: #b42318;
+}
+.trem-support-action--danger .trem-support-action__icon {
+  background: #fff0ee;
+  color: #b42318;
+}
+
+.trem-support-ticket__reference {
+  color: var(--color-primary);
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.trem-support-category,
+.trem-support-contact,
+.trem-support-ticket {
+  width: 100%;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  padding: $space-3 $space-4;
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+}
+.trem-support-category:hover,
+.trem-support-contact:hover,
+.trem-support-ticket:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 55%, var(--border));
+}
+.trem-support-category__icon,
+.trem-support-contact__icon {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  display: grid;
+  place-items: center;
+  border-radius: $radius-md;
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--surface));
+  color: var(--color-primary);
+}
+.trem-support-category__icon--danger {
+  background: #fff0ee;
+  color: #b42318;
+}
+.trem-support-category__copy,
+.trem-support-contact__copy,
+.trem-support-ticket__copy {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.trem-support-category small,
+.trem-support-contact small,
+.trem-support-ticket small {
+  color: var(--text-secondary);
+  font-size: $font-size-xs;
+  font-style: normal;
+}
+.trem-support-contact em {
+  color: var(--color-primary);
+  font-size: $font-size-xs;
+  font-style: normal;
+}
+.trem-support-contact:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.trem-support-ticket {
+  min-height: 82px;
+}
+.trem-support-ticket__meta {
+  min-width: 0;
+  max-width: 48%;
+  flex: 0 1 auto;
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+}
+.trem-support-ticket__unread {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary);
+}
+
+.trem-support-skeleton {
+  display: grid;
+  gap: $space-3;
+}
+.trem-support-skeleton__row {
+  height: 112px;
+  border-radius: $radius-lg;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--border) 65%, transparent),
+    color-mix(in srgb, var(--surface) 90%, white),
+    color-mix(in srgb, var(--border) 65%, transparent)
+  );
+  background-size: 220% 100%;
+  animation: trem-support-shimmer 1.4s infinite linear;
+}
+@keyframes trem-support-shimmer {
+  to {
+    background-position: -220% 0;
+  }
+}
+@media (max-width: 420px) {
+  .trem-support-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .trem-support-ticket {
+    align-items: flex-start;
+    padding: $space-3;
+  }
+
+  .trem-support-ticket__meta {
+    max-width: 44%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .trem-support-skeleton__row {
+    animation: none;
+  }
+}

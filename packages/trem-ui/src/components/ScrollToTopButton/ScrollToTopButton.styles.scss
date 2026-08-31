@@ -2,6 +2,8 @@
 
 .trem-scroll-top {
   position: fixed;
+  bottom: var(--trem-scroll-top-bottom, var(--trem-floating-action-clearance, #{$space-6}));
+  right: var(--trem-scroll-top-right, #{$space-6});
   z-index: 110;
   width: 44px;
   height: 44px;
@@ -13,19 +15,26 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.10), 0 1px 4px rgba(0, 0, 0, 0.06);
-  transition: background 120ms $ease-default, transform 120ms $ease-default, box-shadow 120ms $ease-default;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.1),
+    0 1px 4px rgba(0, 0, 0, 0.06);
+  transition:
+    background 120ms $ease-default,
+    transform 120ms $ease-default,
+    box-shadow 120ms $ease-default;
   animation: trem-scroll-top-in 200ms $ease-out both;
 
   &:hover {
     background: var(--surface-inset, $surface-muted);
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14), 0 2px 6px rgba(0, 0, 0, 0.08);
+    box-shadow:
+      0 6px 20px rgba(0, 0, 0, 0.14),
+      0 2px 6px rgba(0, 0, 0, 0.08);
   }
 
   &:active {
     transform: translateY(0);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
 
   &:focus-visible {
@@ -34,8 +43,19 @@
   }
 
   @media (max-width: $breakpoint-mobile) {
-    bottom: 1rem !important;
-    right: 1rem !important;
+    width: 40px;
+    height: 40px;
+    bottom: var(
+      --trem-scroll-top-bottom,
+      calc(var(--dash-mobile-action-panel-space, #{$space-18}) + #{$space-3})
+    ) !important;
+    right: var(--trem-scroll-top-right, #{$space-3}) !important;
+    z-index: 305;
+    border-color: color-mix(in srgb, var(--color-primary, #{$primary-color}) 24%, var(--border));
+    color: var(--color-primary, #{$primary-color});
+    background: var(--surface-glass-strong, var(--surface-elevated, #{$white-color}));
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
   }
 }
 

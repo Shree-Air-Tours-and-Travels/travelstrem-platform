@@ -17,21 +17,6 @@
       "page": "details",
       "file": "./tours-remote/details/page.json"
     },
-    "tours-remote/booking": {
-      "app": "tours-remote",
-      "page": "booking",
-      "file": "./tours-remote/booking/page.json"
-    },
-    "tours-remote/booking-summary": {
-      "app": "tours-remote",
-      "page": "booking-summary",
-      "file": "./tours-remote/booking-summary/page.json"
-    },
-    "tours-remote/booking-checkout": {
-      "app": "tours-remote",
-      "page": "booking-checkout",
-      "file": "./tours-remote/booking-checkout/page.json"
-    },
     "trevio-remote/home": {
       "app": "trevio-remote",
       "page": "home",
@@ -47,10 +32,10 @@
       "page": "dashboard",
       "file": "./admin-shell/dashboard/page.json"
     },
-    "admin-shell/bookings": {
+    "admin-shell/pricing": {
       "app": "admin-shell",
-      "page": "bookings",
-      "file": "./admin-shell/bookings/page.json"
+      "page": "pricing",
+      "file": "./admin-shell/pricing/page.json"
     },
     "agent-shell/services": {
       "app": "agent-shell",
@@ -61,11 +46,6 @@
       "app": "agent-shell",
       "page": "dashboard",
       "file": "./agent-shell/dashboard/page.json"
-    },
-    "agent-shell/bookings": {
-      "app": "agent-shell",
-      "page": "bookings",
-      "file": "./agent-shell/bookings/page.json"
     },
     "agent-shell/agency": {
       "app": "agent-shell",
@@ -78,31 +58,23 @@
     "/app-shell": "app-shell/app-shell",
     "/trevista": "tours-remote/listing",
     "/trevista/:tourRef": "tours-remote/details",
-    "/trevista/:tourRef/book": "tours-remote/booking",
-    "/trevista/bookings/:bookingId": "tours-remote/booking-summary",
-    "/trevista/bookings/:bookingId/checkout": "tours-remote/booking-checkout",
     "/trevista/home": "trevista-remote/home",
     "/trevio": "trevio-remote/home",
     "/admin": "admin-shell/dashboard",
-    "/admin/bookings": "admin-shell/bookings",
+    "/admin/pricing": "admin-shell/pricing",
     "/agent/services": "agent-shell/services",
     "/agent/dashboard": "agent-shell/dashboard",
-    "/agent/bookings": "agent-shell/bookings",
     "/agent/agency": "agent-shell/agency"
   },
   "aliases": {
     "home": "trevio-remote/home",
     "tour-listing": "tours-remote/listing",
     "tour-details": "tours-remote/details",
-    "tour-booking": "tours-remote/booking",
-    "tour-booking-summary": "tours-remote/booking-summary",
-    "tour-booking-checkout": "tours-remote/booking-checkout",
     "trevio": "trevio-remote/home",
     "dashboard": "admin-shell/dashboard",
-    "bookings": "admin-shell/bookings",
+    "admin-pricing": "admin-shell/pricing",
     "agent-services": "agent-shell/services",
     "agent-dashboard": "agent-shell/dashboard",
-    "agent-bookings": "agent-shell/bookings",
     "agent-agency": "agent-shell/agency"
   }
 }

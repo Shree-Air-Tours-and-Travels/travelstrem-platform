@@ -36,7 +36,9 @@
   &:focus-visible {
     outline: none;
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 4px var(--focus-ring), var(--shadow-md);
+    box-shadow:
+      0 0 0 4px var(--focus-ring),
+      var(--shadow-md);
   }
 
   &__media {
@@ -117,6 +119,34 @@
     color: var(--card-text);
     font-size: $font-size-sm;
     line-height: $line-height-md;
+  }
+
+  &__highlights {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-2 $space-4;
+    margin-top: $space-2;
+
+    > span {
+      display: inline-flex;
+      align-items: center;
+      gap: $space-1-5;
+      color: var(--card-text);
+      font-size: $font-size-xs;
+      font-weight: $font-medium;
+    }
+
+    svg {
+      color: var(--color-primary);
+    }
+  }
+
+  &__action-label {
+    width: fit-content;
+    margin-top: $space-2;
+    color: var(--color-primary);
+    font-size: $font-size-sm;
+    font-weight: $font-semibold;
   }
 
   &__action {
@@ -244,6 +274,11 @@
       font-size: $font-size-xs;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+
+    &__highlights,
+    &__action-label {
+      display: none;
     }
 
     &__action {
