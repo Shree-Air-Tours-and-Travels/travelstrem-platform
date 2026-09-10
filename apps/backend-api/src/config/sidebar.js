@@ -37,8 +37,7 @@ export default applyHideFlags({
                         id: "flights",
                         label: "Flights & Hotels",
                         icon: "plane",
-                        disabled: true,
-                        comingSoon: true,
+                        target: "trehub",
                     },
                     {
                         id: "services",
@@ -75,7 +74,7 @@ export default applyHideFlags({
                 id: "support",
                 title: "Support & More",
                 items: [
-                    { id: "notifications", label: "Notifications", icon: "bell", disabled: true },
+                    { id: "notifications", label: "Notifications", icon: "bell", target: "notifications" },
                     { id: "support", label: "Help & Support", icon: "support", target: "support" },
                 ],
             },

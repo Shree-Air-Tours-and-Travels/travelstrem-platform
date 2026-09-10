@@ -1,0 +1,45 @@
+@import "@packages/trem-design-tokens/scss";
+
+.trem-detailed-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  min-height: 2.5rem;
+  padding: $space-2 $space-3;
+  border: 1px solid var(--border);
+  border-radius: $radius-full;
+  background: var(--surface-elevated);
+  color: var(--text-muted);
+  box-shadow: var(--shadow-sm);
+
+  > span {
+    display: grid;
+    line-height: 1.15;
+  }
+
+  small {
+    color: var(--text-muted);
+    font-size: $font-size-xs;
+  }
+
+  strong {
+    color: var(--text);
+    font-size: $font-size-sm;
+  }
+
+  &--primary {
+    border-color: color-mix(in srgb, var(--color-primary) 24%, var(--border));
+    background: color-mix(in srgb, var(--color-primary) 7%, var(--surface-elevated));
+    color: var(--color-primary-dark);
+  }
+
+  &--success {
+    background: color-mix(in srgb, var(--color-success) 8%, var(--surface));
+    color: var(--color-success);
+  }
+
+  &--warning {
+    background: color-mix(in srgb, var(--color-warning) 10%, var(--surface));
+    color: var(--color-warning);
+  }
+}

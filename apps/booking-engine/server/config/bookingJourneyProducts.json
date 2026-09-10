@@ -58,5 +58,28 @@
         { "name": "specialRequirements", "type": "textarea", "label": "Dietary, accessibility or other requirements", "required": false, "maxLength": 500, "colSpan": 2 }
       ]
     }
+  },
+  "trehub": {
+    "enquiry": {
+      "title": "Flight enquiry details",
+      "description": "Review the selected flight and traveller count before adding each traveller's details.",
+      "sectionTitle": "Selected flight",
+      "sectionDescription": "The itinerary and fare are locked to the flight selected in Trehub.",
+      "fields": [
+        { "name": "adultCount", "type": "counter", "label": "Adults", "required": true, "min": 1, "max": 50, "disabled": true },
+        { "name": "childCount", "type": "counter", "label": "Children", "required": true, "min": 0, "max": 49, "disabled": true },
+        { "name": "infantCount", "type": "counter", "label": "Infants", "required": true, "min": 0, "max": 49, "disabled": true },
+        { "name": "route", "type": "text", "label": "Route", "disabled": true, "colSpan": 2 },
+        { "name": "departureSummary", "type": "text", "label": "Departure", "disabled": true },
+        { "name": "airline", "type": "text", "label": "Airline", "disabled": true },
+        { "name": "cabin", "type": "text", "label": "Cabin and fare", "disabled": true },
+        { "name": "flightChargeSummary", "type": "text", "label": "Flight charge", "disabled": true },
+        { "name": "convenienceFeeSummary", "type": "text", "label": "Convenience fee", "disabled": true },
+        { "name": "priceSummary", "type": "text", "label": "Final amount", "disabled": true }
+      ]
+    },
+    "traveller": {
+      "extraFields": []
+    }
   }
 }

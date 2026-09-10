@@ -1,0 +1,178 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {
+        "passengerTitles": [
+          { "value": "Mr", "label": "Mr" },
+          { "value": "Ms", "label": "Ms" },
+          { "value": "Mrs", "label": "Mrs" }
+        ],
+        "passengerGenders": [
+          { "value": "MALE", "label": "Male" },
+          { "value": "FEMALE", "label": "Female" },
+          { "value": "OTHER", "label": "Other" }
+        ]
+      }
+    },
+    "elements": {
+      "labels": {
+        "breadcrumbTrehub": "Trehub",
+        "breadcrumbFlights": "Flights",
+        "breadcrumbBooking": "Complete booking",
+        "journeyEyebrow": "Secure flight booking",
+        "journeyTitle": "Complete your flight booking",
+        "journeyDescription": "Choose a fare, add traveller details, select seats and revalidate before booking.",
+        "flightDetailsEyebrow": "Your selected flight",
+        "flightDetailsTitle": "Review the complete flight itinerary",
+        "flightDetailsDescription": "Check airport, terminal, aircraft, baggage and fare conditions before continuing.",
+        "secureFare": "Secure fare selection",
+        "flightItinerary": "Flight itinerary",
+        "aircraft": "Aircraft",
+        "operatedBy": "Operated by",
+        "nonStop": "Non-stop",
+        "fareDetails": "fare details",
+        "fareInclusions": "Included in this fare",
+        "fareConditions": "Fare conditions",
+        "importantInformation": "Important information",
+        "fareStep": "Choose fare",
+        "travellerStep": "Travellers",
+        "seatStep": "Seats",
+        "reviewStep": "Review",
+        "confirmationStep": "Confirmation",
+        "refundable": "Refundable",
+        "nonRefundable": "Non-refundable",
+        "changeable": "Changes allowed",
+        "mealIncluded": "Meal included",
+        "selectFare": "Select fare",
+        "selectedFare": "Selected",
+        "fareDescription": "Select the flexibility and inclusions that suit this journey.",
+        "changesRestricted": "Changes restricted",
+        "mealsSeparate": "Meals available separately",
+        "checkedBaggageTemplate": "{weight} kg checked baggage",
+        "continue": "Continue",
+        "createEnquiryTitle": "Continue with this flight?",
+        "createEnquiryDescription": "This will create a flight enquiry and take you to My Bookings, where you can review the enquiry and add traveller details.",
+        "createEnquiryConfirm": "Create enquiry",
+        "cancel": "Keep reviewing",
+        "back": "Back",
+        "backToFlights": "Back to flights",
+        "skipSeats": "Skip seat selection",
+        "travellerDetails": "Traveller details",
+        "adult": "Adult",
+        "child": "Child",
+        "infant": "Infant",
+        "passportDetails": "Passport details",
+        "title": "Title",
+        "firstName": "First name",
+        "lastName": "Last name",
+        "gender": "Gender",
+        "dateOfBirth": "Date of birth",
+        "nationality": "Nationality code",
+        "passportNumber": "Passport number",
+        "passportExpiry": "Passport expiry",
+        "passportIssuingCountry": "Issuing country code",
+        "seatSelection": "Choose seats",
+        "seatSelectionDescription": "Seat prices and availability are supplied by the backend.",
+        "available": "Available",
+        "occupied": "Unavailable",
+        "selected": "Selected",
+        "priceSummary": "Price summary",
+        "finalPriceDescription": "Final prices are revalidated by TravelsTREM before booking.",
+        "baseFare": "Base fare",
+        "taxes": "Taxes",
+        "providerFees": "Provider fees",
+        "convenienceFee": "Convenience fee",
+        "seatFees": "Seat fees",
+        "total": "Total",
+        "revalidate": "Check fare and continue",
+        "bookNow": "Confirm booking",
+        "priceChanged": "The fare changed. Review and accept the updated price to continue.",
+        "acceptPrice": "Accept updated price",
+        "bookingComplete": "Your flight reservation is confirmed",
+        "bookingCompleteDescription": "Your booking snapshot is saved. Payment and ticketing statuses are tracked separately.",
+        "viewBookings": "View My Bookings",
+        "pnr": "PNR",
+        "payment": "Payment",
+        "ticketing": "Ticketing",
+        "departure": "Departure",
+        "cabin": "Cabin",
+        "priceFrom": "From",
+        "perTraveller": "per traveller",
+        "totalForTravellers": "Total for {count} travellers",
+        "viewFlight": "Selected flight"
+      },
+      "urls": {
+        "offer": "/flights/search/{searchId}/offers/{offerId}",
+        "revalidate": "/flights/revalidate",
+        "seatMap": "/flights/offers/{offerId}/seat-map",
+        "bookings": "/flights/bookings",
+        "enquiries": "/flights/enquiries",
+        "booking": "/flights/bookings/{bookingId}",
+        "myBookings": "/?tab=bookings"
+      }
+    },
+    "structure": {
+      "type": "TrehubFlightJourney",
+      "source": "trehub",
+      "header": {},
+      "widgets": [
+        { "name": "breadcrumbs", "type": "Breadcrumbs", "source": "trehub", "props": { "items": [
+          { "labelRef": "breadcrumbTrehub", "path": "/trehub?tab=trehub&product=trehub" },
+          { "labelRef": "breadcrumbFlights", "path": "/trehub/flights" },
+          { "labelRef": "breadcrumbBooking" }
+        ] } },
+        { "name": "flightDetails", "type": "FlightDetails", "source": "trem-ui", "props": {
+          "dataPath": "details",
+          "showAtStep": 0,
+          "eyebrowRef": "flightDetailsEyebrow",
+          "titleRef": "flightDetailsTitle",
+          "descriptionRef": "flightDetailsDescription",
+          "itineraryTitleRef": "flightItinerary",
+          "aircraftRef": "aircraft",
+          "cabinRef": "cabin",
+          "operatedByRef": "operatedBy",
+          "nonStopRef": "nonStop",
+          "fareDetailsRef": "fareDetails",
+          "inclusionsRef": "fareInclusions",
+          "conditionsRef": "fareConditions",
+          "importantInfoRef": "importantInformation",
+          "assuranceRef": "secureFare"
+        } },
+        { "name": "fareSelection", "type": "FlightFareSelection", "source": "trehub", "props": {
+          "showAtStep": 0,
+          "stepNumber": "01",
+          "titleRef": "fareStep",
+          "descriptionRef": "fareDescription"
+        } },
+        { "name": "travellerDetails", "type": "FlightTravellerDetails", "source": "trehub", "props": {
+          "showAtStep": 1,
+          "stepNumber": "02",
+          "titleRef": "travellerDetails"
+        } },
+        { "name": "seatSelection", "type": "FlightSeatSelection", "source": "trehub", "props": {
+          "showAtStep": 2,
+          "stepNumber": "03",
+          "titleRef": "seatSelection",
+          "descriptionRef": "seatSelectionDescription"
+        } },
+        { "name": "priceReview", "type": "FlightPriceReview", "source": "trehub", "props": {
+          "showAtStep": 3,
+          "stepNumber": "04",
+          "titleRef": "priceSummary",
+          "descriptionRef": "finalPriceDescription"
+        } },
+        { "name": "bookingConfirmation", "type": "FlightBookingConfirmation", "source": "trehub", "props": {
+          "showAtStep": 4,
+          "titleRef": "bookingComplete"
+        } },
+        { "name": "bookingJourney", "type": "FlightBookingJourney", "source": "trehub", "props": {
+          "steps": ["fareStep", "travellerStep", "seatStep", "reviewStep", "confirmationStep"]
+        } }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

@@ -28,6 +28,26 @@ function renderAvatar(user, fallback) {
   return getInitials(user, fallback);
 }
 
+function getNotificationRecordMeta(item = {}) {
+  if (item.recordMeta?.label && item.recordMeta?.value) {
+    return item.recordMeta;
+  }
+
+  const data = item.data || {};
+  const type = `${item.type || ""} ${item.entityType || ""}`.toLowerCase();
+  const bookingRef = data.bookingRef || data.bookingReference || "";
+  const enquiryRef = data.enquiryRef || data.enquiryReference || "";
+  const supportRef = data.ticketRef || data.supportRef || data.reference || "";
+  const quoteRef = data.quoteRef || data.quoteNumber || "";
+
+  if (type.includes("support") && supportRef) return { label: "Support ticket", value: supportRef };
+  if (bookingRef) return { label: "Booking", value: bookingRef };
+  if (type.includes("quote") && quoteRef) return { label: "Quotation", value: quoteRef };
+  if (enquiryRef) return { label: "Enquiry", value: enquiryRef };
+  if (quoteRef) return { label: "Quotation", value: quoteRef };
+  return null;
+}
+
 export default function AppHeader({
   config = {},
   user = null,
@@ -127,7 +147,7 @@ export default function AppHeader({
   return (
     <>
       <header
-        className={`trem-app-header${config.variant ? ` trem-app-header--${config.variant}` : ""}${headerActions.some((item) => item.mobileOnly) ? " has-mobile-actions" : ""}${mobileHeaderClasses ? ` ${mobileHeaderClasses}` : ""}`}
+        className={`trem-app-header${config.variant ? ` trem-app-header--${config.variant}` : ""}${headerActions.length ? " has-header-actions" : ""}${headerActions.some((item) => item.mobileOnly) ? " has-mobile-actions" : ""}${mobileHeaderClasses ? ` ${mobileHeaderClasses}` : ""}`}
         aria-label={config.ariaLabel || "Application header"}
         style={{ "--trem-app-header-sidebar-offset": sidebarCollapsed ? "76px" : "260px" }}
       >
@@ -211,7 +231,42 @@ export default function AppHeader({
             </button>
           ))}
 
-          {!notification.hide ? (
+          {!notification.hide && notification.items ? (
+            <Dropdown
+              className="trem-app-header__notification-dropdown"
+              align="right"
+              hoverable={false}
+              variant="scrollable"
+              items={notification.items}
+              menuTitle={notification.menuTitle || "Notifications"}
+              portalWidth={360}
+              portalClassName="trem-app-header__notification-menu"
+              emptyState={notification.emptyState || {
+                icon: "bell",
+                title: notification.emptyTitle || "No notifications",
+                description: notification.emptyDescription || "You are all caught up.",
+              }}
+              renderItem={(item, _index, controls = {}) => {
+                const recordMeta = getNotificationRecordMeta(item);
+                return (
+                  <button type="button" className={`trem-app-header__notification-item${item.readAt ? "" : " is-unread"}`} onClick={() => { controls.close?.(); notification.onItemClick?.(item); }}>
+                    <span className="trem-app-header__notification-copy">
+                      {recordMeta ? <span className="trem-app-header__notification-ref">{recordMeta.label} · {recordMeta.value}</span> : null}
+                      <strong>{item.title || "Notification"}</strong>
+                      {item.message ? <span>{item.message}</span> : null}
+                    </span>
+                    {item.createdAt ? (
+                      <time dateTime={item.createdAt}>
+                        {notification.formatTime?.(item.createdAt) || new Date(item.createdAt).toLocaleString()}
+                      </time>
+                    ) : null}
+                  </button>
+                );
+              }}
+              menuFooter={({ close }) => <div className="trem-app-header__notification-footer"><button type="button" onClick={() => notification.onMarkAllRead?.()?.catch?.(() => null)}>Mark all read</button><button type="button" onClick={() => { close(); notification.onViewAll?.(); }}>View all</button></div>}
+              trigger={() => <button type="button" className="trem-app-header__icon-button trem-app-header__notification" aria-label={notification.label || "Notifications"}><Icon name={notification.icon || "bell"} size={21} />{notification.count ? <span>{notification.count > 9 ? "9+" : notification.count}</span> : null}</button>}
+            />
+          ) : !notification.hide ? (
             <button
               type="button"
               className="trem-app-header__icon-button trem-app-header__notification"

@@ -1,5 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
+import Icon from "../../icons/Icon/Icon.jsx";
 import "./StatusBadge.styles.scss";
 
 const TONE_MAP = {
@@ -67,15 +68,18 @@ export default function StatusBadge({
   tone,
   size = "md",
   showDot = true,
+  icon,
+  appearance = "soft",
   className = "",
 }) {
   const resolvedTone = tone || resolveTone(value);
 
   return (
     <span
-      className={`status-badge status-badge--${resolvedTone} status-badge--${size}${subtitle ? " status-badge--with-subtitle" : ""} ${className}`}
+      className={`status-badge status-badge--${resolvedTone} status-badge--${size} status-badge--${appearance}${subtitle ? " status-badge--with-subtitle" : ""} ${className}`}
     >
-      {showDot && <span className="status-badge__dot" aria-hidden="true" />}
+      {icon ? <Icon name={icon} size={size === "sm" ? 14 : 16} className="status-badge__icon" /> : null}
+      {!icon && showDot && <span className="status-badge__dot" aria-hidden="true" />}
       <span className="status-badge__label">{formatLabel(value)}</span>
       {subtitle && <span className="status-badge__subtitle">{subtitle}</span>}
     </span>
@@ -88,5 +92,7 @@ StatusBadge.propTypes = {
   tone: PropTypes.oneOf(["neutral", "info", "success", "warning", "danger", "secondary"]),
   size: PropTypes.oneOf(["sm", "md", "lg"]),
   showDot: PropTypes.bool,
+  icon: PropTypes.string,
+  appearance: PropTypes.oneOf(["soft", "accent"]),
   className: PropTypes.string,
 };

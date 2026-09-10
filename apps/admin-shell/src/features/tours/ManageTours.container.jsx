@@ -1,7 +1,13 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { fetchData } from "@packages/trem-utils";
-import { REALTIME_EVENTS, showRealtimeToast, useRealtimeEvent } from "@packages/trem-events";
+import {
+  REALTIME_EVENTS,
+  showRealtimeToast,
+  useRealtimeEvent,
+  useTourCatalogRealtime,
+} from "@packages/trem-events";
+import { PRODUCT_TYPE } from "@packages/trem-ui";
 import {
   deleteAllTours,
   deleteTour,
@@ -13,6 +19,7 @@ import {
   deleteAllTrips,
   verifyAdminTour,
   verifyAdminTrip,
+  resolveAdminTripBuilderTour,
   fetchPartnerAgencies,
   removeAdmin,
   reviewAdmin,
@@ -34,6 +41,7 @@ const VALID_TABS = new Set([
   "tenancy",
   "clients",
   "profile",
+  "notifications",
 ]);
 
 const getTabFromSearch = (search, pathname = "") => {
@@ -41,6 +49,7 @@ const getTabFromSearch = (search, pathname = "") => {
   const tab = new URLSearchParams(search || "").get("tab") || "overview";
   return VALID_TABS.has(tab) ? tab : "overview";
 };
+const TREVIO_BUILDER_PATH = "/manage/tours/builder";
 
 const resolveEntityId = (value) => {
   if (value == null) return "";
@@ -83,7 +92,7 @@ export default function ManageTours({ session }) {
   const [agencyLoading, setAgencyLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [tripFormOpen, setTripFormOpen] = useState(false);
-  const [tripEditing, setTripEditing] = useState(null);
+  const [tripEditing] = useState(null);
   const [tripViewOpen, setTripViewOpen] = useState(false);
   const [viewTrip, setViewTrip] = useState(null);
   const [error, setError] = useState(null);
@@ -166,6 +175,11 @@ export default function ManageTours({ session }) {
   }
 
   useRealtimeEvent(REALTIME_EVENTS.ADMIN_SUPPORT_REQUEST_CREATED, () => {
+    if (tab === "overview") loadDashboard();
+  });
+  useTourCatalogRealtime(() => {
+    fetchTours();
+    fetchTrips();
     if (tab === "overview") loadDashboard();
   });
 
@@ -302,11 +316,18 @@ export default function ManageTours({ session }) {
     setConfirmDelete("ALL");
     setConfirmMessage("Delete ALL tours? This is irreversible. Continue?");
   }
-  function handleTripDelete(id) {
+  async function handleTripDelete(id) {
     const tripId = resolveTourId(id);
     if (!tripId) return;
-    setConfirmDelete(`trip:${tripId}`);
-    setConfirmMessage("Delete this trip? This action cannot be undone.");
+    try {
+      const resolved = await resolveAdminTripBuilderTour(tripId);
+      const sourceTourId = resolveEntityId(resolved?.tourId);
+      if (!sourceTourId) throw new Error("Trip builder record was not returned.");
+      setConfirmDelete(`tripTour:${sourceTourId}`);
+      setConfirmMessage("Delete this trip? This action cannot be undone.");
+    } catch (e) {
+      showToast(e.message || "Could not prepare trip delete", "error");
+    }
   }
   function handleTripDeleteAll() {
     setConfirmDelete("trips:ALL");
@@ -320,6 +341,7 @@ export default function ManageTours({ session }) {
     try {
       if (target === "ALL") await deleteAllTours();
       else if (target === "trips:ALL") await deleteAllTrips();
+      else if (target?.startsWith("tripTour:")) await deleteTour(target.replace("tripTour:", ""));
       else if (target?.startsWith("trip:")) await deleteTrip(target.replace("trip:", ""));
       else await deleteTour(target);
       if (target?.startsWith("trip") || target === "trips:ALL") await fetchTrips();
@@ -365,20 +387,28 @@ export default function ManageTours({ session }) {
     }
   }
   function openTripCreate() {
-    navigate("/manage/tours/builder?product=trevio");
+    const params = new URLSearchParams({ product: PRODUCT_TYPE.TREVIO });
+    navigate(`${TREVIO_BUILDER_PATH}?${params.toString()}`);
+  }
+  async function openTripInBuilder(t, mode = "edit") {
+    const tripId = resolveTourId(t);
+    if (!tripId) return;
+    try {
+      const resolved = await resolveAdminTripBuilderTour(tripId);
+      const sourceId = resolveEntityId(resolved?.tourId);
+      if (!sourceId) throw new Error("Trip builder record was not returned.");
+      const params = new URLSearchParams({ product: PRODUCT_TYPE.TREVIO, tourId: sourceId });
+      if (mode === "view") params.set("mode", "view");
+      navigate(`${TREVIO_BUILDER_PATH}?${params.toString()}`);
+    } catch (e) {
+      showToast(e.message || "Trip could not be opened in builder", "error");
+    }
   }
   function openTripEdit(t) {
-    const sourceId = resolveEntityId(t?.sourceTourId);
-    if (sourceId) {
-      navigate(`/manage/tours/builder?product=trevio&tourId=${sourceId}`);
-      return;
-    }
-    setTripEditing(t);
-    setTripFormOpen(true);
+    openTripInBuilder(t);
   }
   function openTripView(t) {
-    setViewTrip(t);
-    setTripViewOpen(true);
+    openTripInBuilder(t, "view");
   }
 
   const handleSaveProfile = useCallback(

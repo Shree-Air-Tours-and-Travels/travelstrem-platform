@@ -2,8 +2,8 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { AppHeader, Breadcrumbs, PRODUCT_TYPE, PortalPreloader, SideBar } from "@packages/trem-ui";
 import { clearAuthBrowserState, emitAuthEvent } from "@packages/trem-auth-core";
-import { emit } from "@packages/trem-events";
-import { buildGlobalAuthUrl, useThemeMode } from "@packages/trem-utils";
+import { emit, resolveNotificationLink, useNotificationInbox } from "@packages/trem-events";
+import { buildGlobalAuthUrl, fetchData, useThemeMode } from "@packages/trem-utils";
 import Routers from "./routes";
 import { isAllowedAgentRole, useAgentPortalConfig } from "./providers/AgentPortalProvider";
 import authService from "../services/authService";
@@ -22,6 +22,7 @@ function activeNavigation(pathname) {
   )
     return "agencyWorkspace";
   if (pathname.includes("/agent/customers")) return "customers";
+  if (pathname.includes("/agent/notifications")) return "notifications";
   if (
     pathname.includes("/agent/enquiries") ||
     pathname.includes("/agent/bookings") ||
@@ -36,10 +37,19 @@ function activeNavigation(pathname) {
 const isRouteMatch = (pathname, route) =>
   Boolean(route && (pathname === route || pathname.startsWith(`${route}/`)));
 
-export const resolvePartnerBreadcrumbs = (pathname, definitions = []) =>
-  definitions
-    .filter((definition) => isRouteMatch(pathname, definition?.match))
-    .sort((left, right) => right.match.length - left.match.length)[0]?.items || [];
+export const resolvePartnerBreadcrumbs = (pathname, definitions = []) => {
+  const items =
+    definitions
+      .filter((definition) => isRouteMatch(pathname, definition?.match))
+      .sort((left, right) => right.match.length - left.match.length)[0]?.items || [];
+  const detailMatch = pathname.match(/^(.*\/(?:bookings|enquiries))\/([^/]+)\/?$/);
+  if (!detailMatch || !items.length) return items;
+  return [
+    ...items.slice(0, -1),
+    { ...items[items.length - 1], path: detailMatch[1] },
+    { label: decodeURIComponent(detailMatch[2]) },
+  ];
+};
 
 export default function AppLayout({ embedded = false }) {
   const { loading, session, headerConfig: backendHeaderConfig } = useAgentPortalConfig();
@@ -51,6 +61,12 @@ export default function AppLayout({ embedded = false }) {
   const [selectedProductKey, setSelectedProductKey] = useState("");
   const hasPartnerAccess = session?.isAuthenticated && isAllowedAgentRole(session);
   const user = useMemo(() => session?.user || {}, [session?.user]);
+  const notificationInbox = useNotificationInbox({
+    loadInbox: async () =>
+      (await fetchData("/tenancy/notifications", { params: { limit: 6 } })).componentData?.data,
+    readInboxItem: (id) => fetchData(`/tenancy/notifications/${id}/read`, { method: "PATCH" }),
+    readAllInboxItems: () => fetchData("/tenancy/notifications/read-all", { method: "PATCH" }),
+  });
   const products = useMemo(
     () => (Array.isArray(user.productAccess) ? user.productAccess : []),
     [user.productAccess],
@@ -87,7 +103,9 @@ export default function AppLayout({ embedded = false }) {
   );
   const breadcrumbItems = useMemo(
     () =>
-      resolvePartnerBreadcrumbs(location.pathname, backendHeaderConfig?.partnerBreadcrumbs || []),
+      location.pathname.startsWith("/agent/notifications")
+        ? [{ label: "Workspace", path: "/agent/dashboard" }, { label: "Notifications" }]
+        : resolvePartnerBreadcrumbs(location.pathname, backendHeaderConfig?.partnerBreadcrumbs || []),
     [backendHeaderConfig?.partnerBreadcrumbs, location.pathname],
   );
 
@@ -120,7 +138,6 @@ export default function AppLayout({ embedded = false }) {
             icon: "usersRound",
             path: "/agent/customers",
           },
-          { id: "support", label: "Help & Support", icon: "support", path: "/agent/support" },
           ...(isPartnerAdmin
             ? [
                 {
@@ -160,8 +177,22 @@ export default function AppLayout({ embedded = false }) {
         ],
       },
       {
-        id: "agency",
-        title: "Agency",
+        id: "support-more",
+        title: "Support & More",
+        items: [
+          {
+            id: "notifications",
+            label: "Notifications",
+            icon: "bell",
+            path: "/agent/notifications",
+            indicator: notificationInbox.unread > 0,
+          },
+          { id: "support", label: "Help & Support", icon: "support", path: "/agent/support" },
+        ],
+      },
+      {
+        id: "account",
+        title: "Account",
         items: [
           ...(isPartnerAdmin
             ? [{ id: "reports", label: "Reports", icon: "management", path: "/agent/reports" }]
@@ -171,7 +202,7 @@ export default function AppLayout({ embedded = false }) {
         ],
       },
     ],
-    [hasTrevio, hasTrevista, isPartnerAdmin],
+    [hasTrevio, hasTrevista, isPartnerAdmin, notificationInbox.unread],
   );
 
   const sidebarConfig = useMemo(
@@ -190,6 +221,21 @@ export default function AppLayout({ embedded = false }) {
       },
     }),
     [sections],
+  );
+
+  const notificationNavItem = useMemo(
+    () => sections.flatMap((section) => section.items || []).find((item) => item.id === "notifications"),
+    [sections],
+  );
+
+  const openNotification = useCallback(
+    async (item) => {
+      if (!item) return;
+      if (!item.readAt) await notificationInbox.markRead(item._id).catch(() => null);
+      const target = resolveNotificationLink(item, { portal: "partner" });
+      if (target) navigate(target);
+    },
+    [navigate, notificationInbox],
   );
 
   const headerConfig = useMemo(
@@ -220,7 +266,14 @@ export default function AppLayout({ embedded = false }) {
             onClick: () => navigate(selectedProduct.createPath),
           }
         : {},
-      notification: { hide: true },
+      notification: {
+        enabled: true,
+        count: notificationInbox.unread,
+        items: notificationInbox.items,
+        onItemClick: openNotification,
+        onMarkAllRead: notificationInbox.markAllRead,
+        onViewAll: notificationNavItem?.path ? () => navigate(notificationNavItem.path) : undefined,
+      },
       themeAction: {},
       user: {
         fallbackName: "Partner",
@@ -242,7 +295,17 @@ export default function AppLayout({ embedded = false }) {
       },
       mobileMenu: { openLabel: "Open partner navigation", closeLabel: "Close partner navigation" },
     }),
-    [backendHeaderConfig?.variant, isPartnerAdmin, navigate, productCatalog, selectedProduct, user],
+    [
+      backendHeaderConfig?.variant,
+      isPartnerAdmin,
+      navigate,
+      notificationInbox,
+      notificationNavItem?.path,
+      openNotification,
+      productCatalog,
+      selectedProduct,
+      user,
+    ],
   );
 
   const onAction = useCallback(

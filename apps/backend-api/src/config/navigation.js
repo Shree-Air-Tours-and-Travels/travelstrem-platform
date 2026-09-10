@@ -30,7 +30,7 @@ export default {
                 label: "Home",
                 icon: "home",
                 target: "overview",
-                activeTargets: ["overview", "trevio", "trevista"],
+                activeTargets: ["overview", "trevio", "trevista", "trehub"],
             },
             { id: "bookings", label: "Bookings", icon: "calendar", target: "bookings" },
             {
@@ -49,6 +49,7 @@ export default {
         { id: "favorites", kind: "tab", tab: "favorites", path: "/", activeId: "favorites" },
         { id: "bookings", kind: "tab", tab: "bookings", path: "/", activeId: "bookings" },
         { id: "profile", kind: "tab", tab: "profile", path: "/", activeId: "profile" },
+        { id: "notifications", kind: "tab", tab: "notifications", path: "/notifications", activeId: "notifications" },
         {
             id: "support",
             kind: "internal",
@@ -65,7 +66,7 @@ export default {
             product: "trevio",
             path: "/",
             activeId: "trips",
-            patterns: ["/trevio/*", "/trip/*"],
+            patterns: ["/trevio/*", "/trips", "/trips/*", "/trip/*"],
         },
         {
             id: "trevista",
@@ -76,6 +77,16 @@ export default {
             path: "/",
             activeId: "tours",
             patterns: ["/trevista/*", "/tour/*"],
+        },
+        {
+            id: "trehub",
+            kind: "remote",
+            renderer: "trehub",
+            tab: "trehub",
+            product: "trehub",
+            path: "/",
+            activeId: "flights",
+            patterns: ["/trehub", "/trehub/*"],
         },
     ],
 };

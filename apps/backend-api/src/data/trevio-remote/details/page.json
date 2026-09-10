@@ -18,8 +18,8 @@
         "tourErrorTitle": "Trip details could not load",
         "agencyDetails": {
           "ariaLabel": "Trip operator details",
-          "eyebrow": "Operated by",
-          "travelPartner": "Your travel partner",
+          "eyebrow": "Uploaded by agency",
+          "travelPartner": "Agent working on this trip",
           "partnerReference": "Agency reference"
         }
       },

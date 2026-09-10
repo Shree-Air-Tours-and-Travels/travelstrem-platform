@@ -229,6 +229,7 @@ export const buildProductEnquiryDetailsForm = ({
     }],
   },
   values: {
+    ...Object.fromEntries(resolvedFields.map((item) => [item.name, saved[item.name] ?? ""])),
     adultCount: Number(saved.adultCount || 1),
     childCount: Number(saved.childCount || 0),
     infantCount: Number(saved.infantCount || 0),

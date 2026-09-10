@@ -10,6 +10,24 @@ import {
 
 const TRIP_HOME_PAGE = "trevio-remote/home";
 const QUICK_CHIPS_KEY = "trevio.quickChipOptions";
+const TRIP_SORT_OPTIONS = [
+    { value: "recommended", label: "TREM recommended" },
+    { value: "upcoming", label: "Upcoming first" },
+    { value: "popular", label: "Most engaged" },
+    { value: "rating", label: "Top rated" },
+    { value: "price_low", label: "Price: low to high" },
+    { value: "price_high", label: "Price: high to low" },
+];
+const TRIP_BUDGET_OPTIONS = [
+    { value: "25000", label: "Up to ₹25,000" },
+    { value: "50000", label: "Up to ₹50,000" },
+    { value: "100000", label: "Up to ₹1,00,000" },
+];
+const TRIP_FLIGHT_OPTIONS = [
+    { value: "all", label: "Any flight option" },
+    { value: "with", label: "With flights" },
+    { value: "without", label: "Without flights" },
+];
 
 const loadTrips = async (req) => {
     try {
@@ -38,13 +56,13 @@ const loadTrips = async (req) => {
 
 export const getTripHome = async (req, res) => {
     const page = pageDefinitionService.buildPageResponse(TRIP_HOME_PAGE);
-    const [quickChipOptions, tripResult, intlResult] = await Promise.all([
+    const [quickChipOptions, featuredResult, tripResult, intlResult] = await Promise.all([
         masterDataService.getOptionSet(QUICK_CHIPS_KEY),
+        tripService.listFeaturedTrips({ limit: 4 }),
         loadTrips(req),
         tripService.listInternationalTrips({ limit: 3 }),
     ]);
-    const trips = tripResult.trips || [];
-    const featuredTrips = trips.filter((trip) => trip.featured);
+    const featuredTrips = featuredResult.trips || [];
 
     return res.status(200).json({
         ...page,
@@ -55,7 +73,7 @@ export const getTripHome = async (req, res) => {
                 state: {
                     ...(page.component.data.state || {}),
                     featuredTrips,
-                    adventureTrips: trips,
+                    adventureTrips: featuredTrips,
                     tripPagination: tripResult.pagination,
                     internationalTrips: intlResult.trips || [],
                 },
@@ -64,6 +82,7 @@ export const getTripHome = async (req, res) => {
                 options: {
                     ...page.component.dataScope.options,
                     quickChipOptions,
+                    tripSortOptions: TRIP_SORT_OPTIONS,
                 },
             },
         },
@@ -73,8 +92,9 @@ export const getTripHome = async (req, res) => {
 
 export const getTrips = async (req, res) => {
     const page = pageDefinitionService.buildPageResponse(TRIP_HOME_PAGE);
-    const [quickChipOptions, tripResult] = await Promise.all([
+    const [quickChipOptions, tripFilterOptions, tripResult] = await Promise.all([
         masterDataService.getOptionSet(QUICK_CHIPS_KEY),
+        tripService.getTripFilterOptions(),
         loadTrips(req),
     ]);
 
@@ -85,8 +105,19 @@ export const getTrips = async (req, res) => {
                 trips: tripResult.trips || [],
                 pagination: tripResult.pagination,
             },
-            dataScope: { options: { quickChipOptions } },
-            elements: { labels: {}, urls: {} },
+            dataScope: {
+                options: {
+                    quickChipOptions,
+                    tripSortOptions: TRIP_SORT_OPTIONS,
+                    tripFilterOptions: {
+                        from: tripFilterOptions.origins || [],
+                        to: tripFilterOptions.destinations || [],
+                        budget: TRIP_BUDGET_OPTIONS,
+                        flights: TRIP_FLIGHT_OPTIONS,
+                    },
+                },
+            },
+            elements: { labels: page.component?.elements?.labels || {}, urls: {} },
             structure: { header: {}, widgets: [], config: {}, actions: [] },
         },
         message: "Trips fetched successfully",

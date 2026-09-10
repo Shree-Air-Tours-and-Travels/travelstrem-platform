@@ -107,7 +107,7 @@ export default function TripsTabWidget({
                 }}
                 onView={openView}
                 onEdit={openEdit}
-                onDelete={(item) => handleDelete(item._id || item.id)}
+                onDelete={handleDelete}
               />
             ))
           )}

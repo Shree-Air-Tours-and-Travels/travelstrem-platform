@@ -472,6 +472,58 @@ importers:
         specifier: ^7.0.3
         version: 7.0.3
 
+  apps/trehub-remote:
+    dependencies:
+      '@packages/trem-auth-core':
+        specifier: workspace:*
+        version: link:../../packages/trem-auth-core
+      '@packages/trem-environment':
+        specifier: workspace:*
+        version: link:../../packages/trem-environment
+      '@packages/trem-events':
+        specifier: workspace:*
+        version: link:../../packages/trem-events
+      '@packages/trem-modals':
+        specifier: workspace:*
+        version: link:../../packages/trem-modals
+      '@packages/trem-runtime':
+        specifier: workspace:*
+        version: link:../../packages/trem-runtime
+      '@packages/trem-session':
+        specifier: workspace:*
+        version: link:../../packages/trem-session
+      '@packages/trem-ui':
+        specifier: workspace:*
+        version: link:../../packages/trem-ui
+      '@packages/trem-utils':
+        specifier: workspace:*
+        version: link:../../packages/trem-utils
+      '@vercel/analytics':
+        specifier: ^2.0.1
+        version: 2.0.1(react@18.3.1)
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+      react-router-dom:
+        specifier: ^7.8.2
+        version: 7.15.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react-scripts:
+        specifier: 5.0.1
+        version: 5.0.1(@babel/plugin-syntax-flow@7.28.6(@babel/core@7.29.0))(@babel/plugin-transform-react-jsx@7.28.6(@babel/core@7.29.0))(@types/babel__core@7.20.5)(eslint@10.9.0(jiti@1.21.7))(react@18.3.1)(sass@1.99.0)(ts-node@10.9.2(@types/node@25.6.0)(typescript@4.9.5))(type-fest@0.21.3)(typescript@4.9.5)
+      sass:
+        specifier: ^1.86.0
+        version: 1.99.0
+    devDependencies:
+      '@craco/craco':
+        specifier: ^7.1.0
+        version: 7.1.0(@types/node@25.6.0)(postcss@8.5.24)(react-scripts@5.0.1(@babel/plugin-syntax-flow@7.28.6(@babel/core@7.29.0))(@babel/plugin-transform-react-jsx@7.28.6(@babel/core@7.29.0))(@types/babel__core@7.20.5)(eslint@10.9.0(jiti@1.21.7))(react@18.3.1)(sass@1.99.0)(ts-node@10.9.2(@types/node@25.6.0)(typescript@4.9.5))(type-fest@0.21.3)(typescript@4.9.5))(typescript@4.9.5)
+      cross-env:
+        specifier: ^7.0.3
+        version: 7.0.3
+
   apps/trevio-remote:
     dependencies:
       '@packages/trem-auth-core':
@@ -17782,7 +17834,7 @@ snapshots:
       sockjs: 0.3.24
       spdy: 4.0.2
       webpack-dev-middleware: 5.3.4(webpack@5.106.2)
-      ws: 8.20.0
+      ws: 8.21.3
     optionalDependencies:
       webpack: 5.106.2
     transitivePeerDependencies:

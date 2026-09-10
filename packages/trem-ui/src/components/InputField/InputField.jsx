@@ -29,7 +29,8 @@ export default function InputField({
 }) {
   const generatedErrorId = React.useId();
   const errorId = `${generatedErrorId}-error`;
-  const describedBy = [ariaDescribedBy, error ? errorId : null].filter(Boolean).join(" ") || undefined;
+  const describedBy =
+    [ariaDescribedBy, error ? errorId : null].filter(Boolean).join(" ") || undefined;
   const isTel = variant === "tel";
   const isMonthYear = variant === "monthYear";
   const telMaxLength = Math.min(10, Math.max(1, Number(maxLength) || 10));
@@ -111,6 +112,7 @@ export default function InputField({
           value={value}
           onChange={handleChange}
           placeholder={placeholder || (isMonthYear ? "MM/YY" : undefined)}
+          required={required}
           disabled={disabled}
           maxLength={isTel ? telMaxLength : isMonthYear ? 5 : maxLength}
           autoComplete={isTel ? "tel" : variant === "email" ? "email" : "off"}

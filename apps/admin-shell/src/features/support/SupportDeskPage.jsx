@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Button,
   EmptyState,
@@ -37,6 +38,7 @@ const supportRequest = async (path, options) => {
 };
 
 export default function SupportDeskPage() {
+  const [searchParams] = useSearchParams();
   const [tickets, setTickets] = useState([]);
   const [detail, setDetail] = useState(null);
   const [ui, setUi] = useState({});
@@ -99,6 +101,7 @@ export default function SupportDeskPage() {
   }, [loadTickets]);
 
   const activeTicketId = idOf(detail?.ticket);
+  const selectedTicketId = searchParams.get("ticket") || "";
   useSupportRealtime(activeTicketId);
   useRealtimeEvent(REALTIME_EVENTS.SUPPORT_MESSAGE_CREATED, (envelope) => {
     const message = envelope?.data;
@@ -130,6 +133,12 @@ export default function SupportDeskPage() {
         canReply: !["RESOLVED", "CLOSED"].includes(ticketUpdate.status),
       }));
   });
+
+  useEffect(() => {
+    if (selectedTicketId && selectedTicketId !== activeTicketId) {
+      loadDetail(selectedTicketId);
+    }
+  }, [activeTicketId, loadDetail, selectedTicketId]);
 
   const sendReply = async (event) => {
     event.preventDefault();

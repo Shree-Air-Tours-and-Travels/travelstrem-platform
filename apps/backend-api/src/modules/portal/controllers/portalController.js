@@ -260,6 +260,9 @@ const applyEnvironmentRemotes = (headerConfig = {}) => {
     const trevioRemoteUrl = stripRemoteEntry(
         config.TREVIO_URL || envFrontends.trevio?.remoteEntry || envFrontends.trevio?.baseUrl,
     );
+    const trehubRemoteUrl = stripRemoteEntry(
+        config.TREHUB_URL || envFrontends.trehub?.remoteEntry || envFrontends.trehub?.baseUrl,
+    );
     const adminRemoteUrl = stripRemoteEntry(
         config.ADMIN_REMOTE_URL ||
             envFrontends.adminTREM?.remoteEntry ||
@@ -268,6 +271,7 @@ const applyEnvironmentRemotes = (headerConfig = {}) => {
     const productUrls = {
         Trevio: trevioRemoteUrl,
         Trevista: trevistaRemoteUrl,
+        Trehub: trehubRemoteUrl,
     };
     const menu = (headerConfig.menu || []).map((item) => {
         if (!Array.isArray(item.items)) return item;
@@ -419,6 +423,63 @@ const buildTrevistaHeaderConfig = (baseConfig = {}) => ({
     },
 });
 
+const buildTrehubHeaderConfig = (baseConfig = {}) => ({
+    ...baseConfig,
+    brand: {
+        label: "Trehub",
+        subtitle: "Flights & Hotels by TravelsTrem",
+        mark: "T",
+        homePath: "/trehub",
+    },
+    menu: [
+        { id: "home", label: "Home", type: "internal", path: "/trehub", disabled: false },
+        {
+            id: "explore",
+            label: "Explore More",
+            type: "dropdown",
+            disabled: false,
+            items: [
+                {
+                    id: "trevio",
+                    label: "Trevio",
+                    type: "external",
+                    href: config.TREVIO_URL,
+                    target: "_self",
+                    disabled: false,
+                },
+                {
+                    id: "trevista",
+                    label: "Trevista",
+                    type: "external",
+                    href: config.TREVISTA_URL,
+                    target: "_self",
+                    disabled: false,
+                },
+            ],
+        },
+    ],
+    navigation: [
+        { id: "home", label: "Home", path: "/trehub", access: "public" },
+        { id: "trevio", label: "Trevio", path: "/trevio", access: "public" },
+        { id: "trevista", label: "Trevista", path: "/trevista", access: "public" },
+    ],
+    authActions: {
+        login: { label: "Sign in", path: "/auth?app=trehub" },
+        logout: { label: "Logout", eventName: "USER_LOGOUT", redirectTo: "/trehub" },
+    },
+    routeMap: {
+        "/trehub": "trehub",
+        "/trevio": "trevio",
+        "/trevista": "trevista",
+    },
+    routes: [{ id: "home", path: "/trehub", component: "home", access: "public" }],
+    fallbacks: {
+        authenticated: "/trehub",
+        anonymous: "/auth?app=trehub",
+        unauthorized: "/trehub",
+    },
+});
+
 const buildAdminHeaderConfig = (baseConfig = {}) => ({
     ...baseConfig,
     variant: "admin",
@@ -466,6 +527,7 @@ const buildAdminHeaderConfig = (baseConfig = {}) => ({
             masterOnly: true,
         },
         { id: "clients", label: "Clients", icon: "usersRound", target: "clients" },
+        { id: "notifications", label: "Notifications", icon: "bell", target: "notifications" },
         { id: "profile", label: "My profile", icon: "user", target: "profile" },
         { id: "logout", label: "Sign out", icon: "logout", action: "logout" },
     ],
@@ -480,6 +542,7 @@ const buildAdminHeaderConfig = (baseConfig = {}) => ({
         tracking: [{ label: "Administration", path: "/manage/tours?tab=overview" }, { label: "Tracking & events" }],
         clients: [{ label: "Administration", path: "/manage/tours?tab=overview" }, { label: "Clients" }],
         profile: [{ label: "Administration", path: "/manage/tours?tab=overview" }, { label: "My profile" }],
+        notifications: [{ label: "Administration", path: "/manage/tours?tab=overview" }, { label: "Notifications" }],
     },
     leftSection: {
         ...(baseConfig.leftSection || {}),
@@ -747,7 +810,7 @@ const buildAgentHeaderConfig = (baseConfig = {}) => ({
         {
             match: "/agent/notifications",
             items: [
-                { label: "Account", path: "/agent/dashboard" },
+                { label: "Workspace", path: "/agent/dashboard" },
                 { label: "Notifications" },
             ],
         },
@@ -924,7 +987,9 @@ export const getHeaderConfig = async (req, res) => {
                 ? buildTrevioHeaderConfig(baseHeaderConfig)
                 : requestedApp === "trevista"
                   ? buildTrevistaHeaderConfig(baseHeaderConfig)
-                  : requestedApp === "adminTREM"
+                  : requestedApp === "trehub"
+                    ? buildTrehubHeaderConfig(baseHeaderConfig)
+                    : requestedApp === "adminTREM"
                     ? buildAdminHeaderConfig(baseHeaderConfig)
                     : requestedApp === "agentTREM"
                       ? buildAgentHeaderConfig(baseHeaderConfig)

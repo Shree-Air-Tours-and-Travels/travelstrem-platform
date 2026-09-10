@@ -23,6 +23,11 @@ const trevioRemoteEntry = remoteEntry(
   process.env.REACT_APP_TREVIO_URL,
   "http://localhost:3005",
 );
+const trehubRemoteEntry = remoteEntry(
+  process.env.REACT_APP_TREHUB_REMOTE_ENTRY,
+  process.env.REACT_APP_TREHUB_URL,
+  "http://localhost:3008",
+);
 
 function extendBabelIncludes(webpackConfig) {
   const oneOfRule = webpackConfig.module.rules.find((rule) => Array.isArray(rule.oneOf));
@@ -83,6 +88,7 @@ module.exports = {
           remotes: {
             trevio: `trevio@${trevioRemoteEntry}`,
             trevista: `trevista@${trevistaRemoteEntry}`,
+            trehub: `trehub@${trehubRemoteEntry}`,
           },
           shared: {
             react: { singleton: true, requiredVersion: false },

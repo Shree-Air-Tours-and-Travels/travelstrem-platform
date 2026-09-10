@@ -79,6 +79,7 @@ const agencySummary = (value) =>
           }
         : null;
 import TourRepository from "../repositories/TourRepository.js";
+import TripRepository from "../../trips/repositories/TripRepository.js";
 import {
     buildManagementTourListQuery,
     buildManagementTourQuery,
@@ -1992,6 +1993,9 @@ export const deleteTour = async (req, res) => {
         // notified and recommendation intelligence retains a source profile.
         if (["draft", "pending_approval"].includes(existing.status)) {
             await existing.deleteOne();
+            if (existing.productKey === "trevio") {
+                await TripRepository.deleteOne({ sourceTourId: existing._id });
+            }
             await audit(req, {
                 action: "trip.deleted",
                 entityType: "Tour",
@@ -2021,6 +2025,18 @@ export const deleteTour = async (req, res) => {
         existing.intelligence = archiveIntelligence.intelligence;
         existing.featuredRequest = archiveIntelligence.featuredRequest;
         const deletedTour = await existing.save();
+        if (deletedTour.productKey === "trevio") {
+            await TripRepository.findOneAndUpdate(
+                { sourceTourId: deletedTour._id },
+                {
+                    $set: {
+                        status: "archived",
+                        isListed: false,
+                        archivedAt: deletedTour.archivedAt,
+                    },
+                },
+            );
+        }
         await audit(req, {
             action: "trip.archived",
             entityType: "Tour",

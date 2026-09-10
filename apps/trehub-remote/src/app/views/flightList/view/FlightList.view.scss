@@ -1,0 +1,221 @@
+@import "@packages/trem-design-tokens/scss";
+
+.trehub-flight-list {
+  min-height: 100%;
+  padding: 0 clamp($space-4, 3vw, $space-8);
+  padding-bottom: max(clamp($space-8, 6vw, 5rem), var(--trem-floating-action-clearance, 0px));
+  background: var(--page-bg);
+  color: var(--text);
+}
+
+.trehub-flight-list__breadcrumb {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  margin: 0 calc(clamp($space-4, 3vw, $space-8) * -1);
+  padding: $space-3 clamp($space-4, 3vw, $space-8);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-glass-strong);
+  backdrop-filter: blur(16px);
+}
+
+.trehub-flight-list__search-stage {
+  position: relative;
+  display: grid;
+  gap: $space-5;
+  width: min(var(--container-width), 100%);
+  margin: $space-5 auto;
+  padding: clamp($space-5, 3vw, $space-7);
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 22%, var(--border));
+  border-radius: $radius-lg;
+  background:
+    radial-gradient(circle at 92% 8%, var(--secondary-soft), transparent 34%),
+    radial-gradient(circle at 8% 100%, var(--primary-soft), transparent 38%),
+    linear-gradient(135deg, var(--surface-elevated), var(--surface-subtle));
+  box-shadow: var(--shadow-card);
+
+  &::after {
+    position: absolute;
+    top: -6rem;
+    right: -4rem;
+    width: 18rem;
+    height: 18rem;
+    border: 1px solid var(--primary-focus);
+    border-radius: $radius-full;
+    content: "";
+    pointer-events: none;
+  }
+}
+
+.trehub-flight-list__search-intro {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: $space-2;
+  max-width: 48rem;
+}
+
+.trehub-flight-list__search-intro > span {
+  width: fit-content;
+  padding: $space-1-5 $space-3;
+  border-radius: $radius-full;
+  background: var(--primary-soft);
+  color: var(--color-primary-dark);
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.trehub-flight-list__search-intro .ui-subtitle {
+  max-width: 46rem;
+  margin: $space-1 0 0;
+  color: var(--heading);
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+  text-align: left;
+}
+
+.trehub-flight-list__search-intro .ui-paragraph {
+  max-width: 44rem;
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.trehub-flight-list__search-stage .trem-global-search {
+  position: relative;
+  z-index: 2;
+}
+
+.trehub-flight-list__search-stage .trem-global-search__panel {
+  border-color: color-mix(in srgb, var(--color-primary) 18%, var(--border));
+  background: var(--surface-glass-strong);
+  box-shadow: var(--shadow-md);
+}
+
+.trehub-flight-list__body {
+  display: grid;
+  grid-template-columns: minmax(14rem, 16rem) minmax(0, 1fr);
+  align-items: start;
+  gap: $space-5;
+  width: min(var(--container-width), 100%);
+  margin: 0 auto;
+}
+
+.trehub-flight-list__results {
+  display: grid;
+  gap: $space-3;
+  min-width: 0;
+}
+
+.trehub-flight-list__results > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-4;
+  min-height: 4rem;
+  padding: $space-3 $space-4;
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-sm);
+}
+
+.trehub-flight-list__results h2,
+.trehub-flight-list__results p {
+  margin: 0;
+}
+
+.trehub-flight-list__results h2 {
+  color: var(--heading);
+  font-size: $font-size-xl;
+  line-height: 1.2;
+}
+
+.trehub-flight-list__results p {
+  margin-top: $space-1;
+  color: var(--text-muted);
+  font-size: $font-size-sm;
+}
+
+.trehub-flight-list__sort {
+  width: min(17rem, 42%);
+  flex: 0 0 auto;
+}
+
+.trehub-flight-list__results > .trem-pagination {
+  justify-self: center;
+  margin-top: $space-4;
+}
+
+.trehub-flight-list__search-sheet {
+  .trem-global-search__panel {
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .trem-global-search__trust {
+    padding-bottom: $space-2;
+  }
+}
+
+.trehub-flight-list__mobile-clearance {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .trehub-flight-list__body {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .trehub-flight-list__mobile-clearance {
+    display: block;
+    height: calc(var(--trem-floating-action-height, 5rem) + #{$space-6} + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (max-width: 560px) {
+  .trehub-flight-list {
+    padding-inline: $space-3;
+  }
+
+  .trehub-flight-list__breadcrumb {
+    margin-inline: -$space-3;
+    padding-inline: $space-3;
+  }
+
+  .trehub-flight-list__search-stage {
+    margin-block: $space-3;
+    padding: $space-4;
+    border-radius: $radius-md;
+  }
+
+  .trehub-flight-list__search-intro .ui-subtitle {
+    font-size: $font-size-xl;
+  }
+
+  .trehub-flight-list__results > header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .trehub-flight-list__sort {
+    width: 100%;
+  }
+
+  .trehub-flight-list__results > .trem-pagination {
+    width: 100%;
+    margin-top: $space-2;
+    padding: $space-3;
+    border: 1px solid var(--border);
+    border-radius: $radius-md;
+    background: var(--surface-elevated);
+    box-shadow: var(--shadow-sm);
+  }
+
+}

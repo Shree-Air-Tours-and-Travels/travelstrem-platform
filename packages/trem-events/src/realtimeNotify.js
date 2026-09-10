@@ -74,6 +74,16 @@ export const showRealtimeToast = ({
   return true;
 };
 
+const currentPortalScope = () => {
+  if (typeof window === "undefined") return "customer";
+  const explicit = String(window.__TREM_AUTH_PORTAL__ || "").trim().toLowerCase();
+  if (["admin", "partner", "customer"].includes(explicit)) return explicit;
+  const prefix = String(window.__TREM_AUTH_STORAGE_PREFIX__ || "").toLowerCase();
+  if (prefix.includes("admin")) return "admin";
+  if (prefix.includes("agent") || prefix.includes("partner")) return "partner";
+  return "customer";
+};
+
 let initialized = false;
 
 /**
@@ -95,6 +105,8 @@ export function initRealtimeNotifications({ events = DEFAULT_REALTIME_NOTIFY_EVE
     events.forEach((eventName) => {
       socket.on(eventName, (envelope) => {
         const notify = envelope && typeof envelope === "object" ? envelope.notify : null;
+        const portal = envelope?.data?.portal;
+        if (eventName === "notification:created" && portal && portal !== currentPortalScope()) return;
         if (!notify || !notify.title) return;
         showRealtimeToast({
           title: notify.title,

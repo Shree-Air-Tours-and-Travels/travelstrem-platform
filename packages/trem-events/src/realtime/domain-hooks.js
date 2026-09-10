@@ -42,4 +42,6 @@ export const useEnquiryRealtime = (handler) => {
 export const useTourCatalogRealtime = (handler) => {
   useRealtimeEvent(REALTIME_EVENTS.TOUR_PUBLISHED, handler);
   useRealtimeEvent(REALTIME_EVENTS.TOUR_UPDATED, handler);
+  useRealtimeEvent(REALTIME_EVENTS.TOUR_AVAILABILITY_CHANGED, handler);
+  useRealtimeEvent(REALTIME_EVENTS.TRIP_AVAILABILITY_CHANGED, handler);
 };

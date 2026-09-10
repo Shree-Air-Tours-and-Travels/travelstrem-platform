@@ -1,9 +1,19 @@
 import { PRODUCT_TYPE } from "@packages/trem-ui";
 
 const ID_PATTERN = /^[a-z0-9][a-z0-9._-]{0,63}$/i;
-const RENDERERS = new Set(["app-shell", PRODUCT_TYPE.TREVIO, PRODUCT_TYPE.TREVISTA]);
+const RENDERERS = new Set([
+  "app-shell",
+  PRODUCT_TYPE.TREVIO,
+  PRODUCT_TYPE.TREVISTA,
+  PRODUCT_TYPE.TREHUB,
+]);
 const KINDS = new Set(["tab", "remote", "internal", "external"]);
-const GUEST_ACCESSIBLE_DESTINATIONS = new Set(["overview", PRODUCT_TYPE.TREVIO, PRODUCT_TYPE.TREVISTA]);
+const GUEST_ACCESSIBLE_DESTINATIONS = new Set([
+  "overview",
+  PRODUCT_TYPE.TREVIO,
+  PRODUCT_TYPE.TREVISTA,
+  PRODUCT_TYPE.TREHUB,
+]);
 const MOBILE_PANEL_ACTIONS = new Set(["open-primary-action"]);
 
 export const isGuestAccessibleDestination = (destination) =>
@@ -40,7 +50,7 @@ export const FALLBACK_NAVIGATION_CONFIG = {
         label: "Home",
         icon: "home",
         target: "overview",
-        activeTargets: ["overview", PRODUCT_TYPE.TREVIO, PRODUCT_TYPE.TREVISTA],
+        activeTargets: ["overview", PRODUCT_TYPE.TREVIO, PRODUCT_TYPE.TREVISTA, PRODUCT_TYPE.TREHUB],
       },
       { id: "bookings", label: "Bookings", icon: "calendar", target: "bookings" },
       {
@@ -88,6 +98,15 @@ export const FALLBACK_NAVIGATION_CONFIG = {
       activeId: "profile",
     },
     {
+      id: "notifications",
+      kind: "tab",
+      renderer: "app-shell",
+      tab: "notifications",
+      path: "/notifications",
+      activeId: "notifications",
+      patterns: ["/notifications"],
+    },
+    {
       id: "support",
       kind: "internal",
       renderer: "app-shell",
@@ -103,7 +122,7 @@ export const FALLBACK_NAVIGATION_CONFIG = {
       product: PRODUCT_TYPE.TREVIO,
       path: "/",
       activeId: "trips",
-      patterns: ["/trevio/*", "/trip/*"],
+      patterns: ["/trevio/*", "/trips", "/trips/*", "/trip/*"],
     },
     {
       id: PRODUCT_TYPE.TREVISTA,
@@ -114,6 +133,16 @@ export const FALLBACK_NAVIGATION_CONFIG = {
       path: "/",
       activeId: "tours",
       patterns: ["/trevista/*", "/tour/*"],
+    },
+    {
+      id: PRODUCT_TYPE.TREHUB,
+      kind: "remote",
+      renderer: PRODUCT_TYPE.TREHUB,
+      tab: PRODUCT_TYPE.TREHUB,
+      product: PRODUCT_TYPE.TREHUB,
+      path: "/",
+      activeId: "flights",
+      patterns: ["/trehub", "/trehub/*"],
     },
   ],
 };

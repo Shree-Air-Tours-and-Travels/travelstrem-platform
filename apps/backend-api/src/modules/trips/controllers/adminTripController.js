@@ -1,6 +1,7 @@
 import Trip from "../models/Trip.js";
 import { audit } from "../../tenancy/audit.service.js";
 import User from "../../auth/models/User.js";
+import Tour from "../../tours/models/Tour.js";
 
 const isMaster = (req) => req.user?.role === "admin" && req.user?.adminLevel === "master";
 const tripScope = (req) => {
@@ -52,6 +53,176 @@ const slugify = (value = "") =>
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-+|-+$/g, "");
 
+const parseDuration = (duration = "") => {
+    const text = String(duration || "");
+    const days = Number(text.match(/(\d+)\s*(?:d|day)/i)?.[1] || text.match(/(\d+)/)?.[1] || 1);
+    const nights = Number(text.match(/(\d+)\s*(?:n|night)/i)?.[1] || Math.max(0, days - 1));
+    return { days: Math.max(1, days), nights: Math.max(0, nights) };
+};
+
+const tripStatusToTourStatus = (status) =>
+    ({
+        listed: "published",
+        unpublished: "unpublished",
+        archived: "archived",
+        cancelled: "cancelled",
+        pending_approval: "pending_approval",
+    })[status] || "draft";
+
+const mapTripToBuilderTour = (trip, req) => {
+    const obj = trip.toObject ? trip.toObject() : trip;
+    const period = parseDuration(obj.duration);
+    const amount = Number(obj.price?.amount || 0);
+    const currency = obj.price?.currency || "INR";
+    const photos = Array.isArray(obj.photos) ? obj.photos : [];
+    const image = obj.image || photos[0] || "";
+    const startDate = obj.startDate || null;
+    const endDate = obj.endDate || null;
+    const capacity = Number(obj.availability?.totalSeats || obj.availability?.seatsAvailable || 0);
+    const seatsAvailable = Number(obj.availability?.seatsAvailable || capacity || 0);
+    const packageTypes = Array.isArray(obj.preferences?.packageTypes)
+        ? obj.preferences.packageTypes.filter((item) => item?.label && item?.value)
+        : [];
+    const components = [
+        {
+            componentKey: "base-trip",
+            type: "MISCELLANEOUS",
+            name: obj.title || "Trip package",
+            description: obj.description || "",
+            active: true,
+            status: "CONFIRMED",
+            pricing: {
+                unit: "PER_PERSON",
+                costAmountMinor: amount * 100,
+                sellingAmountMinor: amount * 100,
+                currency,
+            },
+        },
+    ];
+
+    return {
+        agencyId: obj.agencyId || null,
+        createdBy: obj.createdBy || req.user?.sub || null,
+        ownerAgent: obj.ownerAgent || null,
+        productKey: "trevio",
+        visibility: obj.visibility || "public",
+        slug: obj.slug || slugify(obj.title),
+        title: obj.title || "Untitled Trevio trip",
+        shortDescription: String(obj.description || "").slice(0, 240),
+        city: { from: obj.location || "", to: obj.location || "" },
+        address: { city: obj.location || "", country: obj.country || "India" },
+        distance: 0,
+        period,
+        startDate,
+        endDate,
+        photo: image,
+        photos: image ? [image, ...photos.filter((url) => url !== image)] : photos,
+        desc: obj.description || obj.title || "Trevio trip",
+        price: { min: amount, max: amount, currency, isFinal: obj.price?.isFinal !== false },
+        commercial: {
+            version: "COMPONENTS_V1",
+            currency,
+            defaultBasis: {
+                adults: 1,
+                children: 0,
+                infants: 0,
+                rooms: 1,
+                vehicles: 1,
+                nights: period.nights,
+                days: period.days,
+            },
+            pricingPolicy: {
+                feeType: "PERCENTAGE",
+                feePercent: 0,
+                feeAmountMinor: 0,
+                gstPercent: 0,
+                gstOn: "AGENT_FEE",
+            },
+            components,
+            packages: packageTypes.length
+                ? packageTypes.slice(0, 2).map((item, index) => ({
+                      packageKey: item.value,
+                      tier: index === 0 ? "STANDARD" : "PREMIUM",
+                      name: item.label,
+                      description: item.description || "",
+                      enabled: true,
+                      recommended: index === 0,
+                      includedComponentKeys: ["base-trip"],
+                      optionalComponentKeys: [],
+                  }))
+                : [
+                      {
+                          packageKey: "standard",
+                          tier: "STANDARD",
+                          name: "Standard trip",
+                          description: "",
+                          enabled: true,
+                          recommended: true,
+                          includedComponentKeys: ["base-trip"],
+                          optionalComponentKeys: [],
+                      },
+                  ],
+            derived: {
+                minAmountMinor: amount * 100,
+                maxAmountMinor: amount * 100,
+                calculatedAt: new Date(),
+                displayMode: obj.price?.isFinal === false ? "ESTIMATED" : "FINAL",
+                packages: [],
+            },
+        },
+        packageType: "fixed_departure",
+        departures:
+            startDate && endDate
+                ? [
+                      {
+                          label: obj.title || "Trip departure",
+                          departureDate: startDate,
+                          returnDate: endDate,
+                          status: "active",
+                          capacity: capacity || null,
+                          seatsAvailable: seatsAvailable || null,
+                          pricing: {
+                              min: amount,
+                              max: amount,
+                              currency,
+                              isFinal: obj.price?.isFinal !== false,
+                              source: "manual",
+                          },
+                      },
+                  ]
+                : [],
+        itinerary: obj.itinerary || [],
+        highlights: (obj.chips || []).map((title, index) => ({ title, order: index })),
+        includedStays: obj.includedStays || [],
+        hotelOptions: obj.hotelOptions || [],
+        cancellation: obj.cancellation || {},
+        extras: obj.extras || [],
+        availability: obj.availability || {},
+        meetingPoint: obj.location || "",
+        inclusions: obj.inclusions || [],
+        exclusions: obj.exclusions || [],
+        cancellationPolicy: obj.cancellationPolicy || "",
+        maxGroupSize: capacity || seatsAvailable || 1,
+        reviews: obj.reviews || [],
+        featured: Boolean(obj.featured),
+        tags: obj.tags || [],
+        tagIds: obj.tags || [],
+        searchTags: (obj.tags || []).map((tag) => ({
+            slug: tag,
+            name: tag,
+            type: "THEME",
+        })),
+        tremVerified: Boolean(obj.tremVerified),
+        tremVerifiedBy: obj.tremVerifiedBy || null,
+        tremVerifiedAt: obj.tremVerifiedAt || null,
+        agentTour: Boolean(obj.ownerAgent),
+        inventorySource: obj.ownerAgent ? "agent" : obj.agencyId ? "provider" : "platform",
+        providerName: req.access?.agency?.agencyName || "",
+        status: tripStatusToTourStatus(obj.status),
+        isPublished: obj.status === "listed",
+    };
+};
+
 // Strip HTML tags from a string
 const stripHtml = (str) => (typeof str === "string" ? str.replace(/<[^>]*>/g, "").trim() : str);
 
@@ -87,6 +258,8 @@ function normalizeTrip(doc) {
     return {
         _id: obj._id,
         sourceTourId: obj.sourceTourId || null,
+        productKey: obj.productKey || "trevio",
+        productType: "trip",
         slug: obj.slug,
         title: obj.title,
         category: obj.category,
@@ -136,10 +309,20 @@ function normalizeTrip(doc) {
         ownerAgent: obj.ownerAgent,
         ownerAgentName:
             obj.ownerAgent && typeof obj.ownerAgent === "object" ? obj.ownerAgent.name || "" : "",
+        ownerAgentEmail:
+            obj.ownerAgent && typeof obj.ownerAgent === "object" ? obj.ownerAgent.email || "" : "",
         ownerAgentRef:
             obj.ownerAgent && typeof obj.ownerAgent === "object"
                 ? obj.ownerAgent.agentRef || ""
                 : "",
+        operator:
+            obj.ownerAgent && typeof obj.ownerAgent === "object"
+                ? {
+                      name: obj.ownerAgent.name || "",
+                      email: obj.ownerAgent.email || "",
+                      reference: obj.ownerAgent.agentRef || "",
+                  }
+                : null,
     };
 }
 
@@ -159,7 +342,7 @@ export async function verifyTrip(req, res) {
             { new: true, runValidators: true },
         )
             .populate("agencyId", "agencyName partnerAgencyRef logo")
-            .populate("ownerAgent", "name agentRef");
+            .populate("ownerAgent", "name email agentRef");
         if (!trip) return res.status(404).json({ status: "error", message: "Trip not found." });
         await audit(req, {
             action: "trip.verified",
@@ -326,7 +509,7 @@ export async function listAdminTrips(req, res) {
     try {
         const trips = await Trip.find(tripScope(req))
             .populate({ path: "agencyId", select: "agencyName partnerAgencyRef logo" })
-            .populate({ path: "ownerAgent", select: "name agentRef" })
+            .populate({ path: "ownerAgent", select: "name email agentRef" })
             .sort({ createdAt: -1 });
         return res.status(200).json({
             status: "success",
@@ -413,6 +596,44 @@ export async function createTrip(req, res) {
         return res
             .status(400)
             .json({ status: "error", message: error.message || "Failed to create trip" });
+    }
+}
+
+export async function resolveTripBuilderTour(req, res) {
+    try {
+        const trip = await Trip.findOne({ _id: req.params.id, ...tripScope(req) });
+        if (!trip) return res.status(404).json({ status: "error", message: "Trip not found" });
+
+        if (trip.sourceTourId) {
+            const linkedTour = await Tour.findOne({ _id: trip.sourceTourId, productKey: "trevio" });
+            if (linkedTour) {
+                return res.status(200).json({
+                    status: "success",
+                    componentData: { data: { tourId: linkedTour._id, tripId: trip._id } },
+                });
+            }
+        }
+
+        const savedTour = await new Tour(mapTripToBuilderTour(trip, req)).save();
+        trip.sourceTourId = savedTour._id;
+        await trip.save();
+        await audit(req, {
+            action: "trip.builder_tour_resolved",
+            entityType: "Trip",
+            entityId: trip._id,
+            agencyId: trip.agencyId,
+            after: { sourceTourId: savedTour._id },
+        });
+        return res.status(200).json({
+            status: "success",
+            componentData: { data: { tourId: savedTour._id, tripId: trip._id } },
+        });
+    } catch (error) {
+        console.error("resolveTripBuilderTour error:", error);
+        return res.status(error.status || 400).json({
+            status: "error",
+            message: error.message || "Could not open trip in builder",
+        });
     }
 }
 

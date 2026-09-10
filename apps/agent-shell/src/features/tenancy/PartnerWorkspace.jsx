@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Button,
   Dropdown,
@@ -10,7 +11,7 @@ import {
   Spinner,
   StatusBadge,
 } from "@packages/trem-ui";
-import { showRealtimeToast } from "@packages/trem-events";
+import { resolveNotificationLink, showRealtimeToast, useNotificationInbox } from "@packages/trem-events";
 import api from "../../services/apiClient";
 import PartnerDashboard from "./PartnerDashboard";
 import CustomerDirectory from "./CustomerDirectory";
@@ -28,7 +29,15 @@ const configs = {
   customers: { endpoint: "/tenancy/customers", title: "Customers" },
   reports: { endpoint: "/tenancy/reports", title: "Agency reports" },
   deletions: { endpoint: "/tenancy/deletion-requests", title: "Deletion requests" },
-  notifications: { endpoint: "/tenancy/notifications", title: "Notifications" },
+  notifications: {
+    endpoint: "/tenancy/notifications",
+    title: "Notifications",
+    emptyState: {
+      icon: "bell",
+      title: "No notifications",
+      description: "You are all caught up.",
+    },
+  },
 };
 
 const AGENT_STATUS_OPTIONS = [
@@ -286,7 +295,13 @@ function AgentDirectory({
 }
 
 export default function PartnerWorkspace({ tab, user, embedded = false }) {
+  const navigate = useNavigate();
   const config = configs[tab] || configs.dashboard;
+  const notificationInbox = useNotificationInbox({
+    loadInbox: async ({ limit = 50 } = {}) => unwrap(await api.get("/tenancy/notifications", { params: { limit } })),
+    readInboxItem: (id) => api.patch(`/tenancy/notifications/${id}/read`),
+    readAllInboxItems: () => api.patch("/tenancy/notifications/read-all"),
+  });
   const [state, setState] = useState({ loading: true, error: "", value: null });
   const [notice, setNotice] = useState("");
   const [showCreate, setShowCreate] = useState(false);
@@ -305,7 +320,7 @@ export default function PartnerWorkspace({ tab, user, embedded = false }) {
     return () => window.clearTimeout(timer);
   }, [agentSearch, tab]);
   const load = useCallback(async () => {
-    if (tab === "customers") return;
+    if (tab === "customers" || tab === "notifications") return;
     setState((value) => ({ ...value, loading: true, error: "" }));
     try {
       const response = await api.get(endpoint, {
@@ -362,7 +377,20 @@ export default function PartnerWorkspace({ tab, user, embedded = false }) {
           "Agent invited securely.",
         )
       : perform(() => api.post("/tenancy/customers", form), "Customer added.");
-  const items = state.value?.items || (Array.isArray(state.value) ? state.value : []);
+  const openNotification = useCallback(
+    async (item) => {
+      if (!item) return;
+      if (!item.readAt) await notificationInbox.markRead(item._id).catch(() => null);
+      const target = resolveNotificationLink(item, { portal: "partner" });
+      if (target) navigate(target);
+    },
+    [navigate, notificationInbox],
+  );
+
+  const items =
+    tab === "notifications"
+      ? notificationInbox.items
+      : state.value?.items || (Array.isArray(state.value) ? state.value : []);
   const metrics =
     state.value && !items.length
       ? Object.entries(state.value).filter(([, value]) => typeof value === "number")
@@ -520,7 +548,17 @@ export default function PartnerWorkspace({ tab, user, embedded = false }) {
           <button onClick={() => setNotice("")}>×</button>
         </div>
       )}
-      {tab === "agents" ? null : state.loading ? (
+      {tab === "agents" ? null : tab === "notifications" && notificationInbox.loading ? (
+        <div className="partner-workspace__state">
+          <Spinner label="Loading notifications" />
+        </div>
+      ) : tab === "notifications" && notificationInbox.error ? (
+        <div className="partner-workspace__state">
+          <strong>Unable to load notifications</strong>
+          <span>Try again in a moment.</span>
+          <Button text="Try again" onClick={notificationInbox.load} />
+        </div>
+      ) : state.loading ? (
         <div className="partner-workspace__state">
           <Spinner label="Loading workspace" />
         </div>
@@ -546,22 +584,36 @@ export default function PartnerWorkspace({ tab, user, embedded = false }) {
         </>
       ) : items.length ? (
         <div className="partner-workspace__list">
-          {items.map((item) => (
-            <article key={item._id}>
+          {items.map((item) => {
+            const content = (
+              <>
               <div>
                 <strong>{item.name || item.title || item.email || pretty(item.type)}</strong>
                 <span>{item.email || item.phone || item.message || item.reason || ""}</span>
+                {tab === "notifications" && item.createdAt ? <small>{new Date(item.createdAt).toLocaleString()}</small> : null}
               </div>
               <StatusBadge
                 value={item.accountStatus || item.status || (item.readAt ? "read" : "new")}
               />
-            </article>
-          ))}
+              </>
+            );
+            return tab === "notifications" ? (
+              <button key={item._id} type="button" className={`partner-workspace__notification-item${item.readAt ? "" : " is-unread"}`} onClick={() => openNotification(item)}>
+                {content}
+              </button>
+            ) : (
+              <article key={item._id}>{content}</article>
+            );
+          })}
         </div>
       ) : (
         <NoDataFound
-          title="No records yet"
-          description="New records will appear here as your agency works in TravelsTREM."
+          title={config.emptyState?.title || "No records yet"}
+          description={
+            config.emptyState?.description ||
+            "New records will appear here as your agency works in TravelsTREM."
+          }
+          icon={config.emptyState?.icon}
         />
       )}
       {showCreate && (

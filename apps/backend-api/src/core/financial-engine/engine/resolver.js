@@ -21,10 +21,16 @@ export async function resolveFinancialConfig(input = {}, repositories = {}) {
         customerType,
         overrides,
     } = input;
+    const normalizedProvider = provider && String(provider).trim().toLowerCase();
+    const providerScopeIds = normalizedProvider === "razorpay"
+        ? ["rajorpay", "razorpay"]
+        : normalizedProvider
+          ? [normalizedProvider]
+          : [];
     const scopes = [
         scope("GLOBAL", "default"),
         scope("PRODUCT", productType && String(productType).toLowerCase()),
-        scope("PAYMENT_PROVIDER", provider && String(provider).toLowerCase()),
+        ...providerScopeIds.map((scopeId) => scope("PAYMENT_PROVIDER", scopeId)),
         scope("PAYMENT_METHOD", paymentMethod && String(paymentMethod).toUpperCase()),
         scope("CURRENCY", currency && String(currency).toUpperCase()),
         scope("COUNTRY", country && String(country).toUpperCase()),
@@ -42,17 +48,20 @@ export async function resolveFinancialConfig(input = {}, repositories = {}) {
     const scoped = Object.fromEntries(
         scopes.map((item) => [item.scopeType, byScope.get(`${item.scopeType}:${item.scopeId}`)]),
     );
+    const paymentProviderScope = providerScopeIds
+        .map((scopeId) => byScope.get(`PAYMENT_PROVIDER:${scopeId}`))
+        .findLast(Boolean);
     const merchant =
         agencyId && repositories.merchant?.findActive
             ? await repositories.merchant.findActive({
-                  agencyId: String(agencyId),
-                  paymentMethod,
-                  provider,
+                agencyId: String(agencyId),
+                paymentMethod,
+                provider: normalizedProvider,
               })
             : null;
     const providerConfig = repositories.providerConfig?.findActive
         ? await repositories.providerConfig.findActive({
-              provider: provider || merchant?.provider,
+            provider: normalizedProvider || merchant?.provider,
               paymentMethod,
           })
         : null;
@@ -60,7 +69,7 @@ export async function resolveFinancialConfig(input = {}, repositories = {}) {
         DEFAULT_FINANCIAL_CONFIG,
         scoped.GLOBAL,
         scoped.PRODUCT,
-        scoped.PAYMENT_PROVIDER,
+        paymentProviderScope,
         scoped.PAYMENT_METHOD,
         scoped.CURRENCY,
         scoped.COUNTRY,
@@ -82,7 +91,7 @@ export async function resolveFinancialConfig(input = {}, repositories = {}) {
             country: country || null,
             customerType: customerType || null,
             paymentMethod: paymentMethod || null,
-            provider: provider || merchant?.provider || null,
+            provider: normalizedProvider || merchant?.provider || null,
             configVersions: (rows || []).map((row) => ({
                 scopeType: row.scopeType,
                 scopeId: row.scopeId,

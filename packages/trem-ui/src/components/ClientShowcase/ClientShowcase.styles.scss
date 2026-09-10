@@ -1,0 +1,112 @@
+@import "@packages/trem-design-tokens/scss";
+
+.trem-client-showcase {
+  display: grid;
+  grid-template-columns: minmax(15rem, 0.7fr) minmax(0, 1.3fr);
+  align-items: center;
+  gap: clamp($space-5, 4vw, $space-9);
+  padding: clamp($space-5, 3vw, $space-8);
+  overflow: hidden;
+  border: 0;
+  border-radius: calc(#{$radius-xl} + 8px);
+  background:
+    radial-gradient(circle at 100% 0, rgba(55, 214, 207, 0.26), transparent 34%),
+    linear-gradient(125deg, #18275e, #243c92 58%, #086f7a);
+  box-shadow: 0 24px 52px rgba(24, 39, 94, 0.18);
+}
+
+.trem-client-showcase__eyebrow {
+  display: inline-flex;
+  width: fit-content;
+  padding: $space-1-5 $space-3;
+  border-radius: $radius-full;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.86);
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.trem-client-showcase__title.ui-subtitle {
+  margin: $space-3 0 $space-2;
+  color: #fff;
+  font-size: clamp(1.6rem, 2.7vw, 2.25rem);
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+}
+
+.trem-client-showcase__description.ui-paragraph {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.6;
+}
+
+.trem-client-showcase__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: $space-3;
+}
+
+.trem-client-showcase__client {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  min-width: 0;
+  min-height: 4.25rem;
+  padding: $space-3;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: $radius-md;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+
+  > span,
+  > img {
+    display: grid;
+    flex: 0 0 2.25rem;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: $radius-sm;
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+    font-weight: $font-bold;
+    object-fit: contain;
+  }
+
+  strong {
+    overflow: hidden;
+    color: #fff;
+    font-size: $font-size-sm;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.trem-client-showcase.is-empty {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  text-align: center;
+
+  .trem-client-showcase__header {
+    display: grid;
+    justify-items: center;
+    width: min(42rem, 100%);
+  }
+}
+
+@media (max-width: 800px) {
+  .trem-client-showcase {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .trem-client-showcase {
+    padding: $space-5 $space-4;
+  }
+
+  .trem-client-showcase__list {
+    grid-template-columns: 1fr 1fr;
+  }
+}

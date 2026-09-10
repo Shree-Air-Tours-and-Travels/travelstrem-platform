@@ -10,6 +10,7 @@ import { ApiError } from "../../shared/errors/index.js";
 import asyncHandler from "../../shared/middleware/asyncHandler.js";
 import { escapeHtml, renderEmailLayout } from "../../templates/base.template.js";
 import User from "../auth/models/User.js";
+import { createInboxNotification, createInboxNotifications } from "../tenancy/notification.service.js";
 import SupportTicket from "./models/SupportTicket.js";
 import SupportTicketMessage from "./models/SupportTicketMessage.js";
 import {
@@ -43,6 +44,11 @@ const clean = (value, max = 5000) =>
         .slice(0, max);
 const escapeRegExp = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const validId = (value) => mongoose.Types.ObjectId.isValid(String(value || ""));
+const ticketLookup = (value) => {
+    const identifier = String(value || "").trim();
+    if (!identifier) return null;
+    return validId(identifier) ? { _id: identifier } : { reference: identifier.toUpperCase() };
+};
 const isSupportAdmin = (req) =>
     req.user?.role === "admin" && ["standard", "master"].includes(req.user?.adminLevel);
 const requireSupportAdmin = (req) => {
@@ -211,7 +217,7 @@ export const searchSupport = asyncHandler(async (req, res) => {
 
 export const getServices = asyncHandler(async (_req, res) =>
     ok(res, {
-        services: Object.values(SUPPORT_SERVICES).map(({ categoryIds, ...service }) => service),
+        services: Object.values(SUPPORT_SERVICES).map(({ categoryIds: _categoryIds, ...service }) => service),
     }),
 );
 
@@ -285,8 +291,9 @@ export const listTickets = asyncHandler(async (req, res) => {
 });
 
 export const getTicket = asyncHandler(async (req, res) => {
-    if (!validId(req.params.ticketId)) throw new ApiError(404, "Support request not found");
-    const ticket = await SupportTicket.findOne({ _id: req.params.ticketId, user: userId(req) });
+    const lookup = ticketLookup(req.params.ticketId);
+    if (!lookup) throw new ApiError(404, "Support request not found");
+    const ticket = await SupportTicket.findOne({ ...lookup, user: userId(req) });
     if (!ticket) throw new ApiError(404, "Support request not found");
     const messagePage = await getMessagePage({
         ticketId: ticket._id,
@@ -315,18 +322,26 @@ export const createTicket = asyncHandler(async (req, res) => {
     const requestedServiceId = clean(req.body.serviceId, 40).toLowerCase();
     if (requestedServiceId && !serviceById(requestedServiceId))
         throw new ApiError(400, "Choose a valid support service");
-    const ticket = await SupportTicket.create({
-        reference: createReference("TREM-SUP"),
-        user: userId(req),
-        requesterType: req.user?.role === "agent" ? "agent" : "customer",
-        serviceId: requestedServiceId,
-        categoryId,
-        subcategoryId: clean(req.body.subcategoryId, 80),
-        subject,
-        description,
-        priority: defaultTicketPriority(categoryId),
-        attachments: [],
-    });
+    let ticket = null;
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+        try {
+            ticket = await SupportTicket.create({
+                reference: createReference("TREM-SUP"),
+                user: userId(req),
+                requesterType: req.user?.role === "agent" ? "agent" : "customer",
+                serviceId: requestedServiceId,
+                categoryId,
+                subcategoryId: clean(req.body.subcategoryId, 80),
+                subject,
+                description,
+                priority: defaultTicketPriority(categoryId),
+                attachments: [],
+            });
+            break;
+        } catch (error) {
+            if (error?.code !== 11000 || attempt === 4) throw error;
+        }
+    }
     await SupportTicketMessage.create({
         ticket: ticket._id,
         sender: userId(req),
@@ -334,6 +349,21 @@ export const createTicket = asyncHandler(async (req, res) => {
         senderName: clean(req.user?.name, 100),
         content: description,
     });
+    const supportAdmins = await User.find({ role: "admin", accountStatus: "active" })
+        .select("_id")
+        .lean();
+    await createInboxNotifications(
+        supportAdmins.map((admin) => ({
+            userId: admin._id,
+            portal: "admin",
+            type: "support",
+            title: "New support request",
+            message: `${ticket.reference} · ${ticket.subject}`,
+            entityType: "SupportTicket",
+            entityId: String(ticket._id),
+            data: { reference: ticket.reference },
+        })),
+    );
     // Realtime fan-out: the owner's room, the ticket room, and the admin desk.
     try {
         const ticketDto = supportTicketDto(ticket);
@@ -379,6 +409,21 @@ export const replyToTicket = asyncHandler(async (req, res) => {
         ticket.lastActivityAt = new Date();
         ticket.status = "AWAITING_SUPPORT";
         await ticket.save();
+        const supportAdmins = await User.find({ role: "admin", accountStatus: "active" })
+            .select("_id")
+            .lean();
+        await createInboxNotifications(
+            supportAdmins.map((admin) => ({
+                userId: admin._id,
+                portal: "admin",
+                type: "support",
+                title: "Support reply received",
+                message: `${ticket.reference} has a new customer message.`,
+                entityType: "SupportTicket",
+                entityId: String(ticket._id),
+                data: { reference: ticket.reference },
+            })),
+        );
         try {
             publishToSupportTicket(
                 String(ticket._id),
@@ -483,6 +528,16 @@ export const replyFromSupportDesk = asyncHandler(async (req, res) => {
         ticket.unreadByCustomer = true;
         ticket.lastActivityAt = new Date();
         await ticket.save();
+        await createInboxNotification({
+            userId: ticket.user,
+            portal: "customer",
+            type: "support",
+            title: "Support replied",
+            message: `${ticket.reference} has a new response from ${responderName}.`,
+            entityType: "SupportTicket",
+            entityId: String(ticket._id),
+            data: { reference: ticket.reference },
+        });
         publishToSupportTicket(
             String(ticket._id),
             REALTIME_EVENTS.SUPPORT_MESSAGE_CREATED,

@@ -1,0 +1,6 @@
+{
+  "version": 2,
+  "buildCommand": "cd ../.. && pnpm --filter @apps/trehub build",
+  "outputDirectory": "build",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}
