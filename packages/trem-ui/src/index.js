@@ -1,10 +1,13 @@
 import "./styles/global.scss";
 
 export { PRODUCT_TYPE } from "./constants/productTypes.js";
+export { BOOKING_JOURNEY_ACTION } from "./constants/common.js";
 
 export { default as StatusBadge } from "./components/StatusBadge/StatusBadge.jsx";
 export { default as Button } from "./components/Button/Button.jsx";
 export { default as Gallery } from "./components/Gallery/Gallery.jsx";
+export { default as HotelCard } from "./components/HotelCard/HotelCard.jsx";
+export { default as HotelRoomCard } from "./components/HotelRoomCard/HotelRoomCard.jsx";
 export { default as HighlightSpan } from "./components/HighlightSpan/HighlightSpan.jsx";
 export { default as SubTitle } from "./components/SubTitle/SubTitle.jsx";
 export { default as Title } from "./components/Title/Title.jsx";
@@ -54,6 +57,7 @@ export { default as LocationTypeahead } from "./components/LocationTypeahead/Loc
 export { default as TextArea } from "./components/TextArea/TextArea.jsx";
 export { FormInput, FormSelect, FormTextArea } from "./components/FormControls/FormControls.jsx";
 export { default as DatePicker } from "./components/DatePicker/DatePicker.jsx";
+export { default as TimePicker } from "./components/TimePicker/TimePicker.jsx";
 export { default as TimelineStepper } from "./components/TimelineStepper/TimelineStepper.jsx";
 export { default as TravellerDetailsForm } from "./components/TravellerDetailsForm/TravellerDetailsForm.jsx";
 export { default as ConfigurableForm } from "./components/ConfigurableForm/ConfigurableForm.jsx";
@@ -93,6 +97,7 @@ export { default as WizardValidationSummary } from "./components/WizardValidatio
 export { default as ServiceCard } from "./components/ServiceCard/ServiceCard.jsx";
 export { default as SearchBarCard } from "./components/SearchBarCard/SearchBarCard.jsx";
 export { default as SearchBar } from "./components/SearchBar/SearchBar.jsx";
+export { default as GlobalSearchCard } from "./components/GlobalSearchCard/GlobalSearchCard.jsx";
 export { default as SingleSelect } from "./components/SingleSelect/SingleSelect.jsx";
 export { default as MultiSelect } from "./components/MultiSelect/MultiSelect.jsx";
 export { default as Pagination } from "./components/Pagination/Pagination.jsx";
@@ -121,6 +126,13 @@ export { default as MessageBubble } from "./components/MessageBubble/MessageBubb
 export { default as BenefitCard } from "./components/BenefitCard/BenefitCard.jsx";
 export { default as DestinationCard } from "./components/DestinationCard/DestinationCard.jsx";
 export { default as DestinationCardList } from "./components/DestinationCardList/DestinationCardList.jsx";
+export { default as PopularLocations } from "./components/PopularLocations/PopularLocations.jsx";
+export { default as ClientShowcase } from "./components/ClientShowcase/ClientShowcase.jsx";
+export { default as DetailedChip } from "./components/DetailedChip/DetailedChip.jsx";
+export { default as OptionCardRail } from "./components/OptionCardRail/OptionCardRail.jsx";
+export { default as FlightCard } from "./components/FlightCard/FlightCard.jsx";
+export { default as FlightDetails } from "./components/FlightDetails/FlightDetails.jsx";
+export { default as ConfigurableFilterPanel } from "./components/ConfigurableFilterPanel/ConfigurableFilterPanel.jsx";
 export {
   default as OverviewRail,
   UpcomingTripCard,

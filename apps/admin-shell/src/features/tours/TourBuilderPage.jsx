@@ -18,8 +18,12 @@ export default function TourBuilderPage({ mode = "create" }) {
   const productKey = query.get("product") === PRODUCT_TYPE.TREVIO
     ? PRODUCT_TYPE.TREVIO
     : PRODUCT_TYPE.TREVISTA;
+  const resolvedMode = query.get("mode") === "view" ? "view" : mode;
+  const productLabel = productKey === PRODUCT_TYPE.TREVIO ? "trip" : "tour";
   const startStepKey =
-    mode === "view" ? "review" : query.get("step") || (mode === "edit" ? "resume" : null);
+    resolvedMode === "view"
+      ? "review"
+      : query.get("step") || (resolvedMode === "edit" ? "resume" : null);
   const exit = useCallback(() => navigate("/manage/tours?tab=services"), [navigate]);
   const syncBuilderLocation = useCallback(
     ({ tourId: nextTourId, stepKey }) => {
@@ -39,13 +43,19 @@ export default function TourBuilderPage({ mode = "create" }) {
   return (
     <AdminRouteFrame
       activeId="services"
-      currentLabel={mode === "edit" ? "Edit tour" : "Create tour"}
+      currentLabel={
+        resolvedMode === "view"
+          ? `View ${productLabel}`
+          : resolvedMode === "edit"
+            ? `Edit ${productLabel}`
+            : `Create ${productLabel}`
+      }
       backLabel="Back to travel products"
       backTarget="/manage/tours?tab=services"
       pageClassName="admin-dashboard-shell__page--builder"
     >
       <TourBuilder
-        mode={mode}
+        mode={resolvedMode}
         productKey={productKey}
         tourId={tourId}
         startStepKey={startStepKey}

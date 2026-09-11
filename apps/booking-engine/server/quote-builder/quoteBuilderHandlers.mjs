@@ -48,7 +48,7 @@ export function createQuoteBuilderHandlers(service) {
           status: result.status < 400 ? "success" : "error",
           message: result.status < 400 ? "Quote generated and sent." : "Check the highlighted fields.",
           componentData: result.componentData,
-          data: { quoteId: result.quoteId || null, documentId: result.documentId || null },
+          data: { quoteRef: result.quoteRef || "" },
         });
       } catch (error) {
         return errorResponse(res, error);

@@ -159,6 +159,7 @@ router.get(
     controller.listAudit,
 );
 router.get("/notifications", controller.listNotifications);
+router.patch("/notifications/read-all", controller.readAllNotifications);
 router.patch("/notifications/:id/read", controller.readNotification);
 router.get("/roles", controller.listRoles);
 router.put(

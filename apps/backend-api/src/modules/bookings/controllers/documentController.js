@@ -17,12 +17,24 @@ function canAccessQuote(req, quote) {
     return [quote.userId, quote.createdBy].some((value) => value && String(value) === userId);
 }
 
+function quoteLookup(identifier) {
+    const normalized = String(identifier || "").trim();
+    if (!normalized) return null;
+    if (BookingQuote.db.base.Types.ObjectId.isValid(normalized)) return { _id: normalized };
+    return { $or: [{ quoteRef: normalized }, { quoteNumber: normalized }] };
+}
+
+async function findQuote(identifier) {
+    const query = quoteLookup(identifier);
+    return query ? BookingQuote.findOne(query).lean() : null;
+}
+
 // Quote-centric document endpoint. It returns only a short-lived URL and keeps
 // storage keys and credentials private. The future booking engine can reuse it
 // without inheriting any legacy booking orchestration.
 export async function getQuotePdfSignedUrl(req, res) {
     try {
-        const quote = await BookingQuote.findById(req.params.quoteId).lean();
+        const quote = await findQuote(req.params.quoteId);
         if (!quote) return sendError(res, "Quote not found", 404);
         if (!canAccessQuote(req, quote))
             return sendError(res, "Not authorized to download this quote", 403);
@@ -36,10 +48,11 @@ export async function getQuotePdfSignedUrl(req, res) {
         }
 
         if (quoteDocument.storageProvider === "LOCAL_PRIVATE") {
+            const quoteHandle = quote.quoteRef || quote.quoteNumber || req.params.quoteId;
             return res.json({
                 status: "success",
                 data: {
-                    url: `/api/quotes/${quote.id || quote._id}/pdf/file`,
+                    url: `/api/quotes/${quoteHandle}/pdf/file`,
                     expiresIn: null,
                     fileName: quoteDocument.fileName,
                 },
@@ -64,7 +77,7 @@ export async function getQuotePdfSignedUrl(req, res) {
 
 export async function downloadQuotePdf(req, res) {
     try {
-        const quote = await BookingQuote.findById(req.params.quoteId).lean();
+        const quote = await findQuote(req.params.quoteId);
         if (!quote) return sendError(res, "Quote not found", 404);
         if (!canAccessQuote(req, quote))
             return sendError(res, "Not authorized to download this quote", 403);

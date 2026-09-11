@@ -43,19 +43,19 @@ describe("enquiry realtime contract", () => {
         };
 
         const dto = enquiryDto(lead);
-        expect(dto.enquiryId).toBe("507f1f77bcf86cd799439033");
-        expect(dto.ownerAgentId).toBe("507f1f77bcf86cd799439044");
+        expect(dto.enquiryId).toBe("ENQ-ABC123");
+        expect(dto.ownerAgentId).toBeUndefined();
         expect(dto.travellerCount).toBe(3);
         expect(dto.notified).toBe(true);
 
         const serialized = JSON.stringify(dto);
-        expect(serialized).not.toMatch(/jane@example\.com|\+91|secret|totalMinor/i);
+        expect(serialized).not.toMatch(/507f1f77bcf86cd799439033|507f1f77bcf86cd799439044|jane@example\.com|\+91|secret|totalMinor/i);
     });
 
     test("enquiryDto tolerates sparse documents", () => {
         const dto = enquiryDto({});
         expect(dto.status).toBe("new");
-        expect(dto.claimedUserId).toBeNull();
+        expect(dto.claimedUserId).toBeUndefined();
         expect(typeof dto.createdAt).toBe("string");
     });
 

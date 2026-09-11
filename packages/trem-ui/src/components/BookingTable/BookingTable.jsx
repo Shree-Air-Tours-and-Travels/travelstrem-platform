@@ -508,6 +508,27 @@ export default function BookingTable({
 
   const [mobileControlsOpen, setMobileControlsOpen] = useState(false);
 
+  useEffect(() => {
+    if (sortingHeader.value != null || internalSortValue || columnSort) {
+      return;
+    }
+
+    const defaultSortValue =
+      sortingHeader.defaultValue ??
+      normalizeOption((sortingHeader.options || [])[0])?.value ??
+      "";
+
+    if (defaultSortValue) {
+      setInternalSortValue(defaultSortValue);
+    }
+  }, [
+    columnSort,
+    internalSortValue,
+    sortingHeader.defaultValue,
+    sortingHeader.options,
+    sortingHeader.value,
+  ]);
+
   /* ======================================================================== */
   /* Mobile sheet scroll locking                                              */
   /* ======================================================================== */

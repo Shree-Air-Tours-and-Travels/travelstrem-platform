@@ -4,7 +4,7 @@ const AGENCY_POPULATE = {
     path: "agencyId",
     select: "agencyName partnerAgencyRef logo website address status",
 };
-const OWNER_POPULATE = { path: "ownerAgent", select: "name agentRef" };
+const OWNER_POPULATE = { path: "ownerAgent", select: "name email agentRef" };
 
 const TripRepository = {
     find(query = {}, projection) {
@@ -40,6 +40,9 @@ const TripRepository = {
     },
     findOneAndUpdate(query = {}, update = {}, options = {}) {
         return Trip.findOneAndUpdate(query, update, options);
+    },
+    deleteOne(query = {}) {
+        return Trip.deleteOne(query);
     },
 };
 

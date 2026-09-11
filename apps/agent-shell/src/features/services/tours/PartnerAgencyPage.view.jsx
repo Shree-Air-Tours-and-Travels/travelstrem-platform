@@ -41,8 +41,10 @@ export default function PartnerAgencyPage({
   const [productState, setProductState] = React.useState({
     loading: false,
     products: [],
+    agents: [],
     requests: [],
     selected: [],
+    selectedAgentIds: [],
     reason: "",
     message: "",
   });
@@ -62,12 +64,17 @@ export default function PartnerAgencyPage({
     if (!isLinked || !isPartnerAdmin) return;
     setProductState((current) => ({ ...current, loading: true, message: "" }));
     try {
-      const response = await api.get("/tenancy/product-access-requests", { params: { limit: 20 } });
+      const [response, teamResponse] = await Promise.all([
+        api.get("/tenancy/product-access-requests", { params: { limit: 20 } }),
+        api.get("/tenancy/agencies/me/users", { params: { status: "active", limit: 100 } }),
+      ]);
       const data = response?.data?.componentData?.data || {};
+      const team = teamResponse?.data?.componentData?.data || {};
       setProductState((current) => ({
         ...current,
         loading: false,
         products: data.products || [],
+        agents: team.items || [],
         requests: data.items || [],
       }));
     } catch (error) {
@@ -87,11 +94,13 @@ export default function PartnerAgencyPage({
     try {
       await api.post("/tenancy/product-access-requests", {
         requestedProducts: productState.selected,
+        requestedAgentIds: productState.selectedAgentIds,
         reason: productState.reason,
       });
       setProductState((current) => ({
         ...current,
         selected: [],
+        selectedAgentIds: [],
         reason: "",
         message: "Your product request is now awaiting Master Admin review.",
       }));
@@ -143,6 +152,14 @@ export default function PartnerAgencyPage({
     const availableProducts = productState.products.filter(
       (product) => !enabledProducts.includes(product.key),
     );
+    const pendingProductKeys = new Set(
+      productState.requests
+        .filter((request) => request.status === "pending")
+        .flatMap((request) => request.requestedProducts || []),
+    );
+    const activeAgents = productState.agents.filter((agent) => agent.accountStatus === "active");
+    const allAgentsSelected =
+      activeAgents.length > 0 && activeAgents.every((agent) => productState.selectedAgentIds.includes(agent._id));
     return (
       <section className={`agent-main-widget${embedded ? " is-agency-workspace-embedded" : ""}`}>
         <header className="agent-widget-toolbar">
@@ -238,6 +255,7 @@ export default function PartnerAgencyPage({
                         <input
                           type="checkbox"
                           checked={productState.selected.includes(product.key)}
+                          disabled={pendingProductKeys.has(product.key)}
                           onChange={(event) =>
                             setProductState((current) => ({
                               ...current,
@@ -250,12 +268,63 @@ export default function PartnerAgencyPage({
                         <span>
                           <strong>{product.name}</strong>
                           <small>
-                            {product.description ||
-                              "Extend this agency workspace with this product."}
+                            {pendingProductKeys.has(product.key)
+                              ? "A request for this product is awaiting review."
+                              : product.description ||
+                                "Extend this agency workspace with this product."}
                           </small>
                         </span>
                       </label>
                     ))}
+                  </div>
+                  <div className="agency-products__agents">
+                    <div>
+                      <strong>Agents who need access</strong>
+                      <small>Only selected active agents receive the product when the request is approved.</small>
+                    </div>
+                    {activeAgents.length ? (
+                      <>
+                        <label className="agency-products__select-all">
+                          <input
+                            type="checkbox"
+                            checked={allAgentsSelected}
+                            onChange={(event) =>
+                              setProductState((current) => ({
+                                ...current,
+                                selectedAgentIds: event.target.checked
+                                  ? activeAgents.map((agent) => agent._id)
+                                  : [],
+                              }))
+                            }
+                          />
+                          Select all agents
+                        </label>
+                        <div className="agency-products__options">
+                          {activeAgents.map((agent) => (
+                            <label key={agent._id}>
+                              <input
+                                type="checkbox"
+                                checked={productState.selectedAgentIds.includes(agent._id)}
+                                onChange={(event) =>
+                                  setProductState((current) => ({
+                                    ...current,
+                                    selectedAgentIds: event.target.checked
+                                      ? [...new Set([...current.selectedAgentIds, agent._id])]
+                                      : current.selectedAgentIds.filter((id) => id !== agent._id),
+                                  }))
+                                }
+                              />
+                              <span>
+                                <strong>{agent.name}</strong>
+                                <small>{agent.email} · {agent.agencyRole === "partner_admin" ? "Partner Admin" : "Partner Agent"}</small>
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                      </>
+                    ) : (
+                      <small>No active agents are available to receive access.</small>
+                    )}
                   </div>
                   <label className="agency-products__reason">
                     <span>Business requirement</span>
@@ -275,6 +344,7 @@ export default function PartnerAgencyPage({
                     disabled={
                       productState.loading ||
                       !productState.selected.length ||
+                      !productState.selectedAgentIds.length ||
                       productState.reason.trim().length < 10
                     }
                     onClick={submitProductRequest}
@@ -304,6 +374,7 @@ export default function PartnerAgencyPage({
                         .join(", ")}
                     </strong>
                     <small>{new Date(request.createdAt).toLocaleDateString()}</small>
+                    <small>{request.requestedAgents?.length || 0} agents requested</small>
                   </div>
                   <StatusBadge value={request.status} />
                 </article>

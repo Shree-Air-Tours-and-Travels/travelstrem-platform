@@ -27,7 +27,9 @@ export default function PricingCardView({
   );
   const selectedPackageName = selectedPackagePrice?.name;
   const quoteLabel =
-    productType === "trip"
+    isSoldOut
+      ? labels.notifyMe || "Notify me"
+      : productType === "trip"
       ? selectedPackageName
         ? `Enquire about ${selectedPackageName}`
         : "Enquire now"

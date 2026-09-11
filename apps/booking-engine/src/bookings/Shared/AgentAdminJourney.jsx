@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import useEnquiryBookings from "./useEnquiryBookings.js";
 import BookingEnquiryCenter from "./BookingEnquiryCenter.jsx";
@@ -8,10 +8,13 @@ function AgentAdminJourneyList({ journeyType }) {
   const { enquiries, bookings, view, loading, error, load } = useEnquiryBookings(journeyType);
   const location = useLocation();
   const navigate = useNavigate();
-  const [selectedId, setSelectedId] = useState("");
-  const bookingBasePath = location.pathname.startsWith("/manage/")
-    ? "/manage/bookings"
-    : location.pathname.replace(/\/$/, "");
+  const detailMatch = location.pathname.match(/^(.*\/(?:bookings|enquiries))\/([^/]+)\/?$/);
+  const selectedId = detailMatch ? decodeURIComponent(detailMatch[2]) : "";
+  const bookingBasePath = detailMatch
+    ? detailMatch[1]
+    : location.pathname.startsWith("/manage/")
+      ? "/manage/bookings"
+      : location.pathname.replace(/\/$/, "");
 
   return (
     <BookingEnquiryCenter
@@ -24,7 +27,9 @@ function AgentAdminJourneyList({ journeyType }) {
       loading={loading}
       error={error}
       onRetry={load}
-      onSelect={(item) => setSelectedId(item.id)}
+      onSelect={(item) =>
+        navigate(`${bookingBasePath}/${encodeURIComponent(item.reference || item.id)}`)
+      }
       onOpenJourneyPage={(_, enquiryId) =>
         navigate(`${bookingBasePath}/${encodeURIComponent(enquiryId)}/quotebuilder`)
       }

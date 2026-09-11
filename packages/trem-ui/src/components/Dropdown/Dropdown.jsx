@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import Button from "../Button/Button.jsx";
 import Icon from "../../icons/Icon/Icon.jsx";
 import BottomSheet from "../BottomSheet/BottomSheet.jsx";
+import NoDataFound from "../NoDataFound/NoDataFound.jsx";
 
 import "./Dropdown.styles.scss";
 
@@ -142,6 +143,7 @@ export default function Dropdown({
   portalZIndex,
   menuTitle,
   menuAriaLabel,
+  emptyState,
   open: controlledOpen,
   onOpenChange,
 }) {
@@ -690,12 +692,18 @@ export default function Dropdown({
 
       return (
         <li role="none" key={item.key || item.id || `item-${index}`}>
-          {renderItemProp(item, index)}
+          {renderItemProp(item, index, { close: closeMenu, open })}
         </li>
       );
     });
 
   const resolvedMenuAriaLabel = menuAriaLabel || menuTitle || label || undefined;
+  const resolvedEmptyState =
+    emptyState && !filteredItems.length ? (
+      <div className="trem-dropdown__empty-state">
+        <NoDataFound {...emptyState} compact />
+      </div>
+    ) : null;
 
   const menuContent = (
     <div
@@ -738,15 +746,17 @@ export default function Dropdown({
         </div>
       ) : null}
 
-      <ul
-        id={menuId}
-        className={["trem-dropdown__menu", menuClassName].filter(Boolean).join(" ")}
-        role="menu"
-        aria-label={resolvedMenuAriaLabel}
-        style={menuListStyle}
-      >
-        {renderMenuItems()}
-      </ul>
+      {resolvedEmptyState || (
+        <ul
+          id={menuId}
+          className={["trem-dropdown__menu", menuClassName].filter(Boolean).join(" ")}
+          role="menu"
+          aria-label={resolvedMenuAriaLabel}
+          style={menuListStyle}
+        >
+          {renderMenuItems()}
+        </ul>
+      )}
 
       {resolvedMenuFooter}
     </div>
@@ -814,14 +824,16 @@ export default function Dropdown({
           </div>
         ) : null}
 
-        <ul
-          id={menuId}
-          className={["trem-dropdown__menu", menuClassName].filter(Boolean).join(" ")}
-          role="menu"
-          aria-label={resolvedMenuAriaLabel}
-        >
-          {renderMenuItems()}
-        </ul>
+        {resolvedEmptyState || (
+          <ul
+            id={menuId}
+            className={["trem-dropdown__menu", menuClassName].filter(Boolean).join(" ")}
+            role="menu"
+            aria-label={resolvedMenuAriaLabel}
+          >
+            {renderMenuItems()}
+          </ul>
+        )}
 
         {resolvedMenuFooter}
       </BottomSheet>

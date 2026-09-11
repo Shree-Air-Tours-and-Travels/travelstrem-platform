@@ -33,6 +33,15 @@ const NAVIGATION_ENTRIES = [
         path: "/trevista/tours",
     },
     {
+        id: "trehub",
+        title: "Flights & Hotels",
+        description: "Search flights and hotels with Trehub",
+        icon: "plane",
+        keywords: ["trehub", "flight", "flights", "hotel", "hotels", "stay", "stays"],
+        destination: "trehub",
+        path: "/trehub",
+    },
+    {
         id: "bookings",
         title: "My Bookings",
         description: "View your bookings and enquiries",

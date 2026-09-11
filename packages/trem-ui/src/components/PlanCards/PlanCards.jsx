@@ -15,19 +15,26 @@ export default function PlanCards({
 }) {
   const visibleItems = items.filter((item) => !item.hide);
   if (!visibleItems.length) return null;
+  const liveItemCount = visibleItems.filter((item) => !item.disabled && !item.comingSoon).length;
+  const resolvedLayout = layout === "adaptive"
+    ? (liveItemCount > 1 ? "grid" : "horizontal-stack")
+    : layout;
+  const resolvedColumns = layout === "adaptive"
+    ? Math.min(columns, visibleItems.length)
+    : columns;
 
   return (
     <section
       className={[
         "trem-plan-cards",
-        layout === "horizontal-stack" ? "trem-plan-cards--horizontal-stack" : "",
+        resolvedLayout === "horizontal-stack" ? "trem-plan-cards--horizontal-stack" : "",
         hideUnavailableOnMobile ? "trem-plan-cards--hide-unavailable-mobile" : "",
         className,
       ]
         .filter(Boolean)
         .join(" ")}
       aria-label={ariaLabel || title}
-      style={{ "--trem-plan-cards-columns": columns }}
+      style={{ "--trem-plan-cards-columns": resolvedColumns }}
     >
       <h2 className="trem-plan-cards__title">{title}</h2>
       <div className="trem-plan-cards__grid">
@@ -79,7 +86,7 @@ PlanCards.propTypes = {
   ariaLabel: PropTypes.string,
   className: PropTypes.string,
   columns: PropTypes.number,
-  layout: PropTypes.oneOf(["grid", "horizontal-stack"]),
+  layout: PropTypes.oneOf(["adaptive", "grid", "horizontal-stack"]),
   hideUnavailableOnMobile: PropTypes.bool,
   onSelect: PropTypes.func,
 };

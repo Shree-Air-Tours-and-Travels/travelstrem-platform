@@ -226,6 +226,7 @@ export default function LocationTypeahead({
           id={baseId}
           value={query}
           placeholder={selectedValues.length ? "Add another place" : placeholder}
+          required={required}
           disabled={disabled || (multiple && selectedValues.length >= maxItems)}
           role="combobox"
           aria-autocomplete="list"

@@ -24,6 +24,120 @@ const toISODate = (date) => {
     return d.toISOString().slice(0, 10);
 };
 
+const number = (value, fallback = 0) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const escapeRegex = (value = "") => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const routeParts = (value = "") => {
+    const [from, to] = String(value || "")
+        .split(/\s+to\s+/i)
+        .map((item) => item.trim());
+    return { from: to ? from : "", to: to || from || "" };
+};
+
+const optionValue = (value = "") =>
+    String(value || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+
+const matchTextFilter = (value = "") => new RegExp(escapeRegex(value), "i");
+
+const daysUntil = (date) => {
+    if (!date) return null;
+    const parsed = new Date(date);
+    if (Number.isNaN(parsed.getTime())) return null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    parsed.setHours(0, 0, 0, 0);
+    return Math.ceil((parsed.getTime() - today.getTime()) / 86400000);
+};
+
+const recentSignalScore = (metrics = {}) => {
+    const dates = [
+        metrics.lastViewedAt,
+        metrics.lastEnquiredAt,
+        metrics.lastBookedAt,
+        metrics.lastWishlistedAt,
+    ]
+        .map((value) => (value ? new Date(value) : null))
+        .filter((date) => date && !Number.isNaN(date.getTime()));
+    if (!dates.length) return 0;
+    const latest = Math.max(...dates.map((date) => date.getTime()));
+    const ageDays = Math.max(0, (Date.now() - latest) / 86400000);
+    return Math.max(0, 12 - ageDays / 2);
+};
+
+export const tripIntelligenceScore = (trip = {}) => {
+    const metrics = trip.metrics || {};
+    const upcomingDays = daysUntil(trip.startDateISO || trip.startDate);
+    const upcomingScore =
+        upcomingDays == null || upcomingDays < 0
+            ? 0
+            : upcomingDays <= 7
+              ? 28
+              : upcomingDays <= 30
+                ? 22
+                : upcomingDays <= 90
+                  ? 14
+                  : 6;
+    const engagementScore =
+        Math.min(18, number(metrics.views) / 12) +
+        Math.min(24, number(metrics.enquiries) * 3) +
+        Math.min(26, number(metrics.bookings) * 5) +
+        Math.min(10, number(metrics.wishlists) * 2) +
+        Math.min(16, number(metrics.popularityScore) / 6) +
+        Math.min(14, number(metrics.trendScore) / 5);
+    const ratingValue = number(trip.avgRating || trip.rating);
+    const ratingScore =
+        ratingValue > 0 ? ratingValue * 5 + Math.min(10, number(trip.reviewCount) * 1.5) : 0;
+    const availabilityScore = trip.availability?.isSoldOut === true ? -20 : 6;
+
+    return (
+        upcomingScore +
+        engagementScore +
+        ratingScore +
+        availabilityScore +
+        recentSignalScore(metrics) +
+        (trip.featured ? 10 : 0) +
+        (trip.trending ? 8 : 0) +
+        (trip.tremVerified ? 6 : 0) +
+        Math.min(16, number(trip.intelligence?.qualityScore) / 5)
+    );
+};
+
+const sortTrips = (trips = [], sort = "recommended") => {
+    const ranked = [...trips];
+    switch (sort) {
+        case "upcoming":
+            ranked.sort((a, b) => (daysUntil(a.startDateISO) ?? 9999) - (daysUntil(b.startDateISO) ?? 9999));
+            break;
+        case "rating":
+            ranked.sort(
+                (a, b) =>
+                    number(b.avgRating || b.rating) - number(a.avgRating || a.rating) ||
+                    number(b.reviewCount) - number(a.reviewCount),
+            );
+            break;
+        case "price_low":
+            ranked.sort((a, b) => number(a.price) - number(b.price));
+            break;
+        case "price_high":
+            ranked.sort((a, b) => number(b.price) - number(a.price));
+            break;
+        case "popular":
+        case "recommended":
+        default:
+            ranked.sort((a, b) => tripIntelligenceScore(b) - tripIntelligenceScore(a));
+            break;
+    }
+    return ranked;
+};
+
 export const normalizeTrip = (doc = {}) => {
     const trip = asPlainObject(doc) || {};
     const price = trip.price || {};
@@ -40,6 +154,9 @@ export const normalizeTrip = (doc = {}) => {
         availability.seatsAvailable == null ? null : Number(availability.seatsAvailable);
     const lowSeatThreshold = Math.max(0, Number(process.env.TREVIO_LOW_SEAT_THRESHOLD || 3));
     const agency = trip.agencyId && typeof trip.agencyId === "object" ? trip.agencyId : null;
+    const parsedRoute = routeParts(trip.location);
+    const routeFrom = trip.routeFrom || parsedRoute.from || "";
+    const routeTo = trip.routeTo || parsedRoute.to || trip.location || "";
     const tripPackages = (Array.isArray(trip.preferences?.packageTypes)
         ? trip.preferences.packageTypes
         : []
@@ -68,8 +185,12 @@ export const normalizeTrip = (doc = {}) => {
         sourceTourId: trip.sourceTourId || null,
         id: trip.slug || trip.id || trip._id,
         slug: trip.slug || trip.id || "",
+        productKey: trip.productKey || "trevio",
+        productType: "trip",
         title: trip.title || "",
         category: trip.category || "adventure",
+        routeFrom,
+        routeTo,
         location: trip.location || "India",
         country: trip.country || "India",
         duration: trip.duration || "",
@@ -80,6 +201,8 @@ export const normalizeTrip = (doc = {}) => {
         rating: avgRating,
         avgRating,
         reviewCount: reviews.length,
+        metrics: trip.metrics || {},
+        intelligence: trip.intelligence || {},
         image: trip.image || photos[0] || "",
         photo: trip.image || photos[0] || "",
         photos,
@@ -88,6 +211,7 @@ export const normalizeTrip = (doc = {}) => {
         chips: Array.isArray(trip.chips) ? trip.chips : [],
         tags: Array.isArray(trip.tags) ? trip.tags : [],
         featured: Boolean(trip.featured),
+        trending: Boolean(trip.trending),
         status: trip.status || "listed",
         isListed: Boolean(trip.isListed),
         tremVerified: Boolean(trip.tremVerified),
@@ -108,9 +232,20 @@ export const normalizeTrip = (doc = {}) => {
             trip.ownerAgent && typeof trip.ownerAgent === "object"
                 ? {
                       name: trip.ownerAgent.name || "",
+                      email: trip.ownerAgent.email || "",
                       reference: trip.ownerAgent.agentRef || "",
                   }
                 : null,
+        ownerAgentName:
+            trip.ownerAgent && typeof trip.ownerAgent === "object" ? trip.ownerAgent.name || "" : "",
+        ownerAgentEmail:
+            trip.ownerAgent && typeof trip.ownerAgent === "object"
+                ? trip.ownerAgent.email || ""
+                : "",
+        ownerAgentRef:
+            trip.ownerAgent && typeof trip.ownerAgent === "object"
+                ? trip.ownerAgent.agentRef || ""
+                : "",
         startDate: formatDate(trip.startDate),
         endDate: formatDate(trip.endDate),
         startDateISO: toISODate(trip.startDate),
@@ -182,13 +317,53 @@ const listedQuery = (filters = {}) => {
     };
 
     if (filters.featuredOnly) query.featured = true;
+    const and = [];
+
     if (filters.category && filters.category !== "all") {
-        query.$and = [
+        and.push(
             {
                 $or: [{ category: filters.category }, { tags: filters.category }],
             },
-        ];
+        );
     }
+
+    if (filters.search) {
+        const search = new RegExp(escapeRegex(filters.search), "i");
+        and.push({
+            $or: [
+                { title: search },
+                { description: search },
+                { routeFrom: search },
+                { routeTo: search },
+                { location: search },
+                { country: search },
+                { category: search },
+                { tags: search },
+            ],
+        });
+    }
+
+    if (filters.from && filters.from !== "all") {
+        const from = matchTextFilter(filters.from);
+        and.push({ $or: [{ routeFrom: from }, { location: from }, { title: from }] });
+    }
+
+    if (filters.to && filters.to !== "all") {
+        const to = matchTextFilter(filters.to);
+        and.push({ $or: [{ routeTo: to }, { location: to }, { title: to }] });
+    }
+
+    if (filters.maxBudget) {
+        and.push({ "price.amount": { $lte: number(filters.maxBudget) } });
+    }
+
+    if (filters.flights === "with") {
+        and.push({ "preferences.packageTypes.includesFlights": true });
+    } else if (filters.flights === "without") {
+        and.push({ "preferences.packageTypes.includesFlights": false });
+    }
+
+    if (and.length) query.$and = and;
 
     return query;
 };
@@ -208,11 +383,17 @@ class TripService {
 
     async listTrips(params = {}) {
         const page = Math.max(1, Number(params.page) || 1);
-        const limit = Math.max(1, Number(params.limit) || 20);
+        const limit = Math.max(1, Math.min(Number(params.limit) || 20, 60));
         const category = String(params.category || params.tag || "all")
             .trim()
             .toLowerCase();
         const featuredOnly = params.featured === "true" || params.featured === true;
+        const search = String(params.search || params.query || params.q || "").trim();
+        const sort = String(params.sort || "recommended").trim() || "recommended";
+        const from = String(params.from || "").trim();
+        const to = String(params.to || "").trim();
+        const maxBudget = Number(params.maxBudget || params.budget || 0);
+        const flights = String(params.flights || "").trim();
 
         if (!isDbReady()) {
             return {
@@ -227,18 +408,24 @@ class TripService {
             };
         }
 
-        const query = listedQuery({ category, featuredOnly });
+        const query = listedQuery({
+            category,
+            featuredOnly,
+            search,
+            from,
+            to,
+            maxBudget: Number.isFinite(maxBudget) && maxBudget > 0 ? maxBudget : null,
+            flights,
+        });
         const skip = (page - 1) * limit;
-        const [docs, total] = await Promise.all([
-            TripRepository.find(query)
-                .sort({ featured: -1, sortOrder: 1, startDate: 1 })
-                .skip(skip)
-                .limit(limit),
-            TripRepository.countDocuments(query),
-        ]);
+        const docs = await TripRepository.find(query)
+            .sort({ featured: -1, trending: -1, sortOrder: 1, startDate: 1 })
+            .limit(300);
 
-        const trips = docs.map(normalizeTrip);
+        const rankedTrips = sortTrips(docs.map(normalizeTrip), sort);
+        const total = rankedTrips.length;
         const totalPages = Math.max(1, Math.ceil(total / limit));
+        const trips = rankedTrips.slice(skip, skip + limit);
 
         return {
             trips,
@@ -249,6 +436,46 @@ class TripService {
                 totalPages,
                 hasMore: page < totalPages,
             },
+        };
+    }
+
+    async listFeaturedTrips(params = {}) {
+        const limit = Math.max(1, Math.min(Number(params.limit) || 4, 12));
+
+        if (!isDbReady()) {
+            return { trips: [], total: 0 };
+        }
+
+        const docs = await TripRepository.find(listedQuery())
+            .sort({ featured: -1, trending: -1, sortOrder: 1, startDate: 1 })
+            .limit(120);
+        const trips = sortTrips(docs.map(normalizeTrip), "recommended").slice(0, limit);
+
+        return { trips, total: trips.length };
+    }
+
+    async getTripFilterOptions() {
+        if (!isDbReady()) {
+            return { origins: [], destinations: [] };
+        }
+
+        const docs = await TripRepository.find(listedQuery())
+            .sort({ sortOrder: 1, startDate: 1 })
+            .limit(300);
+        const trips = docs.map(normalizeTrip);
+        const toOptions = (values = []) =>
+            [...new Map(
+                values
+                    .map((label) => String(label || "").trim())
+                    .filter(Boolean)
+                    .map((label) => [optionValue(label), label]),
+            )]
+                .map(([, label], index) => ({ value: label, label, sortOrder: index * 10 }))
+                .sort((a, b) => a.label.localeCompare(b.label));
+
+        return {
+            origins: toOptions(trips.map((trip) => trip.routeFrom)),
+            destinations: toOptions(trips.map((trip) => trip.routeTo || trip.location)),
         };
     }
 

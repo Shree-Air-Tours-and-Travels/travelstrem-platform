@@ -58,6 +58,7 @@ const clientPortalOrigins = (portal, fallbackUrl) => {
             withScheme(process.env.REACT_APP_TRAVELSTREM_APP_URL),
             withScheme(process.env.REACT_APP_TREVISTA_URL),
             withScheme(process.env.REACT_APP_TREVIO_URL),
+            withScheme(process.env.REACT_APP_TREHUB_URL),
             withScheme(process.env.REACT_APP_BOOKING_ENGINE_URL),
           ];
   return new Set([

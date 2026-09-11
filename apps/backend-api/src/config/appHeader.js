@@ -95,10 +95,8 @@ export default applyHideFlags({
                         description: "Flights, stays & transport",
                         mobileIcon: "plane",
                         tone: "secondary",
-                        disabled: true,
-                        comingSoon: true,
-                        comingSoonLabel: "Coming soon",
-                        ariaLabel: "Flights and hotels, coming soon",
+                        target: "trehub",
+                        ariaLabel: "Search flights and hotels on Trehub",
                     },
                     {
                         id: "visas-insurance",

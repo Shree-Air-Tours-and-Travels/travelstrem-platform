@@ -1,0 +1,40 @@
+@import "@packages/trem-design-tokens/scss";
+
+.trem-configurable-filters {
+  position: sticky;
+  top: calc(#{$space-4} + 3.5rem);
+  overflow: visible;
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-soft);
+
+  > header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-3;
+    padding: $space-3 $space-4;
+    border-bottom: 1px solid var(--border);
+    h2 {
+      margin: 0;
+      color: var(--heading);
+      font-size: $font-size-md;
+    }
+  }
+}
+
+.trem-configurable-filters__fields {
+  display: grid;
+  gap: $space-3;
+  padding: $space-4;
+}
+
+@media (max-width: 900px) {
+  .trem-configurable-filters { position: static; }
+  .trem-configurable-filters__fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 560px) {
+  .trem-configurable-filters__fields { grid-template-columns: 1fr; }
+}

@@ -78,6 +78,18 @@ export async function deletePartnerTrevioTrip(id, opts = {}) {
   );
 }
 
+export async function resolvePartnerTrevioTripBuilderTour(id, opts = {}) {
+  const res = await expectSuccess(
+    fetchData(`${TREVIO_TRIPS_URL}/${id}/builder-tour`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      signal: opts.signal,
+    }),
+    "Failed to open Trevio trip in builder",
+  );
+  return res.componentData?.data || res;
+}
+
 export async function approvePartnerTrevioTrip(trip, opts = {}) {
   return savePartnerTrevioTrip({ ...trip, status: "listed", isListed: true }, opts);
 }

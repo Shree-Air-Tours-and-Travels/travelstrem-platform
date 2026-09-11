@@ -47,6 +47,8 @@ const normalizeTripForWidget = (trip = {}) => {
         _id: normalized._id,
         id: normalized.id,
         slug: normalized.slug,
+        productKey: normalized.productKey,
+        productType: normalized.productType,
         title: normalized.title,
         category: normalized.category,
         location: normalized.location,
@@ -73,6 +75,9 @@ const normalizeTripForWidget = (trip = {}) => {
         availability: normalized.availability,
         agency: normalized.agency,
         operator: normalized.operator,
+        ownerAgentName: normalized.ownerAgentName,
+        ownerAgentEmail: normalized.ownerAgentEmail,
+        ownerAgentRef: normalized.ownerAgentRef,
         preferences: normalized.preferences || {},
         commercialPricing: normalized.commercialPricing || null,
         itinerary: (trip.itinerary || []).map((item) => ({

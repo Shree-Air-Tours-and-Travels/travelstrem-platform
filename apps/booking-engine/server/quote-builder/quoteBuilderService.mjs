@@ -107,6 +107,7 @@ const persistedState = (record = {}, definition, context) => {
     contextSnapshot: record?.contextSnapshot || context,
     revision: Number(record?.revision || 0),
     sentQuoteId: record?.sentQuoteId || null,
+    sentQuoteRef: record?.sentQuoteRef || "",
     sentAt: record?.sentAt || null,
     pricingSnapshot: record?.pricingSnapshot || null,
     delivery: record?.delivery || null,
@@ -214,10 +215,18 @@ export function createQuoteBuilderService({ findAuthorizedEnquiry, loadQuoteCont
     throw new TypeError("QuoteBuilder persistence, context, pricing and document adapters are required");
 
   const initialize = async (enquiry, actor) => {
-    const context = enquiry.quoteBuilder?.contextSnapshot || await loadQuoteContext(enquiry, actor);
+    const savedContext = enquiry.quoteBuilder?.contextSnapshot;
+    const refreshMissingTripPricing =
+      !enquiry.quoteBuilder?.sentQuoteId &&
+      (enquiry.product === "trevio" || enquiry.journeyType === "trip") &&
+      savedContext &&
+      !(savedContext.source?.pricingItems || []).length;
+    const context = refreshMissingTripPricing || !savedContext
+      ? await loadQuoteContext(enquiry, actor)
+      : savedContext;
     const definition = createQuoteProcessDefinition(context);
     const process = persistedState(enquiry.quoteBuilder, definition, context);
-    if (!enquiry.quoteBuilder?.contextSnapshot) await saveProcess(enquiry, process, actor);
+    if (!savedContext || refreshMissingTripPricing) await saveProcess(enquiry, process, actor);
     return { context, definition, process };
   };
 
@@ -291,7 +300,7 @@ export function createQuoteBuilderService({ findAuthorizedEnquiry, loadQuoteCont
 
       if (action === "EDIT") {
         if (!process.sentQuoteId) throw Object.assign(new Error("This quote is already editable."), { status: 409 });
-        const next = { ...process, revision: process.revision + 1, data: merge(process.data, { approval: { confirmed: false } }), sentQuoteId: null, sentAt: null, pricingSnapshot: null };
+        const next = { ...process, revision: process.revision + 1, data: merge(process.data, { approval: { confirmed: false } }), sentQuoteId: null, sentQuoteRef: "", sentAt: null, pricingSnapshot: null };
         await saveProcess(enquiry, next, actor);
         return { status: 200, componentData: await view(enquiry, next, definition, context) };
       }
@@ -322,7 +331,7 @@ export function createQuoteBuilderService({ findAuthorizedEnquiry, loadQuoteCont
       });
       if (!result.ok)
         return { status: 422, componentData: await view(enquiry, { ...process, data }, definition, context, result.errors) };
-      const next = { ...process, ...result.process, data, revision: process.revision + 1, sentQuoteId: null, sentAt: null, pricingSnapshot: null };
+      const next = { ...process, ...result.process, data, revision: process.revision + 1, sentQuoteId: null, sentQuoteRef: "", sentAt: null, pricingSnapshot: null };
       await saveProcess(enquiry, next, actor);
       return { status: 200, componentData: await view(enquiry, next, definition, context) };
     },
@@ -331,7 +340,7 @@ export function createQuoteBuilderService({ findAuthorizedEnquiry, loadQuoteCont
       const enquiry = await findAuthorizedEnquiry(enquiryId, actor);
       const { context, definition, process } = await initialize(enquiry, actor);
       if (process.sentQuoteId)
-        return { status: 200, quoteId: process.sentQuoteId, componentData: await view(enquiry, process, definition, context) };
+        return { status: 200, quoteRef: process.sentQuoteRef || "", componentData: await view(enquiry, process, definition, context) };
       const state = createProcessState(definition, process);
       const prerequisitesComplete = definition.steps.slice(0, -1).every((step) => state.completedStageIds.includes(step.id));
       if (state.currentNodeId !== "review-send" || !prerequisitesComplete)
@@ -353,6 +362,7 @@ export function createQuoteBuilderService({ findAuthorizedEnquiry, loadQuoteCont
         ...completed.process,
         data,
         sentQuoteId: String(finalized.quote.id || finalized.quote._id),
+        sentQuoteRef: finalized.quote.quoteRef || finalized.quote.quoteNumber || "",
         sentAt: new Date().toISOString(),
         pricingSnapshot: calculation.pricing,
         delivery: finalized.delivery || null,
@@ -360,8 +370,7 @@ export function createQuoteBuilderService({ findAuthorizedEnquiry, loadQuoteCont
       await saveProcess(enquiry, next, actor);
       return {
         status: 200,
-        quoteId: next.sentQuoteId,
-        documentId: finalized.document?.id || finalized.document?._id || null,
+        quoteRef: next.sentQuoteRef,
         componentData: await view(enquiry, next, definition, context),
       };
     },

@@ -1,0 +1,197 @@
+@import "@packages/trem-design-tokens/scss";
+
+.trehub-page,
+.trehub-home,
+.trehub-flight-list,
+.trehub-flight-journey {
+  --trehub-breadcrumb-height: #{$space-14};
+  --trehub-page-gutter: clamp(#{$space-4}, 3vw, #{$space-8});
+}
+
+.trehub-page__breadcrumbs {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  min-height: var(--trehub-breadcrumb-height);
+  padding: $space-3 var(--trehub-page-gutter);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-glass-strong);
+  box-shadow: var(--shadow-xs);
+  backdrop-filter: blur(14px);
+}
+
+.trehub-home > .trehub-page__breadcrumbs {
+  margin-inline: calc(-1 * var(--trehub-page-gutter));
+  margin-bottom: $space-6;
+}
+
+.trehub-home,
+.trehub-home *,
+.trehub-home *::before,
+.trehub-home *::after {
+  box-sizing: border-box;
+}
+
+.trehub-home {
+  min-height: 100%;
+  padding: 0 var(--trehub-page-gutter);
+  padding-bottom: $space-8;
+  background: var(--page-bg);
+  color: var(--text);
+  font-family: $font-primary;
+}
+
+.trehub-home__shell {
+  display: grid;
+  gap: $space-8;
+  width: 100%;
+
+  > :last-child {
+    margin-bottom: clamp($space-6, 4vw, $space-10);
+  }
+}
+
+.trehub-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2rem;
+  padding: 0 $space-3;
+  border: 1px solid var(--border);
+  border-radius: $radius-full;
+  background: var(--primary-softer);
+  color: var(--color-primary);
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.trehub-why {
+  display: grid;
+  grid-template-columns: minmax(16rem, 0.72fr) minmax(0, 1.28fr);
+  align-items: center;
+  gap: clamp($space-7, 5vw, $space-10);
+  padding: clamp($space-4, 3vw, $space-7);
+}
+
+.trehub-why__head {
+  display: grid;
+  justify-items: start;
+  width: min(46rem, 100%);
+  margin: 0;
+  text-align: left;
+}
+
+.trehub-why__title.ui-subtitle {
+  max-width: 12ch;
+  margin: $space-4 0 $space-3;
+  color: var(--text);
+  font-size: clamp(#{$font-size-xl}, 3vw, #{$font-size-xxl});
+  line-height: $line-height-sm;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.trehub-why__description.ui-paragraph {
+  max-width: 42rem;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: $font-size-md;
+  line-height: $line-height-lg;
+}
+
+.trehub-why__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $space-4;
+}
+
+.trehub-why__card:first-child {
+  grid-column: 1 / -1;
+}
+
+.trehub-why__card.trem-benefit-card {
+  min-width: 0;
+  padding: clamp($space-4, 2vw, $space-5);
+  border-radius: $radius-md;
+  box-shadow: none;
+  transition:
+    border-color $duration-medium $ease-standard,
+    box-shadow $duration-medium $ease-standard,
+    transform $duration-medium $ease-standard;
+
+  &:hover {
+    border-color: var(--primary-focus);
+    box-shadow: var(--shadow-soft);
+    transform: translateY(-2px);
+  }
+
+  .trem-benefit-card__icon {
+    display: inline-grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: $radius-md;
+
+    svg {
+      display: block;
+    }
+  }
+
+  .trem-benefit-card__title {
+    font-size: $font-size-md;
+    line-height: 1.35;
+  }
+
+  .trem-benefit-card__description {
+    font-size: $font-size-sm;
+    line-height: 1.6;
+  }
+
+  &.trem-benefit-card--highlighted {
+    background: linear-gradient(145deg, var(--primary-softer), var(--card-bg));
+  }
+}
+
+@include mq-max($breakpoint-tablet) {
+  .trehub-why {
+    grid-template-columns: 1fr;
+  }
+
+  .trehub-why__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .trehub-why__card:first-child {
+    grid-column: auto;
+  }
+
+  .trehub-why__card.trem-benefit-card {
+    flex-direction: row;
+  }
+}
+
+@include mq-max($breakpoint-phablet) {
+  .trehub-home {
+    --trehub-page-gutter: #{$space-3};
+    padding: 0 var(--trehub-page-gutter);
+    padding-bottom: $space-8;
+  }
+
+  .trehub-why {
+    padding: $space-5 $space-4;
+  }
+
+  .trehub-why__title.ui-subtitle {
+    font-size: $font-size-xxl;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trehub-why__card.trem-benefit-card {
+    transition: none;
+  }
+}

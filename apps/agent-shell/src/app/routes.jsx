@@ -1,5 +1,5 @@
 import React from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 
 import { buildGlobalAuthUrl } from "@packages/trem-utils";
 import ManageTours from "../features/services/tours/ManageTours";
@@ -12,6 +12,7 @@ import { useAgentPortalConfig, isAllowedAgentRole } from "./providers/AgentPorta
 
 const Routers = () => {
   const { loading, session } = useAgentPortalConfig();
+  const location = useLocation();
 
   if (loading) return null;
 
@@ -26,7 +27,12 @@ const Routers = () => {
         <Route
           path="/agent/services/*"
           element={
-            session?.user?.productAccess?.includes(PRODUCT_TYPE.TREVISTA) ? (
+            session?.user?.productAccess?.includes(PRODUCT_TYPE.TREVISTA) ||
+            (
+              session?.user?.productAccess?.includes(PRODUCT_TYPE.TREVIO) &&
+              location.pathname.startsWith("/agent/services/tours/builder") &&
+              new URLSearchParams(location.search).get("product") === PRODUCT_TYPE.TREVIO
+            ) ? (
               <ServicesContainer />
             ) : (
               <Navigate to="/agent/dashboard" replace />

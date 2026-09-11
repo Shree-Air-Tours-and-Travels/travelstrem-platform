@@ -1,11 +1,12 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { clearAuthBrowserState, emitAuthEvent } from "@packages/trem-auth-core";
-import { emit } from "@packages/trem-events";
+import { emit, resolveNotificationLink, useNotificationInbox } from "@packages/trem-events";
 import { buildGlobalAuthUrl, useThemeMode } from "@packages/trem-utils";
 import { AppHeader, Breadcrumbs, Button, SideBar } from "@packages/trem-ui";
 import { useAdminPortalConfig } from "./providers/AdminPortalProvider";
 import authService from "../services/authService";
+import api from "../services/apiClient";
 
 const SECTION_IDS = [
   { id: "workspace", title: "Workspace", items: ["overview", "enquiries", "support"] },
@@ -15,8 +16,10 @@ const SECTION_IDS = [
     title: "Governance",
     items: ["internalTeam", "tenancy", "clients", "pricing"],
   },
-  { id: "account", title: "Account", items: ["profile", "logout"] },
+  { id: "account", title: "Account", items: ["notifications", "profile", "logout"] },
 ];
+
+const unwrap = (response) => response?.data?.componentData?.data ?? response?.data?.data ?? response?.data;
 
 export default function AdminRouteFrame({
   activeId = "services",
@@ -30,6 +33,11 @@ export default function AdminRouteFrame({
   const location = useLocation();
   const { session, headerConfig: backendHeaderConfig } = useAdminPortalConfig();
   const { theme, toggleTheme } = useThemeMode();
+  const notificationInbox = useNotificationInbox({
+    loadInbox: async ({ limit = 6 } = {}) => unwrap(await api.get("/tenancy/notifications", { params: { limit } })),
+    readInboxItem: (id) => api.patch(`/tenancy/notifications/${id}/read`),
+    readAllInboxItems: () => api.patch("/tenancy/notifications/read-all"),
+  });
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const user = useMemo(() => session?.user || {}, [session?.user]);
@@ -44,7 +52,9 @@ export default function AdminRouteFrame({
   );
 
   const sidebarConfig = useMemo(() => {
-    const byId = (ids) => navigationItems.filter((item) => ids.includes(item.id));
+    const byId = (ids) => navigationItems.filter((item) => ids.includes(item.id)).map((item) => (
+      item.id === "notifications" ? { ...item, indicator: notificationInbox.unread > 0 } : item
+    ));
     return {
       ariaLabel: "AdminTREM navigation",
       brand: {
@@ -62,7 +72,7 @@ export default function AdminRouteFrame({
         actionLabel: "View profile",
       },
     };
-  }, [backendHeaderConfig?.brand, navigationItems]);
+  }, [backendHeaderConfig?.brand, navigationItems, notificationInbox.unread]);
 
   const adminUser = useMemo(
     () => ({
@@ -88,6 +98,16 @@ export default function AdminRouteFrame({
     [logout, navigate],
   );
 
+  const openNotification = useCallback(
+    async (item) => {
+      if (!item) return;
+      if (!item.readAt) await notificationInbox.markRead(item._id).catch(() => null);
+      const target = resolveNotificationLink(item, { portal: "admin" });
+      if (target) navigate(target);
+    },
+    [navigate, notificationInbox],
+  );
+
   const breadcrumbs = useMemo(() => {
     const configured = backendHeaderConfig?.adminBreadcrumbs?.[activeId] || [];
     const linked = configured.map((item, index) => ({
@@ -110,7 +130,14 @@ export default function AdminRouteFrame({
       },
       search: { enabled: false },
       primaryAction: { hide: true },
-      notification: { hide: true },
+      notification: {
+        enabled: true,
+        count: notificationInbox.unread,
+        items: notificationInbox.items,
+        onItemClick: openNotification,
+        onMarkAllRead: notificationInbox.markAllRead,
+        onViewAll: () => navigate("/manage/tours?tab=notifications"),
+      },
       themeAction: {},
       user: {
         fallbackName: "Administrator",
@@ -125,7 +152,7 @@ export default function AdminRouteFrame({
         closeLabel: "Close administration navigation",
       },
     }),
-    [backendHeaderConfig?.brand],
+    [backendHeaderConfig?.brand, navigate, notificationInbox, openNotification],
   );
 
   return (

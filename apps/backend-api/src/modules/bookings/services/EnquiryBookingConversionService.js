@@ -2,6 +2,7 @@ import { BOOKING_STATUS, PAYMENT_STATUS } from "../../../constants/enums.js";
 import Booking from "../models/Booking.js";
 import BookingDocument from "../models/BookingDocument.js";
 import BookingQuote from "../models/BookingQuote.js";
+import { createReadableReference } from "../../../utils/readableReference.js";
 
 const enquirySnapshot = (enquiry) => ({
     enquiryRef: enquiry.enquiryRef || "",
@@ -12,7 +13,8 @@ const enquirySnapshot = (enquiry) => ({
     createdAt: enquiry.createdAt || null,
 });
 
-const bookingOnInsert = (enquiry, quote) => ({
+const bookingOnInsert = (enquiry, quote, bookingRef = createReadableReference("BKQ")) => ({
+    bookingRef,
     sourceEnquiryId: enquiry._id,
     acceptedQuoteId: quote._id,
     userId: enquiry.claimedBy || quote.userId || null,
@@ -38,16 +40,21 @@ const bookingOnInsert = (enquiry, quote) => ({
 });
 
 export async function ensureBookingFromAcceptedQuote(enquiry, quote) {
-    let booking;
-    try {
-        booking = await Booking.findOneAndUpdate(
-            { sourceEnquiryId: enquiry._id },
-            { $setOnInsert: bookingOnInsert(enquiry, quote) },
-            { new: true, upsert: true, setDefaultsOnInsert: true, runValidators: true },
-        );
-    } catch (error) {
-        if (error?.code !== 11000) throw error;
-        booking = await Booking.findOne({ sourceEnquiryId: enquiry._id });
+    let booking = null;
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+        try {
+            booking = await Booking.findOneAndUpdate(
+                { sourceEnquiryId: enquiry._id },
+                { $setOnInsert: bookingOnInsert(enquiry, quote) },
+                { new: true, upsert: true, runValidators: true },
+            );
+            break;
+        } catch (error) {
+            if (error?.code !== 11000) throw error;
+            booking = await Booking.findOne({ sourceEnquiryId: enquiry._id });
+            if (booking) break;
+            if (attempt === 4) throw error;
+        }
     }
     if (!booking)
         throw Object.assign(new Error("The booking could not be created from this enquiry."), {

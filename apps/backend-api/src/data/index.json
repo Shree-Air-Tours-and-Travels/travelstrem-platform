@@ -27,6 +27,26 @@
       "page": "home",
       "file": "./trevista-remote/home/page.json"
     },
+    "trehub-remote/home": {
+      "app": "trehub-remote",
+      "page": "home",
+      "file": "./trehub-remote/home/page.json"
+    },
+    "trehub-remote/flights/flight-list": {
+      "app": "trehub-remote",
+      "page": "flight-list",
+      "file": "./trehub-remote/flights/page.json"
+    },
+    "trehub-remote/hotels/hotels": {
+      "app": "trehub-remote",
+      "page": "hotels",
+      "file": "./trehub-remote/hotels/hotels.json"
+    },
+    "trehub-remote/flights/flight-journey": {
+      "app": "trehub-remote",
+      "page": "flight-journey",
+      "file": "./trehub-remote/flights/flight-journey.json"
+    },
     "admin-shell/dashboard": {
       "app": "admin-shell",
       "page": "dashboard",
@@ -60,6 +80,11 @@
     "/trevista/:tourRef": "tours-remote/details",
     "/trevista/home": "trevista-remote/home",
     "/trevio": "trevio-remote/home",
+    "/trehub": "trehub-remote/home",
+    "/trehub/flights": "trehub-remote/flights/flight-list",
+    "/trehub/flights/:offerId": "trehub-remote/flights/flight-journey",
+    "/trehub/hotels": "trehub-remote/hotels/hotels",
+    "/trehub/hotels/:hotelId": "trehub-remote/hotels/hotels",
     "/admin": "admin-shell/dashboard",
     "/admin/pricing": "admin-shell/pricing",
     "/agent/services": "agent-shell/services",
@@ -71,6 +96,9 @@
     "tour-listing": "tours-remote/listing",
     "tour-details": "tours-remote/details",
     "trevio": "trevio-remote/home",
+    "trehub": "trehub-remote/home",
+    "trehub-flights": "trehub-remote/flights/flight-list",
+    "trehub-flight-journey": "trehub-remote/flights/flight-journey",
     "dashboard": "admin-shell/dashboard",
     "admin-pricing": "admin-shell/pricing",
     "agent-services": "agent-shell/services",

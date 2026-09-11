@@ -12,6 +12,7 @@ import portalRoutes from "../modules/portal/routes.js";
 import pageDefinitionRoutes from "../modules/pageDefinitions/routes.js";
 import toursPageRoutes from "../modules/tours/pageRoutes.js";
 import tripRoutes from "../modules/trips/routes.js";
+import trehubRoutes from "../modules/trehub/routes.js";
 import tourHomeRoutes from "../modules/tours/homeRoutes.js";
 import masterDataRoutes from "../modules/masterData/routes.js";
 import clientRoutes from "../modules/clients/routes.js";
@@ -20,6 +21,8 @@ import testEmailRoutes from "../modules/email/routes.js";
 import tenancyRoutes from "../modules/tenancy/routes.js";
 import supportRoutes from "../modules/support/routes.js";
 import locationRoutes from "../modules/locations/routes.js";
+import flightRoutes from "../modules/flights/routes/flight.routes.js";
+import hotelRoutes from "../modules/hotels/routes.js";
 
 const getDbHealth = () => {
     const readyState = mongoose.connection.readyState;
@@ -67,11 +70,14 @@ export default function registerRoutes(app) {
     app.use("/api/tenancy", tenancyRoutes);
     app.use("/api/support", supportRoutes);
     app.use("/api/locations", locationRoutes);
+    app.use("/api/flights", flightRoutes);
+    app.use("/api/hotels", hotelRoutes);
     app.use("/api/pages", pageDefinitionRoutes);
     app.use(API_ROUTES.TOURS, tourRoutes);
     // Public brand URLs remain compatibility aliases; domain code lives in trips/tours.
     app.use("/api/trevio", tripRoutes);
     app.use("/api/trevista", tourHomeRoutes);
+    app.use("/api/trehub", trehubRoutes);
     app.use("/api/master-data", masterDataRoutes);
     app.use(API_ROUTES.CHAT, chatRoutes);
     app.use(API_ROUTES.API, formsRouter);

@@ -30,6 +30,15 @@ export default function TrevioTripCard({
   deleteLabel = "Delete",
   approveLabel = "Approve and publish",
 }) {
+  const displayLabels = {
+    agency: "Agency",
+    agent: "Added by agent",
+    platformAgency: "TravelsTREM",
+    price: "Per person",
+    action: "View itinerary",
+    soldOutAction: "Notify me",
+    ...labels,
+  };
   const image = trip.image || trip.photo || trip.photos?.[0];
   const price =
     typeof trip.price === "object" ? trip.price?.amount : (trip.price ?? trip.priceInfo?.min);
@@ -42,6 +51,8 @@ export default function TrevioTripCard({
   const rating = Number(trip.avgRating ?? trip.rating);
   const ratingLabel = Number.isFinite(rating) && rating > 0 ? rating.toFixed(1) : "";
   const reviewCount = Number(trip.reviewCount || trip.reviews?.length || 0);
+  const agencyName = trip.agency?.name || "";
+  const agencyLogo = trip.agency?.logo || "";
   const agencyInitials = trip.agency?.name
     ?.split(/\s+/)
     .filter(Boolean)
@@ -55,10 +66,10 @@ export default function TrevioTripCard({
   const ownerName = trip.ownerAgentName || owner?.name || "";
   const ownership =
     ownershipMode === "agent"
-      ? { label: labels.agent || "Added by agent", name: ownerName, logo: "" }
+      ? { label: displayLabels.agent, name: ownerName, logo: "" }
       : {
-          label: labels.agency || "Agency",
-          name: trip.agency?.name || labels.platformAgency || "TravelsTREM",
+          label: displayLabels.agency,
+          name: trip.agency?.name || displayLabels.platformAgency,
           logo: trip.agency?.logo || "",
         };
   const ownershipInitials = ownership.name
@@ -95,6 +106,15 @@ export default function TrevioTripCard({
             </span>
           ) : null}
         </div>
+        {agencyName ? (
+          <div className="trevio-trip-card__agency-logo">
+            {agencyLogo ? (
+              <img src={agencyLogo} alt={`${agencyName} logo`} loading="lazy" />
+            ) : (
+              <span aria-hidden="true">{agencyInitials || "TT"}</span>
+            )}
+          </div>
+        ) : null}
         {typeof onFavorite === "function" ? (
           <button
             type="button"
@@ -120,7 +140,7 @@ export default function TrevioTripCard({
                 strokeLinejoin="round"
               />
             </svg>
-            {trip.availability?.availabilityMessage}
+            {trip.availability?.availabilityMessage || "This trip is currently sold out."}
           </div>
         )}
       </div>
@@ -178,7 +198,7 @@ export default function TrevioTripCard({
         </div>
         <div className="trevio-trip-card__footer">
           <div className="trevio-trip-card__price">
-            <small>{labels.price}</small>
+            <small>{displayLabels.price}</small>
             <strong>{money(price, currency)}</strong>
           </div>
           {!management && onView ? (
@@ -186,9 +206,8 @@ export default function TrevioTripCard({
               type="button"
               className="trevio-trip-card__link"
               onClick={() => onView(trip)}
-              disabled={isSoldOut}
             >
-              {isSoldOut ? labels.soldOutAction : labels.action}
+              {isSoldOut ? displayLabels.soldOutAction : displayLabels.action}
               <Icon name="chevronRight" size={16} />
             </button>
           ) : null}

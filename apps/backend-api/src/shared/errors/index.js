@@ -6,6 +6,7 @@ export function normalizeError(err) {
         statusCode,
         body: {
             status: "error",
+            ...(err?.code ? { code: err.code } : {}),
             message: err?.message || "Internal Server Error",
             ...(err?.details ? { details: err.details } : {}),
         },

@@ -2,6 +2,7 @@ import config from "./env.js";
 
 const TREVIO_URL = config.TREVIO_URL;
 const TREVISTA_URL = config.TREVISTA_URL;
+const TREHUB_URL = config.TREHUB_URL;
 const SHELL_URL = config.SHELL_URL;
 
 export default {
@@ -47,6 +48,12 @@ export default {
                 logoSrc: "/favicon.png",
                 name: "Trevista",
                 subtitle: "by TravelsTrem",
+                initial: "",
+            },
+            trehub: {
+                logoSrc: "/favicon.png",
+                name: "Trehub",
+                subtitle: "Flights & Hotels by TravelsTrem",
                 initial: "",
             },
             "app-shell": {
@@ -104,6 +111,14 @@ export default {
                         label: "Trevista",
                         type: "external",
                         href: TREVISTA_URL,
+                        target: "_blank",
+                        rel: "noopener noreferrer",
+                        disabled: false,
+                    },
+                    {
+                        label: "Trehub",
+                        type: "external",
+                        href: TREHUB_URL,
                         target: "_blank",
                         rel: "noopener noreferrer",
                         disabled: false,

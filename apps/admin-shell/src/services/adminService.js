@@ -206,6 +206,17 @@ export async function verifyAdminTrip(id) {
   );
 }
 
+export async function resolveAdminTripBuilderTour(id) {
+  const res = await expectSuccess(
+    fetchData(`${TRIP_BASE}/${id}/builder-tour`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    }),
+    "Failed to open Trevio trip in builder",
+  );
+  return res.componentData?.data || res;
+}
+
 export async function deleteTrip(id) {
   await expectSuccess(
     fetchData(`${TRIP_BASE}/${id}`, {
