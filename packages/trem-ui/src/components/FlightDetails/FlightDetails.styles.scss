@@ -1,0 +1,224 @@
+@import "@packages/trem-design-tokens/scss";
+
+.trem-flight-details {
+  display: grid;
+  gap: $space-5;
+  padding: clamp($space-5, 3vw, $space-7);
+  border: 1px solid var(--border);
+  border-radius: $radius-lg;
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-card);
+}
+
+.trem-flight-details__header,
+.trem-flight-details__itinerary > header,
+.trem-flight-details__fare-detail > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-4;
+
+  h2, h3, p { margin: 0; }
+  p { margin-top: $space-1; color: var(--text-muted); }
+}
+
+.trem-flight-details__header > div > span {
+  color: var(--color-primary);
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.trem-flight-details__header h2 { margin-top: $space-2; font-size: clamp(1.5rem, 2.5vw, 2.25rem); }
+
+.trem-flight-details__assurance {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  color: var(--color-primary);
+  font-size: $font-size-sm;
+  font-weight: $font-semibold;
+  white-space: nowrap;
+}
+
+.trem-flight-details__overview {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-block: 1px solid var(--border);
+}
+
+.trem-flight-details__fact {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px $space-2;
+  min-width: 0;
+  padding: $space-4;
+  border-right: 1px solid var(--border);
+
+  &:last-child { border-right: 0; }
+  svg { grid-row: 1 / 3; align-self: center; color: var(--color-primary); }
+  span { color: var(--text-muted); font-size: $font-size-xs; }
+  strong { overflow: hidden; font-size: $font-size-sm; text-overflow: ellipsis; }
+}
+
+.trem-flight-details__itinerary,
+.trem-flight-details__fare-detail {
+  display: grid;
+  gap: $space-4;
+  padding-top: $space-5;
+  border-top: 1px solid var(--border);
+}
+
+.trem-flight-details__segment {
+  display: grid;
+  grid-template-columns: minmax(9rem, 0.55fr) minmax(22rem, 1.6fr) minmax(12rem, 0.75fr);
+  align-items: center;
+  gap: clamp($space-4, 2vw, $space-6);
+  padding: $space-5;
+  border-radius: $radius-md;
+  background: var(--surface-subtle);
+}
+
+.trem-flight-details__carrier {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+
+  > div { display: grid; min-width: 0; }
+  strong, span, small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  span, small { color: var(--text-muted); }
+}
+
+.trem-flight-details__carrier-icon {
+  display: grid;
+  flex: 0 0 3rem;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  border-radius: $radius-md;
+  background: var(--primary-soft);
+  color: var(--color-primary);
+}
+
+.trem-flight-details__route {
+  display: grid;
+  grid-template-columns: minmax(7rem, 1fr) minmax(8rem, 1.2fr) minmax(7rem, 1fr);
+  align-items: center;
+  gap: $space-3;
+
+  > div:not(.trem-flight-details__route-line) { display: grid; gap: 2px; }
+  > div:last-child { text-align: right; }
+  time { color: var(--heading); font-size: clamp(1.4rem, 2vw, 2rem); font-weight: $font-bold; }
+  strong { color: var(--color-primary); }
+  span, small { color: var(--text-muted); }
+  small { font-size: $font-size-xs; }
+}
+
+.trem-flight-details__route-line {
+  display: grid;
+  justify-items: center;
+  gap: $space-1;
+  color: var(--text-muted);
+  font-size: $font-size-xs;
+
+  > div { display: flex; align-items: center; width: 100%; color: var(--color-primary); }
+  i { flex: 1; height: 1px; background: var(--border); }
+}
+
+.trem-flight-details__equipment {
+  display: grid;
+  gap: $space-3;
+  margin: 0;
+  padding-left: $space-4;
+  border-left: 1px solid var(--border);
+
+  div { display: grid; gap: 2px; }
+  dt { color: var(--text-muted); font-size: $font-size-xs; }
+  dd { margin: 0; font-size: $font-size-sm; font-weight: $font-semibold; }
+}
+
+.trem-flight-details__layover {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-2;
+  padding: $space-2;
+  border-radius: $radius-full;
+  background: var(--warning-soft);
+  color: var(--text-muted);
+  font-size: $font-size-xs;
+  font-weight: $font-semibold;
+}
+
+.trem-flight-details__fare-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $space-5;
+
+  h4 { margin: 0 0 $space-3; }
+}
+
+.trem-flight-details__benefits { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+.trem-flight-details__benefit {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  min-width: 0;
+  padding: $space-3 0;
+  border-bottom: 1px solid var(--border);
+
+  &:nth-last-child(-n + 2) { border-bottom: 0; }
+  svg { flex: 0 0 auto; color: var(--color-primary); }
+  div { display: grid; min-width: 0; }
+  span { color: var(--text-muted); font-size: $font-size-xs; }
+  strong { font-size: $font-size-sm; }
+}
+
+.trem-flight-details__conditions {
+  display: grid;
+  gap: $space-2;
+  margin: 0;
+
+  > div { display: flex; align-items: center; justify-content: space-between; gap: $space-3; padding: $space-2 0; border-bottom: 1px solid var(--border); }
+  > div:last-child { border-bottom: 0; }
+  dt { color: var(--text-muted); font-size: $font-size-sm; }
+  dd { margin: 0; text-align: right; }
+}
+
+.trem-flight-details__notices {
+  display: flex;
+  align-items: flex-start;
+  gap: $space-3;
+  padding: $space-4;
+  border-radius: $radius-md;
+  background: var(--primary-softer);
+  color: var(--text-muted);
+
+  > svg { flex: 0 0 auto; color: var(--color-primary); }
+  strong { color: var(--text); }
+  ul { display: grid; gap: $space-1; margin: $space-2 0 0; padding-left: $space-4; font-size: $font-size-sm; }
+}
+
+@media (max-width: 1100px) {
+  .trem-flight-details__overview { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .trem-flight-details__fact:nth-child(2) { border-right: 0; }
+  .trem-flight-details__fact:nth-child(-n + 2) { border-bottom: 1px solid var(--border); }
+  .trem-flight-details__segment { grid-template-columns: 1fr; }
+  .trem-flight-details__equipment { grid-template-columns: repeat(3, minmax(0, 1fr)); padding: $space-4 0 0; border-top: 1px solid var(--border); border-left: 0; }
+}
+
+@media (max-width: 680px) {
+  .trem-flight-details { padding: $space-4; }
+  .trem-flight-details__header, .trem-flight-details__fare-detail > header { align-items: flex-start; flex-direction: column; }
+  .trem-flight-details__overview, .trem-flight-details__fare-grid, .trem-flight-details__benefits, .trem-flight-details__equipment { grid-template-columns: 1fr; }
+  .trem-flight-details__fact { border-right: 0; border-bottom: 1px solid var(--border); }
+  .trem-flight-details__fact:last-child { border-bottom: 0; }
+  .trem-flight-details__benefit:nth-last-child(2) { border-bottom: 1px solid var(--border); }
+  .trem-flight-details__route { grid-template-columns: 1fr; }
+  .trem-flight-details__route > div:last-child { text-align: left; }
+  .trem-flight-details__route-line { justify-items: start; }
+  .trem-flight-details__route-line > div { width: min(12rem, 100%); }
+}

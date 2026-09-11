@@ -74,6 +74,28 @@ const formatMoney = (minor, currency = "INR") => {
     }).format(Number(minor) / 100);
 };
 
+const quoteHandle = (quote = {}) => quote.quoteRef || quote.quoteNumber || "";
+
+const quoteItemsView = (quote = {}) =>
+    (quote.items || []).map((item, index) => ({
+        id: item.code || `quote-item-${index + 1}`,
+        code: item.code || "",
+        label: item.label || "",
+        description: item.description || "",
+        pricingType: item.pricingType || "FIXED",
+        detailRows: (item.detailRows || []).map((row) => ({
+            label: row.label || "",
+            value: row.value || "",
+        })),
+        unitAmount: item.unitAmount || 0,
+        quantity: item.quantity || 1,
+        amount: item.amount || 0,
+        currency: item.currency || quote.currency || "INR",
+        category: item.category || "inclusion",
+        optional: Boolean(item.optional),
+        selected: item.selected !== false,
+    }));
+
 export const enquiryCenterView = (perspective = "sent") => {
     const isSent = perspective === "sent";
     return {
@@ -138,6 +160,7 @@ export const enquiryCenterView = (perspective = "sent") => {
                         { label: "All products", value: "all" },
                         { label: "Trevista", value: "trevista" },
                         { label: "Trevio", value: "trevio" },
+                        { label: "Trehub", value: "trehub" },
                     ],
                 },
             ],
@@ -254,16 +277,13 @@ export const enquiryView = (
 ) => {
     const fields = lead?.fields || {};
     const isSent = perspective === "sent";
-    const ownerAgent = lead?.ownerAgent && typeof lead.ownerAgent === "object"
-        ? lead.ownerAgent
-        : null;
-    const agency = lead?.agencyId && typeof lead.agencyId === "object"
-        ? lead.agencyId
-        : null;
+    const ownerAgent =
+        lead?.ownerAgent && typeof lead.ownerAgent === "object" ? lead.ownerAgent : null;
+    const agency = lead?.agencyId && typeof lead.agencyId === "object" ? lead.agencyId : null;
     const counterpart = isSent
         ? {
               label: "Sent to",
-              name: lead?.agentSnapshot?.name || "TravelsTREM support team",
+              name: lead?.agentSnapshot?.name || "TravelsTREM",
               email: lead?.agentSnapshot?.email || "",
               phone: lead?.agentSnapshot?.phone || "",
           }
@@ -324,8 +344,9 @@ export const enquiryView = (
             : {};
     const customerQuote = quote?._id
         ? {
-              id: String(quote._id),
-              quoteRef: quote.quoteRef || "",
+              id: quoteHandle(quote),
+              quoteRef: quoteHandle(quote),
+              quoteNumber: quote.quoteNumber || "",
               version: quote.version,
               status: quote.status,
               expirationDate: quote.expirationDate || quote.validity || quote.expiresAt,
@@ -334,7 +355,7 @@ export const enquiryView = (
               platformFee: quote.platformFee || 0,
               taxes: quote.taxes || 0,
               finalAmount: quote.finalAmount || 0,
-              items: quote.items || [],
+              items: quoteItemsView(quote),
               notes: quote.notes || "",
               terms: quote.terms || "",
               acceptedAt: quote.acceptedAt || null,
@@ -346,7 +367,8 @@ export const enquiryView = (
     const bookingJourney = includeBookingJourney
         ? presentBookingJourney({
               booking: {
-                  id: String(lead?._id || ""),
+                  id: lead?.enquiryRef || "",
+                  enquiryId: lead?.enquiryRef || "",
                   reference: lead?.enquiryRef || "Enquiry",
                   title: lead?.tourTitle || "Tour enquiry",
                   status: lead?.status || "new",
@@ -354,12 +376,16 @@ export const enquiryView = (
                       fields.travellerCount || lead?.customizationSnapshot?.travellers || 1,
                   ),
                   requiresPassport:
+                      Boolean(lead?.customizationSnapshot?.requiresPassport) ||
                       fields.flightPreference === "with_flights" ||
                       lead?.customizationSnapshot?.flightRequest === "ADD" ||
                       customerQuote?.items?.some(
                           (item) => String(item.category || "").toUpperCase() === "FLIGHT",
                       ),
                   travellerDetails: lead?.travellerDetails || null,
+                  product: lead?.product || "trevista",
+                  journeyType: lead?.journeyType,
+                  flightSearchUrl: lead?.customizationSnapshot?.searchUrl || "/trehub/flights",
               },
               quote: customerQuote,
               actor: { role: isSent ? "user" : "agent" },
@@ -374,7 +400,7 @@ export const enquiryView = (
             ? "Your enquiry details are saved here. Updates will appear as the request progresses."
             : "The submitted enquiry details and future updates are available here.");
     const summary = {
-        id: String(lead?._id || ""),
+        id: lead?.enquiryRef || "",
         recordType: "enquiry",
         recordTypeLabel: "Enquiry",
         enquiryRef: lead?.enquiryRef || "",

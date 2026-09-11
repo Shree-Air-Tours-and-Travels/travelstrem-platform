@@ -17,8 +17,11 @@ export default function TourBuilderPage({ mode = "create" }) {
   const productKey = query.get("product") === PRODUCT_TYPE.TREVIO
     ? PRODUCT_TYPE.TREVIO
     : PRODUCT_TYPE.TREVISTA;
+  const resolvedMode = query.get("mode") === "view" ? "view" : mode;
   const startStepKey =
-    mode === "view" ? "review" : query.get("step") || (mode === "edit" ? "resume" : null);
+    resolvedMode === "view"
+      ? "review"
+      : query.get("step") || (resolvedMode === "edit" ? "resume" : null);
   const exitTarget = productKey === PRODUCT_TYPE.TREVIO ? "/agent/trevio/trips" : "/agent/services/tours";
   const exit = useCallback(() => navigate(exitTarget), [exitTarget, navigate]);
   const syncBuilderLocation = useCallback(
@@ -38,7 +41,7 @@ export default function TourBuilderPage({ mode = "create" }) {
 
   return (
     <TourBuilder
-      mode={mode}
+      mode={resolvedMode}
       productKey={productKey}
       tourId={tourId}
       startStepKey={startStepKey}

@@ -5,18 +5,34 @@ const CUSTOMER_QUOTE_ACTIONS = Object.freeze({
   CANCEL: "CANCEL",
 });
 
-export const allowedCustomerQuoteActions = (status, hasChangeRequest = false) => {
-  const value = String(status || "").toUpperCase();
-  if (["CANCELLED", "EXPIRED"].includes(value)) return [];
-  if (value === "ACCEPTED") return [CUSTOMER_QUOTE_ACTIONS.REQUEST_CHANGES, CUSTOMER_QUOTE_ACTIONS.CANCEL];
-  if (value === "REJECTED") return [CUSTOMER_QUOTE_ACTIONS.REQUEST_CHANGES, CUSTOMER_QUOTE_ACTIONS.CANCEL];
-  if (hasChangeRequest) return [CUSTOMER_QUOTE_ACTIONS.CANCEL];
-  return Object.values(CUSTOMER_QUOTE_ACTIONS);
+const customerCanRequestChanges = (version) => {
+  const numericVersion = Number(version || 1);
+  return Number.isFinite(numericVersion) && numericVersion < 3;
 };
 
-export const resolveCustomerQuoteDecision = ({ status, action, notes = "", hasChangeRequest = false }) => {
+export const allowedCustomerQuoteActions = (status, hasChangeRequest = false, version = 1) => {
+  const value = String(status || "").toUpperCase();
+  if (["CANCELLED", "EXPIRED"].includes(value)) return [];
+  if (value === "ACCEPTED") return [CUSTOMER_QUOTE_ACTIONS.CANCEL];
+  if (value === "REJECTED")
+    return [
+      ...(customerCanRequestChanges(version) ? [CUSTOMER_QUOTE_ACTIONS.REQUEST_CHANGES] : []),
+      CUSTOMER_QUOTE_ACTIONS.CANCEL,
+    ];
+  if (hasChangeRequest) return [CUSTOMER_QUOTE_ACTIONS.CANCEL];
+  return [
+    CUSTOMER_QUOTE_ACTIONS.ACCEPT,
+    CUSTOMER_QUOTE_ACTIONS.REJECT,
+    ...(customerCanRequestChanges(version) ? [CUSTOMER_QUOTE_ACTIONS.REQUEST_CHANGES] : []),
+    CUSTOMER_QUOTE_ACTIONS.CANCEL,
+  ];
+};
+
+export const resolveCustomerQuoteDecision = ({ status, action, notes = "", hasChangeRequest = false, version = 1 }) => {
   const normalizedAction = String(action || "").toUpperCase();
-  if (!allowedCustomerQuoteActions(status, hasChangeRequest).includes(normalizedAction))
+  if (normalizedAction === CUSTOMER_QUOTE_ACTIONS.REQUEST_CHANGES && !customerCanRequestChanges(version))
+    throw Object.assign(new Error("Quote change requests are locked after V3. Contact your travel specialist for further changes."), { status: 409 });
+  if (!allowedCustomerQuoteActions(status, hasChangeRequest, version).includes(normalizedAction))
     throw Object.assign(new Error("This action is not available for the current quote status."), { status: 409 });
   const normalizedNotes = String(notes || "").trim().slice(0, 1200);
   if (normalizedAction === CUSTOMER_QUOTE_ACTIONS.REQUEST_CHANGES && normalizedNotes.length < 5)

@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { nanoid } from "nanoid";
+import { createReadableReference } from "../../../utils/readableReference.js";
 import {
     BOOKING_STATUS,
     BOOKING_STATUS_LIST,
@@ -13,7 +13,7 @@ const bookingSchema = new Schema(
     {
         bookingRef: {
             type: String,
-            default: () => `BKG-${nanoid(8).toUpperCase()}`,
+            default: () => createReadableReference("BKQ"),
             unique: true,
             index: true,
         },
@@ -67,6 +67,21 @@ const bookingSchema = new Schema(
         pricingSnapshot: { type: Schema.Types.Mixed, required: true, immutable: true },
         financialSnapshot: { type: Schema.Types.Mixed, default: null, immutable: true },
         travellerDetails: { type: Schema.Types.Mixed, default: null },
+        inventoryHold: {
+            resourceType: {
+                type: String,
+                enum: ["trip", "tour_departure", "tour", ""],
+                default: "",
+                index: true,
+            },
+            resourceId: { type: String, default: "", index: true },
+            departureId: { type: String, default: "" },
+            seats: { type: Number, min: 0, default: 0 },
+            tourSeatsHeld: { type: Boolean, default: false },
+            status: { type: String, enum: ["active", "released", ""], default: "", index: true },
+            heldAt: { type: Date, default: null },
+            releasedAt: { type: Date, default: null },
+        },
         convertedAt: { type: Date, default: Date.now, immutable: true },
     },
     { timestamps: true },
@@ -82,6 +97,11 @@ bookingSchema.set("toJSON", {
     transform: (_, ret) => {
         delete ret._id;
     },
+});
+bookingSchema.index({
+    "inventoryHold.resourceType": 1,
+    "inventoryHold.resourceId": 1,
+    "inventoryHold.status": 1,
 });
 
 const Booking = mongoose.models?.Booking || mongoose.model("Booking", bookingSchema);

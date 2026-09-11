@@ -43,6 +43,30 @@ export const responseTrips = (response) =>
   response?.component?.data?.trips ||
   [];
 
+export const responsePagination = (response) =>
+  response?.data?.pagination ||
+  response?.componentData?.data?.pagination ||
+  response?.component?.data?.pagination ||
+  {};
+
+export const responseQuickChips = (response) =>
+  response?.dataScope?.options?.quickChipOptions ||
+  response?.componentData?.dataScope?.options?.quickChipOptions ||
+  response?.component?.dataScope?.options?.quickChipOptions ||
+  [];
+
+export const responseTripSortOptions = (response) =>
+  response?.dataScope?.options?.tripSortOptions ||
+  response?.componentData?.dataScope?.options?.tripSortOptions ||
+  response?.component?.dataScope?.options?.tripSortOptions ||
+  [];
+
+export const responseTripFilterOptions = (response) =>
+  response?.dataScope?.options?.tripFilterOptions ||
+  response?.componentData?.dataScope?.options?.tripFilterOptions ||
+  response?.component?.dataScope?.options?.tripFilterOptions ||
+  {};
+
 export const resolvePageContent = (pageResponse) => {
   const component = pageResponse?.componentData || pageResponse?.component;
   if (!component) return null;

@@ -44,8 +44,12 @@ const resourceRoom = (resource, id) =>
  */
 function joinIdentityRooms(socket, context) {
     socket.join(room.user(context.userId));
-    if (context.agencyId) socket.join(room.agency(context.agencyId));
-    if (context.role === "admin" || context.adminLevel !== "none") socket.join(room.admin());
+    if (context.portal === "partner" && context.agencyId) socket.join(room.agency(context.agencyId));
+    if (
+        context.portal === "admin" &&
+        (context.role === "admin" || context.adminLevel !== "none")
+    )
+        socket.join(room.admin());
     socket.join(room.catalog());
 }
 

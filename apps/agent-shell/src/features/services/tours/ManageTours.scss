@@ -568,6 +568,28 @@ $agent-gap: $space-3;
   font: inherit;
   resize: vertical;
 }
+.agency-products__agents {
+  display: grid;
+  gap: $space-3;
+}
+.agency-products__agents > div {
+  display: grid;
+  gap: $space-1;
+}
+.agency-products__agents small {
+  color: var(--muted);
+  font-weight: normal;
+}
+.agency-products__select-all {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  font-size: $font-size-sm;
+  font-weight: $font-semibold;
+}
+.agency-products__select-all input {
+  width: auto;
+}
 .agency-products__history {
   display: grid;
   gap: $space-2;

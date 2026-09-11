@@ -63,6 +63,10 @@ const DEFAULT_PARTNER_BREADCRUMBS = [
     items: [{ label: "Workspace", path: "/agent/dashboard" }, { label: "Agency Workspace" }],
   },
   {
+    match: "/agent/notifications",
+    items: [{ label: "Workspace", path: "/agent/dashboard" }, { label: "Notifications" }],
+  },
+  {
     match: "/agent/dashboard",
     items: [{ label: "Workspace" }, { label: "Dashboard" }],
   },

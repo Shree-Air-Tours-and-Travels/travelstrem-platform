@@ -25,6 +25,7 @@ export default function SideBar({
   user = null,
   activeId = "",
   mobileOpen = false,
+  desktopOpen = false,
   collapsed = false,
   className = "",
   onNavigate,
@@ -33,6 +34,8 @@ export default function SideBar({
   onCollapsedChange,
 }) {
   const panelRef = useRef(null);
+  const variant = config.variant || "sidebar";
+  const isTopDropdown = variant === "top-dropdown";
   const sections = config.sections || [];
   const profile = config.profile || {};
   const profileName =
@@ -52,19 +55,19 @@ export default function SideBar({
   );
 
   useEffect(() => {
-    if (!mobileOpen) return undefined;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    if (!mobileOpen && !desktopOpen) return undefined;
+    const previousOverflow = mobileOpen ? document.body.style.overflow : "";
+    if (mobileOpen) document.body.style.overflow = "hidden";
     panelRef.current?.focus();
     const handleKey = (event) => {
       if (event.key === "Escape") onClose?.();
     };
     window.addEventListener("keydown", handleKey);
     return () => {
-      document.body.style.overflow = previousOverflow;
+      if (mobileOpen) document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleKey);
     };
-  }, [mobileOpen, onClose]);
+  }, [desktopOpen, mobileOpen, onClose]);
 
   function activate(item) {
     if (item.disabled) return;
@@ -78,23 +81,26 @@ export default function SideBar({
   return (
     <>
       <div
-        className={`trem-sidebar__backdrop${mobileOpen ? " is-open" : ""}`}
+        className={`trem-sidebar__backdrop${mobileOpen ? " is-open is-mobile-open" : ""}${isTopDropdown && desktopOpen ? " is-open is-desktop-open" : ""}${isTopDropdown ? " trem-sidebar__backdrop--top-dropdown" : ""}`}
         aria-hidden="true"
         onClick={onClose}
       />
       <aside
+        id={config.topDropdown?.panelId}
         ref={panelRef}
-        tabIndex={mobileOpen ? -1 : undefined}
+        tabIndex={mobileOpen || desktopOpen ? -1 : undefined}
         className={[
           "trem-sidebar",
+          `trem-sidebar--${variant}`,
           mobileOpen ? "is-mobile-open" : "",
+          isTopDropdown && desktopOpen ? "is-desktop-open" : "",
           collapsed ? "is-collapsed" : "",
           className,
         ]
           .filter(Boolean)
           .join(" ")}
         aria-label={config.ariaLabel || "Dashboard navigation"}
-        aria-hidden={!mobileOpen ? undefined : false}
+        aria-hidden={isTopDropdown && !mobileOpen && !desktopOpen ? true : undefined}
       >
         <header className="trem-sidebar__brand">
           <div className="trem-sidebar__brand-logo">
@@ -194,6 +200,7 @@ SideBar.propTypes = {
   user: PropTypes.object,
   activeId: PropTypes.string,
   mobileOpen: PropTypes.bool,
+  desktopOpen: PropTypes.bool,
   collapsed: PropTypes.bool,
   className: PropTypes.string,
   onNavigate: PropTypes.func,

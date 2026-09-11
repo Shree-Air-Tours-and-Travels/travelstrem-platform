@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Button,
   EmptyState,
@@ -38,6 +39,7 @@ const supportRequest = async (path, options) => {
 };
 
 export default function AgentSupportPage() {
+  const [searchParams] = useSearchParams();
   const [tickets, setTickets] = useState([]);
   const [statuses, setStatuses] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -97,6 +99,7 @@ export default function AgentSupportPage() {
   }, [loadCategories]);
 
   const activeTicketId = idOf(detail?.ticket);
+  const selectedTicketId = searchParams.get("ticket") || "";
   useSupportRealtime(activeTicketId);
   useRealtimeEvent(REALTIME_EVENTS.SUPPORT_MESSAGE_CREATED, (envelope) => {
     const message = envelope?.data;
@@ -123,7 +126,7 @@ export default function AgentSupportPage() {
       }));
   });
 
-  const openTicket = async (ticketId, { before = "", prepend = false } = {}) => {
+  const openTicket = useCallback(async (ticketId, { before = "", prepend = false } = {}) => {
     if (prepend) setLoadingOlder(true);
     else setBusy(true);
     setError("");
@@ -143,7 +146,13 @@ export default function AgentSupportPage() {
       if (prepend) setLoadingOlder(false);
       else setBusy(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (selectedTicketId && selectedTicketId !== activeTicketId) {
+      openTicket(selectedTicketId);
+    }
+  }, [activeTicketId, openTicket, selectedTicketId]);
 
   const createTicket = async (event) => {
     event.preventDefault();

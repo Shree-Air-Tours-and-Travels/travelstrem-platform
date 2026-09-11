@@ -368,6 +368,75 @@ const Flight = (p) => (
   </Svg>
 );
 
+const AirlineGeneric = (p) => (
+  <Svg {...p}>
+    <circle cx="12" cy="12" r="10" {...tone} />
+    <path d="m4.5 13.8 6.2-2.4V6.2c0-1 .6-1.7 1.3-1.7s1.3.7 1.3 1.7v4.2l5-1.9c.8-.3 1.5.1 1.7.8.2.6-.1 1.2-.7 1.5l-6 3.6v3.2l2.1 1.4v.8L12 19l-3.4.8V19l2.1-1.4v-2l-6.2-.4v-1.4Z" {...solid} />
+  </Svg>
+);
+
+const AirlineAirIndia = (p) => (
+  <Svg {...p}>
+    <path d="M4 18.8C8.2 9.1 13.2 5 20.5 4.2c-3.2 2.6-5.1 5.2-6.7 9.3-2.9.4-5.9 2.1-9.8 5.3Z" {...tone} />
+    <path d="M4 18.8C8.2 9.1 13.2 5 20.5 4.2c-3.2 2.6-5.1 5.2-6.7 9.3-2.9.4-5.9 2.1-9.8 5.3Z" {...s} />
+    <path d="m8 15.7 8.3-8.2M10.9 14.1l-1-4.1M13.2 11.7l-1-3.5M15.3 9.4l-.7-2.4" {...s} />
+  </Svg>
+);
+
+const AirlineVistara = (p) => (
+  <Svg {...p}>
+    <circle cx="12" cy="12" r="9.5" {...tone} />
+    <path d="m12 4.2 1.8 5.1 5.3-1.7-3.3 4.4 3.3 4.4-5.3-1.7-1.8 5.1-1.8-5.1-5.3 1.7L8.2 12 4.9 7.6l5.3 1.7L12 4.2Z" {...s} />
+    <circle cx="12" cy="12" r="2.1" {...solid} />
+  </Svg>
+);
+
+const AirlineIndigo = (p) => (
+  <Svg {...p}>
+    <path d="M5 18.5c4.2-5.4 8.9-8.8 14-10.4-3.8 3-6.7 6.2-8.8 9.8l-5.2.6Z" {...tone} />
+    <path d="M5 18.5c4.2-5.4 8.9-8.8 14-10.4-3.8 3-6.7 6.2-8.8 9.8l-5.2.6Z" {...s} />
+    {[7, 10.5, 14, 17.5].map((x) => <circle key={x} cx={x} cy="5.5" r="1" {...solid} />)}
+  </Svg>
+);
+
+const AirlineSpiceJet = (p) => (
+  <Svg {...p}>
+    <path d="M4.5 16.8c4.5 1 9.8.2 15-3.7-3.6 5.2-8.9 7.2-15 5.6v-1.9Z" {...tone} />
+    <path d="M4.5 16.8c4.5 1 9.8.2 15-3.7" {...s} />
+    {[8, 12, 16].flatMap((x) => [6, 9.5, 13].map((y) => <circle key={`${x}-${y}`} cx={x} cy={y} r=".85" {...solid} />))}
+  </Svg>
+);
+
+const AirlineAkasa = (p) => (
+  <Svg {...p}>
+    <path d="M3.8 17.8c2.8-6.9 6.3-10.7 10.4-11.6-1.8 2.7-3.2 5.9-4 9.7l-6.4 1.9Z" {...tone} />
+    <path d="M3.8 17.8c2.8-6.9 6.3-10.7 10.4-11.6-1.8 2.7-3.2 5.9-4 9.7l-6.4 1.9ZM10.2 15.9c2.1-5.7 5.3-8.9 9.5-9.8-2.2 2.7-3.8 5.5-4.7 8.5l-4.8 1.3Z" {...s} />
+  </Svg>
+);
+
+const AirlineEmirates = (p) => <AirlineGeneric {...p} />;
+const AirlineEtihad = (p) => (
+  <Svg {...p}><path d="M5 18 9 6l5-2 5 14-7-4-7 4Z" {...tone} /><path d="M5 18 9 6l5-2 5 14-7-4-7 4Z" {...s} /></Svg>
+);
+const AirlineQatar = (p) => (
+  <Svg {...p}><circle cx="12" cy="12" r="9" {...tone} /><path d="M5 12h14M12 5c3 3.5 3 10.5 0 14M12 5c-3 3.5-3 10.5 0 14" {...s} /></Svg>
+);
+const AirlineSingapore = (p) => (
+  <Svg {...p}><path d="M4 17.5 19.5 5l-6.2 10.2-9.3 2.3Z" {...tone} /><path d="M4 17.5 19.5 5l-6.2 10.2-9.3 2.3ZM8 15l6-5" {...s} /></Svg>
+);
+const AirlineThai = (p) => (
+  <Svg {...p}><path d="M5 15c3.5-7.5 10.5-8.7 14-4.8-4.8-.8-7.9 1.2-9.5 5.8L5 15Z" {...tone} /><path d="M5 15c3.5-7.5 10.5-8.7 14-4.8-4.8-.8-7.9 1.2-9.5 5.8L5 15Z" {...s} /></Svg>
+);
+const AirlineBritish = (p) => (
+  <Svg {...p}><path d="M4 16.5c5.8-1 10.5-4 16-9-3.5 6.1-8.8 10-16 11v-2Z" {...tone} /><path d="M4 16.5c5.8-1 10.5-4 16-9" {...s} /></Svg>
+);
+const AirlineLufthansa = (p) => (
+  <Svg {...p}><circle cx="12" cy="12" r="9" {...tone} /><path d="m7 13 5-2 2-4 1 4 3 2-4 1-2 4-1-4-4-1Z" {...s} /></Svg>
+);
+const AirlineAirIndiaExpress = (p) => (
+  <Svg {...p}><path d="M4 17.8 19.8 6.2c-2.4 4.8-6.2 8.7-11.3 11.6H4Z" {...tone} /><path d="M4 17.8 19.8 6.2c-2.4 4.8-6.2 8.7-11.3 11.6H4Z" {...s} /></Svg>
+);
+
 const Plane = (p) => (
   <Svg {...p}>
     <path d="M21 3 3.5 9.3l7.2 3 3 7.2L21 3Z" {...tone} />
@@ -1087,6 +1156,20 @@ const Fallback = (p) => (
 
 const ICONS = {
   alertTriangle: AlertTriangle,
+  airlineAirIndia: AirlineAirIndia,
+  airlineAirIndiaExpress: AirlineAirIndiaExpress,
+  airlineAkasa: AirlineAkasa,
+  airlineBritish: AirlineBritish,
+  airlineEmirates: AirlineEmirates,
+  airlineEtihad: AirlineEtihad,
+  airlineGeneric: AirlineGeneric,
+  airlineIndigo: AirlineIndigo,
+  airlineLufthansa: AirlineLufthansa,
+  airlineQatar: AirlineQatar,
+  airlineSingapore: AirlineSingapore,
+  airlineSpiceJet: AirlineSpiceJet,
+  airlineThai: AirlineThai,
+  airlineVistara: AirlineVistara,
   arrowLeft: ArrowLeft,
   arrowUpRight: ArrowUpRight,
 

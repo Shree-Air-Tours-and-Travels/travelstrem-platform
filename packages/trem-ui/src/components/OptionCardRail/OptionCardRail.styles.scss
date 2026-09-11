@@ -1,0 +1,104 @@
+@import "@packages/trem-design-tokens/scss";
+
+.trem-option-card-rail {
+  display: grid;
+  gap: $space-3;
+  width: min(var(--container-width), 100%);
+  margin: 0 auto $space-5;
+
+  h2 {
+    margin: 0;
+    color: var(--heading);
+    font-size: $font-size-lg;
+  }
+}
+
+.trem-option-card-rail__track {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: $space-3;
+}
+
+.trem-option-card-rail__item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: $space-3;
+  min-width: 0;
+  min-height: 4.5rem;
+  padding: $space-3;
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+  background: var(--surface-elevated);
+  color: var(--text);
+  text-align: left;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 160ms $ease-default, box-shadow 160ms $ease-default, transform 160ms $ease-default;
+
+  &:hover,
+  &:focus-visible,
+  &.is-active {
+    border-color: color-mix(in srgb, var(--color-primary) 36%, var(--border));
+    background: color-mix(in srgb, var(--color-primary) 5%, var(--surface-elevated));
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+  }
+
+  &:focus-visible {
+    outline: 0;
+    box-shadow: 0 0 0 3px var(--focus-ring), var(--shadow-md);
+  }
+
+  > svg {
+    color: var(--color-primary);
+  }
+}
+
+.trem-option-card-rail__mark {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: $radius-md;
+  background: var(--primary-soft);
+  color: var(--color-primary-dark);
+  font-size: $font-size-sm;
+  font-weight: $font-bold;
+}
+
+.trem-option-card-rail__copy {
+  display: grid;
+  min-width: 0;
+
+  strong,
+  small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  strong {
+    color: var(--text);
+    font-size: $font-size-sm;
+  }
+
+  small {
+    color: var(--text-muted);
+    font-size: $font-size-xs;
+  }
+}
+
+@media (max-width: 720px) {
+  .trem-option-card-rail__track {
+    display: flex;
+    margin-inline: -$space-3;
+    padding-inline: $space-3;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+  }
+
+  .trem-option-card-rail__item {
+    flex: 0 0 13rem;
+    scroll-snap-align: start;
+  }
+}

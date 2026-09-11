@@ -1,224 +1,205 @@
-.gallery {
-  --gallery-radius: 12px;
-  --gallery-overlay: linear-gradient(180deg, transparent 40%, rgba(0, 0, 0, 0.75));
-  --gallery-glass: rgba(0, 0, 0, 0.45);
-  --gallery-glass-border: rgba(255, 255, 255, 0.1);
-  --gallery-text: #fff;
-  --gallery-accent: var(--color-primary, #3b82f6);
+@import "@packages/trem-design-tokens/scss";
 
+.gallery {
   display: flex;
-  flex-direction: column;
-  gap: 0.625rem;
-  min-width: 0;
   position: relative;
+  flex-direction: column;
+  gap: $space-2-5;
+  min-width: 0;
+  color: var(--text);
+  font-family: $font-primary;
 
   &__stage {
     position: relative;
     overflow: hidden;
-    border-radius: var(--gallery-radius);
-    background: var(--surface-inset, #f1f5f9);
+    border: 1px solid var(--border);
+    border-radius: $radius-lg;
+    background: var(--surface-inset);
     isolation: isolate;
   }
 
   &__hero {
     position: absolute;
     inset: 0;
+    display: block;
     width: 100%;
     height: 100%;
-    padding: 0;
+    padding: $space-0;
     border: 0;
-    display: block;
-    cursor: pointer;
-    background: none;
+    background: transparent;
     color: inherit;
+    cursor: pointer;
+  }
 
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-      transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-    }
+  &__hero img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform $duration-slow $ease-standard;
+  }
 
-    &:hover img {
-      transform: scale(1.04);
-    }
+  &__hero:hover img {
+    transform: scale(1.025);
+  }
 
-    &:focus-visible {
-      outline: 2px solid var(--gallery-accent);
-      outline-offset: -2px;
-    }
+  &__hero:focus-visible {
+    outline: $space-1-25 solid var(--color-primary);
+    outline-offset: calc(#{$space-1-25} * -1);
   }
 
   &__hero-overlay {
     position: absolute;
     inset: 0;
-    background: var(--gallery-overlay);
+    background: linear-gradient(var(--color-transparent), var(--overlay-strong));
     pointer-events: none;
   }
 
   &__hero-caption {
     position: absolute;
-    left: 1.25rem;
-    right: 1.25rem;
-    bottom: 1.25rem;
+    right: $space-5;
+    bottom: $space-5;
+    left: $space-5;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
-    color: var(--gallery-text);
+    gap: $space-4;
+    color: $white-color;
     pointer-events: none;
+  }
+
+  &__hero-badge,
+  &__nav {
+    border: 1px solid color-mix(in srgb, var(--border) 45%, transparent);
+    border-radius: $radius-md;
+    background: var(--overlay-strong);
+    color: $white-color;
+    backdrop-filter: blur($space-2);
   }
 
   &__hero-badge {
     display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
-    padding: 0.45rem 0.75rem;
-    border: 1px solid var(--gallery-glass-border);
-    border-radius: 999px;
-    background: var(--gallery-glass);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    font-size: 0.78rem;
-    font-weight: 700;
-    color: var(--gallery-text);
-    line-height: 1;
+    gap: $space-2;
+    padding: $space-2 $space-3;
+    font-size: $font-size-sm;
+    font-weight: $font-semibold;
+    line-height: $line-height-sm;
+  }
 
-    svg {
-      flex-shrink: 0;
-    }
+  &__hero-badge svg {
+    width: $space-4;
+    height: $space-4;
   }
 
   &__hero-location {
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    opacity: 0.7;
+    max-width: calc(#{$space-20} * 4);
+    overflow: hidden;
+    font-size: $font-size-xs;
+    font-weight: $font-semibold;
+    line-height: $line-height-sm;
     text-align: right;
-    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   &__nav {
     position: absolute;
-    top: 1rem;
-    left: 1rem;
-    z-index: 3;
+    z-index: 2;
+    top: $space-4;
+    left: $space-4;
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
-    padding: 0.25rem;
-    border: 1px solid var(--gallery-glass-border);
-    border-radius: 10px;
-    background: var(--gallery-glass);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    color: var(--gallery-text);
+    gap: $space-1;
+    padding: $space-1;
   }
 
-  &__nav-btn {
-    width: 34px;
-    height: 34px;
+  &__nav-btn.ui-button,
+  &__play-btn.ui-button,
+  &__lightbox-btn.ui-button {
     display: inline-grid;
     place-items: center;
-    border: 0;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.08);
-    color: var(--gallery-text);
-    cursor: pointer;
-    transition: background 0.18s ease;
+    min-width: $space-10;
+    width: $space-10;
+    height: $space-10;
+    min-height: $space-10;
+    padding: $space-0;
+    border: 1px solid color-mix(in srgb, var(--border) 45%, transparent);
+    border-radius: $radius-md;
+    background: var(--overlay-strong);
+    color: $white-color;
+    box-shadow: var(--shadow-sm);
+    backdrop-filter: blur($space-2);
+  }
 
-    &:hover {
-      background: rgba(255, 255, 255, 0.18);
-    }
-
-    &:focus-visible {
-      outline: 2px solid var(--gallery-text);
-      outline-offset: 2px;
-    }
+  &__nav-btn.ui-button:hover,
+  &__play-btn.ui-button:hover,
+  &__lightbox-btn.ui-button:hover {
+    background: color-mix(in srgb, var(--color-primary) 72%, var(--heading));
   }
 
   &__nav-counter {
-    min-width: 46px;
+    min-width: $space-12;
+    color: inherit;
+    font-size: $font-size-xs;
+    font-weight: $font-semibold;
     text-align: center;
-    font-size: 0.78rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
     user-select: none;
   }
 
-  &__play-btn {
+  &__play-btn.ui-button {
     position: absolute;
-    top: 1rem;
-    right: 1rem;
-    z-index: 3;
-    width: 34px;
-    height: 34px;
-    display: inline-grid;
-    place-items: center;
-    border: 1px solid var(--gallery-glass-border);
-    border-radius: 8px;
-    background: var(--gallery-glass);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    color: var(--gallery-text);
-    cursor: pointer;
-    transition: background 0.18s ease;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.18);
-    }
-
-    &:focus-visible {
-      outline: 2px solid var(--gallery-text);
-      outline-offset: 2px;
-    }
+    z-index: 2;
+    top: $space-4;
+    right: $space-4;
   }
 
   &__thumbs {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 0.5rem;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: $space-2;
   }
 
-  &__thumb {
+  &__thumb,
+  &__lightbox-thumbs button {
     position: relative;
-    flex: 1;
     min-height: 0;
     overflow: hidden;
-    padding: 0;
-    border: 2px solid transparent;
-    border-radius: 10px;
-    background: var(--surface-inset, #f1f5f9);
+    padding: $space-0;
+    border: 1px solid var(--border);
+    border-radius: $radius-sm;
+    background: var(--surface-inset);
     cursor: pointer;
-    transition:
-      border-color 0.22s ease,
-      transform 0.22s ease;
-    isolation: isolate;
     aspect-ratio: 4 / 3;
+    transition:
+      border-color $duration-medium $ease-standard,
+      transform $duration-medium $ease-standard;
+  }
 
-    img {
-      width: 100%;
-      height: 100%;
-      display: block;
-      object-fit: cover;
-      transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
-    }
+  &__thumb img,
+  &__lightbox-thumbs img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 
-    &:hover img {
-      transform: scale(1.06);
-    }
+  &__thumb:hover,
+  &__thumb.is-active,
+  &__lightbox-thumbs button:hover,
+  &__lightbox-thumbs button.is-active {
+    border-color: var(--color-primary);
+  }
 
-    &.is-active {
-      border-color: var(--gallery-accent);
-      transform: scale(1.02);
-    }
+  &__thumb.is-active,
+  &__lightbox-thumbs button.is-active {
+    box-shadow: 0 0 0 $space-1 var(--primary-focus);
+  }
 
-    &:focus-visible {
-      outline: 2px solid var(--gallery-accent);
-      outline-offset: 2px;
-    }
+  &__thumb:focus-visible,
+  &__lightbox-thumbs button:focus-visible {
+    outline: $space-1-25 solid var(--color-primary);
+    outline-offset: $space-1;
   }
 
   &__thumb-more {
@@ -226,203 +207,221 @@
     inset: 0;
     display: grid;
     place-items: center;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    color: var(--gallery-text);
-    font-size: 1.1rem;
-    font-weight: 800;
-    letter-spacing: 0.02em;
+    background: var(--overlay-strong);
+    color: $white-color;
+    font-size: $font-size-lg;
+    font-weight: $font-bold;
     pointer-events: none;
   }
 
   &__lightbox {
     position: fixed;
     inset: 0;
-    z-index: 99999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0, 0, 0, 0.92);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    animation: gallery-fade-in 0.2s ease;
+    z-index: $z-modal;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: $space-4;
+    padding: $space-5;
+    background: color-mix(in srgb, var(--page-bg) 92%, transparent);
+    color: var(--text);
+    font-family: $font-primary;
+    backdrop-filter: blur($space-2);
+    animation: gallery-fade-in $duration-medium $ease-standard;
   }
 
-  &__lightbox-content {
-    position: relative;
-    display: flex;
-    flex-direction: column;
+  &__lightbox-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
     align-items: center;
-    gap: 1rem;
-    max-width: 92vw;
-    max-height: 88vh;
-
-    img {
-      max-width: 100%;
-      max-height: 80vh;
-      object-fit: contain;
-      border-radius: 8px;
-      box-shadow: 0 32px 120px rgba(0, 0, 0, 0.5);
-      user-select: none;
-      animation: gallery-scale-in 0.25s cubic-bezier(0.22, 1, 0.36, 1);
-    }
+    gap: $space-4;
+    width: min(100%, $full-width);
+    margin-inline: auto;
+    padding: $space-3 $space-4;
+    border: 1px solid var(--border);
+    border-radius: $radius-md;
+    background: var(--surface-glass);
+    box-shadow: var(--shadow-sm);
   }
 
-  &__lightbox-footer {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+  &__lightbox-header > div {
+    display: grid;
+    gap: $space-1;
+    min-width: 0;
+  }
+
+  &__lightbox-header strong {
+    overflow: hidden;
+    color: var(--heading);
+    font-size: $font-size-md;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__lightbox-header span {
+    overflow: hidden;
+    color: var(--text-muted);
+    font-size: $font-size-xs;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   &__lightbox-counter {
-    padding: 0.4rem 1rem;
-    border-radius: 999px;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    color: var(--gallery-text);
-    font-size: 0.82rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
+    padding: $space-2 $space-3;
+    border-radius: $radius-sm;
+    background: var(--primary-surface);
+    color: var(--color-primary) !important;
+    font-weight: $font-semibold;
+  }
+
+  &__lightbox-btn.ui-button {
+    position: static;
+    border-color: var(--border);
+    background: var(--surface-elevated);
+    color: var(--text);
+  }
+
+  &__lightbox-stage {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: $space-4;
+    width: min(100%, $full-width);
+    min-height: 0;
+    margin-inline: auto;
+  }
+
+  &__lightbox-content {
+    display: grid;
+    place-items: center;
+    gap: $space-3;
+    min-width: 0;
+    min-height: 0;
+    margin: $space-0;
+  }
+
+  &__lightbox-content img {
+    display: block;
+    max-width: 100%;
+    max-height: calc(100dvh - (#{$space-20} * 3));
+    border: 1px solid var(--border);
+    border-radius: $radius-md;
+    box-shadow: var(--shadow-lg);
+    object-fit: contain;
     user-select: none;
   }
 
-  &__lightbox-btn {
-    position: absolute;
-    z-index: 2;
-    display: grid;
-    place-items: center;
-    border: 1px solid var(--gallery-glass-border);
-    background: var(--gallery-glass);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    color: var(--gallery-text);
-    cursor: pointer;
-    transition:
-      background 0.2s ease,
-      transform 0.2s ease;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.15);
-      transform: scale(1.05);
-    }
-
-    &:focus-visible {
-      outline: 2px solid var(--gallery-text);
-      outline-offset: 2px;
-    }
-
-    &--close {
-      top: 1.5rem;
-      right: 1.5rem;
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-    }
-
-    &--prev {
-      left: 1.5rem;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-
-      &:hover {
-        transform: translateY(-50%) scale(1.05);
-      }
-    }
-
-    &--next {
-      right: 1.5rem;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-
-      &:hover {
-        transform: translateY(-50%) scale(1.05);
-      }
-    }
+  &__lightbox-content figcaption {
+    color: var(--text-muted);
+    font-size: $font-size-sm;
+    text-align: center;
   }
 
-  @media (max-width: 640px) {
-    --gallery-radius: 10px;
+  &__lightbox-thumbs {
+    display: flex;
+    justify-content: center;
+    gap: $space-2;
+    width: min(100%, $full-width);
+    min-height: 0;
+    margin-inline: auto;
+    overflow-x: auto;
+    padding: $space-1;
+  }
 
-    gap: 0.5rem;
+  &__lightbox-thumbs button {
+    flex: 0 0 $space-20;
+  }
+
+  @include mq-max($breakpoint-mobile) {
+    gap: $space-2;
 
     &__hero-caption {
-      left: 0.75rem;
-      right: 0.75rem;
-      bottom: 0.75rem;
-      flex-direction: column;
-      align-items: flex-start;
+      right: $space-3;
+      bottom: $space-3;
+      left: $space-3;
     }
 
     &__hero-location {
-      text-align: left;
+      display: none;
+    }
+
+    &__nav,
+    &__play-btn.ui-button {
+      top: $space-3;
     }
 
     &__nav {
-      top: 0.75rem;
-      left: 0.75rem;
+      left: $space-3;
     }
 
-    &__nav-btn {
-      width: 30px;
-      height: 30px;
-    }
-
-    &__nav-counter {
-      min-width: 38px;
-      font-size: 0.72rem;
+    &__play-btn.ui-button {
+      right: $space-3;
     }
 
     &__thumbs {
-      grid-template-columns: repeat(5, 1fr);
-      gap: 0.35rem;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
-    &__lightbox-btn {
-      &--prev,
-      &--next {
-        width: 42px;
-        height: 42px;
-        top: auto;
-        bottom: 5rem;
-        transform: none;
+    &__thumb:nth-child(n + 4) {
+      display: none;
+    }
 
-        &:hover {
-          transform: scale(1.05);
-        }
-      }
+    &__lightbox {
+      gap: $space-3;
+      padding: $space-3;
+    }
 
-      &--prev {
-        left: 1rem;
-      }
+    &__lightbox-header {
+      grid-template-columns: minmax(0, 1fr) auto;
+      padding: $space-2 $space-3;
+    }
 
-      &--next {
-        right: 1rem;
-      }
+    &__lightbox-counter {
+      display: none;
+    }
+
+    &__lightbox-stage {
+      grid-template-columns: minmax(0, 1fr);
+      align-content: center;
+    }
+
+    &__lightbox-content {
+      grid-column: 1;
+      grid-row: 1;
     }
 
     &__lightbox-content img {
-      max-height: 70vh;
+      max-height: calc(100dvh - (#{$space-20} * 3));
+    }
+
+    &__lightbox-btn--prev.ui-button,
+    &__lightbox-btn--next.ui-button {
+      position: absolute;
+      z-index: 1;
+      bottom: $space-4;
+    }
+
+    &__lightbox-btn--prev.ui-button {
+      left: $space-4;
+    }
+
+    &__lightbox-btn--next.ui-button {
+      right: $space-4;
+    }
+
+    &__lightbox-thumbs button {
+      flex-basis: $space-16;
     }
   }
 
-  @media (min-width: 1200px) {
-    --gallery-radius: 14px;
-
-    &__hero-badge {
-      font-size: 0.82rem;
-      padding: 0.5rem 0.9rem;
+  @media (prefers-reduced-motion: reduce) {
+    &__hero img,
+    &__thumb,
+    &__lightbox-thumbs button {
+      transition: none;
     }
 
-    &__hero-location {
-      font-size: 0.82rem;
+    &__lightbox {
+      animation: none;
     }
   }
 }
@@ -433,16 +432,5 @@
   }
   to {
     opacity: 1;
-  }
-}
-
-@keyframes gallery-scale-in {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
   }
 }

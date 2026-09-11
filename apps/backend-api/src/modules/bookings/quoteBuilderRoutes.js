@@ -5,6 +5,7 @@ import {
     createQuoteBuilderHandlers,
 } from "../../../../booking-engine/server/index.mjs";
 import quoteBuilderService, {
+    cancelCustomerFlightEnquiry,
     findAuthorizedBookingJourney,
     findCurrentBookingJourneyQuote,
     saveCustomerTravellerDetails,
@@ -71,10 +72,11 @@ router.post("/enquiries/:enquiryId/quotes/:quoteId/decision", authMiddleware, as
                 : "Your quote response has been saved.",
             componentData: {
                 data: {
-                    quoteId: String(result.quote._id),
+                    quoteId: result.quote.quoteRef || result.quote.quoteNumber || "",
+                    quoteRef: result.quote.quoteRef || result.quote.quoteNumber || "",
                     quoteStatus: result.quote.status,
                     enquiryStatus: result.enquiry.status,
-                    bookingId: result.booking ? String(result.booking._id) : null,
+                    bookingId: result.booking?.bookingRef || null,
                     bookingRef: result.booking?.bookingRef || null,
                 },
             },
@@ -102,6 +104,29 @@ router.post("/enquiries/:enquiryId/travellers", authMiddleware, async (req, res)
         return res.status(error?.status || 500).json({
             status: "error",
             message: error?.message || "Traveller details could not be saved.",
+        });
+    }
+});
+router.post("/enquiries/:enquiryId/cancel-flight", authMiddleware, async (req, res) => {
+    try {
+        const result = await cancelCustomerFlightEnquiry({
+            enquiryId: req.params.enquiryId,
+            actor: req.user,
+        });
+        return res.status(200).json({
+            status: "success",
+            message: "Enquiry cancelled.",
+            componentData: {
+                data: {
+                    enquiryStatus: result.enquiry.status,
+                    targetPath: result.targetPath,
+                },
+            },
+        });
+    } catch (error) {
+        return res.status(error?.status || 500).json({
+            status: "error",
+            message: error?.message || "The enquiry could not be cancelled.",
         });
     }
 });

@@ -1,11 +1,10 @@
-import React, { useMemo, useState, useCallback, useEffect, useRef } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Button,
   EmptyState,
   FeaturedCard,
   InternationalTripCard,
-  QuickChips,
   TrevioTripCard,
   Preloader,
   Icon,
@@ -16,33 +15,27 @@ import {
 import { ContactAgentModal } from "@packages/trem-modals";
 import { tripId, tripPrice, tripCurrency, tripImage, tripLocation, tripDuration } from "../utils";
 
-const TRIP_PAGE_SIZE = 4;
 const FEATURED_AUTO_INTERVAL = 5000;
 
 export default function Home({
   user = null,
-  trips,
   pageModel,
-  activeFilter,
-  loadingTrips,
-  onFilterChange,
 }) {
   const { isFavorited, toggleFavorite } = useFavoritesContext();
   const navigate = useNavigate();
-  const [visibleTripCount, setVisibleTripCount] = useState(TRIP_PAGE_SIZE);
   const {
     labels = {},
     content = {},
-    tripList = { filters: [] },
+    tripList = {},
     upcoming = {},
     whyWanderon = { items: [] },
     international = {},
     howToUse = { steps: [] },
-    frames = { topImages: [], bottomImages: [] },
     faq = { items: [] },
     getInTouch = {},
     planInternational = {},
     featuredTrips: featuredTripsFromModel = [],
+    trips: listedTrips = [],
     internationalTrips = [],
   } = pageModel || {};
   const featuredTrips = featuredTripsFromModel;
@@ -50,24 +43,8 @@ export default function Home({
   const [activeSlide, setActiveSlide] = useState(0);
   const sliderRef = useRef(null);
   const isHovered = useRef(false);
-  const categories = useMemo(
-    () =>
-      (Array.isArray(tripList.filters) ? tripList.filters : [])
-        .map((option) => ({
-          id: String(option.value || option.name || option.title || "").toLowerCase(),
-          label: option.title || option.label || option.name || option.value || "",
-          disabled: Boolean(option.disabled) || loadingTrips,
-        }))
-        .filter((option) => option.id),
-    [tripList.filters, loadingTrips],
-  );
-  const allTrips = trips;
   const featuredConfig = content.featuredCard || {};
   const sliderTrips = featuredTrips.length > 0 ? featuredTrips : [];
-
-  useEffect(() => {
-    setVisibleTripCount(TRIP_PAGE_SIZE);
-  }, [trips]);
 
   useEffect(() => {
     if (sliderTrips.length <= 1) return;
@@ -88,12 +65,7 @@ export default function Home({
     });
   }, [activeSlide, sliderTrips.length]);
 
-  const loadMore = useCallback(() => {
-    setVisibleTripCount((prev) => prev + TRIP_PAGE_SIZE);
-  }, []);
-
-  const hasMore = visibleTripCount < allTrips.length;
-  const visibleTrips = allTrips.slice(0, visibleTripCount);
+  const visibleTrips = featuredTrips.slice(0, 4);
 
   const [contactOpen, setContactOpen] = useState(false);
   const handleEnquire = useCallback(() => setContactOpen(true), []);
@@ -221,7 +193,7 @@ export default function Home({
                         price={tripPrice(trip)}
                         currency={tripCurrency(trip)}
                         ctaLabel={featuredConfig.ctaLabel}
-                        onCtaClick={() => navigate(`trip/${tripId(trip)}`)}
+                        onCtaClick={() => navigate(`trips/${tripId(trip)}`)}
                       />
                     </div>
                   ))}
@@ -255,7 +227,7 @@ export default function Home({
               price={tripPrice(sliderTrips[0])}
               currency={tripCurrency(sliderTrips[0])}
               ctaLabel={featuredConfig.ctaLabel}
-              onCtaClick={() => navigate(`trip/${tripId(sliderTrips[0])}`)}
+              onCtaClick={() => navigate(`trips/${tripId(sliderTrips[0])}`)}
             />
           ) : (
             <div className="trevio-featured-empty">
@@ -317,9 +289,11 @@ export default function Home({
               <h2>{tripList.heading}</h2>
               <p>{tripList.description}</p>
             </div>
-            <QuickChips filters={categories} activeId={activeFilter} onClick={onFilterChange} />
+            <Button variant="outline" color="primary" onClick={() => navigate("trips")}>
+              {labels.tripListPrimaryAction || "View all trips"}
+            </Button>
           </div>
-          <div className={`trevio-trip-grid${loadingTrips ? " is-loading" : ""}`}>
+          <div className="trevio-trip-grid">
             {visibleTrips.length ? (
               visibleTrips.map((trip) => (
                 <TrevioTripCard
@@ -328,7 +302,7 @@ export default function Home({
                   labels={tripList.cardLabels}
                   favorited={isFavorited(trip)}
                   onFavorite={toggleFavorite}
-                  onView={() => navigate(`trip/${tripId(trip)}`)}
+                  onView={() => navigate(`trips/${tripId(trip)}`)}
                 />
               ))
             ) : (
@@ -343,14 +317,6 @@ export default function Home({
               />
             )}
           </div>
-          {hasMore && (
-            <div className="trevio-trip-grid__more">
-              <Button variant="outline" color="primary" onClick={loadMore}>
-                {labels.viewMoreAction} ({allTrips.length - visibleTrips.length}{" "}
-                {labels.viewMoreRemaining})
-              </Button>
-            </div>
-          )}
         </div>
       </section>
 
@@ -366,8 +332,8 @@ export default function Home({
               </div>
             </div>
             <div className="trevio-trip-grid">
-              {trips.length ? (
-                trips
+              {listedTrips.length ? (
+                listedTrips
                   .slice(0, Number(upcoming.pagination?.maxItems) || 2)
                   .map((trip) => (
                     <TrevioTripCard

@@ -2,11 +2,12 @@ import React, { useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useLocation, useNavigate } from "react-router-dom";
 import { clearAuthBrowserState, emitAuthEvent } from "@packages/trem-auth-core";
-import { emit } from "@packages/trem-events";
+import { emit, resolveNotificationLink, useNotificationInbox } from "@packages/trem-events";
 import { buildGlobalAuthUrl, useThemeMode } from "@packages/trem-utils";
-import { AppHeader, Breadcrumbs, PRODUCT_TYPE, SideBar } from "@packages/trem-ui";
+import { AppHeader, Breadcrumbs, InfoCard, NoDataFound, PRODUCT_TYPE, SideBar } from "@packages/trem-ui";
 import { useAdminPortalConfig } from "../../app/providers/AdminPortalProvider";
 import authService from "../../services/authService";
+import api from "../../services/apiClient";
 import AdminOverviewView from "../../views/AdminOverviewView";
 import AdminServicesView from "../../views/AdminServicesView";
 import AdminProfileView from "../../views/AdminProfileView";
@@ -20,6 +21,8 @@ import ManageClients from "../clients/ManageClients";
 import PricingConfigurationPage from "../pricing/PricingConfigurationPage";
 import TourTrackingPage from "../analytics/TourTrackingPage";
 import "./ManageTours.scss";
+
+const unwrap = (response) => response?.data?.componentData?.data ?? response?.data?.data ?? response?.data;
 
 export function ConfirmModal({
   open,
@@ -143,11 +146,31 @@ export default function ManageToursView({
   const { theme, toggleTheme } = useThemeMode();
   const { headerConfig: backendHeaderConfig } = useAdminPortalConfig();
   const location = useLocation();
+  const notificationInbox = useNotificationInbox({
+    loadInbox: async ({ limit = 6 } = {}) => unwrap(await api.get("/tenancy/notifications", { params: { limit } })),
+    readInboxItem: (id) => api.patch(`/tenancy/notifications/${id}/read`),
+    readAllInboxItems: () => api.patch("/tenancy/notifications/read-all"),
+  });
+  const loadNotifications = notificationInbox.load;
   const navigate = useNavigate();
   const [mobileSidebarOpen, setMobileSidebarOpen] = React.useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
   const mergedUser = useMemo(() => ({ ...auth.user, ...(profile || {}) }), [auth.user, profile]);
   const closeMobileSidebar = React.useCallback(() => setMobileSidebarOpen(false), []);
+
+  React.useEffect(() => {
+    if (tab === "notifications") loadNotifications({ limit: 50 }).catch(() => null);
+  }, [loadNotifications, tab]);
+
+  const openNotification = useCallback(
+    async (item) => {
+      if (!item) return;
+      if (!item.readAt) await notificationInbox.markRead(item._id).catch(() => null);
+      const target = resolveNotificationLink(item, { portal: "admin" });
+      if (target) navigate(target);
+    },
+    [navigate, notificationInbox],
+  );
 
   const logout = useCallback(async () => {
     await authService.logout().catch(() => null);
@@ -175,7 +198,9 @@ export default function ManageToursView({
   );
 
   const sidebarConfig = useMemo(() => {
-    const byId = (ids) => navigationItems.filter((item) => ids.includes(item.id));
+    const byId = (ids) => navigationItems.filter((item) => ids.includes(item.id)).map((item) =>
+      item.id === "notifications" ? { ...item, indicator: notificationInbox.unread > 0 } : item,
+    );
     return {
       ariaLabel: "AdminTREM navigation",
       brand: {
@@ -190,7 +215,7 @@ export default function ManageToursView({
           title: "Governance",
           items: byId(["internalTeam", "tenancy", "clients", "pricing", "tracking"]),
         },
-        { id: "account", title: "Account", items: byId(["profile", "logout"]) },
+        { id: "account", title: "Account", items: byId(["notifications", "profile", "logout"]) },
       ].filter((section) => section.items.length),
       profile: {
         metaKey: "adminRoleLabel",
@@ -198,12 +223,16 @@ export default function ManageToursView({
         actionLabel: "View profile",
       },
     };
-  }, [backendHeaderConfig?.brand, navigationItems]);
+  }, [backendHeaderConfig?.brand, navigationItems, notificationInbox.unread]);
 
   const activeInventory = dashboardDefinition?.data?.inventory || [];
   const primaryProduct = activeInventory[0];
   const primaryCreateAction =
     primaryProduct?.id === PRODUCT_TYPE.TREVIO ? openTripCreate : primaryProduct ? openCreate : null;
+  const notificationNavigationItem = useMemo(
+    () => navigationItems.find((item) => item.id === "notifications"),
+    [navigationItems],
+  );
 
   const headerConfig = useMemo(
     () => ({
@@ -222,7 +251,16 @@ export default function ManageToursView({
         enabled: Boolean(primaryCreateAction),
         onClick: primaryCreateAction,
       },
-      notification: { hide: true },
+      notification: {
+        enabled: true,
+        count: notificationInbox.unread,
+        items: notificationInbox.items,
+        onItemClick: openNotification,
+        onMarkAllRead: notificationInbox.markAllRead,
+        onViewAll: notificationNavigationItem
+          ? () => setTab(notificationNavigationItem.id)
+          : undefined,
+      },
       themeAction: {},
       user: {
         fallbackName: "Administrator",
@@ -237,7 +275,15 @@ export default function ManageToursView({
         closeLabel: "Close administration navigation",
       },
     }),
-    [backendHeaderConfig?.brand, primaryCreateAction, primaryProduct],
+    [
+      backendHeaderConfig?.brand,
+      notificationInbox,
+      notificationNavigationItem,
+      openNotification,
+      primaryCreateAction,
+      primaryProduct,
+      setTab,
+    ],
   );
 
   const adminUser = useMemo(
@@ -248,7 +294,16 @@ export default function ManageToursView({
     [auth.adminLevel, mergedUser],
   );
 
-  const breadcrumbItems = backendHeaderConfig?.adminBreadcrumbs?.[tab] || [];
+  const breadcrumbItems = useMemo(() => {
+    const configured = backendHeaderConfig?.adminBreadcrumbs?.[tab] || [];
+    const detailMatch = location.pathname.match(/^(.*\/bookings)\/([^/]+)\/?$/);
+    if (!detailMatch || !configured.length) return configured;
+    return [
+      ...configured.slice(0, -1),
+      { ...configured[configured.length - 1], path: detailMatch[1] },
+      { label: decodeURIComponent(detailMatch[2]) },
+    ];
+  }, [backendHeaderConfig?.adminBreadcrumbs, location.pathname, tab]);
 
   return (
     <div
@@ -390,6 +445,7 @@ export default function ManageToursView({
             />
           )}
           {tab === "tenancy" && auth.adminLevel === "master" && <TenancyManagement />}
+          {tab === "notifications" && <section className="tenant-console"><header className="tenant-console__heading"><div><p>Administration</p><h2>Notifications</h2></div></header><div className="tenant-console__records">{notificationInbox.items.map((item) => <InfoCard key={item._id} title={item.title || "Notification"} subtitle={item.message} onClick={() => openNotification(item)} />)}{!notificationInbox.items.length ? <NoDataFound title="No notifications" description="You are all caught up." /> : null}</div></section>}
           {tab === "pricing" && <PricingConfigurationPage />}
           {tab === "clients" && <ManageClients embedded />}
         </div>

@@ -104,6 +104,46 @@
   gap: 0.75rem;
   grid-template-columns: minmax(0, 1fr) auto auto;
 }
+.partner-workspace__notification-item {
+  position: relative;
+  align-items: center;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  width: 100%;
+  padding: 1rem 1rem 1rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 0.85rem;
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+
+  &:hover,
+  &:focus-visible {
+    outline: 0;
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-sm);
+  }
+
+  &.is-unread::before {
+    content: "";
+    position: absolute;
+    top: 1.25rem;
+    left: 0.6rem;
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 999px;
+    background: var(--color-danger);
+  }
+
+  small {
+    display: block;
+    margin-top: 0.25rem;
+    color: var(--muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+}
 .partner-workspace__overlay {
   background: var(--overlay-strong);
   display: grid;

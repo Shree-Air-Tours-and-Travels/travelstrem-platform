@@ -4,12 +4,6 @@
  * whitelisted fields below.
  */
 
-const pick = (source = {}, fields) =>
-    fields.reduce((acc, field) => {
-        if (source[field] !== undefined) acc[field] = source[field];
-        return acc;
-    }, {});
-
 const idOf = (value) =>
     value && typeof value === "object"
         ? String(value._id || value.id || "")
@@ -39,15 +33,11 @@ export const bookingPaymentDto = (payment = {}) => ({
  * enquiries endpoint; the socket event is a live "something changed" nudge.
  */
 export const enquiryDto = (lead = {}) => ({
-    enquiryId: idOf(lead),
+    enquiryId: lead.enquiryRef || null,
     enquiryRef: lead.enquiryRef || null,
-    tourId: lead.tourId || null,
     tourTitle: lead.tourTitle || null,
     product: lead.product || null,
     status: lead.status || "new",
-    agencyId: idOf(lead.agencyId),
-    ownerAgentId: idOf(lead.ownerAgent),
-    claimedUserId: idOf(lead.claimedBy),
     travellerCount: lead.fields?.travellerCount ?? null,
     preferredTravelDate:
         lead.fields?.preferredTravelDate || lead.fields?.preferredStartDate || null,
@@ -58,14 +48,9 @@ export const enquiryDto = (lead = {}) => ({
 });
 
 export const bookingQuoteDto = (quote = {}) => ({
-    quoteId: idOf(quote),
-    enquiryId: idOf(quote.inquiryId),
-    bookingId: idOf(quote.bookingId),
+    quoteId: quote.quoteRef || quote.quoteNumber || "",
+    quoteRef: quote.quoteRef || quote.quoteNumber || "",
     quoteNumber: quote.quoteNumber || null,
-    userId: idOf(quote.userId),
-    agencyId: idOf(quote.agencyId),
-    tourId: idOf(quote.tourId),
-    departureId: quote.departureId || null,
     status: quote.status,
     currency: quote.currency || "INR",
     finalAmount: quote.finalAmount ?? null,
@@ -122,18 +107,88 @@ export const tripDto = (trip = {}) => ({
         : null,
 });
 
-export const notificationDto = (notification = {}) => ({
-    notificationId: idOf(notification),
-    userId: idOf(notification.userId),
-    agencyId: idOf(notification.agencyId),
-    type: notification.type,
-    title: notification.title,
-    message: notification.message,
-    entityType: notification.entityType || "",
-    entityId: notification.entityId || "",
-    data: notification.data || {},
-    createdAt: notification.createdAt || new Date().toISOString(),
-});
+const notificationRecordMeta = (notification = {}) => {
+    const data = notification.data || {};
+    const type = `${notification.type || ""} ${notification.entityType || ""}`.toLowerCase();
+    const bookingRef = data.bookingRef || data.bookingReference || "";
+    const enquiryRef = data.enquiryRef || data.enquiryReference || "";
+    const supportRef = data.ticketRef || data.supportRef || data.reference || "";
+    const quoteRef = data.quoteRef || data.quoteNumber || "";
+
+    if (type.includes("support") && supportRef) return { label: "Support ticket", value: supportRef };
+    if (bookingRef) return { label: "Booking", value: bookingRef };
+    if (type.includes("quote") && quoteRef) return { label: "Quotation", value: quoteRef };
+    if (enquiryRef) return { label: "Enquiry", value: enquiryRef };
+    if (quoteRef) return { label: "Quotation", value: quoteRef };
+    return null;
+};
+
+const hasInternalIdPathSegment = (value) =>
+    /(?:^|[/?#=&])[a-f0-9]{24}(?:$|[/?#=&])/i.test(String(value || ""));
+
+const safePublicPath = (value) => {
+    if (typeof value !== "string") return "";
+    const trimmed = value.trim();
+    if (!trimmed || !trimmed.startsWith("/") || trimmed.startsWith("//")) return "";
+    if (/[\u0000-\u001f\\]/.test(trimmed) || hasInternalIdPathSegment(trimmed)) return "";
+    return trimmed;
+};
+
+const notificationLinksDto = (links = {}) =>
+    ["customer", "partner", "admin"].reduce((acc, key) => {
+        const path = safePublicPath(links[key]);
+        if (path) acc[key] = path;
+        return acc;
+    }, {});
+
+const notificationDataDto = (data = {}) => {
+    const allowed = [
+        "actionUrl",
+        "bookingRef",
+        "bookingReference",
+        "enquiryRef",
+        "enquiryReference",
+        "links",
+        "product",
+        "productKey",
+        "quoteNumber",
+        "quoteRef",
+        "reference",
+        "slug",
+        "status",
+        "supportRef",
+        "ticketRef",
+        "tourSlug",
+        "tourTitle",
+        "tripSlug",
+    ];
+    return allowed.reduce((acc, key) => {
+        if (data[key] !== undefined && data[key] !== null && data[key] !== "") acc[key] = data[key];
+        return acc;
+    }, {});
+};
+
+export const notificationDto = (notification = {}) => {
+    const recordMeta = notificationRecordMeta(notification);
+    const safeData = notificationDataDto(notification.data || {});
+    const links = notificationLinksDto(safeData.links || {});
+    const actionUrl = safePublicPath(notification.actionUrl || safeData.actionUrl || "");
+    return {
+        notificationId: idOf(notification),
+        portal: notification.portal || "",
+        type: notification.type,
+        title: notification.title,
+        message: notification.message,
+        entityType: notification.entityType || "",
+        entityId: "",
+        actionUrl,
+        links,
+        ...(recordMeta ? { recordMeta } : {}),
+        data: { ...safeData, ...(Object.keys(links).length ? { links } : {}) },
+        readAt: notification.readAt || null,
+        createdAt: notification.createdAt || new Date().toISOString(),
+    };
+};
 
 export const supportTicketDto = (ticket = {}) => ({
     id: idOf(ticket),

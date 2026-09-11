@@ -308,7 +308,7 @@ export function presentQuoteBuilder({
       "Quote generated and added to My Bookings. Email delivery failed, but the traveller can download it from their account.";
   return {
     data: {
-      enquiryId: String(enquiry.id || enquiry._id),
+      enquiryId: enquiry.enquiryRef || "",
       enquiryRef: enquiry.enquiryRef || "",
       values: stepValues(stage, persisted.data || {}),
       errors,
@@ -338,7 +338,7 @@ export function presentQuoteBuilder({
             }
           : null,
       sourceSections,
-      sentQuoteId: persisted.sentQuoteId || null,
+      sentQuoteRef: persisted.sentQuoteRef || "",
     },
     labels,
     structure: {

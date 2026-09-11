@@ -14,6 +14,7 @@ import {
     createTrip,
     updateTrip,
     verifyTrip,
+    resolveTripBuilderTour,
     deleteTrip,
     deleteAllTrips,
     duplicateTrip,
@@ -53,6 +54,13 @@ router.put(
     loadAccessContext,
     requirePermission(PERMISSIONS.TRIP_UPDATE_OWN, PERMISSIONS.TRIP_UPDATE_AGENCY),
     updateTrip,
+);
+router.post(
+    "/admin/trips/:id/builder-tour",
+    authMiddleware,
+    loadAccessContext,
+    requirePermission(PERMISSIONS.TRIP_VIEW_OWN, PERMISSIONS.TRIP_VIEW_AGENCY),
+    resolveTripBuilderTour,
 );
 router.post(
     "/admin/trips/:id/verify",

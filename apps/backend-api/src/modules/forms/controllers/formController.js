@@ -16,6 +16,7 @@ import { enquiryCenterView, enquiryView, formatDate } from "../mappers/enquiryVi
 import FinancialEngine from "../../../core/financial-engine/index.js";
 import BookingQuote from "../../bookings/models/BookingQuote.js";
 import Booking from "../../bookings/models/Booking.js";
+import FlightBooking from "../../flights/models/FlightBooking.js";
 import { bookingView } from "../../bookings/mappers/bookingView.js";
 import { getPortalScope } from "../../../core/auth/portalSession.js";
 import {
@@ -28,6 +29,21 @@ import {
 } from "../../../realtime/index.js";
 import { recordTourSignal } from "../../tours/services/tourIntelligence.service.js";
 import { upsertAgencyCustomerFromLead } from "../../tenancy/customerDirectory.service.js";
+import { createInboxNotifications } from "../../tenancy/notification.service.js";
+import { createReadableReference } from "../../../utils/readableReference.js";
+
+const assignEnquiryReference = async (lead) => {
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+        lead.enquiryRef = createReadableReference("ENQ");
+        try {
+            await lead.save();
+            return lead;
+        } catch (error) {
+            if (error?.code !== 11000 || attempt === 4) throw error;
+        }
+    }
+    return lead;
+};
 
 const syncAgencyCustomerFromLead = async (lead) => {
     try {
@@ -36,6 +52,86 @@ const syncAgencyCustomerFromLead = async (lead) => {
         if (error?.code !== 11000) throw error;
         return upsertAgencyCustomerFromLead({ lead });
     }
+};
+
+const createEnquiryInboxNotifications = async ({ lead, agencyNotify, adminNotify, includeAdmins }) => {
+    const safeData = {
+        enquiryRef: lead.enquiryRef,
+        product: lead.product || "",
+        tourTitle: lead.tourTitle || "",
+        status: lead.status || "new",
+    };
+    const notifications = [];
+
+    if (lead.agencyId) {
+        const agencyUserIds = new Set();
+        const agencyAdminIds = await User.find({
+            agencyId: lead.agencyId,
+            agencyRole: "partner_admin",
+            accountStatus: "active",
+        }).distinct("_id");
+        agencyAdminIds.forEach((userId) => agencyUserIds.add(String(userId)));
+
+        if (lead.ownerAgent) {
+            const ownerAgent = await User.findOne({
+                _id: lead.ownerAgent,
+                agencyId: lead.agencyId,
+                agencyRole: "partner_agent",
+                accountStatus: "active",
+            })
+                .select("_id")
+                .lean();
+            if (ownerAgent?._id) agencyUserIds.add(String(ownerAgent._id));
+        }
+
+        notifications.push(
+            ...Array.from(agencyUserIds).map((userId) => ({
+                userId,
+                agencyId: lead.agencyId,
+                portal: "partner",
+                type: "enquiry_created",
+                title: agencyNotify.title,
+                message: agencyNotify.subtitle || agencyNotify.title,
+                entityType: "enquiry",
+                entityId: String(lead._id),
+                data: safeData,
+            })),
+        );
+    } else if (lead.ownerAgent) {
+        notifications.push({
+            userId: lead.ownerAgent,
+            agencyId: null,
+            portal: "partner",
+            type: "enquiry_created",
+            title: agencyNotify.title,
+            message: agencyNotify.subtitle || agencyNotify.title,
+            entityType: "enquiry",
+            entityId: String(lead._id),
+            data: safeData,
+        });
+    }
+
+    if (includeAdmins) {
+        const adminUserIds = await User.find({ role: "admin", accountStatus: "active" }).distinct(
+            "_id",
+        );
+        notifications.push(
+            ...adminUserIds.map((userId) => ({
+                userId,
+                agencyId: lead.agencyId || null,
+                portal: "admin",
+                type: "enquiry_created",
+                title: adminNotify.title,
+                message: adminNotify.subtitle || adminNotify.title,
+                entityType: "enquiry",
+                entityId: String(lead._id),
+                data: safeData,
+            })),
+        );
+    }
+
+    if (!notifications.length) return [];
+    return createInboxNotifications(notifications);
 };
 
 const escapeHtml = (value) =>
@@ -1013,8 +1109,7 @@ export const submitForm = async (req, res) => {
         });
 
         const savedLead = await newLead.save();
-        savedLead.enquiryRef = `ENQ-${String(savedLead._id).slice(-6).toUpperCase()}`;
-        await savedLead.save();
+        await assignEnquiryReference(savedLead);
         await syncAgencyCustomerFromLead(savedLead).catch((error) =>
             console.error("[CustomerDirectory] enquiry sync failed:", error.message),
         );
@@ -1045,6 +1140,16 @@ export const submitForm = async (req, res) => {
             "info",
             `enquiry:${savedLead.enquiryRef}`,
         );
+        createEnquiryInboxNotifications({
+            lead: savedLead,
+            agencyNotify,
+            adminNotify,
+            includeAdmins:
+                !isCustomTourEnquiry ||
+                (!savedLead.agencyId && customAssignment?.reason !== "source_tour_owner"),
+        }).catch((error) =>
+            console.error("[Forms] enquiry inbox notification failed:", error?.message || error),
+        );
 
         // Identity-room pushes. The enquiring user gets a SILENT socket
         // event (no notify): their other tabs/devices refresh the list, but
@@ -1056,9 +1161,7 @@ export const submitForm = async (req, res) => {
                 await publishToUser(savedLead.claimedBy, REALTIME_EVENTS.ENQUIRY_CREATED, dto);
             }
             if (savedLead.agencyId) {
-                await publishToAgency(savedLead.agencyId, REALTIME_EVENTS.ENQUIRY_CREATED, dto, {
-                    notify: agencyNotify,
-                });
+                await publishToAgency(savedLead.agencyId, REALTIME_EVENTS.ENQUIRY_CREATED, dto);
             }
             if (!isCustomTourEnquiry) {
                 await publishToAdmins(REALTIME_EVENTS.ENQUIRY_CREATED, dto, {
@@ -1396,6 +1499,36 @@ export const getLeads = async (req, res) => {
                     new Date(right.createdAt || 0).getTime() -
                     new Date(left.createdAt || 0).getTime(),
             );
+        const flightQuery = access.perspective === "sent"
+            ? { userId: access.userId }
+            : { ...access.query, agencyId: { $ne: null } };
+        const flightBookings = await FlightBooking.find(flightQuery)
+            .sort({ createdAt: -1 })
+            .limit(200)
+            .lean();
+        const flightRecords = flightBookings.map((booking) => {
+            const first = booking.segmentSnapshot?.[0];
+            const last = booking.segmentSnapshot?.at(-1);
+            return {
+                id: booking.bookingRef,
+                reference: booking.bookingRef,
+                bookingRef: booking.bookingRef,
+                recordType: "booking",
+                recordTypeLabel: "Flight booking",
+                product: "trehub",
+                title: `${first?.origin?.city || first?.origin?.iataCode || "Flight"} to ${last?.destination?.city || last?.destination?.iataCode || "destination"}`,
+                status: booking.status,
+                statusLabel: String(booking.status || "").replaceAll("_", " "),
+                createdAt: booking.createdAt,
+                createdLabel: formatDate(booking.createdAt),
+                travelDate: formatDate(first?.departureDateTime),
+                travellers: booking.passengers?.length || 0,
+                amountDisplay: booking.priceSnapshot?.total == null ? "" : new Intl.NumberFormat("en-IN", { style: "currency", currency: booking.priceSnapshot.currency || "INR", maximumFractionDigits: 0 }).format(Number(booking.priceSnapshot.total) / 100),
+                targetPath: `/trehub/flights/bookings/${encodeURIComponent(booking.bookingRef)}`,
+            };
+        });
+        records.push(...flightRecords);
+        records.sort((left, right) => new Date(right.createdAt || 0).getTime() - new Date(left.createdAt || 0).getTime());
         return sendJson(res, 200, {
             status: "success",
             message: "Leads fetched",
@@ -1424,7 +1557,7 @@ export const getEnquiry = async (req, res) => {
         const access = await enquiryAccess(req);
         const identifier = String(req.params?.id || "").trim();
         const isEnquiryRef = /^ENQ-/i.test(identifier);
-        const isBookingRef = /^BKG-/i.test(identifier);
+        const isBookingRef = /^BK[QG]-/i.test(identifier);
         const isObjectId = Tour.db.base.Types.ObjectId.isValid(identifier);
         if (!isEnquiryRef && !isBookingRef && !isObjectId) {
             return sendJson(res, 400, {

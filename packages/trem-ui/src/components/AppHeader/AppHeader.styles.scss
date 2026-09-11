@@ -313,6 +313,24 @@
   font-weight: $font-bold;
 }
 
+.trem-app-header__notification-menu {
+  .trem-dropdown__menu {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+}
+
+.trem-app-header__notification-item { position: relative; display: grid; gap: $space-1; width: 100%; padding: $space-3 $space-3 $space-3 $space-4; border: 0; border-bottom: 1px solid var(--border); background: transparent; color: var(--text); text-align: left; cursor: pointer; }
+.trem-app-header__notification-item:hover { background: var(--surface-inset); }
+.trem-app-header__notification-item.is-unread { background: var(--primary-soft); }
+.trem-app-header__notification-item.is-unread::before { content: ""; position: absolute; top: $space-4; left: $space-2; width: 6px; height: 6px; border-radius: $radius-full; background: var(--color-danger); }
+.trem-app-header__notification-copy { display: grid; gap: 2px; }
+.trem-app-header__notification-copy span { color: var(--muted); font-size: $font-size-xs; line-height: 1.45; }
+.trem-app-header__notification-ref { width: fit-content; padding: 2px 7px; border-radius: $radius-full; background: var(--surface-inset); color: var(--color-primary) !important; font-weight: $font-bold; }
+.trem-app-header__notification-item time { color: var(--muted); font-size: 0.68rem; font-weight: $font-semibold; }
+.trem-app-header__notification-footer { flex: 0 0 auto; display: flex; justify-content: space-between; gap: $space-2; padding: $space-2; border-top: 1px solid var(--border); background: var(--surface); }
+.trem-app-header__notification-footer button { border: 0; background: transparent; color: var(--color-primary); font: inherit; font-size: $font-size-sm; font-weight: $font-semibold; cursor: pointer; }
+
 .trem-app-header__action > span {
   position: absolute;
   top: 0;
@@ -434,8 +452,67 @@
 }
 
 .trem-app-header__menu,
-.trem-app-header__brand {
+.trem-app-header__brand,
+.trem-app-header__desktop-navigation {
   display: none;
+}
+
+@media (min-width: #{$breakpoint-md + 1px}) {
+  .trem-app-header--top-dropdown-shell {
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+
+    .trem-app-header__mobile-row,
+    .trem-app-header__brand {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .trem-app-header__brand {
+      overflow: hidden;
+    }
+
+    .trem-app-header__desktop-navigation {
+      min-height: $space-10;
+      display: inline-flex;
+      align-items: center;
+      gap: $space-2;
+      padding-inline: $space-3;
+      border: 1px solid var(--border);
+      border-radius: $radius-sm;
+      background: var(--surface);
+      color: var(--text);
+      font-size: $font-size-sm;
+      font-weight: $font-semibold;
+      white-space: nowrap;
+      transition:
+        border-color $duration-fast $ease-standard,
+        background $duration-fast $ease-standard,
+        color $duration-fast $ease-standard;
+
+      > svg:last-child {
+        transition: transform $duration-fast $ease-standard;
+      }
+
+      &[aria-expanded="true"] {
+        border-color: var(--color-primary);
+        background: var(--primary-soft);
+        color: var(--color-primary-dark, var(--color-primary));
+
+        > svg:last-child {
+          transform: rotate(180deg);
+        }
+      }
+
+      &:hover,
+      &:focus-visible {
+        outline: 0;
+        border-color: var(--color-primary);
+        background: var(--primary-softer);
+        color: var(--color-primary-dark, var(--color-primary));
+      }
+    }
+  }
 }
 
 // Keep the single-row header stable when the sidebar reduces tablet width.
@@ -444,6 +521,15 @@
     grid-template-columns: minmax(180px, 1fr) auto;
     gap: $space-3;
     padding-inline: $space-3;
+  }
+
+  .trem-app-header--top-dropdown-shell {
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+
+    .brand-logo__subtitle,
+    .trem-app-header__desktop-navigation > span {
+      display: none;
+    }
   }
 
   .trem-app-header__actions {
@@ -575,10 +661,6 @@
     grid-row: 1;
   }
 
-  .trem-app-header.has-mobile-actions .trem-app-header__notification {
-    display: none;
-  }
-
   .trem-app-header__action--mobile-only {
     display: grid;
   }
@@ -697,8 +779,7 @@
   .trem-app-header--partner {
     .trem-app-header__primary,
     .trem-app-header__primary-dropdown,
-    .trem-app-header__product-dropdown,
-    .trem-app-header__notification {
+    .trem-app-header__product-dropdown {
       display: none;
     }
   }
@@ -767,7 +848,67 @@
     justify-self: center;
   }
 
-  .trem-app-header--partner {
-    grid-template-columns: minmax(0, 1fr) repeat(3, var(--trem-mobile-header-action-size));
+  .trem-app-header__actions .trem-app-header__notification-dropdown,
+  .trem-app-header__actions .trem-app-header__notification-dropdown .trem-dropdown__trigger {
+    grid-column: 2;
+    grid-row: 1;
+    width: var(--trem-mobile-header-action-size);
+    height: var(--trem-mobile-header-action-size);
+  }
+
+  .trem-app-header__action {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .trem-app-header__theme {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .trem-app-header__actions .trem-app-header__menu {
+    grid-column: 4;
+    grid-row: 1;
+  }
+
+  .trem-app-header__search {
+    grid-column: 1 / 4;
+  }
+
+  .trem-app-header__user,
+  .trem-app-header__actions .trem-app-header__user-dropdown,
+  .trem-app-header__actions .trem-app-header__user-dropdown .trem-dropdown__trigger {
+    grid-column: 4;
+    grid-row: 2;
+  }
+
+  .trem-app-header.has-header-actions {
+    grid-template-columns: minmax(0, 1fr) repeat(4, var(--trem-mobile-header-action-size));
+
+    .trem-app-header__search {
+      grid-column: 1 / 5;
+    }
+
+    .trem-app-header__user,
+    .trem-app-header__actions .trem-app-header__user-dropdown,
+    .trem-app-header__actions .trem-app-header__user-dropdown .trem-dropdown__trigger {
+      grid-column: 5;
+      grid-row: 2;
+    }
+
+    .trem-app-header__action {
+      grid-column: 3;
+      grid-row: 1;
+    }
+
+    .trem-app-header__theme {
+      grid-column: 4;
+      grid-row: 1;
+    }
+
+    .trem-app-header__actions .trem-app-header__menu {
+      grid-column: 5;
+      grid-row: 1;
+    }
   }
 }

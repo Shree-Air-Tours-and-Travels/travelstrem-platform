@@ -53,6 +53,31 @@
   }
 }
 
+.trem-plan-cards:not(.trem-plan-cards--horizontal-stack) .trem-plan-card {
+  &__body {
+    flex: 1;
+  }
+
+  &__copy {
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__description {
+    min-height: $space-10;
+  }
+
+  &__highlights {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  &__action-label {
+    margin-top: auto;
+  }
+}
+
 @include mq-max($tablet-max) {
   .trem-plan-cards__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -62,6 +87,16 @@
 @include mq-max($mobile-max) {
   .trem-plan-cards__grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .trem-plan-cards:not(.trem-plan-cards--horizontal-stack) .trem-plan-card {
+    &__copy {
+      display: grid;
+    }
+
+    &__description {
+      min-height: 0;
+    }
   }
 
   .trem-plan-cards--hide-unavailable-mobile {
@@ -89,6 +124,7 @@
     }
 
     &__description {
+      min-height: 0;
       font-size: $font-size-xs;
       line-height: $line-height-md;
     }

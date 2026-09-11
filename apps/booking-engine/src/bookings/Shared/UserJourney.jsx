@@ -31,6 +31,10 @@ export default function UserJourney({ journeyType = "" }) {
   };
 
   const selectEnquiry = (item) => {
+    if (item.targetPath) {
+      window.location.assign(item.targetPath);
+      return;
+    }
     const next = new URLSearchParams(searchParams);
     next.set("tab", "bookings");
     if (item.recordType === "booking") {

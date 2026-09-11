@@ -87,6 +87,8 @@ const createEventBus = (initialOptions = {}) => {
 
 const defaultEventBus = createEventBus();
 
+export { resolveNotificationLink } from "./notificationLinks.js";
+
 const isObject = (value) => value && typeof value === "object" && !Array.isArray(value);
 const CLEAR_CONTEXT = "ctx:clear";
 
@@ -370,6 +372,7 @@ export { RealtimeProvider, useRealtimeContext } from "./realtime/RealtimeProvide
 export { default as RealtimeProviderDefault } from "./realtime/RealtimeProvider.jsx";
 export { default as useRealtime } from "./realtime/useRealtime.js";
 export { default as useRealtimeEvent } from "./realtime/useRealtimeEvent.js";
+export { default as useNotificationInbox } from "./useNotificationInbox.js";
 export { default as useRealtimeStatus } from "./realtime/useRealtimeStatus.js";
 export { default as useResourceRealtime } from "./realtime/useResourceRealtime.js";
 export {

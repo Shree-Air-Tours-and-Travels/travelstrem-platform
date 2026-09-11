@@ -35,7 +35,15 @@ import {
     ensureBookingFromAcceptedQuote,
     linkEnquiryArtifactsToBooking,
 } from "./services/EnquiryBookingConversionService.js";
+import {
+    holdInventoryForAcceptedBooking,
+    releaseInventoryForBooking,
+} from "./services/BookingInventoryHoldService.js";
 import { BOOKING_STATUS } from "../../constants/enums.js";
+import {
+    createInboxNotification,
+    createInboxNotifications,
+} from "../tenancy/notification.service.js";
 
 const operatorRoles = new Set(["agent", "admin", "super_admin"]);
 const travellerMasterOptionKeys = {
@@ -52,16 +60,115 @@ const loadTravellerOptionSets = async () => {
         Object.entries(travellerMasterOptionKeys).map(([name, key]) => [name, sets[key] || []]),
     );
 };
+
+const notifyOperators = async ({
+    enquiry,
+    type,
+    title,
+    message,
+    entityType = "enquiry",
+    entityId = null,
+    data = {},
+    includeAdmins = true,
+}) => {
+    const notifications = [];
+    const safeData = {
+        enquiryRef: enquiry.enquiryRef || "",
+        product: enquiry.product || "",
+        tourTitle: enquiry.tourTitle || "",
+        status: enquiry.status || "",
+        ...data,
+    };
+
+    if (enquiry.agencyId) {
+        const agencyUserIds = new Set();
+        const agencyAdminIds = await User.find({
+            agencyId: enquiry.agencyId,
+            agencyRole: "partner_admin",
+            accountStatus: "active",
+        }).distinct("_id");
+        agencyAdminIds.forEach((userId) => agencyUserIds.add(String(userId)));
+
+        if (enquiry.ownerAgent) {
+            const ownerAgent = await User.findOne({
+                _id: enquiry.ownerAgent,
+                agencyId: enquiry.agencyId,
+                agencyRole: "partner_agent",
+                accountStatus: "active",
+            })
+                .select("_id")
+                .lean();
+            if (ownerAgent?._id) agencyUserIds.add(String(ownerAgent._id));
+        }
+
+        notifications.push(
+            ...Array.from(agencyUserIds).map((userId) => ({
+                userId,
+                agencyId: enquiry.agencyId,
+                portal: "partner",
+                type,
+                title,
+                message,
+                entityType,
+                entityId: String(entityId || enquiry._id),
+                data: safeData,
+            })),
+        );
+    } else if (enquiry.ownerAgent) {
+        notifications.push({
+            userId: enquiry.ownerAgent,
+            agencyId: null,
+            portal: "partner",
+            type,
+            title,
+            message,
+            entityType,
+            entityId: String(entityId || enquiry._id),
+            data: safeData,
+        });
+    }
+
+    if (includeAdmins) {
+        const adminUserIds = await User.find({ role: "admin", accountStatus: "active" }).distinct(
+            "_id",
+        );
+        notifications.push(
+            ...adminUserIds.map((userId) => ({
+                userId,
+                agencyId: enquiry.agencyId || null,
+                portal: "admin",
+                type,
+                title,
+                message,
+                entityType,
+                entityId: String(entityId || enquiry._id),
+                data: safeData,
+            })),
+        );
+    }
+
+    return createInboxNotifications(notifications);
+};
 const actorId = (actor) => actor?.sub || actor?.id || actor?._id;
 const bookingIdentity = (value) => {
     const normalized = String(value || "").trim();
-    if (/^BKG-/i.test(normalized)) return { bookingRef: normalized.toUpperCase() };
+    if (/^BK[QG]-/i.test(normalized)) return { bookingRef: normalized.toUpperCase() };
     return Booking.db.base.Types.ObjectId.isValid(normalized) ? { _id: normalized } : null;
 };
 
 const findBookingRecord = async (resourceId) => {
     const identity = bookingIdentity(resourceId);
     return identity ? Booking.findOne(identity) : null;
+};
+
+const findEnquiryResource = async (resourceId) => {
+    const booking = await findBookingRecord(resourceId);
+    if (booking?.sourceEnquiryId) return { booking, query: { _id: booking.sourceEnquiryId } };
+    if (booking) throw Object.assign(new Error("Enquiry not found."), { status: 404 });
+    const normalized = String(resourceId || "").trim();
+    if (/^ENQ-/i.test(normalized)) return { booking: null, query: { enquiryRef: normalized.toUpperCase() } };
+    if (ContactLead.db.base.Types.ObjectId.isValid(normalized)) return { booking: null, query: { _id: normalized } };
+    throw Object.assign(new Error("Enquiry not found."), { status: 404 });
 };
 const escapeHtml = (value) => String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -77,8 +184,7 @@ async function findAuthorizedEnquiry(enquiryId, actor) {
         throw Object.assign(new Error("Only agents and administrators can build quotes."), {
             status: 403,
         });
-    const booking = await findBookingRecord(enquiryId);
-    const query = { _id: booking?.sourceEnquiryId || enquiryId };
+    const { query } = await findEnquiryResource(enquiryId);
     const master = role === "super_admin" || (role === "admin" && actor?.adminLevel === "master");
     if (!master) {
         const viewer = await User.findById(userId).select("agencyId agencyRole").lean();
@@ -115,11 +221,10 @@ export async function findAuthorizedBookingJourney(enquiryId, actor) {
         });
     const role = String(actor?.role || "member").toLowerCase();
     const isOperator = operatorRoles.has(role);
-    const booking = await findBookingRecord(enquiryId);
-    const sourceEnquiryId = booking?.sourceEnquiryId || enquiryId;
+    const { booking, query } = await findEnquiryResource(enquiryId);
     const enquiryDocument = isOperator
-        ? await findAuthorizedEnquiry(sourceEnquiryId, actor)
-        : await ContactLead.findOne({ _id: sourceEnquiryId, claimedBy: userId });
+        ? await findAuthorizedEnquiry(enquiryId, actor)
+        : await ContactLead.findOne({ ...query, claimedBy: userId });
     if (!enquiryDocument)
         throw Object.assign(new Error("Enquiry not found."), { status: 404 });
     await enquiryDocument.populate([
@@ -146,12 +251,15 @@ export async function findAuthorizedBookingJourney(enquiryId, actor) {
     }
     const travellerOptionSets = await loadTravellerOptionSets();
     return {
-        id: String(booking?._id || enquiry._id),
-        enquiryId: String(enquiry._id),
+        id: booking?.bookingRef || enquiry.enquiryRef || "",
+        enquiryId: enquiry.enquiryRef || "",
+        bookingRef: booking?.bookingRef || "",
+        enquiryRef: enquiry.enquiryRef || "",
         reference: booking?.bookingRef || enquiry.enquiryRef || "Enquiry",
         title: booking?.tourTitle || enquiry.tourTitle || "Tour enquiry",
         status: booking?.status || enquiry.status || "new",
         product: enquiry.product || "trevista",
+        journeyType: enquiry.journeyType,
         travellerCount,
         travellerTypeCounts: {
             adults: Number(enquiry.fields?.adultCount || 0),
@@ -161,12 +269,17 @@ export async function findAuthorizedBookingJourney(enquiryId, actor) {
         travellerOptionSets,
         enquiryDetailsForm: buildProductEnquiryDetailsForm({
             product: enquiry.product,
+            journeyType: enquiry.journeyType,
             saved: savedEnquiryFields,
             ...enquiryContext,
         }),
-        requiresPassport: isInternationalJourney(sourceJourney),
+        requiresPassport:
+            enquiry.product === "trehub"
+                ? Boolean(enquiry.customizationSnapshot?.requiresPassport)
+                : isInternationalJourney(sourceJourney),
         travellerDetails: booking?.travellerDetails || enquiry.travellerDetails || null,
         paymentUrl: booking?.paymentUrl || booking?.paymentSession?.url || "",
+        flightSearchUrl: enquiry.product === "trehub" ? flightSearchUrl(enquiry) : "",
         record: booking
             ? bookingView(booking.toObject(), enquiry, perspective)
             : enquiryView(enquiry, perspective),
@@ -174,8 +287,10 @@ export async function findAuthorizedBookingJourney(enquiryId, actor) {
 }
 
 export async function findCurrentBookingJourneyQuote(resourceId) {
-    const booking = await findBookingRecord(resourceId);
-    const enquiryId = booking?.sourceEnquiryId || resourceId;
+    const { booking, query } = await findEnquiryResource(resourceId);
+    const enquiry = await ContactLead.findOne(query).select("_id").lean();
+    const enquiryId = enquiry?._id || booking?.sourceEnquiryId || null;
+    if (!enquiryId) return null;
     const quote = await BookingQuote.findOne({
         $or: [
             ...(booking ? [{ _id: booking.acceptedQuoteId }, { bookingId: booking._id }] : []),
@@ -187,9 +302,11 @@ export async function findCurrentBookingJourneyQuote(resourceId) {
         .sort({ version: -1, createdAt: -1 })
         .lean();
     if (!quote) return null;
+    const quoteHandle = quote.quoteRef || quote.quoteNumber || "";
     return {
-        id: String(quote._id),
-        quoteRef: quote.quoteRef || "",
+        id: quoteHandle,
+        quoteRef: quoteHandle,
+        quoteNumber: quote.quoteNumber || "",
         version: quote.version,
         status: quote.status,
         expirationDate: quote.expirationDate || quote.validity || quote.expiresAt,
@@ -198,7 +315,24 @@ export async function findCurrentBookingJourneyQuote(resourceId) {
         platformFee: quote.platformFee || 0,
         taxes: quote.taxes || 0,
         finalAmount: quote.finalAmount || 0,
-        items: quote.items || [],
+        items: (quote.items || []).map((item, index) => ({
+            id: item.code || `quote-item-${index + 1}`,
+            code: item.code || "",
+            label: item.label || "",
+            description: item.description || "",
+            pricingType: item.pricingType || "FIXED",
+            detailRows: (item.detailRows || []).map((row) => ({
+                label: row.label || "",
+                value: row.value || "",
+            })),
+            unitAmount: item.unitAmount || 0,
+            quantity: item.quantity || 1,
+            amount: item.amount || 0,
+            currency: item.currency || quote.currency || "INR",
+            category: item.category || "inclusion",
+            optional: Boolean(item.optional),
+            selected: item.selected !== false,
+        })),
         notes: quote.notes || "",
         terms: quote.terms || "",
         acceptedAt: quote.acceptedAt || null,
@@ -207,6 +341,13 @@ export async function findCurrentBookingJourneyQuote(resourceId) {
         changeRequest: quote.changeRequest || null,
     };
 }
+
+const quoteIdentity = (value) => {
+    const normalized = String(value || "").trim();
+    if (!normalized) return null;
+    if (BookingQuote.db.base.Types.ObjectId.isValid(normalized)) return { _id: normalized };
+    return { $or: [{ quoteRef: normalized }, { quoteNumber: normalized }] };
+};
 
 async function saveProcess(enquiry, process) {
     enquiry.quoteBuilder = process;
@@ -313,14 +454,69 @@ async function findSourceTour(enquiry) {
     const query = BookingQuote.db.base.Types.ObjectId.isValid(reference)
         ? { _id: reference }
         : { $or: [{ slug: reference.toLowerCase() }, { agentRef: reference }] };
+    if (enquiry.product === "trevio" || enquiry.journeyType === "trip") {
+        const trip = await Trip.findOne(query).lean();
+        if (trip) return trip;
+    }
     const tour = await Tour.findOne(query).lean();
     if (tour) return tour;
     const trip = await Trip.findOne(query).lean();
-    if (trip?.sourceTourId) {
+    if (trip?.sourceTourId && enquiry.product !== "trevio" && enquiry.journeyType !== "trip") {
         return (await Tour.findById(trip.sourceTourId).lean()) || trip;
     }
     return trip;
 }
+
+const isTripSource = (source, enquiry) =>
+    enquiry.product === "trevio" ||
+    enquiry.journeyType === "trip" ||
+    source?.productKey === "trevio" ||
+    source?.productType === "trip";
+
+const numericMajor = (...values) => {
+    for (const value of values) {
+        const amount = Number(value || 0);
+        if (amount > 0) return amount;
+    }
+    return 0;
+};
+
+const tripIncludedDetailRows = ({ tour, selectedPackageConfig, travellerCount, hotelSnapshot, activitySnapshot }) => [
+    {
+        label: "Travellers",
+        value: `${travellerCount} traveller${travellerCount === 1 ? "" : "s"}`,
+    },
+    selectedPackageConfig
+        ? {
+              label: "Package",
+              value: [
+                  selectedPackageConfig.label || selectedPackageConfig.name || selectedPackageConfig.value,
+                  selectedPackageConfig.includesFlights ? "Flights included" : "Flights not included",
+              ]
+                  .filter(Boolean)
+                  .join(" · "),
+          }
+        : null,
+    tour?.duration ? { label: "Duration", value: tour.duration } : null,
+    tour?.location ? { label: "Route", value: tour.location } : null,
+    ...hotelSnapshot.slice(0, 6).map((stay, index) => ({
+        label: `Included stay ${index + 1}`,
+        value: describeHotel(stay),
+    })),
+    ...activitySnapshot.slice(0, 8).map((activity, index) => ({
+        label: `Included activity ${index + 1}`,
+        value: [activity.day ? `Day ${activity.day}` : "", activity.name || activity.description]
+            .filter(Boolean)
+            .join(" · "),
+    })),
+    ...(tour?.extras || [])
+        .filter((extra) => extra?.included === true)
+        .slice(0, 6)
+        .map((extra, index) => ({
+            label: `Included extra ${index + 1}`,
+            value: [extra.title, extra.description].filter(Boolean).join(" · "),
+        })),
+].filter((row) => row?.value);
 
 const isInternationalJourney = (source) => {
     if (/international/i.test(String(source?.category || ""))) return true;
@@ -333,6 +529,26 @@ const isInternationalJourney = (source) => {
         .map((value) => String(value || "").trim().toLowerCase())
         .filter(Boolean);
     return countries.some((country) => !["in", "india", "bharat"].includes(country));
+};
+
+const flightSearchUrl = (enquiry) => {
+    const snapshot = enquiry?.customizationSnapshot || {};
+    if (snapshot.searchUrl) return String(snapshot.searchUrl);
+    const first = snapshot.segments?.[0];
+    const last = snapshot.segments?.at?.(-1);
+    if (!first || !last) return "/trehub/flights";
+    const params = new URLSearchParams({
+        choice: "oneway",
+        from: first.origin?.iataCode || "",
+        to: last.destination?.iataCode || "",
+        departDate: String(first.departureDateTime || "").slice(0, 10),
+        travellers: String(enquiry.fields?.travellerCount || snapshot.travellers || 1),
+        adults: String(enquiry.fields?.adultCount || 1),
+        children: String(enquiry.fields?.childCount || 0),
+        infants: String(enquiry.fields?.infantCount || 0),
+        cabin: snapshot.fare?.cabin || "ECONOMY",
+    });
+    return `/trehub/flights?${params.toString()}`;
 };
 
 const toOptionDate = (value) => {
@@ -462,6 +678,10 @@ async function buildProductEnquiryContext(source, product = "trevista") {
 async function loadQuoteContext(enquiry) {
     const tour = await findSourceTour(enquiry);
     const narrative = generateQuoteNarrative({ enquiry: enquiry.toObject(), tour });
+    const tripSource = isTripSource(tour, enquiry);
+    const commercialSource = tripSource && tour?.sourceTourId
+        ? (await Tour.findById(tour.sourceTourId).lean()) || tour
+        : tour;
     const itinerarySnapshot = safeItinerary(tour);
     const hotelSnapshot = safeHotels(tour, enquiry);
     const transferSnapshot = safeComponents(tour, "TRANSFER");
@@ -472,33 +692,46 @@ async function loadQuoteContext(enquiry) {
         ...safeComponents(tour, "ACTIVITY"),
     ];
     const departureSnapshot = selectedDeparture(tour, enquiry);
-    const variantOptions = (tour?.commercial?.packages || [])
+    const tripPackageOptions = tripSource && Array.isArray(tour?.preferences?.packageTypes)
+        ? tour.preferences.packageTypes
+        : [];
+    const variantOptions = (tripPackageOptions.length ? tripPackageOptions : commercialSource?.commercial?.packages || [])
         .filter((item) => item.enabled !== false)
-        .map((item) => ({ value: item.packageKey || item.tier, label: item.name || item.tier }));
-    const selectedVariant = enquiry.selection?.packageKey || variantOptions[0]?.value || "CUSTOM";
-    const selectedPackageConfig = (tour?.commercial?.packages || []).find(
-        (item) => String(item.packageKey) === String(selectedVariant),
+        .map((item) => ({
+            value: String(item.value || item.packageKey || item.tier || ""),
+            label: item.label || item.name || item.tier,
+            includesFlights:
+                Boolean(item.includesFlights) ||
+                /\bwith[ -]?flights?\b/i.test(`${item.value || item.packageKey || ""} ${item.label || item.name || ""}`),
+            extraPrice: Number(item.extraPrice || 0),
+            includedComponentKeys: item.includedComponentKeys || [],
+        }))
+        .filter((item) => item.value);
+    const selectedVariant = enquiry.selection?.packageKey || enquiry.fields?.packageKey || variantOptions[0]?.value || "CUSTOM";
+    const selectedPackageConfig = (tripPackageOptions.length ? variantOptions : commercialSource?.commercial?.packages || []).find(
+        (item) => String(item.value || item.packageKey) === String(selectedVariant),
     );
-    const packageIncludesFlight = (selectedPackageConfig?.includedComponentKeys || []).some(
-        (key) =>
-            (tour?.commercial?.components || []).some(
-                (component) =>
-                    component.componentKey === key && component.type === "FLIGHT",
-            ),
-    );
+    const packageIncludesFlight = Boolean(selectedPackageConfig?.includesFlights) ||
+        (selectedPackageConfig?.includedComponentKeys || []).some(
+            (key) =>
+                (commercialSource?.commercial?.components || []).some(
+                    (component) =>
+                        component.componentKey === key && component.type === "FLIGHT",
+                ),
+        );
     const travellerCount = Math.max(1, Number(enquiry.fields?.travellerCount || enquiry.customizationSnapshot?.travellers || 1));
     const adultCount = Math.max(1, Number(enquiry.fields?.adultCount || travellerCount));
     const childCount = Math.max(0, Number(enquiry.fields?.childCount || 0));
     const infantCount = Math.max(0, Number(enquiry.fields?.infantCount || 0));
     const roomCount = Math.max(1, Number(enquiry.customizationSnapshot?.rooms || Math.ceil(travellerCount / 2)));
     let commercialPricing = null;
-    if (tour?.commercial?.version === "COMPONENTS_V1" && selectedVariant) {
+    if (commercialSource?.commercial?.version === "COMPONENTS_V1" && selectedVariant) {
         try {
             const calculated = await FinancialEngine.calculateBookingFinancials({
-                tour,
+                tour: commercialSource,
                 packageKey: selectedVariant,
                 selections: {
-                    ...(tour.commercial.defaultBasis || {}),
+                    ...(commercialSource.commercial.defaultBasis || {}),
                     ...(enquiry.customizationSnapshot?.basis || {}),
                     ...(enquiry.customizationSnapshot?.selections || {}),
                     adults: adultCount,
@@ -506,14 +739,17 @@ async function loadQuoteContext(enquiry) {
                     infants: infantCount,
                     rooms: roomCount,
                 },
-                context: { agencyId: enquiry.agencyId || tour.agencyId, tourId: tour._id },
+                context: {
+                    agencyId: enquiry.agencyId || commercialSource.agencyId || tour?.agencyId,
+                    tourId: commercialSource._id,
+                },
             });
             commercialPricing = calculated.commercial || null;
         } catch {
             commercialPricing = null;
         }
     }
-    const derivedPackage = (tour?.commercial?.derived?.packages || []).find(
+    const derivedPackage = (commercialSource?.commercial?.derived?.packages || []).find(
         (item) => item.packageKey === selectedVariant,
     );
     const packageSnapshot = enquiry.customizationSnapshot?.package || {};
@@ -521,7 +757,10 @@ async function loadQuoteContext(enquiry) {
     let packageMinor = Number(
         packageSnapshot.totalMinor ?? commercialPricing?.sellingTotalMinor ?? derivedPackage?.sellingTotalMinor ?? customizedSnapshot.totalMinor ?? 0,
     );
-    const legacyMajor = Number(departureSnapshot?.price?.min || tour?.price?.min || 0);
+    const legacyMajor = numericMajor(departureSnapshot?.price?.min, tour?.price?.min, tour?.price?.amount);
+    const tripPackageUnitMajor = Math.max(0, Number(tour?.price?.amount || 0) + Number(selectedPackageConfig?.extraPrice || 0));
+    if (packageMinor <= 0 && tripSource && tripPackageUnitMajor > 0)
+        packageMinor = Math.round(tripPackageUnitMajor * 100) * travellerCount;
     if (packageMinor <= 0 && legacyMajor > 0) packageMinor = Math.round(legacyMajor * 100);
     const customizedMinor = Number(customizedSnapshot.totalMinor ?? packageMinor);
     const addonAmount = Math.max(0, customizedMinor - packageMinor);
@@ -581,15 +820,34 @@ async function loadQuoteContext(enquiry) {
         (sum, item) => sum + Math.round(Number(item.unitAmount) * 100) * Number(item.quantity),
         0,
     );
-    const pricingItems = derivedItems.length ? derivedItems : packageMinor > 0 ? [{
-        name: tour?.title || enquiry.selection?.packageName || "Tour package",
-        category: "PACKAGE",
-        description: enquiry.selection?.packageName || "Selected tour package",
-        pricingType: "FIXED",
-        unitAmount: minorToDecimal(packageMinor),
-        quantity: 1,
-        packageComponent: true,
-    }] : [];
+    const pricingItems = derivedItems.length ? derivedItems : packageMinor > 0 ? [
+        tripSource && tripPackageUnitMajor > 0
+            ? {
+                  name: tour?.title || enquiry.selection?.packageName || "Trip package",
+                  category: "PACKAGE",
+                  description: selectedPackageConfig?.label || enquiry.selection?.packageName || "Selected trip package",
+                  pricingType: "PER_PERSON",
+                  unitAmount: minorToDecimal(Math.round(tripPackageUnitMajor * 100)),
+                  quantity: travellerCount,
+                  packageComponent: true,
+                  detailRows: tripIncludedDetailRows({
+                      tour,
+                      selectedPackageConfig,
+                      travellerCount,
+                      hotelSnapshot,
+                      activitySnapshot,
+                  }),
+              }
+            : {
+                  name: tour?.title || enquiry.selection?.packageName || "Tour package",
+                  category: "PACKAGE",
+                  description: enquiry.selection?.packageName || "Selected tour package",
+                  pricingType: "FIXED",
+                  unitAmount: minorToDecimal(packageMinor),
+                  quantity: 1,
+                  packageComponent: true,
+              },
+    ] : [];
     if (packageMinor > derivedTotalMinor && derivedItems.length)
         pricingItems.push({
             name: "Package pricing adjustment",
@@ -952,6 +1210,26 @@ async function finalizeQuote({ enquiry, actor, context, data, input, calculation
             emailError: "The enquiry does not have a customer email address.",
         };
     }
+    const quoteUserId = quote.userId || enquiry.claimedBy;
+    if (quoteUserId) {
+        await createInboxNotification({
+            userId: quoteUserId,
+            agencyId: enquiry.agencyId || quote.agencyId || null,
+            portal: "customer",
+            type: "booking",
+            title: "Your quotation is ready",
+            message: `${quoteRef} · Review your quotation and respond from My Bookings.`,
+            entityType: "BookingQuote",
+            entityId: String(quote._id),
+            data: {
+                enquiryRef: enquiry.enquiryRef || "",
+                bookingRef: enquiry.bookingRef || "",
+                quoteRef,
+                product: enquiry.product || "",
+                tourTitle: enquiry.tourTitle || data.details.title || "",
+            },
+        });
+    }
     try {
         const realtimeData = bookingQuoteDto(quote);
         const enquiryRealtimeData = enquiryDto(enquiry);
@@ -987,17 +1265,24 @@ async function finalizeQuote({ enquiry, actor, context, data, input, calculation
 export async function updateCustomerQuoteDecision({ enquiryId, quoteId, actor, action, notes }) {
     const userId = actorId(actor);
     if (!userId) throw Object.assign(new Error("Please sign in to respond to this quote."), { status: 401 });
-    let booking = await findBookingRecord(enquiryId);
-    const sourceEnquiryId = booking?.sourceEnquiryId || enquiryId;
-    const enquiry = await ContactLead.findOne({ _id: sourceEnquiryId, claimedBy: userId });
+    const resource = await findEnquiryResource(enquiryId);
+    let { booking } = resource;
+    const enquiry = await ContactLead.findOne({ ...resource.query, claimedBy: userId });
     if (!enquiry) throw Object.assign(new Error("Enquiry not found."), { status: 404 });
     if (!booking && enquiry.bookingId) booking = await Booking.findById(enquiry.bookingId);
+    if (["cancelled", "closed"].includes(enquiry.status)) throw Object.assign(new Error("This enquiry is closed."), { status: 409 });
+    const identity = quoteIdentity(quoteId);
+    if (!identity) throw Object.assign(new Error("Quote not found."), { status: 404 });
     const quote = await BookingQuote.findOne({
-        _id: quoteId,
-        $or: [
-            { inquiryId: enquiry._id },
-            { bookingId: booking?._id || enquiry._id },
-            { contextType: "ENQUIRY", contextId: String(enquiry._id) },
+        $and: [
+            identity,
+            {
+                $or: [
+                    { inquiryId: enquiry._id },
+                    { bookingId: booking?._id || enquiry._id },
+                    { contextType: "ENQUIRY", contextId: String(enquiry._id) },
+                ],
+            },
         ],
     });
     if (!quote) throw Object.assign(new Error("Quote not found."), { status: 404 });
@@ -1006,6 +1291,7 @@ export async function updateCustomerQuoteDecision({ enquiryId, quoteId, actor, a
         action,
         notes,
         hasChangeRequest: Boolean(quote.changeRequest?.requestedAt),
+        version: quote.version,
     });
     const now = new Date();
     quote.status = decision.quoteStatus;
@@ -1014,6 +1300,7 @@ export async function updateCustomerQuoteDecision({ enquiryId, quoteId, actor, a
         quote.rejectedAt = null;
         quote.changeRequest = null;
         booking = await ensureBookingFromAcceptedQuote(enquiry, quote);
+        await holdInventoryForAcceptedBooking({ booking, enquiry, quote });
         quote.bookingId = booking._id;
         quote.inquiryId = enquiry._id;
         enquiry.bookingId = booking._id;
@@ -1026,11 +1313,34 @@ export async function updateCustomerQuoteDecision({ enquiryId, quoteId, actor, a
         quote.rejectedAt = null;
     } else if (decision.action === "CANCEL") {
         quote.cancelledAt = now;
-        if (booking) booking.status = BOOKING_STATUS.CANCELLED;
+        if (booking) {
+            booking.status = BOOKING_STATUS.CANCELLED;
+            await releaseInventoryForBooking(booking);
+        }
     }
     enquiry.status = decision.enquiryStatus;
     await Promise.all([quote.save(), enquiry.save(), ...(booking ? [booking.save()] : [])]);
     if (booking) await linkEnquiryArtifactsToBooking(enquiry, booking);
+    await notifyOperators({
+        enquiry,
+        type: "quote_decision",
+        title:
+            decision.action === "ACCEPT"
+                ? "Quotation accepted"
+                : decision.action === "REJECT"
+                  ? "Quotation rejected"
+                  : decision.action === "REQUEST_CHANGES"
+                    ? "Quotation change requested"
+                    : "Quotation cancelled",
+        message: `${enquiry.enquiryRef || "Enquiry"} · The traveller responded to the quotation.`,
+        entityType: "BookingQuote",
+        entityId: quote._id,
+        data: {
+            quoteRef: quote.quoteRef || quote.quoteNumber || "",
+            bookingRef: booking?.bookingRef || "",
+            action: decision.action,
+        },
+    });
     try {
         const realtimeData = bookingQuoteDto(quote);
         publishFanOut(
@@ -1053,9 +1363,9 @@ export async function updateCustomerQuoteDecision({ enquiryId, quoteId, actor, a
 export async function saveCustomerTravellerDetails({ enquiryId, actor, values }) {
     const userId = actorId(actor);
     if (!userId) throw Object.assign(new Error("Please sign in to add traveller details."), { status: 401 });
-    let booking = await findBookingRecord(enquiryId);
-    const sourceEnquiryId = booking?.sourceEnquiryId || enquiryId;
-    const enquiry = await ContactLead.findOne({ _id: sourceEnquiryId, claimedBy: userId });
+    const resource = await findEnquiryResource(enquiryId);
+    let { booking } = resource;
+    const enquiry = await ContactLead.findOne({ ...resource.query, claimedBy: userId });
     if (!enquiry) throw Object.assign(new Error("Enquiry not found."), { status: 404 });
     if (!booking && enquiry.bookingId) booking = await Booking.findById(enquiry.bookingId);
     const quote = await BookingQuote.findOne({
@@ -1066,7 +1376,9 @@ export async function saveCustomerTravellerDetails({ enquiryId, actor, values })
         ],
     }).sort({ version: -1, createdAt: -1 });
     const count = Math.max(1, Number(enquiry.fields?.travellerCount || enquiry.customizationSnapshot?.travellers || 1));
-    const requiresPassport = isInternationalJourney(await findSourceTour(enquiry));
+    const requiresPassport = enquiry.product === "trehub"
+        ? Boolean(enquiry.customizationSnapshot?.requiresPassport)
+        : isInternationalJourney(await findSourceTour(enquiry));
     const travellerOptionSets = await loadTravellerOptionSets();
     const validated = validateTravellerDetails({
         count,
@@ -1109,12 +1421,38 @@ export async function saveCustomerTravellerDetails({ enquiryId, actor, values })
     return { status: 200, errors: {}, enquiry, booking };
 }
 
+export async function cancelCustomerFlightEnquiry({ enquiryId, actor }) {
+    const userId = actorId(actor);
+    if (!userId)
+        throw Object.assign(new Error("Please sign in to cancel this enquiry."), { status: 401 });
+    const resource = await findEnquiryResource(enquiryId);
+    const enquiry = await ContactLead.findOne({ ...resource.query, claimedBy: userId });
+    if (!enquiry) throw Object.assign(new Error("Enquiry not found."), { status: 404 });
+    if (enquiry.product !== "trehub" || !["flight", "hotel"].includes(enquiry.journeyType))
+        throw Object.assign(new Error("Only Trehub enquiries can be cancelled here."), {
+            status: 409,
+        });
+    if (enquiry.status !== "cancelled") {
+        if (!["new", "enquiry_details_added", "traveller_details_added"].includes(enquiry.status))
+            throw Object.assign(new Error("This enquiry can no longer be cancelled."), {
+                status: 409,
+            });
+        enquiry.status = "cancelled";
+        await enquiry.save();
+        publishFanOut(
+            { userId: enquiry.claimedBy, agencyId: enquiry.agencyId },
+            REALTIME_EVENTS.BOOKING_QUOTE_UPDATED,
+            enquiryDto(enquiry),
+        );
+    }
+    return { enquiry, targetPath: flightSearchUrl(enquiry) };
+}
+
 export async function saveCustomerEnquiryDetails({ enquiryId, actor, values }) {
     const userId = actorId(actor);
     if (!userId) throw Object.assign(new Error("Please sign in to update this enquiry."), { status: 401 });
-    const booking = await findBookingRecord(enquiryId);
-    const sourceEnquiryId = booking?.sourceEnquiryId || enquiryId;
-    const enquiry = await ContactLead.findOne({ _id: sourceEnquiryId, claimedBy: userId });
+    const resource = await findEnquiryResource(enquiryId);
+    const enquiry = await ContactLead.findOne({ ...resource.query, claimedBy: userId });
     if (!enquiry) throw Object.assign(new Error("Enquiry not found."), { status: 404 });
     if (
         !["new", "enquiry_details_added", "traveller_details_added"].includes(
@@ -1132,9 +1470,11 @@ export async function saveCustomerEnquiryDetails({ enquiryId, actor, values }) {
     );
     const validated = validateProductEnquiryDetails({
         product: enquiry.product,
+        journeyType: enquiry.journeyType,
         values,
         ...context,
     });
+    if (enquiry.product === "trehub") throw Object.assign(new Error("Return to Trehub to change the selected itinerary, rooms or traveller count."), { status: 409 });
     if (!validated.valid) return { status: 422, errors: validated.errors, enquiry };
 
     const previousCount = Number(enquiry.fields?.travellerCount || 0);
@@ -1229,15 +1569,20 @@ export async function saveCustomerEnquiryDetails({ enquiryId, actor, values }) {
 export async function requestCustomerQuotation({ enquiryId, actor }) {
     const userId = actorId(actor);
     if (!userId) throw Object.assign(new Error("Please sign in to request a quotation."), { status: 401 });
-    const booking = await findBookingRecord(enquiryId);
-    const sourceEnquiryId = booking?.sourceEnquiryId || enquiryId;
-    const enquiry = await ContactLead.findOne({ _id: sourceEnquiryId, claimedBy: userId });
+    const resource = await findEnquiryResource(enquiryId);
+    const enquiry = await ContactLead.findOne({ ...resource.query, claimedBy: userId });
     if (!enquiry) throw Object.assign(new Error("Enquiry not found."), { status: 404 });
     if (!enquiry.travellerDetails?.completedAt) {
         throw Object.assign(new Error("Save all traveller details before requesting a quotation."), { status: 409 });
     }
     enquiry.status = "quote_requested";
     await enquiry.save();
+    await notifyOperators({
+        enquiry,
+        type: "quote_requested",
+        title: "Quotation requested",
+        message: `${enquiry.enquiryRef || "Enquiry"} · The traveller is waiting for a quotation.`,
+    });
     publishFanOut(
         { userId: enquiry.claimedBy, agencyId: enquiry.agencyId },
         REALTIME_EVENTS.ENQUIRY_UPDATED,

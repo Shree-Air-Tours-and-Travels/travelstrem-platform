@@ -11,6 +11,8 @@ const productAccessRequestSchema = new mongoose.Schema(
         requestedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
         currentProducts: [{ type: String, trim: true, lowercase: true }],
         requestedProducts: [{ type: String, trim: true, lowercase: true }],
+        requestedAgents: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+        approvedAgents: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
         reason: { type: String, trim: true, required: true, maxlength: 1200 },
         status: {
             type: String,

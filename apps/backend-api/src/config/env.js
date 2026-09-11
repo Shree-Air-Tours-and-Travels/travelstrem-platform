@@ -125,6 +125,7 @@ const frontendsRaw = get(
                 portalJsonConfig?.frontends?.shell?.baseUrl,
                 portalJsonConfig?.frontends?.trevista?.baseUrl,
                 portalJsonConfig?.frontends?.trevio?.baseUrl,
+                portalJsonConfig?.frontends?.trehub?.baseUrl,
                 portalJsonConfig?.frontends?.adminTREM?.baseUrl,
             ].filter(Boolean),
     ),
@@ -152,6 +153,9 @@ const TREVIO_URL = String(
 ).trim();
 const TREVISTA_URL = String(
     get("TREVISTA_URL", portalJsonConfig?.frontends?.trevista?.baseUrl || "") || "",
+).trim();
+const TREHUB_URL = String(
+    get("TREHUB_URL", portalJsonConfig?.frontends?.trehub?.baseUrl || "") || "",
 ).trim();
 const SHELL_URL = String(
     get("SHELL_URL", portalJsonConfig?.frontends?.shell?.baseUrl || "") || "",
@@ -444,6 +448,11 @@ const REDIS_URL = getSecret("REDIS_URL", portalJsonConfig?.redis?.url || "")
 const ENABLE_REDIS_SOCKET_ADAPTER =
     get("ENABLE_REDIS_SOCKET_ADAPTER", "false").toString().trim().toLowerCase() === "true";
 
+const FLIGHT_PROVIDER = String(get("FLIGHT_PROVIDER", "mock") || "mock").trim().toLowerCase();
+const MOCK_FLIGHT_MIN_LATENCY_MS = Math.max(0, Number(get("MOCK_FLIGHT_MIN_LATENCY_MS", "300")) || 0);
+const MOCK_FLIGHT_MAX_LATENCY_MS = Math.max(MOCK_FLIGHT_MIN_LATENCY_MS, Number(get("MOCK_FLIGHT_MAX_LATENCY_MS", "1200")) || 0);
+const MOCK_FLIGHT_FORCE_ERROR = IS_PRODUCTION ? "" : String(get("MOCK_FLIGHT_FORCE_ERROR", "") || "").trim().toUpperCase();
+
 /* ------------------------------
     14) Config summary helper
     ------------------------------ */
@@ -488,6 +497,7 @@ const config = {
     CORS_ALLOWED_DOMAIN_SUFFIXES,
     TREVIO_URL,
     TREVISTA_URL,
+    TREHUB_URL,
     SHELL_URL,
     AUTH_APP_URL,
     PARTNER_URL,
@@ -541,6 +551,10 @@ const config = {
     R2_ENDPOINT,
     REDIS_URL,
     ENABLE_REDIS_SOCKET_ADAPTER,
+    FLIGHT_PROVIDER,
+    MOCK_FLIGHT_MIN_LATENCY_MS,
+    MOCK_FLIGHT_MAX_LATENCY_MS,
+    MOCK_FLIGHT_FORCE_ERROR,
     MASTER_ADMIN_EMAIL,
     MASTER_ADMIN_PHONE,
     MASTER_ADMIN_PIN,
@@ -560,6 +574,7 @@ export {
     CORS_ALLOWED_DOMAIN_SUFFIXES,
     TREVIO_URL,
     TREVISTA_URL,
+    TREHUB_URL,
     SHELL_URL,
     AUTH_APP_URL,
     PARTNER_URL,
@@ -613,6 +628,10 @@ export {
     R2_ENDPOINT,
     REDIS_URL,
     ENABLE_REDIS_SOCKET_ADAPTER,
+    FLIGHT_PROVIDER,
+    MOCK_FLIGHT_MIN_LATENCY_MS,
+    MOCK_FLIGHT_MAX_LATENCY_MS,
+    MOCK_FLIGHT_FORCE_ERROR,
     MASTER_ADMIN_EMAIL,
     MASTER_ADMIN_PHONE,
     MASTER_ADMIN_PIN,

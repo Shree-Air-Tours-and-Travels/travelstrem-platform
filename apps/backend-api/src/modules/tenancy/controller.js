@@ -24,6 +24,10 @@ import {
 } from "./partnerDashboard.service.js";
 import { audit } from "./audit.service.js";
 import {
+    createInboxNotification,
+    createInboxNotifications,
+} from "./notification.service.js";
+import {
     inviteUser,
     activateInvitation,
     revokeSessions,
@@ -34,11 +38,11 @@ import config from "../../config/index.js";
 import { PERMISSIONS, ROLE_PERMISSIONS } from "./permissions.js";
 import { normalizeProductKeys } from "./productCatalog.js";
 import { invalidateHiddenProductCache } from "../../utils/hiddenProductCache.js";
+import { getPortalScope } from "../../core/auth/portalSession.js";
 import {
     REALTIME_EVENTS,
     notificationDto,
     publishToCatalog,
-    publishToUser,
 } from "../../realtime/index.js";
 import {
     CONTACT_METHODS,
@@ -345,40 +349,8 @@ export async function submitPartnershipDraft(req, res) {
     }
 }
 
-// Persisted notifications stay the source of truth; realtime only pushes the
-// safe DTO to the owner's socket room so open dashboards refresh instantly.
-const createNotification = async (data) => {
-    const record = await Notification.create(data);
-    try {
-        if (record?.userId)
-            publishToUser(
-                String(record.userId),
-                REALTIME_EVENTS.NOTIFICATION_CREATED,
-                notificationDto(record),
-            );
-    } catch (error) {
-        console.error("[Tenancy] realtime notification publish failed:", error?.message);
-    }
-    return record;
-};
-
-const createNotifications = async (list) => {
-    const records = list.filter((item) => item?.userId);
-    if (!records.length) return [];
-    const inserted = await Notification.insertMany(records);
-    try {
-        inserted.forEach((record) =>
-            publishToUser(
-                String(record.userId),
-                REALTIME_EVENTS.NOTIFICATION_CREATED,
-                notificationDto(record),
-            ),
-        );
-    } catch (error) {
-        console.error("[Tenancy] realtime notification publish failed:", error?.message);
-    }
-    return inserted;
-};
+const createNotification = createInboxNotification;
+const createNotifications = createInboxNotifications;
 
 export async function submitPartnershipRequest(req, res) {
     try {
@@ -953,6 +925,7 @@ export async function updateAgency(req, res) {
                     admins.map((admin) => ({
                         userId: admin._id,
                         agencyId: agency._id,
+                        portal: "partner",
                         type: "agency_status",
                         title: `Agency ${agency.status}`,
                         message: `Your agency workspace is ${agency.status}.`,
@@ -1109,6 +1082,7 @@ export async function inviteAgent(req, res) {
         await createNotification({
             userId: result.user._id,
             agencyId,
+            portal: "partner",
             type: "invitation",
             title: "Welcome to your agency workspace",
             message: `Your ${agencyRole === "partner_admin" ? "Partner Admin" : "Partner Agent"} account has been created.`,
@@ -1274,6 +1248,7 @@ export async function createDeletionRequest(req, res) {
                 masters.map((master) => ({
                     userId: master._id,
                     agencyId: record.agencyId,
+                    portal: "admin",
                     type: "agent_deletion_request",
                     title: "Agent deletion approval required",
                     message: `${agent.name} has a pending permanent-deletion request.`,
@@ -1342,6 +1317,7 @@ export async function decideDeletionRequest(req, res) {
         await createNotification({
             userId: record.requestedBy,
             agencyId: record.agencyId,
+            portal: "partner",
             type: "agent_deletion_decision",
             title: `Agent deletion ${record.status}`,
             message: req.body.notes || `The deletion request is ${record.status}.`,
@@ -1641,6 +1617,8 @@ export async function listProductAccessRequests(req, res) {
             ProductAccessRequest.find(query)
                 .populate("agencyId", "agencyName partnerAgencyRef productAccess")
                 .populate("requestedBy", "name email agencyRole")
+                .populate("requestedAgents", "name email agencyRole accountStatus")
+                .populate("approvedAgents", "name email agencyRole accountStatus")
                 .populate("decidedBy", "name email")
                 .sort({ createdAt: -1 })
                 .skip(skip)
@@ -1685,6 +1663,29 @@ export async function createProductAccessRequest(req, res) {
                 status: "error",
                 message: "One or more requested products are unavailable.",
             });
+        const requestedAgentIds = [
+            ...new Set((req.body.requestedAgentIds || []).map((id) => String(id))),
+        ];
+        if (!requestedAgentIds.length)
+            return res.status(400).json({
+                status: "error",
+                message: "Select at least one active agency agent for product access.",
+            });
+        if (!requestedAgentIds.every((id) => mongoose.isValidObjectId(id)))
+            return res.status(400).json({ status: "error", message: "One or more selected agents are invalid." });
+        const requestedAgents = await User.find({
+            _id: { $in: requestedAgentIds },
+            agencyId: agency._id,
+            agencyRole: { $in: ["partner_admin", "partner_agent"] },
+            accountStatus: "active",
+        })
+            .select("_id")
+            .lean();
+        if (requestedAgents.length !== requestedAgentIds.length)
+            return res.status(409).json({
+                status: "error",
+                message: "Selected agents must be active members of this agency.",
+            });
         const existing = await ProductAccessRequest.exists({
             agencyId: agency._id,
             status: "pending",
@@ -1706,15 +1707,46 @@ export async function createProductAccessRequest(req, res) {
             requestedBy: req.access.user._id,
             currentProducts: agency.productAccess,
             requestedProducts,
+            requestedAgents: requestedAgentIds,
             reason,
         });
         await createNotification({
             userId: req.access.user._id,
             agencyId: agency._id,
+            portal: "partner",
             type: "product_access",
             title: "Product request submitted",
             message: `Your request for ${requestedProducts.join(", ")} is awaiting TravelsTREM review.`,
         });
+        const masterAdmins = await User.find({
+            role: "admin",
+            adminLevel: "master",
+            accountStatus: "active",
+        })
+            .select("_id name email")
+            .lean();
+        await createNotifications(
+            masterAdmins.map((admin) => ({
+                userId: admin._id,
+                portal: "admin",
+                type: "product_access",
+                title: "Product access request received",
+                message: `${agency.agencyName} requested ${requestedProducts.join(", ")}.`,
+            })),
+        );
+        const recipients = [...new Map(masterAdmins.map((admin) => [admin.email, admin])).values()];
+        if (config.MASTER_ADMIN_EMAIL && !recipients.some((admin) => admin.email === config.MASTER_ADMIN_EMAIL))
+            recipients.push({ email: config.MASTER_ADMIN_EMAIL, name: "Master Admin" });
+        recipients.forEach((admin) =>
+            void notifyByEmail({
+                to: admin.email,
+                recipientName: admin.name,
+                title: "Product access request received",
+                message: `${agency.agencyName} requested ${requestedProducts.join(", ")} for ${requestedAgentIds.length} agency agent${requestedAgentIds.length === 1 ? "" : "s"}.`,
+                actionLabel: "Review product access request",
+                actionUrl: config.ADMIN_URL ? `${config.ADMIN_URL}/manage/tours?tab=tenancy` : undefined,
+            }),
+        );
         await audit(req, {
             action: "agency.product_access_requested",
             entityType: "ProductAccessRequest",
@@ -1754,19 +1786,53 @@ export async function decideProductAccessRequest(req, res) {
             const agency = await PartnerAgency.findById(record.agencyId).session(session);
             if (!agency) throw Object.assign(new Error("Agency not found."), { status: 404 });
             if (decision === "approved") {
+                const requestedAgentIds = record.requestedAgents.map((agentId) => String(agentId));
+                const approvedAgentIds = [
+                    ...new Set((req.body.approvedAgentIds || []).map((id) => String(id))),
+                ];
+                const targetAgentIds = requestedAgentIds.length
+                    ? approvedAgentIds
+                    : (await User.find({
+                          agencyId: agency._id,
+                          agencyRole: "partner_admin",
+                          accountStatus: { $nin: ["deactivated", "suspended"] },
+                      })
+                          .select("_id")
+                          .session(session)
+                          .lean()
+                      ).map((agent) => String(agent._id));
+                if (requestedAgentIds.length && !targetAgentIds.length)
+                    throw Object.assign(new Error("Select at least one requested agent to approve access."), { status: 400 });
+                if (
+                    requestedAgentIds.length &&
+                    (!targetAgentIds.every((agentId) => requestedAgentIds.includes(agentId)) ||
+                        !targetAgentIds.every((agentId) => mongoose.isValidObjectId(agentId)))
+                )
+                    throw Object.assign(new Error("Approved agents must come from the original request."), { status: 400 });
+                const approvedAgents = await User.find({
+                    _id: { $in: targetAgentIds },
+                    agencyId: agency._id,
+                    agencyRole: { $in: ["partner_admin", "partner_agent"] },
+                    accountStatus: "active",
+                })
+                    .select("_id")
+                    .session(session)
+                    .lean();
+                if (approvedAgents.length !== targetAgentIds.length)
+                    throw Object.assign(new Error("Approved agents must still be active in this agency."), { status: 409 });
                 agency.productAccess = [
                     ...new Set([...agency.productAccess, ...record.requestedProducts]),
                 ];
                 await agency.save({ session });
                 await User.updateMany(
                     {
+                        _id: { $in: targetAgentIds },
                         agencyId: agency._id,
-                        agencyRole: "partner_admin",
-                        accountStatus: { $nin: ["deactivated", "suspended"] },
                     },
                     { $addToSet: { productAccess: { $each: record.requestedProducts } } },
                     { session },
                 );
+                record.approvedAgents = targetAgentIds;
             }
             record.status = decision;
             record.decisionNote = String(req.body.decisionNote || "").trim();
@@ -1782,11 +1848,21 @@ export async function decideProductAccessRequest(req, res) {
         })
             .select("_id name email")
             .lean();
-        if (admins.length)
+        const approvedAgents =
+            decision === "approved" && result.record.approvedAgents.length
+                ? await User.find({ _id: { $in: result.record.approvedAgents } })
+                      .select("_id name email")
+                      .lean()
+                : [];
+        const recipients = [
+            ...new Map([...admins, ...approvedAgents].map((user) => [String(user._id), user])).values(),
+        ];
+        if (recipients.length)
             await createNotifications(
-                admins.map((admin) => ({
-                    userId: admin._id,
+                recipients.map((recipient) => ({
+                    userId: recipient._id,
                     agencyId: result.agency._id,
+                    portal: "partner",
                     type: "product_access",
                     title: `Product request ${decision}`,
                     message:
@@ -1795,6 +1871,17 @@ export async function decideProductAccessRequest(req, res) {
                             : `Your product request was not approved${result.record.decisionNote ? `: ${result.record.decisionNote}` : "."}`,
                 })),
             );
+        recipients.forEach((recipient) =>
+            void notifyByEmail({
+                to: recipient.email,
+                recipientName: recipient.name,
+                title: `Product request ${decision}`,
+                message:
+                    decision === "approved"
+                        ? `Access to ${result.record.requestedProducts.join(", ")} has been enabled for your account.`
+                        : `Your product request was not approved${result.record.decisionNote ? `: ${result.record.decisionNote}` : "."}`,
+            }),
+        );
         await audit(req, {
             action: `agency.product_access_${decision}`,
             entityType: "ProductAccessRequest",
@@ -2218,28 +2305,42 @@ export async function dashboard(req, res) {
 export async function listNotifications(req, res) {
     try {
         const { skip, limit } = page(req);
-        const q = { userId: req.access.user._id };
+        const portal = getPortalScope(req);
+        const q = { userId: req.access.user._id, portal };
         if (req.query.unread === "true") q.readAt = null;
         const [items, total, unread] = await Promise.all([
             Notification.find(q).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
             Notification.countDocuments(q),
-            Notification.countDocuments({ userId: req.access.user._id, readAt: null }),
+            Notification.countDocuments({ userId: req.access.user._id, portal, readAt: null }),
         ]);
-        return ok(res, { items, total, unread, skip, limit });
+        return ok(res, { items: items.map(notificationDto), total, unread, skip, limit });
     } catch (error) {
         return fail(res, error);
     }
 }
 export async function readNotification(req, res) {
     try {
+        const portal = getPortalScope(req);
         const record = await Notification.findOneAndUpdate(
-            { _id: req.params.id, userId: req.access.user._id },
+            { _id: req.params.id, userId: req.access.user._id, portal },
             { $set: { readAt: new Date() } },
             { new: true },
         );
         if (!record)
             return res.status(404).json({ status: "error", message: "Notification not found." });
-        return ok(res, record);
+        return ok(res, notificationDto(record));
+    } catch (error) {
+        return fail(res, error);
+    }
+}
+export async function readAllNotifications(req, res) {
+    try {
+        const portal = getPortalScope(req);
+        await Notification.updateMany(
+            { userId: req.access.user._id, portal, readAt: null },
+            { $set: { readAt: new Date() } },
+        );
+        return ok(res, null, "Notifications marked as read.");
     } catch (error) {
         return fail(res, error);
     }

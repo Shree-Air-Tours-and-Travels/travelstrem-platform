@@ -1,0 +1,297 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {
+        "flightSearchModes": [
+          {
+            "id": "flight",
+            "labelRef": "searchFlightsTab",
+            "headingRef": "flightSearchHeading",
+            "icon": "plane",
+            "resultsPath": "/trehub/flights"
+          }
+        ],
+        "flightSearchChoices": {
+          "flight": [
+            { "id": "oneway", "labelRef": "flightChoiceOneway" },
+            { "id": "roundTrip", "labelRef": "flightChoiceRoundTrip" },
+            { "id": "multiTrip", "labelRef": "flightChoiceMultiTrip" }
+          ]
+        },
+        "flightSearchFields": {
+          "flight": {
+            "oneway": [
+              { "id": "from", "type": "airport", "labelRef": "flightFromLabel", "placeholderRef": "flightFromPlaceholder", "helpRef": "flightFromHelp", "required": true },
+              { "id": "to", "type": "airport", "labelRef": "flightToLabel", "placeholderRef": "flightToPlaceholder", "helpRef": "flightToHelp", "required": true },
+              { "id": "departDate", "labelRef": "flightDepartLabel", "type": "date", "helpRef": "flightDepartHelp", "required": true },
+              { "id": "travellers", "labelRef": "flightTravellersLabel", "placeholderRef": "flightTravellersPlaceholder", "helpRef": "flightTravellersHelp", "type": "number", "min": 1, "required": true }
+            ],
+            "roundTrip": [
+              { "id": "from", "type": "airport", "labelRef": "flightFromLabel", "placeholderRef": "flightFromPlaceholder", "helpRef": "flightFromHelp", "required": true },
+              { "id": "to", "type": "airport", "labelRef": "flightToLabel", "placeholderRef": "flightToPlaceholder", "helpRef": "flightToHelp", "required": true },
+              { "id": "departDate", "labelRef": "flightDepartLabel", "type": "date", "helpRef": "flightDepartHelp", "required": true },
+              { "id": "returnDate", "labelRef": "flightReturnLabel", "type": "date", "helpRef": "flightReturnHelp", "minField": "departDate", "required": true },
+              { "id": "travellers", "labelRef": "flightTravellersLabel", "placeholderRef": "flightTravellersPlaceholder", "helpRef": "flightTravellersHelp", "type": "number", "min": 1, "required": true }
+            ],
+            "multiTrip": [
+              {
+                "id": "segments",
+                "type": "repeatable",
+                "labelRef": "flightSegmentsLabel",
+                "addLabelRef": "flightAddSegment",
+                "removeAriaLabelRef": "flightRemoveSegment",
+                "minItems": 2,
+                "maxItems": 6,
+                "fields": [
+                  { "id": "from", "type": "airport", "labelRef": "flightFromLabel", "placeholderRef": "flightFromPlaceholder", "required": true },
+                  { "id": "to", "type": "airport", "labelRef": "flightToLabel", "placeholderRef": "flightToPlaceholder", "required": true },
+                  { "id": "departDate", "labelRef": "flightDepartLabel", "type": "date", "required": true }
+                ]
+              },
+              { "id": "travellers", "labelRef": "flightTravellersLabel", "placeholderRef": "flightTravellersPlaceholder", "helpRef": "flightTravellersHelp", "type": "number", "min": 1, "required": true }
+            ]
+          }
+        },
+        "flightFilters": [
+          { "id": "airlines", "type": "multiSelect", "labelRef": "filterAirlines", "placeholderRef": "filterAirlinesPlaceholder", "optionsRef": "airlineOptions", "applyLabelRef": "filterApply", "clearLabelRef": "filterClear" },
+          { "id": "cabin", "type": "select", "labelRef": "filterCabin", "placeholderRef": "filterCabinPlaceholder", "optionsRef": "cabinOptions" },
+          { "id": "stops", "type": "select", "labelRef": "filterStops", "placeholderRef": "filterStopsPlaceholder", "optionsRef": "stopOptions" },
+          { "id": "maxPrice", "type": "number", "labelRef": "filterMaxPrice", "placeholderRef": "filterMaxPricePlaceholder", "min": 0 },
+          { "id": "departureAfter", "type": "time", "labelRef": "filterDepartureAfter" },
+          { "id": "arrivalBefore", "type": "time", "labelRef": "filterArrivalBefore" },
+          { "id": "maxDuration", "type": "number", "labelRef": "filterDuration", "placeholderRef": "filterDurationPlaceholder", "min": 30 },
+          { "id": "refundable", "type": "select", "labelRef": "filterRefundable", "placeholderRef": "filterRefundablePlaceholder", "optionsRef": "refundableOptions" },
+          { "id": "baggage", "type": "number", "labelRef": "filterBaggage", "placeholderRef": "filterBaggagePlaceholder", "min": 0 }
+        ],
+        "airlineOptions": [
+          { "value": "Air India", "labelRef": "airlineAirIndia" },
+          { "value": "Vistara", "labelRef": "airlineVistara" },
+          { "value": "IndiGo", "labelRef": "airlineIndigo" },
+          { "value": "SpiceJet", "labelRef": "airlineSpiceJet" },
+          { "value": "Akasa Air", "labelRef": "airlineAkasa" }
+        ],
+        "cabinOptions": [
+          { "value": "", "labelRef": "filterAnyCabin" },
+          { "value": "ECONOMY", "labelRef": "cabinEconomy" },
+          { "value": "PREMIUM_ECONOMY", "labelRef": "cabinPremiumEconomy" },
+          { "value": "BUSINESS", "labelRef": "cabinBusiness" },
+          { "value": "FIRST", "labelRef": "cabinFirst" }
+        ],
+        "stopOptions": [
+          { "value": "", "labelRef": "filterAnyStops" },
+          { "value": "0", "labelRef": "stopsDirect" },
+          { "value": "1", "labelRef": "stopsOne" }
+        ],
+        "flightSortOptions": [
+          { "value": "recommended", "labelRef": "sortRecommended" },
+          { "value": "cheapest", "labelRef": "sortLowestPrice" },
+          { "value": "fastest", "labelRef": "sortFastest" },
+          { "value": "earliestDeparture", "labelRef": "sortEarliest" },
+          { "value": "latestDeparture", "labelRef": "sortLatest" }
+        ],
+        "refundableOptions": [
+          { "value": "", "labelRef": "filterAnyRefundability" },
+          { "value": "true", "labelRef": "filterRefundableOnly" },
+          { "value": "false", "labelRef": "filterNonRefundableOnly" }
+        ]
+      }
+    },
+    "elements": {
+      "labels": {
+        "loading": "Updating flights",
+        "loadErrorTitle": "Flights could not be loaded",
+        "retry": "Try again",
+        "breadcrumbTrehub": "Trehub",
+        "breadcrumbFlights": "Flights",
+        "pageEyebrow": "Flight search",
+        "pageTitle": "Choose the flight that fits your journey",
+        "pageDescription": "Compare schedules, stops and fares returned for your search.",
+        "searchFlightsTab": "Flights",
+        "flightSearchHeading": "Search another route or travel date",
+        "flightChoiceOneway": "One way",
+        "flightChoiceRoundTrip": "Round trip",
+        "flightChoiceMultiTrip": "Multi trip",
+        "flightFromLabel": "From",
+        "flightFromPlaceholder": "Origin city or airport",
+        "flightFromHelp": "City or airport",
+        "flightToLabel": "To",
+        "flightToPlaceholder": "Destination city or airport",
+        "flightToHelp": "City or airport",
+        "flightDepartLabel": "Departure",
+        "flightDepartHelp": "Choose your travel date",
+        "flightReturnLabel": "Return",
+        "flightReturnHelp": "Choose your return date",
+        "flightSegmentsLabel": "Flight segments",
+        "flightAddSegment": "Add flight",
+        "flightRemoveSegment": "Remove flight segment",
+        "flightTravellersLabel": "Travellers",
+        "flightTravellersPlaceholder": "Number of travellers",
+        "flightTravellersHelp": "Adults and children",
+        "swapRouteAriaLabel": "Swap origin and destination",
+        "searchAction": "Search flights",
+        "searchTrustLive": "Live fares",
+        "searchTrustSupport": "TREM support",
+        "searchTrustSecure": "Secure booking",
+        "mobileSearchAction": "Search flights",
+        "mobileSearchSheetTitle": "Search flights",
+        "mobileSearchClose": "Close flight search",
+        "airlineInterestsTitle": "Choose the airlines you are interested in",
+        "airlineInterestsCount": "{count} available flight",
+        "summaryFrom": "From",
+        "summaryTo": "To",
+        "summaryDeparture": "Departure",
+        "summaryTravellers": "Travellers",
+        "summaryFromFallback": "New Delhi",
+        "summaryToFallback": "Mumbai",
+        "summaryDepartureFallback": "18 Sep 2026",
+        "summaryTravellersFallback": "1 traveller",
+        "filtersTitle": "Filter results",
+        "filtersReset": "Reset",
+        "filterAirlines": "Airlines",
+        "filterAirlinesPlaceholder": "Select airlines",
+        "filterCabin": "Cabin class",
+        "filterCabinPlaceholder": "Any cabin",
+        "filterStops": "Stops",
+        "filterStopsPlaceholder": "Any number of stops",
+        "filterMaxPrice": "Maximum price",
+        "filterMaxPricePlaceholder": "Enter maximum fare",
+        "filterDepartureAfter": "Depart after",
+        "filterArrivalBefore": "Arrive before",
+        "filterDuration": "Maximum duration",
+        "filterDurationPlaceholder": "Duration in minutes",
+        "filterRefundable": "Refundability",
+        "filterRefundablePlaceholder": "Any fare",
+        "filterAnyRefundability": "Any fare",
+        "filterRefundableOnly": "Refundable only",
+        "filterNonRefundableOnly": "Non-refundable only",
+        "filterBaggage": "Checked baggage",
+        "filterBaggagePlaceholder": "Minimum weight in kg",
+        "filterApply": "Apply",
+        "filterClear": "Clear",
+        "filterAnyCabin": "Any cabin",
+        "cabinEconomy": "Economy",
+        "cabinPremiumEconomy": "Premium economy",
+        "cabinBusiness": "Business",
+        "cabinFirst": "First",
+        "filterAnyStops": "Any stops",
+        "stopsDirect": "Non-stop",
+        "stopsOne": "Up to 1 stop",
+        "airlineAirIndia": "Air India",
+        "airlineVistara": "Vistara",
+        "airlineIndigo": "IndiGo",
+        "airlineSpiceJet": "SpiceJet",
+        "airlineAkasa": "Akasa Air",
+        "resultsTitle": "Available flights",
+        "resultsCountTemplate": "{count} flights found",
+        "sortLabel": "Sort results",
+        "sortRecommended": "Recommended",
+        "sortLowestPrice": "Lowest price",
+        "sortFastest": "Fastest",
+        "sortEarliest": "Earliest departure",
+        "sortLatest": "Latest departure",
+        "flightDeparture": "Departure",
+        "flightCabin": "Cabin",
+        "flightPrice": "From",
+        "flightPriceSuffix": "per traveller",
+        "flightSelect": "View flight",
+        "emptyTitle": "No flights match these filters",
+        "emptyDescription": "Try clearing one or more filters to see available options.",
+        "paginationPrevious": "Previous page",
+        "paginationNext": "Next page",
+        "paginationAria": "Flight results pages"
+      },
+      "urls": {
+        "airportSearch": "/flights/airports/search",
+        "flightSearch": "/flights/search",
+        "flightResults": "/flights/search/{searchId}/results",
+        "flightOffer": "/flights/search/{searchId}/offers/{offerId}",
+        "flightRevalidate": "/flights/revalidate",
+        "flightSeatMap": "/flights/offers/{offerId}/seat-map",
+        "flightBookings": "/flights/bookings"
+      }
+    },
+    "structure": {
+      "type": "TrehubFlightList",
+      "source": "trehub",
+      "header": { "titleRef": "pageTitle" },
+      "widgets": [
+        {
+          "name": "breadcrumbs",
+          "type": "Breadcrumbs",
+          "source": "trehub",
+          "props": {
+            "items": [
+              { "labelRef": "breadcrumbTrehub", "path": "/trehub?tab=trehub&product=trehub" },
+              { "labelRef": "breadcrumbFlights" }
+            ]
+          }
+        },
+        {
+          "name": "flightSearch",
+          "type": "GlobalSearchCard",
+          "source": "trehub",
+          "props": {
+            "variant": "flight",
+            "activeService": ["flight"],
+            "modesOptionsRef": "flightSearchModes",
+            "fieldsOptionsRef": "flightSearchFields",
+            "choiceGroupsOptionsRef": "flightSearchChoices",
+            "submitLabelRef": "searchAction",
+            "mobileActionLabelRef": "mobileSearchAction",
+            "mobileSheetTitleRef": "mobileSearchSheetTitle",
+            "mobileCloseLabelRef": "mobileSearchClose",
+            "trustItems": [
+              { "id": "live", "icon": "sparkles", "labelRef": "searchTrustLive" },
+              { "id": "support", "icon": "support", "labelRef": "searchTrustSupport" },
+              { "id": "secure", "icon": "shieldCheck", "labelRef": "searchTrustSecure" }
+            ]
+          }
+        },
+        {
+          "name": "airlineInterests",
+          "type": "OptionCardRail",
+          "source": "trehub",
+          "props": {
+            "titleRef": "airlineInterestsTitle",
+            "countTemplateRef": "airlineInterestsCount",
+            "itemsDataPath": "facets.airlines"
+          }
+        },
+        {
+          "name": "filters",
+          "type": "ConfigurableFilterPanel",
+          "source": "trehub",
+          "props": { "titleRef": "filtersTitle", "resetLabelRef": "filtersReset", "fieldsOptionsRef": "flightFilters" }
+        },
+        {
+          "name": "flightResults",
+          "type": "FlightList",
+          "source": "trehub",
+          "props": {
+            "titleRef": "resultsTitle",
+            "countTemplateRef": "resultsCountTemplate",
+            "resultsDataPath": "offers",
+            "paginationDataPath": "pagination",
+            "showSinglePage": true,
+            "sortOptionsRef": "flightSortOptions",
+            "sortLabelRef": "sortLabel",
+            "departureLabelRef": "flightDeparture",
+            "cabinLabelRef": "flightCabin",
+            "priceLabelRef": "flightPrice",
+            "priceSuffixRef": "flightPriceSuffix",
+            "selectLabelRef": "flightSelect",
+            "emptyTitleRef": "emptyTitle",
+            "emptyDescriptionRef": "emptyDescription",
+            "previousLabelRef": "paginationPrevious",
+            "nextLabelRef": "paginationNext",
+            "paginationAriaRef": "paginationAria"
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

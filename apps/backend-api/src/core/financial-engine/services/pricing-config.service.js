@@ -77,6 +77,7 @@ const normalizeScope = (scopeType, scopeId) => {
     if (!PRICING_SCOPE_TYPES.includes(type)) throw new Error("Invalid pricing scope type");
     let id = type === "GLOBAL" ? "default" : String(scopeId || "").trim();
     if (["PRODUCT", "PAYMENT_PROVIDER"].includes(type)) id = id.toLowerCase();
+    if (type === "PAYMENT_PROVIDER" && id === "rajorpay") id = "razorpay";
     if (["PAYMENT_METHOD", "CURRENCY", "COUNTRY", "CUSTOMER_TYPE"].includes(type))
         id = id.toUpperCase();
     if (!id || id.length > 200) throw new Error("A valid pricing scope id is required");

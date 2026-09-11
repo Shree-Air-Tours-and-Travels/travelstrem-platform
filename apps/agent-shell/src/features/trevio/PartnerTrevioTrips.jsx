@@ -5,17 +5,20 @@ import {
   Dropdown,
   EmptyState,
   InputField,
+  Paragraph,
   PRODUCT_TYPE,
   RecordReview,
   Spinner,
   SubTitle,
   TrevioTripCard,
+  useTourCatalogRealtime,
 } from "@packages/trem-ui";
 import { getTripJsonTemplate } from "@packages/trem-utils";
 import {
-  deletePartnerTrevioTrip,
+  deleteAgentTour,
   approvePartnerTrevioTrip,
   fetchPartnerTrevioTrips,
+  resolvePartnerTrevioTripBuilderTour,
   savePartnerTrevioTrip,
   uploadTripImage,
 } from "../../services/agentService";
@@ -54,6 +57,29 @@ const statuses = ["draft", "pending_approval", "listed", "unpublished", "archive
     label: value.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase()),
   }),
 );
+const TREVIO_BUILDER_PATH = "/agent/services/tours/builder";
+
+const resolveEntityId = (value) => {
+  if (value == null) return "";
+  if (["string", "number"].includes(typeof value)) return String(value);
+  if (typeof value === "object") {
+    return (
+      resolveEntityId(value._id) ||
+      resolveEntityId(value.id) ||
+      resolveEntityId(value.$oid) ||
+      resolveEntityId(value.value)
+    );
+  }
+  return "";
+};
+
+const trevioBuilderUrl = (tourId, mode = "edit") => {
+  const sourceId = resolveEntityId(tourId);
+  if (!sourceId) return "";
+  const params = new URLSearchParams({ product: PRODUCT_TYPE.TREVIO, tourId: sourceId });
+  if (mode === "view") params.set("mode", "view");
+  return `${TREVIO_BUILDER_PATH}?${params.toString()}`;
+};
 
 const slugify = (value) =>
   String(value || "")
@@ -1308,6 +1334,23 @@ function TripViewModal({ trip, onClose, onEdit }) {
           </div>
         </header>
         <div className="ptf-panel-body">
+          <section className="ptf-section">
+            <SubTitle text="Agency and agent" />
+            <Paragraph>
+              <strong>Agency:</strong> {trip.agency?.name || "TravelsTREM platform"}
+            </Paragraph>
+            <Paragraph>
+              <strong>Agent:</strong> {trip.ownerAgentName || trip.operator?.name || "Master admin"}
+              {trip.ownerAgentRef || trip.operator?.reference
+                ? ` · ${trip.ownerAgentRef || trip.operator?.reference}`
+                : ""}
+            </Paragraph>
+            {trip.ownerAgentEmail || trip.operator?.email ? (
+              <Paragraph>
+                <strong>Email:</strong> {trip.ownerAgentEmail || trip.operator?.email}
+              </Paragraph>
+            ) : null}
+          </section>
           <RecordReview
             data={trip}
             title="Complete trip details"
@@ -1347,9 +1390,15 @@ export default function PartnerTrevioTrips({ session }) {
   useEffect(() => {
     if (hasAccess) load();
   }, [hasAccess, load]);
+  useTourCatalogRealtime(
+    useCallback(() => {
+      if (hasAccess) load();
+    }, [hasAccess, load]),
+  );
   useEffect(() => {
     if (new URLSearchParams(location.search).get("create") !== "true") return;
-    navigate("/agent/services/tours/builder?product=trevio", { replace: true });
+    const params = new URLSearchParams({ product: PRODUCT_TYPE.TREVIO });
+    navigate(`${TREVIO_BUILDER_PATH}?${params.toString()}`, { replace: true });
   }, [location.search, navigate]);
 
   const clearModalQuery = useCallback(() => {
@@ -1364,6 +1413,23 @@ export default function PartnerTrevioTrips({ session }) {
     setEditing(null);
     clearModalQuery();
   }, [clearModalQuery]);
+
+  const openTripInBuilder = useCallback(
+    async (trip, mode = "edit") => {
+      const tripId = resolveEntityId(trip?._id || trip?.id);
+      if (!tripId) return;
+      setError("");
+      try {
+        const resolved = await resolvePartnerTrevioTripBuilderTour(tripId);
+        const url = trevioBuilderUrl(resolved?.tourId, mode);
+        if (!url) throw new Error("Trip builder record was not returned.");
+        navigate(url);
+      } catch (actionError) {
+        setError(actionError.message || "Trip could not be opened in builder.");
+      }
+    },
+    [navigate],
+  );
 
   const visibleTrips = useMemo(
     () =>
@@ -1399,7 +1465,8 @@ export default function PartnerTrevioTrips({ session }) {
           variant="solid"
           color="primary"
           onClick={() => {
-            navigate("/agent/services/tours/builder?product=trevio");
+            const params = new URLSearchParams({ product: PRODUCT_TYPE.TREVIO });
+            navigate(`${TREVIO_BUILDER_PATH}?${params.toString()}`);
           }}
           text="New trip"
         />
@@ -1451,16 +1518,8 @@ export default function PartnerTrevioTrips({ session }) {
                     }
                   : undefined
               }
-              onView={(item) => setViewing(item)}
-              onEdit={(item) => {
-                if (item.sourceTourId) {
-                  navigate(`/agent/services/tours/builder?product=trevio&tourId=${item.sourceTourId}`);
-                  return;
-                }
-                setViewing(null);
-                setEditing(item);
-                setFormOpen(true);
-              }}
+              onView={(item) => openTripInBuilder(item, "view")}
+              onEdit={(item) => openTripInBuilder(item)}
               deleteLabel={
                 trip.status === "draft" || trip.status === "pending_approval" ? "Delete" : "Archive"
               }
@@ -1471,7 +1530,10 @@ export default function PartnerTrevioTrips({ session }) {
                     : "Archive";
                 if (!window.confirm(`${action} ${item.title}?`)) return;
                 try {
-                  await deletePartnerTrevioTrip(item._id);
+                  const resolved = await resolvePartnerTrevioTripBuilderTour(item._id);
+                  const sourceId = resolveEntityId(resolved?.tourId);
+                  if (!sourceId) throw new Error("Trip builder record was not returned.");
+                  await deleteAgentTour(sourceId);
                   await load();
                 } catch (actionError) {
                   setError(actionError.message || "Trip could not be removed.");
@@ -1491,13 +1553,8 @@ export default function PartnerTrevioTrips({ session }) {
           trip={viewing}
           onClose={() => setViewing(null)}
           onEdit={(item) => {
-            if (item.sourceTourId) {
-              navigate(`/agent/services/tours/builder?product=trevio&tourId=${item.sourceTourId}`);
-              return;
-            }
             setViewing(null);
-            setEditing(item);
-            setFormOpen(true);
+            openTripInBuilder(item);
           }}
         />
       ) : null}

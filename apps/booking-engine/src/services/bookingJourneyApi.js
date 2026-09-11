@@ -40,4 +40,9 @@ export const requestQuotation = (enquiryId) =>
     method: "POST",
   });
 
+export const cancelFlightEnquiry = (enquiryId) =>
+  fetchData(`/booking-engine/enquiries/${encodeURIComponent(enquiryId)}/cancel-flight`, {
+    method: "POST",
+  });
+
 export default loadBookingJourney;

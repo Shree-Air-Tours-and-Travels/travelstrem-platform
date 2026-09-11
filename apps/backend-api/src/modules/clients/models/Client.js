@@ -44,6 +44,15 @@ const clientSchema = new Schema(
                     },
                 ],
                 [
+                    "trehub",
+                    {
+                        logoSrc: "/favicon.png",
+                        name: "Trehub",
+                        subtitle: "Flights & Hotels by TravelsTrem",
+                        initial: "",
+                    },
+                ],
+                [
                     "app-shell",
                     {
                         logoSrc: "/favicon.png",
