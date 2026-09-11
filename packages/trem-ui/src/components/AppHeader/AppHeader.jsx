@@ -53,8 +53,10 @@ export default function AppHeader({
   user = null,
   theme = "light",
   menuOpen = false,
+  desktopNavigationOpen = false,
   sidebarCollapsed = false,
   onMenuToggle,
+  onDesktopNavigationToggle,
   onToggleTheme,
   onAction,
   onSearch,
@@ -72,6 +74,8 @@ export default function AppHeader({
   const themeAction = config.themeAction || {};
   const userConfig = config.user || {};
   const mobileConfig = config.mobile || {};
+  const navigationConfig = config.navigation || {};
+  const usesTopDropdown = navigationConfig.variant === "top-dropdown";
   const mobileHeaderClasses = [
     mobileConfig.compact ? "trem-app-header--mobile-compact" : "",
     mobileConfig.search === false ? "trem-app-header--mobile-search-hidden" : "",
@@ -147,9 +151,15 @@ export default function AppHeader({
   return (
     <>
       <header
-        className={`trem-app-header${config.variant ? ` trem-app-header--${config.variant}` : ""}${headerActions.length ? " has-header-actions" : ""}${headerActions.some((item) => item.mobileOnly) ? " has-mobile-actions" : ""}${mobileHeaderClasses ? ` ${mobileHeaderClasses}` : ""}`}
+        className={`trem-app-header${config.variant ? ` trem-app-header--${config.variant}` : ""}${usesTopDropdown ? " trem-app-header--top-dropdown-shell" : ""}${headerActions.length ? " has-header-actions" : ""}${headerActions.some((item) => item.mobileOnly) ? " has-mobile-actions" : ""}${mobileHeaderClasses ? ` ${mobileHeaderClasses}` : ""}`}
         aria-label={config.ariaLabel || "Application header"}
-        style={{ "--trem-app-header-sidebar-offset": sidebarCollapsed ? "76px" : "260px" }}
+        style={{
+          "--trem-app-header-sidebar-offset": usesTopDropdown
+            ? "0"
+            : sidebarCollapsed
+              ? "76px"
+              : "260px",
+        }}
       >
         <div className="trem-app-header__mobile-row">
           <div className="trem-app-header__brand">
@@ -163,6 +173,25 @@ export default function AppHeader({
             />
           </div>
         </div>
+
+        {usesTopDropdown ? (
+          <button
+            type="button"
+            className="trem-app-header__desktop-navigation"
+            aria-label={
+              desktopNavigationOpen
+                ? navigationConfig.closeLabel || "Close navigation"
+                : navigationConfig.openLabel || "Open navigation"
+            }
+            aria-controls={navigationConfig.panelId}
+            aria-expanded={desktopNavigationOpen}
+            onClick={onDesktopNavigationToggle}
+          >
+            <Icon name={desktopNavigationOpen ? "menuClose" : "menuOpen"} size={20} />
+            <span>{navigationConfig.label || "Explore"}</span>
+            <Icon name="chevronDown" size={16} />
+          </button>
+        ) : null}
 
         <GlobalSearch config={search} onSearch={onSearch} onSelect={onSearchSelect} />
 
@@ -333,8 +362,10 @@ AppHeader.propTypes = {
   user: PropTypes.object,
   theme: PropTypes.string,
   menuOpen: PropTypes.bool,
+  desktopNavigationOpen: PropTypes.bool,
   sidebarCollapsed: PropTypes.bool,
   onMenuToggle: PropTypes.func,
+  onDesktopNavigationToggle: PropTypes.func,
   onToggleTheme: PropTypes.func,
   onAction: PropTypes.func,
   onSearch: PropTypes.func,

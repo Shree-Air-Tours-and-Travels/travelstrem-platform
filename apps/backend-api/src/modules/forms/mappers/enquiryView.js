@@ -384,6 +384,7 @@ export const enquiryView = (
                       ),
                   travellerDetails: lead?.travellerDetails || null,
                   product: lead?.product || "trevista",
+                  journeyType: lead?.journeyType,
                   flightSearchUrl: lead?.customizationSnapshot?.searchUrl || "/trehub/flights",
               },
               quote: customerQuote,

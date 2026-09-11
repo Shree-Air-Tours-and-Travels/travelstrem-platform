@@ -59,6 +59,27 @@
       ]
     }
   },
+  "hotel": {
+    "enquiry": {
+      "title": "Hotel enquiry details",
+      "description": "Review your stay and selected rooms before adding each guest's details.",
+      "sectionTitle": "Selected stay",
+      "sectionDescription": "Rates and guest counts reflect the rooms selected in Trehub.",
+      "fields": [
+        { "name": "adultCount", "type": "counter", "label": "Guests", "required": true, "min": 1, "max": 24, "disabled": true },
+        { "name": "hotel", "type": "text", "label": "Hotel", "disabled": true },
+        { "name": "address", "type": "text", "label": "Location", "disabled": true },
+        { "name": "dates", "type": "text", "label": "Stay dates", "disabled": true },
+        { "name": "room", "type": "text", "label": "Rooms", "disabled": true },
+        { "name": "meals", "type": "text", "label": "Meals", "disabled": true },
+        { "name": "cancellation", "type": "text", "label": "Cancellation", "disabled": true },
+        { "name": "stayChargeSummary", "type": "text", "label": "Stay charge", "disabled": true },
+        { "name": "convenienceFeeSummary", "type": "text", "label": "Convenience fee", "disabled": true },
+        { "name": "priceSummary", "type": "text", "label": "Final amount", "disabled": true }
+      ]
+    },
+    "traveller": { "extraFields": [] }
+  },
   "trehub": {
     "enquiry": {
       "title": "Flight enquiry details",

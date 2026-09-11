@@ -102,7 +102,8 @@ export const validateRevalidation = (body = {}) => {
     const errors = {};
     if (!searchId) errors.searchId = "searchId is required";
     if (!offerId) errors.offerId = "offerId is required";
-    return { ok: !Object.keys(errors).length, errors, value: { searchId, offerId, fareId, seats } };
+    const expectedTotal = Number.isSafeInteger(body.expectedTotal) && body.expectedTotal >= 0 ? body.expectedTotal : undefined;
+    return { ok: !Object.keys(errors).length, errors, value: { searchId, offerId, fareId, seats, expectedTotal } };
 };
 
 export const validateBookingInput = (body = {}) => {

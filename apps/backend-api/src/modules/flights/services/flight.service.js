@@ -5,6 +5,8 @@ import { airports } from "../data/catalog.js";
 import { createFlightProvider } from "../providers/flight-provider.factory.js";
 import FlightOfferStore from "./flight-offer.store.js";
 import FlightBookingRepository from "./flight-booking.repository.js";
+import { applyFlightFinancials } from "./flight-pricing.js";
+import { publicFlightPrice } from "../presenters/flight-public.presenter.js";
 import ContactLead from "../../forms/models/ContactLead.js";
 import User from "../../auth/models/User.js";
 import { createReadableReference } from "../../../utils/readableReference.js";
@@ -38,8 +40,8 @@ const publicBooking = (booking) => ({
         ...(passenger.passport ? { passport: { expiryDate: passenger.passport.expiryDate, issuingCountry: passenger.passport.issuingCountry, nationality: passenger.passport.nationality, numberMasked: "••••••" } } : {}),
     })),
     segments: booking.segmentSnapshot,
-    fare: booking.fareSnapshot,
-    price: booking.priceSnapshot,
+    fare: { ...booking.fareSnapshot, pricing: publicFlightPrice(booking.fareSnapshot?.pricing) },
+    price: publicFlightPrice(booking.priceSnapshot),
     baggage: booking.baggageSnapshot,
     seats: booking.seatSnapshot,
     extras: booking.extrasSnapshot,
@@ -67,6 +69,17 @@ export default class FlightService {
                 customerType: actor?.agencyRole || null,
                 paymentProvider: "razorpay",
             });
+            if (!Array.isArray(response.offers)) throw new Error("Invalid flight provider response");
+            response.offers = await Promise.all(response.offers.map(async (offer) => {
+                if (!offer.offerId || !offer.segments?.length || !offer.fares?.length) throw new Error("Invalid normalized flight offer");
+                const fares = await Promise.all(offer.fares.map(async (fare) => {
+                    const price = fare.pricing;
+                    if (!price || !Number.isSafeInteger(price.flightSubtotal ?? price.total) || (price.flightSubtotal ?? price.total) < 0) throw new Error("Invalid provider fare amount");
+                    return { ...fare, pricing: await applyFlightFinancials({ price, financialContext: { agencyId: actor?.agencyId, customerType: actor?.agencyRole } }) };
+                }));
+                const fare = fares.find((item) => item.fareId === offer.fare?.fareId) || fares[0];
+                return { ...offer, fares, fare, price: fare.pricing };
+            }));
             const expiresAt = new Date(this.now() + FLIGHT_SEARCH_TTL_SECONDS * 1000).toISOString();
             const search = { searchId, expiresAt, currency: input.currency, provider: response.provider, input, offers: response.offers };
             await this.store.saveSearch(search);
@@ -85,10 +98,10 @@ export default class FlightService {
     }
 
     async requireOffer(searchId, offerId) {
-        await this.requireSearch(searchId);
-        const offer = await this.store.getOffer(offerId);
-        if (!offer || offer.searchId !== searchId) throw domainError(404, "OFFER_NOT_FOUND", "Flight offer was not found");
-        return offer;
+        const search = await this.requireSearch(searchId);
+        const offer = search.offers.find((item) => item.offerId === offerId);
+        if (!offer) throw domainError(404, "OFFER_NOT_FOUND", "Flight offer was not found");
+        return { ...offer, searchId, expiresAt: search.expiresAt };
     }
 
     async results(searchId, filters = {}) {
@@ -137,6 +150,9 @@ export default class FlightService {
         const offer = await this.requireOffer(searchId, offerId);
         const fare = fareId ? offer.fares.find((item) => item.fareId === fareId) : offer.fare;
         if (!fare) return { status: REVALIDATION_STATUS.FARE_UNAVAILABLE, offerId };
+        const counts = offer.requirements?.passengerCounts || {};
+        const requiredSeats = Number(counts.ADULT || 0) + Number(counts.CHILD || 0);
+        if (fare.availability?.status === "SOLD_OUT" || Number(fare.availability?.fareBucketAvailable || 0) < requiredSeats) return { status: REVALIDATION_STATUS.FARE_UNAVAILABLE, offerId };
         const selectedOffer = fare ? { ...offer, fare, price: fare.pricing } : offer;
         logger.info("[Flights] revalidation", { provider: this.provider.name, searchId, offerId });
         try {
@@ -147,11 +163,13 @@ export default class FlightService {
                 const finalAmount = Number(price?.finalAmount ?? price?.total ?? 0) + seatFees;
                 return { ...price, seatFees, finalAmount, total: finalAmount };
             };
+            const currentPrice = addSeats(await applyFlightFinancials({ price: result.currentPrice || fare.pricing, financialContext: { config: fare.pricing.pricingConfigSnapshot } }));
+            const previousPrice = addSeats(fare.pricing);
             return {
                 ...result,
-                previousPrice: result.previousPrice ? addSeats(result.previousPrice) : result.previousPrice,
-                currentPrice: addSeats(result.currentPrice || fare.pricing),
-                difference: Number(result.difference || 0),
+                previousPrice,
+                currentPrice,
+                difference: currentPrice.total - previousPrice.total,
             };
         }
         catch (error) {
@@ -165,7 +183,7 @@ export default class FlightService {
         return this.requireOffer(searchId, offerId);
     }
 
-    async createEnquiry({ searchId, offerId, fareId }, actor) {
+    async createEnquiry({ searchId, offerId, fareId, expectedTotal }, actor) {
         const userId = actorId(actor);
         if (!userId) throw domainError(401, "AUTH_REQUIRED", "Please sign in to create a flight enquiry");
         const search = await this.requireSearch(searchId);
@@ -176,6 +194,11 @@ export default class FlightService {
         if (![REVALIDATION_STATUS.CONFIRMED, REVALIDATION_STATUS.PRICE_CHANGED].includes(revalidation.status)) {
             throw domainError(409, revalidation.status, "The selected flight is no longer available");
         }
+        if (revalidation.status === REVALIDATION_STATUS.PRICE_CHANGED && expectedTotal !== revalidation.currentPrice.total) {
+            throw domainError(409, "PRICE_CHANGED", "The fare has changed. Review the updated price and continue again to accept it.", { currentPrice: publicFlightPrice(revalidation.currentPrice) });
+        }
+        const existing = await ContactLead.findOne({ claimedBy: userId, journeyType: "flight", "customizationSnapshot.searchId": searchId, "customizationSnapshot.offerId": offerId, "customizationSnapshot.fareId": fareId, status: { $nin: ["cancelled", "closed"] } });
+        if (existing) return { enquiryId: String(existing._id), enquiryRef: existing.enquiryRef, targetPath: `/?tab=bookings&enquiry=${encodeURIComponent(existing.enquiryRef)}` };
         const customer = await User.findById(userId).select("name email phone phoneNumber mobile").lean();
         const firstSegment = offer.segments[0];
         const lastSegment = offer.segments.at(-1);

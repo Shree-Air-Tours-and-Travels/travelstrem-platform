@@ -1,6 +1,5 @@
 import { airportByCode, routePrices } from "../../data/catalog.js";
 import { CABIN, FARE_BRAND, PASSENGER_TYPE } from "../../types/flight.types.js";
-import FinancialEngine from "../../../../core/financial-engine/index.js";
 import { hashNumber } from "./mock-random.js";
 
 const CABIN_MULTIPLIER = { [CABIN.ECONOMY]: 1, [CABIN.PREMIUM_ECONOMY]: 1.65, [CABIN.BUSINESS]: 3.4, [CABIN.FIRST]: 5.8 };
@@ -24,51 +23,6 @@ export const routeBasePrice = (originCode, destinationCode) => {
     return Math.round(Math.max(320000, distanceKm(origin, destination) * 520) / 100) * 100;
 };
 
-export const applyFlightFinancials = async ({ price, financialContext = {} }) => {
-    const flightSubtotal = Number(price.flightSubtotal ?? price.total ?? 0);
-    const travellerCount = (price.passengers || []).reduce(
-        (total, passenger) => total + Number(passenger.count || 0),
-        0,
-    );
-    const calculation = await FinancialEngine.calculatePricing({
-        productType: "flight",
-        baseAmountMinor: flightSubtotal,
-        currency: price.currency || "INR",
-        paymentProvider: financialContext.paymentProvider || "razorpay",
-        agencyId: financialContext.agencyId || null,
-        customerType: financialContext.customerType || null,
-        ...(financialContext.config ? { config: financialContext.config } : {}),
-    });
-    const tremFeeInclusiveGst = calculation.platformFee.totalMinor;
-    const razorpayFeeInclusiveGst = calculation.gateway.totalMinor;
-    const perTravellerTotal = travellerCount
-        ? Number(
-              (BigInt(calculation.finalPayableMinor) + BigInt(Math.floor(travellerCount / 2))) /
-                  BigInt(travellerCount),
-          )
-        : calculation.finalPayableMinor;
-
-    return {
-        ...price,
-        version: calculation.version,
-        unit: calculation.moneyUnit === "PAISE" ? "MINOR" : price.unit,
-        flightSubtotal,
-        travellerCount,
-        perTravellerTotal,
-        travelsTremFees: tremFeeInclusiveGst,
-        tremFee: calculation.platformFee.amountMinor,
-        tremFeeGst: calculation.platformFee.gstMinor,
-        tremFeeInclusiveGst,
-        razorpayFee: calculation.gateway.baseFeeMinor,
-        razorpayFeeGst: calculation.gateway.gstMinor,
-        razorpayFeeInclusiveGst,
-        convenienceFee: calculation.finalPayableMinor - flightSubtotal,
-        finalAmount: calculation.finalPayableMinor,
-        total: calculation.finalPayableMinor,
-        financials: calculation.financials,
-        pricingConfigSnapshot: calculation.pricingConfigSnapshot,
-    };
-};
 
 export const calculateOfferPrice = async ({ journeys, departureDate, cabin, brand, passengers, inventoryKey, currency = "INR", financialContext }) => {
     const routeBase = journeys.reduce((total, journey) => total + routeBasePrice(journey.origin, journey.destination), 0);
@@ -87,7 +41,7 @@ export const calculateOfferPrice = async ({ journeys, departureDate, cabin, bran
     });
     const sum = (key) => passengerPricing.reduce((total, item) => total + item[key] * (key === "total" ? 1 : item.count), 0);
     const flightSubtotal = sum("total");
-    return applyFlightFinancials({ price: {
+    return {
         currency,
         unit: "MINOR",
         baseFare: sum("baseFare"),
@@ -98,7 +52,7 @@ export const calculateOfferPrice = async ({ journeys, departureDate, cabin, bran
         total: flightSubtotal,
         passengers: passengerPricing,
         factors: { daysUntilDeparture, loadFactor: Number(loadFactor.toFixed(2)) },
-    }, financialContext });
+    };
 };
 
 export const fareRules = (brand, cabin) => ({

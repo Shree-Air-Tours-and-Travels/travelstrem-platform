@@ -115,7 +115,7 @@ router.post("/enquiries/:enquiryId/cancel-flight", authMiddleware, async (req, r
         });
         return res.status(200).json({
             status: "success",
-            message: "Flight enquiry cancelled.",
+            message: "Enquiry cancelled.",
             componentData: {
                 data: {
                     enquiryStatus: result.enquiry.status,
@@ -126,7 +126,7 @@ router.post("/enquiries/:enquiryId/cancel-flight", authMiddleware, async (req, r
     } catch (error) {
         return res.status(error?.status || 500).json({
             status: "error",
-            message: error?.message || "The flight enquiry could not be cancelled.",
+            message: error?.message || "The enquiry could not be cancelled.",
         });
     }
 });

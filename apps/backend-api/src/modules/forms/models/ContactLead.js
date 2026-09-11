@@ -8,7 +8,7 @@ const ContactLeadSchema = new mongoose.Schema(
         tourId: { type: String, default: null },
         tourTitle: { type: String, default: null },
         product: { type: String, enum: ["trevista", "trevio", "trehub"], default: "trevista", index: true },
-        journeyType: { type: String, enum: ["tour", "trip", "flight"], default: "tour", index: true },
+        journeyType: { type: String, enum: ["tour", "trip", "flight", "hotel"], default: "tour", index: true },
         ownerAgent: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",

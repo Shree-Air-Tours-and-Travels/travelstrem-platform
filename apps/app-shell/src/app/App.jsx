@@ -220,6 +220,7 @@ function AppShell() {
     normalizeNavigationConfig(FALLBACK_NAVIGATION_CONFIG),
   );
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [guestMode, setGuestMode] = useState(() => isGuestSession());
   const [authPromptDismissed, setAuthPromptDismissed] = useState(false);
@@ -444,6 +445,7 @@ function AppShell() {
 
   useEffect(() => {
     setMobileSidebarOpen(false);
+    setDesktopSidebarOpen(false);
   }, [activeTab]);
 
   useEffect(() => {
@@ -585,7 +587,7 @@ function AppShell() {
 
   return (
     <div
-      className={`dash-layout${sidebarCollapsed ? " dash-layout--sidebar-collapsed" : ""}${showMobileNavigation ? " dash-layout--mobile-action-panel" : ""}`}
+      className={`dash-layout${sidebarConfig.variant === "top-dropdown" ? " dash-layout--top-dropdown" : ""}${sidebarCollapsed ? " dash-layout--sidebar-collapsed" : ""}${showMobileNavigation ? " dash-layout--mobile-action-panel" : ""}`}
     >
       <SideBar
         config={{
@@ -602,10 +604,14 @@ function AppShell() {
         activeId={activeTab}
         user={user}
         mobileOpen={mobileSidebarOpen}
+        desktopOpen={desktopSidebarOpen}
         collapsed={sidebarCollapsed}
         onNavigate={handleTabChange}
         onAction={handleSidebarAction}
-        onClose={() => setMobileSidebarOpen(false)}
+        onClose={() => {
+          setMobileSidebarOpen(false);
+          setDesktopSidebarOpen(false);
+        }}
         onCollapsedChange={setSidebarCollapsed}
       />
 
@@ -614,6 +620,10 @@ function AppShell() {
           config={{
             ...resolvedAppHeaderConfig,
             brand: sidebarConfig.brand || resolvedAppHeaderConfig.brand,
+            navigation: {
+              ...(sidebarConfig.topDropdown || {}),
+              variant: sidebarConfig.variant,
+            },
             user: {
               ...(resolvedAppHeaderConfig.user || {}),
               variant: "outlined",
@@ -629,6 +639,8 @@ function AppShell() {
           onLogoClick={() => handleNavigation({ destination: "overview" })}
           menuOpen={mobileSidebarOpen}
           onMenuToggle={() => setMobileSidebarOpen((open) => !open)}
+          desktopNavigationOpen={desktopSidebarOpen}
+          onDesktopNavigationToggle={() => setDesktopSidebarOpen((open) => !open)}
           primaryActionOpen={primaryActionOpen}
           onPrimaryActionOpenChange={setPrimaryActionOpen}
           onPrimaryActionSelect={(item) => handleTabChange(item.target, item)}

@@ -180,6 +180,7 @@ const resolveEnquiryFields = (definition, context) => definition.fields.flatMap(
 
 export const buildProductEnquiryDetailsForm = ({
   product = "trevista",
+  journeyType = "",
   saved = {},
   packageOptions = [],
   departureOptions = [],
@@ -192,7 +193,7 @@ export const buildProductEnquiryDetailsForm = ({
   latestReturn = "",
   defaultFlightPreference = "",
 } = {}) => {
-  const productDefinition = productDefinitions[product] || productDefinitions.trevista;
+  const productDefinition = productDefinitions[journeyType === "hotel" ? "hotel" : product] || productDefinitions.trevista;
   const context = {
     packageOptions,
     departureOptions,

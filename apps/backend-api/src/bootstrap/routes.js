@@ -22,6 +22,7 @@ import tenancyRoutes from "../modules/tenancy/routes.js";
 import supportRoutes from "../modules/support/routes.js";
 import locationRoutes from "../modules/locations/routes.js";
 import flightRoutes from "../modules/flights/routes/flight.routes.js";
+import hotelRoutes from "../modules/hotels/routes.js";
 
 const getDbHealth = () => {
     const readyState = mongoose.connection.readyState;
@@ -70,6 +71,7 @@ export default function registerRoutes(app) {
     app.use("/api/support", supportRoutes);
     app.use("/api/locations", locationRoutes);
     app.use("/api/flights", flightRoutes);
+    app.use("/api/hotels", hotelRoutes);
     app.use("/api/pages", pageDefinitionRoutes);
     app.use(API_ROUTES.TOURS, tourRoutes);
     // Public brand URLs remain compatibility aliases; domain code lives in trips/tours.

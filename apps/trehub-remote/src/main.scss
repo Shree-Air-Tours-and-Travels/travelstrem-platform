@@ -1,5 +1,32 @@
 @import "@packages/trem-design-tokens/scss";
 
+.trehub-page,
+.trehub-home,
+.trehub-flight-list,
+.trehub-flight-journey {
+  --trehub-breadcrumb-height: #{$space-14};
+  --trehub-page-gutter: clamp(#{$space-4}, 3vw, #{$space-8});
+}
+
+.trehub-page__breadcrumbs {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  min-height: var(--trehub-breadcrumb-height);
+  padding: $space-3 var(--trehub-page-gutter);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-glass-strong);
+  box-shadow: var(--shadow-xs);
+  backdrop-filter: blur(14px);
+}
+
+.trehub-home > .trehub-page__breadcrumbs {
+  margin-inline: calc(-1 * var(--trehub-page-gutter));
+  margin-bottom: $space-6;
+}
+
 .trehub-home,
 .trehub-home *,
 .trehub-home *::before,
@@ -9,24 +36,17 @@
 
 .trehub-home {
   min-height: 100%;
-  padding: clamp($space-4, 3vw, $space-8);
-  padding-bottom: clamp($space-10, 8vw, 7rem);
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--surface-subtle) 62%, transparent),
-      transparent 42%
-    ),
-    var(--bg);
+  padding: 0 var(--trehub-page-gutter);
+  padding-bottom: $space-8;
+  background: var(--page-bg);
   color: var(--text);
   font-family: $font-primary;
 }
 
 .trehub-home__shell {
   display: grid;
-  gap: clamp($space-8, 6vw, 5rem);
-  width: min(1440px, 100%);
-  margin: 0 auto;
+  gap: $space-8;
+  width: 100%;
 
   > :last-child {
     margin-bottom: clamp($space-6, 4vw, $space-10);
@@ -69,8 +89,8 @@
   max-width: 12ch;
   margin: $space-4 0 $space-3;
   color: var(--text);
-  font-size: clamp(2rem, 3.4vw, 3.25rem);
-  line-height: 1.08;
+  font-size: clamp(#{$font-size-xl}, 3vw, #{$font-size-xxl});
+  line-height: $line-height-sm;
   letter-spacing: -0.035em;
   text-wrap: balance;
 }
@@ -79,8 +99,8 @@
   max-width: 42rem;
   margin: 0;
   color: var(--text-muted);
-  font-size: 1rem;
-  line-height: 1.65;
+  font-size: $font-size-md;
+  line-height: $line-height-lg;
 }
 
 .trehub-why__grid {
@@ -96,12 +116,12 @@
 .trehub-why__card.trem-benefit-card {
   min-width: 0;
   padding: clamp($space-4, 2vw, $space-5);
-  border-radius: $radius-lg;
+  border-radius: $radius-md;
   box-shadow: none;
   transition:
-    border-color 180ms ease,
-    box-shadow 180ms ease,
-    transform 180ms ease;
+    border-color $duration-medium $ease-standard,
+    box-shadow $duration-medium $ease-standard,
+    transform $duration-medium $ease-standard;
 
   &:hover {
     border-color: var(--primary-focus);
@@ -136,7 +156,7 @@
   }
 }
 
-@media (max-width: 900px) {
+@include mq-max($breakpoint-tablet) {
   .trehub-why {
     grid-template-columns: 1fr;
   }
@@ -154,9 +174,10 @@
   }
 }
 
-@media (max-width: 560px) {
+@include mq-max($breakpoint-phablet) {
   .trehub-home {
-    padding: $space-3;
+    --trehub-page-gutter: #{$space-3};
+    padding: 0 var(--trehub-page-gutter);
     padding-bottom: $space-8;
   }
 
@@ -165,7 +186,7 @@
   }
 
   .trehub-why__title.ui-subtitle {
-    font-size: clamp(1.75rem, 9vw, 2.4rem);
+    font-size: $font-size-xxl;
   }
 }
 

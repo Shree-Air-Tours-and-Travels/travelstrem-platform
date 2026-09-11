@@ -18,12 +18,18 @@
     },
     "elements": {
       "labels": {
+        "loading": "Loading flight details",
+        "saving": "Checking your fare",
+        "loadErrorTitle": "Flight booking could not be loaded",
+        "unavailableTitle": "This flight is no longer available",
+        "unavailableDescription": "The search may have expired or the offer may have changed. Return to flight search to choose a current offer.",
+        "retry": "Try again",
         "breadcrumbTrehub": "Trehub",
         "breadcrumbFlights": "Flights",
         "breadcrumbBooking": "Complete booking",
         "journeyEyebrow": "Secure flight booking",
         "journeyTitle": "Complete your flight booking",
-        "journeyDescription": "Choose a fare, add traveller details, select seats and revalidate before booking.",
+        "journeyDescription": "Choose your fare, create an enquiry and review traveller details in My Bookings. Payment is not yet available.",
         "flightDetailsEyebrow": "Your selected flight",
         "flightDetailsTitle": "Review the complete flight itinerary",
         "flightDetailsDescription": "Check airport, terminal, aircraft, baggage and fare conditions before continuing.",
@@ -168,7 +174,7 @@
           "titleRef": "bookingComplete"
         } },
         { "name": "bookingJourney", "type": "FlightBookingJourney", "source": "trehub", "props": {
-          "steps": ["fareStep", "travellerStep", "seatStep", "reviewStep", "confirmationStep"]
+          "steps": ["fareStep", "travellerStep", "reviewStep", "payment"]
         } }
       ],
       "config": {},

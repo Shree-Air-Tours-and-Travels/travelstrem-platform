@@ -1,6 +1,7 @@
 import ApiError from "../../../shared/errors/ApiError.js";
 import FlightService from "../services/flight.service.js";
 import { presentFlightDetails } from "../presenters/flight-details.presenter.js";
+import { publicFlightOffer, publicRevalidation } from "../presenters/flight-public.presenter.js";
 import { validateBookingInput, validateFlightSearch, validateRevalidation } from "../schemas/flight.validation.js";
 
 export const flightService = new FlightService();
@@ -12,6 +13,7 @@ export const searchFlights = async (req, res, next) => {
         if (!validation.ok) throw validationError(validation.errors);
         const search = await flightService.search(validation.value, req.user);
         const results = await flightService.results(search.searchId, req.body);
+        results.offers = results.offers.map(publicFlightOffer);
         res.setHeader("Cache-Control", "no-store, private");
         return res.status(200).json({ status: "success", data: results });
     } catch (error) { return next(error); }
@@ -20,6 +22,7 @@ export const searchFlights = async (req, res, next) => {
 export const getFlightResults = async (req, res, next) => {
     try {
         const data = await flightService.results(req.params.searchId, req.query);
+        data.offers = data.offers.map(publicFlightOffer);
         res.setHeader("Cache-Control", "no-store, private");
         return res.status(200).json({ status: "success", data });
     } catch (error) { return next(error); }
@@ -27,7 +30,7 @@ export const getFlightResults = async (req, res, next) => {
 
 export const getFlightOffer = async (req, res, next) => {
     try {
-        const offer = await flightService.getOffer(req.params.searchId, req.params.offerId);
+        const offer = publicFlightOffer(await flightService.getOffer(req.params.searchId, req.params.offerId));
         const details = presentFlightDetails(offer);
         const fareDetails = new Map(details.fares.map((fare) => [fare.fareId, fare]));
         return res.status(200).json({
@@ -48,7 +51,7 @@ export const revalidateFlight = async (req, res, next) => {
     try {
         const validation = validateRevalidation(req.body);
         if (!validation.ok) throw validationError(validation.errors);
-        return res.status(200).json({ status: "success", data: await flightService.revalidate(validation.value) });
+        return res.status(200).json({ status: "success", data: publicRevalidation(await flightService.revalidate(validation.value)) });
     } catch (error) { return next(error); }
 };
 

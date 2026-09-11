@@ -3,9 +3,11 @@ import { useLocation } from "react-router-dom";
 import { Analytics } from "@vercel/analytics/react";
 import { ErrorState, PRODUCT_TYPE } from "@packages/trem-ui";
 import { buildGlobalAppShellUrl } from "@packages/trem-utils";
-import Home from "../views/Home.jsx";
-import FlightList from "../views/FlightList.jsx";
-import FlightJourney from "../views/FlightJourney.jsx";
+import Home from "../views/home/Home.jsx";
+import FlightFilters from "../views/home/flights/flightFilters/FlightFilters.jsx";
+import FlightDetails from "../views/home/flights/flightDetails/FlightDetails.jsx";
+import HotelFilters from "../views/home/hotels/hotelFilters/HotelFilters.jsx";
+import HotelDetails from "../views/home/hotels/hotelDetails/HotelDetails.jsx";
 import "../../main.scss";
 
 const STANDALONE_ENABLED = false;
@@ -29,7 +31,11 @@ class TrehubRouteBoundary extends React.Component {
         <ErrorState
           title="This section could not be displayed"
           description="Your dashboard is still available. Return to Trehub and try this action again."
-          retry={() => window.location.assign(buildGlobalAppShellUrl({ product: PRODUCT_TYPE.TREHUB, tab: PRODUCT_TYPE.TREHUB }))}
+          retry={() =>
+            window.location.assign(
+              buildGlobalAppShellUrl({ product: PRODUCT_TYPE.TREHUB, tab: PRODUCT_TYPE.TREHUB }),
+            )
+          }
           retryText="Back to Trehub"
         />
       );
@@ -46,7 +52,9 @@ export default function App({ embedded = false }) {
         title="Trehub now opens in TravelsTREM"
         description="This product is part of the customer dashboard and is no longer available as a standalone application."
         retry={() =>
-          window.location.assign(buildGlobalAppShellUrl({ product: PRODUCT_TYPE.TREHUB, tab: PRODUCT_TYPE.TREHUB }))
+          window.location.assign(
+            buildGlobalAppShellUrl({ product: PRODUCT_TYPE.TREHUB, tab: PRODUCT_TYPE.TREHUB }),
+          )
         }
         retryText="Go to customer shell"
       />
@@ -55,10 +63,14 @@ export default function App({ embedded = false }) {
 
   return (
     <TrehubRouteBoundary resetKey={`${location.pathname}${location.search}`}>
-      {/^\/trehub\/flights\/[^/]+/.test(location.pathname) ? (
-        <FlightJourney />
+      {/^\/trehub\/hotels\/[^/]+/.test(location.pathname) ? (
+        <HotelDetails />
+      ) : location.pathname.startsWith("/trehub/hotels") ? (
+        <HotelFilters />
+      ) : /^\/trehub\/flights\/[^/]+/.test(location.pathname) ? (
+        <FlightDetails />
       ) : location.pathname.startsWith("/trehub/flights") ? (
-        <FlightList />
+        <FlightFilters />
       ) : (
         <Home />
       )}

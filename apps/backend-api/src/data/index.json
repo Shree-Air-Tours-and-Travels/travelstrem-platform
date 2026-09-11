@@ -37,6 +37,11 @@
       "page": "flight-list",
       "file": "./trehub-remote/flights/page.json"
     },
+    "trehub-remote/hotels/hotels": {
+      "app": "trehub-remote",
+      "page": "hotels",
+      "file": "./trehub-remote/hotels/hotels.json"
+    },
     "trehub-remote/flights/flight-journey": {
       "app": "trehub-remote",
       "page": "flight-journey",
@@ -78,6 +83,8 @@
     "/trehub": "trehub-remote/home",
     "/trehub/flights": "trehub-remote/flights/flight-list",
     "/trehub/flights/:offerId": "trehub-remote/flights/flight-journey",
+    "/trehub/hotels": "trehub-remote/hotels/hotels",
+    "/trehub/hotels/:hotelId": "trehub-remote/hotels/hotels",
     "/admin": "admin-shell/dashboard",
     "/admin/pricing": "admin-shell/pricing",
     "/agent/services": "agent-shell/services",

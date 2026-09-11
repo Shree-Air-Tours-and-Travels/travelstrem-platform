@@ -9,22 +9,20 @@
   padding: clamp($space-5, 2vw, $space-7);
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: $radius-lg;
-  background:
-    radial-gradient(circle at 92% 8%, var(--primary-soft), transparent 28%),
-    var(--surface-elevated);
-  box-shadow: var(--shadow-soft);
+  border-radius: $radius-md;
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-sm);
   transition:
-    border-color 160ms $ease-default,
-    box-shadow 160ms $ease-default,
-    transform 160ms $ease-default;
+    border-color $duration-base $ease-standard,
+    box-shadow $duration-base $ease-standard,
+    transform $duration-base $ease-standard;
 
   &::before {
     position: absolute;
     inset: 0 auto 0 0;
     width: 4px;
     background: linear-gradient(var(--color-primary), var(--color-secondary));
-    content: "";
+    content: none;
   }
 
   &:hover {
@@ -186,7 +184,7 @@
 
 .trem-flight-card__action {
   max-width: 100%;
-  box-shadow: 0 8px 18px color-mix(in srgb, var(--color-primary) 18%, transparent);
+  box-shadow: var(--shadow-sm);
 }
 
 @media (max-width: 1500px) {

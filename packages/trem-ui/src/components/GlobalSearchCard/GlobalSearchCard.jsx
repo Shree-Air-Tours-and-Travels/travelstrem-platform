@@ -64,6 +64,7 @@ export default function GlobalSearchCard({
   activeService = [],
   eyebrowRef,
   titleRef,
+  titleAccentRef,
   descriptionRef,
   backgroundUrlRef,
   ariaLabelRef,
@@ -264,7 +265,7 @@ export default function GlobalSearchCard({
           {eyebrowRef ? (
             <span className="trem-global-search__eyebrow">{labelFor(labels, eyebrowRef)}</span>
           ) : null}
-          {titleRef ? <h1>{labelFor(labels, titleRef)}</h1> : null}
+          {titleRef ? <h1>{labelFor(labels, titleRef)}{titleAccentRef ? <> <span>{labelFor(labels, titleAccentRef)}</span></> : null}</h1> : null}
           {descriptionRef ? <p>{labelFor(labels, descriptionRef)}</p> : null}
         </div>
       ) : null}

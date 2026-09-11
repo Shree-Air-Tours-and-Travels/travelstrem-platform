@@ -4,7 +4,6 @@ import { generateFlightOffers } from "./mock-flight-generator.js";
 import { generateSeatMap } from "./mock-seat-generator.js";
 import { reserveBookingInventory } from "./mock-inventory-engine.js";
 import { hashNumber } from "./mock-random.js";
-import { applyFlightFinancials } from "./mock-price-engine.js";
 
 const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 const reference = (prefix, seed, length) => `${prefix}${hashNumber(seed, prefix).toString().padStart(length, "0").slice(-length)}`;
@@ -55,10 +54,7 @@ export default class MockFlightProvider extends FlightProvider {
         if (forcedPriceChange || roll < 18) {
             const increase = 1.03 + (hashNumber(offer.offerId, "increase") % 10) / 100;
             const flightSubtotal = Math.round((offer.price.flightSubtotal * increase) / 100) * 100;
-            const currentPrice = await applyFlightFinancials({
-                price: { ...offer.price, flightSubtotal, total: flightSubtotal },
-                financialContext: { config: offer.price.pricingConfigSnapshot },
-            });
+            const currentPrice = { ...offer.price, flightSubtotal, total: flightSubtotal };
             return { status: REVALIDATION_STATUS.PRICE_CHANGED, offerId: offer.offerId, previousPrice: offer.price, currentPrice, difference: currentPrice.total - offer.price.total, requiresAcceptance: true };
         }
         if (roll < 23) return { status: REVALIDATION_STATUS.FARE_UNAVAILABLE, offerId: offer.offerId };

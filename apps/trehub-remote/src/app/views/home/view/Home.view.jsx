@@ -3,7 +3,8 @@ import {
   BenefitCard,
   ClientShowcase,
   ErrorState,
-  GlobalLoader,
+  Preloader,
+  Breadcrumbs,
   GlobalSearchCard,
   Paragraph,
   PopularLocations,
@@ -14,7 +15,10 @@ const labelFor = (labels = {}, ref, fallback = "") =>
   ref ? labels[ref] || fallback || ref : fallback;
 
 const getByPath = (source = {}, path = "") =>
-  path.split(".").filter(Boolean).reduce((value, key) => value?.[key], source);
+  path
+    .split(".")
+    .filter(Boolean)
+    .reduce((value, key) => value?.[key], source);
 
 const formatLabel = (value = "", replacements = {}) =>
   Object.entries(replacements).reduce(
@@ -66,16 +70,16 @@ function WhyTrehub({ widget = {}, labels = {} }) {
 }
 
 export default function HomeView({ loading, error, pageModel, onSearch }) {
-  if (loading) return <GlobalLoader visible text="Loading Trehub" />;
+  if (loading) return <Preloader variant="hero" label={pageModel?.labels?.loading || ""} />;
 
   if (error || !pageModel) {
     return (
       <ErrorState
-        title="Trehub failed to start"
-        description="The Trehub page contract could not be loaded."
+        title={pageModel?.labels?.loadErrorTitle}
+        description={pageModel?.labels?.loadErrorDescription}
         error={error}
         retry={() => window.location.reload()}
-        retryText="Retry"
+        retryText={pageModel?.labels?.retry}
       />
     );
   }
@@ -88,6 +92,13 @@ export default function HomeView({ loading, error, pageModel, onSearch }) {
 
   return (
     <main className="trehub-home">
+      <div className="trehub-page__breadcrumbs">
+        <Breadcrumbs
+          items={(widgets.find((widget) => widget.name === "breadcrumbs")?.props?.items || []).map(
+            (item) => ({ label: labels[item.labelRef], path: item.path }),
+          )}
+        />
+      </div>
       <div className="trehub-home__shell">
         {widgets.map((widget) => {
           const props = widget.props || {};
@@ -101,6 +112,7 @@ export default function HomeView({ loading, error, pageModel, onSearch }) {
                 activeService={props.activeService}
                 eyebrowRef={props.eyebrowRef}
                 titleRef={props.titleRef}
+                titleAccentRef={props.titleAccentRef}
                 descriptionRef={props.descriptionRef}
                 backgroundUrlRef={props.backgroundUrlRef}
                 ariaLabelRef={props.ariaLabelRef}

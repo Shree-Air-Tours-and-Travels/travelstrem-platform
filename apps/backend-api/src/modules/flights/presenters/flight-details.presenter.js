@@ -31,7 +31,7 @@ const airportPoint = (airport = {}, value) => ({
 
 const presentFare = (fare = {}) => ({
     fareId: fare.fareId,
-    selectable: fare.availability?.status !== "SOLD_OUT" && Number(fare.availability?.fareBucketAvailable || 0) > 0,
+    selectable: fare.availability?.status !== "SOLD_OUT" && Number(fare.availability?.fareBucketAvailable || 0) >= Math.max(1, (fare.pricing?.passengers || []).filter((passenger) => passenger.type !== "INFANT").reduce((total, passenger) => total + Number(passenger.count || 0), 0)),
     brand: titleCase(fare.brand),
     cabin: titleCase(fare.cabin),
     bookingClass: fare.bookingClass,

@@ -6,6 +6,8 @@ export { BOOKING_JOURNEY_ACTION } from "./constants/common.js";
 export { default as StatusBadge } from "./components/StatusBadge/StatusBadge.jsx";
 export { default as Button } from "./components/Button/Button.jsx";
 export { default as Gallery } from "./components/Gallery/Gallery.jsx";
+export { default as HotelCard } from "./components/HotelCard/HotelCard.jsx";
+export { default as HotelRoomCard } from "./components/HotelRoomCard/HotelRoomCard.jsx";
 export { default as HighlightSpan } from "./components/HighlightSpan/HighlightSpan.jsx";
 export { default as SubTitle } from "./components/SubTitle/SubTitle.jsx";
 export { default as Title } from "./components/Title/Title.jsx";

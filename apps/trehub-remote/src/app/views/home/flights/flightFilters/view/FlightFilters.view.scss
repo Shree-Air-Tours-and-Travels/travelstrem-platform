@@ -23,17 +23,14 @@
   position: relative;
   display: grid;
   gap: $space-5;
-  width: min(var(--container-width), 100%);
-  margin: $space-5 auto;
-  padding: clamp($space-5, 3vw, $space-7);
+  width: 100%;
+  margin: $space-5 0;
+  padding: $space-5;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--color-primary) 22%, var(--border));
-  border-radius: $radius-lg;
-  background:
-    radial-gradient(circle at 92% 8%, var(--secondary-soft), transparent 34%),
-    radial-gradient(circle at 8% 100%, var(--primary-soft), transparent 38%),
-    linear-gradient(135deg, var(--surface-elevated), var(--surface-subtle));
-  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-sm);
 
   &::after {
     position: absolute;
@@ -43,7 +40,7 @@
     height: 18rem;
     border: 1px solid var(--primary-focus);
     border-radius: $radius-full;
-    content: "";
+    content: none;
     pointer-events: none;
   }
 }
@@ -72,8 +69,8 @@
   max-width: 46rem;
   margin: $space-1 0 0;
   color: var(--heading);
-  font-size: clamp(1.75rem, 3vw, 2.5rem);
-  line-height: 1.12;
+  font-size: clamp(#{$font-size-xl}, 3vw, #{$font-size-xxl});
+  line-height: $line-height-sm;
   letter-spacing: -0.035em;
   text-align: left;
 }
@@ -92,7 +89,7 @@
 .trehub-flight-list__search-stage .trem-global-search__panel {
   border-color: color-mix(in srgb, var(--color-primary) 18%, var(--border));
   background: var(--surface-glass-strong);
-  box-shadow: var(--shadow-md);
+  box-shadow: none;
 }
 
 .trehub-flight-list__body {
@@ -100,8 +97,7 @@
   grid-template-columns: minmax(14rem, 16rem) minmax(0, 1fr);
   align-items: start;
   gap: $space-5;
-  width: min(var(--container-width), 100%);
-  margin: 0 auto;
+  width: 100%;
 }
 
 .trehub-flight-list__results {
@@ -166,7 +162,7 @@
   display: none;
 }
 
-@media (max-width: 900px) {
+@include mq-max($breakpoint-tablet) {
   .trehub-flight-list__body {
     grid-template-columns: 1fr;
   }
@@ -175,7 +171,9 @@
 @media (max-width: 768px) {
   .trehub-flight-list__mobile-clearance {
     display: block;
-    height: calc(var(--trem-floating-action-height, 5rem) + #{$space-6} + env(safe-area-inset-bottom, 0px));
+    height: calc(
+      var(--trem-floating-action-height, 5rem) + #{$space-6} + env(safe-area-inset-bottom, 0px)
+    );
   }
 }
 
@@ -217,5 +215,4 @@
     background: var(--surface-elevated);
     box-shadow: var(--shadow-sm);
   }
-
 }

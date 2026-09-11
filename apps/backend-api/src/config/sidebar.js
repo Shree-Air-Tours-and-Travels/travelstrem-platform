@@ -1,14 +1,24 @@
+import config from "./env.js";
 import applyHideFlags from "./visibility.js";
+
+const partnershipUrl = `${String(config.AUTH_APP_URL || config.SHELL_URL || "").replace(/\/$/, "")}/partnership`;
 
 export default applyHideFlags({
     status: "success",
     message: "Sidebar config loaded",
     componentData: {
-        version: 1,
+        version: 2,
+        variant: "top-dropdown",
         ariaLabel: "Customer dashboard navigation",
         closeLabel: "Close navigation",
         collapseLabel: "Collapse sidebar",
         expandLabel: "Expand sidebar",
+        topDropdown: {
+            label: "Explore",
+            openLabel: "Open main navigation",
+            closeLabel: "Close main navigation",
+            panelId: "customer-shell-navigation",
+        },
         brand: {
             logoSrc: "/favicon.png",
             darkLogoSrc: "/favicon-dark.png",
@@ -20,7 +30,23 @@ export default applyHideFlags({
         sections: [
             {
                 id: "primary",
-                items: [{ id: "overview", label: "Home", icon: "home", target: "overview" }],
+                items: [
+                    { id: "overview", label: "Home", icon: "home", target: "overview" },
+                    {
+                        id: "partnership",
+                        label: "Partner with us",
+                        icon: "briefcaseBusiness",
+                        type: "external",
+                        href: partnershipUrl,
+                    },
+                    {
+                        id: "about",
+                        label: "About Us",
+                        icon: "info",
+                        type: "external",
+                        href: "https://travelstrem.com/#about",
+                    },
+                ],
             },
             {
                 id: "plan",

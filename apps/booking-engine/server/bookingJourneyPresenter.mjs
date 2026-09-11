@@ -90,6 +90,8 @@ const operatorJourney = (booking) => {
 const customerJourney = (booking, quote, requestedStep = "") => {
   const isTrevio = booking.product === "trevio";
   const isFlight = booking.product === "trehub";
+  const isHotel = isFlight && booking.journeyType === "hotel";
+  const selectionName = isHotel ? "hotel" : "flight";
   const isCancelled = String(booking.status || "").toLowerCase() === "cancelled";
   const quoteRequestedWithoutQuote =
     String(booking.status || "").toLowerCase() === "quote_requested";
@@ -104,12 +106,12 @@ const customerJourney = (booking, quote, requestedStep = "") => {
     accepted: ["Quotation accepted", "Download the accepted quote or continue to payment when the booking is ready.", "Accepted", "success"],
     rejected: ["Quotation rejected", "Your response is saved. You can still request a revised quotation.", "Rejected", "danger"],
     changes: ["Changes requested", "Your travel specialist has received your request and will prepare an updated quotation.", "Update requested", "warning"],
-    cancelled: ["Booking request cancelled", isFlight ? "This flight enquiry has been cancelled. You can return to flights and search again." : "This request is closed. The quotation remains available for your records.", "Cancelled", "danger"],
+    cancelled: ["Booking request cancelled", isFlight ? `This ${selectionName} enquiry has been cancelled. You can return to search for updated availability.` : "This request is closed. The quotation remains available for your records.", "Cancelled", "danger"],
     pending: quoteRequestedWithoutQuote
       ? ["Your quotation is being prepared", "Your trip captain will price the selected package using every traveller's saved preferences.", "In preparation", "info"]
       : [
-          isFlight ? "Your flight enquiry has been created" : isTrevio ? "Your trip enquiry has been created" : "Your tour enquiry has been created",
-          isFlight ? "Review the selected flight, then continue to individual traveller information." : "Complete the enquiry details to continue to individual traveller information.",
+          isFlight ? `Your ${selectionName} enquiry has been created` : isTrevio ? "Your trip enquiry has been created" : "Your tour enquiry has been created",
+          isFlight ? `Review the selected ${selectionName}, then continue to individual traveller information.` : "Complete the enquiry details to continue to individual traveller information.",
           "Enquiry created",
           "success",
         ],
@@ -286,16 +288,16 @@ const customerJourney = (booking, quote, requestedStep = "") => {
     canEditEnquiry: enquiryEditable,
     canEditTravellers: travellerEditable,
     quotationRequested,
-    paymentEnabled: quoteAccepted && travellerSaved && Boolean(booking.paymentUrl),
-    paymentUrl: quoteAccepted ? booking.paymentUrl || "" : "",
+    paymentEnabled: !isFlight && quoteAccepted && travellerSaved && Boolean(booking.paymentUrl),
+    paymentUrl: !isFlight && quoteAccepted ? booking.paymentUrl || "" : "",
   },
   labels: {
     ...baseLabels(booking),
-    customerEyebrow: isFlight ? "Flight booking" : isTrevio ? "Trip enquiry" : "Quote update",
-    customerTitle: booking.title || (isFlight ? "Flight booking" : "Tour booking"),
-    quoteStateTitle: isFlight && activeStepId === "review" ? "Review your flight booking" : stateTitle,
+    customerEyebrow: isHotel ? "Hotel booking" : isFlight ? "Flight booking" : isTrevio ? "Trip enquiry" : "Quote update",
+    customerTitle: booking.title || (isHotel ? "Hotel booking" : isFlight ? "Flight booking" : "Tour booking"),
+    quoteStateTitle: isFlight && activeStepId === "review" ? `Review your ${selectionName} booking` : stateTitle,
     quoteStateDescription: isFlight && activeStepId === "review"
-      ? "Check the selected flight, fare and every traveller before payment becomes available."
+      ? `Check the selected ${selectionName}, price and every traveller before payment becomes available.`
       : stateDescription,
     quoteStateBadge: isFlight && activeStepId === "review" ? "Ready for review" : stateBadge,
     live: "Live",
@@ -321,7 +323,7 @@ const customerJourney = (booking, quote, requestedStep = "") => {
     sendChangeRequest: "Send change request",
     savingDecision: "Saving…",
     enquiryStep: "Enquiry",
-    enquiryStepDescription: isFlight ? "Review the selected flight, fare and traveller count." : isTrevio ? "Choose your fixed departure and trip preferences." : "Choose your tour package, dates and preferences.",
+    enquiryStepDescription: isFlight ? `Review the selected ${selectionName}, price and traveller count.` : isTrevio ? "Choose your fixed departure and trip preferences." : "Choose your tour package, dates and preferences.",
     quoteStep: "Quotation",
     quoteStepDescription: quoteAccepted ? "Review your accepted quotation." : "Review the itemized quotation and accept, reject, or request changes.",
     travellerStep: "Traveller details",
@@ -332,7 +334,7 @@ const customerJourney = (booking, quote, requestedStep = "") => {
     paymentStep: "Payment",
     paymentStepDescription: isFlight ? "Payment will be enabled after the booking review is confirmed." : "Proceed to payment after accepting the final quotation.",
     reviewStep: "Review & travel updates",
-    reviewStepDescription: isFlight ? "Review the selected flight, fare and traveller information." : "Tickets, vouchers and brochures will appear here through live updates.",
+    reviewStepDescription: isFlight ? `Review the selected ${selectionName}, price and traveller information.` : "Tickets, vouchers and brochures will appear here through live updates.",
     viewQuote: "View quotation",
     viewQuotationStatus: "View quotation status",
     addTravellers: "Add traveller details",
@@ -343,10 +345,10 @@ const customerJourney = (booking, quote, requestedStep = "") => {
     backToPreviousStep: "Back",
     proceedPayment: "Proceed to payment",
     bookNow: "Book now",
-    backToFlights: "Back to flights",
+    backToFlights: isHotel ? "Back to hotels" : "Back to flights",
     cancelFlightEnquiry: "Cancel enquiry",
-    cancelFlightTitle: "Cancel this flight enquiry?",
-    cancelFlightDescription: "The enquiry will be closed. Your flight search will stay filled so you can review updated results.",
+    cancelFlightTitle: `Cancel this ${selectionName} enquiry?`,
+    cancelFlightDescription: `The enquiry will be closed. Your ${selectionName} search will stay filled so you can review updated results.`,
     confirmCancellation: "Cancel enquiry",
     keepFlightEnquiry: "Keep enquiry",
     paymentPending: "Payment session pending",

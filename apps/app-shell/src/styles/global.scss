@@ -82,6 +82,26 @@ select {
     max-width: none;
     z-index: 100;
   }
+
+  .dash-layout--top-dropdown {
+    display: block;
+
+    > .trem-sidebar.trem-sidebar--top-dropdown {
+      position: fixed;
+      inset: $space-16 0 auto;
+      width: 100%;
+      max-width: none;
+      z-index: 89;
+    }
+
+    > .trem-sidebar__backdrop--top-dropdown {
+      z-index: 88;
+    }
+
+    > .dash-main {
+      grid-column: 1;
+    }
+  }
 }
 
 .dash-main {
@@ -118,6 +138,11 @@ select {
 
   &::-webkit-scrollbar {
     display: none;
+  }
+
+  > * {
+    width: min(100%, $full-width);
+    margin-inline: auto;
   }
 
   @media (max-width: $breakpoint-md) {
@@ -194,32 +219,35 @@ select {
   width: 100%;
   max-width: none;
   min-height: 0;
-  padding: 0;
+  padding: 0 $space-6;
   padding-bottom: $space-6;
 
   > * {
-    width: 100%;
-    max-width: none;
+    width: min(100%, $full-width);
+    max-width: $full-width;
+    margin-inline: auto;
   }
 
   @media (max-width: $breakpoint-md) {
     min-height: 0;
-    padding: 0;
+    padding: 0 $space-4;
     padding-bottom: $space-4;
   }
 }
 
 .dash-content--support {
-  padding: 0;
+  padding: 0 $space-6;
 }
 
 .dash-content--support > * {
-  width: 100%;
+  width: min(100%, $full-width);
+  max-width: $full-width;
+  margin-inline: auto;
 }
 
 @media (max-width: $breakpoint-md) {
   .dash-content--support {
-    padding: 0;
+    padding: 0 $space-4;
   }
 }
 
@@ -231,7 +259,7 @@ select {
 }
 
 .dash-content--remote > .dash-app-footer {
-  width: 100%;
+  width: min(100%, $full-width);
   margin-right: 0;
   margin-bottom: 0;
   margin-left: 0;
@@ -284,7 +312,7 @@ select {
   }
 
   .dash-content--remote > .dash-app-footer {
-    width: 100%;
+    width: min(100%, $full-width);
     margin-right: 0;
     margin-bottom: 0;
     margin-left: 0;

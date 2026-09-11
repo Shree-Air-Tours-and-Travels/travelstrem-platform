@@ -452,8 +452,67 @@
 }
 
 .trem-app-header__menu,
-.trem-app-header__brand {
+.trem-app-header__brand,
+.trem-app-header__desktop-navigation {
   display: none;
+}
+
+@media (min-width: #{$breakpoint-md + 1px}) {
+  .trem-app-header--top-dropdown-shell {
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+
+    .trem-app-header__mobile-row,
+    .trem-app-header__brand {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .trem-app-header__brand {
+      overflow: hidden;
+    }
+
+    .trem-app-header__desktop-navigation {
+      min-height: $space-10;
+      display: inline-flex;
+      align-items: center;
+      gap: $space-2;
+      padding-inline: $space-3;
+      border: 1px solid var(--border);
+      border-radius: $radius-sm;
+      background: var(--surface);
+      color: var(--text);
+      font-size: $font-size-sm;
+      font-weight: $font-semibold;
+      white-space: nowrap;
+      transition:
+        border-color $duration-fast $ease-standard,
+        background $duration-fast $ease-standard,
+        color $duration-fast $ease-standard;
+
+      > svg:last-child {
+        transition: transform $duration-fast $ease-standard;
+      }
+
+      &[aria-expanded="true"] {
+        border-color: var(--color-primary);
+        background: var(--primary-soft);
+        color: var(--color-primary-dark, var(--color-primary));
+
+        > svg:last-child {
+          transform: rotate(180deg);
+        }
+      }
+
+      &:hover,
+      &:focus-visible {
+        outline: 0;
+        border-color: var(--color-primary);
+        background: var(--primary-softer);
+        color: var(--color-primary-dark, var(--color-primary));
+      }
+    }
+  }
 }
 
 // Keep the single-row header stable when the sidebar reduces tablet width.
@@ -462,6 +521,15 @@
     grid-template-columns: minmax(180px, 1fr) auto;
     gap: $space-3;
     padding-inline: $space-3;
+  }
+
+  .trem-app-header--top-dropdown-shell {
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+
+    .brand-logo__subtitle,
+    .trem-app-header__desktop-navigation > span {
+      display: none;
+    }
   }
 
   .trem-app-header__actions {

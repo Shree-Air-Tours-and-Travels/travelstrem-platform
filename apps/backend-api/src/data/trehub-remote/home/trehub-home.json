@@ -56,8 +56,7 @@
             "labelRef": "searchHotelsTab",
             "headingRef": "hotelSearchHeading",
             "icon": "hotel",
-            "resultsPath": "/trehub/hotels",
-            "disabled": true
+            "resultsPath": "/trehub/hotels"
           },
           { "id": "car", "labelRef": "searchCarsTab", "icon": "carTaxiFront", "resultsPath": "/trehub/cars" },
           { "id": "cruise", "labelRef": "searchCruiseTab", "icon": "travelPackage", "resultsPath": "/trehub/cruises" },
@@ -74,8 +73,7 @@
             { "id": "multiTrip", "labelRef": "flightChoiceMultiTrip" }
           ],
           "hotel": [
-            { "id": "hotelOnly", "labelRef": "hotelChoiceHotelOnly" },
-            { "id": "flightHotel", "labelRef": "hotelChoiceFlightHotel" }
+            { "id": "hotelOnly", "labelRef": "hotelChoiceHotelOnly" }
           ],
           "car": [
             { "id": "oneWay", "labelRef": "carChoiceOneWay" },
@@ -259,6 +257,15 @@
                 "type": "number",
                 "min": 1,
                 "required": true
+              },
+              {
+                "id": "rooms",
+                "labelRef": "hotelRoomsLabel",
+                "placeholderRef": "hotelRoomsPlaceholder",
+                "type": "number",
+                "min": 1,
+                "max": 8,
+                "required": true
               }
             ],
             "flightHotel": [
@@ -417,8 +424,15 @@
     },
     "elements": {
       "labels": {
+        "loading": "Loading Trehub",
+        "breadcrumbHome": "Home",
+        "breadcrumbTrehub": "Trehub",
+        "loadErrorTitle": "Trehub could not be loaded",
+        "loadErrorDescription": "Please try loading this section again.",
+        "retry": "Try again",
         "searchEyebrow": "Trehub travel desk",
-        "searchTitle": "Welcome to TREHUB",
+        "searchTitle": "Welcome to",
+        "searchTitleAccent": "TREHUB",
         "searchDescription": "Search flights and hotels together in one connected travel workspace.",
         "searchTypeAriaLabel": "Trehub search categories",
         "searchFlightsTab": "Flights",
@@ -476,8 +490,10 @@
         "hotelCheckOutLabel": "Check-out",
         "hotelCheckOutHelp": "Departure date",
         "hotelGuestsLabel": "Guests",
-        "hotelGuestsPlaceholder": "2 guests, 1 room",
-        "hotelGuestsHelp": "Guests and room count",
+        "hotelGuestsPlaceholder": "2 guests",
+        "hotelGuestsHelp": "Total number of guests",
+        "hotelRoomsLabel": "Rooms",
+        "hotelRoomsPlaceholder": "1 room",
         "carPickupLabel": "Pick-up",
         "carPickupPlaceholder": "Airport or city",
         "carDropLabel": "Drop",
@@ -581,6 +597,7 @@
         "titleRef": "searchTitle"
       },
       "widgets": [
+        { "name": "breadcrumbs", "type": "Breadcrumbs", "props": { "items": [{ "labelRef": "breadcrumbHome", "path": "/?tab=overview" }, { "labelRef": "breadcrumbTrehub" }] } },
         {
           "name": "searchCard",
           "type": "GlobalSearchCard",
@@ -591,6 +608,7 @@
             "activeService": ["flight", "hotel"],
             "eyebrowRef": "searchEyebrow",
             "titleRef": "searchTitle",
+            "titleAccentRef": "searchTitleAccent",
             "descriptionRef": "searchDescription",
             "ariaLabelRef": "searchTypeAriaLabel",
             "modesOptionsRef": "trehubSearchModes",

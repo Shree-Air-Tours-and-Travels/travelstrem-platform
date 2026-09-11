@@ -100,6 +100,9 @@
     },
     "elements": {
       "labels": {
+        "loading": "Updating flights",
+        "loadErrorTitle": "Flights could not be loaded",
+        "retry": "Try again",
         "breadcrumbTrehub": "Trehub",
         "breadcrumbFlights": "Flights",
         "pageEyebrow": "Flight search",

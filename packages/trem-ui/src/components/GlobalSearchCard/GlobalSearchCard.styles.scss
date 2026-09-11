@@ -2,12 +2,12 @@
 
 .trem-global-search {
   --search-accent: var(--color-primary);
-  --search-accent-soft: rgba(48, 78, 182, 0.1);
-  --search-accent-shadow: rgba(48, 78, 182, 0.22);
+  --search-accent-soft: var(--primary-soft);
+  --search-accent-shadow: var(--primary-shadow);
   --trem-global-search-surface:
-    radial-gradient(circle at 86% 12%, rgba(61, 214, 206, 0.34), transparent 31%),
-    radial-gradient(circle at 12% 92%, rgba(129, 92, 246, 0.32), transparent 35%),
-    linear-gradient(128deg, #111a3d 0%, #263f9b 52%, #087a83 100%);
+    radial-gradient(circle at 86% 12%, var(--secondary-soft), transparent 31%),
+    radial-gradient(circle at 12% 92%, var(--primary-soft), transparent 35%),
+    linear-gradient(128deg, var(--surface-elevated), var(--primary-softer));
 
   position: relative;
   isolation: isolate;
@@ -21,34 +21,34 @@
   background: var(--trem-global-search-surface);
   background-position: center;
   background-size: cover;
-  box-shadow: var(--shadow-card, 0 20px 54px rgba(15, 23, 42, 0.14));
+  box-shadow: var(--shadow-sm);
 
   &[data-service="hotel"] {
-    --search-accent: #7048c7;
-    --search-accent-soft: rgba(112, 72, 199, 0.1);
-    --search-accent-shadow: rgba(112, 72, 199, 0.22);
+    --search-accent: var(--color-secondary);
+    --search-accent-soft: var(--secondary-soft);
+    --search-accent-shadow: var(--primary-shadow);
   }
 
   &[data-service="car"],
   &[data-service="bus"] {
-    --search-accent: #087e78;
-    --search-accent-soft: rgba(8, 126, 120, 0.1);
-    --search-accent-shadow: rgba(8, 126, 120, 0.22);
+    --search-accent: var(--color-success);
+    --search-accent-soft: var(--success-soft);
+    --search-accent-shadow: var(--primary-shadow);
   }
 
   &[data-service="cruise"],
   &[data-service="activity"] {
-    --search-accent: #087ca7;
-    --search-accent-soft: rgba(8, 124, 167, 0.1);
-    --search-accent-shadow: rgba(8, 124, 167, 0.22);
+    --search-accent: var(--color-secondary);
+    --search-accent-soft: var(--secondary-soft);
+    --search-accent-shadow: var(--primary-shadow);
   }
 
   &[data-service="tour"],
   &[data-service="visa"],
   &[data-service="guide"] {
-    --search-accent: #a1502a;
-    --search-accent-soft: rgba(161, 80, 42, 0.1);
-    --search-accent-shadow: rgba(161, 80, 42, 0.22);
+    --search-accent: var(--color-warning);
+    --search-accent-soft: var(--warning-soft);
+    --search-accent-shadow: var(--primary-shadow);
   }
 }
 
@@ -57,10 +57,10 @@
   inset: 0;
   z-index: -1;
   background:
-    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    radial-gradient(circle at 78% 18%, rgba(255, 255, 255, 0.18), transparent 24%),
-    linear-gradient(180deg, transparent 42%, rgba(4, 12, 32, 0.2));
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px),
+    radial-gradient(circle at 78% 18%, var(--primary-soft), transparent 24%),
+    linear-gradient(180deg, transparent 42%, var(--primary-softer));
   background-size: 48px 48px, 48px 48px, auto, auto;
 }
 
@@ -71,20 +71,28 @@
   h1 {
     max-width: 13ch;
     margin: $space-3 0 $space-3;
-    color: #fff;
-    font-size: clamp(2.35rem, 4.2vw, 4.25rem);
+    color: var(--heading);
+    font-size: clamp(#{$font-size-xxl}, 4vw, #{$font-size-xxxl});
     font-weight: $font-bold;
     line-height: 1;
     letter-spacing: -0.045em;
     text-wrap: balance;
-    text-shadow: 0 8px 28px rgba(4, 12, 32, 0.28);
+    text-shadow: none;
+
+    span {
+      color: var(--color-primary);
+      background: linear-gradient(120deg, var(--color-primary), var(--color-secondary), var(--color-tertiary));
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
   }
 
   p {
     max-width: 42rem;
     margin: 0;
-    color: rgba(255, 255, 255, 0.86);
-    font-size: clamp(0.95rem, 1.3vw, 1.1rem);
+    color: var(--text-muted);
+    font-size: clamp(#{$font-size-sm}, 1.2vw, #{$font-size-md});
     font-weight: $font-medium;
     line-height: 1.6;
   }
@@ -95,11 +103,11 @@
   align-items: center;
   min-height: 2rem;
   padding: 0 $space-3;
-  border: 1px solid rgba(255, 255, 255, 0.24);
+  border: 1px solid var(--border);
   border-radius: $radius-full;
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
-  font-size: 0.72rem;
+  background: var(--primary-soft);
+  color: var(--color-primary);
+  font-size: $font-size-xs;
   font-weight: $font-bold;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -120,10 +128,10 @@
   width: fit-content;
   max-width: 100%;
   padding: $space-2;
-  border: 1px solid rgba(255, 255, 255, 0.54);
+  border: 1px solid var(--border);
   border-radius: $radius-full;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 14px 38px rgba(4, 12, 32, 0.18);
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-sm);
   backdrop-filter: blur(18px);
 }
 
@@ -139,14 +147,14 @@
   background: transparent;
   color: var(--text);
   font: inherit;
-  font-size: 0.92rem;
+  font-size: $font-size-sm;
   font-weight: $font-semibold;
   white-space: nowrap;
   cursor: pointer;
   transition:
-    color 180ms ease,
-    background 180ms ease,
-    box-shadow 180ms ease;
+    color $duration-base $ease-standard,
+    background $duration-base $ease-standard,
+    box-shadow $duration-base $ease-standard;
 
   &:hover:not(.is-active) {
     background: var(--surface-subtle);
@@ -163,8 +171,8 @@
 
   &.is-active:not(.is-disabled) {
     background: var(--search-accent);
-    color: #fff;
-    box-shadow: 0 8px 20px var(--search-accent-shadow);
+    color: var(--color-on-primary);
+    box-shadow: var(--shadow-sm);
   }
 }
 
@@ -184,10 +192,10 @@
   display: grid;
   gap: $space-4;
   padding: clamp($space-4, 2vw, $space-5);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--border);
   border-radius: $radius-xl;
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 22px 54px rgba(4, 12, 32, 0.2);
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-sm);
   backdrop-filter: blur(22px);
 }
 
@@ -227,13 +235,13 @@
   border-radius: $radius-full;
   background: var(--surface-subtle);
   color: var(--text-muted);
-  font-size: 0.88rem;
+  font-size: $font-size-sm;
   font-weight: $font-semibold;
   cursor: pointer;
   transition:
-    color 180ms ease,
-    border-color 180ms ease,
-    background 180ms ease;
+    color $duration-base $ease-standard,
+    border-color $duration-base $ease-standard,
+    background $duration-base $ease-standard;
 
   input {
     position: absolute;
@@ -262,7 +270,7 @@
 
 .trem-global-search__service-heading {
   color: var(--text);
-  font-size: clamp(0.92rem, 1.2vw, 1.05rem);
+  font-size: clamp(#{$font-size-sm}, 1.2vw, #{$font-size-md});
   font-weight: $font-semibold;
   text-align: right;
 }
@@ -287,8 +295,8 @@
   border-radius: $radius-md;
   background: var(--surface);
   transition:
-    border-color 180ms ease,
-    box-shadow 180ms ease;
+    border-color $duration-base $ease-standard,
+    box-shadow $duration-base $ease-standard;
 
   &:focus-within {
     border-color: var(--search-accent);
@@ -319,7 +327,7 @@
 .trem-global-search__field-help {
   overflow: hidden;
   color: var(--text-muted);
-  font-size: 0.72rem;
+  font-size: $font-size-xs;
   font-weight: $font-semibold;
   line-height: 1.25;
   text-overflow: ellipsis;
@@ -361,7 +369,7 @@
     border: 0;
     background: transparent;
     color: var(--text);
-    font-size: clamp(0.95rem, 1.2vw, 1.08rem);
+    font-size: clamp(#{$font-size-sm}, 1.2vw, #{$font-size-md});
     font-weight: $font-bold;
 
     &::placeholder {
@@ -387,7 +395,7 @@
     min-height: auto;
     padding: 0;
     color: var(--text);
-    font-size: clamp(0.95rem, 1.2vw, 1.08rem);
+    font-size: clamp(#{$font-size-sm}, 1.2vw, #{$font-size-md});
     font-weight: $font-bold;
 
     &::placeholder {
@@ -416,7 +424,7 @@
 }
 
 .trem-global-search__date {
-  --trem-control-value-font-size: clamp(0.95rem, 1.2vw, 1.08rem);
+  --trem-control-value-font-size: clamp(#{$font-size-sm}, 1.2vw, #{$font-size-md});
 
   .trem-datepicker__trigger {
     min-height: 1.75rem;
@@ -457,8 +465,8 @@
   border: 3px solid var(--surface);
   border-radius: $radius-full;
   background: var(--search-accent);
-  color: #fff;
-  box-shadow: 0 8px 18px var(--search-accent-shadow);
+  color: var(--color-on-primary);
+  box-shadow: var(--shadow-sm);
   transform: translateY(-50%);
   cursor: pointer;
 
@@ -479,7 +487,7 @@
   padding: 0 $space-4;
   border-radius: $radius-md;
   background: var(--search-accent);
-  box-shadow: 0 10px 24px var(--search-accent-shadow);
+  box-shadow: var(--shadow-sm);
   white-space: nowrap;
 
   &:disabled {
@@ -494,7 +502,7 @@
   flex-wrap: wrap;
   gap: $space-2;
   color: var(--text-muted);
-  font-size: 0.75rem;
+  font-size: $font-size-xs;
   font-weight: $font-semibold;
 
   span {
@@ -559,7 +567,7 @@
     background: var(--surface);
     color: var(--search-accent);
     font: inherit;
-    font-size: 0.8rem;
+    font-size: $font-size-sm;
     font-weight: $font-semibold;
     cursor: pointer;
 
@@ -589,7 +597,7 @@
 
   > span {
     color: var(--text-muted);
-    font-size: 0.72rem;
+    font-size: $font-size-xs;
     font-weight: $font-semibold;
   }
 
@@ -636,7 +644,7 @@
   .trem-global-search__panel {
     border-color: var(--border);
     background: var(--surface);
-    box-shadow: var(--shadow-card, 0 14px 38px rgba(15, 23, 42, 0.08));
+    box-shadow: var(--shadow-sm);
   }
 }
 
@@ -656,7 +664,7 @@
       border: 1px solid var(--border);
       border-radius: inherit;
       background: var(--trem-global-search-surface);
-      box-shadow: var(--shadow-card, 0 20px 54px rgba(15, 23, 42, 0.14));
+      box-shadow: var(--shadow-sm);
       content: "";
     }
 
@@ -695,7 +703,7 @@
     margin-bottom: $space-5;
 
     h1 {
-      font-size: clamp(2.1rem, 11vw, 3.35rem);
+      font-size: clamp(#{$font-size-xl}, 7vw, #{$font-size-xxl});
     }
   }
 

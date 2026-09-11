@@ -259,6 +259,7 @@ export async function findAuthorizedBookingJourney(enquiryId, actor) {
         title: booking?.tourTitle || enquiry.tourTitle || "Tour enquiry",
         status: booking?.status || enquiry.status || "new",
         product: enquiry.product || "trevista",
+        journeyType: enquiry.journeyType,
         travellerCount,
         travellerTypeCounts: {
             adults: Number(enquiry.fields?.adultCount || 0),
@@ -268,6 +269,7 @@ export async function findAuthorizedBookingJourney(enquiryId, actor) {
         travellerOptionSets,
         enquiryDetailsForm: buildProductEnquiryDetailsForm({
             product: enquiry.product,
+            journeyType: enquiry.journeyType,
             saved: savedEnquiryFields,
             ...enquiryContext,
         }),
@@ -1268,6 +1270,7 @@ export async function updateCustomerQuoteDecision({ enquiryId, quoteId, actor, a
     const enquiry = await ContactLead.findOne({ ...resource.query, claimedBy: userId });
     if (!enquiry) throw Object.assign(new Error("Enquiry not found."), { status: 404 });
     if (!booking && enquiry.bookingId) booking = await Booking.findById(enquiry.bookingId);
+    if (["cancelled", "closed"].includes(enquiry.status)) throw Object.assign(new Error("This enquiry is closed."), { status: 409 });
     const identity = quoteIdentity(quoteId);
     if (!identity) throw Object.assign(new Error("Quote not found."), { status: 404 });
     const quote = await BookingQuote.findOne({
@@ -1425,13 +1428,13 @@ export async function cancelCustomerFlightEnquiry({ enquiryId, actor }) {
     const resource = await findEnquiryResource(enquiryId);
     const enquiry = await ContactLead.findOne({ ...resource.query, claimedBy: userId });
     if (!enquiry) throw Object.assign(new Error("Enquiry not found."), { status: 404 });
-    if (enquiry.product !== "trehub" || enquiry.journeyType !== "flight")
-        throw Object.assign(new Error("Only flight enquiries can be cancelled here."), {
+    if (enquiry.product !== "trehub" || !["flight", "hotel"].includes(enquiry.journeyType))
+        throw Object.assign(new Error("Only Trehub enquiries can be cancelled here."), {
             status: 409,
         });
     if (enquiry.status !== "cancelled") {
         if (!["new", "enquiry_details_added", "traveller_details_added"].includes(enquiry.status))
-            throw Object.assign(new Error("This flight enquiry can no longer be cancelled."), {
+            throw Object.assign(new Error("This enquiry can no longer be cancelled."), {
                 status: 409,
             });
         enquiry.status = "cancelled";
@@ -1467,9 +1470,11 @@ export async function saveCustomerEnquiryDetails({ enquiryId, actor, values }) {
     );
     const validated = validateProductEnquiryDetails({
         product: enquiry.product,
+        journeyType: enquiry.journeyType,
         values,
         ...context,
     });
+    if (enquiry.product === "trehub") throw Object.assign(new Error("Return to Trehub to change the selected itinerary, rooms or traveller count."), { status: 409 });
     if (!validated.valid) return { status: 422, errors: validated.errors, enquiry };
 
     const previousCount = Number(enquiry.fields?.travellerCount || 0);
