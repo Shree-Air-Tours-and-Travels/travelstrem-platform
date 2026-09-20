@@ -5,7 +5,6 @@ import {
   ConfigurableFilterPanel,
   ErrorState,
   FlightCard,
-  Preloader,
   Spinner,
   GlobalSearchCard,
   NoDataFound,
@@ -16,6 +15,7 @@ import {
   SubTitle,
   FloatingActionBar,
 } from "@packages/trem-ui";
+import TrehubPreloader from "../../../TrehubPreloader.jsx";
 import "./FlightFilters.view.scss";
 
 const labelFor = (labels, ref, fallback = "") =>
@@ -57,6 +57,7 @@ export default function FlightFiltersView({
   onSelectFlight,
 }) {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [mobileSearchVisible, setMobileSearchVisible] = useState(false);
   const searchStageRef = useRef(null);
 
@@ -72,7 +73,7 @@ export default function FlightFiltersView({
   }, [pageModel]);
 
   if (loading && !pageModel)
-    return <Preloader variant="stack" label={pageModel?.labels?.loading || ""} />;
+    return <TrehubPreloader variant="flight-list" label={pageModel?.labels?.loading} />;
   if (error || !pageModel)
     return (
       <ErrorState
@@ -104,13 +105,15 @@ export default function FlightFiltersView({
     placeholder: labelFor(labels, field.placeholderRef),
     applyLabel: labelFor(labels, field.applyLabelRef),
     clearLabel: labelFor(labels, field.clearLabelRef),
-    options:
-      field.id === "airlines"
-        ? (data.facets?.airlines || []).map((airline) => ({
-            value: airline.value,
-            label: airline.label,
-          }))
-        : resolveOptions(field.optionsRef),
+    options: (() => {
+      const facet = { airlines: "airlines", cabin: "cabins", stops: "stops" }[field.id];
+      if (!facet || !Array.isArray(data.facets?.[facet])) return resolveOptions(field.optionsRef);
+      const anyOption = resolveOptions(field.optionsRef).filter((option) => option.value === "");
+      return [
+        ...anyOption,
+        ...data.facets[facet].map(({ value, label }) => ({ value, label })),
+      ];
+    })(),
   }));
   const filterValues = { ...query, airlines: query.airlines ? query.airlines.split(",") : [] };
   const initialFlightValues = { ...query };
@@ -158,6 +161,17 @@ export default function FlightFiltersView({
       fieldErrors={searchFieldErrors}
     />
   );
+  const renderFilters = (className) => (
+    <ConfigurableFilterPanel
+      title={labelFor(labels, filterProps.titleRef)}
+      resetLabel={labelFor(labels, filterProps.resetLabelRef)}
+      fields={filterFields}
+      values={filterValues}
+      onChange={onFilterChange}
+      onReset={onResetFilters}
+      className={className}
+    />
+  );
 
   return (
     <main className="trehub-flight-list">
@@ -189,16 +203,8 @@ export default function FlightFiltersView({
         onChange={(airlines) => onFilterChange("airlines", airlines)}
       />
       <div className="trehub-flight-list__body">
-        <ConfigurableFilterPanel
-          title={labelFor(labels, filterProps.titleRef)}
-          resetLabel={labelFor(labels, filterProps.resetLabelRef)}
-          fields={filterFields}
-          values={filterValues}
-          onChange={onFilterChange}
-          onReset={onResetFilters}
-        />
+        {renderFilters("trehub-flight-list__desktop-filters")}
         <section className="trehub-flight-list__results">
-          {loading ? <Spinner label={labels.loading || ""} /> : null}
           <header>
             <div>
               <h2>{labelFor(labels, resultProps.titleRef)}</h2>
@@ -208,6 +214,7 @@ export default function FlightFiltersView({
                 })}
               </p>
             </div>
+            {loading ? <Spinner size="sm" label={labels.loading || ""} className="trehub-flight-list__sync-status" /> : null}
             <div className="trehub-flight-list__sort">
               <SingleSelect
                 label={labelFor(labels, resultProps.sortLabelRef)}
@@ -251,23 +258,40 @@ export default function FlightFiltersView({
           />
         </section>
       </div>
-      {mobileSearchVisible ? (
-        <>
-          <div className="trehub-flight-list__mobile-clearance" aria-hidden="true" />
-          <FloatingActionBar
-            hideOnDesktop
-            actions={[
-              {
-                id: "search-flights",
-                label: labelFor(labels, searchProps.mobileActionLabelRef),
-                variant: "primary",
-                iconLeft: "search",
-                onClick: () => setMobileSearchOpen(true),
-              },
-            ]}
-          />
-        </>
-      ) : null}
+      <div className="trehub-flight-list__mobile-clearance" aria-hidden="true" />
+      <FloatingActionBar
+        hideOnDesktop
+        className={`trehub-flight-list__mobile-actions${mobileSearchVisible ? " has-search-action" : ""}`}
+        actions={[
+          {
+            id: "filter-flights",
+            label: labelFor(labels, filterProps.mobileActionLabelRef),
+            variant: mobileSearchVisible ? "outline" : "primary",
+            iconLeft: "filter",
+            onClick: () => setMobileFiltersOpen(true),
+          },
+          ...(mobileSearchVisible
+            ? [
+                {
+                  id: "search-flights",
+                  label: labelFor(labels, searchProps.mobileActionLabelRef),
+                  variant: "primary",
+                  iconLeft: "search",
+                  onClick: () => setMobileSearchOpen(true),
+                },
+              ]
+            : []),
+        ]}
+      />
+      <BottomSheet
+        open={mobileFiltersOpen}
+        onClose={() => setMobileFiltersOpen(false)}
+        title={labelFor(labels, filterProps.mobileSheetTitleRef)}
+        closeLabel={labelFor(labels, filterProps.mobileCloseLabelRef)}
+        className="trehub-flight-list__filter-sheet"
+      >
+        {renderFilters("trehub-flight-list__sheet-filters")}
+      </BottomSheet>
       <BottomSheet
         open={mobileSearchOpen}
         onClose={() => setMobileSearchOpen(false)}

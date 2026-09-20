@@ -358,6 +358,31 @@ export const buildTourSearchPipeline = (
                         ],
                     },
                 },
+                _destinationKeys: {
+                    $setUnion: [
+                        [
+                            { $toLower: { $ifNull: ["$primaryDestination.cityId", ""] } },
+                            { $toLower: { $ifNull: ["$primaryDestination.cityName", ""] } },
+                            { $toLower: { $ifNull: ["$city.to", ""] } },
+                            { $toLower: { $ifNull: ["$address.city", ""] } },
+                        ],
+                        {
+                            $reduce: {
+                                input: { $ifNull: ["$destinations", []] },
+                                initialValue: [],
+                                in: {
+                                    $concatArrays: [
+                                        "$$value",
+                                        [
+                                            { $toLower: { $ifNull: ["$$this.cityId", ""] } },
+                                            { $toLower: { $ifNull: ["$$this.cityName", ""] } },
+                                        ],
+                                    ],
+                                },
+                            },
+                        },
+                    ],
+                },
                 _countryName: countryNameExpression,
                 _countryKey: { $toLower: countryNameExpression },
                 _agencyName: {
@@ -537,7 +562,7 @@ export const buildTourSearchPipeline = (
     ];
 
     const dynamicMatch = {};
-    if (destinationCandidates.length) dynamicMatch._destinationKey = { $in: destinationCandidates };
+    if (destinationCandidates.length) dynamicMatch._destinationKeys = { $in: destinationCandidates };
     if (countryCandidates.length) dynamicMatch._countryKey = { $in: countryCandidates };
     if (agencyCandidates.length) dynamicMatch._agencyKey = { $in: agencyCandidates };
     if (filters.duration.minDays != null || filters.duration.maxDays != null) {

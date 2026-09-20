@@ -163,7 +163,9 @@
   color: var(--nav-text, var(--text));
   font-size: $font-size-sm;
   font-weight: $font-semibold;
+  text-decoration: none;
   text-align: left;
+  cursor: pointer;
   transition:
     background $duration-fast $ease-standard,
     color $duration-fast $ease-standard;

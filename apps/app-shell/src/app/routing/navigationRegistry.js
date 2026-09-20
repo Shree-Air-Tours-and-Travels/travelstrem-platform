@@ -10,11 +10,12 @@ const RENDERERS = new Set([
 const KINDS = new Set(["tab", "remote", "internal", "external"]);
 const GUEST_ACCESSIBLE_DESTINATIONS = new Set([
   "overview",
+  "articles",
   PRODUCT_TYPE.TREVIO,
   PRODUCT_TYPE.TREVISTA,
   PRODUCT_TYPE.TREHUB,
 ]);
-const MOBILE_PANEL_ACTIONS = new Set(["open-primary-action"]);
+const MOBILE_PANEL_ACTIONS = new Set(["open-primary-action", "open-profile-menu"]);
 
 export const isGuestAccessibleDestination = (destination) =>
   GUEST_ACCESSIBLE_DESTINATIONS.has(destination?.id);
@@ -35,9 +36,9 @@ export const FALLBACK_NAVIGATION_CONFIG = {
     mobile: {
       footer: "hidden",
       appHeader: {
-        compact: true,
+        compact: false,
         search: false,
-        profile: false,
+        profile: true,
       },
     },
   },
@@ -61,7 +62,7 @@ export const FALLBACK_NAVIGATION_CONFIG = {
         emphasis: true,
       },
       { id: "support", label: "Support", icon: "support", target: "support" },
-      { id: "profile", label: "Profile", icon: "user", target: "profile" },
+      { id: "profile", label: "Profile", icon: "user", action: "open-profile-menu" },
     ],
   },
   destinations: [
@@ -82,12 +83,29 @@ export const FALLBACK_NAVIGATION_CONFIG = {
       activeId: "favorites",
     },
     {
+      id: "dashboard",
+      kind: "tab",
+      renderer: "app-shell",
+      tab: "dashboard",
+      path: "/",
+      activeId: "dashboard",
+    },
+    {
       id: "bookings",
       kind: "tab",
       renderer: "app-shell",
       tab: "bookings",
       path: "/",
       activeId: "bookings",
+    },
+    {
+      id: "articles",
+      kind: "tab",
+      renderer: "app-shell",
+      tab: "articles",
+      path: "/articles",
+      activeId: "articles",
+      patterns: ["/articles"],
     },
     {
       id: "profile",

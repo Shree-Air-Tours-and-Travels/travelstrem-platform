@@ -1,22 +1,18 @@
 import React from "react";
-import { Button, DatePicker, Dropdown, Icon, InputField } from "@packages/trem-ui";
+import { Button, GlobalSearchCard, Icon } from "@packages/trem-ui";
 
 const DEFAULT_HERO_IMAGE =
   "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1800&q=85";
 
-const toOptionItems = (options, currentValue, onSelect) =>
-  (Array.isArray(options) ? options : []).map((option) => {
-    const label = option && typeof option === "object" ? option.label : option;
-    const value = option && typeof option === "object" ? (option.value ?? option.label) : option;
-    return {
-      id: String(value),
-      label: String(label),
-      active: String(value) === String(currentValue),
-      onClick: () => onSelect(value),
-    };
-  });
-
 const TITLE_TONES = new Set(["product", "brand"]);
+const searchOptionsFor = (options, anyLabel) => [
+  { value: "", label: anyLabel },
+  ...options.map((option) =>
+    option && typeof option === "object"
+      ? { value: option.value ?? option.label, label: option.label ?? option.value }
+      : { value: option, label: option },
+  ),
+];
 
 const renderTitle = (title, segments) => {
   const titleSegments = Array.isArray(segments) && segments.length ? segments : [{ text: title }];
@@ -35,28 +31,6 @@ const renderTitle = (title, segments) => {
   });
 };
 
-function HeroSelectField({ label, anyLabel, options, value, onSelect }) {
-  const items = [
-    { id: "", label: anyLabel, value: "", onClick: () => onSelect("") },
-    ...toOptionItems(options, value, onSelect),
-  ];
-
-  return (
-    <div className="tours-page__hero-field">
-      <Dropdown
-        variant="select"
-        label={label}
-        placeholder={anyLabel}
-        value={value}
-        items={items}
-        hoverable={false}
-        align="left"
-        closeOnSelect
-      />
-    </div>
-  );
-}
-
 export default function HeroBannerView({
   labels,
   pageTitle,
@@ -65,12 +39,6 @@ export default function HeroBannerView({
   onSearch,
   onCustomise,
 }) {
-  const [destination, setDestination] = React.useState("");
-  const [departureDate, setDepartureDate] = React.useState("");
-  const [travellers, setTravellers] = React.useState("");
-  const [interest, setInterest] = React.useState("");
-  const [maxBudget, setMaxBudget] = React.useState("");
-
   const heading = pageTitle || labels.pageTitle || "";
   const titleSegments = labels.titleSegments;
   const eyebrow = labels.eyebrow || "";
@@ -88,15 +56,13 @@ export default function HeroBannerView({
     ? searchOptions.interestOptions
     : [];
 
-  const handleSearchSubmit = (event) => {
-    event.preventDefault();
-    const payload = { destination, departureDate, travellers, interest, maxBudget };
-    if (typeof onSearch === "function") {
-      onSearch(payload);
-      return;
-    }
-    onExplore?.();
-  };
+  const searchFields = [
+    { id: "destination", label: searchLabels.destination || "Destination", placeholder: anyLabels.destination || "Any destination", type: "select", options: searchOptionsFor(destinationOptions, anyLabels.destination || "Any destination") },
+    { id: "departureDate", label: searchLabels.departureDate || "Departure date", type: "date", placeholder: anyLabels.departureDate || "Any date" },
+    { id: "travellers", label: searchLabels.travellers || "Travellers", type: "number", min: 1, placeholder: anyLabels.travellers || "Any group size" },
+    { id: "interest", label: searchLabels.interest || "Interest", placeholder: anyLabels.interest || "Any interest", type: "select", options: searchOptionsFor(interestOptions, anyLabels.interest || "Any interest") },
+    { id: "maxBudget", label: searchLabels.maxBudget || "Maximum budget", type: "number", min: 0, placeholder: anyLabels.maxBudget || "Any budget" },
+  ];
 
   return (
     <header className="tours-page__hero" style={{ "--tours-hero-bg": `url('${heroImage}')` }}>
@@ -146,70 +112,15 @@ export default function HeroBannerView({
           )}
         </div>
 
-        <div className="tours-page__hero-panel">
-          <form className="tours-page__hero-search" onSubmit={handleSearchSubmit}>
-            <HeroSelectField
-              label={searchLabels.destination || "Destination"}
-              anyLabel={anyLabels.destination || "Any destination"}
-              options={destinationOptions}
-              value={destination}
-              onSelect={setDestination}
-            />
-            <div
-              className="tours-page__hero-field trem-input trem-input--labelled tours-page__hero-date"
-            >
-              <span className="trem-input__label">
-                {searchLabels.departureDate || "Departure date"}
-              </span>
-              <DatePicker
-                value={departureDate}
-                placeholder={anyLabels.departureDate || "Any date"}
-                onChange={setDepartureDate}
-              />
-            </div>
-            <div className="tours-page__hero-field">
-              <InputField
-                variant="number"
-                label={searchLabels.travellers || "Travellers"}
-                placeholder={anyLabels.travellers || "Any group size"}
-                value={travellers}
-                min={1}
-                max={500}
-                step={1}
-                inputMode="numeric"
-                onChange={setTravellers}
-              />
-            </div>
-            <HeroSelectField
-              label={searchLabels.interest || "Interest"}
-              anyLabel={anyLabels.interest || "Any interest"}
-              options={interestOptions}
-              value={interest}
-              onSelect={setInterest}
-            />
-            <div className="tours-page__hero-field">
-              <InputField
-                variant="number"
-                label={searchLabels.maxBudget || "Maximum budget"}
-                placeholder={anyLabels.maxBudget || "Any budget"}
-                value={maxBudget}
-                min={0}
-                step={1000}
-                inputMode="numeric"
-                onChange={setMaxBudget}
-              />
-            </div>
-            <Button
-              variant="solid"
-              color="primary"
-              size="medium"
-              type="submit"
-              text={searchLabels.submit || "Search packages"}
-              iconLeft="search"
-              primaryClassName="tours-page__hero-btn tours-page__hero-btn--full tours-page__hero-btn--submit"
-            />
-          </form>
-        </div>
+        <GlobalSearchCard
+          className="tours-page__hero-search-card"
+          variant="tour"
+          modes={[{ id: "tour", heading: searchLabels.heading || "Search holiday packages & tours" }]}
+          fieldsByMode={{ tour: searchFields }}
+          labels={{ submit: searchLabels.submit || "Search packages" }}
+          submitLabelRef="submit"
+          onSearch={({ values }) => onSearch ? onSearch(values) : onExplore?.()}
+        />
       </div>
     </header>
   );

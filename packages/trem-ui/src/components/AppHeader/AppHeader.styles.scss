@@ -1,6 +1,20 @@
 @import "../../styles/base/typography";
 
 .trem-app-header {
+  --text: #eef5ff;
+  --title: #ffffff;
+  --heading: #ffffff;
+  --muted: #d9e5ff;
+  --card-bg: #07172d;
+  --surface: rgba(255, 255, 255, 0.08);
+  --surface-inset: rgba(255, 255, 255, 0.1);
+  --surface-glass-strong: rgba(7, 20, 41, 0.98);
+  --border: rgba(174, 204, 255, 0.22);
+  --primary-soft: rgba(138, 165, 255, 0.24);
+  --primary-softer: rgba(138, 165, 255, 0.16);
+  --color-primary: #8fa8ff;
+  --color-primary-dark: #aec0ff;
+  --color-on-primary: #07142a;
   position: fixed;
   top: 0;
   left: var(--trem-app-header-sidebar-offset, 260px);
@@ -14,10 +28,25 @@
   gap: $space-4;
   padding: $space-2 $space-5;
   border-bottom: 1px solid var(--border);
-  background: var(--surface-glass-strong, var(--card-bg));
-  box-shadow: var(--shadow-sm);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent 42%),
+    var(--surface-glass-strong, var(--card-bg));
+  box-shadow: 0 14px 34px rgba(3, 10, 26, 0.22);
   backdrop-filter: blur(18px);
   transition: left $duration-slow $ease-standard;
+}
+
+.trem-app-header .brand-logo__image--light {
+  display: none;
+}
+
+.trem-app-header .brand-logo__image--dark {
+  display: block;
+}
+
+.trem-app-header .brand-logo__mark {
+  border-color: rgba(170, 204, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .trem-app-header__spacer {
@@ -218,6 +247,30 @@
   gap: $space-2;
 }
 
+.trem-app-header__link-tabs {
+  width: max-content;
+  max-width: 100%;
+  justify-self: center;
+
+  .trem-link-tabs__link {
+    color: var(--text);
+    opacity: 0.82;
+
+    &:hover,
+    &:focus-visible {
+      background: rgba(138, 165, 255, 0.14);
+      color: #ffffff;
+      opacity: 1;
+    }
+
+    &.is-active {
+      background: rgba(138, 165, 255, 0.16);
+      color: var(--color-primary);
+      opacity: 1;
+    }
+  }
+}
+
 .trem-app-header__product {
   display: inline-flex;
   align-items: center;
@@ -249,12 +302,12 @@
   gap: $space-2;
   padding: 0 $space-4;
   border-radius: $radius-sm;
-  background: var(--color-primary);
+  background: #8fa8ff;
   color: var(--color-on-primary);
   font-size: $font-size-sm;
   font-weight: $font-semibold;
   white-space: nowrap;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 10px 24px rgba(30, 70, 190, 0.18);
 
   &:disabled {
     opacity: 0.48;
@@ -331,7 +384,7 @@
 .trem-app-header__notification-footer { flex: 0 0 auto; display: flex; justify-content: space-between; gap: $space-2; padding: $space-2; border-top: 1px solid var(--border); background: var(--surface); }
 .trem-app-header__notification-footer button { border: 0; background: transparent; color: var(--color-primary); font: inherit; font-size: $font-size-sm; font-weight: $font-semibold; cursor: pointer; }
 
-.trem-app-header__action > span {
+.trem-app-header__action-count {
   position: absolute;
   top: 0;
   right: 0;
@@ -346,6 +399,35 @@
   color: var(--color-on-primary);
   font-size: 0.5625rem;
   font-weight: $font-bold;
+}
+
+.trem-app-header__action--labelled {
+  width: auto;
+  min-width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  padding: 0 $space-3;
+  gap: $space-2;
+  border: 0;
+  border-radius: $radius-md;
+  background: transparent;
+  line-height: 1;
+
+  &:hover,
+  &:focus-visible {
+    outline: 0;
+    background: var(--primary-softer);
+    color: var(--color-primary-dark, var(--color-primary));
+  }
+}
+
+.trem-app-header__action-label {
+  font-size: $font-size-sm;
+  font-weight: $font-semibold;
+  white-space: nowrap;
 }
 
 .trem-app-header__action--mobile-only {
@@ -458,8 +540,23 @@
 }
 
 @media (min-width: #{$breakpoint-md + 1px}) {
+  .trem-app-header.has-navigation-tabs {
+    grid-template-columns: auto minmax(340px, 1fr) auto;
+
+    .trem-app-header__mobile-row,
+    .trem-app-header__brand {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+    }
+
+    .trem-app-header__brand {
+      overflow: hidden;
+    }
+  }
+
   .trem-app-header--top-dropdown-shell {
-    grid-template-columns: auto auto minmax(0, 1fr) auto;
+    grid-template-columns: auto minmax(18rem, 1fr) auto;
 
     .trem-app-header__mobile-row,
     .trem-app-header__brand {
@@ -470,6 +567,11 @@
 
     .trem-app-header__brand {
       overflow: hidden;
+    }
+
+    .trem-app-header__search {
+      width: 100%;
+      justify-self: center;
     }
 
     .trem-app-header__desktop-navigation {
@@ -516,7 +618,7 @@
 }
 
 // Keep the single-row header stable when the sidebar reduces tablet width.
-@media (min-width: #{$breakpoint-md + 1px}) and (max-width: $breakpoint-tablet-landscape) {
+@media (min-width: #{$breakpoint-md + 1px}) and (max-width: $breakpoint-laptop) {
   .trem-app-header {
     grid-template-columns: minmax(180px, 1fr) auto;
     gap: $space-3;
@@ -524,7 +626,7 @@
   }
 
   .trem-app-header--top-dropdown-shell {
-    grid-template-columns: auto auto minmax(0, 1fr) auto;
+    grid-template-columns: auto minmax(12rem, 1fr) auto;
 
     .brand-logo__subtitle,
     .trem-app-header__desktop-navigation > span {
@@ -534,6 +636,19 @@
 
   .trem-app-header__actions {
     gap: $space-1;
+  }
+
+  .trem-app-header__link-tabs .trem-link-tabs__link {
+    padding-inline: $space-3;
+  }
+
+  .trem-app-header__action--labelled {
+    width: 40px;
+    padding: 0;
+
+    .trem-app-header__action-label {
+      display: none;
+    }
   }
 
   .trem-app-header__search {
@@ -640,6 +755,26 @@
     height: 40px;
   }
 
+  .trem-app-header__link-tabs {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+  }
+
+  .trem-app-header.has-navigation-tabs {
+    height: 64px;
+    grid-template-rows: 48px;
+
+    .trem-app-header__link-tabs {
+      display: none;
+    }
+  }
+
+  .trem-app-header__spacer--link-tabs {
+    height: 64px;
+    flex-basis: 64px;
+  }
+
   .trem-app-header__search kbd,
   .trem-app-header__primary,
   .trem-app-header__user strong,
@@ -673,6 +808,19 @@
   .trem-app-header__theme {
     grid-column: 3;
     grid-row: 1;
+  }
+
+  .trem-app-header.has-navigation-tabs {
+    .trem-app-header__actions .trem-app-header__user-dropdown,
+    .trem-app-header__actions .trem-app-header__user-dropdown .trem-dropdown__trigger,
+    .trem-app-header__user {
+      grid-column: 3;
+      grid-row: 1;
+    }
+  }
+
+  .trem-app-header__action--desktop-only {
+    display: none;
   }
 
   .trem-app-header__actions .trem-app-header__menu {
@@ -910,5 +1058,31 @@
       grid-column: 5;
       grid-row: 1;
     }
+  }
+
+  .trem-app-header.has-header-actions.trem-app-header--mobile-profile-hidden {
+    grid-template-columns: minmax(0, 1fr) repeat(3, var(--trem-mobile-header-action-size));
+
+    .trem-app-header__search {
+      grid-column: 1 / 4;
+    }
+
+    .trem-app-header__actions .trem-app-header__menu {
+      grid-column: 4;
+      grid-row: 1;
+    }
+  }
+
+  .trem-app-header.has-navigation-tabs.has-header-actions {
+    .trem-app-header__user,
+    .trem-app-header__actions .trem-app-header__user-dropdown,
+    .trem-app-header__actions .trem-app-header__user-dropdown .trem-dropdown__trigger {
+      grid-column: 4;
+      grid-row: 1;
+    }
+  }
+
+  .trem-app-header__action.trem-app-header__action--desktop-only {
+    display: none;
   }
 }

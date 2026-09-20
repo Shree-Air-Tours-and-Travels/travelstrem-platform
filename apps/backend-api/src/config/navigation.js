@@ -15,9 +15,9 @@ export default {
         mobile: {
             footer: "hidden",
             appHeader: {
-                compact: true,
+                compact: false,
                 search: false,
-                profile: false,
+                profile: true,
             },
         },
     },
@@ -41,13 +41,15 @@ export default {
                 emphasis: true,
             },
             { id: "support", label: "Support", icon: "support", target: "support" },
-            { id: "profile", label: "Profile", icon: "user", target: "profile" },
+            { id: "profile", label: "Profile", icon: "user", action: "open-profile-menu" },
         ],
     },
     destinations: [
         { id: "overview", kind: "tab", tab: "overview", path: "/", activeId: "overview" },
+        { id: "dashboard", kind: "tab", tab: "dashboard", path: "/", activeId: "dashboard" },
         { id: "favorites", kind: "tab", tab: "favorites", path: "/", activeId: "favorites" },
         { id: "bookings", kind: "tab", tab: "bookings", path: "/", activeId: "bookings" },
+        { id: "articles", kind: "tab", tab: "articles", path: "/articles", activeId: "articles", patterns: ["/articles"] },
         { id: "profile", kind: "tab", tab: "profile", path: "/", activeId: "profile" },
         { id: "notifications", kind: "tab", tab: "notifications", path: "/notifications", activeId: "notifications" },
         {

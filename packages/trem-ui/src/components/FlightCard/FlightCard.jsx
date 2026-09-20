@@ -16,6 +16,8 @@ const formatMoney = (amount, currency) =>
 const displayTime = (value) => value ? new Intl.DateTimeFormat("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(value)) : "";
 const displayDate = (value) => value ? new Intl.DateTimeFormat("en-IN", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(value)) : "";
 const displayCabin = (value) => String(value || "").toLowerCase().replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase());
+const displayDuration = (minutes) => minutes >= 60
+  ? `${Math.floor(minutes / 60)}h ${minutes % 60}m` : `${minutes}m`;
 
 const normalizeFlight = (flight) => {
   if (!Array.isArray(flight.segments)) return flight;
@@ -24,6 +26,13 @@ const normalizeFlight = (flight) => {
   const first = journey[0] || {};
   const last = journey.at(-1) || first;
   const stops = Math.max(0, journey.length - 1);
+  const durationMinutes = journey.reduce((total, segment) => total + Number(segment.durationMinutes || 0), 0);
+  const journeys = flight.journeys?.length ? flight.journeys : [{
+    origin: { time: displayTime(first.departureDateTime), code: first.origin?.iataCode, city: first.origin?.city, date: displayDate(first.departureDateTime) },
+    destination: { time: displayTime(last.arrivalDateTime), code: last.destination?.iataCode, city: last.destination?.city },
+    durationMinutes,
+    stopsLabel: stops ? `${stops} stop${stops === 1 ? "" : "s"}` : "Non-stop",
+  }];
   return {
     ...flight,
     airline: first.airline,
@@ -31,14 +40,13 @@ const normalizeFlight = (flight) => {
     badge: flight.fare?.brand,
     origin: { time: displayTime(first.departureDateTime), code: first.origin?.iataCode, city: first.origin?.city },
     destination: { time: displayTime(last.arrivalDateTime), code: last.destination?.iataCode, city: last.destination?.city },
-    duration: journey.reduce((total, segment) => total + Number(segment.durationMinutes || 0), 0) >= 60
-      ? `${Math.floor(journey.reduce((total, segment) => total + Number(segment.durationMinutes || 0), 0) / 60)}h ${journey.reduce((total, segment) => total + Number(segment.durationMinutes || 0), 0) % 60}m`
-      : `${journey.reduce((total, segment) => total + Number(segment.durationMinutes || 0), 0)}m`,
+    duration: displayDuration(durationMinutes),
     stopsLabel: stops ? `${stops} stop${stops === 1 ? "" : "s"}` : "Non-stop",
-    departureDate: displayDate(first.departureDateTime),
+    departureDate: journeys[0]?.origin?.date || displayDate(first.departureDateTime),
+    journeys,
     cabinLabel: displayCabin(flight.fare?.cabin),
     seatsLabel: flight.availability?.message,
-    price: { amount: Number(flight.price?.perTravellerTotal ?? flight.price?.total ?? 0) / 100, currency: flight.price?.currency || flight.currency },
+    price: { amount: Number(flight.price?.total ?? 0) / 100, currency: flight.price?.currency || flight.currency },
   };
 };
 
@@ -46,6 +54,7 @@ export default function FlightCard({ flight = {}, labels = {}, onSelect, hideAct
   const card = normalizeFlight(flight);
   const origin = card.origin || {};
   const destination = card.destination || {};
+  const journeys = card.journeys?.length ? card.journeys : [{ origin, destination, duration: card.duration, stopsLabel: card.stopsLabel }];
 
   return (
     <article className={`trem-flight-card${className ? ` ${className}` : ""}`}>
@@ -75,22 +84,27 @@ export default function FlightCard({ flight = {}, labels = {}, onSelect, hideAct
         ) : null}
       </header>
 
-      <div className="trem-flight-card__journey">
-        <div>
-          <strong>{origin.time}</strong>
-          <span>{origin.code}</span>
-          <small>{origin.city}</small>
-        </div>
-        <div className="trem-flight-card__route">
-          <small>{card.duration}</small>
-          <span><Icon name="flight" size={22} /></span>
-          <small>{card.stopsLabel}</small>
-        </div>
-        <div>
-          <strong>{destination.time}</strong>
-          <span>{destination.code}</span>
-          <small>{destination.city}</small>
-        </div>
+      <div className="trem-flight-card__journeys">
+        {journeys.map((journey, index) => (
+          <div className="trem-flight-card__journey" key={journey.index ?? index}>
+            {journeys.length > 1 ? <small className="trem-flight-card__journey-label">{journey.label || `Journey ${index + 1}`}</small> : null}
+            <div>
+              <strong>{journey.origin?.time}</strong>
+              <span>{journey.origin?.code}</span>
+              <small>{journey.origin?.date || journey.origin?.city}</small>
+            </div>
+            <div className="trem-flight-card__route">
+              <small>{journey.duration || displayDuration(journey.durationMinutes || 0)}</small>
+              <span><Icon name="flight" size={22} /></span>
+              <small>{journey.stopsLabel}</small>
+            </div>
+            <div>
+              <strong>{journey.destination?.time}</strong>
+              <span>{journey.destination?.code}</span>
+              <small>{journey.destination?.date || journey.destination?.city}</small>
+            </div>
+          </div>
+        ))}
       </div>
 
       <div className="trem-flight-card__meta">

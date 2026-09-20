@@ -1,5 +1,6 @@
 @import "@packages/trem-design-tokens/scss";
 
+
 .trem-hotel-card {
   display: grid;
   grid-template-columns: minmax(17rem, 0.9fr) minmax(24rem, 1.25fr) minmax(17rem, 0.72fr);
@@ -345,7 +346,39 @@
   }
 
   &--no-image {
-    grid-template-columns: minmax(0, 1fr) minmax(17rem, 0.5fr);
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  &--no-image &__price {
+    grid-column: auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(14rem, 0.45fr);
+  }
+
+  &--no-image &__price-copy,
+  &--no-image &__price-breakdown {
+    grid-column: 1;
+  }
+
+  &--no-image &__price-copy {
+    grid-row: 1;
+  }
+
+  &--no-image &__price-breakdown {
+    grid-row: 2;
+  }
+
+  &--no-image &__cancellation,
+  &--no-image &__actions {
+    grid-column: 2;
+  }
+
+  &--no-image &__cancellation {
+    grid-row: 1;
+  }
+
+  &--no-image &__actions {
+    grid-row: 2;
   }
 
   &--no-price {
@@ -364,10 +397,42 @@
     height: calc((#{$space-20} * 2) + #{$space-16});
   }
 
-  &--compact &__highlights,
-  &--compact &__facts,
-  &--compact &__body > p {
+  &--compact &__price-breakdown {
     display: none;
+  }
+
+  &--compact &__description {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  &--compact &__facts {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+    padding-top: $space-2;
+  }
+
+  &--compact &__facts > div {
+    padding-inline: $space-2;
+  }
+
+  &--compact &__body,
+  &--compact &__price {
+    gap: $space-2;
+    padding-block: 0;
+  }
+
+  &--compact &__price {
+    padding: $space-3;
+  }
+
+  &--compact &__price-copy > strong {
+    font-size: $font-size-xl;
+  }
+
+  &--compact &__cancellation {
+    padding-top: $space-2;
   }
 
   &--vertical {
@@ -440,6 +505,10 @@
       grid-column: auto;
       display: flex;
       padding: $space-4;
+    }
+
+    &--no-image &__price {
+      display: flex;
     }
 
     &__cancellation,

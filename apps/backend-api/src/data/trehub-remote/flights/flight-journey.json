@@ -106,6 +106,7 @@
         "cabin": "Cabin",
         "priceFrom": "From",
         "perTraveller": "per traveller",
+        "totalFare": "total fare",
         "totalForTravellers": "Total for {count} travellers",
         "viewFlight": "Selected flight"
       },

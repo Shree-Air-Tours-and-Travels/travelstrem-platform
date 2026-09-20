@@ -804,6 +804,7 @@ async function loadQuoteContext(enquiry) {
         asText(enquiry.customizationAnswers),
         asText(enquiry.selection?.hotelSelections),
         asText(enquiry.selection?.hotelRequests),
+        asText(enquiry.fields?.room),
         asText(enquiry.customizationSnapshot?.selectedAddOnIds),
         asText(enquiry.fields?.message || enquiry.fields?.notes),
     ].filter(Boolean).join(". ") || "No additional customer customization has been recorded.";

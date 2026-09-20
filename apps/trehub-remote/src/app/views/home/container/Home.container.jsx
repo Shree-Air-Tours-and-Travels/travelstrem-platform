@@ -41,7 +41,7 @@ export default function HomeContainer() {
     if (choice) params.set("choice", choice);
     Object.entries(values).forEach(([key, value]) => {
       if (value === "" || value == null) return;
-      params.set(key, typeof value === "object" ? JSON.stringify(value) : String(value));
+      params.set(key, Array.isArray(value) ? value.join(",") : String(value));
     });
     navigate(`${resultsPath}${params.size ? `?${params.toString()}` : ""}`);
   };

@@ -3,13 +3,13 @@ import {
   BenefitCard,
   ClientShowcase,
   ErrorState,
-  Preloader,
   Breadcrumbs,
   GlobalSearchCard,
   Paragraph,
   PopularLocations,
   SubTitle,
 } from "@packages/trem-ui";
+import TrehubPreloader from "../TrehubPreloader.jsx";
 
 const labelFor = (labels = {}, ref, fallback = "") =>
   ref ? labels[ref] || fallback || ref : fallback;
@@ -70,7 +70,7 @@ function WhyTrehub({ widget = {}, labels = {} }) {
 }
 
 export default function HomeView({ loading, error, pageModel, onSearch }) {
-  if (loading) return <Preloader variant="hero" label={pageModel?.labels?.loading || ""} />;
+  if (loading) return <TrehubPreloader variant="home" label={pageModel?.labels?.loading} />;
 
   if (error || !pageModel) {
     return (

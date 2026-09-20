@@ -2,6 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import BrandLogo from "../BrandLogo/BrandLogo.jsx";
 import Dropdown from "../Dropdown/Dropdown.jsx";
+import LinkTabs from "../LinkTabs/LinkTabs.jsx";
 import Icon from "../../icons/Icon/Icon.jsx";
 import {
   isAccountAvatarIcon,
@@ -65,10 +66,13 @@ export default function AppHeader({
   primaryActionOpen,
   onPrimaryActionOpenChange,
   onPrimaryActionSelect,
+  userMenuOpen,
+  onUserMenuOpenChange,
 }) {
   const brand = config.brand || {};
   const search = config.search || {};
   const primaryAction = config.primaryAction || {};
+  const navigationTabs = config.navigationTabs || {};
   const productMenu = config.productMenu || {};
   const notification = config.notification || {};
   const themeAction = config.themeAction || {};
@@ -114,8 +118,18 @@ export default function AppHeader({
       onClick: () => {
         if (item.type === "external" && item.href) window.location.assign(item.href);
         else if (item.action) onAction?.(item.action, item);
+        else if (item.target) onAction?.("navigate", item);
       },
     }));
+  if (themeAction.placement === "profile") {
+    userItems.unshift({
+      id: "theme",
+      label: themeLabel,
+      icon: themeIcon,
+      onClick: onToggleTheme,
+    });
+  }
+  const tabItems = (navigationTabs.items || []).filter((item) => !item.hide);
   const productItems = (productMenu.items || [])
     .filter((item) => !item.hide)
     .map((item) => ({
@@ -151,7 +165,7 @@ export default function AppHeader({
   return (
     <>
       <header
-        className={`trem-app-header${config.variant ? ` trem-app-header--${config.variant}` : ""}${usesTopDropdown ? " trem-app-header--top-dropdown-shell" : ""}${headerActions.length ? " has-header-actions" : ""}${headerActions.some((item) => item.mobileOnly) ? " has-mobile-actions" : ""}${mobileHeaderClasses ? ` ${mobileHeaderClasses}` : ""}`}
+        className={`trem-app-header${config.variant ? ` trem-app-header--${config.variant}` : ""}${usesTopDropdown ? " trem-app-header--top-dropdown-shell" : ""}${tabItems.length ? " has-navigation-tabs" : ""}${search.hide ? " is-search-hidden" : ""}${headerActions.length ? " has-header-actions" : ""}${headerActions.some((item) => item.mobileOnly) ? " has-mobile-actions" : ""}${mobileHeaderClasses ? ` ${mobileHeaderClasses}` : ""}`}
         aria-label={config.ariaLabel || "Application header"}
         style={{
           "--trem-app-header-sidebar-offset": usesTopDropdown
@@ -174,28 +188,43 @@ export default function AppHeader({
           </div>
         </div>
 
-        {usesTopDropdown ? (
-          <button
-            type="button"
-            className="trem-app-header__desktop-navigation"
-            aria-label={
-              desktopNavigationOpen
-                ? navigationConfig.closeLabel || "Close navigation"
-                : navigationConfig.openLabel || "Open navigation"
-            }
-            aria-controls={navigationConfig.panelId}
-            aria-expanded={desktopNavigationOpen}
-            onClick={onDesktopNavigationToggle}
-          >
-            <Icon name={desktopNavigationOpen ? "menuClose" : "menuOpen"} size={20} />
-            <span>{navigationConfig.label || "Explore"}</span>
-            <Icon name="chevronDown" size={16} />
-          </button>
-        ) : null}
+        {!search.hide ? <GlobalSearch config={search} onSearch={onSearch} onSelect={onSearchSelect} /> : null}
 
-        <GlobalSearch config={search} onSearch={onSearch} onSelect={onSearchSelect} />
+        <LinkTabs
+          className="trem-app-header__link-tabs"
+          ariaLabel={navigationTabs.ariaLabel}
+          options={tabItems.map((item) => ({
+            ...item,
+            endIcon: item.action === "toggle-navigation" ? "chevronDown" : item.endIcon,
+            expanded: item.action === "toggle-navigation" ? desktopNavigationOpen : undefined,
+            controls: item.action === "toggle-navigation" ? navigationConfig.panelId : undefined,
+          }))}
+          onSelect={(item) => {
+            if (item.action === "toggle-navigation") onDesktopNavigationToggle?.();
+            else onAction?.("navigate", item);
+          }}
+        />
 
         <div className="trem-app-header__actions">
+          {usesTopDropdown && !tabItems.length ? (
+            <button
+              type="button"
+              className="trem-app-header__desktop-navigation"
+              aria-label={
+                desktopNavigationOpen
+                  ? navigationConfig.closeLabel || "Close navigation"
+                  : navigationConfig.openLabel || "Open navigation"
+              }
+              aria-controls={navigationConfig.panelId}
+              aria-expanded={desktopNavigationOpen}
+              onClick={onDesktopNavigationToggle}
+            >
+              <Icon name="compass" size={20} />
+              <span>{navigationConfig.label || "Explore"}</span>
+              <Icon name="chevronDown" size={16} />
+            </button>
+          ) : null}
+
           {productMenu.label && productItems.length ? (
             <Dropdown
               className="trem-app-header__product-dropdown"
@@ -246,7 +275,7 @@ export default function AppHeader({
             <button
               key={item.id || item.label}
               type="button"
-              className={`trem-app-header__icon-button trem-app-header__action${item.mobileOnly ? " trem-app-header__action--mobile-only" : ""}${item.active ? " is-active" : ""}`.trim()}
+              className={`trem-app-header__icon-button trem-app-header__action${item.mobileOnly ? " trem-app-header__action--mobile-only" : ""}${item.desktopOnly ? " trem-app-header__action--desktop-only" : ""}${item.variant === "labelled" ? " trem-app-header__action--labelled" : ""}${item.active ? " is-active" : ""}`.trim()}
               aria-label={item.ariaLabel || item.label}
               title={item.label}
               disabled={item.disabled}
@@ -256,7 +285,8 @@ export default function AppHeader({
               }}
             >
               <Icon name={item.icon || "circle"} size={item.iconSize || 21} />
-              {item.count ? <span>{item.count > 9 ? "9+" : item.count}</span> : null}
+              {item.variant === "labelled" ? <span className="trem-app-header__action-label">{item.label}</span> : null}
+              {item.count ? <span className="trem-app-header__action-count">{item.count > 9 ? "9+" : item.count}</span> : null}
             </button>
           ))}
 
@@ -310,15 +340,17 @@ export default function AppHeader({
             </button>
           ) : null}
 
-          <button
-            type="button"
-            className="trem-app-header__icon-button trem-app-header__theme"
-            aria-label={themeLabel}
-            title={themeLabel}
-            onClick={onToggleTheme}
-          >
-            <Icon name={themeIcon} size={21} />
-          </button>
+          {themeAction.placement !== "profile" ? (
+            <button
+              type="button"
+              className="trem-app-header__icon-button trem-app-header__theme"
+              aria-label={themeLabel}
+              title={themeLabel}
+              onClick={onToggleTheme}
+            >
+              <Icon name={themeIcon} size={21} />
+            </button>
+          ) : null}
 
           {userConfig.menuEnabled !== false && userItems.length ? (
             <Dropdown
@@ -328,6 +360,8 @@ export default function AppHeader({
               items={userItems}
               portalWidth={280}
               portalClassName="trem-app-header__user-menu"
+              open={userMenuOpen}
+              onOpenChange={onUserMenuOpenChange}
               trigger={() => userTrigger}
             />
           ) : (
@@ -350,7 +384,7 @@ export default function AppHeader({
         </div>
       </header>
       <div
-        className={`trem-app-header__spacer${config.variant ? ` trem-app-header__spacer--${config.variant}` : ""}${mobileConfig.compact ? " trem-app-header__spacer--mobile-compact" : ""}`}
+        className={`trem-app-header__spacer${config.variant ? ` trem-app-header__spacer--${config.variant}` : ""}${tabItems.length ? " trem-app-header__spacer--link-tabs" : ""}${mobileConfig.compact ? " trem-app-header__spacer--mobile-compact" : ""}`}
         aria-hidden="true"
       />
     </>
@@ -374,4 +408,6 @@ AppHeader.propTypes = {
   primaryActionOpen: PropTypes.bool,
   onPrimaryActionOpenChange: PropTypes.func,
   onPrimaryActionSelect: PropTypes.func,
+  userMenuOpen: PropTypes.bool,
+  onUserMenuOpenChange: PropTypes.func,
 };

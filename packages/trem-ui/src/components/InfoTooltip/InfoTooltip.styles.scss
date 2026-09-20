@@ -1,0 +1,11 @@
+@import "@packages/trem-design-tokens/scss";
+
+.trem-info-tooltip { display: inline-flex; width: auto; margin-inline-start: $space-1; vertical-align: middle; }
+.trem-info-tooltip__portal--modal { z-index: $z-modal + 1; }
+.trem-info-tooltip__trigger { display: grid; place-items: center; width: $space-6; height: $space-6; padding: 0; border: 0; border-radius: $radius-full; background: transparent; color: var(--color-primary); cursor: pointer; }
+.trem-info-tooltip__trigger:hover, .trem-info-tooltip__trigger:focus-visible { background: var(--primary-surface); outline: 2px solid var(--primary-focus); }
+.trem-info-tooltip__portal .trem-dropdown__menu { padding: $space-3; }
+.trem-info-tooltip__portal .trem-dropdown__menu > li { list-style: none; }
+.trem-info-tooltip__content { display: grid; gap: $space-2; color: var(--text); font-size: $font-size-sm; font-weight: $font-regular; line-height: $line-height-lg; white-space: normal; overflow-wrap: anywhere; }
+.trem-info-tooltip__content strong { color: var(--heading); font-weight: $font-semibold; }
+.trem-info-tooltip__content p { margin: 0; }

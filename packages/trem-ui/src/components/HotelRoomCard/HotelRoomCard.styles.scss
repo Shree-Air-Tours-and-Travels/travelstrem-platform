@@ -1,5 +1,6 @@
 @import "@packages/trem-design-tokens/scss";
 
+
 .trem-hotel-room-card {
   display: grid;
   grid-template-columns: minmax(18rem, 0.95fr) minmax(25rem, 1.12fr) minmax(19rem, 0.75fr);
@@ -41,6 +42,10 @@
   &--disabled {
     opacity: 0.62;
     pointer-events: none;
+  }
+
+  &--clickable {
+    cursor: pointer;
   }
 
   &__media {
@@ -97,6 +102,30 @@
     padding-block: $space-2;
   }
 
+  &__assignments {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-2;
+    width: 100%;
+  }
+
+  &__assignments > span {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: $space-1;
+    padding: $space-1 $space-2;
+    border: 1px solid var(--color-primary);
+    border-radius: $radius-sm;
+    background: var(--primary-surface);
+    color: var(--color-primary);
+    font-size: $font-size-xs;
+  }
+
+  &__assignments > span > span {
+    color: var(--text-muted);
+  }
+
   &__heading {
     display: grid;
     gap: $space-2;
@@ -138,6 +167,13 @@
     color: var(--heading);
     font-size: $font-size-sm;
     box-shadow: var(--shadow-sm);
+  }
+
+  &__facilities > &__facility-overflow {
+    border-style: dashed;
+    background: var(--surface-subtle);
+    color: var(--text-muted);
+    box-shadow: none;
   }
 
   &__facilities svg,
@@ -191,11 +227,6 @@
     white-space: nowrap;
   }
 
-  &__content > .ui-button,
-  &__content > .trem-button {
-    margin-top: auto;
-  }
-
   &__price {
     display: flex;
     flex-direction: column;
@@ -234,22 +265,33 @@
 
   &__price dl {
     display: grid;
-    gap: $space-3;
+    gap: 0;
+    padding-block: $space-2;
+    border-block: 1px solid var(--border);
   }
 
   &__price dl > div {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
     gap: $space-3;
+    padding-block: $space-2;
     color: var(--text-muted);
     font-size: $font-size-sm;
   }
 
+  &__price dt {
+    line-height: $line-height-md;
+  }
+
   &__price dd {
+    display: grid;
+    justify-items: end;
     color: var(--heading);
     font-weight: $font-semibold;
     text-align: right;
     white-space: nowrap;
+    font-variant-numeric: tabular-nums;
   }
 
   &__price dd small {
@@ -262,8 +304,8 @@
   }
 
   &__price &__total {
-    align-items: end;
-    margin-top: $space-2;
+    align-items: center;
+    margin-top: $space-1;
     padding-top: $space-4;
     border-top: 1px solid var(--border);
     color: var(--heading);
@@ -276,10 +318,48 @@
     white-space: nowrap;
   }
 
-  &__price > .ui-button,
-  &__price > .trem-button {
-    min-height: 3.25rem;
+  &__room-facts {
+    display: grid;
+    gap: $space-2;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
     margin-top: auto;
+    padding: $space-3;
+    border: 1px solid var(--border);
+    border-radius: $radius-md;
+    background: var(--surface-subtle);
+    list-style: none;
+  }
+
+  &__room-facts li {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) minmax(0, auto);
+    align-items: center;
+    gap: $space-2;
+    color: var(--text-muted);
+    font-size: $font-size-sm;
+  }
+
+  &__room-facts svg {
+    color: var(--color-primary);
+  }
+
+  &__room-facts strong {
+    color: var(--heading);
+    font-weight: $font-semibold;
+    text-align: right;
+  }
+
+  &__price-actions {
+    display: grid;
+    gap: $space-3;
+    margin-top: auto;
+  }
+
+  &__price-actions > .ui-button,
+  &__price-actions > .trem-button {
+    min-height: 3.25rem;
   }
 
   &__secure {
@@ -294,17 +374,278 @@
 
   &__gallery {
     grid-column: 1 / -1;
+    display: grid;
+    gap: $space-4;
     padding-top: $space-4;
     border-top: 1px solid var(--border);
   }
 
-  &__gallery .gallery__stage {
-    max-height: 30rem;
+  &__gallery--standalone {
+    grid-column: auto;
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  &__expanded-details {
+    display: grid;
+    gap: $space-4;
+    padding: $space-4;
+    border: 1px solid var(--border);
     border-radius: $radius-lg;
+    background: var(--surface-elevated);
+  }
+
+  &__expanded-details > header {
+    display: grid;
+    gap: $space-1;
+  }
+
+  &__expanded-details h4,
+  &__expanded-details h5 {
+    margin: 0;
+    color: var(--heading);
+  }
+
+  &__expanded-details h4 {
+    font-size: $font-size-lg;
+  }
+
+  &__expanded-details h5 {
+    font-size: $font-size-sm;
+  }
+
+  &__expanded-details p {
+    color: var(--text-muted);
+    font-size: $font-size-sm;
+    line-height: $line-height-lg;
+  }
+
+  &__expanded-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: $space-2;
+  }
+
+  &__expanded-section {
+    display: block;
+    min-width: 0;
+    padding: $space-3 $space-4;
+    border: 1px solid var(--border);
+    border-radius: $radius-md;
+    background: var(--surface-subtle);
+    transition:
+      border-color $duration-medium $ease-standard,
+      background $duration-medium $ease-standard,
+      box-shadow $duration-medium $ease-standard;
+  }
+
+  &__expanded-section[open] {
+    border-color: color-mix(in srgb, var(--color-primary) 24%, var(--border));
+    background: var(--surface-elevated);
+    box-shadow: var(--shadow-sm);
+  }
+
+  &__expanded-section > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-3;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  &__expanded-section > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  &__expanded-section > summary svg {
+    flex: 0 0 auto;
+    margin: 0;
+    transition: transform $duration-medium $ease-standard;
+  }
+
+  &__expanded-section[open] > summary svg {
+    transform: rotate(180deg);
+  }
+
+  &__expanded-section dl {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: $space-3 $space-4;
+    margin-top: $space-3;
+  }
+
+  &__expanded-section dl > div {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: $space-2;
+    min-width: 0;
+  }
+
+  &__expanded-section svg {
+    margin-top: $space-1;
+    color: var(--color-primary);
+  }
+
+  &__expanded-section dt {
+    color: var(--text-muted);
+    font-size: $font-size-xs;
+  }
+
+  &__expanded-section dd {
+    margin-top: $space-1;
+    color: var(--heading);
+    font-size: $font-size-sm;
+    font-weight: $font-medium;
+    line-height: $line-height-md;
+    overflow-wrap: anywhere;
+  }
+
+  &__expanded-section dd small {
+    display: block;
+    color: var(--text-muted);
+    font-weight: $font-regular;
+  }
+
+  &__gallery .gallery {
+    justify-self: center;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  &__gallery .gallery__stage {
+    max-height: calc(#{$space-20} * 3.5);
+    border-radius: $radius-lg;
+  }
+
+  &--preview {
+    grid-template-columns: minmax(12rem, 0.42fr) minmax(0, 0.58fr);
+    gap: 0;
+    min-height: 13rem;
+    padding: 0;
+  }
+
+  &--preview &__media {
+    min-height: 0;
+    border-radius: 0;
+  }
+
+  &--preview &__media img {
+    position: absolute;
+    inset: 0;
+  }
+
+  &--preview &__media::after {
+    inset: 70% 0 0;
+  }
+
+  &__preview-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: $space-3;
+    min-width: 0;
+    padding: $space-4;
+  }
+
+  &__preview-main {
+    display: grid;
+    align-content: start;
+    gap: $space-3;
+    min-width: 0;
+  }
+
+  &--preview &__heading {
+    gap: $space-1;
+  }
+
+  &--preview h3 {
+    font-size: $font-size-lg;
+  }
+
+  &--preview &__heading p,
+  &__preview-rate {
+    color: var(--text-muted);
+    font-size: $font-size-sm;
+  }
+
+  &__preview-rate {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+  }
+
+  &__preview-rate svg {
+    flex: 0 0 auto;
+    color: var(--color-success);
+  }
+
+  &__preview-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-2 $space-3;
+  }
+
+  &__preview-facts > span {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-1;
+    color: var(--text-muted);
+    font-size: $font-size-sm;
+  }
+
+  &__preview-facts svg {
+    flex: 0 0 auto;
+    color: var(--color-primary);
+  }
+
+  &--preview &__facilities > span {
+    padding: $space-1 $space-2;
+    border: 0;
+    border-radius: $radius-full;
+    background: var(--primary-surface);
+    color: var(--color-primary);
+    box-shadow: none;
+    font-size: $font-size-xs;
+  }
+
+  &__preview-footer {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: $space-3;
+    padding-top: $space-3;
+    border-top: 1px solid var(--border);
+  }
+
+  &__preview-price {
+    display: grid;
+    gap: $space-1;
+    color: var(--text-muted);
+    font-size: $font-size-xs;
+  }
+
+  &__preview-price strong {
+    color: var(--heading);
+    font-size: $font-size-lg;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__preview-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: $space-2;
   }
 
   @include mq-max($breakpoint-desktop) {
     grid-template-columns: minmax(16rem, 0.8fr) minmax(0, 1fr);
+
+    &--preview {
+      grid-template-columns: minmax(12rem, 0.42fr) minmax(0, 0.58fr);
+    }
 
     &__price {
       grid-column: 1 / -1;
@@ -321,6 +662,12 @@
     }
   }
 
+  @include mq-max($breakpoint-tablet-landscape) {
+    &__expanded-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
   @include mq-max($mobile-max) {
     grid-template-columns: minmax(0, 1fr);
     gap: $space-4;
@@ -332,6 +679,26 @@
       max-height: 19rem;
     }
 
+    &--preview {
+      gap: 0;
+      min-height: 0;
+      padding: 0;
+    }
+
+    &--preview &__media {
+      height: 12rem;
+      min-height: 0;
+      max-height: none;
+    }
+
+    &__preview-content {
+      padding: $space-3;
+    }
+
+    &__preview-actions {
+      width: 100%;
+    }
+
     &__content,
     &__price {
       padding: $space-3;
@@ -339,6 +706,10 @@
 
     &__details,
     &__price dl {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    &__expanded-section dl {
       grid-template-columns: minmax(0, 1fr);
     }
 

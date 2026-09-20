@@ -1,0 +1,22 @@
+@import "@packages/trem-design-tokens/scss";
+
+.trem-occupancy { position: relative; width: 100%; }
+.trem-occupancy__trigger { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: $space-2; width: 100%; min-height: 3rem; padding: $space-3; border: 1px solid var(--border); border-radius: $radius-sm; background: var(--surface-elevated); color: var(--text); font: inherit; text-align: left; }
+.trem-occupancy__trigger > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.trem-occupancy__trigger svg { color: var(--color-primary); }
+.trem-occupancy .trem-dropdown { width: 100%; }
+.trem-occupancy__portal .trem-dropdown__menu { max-height: min(32rem, 65dvh); overflow-y: auto; }
+.trem-occupancy__portal .trem-dropdown__menu > li { list-style: none; }
+.trem-occupancy__controls { display: grid; gap: $space-4; padding: $space-5; }
+.trem-occupancy__footer { padding: 0 $space-5 $space-5; }
+.trem-occupancy__counter { display: flex; align-items: center; justify-content: space-between; gap: $space-4; color: var(--heading); font-weight: $font-semibold; }
+.trem-occupancy__counter > div { display: grid; grid-template-columns: $space-10 $space-10 $space-10; align-items: center; border: 1px solid var(--border); border-radius: $radius-sm; }
+.trem-occupancy__counter button { display: grid; place-items: center; min-height: $space-10; border: 0; background: transparent; color: var(--color-primary); }
+.trem-occupancy__counter strong { text-align: center; }
+.trem-occupancy__counter button:disabled { color: var(--text-muted); }
+.trem-occupancy__age { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: $space-3; color: var(--text); }
+.trem-occupancy__age select { min-height: $space-10; padding-inline: $space-3; border: 1px solid var(--border); border-radius: $radius-sm; background: var(--surface-elevated); color: var(--text); font: inherit; }
+.trem-occupancy__controls p { margin: 0; color: var(--text-muted); font-size: $font-size-sm; line-height: $line-height-lg; }
+.trem-occupancy__pets { display: flex; align-items: center; justify-content: space-between; gap: $space-4; padding-top: $space-4; border-top: 1px solid var(--border); color: var(--heading); }
+.trem-occupancy__pets input { width: $space-10; height: $space-6; accent-color: var(--color-primary); }
+@media (max-width: $mobile-max) { .trem-occupancy__portal .trem-dropdown__menu { max-height: none; overflow: visible; } }

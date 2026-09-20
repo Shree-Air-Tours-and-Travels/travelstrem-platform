@@ -9,10 +9,11 @@ import {
   GlobalSearchCard,
   HotelCard,
   Icon,
+  NoDataFound,
   Pagination,
-  Preloader,
   Spinner,
 } from "@packages/trem-ui";
+import TrehubPreloader from "../../../TrehubPreloader.jsx";
 import { resolveForm } from "../../hotel.utils.js";
 import "../../Hotels.scss";
 
@@ -39,10 +40,16 @@ export default function HotelFiltersView({
   const breadcrumbs = widgets.find((widget) => widget.type === "HotelBreadcrumbs");
   const searchProps = widgets.find((widget) => widget.type === "HotelSearch")?.props || {};
   const resultProps = widgets.find((widget) => widget.type === "HotelResults") || {};
+  const searchValuesKey = new URLSearchParams(
+    Object.entries(values).map(([key, value]) => [
+      key,
+      Array.isArray(value) ? value.join(",") : value,
+    ]),
+  ).toString();
 
   const renderSearch = (placement) => (
     <GlobalSearchCard
-      key={`${placement}-${JSON.stringify(values)}`}
+      key={`${placement}-${searchValuesKey}`}
       labels={labels}
       urls={contract.elements.urls}
       variant={searchProps.variant}
@@ -76,23 +83,28 @@ export default function HotelFiltersView({
   return (
     <div className="trehub-page">
       <div className="trehub-page__breadcrumbs">
-        <Breadcrumbs
-          items={(breadcrumbs?.searchItems || []).map((item) => ({
-            label: labels[item.labelRef],
-            path: item.path,
-          }))}
-        />
+        {contract ? (
+          <Breadcrumbs
+            items={(breadcrumbs?.searchItems || []).map((item) => ({
+              label: labels[item.labelRef],
+              path: item.path,
+            }))}
+          />
+        ) : loading ? (
+          <span className="trehub-loading__breadcrumb-placeholder" aria-hidden="true" />
+        ) : null}
       </div>
       <main className="trehub-hotels" aria-busy={loading}>
-        <header className="trehub-hotels__header">
-          <div className="trehub-hotels__heading">
-            <span className="trehub-eyebrow">{labels.eyebrow}</span>
-            <h1>{labels.title}</h1>
-            <p>{labels.description}</p>
-          </div>
-        </header>
-        {loading && !data ? <Preloader variant="stack" label={labels.loading || ""} /> : null}
-        {loading && data ? <Spinner label={labels.loading || ""} /> : null}
+        {loading && !data ? null : (
+          <header className="trehub-hotels__header">
+            <div className="trehub-hotels__heading">
+              <span className="trehub-eyebrow">{labels.eyebrow}</span>
+              <h1>{labels.title}</h1>
+              <p>{labels.description}</p>
+            </div>
+          </header>
+        )}
+        {loading && !data ? <TrehubPreloader variant="hotel-list" label={labels.loading} /> : null}
         {error ? (
           <ErrorState
             title={labels.error}
@@ -101,20 +113,31 @@ export default function HotelFiltersView({
             retryText={labels.retry}
           />
         ) : null}
-        {data?.provider === "mock" ? (
+        {data?.demoInventory || data?.provider === "mock" ? (
           <p role="note" className="trehub-hotels__notice">
             <Icon name="info" size={18} aria-hidden="true" />
             {labels.mock}
           </p>
         ) : null}
-        {contract ? (
+        {contract && (!loading || data) ? (
           <section className="trehub-hotels__search">{renderSearch("page")}</section>
         ) : null}
         {data ? <section className="trehub-hotels__filters">{renderFilters()}</section> : null}
-        {data ? (
+        {data && (!error || data.cards.length > 0) ? (
           <section className="trehub-hotels__results">
-            <h2>{data.summary}</h2>
-            {!data.cards.length ? <p>{labels.emptyDescription}</p> : null}
+            <div className="trehub-hotels__results-heading">
+              <h2>{data.providerSyncStatus === "loading" && !data.cards.length ? labels.loading : data.summary}</h2>
+              {!error && (loading || data.providerSyncStatus === "loading")
+                ? <Spinner size="sm" label={data.cards.length ? labels.loadingMore || labels.loading : ""} className="trehub-hotels__sync-status" />
+                : null}
+            </div>
+            {!data.cards.length && data.providerSyncStatus === "complete" ? (
+              <NoDataFound
+                title={labels.empty}
+                description={labels.emptyDescription}
+                icon="hotel"
+              />
+            ) : null}
             <div className="trehub-hotels__grid">
               {data.cards.map((card) => (
                 <HotelCard
@@ -130,6 +153,9 @@ export default function HotelFiltersView({
                 />
               ))}
             </div>
+            {!data.cards.length && data.providerSyncStatus === "loading" ? (
+              <TrehubPreloader variant="hotel-results" label={labels.loading} />
+            ) : null}
             <Pagination
               className="trehub-hotels__pagination"
               currentPage={data.pagination.page}

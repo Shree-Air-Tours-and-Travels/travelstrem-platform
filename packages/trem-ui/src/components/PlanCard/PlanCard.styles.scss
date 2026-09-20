@@ -1,351 +1,989 @@
 @import "../../styles/base/typography";
 
+/* ============================================================
+   PLAN CARD
+   Base styles shared by every PlanCard instance.
+   ============================================================ */
+
 .trem-plan-card {
   position: relative;
+
+  width: 100%;
   min-width: 0;
+
   display: flex;
   flex-direction: column;
+
+  overflow: hidden;
+
   border: 1px solid var(--border);
   border-radius: $radius-md;
+
   background: var(--card-bg);
   color: var(--text);
+
   box-shadow: var(--shadow-sm);
-  overflow: hidden;
+
   text-decoration: none;
+
   transition:
     transform $duration-base $ease-standard,
     border-color $duration-base $ease-standard,
     box-shadow $duration-base $ease-standard;
-
-  &:hover {
-    border-color: var(--primary-focus);
-    box-shadow: var(--shadow-md);
-    color: var(--text);
-    transform: translateY(-$space-1);
-
-    .trem-plan-card__media img {
-      transform: scale(1.035);
-    }
-
-    .trem-plan-card__action {
-      background: var(--color-primary-dark);
-      transform: translateX($space-1);
-    }
-  }
-
-  &:focus-visible {
-    outline: none;
-    border-color: var(--color-primary);
-    box-shadow:
-      0 0 0 4px var(--focus-ring),
-      var(--shadow-md);
-  }
-
-  &__media {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    display: block;
-    overflow: hidden;
-    background: var(--surface-inset);
-  }
-
-  &__media img {
-    width: 100%;
-    height: 100%;
-    display: block;
-    object-fit: cover;
-    transition: transform $duration-slow $ease-standard;
-  }
-
-  &__mobile-icon {
-    display: none;
-  }
-
-  &__availability {
-    position: absolute;
-    top: $space-3;
-    right: $space-3;
-    padding: $space-1 $space-2-5;
-    border: 1px solid color-mix(in srgb, var(--color-primary) 28%, transparent);
-    border-radius: $radius-full;
-    background: color-mix(in srgb, var(--card-bg) 90%, transparent);
-    color: var(--color-primary-dark);
-    font-size: $font-size-xs;
-    font-weight: $font-bold;
-    letter-spacing: 0.02em;
-    backdrop-filter: blur(8px);
-  }
-
-  &__body {
-    min-height: 120px;
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: $space-3;
-    padding: $space-4;
-  }
-
-  &__copy {
-    min-width: 0;
-    display: grid;
-    gap: $space-1;
-  }
-
-  &__product {
-    width: fit-content;
-    display: inline-flex;
-    align-items: center;
-    padding: $space-1 $space-2;
-    border-radius: $radius-full;
-    background: var(--primary-soft);
-    color: var(--color-primary-dark);
-    font-size: 0.6875rem;
-    font-weight: $font-bold;
-    letter-spacing: 0.04em;
-    line-height: 1;
-    text-transform: uppercase;
-  }
-
-  &__title {
-    color: var(--card-title);
-    font-size: $font-size-md;
-    font-weight: $font-bold;
-    letter-spacing: -0.02em;
-    line-height: $line-height-md;
-  }
-
-  &__description {
-    color: var(--card-text);
-    font-size: $font-size-sm;
-    line-height: $line-height-md;
-  }
-
-  &__highlights {
-    display: flex;
-    flex-wrap: wrap;
-    gap: $space-2 $space-4;
-    margin-top: $space-2;
-
-    > span {
-      display: inline-flex;
-      align-items: center;
-      gap: $space-1-5;
-      color: var(--card-text);
-      font-size: $font-size-xs;
-      font-weight: $font-medium;
-    }
-
-    svg {
-      color: var(--color-primary);
-    }
-  }
-
-  &__action-label {
-    width: fit-content;
-    margin-top: $space-2;
-    color: var(--color-primary);
-    font-size: $font-size-sm;
-    font-weight: $font-semibold;
-  }
-
-  &__action {
-    width: 38px;
-    height: 38px;
-    flex: 0 0 38px;
-    display: grid;
-    place-items: center;
-    border-radius: $radius-circle;
-    background: var(--color-primary);
-    color: var(--color-on-primary);
-    transition:
-      background $duration-base $ease-standard,
-      transform $duration-base $ease-standard;
-  }
-
-  &--disabled {
-    cursor: not-allowed;
-    box-shadow: none;
-
-    .trem-plan-card__media img {
-      filter: saturate(0.45);
-      opacity: 0.72;
-    }
-
-    .trem-plan-card__body {
-      opacity: 0.72;
-    }
-
-    &:hover {
-      border-color: var(--border);
-      box-shadow: none;
-      transform: none;
-
-      .trem-plan-card__media img {
-        transform: none;
-      }
-    }
-  }
 }
+
+/* ============================================================
+   INTERACTION
+   ============================================================ */
+
+.trem-plan-card:hover {
+  border-color: var(--primary-focus);
+
+  box-shadow: var(--shadow-md);
+
+  color: var(--text);
+
+  transform: translateY(-$space-1);
+}
+
+.trem-plan-card:hover .trem-plan-card__media img {
+  transform: scale(1.025);
+}
+
+.trem-plan-card:hover .trem-plan-card__action {
+  background: var(--color-primary-dark);
+
+  transform: translateX(2px);
+}
+
+.trem-plan-card:focus-visible {
+  outline: none;
+
+  border-color: var(--color-primary);
+
+  box-shadow:
+    0 0 0 4px var(--focus-ring),
+    var(--shadow-md);
+}
+
+/* ============================================================
+   MEDIA
+   ============================================================ */
+
+.trem-plan-card__media {
+  position: relative;
+
+  width: 100%;
+  min-width: 0;
+
+  aspect-ratio: 16 / 9;
+
+  display: block;
+
+  overflow: hidden;
+
+  background: var(--surface-inset);
+}
+
+.trem-plan-card__media img {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+
+  transition: transform $duration-slow $ease-standard;
+}
+
+.trem-plan-card__mobile-icon {
+  display: none;
+}
+
+/* ============================================================
+   AVAILABILITY BADGE
+   ============================================================ */
+
+.trem-plan-card__availability {
+  position: absolute;
+
+  z-index: 2;
+
+  top: $space-3;
+  right: $space-3;
+
+  padding: $space-1 $space-2-5;
+
+  border: 1px solid color-mix(in srgb, var(--color-primary) 28%, transparent);
+
+  border-radius: $radius-full;
+
+  background: color-mix(in srgb, var(--card-bg) 90%, transparent);
+
+  color: var(--color-primary-dark);
+
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+
+  line-height: $line-height-md;
+
+  letter-spacing: 0.02em;
+
+  backdrop-filter: blur(8px);
+}
+
+/* ============================================================
+   BODY
+   ============================================================ */
+
+.trem-plan-card__body {
+  width: 100%;
+  min-width: 0;
+
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+
+  padding: $space-4;
+}
+
+.trem-plan-card__copy {
+  width: 100%;
+  min-width: 0;
+
+  display: grid;
+
+  gap: $space-2;
+}
+
+/* ============================================================
+   PRODUCT LABEL
+   ============================================================ */
+
+.trem-plan-card__product {
+  width: fit-content;
+
+  display: inline-flex;
+  align-items: center;
+
+  padding: $space-1 $space-2;
+
+  border-radius: $radius-full;
+
+  background: var(--primary-soft);
+
+  color: var(--color-primary-dark);
+
+  font-size: 0.6875rem;
+  font-weight: $font-bold;
+
+  line-height: 1;
+
+  letter-spacing: 0.04em;
+
+  text-transform: uppercase;
+}
+
+/* ============================================================
+   TITLE + DESCRIPTION
+   ============================================================ */
+
+.trem-plan-card__title {
+  min-width: 0;
+
+  color: var(--card-title);
+
+  font-size: $font-size-md;
+  font-weight: $font-bold;
+
+  line-height: $line-height-md;
+
+  letter-spacing: -0.02em;
+
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.trem-plan-card__description {
+  min-width: 0;
+
+  color: var(--card-text);
+
+  font-size: $font-size-sm;
+
+  line-height: $line-height-md;
+
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+/* ============================================================
+   HIGHLIGHTS
+   Base version.
+   ============================================================ */
+
+.trem-plan-card__highlights {
+  width: 100%;
+  min-width: 0;
+
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: $space-2 $space-4;
+
+  margin-top: $space-2;
+}
+
+.trem-plan-card__highlight {
+  min-width: 0;
+
+  display: inline-flex;
+  align-items: center;
+
+  gap: $space-1-5;
+
+  color: var(--card-text);
+
+  font-size: $font-size-xs;
+  font-weight: $font-medium;
+
+  line-height: $line-height-md;
+}
+
+.trem-plan-card__highlight-icon {
+  display: inline-grid;
+
+  place-items: center;
+
+  flex: 0 0 auto;
+
+  color: var(--color-primary);
+}
+
+.trem-plan-card__highlight-label {
+  min-width: 0;
+
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+
+.trem-plan-card__footer {
+  width: 100%;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: $space-3;
+
+  margin-top: auto;
+
+  padding-top: $space-4;
+}
+
+.trem-plan-card__action-label {
+  min-width: 0;
+
+  color: var(--color-primary);
+
+  font-size: $font-size-sm;
+  font-weight: $font-semibold;
+
+  line-height: $line-height-md;
+}
+
+.trem-plan-card__action {
+  width: 38px;
+  height: 38px;
+
+  flex: 0 0 38px;
+
+  display: grid;
+
+  place-items: center;
+
+  border-radius: $radius-circle;
+
+  background: var(--color-primary);
+
+  color: var(--color-on-primary);
+
+  transition:
+    background $duration-base $ease-standard,
+    transform $duration-base $ease-standard;
+}
+
+/* ============================================================
+   DISABLED
+   ============================================================ */
+
+.trem-plan-card--disabled {
+  cursor: not-allowed;
+
+  box-shadow: none;
+}
+
+.trem-plan-card--disabled .trem-plan-card__media img {
+  opacity: 0.72;
+
+  filter: saturate(0.45);
+}
+
+.trem-plan-card--disabled .trem-plan-card__body {
+  opacity: 0.72;
+}
+
+.trem-plan-card--disabled:hover {
+  border-color: var(--border);
+
+  box-shadow: none;
+
+  transform: none;
+}
+
+.trem-plan-card--disabled:hover .trem-plan-card__media img {
+  transform: none;
+}
+
+/* ============================================================
+   DARK THEME
+   ============================================================ */
 
 .theme--dark .trem-plan-card {
   background: var(--surface-elevated);
+}
 
-  &__product {
-    color: var(--color-primary);
+.theme--dark .trem-plan-card__product,
+.theme--dark .trem-plan-card__availability {
+  color: var(--color-primary);
+}
+
+/* ============================================================
+   COLLECTION VARIANT
+   Used by PlanCards.
+   ============================================================ */
+
+.trem-plan-card--collection {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+
+  height: 100%;
+
+  border-radius: $radius-lg;
+}
+
+.trem-plan-card--collection .trem-plan-card__media {
+  aspect-ratio: 16 / 9;
+}
+
+.trem-plan-card--collection .trem-plan-card__body {
+  padding: $space-5;
+}
+
+.trem-plan-card--collection .trem-plan-card__copy {
+  gap: $space-2;
+}
+
+.trem-plan-card--collection .trem-plan-card__title {
+  font-size: $font-size-lg;
+
+  line-height: 1.2;
+
+  letter-spacing: -0.025em;
+}
+
+.trem-plan-card--collection .trem-plan-card__description {
+  display: -webkit-box;
+
+  overflow: hidden;
+
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+
+  line-clamp: 3;
+
+  font-size: $font-size-sm;
+
+  line-height: $line-height-lg;
+}
+
+/* ============================================================
+   COLLECTION HIGHLIGHTS
+   ============================================================ */
+
+.trem-plan-card--collection .trem-plan-card__highlights {
+  width: 100%;
+
+  display: grid;
+
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  gap: $space-3;
+
+  margin-top: $space-4;
+
+  padding-top: $space-4;
+
+  border-top: 1px solid var(--border);
+}
+
+/*
+ * Each benefit owns one equal third of the row.
+ *
+ * Icon + text are centered as one visual group.
+ */
+.trem-plan-card--collection .trem-plan-card__highlight {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: flex-start;
+
+  gap: $space-2;
+
+  color: var(--card-text);
+
+  font-size: $font-size-xs;
+  font-weight: $font-medium;
+
+  line-height: $line-height-md;
+
+  text-align: center;
+}
+
+.trem-plan-card--collection .trem-plan-card__highlight-icon {
+  width: 38px;
+  height: 38px;
+
+  flex: 0 0 38px;
+
+  display: grid;
+
+  place-items: center;
+
+  margin-inline: auto;
+
+  border-radius: $radius-md;
+
+  background: var(--primary-soft);
+
+  color: var(--color-primary);
+}
+
+.trem-plan-card--collection .trem-plan-card__highlight-label {
+  width: 100%;
+  min-width: 0;
+
+  color: var(--card-text);
+
+  font-weight: $font-medium;
+
+  line-height: $line-height-md;
+
+  text-align: center;
+
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+/* ============================================================
+   COLLECTION FOOTER
+   ============================================================ */
+
+.trem-plan-card--collection .trem-plan-card__footer {
+  margin-top: auto;
+
+  padding-top: $space-5;
+
+  border-top: 1px solid var(--border);
+}
+
+/* ============================================================
+   COLLECTION — SMALL LAPTOP / TABLET
+   The container is defined by .dov__products.
+   ============================================================ */
+
+@container dov-products (max-width: 68rem) {
+  .trem-plan-card--collection .trem-plan-card__body {
+    padding: $space-5;
   }
 
-  &__availability {
-    color: var(--color-primary);
+  .trem-plan-card--collection .trem-plan-card__title {
+    font-size: $font-size-lg;
+  }
+
+  .trem-plan-card--collection .trem-plan-card__description {
+    -webkit-line-clamp: 2;
+
+    line-clamp: 2;
+  }
+
+  .trem-plan-card--collection .trem-plan-card__highlights {
+    gap: $space-3;
   }
 }
 
-@include mq-max($tablet-max) {
-  .trem-plan-card {
-    &__body {
-      min-height: 112px;
-    }
+/* ============================================================
+   COLLECTION — MOBILE
+   Collection cards stay as real visual cards.
+   They DO NOT use the compact 64px PlanCard mobile layout.
+   ============================================================ */
+
+@container dov-products (max-width: 42rem) {
+  .trem-plan-card--collection {
+    min-height: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    padding: 0;
+
+    border: 1px solid var(--border);
+    border-radius: $radius-lg;
+
+    background: var(--card-bg);
+
+    box-shadow: var(--shadow-sm);
+  }
+
+  .theme--dark .trem-plan-card--collection {
+    background: var(--surface-elevated);
+  }
+
+  /* ------------------------------
+     Media
+     ------------------------------ */
+
+  .trem-plan-card--collection .trem-plan-card__media {
+    width: 100%;
+    height: auto;
+
+    aspect-ratio: 16 / 9;
+
+    display: block;
+
+    border-radius: 0;
+
+    background: var(--surface-inset);
+  }
+
+  .trem-plan-card--collection .trem-plan-card__media img {
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    object-fit: cover;
+  }
+
+  .trem-plan-card--collection .trem-plan-card__mobile-icon {
+    display: none;
+  }
+
+  /* ------------------------------
+     Body
+     ------------------------------ */
+
+  .trem-plan-card--collection .trem-plan-card__body {
+    min-height: 0;
+
+    padding: $space-4;
+  }
+
+  .trem-plan-card--collection .trem-plan-card__product {
+    display: inline-flex;
+  }
+
+  .trem-plan-card--collection .trem-plan-card__title {
+    font-size: $font-size-md;
+
+    line-height: 1.2;
+  }
+
+  .trem-plan-card--collection .trem-plan-card__description {
+    display: -webkit-box;
+
+    overflow: hidden;
+
+    white-space: normal;
+
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+
+    line-clamp: 2;
+
+    font-size: $font-size-sm;
+
+    line-height: $line-height-md;
+  }
+
+  /* ------------------------------
+     Highlights
+     ------------------------------ */
+
+  .trem-plan-card--collection .trem-plan-card__highlights {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    gap: $space-2;
+
+    margin-top: $space-3;
+
+    padding-top: $space-3;
+  }
+
+  .trem-plan-card--collection .trem-plan-card__highlight {
+    align-items: center;
+
+    gap: $space-1-5;
+
+    text-align: center;
+  }
+
+  .trem-plan-card--collection .trem-plan-card__highlight-icon {
+    width: 34px;
+    height: 34px;
+
+    flex-basis: 34px;
+
+    margin-inline: auto;
+
+    border-radius: $radius-sm;
+  }
+
+  .trem-plan-card--collection .trem-plan-card__highlight-label {
+    width: 100%;
+
+    font-size: $font-size-xs;
+
+    line-height: $line-height-md;
+
+    text-align: center;
+  }
+
+  /* ------------------------------
+     Footer
+     ------------------------------ */
+
+  .trem-plan-card--collection .trem-plan-card__footer {
+    width: 100%;
+
+    display: flex;
+
+    margin-top: auto;
+
+    padding-top: $space-4;
+  }
+
+  .trem-plan-card--collection .trem-plan-card__action-label {
+    display: inline-flex;
+
+    font-size: $font-size-sm;
+  }
+
+  .trem-plan-card--collection .trem-plan-card__action {
+    width: 34px;
+    height: 34px;
+
+    flex: 0 0 34px;
+
+    background: var(--color-primary);
+
+    color: var(--color-on-primary);
+  }
+
+  /* ------------------------------
+     Touch behavior
+     ------------------------------ */
+
+  .trem-plan-card--collection:hover {
+    border-color: var(--border);
+
+    box-shadow: var(--shadow-sm);
+
+    transform: none;
+  }
+
+  .trem-plan-card--collection:hover .trem-plan-card__media img {
+    transform: none;
   }
 }
+
+/* ============================================================
+   COLLECTION — VERY SMALL MOBILE
+   At this width three benefit columns become too narrow.
+   Stack benefits vertically while keeping them centered.
+   ============================================================ */
+
+@container dov-products (max-width: 27rem) {
+  .trem-plan-card--collection .trem-plan-card__body {
+    padding: $space-3;
+  }
+
+  .trem-plan-card--collection .trem-plan-card__highlights {
+    grid-template-columns: minmax(0, 1fr);
+
+    gap: $space-3;
+  }
+
+  .trem-plan-card--collection .trem-plan-card__highlight {
+    width: 100%;
+
+    align-items: center;
+
+    gap: $space-1-5;
+
+    text-align: center;
+  }
+
+  .trem-plan-card--collection .trem-plan-card__highlight-icon {
+    margin-inline: auto;
+  }
+
+  .trem-plan-card--collection .trem-plan-card__highlight-label {
+    width: 100%;
+
+    text-align: center;
+  }
+}
+
+/* ============================================================
+   NORMAL PLAN CARD — MOBILE
+   Applies only to PlanCard instances NOT rendered by PlanCards.
+   ============================================================ */
 
 @include mq-max($mobile-max) {
-  .trem-plan-card {
+  .trem-plan-card:not(.trem-plan-card--collection) {
     min-height: 92px;
+
     display: grid;
-    grid-template-columns: 64px minmax(0, 1fr);
+
+    grid-template-columns:
+      64px
+      minmax(0, 1fr);
+
     align-items: center;
+
     gap: $space-3;
+
     padding: $space-3;
+
     border: 0;
     border-radius: $radius-md;
+
     background: var(--primary-softer, var(--primary-soft));
+
+    box-shadow: none;
+  }
+
+  /* ------------------------------
+     Interaction
+     ------------------------------ */
+
+  .trem-plan-card:not(.trem-plan-card--collection):hover {
+    border-color: transparent;
+
     box-shadow: none;
 
-    &:hover {
-      border-color: transparent;
-      box-shadow: none;
-      transform: none;
+    transform: none;
+  }
 
-      .trem-plan-card__media img {
-        transform: none;
-      }
-    }
+  .trem-plan-card:not(.trem-plan-card--collection):hover .trem-plan-card__media img {
+    transform: none;
+  }
 
-    &__media {
-      width: 64px;
-      height: 64px;
-      aspect-ratio: 1;
-      display: grid;
-      place-items: center;
-      border-radius: $radius-sm;
-      background: var(--primary-soft);
-    }
+  /* ------------------------------
+     Media
+     ------------------------------ */
 
-    &__media img {
-      display: none;
-    }
+  .trem-plan-card:not(.trem-plan-card--collection) .trem-plan-card__media {
+    width: 64px;
+    height: 64px;
 
-    &__mobile-icon {
-      display: grid;
-      place-items: center;
-      color: var(--color-primary);
-    }
+    aspect-ratio: 1;
 
-    &__body {
-      min-height: 0;
-      align-items: center;
-      padding: 0;
-    }
+    display: grid;
 
-    &__copy {
-      gap: 2px;
-    }
+    place-items: center;
 
-    &__product {
-      display: none;
-    }
+    border-radius: $radius-sm;
 
-    &__title {
-      font-size: $font-size-sm;
-    }
+    background: var(--primary-soft);
+  }
 
-    &__description {
-      overflow: hidden;
-      font-size: $font-size-xs;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
+  .trem-plan-card:not(.trem-plan-card--collection) .trem-plan-card__media img {
+    display: none;
+  }
 
-    &__highlights,
-    &__action-label {
-      display: none;
-    }
+  .trem-plan-card:not(.trem-plan-card--collection) .trem-plan-card__mobile-icon {
+    display: grid;
 
-    &__action {
-      width: 28px;
-      height: 28px;
-      flex-basis: 28px;
-      background: transparent;
-      color: var(--color-primary);
-    }
+    place-items: center;
 
-    &__availability {
-      top: $space-2;
-      right: $space-2;
-      padding: 2px $space-2;
-      font-size: 0.625rem;
-    }
+    color: var(--color-primary);
+  }
 
-    &--coming-soon .trem-plan-card__body {
-      padding-top: $space-2;
-    }
+  /* ------------------------------
+     Body
+     ------------------------------ */
 
-    &--disabled {
-      cursor: not-allowed;
+  .trem-plan-card:not(.trem-plan-card--collection) .trem-plan-card__body {
+    min-height: 0;
 
-      .trem-plan-card__media img {
-        opacity: 1;
-        filter: none;
-      }
-    }
+    padding: 0;
+  }
 
-    &--olive {
-      background: var(--warning-soft);
+  .trem-plan-card:not(.trem-plan-card--collection) .trem-plan-card__copy {
+    gap: 2px;
+  }
 
-      .trem-plan-card__media {
-        background: color-mix(in srgb, var(--color-warning) 12%, var(--card-bg));
-      }
+  .trem-plan-card:not(.trem-plan-card--collection) .trem-plan-card__product {
+    display: none;
+  }
 
-      .trem-plan-card__mobile-icon,
-      .trem-plan-card__action {
-        color: var(--color-warning);
-      }
-    }
+  .trem-plan-card:not(.trem-plan-card--collection) .trem-plan-card__title {
+    font-size: $font-size-sm;
+  }
 
-    &--blue {
-      background: var(--secondary-soft);
+  .trem-plan-card:not(.trem-plan-card--collection) .trem-plan-card__description {
+    overflow: hidden;
 
-      .trem-plan-card__media {
-        background: color-mix(in srgb, var(--color-secondary) 12%, var(--card-bg));
-      }
+    font-size: $font-size-xs;
 
-      .trem-plan-card__mobile-icon,
-      .trem-plan-card__action {
-        color: var(--color-secondary);
-      }
-    }
+    text-overflow: ellipsis;
 
-    &--green {
-      background: var(--success-soft);
+    white-space: nowrap;
+  }
 
-      .trem-plan-card__media {
-        background: color-mix(in srgb, var(--success-color) 12%, var(--card-bg));
-      }
+  /* ------------------------------
+     Hidden compact content
+     ------------------------------ */
 
-      .trem-plan-card__mobile-icon,
-      .trem-plan-card__action {
-        color: var(--success-color);
-      }
-    }
+  .trem-plan-card:not(.trem-plan-card--collection) .trem-plan-card__highlights,
+  .trem-plan-card:not(.trem-plan-card--collection) .trem-plan-card__action-label {
+    display: none;
+  }
+
+  /* ------------------------------
+     Footer / action
+     ------------------------------ */
+
+  .trem-plan-card:not(.trem-plan-card--collection) .trem-plan-card__footer {
+    width: auto;
+
+    margin: 0;
+
+    padding: 0;
+
+    border: 0;
+  }
+
+  .trem-plan-card:not(.trem-plan-card--collection) .trem-plan-card__action {
+    width: 28px;
+    height: 28px;
+
+    flex: 0 0 28px;
+
+    background: transparent;
+
+    color: var(--color-primary);
+  }
+
+  /* ------------------------------
+     Availability
+     ------------------------------ */
+
+  .trem-plan-card:not(.trem-plan-card--collection) .trem-plan-card__availability {
+    top: $space-2;
+    right: $space-2;
+
+    padding: 2px $space-2;
+
+    font-size: 0.625rem;
+  }
+
+  /* ==========================================================
+     NORMAL MOBILE MODIFIERS
+     ========================================================== */
+
+  .trem-plan-card--coming-soon:not(.trem-plan-card--collection) .trem-plan-card__body {
+    padding-top: $space-2;
+  }
+
+  .trem-plan-card--disabled:not(.trem-plan-card--collection) .trem-plan-card__media img {
+    opacity: 1;
+
+    filter: none;
+  }
+
+  /* ------------------------------
+     Olive
+     ------------------------------ */
+
+  .trem-plan-card--olive:not(.trem-plan-card--collection) {
+    background: var(--warning-soft);
+  }
+
+  .trem-plan-card--olive:not(.trem-plan-card--collection) .trem-plan-card__media {
+    background: color-mix(in srgb, var(--color-warning) 12%, var(--card-bg));
+  }
+
+  .trem-plan-card--olive:not(.trem-plan-card--collection) .trem-plan-card__mobile-icon,
+  .trem-plan-card--olive:not(.trem-plan-card--collection) .trem-plan-card__action {
+    color: var(--color-warning);
+  }
+
+  /* ------------------------------
+     Blue
+     ------------------------------ */
+
+  .trem-plan-card--blue:not(.trem-plan-card--collection) {
+    background: var(--secondary-soft);
+  }
+
+  .trem-plan-card--blue:not(.trem-plan-card--collection) .trem-plan-card__media {
+    background: color-mix(in srgb, var(--color-secondary) 12%, var(--card-bg));
+  }
+
+  .trem-plan-card--blue:not(.trem-plan-card--collection) .trem-plan-card__mobile-icon,
+  .trem-plan-card--blue:not(.trem-plan-card--collection) .trem-plan-card__action {
+    color: var(--color-secondary);
+  }
+
+  /* ------------------------------
+     Green
+     ------------------------------ */
+
+  .trem-plan-card--green:not(.trem-plan-card--collection) {
+    background: var(--success-soft);
+  }
+
+  .trem-plan-card--green:not(.trem-plan-card--collection) .trem-plan-card__media {
+    background: color-mix(in srgb, var(--success-color) 12%, var(--card-bg));
+  }
+
+  .trem-plan-card--green:not(.trem-plan-card--collection) .trem-plan-card__mobile-icon,
+  .trem-plan-card--green:not(.trem-plan-card--collection) .trem-plan-card__action {
+    color: var(--success-color);
+  }
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .trem-plan-card,
+  .trem-plan-card__media img,
+  .trem-plan-card__action {
+    transition: none;
   }
 }

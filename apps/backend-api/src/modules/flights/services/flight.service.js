@@ -7,6 +7,8 @@ import FlightOfferStore from "./flight-offer.store.js";
 import FlightBookingRepository from "./flight-booking.repository.js";
 import { applyFlightFinancials } from "./flight-pricing.js";
 import { publicFlightPrice } from "../presenters/flight-public.presenter.js";
+import { flightFareSelectable, flightJourneys, localFlightTime } from "./flight-offer.utils.js";
+import { normalizeFlightOffer } from "../domain/normalize-flight-offer.js";
 import ContactLead from "../../forms/models/ContactLead.js";
 import User from "../../auth/models/User.js";
 import { createReadableReference } from "../../../utils/readableReference.js";
@@ -70,8 +72,8 @@ export default class FlightService {
                 paymentProvider: "razorpay",
             });
             if (!Array.isArray(response.offers)) throw new Error("Invalid flight provider response");
-            response.offers = await Promise.all(response.offers.map(async (offer) => {
-                if (!offer.offerId || !offer.segments?.length || !offer.fares?.length) throw new Error("Invalid normalized flight offer");
+            response.offers = await Promise.all(response.offers.map(async (providerOffer) => {
+                const offer = normalizeFlightOffer(providerOffer, response.provider || this.provider.name);
                 const fares = await Promise.all(offer.fares.map(async (fare) => {
                     const price = fare.pricing;
                     if (!price || !Number.isSafeInteger(price.flightSubtotal ?? price.total) || (price.flightSubtotal ?? price.total) < 0) throw new Error("Invalid provider fare amount");
@@ -108,20 +110,35 @@ export default class FlightService {
         const search = await this.requireSearch(searchId);
         const airlines = String(filters.airlines || "").split(",").filter(Boolean);
         const maxPrice = Number(filters.maxPrice);
-        let offers = search.offers.filter((offer) => {
-            if (airlines.length && !offer.segments.some((segment) => airlines.includes(segment.airline.code) || airlines.includes(segment.airline.name))) return false;
-            const cabin = String(filters.cabin || "").replace(/([a-z])([A-Z])/g, "$1_$2").toUpperCase();
-            if (cabin && offer.fare.cabin !== cabin) return false;
-            if (filters.stops !== undefined && filters.stops !== "" && Math.max(...offer.segments.map((segment) => segment.stops), offer.segments.length - search.input.journeys.length) > Number(filters.stops)) return false;
-            if (filters.refundable !== undefined && filters.refundable !== "" && offer.fare.refundable !== (String(filters.refundable) === "true")) return false;
-            if (Number.isFinite(maxPrice) && maxPrice > 0 && offer.price.total > maxPrice * 100) return false;
-            if (filters.maxDuration && offer.segments.reduce((total, segment) => total + segment.durationMinutes, 0) > Number(filters.maxDuration)) return false;
-            if (filters.departureAfter && offer.segments[0].departureDateTime.slice(11, 16) < filters.departureAfter) return false;
-            if (filters.arrivalBefore && offer.segments.at(-1).arrivalDateTime.slice(11, 16) > filters.arrivalBefore) return false;
-            if (filters.baggage && offer.fare.baggage.checked.weightKg < Number(filters.baggage)) return false;
-            return true;
+        const cabin = String(filters.cabin || "").replace(/([a-z])([A-Z])/g, "$1_$2").toUpperCase();
+        const hasStops = filters.stops !== undefined && filters.stops !== "" && Number.isFinite(Number(filters.stops));
+        const hasRefundability = filters.refundable === "true" || filters.refundable === "false";
+        let offers = search.offers.flatMap((offer) => {
+            const journeys = flightJourneys(offer);
+            const first = journeys[0];
+            if (!first) return [];
+            if (airlines.length && !offer.segments.some((segment) => airlines.includes(segment.airline?.code) || airlines.includes(segment.airline?.name))) return [];
+            if (hasStops && journeys.some((journey) => journey.stops > Number(filters.stops))) return [];
+            if (filters.maxDuration && journeys.some((journey) => journey.durationMinutes > Number(filters.maxDuration))) return [];
+            const departureTime = localFlightTime(first.first.departureDateTime, first.first.origin?.timezone);
+            const arrivalTime = localFlightTime(first.last.arrivalDateTime, first.last.destination?.timezone);
+            if (filters.departureAfter && (!departureTime || departureTime < filters.departureAfter)) return [];
+            if (filters.arrivalBefore && (!arrivalTime || arrivalTime > filters.arrivalBefore)) return [];
+            const fares = (offer.fares || []).filter((fare) => {
+                if (!flightFareSelectable(fare, offer.requirements?.passengerCounts)) return false;
+                if (cabin && fare.cabin !== cabin) return false;
+                if (hasRefundability && fare.refundable !== (filters.refundable === "true")) return false;
+                if (filters.baggage && (!Number.isFinite(Number(fare.baggage?.checked?.weightKg))
+                    || fare.baggage?.checked?.weightKg == null
+                    || Number(fare.baggage.checked.weightKg) < Number(filters.baggage))) return false;
+                if (Number.isFinite(maxPrice) && maxPrice > 0 && fare.pricing.total > maxPrice * 100) return false;
+                return true;
+            });
+            if (!fares.length) return [];
+            const fare = [...fares].sort((left, right) => left.pricing.total - right.pricing.total)[0];
+            return [{ ...offer, fare, price: fare.pricing }];
         });
-        const duration = (offer) => offer.segments.reduce((total, segment) => total + segment.durationMinutes, 0);
+        const duration = (offer) => flightJourneys(offer).reduce((total, journey) => total + journey.durationMinutes, 0);
         const requestedSort = String(filters.sort || "RECOMMENDED").replace(/([a-z])([A-Z])/g, "$1_$2").toUpperCase();
         const sort = { PRICE_ASC: "CHEAPEST", DEPARTURE_ASC: "EARLIEST_DEPARTURE" }[requestedSort] || requestedSort;
         offers = [...offers].sort((left, right) => sort === "CHEAPEST" ? left.price.total - right.price.total : sort === "FASTEST" ? duration(left) - duration(right) : sort === "EARLIEST_DEPARTURE" ? left.segments[0].departureDateTime.localeCompare(right.segments[0].departureDateTime) : sort === "LATEST_DEPARTURE" ? right.segments[0].departureDateTime.localeCompare(left.segments[0].departureDateTime) : right.score - left.score);
@@ -129,12 +146,22 @@ export default class FlightService {
         const totalPages = Math.max(1, Math.ceil(offers.length / perPage));
         const page = Math.min(totalPages, Math.max(1, Number(filters.page) || 1));
         const airlineMap = new Map();
-        search.offers.flatMap((offer) => offer.segments).forEach((segment) => {
-            const current = airlineMap.get(segment.airline.code) || { id: segment.airline.code, value: segment.airline.code, label: segment.airline.name, icon: segment.airline.icon, initial: segment.airline.code, count: 0 };
-            current.count += 1;
-            airlineMap.set(segment.airline.code, current);
+        const cabinMap = new Map();
+        const stopMap = new Map();
+        search.offers.forEach((offer) => {
+            new Map(offer.segments.map((segment) => [segment.airline?.code, segment.airline])).forEach((airline, code) => {
+                if (!code) return;
+                const current = airlineMap.get(code) || { id: code, value: code, label: airline.name || code, icon: airline.icon, initial: code, count: 0 };
+                current.count += 1;
+                airlineMap.set(code, current);
+            });
+            (offer.fares || []).filter((fare) => flightFareSelectable(fare, offer.requirements?.passengerCounts)).forEach((fare) => {
+                if (fare.cabin) cabinMap.set(fare.cabin, { value: fare.cabin, label: fare.cabin.replaceAll("_", " ").toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase()) });
+            });
+            const stops = Math.max(...flightJourneys(offer).map((journey) => journey.stops));
+            if (Number.isFinite(stops)) stopMap.set(stops, { value: String(stops), label: stops ? `Up to ${stops} stop${stops === 1 ? "" : "s"}` : "Non-stop" });
         });
-        return { searchId, expiresAt: search.expiresAt, currency: search.currency, offers: offers.slice((page - 1) * perPage, page * perPage), pagination: { page, perPage, total: offers.length, totalPages }, facets: { airlines: [...airlineMap.values()] } };
+        return { searchId, expiresAt: search.expiresAt, currency: search.currency, offers: offers.slice((page - 1) * perPage, page * perPage), pagination: { page, perPage, total: offers.length, totalPages }, facets: { airlines: [...airlineMap.values()], cabins: [...cabinMap.values()], stops: [...stopMap.entries()].sort(([left], [right]) => left - right).map(([, value]) => value) } };
     }
 
     async authoritativeSeatPrice(offer, seats = []) {
@@ -150,9 +177,8 @@ export default class FlightService {
         const offer = await this.requireOffer(searchId, offerId);
         const fare = fareId ? offer.fares.find((item) => item.fareId === fareId) : offer.fare;
         if (!fare) return { status: REVALIDATION_STATUS.FARE_UNAVAILABLE, offerId };
-        const counts = offer.requirements?.passengerCounts || {};
-        const requiredSeats = Number(counts.ADULT || 0) + Number(counts.CHILD || 0);
-        if (fare.availability?.status === "SOLD_OUT" || Number(fare.availability?.fareBucketAvailable || 0) < requiredSeats) return { status: REVALIDATION_STATUS.FARE_UNAVAILABLE, offerId };
+        if (!flightFareSelectable(fare, offer.requirements?.passengerCounts))
+            return { status: REVALIDATION_STATUS.FARE_UNAVAILABLE, offerId };
         const selectedOffer = fare ? { ...offer, fare, price: fare.pricing } : offer;
         logger.info("[Flights] revalidation", { provider: this.provider.name, searchId, offerId });
         try {

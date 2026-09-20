@@ -36,6 +36,7 @@ export default function FlightDetailsContainer() {
   const offerId = decodeURIComponent(location.pathname.split("/").filter(Boolean).at(-1) || "");
   const bookingDetail = location.pathname.includes("/flights/bookings/");
   const searchId = new URLSearchParams(location.search).get("searchId") || "";
+  const listedFareId = new URLSearchParams(location.search).get("fareId") || "";
   const [state, setState] = useState({
     loading: true,
     error: "",
@@ -85,7 +86,8 @@ export default function FlightDetailsContainer() {
         .replace("{offerId}", encodeURIComponent(offerId));
       const response = await readComponentData(offerPath);
       if (!active) return;
-      setFareId(response.data.fares?.find((fare) => fare.selectable)?.fareId || "");
+      setFareId(response.data.fares?.find((fare) => fare.fareId === listedFareId && fare.selectable)?.fareId
+        || response.data.fares?.find((fare) => fare.selectable)?.fareId || "");
       setPassengers(passengerRows(response.data));
       setState({
         loading: false,
@@ -109,7 +111,7 @@ export default function FlightDetailsContainer() {
     return () => {
       active = false;
     };
-  }, [bookingDetail, offerId, reloadKey, searchId]);
+  }, [bookingDetail, listedFareId, offerId, reloadKey, searchId]);
 
   const loadSeatsAndContinue = async () => {
     setSaving(true);

@@ -6,6 +6,11 @@
   padding-bottom: max(clamp($space-8, 6vw, 5rem), var(--trem-floating-action-clearance, 0px));
   background: var(--page-bg);
   color: var(--text);
+
+  > :not(.trehub-flight-list__breadcrumb) {
+    width: min(100%, #{$full-width});
+    margin-inline: auto;
+  }
 }
 
 .trehub-flight-list__breadcrumb {
@@ -124,6 +129,8 @@
   margin: 0;
 }
 
+.trehub-flight-list__sync-status { margin-left: auto; padding: $space-2 $space-3; border-radius: $radius-full; background: var(--primary-surface); color: var(--color-primary); }
+
 .trehub-flight-list__results h2 {
   color: var(--heading);
   font-size: $font-size-xl;
@@ -131,6 +138,10 @@
 }
 
 .trehub-flight-list__results p {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: $space-2;
   margin-top: $space-1;
   color: var(--text-muted);
   font-size: $font-size-sm;
@@ -158,6 +169,21 @@
   }
 }
 
+.trehub-flight-list__filter-sheet .trehub-flight-list__sheet-filters {
+  position: static;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.trehub-flight-list__filter-sheet .trehub-flight-list__sheet-filters > header {
+  padding-inline: 0;
+}
+
+.trehub-flight-list__filter-sheet .trem-configurable-filters__fields {
+  padding-inline: 0;
+}
+
 .trehub-flight-list__mobile-clearance {
   display: none;
 }
@@ -169,11 +195,25 @@
 }
 
 @media (max-width: 768px) {
+  .trehub-flight-list__desktop-filters {
+    display: none;
+  }
+
   .trehub-flight-list__mobile-clearance {
     display: block;
     height: calc(
       var(--trem-floating-action-height, 5rem) + #{$space-6} + env(safe-area-inset-bottom, 0px)
     );
+  }
+
+  .trehub-flight-list__mobile-actions:not(.has-search-action) .trem-fab__inner {
+    width: fit-content;
+    margin-left: auto;
+  }
+
+  .trehub-flight-list__mobile-actions:not(.has-search-action) .trem-fab__btn.ui-button {
+    min-width: 8rem;
+    padding-inline: $space-4;
   }
 }
 

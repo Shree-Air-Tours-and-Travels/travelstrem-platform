@@ -41,7 +41,11 @@ export default applyHideFlags({
             openLabel: "Open navigation",
             closeLabel: "Close navigation",
         },
+        mobile: {
+            profile: false,
+        },
         search: {
+            hide: true,
             placeholder: "Search tours, bookings, enquiries, support...",
             ariaLabel: "Search TravelsTREM",
             shortcut: "⌘ K",
@@ -58,7 +62,27 @@ export default applyHideFlags({
             mobileSheetVariant: "fullscreen",
             loadingLabel: "Searching...",
             closeLabel: "Close search",
-            enabled: true,
+            enabled: false,
+        },
+        navigationTabs: {
+            ariaLabel: "Primary navigation",
+            items: [
+                {
+                    id: "home",
+                    label: "Home",
+                    icon: "home",
+                    href: "/",
+                    target: "overview",
+                    activeTargets: ["overview"],
+                },
+                {
+                    id: "explore",
+                    label: "Explore",
+                    icon: "compass",
+                    action: "toggle-navigation",
+                    activeTargets: ["trevio", "trevista", "trehub", "trips", "tours", "flights", "articles", "support"],
+                },
+            ],
         },
         primaryAction: {
             label: "New Booking",
@@ -119,6 +143,14 @@ export default applyHideFlags({
         },
         actions: [
             {
+                id: "bookings",
+                label: "My Bookings",
+                ariaLabel: "Open My Bookings",
+                icon: "calendarDays",
+                target: "bookings",
+                desktopOnly: true,
+            },
+            {
                 id: "wishlist",
                 label: "Wishlist",
                 ariaLabel: "Open wishlist",
@@ -128,6 +160,7 @@ export default applyHideFlags({
             },
         ],
         themeAction: {
+            placement: "profile",
             lightLabel: "Switch to light mode",
             darkLabel: "Switch to dark mode",
             lightIcon: "sun",
@@ -138,6 +171,30 @@ export default applyHideFlags({
             menuLabel: "Open user menu",
             menuEnabled: true,
             items: [
+                {
+                    id: "my-bookings",
+                    label: "My Bookings",
+                    icon: "calendarDays",
+                    target: "bookings",
+                },
+                {
+                    id: "profile",
+                    label: "My Profile",
+                    icon: "user",
+                    target: "profile",
+                },
+                {
+                    id: "wishlist",
+                    label: "Wishlist",
+                    icon: "heart",
+                    target: "favorites",
+                },
+                {
+                    id: "support",
+                    label: "Help & Support",
+                    icon: "support",
+                    target: "support",
+                },
                 {
                     id: "partnership",
                     label: "Partner with us",

@@ -1,101 +1,253 @@
 @import "../../styles/base/typography";
 
 .trem-plan-cards {
+  --trem-plan-cards-gap: var(--layout-card-gap, #{$space-4});
+
+  width: 100%;
+  min-width: 0;
+
   display: grid;
-  gap: var(--layout-card-gap, #{$space-4});
+
+  gap: $space-6;
+
+  background: transparent;
+
+  &__heading {
+    width: 100%;
+    max-width: 760px;
+
+    display: grid;
+
+    gap: $space-2;
+  }
+
+  &__eyebrow {
+    width: fit-content;
+
+    display: inline-flex;
+    align-items: center;
+
+    gap: $space-2;
+
+    margin: 0;
+    padding: 0;
+
+    border: 0;
+
+    background: transparent;
+
+    color: var(--color-primary);
+
+    font-size: $font-size-xs;
+    font-weight: $font-bold;
+
+    line-height: $line-height-md;
+
+    letter-spacing: 0.1em;
+
+    text-transform: uppercase;
+
+    svg {
+      flex: 0 0 auto;
+    }
+  }
 
   &__title {
+    max-width: 680px;
+
     margin: 0;
+
     color: var(--heading);
-    font-size: $font-size-md;
-    font-weight: $font-semibold;
-    line-height: $line-height-md;
-  }
 
-  &__grid {
-    display: grid;
-    grid-template-columns: repeat(var(--trem-plan-cards-columns, 4), minmax(0, 1fr));
-    gap: var(--layout-card-gap, #{$space-4});
-  }
+    font-size: clamp(#{$font-size-xl}, 2.5vw, #{$font-size-xxl});
 
-  &--horizontal-stack &__grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
+    font-weight: $font-bold;
 
-  &--horizontal-stack .trem-plan-card {
-    display: grid;
-    grid-template-columns: minmax(15rem, 0.42fr) minmax(0, 0.58fr);
-    min-height: 15rem;
+    line-height: 1.12;
 
-    &__media {
-      height: 100%;
-      aspect-ratio: auto;
-    }
+    letter-spacing: -0.025em;
 
-    &__body {
-      min-height: 100%;
-      align-items: center;
-      padding: $space-6;
-    }
-
-    &__copy {
-      gap: $space-2;
-    }
-
-    &__title {
-      font-size: $font-size-xl;
-    }
-
-    &__description {
-      font-size: $font-size-md;
-      line-height: $line-height-lg;
-    }
-  }
-}
-
-.trem-plan-cards:not(.trem-plan-cards--horizontal-stack) .trem-plan-card {
-  &__body {
-    flex: 1;
-  }
-
-  &__copy {
-    align-self: stretch;
-    display: flex;
-    flex-direction: column;
+    text-wrap: balance;
   }
 
   &__description {
-    min-height: $space-10;
+    max-width: 720px;
+
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: $font-size-md;
+
+    line-height: $line-height-lg;
+
+    text-wrap: pretty;
   }
 
-  &__highlights {
+  &__grid {
+    width: 100%;
+    min-width: 0;
+
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
+
+    grid-template-columns: repeat(var(--trem-plan-cards-columns, 3), minmax(0, 1fr));
+
+    gap: var(--trem-plan-cards-gap);
+
+    align-items: stretch;
   }
 
-  &__action-label {
-    margin-top: auto;
+  &__grid > * {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
   }
 }
 
-@include mq-max($tablet-max) {
-  .trem-plan-cards__grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
+/* ============================================================
+   HORIZONTAL STACK
+   ============================================================ */
 
-@include mq-max($mobile-max) {
+.trem-plan-cards--horizontal-stack {
   .trem-plan-cards__grid {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .trem-plan-cards:not(.trem-plan-cards--horizontal-stack) .trem-plan-card {
-    &__copy {
-      display: grid;
+  .trem-plan-card--collection {
+    display: grid;
+
+    grid-template-columns:
+      minmax(15rem, 0.4fr)
+      minmax(0, 0.6fr);
+
+    .trem-plan-card__media {
+      height: 100%;
+
+      aspect-ratio: auto;
+    }
+
+    .trem-plan-card__body {
+      justify-content: center;
+    }
+  }
+}
+
+/* ============================================================
+   SMALL LAPTOP / TABLET
+   ============================================================ */
+
+@container dov-products (max-width: 68rem) {
+  .trem-plan-cards {
+    gap: $space-5;
+  }
+
+  .trem-plan-cards--grid {
+    .trem-plan-cards__grid {
+      width: 100%;
+
+      display: flex;
+      align-items: stretch;
+
+      gap: $space-4;
+
+      overflow-x: auto;
+      overflow-y: hidden;
+
+      padding: $space-1 0 $space-4;
+
+      scroll-snap-type: x mandatory;
+
+      scroll-padding-inline: 0;
+
+      overscroll-behavior-inline: contain;
+
+      -webkit-overflow-scrolling: touch;
+
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
+    }
+
+    .trem-plan-cards__grid > .trem-plan-card {
+      flex: 0 0 72%;
+
+      width: 72%;
+      min-width: 72%;
+      max-width: 72%;
+
+      height: auto;
+
+      scroll-snap-align: start;
+
+      scroll-snap-stop: always;
+    }
+  }
+
+  .trem-plan-cards[data-mobile-count="1"] {
+    .trem-plan-cards__grid {
+      overflow: visible;
+    }
+
+    .trem-plan-cards__grid > .trem-plan-card {
+      flex-basis: 100%;
+
+      width: 100%;
+      min-width: 100%;
+      max-width: 100%;
+    }
+  }
+}
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+
+@container dov-products (max-width: 42rem) {
+  .trem-plan-cards {
+    gap: $space-4;
+
+    overflow: visible;
+
+    &__heading {
+      max-width: none;
+    }
+
+    &__eyebrow {
+      font-size: $font-size-xs;
+    }
+
+    &__title {
+      max-width: none;
+
+      font-size: $font-size-xl;
+
+      line-height: 1.18;
     }
 
     &__description {
-      min-height: 0;
+      max-width: none;
+
+      font-size: $font-size-sm;
+
+      line-height: $line-height-lg;
+    }
+  }
+
+  .trem-plan-cards--grid {
+    .trem-plan-cards__grid {
+      gap: $space-3;
+
+      padding: $space-1 0 $space-3;
+    }
+
+    .trem-plan-cards__grid > .trem-plan-card {
+      flex-basis: 88%;
+
+      width: 88%;
+      min-width: 88%;
+      max-width: 88%;
     }
   }
 
@@ -106,27 +258,75 @@
     }
   }
 
-  .trem-plan-cards--horizontal-stack .trem-plan-card {
-    min-height: 92px;
-    grid-template-columns: 64px minmax(0, 1fr);
-
-    &__media {
-      height: 64px;
+  .trem-plan-cards[data-mobile-count="1"] {
+    .trem-plan-cards__grid {
+      overflow: visible;
     }
 
-    &__body {
-      min-height: 0;
-      padding: 0;
+    .trem-plan-cards__grid > .trem-plan-card {
+      flex-basis: 100%;
+
+      width: 100%;
+      min-width: 100%;
+      max-width: 100%;
+    }
+  }
+
+  .trem-plan-cards--horizontal-stack {
+    .trem-plan-cards__grid {
+      display: grid;
+
+      overflow: visible;
     }
 
-    &__title {
-      font-size: $font-size-sm;
-    }
+    .trem-plan-card--collection {
+      width: 100%;
 
-    &__description {
-      min-height: 0;
-      font-size: $font-size-xs;
-      line-height: $line-height-md;
+      display: flex;
+      flex-direction: column;
+
+      .trem-plan-card__media {
+        width: 100%;
+        height: auto;
+
+        aspect-ratio: 16 / 9;
+      }
     }
+  }
+}
+
+/* ============================================================
+   VERY SMALL MOBILE
+   ============================================================ */
+
+@container dov-products (max-width: 27rem) {
+  .trem-plan-cards {
+    gap: $space-3;
+  }
+
+  .trem-plan-cards--grid {
+    .trem-plan-cards__grid > .trem-plan-card {
+      flex-basis: 90%;
+
+      width: 90%;
+      min-width: 90%;
+      max-width: 90%;
+    }
+  }
+
+  .trem-plan-cards[data-mobile-count="1"] {
+    .trem-plan-cards__grid > .trem-plan-card {
+      flex-basis: 100%;
+
+      width: 100%;
+      min-width: 100%;
+      max-width: 100%;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trem-plan-cards__grid {
+    scroll-behavior: auto;
   }
 }

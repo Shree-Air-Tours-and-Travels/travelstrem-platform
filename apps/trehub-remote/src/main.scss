@@ -46,7 +46,8 @@
 .trehub-home__shell {
   display: grid;
   gap: $space-8;
-  width: 100%;
+  width: min(100%, #{$full-width});
+  margin-inline: auto;
 
   > :last-child {
     margin-bottom: clamp($space-6, 4vw, $space-10);
