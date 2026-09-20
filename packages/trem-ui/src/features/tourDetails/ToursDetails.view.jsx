@@ -389,8 +389,8 @@ export default function ToursDetailsView({
   if (tourUnavailable) {
     return (
       <main className="tour-detail" aria-label="Tour unavailable">
+        <Breadcrumbs items={breadcrumbItems} className="tour-detail__breadcrumbs" />
         <div className="tour-detail__shell">
-          <Breadcrumbs items={breadcrumbItems} className="tour-detail__breadcrumbs" />
           <section className="tour-detail__empty tour-detail__empty--unavailable">
             <Title text="This tour is no longer available" />
             <Paragraph text="The operator has unpublished this tour. TravelsTREM has checked the live catalog for the closest reliable alternatives." />
@@ -417,9 +417,8 @@ export default function ToursDetailsView({
 
   return (
     <main className="tour-detail" aria-labelledby="tour-detail-title">
+      <Breadcrumbs items={breadcrumbItems} className="tour-detail__breadcrumbs" />
       <div className="tour-detail__shell">
-        <Breadcrumbs items={breadcrumbItems} className="tour-detail__breadcrumbs" />
-
         <nav
           ref={sectionNavRef}
           className="tour-detail__section-nav"

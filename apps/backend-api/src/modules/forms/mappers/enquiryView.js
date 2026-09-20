@@ -443,7 +443,7 @@ export const enquiryView = (
                               `${item.location || item.stayKey}: ${item.hotelName}${item.roomName ? ` — ${item.roomName}` : ""}`,
                       )
                       .join("; ")
-                : lead?.selection?.hotelRoomName || "",
+                : lead?.selection?.hotelRoomName || fields.room || "",
             hotelSelections: lead?.selection?.hotelSelections || [],
             hotelRequests: (lead?.selection?.hotelRequests || []).map((request) => ({
                 stayKey: request.stayKey,

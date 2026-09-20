@@ -6,13 +6,13 @@ import {
   FlightCard,
   FlightDetails,
   FloatingActionBar,
-  Preloader,
   Spinner,
   InputField,
   SingleSelect,
   StatusBadge,
   TimelineStepper,
 } from "@packages/trem-ui";
+import TrehubPreloader from "../../../TrehubPreloader.jsx";
 import { ConfirmOverlay } from "@packages/trem-modals";
 import "./FlightDetails.view.scss";
 
@@ -62,7 +62,7 @@ export default function FlightDetailsView({
   onRetryLoad,
   onBackToSearch,
 }) {
-  if (loading) return <Preloader variant="stack" label={contract?.labels?.loading || ""} />;
+  if (loading) return <TrehubPreloader variant="flight-detail" label={contract?.labels?.loading} />;
   if (error && !contract) {
     return (
       <ErrorState
@@ -138,7 +138,13 @@ export default function FlightDetailsView({
         </aside>
 
         <section className="trehub-flight-journey__content">
-          {saving ? <Spinner label={labels.saving || ""} /> : null}
+          {saving ? (
+            <Spinner
+              size="sm"
+              label={labels.saving || ""}
+              className="trehub-flight-journey__pending"
+            />
+          ) : null}
           {offer && step !== flightDetailsWidget?.props?.showAtStep ? (
             <FlightCard
               flight={{ ...offer, fare: selectedFare, price: selectedFare?.pricing || offer.price }}
@@ -146,7 +152,7 @@ export default function FlightDetailsView({
                 departureLabel: labelFor(labels, "departure"),
                 cabinLabel: labelFor(labels, "cabin"),
                 priceLabel: labelFor(labels, "priceFrom"),
-                priceSuffix: labelFor(labels, "perTraveller"),
+                priceSuffix: labelFor(labels, "totalFare", "total fare"),
                 selectLabel: labelFor(labels, "viewFlight"),
               }}
               hideAction
@@ -226,6 +232,7 @@ export default function FlightDetailsView({
               <div className="trehub-flight-journey__fares">
                 {visibleFares.map((fare) => {
                   const active = fare.fareId === fareId;
+                  const fareDetails = offer.details?.fares?.find((item) => item.fareId === fare.fareId);
                   return (
                     <button
                       key={fare.fareId}
@@ -249,30 +256,16 @@ export default function FlightDetailsView({
                         </span>
                       </div>
                       <ul>
-                        <li>
-                          {fare.refundable
-                            ? labelFor(labels, "refundable")
-                            : labelFor(labels, "nonRefundable")}
-                        </li>
-                        <li>
-                          {fare.changeable
-                            ? labelFor(labels, "changeable")
-                            : labelFor(labels, "changesRestricted")}
-                        </li>
-                        <li>
-                          {fare.mealIncluded
-                            ? labelFor(labels, "mealIncluded")
-                            : labelFor(labels, "mealsSeparate")}
-                        </li>
-                        <li>
-                          {template(labelFor(labels, "checkedBaggageTemplate"), {
-                            weight: fare.baggage?.checked?.weightKg || 0,
-                          })}
-                        </li>
+                        {(fareDetails?.conditions || []).slice(0, 2).map((item) => (
+                          <li key={item.id}>{item.label}: {item.value}</li>
+                        ))}
+                        {(fareDetails?.benefits || []).filter((item) => ["meal", "checked-baggage"].includes(item.id)).map((item) => (
+                          <li key={item.id}>{item.label}: {item.value}</li>
+                        ))}
                       </ul>
                       <StatusBadge
                         value={
-                          active ? labelFor(labels, "selectedFare") : fare.availability?.status
+                          active ? labelFor(labels, "selectedFare") : fare.availability?.status || labelFor(labels, "checkAvailability", "Check availability")
                         }
                         tone={active ? "success" : undefined}
                         appearance="accent"

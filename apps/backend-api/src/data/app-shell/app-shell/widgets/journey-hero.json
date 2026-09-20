@@ -7,8 +7,8 @@
       "labels": {
         "heroAriaLabel": "Your travel planning overview",
         "heroEyebrow": "YOUR JOURNEY HUB",
-        "heroDiscoverTitle": "Where will your next story begin?",
-        "heroDiscoverDescription": "Discover thoughtfully curated tours, save the ones you love, and request a personalised quote when you are ready.",
+        "heroDiscoverTitle": "Discover the world your way",
+        "heroDiscoverDescription": "Find flights, stays, trips and tours in one place.",
         "heroAwaitingTitle": "Your travel request is moving forward",
         "heroAwaitingDescription": "A travel specialist is reviewing your plans. You can track every response and update from your bookings workspace.",
         "heroActiveTitle": "Keep shaping your next journey",
@@ -20,9 +20,42 @@
         "heroFavoritesAction": "Open wishlist",
         "heroTrustOne": "Curated experiences",
         "heroTrustTwo": "Verified travel partners",
-        "heroTrustThree": "Personalised planning"
+        "heroTrustThree": "Personalised planning",
+        "heroSearchAriaLabel": "Search travel",
+        "heroSearchSubmitLabel": "Search",
+        "heroFlightTab": "Flights",
+        "heroHotelTab": "Hotels",
+        "heroTripTab": "Trips",
+        "heroTourTab": "Tours",
+        "heroHolidaySearchHeading": "Search holiday packages & trips",
+        "heroHolidaySearchTripHeading": "Search Community Trips & Group Adventures",
+        "heroHolidaySearchTourHeading": "Search Holiday Tours & packages",
+        "heroFromLabel": "From",
+        "heroFromPlaceholder": "Departure airport",
+        "heroToLabel": "To",
+        "heroToPlaceholder": "Arrival airport",
+        "heroDepartureLabel": "Departure",
+        "heroReturnLabel": "Return",
+        "heroTravellersLabel": "Travellers",
+        "heroDestinationLabel": "Destination",
+        "heroDestinationPlaceholder": "City or hotel",
+        "heroCheckInLabel": "Check-in",
+        "heroCheckOutLabel": "Check-out",
+        "heroOccupancyLabel": "Guests and rooms",
+        "heroWhereLabel": "Where would you like to go?",
+        "heroTripPlaceholder": "City or trip",
+        "heroTourPlaceholder": "City or tour",
+        "heroTravelDatesLabel": "Dates",
+        "heroTravelEndLabel": "Check out",
+        "heroOneWayLabel": "One way",
+        "heroRoundTripLabel": "Return trip",
+        "heroHotelOnlyLabel": "Hotel only",
+        "heroBookingsSectionTitle": "My bookings",
+        "heroViewBookingsAction": "View bookings"
       },
-      "urls": {}
+      "urls": {
+        "heroBackgroundImage": "/home-images/hero-banner.png"
+      }
     },
     "structure": {
       "header": {},
@@ -32,7 +65,180 @@
           "props": {
             "ariaLabelRef": "heroAriaLabel",
             "eyebrowRef": "heroEyebrow",
+            "bookingsSectionTitleRef": "heroBookingsSectionTitle",
+            "bookingsActionLabelRef": "heroViewBookingsAction",
             "stageKey": "journeyStage",
+            "backgroundUrlRef": "heroBackgroundImage",
+            "search": {
+              "ariaLabelRef": "heroSearchAriaLabel",
+              "submitLabelRef": "heroSearchSubmitLabel",
+              "modes": [
+                {
+                  "id": "flight",
+                  "labelRef": "heroFlightTab",
+                  "icon": "plane",
+                  "resultsPath": "/trehub/flights"
+                },
+                {
+                  "id": "hotel",
+                  "labelRef": "heroHotelTab",
+                  "icon": "hotel",
+                  "resultsPath": "/trehub/hotels"
+                },
+                {
+                  "id": "trip",
+                  "labelRef": "heroTripTab",
+                  "headingRef": "heroHolidaySearchTripHeading",
+                  "icon": "briefcaseBusiness",
+                  "resultsPath": "/trevio/trips"
+                },
+                {
+                  "id": "tour",
+                  "labelRef": "heroTourTab",
+                  "headingRef": "heroHolidaySearchTourHeading",
+                  "icon": "map",
+                  "resultsPath": "/trevista/tours"
+                }
+              ],
+              "fieldsByMode": {
+                "flight": {
+                  "oneway": [
+                    {
+                      "id": "from",
+                      "labelRef": "heroFromLabel",
+                      "type": "airport",
+                      "placeholderRef": "heroFromPlaceholder",
+                      "required": true
+                    },
+                    {
+                      "id": "to",
+                      "labelRef": "heroToLabel",
+                      "type": "airport",
+                      "placeholderRef": "heroToPlaceholder",
+                      "required": true
+                    },
+                    {
+                      "id": "departDate",
+                      "labelRef": "heroDepartureLabel",
+                      "type": "date",
+                      "required": true
+                    },
+                    {
+                      "id": "travellers",
+                      "labelRef": "heroTravellersLabel",
+                      "type": "number",
+                      "min": 1,
+                      "required": true
+                    }
+                  ],
+                  "roundTrip": [
+                    {
+                      "id": "from",
+                      "labelRef": "heroFromLabel",
+                      "type": "airport",
+                      "placeholderRef": "heroFromPlaceholder",
+                      "required": true
+                    },
+                    {
+                      "id": "to",
+                      "labelRef": "heroToLabel",
+                      "type": "airport",
+                      "placeholderRef": "heroToPlaceholder",
+                      "required": true
+                    },
+                    {
+                      "id": "departDate",
+                      "labelRef": "heroDepartureLabel",
+                      "type": "date",
+                      "required": true
+                    },
+                    {
+                      "id": "returnDate",
+                      "labelRef": "heroReturnLabel",
+                      "type": "date",
+                      "minField": "departDate",
+                      "required": true
+                    },
+                    {
+                      "id": "travellers",
+                      "labelRef": "heroTravellersLabel",
+                      "type": "number",
+                      "min": 1,
+                      "required": true
+                    }
+                  ]
+                },
+                "hotel": [
+                  {
+                    "id": "destination",
+                    "labelRef": "heroDestinationLabel",
+                    "placeholderRef": "heroDestinationPlaceholder",
+                    "required": true
+                  },
+                  {
+                    "id": "checkIn",
+                    "labelRef": "heroCheckInLabel",
+                    "type": "date",
+                    "required": true
+                  },
+                  {
+                    "id": "checkOut",
+                    "labelRef": "heroCheckOutLabel",
+                    "type": "date",
+                    "minField": "checkIn",
+                    "required": true
+                  },
+                  { "id": "occupancy", "labelRef": "heroOccupancyLabel", "type": "occupancy" }
+                ],
+                "trip": [
+                  {
+                    "id": "destination",
+                    "labelRef": "heroWhereLabel",
+                    "placeholderRef": "heroTripPlaceholder"
+                  },
+                  { "id": "startDate", "labelRef": "heroTravelDatesLabel", "type": "date" },
+                  {
+                    "id": "endDate",
+                    "labelRef": "heroTravelEndLabel",
+                    "type": "date",
+                    "minField": "startDate"
+                  },
+                  {
+                    "id": "travellers",
+                    "labelRef": "heroTravellersLabel",
+                    "type": "number",
+                    "min": 1
+                  }
+                ],
+                "tour": [
+                  {
+                    "id": "destination",
+                    "labelRef": "heroWhereLabel",
+                    "placeholderRef": "heroTourPlaceholder"
+                  },
+                  { "id": "startDate", "labelRef": "heroTravelDatesLabel", "type": "date" },
+                  {
+                    "id": "endDate",
+                    "labelRef": "heroTravelEndLabel",
+                    "type": "date",
+                    "minField": "startDate"
+                  },
+                  {
+                    "id": "travellers",
+                    "labelRef": "heroTravellersLabel",
+                    "type": "number",
+                    "min": 1
+                  }
+                ]
+              },
+              "choiceGroupsByMode": {
+                "flight": [
+                  { "id": "oneway", "labelRef": "heroOneWayLabel" },
+                  { "id": "roundTrip", "labelRef": "heroRoundTripLabel" }
+                ],
+                "hotel": [{ "id": "hotelOnly", "labelRef": "heroHotelOnlyLabel" }]
+              }
+            },
             "states": {
               "discover": {
                 "titleRef": "heroDiscoverTitle",

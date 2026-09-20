@@ -44,7 +44,7 @@ class TrehubRouteBoundary extends React.Component {
   }
 }
 
-export default function App({ embedded = false }) {
+export default function App({ embedded = false, userSession }) {
   const location = useLocation();
   if (!embedded && !STANDALONE_ENABLED) {
     return (
@@ -66,7 +66,10 @@ export default function App({ embedded = false }) {
       {/^\/trehub\/hotels\/[^/]+/.test(location.pathname) ? (
         <HotelDetails />
       ) : location.pathname.startsWith("/trehub/hotels") ? (
-        <HotelFilters />
+        <HotelFilters
+          key={`${userSession?.user?.id || "guest"}:${userSession?.user?.agencyRef || userSession?.user?.agencyId || ""}`}
+          userSession={userSession}
+        />
       ) : /^\/trehub\/flights\/[^/]+/.test(location.pathname) ? (
         <FlightDetails />
       ) : location.pathname.startsWith("/trehub/flights") ? (

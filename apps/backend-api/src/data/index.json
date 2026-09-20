@@ -7,6 +7,11 @@
       "page": "app-shell",
       "file": "./app-shell/app-shell/page.json"
     },
+    "app-shell/articles": {
+      "app": "app-shell",
+      "page": "articles",
+      "file": "./app-shell/articles/page.json"
+    },
     "tours-remote/listing": {
       "app": "tours-remote",
       "page": "listing",
@@ -76,6 +81,7 @@
   "pathMap": {
     "/": "trevio-remote/home",
     "/app-shell": "app-shell/app-shell",
+    "/articles": "app-shell/articles",
     "/trevista": "tours-remote/listing",
     "/trevista/:tourRef": "tours-remote/details",
     "/trevista/home": "trevista-remote/home",
@@ -93,6 +99,7 @@
   },
   "aliases": {
     "home": "trevio-remote/home",
+    "articles": "app-shell/articles",
     "tour-listing": "tours-remote/listing",
     "tour-details": "tours-remote/details",
     "trevio": "trevio-remote/home",

@@ -1,0 +1,47 @@
+@import "@packages/trem-design-tokens/scss";
+
+.trem-hotel-rate-card {
+  box-shadow: var(--shadow-sm);
+
+  .card-subentity__header {
+    padding: $space-3 $space-4;
+  }
+
+  .card-subentity__header-side {
+    grid-template-columns: auto auto;
+    align-items: center;
+    gap: $space-3;
+  }
+
+  &__total {
+    display: grid;
+    gap: $space-1;
+    white-space: nowrap;
+
+    small { color: var(--text-muted); font-size: $font-size-xs; }
+    strong { color: var(--heading); font-size: $font-size-lg; }
+  }
+
+  .card-subentity__row {
+    min-height: 0;
+    padding: $space-2 $space-4;
+  }
+
+  .card-subentity__section--collapsible > summary {
+    padding: $space-2 $space-4;
+  }
+
+  &__detail {
+    display: block;
+    color: var(--text-muted);
+    font-size: $font-size-xs;
+    font-weight: $font-regular;
+    white-space: normal;
+  }
+
+  @media (max-width: $breakpoint-mobile) {
+    .card-subentity__header { flex-wrap: wrap; }
+    .card-subentity__header-side { width: 100%; justify-items: stretch; }
+    .card-subentity__actions > * { width: 100%; }
+  }
+}

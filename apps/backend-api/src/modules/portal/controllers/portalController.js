@@ -64,6 +64,23 @@ const applyProductHiding = (config, hiddenKeys) => {
         };
     }
 
+    if (next.componentData?.navigationTabs?.items) {
+        next.componentData = {
+            ...next.componentData,
+            navigationTabs: {
+                ...next.componentData.navigationTabs,
+                items: next.componentData.navigationTabs.items.map((item) => ({
+                    ...item,
+                    items: (item.items || []).map((child) =>
+                        child.target && hiddenKeys.includes(child.target)
+                            ? { ...child, hide: true }
+                            : child,
+                    ),
+                })),
+            },
+        };
+    }
+
     return next;
 };
 

@@ -137,6 +137,9 @@
         "mobileSearchAction": "Search flights",
         "mobileSearchSheetTitle": "Search flights",
         "mobileSearchClose": "Close flight search",
+        "mobileFiltersAction": "Filters",
+        "mobileFiltersSheetTitle": "Filter flights",
+        "mobileFiltersClose": "Close flight filters",
         "airlineInterestsTitle": "Choose the airlines you are interested in",
         "airlineInterestsCount": "{count} available flight",
         "summaryFrom": "From",
@@ -194,7 +197,7 @@
         "flightDeparture": "Departure",
         "flightCabin": "Cabin",
         "flightPrice": "From",
-        "flightPriceSuffix": "per traveller",
+        "flightPriceSuffix": "total fare",
         "flightSelect": "View flight",
         "emptyTitle": "No flights match these filters",
         "emptyDescription": "Try clearing one or more filters to see available options.",
@@ -263,7 +266,14 @@
           "name": "filters",
           "type": "ConfigurableFilterPanel",
           "source": "trehub",
-          "props": { "titleRef": "filtersTitle", "resetLabelRef": "filtersReset", "fieldsOptionsRef": "flightFilters" }
+          "props": {
+            "titleRef": "filtersTitle",
+            "resetLabelRef": "filtersReset",
+            "fieldsOptionsRef": "flightFilters",
+            "mobileActionLabelRef": "mobileFiltersAction",
+            "mobileSheetTitleRef": "mobileFiltersSheetTitle",
+            "mobileCloseLabelRef": "mobileFiltersClose"
+          }
         },
         {
           "name": "flightResults",

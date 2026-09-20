@@ -5,7 +5,7 @@
     "dataScope": {
       "options": {
         "pagination": {
-          "pageSize": 4
+          "pageSize": 20
         },
         "filterForm": {
           "layout": {
@@ -135,7 +135,36 @@
         "amenities": "Popular amenities",
         "overview": "About this property",
         "overviewDescription": "A closer look at your stay, included comforts and property rules.",
-        "propertyClass": "Property class",
+        "propertyDescription": "Why you’ll enjoy this stay",
+        "readMore": "Read more",
+        "showLess": "Show less",
+        "showAllAmenities": "Show all {count} amenities",
+        "showFewerAmenities": "Show fewer amenities",
+        "showAllPolicies": "Show all {count} policies",
+        "showFewerPolicies": "Show fewer policies",
+        "detailItemCount": "{count} details",
+        "morePropertyDetails": "More about this property",
+        "morePropertyDetailsDescription": "Amenities, guest feedback and details supplied by the property.",
+        "propertyLocation": "Location",
+        "propertyContact": "Property contact",
+        "callProperty": "Call property",
+        "guestReviews": "Guest reviews",
+        "hotelRules": "Hotel rules",
+        "services": "Services",
+        "checkInRule": "Check-in",
+        "checkOutRule": "Check-out",
+        "travelstremBenefits": "Why book with Travelstrem",
+        "benefitCompare": "Compare available supplier rates",
+        "benefitTotal": "Review the estimated total before continuing",
+        "benefitRooms": "Keep every room choice in one stay",
+        "moreItems": "+{count} more",
+        "propertyClass": "Hotel category",
+        "propertyClassSummary": "{count}-star property",
+        "propertyType": "Property type",
+        "propertyRooms": "Property size",
+        "propertyRoomsSummary": "{count} rooms",
+        "languages": "Languages spoken",
+        "arrivalDeparture": "Arrival and departure",
         "ratingSummary": "{rating} out of 10",
         "roomFeatures": "Room features",
         "priceDetails": "Price details",
@@ -143,7 +172,7 @@
         "selectedStay": "Your selected room",
         "cancel": "Keep browsing",
         "confirm": "Create enquiry",
-        "modalTitle": "Continue with this room?",
+        "modalTitle": "Review your stay",
         "modalDescription": "This creates an enquiry and opens My Bookings, where you can add guest details and review your stay. Payment is not available yet.",
         "mock": "Demo hotel inventory — no live reservation will be made.",
         "eyebrow": "Hotels & stays",
@@ -151,7 +180,7 @@
         "breadcrumbTrehub": "Trehub",
         "breadcrumbHotels": "Hotels",
         "breadcrumbDetails": "Hotel details",
-        "priceIncludesFees": "Includes taxes and convenience fee",
+        "priceIncludesFees": "Includes applicable taxes and service charges",
         "viewHotel": "View hotel",
         "viewRooms": "View rooms",
         "freeCancellation": "Free cancellation",
@@ -165,12 +194,47 @@
         "freeCancellationUntil": "Free cancellation until {date}",
         "checkIn": "Check-in",
         "checkOut": "Check-out",
-        "roomOptions": "Room options",
+        "roomOptions": "Room & rate options",
         "roomOptionsAvailable": "{count} available",
         "selectRoom": "Select room",
+        "changeRate": "Change rate",
+        "rateOptions": "Available rates",
+        "selectRate": "Select rate",
         "selectedRoom": "Selected room",
+        "selectedRooms": "Selected rooms",
+        "singleRoomTotal": "Estimated total for this room",
+        "roomSlot": "Room {count}",
+        "roomsSelected": "{selected} of {count} rooms selected",
+        "removeRoom": "Remove room",
+        "addAnotherRoom": "Add another room",
+        "allRoomsSelected": "All rooms selected — review your stay",
         "viewRoomDetails": "View room details",
         "hideRoomDetails": "Hide room details",
+        "closeRoomDetails": "Close",
+        "roomDetailsHeading": "Room details",
+        "roomInformation": "Room information",
+        "roomInclusions": "Included with this room",
+        "rateConditions": "Rate conditions",
+        "bedType": "Bed configuration",
+        "roomSize": "Room size",
+        "roomView": "View",
+        "bathroom": "Bathroom",
+        "smokingPolicy": "Smoking policy",
+        "childPolicy": "Children",
+        "extraBedPolicy": "Extra beds",
+        "accessibility": "Accessibility",
+        "availability": "Availability",
+        "roomsRemaining": "{count} rooms remaining",
+        "roomRemaining": "1 room remaining",
+        "bedsRemaining": "{count} beds remaining",
+        "bedRemaining": "1 bed remaining",
+        "availabilityAvailable": "Available · stock count not provided",
+        "availabilityOnRequest": "Available on request",
+        "ratePlan": "Rate plan",
+        "paymentPolicy": "Payment",
+        "taxesAndFees": "Taxes and fees",
+        "taxesIncluded": "Included in total",
+        "taxesExcluded": "Property taxes or fees may be collected separately",
         "roomGallery": "Room gallery",
         "photoCount": "{count} photos",
         "galleryPhotoCount": "{count} photos",
@@ -188,22 +252,32 @@
         "meal": "Meals",
         "cancellation": "Cancellation",
         "nightly": "Per room / night",
+        "nightlyBed": "Per bed / night",
         "stay": "Stay charge",
-        "fee": "Convenience fee",
+        "fee": "Service charges (incl. applicable GST)",
+        "feeHelp": "TREM service charge: {service}. GST on TREM charge: {gst}.",
+        "feeHelpWithOther": "TREM service charge: {service}. GST on TREM charge: {gst}",
+        "loadingMore": "Checking more stays",
         "total": "Total for all guests",
         "dates": "Dates",
         "party": "Guests and rooms",
         "nights": "Duration",
         "yourStay": "Your stay",
-        "stayPrice": "From, entire stay",
+        "stayPrice": "Lowest available total for your stay",
         "rating": "Guest rating",
         "staySummary": "{nights} nights · {rooms} rooms · {guests} guests",
         "staySummarySingleRoom": "{nights} nights · 1 room · {guests} guests",
+        "staySummaryBeds": "{nights} nights · {guests} beds · {guests} guests",
+        "staySummarySingleBed": "{nights} nights · 1 bed · 1 guest",
         "resultsSummary": "{count} stays available in {destination}",
         "occupancySummary": "Up to {count} guests per room",
+        "occupancySummarySingle": "Up to 1 guest per room",
+        "occupancyBedSummary": "1 guest per bed",
         "stayChargeSummary": "{amount} · {rooms} rooms × {nights} nights",
         "stayUnitsSummary": "{rooms} rooms × {nights} nights",
         "stayUnitsSummarySingleRoom": "1 room × {nights} nights",
+        "stayBedUnitsSummary": "{guests} beds × {nights} nights",
+        "stayBedUnitsSummarySingleBed": "1 bed × {nights} nights",
         "partySummary": "{guests} guests · {rooms} rooms",
         "partySummarySingleRoom": "{guests} guests · 1 room",
         "nightsSummary": "{nights} nights",
@@ -248,6 +322,8 @@
         "search": "/hotels/search",
         "results": "/hotels/search/{searchId}/results",
         "details": "/hotels/search/{searchId}/hotels/{hotelId}",
+        "detailsWidget": "/hotels/search/{searchId}/hotels/{hotelId}/widgets/{widget}",
+        "quote": "/hotels/search/{searchId}/hotels/{hotelId}/quote",
         "enquiries": "/hotels/enquiries"
       }
     },
@@ -266,7 +342,10 @@
           ]
         },
         {
-          "type": "HotelSearch"
+          "type": "HotelSearch",
+          "props": {
+            "variant": "hotel"
+          }
         },
         {
           "type": "HotelFilters"
@@ -274,7 +353,9 @@
         {
           "type": "HotelResults",
           "cardProps": {
-            "variant": "full"
+            "variant": "compact",
+            "previewPriority": ["highlights", "amenities", "description", "facts"],
+            "previewSectionLimit": 2
           },
           "paginationProps": {
             "previousLabelRef": "paginationPrevious",
@@ -287,6 +368,14 @@
         },
         {
           "type": "HotelDetails"
+        },
+        {
+          "type": "HotelPropertyInformation",
+          "props": {
+            "amenityPreviewCount": 12,
+            "policyPreviewCount": 4,
+            "benefitLabelRefs": ["benefitCompare", "benefitTotal", "benefitRooms"]
+          }
         },
         {
           "type": "HotelRooms"

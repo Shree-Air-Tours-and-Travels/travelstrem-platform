@@ -15,14 +15,42 @@ import { useAppShellConfig } from "../../app/providers/AppShellProvider";
 import { buildTrevistaTourPath } from "../../app/routing/navigationRegistry";
 import resolveContractRefs from "../../core/config/resolveContractRefs";
 import OverviewView from "../../views/OverviewView";
+import ArticlesView from "../../views/ArticlesView";
+import DashboardView from "../../views/DashboardView";
 import FavoritesView from "../../views/FavoritesView";
 import ProfileView from "../../views/ProfileView";
 import { UserBookingJourney } from "@apps/booking-engine";
-import { PRODUCT_TYPE } from "@packages/trem-ui";
+import { NoDataFound, Preloader, PRODUCT_TYPE } from "@packages/trem-ui";
 import "./AppShell.styles.scss";
 
 const PRODUCT_URLS = { [PRODUCT_TYPE.TREVISTA]: process.env.REACT_APP_TREVISTA_URL };
 const USER_PROFILE_UPDATED_EVENT = "USER_PROFILE_UPDATED";
+const GUEST_FAVORITES_VIEW = {
+  hero: {
+    eyebrow: "Your travel shortlist",
+    title: "Saved journeys",
+    description: "Sign in or start exploring to save journeys and compare them here.",
+  },
+  controls: {
+    searchPlaceholder: "Search saved tours and destinations",
+    productOptions: [{ value: "all", label: "All saved journeys" }],
+    sortOptions: [{ value: "recent", label: "Recently saved" }],
+  },
+  labels: {
+    saved: "Saved",
+    products: "Available products",
+    result: "saved journey",
+    results: "saved journeys",
+  },
+  states: {
+    emptyTitle: "Start building your travel shortlist",
+    emptyDescription: "Explore available products and save the journeys you want to revisit.",
+    filteredTitle: "No saved journeys match these filters",
+    filteredDescription: "Try another search or clear your current filters.",
+  },
+  actions: { explore: "Explore tours", clear: "Clear filters" },
+  summary: { savedCount: 0, productCount: 0 },
+};
 let overviewResponseCache = null;
 let overviewResponseUserKey = "";
 let overviewRequest = null;
@@ -67,9 +95,13 @@ const resolveFavoriteRef = (item) => {
 export default function AppShellContainer({ activeTab = "overview", onTabChange }) {
   const navigate = useNavigate();
   const { session } = useAppShellConfig();
+  const isAuthenticated = Boolean(session?.isAuthenticated);
   const user = session?.user || {};
   const overviewUserKey = String(user.id || user._id || "guest");
   const [planCards, setPlanCards] = useState(null);
+  const [journeyStory, setJourneyStory] = useState(null);
+  const [travelBenefits, setTravelBenefits] = useState(null);
+  const [homeInsights, setHomeInsights] = useState(null);
   const [overviewRail, setOverviewRail] = useState(null);
   const [metricsDefinition, setMetricsDefinition] = useState(null);
   const [overviewCopy, setOverviewCopy] = useState({});
@@ -88,6 +120,9 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
   const [profileSaving, setProfileSaving] = useState(false);
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [avatarSaving, setAvatarSaving] = useState(false);
+  const [articlesPage, setArticlesPage] = useState(null);
+  const [articlesLoading, setArticlesLoading] = useState(false);
+  const [articlesError, setArticlesError] = useState(false);
 
   // The dashboard page definition carries user-scoped data (metrics, recent
   // bookings & enquiries, upcoming trips) in the same response as the markup.
@@ -135,11 +170,14 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
         });
         setOverviewCopy(labels);
         setJourneyHero(resolve(widgetFor("JourneyHero")?.props || null));
+        setJourneyStory(contentFor("JourneyStory"));
         setOverviewSections({
           recent: resolve(widgetFor("RecentBookings")?.props || {}),
           upcoming: resolve(widgetFor("UpcomingTrips")?.props || {}),
         });
         setPlanCards(contentFor("PlanCards"));
+        setTravelBenefits(contentFor("TravelBenefits"));
+        setHomeInsights(contentFor("HomeInsights"));
         setOverviewRail(contentFor("OverviewRail"));
         setDashboardData({
           metrics: component?.data?.metrics || {},
@@ -153,6 +191,9 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
       .catch(() => {
         if (overviewResponseCache && overviewResponseUserKey === overviewUserKey) return;
         setPlanCards(null);
+        setJourneyStory(null);
+        setTravelBenefits(null);
+        setHomeInsights(null);
         setOverviewRail(null);
         setJourneyHero(null);
         setOverviewSections({});
@@ -172,13 +213,42 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
     loadOverview();
   }, [loadOverview]);
 
+  const loadArticlesPage = useCallback(() => {
+    setArticlesLoading(true);
+    setArticlesError(false);
+    return fetchData("/pages/app-shell/articles")
+      .then((response) => {
+        const component = response?.component;
+        const labels = component?.elements?.labels || {};
+        const urls = component?.elements?.urls || {};
+        const widget = (component?.structure?.widgets || []).find((item) => item?.type === "ArticlesPage");
+        const dataKey = widget?.props?.dataKey;
+        setArticlesPage(dataKey ? resolveContractRefs(component?.data?.[dataKey], labels, urls) : null);
+      })
+      .catch(() => {
+        setArticlesError(true);
+      })
+      .finally(() => setArticlesLoading(false));
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === "articles" && !articlesPage && !articlesLoading) {
+      loadArticlesPage();
+    }
+  }, [activeTab, articlesLoading, articlesPage, loadArticlesPage]);
+
   // Load once, then let realtime enquiry events update the overview.
-  useEnquiryRealtime(activeTab === "overview" ? () => loadOverview({ force: true }) : null);
+  useEnquiryRealtime(
+    activeTab === "overview" || activeTab === "dashboard"
+      ? () => loadOverview({ force: true })
+      : null,
+  );
   useRealtimeEvent(REALTIME_EVENTS.PRODUCT_CATALOG_UPDATED, () =>
     loadOverview({ force: true }),
   );
 
   useEffect(() => {
+    if (!isAuthenticated) return;
     let cancelled = false;
     fetchData("/auth/profile")
       .then((res) => {
@@ -188,9 +258,16 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isAuthenticated]);
 
   const loadFavorites = useCallback(async ({ silent = false } = {}) => {
+    if (!isAuthenticated) {
+      setFavorites([]);
+      setFavoritesView(GUEST_FAVORITES_VIEW);
+      setFavoritesError("");
+      setFavoritesLoading(false);
+      return;
+    }
     if (!silent) setFavoritesLoading(true);
     setFavoritesError("");
     try {
@@ -203,7 +280,7 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
     } finally {
       if (!silent) setFavoritesLoading(false);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     loadFavorites();
@@ -375,10 +452,54 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
     [navigate],
   );
 
+  const handleHeroSearch = useCallback(({ mode, values = {}, choice }) => {
+    const paths = {
+      flight: "/trehub/flights",
+      hotel: "/trehub/hotels",
+      trip: "/trevio/trips",
+      tour: "/trevista/tours",
+    };
+    const path = paths[mode];
+    if (!path) return;
+    const params = new URLSearchParams();
+    if (mode === "trip" || mode === "tour") {
+      const destination = String(values.destination || "").trim();
+      if (destination) params.set(mode === "trip" ? "search" : "q", destination);
+      if (values.startDate) params.set(mode === "trip" ? "startDate" : "departure", values.startDate);
+      if (values.endDate) params.set(mode === "trip" ? "endDate" : "return", values.endDate);
+      if (values.travellers) params.set("travellers", String(values.travellers));
+    } else {
+      if (choice) params.set("choice", choice);
+      Object.entries(values).forEach(([key, value]) => {
+        if (value === "" || value == null) return;
+        params.set(key, Array.isArray(value) ? value.join(",") : String(value));
+      });
+    }
+    navigate(`${path}${params.size ? `?${params}` : ""}`);
+  }, [navigate]);
+
   return (
-    <div className="app-shell-page">
+    <div className={`app-shell-page${activeTab === "overview" ? " app-shell-page--home" : ""}`}>
       {activeTab === "overview" && (
-        <OverviewView
+        overviewDefinitionLoading && !journeyHero ? (
+          <div className="app-shell-home-preloader">
+            <Preloader variant="hero" label="Loading home page" />
+            <Preloader variant="grid" count={3} label="Loading travel products" />
+          </div>
+        ) : (
+          <OverviewView
+            journeyHero={journeyHero}
+            journeyStory={journeyStory}
+            travelBenefits={travelBenefits}
+            planCards={planCards}
+            homeInsights={homeInsights}
+            onHeroSearch={handleHeroSearch}
+            onTabChange={onTabChange}
+          />
+        )
+      )}
+      {activeTab === "dashboard" && (
+        <DashboardView
           user={user}
           stats={{
             ...(dashboardData?.metrics || {}),
@@ -393,7 +514,6 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
           upcomingTrips={dashboardData?.upcomingTrips || []}
           recentEmptyState={dashboardData?.recentEmptyState}
           upcomingEmptyState={dashboardData?.upcomingEmptyState}
-          planCards={planCards}
           overviewRail={overviewRail}
           overviewDefinitionLoading={overviewDefinitionLoading}
           overviewStatsLoading={!metricsDefinition}
@@ -413,17 +533,43 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
           onViewFavorite={handleViewFavorite}
         />
       )}
-      {activeTab === "bookings" && <UserBookingJourney />}
-      {activeTab === "profile" && (
-        <ProfileView
-          user={profile || user}
-          onSaveProfile={handleSaveProfile}
-          onUpdatePassword={handleUpdatePassword}
-          onUpdateAvatar={handleUpdateAvatar}
-          saving={profileSaving}
-          passwordSaving={passwordSaving}
-          avatarSaving={avatarSaving}
+      {activeTab === "articles" && (
+        <ArticlesView
+          page={articlesPage}
+          loading={articlesLoading}
+          error={articlesError}
+          onRetry={loadArticlesPage}
         />
+      )}
+      {activeTab === "bookings" && (
+        isAuthenticated ? (
+          <UserBookingJourney />
+        ) : (
+          <NoDataFound
+            icon="reservations"
+            title="No bookings to show yet"
+            description="Sign in to manage existing bookings, or start a new booking so your travel updates appear here."
+          />
+        )
+      )}
+      {activeTab === "profile" && (
+        !isAuthenticated ? (
+          <NoDataFound
+            icon="user"
+            title="Profile is available after sign in"
+            description="Continue exploring as a guest, or sign in when you are ready to manage your account details."
+          />
+        ) : (
+          <ProfileView
+            user={profile || user}
+            onSaveProfile={handleSaveProfile}
+            onUpdatePassword={handleUpdatePassword}
+            onUpdateAvatar={handleUpdateAvatar}
+            saving={profileSaving}
+            passwordSaving={passwordSaving}
+            avatarSaving={avatarSaving}
+          />
+        )
       )}
     </div>
   );

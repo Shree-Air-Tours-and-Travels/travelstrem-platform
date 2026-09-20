@@ -179,7 +179,7 @@ export default function FlightFiltersContainer() {
       onPageChange={(page) => updateQuery({ page }, false)}
       onSelectFlight={(flight) =>
         navigate(
-          `/trehub/flights/${encodeURIComponent(flight.offerId)}?searchId=${encodeURIComponent(searchIdRef.current)}`,
+          `/trehub/flights/${encodeURIComponent(flight.offerId)}?searchId=${encodeURIComponent(searchIdRef.current)}&fareId=${encodeURIComponent(flight.fare?.fareId || "")}`,
           { state: { returnTo: `${location.pathname}${location.search}` } },
         )
       }

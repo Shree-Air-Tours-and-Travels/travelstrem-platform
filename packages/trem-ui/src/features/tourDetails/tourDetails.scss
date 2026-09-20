@@ -22,6 +22,8 @@
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
+    margin-top: $space-5;
+    padding-bottom: calc(var(--trem-floating-action-clearance, 0px) + #{$space-5});
   }
 
   &__section-nav {
@@ -1104,7 +1106,6 @@
     --td-page-gutter: 0.75rem;
     min-height: 0;
     padding-inline: 0.75rem;
-    padding-bottom: var(--trem-floating-action-clearance, 74px);
 
     &__shell {
       gap: 0.75rem;

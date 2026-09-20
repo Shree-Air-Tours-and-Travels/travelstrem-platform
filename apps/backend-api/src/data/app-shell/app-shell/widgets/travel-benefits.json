@@ -1,0 +1,77 @@
+{
+  "status": "success",
+  "component": {
+    "data": {
+      "travelBenefits": {
+        "ariaLabelRef": "benefitsAriaLabel",
+        "eyebrowRef": "benefitsEyebrow",
+        "eyebrowIcon": "sparkles",
+        "titleRef": "benefitsTitle",
+        "highlightRef": "benefitsHighlight",
+        "descriptionRef": "benefitsDescription",
+        "proofLabelRef": "benefitsProofLabel",
+        "items": [
+          {
+            "id": "secure-planning",
+            "icon": "shieldCheck",
+            "tone": "olive",
+            "titleRef": "benefitSecureTitle",
+            "descriptionRef": "benefitSecureDescription"
+          },
+          {
+            "id": "curated-experiences",
+            "icon": "sparkles",
+            "tone": "orange",
+            "titleRef": "benefitCuratedTitle",
+            "descriptionRef": "benefitCuratedDescription"
+          },
+          {
+            "id": "one-place",
+            "icon": "map",
+            "tone": "purple",
+            "titleRef": "benefitTogetherTitle",
+            "descriptionRef": "benefitTogetherDescription"
+          },
+          {
+            "id": "expert-support",
+            "icon": "phoneCall",
+            "tone": "teal",
+            "titleRef": "benefitSupportTitle",
+            "descriptionRef": "benefitSupportDescription"
+          }
+        ]
+      }
+    },
+    "dataScope": { "options": {} },
+    "elements": {
+      "labels": {
+        "benefitsAriaLabel": "Why travellers choose TravelsTREM",
+        "benefitsEyebrow": "The TravelsTREM advantage",
+        "benefitsTitle": "Travel better with",
+        "benefitsHighlight": "less guesswork",
+        "benefitsDescription": "Thoughtful planning, trusted choices and human support come together for every journey.",
+        "benefitsProofLabel": "One connected journey, from search to support",
+        "benefitSecureTitle": "Plan with confidence",
+        "benefitSecureDescription": "Clear trip details and secure enquiry handling from the first search onward.",
+        "benefitCuratedTitle": "Genuinely curated",
+        "benefitCuratedDescription": "Discover stays, tours and adventures selected for quality and relevance.",
+        "benefitTogetherTitle": "Everything in one place",
+        "benefitTogetherDescription": "Compare flights, stays, trips and tours without losing track of your plans.",
+        "benefitSupportTitle": "People when you need them",
+        "benefitSupportDescription": "Travel specialists help you review choices and move forward with clarity."
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "TravelBenefits",
+          "props": { "dataKey": "travelBenefits" }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

@@ -7,7 +7,11 @@ export { default as StatusBadge } from "./components/StatusBadge/StatusBadge.jsx
 export { default as Button } from "./components/Button/Button.jsx";
 export { default as Gallery } from "./components/Gallery/Gallery.jsx";
 export { default as HotelCard } from "./components/HotelCard/HotelCard.jsx";
-export { default as HotelRoomCard } from "./components/HotelRoomCard/HotelRoomCard.jsx";
+export { default as HotelRateCard } from "./components/HotelRateCard/HotelRateCard.jsx";
+export {
+  default as HotelRoomCard,
+  HotelRoomDetails,
+} from "./components/HotelRoomCard/HotelRoomCard.jsx";
 export { default as HighlightSpan } from "./components/HighlightSpan/HighlightSpan.jsx";
 export { default as SubTitle } from "./components/SubTitle/SubTitle.jsx";
 export { default as Title } from "./components/Title/Title.jsx";
@@ -39,6 +43,7 @@ export { default as Header } from "./layout/Header/Header.jsx";
 export { default as ProductHeader } from "./layout/ProductHeader/ProductHeader.jsx";
 export { default as ProductHeaderWithDropdown } from "./layout/ProductHeader/ProductHeaderWithDropdown.jsx";
 export { default as Dropdown } from "./components/Dropdown/Dropdown.jsx";
+export { default as InfoTooltip } from "./components/InfoTooltip/InfoTooltip.jsx";
 export { default as SmoothScroll } from "./components/SmoothScroll/SmoothScroll.jsx";
 export { default as TourCard } from "./components/TourCard/TourCard.jsx";
 export { default as TrevioTripCard } from "./components/TrevioTripCard/TrevioTripCard.jsx";
@@ -81,6 +86,7 @@ export { default as Paragraph } from "./components/Paragraph/Paragraph.jsx";
 export { default as QuickChips } from "./components/QuickChips/QuickChips.jsx";
 export { default as SideBar } from "./components/SideBar/SideBar.jsx";
 export { default as DashboardSidebar } from "./components/DashboardSidebar/DashboardSidebar.jsx";
+export { default as LinkTabs } from "./components/LinkTabs/LinkTabs.jsx";
 export { default as AppHeader } from "./components/AppHeader/AppHeader.jsx";
 export { default as AuthHeader } from "./components/AuthHeader/AuthHeader.jsx";
 export { default as AppFooter } from "./components/AppFooter/AppFooter.jsx";
@@ -132,6 +138,7 @@ export { default as DetailedChip } from "./components/DetailedChip/DetailedChip.
 export { default as OptionCardRail } from "./components/OptionCardRail/OptionCardRail.jsx";
 export { default as FlightCard } from "./components/FlightCard/FlightCard.jsx";
 export { default as FlightDetails } from "./components/FlightDetails/FlightDetails.jsx";
+export { default as OccupancyPicker } from "./components/OccupancyPicker/OccupancyPicker.jsx";
 export { default as ConfigurableFilterPanel } from "./components/ConfigurableFilterPanel/ConfigurableFilterPanel.jsx";
 export {
   default as OverviewRail,

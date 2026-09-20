@@ -12,6 +12,12 @@
         "greetingEvening": "Good evening",
         "greetingFallbackName": "there",
         "greetingDescription": "Here’s your personal travel overview.",
+        "dashboardAriaLabel": "Your TravelsTREM dashboard",
+        "dashboardEyebrow": "Your travel command centre",
+        "dashboardTitle": "Your travel dashboard",
+        "dashboardDescription": "Track requests, revisit plans and keep your next journey within easy reach.",
+        "dashboardBookingsAction": "My bookings",
+        "dashboardViewAllBookings": "View all",
         "recentSectionAriaLabel": "Recent bookings and enquiries",
         "recentDefaultTitle": "General tour enquiry",
         "recentOpenAction": "Open enquiry in My Bookings",
@@ -45,9 +51,24 @@
           "widgetRef": "./widgets/upcoming-trips.json"
         },
         {
+          "type": "JourneyStory",
+          "source": "shell",
+          "widgetRef": "./widgets/journey-story.json"
+        },
+        {
           "type": "PlanCards",
           "source": "shell",
           "widgetRef": "./widgets/plan-cards.json"
+        },
+        {
+          "type": "TravelBenefits",
+          "source": "shell",
+          "widgetRef": "./widgets/travel-benefits.json"
+        },
+        {
+          "type": "HomeInsights",
+          "source": "shell",
+          "widgetRef": "./widgets/home-insights.json"
         },
         {
           "type": "RecentBookings",

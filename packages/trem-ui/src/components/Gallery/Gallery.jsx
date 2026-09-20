@@ -38,6 +38,7 @@ const Gallery = ({
     viewer: labels.galleryViewer || "Image gallery",
     thumbnails: labels.galleryThumbnails || "Image thumbnails",
     showImage: labels.galleryShowImage || "Show image {current}",
+    openAll: labels.galleryOpenAll || "Open all {count} photos",
     pause: labels.galleryPause || "Pause slideshow",
     play: labels.galleryPlay || "Start slideshow",
   };
@@ -253,8 +254,13 @@ const Gallery = ({
                 type="button"
                 role="tab"
                 className={`gallery__thumb${index === activeIndex ? " is-active" : ""}`}
-                onClick={() => goTo(index)}
-                aria-label={interpolate(text.showImage, { current: index + 1 })}
+                onClick={(event) => {
+                  goTo(index);
+                  if (index === visibleThumbs.length - 1 && hiddenCount > 0) openLightbox(event);
+                }}
+                aria-label={index === visibleThumbs.length - 1 && hiddenCount > 0
+                  ? interpolate(text.openAll, { count })
+                  : interpolate(text.showImage, { current: index + 1 })}
                 aria-selected={index === activeIndex}
               >
                 <img src={src} alt="" loading="lazy" />

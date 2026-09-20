@@ -149,25 +149,48 @@ export default function SideBar({
                 <div className="trem-sidebar__items">
                   {visibleItems.map((item) => {
                     const active = item.id === activeId || activeTargets.has(item.id);
+                    const classNames = [
+                      "trem-sidebar__item",
+                      active ? "is-active" : "",
+                      item.disabled ? "is-disabled" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ");
+                    const content = (
+                      <>
+                        <Icon name={item.icon} size={21} strokeWidth={1.8} />
+                        <span>{item.label}</span>
+                        {item.badge ? <small>{item.badge}</small> : null}
+                        {item.indicator ? <i aria-label="New activity" /> : null}
+                      </>
+                    );
+
+                    if (item.type === "external" && item.href && !item.disabled) {
+                      return (
+                        <a
+                          key={item.id}
+                          href={item.href}
+                          target={item.target}
+                          rel={item.target === "_blank" ? "noopener noreferrer" : undefined}
+                          title={item.label}
+                          className={classNames}
+                          onClick={onClose}
+                        >
+                          {content}
+                        </a>
+                      );
+                    }
+
                     return (
                       <button
                         key={item.id}
                         type="button"
                         disabled={item.disabled}
                         title={item.comingSoon ? `${item.label} — Coming soon` : item.label}
-                        className={[
-                          "trem-sidebar__item",
-                          active ? "is-active" : "",
-                          item.disabled ? "is-disabled" : "",
-                        ]
-                          .filter(Boolean)
-                          .join(" ")}
+                        className={classNames}
                         onClick={() => activate(item)}
                       >
-                        <Icon name={item.icon} size={21} strokeWidth={1.8} />
-                        <span>{item.label}</span>
-                        {item.badge ? <small>{item.badge}</small> : null}
-                        {item.indicator ? <i aria-label="New activity" /> : null}
+                        {content}
                       </button>
                     );
                   })}

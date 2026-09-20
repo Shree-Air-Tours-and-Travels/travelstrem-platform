@@ -26,20 +26,21 @@ const connectionFor = (origin, destination, index) => {
     return candidates[hashNumber(origin, destination, index, "connection") % candidates.length];
 };
 
-const createSegment = ({ originCode, destinationCode, departureDate, optionIndex, legIndex, direction, cabin }) => {
+const createSegment = ({ originCode, destinationCode, departureDate, departureAt, optionIndex, legIndex, journeyIndex, direction, cabin }) => {
     const origin = airportByCode.get(originCode);
     const destination = airportByCode.get(destinationCode);
     const airline = seededItem(airlinePool(originCode, destinationCode), originCode, destinationCode, departureDate, optionIndex, legIndex);
     const isLongHaul = distanceKm(origin, destination) > 4800;
     const plane = seededItem(isLongHaul ? aircraft.filter((item) => item.code === "B787") : aircraft.filter((item) => item.code !== "B787"), originCode, destinationCode, optionIndex);
     const departureMinutes = 330 + ((hashNumber(originCode, destinationCode, departureDate, optionIndex, legIndex) % 900));
-    const departure = new Date(`${departureDate}T00:00:00.000Z`);
-    departure.setUTCMinutes(departureMinutes + legIndex * 125);
+    const departure = departureAt ? new Date(departureAt) : new Date(`${departureDate}T00:00:00.000Z`);
+    if (!departureAt) departure.setUTCMinutes(departureMinutes);
     const durationMinutes = Math.max(65, Math.round(distanceKm(origin, destination) / 12.5 + 40));
     const arrival = addMinutes(departure, durationMinutes);
     const flightNumber = `${airline.code} ${100 + (hashNumber(originCode, destinationCode, departureDate, optionIndex, legIndex, "number") % 8900)}`;
     return {
         segmentId: deterministicId("SEG", flightNumber, departure.toISOString()),
+        journeyIndex,
         direction,
         airline: { code: airline.code, name: airline.name, icon: airline.icon },
         operatingAirline: { code: airline.code, name: airline.name },
@@ -61,11 +62,13 @@ const createSegment = ({ originCode, destinationCode, departureDate, optionIndex
 const buildSegments = (journey, journeyIndex, optionIndex, cabin, directOnly) => {
     const connecting = !directOnly && optionIndex >= 4;
     const direction = journeyIndex === 0 ? "OUTBOUND" : journeyIndex === 1 ? "RETURN" : `JOURNEY_${journeyIndex + 1}`;
-    if (!connecting) return [createSegment({ originCode: journey.origin, destinationCode: journey.destination, departureDate: journey.departureDate, optionIndex, legIndex: 0, direction, cabin })];
+    if (!connecting) return [createSegment({ originCode: journey.origin, destinationCode: journey.destination, departureDate: journey.departureDate, optionIndex, legIndex: 0, journeyIndex, direction, cabin })];
     const connection = connectionFor(journey.origin, journey.destination, optionIndex);
+    const first = createSegment({ originCode: journey.origin, destinationCode: connection, departureDate: journey.departureDate, optionIndex, legIndex: 0, journeyIndex, direction, cabin });
+    const layoverMinutes = 90 + hashNumber(journey.origin, journey.destination, optionIndex, "layover") % 150;
     return [
-        createSegment({ originCode: journey.origin, destinationCode: connection, departureDate: journey.departureDate, optionIndex, legIndex: 0, direction, cabin }),
-        createSegment({ originCode: connection, destinationCode: journey.destination, departureDate: journey.departureDate, optionIndex, legIndex: 1, direction, cabin }),
+        first,
+        createSegment({ originCode: connection, destinationCode: journey.destination, departureDate: journey.departureDate, departureAt: addMinutes(new Date(first.arrivalDateTime), layoverMinutes), optionIndex, legIndex: 1, journeyIndex, direction, cabin }),
     ];
 };
 

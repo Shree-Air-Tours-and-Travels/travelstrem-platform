@@ -60,29 +60,31 @@ export default function FlightDetails({ details = {}, selectedFareId, labels = {
             <div className="trem-flight-details__route">
               <div>
                 <time dateTime={segment.departure?.iso}>{segment.departure?.time}</time>
+                {segment.departure?.date ? <small>{segment.departure.date}</small> : null}
                 <strong>{segment.departure?.code}</strong>
                 <span>{segment.departure?.city}</span>
                 <small>{segment.departure?.name}</small>
-                <small>Terminal {segment.departure?.terminal || "—"}</small>
+                {segment.departure?.terminal ? <small>Terminal {segment.departure.terminal}</small> : null}
               </div>
               <div className="trem-flight-details__route-line">
                 <span>{segment.duration}</span>
                 <div><i /><Icon name="plane" size={20} /><i /></div>
-                <small>{labelFor(labels, config.nonStopRef, "Non-stop")}</small>
+                <small>{segment.stopsLabel || labelFor(labels, config.nonStopRef, "Non-stop")}</small>
               </div>
               <div>
                 <time dateTime={segment.arrival?.iso}>{segment.arrival?.time}</time>
+                {segment.arrival?.date ? <small>{segment.arrival.date}</small> : null}
                 <strong>{segment.arrival?.code}</strong>
                 <span>{segment.arrival?.city}</span>
                 <small>{segment.arrival?.name}</small>
-                <small>Terminal {segment.arrival?.terminal || "—"}</small>
+                {segment.arrival?.terminal ? <small>Terminal {segment.arrival.terminal}</small> : null}
               </div>
             </div>
 
             <dl className="trem-flight-details__equipment">
-              <div><dt>{labelFor(labels, config.aircraftRef, "Aircraft")}</dt><dd>{segment.aircraft}</dd></div>
-              <div><dt>{labelFor(labels, config.cabinRef, "Cabin")}</dt><dd>{selectedFare?.cabin || segment.cabin} · Class {selectedFare?.bookingClass || segment.bookingClass}</dd></div>
-              <div><dt>{labelFor(labels, config.operatedByRef, "Operated by")}</dt><dd>{segment.operatingAirline?.name}</dd></div>
+              {segment.aircraft ? <div><dt>{labelFor(labels, config.aircraftRef, "Aircraft")}</dt><dd>{segment.aircraft}</dd></div> : null}
+              {segment.cabin || selectedFare?.cabin ? <div><dt>{labelFor(labels, config.cabinRef, "Cabin")}</dt><dd>{segment.cabin || selectedFare.cabin}{segment.bookingClass || selectedFare?.bookingClass ? ` · Class ${segment.bookingClass || selectedFare.bookingClass}` : ""}</dd></div> : null}
+              {segment.operatingAirline?.name ? <div><dt>{labelFor(labels, config.operatedByRef, "Operated by")}</dt><dd>{segment.operatingAirline.name}</dd></div> : null}
             </dl>
 
             {segment.layoverAfter ? (
@@ -99,7 +101,7 @@ export default function FlightDetails({ details = {}, selectedFareId, labels = {
               <h3>{selectedFare.brand} {labelFor(labels, config.fareDetailsRef, "fare details")}</h3>
               <p>{selectedFare.cabin} · Booking class {selectedFare.bookingClass}</p>
             </div>
-            <StatusBadge value={selectedFare.availability?.status || "AVAILABLE"} appearance="accent" />
+            <StatusBadge value={selectedFare.availability?.status || "Check availability"} appearance="accent" />
           </header>
 
           <div className="trem-flight-details__fare-grid">

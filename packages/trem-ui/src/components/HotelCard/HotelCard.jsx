@@ -1,4 +1,5 @@
 import React from "react";
+import InfoTooltip from "../InfoTooltip/InfoTooltip.jsx";
 import PropTypes from "prop-types";
 import Button from "../Button/Button.jsx";
 import StatusBadge from "../StatusBadge/StatusBadge.jsx";
@@ -10,6 +11,8 @@ export default function HotelCard({
   hotel,
   labels = {},
   variant = "full",
+  previewPriority = ["highlights", "amenities", "description", "facts"],
+  previewSectionLimit = 2,
   disabled = false,
   hidden = false,
   loading = false,
@@ -30,6 +33,16 @@ export default function HotelCard({
 
   const unavailable = disabled || hotel.disabled;
   const rating = typeof hotel.rating === "object" ? hotel.rating : { value: hotel.rating };
+  const availablePreviewSections = {
+    highlights: Boolean(hotel.highlights?.length),
+    amenities: Boolean(hotel.amenities?.length),
+    description: Boolean(hotel.description?.trim()),
+    facts: Boolean(hotel.facts?.length),
+  };
+  const compactSections = new Set(
+    previewPriority.filter((section) => availablePreviewSections[section]).slice(0, previewSectionLimit),
+  );
+  const showSection = (section) => variant !== "compact" || compactSections.has(section);
 
   return (
     <article
@@ -86,9 +99,9 @@ export default function HotelCard({
           ) : null}
         </div>
 
-        {hotel.highlights?.length ? (
+        {hotel.highlights?.length && showSection("highlights") ? (
           <div className="trem-hotel-card__highlights">
-            {hotel.highlights.map((highlight) => (
+            {(variant === "compact" ? hotel.highlights.slice(0, 2) : hotel.highlights).map((highlight) => (
               <span
                 key={highlight.id}
                 className={`trem-hotel-card__highlight trem-hotel-card__highlight--${highlight.tone || "info"}`}
@@ -100,11 +113,11 @@ export default function HotelCard({
           </div>
         ) : null}
 
-        {hotel.description && variant !== "compact" ? <p>{hotel.description}</p> : null}
+        {hotel.description && showSection("description") ? <p className="trem-hotel-card__description">{hotel.description}</p> : null}
 
-        {hotel.amenities?.length ? (
+        {hotel.amenities?.length && showSection("amenities") ? (
           <ul className="trem-hotel-card__amenities">
-            {hotel.amenities.map((amenity) => {
+            {(variant === "compact" ? hotel.amenities.slice(0, 3) : hotel.amenities).map((amenity) => {
               const item = typeof amenity === "string" ? { value: amenity } : amenity;
               return (
                 <li key={item.value}>
@@ -116,9 +129,9 @@ export default function HotelCard({
           </ul>
         ) : null}
 
-        {hotel.facts?.length ? (
+        {hotel.facts?.length && showSection("facts") ? (
           <dl className="trem-hotel-card__facts">
-            {hotel.facts.map((fact) => (
+            {(variant === "compact" ? hotel.facts.slice(0, 2) : hotel.facts).map((fact) => (
               <div key={fact.id}>
                 <Icon name={fact.icon} size={20} aria-hidden="true" />
                 <span>
@@ -145,7 +158,7 @@ export default function HotelCard({
                 <dl className="trem-hotel-card__price-breakdown">
                   {hotel.priceFields.map((field) => (
                     <div key={field.id}>
-                      <dt>{labels[field.labelRef]}</dt>
+                      <dt>{labels[field.labelRef]}{field.help ? <InfoTooltip label={`About ${labels[field.labelRef]}`} text={field.help} hide={field.id === "fee"} /> : null}</dt>
                       <dd>{field.value}</dd>
                     </div>
                   ))}
@@ -168,7 +181,7 @@ export default function HotelCard({
                 disabled={unavailable || !onView}
                 onClick={() => onView?.(hotel)}
               />
-              {hotel.secondaryActionLabelRef ? (
+              {hotel.secondaryActionLabelRef && variant !== "compact" ? (
                 <Button
                   text={labels[hotel.secondaryActionLabelRef]}
                   variant="outline"
@@ -216,6 +229,8 @@ HotelCard.propTypes = {
   }).isRequired,
   labels: PropTypes.object,
   variant: PropTypes.oneOf(["full", "compact", "vertical"]),
+  previewPriority: PropTypes.arrayOf(PropTypes.oneOf(["highlights", "amenities", "description", "facts"])),
+  previewSectionLimit: PropTypes.number,
   disabled: PropTypes.bool,
   hidden: PropTypes.bool,
   loading: PropTypes.bool,

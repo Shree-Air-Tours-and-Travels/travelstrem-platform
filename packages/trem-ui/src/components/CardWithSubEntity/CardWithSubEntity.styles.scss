@@ -152,6 +152,30 @@
     }
   }
 
+  &__section--collapsible {
+    padding: 0;
+
+    > summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: $space-3;
+      padding: $space-3 $space-4;
+      color: var(--color-primary);
+      font-size: $font-size-sm;
+      font-weight: $font-semibold;
+      cursor: pointer;
+      list-style: none;
+
+      &::-webkit-details-marker { display: none; }
+      svg { flex: 0 0 auto; transition: transform $duration-medium $ease-standard; }
+    }
+
+    &[open] > summary svg { transform: rotate(180deg); }
+    > p { padding: 0 $space-4 $space-3; }
+    > .card-subentity__rows { margin: 0; border-top: 1px solid var(--border); }
+  }
+
   &__totals {
     margin: $space-4;
     border-top: 2px solid var(--heading);
