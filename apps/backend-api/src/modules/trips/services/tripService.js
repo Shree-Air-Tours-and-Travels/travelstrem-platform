@@ -46,6 +46,10 @@ const optionValue = (value = "") =>
         .replace(/^-+|-+$/g, "");
 
 const matchTextFilter = (value = "") => new RegExp(escapeRegex(value), "i");
+const matchDestinationFilter = (value = "") => {
+    const escaped = escapeRegex(String(value).trim());
+    return new RegExp(`^(?:${escaped}(?:\\s*,.*)?|.*\\bto\\s+${escaped}(?:\\s*,.*)?)$`, "i");
+};
 
 const daysUntil = (date) => {
     if (!date) return null;
@@ -329,16 +333,28 @@ const listedQuery = (filters = {}) => {
 
     if (filters.search) {
         const search = new RegExp(escapeRegex(filters.search), "i");
+        const destination = matchDestinationFilter(filters.search);
         and.push({
             $or: [
                 { title: search },
-                { description: search },
-                { routeFrom: search },
                 { routeTo: search },
-                { location: search },
+                { location: destination },
                 { country: search },
                 { category: search },
                 { tags: search },
+            ],
+        });
+    }
+
+    if (filters.destination) {
+        const destination = matchTextFilter(filters.destination);
+        const location = matchDestinationFilter(filters.destination);
+        and.push({
+            $or: [
+                { routeTo: destination },
+                { location },
+                { country: destination },
+                { title: destination },
             ],
         });
     }
@@ -355,6 +371,17 @@ const listedQuery = (filters = {}) => {
 
     if (filters.maxBudget) {
         and.push({ "price.amount": { $lte: number(filters.maxBudget) } });
+    }
+
+    if (filters.startDate) and.push({ startDate: { $gte: filters.startDate } });
+    if (filters.endDate) and.push({ endDate: { $lte: filters.endDate } });
+    if (filters.travellers) {
+        and.push({
+            $or: [
+                { "availability.seatsAvailable": null },
+                { "availability.seatsAvailable": { $gte: filters.travellers } },
+            ],
+        });
     }
 
     if (filters.flights === "with") {
@@ -389,11 +416,19 @@ class TripService {
             .toLowerCase();
         const featuredOnly = params.featured === "true" || params.featured === true;
         const search = String(params.search || params.query || params.q || "").trim();
+        const destination = String(params.destination || "").trim();
         const sort = String(params.sort || "recommended").trim() || "recommended";
         const from = String(params.from || "").trim();
         const to = String(params.to || "").trim();
         const maxBudget = Number(params.maxBudget || params.budget || 0);
         const flights = String(params.flights || "").trim();
+        const startDate = /^\d{4}-\d{2}-\d{2}$/.test(params.startDate || "")
+            ? new Date(`${params.startDate}T00:00:00.000Z`)
+            : null;
+        const endDate = /^\d{4}-\d{2}-\d{2}$/.test(params.endDate || "")
+            ? new Date(`${params.endDate}T23:59:59.999Z`)
+            : null;
+        const travellers = Math.max(0, Number(params.travellers) || 0);
 
         if (!isDbReady()) {
             return {
@@ -412,10 +447,14 @@ class TripService {
             category,
             featuredOnly,
             search,
+            destination,
             from,
             to,
             maxBudget: Number.isFinite(maxBudget) && maxBudget > 0 ? maxBudget : null,
             flights,
+            startDate: startDate && !Number.isNaN(startDate.getTime()) ? startDate : null,
+            endDate: endDate && !Number.isNaN(endDate.getTime()) ? endDate : null,
+            travellers: Number.isFinite(travellers) ? travellers : 0,
         });
         const skip = (page - 1) * limit;
         const docs = await TripRepository.find(query)

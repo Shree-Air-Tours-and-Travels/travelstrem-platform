@@ -12,6 +12,11 @@
   background: var(--page-bg);
   color: var(--text);
   font-family: $font-primary;
+
+  > :not(.trehub-flight-journey__breadcrumb) {
+    width: min(100%, #{$full-width});
+    margin-inline: auto;
+  }
 }
 
 .trehub-flight-journey__breadcrumb {
@@ -83,9 +88,21 @@
   overflow-x: auto;
 }
 .trehub-flight-journey__content {
+  position: relative;
   display: grid;
   gap: $space-4;
   min-width: 0;
+}
+.trehub-flight-journey__pending {
+  position: absolute;
+  z-index: 2;
+  top: $space-3;
+  right: $space-3;
+  padding: $space-2 $space-3;
+  border: 1px solid var(--border);
+  border-radius: $radius-full;
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-sm);
 }
 .trehub-flight-journey__panel {
   padding: clamp($space-4, 3vw, $space-6);

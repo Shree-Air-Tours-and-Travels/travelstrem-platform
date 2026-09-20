@@ -129,7 +129,7 @@
   max-width: 100%;
   padding: $space-2;
   border: 1px solid var(--border);
-  border-radius: $radius-full;
+  border-radius: $radius-lg;
   background: var(--surface-elevated);
   box-shadow: var(--shadow-sm);
   backdrop-filter: blur(18px);
@@ -140,8 +140,8 @@
   align-items: center;
   justify-content: center;
   gap: $space-2;
-  min-height: 2.75rem;
-  padding: 0 $space-4;
+  min-height: 2.5rem;
+  padding: 0 $space-3;
   border: 0;
   border-radius: $radius-full;
   background: transparent;
@@ -190,8 +190,8 @@
 
 .trem-global-search__panel {
   display: grid;
-  gap: $space-4;
-  padding: clamp($space-4, 2vw, $space-5);
+  gap: $space-3;
+  padding: $space-4;
   border: 1px solid var(--border);
   border-radius: $radius-xl;
   background: var(--surface-elevated);
@@ -204,8 +204,10 @@
   align-items: center;
   justify-content: space-between;
   gap: $space-4;
-  min-height: 2.5rem;
+  min-height: 2rem;
 }
+
+.trem-global-search__choices:empty { display: none; }
 
 .trem-global-search__error {
   display: flex;
@@ -227,16 +229,6 @@
 
 .trem-global-search__choice {
   position: relative;
-  display: inline-flex;
-  align-items: center;
-  min-height: 2.35rem;
-  padding: 0 $space-3;
-  border: 1px solid transparent;
-  border-radius: $radius-full;
-  background: var(--surface-subtle);
-  color: var(--text-muted);
-  font-size: $font-size-sm;
-  font-weight: $font-semibold;
   cursor: pointer;
   transition:
     color $duration-base $ease-standard,
@@ -256,10 +248,15 @@
     color: var(--text);
   }
 
+  &:focus-within {
+    outline: 2px solid var(--search-accent);
+    outline-offset: 2px;
+  }
+
   &.is-active {
     border-color: var(--search-accent);
-    background: var(--search-accent-soft);
-    color: var(--search-accent);
+    background: var(--search-accent);
+    color: var(--color-on-primary);
   }
 
   &.is-disabled {
@@ -269,10 +266,8 @@
 }
 
 .trem-global-search__service-heading {
-  color: var(--text);
-  font-size: clamp(#{$font-size-sm}, 1.2vw, #{$font-size-md});
-  font-weight: $font-semibold;
-  text-align: right;
+  max-width: 100%;
+  text-align: left;
 }
 
 .trem-global-search__fields {
@@ -286,11 +281,12 @@
 .trem-global-search__field {
   position: relative;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   align-content: center;
   gap: $space-1-5;
   min-width: 0;
-  min-height: 6.25rem;
-  padding: $space-3 $space-4;
+  min-height: 4.5rem;
+  padding: $space-2 $space-3;
   border: 1px solid var(--border);
   border-radius: $radius-md;
   background: var(--surface);
@@ -298,17 +294,36 @@
     border-color $duration-base $ease-standard,
     box-shadow $duration-base $ease-standard;
 
-  &:focus-within {
-    border-color: var(--search-accent);
-    box-shadow: 0 0 0 3px var(--search-accent-soft);
-  }
-
   &.has-swap {
     padding-right: $space-8;
   }
 
+  &.has-swap-target {
+    padding-left: calc(#{$space-8} + #{$space-2});
+  }
+
   &.is-error {
     border-color: var(--color-danger);
+  }
+}
+
+.trem-global-search__field-heading {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: $space-2;
+  min-width: 0;
+  width: 100%;
+  overflow: hidden;
+
+  > .trem-global-search__field-label {
+    min-width: 0;
+  }
+
+  > svg {
+    order: -1;
+    flex: 0 0 auto;
+    color: var(--search-accent);
   }
 }
 
@@ -448,19 +463,30 @@
   }
 
   .trem-datepicker__trigger-icon {
-    color: var(--search-accent);
+    display: none;
   }
+}
+
+.trem-global-search__field .trem-occupancy__trigger {
+  grid-template-columns: minmax(0, 1fr) auto;
+  min-height: 1.75rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+
+  > svg:first-child { display: none; }
 }
 
 .trem-global-search__swap {
   position: absolute;
   top: 50%;
-  right: -1.05rem;
+  right: -0.875rem;
   z-index: 3;
   display: inline-grid;
   place-items: center;
-  width: 2.1rem;
-  height: 2.1rem;
+  width: 1.75rem;
+  height: 1.75rem;
   padding: 0;
   border: 3px solid var(--surface);
   border-radius: $radius-full;
@@ -482,7 +508,7 @@
 
 .trem-global-search__submit {
   align-self: stretch;
-  min-width: 7.5rem;
+  min-width: 8rem;
   min-height: 3rem;
   padding: 0 $space-4;
   border-radius: $radius-md;
@@ -494,6 +520,32 @@
     box-shadow: none;
     cursor: not-allowed;
     opacity: 0.48;
+  }
+}
+
+@media (min-width: 1181px) {
+  .trem-global-search__fields {
+    gap: 0;
+    padding: $space-1;
+    border: 1px solid var(--border);
+    border-radius: $radius-lg;
+    background: var(--surface);
+  }
+
+  .trem-global-search__field {
+    border: 0;
+    border-right: 1px solid var(--border);
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .trem-global-search__field.is-error {
+    border-radius: $radius-sm;
+    box-shadow: inset 0 0 0 1px var(--color-danger);
+  }
+
+  .trem-global-search__submit {
+    margin-left: $space-1;
   }
 }
 
@@ -744,17 +796,33 @@
   }
 
   .trem-global-search__fields {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .trem-global-search__field[data-field="from"],
+  .trem-global-search__field[data-field="to"],
+  .trem-global-search__field[data-field="destination"],
+  .trem-global-search__field[data-field="occupancy"],
+  .trem-global-search__field[data-field="travellers"],
+  .trem-global-search[data-choice="oneway"] .trem-global-search__field[data-field="departDate"] {
+    grid-column: 1 / -1;
   }
 
   .trem-global-search__field {
-    min-height: 5.75rem;
+    min-height: 4.25rem;
+  }
+
+  .trem-global-search__field.has-swap-target {
+    padding-left: $space-3;
   }
 
   .trem-global-search__swap {
-    top: auto;
-    right: $space-3;
-    bottom: -1.2rem;
+    top: $space-2;
+    right: $space-2;
+    bottom: auto;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-width: 0;
     transform: none;
   }
 
@@ -781,6 +849,25 @@
 
   .trem-global-search--service {
     padding: 0;
+  }
+}
+
+@media (max-width: $breakpoint-tablet) {
+  .trem-global-search__tabs--fit {
+    display: grid;
+    grid-template-columns: repeat(var(--trem-global-search-tab-count), minmax(0, 1fr));
+    overflow: visible;
+  }
+
+  .trem-global-search__tabs--fit .trem-global-search__tab {
+    min-width: 0;
+    padding-inline: $space-2;
+  }
+}
+
+@media (max-width: $breakpoint-phablet) {
+  .trem-global-search__tabs--fit .trem-global-search__tab-icon {
+    display: none;
   }
 }
 

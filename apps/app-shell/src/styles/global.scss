@@ -86,16 +86,20 @@ select {
   .dash-layout--top-dropdown {
     display: block;
 
+    .trem-app-header {
+      z-index: 102;
+    }
+
     > .trem-sidebar.trem-sidebar--top-dropdown {
       position: fixed;
       inset: $space-16 0 auto;
       width: 100%;
       max-width: none;
-      z-index: 89;
+      z-index: 101;
     }
 
     > .trem-sidebar__backdrop--top-dropdown {
-      z-index: 88;
+      z-index: 100;
     }
 
     > .dash-main {
@@ -148,6 +152,15 @@ select {
   @media (max-width: $breakpoint-md) {
     padding: $space-4;
   }
+}
+
+.dash-content--overview > .app-shell-page {
+  width: 100%;
+  max-width: none;
+}
+
+.dash-content--home {
+  padding: 0;
 }
 
 .dash-shell-breadcrumb {
@@ -219,18 +232,19 @@ select {
   width: 100%;
   max-width: none;
   min-height: 0;
-  padding: 0 $space-6;
+  padding: 0;
   padding-bottom: $space-6;
 
   > * {
-    width: min(100%, $full-width);
-    max-width: $full-width;
-    margin-inline: auto;
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: none;
+    min-height: 100%;
   }
 
   @media (max-width: $breakpoint-md) {
     min-height: 0;
-    padding: 0 $space-4;
+    padding: 0;
     padding-bottom: $space-4;
   }
 }
@@ -259,10 +273,16 @@ select {
 }
 
 .dash-content--remote > .dash-app-footer {
-  width: min(100%, $full-width);
+  width: 100%;
   margin-right: 0;
   margin-bottom: 0;
   margin-left: 0;
+}
+
+.dash-content--home > .dash-app-footer {
+  width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 .dash-layout--sidebar-collapsed .dash-main {
@@ -312,10 +332,16 @@ select {
   }
 
   .dash-content--remote > .dash-app-footer {
-    width: min(100%, $full-width);
+    width: 100%;
     margin-right: 0;
     margin-bottom: 0;
     margin-left: 0;
+  }
+
+  .dash-content--home > .dash-app-footer {
+    width: 100%;
+    margin: 0;
+    padding: 0;
   }
 
   // Keep every shell destination clear of the persistent mobile navigation.
@@ -333,5 +359,4 @@ select {
       pointer-events: none;
     }
   }
-
 }

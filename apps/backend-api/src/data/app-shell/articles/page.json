@@ -1,0 +1,117 @@
+{
+  "status": "success",
+  "component": {
+    "data": {
+      "articlesPage": {
+        "ariaLabelRef": "articlesPageAriaLabel",
+        "breadcrumbLabelRef": "articlesBreadcrumbLabel",
+        "eyebrowRef": "articlesEyebrow",
+        "titleRef": "articlesTitle",
+        "highlightRef": "articlesHighlight",
+        "descriptionRef": "articlesDescription",
+        "states": {
+          "errorTitleRef": "articlesErrorTitle",
+          "errorDescriptionRef": "articlesErrorDescription",
+          "retryLabelRef": "articlesRetryLabel",
+          "emptyTitleRef": "articlesEmptyTitle",
+          "emptyDescriptionRef": "articlesEmptyDescription"
+        },
+        "featured": {
+          "categoryRef": "featuredCategory",
+          "titleRef": "featuredTitle",
+          "descriptionRef": "featuredDescription",
+          "authorRef": "featuredAuthor",
+          "dateRef": "featuredDate",
+          "image": "/home-images/hero-banner.png",
+          "imageAltRef": "featuredImageAlt"
+        },
+        "items": [
+          {
+            "id": "curated-escapes",
+            "categoryRef": "articleOneCategory",
+            "titleRef": "articleOneTitle",
+            "descriptionRef": "articleOneDescription",
+            "authorRef": "articleOneAuthor",
+            "dateRef": "articleOneDate",
+            "image": "/product-images/trevista-banner.png",
+            "imageAltRef": "articleOneImageAlt"
+          },
+          {
+            "id": "connected-planning",
+            "categoryRef": "articleTwoCategory",
+            "titleRef": "articleTwoTitle",
+            "descriptionRef": "articleTwoDescription",
+            "authorRef": "articleTwoAuthor",
+            "dateRef": "articleTwoDate",
+            "image": "/product-images/trevio-banner.png",
+            "imageAltRef": "articleTwoImageAlt"
+          },
+          {
+            "id": "flight-stay-checklist",
+            "categoryRef": "articleThreeCategory",
+            "titleRef": "articleThreeTitle",
+            "descriptionRef": "articleThreeDescription",
+            "authorRef": "articleThreeAuthor",
+            "dateRef": "articleThreeDate",
+            "image": "/product-images/trehub-banner.png",
+            "imageAltRef": "articleThreeImageAlt"
+          }
+        ]
+      }
+    },
+    "dataScope": { "options": {} },
+    "elements": {
+      "labels": {
+        "articlesPageAriaLabel": "TravelsTREM articles and travel insights",
+        "articlesBreadcrumbLabel": "Articles",
+        "articlesEyebrow": "Travel Notes",
+        "articlesTitle": "Ideas for smoother",
+        "articlesHighlight": "journeys",
+        "articlesDescription": "Helpful reads from TravelsTREM for planning flights, stays, tours and complete travel moments with more confidence.",
+        "articlesErrorTitle": "Articles are temporarily unavailable",
+        "articlesErrorDescription": "Please try again in a moment.",
+        "articlesRetryLabel": "Try again",
+        "articlesEmptyTitle": "No articles yet",
+        "articlesEmptyDescription": "Travel notes and planning guides will appear here soon.",
+        "featuredCategory": "Featured Guide",
+        "featuredTitle": "How TravelsTREM keeps every journey connected",
+        "featuredDescription": "A practical look at how enquiries, bookings, partner choices and support stay aligned from first search to final confirmation.",
+        "featuredAuthor": "TravelsTREM Desk",
+        "featuredDate": "18 May 2026",
+        "featuredImageAlt": "Traveller exploring a mountain lake destination",
+        "articleOneCategory": "Travel",
+        "articleOneTitle": "Top curated escapes to plan with confidence",
+        "articleOneDescription": "How to shortlist the right journey style before comparing dates, stays and support options.",
+        "articleOneAuthor": "TravelsTREM Team",
+        "articleOneDate": "14 May 2026",
+        "articleOneImageAlt": "Beach destination with blue water",
+        "articleTwoCategory": "Guide",
+        "articleTwoTitle": "What makes a trip genuinely curated",
+        "articleTwoDescription": "The signals we use to separate thoughtful planning from generic travel packaging.",
+        "articleTwoAuthor": "Travel Desk",
+        "articleTwoDate": "12 May 2026",
+        "articleTwoImageAlt": "Adventure trip through mountain water",
+        "articleThreeCategory": "Planning",
+        "articleThreeTitle": "Checklist before booking flights and stays",
+        "articleThreeDescription": "A simple review list for traveller details, flexibility, cancellation terms and support readiness.",
+        "articleThreeAuthor": "Support Team",
+        "articleThreeDate": "10 May 2026",
+        "articleThreeImageAlt": "Flight above clouds"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {
+        "titleRef": "articlesBreadcrumbLabel"
+      },
+      "widgets": [
+        {
+          "type": "ArticlesPage",
+          "props": { "dataKey": "articlesPage" }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

@@ -1,0 +1,133 @@
+{
+  "status": "success",
+  "component": {
+    "data": {
+      "homeInsights": {
+        "ariaLabelRef": "insightsAriaLabel",
+        "faq": {
+          "eyebrowRef": "faqEyebrow",
+          "titleRef": "faqTitle",
+          "highlightRef": "faqHighlight",
+          "descriptionRef": "faqDescription",
+          "items": [
+            {
+              "id": "tour-types",
+              "questionRef": "faqTourTypesQuestion",
+              "answerRef": "faqTourTypesAnswer",
+              "open": true
+            },
+            {
+              "id": "customisable",
+              "questionRef": "faqCustomQuestion",
+              "answerRef": "faqCustomAnswer"
+            },
+            {
+              "id": "safety",
+              "questionRef": "faqSafetyQuestion",
+              "answerRef": "faqSafetyAnswer"
+            },
+            {
+              "id": "advance-booking",
+              "questionRef": "faqAdvanceQuestion",
+              "answerRef": "faqAdvanceAnswer"
+            },
+            {
+              "id": "cancellation",
+              "questionRef": "faqCancellationQuestion",
+              "answerRef": "faqCancellationAnswer"
+            }
+          ]
+        },
+        "articles": {
+          "eyebrowRef": "articlesEyebrow",
+          "titleRef": "articlesTitle",
+          "highlightRef": "articlesHighlight",
+          "descriptionRef": "articlesDescription",
+          "actionLabelRef": "articlesAction",
+          "actionTarget": "articles",
+          "items": [
+            {
+              "id": "hidden-gems",
+              "categoryRef": "articleOneCategory",
+              "titleRef": "articleOneTitle",
+              "authorRef": "articleOneAuthor",
+              "dateRef": "articleOneDate",
+              "image": "/home-images/article-img.png",
+              "imageAltRef": "articleOneImageAlt"
+            },
+            {
+              "id": "dream-itinerary",
+              "categoryRef": "articleTwoCategory",
+              "titleRef": "articleTwoTitle",
+              "authorRef": "articleTwoAuthor",
+              "dateRef": "articleTwoDate",
+              "image": "/home-images/article-img1.png",
+              "imageAltRef": "articleTwoImageAlt"
+            },
+            {
+              "id": "city-breaks",
+              "categoryRef": "articleThreeCategory",
+              "titleRef": "articleThreeTitle",
+              "authorRef": "articleThreeAuthor",
+              "dateRef": "articleThreeDate",
+              "image": "/home-images/article-img2.png",
+              "imageAltRef": "articleThreeImageAlt"
+            }
+          ]
+        }
+      }
+    },
+    "dataScope": { "options": {} },
+    "elements": {
+      "labels": {
+        "insightsAriaLabel": "Frequently asked questions and travel articles",
+        "faqEyebrow": "Travel clarity",
+        "faqTitle": "Frequently Asked",
+        "faqHighlight": "Questions",
+        "faqDescription": "Answers for travellers comparing flights, stays, tours and end-to-end planning with TravelsTREM.",
+        "faqTourTypesQuestion": "What types of travel services do you offer?",
+        "faqTourTypesAnswer": "We support curated tours, adventure trips, flight and hotel planning, transfers, and custom travel requests across domestic and international journeys.",
+        "faqCustomQuestion": "Are the journeys customisable?",
+        "faqCustomAnswer": "Yes. You can start from a listed package and request changes to dates, stays, travellers, transport and experiences.",
+        "faqSafetyQuestion": "How do you choose travel partners?",
+        "faqSafetyAnswer": "We work with vetted partners and keep booking, enquiry and support details connected inside your TravelsTREM workspace.",
+        "faqAdvanceQuestion": "How far in advance should I book?",
+        "faqAdvanceAnswer": "For better availability, start planning at least four to six weeks ahead for domestic trips and eight to twelve weeks for international travel.",
+        "faqCancellationQuestion": "What is your cancellation policy?",
+        "faqCancellationAnswer": "Cancellation terms depend on the selected product, supplier and fare rules. Your quote or booking detail will show the applicable terms.",
+        "articlesEyebrow": "Travel notes",
+        "articlesTitle": "Recent",
+        "articlesHighlight": "Articles",
+        "articlesDescription": "Fresh planning ideas, destination inspiration and practical guidance from the TravelsTREM team.",
+        "articlesAction": "View All Articles",
+        "articleOneCategory": "Travel",
+        "articleOneTitle": "Top curated escapes to plan with confidence",
+        "articleOneAuthor": "TravelsTREM Team",
+        "articleOneDate": "14 May 2026",
+        "articleOneImageAlt": "Curated beach destination inspiration",
+        "articleTwoCategory": "Guide",
+        "articleTwoTitle": "How to compare tours, stays and flights in one place",
+        "articleTwoAuthor": "Travel Desk",
+        "articleTwoDate": "12 May 2026",
+        "articleTwoImageAlt": "Traveller overlooking a mountain lake",
+        "articleThreeCategory": "Planning",
+        "articleThreeTitle": "What to check before confirming your next journey",
+        "articleThreeAuthor": "Support Team",
+        "articleThreeDate": "10 May 2026",
+        "articleThreeImageAlt": "Flight above the clouds"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "HomeInsights",
+          "props": { "dataKey": "homeInsights" }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

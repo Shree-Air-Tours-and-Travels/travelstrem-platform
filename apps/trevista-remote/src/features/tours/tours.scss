@@ -16,7 +16,7 @@
 
   &--home {
     min-height: auto;
-    padding-top: clamp(1rem, 2.5vw, 2rem);
+    padding-top: 0;
   }
 
   &__crumbs {
@@ -98,7 +98,7 @@
   }
 
   &__inner {
-    width: min(1480px, 100%);
+    width: min(#{$full-width}, 100%);
     margin: 1.25rem auto 0;
     display: flex;
     flex-direction: column;
@@ -170,13 +170,23 @@
     width: min(1220px, 100%);
     margin: 0 auto;
     display: grid;
-    grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+    grid-template-columns: minmax(0, 1fr);
     gap: clamp(2rem, 4vw, 3rem);
     align-items: center;
   }
 
   &__hero-copy {
     min-width: 0;
+    max-width: 760px;
+  }
+
+  &__hero-search-card {
+    width: 100%;
+
+    .trem-global-search__panel {
+      border-color: rgba(255, 255, 255, 0.4);
+      box-shadow: 0 20px 56px rgba(7, 42, 39, 0.2);
+    }
   }
 
   &__hero-eyebrow {

@@ -3,196 +3,193 @@
 .trem-app-footer {
   width: 100%;
   margin-top: auto;
-  padding-top: $space-8;
   flex-shrink: 0;
-  background: transparent;
-  color: var(--muted);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.035), transparent 42%),
+    linear-gradient(120deg, #06172e 0%, #09284e 58%, #0b315f 100%);
+  color: rgba(226, 236, 255, 0.76);
 }
 
 .trem-app-footer__bar {
   width: 100%;
-  min-height: 68px;
-  margin: 0 auto;
+  min-height: 12.5rem;
   display: grid;
-  grid-template-columns: minmax(280px, 1fr) auto auto;
-  align-items: center;
+  grid-template-columns: minmax(17rem, 1.25fr) repeat(3, minmax(9rem, 0.8fr)) minmax(14rem, 1fr);
+  align-items: start;
+  gap: clamp(#{$space-6}, 4vw, #{$space-14});
+  padding: clamp(#{$space-7}, 4vw, #{$space-10}) clamp(#{$space-6}, 5vw, #{$space-14});
+  border-top: 1px solid rgba(149, 190, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.trem-app-footer__brand-block {
+  min-width: 0;
+  display: grid;
   gap: $space-4;
-  padding: $space-3 $space-6;
-  border-top: 1px solid var(--border);
-  background: var(--surface);
 }
 
 .trem-app-footer__identity {
   min-width: 0;
   display: flex;
-  align-items: baseline;
-  gap: $space-2;
+  align-items: flex-start;
+  gap: $space-3;
+}
 
-  strong {
-    flex: 0 0 auto;
-    color: var(--text);
-    font-size: $font-size-md;
-    letter-spacing: -0.01em;
-  }
+.trem-app-footer__mark {
+  width: 3.5rem;
+  height: 3.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: $radius-md;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  font-size: $font-size-xl;
+  font-weight: $font-bold;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
 
-  small {
-    overflow: hidden;
-    font-size: $font-size-sm;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 }
 
-.trem-app-footer__links {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0;
+.trem-app-footer__identity-copy {
+  min-width: 0;
+  display: grid;
+  gap: $space-1;
 
-  a {
-    display: inline-flex;
-    align-items: center;
-    color: var(--muted);
+  strong {
+    color: #ffffff;
+    font-size: clamp(#{$font-size-lg}, 1.2vw, #{$font-size-xl});
+    letter-spacing: -0.02em;
+  }
+
+  span {
+    max-width: 18rem;
+    color: rgba(226, 236, 255, 0.68);
     font-size: $font-size-sm;
     font-weight: $font-medium;
-    white-space: nowrap;
+    line-height: 1.5;
+  }
+}
 
-    &:hover,
-    &:focus-visible {
-      color: var(--color-primary);
-    }
+.trem-app-footer__column,
+.trem-app-footer__social {
+  min-width: 0;
+  display: grid;
+  gap: $space-2;
 
-    & + a::before {
-      width: 3px;
-      height: 3px;
-      margin: 0 $space-3;
-      border-radius: $radius-circle;
-      background: var(--border-strong, var(--border));
-      content: "";
-    }
+  > strong {
+    margin-bottom: $space-1;
+    color: rgba(185, 211, 255, 0.92);
+    font-size: $font-size-sm;
+    font-weight: $font-bold;
+  }
+}
+
+.trem-app-footer__column a {
+  width: fit-content;
+  color: rgba(226, 236, 255, 0.66);
+  font-size: $font-size-sm;
+  font-weight: $font-medium;
+  line-height: 1.35;
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    outline: 0;
+    color: #ffffff;
+  }
+}
+
+.trem-app-footer__social {
+  justify-items: start;
+}
+
+.trem-app-footer__social-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-3;
+  margin-top: $space-1;
+}
+
+.trem-app-footer__social-links a {
+  width: 2.25rem;
+  height: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(170, 204, 255, 0.22);
+  border-radius: $radius-sm;
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(226, 236, 255, 0.78);
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  text-transform: uppercase;
+
+  &:hover,
+  &:focus-visible {
+    outline: 0;
+    border-color: rgba(170, 204, 255, 0.42);
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
   }
 }
 
 .trem-app-footer__copyright {
-  padding-left: $space-4;
-  border-left: 1px solid var(--border);
-  font-size: $font-size-sm;
-  white-space: nowrap;
+  margin-top: $space-7;
+  color: rgba(226, 236, 255, 0.58);
+  font-size: $font-size-xs;
+  font-weight: $font-medium;
+  line-height: 1.5;
 }
 
 @media (max-width: $breakpoint-lg) {
   .trem-app-footer__bar {
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: $space-2 $space-4;
+    grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(9rem, 1fr));
   }
 
-  .trem-app-footer__links {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    justify-content: flex-start;
-  }
-
-  .trem-app-footer__copyright {
-    padding-left: 0;
-    border-left: 0;
+  .trem-app-footer__social {
+    grid-column: 2 / -1;
   }
 }
 
 @media (max-width: $breakpoint-md) {
-  .trem-app-footer {
-    padding-top: $space-6;
-  }
-
   .trem-app-footer__bar {
-    min-height: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: $space-2 $space-4;
-    padding: $space-4;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: $space-7 $space-5;
+    padding: $space-7 $space-4 calc(#{$space-8} + env(safe-area-inset-bottom, 0px));
   }
 
-  .trem-app-footer__identity {
-    width: 100%;
-
-    small {
-      white-space: normal;
-    }
-  }
-
-  .trem-app-footer__links {
-    width: 100%;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    gap: $space-2 $space-4;
-
-    a + a::before {
-      display: none;
-    }
-  }
-
-  .trem-app-footer__copyright {
-    width: 100%;
+  .trem-app-footer__brand-block,
+  .trem-app-footer__social {
+    grid-column: 1 / -1;
   }
 }
 
 @media (max-width: $breakpoint-mobile) {
-  .trem-app-footer {
-    padding-top: $space-4;
-  }
-
   .trem-app-footer__bar {
-    gap: $space-2;
-    padding: $space-3;
+    grid-template-columns: 1fr;
+    gap: $space-6;
   }
 
-  .trem-app-footer__identity {
-    display: grid;
-    gap: 2px;
-
-    strong {
-      font-size: $font-size-sm;
-    }
-
-    small {
-      font-size: $font-size-xs;
-      line-height: $line-height-md;
-      overflow-wrap: anywhere;
-    }
+  .trem-app-footer__mark {
+    width: 3rem;
+    height: 3rem;
   }
 
-  .trem-app-footer__links {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: $space-1 $space-3;
-
-    a {
-      min-width: 0;
-      justify-content: flex-start;
-      font-size: $font-size-xs;
-      line-height: $line-height-md;
-      overflow-wrap: anywhere;
-      white-space: normal;
-
-      &:first-child {
-        grid-column: 1 / -1;
-      }
-    }
+  .trem-app-footer__social {
+    grid-column: auto;
   }
 
   .trem-app-footer__copyright {
-    padding-top: $space-1;
-    font-size: $font-size-xs;
-    line-height: $line-height-md;
-    white-space: normal;
-  }
-}
-
-@media (max-width: 360px) {
-  .trem-app-footer__links {
-    grid-template-columns: 1fr;
-
-    a:first-child {
-      grid-column: auto;
-    }
+    margin-top: $space-4;
   }
 }

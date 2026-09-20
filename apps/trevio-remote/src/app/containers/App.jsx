@@ -45,7 +45,7 @@ function TripDetailsWithBreadcrumb({ session, labels = {}, tripRef: providedTrip
   const breadcrumbTrail = Array.isArray(location.state?.trail) && location.state.trail.length
     ? location.state.trail
     : [
-        { label: labels.homeBreadcrumb || "Trevio", path: "/" },
+        { label: labels.homeBreadcrumb || "Trevio", path: "/trevio" },
         { label: labels.tripDirectoryHeading || "Trips", path: "/trips" },
       ];
   return (

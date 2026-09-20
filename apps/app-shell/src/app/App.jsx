@@ -9,6 +9,7 @@ import {
 } from "react-router-dom";
 import {
   AppHeader,
+  AppFooter,
   Breadcrumbs,
   ErrorState,
   FloatingActionBar,
@@ -225,6 +226,7 @@ function AppShell() {
   const [guestMode, setGuestMode] = useState(() => isGuestSession());
   const [authPromptDismissed, setAuthPromptDismissed] = useState(false);
   const [primaryActionOpen, setPrimaryActionOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
   const applyShellConfiguration = useCallback(
     ([sidebarResponse, headerResponse, navigationResponse]) => {
@@ -299,8 +301,7 @@ function AppShell() {
     setAuthPromptDismissed(true);
     enableGuestSession();
     setGuestMode(true);
-    if (!publicDestination) navigate("/?tab=overview&guest=1", { replace: true });
-  }, [navigate, publicDestination]);
+  }, []);
   const requireAuthentication = useCallback(
     ({ returnTo = authReturnTo } = {}) => {
       clearGuestSession();
@@ -366,6 +367,8 @@ function AppShell() {
           onClick:
             item.action === "open-primary-action"
               ? () => setPrimaryActionOpen(true)
+              : item.action === "open-profile-menu"
+                ? () => setProfileMenuOpen(true)
               : () => handleTabChange(item.target, item),
         }),
       ),
@@ -508,9 +511,21 @@ function AppShell() {
 
   const resolvedAppHeaderConfig = useMemo(() => {
     const existingActions = Array.isArray(appHeaderConfig.actions) ? appHeaderConfig.actions : [];
-    const actions = existingActions.filter((item) => item?.id !== "wishlist");
+    const actions = existingActions
+      .filter((item) => item?.id !== "wishlist")
+      .map((item) => ({ ...item, active: item.target === activeTab }));
+    const navigationTabs = appHeaderConfig.navigationTabs
+      ? {
+          ...appHeaderConfig.navigationTabs,
+          items: (appHeaderConfig.navigationTabs.items || []).map((item) => ({
+            ...item,
+            active: (item.activeTargets || [item.target]).includes(activeTab),
+          })),
+        }
+      : null;
     return {
       ...appHeaderConfig,
+      navigationTabs,
       notification: {
         enabled: true,
         count: notificationInbox.unread,
@@ -521,7 +536,10 @@ function AppShell() {
           ? () => handleTabChange(notificationDestination.id)
           : undefined,
       },
-      mobile: destinationMobileHeader,
+      mobile: {
+        ...destinationMobileHeader,
+        ...(appHeaderConfig.mobile || {}),
+      },
       actions: [
         ...actions,
         {
@@ -597,7 +615,11 @@ function AppShell() {
             items: (section.items || []).map((item) =>
               item.id === "notifications"
                 ? { ...item, indicator: notificationInbox.unread > 0 }
-                : item,
+                : item.id === "login"
+                  ? { ...item, hide: Boolean(session?.isAuthenticated) }
+                : item.id === "logout"
+                  ? { ...item, hide: !session?.isAuthenticated }
+                  : item,
             ),
           })),
         }}
@@ -644,6 +666,8 @@ function AppShell() {
           primaryActionOpen={primaryActionOpen}
           onPrimaryActionOpenChange={setPrimaryActionOpen}
           onPrimaryActionSelect={(item) => handleTabChange(item.target, item)}
+          userMenuOpen={profileMenuOpen}
+          onUserMenuOpenChange={setProfileMenuOpen}
         />
 
         {!isRemote &&
@@ -657,10 +681,10 @@ function AppShell() {
 
         <div
           data-scroll-root
-          className={`dash-content${isRemote ? " dash-content--remote" : ""}${isSupportScreen ? " dash-content--support" : ""}`}
+          className={`dash-content${isRemote ? " dash-content--remote" : ""}${isSupportScreen ? " dash-content--support" : ""}${activeTab === "overview" ? " dash-content--overview dash-content--home" : ""}`}
         >
           <ProtectedRoute
-            allowGuest={publicDestination && guestMode}
+            allowGuest={guestMode}
             suppressPrompt={authPromptDismissed}
             onContinueAsGuest={continueAsGuest}
             returnTo={authReturnTo}
@@ -713,6 +737,9 @@ function AppShell() {
               )}
             </RemoteBoundary>
           </ProtectedRoute>
+          {activeTab === "overview" && !isRemote && !isSupportScreen ? (
+            <AppFooter config={appHeaderConfig.footer} className="dash-app-footer" />
+          ) : null}
         </div>
       </div>
 

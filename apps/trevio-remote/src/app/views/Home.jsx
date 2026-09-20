@@ -4,12 +4,14 @@ import {
   Button,
   EmptyState,
   FeaturedCard,
+  GlobalSearchCard,
   InternationalTripCard,
   TrevioTripCard,
   Preloader,
   Icon,
   NoDataFound,
   PRODUCT_TYPE,
+  Breadcrumbs,
   useFavoritesContext,
 } from "@packages/trem-ui";
 import { ContactAgentModal } from "@packages/trem-modals";
@@ -95,6 +97,16 @@ export default function Home({
 
   return (
     <main>
+      <div className="trevio-page__breadcrumbs">
+        <div className="trevio-container">
+          <Breadcrumbs
+            items={[
+              { label: labels.breadcrumbHome, path: "/?tab=overview" },
+              { label: labels.homeBreadcrumb },
+            ].filter((item) => item.label)}
+          />
+        </div>
+      </div>
       <section className="trevio-hero">
         <div className="trevio-container trevio-hero__grid">
           <div className="trevio-hero__content">
@@ -246,6 +258,29 @@ export default function Home({
               </div>
             </div>
           )}
+        </div>
+        <div className="trevio-container trevio-hero__search">
+          <GlobalSearchCard
+            variant="trip"
+            modes={[{ id: "trip", heading: "Find your next trip" }]}
+            fieldsByMode={{ trip: [
+              { id: "destination", label: "Destination", placeholder: "Where would you like to go?" },
+              { id: "startDate", label: "Departure", type: "date" },
+              { id: "endDate", label: "Return", type: "date", minField: "startDate" },
+              { id: "travellers", label: "Travellers", type: "number", min: 1 },
+            ] }}
+            initialValues={{ trip: { travellers: 1 } }}
+            labels={{ submit: "Search trips" }}
+            submitLabelRef="submit"
+            onSearch={({ values }) => {
+              const params = new URLSearchParams();
+              if (values.destination?.trim()) params.set("destination", values.destination.trim());
+              for (const key of ["startDate", "endDate", "travellers"]) {
+                if (values[key]) params.set(key, values[key]);
+              }
+              navigate(`trips${params.size ? `?${params}` : ""}`);
+            }}
+          />
         </div>
       </section>
 

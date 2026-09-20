@@ -1,6 +1,8 @@
 import React from "react";
 import PropTypes from "prop-types";
+
 import Icon from "../../icons/Icon/Icon.jsx";
+
 import "./PlanCard.styles.scss";
 
 export default function PlanCard({
@@ -25,6 +27,7 @@ export default function PlanCard({
   actionLabel = "",
 }) {
   const relationship = rel || (target === "_blank" ? "noopener noreferrer" : undefined);
+
   const cardClassName = [
     "trem-plan-card",
     disabled ? "trem-plan-card--disabled" : "",
@@ -34,43 +37,62 @@ export default function PlanCard({
   ]
     .filter(Boolean)
     .join(" ");
+
   const content = (
     <>
       <span className="trem-plan-card__media">
         <img src={image} alt={imageAlt} loading="lazy" />
+
         {mobileIcon ? (
           <span className="trem-plan-card__mobile-icon" aria-hidden="true">
             <Icon name={mobileIcon} size={30} strokeWidth={1.8} />
           </span>
         ) : null}
       </span>
+
       {comingSoon && comingSoonLabel ? (
         <span className="trem-plan-card__availability">{comingSoonLabel}</span>
       ) : null}
+
       <span className="trem-plan-card__body">
         <span className="trem-plan-card__copy">
           {productName ? <span className="trem-plan-card__product">{productName}</span> : null}
+
           <strong className="trem-plan-card__title">{title}</strong>
+
           {description ? <span className="trem-plan-card__description">{description}</span> : null}
+
           {highlights.length ? (
-            <span className="trem-plan-card__highlights" aria-label={highlightsAriaLabel || undefined}>
+            <span
+              className="trem-plan-card__highlights"
+              aria-label={highlightsAriaLabel || undefined}
+            >
               {highlights.map((highlight) => (
-                <span key={highlight.id || highlight.label}>
+                <span key={highlight.id || highlight.label} className="trem-plan-card__highlight">
                   {highlight.icon ? (
-                    <Icon name={highlight.icon} size={16} strokeWidth={2} aria-hidden="true" />
+                    <span className="trem-plan-card__highlight-icon" aria-hidden="true">
+                      <Icon name={highlight.icon} size={17} strokeWidth={2} />
+                    </span>
                   ) : null}
-                  {highlight.label}
+
+                  <span className="trem-plan-card__highlight-label">{highlight.label}</span>
                 </span>
               ))}
             </span>
           ) : null}
-          {actionLabel && !disabled ? (
-            <span className="trem-plan-card__action-label">{actionLabel}</span>
-          ) : null}
         </span>
+
         {!disabled ? (
-          <span className="trem-plan-card__action" aria-hidden="true">
-            <Icon name="chevronRight" size={20} strokeWidth={2.4} />
+          <span className="trem-plan-card__footer">
+            {actionLabel ? (
+              <span className="trem-plan-card__action-label">{actionLabel}</span>
+            ) : (
+              <span />
+            )}
+
+            <span className="trem-plan-card__action" aria-hidden="true">
+              <Icon name="chevronRight" size={18} strokeWidth={2.4} />
+            </span>
           </span>
         ) : null}
       </span>
@@ -121,6 +143,7 @@ PlanCard.propTypes = {
   comingSoonLabel: PropTypes.string,
   mobileIcon: PropTypes.string,
   tone: PropTypes.string,
+
   highlights: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.string,
@@ -128,6 +151,7 @@ PlanCard.propTypes = {
       icon: PropTypes.string,
     }),
   ),
+
   highlightsAriaLabel: PropTypes.string,
   actionLabel: PropTypes.string,
 };

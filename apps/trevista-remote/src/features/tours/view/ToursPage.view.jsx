@@ -18,8 +18,6 @@ const getLabel = (labels = {}, item = {}) => {
   return item.label || item.id;
 };
 
-const BREADCRUMBS = [{ label: "Trevista", path: "/trevista" }, { label: "Tours" }];
-
 export default function ToursPageView({
   pageLabels,
   widgets,
@@ -108,7 +106,12 @@ export default function ToursPageView({
   return (
     <main className="tours-page">
       <div className="tours-page__crumbs">
-        <Breadcrumbs items={BREADCRUMBS} />
+        <Breadcrumbs
+          items={[
+            { label: pageLabels.breadcrumbTrevista, path: "/trevista" },
+            { label: pageLabels.breadcrumbTours },
+          ].filter((item) => item.label)}
+        />
       </div>
       <div className="tours-page__inner">
         {widgets.map((w) => {

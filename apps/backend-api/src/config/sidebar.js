@@ -33,18 +33,10 @@ export default applyHideFlags({
                 items: [
                     { id: "overview", label: "Home", icon: "home", target: "overview" },
                     {
-                        id: "partnership",
-                        label: "Partner with us",
-                        icon: "briefcaseBusiness",
-                        type: "external",
-                        href: partnershipUrl,
-                    },
-                    {
-                        id: "about",
-                        label: "About Us",
-                        icon: "info",
-                        type: "external",
-                        href: "https://travelstrem.com/#about",
+                        id: "login",
+                        label: "Sign In",
+                        icon: "user",
+                        action: "login",
                     },
                 ],
             },
@@ -78,6 +70,12 @@ export default applyHideFlags({
                 id: "bookings",
                 title: "Manage Bookings",
                 items: [
+                    {
+                        id: "dashboard",
+                        label: "Dashboard",
+                        icon: "management",
+                        target: "dashboard",
+                    },
                     { id: "bookings", label: "My Bookings", icon: "calendar", target: "bookings" },
                     { id: "favorites", label: "Wishlist", icon: "heart", target: "favorites" },
                     {
@@ -102,6 +100,21 @@ export default applyHideFlags({
                 items: [
                     { id: "notifications", label: "Notifications", icon: "bell", target: "notifications" },
                     { id: "support", label: "Help & Support", icon: "support", target: "support" },
+                    { id: "articles", label: "Articles", icon: "bookmark", target: "articles" },
+                    {
+                        id: "about",
+                        label: "About Us",
+                        icon: "info",
+                        type: "external",
+                        href: "https://travelstrem.com/#about",
+                    },
+                    {
+                        id: "partnership",
+                        label: "Partner with us",
+                        icon: "briefcaseBusiness",
+                        type: "external",
+                        href: partnershipUrl,
+                    },
                 ],
             },
             {

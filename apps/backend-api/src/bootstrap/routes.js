@@ -22,7 +22,7 @@ import tenancyRoutes from "../modules/tenancy/routes.js";
 import supportRoutes from "../modules/support/routes.js";
 import locationRoutes from "../modules/locations/routes.js";
 import flightRoutes from "../modules/flights/routes/flight.routes.js";
-import hotelRoutes from "../modules/hotels/routes.js";
+import hotelRoutes from "../modules/hotels/routes/hotel.routes.js";
 
 const getDbHealth = () => {
     const readyState = mongoose.connection.readyState;

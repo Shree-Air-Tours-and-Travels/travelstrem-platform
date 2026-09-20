@@ -7,7 +7,9 @@
     },
     "elements": {
       "labels": {
-        "pageTitle": "Welcome to Trevista by TravelsTREM"
+        "pageTitle": "Welcome to Trevista by TravelsTREM",
+        "breadcrumbHome": "Home",
+        "breadcrumbTrevista": "Trevista"
       },
       "urls": {}
     },

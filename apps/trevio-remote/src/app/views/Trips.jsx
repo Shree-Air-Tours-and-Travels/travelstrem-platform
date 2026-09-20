@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   BottomSheet,
   Breadcrumbs,
@@ -107,6 +107,13 @@ function TripFilterPanel({
 
 export default function Trips({ pageModel }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const routeParams = new URLSearchParams(location.search);
+  const routeQuery = routeParams.get("search") || "";
+  const routeDestination = routeParams.get("destination") || "";
+  const routeStartDate = routeParams.get("startDate") || "";
+  const routeEndDate = routeParams.get("endDate") || "";
+  const routeTravellers = routeParams.get("travellers") || "";
   const { isFavorited, toggleFavorite } = useFavoritesContext();
   const labels = {
     homeBreadcrumb: "Trevio",
@@ -161,7 +168,7 @@ export default function Trips({ pageModel }) {
   const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [filtersSheetOpen, setFiltersSheetOpen] = useState(false);
   const [sort, setSort] = useState("recommended");
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(routeQuery);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [realtimeTick, setRealtimeTick] = useState(0);
@@ -169,6 +176,11 @@ export default function Trips({ pageModel }) {
   useEffect(() => {
     setFilters((current) => (current.length ? current : normalizeFilters(tripList.filters)));
   }, [tripList.filters]);
+
+  useEffect(() => {
+    setQuery(routeQuery);
+    setPage(1);
+  }, [routeQuery, routeDestination, routeStartDate, routeEndDate, routeTravellers]);
 
   useEffect(() => {
     let active = true;
@@ -180,6 +192,10 @@ export default function Trips({ pageModel }) {
         category,
         sort,
         search: query,
+        destination: routeDestination,
+        startDate: routeStartDate,
+        endDate: routeEndDate,
+        travellers: routeTravellers,
         from: advancedFilters.from,
         to: advancedFilters.to,
         maxBudget: advancedFilters.maxBudget,
@@ -214,7 +230,7 @@ export default function Trips({ pageModel }) {
     return () => {
       active = false;
     };
-  }, [advancedFilters, category, page, query, realtimeTick, sort]);
+  }, [advancedFilters, category, page, query, realtimeTick, routeDestination, routeStartDate, routeEndDate, routeTravellers, sort]);
 
   useTourCatalogRealtime(
     useCallback(() => {
@@ -358,7 +374,7 @@ export default function Trips({ pageModel }) {
         state: {
           from: { label: labels.tripDirectoryHeading || "Trips", path: "/trips" },
           trail: [
-            { label: labels.homeBreadcrumb || "Trevio", path: "/" },
+            { label: labels.homeBreadcrumb || "Trevio", path: "/trevio" },
             { label: labels.tripDirectoryHeading || "Trips", path: "/trips" },
           ],
           tour: trip,
@@ -374,7 +390,7 @@ export default function Trips({ pageModel }) {
         <div className="trevio-container">
           <Breadcrumbs
             items={[
-              { label: labels.homeBreadcrumb || "Trevio", path: "/" },
+              { label: labels.homeBreadcrumb || "Trevio", path: "/trevio" },
               { label: labels.tripDirectoryHeading || "Trips" },
             ]}
             className="trevio-trips-page__breadcrumbs"
