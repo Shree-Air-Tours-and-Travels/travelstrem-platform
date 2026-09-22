@@ -8,6 +8,8 @@ import {
   SubTitle,
 } from "@packages/trem-ui";
 import { ModalShell } from "@packages/trem-modals";
+import { useScrollReveal } from "../hooks/useDirectionalReveal";
+import { useCountUp } from "../hooks/useCountUp";
 import "./OverviewView.scss";
 
 export default function OverviewView({
@@ -22,6 +24,7 @@ export default function OverviewView({
 }) {
   const discoveryState = journeyHero?.states?.discover;
   const [activeProduct, setActiveProduct] = useState(null);
+  const galleryRef = useScrollReveal();
 
   const resolveProductItems = useCallback(
     (items = []) =>
@@ -138,7 +141,7 @@ export default function OverviewView({
                 </div>
               ) : null}
             </div>
-            <div className="dov__story-gallery">
+            <div className="dov__story-gallery" ref={galleryRef}>
               {(journeyStory.images || []).map((image) => (
                 <figure
                   className={`dov__story-image dov__story-image--${image.variant || "portrait"}`}
@@ -151,10 +154,7 @@ export default function OverviewView({
           </div>
           <div className="dov__story-stats">
             {(journeyStory.stats || []).map((stat) => (
-              <div className="dov__story-stat" key={stat.id}>
-                <span>{stat.label}</span>
-                <strong>{stat.value}</strong>
-              </div>
+              <StoryStat key={stat.id} stat={stat} />
             ))}
           </div>
         </section>
@@ -253,7 +253,12 @@ export default function OverviewView({
         <section className="dov__insights" aria-label={homeInsights.ariaLabel}>
           <div className="dov__faq">
             <div className="dov__insights-heading">
-              {homeInsights.faq?.eyebrow ? <span>{homeInsights.faq.eyebrow}</span> : null}
+              {homeInsights.faq?.eyebrow ? (
+                <span className="dov__insights-eyebrow">
+                  <Icon name={homeInsights.faq?.eyebrowIcon || "sparkles"} size={15} />
+                  {homeInsights.faq.eyebrow}
+                </span>
+              ) : null}
               <h2>
                 {homeInsights.faq?.title} <em>{homeInsights.faq?.highlight}</em>
               </h2>
@@ -276,7 +281,10 @@ export default function OverviewView({
             <div className="dov__articles-header">
               <div className="dov__insights-heading">
                 {homeInsights.articles?.eyebrow ? (
-                  <span className="dov__insights-eyebrow">{homeInsights.articles.eyebrow}</span>
+                  <span className="dov__insights-eyebrow">
+                    <Icon name={homeInsights.articles?.eyebrowIcon || "sparkles"} size={15} />
+                    {homeInsights.articles.eyebrow}
+                  </span>
                 ) : null}
 
                 <h2>
@@ -391,6 +399,16 @@ export default function OverviewView({
           onClose={handleCloseDetails}
         />
       ) : null}
+    </div>
+  );
+}
+
+function StoryStat({ stat }) {
+  const [valueRef, display] = useCountUp(stat.value);
+  return (
+    <div className="dov__story-stat">
+      <span>{stat.label}</span>
+      <strong ref={valueRef}>{display}</strong>
     </div>
   );
 }

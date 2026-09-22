@@ -49,6 +49,12 @@
     filter: none;
     transform: none;
   }
+
+  .dov__story-image {
+    opacity: 1;
+    transform: none;
+    will-change: auto;
+  }
 }
 
 .dov__hero {
@@ -477,13 +483,11 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--overlay-strong) 22%, transparent) 0%,
-    transparent 46%,
-    transparent 70%,
-    color-mix(in srgb, var(--overlay-strong) 66%, transparent) 100%
-  );
+  background: linear-gradient(180deg,
+      color-mix(in srgb, var(--overlay-strong) 22%, transparent) 0%,
+      transparent 46%,
+      transparent 70%,
+      color-mix(in srgb, var(--overlay-strong) 66%, transparent) 100%);
 }
 
 .dov__product-modal-close {
@@ -1431,6 +1435,7 @@
 }
 
 .dov__story-gallery {
+  --reveal-progress: 1;
   grid-column: 1 / -1;
   display: grid;
   grid-template-columns: 1.55fr 0.75fr 0.75fr;
@@ -1440,6 +1445,7 @@
 }
 
 .dov__story-image {
+  --reveal-x: 0px;
   min-width: 0;
   height: clamp(20rem, 28vw, 31rem);
   margin: 0;
@@ -1447,6 +1453,9 @@
   border-radius: $radius-lg;
   background: var(--surface-muted);
   box-shadow: var(--shadow-lg);
+  opacity: var(--reveal-progress, 1);
+  transform: translateX(calc((1 - var(--reveal-progress, 1)) * var(--reveal-x, 0px)));
+  will-change: transform, opacity;
 }
 
 .dov__story-image img {
@@ -1458,6 +1467,11 @@
 
 .dov__story-image--portrait {
   height: clamp(20rem, 28vw, 31rem);
+  --reveal-x: 70px;
+}
+
+.dov__story-image--wide {
+  --reveal-x: -70px;
 }
 
 .dov__story-stats {
@@ -1636,10 +1650,10 @@
   overflow: hidden;
   border-top: 1px solid color-mix(in srgb, var(--color-primary) 14%, var(--border));
   background: linear-gradient(180deg,
-      var(--page-bg) 0%,
-      var(--page-bg) 48%,
+      var(--border) 0%,
+      var(--border) 48%,
       color-mix(in srgb, var(--primary-softer) 34%, var(--page-bg)) 48%,
-      var(--card-bg) 100%);
+      var(--color-on-primary) 100%);
   color: var(--text);
 }
 
@@ -1760,13 +1774,10 @@
    ============================================================ */
 
 .dov__articles {
-  width: min(100%, 88rem);
 
-  margin-inline: auto;
 
   padding: clamp(#{$space-8}, 5vw, #{$space-12}) clamp(#{$space-4}, 5vw, #{$space-8});
 
-  background: var(--page-bg);
 }
 
 /* ============================================================
@@ -1786,7 +1797,8 @@
     #{$space-9});
 }
 
-.dov__articles .dov__insights-heading {
+.dov__articles .dov__insights-heading,
+.dov__faq .dov__insights-heading {
   max-width: 46rem;
 
   margin: 0;
@@ -1798,6 +1810,8 @@
   display: inline-flex;
 
   align-items: center;
+
+  gap: $space-2;
 
   margin-bottom: $space-2;
 
@@ -1813,7 +1827,8 @@
   text-transform: uppercase;
 }
 
-.dov__articles .dov__insights-heading h2 {
+.dov__articles .dov__insights-heading h2,
+.dov__faq .dov__insights-heading h2 {
   margin: 0;
 
   color: var(--heading);
@@ -1830,7 +1845,8 @@
   letter-spacing: -0.045em;
 }
 
-.dov__articles .dov__insights-heading h2 em {
+.dov__articles .dov__insights-heading h2 em,
+.dov__faq .dov__insights-heading h2 em {
   color: var(--color-primary);
 
   font-style: normal;
@@ -1838,7 +1854,8 @@
   text-decoration: none;
 }
 
-.dov__articles .dov__insights-heading p {
+.dov__articles .dov__insights-heading p,
+.dov__faq .dov__insights-heading p {
   max-width: 38rem;
 
   margin:

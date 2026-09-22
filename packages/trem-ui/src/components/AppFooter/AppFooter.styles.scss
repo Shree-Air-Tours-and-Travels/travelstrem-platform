@@ -4,7 +4,7 @@
   width: 100%;
   margin-top: auto;
   flex-shrink: 0;
-  background: var(--surface);
+  background: var(--primary-soft);
   border-top: 1px solid var(--border);
   color: var(--text);
 }
@@ -162,7 +162,7 @@
     }
 
     &::after {
-      content: " \u2014 Coming soon";
+      content: "Coming soon";
       color: var(--text-muted);
       opacity: 0.6;
       font-size: $font-size-xs;
@@ -377,6 +377,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .trem-app-footer__contact,
   .trem-app-footer__link,
   .trem-app-footer__social-link,

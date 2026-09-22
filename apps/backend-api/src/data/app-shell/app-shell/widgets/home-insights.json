@@ -6,6 +6,7 @@
         "ariaLabelRef": "insightsAriaLabel",
         "faq": {
           "eyebrowRef": "faqEyebrow",
+          "eyebrowIcon": "sparkles",
           "titleRef": "faqTitle",
           "highlightRef": "faqHighlight",
           "descriptionRef": "faqDescription",
@@ -41,6 +42,7 @@
         "articles": {
           "ariaLabelRef": "articlesAriaLabel",
           "eyebrowRef": "articlesEyebrow",
+          "eyebrowIcon": "sparkles",
           "titleRef": "articlesTitle",
           "highlightRef": "articlesHighlight",
           "descriptionRef": "articlesDescription",
