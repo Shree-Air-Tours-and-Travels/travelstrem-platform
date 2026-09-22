@@ -9,21 +9,50 @@
         "titleRef": "articlesTitle",
         "highlightRef": "articlesHighlight",
         "descriptionRef": "articlesDescription",
-        "states": {
-          "errorTitleRef": "articlesErrorTitle",
-          "errorDescriptionRef": "articlesErrorDescription",
-          "retryLabelRef": "articlesRetryLabel",
-          "emptyTitleRef": "articlesEmptyTitle",
-          "emptyDescriptionRef": "articlesEmptyDescription"
-        },
         "featured": {
+          "id": "featured-journey-connection",
           "categoryRef": "featuredCategory",
           "titleRef": "featuredTitle",
           "descriptionRef": "featuredDescription",
           "authorRef": "featuredAuthor",
           "dateRef": "featuredDate",
-          "image": "/home-images/hero-banner.png",
-          "imageAltRef": "featuredImageAlt"
+          "readTime": "7 min read",
+          "image": "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=1600&q=80",
+          "imageAltRef": "featuredImageAlt",
+          "body": [
+            "Every journey at TravelsTREM begins the same way: you share an idea, and a connected workspace starts shaping it into a plan. Enquiries, partner preferences, availability checks, price quotes and support conversations all stay under one roof, so nothing important gets lost between steps.",
+            "When you request a quote, our team translates your wishlist into concrete options with transparent pricing. Once you confirm, the booking, the trip plan and any follow-up support are linked to the same record. That single thread is what keeps a multi-stop itinerary feeling like one smooth journey instead of many disconnected transactions.",
+            "The result is simpler to live with: one place to revisit your plans, one thread for support, and an experience where the next step always makes sense."]
+        },
+        "controls": {
+          "searchPlaceholder": "Search articles, topics, authors",
+          "allCategoriesLabel": "All categories",
+          "categoriesLabel": "Category",
+          "sortLabel": "Sort by",
+          "sortOptions": [
+            { "value": "recent", "label": "Most recent" },
+            { "value": "oldest", "label": "Oldest first" },
+            { "value": "title", "label": "Title A–Z" }
+          ],
+          "resultLabel": "article",
+          "resultLabelPlural": "articles",
+          "featuredLabel": "Featured article",
+          "featuredBadgeLabel": "Featured",
+          "readLabel": "Read article",
+          "relatedLabel": "Keep reading",
+          "relatedDescription": "More travel ideas picked for you.",
+          "journalLabel": "TravelsTREM Journal",
+          "clearLabel": "Clear filters"
+        },
+        "states": {
+          "errorTitleRef": "articlesErrorTitle",
+          "errorDescriptionRef": "articlesErrorDescription",
+          "retryLabelRef": "articlesRetryLabel",
+          "emptyTitleRef": "articlesEmptyTitle",
+          "emptyDescriptionRef": "articlesEmptyDescription",
+          "exploreLabelRef": "articlesExploreLabel",
+          "filteredTitleRef": "articlesFilteredTitle",
+          "filteredDescriptionRef": "articlesFilteredDescription"
         },
         "items": [
           {
@@ -33,8 +62,14 @@
             "descriptionRef": "articleOneDescription",
             "authorRef": "articleOneAuthor",
             "dateRef": "articleOneDate",
-            "image": "/product-images/trevista-banner.png",
-            "imageAltRef": "articleOneImageAlt"
+            "readTime": "4 min read",
+            "image": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80",
+            "imageAltRef": "articleOneImageAlt",
+            "body": [
+              "A curated escape starts with the style of journey you want, not the destination. Before comparing dates or prices, decide whether you are after total relaxation, cultural discovery, or a blend of both. That single decision filters out most irrelevant options.",
+              "Once the journey style is set, shortlist two or three candidates and compare them on stays, pace, and the level of human support included. TravelsTREM keeps these shortlists in your saved journeys so you can revisit them side by side without restarting your research.",
+              "Book when the plan feels clear. Confidence comes from knowing what each option includes, not from endlessly searching for the perfect one."
+            ]
           },
           {
             "id": "connected-planning",
@@ -43,8 +78,14 @@
             "descriptionRef": "articleTwoDescription",
             "authorRef": "articleTwoAuthor",
             "dateRef": "articleTwoDate",
-            "image": "/product-images/trevio-banner.png",
-            "imageAltRef": "articleTwoImageAlt"
+            "readTime": "3 min read",
+            "image": "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1600&q=80",
+            "imageAltRef": "articleTwoImageAlt",
+            "body": [
+              "A genuinely curated trip is organised around your preferences from the very first enquiry. Generic packages repeat the same itinerary for everyone; curated travel adjusts pace, stays, transport and experiences to how you like to move.",
+              "The practical difference shows up in the details: sensible connection times, the right number of rest days, and a support thread that stays attached to your trip. These choices are made with your plan in mind, not copied from a template.",
+              "When you review a curated proposal, ask what was tailored and why. If the answer is specific to your journey, you are in good hands."
+            ]
           },
           {
             "id": "flight-stay-checklist",
@@ -53,8 +94,110 @@
             "descriptionRef": "articleThreeDescription",
             "authorRef": "articleThreeAuthor",
             "dateRef": "articleThreeDate",
-            "image": "/product-images/trehub-banner.png",
-            "imageAltRef": "articleThreeImageAlt"
+            "readTime": "5 min read",
+            "image": "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=1600&q=80",
+            "imageAltRef": "articleThreeImageAlt",
+            "body": [
+              "Before you confirm flights and stays, run through a short checklist of the details that cause most rebooking. Confirm every traveller name exactly as it appears on the passport or ID you will travel with.",
+              "Check flexibility: what does it cost to change a date, and does your plan allow it? Compare cancellation terms for the stay and the fare rules for the flight, because they are usually set by separate suppliers.",
+              "Finally, make sure support readiness is part of the plan. Knowing where to reach your travel desk while on the road turns a small hiccup into a five-minute fix."
+            ]
+          },
+          {
+            "id": "off-peak-destinations",
+            "categoryRef": "articleFourCategory",
+            "titleRef": "articleFourTitle",
+            "descriptionRef": "articleFourDescription",
+            "authorRef": "articleFourAuthor",
+            "dateRef": "articleFourDate",
+            "readTime": "4 min read",
+            "image": "https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=1600&q=80",
+            "imageAltRef": "articleFourImageAlt",
+            "body": [
+              "Off-peak travel trades holiday-season crowds for calmer streets, shorter queues and more responsive support. The same budget often goes further when flights and stays are booked outside the rush.",
+              "Try less obvious hubs near popular destinations. A regional airport can shorten transfers, lower fares and introduce you to places most travellers fly straight past.",
+              "Keep one rule in mind: check what stays open. Some experiences are seasonal, so pair your travel window with the attractions that matter most to you."
+            ]
+          },
+          {
+            "id": "multi-city-packing",
+            "categoryRef": "articleFiveCategory",
+            "titleRef": "articleFiveTitle",
+            "descriptionRef": "articleFiveDescription",
+            "authorRef": "articleFiveAuthor",
+            "dateRef": "articleFiveDate",
+            "readTime": "3 min read",
+            "image": "https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1600&q=80",
+            "imageAltRef": "articleFiveImageAlt",
+            "body": [
+              "Multi-city journeys reward a capsule approach to luggage: a small set of pieces that mix and match across climates and occasions. Fewer, better items move faster through transfers and keep day packs light.",
+              "Plan layers instead of outfits. A two- or three-layer system covers temperature swings between cities without filling a second bag.",
+              "Leave a little empty space on purpose. Local finds and changes of plan are half the joy of moving between cities."
+            ]
+          },
+          {
+            "id": "family-holiday-planning",
+            "categoryRef": "articleSixCategory",
+            "titleRef": "articleSixTitle",
+            "descriptionRef": "articleSixDescription",
+            "authorRef": "articleSixAuthor",
+            "dateRef": "articleSixDate",
+            "readTime": "6 min read",
+            "image": "https://images.unsplash.com/photo-1542037104857-ffbb0b9155fb?auto=format&fit=crop&w=1600&q=80",
+            "imageAltRef": "articleSixImageAlt",
+            "body": [
+              "Family travel works best when the pace has room to breathe. Build in slower mornings and a flexible plan for the afternoon, so tired travellers never feel rushed.",
+              "Proximity matters as much as price. Choose stays within a short commute of your daily activities to cut travel fatigue and keep everyone close to amenities.",
+              "Flexible stays are the safety net group travel needs. When dates or room counts are likely to shift, book options that allow changes without penalty."
+            ]
+          },
+          {
+            "id": "flexible-budget-tips",
+            "categoryRef": "articleSevenCategory",
+            "titleRef": "articleSevenTitle",
+            "descriptionRef": "articleSevenDescription",
+            "authorRef": "articleSevenAuthor",
+            "dateRef": "articleSevenDate",
+            "readTime": "4 min read",
+            "image": "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1600&q=80",
+            "imageAltRef": "articleSevenImageAlt",
+            "body": [
+              "A flexible travel budget holds space for the experiences that make a trip memorable. Once the essentials are covered, keep a reserve for upgrades, local experiences and the occasional surprise.",
+              "Split your plan into must-haves and nice-to-haves. Lock in the must-haves early, then use the flexibility to respond to what you discover on the road.",
+              "Remember that timing is money. Off-peak dates, midweek stays and open return windows often turn the same itinerary into a lighter price tag."
+            ]
+          },
+          {
+            "id": "solo-travel-basics",
+            "categoryRef": "articleEightCategory",
+            "titleRef": "articleEightTitle",
+            "descriptionRef": "articleEightDescription",
+            "authorRef": "articleEightAuthor",
+            "dateRef": "articleEightDate",
+            "readTime": "5 min read",
+            "image": "https://images.unsplash.com/photo-1501555088652-021faa106b9b?auto=format&fit=crop&w=1600&q=80",
+            "imageAltRef": "articleEightImageAlt",
+            "body": [
+              "Solo travel rewards preparation. Keep digital and physical copies of your documents, store backup contact details offline, and share your rough plan with someone at home.",
+              "A clear daily plan keeps exploration calm. Mark one anchor activity per day and leave the rest flexible, so you always know where you are headed without over-scheduling.",
+              "Choose accommodation in walkable, well-lit areas and keep a support contact handy. Prepared solo travellers explore with more confidence, not less freedom."
+            ]
+          },
+          {
+            "id": "adventure-pace-design",
+            "categoryRef": "articleNineCategory",
+            "titleRef": "articleNineTitle",
+            "descriptionRef": "articleNineDescription",
+            "authorRef": "articleNineAuthor",
+            "dateRef": "articleNineDate",
+            "readTime": "4 min read",
+            "image": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1600&q=80",
+            "imageAltRef": "articleNineImageAlt",
+            "body": [
+              "Great adventure itineraries balance movement days with deliberate rest. Alternating active highlights with relaxed mornings keeps energy high and legs fresh.",
+              "Design for your pace, not a stranger's. What sounds like a packed two-week schedule to one traveller is a relaxed wander for another. Align the itinerary with your own comfort.",
+              "Leave one day unplanned. The best adventures often arrive from the space you choose not to fill."
+            ]
           }
         ]
       }
@@ -73,6 +216,9 @@
         "articlesRetryLabel": "Try again",
         "articlesEmptyTitle": "No articles yet",
         "articlesEmptyDescription": "Travel notes and planning guides will appear here soon.",
+        "articlesExploreLabel": "Explore tours",
+        "articlesFilteredTitle": "No articles match these filters",
+        "articlesFilteredDescription": "Try another search or clear your current filters.",
         "featuredCategory": "Featured Guide",
         "featuredTitle": "How TravelsTREM keeps every journey connected",
         "featuredDescription": "A practical look at how enquiries, bookings, partner choices and support stay aligned from first search to final confirmation.",
@@ -96,7 +242,43 @@
         "articleThreeDescription": "A simple review list for traveller details, flexibility, cancellation terms and support readiness.",
         "articleThreeAuthor": "Support Team",
         "articleThreeDate": "10 May 2026",
-        "articleThreeImageAlt": "Flight above clouds"
+        "articleThreeImageAlt": "Flight above clouds",
+        "articleFourCategory": "Insights",
+        "articleFourTitle": "Why off-peak destinations stretch your budget",
+        "articleFourDescription": "Smart timing and lesser-known hubs that reward lighter crowds without giving up comfort.",
+        "articleFourAuthor": "TravelsTREM Team",
+        "articleFourDate": "07 May 2026",
+        "articleFourImageAlt": "Quiet coastal town in off-peak season",
+        "articleFiveCategory": "Travel",
+        "articleFiveTitle": "Packing smarter for multi-city journeys",
+        "articleFiveDescription": "A capsule approach to luggage that keeps day trips, transfers and changing climates simple.",
+        "articleFiveAuthor": "Travel Desk",
+        "articleFiveDate": "05 May 2026",
+        "articleFiveImageAlt": "Open suitcase packed for a multi-city trip",
+        "articleSixCategory": "Planning",
+        "articleSixTitle": "Planning a family holiday without the stress",
+        "articleSixDescription": "Pace, proximity and flexible stays make group travel easier for everyone involved.",
+        "articleSixAuthor": "Support Team",
+        "articleSixDate": "03 May 2026",
+        "articleSixImageAlt": "Family enjoying a relaxed city walk",
+        "articleSevenCategory": "Finance",
+        "articleSevenTitle": "Flexible budgeting tips for international travel",
+        "articleSevenDescription": "Where to keep some room in your plan for upgrades, experiences and last-minute changes.",
+        "articleSevenAuthor": "TravelsTREM Team",
+        "articleSevenDate": "30 Apr 2026",
+        "articleSevenImageAlt": "Budget planner with travel stickers",
+        "articleEightCategory": "Travel",
+        "articleEightTitle": "What to organise before your first solo trip",
+        "articleEightDescription": "Documents, backups and a clear daily plan let you explore at your own pace safely.",
+        "articleEightAuthor": "Travel Desk",
+        "articleEightDate": "28 Apr 2026",
+        "articleEightImageAlt": "Solo traveller with a backpack at a viewpoint",
+        "articleNineCategory": "Guide",
+        "articleNineTitle": "Designing an adventure itinerary that fits your pace",
+        "articleNineDescription": "Balancing movement days with rest days so the journey feels energising instead of exhausting.",
+        "articleNineAuthor": "Support Team",
+        "articleNineDate": "26 Apr 2026",
+        "articleNineImageAlt": "Adventure route over mountains and valleys"
       },
       "urls": {}
     },

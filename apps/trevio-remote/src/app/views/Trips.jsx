@@ -114,6 +114,7 @@ export default function Trips({ pageModel }) {
   const routeStartDate = routeParams.get("startDate") || "";
   const routeEndDate = routeParams.get("endDate") || "";
   const routeTravellers = routeParams.get("travellers") || "";
+  const routeCategory = routeParams.get("category") || "";
   const { isFavorited, toggleFavorite } = useFavoritesContext();
   const labels = {
     homeBreadcrumb: "Trevio",
@@ -157,7 +158,7 @@ export default function Trips({ pageModel }) {
     budget: [],
     flights: [],
   });
-  const [category, setCategory] = useState("all");
+  const [category, setCategory] = useState(routeCategory || "all");
   const [advancedFilters, setAdvancedFilters] = useState({
     from: "",
     to: "",
@@ -179,8 +180,9 @@ export default function Trips({ pageModel }) {
 
   useEffect(() => {
     setQuery(routeQuery);
+    setCategory(routeCategory || "all");
     setPage(1);
-  }, [routeQuery, routeDestination, routeStartDate, routeEndDate, routeTravellers]);
+  }, [routeQuery, routeDestination, routeStartDate, routeEndDate, routeTravellers, routeCategory]);
 
   useEffect(() => {
     let active = true;

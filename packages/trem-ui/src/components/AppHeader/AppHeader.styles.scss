@@ -626,11 +626,33 @@
   }
 
   .trem-app-header--top-dropdown-shell {
-    grid-template-columns: auto minmax(12rem, 1fr) auto;
+    grid-template-columns: auto minmax(10rem, 1fr) auto;
 
     .brand-logo__subtitle,
     .trem-app-header__desktop-navigation > span {
       display: none;
+    }
+  }
+
+  .trem-app-header.has-navigation-tabs.trem-app-header--top-dropdown-shell {
+    grid-template-columns: auto minmax(10rem, 1fr) auto;
+  }
+
+  .trem-app-header__link-tabs {
+    max-width: 100%;
+    justify-self: start;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    ul {
+      width: max-content;
+      min-width: 100%;
     }
   }
 
@@ -639,7 +661,8 @@
   }
 
   .trem-app-header__link-tabs .trem-link-tabs__link {
-    padding-inline: $space-3;
+    padding-inline: $space-2;
+    gap: $space-1-5;
   }
 
   .trem-app-header__action--labelled {

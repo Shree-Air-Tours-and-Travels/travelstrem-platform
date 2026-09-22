@@ -49,6 +49,12 @@
     filter: none;
     transform: none;
   }
+
+  .dov__story-image {
+    opacity: 1;
+    transform: none;
+    will-change: auto;
+  }
 }
 
 .dov__hero {
@@ -333,31 +339,16 @@
   container-name: dov-products;
   container-type: inline-size;
 
-  /*
-   * FULL BLEED SECTION
-   * No outer horizontal gap.
-   */
   width: 100%;
   max-width: none;
-
   margin: 0;
-
-  /*
-   * KEEP INTERNAL CONTENT PADDING.
-   */
-  padding: clamp(#{$space-7}, 3vw, #{$space-11}) clamp(#{$space-5}, 4vw, #{$space-12}) clamp(#{$space-7}, 3vw, #{$space-10});
-
-  /*
-   * Section itself is not a floating rounded card.
-   */
+  padding: clamp(#{$space-10}, 7vw, #{$space-16}) clamp(#{$space-5}, 5vw, #{$space-12});
   border: 0;
   border-radius: 0;
-
-  background: var(--surface-inset);
-
+  background: linear-gradient(180deg, var(--heading) 0%, var(--surface) 70%, var(--surface) 100%);
   box-shadow: none;
-
   overflow: visible;
+  isolation: isolate;
 
   &::before,
   &::after {
@@ -366,65 +357,328 @@
   }
 }
 
-.dov__plan-cards {
-  width: 100%;
-  min-width: 0;
+.dov__products-inner {
+  position: relative;
+  z-index: 2;
+  width: min(100%, 88rem);
+  margin-inline: auto;
+}
 
-  margin-bottom: 0;
+.dov__products-heading {
+  max-width: 52rem;
+  margin: 0 auto $space-10;
+  text-align: center;
+
+  .dov__products-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-2;
+    padding: $space-1 $space-3;
+    border: 1px solid color-mix(in srgb, var(--color-on-primary) 22%, transparent);
+    border-radius: $radius-full;
+    background: color-mix(in srgb, var(--color-on-primary) 10%, transparent);
+    color: var(--color-on-primary);
+    font-size: $font-size-xs;
+    font-weight: $font-bold;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+
+    svg {
+      color: var(--color-primary);
+    }
+  }
+
+  h2 {
+    margin: $space-4 0 0;
+    color: var(--color-on-primary);
+    font-size: clamp(#{$font-size-xl}, 4vw, #{$font-size-xxxl});
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.32);
+  }
+
+  p {
+    max-width: 44rem;
+    margin: $space-4 auto 0;
+    color: rgba(var(--color-on-primary-rgb), 0.78);
+    font-size: $font-size-md;
+    line-height: 1.65;
+  }
+}
+
+.dov__products-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: $space-5;
+
+  .trem-product-card {
+    height: 100%;
+    box-shadow: var(--shadow-lg);
+  }
 }
 
 @include mq-max($tablet-max) {
   .dov__products {
-    width: 100%;
+    padding: $space-10 $space-5;
+  }
 
-    margin: 0;
-
-    padding: $space-7 $space-5;
-
-    border-radius: 0;
+  .dov__products-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: $space-4;
   }
 }
 
 @include mq-max($mobile-max) {
   .dov__products {
-    width: 100%;
+    padding: $space-8 $space-4;
+  }
 
-    margin: 0;
+  .dov__products-heading {
+    margin-bottom: $space-6;
 
-    padding: $space-6 $space-4;
+    h2 {
+      font-size: $font-size-xxl;
+    }
 
-    border-radius: 0;
+    p {
+      font-size: $font-size-sm;
+    }
+  }
 
-    overflow: visible;
+  .dov__products-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
 /* ============================================================
-   TABLET PAGE SPACING
+   PRODUCT DETAILS MODAL
    ============================================================ */
 
-@include mq-max($tablet-max) {
-  .dov__products {
-    width: calc(100% - #{$space-4 * 2});
-    margin: $space-7 auto;
+.dov__product-modal-dialog {
+  width: min(100% - #{$space-6}, 42rem);
+  max-height: calc(100vh - #{$space-6});
+  padding: 0;
+  overflow: auto;
+  border-radius: $radius-lg;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-card);
+}
+
+.dov__product-modal-media {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--surface-inset);
+
+  img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+  }
+}
+
+.dov__product-modal-scrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg,
+      color-mix(in srgb, var(--overlay-strong) 22%, transparent) 0%,
+      transparent 46%,
+      transparent 70%,
+      color-mix(in srgb, var(--overlay-strong) 66%, transparent) 100%);
+}
+
+.dov__product-modal-close {
+  position: absolute;
+  z-index: 2;
+  top: $space-4;
+  right: $space-4;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--color-on-primary) 26%, transparent);
+  border-radius: $radius-circle;
+  background: color-mix(in srgb, var(--overlay-strong) 52%, transparent);
+  color: var(--color-on-primary);
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition: background $duration-fast $ease-standard;
+
+  &:hover {
+    background: var(--overlay-strong);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+.dov__product-modal-badge {
+  position: absolute;
+  z-index: 2;
+  bottom: $space-4;
+  left: $space-5;
+  display: inline-flex;
+  align-items: center;
+  gap: $space-1-5;
+  min-height: 28px;
+  padding: $space-1 $space-3;
+  border: 1px solid color-mix(in srgb, var(--color-on-primary) 26%, transparent);
+  border-radius: $radius-full;
+  background: color-mix(in srgb, var(--overlay-strong) 52%, transparent);
+  color: var(--color-on-primary);
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  backdrop-filter: blur(10px);
+}
+
+.dov__product-modal-body {
+  display: grid;
+  gap: $space-3;
+  padding: $space-6;
+}
+
+.dov__product-modal-eyebrow {
+  color: var(--color-primary);
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.dov__product-modal-body h3 {
+  margin: 0;
+  color: var(--heading);
+  font-size: clamp(#{$font-size-xl}, 4vw, #{$font-size-xxl});
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.dov__product-modal-description {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: $font-size-md;
+  line-height: 1.7;
+}
+
+.dov__product-modal-features {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $space-2;
+  margin-top: $space-2;
+}
+
+.dov__product-modal-feature {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  padding: $space-2 $space-3;
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+  background: var(--surface-inset);
+  color: var(--text);
+  font-size: $font-size-sm;
+  font-weight: $font-medium;
+}
+
+.dov__product-modal-feature-icon {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  color: var(--color-primary);
+}
+
+.dov__product-modal-note {
+  margin: $space-1 0 0;
+  padding: $space-3 $space-4;
+  border-left: 3px solid var(--color-primary);
+  border-radius: $radius-sm;
+  background: var(--primary-softer);
+  color: var(--text);
+  font-size: $font-size-sm;
+  line-height: 1.6;
+}
+
+.dov__product-modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $space-3;
+  margin-top: $space-3;
+  padding-top: $space-4;
+  border-top: 1px solid var(--border);
+}
+
+.dov__product-modal-explore {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  min-height: 44px;
+  padding: $space-2 $space-5;
+  border: 0;
+  border-radius: $radius-full;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  color: var(--color-on-primary);
+  font-size: $font-size-sm;
+  font-weight: $font-bold;
+  cursor: pointer;
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--color-primary) 30%, transparent);
+  transition:
+    box-shadow $duration-base $ease-standard,
+    transform $duration-base $ease-standard;
+
+  &:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+.dov__product-modal-closebtn {
+  padding: $space-2 $space-4;
+  border: 1px solid var(--border);
+  border-radius: $radius-full;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: $font-size-sm;
+  font-weight: $font-semibold;
+  cursor: pointer;
+  transition:
+    color $duration-fast $ease-standard,
+    border-color $duration-fast $ease-standard;
+
+  &:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+@include mq-max($mobile-max) {
+  .dov__product-modal-dialog {
+    width: calc(100% - #{$space-4  * 2});
+  }
+
+  .dov__product-modal-features {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dov__product-modal-body {
     padding: $space-5;
-  }
-}
-
-/* ============================================================
-   MOBILE PAGE SPACING
-   ============================================================ */
-
-@include mq-max($mobile-max) {
-  .dov__products {
-    width: calc(100% - #{$space-3 * 2});
-    margin: $space-6 auto;
-    padding: $space-4;
-    overflow: visible;
-  }
-
-  .dov__plan-cards {
-    margin-bottom: 0;
   }
 }
 
@@ -1181,6 +1435,7 @@
 }
 
 .dov__story-gallery {
+  --reveal-progress: 1;
   grid-column: 1 / -1;
   display: grid;
   grid-template-columns: 1.55fr 0.75fr 0.75fr;
@@ -1190,6 +1445,7 @@
 }
 
 .dov__story-image {
+  --reveal-x: 0px;
   min-width: 0;
   height: clamp(20rem, 28vw, 31rem);
   margin: 0;
@@ -1197,6 +1453,9 @@
   border-radius: $radius-lg;
   background: var(--surface-muted);
   box-shadow: var(--shadow-lg);
+  opacity: var(--reveal-progress, 1);
+  transform: translateX(calc((1 - var(--reveal-progress, 1)) * var(--reveal-x, 0px)));
+  will-change: transform, opacity;
 }
 
 .dov__story-image img {
@@ -1208,6 +1467,11 @@
 
 .dov__story-image--portrait {
   height: clamp(20rem, 28vw, 31rem);
+  --reveal-x: 70px;
+}
+
+.dov__story-image--wide {
+  --reveal-x: -70px;
 }
 
 .dov__story-stats {
@@ -1386,10 +1650,10 @@
   overflow: hidden;
   border-top: 1px solid color-mix(in srgb, var(--color-primary) 14%, var(--border));
   background: linear-gradient(180deg,
-      var(--page-bg) 0%,
-      var(--page-bg) 48%,
+      var(--border) 0%,
+      var(--border) 48%,
       color-mix(in srgb, var(--primary-softer) 34%, var(--page-bg)) 48%,
-      var(--card-bg) 100%);
+      var(--color-on-primary) 100%);
   color: var(--text);
 }
 
@@ -1510,13 +1774,10 @@
    ============================================================ */
 
 .dov__articles {
-  width: min(100%, 88rem);
 
-  margin-inline: auto;
 
   padding: clamp(#{$space-8}, 5vw, #{$space-12}) clamp(#{$space-4}, 5vw, #{$space-8});
 
-  background: var(--page-bg);
 }
 
 /* ============================================================
@@ -1536,7 +1797,8 @@
     #{$space-9});
 }
 
-.dov__articles .dov__insights-heading {
+.dov__articles .dov__insights-heading,
+.dov__faq .dov__insights-heading {
   max-width: 46rem;
 
   margin: 0;
@@ -1548,6 +1810,8 @@
   display: inline-flex;
 
   align-items: center;
+
+  gap: $space-2;
 
   margin-bottom: $space-2;
 
@@ -1563,7 +1827,8 @@
   text-transform: uppercase;
 }
 
-.dov__articles .dov__insights-heading h2 {
+.dov__articles .dov__insights-heading h2,
+.dov__faq .dov__insights-heading h2 {
   margin: 0;
 
   color: var(--heading);
@@ -1580,7 +1845,8 @@
   letter-spacing: -0.045em;
 }
 
-.dov__articles .dov__insights-heading h2 em {
+.dov__articles .dov__insights-heading h2 em,
+.dov__faq .dov__insights-heading h2 em {
   color: var(--color-primary);
 
   font-style: normal;
@@ -1588,7 +1854,8 @@
   text-decoration: none;
 }
 
-.dov__articles .dov__insights-heading p {
+.dov__articles .dov__insights-heading p,
+.dov__faq .dov__insights-heading p {
   max-width: 38rem;
 
   margin:
@@ -1635,12 +1902,20 @@
 
   color: var(--text);
 
+  cursor: pointer;
+
   box-shadow: var(--shadow-sm);
 
   transition:
     transform $duration-base $ease-standard,
     box-shadow $duration-base $ease-standard,
     border-color $duration-base $ease-standard;
+}
+
+.dov__article-card:focus-visible {
+  outline: 2px solid var(--color-primary);
+
+  outline-offset: 3px;
 }
 
 .dov__article-card:hover {
