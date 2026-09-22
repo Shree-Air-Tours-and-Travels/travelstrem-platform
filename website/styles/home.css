@@ -643,6 +643,228 @@
         line-height: 1;
       }
 
+      /* products showcase */
+      .products-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-top: 44px;
+      }
+      .product-card {
+        position: relative;
+        min-height: 330px;
+        padding: 26px;
+        display: flex;
+        flex-direction: column;
+        text-align: left;
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        background: white;
+        cursor: pointer;
+        font: inherit;
+        transition:
+          transform 0.25s ease,
+          box-shadow 0.25s ease,
+          border-color 0.25s ease;
+      }
+      .product-card:hover {
+        transform: translateY(-4px);
+        border-color: #c5cdef;
+        box-shadow: 0 18px 45px rgba(18, 28, 67, 0.08);
+      }
+      .product-card__top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .product-card__icon {
+        width: 50px;
+        height: 50px;
+        display: grid;
+        place-items: center;
+        border-radius: 16px;
+        background: linear-gradient(135deg, var(--primary), var(--primary-2));
+        color: white;
+        font-size: 22px;
+      }
+      .product-card__status {
+        padding: 6px 10px;
+        border-radius: 999px;
+        color: var(--primary);
+        background: var(--blue-soft);
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .product-card h3 {
+        margin: 22px 0 0;
+        font-size: 23px;
+        letter-spacing: -0.03em;
+      }
+      .product-card > p {
+        margin: 10px 0 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.6;
+      }
+      .product-card__points {
+        display: grid;
+        gap: 8px;
+        margin: 18px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+      .product-card__points li {
+        position: relative;
+        padding-left: 18px;
+        color: #4a5570;
+        font-size: 12.5px;
+        line-height: 1.5;
+      }
+      .product-card__points li::before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        color: var(--primary);
+        font-weight: 900;
+      }
+      .product-card__action {
+        margin-top: auto;
+        padding-top: 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--primary);
+        font-size: 13px;
+        font-weight: 850;
+      }
+
+      /* product details modal */
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 120;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background: rgba(7, 17, 31, 0.62);
+        backdrop-filter: blur(8px);
+      }
+      .modal-backdrop[hidden] {
+        display: none;
+      }
+      .modal {
+        position: relative;
+        width: min(680px, 100%);
+        max-height: min(86vh, 720px);
+        overflow: auto;
+        padding: 40px;
+        border-radius: 28px;
+        border: 1px solid var(--line);
+        background: white;
+        box-shadow: var(--shadow-lg);
+        animation: modal-in 0.28s ease;
+      }
+      @keyframes modal-in {
+        from {
+          opacity: 0;
+          transform: translateY(14px) scale(0.985);
+        }
+      }
+      .modal__close {
+        position: absolute;
+        top: 18px;
+        right: 18px;
+        width: 40px;
+        height: 40px;
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: white;
+        cursor: pointer;
+        color: var(--muted);
+        font-size: 20px;
+        transition:
+          color 0.2s ease,
+          border-color 0.2s ease;
+      }
+      .modal__close:hover {
+        color: var(--ink);
+        border-color: var(--primary);
+      }
+      .modal__content .modal-status {
+        width: fit-content;
+        padding: 6px 10px;
+        border-radius: 999px;
+        color: var(--primary);
+        background: var(--blue-soft);
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .modal__content h3 {
+        margin: 18px 0 0;
+        font-size: 38px;
+        line-height: 1.05;
+        letter-spacing: -0.045em;
+        font-weight: 920;
+      }
+      .modal-tagline {
+        margin: 8px 0 0;
+        color: var(--primary);
+        font-size: 16px;
+        font-weight: 750;
+      }
+      .modal-about {
+        margin: 18px 0 0;
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.75;
+      }
+      .modal-features {
+        display: grid;
+        gap: 11px;
+        margin: 26px 0 0;
+        padding: 24px;
+        border-radius: 18px;
+        background: var(--soft);
+        list-style: none;
+      }
+      .modal-features li {
+        display: flex;
+        gap: 11px;
+        align-items: flex-start;
+        color: #38425e;
+        font-size: 14px;
+        line-height: 1.55;
+      }
+      .modal-features li::before {
+        content: "✓";
+        flex: 0 0 auto;
+        width: 20px;
+        height: 20px;
+        display: grid;
+        place-items: center;
+        margin-top: 1px;
+        border-radius: 7px;
+        background: var(--blue-soft);
+        color: var(--primary);
+        font-size: 11px;
+        font-weight: 900;
+      }
+      .modal__footer {
+        margin-top: 28px;
+        padding-top: 22px;
+        border-top: 1px solid var(--line);
+      }
+      body.modal-open {
+        overflow: hidden;
+      }
+
       /* product demo */
       .demo-shell {
         margin-top: 44px;
@@ -1918,6 +2140,9 @@
         .feature-grid {
           grid-template-columns: repeat(2, 1fr);
         }
+        .products-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
         .journey-grid {
           grid-template-columns: repeat(3, 1fr);
           row-gap: 30px;
@@ -1969,7 +2194,8 @@
         .quality-grid,
         .partner-cap-grid,
         .leaders,
-        .cta-grid {
+        .cta-grid,
+        .products-grid {
           grid-template-columns: 1fr;
         }
         .cta-card {
@@ -2094,6 +2320,12 @@
         .footer-bottom {
           flex-direction: column;
         }
+        .modal {
+          padding: 30px 24px;
+        }
+        .modal__content h3 {
+          font-size: 32px;
+        }
         .floating-proof {
           display: none;
         }
@@ -2165,6 +2397,12 @@
         .tour-detail-highlight-grid,
         .tour-detail-packages {
           grid-template-columns: 1fr;
+        }
+        .modal-backdrop {
+          padding: 14px;
+        }
+        .modal {
+          padding: 26px 20px;
         }
         .cta-card {
           min-height: auto;

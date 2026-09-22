@@ -324,11 +324,15 @@ const listedQuery = (filters = {}) => {
     const and = [];
 
     if (filters.category && filters.category !== "all") {
-        and.push(
-            {
-                $or: [{ category: filters.category }, { tags: filters.category }],
-            },
-        );
+        if (filters.category === "domestic") {
+            and.push({ $nor: [{ category: "international" }, { tags: "international" }] });
+        } else {
+            and.push(
+                {
+                    $or: [{ category: filters.category }, { tags: filters.category }],
+                },
+            );
+        }
     }
 
     if (filters.search) {

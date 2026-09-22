@@ -42,6 +42,10 @@
         href: "https://app.travelstrem.com/?tab=trevista&product=trevista",
         external: true,
       },
+      hub: {
+        href: "https://app.travelstrem.com/?tab=dashboard",
+        external: true,
+      },
       partnerApplication: {
         href: "https://auth.travelstrem.com/partnership",
         external: true,
@@ -65,6 +69,7 @@
           "src/sections/home/hero.html",
           "src/sections/home/promises.html",
           "src/sections/home/travellers.html",
+          "src/sections/home/products.html",
           "src/sections/home/platform-preview.html",
           "src/sections/home/journey.html",
           "src/sections/home/trevista.html",

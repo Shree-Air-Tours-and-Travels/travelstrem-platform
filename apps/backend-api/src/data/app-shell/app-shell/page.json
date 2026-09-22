@@ -56,7 +56,7 @@
           "widgetRef": "./widgets/journey-story.json"
         },
         {
-          "type": "PlanCards",
+          "type": "ProductCards",
           "source": "shell",
           "widgetRef": "./widgets/plan-cards.json"
         },

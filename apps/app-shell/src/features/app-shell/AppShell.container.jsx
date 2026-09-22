@@ -92,13 +92,17 @@ const resolveFavoriteRef = (item) => {
   return titleRef || textValue(item?._id) || textValue(item?.id);
 };
 
-export default function AppShellContainer({ activeTab = "overview", onTabChange }) {
+export default function AppShellContainer({
+  activeTab = "overview",
+  onTabChange,
+  onArticleTitleChange,
+}) {
   const navigate = useNavigate();
   const { session } = useAppShellConfig();
   const isAuthenticated = Boolean(session?.isAuthenticated);
   const user = session?.user || {};
   const overviewUserKey = String(user.id || user._id || "guest");
-  const [planCards, setPlanCards] = useState(null);
+  const [products, setProducts] = useState(null);
   const [journeyStory, setJourneyStory] = useState(null);
   const [travelBenefits, setTravelBenefits] = useState(null);
   const [homeInsights, setHomeInsights] = useState(null);
@@ -122,7 +126,7 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
   const [avatarSaving, setAvatarSaving] = useState(false);
   const [articlesPage, setArticlesPage] = useState(null);
   const [articlesLoading, setArticlesLoading] = useState(false);
-  const [articlesError, setArticlesError] = useState(false);
+  const [articlesError, setArticlesError] = useState("");
 
   // The dashboard page definition carries user-scoped data (metrics, recent
   // bookings & enquiries, upcoming trips) in the same response as the markup.
@@ -175,7 +179,12 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
           recent: resolve(widgetFor("RecentBookings")?.props || {}),
           upcoming: resolve(widgetFor("UpcomingTrips")?.props || {}),
         });
-        setPlanCards(contentFor("PlanCards"));
+        const productWidget = widgetFor("ProductCards") || widgetFor("PlanCards");
+        setProducts(
+          productWidget?.props?.dataKey
+            ? resolve(component?.data?.[productWidget.props.dataKey])
+            : null,
+        );
         setTravelBenefits(contentFor("TravelBenefits"));
         setHomeInsights(contentFor("HomeInsights"));
         setOverviewRail(contentFor("OverviewRail"));
@@ -190,7 +199,7 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
       })
       .catch(() => {
         if (overviewResponseCache && overviewResponseUserKey === overviewUserKey) return;
-        setPlanCards(null);
+        setProducts(null);
         setJourneyStory(null);
         setTravelBenefits(null);
         setHomeInsights(null);
@@ -213,29 +222,59 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
     loadOverview();
   }, [loadOverview]);
 
-  const loadArticlesPage = useCallback(() => {
-    setArticlesLoading(true);
-    setArticlesError(false);
-    return fetchData("/pages/app-shell/articles")
-      .then((response) => {
-        const component = response?.component;
-        const labels = component?.elements?.labels || {};
-        const urls = component?.elements?.urls || {};
-        const widget = (component?.structure?.widgets || []).find((item) => item?.type === "ArticlesPage");
-        const dataKey = widget?.props?.dataKey;
-        setArticlesPage(dataKey ? resolveContractRefs(component?.data?.[dataKey], labels, urls) : null);
-      })
-      .catch(() => {
-        setArticlesError(true);
-      })
-      .finally(() => setArticlesLoading(false));
-  }, []);
+  const loadArticlesPage = useCallback(async ({ force = false, silent = false } = {}) => {
+    if (!silent) setArticlesLoading(true);
+    setArticlesError("");
+    try {
+      const response = await fetchData("/pages/app-shell/articles", {
+        params: force ? { refresh: Date.now() } : {},
+      });
+      if (response?.status !== "success") {
+        throw new Error(response?.message || "Articles could not be loaded");
+      }
+      const component = response?.component;
+      const labels = component?.elements?.labels || {};
+      const urls = component?.elements?.urls || {};
+      const widget = (component?.structure?.widgets || []).find(
+        (item) => item?.type === "ArticlesPage",
+      );
+      const dataKey = widget?.props?.dataKey;
+      const resolved = dataKey
+        ? resolveContractRefs(component?.data?.[dataKey], labels, urls)
+        : null;
+      if (!widget || !resolved) {
+        throw new Error("Articles could not be loaded");
+      }
+      setArticlesPage(resolved);
+    } catch (loadError) {
+      if (silent && articlesPage) return;
+      setArticlesPage(null);
+      setArticlesError(loadError?.message || "Articles could not be loaded");
+    } finally {
+      if (!silent) setArticlesLoading(false);
+    }
+  }, [articlesPage]);
 
   useEffect(() => {
-    if (activeTab === "articles" && !articlesPage && !articlesLoading) {
+    if (activeTab === "articles" && !articlesPage && !articlesLoading && !articlesError) {
       loadArticlesPage();
     }
-  }, [activeTab, articlesLoading, articlesPage, loadArticlesPage]);
+  }, [activeTab, articlesError, articlesLoading, articlesPage, loadArticlesPage]);
+  useRefreshOnActivation(() => loadArticlesPage({ silent: true }), {
+    resource: "articles",
+    refreshOnMount: false,
+  });
+
+  const handleOpenArticle = useCallback(
+    (article) => {
+      const id =
+        textValue(article?.articleId) || textValue(article?.id) || slugify(textValue(article?.title));
+      const params = new URLSearchParams({ tab: "articles" });
+      if (id) params.set("article", encodeURIComponent(id));
+      navigate(`/articles?${params}`);
+    },
+    [navigate],
+  );
 
   // Load once, then let realtime enquiry events update the overview.
   useEnquiryRealtime(
@@ -468,6 +507,7 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
       if (values.startDate) params.set(mode === "trip" ? "startDate" : "departure", values.startDate);
       if (values.endDate) params.set(mode === "trip" ? "endDate" : "return", values.endDate);
       if (values.travellers) params.set("travellers", String(values.travellers));
+      if (choice) params.set(mode === "trip" ? "category" : "tags", choice);
     } else {
       if (choice) params.set("choice", choice);
       Object.entries(values).forEach(([key, value]) => {
@@ -491,10 +531,11 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
             journeyHero={journeyHero}
             journeyStory={journeyStory}
             travelBenefits={travelBenefits}
-            planCards={planCards}
+            products={products}
             homeInsights={homeInsights}
             onHeroSearch={handleHeroSearch}
             onTabChange={onTabChange}
+            onArticleSelect={handleOpenArticle}
           />
         )
       )}
@@ -539,6 +580,7 @@ export default function AppShellContainer({ activeTab = "overview", onTabChange 
           loading={articlesLoading}
           error={articlesError}
           onRetry={loadArticlesPage}
+          onArticleTitleChange={onArticleTitleChange}
         />
       )}
       {activeTab === "bookings" && (

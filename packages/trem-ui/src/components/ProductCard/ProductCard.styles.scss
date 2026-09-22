@@ -1,0 +1,552 @@
+@import "../../styles/base/typography";
+
+/* ============================================================
+   PRODUCT CARD
+   A rich, editorial card for surfacing TravelsTREM products.
+   The whole main surface opens the product detail modal and a
+   footer action navigates to the live product.
+   ============================================================ */
+
+.trem-product-card {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+
+  overflow: hidden;
+
+  border: 1px solid var(--border);
+  border-radius: $radius-lg;
+
+  background: var(--surface-elevated, var(--card-bg));
+  color: var(--text);
+
+  box-shadow: var(--shadow-md);
+
+  isolation: isolate;
+
+  transition:
+    transform $duration-base $ease-standard,
+    border-color $duration-base $ease-standard,
+    box-shadow $duration-base $ease-standard;
+
+  &::before {
+    position: absolute;
+    z-index: 3;
+    inset: 0 0 auto;
+    height: 3px;
+    background: var(--tpc-grad);
+    content: "";
+    opacity: 0.85;
+  }
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--tpc-accent) 46%, var(--border));
+    box-shadow: var(--shadow-xl);
+    transform: translateY(-6px);
+
+    .trem-product-card__media img {
+      transform: scale(1.06);
+    }
+
+    .trem-product-card__explore {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+  }
+
+  &:focus-within {
+    outline: none;
+    border-color: var(--tpc-accent);
+    box-shadow:
+      0 0 0 4px color-mix(in srgb, var(--tpc-accent) 22%, transparent),
+      var(--shadow-md);
+  }
+}
+
+/* ============================================================
+   MAIN SURFACE (opens details modal)
+   ============================================================ */
+
+.trem-product-card__main {
+  display: flex;
+  flex-direction: column;
+
+  width: 100%;
+  min-width: 0;
+
+  padding: 0;
+
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+
+  cursor: pointer;
+}
+
+/* ============================================================
+   MEDIA
+   ============================================================ */
+
+.trem-product-card__media {
+  position: relative;
+
+  display: block;
+
+  width: 100%;
+
+  aspect-ratio: 16 / 9;
+
+  overflow: hidden;
+
+  background: var(--surface-inset, var(--primary-softer));
+}
+
+.trem-product-card__media img {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+
+  transition: transform $duration-slow $ease-standard;
+}
+
+.trem-product-card__scrim {
+  position: absolute;
+
+  inset: 0;
+
+  display: block;
+
+  pointer-events: none;
+
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--overlay-strong, #052226) 18%, transparent) 0%,
+    transparent 34%,
+    transparent 62%,
+    color-mix(in srgb, var(--overlay-strong, #052226) 62%, transparent) 100%
+  );
+}
+
+/* ------------------------------
+   Status pill
+   ------------------------------ */
+
+.trem-product-card__status {
+  position: absolute;
+
+  z-index: 2;
+
+  top: $space-3;
+  left: $space-4;
+
+  display: inline-flex;
+  align-items: center;
+
+  gap: $space-1-5;
+
+  min-height: 26px;
+
+  padding: $space-1 $space-3;
+
+  border: 1px solid color-mix(in srgb, var(--color-on-primary) 26%, transparent);
+  border-radius: $radius-full;
+
+  background: color-mix(in srgb, var(--overlay-strong, #052226) 46%, transparent);
+
+  color: var(--color-on-primary);
+
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+
+  line-height: 1;
+
+  letter-spacing: 0.08em;
+
+  text-transform: uppercase;
+
+  backdrop-filter: blur(10px);
+
+  &::before {
+    width: 7px;
+    height: 7px;
+
+    flex: 0 0 7px;
+
+    border-radius: $radius-circle;
+
+    background: var(--tpc-accent);
+
+    content: "";
+  }
+}
+
+/* ------------------------------
+   Icon badge
+   ------------------------------ */
+
+.trem-product-card__icon {
+  position: absolute;
+
+  z-index: 2;
+
+  bottom: $space-4;
+  left: $space-5;
+
+  display: grid;
+
+  place-items: center;
+
+  width: 54px;
+  height: 54px;
+
+  border-radius: $radius-md;
+
+  background: var(--tpc-grad);
+
+  color: var(--color-on-primary);
+
+  box-shadow:
+    0 12px 26px color-mix(in srgb, var(--tpc-accent) 42%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.trem-product-card--coming-soon .trem-product-card__icon,
+.trem-product-card--disabled .trem-product-card__icon {
+  background: var(--neutral-soft, var(--surface-inset));
+
+  color: var(--muted, var(--text-muted));
+}
+
+/* ============================================================
+   BODY
+   ============================================================ */
+
+.trem-product-card__body {
+  display: flex;
+
+  flex-direction: column;
+
+  flex: 1;
+
+  width: 100%;
+  min-width: 0;
+
+  padding: $space-5;
+}
+
+.trem-product-card__eyebrow {
+  display: inline-flex;
+
+  align-items: center;
+
+  width: fit-content;
+
+  margin-bottom: $space-2;
+
+  color: var(--tpc-accent);
+
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+
+  letter-spacing: 0.12em;
+
+  text-transform: uppercase;
+}
+
+.trem-product-card__title {
+  color: var(--heading, var(--card-title));
+
+  font-size: $font-size-lg;
+  font-weight: $font-bold;
+
+  line-height: 1.2;
+
+  letter-spacing: -0.025em;
+}
+
+.trem-product-card__description {
+  margin-top: $space-2;
+
+  color: var(--text-muted, var(--card-text));
+
+  font-size: $font-size-sm;
+
+  line-height: $line-height-lg;
+
+  /* Clamp long copy so every card keeps a balanced rhythm. */
+  display: -webkit-box;
+  overflow: hidden;
+
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+
+  line-clamp: 3;
+}
+
+/* ------------------------------
+   Highlights
+   ------------------------------ */
+
+.trem-product-card__highlights {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: $space-2;
+
+  margin-top: $space-4;
+  padding-top: $space-4;
+
+  border-top: 1px solid var(--border);
+}
+
+.trem-product-card__highlight {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: $space-1-5;
+
+  padding: $space-1 $space-2-5;
+
+  border: 1px solid var(--border);
+  border-radius: $radius-full;
+
+  background: color-mix(in srgb, var(--tpc-soft) 55%, var(--card-bg));
+
+  color: var(--text);
+
+  font-size: $font-size-xs;
+  font-weight: $font-medium;
+
+  line-height: $line-height-md;
+}
+
+.trem-product-card__highlight-icon {
+  display: inline-grid;
+
+  place-items: center;
+
+  flex: 0 0 auto;
+
+  color: var(--tpc-accent);
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+
+.trem-product-card__footer {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: $space-3;
+
+  margin-top: auto;
+
+  padding: $space-3 $space-5 $space-5;
+}
+
+.trem-product-card__details {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: $space-1-5;
+
+  padding: $space-2 $space-2;
+
+  border: 0;
+
+  background: transparent;
+
+  color: var(--muted, var(--text-muted));
+
+  font-size: $font-size-sm;
+  font-weight: $font-semibold;
+
+  cursor: pointer;
+
+  transition: color $duration-fast $ease-standard;
+
+  &:hover {
+    color: var(--tpc-accent);
+  }
+
+  &:focus-visible {
+    border-radius: $radius-sm;
+    outline: 2px solid var(--tpc-accent);
+    outline-offset: 2px;
+  }
+}
+
+.trem-product-card__explore {
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: $space-2;
+
+  min-height: 42px;
+
+  padding: $space-2 $space-4;
+
+  border: 0;
+  border-radius: $radius-full;
+
+  background: var(--tpc-grad);
+
+  color: var(--color-on-primary);
+
+  font-size: $font-size-sm;
+  font-weight: $font-bold;
+
+  letter-spacing: 0.02em;
+
+  text-decoration: none;
+
+  cursor: pointer;
+
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--tpc-accent) 30%, transparent);
+
+  transition:
+    box-shadow $duration-base $ease-standard,
+    transform $duration-base $ease-standard;
+
+  &:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--tpc-accent);
+    outline-offset: 2px;
+  }
+}
+
+/* ============================================================
+   TONE VARIANT — accent variables
+   ============================================================ */
+
+.trem-product-card--primary {
+  --tpc-accent: var(--color-primary);
+  --tpc-soft: var(--primary-soft);
+  --tpc-softer: var(--primary-softer);
+  --tpc-grad: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+}
+
+.trem-product-card--olive {
+  --tpc-accent: var(--color-warning);
+  --tpc-soft: var(--warning-soft);
+  --tpc-softer: var(--warning-soft);
+  --tpc-grad: linear-gradient(135deg, var(--color-warning), var(--color-tertiary));
+}
+
+.trem-product-card--blue {
+  --tpc-accent: var(--color-secondary);
+  --tpc-soft: var(--secondary-soft);
+  --tpc-softer: var(--secondary-soft);
+  --tpc-grad: linear-gradient(135deg, var(--color-secondary), var(--color-primary));
+}
+
+.trem-product-card--green {
+  --tpc-accent: var(--success-color);
+  --tpc-soft: var(--success-soft);
+  --tpc-softer: var(--success-soft);
+  --tpc-grad: linear-gradient(135deg, var(--success-color), var(--color-primary));
+}
+
+.trem-product-card--teal {
+  --tpc-accent: var(--color-tertiary);
+  --tpc-soft: var(--tertiary-soft);
+  --tpc-softer: var(--tertiary-soft);
+  --tpc-grad: linear-gradient(135deg, var(--color-tertiary), var(--color-secondary));
+}
+
+.trem-product-card--purple {
+  --tpc-accent: var(--color-secondary);
+  --tpc-soft: var(--secondary-soft);
+  --tpc-softer: var(--secondary-soft);
+  --tpc-grad: linear-gradient(135deg, var(--color-secondary), var(--color-tertiary));
+}
+
+/* ============================================================
+   DISABLED / COMING SOON
+   ============================================================ */
+
+.trem-product-card--disabled,
+.trem-product-card--coming-soon {
+  .trem-product-card__media img {
+    opacity: 0.62;
+    filter: saturate(0.4);
+  }
+
+  .trem-product-card__body {
+    opacity: 0.78;
+  }
+
+  &:hover {
+    border-color: var(--border);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-4px);
+
+    .trem-product-card__media img {
+      transform: none;
+    }
+
+    .trem-product-card__explore {
+      box-shadow: none;
+      transform: none;
+    }
+  }
+}
+
+.trem-product-card--coming-soon .trem-product-card__status::before,
+.trem-product-card--disabled .trem-product-card__status::before {
+  background: var(--muted, var(--text-muted));
+}
+
+/* ============================================================
+   DARK THEME
+   ============================================================ */
+
+.theme--dark .trem-product-card {
+  background: var(--surface-elevated);
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .trem-product-card,
+  .trem-product-card__media img,
+  .trem-product-card__explore,
+  .trem-product-card__details {
+    transition: none;
+  }
+
+  .trem-product-card:hover {
+    transform: none;
+  }
+
+  .trem-product-card:hover .trem-product-card__media img,
+  .trem-product-card:hover .trem-product-card__explore {
+    transform: none;
+  }
+}

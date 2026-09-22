@@ -28,8 +28,7 @@
         "heroTripTab": "Trips",
         "heroTourTab": "Tours",
         "heroHolidaySearchHeading": "Search holiday packages & trips",
-        "heroHolidaySearchTripHeading": "Search Community Trips & Group Adventures",
-        "heroHolidaySearchTourHeading": "Search Holiday Tours & packages",
+
         "heroFromLabel": "From",
         "heroFromPlaceholder": "Departure airport",
         "heroToLabel": "To",
@@ -50,6 +49,8 @@
         "heroOneWayLabel": "One way",
         "heroRoundTripLabel": "Return trip",
         "heroHotelOnlyLabel": "Hotel only",
+        "heroDomesticChoice": "Domestic",
+        "heroInternationalChoice": "International",
         "heroBookingsSectionTitle": "My bookings",
         "heroViewBookingsAction": "View bookings"
       },
@@ -88,14 +89,12 @@
                 {
                   "id": "trip",
                   "labelRef": "heroTripTab",
-                  "headingRef": "heroHolidaySearchTripHeading",
                   "icon": "briefcaseBusiness",
                   "resultsPath": "/trevio/trips"
                 },
                 {
                   "id": "tour",
                   "labelRef": "heroTourTab",
-                  "headingRef": "heroHolidaySearchTourHeading",
                   "icon": "map",
                   "resultsPath": "/trevista/tours"
                 }
@@ -236,7 +235,15 @@
                   { "id": "oneway", "labelRef": "heroOneWayLabel" },
                   { "id": "roundTrip", "labelRef": "heroRoundTripLabel" }
                 ],
-                "hotel": [{ "id": "hotelOnly", "labelRef": "heroHotelOnlyLabel" }]
+                "hotel": [{ "id": "hotelOnly", "labelRef": "heroHotelOnlyLabel" }],
+                "trip": [
+                  { "id": "domestic", "labelRef": "heroDomesticChoice" },
+                  { "id": "international", "labelRef": "heroInternationalChoice" }
+                ],
+                "tour": [
+                  { "id": "domestic", "labelRef": "heroDomesticChoice" },
+                  { "id": "international", "labelRef": "heroInternationalChoice" }
+                ]
               }
             },
             "states": {

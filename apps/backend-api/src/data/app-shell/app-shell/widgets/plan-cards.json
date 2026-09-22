@@ -16,6 +16,7 @@
         "items": [
           {
             "id": "trips-adventures",
+            "productNameRef": "planTripsProductName",
             "titleRef": "planTripsTitle",
             "descriptionRef": "planTripsDescription",
             "highlights": [
@@ -39,10 +40,29 @@
             "hrefRef": "trevioHome",
             "target": "_self",
             "ariaLabelRef": "planTripsAriaLabel",
-            "actionLabelRef": "planTripsAction"
+            "actionLabelRef": "planTripsAction",
+            "details": {
+              "descriptionRef": "planTripsDetailsDescription",
+              "noteRef": "planTripsDetailsNote",
+              "features": [
+                {
+                  "id": "departures",
+                  "icon": "calendarDays",
+                  "labelRef": "planTripsDetailsDepartures"
+                },
+                { "id": "captains", "icon": "guide", "labelRef": "planTripsDetailsCaptains" },
+                {
+                  "id": "communities",
+                  "icon": "usersRound",
+                  "labelRef": "planTripsDetailsCommunities"
+                },
+                { "id": "live", "icon": "circleDot", "labelRef": "planTripsDetailsLive" }
+              ]
+            }
           },
           {
             "id": "tours-packages",
+            "productNameRef": "planToursProductName",
             "titleRef": "planToursTitle",
             "descriptionRef": "planToursDescription",
             "highlights": [
@@ -59,10 +79,25 @@
             "hrefRef": "trevistaHome",
             "targetTab": "trevista",
             "target": "_self",
-            "ariaLabelRef": "planToursAriaLabel"
+            "ariaLabelRef": "planToursAriaLabel",
+            "details": {
+              "descriptionRef": "planToursDetailsDescription",
+              "noteRef": "planToursDetailsNote",
+              "features": [
+                {
+                  "id": "itineraries",
+                  "icon": "itinerary",
+                  "labelRef": "planToursDetailsItineraries"
+                },
+                { "id": "quotes", "icon": "payment", "labelRef": "planToursDetailsQuotes" },
+                { "id": "domestic", "icon": "mapPin", "labelRef": "planToursDetailsDomestic" },
+                { "id": "global", "icon": "globe", "labelRef": "planToursDetailsGlobal" }
+              ]
+            }
           },
           {
             "id": "flights-hotels",
+            "productNameRef": "planFlightsProductName",
             "titleRef": "planFlightsTitle",
             "descriptionRef": "planFlightsDescription",
             "highlights": [
@@ -83,13 +118,23 @@
             "targetTab": "trehub",
             "target": "_self",
             "ariaLabelRef": "planFlightsAriaLabel",
-            "actionLabelRef": "planFlightsAction"
+            "actionLabelRef": "planFlightsAction",
+            "details": {
+              "descriptionRef": "planFlightsDetailsDescription",
+              "noteRef": "planFlightsDetailsNote",
+              "features": [
+                { "id": "flights", "icon": "flight", "labelRef": "planFlightsDetailsFlights" },
+                { "id": "stays", "icon": "hotel", "labelRef": "planFlightsDetailsStays" },
+                { "id": "transfers", "icon": "taxi", "labelRef": "planFlightsDetailsTransfers" },
+                { "id": "secure", "icon": "shieldCheck", "labelRef": "planFlightsDetailsSecure" }
+              ]
+            }
           },
           {
             "id": "travel-services",
             "titleRef": "planServicesTitle",
             "descriptionRef": "planServicesDescription",
-            "productName": "TreCare",
+            "productNameRef": "planServicesProductName",
             "image": "https://images.unsplash.com/photo-1526772662000-3f88f10405ff?w=900&q=82&auto=format&fit=crop",
             "imageAltRef": "planServicesImageAlt",
             "mobileIcon": "passport",
@@ -111,11 +156,12 @@
     "elements": {
       "labels": {
         "planJourneyEyebrow": "The TravelsTREM collection",
-        "planJourneyTitle": "Our products",
+        "planJourneyTitle": "What we provide?",
         "planJourneyDescription": "From handpicked adventures and curated holidays to flights and stays, explore the travel services we bring together for every journey.",
         "planJourneyAriaLabel": "Explore TravelsTREM products and travel services",
         "planJourneyDecorativeLabel": "Same people\\Anew horizons",
         "planJourneyFooterLabel": "Journeys for a brighter tomorrow",
+        "planTripsProductName": "Trevio",
         "planTripsTitle": "Adventure Awaits",
         "planTripsDescription": "Treks, expeditions and events for every kind of explorer.",
         "planTripsHighlightExperiences": "Handpicked adventures",
@@ -124,16 +170,30 @@
         "planTripsHighlightsAriaLabel": "Trevio product highlights",
         "planTripsImageAlt": "Travellers hiking through a mountain landscape",
         "planTripsAriaLabel": "Explore trips and adventures on Trevio",
-        "planTripsAction": "Explore Trevio trips and adventures",
+        "planTripsAction": "Explore trips and adventures",
+        "planTripsDetailsDescription": "Trevio is where shared journeys begin. Bring a group, join a community or travel solo — every trip is built on real departures, live availability and captains who know the route.",
+        "planTripsDetailsNote": "Adventures, treks and expeditions with departures you can actually join.",
+        "planTripsDetailsDepartures": "Fixed departures",
+        "planTripsDetailsCaptains": "Trip captains",
+        "planTripsDetailsCommunities": "Travel communities",
+        "planTripsDetailsLive": "Live availability",
+        "planToursProductName": "Trevista",
         "planToursTitle": "Journey, Beautifully Yours",
         "planToursDescription": "Domestic and international journeys for every traveller.",
         "planToursHighlightCurated": "Curated itineraries",
         "planToursHighlightFlexible": "Flexible packages and stays",
         "planToursHighlightPartners": "Verified travel partners",
         "planToursHighlightsAriaLabel": "Trevista product highlights",
-        "planToursAction": "Explore Trevista tours and packages",
+        "planToursAction": "Explore holiday packages",
         "planToursImageAlt": "A tropical beach holiday destination",
         "planToursAriaLabel": "Explore tours and packages on Trevista",
+        "planToursDetailsDescription": "Trevista turns a holiday idea into a personal itinerary. Share your preferences and receive curated packages, transparent pricing and a connected booking journey from enquiry to travel.",
+        "planToursDetailsNote": "Curated packages that adapt to how you want to travel.",
+        "planToursDetailsItineraries": "Detailed itineraries",
+        "planToursDetailsQuotes": "Personalised quotes",
+        "planToursDetailsDomestic": "Domestic tours",
+        "planToursDetailsGlobal": "International tours",
+        "planFlightsProductName": "TreHub",
         "planFlightsTitle": "The World, Within Reach",
         "planFlightsDescription": "Flights, stays and transport for every journey.",
         "planFlightsHighlightAvailability": "Live flight availability",
@@ -143,6 +203,13 @@
         "planFlightsImageAlt": "Passenger airplane flying above the clouds",
         "planFlightsAriaLabel": "Search flights and hotels on Trehub",
         "planFlightsAction": "Search flights and hotels",
+        "planFlightsDetailsDescription": "TreHub is your booking surface for flights, hotels, cabs and transfers — with live availability, transparent fares and one place to manage every reservation.",
+        "planFlightsDetailsNote": "Live prices and instant confirmations for flights and stays.",
+        "planFlightsDetailsFlights": "Flights",
+        "planFlightsDetailsStays": "Hotels & stays",
+        "planFlightsDetailsTransfers": "Cabs & transfers",
+        "planFlightsDetailsSecure": "Secure booking support",
+        "planServicesProductName": "TreCare",
         "planServicesTitle": "Visas & Insurance",
         "planServicesDescription": "Visa, passport and insurance services",
         "planServicesImageAlt": "Travel documents and planning essentials",
@@ -160,7 +227,7 @@
       "header": {},
       "widgets": [
         {
-          "type": "PlanCards",
+          "type": "ProductCards",
           "props": {
             "dataKey": "planJourney"
           }

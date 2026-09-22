@@ -292,7 +292,7 @@
     width: 100%;
     height: auto;
     max-height: calc(100dvh - #{$space-16});
-    padding: $space-6;
+    padding: $space-4 $space-6 $space-5;
     border: 0;
     border-bottom: 1px solid var(--border);
     background: var(--surface-glass-strong, var(--card-bg));
@@ -326,7 +326,7 @@
       display: grid;
       grid-template-columns: repeat(5, minmax(0, 1fr));
       align-items: start;
-      gap: 0;
+      gap: 0 $space-2;
       padding: 0;
       overflow: visible;
     }
@@ -335,8 +335,8 @@
       min-width: 0;
       height: 100%;
       align-content: start;
-      padding-inline: $space-5;
-      border-left: 1px solid var(--border);
+      padding-inline: $space-4;
+      border-left: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
 
       &:first-child {
         padding-left: 0;
@@ -353,7 +353,7 @@
     }
 
     .trem-sidebar__item {
-      min-height: $space-11;
+      min-height: $space-10;
     }
   }
 
