@@ -1,26 +1,62 @@
-import React from "react";
-import { BenefitCard, GlobalSearchCard, Icon, PlanCards } from "@packages/trem-ui";
+import React, { useCallback, useState } from "react";
+import {
+  BenefitCard,
+  GlobalSearchCard,
+  Icon,
+  Paragraph,
+  ProductCard,
+  SubTitle,
+} from "@packages/trem-ui";
+import { ModalShell } from "@packages/trem-modals";
 import "./OverviewView.scss";
 
 export default function OverviewView({
   journeyHero,
   journeyStory,
   travelBenefits,
-  planCards,
+  products,
   homeInsights,
   onHeroSearch,
   onTabChange,
+  onArticleSelect,
 }) {
   const discoveryState = journeyHero?.states?.discover;
-  const productsStyle = {
-    "--dov-products-decorative-label": planCards?.decorativeLabel
-      ? `"${planCards.decorativeLabel}"`
-      : '""',
-    "--dov-products-footer-label": planCards?.footerLabel ? `"${planCards.footerLabel}"` : '""',
-  };
+  const [activeProduct, setActiveProduct] = useState(null);
+
+  const resolveProductItems = useCallback(
+    (items = []) =>
+      (Array.isArray(items) ? items : [])
+        .filter((item) => !item.hide)
+        .map((item) => ({
+          ...item,
+          targetTab: item.targetTab || String(item.href || "").match(/tab=([^&?]+)/)?.[1] || "",
+          productName: item.productName || "",
+          icon: item.icon || item.mobileIcon,
+        })),
+    [],
+  );
+
+  const productItems = resolveProductItems(products?.items);
+
+  const handleExplore = useCallback(
+    (item) => {
+      const target = item?.targetTab;
+      if (!target) return;
+      setActiveProduct(null);
+      onTabChange?.(target);
+    },
+    [onTabChange],
+  );
+
+  const handleOpenDetails = useCallback((item) => {
+    if (item?.comingSoon || item?.disabled) return;
+    setActiveProduct(item);
+  }, []);
+
+  const handleCloseDetails = useCallback(() => setActiveProduct(null), []);
 
   return (
-    <div className="dov" style={productsStyle}>
+    <div className="dov">
       {discoveryState ? (
         <section
           className="dov__hero dov__hero--search"
@@ -170,6 +206,49 @@ export default function OverviewView({
         </section>
       ) : null}
 
+      {productItems.length ? (
+        <section className="dov__products" aria-label={products?.ariaLabel}>
+          <div className="dov__products-inner">
+            <div className="dov__products-heading">
+              {products?.eyebrow ? (
+                <span className="dov__products-eyebrow">
+                  <Icon name={products.eyebrowIcon} size={15} />
+                  {products.eyebrow}
+                </span>
+              ) : null}
+              {products?.title ? <h2>{products.title}</h2> : null}
+              {products?.description ? (
+                <Paragraph text={products.description} color={"white"}></Paragraph>
+              ) : null}
+            </div>
+
+            <div className="dov__products-grid">
+              {productItems.map((item) => (
+                <ProductCard
+                  key={item.id || item.title}
+                  title={item.title}
+                  description={item.description}
+                  productName={item.productName}
+                  image={item.image}
+                  imageAlt={item.imageAlt || ""}
+                  icon={item.icon}
+                  tone={item.tone}
+                  status={item.status}
+                  highlights={item.highlights || []}
+                  ariaLabel={item.ariaLabel}
+                  actionLabel={item.actionLabel}
+                  comingSoon={item.comingSoon}
+                  comingSoonLabel={item.comingSoonLabel}
+                  disabled={item.disabled}
+                  onDetails={() => handleOpenDetails(item)}
+                  onExplore={() => handleExplore(item)}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
+
       {homeInsights ? (
         <section className="dov__insights" aria-label={homeInsights.ariaLabel}>
           <div className="dov__faq">
@@ -237,6 +316,16 @@ export default function OverviewView({
                     .filter(Boolean)
                     .join(" ")}
                   key={article.id}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={article.title}
+                  onClick={() => onArticleSelect?.(article)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      onArticleSelect?.(article);
+                    }
+                  }}
                 >
                   <div className="dov__article-media">
                     <img src={article.image} alt={article.imageAlt || ""} loading="lazy" />
@@ -294,6 +383,88 @@ export default function OverviewView({
           </div>
         </section>
       ) : null}
+
+      {activeProduct ? (
+        <ProductDetailsModal
+          product={activeProduct}
+          onExplore={() => handleExplore(activeProduct)}
+          onClose={handleCloseDetails}
+        />
+      ) : null}
     </div>
+  );
+}
+
+function ProductDetailsModal({ product, onExplore, onClose }) {
+  const features = product?.details?.features || [];
+
+  return (
+    <ModalShell
+      open
+      closeOnOutsideClick
+      className="dov__product-modal"
+      dialogClassName="dov__product-modal-dialog"
+      label={product.title}
+      onClose={onClose}
+    >
+      <div className="dov__product-modal-media">
+        <img src={product.image} alt={product.imageAlt || ""} />
+
+        <span className="dov__product-modal-scrim" aria-hidden="true" />
+
+        <button
+          className="dov__product-modal-close"
+          type="button"
+          onClick={onClose}
+          aria-label="Close product details"
+        >
+          <Icon name="x" size={18} strokeWidth={2.4} />
+        </button>
+
+        {product.productName ? (
+          <span className="dov__product-modal-badge">{product.productName}</span>
+        ) : null}
+      </div>
+
+      <div className="dov__product-modal-body">
+        {product.productName ? (
+          <span className="dov__product-modal-eyebrow">{product.productName}</span>
+        ) : null}
+
+        <h3>{product.title}</h3>
+
+        <p className="dov__product-modal-description">
+          {product.details?.description || product.description}
+        </p>
+
+        {features.length ? (
+          <div className="dov__product-modal-features">
+            {features.map((feature) => (
+              <span className="dov__product-modal-feature" key={feature.id || feature.label}>
+                <span className="dov__product-modal-feature-icon" aria-hidden="true">
+                  <Icon name={feature.icon} size={16} strokeWidth={2} />
+                </span>
+                {feature.label}
+              </span>
+            ))}
+          </div>
+        ) : null}
+
+        {product.details?.note ? (
+          <p className="dov__product-modal-note">{product.details.note}</p>
+        ) : null}
+
+        <div className="dov__product-modal-actions">
+          <button type="button" className="dov__product-modal-explore" onClick={onExplore}>
+            <span>{product.actionLabel || "Explore"}</span>
+            <Icon name="arrowUpRight" size={16} strokeWidth={2.2} />
+          </button>
+
+          <button type="button" className="dov__product-modal-closebtn" onClick={onClose}>
+            Close
+          </button>
+        </div>
+      </div>
+    </ModalShell>
   );
 }

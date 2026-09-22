@@ -1,0 +1,106 @@
+<section id="products" class="section">
+  <div class="container">
+    <div class="reveal">
+      <span class="eyebrow">Our Products</span>
+      <h2 class="section-title">A product for every part of your journey.</h2>
+      <p class="section-copy">
+        TravelsTREM connects a family of products around one travel account. Explore each product
+        below and open its details to see exactly what it provides.
+      </p>
+    </div>
+
+    <div class="products-grid reveal">
+      <button class="product-card" type="button" data-product="trevio" aria-haspopup="dialog">
+        <div class="product-card__top">
+          <span class="product-card__icon" aria-hidden="true">◈</span>
+          <span class="product-card__status">Active</span>
+        </div>
+        <h3>Trevio</h3>
+        <p>
+          Community trips, adventures, treks, expeditions and travel communities with shared
+          departures.
+        </p>
+        <ul class="product-card__points">
+          <li>Fixed departures with live availability</li>
+          <li>Trip captains and travel communities</li>
+        </ul>
+        <span class="product-card__action">View details <span aria-hidden="true">→</span></span>
+      </button>
+
+      <button class="product-card" type="button" data-product="trevista" aria-haspopup="dialog">
+        <div class="product-card__top">
+          <span class="product-card__icon" aria-hidden="true">✈</span>
+          <span class="product-card__status">Active</span>
+        </div>
+        <h3>Trevista</h3>
+        <p>
+          Curated holiday packages with detailed itineraries, personalised quotes and connected
+          bookings.
+        </p>
+        <ul class="product-card__points">
+          <li>Curated domestic &amp; international tours</li>
+          <li>Personalised enquiry and quote journey</li>
+        </ul>
+        <span class="product-card__action">View details <span aria-hidden="true">→</span></span>
+      </button>
+
+      <button class="product-card" type="button" data-product="hub" aria-haspopup="dialog">
+        <div class="product-card__top">
+          <span class="product-card__icon" aria-hidden="true">◆</span>
+          <span class="product-card__status">Connected</span>
+        </div>
+        <h3>TravelsTREM Hub</h3>
+        <p>
+          One account that links discovery, enquiries, quotes, bookings, documents and support
+          across products.
+        </p>
+        <ul class="product-card__points">
+          <li>Single account across every product</li>
+          <li>Bookings, documents and support in one place</li>
+        </ul>
+        <span class="product-card__action">View details <span aria-hidden="true">→</span></span>
+      </button>
+
+      <button class="product-card" type="button" data-product="partnertrem" aria-haspopup="dialog">
+        <div class="product-card__top">
+          <span class="product-card__icon" aria-hidden="true">▣</span>
+          <span class="product-card__status">For agencies</span>
+        </div>
+        <h3>Partner TREM</h3>
+        <p>
+          A role-based workspace where agencies run tours, enquiries, customers and bookings
+          together.
+        </p>
+        <ul class="product-card__points">
+          <li>Create, organise and publish tours</li>
+          <li>Enquiries, quotes and bookings management</li>
+        </ul>
+        <span class="product-card__action">View details <span aria-hidden="true">→</span></span>
+      </button>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="productModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="productModalTitle">
+      <button
+        class="modal__close"
+        id="productModalClose"
+        type="button"
+        aria-label="Close product details"
+      >
+        ×
+      </button>
+      <div class="modal__content" id="productModalContent"></div>
+      <div class="modal__footer">
+        <a
+          class="pill primary"
+          id="productModalLink"
+          href="#"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Open product ↗</a
+        >
+      </div>
+    </div>
+  </div>
+</section>

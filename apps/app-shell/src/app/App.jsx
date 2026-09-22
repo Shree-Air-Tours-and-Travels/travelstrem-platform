@@ -227,6 +227,7 @@ function AppShell() {
   const [authPromptDismissed, setAuthPromptDismissed] = useState(false);
   const [primaryActionOpen, setPrimaryActionOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [openArticleTitle, setOpenArticleTitle] = useState("");
 
   const applyShellConfiguration = useCallback(
     ([sidebarResponse, headerResponse, navigationResponse]) => {
@@ -577,6 +578,16 @@ function AppShell() {
       { label: home.label, path: "/?tab=overview" },
       { label: current.label },
     ];
+
+    const openArticleId = activeTab === "articles" ? searchParams.get("article") || "" : "";
+    if (openArticleId) {
+      return [
+        { ...breadcrumbs[0] },
+        { ...breadcrumbs[1], path: "/?tab=articles" },
+        { label: openArticleTitle || current.label },
+      ];
+    }
+
     return selectedBookingRecordRef
       ? [
           { ...breadcrumbs[0] },
@@ -584,7 +595,14 @@ function AppShell() {
           { label: selectedBookingRecordRef },
         ]
       : breadcrumbs;
-  }, [activeTab, selectedBookingRecordRef, selectedTab, sidebarConfig.sections]);
+  }, [
+    activeTab,
+    openArticleTitle,
+    searchParams,
+    selectedBookingRecordRef,
+    selectedTab,
+    sidebarConfig.sections,
+  ]);
 
   if (loading) {
     return <GlobalLoader visible text="Loading App" />;
@@ -732,6 +750,7 @@ function AppShell() {
                     productFilter={productFilter}
                     activeTab={selectedTab}
                     onTabChange={handleTabChange}
+                    onArticleTitleChange={setOpenArticleTitle}
                   />
                 </Suspense>
               )}

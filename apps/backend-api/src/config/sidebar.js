@@ -29,15 +29,12 @@ export default applyHideFlags({
         },
         sections: [
             {
-                id: "primary",
+                id: "account",
+                title: "Account & Navigation",
                 items: [
                     { id: "overview", label: "Home", icon: "home", target: "overview" },
-                    {
-                        id: "login",
-                        label: "Sign In",
-                        icon: "user",
-                        action: "login",
-                    },
+                    { id: "login", label: "Sign In", icon: "user", action: "login" },
+                    { id: "profile", label: "My Profile", icon: "user", target: "profile" },
                 ],
             },
             {
@@ -95,18 +92,17 @@ export default applyHideFlags({
                 ],
             },
             {
-                id: "support",
-                title: "Support & More",
+                id: "explore",
+                title: "Explore / More",
                 items: [
-                    { id: "notifications", label: "Notifications", icon: "bell", target: "notifications" },
-                    { id: "support", label: "Help & Support", icon: "support", target: "support" },
                     { id: "articles", label: "Articles", icon: "bookmark", target: "articles" },
                     {
                         id: "about",
                         label: "About Us",
                         icon: "info",
                         type: "external",
-                        href: "https://travelstrem.com/#about",
+                        href: "https://travelstrem.com",
+                        target: "_blank",
                     },
                     {
                         id: "partnership",
@@ -115,14 +111,22 @@ export default applyHideFlags({
                         type: "external",
                         href: partnershipUrl,
                     },
+                    {
+                        id: "products",
+                        label: "Our Products",
+                        icon: "travelPackage",
+                        type: "external",
+                        href: "https://travelstrem.com/products",
+                        target: "_blank",
+                    },
                 ],
             },
             {
-                id: "account",
-                title: "Account",
+                id: "support",
+                title: "Support",
                 items: [
-                    { id: "profile", label: "My Profile", icon: "user", target: "profile" },
-                    { id: "logout", label: "Sign Out", icon: "logout", action: "logout" },
+                    { id: "notifications", label: "Notifications", icon: "bell", target: "notifications" },
+                    { id: "support", label: "Help & Support", icon: "support", target: "support" },
                 ],
             },
         ],

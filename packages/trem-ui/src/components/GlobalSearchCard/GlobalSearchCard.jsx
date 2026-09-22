@@ -14,6 +14,8 @@ const labelFor = (labels = {}, ref, fallback = "") =>
 const defaultModes = [
   { id: "flight", label: "Flights", icon: "plane" },
   { id: "hotel", label: "Hotels", icon: "hotel" },
+  { id: "trip", label: "Trips", icon: "briefcaseBusiness" },
+  { id: "tour", label: "Tours", icon: "map" },
 ];
 
 const defaultFields = {
@@ -30,6 +32,29 @@ const defaultFields = {
     { id: "checkOut", label: "Check-out", type: "date" },
     { id: "occupancy", label: "Guests and rooms", type: "occupancy" },
   ],
+  trip: [
+    { id: "destination", label: "Where would you like to go?", placeholder: "City or trip" },
+    { id: "startDate", label: "Dates", type: "date" },
+    { id: "endDate", label: "Check out", type: "date", minField: "startDate" },
+    { id: "travellers", label: "Travellers", type: "number", min: 1 },
+  ],
+  tour: [
+    { id: "destination", label: "Where would you like to go?", placeholder: "City or tour" },
+    { id: "startDate", label: "Dates", type: "date" },
+    { id: "endDate", label: "Check out", type: "date", minField: "startDate" },
+    { id: "travellers", label: "Travellers", type: "number", min: 1 },
+  ],
+};
+
+const defaultChoiceGroups = {
+  trip: [
+    { id: "domestic", label: "Domestic" },
+    { id: "international", label: "International" },
+  ],
+  tour: [
+    { id: "domestic", label: "Domestic" },
+    { id: "international", label: "International" },
+  ],
 };
 
 const normalizeModes = (modes) =>
@@ -39,6 +64,7 @@ const SERVICE_ALIASES = {
   flights: "flight",
   hotels: "hotel",
   cars: "car",
+  trips: "trip",
   tours: "tour",
 };
 
@@ -123,7 +149,11 @@ export default function GlobalSearchCard({
   const [values, setValues] = useState(initialValues);
   const [selectedChoices, setSelectedChoices] = useState(initialChoices);
   const activeChoices =
-    choiceGroupsByMode?.[activeMode] || choiceGroupsByMode?.[canonicalService(activeMode)] || [];
+    choiceGroupsByMode?.[activeMode] ||
+    choiceGroupsByMode?.[canonicalService(activeMode)] ||
+    defaultChoiceGroups[activeMode] ||
+    defaultChoiceGroups[canonicalService(activeMode)] ||
+    [];
   const activeChoice = selectedChoices[activeMode] || activeChoices[0]?.id || "";
   const activeFields = resolveFields(fieldsByMode, activeMode, activeChoice);
   const activeServiceConfig =
@@ -339,7 +369,7 @@ export default function GlobalSearchCard({
                 <button
                   key={mode.id}
                   type="button"
-                  className={`trem-global-search__tab${active ? " is-active" : ""}${mode.disabled ? " is-disabled" : ""}`}
+                  className={`trem-global-search__tab trem-global-search__eyebrow${active ? " is-active" : ""}${mode.disabled ? " is-disabled" : ""}`}
                   onClick={() => !mode.disabled && setActiveMode(mode.id)}
                   role="tab"
                   aria-selected={active}
@@ -348,7 +378,7 @@ export default function GlobalSearchCard({
                 >
                   {mode.icon ? (
                     <span className="trem-global-search__tab-icon">
-                      <Icon name={mode.icon} size={18} />
+                      <Icon name={mode.icon} size={14} />
                     </span>
                   ) : null}
                   <span>{labelFor(labels, mode.labelRef, mode.label)}</span>

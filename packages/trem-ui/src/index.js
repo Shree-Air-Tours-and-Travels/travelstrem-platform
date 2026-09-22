@@ -112,8 +112,7 @@ export { default as PricingCard } from "./components/PricingCard/PricingCard.jsx
 export { default as QuoteComparison } from "./components/QuoteComparison/QuoteComparison.jsx";
 export { default as FavoriteCard } from "./components/FavoriteCard/FavoriteCard.jsx";
 export { default as BrandLogo } from "./components/BrandLogo/BrandLogo.jsx";
-export { default as PlanCard } from "./components/PlanCard/PlanCard.jsx";
-export { default as PlanCards } from "./components/PlanCards/PlanCards.jsx";
+export { default as ProductCard } from "./components/ProductCard/ProductCard.jsx";
 export {
   SupportActionCard,
   SupportActionGrid,
