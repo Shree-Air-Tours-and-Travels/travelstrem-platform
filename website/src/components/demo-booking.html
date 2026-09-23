@@ -1,0 +1,96 @@
+<section class="demo-booking" id="book-demo" aria-labelledby="demoBookingTitle">
+  <div class="container demo-booking__grid">
+    <div class="demo-booking__intro">
+      <span class="eyebrow">{{demo.eyebrow}}</span>
+      <h2 id="demoBookingTitle">{{demo.title}}</h2>
+      <p>{{demo.copy}}</p>
+      <div class="demo-booking__options" aria-label="Available solution models">
+        <span>Complete SaaS</span>
+        <span>White label</span>
+        <span>Individual products</span>
+      </div>
+      <p class="demo-booking__note">
+        Trevio · Trevista · TreHub · Dashboard · Partner TREM · AdminTREM · Booking Engine
+      </p>
+    </div>
+
+    <form class="demo-form" id="demoBookingForm">
+      <div class="demo-form__row">
+        <label>
+          <span>Your name</span>
+          <input name="name" type="text" autocomplete="name" placeholder="Your full name" required />
+        </label>
+        <label>
+          <span>Work email</span>
+          <input name="email" type="email" autocomplete="email" placeholder="name@company.com" required />
+        </label>
+      </div>
+      <div class="demo-form__row">
+        <label>
+          <span>Company</span>
+          <input name="company" type="text" autocomplete="organization" placeholder="Company or agency name" required />
+        </label>
+        <label>
+          <span>Phone</span>
+          <input name="phone" type="tel" autocomplete="tel" placeholder="Country code and phone number" required />
+        </label>
+      </div>
+      <div class="demo-form__row">
+        <label>
+          <span>What would you like to explore?</span>
+          <select name="interest" required>
+            <option selected>Complete TravelsTREM SaaS</option>
+            <option>Trevio</option>
+            <option>Trevista</option>
+            <option>TreHub</option>
+            <option>Dashboard</option>
+            <option>Partner TREM</option>
+            <option>AdminTREM</option>
+            <option>Booking Engine</option>
+            <option>Support Dashboard (upcoming)</option>
+            <option>TreCARE (upcoming)</option>
+            <option>Engineering engines and packages</option>
+          </select>
+        </label>
+        <label>
+          <span>Preferred model</span>
+          <select name="model" required>
+            <option selected>Complete SaaS product</option>
+            <option>White-labelled platform</option>
+            <option>Individual product</option>
+            <option>Not sure yet</option>
+          </select>
+        </label>
+      </div>
+      <div class="demo-form__row">
+        <label>
+          <span>Preferred date</span>
+          <input name="date" type="date" required />
+          <small class="demo-form__field-note">Choose a convenient future date.</small>
+        </label>
+        <label>
+          <span>Preferred time slot</span>
+          <select name="time" required>
+            <option value="">Select a time</option>
+            <option value="10:00 AM">10:00 AM</option>
+            <option value="12:00 PM">12:00 PM</option>
+            <option value="2:00 PM">2:00 PM</option>
+            <option value="4:00 PM">4:00 PM</option>
+            <option value="6:00 PM">6:00 PM</option>
+          </select>
+          <small class="demo-form__field-note">45-minute demo · <span id="demoTimezone">your local time</span></small>
+        </label>
+      </div>
+      <label>
+        <span>Anything we should prepare? <small>(optional)</small></span>
+        <textarea name="notes" rows="3" placeholder="Your current setup, priorities or questions"></textarea>
+      </label>
+      <button class="pill primary demo-form__submit" type="submit">
+        {{demo.submit}} <span aria-hidden="true">→</span>
+      </button>
+      <p class="demo-form__helper" id="demoFormHelper">
+        Your email app will open with this information filled in. Review it and press send.
+      </p>
+    </form>
+  </div>
+</section>
