@@ -24,6 +24,11 @@
         ],
       },
     },
+    analytics: {
+      enabled: true,
+      measurementId: "G-RP0Z50DM4P",
+      hosts: ["travelstrem.com", "www.travelstrem.com"],
+    },
     ads: {
       enabled: true,
       publisherId: "ca-pub-2541753556383634",
