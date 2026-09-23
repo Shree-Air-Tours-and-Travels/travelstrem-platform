@@ -35,10 +35,11 @@ const readTemplate = async (relativePath) =>
   fs.readFile(path.join(websiteRoot, relativePath), "utf8");
 
 const bootstraps = Object.fromEntries(Object.keys(site.pages).map(name => {
-  const sources = ["site-data.js", "scripts/analytics.js", "scripts/navigation.js", "scripts/ads.js", `scripts/${name}.js`];
+  const sources = ["site-data.js", "scripts/analytics.js", "scripts/navigation.js", "scripts/ads.js", "scripts/demo.js", `scripts/${name}.js`];
   const code = `document.addEventListener("DOMContentLoaded",function(){${JSON.stringify(sources)}.forEach(function(src){var script=document.createElement("script");script.src=src;script.async=false;document.head.appendChild(script);});},{once:true});`;
   return [name, { code, hash: `sha256-${createHash("sha256").update(code).digest("base64")}` }];
 }));
+const demoBooking = render(await readTemplate("src/components/demo-booking.html"));
 const csp = `script-src 'self' ${Object.values(bootstraps).map(({ hash }) => `'${hash}'`).join(" ")} 'strict-dynamic' 'unsafe-eval' https:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests`;
 const vercelPath = path.join(websiteRoot, "vercel.json");
 const vercel = JSON.parse(await fs.readFile(vercelPath, "utf8"));
@@ -75,7 +76,7 @@ for (const [name, page] of Object.entries(site.pages)) {
   const outputPath = path.join(websiteRoot, page.output);
   await fs.mkdir(path.dirname(outputPath), { recursive: true });
   let bootstrapped = false;
-  const html = render(templates.join("\n"), { header }).trim()
+  const html = render(templates.join("\n"), { header, demoBooking }).trim()
     .replace(/<script src="[^"]+" defer><\/script>/g, () => {
       if (bootstrapped) return "";
       bootstrapped = true;

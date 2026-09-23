@@ -96,6 +96,7 @@
     if (productModalLink) {
       productModalLink.href = configuredLink(product.linkKey);
       productModalLink.textContent = product.cta;
+      productModalLink.dataset.demoProduct = product.name;
     }
     if (productModalDetails) {
       productModalDetails.hidden = !product.detailsLinkKey;

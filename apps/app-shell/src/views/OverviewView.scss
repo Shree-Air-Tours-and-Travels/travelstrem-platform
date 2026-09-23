@@ -3079,3 +3079,415 @@
     border-radius: 0;
   }
 }
+
+/* ============================================================
+   HOME DUOTONE SYSTEM
+   Uses the active Trem primary and secondary theme tokens so the
+   same composition remains balanced in light and dark themes.
+   ============================================================ */
+
+.dov {
+  --dov-tone-primary: var(--color-primary);
+  --dov-tone-secondary: var(--color-secondary);
+  --dov-tone-primary-soft: var(--primary-soft);
+  --dov-tone-secondary-soft: var(--secondary-soft);
+  --dov-band: color-mix(in srgb, var(--surface) 92%, var(--dov-tone-primary) 8%);
+  --dov-band-alt: color-mix(in srgb, var(--surface) 92%, var(--dov-tone-secondary) 8%);
+  --dov-duotone: linear-gradient(135deg,
+      var(--dov-tone-primary),
+      var(--dov-tone-secondary));
+  background: var(--page-bg);
+  color: var(--text);
+}
+
+.theme--dark .dov {
+  --dov-band: color-mix(in srgb, var(--surface) 86%, var(--dov-tone-primary) 14%);
+  --dov-band-alt: color-mix(in srgb, var(--surface) 86%, var(--dov-tone-secondary) 14%);
+}
+
+.dov__hero--search {
+  isolation: isolate;
+  background:
+    linear-gradient(90deg,
+      color-mix(in srgb, var(--page-bg) 92%, transparent) 0%,
+      color-mix(in srgb, var(--page-bg) 72%, transparent) 42%,
+      color-mix(in srgb, var(--dov-tone-secondary) 15%, transparent) 100%),
+    linear-gradient(145deg,
+      color-mix(in srgb, var(--dov-tone-primary) 18%, transparent),
+      color-mix(in srgb, var(--dov-tone-secondary) 18%, transparent)),
+    var(--dov-hero-image) center / cover no-repeat,
+    var(--dov-band);
+}
+
+.dov__hero--search::after {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background:
+    radial-gradient(circle at 14% 22%,
+      color-mix(in srgb, var(--dov-tone-primary) 22%, transparent),
+      transparent 28%),
+    radial-gradient(circle at 86% 18%,
+      color-mix(in srgb, var(--dov-tone-secondary) 24%, transparent),
+      transparent 30%);
+  content: "";
+  pointer-events: none;
+}
+
+.dov__hero--search .dov__hero-eyebrow,
+.dov__benefits-eyebrow,
+.dov__products-eyebrow,
+.dov__insights-eyebrow {
+  color: var(--dov-tone-primary);
+}
+
+.dov__hero--search h1 {
+  color: var(--heading);
+}
+
+.dov__hero--search .dov__hero-search .trem-global-search__tabs,
+.dov__hero--search .dov__hero-search .trem-global-search__panel {
+  border-color: color-mix(in srgb, var(--dov-tone-primary) 22%, var(--border));
+  background: color-mix(in srgb, var(--surface-glass-strong) 94%, transparent);
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(20px);
+}
+
+.dov__hero--search .dov__hero-search .trem-global-search__choice.is-active {
+  background: var(--dov-duotone);
+  color: var(--color-on-primary);
+}
+
+.dov__hero--search .dov__hero-search .trem-global-search__fields {
+  border-color: color-mix(in srgb, var(--dov-tone-secondary) 18%, var(--border));
+  background: var(--surface-elevated);
+}
+
+.dov__hero--search .dov__hero-trust {
+  border: 1px solid color-mix(in srgb, var(--dov-tone-primary) 18%, var(--border));
+  border-radius: $radius-full;
+  background: color-mix(in srgb, var(--surface-glass-strong) 92%, transparent);
+  box-shadow: var(--shadow-sm);
+}
+
+.dov__hero--search .dov__hero-trust span:nth-child(even) svg {
+  color: var(--dov-tone-secondary);
+}
+
+.dov__story {
+  background: var(--surface);
+}
+
+.dov__story::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0 0 auto;
+  height: 58%;
+  background:
+    linear-gradient(120deg, var(--dov-band), var(--dov-band-alt));
+  content: "";
+}
+
+.dov__story-copy h2 {
+  background: var(--dov-duotone);
+  background-clip: text;
+  color: transparent;
+  -webkit-background-clip: text;
+}
+
+.dov__story-reviews strong {
+  color: var(--heading);
+}
+
+.dov__story-avatars span {
+  border-color: var(--surface);
+  background: var(--dov-duotone);
+}
+
+.dov__story-avatars span:nth-child(even) {
+  background: linear-gradient(135deg,
+      var(--dov-tone-secondary),
+      var(--dov-tone-primary));
+}
+
+.dov__story-image {
+  border: 1px solid color-mix(in srgb, var(--dov-tone-primary) 18%, var(--border));
+  box-shadow: var(--shadow-md);
+}
+
+.dov__story-image img {
+  filter: saturate(0.86) contrast(1.03);
+  transition: filter $duration-base $ease-standard,
+    transform $duration-slow $ease-standard;
+}
+
+.dov__story-image:hover img {
+  filter: saturate(1) contrast(1.03);
+  transform: scale(1.025);
+}
+
+.dov__story-stats {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 12% 30%,
+      color-mix(in srgb, var(--dov-tone-secondary) 34%, transparent),
+      transparent 28%),
+    linear-gradient(125deg,
+      color-mix(in srgb, var(--dov-tone-primary) 72%, var(--surface)),
+      color-mix(in srgb, var(--dov-tone-secondary) 72%, var(--surface)));
+}
+
+.dov__story-stat strong {
+  color: var(--color-on-primary);
+  -webkit-text-stroke: 0;
+}
+
+.dov__story-stat span {
+  color: color-mix(in srgb, var(--color-on-primary) 84%, transparent);
+}
+
+.dov__benefits {
+  border-color: color-mix(in srgb, var(--dov-tone-primary) 22%, var(--border));
+  background:
+    radial-gradient(circle at 92% 8%,
+      color-mix(in srgb, var(--dov-tone-secondary) 14%, transparent),
+      transparent 28%),
+    linear-gradient(115deg, var(--dov-band), var(--dov-band-alt));
+}
+
+.dov__benefits-heading h2 span,
+.dov__articles .dov__insights-heading h2 em,
+.dov__faq .dov__insights-heading h2 em {
+  background: var(--dov-duotone);
+  background-clip: text;
+  color: transparent;
+  -webkit-background-clip: text;
+}
+
+.dov__benefits-proof>span {
+  background: var(--dov-duotone);
+  color: var(--color-on-primary);
+}
+
+.dov__benefits .dov__benefits-grid,
+.dov__benefits .dov__benefit-shell {
+  border-color: color-mix(in srgb, var(--dov-tone-primary) 18%, var(--border));
+}
+
+.dov__benefits .dov__benefit-shell:nth-child(even) {
+  background: color-mix(in srgb, var(--dov-tone-secondary) 5%, transparent);
+}
+
+.dov__benefits .dov__benefit-card .trem-benefit-card__icon {
+  background: var(--dov-duotone);
+  color: var(--color-on-primary);
+}
+
+.dov__products {
+  background:
+    radial-gradient(circle at 5% 18%,
+      color-mix(in srgb, var(--dov-tone-primary) 34%, transparent),
+      transparent 25%),
+    radial-gradient(circle at 94% 82%,
+      color-mix(in srgb, var(--dov-tone-secondary) 36%, transparent),
+      transparent 28%),
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--surface) 30%, var(--dov-tone-primary)),
+      color-mix(in srgb, var(--surface) 24%, var(--dov-tone-secondary)));
+}
+
+.dov__products-heading .dov__products-eyebrow {
+  border-color: color-mix(in srgb, var(--color-on-primary) 28%, transparent);
+  background: color-mix(in srgb, var(--surface) 16%, transparent);
+  color: var(--color-on-primary);
+}
+
+.dov__products-heading .dov__products-eyebrow svg {
+  color: inherit;
+}
+
+.dov__products-heading h2,
+.dov__products-heading p {
+  color: var(--color-on-primary);
+  text-shadow: none;
+}
+
+.dov__products-heading p {
+  opacity: 0.82;
+}
+
+.dov__products-grid .trem-product-card {
+  --tpc-accent: var(--dov-tone-primary);
+  --tpc-grad: var(--dov-duotone);
+  border-color: color-mix(in srgb, var(--color-on-primary) 18%, transparent);
+  background: color-mix(in srgb, var(--surface-elevated) 96%, transparent);
+  box-shadow: var(--shadow-lg);
+}
+
+.dov__products-grid .trem-product-card:nth-child(even) {
+  --tpc-accent: var(--dov-tone-secondary);
+  --tpc-grad: linear-gradient(135deg,
+      var(--dov-tone-secondary),
+      var(--dov-tone-primary));
+}
+
+.dov__insights {
+  border-color: color-mix(in srgb, var(--dov-tone-primary) 18%, var(--border));
+  background:
+    radial-gradient(circle at 10% 15%,
+      color-mix(in srgb, var(--dov-tone-primary) 12%, transparent),
+      transparent 25%),
+    radial-gradient(circle at 90% 55%,
+      color-mix(in srgb, var(--dov-tone-secondary) 12%, transparent),
+      transparent 28%),
+    linear-gradient(180deg, var(--dov-band), var(--page-bg));
+}
+
+.dov__insights::before,
+.dov__insights::after {
+  display: none;
+}
+
+.dov__faq-list,
+.dov__article-card {
+  border-color: color-mix(in srgb, var(--dov-tone-primary) 18%, var(--border));
+  background: var(--surface-elevated);
+}
+
+.dov__faq-list {
+  box-shadow: var(--shadow-sm);
+}
+
+.dov__faq-item,
+.dov__article-content {
+  border-color: color-mix(in srgb, var(--dov-tone-primary) 14%, var(--border));
+}
+
+.dov__faq-toggle,
+.dov__article-arrow,
+.dov__articles-action-icon {
+  color: var(--dov-tone-primary);
+}
+
+.dov__article-card:nth-child(even) .dov__article-arrow {
+  color: var(--dov-tone-secondary);
+}
+
+.dov__articles-action {
+  border-color: color-mix(in srgb, var(--dov-tone-primary) 24%, var(--border));
+  background: var(--surface-elevated);
+  color: var(--heading);
+}
+
+.dov__articles-action:hover,
+.dov__article-card:hover .dov__article-arrow {
+  background: var(--dov-duotone);
+  color: var(--color-on-primary);
+}
+
+.theme--dark .dov__hero--search {
+  background:
+    linear-gradient(90deg,
+      color-mix(in srgb, var(--page-bg) 96%, transparent) 0%,
+      color-mix(in srgb, var(--page-bg) 78%, transparent) 44%,
+      color-mix(in srgb, var(--dov-tone-secondary) 14%, transparent) 100%),
+    linear-gradient(145deg,
+      color-mix(in srgb, var(--dov-tone-primary) 14%, transparent),
+      color-mix(in srgb, var(--dov-tone-secondary) 16%, transparent)),
+    var(--dov-hero-image) center / cover no-repeat,
+    var(--page-bg);
+}
+
+.theme--dark .dov__story,
+.theme--dark .dov__faq-list,
+.theme--dark .dov__article-card {
+  background: var(--surface);
+}
+
+.theme--dark .dov__story::before {
+  background: linear-gradient(120deg, var(--dov-band), var(--dov-band-alt));
+}
+
+.theme--dark .dov__products-grid .trem-product-card {
+  background: color-mix(in srgb, var(--surface-elevated) 94%, transparent);
+}
+
+.theme--dark .dov__insights {
+  background:
+    radial-gradient(circle at 10% 15%,
+      color-mix(in srgb, var(--dov-tone-primary) 10%, transparent),
+      transparent 25%),
+    radial-gradient(circle at 90% 55%,
+      color-mix(in srgb, var(--dov-tone-secondary) 10%, transparent),
+      transparent 28%),
+    linear-gradient(180deg, var(--dov-band), var(--page-bg));
+}
+
+@media (max-width: $breakpoint-tablet) {
+  .dov__hero--search {
+    background: var(--surface);
+  }
+
+  .dov__hero--search::before {
+    background:
+      linear-gradient(135deg,
+        color-mix(in srgb, var(--dov-tone-primary) 82%, transparent),
+        color-mix(in srgb, var(--dov-tone-secondary) 72%, transparent)),
+      var(--dov-hero-image) center / cover;
+  }
+
+  .dov__hero--search::after {
+    display: none;
+  }
+
+  .dov__hero--search .dov__hero-trust {
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
+@media (max-width: $breakpoint-mobile) {
+  .dov__story::before {
+    height: 64%;
+  }
+
+  .dov__story-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: $space-6 $space-3;
+  }
+
+  .dov__story-stat strong {
+    font-size: clamp(2.5rem, 14vw, 4rem);
+  }
+
+  .dov__benefits .dov__benefit-shell:nth-child(even) {
+    background: transparent;
+  }
+
+  .dov__products-grid {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(16rem, 82%);
+    grid-template-columns: none;
+    gap: $space-4;
+    padding-bottom: $space-3;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scroll-snap-type: inline mandatory;
+    scrollbar-width: none;
+  }
+
+  .dov__products-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .dov__products-grid .trem-product-card {
+    scroll-snap-align: start;
+  }
+
+  .dov__faq-list {
+    padding: $space-3 $space-4;
+  }
+}
