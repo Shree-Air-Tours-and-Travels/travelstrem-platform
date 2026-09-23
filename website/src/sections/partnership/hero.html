@@ -1,26 +1,23 @@
 <section class="hero">
+          <div class="hero-aurora" aria-hidden="true">
+            <span class="a"></span><span class="b"></span><span class="c"></span>
+          </div>
           <div class="container hero-grid">
-            <div class="hero-copy reveal">
-              <span class="eyebrow">Partner TREM · Agency operating workspace</span>
-              <h1 class="display">
-                Run the agency.
-                <span class="gradient-text">Connect the entire booking journey.</span>
+            <div class="hero-copy hero-in d-1">
+              <span class="eyebrow">{{content.sections_partnership_hero.span1}}</span>
+              <h1 class="display hero-in d-2">{{content.sections_partnership_hero.h11}}<span class="gradient-text">{{content.sections_partnership_hero.span2}}</span>
               </h1>
-              <p class="lead">
-                Partner TREM connects tour creation, enquiries, customers, quotes, bookings,
-                payments and fulfilment in one operating workspace — with eligible inventory able to
-                reach travellers through Trevista.
-              </p>
-              <div class="hero-actions">
+              <p class="lead hero-in d-3">{{content.sections_partnership_hero.p1}}</p>
+              <div class="hero-actions hero-in d-4">
                 <a
-                  class="pill primary"
+                  class="pill primary magnetic"
                   data-link="partnerApplication"
                   href="https://auth.travelstrem.com/partnership"
-                  >Apply for partnership ↗</a
+                  >{{content.sections_partnership_hero.a1}}</a
                 >
-                <a class="pill secondary" href="index.html">Back to TravelsTREM</a>
+                <a class="pill secondary magnetic" href="index.html">{{content.sections_partnership_hero.a2}}</a>
               </div>
-              <div class="hero-proof">
+              <div class="hero-proof hero-in d-5">
                 <span><i></i> Built in Jaipur</span>
                 <span><i></i> 20+ years in the travel industry</span>
                 <span><i></i> Marketplace-connected operations</span>
@@ -28,72 +25,75 @@
             </div>
 
             <div
-              class="product-stage reveal"
+              class="product-stage hero-in d-6"
               aria-label="Illustration of the TravelsTREM partner dashboard"
             >
               <div class="window">
                 <div class="window-bar">
                   <div class="dots"><span></span><span></span><span></span></div>
-                  <div class="url-chip">partner.travelstrem.com / overview</div>
+                  <div class="url-chip">{{content.sections_partnership_hero.div1}}</div>
                 </div>
                 <div class="dashboard">
                   <aside class="sidebar">
-                    <div class="side-brand">PartnerTREM</div>
+                    <div class="side-brand">{{content.sections_partnership_hero.div2}}</div>
                     <div class="side-nav">
-                      <span class="active">Overview</span><span>Enquiries</span><span>Tours</span
-                      ><span>Quotes</span><span>Bookings</span><span>Payments</span
-                      ><span>Customers</span><span>Reports</span>
+                      <span class="active">{{content.sections_partnership_hero.span3}}</span><span>{{content.sections_partnership_hero.span4}}</span><span>{{content.sections_partnership_hero.span5}}</span
+                      ><span>{{content.sections_partnership_hero.span6}}</span><span>{{content.sections_partnership_hero.span7}}</span><span>{{content.sections_partnership_hero.span8}}</span
+                      ><span>{{content.sections_partnership_hero.span9}}</span><span>{{content.sections_partnership_hero.span10}}</span>
                     </div>
                   </aside>
                   <div class="dash-main">
                     <div class="dash-head">
                       <div>
-                        <small>Agency workspace</small><strong>Good afternoon, Partner</strong>
+                        <small>{{content.sections_partnership_hero.small1}}</small><strong>{{content.sections_partnership_hero.strong1}}</strong>
                       </div>
-                      <span class="live-badge">Connected</span>
+                      <span class="live-badge">{{content.sections_partnership_hero.span11}}</span>
                     </div>
                     <div class="kpis">
                       <div class="kpi">
-                        <small>Open enquiries</small><strong>18</strong><em>Needs attention</em>
+                        <small>{{content.sections_partnership_hero.small2}}</small><strong data-count>{{content.sections_partnership_hero.strong2}}</strong
+                        ><em>{{content.sections_partnership_hero.em1}}</em>
                       </div>
                       <div class="kpi">
-                        <small>Active quotes</small><strong>11</strong><em>Across travellers</em>
+                        <small>{{content.sections_partnership_hero.small3}}</small><strong data-count>{{content.sections_partnership_hero.strong3}}</strong
+                        ><em>{{content.sections_partnership_hero.em2}}</em>
                       </div>
                       <div class="kpi">
-                        <small>Live tours</small><strong>24</strong><em>Marketplace ready</em>
+                        <small>{{content.sections_partnership_hero.small4}}</small><strong data-count>{{content.sections_partnership_hero.strong4}}</strong
+                        ><em>{{content.sections_partnership_hero.em3}}</em>
                       </div>
                     </div>
                     <div class="workspace">
                       <div class="panel">
-                        <div class="panel-title">Customer journey <span>Today</span></div>
+                        <div class="panel-title">{{content.sections_partnership_hero.div3}}<span>{{content.sections_partnership_hero.span12}}</span></div>
                         <div class="pipeline">
                           <div class="lead-row">
-                            <div class="avatar">AS</div>
+                            <div class="avatar">{{content.sections_partnership_hero.div4}}</div>
                             <div>
-                              <strong>Andaman family package</strong
-                              ><small>Quote revision requested</small>
+                              <strong>{{content.sections_partnership_hero.strong5}}</strong
+                              ><small>{{content.sections_partnership_hero.small5}}</small>
                             </div>
-                            <b>Quoted</b>
+                            <b>{{content.sections_partnership_hero.b1}}</b>
                           </div>
                           <div class="lead-row">
-                            <div class="avatar">RK</div>
+                            <div class="avatar">{{content.sections_partnership_hero.div5}}</div>
                             <div>
-                              <strong>Kashmir honeymoon</strong
-                              ><small>Advance payment received</small>
+                              <strong>{{content.sections_partnership_hero.strong6}}</strong
+                              ><small>{{content.sections_partnership_hero.small6}}</small>
                             </div>
-                            <b>Booked</b>
+                            <b>{{content.sections_partnership_hero.b2}}</b>
                           </div>
                           <div class="lead-row">
-                            <div class="avatar">NK</div>
+                            <div class="avatar">{{content.sections_partnership_hero.div6}}</div>
                             <div>
-                              <strong>Dubai holiday</strong><small>Flight add-on pending</small>
+                              <strong>{{content.sections_partnership_hero.strong7}}</strong><small>{{content.sections_partnership_hero.small7}}</small>
                             </div>
-                            <b>Enquiry</b>
+                            <b>{{content.sections_partnership_hero.b3}}</b>
                           </div>
                         </div>
                       </div>
                       <div class="panel">
-                        <div class="panel-title">Booking activity <span>30 days</span></div>
+                        <div class="panel-title">{{content.sections_partnership_hero.div7}}<span>{{content.sections_partnership_hero.span13}}</span></div>
                         <div class="chart">
                           <svg viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true">
                             <defs>
@@ -120,12 +120,12 @@
                   </div>
                 </div>
               </div>
-              <div class="float-card one">
-                <strong>Quote received ✓</strong
-                ><small>The customer journey can move forward</small>
+              <div class="float-card one" data-parallax="0.18">
+                <strong>{{content.sections_partnership_hero.strong8}}</strong
+                ><small>{{content.sections_partnership_hero.small8}}</small>
               </div>
-              <div class="float-card two">
-                <strong>Tour published</strong><small>Now visible in TravelsTREM</small>
+              <div class="float-card two" data-parallax="0.24">
+                <strong>{{content.sections_partnership_hero.strong9}}</strong><small>{{content.sections_partnership_hero.small9}}</small>
               </div>
             </div>
           </div>
@@ -134,16 +134,16 @@
         <div class="ticker" aria-hidden="true">
           <div class="ticker-track">
             <div class="ticker-group">
-              <span>Agency team management</span><span>Tour management</span
-              ><span>Customer enquiries</span><span>Quote workflows</span
-              ><span>Booking lifecycle</span><span>Payment tracking</span
-              ><span>Partner marketplace</span><span>Role based operations</span>
+              <span>{{content.sections_partnership_hero.span14}}</span><span>{{content.sections_partnership_hero.span15}}</span
+              ><span>{{content.sections_partnership_hero.span16}}</span><span>{{content.sections_partnership_hero.span17}}</span
+              ><span>{{content.sections_partnership_hero.span18}}</span><span>{{content.sections_partnership_hero.span19}}</span
+              ><span>{{content.sections_partnership_hero.span20}}</span><span>{{content.sections_partnership_hero.span21}}</span>
             </div>
             <div class="ticker-group">
-              <span>Agency team management</span><span>Tour management</span
-              ><span>Customer enquiries</span><span>Quote workflows</span
-              ><span>Booking lifecycle</span><span>Payment tracking</span
-              ><span>Partner marketplace</span><span>Role based operations</span>
+              <span>{{content.sections_partnership_hero.span22}}</span><span>{{content.sections_partnership_hero.span23}}</span
+              ><span>{{content.sections_partnership_hero.span24}}</span><span>{{content.sections_partnership_hero.span25}}</span
+              ><span>{{content.sections_partnership_hero.span26}}</span><span>{{content.sections_partnership_hero.span27}}</span
+              ><span>{{content.sections_partnership_hero.span28}}</span><span>{{content.sections_partnership_hero.span29}}</span>
             </div>
           </div>
         </div>

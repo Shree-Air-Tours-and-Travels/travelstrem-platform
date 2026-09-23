@@ -6,32 +6,29 @@
             <div class="footer-brand">
               <a class="brand" href="#top"
                 ><img src="favicon-dark.png" alt="" aria-hidden="true" /><span
-                  ><strong>TravelsTREM</strong
+                  ><strong>{{content.pages_home_end.strong1}}</strong
                   ><small style="color: #7f8ca6"
-                    >Travel is personal. The platform should be too.</small
+                    >{{content.pages_home_end.small1}}</small
                   ></span
                 ></a
               >
-              <p>
-                A connected travel platform for travellers and approved travel partners, powered by
-                the operating experience of Shree Air Tours &amp; Travels.
-              </p>
+              <p>{{content.pages_home_end.p1}}</p>
             </div>
             <div>
-              <h3>Explore</h3>
+              <h3>{{content.pages_home_end.h31}}</h3>
               <div class="footer-links">
-                <a href="#travellers">Travel services</a
-                ><a href="#products">Products</a
+                <a href="#travellers">{{content.pages_home_end.a1}}</a
+                ><a href="#products">{{content.pages_home_end.a2}}</a
                 ><a
                   data-link="trevista"
                   href="https://app.travelstrem.com/?tab=trevista&amp;product=trevista"
-                  >Explore tours ↗</a
-                ><a href="#journey">Platform workflow</a><a href="#about">About TravelsTREM</a
-                ><a data-link="partnership" href="partnership.html">PartnerTREM ↗</a>
+                  >{{content.pages_home_end.a3}}</a
+                ><a href="#journey">{{content.pages_home_end.a4}}</a><a href="#about">{{content.pages_home_end.a5}}</a
+                ><a data-link="partnership" href="partnership.html">{{content.pages_home_end.a6}}</a>
               </div>
             </div>
             <div>
-              <h3>Contact</h3>
+              <h3>{{content.pages_home_end.h32}}</h3>
               <div class="footer-links">
                 <a data-link="email" href="mailto:{{contact.email}}"
                   >{{contact.email}}</a
@@ -40,7 +37,7 @@
                   >{{contact.locationLabel}} ↗</a
                 ><a
                   href="mailto:akshat.goyal@travelstrem.com?subject=Partner%20TREM%20Demo%20Request"
-                  >Book Partner Demo ↗</a
+                  >{{content.pages_home_end.a7}}</a
                 >
               </div>
             </div>
@@ -49,12 +46,28 @@
             <span
               >© <span id="year"></span> TravelsTREM. Powered by Shree Air Tours &amp;
               Travels.</span
-            ><span>Trevista is the active customer-facing TravelsTREM product.</span>
+            ><span>{{content.pages_home_end.span1}}</span>
           </div>
         </div>
       </footer>
+
+      <button class="to-top" id="toTop" type="button" aria-label="Back to top">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.4"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M12 19V5M5 12l7-7 7 7" />
+        </svg>
+      </button>
     </div>
 
-    <script src="scripts/home.js"></script>
+    <script src="scripts/home.js" defer></script>
   </body>
 </html>
