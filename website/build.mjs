@@ -35,7 +35,7 @@ const readTemplate = async (relativePath) =>
   fs.readFile(path.join(websiteRoot, relativePath), "utf8");
 
 const bootstraps = Object.fromEntries(Object.keys(site.pages).map(name => {
-  const sources = ["site-data.js", "scripts/navigation.js", "scripts/ads.js", `scripts/${name}.js`];
+  const sources = ["site-data.js", "scripts/analytics.js", "scripts/navigation.js", "scripts/ads.js", `scripts/${name}.js`];
   const code = `document.addEventListener("DOMContentLoaded",function(){${JSON.stringify(sources)}.forEach(function(src){var script=document.createElement("script");script.src=src;script.async=false;document.head.appendChild(script);});},{once:true});`;
   return [name, { code, hash: `sha256-${createHash("sha256").update(code).digest("base64")}` }];
 }));
