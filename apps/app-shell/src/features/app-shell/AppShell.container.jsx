@@ -102,9 +102,8 @@ export default function AppShellContainer({
   const isAuthenticated = Boolean(session?.isAuthenticated);
   const user = session?.user || {};
   const overviewUserKey = String(user.id || user._id || "guest");
-  const [products, setProducts] = useState(null);
   const [journeyStory, setJourneyStory] = useState(null);
-  const [travelBenefits, setTravelBenefits] = useState(null);
+  const [featuredTravel, setFeaturedTravel] = useState(null);
   const [homeInsights, setHomeInsights] = useState(null);
   const [overviewRail, setOverviewRail] = useState(null);
   const [metricsDefinition, setMetricsDefinition] = useState(null);
@@ -179,13 +178,7 @@ export default function AppShellContainer({
           recent: resolve(widgetFor("RecentBookings")?.props || {}),
           upcoming: resolve(widgetFor("UpcomingTrips")?.props || {}),
         });
-        const productWidget = widgetFor("ProductCards") || widgetFor("PlanCards");
-        setProducts(
-          productWidget?.props?.dataKey
-            ? resolve(component?.data?.[productWidget.props.dataKey])
-            : null,
-        );
-        setTravelBenefits(contentFor("TravelBenefits"));
+        setFeaturedTravel(contentFor("HomeCardsWithFeature"));
         setHomeInsights(contentFor("HomeInsights"));
         setOverviewRail(contentFor("OverviewRail"));
         setDashboardData({
@@ -199,9 +192,8 @@ export default function AppShellContainer({
       })
       .catch(() => {
         if (overviewResponseCache && overviewResponseUserKey === overviewUserKey) return;
-        setProducts(null);
         setJourneyStory(null);
-        setTravelBenefits(null);
+        setFeaturedTravel(null);
         setHomeInsights(null);
         setOverviewRail(null);
         setJourneyHero(null);
@@ -524,14 +516,13 @@ export default function AppShellContainer({
         overviewDefinitionLoading && !journeyHero ? (
           <div className="app-shell-home-preloader">
             <Preloader variant="hero" label="Loading home page" />
-            <Preloader variant="grid" count={3} label="Loading travel products" />
+            <Preloader variant="grid" count={3} label="Loading featured travel" />
           </div>
         ) : (
           <OverviewView
             journeyHero={journeyHero}
             journeyStory={journeyStory}
-            travelBenefits={travelBenefits}
-            products={products}
+            featuredTravel={featuredTravel}
             homeInsights={homeInsights}
             onHeroSearch={handleHeroSearch}
             onTabChange={onTabChange}

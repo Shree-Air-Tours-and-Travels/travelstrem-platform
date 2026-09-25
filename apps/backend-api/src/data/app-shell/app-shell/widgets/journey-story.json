@@ -4,35 +4,46 @@
     "data": {
       "journeyStory": {
         "ariaLabelRef": "storyAriaLabel",
+        "eyebrowRef": "storyEyebrow",
         "titleRef": "storyTitle",
+        "highlightRef": "storyHighlight",
         "descriptionRef": "storyDescription",
-        "reviewLabelRef": "storyReviewLabel",
-        "images": [
+        "backdropTextRef": "storyBackdropText",
+        "advantages": [
           {
-            "id": "island",
-            "src": "/home-images/journey-img.png",
-            "altRef": "storyImageOneAlt",
-            "variant": "wide"
+            "id": "support",
+            "icon": "support",
+            "titleRef": "storySupportTitle",
+            "descriptionRef": "storySupportDescription",
+            "tone": "primary"
           },
           {
-            "id": "viewpoint",
-            "src": "/home-images/journey-img1.png",
-            "altRef": "storyImageTwoAlt",
-            "variant": "portrait"
+            "id": "guides",
+            "icon": "guide",
+            "titleRef": "storyGuidesTitle",
+            "descriptionRef": "storyGuidesDescription",
+            "tone": "secondary"
           },
           {
-            "id": "beach",
-            "src": "/home-images/journey-img2.png",
-            "altRef": "storyImageThreeAlt",
-            "variant": "portrait"
+            "id": "visa",
+            "icon": "passport",
+            "titleRef": "storyVisaTitle",
+            "descriptionRef": "storyVisaDescription",
+            "tone": "tertiary"
+          },
+          {
+            "id": "planning",
+            "icon": "route",
+            "titleRef": "storyPlanningTitle",
+            "descriptionRef": "storyPlanningDescription",
+            "tone": "success"
           }
         ],
-        "reviewAvatars": [
-          { "id": "client-one", "initials": "AG" },
-          { "id": "client-two", "initials": "RS" },
-          { "id": "client-three", "initials": "MK" },
-          { "id": "client-four", "initials": "NV" }
-        ],
+        "visual": {
+          "src": "/home-images/sticky.png",
+          "badgeIcon": "luggage",
+          "badgeLabelRef": "storyVisualBadge"
+        },
         "stats": [
           {
             "id": "providers",
@@ -52,13 +63,21 @@
     "dataScope": { "options": {} },
     "elements": {
       "labels": {
-        "storyAriaLabel": "TravelsTREM journey planning story",
-        "storyTitle": "Thoughtfully planned journeys, delivered end to end",
-        "storyDescription": "For over two decades we have built trips around the people taking them. Every flight, stay, transfer and guided experience is booked through partners we have vetted ourselves, so the itinerary you see is the trip you get.",
-        "storyReviewLabel": "More than 4.9K client reviews",
-        "storyImageOneAlt": "Curated island stay with turquoise waters",
-        "storyImageTwoAlt": "Traveller overlooking a scenic mountain lake",
-        "storyImageThreeAlt": "Flight and travel services for every journey",
+        "storyAriaLabel": "The TravelsTREM advantage",
+        "storyEyebrow": "The TravelsTREM advantage",
+        "storyTitle": "Why travel with",
+        "storyHighlight": "TravelsTREM",
+        "storyDescription": "A connected travel experience shaped by proven operations, trusted specialists and technology that keeps every journey together.",
+        "storyBackdropText": "ADVENTURES AWAIT",
+        "storySupportTitle": "Global Travel Support",
+        "storySupportDescription": "Helpful guidance before, during and after every journey.",
+        "storyGuidesTitle": "Expert Local Guides",
+        "storyGuidesDescription": "Verified local knowledge for richer, more confident experiences.",
+        "storyVisaTitle": "Visa Assistance",
+        "storyVisaDescription": "Clear document guidance for visas, passports and travel readiness.",
+        "storyPlanningTitle": "Connected Planning",
+        "storyPlanningDescription": "Flights, stays, tours and support kept in one continuous journey.",
+        "storyVisualBadge": "Journey ready",
         "storyProvidersLabel": "Providers Registered",
         "storyProvidersValue": "12+",
         "storyClientsLabel": "Clients Globally",

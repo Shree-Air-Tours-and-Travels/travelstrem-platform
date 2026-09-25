@@ -1,0 +1,65 @@
+{
+  "status": "success",
+  "component": {
+    "data": {
+      "homeFeatures": {
+        "ariaLabelRef": "featuredAriaLabel",
+        "eyebrowRef": "featuredEyebrow",
+        "titleRef": "featuredTitle",
+        "descriptionRef": "featuredDescription",
+        "defaultCategory": "tours",
+        "categories": []
+      }
+    },
+    "dataScope": { "options": {} },
+    "elements": {
+      "labels": {
+        "featuredAriaLabel": "Featured tours, trips, flights and hotels",
+        "featuredEyebrow": "Picked for your next journey",
+        "featuredTitle": "Start with what feels right",
+        "featuredDescription": "Explore the highest-ranked journeys and the destinations travellers choose most often.",
+        "featuredTours": "Tours",
+        "featuredTrips": "Trips",
+        "featuredFlights": "Flights",
+        "featuredHotels": "Hotels",
+        "featuredBadge": "Featured",
+        "trendingBadge": "Trending",
+        "tourPriceLabel": "Packages from",
+        "tripPriceLabel": "Trip from",
+        "viewTourAction": "View tour",
+        "viewTripAction": "View trip",
+        "searchFlightsAction": "Search flights",
+        "searchHotelsAction": "Search hotels",
+        "viewAllTours": "View all tours",
+        "viewAllTrips": "View all trips",
+        "viewAllFlights": "Search all flights",
+        "viewAllHotels": "Search all hotels",
+        "toursEmptyTitle": "No published tours yet",
+        "toursEmptyDescription": "Published tours will appear here as soon as they are available.",
+        "tripsEmptyTitle": "No listed trips yet",
+        "tripsEmptyDescription": "Listed trips will appear here as soon as they are available.",
+        "flightsEmptyTitle": "No flight destinations yet",
+        "flightsEmptyDescription": "Popular destinations will appear after travellers begin booking flights.",
+        "hotelsEmptyTitle": "No hotel destinations yet",
+        "hotelsEmptyDescription": "Popular destinations will appear after hotel selections are saved in quotes."
+      },
+      "urls": {
+        "toursUrl": "/trevista/tours",
+        "tripsUrl": "/trevio/trips",
+        "flightsUrl": "/trehub/flights",
+        "hotelsUrl": "/trehub/hotels"
+      }
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "HomeCardsWithFeature",
+          "props": { "dataKey": "homeFeatures" }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

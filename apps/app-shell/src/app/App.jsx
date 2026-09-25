@@ -712,7 +712,10 @@ function AppShell() {
               onRecover={() => handleTabChange("overview")}
             >
               {isSupportScreen ? (
-                <SupportRoutes />
+                <SupportRoutes
+                  isAuthenticated={Boolean(session?.isAuthenticated)}
+                  onRequireAuthentication={requireAuthentication}
+                />
               ) : activeTab === "notifications" ? (
                 <section className="dash-notifications" aria-label="Notifications">
                   {notificationInbox.items.length ? notificationInbox.items.map((item) => (
@@ -756,7 +759,7 @@ function AppShell() {
               )}
             </RemoteBoundary>
           </ProtectedRoute>
-          {activeTab === "overview" && !isRemote && !isSupportScreen ? (
+          {activeTab === "overview" && !isRemote && !isSupportScreen && appHeaderConfig.footer ? (
             <AppFooter config={appHeaderConfig.footer} className="dash-app-footer" />
           ) : null}
         </div>

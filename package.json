@@ -5,7 +5,7 @@
   "packageManager": "pnpm@10.17.1",
   "scripts": {
     "sync:favicons": "node scripts/sync-favicons.mjs",
-    "build:website": "node website/build.mjs",
+    "build:website": "pnpm --filter @apps/travelstrem-marketing build",
     "prebuild": "pnpm sync:favicons",
     "dev": "turbo run dev",
     "build": "turbo run build",

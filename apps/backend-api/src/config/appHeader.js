@@ -19,23 +19,55 @@ export default applyHideFlags({
         footer: {
             brand: "TravelsTREM",
             owner: "Shree Air Tours and Travels",
-            description: "Tours, Reservations, Experience & Management ",
-            navigationLabel: "Business and legal information",
+            description: "Tours · Reservations · Experiences · Management",
+            logoSrc: "/favicon-dark.png",
             contacts: [
                 {
                     id: "email",
                     label: "akshat.goyal@travelstrem.com",
                     href: "mailto:akshat.goyal@travelstrem.com",
+                    icon: "mail",
                 },
-                { id: "phone", label: "+91 90576 35580", href: "tel:+919057635580" },
+                { id: "phone", label: "+91 90576 35580", href: "tel:+919057635580", icon: "phone" },
                 {
                     id: "location",
-                    label: "Jaipur, India",
-                    href: "https://www.google.com/maps/search/?api=1&query=Jaipur%2C%20India",
+                    label: "Shree Air Tours and Travels, Jaipur",
+                    href: "https://maps.app.goo.gl/ebvDhsdzAe27XRSn7",
                     target: "_blank",
+                    icon: "mapPin",
                 },
             ],
-            legalLinks: [{ id: "privacy", label: "Privacy", href: "/privacy" }],
+            sections: [
+                {
+                    id: "explore",
+                    title: "Explore travel",
+                    links: [
+                        { id: "trips", label: "Trips & adventures", href: "/trevio/trips" },
+                        { id: "tours", label: "Tours & packages", href: "/trevista/tours" },
+                        { id: "flights", label: "Flights", href: "/trehub/flights" },
+                        { id: "hotels", label: "Hotels", href: "/trehub/hotels" },
+                    ],
+                },
+                {
+                    id: "company",
+                    title: "TravelsTREM",
+                    links: [
+                        { id: "about", label: "About us", href: "https://travelstrem.com/about" },
+                        { id: "partnership", label: "Partnership", href: "https://travelstrem.com/partnership" },
+                        { id: "sales", label: "Book a demo", href: "https://travelstrem.com/sales#book-demo" },
+                    ],
+                },
+                {
+                    id: "help",
+                    title: "Help & inspiration",
+                    links: [
+                        { id: "support", label: "Help & support", href: "/help" },
+                        { id: "articles", label: "Travel articles", href: "/articles" },
+                    ],
+                },
+            ],
+            socialLinks: [],
+            legalLinks: [],
         },
         mobileMenu: {
             openLabel: "Open navigation",
@@ -100,10 +132,10 @@ export default applyHideFlags({
                     ],
                 },
                 {
-                    id: "products",
-                    label: "Our Products",
-                    icon: "travelPackage",
-                    href: "https://travelstrem.com/#products",
+                    id: "about",
+                    label: "About Us",
+                    icon: "info",
+                    href: "https://travelstrem.com/about",
                     type: "external",
                     target: "_blank",
                 },
@@ -232,7 +264,7 @@ export default applyHideFlags({
                     label: "About Us",
                     icon: "info",
                     type: "external",
-                    href: "https://travelstrem.com",
+                    href: "https://travelstrem.com/about",
                     target: "_blank",
                 },
                 {

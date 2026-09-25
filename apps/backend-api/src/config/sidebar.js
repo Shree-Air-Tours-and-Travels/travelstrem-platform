@@ -101,7 +101,7 @@ export default applyHideFlags({
                         label: "About Us",
                         icon: "info",
                         type: "external",
-                        href: "https://travelstrem.com",
+                        href: "https://travelstrem.com/about",
                         target: "_blank",
                     },
                     {

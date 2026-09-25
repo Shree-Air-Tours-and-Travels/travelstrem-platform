@@ -56,14 +56,9 @@
           "widgetRef": "./widgets/journey-story.json"
         },
         {
-          "type": "ProductCards",
+          "type": "HomeCardsWithFeature",
           "source": "shell",
-          "widgetRef": "./widgets/plan-cards.json"
-        },
-        {
-          "type": "TravelBenefits",
-          "source": "shell",
-          "widgetRef": "./widgets/travel-benefits.json"
+          "widgetRef": "./widgets/home-cards-with-feature.json"
         },
         {
           "type": "HomeInsights",
