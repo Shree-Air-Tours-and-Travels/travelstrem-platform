@@ -9,9 +9,9 @@ const nextConfig: NextConfig = {
       { source: "/index.html", destination: "/", permanent: true },
       { source: "/about.html", destination: "/about", permanent: true },
       { source: "/partnership.html", destination: "/partnership", permanent: true },
-      { source: "/partner", destination: "/partnership", permanent: true }
+      { source: "/partner", destination: "/partnership", permanent: true },
     ];
-  }
+  },
 };
 
 export default nextConfig;
