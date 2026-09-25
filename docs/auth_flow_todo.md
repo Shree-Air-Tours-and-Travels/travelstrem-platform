@@ -34,3 +34,9 @@ High severity
 - DEV_OTP_BYPASS (env.js:255) is on for every non-production env, including staging. Recommend gating to localhost only.
   Questions before we proceed
   Want me to (a) write this up as a checklist, or (b) start implementing fixes? If (b), I'd prioritize: #1–5 (high), then #6–10. Let me know the scope and whether you want the staging-guard for DEV_OTP_BYPASS included.
+
+I updated [routes.js (line 21)](/Users/akshat.goyal1/Downloads/my-apps/travelstrem-platform/apps/backend-api/src/modules/auth/routes.js:21) so authentication uses the same trusted domain suffixes as global CORS.
+Deploy the updated test backend and ensure its environment includes either:
+FRONTENDS=https://auth.travelstrem.com,...
+or:
+CORS_ALLOWED_DOMAIN_SUFFIXES=.travelstrem.com

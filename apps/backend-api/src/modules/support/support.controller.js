@@ -198,6 +198,7 @@ export const searchSupport = asyncHandler(async (req, res) => {
             action: {
                 type: SUPPORT_ACTION_TYPE.NAVIGATE,
                 target: `/help/new-request?category=${encodeURIComponent(item.id)}`,
+                requiresAuth: true,
             },
         })),
         ...PLATFORM_CONTACT_OPTIONS.filter(

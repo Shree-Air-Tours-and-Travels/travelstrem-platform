@@ -8,6 +8,7 @@ import {
 } from "../../core/auth/portalSession.js";
 import { buildDashboardSnapshot } from "./dashboardDataService.js";
 import { buildAdminDashboardSnapshot } from "./adminDashboardDataService.js";
+import { buildHomeFeatureSnapshot } from "./homeFeatureDataService.js";
 
 // Pages that carry user-specific injected data on top of the definition.
 const PERSONALIZED_PAGES = new Set(["app-shell/app-shell", "admin-shell/dashboard"]);
@@ -48,13 +49,16 @@ export const getPageDefinition = async (req, res) => {
     const pageKey = req.params.pageKey || `${req.params.app}/${req.params.page}`;
     const authUser = extractOptionalUser(req);
     let injectData;
-    if (authUser?.userId && PERSONALIZED_PAGES.has(pageKey)) {
+    if (pageKey === "app-shell/app-shell") {
+        const [homeFeatures, dashboard] = await Promise.all([
+            buildHomeFeatureSnapshot(),
+            authUser?.userId ? buildDashboardSnapshot(authUser.userId) : Promise.resolve({}),
+        ]);
+        injectData = { ...homeFeatures, ...dashboard };
+    } else if (authUser?.userId && PERSONALIZED_PAGES.has(pageKey)) {
         // Metrics / recent activity / upcoming trips are user-scoped and ride
         // the same response as the definition (single round trip).
-        injectData =
-            pageKey === "admin-shell/dashboard"
-                ? await buildAdminDashboardSnapshot()
-                : await buildDashboardSnapshot(authUser.userId);
+        injectData = await buildAdminDashboardSnapshot();
     }
     return pageDefinitionService.resolvePage(req, res, pageKey, {
         remoteOverrides: parseOverride(req.query.remoteOverrides),

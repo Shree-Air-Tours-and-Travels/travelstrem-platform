@@ -14,7 +14,7 @@ import { useSupportResource } from "./support.hooks";
 import { ResourceBoundary, SupportLayout, SupportSection } from "./SupportLayout";
 import { executeSupportAction, trackSupport } from "./support.utils";
 
-export default function SupportHomePage() {
+export default function SupportHomePage({ isAuthenticated = false, onRequireAuthentication }) {
   const navigate = useNavigate();
   const resource = useSupportResource((signal) => supportApi.home(signal), []);
   const [query, setQuery] = useState("");
@@ -43,7 +43,19 @@ export default function SupportHomePage() {
     };
   }, [query]);
 
-  const openAction = (action) => executeSupportAction(action, navigate);
+  const requireAuthentication = (target = "/help") =>
+    onRequireAuthentication?.({
+      returnTo: new URL(target, window.location.origin).toString(),
+    });
+  const openAction = (action) => {
+    const requiresAuth = Boolean(action?.requiresAuth || action?.action?.requiresAuth);
+    const target = action?.action?.target || action?.target || "/help";
+    if (!isAuthenticated && requiresAuth) {
+      requireAuthentication(target);
+      return;
+    }
+    executeSupportAction(action, navigate);
+  };
   const categories = data?.categories || [];
   const contacts = data?.contactOptions || [];
 
@@ -52,7 +64,7 @@ export default function SupportHomePage() {
       title={data?.ui?.header?.title}
       subtitle={data?.ui?.header?.subtitle}
       actions={
-        data?.ui?.actions?.requests ? (
+        isAuthenticated && data?.ui?.actions?.requests ? (
           <Button
             size="small"
             variant="outline"
@@ -100,9 +112,11 @@ export default function SupportHomePage() {
                   <SupportCategoryCard
                     key={category.id}
                     item={category}
-                    onSelect={() =>
-                      navigate(`/help/new-request?category=${encodeURIComponent(category.id)}`)
-                    }
+                    onSelect={() => {
+                      const target = `/help/new-request?category=${encodeURIComponent(category.id)}`;
+                      if (isAuthenticated) navigate(target);
+                      else requireAuthentication(target);
+                    }}
                   />
                 ))}
               </div>

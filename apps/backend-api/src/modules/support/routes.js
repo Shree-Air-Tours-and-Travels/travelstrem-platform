@@ -20,15 +20,19 @@ import {
 } from "./support.controller.js";
 
 const router = express.Router();
-router.use(authMiddleware);
+
+// Help content is available to guests. Ticket and support-desk operations
+// remain authenticated below this boundary.
 router.get("/home", getHome);
 router.get("/search", searchSupport);
 router.get("/services", getServices);
 router.get("/services/:serviceId", getService);
 router.get("/topics/:topicId", getTopic);
 router.get("/articles/:articleId", getArticle);
-router.get("/categories", getCategories);
 router.get("/contact-options", getContacts);
+
+router.use(authMiddleware);
+router.get("/categories", getCategories);
 router.get("/desk/tickets", listSupportDeskTickets);
 router.get("/desk/tickets/:ticketId", getSupportDeskTicket);
 router.post("/desk/tickets/:ticketId/messages", replyFromSupportDesk);
