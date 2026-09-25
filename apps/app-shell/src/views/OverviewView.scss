@@ -1684,12 +1684,14 @@
 
 .dov__faq,
 .dov__articles {
-  width: min(100%, 72rem);
+  background: var(--surface-elevated);
   margin-inline: auto;
   padding-inline: clamp(#{$space-4}, 5vw, #{$space-8});
 }
 
 .dov__faq {
+  display: flex;
+  flex-direction: row;
   padding-top: clamp(#{$space-10}, 7vw, #{$space-14});
   padding-bottom: clamp(#{$space-8}, 6vw, #{$space-12});
 }
@@ -1774,7 +1776,6 @@
    ============================================================ */
 
 .dov__articles {
-
 
   padding: clamp(#{$space-8}, 5vw, #{$space-12}) clamp(#{$space-4}, 5vw, #{$space-8});
 
@@ -3109,21 +3110,39 @@
   isolation: isolate;
   background:
     linear-gradient(90deg,
-      color-mix(in srgb, var(--page-bg) 92%, transparent) 0%,
-      color-mix(in srgb, var(--page-bg) 72%, transparent) 42%,
-      color-mix(in srgb, var(--dov-tone-secondary) 15%, transparent) 100%),
-    linear-gradient(145deg,
-      color-mix(in srgb, var(--dov-tone-primary) 18%, transparent),
-      color-mix(in srgb, var(--dov-tone-secondary) 18%, transparent)),
-    var(--dov-hero-image) center / cover no-repeat,
+      color-mix(in srgb, var(--page-bg) 38%, transparent),
+      color-mix(in srgb, var(--dov-tone-secondary) 12%, transparent)),
     var(--dov-band);
+}
+
+.dov__hero--search::before {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  display: block;
+  background-image: var(--dov-hero-image);
+  background-attachment: fixed;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  content: "";
+  filter: saturate(1.08) contrast(1.06);
+  opacity: 0.72;
+  pointer-events: none;
 }
 
 .dov__hero--search::after {
   position: absolute;
-  z-index: -1;
+  z-index: 1;
   inset: 0;
   background:
+    linear-gradient(90deg,
+      color-mix(in srgb, var(--page-bg) 90%, transparent) 0%,
+      color-mix(in srgb, var(--page-bg) 58%, transparent) 38%,
+      color-mix(in srgb, var(--page-bg) 8%, transparent) 72%),
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--page-bg) 4%, transparent) 54%,
+      color-mix(in srgb, var(--page-bg) 48%, transparent) 100%),
     radial-gradient(circle at 14% 22%,
       color-mix(in srgb, var(--dov-tone-primary) 22%, transparent),
       transparent 28%),
@@ -3132,6 +3151,11 @@
       transparent 30%);
   content: "";
   pointer-events: none;
+}
+
+.dov__hero--search> :not(.dov__hero-wave) {
+  position: relative;
+  z-index: 2;
 }
 
 .dov__hero--search .dov__hero-eyebrow,
@@ -3148,9 +3172,9 @@
 .dov__hero--search .dov__hero-search .trem-global-search__tabs,
 .dov__hero--search .dov__hero-search .trem-global-search__panel {
   border-color: color-mix(in srgb, var(--dov-tone-primary) 22%, var(--border));
-  background: color-mix(in srgb, var(--surface-glass-strong) 94%, transparent);
-  box-shadow: var(--shadow-lg);
-  backdrop-filter: blur(20px);
+  background: color-mix(in srgb, var(--surface-glass-strong) 88%, transparent);
+  box-shadow: 0 1.5rem 4rem color-mix(in srgb, var(--heading) 18%, transparent);
+  backdrop-filter: blur(24px) saturate(1.14);
 }
 
 .dov__hero--search .dov__hero-search .trem-global-search__choice.is-active {
@@ -3389,14 +3413,13 @@
 .theme--dark .dov__hero--search {
   background:
     linear-gradient(90deg,
-      color-mix(in srgb, var(--page-bg) 96%, transparent) 0%,
-      color-mix(in srgb, var(--page-bg) 78%, transparent) 44%,
-      color-mix(in srgb, var(--dov-tone-secondary) 14%, transparent) 100%),
-    linear-gradient(145deg,
-      color-mix(in srgb, var(--dov-tone-primary) 14%, transparent),
+      color-mix(in srgb, var(--page-bg) 42%, transparent),
       color-mix(in srgb, var(--dov-tone-secondary) 16%, transparent)),
-    var(--dov-hero-image) center / cover no-repeat,
     var(--page-bg);
+}
+
+.theme--dark .dov__hero--search::before {
+  opacity: 0.58;
 }
 
 .theme--dark .dov__story,
@@ -3430,15 +3453,18 @@
   }
 
   .dov__hero--search::before {
-    background:
-      linear-gradient(135deg,
-        color-mix(in srgb, var(--dov-tone-primary) 82%, transparent),
-        color-mix(in srgb, var(--dov-tone-secondary) 72%, transparent)),
-      var(--dov-hero-image) center / cover;
+    height: 22rem;
+    background-attachment: scroll;
+    background-position: center;
+    opacity: 0.76;
   }
 
   .dov__hero--search::after {
-    display: none;
+    display: block;
+    height: 22rem;
+    background: linear-gradient(135deg,
+        color-mix(in srgb, var(--dov-tone-primary) 66%, transparent),
+        color-mix(in srgb, var(--dov-tone-secondary) 48%, transparent));
   }
 
   .dov__hero--search .dov__hero-trust {
@@ -3489,5 +3515,934 @@
 
   .dov__faq-list {
     padding: $space-3 $space-4;
+  }
+}
+
+/* Sticky home canvas: copy and search scroll away while the image remains
+   contained by the hero and is covered by the following section. */
+.dov__hero--search {
+  position: relative;
+  display: block;
+  height: clamp(54rem, 126svh, 78rem);
+  min-height: 0;
+  padding: 0;
+  overflow: visible;
+  background: var(--page-bg);
+}
+
+.dov__hero--search::before,
+.dov__hero--search::after {
+  display: none;
+}
+
+.dov__hero--search>.dov__hero-media {
+  position: sticky;
+  z-index: 0;
+  top: 0;
+  width: 100%;
+  height: calc(100svh - 4.5rem);
+  min-height: 42rem;
+  overflow: hidden;
+  background: var(--dov-hero-image) center / cover no-repeat;
+}
+
+.dov__hero-media::before,
+.dov__hero-media::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+}
+
+.dov__hero-media::before {
+  background: linear-gradient(90deg,
+      color-mix(in srgb, var(--page-bg) 88%, transparent) 0%,
+      color-mix(in srgb, var(--page-bg) 54%, transparent) 25%,
+      transparent 52%);
+}
+
+.dov__hero-media::after {
+  display: none;
+}
+
+.dov__hero--search>.dov__hero-stage {
+  position: absolute;
+  z-index: 2;
+  inset: 0 0 auto;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: clamp(#{$space-4}, 2.5vw, #{$space-7});
+  width: 100%;
+  min-height: calc(100svh - 4.5rem);
+  padding: clamp(#{$space-6}, 5vw, #{$space-12}) clamp(#{$space-6}, 5vw, #{$space-12}) $space-6;
+  pointer-events: none;
+}
+
+.dov__hero-stage>* {
+  pointer-events: auto;
+}
+
+.dov__hero--search .dov__hero-copy {
+  width: min(36rem, 58%);
+}
+
+.dov__hero--search .dov__hero-search {
+  align-self: end;
+  margin-top: clamp(#{$space-12}, 14vh, 9rem);
+}
+
+.dov__hero--search .dov__hero-search .trem-global-search__tabs,
+.dov__hero--search .dov__hero-search .trem-global-search__panel,
+.dov__hero--search .dov__hero-trust {
+  background: color-mix(in srgb, var(--surface-glass-strong) 90%, transparent);
+  box-shadow: 0 1.5rem 4rem color-mix(in srgb, var(--heading) 16%, transparent);
+  backdrop-filter: blur(22px) saturate(1.12);
+}
+
+.dov__story,
+.trem-home-features,
+.dov__insights {
+  position: relative;
+  z-index: 3;
+}
+
+.theme--dark .dov__hero-media::before {
+  background: linear-gradient(90deg,
+      color-mix(in srgb, var(--page-bg) 86%, transparent) 0%,
+      color-mix(in srgb, var(--page-bg) 46%, transparent) 28%,
+      transparent 55%);
+}
+
+@media (max-width: $breakpoint-tablet) {
+  .dov__hero--search {
+    height: auto;
+    background: var(--surface);
+  }
+
+  .dov__hero--search>.dov__hero-media {
+    position: absolute;
+    top: 0;
+    height: 22rem;
+    min-height: 0;
+    background-position: 62% center;
+  }
+
+  .dov__hero-media::before {
+    background:
+      linear-gradient(90deg,
+        color-mix(in srgb, var(--page-bg) 76%, transparent) 0%,
+        color-mix(in srgb, var(--page-bg) 34%, transparent) 48%,
+        transparent 78%),
+      linear-gradient(180deg, transparent 66%, color-mix(in srgb, var(--page-bg) 48%, transparent));
+  }
+
+  .dov__hero--search>.dov__hero-stage {
+    position: relative;
+    min-height: 0;
+    padding: $space-5 $space-4 $space-4;
+  }
+
+  .dov__hero--search .dov__hero-copy {
+    width: 100%;
+    min-height: 14rem;
+  }
+
+  .dov__hero--search .dov__hero-search {
+    margin-top: $space-6;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dov__hero--search>.dov__hero-media {
+    position: absolute;
+  }
+
+  .dov__hero--search {
+    height: auto;
+  }
+
+  .dov__hero--search>.dov__hero-stage {
+    position: relative;
+  }
+}
+
+/* Travel-journal and route-map details for the home insights section. */
+@keyframes dov-faq-plane-drift {
+
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(8deg);
+  }
+
+  50% {
+    transform: translate3d(-6px, -3px, 0) rotate(3deg);
+  }
+}
+
+.dov__faq-list {
+  position: relative;
+  overflow: visible;
+}
+
+.dov__faq-list::before {
+  position: absolute;
+  top: $space-7;
+  bottom: $space-7;
+  left: calc(#{$space-6} + 1.1rem);
+  border-left: 1px dashed color-mix(in srgb, var(--color-primary) 42%, var(--border));
+  content: "";
+  pointer-events: none;
+}
+
+.dov__faq-flight-marker {
+  position: absolute;
+  z-index: 2;
+  top: -1.35rem;
+  right: $space-6;
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 28%, var(--border));
+  border-radius: $radius-circle;
+  background: var(--color-primary-dark);
+  color: #{$white-color};
+  box-shadow: var(--shadow-sm);
+  animation: dov-faq-plane-drift 4.5s $ease-standard infinite;
+}
+
+.dov__faq-question {
+  display: flex;
+  align-items: center;
+  gap: $space-4;
+  min-width: 0;
+}
+
+.dov__faq-index {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: 0 0 2.25rem;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 26%, var(--border));
+  border-radius: $radius-circle;
+  background: var(--surface-elevated);
+  color: var(--color-primary);
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+  letter-spacing: 0.05em;
+  transition:
+    background $duration-base $ease-standard,
+    color $duration-base $ease-standard,
+    border-color $duration-base $ease-standard;
+}
+
+.dov__faq-item[open] .dov__faq-index {
+  border-color: var(--color-primary-dark);
+  background: var(--color-primary-dark);
+  color: #{$white-color};
+}
+
+.dov__faq-item p {
+  margin-left: calc(2.25rem + #{$space-4});
+}
+
+.dov__faq-toggle {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border-radius: $radius-circle;
+  background: var(--primary-soft);
+  color: var(--color-primary-dark);
+}
+
+.dov__faq-toggle::before,
+.dov__faq-toggle::after {
+  width: 0.8rem;
+}
+
+.dov__faq-item summary:hover .dov__faq-index {
+  border-color: var(--color-primary);
+  background: var(--primary-soft);
+}
+
+.dov__faq-item[open] summary:hover .dov__faq-index {
+  border-color: var(--color-primary-dark);
+  background: var(--color-primary-dark);
+}
+
+.dov__article-card::after {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+  content: "";
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform $duration-slow $ease-standard;
+}
+
+.dov__article-card:hover::after,
+.dov__article-card:focus-visible::after {
+  transform: scaleX(1);
+}
+
+.dov__article-description {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: $font-size-sm;
+  line-height: 1.55;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.dov__article-category,
+.dov__article-featured-mark {
+  color: #{$white-color};
+}
+
+.dov__article-card:hover .dov__article-arrow {
+  background: var(--color-primary-dark);
+  color: #{$white-color};
+}
+
+.dov__articles-action-icon {
+  background: var(--color-primary-dark);
+  color: #{$white-color};
+}
+
+@media (max-width: $breakpoint-mobile) {
+  .dov__faq-list {
+    padding: $space-4;
+  }
+
+  .dov__faq-list::before {
+    top: $space-6;
+    bottom: $space-6;
+    left: calc(#{$space-4} + 1.1rem);
+  }
+
+  .dov__faq-flight-marker {
+    right: $space-4;
+  }
+
+  .dov__faq-question {
+    gap: $space-3;
+  }
+
+  .dov__faq-item p {
+    margin-left: calc(2.25rem + #{$space-3});
+  }
+
+  .dov__article-grid {
+    display: flex;
+    width: calc(100% + #{$space-4});
+    margin-right: -#{$space-4};
+    padding-right: $space-4;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: $space-3;
+    overscroll-behavior-inline: contain;
+    scroll-padding-inline: 0;
+    scroll-snap-type: inline mandatory;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .dov__article-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .dov__article-card--featured,
+  .dov__article-card--standard {
+    min-width: 0;
+    flex: 0 0 calc(90% - #{$space-3});
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  .dov__article-description {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dov__faq-flight-marker {
+    animation: none;
+  }
+
+  .dov__article-card::after {
+    transition: none;
+  }
+}
+
+/* Desktop journal: two equal editorial cards per viewport with a third card
+   available through the token-styled horizontal rail. */
+@media (min-width: #{$breakpoint-mobile + 1px}) {
+  .dov__articles-header {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .dov__articles .dov__insights-heading {
+    max-width: 50rem;
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .dov__articles .dov__insights-heading p {
+    margin-inline: auto;
+  }
+
+  .dov__articles-action--desktop {
+    display: none;
+  }
+
+  .dov__articles-action--mobile {
+    display: flex;
+    width: fit-content;
+    min-width: 12rem;
+    justify-content: space-between;
+    margin: $space-6 auto 0;
+  }
+
+  .dov__article-grid {
+    display: grid;
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: calc((100% - #{$space-5}) / 2);
+    grid-template-rows: minmax(20rem, auto);
+    gap: $space-5;
+    padding-bottom: $space-4;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-inline: contain;
+    scroll-padding-inline: 0;
+    scroll-snap-type: inline mandatory;
+    scrollbar-color: color-mix(in srgb, var(--color-primary) 54%, var(--border)) transparent;
+    scrollbar-width: thin;
+  }
+
+  .dov__article-grid::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .dov__article-grid::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .dov__article-grid::-webkit-scrollbar-thumb {
+    border-radius: $radius-full;
+    background: color-mix(in srgb, var(--color-primary) 54%, var(--border));
+  }
+
+  .dov__article-card--featured,
+  .dov__article-card--standard {
+    grid-row: auto;
+    min-height: 20rem;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  .dov__article-card--featured .dov__article-content,
+  .dov__article-card--standard .dov__article-content {
+    align-content: center;
+    padding: clamp(#{$space-4}, 2vw, #{$space-6});
+  }
+
+  .dov__article-card--featured .dov__article-title-row h3,
+  .dov__article-card--standard .dov__article-title-row h3 {
+    max-width: none;
+    font-size: clamp(#{$font-size-lg}, 1.5vw, 1.55rem);
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+  }
+
+  .dov__article-description {
+    display: -webkit-box;
+  }
+}
+
+@media (min-width: #{$breakpoint-mobile + 1px}) and (max-width: $breakpoint-lg) {
+
+  .dov__article-card--featured,
+  .dov__article-card--standard {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .dov__article-card--featured .dov__article-media,
+  .dov__article-card--standard .dov__article-media {
+    width: 100%;
+    min-height: 0;
+    height: auto;
+    aspect-ratio: 16 / 10;
+  }
+}
+
+@media (min-width: #{$breakpoint-lg + 1px}) {
+
+  .dov__article-card--featured,
+  .dov__article-card--standard {
+    display: grid;
+    grid-template-columns: minmax(12rem, 0.42fr) minmax(0, 0.58fr);
+  }
+
+  .dov__article-card--featured .dov__article-media,
+  .dov__article-card--standard .dov__article-media {
+    width: 100%;
+    height: 100%;
+    min-height: 20rem;
+  }
+
+  .dov__article-card--featured .dov__article-featured-mark {
+    right: $space-3;
+    bottom: $space-3;
+  }
+}
+
+// Home insights keep a clear reading order while turning the FAQ into a route map.
+.dov__faq {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  align-items: start;
+  gap: clamp(#{$space-6}, 5vw, #{$space-12});
+}
+
+.dov__faq .dov__insights-heading {
+  position: sticky;
+  top: $space-8;
+  padding-top: $space-5;
+}
+
+.dov__faq-list {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+.dov__faq-list::before {
+  left: calc(#{$space-6} + #{$space-3} + 1.1rem);
+}
+
+.dov__faq-item {
+  position: relative;
+  min-width: 0;
+  padding-inline: $space-3;
+  border-radius: $radius-md;
+  transition: background $duration-base $ease-standard;
+}
+
+.dov__faq-item[open] {
+  background: color-mix(in srgb, var(--primary-soft) 56%, var(--surface-elevated));
+}
+
+.dov__faq-item summary {
+  min-height: 4.5rem;
+}
+
+.dov__faq-item summary:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+  border-radius: $radius-sm;
+}
+
+.dov__faq-item p {
+  margin-right: $space-5;
+  padding-bottom: $space-2;
+}
+
+.dov__article-card:hover {
+  transform: none;
+}
+
+.dov__article-card--featured,
+.dov__article-card--standard {
+  min-width: 0;
+}
+
+.dov__article-content {
+  min-width: 0;
+}
+
+.dov__article-title-row {
+  align-items: center;
+}
+
+@media (max-width: $breakpoint-lg) {
+  .dov__faq {
+    grid-template-columns: minmax(0, 1fr);
+    gap: $space-6;
+  }
+
+  .dov__faq .dov__insights-heading {
+    position: static;
+    padding-top: 0;
+  }
+}
+
+@media (max-width: $breakpoint-mobile) {
+  .dov__faq {
+    gap: $space-5;
+  }
+
+  .dov__faq-list {
+    padding: $space-3;
+  }
+
+  .dov__faq-list::before {
+    left: calc(#{$space-3} + #{$space-2} + 1.1rem);
+  }
+
+  .dov__faq-item {
+    padding-inline: $space-2;
+  }
+
+  .dov__faq-question {
+    min-width: 0;
+  }
+
+  .dov__faq-question strong {
+    overflow-wrap: anywhere;
+  }
+
+  .dov__faq-item p {
+    margin-right: $space-2;
+  }
+
+  .dov__article-grid {
+    gap: $space-3;
+  }
+
+  .dov__article-card--featured,
+  .dov__article-card--standard {
+    flex-basis: calc(90% - #{$space-4});
+  }
+
+  .dov__article-description {
+    display: -webkit-box;
+  }
+}
+
+// TravelsTREM advantage: backend-configured benefits with a travel-led transition.
+.dov__story {
+  --dov-advantage-dark: var(--heading);
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 16% 8%, color-mix(in srgb, var(--dov-tone-primary) 9%, transparent), transparent 26%),
+    var(--surface);
+}
+
+.dov__story::before {
+  display: none;
+}
+
+.dov__advantage {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 92rem);
+  margin: 0 auto;
+  padding: clamp(#{$space-10}, 7vw, #{$space-16}) clamp(#{$space-5}, 5vw, #{$space-10}) 0;
+}
+
+.dov__advantage-heading {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+}
+
+.dov__advantage-eyebrow {
+  color: var(--dov-tone-primary);
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.dov__advantage-heading h2 {
+  margin: $space-3 0 0;
+  color: var(--heading);
+  font-size: clamp(2.35rem, 5vw, 5.2rem);
+  font-weight: $font-bold;
+  letter-spacing: -0.06em;
+  line-height: 0.98;
+}
+
+.dov__advantage-heading h2 em {
+  background: var(--dov-duotone);
+  background-clip: text;
+  color: transparent;
+  font-style: italic;
+  -webkit-background-clip: text;
+}
+
+.dov__advantage-heading>p {
+  max-width: 44rem;
+  margin: $space-4 auto 0;
+  color: var(--text-muted);
+  font-size: clamp(#{$font-size-md}, 1.25vw, #{$font-size-lg});
+  line-height: 1.65;
+}
+
+.dov__advantage-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(#{$space-3}, 1.5vw, #{$space-5});
+  margin-top: clamp(#{$space-7}, 5vw, #{$space-10});
+}
+
+.dov__advantage-card {
+  --dov-card-tone: var(--dov-tone-primary);
+  min-width: 0;
+  min-height: 15rem;
+  display: grid;
+  align-content: start;
+  justify-items: center;
+  padding: clamp(#{$space-5}, 2.6vw, #{$space-8});
+  border: 1px solid color-mix(in srgb, var(--dov-card-tone) 18%, var(--border));
+  border-radius: $radius-lg;
+  background: color-mix(in srgb, var(--dov-card-tone) 7%, var(--surface-elevated));
+  box-shadow: 0 1rem 3rem color-mix(in srgb, var(--dov-card-tone) 8%, transparent);
+  text-align: center;
+}
+
+.dov__advantage-card--secondary {
+  --dov-card-tone: var(--dov-tone-secondary);
+}
+
+.dov__advantage-card--tertiary {
+  --dov-card-tone: var(--color-primary);
+}
+
+.dov__advantage-card--success {
+  --dov-card-tone: var(--color-success);
+}
+
+.dov__advantage-icon {
+  width: 4.5rem;
+  height: 4.5rem;
+  display: grid;
+  place-items: center;
+  border-radius: $radius-circle;
+  background: var(--dov-card-tone);
+  color: var(--color-on-primary);
+  box-shadow: 0 0.8rem 1.8rem color-mix(in srgb, var(--dov-card-tone) 22%, transparent);
+}
+
+.dov__advantage-card h3 {
+  margin: $space-5 0 0;
+  color: var(--heading);
+  font-size: clamp(#{$font-size-lg}, 1.5vw, 1.45rem);
+  line-height: 1.18;
+}
+
+.dov__advantage-card p {
+  margin: $space-3 0 0;
+  color: var(--text-muted);
+  font-size: $font-size-md;
+  line-height: 1.55;
+}
+
+.dov__advantage-scene {
+  position: relative;
+  min-height: clamp(18rem, 27vw, 28rem);
+  display: flex;
+  align-items: flex-end;
+  margin-top: clamp(#{$space-7}, 5vw, #{$space-11});
+}
+
+.dov__advantage-scene>strong {
+  max-width: 100%;
+  padding-bottom: clamp(#{$space-5}, 3vw, #{$space-8});
+  color: color-mix(in srgb, var(--dov-tone-primary) 9%, var(--surface));
+  font-size: clamp(4.5rem, 13vw, 13rem);
+  font-weight: $font-bold;
+  letter-spacing: -0.075em;
+  line-height: 0.72;
+  white-space: nowrap;
+}
+
+.dov__advantage-scene figure {
+  position: absolute;
+  right: clamp(#{$space-2}, 4vw, #{$space-9});
+  bottom: 0;
+  width: min(38vw, 34rem);
+  height: clamp(16rem, 24vw, 24rem);
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--dov-tone-secondary) 28%, var(--border));
+  border-radius: 48% 48% $radius-lg $radius-lg;
+  background: var(--surface-muted);
+  box-shadow: 0 2rem 5rem color-mix(in srgb, var(--heading) 20%, transparent);
+  transform: rotate(2deg);
+}
+
+.dov__advantage-scene figure::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(145deg, transparent 48%, color-mix(in srgb, var(--dov-tone-secondary) 26%, transparent));
+  content: "";
+}
+
+.dov__advantage-scene img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 78% center;
+  filter: saturate(1.04) contrast(1.04);
+}
+
+.dov__advantage-badge {
+  position: absolute;
+  z-index: 2;
+  right: min(35vw, 30rem);
+  bottom: clamp(#{$space-6}, 5vw, #{$space-12});
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  padding: $space-3 $space-4;
+  border: 1px solid color-mix(in srgb, var(--dov-tone-primary) 22%, var(--border));
+  border-radius: $radius-full;
+  background: color-mix(in srgb, var(--surface-elevated) 90%, transparent);
+  box-shadow: var(--shadow-md);
+  color: var(--heading);
+  font-size: $font-size-sm;
+  font-weight: $font-semibold;
+  backdrop-filter: blur(18px);
+  animation: dov-advantage-float 4.8s $ease-standard infinite;
+}
+
+.dov__advantage-badge svg {
+  color: var(--dov-tone-primary);
+}
+
+.dov__story-wave {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: clamp(3.5rem, 6vw, 6rem);
+  display: block;
+  margin-top: -2.25rem;
+}
+
+.dov__story-wave path {
+  fill: var(--dov-advantage-dark);
+}
+
+.dov__story .dov__story-stats {
+  position: relative;
+  z-index: 2;
+  margin: 0;
+  padding-top: clamp(#{$space-6}, 3vw, #{$space-9});
+  background: var(--dov-advantage-dark);
+}
+
+@keyframes dov-advantage-float {
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+
+  50% {
+    transform: translateY(-0.6rem) rotate(1deg);
+  }
+}
+
+@media (max-width: $breakpoint-lg) {
+  .dov__advantage-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dov__advantage-scene figure {
+    width: min(50vw, 29rem);
+  }
+
+  .dov__advantage-badge {
+    right: min(43vw, 25rem);
+  }
+}
+
+@media (max-width: $breakpoint-mobile) {
+  .dov__advantage {
+    padding: $space-9 $space-4 0;
+  }
+
+  .dov__advantage-heading h2 {
+    font-size: clamp(2.3rem, 12vw, 3.5rem);
+  }
+
+  .dov__advantage-grid {
+    grid-template-columns: 1fr;
+    gap: $space-3;
+  }
+
+  .dov__advantage-card {
+    min-height: 0;
+    grid-template-columns: auto 1fr;
+    justify-items: start;
+    column-gap: $space-4;
+    padding: $space-5;
+    text-align: left;
+  }
+
+  .dov__advantage-icon {
+    grid-row: 1 / span 2;
+    width: 3.25rem;
+    height: 3.25rem;
+  }
+
+  .dov__advantage-card h3,
+  .dov__advantage-card p {
+    margin: 0;
+  }
+
+  .dov__advantage-card p {
+    margin-top: $space-2;
+  }
+
+  .dov__advantage-scene {
+    min-height: 18rem;
+    margin-top: $space-7;
+  }
+
+  .dov__advantage-scene>strong {
+    align-self: flex-start;
+    padding-top: $space-4;
+    font-size: clamp(3.7rem, 22vw, 6.4rem);
+    line-height: 0.78;
+    white-space: normal;
+  }
+
+  .dov__advantage-scene figure {
+    right: 0;
+    width: 72%;
+    height: 14rem;
+  }
+
+  .dov__advantage-badge {
+    right: auto;
+    bottom: $space-5;
+    left: 0;
+  }
+
+  .dov__story-wave {
+    height: 3.5rem;
+    margin-top: -1.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dov__advantage-badge {
+    animation: none;
   }
 }

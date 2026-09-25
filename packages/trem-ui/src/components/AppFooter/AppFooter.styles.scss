@@ -17,7 +17,7 @@
 
 .trem-app-footer__grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.8fr) repeat(4, minmax(10rem, 1fr));
+  grid-template-columns: minmax(0, 1.8fr) repeat(var(--footer-section-count, 4), minmax(10rem, 1fr));
   gap: clamp(#{$space-6}, 4vw, #{$space-12}) clamp(#{$space-6}, 4vw, #{$space-10});
   margin-bottom: clamp(#{$space-10}, 5vw, #{$space-14});
   padding-bottom: clamp(#{$space-8}, 4vw, #{$space-12});

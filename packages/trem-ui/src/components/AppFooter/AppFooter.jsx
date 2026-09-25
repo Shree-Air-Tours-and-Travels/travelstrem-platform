@@ -137,7 +137,10 @@ export default function AppFooter({ config = {}, className = "" }) {
   return (
     <footer className={`trem-app-footer ${className}`.trim()} role="contentinfo">
       <div className="trem-app-footer__main">
-        <div className="trem-app-footer__grid">
+        <div
+          className="trem-app-footer__grid"
+          style={{ "--footer-section-count": (value.sections || []).length }}
+        >
           <div className="trem-app-footer__brand-section">
             <div className="trem-app-footer__brand">
               <span className="trem-app-footer__logo" aria-hidden="true">
@@ -188,18 +191,20 @@ export default function AppFooter({ config = {}, className = "" }) {
           ))}
         </div>
 
-        <div className="trem-app-footer__social-section">
-          <div className="trem-app-footer__social-content">
-            <div className="trem-app-footer__social-links">
-              {(value.socialLinks || [])
-                .filter((item) => item?.label && item?.href)
-                .map((item) => (
-                  <SocialLink key={item.id || item.href} item={item} />
-                ))}
+        {value.socialLinks.length ? (
+          <div className="trem-app-footer__social-section">
+            <div className="trem-app-footer__social-content">
+              <div className="trem-app-footer__social-links">
+                {value.socialLinks
+                  .filter((item) => item?.label && item?.href)
+                  .map((item) => (
+                    <SocialLink key={item.id || item.href} item={item} />
+                  ))}
+              </div>
+              <p className="trem-app-footer__follow-text">Follow us for travel inspiration</p>
             </div>
-            <p className="trem-app-footer__follow-text">Follow us for travel inspiration</p>
           </div>
-        </div>
+        ) : null}
       </div>
 
       <div className="trem-app-footer__bottom">
@@ -207,17 +212,15 @@ export default function AppFooter({ config = {}, className = "" }) {
           <p className="trem-app-footer__copyright">
             © {year} {value.brand}. All rights reserved.
           </p>
-          <div className="trem-app-footer__legal-links">
-            {value.legalLinks.map((link) => (
-              <a
-                key={link.id}
-                href={link.href}
-                className="trem-app-footer__legal-link"
-              >
-                {link.label}
-              </a>
-            ))}
-          </div>
+          {value.legalLinks.length ? (
+            <div className="trem-app-footer__legal-links">
+              {value.legalLinks.map((link) => (
+                <a key={link.id} href={link.href} className="trem-app-footer__legal-link">
+                  {link.label}
+                </a>
+              ))}
+            </div>
+          ) : null}
         </div>
         <p className="trem-app-footer__powered">
           Made with care by {value.owner}

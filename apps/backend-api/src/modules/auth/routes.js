@@ -18,11 +18,25 @@ const trustedOrigins = new Set(
         }
     }),
 );
+const trustedOriginSuffixes = (config.CORS_ALLOWED_DOMAIN_SUFFIXES || []).map((suffix) =>
+    String(suffix).toLowerCase().replace(/^\./, ""),
+);
+const matchesTrustedOriginSuffix = (origin) => {
+    try {
+        const hostname = new URL(origin).hostname.toLowerCase();
+        return trustedOriginSuffixes.some(
+            (suffix) => hostname === suffix || hostname.endsWith(`.${suffix}`),
+        );
+    } catch {
+        return false;
+    }
+};
 const requireTrustedOrigin = (req, res, next) => {
     const origin = req.get("origin");
     if (
         !origin ||
         trustedOrigins.has(origin) ||
+        matchesTrustedOriginSuffix(origin) ||
         (config.IS_DEVELOPMENT && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin))
     )
         return next();

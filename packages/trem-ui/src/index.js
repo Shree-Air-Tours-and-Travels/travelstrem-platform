@@ -84,6 +84,7 @@ export { default as ErrorState } from "./components/ErrorState/ErrorState.jsx";
 export { default as FeaturedCard } from "./components/FeaturedCard/FeaturedCard.jsx";
 export { default as Paragraph } from "./components/Paragraph/Paragraph.jsx";
 export { default as QuickChips } from "./components/QuickChips/QuickChips.jsx";
+export { default as HomeCardsWithFeature } from "./components/HomeCardsWithFeature/HomeCardsWithFeature.jsx";
 export { default as SideBar } from "./components/SideBar/SideBar.jsx";
 export { default as DashboardSidebar } from "./components/DashboardSidebar/DashboardSidebar.jsx";
 export { default as LinkTabs } from "./components/LinkTabs/LinkTabs.jsx";
