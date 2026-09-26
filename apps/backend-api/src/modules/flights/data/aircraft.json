@@ -1,0 +1,5 @@
+[
+  { "code": "A320", "name": "Airbus A320", "capacity": 180, "columns": ["A", "B", "C", "D", "E", "F"], "aislesAfter": ["C"], "rows": 30, "exitRows": [12, 13], "extraLegroomRows": [1, 12, 13] },
+  { "code": "B737", "name": "Boeing 737-800", "capacity": 186, "columns": ["A", "B", "C", "D", "E", "F"], "aislesAfter": ["C"], "rows": 31, "exitRows": [14, 15], "extraLegroomRows": [1, 14, 15] },
+  { "code": "B787", "name": "Boeing 787-9 Dreamliner", "capacity": 290, "columns": ["A", "B", "C", "D", "E", "F", "G", "H", "J"], "aislesAfter": ["C", "G"], "rows": 32, "exitRows": [16, 17], "extraLegroomRows": [1, 16, 17] }
+]

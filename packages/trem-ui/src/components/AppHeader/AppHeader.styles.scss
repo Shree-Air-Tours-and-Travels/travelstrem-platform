@@ -1,28 +1,57 @@
 @import "../../styles/base/typography";
 
 .trem-app-header {
+  --text: #eef5ff;
+  --title: #ffffff;
+  --heading: #ffffff;
+  --muted: #d9e5ff;
+  --card-bg: #07172d;
+  --surface: rgba(255, 255, 255, 0.08);
+  --surface-inset: rgba(255, 255, 255, 0.1);
+  --surface-glass-strong: rgba(7, 20, 41, 0.98);
+  --border: rgba(174, 204, 255, 0.22);
+  --primary-soft: rgba(138, 165, 255, 0.24);
+  --primary-softer: rgba(138, 165, 255, 0.16);
+  --color-primary: #8fa8ff;
+  --color-primary-dark: #aec0ff;
+  --color-on-primary: #07142a;
   position: fixed;
   top: 0;
   left: var(--trem-app-header-sidebar-offset, 260px);
   right: 0;
   z-index: 90;
   min-width: 0;
-  height: 72px;
+  height: 64px;
   display: grid;
-  grid-template-columns: minmax(260px, 1fr) auto;
+  grid-template-columns: minmax(280px, 1fr) auto;
   align-items: center;
-  gap: $space-6;
-  padding: $space-3 $space-6;
+  gap: $space-4;
+  padding: $space-2 $space-5;
   border-bottom: 1px solid var(--border);
-  background: var(--surface-glass-strong, var(--card-bg));
-  box-shadow: var(--shadow-sm);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent 42%),
+    var(--surface-glass-strong, var(--card-bg));
+  box-shadow: 0 14px 34px rgba(3, 10, 26, 0.22);
   backdrop-filter: blur(18px);
   transition: left $duration-slow $ease-standard;
 }
 
+.trem-app-header .brand-logo__image--light {
+  display: none;
+}
+
+.trem-app-header .brand-logo__image--dark {
+  display: block;
+}
+
+.trem-app-header .brand-logo__mark {
+  border-color: rgba(170, 204, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+}
+
 .trem-app-header__spacer {
-  height: 72px;
-  flex: 0 0 72px;
+  height: 64px;
+  flex: 0 0 64px;
 }
 
 .trem-app-header__mobile-row {
@@ -32,8 +61,8 @@
 
 .trem-app-header__search {
   min-width: 0;
-  max-width: 760px;
-  height: 44px;
+  max-width: 720px;
+  height: 40px;
   display: grid;
   grid-template-columns: 22px minmax(0, 1fr) auto;
   align-items: center;
@@ -218,6 +247,54 @@
   gap: $space-2;
 }
 
+.trem-app-header__link-tabs {
+  width: max-content;
+  max-width: 100%;
+  justify-self: center;
+
+  .trem-link-tabs__link {
+    color: var(--text);
+    opacity: 0.82;
+
+    &:hover,
+    &:focus-visible {
+      background: rgba(138, 165, 255, 0.14);
+      color: #ffffff;
+      opacity: 1;
+    }
+
+    &.is-active {
+      background: rgba(138, 165, 255, 0.16);
+      color: var(--color-primary);
+      opacity: 1;
+    }
+  }
+}
+
+.trem-app-header__product {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  min-height: 40px;
+  padding: 0 $space-3;
+  border: 1px solid var(--border);
+  border-radius: $radius-sm;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: $font-size-sm;
+  font-weight: $font-semibold;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    outline: 0;
+    border-color: var(--color-primary);
+    background: var(--primary-softer);
+    color: var(--color-primary-dark, var(--color-primary));
+  }
+}
+
 .trem-app-header__primary {
   min-height: 42px;
   display: inline-flex;
@@ -225,12 +302,12 @@
   gap: $space-2;
   padding: 0 $space-4;
   border-radius: $radius-sm;
-  background: var(--color-primary);
+  background: #8fa8ff;
   color: var(--color-on-primary);
   font-size: $font-size-sm;
   font-weight: $font-semibold;
   white-space: nowrap;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 10px 24px rgba(30, 70, 190, 0.18);
 
   &:disabled {
     opacity: 0.48;
@@ -289,11 +366,84 @@
   font-weight: $font-bold;
 }
 
+.trem-app-header__notification-menu {
+  .trem-dropdown__menu {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+}
+
+.trem-app-header__notification-item { position: relative; display: grid; gap: $space-1; width: 100%; padding: $space-3 $space-3 $space-3 $space-4; border: 0; border-bottom: 1px solid var(--border); background: transparent; color: var(--text); text-align: left; cursor: pointer; }
+.trem-app-header__notification-item:hover { background: var(--surface-inset); }
+.trem-app-header__notification-item.is-unread { background: var(--primary-soft); }
+.trem-app-header__notification-item.is-unread::before { content: ""; position: absolute; top: $space-4; left: $space-2; width: 6px; height: 6px; border-radius: $radius-full; background: var(--color-danger); }
+.trem-app-header__notification-copy { display: grid; gap: 2px; }
+.trem-app-header__notification-copy span { color: var(--muted); font-size: $font-size-xs; line-height: 1.45; }
+.trem-app-header__notification-ref { width: fit-content; padding: 2px 7px; border-radius: $radius-full; background: var(--surface-inset); color: var(--color-primary) !important; font-weight: $font-bold; }
+.trem-app-header__notification-item time { color: var(--muted); font-size: 0.68rem; font-weight: $font-semibold; }
+.trem-app-header__notification-footer { flex: 0 0 auto; display: flex; justify-content: space-between; gap: $space-2; padding: $space-2; border-top: 1px solid var(--border); background: var(--surface); }
+.trem-app-header__notification-footer button { border: 0; background: transparent; color: var(--color-primary); font: inherit; font-size: $font-size-sm; font-weight: $font-semibold; cursor: pointer; }
+
+.trem-app-header__action-count {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-width: 17px;
+  height: 17px;
+  display: grid;
+  place-items: center;
+  padding: 0 4px;
+  border: 2px solid var(--card-bg);
+  border-radius: $radius-full;
+  background: var(--color-danger);
+  color: var(--color-on-primary);
+  font-size: 0.5625rem;
+  font-weight: $font-bold;
+}
+
+.trem-app-header__action--labelled {
+  width: auto;
+  min-width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  padding: 0 $space-3;
+  gap: $space-2;
+  border: 0;
+  border-radius: $radius-md;
+  background: transparent;
+  line-height: 1;
+
+  &:hover,
+  &:focus-visible {
+    outline: 0;
+    background: var(--primary-softer);
+    color: var(--color-primary-dark, var(--color-primary));
+  }
+}
+
+.trem-app-header__action-label {
+  font-size: $font-size-sm;
+  font-weight: $font-semibold;
+  white-space: nowrap;
+}
+
+.trem-app-header__action--mobile-only {
+  display: none;
+}
+
+.trem-app-header__action.is-active {
+  background: var(--primary-softer);
+  color: var(--color-primary);
+}
+
 .trem-app-header__user {
   width: auto;
   min-width: 0;
   display: grid;
-  grid-template-columns: 38px minmax(0, 92px) 18px;
+  grid-template-columns: 36px minmax(88px, 120px) 18px;
   align-items: center;
   gap: $space-1;
   padding: 0 $space-1 0 0;
@@ -304,15 +454,28 @@
   line-height: 1;
 
   > span {
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
     display: grid;
     place-items: center;
     border-radius: $radius-circle;
+    overflow: hidden;
     background: var(--color-primary);
     color: var(--color-on-primary);
     font-size: $font-size-sm;
     font-weight: $font-bold;
+
+    svg {
+      display: block;
+    }
+
+    img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border-radius: inherit;
+      object-fit: cover;
+    }
   }
 
   strong {
@@ -320,6 +483,42 @@
     font-size: $font-size-sm;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+}
+
+.trem-app-header__user--outlined {
+  min-height: 42px;
+  grid-template-columns: 36px minmax(88px, 120px) 18px;
+  gap: $space-2;
+  padding: 2px $space-3 2px 2px;
+  border: 2px solid var(--color-primary);
+  border-radius: $radius-lg;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition:
+    border-color $duration-fast $ease-standard,
+    background $duration-fast $ease-standard,
+    box-shadow $duration-fast $ease-standard;
+
+  > span {
+    width: 36px;
+    height: 36px;
+  }
+
+  &:hover,
+  &:focus-visible,
+  &[aria-expanded="true"] {
+    outline: 0;
+    border-color: var(--color-primary-dark, var(--color-primary));
+    background: var(--primary-softer);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 14%, transparent);
+  }
+}
+
+.trem-app-header__user-menu {
+  .trem-dropdown__item {
+    font-size: $font-size-md;
   }
 }
 
@@ -335,23 +534,204 @@
 }
 
 .trem-app-header__menu,
-.trem-app-header__brand {
+.trem-app-header__brand,
+.trem-app-header__desktop-navigation {
   display: none;
+}
+
+@media (min-width: #{$breakpoint-md + 1px}) {
+  .trem-app-header.has-navigation-tabs {
+    grid-template-columns: auto minmax(340px, 1fr) auto;
+
+    .trem-app-header__mobile-row,
+    .trem-app-header__brand {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+    }
+
+    .trem-app-header__brand {
+      overflow: hidden;
+    }
+  }
+
+  .trem-app-header--top-dropdown-shell {
+    grid-template-columns: auto minmax(18rem, 1fr) auto;
+
+    .trem-app-header__mobile-row,
+    .trem-app-header__brand {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .trem-app-header__brand {
+      overflow: hidden;
+    }
+
+    .trem-app-header__search {
+      width: 100%;
+      justify-self: center;
+    }
+
+    .trem-app-header__desktop-navigation {
+      min-height: $space-10;
+      display: inline-flex;
+      align-items: center;
+      gap: $space-2;
+      padding-inline: $space-3;
+      border: 1px solid var(--border);
+      border-radius: $radius-sm;
+      background: var(--surface);
+      color: var(--text);
+      font-size: $font-size-sm;
+      font-weight: $font-semibold;
+      white-space: nowrap;
+      transition:
+        border-color $duration-fast $ease-standard,
+        background $duration-fast $ease-standard,
+        color $duration-fast $ease-standard;
+
+      > svg:last-child {
+        transition: transform $duration-fast $ease-standard;
+      }
+
+      &[aria-expanded="true"] {
+        border-color: var(--color-primary);
+        background: var(--primary-soft);
+        color: var(--color-primary-dark, var(--color-primary));
+
+        > svg:last-child {
+          transform: rotate(180deg);
+        }
+      }
+
+      &:hover,
+      &:focus-visible {
+        outline: 0;
+        border-color: var(--color-primary);
+        background: var(--primary-softer);
+        color: var(--color-primary-dark, var(--color-primary));
+      }
+    }
+  }
+}
+
+// Keep the single-row header stable when the sidebar reduces tablet width.
+@media (min-width: #{$breakpoint-md + 1px}) and (max-width: $breakpoint-laptop) {
+  .trem-app-header {
+    grid-template-columns: minmax(180px, 1fr) auto;
+    gap: $space-3;
+    padding-inline: $space-3;
+  }
+
+  .trem-app-header--top-dropdown-shell {
+    grid-template-columns: auto minmax(10rem, 1fr) auto;
+
+    .brand-logo__subtitle,
+    .trem-app-header__desktop-navigation > span {
+      display: none;
+    }
+  }
+
+  .trem-app-header.has-navigation-tabs.trem-app-header--top-dropdown-shell {
+    grid-template-columns: auto minmax(10rem, 1fr) auto;
+  }
+
+  .trem-app-header__link-tabs {
+    max-width: 100%;
+    justify-self: start;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    ul {
+      width: max-content;
+      min-width: 100%;
+    }
+  }
+
+  .trem-app-header__actions {
+    gap: $space-1;
+  }
+
+  .trem-app-header__link-tabs .trem-link-tabs__link {
+    padding-inline: $space-2;
+    gap: $space-1-5;
+  }
+
+  .trem-app-header__action--labelled {
+    width: 40px;
+    padding: 0;
+
+    .trem-app-header__action-label {
+      display: none;
+    }
+  }
+
+  .trem-app-header__search {
+    padding-inline: $space-3;
+
+    kbd {
+      display: none;
+    }
+  }
+
+  .trem-app-header__primary {
+    width: $space-11;
+    min-width: $space-11;
+    min-height: $space-11;
+    justify-content: center;
+    padding: 0;
+
+    > span {
+      display: none;
+    }
+  }
+
+  .trem-app-header__user {
+    width: 38px;
+    grid-template-columns: 38px;
+    padding: 0;
+
+    strong,
+    > svg {
+      display: none;
+    }
+  }
+
+  .trem-app-header__user--outlined {
+    width: 42px;
+    height: 42px;
+    grid-template-columns: 38px;
+    padding: 0;
+    border-radius: $radius-circle;
+
+    > span {
+      width: 38px;
+      height: 38px;
+    }
+  }
 }
 
 @media (max-width: $breakpoint-md) {
   .trem-app-header {
     left: 0;
-    height: 120px;
+    height: 108px;
     grid-template-columns: minmax(0, 1fr) repeat(3, 36px);
-    grid-template-rows: 52px 44px;
+    grid-template-rows: 44px 40px;
     gap: $space-2 $space-1;
-    padding: $space-2 $space-4 $space-3;
+    padding: $space-2 $space-4;
   }
 
   .trem-app-header__spacer {
-    height: 120px;
-    flex-basis: 120px;
+    height: 108px;
+    flex-basis: 108px;
   }
 
   .trem-app-header__mobile-row {
@@ -395,7 +775,27 @@
     grid-row: 2;
     width: 100%;
     max-width: none;
-    height: 44px;
+    height: 40px;
+  }
+
+  .trem-app-header__link-tabs {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+  }
+
+  .trem-app-header.has-navigation-tabs {
+    height: 64px;
+    grid-template-rows: 48px;
+
+    .trem-app-header__link-tabs {
+      display: none;
+    }
+  }
+
+  .trem-app-header__spacer--link-tabs {
+    height: 64px;
+    flex-basis: 64px;
   }
 
   .trem-app-header__search kbd,
@@ -403,6 +803,11 @@
   .trem-app-header__user strong,
   .trem-app-header__user > svg {
     display: none;
+  }
+
+  .trem-app-header__actions .trem-app-header__primary-dropdown {
+    display: none;
+    pointer-events: none;
   }
 
   .trem-app-header__actions {
@@ -414,9 +819,31 @@
     grid-row: 1;
   }
 
+  .trem-app-header__action--mobile-only {
+    display: grid;
+  }
+
+  .trem-app-header__action {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
   .trem-app-header__theme {
     grid-column: 3;
     grid-row: 1;
+  }
+
+  .trem-app-header.has-navigation-tabs {
+    .trem-app-header__actions .trem-app-header__user-dropdown,
+    .trem-app-header__actions .trem-app-header__user-dropdown .trem-dropdown__trigger,
+    .trem-app-header__user {
+      grid-column: 3;
+      grid-row: 1;
+    }
+  }
+
+  .trem-app-header__action--desktop-only {
+    display: none;
   }
 
   .trem-app-header__actions .trem-app-header__menu {
@@ -443,12 +870,39 @@
     }
   }
 
+  .trem-app-header__user--outlined {
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
   .trem-app-header__actions .trem-dropdown,
   .trem-app-header__actions .trem-dropdown__trigger {
     grid-column: 4;
     grid-row: 2;
     width: 36px;
     height: 36px;
+  }
+
+  .trem-app-header--mobile-search-hidden .trem-app-header__search {
+    display: none;
+  }
+
+  .trem-app-header--mobile-profile-hidden {
+    .trem-app-header__user,
+    .trem-app-header__user-dropdown {
+      display: none;
+    }
+  }
+
+  .trem-app-header--mobile-compact {
+    height: 56px;
+    grid-template-rows: 40px;
+  }
+
+  .trem-app-header__spacer--mobile-compact {
+    height: 56px;
+    flex-basis: 56px;
   }
 }
 
@@ -459,6 +913,11 @@
 
   .trem-app-header__brand .brand-logo__subtitle {
     display: none;
+  }
+
+  .trem-app-header--partner .trem-app-header__brand .brand-logo__subtitle,
+  .trem-app-header--admin .trem-app-header__brand .brand-logo__subtitle {
+    display: block;
   }
 
   .trem-app-header__icon-button {
@@ -472,7 +931,181 @@
     height: 36px;
   }
 
+  .trem-app-header__user {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+    gap: 0;
+    overflow: hidden;
+  }
+
   .trem-global-search__state {
     min-height: 0;
+  }
+}
+
+// Partner workspaces retain the standard mobile search row. Product creation
+// remains available inside each workspace, while the account avatar sits beside
+// the search field using the shared mobile grid.
+@media (max-width: $breakpoint-md) {
+  .trem-app-header--partner {
+    .trem-app-header__primary,
+    .trem-app-header__primary-dropdown,
+    .trem-app-header__product-dropdown {
+      display: none;
+    }
+  }
+
+  .trem-app-header__spacer--partner {
+    height: 108px;
+    flex-basis: 108px;
+  }
+}
+
+// One mobile control geometry across customer and partner shells. Keeping the
+// dropdown trigger, avatar surface and icon buttons on the same grid prevents
+// avatar glyphs from drifting when a product supplies a different icon.
+@media (max-width: $breakpoint-md) {
+  .trem-app-header {
+    --trem-mobile-header-action-size: 40px;
+    grid-template-columns: minmax(0, 1fr) repeat(3, var(--trem-mobile-header-action-size));
+  }
+
+  .trem-app-header__icon-button,
+  .trem-app-header__user,
+  .trem-app-header__actions .trem-app-header__user-dropdown,
+  .trem-app-header__actions .trem-app-header__user-dropdown .trem-dropdown__trigger,
+  .trem-app-header__actions > .trem-dropdown,
+  .trem-app-header__actions > .trem-dropdown > .trem-dropdown__trigger {
+    width: var(--trem-mobile-header-action-size);
+    min-width: var(--trem-mobile-header-action-size);
+    max-width: var(--trem-mobile-header-action-size);
+    height: var(--trem-mobile-header-action-size);
+    min-height: var(--trem-mobile-header-action-size);
+    max-height: var(--trem-mobile-header-action-size);
+    margin: 0;
+    padding: 0;
+    place-self: center;
+    line-height: 0;
+  }
+
+  .trem-app-header__icon-button,
+  .trem-app-header__user,
+  .trem-app-header__user > span,
+  .trem-app-header__actions .trem-app-header__user-dropdown .trem-dropdown__trigger {
+    display: grid;
+    place-items: center;
+  }
+
+  .trem-app-header__user > span {
+    width: var(--trem-mobile-header-action-size);
+    height: var(--trem-mobile-header-action-size);
+    min-width: var(--trem-mobile-header-action-size);
+    min-height: var(--trem-mobile-header-action-size);
+    margin: 0;
+    padding: 0;
+    line-height: 0;
+
+    svg {
+      display: block;
+      margin: 0;
+    }
+  }
+
+  .trem-app-header__theme,
+  .trem-app-header__action,
+  .trem-app-header__menu,
+  .trem-app-header__user {
+    align-self: center;
+    justify-self: center;
+  }
+
+  .trem-app-header__actions .trem-app-header__notification-dropdown,
+  .trem-app-header__actions .trem-app-header__notification-dropdown .trem-dropdown__trigger {
+    grid-column: 2;
+    grid-row: 1;
+    width: var(--trem-mobile-header-action-size);
+    height: var(--trem-mobile-header-action-size);
+  }
+
+  .trem-app-header__action {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .trem-app-header__theme {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .trem-app-header__actions .trem-app-header__menu {
+    grid-column: 4;
+    grid-row: 1;
+  }
+
+  .trem-app-header__search {
+    grid-column: 1 / 4;
+  }
+
+  .trem-app-header__user,
+  .trem-app-header__actions .trem-app-header__user-dropdown,
+  .trem-app-header__actions .trem-app-header__user-dropdown .trem-dropdown__trigger {
+    grid-column: 4;
+    grid-row: 2;
+  }
+
+  .trem-app-header.has-header-actions {
+    grid-template-columns: minmax(0, 1fr) repeat(4, var(--trem-mobile-header-action-size));
+
+    .trem-app-header__search {
+      grid-column: 1 / 5;
+    }
+
+    .trem-app-header__user,
+    .trem-app-header__actions .trem-app-header__user-dropdown,
+    .trem-app-header__actions .trem-app-header__user-dropdown .trem-dropdown__trigger {
+      grid-column: 5;
+      grid-row: 2;
+    }
+
+    .trem-app-header__action {
+      grid-column: 3;
+      grid-row: 1;
+    }
+
+    .trem-app-header__theme {
+      grid-column: 4;
+      grid-row: 1;
+    }
+
+    .trem-app-header__actions .trem-app-header__menu {
+      grid-column: 5;
+      grid-row: 1;
+    }
+  }
+
+  .trem-app-header.has-header-actions.trem-app-header--mobile-profile-hidden {
+    grid-template-columns: minmax(0, 1fr) repeat(3, var(--trem-mobile-header-action-size));
+
+    .trem-app-header__search {
+      grid-column: 1 / 4;
+    }
+
+    .trem-app-header__actions .trem-app-header__menu {
+      grid-column: 4;
+      grid-row: 1;
+    }
+  }
+
+  .trem-app-header.has-navigation-tabs.has-header-actions {
+    .trem-app-header__user,
+    .trem-app-header__actions .trem-app-header__user-dropdown,
+    .trem-app-header__actions .trem-app-header__user-dropdown .trem-dropdown__trigger {
+      grid-column: 4;
+      grid-row: 1;
+    }
+  }
+
+  .trem-app-header__action.trem-app-header__action--desktop-only {
+    display: none;
   }
 }

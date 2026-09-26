@@ -1,0 +1,4 @@
+
+> travelstrem-platform@1.0.0 dev
+> turbo run dev --filter= --host 0.0.0.0
+

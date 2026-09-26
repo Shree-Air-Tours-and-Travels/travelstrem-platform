@@ -1,7 +1,9 @@
 export const typography = {
   fontFamily: {
-    primary: '"Inter", "Poppins", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-    secondary: '"Inter", "Poppins", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    primary:
+      '"Inter", "Poppins", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    secondary:
+      '"Inter", "Poppins", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
   },
   fontSize: {
     xs: "0.76rem",

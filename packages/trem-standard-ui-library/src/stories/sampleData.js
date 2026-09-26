@@ -1,7 +1,8 @@
 export const sampleTour = {
   _id: "storybook-tour-1",
   title: "Himalayan Escape to Manali",
-  photo: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80",
+  photo:
+    "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80",
   photos: [],
   period: { days: 5, nights: 4 },
   desc: "A calm mountain itinerary with scenic drives, local food, pine trails, and flexible leisure time for families and small groups.",
@@ -14,7 +15,8 @@ export const sampleTour = {
   priceInfo: { min: 24999, max: 32999, currency: "INR" },
   reviews: [
     {
-      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=80",
+      avatar:
+        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=80",
     },
   ],
 };
@@ -49,7 +51,12 @@ export const contactFields = [
   { name: "name", label: "Full Name", type: "text", placeholder: "Enter your name" },
   { name: "email", label: "Email Address", type: "email", placeholder: "you@example.com" },
   { name: "phone", label: "Phone Number", type: "tel", placeholder: "+1 234 567 890" },
-  { name: "message", label: "Message", type: "textarea", placeholder: "Tell us about your trip..." },
+  {
+    name: "message",
+    label: "Message",
+    type: "textarea",
+    placeholder: "Tell us about your trip...",
+  },
 ];
 
 export const headerNavItems = [

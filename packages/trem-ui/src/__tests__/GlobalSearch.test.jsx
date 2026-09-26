@@ -18,17 +18,21 @@ describe("GlobalSearch", () => {
   it("renders backend groups and selects a result with the keyboard", async () => {
     const onSearch = vi.fn().mockResolvedValue({
       status: "success",
-      groups: [{
-        id: "trips",
-        label: "Trevio trips",
-        results: [{
-          id: "trip:bali",
-          title: "Bali Temple Trail",
-          description: "Bali · 6D / 5N",
-          destination: "trevio",
-          path: "/trip/bali-temple-trail",
-        }],
-      }],
+      groups: [
+        {
+          id: "trips",
+          label: "Trevio trips",
+          results: [
+            {
+              id: "trip:bali",
+              title: "Bali Temple Trail",
+              description: "Bali · 6D / 5N",
+              destination: "trevio",
+              path: "/trip/bali-temple-trail",
+            },
+          ],
+        },
+      ],
     });
     const onSelect = vi.fn();
 
@@ -42,10 +46,12 @@ describe("GlobalSearch", () => {
 
     fireEvent.keyDown(input, { key: "ArrowDown" });
     fireEvent.keyDown(input, { key: "Enter" });
-    expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({
-      destination: "trevio",
-      path: "/trip/bali-temple-trail",
-    }));
+    expect(onSelect).toHaveBeenCalledWith(
+      expect.objectContaining({
+        destination: "trevio",
+        path: "/trip/bali-temple-trail",
+      }),
+    );
     await waitFor(() => expect(screen.queryByRole("listbox")).not.toBeInTheDocument());
   });
 

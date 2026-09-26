@@ -1,220 +1,233 @@
 @import "@packages/trem-design-tokens/scss";
 
 .tt-trip-grid {
-    flex: 1 1 auto;
-    min-width: 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: $space-4;
-    padding-right: 6px;
-    max-height: calc(100vh - 120px);
-    overflow-y: auto;
-    overflow-x: hidden;
-    -webkit-overflow-scrolling: touch;
+  flex: 1 1 auto;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: $space-4;
+  padding-right: 6px;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 
-    @media (max-width: 768px) {
-        grid-template-columns: 1fr;
-        max-height: none;
-        overflow: visible;
-    }
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    max-height: none;
+    overflow: visible;
+  }
 }
 
 .tt-trip-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: $radius-md;
-    overflow: hidden;
-    transition: box-shadow $duration-fast $ease-standard, transform $duration-fast $ease-standard;
-    display: flex;
-    flex-direction: column;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+  overflow: hidden;
+  transition:
+    box-shadow $duration-fast $ease-standard,
+    transform $duration-fast $ease-standard;
+  display: flex;
+  flex-direction: column;
 
-    &:hover {
-        box-shadow: var(--shadow-md);
-        transform: translateY(-2px);
-    }
+  &:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
 
-    &--skeleton {
-        min-height: 280px;
-    }
+  &--skeleton {
+    min-height: 280px;
+  }
 }
 
 .tt-trip-card__img-wrap {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    overflow: hidden;
-    background: var(--surface-muted);
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--surface-muted);
 }
 
 .tt-trip-card__img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .tt-trip-card__placeholder {
-    width: 100%;
-    height: 100%;
-    display: grid;
-    place-items: center;
-    font-size: 2rem;
-    font-weight: $font-bold;
-    color: var(--color-primary);
-    background: var(--primary-soft);
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  font-size: 2rem;
+  font-weight: $font-bold;
+  color: var(--color-primary);
+  background: var(--primary-soft);
 }
 
 .tt-trip-card__badge {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    padding: 3px $space-3;
-    border-radius: $radius-full;
-    font-size: $font-size-xs;
-    font-weight: $font-medium;
-    color: #fff;
-    text-transform: capitalize;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 3px $space-3;
+  border-radius: $radius-full;
+  font-size: $font-size-xs;
+  font-weight: $font-medium;
+  color: #fff;
+  text-transform: capitalize;
 }
 
 .tt-trip-card__featured {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    padding: 3px $space-3;
-    border-radius: $radius-full;
-    font-size: $font-size-xs;
-    font-weight: $font-medium;
-    color: var(--color-on-primary);
-    background: var(--color-tertiary);
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 3px $space-3;
+  border-radius: $radius-full;
+  font-size: $font-size-xs;
+  font-weight: $font-medium;
+  color: var(--color-on-primary);
+  background: var(--color-tertiary);
 }
 
 .tt-trip-card__body {
-    padding: $space-4;
-    display: flex;
-    flex-direction: column;
-    gap: $space-2;
-    flex: 1;
+  padding: $space-4;
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  flex: 1;
 }
 
 .tt-trip-card__top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: $space-2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-2;
 }
 
 .tt-trip-card__title {
-    margin: 0;
-    font-size: $font-size-md;
-    font-weight: $font-semibold;
-    color: var(--heading);
-    line-height: 1.3;
-    flex: 1;
+  margin: 0;
+  font-size: $font-size-md;
+  font-weight: $font-semibold;
+  color: var(--heading);
+  line-height: 1.3;
+  flex: 1;
 }
 
 .tt-trip-card__tag {
-    font-size: $font-size-xs;
-    padding: 2px $space-2;
-    border-radius: $radius-sm;
-    background: var(--primary-soft);
-    color: var(--color-primary);
-    white-space: nowrap;
-    flex-shrink: 0;
+  font-size: $font-size-xs;
+  padding: 2px $space-2;
+  border-radius: $radius-sm;
+  background: var(--primary-soft);
+  color: var(--color-primary);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .tt-trip-card__meta {
-    font-size: $font-size-xs;
-    color: var(--muted);
-    display: flex;
-    gap: $space-3;
-    flex-wrap: wrap;
+  font-size: $font-size-xs;
+  color: var(--muted);
+  display: flex;
+  gap: $space-3;
+  flex-wrap: wrap;
 }
 
 .tt-trip-card__tags {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .tt-trip-card__chip {
-    font-size: $font-size-xs;
-    padding: 2px $space-2;
-    border-radius: $radius-full;
-    background: var(--surface-muted);
-    border: 1px solid var(--border);
-    color: var(--muted);
-    text-transform: capitalize;
+  font-size: $font-size-xs;
+  padding: 2px $space-2;
+  border-radius: $radius-full;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  text-transform: capitalize;
 }
 
 .tt-trip-card__price {
-    font-size: $font-size-sm;
-    font-weight: $font-semibold;
-    color: var(--color-primary);
-    margin-top: auto;
+  font-size: $font-size-sm;
+  font-weight: $font-semibold;
+  color: var(--color-primary);
+  margin-top: auto;
 }
 
 .tt-trip-card__actions {
-    display: flex;
-    gap: $space-2;
-    margin-top: 4px;
+  display: flex;
+  gap: $space-2;
+  margin-top: 4px;
 }
 
 .tt-btn-sm {
-    padding: 5px $space-3 !important;
-    font-size: $font-size-xs !important;
+  padding: 5px $space-3 !important;
+  font-size: $font-size-xs !important;
 }
 
 .tt-btn-danger {
-    color: var(--color-danger) !important;
-    border-color: var(--color-danger) !important;
+  color: var(--color-danger) !important;
+  border-color: var(--color-danger) !important;
 
-    &:hover {
-        background: var(--danger-soft) !important;
-    }
+  &:hover {
+    background: var(--danger-soft) !important;
+  }
 }
 
 .tt-filter-select {
-    padding: 6px $space-3;
-    border: 1px solid var(--border);
-    border-radius: $radius-sm;
-    background: var(--card-bg);
-    color: var(--text);
-    font-size: $font-size-sm;
+  padding: 6px $space-3;
+  border: 1px solid var(--border);
+  border-radius: $radius-sm;
+  background: var(--card-bg);
+  color: var(--text);
+  font-size: $font-size-sm;
 }
 
 .tt-trip-count {
-    font-size: $font-size-xs;
-    color: var(--muted);
-    margin-left: $space-2;
+  font-size: $font-size-xs;
+  color: var(--muted);
+  margin-left: $space-2;
 }
 
 .tt-skeleton-pulse {
-    width: 100%;
-    height: 100%;
-    min-height: 120px;
-    border-radius: $radius-sm;
-    background: linear-gradient(90deg, var(--surface-muted) 25%, var(--border) 50%, var(--surface-muted) 75%);
-    background-size: 200% 100%;
-    animation: tt-pulse 1.5s ease-in-out infinite;
+  width: 100%;
+  height: 100%;
+  min-height: 120px;
+  border-radius: $radius-sm;
+  background: linear-gradient(
+    90deg,
+    var(--surface-muted) 25%,
+    var(--border) 50%,
+    var(--surface-muted) 75%
+  );
+  background-size: 200% 100%;
+  animation: tt-pulse 1.5s ease-in-out infinite;
 }
 
 @keyframes tt-pulse {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 .ctf-tag-toggle input {
-    display: none;
+  display: none;
 }
 
 .ctf-tag-toggle .ctf-tag {
-    opacity: 0.5;
-    transition: opacity $duration-fast $ease-standard, background $duration-fast $ease-standard;
-    cursor: pointer;
+  opacity: 0.5;
+  transition:
+    opacity $duration-fast $ease-standard,
+    background $duration-fast $ease-standard;
+  cursor: pointer;
 }
 
 .ctf-tag-toggle input:checked + .ctf-tag {
-    opacity: 1;
-    background: var(--color-primary);
-    color: var(--color-on-primary);
+  opacity: 1;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
 }

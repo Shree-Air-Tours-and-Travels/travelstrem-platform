@@ -1,23 +1,304 @@
 @import "@packages/trem-design-tokens/scss";
 
-.dov__greeting {
-  margin-bottom: $space-7;
+.dov {
+  width: 100%;
+  container: dashboard-overview / inline-size;
+}
 
-  h1 {
-    font-size: $font-size-xl;
-    font-weight: $font-bold;
-    color: var(--heading);
-    margin-bottom: $space-1;
+@keyframes dov-section-reveal {
+  from {
+    opacity: 0;
+    filter: blur(10px);
+    transform: translateY(34px) scale(0.985);
   }
 
-  p {
-    font-size: $font-size-sm;
-    color: var(--muted);
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0) scale(1);
   }
 }
 
+.dov__hero--search,
+.dov__story,
+.dov__benefits,
+.dov__products,
+.dov__insights {
+  animation: dov-section-reveal 820ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@supports (animation-timeline: view()) {
+
+  .dov__story,
+  .dov__benefits,
+  .dov__products,
+  .dov__insights {
+    animation-timeline: view();
+    animation-range: entry 8% cover 30%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .dov__hero--search,
+  .dov__story,
+  .dov__benefits,
+  .dov__products,
+  .dov__insights {
+    animation: none;
+    filter: none;
+    transform: none;
+  }
+
+  .dov__story-image {
+    opacity: 1;
+    transform: none;
+    will-change: auto;
+  }
+}
+
+.dov__hero {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(240px, 0.75fr);
+  min-height: 330px;
+  margin-bottom: var(--layout-section-gap, #{$space-5});
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 28%, var(--border));
+  border-radius: $radius-lg;
+  background:
+    radial-gradient(circle at 82% 10%, var(--secondary-soft) 0, transparent 34%),
+    linear-gradient(135deg, var(--card-bg) 10%, var(--primary-softer) 100%);
+  box-shadow: var(--shadow-md);
+}
+
+.dov__hero::before {
+  position: absolute;
+  z-index: -1;
+  inset: auto -8% -62% 32%;
+  height: 340px;
+  border-radius: $radius-circle;
+  background: color-mix(in srgb, var(--color-primary) 9%, transparent);
+  content: "";
+}
+
+.dov__hero-copy {
+  z-index: 1;
+  align-self: center;
+  padding: $space-8;
+}
+
+.dov__hero-eyebrow,
+.dov__hero-trust span {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+}
+
+.dov__hero-eyebrow {
+  margin-bottom: $space-4;
+  color: var(--color-primary);
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+  letter-spacing: 0.09em;
+}
+
+.dov__hero-greeting {
+  margin: 0 0 $space-2;
+  color: var(--muted);
+  font-size: $font-size-sm;
+  font-weight: $font-semibold;
+}
+
+.dov__hero h1 {
+  max-width: 720px;
+  margin: 0;
+  color: var(--heading);
+  font-size: clamp(2rem, 3.1vw, 3.4rem);
+  font-weight: $font-bold;
+  letter-spacing: -0.045em;
+  line-height: 1.04;
+}
+
+.dov__hero-description {
+  max-width: 680px;
+  margin: $space-4 0 0;
+  color: var(--muted);
+  font-size: $font-size-md;
+  line-height: $line-height-lg;
+}
+
+.dov__hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-3;
+  margin-top: $space-6;
+}
+
+.dov__hero-action {
+  min-width: 168px;
+}
+
+.dov__hero-visual {
+  position: relative;
+  min-height: 270px;
+  align-self: stretch;
+}
+
+.dov__hero-orbit,
+.dov__hero-plane,
+.dov__hero-pin {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  border-radius: $radius-circle;
+}
+
+.dov__hero-orbit {
+  border: 1px dashed color-mix(in srgb, var(--color-primary) 40%, transparent);
+}
+
+.dov__hero-orbit--outer {
+  width: 290px;
+  height: 290px;
+  top: 28px;
+  right: 18px;
+}
+
+.dov__hero-orbit--inner {
+  width: 190px;
+  height: 190px;
+  top: 78px;
+  right: 68px;
+}
+
+.dov__hero-plane {
+  width: 94px;
+  height: 94px;
+  top: 126px;
+  right: 116px;
+  background: linear-gradient(145deg, var(--color-primary), var(--color-secondary));
+  color: var(--color-on-primary);
+  box-shadow: 0 18px 38px var(--primary-shadow);
+  transform: rotate(-12deg);
+}
+
+.dov__hero-pin {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.dov__hero-pin--one {
+  top: 58px;
+  right: 64px;
+}
+
+.dov__hero-pin--two {
+  right: 34px;
+  bottom: 56px;
+}
+
+.dov__hero-trust {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-3 $space-6;
+  padding: $space-3 $space-8;
+  border-top: 1px solid color-mix(in srgb, var(--border) 75%, transparent);
+  background: color-mix(in srgb, var(--card-bg) 76%, transparent);
+  color: var(--muted);
+  font-size: $font-size-xs;
+  font-weight: $font-semibold;
+}
+
+.dov__hero-trust svg {
+  color: var(--color-primary);
+}
+
+.dov__greeting {
+  margin-bottom: $space-7;
+}
+
+.dov__greeting h1 {
+  font-size: $font-size-xl;
+  font-weight: $font-bold;
+  color: var(--heading);
+  margin-bottom: $space-1;
+}
+
+.dov__greeting p {
+  font-size: $font-size-sm;
+  color: var(--muted);
+}
+
 .dov__stats {
-  margin-bottom: $space-8;
+  margin-bottom: var(--layout-section-gap, #{$space-5});
+}
+
+.dov-dashboard__welcome {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-6;
+  margin-bottom: var(--layout-section-gap, #{$space-5});
+  padding: $space-6 $space-7;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--border));
+  border-radius: $radius-lg;
+  background:
+    radial-gradient(circle at 88% 20%,
+      color-mix(in srgb, var(--color-secondary) 18%, transparent),
+      transparent 30%),
+    linear-gradient(130deg, var(--card-bg), var(--primary-softer));
+  box-shadow: var(--shadow-sm);
+}
+
+.dov-dashboard__welcome::after {
+  position: absolute;
+  z-index: -1;
+  right: 15%;
+  bottom: -90px;
+  width: 220px;
+  height: 220px;
+  border: 1px dashed color-mix(in srgb, var(--color-primary) 35%, transparent);
+  border-radius: $radius-circle;
+  content: "";
+}
+
+.dov-dashboard__welcome h1 {
+  margin: $space-1 0;
+  color: var(--heading);
+  font-size: clamp(1.55rem, 2.4vw, 2.4rem);
+  letter-spacing: -0.035em;
+}
+
+.dov-dashboard__welcome p {
+  max-width: 680px;
+  margin: 0;
+  color: var(--muted);
+  line-height: $line-height-lg;
+}
+
+.dov-dashboard__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  color: var(--color-primary);
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.dov-dashboard .dov__section-heading>.trem-button {
+  margin-left: auto;
 }
 
 .dov__stats-preloader {
@@ -25,18 +306,18 @@
 }
 
 .dov__section {
-  margin-bottom: $space-6;
+  margin-bottom: var(--layout-section-gap, #{$space-5});
 }
 
 .dov__content {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(290px, 340px);
   align-items: start;
-  gap: $space-6;
+  gap: var(--layout-section-gap, #{$space-5});
+}
 
-  &--single {
-    grid-template-columns: minmax(0, 1fr);
-  }
+.dov__content--single {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .dov__main {
@@ -48,65 +329,749 @@
   top: $space-5;
 }
 
-.dov__plan-cards {
-  margin-bottom: $space-8;
+/* ============================================================
+   PRODUCT SECTION
+   ============================================================ */
+
+.dov__products {
+  position: relative;
+
+  container-name: dov-products;
+  container-type: inline-size;
+
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: clamp(#{$space-10}, 7vw, #{$space-16}) clamp(#{$space-5}, 5vw, #{$space-12});
+  border: 0;
+  border-radius: 0;
+  background: linear-gradient(180deg, var(--heading) 0%, var(--surface) 70%, var(--surface) 100%);
+  box-shadow: none;
+  overflow: visible;
+  isolation: isolate;
+
+  &::before,
+  &::after {
+    display: none;
+    content: none;
+  }
+}
+
+.dov__products-inner {
+  position: relative;
+  z-index: 2;
+  width: min(100%, 88rem);
+  margin-inline: auto;
+}
+
+.dov__products-heading {
+  max-width: 52rem;
+  margin: 0 auto $space-10;
+  text-align: center;
+
+  .dov__products-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-2;
+    padding: $space-1 $space-3;
+    border: 1px solid color-mix(in srgb, var(--color-on-primary) 22%, transparent);
+    border-radius: $radius-full;
+    background: color-mix(in srgb, var(--color-on-primary) 10%, transparent);
+    color: var(--color-on-primary);
+    font-size: $font-size-xs;
+    font-weight: $font-bold;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+
+    svg {
+      color: var(--color-primary);
+    }
+  }
+
+  h2 {
+    margin: $space-4 0 0;
+    color: var(--color-on-primary);
+    font-size: clamp(#{$font-size-xl}, 4vw, #{$font-size-xxxl});
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.32);
+  }
+
+  p {
+    max-width: 44rem;
+    margin: $space-4 auto 0;
+    color: rgba(var(--color-on-primary-rgb), 0.78);
+    font-size: $font-size-md;
+    line-height: 1.65;
+  }
+}
+
+.dov__products-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: $space-5;
+
+  .trem-product-card {
+    height: 100%;
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+@include mq-max($tablet-max) {
+  .dov__products {
+    padding: $space-10 $space-5;
+  }
+
+  .dov__products-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: $space-4;
+  }
+}
+
+@include mq-max($mobile-max) {
+  .dov__products {
+    padding: $space-8 $space-4;
+  }
+
+  .dov__products-heading {
+    margin-bottom: $space-6;
+
+    h2 {
+      font-size: $font-size-xxl;
+    }
+
+    p {
+      font-size: $font-size-sm;
+    }
+  }
+
+  .dov__products-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ============================================================
+   PRODUCT DETAILS MODAL
+   ============================================================ */
+
+.dov__product-modal-dialog {
+  width: min(100% - #{$space-6}, 42rem);
+  max-height: calc(100vh - #{$space-6});
+  padding: 0;
+  overflow: auto;
+  border-radius: $radius-lg;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-card);
+}
+
+.dov__product-modal-media {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: var(--surface-inset);
+
+  img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+  }
+}
+
+.dov__product-modal-scrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg,
+      color-mix(in srgb, var(--overlay-strong) 22%, transparent) 0%,
+      transparent 46%,
+      transparent 70%,
+      color-mix(in srgb, var(--overlay-strong) 66%, transparent) 100%);
+}
+
+.dov__product-modal-close {
+  position: absolute;
+  z-index: 2;
+  top: $space-4;
+  right: $space-4;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--color-on-primary) 26%, transparent);
+  border-radius: $radius-circle;
+  background: color-mix(in srgb, var(--overlay-strong) 52%, transparent);
+  color: var(--color-on-primary);
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition: background $duration-fast $ease-standard;
+
+  &:hover {
+    background: var(--overlay-strong);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+.dov__product-modal-badge {
+  position: absolute;
+  z-index: 2;
+  bottom: $space-4;
+  left: $space-5;
+  display: inline-flex;
+  align-items: center;
+  gap: $space-1-5;
+  min-height: 28px;
+  padding: $space-1 $space-3;
+  border: 1px solid color-mix(in srgb, var(--color-on-primary) 26%, transparent);
+  border-radius: $radius-full;
+  background: color-mix(in srgb, var(--overlay-strong) 52%, transparent);
+  color: var(--color-on-primary);
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  backdrop-filter: blur(10px);
+}
+
+.dov__product-modal-body {
+  display: grid;
+  gap: $space-3;
+  padding: $space-6;
+}
+
+.dov__product-modal-eyebrow {
+  color: var(--color-primary);
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.dov__product-modal-body h3 {
+  margin: 0;
+  color: var(--heading);
+  font-size: clamp(#{$font-size-xl}, 4vw, #{$font-size-xxl});
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.dov__product-modal-description {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: $font-size-md;
+  line-height: 1.7;
+}
+
+.dov__product-modal-features {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $space-2;
+  margin-top: $space-2;
+}
+
+.dov__product-modal-feature {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  padding: $space-2 $space-3;
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+  background: var(--surface-inset);
+  color: var(--text);
+  font-size: $font-size-sm;
+  font-weight: $font-medium;
+}
+
+.dov__product-modal-feature-icon {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  color: var(--color-primary);
+}
+
+.dov__product-modal-note {
+  margin: $space-1 0 0;
+  padding: $space-3 $space-4;
+  border-left: 3px solid var(--color-primary);
+  border-radius: $radius-sm;
+  background: var(--primary-softer);
+  color: var(--text);
+  font-size: $font-size-sm;
+  line-height: 1.6;
+}
+
+.dov__product-modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $space-3;
+  margin-top: $space-3;
+  padding-top: $space-4;
+  border-top: 1px solid var(--border);
+}
+
+.dov__product-modal-explore {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  min-height: 44px;
+  padding: $space-2 $space-5;
+  border: 0;
+  border-radius: $radius-full;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  color: var(--color-on-primary);
+  font-size: $font-size-sm;
+  font-weight: $font-bold;
+  cursor: pointer;
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--color-primary) 30%, transparent);
+  transition:
+    box-shadow $duration-base $ease-standard,
+    transform $duration-base $ease-standard;
+
+  &:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+.dov__product-modal-closebtn {
+  padding: $space-2 $space-4;
+  border: 1px solid var(--border);
+  border-radius: $radius-full;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: $font-size-sm;
+  font-weight: $font-semibold;
+  cursor: pointer;
+  transition:
+    color $duration-fast $ease-standard,
+    border-color $duration-fast $ease-standard;
+
+  &:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+@include mq-max($mobile-max) {
+  .dov__product-modal-dialog {
+    width: calc(100% - #{$space-4  * 2});
+  }
+
+  .dov__product-modal-features {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dov__product-modal-body {
+    padding: $space-5;
+  }
+}
+
+.dov__benefits {
+  position: relative;
+  isolation: isolate;
+  margin: var(--layout-section-gap, #{$space-5}) 0;
+  padding: $space-8 $space-8 calc(#{$space-8} + #{$space-3});
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--border));
+  border-radius: $radius-lg;
+  background:
+    radial-gradient(circle at 4% 0%,
+      color-mix(in srgb, var(--color-primary) 18%, transparent),
+      transparent 30%),
+    radial-gradient(circle at 96% 100%,
+      color-mix(in srgb, var(--color-secondary) 16%, transparent),
+      transparent 28%),
+    linear-gradient(145deg,
+      color-mix(in srgb, var(--card-bg) 94%, var(--primary-softer)),
+      var(--card-bg)),
+    var(--card-bg);
+  box-shadow: 0 22px 60px color-mix(in srgb, var(--heading) 8%, transparent);
+}
+
+.dov__benefits::before {
+  position: absolute;
+  top: -100px;
+  right: 12%;
+  width: 240px;
+  height: 240px;
+  border: 1px dashed color-mix(in srgb, var(--color-primary) 25%, transparent);
+  border-radius: $radius-circle;
+  content: "";
+}
+
+.dov__benefits-header {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(210px, 310px);
+  align-items: end;
+  gap: $space-6;
+  margin-bottom: $space-7;
+}
+
+.dov__benefits-heading {
+  max-width: 720px;
+}
+
+.dov__benefits-heading h2 {
+  margin: $space-2 0;
+  color: var(--heading);
+  font-size: clamp(1.55rem, 2.4vw, 2.25rem);
+  letter-spacing: -0.035em;
+  line-height: 1.12;
+}
+
+.dov__benefits-heading h2 span {
+  color: var(--color-primary);
+}
+
+.dov__benefits-heading p {
+  margin: 0;
+  color: var(--muted);
+  line-height: $line-height-lg;
+}
+
+.dov__benefits-proof {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  padding: $space-3;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--border));
+  border-radius: $radius-md;
+  background: color-mix(in srgb, var(--card-bg) 78%, transparent);
+  color: var(--heading);
+  font-size: $font-size-sm;
+  line-height: $line-height-md;
+  box-shadow: var(--shadow-xs);
+  backdrop-filter: blur(12px);
+}
+
+.dov__benefits-proof>span {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  place-items: center;
+  border-radius: $radius-circle;
+  background: linear-gradient(145deg, var(--color-primary), var(--color-secondary));
+  color: var(--color-on-primary);
+}
+
+.dov__benefits-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  color: var(--color-primary);
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.dov__benefits-grid {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: $space-4;
+}
+
+.dov__benefit-shell {
+  position: relative;
+  min-width: 0;
+}
+
+.dov__benefit-shell::after {
+  position: absolute;
+  z-index: 2;
+  top: $space-4;
+  right: $space-4;
+  color: color-mix(in srgb, var(--muted) 48%, transparent);
+  content: attr(data-index);
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+  letter-spacing: 0.12em;
+}
+
+.dov__benefit-shell:nth-child(even) {
+  margin-top: $space-4;
+}
+
+.dov__benefit-card {
+  position: relative;
+  min-height: 190px;
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--color-primary) 12%, var(--border));
+  box-shadow: 0 14px 32px color-mix(in srgb, var(--heading) 7%, transparent);
+  transition:
+    transform $duration-fast $ease-standard,
+    box-shadow $duration-fast $ease-standard;
+}
+
+.dov__benefit-card::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+  content: "";
+}
+
+.dov__benefit-card::after {
+  position: absolute;
+  z-index: 0;
+  right: -38px;
+  bottom: -54px;
+  width: 140px;
+  height: 140px;
+  border-radius: $radius-circle;
+  background: color-mix(in srgb, var(--primary-softer) 65%, transparent);
+  content: "";
+}
+
+.dov__benefit-card .trem-benefit-card__icon,
+.dov__benefit-card .trem-benefit-card__body {
+  position: relative;
+  z-index: 1;
+}
+
+.dov__benefit-card:hover {
+  box-shadow: 0 18px 40px color-mix(in srgb, var(--heading) 11%, transparent);
+  transform: translateY(-4px);
+}
+
+.dov__benefit-card--olive .trem-benefit-card__icon {
+  background: color-mix(in srgb, var(--color-success) 18%, var(--card-bg));
+  color: var(--color-success);
+}
+
+.dov__benefit-card--orange .trem-benefit-card__icon {
+  background: color-mix(in srgb, var(--color-danger) 16%, var(--card-bg));
+  color: var(--color-danger);
+}
+
+.dov__benefit-card--purple .trem-benefit-card__icon {
+  background: color-mix(in srgb, var(--color-secondary) 16%, var(--card-bg));
+  color: var(--color-secondary);
+}
+
+.dov__benefit-card--teal .trem-benefit-card__icon {
+  background: color-mix(in srgb, var(--color-tertiary) 16%, var(--card-bg));
+  color: var(--color-tertiary);
+}
+
+.dov__benefits-route {
+  position: absolute;
+  z-index: 1;
+  right: -7%;
+  bottom: 24%;
+  left: -7%;
+  height: 40px;
+  border-top: 7px solid color-mix(in srgb, var(--color-primary) 72%, transparent);
+  border-radius: 50%;
+  transform: rotate(-2deg);
+}
+
+.dov__benefits-route::after {
+  position: absolute;
+  top: -5px;
+  right: 11%;
+  left: 11%;
+  border-top: 2px dashed color-mix(in srgb, var(--color-on-primary) 70%, transparent);
+  content: "";
+}
+
+@media (max-width: $breakpoint-laptop) {
+  .dov__benefits-header {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dov__benefits-proof {
+    max-width: 360px;
+  }
+
+  .dov__benefits-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: $breakpoint-mobile) {
+  .dov__benefits {
+    padding: $space-5;
+  }
+
+  .dov__benefits-heading {
+    text-align: left;
+  }
+
+  .dov__benefits-header {
+    gap: $space-4;
+    margin-bottom: $space-5;
+  }
+
+  .dov__benefits-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dov__benefit-card {
+    min-height: 0;
+    flex-direction: row;
+  }
+
+  .dov__benefit-shell:nth-child(even) {
+    margin-top: 0;
+  }
+
+  .dov-dashboard__welcome {
+    align-items: stretch;
+    flex-direction: column;
+    padding: $space-5;
+  }
+
+  .dov-dashboard__welcome .trem-button {
+    width: 100%;
+  }
 }
 
 .dov__section-title {
   font-size: $font-size-md;
   font-weight: $font-semibold;
   color: var(--heading);
+  margin: 0;
+}
+
+.dov__section-heading {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
   margin-bottom: $space-4;
 }
 
+.dov__section-icon {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: $radius-sm;
+  background: var(--primary-soft);
+  color: var(--color-primary);
+}
+
 .dov__recent {
+  margin: 0;
+  padding: 0;
+  list-style: none;
   background: var(--card-bg);
   border: 1px solid var(--border);
   border-radius: $radius-md;
   overflow: hidden;
 }
 
-.dov__bookings-loading {
-  display: grid;
-  min-height: 180px;
-  place-items: center;
-  border: 1px solid var(--border);
-  border-radius: $radius-md;
-  background: var(--card-bg);
-}
-
 .dov__recent-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  background: none;
+  border: none;
   padding: 14px $space-4;
   border-bottom: 1px solid var(--border);
   gap: $space-3;
   cursor: pointer;
   transition: background $duration-fast $ease-standard;
+}
 
-  &:hover {
-    background: var(--neutral-soft, var(--surface-inset));
-  }
+.dov__recent-item:hover {
+  background: var(--neutral-soft, var(--surface-inset));
+}
 
-  &:last-child {
-    border-bottom: none;
-  }
+.dov__recent-item:last-child {
+  border-bottom: none;
+}
 
-  @media (max-width: 480px) {
+@media (max-width: 480px) {
+  .dov__recent-item {
     flex-direction: column;
     align-items: flex-start;
     gap: $space-2;
   }
 }
 
-@media (max-width: 1100px) {
+.dov__recent-icon {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: 0 0 2.5rem;
+  place-items: center;
+  border-radius: $radius-md;
+  background: var(--primary-soft);
+  color: var(--color-primary);
+}
+
+.dov__recent-description {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: $font-size-xs;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dov__activity {
+  padding: $space-5;
+  border: 1px solid var(--border);
+  border-radius: $radius-lg;
+  background: var(--card-bg);
+  box-shadow: var(--shadow-sm);
+}
+
+.dov__activity .dov__recent {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+@media (max-width: $breakpoint-laptop) {
   .dov__content {
     grid-template-columns: minmax(0, 1fr);
   }
 
   .dov__rail {
     position: static;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  }
+}
+
+// The shell sidebar can leave tablet-sized content inside a desktop-sized
+
+// browser viewport. Respond to the dashboard's real width so the product card
+
+// never competes with the side rail for space.
+
+@container dashboard-overview (max-width: #{$breakpoint-laptop}) {
+  .dov__content {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dov__rail {
+    position: static;
+    display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
   }
 }
@@ -144,16 +1109,11 @@
   border-radius: $radius-full;
   font-size: 11px;
   font-weight: $font-medium;
+}
 
-  &--trevio {
-    background: var(--secondary-soft);
-    color: var(--color-secondary);
-  }
-
-  &--trevista {
-    background: var(--primary-soft);
-    color: var(--color-primary);
-  }
+.dov__recent-product--trevista {
+  background: var(--primary-soft);
+  color: var(--color-primary);
 }
 
 .dov__recent-status {
@@ -162,45 +1122,3327 @@
   padding: 3px $space-2-5;
   border-radius: $radius-full;
   white-space: nowrap;
+  background: var(--neutral-soft, var(--surface-inset));
+  color: var(--muted);
+}
 
-  &--confirmed,
-  &--Paid,
-  &--COMPLETED,
-  &--CONFIRMED,
-  &--PAID,
-  &--Ticketed,
-  &--TICKETED,
-  &--Travel Ready,
-  &--TRAVEL_READY {
-    background: var(--success-soft);
-    color: var(--success-color);
+.dov__recent-status--confirmed,
+.dov__recent-status--Paid,
+.dov__recent-status--COMPLETED,
+.dov__recent-status--CONFIRMED,
+.dov__recent-status--PAID,
+.dov__recent-status--Ticketed,
+.dov__recent-status--TICKETED,
+.dov__recent-status--Travel Ready,
+.dov__recent-status--TRAVEL_READY {
+  background: var(--success-soft);
+  color: var(--success-color);
+}
+
+.dov__recent-status--pending,
+.dov__recent-status--Draft,
+.dov__recent-status--DRAFT,
+.dov__recent-status--QUOTE_REQUESTED,
+.dov__recent-status--Quote Requested,
+.dov__recent-status--UNDER_REVIEW,
+.dov__recent-status--Under Review,
+.dov__recent-status--QUOTE_READY,
+.dov__recent-status--Quote Ready,
+.dov__recent-status--QUOTE_SENT,
+.dov__recent-status--Quote Sent,
+.dov__recent-status--PAYMENT_PENDING,
+.dov__recent-status--Payment Pending,
+.dov__recent-status--PARTIALLY_PAID,
+.dov__recent-status--Partially Paid {
+  background: var(--warning-soft);
+  color: var(--color-warning);
+}
+
+.dov__recent-status--cancelled,
+.dov__recent-status--CANCELLED,
+.dov__recent-status--Cancelled,
+.dov__recent-status--REFUNDED,
+.dov__recent-status--Refunded {
+  background: var(--danger-soft);
+  color: var(--color-danger);
+}
+
+.dov__recent-status {
+  /* Enquiry pipeline statuses */
+}
+
+.dov__recent-status--new {
+  background: var(--primary-soft);
+  color: var(--color-primary);
+}
+
+.dov__recent-status--in_review {
+  background: var(--warning-soft);
+  color: var(--color-warning);
+}
+
+.dov__recent-status--responded {
+  background: var(--success-soft);
+  color: var(--success-color);
+}
+
+/* Upcoming trips strip */
+
+.dov__side {
+  display: flex;
+  flex-direction: column;
+  gap: $space-6;
+  min-width: 0;
+}
+
+.dov__trips-panel {
+  margin-bottom: 0;
+  padding: $space-5;
+  border: 1px solid var(--border);
+  border-radius: $radius-lg;
+  background: var(--card-bg);
+  box-shadow: var(--shadow-sm);
+}
+
+.dov__trips {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.dov__trip-card {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+  padding: $space-3 $space-4;
+  cursor: pointer;
+  transition:
+    background $duration-fast $ease-standard,
+    border-color $duration-fast $ease-standard;
+}
+
+.dov__trip-card:hover {
+  background: var(--neutral-soft, var(--surface-inset));
+  border-color: var(--color-primary);
+}
+
+.dov__trip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: $radius-md;
+  background: var(--primary-soft);
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.dov__trip-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.dov__trip-copy strong {
+  font-size: $font-size-sm;
+  font-weight: $font-medium;
+  color: var(--heading);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dov__trip-copy small {
+  font-size: $font-size-xs;
+  color: var(--muted);
+}
+
+@media (max-width: 900px) {
+  .dov__hero {
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  &--pending,
-  &--Draft,
-  &--DRAFT,
-  &--QUOTE_REQUESTED,
-  &--Quote Requested,
-  &--UNDER_REVIEW,
-  &--Under Review,
-  &--QUOTE_READY,
-  &--Quote Ready,
-  &--QUOTE_SENT,
-  &--Quote Sent,
-  &--PAYMENT_PENDING,
-  &--Payment Pending,
-  &--PARTIALLY_PAID,
-  &--Partially Paid {
-    background: var(--warning-soft);
-    color: var(--color-warning);
+  .dov__hero-copy {
+    padding: $space-6;
   }
 
-  &--cancelled,
-  &--CANCELLED,
-  &--Cancelled,
-  &--REFUNDED,
-  &--Refunded {
-    background: var(--danger-soft);
-    color: var(--color-danger);
+  .dov__hero-visual {
+    position: absolute;
+    z-index: 0;
+    inset: 0 0 0 auto;
+    width: 35%;
+    opacity: 0.24;
+  }
+
+  .dov__hero-trust {
+    padding-inline: $space-6;
+  }
+}
+
+@media (max-width: $mobile-max) {
+  .dov__hero {
+    min-height: 0;
+    border-radius: $radius-md;
+  }
+
+  .dov__hero-copy {
+    padding: $space-5;
+  }
+
+  .dov__hero h1 {
+    font-size: 2rem;
+  }
+
+  .dov__hero-description {
+    font-size: $font-size-sm;
+  }
+
+  .dov__hero-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    margin-top: $space-5;
+  }
+
+  .dov__hero-action {
+    width: 100%;
+  }
+
+  .dov__hero-visual {
+    display: none;
+  }
+
+  .dov__hero-trust {
+    display: grid;
+    gap: $space-2;
+    padding: $space-3 $space-5;
+  }
+
+  .dov__activity,
+  .dov__trips-panel {
+    padding: $space-4;
+  }
+}
+
+// Home uses connected editorial bands instead of stacked rounded containers.
+
+.dov__hero--search {
+  border-radius: 0;
+}
+
+.dov__benefits {
+  width: 100%;
+  max-width: none;
+  margin-inline: auto;
+  border-radius: 0;
+}
+
+.dov__story {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--card-bg) 0 58%, var(--heading) 58% 100%);
+}
+
+.dov__story-inner {
+  width: min(100%, 92rem);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(20rem, 0.95fr);
+  gap: clamp(#{$space-6}, 4vw, #{$space-12});
+  padding: clamp(#{$space-8}, 6vw, #{$space-16}) clamp(#{$space-5}, 5vw, #{$space-10}) 0;
+}
+
+.dov__story-copy h2 {
+  max-width: 42rem;
+  margin: 0;
+  color: var(--heading);
+  font-size: clamp(2.25rem, 4.2vw, 4.5rem);
+  font-weight: $font-bold;
+  letter-spacing: -0.055em;
+  line-height: 1.12;
+}
+
+.dov__story-summary {
+  display: grid;
+  align-content: start;
+  gap: $space-6;
+  padding-top: $space-5;
+}
+
+.dov__story-summary p {
+  max-width: 42rem;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: clamp(#{$font-size-md}, 1.2vw, #{$font-size-lg});
+  font-weight: $font-medium;
+  line-height: 1.65;
+}
+
+.dov__story-reviews {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  color: var(--text);
+  font-size: $font-size-md;
+  font-weight: $font-semibold;
+}
+
+.dov__story-avatars {
+  display: inline-flex;
+  align-items: center;
+}
+
+.dov__story-avatars span {
+  width: 2.15rem;
+  height: 2.15rem;
+  display: grid;
+  place-items: center;
+  margin-left: -0.45rem;
+  border: 2px solid var(--card-bg);
+  border-radius: $radius-circle;
+  background: linear-gradient(135deg, var(--color-warning), var(--color-primary));
+  color: var(--color-on-primary);
+  font-size: 0.65rem;
+  font-weight: $font-bold;
+}
+
+.dov__story-avatars span:first-child {
+  margin-left: 0;
+}
+
+.dov__story-avatars span:nth-child(2) {
+  background: linear-gradient(135deg, var(--secondary-soft), var(--color-primary));
+}
+
+.dov__story-avatars span:nth-child(3) {
+  background: linear-gradient(135deg, var(--warning-soft), var(--color-warning));
+}
+
+.dov__story-avatars span:nth-child(4) {
+  background: linear-gradient(135deg, var(--tertiary-soft), var(--color-secondary));
+}
+
+.dov__story-gallery {
+  --reveal-progress: 1;
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1.55fr 0.75fr 0.75fr;
+  gap: clamp(#{$space-4}, 2vw, #{$space-6});
+  align-items: stretch;
+  margin-top: $space-2;
+}
+
+.dov__story-image {
+  --reveal-x: 0px;
+  min-width: 0;
+  height: clamp(20rem, 28vw, 31rem);
+  margin: 0;
+  overflow: hidden;
+  border-radius: $radius-lg;
+  background: var(--surface-muted);
+  box-shadow: var(--shadow-lg);
+  opacity: var(--reveal-progress, 1);
+  transform: translateX(calc((1 - var(--reveal-progress, 1)) * var(--reveal-x, 0px)));
+  will-change: transform, opacity;
+}
+
+.dov__story-image img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.dov__story-image--portrait {
+  height: clamp(20rem, 28vw, 31rem);
+  --reveal-x: 70px;
+}
+
+.dov__story-image--wide {
+  --reveal-x: -70px;
+}
+
+.dov__story-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: $space-5;
+  padding: clamp(#{$space-9}, 5vw, #{$space-14}) clamp(#{$space-5}, 5vw, #{$space-10}) clamp(#{$space-8}, 4vw, #{$space-12});
+  background: var(--heading);
+  color: var(--color-on-primary);
+}
+
+.dov__story-stat {
+  display: grid;
+  justify-items: center;
+  gap: $space-4;
+  text-align: center;
+}
+
+.dov__story-stat span {
+  color: color-mix(in srgb, var(--color-on-primary) 86%, transparent);
+  font-size: clamp(#{$font-size-sm}, 1vw, #{$font-size-md});
+  font-weight: $font-semibold;
+}
+
+.dov__story-stat strong {
+  color: transparent;
+  font-size: clamp(3.25rem, 6vw, 6.4rem);
+  font-weight: $font-bold;
+  letter-spacing: -0.06em;
+  line-height: 0.9;
+  -webkit-text-stroke: 2px color-mix(in srgb, var(--color-on-primary) 90%, transparent);
+}
+
+@media (max-width: $breakpoint-lg) {
+  .dov__story-inner {
+    grid-template-columns: 1fr;
+    gap: $space-5;
+  }
+
+  .dov__story-summary {
+    padding-top: 0;
+  }
+
+  .dov__story-gallery {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .dov__story-image--wide {
+    grid-column: 1 / -1;
+  }
+
+  .dov__story-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: $breakpoint-mobile) {
+  .dov__story {
+    background: linear-gradient(180deg, var(--card-bg) 0 64%, var(--heading) 64% 100%);
+  }
+
+  .dov__story-inner {
+    padding: $space-8 $space-4 0;
+  }
+
+  .dov__story-copy h2 {
+    font-size: clamp(2.1rem, 12vw, 3.3rem);
+  }
+
+  .dov__story-summary p {
+    font-size: $font-size-md;
+  }
+
+  .dov__story-reviews {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: $space-2;
+  }
+
+  .dov__story-gallery {
+    grid-template-columns: 1fr;
+  }
+
+  .dov__story-image,
+  .dov__story-image--portrait {
+    height: 18rem;
+  }
+
+  .dov__story-stats {
+    grid-template-columns: 1fr;
+    padding: $space-8 $space-4;
+  }
+}
+
+.dov__benefits {
+  margin-block: 0;
+  padding: clamp(#{$space-7}, 3vw, #{$space-12});
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--color-primary) 24%, var(--border));
+  border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--border));
+  background: linear-gradient(110deg,
+      color-mix(in srgb, var(--primary-softer) 72%, var(--card-bg)),
+      var(--card-bg) 48%,
+      color-mix(in srgb, var(--secondary-soft) 42%, var(--card-bg)));
+  box-shadow: none;
+}
+
+.dov__benefits::before,
+.dov__benefits .dov__benefits-route {
+  display: none;
+}
+
+.dov__benefits .dov__benefits-header {
+  align-items: center;
+  margin-bottom: $space-7;
+}
+
+.dov__benefits .dov__benefits-heading {
+  max-width: 820px;
+}
+
+.dov__benefits .dov__benefits-heading h2 {
+  font-size: clamp(1.75rem, 2.8vw, 2.65rem);
+}
+
+.dov__benefits .dov__benefits-proof {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.dov__benefits .dov__benefits-grid {
+  gap: 0;
+  border-top: 1px solid color-mix(in srgb, var(--color-primary) 16%, var(--border));
+}
+
+.dov__benefits .dov__benefit-shell {
+  margin-top: 0;
+  padding: $space-5;
+  border-right: 1px solid color-mix(in srgb, var(--color-primary) 14%, var(--border));
+}
+
+.dov__benefits .dov__benefit-shell:last-child {
+  border-right: 0;
+}
+
+.dov__benefits .dov__benefit-shell::after {
+  top: $space-3;
+  right: $space-3;
+}
+
+.dov__benefits .dov__benefit-card {
+  min-height: 150px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+}
+
+.dov__benefits .dov__benefit-card::before,
+.dov__benefits .dov__benefit-card::after {
+  display: none;
+}
+
+.dov__benefits .dov__benefit-card:hover {
+  box-shadow: none;
+  transform: none;
+}
+
+.dov__insights {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-top: 1px solid color-mix(in srgb, var(--color-primary) 14%, var(--border));
+  background: linear-gradient(180deg,
+      var(--border) 0%,
+      var(--border) 48%,
+      color-mix(in srgb, var(--primary-softer) 34%, var(--page-bg)) 48%,
+      var(--color-on-primary) 100%);
+  color: var(--text);
+}
+
+.dov__insights::before,
+.dov__insights::after {
+  position: absolute;
+  z-index: -1;
+  content: "";
+}
+
+.dov__insights::before {
+  top: 13.5rem;
+  left: 16%;
+  width: 11rem;
+  height: 1.35rem;
+  background: var(--color-secondary);
+  transform: rotate(-2deg);
+}
+
+.dov__insights::after {
+  top: 12.2rem;
+  right: 15%;
+  width: 12rem;
+  height: 1.35rem;
+  background: var(--color-primary);
+  transform: rotate(-1deg);
+}
+
+.dov__faq,
+.dov__articles {
+  background: var(--surface-elevated);
+  margin-inline: auto;
+  padding-inline: clamp(#{$space-4}, 5vw, #{$space-8});
+}
+
+.dov__faq {
+  display: flex;
+  flex-direction: row;
+  padding-top: clamp(#{$space-10}, 7vw, #{$space-14});
+  padding-bottom: clamp(#{$space-8}, 6vw, #{$space-12});
+}
+
+.dov__faq-list {
+  display: grid;
+  max-width: 52rem;
+  margin: clamp(#{$space-7}, 4vw, #{$space-9}) auto 0;
+  padding: $space-6;
+  border: 1px solid var(--border);
+  border-radius: $radius-lg;
+  background: color-mix(in srgb, var(--card-bg) 88%, transparent);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(18px);
+}
+
+.dov__faq-item {
+  border-bottom: 1px solid var(--border);
+}
+
+.dov__faq-item:last-child {
+  border-bottom: 0;
+}
+
+.dov__faq-item summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-4;
+  padding: $space-4 0;
+  cursor: pointer;
+  list-style: none;
+}
+
+.dov__faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.dov__faq-item strong {
+  color: var(--heading);
+  font-size: clamp(#{$font-size-md}, 1.4vw, #{$font-size-lg});
+  line-height: 1.25;
+}
+
+.dov__faq-item p {
+  margin: -#{$space-2} 0 $space-4;
+  color: var(--text-muted);
+  font-size: $font-size-sm;
+  line-height: 1.65;
+}
+
+.dov__faq-toggle {
+  position: relative;
+  flex: 0 0 auto;
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--muted);
+}
+
+.dov__faq-toggle::before,
+.dov__faq-toggle::after {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 1rem;
+  height: 2px;
+  border-radius: $radius-full;
+  background: currentColor;
+  content: "";
+  transform: translate(-50%, -50%);
+}
+
+.dov__faq-toggle::after {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.dov__faq-item[open] .dov__faq-toggle::after {
+  transform: translate(-50%, -50%) rotate(0deg);
+}
+
+/* ============================================================
+   ARTICLES / TRAVEL JOURNAL
+   ============================================================ */
+
+.dov__articles {
+
+  padding: clamp(#{$space-8}, 5vw, #{$space-12}) clamp(#{$space-4}, 5vw, #{$space-8});
+
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+
+.dov__articles-header {
+  display: flex;
+
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: $space-8;
+
+  margin-bottom: clamp(#{$space-6},
+    4vw,
+    #{$space-9});
+}
+
+.dov__articles .dov__insights-heading,
+.dov__faq .dov__insights-heading {
+  max-width: 46rem;
+
+  margin: 0;
+
+  text-align: left;
+}
+
+.dov__insights-eyebrow {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: $space-2;
+
+  margin-bottom: $space-2;
+
+  color: var(--color-primary);
+
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+
+  line-height: $line-height-md;
+
+  letter-spacing: 0.16em;
+
+  text-transform: uppercase;
+}
+
+.dov__articles .dov__insights-heading h2,
+.dov__faq .dov__insights-heading h2 {
+  margin: 0;
+
+  color: var(--heading);
+
+  font-size:
+    clamp(2rem,
+      3.4vw,
+      3.4rem);
+
+  font-weight: $font-bold;
+
+  line-height: 1.03;
+
+  letter-spacing: -0.045em;
+}
+
+.dov__articles .dov__insights-heading h2 em,
+.dov__faq .dov__insights-heading h2 em {
+  color: var(--color-primary);
+
+  font-style: normal;
+
+  text-decoration: none;
+}
+
+.dov__articles .dov__insights-heading p,
+.dov__faq .dov__insights-heading p {
+  max-width: 38rem;
+
+  margin:
+    $space-3 0 0;
+
+  color: var(--text-muted);
+
+  font-size: $font-size-md;
+
+  line-height: 1.65;
+}
+
+/* ============================================================
+   ARTICLE GRID
+   ============================================================ */
+
+.dov__article-grid {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1.35fr) minmax(18rem, 0.65fr);
+
+  grid-auto-rows: minmax(0, auto);
+
+  gap: $space-5;
+}
+
+/* ============================================================
+   BASE ARTICLE CARD
+   ============================================================ */
+
+.dov__article-card {
+  position: relative;
+
+  min-width: 0;
+
+  overflow: hidden;
+
+  border: 1px solid var(--border);
+
+  border-radius: $radius-lg;
+
+  background: var(--card-bg);
+
+  color: var(--text);
+
+  cursor: pointer;
+
+  box-shadow: var(--shadow-sm);
+
+  transition:
+    transform $duration-base $ease-standard,
+    box-shadow $duration-base $ease-standard,
+    border-color $duration-base $ease-standard;
+}
+
+.dov__article-card:focus-visible {
+  outline: 2px solid var(--color-primary);
+
+  outline-offset: 3px;
+}
+
+.dov__article-card:hover {
+  border-color:
+    color-mix(in srgb,
+      var(--color-primary) 26%,
+      var(--border));
+
+  box-shadow: var(--shadow-md);
+
+  transform: translateY(-4px);
+}
+
+.dov__article-card:hover .dov__article-media img {
+  transform: scale(1.035);
+}
+
+.dov__article-card:hover .dov__article-arrow {
+  background: var(--color-primary);
+
+  color: var(--color-on-primary);
+
+  transform: translateX(2px);
+}
+
+/* ============================================================
+   MEDIA
+   ============================================================ */
+
+.dov__article-media {
+  position: relative;
+
+  min-width: 0;
+
+  overflow: hidden;
+
+  background: var(--surface-inset);
+}
+
+.dov__article-media img {
+  width: 100%;
+  height: 100%;
+
+  display: block;
+
+  object-fit: cover;
+
+  transition:
+    transform $duration-slow $ease-standard;
+}
+
+.dov__article-media-overlay {
+  position: absolute;
+
+  inset: 0;
+
+  pointer-events: none;
+
+  background:
+    linear-gradient(180deg,
+      transparent 48%,
+      color-mix(in srgb,
+        var(--overlay-strong) 28%,
+        transparent));
+}
+
+/* ============================================================
+   CATEGORY
+   ============================================================ */
+
+.dov__article-category {
+  position: absolute;
+
+  z-index: 2;
+
+  top: $space-4;
+  left: $space-4;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  min-height: 30px;
+
+  padding:
+    $space-1 $space-3;
+
+  border:
+    1px solid color-mix(in srgb,
+      var(--color-on-primary) 26%,
+      transparent);
+
+  border-radius: $radius-full;
+
+  background:
+    color-mix(in srgb,
+      var(--overlay-strong) 54%,
+      transparent);
+
+  color: var(--color-on-primary);
+
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+
+  line-height: 1;
+
+  letter-spacing: 0.06em;
+
+  text-transform: uppercase;
+
+  backdrop-filter: blur(10px);
+}
+
+/* ============================================================
+   FEATURED MARK
+   ============================================================ */
+
+.dov__article-featured-mark {
+  position: absolute;
+
+  z-index: 2;
+
+  right: $space-4;
+  bottom: $space-4;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: $space-2;
+
+  padding:
+    $space-2 $space-3;
+
+  border:
+    1px solid color-mix(in srgb,
+      var(--color-on-primary) 26%,
+      transparent);
+
+  border-radius: $radius-full;
+
+  background:
+    color-mix(in srgb,
+      var(--overlay-strong) 56%,
+      transparent);
+
+  color: var(--color-on-primary);
+
+  font-size: $font-size-xs;
+  font-weight: $font-semibold;
+
+  backdrop-filter: blur(10px);
+}
+
+/* ============================================================
+   CONTENT
+   ============================================================ */
+
+.dov__article-content {
+  display: grid;
+
+  gap: $space-3;
+
+  padding: $space-5;
+}
+
+.dov__article-meta {
+  display: flex;
+
+  align-items: center;
+
+  flex-wrap: wrap;
+
+  gap: $space-2;
+
+  color: var(--text-muted);
+
+  font-size: $font-size-xs;
+  font-weight: $font-medium;
+}
+
+.dov__article-meta time {
+  color: inherit;
+
+  font: inherit;
+}
+
+.dov__article-meta-dot {
+  width: 4px;
+  height: 4px;
+
+  flex: 0 0 4px;
+
+  border-radius: $radius-circle;
+
+  background: var(--color-primary);
+}
+
+/* ============================================================
+   TITLE ROW
+   ============================================================ */
+
+.dov__article-title-row {
+  display: flex;
+
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: $space-4;
+}
+
+.dov__article-title-row h3 {
+  min-width: 0;
+
+  margin: 0;
+
+  color: var(--heading);
+
+  font-size: clamp(#{$font-size-lg},
+    1.6vw,
+    1.5rem);
+
+  font-weight: $font-bold;
+
+  line-height: 1.18;
+
+  letter-spacing: -0.025em;
+}
+
+.dov__article-arrow {
+  width: 36px;
+  height: 36px;
+
+  flex: 0 0 36px;
+
+  display: grid;
+
+  place-items: center;
+
+  border-radius: $radius-circle;
+
+  background: var(--primary-soft);
+
+  color: var(--color-primary);
+
+  transition:
+    background $duration-base $ease-standard,
+    color $duration-base $ease-standard,
+    transform $duration-base $ease-standard;
+}
+
+/* ============================================================
+   FEATURED ARTICLE
+   ============================================================ */
+
+.dov__article-card--featured {
+  grid-row: span 2;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.dov__article-card--featured .dov__article-media {
+  flex: 1;
+
+  min-height: 24rem;
+}
+
+.dov__article-card--featured .dov__article-content {
+  padding: $space-6;
+}
+
+.dov__article-card--featured .dov__article-title-row h3 {
+  max-width: 90%;
+
+  font-size:
+    clamp(1.65rem,
+      2.5vw,
+      2.5rem);
+
+  line-height: 1.08;
+
+  letter-spacing: -0.04em;
+}
+
+/* ============================================================
+   STANDARD ARTICLE
+   ============================================================ */
+
+.dov__article-card--standard {
+  display: grid;
+
+  grid-template-columns:
+    minmax(10rem, 0.42fr) minmax(0, 0.58fr);
+
+  min-height: 15rem;
+}
+
+.dov__article-card--standard .dov__article-media {
+  height: 100%;
+}
+
+.dov__article-card--standard .dov__article-content {
+  align-content: center;
+
+  padding: $space-5;
+}
+
+.dov__article-card--standard .dov__article-featured-mark {
+  display: none;
+}
+
+.dov__article-card--standard .dov__article-title-row {
+  align-items: center;
+}
+
+.dov__article-card--standard .dov__article-title-row h3 {
+  font-size: $font-size-lg;
+}
+
+/* ============================================================
+   ARTICLES CTA
+   ============================================================ */
+
+.dov__articles-action {
+  appearance: none;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: $space-3;
+
+  flex: 0 0 auto;
+
+  padding:
+    $space-2 $space-2 $space-2 $space-4;
+
+  border: 1px solid var(--border);
+
+  border-radius: $radius-full;
+
+  background: var(--card-bg);
+
+  color: var(--heading);
+
+  box-shadow: var(--shadow-xs);
+
+  font: inherit;
+
+  font-size: $font-size-sm;
+  font-weight: $font-semibold;
+
+  cursor: pointer;
+
+  transition:
+    border-color $duration-base $ease-standard,
+    background $duration-base $ease-standard,
+    transform $duration-base $ease-standard,
+    box-shadow $duration-base $ease-standard;
+}
+
+.dov__articles-action:hover {
+  border-color:
+    color-mix(in srgb,
+      var(--color-primary) 28%,
+      var(--border));
+
+  background: var(--surface-elevated);
+
+  box-shadow: var(--shadow-sm);
+
+  transform: translateY(-1px);
+}
+
+.dov__articles-action:focus-visible {
+  outline: none;
+
+  box-shadow:
+    0 0 0 4px var(--focus-ring),
+    var(--shadow-sm);
+}
+
+.dov__articles-action-icon {
+  width: 32px;
+  height: 32px;
+
+  display: grid;
+
+  place-items: center;
+
+  border-radius: $radius-circle;
+
+  background: var(--color-primary);
+
+  color: var(--color-on-primary);
+}
+
+.dov__articles-action--mobile {
+  display: none;
+}
+
+/* ============================================================
+   TABLET
+   ============================================================ */
+
+@media (max-width: $breakpoint-lg) {
+  .dov__article-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dov__article-card--featured {
+    grid-row: auto;
+  }
+
+  .dov__article-card--featured .dov__article-media {
+    min-height: 22rem;
+  }
+
+  .dov__article-card--standard {
+    grid-template-columns:
+      minmax(14rem, 0.4fr) minmax(0, 0.6fr);
+  }
+}
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+
+@media (max-width: $breakpoint-mobile) {
+  .dov__articles {
+    padding:
+      $space-8 $space-4;
+  }
+
+  .dov__articles-header {
+    display: block;
+
+    margin-bottom: $space-5;
+  }
+
+  .dov__articles .dov__insights-heading h2 {
+    font-size:
+      clamp(1.9rem,
+        10vw,
+        2.75rem);
+  }
+
+  .dov__articles .dov__insights-heading p {
+    font-size: $font-size-sm;
+  }
+
+  .dov__articles-action--desktop {
+    display: none;
+  }
+
+  .dov__articles-action--mobile {
+    width: 100%;
+
+    display: flex;
+
+    justify-content: space-between;
+
+    margin-top: $space-5;
+  }
+
+  .dov__article-grid {
+    gap: $space-4;
+  }
+
+  .dov__article-card--featured,
+  .dov__article-card--standard {
+    display: flex;
+    flex-direction: column;
+
+    min-height: 0;
+  }
+
+  .dov__article-card--featured .dov__article-media,
+  .dov__article-card--standard .dov__article-media {
+    width: 100%;
+
+    min-height: 0;
+    height: auto;
+
+    aspect-ratio: 16 / 10;
+  }
+
+  .dov__article-card--featured .dov__article-content,
+  .dov__article-card--standard .dov__article-content {
+    padding: $space-4;
+  }
+
+  .dov__article-card--featured .dov__article-title-row h3,
+  .dov__article-card--standard .dov__article-title-row h3 {
+    max-width: none;
+
+    font-size: $font-size-lg;
+
+    line-height: 1.2;
+  }
+
+  .dov__article-featured-mark {
+    right: $space-3;
+    bottom: $space-3;
+  }
+
+  .dov__article-category {
+    top: $space-3;
+    left: $space-3;
+  }
+
+  .dov__article-arrow {
+    width: 34px;
+    height: 34px;
+
+    flex-basis: 34px;
+  }
+}
+
+/* ============================================================
+   VERY SMALL MOBILE
+   ============================================================ */
+
+@media (max-width: 420px) {
+  .dov__articles {
+    padding-inline: $space-3;
+  }
+
+  .dov__article-title-row {
+    align-items: center;
+  }
+
+  .dov__article-title-row h3 {
+    font-size: $font-size-md;
+  }
+
+  .dov__article-featured-mark {
+    display: none;
+  }
+}
+
+/* ============================================================
+   DARK THEME
+   ============================================================ */
+
+.theme--dark .dov__article-card {
+  background: var(--surface-elevated);
+}
+
+.theme--dark .dov__articles-action {
+  background: var(--surface-elevated);
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .dov__article-card,
+  .dov__article-media img,
+  .dov__article-arrow,
+  .dov__articles-action {
+    transition: none;
+  }
+}
+
+@media (max-width: $breakpoint-laptop) {
+  .dov__benefits .dov__benefit-shell {
+    border-right: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 14%, var(--border));
+  }
+
+  .dov__benefits .dov__benefit-shell:nth-child(odd) {
+    border-right: 1px solid color-mix(in srgb, var(--color-primary) 14%, var(--border));
+  }
+
+  .dov__benefits .dov__benefit-shell:nth-last-child(-n + 2) {
+    border-bottom: 0;
+  }
+
+  .dov__article-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: $breakpoint-mobile) {
+
+  .dov__hero--search,
+  .dov__hero--search::before,
+  .dov__hero--search .dov__hero-search .trem-global-search__panel {
+    border-radius: 0;
+  }
+
+  .dov__benefits,
+  .dov__insights {
+    width: 100%;
+  }
+
+  .dov__hero-trust {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: $space-2;
+    width: 100%;
+    margin-top: 0;
+    padding: $space-4;
+    background: var(--card-bg);
+  }
+
+  .dov__hero-trust span {
+    justify-content: center;
+    min-height: 2.75rem;
+    padding: 0 $space-3;
+    border-radius: $radius-sm;
+    background: var(--primary-softer);
+    text-align: center;
+  }
+
+  .dov__hero-trust span:nth-child(3) {
+    grid-column: 1 / -1;
+  }
+
+  .dov__benefits {
+    margin-block: 0;
+    padding: $space-8 $space-4;
+  }
+
+  .dov__benefits .dov__benefits-header {
+    gap: $space-5;
+    margin-bottom: $space-6;
+  }
+
+  .dov__benefits .dov__benefits-heading {
+    max-width: none;
+  }
+
+  .dov__benefits .dov__benefits-heading h2 {
+    font-size: clamp(1.8rem, 8vw, 2.4rem);
+    line-height: 1.08;
+  }
+
+  .dov__benefits .dov__benefits-heading p {
+    font-size: $font-size-md;
+    line-height: 1.65;
+  }
+
+  .dov__benefits .dov__benefits-proof {
+    padding: 0;
+    align-items: center;
+    gap: $space-3;
+  }
+
+  .dov__benefits .dov__benefits-grid {
+    grid-template-columns: minmax(0, 1fr);
+    border-top: 0;
+  }
+
+  .dov__benefits .dov__benefit-shell {
+    padding: $space-5 0;
+    border-right: 0 !important;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 14%, var(--border));
+  }
+
+  .dov__benefits .dov__benefit-shell:last-child {
+    border-bottom: 0;
+  }
+
+  .dov__benefits .dov__benefit-card {
+    min-height: 0;
+    flex-direction: row;
+    gap: $space-4;
+  }
+
+  .dov__benefits .dov__benefit-card .trem-benefit-card__icon {
+    width: 3.75rem;
+    height: 3.75rem;
+  }
+
+  .dov__benefits .dov__benefit-card .trem-benefit-card__title {
+    font-size: $font-size-lg;
+  }
+
+  .dov__benefits .dov__benefit-card .trem-benefit-card__description {
+    font-size: $font-size-md;
+    line-height: 1.55;
+  }
+
+  .dov__insights::before,
+  .dov__insights::after {
+    width: 5.5rem;
+    height: 0.65rem;
+    top: 9.5rem;
+  }
+
+  .dov__insights::before {
+    left: -1.5rem;
+  }
+
+  .dov__insights::after {
+    right: -1.5rem;
+  }
+
+  .dov__faq,
+  .dov__articles {
+    padding-inline: $space-4;
+  }
+
+  .dov__insights-heading h2 {
+    font-size: clamp(1.8rem, 8vw, 2.35rem);
+  }
+
+  .dov__insights-heading p {
+    font-size: $font-size-sm;
+  }
+
+  .dov__faq-list {
+    padding: $space-4;
+    border-radius: $radius-md;
+  }
+
+  .dov__faq-item strong {
+    font-size: $font-size-md;
+  }
+
+  .dov__article-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dov__article-card {
+    min-height: 18rem;
+  }
+}
+
+.dov__hero--search {
+  --hero-padding: clamp(#{$space-6}, 5vw, #{$space-12});
+  margin-bottom: 0;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: clamp(#{$space-4}, 2.5vw, #{$space-7});
+  min-height: clamp(34rem, 46vw, 40rem);
+  padding: var(--hero-padding) var(--hero-padding) $space-5;
+  overflow: visible;
+  border: 0;
+  background:
+    linear-gradient(90deg,
+      color-mix(in srgb, var(--card-bg) 50%, transparent) 0%,
+      color-mix(in srgb, var(--card-bg) 28%, transparent) 34%,
+      color-mix(in srgb, var(--card-bg) 4%, transparent) 64%,
+      transparent 100%),
+    linear-gradient(180deg,
+      transparent 58%,
+      color-mix(in srgb, var(--card-bg) 14%, transparent) 100%),
+    var(--dov-hero-image) center / cover no-repeat,
+    var(--primary-softer);
+}
+
+.dov__hero--search::before,
+.dov__hero--search .dov__hero-visual {
+  display: none;
+}
+
+.dov__hero--search .dov__hero-copy {
+  width: min(34rem, 54%);
+  padding: 0;
+  text-align: left;
+}
+
+.dov__hero--search .dov__hero-eyebrow,
+.dov__hero--search .dov__hero-greeting,
+.dov__hero--search .dov__hero-description,
+.dov__hero--search h1 {
+  color: var(--heading);
+}
+
+.dov__hero--search .dov__hero-description,
+.dov__hero--search h1 {
+  max-width: 11ch;
+}
+
+.dov__hero--search .dov__hero-description {
+  margin-top: $space-2;
+  max-width: 30rem;
+  color: var(--text);
+  font-size: $font-size-md;
+  font-weight: $font-semibold;
+}
+
+.dov__hero--search h1 {
+  font-size: clamp(2.35rem, 4.4vw, 4.5rem);
+  line-height: 0.96;
+}
+
+.dov__hero--search .dov__hero-search {
+  z-index: 1;
+  display: block;
+  min-height: 0;
+  width: min(100%, 76rem);
+  margin-inline: auto;
+  margin-top: auto;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.dov__hero--search .dov__hero-search .trem-global-search__overlay {
+  display: none;
+}
+
+.dov__hero--search .dov__hero-search .trem-global-search__card {
+  width: 100%;
+  gap: 0;
+}
+
+.dov__hero--search .dov__hero-search .trem-global-search__tabs {
+  margin-inline: 0;
+  margin-bottom: $space-3;
+  padding: $space-1;
+  border-color: color-mix(in srgb, var(--card-bg) 52%, transparent);
+  border-radius: $radius-full;
+  background: color-mix(in srgb, var(--card-bg) 78%, transparent);
+  box-shadow: var(--shadow-sm);
+}
+
+.dov__hero--search .dov__hero-search .trem-global-search__panel {
+  min-height: 0;
+  padding: $space-4;
+  border-color: color-mix(in srgb, var(--card-bg) 58%, transparent);
+  background: color-mix(in srgb, var(--card-bg) 84%, transparent);
+  box-shadow: var(--shadow-md);
+}
+
+.dov__hero--search .dov__hero-search .trem-global-search__choices {
+  margin-bottom: $space-2;
+}
+
+.dov__hero--search .dov__hero-search .trem-global-search__choice {
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.dov__hero--search .dov__hero-search .trem-global-search__choice.is-active {
+  background: var(--primary-softer);
+  color: var(--color-primary);
+}
+
+.dov__hero--search .dov__hero-search .trem-global-search__fields {
+  border-color: color-mix(in srgb, var(--color-primary) 18%, var(--border));
+  background: color-mix(in srgb, var(--card-bg) 78%, transparent);
+  box-shadow: var(--shadow-sm);
+}
+
+.dov__hero--search .dov__hero-search .trem-global-search__field-label,
+.dov__hero--search .dov__hero-search .trem-global-search__field-help,
+.dov__hero--search .dov__hero-search .trem-input__field,
+.dov__hero--search .dov__hero-search .trem-location-typeahead input {
+  color: var(--text);
+}
+
+.dov__hero--search .dov__hero-trust {
+  position: relative;
+  z-index: 1;
+  justify-content: center;
+  gap: $space-6;
+  margin: $space-1 auto 0;
+  padding: $space-3 $space-5;
+  border: 0;
+  background: color-mix(in srgb, var(--card-bg) 82%, transparent);
+  color: var(--text-muted);
+  backdrop-filter: blur(14px);
+}
+
+.dov__hero--search .dov__hero-trust svg {
+  color: var(--color-primary);
+}
+
+.dov__hero--search .dov__hero-wave {
+  position: absolute;
+  z-index: 0;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  display: block;
+  width: 100%;
+  height: $space-4;
+  fill: var(--page-bg);
+  pointer-events: none;
+}
+
+.theme--dark .dov__hero--search {
+  background:
+    linear-gradient(90deg,
+      color-mix(in srgb, var(--page-bg) 90%, transparent) 0%,
+      color-mix(in srgb, var(--page-bg) 68%, transparent) 34%,
+      color-mix(in srgb, var(--page-bg) 26%, transparent) 70%,
+      color-mix(in srgb, var(--page-bg) 10%, transparent) 100%),
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--page-bg) 6%, transparent) 0%,
+      var(--page-bg) 100%),
+    var(--dov-hero-image) center / cover no-repeat,
+    var(--page-bg);
+}
+
+.theme--dark .dov__hero--search .dov__hero-eyebrow,
+.theme--dark .dov__hero--search .dov__hero-greeting,
+.theme--dark .dov__hero--search .dov__hero-description,
+.theme--dark .dov__hero--search h1 {
+  color: var(--heading);
+}
+
+.theme--dark .dov__hero--search .dov__hero-description {
+  color: var(--text-muted);
+}
+
+.theme--dark .dov__hero--search .dov__hero-search .trem-global-search__tabs,
+.theme--dark .dov__hero--search .dov__hero-search .trem-global-search__panel,
+.theme--dark .dov__hero--search .dov__hero-search .trem-global-search__fields {
+  border-color: var(--border);
+  background: color-mix(in srgb, var(--surface-elevated) 92%, transparent);
+  box-shadow: var(--shadow-md);
+}
+
+.theme--dark .dov__hero--search .dov__hero-search .trem-global-search__choice {
+  color: var(--text-muted);
+}
+
+.theme--dark .dov__hero--search .dov__hero-search .trem-global-search__choice.is-active {
+  background: var(--primary-surface);
+  color: var(--color-primary);
+}
+
+.theme--dark .dov__hero--search .dov__hero-search .trem-global-search__field-label,
+.theme--dark .dov__hero--search .dov__hero-search .trem-global-search__field-help,
+.theme--dark .dov__hero--search .dov__hero-search .trem-input__field,
+.theme--dark .dov__hero--search .dov__hero-search .trem-location-typeahead input {
+  color: var(--text);
+}
+
+.theme--dark .dov__hero--search .dov__hero-trust {
+  background: color-mix(in srgb, var(--surface-elevated) 82%, transparent);
+  color: var(--text-muted);
+}
+
+.theme--dark .dov__article-card {
+  color: var(--color-on-surface);
+}
+
+.theme--dark .dov__article-card small {
+  color: color-mix(in srgb, var(--color-on-surface) 82%, transparent);
+}
+
+.theme--dark .dov__article-card h3 {
+  color: var(--color-on-surface);
+}
+
+.theme--dark .dov__benefits {
+  background: linear-gradient(110deg,
+      color-mix(in srgb, var(--primary-softer) 42%, var(--surface)),
+      var(--surface) 48%,
+      color-mix(in srgb, var(--secondary-soft) 26%, var(--surface)));
+}
+
+.theme--dark .dov__benefits .dov__benefits-proof {
+  color: var(--heading);
+}
+
+.theme--dark .dov__benefits .dov__benefit-card .trem-benefit-card__title {
+  color: var(--heading) !important;
+}
+
+.theme--dark .dov__benefits .dov__benefit-card .trem-benefit-card__description {
+  color: var(--text-muted) !important;
+}
+
+.theme--dark .dov__insights {
+  border-top-color: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  background: linear-gradient(180deg,
+      var(--page-bg) 0%,
+      var(--page-bg) 48%,
+      color-mix(in srgb, var(--surface-elevated) 72%, var(--page-bg)) 48%,
+      var(--page-bg) 100%);
+}
+
+.theme--dark .dov__insights-heading>span {
+  color: var(--color-primary);
+}
+
+.theme--dark .dov__insights-heading h2 {
+  color: var(--heading);
+}
+
+.theme--dark .dov__insights-heading p {
+  color: var(--text-muted);
+}
+
+.theme--dark .dov__faq-list {
+  border-color: color-mix(in srgb, var(--color-primary) 18%, var(--border));
+  background: color-mix(in srgb, var(--surface-elevated) 86%, transparent);
+  box-shadow: var(--shadow-md);
+}
+
+.theme--dark .dov__faq-item {
+  border-bottom-color: color-mix(in srgb, var(--color-primary) 16%, var(--border));
+}
+
+.theme--dark .dov__faq-item strong {
+  color: var(--heading);
+}
+
+.theme--dark .dov__faq-item p {
+  color: var(--text-muted);
+}
+
+.theme--dark .dov__faq-item .dov__faq-toggle {
+  color: var(--color-primary);
+}
+
+.dov__bookings-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-5;
+  margin-bottom: var(--layout-section-gap, #{$space-5});
+  padding: $space-5 $space-6;
+  border: 1px solid var(--border);
+  border-radius: $radius-lg;
+  background: var(--card-bg);
+  box-shadow: var(--shadow-sm);
+}
+
+.dov__bookings-hero>div {
+  display: grid;
+  gap: $space-1;
+  min-width: 0;
+}
+
+.dov__bookings-hero h2,
+.dov__bookings-hero p {
+  margin: 0;
+}
+
+.dov__bookings-hero h2 {
+  color: var(--heading);
+  font-size: $font-size-lg;
+}
+
+.dov__bookings-hero p {
+  color: var(--text-muted);
+  font-size: $font-size-sm;
+}
+
+.dov__bookings-eyebrow {
+  color: var(--color-primary);
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 1180px) {
+  .dov__hero--search {
+    height: auto;
+    min-height: 40rem;
+  }
+
+  .dov__hero--search .dov__hero-search .trem-global-search__panel {
+    min-height: 0;
+  }
+}
+
+@media (max-width: $breakpoint-tablet) {
+  .dov__hero--search {
+    --hero-padding: #{$space-4};
+    align-content: start;
+    gap: $space-3;
+    min-height: 0;
+    padding-bottom: $space-4;
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .dov__hero--search .dov__hero-copy {
+    width: 100%;
+  }
+
+  .dov__hero--search .dov__hero-eyebrow,
+  .dov__hero--search .dov__hero-greeting,
+  .dov__hero--search .dov__hero-description,
+  .dov__hero--search h1 {
+    color: $white-color;
+  }
+
+  .dov__hero--search::before {
+    position: absolute;
+    z-index: 0;
+    inset: 0 0 auto;
+    display: block;
+    height: 22rem;
+    border-radius: $radius-lg $radius-lg 0 0;
+    background:
+      linear-gradient(180deg,
+        color-mix(in srgb, var(--overlay-strong) 85%, transparent),
+        color-mix(in srgb, var(--overlay-strong) 65%, transparent)),
+      var(--dov-hero-image) center / cover;
+    content: "";
+    pointer-events: none;
+  }
+
+  .dov__hero--search .dov__hero-search .trem-global-search__tabs {
+    width: 100%;
+  }
+
+  .dov__hero--search .dov__hero-search .trem-global-search__panel {
+    border-radius: 0 0 $radius-lg $radius-lg;
+  }
+
+  .dov__hero--search .dov__hero-trust {
+    color: var(--text-muted);
+  }
+
+  .dov__hero--search .dov__hero-trust svg {
+    color: var(--color-primary);
+  }
+
+  .dov__hero--search .dov__hero-wave {
+    display: none;
+  }
+}
+
+@media (max-width: $mobile-max) {
+  .dov__hero--search::before {
+    height: 18rem;
+    border-radius: $radius-md $radius-md 0 0;
+  }
+
+  .dov__hero--search h1 {
+    font-size: clamp(#{$font-size-xl}, 6vw, 2rem);
+  }
+
+  .dov__bookings-hero {
+    align-items: stretch;
+    flex-direction: column;
+    padding: $space-4;
+  }
+}
+
+// Keep the home hero and its mobile search continuation editorial, not card-shaped.
+
+.dov__hero--search {
+  border-radius: 0;
+}
+
+@media (max-width: $breakpoint-tablet) {
+
+  .dov__hero--search,
+  .dov__hero--search::before,
+  .dov__hero--search .dov__hero-search .trem-global-search__panel {
+    border-radius: 0;
+  }
+}
+
+/* ============================================================
+   HOME DUOTONE SYSTEM
+   Uses the active Trem primary and secondary theme tokens so the
+   same composition remains balanced in light and dark themes.
+   ============================================================ */
+
+.dov {
+  --dov-tone-primary: var(--color-primary);
+  --dov-tone-secondary: var(--color-secondary);
+  --dov-tone-primary-soft: var(--primary-soft);
+  --dov-tone-secondary-soft: var(--secondary-soft);
+  --dov-band: color-mix(in srgb, var(--surface) 92%, var(--dov-tone-primary) 8%);
+  --dov-band-alt: color-mix(in srgb, var(--surface) 92%, var(--dov-tone-secondary) 8%);
+  --dov-duotone: linear-gradient(135deg,
+      var(--dov-tone-primary),
+      var(--dov-tone-secondary));
+  background: var(--page-bg);
+  color: var(--text);
+}
+
+.theme--dark .dov {
+  --dov-band: color-mix(in srgb, var(--surface) 86%, var(--dov-tone-primary) 14%);
+  --dov-band-alt: color-mix(in srgb, var(--surface) 86%, var(--dov-tone-secondary) 14%);
+}
+
+.dov__hero--search {
+  isolation: isolate;
+  background:
+    linear-gradient(90deg,
+      color-mix(in srgb, var(--page-bg) 38%, transparent),
+      color-mix(in srgb, var(--dov-tone-secondary) 12%, transparent)),
+    var(--dov-band);
+}
+
+.dov__hero--search::before {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  display: block;
+  background-image: var(--dov-hero-image);
+  background-attachment: fixed;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  content: "";
+  filter: saturate(1.08) contrast(1.06);
+  opacity: 0.72;
+  pointer-events: none;
+}
+
+.dov__hero--search::after {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background:
+    linear-gradient(90deg,
+      color-mix(in srgb, var(--page-bg) 90%, transparent) 0%,
+      color-mix(in srgb, var(--page-bg) 58%, transparent) 38%,
+      color-mix(in srgb, var(--page-bg) 8%, transparent) 72%),
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--page-bg) 4%, transparent) 54%,
+      color-mix(in srgb, var(--page-bg) 48%, transparent) 100%),
+    radial-gradient(circle at 14% 22%,
+      color-mix(in srgb, var(--dov-tone-primary) 22%, transparent),
+      transparent 28%),
+    radial-gradient(circle at 86% 18%,
+      color-mix(in srgb, var(--dov-tone-secondary) 24%, transparent),
+      transparent 30%);
+  content: "";
+  pointer-events: none;
+}
+
+.dov__hero--search> :not(.dov__hero-wave) {
+  position: relative;
+  z-index: 2;
+}
+
+.dov__hero--search .dov__hero-eyebrow,
+.dov__benefits-eyebrow,
+.dov__products-eyebrow,
+.dov__insights-eyebrow {
+  color: var(--dov-tone-primary);
+}
+
+.dov__hero--search h1 {
+  color: var(--heading);
+}
+
+.dov__hero--search .dov__hero-search .trem-global-search__tabs,
+.dov__hero--search .dov__hero-search .trem-global-search__panel {
+  border-color: color-mix(in srgb, var(--dov-tone-primary) 22%, var(--border));
+  background: color-mix(in srgb, var(--surface-glass-strong) 88%, transparent);
+  box-shadow: 0 1.5rem 4rem color-mix(in srgb, var(--heading) 18%, transparent);
+  backdrop-filter: blur(24px) saturate(1.14);
+}
+
+.dov__hero--search .dov__hero-search .trem-global-search__choice.is-active {
+  background: var(--dov-duotone);
+  color: var(--color-on-primary);
+}
+
+.dov__hero--search .dov__hero-search .trem-global-search__fields {
+  border-color: color-mix(in srgb, var(--dov-tone-secondary) 18%, var(--border));
+  background: var(--surface-elevated);
+}
+
+.dov__hero--search .dov__hero-trust {
+  border: 1px solid color-mix(in srgb, var(--dov-tone-primary) 18%, var(--border));
+  border-radius: $radius-full;
+  background: color-mix(in srgb, var(--surface-glass-strong) 92%, transparent);
+  box-shadow: var(--shadow-sm);
+}
+
+.dov__hero--search .dov__hero-trust span:nth-child(even) svg {
+  color: var(--dov-tone-secondary);
+}
+
+.dov__story {
+  background: var(--surface);
+}
+
+.dov__story::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0 0 auto;
+  height: 58%;
+  background:
+    linear-gradient(120deg, var(--dov-band), var(--dov-band-alt));
+  content: "";
+}
+
+.dov__story-copy h2 {
+  background: var(--dov-duotone);
+  background-clip: text;
+  color: transparent;
+  -webkit-background-clip: text;
+}
+
+.dov__story-reviews strong {
+  color: var(--heading);
+}
+
+.dov__story-avatars span {
+  border-color: var(--surface);
+  background: var(--dov-duotone);
+}
+
+.dov__story-avatars span:nth-child(even) {
+  background: linear-gradient(135deg,
+      var(--dov-tone-secondary),
+      var(--dov-tone-primary));
+}
+
+.dov__story-image {
+  border: 1px solid color-mix(in srgb, var(--dov-tone-primary) 18%, var(--border));
+  box-shadow: var(--shadow-md);
+}
+
+.dov__story-image img {
+  filter: saturate(0.86) contrast(1.03);
+  transition: filter $duration-base $ease-standard,
+    transform $duration-slow $ease-standard;
+}
+
+.dov__story-image:hover img {
+  filter: saturate(1) contrast(1.03);
+  transform: scale(1.025);
+}
+
+.dov__story-stats {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 12% 30%,
+      color-mix(in srgb, var(--dov-tone-secondary) 34%, transparent),
+      transparent 28%),
+    linear-gradient(125deg,
+      color-mix(in srgb, var(--dov-tone-primary) 72%, var(--surface)),
+      color-mix(in srgb, var(--dov-tone-secondary) 72%, var(--surface)));
+}
+
+.dov__story-stat strong {
+  color: var(--color-on-primary);
+  -webkit-text-stroke: 0;
+}
+
+.dov__story-stat span {
+  color: color-mix(in srgb, var(--color-on-primary) 84%, transparent);
+}
+
+.dov__benefits {
+  border-color: color-mix(in srgb, var(--dov-tone-primary) 22%, var(--border));
+  background:
+    radial-gradient(circle at 92% 8%,
+      color-mix(in srgb, var(--dov-tone-secondary) 14%, transparent),
+      transparent 28%),
+    linear-gradient(115deg, var(--dov-band), var(--dov-band-alt));
+}
+
+.dov__benefits-heading h2 span,
+.dov__articles .dov__insights-heading h2 em,
+.dov__faq .dov__insights-heading h2 em {
+  background: var(--dov-duotone);
+  background-clip: text;
+  color: transparent;
+  -webkit-background-clip: text;
+}
+
+.dov__benefits-proof>span {
+  background: var(--dov-duotone);
+  color: var(--color-on-primary);
+}
+
+.dov__benefits .dov__benefits-grid,
+.dov__benefits .dov__benefit-shell {
+  border-color: color-mix(in srgb, var(--dov-tone-primary) 18%, var(--border));
+}
+
+.dov__benefits .dov__benefit-shell:nth-child(even) {
+  background: color-mix(in srgb, var(--dov-tone-secondary) 5%, transparent);
+}
+
+.dov__benefits .dov__benefit-card .trem-benefit-card__icon {
+  background: var(--dov-duotone);
+  color: var(--color-on-primary);
+}
+
+.dov__products {
+  background:
+    radial-gradient(circle at 5% 18%,
+      color-mix(in srgb, var(--dov-tone-primary) 34%, transparent),
+      transparent 25%),
+    radial-gradient(circle at 94% 82%,
+      color-mix(in srgb, var(--dov-tone-secondary) 36%, transparent),
+      transparent 28%),
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--surface) 30%, var(--dov-tone-primary)),
+      color-mix(in srgb, var(--surface) 24%, var(--dov-tone-secondary)));
+}
+
+.dov__products-heading .dov__products-eyebrow {
+  border-color: color-mix(in srgb, var(--color-on-primary) 28%, transparent);
+  background: color-mix(in srgb, var(--surface) 16%, transparent);
+  color: var(--color-on-primary);
+}
+
+.dov__products-heading .dov__products-eyebrow svg {
+  color: inherit;
+}
+
+.dov__products-heading h2,
+.dov__products-heading p {
+  color: var(--color-on-primary);
+  text-shadow: none;
+}
+
+.dov__products-heading p {
+  opacity: 0.82;
+}
+
+.dov__products-grid .trem-product-card {
+  --tpc-accent: var(--dov-tone-primary);
+  --tpc-grad: var(--dov-duotone);
+  border-color: color-mix(in srgb, var(--color-on-primary) 18%, transparent);
+  background: color-mix(in srgb, var(--surface-elevated) 96%, transparent);
+  box-shadow: var(--shadow-lg);
+}
+
+.dov__products-grid .trem-product-card:nth-child(even) {
+  --tpc-accent: var(--dov-tone-secondary);
+  --tpc-grad: linear-gradient(135deg,
+      var(--dov-tone-secondary),
+      var(--dov-tone-primary));
+}
+
+.dov__insights {
+  border-color: color-mix(in srgb, var(--dov-tone-primary) 18%, var(--border));
+  background:
+    radial-gradient(circle at 10% 15%,
+      color-mix(in srgb, var(--dov-tone-primary) 12%, transparent),
+      transparent 25%),
+    radial-gradient(circle at 90% 55%,
+      color-mix(in srgb, var(--dov-tone-secondary) 12%, transparent),
+      transparent 28%),
+    linear-gradient(180deg, var(--dov-band), var(--page-bg));
+}
+
+.dov__insights::before,
+.dov__insights::after {
+  display: none;
+}
+
+.dov__faq-list,
+.dov__article-card {
+  border-color: color-mix(in srgb, var(--dov-tone-primary) 18%, var(--border));
+  background: var(--surface-elevated);
+}
+
+.dov__faq-list {
+  box-shadow: var(--shadow-sm);
+}
+
+.dov__faq-item,
+.dov__article-content {
+  border-color: color-mix(in srgb, var(--dov-tone-primary) 14%, var(--border));
+}
+
+.dov__faq-toggle,
+.dov__article-arrow,
+.dov__articles-action-icon {
+  color: var(--dov-tone-primary);
+}
+
+.dov__article-card:nth-child(even) .dov__article-arrow {
+  color: var(--dov-tone-secondary);
+}
+
+.dov__articles-action {
+  border-color: color-mix(in srgb, var(--dov-tone-primary) 24%, var(--border));
+  background: var(--surface-elevated);
+  color: var(--heading);
+}
+
+.dov__articles-action:hover,
+.dov__article-card:hover .dov__article-arrow {
+  background: var(--dov-duotone);
+  color: var(--color-on-primary);
+}
+
+.theme--dark .dov__hero--search {
+  background:
+    linear-gradient(90deg,
+      color-mix(in srgb, var(--page-bg) 42%, transparent),
+      color-mix(in srgb, var(--dov-tone-secondary) 16%, transparent)),
+    var(--page-bg);
+}
+
+.theme--dark .dov__hero--search::before {
+  opacity: 0.58;
+}
+
+.theme--dark .dov__story,
+.theme--dark .dov__faq-list,
+.theme--dark .dov__article-card {
+  background: var(--surface);
+}
+
+.theme--dark .dov__story::before {
+  background: linear-gradient(120deg, var(--dov-band), var(--dov-band-alt));
+}
+
+.theme--dark .dov__products-grid .trem-product-card {
+  background: color-mix(in srgb, var(--surface-elevated) 94%, transparent);
+}
+
+.theme--dark .dov__insights {
+  background:
+    radial-gradient(circle at 10% 15%,
+      color-mix(in srgb, var(--dov-tone-primary) 10%, transparent),
+      transparent 25%),
+    radial-gradient(circle at 90% 55%,
+      color-mix(in srgb, var(--dov-tone-secondary) 10%, transparent),
+      transparent 28%),
+    linear-gradient(180deg, var(--dov-band), var(--page-bg));
+}
+
+@media (max-width: $breakpoint-tablet) {
+  .dov__hero--search {
+    background: var(--surface);
+  }
+
+  .dov__hero--search::before {
+    height: 22rem;
+    background-attachment: scroll;
+    background-position: center;
+    opacity: 0.76;
+  }
+
+  .dov__hero--search::after {
+    display: block;
+    height: 22rem;
+    background: linear-gradient(135deg,
+        color-mix(in srgb, var(--dov-tone-primary) 66%, transparent),
+        color-mix(in srgb, var(--dov-tone-secondary) 48%, transparent));
+  }
+
+  .dov__hero--search .dov__hero-trust {
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
+@media (max-width: $breakpoint-mobile) {
+  .dov__story::before {
+    height: 64%;
+  }
+
+  .dov__story-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: $space-6 $space-3;
+  }
+
+  .dov__story-stat strong {
+    font-size: clamp(2.5rem, 14vw, 4rem);
+  }
+
+  .dov__benefits .dov__benefit-shell:nth-child(even) {
+    background: transparent;
+  }
+
+  .dov__products-grid {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(16rem, 82%);
+    grid-template-columns: none;
+    gap: $space-4;
+    padding-bottom: $space-3;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scroll-snap-type: inline mandatory;
+    scrollbar-width: none;
+  }
+
+  .dov__products-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .dov__products-grid .trem-product-card {
+    scroll-snap-align: start;
+  }
+
+  .dov__faq-list {
+    padding: $space-3 $space-4;
+  }
+}
+
+/* Sticky home canvas: copy and search scroll away while the image remains
+   contained by the hero and is covered by the following section. */
+.dov__hero--search {
+  position: relative;
+  display: block;
+  height: clamp(54rem, 126svh, 78rem);
+  min-height: 0;
+  padding: 0;
+  overflow: visible;
+  background: var(--page-bg);
+}
+
+.dov__hero--search::before,
+.dov__hero--search::after {
+  display: none;
+}
+
+.dov__hero--search>.dov__hero-media {
+  position: sticky;
+  z-index: 0;
+  top: 0;
+  width: 100%;
+  height: calc(100svh - 4.5rem);
+  min-height: 42rem;
+  overflow: hidden;
+  background: var(--dov-hero-image) center / cover no-repeat;
+}
+
+.dov__hero-media::before,
+.dov__hero-media::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+}
+
+.dov__hero-media::before {
+  background: linear-gradient(90deg,
+      color-mix(in srgb, var(--page-bg) 88%, transparent) 0%,
+      color-mix(in srgb, var(--page-bg) 54%, transparent) 25%,
+      transparent 52%);
+}
+
+.dov__hero-media::after {
+  display: none;
+}
+
+.dov__hero--search>.dov__hero-stage {
+  position: absolute;
+  z-index: 2;
+  inset: 0 0 auto;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: clamp(#{$space-4}, 2.5vw, #{$space-7});
+  width: 100%;
+  min-height: calc(100svh - 4.5rem);
+  padding: clamp(#{$space-6}, 5vw, #{$space-12}) clamp(#{$space-6}, 5vw, #{$space-12}) $space-6;
+  pointer-events: none;
+}
+
+.dov__hero-stage>* {
+  pointer-events: auto;
+}
+
+.dov__hero--search .dov__hero-copy {
+  width: min(36rem, 58%);
+}
+
+.dov__hero--search .dov__hero-search {
+  align-self: end;
+  margin-top: clamp(#{$space-12}, 14vh, 9rem);
+}
+
+.dov__hero--search .dov__hero-search .trem-global-search__tabs,
+.dov__hero--search .dov__hero-search .trem-global-search__panel,
+.dov__hero--search .dov__hero-trust {
+  background: color-mix(in srgb, var(--surface-glass-strong) 90%, transparent);
+  box-shadow: 0 1.5rem 4rem color-mix(in srgb, var(--heading) 16%, transparent);
+  backdrop-filter: blur(22px) saturate(1.12);
+}
+
+.dov__story,
+.trem-home-features,
+.dov__insights {
+  position: relative;
+  z-index: 3;
+}
+
+.theme--dark .dov__hero-media::before {
+  background: linear-gradient(90deg,
+      color-mix(in srgb, var(--page-bg) 86%, transparent) 0%,
+      color-mix(in srgb, var(--page-bg) 46%, transparent) 28%,
+      transparent 55%);
+}
+
+@media (max-width: $breakpoint-tablet) {
+  .dov__hero--search {
+    height: auto;
+    background: var(--surface);
+  }
+
+  .dov__hero--search>.dov__hero-media {
+    position: absolute;
+    top: 0;
+    height: 22rem;
+    min-height: 0;
+    background-position: 62% center;
+  }
+
+  .dov__hero-media::before {
+    background:
+      linear-gradient(90deg,
+        color-mix(in srgb, var(--page-bg) 76%, transparent) 0%,
+        color-mix(in srgb, var(--page-bg) 34%, transparent) 48%,
+        transparent 78%),
+      linear-gradient(180deg, transparent 66%, color-mix(in srgb, var(--page-bg) 48%, transparent));
+  }
+
+  .dov__hero--search>.dov__hero-stage {
+    position: relative;
+    min-height: 0;
+    padding: $space-5 $space-4 $space-4;
+  }
+
+  .dov__hero--search .dov__hero-copy {
+    width: 100%;
+    min-height: 14rem;
+  }
+
+  .dov__hero--search .dov__hero-search {
+    margin-top: $space-6;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dov__hero--search>.dov__hero-media {
+    position: absolute;
+  }
+
+  .dov__hero--search {
+    height: auto;
+  }
+
+  .dov__hero--search>.dov__hero-stage {
+    position: relative;
+  }
+}
+
+/* Travel-journal and route-map details for the home insights section. */
+@keyframes dov-faq-plane-drift {
+
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(8deg);
+  }
+
+  50% {
+    transform: translate3d(-6px, -3px, 0) rotate(3deg);
+  }
+}
+
+.dov__faq-list {
+  position: relative;
+  overflow: visible;
+}
+
+.dov__faq-list::before {
+  position: absolute;
+  top: $space-7;
+  bottom: $space-7;
+  left: calc(#{$space-6} + 1.1rem);
+  border-left: 1px dashed color-mix(in srgb, var(--color-primary) 42%, var(--border));
+  content: "";
+  pointer-events: none;
+}
+
+.dov__faq-flight-marker {
+  position: absolute;
+  z-index: 2;
+  top: -1.35rem;
+  right: $space-6;
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 28%, var(--border));
+  border-radius: $radius-circle;
+  background: var(--color-primary-dark);
+  color: #{$white-color};
+  box-shadow: var(--shadow-sm);
+  animation: dov-faq-plane-drift 4.5s $ease-standard infinite;
+}
+
+.dov__faq-question {
+  display: flex;
+  align-items: center;
+  gap: $space-4;
+  min-width: 0;
+}
+
+.dov__faq-index {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: 0 0 2.25rem;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 26%, var(--border));
+  border-radius: $radius-circle;
+  background: var(--surface-elevated);
+  color: var(--color-primary);
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+  letter-spacing: 0.05em;
+  transition:
+    background $duration-base $ease-standard,
+    color $duration-base $ease-standard,
+    border-color $duration-base $ease-standard;
+}
+
+.dov__faq-item[open] .dov__faq-index {
+  border-color: var(--color-primary-dark);
+  background: var(--color-primary-dark);
+  color: #{$white-color};
+}
+
+.dov__faq-item p {
+  margin-left: calc(2.25rem + #{$space-4});
+}
+
+.dov__faq-toggle {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border-radius: $radius-circle;
+  background: var(--primary-soft);
+  color: var(--color-primary-dark);
+}
+
+.dov__faq-toggle::before,
+.dov__faq-toggle::after {
+  width: 0.8rem;
+}
+
+.dov__faq-item summary:hover .dov__faq-index {
+  border-color: var(--color-primary);
+  background: var(--primary-soft);
+}
+
+.dov__faq-item[open] summary:hover .dov__faq-index {
+  border-color: var(--color-primary-dark);
+  background: var(--color-primary-dark);
+}
+
+.dov__article-card::after {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+  content: "";
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform $duration-slow $ease-standard;
+}
+
+.dov__article-card:hover::after,
+.dov__article-card:focus-visible::after {
+  transform: scaleX(1);
+}
+
+.dov__article-description {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: $font-size-sm;
+  line-height: 1.55;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.dov__article-category,
+.dov__article-featured-mark {
+  color: #{$white-color};
+}
+
+.dov__article-card:hover .dov__article-arrow {
+  background: var(--color-primary-dark);
+  color: #{$white-color};
+}
+
+.dov__articles-action-icon {
+  background: var(--color-primary-dark);
+  color: #{$white-color};
+}
+
+@media (max-width: $breakpoint-mobile) {
+  .dov__faq-list {
+    padding: $space-4;
+  }
+
+  .dov__faq-list::before {
+    top: $space-6;
+    bottom: $space-6;
+    left: calc(#{$space-4} + 1.1rem);
+  }
+
+  .dov__faq-flight-marker {
+    right: $space-4;
+  }
+
+  .dov__faq-question {
+    gap: $space-3;
+  }
+
+  .dov__faq-item p {
+    margin-left: calc(2.25rem + #{$space-3});
+  }
+
+  .dov__article-grid {
+    display: flex;
+    width: calc(100% + #{$space-4});
+    margin-right: -#{$space-4};
+    padding-right: $space-4;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: $space-3;
+    overscroll-behavior-inline: contain;
+    scroll-padding-inline: 0;
+    scroll-snap-type: inline mandatory;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .dov__article-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .dov__article-card--featured,
+  .dov__article-card--standard {
+    min-width: 0;
+    flex: 0 0 calc(90% - #{$space-3});
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  .dov__article-description {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dov__faq-flight-marker {
+    animation: none;
+  }
+
+  .dov__article-card::after {
+    transition: none;
+  }
+}
+
+/* Desktop journal: two equal editorial cards per viewport with a third card
+   available through the token-styled horizontal rail. */
+@media (min-width: #{$breakpoint-mobile + 1px}) {
+  .dov__articles-header {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .dov__articles .dov__insights-heading {
+    max-width: 50rem;
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .dov__articles .dov__insights-heading p {
+    margin-inline: auto;
+  }
+
+  .dov__articles-action--desktop {
+    display: none;
+  }
+
+  .dov__articles-action--mobile {
+    display: flex;
+    width: fit-content;
+    min-width: 12rem;
+    justify-content: space-between;
+    margin: $space-6 auto 0;
+  }
+
+  .dov__article-grid {
+    display: grid;
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: calc((100% - #{$space-5}) / 2);
+    grid-template-rows: minmax(20rem, auto);
+    gap: $space-5;
+    padding-bottom: $space-4;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-inline: contain;
+    scroll-padding-inline: 0;
+    scroll-snap-type: inline mandatory;
+    scrollbar-color: color-mix(in srgb, var(--color-primary) 54%, var(--border)) transparent;
+    scrollbar-width: thin;
+  }
+
+  .dov__article-grid::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .dov__article-grid::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .dov__article-grid::-webkit-scrollbar-thumb {
+    border-radius: $radius-full;
+    background: color-mix(in srgb, var(--color-primary) 54%, var(--border));
+  }
+
+  .dov__article-card--featured,
+  .dov__article-card--standard {
+    grid-row: auto;
+    min-height: 20rem;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  .dov__article-card--featured .dov__article-content,
+  .dov__article-card--standard .dov__article-content {
+    align-content: center;
+    padding: clamp(#{$space-4}, 2vw, #{$space-6});
+  }
+
+  .dov__article-card--featured .dov__article-title-row h3,
+  .dov__article-card--standard .dov__article-title-row h3 {
+    max-width: none;
+    font-size: clamp(#{$font-size-lg}, 1.5vw, 1.55rem);
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+  }
+
+  .dov__article-description {
+    display: -webkit-box;
+  }
+}
+
+@media (min-width: #{$breakpoint-mobile + 1px}) and (max-width: $breakpoint-lg) {
+
+  .dov__article-card--featured,
+  .dov__article-card--standard {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .dov__article-card--featured .dov__article-media,
+  .dov__article-card--standard .dov__article-media {
+    width: 100%;
+    min-height: 0;
+    height: auto;
+    aspect-ratio: 16 / 10;
+  }
+}
+
+@media (min-width: #{$breakpoint-lg + 1px}) {
+
+  .dov__article-card--featured,
+  .dov__article-card--standard {
+    display: grid;
+    grid-template-columns: minmax(12rem, 0.42fr) minmax(0, 0.58fr);
+  }
+
+  .dov__article-card--featured .dov__article-media,
+  .dov__article-card--standard .dov__article-media {
+    width: 100%;
+    height: 100%;
+    min-height: 20rem;
+  }
+
+  .dov__article-card--featured .dov__article-featured-mark {
+    right: $space-3;
+    bottom: $space-3;
+  }
+}
+
+// Home insights keep a clear reading order while turning the FAQ into a route map.
+.dov__faq {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  align-items: start;
+  gap: clamp(#{$space-6}, 5vw, #{$space-12});
+}
+
+.dov__faq .dov__insights-heading {
+  position: sticky;
+  top: $space-8;
+  padding-top: $space-5;
+}
+
+.dov__faq-list {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+.dov__faq-list::before {
+  left: calc(#{$space-6} + #{$space-3} + 1.1rem);
+}
+
+.dov__faq-item {
+  position: relative;
+  min-width: 0;
+  padding-inline: $space-3;
+  border-radius: $radius-md;
+  transition: background $duration-base $ease-standard;
+}
+
+.dov__faq-item[open] {
+  background: color-mix(in srgb, var(--primary-soft) 56%, var(--surface-elevated));
+}
+
+.dov__faq-item summary {
+  min-height: 4.5rem;
+}
+
+.dov__faq-item summary:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+  border-radius: $radius-sm;
+}
+
+.dov__faq-item p {
+  margin-right: $space-5;
+  padding-bottom: $space-2;
+}
+
+.dov__article-card:hover {
+  transform: none;
+}
+
+.dov__article-card--featured,
+.dov__article-card--standard {
+  min-width: 0;
+}
+
+.dov__article-content {
+  min-width: 0;
+}
+
+.dov__article-title-row {
+  align-items: center;
+}
+
+@media (max-width: $breakpoint-lg) {
+  .dov__faq {
+    grid-template-columns: minmax(0, 1fr);
+    gap: $space-6;
+  }
+
+  .dov__faq .dov__insights-heading {
+    position: static;
+    padding-top: 0;
+  }
+}
+
+@media (max-width: $breakpoint-mobile) {
+  .dov__faq {
+    gap: $space-5;
+  }
+
+  .dov__faq-list {
+    padding: $space-3;
+  }
+
+  .dov__faq-list::before {
+    left: calc(#{$space-3} + #{$space-2} + 1.1rem);
+  }
+
+  .dov__faq-item {
+    padding-inline: $space-2;
+  }
+
+  .dov__faq-question {
+    min-width: 0;
+  }
+
+  .dov__faq-question strong {
+    overflow-wrap: anywhere;
+  }
+
+  .dov__faq-item p {
+    margin-right: $space-2;
+  }
+
+  .dov__article-grid {
+    gap: $space-3;
+  }
+
+  .dov__article-card--featured,
+  .dov__article-card--standard {
+    flex-basis: calc(90% - #{$space-4});
+  }
+
+  .dov__article-description {
+    display: -webkit-box;
+  }
+}
+
+// TravelsTREM advantage: backend-configured benefits with a travel-led transition.
+.dov__story {
+  --dov-advantage-dark: var(--heading);
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 16% 8%, color-mix(in srgb, var(--dov-tone-primary) 9%, transparent), transparent 26%),
+    var(--surface);
+}
+
+.dov__story::before {
+  display: none;
+}
+
+.dov__advantage {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 92rem);
+  margin: 0 auto;
+  padding: clamp(#{$space-10}, 7vw, #{$space-16}) clamp(#{$space-5}, 5vw, #{$space-10}) 0;
+}
+
+.dov__advantage-heading {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+}
+
+.dov__advantage-eyebrow {
+  color: var(--dov-tone-primary);
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.dov__advantage-heading h2 {
+  margin: $space-3 0 0;
+  color: var(--heading);
+  font-size: clamp(2.35rem, 5vw, 5.2rem);
+  font-weight: $font-bold;
+  letter-spacing: -0.06em;
+  line-height: 0.98;
+}
+
+.dov__advantage-heading h2 em {
+  background: var(--dov-duotone);
+  background-clip: text;
+  color: transparent;
+  font-style: italic;
+  -webkit-background-clip: text;
+}
+
+.dov__advantage-heading>p {
+  max-width: 44rem;
+  margin: $space-4 auto 0;
+  color: var(--text-muted);
+  font-size: clamp(#{$font-size-md}, 1.25vw, #{$font-size-lg});
+  line-height: 1.65;
+}
+
+.dov__advantage-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(#{$space-3}, 1.5vw, #{$space-5});
+  margin-top: clamp(#{$space-7}, 5vw, #{$space-10});
+}
+
+.dov__advantage-card {
+  --dov-card-tone: var(--dov-tone-primary);
+  min-width: 0;
+  min-height: 15rem;
+  display: grid;
+  align-content: start;
+  justify-items: center;
+  padding: clamp(#{$space-5}, 2.6vw, #{$space-8});
+  border: 1px solid color-mix(in srgb, var(--dov-card-tone) 18%, var(--border));
+  border-radius: $radius-lg;
+  background: color-mix(in srgb, var(--dov-card-tone) 7%, var(--surface-elevated));
+  box-shadow: 0 1rem 3rem color-mix(in srgb, var(--dov-card-tone) 8%, transparent);
+  text-align: center;
+}
+
+.dov__advantage-card--secondary {
+  --dov-card-tone: var(--dov-tone-secondary);
+}
+
+.dov__advantage-card--tertiary {
+  --dov-card-tone: var(--color-primary);
+}
+
+.dov__advantage-card--success {
+  --dov-card-tone: var(--color-success);
+}
+
+.dov__advantage-icon {
+  width: 4.5rem;
+  height: 4.5rem;
+  display: grid;
+  place-items: center;
+  border-radius: $radius-circle;
+  background: var(--dov-card-tone);
+  color: var(--color-on-primary);
+  box-shadow: 0 0.8rem 1.8rem color-mix(in srgb, var(--dov-card-tone) 22%, transparent);
+}
+
+.dov__advantage-card h3 {
+  margin: $space-5 0 0;
+  color: var(--heading);
+  font-size: clamp(#{$font-size-lg}, 1.5vw, 1.45rem);
+  line-height: 1.18;
+}
+
+.dov__advantage-card p {
+  margin: $space-3 0 0;
+  color: var(--text-muted);
+  font-size: $font-size-md;
+  line-height: 1.55;
+}
+
+.dov__advantage-scene {
+  position: relative;
+  min-height: clamp(18rem, 27vw, 28rem);
+  display: flex;
+  align-items: flex-end;
+  margin-top: clamp(#{$space-7}, 5vw, #{$space-11});
+}
+
+.dov__advantage-scene>strong {
+  max-width: 100%;
+  padding-bottom: clamp(#{$space-5}, 3vw, #{$space-8});
+  color: color-mix(in srgb, var(--dov-tone-primary) 9%, var(--surface));
+  font-size: clamp(4.5rem, 13vw, 13rem);
+  font-weight: $font-bold;
+  letter-spacing: -0.075em;
+  line-height: 0.72;
+  white-space: nowrap;
+}
+
+.dov__advantage-scene figure {
+  position: absolute;
+  right: clamp(#{$space-2}, 4vw, #{$space-9});
+  bottom: 0;
+  width: min(38vw, 34rem);
+  height: clamp(16rem, 24vw, 24rem);
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--dov-tone-secondary) 28%, var(--border));
+  border-radius: 48% 48% $radius-lg $radius-lg;
+  background: var(--surface-muted);
+  box-shadow: 0 2rem 5rem color-mix(in srgb, var(--heading) 20%, transparent);
+  transform: rotate(2deg);
+}
+
+.dov__advantage-scene figure::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(145deg, transparent 48%, color-mix(in srgb, var(--dov-tone-secondary) 26%, transparent));
+  content: "";
+}
+
+.dov__advantage-scene img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 78% center;
+  filter: saturate(1.04) contrast(1.04);
+}
+
+.dov__advantage-badge {
+  position: absolute;
+  z-index: 2;
+  right: min(35vw, 30rem);
+  bottom: clamp(#{$space-6}, 5vw, #{$space-12});
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  padding: $space-3 $space-4;
+  border: 1px solid color-mix(in srgb, var(--dov-tone-primary) 22%, var(--border));
+  border-radius: $radius-full;
+  background: color-mix(in srgb, var(--surface-elevated) 90%, transparent);
+  box-shadow: var(--shadow-md);
+  color: var(--heading);
+  font-size: $font-size-sm;
+  font-weight: $font-semibold;
+  backdrop-filter: blur(18px);
+  animation: dov-advantage-float 4.8s $ease-standard infinite;
+}
+
+.dov__advantage-badge svg {
+  color: var(--dov-tone-primary);
+}
+
+.dov__story-wave {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: clamp(3.5rem, 6vw, 6rem);
+  display: block;
+  margin-top: -2.25rem;
+}
+
+.dov__story-wave path {
+  fill: var(--dov-advantage-dark);
+}
+
+.dov__story .dov__story-stats {
+  position: relative;
+  z-index: 2;
+  margin: 0;
+  padding-top: clamp(#{$space-6}, 3vw, #{$space-9});
+  background: var(--dov-advantage-dark);
+}
+
+@keyframes dov-advantage-float {
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+
+  50% {
+    transform: translateY(-0.6rem) rotate(1deg);
+  }
+}
+
+@media (max-width: $breakpoint-lg) {
+  .dov__advantage-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dov__advantage-scene figure {
+    width: min(50vw, 29rem);
+  }
+
+  .dov__advantage-badge {
+    right: min(43vw, 25rem);
+  }
+}
+
+@media (max-width: $breakpoint-mobile) {
+  .dov__advantage {
+    padding: $space-9 $space-4 0;
+  }
+
+  .dov__advantage-heading h2 {
+    font-size: clamp(2.3rem, 12vw, 3.5rem);
+  }
+
+  .dov__advantage-grid {
+    grid-template-columns: 1fr;
+    gap: $space-3;
+  }
+
+  .dov__advantage-card {
+    min-height: 0;
+    grid-template-columns: auto 1fr;
+    justify-items: start;
+    column-gap: $space-4;
+    padding: $space-5;
+    text-align: left;
+  }
+
+  .dov__advantage-icon {
+    grid-row: 1 / span 2;
+    width: 3.25rem;
+    height: 3.25rem;
+  }
+
+  .dov__advantage-card h3,
+  .dov__advantage-card p {
+    margin: 0;
+  }
+
+  .dov__advantage-card p {
+    margin-top: $space-2;
+  }
+
+  .dov__advantage-scene {
+    min-height: 18rem;
+    margin-top: $space-7;
+  }
+
+  .dov__advantage-scene>strong {
+    align-self: flex-start;
+    padding-top: $space-4;
+    font-size: clamp(3.7rem, 22vw, 6.4rem);
+    line-height: 0.78;
+    white-space: normal;
+  }
+
+  .dov__advantage-scene figure {
+    right: 0;
+    width: 72%;
+    height: 14rem;
+  }
+
+  .dov__advantage-badge {
+    right: auto;
+    bottom: $space-5;
+    left: 0;
+  }
+
+  .dov__story-wave {
+    height: 3.5rem;
+    margin-top: -1.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dov__advantage-badge {
+    animation: none;
   }
 }

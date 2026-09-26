@@ -36,7 +36,12 @@
       position: absolute;
       inset: 0;
       transform: translateX(-100%);
-      background: linear-gradient(90deg, var(--color-transparent), var(--preloader-shimmer), var(--color-transparent));
+      background: linear-gradient(
+        90deg,
+        var(--color-transparent),
+        var(--preloader-shimmer),
+        var(--color-transparent)
+      );
       animation: portal-preloader-shimmer 1.2s infinite linear;
     }
   }

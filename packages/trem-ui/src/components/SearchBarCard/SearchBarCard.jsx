@@ -21,11 +21,11 @@ const SearchBarCard = ({ fields, values, onChange, onSearch, searchIcon }) => {
         </div>
       ))}
       <Button
-       className="ui-search-bar-card__button"
-       onClick={onSearch}
-       text={searchIcon}
-       variant="outline"
-       size="extra-small"
+        className="ui-search-bar-card__button"
+        onClick={onSearch}
+        text={searchIcon}
+        variant="outline"
+        size="extra-small"
       />
     </div>
   );

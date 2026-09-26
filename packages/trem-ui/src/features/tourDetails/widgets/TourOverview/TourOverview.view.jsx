@@ -1,7 +1,16 @@
 import React from "react";
 import { Icon, Title, Paragraph } from "../../../../index.js";
 
-export default function TourOverviewView({ labels, tour, cityDisplay, title, description, durationText, ratingText, tags }) {
+export default function TourOverviewView({
+  labels,
+  tour,
+  cityDisplay,
+  title,
+  description,
+  durationText,
+  ratingText,
+  tags,
+}) {
   if (!tour) return null;
   const configuredGroupSize = Number(tour.maxGroupSize ?? tour.availability?.totalSeats);
   const groupSize = configuredGroupSize > 0 ? configuredGroupSize : null;
@@ -22,13 +31,15 @@ export default function TourOverviewView({ labels, tour, cityDisplay, title, des
         </div>
         <div className="tour-detail__fact">
           <Icon name="star" />
-          <span>{hasReviews ? (labels.rating || "Rating") : "Reviews"}</span>
+          <span>{hasReviews ? labels.rating || "Rating" : "Reviews"}</span>
           <strong>{ratingText}</strong>
         </div>
         <div className="tour-detail__fact">
           <Icon name="usersRound" />
           <span>{labels.maxGroupSize || "Group size"}</span>
-          <strong>{groupSize != null ? `Up to ${groupSize} travellers` : "Capacity available on request"}</strong>
+          <strong>
+            {groupSize != null ? `Up to ${groupSize} travellers` : "Capacity available on request"}
+          </strong>
         </div>
       </div>
       {tags.length ? (

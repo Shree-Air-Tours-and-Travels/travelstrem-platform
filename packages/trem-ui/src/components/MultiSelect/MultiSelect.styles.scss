@@ -1,0 +1,917 @@
+@import "@packages/trem-design-tokens/scss";
+
+/* ========================================================================== */
+/* Root                                                                       */
+/* ========================================================================== */
+
+.trem-multiselect {
+  --multiselect-accent: var(--color-primary);
+  --multiselect-border: var(--control-border, var(--border));
+  --multiselect-surface: var(--control-bg, var(--surface));
+
+  position: relative;
+
+  width: 100%;
+
+  min-width: 0;
+
+  .trem-dropdown,
+  .trem-dropdown__trigger {
+    width: 100%;
+
+    min-width: 0;
+  }
+}
+
+/* ========================================================================== */
+/* Trigger                                                                    */
+/* ========================================================================== */
+
+.trem-multiselect .trem-dropdown__select.ui-button {
+  position: relative;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    auto
+    auto;
+
+  align-items: center;
+
+  justify-content: stretch;
+
+  width: 100%;
+
+  min-width: 0;
+
+  gap: $space-2;
+
+  margin: 0;
+
+  border: 1px solid var(--multiselect-border);
+
+  border-radius: $radius-sm;
+
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--multiselect-surface) 98%, var(--color-primary) 2%),
+    var(--multiselect-surface)
+  );
+
+  color: var(--text);
+
+  font-family: $font-primary;
+
+  text-align: left;
+
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.035);
+
+  cursor: pointer;
+
+  transform: none;
+
+  transition:
+    border-color 150ms $ease-default,
+    background 150ms $ease-default,
+    box-shadow 150ms $ease-default;
+
+  &:hover:not(:disabled) {
+    transform: none;
+
+    border-color: color-mix(in srgb, var(--color-primary) 30%, var(--multiselect-border));
+
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--multiselect-surface) 96%, var(--color-primary) 4%),
+      var(--multiselect-surface)
+    );
+
+    box-shadow: 0 2px 5px rgba(15, 23, 42, 0.045);
+  }
+
+  &:focus-visible,
+  &.is-open {
+    outline: none;
+
+    border-color: var(--color-primary);
+
+    background: var(--multiselect-surface);
+
+    box-shadow:
+      0 0 0 3px var(--primary-soft),
+      0 3px 9px rgba(15, 23, 42, 0.045);
+  }
+
+  &.is-open {
+    .trem-multiselect__chevron-wrap {
+      background: color-mix(in srgb, var(--color-primary) 9%, var(--surface));
+
+      color: var(--color-primary);
+    }
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+
+    opacity: 1;
+
+    background: var(--surface-inset);
+
+    color: var(--muted);
+
+    box-shadow: none;
+  }
+}
+
+/* ========================================================================== */
+/* Trigger inner                                                              */
+/* ========================================================================== */
+
+.trem-dropdown__select-inner {
+  grid-column: 1;
+
+  display: flex;
+
+  min-width: 0;
+
+  flex-direction: column;
+
+  justify-content: center;
+
+  gap: 3px;
+
+  overflow: hidden;
+}
+
+/* ========================================================================== */
+/* Label                                                                      */
+/* ========================================================================== */
+
+.trem-dropdown__select-label {
+  display: flex;
+  align-items: center;
+
+  min-width: 0;
+
+  gap: 3px;
+
+  color: var(--muted);
+
+  font-size: 10px;
+  font-weight: $font-bold;
+
+  line-height: 1.15;
+
+  letter-spacing: 0.015em;
+
+  transition: color 150ms $ease-default;
+}
+
+.trem-dropdown__select.is-open {
+  .trem-dropdown__select-label {
+    color: var(--color-primary);
+  }
+}
+
+.trem-multiselect__required {
+  color: var(--color-danger);
+
+  font-weight: $font-bold;
+}
+
+/* ========================================================================== */
+/* Selection                                                                  */
+/* ========================================================================== */
+
+.trem-multiselect__selection {
+  display: flex;
+  align-items: center;
+
+  min-width: 0;
+
+  gap: $space-1;
+
+  flex: 1;
+
+  flex-wrap: nowrap;
+
+  overflow: hidden;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Placeholder                                                                */
+/* -------------------------------------------------------------------------- */
+
+.trem-multiselect__placeholder {
+  min-width: 0;
+
+  overflow: hidden;
+
+  color: color-mix(in srgb, var(--muted) 82%, transparent);
+
+  font-weight: $font-regular;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Selected chip                                                              */
+/* -------------------------------------------------------------------------- */
+
+.trem-multiselect__chip {
+  display: inline-flex;
+  align-items: center;
+
+  min-width: 0;
+  max-width: 145px;
+
+  height: 24px;
+
+  padding: 0 $space-2;
+
+  flex: 0 1 auto;
+
+  border: 1px solid color-mix(in srgb, var(--color-primary) 14%, transparent);
+
+  border-radius: $radius-full;
+
+  background: color-mix(in srgb, var(--color-primary) 7%, var(--surface));
+
+  color: var(--color-primary-dark);
+
+  font-size: $font-size-xs;
+  font-weight: $font-semibold;
+
+  line-height: 1;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Overflow                                                                   */
+/* -------------------------------------------------------------------------- */
+
+.trem-multiselect__more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 24px;
+  height: 24px;
+
+  padding: 0 6px;
+
+  flex: 0 0 auto;
+
+  border-radius: $radius-full;
+
+  background: var(--surface-inset);
+
+  color: var(--muted);
+
+  font-size: 10px;
+  font-weight: $font-bold;
+
+  line-height: 1;
+}
+
+/* ========================================================================== */
+/* Count                                                                      */
+/* ========================================================================== */
+
+.trem-multiselect__count {
+  grid-column: 2;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 22px;
+  height: 22px;
+
+  padding: 0 6px;
+
+  justify-self: end;
+
+  border: 1px solid color-mix(in srgb, var(--color-primary) 14%, transparent);
+
+  border-radius: $radius-full;
+
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--surface));
+
+  color: var(--color-primary);
+
+  font-size: 10px;
+  font-weight: $font-bold;
+
+  line-height: 1;
+
+  font-variant-numeric: tabular-nums;
+
+  flex-shrink: 0;
+}
+
+/* ========================================================================== */
+/* Chevron                                                                    */
+/* ========================================================================== */
+
+.trem-multiselect__chevron-wrap {
+  grid-column: 3;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 28px;
+  height: 28px;
+
+  justify-self: end;
+
+  border-radius: $radius-xs;
+
+  color: var(--muted);
+
+  flex: 0 0 28px;
+
+  transition:
+    color 150ms $ease-default,
+    background 150ms $ease-default;
+}
+
+.trem-dropdown__select:hover:not(:disabled) {
+  .trem-multiselect__chevron-wrap {
+    background: var(--surface-inset);
+
+    color: var(--text);
+  }
+}
+
+.trem-dropdown__select-chevron {
+  display: block;
+
+  transition: transform 180ms $ease-default;
+}
+
+.trem-dropdown__select-chevron.is-open {
+  transform: rotate(180deg);
+}
+
+/* ========================================================================== */
+/* Options                                                                    */
+/* ========================================================================== */
+
+.trem-multiselect__option {
+  position: relative;
+
+  display: grid;
+
+  grid-template-columns: auto minmax(0, 1fr);
+
+  align-items: center;
+
+  width: 100%;
+
+  min-height: 40px;
+
+  gap: $space-2;
+
+  padding: 6px $space-2;
+
+  border: 1px solid transparent;
+
+  border-radius: $radius-xs;
+
+  background: transparent;
+
+  color: var(--text);
+
+  font-family: $font-primary;
+  font-size: $font-size-sm;
+  font-weight: $font-regular;
+
+  line-height: 1.35;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    background 120ms $ease-default,
+    border-color 120ms $ease-default,
+    color 120ms $ease-default;
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--color-primary) 5%, var(--surface));
+  }
+
+  &:focus-visible {
+    outline: none;
+
+    border-color: color-mix(in srgb, var(--color-primary) 28%, transparent);
+
+    background: color-mix(in srgb, var(--color-primary) 5%, var(--surface));
+  }
+
+  &.is-selected {
+    border-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
+
+    background: color-mix(in srgb, var(--color-primary) 7%, var(--surface));
+
+    color: var(--color-primary-dark);
+
+    font-weight: $font-semibold;
+  }
+
+  &.is-disabled {
+    opacity: 0.42;
+
+    cursor: not-allowed;
+
+    background: transparent;
+  }
+}
+
+/* ========================================================================== */
+/* Checkbox                                                                   */
+/* ========================================================================== */
+
+.trem-multiselect__checkbox {
+  position: relative;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 18px;
+  height: 18px;
+
+  flex: 0 0 18px;
+
+  border: 1.5px solid color-mix(in srgb, var(--muted) 45%, var(--border));
+
+  border-radius: 5px;
+
+  background: var(--surface);
+
+  color: var(--color-on-primary);
+
+  box-shadow: inset 0 1px 1px rgba(15, 23, 42, 0.02);
+
+  transition:
+    background 130ms $ease-default,
+    border-color 130ms $ease-default,
+    box-shadow 130ms $ease-default,
+    transform 130ms $ease-default;
+
+  &.is-checked {
+    border-color: var(--color-primary);
+
+    background: linear-gradient(
+      135deg,
+      var(--color-primary),
+      color-mix(in srgb, var(--color-primary) 78%, var(--color-secondary) 22%)
+    );
+
+    box-shadow: 0 2px 5px color-mix(in srgb, var(--color-primary) 16%, transparent);
+
+    svg {
+      stroke-width: 2.4;
+    }
+  }
+}
+
+.trem-multiselect__option:hover:not(:disabled) {
+  .trem-multiselect__checkbox:not(.is-checked) {
+    border-color: color-mix(in srgb, var(--color-primary) 52%, var(--border));
+
+    background: color-mix(in srgb, var(--color-primary) 3%, var(--surface));
+  }
+}
+
+/* ========================================================================== */
+/* Option label                                                               */
+/* ========================================================================== */
+
+.trem-multiselect__option-label {
+  display: block;
+
+  min-width: 0;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ========================================================================== */
+/* Footer                                                                     */
+/* ========================================================================== */
+
+.trem-multiselect__footer {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  min-height: 48px;
+
+  gap: $space-2;
+
+  margin-top: $space-1;
+
+  padding: $space-2 $space-1 $space-1;
+
+  border-top: 1px solid var(--border);
+
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface) 96%, transparent),
+    var(--surface)
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Footer tools                                                               */
+/* -------------------------------------------------------------------------- */
+
+.trem-multiselect__footer-tools {
+  display: inline-flex;
+  align-items: center;
+
+  min-width: 0;
+
+  gap: 2px;
+}
+
+.trem-multiselect__footer-btn.ui-button {
+  min-height: 28px;
+
+  padding-inline: $space-2;
+
+  border-radius: $radius-xs;
+
+  font-size: $font-size-xs;
+  font-weight: $font-semibold;
+
+  color: var(--color-primary);
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--color-primary) 7%, transparent);
+
+    transform: none;
+  }
+}
+
+.trem-multiselect__footer-btn--clear.ui-button {
+  color: var(--color-danger);
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--color-danger) 7%, transparent);
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Apply                                                                      */
+/* -------------------------------------------------------------------------- */
+
+.trem-multiselect__apply.ui-button {
+  min-width: 70px;
+  min-height: 30px;
+
+  flex: 0 0 auto;
+
+  padding-inline: $space-3;
+
+  border-radius: $radius-xs;
+
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--color-primary) 14%, transparent);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Empty                                                                      */
+/* -------------------------------------------------------------------------- */
+
+.trem-multiselect__footer--empty {
+  flex-direction: column;
+
+  justify-content: center;
+
+  min-height: 84px;
+
+  gap: $space-2;
+
+  padding: $space-4;
+
+  border-top: 0;
+
+  color: var(--muted);
+
+  font-size: $font-size-xs;
+
+  text-align: center;
+}
+
+.trem-multiselect__empty-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 32px;
+  height: 32px;
+
+  border-radius: $radius-circle;
+
+  background: var(--surface-inset);
+
+  color: var(--muted);
+}
+
+/* ========================================================================== */
+/* Error                                                                      */
+/* ========================================================================== */
+
+.trem-multiselect__error {
+  display: flex;
+  align-items: center;
+
+  gap: $space-1;
+
+  margin-top: $space-1;
+
+  padding-inline: 2px;
+
+  color: var(--color-danger);
+
+  font-size: $font-size-xs;
+  font-weight: $font-semibold;
+
+  line-height: 1.35;
+
+  svg {
+    flex: 0 0 auto;
+  }
+}
+
+.trem-dropdown__select--error.ui-button {
+  border-color: color-mix(in srgb, var(--color-danger) 72%, var(--border));
+
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-danger) 3%, var(--surface)),
+    var(--surface)
+  );
+
+  &:hover:not(:disabled) {
+    border-color: var(--color-danger);
+  }
+
+  &:focus-visible,
+  &.is-open {
+    border-color: var(--color-danger);
+
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-danger) 11%, transparent);
+  }
+
+  .trem-dropdown__select-label {
+    color: var(--color-danger);
+  }
+}
+
+/* ========================================================================== */
+/* Variants                                                                   */
+/* ========================================================================== */
+
+/* -------------------------------------------------------------------------- */
+/* Outlined                                                                   */
+/* -------------------------------------------------------------------------- */
+
+.trem-multiselect--outlined {
+  .trem-dropdown__select.ui-button {
+    border: 1px solid var(--multiselect-border);
+
+    background: var(--multiselect-surface);
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Filled                                                                     */
+/* -------------------------------------------------------------------------- */
+
+.trem-multiselect--filled {
+  .trem-dropdown__select.ui-button {
+    border-color: transparent;
+
+    background: color-mix(in srgb, var(--surface-inset) 78%, var(--surface));
+
+    box-shadow: none;
+
+    &:hover:not(:disabled) {
+      border-color: color-mix(in srgb, var(--color-primary) 14%, transparent);
+
+      background: color-mix(in srgb, var(--color-primary) 4%, var(--surface-inset));
+    }
+
+    &:focus-visible,
+    &.is-open {
+      border-color: var(--color-primary);
+
+      background: var(--surface);
+
+      box-shadow: 0 0 0 3px var(--primary-soft);
+    }
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Underlined                                                                 */
+/* -------------------------------------------------------------------------- */
+
+.trem-multiselect--underlined {
+  .trem-dropdown__select.ui-button {
+    padding-inline: 0;
+
+    border: 0;
+    border-bottom: 1.5px solid var(--multiselect-border);
+
+    border-radius: 0;
+
+    background: transparent;
+
+    box-shadow: none;
+
+    &:hover:not(:disabled) {
+      border-bottom-color: color-mix(in srgb, var(--color-primary) 55%, var(--multiselect-border));
+
+      background: transparent;
+
+      box-shadow: none;
+    }
+
+    &:focus-visible,
+    &.is-open {
+      border-bottom-color: var(--color-primary);
+
+      background: transparent;
+
+      box-shadow: none;
+    }
+  }
+
+  .trem-multiselect__chevron-wrap {
+    border-radius: $radius-xs;
+  }
+}
+
+/* ========================================================================== */
+/* Sizes                                                                      */
+/* ========================================================================== */
+
+/* -------------------------------------------------------------------------- */
+/* Small                                                                      */
+/* -------------------------------------------------------------------------- */
+
+.trem-multiselect--sm {
+  .trem-dropdown__select.ui-button {
+    min-height: 40px;
+
+    padding: 5px $space-2;
+
+    gap: $space-1;
+
+    font-size: $font-size-xs;
+  }
+
+  .trem-multiselect__chip {
+    max-width: 120px;
+
+    height: 21px;
+
+    padding-inline: 6px;
+
+    font-size: 10px;
+  }
+
+  .trem-multiselect__more,
+  .trem-multiselect__count {
+    min-width: 20px;
+    height: 20px;
+
+    font-size: 9px;
+  }
+
+  .trem-multiselect__chevron-wrap {
+    width: 24px;
+    height: 24px;
+
+    flex-basis: 24px;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Medium                                                                     */
+/* -------------------------------------------------------------------------- */
+
+.trem-multiselect--md {
+  .trem-dropdown__select.ui-button {
+    min-height: 48px;
+
+    padding: 6px $space-3;
+
+    font-size: $font-size-sm;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Large                                                                      */
+/* -------------------------------------------------------------------------- */
+
+.trem-multiselect--lg {
+  .trem-dropdown__select.ui-button {
+    min-height: 56px;
+
+    padding: 8px $space-3;
+
+    font-size: $font-size-md;
+  }
+
+  .trem-multiselect__chip {
+    height: 26px;
+
+    max-width: 170px;
+  }
+
+  .trem-multiselect__count {
+    min-width: 24px;
+    height: 24px;
+  }
+
+  .trem-multiselect__chevron-wrap {
+    width: 30px;
+    height: 30px;
+
+    flex-basis: 30px;
+  }
+}
+
+/* ========================================================================== */
+/* Disabled                                                                   */
+/* ========================================================================== */
+
+.trem-multiselect--disabled {
+  cursor: not-allowed;
+
+  .trem-dropdown__select.ui-button {
+    border-color: var(--border);
+
+    opacity: 0.58;
+
+    cursor: not-allowed;
+
+    box-shadow: none;
+  }
+}
+
+/* ========================================================================== */
+/* Responsive                                                                 */
+/* ========================================================================== */
+
+@media (max-width: 768px) {
+  .trem-multiselect__chip {
+    max-width: 110px;
+  }
+
+  .trem-multiselect__footer {
+    gap: $space-1;
+  }
+
+  .trem-multiselect__footer-tools {
+    gap: 0;
+  }
+
+  .trem-multiselect__apply.ui-button {
+    min-width: 64px;
+
+    padding-inline: $space-2;
+  }
+}
+
+/* ========================================================================== */
+/* Reduced motion                                                             */
+/* ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .trem-multiselect {
+    .trem-dropdown__select.ui-button,
+    .trem-dropdown__select-chevron,
+    .trem-multiselect__checkbox,
+    .trem-multiselect__option {
+      transition: none;
+    }
+  }
+}

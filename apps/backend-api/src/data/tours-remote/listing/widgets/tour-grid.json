@@ -3,7 +3,8 @@
   "component": {
     "data": {},
     "dataScope": {
-      "options": {}
+      "options": {},
+      "optionSets": { "tourSortOptions": "trevista.tourSortOptions" }
     },
     "elements": {
       "labels": {
@@ -13,10 +14,16 @@
         "sortDuration": "Duration",
         "sortRating": "Rating",
         "sortBy": "Sort by",
+        "searchTours": "Search tours",
+        "searchPlaceholder": "Search by tour, destination, or experience...",
+        "uploadedBy": "Uploaded by",
         "sortNote": "Save an average of 15% on curated tours when you're signed in.",
+        "memberSortNote": "You're signed in. Save favourites and manage your Trevista bookings from your dashboard.",
         "showing": "Showing",
         "of": "of",
         "noToursFound": "No tours found matching your criteria.",
+        "enquireLabel": "Enquire now",
+        "enquireAriaLabel": "Open tour enquiry form",
         "loadingTours": "Loading tours...",
         "scrollForMore": "Scroll for more tours",
         "loadMore": "Load More Tours",
@@ -36,29 +43,13 @@
         {
           "type": "TourGrid",
           "props": {
-            "sortOptions": [
-              {
-                "id": "recommended",
-                "labelRef": "sortRecommended"
-              },
-              {
-                "id": "price_asc",
-                "labelRef": "sortPriceLowHigh"
-              },
-              {
-                "id": "price_desc",
-                "labelRef": "sortPriceHighLow"
-              },
-              {
-                "id": "duration",
-                "labelRef": "sortDuration"
-              },
-              {
-                "id": "rating",
-                "labelRef": "sortRating"
-              }
-            ],
+            "hideDescription": true,
+            "searchLabelRef": "searchTours",
+            "searchPlaceholderRef": "searchPlaceholder",
+            "agencyLabelRef": "uploadedBy",
+            "sortOptionsRef": "tourSortOptions",
             "sortNoteLabelRef": "sortNote",
+            "memberSortNoteLabelRef": "memberSortNote",
             "emptyLabelRef": "noToursFound",
             "loadingLabelRef": "loadingTours",
             "loadMoreLabelRef": "loadMore",

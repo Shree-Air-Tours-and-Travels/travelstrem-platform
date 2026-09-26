@@ -1,0 +1,2499 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>TravelsTREM — Complete Tour Schema Builder</title>
+    <style>
+      :root {
+        --bg: #f6f7fb;
+        --card: #fff;
+        --soft: #fbfbfe;
+        --text: #111827;
+        --muted: #667085;
+        --line: #e7e8ef;
+        --line2: #d6d9e3;
+        --p: #5b4df5;
+        --ps: #f0eeff;
+        --ok: #067647;
+        --oks: #ecfdf3;
+        --warn: #b54708;
+        --warns: #fff6ed;
+        --danger: #d92d20;
+        --dangers: #fff1f0;
+        --shadow: 0 14px 40px rgba(17, 24, 39, 0.07);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+
+      .topbar {
+        height: 72px;
+        background: #fff;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 26px;
+        position: sticky;
+        top: 0;
+        z-index: 60;
+      }
+
+      .brand {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .logo {
+        width: 40px;
+        height: 40px;
+        border-radius: 13px;
+        background: linear-gradient(135deg, var(--p), #7768ff);
+        color: #fff;
+        display: grid;
+        place-items: center;
+        font-weight: 900;
+      }
+
+      .brand h1 {
+        margin: 0;
+        font-size: 18px;
+      }
+
+      .brand p {
+        margin: 2px 0 0;
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .shell {
+        display: grid;
+        grid-template-columns: 318px minmax(0, 1fr);
+        min-height: calc(100vh - 72px);
+      }
+
+      .sidebar {
+        background: #fff;
+        border-right: 1px solid var(--line);
+        padding: 20px 16px 110px;
+        position: sticky;
+        top: 72px;
+        height: calc(100vh - 72px);
+        overflow: auto;
+      }
+
+      .side-label {
+        padding: 0 10px 12px;
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .step {
+        width: 100%;
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        text-align: left;
+        border: 1px solid transparent;
+        border-radius: 13px;
+        background: transparent;
+        padding: 11px;
+        margin-bottom: 5px;
+      }
+
+      .step:hover {
+        background: #fafaff;
+      }
+
+      .step.active {
+        background: var(--ps);
+        border-color: #d8d3ff;
+      }
+
+      .step.done .step-num {
+        background: var(--oks);
+        color: var(--ok);
+        border-color: #c9ead8;
+      }
+
+      .step-num {
+        width: 28px;
+        height: 28px;
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--line2);
+        border-radius: 50%;
+        background: #fff;
+        font-size: 11px;
+        font-weight: 900;
+        flex: none;
+      }
+
+      .step.active .step-num {
+        background: var(--p);
+        color: #fff;
+        border-color: var(--p);
+      }
+
+      .step-copy strong {
+        font-size: 12px;
+        display: block;
+      }
+
+      .step-copy small {
+        font-size: 9px;
+        color: var(--muted);
+        display: block;
+        line-height: 1.35;
+        margin-top: 3px;
+      }
+
+      .main {
+        min-width: 0;
+        padding: 28px 30px 132px;
+      }
+
+      .content {
+        max-width: 1220px;
+        margin: auto;
+      }
+
+      .heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 24px;
+        margin-bottom: 20px;
+      }
+
+      .eyebrow {
+        font-size: 10px;
+        color: var(--p);
+        font-weight: 900;
+        margin-bottom: 6px;
+        letter-spacing: 0.04em;
+      }
+
+      .heading h2 {
+        margin: 0;
+        font-size: 28px;
+      }
+
+      .heading p {
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.5;
+        max-width: 800px;
+        margin: 7px 0 0;
+      }
+
+      .progress {
+        width: 230px;
+        flex: none;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 13px;
+        padding: 12px;
+      }
+
+      .progress-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 10px;
+        color: var(--muted);
+        margin-bottom: 8px;
+      }
+
+      .track {
+        height: 7px;
+        background: #eceef4;
+        border-radius: 99px;
+        overflow: hidden;
+      }
+
+      .fill {
+        height: 100%;
+        background: var(--p);
+        transition: 0.2s;
+      }
+
+      .card {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 16px;
+      }
+
+      .card.subtle {
+        background: var(--soft);
+        box-shadow: none;
+      }
+
+      .card h3 {
+        font-size: 16px;
+        margin: 0;
+      }
+
+      .card h4 {
+        font-size: 13px;
+        margin: 0;
+      }
+
+      .desc {
+        font-size: 11px;
+        color: var(--muted);
+        line-height: 1.5;
+        margin: 5px 0 16px;
+      }
+
+      .substep-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        align-items: flex-start;
+        margin-bottom: 15px;
+      }
+
+      .path {
+        font-size: 9px;
+        color: var(--muted);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        margin-top: 4px;
+      }
+
+      .grid {
+        display: grid;
+        gap: 13px;
+      }
+
+      .g2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .g3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .g4 {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .field {
+        display: block;
+      }
+
+      .field > span {
+        font-size: 10px;
+        font-weight: 800;
+        display: block;
+        margin-bottom: 6px;
+      }
+
+      .req {
+        color: var(--danger);
+      }
+
+      .schema-hint {
+        font-weight: 500;
+        color: var(--muted);
+        font-size: 9px;
+      }
+
+      input[type="text"],
+      input[type="number"],
+      input[type="date"],
+      input[type="datetime-local"],
+      select,
+      textarea {
+        width: 100%;
+        border: 1px solid var(--line2);
+        border-radius: 10px;
+        background: #fff;
+        padding: 10px 11px;
+        color: var(--text);
+        outline: none;
+      }
+
+      textarea {
+        min-height: 96px;
+        resize: vertical;
+      }
+
+      textarea.json {
+        min-height: 150px;
+        font:
+          10px/1.5 ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          monospace;
+      }
+
+      input:focus,
+      select:focus,
+      textarea:focus {
+        border-color: var(--p);
+        box-shadow: 0 0 0 3px rgba(91, 77, 245, 0.09);
+      }
+
+      .help {
+        font-size: 9px;
+        color: var(--muted);
+        line-height: 1.4;
+        margin-top: 5px;
+      }
+
+      .btn {
+        border: 1px solid var(--line2);
+        background: #fff;
+        color: var(--text);
+        border-radius: 10px;
+        padding: 9px 13px;
+        font-size: 11px;
+        font-weight: 800;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+      }
+
+      .btn.primary {
+        background: var(--p);
+        border-color: var(--p);
+        color: #fff;
+      }
+
+      .btn.danger {
+        color: var(--danger);
+        border-color: #f0c8c5;
+        background: #fff;
+      }
+
+      .btn.small {
+        padding: 6px 9px;
+        font-size: 10px;
+      }
+
+      .btn.ghost {
+        border-color: transparent;
+        background: transparent;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 5px 8px;
+        font-size: 9px;
+        font-weight: 900;
+        background: var(--ps);
+        color: var(--p);
+      }
+
+      .badge.ok {
+        background: var(--oks);
+        color: var(--ok);
+      }
+
+      .badge.warn {
+        background: var(--warns);
+        color: var(--warn);
+      }
+
+      .badge.danger {
+        background: var(--dangers);
+        color: var(--danger);
+      }
+
+      .inline {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+      }
+
+      .divider {
+        height: 1px;
+        background: var(--line);
+        margin: 16px 0;
+      }
+
+      .notice {
+        border: 1px solid #ffd7b1;
+        background: var(--warns);
+        color: #7a3412;
+        border-radius: 11px;
+        padding: 11px 13px;
+        font-size: 10px;
+        line-height: 1.45;
+      }
+
+      .info {
+        border: 1px solid #d8d3ff;
+        background: var(--ps);
+        color: #37306d;
+        border-radius: 11px;
+        padding: 11px 13px;
+        font-size: 10px;
+        line-height: 1.45;
+      }
+
+      .bool-row {
+        border: 1px solid var(--line);
+        background: #fff;
+        border-radius: 10px;
+        padding: 9px 10px;
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .bool-row strong {
+        font-size: 10px;
+      }
+
+      .bool-row small {
+        display: block;
+        font-size: 9px;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+
+      .switch {
+        position: relative;
+        width: 42px;
+        height: 24px;
+        flex: none;
+      }
+
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .slider {
+        position: absolute;
+        inset: 0;
+        background: #d6d9e3;
+        border-radius: 99px;
+        transition: 0.2s;
+      }
+
+      .slider:before {
+        content: "";
+        position: absolute;
+        width: 18px;
+        height: 18px;
+        background: #fff;
+        left: 3px;
+        top: 3px;
+        border-radius: 50%;
+        transition: 0.2s;
+        box-shadow: 0 1px 4px #0002;
+      }
+
+      .switch input:checked + .slider {
+        background: var(--p);
+      }
+
+      .switch input:checked + .slider:before {
+        transform: translateX(18px);
+      }
+
+      .array-box {
+        border: 1px solid var(--line);
+        border-radius: 13px;
+        background: var(--soft);
+        padding: 12px;
+        margin-top: 8px;
+      }
+
+      .array-item {
+        border: 1px solid var(--line);
+        background: #fff;
+        border-radius: 12px;
+        padding: 13px;
+        margin-bottom: 10px;
+      }
+
+      .array-item:last-child {
+        margin-bottom: 0;
+      }
+
+      .array-item-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .nested {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px dashed var(--line2);
+      }
+
+      .pill-list {
+        display: flex;
+        gap: 7px;
+        flex-wrap: wrap;
+      }
+
+      .pill {
+        border: 1px solid var(--line2);
+        border-radius: 999px;
+        background: #fff;
+        padding: 6px 9px;
+        font-size: 9px;
+      }
+
+      .tabs {
+        display: flex;
+        gap: 7px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
+
+      .tab {
+        border: 1px solid var(--line2);
+        background: #fff;
+        border-radius: 9px;
+        padding: 7px 10px;
+        font-size: 10px;
+        font-weight: 800;
+      }
+
+      .tab.active {
+        background: var(--ps);
+        border-color: #cbc5ff;
+        color: var(--p);
+      }
+
+      .codebox {
+        background: #10131b;
+        color: #dce4ef;
+        border-radius: 14px;
+        overflow: hidden;
+      }
+
+      .codehead {
+        padding: 10px 13px;
+        border-bottom: 1px solid #293141;
+        display: flex;
+        justify-content: space-between;
+        color: #aeb8c9;
+        font-size: 10px;
+      }
+
+      .code {
+        margin: 0;
+        padding: 14px;
+        max-height: 650px;
+        overflow: auto;
+        white-space: pre;
+        font:
+          10px/1.5 ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          monospace;
+      }
+
+      .previewHero {
+        background: linear-gradient(135deg, #17152e, #312b7b);
+        color: #fff;
+        border-radius: 17px;
+        padding: 21px;
+        margin-bottom: 14px;
+      }
+
+      .previewHero h3 {
+        font-size: 23px;
+        margin: 9px 0 5px;
+      }
+
+      .previewHero p {
+        margin: 0;
+        color: #dad7f6;
+        font-size: 11px;
+      }
+
+      .pkg-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+      }
+
+      .pkg {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 16px;
+        position: relative;
+      }
+
+      .pkg.recommended {
+        border-color: #aaa1ff;
+        box-shadow: 0 0 0 3px #5b4df512;
+      }
+
+      .pkg h4 {
+        font-size: 15px;
+        margin: 0;
+      }
+
+      .pkg .price {
+        font-size: 24px;
+        font-weight: 900;
+        margin: 10px 0 2px;
+      }
+
+      .pkg ul {
+        padding-left: 16px;
+        font-size: 10px;
+        line-height: 1.7;
+        color: #48505f;
+      }
+
+      .actionbar {
+        position: fixed;
+        left: 318px;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.97);
+        backdrop-filter: blur(14px);
+        border-top: 1px solid var(--line);
+        padding: 13px 30px;
+        z-index: 50;
+      }
+
+      .action-inner {
+        max-width: 1220px;
+        margin: auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .save {
+        font-size: 9px;
+        color: var(--muted);
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      @media (max-width: 980px) {
+        .shell {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          position: relative;
+          top: auto;
+          height: auto;
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+          padding-bottom: 15px;
+        }
+
+        .sidebar .step {
+          display: none;
+        }
+
+        .sidebar .step.active {
+          display: flex;
+        }
+
+        .main {
+          padding: 20px 14px 122px;
+        }
+
+        .actionbar {
+          left: 0;
+          padding: 11px 14px;
+        }
+
+        .heading {
+          flex-direction: column;
+        }
+
+        .progress {
+          width: 100%;
+        }
+
+        .g2,
+        .g3,
+        .g4,
+        .pkg-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">TT</div>
+        <div>
+          <h1>Complete Tour Builder</h1>
+          <p>Tour + TourDeparture + TourDiscoveryChip · schema-complete</p>
+        </div>
+      </div>
+      <div class="inline">
+        <span class="badge ok">Every nested field represented</span
+        ><button class="btn" id="jumpPayload">Payloads</button>
+      </div>
+    </header>
+
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="side-label">Steps → substeps → children → widgets</div>
+        <div id="stepNav"></div>
+      </aside>
+      <main class="main">
+        <div class="content">
+          <div class="heading">
+            <div>
+              <div class="eyebrow" id="eyebrow"></div>
+              <h2 id="stepTitle"></h2>
+              <p id="stepDesc"></p>
+            </div>
+            <div class="progress">
+              <div class="progress-row">
+                <span>Completion path</span><strong id="progressText"></strong>
+              </div>
+              <div class="track">
+                <div class="fill" id="progressFill"></div>
+              </div>
+            </div>
+          </div>
+          <div id="formRoot"></div>
+        </div>
+      </main>
+    </div>
+
+    <div class="actionbar">
+      <div class="action-inner">
+        <div class="inline">
+          <button class="btn" id="exitBtn">Exit</button
+          ><span class="save" id="saveState">Draft saved locally</span>
+        </div>
+        <div class="inline">
+          <button class="btn danger" id="cancelBtn">Cancel</button
+          ><button class="btn hidden" id="backBtn">← Back</button
+          ><button class="btn primary" id="nextBtn">Next →</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const TYPE_OPTIONS = [
+        "ACCOMMODATION",
+        "FLIGHT",
+        "ACTIVITY",
+        "TRANSFER",
+        "MEAL",
+        "SIGHTSEEING",
+        "VISA",
+        "INSURANCE",
+        "GUIDE",
+        "TAX",
+        "AGENT_CHARGE",
+        "MISCELLANEOUS",
+      ];
+      const UNIT_OPTIONS = [
+        "FIXED",
+        "PER_BOOKING",
+        "PER_PERSON",
+        "PER_ADULT",
+        "PER_CHILD",
+        "PER_INFANT",
+        "PER_ROOM",
+        "PER_NIGHT",
+        "PER_ROOM_PER_NIGHT",
+        "PER_PERSON_PER_NIGHT",
+        "PER_VEHICLE",
+        "PER_TRIP",
+        "PER_DAY",
+        "PER_GROUP",
+      ];
+      const SMALL_UNIT_OPTIONS = [
+        "PER_PERSON",
+        "PER_BOOKING",
+        "PER_ROOM",
+        "PER_NIGHT",
+        "PER_ROOM_PER_NIGHT",
+        "PER_VEHICLE",
+        "PER_PERSON_PER_NIGHT",
+      ];
+      const TAG_TYPES = [
+        "DESTINATION",
+        "ATTRACTION",
+        "EXPERIENCE",
+        "THEME",
+        "ORIGIN",
+        "SEASON",
+        "AUDIENCE",
+        "CUSTOM",
+      ];
+      const CHIP_TYPES = ["ALL", "TAG", "FEATURED", "DESTINATION", "ORIGIN", "COUNTRY"];
+      const DEPARTURE_STATUS = ["scheduled", "active", "sold_out", "cancelled", "completed"];
+      const EXTRA_CATEGORIES = ["activity", "transfer", "meal", "visa", "insurance", "other", ""];
+      const STAY_TIERS = ["base", "standard", "premium", ""];
+      const COMMERCIAL_PACKAGE_TIERS = ["BASIC", "STANDARD", "PREMIUM"];
+      const COMPONENT_STATUS = ["ESTIMATED", "CONFIRMED", "REPRICE_REQUIRED"];
+
+      const defaultTour = {
+        agencyId: "",
+        createdBy: "",
+        productKey: "trevista",
+        visibility: "public",
+        archivedAt: "",
+        slug: "himachal-explorer-escape",
+        title: "Himachal Explorer Escape",
+        shortDescription: "Flexible Himachal holiday with three package levels.",
+        agentRef: "agent-shree-air",
+        city: { from: "Delhi", to: "Manali" },
+        address: {
+          line1: "",
+          line2: "",
+          city: "Manali",
+          state: "Himachal Pradesh",
+          zip: "",
+          country: "India",
+        },
+        distance: 540,
+        period: { days: 6, nights: 5 },
+        startDate: "",
+        endDate: "",
+        photo: "",
+        photos: [],
+        desc: "Explore Manali, Solang Valley and Kasol with selectable service tiers.",
+        price: { min: 14999, max: 31999, currency: "INR", isFinal: false, source: "manual" },
+        commercial: {
+          version: "COMPONENTS_V1",
+          currency: "INR",
+          components: [
+            {
+              componentKey: "hotel-3star",
+              type: "ACCOMMODATION",
+              name: "3★ Hotel Stay",
+              description: "Standard accommodation",
+              supplierRef: "",
+              replacesComponentKey: "",
+              active: true,
+              status: "CONFIRMED",
+              pricing: {
+                unit: "PER_PERSON",
+                costAmountMinor: 520000,
+                sellingAmountMinor: 620000,
+                currency: "INR",
+              },
+              details: {
+                propertyClass: "3-star",
+                roomType: "Standard",
+                mealPlan: "Breakfast",
+                nights: 5,
+              },
+            },
+            {
+              componentKey: "hotel-4star",
+              type: "ACCOMMODATION",
+              name: "4★ Premium Stay",
+              description: "Premium accommodation",
+              supplierRef: "",
+              replacesComponentKey: "hotel-3star",
+              active: true,
+              status: "CONFIRMED",
+              pricing: {
+                unit: "PER_PERSON",
+                costAmountMinor: 850000,
+                sellingAmountMinor: 1020000,
+                currency: "INR",
+              },
+              details: {
+                propertyClass: "4-star",
+                roomType: "Deluxe",
+                mealPlan: "Breakfast + Dinner",
+                nights: 5,
+              },
+            },
+            {
+              componentKey: "hotel-5star",
+              type: "ACCOMMODATION",
+              name: "5★ Signature Stay",
+              description: "Signature accommodation",
+              supplierRef: "",
+              replacesComponentKey: "hotel-4star",
+              active: true,
+              status: "CONFIRMED",
+              pricing: {
+                unit: "PER_PERSON",
+                costAmountMinor: 1280000,
+                sellingAmountMinor: 1580000,
+                currency: "INR",
+              },
+              details: {
+                propertyClass: "5-star",
+                roomType: "Premium Valley View",
+                mealPlan: "Breakfast + Dinner",
+                nights: 5,
+              },
+            },
+            {
+              componentKey: "shared-transfer",
+              type: "TRANSFER",
+              name: "Shared Intercity Transfer",
+              description: "Shared transfer",
+              supplierRef: "",
+              replacesComponentKey: "",
+              active: true,
+              status: "CONFIRMED",
+              pricing: {
+                unit: "PER_PERSON",
+                costAmountMinor: 220000,
+                sellingAmountMinor: 280000,
+                currency: "INR",
+              },
+              details: { mode: "SHARED" },
+            },
+            {
+              componentKey: "private-cab",
+              type: "TRANSFER",
+              name: "Private Cab",
+              description: "Private sightseeing and transfer cab",
+              supplierRef: "",
+              replacesComponentKey: "shared-transfer",
+              active: true,
+              status: "CONFIRMED",
+              pricing: {
+                unit: "PER_TRIP",
+                costAmountMinor: 520000,
+                sellingAmountMinor: 650000,
+                currency: "INR",
+              },
+              details: { mode: "PRIVATE", vehicleType: "Sedan/SUV" },
+            },
+            {
+              componentKey: "airport-transfer",
+              type: "TRANSFER",
+              name: "Airport Transfer",
+              description: "Private airport transfer",
+              supplierRef: "",
+              replacesComponentKey: "",
+              active: true,
+              status: "CONFIRMED",
+              pricing: {
+                unit: "PER_TRIP",
+                costAmountMinor: 150000,
+                sellingAmountMinor: 190000,
+                currency: "INR",
+              },
+              details: { transferType: "AIRPORT", mode: "PRIVATE" },
+            },
+            {
+              componentKey: "solang-combo",
+              type: "ACTIVITY",
+              name: "Solang Adventure Combo",
+              description: "Selected adventure activities",
+              supplierRef: "",
+              replacesComponentKey: "",
+              active: true,
+              status: "CONFIRMED",
+              pricing: {
+                unit: "PER_PERSON",
+                costAmountMinor: 120000,
+                sellingAmountMinor: 170000,
+                currency: "INR",
+              },
+              details: { location: "Solang Valley" },
+            },
+          ],
+          packages: [
+            {
+              packageKey: "standard",
+              tier: "BASIC",
+              name: "Standard",
+              description: "Essential package",
+              enabled: true,
+              recommended: false,
+              includedComponentKeys: ["hotel-3star", "shared-transfer"],
+              optionalComponentKeys: ["airport-transfer", "solang-combo"],
+            },
+            {
+              packageKey: "premium",
+              tier: "STANDARD",
+              name: "Premium",
+              description: "Comfort package",
+              enabled: true,
+              recommended: true,
+              includedComponentKeys: [
+                "hotel-4star",
+                "private-cab",
+                "airport-transfer",
+                "solang-combo",
+              ],
+              optionalComponentKeys: [],
+            },
+            {
+              packageKey: "advance",
+              tier: "PREMIUM",
+              name: "Advance",
+              description: "Signature package",
+              enabled: true,
+              recommended: false,
+              includedComponentKeys: [
+                "hotel-5star",
+                "private-cab",
+                "airport-transfer",
+                "solang-combo",
+              ],
+              optionalComponentKeys: [],
+            },
+          ],
+          defaultBasis: {
+            adults: 1,
+            children: 0,
+            infants: 0,
+            rooms: 1,
+            vehicles: 1,
+            nights: 5,
+            days: 6,
+          },
+          derived: {
+            minAmountMinor: 1499900,
+            maxAmountMinor: 3199900,
+            calculatedAt: "",
+            packages: [],
+          },
+        },
+        seasonalPricing: [
+          {
+            seasonName: "Winter 2026",
+            startDate: "2026-11-01",
+            endDate: "2027-02-28",
+            min: 15999,
+            max: 33999,
+            currency: "INR",
+            isFinal: false,
+            source: "manual",
+            notes: "Holiday/festival surcharge may apply",
+          },
+        ],
+        itinerary: [
+          {
+            day: 1,
+            title: "Delhi to Manali",
+            summary: "Departure and overnight journey",
+            activities: ["Board transfer"],
+            structuredActivities: [
+              {
+                name: "Departure coordination",
+                description: "Meet the trip coordinator and board the vehicle.",
+                duration: "1 hour",
+                price: 0,
+                currency: "INR",
+                included: true,
+                bookable: false,
+              },
+            ],
+            meals: [],
+            accommodation: "Overnight journey",
+            location: "Delhi",
+            notes: "Report 30 minutes before departure",
+          },
+          {
+            day: 2,
+            title: "Manali arrival & local sightseeing",
+            summary: "Arrival, check-in and local exploration",
+            activities: ["Hadimba Temple", "Mall Road"],
+            structuredActivities: [
+              {
+                name: "Manali local sightseeing",
+                description: "Local sightseeing circuit.",
+                duration: "4 hours",
+                price: 0,
+                currency: "INR",
+                included: true,
+                bookable: false,
+              },
+            ],
+            meals: ["Breakfast"],
+            accommodation: "Manali hotel",
+            location: "Manali",
+            notes: "Standard hotel check-in policy applies",
+          },
+        ],
+        highlights: [
+          {
+            title: "Three package choices",
+            short: "Standard, Premium and Advance",
+            icon: "layers",
+            order: 1,
+          },
+        ],
+        includedStays: [
+          {
+            nights: 3,
+            location: "Manali",
+            propertyName: "Selected Manali Hotel",
+            propertyClass: "3-star",
+            roomType: "Standard Room",
+            meals: ["Breakfast"],
+            description: "Base included stay",
+            tier: "base",
+            pricing: { unit: "PER_PERSON", amountMinor: 0, currency: "INR" },
+          },
+        ],
+        hotelOptions: [
+          {
+            title: "Premium hotel upgrade",
+            description: "Upgrade to selected 4-star property",
+            costLabel: "Upgrade cost",
+            cost: "₹4,000 per person",
+            tier: "premium",
+            recommended: true,
+            active: true,
+            pricing: { unit: "PER_PERSON", amountMinor: 400000, currency: "INR" },
+          },
+        ],
+        cancellation: {
+          policy: "30+ days: 90% refundable; 15–29 days: 50%; under 15 days: non-refundable.",
+          freeCancellationUntil: "30 days before departure",
+          refundPercent: 90,
+          depositRequired: true,
+          depositPercent: 25,
+          depositNote: "25% deposit confirms booking",
+          note: "",
+          tiers: [
+            { label: "30+ days", daysBefore: 30, refundPercent: 90, description: "90% refund" },
+            { label: "15–29 days", daysBefore: 15, refundPercent: 50, description: "50% refund" },
+            { label: "0–14 days", daysBefore: 0, refundPercent: 0, description: "Non-refundable" },
+          ],
+        },
+        extras: [
+          {
+            title: "Extra night",
+            description: "Add one additional hotel night",
+            price: 2500,
+            currency: "INR",
+            priceLabel: "₹2,500 / night",
+            icon: "bed",
+            category: "other",
+            included: false,
+            active: true,
+            pricing: { unit: "PER_NIGHT", amountMinor: 250000, currency: "INR" },
+          },
+          {
+            title: "Airport transfer",
+            description: "Private transfer",
+            price: 1800,
+            currency: "INR",
+            priceLabel: "₹1,800 / vehicle",
+            icon: "car",
+            category: "transfer",
+            included: false,
+            active: true,
+            pricing: { unit: "PER_VEHICLE", amountMinor: 180000, currency: "INR" },
+          },
+        ],
+        availability: { totalSeats: null, seatsAvailable: null },
+        packageType: "flexible",
+        departures: [
+          {
+            label: "Oct 2026 Batch",
+            departureDate: "2026-10-10T20:00",
+            returnDate: "2026-10-16T08:00",
+            status: "active",
+            capacity: 24,
+            seatsAvailable: 24,
+            pricing: { min: 14999, max: 31999, currency: "INR", isFinal: true, source: "manual" },
+            bookingOpensAt: "2026-08-25T00:00",
+            bookingClosesAt: "2026-10-07T23:59",
+            notes: "",
+          },
+        ],
+        flexibleConfig: {
+          earliestDeparture: "2026-09-01",
+          latestReturn: "2027-03-31",
+          blackoutDates: [],
+          pricingModel: "seasonal",
+          minAdvanceBookingDays: 3,
+          maxAdvanceBookingDays: 180,
+        },
+        customConfig: {
+          responseTimeframeHours: 48,
+          requireDates: true,
+          requireGroupSize: true,
+          allowAgentDraft: true,
+          questionnaireFields: ["budget", "interests", "visaStatus"],
+        },
+        flights: {
+          included: false,
+          inventoryManaged: false,
+          pricePerPerson: 0,
+          currency: "INR",
+          departureCity: "Delhi",
+          arrivalCity: "Kullu",
+          airline: "",
+          notes: "",
+        },
+        meetingPoint: "Majnu Ka Tila, Delhi",
+        inclusions: ["Stay", "Transfers", "Sightseeing", "Trip support"],
+        exclusions: ["Personal expenses", "Anything not explicitly included"],
+        languages: ["English", "Hindi"],
+        cancellationPolicy: "30+ days: 90% refundable",
+        minAge: 12,
+        maxAge: 65,
+        maxGroupSize: 24,
+        reviews: [
+          {
+            name: "Demo Traveler",
+            rating: 4.8,
+            comment: "Example review shown for schema completeness",
+          },
+        ],
+        featured: true,
+        trending: false,
+        group: { min: 1, max: 24 },
+        rating: { average: 4.8, count: 1 },
+        primaryDestination: {
+          destinationId: "manali",
+          name: "Manali",
+          cityId: "manali",
+          cityName: "Manali",
+          countryId: "india",
+          countryName: "India",
+          sortOrder: 0,
+        },
+        destinations: [
+          {
+            destinationId: "solang-valley",
+            name: "Solang Valley",
+            cityId: "manali",
+            cityName: "Manali",
+            countryId: "india",
+            countryName: "India",
+            sortOrder: 1,
+          },
+          {
+            destinationId: "kasol",
+            name: "Kasol",
+            cityId: "kasol",
+            cityName: "Kasol",
+            countryId: "india",
+            countryName: "India",
+            sortOrder: 2,
+          },
+        ],
+        tagIds: ["himachal", "mountains", "adventure"],
+        searchTags: [
+          { id: "himachal", slug: "himachal", name: "Himachal", type: "DESTINATION" },
+          { id: "mountains", slug: "mountains", name: "Mountains", type: "THEME" },
+        ],
+        metrics: { views: 0, bookings: 0, wishlists: 0, popularityScore: 0, trendScore: 0 },
+        ownerAgent: "",
+        agentTour: true,
+        agencyRef: "",
+        partnerAgencyRef: "",
+        inventorySource: "agent",
+        providerName: "Shree Air Tours & Travels",
+        tags: ["Himachal", "Mountains", "Adventure", "Family"],
+        isPublished: false,
+        status: "draft",
+        builderProcess: {
+          definitionKey: "tour-builder",
+          definitionVersion: 1,
+          currentStepKey: "core",
+          allowCustomerCustomization: true,
+        },
+        tremVerified: false,
+        tremVerifiedBy: "",
+        tremVerifiedAt: "",
+      };
+
+      const defaultDepartureDocs = [
+        {
+          tourId: "<TOUR_OBJECT_ID_AFTER_SAVE>",
+          origin: { cityId: "delhi", cityName: "Delhi", countryId: "india", countryName: "India" },
+          departureDate: "2026-10-10T20:00",
+          returnDate: "2026-10-16T08:00",
+          status: "active",
+          capacity: 24,
+          availableSeats: 24,
+          pricing: { currency: "INR", min: 14999, max: 31999, isFinal: true, source: "manual" },
+          bookingOpensAt: "2026-08-25T00:00",
+          bookingClosesAt: "2026-10-07T23:59",
+          legacyDerived: false,
+        },
+      ];
+
+      const defaultDiscoveryDocs = [
+        {
+          label: "Himachal",
+          slug: "himachal",
+          chipType: "DESTINATION",
+          referenceId: "himachal-pradesh",
+          icon: "mountain",
+          priority: 100,
+          active: true,
+          startsAt: "",
+          endsAt: "",
+        },
+        {
+          label: "From Delhi",
+          slug: "from-delhi",
+          chipType: "ORIGIN",
+          referenceId: "delhi",
+          icon: "location",
+          priority: 80,
+          active: true,
+          startsAt: "",
+          endsAt: "",
+        },
+      ];
+
+      let state = {
+        tour: structuredClone(defaultTour),
+        departureDocs: structuredClone(defaultDepartureDocs),
+        discoveryDocs: structuredClone(defaultDiscoveryDocs),
+      };
+      let currentStep = 0,
+        payloadMode = "tour";
+
+      const txt = (label, path, opts = {}) => ({ type: "text", label, path, ...opts });
+      const num = (label, path, opts = {}) => ({ type: "number", label, path, ...opts });
+      const date = (label, path, opts = {}) => ({ type: "date", label, path, ...opts });
+      const dt = (label, path, opts = {}) => ({ type: "datetime", label, path, ...opts });
+      const bool = (label, path, opts = {}) => ({ type: "boolean", label, path, ...opts });
+      const select = (label, path, options, opts = {}) => ({
+        type: "select",
+        label,
+        path,
+        options,
+        ...opts,
+      });
+      const area = (label, path, opts = {}) => ({ type: "textarea", label, path, ...opts });
+      const json = (label, path, opts = {}) => ({ type: "json", label, path, ...opts });
+      const strings = (label, path, opts = {}) => ({ type: "stringArray", label, path, ...opts });
+      const object = (label, path, fields, opts = {}) => ({
+        type: "object",
+        label,
+        path,
+        fields,
+        ...opts,
+      });
+      const array = (label, path, itemFields, opts = {}) => ({
+        type: "objectArray",
+        label,
+        path,
+        itemFields,
+        ...opts,
+      });
+
+      const stayPricingFields = [
+        select("unit", "unit", SMALL_UNIT_OPTIONS, { nullable: true }),
+        num("amountMinor", "amountMinor", {
+          nullable: true,
+          help: "Minor currency units; ₹2,500 = 250000 paise.",
+        }),
+        txt("currency", "currency"),
+      ];
+
+      const destinationFields = [
+        txt("destinationId", "destinationId"),
+        txt("name", "name"),
+        txt("cityId", "cityId"),
+        txt("cityName", "cityName"),
+        txt("countryId", "countryId"),
+        txt("countryName", "countryName"),
+        num("sortOrder", "sortOrder"),
+      ];
+
+      const activityFields = [
+        txt("name", "name"),
+        area("description", "description"),
+        txt("duration", "duration"),
+        num("price", "price"),
+        txt("currency", "currency"),
+        bool("included", "included"),
+        bool("bookable", "bookable"),
+      ];
+
+      const itineraryFields = [
+        num("day", "day", { required: true }),
+        txt("title", "title"),
+        area("summary", "summary"),
+        strings("activities[] (legacy)", "activities"),
+        array("structuredActivities[]", "structuredActivities", activityFields, {
+          itemLabel: "Structured activity",
+        }),
+        strings("meals[]", "meals"),
+        txt("accommodation", "accommodation"),
+        txt("location", "location"),
+        area("notes", "notes"),
+      ];
+
+      const embeddedDepartureFields = [
+        txt("label", "label"),
+        dt("departureDate", "departureDate", { required: true }),
+        dt("returnDate", "returnDate", { required: true }),
+        select("status", "status", DEPARTURE_STATUS),
+        num("capacity", "capacity", { nullable: true }),
+        num("seatsAvailable", "seatsAvailable", { nullable: true }),
+        object("pricing", "pricing", [
+          num("min", "min", { required: true }),
+          num("max", "max", { required: true }),
+          txt("currency", "currency"),
+          bool("isFinal", "isFinal"),
+          txt("source", "source", { help: "Uses PRICE_SOURCE_LIST in your backend enum." }),
+        ]),
+        dt("bookingOpensAt", "bookingOpensAt", { nullable: true }),
+        dt("bookingClosesAt", "bookingClosesAt", { nullable: true }),
+        area("notes", "notes"),
+      ];
+
+      const commercialComponentFields = [
+        txt("componentKey", "componentKey", { required: true }),
+        select("type", "type", TYPE_OPTIONS, { required: true }),
+        txt("name", "name", { required: true }),
+        area("description", "description"),
+        txt("supplierRef", "supplierRef"),
+        txt("replacesComponentKey", "replacesComponentKey"),
+        bool("active", "active"),
+        select("status", "status", COMPONENT_STATUS),
+        object("pricing", "pricing", [
+          select("unit", "unit", UNIT_OPTIONS, { required: true }),
+          num("costAmountMinor", "costAmountMinor", { required: true }),
+          num("sellingAmountMinor", "sellingAmountMinor", { required: true }),
+          txt("currency", "currency"),
+        ]),
+        json("details (Schema.Types.Mixed)", "details", {
+          help: "Type-specific payload. Kept as JSON because your schema explicitly uses Mixed.",
+        }),
+      ];
+
+      const commercialPackageFields = [
+        txt("packageKey", "packageKey", { required: true }),
+        select("tier", "tier", COMMERCIAL_PACKAGE_TIERS, { required: true }),
+        txt("name", "name", { required: true }),
+        area("description", "description"),
+        bool("enabled", "enabled"),
+        bool("recommended", "recommended"),
+        strings("includedComponentKeys[]", "includedComponentKeys"),
+        strings("optionalComponentKeys[]", "optionalComponentKeys"),
+      ];
+
+      const cancellationTierFields = [
+        txt("label", "label"),
+        num("daysBefore", "daysBefore", { nullable: true }),
+        num("refundPercent", "refundPercent", { nullable: true }),
+        area("description", "description"),
+      ];
+
+      const externalDepartureFields = [
+        txt("tourId", "tourId", { required: true }),
+        object("origin", "origin", [
+          txt("cityId", "cityId"),
+          txt("cityName", "cityName"),
+          txt("countryId", "countryId"),
+          txt("countryName", "countryName"),
+        ]),
+        dt("departureDate", "departureDate", { required: true }),
+        dt("returnDate", "returnDate", { required: true }),
+        select("status", "status", DEPARTURE_STATUS),
+        num("capacity", "capacity", { nullable: true }),
+        num("availableSeats", "availableSeats", { nullable: true }),
+        object("pricing", "pricing", [
+          txt("currency", "currency"),
+          num("min", "min", { required: true }),
+          num("max", "max", { required: true }),
+          bool("isFinal", "isFinal"),
+          txt("source", "source"),
+        ]),
+        dt("bookingOpensAt", "bookingOpensAt", { nullable: true }),
+        dt("bookingClosesAt", "bookingClosesAt", { nullable: true }),
+        bool("legacyDerived", "legacyDerived"),
+      ];
+
+      const discoveryDocFields = [
+        txt("label", "label", { required: true }),
+        txt("slug", "slug", { required: true }),
+        select("chipType", "chipType", CHIP_TYPES, { required: true }),
+        txt("referenceId", "referenceId"),
+        txt("icon", "icon"),
+        num("priority", "priority"),
+        bool("active", "active"),
+        dt("startsAt", "startsAt", { nullable: true }),
+        dt("endsAt", "endsAt", { nullable: true }),
+      ];
+
+      const steps = [
+        {
+          title: "Core & ownership",
+          desc: "Every top-level ownership, identity, publishing and compatibility field.",
+          substeps: [
+            {
+              title: "Ownership & product",
+              path: "Tour",
+              fields: [
+                txt("agencyId", "tour.agencyId"),
+                txt("createdBy", "tour.createdBy"),
+                txt("ownerAgent", "tour.ownerAgent"),
+                txt("productKey", "tour.productKey"),
+                txt("agentRef", "tour.agentRef"),
+                bool("agentTour", "tour.agentTour"),
+                txt("agencyRef", "tour.agencyRef"),
+                txt("partnerAgencyRef", "tour.partnerAgencyRef"),
+                select("inventorySource", "tour.inventorySource", [
+                  "agent",
+                  "provider",
+                  "platform",
+                ]),
+                txt("providerName", "tour.providerName"),
+              ],
+            },
+            {
+              title: "Identity & publishing",
+              path: "Tour",
+              fields: [
+                select("visibility", "tour.visibility", ["public", "agency", "private"]),
+                dt("archivedAt", "tour.archivedAt", { nullable: true }),
+                txt("slug", "tour.slug"),
+                txt("title", "tour.title", { required: true }),
+                area("shortDescription", "tour.shortDescription"),
+                area("desc", "tour.desc", { required: true }),
+                txt("status", "tour.status", {
+                  help: "Validated against TOUR_STATUS_LIST in your application constants.",
+                }),
+                bool("isPublished (legacy derived mirror)", "tour.isPublished"),
+                bool("tremVerified", "tour.tremVerified"),
+                txt("tremVerifiedBy", "tour.tremVerifiedBy"),
+                dt("tremVerifiedAt", "tour.tremVerifiedAt", { nullable: true }),
+                json("builderProcess (Schema.Types.Mixed)", "tour.builderProcess", { wide: true }),
+              ],
+            },
+          ],
+        },
+        {
+          title: "Route, duration & media",
+          desc: "City/address/period/run dates, media, age, group, logistics and language fields.",
+          substeps: [
+            {
+              title: "City & address",
+              path: "Tour.city / Tour.address",
+              fields: [
+                object("city", "tour.city", [
+                  txt("from", "from", { required: true }),
+                  txt("to", "to", { required: true }),
+                ]),
+                object("address", "tour.address", [
+                  txt("line1", "line1"),
+                  txt("line2", "line2"),
+                  txt("city", "city"),
+                  txt("state", "state"),
+                  txt("zip", "zip"),
+                  txt("country", "country"),
+                ]),
+                num("distance", "tour.distance", { required: true }),
+              ],
+            },
+            {
+              title: "Duration & run dates",
+              path: "Tour.period / startDate / endDate",
+              fields: [
+                object("period", "tour.period", [
+                  num("days", "days", { required: true }),
+                  num("nights", "nights", { required: true }),
+                ]),
+                date("startDate", "tour.startDate", { nullable: true }),
+                date("endDate", "tour.endDate", { nullable: true }),
+              ],
+            },
+            {
+              title: "Media",
+              path: "Tour.photo / photos",
+              fields: [txt("photo", "tour.photo"), strings("photos[]", "tour.photos")],
+            },
+            {
+              title: "Logistics & audience",
+              path: "Tour",
+              fields: [
+                txt("meetingPoint", "tour.meetingPoint"),
+                strings("languages[]", "tour.languages"),
+                num("minAge", "tour.minAge", { nullable: true }),
+                num("maxAge", "tour.maxAge", { nullable: true }),
+                num("maxGroupSize", "tour.maxGroupSize", { required: true }),
+                object("group", "tour.group", [
+                  num("min", "min"),
+                  num("max", "max", { nullable: true }),
+                ]),
+              ],
+            },
+          ],
+        },
+        {
+          title: "Base & seasonal pricing",
+          desc: "Tour.price plus every SeasonalPricing nested field.",
+          substeps: [
+            {
+              title: "Base price range",
+              path: "Tour.price",
+              fields: [
+                object("price", "tour.price", [
+                  num("min", "min", { required: true }),
+                  num("max", "max", { required: true }),
+                  txt("currency", "currency"),
+                  bool("isFinal", "isFinal"),
+                  txt("source", "source"),
+                ]),
+              ],
+            },
+            {
+              title: "Seasonal pricing",
+              path: "Tour.seasonalPricing[]",
+              fields: [
+                array(
+                  "seasonalPricing[]",
+                  "tour.seasonalPricing",
+                  [
+                    txt("seasonName", "seasonName", { required: true }),
+                    date("startDate", "startDate", { required: true }),
+                    date("endDate", "endDate", { required: true }),
+                    num("min", "min", { required: true }),
+                    num("max", "max", { required: true }),
+                    txt("currency", "currency"),
+                    bool("isFinal", "isFinal"),
+                    txt("source", "source"),
+                    area("notes", "notes"),
+                  ],
+                  { itemLabel: "Season" },
+                ),
+              ],
+            },
+          ],
+        },
+        {
+          title: "Itinerary",
+          desc: "Every field in itineraryItemSchema and every nested itineraryActivitySchema field.",
+          substeps: [
+            {
+              title: "Day-wise itinerary",
+              path: "Tour.itinerary[]",
+              fields: [
+                array("itinerary[]", "tour.itinerary", itineraryFields, { itemLabel: "Day" }),
+              ],
+            },
+          ],
+        },
+        {
+          title: "Highlights & accommodation",
+          desc: "Highlights, included stays and hotel upgrade options including nested pricing.",
+          substeps: [
+            {
+              title: "Highlights",
+              path: "Tour.highlights[]",
+              fields: [
+                array(
+                  "highlights[]",
+                  "tour.highlights",
+                  [
+                    txt("title", "title", { required: true }),
+                    txt("short", "short"),
+                    txt("icon", "icon"),
+                    num("order", "order"),
+                  ],
+                  { itemLabel: "Highlight" },
+                ),
+              ],
+            },
+            {
+              title: "Included stays",
+              path: "Tour.includedStays[]",
+              fields: [
+                array(
+                  "includedStays[]",
+                  "tour.includedStays",
+                  [
+                    num("nights", "nights"),
+                    txt("location", "location"),
+                    txt("propertyName", "propertyName"),
+                    txt("propertyClass", "propertyClass"),
+                    txt("roomType", "roomType"),
+                    strings("meals[]", "meals"),
+                    area("description", "description"),
+                    select("tier", "tier", STAY_TIERS),
+                    object("pricing", "pricing", stayPricingFields),
+                  ],
+                  { itemLabel: "Included stay" },
+                ),
+              ],
+            },
+            {
+              title: "Hotel options / upgrades",
+              path: "Tour.hotelOptions[]",
+              fields: [
+                array(
+                  "hotelOptions[]",
+                  "tour.hotelOptions",
+                  [
+                    txt("title", "title"),
+                    area("description", "description"),
+                    txt("costLabel", "costLabel"),
+                    txt("cost", "cost"),
+                    select("tier", "tier", STAY_TIERS),
+                    bool("recommended", "recommended"),
+                    bool("active", "active"),
+                    object("pricing", "pricing", stayPricingFields),
+                  ],
+                  { itemLabel: "Hotel option" },
+                ),
+              ],
+            },
+          ],
+        },
+        {
+          title: "Cancellation & extras",
+          desc: "Structured cancellation policy, refund tiers, deposits, and every add-on field.",
+          substeps: [
+            {
+              title: "Cancellation",
+              path: "Tour.cancellation",
+              fields: [
+                object("cancellation", "tour.cancellation", [
+                  area("policy", "policy"),
+                  txt("freeCancellationUntil", "freeCancellationUntil"),
+                  num("refundPercent", "refundPercent"),
+                  bool("depositRequired", "depositRequired"),
+                  num("depositPercent", "depositPercent", { nullable: true }),
+                  area("depositNote", "depositNote"),
+                  area("note", "note"),
+                  array("tiers[]", "tiers", cancellationTierFields, {
+                    itemLabel: "Cancellation tier",
+                  }),
+                ]),
+              ],
+            },
+            {
+              title: "Legacy cancellation mirror",
+              path: "Tour.cancellationPolicy",
+              fields: [area("cancellationPolicy", "tour.cancellationPolicy")],
+            },
+            {
+              title: "Extras / add-ons",
+              path: "Tour.extras[]",
+              fields: [
+                array(
+                  "extras[]",
+                  "tour.extras",
+                  [
+                    txt("title", "title"),
+                    area("description", "description"),
+                    num("price", "price"),
+                    txt("currency", "currency"),
+                    txt("priceLabel", "priceLabel"),
+                    txt("icon", "icon"),
+                    select("category", "category", EXTRA_CATEGORIES),
+                    bool("included", "included"),
+                    bool("active", "active"),
+                    object("pricing", "pricing", stayPricingFields),
+                  ],
+                  { itemLabel: "Extra" },
+                ),
+              ],
+            },
+          ],
+        },
+        {
+          title: "Availability & tour mode",
+          desc: "Availability, packageType, embedded fixed departures, flexible configuration and custom quote configuration.",
+          substeps: [
+            {
+              title: "Availability",
+              path: "Tour.availability",
+              fields: [
+                object("availability", "tour.availability", [
+                  num("totalSeats", "totalSeats", { nullable: true }),
+                  num("seatsAvailable", "seatsAvailable", { nullable: true }),
+                ]),
+                txt("packageType", "tour.packageType", {
+                  help: "Validated against PACKAGE_TYPE_LIST in your constants.",
+                }),
+              ],
+            },
+            {
+              title: "Embedded fixed departures",
+              path: "Tour.departures[]",
+              fields: [
+                array("departures[]", "tour.departures", embeddedDepartureFields, {
+                  itemLabel: "Embedded departure",
+                }),
+              ],
+            },
+            {
+              title: "Flexible config",
+              path: "Tour.flexibleConfig",
+              fields: [
+                object("flexibleConfig", "tour.flexibleConfig", [
+                  date("earliestDeparture", "earliestDeparture", { nullable: true }),
+                  date("latestReturn", "latestReturn", { nullable: true }),
+                  strings("blackoutDates[]", "blackoutDates", { inputType: "date" }),
+                  select("pricingModel", "pricingModel", ["seasonal", "fixed", "on_request"]),
+                  num("minAdvanceBookingDays", "minAdvanceBookingDays"),
+                  num("maxAdvanceBookingDays", "maxAdvanceBookingDays", { nullable: true }),
+                ]),
+              ],
+            },
+            {
+              title: "Custom quote config",
+              path: "Tour.customConfig",
+              fields: [
+                object("customConfig", "tour.customConfig", [
+                  num("responseTimeframeHours", "responseTimeframeHours"),
+                  bool("requireDates", "requireDates"),
+                  bool("requireGroupSize", "requireGroupSize"),
+                  bool("allowAgentDraft", "allowAgentDraft"),
+                  strings("questionnaireFields[]", "questionnaireFields"),
+                ]),
+              ],
+            },
+          ],
+        },
+        {
+          title: "Flights & inclusions",
+          desc: "Every flights field plus top-level inclusions/exclusions compatibility arrays.",
+          substeps: [
+            {
+              title: "Flights",
+              path: "Tour.flights",
+              fields: [
+                object("flights", "tour.flights", [
+                  bool("included", "included"),
+                  bool("inventoryManaged", "inventoryManaged"),
+                  num("pricePerPerson", "pricePerPerson"),
+                  txt("currency", "currency"),
+                  txt("departureCity", "departureCity"),
+                  txt("arrivalCity", "arrivalCity"),
+                  txt("airline", "airline"),
+                  area("notes", "notes"),
+                ]),
+              ],
+            },
+            {
+              title: "Common inclusions / exclusions",
+              path: "Tour.inclusions / exclusions",
+              fields: [
+                strings("inclusions[]", "tour.inclusions"),
+                strings("exclusions[]", "tour.exclusions"),
+              ],
+            },
+          ],
+        },
+        {
+          title: "Commercial components",
+          desc: "Every commercialComponentSchema field, nested pricing, and Mixed details.",
+          substeps: [
+            {
+              title: "Commercial header",
+              path: "Tour.commercial",
+              fields: [
+                select("version", "tour.commercial.version", ["LEGACY", "COMPONENTS_V1"]),
+                txt("currency", "tour.commercial.currency"),
+              ],
+            },
+            {
+              title: "Components",
+              path: "Tour.commercial.components[]",
+              fields: [
+                array("components[]", "tour.commercial.components", commercialComponentFields, {
+                  itemLabel: "Commercial component",
+                }),
+              ],
+            },
+          ],
+        },
+        {
+          title: "Commercial packages",
+          desc: "All commercialPackageSchema fields plus defaultBasis and derived pricing snapshot.",
+          substeps: [
+            {
+              title: "Packages",
+              path: "Tour.commercial.packages[]",
+              fields: [
+                array("packages[]", "tour.commercial.packages", commercialPackageFields, {
+                  itemLabel: "Commercial package",
+                }),
+              ],
+            },
+            {
+              title: "Default commercial basis",
+              path: "Tour.commercial.defaultBasis",
+              fields: [
+                object("defaultBasis", "tour.commercial.defaultBasis", [
+                  num("adults", "adults"),
+                  num("children", "children"),
+                  num("infants", "infants"),
+                  num("rooms", "rooms"),
+                  num("vehicles", "vehicles"),
+                  num("nights", "nights"),
+                  num("days", "days"),
+                ]),
+              ],
+            },
+            {
+              title: "Derived commercial snapshot",
+              path: "Tour.commercial.derived",
+              advanced: true,
+              fields: [
+                object("derived", "tour.commercial.derived", [
+                  num("minAmountMinor", "minAmountMinor", { nullable: true }),
+                  num("maxAmountMinor", "maxAmountMinor", { nullable: true }),
+                  dt("calculatedAt", "calculatedAt", { nullable: true }),
+                  json("packages[] (Schema.Types.Mixed)", "packages", { wide: true }),
+                ]),
+              ],
+            },
+          ],
+        },
+        {
+          title: "Search & discovery metadata",
+          desc: "primaryDestination, destinations, tagIds, searchTags and all nested search fields.",
+          substeps: [
+            {
+              title: "Primary destination",
+              path: "Tour.primaryDestination",
+              fields: [object("primaryDestination", "tour.primaryDestination", destinationFields)],
+            },
+            {
+              title: "Destinations",
+              path: "Tour.destinations[]",
+              fields: [
+                array("destinations[]", "tour.destinations", destinationFields, {
+                  itemLabel: "Destination",
+                }),
+              ],
+            },
+            {
+              title: "Tags and search tags",
+              path: "Tour.tagIds / searchTags / tags",
+              fields: [
+                strings("tagIds[]", "tour.tagIds"),
+                strings("tags[]", "tour.tags"),
+                array(
+                  "searchTags[]",
+                  "tour.searchTags",
+                  [
+                    txt("id", "id"),
+                    txt("slug", "slug"),
+                    txt("name", "name"),
+                    select("type", "type", TAG_TYPES),
+                  ],
+                  { itemLabel: "Search tag" },
+                ),
+              ],
+            },
+          ],
+        },
+        {
+          title: "Reviews, ratings & metrics",
+          desc: "Review sub-schema plus rating and analytics fields.",
+          substeps: [
+            {
+              title: "Reviews",
+              path: "Tour.reviews[]",
+              fields: [
+                array(
+                  "reviews[]",
+                  "tour.reviews",
+                  [
+                    txt("name", "name", { required: true }),
+                    num("rating", "rating", { required: true }),
+                    area("comment", "comment"),
+                  ],
+                  { itemLabel: "Review" },
+                ),
+              ],
+            },
+            {
+              title: "Rating projection",
+              path: "Tour.rating",
+              advanced: true,
+              fields: [
+                object("rating", "tour.rating", [num("average", "average"), num("count", "count")]),
+              ],
+            },
+            {
+              title: "Metrics",
+              path: "Tour.metrics",
+              advanced: true,
+              fields: [
+                object("metrics", "tour.metrics", [
+                  num("views", "views"),
+                  num("bookings", "bookings"),
+                  num("wishlists", "wishlists"),
+                  num("popularityScore", "popularityScore"),
+                  num("trendScore", "trendScore"),
+                ]),
+              ],
+            },
+            {
+              title: "Merchandising flags",
+              path: "Tour.featured / trending",
+              fields: [bool("featured", "tour.featured"), bool("trending", "tour.trending")],
+            },
+          ],
+        },
+        {
+          title: "Separate TourDeparture",
+          desc: "Every field from the separate TourDeparture model you sent, including origin and nested pricing.",
+          substeps: [
+            {
+              title: "TourDeparture documents",
+              path: "TourDeparture[]",
+              fields: [
+                array("TourDeparture[]", "departureDocs", externalDepartureFields, {
+                  itemLabel: "TourDeparture",
+                }),
+              ],
+            },
+          ],
+        },
+        {
+          title: "Separate discovery chips",
+          desc: "Every field from the separate TourDiscoveryChip model you sent.",
+          substeps: [
+            {
+              title: "TourDiscoveryChip documents",
+              path: "TourDiscoveryChip[]",
+              fields: [
+                array("TourDiscoveryChip[]", "discoveryDocs", discoveryDocFields, {
+                  itemLabel: "Discovery chip",
+                }),
+              ],
+            },
+          ],
+        },
+        {
+          title: "Customer preview",
+          desc: "Preview the three commercial packages and the tour-level price range.",
+          custom: "preview",
+        },
+        {
+          title: "Final payloads",
+          desc: "Inspect the exact Tour, TourDeparture[] and TourDiscoveryChip[] payloads produced by the form.",
+          custom: "payload",
+        },
+      ];
+
+      function getAt(path) {
+        return path.split(".").reduce((o, k) => (o == null ? undefined : o[k]), state);
+      }
+      function setAt(path, value) {
+        const parts = path.split(".");
+        let o = state;
+        for (let i = 0; i < parts.length - 1; i++) {
+          const k = parts[i];
+          if (o[k] == null) o[k] = /^\d+$/.test(parts[i + 1]) ? [] : {};
+          o = o[k];
+        }
+        o[parts.at(-1)] = value;
+      }
+      function joinPath(base, child) {
+        return base ? `${base}.${child}` : child;
+      }
+      function esc(v = "") {
+        return String(v ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;");
+      }
+      function displayValue(v) {
+        return v == null ? "" : v;
+      }
+      function typeHint(f) {
+        const map = {
+          text: "String",
+          number: "Number",
+          date: "Date",
+          datetime: "Date",
+          boolean: "Boolean",
+          select: "Enum",
+          textarea: "String",
+          json: "Mixed",
+          stringArray: "String[]",
+          object: "Object",
+          objectArray: "Object[]",
+        };
+        return map[f.type] || "";
+      }
+      function inputFor(f, path) {
+        const v = getAt(path);
+        const hint = `<span class="schema-hint">${typeHint(f)}${f.nullable ? " · nullable" : ""}</span>`;
+        if (f.type === "boolean") {
+          return `<div class="bool-row"><div><strong>${esc(f.label)}</strong><small>${esc(path)} · Boolean</small></div><label class="switch"><input data-path="${esc(path)}" data-type="boolean" type="checkbox" ${v ? "checked" : ""}><span class="slider"></span></label></div>`;
+        }
+        if (f.type === "select") {
+          return `<label class="field"><span>${esc(f.label)} ${hint}</span><select data-path="${esc(path)}" data-type="select">${(f.options || []).map((o) => `<option value="${esc(o)}" ${String(v ?? "") === String(o) ? "selected" : ""}>${esc(o || "(empty)")}</option>`).join("")}</select>${f.help ? `<div class="help">${esc(f.help)}</div>` : ""}</label>`;
+        }
+        if (f.type === "textarea") {
+          return `<label class="field ${f.wide ? "wide" : ""}"><span>${esc(f.label)} ${hint}</span><textarea data-path="${esc(path)}" data-type="text">${esc(displayValue(v))}</textarea>${f.help ? `<div class="help">${esc(f.help)}</div>` : ""}</label>`;
+        }
+        if (f.type === "json") {
+          return `<label class="field" style="grid-column:1/-1"><span>${esc(f.label)} ${hint}</span><textarea class="json" data-path="${esc(path)}" data-type="json">${esc(JSON.stringify(v ?? (Array.isArray(v) ? [] : {}), null, 2))}</textarea>${f.help ? `<div class="help">${esc(f.help)}</div>` : ""}</label>`;
+        }
+        if (f.type === "stringArray") {
+          const arr = Array.isArray(v) ? v : [];
+          return `<div style="grid-column:1/-1"><div class="row"><div><span style="font-size:10px;font-weight:800">${esc(f.label)} ${hint}</span><div class="path">${esc(path)}</div></div><button class="btn small" data-add-string="${esc(path)}">+ Add</button></div>
+      <div class="array-box">${arr.length ? arr.map((item, i) => `<div class="inline" style="margin-bottom:7px"><input style="flex:1" data-path="${esc(path)}.${i}" data-type="${f.inputType === "date" ? "text" : "text"}" type="${f.inputType === "date" ? "date" : "text"}" value="${esc(item)}"><button class="btn danger small" data-remove-array="${esc(path)}" data-index="${i}">Remove</button></div>`).join("") : `<div class="help">No values added.</div>`}</div></div>`;
+        }
+        const htmlType =
+          f.type === "number"
+            ? "number"
+            : f.type === "date"
+              ? "date"
+              : f.type === "datetime"
+                ? "datetime-local"
+                : "text";
+        return `<label class="field"><span>${esc(f.label)} ${hint}${f.required ? ' <b class="req">*</b>' : ""}</span><input type="${htmlType}" data-path="${esc(path)}" data-type="${f.type}" value="${esc(displayValue(v))}">${f.help ? `<div class="help">${esc(f.help)}</div>` : ""}</label>`;
+      }
+      function renderFields(fields, base = "") {
+        let out = `<div class="grid g3">`;
+        for (const f of fields) {
+          const path = joinPath(base, f.path);
+          if (f.type === "object") {
+            out += `<div style="grid-column:1/-1" class="nested"><div class="row"><div><h4>${esc(f.label)}</h4><div class="path">${esc(path)}</div></div><span class="badge">nested object</span></div><div style="margin-top:12px">${renderFields(f.fields, path)}</div></div>`;
+          } else if (f.type === "objectArray") {
+            out += renderObjectArray(f, path);
+          } else {
+            out += inputFor(f, path);
+          }
+        }
+        out += `</div>`;
+        return out;
+      }
+      function renderObjectArray(f, path) {
+        const arr = getAt(path) || [];
+        return `<div style="grid-column:1/-1"><div class="row"><div><h4>${esc(f.label)}</h4><div class="path">${esc(path)}</div></div><button class="btn small" data-add-object="${esc(path)}" data-label="${esc(f.itemLabel || "Item")}">+ Add ${esc(f.itemLabel || "item")}</button></div>
+    <div class="array-box">${arr.length ? arr.map((item, i) => `<div class="array-item"><div class="array-item-head"><div><strong style="font-size:11px">${esc(f.itemLabel || "Item")} ${i + 1}</strong><div class="path">${esc(path)}.${i}</div></div><button class="btn danger small" data-remove-array="${esc(path)}" data-index="${i}">Remove</button></div>${renderFields(f.itemFields, `${path}.${i}`)}</div>`).join("") : `<div class="help">No items yet. Add one to populate this schema array.</div>`}</div></div>`;
+      }
+      function blankForField(f) {
+        if (f.type === "number") return f.nullable ? null : 0;
+        if (f.type === "boolean") return false;
+        if (f.type === "json") return {};
+        if (f.type === "stringArray") return [];
+        if (f.type === "object") {
+          const o = {};
+          f.fields.forEach((x) => (o[x.path] = blankForField(x)));
+          return o;
+        }
+        if (f.type === "objectArray") return [];
+        if (f.type === "select") return f.options?.[0] ?? "";
+        return "";
+      }
+      function blankObject(fields) {
+        const o = {};
+        fields.forEach((f) => (o[f.path] = blankForField(f)));
+        return o;
+      }
+      function findArrayDescriptor(path) {
+        for (const s of steps) {
+          for (const sub of s.substeps || []) {
+            const found = findDesc(sub.fields || [], "", path);
+            if (found) return found;
+          }
+        }
+      }
+      function findDesc(fields, base, target) {
+        for (const f of fields) {
+          const p = joinPath(base, f.path);
+          if ((f.type === "objectArray" || f.type === "stringArray") && target.endsWith(p))
+            return f;
+          if (f.type === "object") {
+            const x = findDesc(f.fields, p, target);
+            if (x) return x;
+          }
+          if (f.type === "objectArray") {
+            const x = findDesc(f.itemFields, p, target.replace(/\.\d+(?=\.|$)/g, ""));
+            if (x) return x;
+          }
+        }
+        return null;
+      }
+      function renderStep() {
+        const step = steps[currentStep];
+        document.getElementById("eyebrow").textContent =
+          `STEP ${currentStep + 1} OF ${steps.length}`;
+        document.getElementById("stepTitle").textContent = step.title;
+        document.getElementById("stepDesc").textContent = step.desc;
+        const pct = Math.round(((currentStep + 1) / steps.length) * 100);
+        document.getElementById("progressText").textContent = `${pct}%`;
+        document.getElementById("progressFill").style.width = `${pct}%`;
+        document.getElementById("backBtn").classList.toggle("hidden", currentStep === 0);
+        document.getElementById("nextBtn").textContent =
+          currentStep === steps.length - 1 ? "Finish" : "Next →";
+        renderNav();
+
+        if (step.custom === "preview") {
+          renderPreview();
+          return;
+        }
+        if (step.custom === "payload") {
+          renderPayloadScreen();
+          return;
+        }
+
+        document.getElementById("formRoot").innerHTML = (step.substeps || [])
+          .map(
+            (sub, i) => `
+    <section class="card ${sub.advanced ? "subtle" : ""}">
+      <div class="substep-head">
+        <div><div class="badge ${sub.advanced ? "warn" : ""}">${sub.advanced ? "Advanced / derived" : "Substep " + (i + 1)}</div><h3 style="margin-top:8px">${esc(sub.title)}</h3><div class="path">${esc(sub.path || "")}</div></div>
+        ${sub.advanced ? '<span class="badge warn">present for schema completeness</span>' : ""}
+      </div>
+      ${renderFields(sub.fields || [])}
+    </section>`,
+          )
+          .join("");
+        bindInputs();
+      }
+      function renderNav() {
+        document.getElementById("stepNav").innerHTML = steps
+          .map(
+            (s, i) =>
+              `<button class="step ${i === currentStep ? "active" : ""} ${i < currentStep ? "done" : ""}" data-step="${i}"><span class="step-num">${i < currentStep ? "✓" : i + 1}</span><span class="step-copy"><strong>${esc(s.title)}</strong><small>${esc(s.desc)}</small></span></button>`,
+          )
+          .join("");
+        document
+          .querySelectorAll("[data-step]")
+          .forEach((b) => b.addEventListener("click", () => goTo(+b.dataset.step)));
+      }
+      function bindInputs() {
+        document.querySelectorAll("[data-path]").forEach((el) => {
+          const handler = () => {
+            const type = el.dataset.type;
+            let value;
+            if (type === "boolean") value = el.checked;
+            else if (type === "number") value = el.value === "" ? null : Number(el.value);
+            else if (type === "json") {
+              try {
+                value = JSON.parse(el.value || "null");
+                el.style.borderColor = "";
+              } catch (e) {
+                el.style.borderColor = "var(--danger)";
+                return;
+              }
+            } else value = el.value;
+            setAt(el.dataset.path, value);
+            markSaving();
+          };
+          el.addEventListener(typeFor(el) === "change" ? "change" : "input", handler);
+        });
+        document.querySelectorAll("[data-add-string]").forEach((b) =>
+          b.addEventListener("click", () => {
+            const path = b.dataset.addString,
+              arr = getAt(path) || [];
+            arr.push("");
+            setAt(path, arr);
+            renderStep();
+            markSaving();
+          }),
+        );
+        document.querySelectorAll("[data-add-object]").forEach((b) =>
+          b.addEventListener("click", () => {
+            const path = b.dataset.addObject,
+              desc = findArrayDescriptor(path),
+              arr = getAt(path) || [];
+            arr.push(desc?.itemFields ? blankObject(desc.itemFields) : {});
+            setAt(path, arr);
+            renderStep();
+            markSaving();
+          }),
+        );
+        document.querySelectorAll("[data-remove-array]").forEach((b) =>
+          b.addEventListener("click", () => {
+            const path = b.dataset.removeArray,
+              arr = getAt(path) || [];
+            arr.splice(Number(b.dataset.index), 1);
+            setAt(path, arr);
+            renderStep();
+            markSaving();
+          }),
+        );
+      }
+      function typeFor(el) {
+        return ["SELECT", "INPUT"].includes(el.tagName) ? "change" : "input";
+      }
+      function markSaving() {
+        const el = document.getElementById("saveState");
+        el.textContent = "Saving…";
+        clearTimeout(window.__saveTimer);
+        window.__saveTimer = setTimeout(saveState, 250);
+      }
+      function saveState() {
+        try {
+          localStorage.setItem(
+            "travelstrem-schema-complete-tour",
+            JSON.stringify({ state, currentStep }),
+          );
+        } catch (e) {}
+        document.getElementById("saveState").textContent = "Draft saved locally";
+      }
+      function cleanPayload(value) {
+        if (Array.isArray(value)) return value.map(cleanPayload);
+        if (value && typeof value === "object") {
+          return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, cleanPayload(v)]));
+        }
+        return value === "" ? null : value;
+      }
+      function packagePriceEstimate(pkg) {
+        const map = new Map(
+          (state.tour.commercial.components || []).map((c) => [c.componentKey, c]),
+        );
+        const included = (pkg.includedComponentKeys || []).map((k) => map.get(k)).filter(Boolean);
+        return (
+          included.reduce((sum, c) => sum + (Number(c.pricing?.sellingAmountMinor) || 0), 0) / 100
+        );
+      }
+      function renderPreview() {
+        const pkgs = state.tour.commercial.packages || [];
+        const custom =
+          state.tour.packageType !== "fixed_departure" &&
+          state.tour.builderProcess?.allowCustomerCustomization !== false;
+        document.getElementById("formRoot").innerHTML = `
+    <div class="previewHero"><span class="badge" style="background:#ffffff22;color:#fff">Customer preview</span><h3>${esc(state.tour.title)}</h3><p>${esc(state.tour.period?.days)} Days / ${esc(state.tour.period?.nights)} Nights · ${esc(state.tour.city?.to)} · ${esc(state.tour.packageType)}</p></div>
+    <section class="card"><div class="row"><div><h3>Package choices</h3><p class="desc" style="margin-bottom:0">Built directly from commercial.packages[] and commercial.components[].</p></div><span class="badge ${custom ? "ok" : "warn"}">${custom ? "Customisation available" : "Fixed composition"}</span></div><div class="divider"></div>
+    <div class="pkg-grid">${pkgs.map((p) => `<article class="pkg ${p.recommended ? "recommended" : ""}">${p.recommended ? '<span class="badge" style="position:absolute;right:12px;top:12px">Recommended</span>' : ""}<h4>${esc(p.name)}</h4><div class="path">tier: ${esc(p.tier)} · key: ${esc(p.packageKey)}</div><div class="price">${new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(packagePriceEstimate(p))}</div><div class="help">Estimate from included component selling amounts. Your canonical final package logic can remain in commercial.derived.packages.</div><ul>${(p.includedComponentKeys || []).map((k) => `<li>${esc((state.tour.commercial.components || []).find((c) => c.componentKey === k)?.name || k)}</li>`).join("")}</ul><button class="btn ${p.recommended ? "primary" : ""}" style="width:100%">${custom ? "Select & customise" : "Select package"}</button></article>`).join("")}</div></section>
+    <section class="card"><h3>Tour-level price projection</h3><div class="grid g4" style="margin-top:14px"><div class="bool-row"><div><strong>Minimum</strong><small>Tour.price.min</small></div><b>₹${esc(state.tour.price?.min)}</b></div><div class="bool-row"><div><strong>Maximum</strong><small>Tour.price.max</small></div><b>₹${esc(state.tour.price?.max)}</b></div><div class="bool-row"><div><strong>Final</strong><small>Tour.price.isFinal</small></div><b>${state.tour.price?.isFinal ? "Yes" : "No"}</b></div><div class="bool-row"><div><strong>Source</strong><small>Tour.price.source</small></div><b>${esc(state.tour.price?.source)}</b></div></div></section>
+    <section class="card"><h3>Customisation route</h3><p class="desc">${custom ? "This tour can enter your custom quotation flow. builderProcess can carry UI/workflow metadata while the persisted Tour shape remains unchanged." : "This tour is treated as fixed departure in the customer preview."}</p><div class="pill-list"><span class="pill">Hotel upgrade</span><span class="pill">Room change</span><span class="pill">Airport transfer</span><span class="pill">Private cab</span><span class="pill">Activities</span><span class="pill">Meals</span><span class="pill">Extra night</span><span class="pill">Insurance</span></div></section>`;
+      }
+      function renderPayloadScreen() {
+        document.getElementById("formRoot").innerHTML = `
+    <div class="tabs"><button class="tab ${payloadMode === "tour" ? "active" : ""}" data-payload="tour">Tour</button><button class="tab ${payloadMode === "departures" ? "active" : ""}" data-payload="departures">TourDeparture[]</button><button class="tab ${payloadMode === "chips" ? "active" : ""}" data-payload="chips">TourDiscoveryChip[]</button></div>
+    <div class="codebox"><div class="codehead"><span id="payloadLabel"></span><button class="btn small" id="copyPayload">Copy payload</button></div><pre class="code" id="payloadCode"></pre></div>
+    <section class="card" style="margin-top:15px"><h3>Submission sequence</h3><p class="desc">Keep the three schemas separate exactly as you requested.</p><div class="grid g3"><div class="bool-row"><div><strong>1. Tour</strong><small>Create/update the main aggregate.</small></div><span class="badge">Tour</span></div><div class="bool-row"><div><strong>2. TourDeparture[]</strong><small>Use saved Tour._id as tourId.</small></div><span class="badge">External</span></div><div class="bool-row"><div><strong>3. TourDiscoveryChip[]</strong><small>Upsert by globally unique slug.</small></div><span class="badge">External</span></div></div></section>`;
+        document.querySelectorAll("[data-payload]").forEach((b) =>
+          b.addEventListener("click", () => {
+            payloadMode = b.dataset.payload;
+            renderPayloadScreen();
+          }),
+        );
+        document.getElementById("copyPayload").addEventListener("click", copyPayload);
+        refreshPayloadCode();
+      }
+      function refreshPayloadCode() {
+        let data, label;
+        if (payloadMode === "tour") {
+          data = cleanPayload(state.tour);
+          label = "Tour payload";
+        } else if (payloadMode === "departures") {
+          data = cleanPayload(state.departureDocs);
+          label = "TourDeparture[] payload";
+        } else {
+          data = cleanPayload(state.discoveryDocs);
+          label = "TourDiscoveryChip[] payload";
+        }
+        document.getElementById("payloadLabel").textContent = label;
+        document.getElementById("payloadCode").textContent = JSON.stringify(data, null, 2);
+      }
+      async function copyPayload() {
+        try {
+          await navigator.clipboard.writeText(document.getElementById("payloadCode").textContent);
+          const b = document.getElementById("copyPayload");
+          b.textContent = "Copied";
+          setTimeout(() => (b.textContent = "Copy payload"), 900);
+        } catch (e) {
+          alert("Clipboard access is unavailable in this preview.");
+        }
+      }
+      function goTo(i) {
+        currentStep = Math.max(0, Math.min(steps.length - 1, i));
+        renderStep();
+        saveState();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+      document
+        .getElementById("nextBtn")
+        .addEventListener("click", () =>
+          currentStep < steps.length - 1 ? goTo(currentStep + 1) : renderStep(),
+        );
+      document.getElementById("backBtn").addEventListener("click", () => goTo(currentStep - 1));
+      document
+        .getElementById("jumpPayload")
+        .addEventListener("click", () => goTo(steps.length - 1));
+      document
+        .getElementById("exitBtn")
+        .addEventListener("click", () =>
+          alert("Draft saved locally. In production, route back to the agent's tour list."),
+        );
+      document
+        .getElementById("cancelBtn")
+        .addEventListener("click", () =>
+          confirm(
+            "Cancel tour creation? The local demo draft remains until browser storage is cleared.",
+          ),
+        );
+
+      try {
+        const saved = JSON.parse(
+          localStorage.getItem("travelstrem-schema-complete-tour") || "null",
+        );
+        if (saved?.state) state = saved.state;
+        if (Number.isInteger(saved?.currentStep)) currentStep = saved.currentStep;
+      } catch (e) {}
+      renderStep();
+    </script>
+  </body>
+</html>

@@ -1,18 +1,25 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { AgentPortalConfigProvider } from "./providers/AgentPortalProvider";
 import AppLayout from "./AppLayout";
 import { useThemeMode } from "@packages/trem-utils";
-import { ScrollToTop } from "@packages/trem-ui";
+import { ScrollToTop, Toaster } from "@packages/trem-ui";
+import { initRealtimeNotifications, RealtimeProvider } from "@packages/trem-events";
 
 const AgentApp = ({ embedded = false }) => {
-    useThemeMode();
+  useThemeMode();
+  // Backend-authored realtime toasts (e.g. new enquiry received).
+  useEffect(() => initRealtimeNotifications(), []);
 
-    return (
-        <AgentPortalConfigProvider>
-            <ScrollToTop />
-            <AppLayout embedded={embedded} />
-        </AgentPortalConfigProvider>
-    );
+  return (
+    <AgentPortalConfigProvider>
+      {/* Shared window-anchored socket: powers the live enquiry inbox. */}
+      <RealtimeProvider>
+        <ScrollToTop />
+        <Toaster />
+        <AppLayout embedded={embedded} />
+      </RealtimeProvider>
+    </AgentPortalConfigProvider>
+  );
 };
 
 export default AgentApp;

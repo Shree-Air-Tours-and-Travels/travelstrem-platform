@@ -16,7 +16,9 @@
       border-radius: $radius-md $radius-md $radius-xs $radius-md;
     }
 
-    .message-bubble__text { color: #fff; }
+    .message-bubble__text {
+      color: #fff;
+    }
   }
 
   &--other {
@@ -59,7 +61,7 @@
     align-items: center;
     max-width: 85%;
     background: var(--surface, #fff);
-    border: 1px solid var(--border, rgba(17,17,17,0.12));
+    border: 1px solid var(--border, rgba(17, 17, 17, 0.12));
     border-radius: $radius-md;
     padding: $space-4;
     box-shadow: $shadow-sm;
@@ -99,7 +101,9 @@
     margin-bottom: $space-2;
   }
 
-  &__quote-icon { color: var(--color-primary, $primary-color); }
+  &__quote-icon {
+    color: var(--color-primary, $primary-color);
+  }
 
   &__quote-label {
     font-size: $font-size-sm;

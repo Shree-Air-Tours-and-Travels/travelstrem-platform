@@ -1,31 +1,54 @@
-import React, { useState } from "react";
+import React from "react";
 import { TrevioTripCard } from "@packages/trem-ui";
 
-const trip = {
-  id: "manali",
-  title: "Manali Adventure Escape",
-  category: "Mountains",
-  location: "Himachal Pradesh",
-  duration: "4D / 3N",
-  price: 12999,
-  tag: "Mountain escape",
-  rating: "4.9",
-  image: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=85",
-  desc: "Snowy peaks, riverside cafés, Solang thrills and an unforgettable group journey.",
-  chips: ["Volvo transfer", "Hotel stay", "Breakfast + dinner"],
+const sampleTrip = {
+  _id: "trip-1",
+  title: "Himalayan Escape to Manali",
+  desc: "A calm mountain itinerary with scenic drives, local food, pine trails.",
+  photo:
+    "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=600&q=80",
+  priceInfo: { min: 24999, currency: "INR" },
+  address: { city: "Manali" },
+  period: { days: 5, nights: 4 },
+  avgRating: 4.8,
+  tags: ["adventure", "hiking", "culture"],
 };
 
-export default { title: "Trevio/Trip Card", component: TrevioTripCard, tags: ["autodocs"] };
+export default {
+  title: "Trem UI/Cards/TrevioTripCard",
+  component: TrevioTripCard,
+  tags: ["autodocs"],
+};
 
 export const Default = {
-  render: () => {
-    const [favorited, setFavorited] = useState(false);
-    return <div style={{ maxWidth: 380 }}><TrevioTripCard trip={trip} favorited={favorited} onFavorite={() => setFavorited((value) => !value)} onView={() => {}} /></div>;
-  },
+  render: () => (
+    <div style={{ maxWidth: 360 }}>
+      <TrevioTripCard trip={sampleTrip} onFavorite={() => {}} onView={() => {}} />
+    </div>
+  ),
 };
 
-export const CardGrid = {
-  render: () => <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(260px, 1fr))", gap: 20 }}>
-    {[trip, { ...trip, id: "rishikesh", title: "Rishikesh Rush Weekend", category: "Weekend", rating: "4.8" }, { ...trip, id: "spiti", title: "Spiti Road Expedition", category: "Road trips", rating: "4.9" }].map((item) => <TrevioTripCard key={item.id} trip={item} onView={() => {}} />)}
-  </div>,
+export const Favorited = {
+  render: () => (
+    <div style={{ maxWidth: 360 }}>
+      <TrevioTripCard trip={sampleTrip} favorited onFavorite={() => {}} onView={() => {}} />
+    </div>
+  ),
+};
+
+export const SoldOut = {
+  render: () => (
+    <div style={{ maxWidth: 360 }}>
+      <TrevioTripCard
+        trip={{
+          ...sampleTrip,
+          _id: "trip-2",
+          title: "Goa Beach Retreat",
+          availability: { seatsAvailable: 0 },
+        }}
+        onFavorite={() => {}}
+        onView={() => {}}
+      />
+    </div>
+  ),
 };

@@ -1,5 +1,4 @@
-$font-primary:
-  "Inter",
+$font-primary: "Inter",
   "Poppins",
   system-ui,
   -apple-system,
@@ -7,6 +6,11 @@ $font-primary:
   "Segoe UI",
   sans-serif;
 $font-secondary: $font-primary;
+
+$root-font-size-desktop: 16px;
+$root-font-size-tablet: 15px;
+$root-font-size-mobile: 14px;
+$control-font-size-mobile: 14px;
 
 $font-size-xs: 0.76rem !default;
 $font-size-sm: 0.875rem;

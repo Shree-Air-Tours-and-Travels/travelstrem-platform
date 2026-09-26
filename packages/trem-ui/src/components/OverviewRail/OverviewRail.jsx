@@ -35,7 +35,10 @@ export function UpcomingTripCard({
           </div>
           <h3>{trip.title}</h3>
           <div className="trem-upcoming-trip__meta">
-            <span><Icon name="calendar" size={17} />{trip.dateRange}</span>
+            <span>
+              <Icon name="calendar" size={17} />
+              {trip.dateRange}
+            </span>
             <strong>{trip.duration}</strong>
           </div>
         </>
@@ -46,24 +49,39 @@ export function UpcomingTripCard({
   );
 }
 
-export function QuickActionsCard({ title, items = [] }) {
+export function QuickActionsCard({ title, items = [], hideDisabled = false, onAction }) {
+  const visibleItems = items.filter((item) => !item.hide && !(hideDisabled && item.disabled));
+  if (!visibleItems.length) return null;
+
   return (
     <section className="trem-rail-card trem-quick-actions">
-      <header className="trem-rail-card__header"><h2>{title}</h2></header>
+      <header className="trem-rail-card__header">
+        <h2>{title}</h2>
+      </header>
       <nav aria-label={title}>
-        {items.map((item) => {
-          const Tag = item.disabled ? "div" : "a";
+        {visibleItems.map((item) => {
+          const useButton = !item.disabled && Boolean(item.targetTab);
+          const Tag = item.disabled ? "div" : useButton ? "button" : "a";
+          const interactionProps = item.disabled
+            ? {}
+            : useButton
+              ? { type: "button", onClick: () => onAction?.(item.targetTab, item) }
+              : {
+                  href: item.href,
+                  target: item.target || "_self",
+                  rel: linkRel(item.target, item.rel),
+                };
           return (
             <Tag
               key={item.id}
-              href={item.disabled ? undefined : item.href}
-              target={item.disabled ? undefined : (item.target || "_self")}
-              rel={item.disabled ? undefined : linkRel(item.target, item.rel)}
               aria-label={item.ariaLabel || item.title}
               aria-disabled={item.disabled || undefined}
               className={item.disabled ? "is-disabled" : ""}
+              {...interactionProps}
             >
-              <span className="trem-quick-actions__icon"><Icon name={item.icon} size={20} /></span>
+              <span className="trem-quick-actions__icon">
+                <Icon name={item.icon} size={20} />
+              </span>
               <span className="trem-quick-actions__copy">
                 <strong>{item.title}</strong>
                 <small>{item.description}</small>
@@ -94,7 +112,9 @@ export function ExclusiveOfferCard({
 }) {
   return (
     <section className="trem-rail-card trem-exclusive-offer">
-      <header className="trem-rail-card__header"><h2>{title}</h2></header>
+      <header className="trem-rail-card__header">
+        <h2>{title}</h2>
+      </header>
       {available ? (
         <a
           className="trem-exclusive-offer__content"
@@ -106,7 +126,9 @@ export function ExclusiveOfferCard({
           <span className="trem-exclusive-offer__copy">
             <strong>{headline}</strong>
             <span>{description}</span>
-            <span className="trem-exclusive-offer__code"><em>{codeLabel}</em> {code}</span>
+            <span className="trem-exclusive-offer__code">
+              <em>{codeLabel}</em> {code}
+            </span>
           </span>
           <img src={image} alt={imageAlt} loading="lazy" />
         </a>
@@ -123,17 +145,18 @@ const WIDGET_COMPONENTS = {
   exclusiveOffer: ExclusiveOfferCard,
 };
 
-export default function OverviewRail({ widgets = [], ariaLabel = "", className = "" }) {
-  if (!widgets.length) return null;
+export default function OverviewRail({ widgets = [], ariaLabel = "", className = "", onAction }) {
+  const visibleWidgets = widgets.filter((widget) => !widget.hide);
+  if (!visibleWidgets.length) return null;
 
   return (
     <aside
       className={`trem-overview-rail${className ? ` ${className}` : ""}`}
       aria-label={ariaLabel}
     >
-      {widgets.map(({ id, type, ...props }) => {
+      {visibleWidgets.map(({ id, type, ...props }) => {
         const Widget = WIDGET_COMPONENTS[type];
-        return Widget ? <Widget key={id} {...props} /> : null;
+        return Widget ? <Widget key={id} {...props} onAction={onAction} /> : null;
       })}
     </aside>
   );
@@ -145,15 +168,19 @@ const actionShape = PropTypes.shape({
   description: PropTypes.string,
   icon: PropTypes.string,
   href: PropTypes.string,
+  targetTab: PropTypes.string,
   target: PropTypes.string,
   rel: PropTypes.string,
   ariaLabel: PropTypes.string,
   disabled: PropTypes.bool,
+  hide: PropTypes.bool,
 });
 
 QuickActionsCard.propTypes = {
   title: PropTypes.string.isRequired,
   items: PropTypes.arrayOf(actionShape),
+  hideDisabled: PropTypes.bool,
+  onAction: PropTypes.func,
 };
 
 UpcomingTripCard.propTypes = {
@@ -190,10 +217,14 @@ ExclusiveOfferCard.propTypes = {
 };
 
 OverviewRail.propTypes = {
-  widgets: PropTypes.arrayOf(PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    type: PropTypes.oneOf(Object.keys(WIDGET_COMPONENTS)).isRequired,
-  })),
+  widgets: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      type: PropTypes.oneOf(Object.keys(WIDGET_COMPONENTS)).isRequired,
+      hide: PropTypes.bool,
+    }),
+  ),
   ariaLabel: PropTypes.string,
   className: PropTypes.string,
+  onAction: PropTypes.func,
 };

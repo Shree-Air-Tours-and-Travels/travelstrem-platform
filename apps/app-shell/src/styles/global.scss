@@ -11,7 +11,7 @@
 html {
   width: 100%;
   height: 100%;
-  font-size: $font-size-md;
+  font-size: var(--root-font-size);
   background: var(--bg);
   overscroll-behavior-y: none;
   -webkit-font-smoothing: antialiased;
@@ -82,6 +82,30 @@ select {
     max-width: none;
     z-index: 100;
   }
+
+  .dash-layout--top-dropdown {
+    display: block;
+
+    .trem-app-header {
+      z-index: 102;
+    }
+
+    > .trem-sidebar.trem-sidebar--top-dropdown {
+      position: fixed;
+      inset: $space-16 0 auto;
+      width: 100%;
+      max-width: none;
+      z-index: 101;
+    }
+
+    > .trem-sidebar__backdrop--top-dropdown {
+      z-index: 100;
+    }
+
+    > .dash-main {
+      grid-column: 1;
+    }
+  }
 }
 
 .dash-main {
@@ -120,9 +144,88 @@ select {
     display: none;
   }
 
+  > * {
+    width: min(100%, $full-width);
+    margin-inline: auto;
+  }
+
   @media (max-width: $breakpoint-md) {
     padding: $space-4;
   }
+}
+
+.dash-content--overview > .app-shell-page {
+  width: 100%;
+  max-width: none;
+}
+
+.dash-content--home {
+  padding: 0;
+}
+
+.dash-shell-breadcrumb {
+  position: sticky;
+  top: 0;
+  z-index: 80;
+  width: 100%;
+  min-height: 52px;
+  padding-inline: $space-6;
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-glass-strong, var(--surface));
+  box-shadow: var(--shadow-xs);
+  backdrop-filter: blur(14px);
+
+  @media (max-width: $breakpoint-md) {
+    min-height: 46px;
+    padding-inline: $space-4;
+  }
+}
+
+.dash-notifications {
+  display: grid;
+  gap: $space-3;
+  width: min(100%, 56rem);
+  margin: 0 auto;
+}
+
+.dash-notifications > button {
+  position: relative;
+  display: grid;
+  gap: $space-1;
+  padding: $space-4 $space-4 $space-4 $space-5;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  box-shadow: var(--shadow-xs);
+}
+
+.dash-notifications > button:hover,
+.dash-notifications > button:focus-visible {
+  outline: 0;
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.dash-notifications > button.is-unread::before {
+  content: "";
+  position: absolute;
+  top: $space-4;
+  left: $space-3;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: var(--color-danger);
+}
+
+.dash-notifications span,
+.dash-notifications time {
+  color: var(--muted);
+  font-size: $font-size-sm;
 }
 
 .dash-content--remote {
@@ -133,8 +236,10 @@ select {
   padding-bottom: $space-6;
 
   > * {
+    flex: 0 0 auto;
     width: 100%;
     max-width: none;
+    min-height: 100%;
   }
 
   @media (max-width: $breakpoint-md) {
@@ -144,20 +249,19 @@ select {
   }
 }
 
-.dash-content--booking-detail {
-  padding: 0;
-  padding-bottom: $space-6;
-  overflow-x: hidden;
-  overflow-y: auto;
+.dash-content--support {
+  padding: 0 $space-6;
+}
+
+.dash-content--support > * {
+  width: min(100%, $full-width);
+  max-width: $full-width;
+  margin-inline: auto;
 }
 
 @media (max-width: $breakpoint-md) {
-  .dash-content--booking-detail {
-    padding: 0;
-    padding-bottom: $space-4;
-    overflow-x: hidden;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+  .dash-content--support {
+    padding: 0 $space-4;
   }
 }
 
@@ -173,6 +277,12 @@ select {
   margin-right: 0;
   margin-bottom: 0;
   margin-left: 0;
+}
+
+.dash-content--home > .dash-app-footer {
+  width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 .dash-layout--sidebar-collapsed .dash-main {
@@ -193,29 +303,27 @@ select {
     height: 100dvh;
     margin-left: 0;
   }
+
+  .dash-layout--mobile-action-panel {
+    --dash-mobile-action-panel-fallback-height: calc(
+      #{$space-18} + env(safe-area-inset-bottom, 0px)
+    );
+    --dash-mobile-action-panel-clearance: #{$space-4};
+    --dash-mobile-action-panel-space: calc(
+      var(
+          --dash-mobile-action-panel-rendered-height,
+          var(--dash-mobile-action-panel-fallback-height)
+        ) +
+        var(--dash-mobile-action-panel-clearance)
+    );
+
+    .trem-fab:not(.trem-fab--variant-mobile-navigation) {
+      bottom: var(--dash-mobile-action-panel-space);
+    }
+  }
 }
 
 @media (max-width: $breakpoint-md) {
-  .dash-content--bookings {
-    height: calc(100dvh - 120px);
-    min-height: 0;
-    overflow: hidden;
-
-    .app-shell-page {
-      height: 100%;
-      min-height: 0;
-    }
-  }
-
-  .dash-content--booking-detail {
-    height: auto;
-    padding: 0;
-    padding-bottom: $space-4;
-    overflow-x: hidden;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
   .dash-content > .dash-app-footer {
     width: calc(100% + #{$space-4 * 2});
     margin-right: -$space-4;
@@ -228,5 +336,27 @@ select {
     margin-right: 0;
     margin-bottom: 0;
     margin-left: 0;
+  }
+
+  .dash-content--home > .dash-app-footer {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  // Keep every shell destination clear of the persistent mobile navigation.
+  // This stays last so page-specific padding cannot cover the reserved space.
+  .dash-layout--mobile-action-panel .dash-content {
+    padding-bottom: 0;
+    scroll-padding-bottom: var(--dash-mobile-action-panel-space);
+
+    &::after {
+      content: "";
+      display: block;
+      width: 100%;
+      min-height: var(--dash-mobile-action-panel-space);
+      flex: 0 0 var(--dash-mobile-action-panel-space);
+      pointer-events: none;
+    }
   }
 }

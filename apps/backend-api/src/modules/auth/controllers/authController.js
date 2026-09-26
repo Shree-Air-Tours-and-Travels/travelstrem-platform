@@ -2,118 +2,57 @@
 import crypto from "crypto";
 import UserRepository from "../repositories/UserRepository.js";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import mailer from "../../../core/mailer/index.js";
+import {
+    sendLoginEmail,
+    sendPasswordResetEmail,
+    sendWelcomeEmail,
+} from "../../../services/email.service.js";
 import config from "../../../config/index.js";
 import authConfig from "../../../config/auth.js";
 import UserVerification from "../models/UserVerification.js";
-import RefreshToken from "../models/RefreshToken.js";
 import PartnerAgency from "../models/PartnerAgency.js";
+import PartnershipRequest from "../../tenancy/models/PartnershipRequest.js";
+import Invitation from "../../tenancy/models/Invitation.js";
+import ActivationSession from "../models/ActivationSession.js";
+import { hashToken } from "../../tenancy/tenancy.service.js";
 import User from "../models/User.js";
-
-const NODE_ENV = (config.NODE_ENV || process.env.NODE_ENV || "development").toString().trim();
-const IS_PRODUCTION = !!config.IS_PRODUCTION;
-const AUTH_COOKIE_DOMAIN = (config.AUTH_COOKIE_DOMAIN || process.env.AUTH_COOKIE_DOMAIN || "").toString().trim();
-const USE_SHARED_COOKIE_DOMAIN = IS_PRODUCTION && Boolean(AUTH_COOKIE_DOMAIN);
-
-// JWT config (use config.JWT which was normalized in server/config.js)
-const JWT_SECRET = (config.JWT && config.JWT.accessSecret) || process.env.JWT_SECRET;
-const JWT_EXPIRES_IN = (config.JWT && config.JWT.accessExpires) || process.env.JWT_EXPIRES_IN || "15m";
-const JWT_REFRESH_SECRET = (config.JWT && config.JWT.refreshSecret) || process.env.JWT_REFRESH_SECRET;
-const JWT_REFRESH_EXPIRES_IN = (config.JWT && config.JWT.refreshExpires) || process.env.JWT_REFRESH_EXPIRES_IN || "30d";
-const REFRESH_COOKIE_NAME = IS_PRODUCTION && !USE_SHARED_COOKIE_DOMAIN ? "__Host-refresh-token" : "refresh_token";
+import { getPortalScope } from "../../../core/auth/portalSession.js";
+import {
+    createSession,
+    getSessionUser,
+    revokeCurrentSession,
+    revokePresentedRefreshToken,
+    revokeUserSessions,
+    rotateSession,
+    safeAuthUser,
+    SESSION_INACTIVITY_TIMEOUT_MS,
+} from "../services/session.service.js";
 
 // Admin creation secret from config (production-safe)
 const ADMIN_CREATION_SECRET = (config.ADMIN_CREATION_SECRET || "").toString().trim();
 const MASTER_ADMIN_EMAIL = config.MASTER_ADMIN_EMAIL;
+
+const sendRegistrationWelcomeEmail = async (user) => {
+    if (!config.ENABLE_EMAILS || !user?.email) return;
+    const result = await sendWelcomeEmail({
+        to: user.email,
+        customerName: user.name,
+        dashboardUrl: config.SHELL_URL,
+    });
+    if (!result?.success) {
+        console.warn("Welcome email was not sent:", result?.code || result?.message);
+    }
+};
 const MASTER_ADMIN_PHONE = config.MASTER_ADMIN_PHONE;
+const MASTER_ADMIN_PIN = (config.MASTER_ADMIN_PIN || "").toString().trim();
 
 // OTP TTL (ms) - from config
 const OTP_TTL = Number(config.OTP_TTL_MS || 1000 * 60 * 5);
 const OTP_MAX_ATTEMPTS = Number(config.OTP_MAX_ATTEMPTS || 3);
 const OTP_RESEND_COOLDOWN_MS = Number(config.OTP_RESEND_COOLDOWN_MS || 30 * 1000);
 
-// Debug flag
-const DEBUG = !!config.DEBUG;
-
-/**
- * signTokenForUser - create JWT for a user
- * payload contains sub (user id) and role/name/email for convenience
- */
-const signTokenForUser = (user) =>
-    jwt.sign(
-        {
-            sub: user._id.toString(),
-            role: user.role,
-            name: user.name,
-            email: user.email,
-            tokenVersion: user.tokenVersion || 0,
-            agentRef: user.agentRef || "",
-            agencyRef: user.agencyRef || "",
-            partnerAgencyRef: user.partnerAgencyRef || "",
-            agentApprovalStatus: user.agentApprovalStatus || "not_required",
-            adminLevel: user.adminLevel || "none",
-            adminApprovalStatus: user.adminApprovalStatus || "not_required",
-        },
-        JWT_SECRET,
-        { expiresIn: JWT_EXPIRES_IN }
-    );
-
-const COOKIE_NAME = IS_PRODUCTION && !USE_SHARED_COOKIE_DOMAIN ? "__Host-token" : "token";
-const sharedCookieOptions = USE_SHARED_COOKIE_DOMAIN ? { domain: AUTH_COOKIE_DOMAIN } : {};
-
-const setTokenCookie = (res, token) => {
-    res.cookie(COOKIE_NAME, token, {
-        httpOnly: true,
-        secure: IS_PRODUCTION,
-        sameSite: IS_PRODUCTION && !USE_SHARED_COOKIE_DOMAIN ? "strict" : "lax",
-        path: "/",
-        ...sharedCookieOptions,
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-};
-
-const clearTokenCookie = (res) => {
-    res.cookie(COOKIE_NAME, "", {
-        httpOnly: true,
-        secure: IS_PRODUCTION,
-        sameSite: IS_PRODUCTION && !USE_SHARED_COOKIE_DOMAIN ? "strict" : "lax",
-        path: "/",
-        ...sharedCookieOptions,
-        maxAge: 0,
-    });
-};
-
-const parseDuration = (duration) => {
-    const match = String(duration).match(/^(\d+)\s*(s|m|h|d)$/);
-    if (!match) return 30 * 24 * 60 * 60 * 1000;
-    const num = parseInt(match[1], 10);
-    const unit = match[2];
-    const multipliers = { s: 1000, m: 60000, h: 3600000, d: 86400000 };
-    return num * (multipliers[unit] || 86400000);
-};
-
-const setRefreshTokenCookie = (res, token) => {
-    res.cookie(REFRESH_COOKIE_NAME, token, {
-        httpOnly: true,
-        secure: IS_PRODUCTION,
-        sameSite: IS_PRODUCTION && !USE_SHARED_COOKIE_DOMAIN ? "strict" : "lax",
-        path: "/api/auth",
-        ...sharedCookieOptions,
-        maxAge: parseDuration(JWT_REFRESH_EXPIRES_IN),
-    });
-};
-
-const clearRefreshTokenCookie = (res) => {
-    res.cookie(REFRESH_COOKIE_NAME, "", {
-        httpOnly: true,
-        secure: IS_PRODUCTION,
-        sameSite: IS_PRODUCTION && !USE_SHARED_COOKIE_DOMAIN ? "strict" : "lax",
-        path: "/api/auth",
-        ...sharedCookieOptions,
-        maxAge: 0,
-    });
-};
+// Explicit legacy email-OTP development bypass. It defaults off and production rejects it.
+const DEV_OTP_BYPASS = !!config.DEV_OTP_BYPASS;
 
 const setAuthNoStoreHeaders = (res) => {
     res.setHeader("Cache-Control", "no-store");
@@ -121,49 +60,37 @@ const setAuthNoStoreHeaders = (res) => {
     res.setHeader("Referrer-Policy", "no-referrer");
 };
 
-const generateRefreshToken = (user) => {
-    const raw = crypto.randomBytes(48).toString("hex");
-    const family = crypto.randomBytes(16).toString("hex");
-    const expiresAt = new Date(Date.now() + parseDuration(JWT_REFRESH_EXPIRES_IN));
-    return { raw, family, expiresAt };
-};
-
-const hashToken = (raw) => crypto.createHash("sha256").update(raw).digest("hex");
-
-const issueRefreshToken = async (user, res) => {
-    await RefreshToken.cleanupExpired();
-    const refresh = generateRefreshToken(user);
-    await RefreshToken.create({
-        userId: user._id,
-        tokenHash: hashToken(refresh.raw),
-        family: refresh.family,
-        expiresAt: refresh.expiresAt,
-    });
-    setRefreshTokenCookie(res, refresh.raw);
-};
-
-const revokeUserRefreshTokens = async (userId) => {
-    await RefreshToken.deleteMany({ userId });
-};
-
-const revokeCurrentRefreshToken = async (req) => {
-    const refreshTokenRaw = req.cookies?.[REFRESH_COOKIE_NAME] || req.cookies?.refresh_token;
-    if (!refreshTokenRaw) return;
-    await RefreshToken.deleteOne({ tokenHash: hashToken(refreshTokenRaw) });
-};
+const issueUserToken = (user, res, { rememberMe = false } = {}) =>
+    createSession({ user, req: res.req, res, rememberMe });
+const revokeUserRefreshTokens = revokeUserSessions;
+const revokeCurrentRefreshToken = revokePresentedRefreshToken;
 
 const isPrivilegedRole = (role) => role === "admin" || role === "agent";
-const TRAVELSTREM_AGENT_DOMAIN = config.AGENT_EMAIL_DOMAIN;
+const portalAllowsRole = (portal, role) =>
+    (
+        ({
+            customer: ["member", "agent", "admin"],
+            admin: ["admin"],
+            partner: ["agent"],
+        })[portal] || ["member"]
+    ).includes(role);
 
 const normalizePhone = (phone = "") => String(phone || "").replace(/[^\d]/g, "");
+// Compare the national number so "+91 98765 43210" and "9876543210" are equivalent.
+const normalizeMasterPhone = (phone = "") => {
+    const digits = normalizePhone(phone);
+    return digits.length >= 10 ? digits.slice(-10) : digits;
+};
 const matchesMasterPhone = (phone = "") => {
-    const normalizedPhone = normalizePhone(phone);
-    const masterPhone = normalizePhone(MASTER_ADMIN_PHONE);
-    if (!normalizedPhone) return true;
-    return normalizedPhone === masterPhone || normalizedPhone.endsWith(masterPhone);
+    const normalizedPhone = normalizeMasterPhone(phone);
+    const masterPhone = normalizeMasterPhone(MASTER_ADMIN_PHONE);
+    if (normalizedPhone.length !== 10 || masterPhone.length !== 10) return false;
+    return normalizedPhone === masterPhone;
 };
 const isMasterAdminIdentity = ({ email = "", phone = "" } = {}) => {
-    const normalizedEmail = String(email || "").trim().toLowerCase();
+    const normalizedEmail = String(email || "")
+        .trim()
+        .toLowerCase();
     return normalizedEmail === MASTER_ADMIN_EMAIL && matchesMasterPhone(phone);
 };
 
@@ -184,50 +111,18 @@ const slugRef = (value = "", fallback = "agency") => {
     return slug || fallback;
 };
 
-const makeAgencyRef = (name = "", email = "") => {
-    const local = String(email || "").split("@")[0] || name || "agency";
-    return `agency-${slugRef(name || local)}`;
-};
-
 const makePartnerAgencyRef = (name = "") => `partner-${slugRef(name, "agency")}`;
-const makeAgentRef = (email = "") => `agent-${slugRef(String(email).split("@")[0] || "user")}`;
 
-const getAgentRoleContext = async ({ requestedRole, normalizedEmail, body = {} }) => {
+const getAgentRoleContext = async ({ requestedRole }) => {
     if (requestedRole !== "agent") return {};
 
-    if (!TRAVELSTREM_AGENT_DOMAIN) {
-        const err = new Error("AGENT_EMAIL_DOMAIN is not configured.");
-        err.status = 503;
-        throw err;
-    }
-    const domain = normalizedEmail.split("@")[1] || "";
-    if (domain !== TRAVELSTREM_AGENT_DOMAIN) {
-        const err = new Error(`Agent accounts must use an @${TRAVELSTREM_AGENT_DOMAIN} email address.`);
-        err.status = 400;
-        throw err;
-    }
-
-    const requestedPartnerAgencyRef = String(body.partnerAgencyRef || "").trim();
-    let partnerAgencyRef = "";
-    if (requestedPartnerAgencyRef) {
-        const partner = await PartnerAgency.findOne({
-            partnerAgencyRef: requestedPartnerAgencyRef,
-            status: "approved",
-        });
-        if (!partner) {
-            const err = new Error("Partner agency must be approved before its agents can register.");
-            err.status = 403;
-            throw err;
-        }
-        partnerAgencyRef = partner.partnerAgencyRef;
-    }
-
-    return {
-        agentRef: makeAgentRef(normalizedEmail),
-        agencyRef: partnerAgencyRef ? "" : String(body.agencyRef || makeAgencyRef(body.agencyName || body.name, normalizedEmail)).trim(),
-        partnerAgencyRef,
-        agentApprovalStatus: "pending",
-    };
+    // Agency accounts are provisioned only through a single-use invitation.
+    // Public self-registration must never allow a caller to choose an agency or role.
+    const invitationError = new Error(
+        "Partner accounts require an invitation from an authorized agency administrator.",
+    );
+    invitationError.status = 403;
+    throw invitationError;
 };
 
 const getAdminRoleContext = async ({ requestedRole, normalizedEmail, body = {} }) => {
@@ -238,7 +133,9 @@ const getAdminRoleContext = async ({ requestedRole, normalizedEmail, body = {} }
 
     if (!masterExists) {
         if (!isMasterAdminIdentity({ email: normalizedEmail, phone })) {
-            const err = new Error(`First admin must be registered by the master admin identity: ${MASTER_ADMIN_EMAIL}.`);
+            const err = new Error(
+                `First admin must be registered by the master admin identity: ${MASTER_ADMIN_EMAIL}.`,
+            );
             err.status = 403;
             throw err;
         }
@@ -259,10 +156,40 @@ const getAdminRoleContext = async ({ requestedRole, normalizedEmail, body = {} }
 
 const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
 
+// Short-lived authorization code for activation flow. Never exposed in URLs.
+const AUTH_CODE_TTL_MS = Number(config.ACTIVATION_AUTH_CODE_TTL_MS || 10 * 60 * 1000); // 10 min
+const generateAuthCode = () => crypto.randomBytes(32).toString("base64url");
+
 const sendOtpMail = async ({ email, otp, subject, label }) => {
-    const text = `Your ${label} OTP is: ${otp}. It is valid for ${Math.round(OTP_TTL / 60000)} minutes.`;
-    const html = `<p>Your ${label} OTP is: <strong>${otp}</strong></p><p>This code is valid for ${Math.round(OTP_TTL / 60000)} minutes.</p>`;
-    await mailer.sendMail({ to: email, subject, text, html });
+    if (DEV_OTP_BYPASS) {
+        console.log(`[otp:dev] OTP ${label} for ${email} skipped (dev bypass, no email sent).`);
+        return { success: true, skipped: true };
+    }
+    const payload = {
+        to: email,
+        otp,
+        subject,
+        purpose: label,
+        expiresInMinutes: Math.round(OTP_TTL / 60000),
+    };
+    const result =
+        label === "password reset"
+            ? await sendPasswordResetEmail(payload)
+            : await sendLoginEmail(payload);
+    if (!result.success) {
+        const error = new Error(result.message);
+        error.status = 503;
+        throw error;
+    }
+    return result;
+};
+
+// In dev, any non-empty OTP is accepted so no one is blocked by an emailed code.
+const acceptsOtp = (storedOtp, submittedOtp) => {
+    const submitted = String(submittedOtp || "").trim();
+    if (!submitted) return false;
+    if (DEV_OTP_BYPASS) return true;
+    return storedOtp === submitted;
 };
 
 const createVerification = async ({ email, type, metadata = {}, deleteExisting = true }) => {
@@ -298,10 +225,14 @@ const consumeVerificationOtp = async ({ email, type, otp }) => {
 
     if (verification.attempts >= OTP_MAX_ATTEMPTS) {
         await UserVerification.deleteOne({ _id: verification._id });
-        return { ok: false, status: 400, message: "Too many failed attempts. Please request a new OTP." };
+        return {
+            ok: false,
+            status: 400,
+            message: "Too many failed attempts. Please request a new OTP.",
+        };
     }
 
-    if (verification.otp !== otp.toString().trim()) {
+    if (!acceptsOtp(verification.otp, otp)) {
         verification.attempts += 1;
         await verification.save();
         const remaining = OTP_MAX_ATTEMPTS - verification.attempts;
@@ -319,36 +250,46 @@ const consumeVerificationOtp = async ({ email, type, otp }) => {
     return { ok: true, verification };
 };
 
-const validateMasterAdminRegistration = async ({ email, adminOtp, adminSecret }) => {
-    const normalizedOtp = (adminOtp ?? "").toString().trim();
-    if (normalizedOtp) {
-        const record = await UserVerification.findOne({
-            email,
-            type: "registration",
-            verified: false,
-            expiresAt: { $gt: new Date() },
-        }).sort({ createdAt: -1 });
-        if (!record) return { ok: false, message: "Invalid or expired admin registration OTP." };
-        const result = await consumeVerificationOtp({ email, type: "registration", otp: normalizedOtp });
-        return result.ok ? { ok: true } : { ok: false, message: result.message };
-    }
+const secureEqual = (received = "", expected = "") => {
+    const receivedBuffer = Buffer.from(String(received));
+    const expectedBuffer = Buffer.from(String(expected));
+    return (
+        receivedBuffer.length === expectedBuffer.length &&
+        crypto.timingSafeEqual(receivedBuffer, expectedBuffer)
+    );
+};
 
-    const adminSecretReceived = (adminSecret ?? "").toString().trim();
-    if (adminSecretReceived && adminSecretReceived === ADMIN_CREATION_SECRET) {
-        return { ok: true };
+const validateMasterAdminRegistration = async ({ email, verificationId, adminPin }) => {
+    if (!verificationId)
+        return { ok: false, message: "Verify the registration OTP before entering the Admin PIN." };
+    if (!/^[a-f\d]{24}$/i.test(String(verificationId))) {
+        return { ok: false, message: "The verified registration session is invalid or expired." };
     }
-
-    if (DEBUG) {
-        console.warn("[register] privileged registration verification failed", {
-            role: "admin",
-            email,
-            otpProvided: Boolean(normalizedOtp),
-            secretProvided: Boolean(adminSecretReceived),
-            secretConfigured: Boolean(ADMIN_CREATION_SECRET),
-        });
+    const verification = await UserVerification.findOne({
+        _id: verificationId,
+        email,
+        type: "registration",
+        verified: true,
+        expiresAt: { $gt: new Date() },
+        "metadata.purpose": "master_admin_registration",
+    });
+    if (!verification)
+        return { ok: false, message: "The verified registration session is invalid or expired." };
+    if (!MASTER_ADMIN_PIN || !secureEqual(String(adminPin || "").trim(), MASTER_ADMIN_PIN)) {
+        const pinAttempts = Number(verification.metadata?.pinAttempts || 0) + 1;
+        verification.metadata = { ...(verification.metadata || {}), pinAttempts };
+        verification.markModified("metadata");
+        if (pinAttempts >= OTP_MAX_ATTEMPTS) {
+            await UserVerification.deleteOne({ _id: verification._id });
+            return {
+                ok: false,
+                message: "Too many invalid PIN attempts. Request and verify a new OTP.",
+            };
+        }
+        await verification.save();
+        return { ok: false, message: "Invalid Admin PIN." };
     }
-
-    return { ok: false, message: "Master admin registration OTP is required." };
+    return { ok: true, verification };
 };
 
 const maskEmail = (email) => {
@@ -359,56 +300,21 @@ const maskEmail = (email) => {
     return `${masked}@${domain}`;
 };
 
-const issueUserToken = async (user, res) => {
-    const token = signTokenForUser(user);
-    setTokenCookie(res, token);
-    await issueRefreshToken(user, res);
-    return {
-        status: "success",
-        success: true,
-        authenticated: true,
-        user: {
-            id: user._id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            agentRef: user.agentRef || "",
-            agencyRef: user.agencyRef || "",
-            partnerAgencyRef: user.partnerAgencyRef || "",
-            agentApprovalStatus: user.agentApprovalStatus || "not_required",
-            phone: user.phone || "",
-            adminLevel: user.adminLevel || "none",
-            adminApprovalStatus: user.adminApprovalStatus || "not_required",
-        },
-        sessionVersion: String(user.tokenVersion || 0),
-        redirectTo: config.TRAVELSTREM_APP_URL || config.APP_URL || process.env.TRAVELSTREM_APP_URL || process.env.APP_URL || "https://app.travelstrem.com",
-    };
-};
-
-const safeAuthUser = (user) => ({
-    id: user._id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-    agentRef: user.agentRef || "",
-    agencyRef: user.agencyRef || "",
-    partnerAgencyRef: user.partnerAgencyRef || "",
-    agentApprovalStatus: user.agentApprovalStatus || "not_required",
-    phone: user.phone || "",
-    avatar: user.avatar || "user",
-    adminLevel: user.adminLevel || "none",
-    adminApprovalStatus: user.adminApprovalStatus || "not_required",
-});
-
 const assertApprovedAdmin = async (req, res) => {
     if (req.user?.role !== "admin") {
-        res.status(403).json({status: "error", message: "Only approved admins can perform this action." });
+        res.status(403).json({
+            status: "error",
+            message: "Only approved admins can perform this action.",
+        });
         return null;
     }
 
     const admin = await UserRepository.findById(req.user.sub || req.user.id);
     if (!admin || admin.role !== "admin" || admin.adminApprovalStatus !== "approved") {
-        res.status(403).json({status: "error", message: "Admin approval is required before this action." });
+        res.status(403).json({
+            status: "error",
+            message: "Admin approval is required before this action.",
+        });
         return null;
     }
     return admin;
@@ -418,13 +324,39 @@ const assertMasterAdmin = async (req, res) => {
     const admin = await assertApprovedAdmin(req, res);
     if (!admin) return null;
     if (admin.adminLevel !== "master") {
-        res.status(403).json({status: "error", message: "Only the master admin can perform this action." });
+        res.status(403).json({
+            status: "error",
+            message: "Only the master admin can perform this action.",
+        });
         return null;
     }
     return admin;
 };
 
+const canManageInternalTeamMember = (admin, member) => {
+    if (admin?.adminLevel === "master") return true;
+    if (!member || member.adminLevel === "master") return false;
+    if (String(admin?._id || "") === String(member._id || "")) return false;
+    return (
+        member.adminApprovalStatus === "pending" ||
+        (member.internalTeamRoles || []).includes("support")
+    );
+};
+
 const enforceActivePrivilegedUser = async (user) => {
+    if ((user.accountStatus || "active") !== "active") {
+        const err = new Error(`Account is ${user.accountStatus}.`);
+        err.status = 403;
+        throw err;
+    }
+    if (user.agencyId) {
+        const agency = await PartnerAgency.findById(user.agencyId).select("status");
+        if (!agency || agency.status !== "active") {
+            const err = new Error("Your partner agency is not active.");
+            err.status = 403;
+            throw err;
+        }
+    }
     if (user.role === "admin") {
         if (user.email === MASTER_ADMIN_EMAIL && user.adminLevel !== "master") {
             user.adminLevel = "master";
@@ -435,7 +367,7 @@ const enforceActivePrivilegedUser = async (user) => {
             const err = new Error(
                 user.adminApprovalStatus === "removed"
                     ? "Admin access has been removed by the master admin."
-                    : "Admin account is pending master admin approval."
+                    : "Admin account is pending master admin approval.",
             );
             err.status = 403;
             throw err;
@@ -469,48 +401,120 @@ export const requestAdminRegistrationOtp = async (req, res) => {
     try {
         const { email, role, phone } = req.body || {};
         if (!email || typeof email !== "string") {
-            return res.status(400).json({status: "error", message: "Email is required." });
+            return res.status(400).json({ status: "error", message: "Email is required." });
         }
 
         const requestedRole = role || "admin";
         if (requestedRole !== "admin") {
-            return res.status(400).json({status: "error", message: "OTP is only available for master admin registration." });
+            return res.status(400).json({
+                status: "error",
+                message: "OTP is only available for master admin registration.",
+            });
         }
 
         const normalizedEmail = email.toLowerCase().trim();
-        if (!isMasterAdminIdentity({ email: normalizedEmail, phone })) {
-            return res.status(403).json({status: "error", message: `Master admin OTP can only be requested by ${MASTER_ADMIN_EMAIL}.` });
+        if (normalizedEmail !== MASTER_ADMIN_EMAIL) {
+            return res.status(403).json({
+                status: "error",
+                message: "Enter the configured master administrator email address.",
+            });
+        }
+        if (!matchesMasterPhone(phone)) {
+            return res.status(403).json({
+                status: "error",
+                message: "Enter the configured master administrator mobile number.",
+            });
         }
 
         if (await hasApprovedMasterAdmin()) {
-            return res.status(409).json({status: "error", message: "Master admin already exists. New admins must register and wait for master admin approval." });
+            return res.status(409).json({
+                status: "error",
+                message:
+                    "Master admin already exists. New admins must register and wait for master admin approval.",
+            });
         }
 
         const existing = await UserRepository.findByEmail(normalizedEmail);
         if (existing) {
-            return res.status(409).json({status: "error", message: "Email already in use." });
+            return res.status(409).json({ status: "error", message: "Email already in use." });
         }
 
         const { otp } = await createVerification({
             email: normalizedEmail,
             type: "registration",
-            metadata: { role: requestedRole },
+            metadata: { role: requestedRole, purpose: "master_admin_registration" },
         });
 
         await sendOtpMail({
             email: normalizedEmail,
             otp,
-            subject: "Your AdminTREM registration OTP",
+            subject: `Your ${config.COMPANY_NAME} registration OTP`,
             label: "registration",
         });
 
         return res.json({
             message: "Registration OTP sent.",
             expiresInMs: OTP_TTL,
+            resendAfterMs: OTP_RESEND_COOLDOWN_MS,
+            ...(DEV_OTP_BYPASS ? { developmentOtp: otp } : {}),
         });
     } catch (err) {
         console.error("requestAdminRegistrationOtp error:", err && err.stack ? err.stack : err);
-        return res.status(500).json({status: "error", message: "Failed to generate registration OTP." });
+        return res
+            .status(500)
+            .json({ status: "error", message: "Failed to generate registration OTP." });
+    }
+};
+
+/** Verify ownership first; the private Admin PIN is requested only after this succeeds. */
+export const verifyAdminRegistrationOtp = async (req, res) => {
+    setAuthNoStoreHeaders(res);
+    try {
+        const normalizedEmail = String(req.body?.email || "")
+            .trim()
+            .toLowerCase();
+        const otp = String(req.body?.otp || "").trim();
+        if (!isMasterAdminIdentity({ email: normalizedEmail, phone: req.body?.phone })) {
+            return res.status(403).json({
+                status: "error",
+                message: "This identity cannot create the master administrator.",
+            });
+        }
+        if (!/^\d{6}$/.test(otp)) {
+            return res
+                .status(400)
+                .json({ status: "error", message: "Enter the 6 digit registration OTP." });
+        }
+        if (await hasApprovedMasterAdmin()) {
+            return res
+                .status(409)
+                .json({ status: "error", message: "Master admin already exists." });
+        }
+        const result = await consumeVerificationOtp({
+            email: normalizedEmail,
+            type: "registration",
+            otp,
+        });
+        if (!result.ok)
+            return res
+                .status(result.status || 400)
+                .json({ status: "error", message: result.message });
+        result.verification.metadata = {
+            ...(result.verification.metadata || {}),
+            purpose: "master_admin_registration",
+        };
+        await result.verification.save();
+        return res.json({
+            status: "verified",
+            message: "OTP verified. Enter your private Admin PIN to finish registration.",
+            verificationId: result.verification._id.toString(),
+            expiresInMs: Math.max(0, result.verification.expiresAt.getTime() - Date.now()),
+        });
+    } catch (err) {
+        console.error("verifyAdminRegistrationOtp error:", err?.stack || err);
+        return res
+            .status(500)
+            .json({ status: "error", message: "Could not verify the registration OTP." });
     }
 };
 
@@ -525,23 +529,39 @@ export const register = async (req, res) => {
         const normalizedEmail = email.toLowerCase().trim();
         const existing = await UserRepository.findByEmail(normalizedEmail);
         if (existing) {
-            return res.status(409).json({status: "error", message: "Email already in use." });
+            return res.status(409).json({ status: "error", message: "Email already in use." });
         }
 
         const requestedRole = role || "member";
-        const adminContext = await getAdminRoleContext({ requestedRole, normalizedEmail, body: req.body || {} });
+        const portal = getPortalScope(req);
+        if (!portalAllowsRole(portal, requestedRole)) {
+            return res.status(403).json({
+                status: "error",
+                message: `This account type cannot register through the ${portal} portal.`,
+            });
+        }
+        const adminContext = await getAdminRoleContext({
+            requestedRole,
+            normalizedEmail,
+            body: req.body || {},
+        });
         if (requestedRole === "admin" && adminContext.adminLevel === "master") {
             const verification = await validateMasterAdminRegistration({
                 email: normalizedEmail,
-                adminOtp: req.body.adminOtp || req.body.registrationOtp,
-                adminSecret: req.body.adminSecret,
+                verificationId: req.body.adminVerificationId,
+                adminPin: req.body.adminPin,
             });
-            if (!verification.ok) return res.status(403).json({status: "error", message: verification.message });
+            if (!verification.ok)
+                return res.status(403).json({ status: "error", message: verification.message });
         }
 
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash(password, salt);
-        const roleContext = await getAgentRoleContext({ requestedRole, normalizedEmail, body: req.body || {} });
+        const roleContext = await getAgentRoleContext({
+            requestedRole,
+            normalizedEmail,
+            body: req.body || {},
+        });
 
         const user = UserRepository.create({
             name: name.trim(),
@@ -554,6 +574,14 @@ export const register = async (req, res) => {
 
         await user.save();
 
+        await sendRegistrationWelcomeEmail(user).catch((error) => {
+            console.warn("Welcome email failed:", error?.message || error);
+        });
+
+        if (requestedRole === "admin" && adminContext.adminLevel === "master") {
+            await UserVerification.deleteOne({ _id: req.body.adminVerificationId });
+        }
+
         if (requestedRole === "agent") {
             return res.status(202).json({
                 status: "pending_approval",
@@ -565,7 +593,8 @@ export const register = async (req, res) => {
         if (requestedRole === "admin" && user.adminApprovalStatus === "pending") {
             return res.status(202).json({
                 status: "pending_approval",
-                message: "Admin registration submitted. Master admin approval is required before login.",
+                message:
+                    "Admin registration submitted. Master admin approval is required before login.",
                 user: safeAuthUser(user),
             });
         }
@@ -575,7 +604,9 @@ export const register = async (req, res) => {
         return res.status(201).json(result);
     } catch (err) {
         console.error("Auth register error:", err && err.stack ? err.stack : err);
-        return res.status(err.status || 500).json({status: "error", message: err.message || "Server error during registration." });
+        return res
+            .status(err.status || 500)
+            .json({ status: "error", message: err.message || "Server error during registration." });
     }
 };
 
@@ -587,59 +618,78 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
     setAuthNoStoreHeaders(res);
     try {
-        const { email, password } = req.body || {};
+        const { email, password, rememberMe = false } = req.body || {};
 
         const normalizedEmail = email.toLowerCase().trim();
         const user = await UserRepository.findByEmail(normalizedEmail);
         if (!user) {
-            return res.status(401).json({status: "error", message: "Invalid credentials." });
+            return res.status(401).json({ status: "error", message: "Invalid credentials." });
+        }
+
+        const portal = getPortalScope(req);
+        if (!portalAllowsRole(portal, user.role)) {
+            return res.status(403).json({
+                status: "error",
+                message: `This account does not have access to the ${portal} portal.`,
+            });
         }
 
         try {
             await enforceActivePrivilegedUser(user);
         } catch (statusErr) {
-            return res.status(statusErr.status || 403).json({status: "error", message: statusErr.message });
+            return res
+                .status(statusErr.status || 403)
+                .json({ status: "error", message: statusErr.message });
         }
 
         if (!user.passwordHash || typeof user.passwordHash !== "string") {
-            console.error(`[login] user ${normalizedEmail} missing/invalid passwordHash`);
-            return res.status(500).json({status: "error", message: "User password is not configured correctly." });
+            return res.status(400).json({
+                status: "error",
+                code: "PASSWORD_NOT_SET",
+                message: "This account does not have a password. Use a linked sign-in method.",
+            });
         }
 
         const match = await bcrypt.compare(password, user.passwordHash);
         if (!match) {
-            return res.status(401).json({status: "error", message: "Invalid credentials." });
+            return res.status(401).json({ status: "error", message: "Invalid credentials." });
         }
 
-        // Privileged roles (admin/agent) require OTP verification
-        if (isPrivilegedRole(user.role)) {
+        // Privileged roles (admin/agent) require OTP verification, except in
+        // non-production where the OTP step is bypassed entirely.
+        if (isPrivilegedRole(user.role) && !DEV_OTP_BYPASS) {
             const { verification, otp } = await createVerification({
                 email: normalizedEmail,
                 type: "login",
-                metadata: { role: user.role },
+                metadata: {
+                    role: user.role,
+                    portal: getPortalScope(req),
+                    rememberMe: rememberMe === true,
+                },
             });
 
             await sendOtpMail({
                 email: normalizedEmail,
                 otp,
-                subject: "Your AdminTREM login OTP",
+                subject: `Your ${config.COMPANY_NAME} login OTP`,
                 label: "login",
             });
 
-            return res.json({
-                status: "verify_otp",
-                verificationId: verification._id.toString(),
-                email: maskEmail(normalizedEmail),
-                expiresInMs: OTP_TTL,
-            });
+        return res.json({
+            status: "verify_otp",
+            verificationId: verification._id.toString(),
+            email: maskEmail(normalizedEmail),
+            expiresInMs: OTP_TTL,
+            resendAfterMs: OTP_RESEND_COOLDOWN_MS,
+        });
         }
 
         await revokeCurrentRefreshToken(req);
-        const result = await issueUserToken(user, res);
+        const result = await issueUserToken(user, res, { rememberMe: rememberMe === true });
         return res.json(result);
     } catch (err) {
         console.error("Auth login error:", err && err.stack ? err.stack : err);
-        return res.status(500).json({status: "error", message: "Server error during login." });
+        return res.status(500).json({ status: "error", message: "Server error during login." });
     }
 };
 
@@ -652,31 +702,49 @@ export const verifyLoginOtp = async (req, res) => {
     try {
         const { verificationId, otp } = req.body || {};
         if (!verificationId || !otp) {
-            return res.status(400).json({status: "error", message: "Verification ID and OTP are required." });
+            return res
+                .status(400)
+                .json({ status: "error", message: "Verification ID and OTP are required." });
         }
 
         await UserVerification.cleanupExpired();
 
         const verification = await UserVerification.findById(verificationId);
         if (!verification) {
-            return res.status(400).json({status: "error", message: "Verification session not found or expired." });
+            return res
+                .status(400)
+                .json({ status: "error", message: "Verification session not found or expired." });
+        }
+
+        if (verification.metadata?.portal && verification.metadata.portal !== getPortalScope(req)) {
+            return res.status(403).json({
+                status: "error",
+                message: "This OTP belongs to a different portal login.",
+            });
         }
 
         if (verification.verified) {
-            return res.status(400).json({status: "error", message: "OTP already verified. Please log in again." });
+            return res
+                .status(400)
+                .json({ status: "error", message: "OTP already verified. Please log in again." });
         }
 
         if (new Date() > verification.expiresAt) {
             await UserVerification.deleteOne({ _id: verificationId });
-            return res.status(400).json({status: "error", message: "OTP has expired. Please request a new one." });
+            return res
+                .status(400)
+                .json({ status: "error", message: "OTP has expired. Please request a new one." });
         }
 
         if (verification.attempts >= OTP_MAX_ATTEMPTS) {
             await UserVerification.deleteOne({ _id: verificationId });
-            return res.status(400).json({status: "error", message: "Too many failed attempts. Please log in again." });
+            return res.status(400).json({
+                status: "error",
+                message: "Too many failed attempts. Please log in again.",
+            });
         }
 
-        if (verification.otp !== otp.toString().trim()) {
+        if (!acceptsOtp(verification.otp, otp)) {
             verification.attempts += 1;
             await verification.save();
             const remaining = OTP_MAX_ATTEMPTS - verification.attempts;
@@ -689,14 +757,16 @@ export const verifyLoginOtp = async (req, res) => {
         const user = await UserRepository.findByEmail(verification.email);
         if (!user) {
             await UserVerification.deleteOne({ _id: verificationId });
-            return res.status(400).json({status: "error", message: "User not found." });
+            return res.status(400).json({ status: "error", message: "User not found." });
         }
 
         try {
             await enforceActivePrivilegedUser(user);
         } catch (statusErr) {
             await UserVerification.deleteOne({ _id: verificationId });
-            return res.status(statusErr.status || 403).json({status: "error", message: statusErr.message });
+            return res
+                .status(statusErr.status || 403)
+                .json({ status: "error", message: statusErr.message });
         }
 
         verification.verified = true;
@@ -705,11 +775,15 @@ export const verifyLoginOtp = async (req, res) => {
         await verification.save();
 
         await revokeCurrentRefreshToken(req);
-        const result = await issueUserToken(user, res);
+        const result = await issueUserToken(user, res, {
+            rememberMe: verification.metadata?.rememberMe === true,
+        });
         return res.json(result);
     } catch (err) {
         console.error("verifyLoginOtp error:", err && err.stack ? err.stack : err);
-        return res.status(500).json({status: "error", message: "Server error during OTP verification." });
+        return res
+            .status(500)
+            .json({ status: "error", message: "Server error during OTP verification." });
     }
 };
 
@@ -722,19 +796,33 @@ export const resendLoginOtp = async (req, res) => {
     try {
         const { verificationId } = req.body || {};
         if (!verificationId) {
-            return res.status(400).json({status: "error", message: "Verification ID is required." });
+            return res
+                .status(400)
+                .json({ status: "error", message: "Verification ID is required." });
         }
 
         const verification = await UserVerification.findById(verificationId);
         if (!verification) {
-            return res.status(400).json({status: "error", message: "Verification session not found or expired." });
+            return res
+                .status(400)
+                .json({ status: "error", message: "Verification session not found or expired." });
+        }
+
+        if (verification.metadata?.portal && verification.metadata.portal !== getPortalScope(req)) {
+            return res.status(403).json({
+                status: "error",
+                message: "This OTP belongs to a different portal login.",
+            });
         }
 
         if (verification.verified) {
-            return res.status(400).json({status: "error", message: "OTP already verified. Please log in again." });
+            return res
+                .status(400)
+                .json({ status: "error", message: "OTP already verified. Please log in again." });
         }
 
-        const cooldownMs = OTP_RESEND_COOLDOWN_MS - (Date.now() - new Date(verification.createdAt).getTime());
+        const cooldownMs =
+            OTP_RESEND_COOLDOWN_MS - (Date.now() - new Date(verification.createdAt).getTime());
         if (cooldownMs > 0) {
             return res.status(429).json({
                 status: "error",
@@ -752,36 +840,45 @@ export const resendLoginOtp = async (req, res) => {
         await sendOtpMail({
             email: verification.email,
             otp: verification.otp,
-            subject: verification.type === "password_reset" ? "Your password reset OTP" : "Your AdminTREM login OTP",
+            subject:
+                verification.type === "password_reset"
+                    ? `Your ${config.COMPANY_NAME} password reset OTP`
+                    : `Your ${config.COMPANY_NAME} login OTP`,
             label: verification.type === "password_reset" ? "password reset" : "login",
         });
 
         return res.json({
             message: "New OTP sent.",
             expiresInMs: OTP_TTL,
+            resendAfterMs: OTP_RESEND_COOLDOWN_MS,
         });
     } catch (err) {
         console.error("resendLoginOtp error:", err && err.stack ? err.stack : err);
-        return res.status(500).json({status: "error", message: "Server error during OTP resend." });
+        return res
+            .status(500)
+            .json({ status: "error", message: "Server error during OTP resend." });
     }
 };
 
-const isDev = process.env.NODE_ENV !== "production";
+const isDev = config.IS_DEVELOPMENT;
 
 export const forgotPassword = async (req, res) => {
     setAuthNoStoreHeaders(res);
     try {
         const { email } = req.body || {};
         if (!email || typeof email !== "string") {
-            return res.status(400).json({status: "error", message: "Email is required." });
+            return res.status(400).json({ status: "error", message: "Email is required." });
         }
 
         const normalizedEmail = email.toLowerCase().trim();
         const user = await UserRepository.findByEmail(normalizedEmail);
 
         if (!user) {
-            // For security you might want to always return 200 , but original code returned 404.
-            return res.status(404).json({status: "error", message: "No account found with that email address." });
+            return res.json({
+                message: "If that email is registered, a password reset code has been sent.",
+                expiresInMs: OTP_TTL,
+                resendAfterMs: OTP_RESEND_COOLDOWN_MS,
+            });
         }
 
         const { otp } = await createVerification({
@@ -793,24 +890,45 @@ export const forgotPassword = async (req, res) => {
         await sendOtpMail({
             email: user.email,
             otp,
-            subject: "Your password reset OTP",
+            subject: `Your ${config.COMPANY_NAME} password reset OTP`,
             label: "password reset",
         });
 
-        return res.json({ message: "OTP sent to registered email address." });
+        return res.json({
+            message: "If that email is registered, a password reset code has been sent.",
+            expiresInMs: OTP_TTL,
+            resendAfterMs: OTP_RESEND_COOLDOWN_MS,
+            ...(DEV_OTP_BYPASS ? { developmentOtp: otp } : {}),
+        });
     } catch (err) {
         console.error("Auth forgotPassword error:", err && err.stack ? err.stack : err);
-        return res.status(500).json({status: "error", message: isDev ? `Server error: ${err.message}` : "Server error" });
+        return res.status(500).json({
+            status: "error",
+            message: isDev ? `Server error: ${err.message}` : "Server error",
+        });
     }
 };
-
 
 export const resetPassword = async (req, res) => {
     setAuthNoStoreHeaders(res);
     try {
         const { email, otp, password } = req.body || {};
         if (!email || !otp || !password) {
-            return res.status(400).json({status: "error", message: "Email, OTP and new password are required." });
+            return res
+                .status(400)
+                .json({ status: "error", message: "Email, OTP and new password are required." });
+        }
+        if (
+            !/^\d{6}$/.test(String(otp)) ||
+            typeof password !== "string" ||
+            password.length < 8 ||
+            password.length > 128
+        ) {
+            return res.status(400).json({
+                status: "error",
+                code: "INVALID_PASSWORD_RESET",
+                message: "Enter a valid reset code and a password between 8 and 128 characters.",
+            });
         }
 
         const normalizedEmail = email.toLowerCase().trim();
@@ -821,15 +939,19 @@ export const resetPassword = async (req, res) => {
             otp,
         });
         if (!verificationResult.ok) {
-            return res.status(verificationResult.status).json({status: "error", message: verificationResult.message });
+            return res
+                .status(verificationResult.status)
+                .json({ status: "error", message: verificationResult.message });
         }
 
         const user = await UserRepository.findByEmail(normalizedEmail);
-        if (!user) return res.status(400).json({status: "error", message: "User not found." });
+        if (!user) return res.status(400).json({ status: "error", message: "User not found." });
 
         if (typeof bcrypt === "undefined" || typeof bcrypt.hash !== "function") {
             console.error("[resetPassword] bcrypt not available");
-            return res.status(500).json({status: "error", message: "Server misconfiguration: bcrypt missing." });
+            return res
+                .status(500)
+                .json({ status: "error", message: "Server misconfiguration: bcrypt missing." });
         }
 
         // Hash password - use the same field your app expects. Support both 'password' and 'passwordHash' fields.
@@ -852,7 +974,9 @@ export const resetPassword = async (req, res) => {
             await user.save();
         } catch (saveErr) {
             console.error("[resetPassword] failed to save new password:", saveErr);
-            return res.status(500).json({status: "error", message: "Failed to save new password." });
+            return res
+                .status(500)
+                .json({ status: "error", message: "Failed to save new password." });
         }
 
         // Increment tokenVersion to invalidate existing sessions
@@ -865,10 +989,242 @@ export const resetPassword = async (req, res) => {
         return res.json({ message: "Password reset successful.", ...result });
     } catch (err) {
         console.error("Auth resetPassword error:", err && err.stack ? err.stack : err);
-        return res.status(500).json({status: "error", message: isDev ? `Server error: ${err.message}` : "Server error resetting password." });
+        return res.status(500).json({
+            status: "error",
+            message: isDev ? `Server error: ${err.message}` : "Server error resetting password.",
+        });
     }
 };
 
+/**
+ * POST /auth/activate-validate
+ * Accepts a raw invitation token, validates it server-side, and returns a
+ * short-lived single-use authorization code. The raw token is NEVER exposed
+ * to the browser — only the opaque code is used going forward.
+ */
+export const activateValidate = async (req, res) => {
+    setAuthNoStoreHeaders(res);
+    try {
+        const { token } = req.body || {};
+        if (!token || typeof token !== "string") {
+            return res
+                .status(400)
+                .json({ status: "error", message: "Activation token is required." });
+        }
+
+        const invitation = await Invitation.findOne({
+            tokenHash: hashToken(token),
+            usedAt: null,
+            revokedAt: null,
+            expiresAt: { $gt: new Date() },
+        }).lean();
+
+        if (!invitation) {
+            return res.status(400).json({
+                status: "error",
+                message:
+                    "This invitation link is invalid or has expired. Please request a new one from your agency administrator.",
+            });
+        }
+
+        const user = await User.findById(invitation.userId).lean();
+        if (!user) {
+            return res
+                .status(400)
+                .json({ status: "error", message: "Invited account is unavailable." });
+        }
+        if (user.accountStatus !== "invited") {
+            return res.status(409).json({
+                status: "error",
+                message: "This account has already been activated. Please sign in.",
+            });
+        }
+
+        // Invalidate any prior activation sessions for this user
+        await ActivationSession.deleteMany({ userId: user._id, usedAt: null });
+
+        const code = generateAuthCode();
+        await ActivationSession.create({
+            code,
+            userId: user._id,
+            invitationId: invitation._id,
+            email: user.email,
+            expiresAt: new Date(Date.now() + AUTH_CODE_TTL_MS),
+        });
+
+        return res.json({ code, email: user.email });
+    } catch (err) {
+        console.error("activateValidate error:", err && err.stack ? err.stack : err);
+        return res.status(500).json({
+            status: "error",
+            message: isDev ? `Server error: ${err.message}` : "Server error.",
+        });
+    }
+};
+
+/**
+ * POST /auth/request-activation-otp
+ * Accepts the authorization code (NOT the raw token) and sends an OTP
+ * to the invited user's email. The OTP verifies email ownership.
+ */
+export const requestActivationOtp = async (req, res) => {
+    setAuthNoStoreHeaders(res);
+    try {
+        const { code } = req.body || {};
+        if (!code || typeof code !== "string") {
+            return res
+                .status(400)
+                .json({ status: "error", message: "Activation code is required." });
+        }
+
+        const session = await ActivationSession.findOne({
+            code,
+            usedAt: null,
+            expiresAt: { $gt: new Date() },
+        }).lean();
+
+        if (!session) {
+            return res.status(400).json({
+                status: "error",
+                message: "Session expired. Please re-open your activation link.",
+            });
+        }
+
+        const user = await User.findById(session.userId).lean();
+        if (!user) {
+            return res
+                .status(400)
+                .json({ status: "error", message: "Invited account is unavailable." });
+        }
+        if (user.accountStatus !== "invited") {
+            return res.status(409).json({
+                status: "error",
+                message: "This account has already been activated. Please sign in.",
+            });
+        }
+
+        const { otp } = await createVerification({
+            email: user.email,
+            type: "activation",
+            metadata: {
+                userId: user._id.toString(),
+                invitationId: session.invitationId.toString(),
+            },
+        });
+
+        await sendOtpMail({
+            email: user.email,
+            otp,
+            subject: `Your ${config.COMPANY_NAME} account activation code`,
+            label: "password reset",
+        });
+
+        return res.json({
+            message: "Verification code sent.",
+            email: user.email,
+            expiresInMs: OTP_TTL,
+            resendAfterMs: OTP_RESEND_COOLDOWN_MS,
+            ...(DEV_OTP_BYPASS ? { developmentOtp: otp } : {}),
+        });
+    } catch (err) {
+        console.error("requestActivationOtp error:", err && err.stack ? err.stack : err);
+        return res.status(500).json({
+            status: "error",
+            message: isDev ? `Server error: ${err.message}` : "Server error.",
+        });
+    }
+};
+
+/**
+ * POST /auth/activate-with-otp
+ * Accepts the authorization code (NOT the raw token), verifies the OTP,
+ * and sets the user's password, completing account activation.
+ */
+export const activateWithOtp = async (req, res) => {
+    setAuthNoStoreHeaders(res);
+    try {
+        const { code, otp, password } = req.body || {};
+        if (!code || !otp || !password) {
+            return res
+                .status(400)
+                .json({ status: "error", message: "Code, OTP and password are required." });
+        }
+        if (!/^\d{6}$/.test(String(otp))) {
+            return res
+                .status(400)
+                .json({ status: "error", message: "Enter the 6-digit verification code." });
+        }
+        if (typeof password !== "string" || password.length < 8 || password.length > 128) {
+            return res.status(400).json({
+                status: "error",
+                message: "Password must be between 8 and 128 characters.",
+            });
+        }
+
+        const activationSession = await ActivationSession.findOne({
+            code,
+            usedAt: null,
+            expiresAt: { $gt: new Date() },
+        });
+
+        if (!activationSession) {
+            return res.status(400).json({
+                status: "error",
+                message: "Session expired. Please re-open your activation link.",
+            });
+        }
+
+        const user = await User.findById(activationSession.userId);
+        if (!user) {
+            return res
+                .status(400)
+                .json({ status: "error", message: "Invited account is unavailable." });
+        }
+        if (user.accountStatus !== "invited") {
+            return res.status(409).json({
+                status: "error",
+                message: "This account has already been activated. Please sign in.",
+            });
+        }
+
+        const verificationResult = await consumeVerificationOtp({
+            email: user.email,
+            type: "activation",
+            otp,
+        });
+        if (!verificationResult.ok) {
+            return res
+                .status(verificationResult.status)
+                .json({ status: "error", message: verificationResult.message });
+        }
+
+        const passwordHash = await bcrypt.hash(password, 12);
+        user.passwordHash = passwordHash;
+        user.accountStatus = "active";
+        user.activatedAt = new Date();
+        user.tokenVersion = (user.tokenVersion || 0) + 1;
+        await user.save();
+
+        // Mark invitation as used
+        await Invitation.updateOne(
+            { _id: activationSession.invitationId },
+            { $set: { usedAt: new Date() } },
+        );
+
+        // Mark activation session as used
+        activationSession.usedAt = new Date();
+        await activationSession.save();
+
+        const result = await createSession({ user, req, res });
+        return res.json({ message: "Account activated successfully.", ...result });
+    } catch (err) {
+        console.error("activateWithOtp error:", err && err.stack ? err.stack : err);
+        return res.status(500).json({
+            status: "error",
+            message: isDev ? `Server error: ${err.message}` : "Server error.",
+        });
+    }
+};
 
 /**
  * POST /auth/refresh
@@ -877,36 +1233,19 @@ export const resetPassword = async (req, res) => {
 export const refreshTokenEndpoint = async (req, res) => {
     setAuthNoStoreHeaders(res);
     try {
-        const refreshTokenRaw = req.cookies?.[REFRESH_COOKIE_NAME] || req.cookies?.refresh_token;
-        if (!refreshTokenRaw) {
-            clearRefreshTokenCookie(res);
-            return res.status(401).json({status: "error", message: "Refresh token not provided." });
-        }
-
-        await RefreshToken.cleanupExpired();
-
-        const tokenHash = hashToken(refreshTokenRaw);
-        const stored = await RefreshToken.findOne({ tokenHash, expiresAt: { $gt: new Date() } });
-
-        if (!stored) {
-            clearRefreshTokenCookie(res);
-            return res.status(401).json({status: "error", message: "Invalid or expired refresh token." });
-        }
-
-        const user = await UserRepository.findById(stored.userId);
-        if (!user) {
-            await RefreshToken.deleteMany({ userId: stored.userId });
-            clearRefreshTokenCookie(res);
-            return res.status(401).json({status: "error", message: "User not found." });
-        }
-
-        await revokeUserRefreshTokens(user._id);
-
-        const result = await issueUserToken(user, res);
+        const result = await rotateSession({ req, res });
+        if (!result)
+            return res.status(401).json({
+                status: "error",
+                code: "INVALID_REFRESH_TOKEN",
+                message: "Invalid or expired refresh token.",
+            });
         return res.json(result);
     } catch (err) {
         console.error("refreshTokenEndpoint error:", err && err.stack ? err.stack : err);
-        return res.status(500).json({status: "error", message: "Server error during token refresh." });
+        return res
+            .status(500)
+            .json({ status: "error", message: "Server error during token refresh." });
     }
 };
 
@@ -916,97 +1255,36 @@ export const refreshTokenEndpoint = async (req, res) => {
  */
 export const logout = async (req, res) => {
     setAuthNoStoreHeaders(res);
-    clearTokenCookie(res);
-
-    const refreshTokenRaw = req.cookies?.[REFRESH_COOKIE_NAME] || req.cookies?.refresh_token;
-    if (refreshTokenRaw) {
-        try {
-            await RefreshToken.deleteOne({ tokenHash: hashToken(refreshTokenRaw) });
-        } catch (err) {
-            console.error("[logout] failed to delete refresh token:", err.message);
-        }
-    }
-
-    clearRefreshTokenCookie(res);
+    await revokeCurrentSession(req, res);
     return res.json({ success: true, message: "Logged out successfully." });
-};
-
-const readAccessTokenFromRequest = (req) =>
-    req.cookies?.[COOKIE_NAME] || req.cookies?.token || req.cookies?.["__Host-token"] || null;
-
-const findUserForPayload = async (payload) => {
-    if (!payload?.sub) return null;
-    return UserRepository.findById(
-        payload.sub,
-        "name email phone role agentRef agencyRef partnerAgencyRef agentApprovalStatus adminLevel adminApprovalStatus avatar tokenVersion"
-    );
-};
-
-const resolveSessionUser = async (req, res) => {
-    const accessToken = readAccessTokenFromRequest(req);
-    if (accessToken) {
-        try {
-            const payload = jwt.verify(accessToken, JWT_SECRET);
-            const user = await findUserForPayload(payload);
-            if (user) return user;
-        } catch (err) {
-            clearTokenCookie(res);
-        }
-    }
-
-    const refreshTokenRaw = req.cookies?.[REFRESH_COOKIE_NAME] || req.cookies?.refresh_token;
-    if (!refreshTokenRaw) return null;
-
-    await RefreshToken.cleanupExpired();
-    const stored = await RefreshToken.findOne({
-        tokenHash: hashToken(refreshTokenRaw),
-        expiresAt: { $gt: new Date() },
-    });
-    if (!stored) {
-        clearRefreshTokenCookie(res);
-        return null;
-    }
-
-    const user = await findUserForPayload({ sub: stored.userId });
-    if (!user) {
-        await RefreshToken.deleteMany({ userId: stored.userId });
-        clearRefreshTokenCookie(res);
-        return null;
-    }
-
-    await RefreshToken.deleteOne({ _id: stored._id });
-    await issueUserToken(user, res);
-    return user;
 };
 
 /**
  * GET /auth/session
- * Returns the current user AND a fresh access token so the frontend can
- * store it in memory for Bearer-header auth (needed for cross-origin API
- * calls where the httpOnly cookie is blocked by SameSite policy).
+ * Returns the current cookie-backed session state.
  */
 export const getSession = async (req, res) => {
     setAuthNoStoreHeaders(res);
     try {
-        const user = await resolveSessionUser(req, res);
+        const user = await getSessionUser({ req, res });
         if (!user) return res.json({ authenticated: false, user: null });
 
         try {
             await enforceActivePrivilegedUser(user);
         } catch (statusErr) {
-            return res.status(statusErr.status || 403).json({ status: "error", message: statusErr.message });
+            return res
+                .status(statusErr.status || 403)
+                .json({ status: "error", message: statusErr.message });
         }
 
+        const sessionUser = safeAuthUser(user);
         return res.json({
             status: "success",
             authenticated: true,
-            user: safeAuthUser(user),
+            portal: getPortalScope(req),
+            user: sessionUser,
             sessionVersion: String(user.tokenVersion || 0),
-            componentData: {
-                data: {
-                    user: safeAuthUser(user),
-                },
-            },
+            config: { session: { inactivityTimeoutMs: SESSION_INACTIVITY_TIMEOUT_MS } },
         });
     } catch (err) {
         console.error("[getSession] error:", err && err.stack ? err.stack : err);
@@ -1021,20 +1299,26 @@ export const getSession = async (req, res) => {
 export const getCurrentUser = async (req, res) => {
     setAuthNoStoreHeaders(res);
     try {
-        if (!req.user) return res.status(401).json({status: "error", message: "Unauthorized" });
+        if (!req.user) return res.status(401).json({ status: "error", message: "Unauthorized" });
 
-        const user = await UserRepository.findById(req.user.sub, "name email phone role agentRef agencyRef partnerAgencyRef agentApprovalStatus adminLevel adminApprovalStatus avatar");
-        if (!user) return res.status(404).json({status: "error", message: "User not found" });
+        const user = await UserRepository.findById(
+            req.user.sub,
+            "name email mobile phone emailVerified mobileVerified role agentRef agencyRef partnerAgencyRef agentApprovalStatus adminLevel adminApprovalStatus avatar agencyRole agencyId designation accountStatus productAccess permissionGrants permissionDenials internalTeamRoles tokenVersion",
+        );
+        if (!user) return res.status(404).json({ status: "error", message: "User not found" });
         try {
             await enforceActivePrivilegedUser(user);
         } catch (statusErr) {
-            return res.status(statusErr.status || 403).json({status: "error", message: statusErr.message });
+            return res
+                .status(statusErr.status || 403)
+                .json({ status: "error", message: statusErr.message });
         }
 
-        return res.json(safeAuthUser(user));
+        const safeUser = safeAuthUser(user);
+        return res.json({ status: "success", user: safeUser, ...safeUser });
     } catch (err) {
         console.error("getCurrentUser error:", err && err.stack ? err.stack : err);
-        return res.status(500).json({status: "error", message: "Server error" });
+        return res.status(500).json({ status: "error", message: "Server error" });
     }
 };
 
@@ -1042,51 +1326,101 @@ export const applyPartnerAgency = async (req, res) => {
     try {
         const body = req.body || {};
         const agencyName = String(body.agencyName || body.name || "").trim();
-        if (!agencyName) return res.status(400).json({status: "error", message: "Agency name is required." });
+        if (!agencyName)
+            return res.status(400).json({ status: "error", message: "Agency name is required." });
 
-        const partnerAgencyRef = String(body.partnerAgencyRef || makePartnerAgencyRef(agencyName)).trim();
-        const existing = await PartnerAgency.findOne({ partnerAgencyRef });
+        const contactEmail = String(body.contactEmail || body.email || "")
+            .trim()
+            .toLowerCase();
+        if (!contactEmail)
+            return res.status(400).json({ status: "error", message: "Contact email is required." });
+        const existing = await PartnershipRequest.findOne({
+            companyEmail: contactEmail,
+            status: { $nin: ["rejected", "converted"] },
+        });
         if (existing) {
-            return res.status(409).json({status: "error", message: "Partner agency application already exists.", partnerAgencyRef });
+            return res.status(409).json({
+                status: "error",
+                message: "Partner agency application already exists.",
+                requestId: existing.id,
+            });
         }
 
-        const application = await PartnerAgency.create({
+        const application = await PartnershipRequest.create({
             agencyName,
-            partnerAgencyRef,
-            contactName: String(body.contactName || "").trim(),
-            contactEmail: String(body.contactEmail || body.email || "").trim().toLowerCase(),
-            contactPhone: String(body.contactPhone || body.phone || "").trim(),
+            legalName: String(body.legalName || agencyName).trim(),
+            companyEmail: contactEmail,
+            companyPhone: String(body.contactPhone || body.phone || "").trim(),
             website: String(body.website || "").trim(),
             gstNumber: String(body.gstNumber || "").trim(),
             notes: String(body.notes || "").trim(),
+            requestedProducts: body.requestedProducts || [],
+            primaryContact: {
+                fullName: String(
+                    body.contactName || body.primaryContact?.fullName || "Primary contact",
+                ).trim(),
+                designation: String(
+                    body.designation || body.primaryContact?.designation || "",
+                ).trim(),
+                email: contactEmail,
+                mobile: String(
+                    body.contactPhone || body.phone || body.primaryContact?.mobile || "",
+                ).trim(),
+            },
+            status: "submitted",
+            history: [
+                { status: "submitted", note: "Submitted through legacy partnership endpoint." },
+            ],
         });
 
         return res.status(201).json({
             status: "success",
             message: "Partner agency application submitted.",
-            partnerAgency: application,
+            partnershipRequest: application,
         });
     } catch (err) {
         console.error("applyPartnerAgency error:", err && err.stack ? err.stack : err);
-        return res.status(500).json({status: "error", message: "Failed to submit partner agency application." });
+        return res
+            .status(500)
+            .json({ status: "error", message: "Failed to submit partner agency application." });
     }
 };
 
 export const checkPartnerAgency = async (req, res) => {
     try {
-        const email = String(req.query?.email || "").trim().toLowerCase();
-        if (!email) return res.status(400).json({status: "error", message: "Email query parameter is required." });
-        const application = await PartnerAgency.findOne({ contactEmail: email }).sort({ createdAt: -1 });
-        return res.json({ status: "success", data: application || null });
+        const email = String(req.query?.email || "")
+            .trim()
+            .toLowerCase();
+        if (!email)
+            return res
+                .status(400)
+                .json({ status: "error", message: "Email query parameter is required." });
+        const application = await PartnershipRequest.findOne({ companyEmail: email }).sort({
+            createdAt: -1,
+        });
+        return res.json({
+            status: "success",
+            data: application
+                ? {
+                      id: application.id,
+                      agencyName: application.agencyName,
+                      status: application.status,
+                      submittedAt: application.submittedAt,
+                      updatedAt: application.updatedAt,
+                  }
+                : null,
+        });
     } catch (err) {
         console.error("checkPartnerAgency error:", err && err.stack ? err.stack : err);
-        return res.status(500).json({status: "error", message: "Failed to check partner agency application." });
+        return res
+            .status(500)
+            .json({ status: "error", message: "Failed to check partner agency application." });
     }
 };
 
 export const listPartnerAgencies = async (req, res) => {
     try {
-        const admin = await assertApprovedAdmin(req, res);
+        const admin = await assertMasterAdmin(req, res);
         if (!admin) return;
         const status = String(req.query?.status || "").trim();
         const query = status ? { status } : {};
@@ -1094,19 +1428,27 @@ export const listPartnerAgencies = async (req, res) => {
         return res.json({ status: "success", data: agencies });
     } catch (err) {
         console.error("listPartnerAgencies error:", err && err.stack ? err.stack : err);
-        return res.status(500).json({status: "error", message: "Failed to list partner agencies." });
+        return res
+            .status(500)
+            .json({ status: "error", message: "Failed to list partner agencies." });
     }
 };
 
 export const reviewPartnerAgency = async (req, res) => {
     try {
-        const admin = await assertApprovedAdmin(req, res);
+        const admin = await assertMasterAdmin(req, res);
         if (!admin) return;
-        const status = String(req.body?.status || "approved").trim().toLowerCase();
-        if (!["approved", "rejected"].includes(status)) return res.status(400).json({status: "error", message: "status must be approved or rejected." });
+        const status = String(req.body?.status || "approved")
+            .trim()
+            .toLowerCase();
+        if (!["approved", "rejected"].includes(status))
+            return res
+                .status(400)
+                .json({ status: "error", message: "status must be approved or rejected." });
 
         const agency = await PartnerAgency.findById(req.params.id);
-        if (!agency) return res.status(404).json({status: "error", message: "Partner agency not found." });
+        if (!agency)
+            return res.status(404).json({ status: "error", message: "Partner agency not found." });
         agency.status = status;
         agency.notes = String(req.body?.notes || agency.notes || "").trim();
         agency.approvedBy = admin._id || req.user.sub || req.user.id || null;
@@ -1116,111 +1458,207 @@ export const reviewPartnerAgency = async (req, res) => {
         return res.json({ status: "success", message: `Partner agency ${status}.`, data: agency });
     } catch (err) {
         console.error("reviewPartnerAgency error:", err && err.stack ? err.stack : err);
-        return res.status(500).json({status: "error", message: "Failed to update partner agency." });
+        return res
+            .status(500)
+            .json({ status: "error", message: "Failed to update partner agency." });
     }
 };
 
 export const listAgents = async (req, res) => {
     try {
-        const admin = await assertApprovedAdmin(req, res);
+        const admin = await assertMasterAdmin(req, res);
         if (!admin) return;
         const status = String(req.query?.status || "").trim();
         const query = { role: "agent" };
         if (status) query.agentApprovalStatus = status;
         const agents = await User.find(query)
-            .select("name email role agentRef agencyRef partnerAgencyRef agentApprovalStatus createdAt approvedAt")
+            .select(
+                "name email role agentRef agencyRef partnerAgencyRef agentApprovalStatus createdAt approvedAt",
+            )
             .sort({ createdAt: -1 });
         return res.json({ status: "success", data: agents });
     } catch (err) {
         console.error("listAgents error:", err && err.stack ? err.stack : err);
-        return res.status(500).json({status: "error", message: "Failed to list agents." });
+        return res.status(500).json({ status: "error", message: "Failed to list agents." });
     }
 };
 
 export const reviewAgent = async (req, res) => {
     try {
-        const admin = await assertApprovedAdmin(req, res);
+        const admin = await assertMasterAdmin(req, res);
         if (!admin) return;
-        const status = String(req.body?.status || "approved").trim().toLowerCase();
-        if (!["approved", "rejected"].includes(status)) return res.status(400).json({status: "error", message: "status must be approved or rejected." });
+        const status = String(req.body?.status || "approved")
+            .trim()
+            .toLowerCase();
+        if (!["approved", "rejected"].includes(status))
+            return res
+                .status(400)
+                .json({ status: "error", message: "status must be approved or rejected." });
 
         const user = await UserRepository.findById(req.params.id);
-        if (!user || user.role !== "agent") return res.status(404).json({status: "error", message: "Agent not found." });
+        if (!user || user.role !== "agent")
+            return res.status(404).json({ status: "error", message: "Agent not found." });
         user.agentApprovalStatus = status;
         user.approvedBy = admin._id || req.user.sub || req.user.id || null;
         user.approvedAt = new Date();
         await user.save();
 
-        return res.json({ status: "success", message: `Agent ${status}.`, data: safeAuthUser(user) });
+        return res.json({
+            status: "success",
+            message: `Agent ${status}.`,
+            data: safeAuthUser(user),
+        });
     } catch (err) {
         console.error("reviewAgent error:", err && err.stack ? err.stack : err);
-        return res.status(500).json({status: "error", message: "Failed to update agent." });
+        return res.status(500).json({ status: "error", message: "Failed to update agent." });
     }
 };
 
 export const listAdmins = async (req, res) => {
     try {
-        const master = await assertMasterAdmin(req, res);
-        if (!master) return;
+        const admin = await assertApprovedAdmin(req, res);
+        if (!admin) return;
 
         const status = String(req.query?.status || "").trim();
         const query = { role: "admin" };
         if (status) query.adminApprovalStatus = status;
+        if (admin.adminLevel !== "master") {
+            query._id = { $ne: admin._id };
+            query.adminLevel = { $ne: "master" };
+            query.$or = [
+                { adminApprovalStatus: "pending" },
+                { internalTeamRoles: "support" },
+            ];
+        }
         const admins = await User.find(query)
-            .select("name email phone role adminLevel adminApprovalStatus createdAt approvedAt")
+            .select(
+                "name email phone role adminLevel adminApprovalStatus accountStatus internalTeamRoles createdAt approvedAt",
+            )
             .sort({ adminLevel: -1, createdAt: -1 });
 
         return res.json({ status: "success", data: admins });
     } catch (err) {
         console.error("listAdmins error:", err && err.stack ? err.stack : err);
-        return res.status(500).json({status: "error", message: "Failed to list admins." });
+        return res.status(500).json({ status: "error", message: "Failed to list admins." });
+    }
+};
+
+export const updateAdminInternalTeam = async (req, res) => {
+    try {
+        const admin = await assertApprovedAdmin(req, res);
+        if (!admin) return;
+        const team = String(req.body?.team || "")
+            .trim()
+            .toLowerCase();
+        const enabled = req.body?.enabled === true;
+        if (team !== "support")
+            return res.status(400).json({ status: "error", message: "Unknown internal team." });
+        const user = await UserRepository.findById(req.params.id);
+        if (!user || user.role !== "admin")
+            return res.status(404).json({ status: "error", message: "Admin not found." });
+        if (!canManageInternalTeamMember(admin, user))
+            return res.status(403).json({
+                status: "error",
+                message: "You cannot manage master admins or sibling platform admins.",
+            });
+        if (enabled && user.adminApprovalStatus !== "approved")
+            return res.status(409).json({
+                status: "error",
+                message: "Approve the admin before assigning an internal team.",
+            });
+        const teams = new Set(user.internalTeamRoles || []);
+        if (enabled) teams.add(team);
+        else teams.delete(team);
+        user.internalTeamRoles = [...teams];
+        user.approvedBy = admin._id;
+        user.approvedAt = new Date();
+        await user.save();
+        return res.json({
+            status: "success",
+            message: enabled
+                ? "Admin added to the support team."
+                : "Admin removed from the support team.",
+            data: safeAuthUser(user),
+        });
+    } catch (err) {
+        console.error("updateAdminInternalTeam error:", err && err.stack ? err.stack : err);
+        return res
+            .status(500)
+            .json({ status: "error", message: "Failed to update internal team." });
     }
 };
 
 export const reviewAdmin = async (req, res) => {
     try {
-        const master = await assertMasterAdmin(req, res);
-        if (!master) return;
+        const admin = await assertApprovedAdmin(req, res);
+        if (!admin) return;
 
-        const status = String(req.body?.status || "approved").trim().toLowerCase();
-        if (!["approved", "rejected"].includes(status)) return res.status(400).json({status: "error", message: "status must be approved or rejected." });
+        const status = String(req.body?.status || "approved")
+            .trim()
+            .toLowerCase();
+        if (!["approved", "rejected"].includes(status))
+            return res
+                .status(400)
+                .json({ status: "error", message: "status must be approved or rejected." });
 
         const user = await UserRepository.findById(req.params.id);
-        if (!user || user.role !== "admin") return res.status(404).json({status: "error", message: "Admin not found." });
-        if (user.adminLevel === "master") return res.status(403).json({status: "error", message: "Master admin cannot be reviewed or downgraded." });
+        if (!user || user.role !== "admin")
+            return res.status(404).json({ status: "error", message: "Admin not found." });
+        if (!canManageInternalTeamMember(admin, user))
+            return res.status(403).json({
+                status: "error",
+                message: "You cannot review master admins or sibling platform admins.",
+            });
 
         user.adminLevel = "standard";
         user.adminApprovalStatus = status;
-        user.approvedBy = master._id;
+        if (status !== "approved") user.internalTeamRoles = [];
+        else if (admin.adminLevel !== "master") user.internalTeamRoles = ["support"];
+        user.approvedBy = admin._id;
         user.approvedAt = new Date();
         await user.save();
 
-        return res.json({ status: "success", message: `Admin ${status}.`, data: safeAuthUser(user) });
+        return res.json({
+            status: "success",
+            message: `Admin ${status}.`,
+            data: safeAuthUser(user),
+        });
     } catch (err) {
         console.error("reviewAdmin error:", err && err.stack ? err.stack : err);
-        return res.status(500).json({status: "error", message: "Failed to update admin." });
+        return res.status(500).json({ status: "error", message: "Failed to update admin." });
     }
 };
 
 export const removeAdmin = async (req, res) => {
     try {
-        const master = await assertMasterAdmin(req, res);
-        if (!master) return;
+        const admin = await assertApprovedAdmin(req, res);
+        if (!admin) return;
 
         const user = await UserRepository.findById(req.params.id);
-        if (!user || user.role !== "admin") return res.status(404).json({status: "error", message: "Admin not found." });
-        if (String(user._id) === String(master._id) || user.adminLevel === "master") {
-            return res.status(403).json({status: "error", message: "Master admin cannot remove itself." });
+        if (!user || user.role !== "admin")
+            return res.status(404).json({ status: "error", message: "Admin not found." });
+        if (!canManageInternalTeamMember(admin, user)) {
+            return res
+                .status(403)
+                .json({
+                    status: "error",
+                    message: "You cannot remove master admins or sibling platform admins.",
+                });
         }
 
         user.adminApprovalStatus = "removed";
-        user.approvedBy = master._id;
+        user.internalTeamRoles = [];
+        user.approvedBy = admin._id;
         user.approvedAt = new Date();
         await user.save();
 
-        return res.json({ status: "success", message: "Admin access removed.", data: safeAuthUser(user) });
+        return res.json({
+            status: "success",
+            message: "Admin access removed.",
+            data: safeAuthUser(user),
+        });
     } catch (err) {
         console.error("removeAdmin error:", err && err.stack ? err.stack : err);
-        return res.status(500).json({status: "error", message: "Failed to remove admin." });
+        return res.status(500).json({ status: "error", message: "Failed to remove admin." });
     }
 };

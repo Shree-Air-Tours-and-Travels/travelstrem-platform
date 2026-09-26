@@ -1,0 +1,151 @@
+@import "@packages/trem-design-tokens/scss";
+
+.booking-engine-journey-notice {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: $space-4;
+  padding: $space-5;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 24%, var(--border));
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-primary) 5%, var(--surface));
+
+  &.is-success {
+    border-color: color-mix(in srgb, var(--color-success) 42%, var(--border));
+    background: color-mix(in srgb, var(--color-success) 7%, var(--surface));
+  }
+
+  h2,
+  p {
+    margin: 0;
+  }
+
+  p {
+    margin: $space-2 0 $space-3;
+    color: var(--muted);
+  }
+
+  &__icon {
+    display: grid;
+    width: 2.5rem;
+    height: 2.5rem;
+    place-items: center;
+    border-radius: var(--radius-sm);
+    background: var(--primary-soft);
+    color: var(--color-primary-dark);
+  }
+
+  &__heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-3;
+  }
+}
+
+.booking-engine-journey-page {
+  display: grid;
+  align-content: start;
+  gap: $space-6;
+  width: 100%;
+}
+
+.booking-engine-journey-page__empty {
+  min-height: 32rem;
+}
+
+.booking-engine-customer-quote {
+  display: grid;
+  gap: $space-4;
+}
+
+.booking-engine-customer-journey {
+  display: grid;
+  grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr);
+  gap: $space-6;
+  align-items: start;
+  margin-bottom: var(--trem-floating-action-clearance, 0);
+  padding: $space-5;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+
+  > aside {
+    position: sticky;
+    top: $space-5;
+    padding: $space-4;
+    border-radius: var(--radius-md);
+    background: var(--surface-muted, var(--primary-soft));
+  }
+}
+
+.booking-engine-customer-journey__stage {
+  min-width: 0;
+}
+
+.booking-engine-quotation-pending {
+  display: grid;
+  gap: $space-6;
+}
+
+.booking-engine-workspace__claim {
+  display: grid;
+  grid-template-columns: minmax(16rem, 1fr) minmax(14rem, 0.7fr) auto;
+  align-items: end;
+  gap: $space-4;
+  width: 100%;
+  margin-bottom: $space-6;
+  padding: $space-5;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+
+  h2,
+  p {
+    margin: 0;
+  }
+
+  h2 {
+    margin-bottom: $space-1;
+    font-size: $font-size-lg;
+  }
+
+  p {
+    color: var(--muted);
+  }
+
+  > p {
+    grid-column: 1 / -1;
+  }
+
+  .booking-engine-workspace__claim-submit {
+    align-self: end;
+    min-height: 66px;
+    padding-inline: $space-6;
+  }
+
+  .is-error {
+    color: var(--color-danger);
+  }
+
+  .is-success {
+    color: var(--color-success);
+  }
+}
+
+@media (max-width: $breakpoint-md) {
+  .booking-engine-customer-journey {
+    grid-template-columns: 1fr;
+    margin-bottom: var(--trem-floating-action-height, 0);
+
+    > aside { position: static; }
+  }
+
+  .booking-engine-workspace__claim {
+    grid-template-columns: 1fr;
+
+    .booking-engine-workspace__claim-submit {
+      min-height: 48px;
+      width: 100%;
+    }
+  }
+}

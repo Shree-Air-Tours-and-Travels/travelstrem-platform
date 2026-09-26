@@ -1,12 +1,12 @@
 import express from "express";
 import {
-  getClients,
-  getClient,
-  createClient,
-  updateClient,
-  deleteClient,
-  uploadClientLogo,
-  getClientBySlug,
+    getClients,
+    getClient,
+    createClient,
+    updateClient,
+    deleteClient,
+    uploadClientLogo,
+    getClientBySlug,
 } from "./controllers/clientController.js";
 import { upload } from "../../services/cloudinary.js";
 import authMiddleware from "../../shared/auth/middleware.js";

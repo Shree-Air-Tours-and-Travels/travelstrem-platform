@@ -35,15 +35,15 @@ Use different values for `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, and `ADMIN_C
 2. Connect the GitHub repo.
 3. Use these settings:
 
-| Setting | Value |
-| --- | --- |
-| Name | `travelstrem-api` |
-| Environment | `Node` |
-| Region | nearest to users |
-| Branch | `main` or your production branch |
-| Root Directory | leave empty / repo root |
-| Build Command | `pnpm install --frozen-lockfile && pnpm --filter @apps/backend-api build` |
-| Start Command | `pnpm --filter @apps/backend-api start` |
+| Setting        | Value                                                                     |
+| -------------- | ------------------------------------------------------------------------- |
+| Name           | `travelstrem-api`                                                         |
+| Environment    | `Node`                                                                    |
+| Region         | nearest to users                                                          |
+| Branch         | `main` or your production branch                                          |
+| Root Directory | leave empty / repo root                                                   |
+| Build Command  | `pnpm install --frozen-lockfile && pnpm --filter @apps/backend-api build` |
+| Start Command  | `pnpm --filter @apps/backend-api start`                                   |
 
 4. Add the backend environment variables below.
 5. Deploy.
@@ -108,13 +108,14 @@ Optional integrations:
 
 ```env
 AGENT_WEBHOOK_URL=<zapier-or-automation-webhook>
-OAUTH_GOOGLE_URL=<full-google-authorize-url>
-OAUTH_GITHUB_URL=<full-github-authorize-url>
-OAUTH_APPLE_URL=<full-apple-authorize-url>
 REDIS_URL=<redis-url-if-notification-queue-uses-redis>
 ```
 
-Important: for global login across `auth.travelstrem.com`, `trevio.travelstrem.com`, and `trevista.travelstrem.com`, the backend must be served from a TravelsTrem subdomain such as `api.travelstrem.com`. Browsers will reject `.travelstrem.com` cookies if they are set by a `*.onrender.com` host.
+For backend-driven Google login, configure `GOOGLE_AUTH_ENABLED`, `GOOGLE_CLIENT_ID`,
+`GOOGLE_CLIENT_SECRET`, and the exact backend `GOOGLE_CALLBACK_URL` described in
+[`authentication.md`](./authentication.md). Do not put Google client secrets or provider tokens in a frontend environment.
+
+Important: use a first-party API domain such as `api.travelstrem.com`. Authentication is intentionally isolated into customer, AdminTREM, and PartnerTREM cookie pairs. Signing into one portal must not replace another portal's user. `AUTH_COOKIE_DOMAIN=.travelstrem.com` is supported, but the separate cookie names still preserve this boundary. A host-only API cookie (leave `AUTH_COOKIE_DOMAIN` empty) is preferable when every frontend calls the same `api.travelstrem.com` host.
 
 After Vercel deploys create real URLs, update `FRONTENDS` in Render to include every exact frontend origin. No trailing paths and no trailing slash.
 
@@ -125,13 +126,13 @@ Deploy Trevio and Trevista as independent product applications.
 1. Vercel -> Add New -> Project -> import the repo.
 2. Configure:
 
-| Setting | Value |
-| --- | --- |
-| Framework Preset | Create React App |
-| Root Directory | repo root |
-| Install Command | `pnpm install --frozen-lockfile` |
-| Build Command | `pnpm --filter @apps/trevio build` |
-| Output Directory | `apps/trevio-remote/build` |
+| Setting          | Value                              |
+| ---------------- | ---------------------------------- |
+| Framework Preset | Create React App                   |
+| Root Directory   | repo root                          |
+| Install Command  | `pnpm install --frozen-lockfile`   |
+| Build Command    | `pnpm --filter @apps/trevio build` |
+| Output Directory | `apps/trevio-remote/build`         |
 
 3. Add environment variables:
 
@@ -143,15 +144,15 @@ REACT_APP_AUTH_APP_URL=https://auth.travelstrem.com
 ```
 
 4. Deploy.
-Repeat for Trevista:
+   Repeat for Trevista:
 
-| Setting | Value |
-| --- | --- |
-| Framework Preset | Create React App |
-| Root Directory | repo root |
-| Install Command | `pnpm install --frozen-lockfile` |
-| Build Command | `pnpm --filter @apps/trevista build` |
-| Output Directory | `apps/trevista-remote/build` |
+| Setting          | Value                                |
+| ---------------- | ------------------------------------ |
+| Framework Preset | Create React App                     |
+| Root Directory   | repo root                            |
+| Install Command  | `pnpm install --frozen-lockfile`     |
+| Build Command    | `pnpm --filter @apps/trevista build` |
+| Output Directory | `apps/trevista-remote/build`         |
 
 Confirm both product app URLs load in the browser:
 
@@ -164,13 +165,13 @@ https://trevista.vercel.app
 
 Deploy the global auth app at `auth.travelstrem.com`.
 
-| Setting | Value |
-| --- | --- |
-| Framework Preset | Create React App |
-| Root Directory | repo root |
-| Install Command | `pnpm install --frozen-lockfile` |
-| Build Command | `pnpm --filter @apps/auth build` |
-| Output Directory | `apps/auth-trem/build` |
+| Setting          | Value                            |
+| ---------------- | -------------------------------- |
+| Framework Preset | Create React App                 |
+| Root Directory   | repo root                        |
+| Install Command  | `pnpm install --frozen-lockfile` |
+| Build Command    | `pnpm --filter @apps/auth build` |
+| Output Directory | `apps/auth-trem/build`           |
 
 Environment:
 
@@ -185,13 +186,13 @@ REACT_APP_TRAVELSTREM_APP_URL=https://travelstrem.com
 
 Deploy the common dashboard app at `dashboard.travelstrem.com`.
 
-| Setting | Value |
-| --- | --- |
-| Framework Preset | Create React App |
-| Root Directory | repo root |
-| Install Command | `pnpm install --frozen-lockfile` |
-| Build Command | `pnpm --filter @apps/dashboard build` |
-| Output Directory | `apps/dashboard/build` |
+| Setting          | Value                                 |
+| ---------------- | ------------------------------------- |
+| Framework Preset | Create React App                      |
+| Root Directory   | repo root                             |
+| Install Command  | `pnpm install --frozen-lockfile`      |
+| Build Command    | `pnpm --filter @apps/dashboard build` |
+| Output Directory | `apps/dashboard/build`                |
 
 Environment:
 
@@ -207,13 +208,13 @@ REACT_APP_DASHBOARD_URL=https://dashboard.travelstrem.com
 1. Create another Vercel project from the same repo.
 2. Configure:
 
-| Setting | Value |
-| --- | --- |
-| Framework Preset | Create React App |
-| Root Directory | repo root |
-| Install Command | `pnpm install --frozen-lockfile` |
-| Build Command | `pnpm --filter @apps/travelstrem build` |
-| Output Directory | `apps/customer-shell/build` |
+| Setting          | Value                                   |
+| ---------------- | --------------------------------------- |
+| Framework Preset | Create React App                        |
+| Root Directory   | repo root                               |
+| Install Command  | `pnpm install --frozen-lockfile`        |
+| Build Command    | `pnpm --filter @apps/travelstrem build` |
+| Output Directory | `apps/customer-shell/build`             |
 
 3. Add environment variables:
 
@@ -235,13 +236,13 @@ REACT_APP_ADMIN_SHELL_URL=https://admin-shell.vercel.app/admin/tours
 1. Create another Vercel project from the same repo.
 2. Configure:
 
-| Setting | Value |
-| --- | --- |
-| Framework Preset | Create React App |
-| Root Directory | repo root |
-| Install Command | `pnpm install --frozen-lockfile` |
-| Build Command | `pnpm --filter @apps/admin build` |
-| Output Directory | `apps/admin-shell/build` |
+| Setting          | Value                             |
+| ---------------- | --------------------------------- |
+| Framework Preset | Create React App                  |
+| Root Directory   | repo root                         |
+| Install Command  | `pnpm install --frozen-lockfile`  |
+| Build Command    | `pnpm --filter @apps/admin build` |
+| Output Directory | `apps/admin-shell/build`          |
 
 3. Add environment variables:
 
@@ -293,9 +294,9 @@ If Vercel is using repo root for each project, also configure the same rewrite i
 2. Customer Vercel `REACT_APP_TREVIO_APP_URL` and `REACT_APP_TREVISTA_APP_URL` point to the product app origins.
 3. All frontend `REACT_APP_DASHBOARD_URL` points to the dashboard app origin.
 4. Every frontend `REACT_APP_API_URL` points to the Render backend with `/api`.
-4. MongoDB Atlas Network Access allows Render connections. For quick setup use `0.0.0.0/0`; for stricter production security use Render outbound IPs if your plan supports stable IPs.
-5. Redeploy frontends after changing any `REACT_APP_*` variable. CRA bakes these into the static build.
-6. Redeploy backend after changing backend env vars.
+5. MongoDB Atlas Network Access allows Render connections. For quick setup use `0.0.0.0/0`; for stricter production security use Render outbound IPs if your plan supports stable IPs.
+6. Redeploy frontends after changing any `REACT_APP_*` variable. CRA bakes these into the static build.
+7. Redeploy backend after changing backend env vars.
 
 ## 11. Suggested Deploy Order
 
@@ -315,7 +316,8 @@ If Vercel is using repo root for each project, also configure the same rewrite i
 - Frontend still calls old API: update `REACT_APP_API_URL` and redeploy the frontend.
 - Product click opens the wrong URL: check `REACT_APP_TREVIO_APP_URL` and `REACT_APP_TREVISTA_APP_URL`, then redeploy the parent website.
 - Dashboard link not working: verify `REACT_APP_DASHBOARD_URL` is set in all frontend apps and points to `https://dashboard.travelstrem.com`.
-- Product still asks users to login after auth success: verify the API is on a `travelstrem.com` subdomain and `AUTH_COOKIE_DOMAIN=.travelstrem.com` is set.
+- Product still asks users to login after auth success: verify the API is on a `travelstrem.com` subdomain, credentials are enabled, and the frontend sends `X-Travelstrem-Portal: customer`.
+- AdminTREM changes the customer shown in TravelsTREM: redeploy the backend and both shells together, then sign in once per portal so the old shared cookie is replaced by portal-scoped cookies.
 - Backend ignores `FRONTENDS`/`BASE_URL`: make sure Render has `ALLOW_ENV_OVERRIDES=true`.
 - Mongo connection fails: verify `MONGO_URI`, Atlas database user permissions, and Atlas Network Access.
 - Refreshing product/admin/dashboard routes gives 404: add Vercel rewrites to `index.html`.

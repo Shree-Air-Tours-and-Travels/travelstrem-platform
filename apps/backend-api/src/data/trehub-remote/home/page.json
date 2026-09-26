@@ -1,0 +1,31 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "pageTitle": "Trehub",
+        "brandSubtitle": "Flights & Hotels by TravelsTREM"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "type": "TrehubHome",
+      "source": "trehub",
+      "header": {
+        "titleRef": "pageTitle"
+      },
+      "widgets": [
+        {
+          "name": "trehubHome",
+          "path": "trehub-remote/home/trehub-home.json"
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

@@ -29,22 +29,34 @@
 
     &:focus-visible {
       outline: none;
-      box-shadow: 0 0 0 3px var(--focus-ring), var(--shadow-md);
+      box-shadow:
+        0 0 0 3px var(--focus-ring),
+        var(--shadow-md);
     }
   }
 
   &__header {
     min-width: 0;
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) max-content;
     align-items: center;
     gap: $space-3;
+
+    &--with-image {
+      grid-template-columns: auto minmax(0, 1fr) max-content;
+    }
 
     img {
       width: 46px;
       height: 46px;
       border-radius: $radius-sm;
       object-fit: cover;
+    }
+
+    > .status-badge {
+      min-width: max-content;
+      max-width: none;
+      justify-self: end;
     }
   }
 
@@ -72,38 +84,23 @@
     }
   }
 
-  &__badge {
-    max-width: 112px;
-    overflow: hidden;
-    padding: $space-1 $space-2;
-    border-radius: $radius-full;
-    background: var(--surface-inset);
-    color: var(--muted);
-    font-size: 0.6875rem;
+  &__subtitle-action {
+    width: fit-content;
+    max-width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-primary);
+    font: inherit;
+    font-size: $font-size-xs;
     font-weight: $font-semibold;
+    overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    cursor: pointer;
 
-    &--upcoming,
-    &--confirmed {
-      background: var(--success-soft);
-      color: var(--success-color);
-    }
-
-    &--pending {
-      background: var(--warning-soft);
-      color: var(--color-warning);
-    }
-
-    &--cancelled,
-    &--canceled {
-      background: var(--danger-soft);
-      color: var(--color-danger);
-    }
-
-    &--completed {
-      background: var(--primary-soft);
-      color: var(--color-primary);
+    &:hover {
+      text-decoration: underline;
     }
   }
 
@@ -136,6 +133,7 @@
   }
 
   &__action {
+    width: 100%;
     display: flex;
     align-items: center;
     justify-content: flex-end;
@@ -145,5 +143,10 @@
     color: var(--color-primary);
     font-size: $font-size-xs;
     font-weight: $font-semibold;
+    cursor: pointer;
+
+    &:disabled {
+      cursor: default;
+    }
   }
 }

@@ -11,6 +11,6 @@ if (container) {
     <BrowserRouter>
       <ScrollToTop />
       <AuthTremApp />
-    </BrowserRouter>
+    </BrowserRouter>,
   );
 }

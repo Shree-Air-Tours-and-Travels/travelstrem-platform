@@ -1,20 +1,26 @@
-# TravelsTREM static website
+# TravelsTREM marketing website
 
-This folder is a dependency-free static company and blog website. Deploy the contents of `website/` to any static host, or configure the host to serve `index.html` for `/`.
+The single Next.js App Router marketing site for `travelstrem.com`.
 
-Positioning: Shree Air Tours and Travels owns and operates the travel agency. TravelsTREM is the internal technology platform built for that agency; its products and five engines are used by the agency team and its travel partners, agents and agency partners. TravelsTREM is not presented as software sold to external customers.
+Routes:
 
-Product links are currently configured for:
+- `/` — platform landing page
+- `/about` — company, leadership and vision
+- `/partnership` — partner and agency information
+- `/sales` — commercial models and demo booking
 
-- `https://app.travelstrem.com/?tab=trevio&product=trevio`
-- Trevista, TreCare and TreHub currently show an in-development message rather than linking to unavailable deployments.
+Run locally from the repository root:
 
-When those products are deployed, replace their `data-coming-soon` cards in `index.html` with their live URLs.
+```sh
+pnpm --filter @apps/travelstrem-marketing dev
+```
 
-`favicon-light.png` is the rounded master brand asset shared by every app. The build sync derives `favicon-dark.png` from it with a navy background and light mark for dark themes.
+Build with:
 
-## Security
+```sh
+pnpm build:website
+```
 
-This is a dependency-free static site. It does not store user data, process form submissions, contain authentication, or include private keys. The Vercel `vercel.json` and Netlify-style `_headers` file add a restrictive Content Security Policy and standard browser protections: MIME sniffing prevention, clickjacking protection, strict referrer handling, disabled unused device permissions, cross-origin isolation, and HTTPS enforcement.
+For Vercel, create one project with `website` as the Root Directory and attach `travelstrem.com` and `www.travelstrem.com`. The app uses shared design-token sources outside this folder, so enable **Include source files outside of the Root Directory in the Build Step**.
 
-Deploy over HTTPS and keep the security headers enabled. The public email address, phone number, product links, and page content are intentionally public; they should not be treated as secrets.
+`app.travelstrem.com` remains a separate product deployment and is only linked from the marketing navigation.

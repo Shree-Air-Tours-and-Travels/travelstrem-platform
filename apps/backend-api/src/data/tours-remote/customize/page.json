@@ -1,0 +1,377 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {},
+      "optionSets": {
+        "journeyTypeOptions": "trevista.customTourJourneyTypeOptions",
+        "flightPreferenceOptions": "trevista.customTourFlightOptions",
+        "accommodationPreferenceOptions": "trevista.customTourAccommodationOptions",
+        "transportPreferenceOptions": "trevista.customTourTransportOptions",
+        "interestOptions": "trevista.customTourInterestOptions",
+        "paceOptions": "trevista.customTourPaceOptions",
+        "currencyOptions": "trevista.customTourCurrencyOptions",
+        "phoneCountryCodes": "common.phoneCountryCodes",
+        "preferredContactOptions": "tours.preferredContactOptions"
+      }
+    },
+    "elements": {
+      "labels": {
+        "pageTitle": "Customise Tour",
+        "breadcrumbRoot": "Trevista",
+        "breadcrumbTours": "Tours",
+        "breadcrumbCurrent": "Customise Tour",
+        "pageEyebrow": "Custom tour planner",
+        "pageHeading": "Create a trip made for you",
+        "pageDescription": "Choose where you want to go, when you want to travel, and what matters to you. A travel specialist will turn it into a tailored proposal.",
+        "customisingSourceTour": "Starting from {tour}",
+        "loadingLabel": "Loading your custom tour planner",
+        "errorTitle": "Your custom tour planner could not load",
+        "errorDescription": "We could not load the custom tour page. Please try again.",
+        "retryLabel": "Try again",
+        "emptyTitle": "The custom tour planner is unavailable",
+        "emptyDescription": "There are no planning steps available right now. Please try again later.",
+        "tripStep": "Trip basics",
+        "preferencesStep": "Preferences",
+        "contactStep": "Contact details",
+        "reviewStep": "Review & send",
+        "backLabel": "Back",
+        "continueLabel": "Continue",
+        "sendLabel": "Send custom tour enquiry",
+        "sendingLabel": "Sending enquiry…",
+        "editLabel": "Edit",
+        "validationMessage": "Please complete the highlighted fields before continuing.",
+        "submitErrorTitle": "Your enquiry was not sent",
+        "successTitle": "Your custom tour enquiry is on its way",
+        "successDescription": "A travel specialist can now review your destinations, dates, travellers, and preferences.",
+        "newEnquiryLabel": "Plan another custom tour",
+        "reviewTitle": "Review your custom tour",
+        "reviewDescription": "Check these details before sending them to a travel specialist.",
+        "journeyType": "How fixed is your trip?",
+        "journeyTypePlaceholder": "Choose a planning style",
+        "fixedJourney": "Fixed dates",
+        "flexibleJourney": "Flexible dates",
+        "customJourney": "Fully custom / dates undecided",
+        "origin": "Where will you start from?",
+        "originPlaceholder": "City or airport",
+        "destinations": "Where would you like to go?",
+        "destinationsPlaceholder": "Search cities, countries, regions, or places",
+        "fixedStart": "Start date",
+        "fixedEnd": "End date",
+        "earliestStart": "Earliest start date",
+        "latestEnd": "Latest return date",
+        "durationDays": "Preferred trip length (days)",
+        "travelWindow": "When would you like to travel?",
+        "travelWindowPlaceholder": "For example, Diwali week, June 2027, or dates are completely open",
+        "adults": "Adults",
+        "children": "Children",
+        "infants": "Infants",
+        "flightPreference": "Flights",
+        "withFlights": "Include flights",
+        "withoutFlights": "I will arrange flights",
+        "recommendFlights": "Let the specialist recommend",
+        "accommodation": "Accommodation preferences",
+        "accommodationPlaceholder": "Select any that suit you",
+        "hotel": "Hotels",
+        "resort": "Resorts",
+        "villa": "Private villas",
+        "homestay": "Homestays",
+        "camp": "Camps / glamping",
+        "transport": "Getting around",
+        "transportPlaceholder": "Select preferred transport",
+        "privateCar": "Private car",
+        "selfDrive": "Self drive",
+        "train": "Train",
+        "coach": "Coach",
+        "localTransit": "Local transport",
+        "interests": "What would you like to experience?",
+        "interestsPlaceholder": "Select all that interest you",
+        "culture": "Culture & heritage",
+        "food": "Food & local experiences",
+        "nature": "Nature & wildlife",
+        "adventure": "Adventure",
+        "wellness": "Wellness",
+        "beaches": "Beaches",
+        "nightlife": "Nightlife",
+        "family": "Family activities",
+        "shopping": "Shopping",
+        "pace": "Preferred pace",
+        "relaxedPace": "Relaxed",
+        "balancedPace": "Balanced",
+        "packedPace": "See as much as possible",
+        "budgetMin": "Minimum total budget",
+        "budgetMax": "Maximum total budget",
+        "currency": "Currency",
+        "fullName": "Full name",
+        "email": "Email",
+        "phone": "Phone number",
+        "preferredContact": "Preferred contact method",
+        "whatsapp": "WhatsApp",
+        "phoneCall": "Phone call",
+        "emailContact": "Email",
+        "message": "Anything else the specialist should know?",
+        "messagePlaceholder": "Share must-haves, accessibility needs, celebrations, dietary needs, or places you want to avoid."
+      }
+    },
+    "structure": {
+      "header": {
+        "eyebrowRef": "pageEyebrow",
+        "titleRef": "pageHeading",
+        "descriptionRef": "pageDescription"
+      },
+      "journey": {
+        "steps": [
+          {
+            "id": "trip",
+            "labelRef": "tripStep",
+            "fields": [
+              {
+                "name": "journeyType",
+                "type": "select",
+                "labelRef": "journeyType",
+                "placeholderRef": "journeyTypePlaceholder",
+                "required": true,
+                "width": "full",
+                "optionsRef": "journeyTypeOptions"
+              },
+              {
+                "name": "origin",
+                "type": "location",
+                "locationMode": "place",
+                "selectionName": "originPlace",
+                "labelRef": "origin",
+                "placeholderRef": "originPlaceholder",
+                "required": true,
+                "minLength": 2,
+                "maxLength": 160,
+                "width": "half"
+              },
+              {
+                "name": "destinations",
+                "type": "location",
+                "locationMode": "place",
+                "multiple": true,
+                "maxItems": 10,
+                "selectionName": "destinationPlaces",
+                "labelRef": "destinations",
+                "placeholderRef": "destinationsPlaceholder",
+                "required": true,
+                "minLength": 2,
+                "maxLength": 1000,
+                "width": "half"
+              },
+              {
+                "name": "preferredStartDate",
+                "type": "date",
+                "labelRef": "fixedStart",
+                "required": true,
+                "width": "half",
+                "visibleWhen": { "field": "journeyType", "equals": "fixed" }
+              },
+              {
+                "name": "preferredEndDate",
+                "type": "date",
+                "labelRef": "fixedEnd",
+                "required": true,
+                "width": "half",
+                "visibleWhen": { "field": "journeyType", "equals": "fixed" }
+              },
+              {
+                "name": "earliestStartDate",
+                "type": "date",
+                "labelRef": "earliestStart",
+                "required": true,
+                "width": "half",
+                "visibleWhen": { "field": "journeyType", "equals": "flexible" }
+              },
+              {
+                "name": "latestEndDate",
+                "type": "date",
+                "labelRef": "latestEnd",
+                "required": true,
+                "width": "half",
+                "visibleWhen": { "field": "journeyType", "equals": "flexible" }
+              },
+              {
+                "name": "durationDays",
+                "type": "number",
+                "labelRef": "durationDays",
+                "required": true,
+                "integer": true,
+                "min": 1,
+                "max": 90,
+                "width": "half",
+                "visibleWhen": { "field": "journeyType", "equals": "flexible" }
+              },
+              {
+                "name": "travelWindow",
+                "type": "textarea",
+                "labelRef": "travelWindow",
+                "placeholderRef": "travelWindowPlaceholder",
+                "required": true,
+                "minLength": 2,
+                "maxLength": 240,
+                "width": "full",
+                "visibleWhen": { "field": "journeyType", "equals": "custom" }
+              }
+            ]
+          },
+          {
+            "id": "preferences",
+            "labelRef": "preferencesStep",
+            "fields": [
+              {
+                "name": "adults",
+                "type": "number",
+                "labelRef": "adults",
+                "required": true,
+                "integer": true,
+                "min": 1,
+                "max": 50,
+                "width": "half",
+                "value": "1"
+              },
+              {
+                "name": "children",
+                "type": "number",
+                "labelRef": "children",
+                "integer": true,
+                "min": 0,
+                "max": 50,
+                "width": "half",
+                "value": "0"
+              },
+              {
+                "name": "infants",
+                "type": "number",
+                "labelRef": "infants",
+                "integer": true,
+                "min": 0,
+                "max": 50,
+                "width": "half",
+                "value": "0"
+              },
+              {
+                "name": "flightPreference",
+                "type": "select",
+                "labelRef": "flightPreference",
+                "required": true,
+                "width": "half",
+                "optionsRef": "flightPreferenceOptions"
+              },
+              {
+                "name": "accommodationPreferences",
+                "type": "multiselect",
+                "labelRef": "accommodation",
+                "placeholderRef": "accommodationPlaceholder",
+                "maxItems": 5,
+                "width": "full",
+                "optionsRef": "accommodationPreferenceOptions"
+              },
+              {
+                "name": "transportPreferences",
+                "type": "multiselect",
+                "labelRef": "transport",
+                "placeholderRef": "transportPlaceholder",
+                "maxItems": 5,
+                "width": "full",
+                "optionsRef": "transportPreferenceOptions"
+              },
+              {
+                "name": "interests",
+                "type": "multiselect",
+                "labelRef": "interests",
+                "placeholderRef": "interestsPlaceholder",
+                "maxItems": 9,
+                "width": "full",
+                "optionsRef": "interestOptions"
+              },
+              {
+                "name": "pace",
+                "type": "select",
+                "labelRef": "pace",
+                "width": "full",
+                "optionsRef": "paceOptions"
+              }
+            ]
+          },
+          {
+            "id": "contact",
+            "labelRef": "contactStep",
+            "fields": [
+              {
+                "name": "budgetMin",
+                "type": "number",
+                "labelRef": "budgetMin",
+                "min": 0,
+                "width": "half"
+              },
+              {
+                "name": "budgetMax",
+                "type": "number",
+                "labelRef": "budgetMax",
+                "min": 0,
+                "width": "half"
+              },
+              {
+                "name": "currency",
+                "type": "select",
+                "labelRef": "currency",
+                "required": true,
+                "width": "half",
+                "value": "INR",
+                "optionsRef": "currencyOptions"
+              },
+              {
+                "name": "name",
+                "type": "text",
+                "labelRef": "fullName",
+                "required": true,
+                "minLength": 2,
+                "maxLength": 160,
+                "width": "half"
+              },
+              {
+                "name": "email",
+                "type": "email",
+                "labelRef": "email",
+                "required": true,
+                "width": "half"
+              },
+              {
+                "name": "phone",
+                "type": "tel",
+                "labelRef": "phone",
+                "required": true,
+                "maxLength": 10,
+                "optionsRef": "phoneCountryCodes",
+                "width": "half"
+              },
+              {
+                "name": "preferredContact",
+                "type": "select",
+                "labelRef": "preferredContact",
+                "required": true,
+                "width": "half",
+                "optionsRef": "preferredContactOptions"
+              },
+              {
+                "name": "message",
+                "type": "textarea",
+                "labelRef": "message",
+                "placeholderRef": "messagePlaceholder",
+                "required": true,
+                "minLength": 10,
+                "maxLength": 2000,
+                "width": "full"
+              }
+            ]
+          },
+          { "id": "review", "labelRef": "reviewStep", "fields": [] }
+        ]
+      },
+      "widgets": []
+    }
+  }
+}

@@ -46,14 +46,11 @@
   }
 
   &__action {
-    display: inline-flex;
-    align-items: center;
-    gap: $space-1;
     margin-top: $space-1;
-    color: var(--color-primary);
-    font-size: $font-size-sm;
-    font-weight: $font-semibold;
-    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
   }
 
   &--compact {
@@ -71,6 +68,7 @@
 
     .trem-no-data__action {
       grid-column: 2;
+      margin-top: 0;
     }
   }
 }

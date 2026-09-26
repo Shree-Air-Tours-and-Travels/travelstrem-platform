@@ -19,16 +19,36 @@
                 "titleRef": "sectionProfile",
                 "fields": [
                   { "id": "avatar", "type": "iconPicker", "labelRef": "fieldAvatar" },
-                  { "id": "name", "type": "text", "labelRef": "fieldName", "placeholderRef": "fieldNamePlaceholder" }
+                  {
+                    "id": "name",
+                    "type": "text",
+                    "labelRef": "fieldName",
+                    "placeholderRef": "fieldNamePlaceholder"
+                  }
                 ]
               },
               {
                 "id": "password",
                 "titleRef": "sectionPassword",
                 "fields": [
-                  { "id": "currentPassword", "type": "password", "labelRef": "fieldCurrentPassword", "placeholderRef": "fieldCurrentPasswordPlaceholder" },
-                  { "id": "newPassword", "type": "password", "labelRef": "fieldNewPassword", "placeholderRef": "fieldNewPasswordPlaceholder" },
-                  { "id": "confirmPassword", "type": "password", "labelRef": "fieldConfirmPassword", "placeholderRef": "fieldConfirmPasswordPlaceholder" }
+                  {
+                    "id": "currentPassword",
+                    "type": "password",
+                    "labelRef": "fieldCurrentPassword",
+                    "placeholderRef": "fieldCurrentPasswordPlaceholder"
+                  },
+                  {
+                    "id": "newPassword",
+                    "type": "password",
+                    "labelRef": "fieldNewPassword",
+                    "placeholderRef": "fieldNewPasswordPlaceholder"
+                  },
+                  {
+                    "id": "confirmPassword",
+                    "type": "password",
+                    "labelRef": "fieldConfirmPassword",
+                    "placeholderRef": "fieldConfirmPasswordPlaceholder"
+                  }
                 ]
               }
             ],

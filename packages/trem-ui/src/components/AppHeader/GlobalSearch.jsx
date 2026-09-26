@@ -19,15 +19,20 @@ export default function GlobalSearch({ config = {}, onSearch, onSelect }) {
   const minimumQueryLength = Math.max(1, Number(config.minimumQueryLength) || 2);
   const enabled = config.enabled !== false;
   const results = useMemo(
-    () => response.groups.flatMap((group) => (
-      group.results.map((result) => ({ ...result, groupId: group.id }))
-    )),
+    () =>
+      response.groups.flatMap((group) =>
+        group.results.map((result) => ({ ...result, groupId: group.id })),
+      ),
     [response.groups],
   );
-  const dropdownGroups = useMemo(() => response.groups.map((group) => ({
-    ...group,
-    items: group.results,
-  })), [response.groups]);
+  const dropdownGroups = useMemo(
+    () =>
+      response.groups.map((group) => ({
+        ...group,
+        items: group.results,
+      })),
+    [response.groups],
+  );
 
   const close = () => {
     setOpen(false);
@@ -66,30 +71,33 @@ export default function GlobalSearch({ config = {}, onSearch, onSelect }) {
 
     const controller = new AbortController();
     requestRef.current = controller;
-    const timer = window.setTimeout(async () => {
-      setLoading(true);
-      setError("");
-      let result;
-      try {
-        result = await onSearch?.(normalized, controller.signal);
-      } catch (searchError) {
+    const timer = window.setTimeout(
+      async () => {
+        setLoading(true);
+        setError("");
+        let result;
+        try {
+          result = await onSearch?.(normalized, controller.signal);
+        } catch (searchError) {
+          if (controller.signal.aborted) return;
+          result = { status: "error", message: searchError?.message };
+        }
         if (controller.signal.aborted) return;
-        result = { status: "error", message: searchError?.message };
-      }
-      if (controller.signal.aborted) return;
-      if (!result || result.status === "error") {
-        setError(result?.message || "Search is temporarily unavailable.");
-        setResponse(EMPTY_RESPONSE);
-      } else {
-        setResponse({
-          groups: Array.isArray(result.groups) ? result.groups : [],
-          emptyState: result.emptyState || null,
-          meta: result.meta || {},
-        });
-      }
-      setActiveIndex(-1);
-      setLoading(false);
-    }, Math.max(0, Number(config.debounceMs) || 250));
+        if (!result || result.status === "error") {
+          setError(result?.message || "Search is temporarily unavailable.");
+          setResponse(EMPTY_RESPONSE);
+        } else {
+          setResponse({
+            groups: Array.isArray(result.groups) ? result.groups : [],
+            emptyState: result.emptyState || null,
+            meta: result.meta || {},
+          });
+        }
+        setActiveIndex(-1);
+        setLoading(false);
+      },
+      Math.max(0, Number(config.debounceMs) || 250),
+    );
 
     return () => {
       window.clearTimeout(timer);
@@ -124,7 +132,10 @@ export default function GlobalSearch({ config = {}, onSearch, onSelect }) {
   };
 
   const searchInput = (ref, mobile = false) => (
-    <div className={mobile ? "trem-global-search__mobile-input" : "trem-app-header__search"} ref={mobile ? undefined : anchorRef}>
+    <div
+      className={mobile ? "trem-global-search__mobile-input" : "trem-app-header__search"}
+      ref={mobile ? undefined : anchorRef}
+    >
       <Icon name="search" size={20} />
       <input
         ref={ref}
@@ -136,7 +147,9 @@ export default function GlobalSearch({ config = {}, onSearch, onSelect }) {
         aria-disabled={!enabled}
         aria-expanded={open}
         aria-controls="trem-global-search-results"
-        aria-activedescendant={activeIndex >= 0 ? `trem-global-search-result-${activeIndex}` : undefined}
+        aria-activedescendant={
+          activeIndex >= 0 ? `trem-global-search-result-${activeIndex}` : undefined
+        }
         autoComplete="off"
         onFocus={() => setOpen(true)}
         onClick={() => setOpen(true)}
@@ -176,18 +189,21 @@ export default function GlobalSearch({ config = {}, onSearch, onSelect }) {
         ariaLabel={config.dialogLabel || "Global search results"}
         mobileTitle={config.mobileTitle || "Search"}
         mobileBreakpoint={Number(config.mobileBreakpoint) || 768}
+        desktopMaxHeight={Number(config.desktopMaxHeight) || 560}
         mobileVariant={config.mobileSheetVariant || "fullscreen"}
         mobileCloseLabel={config.closeLabel || "Close search"}
         mobileHeader={searchInput(mobileInputRef, true)}
         loading={loading}
-        loadingContent={<div className="trem-global-search__state">{config.loadingLabel || "Searching..."}</div>}
+        loadingContent={
+          <div className="trem-global-search__state">{config.loadingLabel || "Searching..."}</div>
+        }
         emptyContent={emptyContent}
         onClose={close}
       >
         {({ item: result, group }) => {
-          const index = results.findIndex((candidate) => (
-            candidate.id === result.id && candidate.groupId === group.id
-          ));
+          const index = results.findIndex(
+            (candidate) => candidate.id === result.id && candidate.groupId === group.id,
+          );
           return (
             <button
               type="button"
@@ -200,9 +216,11 @@ export default function GlobalSearch({ config = {}, onSearch, onSelect }) {
               onClick={() => choose(result)}
             >
               <span className="trem-global-search__result-media">
-                {result.image
-                  ? <img src={result.image} alt="" />
-                  : <Icon name={result.icon || group.icon || "search"} size={20} />}
+                {result.image ? (
+                  <img src={result.image} alt="" />
+                ) : (
+                  <Icon name={result.icon || group.icon || "search"} size={20} />
+                )}
               </span>
               <span className="trem-global-search__result-copy">
                 <strong>{result.title}</strong>

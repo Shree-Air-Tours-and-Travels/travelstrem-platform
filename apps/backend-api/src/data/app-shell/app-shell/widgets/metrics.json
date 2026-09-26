@@ -1,62 +1,62 @@
 {
-    "status": "success",
-    "component": {
-        "data": {},
-        "dataScope": {
-            "options": {}
-        },
-        "elements": {
-            "labels": {
-                "metricsAriaLabel": "Travel activity summary",
-                "metricTotalBookings": "Total Bookings",
-                "metricFavorites": "Favorites",
-                "metricTripsCompleted": "Trips Completed",
-                "metricPending": "Pending"
-            },
-            "urls": {}
-        },
-        "structure": {
-            "header": {},
-            "widgets": [
-                {
-                    "type": "DashboardMetrics",
-                    "props": {
-                        "items": [
-                            {
-                                "id": "bookings",
-                                "labelRef": "metricTotalBookings",
-                                "valueKey": "totalBookings",
-                                "icon": "briefcaseBusiness",
-                                "target": "bookings"
-                            },
-                            {
-                                "id": "favorites",
-                                "labelRef": "metricFavorites",
-                                "valueKey": "totalFavorites",
-                                "icon": "heart",
-                                "target": "favorites"
-                            },
-                            {
-                                "id": "completed",
-                                "labelRef": "metricTripsCompleted",
-                                "valueKey": "tripsCompleted",
-                                "icon": "shieldCheck",
-                                "target": "bookings"
-                            },
-                            {
-                                "id": "pending",
-                                "labelRef": "metricPending",
-                                "valueKey": "pendingBookings",
-                                "icon": "clock",
-                                "target": "bookings"
-                            }
-                        ],
-                        "ariaLabelRef": "metricsAriaLabel"
-                    }
-                }
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "metricsAriaLabel": "Travel activity summary",
+        "metricEnquiries": "Enquiries",
+        "metricFavorites": "Favorites",
+        "metricUpcoming": "Upcoming trips",
+        "metricAwaiting": "Awaiting response"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "DashboardMetrics",
+          "props": {
+            "items": [
+              {
+                "id": "enquiries",
+                "labelRef": "metricEnquiries",
+                "valueKey": "totalEnquiries",
+                "icon": "briefcaseBusiness",
+                "target": "bookings"
+              },
+              {
+                "id": "favorites",
+                "labelRef": "metricFavorites",
+                "valueKey": "totalFavorites",
+                "icon": "heart",
+                "target": "favorites"
+              },
+              {
+                "id": "upcoming",
+                "labelRef": "metricUpcoming",
+                "valueKey": "upcomingTrips",
+                "icon": "calendarDays",
+                "target": "bookings"
+              },
+              {
+                "id": "awaiting",
+                "labelRef": "metricAwaiting",
+                "valueKey": "awaitingResponse",
+                "icon": "clock",
+                "target": "bookings"
+              }
             ],
-            "config": {},
-            "actions": []
+            "ariaLabelRef": "metricsAriaLabel"
+          }
         }
+      ],
+      "config": {},
+      "actions": []
     }
+  }
 }

@@ -1,0 +1,214 @@
+@import "../../../../styles/base/typography";
+
+.td-ie-widget {
+  &__header {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: $space-4;
+    margin-bottom: $space-4;
+  }
+
+  &__eyebrow {
+    display: block;
+    margin-bottom: $space-1;
+    color: var(--color-primary-dark);
+    font-size: $font-size-xs;
+    font-weight: $font-bold;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  &__title {
+    margin: 0;
+    color: var(--title);
+    font-size: 1.35rem;
+    letter-spacing: -0.02em;
+  }
+
+  &__summary {
+    margin: 0;
+    color: var(--muted);
+    font-size: $font-size-sm;
+    white-space: nowrap;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: $space-2;
+  }
+}
+
+.td-ie {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+
+  &__card {
+    position: relative;
+    isolation: isolate;
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+
+    &::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--ie-from), var(--ie-to));
+    }
+
+    &--included {
+      --ie-accent: var(--color-primary-dark);
+      --ie-from: var(--color-primary);
+      --ie-to: var(--color-secondary);
+      --ie-soft: var(--primary-soft);
+    }
+
+    &--excluded {
+      --ie-accent: var(--color-secondary-dark);
+      --ie-from: var(--color-secondary);
+      --ie-to: var(--color-secondary-dark);
+      --ie-soft: var(--secondary-soft);
+    }
+  }
+
+  &__glow {
+    position: absolute;
+    top: -40%;
+    right: -30%;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--ie-soft), transparent 70%);
+    filter: blur(6px);
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.8rem 0.9rem 0.65rem;
+  }
+
+  &__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 12px;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, var(--ie-from), var(--ie-to));
+    color: var(--color-on-primary);
+    box-shadow: 0 8px 18px -8px var(--ie-from);
+  }
+
+  &__title {
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 1.02rem;
+    letter-spacing: -0.01em;
+    color: var(--title);
+  }
+
+  &__count {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 26px;
+    height: 26px;
+    padding: 0 0.6rem;
+    border-radius: 999px;
+    background: var(--ie-soft);
+    color: var(--ie-accent);
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+  }
+
+  &__body {
+    padding: 0.1rem 0.9rem 0.75rem;
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    padding: 0.55rem 0.45rem;
+    border-bottom: 1px dashed var(--border);
+    &:last-child {
+      border-bottom: 0;
+    }
+
+  }
+
+  &__mark {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    margin-top: 2px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: var(--ie-soft);
+    color: var(--ie-accent);
+  }
+
+  &__item-text {
+    font-size: 0.9rem;
+    line-height: 1.55;
+    color: var(--text);
+  }
+
+  &__empty {
+    margin: 0.5rem 0 0;
+    font-size: 0.85rem;
+    line-height: 1.7;
+    color: var(--muted);
+  }
+
+  &__toggle {
+    min-height: auto;
+    color: var(--color-primary-dark);
+    font-weight: $font-bold;
+    text-decoration: underline;
+    text-underline-offset: $space-1;
+
+    &:hover {
+      color: var(--color-secondary-dark);
+    }
+
+    margin: 0 $space-3 $space-3;
+  }
+}
+
+@media (max-width: 640px) {
+  .td-ie-widget__header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: $space-1;
+  }
+
+  .td-ie {
+    grid-template-columns: 1fr;
+  }
+}

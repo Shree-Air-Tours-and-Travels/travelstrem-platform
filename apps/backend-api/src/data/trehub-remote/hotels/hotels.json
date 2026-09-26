@@ -1,0 +1,414 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {
+        "pagination": {
+          "pageSize": 20
+        },
+        "filterForm": {
+          "layout": {
+            "columns": 1,
+            "columnsMobile": 1
+          },
+          "sections": [
+            {
+              "id": "filters",
+              "fields": [
+                {
+                  "name": "name",
+                  "type": "text",
+                  "labelRef": "filterForm_name"
+                },
+                {
+                  "name": "maxPrice",
+                  "type": "number",
+                  "min": 0,
+                  "labelRef": "filterForm_maxPrice"
+                },
+                {
+                  "name": "stars",
+                  "type": "select",
+                  "options": [
+                    {
+                      "value": "",
+                      "labelRef": "filterForm_stars_0"
+                    },
+                    {
+                      "value": "3",
+                      "labelRef": "filterForm_stars_1"
+                    },
+                    {
+                      "value": "4",
+                      "labelRef": "filterForm_stars_2"
+                    },
+                    {
+                      "value": "5",
+                      "labelRef": "filterForm_stars_3"
+                    }
+                  ],
+                  "labelRef": "filterForm_stars",
+                  "placeholderRef": "filterForm_stars_0"
+                },
+                {
+                  "name": "refundable",
+                  "type": "select",
+                  "options": [
+                    {
+                      "value": "",
+                      "labelRef": "filterForm_refundable_0"
+                    },
+                    {
+                      "value": "true",
+                      "labelRef": "filterForm_refundable_1"
+                    }
+                  ],
+                  "labelRef": "filterForm_refundable",
+                  "placeholderRef": "filterForm_refundable_0"
+                },
+                {
+                  "name": "amenity",
+                  "type": "select",
+                  "options": [
+                    {
+                      "value": "",
+                      "labelRef": "filterForm_amenity_0"
+                    },
+                    {
+                      "value": "Pool",
+                      "labelRef": "filterForm_amenity_1"
+                    },
+                    {
+                      "value": "Parking",
+                      "labelRef": "filterForm_amenity_2"
+                    },
+                    {
+                      "value": "Wi-Fi",
+                      "labelRef": "filterForm_amenity_3"
+                    }
+                  ],
+                  "labelRef": "filterForm_amenity",
+                  "placeholderRef": "filterForm_amenity_0"
+                },
+                {
+                  "name": "sort",
+                  "type": "select",
+                  "options": [
+                    {
+                      "value": "",
+                      "labelRef": "filterForm_sort_0"
+                    },
+                    {
+                      "value": "price",
+                      "labelRef": "filterForm_sort_1"
+                    }
+                  ],
+                  "labelRef": "filterForm_sort",
+                  "placeholderRef": "filterForm_sort_0"
+                }
+              ],
+              "titleRef": "filterFormTitle",
+              "collapsible": false
+            }
+          ]
+        }
+      }
+    },
+    "elements": {
+      "labels": {
+        "title": "Find a stay that suits your journey",
+        "loading": "Loading stays",
+        "search": "Search hotels",
+        "apply": "Apply filters",
+        "reset": "Reset filters",
+        "empty": "No stays match your search",
+        "emptyDescription": "Try different dates, fewer rooms or broader filters.",
+        "error": "We could not load these stays",
+        "retry": "Try again",
+        "back": "Back to hotels",
+        "continue": "Continue",
+        "rooms": "Choose your room",
+        "roomsDescription": "Compare what is included and select the room that fits your stay.",
+        "policies": "Property policies",
+        "policiesDescription": "Important information to review before you continue.",
+        "amenities": "Popular amenities",
+        "overview": "About this property",
+        "overviewDescription": "A closer look at your stay, included comforts and property rules.",
+        "propertyDescription": "Why you’ll enjoy this stay",
+        "readMore": "Read more",
+        "showLess": "Show less",
+        "showAllAmenities": "Show all {count} amenities",
+        "showFewerAmenities": "Show fewer amenities",
+        "showAllPolicies": "Show all {count} policies",
+        "showFewerPolicies": "Show fewer policies",
+        "detailItemCount": "{count} details",
+        "morePropertyDetails": "More about this property",
+        "morePropertyDetailsDescription": "Amenities, guest feedback and details supplied by the property.",
+        "propertyLocation": "Location",
+        "propertyContact": "Property contact",
+        "callProperty": "Call property",
+        "guestReviews": "Guest reviews",
+        "hotelRules": "Hotel rules",
+        "services": "Services",
+        "checkInRule": "Check-in",
+        "checkOutRule": "Check-out",
+        "travelstremBenefits": "Why book with Travelstrem",
+        "benefitCompare": "Compare available supplier rates",
+        "benefitTotal": "Review the estimated total before continuing",
+        "benefitRooms": "Keep every room choice in one stay",
+        "moreItems": "+{count} more",
+        "propertyClass": "Hotel category",
+        "propertyClassSummary": "{count}-star property",
+        "propertyType": "Property type",
+        "propertyRooms": "Property size",
+        "propertyRoomsSummary": "{count} rooms",
+        "languages": "Languages spoken",
+        "arrivalDeparture": "Arrival and departure",
+        "ratingSummary": "{rating} out of 10",
+        "roomFeatures": "Room features",
+        "priceDetails": "Price details",
+        "openInMaps": "View location on map",
+        "selectedStay": "Your selected room",
+        "cancel": "Keep browsing",
+        "confirm": "Create enquiry",
+        "modalTitle": "Review your stay",
+        "modalDescription": "This creates an enquiry and opens My Bookings, where you can add guest details and review your stay. Payment is not available yet.",
+        "mock": "Demo hotel inventory — no live reservation will be made.",
+        "eyebrow": "Hotels & stays",
+        "description": "Find your place to unwind. Compare rooms, inclusions and the full cost of your stay.",
+        "breadcrumbTrehub": "Trehub",
+        "breadcrumbHotels": "Hotels",
+        "breadcrumbDetails": "Hotel details",
+        "priceIncludesFees": "Includes applicable taxes and service charges",
+        "viewHotel": "View hotel",
+        "viewRooms": "View rooms",
+        "freeCancellation": "Free cancellation",
+        "breakfastIncluded": "Breakfast included",
+        "payAtProperty": "Pay at property",
+        "ratingExceptional": "Exceptional",
+        "ratingVeryGood": "Very good",
+        "ratingGood": "Good",
+        "reviewCountSummary": "{count} reviews",
+        "distanceSummary": "{distance} m from city centre",
+        "freeCancellationUntil": "Free cancellation until {date}",
+        "checkIn": "Check-in",
+        "checkOut": "Check-out",
+        "roomOptions": "Room & rate options",
+        "roomOptionsAvailable": "{count} available",
+        "selectRoom": "Select room",
+        "changeRate": "Change rate",
+        "rateOptions": "Available rates",
+        "selectRate": "Select rate",
+        "selectedRoom": "Selected room",
+        "selectedRooms": "Selected rooms",
+        "singleRoomTotal": "Estimated total for this room",
+        "roomSlot": "Room {count}",
+        "roomsSelected": "{selected} of {count} rooms selected",
+        "removeRoom": "Remove room",
+        "addAnotherRoom": "Add another room",
+        "allRoomsSelected": "All rooms selected — review your stay",
+        "viewRoomDetails": "View room details",
+        "hideRoomDetails": "Hide room details",
+        "closeRoomDetails": "Close",
+        "roomDetailsHeading": "Room details",
+        "roomInformation": "Room information",
+        "roomInclusions": "Included with this room",
+        "rateConditions": "Rate conditions",
+        "bedType": "Bed configuration",
+        "roomSize": "Room size",
+        "roomView": "View",
+        "bathroom": "Bathroom",
+        "smokingPolicy": "Smoking policy",
+        "childPolicy": "Children",
+        "extraBedPolicy": "Extra beds",
+        "accessibility": "Accessibility",
+        "availability": "Availability",
+        "roomsRemaining": "{count} rooms remaining",
+        "roomRemaining": "1 room remaining",
+        "bedsRemaining": "{count} beds remaining",
+        "bedRemaining": "1 bed remaining",
+        "availabilityAvailable": "Available · stock count not provided",
+        "availabilityOnRequest": "Available on request",
+        "ratePlan": "Rate plan",
+        "paymentPolicy": "Payment",
+        "taxesAndFees": "Taxes and fees",
+        "taxesIncluded": "Included in total",
+        "taxesExcluded": "Property taxes or fees may be collected separately",
+        "roomGallery": "Room gallery",
+        "photoCount": "{count} photos",
+        "galleryPhotoCount": "{count} photos",
+        "galleryOpenImage": "Open image {current} of {count}",
+        "galleryPrevious": "Previous image",
+        "galleryNext": "Next image",
+        "galleryClose": "Close gallery",
+        "galleryViewer": "Hotel image gallery",
+        "galleryThumbnails": "Hotel image thumbnails",
+        "galleryShowImage": "Show image {current}",
+        "galleryPause": "Pause slideshow",
+        "galleryPlay": "Start slideshow",
+        "secureBookingNote": "Secure booking · Best available rate",
+        "occupancy": "Occupancy",
+        "meal": "Meals",
+        "cancellation": "Cancellation",
+        "nightly": "Per room / night",
+        "nightlyBed": "Per bed / night",
+        "stay": "Stay charge",
+        "fee": "Service charges (incl. applicable GST)",
+        "feeHelp": "TREM service charge: {service}. GST on TREM charge: {gst}.",
+        "feeHelpWithOther": "TREM service charge: {service}. GST on TREM charge: {gst}",
+        "loadingMore": "Checking more stays",
+        "total": "Total for all guests",
+        "dates": "Dates",
+        "party": "Guests and rooms",
+        "nights": "Duration",
+        "yourStay": "Your stay",
+        "stayPrice": "Lowest available total for your stay",
+        "rating": "Guest rating",
+        "staySummary": "{nights} nights · {rooms} rooms · {guests} guests",
+        "staySummarySingleRoom": "{nights} nights · 1 room · {guests} guests",
+        "staySummaryBeds": "{nights} nights · {guests} beds · {guests} guests",
+        "staySummarySingleBed": "{nights} nights · 1 bed · 1 guest",
+        "resultsSummary": "{count} stays available in {destination}",
+        "occupancySummary": "Up to {count} guests per room",
+        "occupancySummarySingle": "Up to 1 guest per room",
+        "occupancyBedSummary": "1 guest per bed",
+        "stayChargeSummary": "{amount} · {rooms} rooms × {nights} nights",
+        "stayUnitsSummary": "{rooms} rooms × {nights} nights",
+        "stayUnitsSummarySingleRoom": "1 room × {nights} nights",
+        "stayBedUnitsSummary": "{guests} beds × {nights} nights",
+        "stayBedUnitsSummarySingleBed": "1 bed × {nights} nights",
+        "partySummary": "{guests} guests · {rooms} rooms",
+        "partySummarySingleRoom": "{guests} guests · 1 room",
+        "nightsSummary": "{nights} nights",
+        "starsSummary": "{count} stars",
+        "searchFormTitle": "Find your stay",
+        "searchForm_destination": "Destination",
+        "searchForm_checkIn": "Check-in",
+        "searchForm_checkOut": "Check-out",
+        "searchForm_guests": "Guests",
+        "searchForm_rooms": "Rooms",
+        "filterFormTitle": "Filter stays",
+        "filterForm_name": "Hotel name",
+        "filterForm_maxPrice": "Maximum total stay price",
+        "filterForm_stars": "Minimum star rating",
+        "filterForm_stars_0": "Any rating",
+        "filterForm_stars_1": "3 stars",
+        "filterForm_stars_2": "4 stars",
+        "filterForm_stars_3": "5 stars",
+        "filterForm_refundable": "Cancellation",
+        "filterForm_refundable_0": "Any policy",
+        "filterForm_refundable_1": "Refundable rooms",
+        "filterForm_amenity": "Amenities",
+        "filterForm_amenity_0": "Any amenities",
+        "filterForm_amenity_1": "Pool",
+        "filterForm_amenity_2": "Parking",
+        "filterForm_amenity_3": "Wi-Fi",
+        "filterForm_sort": "Sort by",
+        "filterForm_sort_0": "Recommended",
+        "filterForm_sort_1": "Lowest total price",
+        "editSearch": "Edit hotel search",
+        "filters": "Filter stays",
+        "close": "Close",
+        "popular": "Popular choice",
+        "unavailable": "Unavailable",
+        "addFavorite": "Save hotel",
+        "removeFavorite": "Remove saved hotel",
+        "paginationPrevious": "Previous hotel results",
+        "paginationNext": "Next hotel results",
+        "paginationAria": "Hotel result pages"
+      },
+      "urls": {
+        "search": "/hotels/search",
+        "results": "/hotels/search/{searchId}/results",
+        "details": "/hotels/search/{searchId}/hotels/{hotelId}",
+        "detailsWidget": "/hotels/search/{searchId}/hotels/{hotelId}/widgets/{widget}",
+        "quote": "/hotels/search/{searchId}/hotels/{hotelId}/quote",
+        "enquiries": "/hotels/enquiries"
+      }
+    },
+    "structure": {
+      "widgets": [
+        {
+          "type": "HotelBreadcrumbs",
+          "searchItems": [
+            { "labelRef": "breadcrumbTrehub", "path": "/trehub" },
+            { "labelRef": "breadcrumbHotels" }
+          ],
+          "detailsItems": [
+            { "labelRef": "breadcrumbTrehub", "path": "/trehub" },
+            { "labelRef": "breadcrumbHotels", "path": "/trehub/hotels" },
+            { "labelRef": "breadcrumbDetails" }
+          ]
+        },
+        {
+          "type": "HotelSearch",
+          "props": {
+            "variant": "hotel"
+          }
+        },
+        {
+          "type": "HotelFilters"
+        },
+        {
+          "type": "HotelResults",
+          "cardProps": {
+            "variant": "compact",
+            "previewPriority": ["highlights", "amenities", "description", "facts"],
+            "previewSectionLimit": 2
+          },
+          "paginationProps": {
+            "previousLabelRef": "paginationPrevious",
+            "nextLabelRef": "paginationNext",
+            "ariaLabelRef": "paginationAria"
+          }
+        },
+        {
+          "type": "HotelGallery"
+        },
+        {
+          "type": "HotelDetails"
+        },
+        {
+          "type": "HotelPropertyInformation",
+          "props": {
+            "amenityPreviewCount": 12,
+            "policyPreviewCount": 4,
+            "benefitLabelRefs": ["benefitCompare", "benefitTotal", "benefitRooms"]
+          }
+        },
+        {
+          "type": "HotelRooms"
+        },
+        {
+          "type": "HotelSummary",
+          "summaryFieldIds": ["stay", "fee", "total"]
+        }
+      ],
+      "breadcrumbs": {
+        "search": [
+          {
+            "labelRef": "breadcrumbTrehub",
+            "path": "/trehub"
+          },
+          {
+            "labelRef": "breadcrumbHotels"
+          }
+        ],
+        "details": [
+          {
+            "labelRef": "breadcrumbTrehub",
+            "path": "/trehub"
+          },
+          {
+            "labelRef": "breadcrumbHotels",
+            "path": "/trehub/hotels"
+          },
+          {
+            "labelRef": "breadcrumbDetails"
+          }
+        ]
+      }
+    }
+  }
+}

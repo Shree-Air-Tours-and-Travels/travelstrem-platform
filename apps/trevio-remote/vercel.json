@@ -1,5 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "create-react-app",
+  "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
+  "buildCommand": "cd ../.. && pnpm --filter @apps/trevio build",
+  "outputDirectory": "build",
   "git": {
     "deploymentEnabled": true
   },
@@ -15,6 +19,9 @@
     { "source": "/:path*", "destination": "/index.html" }
   ],
   "headers": [
-    { "source": "/remoteEntry.js", "headers": [{ "key": "Access-Control-Allow-Origin", "value": "*" }] }
+    {
+      "source": "/remoteEntry.js",
+      "headers": [{ "key": "Access-Control-Allow-Origin", "value": "*" }]
+    }
   ]
 }

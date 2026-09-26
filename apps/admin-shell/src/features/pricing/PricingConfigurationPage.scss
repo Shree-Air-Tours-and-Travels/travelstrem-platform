@@ -1,0 +1,420 @@
+@import "@packages/trem-design-tokens/scss";
+
+.pricing-config-page {
+  display: grid;
+  gap: $space-5;
+  color: var(--text);
+}
+
+.pricing-config-page__hero {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: $space-5;
+  padding: $space-6;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 24%, var(--border));
+  border-radius: $radius-lg;
+  background:
+    radial-gradient(circle at 88% 18%, rgb(255 255 255 / 18%), transparent 30%),
+    linear-gradient(132deg, var(--color-primary), color-mix(in srgb, var(--color-primary) 68%, #111a42));
+  color: #fff;
+  box-shadow: var(--shadow-md);
+}
+
+.pricing-config-page__hero > div:first-child {
+  max-width: 760px;
+}
+
+.pricing-config-page__hero span,
+.pricing-config-editor__heading span,
+.pricing-config-history__heading span {
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.pricing-config-page__hero h1 {
+  margin: $space-2 0;
+  color: inherit;
+  font-size: clamp(1.8rem, 3vw, 2.5rem);
+}
+
+.pricing-config-page__hero p {
+  max-width: 680px;
+  margin: 0;
+  color: rgb(255 255 255 / 82%);
+  line-height: 1.6;
+}
+
+.pricing-config-page__hero-lock {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  flex: 0 0 auto;
+  padding: $space-3 $space-4;
+  border: 1px solid rgb(255 255 255 / 32%);
+  border-radius: $radius-full;
+  background: rgb(255 255 255 / 12%);
+  backdrop-filter: blur(10px);
+}
+
+.pricing-config-page__message {
+  padding: $space-3 $space-4;
+  border: 1px solid;
+  border-radius: $radius-md;
+  font-weight: $font-semibold;
+}
+
+.pricing-config-page__message.is-error {
+  border-color: color-mix(in srgb, var(--color-danger, #c62828) 35%, var(--border));
+  background: color-mix(in srgb, var(--color-danger, #c62828) 8%, var(--surface));
+  color: var(--color-danger, #c62828);
+}
+
+.pricing-config-page__message.is-success {
+  border-color: color-mix(in srgb, var(--color-success, #2e7d32) 35%, var(--border));
+  background: color-mix(in srgb, var(--color-success, #2e7d32) 8%, var(--surface));
+  color: var(--color-success, #2e7d32);
+}
+
+.pricing-config-page__loading {
+  min-height: 300px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: $space-3;
+  color: var(--text-secondary);
+}
+
+.pricing-config-page__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(320px, 0.75fr);
+  align-items: start;
+  gap: $space-5;
+}
+
+.pricing-config-editor,
+.pricing-config-history {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: $radius-lg;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.pricing-config-editor {
+  display: grid;
+}
+
+.pricing-config-editor__heading,
+.pricing-config-history__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-4;
+  padding: $space-5;
+  border-bottom: 1px solid var(--border);
+}
+
+.pricing-config-editor__heading h2,
+.pricing-config-history__heading h2 {
+  margin: $space-1 0 0;
+  color: var(--text);
+  font-size: $font-size-xl;
+}
+
+.pricing-config-editor__heading span,
+.pricing-config-history__heading span {
+  color: var(--color-primary);
+}
+
+.pricing-config-editor__scope,
+.pricing-config-editor__section {
+  padding: $space-5;
+  border-bottom: 1px solid var(--border);
+}
+
+.pricing-config-editor__scope {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $space-3;
+  background: color-mix(in srgb, var(--color-primary) 4%, var(--surface));
+}
+
+.pricing-config-editor__hint {
+  grid-column: 2;
+  color: var(--text-secondary);
+}
+
+.pricing-config-editor__section {
+  display: grid;
+  gap: $space-4;
+}
+
+.pricing-config-editor__section-title {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+}
+
+.pricing-config-editor__section-icon {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  display: grid;
+  place-items: center;
+  border-radius: $radius-md;
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--surface));
+  color: var(--color-primary);
+}
+
+.pricing-config-editor__section-title h3,
+.pricing-config-editor__section-title p {
+  margin: 0;
+}
+
+.pricing-config-editor__section-title h3 {
+  color: var(--text);
+  font-size: $font-size-lg;
+}
+
+.pricing-config-editor__section-title p {
+  margin-top: 2px;
+  color: var(--text-secondary);
+  font-size: $font-size-sm;
+}
+
+.pricing-rule-toggle {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: $space-3;
+  padding: $space-3;
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+  background: var(--surface-subtle, var(--surface));
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.pricing-rule-toggle.is-active {
+  border-color: color-mix(in srgb, var(--color-primary) 42%, var(--border));
+  background: color-mix(in srgb, var(--color-primary) 6%, var(--surface));
+}
+
+.pricing-rule-toggle__icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: $radius-full;
+  background: var(--surface);
+  color: var(--text-secondary);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.pricing-rule-toggle.is-active .pricing-rule-toggle__icon {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.pricing-rule-toggle strong,
+.pricing-rule-toggle small {
+  display: block;
+}
+
+.pricing-rule-toggle small {
+  margin-top: 2px;
+  color: var(--text-secondary);
+}
+
+.pricing-rule-toggle__state {
+  color: var(--color-primary);
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+}
+
+.pricing-config-editor__fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $space-3;
+}
+
+.pricing-config-editor__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-4;
+  padding: $space-5;
+}
+
+.pricing-config-editor__footer > div {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  max-width: 560px;
+  color: var(--text-secondary);
+  font-size: $font-size-sm;
+}
+
+.pricing-config-history {
+  position: sticky;
+  top: $space-4;
+  overflow: hidden;
+}
+
+.pricing-config-history__list {
+  max-height: min(780px, calc(100dvh - 230px));
+  overflow-y: auto;
+  padding: $space-3;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-primary) 35%, transparent) transparent;
+}
+
+.pricing-config-version {
+  display: grid;
+  gap: $space-3;
+  padding: $space-4;
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+  background: var(--surface);
+}
+
+.pricing-config-version + .pricing-config-version {
+  margin-top: $space-3;
+}
+
+.pricing-config-version__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $space-3;
+}
+
+.pricing-config-version__top strong,
+.pricing-config-version__top span {
+  display: block;
+}
+
+.pricing-config-version__top strong {
+  font-size: $font-size-sm;
+  text-transform: capitalize;
+}
+
+.pricing-config-version__top span {
+  margin-top: 2px;
+  overflow-wrap: anywhere;
+  color: var(--text-secondary);
+  font-size: $font-size-sm;
+}
+
+.pricing-config-version dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $space-2;
+  margin: 0;
+  padding: $space-3;
+  border-radius: $radius-sm;
+  background: var(--surface-subtle, #f7f8fb);
+}
+
+.pricing-config-version dt {
+  color: var(--text-secondary);
+  font-size: $font-size-xs;
+}
+
+.pricing-config-version dd {
+  margin: 2px 0 0;
+  color: var(--text);
+  font-size: $font-size-sm;
+  font-weight: $font-semibold;
+}
+
+.pricing-config-version__rules {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-2;
+}
+
+.pricing-config-version__rules span {
+  padding: $space-1 $space-2;
+  border-radius: $radius-full;
+  background: color-mix(in srgb, var(--color-primary) 7%, var(--surface));
+  color: var(--text-secondary);
+  font-size: $font-size-xs;
+}
+
+@media (max-width: $breakpoint-laptop) {
+  .pricing-config-page__layout {
+    grid-template-columns: minmax(0, 1fr) 320px;
+  }
+}
+
+@media (max-width: $breakpoint-lg) {
+  .pricing-config-page__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .pricing-config-history {
+    position: static;
+  }
+
+  .pricing-config-history__list {
+    max-height: 560px;
+  }
+}
+
+@media (max-width: $breakpoint-md) {
+  .pricing-config-page__hero,
+  .pricing-config-editor__footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .pricing-config-page__hero-lock {
+    align-self: flex-start;
+  }
+
+  .pricing-config-editor__scope,
+  .pricing-config-editor__fields {
+    grid-template-columns: 1fr;
+  }
+
+  .pricing-config-editor__hint {
+    grid-column: 1;
+  }
+
+  .pricing-config-editor__footer .ui-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 520px) {
+  .pricing-config-page__hero,
+  .pricing-config-editor__heading,
+  .pricing-config-history__heading,
+  .pricing-config-editor__scope,
+  .pricing-config-editor__section,
+  .pricing-config-editor__footer {
+    padding: $space-4;
+  }
+
+  .pricing-config-editor__heading,
+  .pricing-config-history__heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .pricing-rule-toggle {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .pricing-rule-toggle__state {
+    grid-column: 2;
+  }
+}

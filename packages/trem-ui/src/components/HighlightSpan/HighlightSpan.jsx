@@ -1,6 +1,6 @@
 // components/ui/HighlightSpan.jsx
 import React from "react";
-import "./HighlightSpan.styles.scss"
+import "./HighlightSpan.styles.scss";
 
 const HighlightSpan = ({ children, variant = "highlight" }) => {
   return <span className={`ui-span ui-span--${variant}`}>{children}</span>;

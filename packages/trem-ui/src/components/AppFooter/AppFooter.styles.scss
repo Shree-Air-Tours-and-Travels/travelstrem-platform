@@ -1,198 +1,387 @@
-@import "../../styles/base/typography";
+@import "@packages/trem-design-tokens/scss";
 
 .trem-app-footer {
   width: 100%;
   margin-top: auto;
-  padding-top: $space-8;
   flex-shrink: 0;
-  background: transparent;
-  color: var(--muted);
-}
-
-.trem-app-footer__bar {
-  width: 100%;
-  min-height: 68px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: minmax(280px, 1fr) auto auto;
-  align-items: center;
-  gap: $space-4;
-  padding: $space-3 $space-6;
+  background: var(--primary-soft);
   border-top: 1px solid var(--border);
-  background: var(--surface);
+  color: var(--text);
 }
 
-.trem-app-footer__identity {
+.trem-app-footer__main {
+  width: min(100%, 88rem);
+  margin-inline: auto;
+  padding: clamp(#{$space-10}, 6vw, #{$space-16}) clamp(#{$space-5}, 5vw, #{$space-10}) #{$space-8};
+}
+
+.trem-app-footer__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.8fr) repeat(var(--footer-section-count, 4), minmax(10rem, 1fr));
+  gap: clamp(#{$space-6}, 4vw, #{$space-12}) clamp(#{$space-6}, 4vw, #{$space-10});
+  margin-bottom: clamp(#{$space-10}, 5vw, #{$space-14});
+  padding-bottom: clamp(#{$space-8}, 4vw, #{$space-12});
+  border-bottom: 1px solid var(--border);
+}
+
+.trem-app-footer__brand-section {
   min-width: 0;
-  display: flex;
-  align-items: baseline;
-  gap: $space-2;
-
-  strong {
-    flex: 0 0 auto;
-    color: var(--text);
-    font-size: $font-size-md;
-    letter-spacing: -0.01em;
-  }
-
-  small {
-    overflow: hidden;
-    font-size: $font-size-sm;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+  display: grid;
+  gap: $space-5;
+  padding-right: $space-4;
 }
 
-.trem-app-footer__links {
+.trem-app-footer__brand {
   display: flex;
+  align-items: flex-start;
+  gap: $space-3;
+}
+
+.trem-app-footer__logo {
+  width: 3.25rem;
+  height: 3.25rem;
+  flex: 0 0 auto;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0;
+  border-radius: $radius-md;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  color: var(--color-on-primary);
+  font-size: $font-size-xl;
+  font-weight: $font-bold;
+  box-shadow: var(--shadow-md);
 
-  a {
-    display: inline-flex;
-    align-items: center;
-    color: var(--muted);
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+  }
+}
+
+.trem-app-footer__brand-text {
+  min-width: 0;
+  display: grid;
+  gap: $space-1;
+
+  .trem-app-footer__brand-name {
+    color: var(--heading);
+    font-size: clamp(#{$font-size-lg}, 1.3vw, #{$font-size-xl});
+    font-weight: $font-bold;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  .trem-app-footer__tagline {
+    max-width: 20rem;
+    color: var(--text-muted);
     font-size: $font-size-sm;
     font-weight: $font-medium;
-    white-space: nowrap;
+    line-height: 1.5;
+    margin: 0;
+  }
+}
+
+.trem-app-footer__contacts {
+  display: grid;
+  gap: $space-3;
+  font-style: normal;
+}
+
+.trem-app-footer__contact {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: $space-2;
+  color: var(--text-muted);
+  font-size: $font-size-sm;
+  font-weight: $font-medium;
+  line-height: 1.5;
+  text-decoration: none;
+  transition: color $duration-fast $ease-standard;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--color-primary);
+    outline: none;
+  }
+
+  .trem-app-footer__contact-icon {
+    flex: 0 0 auto;
+    margin-top: 0.125rem;
+    color: var(--color-primary);
+  }
+}
+
+.trem-app-footer__nav-section {
+  min-width: 0;
+  display: grid;
+  gap: $space-3;
+}
+
+.trem-app-footer__section-title {
+  margin: 0;
+  color: var(--heading);
+  font-size: $font-size-sm;
+  font-weight: $font-bold;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.trem-app-footer__link-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: $space-2-5;
+}
+
+.trem-app-footer__link {
+  display: inline-block;
+  color: var(--text-muted);
+  font-size: $font-size-sm;
+  font-weight: $font-medium;
+  line-height: 1.4;
+  text-decoration: none;
+  transition: color $duration-fast $ease-standard;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--color-primary);
+    outline: none;
+  }
+
+  &--disabled {
+    color: var(--text-muted);
+    opacity: 0.45;
+    cursor: not-allowed;
+    text-decoration: none;
 
     &:hover,
     &:focus-visible {
-      color: var(--color-primary);
+      color: var(--text-muted);
     }
 
-    & + a::before {
-      width: 3px;
-      height: 3px;
-      margin: 0 $space-3;
-      border-radius: $radius-circle;
-      background: var(--border-strong, var(--border));
-      content: "";
+    &::after {
+      content: "Coming soon";
+      color: var(--text-muted);
+      opacity: 0.6;
+      font-size: $font-size-xs;
+      font-weight: 500;
+      margin-left: $space-1;
     }
   }
 }
 
-.trem-app-footer__copyright {
-  padding-left: $space-4;
-  border-left: 1px solid var(--border);
+.trem-app-footer__social-section {
+  grid-column: 1 / -1;
+  padding-top: $space-4;
+  border-top: 1px solid var(--border);
+}
+
+.trem-app-footer__social-content {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-6;
+}
+
+.trem-app-footer__social-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-3;
+}
+
+.trem-app-footer__social-link {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: $radius-full;
+  background: var(--surface-elevated);
+  color: var(--text-muted);
+  text-decoration: none;
+  transition:
+    color $duration-fast $ease-standard,
+    border-color $duration-fast $ease-standard,
+    background $duration-fast $ease-standard,
+    transform $duration-fast $ease-standard;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--color-primary);
+    background: var(--primary-soft);
+    color: var(--color-primary);
+    transform: translateY(-2px);
+    outline: none;
+  }
+}
+
+.trem-app-footer__follow-text {
+  margin: 0;
+  color: var(--text-muted);
   font-size: $font-size-sm;
+  font-weight: $font-medium;
   white-space: nowrap;
 }
 
+.trem-app-footer__bottom {
+  width: min(100%, 88rem);
+  margin-inline: auto;
+  padding: $space-5 clamp(#{$space-5}, 5vw, #{$space-10}) $space-6;
+}
+
+.trem-app-footer__bottom-content {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-4;
+  margin-bottom: $space-4;
+  padding-bottom: $space-4;
+  border-bottom: 1px solid var(--border);
+}
+
+.trem-app-footer__copyright {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: $font-size-sm;
+  font-weight: $font-medium;
+}
+
+.trem-app-footer__legal-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $space-4;
+}
+
+.trem-app-footer__legal-link {
+  color: var(--text-muted);
+  font-size: $font-size-sm;
+  font-weight: $font-medium;
+  text-decoration: none;
+  transition: color $duration-fast $ease-standard;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--color-primary);
+    outline: none;
+  }
+}
+
+.trem-app-footer__powered {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: $font-size-xs;
+  font-weight: $font-medium;
+  opacity: 0.7;
+}
+
 @media (max-width: $breakpoint-lg) {
-  .trem-app-footer__bar {
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: $space-2 $space-4;
+  .trem-app-footer__grid {
+    grid-template-columns: minmax(0, 1.6fr) repeat(2, minmax(10rem, 1fr));
   }
 
-  .trem-app-footer__links {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    justify-content: flex-start;
+  .trem-app-footer__brand-section {
+    grid-column: 1 / 3;
   }
 
-  .trem-app-footer__copyright {
-    padding-left: 0;
-    border-left: 0;
+  .trem-app-footer__nav-section:nth-child(3),
+  .trem-app-footer__nav-section:nth-child(4),
+  .trem-app-footer__nav-section:nth-child(5) {
+    grid-column: span 1;
   }
 }
 
 @media (max-width: $breakpoint-md) {
-  .trem-app-footer {
-    padding-top: $space-6;
+  .trem-app-footer__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: $space-7 $space-5;
   }
 
-  .trem-app-footer__bar {
-    min-height: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: $space-2 $space-4;
-    padding: $space-4;
+  .trem-app-footer__brand-section {
+    grid-column: 1 / -1;
+    padding-right: 0;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: $space-6;
   }
 
-  .trem-app-footer__identity {
-    width: 100%;
-
-    small {
-      white-space: normal;
-    }
-  }
-
-  .trem-app-footer__links {
-    width: 100%;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    gap: $space-2 $space-4;
-
-    a + a::before {
-      display: none;
-    }
-  }
-
-  .trem-app-footer__copyright {
-    width: 100%;
+  .trem-app-footer__contacts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: $breakpoint-mobile) {
-  .trem-app-footer {
-    padding-top: $space-4;
+  .trem-app-footer__main {
+    padding: $space-8 $space-4 $space-6;
   }
 
-  .trem-app-footer__bar {
-    gap: $space-2;
-    padding: $space-3;
+  .trem-app-footer__grid {
+    grid-template-columns: 1fr;
+    gap: $space-8;
+    margin-bottom: $space-8;
+    padding-bottom: $space-8;
   }
 
-  .trem-app-footer__identity {
-    display: grid;
-    gap: 2px;
-
-    strong {
-      font-size: $font-size-sm;
-    }
-
-    small {
-      font-size: $font-size-xs;
-      line-height: $line-height-md;
-      overflow-wrap: anywhere;
-    }
+  .trem-app-footer__brand {
+    justify-content: center;
+    text-align: center;
+    flex-direction: column;
+    align-items: center;
   }
 
-  .trem-app-footer__links {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: $space-1 $space-3;
-
-    a {
-      min-width: 0;
-      justify-content: flex-start;
-      font-size: $font-size-xs;
-      line-height: $line-height-md;
-      overflow-wrap: anywhere;
-      white-space: normal;
-
-      &:first-child {
-        grid-column: 1 / -1;
-      }
-    }
+  .trem-app-footer__brand-text {
+    text-align: center;
   }
 
-  .trem-app-footer__copyright {
-    padding-top: $space-1;
-    font-size: $font-size-xs;
-    line-height: $line-height-md;
+  .trem-app-footer__tagline {
+    max-width: none;
+  }
+
+  .trem-app-footer__contacts {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .trem-app-footer__nav-section {
+    text-align: center;
+  }
+
+  .trem-app-footer__link-list {
+    justify-items: center;
+  }
+
+  .trem-app-footer__social-content {
+    flex-direction: column;
+    gap: $space-4;
+    text-align: center;
+  }
+
+  .trem-app-footer__follow-text {
     white-space: normal;
+  }
+
+  .trem-app-footer__bottom-content {
+    flex-direction: column;
+    text-align: center;
+    gap: $space-3;
+  }
+
+  .trem-app-footer__legal-links {
+    justify-content: center;
   }
 }
 
-@media (max-width: 360px) {
-  .trem-app-footer__links {
-    grid-template-columns: 1fr;
+@media (prefers-reduced-motion: reduce) {
 
-    a:first-child {
-      grid-column: auto;
-    }
+  .trem-app-footer__contact,
+  .trem-app-footer__link,
+  .trem-app-footer__social-link,
+  .trem-app-footer__legal-link {
+    transition: none;
   }
 }

@@ -5,8 +5,7 @@
 @mixin fluid-type($min, $max, $min-vw: 320px, $max-vw: 1200px) {
   font-size: clamp(
     #{$min},
-    #{$min} + (#{$max} - #{$min}) *
-      ((100vw - #{$min-vw}) / (#{$max-vw} - #{$min-vw})),
+    #{$min} + (#{$max} - #{$min}) * ((100vw - #{$min-vw}) / (#{$max-vw} - #{$min-vw})),
     #{$max}
   );
 }

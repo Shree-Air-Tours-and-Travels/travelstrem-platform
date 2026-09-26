@@ -1,0 +1,77 @@
+@import "@packages/trem-design-tokens/scss";
+
+.trem-session-timeout {
+  position: fixed;
+  inset: 0;
+  z-index: 2200;
+  display: grid;
+  place-items: center;
+  padding: $space-5;
+}
+
+.trem-session-timeout__backdrop {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, #101528 66%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.trem-session-timeout__dialog {
+  position: relative;
+  z-index: 1;
+  width: min(440px, 100%);
+  display: grid;
+  gap: $space-4;
+  padding: $space-6;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--border));
+  border-radius: $radius-lg;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-xl, var(--shadow-lg));
+}
+
+.trem-session-timeout__icon {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border-radius: $radius-circle;
+  background: var(--primary-soft);
+  color: var(--color-primary);
+}
+
+.trem-session-timeout__eyebrow {
+  color: var(--color-primary);
+  font-size: $font-size-xs;
+  font-weight: $font-bold;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.trem-session-timeout__dialog h2 {
+  margin: $space-1 0 $space-2;
+  font-size: $font-size-xl;
+  letter-spacing: -0.02em;
+}
+
+.trem-session-timeout__dialog p {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+.trem-session-timeout__dialog .ui-button {
+  width: 100%;
+}
+
+@media (max-width: $breakpoint-mobile) {
+  .trem-session-timeout {
+    align-items: end;
+    padding: $space-3;
+  }
+
+  .trem-session-timeout__dialog {
+    padding: $space-5;
+    border-radius: $radius-lg $radius-lg $radius-md $radius-md;
+  }
+}

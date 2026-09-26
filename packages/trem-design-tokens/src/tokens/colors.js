@@ -6,73 +6,73 @@ function rgba(hex, alpha) {
 }
 
 export const colors = {
-  // Brand
-  primary: "#4F46E5",      // Rich Indigo
-  primaryDark: "#3730A3",
+  // Brand — Tropical Ocean
+  primary: "#007F82", // Premium Teal
+  primaryDark: "#005E61",
 
-  secondary: "#F97360",    // Premium Coral
-  secondaryDark: "#EA5A47",
+  secondary: "#FF6B4A", // Sunset Coral
+  secondaryDark: "#D94A2E",
 
-  tertiary: "#F6C453",     // Warm Gold
-  tertiaryDark: "#D89A22",
+  tertiary: "#F2B84B", // Heritage Gold
+  tertiaryDark: "#C98716",
 
-  accent: "#111827",
+  accent: "#102A2E", // Deep Ocean Ink
 
   // Status
-  success: "#16A34A",
-  danger: "#DC2626",
-  warning: "#D97706",
+  success: "#16875B",
+  danger: "#D64545",
+  warning: "#D98A12",
 
   // Backgrounds
-  background: "#FAFBFF",
+  background: "#F5FAF9",
   surface: "#FFFFFF",
-  surfaceMuted: "#EEF2FF",
-  surfaceSubtle: "#F7F8FF",
+  surfaceMuted: "#E4F3F1",
+  surfaceSubtle: "#F0F7F6",
 
   // Text
-  text: "#111827",
-  textMuted: "#4B5563",
-  textLight: "rgba(17, 24, 39, 0.65)",
+  text: "#102A2E",
+  textMuted: "#52676A",
+  textLight: "rgba(16, 42, 46, 0.64)",
 
-  // Borders
-  border: "rgba(17, 24, 39, 0.10)",
-  overlay: "rgba(17, 24, 39, 0.48)",
+  // Borders and overlays
+  border: "rgba(16, 42, 46, 0.11)",
+  overlay: "rgba(6, 28, 31, 0.52)",
 
   transparent: "transparent",
 };
 
 export const darkColors = {
-  // Brand
-  primary: "#7C74FF",      // Bright Indigo
-  primaryDark: "#5B54F5",
+  // Brand — Night Ocean
+  primary: "#41C7C3", // Luminous Aqua
+  primaryDark: "#22A6A4",
 
-  secondary: "#FF8B78",    // Soft Coral
-  secondaryDark: "#F97360",
+  secondary: "#FF8268", // Warm Sunset Coral
+  secondaryDark: "#F25E43",
 
-  tertiary: "#FFD166",     // Warm Gold
-  tertiaryDark: "#F6C453",
+  tertiary: "#FFD06A", // Soft Travel Gold
+  tertiaryDark: "#E5A83D",
 
-  accent: "#FFFFFF",
+  accent: "#F3FFFD",
 
   // Status
-  success: "#4ADE80",
-  danger: "#F87171",
-  warning: "#FBBF24",
+  success: "#4BD39A",
+  danger: "#FF7777",
+  warning: "#F4BD4F",
 
   // Backgrounds
-  background: "#0F1222",
-  surface: "#171B2E",
-  surfaceMuted: "#202744",
-  surfaceSubtle: "#151A30",
+  background: "#07191B",
+  surface: "#0D2427",
+  surfaceMuted: "#153438",
+  surfaceSubtle: "#102B2E",
 
   // Text
-  text: "#F8FAFC",
-  textMuted: "rgba(248, 250, 252, 0.74)",
-  textLight: "rgba(248, 250, 252, 0.58)",
+  text: "#F3FFFD",
+  textMuted: "rgba(243, 255, 253, 0.74)",
+  textLight: "rgba(243, 255, 253, 0.56)",
 
-  // Borders
-  border: "rgba(255, 255, 255, 0.08)",
-  overlay: "rgba(0, 0, 0, 0.72)",
+  // Borders and overlays
+  border: "rgba(210, 255, 250, 0.10)",
+  overlay: "rgba(0, 10, 12, 0.76)",
 
   transparent: "transparent",
 };
