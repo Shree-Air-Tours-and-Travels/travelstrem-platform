@@ -79,6 +79,9 @@ export default function OverviewView({
               ))}
             </div>
           </div>
+          <svg className="dov__hero-wave" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M0 68C162 17 319 113 490 76C654 40 758 16 920 66C1091 119 1287 24 1440 65V120H0Z" />
+          </svg>
         </section>
       ) : null}
 

@@ -57,7 +57,7 @@ export const createHotelProvider = async (
     if (!keys.length || new Set(keys).size !== keys.length)
         throw new Error("Hotel provider list must contain unique provider names.");
     const providers = (await Promise.all(keys.map(createSingleHotelProvider))).filter(
-        (provider) => process.env.NODE_ENV === "development" || !provider.isDemo,
+        (provider) => ["development", "test"].includes(process.env.NODE_ENV) || !provider.isDemo,
     );
     if (!providers.length)
         throw new Error(

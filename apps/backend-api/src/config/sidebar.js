@@ -116,7 +116,7 @@ export default applyHideFlags({
                         label: "Our Products",
                         icon: "travelPackage",
                         type: "external",
-                        href: "https://travelstrem.com/products",
+                        href: "https://travelstrem.com/#ecosystem",
                         target: "_blank",
                     },
                 ],
