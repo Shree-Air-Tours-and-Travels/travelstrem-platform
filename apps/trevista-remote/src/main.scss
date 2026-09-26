@@ -1,22 +1,20 @@
-@import "@packages/trem-ui/styles/base/typography";
+@import "@packages/trem-ui/styles/base/tokens";
 
-* {
+.tours-app-shell,
+.tours-app-shell *,
+.tours-app-shell *::before,
+.tours-app-shell *::after {
   box-sizing: border-box;
 }
 
-body {
-  margin: 0;
+.tours-app-shell {
   font-family: $font-primary;
   background: var(--page-bg);
   color: var(--text);
 }
 
-a {
+.tours-app-shell a {
   color: inherit;
-}
-
-#root {
-  min-height: 100vh;
 }
 
 .tours-app-shell {

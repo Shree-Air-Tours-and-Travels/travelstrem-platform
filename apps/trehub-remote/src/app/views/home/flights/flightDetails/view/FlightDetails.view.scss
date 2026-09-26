@@ -461,6 +461,55 @@
   .trehub-flight-journey {
     padding-inline: $space-3;
   }
+  .trehub-flight-journey__layout,
+  .trehub-flight-journey__steps,
+  .trehub-flight-journey__content {
+    min-width: 0;
+  }
+  .trehub-flight-journey__steps {
+    padding: $space-3 $space-2;
+    overflow: visible;
+  }
+  .trehub-flight-journey__steps .timeline-stepper--horizontal {
+    --step-marker-size: #{$space-8};
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    min-width: 0;
+    gap: $space-1;
+  }
+  .trehub-flight-journey__steps .timeline-stepper--horizontal .timeline-stepper__item {
+    display: grid;
+    justify-items: center;
+    width: 100%;
+    min-height: 0;
+    gap: $space-1;
+  }
+  .trehub-flight-journey__steps .timeline-stepper--horizontal .timeline-stepper__marker {
+    display: grid;
+    grid-template-columns: 1fr;
+    place-items: center;
+    width: 100%;
+    height: var(--step-marker-size);
+  }
+  .trehub-flight-journey__steps .timeline-stepper--horizontal .timeline-stepper__item:last-child .timeline-stepper__marker {
+    grid-template-columns: 1fr;
+  }
+  .trehub-flight-journey__steps .timeline-stepper__line {
+    display: none;
+  }
+  .trehub-flight-journey__steps .timeline-stepper--horizontal .timeline-stepper__content {
+    width: 100%;
+    padding: 0;
+    text-align: center;
+  }
+  .trehub-flight-journey__steps .timeline-stepper--horizontal .timeline-stepper__heading {
+    justify-content: center;
+  }
+  .trehub-flight-journey__steps .timeline-stepper__label {
+    font-size: $font-size-xs;
+    line-height: 1.25;
+    text-align: center;
+  }
   .trehub-flight-journey__breadcrumb {
     margin-inline: -$space-3;
     padding-inline: $space-3;
@@ -478,6 +527,18 @@
   }
   .trehub-flight-journey__form-grid {
     grid-template-columns: 1fr;
+  }
+  .trehub-flight-journey .trem-flight-details__overview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .trehub-flight-journey .trem-flight-details__fact {
+    padding: $space-3;
+  }
+  .trehub-flight-journey .trem-flight-details__fact:nth-child(odd) {
+    border-right: 1px solid var(--border);
+  }
+  .trehub-flight-journey .trem-flight-details__fact:nth-last-child(-n + 2) {
+    border-bottom: 0;
   }
   .trehub-flight-journey__seat-map {
     grid-template-columns: repeat(var(--seat-columns), minmax(2rem, 1fr));
