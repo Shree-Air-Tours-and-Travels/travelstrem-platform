@@ -1109,3 +1109,29 @@
     display: none;
   }
 }
+
+// Backend actions occupy independent, consecutive slots rather than sharing
+// a grid cell. Hidden actions do not reserve any space.
+.trem-app-header__action-slots { display: contents; }
+
+@media (max-width: $breakpoint-md) {
+  .trem-app-header .trem-app-header__action-slots {
+    display: grid;
+    grid-column: 3;
+    grid-row: 1;
+    grid-auto-flow: column;
+    grid-auto-columns: var(--trem-mobile-header-action-size);
+    align-items: center;
+    gap: $space-1;
+
+    > .trem-app-header__action { grid-column: auto; grid-row: auto; }
+  }
+
+  .trem-app-header.has-header-actions {
+    grid-template-columns: minmax(0, 1fr) var(--trem-mobile-header-action-size) max-content repeat(2, var(--trem-mobile-header-action-size));
+  }
+
+  .trem-app-header.has-header-actions.trem-app-header--mobile-profile-hidden {
+    grid-template-columns: minmax(0, 1fr) var(--trem-mobile-header-action-size) max-content var(--trem-mobile-header-action-size);
+  }
+}

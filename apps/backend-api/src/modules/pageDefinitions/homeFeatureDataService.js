@@ -21,7 +21,9 @@ const formatPrice = (amount, currency = "INR") => {
 };
 
 const compactText = (value, maximumLength = 150) => {
-    const text = String(value || "").replace(/\s+/g, " ").trim();
+    const text = String(value || "")
+        .replace(/\s+/g, " ")
+        .trim();
     return text.length > maximumLength ? `${text.slice(0, maximumLength - 1).trim()}…` : text;
 };
 
@@ -49,7 +51,9 @@ const mapTour = (tour) => {
         imageAlt: tour?.title || destination,
         badgeRef: tour?.featured ? "featuredBadge" : tour?.trending ? "trendingBadge" : "",
         meta: [
-            days > 0 ? { icon: "calendarDays", label: `${days} day${days === 1 ? "" : "s"}` } : null,
+            days > 0
+                ? { icon: "calendarDays", label: `${days} day${days === 1 ? "" : "s"}` }
+                : null,
             destination ? { icon: "mapPin", label: destination } : null,
             rating > 0 ? { icon: "star", label: rating.toFixed(1) } : null,
         ].filter(Boolean),
@@ -216,16 +220,43 @@ export const buildHomeFeatureSnapshot = async () => {
     try {
         const [tours, trips, flightBookings, hotelQuotes] = await Promise.all([
             Tour.find({ status: "published", visibility: "public", archivedAt: null })
-                .select("slug title shortDescription desc photo photos period city address price rating primaryDestination featured trending tremVerified metrics intelligence createdAt")
-                .sort({ featured: -1, trending: -1, tremVerified: -1, "metrics.popularityScore": -1, "metrics.bookings": -1, "rating.average": -1, "rating.count": -1, "intelligence.qualityScore": -1, createdAt: -1 })
+                .select(
+                    "slug title shortDescription desc photo photos period city address price rating primaryDestination featured trending tremVerified metrics intelligence createdAt",
+                )
+                .sort({
+                    featured: -1,
+                    trending: -1,
+                    tremVerified: -1,
+                    "metrics.popularityScore": -1,
+                    "metrics.bookings": -1,
+                    "rating.average": -1,
+                    "rating.count": -1,
+                    "intelligence.qualityScore": -1,
+                    createdAt: -1,
+                })
                 .limit(FEATURE_LIMIT)
                 .lean(),
             Trip.find({ status: "listed", isListed: true, visibility: "public", archivedAt: null })
-                .select("slug title description image photos duration routeTo location country price rating featured trending tremVerified metrics intelligence sortOrder createdAt")
-                .sort({ featured: -1, trending: -1, tremVerified: -1, "metrics.popularityScore": -1, "metrics.bookings": -1, rating: -1, "intelligence.qualityScore": -1, sortOrder: 1, createdAt: -1 })
+                .select(
+                    "slug title description image photos duration routeTo location country price rating featured trending tremVerified metrics intelligence sortOrder createdAt",
+                )
+                .sort({
+                    featured: -1,
+                    trending: -1,
+                    tremVerified: -1,
+                    "metrics.popularityScore": -1,
+                    "metrics.bookings": -1,
+                    rating: -1,
+                    "intelligence.qualityScore": -1,
+                    sortOrder: 1,
+                    createdAt: -1,
+                })
                 .limit(FEATURE_LIMIT)
                 .lean(),
-            FlightBooking.find({ segmentSnapshot: { $exists: true, $ne: [] }, status: { $nin: ["FAILED", "CANCELLED"] } })
+            FlightBooking.find({
+                segmentSnapshot: { $exists: true, $ne: [] },
+                status: { $nin: ["FAILED", "CANCELLED"] },
+            })
                 .select("segmentSnapshot createdAt")
                 .sort({ createdAt: -1 })
                 .limit(SNAPSHOT_LIMIT)

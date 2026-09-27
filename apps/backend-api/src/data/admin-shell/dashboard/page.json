@@ -14,6 +14,12 @@
     },
     "elements": {
       "labels": {
+        "progressWidgetTitle": "Platform tour performance",
+        "progressWidgetDescription": "Track traveller interest, conversion signals and automatically trending tours across the platform.",
+        "upcomingDeparturesTitle": "Upcoming departures",
+        "upcomingDeparturesDescription": "Next scheduled tours and trips.",
+        "systemStatusTitle": "System status",
+        "systemStatusDescription": "Current API instance and database health.",
         "eyebrow": "PLATFORM CONTROL CENTER",
         "dashboardTitle": "TravelsTREM operations",
         "dashboardDescription": "Monitor product publishing, traveller demand, partner governance and platform reach from one workspace.",
@@ -61,28 +67,167 @@
         {
           "type": "AdminMetrics",
           "props": {
+            "endpoint": "/pages/admin-shell/dashboard/widgets/metrics",
             "ariaLabelRef": "metricsAriaLabel",
             "items": [
-              { "id": "inventory", "metric": "totalInventory", "labelRef": "totalInventory", "icon": "travelPackage", "target": "services" },
-              { "id": "live", "metric": "publishedInventory", "labelRef": "publishedInventory", "icon": "globe", "target": "services" },
-              { "id": "enquiries", "metric": "openEnquiries", "labelRef": "openEnquiries", "icon": "messageCircle", "target": "enquiries" },
-              { "id": "support", "metric": "openSupportTickets", "labelRef": "openSupportTickets", "icon": "support", "target": "support" },
-              { "id": "approvals", "metric": "pendingApprovals", "labelRef": "pendingApprovals", "icon": "shieldCheck", "target": "tenancy" }
+              {
+                "id": "inventory",
+                "metric": "totalInventory",
+                "labelRef": "totalInventory",
+                "icon": "travelPackage",
+                "target": "services"
+              },
+              {
+                "id": "live",
+                "metric": "publishedInventory",
+                "labelRef": "publishedInventory",
+                "icon": "globe",
+                "target": "services"
+              },
+              {
+                "id": "enquiries",
+                "metric": "openEnquiries",
+                "labelRef": "openEnquiries",
+                "icon": "messageCircle",
+                "target": "enquiries"
+              },
+              {
+                "id": "support",
+                "metric": "openSupportTickets",
+                "labelRef": "openSupportTickets",
+                "icon": "support",
+                "target": "support"
+              },
+              {
+                "id": "approvals",
+                "metric": "pendingApprovals",
+                "labelRef": "pendingApprovals",
+                "icon": "shieldCheck",
+                "target": "tenancy"
+              }
             ]
           }
         },
-        { "type": "InventoryHealth", "props": { "titleRef": "inventoryTitle", "descriptionRef": "inventoryDescription", "dataKey": "inventory" } },
-        { "type": "GovernanceQueue", "props": { "titleRef": "governanceTitle", "descriptionRef": "governanceDescription", "dataKey": "governance" } },
-        { "type": "PlatformReach", "props": { "titleRef": "platformTitle", "descriptionRef": "platformDescription", "dataKey": "platform" } },
-        { "type": "RecentActivity", "props": { "titleRef": "recentTitle", "descriptionRef": "recentDescription", "dataKey": "recentActivity", "emptyTitleRef": "recentEmptyTitle", "emptyDescriptionRef": "recentEmptyDescription" } },
-        { "type": "QuickActions", "props": { "titleRef": "quickActionsTitle", "descriptionRef": "quickActionsDescription" } }
+        {
+          "type": "ProgressWidget",
+          "props": {
+            "endpoint": "/pages/admin-shell/dashboard/widgets/progress",
+            "group": "analytics",
+            "titleRef": "progressWidgetTitle",
+            "descriptionRef": "progressWidgetDescription"
+          }
+        },
+        {
+          "type": "ListingWidget",
+          "props": {
+            "endpoint": "/pages/admin-shell/dashboard/widgets/listing",
+            "group": "analytics"
+          }
+        },
+        {
+          "type": "InventoryHealth",
+          "props": {
+            "endpoint": "/pages/admin-shell/dashboard/widgets/productHealth",
+            "group": "operations",
+            "titleRef": "inventoryTitle",
+            "descriptionRef": "inventoryDescription",
+            "dataKey": "inventory"
+          }
+        },
+        {
+          "type": "GovernanceQueue",
+          "props": {
+            "endpoint": "/pages/admin-shell/dashboard/widgets/governanceQueue",
+            "group": "operations",
+            "titleRef": "governanceTitle",
+            "descriptionRef": "governanceDescription",
+            "dataKey": "governance"
+          }
+        },
+        {
+          "type": "PlatformReach",
+          "props": {
+            "endpoint": "/pages/admin-shell/dashboard/widgets/platformReach",
+            "group": "operations",
+            "titleRef": "platformTitle",
+            "descriptionRef": "platformDescription",
+            "dataKey": "platform"
+          }
+        },
+        {
+          "type": "QuickActions",
+          "props": {
+            "endpoint": "/pages/admin-shell/dashboard/widgets/quickActions",
+            "group": "operations",
+            "titleRef": "quickActionsTitle",
+            "descriptionRef": "quickActionsDescription"
+          }
+        },
+        {
+          "type": "RecentActivity",
+          "props": {
+            "endpoint": "/pages/admin-shell/dashboard/widgets/recentActivity",
+            "group": "activity",
+            "slot": "primary",
+            "titleRef": "recentTitle",
+            "descriptionRef": "recentDescription",
+            "dataKey": "recentActivity",
+            "emptyTitleRef": "recentEmptyTitle",
+            "emptyDescriptionRef": "recentEmptyDescription"
+          }
+        },
+        {
+          "type": "UpcomingDepartures",
+          "props": {
+            "endpoint": "/pages/admin-shell/dashboard/widgets/upcomingDepartures",
+            "group": "activity",
+            "slot": "secondary",
+            "titleRef": "upcomingDeparturesTitle",
+            "descriptionRef": "upcomingDeparturesDescription"
+          }
+        },
+        {
+          "type": "SystemStatus",
+          "props": {
+            "endpoint": "/pages/admin-shell/dashboard/widgets/systemStatus",
+            "group": "activity",
+            "slot": "secondary",
+            "titleRef": "systemStatusTitle",
+            "descriptionRef": "systemStatusDescription"
+          }
+        }
       ],
       "config": {},
       "actions": [
-        { "id": "inventory", "labelRef": "manageInventory", "descriptionRef": "manageInventoryDescription", "icon": "map", "target": "services" },
-        { "id": "enquiries", "labelRef": "reviewEnquiries", "descriptionRef": "reviewEnquiriesDescription", "icon": "messageCircle", "target": "enquiries" },
-        { "id": "support", "labelRef": "openSupportTickets", "descriptionRef": "recentDescription", "icon": "support", "target": "support" },
-        { "id": "partners", "labelRef": "managePartners", "descriptionRef": "managePartnersDescription", "icon": "building2", "target": "tenancy", "masterOnly": true }
+        {
+          "id": "inventory",
+          "labelRef": "manageInventory",
+          "descriptionRef": "manageInventoryDescription",
+          "icon": "map",
+          "target": "services"
+        },
+        {
+          "id": "enquiries",
+          "labelRef": "reviewEnquiries",
+          "descriptionRef": "reviewEnquiriesDescription",
+          "icon": "messageCircle",
+          "target": "enquiries"
+        },
+        {
+          "id": "support",
+          "labelRef": "openSupportTickets",
+          "descriptionRef": "recentDescription",
+          "icon": "support",
+          "target": "support"
+        },
+        {
+          "id": "partners",
+          "labelRef": "managePartners",
+          "descriptionRef": "managePartnersDescription",
+          "icon": "building2",
+          "target": "tenancy",
+          "masterOnly": true
+        }
       ]
     }
   }

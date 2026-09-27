@@ -1,6 +1,8 @@
+import { buildUserDashboardSnapshots } from "./userDashboardSnapshots.js";
 import ContactLeadRepository from "../forms/repositories/ContactLeadRepository.js";
 import Favorite from "../tours/models/Favorite.js";
 import BookingQuote from "../bookings/models/BookingQuote.js";
+import SupportTicket from "../support/models/SupportTicket.js";
 import { enquiryView } from "../forms/mappers/enquiryView.js";
 
 // Builds the user-specific payload injected into the app-shell dashboard
@@ -22,10 +24,26 @@ const AWAITING_STATUSES = [
 const RECENT_LIMIT = 5;
 
 const ACTIVITY_COPY = Object.freeze({
-    new: { icon: "messageCircle", title: "Enquiry submitted", description: "Your travel request was sent successfully." },
-    in_review: { icon: "clock", title: "Enquiry in review", description: "A travel specialist is reviewing your request." },
-    responded: { icon: "itinerary", title: "Quote ready", description: "A quote or response is available for your enquiry." },
-    closed: { icon: "shieldCheck", title: "Enquiry closed", description: "This enquiry journey has been completed." },
+    new: {
+        icon: "messageCircle",
+        title: "Enquiry submitted",
+        description: "Your travel request was sent successfully.",
+    },
+    in_review: {
+        icon: "clock",
+        title: "Enquiry in review",
+        description: "A travel specialist is reviewing your request.",
+    },
+    responded: {
+        icon: "itinerary",
+        title: "Quote ready",
+        description: "A quote or response is available for your enquiry.",
+    },
+    closed: {
+        icon: "shieldCheck",
+        title: "Enquiry closed",
+        description: "This enquiry journey has been completed.",
+    },
 });
 
 const activityFromLead = (lead) => {
@@ -69,10 +87,38 @@ const quoteActivities = (quotes, leadsById) =>
                 occurredAt,
             });
         };
-        add("quote_uploaded", quote?.createdAt, "Quote prepared", "A new quote was prepared for your trip.", "ready", "itinerary");
-        add("quote_sent", quote?.sentAt, "Quote received", "Your travel specialist sent a quote for review.", "responded", "navigation");
-        add("quote_rejected", quote?.rejectedAt, "Quote declined", "You declined this quote. Your request remains available for follow-up.", "rejected", "x");
-        add("quote_accepted", quote?.acceptedAt, "Quote accepted", "Your quote was accepted and is ready for the next booking step.", "accepted", "shieldCheck");
+        add(
+            "quote_uploaded",
+            quote?.createdAt,
+            "Quote prepared",
+            "A new quote was prepared for your trip.",
+            "ready",
+            "itinerary",
+        );
+        add(
+            "quote_sent",
+            quote?.sentAt,
+            "Quote received",
+            "Your travel specialist sent a quote for review.",
+            "responded",
+            "navigation",
+        );
+        add(
+            "quote_rejected",
+            quote?.rejectedAt,
+            "Quote declined",
+            "You declined this quote. Your request remains available for follow-up.",
+            "rejected",
+            "x",
+        );
+        add(
+            "quote_accepted",
+            quote?.acceptedAt,
+            "Quote accepted",
+            "Your quote was accepted and is ready for the next booking step.",
+            "accepted",
+            "shieldCheck",
+        );
         return events;
     });
 
@@ -86,6 +132,7 @@ const emptySnapshot = () => ({
         totalFavorites: 0,
         upcomingTrips: 0,
         awaitingResponse: 0,
+        totalSupportTickets: 0,
     },
     journeyStage: "discover",
     recentActivity: [],
@@ -105,7 +152,7 @@ export const buildDashboardSnapshot = async (userId) => {
     if (!userId) return emptySnapshot();
     try {
         const query = await identityQuery(userId);
-        const [totalEnquiries, totalFavorites, awaitingResponse, recentLeads] = await Promise.all([
+        const [totalEnquiries, totalFavorites, awaitingResponse, recentLeads, totalSupportTickets] = await Promise.all([
             (async () => ContactLeadRepository.countDocuments(query))(),
             Favorite.countDocuments({ userId: String(userId) }).catch((error) => {
                 console.error("[Dashboard] favorites count failed:", error?.message || error);
@@ -121,6 +168,10 @@ export const buildDashboardSnapshot = async (userId) => {
                     .sort({ createdAt: -1 })
                     .limit(RECENT_LIMIT * 2)
                     .lean())(),
+            SupportTicket.countDocuments({ user: userId }).catch((error) => {
+                console.error("[Dashboard] support count failed:", error?.message || error);
+                return 0;
+            }),
         ]);
 
         const leadIds = recentLeads.map((lead) => lead?._id).filter(Boolean);
@@ -152,7 +203,8 @@ export const buildDashboardSnapshot = async (userId) => {
         ]
             .sort(
                 (left, right) =>
-                    new Date(right.occurredAt || 0).getTime() - new Date(left.occurredAt || 0).getTime(),
+                    new Date(right.occurredAt || 0).getTime() -
+                    new Date(left.occurredAt || 0).getTime(),
             )
             .slice(0, RECENT_LIMIT);
 
@@ -162,11 +214,13 @@ export const buildDashboardSnapshot = async (userId) => {
             // Stays 0 until the quote-acceptance + payment journey exists.
             upcomingTrips: 0,
             awaitingResponse,
+            totalSupportTickets,
         };
 
         return {
             metrics,
             journeyStage: resolveJourneyStage(metrics),
+            userSnapshots: await buildUserDashboardSnapshots(userId, { totalEnquiries, totalFavorites, recentLeads }),
             recentActivity,
             upcomingTrips: [],
         };

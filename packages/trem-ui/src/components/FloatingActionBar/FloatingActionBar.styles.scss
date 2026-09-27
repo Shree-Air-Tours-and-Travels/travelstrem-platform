@@ -1,4 +1,4 @@
-@import "@packages/trem-design-tokens/scss";
+@import "@packages/trem-design-tokens/scss/tokens";
 
 .trem-fab {
   position: fixed;
@@ -565,6 +565,7 @@
   }
 
   .trem-fab__mobile-nav-item.ui-button {
+    position: relative;
     min-width: 0;
     min-height: $space-14;
     display: flex;
@@ -588,9 +589,21 @@
     }
 
     &.is-active:not(.is-emphasized) {
-      color: var(--color-on-primary);
-      background: var(--color-primary);
-      box-shadow: var(--shadow-sm);
+      color: var(--color-primary);
+      background: transparent;
+      font-weight: $font-semibold;
+
+      &::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        width: min(55%, 3rem);
+        height: $space-1;
+        border-radius: $radius-full;
+        background: linear-gradient(90deg, var(--color-primary), var(--color-accent, var(--color-primary)));
+        transform: translateX(-50%);
+      }
     }
 
     &:focus-visible {

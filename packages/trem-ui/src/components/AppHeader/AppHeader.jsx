@@ -271,6 +271,7 @@ export default function AppHeader({
             </button>
           ) : null}
 
+          <div className="trem-app-header__action-slots">
           {headerActions.map((item) => (
             <button
               key={item.id || item.label}
@@ -289,6 +290,7 @@ export default function AppHeader({
               {item.count ? <span className="trem-app-header__action-count">{item.count > 9 ? "9+" : item.count}</span> : null}
             </button>
           ))}
+          </div>
 
           {!notification.hide && notification.items ? (
             <Dropdown

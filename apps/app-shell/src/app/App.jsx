@@ -329,7 +329,11 @@ function AppShell() {
     (rawIntent) => {
       const result = resolveNavigationIntent(navigationConfig, rawIntent, window.location.origin);
       if (result.type === "internal" || result.type === "internal-path") {
-        navigate(result.location, { replace: result.replace });
+        const dashboardOrigin = activeTab === "dashboard" ? "dashboard"
+          : activeTab === "overview" ? "overview" : location.state?.dashboardOrigin || new URLSearchParams(location.search).get("navFrom") || "overview";
+        const params = new URLSearchParams(result.location.search || "");
+        params.set("navFrom", dashboardOrigin === "dashboard" ? "dashboard" : "overview");
+        navigate({ ...result.location, search: `?${params}` }, { replace: result.replace, state: { dashboardOrigin } });
         return true;
       }
       if (result.type === "external") {
@@ -343,13 +347,13 @@ function AppShell() {
       console.warn(`[Navigation] ${result.reason}`);
       return false;
     },
-    [navigate, navigationConfig],
+    [navigate, navigationConfig, activeTab, location.state, location.search],
   );
 
   const handleTabChange = useCallback(
     (target, item = {}) =>
       handleNavigation({
-        destination: target,
+        ...(typeof target === "string" && target.startsWith("/") ? { path: target } : { destination: target }),
         targetWindow: item.target,
       }),
     [handleNavigation],
@@ -574,8 +578,11 @@ function AppShell() {
     if (!home) return [];
     if (!current || current.id === home.id) return [{ label: home.label }];
 
+    const fromDashboard = activeTab !== "dashboard" && (location.state?.dashboardOrigin || searchParams.get("navFrom")) === "dashboard";
+    const root = fromDashboard ? { label: "Dashboard", path: "/?tab=dashboard" }
+      : { label: home.label, path: "/?tab=overview" };
     const breadcrumbs = [
-      { label: home.label, path: "/?tab=overview" },
+      root,
       { label: current.label },
     ];
 
@@ -583,7 +590,7 @@ function AppShell() {
     if (openArticleId) {
       return [
         { ...breadcrumbs[0] },
-        { ...breadcrumbs[1], path: "/?tab=articles" },
+        { ...breadcrumbs[1], path: `/?tab=articles&navFrom=${fromDashboard ? "dashboard" : "overview"}`, state: location.state },
         { label: openArticleTitle || current.label },
       ];
     }
@@ -591,13 +598,14 @@ function AppShell() {
     return selectedBookingRecordRef
       ? [
           { ...breadcrumbs[0] },
-          { ...breadcrumbs[1], path: "/?tab=bookings" },
+          { ...breadcrumbs[1], path: `/?tab=bookings&navFrom=${fromDashboard ? "dashboard" : "overview"}`, state: location.state },
           { label: selectedBookingRecordRef },
         ]
       : breadcrumbs;
   }, [
     activeTab,
     openArticleTitle,
+    location.state,
     searchParams,
     selectedBookingRecordRef,
     selectedTab,
@@ -692,14 +700,14 @@ function AppShell() {
         !isSupportScreen &&
         activeTab !== "overview" &&
         shellBreadcrumbItems.length ? (
-          <div className="dash-shell-breadcrumb">
+          <div className="dash-shell-breadcrumb" aria-live="polite">
             <Breadcrumbs items={shellBreadcrumbItems} />
           </div>
         ) : null}
 
         <div
           data-scroll-root
-          className={`dash-content${isRemote ? " dash-content--remote" : ""}${isSupportScreen ? " dash-content--support" : ""}${activeTab === "overview" ? " dash-content--overview dash-content--home" : ""}`}
+          className={`dash-content${activeTab === "dashboard" ? " dash-content--dashboard" : ""}${isRemote ? " dash-content--remote" : ""}${isSupportScreen ? " dash-content--support" : ""}${activeTab === "overview" ? " dash-content--overview dash-content--home" : ""}`}
         >
           <ProtectedRoute
             allowGuest={guestMode}
@@ -750,6 +758,9 @@ function AppShell() {
                   fallback={<Preloader variant="stack" count={3} label="Loading page" />}
                 >
                   <AppShellPage
+                    onSearch={handleGlobalSearch}
+                    onSearchSelect={handleGlobalSearchSelect}
+                    searchConfig={resolvedAppHeaderConfig.search}
                     productFilter={productFilter}
                     activeTab={selectedTab}
                     onTabChange={handleTabChange}

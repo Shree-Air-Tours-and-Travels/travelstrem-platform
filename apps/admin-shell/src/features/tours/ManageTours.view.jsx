@@ -1,14 +1,13 @@
-import React, { useCallback, useMemo } from "react";
+import React, { Suspense, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useLocation, useNavigate } from "react-router-dom";
 import { clearAuthBrowserState, emitAuthEvent } from "@packages/trem-auth-core";
 import { emit, resolveNotificationLink, useNotificationInbox } from "@packages/trem-events";
-import { buildGlobalAuthUrl, useThemeMode } from "@packages/trem-utils";
+import { buildGlobalAuthUrl, fetchData, useThemeMode } from "@packages/trem-utils";
 import { AppHeader, Breadcrumbs, InfoCard, NoDataFound, PRODUCT_TYPE, SideBar } from "@packages/trem-ui";
 import { useAdminPortalConfig } from "../../app/providers/AdminPortalProvider";
 import authService from "../../services/authService";
 import api from "../../services/apiClient";
-import AdminOverviewView from "../../views/AdminOverviewView";
 import AdminServicesView from "../../views/AdminServicesView";
 import AdminProfileView from "../../views/AdminProfileView";
 import TripView from "../trips/TripView";
@@ -23,6 +22,7 @@ import TourTrackingPage from "../analytics/TourTrackingPage";
 import "./ManageTours.scss";
 
 const unwrap = (response) => response?.data?.componentData?.data ?? response?.data?.data ?? response?.data;
+const Dashboard = React.lazy(() => import("dashboard/Dashboard"));
 
 export function ConfirmModal({
   open,
@@ -343,15 +343,18 @@ export default function ManageToursView({
         ) : null}
         <div className="admin-dashboard-shell__page">
           {tab === "overview" && (
-            <AdminOverviewView
+            <Suspense fallback={<div aria-label="Loading dashboard" />}><Dashboard
+              role={dashboardDefinition?.data?.supportDashboard ? "support_admin" : auth.adminLevel === "master" ? "master_admin" : "admin"}
               user={adminUser}
+              source={dashboardDefinition?.data?.supportDashboard}
               definition={dashboardDefinition}
               loading={dashboardLoading}
               error={dashboardError}
               onRefresh={refreshDashboard}
+              fetchWidgetData={fetchData}
               onTabChange={setTab}
               isMasterAdmin={auth.adminLevel === "master"}
-            />
+            /></Suspense>
           )}
           {tab === "enquiries" && <AgentAdminBookingJourney />}
           {tab === "support" && <SupportDeskPage />}
@@ -447,7 +450,7 @@ export default function ManageToursView({
           {tab === "tenancy" && auth.adminLevel === "master" && <TenancyManagement />}
           {tab === "notifications" && <section className="tenant-console"><header className="tenant-console__heading"><div><p>Administration</p><h2>Notifications</h2></div></header><div className="tenant-console__records">{notificationInbox.items.map((item) => <InfoCard key={item._id} title={item.title || "Notification"} subtitle={item.message} onClick={() => openNotification(item)} />)}{!notificationInbox.items.length ? <NoDataFound title="No notifications" description="You are all caught up." /> : null}</div></section>}
           {tab === "pricing" && <PricingConfigurationPage />}
-          {tab === "clients" && <ManageClients embedded />}
+          {tab === "clients" && <ManageClients embedded isMaster={auth.adminLevel === "master"} />}
         </div>
       </main>
 

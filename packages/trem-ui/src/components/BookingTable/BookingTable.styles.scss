@@ -2162,3 +2162,19 @@
     transform: none !important;
   }
 }
+
+// FilterBox owns its responsive sheet; keep its trigger alongside search.
+.booking-table:has(.has-filter-box),
+.booking-table__panel:has(.has-filter-box),
+.booking-table__toolbar.has-filter-box { overflow: visible; }
+.booking-table__toolbar.has-filter-box {
+  .booking-table__mobile-toggle { display: none; }
+  .booking-table__controls { display: flex; flex-wrap: wrap; }
+  .trem-filter-box-anchor { align-self: center; flex: 0 0 auto; }
+  .booking-table__search { margin-inline-end: 0; }
+  .booking-table__page-size { margin-inline-start: auto; }
+  @media (max-width: $breakpoint-mobile) {
+    .booking-table__search { min-width: 0; max-width: none; flex: 1 1 60%; }
+    .booking-table__page-size { margin-inline-start: 0; }
+  }
+}

@@ -43,6 +43,7 @@ export default function ManageClientsView({
   onEdit,
   onDelete,
   onLogoUpload,
+  onMembers,
   onRetry,
 }) {
   if (loading) return <div className="mc-loading">Loading clients...</div>;
@@ -96,6 +97,7 @@ export default function ManageClientsView({
               </div>
 
               <div className="mc-card__actions">
+                {onMembers && <button className="btn btn--ghost btn--sm" onClick={() => onMembers(client)}>Manage access</button>}
                 <button className="btn btn--ghost btn--sm" onClick={() => onEdit(client)}>
                   Edit
                 </button>

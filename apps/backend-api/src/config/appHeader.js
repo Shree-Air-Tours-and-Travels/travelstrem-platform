@@ -26,9 +26,9 @@ export default applyHideFlags({
                     id: "email",
                     label: "akshat.goyal@travelstrem.com",
                     href: "mailto:akshat.goyal@travelstrem.com",
-                    icon: "mail",
+                    icon: "messageCircle",
                 },
-                { id: "phone", label: "+91 90576 35580", href: "tel:+919057635580", icon: "phone" },
+                { id: "phone", label: "+91 90576 35580", href: "tel:+919057635580", icon: "phoneCall" },
                 {
                     id: "location",
                     label: "Shree Air Tours and Travels, Jaipur",
@@ -205,7 +205,6 @@ export default applyHideFlags({
                 ariaLabel: "Open My Bookings",
                 icon: "calendarDays",
                 target: "bookings",
-                desktopOnly: true,
             },
             {
                 id: "wishlist",

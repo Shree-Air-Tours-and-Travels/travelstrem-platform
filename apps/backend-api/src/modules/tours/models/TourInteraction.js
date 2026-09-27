@@ -11,8 +11,8 @@ const tourInteractionSchema = new mongoose.Schema(
 );
 
 tourInteractionSchema.index({ tourId: 1, type: 1, dedupeKey: 1 }, { unique: true });
+tourInteractionSchema.index({ type: 1, createdAt: 1, tourId: 1 });
 tourInteractionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 export default
     mongoose.models?.TourInteraction || mongoose.model("TourInteraction", tourInteractionSchema);
-

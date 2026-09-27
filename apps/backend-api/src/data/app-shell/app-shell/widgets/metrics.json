@@ -11,7 +11,8 @@
         "metricEnquiries": "Enquiries",
         "metricFavorites": "Favorites",
         "metricUpcoming": "Upcoming trips",
-        "metricAwaiting": "Awaiting response"
+        "metricAwaiting": "Awaiting response",
+        "metricSupport": "Support tickets"
       },
       "urls": {}
     },
@@ -49,6 +50,13 @@
                 "valueKey": "awaitingResponse",
                 "icon": "clock",
                 "target": "bookings"
+              },
+              {
+                "id": "support",
+                "labelRef": "metricSupport",
+                "valueKey": "totalSupportTickets",
+                "icon": "support",
+                "target": "support"
               }
             ],
             "ariaLabelRef": "metricsAriaLabel"

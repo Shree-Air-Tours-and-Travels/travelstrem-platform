@@ -1529,13 +1529,27 @@ export const getLeads = async (req, res) => {
         });
         records.push(...flightRecords);
         records.sort((left, right) => new Date(right.createdAt || 0).getTime() - new Date(left.createdAt || 0).getTime());
+        const selected = (key) => String(req.query[key] || "").split(",").filter((value) => value && value !== "all");
+        const filterKeys = ["recordType", "product", "status", "journeyType"];
+        const filteredRecords = records.filter((record) => filterKeys.every((key) =>
+            !selected(key).length || selected(key).includes(String(record[key] || ""))));
+        const baseView = enquiryCenterView(access.perspective);
+        const statusOptions = [...new Set(records.map((record) => record.status).filter(Boolean))]
+            .sort().map((value) => ({ value, label: records.find((record) => record.status === value)?.statusLabel || value.replaceAll("_", " ") }));
         return sendJson(res, 200, {
             status: "success",
             message: "Leads fetched",
             componentData: {
                 ...enquiryCenterView(access.perspective),
                 perspective: access.perspective,
-                data: records,
+                filterBox: {
+                    title: "Filter bookings and enquiries", triggerLabel: "Filters", closeLabel: "Close filters", applyLabel: "Apply filters", resetLabel: "Clear selection",
+                    fields: [
+                        ...baseView.table.filters.map((field) => ({ ...field, type: field.id === "recordType" ? "single" : "multi", options: field.options.filter((option) => option.value !== "all") })),
+                        { id: "status", label: "Status", type: "multi", options: statusOptions },
+                    ],
+                },
+                data: filteredRecords,
             },
         });
     } catch (err) {

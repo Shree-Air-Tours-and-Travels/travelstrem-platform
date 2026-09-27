@@ -28,6 +28,11 @@ const trehubRemoteEntry = remoteEntry(
   process.env.REACT_APP_TREHUB_URL,
   "http://localhost:3008",
 );
+const dashboardRemoteEntry = remoteEntry(
+  process.env.REACT_APP_DASHBOARD_REMOTE_ENTRY,
+  process.env.REACT_APP_DASHBOARD_URL,
+  process.env.NODE_ENV === "production" ? "https://dashboard.travelstrem.com" : "http://localhost:3017",
+);
 
 function extendBabelIncludes(webpackConfig) {
   const oneOfRule = webpackConfig.module.rules.find((rule) => Array.isArray(rule.oneOf));
@@ -89,6 +94,7 @@ module.exports = {
             trevio: `trevio@${trevioRemoteEntry}`,
             trevista: `trevista@${trevistaRemoteEntry}`,
             trehub: `trehub@${trehubRemoteEntry}`,
+            dashboard: `dashboard@${dashboardRemoteEntry}`,
           },
           shared: {
             react: { singleton: true, requiredVersion: false },

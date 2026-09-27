@@ -5,7 +5,7 @@ import BookingEnquiryCenter from "./BookingEnquiryCenter.jsx";
 import QuoteBuilderRoute from "../../quote-builder/QuoteBuilderRoute.jsx";
 
 function AgentAdminJourneyList({ journeyType }) {
-  const { enquiries, bookings, view, loading, error, load } = useEnquiryBookings(journeyType);
+  const { enquiries, bookings, view, loading, error, load, filters, applyFilters } = useEnquiryBookings(journeyType);
   const location = useLocation();
   const navigate = useNavigate();
   const detailMatch = location.pathname.match(/^(.*\/(?:bookings|enquiries))\/([^/]+)\/?$/);
@@ -21,6 +21,8 @@ function AgentAdminJourneyList({ journeyType }) {
       title={view.title}
       description={view.description}
       view={view}
+      filters={filters}
+      onApplyFilters={applyFilters}
       enquiries={enquiries}
       bookings={bookings}
       selectedId={selectedId}

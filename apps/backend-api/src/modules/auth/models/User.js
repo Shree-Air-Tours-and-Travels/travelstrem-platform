@@ -35,6 +35,17 @@ const userSchema = new mongoose.Schema(
             default: null,
             index: true,
         },
+        clientId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Client",
+            default: null,
+            index: true,
+        },
+        clientRole: {
+            type: String,
+            enum: ["none", "client_admin", "client_agent"],
+            default: "none",
+        },
         designation: { type: String, trim: true, default: "" },
         accountStatus: {
             type: String,

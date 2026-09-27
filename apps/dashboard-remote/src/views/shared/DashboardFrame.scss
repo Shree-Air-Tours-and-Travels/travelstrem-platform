@@ -1,0 +1,38 @@
+@import "./tokens";
+
+.admin-overview { display: grid; gap: $space-4; width: 100%; color: var(--text); }
+
+.admin-overview__hero {
+  overflow: hidden; display: flex; align-items: center; justify-content: space-between; gap: $space-5;
+  min-height: 0; padding: $space-3 $space-1; border: 0; background: transparent;
+}
+
+.admin-overview__hero-copy { max-width: 760px; }
+
+.admin-overview__hero-copy > span { display: flex; align-items: center; gap: $space-2; margin-bottom: $space-2; color: var(--color-primary); font-size: $font-size-xs; font-weight: $font-bold; letter-spacing: .1em; }
+
+.admin-overview__hero-copy h1 { margin: 0 0 $space-1; color: var(--heading); font-size: clamp(1.8rem, 2.4vw, 2.3rem); line-height: 1.1; }
+
+.admin-overview__hero-copy p { max-width: 680px; margin: 0; color: var(--muted); line-height: $line-height-lg; }
+
+.admin-overview__hero-meta { display: flex; flex-wrap: wrap; align-items: center; gap: $space-3; margin-top: $space-4; }
+
+.admin-overview__hero-meta > span { display: flex; align-items: center; gap: $space-2; color: var(--muted); font-size: $font-size-sm; font-weight: $font-semibold; }
+
+.admin-overview__live { display: flex; align-items: center; gap: $space-2; margin: 0; color: var(--muted); font-size: $font-size-xs; font-weight: $font-semibold; }
+
+.admin-overview__live i { width: 8px; height: 8px; border-radius: $radius-full; background: var(--muted-border); }
+
+.admin-overview__live.is-connected { color: var(--color-success); }
+
+.admin-overview__live.is-connected i { background: var(--color-success); box-shadow: 0 0 0 3px var(--success-soft); }
+
+.admin-overview__notice { display: flex; align-items: center; gap: $space-3; padding: $space-3 $space-4; border: 1px solid var(--color-warning); border-radius: $radius-lg; background: var(--warning-soft); color: var(--text); font-size: $font-size-sm; }
+
+.admin-overview__notice > span { flex: 1; min-width: 0; }
+
+@media (max-width: 700px) {
+.admin-overview { gap: $space-3; }
+.admin-overview__hero { min-height: 0; align-items: stretch; flex-direction: column; padding: $space-2 0; }
+.admin-overview__notice { align-items: flex-start; flex-wrap: wrap; }
+}
