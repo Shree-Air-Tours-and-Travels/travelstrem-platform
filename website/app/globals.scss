@@ -243,3 +243,16 @@ p { color: var(--muted); line-height: 1.7; }
   *, *::before, *::after { animation-duration: motion.$duration-instant !important; animation-iteration-count: 1 !important; transition-duration: motion.$duration-instant !important; }
   .reveal { opacity: 1; transform: none; }
 }
+.office-photo-dialog {
+  width: min(940px, 94vw);
+  max-height: 92dvh;
+  padding: 0;
+  border: 0;
+  border-radius: 20px;
+  margin: auto;
+  &::backdrop { background: rgb(0 0 0 / 75%); }
+  &__content { padding: 20px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+  h2 { margin: 0; font-size: 1.25rem; }
+  img { display: block; width: 100%; height: auto; max-height: 72dvh; object-fit: contain; border-radius: 12px; }
+}

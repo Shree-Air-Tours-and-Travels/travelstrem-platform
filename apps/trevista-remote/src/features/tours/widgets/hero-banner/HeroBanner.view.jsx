@@ -2,7 +2,7 @@ import React from "react";
 import { Button, GlobalSearchCard, Icon } from "@packages/trem-ui";
 
 const DEFAULT_HERO_IMAGE =
-  "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1800&q=85";
+  "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519364/travelstrem/site-assets/4e61143809a65097c5010ca1.jpg";
 
 const TITLE_TONES = new Set(["product", "brand"]);
 const searchOptionsFor = (options, anyLabel) => [

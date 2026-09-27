@@ -17,8 +17,8 @@ export default {
                 brand: {
                     name: "TravelsTREM",
                     tagline: "Tours · Reservations · Experiences · Management",
-                    logoSrc: "/favicon.png",
-                    darkLogoSrc: "/favicon-dark.png",
+                    logoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png",
+                    darkLogoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519386/travelstrem/site-assets/e38709b8a4ada750aed0f6df.png",
                 },
                 themeAction: {
                     darkLabel: "Switch to dark mode",

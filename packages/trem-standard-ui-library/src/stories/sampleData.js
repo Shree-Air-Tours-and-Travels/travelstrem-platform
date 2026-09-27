@@ -2,7 +2,7 @@ export const sampleTour = {
   _id: "storybook-tour-1",
   title: "Himalayan Escape to Manali",
   photo:
-    "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80",
+    "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519375/travelstrem/site-assets/970378c505dccdf23c4c9113.jpg",
   photos: [],
   period: { days: 5, nights: 4 },
   desc: "A calm mountain itinerary with scenic drives, local food, pine trails, and flexible leisure time for families and small groups.",
@@ -16,7 +16,7 @@ export const sampleTour = {
   reviews: [
     {
       avatar:
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=80",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519383/travelstrem/site-assets/4eb716145c78f8b1bc32925a.jpg",
     },
   ],
 };
@@ -38,13 +38,13 @@ export const quickFilters = [
 ];
 
 export const galleryImages = [
-  "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80",
-  "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=1200&q=80",
-  "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1200&q=80",
-  "https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1200&q=80",
-  "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80",
-  "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1200&q=80",
-  "https://images.unsplash.com/photo-1530789253388-582c481c54b0?auto=format&fit=crop&w=1200&q=80",
+  "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519375/travelstrem/site-assets/970378c505dccdf23c4c9113.jpg",
+  "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519383/travelstrem/site-assets/4e7ac80c13474f74e8af0ce7.jpg",
+  "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519384/travelstrem/site-assets/74768412652acd6e65f71989.jpg",
+  "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519384/travelstrem/site-assets/b761d34970384ba8f447acf2.jpg",
+  "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519384/travelstrem/site-assets/04b1643ed9df56b961bb879c.jpg",
+  "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519384/travelstrem/site-assets/2025e99d86bbe8a27f9ba2d2.jpg",
+  "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519384/travelstrem/site-assets/59de32de50c7d7ea6c0221f9.jpg",
 ];
 
 export const contactFields = [

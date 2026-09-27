@@ -4,6 +4,7 @@ import { Reveal } from "@/components/animations/Reveal";
 import { BookDemo } from "@/components/marketing/BookDemo";
 import { SectionIntro } from "@/components/marketing/SectionIntro";
 import { leadership, site } from "@/lib/content";
+import { OfficePhoto } from "@/components/marketing/OfficePhoto";
 
 export const metadata: Metadata = {
   title: "About",
@@ -150,6 +151,7 @@ export default function AboutPage() {
             <div>
               <small>Office</small>
               <strong>{site.location}</strong>
+              <OfficePhoto />
               <a href={site.locationUrl} target="_blank" rel="noreferrer">
                 Open in Maps ↗
               </a>

@@ -12,7 +12,7 @@ const sampleWidgets = [
       id: "trip-1",
       title: "Himalayan Escape to Manali",
       image:
-        "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=400&q=80",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519382/travelstrem/site-assets/5418717827438ce5734537f2.jpg",
       dateRange: "12 Jun – 16 Jun 2026",
       duration: "5 Days",
       productName: "TravelsTREM",
@@ -54,7 +54,7 @@ const sampleWidgets = [
     codeLabel: "Use code",
     code: "SUMMER20",
     image:
-      "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=400&q=80",
+      "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519383/travelstrem/site-assets/c536e8b80c4e8913c97c90a9.jpg",
     href: "/offers/summer",
     available: true,
   },

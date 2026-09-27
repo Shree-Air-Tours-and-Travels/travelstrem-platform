@@ -5,7 +5,7 @@ const sampleTour = {
   _id: "fav-1",
   title: "Himalayan Escape to Manali",
   photo:
-    "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=600&q=80",
+    "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519381/travelstrem/site-assets/81cf5655c4354115342ad404.jpg",
   price: 24999,
   priceInfo: { min: 24999, currency: "INR" },
   address: { city: "Manali" },
@@ -36,7 +36,7 @@ export const WithoutRating = {
           _id: "fav-2",
           title: "Goa Beach Retreat",
           photo:
-            "https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=600&q=80",
+            "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519381/travelstrem/site-assets/04b15c92b9ccc1fce935026a.jpg",
           avgRating: undefined,
         }}
         onView={() => {}}

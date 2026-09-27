@@ -1,7 +1,7 @@
 import HotelProvider from "../../../../providers/travel/contracts/HotelProvider.js";
 
 const image = (id, width = 1200) =>
-    `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${width}&q=82`;
+    id.replace("/image/upload/", `/image/upload/f_auto,q_auto,c_limit,w_${width}/`);
 const dateBefore = (value, days) => {
     const date = new Date(`${value}T00:00:00Z`);
     date.setUTCDate(date.getUTCDate() - days);
@@ -9,64 +9,64 @@ const dateBefore = (value, days) => {
 };
 const HOTEL_IMAGES = [
     [
-        "photo-1566073771259-6a8506099945",
-        "photo-1564501049412-61c2a3083791",
-        "photo-1542314831-068cd1dbfeeb",
-        "photo-1571896349842-33c89424de2d",
-        "photo-1551882547-ff40c63fe5fa",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519370/travelstrem/site-assets/7441fb9bb0995749024e92a2.jpg",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519370/travelstrem/site-assets/18d95c23e1135411561eba2c.jpg",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519370/travelstrem/site-assets/020952c6c084016ba026fa68.jpg",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519370/travelstrem/site-assets/9f5b9b62d0b2d59d3db40d0f.jpg",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519371/travelstrem/site-assets/974d52c9e9bdd44711ef26cb.jpg",
     ],
     [
-        "photo-1520250497591-112f2f40a3f4",
-        "photo-1571896349842-33c89424de2d",
-        "photo-1551882547-ff40c63fe5fa",
-        "photo-1566073771259-6a8506099945",
-        "photo-1542314831-068cd1dbfeeb",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519371/travelstrem/site-assets/fdf479ee32c281957125ca84.jpg",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519370/travelstrem/site-assets/9f5b9b62d0b2d59d3db40d0f.jpg",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519371/travelstrem/site-assets/974d52c9e9bdd44711ef26cb.jpg",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519370/travelstrem/site-assets/7441fb9bb0995749024e92a2.jpg",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519370/travelstrem/site-assets/020952c6c084016ba026fa68.jpg",
     ],
     [
-        "photo-1445019980597-93fa8acb246c",
-        "photo-1582719478250-c89cae4dc85b",
-        "photo-1564501049412-61c2a3083791",
-        "photo-1571896349842-33c89424de2d",
-        "photo-1549294413-26f195200c16",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519371/travelstrem/site-assets/5aba6017985c3bf2bfb57297.jpg",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519372/travelstrem/site-assets/cea709d1cffba40d0dce5685.jpg",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519370/travelstrem/site-assets/18d95c23e1135411561eba2c.jpg",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519370/travelstrem/site-assets/9f5b9b62d0b2d59d3db40d0f.jpg",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519372/travelstrem/site-assets/e0d9fad67e34c131502859e1.jpg",
     ],
     [
-        "photo-1549294413-26f195200c16",
-        "photo-1566073771259-6a8506099945",
-        "photo-1520250497591-112f2f40a3f4",
-        "photo-1551882547-ff40c63fe5fa",
-        "photo-1582719478250-c89cae4dc85b",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519372/travelstrem/site-assets/e0d9fad67e34c131502859e1.jpg",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519370/travelstrem/site-assets/7441fb9bb0995749024e92a2.jpg",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519371/travelstrem/site-assets/fdf479ee32c281957125ca84.jpg",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519371/travelstrem/site-assets/974d52c9e9bdd44711ef26cb.jpg",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519372/travelstrem/site-assets/cea709d1cffba40d0dce5685.jpg",
     ],
 ];
 const ROOM_IMAGES = [
     [
-        "photo-1611892440504-42a792e24d32",
-        "photo-1590490360182-c33d57733427",
-        "photo-1631049307264-da0ec9d70304",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519372/travelstrem/site-assets/cd0e6a7f0f06ff4ce50404e3.jpg",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519372/travelstrem/site-assets/767f9dce0afeafcab7c2c8f9.jpg",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519372/travelstrem/site-assets/6ce006ee97ddb0cdb2d6543d.jpg",
     ],
     [
-        "photo-1598928636135-d146006ff4be",
-        "photo-1566665797739-1674de7a421a",
-        "photo-1586023492125-27b2c045efd7",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519373/travelstrem/site-assets/5970cc6f03cca257a9ae9193.jpg",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519373/travelstrem/site-assets/8e82e5a0ebfb21cbd98c7e5b.jpg",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519373/travelstrem/site-assets/b0873b69038894e3d59a0702.jpg",
     ],
     [
-        "photo-1560185007-c5ca9d2c014d",
-        "photo-1560185127-6ed189bf02f4",
-        "photo-1591088398332-8a7791972843",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519374/travelstrem/site-assets/37e935626887c54427349af1.jpg",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519374/travelstrem/site-assets/22f807c0571222d66d122f78.jpg",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519374/travelstrem/site-assets/aee451f39038eb51773a785c.jpg",
     ],
     [
-        "photo-1590490360182-c33d57733427",
-        "photo-1611892440504-42a792e24d32",
-        "photo-1566665797739-1674de7a421a",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519372/travelstrem/site-assets/767f9dce0afeafcab7c2c8f9.jpg",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519372/travelstrem/site-assets/cd0e6a7f0f06ff4ce50404e3.jpg",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519373/travelstrem/site-assets/8e82e5a0ebfb21cbd98c7e5b.jpg",
     ],
     [
-        "photo-1586023492125-27b2c045efd7",
-        "photo-1631049307264-da0ec9d70304",
-        "photo-1598928636135-d146006ff4be",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519373/travelstrem/site-assets/b0873b69038894e3d59a0702.jpg",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519372/travelstrem/site-assets/6ce006ee97ddb0cdb2d6543d.jpg",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519373/travelstrem/site-assets/5970cc6f03cca257a9ae9193.jpg",
     ],
     [
-        "photo-1560185127-6ed189bf02f4",
-        "photo-1591088398332-8a7791972843",
-        "photo-1560185007-c5ca9d2c014d",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519374/travelstrem/site-assets/22f807c0571222d66d122f78.jpg",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519374/travelstrem/site-assets/aee451f39038eb51773a785c.jpg",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519374/travelstrem/site-assets/37e935626887c54427349af1.jpg",
     ],
 ];
 const ROOM_TYPES = [

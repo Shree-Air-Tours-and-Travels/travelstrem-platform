@@ -6,7 +6,7 @@ const sampleTrip = {
   title: "Himalayan Escape to Manali",
   desc: "A calm mountain itinerary with scenic drives, local food, pine trails.",
   photo:
-    "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=600&q=80",
+    "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519381/travelstrem/site-assets/81cf5655c4354115342ad404.jpg",
   priceInfo: { min: 24999, currency: "INR" },
   address: { city: "Manali" },
   period: { days: 5, nights: 4 },

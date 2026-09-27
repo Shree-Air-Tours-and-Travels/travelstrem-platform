@@ -3,7 +3,7 @@ import { HotelCard } from "@packages/trem-ui";
 
 const hotel = {
   id: "demo-hotel", title: "The Jaipur Garden", subtitle: "Civil Lines, Jaipur",
-  image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80",
+  image: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519382/travelstrem/site-assets/2134dd9240a01853fa713303.jpg",
   imageAlt: "Hotel pool and garden", badge: { value: "5 stars" }, rating: "9.2",
   description: "A quiet garden stay with spacious rooms and breakfast included.",
   amenities: ["Wi-Fi", "Pool", "Restaurant", "Parking"],

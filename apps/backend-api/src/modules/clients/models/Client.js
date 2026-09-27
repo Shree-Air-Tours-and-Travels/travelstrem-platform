@@ -4,7 +4,7 @@ const { Schema } = mongoose;
 
 const productBrandingSchema = new Schema(
     {
-        logoSrc: { type: String, default: "/favicon.png" },
+        logoSrc: { type: String, default: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png" },
         name: { type: String, default: "" },
         subtitle: { type: String, default: "" },
         initial: { type: String, default: "" },
@@ -28,7 +28,7 @@ const clientSchema = new Schema(
                 [
                     "trevio",
                     {
-                        logoSrc: "/favicon.png",
+                        logoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png",
                         name: "Trevio",
                         subtitle: "by TravelsTrem",
                         initial: "",
@@ -37,7 +37,7 @@ const clientSchema = new Schema(
                 [
                     "trevista",
                     {
-                        logoSrc: "/favicon.png",
+                        logoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png",
                         name: "Trevista",
                         subtitle: "by TravelsTrem",
                         initial: "",
@@ -46,7 +46,7 @@ const clientSchema = new Schema(
                 [
                     "trehub",
                     {
-                        logoSrc: "/favicon.png",
+                        logoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png",
                         name: "Trehub",
                         subtitle: "Flights & Hotels by TravelsTrem",
                         initial: "",
@@ -55,7 +55,7 @@ const clientSchema = new Schema(
                 [
                     "app-shell",
                     {
-                        logoSrc: "/favicon.png",
+                        logoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png",
                         name: "TravelsTrem",
                         subtitle: "Dashboard",
                         initial: "",
@@ -64,7 +64,7 @@ const clientSchema = new Schema(
                 [
                     "admin",
                     {
-                        logoSrc: "/favicon.png",
+                        logoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png",
                         name: "TravelsTREM",
                         subtitle: "Admin",
                         initial: "",
@@ -73,7 +73,7 @@ const clientSchema = new Schema(
                 [
                     "booking",
                     {
-                        logoSrc: "/favicon.png",
+                        logoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png",
                         name: "TravelsTrem",
                         subtitle: "Booking",
                         initial: "",
@@ -82,7 +82,7 @@ const clientSchema = new Schema(
                 [
                     "agent",
                     {
-                        logoSrc: "/favicon.png",
+                        logoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png",
                         name: "TravelsTrem",
                         subtitle: "Partner Portal",
                         initial: "",
@@ -92,7 +92,7 @@ const clientSchema = new Schema(
         },
 
         globalBrand: {
-            logoSrc: { type: String, default: "/favicon.png" },
+            logoSrc: { type: String, default: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png" },
             label: { type: String, default: "TravelsTrem" },
         },
     },

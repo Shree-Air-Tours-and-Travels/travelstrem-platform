@@ -1,8 +1,8 @@
 import React, { useCallback, useMemo, useState } from "react";
 import "./BrandLogo.styles.scss";
 
-const DEFAULT_LIGHT_LOGO = "/favicon.png";
-const DEFAULT_DARK_LOGO = "/favicon-dark.png";
+const DEFAULT_LIGHT_LOGO = "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png";
+const DEFAULT_DARK_LOGO = "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519386/travelstrem/site-assets/e38709b8a4ada750aed0f6df.png";
 
 export default function BrandLogo({
   logoSrc = "",

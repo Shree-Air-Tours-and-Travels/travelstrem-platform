@@ -10,8 +10,8 @@ export default applyHideFlags({
         version: 1,
         ariaLabel: "Dashboard application header",
         brand: {
-            logoSrc: "/favicon.png",
-            darkLogoSrc: "/favicon-dark.png",
+            logoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png",
+            darkLogoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519386/travelstrem/site-assets/e38709b8a4ada750aed0f6df.png",
             name: "Shree Air",
             subtitle: "Tours & Travels",
             href: "/",
@@ -20,7 +20,7 @@ export default applyHideFlags({
             brand: "TravelsTREM",
             owner: "Shree Air Tours and Travels",
             description: "Tours · Reservations · Experiences · Management",
-            logoSrc: "/favicon-dark.png",
+            logoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519386/travelstrem/site-assets/e38709b8a4ada750aed0f6df.png",
             contacts: [
                 {
                     id: "email",

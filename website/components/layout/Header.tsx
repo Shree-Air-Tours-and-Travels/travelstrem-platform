@@ -20,7 +20,7 @@ export function Header() {
   return <header className="site-header">
     <div className="shell header-inner">
       <Link className="brand" href="/" aria-label="TravelsTREM home">
-        <Image src="/favicon-dark.png" width={42} height={42} alt="" priority />
+        <Image src="https://res.cloudinary.com/dofxshf3z/image/upload/v1790519386/travelstrem/site-assets/e38709b8a4ada750aed0f6df.png" width={42} height={42} alt="" priority />
         <span><strong>TravelsTREM</strong><small>Tours · Reservations · Experiences · Management</small></span>
       </Link>
       <div className="header-controls"><ThemeControl /><button className="menu-button" type="button" aria-expanded={open} aria-controls="site-navigation" onClick={() => setOpen(value => !value)}>

@@ -4,7 +4,7 @@ export const featuredHolidayPackagesMock = [
     title: "Bali Tropical Escape",
     desc: "A sun-soaked retreat through Ubud's rice terraces, Uluwatu's cliffs and Nusa Penida's turquoise bays.",
     photo:
-      "https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=900&q=80",
+      "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519379/travelstrem/site-assets/9f58751f6f8862eadb190963.jpg",
     city: { from: "Mumbai", to: "Bali" },
     address: { city: "Bali", country: "Indonesia" },
     period: { days: 6, nights: 5 },
@@ -18,7 +18,7 @@ export const featuredHolidayPackagesMock = [
     title: "Manali Snow Holiday",
     desc: "Snow-dusted valleys, cosy cafés and a scenic drive over the Rohtang Pass.",
     photo:
-      "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&w=900&q=80",
+      "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519379/travelstrem/site-assets/3aeeb733787f2dd400bb1729.jpg",
     city: { from: "Chandigarh", to: "Manali" },
     address: { city: "Manali", country: "India" },
     period: { days: 5, nights: 4 },
@@ -32,7 +32,7 @@ export const featuredHolidayPackagesMock = [
     title: "Royal Jaipur & Udaipur",
     desc: "Forts, lakes and bazaars across Rajasthan's most photogenic cities.",
     photo:
-      "https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=900&q=80",
+      "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519379/travelstrem/site-assets/9d3576a968c833f01dd9d9bf.jpg",
     city: { from: "Delhi", to: "Jaipur" },
     address: { city: "Jaipur", country: "India" },
     period: { days: 4, nights: 3 },
@@ -46,7 +46,7 @@ export const featuredHolidayPackagesMock = [
     title: "Alleppey Backwaters Escape",
     desc: "Overnight houseboat stays, palm-lined canals and quiet village mornings in Kerala.",
     photo:
-      "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&w=900&q=80",
+      "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519379/travelstrem/site-assets/7e70c4d688e295f49aece928.jpg",
     city: { from: "Kochi", to: "Alleppey" },
     address: { city: "Alleppey", country: "India" },
     period: { days: 3, nights: 2 },

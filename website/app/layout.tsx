@@ -24,8 +24,8 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/favicon-light.png", media: "(prefers-color-scheme: light)" },
-      { url: "/favicon-dark.png", media: "(prefers-color-scheme: dark)" },
+      { url: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png", media: "(prefers-color-scheme: light)" },
+      { url: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519386/travelstrem/site-assets/e38709b8a4ada750aed0f6df.png", media: "(prefers-color-scheme: dark)" },
     ],
   },
   other: { "google-adsense-account": tracking.adsenseClient },
