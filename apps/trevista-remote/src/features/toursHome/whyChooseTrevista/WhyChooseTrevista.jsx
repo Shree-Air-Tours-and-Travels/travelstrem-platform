@@ -23,6 +23,7 @@ const WhyChooseTrevista = ({ benefits = [], title = "Why Choose Trevista", descr
           {benefits.map((benefit) => (
             <BenefitCard
               key={benefit.id}
+              className="why-choose-trevista__card"
               icon={benefit.icon}
               title={benefit.title}
               description={benefit.description}

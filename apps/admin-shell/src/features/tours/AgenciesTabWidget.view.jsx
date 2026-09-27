@@ -3,14 +3,10 @@ import { Button, SubTitle } from "@packages/trem-ui";
 import "./AgenciesTabWidget.scss";
 
 export default function AgenciesTabWidget({
-  admins,
   agents,
   partnerAgencies,
   agencyLoading,
-  auth,
   fetchAgencyManagement,
-  handleReviewAdmin,
-  handleRemoveAdmin,
   handleReviewAgent,
   handleReviewPartnerAgency,
   hideHeader = false,
@@ -35,76 +31,6 @@ export default function AgenciesTabWidget({
       {agencyLoading ? <div className="mt-empty">Loading agency approvals...</div> : null}
 
       <div className="mt-grid" style={{ gridTemplateColumns: "1fr", gap: 16 }}>
-        {auth?.user?.adminLevel === "master" && (
-          <article className="mt-empty" style={{ textAlign: "left" }}>
-            <SubTitle text="Admin Approvals" />
-            {(admins || []).length === 0 ? (
-              <p>No admins found.</p>
-            ) : (
-              <div style={{ display: "grid", gap: 10 }}>
-                {admins.map((admin) => {
-                  const id = admin.id || admin._id;
-                  const isMaster = admin.adminLevel === "master";
-                  const isSelf = id && auth?.user?.id && String(id) === String(auth.user.id);
-                  return (
-                    <div
-                      key={id}
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "1fr auto",
-                        gap: 12,
-                        alignItems: "center",
-                        border: "1px solid #dbe7e4",
-                        borderRadius: 8,
-                        padding: 12,
-                      }}
-                    >
-                      <div>
-                        <strong>{admin.name}</strong>
-                        <div>
-                          {admin.email} {admin.phone ? `· ${admin.phone}` : ""}
-                        </div>
-                        <small>
-                          level: {admin.adminLevel || "standard"} · status:{" "}
-                          {admin.adminApprovalStatus || "pending"}
-                        </small>
-                      </div>
-                      <div className="mt-actions">
-                        {!isMaster && admin.adminApprovalStatus !== "approved" && (
-                          <Button
-                            primaryClassName="btn agency-button agency-button--approve"
-                            variant="solid"
-                            onClick={() => handleReviewAdmin(id, "approved")}
-                            text="Approve"
-                          />
-                        )}
-                        {!isMaster && admin.adminApprovalStatus !== "rejected" && (
-                          <Button
-                            primaryClassName="btn agency-button agency-button--danger"
-                            variant="outline"
-                            color="danger"
-                            onClick={() => handleReviewAdmin(id, "rejected")}
-                            text="Reject"
-                          />
-                        )}
-                        {!isMaster && !isSelf && admin.adminApprovalStatus !== "removed" && (
-                          <Button
-                            primaryClassName="btn agency-button agency-button--danger"
-                            variant="outline"
-                            color="danger"
-                            onClick={() => handleRemoveAdmin(id)}
-                            text="Remove"
-                          />
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </article>
-        )}
-
         <article className="mt-empty" style={{ textAlign: "left" }}>
           <SubTitle text="Pending / Registered Agents" />
           {(agents || []).length === 0 ? (

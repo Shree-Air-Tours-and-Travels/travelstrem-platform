@@ -1,5 +1,5 @@
 const slugify = (value = "") =>
-    String(value)
+    displayText(value)
         .trim()
         .toLowerCase()
         .replace(/&/g, " and ")
@@ -8,8 +8,10 @@ const slugify = (value = "") =>
 
 const displayText = (value, fallback = "") => {
     if (value == null) return fallback;
-    if (["string", "number", "boolean"].includes(typeof value))
-        return String(value).trim() || fallback;
+    if (["string", "number", "boolean"].includes(typeof value)) {
+        const text = String(value).trim();
+        return text && text !== "[object Object]" ? text : fallback;
+    }
     if (Array.isArray(value))
         return (
             value
@@ -18,7 +20,16 @@ const displayText = (value, fallback = "") => {
                 .join(", ") || fallback
         );
     if (typeof value === "object") {
-        const direct = value.label ?? value.name ?? value.title;
+        const direct =
+            value.slug ??
+            value.value ??
+            value.label ??
+            value.name ??
+            value.title ??
+            value.en ??
+            value.default ??
+            value._id ??
+            value.id;
         if (direct != null && direct !== value) return displayText(direct, fallback);
         return (
             [value.city, value.country]
@@ -48,13 +59,53 @@ const mapFacetOptions = (items = []) =>
         })
         .filter((item) => item.id && item.name);
 
+const toMinor = (value) => {
+    const amount = Number(value);
+    return Number.isFinite(amount) ? Math.round(amount * 100) : null;
+};
+
+const mapPublicPricing = (pricing = {}) => ({
+    currency: String(pricing.currency || "INR"),
+    minMinor: toMinor(pricing.min),
+    maxMinor: toMinor(pricing.max),
+    moneyUnit: "PAISE",
+    isFinal: Boolean(pricing.isFinal),
+});
+
+const PACKAGE_DISPLAY_NAMES = Object.freeze({
+    BASIC: "Standard",
+    STANDARD: "Premium",
+    PREMIUM: "Advance",
+});
+
+const mapPackagePrices = (items = []) =>
+    items
+        .map((item) => ({
+            packageKey: displayText(item.packageKey),
+            tier: displayText(item.tier).toUpperCase(),
+            name:
+                PACKAGE_DISPLAY_NAMES[displayText(item.tier).toUpperCase()] ||
+                displayText(item.name, "Package"),
+            sellingTotalMinor: Number(item.sellingTotalMinor || 0),
+            currency: String(item.currency || "INR"),
+            moneyUnit: "PAISE",
+        }))
+        .filter((item) => item.packageKey && item.sellingTotalMinor > 0)
+        .sort(
+            (left, right) =>
+                ["Standard", "Premium", "Advance"].indexOf(left.name) -
+                ["Standard", "Premium", "Advance"].indexOf(right.name),
+        );
+
 export const mapTourSearchCard = (item = {}) => {
     const route = item.route || {};
     const location = item.location || {};
+    const title = displayText(item.title);
+    const slug = slugify(displayText(item.slug) || title || item.id);
     return {
-        id: item.id,
-        slug: item.slug || slugify(item.title),
-        title: displayText(item.title),
+        id: displayText(item.id ?? item._id),
+        slug,
+        title,
         route: {
             origin: route.origin ? { ...route.origin, name: displayText(route.origin.name) } : null,
             destination: route.destination
@@ -74,7 +125,15 @@ export const mapTourSearchCard = (item = {}) => {
             departureCount: 0,
             nextDepartureDate: null,
         },
-        pricing: item.pricing || { currency: "INR", min: null, max: null, isFinal: false },
+        departures: (item.departures || []).map((departure) => ({
+            id: displayText(departure.id),
+            departureDate: departure.departureDate || null,
+            returnDate: departure.returnDate || null,
+            status: displayText(departure.status, "active"),
+            availableSeats: departure.availableSeats ?? null,
+        })),
+        pricing: mapPublicPricing(item.pricing),
+        packagePrices: mapPackagePrices(item.packagePrices),
         rating: item.rating || { average: 0, count: 0 },
         featured: Boolean(item.featured),
         trending: Boolean(item.trending),
@@ -108,8 +167,13 @@ export const mapTourSearchResult = (aggregation = {}, search) => {
         },
         facets: {
             price: aggregation.price?.[0]
-                ? { min: aggregation.price[0].min ?? 0, max: aggregation.price[0].max ?? 0 }
-                : { min: 0, max: 0 },
+                ? {
+                      minMinor: toMinor(aggregation.price[0].min) ?? 0,
+                      maxMinor: toMinor(aggregation.price[0].max) ?? 0,
+                      currency: "INR",
+                      moneyUnit: "PAISE",
+                  }
+                : { minMinor: 0, maxMinor: 0, currency: "INR", moneyUnit: "PAISE" },
             duration: aggregation.duration?.[0]
                 ? {
                       minDays: aggregation.duration[0].minDays ?? 0,

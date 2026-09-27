@@ -9,7 +9,7 @@
       "labels": {
         "pageTitle": "Trip Details",
         "bookNow": "Book Now",
-        "enquire": "Get a quote",
+        "enquire": "Enquire now",
         "backToTours": "Back to trips",
         "backToLabel": "Back to",
         "referrerTours": "Trips",
@@ -18,8 +18,8 @@
         "tourErrorTitle": "Trip details could not load",
         "agencyDetails": {
           "ariaLabel": "Trip operator details",
-          "eyebrow": "Operated by",
-          "travelPartner": "Your travel partner",
+          "eyebrow": "Uploaded by agency",
+          "travelPartner": "Agent working on this trip",
           "partnerReference": "Agency reference"
         }
       },
@@ -54,6 +54,11 @@
           "type": "InclusionsExclusions",
           "source": "shell",
           "widgetRef": "./widgets/inclusions-exclusions.json"
+        },
+        {
+          "type": "PackagePlans",
+          "source": "shell",
+          "widgetRef": "./widgets/pricing-card.json"
         },
         {
           "type": "IncludedStays",

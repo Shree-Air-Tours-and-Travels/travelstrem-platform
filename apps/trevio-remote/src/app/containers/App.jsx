@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useRef, useCallback } from "react";
-import { Route, Routes, Navigate, useNavigate } from "react-router-dom";
+import { Route, Routes, Navigate, useLocation, useParams } from "react-router-dom";
 import {
   fetchData,
   redirectToGlobalAuth,
@@ -14,20 +14,22 @@ import {
   emit,
   registerSessionCacheClearer,
   initRealtimeNotifications,
+  RealtimeProvider,
 } from "@packages/trem-events";
 import {
   FavoritesProvider,
   ErrorState,
+  PRODUCT_TYPE,
   ScrollToTop,
   TourDetailsPage,
   useFavoritesContext,
-  RealtimeProvider,
   Toaster,
 } from "@packages/trem-ui";
 import { Analytics } from "@vercel/analytics/react";
 import Shell from "./Shell";
 import Home from "../views/Home";
-import { tripId, responseTrips, resolvePageContent } from "../utils";
+import Trips from "../views/Trips";
+import { resolvePageContent } from "../utils";
 import { initApp } from "../../core/initApp";
 import { API_BASE } from "../../services/configService";
 import { clearUserSessionCache } from "../../services/userSession";
@@ -36,28 +38,48 @@ import "../../main.scss";
 setComponentDataFetcher(fetchData);
 const STANDALONE_ENABLED = false;
 
+function TripDetailsWithBreadcrumb({ session, labels = {}, tripRef: providedTripRef = "" }) {
+  const params = useParams();
+  const location = useLocation();
+  const tripRef = providedTripRef || params.tripRef || "";
+  const breadcrumbTrail = Array.isArray(location.state?.trail) && location.state.trail.length
+    ? location.state.trail
+    : [
+        { label: labels.homeBreadcrumb || "Trevio", path: "/trevio" },
+        { label: labels.tripDirectoryHeading || "Trips", path: "/trips" },
+      ];
+  return (
+    <TourDetailsPage
+      userSession={session}
+      appKey={PRODUCT_TYPE.TREVIO}
+      productType="trip"
+      breadcrumbTrail={breadcrumbTrail}
+      breadcrumbDetailLabel={`Trip-${tripRef || ""}`}
+      routeRef={tripRef}
+    />
+  );
+}
+
 function AppShell({
   embedded,
   session,
   headerConfig,
   pageModel,
-  trips,
-  activeFilter,
-  loadingTrips,
-  onFilterChange,
   buildAuthAction,
   basename,
 }) {
   const { favoritesCount } = useFavoritesContext();
-  const navigate = useNavigate();
+  const location = useLocation();
   const openWishlist = () => {
     if (embedded) {
       requestShellNavigation("favorites");
       return;
     }
-    window.location.assign(buildGlobalAppShellUrl({ product: "trevio", tab: "favorites" }));
+    window.location.assign(buildGlobalAppShellUrl({ product: PRODUCT_TYPE.TREVIO, tab: "favorites" }));
   };
   const labels = pageModel?.labels || {};
+  const tripsPathMatch = embedded ? location.pathname.match(/^\/trips(?:\/([^/]+))?\/?$/) : null;
+  const tripsPathRef = tripsPathMatch?.[1] ? decodeURIComponent(tripsPathMatch[1]) : "";
   const shellProps = {
     labels,
     headerConfig,
@@ -71,28 +93,42 @@ function AppShell({
   return (
     <Shell {...shellProps} embedded={embedded}>
       <ScrollToTop />
-      {embedded ? (
+      {tripsPathMatch ? (
+        tripsPathRef ? (
+          <TripDetailsWithBreadcrumb
+            session={session}
+            labels={labels}
+            tripRef={tripsPathRef}
+          />
+        ) : (
+          <Trips pageModel={pageModel} />
+        )
+      ) : embedded ? (
         <Routes>
           <Route
             index
             element={
               <Home
                 user={session?.user}
-                trips={trips}
                 pageModel={pageModel}
-                activeFilter={activeFilter}
-                loadingTrips={loadingTrips}
-                onFilterChange={onFilterChange}
               />
             }
           />
           <Route
+            path="trips"
+            element={<Trips pageModel={pageModel} />}
+          />
+          <Route
+            path="trips/:tripRef"
+            element={<TripDetailsWithBreadcrumb session={session} labels={labels} />}
+          />
+          <Route
             path="trip/:tripRef"
-            element={<TourDetailsPage userSession={session} appKey="trevio" productType="trip" />}
+            element={<TourDetailsPage userSession={session} appKey={PRODUCT_TYPE.TREVIO} productType="trip" />}
           />
           <Route
             path=":tripRef"
-            element={<TourDetailsPage userSession={session} appKey="trevio" productType="trip" />}
+            element={<TourDetailsPage userSession={session} appKey={PRODUCT_TYPE.TREVIO} productType="trip" />}
           />
         </Routes>
       ) : (
@@ -103,17 +139,29 @@ function AppShell({
             element={
               <Home
                 user={session?.user}
-                trips={trips}
                 pageModel={pageModel}
-                activeFilter={activeFilter}
-                loadingTrips={loadingTrips}
-                onFilterChange={onFilterChange}
               />
             }
           />
           <Route
+            path="/trevio/trips"
+            element={<Trips pageModel={pageModel} />}
+          />
+          <Route
+            path="/trevio/trips/:tripRef"
+            element={<TripDetailsWithBreadcrumb session={session} labels={labels} />}
+          />
+          <Route
+            path="/trips"
+            element={<Trips pageModel={pageModel} />}
+          />
+          <Route
+            path="/trips/:tripRef"
+            element={<TripDetailsWithBreadcrumb session={session} labels={labels} />}
+          />
+          <Route
             path="/trevio/trip/:tripRef"
-            element={<TourDetailsPage userSession={session} appKey="trevio" productType="trip" />}
+            element={<TourDetailsPage userSession={session} appKey={PRODUCT_TYPE.TREVIO} productType="trip" />}
           />
         </Routes>
       )}
@@ -126,7 +174,6 @@ export default function App({
   userSession: externalSession = null,
   basename = "",
 }) {
-  const navigate = useNavigate();
   // Backend-authored realtime toasts (enquiry confirmations live here).
   useEffect(() => initRealtimeNotifications(), []);
   const [state, setState] = useState({
@@ -135,11 +182,7 @@ export default function App({
     session: null,
     headerConfig: null,
   });
-  const [trips, setTrips] = useState([]);
   const [pageModel, setPageModel] = useState(null);
-  const [tripsEndpoint, setTripsEndpoint] = useState("");
-  const [activeFilter, setActiveFilter] = useState("");
-  const [loadingTrips, setLoadingTrips] = useState(false);
   const [initKey, setInitKey] = useState(0);
   const initRunRef = useRef(false);
 
@@ -147,14 +190,13 @@ export default function App({
     initRunRef.current = false;
     setState({ loading: true, error: null, session: null, headerConfig: null });
     setPageModel(null);
-    setTrips([]);
     setInitKey((k) => k + 1);
   }, []);
 
   const { buildAuthAction } = useMemo(
     () =>
       createProductAuth({
-        app: "trevio",
+        app: PRODUCT_TYPE.TREVIO,
         apiBase: API_BASE,
         emit,
         registerSessionCacheClearer,
@@ -174,7 +216,7 @@ export default function App({
       pathname: window.location.pathname,
       search: window.location.search,
       hash: window.location.hash,
-      app: "trevio",
+      app: PRODUCT_TYPE.TREVIO,
     })
       .then(({ session, header }) => {
         if (!active) return;
@@ -189,7 +231,7 @@ export default function App({
             });
             return;
           }
-          redirectToGlobalAuth({ app: "trevio", returnTo: getCurrentReturnUrl() });
+          redirectToGlobalAuth({ app: PRODUCT_TYPE.TREVIO, returnTo: getCurrentReturnUrl() });
         }
       })
       .catch((error) => {
@@ -217,24 +259,11 @@ export default function App({
         const pageResponse = await fetchData("/trevio/home.json");
         const nextPageModel = resolvePageContent(pageResponse);
         if (!nextPageModel) return;
-        const tripResponse =
-          nextPageModel.trips.length || !nextPageModel.tripsEndpoint
-            ? null
-            : await fetchData(nextPageModel.tripsEndpoint, {
-                params: { limit: nextPageModel.tripList.pagination?.maxItems },
-              });
         if (!active) return;
-        const received = nextPageModel.trips.length
-          ? nextPageModel.trips
-          : responseTrips(tripResponse);
         setPageModel(nextPageModel);
-        setTripsEndpoint(nextPageModel.tripsEndpoint);
-        setActiveFilter(nextPageModel.tripList.filters?.[0]?.value || "");
-        setTrips(received);
       } catch (error) {
         if (active) {
           setPageModel(null);
-          setTrips([]);
         }
       }
     }
@@ -244,43 +273,13 @@ export default function App({
     };
   }, [state.loading, state.error, state.session, embedded]);
 
-  const applyTripsResponse = (tripResponse) => {
-    const received = responseTrips(tripResponse);
-    setTrips(received);
-    setPageModel((current) =>
-      current
-        ? {
-            ...current,
-            featuredTrips: received.filter((trip) => trip.featured),
-          }
-        : current,
-    );
-  };
-
-  const handleFilterChange = async (filterValue) => {
-    const nextFilter = filterValue || "";
-    setActiveFilter(nextFilter);
-    if (!tripsEndpoint) return;
-    setLoadingTrips(true);
-    try {
-      const response = await fetchData(tripsEndpoint, {
-        params: {
-          category: nextFilter,
-        },
-      });
-      applyTripsResponse(response);
-    } finally {
-      setLoadingTrips(false);
-    }
-  };
-
   if (!embedded) {
     return (
       <ErrorState
         title="Trevio now opens in TravelsTREM"
         description="This product is part of the customer dashboard and is no longer available as a standalone application."
         retry={() =>
-          window.location.assign(buildGlobalAppShellUrl({ product: "trevio", tab: "trevio" }))
+          window.location.assign(buildGlobalAppShellUrl({ product: PRODUCT_TYPE.TREVIO, tab: PRODUCT_TYPE.TREVIO }))
         }
         retryText="Go to customer shell"
       />
@@ -311,16 +310,12 @@ export default function App({
             the socket; standalone runs get their own connection here. */}
         <RealtimeProvider>
           <Toaster />
-          <FavoritesProvider product="trevio">
+          <FavoritesProvider product={PRODUCT_TYPE.TREVIO}>
             <AppShell
               embedded={embedded}
               session={session}
               headerConfig={state.headerConfig}
               pageModel={pageModel}
-              trips={trips}
-              activeFilter={activeFilter}
-              loadingTrips={loadingTrips}
-              onFilterChange={handleFilterChange}
               buildAuthAction={buildAuthAction}
               basename={basename}
             />

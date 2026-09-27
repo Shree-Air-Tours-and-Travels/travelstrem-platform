@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import config from "../config/index.js";
 import Tour from "../modules/tours/models/Tour.js";
 import TourDeparture from "../modules/tours/models/TourDeparture.js";
-import TrevioTrip from "../modules/trevio/models/TrevioTrip.js";
+import Trip from "../modules/trips/models/Trip.js";
 import User from "../modules/auth/models/User.js";
 import PartnerAgency from "../modules/auth/models/PartnerAgency.js";
 
@@ -98,7 +98,7 @@ try {
         }),
         PartnerAgency.find({ status: { $in: ["active", "approved"] } }).lean(),
         Tour.find({}).sort({ createdAt: 1 }),
-        TrevioTrip.find({}).sort({ createdAt: 1 }),
+        Trip.find({}).sort({ createdAt: 1 }),
     ]);
 
     const approvedAgents = agents.filter((agent) =>

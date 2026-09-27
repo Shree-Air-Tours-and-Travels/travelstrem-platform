@@ -1,4 +1,9 @@
 import masterDataService from "../services/masterDataService.js";
+import {
+    listPricingConfigs as listPricingConfigRecords,
+    savePricingConfig,
+} from "../../../core/financial-engine/services/pricing-config.service.js";
+import pageDefinitionService from "../../../services/pageDefinitionService.js";
 
 export const getMasterOptionSet = async (req, res) => {
     const key = req.params.key;
@@ -43,6 +48,39 @@ export const upsertMasterOptionSet = async (req, res) => {
         return res.status(400).json({
             status: "error",
             message: error.message || "Master options could not be saved",
+        });
+    }
+};
+
+export const listPricingConfigs = async (_req, res) => {
+    try {
+        const pricingConfigs = await listPricingConfigRecords();
+        return res.status(200).json(
+            pageDefinitionService.buildPageResponse("admin-shell/pricing", {
+                injectData: { pricingConfigs },
+            }),
+        );
+    } catch (error) {
+        return res.status(500).json({
+            status: "error",
+            message: error.message || "Pricing configuration could not be loaded",
+        });
+    }
+};
+
+export const upsertPricingConfig = async (req, res) => {
+    try {
+        const pricingConfig = await savePricingConfig(req.body, req.user?._id || req.user?.id);
+        return res.status(200).json({
+            status: "success",
+            data: { pricingConfig },
+            message:
+                "A new pricing version was published. Existing quotes remain unchanged.",
+        });
+    } catch (error) {
+        return res.status(400).json({
+            status: "error",
+            message: error.message || "Pricing configuration could not be saved",
         });
     }
 };

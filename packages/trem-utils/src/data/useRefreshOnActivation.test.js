@@ -7,11 +7,10 @@ import useRefreshOnActivation, { DATA_CHANGED_EVENT } from "./useRefreshOnActiva
 const flush = () => act(async () => {});
 
 describe("useRefreshOnActivation", () => {
-  it("skips focus/tab-activation refreshes when activationEnabled is false", async () => {
+  it("does not refresh on focus or page activation", async () => {
     const refresh = vi.fn().mockResolvedValue();
     renderHook(() =>
       useRefreshOnActivation(refresh, {
-        activationEnabled: false,
         minimumIntervalMs: 0,
         refreshOnMount: true,
       }),
@@ -35,7 +34,7 @@ describe("useRefreshOnActivation", () => {
     expect(refresh).toHaveBeenCalledTimes(2); // real data changes always load
   });
 
-  it("refreshes on focus by default when realtime fallback is wanted", async () => {
+  it("keeps focus changes free of backend refreshes", async () => {
     const refresh = vi.fn().mockResolvedValue();
     renderHook(() =>
       useRefreshOnActivation(refresh, { minimumIntervalMs: 0, refreshOnMount: true }),
@@ -47,7 +46,7 @@ describe("useRefreshOnActivation", () => {
       window.dispatchEvent(new Event("focus"));
     });
     await flush();
-    expect(refresh).toHaveBeenCalledTimes(2);
+    expect(refresh).toHaveBeenCalledTimes(1);
   });
 
   it("filters data-changed events by resource", async () => {
@@ -55,7 +54,6 @@ describe("useRefreshOnActivation", () => {
     renderHook(() =>
       useRefreshOnActivation(refresh, {
         resource: "enquiries",
-        activationEnabled: false,
         minimumIntervalMs: 0,
         refreshOnMount: false,
       }),

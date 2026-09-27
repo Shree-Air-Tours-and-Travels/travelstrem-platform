@@ -4,23 +4,41 @@ import HeroBanner from "../../tours/widgets/hero-banner/HeroBanner";
 import WhyChooseTrevista from "../whyChooseTrevista/WhyChooseTrevista";
 import FeaturedHolidayPackages from "../featuredHolidayPackages/FeaturedHolidayPackages";
 import { bookingBenefits } from "../whyChooseTrevista/data";
-import { Preloader } from "@packages/trem-ui";
+import { Breadcrumbs, Button } from "@packages/trem-ui";
+
+const ToursHomeSkeleton = () => (
+  <div className="tours-page__home-skeleton" role="status" aria-label="Loading Trevista home">
+    <div className="tours-page__home-skeleton-hero" />
+    <div className="tours-page__home-skeleton-heading" />
+    <div className="tours-page__home-skeleton-grid">
+      {Array.from({ length: 3 }).map((_, index) => (
+        <div className="tours-page__home-skeleton-card" key={index} />
+      ))}
+    </div>
+  </div>
+);
 
 export default function ToursHomeView({
   widgets,
   widgetsData,
   pageTitle,
+  breadcrumbs,
   loading,
   error,
+  onRetry,
   onExplore,
   onSearch,
+  onCustomise,
   onTourEnquiry,
 }) {
   return (
     <main className="tours-page tours-page--home">
+      <div className="tours-page__crumbs">
+        <Breadcrumbs items={breadcrumbs} />
+      </div>
       <div className="tours-page__inner">
         {loading ? (
-          <Preloader variant="hero" className="tours-page__hero-preloader" />
+          <ToursHomeSkeleton />
         ) : (
           widgets.map((w) => {
             if (w.type === "HeroBanner") {
@@ -31,6 +49,7 @@ export default function ToursHomeView({
                   pageTitle={pageTitle}
                   onExplore={onExplore}
                   onSearch={onSearch}
+                  onCustomise={onCustomise}
                 />
               );
             }
@@ -48,7 +67,12 @@ export default function ToursHomeView({
         )}
         {!loading && <WhyChooseTrevista benefits={bookingBenefits} />}
         {!loading && error && (
-          <div className="tours-page__message tours-page__message--error">{error}</div>
+          <div className="tours-page__message tours-page__message--error" role="alert">
+            <span>{error}</span>
+            <Button size="small" variant="outline" onClick={onRetry}>
+              Retry
+            </Button>
+          </div>
         )}
       </div>
     </main>

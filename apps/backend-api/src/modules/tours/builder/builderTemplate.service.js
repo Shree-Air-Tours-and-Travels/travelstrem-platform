@@ -26,6 +26,18 @@ const EXCLUDED_PATHS = new Set([
     "productKey",
     "archivedAt",
     "builderProcess",
+    "reviews",
+    "featured",
+    "trending",
+    "metrics",
+    "intelligence",
+    "featuredRequest.status",
+    "featuredRequest.requestedAt",
+    "featuredRequest.requestedBy",
+    "featuredRequest.evaluatedAt",
+    "featuredRequest.score",
+    "featuredRequest.reason",
+    "tremVerified",
     "tremVerifiedBy",
     "tremVerifiedAt",
 ]);
@@ -50,6 +62,9 @@ const isSchemaLike = (value) =>
         typeof value === "object" &&
         typeof value.tree === "object" &&
         typeof value.path === "function");
+
+const isVirtualType = (value) =>
+    value instanceof mongoose.VirtualType || value?.constructor?.name === "VirtualType";
 
 /* Safety net: schema graphs are finite; exceeding this means a cycle leaked through. */
 const MAX_DEPTH = 64;
@@ -131,7 +146,11 @@ const walkTree = (tree, enums, prefix = "", depth = 0) => {
     const output = {};
 
     Object.entries(tree).forEach(([key, descriptor]) => {
-        if (key.startsWith("$")) return;
+        // Mongoose injects `_id` and virtual descriptors such as `id` into
+        // nested schema trees. They describe persistence internals, not valid
+        // builder input, and must never leak into a user/AI template.
+        if (key.startsWith("$") || key === "_id" || key === "__v" || isVirtualType(descriptor))
+            return;
         const path = prefix ? `${prefix}.${key}` : key;
         if (EXCLUDED_PATHS.has(path)) return;
         emitResolved(output, key, path, resolveDescriptor(descriptor, depth), enums, depth);
@@ -218,6 +237,21 @@ const filterByOwnedPaths = (template, ownedPaths) => {
     });
     return scoped;
 };
+
+const templateContainsPath = (template, path) => {
+    let cursor = template;
+    for (const segment of String(path || "").split(".").filter(Boolean)) {
+        if (Array.isArray(cursor)) cursor = cursor[0];
+        if (!cursor || typeof cursor !== "object" || !(segment in cursor)) return false;
+        cursor = cursor[segment];
+    }
+    return true;
+};
+
+const filterEnumsByTemplate = (enums, template) =>
+    Object.fromEntries(
+        Object.entries(enums || {}).filter(([path]) => templateContainsPath(template, path)),
+    );
 
 const cache = { full: null };
 
@@ -421,13 +455,14 @@ export const getBuilderTemplatePayload = ({ stepKey } = {}) => {
     }
 
     const { template, enums } = buildFullTourTemplate();
+    const scopedTemplate = filterByOwnedPaths(template, step.ownedPaths || []);
     return {
         scope: "step",
         label: step.title,
         schemaVersion: "TOUR_BUILDER_V2",
         stepKey,
-        tour: filterByOwnedPaths(template, step.ownedPaths || []),
-        enums,
+        tour: scopedTemplate,
+        enums: filterEnumsByTemplate(enums, scopedTemplate),
         rules: TOUR_TEMPLATE_RULES,
     };
 };

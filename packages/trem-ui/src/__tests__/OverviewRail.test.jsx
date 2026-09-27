@@ -1,7 +1,8 @@
 import React from "react";
 import { describe, expect, it } from "vitest";
 import "@testing-library/jest-dom/vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { vi } from "vitest";
 import OverviewRail from "../components/OverviewRail/OverviewRail.jsx";
 
 describe("OverviewRail", () => {
@@ -101,5 +102,35 @@ describe("OverviewRail", () => {
     expect(screen.getByRole("link", { name: "Contact support" })).toBeInTheDocument();
     expect(screen.queryByText("Upload documents")).not.toBeInTheDocument();
     expect(screen.queryByText("Hidden action")).not.toBeInTheDocument();
+  });
+
+  it("routes backend tab actions through the portal callback", () => {
+    const onAction = vi.fn();
+    render(
+      <OverviewRail
+        onAction={onAction}
+        widgets={[
+          {
+            id: "actions",
+            type: "quickActions",
+            title: "Quick Actions",
+            items: [
+              {
+                id: "support",
+                title: "Contact support",
+                icon: "phoneCall",
+                targetTab: "support",
+              },
+            ],
+          },
+        ]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Contact support" }));
+    expect(onAction).toHaveBeenCalledWith(
+      "support",
+      expect.objectContaining({ id: "support" }),
+    );
   });
 });

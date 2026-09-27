@@ -36,6 +36,7 @@ module.exports = {
       webpackConfig.resolve.alias = {
         ...(webpackConfig.resolve.alias || {}),
         "@packages/trem-auth-core": path.resolve(__dirname, "../../packages/trem-auth-core/src"),
+        "@packages/trem-events": path.resolve(__dirname, "../../packages/trem-events/src"),
         "@packages/trem-modals": path.resolve(__dirname, "../../packages/trem-modals/src"),
         "@packages/trem-ui": path.resolve(__dirname, "../../packages/trem-ui/src"),
         "@packages/trem-utils": path.resolve(__dirname, "../../packages/trem-utils/src"),

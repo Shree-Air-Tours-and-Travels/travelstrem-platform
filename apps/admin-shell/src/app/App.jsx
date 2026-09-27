@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
 import { AdminPortalConfigProvider } from "./providers/AdminPortalProvider";
 import AppLayout from "./AppLayout";
-import { RealtimeProvider, Toaster } from "@packages/trem-ui";
-import { initRealtimeNotifications } from "@packages/trem-events";
+import { Toaster } from "@packages/trem-ui";
+import { initRealtimeNotifications, RealtimeProvider } from "@packages/trem-events";
 
 const AdminApp = ({ embedded = false }) => {
   // Backend-authored realtime toasts (e.g. new enquiry received).

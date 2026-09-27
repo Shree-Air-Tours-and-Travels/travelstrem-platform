@@ -101,7 +101,19 @@ export default function DestinationCard({
   const showDuration = !isCompact && durationText;
   const hasFavorite = typeof favorite === "boolean" && typeof onFavorite === "function";
 
-  const cardPayload = { id, title: titleText };
+  const cardPayload = {
+    id,
+    title: titleText,
+    description,
+    image,
+    price,
+    rating,
+    reviewCount,
+    duration,
+    location,
+    badges,
+    href,
+  };
 
   const handleImageError = () => {
     if (fallbackSrc && imgSrc !== fallbackSrc) {
@@ -250,7 +262,7 @@ export default function DestinationCard({
       <a
         className={baseClasses}
         href={href}
-        onClick={handleClick}
+        onClick={disabled ? undefined : handleClick}
         aria-label={titleText}
         aria-disabled={disabled || undefined}
         tabIndex={disabled ? -1 : undefined}

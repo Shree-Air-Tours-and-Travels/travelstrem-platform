@@ -23,7 +23,7 @@ export {
   selectStepErrors,
   validateTourBuilderCollections,
 } from "./data/useTourBuilderContract.js";
-export { default as fetchData, setFetchDataApiClient } from "./http/fetchData.js";
+export { default as fetchData, fetchBinary, setFetchDataApiClient } from "./http/fetchData.js";
 export { tokenStore } from "./http/tokenStore.js";
 export {
   buildGlobalAuthUrl,

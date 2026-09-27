@@ -1,14 +1,24 @@
+import config from "./env.js";
 import applyHideFlags from "./visibility.js";
+
+const partnershipUrl = `${String(config.AUTH_APP_URL || config.SHELL_URL || "").replace(/\/$/, "")}/partnership`;
 
 export default applyHideFlags({
     status: "success",
     message: "Sidebar config loaded",
     componentData: {
-        version: 1,
+        version: 2,
+        variant: "top-dropdown",
         ariaLabel: "Customer dashboard navigation",
         closeLabel: "Close navigation",
         collapseLabel: "Collapse sidebar",
         expandLabel: "Expand sidebar",
+        topDropdown: {
+            label: "Explore",
+            openLabel: "Open main navigation",
+            closeLabel: "Close main navigation",
+            panelId: "customer-shell-navigation",
+        },
         brand: {
             logoSrc: "/favicon.png",
             darkLogoSrc: "/favicon-dark.png",
@@ -19,8 +29,13 @@ export default applyHideFlags({
         },
         sections: [
             {
-                id: "primary",
-                items: [{ id: "overview", label: "Home", icon: "home", target: "overview" }],
+                id: "account",
+                title: "Account & Navigation",
+                items: [
+                    { id: "overview", label: "Home", icon: "home", target: "overview" },
+                    { id: "login", label: "Sign In", icon: "user", action: "login" },
+                    { id: "profile", label: "My Profile", icon: "user", target: "profile" },
+                ],
             },
             {
                 id: "plan",
@@ -31,16 +46,13 @@ export default applyHideFlags({
                         label: "Trips & Adventures",
                         icon: "mountain",
                         target: "trevio",
-                        disabled: true,
-                        comingSoon: true,
                     },
                     { id: "tours", label: "Tours & Packages", icon: "globe", target: "trevista" },
                     {
                         id: "flights",
                         label: "Flights & Hotels",
                         icon: "plane",
-                        disabled: true,
-                        comingSoon: true,
+                        target: "trehub",
                     },
                     {
                         id: "services",
@@ -55,7 +67,14 @@ export default applyHideFlags({
                 id: "bookings",
                 title: "Manage Bookings",
                 items: [
+                    {
+                        id: "dashboard",
+                        label: "Dashboard",
+                        icon: "management",
+                        target: "dashboard",
+                    },
                     { id: "bookings", label: "My Bookings", icon: "calendar", target: "bookings" },
+                    { id: "saved-searches", label: "Saved searches", icon: "search", target: "saved-searches" },
                     { id: "favorites", label: "Wishlist", icon: "heart", target: "favorites" },
                     {
                         id: "documents",
@@ -74,19 +93,41 @@ export default applyHideFlags({
                 ],
             },
             {
-                id: "support",
-                title: "Support & More",
+                id: "explore",
+                title: "Explore / More",
                 items: [
-                    { id: "notifications", label: "Notifications", icon: "bell", disabled: true },
-                    { id: "support", label: "Help & Support", icon: "support", target: "support" },
+                    { id: "articles", label: "Articles", icon: "bookmark", target: "articles" },
+                    {
+                        id: "about",
+                        label: "About Us",
+                        icon: "info",
+                        type: "external",
+                        href: "https://travelstrem.com/about",
+                        target: "_blank",
+                    },
+                    {
+                        id: "partnership",
+                        label: "Partner with us",
+                        icon: "briefcaseBusiness",
+                        type: "external",
+                        href: partnershipUrl,
+                    },
+                    {
+                        id: "products",
+                        label: "Our Products",
+                        icon: "travelPackage",
+                        type: "external",
+                        href: "https://travelstrem.com/#ecosystem",
+                        target: "_blank",
+                    },
                 ],
             },
             {
-                id: "account",
-                title: "Account",
+                id: "support",
+                title: "Support",
                 items: [
-                    { id: "profile", label: "My Profile", icon: "user", target: "profile" },
-                    { id: "logout", label: "Sign Out", icon: "logout", action: "logout" },
+                    { id: "notifications", label: "Notifications", icon: "bell", target: "notifications" },
+                    { id: "support", label: "Help & Support", icon: "support", target: "support" },
                 ],
             },
         ],
@@ -94,7 +135,7 @@ export default applyHideFlags({
             nameKey: "name",
             fallbackName: "Traveller",
             metaKey: "membershipLabel",
-            fallbackMeta: "TravelsTREM Member",
+            fallbackMeta: "TREM Member",
             actionLabel: "View Profile",
             actionTarget: "profile",
         },

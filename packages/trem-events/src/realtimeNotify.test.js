@@ -63,6 +63,7 @@ describe("realtime notification bridge", () => {
   afterEach(() => {
     window.removeEventListener(TREM_TOAST_EVENT, toastSpy);
     delete window.__TREM_REALTIME_CLIENT__;
+    delete process.env.REACT_APP_REALTIME_ENABLED;
   });
 
   it("forwards a backend notify payload to the toast contract untouched", async () => {
@@ -114,6 +115,17 @@ describe("realtime notification bridge", () => {
     socket.fire("enquiry:claimed", envelope({ title: "" }));
     expect(toastSpy).toHaveBeenCalledTimes(1);
 
+    dispose();
+  });
+
+  it("does not initialize a socket when realtime is disabled", async () => {
+    process.env.REACT_APP_REALTIME_ENABLED = "false";
+    const { initRealtimeNotifications } = await loadBridge();
+    const { client } = installClient();
+
+    const dispose = initRealtimeNotifications();
+
+    expect(client.connected).toBe(false);
     dispose();
   });
 

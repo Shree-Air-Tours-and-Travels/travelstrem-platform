@@ -49,6 +49,7 @@ export const updateBuilderPosition = async (req, res) => {
         const result = await saveBuilderPosition(req, {
             tourId: req.body?.tourId || null,
             stepKey: req.body?.stepKey || null,
+            productKey: req.body?.productKey || null,
         });
         return res.json({ status: "success", ...result });
     } catch (error) {
@@ -68,6 +69,7 @@ export const saveBuilderStep = async (req, res) => {
             tourId: body.tourId || null,
             stepKey: req.params.stepKey,
             data: body.data,
+            productKey: body.productKey || null,
         });
         return res.json({
             status: "success",
@@ -94,6 +96,7 @@ export const previewBuilderPricing = async (req, res) => {
         const result = await previewPricing(req, {
             tourId: req.body?.tourId || null,
             data: req.body?.data || {},
+            productKey: req.body?.productKey || null,
         });
         return res.json({ status: "success", ...result });
     } catch (error) {

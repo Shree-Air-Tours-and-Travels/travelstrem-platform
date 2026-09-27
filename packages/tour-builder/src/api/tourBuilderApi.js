@@ -61,8 +61,9 @@ const hydrateBuilderEnvelope = (response) => {
 };
 
 export const tourBuilderApi = {
-  async fetchDefinition() {
-    const response = await adapter.request({ url: "/tours.json/builder/definition" });
+  async fetchDefinition(productKey) {
+    const query = productKey ? `?product=${encodeURIComponent(productKey)}` : "";
+    const response = await adapter.request({ url: `/tours.json/builder/definition${query}` });
     const envelope = hydrateBuilderEnvelope(response);
     return envelope?.builder || envelope?.component?.data?.builder || null;
   },
@@ -78,8 +79,11 @@ export const tourBuilderApi = {
     return unwrapEnvelope(response);
   },
 
-  async loadStep({ tourId, stepKey, signal } = {}) {
-    const query = tourId ? `?tourId=${encodeURIComponent(tourId)}` : "";
+  async loadStep({ tourId, stepKey, productKey, signal } = {}) {
+    const params = new URLSearchParams();
+    if (tourId) params.set("tourId", tourId);
+    if (productKey) params.set("product", productKey);
+    const query = params.toString() ? `?${params}` : "";
     const response = await adapter.request({
       url: `/tours.json/builder/steps/${encodeURIComponent(stepKey)}${query}`,
       signal,
@@ -87,31 +91,31 @@ export const tourBuilderApi = {
     return hydrateBuilderEnvelope(response);
   },
 
-  async saveStep({ tourId, stepKey, data, signal } = {}) {
+  async saveStep({ tourId, stepKey, data, productKey, signal } = {}) {
     const response = await adapter.request({
       url: `/tours.json/builder/steps/${encodeURIComponent(stepKey)}`,
       method: "PATCH",
-      body: { tourId: tourId || null, stepKey, data },
+      body: { tourId: tourId || null, stepKey, data, productKey },
       signal,
     });
     return unwrapEnvelope(response);
   },
 
-  async savePosition({ tourId, stepKey, signal } = {}) {
+  async savePosition({ tourId, stepKey, productKey, signal } = {}) {
     const response = await adapter.request({
       url: "/tours.json/builder/position",
       method: "PATCH",
-      body: { tourId, stepKey },
+      body: { tourId, stepKey, productKey },
       signal,
     });
     return unwrapEnvelope(response);
   },
 
-  async previewPricing({ tourId, data, signal } = {}) {
+  async previewPricing({ tourId, data, productKey, signal } = {}) {
     const response = await adapter.request({
       url: "/tours.json/builder/pricing-preview",
       method: "POST",
-      body: { tourId, data },
+      body: { tourId, data, productKey },
       signal,
     });
     return unwrapEnvelope(response);

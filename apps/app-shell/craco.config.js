@@ -1,9 +1,10 @@
 const path = require("path");
-const { container } = require("webpack");
-const ModuleScopePlugin = require("react-dev-utils/ModuleScopePlugin");
+const reactScriptsDir = path.dirname(require.resolve("react-scripts/package.json"));
+const { container } = require(require.resolve("webpack", { paths: [reactScriptsDir] }));
 
 const appSrc = path.resolve(__dirname, "src");
 const packagesSrc = path.resolve(__dirname, "../../packages");
+const bookingEngineSrc = path.resolve(__dirname, "../booking-engine/src");
 const backendTarget =
   process.env.REACT_APP_BACKEND_URL ||
   process.env.REACT_APP_API_URL?.replace(/\/api\/?$/, "") ||
@@ -17,6 +18,21 @@ const trevistaRemoteEntry = remoteEntry(
   process.env.REACT_APP_TREVISTA_URL,
   "http://localhost:3001",
 );
+const trevioRemoteEntry = remoteEntry(
+  process.env.REACT_APP_TREVIO_REMOTE_ENTRY,
+  process.env.REACT_APP_TREVIO_URL,
+  "http://localhost:3005",
+);
+const trehubRemoteEntry = remoteEntry(
+  process.env.REACT_APP_TREHUB_REMOTE_ENTRY,
+  process.env.REACT_APP_TREHUB_URL,
+  "http://localhost:3008",
+);
+const dashboardRemoteEntry = remoteEntry(
+  process.env.REACT_APP_DASHBOARD_REMOTE_ENTRY,
+  process.env.REACT_APP_DASHBOARD_URL,
+  process.env.NODE_ENV === "production" ? "https://dashboard.travelstrem.com" : "http://localhost:3017",
+);
 
 function extendBabelIncludes(webpackConfig) {
   const oneOfRule = webpackConfig.module.rules.find((rule) => Array.isArray(rule.oneOf));
@@ -25,7 +41,7 @@ function extendBabelIncludes(webpackConfig) {
   oneOfRule.oneOf.forEach((rule) => {
     if (!rule.loader || !rule.loader.includes("babel-loader")) return;
     const include = Array.isArray(rule.include) ? rule.include : rule.include ? [rule.include] : [];
-    rule.include = Array.from(new Set([...include, appSrc, packagesSrc]));
+    rule.include = Array.from(new Set([...include, appSrc, packagesSrc, bookingEngineSrc]));
   });
 }
 
@@ -50,6 +66,7 @@ module.exports = {
       webpackConfig.optimization.runtimeChunk = false;
       webpackConfig.resolve.alias = {
         ...(webpackConfig.resolve.alias || {}),
+        "@apps/booking-engine": path.resolve(__dirname, "../booking-engine/src/library.js"),
         "@packages/trem-auth-core": path.resolve(__dirname, "../../packages/trem-auth-core/src"),
         "@packages/trem-environment": path.resolve(
           __dirname,
@@ -67,14 +84,17 @@ module.exports = {
         ),
       };
       webpackConfig.resolve.plugins = (webpackConfig.resolve.plugins || []).filter(
-        (plugin) => !(plugin instanceof ModuleScopePlugin),
+        (plugin) => plugin?.constructor?.name !== "ModuleScopePlugin",
       );
       extendBabelIncludes(webpackConfig);
       webpackConfig.plugins.push(
         new container.ModuleFederationPlugin({
           name: "app_shell",
           remotes: {
+            trevio: `trevio@${trevioRemoteEntry}`,
             trevista: `trevista@${trevistaRemoteEntry}`,
+            trehub: `trehub@${trehubRemoteEntry}`,
+            dashboard: `dashboard@${dashboardRemoteEntry}`,
           },
           shared: {
             react: { singleton: true, requiredVersion: false },

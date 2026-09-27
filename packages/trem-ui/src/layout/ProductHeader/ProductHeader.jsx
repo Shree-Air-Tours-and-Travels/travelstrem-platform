@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import Icon from "../../icons/Icon/Icon.jsx";
 import Dropdown from "../../components/Dropdown/Dropdown.jsx";
 import BrandLogo from "../../components/BrandLogo/BrandLogo.jsx";
+import { resolveAccountAvatar } from "../../components/AccountProfile/accountAvatar.constants.js";
 import "./ProductHeader.styles.scss";
 
 const asArray = (value) => (Array.isArray(value) ? value : []);
@@ -405,11 +406,7 @@ export default function ProductHeader({
     item.variant === "profile" ? (
       <>
         <span className="trem-product-header__profile-avatar" aria-hidden="true">
-          {item.avatarUrl ? (
-            <img src={item.avatarUrl} alt="" />
-          ) : (
-            getInitials(item.displayName || item.label)
-          )}
+          <Icon name={resolveAccountAvatar(item.avatar)} size={20} />
         </span>
         <span className="trem-product-header__profile-copy">
           <strong>{item.displayName || item.label}</strong>
@@ -586,7 +583,7 @@ ProductHeader.propTypes = {
   }),
   profile: PropTypes.shape({
     ariaLabel: PropTypes.string,
-    avatarUrl: PropTypes.string,
+    avatar: PropTypes.string,
     displayName: PropTypes.string,
     icon: PropTypes.string,
     items: PropTypes.arrayOf(

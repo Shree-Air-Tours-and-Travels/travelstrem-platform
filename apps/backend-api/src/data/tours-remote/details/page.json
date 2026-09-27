@@ -10,6 +10,7 @@
         "pageTitle": "Tour Details",
         "bookNow": "Book now",
         "enquire": "Get a quote",
+        "continueWithPackage": "Continue with {package}",
         "backToTours": "Back to tours",
         "backToLabel": "Back to",
         "referrerTours": "Tours",

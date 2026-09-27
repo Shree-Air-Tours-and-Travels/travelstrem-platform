@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useComponentData, fetchData } from "@packages/trem-utils";
-import { useTourCatalogRealtime } from "@packages/trem-ui";
+import { useTourCatalogRealtime } from "@packages/trem-events";
 import ToursPageView from "../view/ToursPage.view";
-import { slugifyTourTitle } from "../helper";
+import { getTourRef } from "../helper";
 import useFavorites from "../hooks/useFavorites";
 import { ContactAgentModal } from "@packages/trem-modals";
+import { PRODUCT_TYPE } from "@packages/trem-ui";
 import { fetchTourSearch } from "../search/tourSearch.service";
 import {
   flattenTourSearchState,
@@ -68,15 +69,13 @@ export default function ToursPageContainer({ dispatchEvent, userSession = null }
   });
   const [searching, setSearching] = useState(true);
   const [searchError, setSearchError] = useState(null);
-  const [filtersExpanded, setFiltersExpanded] = useState(() =>
-    typeof window !== "undefined" ? window.innerWidth > 900 : true,
-  );
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const previousQuery = useRef(searchState.query);
   const [realtimeTick, setRealtimeTick] = useState(0);
 
-  // A new tour was published elsewhere (e.g. an agent saved the builder's
-  // publishing step): refetch listing + facets without any reload.
+  // A tour was published or an existing public card changed elsewhere:
+  // refetch listing + facets from the API without any reload.
   useTourCatalogRealtime(useCallback(() => setRealtimeTick((tick) => tick + 1), []));
 
   useEffect(() => {
@@ -91,7 +90,7 @@ export default function ToursPageContainer({ dispatchEvent, userSession = null }
       .then((widgetEntries) => {
         if (!active) return;
         const metadata = Object.fromEntries(widgetEntries);
-        const chips = metadata.quickChips?.data?.filters || [];
+        const chips = metadata.quickChips?.dataScope?.options?.quickFilters || [];
         setWidgetsData(metadata);
         setDiscovery(chips);
         setWidgetsLoading(false);
@@ -185,19 +184,21 @@ export default function ToursPageContainer({ dispatchEvent, userSession = null }
 
   const onView = useCallback(
     (tour) => {
-      const ref = tour?.slug || slugifyTourTitle(tour?.title) || tour?.id;
+      const ref = getTourRef(tour);
+      if (!ref) return;
+      const toursPath = `${location.pathname}${location.search || ""}`;
       if (typeof dispatchEvent === "function") {
         dispatchEvent("navigateToTourDetails", {
-          tourRef: encodeURIComponent(ref),
-          state: { tour, from: { label: "Tours", path: "/trevista/tours" } },
+          tourRef: ref,
+          state: { tour, from: { label: "Tours", path: toursPath } },
         });
         return;
       }
       navigate(`/trevista/tours/${encodeURIComponent(ref)}`, {
-        state: { tour, from: { label: "Tours", path: "/trevista/tours" } },
+        state: { tour, from: { label: "Tours", path: toursPath } },
       });
     },
-    [dispatchEvent, navigate],
+    [dispatchEvent, location.pathname, location.search, navigate],
   );
 
   const activeDiscoveryIds = useMemo(() => {
@@ -218,6 +219,7 @@ export default function ToursPageContainer({ dispatchEvent, userSession = null }
     () => getActiveTourFilterChips(searchState, result.facets),
     [result.facets, searchState],
   );
+  const filterValues = useMemo(() => flattenTourSearchState(searchState), [searchState]);
   const handleClearFilters = useCallback(() => {
     const cleared = createDefaultTourSearchState();
     commitSearch({ ...cleared, sort: searchState.sort, pageSize: searchState.pageSize });
@@ -252,7 +254,7 @@ export default function ToursPageContainer({ dispatchEvent, userSession = null }
         onPageChange={handlePageChange}
         filtersExpanded={filtersExpanded}
         onFiltersExpandedChange={setFiltersExpanded}
-        filterValues={flattenTourSearchState(searchState)}
+        filterValues={filterValues}
         facets={result.facets}
         activeDiscoveryIds={activeDiscoveryIds}
         discoveryOptions={discovery}
@@ -265,7 +267,7 @@ export default function ToursPageContainer({ dispatchEvent, userSession = null }
         open={contactOpen}
         onClose={() => setContactOpen(false)}
         user={userSession?.user || null}
-        product="trevista"
+        product={PRODUCT_TYPE.TREVISTA}
       />
     </>
   );

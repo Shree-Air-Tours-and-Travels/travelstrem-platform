@@ -1,5 +1,7 @@
 import {
+    buildManagementTourListQuery,
     buildManagementTourQuery,
+    getManagementTourSort,
     getTourCheckpointPublishingState,
     isPrivateAgentDraft,
     isPrivateDraftOwner,
@@ -58,6 +60,60 @@ describe("private Agent Tour drafts", () => {
                 },
             }),
         ).toEqual({ agencyId: "agency-1", ownerAgent: "agent-1" });
+    });
+
+    test("scope=mine keeps a Partner Admin listing limited to tours they own", () => {
+        expect(
+            buildManagementTourQuery({
+                query: { scope: "mine" },
+                user: {
+                    role: "agent",
+                    sub: "partner-admin-1",
+                    agencyId: "agency-1",
+                    agencyRole: "partner_admin",
+                },
+                access: {
+                    role: "partner_admin",
+                    agencyId: "agency-1",
+                    user: {
+                        _id: "partner-admin-1",
+                        role: "agent",
+                        agencyId: "agency-1",
+                    },
+                },
+            }),
+        ).toEqual({ agencyId: "agency-1", ownerAgent: "partner-admin-1" });
+    });
+
+    test("scope=mine fails closed when the authenticated actor id is unavailable", () => {
+        expect(
+            buildManagementTourQuery({
+                query: { scope: "mine" },
+                access: { role: "partner_agent", agencyId: "agency-1", user: {} },
+            }),
+        ).toEqual({ _id: null });
+    });
+
+    test("combines agent ownership with escaped server-side search and status filters", () => {
+        const query = buildManagementTourListQuery({
+            query: { scope: "mine", query: "Leh.*", status: "published" },
+            access: {
+                role: "partner_agent",
+                agencyId: "agency-1",
+                user: { _id: "agent-1", role: "agent", agencyId: "agency-1" },
+            },
+        });
+
+        expect(query.$and[0]).toEqual({ agencyId: "agency-1", ownerAgent: "agent-1" });
+        expect(query.$and[1].$or).toHaveLength(5);
+        expect(query.$and[1].$or[0].title.source).toBe("Leh\\.\\*");
+        expect(query.$and[2]).toEqual({ status: "published" });
+    });
+
+    test("uses only supported management sort orders", () => {
+        expect(getManagementTourSort("oldest")).toEqual({ createdAt: 1 });
+        expect(getManagementTourSort("title")).toEqual({ title: 1, createdAt: -1 });
+        expect(getManagementTourSort("not-supported")).toEqual({ createdAt: -1 });
     });
 
     test("process checkpoints do not silently unpublish a live tour", () => {

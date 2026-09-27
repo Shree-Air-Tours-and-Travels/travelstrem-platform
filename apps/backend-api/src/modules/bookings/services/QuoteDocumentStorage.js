@@ -5,10 +5,11 @@ import { DOCUMENT_TYPE } from "../../../constants/enums.js";
 import DocumentStorageService from "../../../services/r2/DocumentStorageService.js";
 
 export const quoteUploadDirectory = path.resolve("uploads", "quotes");
+export const privateQuoteUploadDirectory = path.resolve("private-uploads", "quotes");
 
-export async function latestQuoteDocument(bookingId, quoteVersion = null) {
+export async function latestQuoteDocument(resourceId, quoteVersion = null) {
     return BookingDocument.findOne({
-        bookingId,
+        $or: [{ bookingId: resourceId }, { enquiryId: resourceId }],
         type: DOCUMENT_TYPE.QUOTE,
         ...(quoteVersion == null ? {} : { quoteVersion: Number(quoteVersion) }),
     }).sort({ quoteVersion: -1, uploadedAt: -1 });
@@ -17,8 +18,12 @@ export async function latestQuoteDocument(bookingId, quoteVersion = null) {
 export function resolveQuoteDocumentPath(document) {
     if (!document?.url) return null;
     const fileName = path.basename(String(document.url));
-    const resolved = path.resolve(quoteUploadDirectory, fileName);
-    if (!resolved.startsWith(`${quoteUploadDirectory}${path.sep}`)) return null;
+    const directory =
+        document.storageProvider === "LOCAL_PRIVATE"
+            ? privateQuoteUploadDirectory
+            : quoteUploadDirectory;
+    const resolved = path.resolve(directory, fileName);
+    if (!resolved.startsWith(`${directory}${path.sep}`)) return null;
     return resolved;
 }
 

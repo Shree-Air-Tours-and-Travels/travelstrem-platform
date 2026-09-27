@@ -1,8 +1,8 @@
 import React, { useRef } from "react";
-import { BrandLogo } from "@packages/trem-ui";
+import { BrandLogo, PRODUCT_TYPE } from "@packages/trem-ui";
 import "./ManageClients.scss";
 
-const PRODUCTS = ["trevio", "trevista", "dashboard", "admin", "agent"];
+const PRODUCTS = [PRODUCT_TYPE.TREVIO, PRODUCT_TYPE.TREVISTA, "dashboard", "admin", "agent"];
 
 function LogoUploadCell({ client, product, onUpload }) {
   const inputRef = useRef(null);
@@ -43,6 +43,7 @@ export default function ManageClientsView({
   onEdit,
   onDelete,
   onLogoUpload,
+  onMembers,
   onRetry,
 }) {
   if (loading) return <div className="mc-loading">Loading clients...</div>;
@@ -96,6 +97,7 @@ export default function ManageClientsView({
               </div>
 
               <div className="mc-card__actions">
+                {onMembers && <button className="btn btn--ghost btn--sm" onClick={() => onMembers(client)}>Manage access</button>}
                 <button className="btn btn--ghost btn--sm" onClick={() => onEdit(client)}>
                   Edit
                 </button>

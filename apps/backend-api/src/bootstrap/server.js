@@ -4,6 +4,7 @@ import config from "../config/index.js";
 import logger from "../shared/logger/index.js";
 import { verifyEmailConnection } from "../config/mail.js";
 import { attachRealtime } from "../realtime/index.js";
+import { disconnectRedis, initializeRedis } from "../shared/redis/client.js";
 
 const DEFAULT_SHUTDOWN_TIMEOUT_MS = 10_000;
 
@@ -12,6 +13,7 @@ export async function startServer({
     shutdownTimeoutMs = DEFAULT_SHUTDOWN_TIMEOUT_MS,
 } = {}) {
     await initializeDatabase();
+    await initializeRedis();
     await verifyEmailConnection();
 
     const server = app.listen(port, () => {
@@ -20,9 +22,12 @@ export async function startServer({
 
     // Realtime shares the platform HTTP server: same origin, same auth, no
     // separate websocket service.
-    const realtime = attachRealtime(server);
+    const realtime = await attachRealtime(server);
 
-    const shutdown = () => {
+    let isShuttingDown = false;
+    const shutdown = async () => {
+        if (isShuttingDown) return;
+        isShuttingDown = true;
         logger.info("Shutting down gracefully...");
         const closeHttp = new Promise((resolve) => server.close(() => resolve()));
         const closeRealtime = realtime?.realtimeClose
@@ -30,10 +35,12 @@ export async function startServer({
                   .realtimeClose()
                   .catch((err) => logger.error("[Realtime] shutdown error:", err?.message))
             : Promise.resolve();
-        Promise.race([
+        await Promise.race([
             Promise.all([closeHttp, closeRealtime]),
             new Promise((resolve) => setTimeout(resolve, shutdownTimeoutMs)),
-        ]).then(() => process.exit(0));
+        ]);
+        await disconnectRedis();
+        process.exit(0);
     };
 
     process.once("SIGTERM", shutdown);

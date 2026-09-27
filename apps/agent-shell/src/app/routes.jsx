@@ -1,15 +1,18 @@
 import React from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 
 import { buildGlobalAuthUrl } from "@packages/trem-utils";
 import ManageTours from "../features/services/tours/ManageTours";
 import ServicesContainer from "../features/services/container";
 import PartnerTrevioTrips from "../features/trevio/PartnerTrevioTrips";
-import EnquiriesPage from "../features/enquiries/EnquiriesPage";
+import { AgentAdminBookingJourney } from "@apps/booking-engine";
+import { PRODUCT_TYPE } from "@packages/trem-ui";
+import AgentSupportPage from "../features/support/AgentSupportPage";
 import { useAgentPortalConfig, isAllowedAgentRole } from "./providers/AgentPortalProvider";
 
 const Routers = () => {
   const { loading, session } = useAgentPortalConfig();
+  const location = useLocation();
 
   if (loading) return null;
 
@@ -24,7 +27,12 @@ const Routers = () => {
         <Route
           path="/agent/services/*"
           element={
-            session?.user?.productAccess?.includes("trevista") ? (
+            session?.user?.productAccess?.includes(PRODUCT_TYPE.TREVISTA) ||
+            (
+              session?.user?.productAccess?.includes(PRODUCT_TYPE.TREVIO) &&
+              location.pathname.startsWith("/agent/services/tours/builder") &&
+              new URLSearchParams(location.search).get("product") === PRODUCT_TYPE.TREVIO
+            ) ? (
               <ServicesContainer />
             ) : (
               <Navigate to="/agent/dashboard" replace />
@@ -33,14 +41,19 @@ const Routers = () => {
         />
         <Route path="/agent/profile" element={<ManageTours session={session} />} />
         <Route path="/agent/dashboard" element={<ManageTours session={session} />} />
-        <Route path="/agent/agents" element={<ManageTours session={session} />} />
+        <Route path="/agent/agency" element={<ManageTours session={session} />} />
+        <Route path="/agent/agents" element={<Navigate to="/agent/agency?view=team" replace />} />
         <Route path="/agent/customers" element={<ManageTours session={session} />} />
-        <Route path="/agent/enquiries" element={<EnquiriesPage />} />
-        <Route path="/agent/bookings" element={<EnquiriesPage />} />
+        <Route path="/agent/enquiries/*" element={<AgentAdminBookingJourney />} />
+        <Route path="/agent/bookings/*" element={<AgentAdminBookingJourney />} />
+        <Route path="/agent/support" element={<AgentSupportPage />} />
         <Route path="/agent/reports" element={<ManageTours session={session} />} />
         <Route path="/agent/deletion-requests" element={<ManageTours session={session} />} />
         <Route path="/agent/notifications" element={<ManageTours session={session} />} />
-        <Route path="/agent/partner-agency" element={<ManageTours session={session} />} />
+        <Route
+          path="/agent/partner-agency"
+          element={<Navigate to="/agent/agency?view=profile" replace />}
+        />
         <Route path="/agent/settings" element={<ManageTours session={session} />} />
         <Route path="/agent/trevio/trips" element={<PartnerTrevioTrips session={session} />} />
         <Route path="*" element={<Navigate to="/agent/dashboard" replace />} />

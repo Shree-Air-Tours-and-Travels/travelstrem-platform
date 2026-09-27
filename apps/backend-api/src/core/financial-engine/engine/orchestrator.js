@@ -6,17 +6,27 @@ import { percentageOf } from "../utils/money.js";
 import { DEFAULT_FINANCIAL_CONFIG } from "../constants/index.js";
 import { mergeConfig, validateFinancialConfig } from "../utils/configResolver.js";
 
+const resolutionInput = (input = {}) => ({
+    ...input,
+    ...(input.context || {}),
+    productType: input.productType || input.context?.productType || (input.tour ? "tour" : null),
+    paymentProvider:
+        input.paymentProvider || input.provider || input.context?.paymentProvider,
+    paymentMethod: input.paymentMethod || input.context?.paymentMethod,
+    currency: input.currency || input.context?.currency,
+});
+
 export async function calculateWithConfig(input, dependencies) {
     const config = input.config
         ? validateFinancialConfig(mergeConfig(DEFAULT_FINANCIAL_CONFIG, input.config))
-        : await resolveFinancialConfig(input.context || input, dependencies.repositories);
+        : await resolveFinancialConfig(resolutionInput(input), dependencies.repositories);
     return { config, financials: calculateFinancials({ ...input, config }) };
 }
 
 export async function calculateQuoteWithConfig(input, dependencies) {
     const config = input.config
         ? validateFinancialConfig(mergeConfig(DEFAULT_FINANCIAL_CONFIG, input.config))
-        : await resolveFinancialConfig(input.context || input, dependencies.repositories);
+        : await resolveFinancialConfig(resolutionInput(input), dependencies.repositories);
     if (input.subtotalMinor != null) {
         const taxAmountMinor = percentageOf(input.subtotalMinor, input.taxRateBasisPoints || 0);
         const feesMinor = Object.fromEntries(
@@ -28,19 +38,15 @@ export async function calculateQuoteWithConfig(input, dependencies) {
         const totalFeesMinor = Object.values(feesMinor).reduce((sum, amount) => sum + amount, 0);
         const beforeDiscountMinor = input.subtotalMinor + taxAmountMinor + totalFeesMinor;
         const discountMinor = percentageOf(beforeDiscountMinor, input.discountRateBasisPoints || 0);
-        const finalPayableMinor = Math.max(0, beforeDiscountMinor - discountMinor);
+        const partnerQuoteMinor = Math.max(0, beforeDiscountMinor - discountMinor);
         const effectiveConfig = {
             ...config,
             productFeeRatesBasisPoints: { ...(input.feeRatesBasisPoints || {}) },
             productTaxRateBasisPoints: input.taxRateBasisPoints || 0,
             productDiscountRateBasisPoints: input.discountRateBasisPoints || 0,
-            commission: { ...config.commission, enabled: false },
-            platformGst: { ...config.platformGst, enabled: false },
-            gatewayFee: { ...config.gatewayFee, enabled: false },
-            routeFee: { ...config.routeFee, enabled: false },
         };
         const financials = calculateFinancials({
-            agentAmountMinor: finalPayableMinor,
+            agentAmountMinor: partnerQuoteMinor,
             currency: input.currency || config.currency,
             config: effectiveConfig,
         });
@@ -54,13 +60,29 @@ export async function calculateQuoteWithConfig(input, dependencies) {
                 totalFeesMinor,
                 taxAmountMinor,
                 discountMinor,
-                finalPayableMinor,
+                partnerQuoteMinor,
+                platformFee: {
+                    amountMinor: financials.platform.commissionMinor,
+                    gstMinor: financials.platform.gstMinor,
+                    totalMinor:
+                        financials.platform.commissionMinor + financials.platform.gstMinor,
+                },
+                customerGatewayFee: {
+                    baseFeeMinor: financials.gateway.feeMinor,
+                    gstMinor: financials.gateway.taxMinor,
+                    amountMinor: financials.gateway.totalMinor,
+                    grossedUp: financials.gateway.grossedUp,
+                },
+                finalPayableMinor: financials.customer.payableMinor,
             },
             financials,
             tokenAmountMinor:
                 input.fixedTokenMinor == null
-                    ? percentageOf(finalPayableMinor, config.token?.rateBasisPoints || 0)
-                    : Math.min(input.fixedTokenMinor, finalPayableMinor),
+                    ? percentageOf(
+                          financials.customer.payableMinor,
+                          config.token?.rateBasisPoints || 0,
+                      )
+                    : Math.min(input.fixedTokenMinor, financials.customer.payableMinor),
         };
     }
     if (input.tour?.commercial?.version === "COMPONENTS_V1") {
@@ -143,7 +165,7 @@ export async function calculateQuoteWithConfig(input, dependencies) {
         };
     }
     const pricing = input.tour ? calculateBookingPrice(input) : null;
-    const agentAmountMinor = input.agentAmountMinor ?? pricing?.subtotalMinor;
+    const agentAmountMinor = input.agentAmountMinor ?? pricing?.partnerQuoteMinor;
     const financials = calculateFinancials({
         agentAmountMinor,
         currency: input.currency || pricing?.currency || config.currency,
@@ -156,11 +178,20 @@ export async function calculateQuoteWithConfig(input, dependencies) {
             0,
             financials.agent.amountMinor - financials.agent.deductionsMinor,
         );
-        financials.customer.adjustmentsMinor =
-            pricing.finalPayableMinor - financials.customer.payableMinor;
-        financials.customer.payableMinor = pricing.finalPayableMinor;
         financials.settlement.deductionsMinor += agencyDeductionMinor;
         financials.settlement.agentPayableMinor = financials.agent.receivableMinor;
+        pricing.platformFee = {
+            amountMinor: financials.platform.commissionMinor,
+            gstMinor: financials.platform.gstMinor,
+            totalMinor: financials.platform.commissionMinor + financials.platform.gstMinor,
+        };
+        pricing.customerGatewayFee = {
+            baseFeeMinor: financials.gateway.feeMinor,
+            gstMinor: financials.gateway.taxMinor,
+            amountMinor: financials.gateway.totalMinor,
+            grossedUp: financials.gateway.grossedUp,
+        };
+        pricing.finalPayableMinor = financials.customer.payableMinor;
     }
     return {
         config,

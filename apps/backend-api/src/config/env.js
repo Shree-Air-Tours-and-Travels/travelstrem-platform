@@ -20,6 +20,7 @@ import {
 // normalize node env early
 const RAW_NODE_ENV = (process.env.NODE_ENV || "development").toString().trim();
 const NODE_ENV = RAW_NODE_ENV || "development";
+const IS_PRODUCTION_LIKE_ENV = NODE_ENV === "production" || NODE_ENV === "test";
 
 // Runtime environment variables are primary. Local dotenv loading is opt-in.
 const projectRoot = process.cwd();
@@ -30,16 +31,16 @@ if (USE_DOTENV && fs.existsSync(envFileCandidate)) {
     dotenv.config({ path: envFileCandidate });
     // Note: don't log secrets; only presence
 
-    if (NODE_ENV !== "production") console.log(`✅ Loaded environment from ${envFileCandidate}`);
+    if (!IS_PRODUCTION_LIKE_ENV) console.log(`✅ Loaded environment from ${envFileCandidate}`);
 } else {
     if (USE_DOTENV) dotenv.config();
 
-    if (USE_DOTENV && NODE_ENV !== "production")
+    if (USE_DOTENV && !IS_PRODUCTION_LIKE_ENV)
         console.log(`⚠️ Loaded fallback .env (or none) for ${NODE_ENV}`);
 }
 if (USE_DOTENV && fs.existsSync(localEnvFileCandidate)) {
     dotenv.config({ path: localEnvFileCandidate, override: true });
-    if (NODE_ENV !== "production")
+    if (!IS_PRODUCTION_LIKE_ENV)
         console.log(`✅ Loaded local environment overrides from ${localEnvFileCandidate}`);
 }
 
@@ -75,7 +76,7 @@ const readPortalJsonConfig = () => {
 
     try {
         const parsed = JSON.parse(fs.readFileSync(configPath, "utf8"));
-        if (NODE_ENV !== "production") console.log(`✅ Loaded portal config from ${configPath}`);
+        if (!IS_PRODUCTION_LIKE_ENV) console.log(`✅ Loaded portal config from ${configPath}`);
         return parsed;
     } catch (err) {
         throw new Error(`Failed to parse portal config ${configPath}: ${err.message}`);
@@ -101,7 +102,7 @@ const parseFrontends = (raw) => {
 /* ------------------------------
    3) Core runtime settings
    ------------------------------ */
-const IS_PRODUCTION = NODE_ENV === "production";
+const IS_PRODUCTION = IS_PRODUCTION_LIKE_ENV;
 const IS_DEVELOPMENT = NODE_ENV === "development";
 const IS_TEST = NODE_ENV === "test";
 
@@ -124,6 +125,7 @@ const frontendsRaw = get(
                 portalJsonConfig?.frontends?.shell?.baseUrl,
                 portalJsonConfig?.frontends?.trevista?.baseUrl,
                 portalJsonConfig?.frontends?.trevio?.baseUrl,
+                portalJsonConfig?.frontends?.trehub?.baseUrl,
                 portalJsonConfig?.frontends?.adminTREM?.baseUrl,
             ].filter(Boolean),
     ),
@@ -151,6 +153,9 @@ const TREVIO_URL = String(
 ).trim();
 const TREVISTA_URL = String(
     get("TREVISTA_URL", portalJsonConfig?.frontends?.trevista?.baseUrl || "") || "",
+).trim();
+const TREHUB_URL = String(
+    get("TREHUB_URL", portalJsonConfig?.frontends?.trehub?.baseUrl || "") || "",
 ).trim();
 const SHELL_URL = String(
     get("SHELL_URL", portalJsonConfig?.frontends?.shell?.baseUrl || "") || "",
@@ -336,8 +341,13 @@ const R2_ENDPOINT =
     11) OTP and other application-level settings
     ------------------------------ */
 const OTP_TTL_MS = Number(
-    get("OTP_TTL_MS", portalJsonConfig?.features?.otpTtlMs || 15 * 60 * 1000),
-); // 15 minutes by default
+    get("OTP_TTL_MS", portalJsonConfig?.features?.otpTtlMs || 5 * 60 * 1000),
+); // 5 minutes by default
+const OTP_MAX_ATTEMPTS = Math.min(10, Math.max(3, Number(get("OTP_MAX_ATTEMPTS", 3)) || 3));
+const OTP_RESEND_COOLDOWN_MS = Math.min(
+    5 * 60 * 1000,
+    Math.max(15 * 1000, Number(get("OTP_RESEND_COOLDOWN_MS", 30 * 1000)) || 30 * 1000),
+);
 // In non-production environments the OTP flow is bypassed: no OTP emails are
 // sent and any submitted OTP is accepted. Production always keeps real OTPs.
 const DEV_OTP_BYPASS = get("DEV_OTP_BYPASS", "false").toString() === "true";
@@ -355,6 +365,10 @@ const GOOGLE_CLIENT_SECRET = String(get("GOOGLE_CLIENT_SECRET", "") || "").trim(
 const GOOGLE_CALLBACK_URL = String(
     get("GOOGLE_CALLBACK_URL", `${BASE_URL.replace(/\/$/, "")}/api/auth/google/callback`) || "",
 ).trim();
+const GOOGLE_PLACES_API_KEY = String(get("GOOGLE_PLACES_API_KEY", "") || "").trim();
+const GOOGLE_PLACES_API_BASE_URL = String(
+    get("GOOGLE_PLACES_API_BASE_URL", "https://places.googleapis.com/v1") || "",
+).replace(/\/$/, "");
 const OAUTH_TRANSACTION_TTL_SECONDS = Math.min(
     900,
     Math.max(60, Number(get("OAUTH_TRANSACTION_TTL_SECONDS", 600)) || 600),
@@ -431,6 +445,13 @@ if (MASTER_ADMIN_PIN && !/^\d{6}$/.test(MASTER_ADMIN_PIN)) {
 const REDIS_URL = getSecret("REDIS_URL", portalJsonConfig?.redis?.url || "")
     .toString()
     .trim();
+const ENABLE_REDIS_SOCKET_ADAPTER =
+    get("ENABLE_REDIS_SOCKET_ADAPTER", "false").toString().trim().toLowerCase() === "true";
+
+const FLIGHT_PROVIDER = String(get("FLIGHT_PROVIDER", "mock") || "mock").trim().toLowerCase();
+const MOCK_FLIGHT_MIN_LATENCY_MS = Math.max(0, Number(get("MOCK_FLIGHT_MIN_LATENCY_MS", "300")) || 0);
+const MOCK_FLIGHT_MAX_LATENCY_MS = Math.max(MOCK_FLIGHT_MIN_LATENCY_MS, Number(get("MOCK_FLIGHT_MAX_LATENCY_MS", "1200")) || 0);
+const MOCK_FLIGHT_FORCE_ERROR = IS_PRODUCTION ? "" : String(get("MOCK_FLIGHT_FORCE_ERROR", "") || "").trim().toUpperCase();
 
 /* ------------------------------
     14) Config summary helper
@@ -476,6 +497,7 @@ const config = {
     CORS_ALLOWED_DOMAIN_SUFFIXES,
     TREVIO_URL,
     TREVISTA_URL,
+    TREHUB_URL,
     SHELL_URL,
     AUTH_APP_URL,
     PARTNER_URL,
@@ -501,12 +523,16 @@ const config = {
     DEBUG,
     DEV_DELAY_MS,
     OTP_TTL_MS,
+    OTP_MAX_ATTEMPTS,
+    OTP_RESEND_COOLDOWN_MS,
     DEV_OTP_BYPASS,
     AUTH_COOKIE_DOMAIN,
     GOOGLE_AUTH_ENABLED,
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
     GOOGLE_CALLBACK_URL,
+    GOOGLE_PLACES_API_KEY,
+    GOOGLE_PLACES_API_BASE_URL,
     OAUTH_TRANSACTION_TTL_SECONDS,
     MOBILE_AUTH_ENABLED,
     MOBILE_AUTH_PROVIDER,
@@ -524,6 +550,11 @@ const config = {
     R2_BUCKET_NAME,
     R2_ENDPOINT,
     REDIS_URL,
+    ENABLE_REDIS_SOCKET_ADAPTER,
+    FLIGHT_PROVIDER,
+    MOCK_FLIGHT_MIN_LATENCY_MS,
+    MOCK_FLIGHT_MAX_LATENCY_MS,
+    MOCK_FLIGHT_FORCE_ERROR,
     MASTER_ADMIN_EMAIL,
     MASTER_ADMIN_PHONE,
     MASTER_ADMIN_PIN,
@@ -543,6 +574,7 @@ export {
     CORS_ALLOWED_DOMAIN_SUFFIXES,
     TREVIO_URL,
     TREVISTA_URL,
+    TREHUB_URL,
     SHELL_URL,
     AUTH_APP_URL,
     PARTNER_URL,
@@ -568,12 +600,16 @@ export {
     DEBUG,
     DEV_DELAY_MS,
     OTP_TTL_MS,
+    OTP_MAX_ATTEMPTS,
+    OTP_RESEND_COOLDOWN_MS,
     DEV_OTP_BYPASS,
     AUTH_COOKIE_DOMAIN,
     GOOGLE_AUTH_ENABLED,
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
     GOOGLE_CALLBACK_URL,
+    GOOGLE_PLACES_API_KEY,
+    GOOGLE_PLACES_API_BASE_URL,
     OAUTH_TRANSACTION_TTL_SECONDS,
     MOBILE_AUTH_ENABLED,
     MOBILE_AUTH_PROVIDER,
@@ -591,6 +627,11 @@ export {
     R2_BUCKET_NAME,
     R2_ENDPOINT,
     REDIS_URL,
+    ENABLE_REDIS_SOCKET_ADAPTER,
+    FLIGHT_PROVIDER,
+    MOCK_FLIGHT_MIN_LATENCY_MS,
+    MOCK_FLIGHT_MAX_LATENCY_MS,
+    MOCK_FLIGHT_FORCE_ERROR,
     MASTER_ADMIN_EMAIL,
     MASTER_ADMIN_PHONE,
     MASTER_ADMIN_PIN,

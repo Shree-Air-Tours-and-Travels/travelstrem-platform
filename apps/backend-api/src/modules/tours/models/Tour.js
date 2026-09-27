@@ -646,10 +646,33 @@ const tourSchema = new Schema(
         searchTags: [searchTagSchema],
         metrics: {
             views: { type: Number, min: 0, default: 0 },
+            enquiries: { type: Number, min: 0, default: 0 },
             bookings: { type: Number, min: 0, default: 0 },
             wishlists: { type: Number, min: 0, default: 0 },
             popularityScore: { type: Number, default: 0 },
             trendScore: { type: Number, default: 0 },
+            lastViewedAt: { type: Date, default: null },
+            lastEnquiredAt: { type: Date, default: null },
+            lastBookedAt: { type: Date, default: null },
+            lastWishlistedAt: { type: Date, default: null },
+        },
+        intelligence: {
+            qualityScore: { type: Number, min: 0, max: 100, default: 0 },
+            scoreVersion: { type: String, default: "TREM_TOUR_INTELLIGENCE_V1" },
+            lastEvaluatedAt: { type: Date, default: null },
+        },
+        featuredRequest: {
+            requested: { type: Boolean, default: false },
+            status: {
+                type: String,
+                enum: ["not_requested", "pending", "approved", "declined"],
+                default: "not_requested",
+            },
+            requestedAt: { type: Date, default: null },
+            requestedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
+            evaluatedAt: { type: Date, default: null },
+            score: { type: Number, min: 0, max: 100, default: 0 },
+            reason: { type: String, default: "" },
         },
 
         ownerAgent: { type: Schema.Types.ObjectId, ref: "User", default: null, index: true },

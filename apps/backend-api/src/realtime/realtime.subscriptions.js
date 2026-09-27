@@ -1,6 +1,6 @@
 import BookingPayment from "../modules/bookings/models/BookingPayment.js";
 import Tour from "../modules/tours/models/Tour.js";
-import TrevioTrip from "../modules/trevio/models/TrevioTrip.js";
+import Trip from "../modules/trips/models/Trip.js";
 import SupportTicket from "../modules/support/models/SupportTicket.js";
 import { isAdmin } from "../shared/auth/permissions.js";
 import { room, realtimeError, REALTIME_ERROR_CODES } from "./realtime.constants.js";
@@ -67,7 +67,7 @@ async function authorizeTour(context, tourId) {
 }
 
 async function authorizeTrip(context, tripId) {
-    const trip = await TrevioTrip.findById(tripId)
+    const trip = await Trip.findById(tripId)
         .select("status isListed agencyId createdBy")
         .lean();
     if (!trip)

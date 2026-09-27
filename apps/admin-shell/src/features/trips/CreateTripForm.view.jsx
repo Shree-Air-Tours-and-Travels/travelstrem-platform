@@ -199,6 +199,33 @@ function PreferenceEditor({ preferences = {}, onChange }) {
                     }}
                   />
                 </label>
+                {key === "packageTypes" ? (
+                  <>
+                    <label>
+                      Package details
+                      <input
+                        value={option.description || ""}
+                        onChange={(e) => {
+                          const next = [...options];
+                          next[index] = { ...option, description: e.target.value };
+                          updateGroup(key, next);
+                        }}
+                      />
+                    </label>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={Boolean(option.includesFlights)}
+                        onChange={(e) => {
+                          const next = [...options];
+                          next[index] = { ...option, includesFlights: e.target.checked };
+                          updateGroup(key, next);
+                        }}
+                      />
+                      Flights included
+                    </label>
+                  </>
+                ) : null}
                 <Button
                   type="button"
                   primaryClassName="btn ctf-preference-remove"

@@ -1,4 +1,5 @@
 import axios from "axios";
+import { showRealtimeToast } from "@packages/trem-events";
 
 const normalizeBase = (raw) => {
   if (raw == null || raw === "") return raw;
@@ -71,6 +72,7 @@ export const fetchData = async (endpoint, options = {}) => {
     }
 
     const rawResponse = res?.data || {};
+    if (rawResponse?.notify) showRealtimeToast(rawResponse.notify);
     const { status, message, componentData, component } = rawResponse;
     // Newer domain endpoints return their payload directly at `data`, while
     // legacy component endpoints wrap it in `componentData.data` or
@@ -112,6 +114,36 @@ export const fetchData = async (endpoint, options = {}) => {
       },
       data: null,
     };
+  }
+};
+
+export const fetchBinary = async (endpoint, options = {}) => {
+  const { method = "GET", body = null, headers = {}, signal } = options;
+  try {
+    const response = await apiClient.request({
+      url: endpoint,
+      method: method.toUpperCase(),
+      data: body ?? undefined,
+      headers,
+      signal,
+      responseType: "blob",
+    });
+    return {
+      status: "success",
+      data: response.data,
+      contentType: response.headers?.["content-type"] || "application/octet-stream",
+      disposition: response.headers?.["content-disposition"] || "",
+    };
+  } catch (error) {
+    let message = error?.message || "The file could not be loaded.";
+    const payload = error?.response?.data;
+    if (payload instanceof Blob) {
+      try {
+        const parsed = JSON.parse(await payload.text());
+        message = parsed?.message || message;
+      } catch {}
+    }
+    return { status: "error", message, data: null };
   }
 };
 

@@ -23,7 +23,9 @@ export const supportApi = {
   categories: (signal) => read("/categories", null, signal),
   contacts: (signal) => read("/contact-options", null, signal),
   tickets: (status, signal) => read("/tickets", status ? { status } : null, signal),
-  ticket: (id, signal) => read(`/tickets/${encodeURIComponent(id)}`, null, signal),
+  ticket: (id, signal, before = "") =>
+    read(`/tickets/${encodeURIComponent(id)}`, before ? { before } : null, signal),
   createTicket: (payload) => write("/tickets", payload),
-  reply: (id, content) => write(`/tickets/${encodeURIComponent(id)}/messages`, { content }),
+  reply: (id, content, clientMessageId) =>
+    write(`/tickets/${encodeURIComponent(id)}/messages`, { content, clientMessageId }),
 };

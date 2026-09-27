@@ -2,8 +2,8 @@ import React, { useEffect } from "react";
 import { AgentPortalConfigProvider } from "./providers/AgentPortalProvider";
 import AppLayout from "./AppLayout";
 import { useThemeMode } from "@packages/trem-utils";
-import { RealtimeProvider, ScrollToTop, Toaster } from "@packages/trem-ui";
-import { initRealtimeNotifications } from "@packages/trem-events";
+import { ScrollToTop, Toaster } from "@packages/trem-ui";
+import { initRealtimeNotifications, RealtimeProvider } from "@packages/trem-events";
 
 const AgentApp = ({ embedded = false }) => {
   useThemeMode();

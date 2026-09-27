@@ -1,9 +1,12 @@
 const path = require("path");
-const ModuleScopePlugin = require("react-dev-utils/ModuleScopePlugin");
 
 const appSrc = path.resolve(__dirname, "src");
 const sharedPackageSrc = path.resolve(__dirname, "../../packages");
 const authTremSrc = path.resolve(__dirname, "../../apps/auth-trem/src");
+const bookingEngineSrc = path.resolve(__dirname, "../booking-engine/src");
+const reactScriptsDir = path.dirname(require.resolve("react-scripts/package.json"));
+const { container } = require(require.resolve("webpack", { paths: [reactScriptsDir] }));
+const dashboardRemoteEntry = process.env.REACT_APP_DASHBOARD_REMOTE_ENTRY || (process.env.NODE_ENV === "production" ? "https://dashboard.travelstrem.com/remoteEntry.js" : "http://localhost:3017/remoteEntry.js");
 const backendTarget =
   process.env.REACT_APP_BACKEND_URL ||
   process.env.REACT_APP_API_URL?.replace(/\/api\/?$/, "") ||
@@ -17,12 +20,14 @@ function extendBabelIncludes(webpackConfig) {
     if (!rule.loader || !rule.loader.includes("babel-loader")) return;
 
     if (Array.isArray(rule.include)) {
-      rule.include = Array.from(new Set([...rule.include, appSrc, sharedPackageSrc, authTremSrc]));
+      rule.include = Array.from(
+        new Set([...rule.include, appSrc, sharedPackageSrc, authTremSrc, bookingEngineSrc]),
+      );
       return;
     }
 
     if (rule.include) {
-      rule.include = [rule.include, appSrc, sharedPackageSrc, authTremSrc];
+      rule.include = [rule.include, appSrc, sharedPackageSrc, authTremSrc, bookingEngineSrc];
     }
   });
 }
@@ -50,11 +55,14 @@ module.exports = {
     configure: (webpackConfig) => {
       webpackConfig.output.publicPath = "auto";
       webpackConfig.output.uniqueName = "adminShell";
+      webpackConfig.optimization.runtimeChunk = false;
       webpackConfig.resolve.alias = {
         ...(webpackConfig.resolve.alias || {}),
+        "@apps/booking-engine": path.resolve(__dirname, "../booking-engine/src/library.js"),
         react: path.resolve(__dirname, "node_modules/react"),
         "react-dom": path.resolve(__dirname, "node_modules/react-dom"),
         "@packages/trem-auth-core": path.resolve(__dirname, "../../packages/trem-auth-core/src"),
+        "@packages/trem-events": path.resolve(__dirname, "../../packages/trem-events/src"),
         "@packages/tour-builder": path.resolve(__dirname, "../../packages/tour-builder/src"),
         "@packages/trem-modals": path.resolve(__dirname, "../../packages/trem-modals/src"),
         "@packages/trem-ui": path.resolve(__dirname, "../../packages/trem-ui/src"),
@@ -65,9 +73,17 @@ module.exports = {
         ),
       };
       webpackConfig.resolve.plugins = (webpackConfig.resolve.plugins || []).filter(
-        (plugin) => !(plugin instanceof ModuleScopePlugin),
+        (plugin) => plugin?.constructor?.name !== "ModuleScopePlugin",
       );
       extendBabelIncludes(webpackConfig);
+      webpackConfig.plugins.push(new container.ModuleFederationPlugin({
+        name: "admin_shell",
+        remotes: { dashboard: `dashboard@${dashboardRemoteEntry}` },
+        shared: {
+          react: { singleton: true, requiredVersion: false },
+          "react-dom": { singleton: true, requiredVersion: false },
+        },
+      }));
       return webpackConfig;
     },
   },

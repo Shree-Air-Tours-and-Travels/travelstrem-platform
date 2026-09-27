@@ -1,3 +1,4 @@
+import { useSupportNavigate } from "./SupportLayout";
 import React from "react";
 import {
   EmptyState,
@@ -5,14 +6,14 @@ import {
   SupportContactMethod,
   SupportTopicRow,
 } from "@packages/trem-ui";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { supportApi } from "./support.api";
 import { useSupportResource } from "./support.hooks";
 import { ResourceBoundary, SupportLayout, SupportSection } from "./SupportLayout";
 import { executeSupportAction } from "./support.utils";
 
 const ContentLists = ({ data, serviceId }) => {
-  const navigate = useNavigate();
+  const navigate = useSupportNavigate();
   const open = (value) => executeSupportAction(value, navigate);
   return (
     <>
@@ -105,7 +106,7 @@ export function TopicSupportPage() {
 }
 
 export function ContactSupportPage() {
-  const navigate = useNavigate();
+  const navigate = useSupportNavigate();
   const resource = useSupportResource((signal) => supportApi.contacts(signal), []);
   return (
     <SupportLayout

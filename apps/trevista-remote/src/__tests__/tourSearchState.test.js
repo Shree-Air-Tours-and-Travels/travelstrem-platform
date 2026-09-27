@@ -89,4 +89,16 @@ describe("Trevista canonical tour search state", () => {
     expect(cleared.filters.tagIds).toEqual([]);
     expect(cleared.filters.featured).toBeNull();
   });
+
+  test("keeps domestic and international as additive choices", () => {
+    const state = createDefaultTourSearchState();
+    const domestic = applyTourDiscoveryChip(state, { type: "TAG", value: "domestic" });
+    const both = applyTourDiscoveryChip(domestic, { type: "TAG", value: "international" });
+
+    expect(both.filters.tagIds).toEqual(["domestic", "international"]);
+    expect(parseTourSearchUrl(`?${serializeTourSearchUrl(both)}`).filters.tagIds).toEqual([
+      "domestic",
+      "international",
+    ]);
+  });
 });

@@ -4,7 +4,10 @@
     "data": {},
     "dataScope": {
       "options": {},
-      "optionSets": { "preferredContactOptions": "tours.preferredContactOptions" }
+      "optionSets": {
+        "preferredContactOptions": "tours.preferredContactOptions",
+        "phoneCountryCodes": "common.phoneCountryCodes"
+      }
     },
     "elements": {
       "labels": {
@@ -22,6 +25,9 @@
         "customizationPreference": "How would you like to travel?",
         "usePackage": "Use the selected package",
         "customizeTour": "Customise this tour",
+        "customJourneyRedirectTitle": "Build the full journey in the custom tour planner",
+        "customJourneyRedirectDescription": "We will carry this tour's destinations, dates, duration, flights, and available preferences into the planner so you can tailor the complete trip.",
+        "customJourneyRedirectAction": "Continue to custom planner",
         "preferredTravelDate": "Choose a departure",
         "preferredStartDate": "Suitable start date",
         "preferredEndDate": "Suitable end date",
@@ -40,10 +46,38 @@
         "quoteWithFlights": "Quote with flights",
         "quoteWithoutFlights": "Quote without flights",
         "sendRequest": "Request quote",
+        "quoteJourneyAriaLabel": "Quote request progress",
+        "quoteDetailsStep": "Trip details",
+        "quoteChangesStep": "Changes & add-ons",
+        "quotePricingStep": "Package price",
+        "quoteReviewStep": "Review request",
+        "quoteDetailsTitle": "Tell us about your trip",
+        "quoteDetailsDescription": "Complete your contact, traveller and journey preferences before TREM Intelligence calculates your options.",
+        "quoteChangesTitle": "Tailor your selected package",
+        "quoteChangesDescription": "Request package changes and select optional services for the agent to include in your quotation.",
+        "quotePricingTitle": "Review your package price",
+        "quotePricingDescription": "See the selected package, requested changes and optional add-ons before reviewing the complete enquiry.",
+        "quoteReviewTitle": "Review and send your request",
+        "quoteReviewDescription": "Check your saved details and selected package before sending the request to your travel specialist.",
+        "cancel": "Cancel",
+        "continueToPricing": "Continue",
+        "continueWithPackage": "Continue with {package}",
+        "continueToReview": "Continue to review",
+        "continueWithoutSuggestion": "Continue without suggestion",
+        "backToDetails": "Back to details",
+        "backToPricing": "Back to price",
+        "sendingRequest": "Sending…",
+        "formValidationError": "Please fix the highlighted fields before continuing.",
         "operatedBy": "Operated by",
         "travelSpecialist": "Travel specialist",
         "quoteSummary": "Quote summary",
-        "calculatingPrice": "Updating your price…",
+        "intelligenceTag": "TREM intelligence",
+        "pricingAssistantTitle": "Build your intelligent trip price",
+        "pricingAssistantDescription": "Complete the trip details and TREM Intelligence will compare packages, rooms and traveller pricing.",
+        "pricingDetailsProgress": "Pricing details",
+        "pricingWaitingForDetails": "Your live estimate will replace this guide as soon as the required trip selections are complete.",
+        "calculatingPrice": "Calculating your TREM price…",
+        "calculatingPriceDescription": "Comparing package components, room choices and traveller pricing securely.",
         "customQuote": "Customized quote",
         "packageQuote": "Package price",
         "travellers": "travellers",
@@ -55,7 +89,7 @@
         "customizedPlan": "Customized package",
         "perPersonPrice": "per person",
         "totalPrice": "total",
-        "saveWithPackage": "You can save by switching packages",
+        "saveWithPackage": "A comparable package may offer better value",
         "comparePackage": "Compare with the package that includes this hotel",
         "includesHotel": "recalculates all your selected stays",
         "saves": "You save",
@@ -66,7 +100,10 @@
         "alternativePrice": "Package price",
         "pricePending": "Agent confirmation required",
         "hotelRequestPending": "Your requested hotel preferences will be priced after the agent confirms suitable properties and rooms.",
-        "hotelRequest": "Requested hotel"
+        "hotelRequest": "Requested hotel",
+        "flights": "Flights",
+        "flightsIncluded": "Included in selected package",
+        "flightsAdded": "Added to quotation · Agent pricing required"
       },
       "urls": {
         "brandLogo": "/favicon-dark.png"
@@ -106,6 +143,7 @@
                 "required": true,
                 "width": "half",
                 "maxLength": 10,
+                "optionsRef": "phoneCountryCodes",
                 "placeholderRef": "phonePlaceholder"
               },
               {
@@ -123,7 +161,7 @@
                 "name": "packageKey",
                 "labelRef": "package",
                 "type": "select",
-                "required": false,
+                "required": true,
                 "width": "half",
                 "placeholderRef": "packagePlaceholder",
                 "options": []

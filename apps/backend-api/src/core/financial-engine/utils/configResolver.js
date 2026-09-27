@@ -36,10 +36,21 @@ export function validateFinancialConfig(config) {
     }
     for (const [key, rate] of [
         ["platformGst.rateBasisPoints", config.platformGst?.rateBasisPoints],
+        ["gatewayFee.taxRateBasisPoints", config.gatewayFee?.taxRateBasisPoints],
+        ["routeFee.taxRateBasisPoints", config.routeFee?.taxRateBasisPoints],
         ["token.rateBasisPoints", config.token?.rateBasisPoints],
     ]) {
         if (!Number.isSafeInteger(rate || 0) || (rate || 0) < 0 || (rate || 0) > 10000)
             throw new RangeError(`${key} must be between 0 and 10000`);
     }
+    if (
+        config.gatewayFee.enabled &&
+        config.gatewayFee.type === "PERCENTAGE" &&
+        config.gatewayFee.responsibility === "CUSTOMER" &&
+        config.gatewayFee.rateBasisPoints *
+            (10000 + config.gatewayFee.taxRateBasisPoints) >=
+            100000000
+    )
+        throw new RangeError("Effective customer gateway rate must be less than 100 percent");
     return config;
 }

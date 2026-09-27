@@ -14,5 +14,8 @@
   "prettier.requireConfig": true,
   "css.validate": false,
   "scss.validate": false,
-  "less.validate": false
+  "less.validate": false,
+  "[scss]": {
+    "editor.defaultFormatter": "vscode.css-language-features"
+  }
 }

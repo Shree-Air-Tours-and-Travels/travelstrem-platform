@@ -1,5 +1,6 @@
 // server/models/User.js
 import mongoose from "mongoose";
+import { DEFAULT_PROFILE_AVATAR } from "../profileAvatar.constants.js";
 
 const userSchema = new mongoose.Schema(
     {
@@ -34,6 +35,17 @@ const userSchema = new mongoose.Schema(
             default: null,
             index: true,
         },
+        clientId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Client",
+            default: null,
+            index: true,
+        },
+        clientRole: {
+            type: String,
+            enum: ["none", "client_admin", "client_agent"],
+            default: "none",
+        },
         designation: { type: String, trim: true, default: "" },
         accountStatus: {
             type: String,
@@ -46,6 +58,14 @@ const userSchema = new mongoose.Schema(
         productAccess: [{ type: String, trim: true, lowercase: true }],
         permissionGrants: [{ type: String, trim: true }],
         permissionDenials: [{ type: String, trim: true }],
+        internalTeamRoles: [
+            {
+                type: String,
+                enum: ["support"],
+                trim: true,
+                lowercase: true,
+            },
+        ],
         agentRef: { type: String, trim: true, default: "" },
         agencyRef: { type: String, trim: true, default: "" },
         partnerAgencyRef: { type: String, trim: true, default: "" },
@@ -68,7 +88,7 @@ const userSchema = new mongoose.Schema(
         },
         approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
         approvedAt: { type: Date, default: null },
-        avatar: { type: String, default: "user" },
+        avatar: { type: String, trim: true, default: DEFAULT_PROFILE_AVATAR },
         tokenVersion: { type: Number, default: 0 },
     },
     { timestamps: true },

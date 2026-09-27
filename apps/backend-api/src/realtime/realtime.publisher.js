@@ -52,10 +52,16 @@ export async function publish(targetRooms, event, data, { correlationId, notify 
     if (!ioInstance || !event || data === undefined || data === null) return false;
     const rooms = normalizeRooms(targetRooms);
     if (rooms.length === 0) return false;
-    ioInstance
-        .to(rooms)
-        .emit(event, buildEnvelope(event, data, correlationId ? { correlationId } : {}, notify));
-    return true;
+    try {
+        ioInstance
+            .to(rooms)
+            .emit(event, buildEnvelope(event, data, correlationId ? { correlationId } : {}, notify));
+        return true;
+    } catch {
+        // Realtime is best-effort. A missing/stopping adapter must never fail
+        // the HTTP transaction that already persisted the business record.
+        return false;
+    }
 }
 
 const publishToRoom = (roomValue) => (id, event, data, opts) =>

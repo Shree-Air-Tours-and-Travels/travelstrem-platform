@@ -1,4 +1,4 @@
-@import "@packages/trem-ui/styles/base/typography";
+@import "@packages/trem-ui/styles/base/tokens";
 
 .featured-holiday-packages {
   padding: $space-8 0 0;
@@ -20,18 +20,7 @@
   }
 
   &__eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: $space-2;
     margin-bottom: $space-3;
-    padding: $space-1 $space-3;
-    border-radius: $radius-full;
-    background: var(--primary-softer);
-    color: var(--color-primary-dark);
-    font-size: $font-size-xs;
-    font-weight: $font-semibold;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
   }
 
   &__title {
@@ -60,6 +49,14 @@
     justify-content: center;
     gap: $space-3;
     margin-top: $space-2;
+  }
+
+  &__list--count-1 {
+    width: min(760px, 100%);
+  }
+
+  &__list--count-2 {
+    width: min(1080px, 100%);
   }
 }
 

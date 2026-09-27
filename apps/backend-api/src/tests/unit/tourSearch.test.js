@@ -187,6 +187,21 @@ describe("tour discovery search rules", () => {
         expect(serialized).toContain('"_priceMax":{"$lte":150000}');
     });
 
+    test("combines selected values inside the tag facet with OR semantics", () => {
+        const search = normalizeTourSearchRequest({
+            filters: { tagIds: ["domestic", "international"] },
+        }).value;
+        const pipeline = buildTourSearchPipeline(search);
+        const tagMatch = pipeline.find(
+            (stage) => stage.$match?._tagSlugs && stage.$match._tagSlugs.$in,
+        );
+
+        expect(tagMatch.$match._tagSlugs.$in).toEqual(
+            expect.arrayContaining(["domestic", "international"]),
+        );
+        expect(tagMatch.$match.$and).toBeUndefined();
+    });
+
     test.each([
         ["PRICE_ASC", { _priceMin: 1 }],
         ["PRICE_DESC", { _priceMin: -1 }],

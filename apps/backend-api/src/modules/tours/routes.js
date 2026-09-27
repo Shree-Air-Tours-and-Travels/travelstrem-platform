@@ -36,6 +36,7 @@ import {
     saveBuilderStep,
     updateBuilderPosition,
 } from "./builder/tourBuilder.controller.js";
+import { getTourTrackingEvents } from "./controllers/tourAnalytics.controller.js";
 
 const router = express.Router();
 
@@ -87,6 +88,13 @@ router.post(
     loadAccessContext,
     builderPermission,
     previewBuilderPricing,
+);
+router.get(
+    "/analytics/events",
+    authMiddleware,
+    loadAccessContext,
+    requirePermission(PERMISSIONS.TRIP_VIEW_AGENCY),
+    getTourTrackingEvents,
 );
 
 // Departure management

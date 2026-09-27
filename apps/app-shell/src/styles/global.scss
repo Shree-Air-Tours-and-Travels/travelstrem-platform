@@ -82,6 +82,30 @@ select {
     max-width: none;
     z-index: 100;
   }
+
+  .dash-layout--top-dropdown {
+    display: block;
+
+    .trem-app-header {
+      z-index: 102;
+    }
+
+    > .trem-sidebar.trem-sidebar--top-dropdown {
+      position: fixed;
+      inset: $space-16 0 auto;
+      width: 100%;
+      max-width: none;
+      z-index: 101;
+    }
+
+    > .trem-sidebar__backdrop--top-dropdown {
+      z-index: 100;
+    }
+
+    > .dash-main {
+      grid-column: 1;
+    }
+  }
 }
 
 .dash-main {
@@ -120,9 +144,88 @@ select {
     display: none;
   }
 
+  > * {
+    width: min(100%, $full-width);
+    margin-inline: auto;
+  }
+
   @media (max-width: $breakpoint-md) {
     padding: $space-4;
   }
+}
+
+.dash-content--overview > .app-shell-page {
+  width: 100%;
+  max-width: none;
+}
+
+.dash-content--home {
+  padding: 0;
+}
+
+.dash-shell-breadcrumb {
+  position: sticky;
+  top: 0;
+  z-index: 80;
+  width: 100%;
+  min-height: 52px;
+  padding-inline: $space-6;
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-glass-strong, var(--surface));
+  box-shadow: var(--shadow-xs);
+  backdrop-filter: blur(14px);
+
+  @media (max-width: $breakpoint-md) {
+    min-height: 46px;
+    padding-inline: $space-4;
+  }
+}
+
+.dash-notifications {
+  display: grid;
+  gap: $space-3;
+  width: min(100%, 56rem);
+  margin: 0 auto;
+}
+
+.dash-notifications > button {
+  position: relative;
+  display: grid;
+  gap: $space-1;
+  padding: $space-4 $space-4 $space-4 $space-5;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  box-shadow: var(--shadow-xs);
+}
+
+.dash-notifications > button:hover,
+.dash-notifications > button:focus-visible {
+  outline: 0;
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.dash-notifications > button.is-unread::before {
+  content: "";
+  position: absolute;
+  top: $space-4;
+  left: $space-3;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: var(--color-danger);
+}
+
+.dash-notifications span,
+.dash-notifications time {
+  color: var(--muted);
+  font-size: $font-size-sm;
 }
 
 .dash-content--remote {
@@ -133,8 +236,10 @@ select {
   padding-bottom: $space-6;
 
   > * {
+    flex: 0 0 auto;
     width: 100%;
     max-width: none;
+    min-height: 100%;
   }
 
   @media (max-width: $breakpoint-md) {
@@ -145,16 +250,18 @@ select {
 }
 
 .dash-content--support {
-  padding: 0;
+  padding: 0 $space-6;
 }
 
 .dash-content--support > * {
-  width: 100%;
+  width: min(100%, $full-width);
+  max-width: $full-width;
+  margin-inline: auto;
 }
 
 @media (max-width: $breakpoint-md) {
   .dash-content--support {
-    padding: 0;
+    padding: 0 $space-4;
   }
 }
 
@@ -170,6 +277,12 @@ select {
   margin-right: 0;
   margin-bottom: 0;
   margin-left: 0;
+}
+
+.dash-content--home > .dash-app-footer {
+  width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 .dash-layout--sidebar-collapsed .dash-main {
@@ -225,6 +338,12 @@ select {
     margin-left: 0;
   }
 
+  .dash-content--home > .dash-app-footer {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
   // Keep every shell destination clear of the persistent mobile navigation.
   // This stays last so page-specific padding cannot cover the reserved space.
   .dash-layout--mobile-action-panel .dash-content {
@@ -241,3 +360,5 @@ select {
     }
   }
 }
+
+.dash-content--dashboard > .app-shell-page { width: 100%; max-width: none; }

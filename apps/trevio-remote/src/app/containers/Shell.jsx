@@ -4,6 +4,7 @@ import { buildGlobalAuthUrl, buildGlobalAppShellUrl } from "@packages/trem-utils
 import {
   ProductHeaderWithDropdown,
   AppFooter,
+  PRODUCT_TYPE,
   ScrollToTopButton,
   useTheme,
 } from "@packages/trem-ui";
@@ -24,11 +25,11 @@ export default function Shell({
   const { theme, toggleTheme } = useTheme();
   const productRoot = rootPath === "/" ? "" : rootPath.replace(/\/$/, "");
   const goToDashboard = () => {
-    const url = buildGlobalAppShellUrl({ product: "trevio" });
+    const url = buildGlobalAppShellUrl({ product: PRODUCT_TYPE.TREVIO });
     window.location.assign(url);
   };
   const goToProfile = () => {
-    const url = buildGlobalAppShellUrl({ product: "trevio", tab: "profile" });
+    const url = buildGlobalAppShellUrl({ product: PRODUCT_TYPE.TREVIO, tab: "profile" });
     window.location.assign(url);
   };
 
@@ -70,7 +71,7 @@ export default function Shell({
     ? buildAuthAction(headerConfig, userSession)
     : {
         label: "Sign in",
-        href: buildGlobalAuthUrl({ app: "trevio", returnTo: window.location.href }),
+        href: buildGlobalAuthUrl({ app: PRODUCT_TYPE.TREVIO, returnTo: window.location.href }),
         variant: "primary",
       };
 

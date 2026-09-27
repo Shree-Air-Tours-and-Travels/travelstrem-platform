@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import { createPortal } from "react-dom";
-import Icon from "../../icons/Icon/Icon.jsx";
 import Button from "../Button/Button.jsx";
 import "./BottomSheet.styles.scss";
 
@@ -12,6 +11,7 @@ export default function BottomSheet({
   title,
   className = "",
   variant = "default",
+  zIndex,
   closeLabel = "Close",
   closeOnOutsideClick = true,
 }) {
@@ -47,6 +47,7 @@ export default function BottomSheet({
     <div
       className={`trem-bottom-sheet trem-bottom-sheet--${variant} ${className}`.trim()}
       ref={sheetRef}
+      style={zIndex != null ? { zIndex } : undefined}
     >
       <div className="trem-bottom-sheet__overlay" onClick={handleOverlayClick} aria-hidden />
       <div
@@ -88,6 +89,7 @@ BottomSheet.propTypes = {
   title: PropTypes.string,
   className: PropTypes.string,
   variant: PropTypes.oneOf(["default", "fullscreen"]),
+  zIndex: PropTypes.number,
   closeLabel: PropTypes.string,
   closeOnOutsideClick: PropTypes.bool,
 };

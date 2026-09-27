@@ -126,6 +126,31 @@ export async function removeAdmin(id) {
   return res?.data?.data;
 }
 
+export async function updateAdminInternalTeam(id, team, enabled) {
+  const res = await api.patch(`/auth/admins/${id}/internal-team`, { team, enabled });
+  return res?.data?.data;
+}
+
+export async function fetchPricingConfigurations() {
+  const response = await api.get("/master-data/pricing-configs");
+  const payload = response?.data;
+  if (payload?.status !== "success" || !payload.component) {
+    throw new Error(payload?.message);
+  }
+  return payload.component;
+}
+
+export async function savePricingConfiguration(payload) {
+  const response = await api.put("/master-data/pricing-configs", payload);
+  if (response?.data?.status !== "success") {
+    throw new Error(response?.data?.message);
+  }
+  return {
+    record: response.data.data?.pricingConfig,
+    message: response.data.message,
+  };
+}
+
 export async function uploadTourImage(file) {
   const fd = new FormData();
   fd.append("image", file);
@@ -181,6 +206,17 @@ export async function verifyAdminTrip(id) {
   );
 }
 
+export async function resolveAdminTripBuilderTour(id) {
+  const res = await expectSuccess(
+    fetchData(`${TRIP_BASE}/${id}/builder-tour`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    }),
+    "Failed to open Trevio trip in builder",
+  );
+  return res.componentData?.data || res;
+}
+
 export async function deleteTrip(id) {
   await expectSuccess(
     fetchData(`${TRIP_BASE}/${id}`, {
@@ -225,6 +261,24 @@ export async function fetchClient(id) {
   const res = await fetchData(`/clients/${id}`);
   if (!res || res.status !== "success") throw new Error(res?.message || "Failed to fetch client");
   return res.componentData?.data?.client || null;
+}
+
+export async function fetchClientMembers(id) {
+  const res = await fetchData(`/clients/${id}/members`);
+  if (!res || res.status !== "success") throw new Error(res?.message || "Failed to load client members");
+  return res.componentData?.data?.members || [];
+}
+
+export async function assignClientMember(id, payload) {
+  return expectSuccess(fetchData(`/clients/${id}/members`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  }), "Failed to assign client member");
+}
+
+export async function removeClientMember(id, userId) {
+  return expectSuccess(fetchData(`/clients/${id}/members/${userId}`, { method: "DELETE" }), "Failed to remove client member");
 }
 
 export async function createClient(payload) {

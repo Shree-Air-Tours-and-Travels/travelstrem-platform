@@ -6,11 +6,11 @@ import { deflateSync, inflateSync } from "node:zlib";
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const masterFavicons = [
   {
-    source: path.join(repoRoot, "website", "favicon-light.png"),
+    source: path.join(repoRoot, "website", "public", "favicon-light.png"),
     target: "favicon.png",
   },
   {
-    source: path.join(repoRoot, "website", "favicon-dark.png"),
+    source: path.join(repoRoot, "website", "public", "favicon-dark.png"),
     target: "favicon-dark.png",
   },
 ];
@@ -22,6 +22,7 @@ const appNames = [
   "app-shell",
   "trevio-remote",
   "trevista-remote",
+  "trehub-remote",
 ];
 
 const PNG_SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);

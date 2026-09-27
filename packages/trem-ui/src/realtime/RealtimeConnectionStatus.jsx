@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import useRealtimeStatus from "./useRealtimeStatus.js";
+import { useRealtimeStatus } from "@packages/trem-events";
 
 /**
  * Generic connection status pill. Contains no TravelsTREM business logic —

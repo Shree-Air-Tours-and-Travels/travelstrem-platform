@@ -18,7 +18,9 @@ export default function ConfirmOverlay({
   icon,
   confirmLabel = "Proceed",
   cancelLabel = "Cancel",
+  confirmColor = "primary",
   confirmDisabled = false,
+  children = null,
   className = "",
   closeOnOutsideClick = false,
 }) {
@@ -48,6 +50,7 @@ export default function ConfirmOverlay({
               <p>{note}</p>
             </div>
           )}
+          {children ? <div className="trem-confirm__content">{children}</div> : null}
           <div className="trem-confirm__actions">
             <Button
               variant="outline"
@@ -57,11 +60,11 @@ export default function ConfirmOverlay({
             />
             <Button
               variant="solid"
-              color="primary"
+              color={confirmColor}
               text={confirmLabel}
               onClick={onConfirm}
               disabled={confirmDisabled}
-              primaryClassName="trem-confirm__btn trem-confirm__btn--confirm"
+              primaryClassName={`trem-confirm__btn trem-confirm__btn--confirm trem-confirm__btn--${confirmColor}`}
             />
           </div>
         </div>
@@ -95,6 +98,7 @@ export default function ConfirmOverlay({
           <p>{note}</p>
         </div>
       )}
+      {children ? <div className="trem-confirm-overlay__content">{children}</div> : null}
       <div className="trem-confirm-overlay__actions">
         <Button
           variant="outline"
@@ -104,11 +108,11 @@ export default function ConfirmOverlay({
         />
         <Button
           variant="solid"
-          color="primary"
+          color={confirmColor}
           text={confirmLabel}
           onClick={onConfirm}
           disabled={confirmDisabled}
-          primaryClassName="trem-confirm__btn trem-confirm__btn--confirm"
+          primaryClassName={`trem-confirm__btn trem-confirm__btn--confirm trem-confirm__btn--${confirmColor}`}
         />
       </div>
     </ModalShell>

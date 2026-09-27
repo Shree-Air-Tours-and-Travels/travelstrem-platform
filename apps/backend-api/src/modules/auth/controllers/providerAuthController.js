@@ -29,21 +29,41 @@ const sendError = (res, error, fallbackCode = "AUTH_FAILED") => {
     });
 };
 
+const isExternalProviderAuthEnabled = () => config.IS_DEVELOPMENT;
+
 export const getAuthMethods = (_req, res) => {
     noStore(res);
+    const externalProviderAuthEnabled = isExternalProviderAuthEnabled();
+    const googleEnabled = Boolean(
+        externalProviderAuthEnabled &&
+            config.GOOGLE_AUTH_ENABLED &&
+            config.GOOGLE_CLIENT_ID &&
+            config.GOOGLE_CLIENT_SECRET,
+    );
+    const mobileEnabled = Boolean(externalProviderAuthEnabled && config.MOBILE_AUTH_ENABLED);
     return res.json({
         status: "success",
+        directAuth: true,
+        actions: {
+            emailLogin: true,
+            emailRegister: true,
+            forgotPassword: true,
+            google: googleEnabled,
+            mobile: mobileEnabled,
+        },
         methods: {
             google: {
-                enabled: Boolean(
-                    config.GOOGLE_AUTH_ENABLED &&
-                    config.GOOGLE_CLIENT_ID &&
-                    config.GOOGLE_CLIENT_SECRET,
-                ),
+                enabled: googleEnabled,
             },
             mobile: {
-                enabled: Boolean(config.MOBILE_AUTH_ENABLED),
-                available: Boolean(mobileOtpProvider.available),
+                enabled: mobileEnabled,
+                available: Boolean(externalProviderAuthEnabled && mobileOtpProvider.available),
+            },
+            email: {
+                enabled: true,
+                login: true,
+                register: true,
+                forgotPassword: true,
             },
         },
     });
@@ -51,6 +71,16 @@ export const getAuthMethods = (_req, res) => {
 
 export const startGoogle = async (req, res) => {
     noStore(res);
+    if (!isExternalProviderAuthEnabled()) {
+        return sendError(
+            res,
+            Object.assign(new Error("Google sign-in is disabled for this environment."), {
+                code: "GOOGLE_AUTH_DISABLED",
+                status: 404,
+            }),
+            "GOOGLE_AUTH_DISABLED",
+        );
+    }
     try {
         const authorizationUrl = await beginGoogleAuthentication({
             portal: req.query.portal || req.query.app || "customer",
@@ -91,6 +121,16 @@ export const googleCallback = async (req, res) => {
 
 export const requestOtp = async (req, res) => {
     noStore(res);
+    if (!isExternalProviderAuthEnabled()) {
+        return sendError(
+            res,
+            Object.assign(new Error("Mobile sign-in is disabled for this environment."), {
+                code: "MOBILE_AUTH_DISABLED",
+                status: 404,
+            }),
+            "MOBILE_AUTH_DISABLED",
+        );
+    }
     try {
         const portal = getRequestPortal(req);
         const result = await requestMobileOtp({
@@ -106,6 +146,16 @@ export const requestOtp = async (req, res) => {
 
 export const verifyOtp = async (req, res) => {
     noStore(res);
+    if (!isExternalProviderAuthEnabled()) {
+        return sendError(
+            res,
+            Object.assign(new Error("Mobile sign-in is disabled for this environment."), {
+                code: "MOBILE_AUTH_DISABLED",
+                status: 404,
+            }),
+            "MOBILE_AUTH_DISABLED",
+        );
+    }
     try {
         const portal = getRequestPortal(req);
         const result = await verifyMobileOtp({

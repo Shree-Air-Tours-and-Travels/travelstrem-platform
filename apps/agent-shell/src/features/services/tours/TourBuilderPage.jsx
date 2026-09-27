@@ -1,6 +1,7 @@
 import React, { useCallback } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import TourBuilder from "@packages/tour-builder";
+import { PRODUCT_TYPE } from "@packages/trem-ui";
 import { uploadTourImage } from "../../../services/agentService";
 
 const uploader = {
@@ -13,9 +14,16 @@ export default function TourBuilderPage({ mode = "create" }) {
   const { tourId: routeTourId } = useParams();
   const query = new URLSearchParams(location.search);
   const tourId = routeTourId || query.get("tourId") || null;
+  const productKey = query.get("product") === PRODUCT_TYPE.TREVIO
+    ? PRODUCT_TYPE.TREVIO
+    : PRODUCT_TYPE.TREVISTA;
+  const resolvedMode = query.get("mode") === "view" ? "view" : mode;
   const startStepKey =
-    mode === "view" ? "review" : query.get("step") || (mode === "edit" ? "resume" : null);
-  const exit = useCallback(() => navigate("/agent/services/tours"), [navigate]);
+    resolvedMode === "view"
+      ? "review"
+      : query.get("step") || (resolvedMode === "edit" ? "resume" : null);
+  const exitTarget = productKey === PRODUCT_TYPE.TREVIO ? "/agent/trevio/trips" : "/agent/services/tours";
+  const exit = useCallback(() => navigate(exitTarget), [exitTarget, navigate]);
   const syncBuilderLocation = useCallback(
     ({ tourId: nextTourId, stepKey }) => {
       const params = new URLSearchParams(location.search);
@@ -33,12 +41,13 @@ export default function TourBuilderPage({ mode = "create" }) {
 
   return (
     <TourBuilder
-      mode={mode}
+      mode={resolvedMode}
+      productKey={productKey}
       tourId={tourId}
       startStepKey={startStepKey}
       onLocationChange={syncBuilderLocation}
       onExit={exit}
-      onComplete={() => navigate("/agent/services/tours")}
+      onComplete={() => navigate(exitTarget)}
       uploader={uploader}
     />
   );

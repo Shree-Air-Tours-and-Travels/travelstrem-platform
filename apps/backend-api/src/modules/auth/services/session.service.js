@@ -4,6 +4,10 @@ import config from "../../../config/index.js";
 import RefreshToken from "../models/RefreshToken.js";
 import User from "../models/User.js";
 import {
+    DEFAULT_PROFILE_AVATAR,
+    normalizeProfileAvatar,
+} from "../profileAvatar.constants.js";
+import {
     getPortalCookieNames,
     getPortalScope,
     normalizePortalScope,
@@ -18,19 +22,34 @@ const parseDuration = (duration, fallback = 30 * 86400000) => {
     return Number(match[1]) * ({ s: 1000, m: 60000, h: 3600000, d: 86400000 }[match[2]] || 1);
 };
 
+export const SESSION_INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000;
+const sessionPolicy = () => ({ inactivityTimeoutMs: SESSION_INACTIVITY_TIMEOUT_MS });
+
 export const hashToken = (raw) => crypto.createHash("sha256").update(String(raw)).digest("hex");
 const requestPortal = (req, override) =>
     normalizePortalScope(override || req?.authPortalOverride || getPortalScope(req));
 
+const toStringId = (value) => {
+    if (!value) return "";
+    if (typeof value === "string") return value;
+    if (typeof value === "number" || typeof value === "bigint") return String(value);
+    if (typeof value.toHexString === "function") return value.toHexString();
+    if (typeof value.toString === "function") {
+        const result = value.toString();
+        return result === "[object Object]" ? "" : result;
+    }
+    return "";
+};
+
 export const safeAuthUser = (user) => ({
-    id: user._id || user.id,
+    id: toStringId(user._id || user.id),
     name: user.name,
     email: user.email || null,
     mobile: user.mobile || user.phone || null,
     phone: user.mobile || user.phone || "",
     emailVerified: Boolean(user.emailVerified),
     mobileVerified: Boolean(user.mobileVerified),
-    avatar: user.avatar || "user",
+    avatar: normalizeProfileAvatar(user.avatar),
     role: user.role,
     accountStatus: user.accountStatus || "active",
     agentRef: user.agentRef || "",
@@ -40,8 +59,12 @@ export const safeAuthUser = (user) => ({
     adminLevel: user.adminLevel || "none",
     adminApprovalStatus: user.adminApprovalStatus || "not_required",
     agencyRole: user.agencyRole || "none",
-    agencyId: user.agencyId || null,
+    agencyId: toStringId(user.agencyId) || null,
+    clientId: toStringId(user.clientId) || null,
+    clientRole: user.clientRole || "none",
     productAccess: user.productAccess || [],
+    internalTeamRoles: user.internalTeamRoles || [],
+    createdAt: user.createdAt ? new Date(user.createdAt).toISOString() : null,
 });
 
 const signAccessToken = (user, portal, sessionId) =>
@@ -69,7 +92,23 @@ export const clearAuthCookies = (req, res, portalOverride) => {
     setCookie(res, names.refresh, "", 0);
 };
 
-export const createSession = async ({ user, req, res, portal: portalOverride, family = null }) => {
+export const createSession = async ({
+    user,
+    req,
+    res,
+    portal: portalOverride,
+    family = null,
+    rememberMe = false,
+}) => {
+    const normalizedAvatar = normalizeProfileAvatar(user.avatar);
+    if (user.avatar !== normalizedAvatar) {
+        const previousAvatar = user.avatar ?? null;
+        user.avatar = normalizedAvatar;
+        await User.updateOne(
+            { _id: user._id, avatar: previousAvatar },
+            { $set: { avatar: normalizedAvatar } },
+        );
+    }
     const portal = requestPortal(req, portalOverride);
     const rawRefreshToken = crypto.randomBytes(48).toString("base64url");
     const sessionId = crypto.randomUUID();
@@ -86,12 +125,23 @@ export const createSession = async ({ user, req, res, portal: portalOverride, fa
         userAgent: String(req.get?.("user-agent") || "").slice(0, 500),
         ipAddress: String(req.ip || "").slice(0, 100),
         lastUsedAt: new Date(),
+        rememberMe: rememberMe === true,
     });
 
     const accessToken = signAccessToken(user, portal, sessionId);
     const names = getPortalCookieNames(portal);
-    setCookie(res, names.access, accessToken, parseDuration(config.JWT.accessExpires, 15 * 60000));
-    setCookie(res, names.refresh, rawRefreshToken, parseDuration(config.JWT.refreshExpires));
+    setCookie(
+        res,
+        names.access,
+        accessToken,
+        rememberMe ? parseDuration(config.JWT.accessExpires, 15 * 60000) : undefined,
+    );
+    setCookie(
+        res,
+        names.refresh,
+        rawRefreshToken,
+        rememberMe ? parseDuration(config.JWT.refreshExpires) : undefined,
+    );
 
     return {
         status: "success",
@@ -100,6 +150,7 @@ export const createSession = async ({ user, req, res, portal: portalOverride, fa
         portal,
         user: safeAuthUser(user),
         sessionVersion: String(user.tokenVersion || 0),
+        config: { session: sessionPolicy() },
     };
 };
 
@@ -151,6 +202,16 @@ export const rotateSession = async ({ req, res, portal: portalOverride }) => {
         return null;
     }
 
+    const lastActivityAt = new Date(stored.lastUsedAt || stored.createdAt || 0).getTime();
+    if (!lastActivityAt || Date.now() - lastActivityAt >= SESSION_INACTIVITY_TIMEOUT_MS) {
+        await RefreshToken.updateMany(
+            { family: stored.family, revokedAt: null },
+            { $set: { revokedAt: new Date() } },
+        );
+        clearAuthCookies(req, res, portal);
+        return null;
+    }
+
     // Keep refresh records issued before the authentication migration usable.
     if (!stored.sessionId) stored.sessionId = crypto.randomUUID();
     if (stored.revokedAt) {
@@ -172,7 +233,14 @@ export const rotateSession = async ({ req, res, portal: portalOverride }) => {
 
     stored.revokedAt = new Date();
     stored.lastUsedAt = new Date();
-    const result = await createSession({ user, req, res, portal, family: stored.family });
+    const result = await createSession({
+        user,
+        req,
+        res,
+        portal,
+        family: stored.family,
+        rememberMe: stored.rememberMe === true,
+    });
     const replacement = await RefreshToken.findOne({
         sessionId: { $ne: stored.sessionId },
         family: stored.family,
@@ -195,8 +263,20 @@ export const getSessionUser = async ({ req, res, portal: portalOverride, allowRe
                 user &&
                 Number(user.tokenVersion || 0) === Number(payload.tokenVersion || 0) &&
                 user.accountStatus === "active"
-            )
+            ) {
+                if (payload.sid) {
+                    await RefreshToken.updateOne(
+                        { sessionId: payload.sid, portal, revokedAt: null },
+                        { $set: { lastUsedAt: new Date() } },
+                    ).catch((error) =>
+                        console.warn(
+                            "[auth] session activity touch failed:",
+                            error?.message || error,
+                        ),
+                    );
+                }
                 return user;
+            }
         } catch {
             const { access } = getPortalCookieNames(portal);
             setCookie(res, access, "", 0);

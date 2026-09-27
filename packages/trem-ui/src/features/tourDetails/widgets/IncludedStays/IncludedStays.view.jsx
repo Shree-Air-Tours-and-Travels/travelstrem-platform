@@ -37,7 +37,7 @@ export default function IncludedStaysView({
     requirements: "",
   });
   const listRef = useRef(null);
-  const title = labels.title || "Included stays";
+  const title = labels.title || "Hotels & stays";
   const nightsLabel = labels.nightsLabel || "nights";
   const hasOptions = Array.isArray(hotelOptions) && hotelOptions.length > 0;
   const selectable = typeof onSelectHotel === "function";
@@ -49,6 +49,7 @@ export default function IncludedStaysView({
     null;
   const formatPrice = (pricing) => {
     if (!pricing || !Number.isFinite(Number(pricing.amountMinor))) return "";
+    if (Number(pricing.amountMinor) === 0) return labels.included || "Included";
     const amount = new Intl.NumberFormat("en-IN", {
       style: "currency",
       currency: pricing.currency || "INR",
@@ -355,7 +356,7 @@ export default function IncludedStaysView({
                 >
                   {requestOpen
                     ? labels.closeRequest || "Close request"
-                    : labels.requestHotel || "Request another hotel"}
+                    : labels.requestHotel || "Start hotel customization request"}
                   <Icon name={requestOpen ? "chevronDown" : "chevronRight"} size={16} />
                 </button>
               </div>
@@ -459,6 +460,8 @@ export default function IncludedStaysView({
               .join(" · ")}
             subtitle={labels.optionsSubtitle}
             icon="hotel"
+            emptyTitle={labels.optionsEmptyTitle}
+            emptyDescription={labels.optionsEmptyDescription}
             recommendedLabel={labels.recommended || "Recommended"}
             pricePendingLabel={labels.pricePending || "Price on request"}
             includedInLabel={labels.includedIn || "Included in"}
@@ -471,6 +474,7 @@ export default function IncludedStaysView({
             selectedLabel={labels.selected || "Selected"}
             confirmLabel={labels.applyHotel || "Apply hotel"}
             cancelLabel={labels.cancel || "Cancel"}
+            closeLabel={labels.close || "Close"}
             customizeLabel={labels.customize || "Customise this tour"}
             onCustomize={
               typeof onCustomize === "function"

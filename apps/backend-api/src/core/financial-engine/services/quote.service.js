@@ -6,12 +6,13 @@ export async function createQuoteRecord(input, repositories) {
     const idempotencyKey = requireIdempotencyKey(input.idempotencyKey);
     const existing = await repositories.quotes.findByIdempotencyKey?.(idempotencyKey);
     if (existing) return existing;
-    if (!input.configSnapshot || !input.financialSnapshot)
-        throw new TypeError("Quote config and financial snapshots are required");
+    if (!input.configSnapshot || !input.financialSnapshot || !input.pricingSnapshot)
+        throw new TypeError("Quote pricing, config and financial snapshots are required");
     return repositories.quotes.create({
         ...input,
         idempotencyKey,
         moneyUnit: "PAISE",
+        pricing: immutableSnapshot(input.pricingSnapshot),
         configSnapshot: immutableSnapshot(input.configSnapshot),
         financialSnapshot: immutableSnapshot(input.financialSnapshot),
     });

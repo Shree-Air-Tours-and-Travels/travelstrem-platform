@@ -13,10 +13,6 @@ export default function useRefreshOnActivation(
   refresh,
   {
     enabled = true,
-    // Gate for focus/pageshow/visibility refreshes ("clicking around"). When a
-    // live websocket already pushes changes, callers pass false to avoid
-    // redundant fetches; data-changed events and the mount load stay active.
-    activationEnabled = true,
     resource = "",
     minimumIntervalMs = 750,
     refreshOnMount = true,
@@ -51,27 +47,10 @@ export default function useRefreshOnActivation(
     };
     window.addEventListener(DATA_CHANGED_EVENT, onDataChanged);
 
-    let onVisibilityChange = null;
-    const activationWanted = activationEnabled && typeof document !== "undefined";
-    const detachActivation = () => {
-      window.removeEventListener("focus", run);
-      window.removeEventListener("pageshow", run);
-      document.removeEventListener("visibilitychange", onVisibilityChange);
-    };
-    if (activationWanted) {
-      onVisibilityChange = () => {
-        if (document.visibilityState === "visible") run();
-      };
-      window.addEventListener("focus", run);
-      window.addEventListener("pageshow", run);
-      document.addEventListener("visibilitychange", onVisibilityChange);
-    }
-
     return () => {
       window.removeEventListener(DATA_CHANGED_EVENT, onDataChanged);
-      if (activationWanted) detachActivation();
     };
-  }, [activationEnabled, enabled, refreshOnMount, resource, run]);
+  }, [enabled, refreshOnMount, resource, run]);
 
   return run;
 }

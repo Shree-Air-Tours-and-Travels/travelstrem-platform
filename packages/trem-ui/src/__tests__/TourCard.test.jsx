@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import TourCard from "../components/TourCard/TourCard.jsx";
 
@@ -41,14 +41,46 @@ describe("TourCard", () => {
     });
 
     it("renders as article when no path", () => {
-      render(
+      const { container } = render(
         <MemoryRouter>
           <TourCard tour={baseTour} />
         </MemoryRouter>,
       );
-      const articles = screen.getAllByRole("button");
-      expect(articles.length).toBeGreaterThanOrEqual(1);
-      expect(articles[0].className).toContain("tour-card");
+      const card = container.querySelector("article.tour-card");
+      expect(card).toBeInTheDocument();
+    });
+
+    it("recovers an identifier serialized through a Mongo buffer", () => {
+      render(
+        <MemoryRouter>
+          <TourCard
+            tour={{
+              ...baseTour,
+              _id: {
+                buffer: {
+                  0: 106,
+                  1: 133,
+                  2: 203,
+                  3: 249,
+                  4: 128,
+                  5: 110,
+                  6: 39,
+                  7: 61,
+                  8: 205,
+                  9: 84,
+                  10: 11,
+                  11: 207,
+                },
+              },
+            }}
+          />
+        </MemoryRouter>,
+      );
+
+      expect(screen.getByRole("heading", { name: baseTour.title })).toHaveAttribute(
+        "id",
+        "tour-card-6a85cbf9806e273dcd540bcf-title",
+      );
     });
   });
 
@@ -98,13 +130,43 @@ describe("TourCard", () => {
       expect(screen.getByText("Delete")).toBeInTheDocument();
     });
 
-    it("does not duplicate the customer View tour button for admin cards", () => {
+    it("calls management action handlers when action buttons are clicked", () => {
+      const onView = vi.fn();
+      const onEdit = vi.fn();
+      const onVerify = vi.fn();
+      const onDelete = vi.fn();
+      render(
+        <MemoryRouter>
+          <TourCard
+            tour={baseTour}
+            variant="management"
+            managementActions
+            onView={onView}
+            onEdit={onEdit}
+            onVerify={onVerify}
+            onDelete={onDelete}
+          />
+        </MemoryRouter>,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: "View" }));
+      fireEvent.click(screen.getByRole("button", { name: "Edit" }));
+      fireEvent.click(screen.getByRole("button", { name: "Verify" }));
+      fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+
+      expect(onView).toHaveBeenCalledWith(baseTour);
+      expect(onEdit).toHaveBeenCalledWith(baseTour);
+      expect(onVerify).toHaveBeenCalledWith(baseTour);
+      expect(onDelete).toHaveBeenCalledWith(baseTour);
+    });
+
+    it("does not duplicate the customer explore button for admin cards", () => {
       render(
         <MemoryRouter>
           <TourCard tour={baseTour} isAdmin onView={vi.fn()} onEdit={vi.fn()} onDelete={vi.fn()} />
         </MemoryRouter>,
       );
-      expect(screen.queryByText("View tour")).not.toBeInTheDocument();
+      expect(screen.queryByText("Explore this Tour")).not.toBeInTheDocument();
       expect(screen.getByText("View")).toBeInTheDocument();
     });
 
@@ -137,6 +199,26 @@ describe("TourCard", () => {
         </MemoryRouter>,
       );
       expect(screen.getByLabelText("Remove from favorites")).toBeInTheDocument();
+    });
+
+    it("uses the favorite hit area without opening the tour card", () => {
+      const onFavorite = vi.fn();
+      const onView = vi.fn();
+      render(
+        <MemoryRouter>
+          <TourCard
+            tour={baseTour}
+            favorited={false}
+            onFavorite={onFavorite}
+            onView={onView}
+          />
+        </MemoryRouter>,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: "Add to favorites" }));
+
+      expect(onFavorite).toHaveBeenCalledWith(baseTour);
+      expect(onView).not.toHaveBeenCalled();
     });
 
     it("does not show heart if favorited prop is not boolean", () => {
@@ -232,42 +314,42 @@ describe("TourCard", () => {
 
   describe("Variants", () => {
     it("renders with grid variant class", () => {
-      render(
+      const { container } = render(
         <MemoryRouter>
           <TourCard tour={baseTour} variant="grid" />
         </MemoryRouter>,
       );
-      const card = screen.getByRole("button");
+      const card = container.querySelector("article.tour-card");
       expect(card.className).toContain("tour-card--grid");
     });
 
     it("renders with compact variant class", () => {
-      render(
+      const { container } = render(
         <MemoryRouter>
           <TourCard tour={baseTour} variant="compact" />
         </MemoryRouter>,
       );
-      const card = screen.getByRole("button");
+      const card = container.querySelector("article.tour-card");
       expect(card.className).toContain("tour-card--compact");
     });
 
     it("renders with featured variant class", () => {
-      render(
+      const { container } = render(
         <MemoryRouter>
           <TourCard tour={baseTour} variant="featured" />
         </MemoryRouter>,
       );
-      const card = screen.getByRole("button");
+      const card = container.querySelector("article.tour-card");
       expect(card.className).toContain("tour-card--featured");
     });
 
     it("renders with list variant class by default", () => {
-      render(
+      const { container } = render(
         <MemoryRouter>
           <TourCard tour={baseTour} />
         </MemoryRouter>,
       );
-      const card = screen.getByRole("button");
+      const card = container.querySelector("article.tour-card");
       expect(card.className).toContain("tour-card--list");
     });
   });
@@ -293,22 +375,22 @@ describe("TourCard", () => {
   });
 
   describe("View Tour Button", () => {
-    it("shows View tour button in list variant when onView is provided", () => {
+    it("shows explore button in list variant when onView is provided", () => {
       render(
         <MemoryRouter>
           <TourCard tour={baseTour} variant="list" onView={vi.fn()} />
         </MemoryRouter>,
       );
-      expect(screen.getByText("View tour")).toBeInTheDocument();
+      expect(screen.getByText("Explore this Tour")).toBeInTheDocument();
     });
 
-    it("does not show View tour button when showActions is false", () => {
+    it("does not show explore button when showActions is false", () => {
       render(
         <MemoryRouter>
           <TourCard tour={baseTour} variant="list" onView={vi.fn()} showActions={false} />
         </MemoryRouter>,
       );
-      expect(screen.queryByText("View tour")).not.toBeInTheDocument();
+      expect(screen.queryByText("Explore this Tour")).not.toBeInTheDocument();
     });
   });
 

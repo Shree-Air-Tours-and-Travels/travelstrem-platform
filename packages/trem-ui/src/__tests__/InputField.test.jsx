@@ -46,4 +46,14 @@ describe("InputField", () => {
     const trigger = screen.getByText("+91").closest(".trem-dropdown");
     expect(trigger.style.width).toBe("");
   });
+
+  it("renders and associates an actionable validation error", () => {
+    render(<InputField label="GST number" error="GSTIN must contain exactly 15 characters." />);
+
+    const input = screen.getByRole("textbox", { name: "GST number" });
+    const message = screen.getByRole("alert");
+    expect(input).toHaveAttribute("aria-invalid", "true");
+    expect(input).toHaveAttribute("aria-describedby", message.id);
+    expect(message).toHaveTextContent("GSTIN must contain exactly 15 characters.");
+  });
 });

@@ -16,6 +16,7 @@ import {
     publishToBooking,
     publishToPayment,
 } from "../realtime/index.js";
+import { recordTourSignal } from "../modules/tours/services/tourIntelligence.service.js";
 
 // Realtime fan-out for payment/quote state changes lives at this repository
 // layer because it is the single idempotent funnel every payment transition
@@ -81,11 +82,27 @@ const repositories = {
                 .lean(),
     },
     providerConfig: {
-        findActive: ({ provider }) =>
-            provider ? PaymentProviderConfig.findOne({ provider, active: true }).lean() : null,
+        findActive: ({ provider, paymentMethod }) =>
+            provider
+                ? PaymentProviderConfig.findOne({
+                      provider,
+                      active: true,
+                      ...(paymentMethod
+                          ? {
+                                $or: [
+                                    { paymentMethods: { $size: 0 } },
+                                    { paymentMethods: paymentMethod },
+                                ],
+                            }
+                          : {}),
+                  })
+                      .sort({ priority: -1 })
+                      .lean()
+                : null,
     },
     quotes: {
         findByIdempotencyKey: (idempotencyKey) => BookingQuote.findOne({ idempotencyKey }),
+        findById: (quoteId) => BookingQuote.findById(quoteId).lean(),
         create: async (data) => {
             const quote = await BookingQuote.create(data);
             publishQuoteEvent(quote);
@@ -136,6 +153,17 @@ const repositories = {
             // Emitted only after the database state actually changed — verified
             // gateway webhooks are the only path that reaches this transition.
             if (payment) publishPaymentEvent(REALTIME_EVENTS.PAYMENT_SUCCESS, payment);
+            if (payment?.quoteId) {
+                BookingQuote.findById(payment.quoteId)
+                    .select("tourId")
+                    .lean()
+                    .then((quote) =>
+                        quote?.tourId ? recordTourSignal(quote.tourId, "booking") : null,
+                    )
+                    .catch((error) =>
+                        console.error("[TourIntelligence] booking signal failed:", error.message),
+                    );
+            }
             return payment;
         },
     },

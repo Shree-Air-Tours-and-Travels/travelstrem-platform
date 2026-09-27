@@ -78,9 +78,9 @@ describe("FloatingActionBar action overflow", () => {
     ).toBe("");
   });
 
-  it("keeps one action on each side and moves secondary actions into a bottom sheet", () => {
+  it("keeps one left and two right actions visible before using a bottom sheet", () => {
     Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 800 });
-    const onPaste = vi.fn();
+    const onCancel = vi.fn();
     const { container } = render(
       <FloatingActionBar
         align="left-right"
@@ -88,23 +88,24 @@ describe("FloatingActionBar action overflow", () => {
         actions={[
           { label: "Back", variant: "outline", align: "left" },
           { label: "Exit", variant: "ghost", align: "left" },
-          { label: "Paste JSON", variant: "ghost", align: "right", onClick: onPaste },
-          { label: "Cancel", variant: "ghost", align: "right" },
+          { label: "Paste JSON", variant: "ghost", align: "right" },
+          { label: "Cancel", variant: "ghost", align: "right", onClick: onCancel },
           { label: "Save & continue", variant: "primary", align: "right", primary: true },
         ]}
       />,
     );
 
     expect(screen.getByRole("button", { name: "Back" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Paste JSON" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Save & continue" })).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Paste JSON" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Cancel" })).toBeNull();
     const rightButtons = container.querySelectorAll(".trem-fab__group--right button");
     expect(rightButtons[rightButtons.length - 1].getAttribute("aria-label")).toBe("More actions");
 
     fireEvent.click(screen.getByRole("button", { name: "More actions" }));
     expect(screen.getByRole("dialog", { name: "Builder actions" })).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Paste JSON" }));
-    expect(onPaste).toHaveBeenCalledOnce();
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(onCancel).toHaveBeenCalledOnce();
     expect(screen.queryByRole("dialog", { name: "Builder actions" })).toBeNull();
   });
 

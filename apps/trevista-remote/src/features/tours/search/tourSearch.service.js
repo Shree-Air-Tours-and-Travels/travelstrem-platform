@@ -9,5 +9,5 @@ export const fetchTourSearch = async (search, signal) => {
   });
   if (response.status !== "success")
     throw new Error(response.message || "Tours could not be loaded");
-  return response.component?.data || response.data || response;
+  return response.data || response.component?.data || response;
 };

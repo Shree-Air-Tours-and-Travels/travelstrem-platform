@@ -102,9 +102,16 @@ export default function CancellationPolicyView({
         )}
 
         {policyText && (
-          <div className="td-cp__policy-wrap">
-            <Paragraph primaryClassname="td-cp__policy" text={policyText} />
-          </div>
+          policyText.length > 180 ? (
+            <details className="td-cp__policy-wrap">
+              <summary>{labels.viewFullPolicy || "View full cancellation policy"}</summary>
+              <Paragraph primaryClassname="td-cp__policy" text={policyText} />
+            </details>
+          ) : (
+            <div className="td-cp__policy-wrap">
+              <Paragraph primaryClassname="td-cp__policy" text={policyText} />
+            </div>
+          )
         )}
 
         {tiers.length > 0 && (

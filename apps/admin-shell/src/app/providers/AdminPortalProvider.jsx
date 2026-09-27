@@ -3,8 +3,14 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { initApp } from "../../core/initApp";
 import { getHeaderConfig } from "../../services/configService";
 import { clearUserSessionCache } from "../../services/userSession";
-import { clearAuthBrowserState, subscribeAuthEvents } from "@packages/trem-auth-core";
+import {
+  clearAuthBrowserState,
+  subscribeAuthEvents,
+  useSessionInactivity,
+} from "@packages/trem-auth-core";
 import { buildGlobalAuthUrl } from "@packages/trem-utils";
+import { SessionTimeoutModal } from "@packages/trem-ui";
+import apiService from "../../services/apiService";
 import {
   createPortalEventController,
   emit,
@@ -88,6 +94,11 @@ export function AdminPortalConfigProvider({ children }) {
     session: DEFAULT_SESSION,
     headerConfig: DEFAULT_HEADER_CONFIG,
     pageConfig: DEFAULT_PAGE_CONFIG,
+  });
+  const [sessionExitBusy, setSessionExitBusy] = React.useState(false);
+  const sessionExpired = useSessionInactivity({
+    enabled: Boolean(state.session?.isAuthenticated),
+    timeoutMs: state.session?.config?.session?.inactivityTimeoutMs,
   });
 
   React.useEffect(() => {
@@ -263,8 +274,21 @@ export function AdminPortalConfigProvider({ children }) {
     [dispatchEvent, loadPortalConfig, refreshHeader, reload, state],
   );
 
+  const continueToLogin = React.useCallback(async () => {
+    setSessionExitBusy(true);
+    await apiService.post("/auth/logout").catch(() => null);
+    window.dispatchEvent(new CustomEvent("USER_LOGOUT", { detail: { reason: "inactivity" } }));
+  }, []);
+
   return (
-    <AdminPortalConfigContext.Provider value={value}>{children}</AdminPortalConfigContext.Provider>
+    <AdminPortalConfigContext.Provider value={value}>
+      {children}
+      <SessionTimeoutModal
+        open={sessionExpired}
+        busy={sessionExitBusy}
+        onLogin={continueToLogin}
+      />
+    </AdminPortalConfigContext.Provider>
   );
 }
 

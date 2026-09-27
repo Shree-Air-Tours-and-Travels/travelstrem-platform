@@ -61,6 +61,8 @@
     "elements": {
       "labels": {
         "pageTitle": "Trevio",
+        "breadcrumbHome": "Home",
+        "homeBreadcrumb": "Trevio",
         "brandSubtitle": "by TravelsTrem",
         "navExplore": "Explore",
         "navHowItWorks": "How it works",

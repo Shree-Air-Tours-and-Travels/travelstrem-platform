@@ -1,114 +1,68 @@
 import React from "react";
-import { Button, Dropdown, Icon } from "@packages/trem-ui";
+import { Button, GlobalSearchCard, Icon } from "@packages/trem-ui";
 
 const DEFAULT_HERO_IMAGE =
   "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1800&q=85";
 
-const toOptionItems = (options, currentValue, onSelect) =>
-  (Array.isArray(options) ? options : []).map((option) => {
-    const label = option && typeof option === "object" ? option.label : option;
-    const value = option && typeof option === "object" ? (option.value ?? option.label) : option;
-    return {
-      id: String(value),
-      label: String(label),
-      active: String(value) === String(currentValue),
-      onClick: () => onSelect(value),
-    };
+const TITLE_TONES = new Set(["product", "brand"]);
+const searchOptionsFor = (options, anyLabel) => [
+  { value: "", label: anyLabel },
+  ...options.map((option) =>
+    option && typeof option === "object"
+      ? { value: option.value ?? option.label, label: option.label ?? option.value }
+      : { value: option, label: option },
+  ),
+];
+
+const renderTitle = (title, segments) => {
+  const titleSegments = Array.isArray(segments) && segments.length ? segments : [{ text: title }];
+
+  return titleSegments.map((segment, index) => {
+    const text = typeof segment === "string" ? segment : segment?.text;
+    const tone = typeof segment === "object" ? segment?.tone : null;
+
+    return TITLE_TONES.has(tone) ? (
+      <span key={`${tone}-${index}`} className={`tours-page__hero-title-${tone}`}>
+        {text}
+      </span>
+    ) : (
+      <React.Fragment key={`default-${index}`}>{text}</React.Fragment>
+    );
   });
-
-const DEFAULT_HERO_TITLE = "Welcome to Trevista by TravelsTrem";
-
-const highlightBrand = (text) =>
-  String(text || "")
-    .split(/(Trevista|TravelsTrem)/g)
-    .map((part, index) => {
-      if (part === "Trevista") {
-        return (
-          <span key={index} className="tours-page__hero-title-accent">
-            {part}
-          </span>
-        );
-      }
-      if (part === "TravelsTrem") {
-        return (
-          <span key={index} className="tours-page__hero-title-brand">
-            {part}
-          </span>
-        );
-      }
-      return part;
-    });
-
-function HeroSelectField({ label, anyLabel, options, value, onSelect }) {
-  const items = [
-    { id: "", label: anyLabel, value: "", onClick: () => onSelect("") },
-    ...toOptionItems(options, value, onSelect),
-  ];
-
-  return (
-    <div className="tours-page__hero-field">
-      <Dropdown
-        variant="select"
-        label={label}
-        placeholder={anyLabel}
-        value={value}
-        items={items}
-        hoverable={false}
-        align="left"
-        closeOnSelect
-      />
-    </div>
-  );
-}
+};
 
 export default function HeroBannerView({
   labels,
   pageTitle,
-  destinationOptions = [],
   searchOptions = {},
   onExplore,
   onSearch,
+  onCustomise,
 }) {
-  const [activeTab, setActiveTab] = React.useState("packages");
-  const [destination, setDestination] = React.useState("");
-  const [travelMonth, setTravelMonth] = React.useState("");
-  const [travellers, setTravellers] = React.useState("");
-  const [tripStyle, setTripStyle] = React.useState("");
-  const [budget, setBudget] = React.useState("");
-
-  const heading = pageTitle || labels.pageTitle || DEFAULT_HERO_TITLE;
+  const heading = pageTitle || labels.pageTitle || "";
+  const titleSegments = labels.titleSegments;
   const eyebrow = labels.eyebrow || "";
   const description = labels.description || "";
   const primaryActionLabel = labels.primaryActionLabel || "Explore packages";
   const secondaryActionLabel = labels.secondaryActionLabel || "";
   const trustItems = Array.isArray(labels.trustItems) ? labels.trustItems : [];
   const heroImage = labels.heroImage || DEFAULT_HERO_IMAGE;
-  const searchTabLabel = labels.searchTabLabel || "Holiday packages";
-  const customTabLabel = labels.customTabLabel || "Custom trip";
   const searchLabels = labels.searchLabels || {};
   const anyLabels = labels.anyLabels || {};
-  const travelMonthOptions = Array.isArray(searchOptions.travelMonthOptions)
-    ? searchOptions.travelMonthOptions
+  const destinationOptions = Array.isArray(searchOptions.destinationOptions)
+    ? searchOptions.destinationOptions
     : [];
-  const travellerOptions = Array.isArray(searchOptions.travellerOptions)
-    ? searchOptions.travellerOptions
-    : [];
-  const tripStyleOptions = Array.isArray(searchOptions.tripStyleOptions)
-    ? searchOptions.tripStyleOptions
-    : [];
-  const budgetOptions = Array.isArray(searchOptions.budgetOptions)
-    ? searchOptions.budgetOptions
+  const interestOptions = Array.isArray(searchOptions.interestOptions)
+    ? searchOptions.interestOptions
     : [];
 
-  const handleSearchSubmit = (event) => {
-    event.preventDefault();
-    const payload = { destination, travelMonth, travellers, tripStyle, budget };
-    if (typeof onSearch === "function") {
-      onSearch(payload);
-      return;
-    }
-    onExplore?.();
-  };
+  const searchFields = [
+    { id: "destination", label: searchLabels.destination || "Destination", placeholder: anyLabels.destination || "Any destination", type: "select", options: searchOptionsFor(destinationOptions, anyLabels.destination || "Any destination") },
+    { id: "departureDate", label: searchLabels.departureDate || "Departure date", type: "date", placeholder: anyLabels.departureDate || "Any date" },
+    { id: "travellers", label: searchLabels.travellers || "Travellers", type: "number", min: 1, placeholder: anyLabels.travellers || "Any group size" },
+    { id: "interest", label: searchLabels.interest || "Interest", placeholder: anyLabels.interest || "Any interest", type: "select", options: searchOptionsFor(interestOptions, anyLabels.interest || "Any interest") },
+    { id: "maxBudget", label: searchLabels.maxBudget || "Maximum budget", type: "number", min: 0, placeholder: anyLabels.maxBudget || "Any budget" },
+  ];
 
   return (
     <header className="tours-page__hero" style={{ "--tours-hero-bg": `url('${heroImage}')` }}>
@@ -120,7 +74,7 @@ export default function HeroBannerView({
               {eyebrow}
             </span>
           )}
-          <h1 className="tours-page__hero-title">{highlightBrand(heading)}</h1>
+          <h1 className="tours-page__hero-title">{renderTitle(heading, titleSegments)}</h1>
           {description && <p className="tours-page__hero-desc">{description}</p>}
           <div className="tours-page__hero-actions">
             {primaryActionLabel && (
@@ -136,13 +90,12 @@ export default function HeroBannerView({
             )}
             {secondaryActionLabel && (
               <Button
-                variant="outline"
+                variant="text"
                 color="white"
                 size="medium"
-                disabled
                 text={secondaryActionLabel}
                 iconLeft="sparkles"
-                onClick={() => setActiveTab("custom")}
+                onClick={onCustomise}
                 primaryClassName="tours-page__hero-btn tours-page__hero-btn--ghost"
               />
             )}
@@ -159,98 +112,15 @@ export default function HeroBannerView({
           )}
         </div>
 
-        <div className="tours-page__hero-panel">
-          <div className="tours-page__hero-tabs" role="tablist">
-            <Button
-              variant="text"
-              type="button"
-              role="tab"
-              aria-selected={activeTab === "packages"}
-              text={searchTabLabel}
-              onClick={() => setActiveTab("packages")}
-              primaryClassName={`tours-page__hero-tab${activeTab === "packages" ? " is-active" : ""}`}
-            />
-            <Button
-              variant="text"
-              type="button"
-              role="tab"
-              disabled
-              aria-selected={activeTab === "custom"}
-              text={customTabLabel}
-              onClick={() => setActiveTab("custom")}
-              primaryClassName={`tours-page__hero-tab${activeTab === "custom" ? " is-active" : ""}`}
-            />
-          </div>
-
-          {activeTab === "packages" ? (
-            <form className="tours-page__hero-search" onSubmit={handleSearchSubmit}>
-              <HeroSelectField
-                label={searchLabels.destination || "Destination"}
-                anyLabel={anyLabels.destination || "Any destination"}
-                options={destinationOptions}
-                value={destination}
-                onSelect={setDestination}
-              />
-              <HeroSelectField
-                label={searchLabels.travelMonth || "Travel month"}
-                anyLabel={anyLabels.travelMonth || "Any month"}
-                options={travelMonthOptions}
-                value={travelMonth}
-                onSelect={setTravelMonth}
-              />
-              <HeroSelectField
-                label={searchLabels.travellers || "Travellers"}
-                anyLabel={anyLabels.travellers || "Any group size"}
-                options={travellerOptions}
-                value={travellers}
-                onSelect={setTravellers}
-              />
-              <HeroSelectField
-                label={searchLabels.tripStyle || "Trip style"}
-                anyLabel={anyLabels.tripStyle || "Any style"}
-                options={tripStyleOptions}
-                value={tripStyle}
-                onSelect={setTripStyle}
-              />
-              <HeroSelectField
-                label={searchLabels.budget || "Budget"}
-                anyLabel={anyLabels.budget || "Any budget"}
-                options={budgetOptions}
-                value={budget}
-                onSelect={setBudget}
-              />
-              <Button
-                variant="solid"
-                color="primary"
-                size="medium"
-                type="submit"
-                text={searchLabels.submit || "Search packages"}
-                iconLeft="search"
-                primaryClassName="tours-page__hero-btn tours-page__hero-btn--full tours-page__hero-btn--submit"
-              />
-            </form>
-          ) : (
-            <div className="tours-page__hero-custom">
-              <span className="tours-page__hero-custom-icon">
-                <Icon name="sparkles" size={20} />
-              </span>
-              <strong className="tours-page__hero-custom-title">{customTabLabel}</strong>
-              <p className="tours-page__hero-custom-desc">
-                Tell us your destination, dates and preferences, and a holiday expert will craft a
-                personalised itinerary for you.
-              </p>
-              <Button
-                variant="solid"
-                color="primary"
-                size="large"
-                text={secondaryActionLabel || customTabLabel}
-                iconLeft="arrowUpRight"
-                onClick={onExplore}
-                primaryClassName="tours-page__hero-btn tours-page__hero-btn--full tours-page__hero-btn--submit"
-              />
-            </div>
-          )}
-        </div>
+        <GlobalSearchCard
+          className="tours-page__hero-search-card"
+          variant="tour"
+          modes={[{ id: "tour", heading: searchLabels.heading || "Search holiday packages & tours" }]}
+          fieldsByMode={{ tour: searchFields }}
+          labels={{ submit: searchLabels.submit || "Search packages" }}
+          submitLabelRef="submit"
+          onSearch={({ values }) => onSearch ? onSearch(values) : onExplore?.()}
+        />
       </div>
     </header>
   );

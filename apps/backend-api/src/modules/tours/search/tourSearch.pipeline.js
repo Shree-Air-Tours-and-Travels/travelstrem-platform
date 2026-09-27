@@ -169,11 +169,66 @@ const facetProjection = {
         departureCount: { $size: "$_eligibleDepartures" },
         nextDepartureDate: { $min: "$_eligibleDepartures.departureDate" },
     },
+    departures: {
+        $map: {
+            input: "$_eligibleDepartures",
+            as: "departure",
+            in: {
+                id: { $toString: "$$departure._id" },
+                departureDate: "$$departure.departureDate",
+                returnDate: "$$departure.returnDate",
+                status: "$$departure.status",
+                availableSeats: "$$departure.availableSeats",
+            },
+        },
+    },
     pricing: {
         currency: "$_currency",
         min: "$_priceMin",
         max: "$_priceMax",
         isFinal: "$_priceIsFinal",
+    },
+    packagePrices: {
+        $map: {
+            input: { $ifNull: ["$commercial.derived.packages", []] },
+            as: "package",
+            in: {
+                packageKey: "$$package.packageKey",
+                tier: {
+                    $ifNull: [
+                        "$$package.tier",
+                        {
+                            $let: {
+                                vars: {
+                                    definition: {
+                                        $arrayElemAt: [
+                                            {
+                                                $filter: {
+                                                    input: {
+                                                        $ifNull: ["$commercial.packages", []],
+                                                    },
+                                                    as: "definition",
+                                                    cond: {
+                                                        $eq: [
+                                                            "$$definition.packageKey",
+                                                            "$$package.packageKey",
+                                                        ],
+                                                    },
+                                                },
+                                            },
+                                            0,
+                                        ],
+                                    },
+                                },
+                                in: "$$definition.tier",
+                            },
+                        },
+                    ],
+                },
+                sellingTotalMinor: "$$package.sellingTotalMinor",
+                currency: { $ifNull: ["$commercial.currency", "$_currency"] },
+            },
+        },
     },
     soldOut: {
         $allElementsTrue: [
@@ -206,7 +261,7 @@ export const buildTourSearchPipeline = (
     const destinationCandidates = slugCandidates(filters.destinationCityIds);
     const countryCandidates = slugCandidates(filters.countryIds);
     const agencyCandidates = slugCandidates(filters.agencyIds);
-    const tagCandidateGroups = filters.tagIds.map((value) => slugCandidates([value]));
+    const tagCandidates = slugCandidates(filters.tagIds);
     const priceDate = filters.departureDate
         ? new Date(`${filters.departureDate}T00:00:00.000Z`)
         : "$$NOW";
@@ -302,6 +357,31 @@ export const buildTourSearchPipeline = (
                             { $ifNull: ["$city.to", "$address.city"] },
                         ],
                     },
+                },
+                _destinationKeys: {
+                    $setUnion: [
+                        [
+                            { $toLower: { $ifNull: ["$primaryDestination.cityId", ""] } },
+                            { $toLower: { $ifNull: ["$primaryDestination.cityName", ""] } },
+                            { $toLower: { $ifNull: ["$city.to", ""] } },
+                            { $toLower: { $ifNull: ["$address.city", ""] } },
+                        ],
+                        {
+                            $reduce: {
+                                input: { $ifNull: ["$destinations", []] },
+                                initialValue: [],
+                                in: {
+                                    $concatArrays: [
+                                        "$$value",
+                                        [
+                                            { $toLower: { $ifNull: ["$$this.cityId", ""] } },
+                                            { $toLower: { $ifNull: ["$$this.cityName", ""] } },
+                                        ],
+                                    ],
+                                },
+                            },
+                        },
+                    ],
                 },
                 _countryName: countryNameExpression,
                 _countryKey: { $toLower: countryNameExpression },
@@ -482,7 +562,7 @@ export const buildTourSearchPipeline = (
     ];
 
     const dynamicMatch = {};
-    if (destinationCandidates.length) dynamicMatch._destinationKey = { $in: destinationCandidates };
+    if (destinationCandidates.length) dynamicMatch._destinationKeys = { $in: destinationCandidates };
     if (countryCandidates.length) dynamicMatch._countryKey = { $in: countryCandidates };
     if (agencyCandidates.length) dynamicMatch._agencyKey = { $in: agencyCandidates };
     if (filters.duration.minDays != null || filters.duration.maxDays != null) {
@@ -499,10 +579,13 @@ export const buildTourSearchPipeline = (
         if (filters.price.max != null) dynamicMatch._priceMax = { $lte: filters.price.max };
     }
     if (Object.keys(dynamicMatch).length) pipeline.push({ $match: dynamicMatch });
-    if (tagCandidateGroups.length) {
+    if (tagCandidates.length) {
         pipeline.push({
             $match: {
-                $and: tagCandidateGroups.map((candidates) => ({ _tagSlugs: { $in: candidates } })),
+                // Values inside one facet family are alternatives. Selecting
+                // Domestic + International means either scope; independent
+                // filters such as destination, dates and price remain ANDed.
+                _tagSlugs: { $in: tagCandidates },
             },
         });
     }

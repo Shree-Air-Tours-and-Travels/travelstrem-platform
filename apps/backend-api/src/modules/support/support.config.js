@@ -12,11 +12,72 @@ export const SUPPORT_UI = Object.freeze({
         title: "Help & Support",
         subtitle: "Get quick help for your trips, tours, and account.",
         searchPlaceholder: "Search for help and travel information...",
+        searchingLabel: "Searching…",
     },
     sections: {
-        services: { title: "Choose a service" },
-        topics: { title: "Popular help topics" },
-        contact: { title: "Need urgent help?" },
+        options: { title: "What do you need help with?" },
+        contact: { title: "Contact support directly" },
+    },
+    actions: {
+        requests: "My requests",
+        newRequest: "Create request",
+    },
+    requestForm: {
+        title: "Create support request",
+        subtitle: "Share the issue once and track every reply in My requests.",
+        categoryLabel: "Issue category",
+        categoryPlaceholder: "Choose a category",
+        subjectLabel: "Subject",
+        subjectPlaceholder: "Briefly describe the issue",
+        descriptionLabel: "Description",
+        descriptionPlaceholder: "Include the details the support team needs to help.",
+        submitLabel: "Send request",
+        submittingLabel: "Sending…",
+        successTitle: "Request received",
+        successSubtitle: "The support team will respond in your request history.",
+        successMessage: "Your support request has been created.",
+        viewRequestLabel: "View request",
+        backLabel: "Back to Help & Support",
+    },
+    requestList: {
+        title: "My Support Requests",
+        subtitle: "Track requests and replies from the support team.",
+        newRequestLabel: "Create request",
+        allLabel: "All",
+        updatedPrefix: "Updated",
+    },
+    ticketDetail: {
+        fallbackTitle: "Support request",
+        statusLabel: "Status",
+        categoryLabel: "Category",
+        createdLabel: "Created",
+        conversationTitle: "Conversation",
+        replyLabel: "Reply",
+        replyPlaceholder: "Write a reply",
+        sendLabel: "Send reply",
+        sendingLabel: "Sending…",
+        closedMessage: "This request no longer accepts replies.",
+    },
+    supportDesk: {
+        title: "Support desk",
+        subtitle: "Review and respond to customer and partner support requests.",
+        searchPlaceholder: "Search by reference or subject",
+        allRequestersLabel: "All requesters",
+        customerLabel: "Customers",
+        agentLabel: "Partners and agents",
+        emptyTitle: "No support requests",
+        emptyDescription: "New customer and partner requests will appear here.",
+        selectTitle: "Select a support request",
+        selectDescription: "Choose a request to view its conversation and respond.",
+        replyLabel: "Reply as TravelsTREM support",
+        replyPlaceholder: "Write a helpful response",
+        sendLabel: "Send response",
+        sendingLabel: "Sending…",
+        emailOptionLabel: "Also email this reply to the requester",
+        statusLabel: "Status",
+        requesterLabel: "Requester",
+        categoryLabel: "Category",
+        assignedLabel: "Assigned admin",
     },
     emptyStates: {
         tickets: {
@@ -38,6 +99,11 @@ export const SUPPORT_UI = Object.freeze({
             icon: "support",
             title: "No contact options available",
             description: "Create a support request and the team will follow up.",
+        },
+        categories: {
+            icon: "support",
+            title: "No support options available",
+            description: "Support categories are being prepared. Try again later.",
         },
     },
 });
@@ -126,6 +192,44 @@ export const SUPPORT_CATEGORIES = Object.freeze([
     },
 ]);
 
+export const AGENT_SUPPORT_CATEGORIES = Object.freeze([
+    {
+        id: "agency-workspace",
+        type: "AGENCY_WORKSPACE",
+        label: "Agency workspace",
+        icon: "building2",
+        description: "Team, agency profile, permissions, or workspace issues.",
+    },
+    {
+        id: "product-publishing",
+        type: "PRODUCT_PUBLISHING",
+        label: "Products and publishing",
+        icon: "briefcaseBusiness",
+        description: "Tour, trip, pricing, publishing, or inventory issues.",
+    },
+    {
+        id: "enquiry-customer",
+        type: "ENQUIRY_CUSTOMER",
+        label: "Enquiries and customers",
+        icon: "messageCircle",
+        description: "Help with an enquiry, assignment, booking, or customer record.",
+    },
+    {
+        id: "account-access",
+        type: "ACCOUNT_ACCESS",
+        label: "Account and access",
+        icon: "user",
+        description: "Sign-in, profile, role, or product access issues.",
+    },
+    {
+        id: "technical-issue",
+        type: "TECHNICAL_ISSUE",
+        label: "Technical issue",
+        icon: "alert",
+        description: "Report an error or unexpected portal behaviour.",
+    },
+]);
+
 export const SUPPORT_TOPICS = Object.freeze([
     {
         id: "documents-visa",
@@ -207,6 +311,7 @@ export const PLATFORM_CONTACT_OPTIONS = Object.freeze([
     },
 ]);
 
-export const categoryById = (id) => SUPPORT_CATEGORIES.find((item) => item.id === id) || null;
+export const categoryById = (id) =>
+    [...SUPPORT_CATEGORIES, ...AGENT_SUPPORT_CATEGORIES].find((item) => item.id === id) || null;
 export const topicById = (id) => SUPPORT_TOPICS.find((item) => item.id === id) || null;
 export const serviceById = (id) => SUPPORT_SERVICES[String(id || "").toLowerCase()] || null;

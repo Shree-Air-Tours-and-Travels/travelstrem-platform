@@ -4,15 +4,20 @@ const repoDouble = {
     countDocuments: jest.fn(),
     find: jest.fn(),
 };
-const userFindById = jest.fn();
+const favoriteCountDocuments = jest.fn();
+const quoteFind = jest.fn();
 
 jest.unstable_mockModule("../../modules/forms/repositories/ContactLeadRepository.js", () => ({
     __esModule: true,
     default: repoDouble,
 }));
-jest.unstable_mockModule("../../modules/auth/models/User.js", () => ({
+jest.unstable_mockModule("../../modules/tours/models/Favorite.js", () => ({
     __esModule: true,
-    default: { findById: userFindById },
+    default: { countDocuments: favoriteCountDocuments },
+}));
+jest.unstable_mockModule("../../modules/bookings/models/BookingQuote.js", () => ({
+    __esModule: true,
+    default: { find: quoteFind },
 }));
 
 const { buildDashboardSnapshot } =
@@ -30,21 +35,17 @@ const lead = (overrides = {}) => ({
     ...overrides,
 });
 
-const mockUserEmail = (email) => {
-    userFindById.mockReturnValue({
-        select: () => ({ lean: async () => ({ email }) }),
-    });
-};
-
 beforeEach(() => {
     repoDouble.countDocuments.mockReset();
     repoDouble.find.mockReset();
-    userFindById.mockReset();
+    favoriteCountDocuments.mockReset();
+    quoteFind.mockReset();
+    favoriteCountDocuments.mockResolvedValue(0);
 });
 
 describe("buildDashboardSnapshot", () => {
     test("injects metrics and caps recent activity at five", async () => {
-        mockUserEmail("traveller@example.com");
+        favoriteCountDocuments.mockResolvedValue(4);
         repoDouble.countDocuments.mockImplementation((query) => {
             if (query.status) return Promise.resolve(3);
             return Promise.resolve(7);
@@ -63,12 +64,12 @@ describe("buildDashboardSnapshot", () => {
 
         expect(snapshot.metrics).toEqual({
             totalEnquiries: 7,
+            totalFavorites: 4,
             upcomingTrips: 0,
             awaitingResponse: 3,
         });
-        expect(repoDouble.countDocuments).toHaveBeenCalledWith(
-            expect.objectContaining({ $or: [expect.anything(), expect.anything()] }),
-        );
+        expect(favoriteCountDocuments).toHaveBeenCalledWith({ userId: "user-1" });
+        expect(snapshot.journeyStage).toBe("awaiting");
         expect(snapshot.recentActivity).toHaveLength(5);
         expect(snapshot.recentActivity[0]).toMatchObject({
             recordType: "enquiry",
@@ -78,7 +79,6 @@ describe("buildDashboardSnapshot", () => {
     });
 
     test("keeps upcoming trips empty until the quote-and-payment journey exists", async () => {
-        mockUserEmail("traveller@example.com");
         repoDouble.countDocuments.mockResolvedValue(1);
         repoDouble.find.mockReturnValue({
             sort: () => ({
@@ -103,8 +103,48 @@ describe("buildDashboardSnapshot", () => {
         expect(snapshot.recentActivity).toHaveLength(1);
     });
 
-    test("falls back to a claimed-only query when the viewer has no email", async () => {
-        mockUserEmail("");
+    test("includes quote lifecycle events in the recent activity timeline", async () => {
+        repoDouble.countDocuments.mockResolvedValue(1);
+        repoDouble.find.mockReturnValue({
+            sort: () => ({
+                limit: () => ({
+                    lean: async () => [
+                        lead({
+                            bookingId: "booking-1",
+                            createdAt: "2026-08-20T10:00:00.000Z",
+                            updatedAt: "2026-08-20T10:00:00.000Z",
+                        }),
+                    ],
+                }),
+            }),
+        });
+        quoteFind.mockReturnValue({
+            sort: () => ({
+                limit: () => ({
+                    lean: async () => [
+                        {
+                            _id: "quote-1",
+                            bookingId: "booking-1",
+                            createdAt: "2026-08-21T10:00:00.000Z",
+                            sentAt: "2026-08-22T10:00:00.000Z",
+                            rejectedAt: "2026-08-23T10:00:00.000Z",
+                        },
+                    ],
+                }),
+            }),
+        });
+
+        const snapshot = await buildDashboardSnapshot("user-1");
+
+        expect(snapshot.recentActivity.map((item) => item.activityType)).toEqual([
+            "quote_rejected",
+            "quote_sent",
+            "quote_uploaded",
+            "enquiry_new",
+        ]);
+    });
+
+    test("uses the member identity rather than matching enquiries by shared email", async () => {
         repoDouble.countDocuments.mockResolvedValue(0);
         repoDouble.find.mockReturnValue({
             sort: () => ({ limit: () => ({ lean: async () => [] }) }),
@@ -115,8 +155,20 @@ describe("buildDashboardSnapshot", () => {
         expect(repoDouble.countDocuments).toHaveBeenCalledWith({ claimedBy: "user-1" });
     });
 
+    test("keeps the rest of the dashboard available if favorites cannot be counted", async () => {
+        favoriteCountDocuments.mockRejectedValue(new Error("favorites unavailable"));
+        repoDouble.countDocuments.mockResolvedValue(2);
+        repoDouble.find.mockReturnValue({
+            sort: () => ({ limit: () => ({ lean: async () => [] }) }),
+        });
+
+        const snapshot = await buildDashboardSnapshot("user-1");
+
+        expect(snapshot.metrics.totalEnquiries).toBe(2);
+        expect(snapshot.metrics.totalFavorites).toBe(0);
+    });
+
     test("returns a safe empty snapshot when the data layer fails", async () => {
-        mockUserEmail("traveller@example.com");
         repoDouble.countDocuments.mockRejectedValue(new Error("db down"));
         repoDouble.find.mockReturnValue({
             sort: () => ({ limit: () => ({ lean: async () => [] }) }),
@@ -126,9 +178,11 @@ describe("buildDashboardSnapshot", () => {
 
         expect(snapshot.metrics).toEqual({
             totalEnquiries: 0,
+            totalFavorites: 0,
             upcomingTrips: 0,
             awaitingResponse: 0,
         });
+        expect(snapshot.journeyStage).toBe("discover");
         expect(snapshot.recentActivity).toEqual([]);
         expect(snapshot.upcomingTrips).toEqual([]);
     });

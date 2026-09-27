@@ -88,6 +88,27 @@ describe("buildStepTemplate", () => {
 });
 
 describe("applyPastedJson", () => {
+  it("accepts common API and AI response envelopes", () => {
+    const tourEnvelope = applyPastedJson(definition, { tour: { title: "Wrapped tour" } }, {});
+    expect(tourEnvelope.values.title).toBe("Wrapped tour");
+
+    const dataEnvelope = applyPastedJson(
+      definition,
+      { component: { data: [{ title: "Nested tour" }] } },
+      {},
+    );
+    expect(dataEnvelope.values.title).toBe("Nested tour");
+  });
+
+  it("rejects payloads that do not contain one tour object", () => {
+    expect(() => applyPastedJson(definition, [], {})).toThrow(
+      "JSON must contain one tour object.",
+    );
+    expect(() => applyPastedJson(definition, "tour", {})).toThrow(
+      "JSON must contain one tour object.",
+    );
+  });
+
   it("merges owned fields, normalizing dates inside repeater items", () => {
     const current = { departures: [{ _id: "keep-me-out", departureDate: "2026-01-01" }] };
     const result = applyPastedJson(

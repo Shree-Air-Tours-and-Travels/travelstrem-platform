@@ -3,6 +3,7 @@ import {
     getToursHomePage,
     getToursPage,
     getTourDetailsPage,
+    getCustomizeTourPage,
     getToursManagementPage,
 } from "./controllers/pageController.js";
 import { getWidget, getTourManagementListingWidget } from "./controllers/widgetController.js";
@@ -15,6 +16,7 @@ const router = express.Router();
 router.get("/tours-home-page.json", getToursHomePage);
 router.get("/tours-page.json", getToursPage);
 router.get("/tour-details-page.json", getTourDetailsPage);
+router.get("/customize-tour-page.json", getCustomizeTourPage);
 router.get("/tours-management-page.json", getToursManagementPage);
 // Declared before the catch-all: this widget carries agent-scoped DATA and
 // therefore requires the same identity/permission chain as GET /tours.json.

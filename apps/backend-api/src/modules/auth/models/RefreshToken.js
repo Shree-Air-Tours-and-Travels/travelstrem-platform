@@ -18,6 +18,7 @@ const refreshTokenSchema = new mongoose.Schema({
     userAgent: { type: String, default: "" },
     ipAddress: { type: String, default: "" },
     lastUsedAt: { type: Date, default: Date.now },
+    rememberMe: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now },
 });
 

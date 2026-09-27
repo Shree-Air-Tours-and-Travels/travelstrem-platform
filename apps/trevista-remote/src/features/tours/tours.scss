@@ -1,4 +1,4 @@
-@import "@packages/trem-ui/styles/base/typography";
+@import "@packages/trem-ui/styles/base/tokens";
 
 :root {
   --td-header-offset: 72px;
@@ -16,7 +16,7 @@
 
   &--home {
     min-height: auto;
-    padding-top: clamp(1rem, 2.5vw, 2rem);
+    padding-top: 0;
   }
 
   &__crumbs {
@@ -50,8 +50,55 @@
     overflow: hidden;
   }
 
+  &__home-skeleton {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  &__home-skeleton-hero,
+  &__home-skeleton-heading,
+  &__home-skeleton-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 16px;
+    background: var(--surface-inset);
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      transform: translateX(-100%);
+      background: linear-gradient(
+        90deg,
+        transparent,
+        color-mix(in srgb, var(--surface) 70%, transparent),
+        transparent
+      );
+      animation: tours-home-skeleton 1.35s infinite;
+    }
+  }
+
+  &__home-skeleton-hero {
+    min-height: clamp(360px, 52vw, 500px);
+  }
+
+  &__home-skeleton-heading {
+    width: min(380px, 70%);
+    min-height: 44px;
+  }
+
+  &__home-skeleton-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  &__home-skeleton-card {
+    min-height: 320px;
+  }
+
   &__inner {
-    width: min(1480px, 100%);
+    width: min(#{$full-width}, 100%);
     margin: 1.25rem auto 0;
     display: flex;
     flex-direction: column;
@@ -99,8 +146,8 @@
   &__hero {
     position: relative;
     overflow: hidden;
-    min-height: 610px;
-    padding: clamp(3rem, 6vw, 4.5rem) clamp(1.25rem, 4vw, 3rem) clamp(5rem, 8vw, 7.75rem);
+    min-height: 550px;
+    padding: clamp(2.7rem, 5.4vw, 4rem) clamp(1.25rem, 4vw, 3rem) clamp(4.5rem, 7.2vw, 7rem);
     border-radius: 20px;
     color: #ffffff;
     background:
@@ -123,13 +170,23 @@
     width: min(1220px, 100%);
     margin: 0 auto;
     display: grid;
-    grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+    grid-template-columns: minmax(0, 1fr);
     gap: clamp(2rem, 4vw, 3rem);
     align-items: center;
   }
 
   &__hero-copy {
     min-width: 0;
+    max-width: 760px;
+  }
+
+  &__hero-search-card {
+    width: 100%;
+
+    .trem-global-search__panel {
+      border-color: rgba(255, 255, 255, 0.4);
+      box-shadow: 0 20px 56px rgba(7, 42, 39, 0.2);
+    }
   }
 
   &__hero-eyebrow {
@@ -152,27 +209,25 @@
 
   &__hero-title {
     margin: 1.25rem 0 1rem;
+    color: #ffffff;
     font-size: clamp(2.5rem, 4.4vw, 4.25rem);
     line-height: 1.05;
     letter-spacing: -0.03em;
     font-weight: $font-extrabold;
+    text-shadow: 0 2px 18px rgba(7, 42, 39, 0.34);
   }
 
-  &__hero-title-accent,
+  &__hero-title-product,
   &__hero-title-brand {
-    background-image: linear-gradient(100deg, var(--color-secondary), var(--color-secondary-dark));
+    background-image: linear-gradient(
+      100deg,
+      #{$dark-secondary},
+      color-mix(in srgb, #{$dark-secondary} 58%, #ffffff)
+    );
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-  }
-
-  .theme--light &__hero-title-accent,
-  .theme--light &__hero-title-brand {
-    background-image: linear-gradient(
-      60deg,
-      var(--color-secondary),
-      color-mix(in srgb, var(--color-on-secondary) 98%, var(--text))
-    );
+    filter: drop-shadow(0 2px 10px rgba(7, 42, 39, 0.32));
   }
 
   &__hero-desc {
@@ -198,13 +253,13 @@
   }
 
   &__hero-actions .tours-page__hero-btn--ghost {
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.28);
+    background: transparent;
+    border: 1px solid transparent;
     color: #ffffff;
     box-shadow: none;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.12);
       color: #ffffff;
     }
   }
@@ -241,7 +296,7 @@
     background: var(--surface-glass-strong);
     color: var(--text);
     border-radius: 28px;
-    padding: 1.4rem;
+    padding: 1.2rem;
     box-shadow: 0 18px 60px var(--primary-shadow);
     backdrop-filter: blur(16px);
   }
@@ -249,14 +304,14 @@
   &__hero-tabs {
     display: flex;
     gap: 0.5rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.8rem;
   }
 
   &__hero-tabs .tours-page__hero-tab {
     @include type-xs();
     flex: 1;
     min-height: 0;
-    padding: 0.65rem 0.9rem;
+    padding: 0.55rem 0.9rem;
     border-radius: 11px;
     background: var(--surface-inset);
     color: var(--muted);
@@ -291,6 +346,16 @@
 
   &__hero-field {
     min-width: 0;
+  }
+
+  &__hero-date {
+    .trem-datepicker__trigger {
+      min-height: 36px;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
   }
 
   &__hero-custom {
@@ -364,6 +429,7 @@
   &__quick-filters {
     flex-wrap: nowrap;
     overflow-x: auto;
+    padding: 2px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
 
@@ -372,11 +438,26 @@
     }
   }
 
+  &__custom-tour-link {
+    margin: 0;
+    color: var(--muted);
+    font-size: $font-size-sm;
+
+    a {
+      color: var(--color-primary);
+      font-weight: $font-semibold;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+
+      &:hover {
+        color: var(--color-primary-dark);
+      }
+    }
+  }
+
   &__body {
-    display: grid;
-    grid-template-columns: minmax(320px, 380px) minmax(0, 1fr);
-    gap: 1.25rem;
-    align-items: stretch;
+    display: block;
+    min-width: 0;
   }
 
   &__sidebar {
@@ -392,13 +473,100 @@
     min-width: 0;
   }
 
+  &__discovery-toolbar {
+    display: grid;
+    grid-template-columns: auto minmax(280px, 1fr) minmax(170px, 210px) auto;
+    align-items: center;
+    gap: $space-3;
+    padding: $space-3;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+  }
+
+  &__filter-toggle.ui-button {
+    min-height: 46px;
+    padding-inline: $space-4;
+  }
+
+  &__toolbar-search {
+    position: relative;
+    min-width: 0;
+    min-height: 46px;
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    padding: 0 $space-3;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+
+    > svg {
+      flex: 0 0 18px;
+      color: var(--muted);
+    }
+
+    &:focus-within {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px var(--primary-soft);
+    }
+  }
+
+  &__toolbar-search-input {
+    flex: 1 1 auto;
+    min-width: 0;
+
+    &.trem-input {
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+  }
+
+  &__toolbar-sort {
+    min-width: 0;
+    width: 100%;
+  }
+
+  &__toolbar-results {
+    min-height: 46px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 118px;
+    padding: 0 $space-4;
+    border-radius: 10px;
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    font-size: $font-size-sm;
+    font-weight: $font-bold;
+    white-space: nowrap;
+  }
+
+  &__inline-filters {
+    position: relative;
+  }
+
+  &__inline-filters-close.ui-button {
+    position: absolute;
+    z-index: 4;
+    top: $space-2;
+    right: $space-2;
+    width: 38px;
+    min-width: 38px;
+    height: 38px;
+    padding: 0;
+  }
+
   &__grid-search {
     position: relative;
     display: flex;
     align-items: center;
     gap: 0.35rem;
     min-width: 0;
-    min-height: 48px;
+    min-height: 44px;
     padding: 0 0.5rem 0 0.85rem;
     border: 1px solid var(--border);
     border-radius: 10px;
@@ -445,14 +613,13 @@
     display: grid;
     grid-template-columns: max-content minmax(240px, 1fr) max-content;
     align-items: center;
-    gap: clamp(0.75rem, 2vw, 1.25rem);
-    margin-bottom: 0.85rem;
-    padding: 0.8rem 0.9rem;
+    gap: clamp(0.65rem, 1.5vw, 1rem);
+    margin-bottom: 0.65rem;
+    padding: 0.65rem 0.75rem;
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: 8px;
     background: var(--surface);
-    box-shadow: var(--shadow-sm);
-    backdrop-filter: blur(10px);
+    box-shadow: none;
 
     .tours-page__listing-count {
       display: inline-flex;
@@ -472,6 +639,14 @@
       color: var(--text);
       font-weight: $font-bold;
     }
+
+    &--compact {
+      display: flex;
+      margin: 0;
+      padding: $space-2 0;
+      border: 0;
+      background: transparent;
+    }
   }
 
   &__listing-controls {
@@ -487,7 +662,7 @@
   }
 
   &__sort {
-    width: clamp(180px, 18vw, 240px);
+    width: clamp(160px, 16vw, 210px);
     min-width: 0;
   }
 
@@ -513,21 +688,63 @@
     }
 
     &--member {
+      width: fit-content;
+      max-width: 100%;
+      padding: 0.4rem 0.6rem;
       border-color: var(--color-success);
       background: var(--success-soft);
       color: var(--color-success);
+      box-shadow: none;
+
+      svg {
+        width: 15px;
+        height: 15px;
+      }
+
+      span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+  }
+
+  &__sort-note-dismiss {
+    flex: 0 0 auto;
+    display: inline-grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    margin: -0.25rem -0.35rem -0.25rem 0.15rem;
+    padding: 0;
+    border: 0;
+    border-radius: $radius-full;
+    background: transparent;
+    color: currentColor;
+    cursor: pointer;
+
+    &:hover {
+      background: color-mix(in srgb, currentColor 10%, transparent);
+    }
+
+    &:focus-visible {
+      outline: 2px solid currentColor;
+      outline-offset: 1px;
     }
   }
 
   &__list {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 28rem), 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-auto-rows: 1fr;
     align-items: stretch;
-    gap: $space-5;
+    gap: $space-3;
   }
 
   &__card {
     min-width: 0;
+    width: 100%;
+    height: 100%;
     container-type: inline-size;
     container-name: tour-card-slot;
 
@@ -557,8 +774,8 @@
   }
 
   &__no-tours {
-    margin: 1.5rem auto;
-    padding: 2rem;
+    margin: 0.75rem auto;
+    padding: 1rem;
   }
 
   &__loading-card {
@@ -614,6 +831,18 @@
   }
 }
 
+@media (max-width: 1380px) {
+  .tours-page__list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@keyframes tours-home-skeleton {
+  to {
+    transform: translateX(100%);
+  }
+}
+
 @keyframes tours-clean-shimmer {
   to {
     transform: translateX(100%);
@@ -650,11 +879,19 @@
 @media (max-width: $tablet-max) {
   .tours-page {
     &__body {
-      grid-template-columns: 1fr;
+      display: block;
+    }
+
+    &__discovery-toolbar {
+      grid-template-columns: auto minmax(0, 1fr) minmax(160px, 190px);
+    }
+
+    &__toolbar-results {
+      display: none;
     }
 
     &__list {
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 1rem;
     }
 
@@ -718,9 +955,7 @@
     }
 
     &__list {
-      // Tablet shells retain their sidebar, so the result pane is too narrow
-      // for a two-card grid even though the viewport itself is tablet-sized.
-      grid-template-columns: minmax(0, 1fr);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: $space-4;
     }
 
@@ -731,6 +966,14 @@
     &__loading-media {
       height: 160px;
     }
+
+    &__home-skeleton-grid {
+      grid-template-columns: 1fr;
+    }
+
+    &__home-skeleton-card:nth-child(n + 2) {
+      display: none;
+    }
   }
 }
 
@@ -739,22 +982,57 @@
     --td-header-offset: 56px;
   }
 
+  .tours-page__filters-sheet {
+    .trem-bottom-sheet__body {
+      padding: 0;
+      background: var(--surface);
+    }
+  }
+
   .tours-page {
     --tours-page-gutter: 0.75rem;
     --tours-crumb-height: 48px;
+    padding-bottom: calc(
+      var(--trem-floating-action-clearance, 64px) + var(--dash-mobile-action-panel-space, 0px) +
+        env(safe-area-inset-bottom, 0px) + 0.75rem
+    );
 
     &__inner {
-      margin-top: 0.85rem;
-      gap: 1rem;
+      margin-top: 0.65rem;
+      gap: 0.85rem;
+    }
+
+    &__sidebar {
+      display: none;
+    }
+
+    &__discovery-toolbar {
+      grid-template-columns: minmax(0, 1fr);
+      padding: $space-2;
+    }
+
+    &__toolbar-search {
+      grid-column: 1;
+    }
+
+    &__filter-toggle,
+    &__toolbar-sort {
+      display: none;
+    }
+
+    &__inline-filters {
+      display: none;
     }
 
     &__crumbs {
+      height: 44px;
+      min-height: 44px;
+      padding-block: 0;
       box-shadow: 0 4px 16px color-mix(in srgb, var(--text) 7%, transparent);
 
       .trem-breadcrumbs {
         max-width: 100%;
-        overflow-x: auto;
-        scrollbar-width: none;
+        overflow: hidden;
       }
     }
 
@@ -789,9 +1067,17 @@
     }
 
     &__hero-eyebrow {
+      display: block;
+      width: fit-content;
       max-width: 100%;
       border-radius: 14px;
       line-height: 1.3;
+
+      svg {
+        display: inline-block;
+        margin-right: 0.5rem;
+        vertical-align: -0.15em;
+      }
     }
 
     &__hero-actions {
@@ -876,5 +1162,11 @@
         color: var(--muted);
       }
     }
+  }
+
+  // The host shell already appends the persistent navigation safe area.
+  // Home has no page action bar, so it should only keep its normal gutter.
+  .tours-app-shell--embedded .tours-page--home {
+    padding-bottom: 0.75rem;
   }
 }

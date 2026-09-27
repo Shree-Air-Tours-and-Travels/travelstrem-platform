@@ -32,7 +32,7 @@ describe("tour detail disclosure widgets", () => {
     expect(screen.getByText("Airport pickup")).toBeInTheDocument();
   });
 
-  it("uses one desktop text action to expand both inclusion columns", () => {
+  it("uses each more-count action to expand its inclusion column", () => {
     render(
       <InclusionsExclusionsView
         labels={{
@@ -53,10 +53,12 @@ describe("tour detail disclosure widgets", () => {
 
     expect(screen.queryByText("Six")).not.toBeInTheDocument();
     expect(screen.queryByText("F")).not.toBeInTheDocument();
-    expect(screen.getAllByText("+1 more")).toHaveLength(2);
-    expect(screen.getAllByRole("button", { name: "View all" })).toHaveLength(1);
-    fireEvent.click(screen.getByRole("button", { name: "View all" }));
+    const moreActions = screen.getAllByRole("button", { name: "+1 more" });
+    expect(moreActions).toHaveLength(2);
+    fireEvent.click(moreActions[0]);
     expect(screen.getByText("Six")).toBeInTheDocument();
+    expect(screen.queryByText("F")).not.toBeInTheDocument();
+    fireEvent.click(moreActions[1]);
     expect(screen.getByText("F")).toBeInTheDocument();
   });
 
@@ -82,8 +84,8 @@ describe("tour detail disclosure widgets", () => {
       />,
     );
 
-    expect(screen.getAllByRole("button", { name: "View all" })).toHaveLength(2);
-    fireEvent.click(screen.getAllByRole("button", { name: "View all" })[0]);
+    expect(screen.getAllByRole("button", { name: "+1 more" })).toHaveLength(2);
+    fireEvent.click(screen.getAllByRole("button", { name: "+1 more" })[0]);
     expect(screen.getByText("Six")).toBeInTheDocument();
     expect(screen.queryByText("F")).not.toBeInTheDocument();
 

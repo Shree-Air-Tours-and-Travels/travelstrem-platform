@@ -7,6 +7,7 @@
     },
     "elements": {
       "labels": {
+        "swipeHint": "Swipe to see more tours",
         "youMayAlsoLike": "You May Also Like",
         "viewDetails": "View Details"
       },

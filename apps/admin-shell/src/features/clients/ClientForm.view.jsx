@@ -1,7 +1,8 @@
 import React from "react";
+import { PRODUCT_TYPE } from "@packages/trem-ui";
 import "./ClientForm.scss";
 
-const PRODUCTS = ["trevio", "trevista", "dashboard", "admin", "agent"];
+const PRODUCTS = [PRODUCT_TYPE.TREVIO, PRODUCT_TYPE.TREVISTA, "dashboard", "admin", "agent"];
 
 export default function ClientFormView({
   form,

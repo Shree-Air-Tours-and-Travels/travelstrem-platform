@@ -3,14 +3,22 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { normalizeTourForResponse } from "./tourController.js";
 import TourRepository from "../repositories/TourRepository.js";
-import { getTourDiscovery, searchToursFromRawRequest } from "../services/tourSearchService.js";
-import { buildManagementTourQuery } from "../services/tourVisibility.service.js";
+import TourDeparture from "../models/TourDeparture.js";
+import { searchToursFromRawRequest } from "../services/tourSearchService.js";
+import {
+    buildManagementTourListQuery,
+    getManagementTourSort,
+} from "../services/tourVisibility.service.js";
 import masterDataService from "../../masterData/services/masterDataService.js";
 import { getHiddenProductKeys } from "../../../utils/hiddenProductCache.js";
 import {
     calculateTourCustomizationPreview,
     calculateTourHotelUnitPrice,
 } from "../../../core/financial-engine/services/tour-commercial.service.js";
+import {
+    findIntelligentSimilarTours,
+    recordTourView,
+} from "../services/tourIntelligence.service.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -62,33 +70,63 @@ const PAGE_DIR_MAP = {
 
 const escapeRegExp = (s = "") => String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
+const textValue = (value, fallback = "") => {
+    if (value == null) return fallback;
+    if (["string", "number", "boolean"].includes(typeof value)) {
+        const text = String(value).trim();
+        return text && text !== "[object Object]" ? text : fallback;
+    }
+    if (Array.isArray(value)) return value.map((item) => textValue(item)).find(Boolean) || fallback;
+    if (typeof value === "object") {
+        if (value._bsontype && typeof value.toString === "function") {
+            const text = value.toString().trim();
+            return text && text !== "[object Object]" ? text : fallback;
+        }
+        return textValue(
+            value.slug ??
+                value.tourRef ??
+                value.value ??
+                value.label ??
+                value.name ??
+                value.title ??
+                value.en ??
+                value.default ??
+                value._id ??
+                value.id,
+            fallback,
+        );
+    }
+    return fallback;
+};
+
 const slugifyTourTitle = (value = "") =>
-    String(value)
+    textValue(value)
         .trim()
         .toLowerCase()
         .replace(/&/g, " and ")
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-+|-+$/g, "");
 
-const findTourByRef = async (tourRef) => {
+const findTourByRef = async (tourRef, { includeUnpublishedSource = false } = {}) => {
     const ref = decodeURIComponent(String(tourRef || "")).trim();
     if (!ref) return null;
+    const visibility = includeUnpublishedSource ? {} : { status: "published" };
     if (/^[0-9a-fA-F]{24}$/.test(ref)) {
-        const byId = await TourRepository.findOne({ _id: ref, status: "published" });
+        const byId = await TourRepository.findOne({ _id: ref, ...visibility });
         if (byId) return byId;
     }
     const bySlug = await TourRepository.findOne({
         slug: slugifyTourTitle(ref),
-        status: "published",
+        ...visibility,
     });
     if (bySlug) return bySlug;
     const titleCandidate = ref.replace(/-/g, " ").trim();
     const directTitle = await TourRepository.findOne({
         title: new RegExp(`^${escapeRegExp(titleCandidate)}$`, "i"),
-        status: "published",
+        ...visibility,
     });
     if (directTitle) return directTitle;
-    const tours = await TourRepository.find({ status: "published" });
+    const tours = await TourRepository.find(visibility);
     return tours.find((tour) => slugifyTourTitle(tour.title) === slugifyTourTitle(ref)) || null;
 };
 
@@ -130,10 +168,15 @@ function ensurePageContract(widget) {
 const normalizeTourCardForResponse = (tourObj = {}, priceInfo = null) => {
     const reviews = Array.isArray(tourObj.reviews) ? tourObj.reviews : [];
     const reviewCount = reviews.length;
+    const title = textValue(tourObj.title);
+    const slug = slugifyTourTitle(tourObj.slug || title || tourObj._id || tourObj.id);
 
     return {
-        _id: tourObj._id || tourObj.id || null,
-        title: tourObj.title || "",
+        _id: textValue(tourObj._id || tourObj.id) || null,
+        id: textValue(tourObj.id || tourObj._id) || null,
+        slug,
+        tourRef: slug,
+        title,
         city: tourObj.city ? { from: tourObj.city.from, to: tourObj.city.to } : null,
         address: tourObj.address
             ? { city: tourObj.address.city, country: tourObj.address.country }
@@ -148,10 +191,24 @@ const normalizeTourCardForResponse = (tourObj = {}, priceInfo = null) => {
         reviewCount,
         reviews: [],
         featured: !!tourObj.featured,
+        trending: !!tourObj.trending,
         tremVerified: Boolean(tourObj.tremVerified),
         tremVerifiedAt: tourObj.tremVerifiedAt || null,
         tags: Array.isArray(tourObj.tags) ? tourObj.tags.slice(0, 4) : [],
+        similarity: tourObj.similarity || null,
         priceInfo: priceInfo || null,
+        packagePrices: publicPackages(tourObj).map((item) => ({
+            packageKey: item.packageKey,
+            tier: item.tier,
+            name: item.name,
+            sellingTotalMinor: item.sellingTotalMinor,
+            currency: String(tourObj.commercial?.currency || priceInfo?.currency || "INR"),
+            moneyUnit: "PAISE",
+        })),
+        availability: {
+            seatsAvailable: tourObj.availability?.seatsAvailable ?? null,
+            departureCount: Array.isArray(tourObj.departures) ? tourObj.departures.length : 0,
+        },
     };
 };
 
@@ -163,23 +220,39 @@ const normalizeTourFactsForResponse = (tour = {}) => ({
         tour.city && typeof tour.city === "object"
             ? { from: String(tour.city.from || ""), to: String(tour.city.to || "") }
             : String(tour.city || ""),
-    distance: Number(tour.distance) > 0 ? Number(tour.distance) : null,
+    period: tour.period
+        ? { days: Number(tour.period.days || 0), nights: Number(tour.period.nights || 0) }
+        : null,
     startDate: tour.startDate || null,
     endDate: tour.endDate || null,
+    departures: (Array.isArray(tour.departures) ? tour.departures : []).map((departure) => ({
+        id: String(departure?._id || departure?.id || ""),
+        departureDate: departure?.departureDate || null,
+        returnDate: departure?.returnDate || null,
+        status: String(departure?.status || "active"),
+        availableSeats: departure?.availableSeats ?? null,
+    })),
     availability: {
         seatsAvailable: tour.availability?.seatsAvailable ?? null,
     },
 });
 
+const normalizePublicPackageCopy = (value = "") =>
+    String(value).replace(
+        /\bBasic,\s*Standard(?:,|\s+and)\s*Premium packages\b/gi,
+        "Standard, Premium and Advance packages",
+    );
+
 const normalizeTourOverviewForResponse = (tour = {}) => ({
     // _id is required for favourites and enquiry actions.
     _id: tour._id || null,
+    status: tour.status || null,
     title: String(tour.title || ""),
     city:
         tour.city && typeof tour.city === "object"
             ? { from: String(tour.city.from || ""), to: String(tour.city.to || "") }
             : String(tour.city || ""),
-    desc: String(tour.desc || ""),
+    desc: normalizePublicPackageCopy(tour.desc),
     period: tour.period
         ? {
               days: Number(tour.period.days || 0),
@@ -189,6 +262,7 @@ const normalizeTourOverviewForResponse = (tour = {}) => ({
     avgRating: Number(tour.avgRating || 0),
     maxGroupSize: Number(tour.maxGroupSize || 0) || null,
     availability: { totalSeats: tour.availability?.totalSeats ?? null },
+    reviewCount: Array.isArray(tour.reviews) ? tour.reviews.length : 0,
     tags: Array.isArray(tour.tags) ? tour.tags.map(String).slice(0, 8) : [],
     agency: tour.agency || null,
     operator: tour.operator || null,
@@ -197,6 +271,15 @@ const normalizeTourOverviewForResponse = (tour = {}) => ({
     ownerAgentName: tour.ownerAgentName || "",
     ownerAgentEmail: tour.ownerAgentEmail || "",
 });
+
+const PUBLIC_PACKAGE_NAMES = Object.freeze({
+    BASIC: "Standard",
+    STANDARD: "Premium",
+    PREMIUM: "Advance",
+});
+
+const publicPackageName = (item = {}) =>
+    PUBLIC_PACKAGE_NAMES[String(item.tier || "").toUpperCase()] || String(item.name || "Package");
 
 const publicPackages = (tour = {}) => {
     if (tour.commercial?.version !== "COMPONENTS_V1") return [];
@@ -218,9 +301,16 @@ const publicPackages = (tour = {}) => {
             return {
                 packageKey: String(derived.packageKey || definition.packageKey || ""),
                 tier: String(derived.tier || definition.tier || ""),
-                name: String(derived.name || definition.name || "Package"),
+                name: publicPackageName({
+                    tier: derived.tier || definition.tier,
+                    name: derived.name || definition.name,
+                }),
                 description: String(definition.description || ""),
-                recommended: Boolean(definition.recommended),
+                recommended:
+                    publicPackageName({
+                        tier: derived.tier || definition.tier,
+                        name: derived.name || definition.name,
+                    }) === "Premium",
                 included: componentNames(definition.includedComponentKeys),
                 optional: componentNames(definition.optionalComponentKeys),
                 sellingTotalMinor: Number(derived.sellingTotalMinor || 0),
@@ -238,7 +328,6 @@ const normalizePricingCardForResponse = (tour = {}) => ({
         tour.city && typeof tour.city === "object"
             ? { from: String(tour.city.from || ""), to: String(tour.city.to || "") }
             : String(tour.city || ""),
-    distance: Number(tour.distance) > 0 ? Number(tour.distance) : null,
     availability: { seatsAvailable: tour.availability?.seatsAvailable ?? null },
     priceInfo: tour.priceInfo
         ? {
@@ -270,7 +359,7 @@ const normalizeHotelOptionsForResponse = (tour = {}, selectedPackageKey = "") =>
     const packageNames = new Map(
         (tour.commercial?.packages || []).map((item) => [
             String(item.packageKey || ""),
-            String(item.name || ""),
+            publicPackageName(item),
         ]),
     );
     return (tour.hotelOptions || [])
@@ -438,35 +527,24 @@ const resolvePackageStays = (tour = {}, packageKey = "") => {
  */
 export const getTourManagementListingWidget = async (req, res) => {
     try {
-        const pageDir = path.resolve(DATA_DIR, PAGE_DIR_MAP["agent-shell/services/tours-management"]);
+        const pageDir = path.resolve(
+            DATA_DIR,
+            PAGE_DIR_MAP["agent-shell/services/tours-management"],
+        );
         const resolvedPath = path.resolve(pageDir, "./widgets/tour-management-listing.json");
         if (!resolvedPath.startsWith(DATA_DIR)) {
             return res.status(403).json({ status: "error", message: "Invalid widget path" });
         }
         const widget = JSON.parse(fs.readFileSync(resolvedPath, "utf8"));
 
-        const search = String(req.query.query || "").trim();
-        const sortMap = {
-            newest: { createdAt: -1 },
-            oldest: { createdAt: 1 },
-            title: { title: 1 },
-        };
-        const mongoSort = sortMap[String(req.query.sort || "")] || sortMap.newest;
-
-        const conditions = [buildManagementTourQuery(req)];
-        if (search) {
-            const rx = new RegExp(escapeRegExp(search), "i");
-            conditions.push({
-                $or: [
-                    { title: rx },
-                    { desc: rx },
-                    { "city.from": rx },
-                    { "city.to": rx },
-                    { tags: rx },
-                ],
-            });
+        if (String(req.query.metadataOnly || "").toLowerCase() === "true") {
+            widget.component.data = {};
+            widget.component = await masterDataService.hydrateDataScope(widget.component);
+            return res.status(200).json(ensurePageContract(widget));
         }
-        const mongoQuery = conditions.length === 1 ? conditions[0] : { $and: conditions };
+
+        const mongoQuery = buildManagementTourListQuery(req);
+        const mongoSort = getManagementTourSort(req.query.sort);
 
         const dateQuery = req.query?.date ? new Date(req.query.date) : new Date();
         const toursRaw = await TourRepository.find(mongoQuery).sort(mongoSort);
@@ -492,7 +570,8 @@ export const getTourManagementListingWidget = async (req, res) => {
     }
 };
 
-export const getWidget = async (req, res) => {    try {
+export const getWidget = async (req, res) => {
+    try {
         const pageKey = req.query.pageKey;
         const widgetRef =
             req.query.ref ||
@@ -524,6 +603,35 @@ export const getWidget = async (req, res) => {    try {
         const widget = JSON.parse(raw);
 
         const fileName = path.basename(resolvedPath);
+
+        // Keep workflow status choices in the backend contract. The checked-in
+        // legacy widget still exposes date sorting, so normalize it here until
+        // that root-owned data file can be migrated safely.
+        if (fileName === "tour-management-filters.json") {
+            widget.component.elements = widget.component.elements || {};
+            widget.component.elements.labels = {
+                ...(widget.component.elements.labels || {}),
+                allStatuses: "All statuses",
+                statusDraft: "Draft",
+                statusPendingApproval: "Pending approval",
+                statusPublished: "Published",
+                statusUnpublished: "Unpublished",
+                statusCancelled: "Cancelled",
+            };
+            widget.component.structure = widget.component.structure || {};
+            widget.component.structure.config = widget.component.structure.config || {};
+            delete widget.component.structure.config.sort;
+            widget.component.structure.config.status = {
+                options: [
+                    { id: "", labelRef: "allStatuses" },
+                    { id: "draft", labelRef: "statusDraft" },
+                    { id: "pending_approval", labelRef: "statusPendingApproval" },
+                    { id: "published", labelRef: "statusPublished" },
+                    { id: "unpublished", labelRef: "statusUnpublished" },
+                    { id: "cancelled", labelRef: "statusCancelled" },
+                ],
+            };
+        }
 
         // Filter choices are part of the widget contract. Resolve them for every
         // request, including metadata requests, so consumers receive a complete
@@ -566,14 +674,6 @@ export const getWidget = async (req, res) => {    try {
             return res.status(200).json(ensurePageContract(resBody));
         }
 
-        // Quick-filter chips are part of this widget's data contract. Keep them in
-        // the widget response even for metadata requests so clients do not need to
-        // fetch and merge a second discovery payload.
-        if (fileName === "quick-filters.json") {
-            const discovery = await getTourDiscovery();
-            widget.component.data.filters = discovery.chips;
-        }
-
         // The grid response owns its initial DB result set and facets. Returning an
         // empty data object for metadata requests made the public widget contract
         // misleading and forced the client to assemble it from another endpoint.
@@ -592,26 +692,42 @@ export const getWidget = async (req, res) => {    try {
 
         if (fileName === "featured-holiday-packages.json") {
             const limit = Math.min(Math.max(Number(req.query.limit) || 4, 1), 8);
-            const toursRaw = await TourRepository.find({}).sort({ createdAt: -1 });
-            const packages = (Array.isArray(toursRaw) ? toursRaw : [])
-                .map((doc) => {
-                    const tourObj = doc.toObject ? doc.toObject() : doc;
-                    return normalizeTourCardForResponse(tourObj, buildPriceInfo(doc));
-                })
-                .filter((tour) => tour.title && tour.photo)
-                .sort(
-                    (a, b) =>
-                        Number(b.featured) - Number(a.featured) ||
-                        Number(b.avgRating || 0) - Number(a.avgRating || 0),
-                )
-                .slice(0, limit);
-            widget.component.data.packages = packages;
+            const featuredResult = await searchToursFromRawRequest({
+                filters: { featured: true },
+                sort: "RECOMMENDED",
+                page: 1,
+                pageSize: limit,
+            });
+            widget.component.data.packages = featuredResult.items;
+        }
+
+        if (fileName === "hero-banner.json" && pageKey === "tours-remote/home") {
+            const { facets } = await searchToursFromRawRequest({ page: 1, pageSize: 1 });
+            const option = (item) => ({
+                id: item.id,
+                value: item.value,
+                label: `${item.label} (${item.count})`,
+                count: item.count,
+            });
+            widget.component.dataScope.options = {
+                destinationOptions: facets.destinations.map(option),
+                interestOptions: facets.tags.map(option),
+            };
+            widget.component.data.filterBounds = {
+                price: facets.price,
+                duration: facets.duration,
+            };
         }
 
         if (pageKey === "tours-remote/details") {
             const tourRef = req.query.tourRef;
             if (tourRef) {
-                const tourRaw = await findTourByRef(tourRef);
+                // Similar recommendations may still use an unpublished tour
+                // as their private scoring source, but no unpublished tour
+                // fields are returned to the browser.
+                const tourRaw = await findTourByRef(tourRef, {
+                    includeUnpublishedSource: fileName === "similar-tours.json",
+                });
                 if (tourRaw) {
                     const tourObj = tourRaw.toObject ? tourRaw.toObject() : tourRaw;
                     const priceInfo = buildPriceInfo(tourRaw);
@@ -620,10 +736,27 @@ export const getWidget = async (req, res) => {    try {
                         case "tour-overview.json":
                             widget.component.data.tour =
                                 normalizeTourOverviewForResponse(normalized);
+                            // Non-blocking, daily-deduplicated intelligence signal.
+                            recordTourView(tourObj._id, req).catch((error) =>
+                                console.error(
+                                    "[TourIntelligence] view signal failed:",
+                                    error.message,
+                                ),
+                            );
                             break;
-                        case "tour-facts.json":
-                            widget.component.data.tour = normalizeTourFactsForResponse(normalized);
+                        case "tour-facts.json": {
+                            const departures = await TourDeparture.find({
+                                tourId: tourObj._id,
+                                status: { $in: ["scheduled", "active", "sold_out"] },
+                            })
+                                .sort({ departureDate: 1 })
+                                .lean();
+                            widget.component.data.tour = normalizeTourFactsForResponse({
+                                ...normalized,
+                                departures: departures.length ? departures : normalized.departures,
+                            });
                             break;
+                        }
                         case "tour-gallery.json":
                             widget.component.data.photos = Array.isArray(normalized.photos)
                                 ? normalized.photos
@@ -692,33 +825,21 @@ export const getWidget = async (req, res) => {    try {
                                 ? normalized.reviews
                                 : [];
                             widget.component.data.avgRating = normalized.avgRating || 0;
+                            // Completed customer bookings are not persisted in this service yet.
+                            // Keep review eligibility explicit and server-owned so public clients
+                            // cannot infer eligibility from local state or an enquiry status.
+                            widget.component.data.canReview = false;
+                            widget.component.data.reviewEligibilityReason =
+                                "COMPLETED_BOOKING_REQUIRED";
                             break;
                         case "similar-tours.json": {
-                            const allTours = await TourRepository.find({}).sort({ createdAt: -1 });
-                            const currentTags = new Set(
-                                (normalized.tags || []).map((tag) => String(tag).toLowerCase()),
-                            );
-                            widget.component.data.tours = (Array.isArray(allTours) ? allTours : [])
-                                .map((doc) => {
-                                    const tourObj = doc.toObject ? doc.toObject() : doc;
-                                    return normalizeTourCardForResponse(
-                                        tourObj,
-                                        buildPriceInfo(doc),
-                                    );
-                                })
-                                .filter(
-                                    (candidate) => String(candidate._id) !== String(normalized._id),
-                                )
-                                .sort((a, b) => {
-                                    const aScore = (a.tags || []).filter((tag) =>
-                                        currentTags.has(String(tag).toLowerCase()),
-                                    ).length;
-                                    const bScore = (b.tags || []).filter((tag) =>
-                                        currentTags.has(String(tag).toLowerCase()),
-                                    ).length;
-                                    return bScore - aScore;
-                                })
-                                .slice(0, 3);
+                            const similarTours = await findIntelligentSimilarTours(tourRaw, {
+                                limit: 4,
+                            });
+                            widget.component.data.tours = similarTours.map((doc) => {
+                                const tourObj = doc.toObject ? doc.toObject() : doc;
+                                return normalizeTourCardForResponse(tourObj, buildPriceInfo(doc));
+                            });
                             break;
                         }
                         default:

@@ -3,79 +3,109 @@
   "component": {
     "data": {
       "overviewRail": {
-        "ariaLabel": "Travel planning shortcuts and updates",
+        "ariaLabelRef": "railAriaLabel",
         "widgets": [
           {
             "id": "quick-actions",
             "type": "quickActions",
-            "title": "Quick Actions",
+            "titleRef": "quickActionsTitle",
             "hideDisabled": true,
             "items": [
               {
                 "id": "plan-trip",
-                "title": "Plan a new trip",
-                "description": "Start planning your journey",
+                "titleRef": "planTripTitle",
+                "descriptionRef": "planTripDescription",
                 "icon": "map",
-                "href": "/?tab=trevista",
+                "hrefRef": "trevistaHome",
                 "target": "_self",
-                "ariaLabel": "Plan a new trip with Tours and Packages"
+                "ariaLabelRef": "planTripAriaLabel"
               },
               {
                 "id": "visa-requirements",
-                "title": "Check visa requirements",
-                "description": "Get visa info for your destination",
+                "titleRef": "visaTitle",
+                "descriptionRef": "visaDescription",
                 "icon": "visa",
-                "href": "https://travelstrem.com/#contact",
+                "hrefRef": "contactTravelstrem",
                 "target": "_self",
-                "ariaLabel": "Ask about visa requirements",
+                "ariaLabelRef": "visaAriaLabel",
                 "disabled": true
               },
               {
                 "id": "upload-documents",
-                "title": "Upload documents",
-                "description": "Keep your travel documents ready",
+                "titleRef": "documentsTitle",
+                "descriptionRef": "documentsDescription",
                 "icon": "passport",
-                "href": "/?tab=profile",
+                "hrefRef": "profileHome",
                 "target": "_self",
-                "ariaLabel": "Open your travel profile",
+                "ariaLabelRef": "documentsAriaLabel",
                 "disabled": true
               },
               {
                 "id": "contact-support",
-                "title": "Contact support",
-                "description": "We're here to help",
+                "titleRef": "supportTitle",
+                "descriptionRef": "supportDescription",
                 "icon": "phoneCall",
-                "href": "mailto:akshat.goyal@travelstrem.com",
-                "target": "_self",
-                "ariaLabel": "Email TravelsTrem support"
+                "targetTab": "support",
+                "ariaLabelRef": "supportAriaLabel"
               }
             ]
           },
           {
             "id": "exclusive-offer",
             "type": "exclusiveOffer",
-            "title": "Exclusive for You",
+            "titleRef": "exclusiveTitle",
             "available": false,
             "emptyState": {
               "icon": "ticket",
-              "title": "No coupons available",
-              "description": "New travel offers and coupon codes will appear here."
+              "titleRef": "exclusiveEmptyTitle",
+              "descriptionRef": "exclusiveEmptyDescription"
             },
-            "headline": "Get up to 15% off",
-            "description": "on holiday packages",
-            "codeLabel": "Use code:",
+            "headlineRef": "exclusiveHeadline",
+            "descriptionRef": "exclusiveDescription",
+            "codeLabelRef": "exclusiveCodeLabel",
             "code": "TREM15",
             "image": "https://images.unsplash.com/photo-1507525428034-b723cf961b3e?w=700&q=82&auto=format&fit=crop",
-            "imageAlt": "Tropical holiday resort by the sea",
-            "href": "https://trevista.travelstrem.com",
+            "imageAltRef": "exclusiveImageAlt",
+            "hrefRef": "trevistaPublic",
             "target": "_self",
-            "ariaLabel": "Explore the exclusive Trevista holiday offer"
+            "ariaLabelRef": "exclusiveAriaLabel"
           }
         ]
       }
     },
     "dataScope": { "options": {} },
-    "elements": { "labels": {}, "urls": {} },
+    "elements": {
+      "labels": {
+        "railAriaLabel": "Travel planning shortcuts and updates",
+        "quickActionsTitle": "Quick actions",
+        "planTripTitle": "Plan a new trip",
+        "planTripDescription": "Start planning your journey",
+        "planTripAriaLabel": "Plan a new trip with Tours and Packages",
+        "visaTitle": "Check visa requirements",
+        "visaDescription": "Get visa information for your destination",
+        "visaAriaLabel": "Ask about visa requirements",
+        "documentsTitle": "Upload documents",
+        "documentsDescription": "Keep your travel documents ready",
+        "documentsAriaLabel": "Open your travel profile",
+        "supportTitle": "Contact support",
+        "supportDescription": "We’re here to help",
+        "supportAriaLabel": "Open TravelsTREM support",
+        "exclusiveTitle": "Exclusive for you",
+        "exclusiveEmptyTitle": "New rewards are on the way",
+        "exclusiveEmptyDescription": "Personal offers and coupon codes will appear here when available.",
+        "exclusiveHeadline": "Get up to 15% off",
+        "exclusiveDescription": "on holiday packages",
+        "exclusiveCodeLabel": "Use code:",
+        "exclusiveImageAlt": "Tropical holiday resort by the sea",
+        "exclusiveAriaLabel": "Explore the exclusive Trevista holiday offer"
+      },
+      "urls": {
+        "trevistaHome": "/?tab=trevista",
+        "profileHome": "/?tab=profile",
+        "contactTravelstrem": "https://travelstrem.com/#contact",
+        "trevistaPublic": "https://trevista.travelstrem.com"
+      }
+    },
     "structure": {
       "header": {},
       "widgets": [

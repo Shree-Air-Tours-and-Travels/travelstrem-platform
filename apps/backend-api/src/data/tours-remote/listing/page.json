@@ -7,7 +7,9 @@
     },
     "elements": {
       "labels": {
-        "pageTitle": "Explore Curated Holiday Packages"
+        "pageTitle": "Explore Curated Holiday Packages",
+        "breadcrumbTrevista": "Trevista",
+        "breadcrumbTours": "Tours"
       },
       "urls": {}
     },

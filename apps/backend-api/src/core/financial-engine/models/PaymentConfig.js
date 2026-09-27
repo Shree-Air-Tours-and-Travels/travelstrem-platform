@@ -1,10 +1,11 @@
 import mongoose from "mongoose";
+import { PRICING_SCOPE_TYPES } from "../constants/index.js";
 
 const schema = new mongoose.Schema(
     {
         scopeType: {
             type: String,
-            enum: ["GLOBAL", "AGENCY", "TOUR", "BOOKING"],
+            enum: PRICING_SCOPE_TYPES,
             required: true,
             index: true,
         },

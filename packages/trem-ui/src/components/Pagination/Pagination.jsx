@@ -28,9 +28,10 @@ export default function Pagination({
   nextLabel = "Next page",
   ariaLabel = "Pagination",
   disabled = false,
+  showSinglePage = false,
   className = "",
 }) {
-  if (totalPages <= 1) return null;
+  if (totalPages < 1 || (totalPages === 1 && !showSinglePage)) return null;
   const pages = getVisiblePages(currentPage, totalPages, maxVisible);
   const selectPage = (page) => {
     if (!disabled && page >= 1 && page <= totalPages && page !== currentPage) onPageChange?.(page);

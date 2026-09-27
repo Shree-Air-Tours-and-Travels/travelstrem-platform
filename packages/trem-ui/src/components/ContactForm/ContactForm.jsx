@@ -1,8 +1,11 @@
 import React from "react";
 import PropTypes from "prop-types";
 import Button from "../Button/Button.jsx";
+import DatePicker from "../DatePicker/DatePicker.jsx";
 import Dropdown from "../Dropdown/Dropdown.jsx";
 import InputField from "../InputField/InputField.jsx";
+import LocationTypeahead from "../LocationTypeahead/LocationTypeahead.jsx";
+import MultiSelect from "../MultiSelect/MultiSelect.jsx";
 import "./ContactForm.scss";
 
 const ContactForm = ({
@@ -15,6 +18,8 @@ const ContactForm = ({
   submitText = "Send Request",
   errors = {},
   Button: CustomButton,
+  formId,
+  showActions = true,
 }) => {
   const Btn = CustomButton || Button;
 
@@ -41,6 +46,39 @@ const ContactForm = ({
         />
       );
     }
+    if (type === "multiselect") {
+      return (
+        <MultiSelect
+          label={field.label}
+          placeholder={field.placeholder || "Select options"}
+          value={Array.isArray(value) ? value : []}
+          options={field.options || []}
+          required={field.required}
+          maxSelected={field.maxItems}
+          error={errors[field.name]}
+          onChange={(next) => onChange(field.name, next)}
+        />
+      );
+    }
+    if (type === "location") {
+      return (
+        <LocationTypeahead
+          label={field.label}
+          placeholder={field.placeholder}
+          value={value}
+          required={field.required}
+          error={errors[field.name]}
+          mode={field.locationMode || "place"}
+          countries={field.countries || []}
+          multiple={field.multiple}
+          maxItems={field.maxItems}
+          onChange={(next) => onChange(field.name, next)}
+          onPlaceChange={(place) => {
+            if (field.selectionName) onChange(field.selectionName, place);
+          }}
+        />
+      );
+    }
     if (type === "textarea") {
       return (
         <label
@@ -62,14 +100,19 @@ const ContactForm = ({
     }
     if (type === "date") {
       return (
-        <InputField
-          variant="date"
-          label={field.label}
-          required={field.required}
-          value={value}
-          error={errors[field.name]}
-          onChange={(next) => onChange(field.name, next)}
-        />
+        <div className="trem-contact-form__date-wrap">
+          <DatePicker
+            value={value}
+            label={field.label}
+            required={field.required}
+            placeholder={field.placeholder || field.label}
+            min={field.min}
+            max={field.max}
+            error={errors[field.name]}
+            portalZIndex={2100}
+            onChange={(next) => onChange(field.name, next)}
+          />
+        </div>
       );
     }
     return (
@@ -79,7 +122,14 @@ const ContactForm = ({
         required={field.required}
         value={value}
         maxLength={field.maxLength}
+        min={field.min}
+        max={field.max}
+        step={field.integer ? 1 : field.step}
+        inputMode={field.type === "number" ? "numeric" : undefined}
         placeholder={field.placeholder || ""}
+        countryCodeOptions={type === "tel" ? field.options : undefined}
+        dropdownPortalClassName="trem-contact-form__dropdown-layer"
+        dropdownPortalZIndex={2100}
         error={errors[field.name]}
         onChange={(next) => onChange(field.name, next)}
       />
@@ -92,7 +142,7 @@ const ContactForm = ({
   });
 
   return (
-    <form className="trem-contact-form" noValidate onSubmit={onSubmit}>
+    <form id={formId} className="trem-contact-form" noValidate onSubmit={onSubmit}>
       <div className="trem-contact-form__grid">
         {visibleFields.map((field) => (
           <div
@@ -100,31 +150,33 @@ const ContactForm = ({
             key={field.name}
           >
             {renderField(field)}
-            {errors[field.name] ? (
+            {["select", "textarea", "date"].includes(field.type) && errors[field.name] ? (
               <p className="trem-contact-form__error">{errors[field.name]}</p>
             ) : null}
           </div>
         ))}
       </div>
-      <div className="trem-contact-form__actions">
-        <Btn
-          type="submit"
-          text={submitting ? "Sending..." : submitText}
-          size="medium"
-          variant="solid"
-          color="primary"
-          disabled={submitting}
-        />
-        <Btn
-          type="button"
-          text="Cancel"
-          size="medium"
-          variant="outline"
-          color="primary"
-          onClick={onCancel}
-          disabled={submitting}
-        />
-      </div>
+      {showActions ? (
+        <div className="trem-contact-form__actions">
+          <Btn
+            type="submit"
+            text={submitting ? "Sending..." : submitText}
+            size="medium"
+            variant="solid"
+            color="primary"
+            disabled={submitting}
+          />
+          <Btn
+            type="button"
+            text="Cancel"
+            size="medium"
+            variant="outline"
+            color="primary"
+            onClick={onCancel}
+            disabled={submitting}
+          />
+        </div>
+      ) : null}
     </form>
   );
 };
@@ -139,5 +191,7 @@ ContactForm.propTypes = {
   submitText: PropTypes.string,
   errors: PropTypes.object,
   Button: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
+  formId: PropTypes.string,
+  showActions: PropTypes.bool,
 };
 export default ContactForm;

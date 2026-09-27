@@ -1,0 +1,12 @@
+[
+  { "code": "AI", "name": "Air India", "countryCode": "IN", "icon": "airlineAirIndia", "domestic": true, "international": true },
+  { "code": "6E", "name": "IndiGo", "countryCode": "IN", "icon": "airlineIndigo", "domestic": true, "international": true },
+  { "code": "IX", "name": "Air India Express", "countryCode": "IN", "icon": "airlineAirIndiaExpress", "domestic": true, "international": true },
+  { "code": "EK", "name": "Emirates", "countryCode": "AE", "icon": "airlineEmirates", "domestic": false, "international": true },
+  { "code": "EY", "name": "Etihad Airways", "countryCode": "AE", "icon": "airlineEtihad", "domestic": false, "international": true },
+  { "code": "QR", "name": "Qatar Airways", "countryCode": "QA", "icon": "airlineQatar", "domestic": false, "international": true },
+  { "code": "SQ", "name": "Singapore Airlines", "countryCode": "SG", "icon": "airlineSingapore", "domestic": false, "international": true },
+  { "code": "TG", "name": "Thai Airways", "countryCode": "TH", "icon": "airlineThai", "domestic": false, "international": true },
+  { "code": "BA", "name": "British Airways", "countryCode": "GB", "icon": "airlineBritish", "domestic": false, "international": true },
+  { "code": "LH", "name": "Lufthansa", "countryCode": "DE", "icon": "airlineLufthansa", "domestic": false, "international": true }
+]

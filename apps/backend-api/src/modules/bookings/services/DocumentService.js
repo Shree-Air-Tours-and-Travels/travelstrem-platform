@@ -1,7 +1,10 @@
+import fs from "fs/promises";
+import path from "path";
 import BookingDocument from "../models/BookingDocument.js";
 import { DOCUMENT_STATUS, DOCUMENT_TYPE } from "../../../constants/enums.js";
 import DocumentStorageService from "../../../services/r2/DocumentStorageService.js";
 import { generateQuoteDocumentKey } from "../../../services/r2/objectKey.js";
+import { privateQuoteUploadDirectory } from "./QuoteDocumentStorage.js";
 
 export const DocumentService = {
     async upload(bookingId, payload = {}, actor = {}, options = {}) {
@@ -33,6 +36,7 @@ export const DocumentService = {
 
     async uploadQuoteToR2({
         bookingId,
+        enquiryId,
         agencyId,
         version,
         buffer,
@@ -41,13 +45,15 @@ export const DocumentService = {
         currency,
         actor,
     }) {
-        const key = generateQuoteDocumentKey({ agencyId, bookingId, version });
+        const ownerId = bookingId || enquiryId;
+        const key = generateQuoteDocumentKey({ agencyId, bookingId: ownerId, version });
         const result = await DocumentStorageService.upload({
             key,
             body: buffer,
             contentType: "application/pdf",
             metadata: {
-                bookingId: String(bookingId),
+                bookingId: bookingId ? String(bookingId) : "",
+                enquiryId: enquiryId ? String(enquiryId) : "",
                 version: String(version),
                 quoteAmount: String(quoteAmount),
             },
@@ -56,6 +62,7 @@ export const DocumentService = {
         const [document] = await BookingDocument.create([
             {
                 bookingId,
+                enquiryId,
                 type: DOCUMENT_TYPE.QUOTE,
                 fileName: fileName || `quote-v${version}.pdf`,
                 url: "",
@@ -75,12 +82,55 @@ export const DocumentService = {
         return document;
     },
 
+    async uploadGeneratedQuote(payload) {
+        if (DocumentStorageService.isConfigured()) {
+            try {
+                return await this.uploadQuoteToR2(payload);
+            } catch (error) {
+                if (process.env.NODE_ENV === "production")
+                    throw Object.assign(
+                        new Error("Quote document storage is unavailable. Verify the R2 credentials and bucket permissions."),
+                        { status: 503, cause: error },
+                    );
+                console.warn(
+                    `[quote-storage] R2 upload failed (${error?.name || "storage error"}); using private local development storage.`,
+                );
+            }
+        }
+        await fs.mkdir(privateQuoteUploadDirectory, { recursive: true });
+        const ownerId = payload.bookingId || payload.enquiryId;
+        const safeName = `quote-${String(ownerId)}-v${Number(payload.version) || 1}.pdf`;
+        await fs.writeFile(path.join(privateQuoteUploadDirectory, safeName), payload.buffer);
+        const [document] = await BookingDocument.create([
+            {
+                bookingId: payload.bookingId,
+                enquiryId: payload.enquiryId,
+                type: DOCUMENT_TYPE.QUOTE,
+                fileName: payload.fileName || safeName,
+                url: safeName,
+                mimeType: "application/pdf",
+                size: payload.buffer.length,
+                quoteAmount: Number(payload.quoteAmount),
+                quoteVersion: Number(payload.version),
+                currency: payload.currency || "INR",
+                status: DOCUMENT_STATUS.UPLOADED,
+                storageProvider: "LOCAL_PRIVATE",
+                uploadedBy: payload.actor?.id || null,
+                uploadedAt: new Date(),
+            },
+        ]);
+        return document;
+    },
+
     list(bookingId) {
         return BookingDocument.find({ bookingId }).sort({ uploadedAt: -1 });
     },
 
-    latest(bookingId, type) {
-        return BookingDocument.findOne({ bookingId, ...(type ? { type } : {}) }).sort({
+    latest(resourceId, type) {
+        return BookingDocument.findOne({
+            $or: [{ bookingId: resourceId }, { enquiryId: resourceId }],
+            ...(type ? { type } : {}),
+        }).sort({
             uploadedAt: -1,
         });
     },

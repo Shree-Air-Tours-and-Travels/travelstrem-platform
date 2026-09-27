@@ -53,15 +53,6 @@
     background: var(--surface);
     overflow: hidden;
     box-shadow: var(--shadow-sm);
-    transition:
-      transform $duration-medium $ease-standard,
-      border-color $duration-medium $ease-standard,
-      box-shadow $duration-medium $ease-standard;
-
-    &:hover {
-      border-color: var(--ie-accent);
-      box-shadow: var(--shadow-md);
-    }
 
     &::after {
       content: "";
@@ -105,7 +96,7 @@
     display: flex;
     align-items: center;
     gap: 0.7rem;
-    padding: 1.1rem 1.15rem 0.85rem;
+    padding: 0.8rem 0.9rem 0.65rem;
   }
 
   &__badge {
@@ -146,7 +137,7 @@
   }
 
   &__body {
-    padding: 0.1rem 1.15rem 1.15rem;
+    padding: 0.1rem 0.9rem 0.75rem;
   }
 
   &__list {
@@ -163,21 +154,10 @@
     gap: 0.7rem;
     padding: 0.55rem 0.45rem;
     border-bottom: 1px dashed var(--border);
-    transition:
-      background $duration-base $ease-standard,
-      border-radius $duration-base $ease-standard,
-      padding $duration-base $ease-standard;
-
     &:last-child {
       border-bottom: 0;
     }
 
-    &:hover {
-      background: var(--surface-inset);
-      border-radius: 10px;
-      padding-left: 0.7rem;
-      padding-right: 0.7rem;
-    }
   }
 
   &__mark {
@@ -206,27 +186,6 @@
     color: var(--muted);
   }
 
-  &__overflow-cue {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    margin-top: -$space-5;
-    padding: $space-6 $space-4-5 $space-1;
-    background: linear-gradient(to bottom, var(--color-transparent), var(--surface) 55%);
-    pointer-events: none;
-
-    span {
-      padding: $space-1 $space-2-5;
-      border: 1px solid var(--border);
-      border-radius: $radius-full;
-      background: var(--surface-inset);
-      color: var(--muted);
-      font-size: $font-size-xs;
-      font-weight: $font-bold;
-      box-shadow: var(--shadow-sm);
-    }
-  }
-
   &__toggle {
     min-height: auto;
     color: var(--color-primary-dark);
@@ -238,9 +197,7 @@
       color: var(--color-secondary-dark);
     }
 
-    &--mobile {
-      margin: $space-1 $space-4-5 $space-4;
-    }
+    margin: 0 $space-3 $space-3;
   }
 }
 

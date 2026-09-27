@@ -1,7 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { fetchData, useComponentData } from "@packages/trem-utils";
+import {
+  REALTIME_EVENTS,
+  useRealtimeEvent,
+  useTourRealtime,
+  useTripRealtime,
+} from "@packages/trem-events";
 import { useFavoritesContext } from "../../context/FavoritesContext.jsx";
+import { PRODUCT_TYPE } from "../../constants/productTypes.js";
 import { ProductDetailProvider, WIDGET_API_OPTIONS } from "./context/ProductDetailContext.js";
 import ToursDetailsView, { DetailSkeleton, EmptyState } from "./ToursDetails.view";
 import { getRouteIdentityFromPath, slugifyTitle } from "./helper";
@@ -29,11 +36,57 @@ const PRODUCT_CONFIG = {
   },
 };
 
+const normalizeRouteRef = (value) => {
+  if (!value) return "";
+  if (typeof value === "string" || typeof value === "number") {
+    const ref = String(value).trim();
+    const decoded = (() => {
+      try {
+        return decodeURIComponent(ref);
+      } catch {
+        return ref;
+      }
+    })();
+    return decoded === "[object Object]" ? "" : ref;
+  }
+  if (typeof value === "object") {
+    return normalizeRouteRef(
+      value.slug ||
+        value.tourRef ||
+        value.tripRef ||
+        value.value ||
+        value.label ||
+        value.name ||
+        value.title ||
+        value.en ||
+        value.default ||
+        value._id ||
+        value.id,
+    );
+  }
+  return "";
+};
+
+const selectionFromTourCard = (tour = {}) => ({
+  packageKey: String(tour?.selectedPackageKey || ""),
+  packageData: tour?.selectedPackageDetails || null,
+});
+
+const availabilityMessage = (seatsAvailable) => {
+  if (seatsAvailable == null) return "";
+  const seats = Number(seatsAvailable);
+  if (seats === 0) return "This trip is currently sold out.";
+  return `${seats} seats available`;
+};
+
 export default function ToursDetailsContainer({
   dispatchEvent,
-  appKey = "trevista",
+  appKey = PRODUCT_TYPE.TREVISTA,
   productType = "tour",
   breadcrumbRoot: breadcrumbRootProp,
+  breadcrumbTrail = null,
+  breadcrumbDetailLabel = "",
+  routeRef: routeRefProp = "",
   userSession = null,
 } = {}) {
   const params = useParams();
@@ -41,12 +94,16 @@ export default function ToursDetailsContainer({
   const navigate = useNavigate();
   const config = PRODUCT_CONFIG[productType] || PRODUCT_CONFIG.tour;
   const routeRef =
-    params[config.routeParam] || params.tourRef || getRouteIdentityFromPath(location.pathname);
-  const decodedRef = decodeURIComponent(String(routeRef || ""));
+    routeRefProp ||
+    params[config.routeParam] ||
+    params.tourRef ||
+    getRouteIdentityFromPath(location.pathname);
+  const decodedRef = decodeURIComponent(String(normalizeRouteRef(routeRef) || ""));
 
-  const { loading, error, elements, structure } = useComponentData(config.pageConfigEndpoint, {
-    auto: true,
-  });
+  const { loading, error, elements, structure, refetch } = useComponentData(
+    config.pageConfigEndpoint,
+    { auto: true },
+  );
   const widgets = useMemo(() => structure?.widgets || [], [structure?.widgets]);
   const pageLabels = elements?.labels || {};
 
@@ -56,6 +113,7 @@ export default function ToursDetailsContainer({
   );
 
   const [activeTour, setActiveTour] = useState(location.state?.tour || null);
+  const [tourUnavailable, setTourUnavailable] = useState(false);
   const [breadcrumbRoot, setBreadcrumbRoot] = useState(breadcrumbRootProp || defaultBreadcrumbRoot);
   const referrer = useMemo(
     () => location.state?.from || breadcrumbRoot,
@@ -71,14 +129,10 @@ export default function ToursDetailsContainer({
         }
       })
       .catch(() => {});
-  }, [breadcrumbRootProp]);
+  }, [breadcrumbRootProp, productType]);
 
   const [contactOpen, setContactOpen] = useState(false);
-  const [selection, setSelection] = useState({
-    packageKey: "",
-    hotelSelections: {},
-    hotelRequests: [],
-  });
+  const [selection, setSelection] = useState(() => selectionFromTourCard(location.state?.tour));
   const { isFavorited, toggleFavorite } = useFavoritesContext();
 
   useEffect(() => {
@@ -86,9 +140,79 @@ export default function ToursDetailsContainer({
     // changes. Clear route-specific UI and adopt the newly selected card
     // while its complete backend detail payload is loading.
     setActiveTour(location.state?.tour || null);
+    setTourUnavailable(false);
     setContactOpen(false);
-    setSelection({ packageKey: "", hotelSelections: {}, hotelRequests: [] });
+    setSelection(selectionFromTourCard(location.state?.tour));
   }, [decodedRef, location.state?.tour]);
+
+  const watchedTourId = productType === "tour" ? activeTour?._id || activeTour?.id : null;
+  const watchedTripId = productType === "trip" ? activeTour?._id || activeTour?.id : null;
+  useTourRealtime(watchedTourId);
+  useTripRealtime(watchedTripId);
+  useRealtimeEvent(
+    REALTIME_EVENTS.TOUR_UPDATED,
+    useCallback(
+      (envelope) => {
+        const updated = envelope?.data || {};
+        if (!watchedTourId || String(updated.tourId || "") !== String(watchedTourId)) return;
+        if (updated.isPublished === false || updated.status !== "published") {
+          setTourUnavailable(true);
+          setContactOpen(false);
+        }
+      },
+      [watchedTourId],
+    ),
+  );
+  useRealtimeEvent(
+    REALTIME_EVENTS.TOUR_AVAILABILITY_CHANGED,
+    useCallback(
+      (envelope) => {
+        const updated = envelope?.data || {};
+        if (!watchedTourId || String(updated.tourId || "") !== String(watchedTourId)) return;
+        setActiveTour((current) => {
+          if (!current) return current;
+          const seatsAvailable = updated.seatsAvailable ?? current.availability?.seatsAvailable;
+          return {
+            ...current,
+            availability: {
+              ...(current.availability || {}),
+              seatsAvailable,
+              totalSeats: updated.seatsTotal ?? current.availability?.totalSeats,
+              isSoldOut: seatsAvailable === 0,
+              availabilityMessage:
+                current.availability?.availabilityMessage || availabilityMessage(seatsAvailable),
+            },
+          };
+        });
+      },
+      [watchedTourId],
+    ),
+  );
+  useRealtimeEvent(
+    REALTIME_EVENTS.TRIP_AVAILABILITY_CHANGED,
+    useCallback(
+      (envelope) => {
+        const updated = envelope?.data || {};
+        if (!watchedTripId || String(updated.tripId || "") !== String(watchedTripId)) return;
+        setActiveTour((current) => {
+          if (!current) return current;
+          const seatsAvailable =
+            updated.availability?.seatsAvailable ?? current.availability?.seatsAvailable;
+          return {
+            ...current,
+            availability: {
+              ...(current.availability || {}),
+              ...(updated.availability || {}),
+              seatsAvailable,
+              isSoldOut: seatsAvailable === 0,
+              availabilityMessage: availabilityMessage(seatsAvailable),
+            },
+          };
+        });
+      },
+      [watchedTripId],
+    ),
+  );
 
   const handleTourLoad = useCallback((tour) => {
     if (!tour?._id) return;
@@ -116,53 +240,28 @@ export default function ToursDetailsContainer({
     [activeTour],
   );
 
-  const handleSelectPackage = useCallback((packageKey) => {
+  const handleSelectPackage = useCallback((packageKey, packageData = null) => {
     setSelection((current) => {
       const nextPackageKey = String(packageKey || "");
-      if (current.packageKey === nextPackageKey) return current;
-      return { packageKey: nextPackageKey, hotelSelections: {}, hotelRequests: [] };
+      if (current.packageKey === nextPackageKey && current.packageData === packageData)
+        return current;
+      return {
+        packageKey: nextPackageKey,
+        packageData,
+      };
     });
   }, []);
 
-  const handleSelectHotel = useCallback((stayKey, hotelOptionKey, roomOptionKey, option = null) => {
-    const key = String(stayKey || option?.stayKey || "");
-    if (!key) return;
-    setSelection((current) => ({
-      ...current,
-      hotelSelections: {
-        ...current.hotelSelections,
-        [key]: {
-          stayKey: key,
-          location: String(option?.location || ""),
-          hotelOptionKey: String(hotelOptionKey || ""),
-          roomOptionKey: String(roomOptionKey || ""),
-        },
-      },
-    }));
-  }, []);
-
-  const handleCustomize = useCallback(
-    (stayKey, hotel, room) => {
-      handleSelectHotel(stayKey, hotel?.value, room?.value, hotel);
-      if (activeTour?._id) setContactOpen(true);
+  const handleCustomizeJourney = useCallback(
+    ({ tourId } = {}) => {
+      const sourceTourId = String(tourId || activeTour?._id || "");
+      if (productType !== "tour" || !sourceTourId) return;
+      setContactOpen(false);
+      navigate(`/${appKey}/customise-tour?tourId=${encodeURIComponent(sourceTourId)}`);
     },
-    [activeTour?._id, handleSelectHotel],
+    [activeTour?._id, appKey, navigate, productType],
   );
 
-  const handleRequestHotel = useCallback(
-    (request) => {
-      if (!request?.stayKey || !activeTour?._id) return;
-      setSelection((current) => ({
-        ...current,
-        hotelRequests: [
-          ...(current.hotelRequests || []).filter((item) => item.stayKey !== request.stayKey),
-          request,
-        ],
-      }));
-      setContactOpen(true);
-    },
-    [activeTour?._id],
-  );
 
   const handleShare = useCallback(
     async (tour) => {
@@ -202,6 +301,7 @@ export default function ToursDetailsContainer({
       <EmptyState
         title={pageLabels.tourErrorTitle || config.defaultLabels.error}
         message={error}
+        onRetry={refetch}
         onBack={handleBack}
         backLabel={pageLabels.backToTours || config.defaultLabels.backTo}
       />
@@ -211,6 +311,13 @@ export default function ToursDetailsContainer({
   const widgetApiOptions = WIDGET_API_OPTIONS[productType] || WIDGET_API_OPTIONS.tour;
   const intermediateCrumb =
     productType === "tour" ? { label: "Tours", path: `/${appKey}/tours` } : null;
+  const baseBreadcrumbItems =
+    Array.isArray(breadcrumbTrail) && breadcrumbTrail.length ? breadcrumbTrail : [breadcrumbRoot];
+  const detailBreadcrumbLabel =
+    breadcrumbDetailLabel ||
+    activeTour?.title ||
+    pageLabels.pageTitle ||
+    slugifyTitle(decodedRef).replace(/-/g, " ");
 
   return (
     <ProductDetailProvider key={`${productType}:${decodedRef}`} value={widgetApiOptions}>
@@ -221,18 +328,16 @@ export default function ToursDetailsContainer({
           activeTour?.title || pageLabels.pageTitle || slugifyTitle(decodedRef).replace(/-/g, " ")
         }
         activeTour={activeTour}
+        tourUnavailable={tourUnavailable}
         structure={structure}
         elements={elements}
         contactOpen={contactOpen}
         referrerLabel={referrer.label}
         breadcrumbItems={[
-          breadcrumbRoot,
+          ...baseBreadcrumbItems,
           ...(intermediateCrumb ? [intermediateCrumb] : []),
           {
-            label:
-              activeTour?.title ||
-              pageLabels.pageTitle ||
-              slugifyTitle(decodedRef).replace(/-/g, " "),
+            label: detailBreadcrumbLabel,
           },
         ]}
         onTourLoad={handleTourLoad}
@@ -246,12 +351,9 @@ export default function ToursDetailsContainer({
         productType={productType}
         user={userSession?.user || null}
         selectedPackage={selection.packageKey}
-        hotelSelections={selection.hotelSelections}
-        hotelRequests={selection.hotelRequests}
+        selectedPackageDetails={selection.packageData}
         onSelectPackage={handleSelectPackage}
-        onSelectHotel={handleSelectHotel}
-        onCustomize={handleCustomize}
-        onRequestHotel={handleRequestHotel}
+        onCustomizeJourney={handleCustomizeJourney}
       />
     </ProductDetailProvider>
   );

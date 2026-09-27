@@ -3,10 +3,11 @@ import QuickFiltersView from "./QuickFilters.view";
 
 export default function QuickFiltersContainer({ widgetData, onQuickFilter, activeIds = ["all"] }) {
   const filters = useMemo(
-    () => widgetData?.data?.filters || widgetData?.structure?.widgets?.[0]?.props?.filters || [],
+    () => widgetData?.dataScope?.options?.quickFilters || [],
     [widgetData],
   );
   const labels = widgetData?.elements?.labels || {};
+  const urls = widgetData?.elements?.urls || {};
   const props = widgetData?.structure?.widgets?.[0]?.props || {};
   const title = props.titleRef ? labels[props.titleRef] : null;
   const handleClick = useCallback(
@@ -23,6 +24,9 @@ export default function QuickFiltersContainer({ widgetData, onQuickFilter, activ
       labels={labels}
       activeIds={activeIds}
       onFilterClick={handleClick}
+      customTourPrompt={labels[props.customTourPromptRef] || ""}
+      customTourAction={labels[props.customTourActionRef] || ""}
+      customTourPath={urls[props.customTourPathRef] || ""}
     />
   );
 }

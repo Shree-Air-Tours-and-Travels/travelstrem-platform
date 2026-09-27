@@ -1,3 +1,5 @@
+import { isRealtimeEnabled } from "./realtime/realtime-client.js";
+
 /**
  * Realtime notification bridge — the single place where backend realtime
  * envelopes become toasts.
@@ -15,31 +17,39 @@
 const REALTIME_CLIENT_KEY = "__TREM_REALTIME_CLIENT__";
 export const TREM_TOAST_EVENT = "TREM_TOAST";
 
-// Module Federation duplicates this module per bundle; the dedupe registry
-// must be shared across copies, so it lives on window next to the toaster's.
-const TOASTER_SEEN_KEYS = "__TREM_TOAST_SEEN_KEYS__";
-const DEDUPE_WINDOW_MS = 10000;
-
-const seenKeysRegistry = () => {
-  if (!window[TOASTER_SEEN_KEYS]) window[TOASTER_SEEN_KEYS] = new Map();
-  return window[TOASTER_SEEN_KEYS];
-};
-
 /** Events whose `notify` payload is surfaced as a toast. Extendable per app. */
-export const DEFAULT_REALTIME_NOTIFY_EVENTS = Object.freeze(["enquiry:created", "enquiry:claimed"]);
-
-const pruneSeenKeys = (now) => {
-  const seen = seenKeysRegistry();
-  for (const [key, seenAt] of seen) {
-    if (now - seenAt >= DEDUPE_WINDOW_MS) seen.delete(key);
-  }
-  return seen;
-};
+export const DEFAULT_REALTIME_NOTIFY_EVENTS = Object.freeze([
+  "enquiry:created",
+  "enquiry:claimed",
+  "booking:quote-created",
+  "payment:created",
+  "payment:pending",
+  "payment:success",
+  "payment:failed",
+  "payment:refunded",
+  "tour:created",
+  "tour:updated",
+  "tour:published",
+  "tour:price-changed",
+  "tour:availability-changed",
+  "trip:updated",
+  "trip:availability-changed",
+  "notification:created",
+  "support:ticket-created",
+  "support:message-created",
+  "support:conversation-updated",
+  "admin:booking-quote-created",
+  "admin:support-request-created",
+]);
 
 /**
  * Raises a toast via the window-event contract shared with trem-ui.
  * dedupeKey collapses the same logical notification across channels
  * (e.g. an enquiry's HTTP confirmation + its socket echo to other tabs).
+ *
+ * Important: this dispatcher must not write to the shared dedupe registry
+ * before dispatching. The mounted <Toaster /> owns dedupe at render time.
+ * Pre-marking here makes the Toaster treat this same event as already seen.
  */
 export const showRealtimeToast = ({
   title,
@@ -50,19 +60,28 @@ export const showRealtimeToast = ({
 } = {}) => {
   if (typeof window === "undefined" || !title) return false;
 
-  const now = Date.now();
-  const seen = pruneSeenKeys(now);
-  if (dedupeKey) {
-    if (now - (seen.get(dedupeKey) || 0) < DEDUPE_WINDOW_MS) return false;
-    seen.set(dedupeKey, now);
-  }
-
   window.dispatchEvent(
     new CustomEvent(TREM_TOAST_EVENT, {
-      detail: { title: String(title), subtitle: String(subtitle || ""), status, durationMs },
+      detail: {
+        title: String(title),
+        subtitle: String(subtitle || ""),
+        status,
+        durationMs,
+        dedupeKey,
+      },
     }),
   );
   return true;
+};
+
+const currentPortalScope = () => {
+  if (typeof window === "undefined") return "customer";
+  const explicit = String(window.__TREM_AUTH_PORTAL__ || "").trim().toLowerCase();
+  if (["admin", "partner", "customer"].includes(explicit)) return explicit;
+  const prefix = String(window.__TREM_AUTH_STORAGE_PREFIX__ || "").toLowerCase();
+  if (prefix.includes("admin")) return "admin";
+  if (prefix.includes("agent") || prefix.includes("partner")) return "partner";
+  return "customer";
 };
 
 let initialized = false;
@@ -74,7 +93,7 @@ let initialized = false;
  * and logout/destroy cycles by intercepting every connect() call.
  */
 export function initRealtimeNotifications({ events = DEFAULT_REALTIME_NOTIFY_EVENTS } = {}) {
-  if (typeof window === "undefined" || initialized) return () => {};
+  if (typeof window === "undefined" || initialized || !isRealtimeEnabled()) return () => {};
 
   let disposed = false;
   let retryTimer = null;
@@ -86,6 +105,8 @@ export function initRealtimeNotifications({ events = DEFAULT_REALTIME_NOTIFY_EVE
     events.forEach((eventName) => {
       socket.on(eventName, (envelope) => {
         const notify = envelope && typeof envelope === "object" ? envelope.notify : null;
+        const portal = envelope?.data?.portal;
+        if (eventName === "notification:created" && portal && portal !== currentPortalScope()) return;
         if (!notify || !notify.title) return;
         showRealtimeToast({
           title: notify.title,

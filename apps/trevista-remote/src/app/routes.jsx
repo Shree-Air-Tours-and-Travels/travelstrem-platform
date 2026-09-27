@@ -4,6 +4,7 @@ import { ScrollToTop } from "@packages/trem-ui";
 import ToursHome from "../features/toursHome/ToursHome";
 import ToursPage from "../features/tours/Tours";
 import ToursDetails from "../features/tourDetails/ToursDetails";
+import CustomizeTour from "../features/customizeTour/CustomizeTour";
 
 export default function AppRoutes({ dispatchEvent, embedded = false, userSession = null }) {
   const routeProps = { dispatchEvent, userSession, embedded };
@@ -17,6 +18,7 @@ export default function AppRoutes({ dispatchEvent, embedded = false, userSession
           <Route path="tours" element={<ToursPage {...routeProps} />} />
           <Route path="tours/:tourRef" element={<ToursDetails {...routeProps} />} />
           <Route path="tour/:tourRef" element={<ToursDetails {...routeProps} />} />
+          <Route path="customise-tour" element={<CustomizeTour {...routeProps} />} />
           <Route path="*" element={<Navigate to="." replace />} />
         </Routes>
       </>
@@ -32,6 +34,7 @@ export default function AppRoutes({ dispatchEvent, embedded = false, userSession
         <Route path="/trevista/tours" element={<ToursPage {...routeProps} />} />
         <Route path="/trevista/tours/:tourRef" element={<ToursDetails {...routeProps} />} />
         <Route path="/trevista/tour/:tourRef" element={<ToursDetails {...routeProps} />} />
+        <Route path="/trevista/customise-tour" element={<CustomizeTour {...routeProps} />} />
         <Route path="*" element={<Navigate to="/trevista" replace />} />
       </Routes>
     </>

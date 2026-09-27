@@ -2,6 +2,22 @@ import React from "react";
 import { Button, SubTitle, TourCard } from "@packages/trem-ui";
 import { TourCardSkeleton, WidgetError } from "../../shared/Skeleton";
 
+const resolveEntityId = (value) => {
+  if (value == null) return "";
+  if (["string", "number"].includes(typeof value)) return String(value);
+  if (typeof value === "object") {
+    return (
+      resolveEntityId(value._id) ||
+      resolveEntityId(value.id) ||
+      resolveEntityId(value.$oid) ||
+      resolveEntityId(value.value)
+    );
+  }
+  return "";
+};
+
+const resolveTourId = (tour) => resolveEntityId(tour?._id) || resolveEntityId(tour?.id);
+
 export default function ToursTabWidget({
   tours,
   loading,
@@ -49,15 +65,16 @@ export default function ToursTabWidget({
           ) : (
             tours.map((t) => (
               <TourCard
-                key={t._id || t.id}
+                key={resolveTourId(t)}
                 tour={t}
                 isAdmin
                 variant="management"
+                managementActions
                 ownershipMode="agency"
                 ownershipLabels={{ agency: "Added by agency", platformAgency: "TravelsTREM" }}
                 onView={() => openView(t)}
                 onEdit={() => openEdit(t)}
-                onDelete={() => handleDelete(t._id || t.id)}
+                onDelete={() => handleDelete(resolveTourId(t))}
               />
             ))
           )}

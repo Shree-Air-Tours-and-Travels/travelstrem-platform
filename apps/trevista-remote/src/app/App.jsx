@@ -3,11 +3,12 @@ import {
   FavoritesProvider,
   ProductHeader,
   GlobalLoader,
+  PRODUCT_TYPE,
+  ErrorState,
   AppFooter,
   ScrollToTopButton,
   useTheme,
   useFavoritesContext,
-  RealtimeProvider,
   Toaster,
 } from "@packages/trem-ui";
 import AppRoutes from "./routes";
@@ -25,6 +26,7 @@ import {
   emit,
   registerSessionCacheClearer,
   initRealtimeNotifications,
+  RealtimeProvider,
 } from "@packages/trem-events";
 import { API_BASE } from "../services/configService";
 import { clearUserSessionCache } from "../services/userSession";
@@ -32,12 +34,13 @@ import { clearUserSessionCache } from "../services/userSession";
 setComponentDataFetcher(fetchData);
 
 const { buildAuthAction } = createProductAuth({
-  app: "trevista",
+  app: PRODUCT_TYPE.TREVISTA,
   apiBase: API_BASE,
   emit,
   registerSessionCacheClearer,
   clearUserSessionCache,
 });
+const STANDALONE_ENABLED = false;
 
 const getPlatformUrl = () => {
   const host = window.location.hostname;
@@ -110,11 +113,11 @@ function AppHeader({ headerConfig, state, navItems, activeTab, authAction, brand
         ariaLabel: "Wishlist",
         icon: "heart",
         count: favoritesCount,
-        href: buildGlobalAppShellUrl({ product: "trevista" }),
+        href: buildGlobalAppShellUrl({ product: PRODUCT_TYPE.TREVISTA }),
       }}
       profile={{
         label: state.session?.user?.name || brand.label || "Dashboard",
-        href: buildGlobalAppShellUrl({ product: "trevista" }),
+        href: buildGlobalAppShellUrl({ product: PRODUCT_TYPE.TREVISTA }),
       }}
       authAction={authAction}
     />
@@ -133,7 +136,7 @@ function App({ dispatchEvent, embedded = false, userSession = null }) {
   useEffect(() => initRealtimeNotifications(), []);
 
   React.useEffect(() => {
-    if (embedded) return undefined;
+    if (embedded || !STANDALONE_ENABLED) return undefined;
 
     let active = true;
 
@@ -141,13 +144,13 @@ function App({ dispatchEvent, embedded = false, userSession = null }) {
       pathname: window.location.pathname,
       search: window.location.search,
       hash: window.location.hash,
-      app: "trevista",
+      app: PRODUCT_TYPE.TREVISTA,
     })
       .then(({ session, header }) => {
         if (!active) return;
         setState({ loading: false, error: null, session, headerConfig: header });
         if (!session?.isAuthenticated) {
-          redirectToGlobalAuth({ app: "trevista", returnTo: getCurrentReturnUrl() });
+          redirectToGlobalAuth({ app: PRODUCT_TYPE.TREVISTA, returnTo: getCurrentReturnUrl() });
         }
       })
       .catch((error) => {
@@ -165,8 +168,28 @@ function App({ dispatchEvent, embedded = false, userSession = null }) {
     };
   }, [embedded]);
 
+  if (!embedded) {
+    return (
+      <ErrorState
+        title="Trevista now opens in TravelsTREM"
+        description="Trevista is integrated with the TravelsTREM customer dashboard and is no longer available as a standalone application."
+        retry={() =>
+          window.location.assign(buildGlobalAppShellUrl({ product: PRODUCT_TYPE.TREVISTA, tab: PRODUCT_TYPE.TREVISTA }))
+        }
+        retryText="Go to Trevista"
+      />
+    );
+  }
+
   if (state.error)
-    return <div className="app-status">Trevista initialization failed: {state.error}</div>;
+    return (
+      <ErrorState
+        title="Trevista could not start"
+        description="The tour experience is temporarily unavailable."
+        error={state.error}
+        retry={() => window.location.reload()}
+      />
+    );
 
   if (!embedded && state.loading) return <GlobalLoader visible text="Loading Trevista" />;
 
@@ -196,7 +219,6 @@ function App({ dispatchEvent, embedded = false, userSession = null }) {
 
   return (
     <>
-      <GlobalLoader visible={state.loading} />
       <div className={embedded ? "tours-app-shell tours-app-shell--embedded" : "tours-app-shell"}>
         {/* Shared singleton client: when embedded in the shell, the shell's
                     provider already owns the connection and this is a no-op. */}

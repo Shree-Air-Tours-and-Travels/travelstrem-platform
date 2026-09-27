@@ -19,6 +19,7 @@ const supportTicketMessageSchema = new Schema(
         sender: { type: Schema.Types.ObjectId, ref: "User", default: null },
         senderType: { type: String, enum: SUPPORT_SENDER_TYPE_LIST, required: true },
         senderName: { type: String, trim: true, default: "" },
+        clientMessageId: { type: String, trim: true, maxlength: 100, default: undefined },
         content: { type: String, trim: true, required: true, maxlength: 5000 },
         attachments: { type: [attachmentSchema], default: [] },
         readAt: { type: Date, default: null },
@@ -27,6 +28,13 @@ const supportTicketMessageSchema = new Schema(
 );
 
 supportTicketMessageSchema.index({ ticket: 1, createdAt: 1 });
+supportTicketMessageSchema.index(
+    { ticket: 1, sender: 1, clientMessageId: 1 },
+    {
+        unique: true,
+        partialFilterExpression: { clientMessageId: { $type: "string" } },
+    },
+);
 supportTicketMessageSchema.set("toJSON", {
     virtuals: true,
     versionKey: false,

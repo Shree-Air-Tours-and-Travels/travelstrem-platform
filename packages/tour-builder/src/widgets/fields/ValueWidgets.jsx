@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FileUploader } from "@packages/trem-ui";
+import { FileUploader, MetricSummary } from "@packages/trem-ui";
 import FieldShell from "./FieldShell.jsx";
 
 const parseJson = (text) => {
@@ -44,24 +44,81 @@ export const JsonWidget = ({ widget, value, onChange, error }) => {
   );
 };
 
-/** Read-only projection of system-derived objects (rating, metrics, derived). */
-export const ReadOnlyObjectWidget = ({ widget, value }) => (
-  <FieldShell widget={widget} error={null}>
-    <dl className="tb-readonly">
-      {Object.entries(value || {})
-        .filter(([, item]) => item != null)
-        .map(([key, item]) => (
-          <div className="tb-readonly__row" key={key}>
-            <dt>{key}</dt>
-            <dd>{typeof item === "object" ? JSON.stringify(item) : String(item)}</dd>
+const humanize = (value = "") =>
+  String(value)
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replaceAll("_", " ")
+    .replace(/^./, (letter) => letter.toUpperCase());
+
+const displayValue = (value, format) => {
+  if (value == null || value === "") return "Not recorded";
+  if (format === "date") {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime())
+      ? "Not recorded"
+      : new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(date);
+  }
+  if (format === "score") return `${Math.round(Number(value) || 0)}/100`;
+  if (format === "rating") return `${Number(value || 0).toFixed(1)}/5`;
+  if (typeof value === "object") return JSON.stringify(value);
+  return String(value);
+};
+
+/** Backend-configured projection for system-derived ratings and analytics. */
+export const ReadOnlyObjectWidget = ({ widget, value }) => {
+  const source = value || {};
+  const configuredFields = Array.isArray(widget.fields) ? widget.fields : [];
+  const fields = configuredFields.length
+    ? configuredFields
+    : Object.keys(source).map((key) => ({ key, label: humanize(key) }));
+  const primary = fields.filter((field) => field.kind !== "detail");
+  const details = fields.filter((field) => field.kind === "detail" && source[field.key]);
+
+  if (widget.presentation === "metrics") {
+    return (
+      <FieldShell widget={widget} error={null} className="tb-field--analytics">
+        <MetricSummary
+          variant="cards"
+          ariaLabel={`${widget.label || "Tour"} analytics`}
+          className="tb-readonly-metrics"
+          items={primary.map((field) => ({
+            id: field.key,
+            label: field.label || humanize(field.key),
+            value: displayValue(source[field.key] ?? field.emptyValue ?? 0, field.format),
+            icon: field.icon || "sparkles",
+            helper: field.helper,
+          }))}
+        />
+        {details.length ? (
+          <dl className="tb-readonly-activity">
+            {details.map((field) => (
+              <div key={field.key}>
+                <dt>{field.label || humanize(field.key)}</dt>
+                <dd>{displayValue(source[field.key], field.format || "date")}</dd>
+              </div>
+            ))}
+          </dl>
+        ) : (
+          <p className="tb-readonly__empty">Activity timestamps appear after travellers interact with this tour.</p>
+        )}
+      </FieldShell>
+    );
+  }
+
+  return (
+    <FieldShell widget={widget} error={null}>
+      <dl className="tb-readonly">
+        {fields.filter((field) => source[field.key] != null).map((field) => (
+          <div className="tb-readonly__row" key={field.key}>
+            <dt>{field.label || humanize(field.key)}</dt>
+            <dd>{displayValue(source[field.key], field.format)}</dd>
           </div>
         ))}
-      {!Object.keys(value || {}).length && (
-        <dd className="tb-readonly__empty">No values recorded yet.</dd>
-      )}
-    </dl>
-  </FieldShell>
-);
+        {!Object.keys(source).length && <dd className="tb-readonly__empty">No values recorded yet.</dd>}
+      </dl>
+    </FieldShell>
+  );
+};
 
 /**
  * Image gallery upload. Transport is injected by the host portal through

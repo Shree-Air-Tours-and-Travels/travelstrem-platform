@@ -1,0 +1,423 @@
+@import "@packages/trem-design-tokens/scss";
+
+.trehub-loading {
+  grid-column: 1 / -1;
+  width: 100%;
+  padding: 0 var(--trehub-page-gutter, #{$space-5}) $space-8;
+  color: var(--text);
+  background: var(--page-bg);
+
+  &--hotel-list,
+  &--hotel-detail,
+  &--hotel-results {
+    padding: 0;
+  }
+
+  &__content {
+    display: grid;
+    gap: $space-5;
+    width: min(100%, #{$full-width});
+    margin-inline: auto;
+  }
+
+  &__breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: $space-4;
+    min-height: $space-14;
+    padding: $space-4 0;
+    margin-bottom: $space-5;
+    border-bottom: 1px solid var(--border);
+
+    .trehub-loading__line {
+      width: $space-14;
+    }
+  }
+
+  &__surface {
+    min-width: 0;
+    border: 1px solid var(--border);
+    border-radius: $radius-lg;
+    background: var(--card-bg);
+    box-shadow: var(--shadow-sm);
+  }
+
+  &__line,
+  &__breadcrumb-placeholder,
+  &__field,
+  &__button,
+  &__home-media,
+  &__feature-icon,
+  &__filter-field,
+  &__listing-media,
+  &__chips > span,
+  &__steps > span,
+  &__journey-route > span,
+  &__gallery-main,
+  &__gallery-thumbs > span {
+    display: block;
+    background: linear-gradient(
+      90deg,
+      var(--surface-inset),
+      var(--surface-shimmer),
+      var(--surface-inset)
+    );
+    background-size: 200% 100%;
+    animation: trehub-loading-shimmer $duration-shimmer linear infinite;
+  }
+
+  &__line {
+    width: 58%;
+    height: $space-3;
+    border-radius: $radius-full;
+
+    &--short {
+      width: 28%;
+    }
+    &--medium {
+      width: 58%;
+    }
+    &--long {
+      width: 88%;
+    }
+    &.is-emphasis {
+      height: $space-5;
+    }
+  }
+
+  &__breadcrumb-placeholder {
+    width: $space-20 * 2;
+    height: $space-3;
+    border-radius: $radius-full;
+  }
+
+  &__button {
+    width: 100%;
+    height: $space-10;
+    border-radius: $radius-sm;
+  }
+
+  &__fields {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(0, 0.8fr);
+    gap: $space-3;
+  }
+
+  &__field,
+  &__filter-field {
+    height: $space-12;
+    border-radius: $radius-sm;
+  }
+
+  &__field--action {
+    background: var(--primary-softer);
+  }
+
+  &__home-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    gap: $space-6;
+    align-items: center;
+    padding: $space-6;
+  }
+
+  &__home-copy,
+  &__search-heading,
+  &__intro,
+  &__feature,
+  &__filters,
+  &__listing-copy,
+  &__listing-price,
+  &__journey-main,
+  &__journey-aside,
+  &__hotel-copy,
+  &__hotel-summary {
+    display: grid;
+    align-content: start;
+    gap: $space-4;
+    min-width: 0;
+  }
+
+  &__home-copy {
+    .trehub-loading__fields {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .trehub-loading__button {
+      width: 40%;
+    }
+  }
+
+  &__home-media {
+    width: 100%;
+    max-height: calc(#{$space-20} * 3);
+    aspect-ratio: 4 / 3;
+    border-radius: $radius-md;
+  }
+
+  &__home-features {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: $space-4;
+  }
+
+  &__feature {
+    padding: $space-5;
+    border-radius: $radius-md;
+  }
+
+  &__feature-icon {
+    width: $space-9;
+    height: $space-9;
+    border-radius: $radius-sm;
+  }
+
+  &__intro {
+    padding-block: $space-3;
+  }
+
+  &__search {
+    display: grid;
+    gap: $space-5;
+    padding: $space-5;
+  }
+
+  &__results-layout {
+    display: grid;
+    grid-template-columns: minmax(14rem, 20rem) minmax(0, 1fr);
+    align-items: start;
+    gap: $space-5;
+  }
+
+  &__filters {
+    padding: $space-5;
+  }
+
+  &__results {
+    display: grid;
+    gap: $space-4;
+    min-width: 0;
+  }
+
+  &__results-heading {
+    display: flex;
+    justify-content: space-between;
+    gap: $space-4;
+    padding: $space-3 0;
+
+    .trehub-loading__line:first-child {
+      max-width: $space-20 * 3;
+    }
+    .trehub-loading__line:last-child {
+      max-width: $space-20 * 2;
+    }
+  }
+
+  &__listing-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(12rem, 0.38fr);
+    gap: $space-5;
+    padding: $space-4;
+
+    &.is-hotel {
+      grid-template-columns: minmax(12rem, 0.75fr) minmax(0, 1fr) minmax(12rem, 0.56fr);
+    }
+  }
+
+  &__listing-media {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    border-radius: $radius-md;
+  }
+
+  &__listing-copy,
+  &__listing-price {
+    padding: $space-3;
+  }
+
+  &__listing-price {
+    padding: $space-5;
+    border: 1px solid var(--border);
+    border-radius: $radius-md;
+    background: var(--surface-inset);
+
+    .trehub-loading__button {
+      margin-top: $space-5;
+    }
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-2;
+
+    > span {
+      width: $space-16;
+      height: $space-7;
+      border-radius: $radius-full;
+    }
+  }
+
+  &__steps {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: $space-4;
+    padding: $space-5;
+
+    > span {
+      height: $space-5;
+      border-radius: $radius-full;
+    }
+  }
+
+  &__journey {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(12rem, 0.35fr);
+    gap: $space-5;
+    padding: $space-5;
+  }
+
+  &__journey-route {
+    display: flex;
+    align-items: center;
+    gap: $space-5;
+    padding-block: $space-6;
+
+    .trehub-loading__line {
+      max-width: $space-20 * 2;
+    }
+    > span {
+      flex: 1;
+      height: $space-1;
+      border-radius: $radius-full;
+    }
+  }
+
+  &__journey-aside {
+    padding: $space-5;
+    border-radius: $radius-md;
+    background: var(--surface-inset);
+  }
+
+  &__gallery {
+    display: grid;
+    gap: $space-3;
+  }
+
+  &__gallery-main {
+    width: 100%;
+    max-height: calc(#{$space-20} * 3);
+    aspect-ratio: 16 / 5;
+    border-radius: $radius-lg;
+  }
+
+  &__gallery-thumbs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: $space-3;
+
+    > span {
+      max-height: $space-20;
+      aspect-ratio: 16 / 7;
+      border-radius: $radius-md;
+    }
+  }
+
+  &__hotel-overview {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(12rem, 0.35fr);
+    gap: $space-5;
+    padding: $space-5;
+  }
+
+  &__hotel-summary {
+    padding: $space-5;
+    border-radius: $radius-md;
+    background: var(--surface-inset);
+  }
+}
+
+@keyframes trehub-loading-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@include mq-max($breakpoint-tablet) {
+  .trehub-loading {
+    &__results-layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    &__filters {
+      display: none;
+    }
+    &__listing-card.is-hotel {
+      grid-template-columns: minmax(10rem, 0.75fr) minmax(0, 1fr);
+    }
+    &__listing-card.is-hotel .trehub-loading__listing-price {
+      grid-column: 1 / -1;
+    }
+  }
+}
+
+@include mq-max($breakpoint-mobile) {
+  .trehub-loading {
+    &__home-hero,
+    &__journey,
+    &__hotel-overview,
+    &__listing-card,
+    &__listing-card.is-hotel {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    &__home-media {
+      display: none;
+    }
+    &__home-features {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    &__home-features .trehub-loading__feature:not(:first-child) {
+      display: none;
+    }
+    &__fields {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    &__home-copy .trehub-loading__fields {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    &__field--action {
+      grid-column: 1 / -1;
+    }
+    &__listing-media {
+      aspect-ratio: 16 / 9;
+    }
+    &__listing-card.is-hotel .trehub-loading__listing-price {
+      grid-column: auto;
+    }
+    &__gallery-main {
+      aspect-ratio: 16 / 8;
+    }
+    &__steps {
+      gap: $space-2;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trehub-loading {
+    &__line,
+    &__breadcrumb-placeholder,
+    &__field,
+    &__button,
+    &__home-media,
+    &__feature-icon,
+    &__filter-field,
+    &__listing-media,
+    &__chips > span,
+    &__steps > span,
+    &__journey-route > span,
+    &__gallery-main,
+    &__gallery-thumbs > span {
+      animation: none;
+    }
+  }
+}

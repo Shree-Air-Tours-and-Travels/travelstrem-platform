@@ -32,16 +32,16 @@
 
 .trevio-app--embedded {
   width: 100%;
-  height: 100%;
-  min-height: auto;
+  height: auto;
+  min-height: 100%;
   margin-bottom: $space-6;
   container-name: trevio-shell;
   container-type: inline-size;
 
   .trevio-container {
     width: 100%;
-    max-width: none;
-    margin: 0;
+    max-width: $full-width;
+    margin-inline: auto;
     padding-inline: clamp(1rem, 2vw, 2rem);
   }
 
@@ -51,10 +51,32 @@
 
     &__shell {
       width: 100%;
-      max-width: none;
-      margin: 0;
+      max-width: $full-width;
+      margin-inline: auto;
     }
   }
+}
+
+.trevio-page__breadcrumbs {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  width: 100%;
+  min-height: $space-14;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-glass-strong, var(--surface));
+  box-shadow: var(--shadow-xs);
+  backdrop-filter: blur(14px);
+}
+
+.trevio-page__breadcrumbs .trevio-container,
+.trevio-trips-page__breadcrumbs-shell .trevio-container {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+  padding-inline: clamp($space-4, 3vw, $space-8);
 }
 
 @container trevio-shell (max-width: 1100px) {
@@ -71,7 +93,7 @@
 }
 
 .trevio-container {
-  width: min(1380px, calc(100% - clamp(2rem, 5vw, 5rem)));
+  width: min(#{$full-width}, calc(100% - clamp(2rem, 5vw, 5rem)));
   margin: auto;
 }
 
@@ -125,6 +147,15 @@
   grid-template-columns: minmax(0, 1.04fr) minmax(320px, 0.96fr);
   gap: clamp(2rem, 5vw, 4rem);
   align-items: center;
+}
+
+.trevio-hero__search {
+  margin-top: clamp(1.5rem, 3vw, 2.5rem);
+
+  .trem-global-search__panel {
+    border-color: var(--border);
+    box-shadow: var(--shadow-md);
+  }
 }
 
 /* ─── Featured Slider ───────────────────────────────────── */

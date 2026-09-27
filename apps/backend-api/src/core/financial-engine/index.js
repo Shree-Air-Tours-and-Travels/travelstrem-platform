@@ -1,4 +1,4 @@
-import { calculateFinancials } from "./engine/calculator.js";
+import { calculatePricingBreakdown } from "./engine/calculator.js";
 import { calculateQuoteWithConfig } from "./engine/orchestrator.js";
 import { resolveFinancialConfig } from "./engine/resolver.js";
 import { createLedgerService } from "./services/ledger.service.js";
@@ -10,11 +10,13 @@ import {
 } from "./services/settlement.service.js";
 import { calculateRefundAmount, processRefundRecord } from "./services/refund.service.js";
 import { DEFAULT_FINANCIAL_CONFIG } from "./constants/index.js";
-import { mergeConfig, validateFinancialConfig } from "./utils/configResolver.js";
 import {
-    calculateTourCommercials,
-    calculateTourCustomizationPreview,
-} from "./services/tour-commercial.service.js";
+    immutableSnapshot,
+    mergeConfig,
+    validateFinancialConfig,
+} from "./utils/configResolver.js";
+import { calculateTourCustomizationPreview } from "./services/tour-commercial.service.js";
+import { prepareTourPricingInput } from "./adapters/tour-pricing.adapter.js";
 
 const dependencies = { repositories: {}, providers: {} };
 let ledger = createLedgerService(dependencies.repositories);
@@ -28,36 +30,90 @@ export function configureFinancialEngine({ repositories = {}, providers = {} } =
     return FinancialEngine;
 }
 
+const configContext = (input = {}) => ({
+    ...(input.context || {}),
+    productType: input.productType || input.context?.productType,
+    paymentProvider:
+        input.paymentProvider || input.provider || input.context?.paymentProvider,
+    paymentMethod: input.paymentMethod || input.context?.paymentMethod,
+    currency: input.currency || input.context?.currency,
+    country: input.country || input.context?.country,
+    customerType: input.customerType || input.context?.customerType,
+});
+
 const resolve = (input) =>
     input.config
         ? Promise.resolve(
               validateFinancialConfig(mergeConfig(DEFAULT_FINANCIAL_CONFIG, input.config)),
           )
-        : resolveFinancialConfig(input.context || input, dependencies.repositories);
+        : resolveFinancialConfig(configContext(input), dependencies.repositories);
+
+const calculateProductPricing = async (input = {}) => {
+    if (!input.productType) throw new TypeError("productType is required");
+    const baseAmountMinor = input.baseAmountMinor ?? input.baseAmount;
+    const config = await resolve({ ...input, baseAmountMinor });
+    const pricing = calculatePricingBreakdown({
+        productType: input.productType,
+        baseAmountMinor,
+        currency: input.currency || config.currency,
+        paymentProvider:
+            input.paymentProvider || input.provider || config.resolution?.provider || null,
+        paymentMethod: input.paymentMethod || null,
+        config,
+    });
+    const { financials, ...breakdown } = pricing;
+    return {
+        ...breakdown,
+        pricingConfigSnapshot: immutableSnapshot(config),
+        financials,
+    };
+};
+
+const isNormalizedPricingRequest = (input = {}) =>
+    Boolean(input.productType) &&
+    (input.baseAmountMinor != null ||
+        input.baseAmount != null ||
+        input.partnerQuoteMinor != null);
+
+const calculateNormalizedQuote = async (input = {}) => {
+    const result =
+        String(input.productType).toLowerCase() === "tour"
+            ? await FinancialEngine.calculateTourPricing(input)
+            : await calculateProductPricing(input);
+    const { financials, pricingConfigSnapshot, ...pricing } = result;
+    return { config: pricingConfigSnapshot, financials, pricing };
+};
 
 export const FinancialEngine = Object.freeze({
     calculateTourCustomizationPreview(input = {}) {
         return calculateTourCustomizationPreview(input);
     },
+    async calculatePricing(input = {}) {
+        return calculateProductPricing(input);
+    },
+    async calculateTourPricing(input = {}) {
+        const prepared = prepareTourPricingInput(input);
+        const calculated = await calculateProductPricing({
+            ...input,
+            ...prepared,
+            context: { ...(input.context || {}), productType: "tour" },
+        });
+        return { ...calculated, commercial: prepared.commercial };
+    },
     async calculateBookingFinancials(input = {}) {
         if (input.tour?.commercial?.version === "COMPONENTS_V1") {
-            const commercial = calculateTourCommercials(input);
-            const config = await resolve(input);
-            const financials = calculateFinancials({
-                agentAmountMinor: commercial.agentAmountMinor,
-                currency: commercial.currency,
-                config,
-            });
-            return { ...financials, commercial };
+            const calculated = await FinancialEngine.calculateTourPricing(input);
+            return { ...calculated.financials, commercial: calculated.commercial };
         }
-        const config = await resolve(input);
-        return calculateFinancials({
-            agentAmountMinor: input.agentAmountMinor,
-            currency: input.currency || config.currency,
-            config,
+        const calculated = await calculateProductPricing({
+            ...input,
+            productType: input.productType || "tour",
+            baseAmountMinor: input.agentAmountMinor ?? input.baseAmountMinor,
         });
+        return calculated.financials;
     },
     async calculateQuote(input = {}) {
+        if (isNormalizedPricingRequest(input)) return calculateNormalizedQuote(input);
         return calculateQuoteWithConfig(input, dependencies);
     },
     async createQuote(input = {}) {
@@ -67,7 +123,9 @@ export const FinancialEngine = Object.freeze({
                   financials: input.financialSnapshot,
                   pricing: input.pricingSnapshot,
               }
-            : await calculateQuoteWithConfig(input, dependencies);
+            : isNormalizedPricingRequest(input)
+              ? await calculateNormalizedQuote(input)
+              : await calculateQuoteWithConfig(input, dependencies);
         return createQuoteRecord(
             {
                 ...input,
@@ -83,7 +141,7 @@ export const FinancialEngine = Object.freeze({
     },
     async processPayment(input = {}) {
         const payment = await processPaymentRecord(input, { ...dependencies, ledger });
-        const financials = input.financialSnapshot || payment.financialSnapshot;
+        const financials = payment.financialSnapshot;
         if (financials && dependencies.repositories.settlements?.createIdempotent) {
             const settlement = calculateSettlementFromFinancials({
                 financials,

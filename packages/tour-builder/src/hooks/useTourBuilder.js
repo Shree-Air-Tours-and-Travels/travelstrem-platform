@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { PRODUCT_TYPE } from "@packages/trem-ui";
 import tourBuilderApi from "../api/tourBuilderApi.js";
 
 /**
@@ -13,6 +14,7 @@ export default function useTourBuilder({
   onComplete,
   onLocationChange,
   trackPosition = true,
+  productKey = PRODUCT_TYPE.TREVISTA,
 }) {
   const [state, setState] = useState({
     tourId: initialTourId,
@@ -44,6 +46,7 @@ export default function useTourBuilder({
         const envelope = await tourBuilderApi.loadStep({
           tourId: targetTourId ?? undefined,
           stepKey,
+          productKey,
           signal: controller.signal,
         });
         const resolvedTourId = envelope.builder?.tourId || targetTourId || null;
@@ -71,7 +74,7 @@ export default function useTourBuilder({
         setLoading(false);
       }
     },
-    [onLocationChange],
+    [onLocationChange, productKey],
   );
 
   useEffect(() => {
@@ -90,6 +93,7 @@ export default function useTourBuilder({
           tourId: state.tourId,
           stepKey,
           data,
+          productKey,
         });
         if (!result.saved && result.tourId) {
           setState((current) => ({ ...current, tourId: result.tourId }));
@@ -122,7 +126,7 @@ export default function useTourBuilder({
       if (!stepKey) return;
       if (trackPosition && state.tourId) {
         try {
-          await tourBuilderApi.savePosition({ tourId: state.tourId, stepKey });
+          await tourBuilderApi.savePosition({ tourId: state.tourId, stepKey, productKey });
         } catch (positionError) {
           setError(positionError.message || "Could not save your builder position");
           return;
@@ -130,7 +134,7 @@ export default function useTourBuilder({
       }
       await loadStep(stepKey, state.tourId);
     },
-    [loadStep, state.tourId, trackPosition],
+    [loadStep, productKey, state.tourId, trackPosition],
   );
 
   const exit = useCallback(() => {

@@ -1,0 +1,104 @@
+{
+  "status": "success",
+  "component": {
+    "data": {
+      "journeyStory": {
+        "ariaLabelRef": "storyAriaLabel",
+        "eyebrowRef": "storyEyebrow",
+        "titleRef": "storyTitle",
+        "highlightRef": "storyHighlight",
+        "descriptionRef": "storyDescription",
+        "backdropTextRef": "storyBackdropText",
+        "advantages": [
+          {
+            "id": "support",
+            "icon": "support",
+            "titleRef": "storySupportTitle",
+            "descriptionRef": "storySupportDescription",
+            "tone": "primary"
+          },
+          {
+            "id": "guides",
+            "icon": "guide",
+            "titleRef": "storyGuidesTitle",
+            "descriptionRef": "storyGuidesDescription",
+            "tone": "secondary"
+          },
+          {
+            "id": "visa",
+            "icon": "passport",
+            "titleRef": "storyVisaTitle",
+            "descriptionRef": "storyVisaDescription",
+            "tone": "tertiary"
+          },
+          {
+            "id": "planning",
+            "icon": "route",
+            "titleRef": "storyPlanningTitle",
+            "descriptionRef": "storyPlanningDescription",
+            "tone": "success"
+          }
+        ],
+        "visual": {
+          "src": "/home-images/sticky.png",
+          "badgeIcon": "luggage",
+          "badgeLabelRef": "storyVisualBadge"
+        },
+        "stats": [
+          {
+            "id": "providers",
+            "labelRef": "storyProvidersLabel",
+            "valueRef": "storyProvidersValue"
+          },
+          { "id": "clients", "labelRef": "storyClientsLabel", "valueRef": "storyClientsValue" },
+          {
+            "id": "destinations",
+            "labelRef": "storyDestinationsLabel",
+            "valueRef": "storyDestinationsValue"
+          },
+          { "id": "services", "labelRef": "storyServicesLabel", "valueRef": "storyServicesValue" }
+        ]
+      }
+    },
+    "dataScope": { "options": {} },
+    "elements": {
+      "labels": {
+        "storyAriaLabel": "The TravelsTREM advantage",
+        "storyEyebrow": "The TravelsTREM advantage",
+        "storyTitle": "Why travel with",
+        "storyHighlight": "TravelsTREM",
+        "storyDescription": "A connected travel experience shaped by proven operations, trusted specialists and technology that keeps every journey together.",
+        "storyBackdropText": "ADVENTURES AWAIT",
+        "storySupportTitle": "Global Travel Support",
+        "storySupportDescription": "Helpful guidance before, during and after every journey.",
+        "storyGuidesTitle": "Expert Local Guides",
+        "storyGuidesDescription": "Verified local knowledge for richer, more confident experiences.",
+        "storyVisaTitle": "Visa Assistance",
+        "storyVisaDescription": "Clear document guidance for visas, passports and travel readiness.",
+        "storyPlanningTitle": "Connected Planning",
+        "storyPlanningDescription": "Flights, stays, tours and support kept in one continuous journey.",
+        "storyVisualBadge": "Journey ready",
+        "storyProvidersLabel": "Providers Registered",
+        "storyProvidersValue": "12+",
+        "storyClientsLabel": "Clients Globally",
+        "storyClientsValue": "15000+",
+        "storyDestinationsLabel": "Destinations Worldwide",
+        "storyDestinationsValue": "98+",
+        "storyServicesLabel": "Services",
+        "storyServicesValue": "20+"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "JourneyStory",
+          "props": { "dataKey": "journeyStory" }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

@@ -20,7 +20,7 @@ const portalAllowedOrigins = (portal) =>
     new Set(
         (
             {
-                customer: [config.SHELL_URL, config.TREVISTA_URL, config.TREVIO_URL],
+                customer: [config.SHELL_URL, config.TREVISTA_URL, config.TREVIO_URL, config.TREHUB_URL],
                 admin: [config.ADMIN_URL],
                 partner: [config.PARTNER_URL],
             }[normalizePortalScope(portal)] || []

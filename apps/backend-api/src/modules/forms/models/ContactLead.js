@@ -7,7 +7,8 @@ const ContactLeadSchema = new mongoose.Schema(
         fields: { type: Object, required: true }, // { name, email, phone, ... }
         tourId: { type: String, default: null },
         tourTitle: { type: String, default: null },
-        product: { type: String, enum: ["trevista", "trevio"], default: "trevista", index: true },
+        product: { type: String, enum: ["trevista", "trevio", "trehub"], default: "trevista", index: true },
+        journeyType: { type: String, enum: ["tour", "trip", "flight", "hotel"], default: "tour", index: true },
         ownerAgent: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
@@ -20,10 +21,20 @@ const ContactLeadSchema = new mongoose.Schema(
             default: null,
             index: true,
         },
+        assignmentRule: {
+            type: String,
+            enum: ["source_tour_owner", "custom_tour_partner", "master_admin_fallback", ""],
+            default: "",
+            index: true,
+        },
         agentSnapshot: {
             name: { type: String, default: "" },
             email: { type: String, default: "" },
             phone: { type: String, default: "" },
+        },
+        agencySnapshot: {
+            name: { type: String, default: "" },
+            logo: { type: String, default: "" },
         },
         selection: {
             packageKey: { type: String, default: "" },
@@ -52,9 +63,19 @@ const ContactLeadSchema = new mongoose.Schema(
             default: null,
             index: true,
         },
+        customerId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "AgencyCustomer",
+            default: null,
+            index: true,
+        },
+        // Backend-owned QuoteBuilder process snapshot. The definition and
+        // transition rules live in apps/booking-engine/server.
+        quoteBuilder: { type: mongoose.Schema.Types.Mixed, default: null },
+        travellerDetails: { type: mongoose.Schema.Types.Mixed, default: null },
         status: {
             type: String,
-            enum: ["new", "in_review", "responded", "closed"],
+            enum: ["new", "enquiry_details_added", "traveller_details_added", "quote_requested", "in_review", "quote_sent", "accepted", "rejected", "change_requested", "cancelled", "responded", "closed"],
             default: "new",
             index: true,
         },

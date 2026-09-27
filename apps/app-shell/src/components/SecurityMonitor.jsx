@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { auditLog_event, detectScriptInjection } from "../services/security";
 
 const configuredScriptOrigins = [
+  process.env.REACT_APP_TREVIO_REMOTE_ENTRY,
+  process.env.REACT_APP_TREVIO_URL,
   process.env.REACT_APP_TREVISTA_REMOTE_ENTRY,
   process.env.REACT_APP_TREVISTA_URL,
 ].flatMap((value) => {

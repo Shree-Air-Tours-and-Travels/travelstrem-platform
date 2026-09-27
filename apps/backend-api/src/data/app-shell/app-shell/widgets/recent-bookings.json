@@ -4,17 +4,23 @@
     "data": {
       "recentBookingsEmptyState": {
         "icon": "reservations",
-        "title": "No bookings or enquiries yet",
-        "description": "When you request a trip, your enquiries and bookings will appear here.",
-        "actionLabel": "Explore trips",
-        "actionHref": "/?tab=trevio",
-        "actionAriaLabel": "Explore available trips"
+        "titleRef": "recentEmptyTitle",
+        "descriptionRef": "recentEmptyDescription",
+        "actionLabelRef": "recentEmptyAction",
+        "actionHrefRef": "trevistaHome",
+        "actionAriaLabelRef": "recentEmptyActionAriaLabel"
       }
     },
     "dataScope": { "options": {} },
     "elements": {
-      "labels": { "recentBookingsTitle": "Recent bookings & enquiries" },
-      "urls": {}
+      "labels": {
+        "recentBookingsTitle": "Recent bookings & enquiries",
+        "recentEmptyTitle": "Your travel timeline starts here",
+        "recentEmptyDescription": "Request a tour and every enquiry, quote and booking update will appear in this timeline.",
+        "recentEmptyAction": "Discover tours",
+        "recentEmptyActionAriaLabel": "Explore available tours"
+      },
+      "urls": { "trevistaHome": "/?tab=trevista" }
     },
     "structure": {
       "header": {},

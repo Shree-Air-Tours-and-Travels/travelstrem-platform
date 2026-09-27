@@ -115,7 +115,13 @@ const FloatingActionBar = React.memo(function FloatingActionBar({
         .reverse()
         .find((action) => action.variant === "solid" && action.color === "primary") ||
       right[0];
-    visible = [...left.slice(0, 1), ...(primaryRight ? [primaryRight] : [])];
+    const visibleRight =
+      right.length <= 2
+        ? right
+        : right.filter(
+            (action) => action === primaryRight || action === right.find((item) => item !== primaryRight),
+          );
+    visible = [...left.slice(0, 1), ...visibleRight];
   } else {
     const maxVisible = mobile ? Math.min(mobileVisible, eligible.length) : eligible.length;
     visible = eligible.slice(0, maxVisible);
@@ -173,18 +179,30 @@ const FloatingActionBar = React.memo(function FloatingActionBar({
       if (rect.height <= 0 || !Number.isFinite(rect.top)) return;
       const clearance = Math.max(0, Math.ceil(window.innerHeight - rect.top + 12));
       root.style.setProperty("--trem-floating-action-clearance", `${clearance}px`);
+      root.style.setProperty(
+        "--trem-floating-action-height",
+        `${Math.ceil(rect.height + 12)}px`,
+      );
     };
 
     syncClearance();
     const observer =
       typeof ResizeObserver === "function" ? new ResizeObserver(syncClearance) : null;
     observer?.observe(panel);
+    const layout = panel.closest(".dash-layout");
+    const layoutObserver =
+      layout && typeof MutationObserver === "function"
+        ? new MutationObserver(syncClearance)
+        : null;
+    layoutObserver?.observe(layout, { attributes: true, attributeFilter: ["class", "style"] });
     window.addEventListener("resize", syncClearance);
 
     return () => {
       observer?.disconnect();
+      layoutObserver?.disconnect();
       window.removeEventListener("resize", syncClearance);
       root.style.removeProperty("--trem-floating-action-clearance");
+      root.style.removeProperty("--trem-floating-action-height");
     };
   }, [mobile, resolved.length, resolvedError, resolvedNote, variant]);
 
@@ -274,7 +292,7 @@ const FloatingActionBar = React.memo(function FloatingActionBar({
                     variant="text"
                     size="small"
                     isCircular
-                    iconLeft="moreVertical"
+                    iconLeft="moreHorizontal"
                     iconSize={18}
                     onClick={() => setSheetOpen(true)}
                     primaryClassName="trem-fab__btn trem-fab__btn--more"
@@ -292,7 +310,7 @@ const FloatingActionBar = React.memo(function FloatingActionBar({
                   variant="text"
                   size="small"
                   isCircular
-                  iconLeft="moreVertical"
+                  iconLeft="moreHorizontal"
                   iconSize={18}
                   onClick={() => setSheetOpen(true)}
                   primaryClassName="trem-fab__btn trem-fab__btn--more"

@@ -7,7 +7,7 @@ import {
     isRealtimeActive,
 } from "../../realtime/realtime.publisher.js";
 import { REALTIME_EVENTS, room } from "../../realtime/realtime.constants.js";
-import { bookingPaymentDto } from "../../realtime/realtime.dto.js";
+import { bookingPaymentDto, tourDto } from "../../realtime/realtime.dto.js";
 
 const createFakeIo = () => {
     const emissions = [];
@@ -83,6 +83,16 @@ describe("realtime publisher", () => {
         expect(sent).toBe(false);
     });
 
+    test("socket publication failures never escape into the HTTP business flow", async () => {
+        setRealtimeServer({
+            to() {
+                throw new Error("socket adapter unavailable");
+            },
+        });
+
+        await expect(publishToUser("u2", "enquiry:created", {})).resolves.toBe(false);
+    });
+
     test("payment DTO exposes only whitelisted fields", () => {
         const dto = bookingPaymentDto(PAYMENT);
         expect(Object.keys(dto).sort()).toEqual(
@@ -103,6 +113,29 @@ describe("realtime publisher", () => {
             ].sort(),
         );
         expect(JSON.stringify(dto)).not.toMatch(/raw|signature|secret/i);
+    });
+
+    test("tour DTO carries public card flags for realtime invalidation", () => {
+        const dto = tourDto({
+            _id: "tour-1",
+            title: "Rajasthan Tour",
+            status: "published",
+            featured: true,
+            trending: false,
+            tremVerified: true,
+            password: "must-not-leak",
+        });
+
+        expect(dto).toEqual(
+            expect.objectContaining({
+                tourId: "tour-1",
+                isPublished: true,
+                featured: true,
+                trending: false,
+                tremVerified: true,
+            }),
+        );
+        expect(dto).not.toHaveProperty("password");
     });
 
     test("unrelated rooms never receive an event", async () => {

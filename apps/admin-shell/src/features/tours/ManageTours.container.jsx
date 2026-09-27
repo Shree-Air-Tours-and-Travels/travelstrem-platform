@@ -2,6 +2,13 @@ import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { fetchData } from "@packages/trem-utils";
 import {
+  REALTIME_EVENTS,
+  showRealtimeToast,
+  useRealtimeEvent,
+  useTourCatalogRealtime,
+} from "@packages/trem-events";
+import { PRODUCT_TYPE } from "@packages/trem-ui";
+import {
   deleteAllTours,
   deleteTour,
   fetchAdmins,
@@ -12,22 +19,58 @@ import {
   deleteAllTrips,
   verifyAdminTour,
   verifyAdminTrip,
+  resolveAdminTripBuilderTour,
   fetchPartnerAgencies,
   removeAdmin,
   reviewAdmin,
+  updateAdminInternalTeam,
   reviewAgent,
   reviewPartnerAgency,
 } from "../../services/adminService";
+import { useAdminPortalConfig } from "../../app/providers/AdminPortalProvider";
 import ManageToursView from "./ManageTours.view";
 
-const VALID_TABS = new Set(["overview", "enquiries", "services", "tenancy", "profile"]);
+const VALID_TABS = new Set([
+  "overview",
+  "enquiries",
+  "support",
+  "internalTeam",
+  "services",
+  "tracking",
+  "pricing",
+  "tenancy",
+  "clients",
+  "profile",
+  "notifications",
+]);
 
-const getTabFromSearch = (search) => {
+const getTabFromSearch = (search, pathname = "") => {
+  if (pathname.startsWith("/manage/bookings")) return "enquiries";
   const tab = new URLSearchParams(search || "").get("tab") || "overview";
   return VALID_TABS.has(tab) ? tab : "overview";
 };
+const TREVIO_BUILDER_PATH = "/manage/tours/builder";
 
-export default function ManageTours({ session, tab: tabProp }) {
+const resolveEntityId = (value) => {
+  if (value == null) return "";
+  if (["string", "number"].includes(typeof value)) return String(value);
+  if (typeof value === "object") {
+    return (
+      resolveEntityId(value._id) ||
+      resolveEntityId(value.id) ||
+      resolveEntityId(value.$oid) ||
+      resolveEntityId(value.value)
+    );
+  }
+  return "";
+};
+
+const resolveTourId = (tourOrId) =>
+  resolveEntityId(tourOrId?._id) || resolveEntityId(tourOrId?.id) || resolveEntityId(tourOrId);
+
+export default function ManageTours({ session }) {
+  const { reload: reloadPortalSession, headerConfig: backendHeaderConfig } =
+    useAdminPortalConfig();
   const location = useLocation();
   const navigate = useNavigate();
   const auth = {
@@ -36,17 +79,20 @@ export default function ManageTours({ session, tab: tabProp }) {
     adminLevel: session?.user?.adminLevel || "standard",
   };
 
-  const [tab, setTabState] = useState(() => getTabFromSearch(location.search));
+  const [tab, setTabState] = useState(() => getTabFromSearch(location.search, location.pathname));
   const [tours, setTours] = useState([]);
   const [trips, setTrips] = useState([]);
   const [admins, setAdmins] = useState([]);
   const [agents, setAgents] = useState([]);
   const [partnerAgencies, setPartnerAgencies] = useState([]);
   const [profile, setProfile] = useState(null);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [avatarSaving, setAvatarSaving] = useState(false);
   const [agencyLoading, setAgencyLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [tripFormOpen, setTripFormOpen] = useState(false);
-  const [tripEditing, setTripEditing] = useState(null);
+  const [tripEditing] = useState(null);
   const [tripViewOpen, setTripViewOpen] = useState(false);
   const [viewTrip, setViewTrip] = useState(null);
   const [error, setError] = useState(null);
@@ -55,41 +101,103 @@ export default function ManageTours({ session, tab: tabProp }) {
   const [confirmMessage, setConfirmMessage] = useState("");
   const [toast, setToast] = useState({ message: "", type: "info", visible: false });
   const [stats, setStats] = useState({ totalTours: 0, totalTrips: 0 });
+  const [dashboardDefinition, setDashboardDefinition] = useState(null);
+  const [dashboardLoading, setDashboardLoading] = useState(true);
+  const [dashboardError, setDashboardError] = useState("");
+
+  const canAccessTab = useCallback(
+    (nextTab) => {
+      const destination = (backendHeaderConfig?.adminNavigation || []).find(
+        (item) => item.target === nextTab || item.id === nextTab,
+      );
+      return !destination?.masterOnly || auth.adminLevel === "master";
+    },
+    [auth.adminLevel, backendHeaderConfig?.adminNavigation],
+  );
 
   const setTab = useCallback(
     (nextTab) => {
-      const safeTab = VALID_TABS.has(nextTab) ? nextTab : "overview";
+      const requestedTab = VALID_TABS.has(nextTab) ? nextTab : "overview";
+      const safeTab = canAccessTab(requestedTab) ? requestedTab : "overview";
       setTabState(safeTab);
       const params = new URLSearchParams(location.search);
       params.set("tab", safeTab);
-      navigate(`${location.pathname}?${params.toString()}`, { replace: false });
+      const destinationPath = location.pathname.startsWith("/manage/bookings")
+        ? "/manage/tours"
+        : location.pathname;
+      navigate(`${destinationPath}?${params.toString()}`, { replace: false });
     },
-    [location.pathname, location.search, navigate],
+    [canAccessTab, location.pathname, location.search, navigate],
   );
 
   const showToast = useCallback((message, type = "info", durationMs = 3000) => {
-    setToast({ message, type, visible: true });
-    setTimeout(() => setToast({ message: "", type: "info", visible: false }), durationMs);
+    showRealtimeToast({
+      title: message,
+      status: type,
+      durationMs,
+      dedupeKey: `admin:${type}:${message}`,
+    });
   }, []);
+
+  const handleToastState = useCallback(
+    (nextToast) => {
+      if (nextToast?.visible && nextToast.message) {
+        showToast(nextToast.message, nextToast.type || "info");
+        return;
+      }
+      setToast({ message: "", type: "info", visible: false });
+    },
+    [reloadPortalSession, showToast],
+  );
 
   useEffect(() => {
     fetchTours();
     fetchTrips();
     fetchAgencyManagement();
     fetchProfile();
+    loadDashboard();
   }, []);
 
+  async function loadDashboard() {
+    setDashboardLoading(true);
+    setDashboardError("");
+    try {
+      const response = await fetchData("/pages/admin-shell/dashboard");
+      if (response?.status !== "success" || !response?.component) {
+        throw new Error(response?.message || "Dashboard data is unavailable");
+      }
+      setDashboardDefinition(response.component);
+    } catch (dashboardRequestError) {
+      setDashboardError(dashboardRequestError?.message || "Dashboard data is unavailable");
+    } finally {
+      setDashboardLoading(false);
+    }
+  }
+
+  useRealtimeEvent(REALTIME_EVENTS.ADMIN_SUPPORT_REQUEST_CREATED, () => {
+    if (tab === "overview") loadDashboard();
+  });
+  useTourCatalogRealtime(() => {
+    fetchTours();
+    fetchTrips();
+    if (tab === "overview") loadDashboard();
+  });
+
   useEffect(() => {
-    const nextTab = getTabFromSearch(location.search);
+    const requestedNextTab = getTabFromSearch(location.search, location.pathname);
+    const nextTab = canAccessTab(requestedNextTab) ? requestedNextTab : "overview";
     const params = new URLSearchParams(location.search);
     const requestedTab = params.get("tab");
-    if (requestedTab && !VALID_TABS.has(requestedTab)) {
+    if (
+      requestedTab &&
+      (!VALID_TABS.has(requestedTab) || !canAccessTab(requestedTab))
+    ) {
       params.set("tab", nextTab);
       navigate(`${location.pathname}?${params.toString()}`, { replace: true });
       return;
     }
     setTabState((current) => (current === nextTab ? current : nextTab));
-  }, [location.pathname, location.search, navigate]);
+  }, [canAccessTab, location.pathname, location.search, navigate]);
 
   async function fetchTours() {
     const seq = ++requestSeq.current;
@@ -134,7 +242,7 @@ export default function ManageTours({ session, tab: tabProp }) {
     setAgencyLoading(true);
     try {
       const [nextAgents, nextAgencies] = await Promise.all([fetchAgents(), fetchPartnerAgencies()]);
-      const nextAdmins = auth.user?.adminLevel === "master" ? await fetchAdmins() : [];
+      const nextAdmins = await fetchAdmins();
       setAdmins(nextAdmins);
       setAgents(nextAgents);
       setPartnerAgencies(nextAgencies);
@@ -185,17 +293,41 @@ export default function ManageTours({ session, tab: tabProp }) {
     }
   }
 
+  async function handleUpdateAdminInternalTeam(id, team, enabled) {
+    try {
+      await updateAdminInternalTeam(id, team, enabled);
+      showToast(
+        enabled ? "Admin added to support team" : "Admin removed from support team",
+        "success",
+      );
+      await fetchAgencyManagement();
+    } catch (e) {
+      showToast(e.message || "Internal team update failed", "error");
+    }
+  }
+
   function handleDelete(id) {
-    setConfirmDelete(id);
+    const tourId = resolveTourId(id);
+    if (!tourId) return;
+    setConfirmDelete(tourId);
     setConfirmMessage("Delete this tour? This action cannot be undone.");
   }
   function handleDeleteAll() {
     setConfirmDelete("ALL");
     setConfirmMessage("Delete ALL tours? This is irreversible. Continue?");
   }
-  function handleTripDelete(id) {
-    setConfirmDelete(`trip:${id}`);
-    setConfirmMessage("Delete this trip? This action cannot be undone.");
+  async function handleTripDelete(id) {
+    const tripId = resolveTourId(id);
+    if (!tripId) return;
+    try {
+      const resolved = await resolveAdminTripBuilderTour(tripId);
+      const sourceTourId = resolveEntityId(resolved?.tourId);
+      if (!sourceTourId) throw new Error("Trip builder record was not returned.");
+      setConfirmDelete(`tripTour:${sourceTourId}`);
+      setConfirmMessage("Delete this trip? This action cannot be undone.");
+    } catch (e) {
+      showToast(e.message || "Could not prepare trip delete", "error");
+    }
   }
   function handleTripDeleteAll() {
     setConfirmDelete("trips:ALL");
@@ -209,6 +341,7 @@ export default function ManageTours({ session, tab: tabProp }) {
     try {
       if (target === "ALL") await deleteAllTours();
       else if (target === "trips:ALL") await deleteAllTrips();
+      else if (target?.startsWith("tripTour:")) await deleteTour(target.replace("tripTour:", ""));
       else if (target?.startsWith("trip:")) await deleteTrip(target.replace("trip:", ""));
       else await deleteTour(target);
       if (target?.startsWith("trip") || target === "trips:ALL") await fetchTrips();
@@ -226,16 +359,18 @@ export default function ManageTours({ session, tab: tabProp }) {
     navigate("/manage/tours/builder");
   }
   function openEdit(t) {
-    const id = t?._id || t?.id;
+    const id = resolveTourId(t);
     if (id) navigate(`/manage/tours/${encodeURIComponent(id)}/edit`);
   }
   function openView(t) {
-    const id = t?._id || t?.id;
+    const id = resolveTourId(t);
     if (id) navigate(`/manage/tours/${encodeURIComponent(id)}/view`);
   }
   async function verifyTour(id) {
     try {
-      await verifyAdminTour(id);
+      const tourId = resolveTourId(id);
+      if (!tourId) return;
+      await verifyAdminTour(tourId);
       showToast("Tour verified by TravelsTREM", "success");
       await fetchTours();
     } catch (e) {
@@ -252,20 +387,33 @@ export default function ManageTours({ session, tab: tabProp }) {
     }
   }
   function openTripCreate() {
-    setTripEditing(null);
-    setTripFormOpen(true);
+    const params = new URLSearchParams({ product: PRODUCT_TYPE.TREVIO });
+    navigate(`${TREVIO_BUILDER_PATH}?${params.toString()}`);
+  }
+  async function openTripInBuilder(t, mode = "edit") {
+    const tripId = resolveTourId(t);
+    if (!tripId) return;
+    try {
+      const resolved = await resolveAdminTripBuilderTour(tripId);
+      const sourceId = resolveEntityId(resolved?.tourId);
+      if (!sourceId) throw new Error("Trip builder record was not returned.");
+      const params = new URLSearchParams({ product: PRODUCT_TYPE.TREVIO, tourId: sourceId });
+      if (mode === "view") params.set("mode", "view");
+      navigate(`${TREVIO_BUILDER_PATH}?${params.toString()}`);
+    } catch (e) {
+      showToast(e.message || "Trip could not be opened in builder", "error");
+    }
   }
   function openTripEdit(t) {
-    setTripEditing(t);
-    setTripFormOpen(true);
+    openTripInBuilder(t);
   }
   function openTripView(t) {
-    setViewTrip(t);
-    setTripViewOpen(true);
+    openTripInBuilder(t, "view");
   }
 
   const handleSaveProfile = useCallback(
     async (data) => {
+      setProfileSaving(true);
       try {
         const res = await fetchData("/auth/profile", {
           method: "PUT",
@@ -274,19 +422,77 @@ export default function ManageTours({ session, tab: tabProp }) {
         });
         if (res?.status === "success") {
           setProfile(res.componentData?.data);
+          reloadPortalSession?.();
           showToast("Profile updated", "success");
           return { success: true };
         }
         return { success: false, message: res?.message || "Something went wrong" };
-      } catch {
-        return { success: false, message: "Something went wrong" };
+      } catch (error) {
+        const message = error?.response?.data?.message || error?.message || "Something went wrong";
+        showToast(message, "error");
+        return { success: false, message };
+      } finally {
+        setProfileSaving(false);
       }
     },
     [showToast],
   );
 
+  const handleUpdatePassword = useCallback(
+    async (data) => {
+      setPasswordSaving(true);
+      try {
+        const res = await fetchData("/auth/password", {
+          method: "PUT",
+          body: JSON.stringify(data),
+          headers: { "Content-Type": "application/json" },
+        });
+        if (res?.status === "success") {
+          showToast("Password updated", "success");
+          return { success: true };
+        }
+        return { success: false, message: res?.message || "Password update failed" };
+      } catch (error) {
+        const message =
+          error?.response?.data?.message || error?.message || "Password update failed";
+        showToast(message, "error");
+        return { success: false, message };
+      } finally {
+        setPasswordSaving(false);
+      }
+    },
+    [showToast],
+  );
+
+  const handleUpdateAvatar = useCallback(
+    async (avatar) => {
+      setAvatarSaving(true);
+      try {
+        const res = await fetchData("/auth/profile", {
+          method: "PUT",
+          body: JSON.stringify({ avatar }),
+          headers: { "Content-Type": "application/json" },
+        });
+        if (res?.status === "success") {
+          setProfile(res.componentData?.data);
+          reloadPortalSession?.();
+          showToast("Avatar updated", "success");
+          return { success: true };
+        }
+        return { success: false, message: res?.message || "Avatar update failed" };
+      } catch (error) {
+        const message = error?.response?.data?.message || error?.message || "Avatar update failed";
+        showToast(message, "error");
+        return { success: false, message };
+      } finally {
+        setAvatarSaving(false);
+      }
+    },
+    [reloadPortalSession, showToast],
+  );
+
   const refreshAll = useCallback(async () => {
-    await Promise.all([fetchTours(), fetchTrips()]);
+    await Promise.all([fetchTours(), fetchTrips(), loadDashboard()]);
   }, []);
 
   return (
@@ -302,6 +508,10 @@ export default function ManageTours({ session, tab: tabProp }) {
       loading={loading}
       agencyLoading={agencyLoading}
       stats={stats}
+      dashboardDefinition={dashboardDefinition}
+      dashboardLoading={dashboardLoading}
+      dashboardError={dashboardError}
+      refreshDashboard={loadDashboard}
       auth={auth}
       error={error}
       tripFormOpen={tripFormOpen}
@@ -332,12 +542,18 @@ export default function ManageTours({ session, tab: tabProp }) {
       fetchAgencyManagement={fetchAgencyManagement}
       handleReviewAdmin={handleReviewAdmin}
       handleRemoveAdmin={handleRemoveAdmin}
+      handleUpdateAdminInternalTeam={handleUpdateAdminInternalTeam}
       handleReviewAgent={handleReviewAgent}
       handleReviewPartnerAgency={handleReviewPartnerAgency}
       handleSaveProfile={handleSaveProfile}
+      handleUpdatePassword={handleUpdatePassword}
+      handleUpdateAvatar={handleUpdateAvatar}
+      profileSaving={profileSaving}
+      passwordSaving={passwordSaving}
+      avatarSaving={avatarSaving}
       refreshAll={refreshAll}
       toast={toast}
-      setToast={setToast}
+      setToast={handleToastState}
     />
   );
 }

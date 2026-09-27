@@ -1,5 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
+import Icon from "../../icons/Icon/Icon.jsx";
 import "./CardWithSubEntity.styles.scss";
 
 const renderAction = (action, index) => {
@@ -73,9 +74,8 @@ export default function CardWithSubEntity({
         </div>
       ) : null}
 
-      {visibleSections.map((section) => (
-        <section className="card-subentity__section" key={section.id || section.title}>
-          {section.title ? <h4>{section.title}</h4> : null}
+      {visibleSections.map((section) => {
+        const content = <>
           {section.text ? <p>{section.text}</p> : null}
           {section.items?.length ? (
             <div className="card-subentity__rows">
@@ -84,8 +84,19 @@ export default function CardWithSubEntity({
               ))}
             </div>
           ) : null}
-        </section>
-      ))}
+        </>;
+        return section.collapsible ? (
+          <details className="card-subentity__section card-subentity__section--collapsible" key={section.id || section.title} open={section.defaultOpen || undefined}>
+            <summary>{section.title}<Icon name="chevronDown" size={16} aria-hidden="true" /></summary>
+            {content}
+          </details>
+        ) : (
+          <section className="card-subentity__section" key={section.id || section.title}>
+            {section.title ? <h4>{section.title}</h4> : null}
+            {content}
+          </section>
+        );
+      })}
 
       {visibleTotals.length ? (
         <div className="card-subentity__totals">
@@ -136,6 +147,8 @@ CardWithSubEntity.propTypes = {
       title: PropTypes.node,
       text: PropTypes.node,
       items: PropTypes.arrayOf(valueItemShape),
+      collapsible: PropTypes.bool,
+      defaultOpen: PropTypes.bool,
     }),
   ),
   totals: PropTypes.arrayOf(valueItemShape),

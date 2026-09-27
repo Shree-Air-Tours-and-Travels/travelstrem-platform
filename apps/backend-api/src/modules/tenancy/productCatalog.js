@@ -7,6 +7,11 @@ export const DEFAULT_PLATFORM_PRODUCTS = Object.freeze([
         name: "Trevista",
         description: "Custom tours and travel services",
     }),
+    Object.freeze({
+        key: "trehub",
+        name: "Trehub",
+        description: "Flights, hotels and connected travel logistics",
+    }),
 ]);
 
 export function normalizeProductKeys(values = []) {

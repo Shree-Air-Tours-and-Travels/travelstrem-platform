@@ -14,13 +14,29 @@ const statusHistorySchema = new mongoose.Schema(
 );
 const schema = new mongoose.Schema(
     {
-        agencyName: { type: String, required: true, trim: true },
+        agencyName: {
+            type: String,
+            required() {
+                return this.status !== "draft";
+            },
+            trim: true,
+            default: "",
+        },
         legalName: { type: String, trim: true, default: "" },
         registrationNumber: { type: String, trim: true, default: "", index: true },
         gstNumber: { type: String, trim: true, uppercase: true, default: "", index: true },
         panNumber: { type: String, trim: true, uppercase: true, default: "", index: true },
         website: { type: String, trim: true, default: "" },
-        companyEmail: { type: String, required: true, trim: true, lowercase: true, index: true },
+        companyEmail: {
+            type: String,
+            required() {
+                return this.status !== "draft";
+            },
+            trim: true,
+            lowercase: true,
+            default: "",
+            index: true,
+        },
         companyPhone: { type: String, trim: true, default: "" },
         address: {
             line1: String,
@@ -38,9 +54,9 @@ const schema = new mongoose.Schema(
         requestedProducts: [{ type: String, trim: true, lowercase: true }],
         notes: { type: String, default: "" },
         primaryContact: {
-            fullName: { type: String, required: true },
+            fullName: { type: String, default: "" },
             designation: String,
-            email: { type: String, required: true, lowercase: true },
+            email: { type: String, lowercase: true, default: "" },
             mobile: String,
         },
         documents: [documentSchema],
@@ -66,16 +82,31 @@ const schema = new mongoose.Schema(
             index: true,
         },
         rejectionReason: { type: String, default: "" },
+        reopenedAt: { type: Date, default: null },
+        reopenedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            default: null,
+        },
         convertedAgency: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "PartnerAgency",
             default: null,
         },
         history: [statusHistorySchema],
-        submittedAt: { type: Date, default: Date.now },
+        workflowVersion: { type: String, default: "PARTNERSHIP_ACTIVATION_V1" },
+        currentStep: { type: String, default: "business" },
+        completedSteps: [{ type: String }],
+        resumeTokenHash: { type: String, select: false, default: "" },
+        draftExpiresAt: { type: Date, default: null },
+        submittedAt: { type: Date, default: null },
         convertedAt: Date,
     },
     { timestamps: true },
 );
 schema.index({ companyEmail: 1, status: 1 });
+schema.index(
+    { draftExpiresAt: 1 },
+    { expireAfterSeconds: 0, partialFilterExpression: { status: "draft" } },
+);
 export default mongoose.models.PartnershipRequest || mongoose.model("PartnershipRequest", schema);

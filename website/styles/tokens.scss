@@ -1,0 +1,55 @@
+// Compatibility aliases sourced directly from the same Sass tokens as trem-ui.
+@use "../../packages/trem-design-tokens/src/scss/index" as trem;
+
+:root {
+  --trem-primary: #{trem.$primary-color};
+  --trem-primaryDark: #{trem.$primary-dark};
+  --trem-secondary: #{trem.$secondary-color};
+  --trem-secondaryDark: #{trem.$secondary-dark};
+  --trem-tertiary: #{trem.$tertiary-color};
+  --trem-tertiaryDark: #{trem.$tertiary-dark};
+  --trem-accent: #{trem.$accent-color};
+  --trem-background: #{trem.$light-bg};
+  --trem-surface: #{trem.$white-color};
+  --trem-surfaceMuted: #{trem.$surface-muted};
+  --trem-surfaceSubtle: #{trem.$surface-subtle};
+  --trem-text: #{trem.$text-dark};
+  --trem-textMuted: #{trem.$text-muted};
+  --trem-textLight: #{trem.$text-light};
+  --trem-border: #{trem.$border-color};
+  --trem-overlay: #{trem.$overlay-color};
+  --trem-dark-primary: #{trem.$dark-primary};
+  --trem-dark-primaryDark: #{trem.$dark-primary-dark};
+  --trem-dark-secondary: #{trem.$dark-secondary};
+  --trem-dark-secondaryDark: #{trem.$dark-secondary-dark};
+  --trem-dark-tertiary: #{trem.$dark-tertiary};
+  --trem-dark-tertiaryDark: #{trem.$dark-tertiary-dark};
+  --trem-dark-accent: #{trem.$dark-accent};
+  --trem-dark-background: #{trem.$dark-bg};
+  --trem-dark-surface: #{trem.$dark-surface};
+  --trem-dark-surfaceMuted: #{trem.$dark-surface-muted};
+  --trem-dark-surfaceSubtle: #{trem.$dark-surface-subtle};
+  --trem-dark-text: #{trem.$dark-text};
+  --trem-dark-textMuted: #{trem.$dark-text-muted};
+  --trem-dark-textLight: #{trem.$dark-text-light};
+  --trem-dark-border: #{trem.$dark-border};
+  --trem-dark-overlay: #{trem.$dark-overlay};
+  --trem-radius-xs: #{trem.$radius-xs};
+  --trem-radius-sm: #{trem.$radius-sm};
+  --trem-radius-md: #{trem.$radius-md};
+  --trem-radius-lg: #{trem.$radius-lg};
+  --trem-radius-full: #{trem.$radius-full};
+  --trem-shadow-soft: #{trem.$shadow-soft};
+  --trem-shadow-card: #{trem.$shadow-card};
+  --trem-shadow-sm: #{trem.$shadow-sm};
+  --trem-shadow-md: #{trem.$shadow-md};
+  --trem-shadow-lg: #{trem.$shadow-lg};
+  --trem-font-primary: #{trem.$font-primary};
+  --type-xs: #{trem.$font-size-xs};
+  --type-sm: #{trem.$font-size-sm};
+  --type-md: #{trem.$font-size-md};
+  --type-lg: #{trem.$font-size-lg};
+  --type-xl: #{trem.$font-size-xl};
+  --type-xxl: #{trem.$font-size-xxl};
+  --type-xxxl: #{trem.$font-size-xxxl};
+}

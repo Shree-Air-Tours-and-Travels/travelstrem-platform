@@ -2,7 +2,11 @@
 import crypto from "crypto";
 import UserRepository from "../repositories/UserRepository.js";
 import bcrypt from "bcryptjs";
-import { sendLoginEmail, sendPasswordResetEmail } from "../../../services/email.service.js";
+import {
+    sendLoginEmail,
+    sendPasswordResetEmail,
+    sendWelcomeEmail,
+} from "../../../services/email.service.js";
 import config from "../../../config/index.js";
 import authConfig from "../../../config/auth.js";
 import UserVerification from "../models/UserVerification.js";
@@ -21,11 +25,24 @@ import {
     revokeUserSessions,
     rotateSession,
     safeAuthUser,
+    SESSION_INACTIVITY_TIMEOUT_MS,
 } from "../services/session.service.js";
 
 // Admin creation secret from config (production-safe)
 const ADMIN_CREATION_SECRET = (config.ADMIN_CREATION_SECRET || "").toString().trim();
 const MASTER_ADMIN_EMAIL = config.MASTER_ADMIN_EMAIL;
+
+const sendRegistrationWelcomeEmail = async (user) => {
+    if (!config.ENABLE_EMAILS || !user?.email) return;
+    const result = await sendWelcomeEmail({
+        to: user.email,
+        customerName: user.name,
+        dashboardUrl: config.SHELL_URL,
+    });
+    if (!result?.success) {
+        console.warn("Welcome email was not sent:", result?.code || result?.message);
+    }
+};
 const MASTER_ADMIN_PHONE = config.MASTER_ADMIN_PHONE;
 const MASTER_ADMIN_PIN = (config.MASTER_ADMIN_PIN || "").toString().trim();
 
@@ -43,7 +60,8 @@ const setAuthNoStoreHeaders = (res) => {
     res.setHeader("Referrer-Policy", "no-referrer");
 };
 
-const issueUserToken = (user, res) => createSession({ user, req: res.req, res });
+const issueUserToken = (user, res, { rememberMe = false } = {}) =>
+    createSession({ user, req: res.req, res, rememberMe });
 const revokeUserRefreshTokens = revokeUserSessions;
 const revokeCurrentRefreshToken = revokePresentedRefreshToken;
 
@@ -315,6 +333,16 @@ const assertMasterAdmin = async (req, res) => {
     return admin;
 };
 
+const canManageInternalTeamMember = (admin, member) => {
+    if (admin?.adminLevel === "master") return true;
+    if (!member || member.adminLevel === "master") return false;
+    if (String(admin?._id || "") === String(member._id || "")) return false;
+    return (
+        member.adminApprovalStatus === "pending" ||
+        (member.internalTeamRoles || []).includes("support")
+    );
+};
+
 const enforceActivePrivilegedUser = async (user) => {
     if ((user.accountStatus || "active") !== "active") {
         const err = new Error(`Account is ${user.accountStatus}.`);
@@ -427,6 +455,8 @@ export const requestAdminRegistrationOtp = async (req, res) => {
         return res.json({
             message: "Registration OTP sent.",
             expiresInMs: OTP_TTL,
+            resendAfterMs: OTP_RESEND_COOLDOWN_MS,
+            ...(DEV_OTP_BYPASS ? { developmentOtp: otp } : {}),
         });
     } catch (err) {
         console.error("requestAdminRegistrationOtp error:", err && err.stack ? err.stack : err);
@@ -544,6 +574,10 @@ export const register = async (req, res) => {
 
         await user.save();
 
+        await sendRegistrationWelcomeEmail(user).catch((error) => {
+            console.warn("Welcome email failed:", error?.message || error);
+        });
+
         if (requestedRole === "admin" && adminContext.adminLevel === "master") {
             await UserVerification.deleteOne({ _id: req.body.adminVerificationId });
         }
@@ -584,7 +618,7 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
     setAuthNoStoreHeaders(res);
     try {
-        const { email, password } = req.body || {};
+        const { email, password, rememberMe = false } = req.body || {};
 
         const normalizedEmail = email.toLowerCase().trim();
         const user = await UserRepository.findByEmail(normalizedEmail);
@@ -627,7 +661,11 @@ export const login = async (req, res) => {
             const { verification, otp } = await createVerification({
                 email: normalizedEmail,
                 type: "login",
-                metadata: { role: user.role, portal: getPortalScope(req) },
+                metadata: {
+                    role: user.role,
+                    portal: getPortalScope(req),
+                    rememberMe: rememberMe === true,
+                },
             });
 
             await sendOtpMail({
@@ -637,16 +675,17 @@ export const login = async (req, res) => {
                 label: "login",
             });
 
-            return res.json({
-                status: "verify_otp",
-                verificationId: verification._id.toString(),
-                email: maskEmail(normalizedEmail),
-                expiresInMs: OTP_TTL,
-            });
+        return res.json({
+            status: "verify_otp",
+            verificationId: verification._id.toString(),
+            email: maskEmail(normalizedEmail),
+            expiresInMs: OTP_TTL,
+            resendAfterMs: OTP_RESEND_COOLDOWN_MS,
+        });
         }
 
         await revokeCurrentRefreshToken(req);
-        const result = await issueUserToken(user, res);
+        const result = await issueUserToken(user, res, { rememberMe: rememberMe === true });
         return res.json(result);
     } catch (err) {
         console.error("Auth login error:", err && err.stack ? err.stack : err);
@@ -736,7 +775,9 @@ export const verifyLoginOtp = async (req, res) => {
         await verification.save();
 
         await revokeCurrentRefreshToken(req);
-        const result = await issueUserToken(user, res);
+        const result = await issueUserToken(user, res, {
+            rememberMe: verification.metadata?.rememberMe === true,
+        });
         return res.json(result);
     } catch (err) {
         console.error("verifyLoginOtp error:", err && err.stack ? err.stack : err);
@@ -809,6 +850,7 @@ export const resendLoginOtp = async (req, res) => {
         return res.json({
             message: "New OTP sent.",
             expiresInMs: OTP_TTL,
+            resendAfterMs: OTP_RESEND_COOLDOWN_MS,
         });
     } catch (err) {
         console.error("resendLoginOtp error:", err && err.stack ? err.stack : err);
@@ -818,7 +860,7 @@ export const resendLoginOtp = async (req, res) => {
     }
 };
 
-const isDev = process.env.NODE_ENV !== "production";
+const isDev = config.IS_DEVELOPMENT;
 
 export const forgotPassword = async (req, res) => {
     setAuthNoStoreHeaders(res);
@@ -834,6 +876,8 @@ export const forgotPassword = async (req, res) => {
         if (!user) {
             return res.json({
                 message: "If that email is registered, a password reset code has been sent.",
+                expiresInMs: OTP_TTL,
+                resendAfterMs: OTP_RESEND_COOLDOWN_MS,
             });
         }
 
@@ -852,6 +896,9 @@ export const forgotPassword = async (req, res) => {
 
         return res.json({
             message: "If that email is registered, a password reset code has been sent.",
+            expiresInMs: OTP_TTL,
+            resendAfterMs: OTP_RESEND_COOLDOWN_MS,
+            ...(DEV_OTP_BYPASS ? { developmentOtp: otp } : {}),
         });
     } catch (err) {
         console.error("Auth forgotPassword error:", err && err.stack ? err.stack : err);
@@ -1076,6 +1123,8 @@ export const requestActivationOtp = async (req, res) => {
             message: "Verification code sent.",
             email: user.email,
             expiresInMs: OTP_TTL,
+            resendAfterMs: OTP_RESEND_COOLDOWN_MS,
+            ...(DEV_OTP_BYPASS ? { developmentOtp: otp } : {}),
         });
     } catch (err) {
         console.error("requestActivationOtp error:", err && err.stack ? err.stack : err);
@@ -1212,9 +1261,7 @@ export const logout = async (req, res) => {
 
 /**
  * GET /auth/session
- * Returns the current user AND a fresh access token so the frontend can
- * store it in memory for Bearer-header auth (needed for cross-origin API
- * calls where the httpOnly cookie is blocked by SameSite policy).
+ * Returns the current cookie-backed session state.
  */
 export const getSession = async (req, res) => {
     setAuthNoStoreHeaders(res);
@@ -1230,17 +1277,14 @@ export const getSession = async (req, res) => {
                 .json({ status: "error", message: statusErr.message });
         }
 
+        const sessionUser = safeAuthUser(user);
         return res.json({
             status: "success",
             authenticated: true,
             portal: getPortalScope(req),
-            user: safeAuthUser(user),
+            user: sessionUser,
             sessionVersion: String(user.tokenVersion || 0),
-            componentData: {
-                data: {
-                    user: safeAuthUser(user),
-                },
-            },
+            config: { session: { inactivityTimeoutMs: SESSION_INACTIVITY_TIMEOUT_MS } },
         });
     } catch (err) {
         console.error("[getSession] error:", err && err.stack ? err.stack : err);
@@ -1259,7 +1303,7 @@ export const getCurrentUser = async (req, res) => {
 
         const user = await UserRepository.findById(
             req.user.sub,
-            "name email mobile phone emailVerified mobileVerified role agentRef agencyRef partnerAgencyRef agentApprovalStatus adminLevel adminApprovalStatus avatar agencyRole agencyId designation accountStatus productAccess permissionGrants permissionDenials tokenVersion",
+            "name email mobile phone emailVerified mobileVerified role agentRef agencyRef partnerAgencyRef agentApprovalStatus adminLevel adminApprovalStatus avatar agencyRole agencyId designation accountStatus productAccess permissionGrants permissionDenials internalTeamRoles tokenVersion",
         );
         if (!user) return res.status(404).json({ status: "error", message: "User not found" });
         try {
@@ -1472,14 +1516,24 @@ export const reviewAgent = async (req, res) => {
 
 export const listAdmins = async (req, res) => {
     try {
-        const master = await assertMasterAdmin(req, res);
-        if (!master) return;
+        const admin = await assertApprovedAdmin(req, res);
+        if (!admin) return;
 
         const status = String(req.query?.status || "").trim();
         const query = { role: "admin" };
         if (status) query.adminApprovalStatus = status;
+        if (admin.adminLevel !== "master") {
+            query._id = { $ne: admin._id };
+            query.adminLevel = { $ne: "master" };
+            query.$or = [
+                { adminApprovalStatus: "pending" },
+                { internalTeamRoles: "support" },
+            ];
+        }
         const admins = await User.find(query)
-            .select("name email phone role adminLevel adminApprovalStatus createdAt approvedAt")
+            .select(
+                "name email phone role adminLevel adminApprovalStatus accountStatus internalTeamRoles createdAt approvedAt",
+            )
             .sort({ adminLevel: -1, createdAt: -1 });
 
         return res.json({ status: "success", data: admins });
@@ -1489,10 +1543,55 @@ export const listAdmins = async (req, res) => {
     }
 };
 
+export const updateAdminInternalTeam = async (req, res) => {
+    try {
+        const admin = await assertApprovedAdmin(req, res);
+        if (!admin) return;
+        const team = String(req.body?.team || "")
+            .trim()
+            .toLowerCase();
+        const enabled = req.body?.enabled === true;
+        if (team !== "support")
+            return res.status(400).json({ status: "error", message: "Unknown internal team." });
+        const user = await UserRepository.findById(req.params.id);
+        if (!user || user.role !== "admin")
+            return res.status(404).json({ status: "error", message: "Admin not found." });
+        if (!canManageInternalTeamMember(admin, user))
+            return res.status(403).json({
+                status: "error",
+                message: "You cannot manage master admins or sibling platform admins.",
+            });
+        if (enabled && user.adminApprovalStatus !== "approved")
+            return res.status(409).json({
+                status: "error",
+                message: "Approve the admin before assigning an internal team.",
+            });
+        const teams = new Set(user.internalTeamRoles || []);
+        if (enabled) teams.add(team);
+        else teams.delete(team);
+        user.internalTeamRoles = [...teams];
+        user.approvedBy = admin._id;
+        user.approvedAt = new Date();
+        await user.save();
+        return res.json({
+            status: "success",
+            message: enabled
+                ? "Admin added to the support team."
+                : "Admin removed from the support team.",
+            data: safeAuthUser(user),
+        });
+    } catch (err) {
+        console.error("updateAdminInternalTeam error:", err && err.stack ? err.stack : err);
+        return res
+            .status(500)
+            .json({ status: "error", message: "Failed to update internal team." });
+    }
+};
+
 export const reviewAdmin = async (req, res) => {
     try {
-        const master = await assertMasterAdmin(req, res);
-        if (!master) return;
+        const admin = await assertApprovedAdmin(req, res);
+        if (!admin) return;
 
         const status = String(req.body?.status || "approved")
             .trim()
@@ -1505,15 +1604,17 @@ export const reviewAdmin = async (req, res) => {
         const user = await UserRepository.findById(req.params.id);
         if (!user || user.role !== "admin")
             return res.status(404).json({ status: "error", message: "Admin not found." });
-        if (user.adminLevel === "master")
+        if (!canManageInternalTeamMember(admin, user))
             return res.status(403).json({
                 status: "error",
-                message: "Master admin cannot be reviewed or downgraded.",
+                message: "You cannot review master admins or sibling platform admins.",
             });
 
         user.adminLevel = "standard";
         user.adminApprovalStatus = status;
-        user.approvedBy = master._id;
+        if (status !== "approved") user.internalTeamRoles = [];
+        else if (admin.adminLevel !== "master") user.internalTeamRoles = ["support"];
+        user.approvedBy = admin._id;
         user.approvedAt = new Date();
         await user.save();
 
@@ -1530,20 +1631,24 @@ export const reviewAdmin = async (req, res) => {
 
 export const removeAdmin = async (req, res) => {
     try {
-        const master = await assertMasterAdmin(req, res);
-        if (!master) return;
+        const admin = await assertApprovedAdmin(req, res);
+        if (!admin) return;
 
         const user = await UserRepository.findById(req.params.id);
         if (!user || user.role !== "admin")
             return res.status(404).json({ status: "error", message: "Admin not found." });
-        if (String(user._id) === String(master._id) || user.adminLevel === "master") {
+        if (!canManageInternalTeamMember(admin, user)) {
             return res
                 .status(403)
-                .json({ status: "error", message: "Master admin cannot remove itself." });
+                .json({
+                    status: "error",
+                    message: "You cannot remove master admins or sibling platform admins.",
+                });
         }
 
         user.adminApprovalStatus = "removed";
-        user.approvedBy = master._id;
+        user.internalTeamRoles = [];
+        user.approvedBy = admin._id;
         user.approvedAt = new Date();
         await user.save();
 

@@ -1,25 +1,45 @@
 @import "@packages/trem-design-tokens/scss";
 
 .ct-modal-card {
-  width: min(680px, 100%);
-  max-height: min(90dvh, 760px);
-  overflow-y: auto;
+  width: min(58rem, 100%);
+  height: min(90dvh, 52rem);
+  max-height: calc(100dvh - (2 * #{$space-6}));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  &--confirmation {
+    height: auto;
+  }
   border: 1px solid var(--border);
   background: var(--card-bg);
   border-radius: $radius-lg;
   box-shadow: var(--shadow-card);
   animation: ct-modal-in 180ms ease both;
 
+  &__header-bar {
+    flex: 0 0 auto;
+    padding: $space-6 $space-12 $space-5 $space-7;
+    border-bottom: 1px solid var(--border);
+    background: var(--card-bg);
+  }
+
   &__body {
-    padding: $space-7;
+    min-width: 0;
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: $space-5 $space-7;
   }
 
   &__intro {
     display: grid;
     grid-template-columns: $space-12 minmax(0, 1fr);
-    align-items: start;
+    align-items: center;
     gap: $space-5;
-    margin: 0 0 $space-5;
+    margin: 0;
   }
 
   &__brand {
@@ -30,8 +50,15 @@
     box-shadow: var(--shadow-md);
   }
 
-  &__header {
+  &__header,
+  &__workspace,
+  &__stage,
+  &__form-panel {
     min-width: 0;
+  }
+
+  &__package-baseline {
+    margin-bottom: $space-5;
   }
 
   &__title {
@@ -47,15 +74,96 @@
     line-height: $line-height-lg;
   }
 
+  &__workspace {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: $space-5;
+    width: min(100%, 52rem);
+    margin: 0 auto;
+  }
+
+  &__steps {
+    margin: 0;
+
+    &.timeline-stepper--horizontal {
+      .timeline-stepper__content {
+        padding-inline: $space-2;
+        text-align: center;
+      }
+
+      .timeline-stepper__heading {
+        align-items: center;
+      }
+
+      .timeline-stepper__label,
+      .timeline-stepper__description {
+        display: block;
+        width: 100%;
+        overflow: visible;
+        text-align: center;
+        white-space: normal;
+      }
+    }
+  }
+
+  &__stage {
+    padding: $space-5;
+    border: 1px solid var(--border);
+    border-radius: $radius-lg;
+    background: var(--surface);
+  }
+
+  &__stage-heading {
+    display: grid;
+    gap: $space-1;
+    margin-bottom: $space-5;
+
+    > span {
+      color: var(--color-primary);
+      font-size: $font-size-xs;
+      font-weight: $font-bold;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    h4,
+    p {
+      margin: 0;
+    }
+
+    h4 {
+      color: var(--heading);
+      font-size: $font-size-lg;
+    }
+
+    p {
+      color: var(--muted);
+      font-size: $font-size-sm;
+      line-height: $line-height-lg;
+    }
+  }
+
+  &__form-panel {
+    .trem-contact-form,
+    .trem-contact-form__grid,
+    .trem-contact-form__field,
+    .ui-input-field,
+    .trem-dropdown {
+      min-width: 0;
+      max-width: 100%;
+    }
+  }
+
   &__tour {
     display: flex;
     gap: $space-3;
     align-items: center;
+    min-width: 0;
     padding: $space-3 $space-4;
     border-radius: $radius-md;
     border: 1px solid var(--border);
     background: var(--surface-inset);
-    margin: 0 0 $space-5;
+    margin: 0 0 $space-4;
   }
 
   &__tour-img {
@@ -84,13 +192,14 @@
     strong {
       font-size: $font-size-sm;
       color: var(--heading);
+      overflow-wrap: anywhere;
     }
   }
 
   &__tour-price {
     font-size: $font-size-xs;
     color: var(--color-primary);
-    font-weight: 600;
+    font-weight: $font-semibold;
   }
 
   &__operator {
@@ -100,12 +209,15 @@
     margin-top: $space-1;
 
     span {
+      min-width: 0;
       display: inline-flex;
+      flex-wrap: wrap;
       align-items: baseline;
       gap: $space-1;
       color: var(--text);
       font-size: $font-size-xs;
       font-weight: $font-medium;
+      overflow-wrap: anywhere;
     }
 
     small {
@@ -115,12 +227,129 @@
     }
   }
 
+  &__pricing-panel > .trem-quote-comparison {
+    margin-bottom: 0;
+  }
+
+  &__review-panel {
+    display: grid;
+    gap: $space-4;
+
+    .ct-modal-card__stage-heading {
+      margin-bottom: 0;
+    }
+  }
+
+  &__addons {
+    display: grid;
+    gap: $space-3;
+    margin-top: $space-5;
+  }
+
+  &__addons-heading {
+    strong,
+    p {
+      margin: 0;
+    }
+
+    strong {
+      color: var(--heading);
+      font-size: $font-size-md;
+    }
+
+    p {
+      margin-top: $space-1;
+      color: var(--muted);
+      font-size: $font-size-xs;
+      line-height: $line-height-lg;
+    }
+  }
+
+  &__addon {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: $space-3;
+    padding: $space-4;
+    border: 1px solid var(--border);
+    border-radius: $radius-md;
+    background: var(--card-bg);
+    cursor: pointer;
+
+    &.is-selected {
+      border-color: var(--color-primary);
+      background: var(--primary-soft);
+    }
+
+    input {
+      width: $space-5;
+      height: $space-5;
+      accent-color: var(--color-primary);
+    }
+
+    span {
+      display: grid;
+      gap: $space-1;
+      min-width: 0;
+    }
+
+    strong,
+    b {
+      color: var(--heading);
+      font-size: $font-size-sm;
+    }
+
+    small {
+      color: var(--muted);
+      line-height: $line-height-md;
+    }
+
+    b {
+      color: var(--color-primary);
+      white-space: nowrap;
+    }
+  }
+
+  &__custom-journey {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-4;
+    margin-top: $space-4;
+    padding: $space-4;
+    border: 1px solid var(--color-primary);
+    border-radius: $radius-md;
+    background: var(--primary-soft);
+
+    strong,
+    p {
+      margin: 0;
+    }
+
+    strong {
+      color: var(--heading);
+      font-size: $font-size-sm;
+    }
+
+    p {
+      margin-top: $space-1;
+      color: var(--muted);
+      font-size: $font-size-xs;
+      line-height: $line-height-md;
+    }
+
+    .ui-button {
+      flex: 0 0 auto;
+    }
+  }
+
   &__msg {
     margin-top: $space-3;
     padding: $space-2 $space-3;
     border-radius: $radius-sm;
     font-size: $font-size-sm;
-    font-weight: 600;
+    font-weight: $font-semibold;
+    overflow-wrap: anywhere;
 
     &--success {
       background: var(--success-soft);
@@ -136,6 +365,18 @@
   &__loader,
   &__error {
     min-height: 280px;
+  }
+
+  &__footer {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: $space-3;
+    padding: $space-4 $space-7;
+    border-top: 1px solid var(--border);
+    background: var(--card-bg);
+    box-shadow: var(--shadow-sm);
   }
 }
 
@@ -164,26 +405,83 @@
 @media (max-width: $breakpoint-mobile) {
   .ct-modal-card {
     width: 100%;
-    max-height: 92dvh;
+    height: calc(100dvh - (2 * #{$space-3}));
+    max-height: calc(100dvh - (2 * #{$space-3}));
     border-radius: $radius-lg $radius-lg $radius-sm $radius-sm;
-  }
-  .ct-modal-card__body {
-    padding: $space-7 $space-5;
-  }
-  .ct-modal-card__header,
-  .ct-modal-card__intro,
-  .ct-modal-card__tour {
-    max-width: none;
-  }
 
-  .ct-modal-card__intro {
-    grid-template-columns: $space-12 minmax(0, 1fr);
-    gap: $space-3;
-  }
+    &__header-bar {
+      padding: $space-5 $space-12 $space-4 $space-4;
+    }
 
-  .ct-modal-card__brand {
-    width: $space-12;
-    height: $space-12;
+    &__body {
+      padding: $space-4;
+    }
+
+    &__intro {
+      grid-template-columns: $space-10 minmax(0, 1fr);
+      gap: $space-3;
+    }
+
+    &__brand {
+      width: $space-10;
+      height: $space-10;
+    }
+
+    &__title {
+      font-size: $font-size-lg;
+    }
+
+    &__form-panel {
+      padding: $space-4;
+    }
+
+    &__stage {
+      padding: $space-4;
+    }
+
+    &__steps {
+      gap: $space-1;
+    }
+
+    &__tour {
+      align-items: flex-start;
+    }
+
+    &__custom-journey {
+      align-items: stretch;
+      flex-direction: column;
+
+      .ui-button {
+        justify-content: flex-start;
+      }
+    }
+
+    &__addon {
+      grid-template-columns: auto minmax(0, 1fr);
+
+      b {
+        grid-column: 2;
+      }
+    }
+
+    &__footer {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      padding: $space-3 $space-4 calc(#{$space-3} + env(safe-area-inset-bottom));
+
+      > * {
+        width: 100%;
+        min-width: 0;
+      }
+    }
+
+    .trem-contact-form__grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .trem-contact-form__field {
+      grid-column: 1;
+    }
   }
 }
 

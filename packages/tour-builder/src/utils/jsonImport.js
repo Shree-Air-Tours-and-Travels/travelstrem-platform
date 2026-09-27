@@ -220,6 +220,9 @@ export const serverManagedPaths = (definition) => {
  * @returns {{ values: object, appliedKeys: string[], ignoredKeys: string[] }}
  */
 export const applyPastedJson = (definition, pasted, currentValues = {}) => {
+  const source = unwrapTourJson(pasted);
+  if (!source) throw new Error("JSON must contain one tour object.");
+
   const { leaves, lists } = indexWidgets(definition);
   const ownedPaths = definition?.ownedPaths || [];
   const isCollectionStep = !!definition?.collection;
@@ -343,6 +346,6 @@ export const applyPastedJson = (definition, pasted, currentValues = {}) => {
     });
   };
 
-  mergeObject(pasted, "");
+  mergeObject(source, "");
   return { values, appliedKeys, ignoredKeys };
 };

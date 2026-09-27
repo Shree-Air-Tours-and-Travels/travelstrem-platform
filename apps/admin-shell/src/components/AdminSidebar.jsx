@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { emit } from "@packages/trem-events";
 import { clearAuthBrowserState, emitAuthEvent } from "@packages/trem-auth-core";
-import { BrandLogo } from "@packages/trem-ui";
+import { BrandLogo, PRODUCT_TYPE } from "@packages/trem-ui";
 import { buildGlobalAuthUrl } from "@packages/trem-utils";
 import authService from "../services/authService";
 import "./AdminSidebar.scss";
@@ -58,7 +58,7 @@ export default function Sidebar({
           .get("/tenancy/products")
           .then((res) => {
             const products = res?.data?.componentData?.data || res?.data?.data || [];
-            const trevio = products.find((p) => p.key === "trevio");
+            const trevio = products.find((p) => p.key === PRODUCT_TYPE.TREVIO);
             if (trevio?.hidden || trevio?.status === "inactive") setTrevioVisible(false);
           })
           .catch(() => {});

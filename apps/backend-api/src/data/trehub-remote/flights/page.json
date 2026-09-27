@@ -1,0 +1,30 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "pageTitle": "Flights"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "type": "TrehubFlightList",
+      "source": "trehub",
+      "header": {
+        "titleRef": "pageTitle"
+      },
+      "widgets": [
+        {
+          "name": "trehubFlightList",
+          "path": "trehub-remote/flights/flight-list.json"
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

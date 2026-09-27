@@ -35,8 +35,8 @@ const config = {
 afterEach(cleanup);
 
 describe("AppHeader", () => {
-  it("renders backend-driven placeholder controls without activating them", () => {
-    render(<AppHeader config={config} user={{ name: "Akshat Goyal" }} />);
+  it("renders backend-driven placeholder controls and the default avatar without activating them", () => {
+    const { container } = render(<AppHeader config={config} user={{ name: "Akshat Goyal" }} />);
 
     expect(screen.getByLabelText("Search travel services")).toHaveAttribute(
       "aria-disabled",
@@ -45,7 +45,57 @@ describe("AppHeader", () => {
     expect(screen.getByRole("button", { name: "New Booking" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Notifications" })).toBeDisabled();
     expect(screen.getByText("3")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Open user menu" })).toHaveTextContent("AG");
+    const userButton = screen.getByRole("button", { name: "Open user menu" });
+    expect(userButton).not.toHaveTextContent("AG");
+    expect(container.querySelector(".trem-app-header__user > span svg")).toBeInTheDocument();
+  });
+
+  it("supports an outlined account trigger for customer and partner portals", () => {
+    render(
+      <AppHeader
+        config={{ ...config, user: { ...config.user, variant: "outlined" } }}
+        user={{ name: "Shreekant", avatar: "user" }}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Open user menu" })).toHaveClass(
+      "trem-app-header__user--outlined",
+    );
+  });
+
+  it("ignores provider profile photo URLs and renders the default avatar icon", () => {
+    const { container } = render(
+      <AppHeader
+        config={config}
+        user={{ name: "Google Traveller", avatar: "https://provider.example/photo.jpg" }}
+      />,
+    );
+
+    expect(container.querySelector(".trem-app-header__user img")).not.toBeInTheDocument();
+    expect(container.querySelector(".trem-app-header__user > span svg")).toBeInTheDocument();
+  });
+
+  it("marks partner headers and forwards the selected backend product", () => {
+    render(
+      <AppHeader
+        config={{
+          ...config,
+          variant: "partner",
+          productMenu: {
+            label: "Trevista",
+            ariaLabel: "Choose agency product",
+            items: [
+              { id: "trevista", label: "Trevista Tours", active: true },
+              { id: "trevio", label: "Trevio Trips" },
+            ],
+          },
+        }}
+      />,
+    );
+
+    expect(screen.getByRole("banner")).toHaveClass("trem-app-header--partner");
+    fireEvent.click(screen.getByRole("button", { name: "Choose agency product" }));
+    expect(screen.getByRole("menuitem", { name: "Trevista Tours" })).toHaveClass("is-active");
   });
 
   it("connects only theme and mobile navigation actions", () => {

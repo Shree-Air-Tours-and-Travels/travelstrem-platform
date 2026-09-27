@@ -11,6 +11,16 @@ export default {
         allowedExternalOrigins: externalOrigins,
         allowedExternalProtocols: ["https:"],
     },
+    remoteShellPresentation: {
+        mobile: {
+            footer: "hidden",
+            appHeader: {
+                compact: false,
+                search: false,
+                profile: true,
+            },
+        },
+    },
     mobileActionPanel: {
         variant: "mobile-navigation",
         ariaLabel: "Primary mobile navigation",
@@ -20,9 +30,9 @@ export default {
                 label: "Home",
                 icon: "home",
                 target: "overview",
-                activeTargets: ["overview", "trevista"],
+                activeTargets: ["overview", "trevio", "trevista", "trehub"],
             },
-            { id: "bookings", label: "Bookings", icon: "calendar", target: "bookings" },
+            { id: "dashboard", label: "Dashboard", icon: "management", target: "dashboard" },
             {
                 id: "new-booking",
                 label: "New Booking",
@@ -30,15 +40,19 @@ export default {
                 action: "open-primary-action",
                 emphasis: true,
             },
-            { id: "wishlist", label: "Wishlist", icon: "heart", target: "favorites" },
-            { id: "profile", label: "Profile", icon: "user", target: "profile" },
+            { id: "support", label: "Support", icon: "support", target: "support" },
+            { id: "profile", label: "Profile", icon: "user", action: "open-profile-menu" },
         ],
     },
     destinations: [
         { id: "overview", kind: "tab", tab: "overview", path: "/", activeId: "overview" },
+        { id: "dashboard", kind: "tab", tab: "dashboard", path: "/", activeId: "dashboard" },
+        { id: "saved-searches", kind: "tab", tab: "saved-searches", path: "/", activeId: "saved-searches" },
         { id: "favorites", kind: "tab", tab: "favorites", path: "/", activeId: "favorites" },
         { id: "bookings", kind: "tab", tab: "bookings", path: "/", activeId: "bookings" },
+        { id: "articles", kind: "tab", tab: "articles", path: "/articles", activeId: "articles", patterns: ["/articles"] },
         { id: "profile", kind: "tab", tab: "profile", path: "/", activeId: "profile" },
+        { id: "notifications", kind: "tab", tab: "notifications", path: "/notifications", activeId: "notifications" },
         {
             id: "support",
             kind: "internal",
@@ -55,8 +69,7 @@ export default {
             product: "trevio",
             path: "/",
             activeId: "trips",
-            patterns: ["/trevio/*", "/trip/*"],
-            disabled: true,
+            patterns: ["/trevio/*", "/trips", "/trips/*", "/trip/*"],
         },
         {
             id: "trevista",
@@ -67,6 +80,16 @@ export default {
             path: "/",
             activeId: "tours",
             patterns: ["/trevista/*", "/tour/*"],
+        },
+        {
+            id: "trehub",
+            kind: "remote",
+            renderer: "trehub",
+            tab: "trehub",
+            product: "trehub",
+            path: "/",
+            activeId: "flights",
+            patterns: ["/trehub", "/trehub/*"],
         },
     ],
 };

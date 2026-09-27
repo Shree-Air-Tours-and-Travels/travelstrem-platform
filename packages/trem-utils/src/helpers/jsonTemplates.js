@@ -437,7 +437,22 @@ export function getTripJsonTemplate({ master = false } = {}) {
     preferences: {
       roomTypes: [{ label: "", value: "", extraPrice: 0 }],
       mealPreferences: [{ label: "", value: "", extraPrice: 0 }],
-      packageTypes: [{ label: "", value: "", extraPrice: 0 }],
+      packageTypes: [
+        {
+          label: "Trip without flights",
+          value: "without-flights",
+          description: "Fixed itinerary and standard facilities without flights.",
+          includesFlights: false,
+          extraPrice: 0,
+        },
+        {
+          label: "Trip with flights",
+          value: "with-flights",
+          description: "The same fixed itinerary and facilities with flights included.",
+          includesFlights: true,
+          extraPrice: 0,
+        },
+      ],
       drinkTypes: [{ label: "", value: "", extraPrice: 0 }],
     },
     itinerary: [{ day: 1, title: "", summary: "", location: "", activities: [""] }],

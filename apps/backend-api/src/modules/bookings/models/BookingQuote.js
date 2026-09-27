@@ -4,10 +4,18 @@ import { QUOTE_STATUS_LIST } from "../../../constants/enums.js";
 
 const { Schema } = mongoose;
 const V2_STATUSES = ["ACTIVE", "EXPIRED", "CONSUMED", "INVALIDATED"];
+const quoteItemDetailSchema = new Schema(
+    {
+        label: { type: String, trim: true, required: true },
+        value: { type: String, trim: true, required: true },
+    },
+    { _id: false },
+);
 
 const quoteItemSchema = new Schema(
     {
         label: { type: String, trim: true, required: true },
+        description: { type: String, trim: true, default: "" },
         code: { type: String, trim: true, default: "" },
         pricingType: {
             type: String,
@@ -17,6 +25,9 @@ const quoteItemSchema = new Schema(
                 "PER_CHILD",
                 "PER_ROOM",
                 "PER_NIGHT",
+                "PER_ROOM_PER_NIGHT",
+                "PER_VEHICLE",
+                "PER_DAY",
                 "PER_BOOKING",
                 "FIXED",
                 "PERCENTAGE",
@@ -28,6 +39,7 @@ const quoteItemSchema = new Schema(
         amount: { type: Number, default: 0 }, // Server-calculated extended amount.
         currency: { type: String, trim: true, default: "INR" },
         category: { type: String, trim: true, default: "inclusion" },
+        detailRows: { type: [quoteItemDetailSchema], default: [] },
         optional: { type: Boolean, default: false },
         selected: { type: Boolean, default: true },
     },
@@ -49,6 +61,7 @@ const bookingQuoteSchema = new Schema(
 
         // Legacy agent-created quote fields.
         bookingId: { type: Schema.Types.ObjectId, ref: "Booking", default: null },
+        inquiryId: { type: Schema.Types.ObjectId, ref: "ContactLead", default: null, index: true },
         version: { type: Number, default: null },
         supersedesQuoteId: { type: Schema.Types.ObjectId, ref: "BookingQuote", default: null },
         quoteRef: { type: String, trim: true, default: "" },
@@ -78,6 +91,7 @@ const bookingQuoteSchema = new Schema(
         sentAt: Date,
         acceptedAt: Date,
         rejectedAt: Date,
+        cancelledAt: Date,
         changeRequest: {
             type: {
                 guestCountChange: { type: Number, default: 0 },
@@ -96,11 +110,23 @@ const bookingQuoteSchema = new Schema(
         agencyId: { type: Schema.Types.ObjectId, ref: "PartnerAgency", default: null },
         departureId: { type: String, default: "" },
         selections: { type: Schema.Types.Mixed, default: null },
-        pricing: { type: Schema.Types.Mixed, default: null },
+        pricing: { type: Schema.Types.Mixed, default: null, immutable: true },
         moneyUnit: { type: String, enum: ["PAISE"], default: "PAISE" },
         idempotencyKey: { type: String, trim: true, default: "", index: true },
-        configSnapshot: { type: Schema.Types.Mixed, default: null },
-        financialSnapshot: { type: Schema.Types.Mixed, default: null },
+        configSnapshot: { type: Schema.Types.Mixed, default: null, immutable: true },
+        financialSnapshot: { type: Schema.Types.Mixed, default: null, immutable: true },
+        documentSnapshot: { type: Schema.Types.Mixed, default: null, immutable: true },
+        itinerarySnapshot: { type: Schema.Types.Mixed, default: null, immutable: true },
+        hotelSnapshot: { type: Schema.Types.Mixed, default: null, immutable: true },
+        flightSnapshot: { type: Schema.Types.Mixed, default: null, immutable: true },
+        transferSnapshot: { type: Schema.Types.Mixed, default: null, immutable: true },
+        activitySnapshot: { type: Schema.Types.Mixed, default: null, immutable: true },
+        inclusions: { type: [String], default: [], immutable: true },
+        exclusions: { type: [String], default: [], immutable: true },
+        variant: { type: String, trim: true, default: "", immutable: true },
+        paymentPlan: { type: Schema.Types.Mixed, default: null, immutable: true },
+        cancellationPolicy: { type: Schema.Types.Mixed, default: null, immutable: true },
+        validity: { type: Date, default: null, immutable: true },
         pricingVersion: { type: String, default: "V2" },
         expiresAt: { type: Date, default: null },
         consumedAt: { type: Date, default: null },
@@ -150,6 +176,17 @@ bookingQuoteSchema.index(
         name: "bookingId_1_version_1",
         unique: true,
         partialFilterExpression: { bookingId: { $type: "objectId" }, version: { $type: "number" } },
+    },
+);
+bookingQuoteSchema.index(
+    { inquiryId: 1, version: 1 },
+    {
+        name: "inquiryId_1_version_1",
+        unique: true,
+        partialFilterExpression: {
+            inquiryId: { $type: "objectId" },
+            version: { $type: "number" },
+        },
     },
 );
 bookingQuoteSchema.index(

@@ -3,8 +3,14 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { initApp } from "../../core/initApp";
 import { getHeaderConfig } from "../../services/configService";
 import { clearUserSessionCache } from "../../services/userSession";
-import { clearAuthBrowserState, subscribeAuthEvents } from "@packages/trem-auth-core";
+import {
+  clearAuthBrowserState,
+  subscribeAuthEvents,
+  useSessionInactivity,
+} from "@packages/trem-auth-core";
 import { buildGlobalAuthUrl } from "@packages/trem-utils";
+import { PRODUCT_TYPE, SessionTimeoutModal } from "@packages/trem-ui";
+import apiService from "../../services/apiService";
 import {
   createPortalEventController,
   emit,
@@ -22,6 +28,50 @@ const DEFAULT_SESSION = {
 const agentRoles = ["agent"];
 const partnerAgencyRoles = ["partner_admin", "partner_agent"];
 
+const DEFAULT_PARTNER_PRODUCTS = [
+  {
+    key: PRODUCT_TYPE.TREVISTA,
+    label: "Trevista",
+    menuLabel: "Trevista Tours",
+    icon: "map",
+    listPath: "/agent/services/tours",
+    createPath: "/agent/services/tours?create=true",
+    createLabel: "New Trevista Tour",
+  },
+  {
+    key: PRODUCT_TYPE.TREVIO,
+    label: "Trevio",
+    menuLabel: "Trevio Trips",
+    icon: "mountain",
+    listPath: "/agent/trevio/trips",
+    createPath: "/agent/trevio/trips?create=true",
+    createLabel: "New Trevio Trip",
+  },
+];
+
+const DEFAULT_PARTNER_BREADCRUMBS = [
+  {
+    match: "/agent/services/tours",
+    items: [{ label: "Products", path: "/agent/dashboard" }, { label: "Trevista Tours" }],
+  },
+  {
+    match: "/agent/trevio/trips",
+    items: [{ label: "Products", path: "/agent/dashboard" }, { label: "Trevio Trips" }],
+  },
+  {
+    match: "/agent/agency",
+    items: [{ label: "Workspace", path: "/agent/dashboard" }, { label: "Agency Workspace" }],
+  },
+  {
+    match: "/agent/notifications",
+    items: [{ label: "Workspace", path: "/agent/dashboard" }, { label: "Notifications" }],
+  },
+  {
+    match: "/agent/dashboard",
+    items: [{ label: "Workspace" }, { label: "Dashboard" }],
+  },
+];
+
 export const isAllowedAgentRole = (session) =>
   agentRoles.includes(session?.user?.role) &&
   partnerAgencyRoles.includes(session?.user?.agencyRole) &&
@@ -29,6 +79,7 @@ export const isAllowedAgentRole = (session) =>
   session?.user?.accountStatus !== "suspended";
 
 const DEFAULT_HEADER_CONFIG = {
+  variant: "partner",
   brand: { label: "Partner Portal", homePath: "/agent/services" },
   leftSection: { welcome: true, showStatus: true },
   menu: [
@@ -51,6 +102,8 @@ const DEFAULT_HEADER_CONFIG = {
     login: { label: "Login", path: "/login" },
     logout: { label: "Logout" },
   },
+  partnerProducts: DEFAULT_PARTNER_PRODUCTS,
+  partnerBreadcrumbs: DEFAULT_PARTNER_BREADCRUMBS,
   routes: [],
   remotes: {},
   fallbacks: {
@@ -80,6 +133,7 @@ const AgentPortalConfigContext = React.createContext({
   headerConfig: DEFAULT_HEADER_CONFIG,
   pageConfig: DEFAULT_PAGE_CONFIG,
   reload: () => Promise.resolve(),
+  updateSessionUser: () => {},
   refreshHeader: () => Promise.resolve(),
   dispatchEvent: () => Promise.resolve(false),
 });
@@ -105,6 +159,11 @@ export function AgentPortalConfigProvider({ children }) {
     session: DEFAULT_SESSION,
     headerConfig: DEFAULT_HEADER_CONFIG,
     pageConfig: DEFAULT_PAGE_CONFIG,
+  });
+  const [sessionExitBusy, setSessionExitBusy] = React.useState(false);
+  const sessionExpired = useSessionInactivity({
+    enabled: Boolean(state.session?.isAuthenticated),
+    timeoutMs: state.session?.config?.session?.inactivityTimeoutMs,
   });
 
   React.useEffect(() => {
@@ -271,19 +330,45 @@ export function AgentPortalConfigProvider({ children }) {
     [loadPortalConfig],
   );
 
+  const updateSessionUser = React.useCallback((userPatch) => {
+    if (!userPatch || typeof userPatch !== "object") return;
+    setState((current) => {
+      const nextSession = {
+        ...current.session,
+        user: { ...(current.session?.user || {}), ...userPatch },
+      };
+      sessionRef.current = nextSession;
+      return { ...current, session: nextSession };
+    });
+  }, []);
+
   const value = React.useMemo(
     () => ({
       ...state,
       userSession: state.session,
       reload,
+      updateSessionUser,
       refreshHeader,
       dispatchEvent,
     }),
-    [dispatchEvent, loadPortalConfig, refreshHeader, reload, state],
+    [dispatchEvent, refreshHeader, reload, state, updateSessionUser],
   );
 
+  const continueToLogin = React.useCallback(async () => {
+    setSessionExitBusy(true);
+    await apiService.post("/auth/logout").catch(() => null);
+    window.dispatchEvent(new CustomEvent("USER_LOGOUT", { detail: { reason: "inactivity" } }));
+  }, []);
+
   return (
-    <AgentPortalConfigContext.Provider value={value}>{children}</AgentPortalConfigContext.Provider>
+    <AgentPortalConfigContext.Provider value={value}>
+      {children}
+      <SessionTimeoutModal
+        open={sessionExpired}
+        busy={sessionExitBusy}
+        onLogin={continueToLogin}
+      />
+    </AgentPortalConfigContext.Provider>
   );
 }
 

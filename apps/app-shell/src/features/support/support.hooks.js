@@ -6,6 +6,14 @@ export function useSupportResource(loader, dependencies = []) {
   const [state, setState] = useState({ data: null, loading: true, error: "" });
   const [version, setVersion] = useState(0);
   const reload = useCallback(() => setVersion((value) => value + 1), []);
+  const updateData = useCallback(
+    (updater) =>
+      setState((current) => ({
+        ...current,
+        data: typeof updater === "function" ? updater(current.data) : updater,
+      })),
+    [],
+  );
   useEffect(() => {
     const controller = new AbortController();
     setState((current) => ({ ...current, loading: true, error: "" }));
@@ -20,5 +28,5 @@ export function useSupportResource(loader, dependencies = []) {
     // The caller owns the explicit dependency list, mirroring useEffect.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [...dependencies, version]);
-  return { ...state, reload };
+  return { ...state, reload, updateData };
 }

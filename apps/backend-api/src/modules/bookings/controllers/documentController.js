@@ -2,6 +2,7 @@ import BookingQuote from "../models/BookingQuote.js";
 import {
     latestQuoteDocument,
     getQuoteDocumentSignedUrl,
+    readQuoteDocument,
 } from "../services/QuoteDocumentStorage.js";
 
 function sendError(res, message, status = 400) {
@@ -12,8 +13,20 @@ function canAccessQuote(req, quote) {
     const userId = String(req.user?.sub || req.user?.id || req.user?._id || "");
     const role = String(req.user?.role || "").toLowerCase();
     if (!userId) return false;
-    if (["admin", "agent"].includes(role)) return true;
+    if (["admin", "agent", "super_admin"].includes(role)) return true;
     return [quote.userId, quote.createdBy].some((value) => value && String(value) === userId);
+}
+
+function quoteLookup(identifier) {
+    const normalized = String(identifier || "").trim();
+    if (!normalized) return null;
+    if (BookingQuote.db.base.Types.ObjectId.isValid(normalized)) return { _id: normalized };
+    return { $or: [{ quoteRef: normalized }, { quoteNumber: normalized }] };
+}
+
+async function findQuote(identifier) {
+    const query = quoteLookup(identifier);
+    return query ? BookingQuote.findOne(query).lean() : null;
 }
 
 // Quote-centric document endpoint. It returns only a short-lived URL and keeps
@@ -21,16 +34,29 @@ function canAccessQuote(req, quote) {
 // without inheriting any legacy booking orchestration.
 export async function getQuotePdfSignedUrl(req, res) {
     try {
-        const quote = await BookingQuote.findById(req.params.quoteId).lean();
+        const quote = await findQuote(req.params.quoteId);
         if (!quote) return sendError(res, "Quote not found", 404);
         if (!canAccessQuote(req, quote))
             return sendError(res, "Not authorized to download this quote", 403);
-        if (!quote.bookingId || quote.version == null)
+        const documentOwnerId = quote.bookingId || quote.inquiryId;
+        if (!documentOwnerId || quote.version == null)
             return sendError(res, "The generated quote PDF is unavailable", 404);
 
-        const quoteDocument = await latestQuoteDocument(quote.bookingId, quote.version);
+        const quoteDocument = await latestQuoteDocument(documentOwnerId, quote.version);
         if (!quoteDocument?.storageKey && !quoteDocument?.url) {
             return sendError(res, "The generated quote PDF is unavailable", 404);
+        }
+
+        if (quoteDocument.storageProvider === "LOCAL_PRIVATE") {
+            const quoteHandle = quote.quoteRef || quote.quoteNumber || req.params.quoteId;
+            return res.json({
+                status: "success",
+                data: {
+                    url: `/api/quotes/${quoteHandle}/pdf/file`,
+                    expiresIn: null,
+                    fileName: quoteDocument.fileName,
+                },
+            });
         }
 
         const signedUrl = await getQuoteDocumentSignedUrl(quoteDocument);
@@ -46,5 +72,33 @@ export async function getQuotePdfSignedUrl(req, res) {
     } catch (error) {
         console.error("getQuotePdfSignedUrl error:", error);
         return sendError(res, "Failed to generate quote download URL", 500);
+    }
+}
+
+export async function downloadQuotePdf(req, res) {
+    try {
+        const quote = await findQuote(req.params.quoteId);
+        if (!quote) return sendError(res, "Quote not found", 404);
+        if (!canAccessQuote(req, quote))
+            return sendError(res, "Not authorized to download this quote", 403);
+        const documentOwnerId = quote.bookingId || quote.inquiryId;
+        if (!documentOwnerId || quote.version == null)
+            return sendError(res, "The generated quote PDF is unavailable", 404);
+        const document = await latestQuoteDocument(
+            documentOwnerId,
+            quote.version,
+        );
+        const buffer = await readQuoteDocument(document);
+        if (!buffer) return sendError(res, "The generated quote PDF is unavailable", 404);
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader(
+            "Content-Disposition",
+            `inline; filename="${String(document.fileName || "quote.pdf").replace(/[\r\n"]/g, "")}"`,
+        );
+        res.setHeader("Cache-Control", "private, no-store");
+        return res.send(buffer);
+    } catch (error) {
+        console.error("downloadQuotePdf error:", error);
+        return sendError(res, "Failed to download quote", 500);
     }
 }

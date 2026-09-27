@@ -64,7 +64,12 @@ test("new verified Google identity creates a user and provider link", async () =
 
     await authenticateWithGoogle({ claims: googleClaims, portal: "customer" });
     expect(userModel.create).toHaveBeenCalledWith(
-        expect.objectContaining({ email: googleClaims.email, emailVerified: true, role: "member" }),
+        expect.objectContaining({
+            email: googleClaims.email,
+            emailVerified: true,
+            role: "member",
+            avatar: "user",
+        }),
     );
     expect(identityModel.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -84,6 +89,7 @@ test("verified Google email safely links an existing internal account", async ()
     await authenticateWithGoogle({ claims: googleClaims, portal: "customer" });
     expect(userModel.create).not.toHaveBeenCalled();
     expect(user.emailVerified).toBe(true);
+    expect(user.avatar).toBe("user");
 });
 
 test("an active admin Google identity can also use the customer app", async () => {

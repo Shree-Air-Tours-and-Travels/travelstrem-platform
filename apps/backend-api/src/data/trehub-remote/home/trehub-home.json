@@ -1,0 +1,695 @@
+{
+  "status": "success",
+  "component": {
+    "data": {
+      "activeClientCount": 0,
+      "activeClients": [],
+      "popularLocations": {
+        "items": [
+          {
+            "id": "goa",
+            "titleRef": "locationGoaTitle",
+            "descriptionRef": "locationGoaDescription",
+            "locationRef": "locationGoaRegion",
+            "imageUrlRef": "locationGoaImage",
+            "imageAltRef": "locationGoaImageAlt"
+          },
+          {
+            "id": "dubai",
+            "titleRef": "locationDubaiTitle",
+            "descriptionRef": "locationDubaiDescription",
+            "locationRef": "locationDubaiRegion",
+            "imageUrlRef": "locationDubaiImage",
+            "imageAltRef": "locationDubaiImageAlt"
+          },
+          {
+            "id": "bali",
+            "titleRef": "locationBaliTitle",
+            "descriptionRef": "locationBaliDescription",
+            "locationRef": "locationBaliRegion",
+            "imageUrlRef": "locationBaliImage",
+            "imageAltRef": "locationBaliImageAlt"
+          },
+          {
+            "id": "singapore",
+            "titleRef": "locationSingaporeTitle",
+            "descriptionRef": "locationSingaporeDescription",
+            "locationRef": "locationSingaporeRegion",
+            "imageUrlRef": "locationSingaporeImage",
+            "imageAltRef": "locationSingaporeImageAlt"
+          }
+        ]
+      }
+    },
+    "dataScope": {
+      "options": {
+        "trehubSearchModes": [
+          {
+            "id": "flight",
+            "labelRef": "searchFlightsTab",
+            "headingRef": "flightSearchHeading",
+            "icon": "plane",
+            "resultsPath": "/trehub/flights"
+          },
+          {
+            "id": "hotel",
+            "labelRef": "searchHotelsTab",
+            "headingRef": "hotelSearchHeading",
+            "icon": "hotel",
+            "resultsPath": "/trehub/hotels"
+          },
+          { "id": "car", "labelRef": "searchCarsTab", "icon": "carTaxiFront", "resultsPath": "/trehub/cars" },
+          { "id": "cruise", "labelRef": "searchCruiseTab", "icon": "travelPackage", "resultsPath": "/trehub/cruises" },
+          { "id": "tour", "labelRef": "searchTourTab", "icon": "briefcaseBusiness", "resultsPath": "/trehub/tours" },
+          { "id": "bus", "labelRef": "searchBusTab", "icon": "bus", "resultsPath": "/trehub/buses" },
+          { "id": "activity", "labelRef": "searchActivityTab", "icon": "calendar", "resultsPath": "/trehub/activities" },
+          { "id": "visa", "labelRef": "searchVisaTab", "icon": "visa", "resultsPath": "/trehub/visas" },
+          { "id": "guide", "labelRef": "searchGuideTab", "icon": "guide", "resultsPath": "/trehub/guides" }
+        ],
+        "trehubSearchChoices": {
+          "flight": [
+            { "id": "oneway", "labelRef": "flightChoiceOneway" },
+            { "id": "roundTrip", "labelRef": "flightChoiceRoundTrip" },
+            { "id": "multiTrip", "labelRef": "flightChoiceMultiTrip" }
+          ],
+          "hotel": [
+            { "id": "hotelOnly", "labelRef": "hotelChoiceHotelOnly" }
+          ],
+          "car": [
+            { "id": "oneWay", "labelRef": "carChoiceOneWay" },
+            { "id": "return", "labelRef": "carChoiceReturn" }
+          ],
+          "cruise": [
+            { "id": "ocean", "labelRef": "cruiseChoiceOcean" },
+            { "id": "river", "labelRef": "cruiseChoiceRiver" }
+          ],
+          "tour": [
+            { "id": "fixed", "labelRef": "tourChoiceFixed" },
+            { "id": "custom", "labelRef": "tourChoiceCustom" }
+          ],
+          "bus": [
+            { "id": "oneWay", "labelRef": "busChoiceOneWay" },
+            { "id": "return", "labelRef": "busChoiceReturn" }
+          ],
+          "activity": [
+            { "id": "ticket", "labelRef": "activityChoiceTicket" },
+            { "id": "private", "labelRef": "activityChoicePrivate" }
+          ],
+          "visa": [
+            { "id": "tourist", "labelRef": "visaChoiceTourist" },
+            { "id": "business", "labelRef": "visaChoiceBusiness" }
+          ],
+          "guide": [
+            { "id": "private", "labelRef": "guideChoicePrivate" },
+            { "id": "group", "labelRef": "guideChoiceGroup" }
+          ]
+        },
+        "trehubSearchFields": {
+          "flight": {
+            "oneway": [
+              {
+                "id": "from",
+                "type": "airport",
+                "labelRef": "flightFromLabel",
+                "placeholderRef": "flightFromPlaceholder",
+                "helpRef": "flightFromHelp",
+                "required": true
+              },
+              {
+                "id": "to",
+                "type": "airport",
+                "labelRef": "flightToLabel",
+                "placeholderRef": "flightToPlaceholder",
+                "helpRef": "flightToHelp",
+                "required": true
+              },
+              {
+                "id": "departDate",
+                "labelRef": "flightDepartLabel",
+                "type": "date",
+                "helpRef": "flightDepartHelp",
+                "required": true
+              },
+              {
+                "id": "travellers",
+                "labelRef": "flightTravellersLabel",
+                "placeholderRef": "flightTravellersPlaceholder",
+                "helpRef": "flightTravellersHelp",
+                "type": "number",
+                "min": 1,
+                "required": true
+              }
+            ],
+            "roundTrip": [
+              {
+                "id": "from",
+                "type": "airport",
+                "labelRef": "flightFromLabel",
+                "placeholderRef": "flightFromPlaceholder",
+                "helpRef": "flightFromHelp",
+                "required": true
+              },
+              {
+                "id": "to",
+                "type": "airport",
+                "labelRef": "flightToLabel",
+                "placeholderRef": "flightToPlaceholder",
+                "helpRef": "flightToHelp",
+                "required": true
+              },
+              {
+                "id": "departDate",
+                "labelRef": "flightDepartLabel",
+                "type": "date",
+                "helpRef": "flightDepartHelp",
+                "required": true
+              },
+              {
+                "id": "returnDate",
+                "labelRef": "flightReturnLabel",
+                "type": "date",
+                "helpRef": "flightReturnHelp",
+                "minField": "departDate",
+                "required": true
+              },
+              {
+                "id": "travellers",
+                "labelRef": "flightTravellersLabel",
+                "placeholderRef": "flightTravellersPlaceholder",
+                "helpRef": "flightTravellersHelp",
+                "type": "number",
+                "min": 1,
+                "required": true
+              }
+            ],
+            "multiTrip": [
+              {
+                "id": "segments",
+                "type": "repeatable",
+                "labelRef": "flightSegmentsLabel",
+                "addLabelRef": "flightAddSegment",
+                "removeAriaLabelRef": "flightRemoveSegment",
+                "minItems": 2,
+                "maxItems": 6,
+                "fields": [
+                  {
+                    "id": "from",
+                    "type": "airport",
+                    "labelRef": "flightFromLabel",
+                    "placeholderRef": "flightFromPlaceholder",
+                    "required": true
+                  },
+                  {
+                    "id": "to",
+                    "type": "airport",
+                    "labelRef": "flightToLabel",
+                    "placeholderRef": "flightToPlaceholder",
+                    "required": true
+                  },
+                  {
+                    "id": "departDate",
+                    "labelRef": "flightDepartLabel",
+                    "type": "date",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "id": "travellers",
+                "labelRef": "flightTravellersLabel",
+                "placeholderRef": "flightTravellersPlaceholder",
+                "helpRef": "flightTravellersHelp",
+                "type": "number",
+                "min": 1,
+                "required": true
+              }
+            ]
+          },
+          "hotel": {
+            "hotelOnly": [
+              {
+                "id": "destination",
+                "labelRef": "hotelDestinationLabel",
+                "placeholderRef": "hotelDestinationPlaceholder",
+                "helpRef": "hotelDestinationHelp",
+                "required": true
+              },
+              {
+                "id": "checkIn",
+                "labelRef": "hotelCheckInLabel",
+                "type": "date",
+                "helpRef": "hotelCheckInHelp",
+                "required": true
+              },
+              {
+                "id": "checkOut",
+                "labelRef": "hotelCheckOutLabel",
+                "type": "date",
+                "helpRef": "hotelCheckOutHelp",
+                "minField": "checkIn",
+                "required": true
+              },
+              {
+                "id": "occupancy",
+                "type": "occupancy",
+                "labelRef": "hotelOccupancyLabel",
+                "adultsLabelRef": "hotelAdultsLabel",
+                "childrenLabelRef": "hotelChildrenLabel",
+                "childAgeLabelRef": "hotelChildAgeLabel",
+                "childAgeHelpRef": "hotelChildAgeHelp",
+                "roomsLabelRef": "hotelRoomsLabel",
+                "petsLabelRef": "hotelPetsLabel",
+                "doneLabelRef": "done",
+                "maxAdults": 24,
+                "maxChildren": 10,
+                "maxRooms": 8,
+                "required": true
+              }
+            ],
+            "flightHotel": [
+              {
+                "id": "from",
+                "labelRef": "flightFromLabel",
+                "placeholderRef": "flightFromPlaceholder",
+                "helpRef": "flightFromHelp",
+                "required": true
+              },
+              {
+                "id": "destination",
+                "labelRef": "hotelDestinationLabel",
+                "placeholderRef": "hotelDestinationPlaceholder",
+                "helpRef": "hotelDestinationHelp",
+                "required": true
+              },
+              {
+                "id": "departDate",
+                "labelRef": "flightDepartLabel",
+                "type": "date",
+                "helpRef": "flightDepartHelp",
+                "required": true
+              },
+              {
+                "id": "returnDate",
+                "labelRef": "flightReturnLabel",
+                "type": "date",
+                "helpRef": "flightReturnHelp",
+                "minField": "departDate",
+                "required": true
+              },
+              {
+                "id": "guests",
+                "labelRef": "hotelGuestsLabel",
+                "placeholderRef": "hotelGuestsPlaceholder",
+                "helpRef": "hotelGuestsHelp",
+                "type": "number",
+                "min": 1,
+                "required": true
+              }
+            ]
+          },
+          "car": [
+            {
+              "id": "pickup",
+              "labelRef": "carPickupLabel",
+              "placeholderRef": "carPickupPlaceholder"
+            },
+            { "id": "drop", "labelRef": "carDropLabel", "placeholderRef": "carDropPlaceholder" },
+            { "id": "pickupDate", "labelRef": "carPickupDateLabel", "type": "date" },
+            {
+              "id": "passengers",
+              "labelRef": "carPassengersLabel",
+              "placeholderRef": "carPassengersPlaceholder"
+            }
+          ],
+          "cruise": [
+            {
+              "id": "departurePort",
+              "labelRef": "cruiseDepartureLabel",
+              "placeholderRef": "cruiseDeparturePlaceholder"
+            },
+            {
+              "id": "route",
+              "labelRef": "cruiseRouteLabel",
+              "placeholderRef": "cruiseRoutePlaceholder"
+            },
+            { "id": "sailDate", "labelRef": "cruiseDateLabel", "type": "date" },
+            {
+              "id": "guests",
+              "labelRef": "cruiseGuestsLabel",
+              "placeholderRef": "cruiseGuestsPlaceholder"
+            }
+          ],
+          "tour": [
+            {
+              "id": "destination",
+              "labelRef": "tourDestinationLabel",
+              "placeholderRef": "tourDestinationPlaceholder"
+            },
+            { "id": "startDate", "labelRef": "tourStartLabel", "type": "date" },
+            {
+              "id": "duration",
+              "labelRef": "tourDurationLabel",
+              "placeholderRef": "tourDurationPlaceholder"
+            },
+            {
+              "id": "travellers",
+              "labelRef": "tourTravellersLabel",
+              "placeholderRef": "tourTravellersPlaceholder"
+            }
+          ],
+          "bus": [
+            { "id": "from", "labelRef": "busFromLabel", "placeholderRef": "busFromPlaceholder" },
+            { "id": "to", "labelRef": "busToLabel", "placeholderRef": "busToPlaceholder" },
+            { "id": "departDate", "labelRef": "busDepartLabel", "type": "date" },
+            { "id": "seats", "labelRef": "busSeatsLabel", "placeholderRef": "busSeatsPlaceholder" }
+          ],
+          "activity": [
+            {
+              "id": "destination",
+              "labelRef": "activityDestinationLabel",
+              "placeholderRef": "activityDestinationPlaceholder"
+            },
+            {
+              "id": "activityType",
+              "labelRef": "activityTypeLabel",
+              "placeholderRef": "activityTypePlaceholder"
+            },
+            { "id": "date", "labelRef": "activityDateLabel", "type": "date" },
+            {
+              "id": "guests",
+              "labelRef": "activityGuestsLabel",
+              "placeholderRef": "activityGuestsPlaceholder"
+            }
+          ],
+          "visa": [
+            {
+              "id": "nationality",
+              "labelRef": "visaNationalityLabel",
+              "placeholderRef": "visaNationalityPlaceholder"
+            },
+            {
+              "id": "destination",
+              "labelRef": "visaDestinationLabel",
+              "placeholderRef": "visaDestinationPlaceholder"
+            },
+            { "id": "travelDate", "labelRef": "visaTravelDateLabel", "type": "date" },
+            {
+              "id": "travellers",
+              "labelRef": "visaTravellersLabel",
+              "placeholderRef": "visaTravellersPlaceholder"
+            }
+          ],
+          "guide": [
+            {
+              "id": "destination",
+              "labelRef": "guideDestinationLabel",
+              "placeholderRef": "guideDestinationPlaceholder"
+            },
+            {
+              "id": "language",
+              "labelRef": "guideLanguageLabel",
+              "placeholderRef": "guideLanguagePlaceholder"
+            },
+            { "id": "date", "labelRef": "guideDateLabel", "type": "date" },
+            {
+              "id": "travellers",
+              "labelRef": "guideTravellersLabel",
+              "placeholderRef": "guideTravellersPlaceholder"
+            }
+          ]
+        }
+      }
+    },
+    "elements": {
+      "labels": {
+        "loading": "Loading Trehub",
+        "breadcrumbHome": "Home",
+        "breadcrumbTrehub": "Trehub",
+        "loadErrorTitle": "Trehub could not be loaded",
+        "loadErrorDescription": "Please try loading this section again.",
+        "retry": "Try again",
+        "searchEyebrow": "Trehub travel desk",
+        "searchTitle": "Welcome to",
+        "searchTitleAccent": "TREHUB",
+        "searchDescription": "Search flights and hotels together in one connected travel workspace.",
+        "searchTypeAriaLabel": "Trehub search categories",
+        "searchFlightsTab": "Flights",
+        "searchHotelsTab": "Hotels",
+        "searchCarsTab": "Cars",
+        "searchCruiseTab": "Cruise",
+        "searchTourTab": "Tour",
+        "searchBusTab": "Bus",
+        "searchActivityTab": "Activity",
+        "searchVisaTab": "Visa",
+        "searchGuideTab": "Guide",
+        "flightSearchHeading": "Find the right flight for your journey",
+        "hotelSearchHeading": "Compare stays for your journey",
+        "flightChoiceOneway": "One way",
+        "flightChoiceRoundTrip": "Round trip",
+        "flightChoiceMultiTrip": "Multi trip",
+        "hotelChoiceHotelOnly": "Hotel only",
+        "hotelChoiceFlightHotel": "Flight + hotel",
+        "carChoiceOneWay": "One way",
+        "carChoiceReturn": "Return",
+        "cruiseChoiceOcean": "Ocean cruise",
+        "cruiseChoiceRiver": "River cruise",
+        "tourChoiceFixed": "Fixed departure",
+        "tourChoiceCustom": "Custom tour",
+        "busChoiceOneWay": "One way",
+        "busChoiceReturn": "Return",
+        "activityChoiceTicket": "Entry ticket",
+        "activityChoicePrivate": "Private activity",
+        "visaChoiceTourist": "Tourist visa",
+        "visaChoiceBusiness": "Business visa",
+        "guideChoicePrivate": "Private guide",
+        "guideChoiceGroup": "Group guide",
+        "flightFromLabel": "From",
+        "flightFromPlaceholder": "New York",
+        "flightFromHelp": "Origin city or airport",
+        "flightToLabel": "To",
+        "flightToPlaceholder": "Las Vegas",
+        "flightToHelp": "Destination city or airport",
+        "flightDepartLabel": "Departure",
+        "flightDepartHelp": "Choose your travel date",
+        "flightReturnLabel": "Return",
+        "flightReturnHelp": "Choose your return date",
+        "flightSegmentsLabel": "Flight segments",
+        "flightAddSegment": "Add flight",
+        "flightRemoveSegment": "Remove flight segment",
+        "flightTravellersLabel": "Travellers and cabin class",
+        "flightTravellersPlaceholder": "4 persons",
+        "flightTravellersHelp": "Adults, children and cabin",
+        "swapRouteAriaLabel": "Swap origin and destination",
+        "hotelDestinationLabel": "Destination",
+        "hotelDestinationPlaceholder": "Dubai Marina",
+        "hotelDestinationHelp": "City, area or hotel",
+        "hotelCheckInLabel": "Check-in",
+        "hotelCheckInHelp": "Arrival date",
+        "hotelCheckOutLabel": "Check-out",
+        "hotelCheckOutHelp": "Departure date",
+        "hotelGuestsLabel": "Guests",
+        "hotelGuestsPlaceholder": "2 guests",
+        "hotelGuestsHelp": "Total number of guests",
+        "hotelOccupancyLabel": "Guests and rooms",
+        "hotelAdultsLabel": "Adults",
+        "hotelChildrenLabel": "Children",
+        "hotelChildAgeLabel": "Child {count} age",
+        "hotelChildAgeHelp": "Child ages at check-out are needed for accurate availability and prices.",
+        "hotelRoomsLabel": "Rooms",
+        "hotelRoomsPlaceholder": "1 room",
+        "hotelPetsLabel": "Travelling with pets?",
+        "done": "Done",
+        "carPickupLabel": "Pick-up",
+        "carPickupPlaceholder": "Airport or city",
+        "carDropLabel": "Drop",
+        "carDropPlaceholder": "Hotel or city",
+        "carPickupDateLabel": "Pick-up date",
+        "carPassengersLabel": "Passengers",
+        "carPassengersPlaceholder": "2 passengers",
+        "cruiseDepartureLabel": "Departure port",
+        "cruiseDeparturePlaceholder": "Singapore",
+        "cruiseRouteLabel": "Route",
+        "cruiseRoutePlaceholder": "Phuket and Langkawi",
+        "cruiseDateLabel": "Sailing date",
+        "cruiseGuestsLabel": "Guests",
+        "cruiseGuestsPlaceholder": "2 guests",
+        "tourDestinationLabel": "Destination",
+        "tourDestinationPlaceholder": "Bali",
+        "tourStartLabel": "Start date",
+        "tourDurationLabel": "Duration",
+        "tourDurationPlaceholder": "5 nights",
+        "tourTravellersLabel": "Travellers",
+        "tourTravellersPlaceholder": "2 travellers",
+        "busFromLabel": "From",
+        "busFromPlaceholder": "Delhi",
+        "busToLabel": "To",
+        "busToPlaceholder": "Jaipur",
+        "busDepartLabel": "Departure",
+        "busSeatsLabel": "Seats",
+        "busSeatsPlaceholder": "2 seats",
+        "activityDestinationLabel": "Destination",
+        "activityDestinationPlaceholder": "Goa",
+        "activityTypeLabel": "Activity",
+        "activityTypePlaceholder": "Scuba diving",
+        "activityDateLabel": "Date",
+        "activityGuestsLabel": "Guests",
+        "activityGuestsPlaceholder": "2 guests",
+        "visaNationalityLabel": "Nationality",
+        "visaNationalityPlaceholder": "Indian",
+        "visaDestinationLabel": "Destination",
+        "visaDestinationPlaceholder": "United Arab Emirates",
+        "visaTravelDateLabel": "Travel date",
+        "visaTravellersLabel": "Travellers",
+        "visaTravellersPlaceholder": "2 travellers",
+        "guideDestinationLabel": "Destination",
+        "guideDestinationPlaceholder": "Kyoto",
+        "guideLanguageLabel": "Language",
+        "guideLanguagePlaceholder": "English",
+        "guideDateLabel": "Date",
+        "guideTravellersLabel": "Travellers",
+        "guideTravellersPlaceholder": "2 travellers",
+        "searchAction": "Search",
+        "searchTrustLive": "Live availability ready",
+        "searchTrustSupport": "TREM support connected",
+        "searchTrustSecure": "Secure booking flow",
+        "whyEyebrow": "Why Trehub",
+        "whyTitle": "One journey. Every detail connected.",
+        "whyDescription": "From the first search to the final check-in, Trehub keeps your flights, stays and travel support moving together.",
+        "whyFastTitle": "Flights and stays, perfectly in sync",
+        "whyFastDescription": "Keep every reservation connected to one journey, with the details you need always within reach.",
+        "whyCompareTitle": "Search built around you",
+        "whyCompareDescription": "Compare one-way, return and multi-city flights alongside stays that match your plans.",
+        "whySupportTitle": "Real support, wherever you go",
+        "whySupportDescription": "Move smoothly from discovery to booking with TREM support connected throughout your journey.",
+        "popularLocationsEyebrow": "Travel inspiration",
+        "popularLocationsTitle": "Popular locations",
+        "popularLocationsDescription": "Explore destinations travellers are searching for now, selected for easy flight and stay planning.",
+        "popularLocationsEmptyTitle": "No locations available",
+        "popularLocationsEmptyDescription": "New destination ideas will appear here soon.",
+        "locationGoaTitle": "Goa",
+        "locationGoaDescription": "Coastal stays, easy escapes and vibrant neighbourhoods.",
+        "locationGoaRegion": "India",
+        "locationGoaImageAlt": "Goa beach and palm trees",
+        "locationDubaiTitle": "Dubai",
+        "locationDubaiDescription": "City breaks, iconic skylines and desert experiences.",
+        "locationDubaiRegion": "United Arab Emirates",
+        "locationDubaiImageAlt": "Dubai skyline at dusk",
+        "locationBaliTitle": "Bali",
+        "locationBaliDescription": "Island stays shaped around culture, coast and calm.",
+        "locationBaliRegion": "Indonesia",
+        "locationBaliImageAlt": "Bali temple surrounded by tropical landscape",
+        "locationSingaporeTitle": "Singapore",
+        "locationSingaporeDescription": "A connected city for food, design and family travel.",
+        "locationSingaporeRegion": "Singapore",
+        "locationSingaporeImageAlt": "Singapore city waterfront",
+        "clientShowcaseEyebrow": "Trusted network",
+        "clientShowcaseTitle": "Working with {count}+ active clients",
+        "clientShowcaseEmptyTitle": "Built for a growing travel network",
+        "clientShowcaseDescription": "A growing network of travel businesses uses TravelsTREM to keep journeys connected."
+      },
+      "urls": {
+        "airportSearch": "/flights/airports/search",
+        "locationGoaImage": "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=1200&q=80",
+        "locationDubaiImage": "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=80",
+        "locationBaliImage": "https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1200&q=80",
+        "locationSingaporeImage": "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?auto=format&fit=crop&w=1200&q=80"
+      }
+    },
+    "structure": {
+      "type": "TrehubHome",
+      "source": "trehub",
+      "header": {
+        "titleRef": "searchTitle"
+      },
+      "widgets": [
+        { "name": "breadcrumbs", "type": "Breadcrumbs", "props": { "items": [{ "labelRef": "breadcrumbHome", "path": "/?tab=overview" }, { "labelRef": "breadcrumbTrehub" }] } },
+        {
+          "name": "searchCard",
+          "type": "GlobalSearchCard",
+          "source": "trehub",
+          "props": {
+            "variant": "all",
+            "overlap": true,
+            "activeService": ["flight", "hotel"],
+            "eyebrowRef": "searchEyebrow",
+            "titleRef": "searchTitle",
+            "titleAccentRef": "searchTitleAccent",
+            "descriptionRef": "searchDescription",
+            "ariaLabelRef": "searchTypeAriaLabel",
+            "modesOptionsRef": "trehubSearchModes",
+            "fieldsOptionsRef": "trehubSearchFields",
+            "choiceGroupsOptionsRef": "trehubSearchChoices",
+            "submitLabelRef": "searchAction",
+            "trustItems": [
+              { "id": "live", "icon": "sparkles", "labelRef": "searchTrustLive" },
+              { "id": "support", "icon": "support", "labelRef": "searchTrustSupport" },
+              { "id": "secure", "icon": "shieldCheck", "labelRef": "searchTrustSecure" }
+            ]
+          }
+        },
+        {
+          "name": "whyTrehub",
+          "type": "WhyTrehub",
+          "source": "trehub",
+          "props": {
+            "eyebrowRef": "whyEyebrow",
+            "titleRef": "whyTitle",
+            "descriptionRef": "whyDescription",
+            "items": [
+              {
+                "id": "context",
+                "icon": "route",
+                "titleRef": "whyFastTitle",
+                "descriptionRef": "whyFastDescription"
+              },
+              {
+                "id": "variants",
+                "icon": "search",
+                "titleRef": "whyCompareTitle",
+                "descriptionRef": "whyCompareDescription"
+              },
+              {
+                "id": "support",
+                "icon": "messageCircle",
+                "titleRef": "whySupportTitle",
+                "descriptionRef": "whySupportDescription"
+              }
+            ]
+          }
+        },
+        {
+          "name": "popularLocations",
+          "type": "PopularLocations",
+          "source": "trehub",
+          "props": {
+            "eyebrowRef": "popularLocationsEyebrow",
+            "titleRef": "popularLocationsTitle",
+            "descriptionRef": "popularLocationsDescription",
+            "locationsDataPath": "popularLocations.items",
+            "columns": 4,
+            "cardVariant": "overlay",
+            "emptyTitleRef": "popularLocationsEmptyTitle",
+            "emptyDescriptionRef": "popularLocationsEmptyDescription"
+          }
+        },
+        {
+          "name": "clientShowcase",
+          "type": "ClientShowcase",
+          "source": "trehub",
+          "props": {
+            "eyebrowRef": "clientShowcaseEyebrow",
+            "titleRef": "clientShowcaseTitle",
+            "emptyTitleRef": "clientShowcaseEmptyTitle",
+            "descriptionRef": "clientShowcaseDescription",
+            "templateValues": {
+              "count": "activeClientCount"
+            },
+            "clientsDataPath": "activeClients"
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

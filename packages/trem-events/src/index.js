@@ -87,6 +87,8 @@ const createEventBus = (initialOptions = {}) => {
 
 const defaultEventBus = createEventBus();
 
+export { resolveNotificationLink } from "./notificationLinks.js";
+
 const isObject = (value) => value && typeof value === "object" && !Array.isArray(value);
 const CLEAR_CONTEXT = "ctx:clear";
 
@@ -365,3 +367,21 @@ export {
   showRealtimeToast,
   initRealtimeNotifications,
 } from "./realtimeNotify.js";
+
+export { RealtimeProvider, useRealtimeContext } from "./realtime/RealtimeProvider.jsx";
+export { default as RealtimeProviderDefault } from "./realtime/RealtimeProvider.jsx";
+export { default as useRealtime } from "./realtime/useRealtime.js";
+export { default as useRealtimeEvent } from "./realtime/useRealtimeEvent.js";
+export { default as useNotificationInbox } from "./useNotificationInbox.js";
+export { default as useRealtimeStatus } from "./realtime/useRealtimeStatus.js";
+export { default as useResourceRealtime } from "./realtime/useResourceRealtime.js";
+export {
+  useBookingRealtime,
+  useTourRealtime,
+  useTripRealtime,
+  useSupportRealtime,
+  useEnquiryRealtime,
+  useTourCatalogRealtime,
+} from "./realtime/domain-hooks.js";
+export { REALTIME_EVENTS, REALTIME_RESOURCES, CONNECTION_STATUS } from "./realtime/realtime-types.js";
+export { getRealtimeClient, resolveRealtimeUrl } from "./realtime/realtime-client.js";

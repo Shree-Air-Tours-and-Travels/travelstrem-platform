@@ -137,20 +137,6 @@ export function calculateBookingPrice({ tour, selections, options = {}, configs 
             optionPrice(addon),
         );
     const subtotalMinor = sumMinor([tourSubtotalMinor, addonsSubtotalMinor]);
-    const platformConfig = configs.platform?.travelsTremFee || {};
-    const platformFeeMinor = policyAmount(
-        platformConfig,
-        platformConfig.calculationBase === "TOUR_ONLY" ? tourSubtotalMinor : subtotalMinor,
-    );
-    if (platformFeeMinor)
-        items.push({
-            code: "PLATFORM_FEE",
-            label: "TravelsTREM fee",
-            category: "PLATFORM_FEE",
-            quantity: 1,
-            unitAmountMinor: platformFeeMinor,
-            amountMinor: platformFeeMinor,
-        });
     const agencyConfig = configs.agency?.feeConfig || {};
     const agencyFeeMinor = policyAmount(agencyConfig, subtotalMinor);
     const customerAgencyFeeMinor =
@@ -164,16 +150,14 @@ export function calculateBookingPrice({ tour, selections, options = {}, configs 
             unitAmountMinor: customerAgencyFeeMinor,
             amountMinor: customerAgencyFeeMinor,
         });
-    const preDiscountMinor = sumMinor([subtotalMinor, platformFeeMinor, customerAgencyFeeMinor]);
+    const preDiscountMinor = sumMinor([subtotalMinor, customerAgencyFeeMinor]);
     const coupon = configs.coupon;
     let discountMinor = 0;
     if (coupon) {
         const discountBaseMinor =
             coupon.appliesTo === "TOUR_AND_ADDONS"
                 ? subtotalMinor
-                : coupon.appliesTo === "PLATFORM_FEE"
-                  ? platformFeeMinor
-                  : coupon.appliesTo === "BOOKING_SUBTOTAL"
+                : coupon.appliesTo === "BOOKING_SUBTOTAL"
                     ? preDiscountMinor
                     : tourSubtotalMinor;
         discountMinor =
@@ -196,7 +180,6 @@ export function calculateBookingPrice({ tour, selections, options = {}, configs 
     const taxable = {
         TOUR: tourSubtotalMinor,
         ADDONS: addonsSubtotalMinor,
-        PLATFORM_FEE: platformFeeMinor,
         AGENCY_FEE: customerAgencyFeeMinor,
     };
     const taxes = [];
@@ -223,23 +206,9 @@ export function calculateBookingPrice({ tour, selections, options = {}, configs 
             });
         }
     }
-    const gatewayConfig = configs.gatewayFee || {};
-    const gatewayFeeMinor = policyAmount(
-        gatewayConfig,
-        Math.max(0, preDiscountMinor - discountMinor + taxAmountMinor),
-    );
-    if (gatewayFeeMinor)
-        items.push({
-            code: "PAYMENT_FEE",
-            label: "Payment convenience fee",
-            category: "PAYMENT_FEE",
-            quantity: 1,
-            unitAmountMinor: gatewayFeeMinor,
-            amountMinor: gatewayFeeMinor,
-        });
-    const finalPayableMinor = Math.max(
+    const partnerQuoteMinor = Math.max(
         0,
-        preDiscountMinor - discountMinor + taxAmountMinor + gatewayFeeMinor,
+        preDiscountMinor - discountMinor + taxAmountMinor,
     );
     return {
         currency: current?.currency || "INR",
@@ -248,7 +217,6 @@ export function calculateBookingPrice({ tour, selections, options = {}, configs 
         tourSubtotalMinor,
         addonsSubtotalMinor,
         subtotalMinor,
-        platformFee: { ...platformConfig, amountMinor: platformFeeMinor },
         agencyFee: {
             ...agencyConfig,
             amountMinor: agencyFeeMinor,
@@ -261,8 +229,8 @@ export function calculateBookingPrice({ tour, selections, options = {}, configs 
         },
         taxes,
         taxAmountMinor,
-        customerGatewayFee: { ...gatewayConfig, amountMinor: gatewayFeeMinor },
-        finalPayableMinor,
+        partnerQuoteMinor,
+        finalPayableMinor: partnerQuoteMinor,
         settlement: {
             agencyFeeDeductionMinor:
                 agencyConfig.chargingMode === "SETTLEMENT_DEDUCTION" ? agencyFeeMinor : 0,

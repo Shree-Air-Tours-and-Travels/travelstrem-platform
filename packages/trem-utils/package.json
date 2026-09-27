@@ -5,6 +5,7 @@
   "main": "src/index.js",
   "dependencies": {
     "@packages/trem-auth-core": "workspace:*",
+    "@packages/trem-events": "workspace:*",
     "axios": "^1.8.4"
   },
   "peerDependencies": {

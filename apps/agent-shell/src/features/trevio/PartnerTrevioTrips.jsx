@@ -5,16 +5,20 @@ import {
   Dropdown,
   EmptyState,
   InputField,
+  Paragraph,
+  PRODUCT_TYPE,
   RecordReview,
   Spinner,
   SubTitle,
   TrevioTripCard,
+  useTourCatalogRealtime,
 } from "@packages/trem-ui";
 import { getTripJsonTemplate } from "@packages/trem-utils";
 import {
-  deletePartnerTrevioTrip,
+  deleteAgentTour,
   approvePartnerTrevioTrip,
   fetchPartnerTrevioTrips,
+  resolvePartnerTrevioTripBuilderTour,
   savePartnerTrevioTrip,
   uploadTripImage,
 } from "../../services/agentService";
@@ -53,6 +57,29 @@ const statuses = ["draft", "pending_approval", "listed", "unpublished", "archive
     label: value.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase()),
   }),
 );
+const TREVIO_BUILDER_PATH = "/agent/services/tours/builder";
+
+const resolveEntityId = (value) => {
+  if (value == null) return "";
+  if (["string", "number"].includes(typeof value)) return String(value);
+  if (typeof value === "object") {
+    return (
+      resolveEntityId(value._id) ||
+      resolveEntityId(value.id) ||
+      resolveEntityId(value.$oid) ||
+      resolveEntityId(value.value)
+    );
+  }
+  return "";
+};
+
+const trevioBuilderUrl = (tourId, mode = "edit") => {
+  const sourceId = resolveEntityId(tourId);
+  if (!sourceId) return "";
+  const params = new URLSearchParams({ product: PRODUCT_TYPE.TREVIO, tourId: sourceId });
+  if (mode === "view") params.set("mode", "view");
+  return `${TREVIO_BUILDER_PATH}?${params.toString()}`;
+};
 
 const slugify = (value) =>
   String(value || "")
@@ -126,7 +153,7 @@ const blankTrip = {
       { label: "Single", value: "single", extraPrice: 0 },
       { label: "Double", value: "double", extraPrice: 0 },
       { label: "Triple", value: "triple", extraPrice: 0 },
-      { label: "Shared", value: "shared", extraPrice: -500 },
+      { label: "Shared room with another traveller", value: "shared", extraPrice: -500 },
     ],
     mealPreferences: [
       { label: "Vegetarian", value: "veg", extraPrice: 0 },
@@ -135,9 +162,20 @@ const blankTrip = {
       { label: "Jain", value: "jain", extraPrice: 0 },
     ],
     packageTypes: [
-      { label: "Standard", value: "standard", extraPrice: 0 },
-      { label: "Premium", value: "premium", extraPrice: 5000 },
-      { label: "Luxury", value: "luxury", extraPrice: 12000 },
+      {
+        label: "Trip without flights",
+        value: "without-flights",
+        description: "Fixed itinerary and standard facilities without flights.",
+        includesFlights: false,
+        extraPrice: 0,
+      },
+      {
+        label: "Trip with flights",
+        value: "with-flights",
+        description: "The same fixed itinerary and facilities with flights included.",
+        includesFlights: true,
+        extraPrice: 0,
+      },
     ],
     drinkTypes: [
       { label: "Non-Alcoholic", value: "non-alcoholic", extraPrice: 0 },
@@ -374,6 +412,33 @@ function PreferenceEditor({ preferences = {}, onChange }) {
                     }}
                   />
                 </label>
+                {key === "packageTypes" ? (
+                  <>
+                    <label>
+                      Package details
+                      <input
+                        value={option.description || ""}
+                        onChange={(e) => {
+                          const next = [...options];
+                          next[index] = { ...option, description: e.target.value };
+                          updateGroup(key, next);
+                        }}
+                      />
+                    </label>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={Boolean(option.includesFlights)}
+                        onChange={(e) => {
+                          const next = [...options];
+                          next[index] = { ...option, includesFlights: e.target.checked };
+                          updateGroup(key, next);
+                        }}
+                      />
+                      Flights included
+                    </label>
+                  </>
+                ) : null}
                 <Button
                   type="button"
                   primaryClassName="ptf-pref-remove"
@@ -1269,6 +1334,23 @@ function TripViewModal({ trip, onClose, onEdit }) {
           </div>
         </header>
         <div className="ptf-panel-body">
+          <section className="ptf-section">
+            <SubTitle text="Agency and agent" />
+            <Paragraph>
+              <strong>Agency:</strong> {trip.agency?.name || "TravelsTREM platform"}
+            </Paragraph>
+            <Paragraph>
+              <strong>Agent:</strong> {trip.ownerAgentName || trip.operator?.name || "Master admin"}
+              {trip.ownerAgentRef || trip.operator?.reference
+                ? ` · ${trip.ownerAgentRef || trip.operator?.reference}`
+                : ""}
+            </Paragraph>
+            {trip.ownerAgentEmail || trip.operator?.email ? (
+              <Paragraph>
+                <strong>Email:</strong> {trip.ownerAgentEmail || trip.operator?.email}
+              </Paragraph>
+            ) : null}
+          </section>
           <RecordReview
             data={trip}
             title="Complete trip details"
@@ -1291,7 +1373,7 @@ export default function PartnerTrevioTrips({ session }) {
   const [editing, setEditing] = useState(null);
   const [viewing, setViewing] = useState(null);
   const [formOpen, setFormOpen] = useState(false);
-  const hasAccess = session?.user?.productAccess?.includes("trevio");
+  const hasAccess = session?.user?.productAccess?.includes(PRODUCT_TYPE.TREVIO);
   const canApprove = session?.user?.agencyRole === "partner_admin";
 
   const load = useCallback(async () => {
@@ -1308,12 +1390,16 @@ export default function PartnerTrevioTrips({ session }) {
   useEffect(() => {
     if (hasAccess) load();
   }, [hasAccess, load]);
+  useTourCatalogRealtime(
+    useCallback(() => {
+      if (hasAccess) load();
+    }, [hasAccess, load]),
+  );
   useEffect(() => {
     if (new URLSearchParams(location.search).get("create") !== "true") return;
-    setEditing(null);
-    setViewing(null);
-    setFormOpen(true);
-  }, [location.search]);
+    const params = new URLSearchParams({ product: PRODUCT_TYPE.TREVIO });
+    navigate(`${TREVIO_BUILDER_PATH}?${params.toString()}`, { replace: true });
+  }, [location.search, navigate]);
 
   const clearModalQuery = useCallback(() => {
     const params = new URLSearchParams(location.search);
@@ -1327,6 +1413,23 @@ export default function PartnerTrevioTrips({ session }) {
     setEditing(null);
     clearModalQuery();
   }, [clearModalQuery]);
+
+  const openTripInBuilder = useCallback(
+    async (trip, mode = "edit") => {
+      const tripId = resolveEntityId(trip?._id || trip?.id);
+      if (!tripId) return;
+      setError("");
+      try {
+        const resolved = await resolvePartnerTrevioTripBuilderTour(tripId);
+        const url = trevioBuilderUrl(resolved?.tourId, mode);
+        if (!url) throw new Error("Trip builder record was not returned.");
+        navigate(url);
+      } catch (actionError) {
+        setError(actionError.message || "Trip could not be opened in builder.");
+      }
+    },
+    [navigate],
+  );
 
   const visibleTrips = useMemo(
     () =>
@@ -1362,9 +1465,8 @@ export default function PartnerTrevioTrips({ session }) {
           variant="solid"
           color="primary"
           onClick={() => {
-            setEditing(null);
-            setViewing(null);
-            setFormOpen(true);
+            const params = new URLSearchParams({ product: PRODUCT_TYPE.TREVIO });
+            navigate(`${TREVIO_BUILDER_PATH}?${params.toString()}`);
           }}
           text="New trip"
         />
@@ -1416,12 +1518,8 @@ export default function PartnerTrevioTrips({ session }) {
                     }
                   : undefined
               }
-              onView={(item) => setViewing(item)}
-              onEdit={(item) => {
-                setViewing(null);
-                setEditing(item);
-                setFormOpen(true);
-              }}
+              onView={(item) => openTripInBuilder(item, "view")}
+              onEdit={(item) => openTripInBuilder(item)}
               deleteLabel={
                 trip.status === "draft" || trip.status === "pending_approval" ? "Delete" : "Archive"
               }
@@ -1432,7 +1530,10 @@ export default function PartnerTrevioTrips({ session }) {
                     : "Archive";
                 if (!window.confirm(`${action} ${item.title}?`)) return;
                 try {
-                  await deletePartnerTrevioTrip(item._id);
+                  const resolved = await resolvePartnerTrevioTripBuilderTour(item._id);
+                  const sourceId = resolveEntityId(resolved?.tourId);
+                  if (!sourceId) throw new Error("Trip builder record was not returned.");
+                  await deleteAgentTour(sourceId);
                   await load();
                 } catch (actionError) {
                   setError(actionError.message || "Trip could not be removed.");
@@ -1453,8 +1554,7 @@ export default function PartnerTrevioTrips({ session }) {
           onClose={() => setViewing(null)}
           onEdit={(item) => {
             setViewing(null);
-            setEditing(item);
-            setFormOpen(true);
+            openTripInBuilder(item);
           }}
         />
       ) : null}
