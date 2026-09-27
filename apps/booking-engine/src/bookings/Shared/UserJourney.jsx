@@ -7,7 +7,7 @@ import BookingEnquiryCenter from "./BookingEnquiryCenter.jsx";
 
 export default function UserJourney({ journeyType = "" }) {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { enquiries, bookings, view, loading, error, load } = useEnquiryBookings(journeyType);
+  const { enquiries, bookings, view, loading, error, load, filters, applyFilters } = useEnquiryBookings(journeyType);
   const selectedId = searchParams.get("booking") || searchParams.get("enquiry") || "";
   const [enquiryRef, setEnquiryRef] = useState("");
   const [claimState, setClaimState] = useState({ saving: false, message: "", error: false });
@@ -78,6 +78,8 @@ export default function UserJourney({ journeyType = "" }) {
         title={view.title}
         description={view.description}
         view={view}
+        filters={filters}
+        onApplyFilters={applyFilters}
         enquiries={enquiries}
         bookings={bookings}
         selectedId={selectedId}

@@ -50,14 +50,16 @@ export const createHotelProvider = async (
         process.env.HOTEL_PROVIDER ||
         "hotelbeds,stayingapi,trekko",
 ) => {
+    const isProduction = process.env.NODE_ENV === "production";
     const keys = String(names)
         .split(",")
         .map((name) => name.trim().toLowerCase())
         .filter(Boolean);
     if (!keys.length || new Set(keys).size !== keys.length)
         throw new Error("Hotel provider list must contain unique provider names.");
+    if (!isProduction && !keys.includes("mock")) keys.push("mock");
     const providers = (await Promise.all(keys.map(createSingleHotelProvider))).filter(
-        (provider) => ["development", "test"].includes(process.env.NODE_ENV) || !provider.isDemo,
+        (provider) => !isProduction || !provider.isDemo,
     );
     if (!providers.length)
         throw new Error(

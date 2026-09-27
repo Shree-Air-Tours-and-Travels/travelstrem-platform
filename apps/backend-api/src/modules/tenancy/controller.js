@@ -2240,6 +2240,7 @@ export async function dashboard(req, res) {
             buildTourAnalyticsSnapshot({
                 query: scopes.products,
                 scope: req.access.role === "partner_admin" ? "agency" : "agent",
+                sections: ["summary", "timeline", "topTours"],
             }),
         ]);
         return ok(

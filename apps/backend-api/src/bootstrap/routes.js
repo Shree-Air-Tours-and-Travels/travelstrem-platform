@@ -1,3 +1,4 @@
+import savedSearchRoutes from "../modules/savedSearches/routes.js";
 import mongoose from "mongoose";
 import config from "../config/index.js";
 import { API_ROUTES } from "../shared/constants/index.js";
@@ -73,6 +74,7 @@ export default function registerRoutes(app) {
     app.use("/api/flights", flightRoutes);
     app.use("/api/hotels", hotelRoutes);
     app.use("/api/pages", pageDefinitionRoutes);
+    app.use("/api/saved-searches", savedSearchRoutes);
     app.use(API_ROUTES.TOURS, tourRoutes);
     // Public brand URLs remain compatibility aliases; domain code lives in trips/tours.
     app.use("/api/trevio", tripRoutes);

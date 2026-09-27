@@ -1,3 +1,4 @@
+import { useSupportNavigate } from "./SupportLayout";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Button,
@@ -11,7 +12,7 @@ import {
   SupportTicketCard,
   TextArea,
 } from "@packages/trem-ui";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { SUPPORT_ANALYTICS_EVENT } from "@packages/trem-support-contracts";
 import {
   REALTIME_EVENTS,
@@ -25,7 +26,7 @@ import { ResourceBoundary, SupportLayout } from "./SupportLayout";
 import { formatDateTime, trackSupport } from "./support.utils";
 
 export function NewSupportRequestPage() {
-  const navigate = useNavigate();
+  const navigate = useSupportNavigate();
   const [params] = useSearchParams();
   const [categoryId, setCategoryId] = useState(params.get("category") || "");
   const [subject, setSubject] = useState("");
@@ -135,7 +136,7 @@ export function NewSupportRequestPage() {
 }
 
 export function SupportRequestsPage() {
-  const navigate = useNavigate();
+  const navigate = useSupportNavigate();
   const [status, setStatus] = useState("");
   const resource = useSupportResource((signal) => supportApi.tickets(status, signal), [status]);
   const statuses = resource.data?.statuses || [];

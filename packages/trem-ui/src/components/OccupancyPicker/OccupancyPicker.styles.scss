@@ -1,4 +1,4 @@
-@import "@packages/trem-design-tokens/scss";
+@import "@packages/trem-design-tokens/scss/tokens";
 
 .trem-occupancy { position: relative; width: 100%; }
 .trem-occupancy__trigger { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: $space-2; width: 100%; min-height: 3rem; padding: $space-3; border: 1px solid var(--border); border-radius: $radius-sm; background: var(--surface-elevated); color: var(--text); font: inherit; text-align: left; }

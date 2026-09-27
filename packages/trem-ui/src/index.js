@@ -49,6 +49,9 @@ export { default as TourCard } from "./components/TourCard/TourCard.jsx";
 export { default as TrevioTripCard } from "./components/TrevioTripCard/TrevioTripCard.jsx";
 export { default as InternationalTripCard } from "./components/InternationalTripCard/InternationalTripCard.jsx";
 export { default as MetricSummary } from "./components/MetricSummary/MetricSummary.jsx";
+export { default as ProgressMeter } from "./components/ProgressMeter/ProgressMeter.jsx";
+export { default as DataTrendChart } from "./components/DataTrendChart/DataTrendChart.jsx";
+export { default as DashboardPanel } from "./components/DashboardPanel/DashboardPanel.jsx";
 export { default as TourPerformance } from "./components/TourPerformance/TourPerformance.jsx";
 export { default as InfoCard } from "./components/InfoCard/InfoCard.jsx";
 export { default as CardWithSubEntity } from "./components/CardWithSubEntity/CardWithSubEntity.jsx";
@@ -170,3 +173,9 @@ export {
   CONNECTION_STATUS,
   getRealtimeClient,
 } from "./realtime/index.js";
+
+export { default as MetricSnapshot } from "./components/MetricSnapshot/MetricSnapshot.jsx";
+
+export { default as FilterBox } from "./components/FilterBox/FilterBox.jsx";
+
+export { default as GlobalSearch } from "./components/AppHeader/GlobalSearch.jsx";

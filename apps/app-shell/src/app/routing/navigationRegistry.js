@@ -91,6 +91,9 @@ export const FALLBACK_NAVIGATION_CONFIG = {
       activeId: "dashboard",
     },
     {
+      id: "saved-searches", kind: "tab", renderer: "app-shell", tab: "saved-searches", path: "/", activeId: "saved-searches",
+    },
+    {
       id: "bookings",
       kind: "tab",
       renderer: "app-shell",

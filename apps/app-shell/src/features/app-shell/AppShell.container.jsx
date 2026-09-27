@@ -17,6 +17,7 @@ import resolveContractRefs from "../../core/config/resolveContractRefs";
 import OverviewView from "../../views/OverviewView";
 import ArticlesView from "../../views/ArticlesView";
 import DashboardView from "../../views/DashboardView";
+import SavedSearchesView from "../../views/SavedSearchesView";
 import FavoritesView from "../../views/FavoritesView";
 import ProfileView from "../../views/ProfileView";
 import { UserBookingJourney } from "@apps/booking-engine";
@@ -55,6 +56,10 @@ let overviewResponseCache = null;
 let overviewResponseUserKey = "";
 let overviewRequest = null;
 let overviewRequestUserKey = "";
+let dashboardResponseCache = null;
+let dashboardResponseUserKey = "";
+let dashboardRequest = null;
+let dashboardRequestUserKey = "";
 
 const textValue = (value) => {
   if (!value) return "";
@@ -93,6 +98,7 @@ const resolveFavoriteRef = (item) => {
 };
 
 export default function AppShellContainer({
+  onSearch, onSearchSelect, searchConfig,
   activeTab = "overview",
   onTabChange,
   onArticleTitleChange,
@@ -106,6 +112,7 @@ export default function AppShellContainer({
   const [featuredTravel, setFeaturedTravel] = useState(null);
   const [homeInsights, setHomeInsights] = useState(null);
   const [overviewRail, setOverviewRail] = useState(null);
+  const [dashboardFeaturedTravel, setDashboardFeaturedTravel] = useState(null);
   const [metricsDefinition, setMetricsDefinition] = useState(null);
   const [overviewCopy, setOverviewCopy] = useState({});
   const [journeyHero, setJourneyHero] = useState(null);
@@ -113,6 +120,9 @@ export default function AppShellContainer({
   const [dashboardData, setDashboardData] = useState(null);
   const [overviewDefinitionLoading, setOverviewDefinitionLoading] = useState(
     () => !(overviewResponseCache && overviewResponseUserKey === overviewUserKey),
+  );
+  const [dashboardLoading, setDashboardLoading] = useState(
+    () => !(dashboardResponseCache && dashboardResponseUserKey === overviewUserKey),
   );
   const [favorites, setFavorites] = useState([]);
   const [favoritesLoading, setFavoritesLoading] = useState(true);
@@ -127,8 +137,6 @@ export default function AppShellContainer({
   const [articlesLoading, setArticlesLoading] = useState(false);
   const [articlesError, setArticlesError] = useState("");
 
-  // The dashboard page definition carries user-scoped data (metrics, recent
-  // bookings & enquiries, upcoming trips) in the same response as the markup.
   const loadOverview = useCallback(({ force = false } = {}) => {
     const hasCurrentCache =
       overviewResponseCache && overviewResponseUserKey === overviewUserKey;
@@ -140,7 +148,7 @@ export default function AppShellContainer({
     } else if (hasCurrentRequest) {
       request = overviewRequest;
     } else {
-      request = fetchData("/pages/app-shell/app-shell").then((response) => {
+      request = fetchData("/pages/app-shell/home").then((response) => {
         overviewResponseCache = response;
         overviewResponseUserKey = overviewUserKey;
         return response;
@@ -160,46 +168,17 @@ export default function AppShellContainer({
           const widget = widgetFor(type);
           return widget?.props?.dataKey ? resolve(component?.data?.[widget.props.dataKey]) : null;
         };
-        const emptyStateFor = (type) => {
-          const widget = widgetFor(type);
-          return widget?.props?.emptyStateKey
-            ? resolve(component?.data?.[widget.props.emptyStateKey])
-            : null;
-        };
-        const metricsWidget = widgetFor("DashboardMetrics");
-        if (!metricsWidget) return;
-        setMetricsDefinition({
-          ...resolve(metricsWidget.props || {}),
-        });
-        setOverviewCopy(labels);
         setJourneyHero(resolve(widgetFor("JourneyHero")?.props || null));
         setJourneyStory(contentFor("JourneyStory"));
-        setOverviewSections({
-          recent: resolve(widgetFor("RecentBookings")?.props || {}),
-          upcoming: resolve(widgetFor("UpcomingTrips")?.props || {}),
-        });
         setFeaturedTravel(contentFor("HomeCardsWithFeature"));
         setHomeInsights(contentFor("HomeInsights"));
-        setOverviewRail(contentFor("OverviewRail"));
-        setDashboardData({
-          metrics: component?.data?.metrics || {},
-          journeyStage: component?.data?.journeyStage || "discover",
-          recentActivity: contentFor("RecentBookings") || [],
-          upcomingTrips: contentFor("UpcomingTrips") || [],
-          recentEmptyState: emptyStateFor("RecentBookings"),
-          upcomingEmptyState: emptyStateFor("UpcomingTrips"),
-        });
       })
       .catch(() => {
         if (overviewResponseCache && overviewResponseUserKey === overviewUserKey) return;
         setJourneyStory(null);
         setFeaturedTravel(null);
         setHomeInsights(null);
-        setOverviewRail(null);
         setJourneyHero(null);
-        setOverviewSections({});
-        setOverviewCopy({});
-        setDashboardData(null);
       })
       .finally(() => {
         if (overviewRequest === request) {
@@ -210,9 +189,77 @@ export default function AppShellContainer({
       });
   }, [overviewUserKey]);
 
+  const loadDashboard = useCallback(({ force = false } = {}) => {
+    const hasCurrentCache = dashboardResponseCache && dashboardResponseUserKey === overviewUserKey;
+    const hasCurrentRequest = dashboardRequest && dashboardRequestUserKey === overviewUserKey;
+    setDashboardLoading(!hasCurrentCache);
+    let request;
+    if (!force && hasCurrentCache) request = Promise.resolve(dashboardResponseCache);
+    else if (hasCurrentRequest) request = dashboardRequest;
+    else {
+      request = fetchData("/pages/app-shell/dashboard").then((response) => {
+        dashboardResponseCache = response;
+        dashboardResponseUserKey = overviewUserKey;
+        return response;
+      });
+      dashboardRequest = request;
+      dashboardRequestUserKey = overviewUserKey;
+    }
+    return request.then((response) => {
+      const component = response?.component;
+      if (response?.status !== "success" || !component) throw new Error("Dashboard unavailable");
+      const labels = component.elements?.labels || {};
+      const urls = component.elements?.urls || {};
+      const resolve = (value) => resolveContractRefs(value, labels, urls);
+      const widgets = component.structure?.widgets || [];
+      const widgetFor = (type) => widgets.find((item) => item?.type === type);
+      const contentFor = (type) => {
+        const widget = widgetFor(type);
+        return widget?.props?.dataKey ? resolve(component.data?.[widget.props.dataKey]) : null;
+      };
+      const emptyStateFor = (type) => {
+        const widget = widgetFor(type);
+        return widget?.props?.emptyStateKey ? resolve(component.data?.[widget.props.emptyStateKey]) : null;
+      };
+      setOverviewCopy(labels);
+      setMetricsDefinition(resolve(widgetFor("DashboardMetrics")?.props || {}));
+      setOverviewSections({
+        recent: resolve(widgetFor("RecentBookings")?.props || {}),
+        upcoming: resolve(widgetFor("UpcomingTrips")?.props || {}),
+      });
+      setDashboardFeaturedTravel(contentFor("HomeCardsWithFeature"));
+      setOverviewRail(contentFor("OverviewRail"));
+      setDashboardData({
+        guestDashboard: resolve(component.data?.guestDashboard),
+        travellerLayout: resolve(component.data?.travellerLayout),
+        userSnapshots: component.data?.userSnapshots || [],
+        clientDashboard: component.data?.clientDashboard || null,
+        supportDashboard: component.data?.supportDashboard || null,
+        metrics: component.data?.metrics || {},
+        journeyStage: component.data?.journeyStage || "discover",
+        recentActivity: contentFor("RecentBookings") || [],
+        upcomingTrips: contentFor("UpcomingTrips") || [],
+        recentEmptyState: emptyStateFor("RecentBookings"),
+        upcomingEmptyState: emptyStateFor("UpcomingTrips"),
+      });
+    }).catch(() => {
+      if (dashboardResponseCache && dashboardResponseUserKey === overviewUserKey) return;
+      setDashboardData(null);
+      setDashboardFeaturedTravel(null);
+      setMetricsDefinition(null);
+    }).finally(() => {
+      if (dashboardRequest === request) {
+        dashboardRequest = null;
+        dashboardRequestUserKey = "";
+      }
+      setDashboardLoading(false);
+    });
+  }, [overviewUserKey]);
+
   useEffect(() => {
-    loadOverview();
-  }, [loadOverview]);
+    if (activeTab === "overview") loadOverview();
+    if (activeTab === "dashboard") loadDashboard();
+  }, [activeTab, loadOverview, loadDashboard]);
 
   const loadArticlesPage = useCallback(async ({ force = false, silent = false } = {}) => {
     if (!silent) setArticlesLoading(true);
@@ -271,15 +318,16 @@ export default function AppShellContainer({
   // Load once, then let realtime enquiry events update the overview.
   useEnquiryRealtime(
     activeTab === "overview" || activeTab === "dashboard"
-      ? () => loadOverview({ force: true })
+      ? () => (activeTab === "dashboard" ? loadDashboard({ force: true }) : loadOverview({ force: true }))
       : null,
   );
-  useRealtimeEvent(REALTIME_EVENTS.PRODUCT_CATALOG_UPDATED, () =>
-    loadOverview({ force: true }),
-  );
+  useRealtimeEvent(REALTIME_EVENTS.PRODUCT_CATALOG_UPDATED, () => {
+    if (activeTab === "overview") loadOverview({ force: true });
+    if (activeTab === "dashboard") loadDashboard({ force: true });
+  });
 
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || activeTab !== "profile") return;
     let cancelled = false;
     fetchData("/auth/profile")
       .then((res) => {
@@ -289,7 +337,7 @@ export default function AppShellContainer({
     return () => {
       cancelled = true;
     };
-  }, [isAuthenticated]);
+  }, [activeTab, isAuthenticated]);
 
   const loadFavorites = useCallback(async ({ silent = false } = {}) => {
     if (!isAuthenticated) {
@@ -314,9 +362,10 @@ export default function AppShellContainer({
   }, [isAuthenticated]);
 
   useEffect(() => {
-    loadFavorites();
-  }, [loadFavorites]);
+    if (activeTab === "favorites") loadFavorites();
+  }, [activeTab, loadFavorites]);
   useRefreshOnActivation(() => loadFavorites({ silent: true }), {
+    enabled: activeTab === "favorites",
     resource: "favorites",
     refreshOnMount: false,
   });
@@ -444,6 +493,7 @@ export default function AppShellContainer({
           body: { tourId, product: item?.product },
         });
         if (response?.status !== "success") throw new Error(response?.message || "Remove failed");
+        dashboardResponseCache = null;
         showRealtimeToast({
           title: "Removed from saved journeys",
           subtitle: item?.title || "Your shortlist has been updated.",
@@ -483,6 +533,12 @@ export default function AppShellContainer({
     [navigate],
   );
 
+  useEffect(() => {
+    const refreshSavedSearches = () => { dashboardResponseCache = null; if (activeTab === "dashboard") loadDashboard({ force: true }); };
+    window.addEventListener("saved-searches:changed", refreshSavedSearches);
+    return () => window.removeEventListener("saved-searches:changed", refreshSavedSearches);
+  }, [activeTab, loadDashboard]);
+
   const handleHeroSearch = useCallback(({ mode, values = {}, choice }) => {
     const paths = {
       flight: "/trehub/flights",
@@ -507,8 +563,16 @@ export default function AppShellContainer({
         params.set(key, Array.isArray(value) ? value.join(",") : String(value));
       });
     }
-    navigate(`${path}${params.size ? `?${params}` : ""}`);
-  }, [navigate]);
+    if (isAuthenticated && params.size) {
+      fetchData("/saved-searches", { method: "POST", body: { mode, query: params.toString() } })
+        .then((response) => {
+          if (response.status !== "success") throw new Error(response.message);
+          window.dispatchEvent(new Event("saved-searches:changed"));
+        })
+        .catch(() => showRealtimeToast({ title: "Search was not saved", subtitle: "Your search will still open. Try saving it again later.", status: "error" }));
+    }
+    navigate(`${path}${params.size ? `?${params}` : ""}`, { state: { dashboardOrigin: "overview" } });
+  }, [navigate, isAuthenticated]);
 
   return (
     <div className={`app-shell-page${activeTab === "overview" ? " app-shell-page--home" : ""}`}>
@@ -532,11 +596,15 @@ export default function AppShellContainer({
       )}
       {activeTab === "dashboard" && (
         <DashboardView
+          onSearch={onSearch} onSearchSelect={onSearchSelect} searchConfig={searchConfig}
+          featuredTravel={dashboardFeaturedTravel} travellerLayout={dashboardData?.travellerLayout}
           user={user}
-          stats={{
-            ...(dashboardData?.metrics || {}),
-            ...(!favoritesLoading ? { totalFavorites: favorites.length } : {}),
-          }}
+          isAuthenticated={isAuthenticated}
+          userSnapshots={dashboardData?.userSnapshots}
+          guestDashboard={dashboardData?.guestDashboard}
+          clientDashboard={dashboardData?.clientDashboard}
+          supportDashboard={dashboardData?.supportDashboard}
+          stats={dashboardData?.metrics || {}}
           copy={overviewCopy}
           journeyStage={dashboardData?.journeyStage}
           journeyHero={journeyHero}
@@ -547,11 +615,12 @@ export default function AppShellContainer({
           recentEmptyState={dashboardData?.recentEmptyState}
           upcomingEmptyState={dashboardData?.upcomingEmptyState}
           overviewRail={overviewRail}
-          overviewDefinitionLoading={overviewDefinitionLoading}
-          overviewStatsLoading={!metricsDefinition}
+          overviewDefinitionLoading={dashboardLoading}
+          overviewStatsLoading={dashboardLoading}
           onTabChange={onTabChange}
         />
       )}
+      {activeTab === "saved-searches" && <SavedSearchesView isAuthenticated={isAuthenticated} />}
       {activeTab === "favorites" && (
         <FavoritesView
           favorites={favorites}

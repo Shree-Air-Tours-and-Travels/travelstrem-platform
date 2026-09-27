@@ -34,6 +34,8 @@ export default function EnquiryCenter({
   error = "",
   onSelect = () => {},
   onRetry = () => {},
+  filters,
+  onApplyFilters,
   renderDetailActions = null,
   renderDetailContent = null,
   renderDetailOverride = null,
@@ -247,6 +249,7 @@ export default function EnquiryCenter({
         actions={{
           search: tableCopy.search,
           filters: tableCopy.filters || [],
+          filterBox: view.filterBox ? { ...view.filterBox, value: filters, onApply: onApplyFilters } : undefined,
         }}
         sortingHeader={tableCopy.sorting || {}}
         pagination={tableCopy.pagination || { enabled: false }}

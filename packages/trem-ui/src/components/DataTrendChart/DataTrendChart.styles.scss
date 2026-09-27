@@ -1,0 +1,18 @@
+@import "../../styles/base/typography";
+
+.trem-data-trend-chart {
+  min-width: 0;
+  &__legend { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: $space-3; margin-bottom: $space-2; }
+  &__legend-item { display: inline-flex; align-items: center; gap: $space-1; color: var(--muted); font-size: $font-size-xs; }
+  &__legend-item i { width: 8px; height: 8px; border-radius: $radius-full; background: var(--trend-color, var(--color-primary)); }
+  &__legend-item.is-primary, &__line.is-primary { --trend-color: var(--color-primary); }
+  &__legend-item.is-accent, &__line.is-accent { --trend-color: var(--color-accent, var(--color-primary)); }
+  &__legend-item.is-success, &__line.is-success { --trend-color: var(--color-success); }
+  &__legend-item.is-info, &__line.is-info { --trend-color: var(--color-info, var(--color-primary)); }
+  &__legend-item.is-warning, &__line.is-warning { --trend-color: var(--color-warning); }
+  svg { display: block; width: 100%; height: auto; overflow: visible; }
+  svg text { fill: var(--muted); font-size: 11px; }
+  &__grid { stroke: var(--border); stroke-dasharray: 3 4; }
+  &__line { fill: none; stroke: var(--trend-color, var(--color-primary)); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+  &__empty { display: grid; place-items: center; min-height: 180px; color: var(--muted); font-size: $font-size-sm; text-align: center; }
+}

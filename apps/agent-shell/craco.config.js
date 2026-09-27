@@ -4,6 +4,9 @@ const appSrc = path.resolve(__dirname, "src");
 const sharedPackageSrc = path.resolve(__dirname, "../../packages");
 const authTremSrc = path.resolve(__dirname, "../../apps/auth-trem/src");
 const bookingEngineSrc = path.resolve(__dirname, "../booking-engine/src");
+const reactScriptsDir = path.dirname(require.resolve("react-scripts/package.json"));
+const { container } = require(require.resolve("webpack", { paths: [reactScriptsDir] }));
+const dashboardRemoteEntry = process.env.REACT_APP_DASHBOARD_REMOTE_ENTRY || (process.env.NODE_ENV === "production" ? "https://dashboard.travelstrem.com/remoteEntry.js" : "http://localhost:3017/remoteEntry.js");
 const backendTarget =
   process.env.REACT_APP_BACKEND_URL ||
   process.env.REACT_APP_API_URL?.replace(/\/api\/?$/, "") ||
@@ -52,6 +55,7 @@ module.exports = {
     configure: (webpackConfig) => {
       webpackConfig.output.publicPath = "auto";
       webpackConfig.output.uniqueName = "agentShell";
+      webpackConfig.optimization.runtimeChunk = false;
       webpackConfig.resolve.alias = {
         ...(webpackConfig.resolve.alias || {}),
         "@apps/booking-engine": path.resolve(__dirname, "../booking-engine/src/library.js"),
@@ -68,6 +72,14 @@ module.exports = {
         (plugin) => plugin?.constructor?.name !== "ModuleScopePlugin",
       );
       extendBabelIncludes(webpackConfig);
+      webpackConfig.plugins.push(new container.ModuleFederationPlugin({
+        name: "agent_shell",
+        remotes: { dashboard: `dashboard@${dashboardRemoteEntry}` },
+        shared: {
+          react: { singleton: true, requiredVersion: false },
+          "react-dom": { singleton: true, requiredVersion: false },
+        },
+      }));
       return webpackConfig;
     },
   },

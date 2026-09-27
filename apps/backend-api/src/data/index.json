@@ -2,11 +2,6 @@
   "version": "1.0.0",
   "defaultPage": "trevio-remote/home",
   "pages": {
-    "app-shell/app-shell": {
-      "app": "app-shell",
-      "page": "app-shell",
-      "file": "./app-shell/app-shell/page.json"
-    },
     "app-shell/articles": {
       "app": "app-shell",
       "page": "articles",
@@ -76,11 +71,21 @@
       "app": "agent-shell",
       "page": "agency",
       "file": "./agent-shell/agency/page.json"
+    },
+    "app-shell/dashboard": {
+      "app": "app-shell",
+      "page": "dashboard",
+      "file": "./app-shell/dashboard/page.json"
+    },
+    "app-shell/home": {
+      "app": "app-shell",
+      "page": "home",
+      "file": "./app-shell/home/page.json"
     }
   },
   "pathMap": {
     "/": "trevio-remote/home",
-    "/app-shell": "app-shell/app-shell",
+    "/app-shell": "app-shell/home",
     "/articles": "app-shell/articles",
     "/trevista": "tours-remote/listing",
     "/trevista/:tourRef": "tours-remote/details",
@@ -95,7 +100,9 @@
     "/admin/pricing": "admin-shell/pricing",
     "/agent/services": "agent-shell/services",
     "/agent/dashboard": "agent-shell/dashboard",
-    "/agent/agency": "agent-shell/agency"
+    "/agent/agency": "agent-shell/agency",
+    "/app-shell/dashboard": "app-shell/dashboard",
+    "/app-shell/home": "app-shell/home"
   },
   "aliases": {
     "home": "trevio-remote/home",
@@ -110,6 +117,7 @@
     "admin-pricing": "admin-shell/pricing",
     "agent-services": "agent-shell/services",
     "agent-dashboard": "agent-shell/dashboard",
-    "agent-agency": "agent-shell/agency"
+    "agent-agency": "agent-shell/agency",
+    "app-shell/app-shell": "app-shell/home"
   }
 }
