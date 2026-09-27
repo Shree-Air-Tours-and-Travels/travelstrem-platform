@@ -589,10 +589,10 @@
       },
       "urls": {
         "airportSearch": "/flights/airports/search",
-        "locationGoaImage": "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=1200&q=80",
-        "locationDubaiImage": "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=80",
-        "locationBaliImage": "https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=1200&q=80",
-        "locationSingaporeImage": "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?auto=format&fit=crop&w=1200&q=80"
+        "locationGoaImage": "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519364/travelstrem/site-assets/4a1b84660f2704061b7c1fd9.jpg",
+        "locationDubaiImage": "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519364/travelstrem/site-assets/7dc4b418344653d80fcc6488.jpg",
+        "locationBaliImage": "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519364/travelstrem/site-assets/46aabbcf3c15309060596b4c.jpg",
+        "locationSingaporeImage": "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519365/travelstrem/site-assets/1879d666aa61fed589a77036.jpg"
       }
     },
     "structure": {

@@ -6,10 +6,10 @@ const sampleCard = {
   title: "Jaipur",
   location: "Rajasthan, India",
   image: {
-    src: "https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=800&q=80",
+    src: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519380/travelstrem/site-assets/985fcaab498cdf910e633028.jpg",
     alt: "Jaipur cityscape",
     fallbackSrc:
-      "https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=800&q=60",
+      "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519380/travelstrem/site-assets/5a0505b25508b0c970949628.jpg",
   },
   description: "The Pink City — a royal tapestry of forts, palaces, bazaars, and heritage hotels.",
   duration: { days: 5, nights: 4 },

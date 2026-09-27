@@ -7,7 +7,7 @@ export function Footer() {
   return <footer className="site-footer">
     <div className="shell footer-grid">
       <div className="footer-brand">
-        <Link className="brand brand-footer" href="/"><Image src="/favicon-dark.png" width={44} height={44} alt="" /><span><strong>{site.name}</strong><small>Travel is personal. The platform should be too.</small></span></Link>
+        <Link className="brand brand-footer" href="/"><Image src="https://res.cloudinary.com/dofxshf3z/image/upload/v1790519386/travelstrem/site-assets/e38709b8a4ada750aed0f6df.png" width={44} height={44} alt="" /><span><strong>{site.name}</strong><small>Travel is personal. The platform should be too.</small></span></Link>
         <p>A connected travel platform created and operated by {site.operator}.</p>
       </div>
       <div><h2>Explore</h2><Link href="/about">About</Link><Link href="/partnership">Partnership</Link><Link href="/sales">Sales</Link><DemoLink className="" /></div>

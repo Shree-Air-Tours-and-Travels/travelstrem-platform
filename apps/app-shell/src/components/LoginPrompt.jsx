@@ -37,7 +37,7 @@ export default function LoginPrompt({
       <div className="dlp__content">
         <div className="dlp__brand">TRAVELSTREM</div>
         <div className="dlp__icon" aria-hidden="true">
-          <img src="/favicon-dark.png" alt="" />
+          <img src="https://res.cloudinary.com/dofxshf3z/image/upload/v1790519386/travelstrem/site-assets/e38709b8a4ada750aed0f6df.png" alt="" />
         </div>
         <Title text={title} primaryClassname="dlp__title" />
         <Paragraph

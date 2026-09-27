@@ -8,7 +8,7 @@ const DEFAULT_CONFIG = {
   productName: "TravelsTREM",
   owner: "Shree Air Tours and Travels",
   description: "Your trusted travel partner for unforgettable journeys",
-  logoSrc: "/favicon-dark.png",
+  logoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519386/travelstrem/site-assets/e38709b8a4ada750aed0f6df.png",
   contacts: [
     {
       id: "email",

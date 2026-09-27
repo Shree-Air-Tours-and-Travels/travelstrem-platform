@@ -12,8 +12,8 @@ export default {
         version: 2,
         brand: {
             label: "TravelsTrem",
-            logoSrc: "/favicon.png",
-            darkLogoSrc: "/favicon-dark.png",
+            logoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png",
+            darkLogoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519386/travelstrem/site-assets/e38709b8a4ada750aed0f6df.png",
             homePath: "/",
         },
         footer: {
@@ -39,38 +39,38 @@ export default {
         },
         logos: {
             trevio: {
-                logoSrc: "/favicon.png",
+                logoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png",
                 name: "Trevio",
                 subtitle: "by TravelsTrem",
                 initial: "",
             },
             trevista: {
-                logoSrc: "/favicon.png",
+                logoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png",
                 name: "Trevista",
                 subtitle: "by TravelsTrem",
                 initial: "",
             },
             trehub: {
-                logoSrc: "/favicon.png",
+                logoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png",
                 name: "Trehub",
                 subtitle: "Flights & Hotels by TravelsTrem",
                 initial: "",
             },
             "app-shell": {
-                logoSrc: "/favicon.png",
+                logoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png",
                 name: "TravelsTrem",
                 subtitle: "Dashboard",
                 initial: "",
             },
-            admin: { logoSrc: "/favicon.png", name: "TravelsTREM", subtitle: "Admin", initial: "" },
+            admin: { logoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png", name: "TravelsTREM", subtitle: "Admin", initial: "" },
             booking: {
-                logoSrc: "/favicon.png",
+                logoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png",
                 name: "TravelsTrem",
                 subtitle: "Booking",
                 initial: "",
             },
             agent: {
-                logoSrc: "/favicon.png",
+                logoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png",
                 name: "TravelsTrem",
                 subtitle: "Partner Portal",
                 initial: "",

@@ -5,9 +5,9 @@ const sampleTour = {
   _id: "tour-1",
   title: "Himalayan Escape to Manali",
   photo:
-    "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=400&q=80",
+    "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519382/travelstrem/site-assets/5418717827438ce5734537f2.jpg",
   photos: [
-    "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=400&q=80",
+    "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519382/travelstrem/site-assets/5418717827438ce5734537f2.jpg",
   ],
   desc: "Embark on a breathtaking journey through the Himalayas. Experience pristine mountain views, lush valleys, and serene rivers.",
   avgRating: 4.5,
@@ -71,7 +71,7 @@ export const WithAgency = {
     variant: "list",
     withAgency: true,
     agencyLogo:
-      "https://images.unsplash.com/photo-1560179707-f14e90ef3623?auto=format&fit=crop&w=80&q=80",
+      "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519380/travelstrem/site-assets/0ad7ebd035a44aab417a2db1.jpg",
     ownerAgentName: "Priya Sharma",
     showOwner: true,
     onView: () => {},

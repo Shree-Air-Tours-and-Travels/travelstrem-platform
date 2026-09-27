@@ -17,7 +17,7 @@
           "authorRef": "featuredAuthor",
           "dateRef": "featuredDate",
           "readTime": "7 min read",
-          "image": "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=1600&q=80",
+          "image": "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519360/travelstrem/site-assets/b239ad2920532f9359dbb0d3.jpg",
           "imageAltRef": "featuredImageAlt",
           "body": [
             "Every journey at TravelsTREM begins the same way: you share an idea, and a connected workspace starts shaping it into a plan. Enquiries, partner preferences, availability checks, price quotes and support conversations all stay under one roof, so nothing important gets lost between steps.",
@@ -63,7 +63,7 @@
             "authorRef": "articleOneAuthor",
             "dateRef": "articleOneDate",
             "readTime": "4 min read",
-            "image": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80",
+            "image": "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519358/travelstrem/site-assets/72e20f780be2b695eeab056d.jpg",
             "imageAltRef": "articleOneImageAlt",
             "body": [
               "A curated escape starts with the style of journey you want, not the destination. Before comparing dates or prices, decide whether you are after total relaxation, cultural discovery, or a blend of both. That single decision filters out most irrelevant options.",
@@ -79,7 +79,7 @@
             "authorRef": "articleTwoAuthor",
             "dateRef": "articleTwoDate",
             "readTime": "3 min read",
-            "image": "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1600&q=80",
+            "image": "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519358/travelstrem/site-assets/e725a5df5610343512d2d560.jpg",
             "imageAltRef": "articleTwoImageAlt",
             "body": [
               "A genuinely curated trip is organised around your preferences from the very first enquiry. Generic packages repeat the same itinerary for everyone; curated travel adjusts pace, stays, transport and experiences to how you like to move.",
@@ -95,7 +95,7 @@
             "authorRef": "articleThreeAuthor",
             "dateRef": "articleThreeDate",
             "readTime": "5 min read",
-            "image": "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=1600&q=80",
+            "image": "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519358/travelstrem/site-assets/59e534c4f3202a3664b7415c.jpg",
             "imageAltRef": "articleThreeImageAlt",
             "body": [
               "Before you confirm flights and stays, run through a short checklist of the details that cause most rebooking. Confirm every traveller name exactly as it appears on the passport or ID you will travel with.",
@@ -111,7 +111,7 @@
             "authorRef": "articleFourAuthor",
             "dateRef": "articleFourDate",
             "readTime": "4 min read",
-            "image": "https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=1600&q=80",
+            "image": "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519360/travelstrem/site-assets/bfbc080b4bf26c0059c2293d.jpg",
             "imageAltRef": "articleFourImageAlt",
             "body": [
               "Off-peak travel trades holiday-season crowds for calmer streets, shorter queues and more responsive support. The same budget often goes further when flights and stays are booked outside the rush.",
@@ -127,7 +127,7 @@
             "authorRef": "articleFiveAuthor",
             "dateRef": "articleFiveDate",
             "readTime": "3 min read",
-            "image": "https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1600&q=80",
+            "image": "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519360/travelstrem/site-assets/d804024495131d7a6f281643.jpg",
             "imageAltRef": "articleFiveImageAlt",
             "body": [
               "Multi-city journeys reward a capsule approach to luggage: a small set of pieces that mix and match across climates and occasions. Fewer, better items move faster through transfers and keep day packs light.",
@@ -143,7 +143,7 @@
             "authorRef": "articleSixAuthor",
             "dateRef": "articleSixDate",
             "readTime": "6 min read",
-            "image": "https://images.unsplash.com/photo-1542037104857-ffbb0b9155fb?auto=format&fit=crop&w=1600&q=80",
+            "image": "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519360/travelstrem/site-assets/772333c4dfeb2c269a88a907.jpg",
             "imageAltRef": "articleSixImageAlt",
             "body": [
               "Family travel works best when the pace has room to breathe. Build in slower mornings and a flexible plan for the afternoon, so tired travellers never feel rushed.",
@@ -159,7 +159,7 @@
             "authorRef": "articleSevenAuthor",
             "dateRef": "articleSevenDate",
             "readTime": "4 min read",
-            "image": "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1600&q=80",
+            "image": "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519361/travelstrem/site-assets/5a0dc4f2b097510729b0ac6e.jpg",
             "imageAltRef": "articleSevenImageAlt",
             "body": [
               "A flexible travel budget holds space for the experiences that make a trip memorable. Once the essentials are covered, keep a reserve for upgrades, local experiences and the occasional surprise.",
@@ -175,7 +175,7 @@
             "authorRef": "articleEightAuthor",
             "dateRef": "articleEightDate",
             "readTime": "5 min read",
-            "image": "https://images.unsplash.com/photo-1501555088652-021faa106b9b?auto=format&fit=crop&w=1600&q=80",
+            "image": "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519361/travelstrem/site-assets/1d5bf96ee540a267596f7569.jpg",
             "imageAltRef": "articleEightImageAlt",
             "body": [
               "Solo travel rewards preparation. Keep digital and physical copies of your documents, store backup contact details offline, and share your rough plan with someone at home.",
@@ -191,7 +191,7 @@
             "authorRef": "articleNineAuthor",
             "dateRef": "articleNineDate",
             "readTime": "4 min read",
-            "image": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1600&q=80",
+            "image": "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519361/travelstrem/site-assets/83c9b937c3588759d8aa2440.jpg",
             "imageAltRef": "articleNineImageAlt",
             "body": [
               "Great adventure itineraries balance movement days with deliberate rest. Alternating active highlights with relaxed mornings keeps energy high and legs fresh.",

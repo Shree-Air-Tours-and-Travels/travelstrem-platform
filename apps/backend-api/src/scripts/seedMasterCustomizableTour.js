@@ -146,22 +146,22 @@ const hotel = ({
 });
 
 const photos = {
-    hero: "https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=1800&q=85",
+    hero: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519376/travelstrem/site-assets/1948e57d13227f987ddca0da.jpg",
     jaipur: [
-        "https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=1200&q=80",
-        "https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=1200&q=80",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519374/travelstrem/site-assets/e5cb042275ce0509ddb096b5.jpg",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519376/travelstrem/site-assets/84ab258a5edee62b88707c18.jpg",
     ],
     pushkar: [
-        "https://images.unsplash.com/photo-1590050752117-238cb0fb12b1?auto=format&fit=crop&w=1200&q=80",
-        "https://images.unsplash.com/photo-1567157577867-05ccb1388e66?auto=format&fit=crop&w=1200&q=80",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519376/travelstrem/site-assets/e81a5996395ad90802c3c9d2.jpg",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519376/travelstrem/site-assets/27728c0749b1799494926060.jpg",
     ],
     jodhpur: [
-        "https://images.unsplash.com/photo-1599661046827-dacde6976549?auto=format&fit=crop&w=1200&q=80",
-        "https://images.unsplash.com/photo-1534757725210-57860f23d0c9?auto=format&fit=crop&w=1200&q=80",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519369/travelstrem/site-assets/04ec93cbc0e9689e721f6066.jpg",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519375/travelstrem/site-assets/9a8dc02c2ea53063eb49e5f6.jpg",
     ],
     udaipur: [
-        "https://images.unsplash.com/photo-1595658658481-d53d3f999875?auto=format&fit=crop&w=1200&q=80",
-        "https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=1200&q=80",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519377/travelstrem/site-assets/c40f10e249253d9993c28efb.jpg",
+        "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519374/travelstrem/site-assets/e5cb042275ce0509ddb096b5.jpg",
     ],
 };
 

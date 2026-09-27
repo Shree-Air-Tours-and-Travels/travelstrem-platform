@@ -118,12 +118,11 @@ export default function AppShellContainer({
   const [journeyHero, setJourneyHero] = useState(null);
   const [overviewSections, setOverviewSections] = useState({});
   const [dashboardData, setDashboardData] = useState(null);
+  const [dashboardError, setDashboardError] = useState("");
   const [overviewDefinitionLoading, setOverviewDefinitionLoading] = useState(
     () => !(overviewResponseCache && overviewResponseUserKey === overviewUserKey),
   );
-  const [dashboardLoading, setDashboardLoading] = useState(
-    () => !(dashboardResponseCache && dashboardResponseUserKey === overviewUserKey),
-  );
+  const [dashboardLoading, setDashboardLoading] = useState(true);
   const [favorites, setFavorites] = useState([]);
   const [favoritesLoading, setFavoritesLoading] = useState(true);
   const [favoritesView, setFavoritesView] = useState({});
@@ -190,6 +189,7 @@ export default function AppShellContainer({
   }, [overviewUserKey]);
 
   const loadDashboard = useCallback(({ force = false } = {}) => {
+    setDashboardError("");
     const hasCurrentCache = dashboardResponseCache && dashboardResponseUserKey === overviewUserKey;
     const hasCurrentRequest = dashboardRequest && dashboardRequestUserKey === overviewUserKey;
     setDashboardLoading(!hasCurrentCache);
@@ -198,6 +198,9 @@ export default function AppShellContainer({
     else if (hasCurrentRequest) request = dashboardRequest;
     else {
       request = fetchData("/pages/app-shell/dashboard").then((response) => {
+        if (response?.status !== "success" || !response?.component?.structure?.widgets?.length) {
+          throw new Error("Dashboard unavailable");
+        }
         dashboardResponseCache = response;
         dashboardResponseUserKey = overviewUserKey;
         return response;
@@ -244,6 +247,7 @@ export default function AppShellContainer({
       });
     }).catch(() => {
       if (dashboardResponseCache && dashboardResponseUserKey === overviewUserKey) return;
+      setDashboardError("We could not load your dashboard. Please try again.");
       setDashboardData(null);
       setDashboardFeaturedTravel(null);
       setMetricsDefinition(null);
@@ -596,6 +600,9 @@ export default function AppShellContainer({
       )}
       {activeTab === "dashboard" && (
         <DashboardView
+          error={dashboardError}
+          hasData={Boolean(dashboardData)}
+          onRetry={() => loadDashboard({ force: true })}
           onSearch={onSearch} onSearchSelect={onSearchSelect} searchConfig={searchConfig}
           featuredTravel={dashboardFeaturedTravel} travellerLayout={dashboardData?.travellerLayout}
           user={user}

@@ -8,7 +8,7 @@ const sampleTrip = {
   location: "Interlaken",
   duration: "7 Days",
   coverImage:
-    "https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?auto=format&fit=crop&w=600&q=80",
+    "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519382/travelstrem/site-assets/4bb38492a8f0e35290ce2ac4.jpg",
   price: { amount: 129999, currency: "INR" },
   avgRating: 4.9,
   tag: "Premium",

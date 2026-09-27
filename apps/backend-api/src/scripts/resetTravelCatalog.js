@@ -48,7 +48,7 @@ const rawTours = [
         period: { days: 4, nights: 3 },
         startDate: new Date("2026-10-17T00:00:00.000Z"),
         endDate: new Date("2026-10-20T00:00:00.000Z"),
-        photo: "https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=1200&q=80",
+        photo: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519374/travelstrem/site-assets/e5cb042275ce0509ddb096b5.jpg",
         desc: "A fully bundled Udaipur holiday covering return flights, lake-facing accommodation, daily meals, airport transfers and guided palace visits.",
         price: { ...common.price, min: 32999, max: 32999 },
         includedStays: [
@@ -110,7 +110,7 @@ const rawTours = [
         period: { days: 3, nights: 2 },
         startDate: new Date("2026-11-07T00:00:00.000Z"),
         endDate: new Date("2026-11-09T00:00:00.000Z"),
-        photo: "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&w=1200&q=80",
+        photo: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519374/travelstrem/site-assets/7d7e821721da918f02ac6533.jpg",
         desc: "A flexible route plan and local recommendations for travellers who prefer booking every component independently.",
         price: { ...common.price, min: 3999, max: 3999 },
         includedStays: [],
@@ -135,7 +135,7 @@ const rawTours = [
         period: { days: 4, nights: 3 },
         startDate: new Date("2026-11-21T00:00:00.000Z"),
         endDate: new Date("2026-11-24T00:00:00.000Z"),
-        photo: "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=1200&q=80",
+        photo: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519364/travelstrem/site-assets/4a1b84660f2704061b7c1fd9.jpg",
         desc: "A relaxed Goa package with a comfortable resort and breakfast while keeping flights, transfers and experiences optional.",
         price: { ...common.price, min: 12999, max: 12999 },
         includedStays: [
@@ -197,7 +197,7 @@ const rawTours = [
         period: { days: 6, nights: 5 },
         startDate: new Date("2026-12-05T00:00:00.000Z"),
         endDate: new Date("2026-12-10T00:00:00.000Z"),
-        photo: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80",
+        photo: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519375/travelstrem/site-assets/970378c505dccdf23c4c9113.jpg",
         desc: "A small-group Ladakh circuit with return flights and shared road transport, designed for travellers who want to choose their own meal plan.",
         price: { ...common.price, min: 28999, max: 28999 },
         includedStays: [

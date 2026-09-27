@@ -55,7 +55,7 @@
         "heroViewBookingsAction": "View bookings"
       },
       "urls": {
-        "heroBackgroundImage": "/home-images/hero-banner.png"
+        "heroBackgroundImage": "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519395/travelstrem/site-assets/4726019fefba093500bee8eb.png"
       }
     },
     "structure": {

@@ -17,7 +17,7 @@ export const Default = {
 export const WithLogo = {
   args: {
     logoSrc:
-      "https://images.unsplash.com/photo-1560179707-f14e90ef3623?auto=format&fit=crop&w=80&q=80",
+      "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519380/travelstrem/site-assets/0ad7ebd035a44aab417a2db1.jpg",
     name: "TravelsTREM",
     subtitle: "Explore the world",
   },

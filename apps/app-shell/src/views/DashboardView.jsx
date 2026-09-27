@@ -1,9 +1,12 @@
 import React, { Suspense } from "react";
-import { Preloader } from "@packages/trem-ui";
+import { NoDataFound, Preloader } from "@packages/trem-ui";
 
 const Dashboard = React.lazy(() => import("dashboard/Dashboard"));
 
 export default function DashboardView({
+  error = "",
+  hasData = false,
+  onRetry,
   onSearch, onSearchSelect, searchConfig, featuredTravel, travellerLayout,
   user,
   isAuthenticated,
@@ -26,6 +29,14 @@ export default function DashboardView({
   overviewStatsLoading = false,
   onTabChange,
 }) {
+  if (overviewDefinitionLoading || overviewStatsLoading) {
+    return <Preloader variant="grid" count={4} label="Loading dashboard" />;
+  }
+  if (error || !hasData) {
+    return <NoDataFound title={error ? "Dashboard unavailable" : "Your dashboard is not available yet"}
+      description={error || "Please try loading your dashboard again."}
+      actionLabel="Try again" onAction={onRetry} />;
+  }
   return (
     <Suspense fallback={<Preloader variant="grid" count={4} label="Loading dashboard" />}>
       <Dashboard

@@ -40,7 +40,7 @@
           }
         ],
         "visual": {
-          "src": "/home-images/sticky.png",
+          "src": "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519399/travelstrem/site-assets/441a7adad6318fa95fb91e85.png",
           "badgeIcon": "luggage",
           "badgeLabelRef": "storyVisualBadge"
         },

@@ -64,6 +64,22 @@ const mapTour = (tour) => {
     };
 };
 
+const mapFeaturedJourneys = (journeys, mapJourney, coverKey) => {
+    const usedImages = new Set();
+    return journeys.map((journey, index) => {
+        const card = mapJourney(journey);
+        const images = [...new Set([journey[coverKey], ...(journey.photos || [])])].filter(
+            (image) => typeof image === "string" && image.startsWith("https://res.cloudinary.com/"),
+        );
+        if (!images.length) return card;
+        const offset = index % images.length;
+        const candidates = [...images.slice(offset), ...images.slice(0, offset)];
+        card.image = candidates.find((image) => !usedImages.has(image)) || candidates[0];
+        usedImages.add(card.image);
+        return card;
+    });
+};
+
 const mapTrip = (trip) => {
     const destination = firstText(trip?.routeTo, trip?.location, trip?.country);
     const rating = Number(trip?.rating || 0);
@@ -272,8 +288,8 @@ export const buildHomeFeatureSnapshot = async () => {
             homeFeatures: {
                 ...emptyHomeFeatures().homeFeatures,
                 categories: [
-                    category("tours", tours.map(mapTour)),
-                    category("trips", trips.map(mapTrip)),
+                    category("tours", mapFeaturedJourneys(tours, mapTour, "photo")),
+                    category("trips", mapFeaturedJourneys(trips, mapTrip, "image")),
                     category("flights", aggregateFlightDestinations(flightBookings)),
                     category("hotels", aggregateHotelDestinations(hotelQuotes)),
                 ],
