@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=development USE_DOTENV=true nodemon src/server.js",
     "build": "node --check src/server.js",
-    "start": "cross-env NODE_ENV=production node src/server.js",
+    "start": "node src/server.js",
     "start:prod": "cross-env NODE_ENV=production node src/server.js",
     "test": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --runInBand --passWithNoTests",
     "migrate:tenancy": "cross-env NODE_ENV=development USE_DOTENV=true node src/scripts/migrateTenancy.js",

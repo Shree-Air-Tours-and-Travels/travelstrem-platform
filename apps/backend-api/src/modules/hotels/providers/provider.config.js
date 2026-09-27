@@ -19,6 +19,11 @@ const positiveInteger = (key, fallback, { allowZero = false } = {}) => {
     return parsed;
 };
 
+export const isHotelMockInventoryEnabled = () => {
+    const environment = value("PORTAL_ENV", value("NODE_ENV", "development")).toLowerCase();
+    return ["development", "dev", "test", "staging", "stage"].includes(environment);
+};
+
 export const createHotelProviderConfig = (name) => {
     const prefix = envKey(name);
     return Object.freeze({
