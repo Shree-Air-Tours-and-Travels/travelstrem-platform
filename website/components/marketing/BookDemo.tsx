@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
 import { site } from "@/lib/content";
+import { DemoLink } from "./DemoLink";
 
 export function BookDemo({ compact = false }: { compact?: boolean }) {
   const [sent, setSent] = useState(false);
@@ -12,7 +12,7 @@ export function BookDemo({ compact = false }: { compact?: boolean }) {
     setMinimumDate(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`);
   }, []);
 
-  if (compact) return <section className="demo-teaser"><div className="shell demo-teaser-inner"><div><span className="eyebrow light">See it in your workflow</span><h2>From travel discovery to daily operations—walk through the connected platform.</h2></div><Link className="button button-light" href={site.demoUrl}>Book a Demo <span aria-hidden="true">↗</span></Link></div></section>;
+  if (compact) return <section className="demo-teaser"><div className="shell demo-teaser-inner"><div><span className="eyebrow light">See it in your workflow</span><h2>From travel discovery to daily operations, walk through the connected platform.</h2></div><DemoLink className="button button-light" /></div></section>;
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

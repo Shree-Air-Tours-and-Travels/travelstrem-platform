@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import PropTypes from "prop-types";
 
 import Button from "../Button/Button.jsx";
+import FilterBox from "../FilterBox/FilterBox.jsx";
 import Dropdown from "../Dropdown/Dropdown.jsx";
 import NoDataFound from "../NoDataFound/NoDataFound.jsx";
 import SearchBar from "../SearchBar/SearchBar.jsx";
@@ -475,7 +476,7 @@ export default function BookingTable({
 
   const isServerSide = Boolean(table.serverSide || actions.serverSide || pagination.serverSide);
 
-  const filterDefinitions = actions.filters || [];
+  const filterDefinitions = actions.filterBox?.fields || actions.filters || [];
 
   /* ======================================================================== */
   /* State                                                                    */
@@ -660,6 +661,7 @@ export default function BookingTable({
         );
 
       const matchesFilters = filterDefinitions.every((filter) => {
+        if (actions.filterBox?.onApply) return true;
         const selectedValue = filter.value ?? filters[filter.id];
 
         if (selectedValue == null || selectedValue === "" || selectedValue === "all") {
@@ -668,12 +670,14 @@ export default function BookingTable({
 
         const rowValue = getValue(row, filter.accessor || filter.id);
 
-        return String(rowValue).toLowerCase() === String(selectedValue).toLowerCase();
+        return Array.isArray(selectedValue)
+          ? !selectedValue.length || selectedValue.some((value) => String(value).toLowerCase() === String(rowValue).toLowerCase())
+          : String(rowValue).toLowerCase() === String(selectedValue).toLowerCase();
       });
 
       return matchesQuery && matchesFilters;
     });
-  }, [filterDefinitions, filters, isServerSide, query, rows, searchableKeys]);
+  }, [actions.filterBox?.onApply, filterDefinitions, filters, isServerSide, query, rows, searchableKeys]);
 
   /* ======================================================================== */
   /* Sorting                                                                  */
@@ -875,7 +879,7 @@ export default function BookingTable({
           sortingHeader.options?.length ||
           (pagination.enabled !== false && pagination.showPageSize !== false)) && (
           <div
-            className={["booking-table__toolbar", mobileControlsOpen ? "is-sheet-open" : ""]
+            className={["booking-table__toolbar", filterDefinitions.length ? "has-filter-box" : "", mobileControlsOpen ? "is-sheet-open" : ""]
               .filter(Boolean)
               .join(" ")}
           >
@@ -974,25 +978,23 @@ export default function BookingTable({
                 />
               ) : null}
 
-              {filterDefinitions.map((filter) => (
-                <SelectControl
-                  key={filter.id}
-                  label={filter.label}
-                  value={filter.value ?? filters[filter.id] ?? "all"}
-                  options={filter.options || []}
-                  onChange={(nextValue) => {
-                    setFilters((current) => ({
-                      ...current,
-
-                      [filter.id]: nextValue,
-                    }));
-
-                    filter.onChange?.(nextValue);
-
-                    resetPage();
-                  }}
-                />
-              ))}
+              {filterDefinitions.length ? <FilterBox
+                triggerLabel={table.expandFiltersLabel || "Filters"}
+                title={table.filtersSheetTitle || "Filter records"}
+                closeLabel={table.closeFiltersLabel || "Close filters"}
+                applyLabel={table.applyFiltersLabel || "Apply filters"}
+                resetLabel={table.resetFiltersLabel || "Clear selection"}
+                {...actions.filterBox}
+                fields={filterDefinitions}
+                value={actions.filterBox?.value || filters}
+                disabled={table.loading}
+                onApply={(next) => {
+                  setFilters(next);
+                  if (actions.filterBox?.onApply) actions.filterBox.onApply(next);
+                  else filterDefinitions.forEach((field) => field.onChange?.(next[field.id] ?? "all"));
+                  resetPage();
+                }}
+              /> : null}
 
               {pagination.enabled !== false && pagination.showPageSize !== false ? (
                 <div className="booking-table__page-size">

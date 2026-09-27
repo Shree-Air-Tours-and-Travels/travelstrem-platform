@@ -43,6 +43,7 @@ const AppShellConfigContext = React.createContext({
 
 export function AppShellProvider({ children }) {
   const initOnceRef = React.useRef(null);
+  const initializedRef = React.useRef(false);
   const sessionRef = React.useRef(DEFAULT_SESSION);
   const sessionExitStartedRef = React.useRef(false);
   const [state, setState] = React.useState({
@@ -71,7 +72,7 @@ export function AppShellProvider({ children }) {
       if (initOnceRef.current) return initOnceRef.current;
 
       if (!background) {
-        setState((current) => ({ ...current, loading: true, error: null }));
+        setState((current) => ({ ...current, loading: !initializedRef.current, error: null }));
       }
 
       const MAX_RETRIES = 2;
@@ -86,6 +87,7 @@ export function AppShellProvider({ children }) {
           });
 
           const resolved = session || DEFAULT_SESSION;
+          initializedRef.current = true;
           setState({
             loading: false,
             error: null,
@@ -104,6 +106,7 @@ export function AppShellProvider({ children }) {
             return attempt(retryCount + 1);
           }
 
+          initializedRef.current = true;
           setState({
             loading: false,
             error: error?.message || "init-app-failed",

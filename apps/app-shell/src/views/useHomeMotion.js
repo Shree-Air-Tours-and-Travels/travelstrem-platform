@@ -10,7 +10,6 @@ export function useHomeMotion() {
     const seen = new WeakSet();
     const running = new Set();
     const selector = "[data-home-reveal], [data-home-ambient], .dov__hero-search, .dov__hero-trust, .trem-home-features__header, .trem-home-feature-card";
-    const duration = parseFloat(getComputedStyle(root).getPropertyValue("--home-enter-duration")) || 660;
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(({ target, isIntersecting }) => {
         if (target.hasAttribute("data-home-ambient")) {
@@ -20,13 +19,16 @@ export function useHomeMotion() {
         if (!isIntersecting) return;
         observer.unobserve(target);
         if (preference.matches) return;
-        const title = target.dataset.homeReveal === "title";
+        const isHeading = target.dataset.homeReveal === "title";
+        const isCard = target.matches(".dov__advantage-card, .dov__article-card, .trem-home-feature-card");
+        const isSearch = target.classList.contains("dov__hero-search");
+        const distance = isSearch ? 26 : isHeading || isCard ? 20 : 14;
         const animation = target.animate([
-          { opacity: 0, transform: `translateY(${title ? 30 : 22}px)`, ...(title ? { clipPath: "inset(0 0 100% 0)" } : {}) },
-          { opacity: 1, transform: "translateY(0)", ...(title ? { clipPath: "inset(0 0 0 0)" } : {}) },
+          { opacity: isHeading || isCard ? 0.48 : 0.62, transform: `translateY(${distance}px)` },
+          { opacity: 1, transform: "translateY(0)" },
         ], {
-          duration,
-          delay: Math.min(Number(target.dataset.homeOrder || target.style.getPropertyValue("--feature-index") || 0), 4) * 70,
+          duration: isSearch ? 820 : isHeading ? 760 : 650,
+          delay: Math.min(Number(target.dataset.homeOrder) || 0, 3) * 75,
           easing: "cubic-bezier(0.22, 1, 0.36, 1)",
           fill: "backwards",
         });

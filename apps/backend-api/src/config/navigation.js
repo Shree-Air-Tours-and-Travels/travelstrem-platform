@@ -32,7 +32,7 @@ export default {
                 target: "overview",
                 activeTargets: ["overview", "trevio", "trevista", "trehub"],
             },
-            { id: "bookings", label: "Bookings", icon: "calendar", target: "bookings" },
+            { id: "dashboard", label: "Dashboard", icon: "management", target: "dashboard" },
             {
                 id: "new-booking",
                 label: "New Booking",
@@ -47,6 +47,7 @@ export default {
     destinations: [
         { id: "overview", kind: "tab", tab: "overview", path: "/", activeId: "overview" },
         { id: "dashboard", kind: "tab", tab: "dashboard", path: "/", activeId: "dashboard" },
+        { id: "saved-searches", kind: "tab", tab: "saved-searches", path: "/", activeId: "saved-searches" },
         { id: "favorites", kind: "tab", tab: "favorites", path: "/", activeId: "favorites" },
         { id: "bookings", kind: "tab", tab: "bookings", path: "/", activeId: "bookings" },
         { id: "articles", kind: "tab", tab: "articles", path: "/articles", activeId: "articles", patterns: ["/articles"] },

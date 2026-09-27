@@ -60,6 +60,8 @@ export const safeAuthUser = (user) => ({
     adminApprovalStatus: user.adminApprovalStatus || "not_required",
     agencyRole: user.agencyRole || "none",
     agencyId: toStringId(user.agencyId) || null,
+    clientId: toStringId(user.clientId) || null,
+    clientRole: user.clientRole || "none",
     productAccess: user.productAccess || [],
     internalTeamRoles: user.internalTeamRoles || [],
     createdAt: user.createdAt ? new Date(user.createdAt).toISOString() : null,

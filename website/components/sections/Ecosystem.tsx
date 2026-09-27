@@ -29,7 +29,7 @@ export function Ecosystem() {
     window.addEventListener("resize", observe);
     return () => { observer.disconnect(); window.removeEventListener("resize", observe); };
   }, []);
-  return <section className="section ecosystem-section"><div className="shell">
+  return <section id="ecosystem" className="section ecosystem-section"><div className="shell">
     <Reveal><SectionIntro eyebrow="The TravelsTREM ecosystem" title={<>A product for every part of the journey. <em>One system underneath.</em></>} copy="Traveller products and agency operations share the same design language, records and operational foundation." /></Reveal>
     <div className="ecosystem-grid" ref={ref}>
       <div className="ecosystem-core"><div className="orbit orbit-one" aria-hidden="true" /><div className="orbit orbit-two" aria-hidden="true" /><span>ONE CONNECTED ECOSYSTEM</span><strong key={active}>{products[active].name}</strong><small>{products[active].label}</small><div className="ecosystem-progress" aria-hidden="true">{products.map((product, index) => <i key={product.key} className={index <= active ? "is-current" : ""} />)}</div><span className="ecosystem-count">{products[active].key} / 06</span></div>

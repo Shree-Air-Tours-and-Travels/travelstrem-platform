@@ -74,6 +74,7 @@ export default applyHideFlags({
                         target: "dashboard",
                     },
                     { id: "bookings", label: "My Bookings", icon: "calendar", target: "bookings" },
+                    { id: "saved-searches", label: "Saved searches", icon: "search", target: "saved-searches" },
                     { id: "favorites", label: "Wishlist", icon: "heart", target: "favorites" },
                     {
                         id: "documents",
@@ -116,7 +117,7 @@ export default applyHideFlags({
                         label: "Our Products",
                         icon: "travelPackage",
                         type: "external",
-                        href: "https://travelstrem.com/products",
+                        href: "https://travelstrem.com/#ecosystem",
                         target: "_blank",
                     },
                 ],

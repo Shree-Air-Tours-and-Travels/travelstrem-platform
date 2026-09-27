@@ -42,7 +42,7 @@ const toActivity = ({ id, title, description, type, status, occurredAt, target }
     target,
 });
 
-const buildRecentActivity = async () => {
+export const buildRecentActivity = async () => {
     const [tours, trips, agencies, enquiries, supportTickets] = await Promise.all([
         Tour.find({}).select("title status updatedAt").sort({ updatedAt: -1 }).limit(RECENT_LIMIT).lean(),
         Trip.find({})
@@ -187,7 +187,7 @@ export const buildAdminDashboardSnapshot = async () => {
                 .sort({ name: 1 })
                 .lean(),
             buildRecentActivity(),
-            buildTourAnalyticsSnapshot({ scope: "platform" }),
+            buildTourAnalyticsSnapshot({ scope: "platform", sections: ["summary", "timeline", "topTours"] }),
         ]);
 
         const enabledProductKeys = new Set(enabledProducts.map((product) => product.key));

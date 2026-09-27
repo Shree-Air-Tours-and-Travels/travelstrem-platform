@@ -2,7 +2,8 @@ import AggregateHotelProvider from "./aggregate/aggregate.provider.js";
 import HotelBedsProvider from "./hotel_beds/hotel_beds.provider.js";
 import StayingApiProvider from "./stayingapi/stayingapi.provider.js";
 import TrekkoProvider from "./trekko/trekko.provider.js";
-import { createHotelProviderConfig } from "./provider.config.js";
+import { createHotelProviderConfig, isHotelMockInventoryEnabled } from "./provider.config.js";
+import logger from "../../../shared/logger/index.js";
 
 const registeredProviders = new Map([
     ["hotelbeds", (config) => new HotelBedsProvider({ config })],
@@ -50,14 +51,28 @@ export const createHotelProvider = async (
         process.env.HOTEL_PROVIDER ||
         "hotelbeds,stayingapi,trekko",
 ) => {
+    const mockEnabled = isHotelMockInventoryEnabled();
     const keys = String(names)
         .split(",")
         .map((name) => name.trim().toLowerCase())
         .filter(Boolean);
     if (!keys.length || new Set(keys).size !== keys.length)
         throw new Error("Hotel provider list must contain unique provider names.");
-    const providers = (await Promise.all(keys.map(createSingleHotelProvider))).filter(
-        (provider) => process.env.NODE_ENV === "development" || !provider.isDemo,
+    if (mockEnabled && !keys.includes("mock")) keys.push("mock");
+    const outcomes = await Promise.allSettled(keys.map(createSingleHotelProvider));
+    const initialized = [];
+    outcomes.forEach((outcome, index) => {
+        if (outcome.status === "fulfilled") {
+            initialized.push(outcome.value);
+        } else {
+            if (!mockEnabled || keys[index] === "mock") throw outcome.reason;
+            logger.warn("[Hotels] provider initialization failed; test inventory remains available", {
+                provider: keys[index],
+            });
+        }
+    });
+    const providers = initialized.filter(
+        (provider) => mockEnabled || !provider.isDemo,
     );
     if (!providers.length)
         throw new Error(

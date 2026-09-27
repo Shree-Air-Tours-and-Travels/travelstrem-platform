@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import Icon from "../../icons/Icon/Icon.jsx";
 import ListingDropdown from "../ListingDropdown/ListingDropdown.jsx";
@@ -6,6 +6,7 @@ import ListingDropdown from "../ListingDropdown/ListingDropdown.jsx";
 const EMPTY_RESPONSE = { groups: [], emptyState: null, meta: {} };
 
 export default function GlobalSearch({ config = {}, onSearch, onSelect }) {
+  const searchId = useId();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [response, setResponse] = useState(EMPTY_RESPONSE);
@@ -146,9 +147,9 @@ export default function GlobalSearch({ config = {}, onSearch, onSelect }) {
         aria-label={config.ariaLabel || config.placeholder || "Search"}
         aria-disabled={!enabled}
         aria-expanded={open}
-        aria-controls="trem-global-search-results"
+        aria-controls={`${searchId}-results`}
         aria-activedescendant={
-          activeIndex >= 0 ? `trem-global-search-result-${activeIndex}` : undefined
+          activeIndex >= 0 ? `${searchId}-result-${activeIndex}` : undefined
         }
         autoComplete="off"
         onFocus={() => setOpen(true)}
@@ -183,7 +184,7 @@ export default function GlobalSearch({ config = {}, onSearch, onSelect }) {
       {searchInput(desktopInputRef)}
       <ListingDropdown
         open={open}
-        id="trem-global-search-results"
+        id={`${searchId}-results`}
         anchorRef={anchorRef}
         groups={dropdownGroups}
         ariaLabel={config.dialogLabel || "Global search results"}
@@ -208,7 +209,7 @@ export default function GlobalSearch({ config = {}, onSearch, onSelect }) {
             <button
               type="button"
               role="option"
-              id={`trem-global-search-result-${index}`}
+              id={`${searchId}-result-${index}`}
               aria-selected={index === activeIndex}
               className={`trem-global-search__result${index === activeIndex ? " is-active" : ""}`}
               key={result.id}

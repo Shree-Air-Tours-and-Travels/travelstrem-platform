@@ -2,17 +2,18 @@
 
 // A single, home-only presentation layer. Shared product and search styles stay reusable.
 .dov--experience {
-  --home-enter-duration: 660;
   --home-width: 88rem;
   --home-gutter: clamp(#{$space-5}, 5vw, #{$space-12});
 
-  .dov__hero--search, .dov__story, .dov__insights, .trem-home-feature-card {
+  .dov__hero--search, .dov__story, .dov__benefits, .dov__products, .dov__insights, .trem-home-feature-card {
     animation: none;
     filter: none;
+    transform: none;
   }
 
   .dov__hero--search {
-    height: clamp(46rem, 102svh, 65rem);
+    height: clamp(44rem, 90svh, 56rem);
+    background: var(--surface);
     border: 0;
     border-radius: 0;
     box-shadow: none;
@@ -23,15 +24,32 @@
     max-height: 100svh;
     background-position: 65% center;
   }
+  .dov__hero-media::before {
+    background: linear-gradient(90deg,
+      color-mix(in srgb, var(--page-bg) 70%, transparent),
+      color-mix(in srgb, var(--page-bg) 38%, transparent) 29%,
+      transparent 58%);
+  }
+  .dov__hero-wave {
+    position: absolute;
+    z-index: 1;
+    inset: auto 0 0;
+    width: 100%;
+    height: clamp(4rem, 7vw, 7rem);
+    display: block;
+    pointer-events: none;
+    fill: var(--surface);
+  }
   .dov__hero--search > .dov__hero-stage {
     inset: 0;
+    min-height: 0;
     width: min(100%, calc(var(--home-width) + var(--home-gutter) * 2));
     margin-inline: auto;
-    padding: clamp(#{$space-8}, 7vh, #{$space-14}) var(--home-gutter) $space-7;
+    padding: clamp(#{$space-8}, 5vh, #{$space-12}) var(--home-gutter) $space-7;
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: $space-5;
+    gap: $space-4;
   }
   .dov__hero--search .dov__hero-copy { width: min(100%, 48rem); min-height: 0; margin: 0; align-self: flex-start; }
   .dov__hero-copy h1 {
@@ -44,8 +62,11 @@
   }
   .dov__hero--search .dov__hero-description { max-width: 32rem; color: var(--heading); font-size: clamp(#{$font-size-md}, 1.3vw, #{$font-size-xl}); }
   .dov__hero-eyebrow { width: fit-content; padding: $space-2 $space-3; border: 1px solid var(--border); border-radius: $radius-full; background: var(--surface-glass); }
-  .dov__hero--search .dov__hero-search { width: 100%; max-width: none; margin: auto 0 0; }
+  .dov__hero--search .dov__hero-search { width: 100%; max-width: none; margin: $space-7 0 0; }
   .dov__hero-search .trem-global-search__panel { border-radius: $radius-lg; box-shadow: var(--shadow-lg); }
+  .dov__hero--search .dov__hero-search .trem-global-search__tabs,
+  .dov__hero--search .dov__hero-search .trem-global-search__panel,
+  .dov__hero--search .dov__hero-trust { background: color-mix(in srgb, var(--surface) 96%, transparent); backdrop-filter: none; }
   .dov__hero--search .dov__hero-trust { align-self: center; margin: 0; gap: $space-5; }
 
   .dov__advantage { max-width: calc(var(--home-width) + var(--home-gutter) * 2); padding: $space-12 var(--home-gutter) 0; }
@@ -70,9 +91,9 @@
   .dov__advantage-card h3 { margin-top: $space-6; font-size: $font-size-lg; }
   .dov__advantage-card p { font-size: $font-size-sm; }
   .dov__advantage-scene { min-height: clamp(17rem, 24vw, 23rem); margin-top: $space-6; }
-  .dov__advantage-scene > strong { animation: home-word-drift 18s ease-in-out infinite alternate; }
-  .dov__advantage-scene figure { height: clamp(16rem, 24vw, 23rem); box-shadow: var(--shadow-lg); animation: home-travel-float 7s ease-in-out infinite; }
-  .dov__story { --dov-advantage-dark: #{$text-dark}; }
+  .dov__advantage-scene > strong { animation: none; }
+  .dov__advantage-scene figure { height: clamp(16rem, 24vw, 23rem); box-shadow: var(--shadow-lg); animation: none; }
+  .dov__story { --dov-advantage-dark: #{$text-dark}; background: var(--surface); }
   .dov__story-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: $space-7 var(--home-gutter) $space-9; gap: $space-5; }
   .dov__story-stat { border-inline-end: 1px solid color-mix(in srgb, #{$white-color} 18%, transparent); padding-inline: $space-4; }
   .dov__story-stat:last-child { border: 0; }
@@ -135,15 +156,12 @@
   .dov__article-title-row { align-items: start; }
   .dov__article-arrow { background: var(--primary-soft); color: var(--color-primary); }
   .dov__faq-action:focus-visible, .dov__faq-trigger:focus-visible, .dov__article-grid:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 4px; }
-  .dov__advantage-scene > strong, .dov__advantage-scene figure, .dov__advantage-badge, .dov__faq-route path, .dov__faq-route > span { animation-play-state: paused; }
-  .dov__advantage-scene[data-home-visible="true"] > strong,
-  .dov__advantage-scene[data-home-visible="true"] figure,
+  .dov__advantage-badge, .dov__faq-route path, .dov__faq-route > span { animation-play-state: paused; }
   .dov__advantage-scene[data-home-visible="true"] .dov__advantage-badge,
   .dov__faq-route[data-home-visible="true"] path,
   .dov__faq-route[data-home-visible="true"] > span { animation-play-state: running; }
 }
 
-@keyframes home-word-drift { from { transform: translateX(0); } to { transform: translateX(-8%); } }
 @keyframes home-travel-float { 0%, 100% { transform: translateY(0) rotate(1deg); } 50% { transform: translateY(-10px) rotate(-1deg); } }
 @keyframes home-route-dash { to { stroke-dashoffset: -120; } }
 
@@ -160,11 +178,13 @@
 
 @media (max-width: $breakpoint-tablet) {
   .dov--experience {
-    .dov__hero--search { height: auto; }
+    .dov__hero--search { height: auto; background: var(--surface); }
     .dov__hero--search > .dov__hero-media { position: absolute; inset: 0 0 auto; height: 33rem; max-height: none; background-position: 65% center; }
-    .dov__hero--search > .dov__hero-stage { position: relative; padding: $space-8 var(--home-gutter) $space-6; gap: $space-5; }
-    .dov__hero--search .dov__hero-copy { min-height: 23rem; }
+    .dov__hero-wave { top: 28rem; bottom: auto; height: 5rem; fill: var(--surface); }
+    .dov__hero--search > .dov__hero-stage { position: relative; padding: $space-7 var(--home-gutter) $space-6; gap: $space-4; }
+    .dov__hero--search .dov__hero-copy { min-height: 20rem; display: grid; justify-items: center; text-align: center; align-self: center; }
     .dov__hero-copy h1 { font-size: clamp(3rem, 8vw, 4.5rem); max-width: 12ch; }
+    .dov__hero--search .dov__hero-description { margin-inline: auto; }
     .dov__hero--search .dov__hero-search { margin: 0; }
     .dov__hero--search .dov__hero-trust { flex-wrap: wrap; gap: $space-3; }
     .dov__faq { grid-template-columns: 1fr; }
@@ -180,8 +200,11 @@
 @media (max-width: $breakpoint-mobile) {
   .dov--experience {
     --home-gutter: #{$space-4};
-    .dov__hero-copy h1 { font-size: clamp(2.9rem, 11vw, 4.5rem); }
-    .dov__hero--search .dov__hero-description { max-width: 23ch; line-height: 1.6; }
+    .dov__hero--search .dov__hero-copy { min-height: 0; display: flex; flex-direction: column; align-items: center; gap: $space-2; }
+    .dov__hero-eyebrow { margin-bottom: 0; }
+    .dov__hero-copy h1 { max-width: 11ch; margin: 0; font-size: clamp(2.4rem, 9.5vw, 3rem); }
+    .dov__hero--search .dov__hero-description { max-width: 24ch; margin-top: 0; font-size: $font-size-sm; line-height: 1.5; }
+    .dov__hero--search .dov__hero-search { margin-top: $space-20; }
     .dov__hero--search .dov__hero-trust { display: flex; padding: 0; font-size: $font-size-xs; }
     .dov__hero-trust span { min-height: 0; padding: $space-2; background: transparent; }
     .dov__advantage, .trem-home-features { padding-top: $space-9; }

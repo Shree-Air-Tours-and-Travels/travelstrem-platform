@@ -29,7 +29,7 @@ export default function HomePage() {
           <Reveal>
             <p>
               TravelsTREM keeps the traveller, responsible agency and operational journey
-              connected—from the first idea to the final document.
+              connected from the first idea to the final document.
             </p>
             <div className="positioning-links">
               <Link href="/about">Our story ↗</Link>

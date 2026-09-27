@@ -1,4 +1,4 @@
-@import "@packages/trem-design-tokens/scss";
+@import "@packages/trem-design-tokens/scss/tokens";
 
 .trem-info-tooltip { display: inline-flex; width: auto; margin-inline-start: $space-1; vertical-align: middle; }
 .trem-info-tooltip__portal--modal { z-index: $z-modal + 1; }

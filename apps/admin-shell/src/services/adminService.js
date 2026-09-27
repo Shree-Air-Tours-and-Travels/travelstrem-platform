@@ -263,6 +263,24 @@ export async function fetchClient(id) {
   return res.componentData?.data?.client || null;
 }
 
+export async function fetchClientMembers(id) {
+  const res = await fetchData(`/clients/${id}/members`);
+  if (!res || res.status !== "success") throw new Error(res?.message || "Failed to load client members");
+  return res.componentData?.data?.members || [];
+}
+
+export async function assignClientMember(id, payload) {
+  return expectSuccess(fetchData(`/clients/${id}/members`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  }), "Failed to assign client member");
+}
+
+export async function removeClientMember(id, userId) {
+  return expectSuccess(fetchData(`/clients/${id}/members/${userId}`, { method: "DELETE" }), "Failed to remove client member");
+}
+
 export async function createClient(payload) {
   const res = await expectSuccess(
     fetchData("/clients", {

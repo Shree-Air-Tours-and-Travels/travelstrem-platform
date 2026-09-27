@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ThemeControl } from "./ThemeControl";
+import { DemoLink } from "@/components/marketing/DemoLink";
 import { site } from "@/lib/content";
 
 const links = [
@@ -26,8 +27,8 @@ export function Header() {
         <span /><span /><span /><b className="sr-only">Toggle navigation</b>
       </button></div>
       <nav id="site-navigation" className={open ? "nav-links is-open" : "nav-links"} aria-label="Main navigation" onClick={() => setOpen(false)} onKeyDown={event => { if (event.key === "Escape") setOpen(false); }}>
-        {links.map(([href, label]) => <Link key={href} href={href} aria-current={pathname === href ? "page" : undefined}>{label}</Link>)}
-        <Link className="button button-small" href={site.demoUrl}>Book a Demo</Link>
+        {links.map(([href, label]) => <Link key={href} href={href} aria-current={pathname === href ? "page" : undefined} onClick={() => { if (pathname === href) window.scrollTo({ top: 0, behavior: "smooth" }); }}>{label}</Link>)}
+        <DemoLink className="button button-small" />
         <a className="button button-small button-secondary" href={site.appUrl}>Open App <span aria-hidden="true">↗</span></a>
       </nav>
     </div>

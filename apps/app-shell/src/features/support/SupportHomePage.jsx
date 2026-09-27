@@ -1,3 +1,4 @@
+import { useSupportNavigate } from "./SupportLayout";
 import React, { useEffect, useState } from "react";
 import {
   Button,
@@ -7,7 +8,7 @@ import {
   SupportContactMethod,
   SupportTopicRow,
 } from "@packages/trem-ui";
-import { useNavigate } from "react-router-dom";
+
 import { SUPPORT_ANALYTICS_EVENT } from "@packages/trem-support-contracts";
 import { supportApi } from "./support.api";
 import { useSupportResource } from "./support.hooks";
@@ -15,7 +16,7 @@ import { ResourceBoundary, SupportLayout, SupportSection } from "./SupportLayout
 import { executeSupportAction, trackSupport } from "./support.utils";
 
 export default function SupportHomePage({ isAuthenticated = false, onRequireAuthentication }) {
-  const navigate = useNavigate();
+  const navigate = useSupportNavigate();
   const resource = useSupportResource((signal) => supportApi.home(signal), []);
   const [query, setQuery] = useState("");
   const [search, setSearch] = useState({ loading: false, results: [], error: "" });

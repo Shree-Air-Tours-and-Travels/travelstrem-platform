@@ -1,6 +1,58 @@
 import Client from "../models/Client.js";
+import User from "../../auth/models/User.js";
 
 const sendJson = (res, statusCode, body) => res.status(statusCode).json(body);
+
+const masterViewer = async (req) => {
+    const user = await User.findById(req.user?.sub || req.user?.id)
+        .select("role adminLevel accountStatus tokenVersion")
+        .lean();
+    return user?.role === "admin" && user.adminLevel === "master" &&
+        (user.accountStatus || "active") === "active" &&
+        Number(user.tokenVersion || 0) === Number(req.user?.tokenVersion || 0);
+};
+
+export const listClientMembers = async (req, res) => {
+    if (!await masterViewer(req)) return sendJson(res, 403, { status: "error", message: "Access denied" });
+    const client = await Client.findById(req.params.id).select("_id").lean();
+    if (!client) return sendJson(res, 404, { status: "error", message: "Client not found" });
+    const members = await User.find({ clientId: client._id })
+        .select("name email clientRole accountStatus")
+        .sort({ name: 1 })
+        .lean();
+    return sendJson(res, 200, { status: "success", componentData: { data: { members } } });
+};
+
+export const assignClientMember = async (req, res) => {
+    if (!await masterViewer(req)) return sendJson(res, 403, { status: "error", message: "Access denied" });
+    const role = req.body?.clientRole;
+    const email = String(req.body?.email || "").trim().toLowerCase();
+    if (!email || !["client_admin", "client_agent"].includes(role))
+        return sendJson(res, 400, { status: "error", message: "Enter an existing user email and a client role." });
+    const client = await Client.findOne({ _id: req.params.id, status: "active" }).select("_id").lean();
+    if (!client) return sendJson(res, 404, { status: "error", message: "Active client not found" });
+    const user = await User.findOne({ email });
+    if (!user || (user.accountStatus || "active") !== "active" || user.role !== "member" || user.agencyId)
+        return sendJson(res, 404, { status: "error", message: "Eligible member account not found" });
+    if (user.clientId && String(user.clientId) !== String(client._id))
+        return sendJson(res, 409, { status: "error", message: "This user already belongs to another client." });
+    user.clientId = client._id;
+    user.clientRole = role;
+    user.tokenVersion = (user.tokenVersion || 0) + 1;
+    await user.save();
+    return sendJson(res, 200, { status: "success", componentData: { data: { member: { id: user.id, name: user.name, email: user.email, clientRole: role } } } });
+};
+
+export const removeClientMember = async (req, res) => {
+    if (!await masterViewer(req)) return sendJson(res, 403, { status: "error", message: "Access denied" });
+    const user = await User.findOne({ _id: req.params.userId, clientId: req.params.id });
+    if (!user) return sendJson(res, 404, { status: "error", message: "Client member not found" });
+    user.clientId = null;
+    user.clientRole = "none";
+    user.tokenVersion = (user.tokenVersion || 0) + 1;
+    await user.save();
+    return sendJson(res, 200, { status: "success" });
+};
 
 export const getClients = async (req, res) => {
     try {
@@ -111,6 +163,10 @@ export const deleteClient = async (req, res) => {
     try {
         const client = await Client.findByIdAndDelete(req.params.id);
         if (!client) return sendJson(res, 404, { status: "error", message: "Client not found" });
+        await User.updateMany(
+            { clientId: client._id },
+            { $set: { clientId: null, clientRole: "none" }, $inc: { tokenVersion: 1 } },
+        );
         return sendJson(res, 200, { status: "success", message: "Client deleted" });
     } catch (error) {
         return sendJson(res, 500, {

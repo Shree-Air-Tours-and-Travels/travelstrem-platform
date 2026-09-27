@@ -1,10 +1,10 @@
-@import "@packages/trem-design-tokens/scss";
+@import "@packages/trem-design-tokens/scss/tokens";
 
 .trem-app-footer {
   width: 100%;
   margin-top: auto;
   flex-shrink: 0;
-  background: var(--primary-soft);
+  background: linear-gradient(135deg, var(--card-bg), var(--surface-muted));
   border-top: 1px solid var(--border);
   color: var(--text);
 }
@@ -12,22 +12,23 @@
 .trem-app-footer__main {
   width: min(100%, 88rem);
   margin-inline: auto;
-  padding: clamp(#{$space-10}, 6vw, #{$space-16}) clamp(#{$space-5}, 5vw, #{$space-10}) #{$space-8};
+  padding: clamp(#{$space-8}, 4vw, #{$space-12}) clamp(#{$space-5}, 5vw, #{$space-10}) $space-6;
 }
 
 .trem-app-footer__grid {
   display: grid;
   grid-template-columns: minmax(0, 1.8fr) repeat(var(--footer-section-count, 4), minmax(10rem, 1fr));
   gap: clamp(#{$space-6}, 4vw, #{$space-12}) clamp(#{$space-6}, 4vw, #{$space-10});
-  margin-bottom: clamp(#{$space-10}, 5vw, #{$space-14});
-  padding-bottom: clamp(#{$space-8}, 4vw, #{$space-12});
-  border-bottom: 1px solid var(--border);
+  align-items: start;
+  margin-bottom: 0;
+  padding-bottom: $space-6;
 }
 
 .trem-app-footer__brand-section {
   min-width: 0;
   display: grid;
   gap: $space-5;
+  align-content: start;
   padding-right: $space-4;
 }
 
@@ -74,7 +75,7 @@
 
   .trem-app-footer__tagline {
     max-width: 20rem;
-    color: var(--text-muted);
+    color: var(--muted);
     font-size: $font-size-sm;
     font-weight: $font-medium;
     line-height: 1.5;
@@ -92,17 +93,19 @@
   display: inline-flex;
   align-items: flex-start;
   gap: $space-2;
-  color: var(--text-muted);
+  color: var(--muted);
   font-size: $font-size-sm;
   font-weight: $font-medium;
   line-height: 1.5;
+  overflow-wrap: anywhere;
   text-decoration: none;
   transition: color $duration-fast $ease-standard;
 
   &:hover,
   &:focus-visible {
     color: var(--color-primary);
-    outline: none;
+    outline: 2px solid var(--color-primary);
+    outline-offset: $space-1;
   }
 
   .trem-app-footer__contact-icon {
@@ -113,6 +116,7 @@
 }
 
 .trem-app-footer__nav-section {
+  align-content: start;
   min-width: 0;
   display: grid;
   gap: $space-3;
@@ -125,6 +129,8 @@
   font-weight: $font-bold;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  padding-bottom: $space-3;
+  border-bottom: 1px solid var(--border);
 }
 
 .trem-app-footer__link-list {
@@ -132,12 +138,13 @@
   padding: 0;
   list-style: none;
   display: grid;
-  gap: $space-2-5;
+  gap: $space-3;
+  align-content: start;
 }
 
 .trem-app-footer__link {
   display: inline-block;
-  color: var(--text-muted);
+  color: var(--muted);
   font-size: $font-size-sm;
   font-weight: $font-medium;
   line-height: 1.4;
@@ -147,23 +154,24 @@
   &:hover,
   &:focus-visible {
     color: var(--color-primary);
-    outline: none;
+    outline: 2px solid var(--color-primary);
+    outline-offset: $space-1;
   }
 
   &--disabled {
-    color: var(--text-muted);
+    color: var(--muted);
     opacity: 0.45;
     cursor: not-allowed;
     text-decoration: none;
 
     &:hover,
     &:focus-visible {
-      color: var(--text-muted);
+      color: var(--muted);
     }
 
     &::after {
       content: "Coming soon";
-      color: var(--text-muted);
+      color: var(--muted);
       opacity: 0.6;
       font-size: $font-size-xs;
       font-weight: 500;
@@ -201,7 +209,7 @@
   border: 1px solid var(--border);
   border-radius: $radius-full;
   background: var(--surface-elevated);
-  color: var(--text-muted);
+  color: var(--muted);
   text-decoration: none;
   transition:
     color $duration-fast $ease-standard,
@@ -215,13 +223,14 @@
     background: var(--primary-soft);
     color: var(--color-primary);
     transform: translateY(-2px);
-    outline: none;
+    outline: 2px solid var(--color-primary);
+    outline-offset: $space-1;
   }
 }
 
 .trem-app-footer__follow-text {
   margin: 0;
-  color: var(--text-muted);
+  color: var(--muted);
   font-size: $font-size-sm;
   font-weight: $font-medium;
   white-space: nowrap;
@@ -231,6 +240,7 @@
   width: min(100%, 88rem);
   margin-inline: auto;
   padding: $space-5 clamp(#{$space-5}, 5vw, #{$space-10}) $space-6;
+  border-top: 1px solid var(--border);
 }
 
 .trem-app-footer__bottom-content {
@@ -239,14 +249,12 @@
   align-items: center;
   justify-content: space-between;
   gap: $space-4;
-  margin-bottom: $space-4;
-  padding-bottom: $space-4;
-  border-bottom: 1px solid var(--border);
+  margin-bottom: $space-2;
 }
 
 .trem-app-footer__copyright {
   margin: 0;
-  color: var(--text-muted);
+  color: var(--muted);
   font-size: $font-size-sm;
   font-weight: $font-medium;
 }
@@ -259,7 +267,7 @@
 }
 
 .trem-app-footer__legal-link {
-  color: var(--text-muted);
+  color: var(--muted);
   font-size: $font-size-sm;
   font-weight: $font-medium;
   text-decoration: none;
@@ -268,112 +276,40 @@
   &:hover,
   &:focus-visible {
     color: var(--color-primary);
-    outline: none;
+    outline: 2px solid var(--color-primary);
+    outline-offset: $space-1;
   }
 }
 
 .trem-app-footer__powered {
   margin: 0;
-  color: var(--text-muted);
+  color: var(--muted);
   font-size: $font-size-xs;
   font-weight: $font-medium;
   opacity: 0.7;
 }
 
 @media (max-width: $breakpoint-lg) {
-  .trem-app-footer__grid {
-    grid-template-columns: minmax(0, 1.6fr) repeat(2, minmax(10rem, 1fr));
-  }
-
-  .trem-app-footer__brand-section {
-    grid-column: 1 / 3;
-  }
-
-  .trem-app-footer__nav-section:nth-child(3),
-  .trem-app-footer__nav-section:nth-child(4),
-  .trem-app-footer__nav-section:nth-child(5) {
-    grid-column: span 1;
-  }
-}
-
-@media (max-width: $breakpoint-md) {
-  .trem-app-footer__grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: $space-7 $space-5;
-  }
-
-  .trem-app-footer__brand-section {
-    grid-column: 1 / -1;
-    padding-right: 0;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: $space-6;
-  }
-
-  .trem-app-footer__contacts {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+  .trem-app-footer__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .trem-app-footer__brand-section { grid-column: 1 / -1; padding-right: 0; }
+  .trem-app-footer__contacts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 @media (max-width: $breakpoint-mobile) {
-  .trem-app-footer__main {
-    padding: $space-8 $space-4 $space-6;
+  .trem-app-footer__main { padding: $space-8 $space-5 $space-4; }
+  .trem-app-footer__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: $space-7 $space-5; }
+  .trem-app-footer__contacts { grid-template-columns: 1fr; }
+  .trem-app-footer__nav-section:last-child { grid-column: 1 / -1; }
+  .trem-app-footer__nav-section:last-child .trem-app-footer__link-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: $space-1 $space-4;
   }
-
-  .trem-app-footer__grid {
-    grid-template-columns: 1fr;
-    gap: $space-8;
-    margin-bottom: $space-8;
-    padding-bottom: $space-8;
-  }
-
-  .trem-app-footer__brand {
-    justify-content: center;
-    text-align: center;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .trem-app-footer__brand-text {
-    text-align: center;
-  }
-
-  .trem-app-footer__tagline {
-    max-width: none;
-  }
-
-  .trem-app-footer__contacts {
-    grid-template-columns: 1fr;
-    justify-items: center;
-    text-align: center;
-  }
-
-  .trem-app-footer__nav-section {
-    text-align: center;
-  }
-
-  .trem-app-footer__link-list {
-    justify-items: center;
-  }
-
-  .trem-app-footer__social-content {
-    flex-direction: column;
-    gap: $space-4;
-    text-align: center;
-  }
-
-  .trem-app-footer__follow-text {
-    white-space: normal;
-  }
-
-  .trem-app-footer__bottom-content {
-    flex-direction: column;
-    text-align: center;
-    gap: $space-3;
-  }
-
-  .trem-app-footer__legal-links {
-    justify-content: center;
-  }
+  .trem-app-footer__section-title { font-size: $font-size-xs; letter-spacing: .05em; }
+  .trem-app-footer__link { padding-block: $space-1; }
+  .trem-app-footer__link-list { gap: $space-1; }
+  .trem-app-footer__bottom { padding: $space-4 $space-5; }
+  .trem-app-footer__bottom-content { align-items: flex-start; flex-direction: column; gap: $space-2; }
+  .trem-app-footer__follow-text { white-space: normal; }
 }
 
 @media (prefers-reduced-motion: reduce) {

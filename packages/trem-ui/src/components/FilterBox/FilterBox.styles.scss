@@ -1,0 +1,26 @@
+@import "../../styles/base/typography";
+.trem-filter-box {
+  padding: $space-4; border: 1px solid var(--border); border-radius: $radius-lg; background: var(--card-bg); color: var(--text);
+  h2 { margin: 0 0 $space-4; font-size: $font-size-md; color: var(--heading); }
+  &__fields { display: grid; gap: $space-4; }
+  fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
+  legend { font-size: $font-size-sm; font-weight: $font-semibold; margin-bottom: $space-2; }
+  &__chips { display: flex; flex-wrap: wrap; gap: $space-2; }
+  label { position: relative; cursor: pointer; }
+  input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  label span { display: block; border: 1px solid var(--border); border-radius: $radius-full; padding: $space-2 $space-4; font-size: $font-size-sm; }
+  .is-selected span { background: var(--color-primary); color: var(--color-on-primary); border-color: var(--color-primary); }
+  input:focus-visible + span { outline: 2px solid var(--color-primary); outline-offset: 3px; }
+  fieldset:disabled { opacity: .6; }
+  footer { display: flex; justify-content: flex-end; gap: $space-2; margin-top: $space-4; }
+}
+
+.trem-filter-box-anchor { position: relative; align-self: flex-start; width: fit-content; }
+.trem-filter-box-dropdown { position: absolute; inset-inline-start: 0; top: calc(100% + #{$space-2}); z-index: 100; width: min(36rem, calc(100vw - #{$space-8})); max-height: 70dvh; overflow: auto; border-radius: $radius-lg; box-shadow: var(--shadow-lg); }
+.trem-filter-box {
+  header { display: flex; align-items: center; justify-content: space-between; gap: $space-3; margin-bottom: $space-4; }
+  header h2 { margin: 0; }
+  fieldset + fieldset { border-top: 1px solid var(--border); padding-top: $space-4; }
+  footer { position: sticky; bottom: 0; background: var(--card-bg); padding-top: $space-3; border-top: 1px solid var(--border); }
+}
+.trem-filter-box-sheet .trem-filter-box { border: 0; padding: $space-2; }
