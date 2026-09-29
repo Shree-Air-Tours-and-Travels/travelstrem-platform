@@ -336,7 +336,7 @@ $container-width: 1200px;
     }
     &__drawer-info strong {
       color: var(--text);
-      font-size: 1rem;
+      font-size: var(--font-size-md);
       font-weight: $font-bold;
       line-height: 1.2;
       overflow: hidden;

@@ -1,3 +1,4 @@
+import { requireEnquiryMobile } from "../auth/services/mobileProfile.js";
 import express from "express";
 import {
     getForm,
@@ -17,7 +18,7 @@ const optionalSubmitAuth = (req, res, next) => {
 };
 
 router.get("/form.json", getForm);
-router.post("/submit.json", optionalSubmitAuth, submitForm);
+router.post("/submit.json", optionalSubmitAuth, requireEnquiryMobile, submitForm);
 router.post("/enquiries/claim", authMiddleware, claimEnquiry);
 router.get("/enquiries", authMiddleware, getLeads);
 router.get("/enquiries/:id", authMiddleware, getEnquiry);

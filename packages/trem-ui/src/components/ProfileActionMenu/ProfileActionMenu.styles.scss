@@ -124,7 +124,7 @@
   &__item--danger:hover,
   &__item--danger:focus-visible {
     background: rgba(207, 52, 52, 0.12);
-    color: var(--color-danger, #cf3434);
+    color: var(--color-danger);
   }
 }
 

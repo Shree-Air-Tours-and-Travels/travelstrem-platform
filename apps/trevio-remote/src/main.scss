@@ -926,32 +926,32 @@
 
 .trevio-why__card--teal .trevio-why__card-icon {
   background: rgba(20, 184, 166, 0.1);
-  color: #14b8a6;
+  color: var(--color-primary);
 }
 
 .trevio-why__card--coral .trevio-why__card-icon {
   background: rgba(251, 113, 133, 0.1);
-  color: #fb7185;
+  color: var(--color-secondary);
 }
 
 .trevio-why__card--amber .trevio-why__card-icon {
   background: rgba(245, 158, 11, 0.1);
-  color: #f59e0b;
+  color: var(--color-warning);
 }
 
 .trevio-why__card--blue .trevio-why__card-icon {
   background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
+  color: var(--color-success);
 }
 
 .trevio-why__card--violet .trevio-why__card-icon {
   background: rgba(139, 92, 246, 0.1);
-  color: #8b5cf6;
+  color: var(--color-secondary);
 }
 
 .trevio-why__card--green .trevio-why__card-icon {
   background: rgba(34, 197, 94, 0.1);
-  color: #22c55e;
+  color: var(--color-success);
 }
 
 .trevio-why__card:hover.trevio-why__card--teal {
@@ -1281,7 +1281,7 @@
   width: 8px;
   height: 8px;
   border-radius: $radius-full;
-  background: #22c55e;
+  background: var(--color-success);
   animation: trevio-pulse 2s ease-in-out infinite;
 }
 
@@ -1530,7 +1530,7 @@
 
   .trevio-faq__item--open & {
     background: var(--color-primary);
-    color: var(--color-on-primary, #fff);
+    color: var(--color-on-primary);
     transform: rotate(135deg);
   }
 }

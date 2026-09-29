@@ -6,7 +6,7 @@
   color: var(--muted);
 }
 .mc-error {
-  color: #ef4444;
+  color: var(--color-danger);
 }
 .mc-error button {
   margin-top: 1rem;
@@ -20,7 +20,7 @@
 }
 .mc-header h1 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: var(--font-size-xl);
   color: var(--title);
 }
 
@@ -66,12 +66,12 @@
   border-radius: 999px;
 }
 .mc-card__status--active {
-  background: #dcfce7;
-  color: #166534;
+  background: var(--success-soft);
+  color: var(--color-success);
 }
 .mc-card__status--inactive {
-  background: #f3f4f6;
-  color: #6b7280;
+  background: var(--surface-muted);
+  color: var(--muted);
 }
 
 .mc-card__logos {
@@ -114,7 +114,7 @@
   color: var(--color-on-primary);
   border-radius: var(--radius-sm);
   font-weight: 700;
-  font-size: 1rem;
+  font-size: var(--font-size-md);
 }
 .client-logo-cell__label {
   font-size: 0.65rem;
@@ -154,11 +154,11 @@
   background: var(--surface-inset);
 }
 .btn--danger {
-  background: #ef4444;
-  color: #fff;
+  background: var(--color-danger);
+  color: var(--color-on-primary);
 }
 .btn--danger:hover {
-  background: #dc2626;
+  background: var(--color-danger);
 }
 .btn--sm {
   padding: 0.35rem 0.75rem;

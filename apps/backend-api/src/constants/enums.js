@@ -11,6 +11,9 @@ export const BOOKING_STATUS = Object.freeze({
     PARTIALLY_PAID: "PARTIALLY_PAID",
     PAID: "PAID",
     CONFIRMED: "CONFIRMED",
+    CONFIRMING_WITH_SUPPLIER: "CONFIRMING_WITH_SUPPLIER",
+    SUPPLIER_FAILED: "SUPPLIER_FAILED",
+    REFUND_INITIATED: "REFUND_INITIATED",
     TICKETING: "TICKETING",
     TICKETED: "TICKETED",
     TRAVEL_READY: "TRAVEL_READY",
@@ -39,7 +42,10 @@ export const BOOKING_STATUS_TRANSITIONS = Object.freeze({
     CUSTOMER_REJECTED: ["QUOTE_READY", "CANCELLED"],
     PAYMENT_PENDING: ["PARTIALLY_PAID", "PAID", "CANCELLED"],
     PARTIALLY_PAID: ["PAID", "REFUND_PENDING", "CANCELLED"],
-    PAID: ["CONFIRMED", "REFUND_PENDING"],
+    PAID: ["CONFIRMING_WITH_SUPPLIER", "REFUND_PENDING"],
+    CONFIRMING_WITH_SUPPLIER: ["CONFIRMED", "SUPPLIER_FAILED"],
+    SUPPLIER_FAILED: ["REFUND_INITIATED"],
+    REFUND_INITIATED: ["REFUNDED"],
     CONFIRMED: ["PARTIALLY_PAID", "PAID", "TICKETING", "TRAVEL_READY", "COMPLETED", "CANCELLED"],
     TICKETING: ["TICKETED", "CANCELLED"],
     TICKETED: ["TRAVEL_READY", "COMPLETED", "REFUND_PENDING"],
@@ -51,11 +57,16 @@ export const BOOKING_STATUS_TRANSITIONS = Object.freeze({
 });
 
 export const PAYMENT_STATUS = Object.freeze({
+    CREATED: "CREATED",
+    PENDING: "PENDING",
+    PROCESSING: "PROCESSING",
+    EXPIRED: "EXPIRED",
     TOKEN_PENDING: "TOKEN_PENDING",
     TOKEN_VERIFICATION: "TOKEN_VERIFICATION",
     TOKEN_PAID: "TOKEN_PAID",
     BALANCE_PENDING: "BALANCE_PENDING",
     FULLY_PAID: "FULLY_PAID",
+    PARTIALLY_REFUNDED: "PARTIALLY_REFUNDED",
     UNPAID: "UNPAID",
     PARTIAL: "PARTIAL",
     PAID: "PAID",
@@ -65,6 +76,25 @@ export const PAYMENT_STATUS = Object.freeze({
 });
 
 export const PAYMENT_STATUS_LIST = Object.values(PAYMENT_STATUS);
+
+export const STATUS_DISPLAY = Object.freeze({
+    NEW: ["New", "info"], SENT: ["Sent", "info"], DRAFT: ["Draft", "neutral"],
+    IN_REVIEW: ["Under review", "info"], UNDER_REVIEW: ["Under review", "info"],
+    ENQUIRY_DETAILS_ADDED: ["Enquiry saved", "info"], TRAVELLER_DETAILS_ADDED: ["Travellers saved", "info"],
+    QUOTE_REQUESTED: ["Quote requested", "info"], QUOTE_READY: ["Quote ready", "info"], QUOTE_SENT: ["Quote sent", "info"],
+    ACCEPTED: ["Accepted", "success"], CUSTOMER_ACCEPTED: ["Awaiting payment", "warning"],
+    REJECTED: ["Rejected", "danger"], CUSTOMER_REJECTED: ["Rejected", "danger"], CHANGE_REQUESTED: ["Changes requested", "warning"],
+    CREATED: ["Awaiting payment", "warning"], PENDING: ["Awaiting payment", "warning"], PAYMENT_PENDING: ["Awaiting payment", "warning"],
+    AWAITING_TOKEN_PAYMENT: ["Awaiting payment", "warning"], TOKEN_PENDING: ["Awaiting payment", "warning"], UNPAID: ["Awaiting payment", "warning"],
+    PROCESSING: ["Confirming payment", "info"], TOKEN_VERIFICATION: ["Confirming payment", "info"],
+    PAID: ["Payment received", "success"], FULLY_PAID: ["Payment received", "success"],
+    PARTIAL: ["Partially paid", "warning"], PARTIALLY_PAID: ["Partially paid", "warning"], TOKEN_PAID: ["Partially paid", "warning"], BALANCE_PENDING: ["Balance pending", "warning"],
+    CONFIRMING_WITH_SUPPLIER: ["Confirming booking", "info"], SUPPLIER_FAILED: ["Booking unsuccessful", "danger"],
+    CONFIRMED: ["Confirmed", "success"], TICKETING: ["Preparing tickets", "info"], TICKETED: ["Ticketed", "success"], TRAVEL_READY: ["Ready to travel", "success"],
+    COMPLETED: ["Completed", "success"], CLOSED: ["Closed", "neutral"], RESPONDED: ["Responded", "info"],
+    CANCELLED: ["Cancelled", "danger"], FAILED: ["Payment unsuccessful", "danger"], EXPIRED: ["Expired", "warning"],
+    REFUND_INITIATED: ["Refund in progress", "warning"], REFUND_PENDING: ["Refund in progress", "warning"], REFUNDED: ["Refunded", "info"], PARTIALLY_REFUNDED: ["Partially refunded", "info"],
+});
 
 export const PAYMENT_TYPE = Object.freeze({
     TOKEN: "TOKEN",
@@ -109,6 +139,7 @@ export const QUOTE_STATUS = Object.freeze({
 export const QUOTE_STATUS_LIST = Object.values(QUOTE_STATUS);
 
 export const DOCUMENT_STATUS = Object.freeze({
+    REPLACED: "REPLACED",
     PENDING: "PENDING",
     UPLOADED: "UPLOADED",
     APPROVED: "APPROVED",

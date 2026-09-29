@@ -3,10 +3,10 @@ SCSS: src/components/GlobalLoader/globalLoader.scss
 Place this file beside the component. It contains variables and a fade-out animation.
 */
 
-$primary-color: var(--color-primary, #0f8f86);
-$loader-surface: var(--surface-elevated, #ffffff);
-$loader-text: var(--text, #132321);
-$loader-overlay: var(--page-bg, #f8faf9);
+$primary-color: var(--color-primary);
+$loader-surface: var(--surface-elevated);
+$loader-text: var(--text);
+$loader-overlay: var(--page-bg);
 $loader-fade-duration: 0.45s;
 
 .tt-loader {
@@ -52,7 +52,7 @@ $loader-fade-duration: 0.45s;
     left: -12rem;
     background: radial-gradient(
       circle,
-      color-mix(in srgb, var(--color-accent, #7867e8) 20%, transparent),
+      color-mix(in srgb, var(--color-accent) 20%, transparent),
       transparent 68%
     );
   }
@@ -134,7 +134,7 @@ $loader-fade-duration: 0.45s;
 
   &__copy p {
     margin-top: 0.5rem;
-    color: var(--text-muted, #667085);
+    color: var(--text-muted);
     font-size: 0.92rem;
     line-height: 1.55;
   }
@@ -181,14 +181,14 @@ $loader-fade-duration: 0.45s;
     height: 0.35rem;
     overflow: hidden;
     border-radius: 999px;
-    background: var(--surface-inset, #eef1f5);
+    background: var(--surface-inset);
   }
 
   &__progress span {
     display: block;
     height: 100%;
     border-radius: inherit;
-    background: linear-gradient(90deg, var(--color-primary), var(--color-accent, #7867e8));
+    background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
     transition: width 700ms ease;
   }
 
@@ -209,7 +209,7 @@ $loader-fade-duration: 0.45s;
   }
 
   &__wake-note span {
-    color: var(--text-muted, #667085);
+    color: var(--text-muted);
     font-size: 0.75rem;
     line-height: 1.45;
   }
@@ -219,7 +219,7 @@ $loader-fade-duration: 0.45s;
     justify-content: center;
     gap: 1.25rem;
     width: 100%;
-    color: var(--text-muted, #667085);
+    color: var(--text-muted);
     font-size: 0.68rem;
     font-weight: 700;
   }

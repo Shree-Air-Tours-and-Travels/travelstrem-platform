@@ -1,3 +1,4 @@
+import { redirectToPayment } from "@packages/trem-utils";
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
@@ -51,6 +52,7 @@ export default function FlightDetailsContainer() {
   const [seats, setSeats] = useState([]);
   const [revalidation, setRevalidation] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [enquiryError, setEnquiryError] = useState(null);
   const [enquiryModalOpen, setEnquiryModalOpen] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
 
@@ -70,6 +72,10 @@ export default function FlightDetailsContainer() {
         );
         const bookingResponse = await readComponentData(bookingPath);
         if (!active) return;
+        if (bookingResponse.data.summaryPath) {
+          navigate(bookingResponse.data.summaryPath, { replace: true });
+          return;
+        }
         setStep(4);
         setState({
           loading: false,
@@ -164,8 +170,9 @@ export default function FlightDetailsContainer() {
         },
       );
       setState((current) => ({ ...current, booking: response.data }));
-      setStep(4);
+      await redirectToPayment({ bookingId: response.data.bookingId, bookingType: "flight", sourceApp: "trehub" });
     } catch (error) {
+      setEnquiryError(error);
       if (error.code === "PRICE_CHANGED")
         setRevalidation({ status: "PRICE_CHANGED", ...error.details });
       else setState((current) => ({ ...current, error: error.message }));
@@ -175,6 +182,7 @@ export default function FlightDetailsContainer() {
   };
 
   const createEnquiry = async () => {
+    setEnquiryError(null);
     setSaving(true);
     setState((current) => ({ ...current, error: "" }));
     try {
@@ -238,6 +246,7 @@ export default function FlightDetailsContainer() {
       seats={seats}
       revalidation={revalidation}
       saving={saving}
+      enquiryError={enquiryError}
       enquiryModalOpen={enquiryModalOpen}
       onFareChange={(value) => {
         setFareId(value);
@@ -272,6 +281,11 @@ export default function FlightDetailsContainer() {
       onCreateEnquiry={createEnquiry}
       onRevalidate={revalidate}
       onBook={createBooking}
+      onPay={async () => {
+        setSaving(true);
+        try { await redirectToPayment({ bookingId: state.booking.bookingId, bookingType: "flight", sourceApp: "trehub" }); }
+        catch (error) { setState(current => ({ ...current, error: error.message })); setSaving(false); }
+      }}
       onRetryLoad={() => setReloadKey((current) => current + 1)}
       onBackToSearch={() => navigate(location.state?.returnTo || "/trehub/flights")}
     />

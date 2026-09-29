@@ -1,3 +1,4 @@
+import { getMobileProfilePrompt } from "./services/mobileProfile.js";
 // modules/auth/routes.js
 import express from "express";
 import * as controller from "./controllers/authController.js";
@@ -157,6 +158,7 @@ router.get("/session", controller.getSession);
   Profile routes (authenticated)
 */
 router.get("/profile", authMiddleware, profileController.getProfile);
+router.post("/profile/mobile-prompt", authMiddleware, getMobileProfilePrompt);
 router.put("/profile", authMiddleware, profileController.updateProfile);
 router.put("/password", authMiddleware, profileController.updatePassword);
 

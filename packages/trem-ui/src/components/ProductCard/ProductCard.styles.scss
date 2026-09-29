@@ -130,10 +130,10 @@
 
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--overlay-strong, #052226) 18%, transparent) 0%,
+    color-mix(in srgb, var(--overlay-strong) 18%, transparent) 0%,
     transparent 34%,
     transparent 62%,
-    color-mix(in srgb, var(--overlay-strong, #052226) 62%, transparent) 100%
+    color-mix(in srgb, var(--overlay-strong) 62%, transparent) 100%
   );
 }
 
@@ -161,7 +161,7 @@
   border: 1px solid color-mix(in srgb, var(--color-on-primary) 26%, transparent);
   border-radius: $radius-full;
 
-  background: color-mix(in srgb, var(--overlay-strong, #052226) 46%, transparent);
+  background: color-mix(in srgb, var(--overlay-strong) 46%, transparent);
 
   color: var(--color-on-primary);
 

@@ -1,3 +1,5 @@
+import FlightBooking from "../modules/flights/models/FlightBooking.js";
+import { PaymentSession, PaymentTransaction, PaymentWebhookEvent, Refund } from "../modules/payments/models.js";
 import initializeDatabase from "../bootstrap/database.js";
 import PaymentConfig from "../core/financial-engine/models/PaymentConfig.js";
 import AgencyMerchantConfig from "../core/financial-engine/models/AgencyMerchantConfig.js";
@@ -17,6 +19,11 @@ for (const model of [
     FinancialSettlement,
     BookingQuote,
     BookingPayment,
+    PaymentSession,
+    PaymentTransaction,
+    PaymentWebhookEvent,
+    Refund,
+    FlightBooking,
 ]) {
     const result = await model.syncIndexes();
     console.log(`${model.modelName}:`, result);

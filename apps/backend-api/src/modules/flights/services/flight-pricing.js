@@ -10,7 +10,7 @@ export const applyFlightFinancials = async ({ price, financialContext = {} }) =>
         productType: "flight",
         baseAmountMinor: flightSubtotal,
         currency: price.currency || "INR",
-        paymentProvider: financialContext.paymentProvider || "razorpay",
+        paymentProvider: financialContext.paymentProvider || process.env.PAYMENT_PROVIDER || "razorpay",
         agencyId: financialContext.agencyId || null,
         customerType: financialContext.customerType || null,
         ...(financialContext.config ? { config: financialContext.config } : {}),

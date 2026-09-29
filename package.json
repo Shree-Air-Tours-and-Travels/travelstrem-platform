@@ -6,7 +6,7 @@
   "scripts": {
     "sync:favicons": "node scripts/sync-favicons.mjs",
     "build:website": "pnpm --filter @apps/travelstrem-marketing build",
-    "prebuild": "pnpm sync:favicons",
+    "prebuild": "pnpm tokens:check && pnpm sync:favicons",
     "dev": "turbo run dev",
     "build": "turbo run build",
     "start": "turbo run start",
@@ -19,7 +19,9 @@
     "lint:fix": "eslint . --fix",
     "fix": "npm run format && npm run lint:fix",
     "storybook": "pnpm --filter @packages/trem-standard-ui-library storybook",
-    "build:storybook": "pnpm --filter @packages/trem-standard-ui-library build-storybook"
+    "build:storybook": "pnpm --filter @packages/trem-standard-ui-library build-storybook",
+    "tokens:generate": "pnpm --filter @packages/trem-design-tokens generate",
+    "tokens:check": "pnpm --filter @packages/trem-design-tokens check"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

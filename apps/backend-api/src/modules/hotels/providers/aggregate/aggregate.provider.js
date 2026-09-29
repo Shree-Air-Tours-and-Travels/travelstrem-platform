@@ -125,6 +125,7 @@ export default class AggregateHotelProvider extends HotelProvider {
             return canonicalHotels;
         };
         const completion = Promise.all(executions).then(merge);
+        if (providers.length === 1) return completion;
         let initialWait;
         const first = await Promise.race([
             Promise.any(

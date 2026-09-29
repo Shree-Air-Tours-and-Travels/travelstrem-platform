@@ -1,11 +1,2 @@
 // Compile-time tokens only. The shell owns global theme CSS.
-@import "@packages/trem-design-tokens/scss/colors";
-@import "@packages/trem-design-tokens/scss/spacing";
-@import "@packages/trem-design-tokens/scss/radius";
-@import "@packages/trem-design-tokens/scss/breakpoints";
-@import "@packages/trem-design-tokens/scss/layers";
-@import "@packages/trem-design-tokens/scss/shadows";
-@import "@packages/trem-design-tokens/scss/motion";
-@import "@packages/trem-design-tokens/scss/easing";
-@import "@packages/trem-design-tokens/scss/typography";
-@import "@packages/trem-design-tokens/scss/mixins";
+@import "@packages/trem-design-tokens/scss/tokens";

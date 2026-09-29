@@ -17,6 +17,8 @@ import FinancialEngine from "../../../core/financial-engine/index.js";
 import BookingQuote from "../../bookings/models/BookingQuote.js";
 import Booking from "../../bookings/models/Booking.js";
 import FlightBooking from "../../flights/models/FlightBooking.js";
+import { bookingStatusDisplay } from "../../../constants/common.js";
+import { PaymentSession } from "../../payments/models.js";
 import { bookingView } from "../../bookings/mappers/bookingView.js";
 import { getPortalScope } from "../../../core/auth/portalSession.js";
 import {
@@ -1518,7 +1520,8 @@ export const getLeads = async (req, res) => {
                 product: "trehub",
                 title: `${first?.origin?.city || first?.origin?.iataCode || "Flight"} to ${last?.destination?.city || last?.destination?.iataCode || "destination"}`,
                 status: booking.status,
-                statusLabel: String(booking.status || "").replaceAll("_", " "),
+                statusLabel: bookingStatusDisplay(booking.status, booking.paymentStatus).label,
+                statusTone: bookingStatusDisplay(booking.status, booking.paymentStatus).tone,
                 createdAt: booking.createdAt,
                 createdLabel: formatDate(booking.createdAt),
                 travelDate: formatDate(first?.departureDateTime),
@@ -1528,6 +1531,21 @@ export const getLeads = async (req, res) => {
             };
         });
         records.push(...flightRecords);
+        const allBookings = [...bookings, ...flightBookings];
+        const sessions = allBookings.length ? await PaymentSession.find({ bookingId: { $in: allBookings.map(item => item._id) } }).sort({ createdAt: -1 }).select("bookingId status").lean() : [];
+        const paymentByBooking = new Map();
+        for (const session of sessions) if (!paymentByBooking.has(String(session.bookingId))) paymentByBooking.set(String(session.bookingId), session.status);
+        const byReference = new Map(allBookings.map(item => [item.bookingRef, item]));
+        const byEnquiry = new Map(allBookings.filter(item => item.sourceEnquiryId).map(item => [String(item.sourceEnquiryId), item]));
+        const leadByReference = new Map(leads.map(item => [item.enquiryRef, item]));
+        for (const record of records) {
+            const booking = byReference.get(record.bookingRef) || byEnquiry.get(String(leadByReference.get(record.enquiryRef)?._id));
+            if (!booking) continue;
+            const display = bookingStatusDisplay(booking.status, paymentByBooking.get(String(booking._id)) || booking.paymentStatus);
+            record.status = booking.status;
+            record.statusLabel = display.label;
+            record.statusTone = display.tone;
+        }
         records.sort((left, right) => new Date(right.createdAt || 0).getTime() - new Date(left.createdAt || 0).getTime());
         const selected = (key) => String(req.query[key] || "").split(",").filter((value) => value && value !== "all");
         const filterKeys = ["recordType", "product", "status", "journeyType"];

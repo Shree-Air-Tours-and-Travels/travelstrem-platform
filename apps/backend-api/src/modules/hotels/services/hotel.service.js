@@ -262,7 +262,7 @@ export default class HotelService {
             productType: "hotel",
             baseAmountMinor: subtotal,
             currency: room.currency,
-            paymentProvider: "razorpay",
+            paymentProvider: process.env.PAYMENT_PROVIDER || "razorpay",
             agencyId: actor.agencyId || null,
         });
         return {
@@ -760,7 +760,7 @@ export default class HotelService {
             productType: "hotel",
             baseAmountMinor: best.subtotal,
             currency,
-            paymentProvider: "razorpay",
+            paymentProvider: process.env.PAYMENT_PROVIDER || "razorpay",
             agencyId: actor.agencyId || null,
         });
         return {
@@ -1353,7 +1353,7 @@ export default class HotelService {
             productType: "hotel",
             baseAmountMinor: subtotal,
             currency,
-            paymentProvider: "razorpay",
+            paymentProvider: process.env.PAYMENT_PROVIDER || "razorpay",
             agencyId: actor.agencyId || null,
         });
         return {
@@ -1439,6 +1439,7 @@ export default class HotelService {
                 priceSummary: quote.display.total,
             },
             customizationSnapshot: {
+                bookingExpiresAt: search.expiresAt,
                 type: "HOTEL",
                 travellers: search.input.guests,
                 rooms: search.input.rooms,

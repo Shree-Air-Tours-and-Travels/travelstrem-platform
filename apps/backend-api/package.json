@@ -5,7 +5,7 @@
   "type": "module",
   "main": "src/server.js",
   "scripts": {
-    "dev": "cross-env NODE_ENV=development USE_DOTENV=true nodemon src/server.js",
+    "dev": "cross-env NODE_ENV=development USE_DOTENV=true nodemon --watch src --watch ../booking-engine/server --ext js,mjs,json src/server.js",
     "build": "node --check src/server.js",
     "start": "node src/server.js",
     "start:prod": "cross-env NODE_ENV=production node src/server.js",

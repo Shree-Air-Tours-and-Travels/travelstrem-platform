@@ -24,6 +24,7 @@ export default function HotelDetailsContainer() {
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [quoteError, setQuoteError] = useState(null);
   const [expandedRoomId, setExpandedRoomId] = useState(null);
+  const [enquiryError, setEnquiryError] = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [reload, setReload] = useState(0);
   const request = useRef(0);
@@ -95,6 +96,7 @@ export default function HotelDetailsContainer() {
 
   const createEnquiry = async () => {
     if (saving || !quote) return;
+    setEnquiryError(null);
     setSaving(true);
     setError(null);
     try {
@@ -107,8 +109,7 @@ export default function HotelDetailsContainer() {
       setConfirmOpen(false);
       navigate(response.data.targetPath);
     } catch (failure) {
-      setConfirmOpen(false);
-      setError(failure);
+      setEnquiryError(failure);
     } finally {
       setSaving(false);
     }
@@ -133,6 +134,7 @@ export default function HotelDetailsContainer() {
       quoteLoading={quoteLoading}
       quoteError={quoteError}
       expandedRoomId={expandedRoomId}
+      enquiryError={enquiryError}
       confirmOpen={confirmOpen}
       onSelectRoom={selectRoom}
       onChooseSlot={setActiveSlot}

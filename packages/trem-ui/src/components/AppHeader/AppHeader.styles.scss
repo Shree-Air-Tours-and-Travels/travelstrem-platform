@@ -1,20 +1,20 @@
 @import "../../styles/base/typography";
 
 .trem-app-header {
-  --text: #eef5ff;
-  --title: #ffffff;
-  --heading: #ffffff;
-  --muted: #d9e5ff;
-  --card-bg: #07172d;
-  --surface: rgba(255, 255, 255, 0.08);
-  --surface-inset: rgba(255, 255, 255, 0.1);
-  --surface-glass-strong: rgba(7, 20, 41, 0.98);
-  --border: rgba(174, 204, 255, 0.22);
-  --primary-soft: rgba(138, 165, 255, 0.24);
-  --primary-softer: rgba(138, 165, 255, 0.16);
-  --color-primary: #8fa8ff;
-  --color-primary-dark: #aec0ff;
-  --color-on-primary: #07142a;
+  --text: #{$dark-text};
+  --title: #{$dark-text};
+  --heading: #{$dark-text};
+  --muted: #{$dark-text-muted};
+  --card-bg: #{$dark-bg};
+  --surface: #{$dark-surface};
+  --surface-inset: #{$dark-surface-muted};
+  --surface-glass-strong: #{$dark-surface};
+  --border: #{$dark-border};
+  --primary-soft: #{$dark-primary-soft};
+  --primary-softer: #{$dark-primary-softer};
+  --color-primary: #{$dark-primary};
+  --color-primary-dark: #{$dark-primary-dark};
+  --color-on-primary: #{$dark-bg};
   position: fixed;
   top: 0;
   left: var(--trem-app-header-sidebar-offset, 260px);
@@ -259,7 +259,7 @@
     &:hover,
     &:focus-visible {
       background: rgba(138, 165, 255, 0.14);
-      color: #ffffff;
+      color: var(--color-on-primary);
       opacity: 1;
     }
 

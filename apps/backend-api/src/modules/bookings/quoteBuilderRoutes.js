@@ -6,6 +6,7 @@ import {
 } from "../../../../booking-engine/server/index.mjs";
 import quoteBuilderService, {
     cancelCustomerFlightEnquiry,
+    downloadJourneyDocument,
     findAuthorizedBookingJourney,
     findCurrentBookingJourneyQuote,
     saveCustomerTravellerDetails,
@@ -16,6 +17,15 @@ import quoteBuilderService, {
 
 const router = express.Router();
 const handlers = createQuoteBuilderHandlers(quoteBuilderService);
+router.get("/bookings/:bookingId/documents/:documentId", authMiddleware, async (req, res) => {
+    try {
+        const data = await downloadJourneyDocument(req.params.bookingId, req.params.documentId, req.user);
+        res.setHeader("Cache-Control", "no-store, private");
+        return res.json({ status: "success", data });
+    } catch (error) {
+        return res.status(error.status || 500).json({ status: "error", message: error.status ? error.message : "Document download is unavailable." });
+    }
+});
 
 router.get(
     "/bookings/:bookingId/journey",

@@ -45,10 +45,21 @@ const bookingSchema = new Schema(
             default: null,
             index: true,
         },
-        product: { type: String, enum: ["trevista", "trevio"], required: true, index: true },
-        journeyType: { type: String, enum: ["tour", "trip"], required: true, index: true },
+        product: {
+            type: String,
+            enum: ["trevista", "trevio", "trehub", "custom"],
+            required: true,
+            index: true,
+        },
+        journeyType: {
+            type: String,
+            enum: ["tour", "trip", "hotel", "flight", "custom"],
+            required: true,
+            index: true,
+        },
         tourId: { type: String, default: null },
         tourTitle: { type: String, default: "" },
+        supplierConfirmationReference: String,
         status: {
             type: String,
             enum: BOOKING_STATUS_LIST,

@@ -149,7 +149,7 @@
     min-height: 550px;
     padding: clamp(2.7rem, 5.4vw, 4rem) clamp(1.25rem, 4vw, 3rem) clamp(4.5rem, 7.2vw, 7rem);
     border-radius: 20px;
-    color: #ffffff;
+    color: var(--color-on-primary);
     background:
       linear-gradient(90deg, rgba(7, 42, 39, 0.82), rgba(7, 42, 39, 0.28)),
       var(--tours-hero-bg, var(--color-primary-dark)) center / cover no-repeat;
@@ -198,7 +198,7 @@
     border: 1px solid rgba(255, 255, 255, 0.25);
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.14);
-    color: #ffffff;
+    color: var(--color-on-primary);
     font-weight: $font-bold;
     backdrop-filter: blur(10px);
 
@@ -209,7 +209,7 @@
 
   &__hero-title {
     margin: 1.25rem 0 1rem;
-    color: #ffffff;
+    color: var(--color-on-primary);
     font-size: clamp(2.5rem, 4.4vw, 4.25rem);
     line-height: 1.05;
     letter-spacing: -0.03em;
@@ -255,12 +255,12 @@
   &__hero-actions .tours-page__hero-btn--ghost {
     background: transparent;
     border: 1px solid transparent;
-    color: #ffffff;
+    color: var(--color-on-primary);
     box-shadow: none;
 
     &:hover {
       background: rgba(255, 255, 255, 0.12);
-      color: #ffffff;
+      color: var(--color-on-primary);
     }
   }
 
@@ -385,7 +385,7 @@
     margin: 0;
     font-size: 0.85rem;
     line-height: 1.6;
-    color: #687a78;
+    color: var(--muted);
   }
 
   &__result-pill {

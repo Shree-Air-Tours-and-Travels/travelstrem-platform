@@ -1,0 +1,21 @@
+.trem-details-card {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+  overflow: hidden;
+  &__header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 24px; border-bottom: 1px solid var(--border); background: linear-gradient(120deg, var(--primary-soft), var(--surface)); }
+  &__header h2 { margin: 0; font-size: 1.1rem; line-height: 1.4; color: var(--text); }
+  &__header p { margin: 6px 0 0; font-size: var(--font-size-sm); line-height: 1.6; color: var(--muted); }
+  &__actions { flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
+  &__rows { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 24px; padding: 24px; margin: 0; }
+  &__rows dt { color: var(--muted); font-size: .75rem; margin-bottom: 6px; }
+  &__rows dd { margin: 0; color: var(--text); font-size: .9375rem; font-weight: 600; overflow-wrap: anywhere; }
+  &__body { padding: 20px 24px; }
+  @media (max-width: 600px) {
+    &__header, &__body, &__rows { padding: 16px; }
+    &__header { flex-wrap: wrap; }
+    &__rows { grid-template-columns: 1fr; gap: 16px; }
+  }
+}

@@ -1,3 +1,4 @@
+import { requireEnquiryMobile } from "../../auth/services/mobileProfile.js";
 import express from "express";
 import { authMiddleware } from "../../../shared/auth/index.js";
 import {
@@ -21,7 +22,7 @@ router.post("/search", searchFlights);
 router.get("/search/:searchId/results", getFlightResults);
 router.get("/search/:searchId/offers/:offerId", getFlightOffer);
 router.post("/revalidate", revalidateFlight);
-router.post("/enquiries", authMiddleware, createFlightEnquiry);
+router.post("/enquiries", authMiddleware, requireEnquiryMobile, createFlightEnquiry);
 router.get("/offers/:offerId/seat-map", getSeatMap);
 router.get("/bookings/pnr/:pnr", authMiddleware, getFlightBookingByPnr);
 router.post("/bookings", authMiddleware, createFlightBooking);

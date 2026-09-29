@@ -54,10 +54,10 @@
   &__message {
     margin-bottom: $space-4;
     padding: $space-3 $space-4;
-    border: 1px solid color-mix(in srgb, var(--danger) 35%, var(--border));
+    border: 1px solid color-mix(in srgb, var(--color-danger) 35%, var(--border));
     border-radius: $radius-md;
     background: var(--danger-soft);
-    color: var(--danger);
+    color: var(--color-danger);
     font-weight: $font-semibold;
   }
 

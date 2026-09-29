@@ -13,7 +13,7 @@ import {
   TimelineStepper,
 } from "@packages/trem-ui";
 import TrehubPreloader from "../../../TrehubPreloader.jsx";
-import { ConfirmOverlay } from "@packages/trem-modals";
+import { EnquiryModal } from "@packages/trem-modals";
 import "./FlightDetails.view.scss";
 
 const labelFor = (labels, ref, fallback = "") => labels?.[ref] || fallback || ref;
@@ -50,6 +50,7 @@ export default function FlightDetailsView({
   revalidation,
   saving,
   enquiryModalOpen,
+  enquiryError,
   onFareChange,
   onPassengerChange,
   onSeatToggle,
@@ -59,6 +60,7 @@ export default function FlightDetailsView({
   onCreateEnquiry,
   onRevalidate,
   onBook,
+  onPay,
   onRetryLoad,
   onBackToSearch,
 }) {
@@ -122,12 +124,12 @@ export default function FlightDetailsView({
 
       <header className="trehub-flight-journey__hero">
         <span>{labelFor(labels, "journeyEyebrow")}</span>
-        <h1>{labelFor(labels, step === 4 ? "bookingComplete" : "journeyTitle")}</h1>
-        <p>{labelFor(labels, step === 4 ? "bookingCompleteDescription" : "journeyDescription")}</p>
+        <h1>{step === 4 ? booking?.paymentSummary?.heading || "Booking summary" : labelFor(labels, "journeyTitle")}</h1>
+        <p>{step === 4 ? booking?.paymentSummary?.message : labelFor(labels, "journeyDescription")}</p>
       </header>
 
       <div className="trehub-flight-journey__layout">
-        <aside className="trehub-flight-journey__steps">
+        {!booking && <aside className="trehub-flight-journey__steps">
           <TimelineStepper
             steps={stepItems}
             orientation="horizontal"
@@ -135,7 +137,7 @@ export default function FlightDetailsView({
             showStepNumbers
             showTime={false}
           />
-        </aside>
+        </aside>}
 
         <section className="trehub-flight-journey__content">
           {saving ? (
@@ -482,12 +484,14 @@ export default function FlightDetailsView({
 
           {confirmationWidget && step === confirmationWidget.props?.showAtStep && booking ? (
             <div className="trehub-flight-journey__confirmation">
-              <div className="trehub-flight-journey__confirmation-icon">✓</div>
+              <div className="trehub-flight-journey__confirmation-icon" aria-hidden="true">{booking.pnr ? "✓" : "…"}</div>
               <StatusBadge value={booking.status} appearance="accent" />
               <h2>{booking.bookingId}</h2>
-              <p>
+              {booking.paymentSummary?.message && <p>{booking.paymentSummary.message}</p>}
+              {booking.paymentEnabled && <Button text={booking.paymentActionLabel} onClick={onPay} disabled={saving} />}
+              {booking.pnr && <p>
                 {labelFor(labels, "pnr")} <strong>{booking.pnr}</strong>
-              </p>
+              </p>}
               <div>
                 <span>
                   {labelFor(labels, "payment")}{" "}
@@ -589,16 +593,26 @@ export default function FlightDetailsView({
           ) : null}
         </section>
       </div>
-      <ConfirmOverlay
+      <EnquiryModal
         open={enquiryModalOpen}
         title={labelFor(labels, "createEnquiryTitle")}
         note={labelFor(labels, "createEnquiryDescription")}
-        icon="plane"
         cancelLabel={labelFor(labels, "cancel")}
         confirmLabel={labelFor(labels, "createEnquiryConfirm")}
         confirmDisabled={saving}
         onClose={onCloseEnquiryModal}
         onConfirm={onCreateEnquiry}
+        error={enquiryError}
+        summary={selectedFare?.pricing ? {
+          title: selectedFare.brand || labelFor(labels, "selectedFare", "Selected fare"),
+          items: [
+            { id: "base", label: labelFor(labels, "baseFare", "Base fare"), value: money(selectedFare.pricing.baseFare, selectedFare.pricing.currency) },
+            { id: "taxes", label: labelFor(labels, "taxes", "Taxes"), value: money(selectedFare.pricing.taxes, selectedFare.pricing.currency) },
+            { id: "providerFees", label: labelFor(labels, "providerFees", "Provider fees"), value: money(selectedFare.pricing.providerFees, selectedFare.pricing.currency) },
+            { id: "fee", label: labelFor(labels, "convenienceFee", "Convenience fee"), value: money(selectedFare.pricing.convenienceFee, selectedFare.pricing.currency) },
+          ],
+          totals: [{ id: "total", label: labelFor(labels, "total", "Total"), value: money(selectedFare.pricing.total, selectedFare.pricing.currency), tone: "highlight" }],
+        } : null}
       />
     </main>
   );

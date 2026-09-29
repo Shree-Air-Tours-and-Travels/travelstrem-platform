@@ -1,3 +1,4 @@
+import paymentRoutes, { webhookRouter } from "../modules/payments/routes.js";
 import savedSearchRoutes from "../modules/savedSearches/routes.js";
 import mongoose from "mongoose";
 import config from "../config/index.js";
@@ -64,6 +65,8 @@ export default function registerRoutes(app) {
         }),
     );
 
+    app.use("/api/payments", paymentRoutes);
+    app.use("/api/webhooks/payments", webhookRouter);
     app.use(API_ROUTES.AUTH, authRoutes);
     app.use(API_ROUTES.API, portalRoutes);
     app.use(API_ROUTES.API, searchRoutes);

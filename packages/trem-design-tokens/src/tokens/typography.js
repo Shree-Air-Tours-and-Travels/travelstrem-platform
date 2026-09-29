@@ -1,30 +1,9 @@
+import tokens from "./typography-sass.js";
+const value = key => tokens[key].replace(/ !default$/, "");
 export const typography = {
-  fontFamily: {
-    primary:
-      '"Inter", "Poppins", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-    secondary:
-      '"Inter", "Poppins", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-  },
-  fontSize: {
-    xs: "0.76rem",
-    sm: "0.875rem",
-    md: "1rem",
-    lg: "1.25rem",
-    xl: "1.5rem",
-    xxl: "2rem",
-    xxxl: "2.5rem",
-  },
-  fontWeight: {
-    light: 300,
-    regular: 400,
-    medium: 500,
-    semibold: 600,
-    bold: 700,
-  },
-  lineHeight: {
-    xs: 1.25,
-    sm: 1.2,
-    md: 1.5,
-    lg: 1.75,
-  },
+  fontFamily: { primary: value("font-primary"), secondary: value("font-primary") },
+  fontSize: Object.fromEntries(["xs", "sm", "md", "lg", "xl", "xxl", "xxxl"].map(key => [key, value(`font-size-${key}`)])),
+  fontWeight: Object.fromEntries(["light", "regular", "medium", "semibold", "bold", "extrabold", "black"].map(key => [key, Number(value(`font-${key}`))])),
+  lineHeight: Object.fromEntries(["xs", "sm", "md", "lg"].map(key => [key, Number(value(`line-height-${key}`))])),
+  rootFontSize: Object.fromEntries(["desktop", "tablet", "mobile"].map(key => [key, value(`root-font-size-${key}`)])),
 };

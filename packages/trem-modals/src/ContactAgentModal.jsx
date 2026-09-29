@@ -17,6 +17,7 @@ import {
   validateFields,
 } from "@packages/trem-utils";
 import { showRealtimeToast } from "@packages/trem-events";
+import EnquiryError from "./EnquiryError.jsx";
 import ModalShell from "./ModalShell.jsx";
 import "./ContactAgentModal.styles.scss";
 
@@ -716,7 +717,7 @@ const ContactAgentModal = ({
         destination.searchParams.set("enquiry", enquiryRef);
         window.location.assign(destination.toString());
       } catch (error) {
-        setMsg({ type: "error", text: error?.message || "The enquiry could not be created." });
+        setMsg({ type: "error", text: error?.message || "The enquiry could not be created.", error });
         setSubmitting(false);
       }
       return;
@@ -775,6 +776,7 @@ const ContactAgentModal = ({
       console.error("submit error", err?.response || err);
       setMsg({
         type: "error",
+        error: err,
         text:
           err?.response?.data?.message || err.message || "Something went wrong. Please try again.",
       });
@@ -1126,7 +1128,7 @@ const ContactAgentModal = ({
             className={`ct-modal-card__msg ct-modal-card__msg--${msg.type}`}
             role={msg.type === "error" ? "alert" : "status"}
           >
-            {msg.text}
+            {msg.type === "error" ? <EnquiryError error={msg.error || msg.text} /> : msg.text}
           </div>
         )}
       </div>

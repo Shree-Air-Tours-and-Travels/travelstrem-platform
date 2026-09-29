@@ -111,7 +111,7 @@
   display: grid;
   place-items: center;
   color: var(--muted);
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
 }
 .tour-view .tv-row {
   display: flex;

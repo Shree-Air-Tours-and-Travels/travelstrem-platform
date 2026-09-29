@@ -16,49 +16,28 @@ export async function createPaymentRecord(input, { repositories, providers }) {
     if (["EXPIRED", "INVALIDATED", "CONSUMED"].includes(quote.status))
         throw new Error("Pricing quote is not payable");
 
-    const financialSnapshot = quote.financialSnapshot;
-    const configSnapshot = quote.configSnapshot;
-    const pricingSnapshot = quote.pricing;
-    if (!financialSnapshot || !configSnapshot || !pricingSnapshot)
-        throw new TypeError("Payment pricing, config and financial snapshots are required");
-    const quotedPayableMinor = assertMinor(
-        pricingSnapshot.finalPayableMinor ?? financialSnapshot.customer?.payableMinor,
-        "quotedPayableMinor",
-    );
-    if (input.amountMinor != null && input.amountMinor !== quotedPayableMinor)
-        throw new Error("Payment amount must match the stored quote final payable");
-
-    const amountMinor = quotedPayableMinor;
-    const quotedProvider =
-        pricingSnapshot.gateway?.provider || configSnapshot.resolution?.provider || null;
-    if (
-        input.provider &&
-        quotedProvider &&
-        String(input.provider).toLowerCase() !== String(quotedProvider).toLowerCase()
-    )
-        throw new Error("Payment provider must match the stored pricing quote");
-    const quotedPaymentMethod = pricingSnapshot.gateway?.paymentMethod || null;
-    if (
-        input.paymentMethod &&
-        quotedPaymentMethod &&
-        String(input.paymentMethod).toUpperCase() !== String(quotedPaymentMethod).toUpperCase()
-    )
-        throw new Error("Payment method must match the stored pricing quote");
-    const quotedCurrency = financialSnapshot.customer.currency;
-    if (input.currency && String(input.currency).toUpperCase() !== quotedCurrency)
-        throw new Error("Payment currency must match the stored pricing quote");
-    const providerName = String(quotedProvider || input.provider || "manual").toLowerCase();
+    const {
+        financialSnapshot,
+        configSnapshot,
+        pricingSnapshot,
+        amountMinor,
+        quotedCurrency,
+        quotedPaymentMethod,
+        providerName,
+    } = validatePaymentQuote(quote, input);
     const provider = providers[providerName];
     if (providerName !== "manual" && !provider)
         throw new Error(`Payment provider '${providerName}' is not configured`);
-    const providerPayment = provider
+    const providerPayment = input.recoveredProviderOrder || (provider
         ? await provider.createPayment({
               amountMinor,
               currency: quotedCurrency,
               reference: input.reference || idempotencyKey,
               metadata: input.metadata,
           })
-        : null;
+        : null);
+    if (providerPayment && (providerPayment.amount !== amountMinor || providerPayment.currency !== quotedCurrency))
+        throw new Error("Gateway order does not match the stored quote");
     return repositories.payments.createPending({
         ...input,
         amountMinor,
@@ -130,4 +109,51 @@ export async function processPaymentRecord(input, { repositories, providers, led
         }));
     await ledger.recordMany(entries);
     return payment;
+}
+
+export function validatePaymentQuote(quote, input = {}) {
+    const financialSnapshot = quote.financialSnapshot;
+    const configSnapshot = quote.configSnapshot;
+    const pricingSnapshot = quote.pricing;
+    if (!financialSnapshot || !configSnapshot || !pricingSnapshot)
+        throw new TypeError("Payment pricing, config and financial snapshots are required");
+    const quotedPayableMinor = assertMinor(
+        pricingSnapshot.finalPayableMinor ?? financialSnapshot.customer?.payableMinor,
+        "quotedPayableMinor",
+    );
+    if (input.amountMinor != null && input.amountMinor !== quotedPayableMinor)
+        throw new Error("Payment amount must match the stored quote final payable");
+
+    const amountMinor = quotedPayableMinor;
+    if (amountMinor !== financialSnapshot.customer?.payableMinor)
+        throw new Error("Quote and financial snapshot payable amounts do not match");
+    const quotedProvider =
+        pricingSnapshot.gateway?.provider || configSnapshot.resolution?.provider || null;
+    if (
+        input.provider &&
+        quotedProvider &&
+        String(input.provider).toLowerCase() !== String(quotedProvider).toLowerCase()
+    )
+        throw new Error("Payment provider must match the stored pricing quote");
+    const quotedPaymentMethod = pricingSnapshot.gateway?.paymentMethod || null;
+    if (
+        input.paymentMethod &&
+        quotedPaymentMethod &&
+        String(input.paymentMethod).toUpperCase() !== String(quotedPaymentMethod).toUpperCase()
+    )
+        throw new Error("Payment method must match the stored pricing quote");
+    const quotedCurrency = financialSnapshot.customer.currency;
+    if (input.currency && String(input.currency).toUpperCase() !== quotedCurrency)
+        throw new Error("Payment currency must match the stored pricing quote");
+    const providerName = String(quotedProvider || input.provider || "manual").toLowerCase();
+    if (amountMinor <= 0) throw new Error("Payment amount must be positive");
+    return {
+        financialSnapshot,
+        configSnapshot,
+        pricingSnapshot,
+        amountMinor,
+        quotedCurrency,
+        quotedPaymentMethod,
+        providerName,
+    };
 }

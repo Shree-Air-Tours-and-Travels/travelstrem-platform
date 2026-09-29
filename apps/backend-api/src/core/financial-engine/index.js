@@ -3,7 +3,7 @@ import { calculateQuoteWithConfig } from "./engine/orchestrator.js";
 import { resolveFinancialConfig } from "./engine/resolver.js";
 import { createLedgerService } from "./services/ledger.service.js";
 import { createQuoteRecord } from "./services/quote.service.js";
-import { createPaymentRecord, processPaymentRecord } from "./services/payment.service.js";
+import { createPaymentRecord, processPaymentRecord, validatePaymentQuote } from "./services/payment.service.js";
 import {
     calculateSettlementFromFinancials,
     createSettlementRecord,
@@ -85,6 +85,7 @@ const calculateNormalizedQuote = async (input = {}) => {
 };
 
 export const FinancialEngine = Object.freeze({
+    validatePaymentQuote,
     calculateTourCustomizationPreview(input = {}) {
         return calculateTourCustomizationPreview(input);
     },

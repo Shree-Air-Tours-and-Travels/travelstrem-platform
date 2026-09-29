@@ -64,7 +64,7 @@
 .ui-footer__brand-lockup strong {
   display: block;
   color: var(--text);
-  font-size: 1.25rem;
+  font-size: var(--font-size-lg);
   letter-spacing: -0.04em;
 }
 .ui-footer__brand-lockup em {

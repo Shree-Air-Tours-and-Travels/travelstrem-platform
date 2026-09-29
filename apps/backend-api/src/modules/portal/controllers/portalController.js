@@ -18,6 +18,7 @@ import {
     getPortalScope,
     normalizePortalScope,
     readPortalAccessToken,
+    scopeUserToPortal,
 } from "../../../core/auth/portalSession.js";
 
 const setPublicConfigCacheHeaders = (res) => {
@@ -135,7 +136,7 @@ const getUserFromRequest = (req) => {
         const payload = jwt.verify(token, JWT_SECRET);
         if (!payload.portal || normalizePortalScope(payload.portal) !== getPortalScope(req))
             return null;
-        return {
+        return scopeUserToPortal({
             id: payload.sub || payload.id || payload.userId || null,
             name: payload.name || null,
             email: payload.email || null,
@@ -146,7 +147,7 @@ const getUserFromRequest = (req) => {
             agentApprovalStatus: payload.agentApprovalStatus || "not_required",
             adminLevel: payload.adminLevel || "none",
             adminApprovalStatus: payload.adminApprovalStatus || "not_required",
-        };
+        }, getPortalScope(req));
     } catch (error) {
         return null;
     }
@@ -189,7 +190,9 @@ const getSessionFromRequest = async (req, res) => {
             dbUser?.role === "agent" && dbUser?.agencyRole && dbUser?.agencyId
             ? await PartnerAgency.findById(dbUser.agencyId).select("agencyName").lean()
             : null;
-        const user = toSafePortalUser(dbUser, { agencyName: agency?.agencyName || "" });
+        const user = toSafePortalUser(scopeUserToPortal(dbUser, getPortalScope(req)), {
+            agencyName: getPortalScope(req) === "customer" ? "" : agency?.agencyName || "",
+        });
         const role = user?.role || "member";
 
         return {

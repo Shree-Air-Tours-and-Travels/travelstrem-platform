@@ -5,6 +5,7 @@
  */
 
 export const REALTIME_EVENTS = Object.freeze({
+  BOOKING_CLOCK: "booking:clock",
   SYSTEM_CONNECTED: "system:connected",
 
   BOOKING_QUOTE_CREATED: "booking:quote-created",

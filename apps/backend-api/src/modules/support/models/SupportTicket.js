@@ -30,6 +30,7 @@ const supportTicketSchema = new Schema(
             default: "customer",
             index: true,
         },
+        relatedContext: { type: Schema.Types.Mixed, default: null },
         serviceId: { type: String, trim: true, lowercase: true, default: "", index: true },
         categoryId: { type: String, trim: true, lowercase: true, required: true, index: true },
         subcategoryId: { type: String, trim: true, lowercase: true, default: "" },

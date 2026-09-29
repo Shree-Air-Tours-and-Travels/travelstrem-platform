@@ -1,3 +1,4 @@
+import { requireEnquiryMobile } from "../../auth/services/mobileProfile.js";
 import express from "express";
 import { authMiddleware } from "../../../shared/auth/index.js";
 import {
@@ -17,5 +18,5 @@ router.get("/search/:searchId/results", getHotelResults);
 router.get("/search/:searchId/hotels/:hotelId", getHotelDetails);
 router.get("/search/:searchId/hotels/:hotelId/widgets/:widget", getHotelDetailWidget);
 router.post("/search/:searchId/hotels/:hotelId/quote", quoteHotelRooms);
-router.post("/enquiries", authMiddleware, createHotelEnquiry);
+router.post("/enquiries", authMiddleware, requireEnquiryMobile, createHotelEnquiry);
 export default router;

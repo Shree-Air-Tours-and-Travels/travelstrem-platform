@@ -49,11 +49,11 @@
 }
 .trem-support-action--danger {
   border-color: color-mix(in srgb, #d73535 35%, var(--border));
-  color: #b42318;
+  color: var(--color-danger);
 }
 .trem-support-action--danger .trem-support-action__icon {
   background: #fff0ee;
-  color: #b42318;
+  color: var(--color-danger);
 }
 
 .trem-support-ticket__reference {
@@ -97,7 +97,7 @@
 }
 .trem-support-category__icon--danger {
   background: #fff0ee;
-  color: #b42318;
+  color: var(--color-danger);
 }
 .trem-support-category__copy,
 .trem-support-contact__copy,

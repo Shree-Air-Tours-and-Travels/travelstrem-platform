@@ -150,7 +150,7 @@
   gap: $space-3;
   padding: $space-3;
   border-radius: $radius-md;
-  background: var(--surface-subtle, #f7f8fb);
+  background: var(--surface-subtle);
 }
 
 .admin-support-detail__meta span {
@@ -169,13 +169,13 @@
 }
 
 .admin-support-detail__closed {
-  background: var(--surface-subtle, #f7f8fb);
+  background: var(--surface-subtle);
   color: var(--text-secondary);
 }
 
 .admin-support-desk__error {
-  background: #fff1f0;
-  color: #b42318;
+  background: var(--danger-soft);
+  color: var(--color-danger);
 }
 
 @media (max-width: $breakpoint-lg) {

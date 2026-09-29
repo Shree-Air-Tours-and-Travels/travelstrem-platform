@@ -244,7 +244,7 @@
 .status-badge--accent {
   border-color: transparent;
   background: linear-gradient(120deg, var(--color-primary), var(--color-secondary));
-  color: var(--text-on-primary, #fff);
+  color: var(--color-on-primary);
   box-shadow: 0 5px 14px color-mix(in srgb, var(--color-primary) 20%, transparent);
 }
 

@@ -30,7 +30,7 @@
 
 .trem-client-showcase__title.ui-subtitle {
   margin: $space-3 0 $space-2;
-  color: #fff;
+  color: var(--color-on-primary);
   font-size: clamp(1.6rem, 2.7vw, 2.25rem);
   line-height: 1.15;
   letter-spacing: -0.025em;
@@ -69,14 +69,14 @@
     height: 2.25rem;
     border-radius: $radius-sm;
     background: rgba(255, 255, 255, 0.14);
-    color: #fff;
+    color: var(--color-on-primary);
     font-weight: $font-bold;
     object-fit: contain;
   }
 
   strong {
     overflow: hidden;
-    color: #fff;
+    color: var(--color-on-primary);
     font-size: $font-size-sm;
     text-overflow: ellipsis;
     white-space: nowrap;

@@ -1,5 +1,9 @@
-import { createContext, useContext } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect } from "react";
 import { useThemeMode } from "@packages/trem-utils";
+
+import { applyTenantTheme } from "@packages/trem-design-tokens";
+
+const useThemeEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 const ThemeContext = createContext({
   theme: "light",
@@ -7,8 +11,10 @@ const ThemeContext = createContext({
   toggleTheme: () => {},
 });
 
-export function ThemeProvider({ defaultTheme, children }) {
+export function ThemeProvider({ defaultTheme, tenantId, tenantTheme, tenantThemes, children }) {
   const themeMode = useThemeMode({ defaultTheme });
+
+  useThemeEffect(() => applyTenantTheme({ tenantId, tenantTheme, tenantThemes, mode: themeMode.theme }), [tenantId, tenantTheme, tenantThemes, themeMode.theme]);
 
   return <ThemeContext.Provider value={themeMode}>{children}</ThemeContext.Provider>;
 }

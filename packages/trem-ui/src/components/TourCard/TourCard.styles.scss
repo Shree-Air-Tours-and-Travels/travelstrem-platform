@@ -152,7 +152,7 @@
   overflow: hidden;
 
   background:
-    linear-gradient(135deg, var(--primary-soft, #e0f2fe), var(--secondary-soft, #fae8ff)),
+    linear-gradient(135deg, var(--primary-soft), var(--secondary-soft)),
     var(--surface-inset);
 
   isolation: isolate;
@@ -420,7 +420,7 @@
 
     background: rgba(8, 18, 40, 0.64);
 
-    color: #fff;
+    color: var(--color-on-primary);
   }
 }
 
@@ -788,7 +788,7 @@
 .tour-card__rating-value {
   color: var(--text);
 
-  font-size: 0.76rem;
+  font-size: var(--font-size-xs);
   font-weight: $font-bold;
 
   line-height: 1;

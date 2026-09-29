@@ -5,10 +5,10 @@
   align-items: center;
   gap: $space-2;
   padding: 10px 12px;
-  border: 1px solid var(--color-danger, #dc2626);
+  border: 1px solid var(--color-danger);
   border-radius: var(--radius-md, 10px);
-  background: var(--danger-soft, #fff1f2);
-  color: var(--color-danger, #b91c1c);
+  background: var(--danger-soft);
+  color: var(--color-danger);
 }
 .wizard-validation-summary strong {
   flex: 0 0 auto;

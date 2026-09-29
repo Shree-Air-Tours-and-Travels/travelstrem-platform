@@ -1,8 +1,11 @@
+import { useRealtimeEvent, useRealtimeContext, useBookingClock } from "@packages/trem-events";
+import { fetchData, redirectToPayment } from "@packages/trem-utils";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Breadcrumbs,
-  BOOKING_JOURNEY_ACTION,
+  Button,
   EnquiryCenter,
+  DetailsCard,
   FloatingActionBar,
   Icon,
   RealtimeConnectionStatus,
@@ -28,24 +31,6 @@ import {
 } from "../../services/bookingJourneyApi.js";
 
 const referencedLabel = (journey, ref) => journey?.labels?.[ref] || "";
-
-const normalizeComparableValue = (value) => {
-  if (Array.isArray(value)) return value.map(normalizeComparableValue);
-  if (value && typeof value === "object")
-    return Object.keys(value)
-      .sort()
-      .reduce((result, key) => ({
-        ...result,
-        [key]: normalizeComparableValue(value[key]),
-      }), {});
-  return value ?? "";
-};
-
-const serializeComparableValue = (value) =>
-  JSON.stringify(normalizeComparableValue(value || {}));
-
-const matchesJourneyAction = (action, definition) =>
-  action?.id === definition.id || action?.type === definition.type;
 
 function JourneyNotice({ journey, block }) {
   return (
@@ -84,15 +69,31 @@ function JourneyNotice({ journey, block }) {
 }
 
 export default function BookingEnquiryCenter(props) {
+  const paymentRedirectRef = useRef(false);
+  const [paymentBusy, setPaymentBusy] = useState(false);
+  const [paymentReceipt, setPaymentReceipt] = useState(null);
+  const returnParams = new URLSearchParams(window.location.search);
+  const returnStep = ["enquiry", "travellers", "review", "quote", "payment"].includes(returnParams.get("step")) ? returnParams.get("step") : "";
   const [journeyPage, setJourneyPage] = useState(null);
   const [journey, setJourney] = useState(null);
+  const paymentSessionId = journey?.data?.paymentSessionId || returnParams.get("paymentSession");
   const [journeyState, setJourneyState] = useState({ loading: false, error: "", revision: 0 });
   const [decision, setDecision] = useState(null);
   const [decisionState, setDecisionState] = useState({ saving: false, error: "" });
-  const [activeStepId, setActiveStepId] = useState("enquiry");
+  const [activeStepId, setActiveStepId] = useState(returnStep);
   const [travellerValues, setTravellerValues] = useState({});
   const [travellerState, setTravellerState] = useState({ saving: false, error: "", errors: {} });
   const [enquiryValues, setEnquiryValues] = useState({});
+  useEffect(() => {
+    const restoreJourney = (event) => {
+      if (!event.persisted) return;
+      paymentRedirectRef.current = false;
+      setPaymentBusy(false);
+      setJourneyState((current) => ({ ...current, revision: current.revision + 1 }));
+    };
+    window.addEventListener("pageshow", restoreJourney);
+    return () => window.removeEventListener("pageshow", restoreJourney);
+  }, []);
   const [enquiryFormState, setEnquiryFormState] = useState({ saving: false, error: "", errors: {} });
   const providerByRecordRef = useRef(new Map());
   const selectedListRecord = [...(props.enquiries || []), ...(props.bookings || [])].find(
@@ -128,6 +129,9 @@ export default function BookingEnquiryCenter(props) {
         ...(activeJourney ? { bookingJourney: activeJourney } : {}),
       }
     : null;
+  const { isConnected: clockConnected } = useRealtimeContext() || {};
+  const { remainingSeconds, expired: sessionExpired, synced: clockSynced } = useBookingClock({ enquiryId: journey?.data?.enquiryId, paymentSessionId: journey?.data?.paymentSessionId, initial: journey?.data?.clock });
+  const clockBlocked = remainingSeconds !== null && !clockSynced;
   const selectedTravellerForm = activeJourney?.data?.travellerForm;
   const selectedEnquiryForm = activeJourney?.data?.enquiryForm;
 
@@ -135,7 +139,7 @@ export default function BookingEnquiryCenter(props) {
     setJourneyPage(null);
     setJourney(null);
     setDecision(null);
-    setActiveStepId("enquiry");
+    setActiveStepId(returnStep);
   }, [props.selectedId, selectedListRecord?.id]);
 
   useEffect(() => {
@@ -149,6 +153,12 @@ export default function BookingEnquiryCenter(props) {
           throw new Error(response?.message || "This booking step could not be loaded.");
         }
         setJourney(response.componentData);
+        const resolvedStep = response.componentData.structure?.timeline?.activeStepId;
+        if (resolvedStep) {
+          const url = new URL(window.location.href);
+          url.searchParams.set("step", resolvedStep);
+          window.history.replaceState(window.history.state, "", url);
+        }
         setActiveStepId(
           response.componentData.structure?.timeline?.activeStepId || activeStepId,
         );
@@ -164,7 +174,7 @@ export default function BookingEnquiryCenter(props) {
         }
       });
     return () => { active = false; };
-  }, [activeStepId, journeyState.revision, selectedListRecord?.id, selectedListRecord?.status]);
+  }, [activeStepId, journeyState.revision, selectedListRecord?.id, selectedListRecord?.status, clockConnected]);
 
   useEffect(() => {
     if (!selectedTravellerForm) return;
@@ -177,6 +187,44 @@ export default function BookingEnquiryCenter(props) {
     setEnquiryValues(selectedEnquiryForm.values || {});
     setEnquiryFormState({ saving: false, error: "", errors: {} });
   }, [selectedEnquiryForm]);
+
+  useEffect(() => {
+    let active = true;
+    setPaymentReceipt(null);
+    if (!/^ps_[a-f0-9]{48}$/.test(paymentSessionId || "") || !journey?.data?.paymentBookingId) return;
+    fetchData(`/payments/sessions/${paymentSessionId}`)
+      .then(response => {
+        if (active && response.status === "success" &&
+            String(response.data?.bookingId) === String(journey.data.paymentBookingId)) setPaymentReceipt(response.data);
+      }).catch(() => {});
+    return () => { active = false; };
+  }, [paymentSessionId, journey]);
+
+  const refreshPayment = (envelope) => {
+    if (String(envelope.data?.bookingId) !== String(journey?.data?.paymentBookingId)) return;
+    setJourneyState(current => ({ ...current, revision: current.revision + 1 }));
+    props.onRetry?.();
+  };
+  useRealtimeEvent("payment.processing", refreshPayment);
+  useRealtimeEvent("payment.completed", refreshPayment);
+  useRealtimeEvent("payment.failed", refreshPayment);
+  useRealtimeEvent("payment.refunded", refreshPayment);
+  useRealtimeEvent("payment.refund.updated", refreshPayment);
+  useRealtimeEvent("booking.confirmed", refreshPayment);
+
+  const proceedToPayment = async (data) => {
+    if (paymentRedirectRef.current) return;
+    paymentRedirectRef.current = true;
+    setPaymentBusy(true);
+    try {
+      await redirectToPayment({ bookingId: data.paymentBookingId, bookingType: data.paymentBookingType, sourceApp: "booking-engine" });
+    } catch (error) {
+      showToast({ title: error.message, status: "error" });
+      paymentRedirectRef.current = false;
+      setPaymentBusy(false);
+      setJourneyState((current) => ({ ...current, revision: current.revision + 1 }));
+    }
+  };
 
   const submitDecision = async () => {
     if (!decision) return;
@@ -247,6 +295,9 @@ export default function BookingEnquiryCenter(props) {
       }
       setTravellerState({ saving: false, error: "", errors: {} });
       showToast({ title: response.message, status: "success" });
+      if (selected.bookingJourney?.data?.travellerSaveNextStep) {
+        setActiveStepId(selected.bookingJourney.data.travellerSaveNextStep);
+      }
       setJourneyState((current) => ({ ...current, revision: current.revision + 1 }));
       props.onRetry?.();
     } catch (error) {
@@ -288,6 +339,7 @@ export default function BookingEnquiryCenter(props) {
   };
 
   const runJourneyAction = (action, selected) => {
+    if (action.type === "payment") return proceedToPayment(selected.bookingJourney.data);
     if (action.page) {
       if (props.onOpenJourneyPage) props.onOpenJourneyPage(action.page, selected.id);
       else setJourneyPage(action.page);
@@ -309,13 +361,13 @@ export default function BookingEnquiryCenter(props) {
       const actions = journey.structure?.actions || [];
       return <>
         {(journey.structure?.blocks || []).map((block) => block.type === "notice" ? <JourneyNotice key={block.id} journey={journey} block={block} /> : null)}
-        {actions.length ? <FloatingActionBar align="left-right" actions={actions.map((action, index) => ({
+        {actions.length && !sessionExpired ? <FloatingActionBar align="left-right" actions={actions.map((action, index) => ({
           label: referencedLabel(journey, action.labelRef),
           iconLeft: action.icon,
           variant: index === actions.length - 1 ? "primary" : "outline",
           align: index === actions.length - 1 ? "right" : "left",
           onClick: () => runJourneyAction(action, selected),
-          disabled: action.disabled,
+          disabled: action.disabled || (action.type === "payment" && paymentBusy),
         }))} /> : null}
       </>;
     }
@@ -325,19 +377,14 @@ export default function BookingEnquiryCenter(props) {
     const noticeBlock = (journey.structure?.blocks || []).find((block) => block.type === "notice");
     const downloadAction = (journey.structure?.actions || []).find((action) => action.type === "download");
     const quoteActions = quoteBlock?.actions || [];
-    const renderableQuoteActions = quoteAccepted
-      ? quoteActions.filter((action) => String(action.id).toUpperCase() === "CANCEL")
-      : quoteActions.filter((action) => String(action.id).toUpperCase() !== "REQUEST_CHANGES" || Number(quote?.version || 1) < 3);
-    const travellerValuesChanged =
-      serializeComparableValue(travellerValues) !==
-      serializeComparableValue(selectedTravellerForm?.values || {});
+    const renderableQuoteActions = quoteActions;
     const timelineItems = (timeline.steps || []).map((step) => ({
       id: step.id,
       label: referencedLabel(journey, step.labelRef),
       description: referencedLabel(journey, step.descriptionRef),
       status: step.status,
-      disabled: step.disabled,
-      onClick: step.disabled ? undefined : () => setActiveStepId(step.id),
+      disabled: step.disabled || paymentBusy,
+      onClick: step.disabled || paymentBusy ? undefined : () => setActiveStepId(step.id),
     }));
     const mapJourneyAction = (action) => {
       const mapped = {
@@ -347,9 +394,12 @@ export default function BookingEnquiryCenter(props) {
         align: action.align,
         iconLeft: action.iconLeft,
         iconRight: action.iconRight,
-        disabled: Boolean(action.disabled),
+        disabled: Boolean(action.disabled) || paymentBusy || clockBlocked,
       };
-      if (action.type === "navigate-step") {
+      if (action.type === "payment") {
+        mapped.disabled = mapped.disabled || paymentBusy;
+        mapped.onClick = () => proceedToPayment(journey.data);
+      } else if (action.type === "navigate-step") {
         mapped.onClick = () => setActiveStepId(action.targetStepId);
       } else if (action.type === "navigate" && action.href) {
         mapped.onClick = () => window.location.assign(action.href);
@@ -363,39 +413,6 @@ export default function BookingEnquiryCenter(props) {
         mapped.disabled = mapped.disabled || travellerState.saving;
       }
       return mapped;
-    };
-    const normalizeTravellerStepActions = (stepActions = []) => {
-      const items = Array.isArray(stepActions) ? stepActions : [];
-      if (activeStepId !== "travellers") return items;
-      const navigationActions = items.filter((action) => action.type === "navigate-step");
-      if (navigationActions.length) return navigationActions;
-
-      const requestQuotationAction =
-        items.find((action) => matchesJourneyAction(action, BOOKING_JOURNEY_ACTION.REQUEST_QUOTATION)) ||
-        (journey.data?.canRequestQuotation
-          ? {
-              ...BOOKING_JOURNEY_ACTION.REQUEST_QUOTATION,
-              labelRef: "requestQuotation",
-              variant: "primary",
-              align: "right",
-            }
-          : null);
-      const saveTravellersAction = items.find((action) =>
-        matchesJourneyAction(action, BOOKING_JOURNEY_ACTION.SAVE_TRAVELLERS),
-      );
-      const viewQuotationAction = items.find((action) =>
-        matchesJourneyAction(action, BOOKING_JOURNEY_ACTION.VIEW_QUOTATION_STATUS),
-      );
-      const disabledFallbackAction = items.find((action) =>
-        matchesJourneyAction(action, BOOKING_JOURNEY_ACTION.COMPLETE_TRAVELLERS_FOR_QUOTATION),
-      );
-
-      if (journey.data?.quotationRequested && viewQuotationAction) return [viewQuotationAction];
-      if (travellerValuesChanged && saveTravellersAction) return [saveTravellersAction];
-      if (requestQuotationAction) return [requestQuotationAction];
-      if (saveTravellersAction) return [saveTravellersAction];
-      if (disabledFallbackAction) return [disabledFallbackAction];
-      return [];
     };
     let stageContent = null;
     let actions = [];
@@ -411,36 +428,21 @@ export default function BookingEnquiryCenter(props) {
       const travellerStep = (timeline.steps || []).find((step) => step.id === "travellers");
       const quoteStep = (timeline.steps || []).find((step) => step.id === "quote");
       if (journey.data?.enquiryForm && journey.data?.canEditEnquiry) {
-        actions = [{ label: referencedLabel(journey, "saveEnquiryDetails"), variant: "primary", align: "right", iconRight: "chevronRight", onClick: () => submitEnquiryDetails(selected), disabled: enquiryFormState.saving }];
+        actions = [{ label: referencedLabel(journey, "saveEnquiryDetails"), variant: "primary", align: "right", iconRight: "chevronRight", onClick: () => submitEnquiryDetails(selected), disabled: enquiryFormState.saving || clockBlocked }];
       } else if (journey.data?.enquiryForm && quoteStep && !quoteStep.disabled) {
         actions = [{ label: referencedLabel(journey, "viewQuotationStatus"), variant: "primary", align: "right", iconRight: "chevronRight", onClick: () => setActiveStepId("quote") }];
       } else if (travellerStep && !travellerStep.disabled) {
         actions = [{ label: referencedLabel(journey, "continueTravellerDetails"), variant: "primary", align: "right", iconRight: "chevronRight", onClick: () => setActiveStepId("travellers") }];
       } else if (quoteStep && !quoteStep.disabled) actions = [{ label: referencedLabel(journey, "viewQuote"), variant: "primary", align: "right", iconRight: "chevronRight", onClick: () => setActiveStepId("quote") }];
     } else if (activeStepId === "quote" && !quote) {
-      stageContent = (
-        <div className="booking-engine-quotation-pending">
-          {noticeBlock ? <JourneyNotice journey={journey} block={noticeBlock} /> : null}
-          {journey.data?.enquirySummaryForm ? (
-            <TravellerDetailsForm
-              form={journey.data.enquirySummaryForm}
-              values={journey.data.enquirySummaryForm.values || {}}
-              errors={{}}
-              onChange={() => {}}
-            />
-          ) : null}
-          {journey.data?.travellerSummaryForm ? (
-            <TravellerDetailsForm
-              form={journey.data.travellerSummaryForm}
-              values={journey.data.travellerSummaryForm.values || {}}
-              errors={{}}
-              onChange={() => {}}
-            />
-          ) : null}
-        </div>
-      );
+      stageContent = <div className="booking-engine-review">
+        {noticeBlock ? <JourneyNotice journey={journey} block={noticeBlock} /> : null}
+        {(journey.data?.reviewCards || []).map(card => <DetailsCard key={card.id} title={card.title} rows={card.rows} actions={card.editAction && <Button variant="outline" text={referencedLabel(journey, card.editAction.labelRef)} onClick={mapJourneyAction(card.editAction).onClick} />} />)}
+      </div>;
+      actions = (journey.structure?.stepActions || []).map(mapJourneyAction);
     } else if (activeStepId === "quote" && quote) {
       stageContent = <div className="booking-engine-customer-quote">
+          {(journey.data?.reviewCards || []).map(card => <DetailsCard key={card.id} title={card.title} rows={card.rows} />)}
           <QuoteDisplay
             quote={quote}
             status={quote.status}
@@ -456,15 +458,7 @@ export default function BookingEnquiryCenter(props) {
           align: "right",
           onClick: () => beginDecision(action, selected, quote),
         })),
-        ...(quoteAccepted ? [{
-          label: referencedLabel(journey, "proceedPayment"),
-          variant: "primary",
-          align: "right",
-          disabled: !journey.data?.paymentEnabled,
-          onClick: journey.data?.paymentEnabled && journey.data?.paymentUrl
-            ? () => window.location.assign(journey.data.paymentUrl)
-            : undefined,
-        }] : []),
+        ...(journey.structure?.stepActions || []).map(mapJourneyAction),
       ];
     } else if (activeStepId === "travellers" && journey.data?.travellerForm) {
       stageContent = <TravellerDetailsForm
@@ -473,18 +467,36 @@ export default function BookingEnquiryCenter(props) {
         errors={travellerState.errors}
         onChange={(name, value) => setTravellerValues((current) => ({ ...current, [name]: value }))}
       />;
-      actions = normalizeTravellerStepActions(journey.structure?.stepActions).map(mapJourneyAction);
+      actions = (journey.structure?.stepActions || []).map(mapJourneyAction);
     } else if (activeStepId === "payment") {
-      stageContent = noticeBlock ? <JourneyNotice journey={journey} block={noticeBlock} /> : null;
-      actions = [{
+      stageContent = <div className="booking-engine-summary">
+        {paymentReceipt ? <DetailsCard title={paymentReceipt.heading} actions={<StatusBadge value={paymentReceipt.statusLabel || paymentReceipt.status} tone={paymentReceipt.statusTone || paymentReceipt.tone} />} rows={[{ label: paymentReceipt.amountLabel || "Total payable", value: paymentReceipt.amount }, ...(paymentReceipt.details || [])]}>
+          {!!paymentReceipt.refunds?.length && <section><h3>Refund updates</h3><p>Total refunded: {paymentReceipt.refundedAmount}</p>{paymentReceipt.refunds.map(item => <div key={item.reference}><strong>{item.status} · {item.amount}</strong><p>{item.message}</p><small>{item.reference}</small></div>)}</section>}
+        </DetailsCard> : noticeBlock ? <JourneyNotice journey={journey} block={noticeBlock} /> : null}
+        {(journey.data?.summaryCards || []).map(card => <DetailsCard key={card.id} title={card.title} rows={card.rows} />)}
+        <DetailsCard title="Travel documents" description="Your tickets, vouchers and documents shared by your travel partner." rows={journey.data?.ticketRows || []}>
+          {journey.data?.travelDocuments?.length ? <ul className="booking-engine-summary__documents">{journey.data.travelDocuments.map(document => <li key={document.id}><div><strong>{document.title}</strong><span>{document.type} · {document.availability}</span></div>{document.href && <Button variant="outline" size="small" iconLeft="download" text="Download" aria-label={`Download ${document.title}`} onClick={() => openQuoteDocument(document.href).catch(error => showToast({ title: error.message, status: "error" }))} />}</li>)}</ul> : <p className="booking-engine-summary__empty">Your files will appear here once your travel partner or provider makes them available.</p>}
+        </DetailsCard>
+      </div>;
+      actions = journey.data?.paymentComplete || ["PROCESSING", "PAID", "REFUNDED", "PARTIALLY_REFUNDED"].includes(paymentReceipt?.status || journey.data?.paymentStatus) ? [] : [{
         label: referencedLabel(journey, "proceedPayment"),
         variant: "primary",
         align: "right",
-        disabled: !journey.data?.paymentEnabled,
-        onClick: journey.data?.paymentUrl ? () => window.location.assign(journey.data.paymentUrl) : undefined,
+        disabled: !journey.data?.paymentEnabled || paymentBusy || paymentReceipt?.status === "PROCESSING" || ["PAID", "REFUNDED", "PARTIALLY_REFUNDED"].includes(paymentReceipt?.status),
+        onClick: () => proceedToPayment(journey.data),
       }];
     } else if (activeStepId === "review") {
-      stageContent = (
+      stageContent = journey.data?.reviewCards ? (
+        <div className="booking-engine-review">
+          <header>
+            <h2>{referencedLabel(journey, "quoteStateTitle")}</h2>
+            <p>{referencedLabel(journey, "quoteStateDescription")}</p>
+          </header>
+          {journey.data.reviewCards.map((card) => (
+            <DetailsCard key={card.id} title={card.title} rows={card.rows} actions={card.editAction && <Button variant="outline" size="small" text={referencedLabel(journey, card.editAction.labelRef)} aria-label={`Edit ${card.title}`} onClick={mapJourneyAction(card.editAction).onClick} disabled={paymentBusy || sessionExpired} />} />
+          ))}
+        </div>
+      ) : (
         <div className="booking-engine-quotation-pending">
           {noticeBlock ? <JourneyNotice journey={journey} block={noticeBlock} /> : null}
           {journey.data?.enquirySummaryForm ? (
@@ -520,11 +532,13 @@ export default function BookingEnquiryCenter(props) {
       setDecisionState({ saving: false, error: "" });
     };
     return <>
+      <div className={activeStepId === "enquiry" ? "booking-engine-enquiry-step" : activeStepId === "travellers" || activeStepId === "review" || activeStepId === "quote" || activeStepId === "payment" ? "booking-engine-traveller-step" : undefined}>
       <section className="booking-engine-customer-journey">
         <aside><TimelineStepper steps={timelineItems} markerVariant="number" showStepNumbers showTime={false} ariaLabel="Booking journey" /></aside>
-        <div className="booking-engine-customer-journey__stage">{stageContent}</div>
+        <div className="booking-engine-customer-journey__stage"><fieldset disabled={sessionExpired || clockBlocked} style={{ border: 0, margin: 0, padding: 0, minWidth: 0 }}>{stageContent}</fieldset></div>
       </section>
-      {actions.length ? <FloatingActionBar align="left-right" actions={actions} error={enquiryFormState.error || travellerState.error || decisionState.error} /> : null}
+      {actions.length && !sessionExpired ? <FloatingActionBar align="left-right" actions={actions.map(action => ({ ...action, disabled: action.disabled || clockBlocked }))} error={enquiryFormState.error || travellerState.error || decisionState.error} /> : null}
+      </div>
       <ConfirmOverlay
         open={Boolean(
           decision?.type === "cancel-enquiry" ||
@@ -589,7 +603,16 @@ export default function BookingEnquiryCenter(props) {
       bookings={(props.bookings || []).map((item) =>
         selectedRecord && item.id === selectedListRecord?.id ? selectedRecord : item,
       )}
-      renderDetailActions={() => null}
+      renderDetailActions={(selected) => remainingSeconds !== null && selected.bookingJourney?.structure?.timeline ? (
+        <div className={`booking-engine-session${sessionExpired ? " is-expired" : ""}`} role={sessionExpired ? "alert" : undefined}>
+          <span className="booking-engine-session__label">{sessionExpired ? "Your booking session has ended" : !clockSynced ? "Syncing booking time…" : "Complete your booking within"}</span>
+          {!sessionExpired && <strong className="booking-engine-session__time" role="timer" aria-label="Booking time remaining">
+            {Math.floor(remainingSeconds / 60)}:{String(remainingSeconds % 60).padStart(2, "0")}
+          </strong>}
+          <p>{sessionExpired ? "Start a new search to check the latest prices and availability. If money was debited, check your payment status before paying again." : "Prices and availability are valid during this session."}</p>
+          {sessionExpired && <a href={selected.bookingJourney.data.restartBookingUrl}>Start a new search</a>}
+        </div>
+      ) : null}
       renderDetailContent={renderDetailContent}
       renderDetailOverride={renderDetailOverride}
       showDetailPanels={() => !activeJourney?.structure?.timeline}

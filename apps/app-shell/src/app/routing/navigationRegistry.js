@@ -366,20 +366,13 @@ export function buildDestinationLocation(destination, intent = {}) {
 export function resolveNavigationIntent(config, rawIntent, currentOrigin) {
   const intent =
     typeof rawIntent === "object" && rawIntent !== null ? rawIntent : { destination: rawIntent };
-  const target = String(intent.destination || intent.id || intent.target || "");
+  const target = String(intent.path || intent.destination || intent.id || intent.target || "");
   const destination = config.destinations.find((item) => item.id === target || item.tab === target);
   if (destination) {
     return {
       type: "internal",
       destination,
       location: buildDestinationLocation(destination, intent),
-      replace: Boolean(intent.replace),
-    };
-  }
-  if (target.startsWith("/") && !target.startsWith("//")) {
-    return {
-      type: "internal-path",
-      location: { pathname: safePath(target), search: "", hash: "" },
       replace: Boolean(intent.replace),
     };
   }

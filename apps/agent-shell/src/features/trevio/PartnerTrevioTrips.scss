@@ -51,17 +51,17 @@
   min-width: 8rem;
   background: linear-gradient(215deg, var(--color-primary), var(--color-secondary));
   border-color: transparent;
-  color: var(--color-on-primary, #fff) !important;
+  color: var(--color-on-primary) !important;
   font-weight: $font-bold;
   box-shadow: var(--primary-shadow);
 }
 .partner-trips-page__create.ui-button span,
 .partner-trips-page__create.ui-button svg {
-  color: var(--color-on-primary, #fff) !important;
+  color: var(--color-on-primary) !important;
   fill: currentColor;
 }
 .partner-trips-page__create.ui-button:hover:not(:disabled) {
-  color: var(--color-on-primary, #fff) !important;
+  color: var(--color-on-primary) !important;
   filter: brightness(1.06);
 }
 

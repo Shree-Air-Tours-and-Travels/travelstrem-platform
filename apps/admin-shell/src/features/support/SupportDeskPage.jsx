@@ -312,6 +312,7 @@ export default function SupportDeskPage() {
                 <div>
                   <span>{selectedTicket.reference}</span>
                   <h2>{selectedTicket.subject}</h2>
+                  {selectedTicket.relatedContext ? <p>{selectedTicket.relatedContext.title} · {selectedTicket.relatedContext.reference} · {selectedTicket.relatedContext.status}</p> : null}
                   <p>
                     {selectedTicket.user?.name || selectedTicket.user?.email} ·{" "}
                     {detail.category?.label}

@@ -16,7 +16,7 @@ import Invitation from "../../tenancy/models/Invitation.js";
 import ActivationSession from "../models/ActivationSession.js";
 import { hashToken } from "../../tenancy/tenancy.service.js";
 import User from "../models/User.js";
-import { getPortalScope } from "../../../core/auth/portalSession.js";
+import { getPortalScope, scopeUserToPortal } from "../../../core/auth/portalSession.js";
 import {
     createSession,
     getSessionUser,
@@ -1277,7 +1277,7 @@ export const getSession = async (req, res) => {
                 .json({ status: "error", message: statusErr.message });
         }
 
-        const sessionUser = safeAuthUser(user);
+        const sessionUser = safeAuthUser(scopeUserToPortal(user, getPortalScope(req)));
         return res.json({
             status: "success",
             authenticated: true,
@@ -1314,7 +1314,7 @@ export const getCurrentUser = async (req, res) => {
                 .json({ status: "error", message: statusErr.message });
         }
 
-        const safeUser = safeAuthUser(user);
+        const safeUser = safeAuthUser(scopeUserToPortal(user, getPortalScope(req)));
         return res.json({ status: "success", user: safeUser, ...safeUser });
     } catch (err) {
         console.error("getCurrentUser error:", err && err.stack ? err.stack : err);

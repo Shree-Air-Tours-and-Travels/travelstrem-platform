@@ -2,7 +2,6 @@ import React, { useRef, useState } from "react";
 import {
   Breadcrumbs,
   Button,
-  CardWithSubEntity,
   ErrorState,
   FloatingActionBar,
   Gallery,
@@ -15,7 +14,7 @@ import {
 } from "@packages/trem-ui";
 import TrehubPreloader from "../../../TrehubPreloader.jsx";
 import HotelPropertyInformationContainer from "../container/HotelPropertyInformation.container.jsx";
-import { ConfirmOverlay, ModalShell } from "@packages/trem-modals";
+import { EnquiryModal, ModalShell } from "@packages/trem-modals";
 import "../../Hotels.scss";
 
 export default function HotelDetailsView({
@@ -33,6 +32,7 @@ export default function HotelDetailsView({
   quoteError,
   expandedRoomId,
   confirmOpen,
+  enquiryError,
   onSelectRoom,
   onChooseSlot,
   onToggleRoom,
@@ -553,7 +553,7 @@ export default function HotelDetailsView({
             },
           ]}
         />
-        <ConfirmOverlay
+        <EnquiryModal
           open={confirmOpen}
           title={labels.modalTitle}
           note={labels.modalDescription}
@@ -562,41 +562,32 @@ export default function HotelDetailsView({
           confirmDisabled={saving}
           onClose={onCloseConfirm}
           onConfirm={onConfirm}
-        >
-          {quote ? (
-            <CardWithSubEntity
-              className="trehub-hotels__confirm-card"
-              title={labels.selectedRooms}
-              badge={labels.roomsSelected
-                ?.replace("{selected}", quote.lineItems.length)
-                ?.replace("{count}", data.input.rooms)}
-              items={quote.lineItems.map((item, index) => ({
-                id: `${item.roomId}-${index}`,
-                label: (
-                  <span className="trehub-hotels__confirm-room-label">
-                    <strong>
-                      {labels.roomSlot?.replace("{count}", index + 1)} · {item.name}
-                    </strong>
-                    <small>{item.ratePlan}</small>
-                  </span>
-                ),
-                value: item.stayAmount,
-              }))}
-              sections={[
-                {
-                  id: "charges",
-                  items: [
-                    { id: "stay", label: labels.stay, value: quote.display.subtotal },
-                    { id: "fee", label: labels.fee, value: quote.display.convenienceFee },
-                  ],
-                },
-              ]}
-              totals={[
-                { id: "total", label: labels.total, value: quote.display.total, tone: "highlight" },
-              ]}
-            />
-          ) : null}
-        </ConfirmOverlay>
+          error={enquiryError}
+          summary={quote ? {
+            title: labels.selectedRooms,
+            badge: labels.roomsSelected
+              ?.replace("{selected}", quote.lineItems.length)
+              ?.replace("{count}", data.input.rooms),
+            items: quote.lineItems.map((item, index) => ({
+              id: `${item.roomId}-${index}`,
+              label: (
+                <span className="trehub-hotels__confirm-room-label">
+                  <strong>{labels.roomSlot?.replace("{count}", index + 1)} · {item.name}</strong>
+                  <small>{item.ratePlan}</small>
+                </span>
+              ),
+              value: item.stayAmount,
+            })),
+            sections: [{
+              id: "charges",
+              items: [
+                { id: "stay", label: labels.stay, value: quote.display.subtotal },
+                { id: "fee", label: labels.fee, value: quote.display.convenienceFee },
+              ],
+            }],
+            totals: [{ id: "total", label: labels.total, value: quote.display.total, tone: "highlight" }],
+          } : null}
+        />
       </main>
     </div>
   );

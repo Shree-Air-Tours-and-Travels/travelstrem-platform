@@ -17,3 +17,7 @@ The enquiry stores its assignment rule, agency and agent snapshot so routing rem
 
 - **Multiple partner agencies:** only one agency can currently be marked as the custom-tour partner. Before enabling multiple agencies, define an auditable allocation policy covering destination/speciality, capacity, availability, weighted distribution, failover and manual override.
 - **Multiple agents within an agency:** routing currently stops at the Partner Admin. Before assigning enquiries directly to agents, add an agency-managed dispatch policy covering a primary handler or queue, skills, language, destination, workload, availability, SLA-based reassignment and assignment history.
+
+Can you document to explaiin how we acchive everything and what is the process for each and every thing for product booking to payement?
+there must be technical and business documents for all.
+i want this document as product wise and add them in docs folder.

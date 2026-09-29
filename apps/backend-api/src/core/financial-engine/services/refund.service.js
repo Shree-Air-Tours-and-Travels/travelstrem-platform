@@ -20,7 +20,8 @@ export function calculateRefundAmount({
     const ratio = (componentMinor, refundable) =>
         refundable
             ? Number(
-                  (BigInt(componentMinor) * BigInt(requestedMinor) + BigInt(paidMinor / 2)) /
+                  (BigInt(componentMinor) * BigInt(requestedMinor) +
+                      BigInt(Math.floor(paidMinor / 2))) /
                       BigInt(paidMinor || 1),
               )
             : 0;
@@ -59,13 +60,15 @@ export async function processRefundRecord(input, { repositories, providers, ledg
     let processed = existing?.status === "REFUNDED" ? existing : null;
     if (!processed) {
         const provider = providers[input.provider];
-        const providerResult = provider
-            ? await provider.refund({
-                  paymentId: input.providerPaymentId,
-                  amountMinor: input.refund.amountMinor,
-                  reference: String(pending.id || pending._id),
-              })
-            : { status: "processed", id: input.providerRefundId || "manual" };
+        const providerResult =
+            input.verifiedProviderRefund ||
+            (provider
+                ? await provider.refund({
+                      paymentId: input.providerPaymentId,
+                      amountMinor: input.refund.amountMinor,
+                      reference: String(pending.id || pending._id),
+                  })
+                : { status: "processed", id: input.providerRefundId || "manual" });
         processed = await repositories.refunds.markProcessed(pending, providerResult);
     }
     await ledger.recordMany(

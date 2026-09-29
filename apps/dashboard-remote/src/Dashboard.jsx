@@ -3,12 +3,10 @@ import { EmptyState, NoDataFound } from "@packages/trem-ui";
 import AdminDashboardView from "./views/admin/AdminDashboard.view";
 import buildAdminModel from "./views/admin/AdminDashboard.model";
 import PartnerDashboardView from "./views/partner/PartnerDashboard.view";
-import buildPartnerModel from "./views/partner/PartnerDashboard.model";
+import buildPartnerModel, { PARTNER_SCHEMAS } from "./views/partner/PartnerDashboard.model";
 import TravellerDashboardView from "./views/traveller/TravellerDashboard.view";
 import buildTravellerModel from "./views/traveller/TravellerDashboard.model";
 import DashboardSkeleton from "./views/shared/DashboardSkeleton";
-
-const PARTNER_SCHEMAS = new Set(["partner-dashboard.v1", "dashboard.v1"]);
 
 function resolveModel(props) {
   const role = String(props.role || "");

@@ -2171,6 +2171,10 @@
   .booking-table__mobile-toggle { display: none; }
   .booking-table__controls { display: flex; flex-wrap: wrap; }
   .trem-filter-box-anchor { align-self: center; flex: 0 0 auto; }
+  .trem-filter-box-anchor > .ui-button {
+    height: var(--booking-table-control-height);
+    min-height: var(--booking-table-control-height);
+  }
   .booking-table__search { margin-inline-end: 0; }
   .booking-table__page-size { margin-inline-start: auto; }
   @media (max-width: $breakpoint-mobile) {

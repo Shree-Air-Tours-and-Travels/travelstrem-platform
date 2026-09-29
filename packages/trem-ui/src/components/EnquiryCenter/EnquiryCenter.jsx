@@ -12,16 +12,6 @@ const Detail = ({ label, value, wide = false }) =>
     </div>
   ) : null;
 
-const statusTone = (status) => {
-  const key = String(status || "").toLowerCase();
-  if (["accepted", "confirmed", "completed", "paid", "closed", "responded"].includes(key))
-    return "success";
-  if (["cancelled", "canceled", "failed", "rejected"].includes(key)) return "danger";
-  if (["pending", "in_review", "quote_requested", "quote_sent", "change_requested"].includes(key))
-    return "warning";
-  if (["new", "sent", "ready"].includes(key)) return "info";
-  return "neutral";
-};
 
 export default function EnquiryCenter({
   title = "",
@@ -66,7 +56,7 @@ export default function EnquiryCenter({
       travelDate: item.request?.departure || item.startDateLabel || item.travelDate || "",
       travellers: item.request?.travellers || item.travellers || item.guestsCount || "",
       statusDisplay: item.statusLabel || item.status || "",
-      statusTone: item.statusTone || statusTone(item.status),
+      statusTone: item.statusTone || "neutral",
       createdDisplay: item.createdLabel || item.createdDisplay || "",
     };
   });

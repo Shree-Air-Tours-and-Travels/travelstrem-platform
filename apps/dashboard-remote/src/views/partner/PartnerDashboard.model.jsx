@@ -3,6 +3,8 @@ import { Button } from "@packages/trem-ui";
 import { ACTIVITY_ICONS, formatNumber, buildStats } from "../shared/dashboardHelpers";
 import { widgetsFromTourAnalytics } from "../../dashboardWidgetAdapters";
 
+export const PARTNER_SCHEMAS = new Set(["partner-dashboard.v1", "dashboard.v1"]);
+
 export default function buildPartnerModel({
   source,
   dashboardWidgets,
@@ -209,4 +211,3 @@ export default function buildPartnerModel({
     },
   };
 }
-

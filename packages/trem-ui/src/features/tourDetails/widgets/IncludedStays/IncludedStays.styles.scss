@@ -328,7 +328,7 @@
   }
   &__actions > div span {
     color: var(--subtitle);
-    font-size: 0.76rem;
+    font-size: var(--font-size-xs);
   }
   &__link {
     display: inline-flex;
@@ -378,7 +378,7 @@
   }
   &__request > header span {
     color: var(--subtitle);
-    font-size: 0.76rem;
+    font-size: var(--font-size-xs);
   }
   &__request-status {
     flex: 0 0 auto;
@@ -409,7 +409,7 @@
   &__request-error {
     margin: 0.75rem 0 0;
     color: var(--color-danger);
-    font-size: 0.76rem;
+    font-size: var(--font-size-xs);
   }
   &__request > footer {
     display: flex;

@@ -5,7 +5,7 @@ import AgencyMerchantConfig from "../core/financial-engine/models/AgencyMerchant
 import PaymentProviderConfig from "../core/financial-engine/models/PaymentProviderConfig.js";
 import FinancialLedgerEntry from "../core/financial-engine/models/FinancialLedgerEntry.js";
 import FinancialSettlement from "../core/financial-engine/models/FinancialSettlement.js";
-import RazorpayProvider from "../core/financial-engine/providers/razorpay.provider.js";
+import { getPaymentProvider } from "../core/financial-engine/providers/registry.js";
 import { configureFinancialEngine } from "../core/financial-engine/index.js";
 import { minorToDecimal } from "../core/financial-engine/utils/money.js";
 import {
@@ -240,11 +240,5 @@ const repositories = {
 };
 const providers = {};
 if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET)
-    providers.razorpay = new RazorpayProvider({
-        keyId: process.env.RAZORPAY_KEY_ID,
-        keySecret: process.env.RAZORPAY_KEY_SECRET,
-        webhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET,
-        apiBaseUrl: process.env.RAZORPAY_API_BASE_URL,
-        timeoutMs: Number(process.env.RAZORPAY_TIMEOUT_MS || 15000),
-    });
+    providers.razorpay = getPaymentProvider("razorpay");
 configureFinancialEngine({ repositories, providers });

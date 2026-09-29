@@ -362,3 +362,17 @@ select {
 }
 
 .dash-content--dashboard > .app-shell-page { width: 100%; max-width: none; }
+
+.dash-load-error {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--surface);
+
+  > .trem-no-data {
+    width: 100%;
+    max-width: 560px;
+  }
+}

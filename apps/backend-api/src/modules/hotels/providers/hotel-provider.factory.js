@@ -58,14 +58,13 @@ export const createHotelProvider = async (
         .filter(Boolean);
     if (!keys.length || new Set(keys).size !== keys.length)
         throw new Error("Hotel provider list must contain unique provider names.");
-    if (mockEnabled && !keys.includes("mock")) keys.push("mock");
     const outcomes = await Promise.allSettled(keys.map(createSingleHotelProvider));
     const initialized = [];
     outcomes.forEach((outcome, index) => {
         if (outcome.status === "fulfilled") {
             initialized.push(outcome.value);
         } else {
-            if (!mockEnabled || keys[index] === "mock") throw outcome.reason;
+            if (!mockEnabled || !keys.includes("mock") || keys[index] === "mock") throw outcome.reason;
             logger.warn("[Hotels] provider initialization failed; test inventory remains available", {
                 provider: keys[index],
             });
