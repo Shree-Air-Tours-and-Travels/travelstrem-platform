@@ -179,3 +179,4 @@ export { default as MetricSnapshot } from "./components/MetricSnapshot/MetricSna
 export { default as FilterBox } from "./components/FilterBox/FilterBox.jsx";
 
 export { default as GlobalSearch } from "./components/AppHeader/GlobalSearch.jsx";
+export { default as DetailsCard } from "./components/DetailsCard/DetailsCard.jsx";

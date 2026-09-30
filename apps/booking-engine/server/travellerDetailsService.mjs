@@ -102,7 +102,7 @@ export const buildTravellerDetailsForm = ({ count = 1, requiresPassport = false,
 export const validateTravellerDetails = ({ count, requiresPassport, product = "trevista", includeTripPreferences, optionSets, values }) => {
   const form = buildTravellerDetailsForm({ count, requiresPassport, product, includeTripPreferences, optionSets });
   const fields = form.config.sections.flatMap((section) => section.fields);
-  const result = validateFormFields(fields, values || {});
+  const result = validateFormFields(fields.filter((field) => field.name !== "selectedAddOnKeys"), values || {});
   Array.from({ length: Math.max(1, Number(count) || 1) }, (_, index) => index).forEach((index) => {
     const path = `traveller_${index}_dob`;
     const dob = result.data[path] ? new Date(`${result.data[path]}T00:00:00.000Z`) : null;
@@ -154,14 +154,13 @@ const resolveEnquiryFields = (definition, context) => definition.fields.flatMap(
     ]);
   }
   if (configuredField.slot === "addOns") {
-    return context.addOnOptions.map((addOn) =>
-      field(`addOn_${addOn.key}`, "checkbox", addOn.label, {
-        required: false,
-        checkboxLabel: addOn.description
-          ? `${addOn.label} — ${addOn.description}`
-          : addOn.label,
-        colSpan: 2,
-      }));
+    return context.addOnOptions.length ? [field("selectedAddOnKeys", "multiselect", "Optional add-ons", {
+      required: false, colSpan: 2, width: "full",
+      options: context.addOnOptions.map((addOn) => ({
+        value: addOn.key,
+        label: addOn.description ? `${addOn.label} — ${addOn.description}` : addOn.label,
+      })),
+    })] : [];
   }
   if (configuredField.name === "customizationPreference" && !context.allowCustomization) return [];
   if (configuredField.name === "flightPreference" && context.packageOptions.length) return [];
@@ -253,6 +252,7 @@ export const buildProductEnquiryDetailsForm = ({
       `roomPreference_${group.key}`,
       saved[`roomPreference_${group.key}`] || "",
     ])),
+    selectedAddOnKeys: addOnOptions.filter((addOn) => saved[`addOn_${addOn.key}`] === true || saved[`addOn_${addOn.key}`] === "true").map((addOn) => addOn.key),
     ...Object.fromEntries(addOnOptions.map((addOn) => [
       `addOn_${addOn.key}`,
       saved[`addOn_${addOn.key}`] === true || saved[`addOn_${addOn.key}`] === "true",
@@ -269,6 +269,15 @@ export const validateProductEnquiryDetails = ({ product = "trevista", values, ..
   const form = buildProductEnquiryDetailsForm({ product, ...context });
   const fields = form.config.sections.flatMap((section) => section.fields);
   const result = validateFormFields(fields, values || {});
+  const selectedKeys = values?.selectedAddOnKeys ?? (context.addOnOptions || [])
+    .filter((item) => values?.[`addOn_${item.key}`] === true || values?.[`addOn_${item.key}`] === "true")
+    .map((item) => item.key);
+  const allowedKeys = new Set((context.addOnOptions || []).map((item) => item.key));
+  if (!Array.isArray(selectedKeys) || selectedKeys.some((key) => !allowedKeys.has(key))) {
+    result.errors.selectedAddOnKeys = "One or more selected add-ons are no longer available. Reopen the list and select the available options.";
+  }
+  result.data.selectedAddOnKeys = Array.isArray(selectedKeys) ? selectedKeys.filter((key) => allowedKeys.has(key)) : [];
+  for (const key of allowedKeys) result.data[`addOn_${key}`] = Array.isArray(selectedKeys) && selectedKeys.includes(key);
   const adults = Number(result.data.adultCount || 0);
   const children = Number(result.data.childCount || 0);
   const infants = Number(result.data.infantCount || 0);

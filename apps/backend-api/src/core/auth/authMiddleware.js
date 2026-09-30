@@ -4,7 +4,7 @@ import config from "../../config/index.js";
 import User from "../../modules/auth/models/User.js";
 import PartnerAgency from "../../modules/auth/models/PartnerAgency.js";
 import RefreshToken from "../../modules/auth/models/RefreshToken.js";
-import { getPortalScope, normalizePortalScope, readPortalAccessToken } from "./portalSession.js";
+import { getPortalScope, normalizePortalScope, readPortalAccessToken, scopeUserToPortal } from "./portalSession.js";
 
 const JWT_SECRET = (config.JWT && config.JWT.accessSecret) || process.env.JWT_SECRET;
 const SESSION_ACTIVITY_TOUCH_INTERVAL_MS = 60 * 1000;
@@ -78,7 +78,7 @@ export default async function authMiddleware(req, res, next) {
                 console.warn("[auth] session activity touch failed:", error?.message || error),
             );
         }
-        req.user = { ...payload, ...user, sub: payload.sub };
+        req.user = scopeUserToPortal({ ...payload, ...user, sub: payload.sub }, payload.portal);
         return next();
     } catch (err) {
         return res.status(401).json({

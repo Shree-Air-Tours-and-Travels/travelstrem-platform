@@ -60,7 +60,7 @@
   height: 100%;
   display: grid;
   place-items: center;
-  font-size: 2rem;
+  font-size: var(--font-size-xxl);
   font-weight: $font-bold;
   color: var(--color-primary);
   background: var(--primary-soft);
@@ -74,7 +74,7 @@
   border-radius: $radius-full;
   font-size: $font-size-xs;
   font-weight: $font-medium;
-  color: #fff;
+  color: var(--color-on-primary);
   text-transform: capitalize;
 }
 

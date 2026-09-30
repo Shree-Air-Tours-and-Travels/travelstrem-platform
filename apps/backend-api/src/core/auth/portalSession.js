@@ -98,3 +98,25 @@ export const readPortalRefreshToken = (req) => {
     const { refresh } = getPortalCookieNames(req);
     return req?.cookies?.[refresh] || null;
 };
+
+// Portal capabilities are request-scoped; never change the stored account role.
+export const scopeUserToPortal = (user, portal) => {
+    if (!user || normalizePortalScope(portal) !== PORTAL_SCOPES.CUSTOMER) return user;
+    const identity = typeof user.toObject === "function" ? user.toObject() : user;
+    return {
+        ...identity,
+        role: "member",
+        adminLevel: "none",
+        adminApprovalStatus: "not_required",
+        agencyRole: "none",
+        agencyId: null,
+        agentRef: "",
+        agencyRef: "",
+        partnerAgencyRef: "",
+        agentApprovalStatus: "not_required",
+        internalTeamRoles: [],
+        permissionGrants: [],
+        permissionDenials: [],
+        productAccess: [],
+    };
+};

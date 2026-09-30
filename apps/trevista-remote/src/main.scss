@@ -17,6 +17,11 @@
   color: inherit;
 }
 
+.tours-app-shell .tour-detail__shell {
+  max-width: $full-width;
+  margin-inline: auto;
+}
+
 .tours-app-shell {
   display: flex;
   flex-direction: column;

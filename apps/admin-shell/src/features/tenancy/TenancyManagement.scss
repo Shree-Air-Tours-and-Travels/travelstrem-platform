@@ -217,8 +217,8 @@
   }
 
   &__danger-zone {
-    background: color-mix(in srgb, var(--danger, #c62855) 4%, var(--surface));
-    border-color: color-mix(in srgb, var(--danger, #c62855) 25%, var(--border));
+    background: color-mix(in srgb, var(--color-danger) 4%, var(--surface));
+    border-color: color-mix(in srgb, var(--color-danger) 25%, var(--border));
   }
 
   &__detail-grid {
@@ -327,10 +327,10 @@
   }
 
   &__inline-error {
-    background: color-mix(in srgb, var(--danger, #c62855) 8%, var(--surface));
-    border: 1px solid color-mix(in srgb, var(--danger, #c62855) 40%, var(--border));
+    background: color-mix(in srgb, var(--color-danger) 8%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--color-danger) 40%, var(--border));
     border-radius: $radius-sm;
-    color: var(--danger, #c62855);
+    color: var(--color-danger);
     padding: $space-3;
   }
 

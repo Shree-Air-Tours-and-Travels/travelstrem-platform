@@ -1,3 +1,5 @@
+import { useExistingEnquiryChoice } from "@packages/trem-modals";
+import { redirectToPayment } from "@packages/trem-utils";
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
@@ -31,6 +33,7 @@ const passengerRows = (offer) =>
   );
 
 export default function FlightDetailsContainer() {
+  const existingEnquiryChoice = useExistingEnquiryChoice();
   const location = useLocation();
   const navigate = useNavigate();
   const offerId = decodeURIComponent(location.pathname.split("/").filter(Boolean).at(-1) || "");
@@ -51,6 +54,7 @@ export default function FlightDetailsContainer() {
   const [seats, setSeats] = useState([]);
   const [revalidation, setRevalidation] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [enquiryError, setEnquiryError] = useState(null);
   const [enquiryModalOpen, setEnquiryModalOpen] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
 
@@ -70,6 +74,10 @@ export default function FlightDetailsContainer() {
         );
         const bookingResponse = await readComponentData(bookingPath);
         if (!active) return;
+        if (bookingResponse.data.summaryPath) {
+          navigate(bookingResponse.data.summaryPath, { replace: true });
+          return;
+        }
         setStep(4);
         setState({
           loading: false,
@@ -164,8 +172,9 @@ export default function FlightDetailsContainer() {
         },
       );
       setState((current) => ({ ...current, booking: response.data }));
-      setStep(4);
+      await redirectToPayment({ bookingId: response.data.bookingId, bookingType: "flight", sourceApp: "trehub" });
     } catch (error) {
+      setEnquiryError(error);
       if (error.code === "PRICE_CHANGED")
         setRevalidation({ status: "PRICE_CHANGED", ...error.details });
       else setState((current) => ({ ...current, error: error.message }));
@@ -174,19 +183,27 @@ export default function FlightDetailsContainer() {
     }
   };
 
-  const createEnquiry = async () => {
+  const createEnquiry = async (startNew = false) => {
+    setEnquiryError(null);
     setSaving(true);
     setState((current) => ({ ...current, error: "" }));
     try {
       const response = await createComponentData(
         state.contract.urls.enquiries || "/flights/enquiries",
         {
+          startNew: startNew === true,
           searchId,
           offerId,
           fareId,
           expectedTotal: state.offer.fares.find((fare) => fare.fareId === fareId)?.pricing?.total,
         },
       );
+      if (response.data?.existingEnquiry) {
+        const choice = await existingEnquiryChoice.choose(response.data);
+        if (choice === "new") return createEnquiry(true);
+        if (choice === "continue") navigate(response.data.targetPath);
+        return;
+      }
       setEnquiryModalOpen(false);
       navigate(response.data.targetPath);
     } catch (error) {
@@ -230,6 +247,8 @@ export default function FlightDetailsContainer() {
     });
 
   return (
+    <>
+      {existingEnquiryChoice.modal}
     <FlightDetailsView
       {...state}
       step={step}
@@ -238,6 +257,7 @@ export default function FlightDetailsContainer() {
       seats={seats}
       revalidation={revalidation}
       saving={saving}
+      enquiryError={enquiryError}
       enquiryModalOpen={enquiryModalOpen}
       onFareChange={(value) => {
         setFareId(value);
@@ -272,8 +292,14 @@ export default function FlightDetailsContainer() {
       onCreateEnquiry={createEnquiry}
       onRevalidate={revalidate}
       onBook={createBooking}
+      onPay={async () => {
+        setSaving(true);
+        try { await redirectToPayment({ bookingId: state.booking.bookingId, bookingType: "flight", sourceApp: "trehub" }); }
+        catch (error) { setState(current => ({ ...current, error: error.message })); setSaving(false); }
+      }}
       onRetryLoad={() => setReloadKey((current) => current + 1)}
       onBackToSearch={() => navigate(location.state?.returnTo || "/trehub/flights")}
     />
+    </>
   );
 }

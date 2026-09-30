@@ -108,6 +108,7 @@ export default function AppShellContainer({
   const isAuthenticated = Boolean(session?.isAuthenticated);
   const user = session?.user || {};
   const overviewUserKey = String(user.id || user._id || "guest");
+  const [overviewError, setOverviewError] = useState(false);
   const [journeyStory, setJourneyStory] = useState(null);
   const [featuredTravel, setFeaturedTravel] = useState(null);
   const [homeInsights, setHomeInsights] = useState(null);
@@ -137,10 +138,11 @@ export default function AppShellContainer({
   const [articlesError, setArticlesError] = useState("");
 
   const loadOverview = useCallback(({ force = false } = {}) => {
+    setOverviewError(false);
     const hasCurrentCache =
       overviewResponseCache && overviewResponseUserKey === overviewUserKey;
     const hasCurrentRequest = overviewRequest && overviewRequestUserKey === overviewUserKey;
-    setOverviewDefinitionLoading(!hasCurrentCache);
+    setOverviewDefinitionLoading(force || !hasCurrentCache);
     let request;
     if (!force && hasCurrentCache) {
       request = Promise.resolve(overviewResponseCache);
@@ -148,6 +150,10 @@ export default function AppShellContainer({
       request = overviewRequest;
     } else {
       request = fetchData("/pages/app-shell/home").then((response) => {
+        if (!Array.isArray(response?.component?.structure?.widgets) ||
+            !response.component.structure.widgets.length) {
+          throw new Error("Home page is unavailable");
+        }
         overviewResponseCache = response;
         overviewResponseUserKey = overviewUserKey;
         return response;
@@ -173,7 +179,9 @@ export default function AppShellContainer({
         setHomeInsights(contentFor("HomeInsights"));
       })
       .catch(() => {
-        if (overviewResponseCache && overviewResponseUserKey === overviewUserKey) return;
+        setOverviewError(true);
+        overviewResponseCache = null;
+        overviewResponseUserKey = "";
         setJourneyStory(null);
         setFeaturedTravel(null);
         setHomeInsights(null);
@@ -581,11 +589,18 @@ export default function AppShellContainer({
   return (
     <div className={`app-shell-page${activeTab === "overview" ? " app-shell-page--home" : ""}`}>
       {activeTab === "overview" && (
-        overviewDefinitionLoading && !journeyHero ? (
+        overviewDefinitionLoading ? (
           <div className="app-shell-home-preloader">
             <Preloader variant="hero" label="Loading home page" />
             <Preloader variant="grid" count={3} label="Loading featured travel" />
           </div>
+        ) : overviewError ? (
+          <NoDataFound
+            title="Something went wrong"
+            description="We couldn’t load your travel options right now. Please try again in a moment."
+            actionLabel="Retry"
+            onAction={() => loadOverview({ force: true })}
+          />
         ) : (
           <OverviewView
             journeyHero={journeyHero}

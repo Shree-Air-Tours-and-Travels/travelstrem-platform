@@ -5,10 +5,12 @@ import { Breadcrumbs, EmptyState, ErrorState, SupportSkeleton } from "@packages/
 export function SupportLayout({ title, subtitle, children, actions, className = "" }) {
   const location = useLocation();
   const fromDashboard = (location.state?.dashboardOrigin || new URLSearchParams(location.search).get("navFrom")) === "dashboard";
-  const isHelpHome = title === "Help & Support";
+  const isHelpHome = location.pathname.replace(/\/$/, "") === "/help";
+  const isTicket = location.pathname.startsWith("/help/requests/");
   const breadcrumbs = [
     { label: fromDashboard ? "Dashboard" : "Home", path: fromDashboard ? "/?tab=dashboard" : "/?tab=overview" },
     isHelpHome ? { label: "Help & Support" } : { label: "Help & Support", path: `/help?navFrom=${fromDashboard ? "dashboard" : "overview"}`, state: location.state },
+    ...(isTicket ? [{ label: "My support requests", path: `/help/requests?navFrom=${fromDashboard ? "dashboard" : "overview"}`, state: location.state }] : []),
     ...(!isHelpHome && title ? [{ label: title }] : []),
   ];
   return (

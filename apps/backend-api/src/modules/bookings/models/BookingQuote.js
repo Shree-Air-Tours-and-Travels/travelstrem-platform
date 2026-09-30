@@ -63,6 +63,7 @@ const bookingQuoteSchema = new Schema(
         bookingId: { type: Schema.Types.ObjectId, ref: "Booking", default: null },
         inquiryId: { type: Schema.Types.ObjectId, ref: "ContactLead", default: null, index: true },
         version: { type: Number, default: null },
+        selectionFingerprint: String,
         supersedesQuoteId: { type: Schema.Types.ObjectId, ref: "BookingQuote", default: null },
         quoteRef: { type: String, trim: true, default: "" },
         basePrice: { type: Number, default: 0 },

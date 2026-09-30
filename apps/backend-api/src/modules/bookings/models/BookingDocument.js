@@ -27,6 +27,7 @@ const bookingDocumentSchema = new Schema(
         },
         type: { type: String, enum: DOCUMENT_TYPES, default: DOCUMENT_TYPE.OTHER, index: true },
         fileName: { type: String, trim: true, default: "" },
+        replacesDocumentId: { type: Schema.Types.ObjectId, ref: "BookingDocument", default: null },
         url: { type: String, trim: true, default: "" },
         mimeType: { type: String, trim: true, default: "" },
         size: { type: Number, default: 0 },

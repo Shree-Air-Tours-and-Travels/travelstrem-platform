@@ -322,6 +322,7 @@ export default function ToursDetailsContainer({
   return (
     <ProductDetailProvider key={`${productType}:${decodedRef}`} value={widgetApiOptions}>
       <ToursDetailsView
+        key={decodedRef}
         tourRef={decodedRef}
         widgets={widgets}
         pageTitle={

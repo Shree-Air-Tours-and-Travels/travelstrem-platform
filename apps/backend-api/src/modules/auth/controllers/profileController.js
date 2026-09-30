@@ -1,3 +1,4 @@
+import { normalizeMobileNumber } from "../services/mobileAuth.service.js";
 import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 import UserRepository from "../repositories/UserRepository.js";
@@ -60,7 +61,10 @@ export const updateProfile = async (req, res) => {
             }
             updates.avatar = avatar;
         }
-        if (phone !== undefined) updates.phone = phone;
+        if (phone !== undefined) {
+            try { updates.phone = normalizeMobileNumber(phone); }
+            catch { return res.status(400).json({ status: "error", message: "Enter a valid mobile number, including its country code." }); }
+        }
         const before = await UserRepository.findById(userId, "name phone avatar agencyId").lean();
         const user = await UserRepository.updateProfile(userId, updates);
         if (!user) return res.status(404).json({ status: "error", message: "User not found" });

@@ -105,14 +105,6 @@ export default function HotelFiltersView({
           </header>
         )}
         {loading && !data ? <TrehubPreloader variant="hotel-list" label={labels.loading} /> : null}
-        {error ? (
-          <ErrorState
-            title={labels.error}
-            description={error.message}
-            retry={onRetry}
-            retryText={labels.retry}
-          />
-        ) : null}
         {data?.demoInventory || data?.provider === "mock" ? (
           <p role="note" className="trehub-hotels__notice">
             <Icon name="info" size={18} aria-hidden="true" />
@@ -121,6 +113,14 @@ export default function HotelFiltersView({
         ) : null}
         {contract && (!loading || data) ? (
           <section className="trehub-hotels__search">{renderSearch("page")}</section>
+        ) : null}
+        {error ? (
+          <ErrorState
+            title={labels.error}
+            description={error.message}
+            retry={onRetry}
+            retryText={labels.retry}
+          />
         ) : null}
         {data ? <section className="trehub-hotels__filters">{renderFilters()}</section> : null}
         {data && (!error || data.cards.length > 0) ? (

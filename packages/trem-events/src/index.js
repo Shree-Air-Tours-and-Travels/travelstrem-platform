@@ -369,6 +369,7 @@ export {
 } from "./realtimeNotify.js";
 
 export { RealtimeProvider, useRealtimeContext } from "./realtime/RealtimeProvider.jsx";
+export { useBookingClock } from "./realtime/useBookingClock.js";
 export { default as RealtimeProviderDefault } from "./realtime/RealtimeProvider.jsx";
 export { default as useRealtime } from "./realtime/useRealtime.js";
 export { default as useRealtimeEvent } from "./realtime/useRealtimeEvent.js";

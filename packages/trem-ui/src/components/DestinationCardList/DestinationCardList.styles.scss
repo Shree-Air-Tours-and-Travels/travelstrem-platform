@@ -3,7 +3,7 @@
 .trem-destination-card-list {
   display: grid;
   grid-template-columns: repeat(var(--destination-card-columns, 4), minmax(0, 1fr));
-  gap: var(--destination-card-gap, $space-4);
+  gap: var(--destination-card-gap);
 
   &__item {
     min-width: 0;

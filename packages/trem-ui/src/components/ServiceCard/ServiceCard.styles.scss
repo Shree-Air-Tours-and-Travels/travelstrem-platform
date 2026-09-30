@@ -216,7 +216,7 @@
   }
 
   .ui-service-card__title {
-    color: #ffffff !important;
+    color: var(--color-on-primary) !important;
   }
   .ui-service-card__description {
     color: rgba(229, 246, 243, 0.78) !important;

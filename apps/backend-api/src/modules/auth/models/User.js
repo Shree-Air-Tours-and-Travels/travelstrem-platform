@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema(
             lowercase: true,
             trim: true,
         },
+        mobilePromptAfter: { type: Date, default: null },
         phone: { type: String, trim: true, default: "" },
         mobile: { type: String, trim: true, default: undefined, unique: true, sparse: true },
         emailVerified: { type: Boolean, default: false },

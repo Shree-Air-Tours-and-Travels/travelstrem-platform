@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useEnquiryRealtime } from "@packages/trem-events";
-import { fetchData, useRefreshOnActivation } from "@packages/trem-utils";
+import { fetchData } from "@packages/trem-utils";
 
 export default function useEnquiryBookings(journeyType = "") {
   const requestRef = useRef(0);
+  const pendingRef = useRef(null);
+  const inFlightRef = useRef(null);
+  const refreshTimerRef = useRef(null);
   const [filters, setFilters] = useState({});
   const [state, setState] = useState({
     enquiries: [],
@@ -13,7 +16,7 @@ export default function useEnquiryBookings(journeyType = "") {
     error: "",
   });
 
-  const load = useCallback(async () => {
+  const fetchRecords = useCallback(async () => {
     const requestId = ++requestRef.current;
     setState((current) => ({ ...current, loading: true, error: "" }));
     try {
@@ -42,8 +45,37 @@ export default function useEnquiryBookings(journeyType = "") {
     }
   }, [journeyType, filters]);
 
-  useEffect(() => { load(); return () => { requestRef.current += 1; }; }, [load]);
-  useRefreshOnActivation(load, { resource: "enquiries", refreshOnMount: false });
+  // Collapse mutation callbacks and their realtime echoes into one trailing refresh.
+  const load = useCallback(() => {
+    if (!pendingRef.current) {
+      let resolve;
+      const promise = new Promise((done) => { resolve = done; });
+      pendingRef.current = { promise, resolve };
+    }
+    clearTimeout(refreshTimerRef.current);
+    refreshTimerRef.current = setTimeout(async () => {
+      const pending = pendingRef.current;
+      pendingRef.current = null;
+      // A later event must run after an older request, never race it.
+      if (inFlightRef.current) await inFlightRef.current;
+      const request = fetchRecords();
+      inFlightRef.current = request;
+      await request;
+      if (inFlightRef.current === request) inFlightRef.current = null;
+      pending?.resolve();
+    }, 150);
+    return pendingRef.current.promise;
+  }, [fetchRecords]);
+
+  useEffect(() => {
+    load();
+    return () => {
+      clearTimeout(refreshTimerRef.current);
+      pendingRef.current?.resolve();
+      pendingRef.current = null;
+      requestRef.current += 1;
+    };
+  }, [load]);
   useEnquiryRealtime(load);
 
   return { ...state, load, filters, applyFilters: setFilters };

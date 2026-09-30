@@ -317,12 +317,10 @@ const publicAmount = (totalMinor, travellers) => ({
 
 export function calculateTourHotelUnitPrice({ tour, pricing } = {}) {
     if (!pricing || pricing.amountMinor == null) return null;
-    const basis = { adults: 1, children: 0, infants: 0, rooms: 1, vehicles: 1, nights: 1, days: 1 };
-    const priced = incrementalSupplement({ tour, pricing, basis });
     return {
-        amountMinor: priced.sellingTotalMinor,
+        amountMinor: integer(pricing.amountMinor, "Hotel room configured price"),
         currency: pricing.currency || tour?.commercial?.currency || "INR",
-        unit: priced.unit,
+        unit: pricing.unit || "PER_ROOM_PER_NIGHT",
     };
 }
 

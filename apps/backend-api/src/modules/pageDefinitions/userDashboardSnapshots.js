@@ -1,3 +1,4 @@
+import { bookingStatusDisplay, statusDisplay } from "../../constants/common.js";
 import Booking from "../bookings/models/Booking.js";
 import FlightBooking from "../flights/models/FlightBooking.js";
 import SupportTicket from "../support/models/SupportTicket.js";
@@ -15,14 +16,14 @@ export async function buildUserDashboardSnapshots(
             Booking.countDocuments({ userId }),
             FlightBooking.countDocuments({ userId }),
             Booking.find({ userId })
-                .select("bookingRef tourTitle status createdAt")
+                .select("bookingRef tourTitle status paymentStatus sourceEnquiryId createdAt")
                 .sort({ createdAt: -1 })
-                .limit(3)
+                .limit(5)
                 .lean(),
             FlightBooking.find({ userId })
-                .select("bookingRef status createdAt")
+                .select("bookingRef status paymentStatus segmentSnapshot sourceEnquiryId createdAt")
                 .sort({ createdAt: -1 })
-                .limit(3)
+                .limit(5)
                 .lean(),
         ]),
         Promise.all([
@@ -30,24 +31,24 @@ export async function buildUserDashboardSnapshots(
             SupportTicket.find({ user: userId })
                 .select("reference subject status")
                 .sort({ lastActivityAt: -1 })
-                .limit(3)
+                .limit(5)
                 .lean(),
         ]),
         Promise.all([
             Notification.countDocuments({ userId, portal: "customer", readAt: null }),
             Notification.find({ userId, portal: "customer" })
-                .select("title readAt")
+                .select("title readAt actionUrl")
                 .sort({ createdAt: -1 })
-                .limit(3)
+                .limit(5)
                 .lean(),
         ]),
         User.findById(userId).select("name email phone").lean(),
         Promise.all([
             SavedSearch.countDocuments({ userId }),
             SavedSearch.find({ userId })
-                .select("title mode")
+                .select("title mode path query")
                 .sort({ updatedAt: -1 })
-                .limit(3)
+                .limit(5)
                 .lean(),
         ]),
     ]);
@@ -59,11 +60,14 @@ export async function buildUserDashboardSnapshots(
             description: `${totalEnquiries} travel requests`,
             target: "bookings",
             items: recentLeads
-                .slice(0, 3)
+                .slice(0, 5)
                 .map((lead) => ({
                     id: String(lead._id),
                     label: lead.tourTitle || lead.enquiryRef,
-                    status: lead.status,
+                    status: statusDisplay(lead.status).label,
+                    statusTone: statusDisplay(lead.status).tone,
+                    description: lead.enquiryRef,
+                    target: `/?tab=bookings&enquiry=${encodeURIComponent(lead.enquiryRef || lead._id)}`,
                 })),
         },
         {
@@ -86,12 +90,24 @@ export async function buildUserDashboardSnapshots(
             target: "bookings",
             items: [...bookings[2], ...bookings[3]]
                 .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-                .slice(0, 3)
-                .map((item) => ({
-                    id: String(item._id),
-                    label: item.tourTitle || item.bookingRef,
-                    status: item.status,
-                })),
+                .slice(0, 5)
+                .map((item) => {
+                    const segments = item.segmentSnapshot || [];
+                    const origin = segments[0]?.origin;
+                    const destination = segments.at(-1)?.destination;
+                    const route = origin && destination
+                        ? `${origin.city || origin.iataCode} → ${destination.city || destination.iataCode}`
+                        : null;
+                    const display = bookingStatusDisplay(item.status, item.paymentStatus);
+                    return {
+                        id: String(item._id),
+                        label: item.tourTitle || route || "Flight booking",
+                        description: item.bookingRef,
+                        target: `/?tab=bookings&enquiry=${encodeURIComponent(item.sourceEnquiryId || item.bookingRef)}`,
+                        status: display.label,
+                        statusTone: display.tone,
+                    };
+                }),
         });
     const support = value(1);
     if (support)
@@ -104,6 +120,7 @@ export async function buildUserDashboardSnapshots(
             items: support[1].map((item) => ({
                 id: String(item._id),
                 label: item.subject,
+                target: `/help/requests/${encodeURIComponent(item._id)}`,
                 status: item.status,
             })),
         });
@@ -118,6 +135,7 @@ export async function buildUserDashboardSnapshots(
             items: notifications[1].map((item) => ({
                 id: String(item._id),
                 label: item.title,
+                target: item.actionUrl?.startsWith("/") && !item.actionUrl.startsWith("//") ? item.actionUrl : undefined,
                 meta: item.readAt ? "Read" : "Unread",
             })),
         });
@@ -143,7 +161,7 @@ export async function buildUserDashboardSnapshots(
             icon: "search",
             description: `${searches[0]} saved searches`,
             target: "saved-searches",
-            items: searches[1].map((item) => ({ id: String(item._id), label: item.title })),
+            items: searches[1].map((item) => ({ id: String(item._id), label: item.title, target: `${item.path}${item.query ? `?${item.query.replace(/^\?/, "")}` : ""}` })),
         });
     return snapshots.map((snapshot) => ({
         ...snapshot,

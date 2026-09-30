@@ -29,6 +29,7 @@ export function NewSupportRequestPage() {
   const navigate = useSupportNavigate();
   const [params] = useSearchParams();
   const [categoryId, setCategoryId] = useState(params.get("category") || "");
+  const [contextId, setContextId] = useState(params.get("contextId") || "");
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -52,6 +53,7 @@ export function NewSupportRequestPage() {
       const result = await supportApi.createTicket({
         serviceId: params.get("serviceId") || "",
         categoryId,
+        contextId,
         subject,
         description,
       });
@@ -93,6 +95,13 @@ export function NewSupportRequestPage() {
             submit();
           }}
         >
+          <SingleSelect
+            label="Related booking or enquiry"
+            placeholder="General help (no booking or enquiry)"
+            value={contextId}
+            onChange={setContextId}
+            options={(categories.data?.contexts || []).map(item => ({ value: item.id, label: `${item.title} · ${item.reference} · ${item.status}` }))}
+          />
           <SingleSelect
             label={ui.categoryLabel}
             placeholder={ui.categoryPlaceholder}
@@ -139,6 +148,7 @@ export function SupportRequestsPage() {
   const navigate = useSupportNavigate();
   const [status, setStatus] = useState("");
   const resource = useSupportResource((signal) => supportApi.tickets(status, signal), [status]);
+  useRealtimeEvent(REALTIME_EVENTS.SUPPORT_TICKET_CREATED, resource.reload);
   const statuses = resource.data?.statuses || [];
   const ui = resource.data?.ui || {};
   const labelByStatus = Object.fromEntries(statuses.map((item) => [item.id, item.label]));
@@ -350,6 +360,12 @@ export function SupportTicketDetailPage() {
                 <strong>{formatDateTime(ticket.createdAt)}</strong>
               </div>
             </div>
+            {ticket.relatedContext ? (
+              <div className="support-ticket-summary">
+                <strong>{ticket.relatedContext.title} · {ticket.relatedContext.reference}</strong>
+                <span>{ticket.relatedContext.status}</span>
+              </div>
+            ) : null}
             <SupportConversation
               title={ui.conversationTitle}
               className="support-ticket-detail__conversation"

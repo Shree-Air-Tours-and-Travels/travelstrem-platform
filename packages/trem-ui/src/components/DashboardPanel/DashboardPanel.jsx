@@ -67,7 +67,7 @@ export default function DashboardPanel({
                 {item.value != null ? (
                   <strong className="trem-dashboard-panel__item-value">{item.value}</strong>
                 ) : null}
-                {item.status ? <StatusBadge value={item.status} size="sm" /> : null}
+                {item.status ? <StatusBadge value={item.status} tone={item.statusTone} size="sm" /> : null}
                 {item.meta ? (
                   <small className="trem-dashboard-panel__item-meta">{item.meta}</small>
                 ) : null}

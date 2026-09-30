@@ -3,6 +3,17 @@ import { buildTravellerDetailsForm } from "./travellerDetailsService.mjs";
 
 const OPERATOR_ROLES = new Set(["agent", "admin", "super_admin"]);
 
+const reviewCardsFromForm = (form, targetStepId) => (form?.config?.sections || []).map((section) => ({
+  id: section.id,
+  title: section.title,
+  editAction: { type: "navigate-step", targetStepId, labelRef: "editDetails", variant: "outline" },
+  rows: (section.fields || []).map((field) => {
+    const value = form.values?.[field.name];
+    const option = field.options?.find((item) => String(item.value) === String(value));
+    return { label: field.label, value: option?.label || (value == null || value === "" ? "—" : String(value)) };
+  }),
+}));
+
 const asReadOnlyForm = (form, collapseSections = false) => form ? ({
   ...form,
   config: {
@@ -55,24 +66,29 @@ const operatorJourney = (booking) => {
     ["trevista", "trevio"].includes(booking.product) &&
     !travellerDetailsSaved;
   return {
-    data: { bookingId: booking.id, ...(booking.record ? { record: booking.record } : {}) },
+    data: { bookingId: booking.id, paymentBookingId: booking.paymentBookingId, paymentBookingType: booking.paymentBookingType, ...(booking.record ? { record: booking.record } : {}) },
     labels: {
       ...baseLabels(booking),
       operatorEyebrow: "Quote management",
       operatorTitle: booking.title || "Tour booking",
-      operatorDescription: awaitingTravellerDetails
+      operatorDescription: ["PAID", "REFUNDED", "PARTIALLY_REFUNDED"].includes(booking.paymentStatus) ? booking.paymentMessage : awaitingTravellerDetails
         ? "The traveller must complete their details and request a quotation before pricing begins."
         : "Create and manage the traveller's quote from this booking.",
       manageQuote: "Create / edit quote",
+      paymentHeading: booking.paymentHeading,
+      paymentMessage: booking.paymentMessage,
+      proceedPayment: "Proceed to Payment",
     },
     structure: {
       ...baseStructure(booking),
+      blocks: ["PAID", "REFUNDED", "PARTIALLY_REFUNDED"].includes(booking.paymentStatus) ? [{ id: "payment-status", type: "notice", titleRef: "paymentHeading", descriptionRef: "paymentMessage", tone: booking.paymentTone, icon: "itinerary" }] : [],
       header: {
         eyebrowRef: "operatorEyebrow",
         titleRef: "operatorTitle",
         descriptionRef: "operatorDescription",
       },
       actions: [
+        ...(booking.paymentEnabled && travellerDetailsSaved ? [{ id: "proceed-payment", type: "payment", labelRef: "proceedPayment" }] : []),
         {
           id: "manage-quote",
           type: "navigate",
@@ -116,7 +132,11 @@ const customerJourney = (booking, quote, requestedStep = "") => {
           "success",
         ],
   };
-  const [stateTitle, stateDescription, stateBadge, stateTone] = states[state];
+  const summaryOnly = Boolean(booking.bookingCreated);
+  const paymentComplete = ["PAID", "FULLY_PAID", "REFUNDED", "PARTIALLY_REFUNDED"].includes(booking.paymentStatus);
+  const [stateTitle, stateDescription, stateBadge, stateTone] = (summaryOnly || paymentComplete)
+    ? [booking.paymentHeading, booking.paymentMessage, booking.paymentHeading, booking.paymentTone]
+    : states[state];
   const actionLabelRefs = {
     ACCEPT: "acceptQuote",
     REJECT: "rejectQuote",
@@ -165,15 +185,16 @@ const customerJourney = (booking, quote, requestedStep = "") => {
   const enquiryCreated = isFlight || String(booking.status || "").toLowerCase() !== "new";
   const quotationRequested = Boolean(quote?.id) || ["quote_requested", "quote_sent", "accepted", "rejected", "change_requested"].includes(String(booking.status || "").toLowerCase());
   const canRequestQuotation = !isFlight && travellerSaved && !quotationRequested;
-  const enquiryEditable = !quotationRequested && !isFlight;
-  const travellerEditable = !quotationRequested && !isCancelled;
-  const currentStepId = isFlight
+  const enquiryEditable = !summaryOnly && !quotationRequested && !isFlight;
+  const travellerEditable = !summaryOnly && !quotationRequested && !isCancelled && !paymentComplete && !booking.clock?.expired;
+  const summaryLocked = paymentComplete;
+  const checkoutLocked = summaryOnly || Boolean(booking.paymentSessionId);
+  const paymentProcessing = booking.paymentStatus === "PROCESSING";
+  const currentStepId = summaryLocked ? "payment" : isFlight
     ? travellerSaved ? "review" : "enquiry"
     : !enquiryCreated
     ? "enquiry"
-    : !travellerSaved || !quotationRequested
-      ? "travellers"
-      : !quoteAccepted ? "quote" : "payment";
+    : !travellerSaved ? "travellers" : "quote";
   const flightStepOrder = ["enquiry", "travellers", "review", "payment"];
   const currentFlightStepIndex = flightStepOrder.indexOf(currentStepId);
   const flightStepStatus = (id) => {
@@ -184,19 +205,21 @@ const customerJourney = (booking, quote, requestedStep = "") => {
     { id: "enquiry", labelRef: "enquiryStep", descriptionRef: "enquiryStepDescription", status: flightStepStatus("enquiry") },
     { id: "travellers", labelRef: "travellerStep", descriptionRef: travellerSaved ? "travellerSavedDescription" : "travellerStepDescription", status: flightStepStatus("travellers"), disabled: isCancelled },
     { id: "review", labelRef: "reviewStep", descriptionRef: "reviewStepDescription", status: flightStepStatus("review"), disabled: isCancelled || !travellerSaved },
-    { id: "payment", labelRef: "paymentStep", descriptionRef: "paymentStepDescription", status: "pending", disabled: true },
+    { id: "payment", labelRef: "paymentStep", descriptionRef: "paymentStepDescription", status: paymentComplete ? "completed" : "pending", disabled: !paymentComplete },
   ] : [
-    { id: "enquiry", labelRef: "enquiryStep", descriptionRef: "enquiryStepDescription", status: enquiryCreated ? "completed" : "current" },
-    { id: "travellers", labelRef: "travellerStep", descriptionRef: travellerSaved ? "travellerSavedDescription" : "travellerStepDescription", status: enquiryCreated ? quotationRequested ? "completed" : "current" : "pending", disabled: !enquiryCreated },
-    { id: "quote", labelRef: "quoteStep", descriptionRef: "quoteStepDescription", status: quoteAccepted ? "completed" : quotationRequested ? "current" : "pending", disabled: !quotationRequested },
-    { id: "payment", labelRef: "paymentStep", descriptionRef: "paymentStepDescription", status: quoteAccepted ? "current" : "pending", disabled: !quoteAccepted },
+    { id: "enquiry", labelRef: "enquiryStep", descriptionRef: "enquiryStepDescription", status: enquiryCreated ? "completed" : "current", disabled: quotationRequested || isCancelled },
+    { id: "travellers", labelRef: "travellerStep", descriptionRef: travellerSaved ? "travellerSavedDescription" : "travellerStepDescription", status: enquiryCreated ? quotationRequested ? "completed" : "current" : "pending", disabled: !enquiryCreated || quotationRequested || isCancelled },
+    { id: "quote", labelRef: "quoteStep", descriptionRef: "quoteStepDescription", status: quoteAccepted ? "completed" : quotationRequested ? "current" : "pending", disabled: !travellerSaved || isCancelled },
+    { id: "payment", labelRef: "paymentStep", descriptionRef: "paymentStepDescription", status: paymentComplete ? "completed" : quoteAccepted ? "current" : "pending", disabled: !paymentComplete },
   ];
+  if (checkoutLocked && !summaryLocked) timelineSteps = timelineSteps.map(step => ({ ...step, disabled: ["enquiry", "travellers", "payment"].includes(step.id) }));
+  if (summaryLocked) timelineSteps = timelineSteps.map(step => ({ ...step, disabled: step.id !== "payment", status: step.id === "payment" ? "current" : "completed" }));
   const requestedTimelineStep = timelineSteps.find((step) => step.id === requestedStep);
   const activeStepId = requestedTimelineStep && !requestedTimelineStep.disabled
     ? requestedTimelineStep.id
     : currentStepId;
-  if (isFlight) {
-    const selectedIndex = flightStepOrder.indexOf(activeStepId);
+  {
+    const selectedIndex = timelineSteps.findIndex(step => step.id === activeStepId);
     timelineSteps = timelineSteps.map((item, index) => ({
       ...item,
       status: index < selectedIndex ? "completed" : index === selectedIndex ? "current" : "pending",
@@ -207,15 +230,18 @@ const customerJourney = (booking, quote, requestedStep = "") => {
     .slice(0, Math.max(0, activeStepIndex))
     .reverse()
     .find((step) => !step.disabled);
-  const travellerStepActions = isCancelled ? [] : activeStepId === "review" && isFlight
-    ? [{ id: "proceed-payment", type: "status", labelRef: "proceedPayment", variant: "primary", align: "right", disabled: true }]
+  const travellerStepActions = summaryLocked || isCancelled || paymentComplete || paymentProcessing || booking.clock?.expired ? [] : activeStepId === "review" && isFlight
+    ? [{ id: "proceed-payment", type: "payment", labelRef: "proceedPayment", variant: "primary", align: "right", disabled: !booking.paymentEnabled || !travellerSaved }]
+    : activeStepId === "quote" && canRequestQuotation
+    ? [{ id: "request-quotation", type: "request-quotation", labelRef: "requestQuotation", variant: "primary", align: "right" }]
+    : activeStepId === "quote" && quoteAccepted
+    ? [{ id: "proceed-payment", type: "payment", labelRef: "proceedPayment", variant: "primary", align: "right", disabled: !booking.paymentEnabled }]
     : activeStepId === "travellers"
     ? [
-        ...(isFlight && travellerSaved ? [{
-          id: "book-flight",
-          type: "navigate-step",
-          targetStepId: "review",
-          labelRef: "bookNow",
+        ...(travellerEditable ? [{
+          id: "save-travellers",
+          type: "save-travellers",
+          labelRef: "saveTravellers",
           variant: "primary",
           align: "right",
         }] : quotationRequested ? [{
@@ -257,7 +283,7 @@ const customerJourney = (booking, quote, requestedStep = "") => {
         saved: booking.travellerDetails,
       })
     : null;
-  const pendingTravellerForm = (activeStepId === "quote" && !quote?.id || activeStepId === "review" && isFlight)
+  const pendingTravellerForm = (activeStepId === "payment" || activeStepId === "quote" || activeStepId === "review" && isFlight)
     ? buildTravellerDetailsForm({
         count: booking.travellerCount,
         requiresPassport: booking.requiresPassport,
@@ -269,15 +295,31 @@ const customerJourney = (booking, quote, requestedStep = "") => {
     : null;
   return {
   data: {
+    travellerSaveNextStep: isFlight ? "review" : "quote",
+    ...(activeStepId === "payment" ? {
+      summaryCards: [...reviewCardsFromForm(booking.enquiryDetailsForm), ...reviewCardsFromForm(pendingTravellerForm)].map(({ editAction, ...card }) => ({ ...card, rows: card.rows.filter(row => !["Final amount", "Flight charge", "Convenience fee"].includes(row.label)) })),
+      travelDocuments: [
+        ...(quote?.id && quoteAccepted ? [{ id: `quote-${quote.id}`, title: "Accepted quotation", type: "quote", availability: "Available", href: `/quotes/${quote.id}/pdf` }] : []),
+        ...(booking.travelDocuments || []),
+      ],
+      ticketRows: booking.ticketRows || [],
+    } : {}),
+    ...((isFlight && activeStepId === "review" || !isFlight && activeStepId === "quote") && !paymentComplete ? {
+      reviewCards: [
+        ...reviewCardsFromForm(booking.enquiryDetailsForm, "enquiry"),
+        ...reviewCardsFromForm(pendingTravellerForm, "travellers"),
+      ].map(card => quotationRequested || checkoutLocked ? { ...card, editAction: null } : card),
+    } : {}),
     bookingId: booking.id,
+    clock: booking.clock,
     enquiryId: booking.enquiryId || booking.id,
-    ...(activeStepId === "enquiry" && booking.record ? { record: booking.record } : {}),
+    ...(booking.record ? { record: booking.record } : {}),
     ...(activeStepId === "enquiry" && booking.enquiryDetailsForm
       ? { enquiryForm: enquiryEditable ? booking.enquiryDetailsForm : asReadOnlyForm(booking.enquiryDetailsForm) }
       : {}),
     ...(activeStepId === "quote" && quote ? { quote } : {}),
     ...(travellerForm ? { travellerForm: travellerEditable ? travellerForm : asReadOnlyForm(travellerForm, true) } : {}),
-    ...((activeStepId === "quote" && !quote?.id || activeStepId === "review" && isFlight) && booking.enquiryDetailsForm
+    ...((activeStepId === "payment" || activeStepId === "quote" || activeStepId === "review" && isFlight) && booking.enquiryDetailsForm
       ? { enquirySummaryForm: asReadOnlyForm(booking.enquiryDetailsForm) }
       : {}),
     ...((pendingTravellerForm || activeStepId === "review" && isFlight && booking.travellerDetails)
@@ -288,18 +330,25 @@ const customerJourney = (booking, quote, requestedStep = "") => {
     canEditEnquiry: enquiryEditable,
     canEditTravellers: travellerEditable,
     quotationRequested,
-    paymentEnabled: !isFlight && quoteAccepted && travellerSaved && Boolean(booking.paymentUrl),
-    paymentUrl: !isFlight && quoteAccepted ? booking.paymentUrl || "" : "",
+    paymentEnabled: !booking.clock?.expired && (isFlight || quoteAccepted) && travellerSaved && Boolean(booking.paymentEnabled),
+    paymentComplete,
+    paymentStatus: booking.paymentStatus || "",
+    paymentSessionId: booking.paymentSessionId || "",
+    bookingExpiresAt: ["PROCESSING", "PAID", "FULLY_PAID", "REFUNDED", "PARTIALLY_REFUNDED"].includes(booking.paymentStatus) ? null : booking.bookingExpiresAt,
+    restartBookingUrl: booking.restartBookingUrl,
+    serverTime: booking.serverTime,
+    paymentBookingId: booking.paymentBookingId || "",
+    paymentBookingType: booking.paymentBookingType || "booking",
   },
   labels: {
     ...baseLabels(booking),
     customerEyebrow: isHotel ? "Hotel booking" : isFlight ? "Flight booking" : isTrevio ? "Trip enquiry" : "Quote update",
     customerTitle: booking.title || (isHotel ? "Hotel booking" : isFlight ? "Flight booking" : "Tour booking"),
-    quoteStateTitle: isFlight && activeStepId === "review" ? `Review your ${selectionName} booking` : stateTitle,
-    quoteStateDescription: isFlight && activeStepId === "review"
-      ? `Check the selected ${selectionName}, price and every traveller before payment becomes available.`
+    quoteStateTitle: canRequestQuotation ? "Review your booking details" : !checkoutLocked && !paymentComplete && isFlight && activeStepId === "review" ? `Review your ${selectionName} booking` : stateTitle,
+    quoteStateDescription: canRequestQuotation ? "Check your details, then ask your travel specialist for a quotation." : !checkoutLocked && !paymentComplete && isFlight && activeStepId === "review"
+      ? `Check the selected ${selectionName}, price and every traveller. Once you confirm and proceed to payment, these details are locked and you cannot return to earlier steps.`
       : stateDescription,
-    quoteStateBadge: isFlight && activeStepId === "review" ? "Ready for review" : stateBadge,
+    quoteStateBadge: !checkoutLocked && !paymentComplete && isFlight && activeStepId === "review" ? "Ready for review" : stateBadge,
     live: "Live",
     connecting: "Connecting…",
     reconnecting: "Reconnecting…",
@@ -324,15 +373,15 @@ const customerJourney = (booking, quote, requestedStep = "") => {
     savingDecision: "Saving…",
     enquiryStep: "Enquiry",
     enquiryStepDescription: isFlight ? `Review the selected ${selectionName}, price and traveller count.` : isTrevio ? "Choose your fixed departure and trip preferences." : "Choose your tour package, dates and preferences.",
-    quoteStep: "Quotation",
+    quoteStep: "Review & quotation",
     quoteStepDescription: quoteAccepted ? "Review your accepted quotation." : "Review the itemized quotation and accept, reject, or request changes.",
     travellerStep: "Traveller details",
     travellerStepDescription: isFlight ? "Add the identity and travel-document details required to book every traveller." : isTrevio ? "Add identity, meal, drink, room-sharing and insurance preferences for every traveller." : "Add identity and reservation details for every traveller.",
     travellerSavedDescription: isFlight ? "Traveller details saved. Continue to review the booking." : isTrevio ? "Traveller details saved. Ask your trip captain for an accurate quotation when ready." : "Traveller details saved. Ask your travel specialist for an accurate quotation when ready.",
     requestQuotation: "Ask for quotation",
     quotationRequested: "Quotation requested",
-    paymentStep: "Payment",
-    paymentStepDescription: isFlight ? "Payment will be enabled after the booking review is confirmed." : "Proceed to payment after accepting the final quotation.",
+    paymentStep: "Summary",
+    paymentStepDescription: "View your booking, traveller details and payment updates.",
     reviewStep: "Review & travel updates",
     reviewStepDescription: isFlight ? `Review the selected ${selectionName}, price and traveller information.` : "Tickets, vouchers and brochures will appear here through live updates.",
     viewQuote: "View quotation",
@@ -340,11 +389,13 @@ const customerJourney = (booking, quote, requestedStep = "") => {
     addTravellers: "Add traveller details",
     continueTravellerDetails: "Continue to traveller details",
     saveEnquiryDetails: "Save and continue",
-    saveTravellers: "Save traveller details",
+    saveTravellers: "Save and continue to review",
+    editDetails: "Edit",
     completeTravellersForQuotation: "Save details to request quotation",
     backToPreviousStep: "Back",
-    proceedPayment: "Proceed to payment",
+    proceedPayment: isFlight && activeStepId === "review" ? "Confirm and proceed to pay" : "Proceed to Payment",
     bookNow: "Book now",
+    backToProduct: isTrevio ? "Back to trip" : "Back to tour",
     backToFlights: isHotel ? "Back to hotels" : "Back to flights",
     cancelFlightEnquiry: "Cancel enquiry",
     cancelFlightTitle: `Cancel this ${selectionName} enquiry?`,
@@ -370,7 +421,7 @@ const customerJourney = (booking, quote, requestedStep = "") => {
       },
     } : {},
     stepActions: travellerStepActions,
-    contextActions: isFlight ? [
+    contextActions: isFlight && activeStepId === "enquiry" && !summaryOnly && !paymentComplete ? [
       {
         id: "back-to-flights",
         type: "navigate",
@@ -395,7 +446,10 @@ const customerJourney = (booking, quote, requestedStep = "") => {
           tone: "danger",
         },
       }] : []),
-    ] : [],
+    ] : booking.sourceProductUrl ? [{
+      id: "back-to-product", type: "navigate", labelRef: "backToProduct",
+      href: booking.sourceProductUrl, iconLeft: "chevronLeft", variant: "outline", align: "left",
+    }] : [],
     actions: activeStepId === "quote" && quote?.id
       ? [
           {
@@ -431,7 +485,7 @@ const customerJourney = (booking, quote, requestedStep = "") => {
         id: "quote",
         type: "quote",
         dataPath: "quote",
-        actions: allowedCustomerQuoteActions(status, hasChangeRequest, quoteVersion).map((id) => ({
+        actions: (booking.paymentSessionId || paymentComplete ? [] : allowedCustomerQuoteActions(status, hasChangeRequest, quoteVersion)).map((id) => ({
           id,
           labelRef: actionLabelRefs[id],
           modal: decisionModalByAction[id],

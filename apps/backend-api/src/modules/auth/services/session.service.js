@@ -8,6 +8,7 @@ import {
     normalizeProfileAvatar,
 } from "../profileAvatar.constants.js";
 import {
+    scopeUserToPortal,
     getPortalCookieNames,
     getPortalScope,
     normalizePortalScope,
@@ -71,7 +72,7 @@ const signAccessToken = (user, portal, sessionId) =>
     jwt.sign(
         {
             sub: user._id.toString(),
-            role: user.role,
+            role: scopeUserToPortal(user, portal).role,
             name: user.name,
             email: user.email || null,
             tokenVersion: user.tokenVersion || 0,
@@ -148,7 +149,7 @@ export const createSession = async ({
         success: true,
         authenticated: true,
         portal,
-        user: safeAuthUser(user),
+        user: safeAuthUser(scopeUserToPortal(user, portal)),
         sessionVersion: String(user.tokenVersion || 0),
         config: { session: sessionPolicy() },
     };

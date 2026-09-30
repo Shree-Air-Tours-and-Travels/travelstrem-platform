@@ -62,7 +62,7 @@ export const createFlightEnquiry = async (req, res, next) => {
         return res.status(201).json({
             status: "success",
             message: "Flight enquiry created",
-            data: await flightService.createEnquiry(validation.value, req.user),
+            data: await flightService.createEnquiry({ ...validation.value, startNew: req.body.startNew === true }, req.user),
         });
     } catch (error) { return next(error); }
 };

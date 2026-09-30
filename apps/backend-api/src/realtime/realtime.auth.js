@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import config from "../config/index.js";
 import User from "../modules/auth/models/User.js";
 import PartnerAgency from "../modules/auth/models/PartnerAgency.js";
-import { getPortalCookieNames, normalizePortalScope } from "../core/auth/portalSession.js";
+import { getPortalCookieNames, normalizePortalScope, scopeUserToPortal } from "../core/auth/portalSession.js";
 import { REALTIME_ERROR_CODES } from "./realtime.constants.js";
 
 const JWT_SECRET = (config.JWT && config.JWT.accessSecret) || process.env.JWT_SECRET;
@@ -69,15 +69,17 @@ export async function authenticateHandshake(handshake) {
             }
         }
 
+        const portalUser = scopeUserToPortal(user, portal);
+
         // Only safe identity fields ever reach the socket context.
         return {
             ok: true,
             context: {
                 userId: String(user._id),
-                role: user.role,
-                adminLevel: user.adminLevel || "none",
-                agencyId: user.agencyId ? String(user.agencyId) : null,
-                agencyRole: user.agencyRole || "none",
+                role: portalUser.role,
+                adminLevel: portalUser.adminLevel || "none",
+                agencyId: portalUser.agencyId ? String(portalUser.agencyId) : null,
+                agencyRole: portalUser.agencyRole || "none",
                 portal,
                 sessionId: payload.sessionId ? String(payload.sessionId) : null,
             },

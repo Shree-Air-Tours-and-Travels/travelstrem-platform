@@ -11,6 +11,15 @@ import "./GlobalSearchCard.styles.scss";
 const labelFor = (labels = {}, ref, fallback = "") =>
   ref ? labels[ref] || fallback || ref : fallback;
 
+const localToday = () => {
+  const now = new Date();
+  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 10);
+};
+
+const precedingDateField = (field) =>
+  field.minField || { returnDate: "departDate", checkOut: "checkIn" }[field.id];
+
 const defaultModes = [
   { id: "flight", label: "Flights", icon: "plane" },
   { id: "hotel", label: "Hotels", icon: "hotel" },
@@ -23,13 +32,13 @@ const defaultFields = {
     { id: "from", label: "From", placeholder: "Origin city" },
     { id: "to", label: "To", placeholder: "Destination city" },
     { id: "departDate", label: "Departure", type: "date" },
-    { id: "returnDate", label: "Return", type: "date" },
+    { id: "returnDate", label: "Return", type: "date", minField: "departDate" },
     { id: "travellers", label: "Travellers", type: "number", min: 1 },
   ],
   hotel: [
     { id: "destination", label: "Destination", placeholder: "City or hotel" },
     { id: "checkIn", label: "Check-in", type: "date" },
-    { id: "checkOut", label: "Check-out", type: "date" },
+    { id: "checkOut", label: "Check-out", type: "date", minField: "checkIn" },
     { id: "occupancy", label: "Guests and rooms", type: "occupancy" },
   ],
   trip: [
@@ -146,7 +155,31 @@ export default function GlobalSearchCard({
   const [activeMode, setActiveMode] = useState(
     enabledModes.find((mode) => !mode.disabled)?.id || enabledModes[0]?.id || "flight",
   );
-  const [values, setValues] = useState(initialValues);
+  const [values, setValues] = useState(() => {
+    const todayValue = localToday();
+    const tomorrow = new Date(`${todayValue}T12:00:00`);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const nextDay = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, "0")}-${String(tomorrow.getDate()).padStart(2, "0")}`;
+    const defaults = {
+      flight: { departDate: todayValue },
+      hotel: { checkIn: todayValue, checkOut: nextDay },
+      trip: { startDate: todayValue },
+      tour: { startDate: todayValue },
+    };
+    return Object.fromEntries(Object.entries(defaults).map(([mode, dates]) => [
+      mode, Object.fromEntries(Object.entries({ ...dates, ...(initialValues[mode] || {}) }).map(([key, value]) => [
+        key, typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value) && value < todayValue
+          ? dates[key] || todayValue : value,
+      ])),
+    ]));
+  });
+  const [dateErrors, setDateErrors] = useState({});
+  const [today, setToday] = useState(localToday);
+  useEffect(() => {
+    const refreshToday = () => setToday(localToday());
+    const timer = window.setInterval(refreshToday, 60000);
+    return () => window.clearInterval(timer);
+  }, []);
   const [selectedChoices, setSelectedChoices] = useState(initialChoices);
   const activeChoices =
     choiceGroupsByMode?.[activeMode] ||
@@ -171,11 +204,13 @@ export default function GlobalSearchCard({
     }
   }, [activeMode, enabledModes]);
 
-  const updateField = (id, value) =>
+  const updateField = (id, value) => {
+    setDateErrors((current) => ({ ...current, [id]: "" }));
     setValues((current) => ({
       ...current,
       [activeMode]: { ...(current[activeMode] || {}), [id]: value },
     }));
+  };
 
   const swapRouteFields = () => {
     setValues((current) => {
@@ -242,7 +277,7 @@ export default function GlobalSearchCard({
           onChange={onChange}
           required={field.required}
           disabled={field.disabled || searchDisabled}
-          min={field.minField ? values[activeMode]?.[field.minField] || field.min : field.min}
+          min={[today, field.min, values[activeMode]?.[precedingDateField(field)]].filter(Boolean).sort().at(-1)}
           max={field.max}
           placeholder={labelFor(
             labels,
@@ -314,6 +349,17 @@ export default function GlobalSearchCard({
   const handleSubmit = (event) => {
     event.preventDefault();
     const activeValues = values[activeMode] || {};
+    const todayValue = localToday();
+    const invalidDates = Object.fromEntries(activeFields.filter((field) => field.type === "date" &&
+      activeValues[field.id] && (activeValues[field.id] < todayValue ||
+        (activeValues[precedingDateField(field)] &&
+          activeValues[field.id] < activeValues[precedingDateField(field)])))
+      .map((field) => [field.id, "Choose today or a future date."]));
+    if (Object.keys(invalidDates).length) {
+      setDateErrors(invalidDates);
+      return;
+    }
+    setDateErrors({});
     const submittedValues = activeFields.reduce((result, field) => {
       if (field.type !== "occupancy") {
         result[field.id] = activeValues[field.id];
@@ -490,7 +536,7 @@ export default function GlobalSearchCard({
                 </fieldset>
               ) : (
                 <label
-                  className={`trem-global-search__field${field.id === "from" && activeFields.some((item) => item.id === "to") ? " has-swap" : ""}${field.id === "to" && activeFields.some((item) => item.id === "from") ? " has-swap-target" : ""}${fieldErrors[field.id] ? " is-error" : ""}`}
+                  className={`trem-global-search__field${field.id === "from" && activeFields.some((item) => item.id === "to") ? " has-swap" : ""}${field.id === "to" && activeFields.some((item) => item.id === "from") ? " has-swap-target" : ""}${fieldErrors[field.id] || dateErrors[field.id] ? " is-error" : ""}`}
                   data-field={field.id}
                   key={field.id}
                 >
@@ -515,8 +561,8 @@ export default function GlobalSearchCard({
                       {labelFor(labels, field.helpRef, field.help)}
                     </span>
                   ) : null}
-                  {fieldErrors[field.id] ? (
-                    <span className="trem-global-search__field-error">{fieldErrors[field.id]}</span>
+                  {dateErrors[field.id] || fieldErrors[field.id] ? (
+                    <span className="trem-global-search__field-error">{dateErrors[field.id] || fieldErrors[field.id]}</span>
                   ) : null}
                   {field.id === "from" && activeFields.some((item) => item.id === "to") ? (
                     <button

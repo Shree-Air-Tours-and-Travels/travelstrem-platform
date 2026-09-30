@@ -177,7 +177,7 @@ const notifyAvailabilityInterest = async ({ booking, hold, title }) => {
     }
 };
 
-const reserveTripSeats = async ({ booking, enquiry, quote, seats }) => {
+const reserveTripSeats = async ({ booking, enquiry, quote, seats, session = null, afterCommit = null }) => {
     const ref = enquiryTourRef({ booking, enquiry, quote });
     if (!ref) return null;
     const query = isObjectId(ref) ? { _id: ref } : { slug: ref };
@@ -189,10 +189,10 @@ const reserveTripSeats = async ({ booking, enquiry, quote, seats }) => {
             isListed: true,
         },
         { $inc: { "availability.seatsAvailable": -seats } },
-        { new: true, runValidators: true },
+        { new: true, runValidators: true, session },
     );
     if (!trip) {
-        const existing = await Trip.findOne(query).select("availability title").lean();
+        const existing = await Trip.findOne(query).session(session).select("availability title").lean();
         if (existing?.availability?.seatsAvailable == null) return null;
         throw Object.assign(new Error("Not enough seats are available for this trip."), {
             status: 409,
@@ -208,11 +208,11 @@ const reserveTripSeats = async ({ booking, enquiry, quote, seats }) => {
         heldAt: new Date(),
         releasedAt: null,
     };
-    await publishTripAvailability(trip);
+    if (afterCommit) afterCommit.push(() => publishTripAvailability(trip)); else await publishTripAvailability(trip);
     return trip;
 };
 
-const reserveTourSeats = async ({ booking, enquiry, quote, seats }) => {
+const reserveTourSeats = async ({ booking, enquiry, quote, seats, session = null, afterCommit = null }) => {
     const ref = enquiryTourRef({ booking, enquiry, quote });
     if (!ref || !isObjectId(ref)) return null;
     const selectedDate = preferredStartDate(enquiry);
@@ -230,7 +230,7 @@ const reserveTourSeats = async ({ booking, enquiry, quote, seats }) => {
     let departure = await TourDeparture.findOneAndUpdate(
         departureQuery,
         { $inc: { availableSeats: -seats } },
-        { new: true, runValidators: true },
+        { new: true, runValidators: true, session },
     );
     if (!departure && quoteDepartureId) {
         departure = await TourDeparture.findOneAndUpdate(
@@ -240,14 +240,14 @@ const reserveTourSeats = async ({ booking, enquiry, quote, seats }) => {
                 availableSeats: { $gte: seats },
             },
             { $inc: { availableSeats: -seats } },
-            { new: true, runValidators: true },
+            { new: true, runValidators: true, session },
         );
     }
     if (!departure && (quoteDepartureId || dateQuery)) {
         const matchingDeparture = await TourDeparture.exists({
             tourId: ref,
             ...(quoteDepartureId ? { _id: quoteDepartureId } : { departureDate: dateQuery }),
-        });
+        }).session(session);
         if (matchingDeparture) {
             throw Object.assign(new Error("Not enough seats are available for this departure."), {
                 status: 409,
@@ -261,11 +261,11 @@ const reserveTourSeats = async ({ booking, enquiry, quote, seats }) => {
             "availability.seatsAvailable": { $gte: seats },
         },
         { $inc: { "availability.seatsAvailable": -seats } },
-        { new: true, runValidators: true },
+        { new: true, runValidators: true, session },
     );
 
     if (!departure && !tourUpdate) {
-        const existingTour = await Tour.findById(ref).select("availability title").lean();
+        const existingTour = await Tour.findById(ref).session(session).select("availability title").lean();
         if (existingTour?.availability?.seatsAvailable == null) return null;
         throw Object.assign(new Error("Not enough seats are available for this tour."), {
             status: 409,
@@ -274,10 +274,10 @@ const reserveTourSeats = async ({ booking, enquiry, quote, seats }) => {
 
     if (departure?.availableSeats === 0 && departure.status !== "sold_out") {
         departure.status = "sold_out";
-        await departure.save();
+        await departure.save({ session });
     }
 
-    const tour = tourUpdate || (await Tour.findById(ref));
+    const tour = tourUpdate || (await Tour.findById(ref).session(session));
     booking.inventoryHold = {
         resourceType: departure ? "tour_departure" : "tour",
         resourceId: String(ref),
@@ -288,23 +288,23 @@ const reserveTourSeats = async ({ booking, enquiry, quote, seats }) => {
         heldAt: new Date(),
         releasedAt: null,
     };
-    await publishTourAvailability({ tour, departure });
+    if (afterCommit) afterCommit.push(() => publishTourAvailability({ tour, departure })); else await publishTourAvailability({ tour, departure });
     return tour;
 };
 
-export async function holdInventoryForAcceptedBooking({ booking, enquiry, quote } = {}) {
+export async function holdInventoryForAcceptedBooking({ booking, enquiry, quote, session = null, afterCommit = null } = {}) {
     if (!booking || activeHold(booking)) return booking;
     if (booking.status === BOOKING_STATUS.CANCELLED) return booking;
     const seats = resolveTravellerCount({ booking, enquiry, quote });
     if (booking.product === "trevio" || booking.journeyType === "trip") {
-        await reserveTripSeats({ booking, enquiry, quote, seats });
+        await reserveTripSeats({ booking, enquiry, quote, seats, session, afterCommit });
     } else {
-        await reserveTourSeats({ booking, enquiry, quote, seats });
+        await reserveTourSeats({ booking, enquiry, quote, seats, session, afterCommit });
     }
     return booking;
 }
 
-export async function releaseInventoryForBooking(booking) {
+export async function releaseInventoryForBooking(booking, { session = null, afterCommit = null } = {}) {
     if (!activeHold(booking)) return booking;
     const hold = booking.inventoryHold;
     const seats = Number(hold.seats || 0);
@@ -312,37 +312,37 @@ export async function releaseInventoryForBooking(booking) {
         const trip = await Trip.findByIdAndUpdate(
             hold.resourceId,
             { $inc: { "availability.seatsAvailable": seats } },
-            { new: true, runValidators: true },
+            { new: true, runValidators: true, session },
         );
-        await publishTripAvailability(trip);
-        await notifyAvailabilityInterest({ booking, hold, title: trip?.title || booking.tourTitle });
+        if (afterCommit) afterCommit.push(() => publishTripAvailability(trip)); else await publishTripAvailability(trip);
+        if (afterCommit) afterCommit.push(() => notifyAvailabilityInterest({ booking, hold, title: trip?.title || booking.tourTitle })); else await notifyAvailabilityInterest({ booking, hold, title: trip?.title || booking.tourTitle });
     } else if (hold.resourceType === "tour_departure") {
         const departure = await TourDeparture.findByIdAndUpdate(
             hold.departureId,
             { $inc: { availableSeats: seats } },
-            { new: true, runValidators: true },
+            { new: true, runValidators: true, session },
         );
         if (departure?.status === "sold_out" && Number(departure.availableSeats) > 0) {
             departure.status = "active";
-            await departure.save();
+            await departure.save({ session });
         }
         const tour = hold.tourSeatsHeld
             ? await Tour.findByIdAndUpdate(
                   hold.resourceId,
                   { $inc: { "availability.seatsAvailable": seats } },
-                  { new: true, runValidators: true },
+                  { new: true, runValidators: true, session },
               )
-            : await Tour.findById(hold.resourceId);
-        await publishTourAvailability({ tour, departure });
-        await notifyAvailabilityInterest({ booking, hold, title: tour?.title || booking.tourTitle });
+            : await Tour.findById(hold.resourceId).session(session);
+        if (afterCommit) afterCommit.push(() => publishTourAvailability({ tour, departure })); else await publishTourAvailability({ tour, departure });
+        if (afterCommit) afterCommit.push(() => notifyAvailabilityInterest({ booking, hold, title: tour?.title || booking.tourTitle })); else await notifyAvailabilityInterest({ booking, hold, title: tour?.title || booking.tourTitle });
     } else if (hold.resourceType === "tour") {
         const tour = await Tour.findByIdAndUpdate(
             hold.resourceId,
             { $inc: { "availability.seatsAvailable": seats } },
-            { new: true, runValidators: true },
+            { new: true, runValidators: true, session },
         );
-        await publishTourAvailability({ tour });
-        await notifyAvailabilityInterest({ booking, hold, title: tour?.title || booking.tourTitle });
+        if (afterCommit) afterCommit.push(() => publishTourAvailability({ tour })); else await publishTourAvailability({ tour });
+        if (afterCommit) afterCommit.push(() => notifyAvailabilityInterest({ booking, hold, title: tour?.title || booking.tourTitle })); else await notifyAvailabilityInterest({ booking, hold, title: tour?.title || booking.tourTitle });
     }
     booking.inventoryHold.status = HOLD_STATUS_RELEASED;
     booking.inventoryHold.releasedAt = new Date();

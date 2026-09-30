@@ -1,6 +1,7 @@
 // Presentation mapping for ContactLead documents, shared by the forms
 // controllers (getLeads / getEnquiry) and the dashboard data service.
 import { presentBookingJourney } from "../../../../../booking-engine/server/index.mjs";
+import { statusDisplay } from "../../../constants/common.js";
 
 export const formatDate = (value) => {
     const date = value ? new Date(value) : null;
@@ -407,7 +408,8 @@ export const enquiryView = (
         perspective,
         directionLabel: isSent ? "Enquiry sent" : "Enquiry received",
         status: lead?.status || "new",
-        statusLabel: String(lead?.status || "new").replaceAll("_", " "),
+        statusLabel: statusDisplay(lead?.status).label,
+        statusTone: statusDisplay(lead?.status).tone,
         title: lead?.tourTitle || "General tour enquiry",
         product: lead?.product || "trevista",
         journeyType:

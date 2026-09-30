@@ -1,4 +1,6 @@
+import { paymentPresentation } from "../../payments/presentation.js";
 import crypto from "crypto";
+import FlightBooking from "../models/FlightBooking.js";
 import logger from "../../../shared/logger/index.js";
 import ApiError from "../../../shared/errors/ApiError.js";
 import { airports } from "../data/catalog.js";
@@ -27,6 +29,9 @@ const publicBooking = (booking) => ({
     bookingId: booking.bookingRef,
     status: booking.status,
     paymentStatus: booking.paymentStatus,
+    paymentEnabled: booking.status === "PAYMENT_PENDING" && booking.paymentStatus === "PENDING",
+    paymentActionLabel: "Proceed to Payment",
+    paymentSummary: paymentPresentation(booking.paymentStatus, booking.status),
     ticketingStatus: booking.ticketingStatus,
     pnr: booking.pnr,
     provider: booking.provider,
@@ -69,7 +74,7 @@ export default class FlightService {
             const response = await this.provider.search(input, {
                 agencyId: actor?.agencyId || null,
                 customerType: actor?.agencyRole || null,
-                paymentProvider: "razorpay",
+                paymentProvider: process.env.PAYMENT_PROVIDER || "razorpay",
             });
             if (!Array.isArray(response.offers)) throw new Error("Invalid flight provider response");
             response.offers = await Promise.all(response.offers.map(async (providerOffer) => {
@@ -189,7 +194,8 @@ export default class FlightService {
                 const finalAmount = Number(price?.finalAmount ?? price?.total ?? 0) + seatFees;
                 return { ...price, seatFees, finalAmount, total: finalAmount };
             };
-            const currentPrice = addSeats(await applyFlightFinancials({ price: result.currentPrice || fare.pricing, financialContext: { config: fare.pricing.pricingConfigSnapshot } }));
+            const supplierPrice = result.currentPrice || fare.pricing;
+            const currentPrice = { ...await applyFlightFinancials({ price: { ...supplierPrice, flightSubtotal: Number(supplierPrice.flightSubtotal ?? supplierPrice.total ?? 0) + seatFees }, financialContext: { config: fare.pricing.pricingConfigSnapshot } }), seatFees };
             const previousPrice = addSeats(fare.pricing);
             return {
                 ...result,
@@ -209,7 +215,7 @@ export default class FlightService {
         return this.requireOffer(searchId, offerId);
     }
 
-    async createEnquiry({ searchId, offerId, fareId, expectedTotal }, actor) {
+    async createEnquiry({ searchId, offerId, fareId, expectedTotal, startNew = false }, actor) {
         const userId = actorId(actor);
         if (!userId) throw domainError(401, "AUTH_REQUIRED", "Please sign in to create a flight enquiry");
         const search = await this.requireSearch(searchId);
@@ -224,7 +230,7 @@ export default class FlightService {
             throw domainError(409, "PRICE_CHANGED", "The fare has changed. Review the updated price and continue again to accept it.", { currentPrice: publicFlightPrice(revalidation.currentPrice) });
         }
         const existing = await ContactLead.findOne({ claimedBy: userId, journeyType: "flight", "customizationSnapshot.searchId": searchId, "customizationSnapshot.offerId": offerId, "customizationSnapshot.fareId": fareId, status: { $nin: ["cancelled", "closed"] } });
-        if (existing) return { enquiryId: String(existing._id), enquiryRef: existing.enquiryRef, targetPath: `/?tab=bookings&enquiry=${encodeURIComponent(existing.enquiryRef)}` };
+        if (existing && !startNew) return { existingEnquiry: true, enquiryId: String(existing._id), enquiryRef: existing.enquiryRef, targetPath: `/?tab=bookings&enquiry=${encodeURIComponent(existing.enquiryRef)}` };
         const customer = await User.findById(userId).select("name email phone phoneNumber mobile").lean();
         const firstSegment = offer.segments[0];
         const lastSegment = offer.segments.at(-1);
@@ -297,6 +303,7 @@ export default class FlightService {
                 message: "Flight selected in Trehub. Traveller details are pending.",
             },
             customizationSnapshot: {
+                bookingExpiresAt: search.expiresAt,
                 type: "FLIGHT",
                 travellers: travellerCount,
                 searchId,
@@ -336,6 +343,9 @@ export default class FlightService {
     }
 
     async createBooking(input, actor) {
+        const checkoutKey = crypto.createHash("sha256").update(JSON.stringify([actorId(actor), input.sourceEnquiryId || null, input.searchId, input.offerId, input.fareId, input.passengers, input.seats, input.extras])).digest("hex");
+        const existing = await FlightBooking.findOne({ checkoutKey });
+        if (existing) return publicBooking(existing.toObject());
         const offer = await this.requireOffer(input.searchId, input.offerId);
         const fare = offer.fares.find((item) => item.fareId === input.fareId);
         if (!fare) throw domainError(409, "FARE_UNAVAILABLE", "Selected fare is unavailable");
@@ -356,18 +366,23 @@ export default class FlightService {
         const requestId = crypto.randomUUID();
         logger.info("[Flights] booking attempt", { provider: this.provider.name, searchId: input.searchId, offerId: input.offerId, requestId, userId: actorId(actor) });
         try {
-            const providerBooking = await this.provider.createBooking({ ...input, offer: { ...offer, price: authoritativePrice }, fareId: fare.fareId, requestId });
+
             const booking = await this.bookings.create({
                 userId: actorId(actor), agencyId: actor?.agencyId || null, ownerAgent: actor?.agencyRole === "partner_agent" ? actorId(actor) : null,
-                status: providerBooking.status === "CONFIRMED" ? FLIGHT_BOOKING_STATUS.CONFIRMED : FLIGHT_BOOKING_STATUS.PENDING,
-                paymentStatus: "PENDING", ticketingStatus: providerBooking.ticketingStatus,
-                searchId: input.searchId, offerId: input.offerId, provider: providerBooking.provider, providerReference: providerBooking.providerReference, pnr: providerBooking.pnr,
+                status: FLIGHT_BOOKING_STATUS.PAYMENT_PENDING,
+                checkoutKey, sourceEnquiryId: input.sourceEnquiryId || undefined, supplierOffer: { ...offer, price: authoritativePrice },
+                paymentStatus: "PENDING", ticketingStatus: "PENDING",
+                searchId: input.searchId, offerId: input.offerId, provider: this.provider.name,
                 passengers: input.passengers, segmentSnapshot: offer.segments, fareSnapshot: fare, priceSnapshot: authoritativePrice,
-                baggageSnapshot: fare.baggage, seatSnapshot: input.seats, extrasSnapshot: input.extras, tickets: providerBooking.tickets,
+                baggageSnapshot: fare.baggage, seatSnapshot: input.seats, extrasSnapshot: input.extras, tickets: [],
             });
             return publicBooking(booking.toObject ? booking.toObject() : booking);
         } catch (error) {
-            logger.error("[Flights] provider booking failed", { provider: this.provider.name, requestId, code: error.code || "BOOKING_FAILED" });
+            if (error.code === 11000) {
+                const raced = await FlightBooking.findOne(input.sourceEnquiryId ? { sourceEnquiryId: input.sourceEnquiryId, userId: actorId(actor) } : { checkoutKey });
+                if (raced) return publicBooking(raced.toObject());
+            }
+            logger.error("[Flights] booking persistence failed", { provider: this.provider.name, requestId, code: error.code || "BOOKING_FAILED", ...(error.code === 11000 ? { keyPattern: error.keyPattern } : {}) });
             throw domainError(error.code === "PROVIDER_TIMEOUT" ? 504 : 409, error.code || "BOOKING_FAILED", "Flight booking could not be completed");
         }
     }
@@ -383,7 +398,11 @@ export default class FlightService {
         const booking = byPnr ? await this.bookings.findByPnr(identifier) : await this.bookings.findById(identifier);
         if (!booking) throw domainError(404, "BOOKING_NOT_FOUND", "Flight booking was not found");
         if (!this.canAccess(booking, actor)) throw domainError(403, "BOOKING_FORBIDDEN", "You cannot access this flight booking");
-        return publicBooking(booking);
+        const enquiry = booking.sourceEnquiryId
+            ? await ContactLead.findById(booking.sourceEnquiryId).select("enquiryRef").lean() : null;
+        return { ...publicBooking(booking),
+            summaryPath: enquiry?.enquiryRef ? `/?tab=bookings&enquiry=${encodeURIComponent(enquiry.enquiryRef)}&step=payment` : "",
+        };
     }
 
     async cancelBooking(bookingId, actor) {
@@ -391,6 +410,11 @@ export default class FlightService {
         if (!booking) throw domainError(404, "BOOKING_NOT_FOUND", "Flight booking was not found");
         if (!this.canAccess(booking, actor)) throw domainError(403, "BOOKING_FORBIDDEN", "You cannot cancel this flight booking");
         if ([FLIGHT_BOOKING_STATUS.CANCELLED, FLIGHT_BOOKING_STATUS.REFUNDED].includes(booking.status)) return publicBooking(booking);
+        if (!booking.providerReference) {
+            if (["PAID", "CONFIRMING_WITH_SUPPLIER"].includes(booking.status)) throw domainError(409, "CONFIRMATION_IN_PROGRESS", "Supplier confirmation is in progress. Please contact support.");
+            const cancelled = await this.bookings.update(bookingId, { status: FLIGHT_BOOKING_STATUS.CANCELLED });
+            return publicBooking(cancelled);
+        }
         const cancellation = await this.provider.cancelBooking(booking);
         const updated = await this.bookings.update(bookingId, { status: cancellation.refundable ? FLIGHT_BOOKING_STATUS.REFUND_PENDING : FLIGHT_BOOKING_STATUS.CANCELLED, paymentStatus: cancellation.refundable ? "REFUND_PENDING" : booking.paymentStatus, cancellation: { ...cancellation, cancelledAt: new Date().toISOString() } });
         return publicBooking(updated);

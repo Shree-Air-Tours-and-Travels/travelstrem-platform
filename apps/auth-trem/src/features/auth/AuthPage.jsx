@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { AuthHeader, Button, Icon, Paragraph, Title } from "@packages/trem-ui";
+import { AuthHeader, Button, Paragraph, Title } from "@packages/trem-ui";
+import { AuthField, SecretField } from "./AuthField";
+import AuthBrandPanel from "./AuthBrandPanel";
 import "./auth-page.scss";
 
 const APP_PORTALS = {
@@ -109,34 +111,6 @@ const GoogleMark = () => (
   </svg>
 );
 
-const SecretField = ({ value, onChange, placeholder, ...inputProps }) => {
-  const [visible, setVisible] = useState(false);
-  const label = visible ? `Hide ${placeholder.toLowerCase()}` : `Show ${placeholder.toLowerCase()}`;
-
-  return (
-    <div className="auth-trem__field-wrap">
-      <input
-        {...inputProps}
-        className="auth-trem__field-input"
-        type={visible ? "text" : "password"}
-        placeholder={placeholder}
-        value={value}
-        onChange={onChange}
-      />
-      <button
-        type="button"
-        className="auth-trem__field-action"
-        aria-label={label}
-        title={label}
-        aria-pressed={visible}
-        onMouseDown={(event) => event.preventDefault()}
-        onClick={() => setVisible((current) => !current)}
-      >
-        <Icon name={visible ? "eyeSlash" : "eye"} size={18} />
-      </button>
-    </div>
-  );
-};
 
 export default function AuthPage({
   authService,
@@ -181,6 +155,7 @@ export default function AuthPage({
   const [otpExpiresIn, setOtpExpiresIn] = useState(0);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [emailMode, setEmailMode] = useState("login");
+  const [notice, setNotice] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [emailForm, setEmailForm] = useState({
     name: "",
@@ -266,7 +241,7 @@ export default function AuthPage({
         setActivationRequestSent(true);
         setOtpExpiresIn(secondsFromMs(data.expiresInMs, 300));
         setResendCooldown(secondsFromMs(data.resendAfterMs, 30));
-        setError(data.message || "A verification code has been sent to your email.");
+        setNotice(data.message || "A verification code has been sent to your email.");
       })
       .catch((err) => {
         const message =
@@ -318,7 +293,7 @@ export default function AuthPage({
       const data = response?.data || response;
       setChallenge(data);
       setPhoneNumber(data.phoneNumber);
-      setOtp(data.developmentOtp || "");
+      setOtp("");
       setOtpExpiresIn(Number(data.expiresIn || data.expiresInSeconds || 300));
       setResendCooldown(Number(data.resendAfter || data.resendAfterSeconds || 60));
       setScreen("otp");
@@ -350,8 +325,10 @@ export default function AuthPage({
 
   const submitEmailAuth = async (event) => {
     event.preventDefault();
+    if (loading) return;
     setLoading(true);
     setError("");
+    setNotice("");
     try {
       if (emailMode === "register") {
         if (!allowEmailRegister) throw new Error("Registration is not available.");
@@ -403,7 +380,9 @@ export default function AuthPage({
       }
       redirectAfterAuth();
     } catch (authError) {
-      setError(authError?.response?.data?.message || authError.message || "Unable to sign in.");
+      setError(authError?.response?.data?.message ||
+        (authError?.request ? "We couldn’t connect. Check your connection and try again." : authError.message) ||
+        "Unable to sign in. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -423,13 +402,11 @@ export default function AuthPage({
         role: "admin",
       });
       const data = response?.data || response;
-      if (data.developmentOtp) {
-        setEmailForm((current) => ({ ...current, adminOtp: data.developmentOtp }));
-      }
+      setEmailForm((current) => ({ ...current, adminOtp: "" }));
       setAdminRegistration({ status: "otp_sent" });
       setOtpExpiresIn(secondsFromMs(data.expiresInMs, 300));
       setResendCooldown(secondsFromMs(data.resendAfterMs, 30));
-      setError(data.message || "Registration code sent.");
+      setNotice(data.message || "Registration code sent.");
     } catch (registrationError) {
       setError(
         registrationError?.response?.data?.message || "Unable to send the registration code.",
@@ -455,7 +432,7 @@ export default function AuthPage({
       const data = response?.data || response;
       setAdminRegistration({ status: "verified", verificationId: data.verificationId });
       setOtpExpiresIn(secondsFromMs(data.expiresInMs, 300));
-      setError(data.message || "Registration code verified. Enter the Admin PIN.");
+      setNotice(data.message || "Registration code verified. Enter the Admin PIN.");
     } catch (registrationError) {
       setError(
         registrationError?.response?.data?.message || "Unable to verify the registration code.",
@@ -489,11 +466,8 @@ export default function AuthPage({
     try {
       const response = await authService.forgotPassword({ email: emailForm.email.trim() });
       const data = response?.data || response;
-      setError(
-        data?.message ||
-          "If that email is registered, a password reset code has been sent.",
-      );
-      setResetForm({ otp: data?.developmentOtp || "", password: "", confirmPassword: "" });
+      setNotice(data?.message || "If that email is registered, a password reset code has been sent.");
+      setResetForm({ otp: "", password: "", confirmPassword: "" });
       setOtpExpiresIn(secondsFromMs(data?.expiresInMs, 300));
       setResendCooldown(secondsFromMs(data?.resendAfterMs, 30));
       setScreen("resetPassword");
@@ -518,7 +492,11 @@ export default function AuthPage({
         otp: resetForm.otp,
         password: resetForm.password,
       });
-      redirectAfterAuth();
+      setResetForm({ otp: "", password: "", confirmPassword: "" });
+      setEmailForm((current) => ({ ...current, password: "", confirmPassword: "" }));
+      setEmailMode("login");
+      setScreen(isCustomer ? "methods" : "email");
+      setNotice("Your password has been reset. Sign in with your new password.");
     } catch (resetError) {
       setError(resetError?.response?.data?.message || "The reset code is invalid or expired.");
     } finally {
@@ -536,7 +514,7 @@ export default function AuthPage({
       const data = response?.data || response;
       setOtpExpiresIn(secondsFromMs(data.expiresInMs, 300));
       setResendCooldown(secondsFromMs(data.resendAfterMs, 30));
-      setError(data.message || "A new code has been sent.");
+      setNotice(data.message || "A new code has been sent.");
     } catch (resendError) {
       const retryAfterMs = resendError?.response?.data?.retryAfterMs;
       if (retryAfterMs) setResendCooldown(secondsFromMs(retryAfterMs));
@@ -559,7 +537,7 @@ export default function AuthPage({
       setActivationRequestSent(true);
       setOtpExpiresIn(secondsFromMs(data.expiresInMs, 300));
       setResendCooldown(secondsFromMs(data.resendAfterMs, 30));
-      setError(data.message || "A verification code has been sent to your email.");
+      setNotice(data.message || "A verification code has been sent to your email.");
     } catch (err) {
       setError(err?.response?.data?.message || "Unable to send the code. Please try again.");
     } finally {
@@ -611,47 +589,7 @@ export default function AuthPage({
       />
       <main className="auth-trem">
         <div className="auth-trem__experience">
-          <section className="auth-trem__company">
-            <span className="auth-trem__company-eyebrow">TRAVEL, THOUGHTFULLY CONNECTED</span>
-            <h1 className="auth-trem__company-title">
-              One account for
-              <br />
-              every journey.
-            </h1>
-            <p className="auth-trem__company-description">
-              Discover curated trips, manage reservations and keep every travel detail together with{" "}
-              <strong className="auth-trem__company-description-highlight">TravelsTREM.</strong>
-            </p>
-            <div className="auth-trem__highlights">
-              <article className="auth-trem__highlight">
-                <span className="auth-trem__highlight-icon">
-                  <Icon name="map" size={20} />
-                </span>
-                <span>
-                  <strong>Curated experiences</strong>
-                  <small>Thoughtfully planned adventures and holiday packages.</small>
-                </span>
-              </article>
-              <article className="auth-trem__highlight">
-                <span className="auth-trem__highlight-icon">
-                  <Icon name="calendar" size={20} />
-                </span>
-                <span>
-                  <strong>Reservations in one place</strong>
-                  <small>Keep bookings, payments and travel details together.</small>
-                </span>
-              </article>
-              <article className="auth-trem__highlight">
-                <span className="auth-trem__highlight-icon">
-                  <Icon name="support" size={20} />
-                </span>
-                <span>
-                  <strong>Travel support</strong>
-                  <small>Helpful guidance from our travel team.</small>
-                </span>
-              </article>
-            </div>
-          </section>
+          <AuthBrandPanel />
 
           <section className="auth-trem__access" aria-label="Account access">
             <div className="auth-trem__card">
@@ -659,7 +597,7 @@ export default function AuthPage({
               <Title
                 primaryClassname="auth-trem__title"
                 text={
-                  screen === "otp"
+                  screen === "forgotPassword" ? "Forgot your password?" : screen === "otp"
                     ? "Verify your mobile"
                     : screen === "emailOtp"
                       ? "Verify your login"
@@ -673,7 +611,7 @@ export default function AuthPage({
                 }
               />
               <Paragraph primaryClassname="auth-trem__sub">
-                {screen === "otp"
+                {screen === "forgotPassword" ? "Enter your email and we’ll send you a reset code." : screen === "otp"
                   ? `We sent a verification code to ${phoneNumber}.`
                   : screen === "emailOtp"
                     ? `Enter the code sent to ${emailOtpStep?.email || "your email"}.`
@@ -684,6 +622,7 @@ export default function AuthPage({
                         : "Sign in or create your account securely."}
               </Paragraph>
 
+              {notice && !error ? <div className="auth-trem__notice" role="status">{notice}</div> : null}
               {error ? (
                 <div className="auth-trem__error" role="alert">
                   {error}
@@ -742,17 +681,17 @@ export default function AuthPage({
                         text="Register"
                         onClick={() => {
                           setError("");
-                          setEmailMode("register");
+                          setEmailMode("register"); setError(""); setNotice("");
                         }}
                         primaryClassName={`auth-trem__tab ${emailMode === "register" ? "is-active" : ""}`}
                       />
                     </div>
                   ) : null}
                   {emailMode === "register" ? (
-                    <input
+                    <AuthField
                       className="auth-trem__field"
                       autoComplete="name"
-                      placeholder="Full name"
+                      placeholder="Full name" minLength={2} maxLength={100}
                       value={emailForm.name}
                       onChange={(event) =>
                         setEmailForm((value) => ({ ...value, name: event.target.value }))
@@ -760,12 +699,12 @@ export default function AuthPage({
                       required
                     />
                   ) : null}
-                  <input
+                  <AuthField
                     className="auth-trem__field"
                     type="email"
                     inputMode="email"
                     autoComplete="email"
-                    placeholder="Email"
+                    placeholder="Email" maxLength={254}
                     value={emailForm.email}
                     onChange={(event) => {
                       const email = event.target.value;
@@ -775,7 +714,7 @@ export default function AuthPage({
                     required
                   />
                   {isAdmin && emailMode === "register" ? (
-                    <input
+                    <AuthField
                       className="auth-trem__field"
                       type="tel"
                       inputMode="tel"
@@ -792,7 +731,7 @@ export default function AuthPage({
                   ) : null}
                   <SecretField
                     autoComplete={emailMode === "register" ? "new-password" : "current-password"}
-                    placeholder="Password"
+                    placeholder="Password" minLength={emailMode === "register" ? 8 : undefined} maxLength={128}
                     value={emailForm.password}
                     onChange={(event) =>
                       setEmailForm((value) => ({ ...value, password: event.target.value }))
@@ -802,7 +741,7 @@ export default function AuthPage({
                   {emailMode === "register" ? (
                     <SecretField
                       autoComplete="new-password"
-                      placeholder="Confirm password"
+                      placeholder="Confirm password" matchValue={emailForm.password} maxLength={128}
                       value={emailForm.confirmPassword}
                       onChange={(event) =>
                         setEmailForm((value) => ({ ...value, confirmPassword: event.target.value }))
@@ -903,14 +842,18 @@ export default function AuthPage({
                           checked={rememberMe}
                           onChange={(event) => setRememberMe(event.target.checked)}
                         />
-                        <span>Remember me</span>
+                        <span title="Keep this sign-in in this browser. The session inactivity timeout still applies.">Remember me</span>
                       </label>
                       {allowForgotPassword ? (
                         <Button
                           variant="text"
                           type="button"
                           text="Forgot password?"
-                          onClick={requestPasswordReset}
+                          onClick={() => {
+                            setError(""); setNotice("");
+                            setResetForm({ otp: "", password: "", confirmPassword: "" });
+                            setScreen("forgotPassword");
+                          }}
                           primaryClassName="auth-trem__forgot-link"
                         />
                       ) : null}
@@ -1086,7 +1029,7 @@ export default function AuthPage({
                     text="Back to login"
                     onClick={() => {
                       setOtp("");
-                      setError("");
+                      setError(""); setNotice("");
                       setScreen(isCustomer ? "methods" : "email");
                     }}
                     primaryClassName="auth-trem__guest-link"
@@ -1094,6 +1037,17 @@ export default function AuthPage({
                 </form>
               ) : null}
 
+              {screen === "forgotPassword" ? (
+                <form className="auth-trem__form" onSubmit={(event) => { event.preventDefault(); requestPasswordReset(); }}>
+                  <AuthField label="Email address" placeholder="you@example.com" type="email" autoComplete="email"
+                    value={emailForm.email} required maxLength={254}
+                    onChange={(event) => setEmailForm((current) => ({ ...current, email: event.target.value }))} />
+                  <Button type="submit" text={loading ? "Sending…" : "Send reset code"} disabled={loading} />
+                  <Button type="button" variant="text" text="Back to login" onClick={() => {
+                    setError(""); setNotice(""); setScreen(isCustomer ? "methods" : "email");
+                  }} />
+                </form>
+              ) : null}
               {screen === "resetPassword" ? (
                 <form className="auth-trem__form" onSubmit={submitPasswordReset}>
                   <label className="auth-trem__mobile-label" htmlFor="password-reset-otp">
@@ -1118,7 +1072,7 @@ export default function AuthPage({
                   />
                   <SecretField
                     autoComplete="new-password"
-                    placeholder="New password"
+                    placeholder="New password" maxLength={128}
                     value={resetForm.password}
                     onChange={(event) =>
                       setResetForm((value) => ({ ...value, password: event.target.value }))
@@ -1128,7 +1082,7 @@ export default function AuthPage({
                   />
                   <SecretField
                     autoComplete="new-password"
-                    placeholder="Confirm new password"
+                    placeholder="Confirm new password" matchValue={resetForm.password} maxLength={128}
                     value={resetForm.confirmPassword}
                     onChange={(event) =>
                       setResetForm((value) => ({ ...value, confirmPassword: event.target.value }))
@@ -1165,7 +1119,7 @@ export default function AuthPage({
                     type="button"
                     text="Back to login"
                     onClick={() => {
-                      setError("");
+                      setError(""); setNotice("");
                       setScreen(isCustomer ? "methods" : "email");
                     }}
                     primaryClassName="auth-trem__guest-link"
@@ -1252,7 +1206,7 @@ export default function AuthPage({
                     type="button"
                     text="Back to login"
                     onClick={() => {
-                      setError("");
+                      setError(""); setNotice("");
                       setScreen(isCustomer ? "methods" : "email");
                     }}
                     primaryClassName="auth-trem__guest-link"

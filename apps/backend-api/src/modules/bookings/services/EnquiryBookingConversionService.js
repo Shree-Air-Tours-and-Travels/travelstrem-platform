@@ -39,18 +39,18 @@ const bookingOnInsert = (enquiry, quote, bookingRef = createReadableReference("B
     convertedAt: new Date(),
 });
 
-export async function ensureBookingFromAcceptedQuote(enquiry, quote) {
+export async function ensureBookingFromAcceptedQuote(enquiry, quote, { session } = {}) {
     let booking = null;
     for (let attempt = 0; attempt < 5; attempt += 1) {
         try {
             booking = await Booking.findOneAndUpdate(
                 { sourceEnquiryId: enquiry._id },
                 { $setOnInsert: bookingOnInsert(enquiry, quote) },
-                { new: true, upsert: true, runValidators: true },
+                { new: true, upsert: true, runValidators: true, session },
             );
             break;
         } catch (error) {
-            if (error?.code !== 11000) throw error;
+            if (session || error?.code !== 11000) throw error;
             booking = await Booking.findOne({ sourceEnquiryId: enquiry._id });
             if (booking) break;
             if (attempt === 4) throw error;
@@ -60,6 +60,7 @@ export async function ensureBookingFromAcceptedQuote(enquiry, quote) {
         throw Object.assign(new Error("The booking could not be created from this enquiry."), {
             status: 500,
         });
+    if (String(booking.acceptedQuoteId) !== String(quote._id)) throw Object.assign(new Error("A different quotation was already accepted for this enquiry."), { status: 409 });
     return booking;
 }
 

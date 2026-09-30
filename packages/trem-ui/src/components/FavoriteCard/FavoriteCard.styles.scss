@@ -211,7 +211,7 @@
 
   background: rgba(18, 24, 38, 0.48);
 
-  color: #fff;
+  color: var(--color-on-primary);
 
   backdrop-filter: blur(12px);
 
@@ -232,7 +232,7 @@
 
     background: color-mix(in srgb, var(--color-danger) 78%, rgba(18, 24, 38, 0.48));
 
-    color: #fff;
+    color: var(--color-on-primary);
 
     transform: scale(1.055);
   }
@@ -279,7 +279,7 @@
 
   background: rgba(18, 24, 38, 0.52);
 
-  color: #fff;
+  color: var(--color-on-primary);
 
   backdrop-filter: blur(12px);
 

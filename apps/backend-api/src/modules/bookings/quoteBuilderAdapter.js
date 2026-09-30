@@ -1,8 +1,13 @@
+import config from "../../config/index.js";
+import FlightBooking from "../flights/models/FlightBooking.js";
+import { PaymentSession } from "../payments/models.js";
+import { paymentPresentation } from "../payments/presentation.js";
 import User from "../auth/models/User.js";
 import PartnerAgency from "../auth/models/PartnerAgency.js";
 import ContactLead from "../forms/models/ContactLead.js";
 import Booking from "./models/Booking.js";
 import BookingQuote from "./models/BookingQuote.js";
+import { quoteSelectionFingerprint } from "./services/quoteSelection.js";
 import Tour from "../tours/models/Tour.js";
 import TourDeparture from "../tours/models/TourDeparture.js";
 import masterDataService from "../masterData/services/masterDataService.js";
@@ -13,6 +18,10 @@ import { minorToDecimal } from "../../core/financial-engine/utils/money.js";
 import { buildServerQuoteDocumentModel } from "@packages/trem-docengine/server";
 import { generateQuoteDocumentPdf, pdfDocumentToBuffer } from "../../services/pdfService.js";
 import DocumentService from "./services/DocumentService.js";
+import { bookingClock, watchBookingClock, assertBookingOpen } from "../../services/bookingClock.js";
+import { bookingStatusDisplay } from "../../constants/common.js";
+import BookingDocument from "./models/BookingDocument.js";
+import DocumentStorageService from "../../services/r2/DocumentStorageService.js";
 import { readQuoteDocument } from "./services/QuoteDocumentStorage.js";
 import {
     buildProductEnquiryDetailsForm,
@@ -213,6 +222,17 @@ async function findQuoteableEnquiry(enquiryId, actor) {
     return enquiry;
 }
 
+export async function downloadJourneyDocument(enquiryId, documentId, actor) {
+    const journey = await findAuthorizedBookingJourney(enquiryId, actor);
+    if (!journey.travelDocuments.some(doc => doc.id === documentId && doc.href)) throw Object.assign(new Error("Document not found or no longer available."), { status: 404 });
+    const document = await BookingDocument.findById(documentId).lean();
+    if (!document || !["UPLOADED", "APPROVED"].includes(document.status)) throw Object.assign(new Error("This document is no longer available."), { status: 404 });
+    const signed = document.storageProvider === "R2"
+        ? await DocumentStorageService.getSignedDownloadUrl(document.storageKey)
+        : { url: document.url };
+    return { url: signed.url, fileName: document.fileName };
+}
+
 export async function findAuthorizedBookingJourney(enquiryId, actor) {
     const userId = actorId(actor);
     if (!userId)
@@ -250,6 +270,28 @@ export async function findAuthorizedBookingJourney(enquiryId, actor) {
         }
     }
     const travellerOptionSets = await loadTravellerOptionSets();
+    const flightBooking = enquiry.journeyType === "flight" ? await FlightBooking.findOne({ sourceEnquiryId: enquiry._id }).lean() : null;
+    const paymentBooking = booking || flightBooking;
+    const travelDocuments = paymentBooking ? await BookingDocument.find({
+        $or: [{ enquiryId: enquiry._id }, { bookingId: paymentBooking._id }],
+        type: { $in: ["ticket", "voucher", "insurance", "invoice", "visa", "other"] },
+        status: { $in: ["PENDING", "UPLOADED", "APPROVED", "REPLACED"] },
+    }).sort({ uploadedAt: -1 }).lean() : [];
+    const paymentSession = paymentBooking ? await PaymentSession.findOne({ bookingId: paymentBooking._id, bookingType: booking ? "booking" : "flight" }).sort({ createdAt: -1 }).lean() : null;
+    let bookingExpiresAt = enquiry.customizationSnapshot?.bookingExpiresAt;
+    if (!paymentBooking && enquiry.product === "trehub" && !bookingExpiresAt && enquiry.customizationSnapshot?.searchId) {
+        const { default: SearchService } = enquiry.journeyType === "hotel"
+            ? await import("../hotels/services/hotel.service.js") : await import("../flights/services/flight.service.js");
+        try { bookingExpiresAt = (await new SearchService().requireSearch(enquiry.customizationSnapshot.searchId)).expiresAt; }
+        catch (error) {
+            if (error.status !== 410 && error.statusCode !== 410 && error.code !== "SEARCH_EXPIRED") throw error;
+            bookingExpiresAt = new Date(0).toISOString();
+        }
+    }
+    const paymentStatus = paymentSession?.status || paymentBooking?.paymentStatus || "";
+    const deadline = paymentBooking ? paymentSession?.expiresAt : bookingExpiresAt;
+    watchBookingClock({ userId, enquiryId: enquiry.enquiryRef, enquiryMongoId: enquiry._id, paymentSessionId: paymentSession?.sessionId, expiresAt: deadline, status: paymentStatus });
+    const paymentState = paymentPresentation(paymentStatus, paymentBooking?.status);
     return {
         id: booking?.bookingRef || enquiry.enquiryRef || "",
         enquiryId: enquiry.enquiryRef || "",
@@ -257,7 +299,24 @@ export async function findAuthorizedBookingJourney(enquiryId, actor) {
         enquiryRef: enquiry.enquiryRef || "",
         reference: booking?.bookingRef || enquiry.enquiryRef || "Enquiry",
         title: booking?.tourTitle || enquiry.tourTitle || "Tour enquiry",
-        status: booking?.status || enquiry.status || "new",
+        status: paymentBooking?.status || enquiry.status || "new",
+        bookingCreated: Boolean(paymentBooking),
+        travelDocuments: travelDocuments.map(doc => ({
+            id: String(doc._id), title: doc.fileName || doc.type,
+            type: doc.type,
+            availability: doc.status === "REPLACED" ? "Replaced" : ["UPLOADED", "APPROVED"].includes(doc.status) && (doc.storageProvider === "R2" && doc.storageKey || /^https:\/\//i.test(doc.url || "")) ? "Available" : "Not issued yet",
+            href: ["UPLOADED", "APPROVED"].includes(doc.status) && (doc.storageProvider === "R2" && doc.storageKey || /^https:\/\//i.test(doc.url || "")) ? `/booking-engine/bookings/${encodeURIComponent(enquiry.enquiryRef)}/documents/${doc._id}` : null,
+        })).concat((enquiry.journeyType === "flight" ? ["ticket"] : ["voucher"]).filter(type => !travelDocuments.some(doc => doc.type === type && doc.status !== "REPLACED")).map(type => ({ id: `pending-${type}`, type, title: type === "ticket" ? "Flight tickets" : "Travel vouchers", availability: "Not issued yet", href: null }))),
+        ticketRows: (flightBooking?.tickets || []).map((ticket, index) => ({ label: `Ticket ${index + 1}`, value: ticket.ticketNumber || "Awaiting ticket number" })),
+        bookingExpiresAt: paymentBooking ? paymentSession?.expiresAt : bookingExpiresAt,
+        restartBookingUrl: enquiry.customizationSnapshot?.searchUrl || (enquiry.journeyType === "hotel" ? "/trehub/hotels" : "/trehub/flights"),
+        serverTime: new Date().toISOString(),
+        clock: bookingClock(deadline, paymentStatus),
+        paymentStatus,
+        paymentSessionId: paymentSession?.sessionId || "",
+        paymentHeading: paymentState.heading,
+        paymentMessage: paymentState.message,
+        paymentTone: paymentState.tone,
         product: enquiry.product || "trevista",
         journeyType: enquiry.journeyType,
         travellerCount,
@@ -278,11 +337,17 @@ export async function findAuthorizedBookingJourney(enquiryId, actor) {
                 ? Boolean(enquiry.customizationSnapshot?.requiresPassport)
                 : isInternationalJourney(sourceJourney),
         travellerDetails: booking?.travellerDetails || enquiry.travellerDetails || null,
-        paymentUrl: booking?.paymentUrl || booking?.paymentSession?.url || "",
+        paymentBookingId: paymentBooking ? String(paymentBooking._id) : String(enquiry._id),
+        paymentBookingType: booking ? "booking" : flightBooking ? "flight" : "enquiry",
+        paymentEnabled: !config.IS_DEVELOPMENT ? false : paymentBooking
+            ? !["PAID", "FULLY_PAID", "REFUNDED", "PARTIALLY_REFUNDED"].includes(paymentBooking.paymentStatus) && !["CANCELLED", "COMPLETED"].includes(paymentBooking.status)
+            : enquiry.product === "trehub" && !["cancelled", "closed"].includes(enquiry.status),
+        sourceProductUrl: sourceJourney ? `/${enquiry.product === "trevio" ? "trevio/trips" : "trevista/tours"}/${encodeURIComponent(sourceJourney.slug || String(sourceJourney._id))}` : "",
         flightSearchUrl: enquiry.product === "trehub" ? flightSearchUrl(enquiry) : "",
-        record: booking
-            ? bookingView(booking.toObject(), enquiry, perspective)
-            : enquiryView(enquiry, perspective),
+        record: {
+            ...(booking ? bookingView(booking.toObject(), enquiry, perspective) : enquiryView(enquiry, perspective)),
+            ...(paymentBooking ? { status: paymentBooking.status, statusLabel: bookingStatusDisplay(paymentBooking.status, paymentStatus).label, guidance: paymentState.message, statusTone: bookingStatusDisplay(paymentBooking.status, paymentStatus).tone } : {}),
+        },
     };
 }
 
@@ -648,7 +713,7 @@ async function buildProductEnquiryContext(source, product = "trevista") {
             hotelsByStay.set(stayKey, group);
         });
     }
-    const addOnOptions = product === "trevista"
+    const addOnOptions = ["trevista", "trevio"].includes(product)
         ? (source?.extras || []).filter((item) => item.active !== false && item.included !== true)
             .map((item, index) => ({
                 key: optionKey(item._id, `addon-${index + 1}`),
@@ -849,6 +914,19 @@ async function loadQuoteContext(enquiry) {
                   packageComponent: true,
               },
     ] : [];
+    const selectedExtraIds = new Set((enquiry.customizationSnapshot?.selectedAddOnIds || []).map(String));
+    for (const extra of tour?.extras || []) {
+        if (!selectedExtraIds.has(String(extra._id)) || extra.included === true || extra.active === false) continue;
+        pricingItems.push({
+            name: extra.title || "Selected add-on",
+            category: "OTHER",
+            description: extra.description || "Customer-selected optional add-on",
+            pricingType: extra.perTraveller || extra.perPerson ? "PER_PERSON" : "FIXED",
+            unitAmount: extra.price != null && Number.isFinite(Number(extra.price)) && Number(extra.price) >= 0 ? String(Number(extra.price)) : "",
+            quantity: extra.perTraveller || extra.perPerson ? travellerCount : 1,
+            packageComponent: false,
+        });
+    }
     if (packageMinor > derivedTotalMinor && derivedItems.length)
         pricingItems.push({
             name: "Package pricing adjustment",
@@ -1077,6 +1155,11 @@ async function previewQuoteDocument({ enquiry, context, data, input, calculation
 }
 
 async function finalizeQuote({ enquiry, actor, context, data, input, calculation, idempotencyKey }) {
+    const currentEnquiry = await ContactLead.findById(enquiry._id).lean();
+    if (!currentEnquiry || quoteSelectionFingerprint(currentEnquiry) !== quoteSelectionFingerprint(enquiry))
+        throw Object.assign(new Error("The enquiry details changed. Reload and recalculate the quotation."), { status: 409 });
+    if (enquiry.bookingId || ["accepted", "cancelled", "closed"].includes(enquiry.status))
+        throw Object.assign(new Error("This enquiry is locked and cannot receive another quotation."), { status: 409 });
     let quote = await BookingQuote.findOne({ idempotencyKey });
     let version;
     let quoteRef;
@@ -1141,6 +1224,7 @@ async function finalizeQuote({ enquiry, actor, context, data, input, calculation
             contextId: String(enquiry._id),
             bookingId: enquiry.bookingId || null,
             inquiryId: enquiry._id,
+            selectionFingerprint: quoteSelectionFingerprint(enquiry),
             version,
             quoteRef,
             status: "SENT",
@@ -1271,6 +1355,8 @@ export async function updateCustomerQuoteDecision({ enquiryId, quoteId, actor, a
     const enquiry = await ContactLead.findOne({ ...resource.query, claimedBy: userId });
     if (!enquiry) throw Object.assign(new Error("Enquiry not found."), { status: 404 });
     if (!booking && enquiry.bookingId) booking = await Booking.findById(enquiry.bookingId);
+    if (booking && ["PAID", "FULLY_PAID", "REFUNDED", "PARTIALLY_REFUNDED"].includes(booking.paymentStatus))
+        throw Object.assign(new Error("This booking has a completed payment. Contact support for changes or cancellation."), { status: 409 });
     if (["cancelled", "closed"].includes(enquiry.status)) throw Object.assign(new Error("This enquiry is closed."), { status: 409 });
     const identity = quoteIdentity(quoteId);
     if (!identity) throw Object.assign(new Error("Quote not found."), { status: 404 });
@@ -1287,6 +1373,21 @@ export async function updateCustomerQuoteDecision({ enquiryId, quoteId, actor, a
         ],
     });
     if (!quote) throw Object.assign(new Error("Quote not found."), { status: 404 });
+    if (booking && await PaymentSession.exists({ bookingId: booking._id }))
+        throw Object.assign(new Error("Checkout has started. Quote changes are locked; contact support."), { status: 409 });
+    const latestQuote = await BookingQuote.findOne({ inquiryId: enquiry._id, version: { $ne: null } }).sort({ version: -1, createdAt: -1 }).select("_id");
+    if (latestQuote && String(latestQuote._id) !== String(quote._id))
+        throw Object.assign(new Error("This quotation has been replaced. Review the latest version."), { status: 409 });
+    if (String(action).toUpperCase() === "ACCEPT") {
+        const expiry = quote.expirationDate || quote.validity || quote.expiresAt;
+        if (expiry && new Date(expiry) <= new Date()) throw Object.assign(new Error("This quotation has expired. Request a revised quotation."), { status: 409 });
+        if (quote.selectionFingerprint && quote.selectionFingerprint !== quoteSelectionFingerprint(enquiry))
+            throw Object.assign(new Error("Booking details changed after this quote was prepared. A revised quotation is required."), { status: 409 });
+        if (quote.status === "ACCEPTED" && booking && String(booking.acceptedQuoteId) === String(quote._id)) {
+            return { quote, enquiry, booking };
+        }
+    }
+    if (String(action).toUpperCase() === "REJECT" && quote.status === "REJECTED") return { quote, enquiry, booking };
     const decision = resolveCustomerQuoteDecision({
         status: quote.status,
         action,
@@ -1294,33 +1395,57 @@ export async function updateCustomerQuoteDecision({ enquiryId, quoteId, actor, a
         hasChangeRequest: Boolean(quote.changeRequest?.requestedAt),
         version: quote.version,
     });
-    const now = new Date();
-    quote.status = decision.quoteStatus;
-    if (decision.action === "ACCEPT") {
-        quote.acceptedAt = now;
-        quote.rejectedAt = null;
-        quote.changeRequest = null;
-        booking = await ensureBookingFromAcceptedQuote(enquiry, quote);
-        await holdInventoryForAcceptedBooking({ booking, enquiry, quote });
-        quote.bookingId = booking._id;
-        quote.inquiryId = enquiry._id;
-        enquiry.bookingId = booking._id;
-    } else if (decision.action === "REJECT") {
-        quote.rejectedAt = now;
-        quote.acceptedAt = null;
-    } else if (decision.action === "REQUEST_CHANGES") {
-        quote.changeRequest = { notes: decision.notes, requestedAt: now };
-        quote.acceptedAt = null;
-        quote.rejectedAt = null;
-    } else if (decision.action === "CANCEL") {
-        quote.cancelledAt = now;
-        if (booking) {
-            booking.status = BOOKING_STATUS.CANCELLED;
-            await releaseInventoryForBooking(booking);
+    const afterCommit = [];
+    const session = await BookingQuote.db.startSession();
+    session.startTransaction();
+    try {
+        const enquiryClaim = await ContactLead.updateOne({ _id: enquiry._id, updatedAt: enquiry.updatedAt, status: enquiry.status }, { $set: { status: decision.enquiryStatus } }, { session });
+        if (!enquiryClaim.matchedCount) throw Object.assign(new Error("The enquiry changed. Review the latest quotation before responding."), { status: 409 });
+        const claimed = await BookingQuote.updateOne({ _id: quote._id, status: quote.status, updatedAt: quote.updatedAt }, { $set: { status: decision.quoteStatus } }, { session });
+        if (!claimed.matchedCount) throw Object.assign(new Error("This quote changed. Refresh before responding."), { status: 409 });
+        const now = new Date();
+        quote.status = decision.quoteStatus;
+        if (decision.action === "ACCEPT") {
+            quote.acceptedAt = now;
+            quote.rejectedAt = null;
+            quote.changeRequest = null;
+            booking = await ensureBookingFromAcceptedQuote(enquiry, quote, { session });
+            await holdInventoryForAcceptedBooking({ booking, enquiry, quote, session, afterCommit });
+            quote.bookingId = booking._id;
+            quote.inquiryId = enquiry._id;
+            enquiry.bookingId = booking._id;
+        } else if (decision.action === "REJECT") {
+            quote.rejectedAt = now;
+            quote.acceptedAt = null;
+        } else if (decision.action === "REQUEST_CHANGES") {
+            quote.changeRequest = { notes: decision.notes, requestedAt: now };
+            quote.acceptedAt = null;
+            quote.rejectedAt = null;
+        } else if (decision.action === "CANCEL") {
+            quote.cancelledAt = now;
+            if (booking) {
+                booking.status = BOOKING_STATUS.CANCELLED;
+                await releaseInventoryForBooking(booking, { session, afterCommit });
+            }
         }
+        enquiry.status = decision.enquiryStatus;
+        await quote.save({ session });
+        await enquiry.save({ session });
+        if (booking) await booking.save({ session });
+        await session.commitTransaction();
+    } catch (error) {
+        await session.abortTransaction();
+        if (error.code === 11000 || error.hasErrorLabel?.("TransientTransactionError")) throw Object.assign(new Error("This booking was updated by another request. Refresh to see the latest result."), { status: 409 });
+        throw error;
+    } finally {
+        quote.$session(null);
+        enquiry.$session(null);
+        await session.endSession();
     }
-    enquiry.status = decision.enquiryStatus;
-    await Promise.all([quote.save(), enquiry.save(), ...(booking ? [booking.save()] : [])]);
+    if (booking) {
+        booking.$session(null);
+        await Promise.allSettled(afterCommit.map(publish => publish()));
+    }
     if (booking) await linkEnquiryArtifactsToBooking(enquiry, booking);
     await notifyOperators({
         enquiry,
@@ -1365,9 +1490,15 @@ export async function saveCustomerTravellerDetails({ enquiryId, actor, values })
     const userId = actorId(actor);
     if (!userId) throw Object.assign(new Error("Please sign in to add traveller details."), { status: 401 });
     const resource = await findEnquiryResource(enquiryId);
+
     let { booking } = resource;
     const enquiry = await ContactLead.findOne({ ...resource.query, claimedBy: userId });
     if (!enquiry) throw Object.assign(new Error("Enquiry not found."), { status: 404 });
+    if (!["new", "enquiry_details_added", "traveller_details_added"].includes(enquiry.status))
+        throw Object.assign(new Error("Traveller details are locked after requesting a quotation. Request changes to the quotation instead."), { status: 409 });
+    if (enquiry.product === "trehub") assertBookingOpen(enquiry.customizationSnapshot?.bookingExpiresAt || new Date(0));
+    if (resource.booking || enquiry.bookingId || await FlightBooking.exists({ sourceEnquiryId: enquiry._id }))
+        throw Object.assign(new Error("Traveller details are locked once a booking has been prepared. Contact support to make changes."), { status: 409 });
     if (!booking && enquiry.bookingId) booking = await Booking.findById(enquiry.bookingId);
     const quote = await BookingQuote.findOne({
         $or: [
@@ -1376,6 +1507,7 @@ export async function saveCustomerTravellerDetails({ enquiryId, actor, values })
             { contextType: "ENQUIRY", contextId: String(enquiry._id) },
         ],
     }).sort({ version: -1, createdAt: -1 });
+    if (quote) throw Object.assign(new Error("A quotation already exists. Request a revised quotation to change these details."), { status: 409 });
     const count = Math.max(1, Number(enquiry.fields?.travellerCount || enquiry.customizationSnapshot?.travellers || 1));
     const requiresPassport = enquiry.product === "trehub"
         ? Boolean(enquiry.customizationSnapshot?.requiresPassport)
@@ -1402,7 +1534,13 @@ export async function saveCustomerTravellerDetails({ enquiryId, actor, values })
         booking.travellerDetails = enquiry.travellerDetails;
         booking.markModified("travellerDetails");
     }
-    await Promise.all([enquiry.save(), ...(booking ? [booking.save()] : [])]);
+    if (enquiry.product === "trehub") {
+        const saved = await ContactLead.updateOne({ _id: enquiry._id, updatedAt: enquiry.updatedAt, $expr: { $gt: [{ $convert: { input: "$customizationSnapshot.bookingExpiresAt", to: "date", onError: new Date(0), onNull: new Date(0) } }, "$$NOW"] } }, { $set: { travellerDetails: enquiry.travellerDetails, status: enquiry.status } });
+        if (!saved.modifiedCount) throw Object.assign(new Error("This booking session expired or changed. Reload the booking before continuing."), { status: 409 });
+    } else {
+        const saved = await ContactLead.updateOne({ _id: enquiry._id, updatedAt: enquiry.updatedAt, status: { $in: ["new", "enquiry_details_added", "traveller_details_added"] } }, { $set: { travellerDetails: enquiry.travellerDetails, status: enquiry.status } }, { runValidators: true });
+        if (!saved.modifiedCount) throw Object.assign(new Error("This enquiry changed. Reload before saving traveller details."), { status: 409 });
+    }
     try {
         const realtimeData = quote ? bookingQuoteDto(quote) : enquiryDto(enquiry);
         publishFanOut(
@@ -1433,6 +1571,8 @@ export async function cancelCustomerFlightEnquiry({ enquiryId, actor }) {
         throw Object.assign(new Error("Only Trehub enquiries can be cancelled here."), {
             status: 409,
         });
+    const paidFlight = await FlightBooking.exists({ sourceEnquiryId: enquiry._id });
+    if (paidFlight || enquiry.bookingId) throw Object.assign(new Error("A booking already exists for this enquiry. Manage cancellation from the booking or contact support."), { status: 409 });
     if (enquiry.status !== "cancelled") {
         if (!["new", "enquiry_details_added", "traveller_details_added"].includes(enquiry.status))
             throw Object.assign(new Error("This enquiry can no longer be cancelled."), {
@@ -1455,6 +1595,8 @@ export async function saveCustomerEnquiryDetails({ enquiryId, actor, values }) {
     const resource = await findEnquiryResource(enquiryId);
     const enquiry = await ContactLead.findOne({ ...resource.query, claimedBy: userId });
     if (!enquiry) throw Object.assign(new Error("Enquiry not found."), { status: 404 });
+    if (resource.booking || enquiry.bookingId || await FlightBooking.exists({ sourceEnquiryId: enquiry._id }))
+        throw Object.assign(new Error("Your booking has been created. Contact support if you need to change its details."), { status: 409 });
     if (
         !["new", "enquiry_details_added", "traveller_details_added"].includes(
             enquiry.status,
@@ -1558,7 +1700,8 @@ export async function saveCustomerEnquiryDetails({ enquiryId, actor, values }) {
     enquiry.markModified("customizationAnswers");
     enquiry.markModified("customizationSnapshot");
     enquiry.markModified("travellerDetails");
-    await enquiry.save();
+    const saved = await ContactLead.updateOne({ _id: enquiry._id, updatedAt: enquiry.updatedAt, status: { $in: ["new", "enquiry_details_added", "traveller_details_added"] } }, enquiry.getChanges(), { runValidators: true });
+    if (!saved.modifiedCount) throw Object.assign(new Error("This enquiry changed. Reload before saving booking details."), { status: 409 });
     publishFanOut(
         { userId: enquiry.claimedBy, agencyId: enquiry.agencyId },
         REALTIME_EVENTS.ENQUIRY_UPDATED,
@@ -1573,11 +1716,20 @@ export async function requestCustomerQuotation({ enquiryId, actor }) {
     const resource = await findEnquiryResource(enquiryId);
     const enquiry = await ContactLead.findOne({ ...resource.query, claimedBy: userId });
     if (!enquiry) throw Object.assign(new Error("Enquiry not found."), { status: 404 });
+    if (resource.booking || enquiry.bookingId || enquiry.product === "trehub" || !["enquiry_details_added", "traveller_details_added", "quote_requested"].includes(enquiry.status)) {
+        throw Object.assign(new Error("A quotation cannot be requested at this booking stage."), { status: 409 });
+    }
+    if (enquiry.status === "quote_requested") return enquiry;
     if (!enquiry.travellerDetails?.completedAt) {
         throw Object.assign(new Error("Save all traveller details before requesting a quotation."), { status: 409 });
     }
-    enquiry.status = "quote_requested";
-    await enquiry.save();
+    const requested = await ContactLead.findOneAndUpdate({ _id: enquiry._id, status: enquiry.status, updatedAt: enquiry.updatedAt, "travellerDetails.completedAt": { $ne: null } }, { $set: { status: "quote_requested" } }, { new: true });
+    if (!requested) {
+        const current = await ContactLead.findById(enquiry._id);
+        if (current?.status === "quote_requested") return current;
+        throw Object.assign(new Error("Booking details changed. Review them before requesting a quotation."), { status: 409 });
+    }
+    enquiry.status = requested.status;
     await notifyOperators({
         enquiry,
         type: "quote_requested",

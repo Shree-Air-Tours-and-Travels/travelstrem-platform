@@ -103,7 +103,7 @@ export default function registerMiddleware(app) {
         app.express.json({
             limit: "20mb",
             verify: (req, _res, buffer) => {
-                if (req.originalUrl?.includes("/payments/webhooks/"))
+                if ((req.originalUrl?.includes("/payments/webhooks/") || req.originalUrl?.startsWith("/api/webhooks/payments/")))
                     req.rawBody = Buffer.from(buffer);
             },
         }),

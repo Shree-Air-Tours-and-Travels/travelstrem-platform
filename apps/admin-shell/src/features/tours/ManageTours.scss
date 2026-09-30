@@ -201,7 +201,7 @@ $mt-bg: var(--page-bg);
   margin-bottom: 10px;
 
   h4 {
-    font-size: 1.25rem;
+    font-size: var(--font-size-lg);
     margin: 0;
     font-weight: 600;
     color: var(--text);

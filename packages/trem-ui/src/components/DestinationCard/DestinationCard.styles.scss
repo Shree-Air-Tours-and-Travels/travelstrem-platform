@@ -101,7 +101,7 @@
     }
 
     &.is-favorite {
-      color: var(--color-danger, #e11d48);
+      color: var(--color-danger);
     }
   }
 
@@ -122,7 +122,7 @@
     backdrop-filter: blur(10px);
 
     svg {
-      color: var(--color-warning, #f59e0b);
+      color: var(--color-warning);
     }
 
     small {

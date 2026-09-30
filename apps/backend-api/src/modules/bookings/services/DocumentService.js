@@ -8,10 +8,13 @@ import { privateQuoteUploadDirectory } from "./QuoteDocumentStorage.js";
 
 export const DocumentService = {
     async upload(bookingId, payload = {}, actor = {}, options = {}) {
+        if (payload.replacesDocumentId && !await BookingDocument.exists({ _id: payload.replacesDocumentId, bookingId, type: payload.type || DOCUMENT_TYPE.OTHER }))
+            throw Object.assign(new Error("The document being replaced does not belong to this booking or document type."), { status: 409 });
         const [document] = await BookingDocument.create(
             [
                 {
                     bookingId,
+                    replacesDocumentId: payload.replacesDocumentId || null,
                     travellerId: payload.travellerId || payload.travelerId || null,
                     type: payload.type || DOCUMENT_TYPE.OTHER,
                     fileName: payload.fileName || payload.name || "",
@@ -31,6 +34,7 @@ export const DocumentService = {
             ],
             options,
         );
+        if (payload.replacesDocumentId) await BookingDocument.updateOne({ _id: payload.replacesDocumentId, bookingId }, { $set: { status: DOCUMENT_STATUS.REPLACED } }, options);
         return document;
     },
 

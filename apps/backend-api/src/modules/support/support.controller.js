@@ -1,3 +1,4 @@
+import { supportContexts } from "./support.context.js";
 import {
     SUPPORT_ACTION_TYPE,
     SUPPORT_SENDER_TYPE,
@@ -265,6 +266,7 @@ export const getCategories = asyncHandler(async (req, res) =>
     ok(res, {
         categories: req.user?.role === "agent" ? AGENT_SUPPORT_CATEGORIES : SUPPORT_CATEGORIES,
         ui: SUPPORT_UI.requestForm,
+        contexts: req.user?.role === "agent" ? [] : await supportContexts(userId(req)),
     }),
 );
 
@@ -323,6 +325,9 @@ export const createTicket = asyncHandler(async (req, res) => {
     const requestedServiceId = clean(req.body.serviceId, 40).toLowerCase();
     if (requestedServiceId && !serviceById(requestedServiceId))
         throw new ApiError(400, "Choose a valid support service");
+    const contextId = clean(req.body.contextId, 100);
+    const relatedContext = contextId ? (await supportContexts(userId(req))).find(item => item.id === contextId) : null;
+    if (contextId && !relatedContext) throw new ApiError(404, "Booking or enquiry not found");
     let ticket = null;
     for (let attempt = 0; attempt < 5; attempt += 1) {
         try {
@@ -331,6 +336,7 @@ export const createTicket = asyncHandler(async (req, res) => {
                 user: userId(req),
                 requesterType: req.user?.role === "agent" ? "agent" : "customer",
                 serviceId: requestedServiceId,
+                relatedContext,
                 categoryId,
                 subcategoryId: clean(req.body.subcategoryId, 80),
                 subject,

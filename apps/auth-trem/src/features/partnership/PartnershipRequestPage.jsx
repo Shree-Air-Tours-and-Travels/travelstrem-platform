@@ -1,7 +1,7 @@
 import React from "react";
 import {
   AuthHeader, Button, FileUploader, InputField, Spinner, StatusBadge, TextArea,
-  WizardFormShell, WizardValidationSummary,
+  WizardFormShell,
 } from "@packages/trem-ui";
 import "./partnership-request.scss";
 
@@ -183,7 +183,6 @@ export default function PartnershipRequestPage({ api, theme, onToggleTheme }) {
   return <div className="partner-request-page">
     <AuthHeader config={{ brand: { name: process.env.REACT_APP_COMPANY_NAME || "TravelsTREM", tagline: "Tours · Reservations · Experiences · Management" } }} theme={theme} onToggleTheme={onToggleTheme} />
     {receipt ? <SubmissionReceipt receipt={receipt} onStartAgain={reset} /> : state.loading ? <div className="partner-request-page__loading"><Spinner label="Preparing your activation journey" /></div> : state.error && !workflow ? <div className="partner-request-page__loading"><strong>{state.error}</strong><Button text="Try again" onClick={() => window.location.reload()} /></div> : workflow ? <WizardFormShell className="partner-request-page__wizard" eyebrow="Agency partnerships" title={workflow.title} subtitle={workflow.subtitle} status={draft ? "Draft saved" : "Not started"} headerActions={<Button text="Return to sign in" variant="text" iconLeft="logout" onClick={returnToSignIn} />} steps={workflow.steps} activeStepId={activeStep} completedStepIds={completed} progress={Math.round((completed.length / workflow.steps.length) * 100)} canNavigate railTitle="Activate your agency" railSubtitle={`${workflow.steps.length} verified steps`} onStepChange={(stepId) => { if (completed.includes(stepId) || stepId === activeStep) setActiveStep(stepId); }} actionBar={<footer className="partner-request-page__actions"><div className="partner-request-page__actions-secondary"><Button text={index === 0 ? "Sign in" : "Previous"} variant="outline" iconLeft={index === 0 ? "logout" : "arrowLeft"} disabled={state.saving} onClick={index === 0 ? returnToSignIn : () => setActiveStep(workflow.steps[index - 1].id)} /><span>{state.saving ? "Saving securely…" : state.savedAt ? `Progress saved at ${new Date(state.savedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : "Your progress is saved after each step"}</span></div>{index === workflow.steps.length - 1 ? <Button text={state.saving ? "Submitting…" : "Submit application"} disabled={state.saving} onClick={submit} /> : <Button text={state.saving ? "Saving…" : "Save and continue"} iconRight="chevronRight" disabled={state.saving} onClick={() => saveStep(nextStep.id)} />}</footer>}>
-      <WizardValidationSummary errors={Object.fromEntries(workflow.steps[index]?.widgets.map((widget) => [widget.path, errors[widget.path]]).filter(([, message]) => message))} />
       {state.error ? <div className="partner-request-page__message" role="alert">{state.error}</div> : null}
       <div className="partner-request-page__step-grid">{workflow.steps[index]?.widgets.map((widget) => <PartnershipWidget key={widget.path} widget={widget} form={form} setForm={setForm} errors={errors} setErrors={setErrors} documents={documents} setDocuments={setDocuments} logo={logo} setLogo={setLogo} />)}</div>
     </WizardFormShell> : null}

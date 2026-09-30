@@ -5,6 +5,7 @@ import {
     getPortalScope,
     normalizePortalScope,
     readPortalAccessToken,
+    scopeUserToPortal,
 } from "../../core/auth/portalSession.js";
 import { buildDashboardSnapshot } from "./dashboardDataService.js";
 import { buildAdminDashboardSnapshot } from "./adminDashboardDataService.js";
@@ -52,6 +53,7 @@ function extractOptionalUser(req) {
 }
 
 async function findAdminViewer(req, authUser = extractOptionalUser(req)) {
+    if (getPortalScope(req) !== "admin") return null;
     const user = authUser?.userId
         ? await User.findById(authUser.userId)
               .select(
@@ -103,7 +105,7 @@ export const getPageDefinition = async (req, res) => {
                           user &&
                           (user.accountStatus || "active") === "active" &&
                           Number(authUser.tokenVersion || 0) === Number(user.tokenVersion || 0) &&
-                          user.internalTeamRoles?.includes("support")
+                          scopeUserToPortal(user, getPortalScope(req)).internalTeamRoles?.includes("support")
                               ? buildSupportDashboardSnapshot(user)
                               : null,
                       )

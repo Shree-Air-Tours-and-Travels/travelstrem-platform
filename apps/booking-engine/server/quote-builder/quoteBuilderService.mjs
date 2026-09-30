@@ -216,18 +216,20 @@ export function createQuoteBuilderService({ findAuthorizedEnquiry, loadQuoteCont
 
   const initialize = async (enquiry, actor) => {
     const savedContext = enquiry.quoteBuilder?.contextSnapshot;
-    const refreshMissingTripPricing =
-      !enquiry.quoteBuilder?.sentQuoteId &&
-      (enquiry.product === "trevio" || enquiry.journeyType === "trip") &&
-      savedContext &&
-      !(savedContext.source?.pricingItems || []).length;
-    const context = refreshMissingTripPricing || !savedContext
+    const context = !enquiry.quoteBuilder?.sentQuoteId || !savedContext
       ? await loadQuoteContext(enquiry, actor)
       : savedContext;
+    const contextChanged = Boolean(savedContext) && JSON.stringify(savedContext) !== JSON.stringify(context);
     const definition = createQuoteProcessDefinition(context);
     const process = persistedState(enquiry.quoteBuilder, definition, context);
-    if (!savedContext || refreshMissingTripPricing) await saveProcess(enquiry, process, actor);
-    return { context, definition, process };
+    process.contextSnapshot = context;
+    if (contextChanged) {
+      process.data = merge(process.data, { approval: { confirmed: false } });
+      process.pricingSnapshot = null;
+      process.revision += 1;
+    }
+    if (!savedContext || contextChanged) await saveProcess(enquiry, process, actor);
+    return { context, definition, process, contextChanged };
   };
 
   const calculate = async (enquiry, data, context) => {
@@ -338,7 +340,9 @@ export function createQuoteBuilderService({ findAuthorizedEnquiry, loadQuoteCont
 
     async send(enquiryId, actor, payload = {}) {
       const enquiry = await findAuthorizedEnquiry(enquiryId, actor);
-      const { context, definition, process } = await initialize(enquiry, actor);
+      const { context, definition, process, contextChanged } = await initialize(enquiry, actor);
+      if (contextChanged)
+        return { status: 422, componentData: await view(enquiry, process, definition, context, { "approval.confirmed": "Enquiry details have been updated. Review the refreshed quotation and confirm before sending." }) };
       if (process.sentQuoteId)
         return { status: 200, quoteRef: process.sentQuoteRef || "", componentData: await view(enquiry, process, definition, context) };
       const state = createProcessState(definition, process);

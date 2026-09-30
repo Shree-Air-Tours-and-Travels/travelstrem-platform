@@ -34,6 +34,7 @@ import { AppShellProvider, useAppShellConfig } from "./providers/AppShellProvide
 import AppShellPage from "../features/app-shell/AppShell.container";
 import { buildGlobalAuthUrl, fetchData, SHELL_NAVIGATION_EVENT } from "@packages/trem-utils";
 import { clearAuthBrowserState, emitAuthEvent } from "@packages/trem-auth-core";
+import MobileProfilePrompt from "../components/MobileProfilePrompt";
 import LoginPrompt from "../components/LoginPrompt";
 import SecurityMonitor from "../components/SecurityMonitor";
 import SupportRoutes from "../features/support/SupportRoutes";
@@ -142,9 +143,9 @@ class RemoteBoundary extends React.Component {
       return (
         <ErrorState
           title="This section is temporarily unavailable"
-          description="The rest of your dashboard is still available. Return home and continue working."
-          retry={this.props.onRecover}
-          retryText="Return home"
+          description="We couldn’t load this page. Please try again here."
+          retry={() => this.setState({ error: null })}
+          retryText="Try again"
         />
       );
     }
@@ -201,7 +202,7 @@ function AppShell() {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const { loading, session } = useAppShellConfig();
+  const { loading, session, error: sessionError, reload: reloadSession } = useAppShellConfig();
   const { theme, toggleTheme } = useTheme();
   const notificationInbox = useNotificationInbox({
     loadInbox: async ({ limit = 6 } = {}) => (await fetchData("/tenancy/notifications", { params: { limit } })).componentData?.data,
@@ -215,6 +216,9 @@ function AppShell() {
     () => (baseUser ? { ...baseUser, ...(profileUserPatch || {}) } : profileUserPatch),
     [baseUser, profileUserPatch],
   );
+  const [shellLoading, setShellLoading] = useState(true);
+  const [shellError, setShellError] = useState(false);
+  const [shellAttempt, setShellAttempt] = useState(0);
   const [sidebarConfig, setSidebarConfig] = useState({});
   const [appHeaderConfig, setAppHeaderConfig] = useState({});
   const [navigationConfig, setNavigationConfig] = useState(() =>
@@ -231,7 +235,11 @@ function AppShell() {
 
   const applyShellConfiguration = useCallback(
     ([sidebarResponse, headerResponse, navigationResponse]) => {
-      setSidebarConfig(sidebarResponse?.componentData || {});
+      if ([sidebarResponse, headerResponse, navigationResponse].some(
+        (response) => !response?.componentData || typeof response.componentData !== "object" ||
+          Array.isArray(response.componentData) || !Object.keys(response.componentData).length,
+      )) throw new Error("Shell configuration is unavailable");
+      setSidebarConfig(sidebarResponse.componentData);
       setAppHeaderConfig(headerResponse?.componentData || {});
       const serverNavigationConfig = navigationResponse?.componentData || FALLBACK_NAVIGATION_CONFIG;
       const fallbackNotificationDestination = FALLBACK_NAVIGATION_CONFIG.destinations.find(
@@ -417,20 +425,27 @@ function AppShell() {
 
   useEffect(() => {
     let cancelled = false;
-    fetchShellConfiguration()
-      .then((responses) => {
+    setShellLoading(true);
+    setShellError(false);
+    Promise.all([
+      fetchShellConfiguration({ force: shellAttempt > 0 }),
+      shellAttempt > 0 ? reloadSession() : Promise.resolve(),
+    ])
+      .then(([responses]) => {
         if (!cancelled) applyShellConfiguration(responses);
       })
       .catch(() => {
         if (!cancelled) {
-          setSidebarConfig({});
-          setAppHeaderConfig({});
+          setShellError(true);
         }
+      })
+      .finally(() => {
+        if (!cancelled) setShellLoading(false);
       });
     return () => {
       cancelled = true;
     };
-  }, [applyShellConfiguration]);
+  }, [applyShellConfiguration, reloadSession, shellAttempt]);
 
   useRealtimeEvent(REALTIME_EVENTS.PRODUCT_CATALOG_UPDATED, () => {
     fetchShellConfiguration({ force: true }).then(applyShellConfiguration).catch(() => null);
@@ -612,8 +627,24 @@ function AppShell() {
     sidebarConfig.sections,
   ]);
 
-  if (loading) {
+  if (loading || shellLoading) {
     return <GlobalLoader visible text="Loading App" />;
+  }
+
+  if (shellError || sessionError) {
+    return (
+      <main className="dash-load-error">
+        <NoDataFound
+          title="Something went wrong"
+          description="We couldn’t load this page right now. Please try again in a moment."
+          actionLabel="Retry"
+          onAction={() => {
+            setShellLoading(true);
+            setShellAttempt((attempt) => attempt + 1);
+          }}
+        />
+      </main>
+    );
   }
 
   if (!session?.isAuthenticated && !guestMode && !authPromptDismissed) {
@@ -633,6 +664,12 @@ function AppShell() {
     <div
       className={`dash-layout${sidebarConfig.variant === "top-dropdown" ? " dash-layout--top-dropdown" : ""}${sidebarCollapsed ? " dash-layout--sidebar-collapsed" : ""}${showMobileNavigation ? " dash-layout--mobile-action-panel" : ""}`}
     >
+      <MobileProfilePrompt
+        key={user?.id || user?._id || "guest"}
+        userId={session?.isAuthenticated ? user?.id || user?._id : null}
+        eligible={!isRemote && ["overview", "dashboard"].includes(activeTab)}
+        onSaved={reloadSession}
+      />
       <SideBar
         config={{
           ...sidebarConfig,
@@ -717,7 +754,6 @@ function AppShell() {
           >
             <RemoteBoundary
               resetKey={`${location.pathname}${location.search}`}
-              onRecover={() => handleTabChange("overview")}
             >
               {isSupportScreen ? (
                 <SupportRoutes

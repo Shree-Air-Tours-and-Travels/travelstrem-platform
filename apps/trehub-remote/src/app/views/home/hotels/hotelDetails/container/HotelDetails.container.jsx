@@ -1,3 +1,4 @@
+import { useExistingEnquiryChoice } from "@packages/trem-modals";
 import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
@@ -8,6 +9,7 @@ import { interpolate } from "../../hotel.utils.js";
 import HotelDetailsView from "../view/HotelDetails.view.jsx";
 
 export default function HotelDetailsContainer() {
+  const existingEnquiryChoice = useExistingEnquiryChoice();
   const location = useLocation();
   const navigate = useNavigate();
   const hotelId = decodeURIComponent(location.pathname.split("/").filter(Boolean)[2] || "");
@@ -24,6 +26,7 @@ export default function HotelDetailsContainer() {
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [quoteError, setQuoteError] = useState(null);
   const [expandedRoomId, setExpandedRoomId] = useState(null);
+  const [enquiryError, setEnquiryError] = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [reload, setReload] = useState(0);
   const request = useRef(0);
@@ -93,28 +96,37 @@ export default function HotelDetailsContainer() {
     if (nextEmptySlot !== -1) setActiveSlot(nextEmptySlot);
   };
 
-  const createEnquiry = async () => {
-    if (saving || !quote) return;
+  const createEnquiry = async (startNew = false) => {
+    if ((saving && startNew !== true) || !quote) return;
+    setEnquiryError(null);
     setSaving(true);
     setError(null);
     try {
       const response = await createComponentData(contract.elements.urls.enquiries, {
+        startNew: startNew === true,
         searchId: data.searchId,
         hotelId,
         roomIds,
         expectedTotal: quote.price.total,
       });
+      if (response.data?.existingEnquiry) {
+        const choice = await existingEnquiryChoice.choose(response.data);
+        if (choice === "new") return createEnquiry(true);
+        if (choice === "continue") navigate(response.data.targetPath);
+        return;
+      }
       setConfirmOpen(false);
       navigate(response.data.targetPath);
     } catch (failure) {
-      setConfirmOpen(false);
-      setError(failure);
+      setEnquiryError(failure);
     } finally {
       setSaving(false);
     }
   };
 
   return (
+    <>
+      {existingEnquiryChoice.modal}
     <HotelDetailsView
       contract={contract}
       data={data}
@@ -133,6 +145,7 @@ export default function HotelDetailsContainer() {
       quoteLoading={quoteLoading}
       quoteError={quoteError}
       expandedRoomId={expandedRoomId}
+      enquiryError={enquiryError}
       confirmOpen={confirmOpen}
       onSelectRoom={selectRoom}
       onChooseSlot={setActiveSlot}
@@ -149,5 +162,6 @@ export default function HotelDetailsContainer() {
       onConfirm={createEnquiry}
       onRetry={() => setReload((current) => current + 1)}
     />
+    </>
   );
 }

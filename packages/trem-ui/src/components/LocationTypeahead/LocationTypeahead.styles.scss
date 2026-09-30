@@ -159,8 +159,8 @@
   &__attribution {
     display: block;
     padding: $space-1 $space-3 $space-2;
-    color: #5e5e5e;
-    font-family: Roboto, sans-serif;
+    color: var(--color-text-muted);
+    font-family: $font-primary;
     font-size: 12px;
     font-style: normal;
     font-weight: 400;
