@@ -177,7 +177,7 @@
         "mock": "Demo hotel inventory — no live reservation will be made.",
         "eyebrow": "Hotels & stays",
         "description": "Find your place to unwind. Compare rooms, inclusions and the full cost of your stay.",
-        "breadcrumbTrehub": "Trehub",
+        "breadcrumbTrehub": "Home",
         "breadcrumbHotels": "Hotels",
         "breadcrumbDetails": "Hotel details",
         "priceIncludesFees": "Includes applicable taxes and service charges",
@@ -332,11 +332,11 @@
         {
           "type": "HotelBreadcrumbs",
           "searchItems": [
-            { "labelRef": "breadcrumbTrehub", "path": "/trehub" },
+            { "labelRef": "breadcrumbTrehub", "path": "/trehub?tab=trehub&product=trehub" },
             { "labelRef": "breadcrumbHotels" }
           ],
           "detailsItems": [
-            { "labelRef": "breadcrumbTrehub", "path": "/trehub" },
+            { "labelRef": "breadcrumbTrehub", "path": "/trehub?tab=trehub&product=trehub" },
             { "labelRef": "breadcrumbHotels", "path": "/trehub/hotels" },
             { "labelRef": "breadcrumbDetails" }
           ]
@@ -344,11 +344,23 @@
         {
           "type": "HotelSearch",
           "props": {
-            "variant": "hotel"
+            "variant": "hotel",
+            "overlayConfig": {
+              "titleRef": "editSearch",
+              "closeLabelRef": "close"
+            }
           }
         },
         {
-          "type": "HotelFilters"
+          "type": "HotelFilters",
+          "props": {
+            "overlayConfig": {
+              "titleRef": "filters",
+              "closeLabelRef": "close",
+              "applyLabelRef": "apply",
+              "resetLabelRef": "reset"
+            }
+          }
         },
         {
           "type": "HotelResults",
@@ -389,7 +401,7 @@
         "search": [
           {
             "labelRef": "breadcrumbTrehub",
-            "path": "/trehub"
+            "path": "/trehub?tab=trehub&product=trehub"
           },
           {
             "labelRef": "breadcrumbHotels"
@@ -398,7 +410,7 @@
         "details": [
           {
             "labelRef": "breadcrumbTrehub",
-            "path": "/trehub"
+            "path": "/trehub?tab=trehub&product=trehub"
           },
           {
             "labelRef": "breadcrumbHotels",

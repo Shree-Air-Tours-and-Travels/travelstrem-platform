@@ -1,27 +1,16 @@
 @import "@packages/trem-design-tokens/scss";
 
 .trehub-flight-list {
+  display: flex;
+  flex-direction: column;
+  gap: $space-5;
+  width: min(calc(100% - (2 * var(--trehub-page-gutter))), #{$full-width});
+  margin-inline: auto;
   min-height: 100%;
-  padding: 0 clamp($space-4, 3vw, $space-8);
-  padding-bottom: max(clamp($space-8, 6vw, 5rem), var(--trem-floating-action-clearance, 0px));
+  padding: 0 0 max(clamp($space-8, 6vw, 5rem), var(--trem-floating-action-clearance, 0px));
   background: var(--page-bg);
   color: var(--text);
 
-  > :not(.trehub-flight-list__breadcrumb) {
-    width: min(100%, #{$full-width});
-    margin-inline: auto;
-  }
-}
-
-.trehub-flight-list__breadcrumb {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  margin: 0 calc(clamp($space-4, 3vw, $space-8) * -1);
-  padding: $space-3 clamp($space-4, 3vw, $space-8);
-  border-bottom: 1px solid var(--border);
-  background: var(--surface-glass-strong);
-  backdrop-filter: blur(16px);
 }
 
 .trehub-flight-list__search-stage {
@@ -29,7 +18,7 @@
   display: grid;
   gap: $space-5;
   width: 100%;
-  margin: $space-5 0;
+  margin: 0;
   padding: $space-5;
   overflow: hidden;
   border: 1px solid var(--border);
@@ -184,6 +173,16 @@
   padding-inline: 0;
 }
 
+.trehub-flight-list__sheet-actions {
+  display: flex;
+  gap: $space-2;
+
+  > .ui-button {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+}
+
 .trehub-flight-list__mobile-clearance {
   display: none;
 }
@@ -206,29 +205,10 @@
     );
   }
 
-  .trehub-flight-list__mobile-actions:not(.has-search-action) .trem-fab__inner {
-    width: fit-content;
-    margin-left: auto;
-  }
-
-  .trehub-flight-list__mobile-actions:not(.has-search-action) .trem-fab__btn.ui-button {
-    min-width: 8rem;
-    padding-inline: $space-4;
-  }
 }
 
 @media (max-width: 560px) {
-  .trehub-flight-list {
-    padding-inline: $space-3;
-  }
-
-  .trehub-flight-list__breadcrumb {
-    margin-inline: -$space-3;
-    padding-inline: $space-3;
-  }
-
   .trehub-flight-list__search-stage {
-    margin-block: $space-3;
     padding: $space-4;
     border-radius: $radius-md;
   }

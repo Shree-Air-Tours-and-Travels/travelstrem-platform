@@ -229,7 +229,7 @@ export default class FlightService {
         if (revalidation.status === REVALIDATION_STATUS.PRICE_CHANGED && expectedTotal !== revalidation.currentPrice.total) {
             throw domainError(409, "PRICE_CHANGED", "The fare has changed. Review the updated price and continue again to accept it.", { currentPrice: publicFlightPrice(revalidation.currentPrice) });
         }
-        const existing = await ContactLead.findOne({ claimedBy: userId, journeyType: "flight", "customizationSnapshot.searchId": searchId, "customizationSnapshot.offerId": offerId, "customizationSnapshot.fareId": fareId, status: { $nin: ["cancelled", "closed"] } });
+        const existing = await ContactLead.findOne({ claimedBy: userId, journeyType: "flight", "customizationSnapshot.searchId": searchId, "customizationSnapshot.offerId": offerId, "customizationSnapshot.fareId": fareId, status: { $nin: ["rejected", "cancelled", "closed"] } });
         if (existing && !startNew) return { existingEnquiry: true, enquiryId: String(existing._id), enquiryRef: existing.enquiryRef, targetPath: `/?tab=bookings&enquiry=${encodeURIComponent(existing.enquiryRef)}` };
         const customer = await User.findById(userId).select("name email phone phoneNumber mobile").lean();
         const firstSegment = offer.segments[0];
@@ -284,7 +284,7 @@ export default class FlightService {
             fields: {
                 name: customer?.name || actor?.name || "Traveller",
                 email: customer?.email || actor?.email || "",
-                phone: customer?.phone || customer?.phoneNumber || customer?.mobile || "",
+                phone: actor?.enquiryPhone || customer?.phone || customer?.phoneNumber || customer?.mobile || "",
                 preferredContact: "email",
                 adultCount: String(counts.ADULT || 0),
                 childCount: String(counts.CHILD || 0),

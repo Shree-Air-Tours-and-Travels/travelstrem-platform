@@ -2,17 +2,14 @@ import { buildUserDashboardSnapshots } from "./userDashboardSnapshots.js";
 import ContactLeadRepository from "../forms/repositories/ContactLeadRepository.js";
 import Favorite from "../tours/models/Favorite.js";
 import BookingQuote from "../bookings/models/BookingQuote.js";
+import Booking from "../bookings/models/Booking.js";
+import FlightBooking from "../flights/models/FlightBooking.js";
 import SupportTicket from "../support/models/SupportTicket.js";
 import { enquiryView } from "../forms/mappers/enquiryView.js";
 
 // Builds the user-specific payload injected into the app-shell dashboard
 // page (metrics + recent bookings & enquiries). ContactLeads remain the
 // customer-owned source records; accepted enquiries link to Booking records.
-//
-// NOTE: upcomingTrips intentionally stays EMPTY. A trip only becomes
-// "upcoming" after the traveller accepts a quote AND completes payment —
-// that journey is not built yet, so the UI must keep showing the no-data
-// state until it ships.
 
 const AWAITING_STATUSES = [
     "new",
@@ -22,6 +19,42 @@ const AWAITING_STATUSES = [
     "in_review",
 ];
 const RECENT_LIMIT = 5;
+
+const loadUpcomingTrips = async (userId) => {
+    const query = { userId, paymentStatus: "PAID", status: { $in: ["CONFIRMED", "TICKETED"] } };
+    const [bookings, flights] = await Promise.all([
+        Booking.find(query).select("bookingRef sourceEnquiryId tourTitle journeyType enquirySnapshot customizationSnapshot").lean(),
+        FlightBooking.find(query).select("bookingRef sourceEnquiryId segmentSnapshot").lean(),
+    ]);
+    const now = Date.now();
+    const today = new Date(now).toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+    return [...bookings, ...flights].flatMap((booking) => {
+        const first = booking.segmentSnapshot?.[0];
+        const fields = booking.enquirySnapshot?.fields || {};
+        const departure = first?.departureDateTime ||
+            booking.customizationSnapshot?.searchInput?.checkIn ||
+            fields.preferredTravelDate || fields.preferredStartDate;
+        const date = departure ? new Date(departure) : null;
+        if (!date || !Number.isFinite(date.getTime())) return [];
+        const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(String(departure));
+        if (dateOnly ? departure < today : date.getTime() <= now) return [];
+        const destination = booking.segmentSnapshot?.at(-1)?.destination;
+        const route = first && destination
+            ? `${first.origin.city || first.origin.iataCode} → ${destination.city || destination.iataCode}`
+            : "";
+        return [{
+            id: String(booking._id),
+            title: booking.tourTitle || route || "Upcoming journey",
+            enquiryRef: booking.enquirySnapshot?.enquiryRef || booking.bookingRef,
+            departureAt: date.toISOString(),
+            departureLabel: date.toLocaleString("en-IN", {
+                dateStyle: "medium", ...(!dateOnly ? { timeStyle: "short" } : {}),
+                timeZone: first?.origin?.timezone || "Asia/Kolkata",
+            }),
+            target: `/?tab=bookings&enquiry=${encodeURIComponent(booking.sourceEnquiryId || booking.bookingRef)}`,
+        }];
+    }).sort((left, right) => Date.parse(left.departureAt) - Date.parse(right.departureAt));
+};
 
 const ACTIVITY_COPY = Object.freeze({
     new: {
@@ -152,7 +185,7 @@ export const buildDashboardSnapshot = async (userId) => {
     if (!userId) return emptySnapshot();
     try {
         const query = await identityQuery(userId);
-        const [totalEnquiries, totalFavorites, awaitingResponse, recentLeads, totalSupportTickets] = await Promise.all([
+        const [totalEnquiries, totalFavorites, awaitingResponse, recentLeads, totalSupportTickets, upcomingTrips] = await Promise.all([
             (async () => ContactLeadRepository.countDocuments(query))(),
             Favorite.countDocuments({ userId: String(userId) }).catch((error) => {
                 console.error("[Dashboard] favorites count failed:", error?.message || error);
@@ -172,6 +205,7 @@ export const buildDashboardSnapshot = async (userId) => {
                 console.error("[Dashboard] support count failed:", error?.message || error);
                 return 0;
             }),
+            loadUpcomingTrips(userId),
         ]);
 
         const leadIds = recentLeads.map((lead) => lead?._id).filter(Boolean);
@@ -211,8 +245,7 @@ export const buildDashboardSnapshot = async (userId) => {
         const metrics = {
             totalEnquiries,
             totalFavorites,
-            // Stays 0 until the quote-acceptance + payment journey exists.
-            upcomingTrips: 0,
+            upcomingTrips: upcomingTrips.length,
             awaitingResponse,
             totalSupportTickets,
         };
@@ -222,7 +255,7 @@ export const buildDashboardSnapshot = async (userId) => {
             journeyStage: resolveJourneyStage(metrics),
             userSnapshots: await buildUserDashboardSnapshots(userId, { totalEnquiries, totalFavorites, recentLeads }),
             recentActivity,
-            upcomingTrips: [],
+            upcomingTrips: upcomingTrips.slice(0, RECENT_LIMIT),
         };
     } catch (err) {
         console.error("[Dashboard] snapshot build failed:", err?.message || err);

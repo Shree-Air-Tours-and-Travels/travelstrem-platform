@@ -4178,6 +4178,8 @@
 }
 
 .dov__advantage-heading h2 em {
+  padding-inline-end: 0.12em;
+  margin-inline-end: -0.12em;
   background: var(--dov-duotone);
   background-clip: text;
   color: transparent;

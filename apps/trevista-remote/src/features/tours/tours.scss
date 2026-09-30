@@ -2,14 +2,13 @@
 
 :root {
   --td-header-offset: 72px;
-  --tours-crumb-height: 56px;
+
 }
 
 .tours-page {
   --tours-page-gutter: clamp(1rem, 2.5vw, 2rem);
   width: 100%;
   min-height: 100vh;
-  padding: 0 var(--tours-page-gutter) var(--tours-page-gutter);
   background:
     linear-gradient(180deg, var(--primary-softer), var(--color-transparent) 320px), var(--page-bg);
   color: var(--text);
@@ -17,32 +16,6 @@
   &--home {
     min-height: auto;
     padding-top: 0;
-  }
-
-  &__crumbs {
-    position: sticky;
-    top: var(--td-header-offset);
-    z-index: 50;
-    display: flex;
-    align-items: center;
-    width: calc(100% + (2 * var(--tours-page-gutter)));
-    height: var(--tours-crumb-height);
-    margin-inline: calc(-1 * var(--tours-page-gutter));
-    padding-inline: var(--tours-page-gutter);
-    border-bottom: 1px solid var(--border-subtle, var(--border));
-    background: color-mix(in srgb, var(--surface) 94%, transparent);
-    box-shadow: 0 8px 24px color-mix(in srgb, var(--text) 8%, transparent);
-    backdrop-filter: blur(18px);
-
-    .trem-breadcrumbs {
-      ol {
-        flex-wrap: nowrap;
-      }
-
-      li {
-        font-size: 0.85rem;
-      }
-    }
   }
 
   &__hero-preloader {
@@ -68,12 +41,10 @@
       position: absolute;
       inset: 0;
       transform: translateX(-100%);
-      background: linear-gradient(
-        90deg,
-        transparent,
-        color-mix(in srgb, var(--surface) 70%, transparent),
-        transparent
-      );
+      background: linear-gradient(90deg,
+          transparent,
+          color-mix(in srgb, var(--surface) 70%, transparent),
+          transparent);
       animation: tours-home-skeleton 1.35s infinite;
     }
   }
@@ -98,11 +69,11 @@
   }
 
   &__inner {
-    width: min(#{$full-width}, 100%);
-    margin: 1.25rem auto 0;
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: $space-5;
+    width: min(calc(100% - (2 * var(--tours-page-gutter))), #{$full-width});
+    margin-inline: auto;
   }
 
   &__header {
@@ -112,7 +83,6 @@
     gap: 1rem;
     padding: 1.25rem;
     border: 1px solid var(--border);
-    border-radius: 8px;
     background: var(--surface-glass-strong);
     box-shadow: var(--shadow-sm);
     backdrop-filter: blur(16px);
@@ -148,7 +118,6 @@
     overflow: hidden;
     min-height: 550px;
     padding: clamp(2.7rem, 5.4vw, 4rem) clamp(1.25rem, 4vw, 3rem) clamp(4.5rem, 7.2vw, 7rem);
-    border-radius: 20px;
     color: var(--color-on-primary);
     background:
       linear-gradient(90deg, rgba(7, 42, 39, 0.82), rgba(7, 42, 39, 0.28)),
@@ -219,11 +188,9 @@
 
   &__hero-title-product,
   &__hero-title-brand {
-    background-image: linear-gradient(
-      100deg,
+    background-image: linear-gradient(100deg,
       #{$dark-secondary},
-      color-mix(in srgb, #{$dark-secondary} 58%, #ffffff)
-    );
+      color-mix(in srgb, #{$dark-secondary} 58%, #ffffff));
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -413,6 +380,7 @@
   }
 
   &__quick-filters-wrapper {
+    width: 100%;
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
@@ -458,6 +426,7 @@
   &__body {
     display: block;
     min-width: 0;
+    width: 100%;
   }
 
   &__sidebar {
@@ -483,6 +452,7 @@
     border-radius: 12px;
     background: var(--surface);
     box-shadow: var(--shadow-sm);
+    width: 100%;
   }
 
   &__filter-toggle.ui-button {
@@ -502,7 +472,7 @@
     border-radius: 10px;
     background: var(--surface);
 
-    > svg {
+    >svg {
       flex: 0 0 18px;
       color: var(--muted);
     }
@@ -580,7 +550,7 @@
       box-shadow: 0 0 0 3px var(--primary-soft);
     }
 
-    > svg {
+    >svg {
       flex: 0 0 20px;
       width: 20px;
       height: 20px;
@@ -800,12 +770,10 @@
       position: absolute;
       inset: 0;
       transform: translateX(-100%);
-      background: linear-gradient(
-        90deg,
-        var(--color-transparent),
-        var(--surface-shimmer),
-        var(--color-transparent)
-      );
+      background: linear-gradient(90deg,
+          var(--color-transparent),
+          var(--surface-shimmer),
+          var(--color-transparent));
       animation: tours-clean-shimmer 1.2s infinite linear;
     }
   }
@@ -829,6 +797,22 @@
       width: 42%;
     }
   }
+}
+
+// The home hero is the only full-bleed product section. All following home
+// sections own the same centered content width as listing and detail pages.
+.tours-page--home .tours-page__inner {
+  width: 100%;
+  max-width: none;
+}
+
+.tours-page--home .tours-page__inner > :not(.tours-page__hero) {
+  width: min(calc(100% - (2 * var(--tours-page-gutter))), #{$full-width});
+  margin-inline: auto;
+}
+
+.tours-page--home .tours-page__hero {
+  width: 100%;
 }
 
 @media (max-width: 1380px) {
@@ -900,8 +884,7 @@
       height: auto;
     }
 
-    &__card {
-    }
+    &__card {}
 
     &__loading-card:nth-child(n + 2) {
       display: none;
@@ -991,11 +974,8 @@
 
   .tours-page {
     --tours-page-gutter: 0.75rem;
-    --tours-crumb-height: 48px;
-    padding-bottom: calc(
-      var(--trem-floating-action-clearance, 64px) + var(--dash-mobile-action-panel-space, 0px) +
-        env(safe-area-inset-bottom, 0px) + 0.75rem
-    );
+
+    padding-bottom: calc(var(--trem-floating-action-clearance, 64px) + var(--dash-mobile-action-panel-space, 0px) + env(safe-area-inset-bottom, 0px) + 0.75rem);
 
     &__inner {
       margin-top: 0.65rem;
@@ -1022,18 +1002,6 @@
 
     &__inline-filters {
       display: none;
-    }
-
-    &__crumbs {
-      height: 44px;
-      min-height: 44px;
-      padding-block: 0;
-      box-shadow: 0 4px 16px color-mix(in srgb, var(--text) 7%, transparent);
-
-      .trem-breadcrumbs {
-        max-width: 100%;
-        overflow: hidden;
-      }
     }
 
     &__listing-controls {
@@ -1117,8 +1085,7 @@
       grid-template-columns: 1fr;
     }
 
-    &__card {
-    }
+    &__card {}
 
     &__sort-sheet {
       display: flex;

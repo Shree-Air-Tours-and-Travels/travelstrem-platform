@@ -39,10 +39,18 @@ export const requireEnquiryMobile = async (req, res, next) => {
     )) return next();
     try {
         const user = await User.findById(req.user.sub).select("mobile phone").lean();
-        if (!hasNumber(user)) return res.status(422).json({
+        if (!hasNumber(user) && !hasNumber({ phone: req.body?.fields?.phone || req.body?.phone })) return res.status(422).json({
             status: "error", code: "MOBILE_REQUIRED",
-            message: "Please add your mobile number to your profile before creating an enquiry.",
+            message: "Enter a valid mobile number in the enquiry to continue.",
         });
+        const enteredPhone = req.body?.fields?.phone || req.body?.phone;
+        if (enteredPhone) {
+            try { req.user.enquiryPhone = normalizeMobileNumber(enteredPhone); }
+            catch { return res.status(422).json({ status: "error", code: "MOBILE_REQUIRED", message: "Enter a valid mobile number including its country code." }); }
+            if (req.body.savePhoneToProfile === true) {
+                await User.updateOne({ _id: req.user.sub }, { $set: { phone: req.user.enquiryPhone } });
+            }
+        }
         return next();
     } catch (error) { next(error); }
 };

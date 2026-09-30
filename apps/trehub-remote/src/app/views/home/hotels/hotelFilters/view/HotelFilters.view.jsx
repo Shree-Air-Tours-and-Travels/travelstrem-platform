@@ -8,7 +8,7 @@ import {
   FloatingActionBar,
   GlobalSearchCard,
   HotelCard,
-  Icon,
+  Note,
   NoDataFound,
   Pagination,
   Spinner,
@@ -39,6 +39,7 @@ export default function HotelFiltersView({
   const widgets = contract?.structure?.widgets || [];
   const breadcrumbs = widgets.find((widget) => widget.type === "HotelBreadcrumbs");
   const searchProps = widgets.find((widget) => widget.type === "HotelSearch")?.props || {};
+  const filterOverlay = widgets.find((widget) => widget.type === "HotelFilters")?.props?.overlayConfig || {};
   const resultProps = widgets.find((widget) => widget.type === "HotelResults") || {};
   const searchValuesKey = new URLSearchParams(
     Object.entries(values).map(([key, value]) => [
@@ -66,23 +67,26 @@ export default function HotelFiltersView({
       fieldErrors={error?.details || {}}
     />
   );
-  const renderFilters = () => (
+  const renderFilters = (inSheet = false) => (
     <>
       <ConfigurableForm
-        config={resolveForm(options.filterForm, labels)}
+        config={resolveForm(inSheet ? {
+          ...options.filterForm,
+          sections: options.filterForm?.sections?.map((section) => ({ ...section, titleRef: undefined })),
+        } : options.filterForm, labels)}
         values={filters}
         onChange={onFilterChange}
       />
-      <div className="trehub-hotels__actions">
+      {!inSheet ? <div className="trehub-hotels__actions">
         <Button text={labels.apply} onClick={() => onApplyFilters(filters)} disabled={loading} />
         <Button text={labels.reset} variant="outline" onClick={onResetFilters} disabled={loading} />
-      </div>
+      </div> : null}
     </>
   );
 
   return (
     <div className="trehub-page">
-      <div className="trehub-page__breadcrumbs">
+      <main className="trehub-hotels" aria-busy={loading}>
         {contract ? (
           <Breadcrumbs
             items={(breadcrumbs?.searchItems || []).map((item) => ({
@@ -93,8 +97,10 @@ export default function HotelFiltersView({
         ) : loading ? (
           <span className="trehub-loading__breadcrumb-placeholder" aria-hidden="true" />
         ) : null}
-      </div>
-      <main className="trehub-hotels" aria-busy={loading}>
+        <Note variant="warning" dismissible className="trehub-hotels__notice">
+          {labels.mock}
+        </Note>
+
         {loading && !data ? null : (
           <header className="trehub-hotels__header">
             <div className="trehub-hotels__heading">
@@ -105,12 +111,6 @@ export default function HotelFiltersView({
           </header>
         )}
         {loading && !data ? <TrehubPreloader variant="hotel-list" label={labels.loading} /> : null}
-        {data?.demoInventory || data?.provider === "mock" ? (
-          <p role="note" className="trehub-hotels__notice">
-            <Icon name="info" size={18} aria-hidden="true" />
-            {labels.mock}
-          </p>
-        ) : null}
         {contract && (!loading || data) ? (
           <section className="trehub-hotels__search">{renderSearch("page")}</section>
         ) : null}
@@ -172,6 +172,7 @@ export default function HotelFiltersView({
         {contract && !mobilePanel ? (
           <FloatingActionBar
             hideOnDesktop
+            variant="inline"
             actions={[
               {
                 id: "search-hotels",
@@ -196,14 +197,20 @@ export default function HotelFiltersView({
         <BottomSheet
           open={Boolean(mobilePanel)}
           onClose={() => onOpenMobilePanel(null)}
-          title={mobilePanel === "filters" ? labels.filters : labels.editSearch}
-          closeLabel={labels.close}
+          title={mobilePanel === "filters"
+            ? labels[filterOverlay.titleRef] || labels.filters
+            : labels[searchProps.overlayConfig?.titleRef] || labels.editSearch}
+          closeLabel={labels[mobilePanel === "filters" ? filterOverlay.closeLabelRef : searchProps.overlayConfig?.closeLabelRef] || labels.close}
           className="trehub-hotels__sheet"
+          actions={mobilePanel === "filters" ? <div className="trehub-hotels__actions">
+            <Button text={labels[filterOverlay.applyLabelRef] || labels.apply} onClick={() => { onApplyFilters(filters); onOpenMobilePanel(null); }} disabled={loading} />
+            <Button text={labels[filterOverlay.resetLabelRef] || labels.reset} variant="outline" onClick={onResetFilters} disabled={loading} />
+          </div> : null}
         >
           {mobilePanel === "search"
             ? renderSearch("sheet")
             : mobilePanel === "filters"
-              ? renderFilters()
+              ? renderFilters(true)
               : null}
         </BottomSheet>
       </main>

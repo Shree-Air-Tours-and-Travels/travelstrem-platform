@@ -42,19 +42,11 @@ function TripDetailsWithBreadcrumb({ session, labels = {}, tripRef: providedTrip
   const params = useParams();
   const location = useLocation();
   const tripRef = providedTripRef || params.tripRef || "";
-  const breadcrumbTrail = Array.isArray(location.state?.trail) && location.state.trail.length
-    ? location.state.trail
-    : [
-        { label: labels.homeBreadcrumb || "Trevio", path: "/trevio" },
-        { label: labels.tripDirectoryHeading || "Trips", path: "/trips" },
-      ];
   return (
     <TourDetailsPage
       userSession={session}
       appKey={PRODUCT_TYPE.TREVIO}
       productType="trip"
-      breadcrumbTrail={breadcrumbTrail}
-      breadcrumbDetailLabel={`Trip-${tripRef || ""}`}
       routeRef={tripRef}
     />
   );

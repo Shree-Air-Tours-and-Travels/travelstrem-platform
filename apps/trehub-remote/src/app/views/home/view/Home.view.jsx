@@ -3,7 +3,6 @@ import {
   BenefitCard,
   ClientShowcase,
   ErrorState,
-  Breadcrumbs,
   GlobalSearchCard,
   Paragraph,
   PopularLocations,
@@ -92,13 +91,6 @@ export default function HomeView({ loading, error, pageModel, onSearch }) {
 
   return (
     <main className="trehub-home">
-      <div className="trehub-page__breadcrumbs">
-        <Breadcrumbs
-          items={(widgets.find((widget) => widget.name === "breadcrumbs")?.props?.items || []).map(
-            (item) => ({ label: labels[item.labelRef], path: item.path }),
-          )}
-        />
-      </div>
       <div className="trehub-home__shell">
         {widgets.map((widget) => {
           const props = widget.props || {};

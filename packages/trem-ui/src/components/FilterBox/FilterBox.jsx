@@ -58,15 +58,18 @@ export default function FilterBox({ fields = [], value = {}, onApply, title, tri
         </div>
       </fieldset>)}
     </div>
-    <footer>
+    {!mobile ? <footer>
       <Button type="button" text={resetLabel} variant="outline" disabled={disabled} onClick={() => setDraft({})} />
       <Button type="submit" text={applyLabel} disabled={disabled} />
-    </footer>
+    </footer> : null}
   </form>;
   return <div className="trem-filter-box-anchor" ref={trigger}>
     <Button type="button" variant="outline" text={triggerLabel} iconLeft="filter" aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? id : undefined} disabled={disabled}
       onClick={() => { setDraft(value); setOpen((current) => !current); }} />
-    {mobile ? <BottomSheet open={open} onClose={close} title={title} closeLabel={closeLabel} className="trem-filter-box-sheet">{content}</BottomSheet>
+    {mobile ? <BottomSheet open={open} onClose={close} title={title} closeLabel={closeLabel} className="trem-filter-box-sheet" actions={<div className="trem-filter-box__sheet-actions">
+      <Button type="submit" form={id} text={applyLabel} disabled={disabled} />
+      <Button type="button" text={resetLabel} variant="outline" disabled={disabled} onClick={() => setDraft({})} />
+    </div>}>{content}</BottomSheet>
       : open ? <div className="trem-filter-box-dropdown" role="dialog" aria-label={title}>{content}</div> : null}
   </div>;
 }

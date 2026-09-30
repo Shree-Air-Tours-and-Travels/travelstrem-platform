@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 
 import PropTypes from "prop-types";
 import {
   Button,
+  InfoTooltip,
   CardWithSubEntity,
   ContactForm,
   ErrorState,
@@ -150,6 +151,16 @@ const ContactAgentModal = ({
   onCustomizeJourney,
 }) => {
   const enquiryFormId = useId();
+  const [guestPreferences] = useState(() => {
+    if (user?.id || user?._id) return {};
+    try {
+      return JSON.parse(localStorage.getItem("trem-enquiry-preferences") || "{}");
+    } catch {
+      return {};
+    }
+  });
+  const [savePhoneToProfile, setSavePhoneToProfile] = useState(false);
+  const [savePreferences, setSavePreferences] = useState(false);
   const existingEnquiryChoice = useExistingEnquiryChoice();
   const [formData, setFormData] = useState(null);
   const [formLoadError, setFormLoadError] = useState("");
@@ -273,7 +284,7 @@ const ContactAgentModal = ({
                       : "";
                   })()
                 : "";
-      obj[f.name] = profile[f.name] || selectedValue || f.value || "";
+      obj[f.name] = profile[f.name] || selectedValue || f.value || guestPreferences[f.name] || "";
     });
     return obj;
   }, [
@@ -405,8 +416,10 @@ const ContactAgentModal = ({
     [detailFieldNames, effectiveFieldsMeta],
   );
   const confirmationFields = useMemo(
-    () => effectiveFieldsMeta.filter((field) =>
-      ["name", "email", "phone", "preferredContact"].includes(field.name)),
+    () =>
+      effectiveFieldsMeta.filter((field) =>
+        ["name", "email", "phone", "preferredContact"].includes(field.name),
+      ),
     [effectiveFieldsMeta],
   );
   const mapFields = (fields) => Object.fromEntries(fields.map((field) => [field.name, field]));
@@ -649,8 +662,10 @@ const ContactAgentModal = ({
     setMsg(null);
     setActiveStage(stage);
     window.requestAnimationFrame(() => {
-      if (typeof bodyRef.current?.scrollTo === "function") {
-        bodyRef.current.scrollTo({ top: 0, behavior: "smooth" });
+      const scrollContainer =
+        bodyRef.current?.closest(".trem-bottom-sheet__body") || bodyRef.current;
+      if (typeof scrollContainer?.scrollTo === "function") {
+        scrollContainer.scrollTo({ top: 0, behavior: "smooth" });
       }
     });
   };
@@ -677,6 +692,32 @@ const ContactAgentModal = ({
     goToStage(hasPricingJourney ? "pricing" : "review");
   };
 
+  const saveGuestPreferences = () => {
+    if (!savePreferences || user?.id || user?._id) return;
+    const keys = [
+      "name",
+      "email",
+      "phone",
+      "preferredContact",
+      "adultCount",
+      "childCount",
+      "infantCount",
+      "flightPreference",
+    ];
+    try {
+      localStorage.setItem(
+        "trem-enquiry-preferences",
+        JSON.stringify(
+          Object.fromEntries(
+            keys.filter((key) => form[key] != null).map((key) => [key, form[key]]),
+          ),
+        ),
+      );
+    } catch {
+      /* Enquiry creation must not fail when browser storage is unavailable. */
+    }
+  };
+
   const handleSubmit = async (ev, startNew = false) => {
     ev?.preventDefault?.();
 
@@ -694,6 +735,8 @@ const ContactAgentModal = ({
           method: "POST",
           body: {
             startNew,
+            savePhoneToProfile,
+            savePreferences,
             tourId: typeof tour?._id === "string" ? tour._id : tourId,
             tourTitle: tour?.title || "Trevio trip",
             product,
@@ -716,6 +759,7 @@ const ContactAgentModal = ({
           setSubmitting(false);
           return;
         }
+        saveGuestPreferences();
         notifyDataChanged("enquiries");
         if (response.notify) showRealtimeToast(response.notify);
         const enquiryRef =
@@ -727,7 +771,11 @@ const ContactAgentModal = ({
         destination.searchParams.set("enquiry", enquiryRef);
         window.location.assign(destination.toString());
       } catch (error) {
-        setMsg({ type: "error", text: error?.message || "The enquiry could not be created.", error });
+        setMsg({
+          type: "error",
+          text: error?.message || "The enquiry could not be created.",
+          error,
+        });
         setSubmitting(false);
       }
       return;
@@ -755,6 +803,8 @@ const ContactAgentModal = ({
 
     const payload = {
       startNew,
+      savePhoneToProfile,
+      savePreferences,
       tourId: typeof tour?._id === "string" ? tour._id : tourId,
       tourTitle: tour?.title ?? "title unknown",
       product,
@@ -785,6 +835,7 @@ const ContactAgentModal = ({
         notifyDataChanged("enquiries");
         // Backend-authored confirmation toast (title/subtitle/status come
         // from the API; the dedupeKey collapses the socket echo on other tabs).
+        saveGuestPreferences();
         if (response.notify) showRealtimeToast(response.notify);
         setMsg({ type: ui?.messageType || "success", text: message });
         onClose();
@@ -806,13 +857,114 @@ const ContactAgentModal = ({
 
   return (
     <ModalShell
+      actions={
+        formData && !formLoadError ? (
+          <footer className="ct-modal-card__footer">
+            <Button
+              type="button"
+              text={
+                activeStage === "confirm"
+                  ? "Cancel"
+                  : activeStage === "details"
+                    ? journeyLabels.cancel
+                    : activeStage === "changes"
+                      ? journeyLabels.backToDetails
+                      : activeStage === "pricing"
+                        ? "Back to changes"
+                        : hasPricingJourney
+                          ? journeyLabels.backToPricing
+                          : hasPreferenceJourney
+                            ? "Back to preferences"
+                            : journeyLabels.backToDetails
+              }
+              size="medium"
+              variant="outline"
+              color="primary"
+              onClick={
+                activeStage === "confirm"
+                  ? onClose
+                  : activeStage === "details"
+                    ? onClose
+                    : () =>
+                        goToStage(
+                          activeStage === "pricing"
+                            ? "changes"
+                            : activeStage === "changes"
+                              ? "details"
+                              : hasPricingJourney
+                                ? "pricing"
+                                : hasPreferenceJourney
+                                  ? "changes"
+                                  : "details",
+                        )
+              }
+              disabled={submitting}
+            />
+            {activeStage === "confirm" ? (
+              <Button
+                type="button"
+                text={submitting ? "Creating enquiry…" : "Confirm and continue"}
+                size="medium"
+                variant="solid"
+                color="primary"
+                onClick={handleSubmit}
+                disabled={submitting}
+              />
+            ) : activeStage === "review" ? (
+              <Button
+                type="button"
+                text={submitting ? journeyLabels.sending : submitText}
+                size="medium"
+                variant="solid"
+                color="primary"
+                onClick={handleSubmit}
+                disabled={submitting}
+              />
+            ) : (
+              <Button
+                type="button"
+                text={
+                  activeStage === "changes" &&
+                  form.customizationPreference === "customize" &&
+                  onCustomizeJourney
+                    ? journeyLabels.customJourneyRedirectAction
+                    : activeStage === "pricing"
+                      ? journeyLabels.continueToReview
+                      : activeStage === "changes"
+                        ? hasPricingJourney
+                          ? "Continue to package price"
+                          : journeyLabels.continueToReview
+                        : detailsContinueLabel
+                }
+                size="medium"
+                variant="solid"
+                color="primary"
+                onClick={
+                  activeStage === "changes" &&
+                  form.customizationPreference === "customize" &&
+                  onCustomizeJourney
+                    ? continueToCustomJourney
+                    : () =>
+                        activeStage === "pricing"
+                          ? goToStage("review")
+                          : activeStage === "changes"
+                            ? handleChangesContinue()
+                            : handleDetailsContinue()
+                }
+                disabled={submitting || (activeStage === "pricing" && quotePreview.loading)}
+              />
+            )}
+          </footer>
+        ) : null
+      }
       open={open}
-      label={formData?.title || "Contact Agent"}
+      label={formData?.title}
       dialogClassName={`ct-modal-card${activeStage === "confirm" ? " ct-modal-card--confirmation" : ""}`}
       closeOnOutsideClick={closeOnOutsideClick}
       onClose={onClose}
     >
       {existingEnquiryChoice.modal}
+
       <Button
         variant="text"
         isCircular
@@ -828,11 +980,43 @@ const ContactAgentModal = ({
             <img className="ct-modal-card__brand" src={formData.brandLogo} alt="" />
           ) : null}
           <div className="ct-modal-card__header">
-            <h3 className="ct-modal-card__title">{formData?.title || "Contact Agent"}</h3>
+            <h3 className="ct-modal-card__title">{formData?.title}</h3>
             {formData?.description && <p className="ct-modal-card__desc">{formData.description}</p>}
           </div>
         </div>
       </header>
+      <div className="ct-modal-save-preferences">
+        {(user?.id || user?._id) && (
+          <>
+            <label>
+              <input
+                type="checkbox"
+                checked={savePhoneToProfile}
+                onChange={(event) => setSavePhoneToProfile(event.target.checked)}
+              />{" "}
+              Add phone number to profile
+            </label>
+            <InfoTooltip
+              inModal
+              label="About saving your phone"
+              text="Save this phone number to your profile for faster future enquiries. This does not verify the number."
+            />
+          </>
+        )}
+        <label>
+          <input
+            type="checkbox"
+            checked={savePreferences}
+            onChange={(event) => setSavePreferences(event.target.checked)}
+          />{" "}
+          Save preferences for future enquiries
+        </label>
+        <InfoTooltip
+          inModal
+          label="About saved preferences"
+          text="Prefill contact details, traveller counts and flight preference next time. Guests save on this browser; signed-in users save to their profile. Dates and product selections are not reused."
+        />
+      </div>
 
       <div className="ct-modal-card__body" ref={bodyRef}>
         {!formData && !formLoadError ? (
@@ -938,7 +1122,11 @@ const ContactAgentModal = ({
                   <p>{journeyLabels.reviewDescription}</p>
                 </header>
                 <CardWithSubEntity
-                  title={product === PRODUCT_TYPE.TREVIO ? "Traveller and trip enquiry" : "Traveller and tour request"}
+                  title={
+                    product === PRODUCT_TYPE.TREVIO
+                      ? "Traveller and trip enquiry"
+                      : "Traveller and tour request"
+                  }
                   subtitle={
                     product === PRODUCT_TYPE.TREVIO
                       ? "Nothing is sent until you select Enquire now below."
@@ -963,15 +1151,19 @@ const ContactAgentModal = ({
                           .join(" – ") ||
                         "—",
                     },
-                    ...(product === PRODUCT_TYPE.TREVISTA ? [{
-                      label: "Flights",
-                      value:
-                        form.flightPreference === "with_flights"
-                          ? selectedPackageConfig?.includesFlights
-                            ? "Included in package"
-                            : "Request flights from the agent"
-                          : "No flights requested",
-                    }] : []),
+                    ...(product === PRODUCT_TYPE.TREVISTA
+                      ? [
+                          {
+                            label: "Flights",
+                            value:
+                              form.flightPreference === "with_flights"
+                                ? selectedPackageConfig?.includesFlights
+                                  ? "Included in package"
+                                  : "Request flights from the agent"
+                                : "No flights requested",
+                          },
+                        ]
+                      : []),
                     ...(product === PRODUCT_TYPE.TREVIO
                       ? [
                           { label: "Room", value: form.roomType || "No preference" },
@@ -1152,105 +1344,6 @@ const ContactAgentModal = ({
           </div>
         )}
       </div>
-
-      {formData && !formLoadError ? (
-        <footer className="ct-modal-card__footer">
-          <Button
-            type="button"
-            text={
-              activeStage === "confirm"
-                ? "Cancel"
-                : activeStage === "details"
-                ? journeyLabels.cancel
-                : activeStage === "changes"
-                  ? journeyLabels.backToDetails
-                  : activeStage === "pricing"
-                    ? "Back to changes"
-                    : hasPricingJourney
-                      ? journeyLabels.backToPricing
-                      : hasPreferenceJourney
-                        ? "Back to preferences"
-                        : journeyLabels.backToDetails
-            }
-            size="medium"
-            variant="outline"
-            color="primary"
-            onClick={
-              activeStage === "confirm"
-                ? onClose
-                : activeStage === "details"
-                ? onClose
-                : () =>
-                    goToStage(
-                      activeStage === "pricing"
-                        ? "changes"
-                        : activeStage === "changes"
-                          ? "details"
-                          : hasPricingJourney
-                            ? "pricing"
-                            : hasPreferenceJourney
-                              ? "changes"
-                              : "details",
-                    )
-            }
-            disabled={submitting}
-          />
-          {activeStage === "confirm" ? (
-            <Button
-              type="button"
-              text={submitting ? "Creating enquiry…" : "Confirm and continue"}
-              size="medium"
-              variant="solid"
-              color="primary"
-              onClick={handleSubmit}
-              disabled={submitting}
-            />
-          ) : activeStage === "review" ? (
-            <Button
-              type="button"
-              text={submitting ? journeyLabels.sending : submitText}
-              size="medium"
-              variant="solid"
-              color="primary"
-              onClick={handleSubmit}
-              disabled={submitting}
-            />
-          ) : (
-            <Button
-              type="button"
-              text={
-                activeStage === "changes" &&
-                form.customizationPreference === "customize" &&
-                onCustomizeJourney
-                  ? journeyLabels.customJourneyRedirectAction
-                  : activeStage === "pricing"
-                    ? journeyLabels.continueToReview
-                    : activeStage === "changes"
-                      ? hasPricingJourney
-                        ? "Continue to package price"
-                        : journeyLabels.continueToReview
-                      : detailsContinueLabel
-              }
-              size="medium"
-              variant="solid"
-              color="primary"
-              onClick={
-                activeStage === "changes" &&
-                form.customizationPreference === "customize" &&
-                onCustomizeJourney
-                  ? continueToCustomJourney
-                  : () =>
-                      activeStage === "pricing"
-                        ? goToStage("review")
-                        : activeStage === "changes"
-                          ? handleChangesContinue()
-                          : handleDetailsContinue()
-              }
-              disabled={submitting || (activeStage === "pricing" && quotePreview.loading)}
-            />
-          )}
-        </footer>
-      ) : null}
     </ModalShell>
   );
 };

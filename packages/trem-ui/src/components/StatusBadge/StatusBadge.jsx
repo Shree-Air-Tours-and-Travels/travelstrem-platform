@@ -78,7 +78,9 @@ export default function StatusBadge({
     <span
       className={`status-badge status-badge--${resolvedTone} status-badge--${size} status-badge--${appearance}${subtitle ? " status-badge--with-subtitle" : ""} ${className}`}
     >
-      {icon ? <Icon name={icon} size={size === "sm" ? 14 : 16} className="status-badge__icon" /> : null}
+      {icon ? (
+        <Icon name={icon} size={size === "sm" ? 14 : 16} className="status-badge__icon" />
+      ) : null}
       {!icon && showDot && <span className="status-badge__dot" aria-hidden="true" />}
       <span className="status-badge__label">{formatLabel(value)}</span>
       {subtitle && <span className="status-badge__subtitle">{subtitle}</span>}

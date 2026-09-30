@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button, InputField } from "@packages/trem-ui";
 import { fetchData } from "@packages/trem-utils";
 import useEnquiryBookings from "./useEnquiryBookings.js";
 import BookingEnquiryCenter from "./BookingEnquiryCenter.jsx";
 
 export default function UserJourney({ journeyType = "" }) {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { enquiries, bookings, view, loading, error, load, filters, applyFilters } = useEnquiryBookings(journeyType);
   const selectedId = searchParams.get("booking") || searchParams.get("enquiry") || "";
@@ -32,7 +33,7 @@ export default function UserJourney({ journeyType = "" }) {
 
   const selectEnquiry = (item) => {
     if (item.targetPath) {
-      window.location.assign(item.targetPath);
+      navigate(item.targetPath);
       return;
     }
     const next = new URLSearchParams(searchParams);

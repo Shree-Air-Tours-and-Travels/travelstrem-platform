@@ -229,7 +229,7 @@ export default function HotelCard({
         "trem-hotel-card",
         `trem-hotel-card--${variant}`,
         unavailable ? "trem-hotel-card--disabled" : "",
-        !shouldShowImage ? "trem-hotel-card--no-image" : "",
+        hideImage ? "trem-hotel-card--no-image" : "",
         !hasPriceContent ? "trem-hotel-card--no-price" : "",
         !hasFooterContent ? "trem-hotel-card--no-footer" : "",
         className,
@@ -239,14 +239,19 @@ export default function HotelCard({
       aria-disabled={unavailable || undefined}
     >
       <div className="trem-hotel-card__layout">
-        {shouldShowImage ? (
-          <div className="trem-hotel-card__media">
-            <img
+        {!hideImage ? (
+          <div className={`trem-hotel-card__media${shouldShowImage ? "" : " trem-hotel-card__media--placeholder"}`}>
+            {shouldShowImage ? <img
               src={image}
               alt={displayValue(safeHotel.imageAlt, title)}
               loading="lazy"
               onError={() => setImageFailed(true)}
-            />
+            /> : (
+              <div className="trem-hotel-card__image-placeholder">
+                <BrandLogo name="TravelsTREM" />
+                <span>Hotel photo unavailable</span>
+              </div>
+            )}
 
             {showFavorite && onFavorite ? (
               <Button
@@ -265,7 +270,7 @@ export default function HotelCard({
               />
             ) : null}
 
-            {hasValue(safeHotel.imageCountLabel) ? (
+            {shouldShowImage && hasValue(safeHotel.imageCountLabel) ? (
               <span className="trem-hotel-card__photo-count">
                 <Icon name="camera" size={17} aria-hidden="true" />
                 <span>{safeHotel.imageCountLabel}</span>

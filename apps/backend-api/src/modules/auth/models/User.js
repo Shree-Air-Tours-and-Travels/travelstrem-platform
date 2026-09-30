@@ -17,6 +17,7 @@ const userSchema = new mongoose.Schema(
         phone: { type: String, trim: true, default: "" },
         mobile: { type: String, trim: true, default: undefined, unique: true, sparse: true },
         emailVerified: { type: Boolean, default: false },
+        enquiryPreferences: { type: mongoose.Schema.Types.Mixed, default: {} },
         mobileVerified: { type: Boolean, default: false },
         passwordHash: { type: String, default: null, select: false },
         role: {

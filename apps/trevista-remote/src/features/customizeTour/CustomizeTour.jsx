@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import {
-  Breadcrumbs,
   Button,
   ContactForm,
   ErrorState,
@@ -213,15 +212,6 @@ export default function CustomizeTour({ userSession = null }) {
 
   return (
     <main className="customize-tour-page">
-      <div className="customize-tour-page__crumbs">
-        <Breadcrumbs
-          items={[
-            { label: labels.breadcrumbRoot || "Trevista", path: "/trevista" },
-            { label: labels.breadcrumbTours || "Tours", path: "/trevista/tours" },
-            { label: labels.breadcrumbCurrent || labels.pageTitle || "Customise Tour" },
-          ]}
-        />
-      </div>
       <section className="customize-tour-page__content">
         {loading ? (
           <Preloader variant="stack" count={3} label={labels.loadingLabel} />

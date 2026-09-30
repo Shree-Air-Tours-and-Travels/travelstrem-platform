@@ -39,20 +39,7 @@ export default function ConfirmOverlay({
     return (
       <BottomSheet
         open={open}
-        zIndex={2100}
-        onClose={onClose}
-        title={title}
-        closeOnOutsideClick={closeOnOutsideClick}
-      >
-        <div className={`trem-confirm ${className}`.trim()}>
-          {note && (
-            <div className="trem-confirm__note">
-              {icon && <Icon name={icon} size={20} />}
-              <p>{note}</p>
-            </div>
-          )}
-          {children ? <div className="trem-confirm__content">{children}</div> : null}
-          <div className="trem-confirm__actions">
+        actions={<div className="trem-confirm__actions">
             <Button
               variant="outline"
               text={cancelLabel}
@@ -67,7 +54,21 @@ export default function ConfirmOverlay({
               disabled={confirmDisabled}
               primaryClassName={`trem-confirm__btn trem-confirm__btn--confirm trem-confirm__btn--${confirmColor}`}
             />
-          </div>
+          </div>}
+        zIndex={2100}
+        onClose={onClose}
+        title={title}
+        closeOnOutsideClick={closeOnOutsideClick}
+      >
+        <div className={`trem-confirm ${className}`.trim()}>
+          {note && (
+            <div className="trem-confirm__note">
+              {icon && <Icon name={icon} size={20} />}
+              <p>{note}</p>
+            </div>
+          )}
+          {children ? <div className="trem-confirm__content">{children}</div> : null}
+
         </div>
       </BottomSheet>
     );

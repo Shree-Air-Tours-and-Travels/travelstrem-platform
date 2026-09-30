@@ -133,7 +133,16 @@
           }
         }
       ],
-      "config": {},
+      "config": {
+        "overlayConfig": {
+          "tripFilters": {
+            "titleRef": "tripDirectoryFiltersTitle",
+            "applyLabelRef": "tripDirectoryFilterApply",
+            "resetLabelRef": "tripDirectoryFilterReset",
+            "closeLabelRef": "tripDirectoryFilterClose"
+          }
+        }
+      },
       "actions": []
     }
   }

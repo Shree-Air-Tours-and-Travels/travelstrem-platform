@@ -7,6 +7,9 @@
     },
     "elements": {
       "labels": {
+        "breadcrumbHomePage": "Home",
+        "breadcrumbListingPage": "Trips",
+
         "pageTitle": "Trip Details",
         "bookNow": "Book Now",
         "enquire": "Enquire now",
@@ -30,6 +33,7 @@
         "titleRef": "pageTitle"
       },
       "widgets": [
+        {"type": "Breadcrumbs", "props": {"items": [{"path": "/trevio", "labelRef": "breadcrumbHomePage"}, {"path": "/trips", "labelRef": "breadcrumbListingPage"}]}},
         {
           "type": "TourGallery",
           "source": "shell",

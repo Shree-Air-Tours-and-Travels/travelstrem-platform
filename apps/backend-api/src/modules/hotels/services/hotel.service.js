@@ -1394,7 +1394,7 @@ export default class HotelService {
             "customizationSnapshot.searchId": searchId,
             "customizationSnapshot.hotelId": hotelId,
             "customizationSnapshot.roomSignature": roomSignature,
-            status: { $nin: ["cancelled", "closed"] },
+            status: { $nin: ["rejected", "cancelled", "closed"] },
         });
         if (existing && !startNew) return { existingEnquiry: true, targetPath: `/?tab=bookings&enquiry=${existing.enquiryRef}` };
         const customer = await User.findById(userId).select("name email phone").lean();
@@ -1409,7 +1409,7 @@ export default class HotelService {
             fields: {
                 name: customer?.name || "Traveller",
                 email: customer?.email || "",
-                phone: customer?.phone || "",
+                phone: actor?.enquiryPhone || customer?.phone || "",
                 adultCount: String(search.input.guests),
                 childCount: "0",
                 infantCount: "0",

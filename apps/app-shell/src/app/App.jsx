@@ -594,8 +594,7 @@ function AppShell() {
     if (!current || current.id === home.id) return [{ label: home.label }];
 
     const fromDashboard = activeTab !== "dashboard" && (location.state?.dashboardOrigin || searchParams.get("navFrom")) === "dashboard";
-    const root = fromDashboard ? { label: "Dashboard", path: "/?tab=dashboard" }
-      : { label: home.label, path: "/?tab=overview" };
+    const root = { label: home.label, path: "/?tab=overview" };
     const breadcrumbs = [
       root,
       { label: current.label },
@@ -733,19 +732,17 @@ function AppShell() {
           onUserMenuOpenChange={setProfileMenuOpen}
         />
 
-        {!isRemote &&
-        !isSupportScreen &&
-        activeTab !== "overview" &&
-        shellBreadcrumbItems.length ? (
-          <div className="dash-shell-breadcrumb" aria-live="polite">
-            <Breadcrumbs items={shellBreadcrumbItems} />
-          </div>
-        ) : null}
-
         <div
           data-scroll-root
           className={`dash-content${activeTab === "dashboard" ? " dash-content--dashboard" : ""}${isRemote ? " dash-content--remote" : ""}${isSupportScreen ? " dash-content--support" : ""}${activeTab === "overview" ? " dash-content--overview dash-content--home" : ""}`}
         >
+        {!isRemote &&
+        !isSupportScreen &&
+        activeTab !== "overview" &&
+        shellBreadcrumbItems.length ? (
+          <Breadcrumbs items={shellBreadcrumbItems} />
+        ) : null}
+
           <ProtectedRoute
             allowGuest={guestMode}
             suppressPrompt={authPromptDismissed}

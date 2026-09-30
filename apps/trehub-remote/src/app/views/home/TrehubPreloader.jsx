@@ -77,7 +77,7 @@ export default function TrehubPreloader({ variant, label = "Loading content" }) 
       aria-label={label || "Loading content"}
     >
       <div aria-hidden="true">
-        {!isHotelList && !isHotelDetail && variant !== "hotel-results" ? <Breadcrumb /> : null}
+        {variant !== "home" && !isHotelList && !isHotelDetail && variant !== "hotel-results" ? <Breadcrumb /> : null}
         <div className="trehub-loading__content">
           {variant === "home" ? (
             <>

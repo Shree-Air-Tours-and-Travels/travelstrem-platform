@@ -395,15 +395,46 @@
 }
 
 @media (max-width: $breakpoint-md) {
+  .trem-fab.trem-fab--single-action {
+    .trem-fab__inner {
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .trem-fab__group:empty {
+      display: none;
+    }
+
+    .trem-fab__group:not(:empty),
+    .trem-fab__btn.ui-button {
+      flex: 1 1 100%;
+      width: 100%;
+      min-width: 0;
+      max-width: none;
+    }
+
+    .trem-fab__btn.ui-button {
+      justify-content: center;
+      text-align: center;
+    }
+
+    &.trem-fab--variant-floating .trem-fab__inner {
+      width: 100%;
+      margin-inline: 0;
+    }
+  }
+
   .trem-fab {
     padding: 0.75rem;
     padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
 
     &--variant-floating {
-      left: 0.75rem;
-      right: 0.75rem;
+      left: 0;
+      right: 0;
       bottom: 0;
-      padding: 0;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0 0.75rem;
       background: transparent;
       border: none;
       box-shadow: none;
@@ -413,6 +444,8 @@
       }
 
       .trem-fab__inner {
+        width: 100%;
+        box-sizing: border-box;
         align-items: center;
         gap: $space-2;
         padding: $space-1-5;
@@ -512,6 +545,41 @@
           border-radius: 0 0 14px 14px;
           border-top: none;
         }
+      }
+    }
+
+    &--variant-inline {
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      box-sizing: border-box;
+      padding: $space-2 $space-3 calc(#{$space-2} + env(safe-area-inset-bottom, 0px));
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+
+      .trem-fab__inner {
+        width: 100%;
+        box-sizing: border-box;
+        padding: $space-1;
+        gap: 0;
+        border: 1px solid var(--border);
+        border-radius: $radius-md;
+        background: var(--surface-elevated);
+        box-shadow: var(--shadow-md);
+      }
+
+      .trem-fab__btn.ui-button:not(.trem-fab__btn--more) {
+        flex: 1 1 0;
+        min-width: 0;
+        width: auto;
+        justify-content: center;
+        border: 0;
+        border-radius: $radius-sm;
+        background: transparent;
+        color: var(--color-primary);
+        box-shadow: none;
       }
     }
 

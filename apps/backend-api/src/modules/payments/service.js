@@ -12,6 +12,8 @@ import BookingQuote from "../bookings/models/BookingQuote.js";
 import { quoteSelectionFingerprint } from "../bookings/services/quoteSelection.js";
 import BookingPayment from "../bookings/models/BookingPayment.js";
 import FlightBooking from "../flights/models/FlightBooking.js";
+import User from "../auth/models/User.js";
+import { normalizeMobileNumber } from "../auth/services/mobileAuth.service.js";
 import FinancialEngine from "../../core/financial-engine/index.js";
 import { getPaymentProvider } from "../../core/financial-engine/providers/registry.js";
 import { findAuthorizedBookingJourney } from "../bookings/quoteBuilderAdapter.js";
@@ -208,6 +210,18 @@ export async function createSession(input, actor, portal) {
 
     const base = process.env.PAYMENT_APP_URL?.trim() ||
         (config.IS_DEVELOPMENT ? "http://localhost:3018" : "https://pay.travelstrem.com");
+    const isFlight = session.bookingType === "flight";
+    const firstSegment = booking.segmentSnapshot?.[0];
+    const lastSegment = booking.segmentSnapshot?.at(-1);
+    const origin = firstSegment?.origin?.city || firstSegment?.origin?.iataCode;
+    const destination = lastSegment?.destination?.city || lastSegment?.destination?.iataCode;
+    const departure = firstSegment?.departureDateTime ? new Date(firstSegment.departureDateTime) : null;
+    const flightDetails = [
+        { label: booking.pnr ? "Airline PNR" : "TravelsTREM booking reference", value: booking.pnr || booking.bookingRef },
+        ...(origin && destination ? [{ label: "Route", value: `${origin} → ${destination}` }] : []),
+        ...(departure && Number.isFinite(departure.getTime()) ? [{ label: "Departure", value: departure.toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short", timeZone: firstSegment.origin?.timezone || "UTC" }) }] : []),
+        ...(booking.passengers?.length ? [{ label: "Passengers", value: booking.passengers.length }] : []),
+    ].filter(row => row.value !== undefined && row.value !== null && row.value !== "");
     return {
         paymentSessionId: session.sessionId,
         paymentUrl: `${base.replace(/\/$/, "")}/pay/${session.sessionId}?portal=${portal}`,
@@ -224,6 +238,7 @@ async function authorizedSession(id, actor) {
 
 export async function sessionDetails(id, actor) {
     let session = await authorizedSession(id, actor);
+    session = await reconcileDevelopmentPayment(session);
     if (![...terminal, "PROCESSING"].includes(session.status) && session.expiresAt <= new Date()) {
         await PaymentSession.updateOne(
             { _id: session._id, status: { $in: ["CREATED", "PENDING", "FAILED"] }, expiresAt: { $lte: new Date() } },
@@ -273,7 +288,13 @@ export async function sessionDetails(id, actor) {
         amount: format(session.expectedAmount),
         currency: session.currency,
         returnUrl: returnUrl?.toString() || "",
-        details: [
+        ...(isFlight ? { paymentDetails: [
+            ...(booking.pnr && booking.bookingRef ? [{ label: "TravelsTREM booking reference", value: booking.bookingRef }] : []),
+            ...(session.provider ? [{ label: "Payment provider", value: session.provider }] : []),
+            ...(session.providerOrderId ? [{ label: "Order reference", value: session.providerOrderId }] : []),
+            ...(session.capturedPaymentId ? [{ label: "Payment reference", value: session.capturedPaymentId }] : []),
+        ] } : {}),
+        details: isFlight ? flightDetails : [
             { label: "Booking reference", value: booking.bookingRef },
             { label: "Booking status", value: bookingStatusDisplay(booking.status, session.status).label },
             { label: "Payment provider", value: session.provider },
@@ -330,6 +351,19 @@ export async function createOrder(id, actor) {
     const valid = await payableQuote(booking, session.bookingType, session.provider);
     if (valid.amountMinor !== session.expectedAmount || valid.quotedCurrency !== session.currency || (session.quoteVersion != null && valid.quote.version !== session.quoteVersion) || !same(valid.quote._id, session.quoteId))
         fail(409, "Your booking price has changed. Return to your booking to review the updated total.");
+    const payer = await User.findById(uid(actor)).select("name email mobile phone").lean();
+    const prefill = {};
+    if (payer?.name) prefill.name = payer.name;
+    if (payer?.email) prefill.email = payer.email;
+    for (const number of [payer?.mobile, payer?.phone]) {
+        if (!number) continue;
+        try {
+            prefill.contact = normalizeMobileNumber(number);
+            break;
+        } catch {
+            // Leave missing or invalid contact details editable in checkout.
+        }
+    }
     const provider = getPaymentProvider(session.provider);
     if (!session.providerOrderId) {
         provider.assertConfigured();
@@ -383,11 +417,11 @@ export async function createOrder(id, actor) {
     if (!session || terminal.includes(session.status)) fail(409, "Payment has already completed. Check payment status.");
     if (session.expiresAt <= new Date()) fail(410, "Your booking session has ended. Check payment status before making any further payment.");
     await emit(session, "payment.processing");
-    return provider.checkout({
+    return { ...provider.checkout({
         id: session.providerOrderId,
         amount: session.expectedAmount,
         currency: session.currency,
-    });
+    }), prefill };
 }
 
 export async function verifyCallback(id, actor, input) {
@@ -400,14 +434,40 @@ export async function verifyCallback(id, actor, input) {
         { new: true },
     );
     if (updated) await emit(updated, "payment.processing");
-    return { status: updated?.status || session.status }; // Never mark paid from a browser callback.
+    const reconciled = await reconcileDevelopmentPayment(updated || session);
+    return { status: reconciled.status };
+}
+
+async function reconcileDevelopmentPayment(session) {
+    if (!config.IS_DEVELOPMENT || session.provider !== "razorpay" ||
+        !session.providerOrderId || terminal.includes(session.status)) return session;
+    const provider = getPaymentProvider(session.provider);
+    if (!provider.keyId?.startsWith("rzp_test_")) return session;
+    const payments = await provider.fetchOrderPayments(session.providerOrderId);
+    const payment = payments.find(item => item.order_id === session.providerOrderId &&
+        item.status === "captured" && item.captured === true);
+    if (!payment) return session;
+    // Only server-fetched test payments reach this private completion path.
+    const payload = { event: "payment.captured", payload: { payment: { entity: {
+        id: payment.id, order_id: payment.order_id, amount: payment.amount,
+        currency: payment.currency, status: payment.status, captured: payment.captured,
+    } } } };
+    await processProviderEvent(session.provider, payload, {
+        eventId: `dev-reconcile:${payment.id}`,
+    });
+    return PaymentSession.findById(session._id);
 }
 
 export async function handleWebhook(providerName, rawBody, signature, eventId) {
     const provider = getPaymentProvider(providerName);
     if (!rawBody || !await provider.verifyWebhook({ rawBody, signature }))
         fail(400, "Invalid webhook signature");
-    const digest = createHash("sha256").update(rawBody).digest("hex");
+    return processProviderEvent(providerName, JSON.parse(rawBody.toString("utf8")), { rawBody, signature, eventId });
+}
+
+async function processProviderEvent(providerName, payload, { rawBody, signature, eventId }) {
+    const provider = getPaymentProvider(providerName);
+    const digest = createHash("sha256").update(rawBody || JSON.stringify(payload)).digest("hex");
     const key = eventId || digest;
     let event;
     try {
@@ -421,7 +481,7 @@ export async function handleWebhook(providerName, rawBody, signature, eventId) {
         event = await PaymentWebhookEvent.findOne({ provider: providerName, eventId: key });
     }
     if (event.digest !== digest) fail(400, "Webhook event payload mismatch");
-    const { type, payment, refund } = await provider.parseWebhook(JSON.parse(rawBody.toString("utf8")));
+    const { type, payment, refund } = await provider.parseWebhook(payload);
     if (event.completedAt) {
         if (["payment.captured", "order.paid"].includes(type)) {
             const paidSession = await PaymentSession.findOne({ provider: providerName, providerOrderId: payment?.order_id });

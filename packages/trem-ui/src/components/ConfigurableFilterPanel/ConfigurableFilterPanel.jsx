@@ -18,10 +18,10 @@ export default function ConfigurableFilterPanel({
 }) {
   return (
     <aside className={`trem-configurable-filters${className ? ` ${className}` : ""}`}>
-      <header>
+      {title || resetLabel ? <header>
         <h2>{title}</h2>
         {resetLabel ? <Button text={resetLabel} variant="text" size="small" onClick={onReset} /> : null}
-      </header>
+      </header> : null}
       <div className="trem-configurable-filters__fields">
         {fields.map((field) => {
           const value = values[field.id] ?? (field.type === "multiSelect" ? [] : "");

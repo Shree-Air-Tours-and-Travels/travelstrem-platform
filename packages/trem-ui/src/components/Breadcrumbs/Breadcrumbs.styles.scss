@@ -6,6 +6,8 @@
 
   width: 100%;
   min-width: 0;
+  padding-top: $space-4;
+  box-sizing: border-box;
 
   color: var(--muted);
 
@@ -101,7 +103,7 @@
   /* Current page                                                            */
   /* ---------------------------------------------------------------------- */
 
-  li:last-child > span:not(.trem-breadcrumbs__sep) {
+  li:last-child>span:not(.trem-breadcrumbs__sep) {
     display: inline-flex;
     align-items: center;
 
@@ -182,7 +184,7 @@
 
     a,
     button,
-    li:last-child > span:not(.trem-breadcrumbs__sep) {
+    li:last-child>span:not(.trem-breadcrumbs__sep) {
       max-width: 100%;
     }
 
@@ -210,7 +212,7 @@
 
     a,
     button,
-    li:last-child > span:not(.trem-breadcrumbs__sep) {
+    li:last-child>span:not(.trem-breadcrumbs__sep) {
       min-height: 26px;
 
       padding-inline: 3px;

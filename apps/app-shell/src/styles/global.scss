@@ -163,27 +163,6 @@ select {
   padding: 0;
 }
 
-.dash-shell-breadcrumb {
-  position: sticky;
-  top: 0;
-  z-index: 80;
-  width: 100%;
-  min-height: 52px;
-  padding-inline: $space-6;
-  display: flex;
-  align-items: center;
-  flex: 0 0 auto;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface-glass-strong, var(--surface));
-  box-shadow: var(--shadow-xs);
-  backdrop-filter: blur(14px);
-
-  @media (max-width: $breakpoint-md) {
-    min-height: 46px;
-    padding-inline: $space-4;
-  }
-}
-
 .dash-notifications {
   display: grid;
   gap: $space-3;
@@ -233,19 +212,18 @@ select {
   max-width: none;
   min-height: 0;
   padding: 0;
-  padding-bottom: $space-6;
 
   > * {
     flex: 0 0 auto;
     width: 100%;
     max-width: none;
+    margin: 0;
     min-height: 100%;
   }
 
   @media (max-width: $breakpoint-md) {
     min-height: 0;
     padding: 0;
-    padding-bottom: $space-4;
   }
 }
 
@@ -257,6 +235,23 @@ select {
   width: min(100%, $full-width);
   max-width: $full-width;
   margin-inline: auto;
+}
+
+// Internal shell pages share the header edge and keep one deliberate gap
+// between the breadcrumb and the page content.
+.dash-content:not(.dash-content--remote):not(.dash-content--home):not(.dash-content--support) {
+  gap: $space-5;
+  padding-top: 0;
+}
+
+.dash-content > .trem-breadcrumbs {
+  width: min(100%, #{$full-width});
+  margin-inline: auto;
+}
+
+.dash-content--dashboard > .trem-breadcrumbs {
+  width: 100%;
+  max-width: none;
 }
 
 @media (max-width: $breakpoint-md) {

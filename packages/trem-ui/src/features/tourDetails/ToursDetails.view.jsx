@@ -278,16 +278,13 @@ export default function ToursDetailsView({
   useEffect(() => {
     const nav = sectionNavRef.current;
     const page = nav?.closest(".tour-detail");
-    const breadcrumbs = page?.querySelector(".tour-detail__breadcrumbs");
-    if (!nav || !page || !breadcrumbs) return undefined;
+    if (!nav || !page) return undefined;
 
     const measureHeaders = () => {
-      page.style.setProperty("--td-breadcrumb-height", `${breadcrumbs.offsetHeight}px`);
       page.style.setProperty("--td-section-nav-height", `${nav.offsetHeight}px`);
     };
     const observer = new ResizeObserver(measureHeaders);
     observer.observe(nav);
-    observer.observe(breadcrumbs);
     measureHeaders();
     return () => observer.disconnect();
   }, [tourUnavailable]);
@@ -412,8 +409,8 @@ export default function ToursDetailsView({
   if (tourUnavailable) {
     return (
       <main className="tour-detail" aria-label="Tour unavailable">
-        <Breadcrumbs items={breadcrumbItems} className="tour-detail__breadcrumbs" />
         <div className="tour-detail__shell">
+          <Breadcrumbs items={breadcrumbItems} />
           <section className="tour-detail__empty tour-detail__empty--unavailable">
             <Title text="This tour is no longer available" />
             <Paragraph text="The operator has unpublished this tour. TravelsTREM has checked the live catalog for the closest reliable alternatives." />
@@ -440,8 +437,8 @@ export default function ToursDetailsView({
 
   return (
     <main className="tour-detail" aria-labelledby="tour-detail-title">
-      <Breadcrumbs items={breadcrumbItems} className="tour-detail__breadcrumbs" />
       <div className="tour-detail__shell">
+        <Breadcrumbs items={breadcrumbItems} />
         <nav
           ref={sectionNavRef}
           className="tour-detail__section-nav"

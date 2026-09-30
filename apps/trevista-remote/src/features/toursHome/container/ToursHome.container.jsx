@@ -142,10 +142,6 @@ export default function ToursHomeContainer({ dispatchEvent, userSession = null }
         widgets={widgets}
         widgetsData={widgetsData}
         pageTitle={pageLabels.pageTitle}
-        breadcrumbs={[
-          { label: pageLabels.breadcrumbHome, path: "/?tab=overview" },
-          { label: pageLabels.breadcrumbTrevista },
-        ].filter((item) => item.label)}
         loading={loading}
         error={pageError || widgetsError}
         onRetry={retryHome}

@@ -295,7 +295,7 @@ export default function OptionsModal({
         {subtitle && hasOptions ? <p className="trem-options__subtitle">{subtitle}</p> : null}
         {list}
       </div>
-      {selectionActions}
+      {!mobile ? selectionActions : null}
     </div>
   );
 
@@ -306,6 +306,7 @@ export default function OptionsModal({
         onClose={onClose}
         title={title}
         className="trem-options-sheet"
+        actions={selectionActions}
         closeOnOutsideClick={closeOnOutsideClick}
       >
         {content}

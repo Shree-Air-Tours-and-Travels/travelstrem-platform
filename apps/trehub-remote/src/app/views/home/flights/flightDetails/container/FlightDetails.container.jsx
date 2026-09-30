@@ -1,4 +1,4 @@
-import { useExistingEnquiryChoice } from "@packages/trem-modals";
+import { useExistingEnquiryChoice, useEnquiryContact } from "@packages/trem-modals";
 import { redirectToPayment } from "@packages/trem-utils";
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -33,6 +33,7 @@ const passengerRows = (offer) =>
   );
 
 export default function FlightDetailsContainer() {
+  const enquiryContact = useEnquiryContact();
   const existingEnquiryChoice = useExistingEnquiryChoice();
   const location = useLocation();
   const navigate = useNavigate();
@@ -183,7 +184,7 @@ export default function FlightDetailsContainer() {
     }
   };
 
-  const createEnquiry = async (startNew = false) => {
+  const createEnquiry = async (startNew = false, contact = {}) => {
     setEnquiryError(null);
     setSaving(true);
     setState((current) => ({ ...current, error: "" }));
@@ -191,6 +192,7 @@ export default function FlightDetailsContainer() {
       const response = await createComponentData(
         state.contract.urls.enquiries || "/flights/enquiries",
         {
+          ...contact,
           startNew: startNew === true,
           searchId,
           offerId,
@@ -200,15 +202,19 @@ export default function FlightDetailsContainer() {
       );
       if (response.data?.existingEnquiry) {
         const choice = await existingEnquiryChoice.choose(response.data);
-        if (choice === "new") return createEnquiry(true);
+        if (choice === "new") return createEnquiry(true, contact);
         if (choice === "continue") navigate(response.data.targetPath);
         return;
       }
       setEnquiryModalOpen(false);
       navigate(response.data.targetPath);
     } catch (error) {
+      if (error.code === "MOBILE_REQUIRED") {
+        const entered = await enquiryContact.request();
+        if (entered) return createEnquiry(startNew, entered);
+        return;
+      }
       if (error.code === "PRICE_CHANGED" && error.details?.currentPrice) {
-        setEnquiryModalOpen(false);
         setState((current) => {
           const updateFare = (fare) =>
             fare.fareId === fareId ? { ...fare, pricing: error.details.currentPrice } : fare;
@@ -225,7 +231,7 @@ export default function FlightDetailsContainer() {
           };
         });
       }
-      setState((current) => ({ ...current, error: error.message }));
+      setEnquiryError(error);
     } finally {
       setSaving(false);
     }
@@ -249,6 +255,7 @@ export default function FlightDetailsContainer() {
   return (
     <>
       {existingEnquiryChoice.modal}
+      {enquiryContact.modal}
     <FlightDetailsView
       {...state}
       step={step}

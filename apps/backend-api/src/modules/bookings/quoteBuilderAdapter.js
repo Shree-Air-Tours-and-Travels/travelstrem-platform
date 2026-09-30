@@ -306,7 +306,16 @@ export async function findAuthorizedBookingJourney(enquiryId, actor) {
             type: doc.type,
             availability: doc.status === "REPLACED" ? "Replaced" : ["UPLOADED", "APPROVED"].includes(doc.status) && (doc.storageProvider === "R2" && doc.storageKey || /^https:\/\//i.test(doc.url || "")) ? "Available" : "Not issued yet",
             href: ["UPLOADED", "APPROVED"].includes(doc.status) && (doc.storageProvider === "R2" && doc.storageKey || /^https:\/\//i.test(doc.url || "")) ? `/booking-engine/bookings/${encodeURIComponent(enquiry.enquiryRef)}/documents/${doc._id}` : null,
-        })).concat((enquiry.journeyType === "flight" ? ["ticket"] : ["voucher"]).filter(type => !travelDocuments.some(doc => doc.type === type && doc.status !== "REPLACED")).map(type => ({ id: `pending-${type}`, type, title: type === "ticket" ? "Flight tickets" : "Travel vouchers", availability: "Not issued yet", href: null }))),
+        })).concat((enquiry.journeyType === "flight" ? ["ticket"] : ["voucher"]).filter(type => !travelDocuments.some(doc => doc.type === type && doc.status !== "REPLACED")).map(type => ({ id: `pending-${type}`, type, title: type === "ticket" ? "Flight tickets" : "Travel vouchers", availability: type === "ticket" && flightBooking?.tickets?.some(ticket => ticket.ticketNumber) ? "Ticket issued · Download not available yet" : "Not issued yet", href: null }))),
+        flightConfirmation: flightBooking && paymentStatus === "PAID" && ["CONFIRMED", "TICKETED"].includes(flightBooking.status) ? {
+            title: "Booking Confirmed",
+            rows: [
+                ...(flightBooking.pnr ? [{ label: "Airline PNR", value: flightBooking.pnr }] : []),
+                ...(Number.isSafeInteger(paymentSession?.expectedAmount) ? [{ label: "Amount paid", value: new Intl.NumberFormat("en-IN", { style: "currency", currency: paymentSession.currency || "INR" }).format(paymentSession.expectedAmount / 100) }] : []),
+                ...(!flightBooking.pnr && flightBooking.bookingRef ? [{ label: "Booking reference", value: flightBooking.bookingRef }] : []),
+            ],
+            reference: flightBooking.pnr ? flightBooking.bookingRef : "",
+        } : null,
         ticketRows: (flightBooking?.tickets || []).map((ticket, index) => ({ label: `Ticket ${index + 1}`, value: ticket.ticketNumber || "Awaiting ticket number" })),
         bookingExpiresAt: paymentBooking ? paymentSession?.expiresAt : bookingExpiresAt,
         restartBookingUrl: enquiry.customizationSnapshot?.searchUrl || (enquiry.journeyType === "hotel" ? "/trehub/hotels" : "/trehub/flights"),

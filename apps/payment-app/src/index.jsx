@@ -2,6 +2,7 @@ import { colors } from "@packages/trem-design-tokens";
 import React, { useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import Button from "@packages/trem-ui/components/Button/Button.jsx";
+import Note from "@packages/trem-ui/components/Note/Note.jsx";
 import Spinner from "@packages/trem-ui/components/Spinner/Spinner.jsx";
 import StatusBadge from "@packages/trem-ui/components/StatusBadge/StatusBadge.jsx";
 import TimelineStepper from "@packages/trem-ui/components/TimelineStepper/TimelineStepper.jsx";
@@ -110,6 +111,7 @@ function PaymentPage() {
         currency: order.currency,
         name: "TravelsTrem",
         description: session.bookingReference,
+        prefill: order.prefill || {},
         handler: async (response) => {
           completed = true;
           setCheckoutOutcome("");
@@ -168,19 +170,17 @@ function PaymentPage() {
         <p className="eyebrow">SECURE BOOKING PAYMENT</p>
         <h1>{session?.heading || "Complete your booking payment"}</h1>
         {error && (
-          <p role="alert" className="payment-error">
-            {error}
-          </p>
+          <Note variant="error">{error}</Note>
         )}
-        {checkoutOutcome && <p role="status" className="payment-error">{checkoutOutcome}</p>}
+        {checkoutOutcome && <Note variant="warning" dismissible key={checkoutOutcome}>{checkoutOutcome}</Note>}
         {!session && !error && <Spinner label="Loading your payment…" />}
         {!session && error && (authRequired ? <Button href={signInUrl}>Sign in to continue</Button> : <Button variant="outline" onClick={refresh}>Try again</Button>)}
         {session && (
           <>
             <div className="payment-status"><StatusBadge value={session.statusLabel || session.status} tone={session.statusTone || session.tone} /><span className={isConnected ? "is-connected" : ""}>{isConnected ? "Updating automatically" : "Use Check payment status for updates"}</span></div>
-            <div className="payment-notice" role="status">
+            <Note variant={session.tone || "info"}>
               <p>{awaiting && !paid && session.status !== "PROCESSING" ? "We’re verifying your payment. Please don’t pay again. You can safely leave this page and return to your booking later." : session.message}</p>
-            </div>
+            </Note>
             <div className="payment-layout"><div className="payment-booking">
             <h2>{session.title}</h2>
             <p>
@@ -189,6 +189,10 @@ function PaymentPage() {
             <dl className="payment-details">
               {session.details?.map(row => <div key={row.label}><dt>{row.label}</dt><dd>{row.value}</dd></div>)}
             </dl>
+            {!!session.paymentDetails?.length && <details className="payment-help">
+              <summary>Payment details</summary>
+              <dl className="payment-details">{session.paymentDetails.filter(row => row.value !== undefined && row.value !== null && row.value !== "").map(row => <div key={row.label}><dt>{row.label}</dt><dd>{row.value}</dd></div>)}</dl>
+            </details>}
             <details className="payment-help" open={helpOpen} onToggle={event => setHelpOpen(event.currentTarget.open)}>
               <summary>Need help with your payment?</summary>
               <p>If money was debited, check the payment status before retrying. Confirmation may take a moment.</p>
@@ -226,7 +230,7 @@ function PaymentPage() {
             </Button>
             {session.returnUrl && (
               <Button variant="outline" href={session.returnUrl}>
-                {session.status === "PAID" ? "Continue to booking" : "Return to booking"}
+                {session.status === "PAID" ? "Manage Booking" : "Return to booking"}
               </Button>
             )}
             </div>

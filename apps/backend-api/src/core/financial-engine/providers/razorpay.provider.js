@@ -63,6 +63,10 @@ export default class RazorpayProvider extends PaymentProviderInterface {
         if (orders.length > 1) throw new Error("Multiple gateway orders require reconciliation");
         return orders[0] || null;
     }
+    async fetchOrderPayments(orderId) {
+        const result = await this.request(`/orders/${encodeURIComponent(orderId)}/payments`, undefined, "GET");
+        return result.items || [];
+    }
     createPayment({ amountMinor, currency = "INR", reference, metadata = {} }) {
         assertMinor(amountMinor);
         return this.request("/orders", {

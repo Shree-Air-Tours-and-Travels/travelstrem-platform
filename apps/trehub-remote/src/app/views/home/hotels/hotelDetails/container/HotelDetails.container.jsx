@@ -1,4 +1,4 @@
-import { useExistingEnquiryChoice } from "@packages/trem-modals";
+import { useExistingEnquiryChoice, useEnquiryContact } from "@packages/trem-modals";
 import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
@@ -9,6 +9,7 @@ import { interpolate } from "../../hotel.utils.js";
 import HotelDetailsView from "../view/HotelDetails.view.jsx";
 
 export default function HotelDetailsContainer() {
+  const enquiryContact = useEnquiryContact();
   const existingEnquiryChoice = useExistingEnquiryChoice();
   const location = useLocation();
   const navigate = useNavigate();
@@ -96,14 +97,15 @@ export default function HotelDetailsContainer() {
     if (nextEmptySlot !== -1) setActiveSlot(nextEmptySlot);
   };
 
-  const createEnquiry = async (startNew = false) => {
-    if ((saving && startNew !== true) || !quote) return;
+  const createEnquiry = async (startNew = false, contact = {}) => {
+    if ((saving && startNew !== true && !contact.phone) || !quote) return;
     setEnquiryError(null);
     setSaving(true);
     setError(null);
     try {
       const response = await createComponentData(contract.elements.urls.enquiries, {
-        startNew: startNew === true,
+        ...contact,
+          startNew: startNew === true,
         searchId: data.searchId,
         hotelId,
         roomIds,
@@ -111,13 +113,18 @@ export default function HotelDetailsContainer() {
       });
       if (response.data?.existingEnquiry) {
         const choice = await existingEnquiryChoice.choose(response.data);
-        if (choice === "new") return createEnquiry(true);
+        if (choice === "new") return createEnquiry(true, contact);
         if (choice === "continue") navigate(response.data.targetPath);
         return;
       }
       setConfirmOpen(false);
       navigate(response.data.targetPath);
     } catch (failure) {
+      if (failure.code === "MOBILE_REQUIRED") {
+        const entered = await enquiryContact.request();
+        if (entered) return createEnquiry(startNew, entered);
+        return;
+      }
       setEnquiryError(failure);
     } finally {
       setSaving(false);
@@ -127,6 +134,7 @@ export default function HotelDetailsContainer() {
   return (
     <>
       {existingEnquiryChoice.modal}
+      {enquiryContact.modal}
     <HotelDetailsView
       contract={contract}
       data={data}

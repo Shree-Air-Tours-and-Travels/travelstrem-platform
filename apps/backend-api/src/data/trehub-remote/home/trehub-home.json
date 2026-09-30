@@ -602,7 +602,6 @@
         "titleRef": "searchTitle"
       },
       "widgets": [
-        { "name": "breadcrumbs", "type": "Breadcrumbs", "props": { "items": [{ "labelRef": "breadcrumbHome", "path": "/?tab=overview" }, { "labelRef": "breadcrumbTrehub" }] } },
         {
           "name": "searchCard",
           "type": "GlobalSearchCard",

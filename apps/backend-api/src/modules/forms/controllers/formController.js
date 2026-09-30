@@ -56,7 +56,12 @@ const syncAgencyCustomerFromLead = async (lead) => {
     }
 };
 
-const createEnquiryInboxNotifications = async ({ lead, agencyNotify, adminNotify, includeAdmins }) => {
+const createEnquiryInboxNotifications = async ({
+    lead,
+    agencyNotify,
+    adminNotify,
+    includeAdmins,
+}) => {
     const safeData = {
         enquiryRef: lead.enquiryRef,
         product: lead.product || "",
@@ -238,8 +243,8 @@ const getTourFormContext = async (tour, product) => {
               value: item.packageKey,
               label: item.name,
               description: item.description,
-              includesFlights: (item.includedComponentKeys || []).some((key) =>
-                  commercialComponents.get(String(key))?.type === "FLIGHT",
+              includesFlights: (item.includedComponentKeys || []).some(
+                  (key) => commercialComponents.get(String(key))?.type === "FLIGHT",
               ),
           }));
     const packageOptions =
@@ -256,23 +261,25 @@ const getTourFormContext = async (tour, product) => {
                   }))
                   .filter((item) => item.value)
             : tour?.commercial?.version === "COMPONENTS_V1"
-            ? (tour.commercial.packages || [])
-                  .filter((item) => item?.enabled !== false)
-                  .map((item) => {
-                      const flightComponents = (item.includedComponentKeys || [])
-                          .map((key) => commercialComponents.get(String(key)))
-                          .filter((component) => component?.type === "FLIGHT");
-                      return {
-                          value: String(item.packageKey || ""),
-                          label: String(item.name || item.tier || "Package"),
-                          includesFlights: hasStructuredFlightComponents
-                              ? flightComponents.length > 0
-                              : Boolean(tour?.flights?.included),
-                          includedFlightNames: flightComponents.map((component) => component.name),
-                      };
-                  })
-                  .filter((item) => item.value)
-            : [];
+              ? (tour.commercial.packages || [])
+                    .filter((item) => item?.enabled !== false)
+                    .map((item) => {
+                        const flightComponents = (item.includedComponentKeys || [])
+                            .map((key) => commercialComponents.get(String(key)))
+                            .filter((component) => component?.type === "FLIGHT");
+                        return {
+                            value: String(item.packageKey || ""),
+                            label: String(item.name || item.tier || "Package"),
+                            includesFlights: hasStructuredFlightComponents
+                                ? flightComponents.length > 0
+                                : Boolean(tour?.flights?.included),
+                            includedFlightNames: flightComponents.map(
+                                (component) => component.name,
+                            ),
+                        };
+                    })
+                    .filter((item) => item.value)
+              : [];
     const stayKeyFor = (option, index) =>
         String(
             option?.stayKey ||
@@ -503,7 +510,7 @@ export const getForm = async (req, res) => {
             }
             if (product === "trevio") {
                 const labels = response.component.elements.labels;
-                labels.contactAgent = `Create enquiry for ${tour.title || "this trip"}?`;
+                labels.contactAgent = `Create enquiry?`;
                 labels.contactAgentDescription =
                     "Confirm to create an enquiry. You will add traveller details and request the quotation from My Bookings.";
                 labels.sendRequest = "Enquire now";
@@ -582,12 +589,30 @@ export const getForm = async (req, res) => {
                     optionField("mealPreference", "Meal preference", preferences.mealPreferences),
                     optionField("drinkPreference", "Drink preference", preferences.drinkTypes),
                     ...journeyFields.filter((field) => field.name === "message"),
-                ].filter((field) => field.name !== "packageKey" || formContext.packageOptions.length);
+                ].filter(
+                    (field) => field.name !== "packageKey" || formContext.packageOptions.length,
+                );
             } else {
                 const labels = response.component.elements.labels;
-                labels.contactAgent = `Create enquiry for ${tour.title || "this tour"}?`;
+                labels.contactAgent = `Create enquiry?`;
                 labels.contactAgentDescription =
                     "Confirm to create an enquiry. You will complete the tour and traveller details from My Bookings before requesting a quotation.";
+            }
+        }
+        const preferenceUserId = req.user?.sub || req.user?.id || req.user?._id;
+        if (preferenceUserId) {
+            res.setHeader("Cache-Control", "private, no-store");
+            const account = await User.findById(preferenceUserId)
+                .select("enquiryPreferences")
+                .lean();
+            for (const field of response.component?.structure?.widgets?.[0]?.props?.fields || []) {
+                const value = account?.enquiryPreferences?.[field.name];
+                if (
+                    value != null &&
+                    (!field.options?.length ||
+                        field.options.some((item) => String(item.value) === String(value)))
+                )
+                    field.value = value;
             }
         }
         return sendJson(res, 200, {
@@ -690,7 +715,11 @@ export const submitForm = async (req, res) => {
                     name: allowedFields.name || customer?.name || req.user?.name || "Traveller",
                     email: allowedFields.email || customer?.email || req.user?.email || "",
                     phone:
-                        allowedFields.phone || customer?.phone || customer?.phoneNumber || customer?.mobile || "",
+                        allowedFields.phone ||
+                        customer?.phone ||
+                        customer?.phoneNumber ||
+                        customer?.mobile ||
+                        "",
                     preferredContact: allowedFields.preferredContact || "email",
                     message: "Enquiry created. Journey and traveller details are pending.",
                 };
@@ -712,7 +741,8 @@ export const submitForm = async (req, res) => {
                 "preferredContact",
                 ...(!isConfirmedBookingEnquiry ? ["travellerCount"] : []),
                 "phone",
-                ...(isConfirmedBookingEnquiry || String(requestedProduct || "").toLowerCase() === "trevio"
+                ...(isConfirmedBookingEnquiry ||
+                String(requestedProduct || "").toLowerCase() === "trevio"
                     ? []
                     : ["flightPreference"]),
             ];
@@ -729,10 +759,7 @@ export const submitForm = async (req, res) => {
                     status: "error",
                     message: "Please provide a valid email address.",
                 });
-            if (
-                allowedFields.phone &&
-                String(allowedFields.phone).replace(/\D/g, "").length !== 10
-            )
+            if (allowedFields.phone && String(allowedFields.phone).replace(/\D/g, "").length !== 10)
                 return sendJson(res, 400, {
                     status: "error",
                     message: "Please provide a valid 10-digit phone number.",
@@ -1075,17 +1102,28 @@ export const submitForm = async (req, res) => {
         const customerId = req.user?.sub || req.user?.id || req.user?._id;
         if (customerId && linkedTourId && req.body?.startNew !== true) {
             const existing = await ContactLeadRepository.findOne({
-                claimedBy: customerId, tourId: linkedTourId, product,
-                ...(allowedFields.packageKey ? { "selection.packageKey": allowedFields.packageKey } : {}),
-                ...(allowedFields.preferredTravelDate ? { "fields.preferredTravelDate": allowedFields.preferredTravelDate } : {}),
-                status: { $nin: ["cancelled", "closed"] },
-            }).sort({ createdAt: -1 }).lean();
-            if (existing) return sendJson(res, 200, {
-                status: "success", data: { existingEnquiry: true,
-                    enquiryRef: existing.enquiryRef,
-                    targetPath: `/?product=${product}&tab=bookings&enquiry=${encodeURIComponent(existing.enquiryRef)}`,
-                },
-            });
+                claimedBy: customerId,
+                tourId: linkedTourId,
+                product,
+                ...(allowedFields.packageKey
+                    ? { "selection.packageKey": allowedFields.packageKey }
+                    : {}),
+                ...(allowedFields.preferredTravelDate
+                    ? { "fields.preferredTravelDate": allowedFields.preferredTravelDate }
+                    : {}),
+                status: { $nin: ["rejected", "cancelled", "closed"] },
+            })
+                .sort({ createdAt: -1 })
+                .lean();
+            if (existing)
+                return sendJson(res, 200, {
+                    status: "success",
+                    data: {
+                        existingEnquiry: true,
+                        enquiryRef: existing.enquiryRef,
+                        targetPath: `/?product=${product}&tab=bookings&enquiry=${encodeURIComponent(existing.enquiryRef)}`,
+                    },
+                });
         }
 
         const newLead = ContactLeadRepository.create({
@@ -1128,6 +1166,27 @@ export const submitForm = async (req, res) => {
 
         const savedLead = await newLead.save();
         await assignEnquiryReference(savedLead);
+        if (customerId && req.body.savePreferences === true) {
+            const preferenceKeys = [
+                "name",
+                "email",
+                "phone",
+                "preferredContact",
+                "adultCount",
+                "childCount",
+                "infantCount",
+                "flightPreference",
+            ];
+            const preferences = Object.fromEntries(
+                preferenceKeys
+                    .filter((key) => allowedFields[key] != null)
+                    .map((key) => [key, allowedFields[key]]),
+            );
+            await User.updateOne(
+                { _id: customerId },
+                { $set: { enquiryPreferences: preferences } },
+            );
+        }
         await syncAgencyCustomerFromLead(savedLead).catch((error) =>
             console.error("[CustomerDirectory] enquiry sync failed:", error.message),
         );
@@ -1224,12 +1283,11 @@ export const submitForm = async (req, res) => {
                     const customerPhone = allowedFields.phone || "Not provided";
                     const customerMessage = allowedFields.message || "No additional message";
                     const preferredContact = allowedFields.preferredContact || "Not provided";
-                    const travellerSummary =
-                        isConfirmedBookingEnquiry
-                            ? "To be provided in My Bookings"
-                            : product === "trevio"
-                            ? `${allowedFields.adultCount || 0} adults, ${allowedFields.childCount || 0} children, ${allowedFields.infantCount || 0} infants`
-                            : allowedFields.travellerCount || "Not provided";
+                    const travellerSummary = isConfirmedBookingEnquiry
+                        ? "To be provided in My Bookings"
+                        : product === "trevio"
+                          ? `${allowedFields.adultCount || 0} adults, ${allowedFields.childCount || 0} children, ${allowedFields.infantCount || 0} infants`
+                          : allowedFields.travellerCount || "Not provided";
                     const preferredTravelDate = selectedDepartureLabel;
                     const flightPreference =
                         customizationSnapshot?.flightRequest === "KEEP_INCLUDED"
@@ -1269,9 +1327,10 @@ export const submitForm = async (req, res) => {
                     const quoteMode =
                         product === "trevio"
                             ? "Fixed departure enquiry"
-                            : isCustomTourEnquiry || customizationSnapshot?.quoteMode === "CUSTOMIZED"
-                            ? "Customized package"
-                            : "Package";
+                            : isCustomTourEnquiry ||
+                                customizationSnapshot?.quoteMode === "CUSTOMIZED"
+                              ? "Customized package"
+                              : "Package";
                     const customTourSummary = isCustomTourEnquiry
                         ? [
                               `Journey type: ${allowedFields.journeyType}`,
@@ -1326,7 +1385,8 @@ export const submitForm = async (req, res) => {
                     .filter(Boolean)
                     .join(" · ");
                 const customerDeparture = selectedDepartureLabel;
-                const customerOptionLabel = product === "trevio" ? "Selected package" : "Quote type";
+                const customerOptionLabel =
+                    product === "trevio" ? "Selected package" : "Quote type";
                 const customerQuoteType =
                     product === "trevio"
                         ? selectedPackage?.label || "Fixed trip package"
@@ -1517,9 +1577,10 @@ export const getLeads = async (req, res) => {
                     new Date(right.createdAt || 0).getTime() -
                     new Date(left.createdAt || 0).getTime(),
             );
-        const flightQuery = access.perspective === "sent"
-            ? { userId: access.userId }
-            : { ...access.query, agencyId: { $ne: null } };
+        const flightQuery =
+            access.perspective === "sent"
+                ? { userId: access.userId }
+                : { ...access.query, agencyId: { $ne: null } };
         const flightBookings = await FlightBooking.find(flightQuery)
             .sort({ createdAt: -1 })
             .limit(200)
@@ -1542,34 +1603,72 @@ export const getLeads = async (req, res) => {
                 createdLabel: formatDate(booking.createdAt),
                 travelDate: formatDate(first?.departureDateTime),
                 travellers: booking.passengers?.length || 0,
-                amountDisplay: booking.priceSnapshot?.total == null ? "" : new Intl.NumberFormat("en-IN", { style: "currency", currency: booking.priceSnapshot.currency || "INR", maximumFractionDigits: 0 }).format(Number(booking.priceSnapshot.total) / 100),
+                amountDisplay:
+                    booking.priceSnapshot?.total == null
+                        ? ""
+                        : new Intl.NumberFormat("en-IN", {
+                              style: "currency",
+                              currency: booking.priceSnapshot.currency || "INR",
+                              maximumFractionDigits: 0,
+                          }).format(Number(booking.priceSnapshot.total) / 100),
                 targetPath: `/trehub/flights/bookings/${encodeURIComponent(booking.bookingRef)}`,
             };
         });
         records.push(...flightRecords);
         const allBookings = [...bookings, ...flightBookings];
-        const sessions = allBookings.length ? await PaymentSession.find({ bookingId: { $in: allBookings.map(item => item._id) } }).sort({ createdAt: -1 }).select("bookingId status").lean() : [];
+        const sessions = allBookings.length
+            ? await PaymentSession.find({ bookingId: { $in: allBookings.map((item) => item._id) } })
+                  .sort({ createdAt: -1 })
+                  .select("bookingId status")
+                  .lean()
+            : [];
         const paymentByBooking = new Map();
-        for (const session of sessions) if (!paymentByBooking.has(String(session.bookingId))) paymentByBooking.set(String(session.bookingId), session.status);
-        const byReference = new Map(allBookings.map(item => [item.bookingRef, item]));
-        const byEnquiry = new Map(allBookings.filter(item => item.sourceEnquiryId).map(item => [String(item.sourceEnquiryId), item]));
-        const leadByReference = new Map(leads.map(item => [item.enquiryRef, item]));
+        for (const session of sessions)
+            if (!paymentByBooking.has(String(session.bookingId)))
+                paymentByBooking.set(String(session.bookingId), session.status);
+        const byReference = new Map(allBookings.map((item) => [item.bookingRef, item]));
+        const byEnquiry = new Map(
+            allBookings
+                .filter((item) => item.sourceEnquiryId)
+                .map((item) => [String(item.sourceEnquiryId), item]),
+        );
+        const leadByReference = new Map(leads.map((item) => [item.enquiryRef, item]));
         for (const record of records) {
-            const booking = byReference.get(record.bookingRef) || byEnquiry.get(String(leadByReference.get(record.enquiryRef)?._id));
+            const booking =
+                byReference.get(record.bookingRef) ||
+                byEnquiry.get(String(leadByReference.get(record.enquiryRef)?._id));
             if (!booking) continue;
-            const display = bookingStatusDisplay(booking.status, paymentByBooking.get(String(booking._id)) || booking.paymentStatus);
+            const display = bookingStatusDisplay(
+                booking.status,
+                paymentByBooking.get(String(booking._id)) || booking.paymentStatus,
+            );
             record.status = booking.status;
             record.statusLabel = display.label;
             record.statusTone = display.tone;
         }
-        records.sort((left, right) => new Date(right.createdAt || 0).getTime() - new Date(left.createdAt || 0).getTime());
-        const selected = (key) => String(req.query[key] || "").split(",").filter((value) => value && value !== "all");
+        records.sort(
+            (left, right) =>
+                new Date(right.createdAt || 0).getTime() - new Date(left.createdAt || 0).getTime(),
+        );
+        const selected = (key) =>
+            String(req.query[key] || "")
+                .split(",")
+                .filter((value) => value && value !== "all");
         const filterKeys = ["recordType", "product", "status", "journeyType"];
-        const filteredRecords = records.filter((record) => filterKeys.every((key) =>
-            !selected(key).length || selected(key).includes(String(record[key] || ""))));
+        const filteredRecords = records.filter((record) =>
+            filterKeys.every(
+                (key) => !selected(key).length || selected(key).includes(String(record[key] || "")),
+            ),
+        );
         const baseView = enquiryCenterView(access.perspective);
         const statusOptions = [...new Set(records.map((record) => record.status).filter(Boolean))]
-            .sort().map((value) => ({ value, label: records.find((record) => record.status === value)?.statusLabel || value.replaceAll("_", " ") }));
+            .sort()
+            .map((value) => ({
+                value,
+                label:
+                    records.find((record) => record.status === value)?.statusLabel ||
+                    value.replaceAll("_", " "),
+            }));
         return sendJson(res, 200, {
             status: "success",
             message: "Leads fetched",
@@ -1577,9 +1676,17 @@ export const getLeads = async (req, res) => {
                 ...enquiryCenterView(access.perspective),
                 perspective: access.perspective,
                 filterBox: {
-                    title: "Filter bookings and enquiries", triggerLabel: "Filters", closeLabel: "Close filters", applyLabel: "Apply filters", resetLabel: "Clear selection",
+                    title: "Filter bookings and enquiries",
+                    triggerLabel: "Filters",
+                    closeLabel: "Close filters",
+                    applyLabel: "Apply filters",
+                    resetLabel: "Clear selection",
                     fields: [
-                        ...baseView.table.filters.map((field) => ({ ...field, type: field.id === "recordType" ? "single" : "multi", options: field.options.filter((option) => option.value !== "all") })),
+                        ...baseView.table.filters.map((field) => ({
+                            ...field,
+                            type: field.id === "recordType" ? "single" : "multi",
+                            options: field.options.filter((option) => option.value !== "all"),
+                        })),
                         { id: "status", label: "Status", type: "multi", options: statusOptions },
                     ],
                 },

@@ -9,6 +9,7 @@ import {
   HotelRoomDetails,
   HotelRateCard,
   Icon,
+  Note,
   Spinner,
   StatusBadge,
 } from "@packages/trem-ui";
@@ -62,7 +63,10 @@ export default function HotelDetailsView({
 
   return (
     <div className="trehub-page">
-      <div className="trehub-page__breadcrumbs">
+      <main
+        className="trehub-hotels trehub-hotels--details"
+        aria-busy={loading || roomsLoading || saving}
+      >
         {contract ? (
           <Breadcrumbs
             items={(breadcrumbs?.detailsItems || []).map((item) => ({
@@ -73,11 +77,7 @@ export default function HotelDetailsView({
         ) : loading ? (
           <span className="trehub-loading__breadcrumb-placeholder" aria-hidden="true" />
         ) : null}
-      </div>
-      <main
-        className="trehub-hotels trehub-hotels--details"
-        aria-busy={loading || roomsLoading || saving}
-      >
+
         {loading && !data ? (
           <TrehubPreloader variant="hotel-detail" label={labels.loading} />
         ) : null}
@@ -93,10 +93,9 @@ export default function HotelDetailsView({
           />
         ) : null}
         {data?.demoInventory || data?.provider === "mock" ? (
-          <p role="note" className="trehub-hotels__notice">
-            <Icon name="info" size={18} aria-hidden="true" />
+          <Note variant="warning" dismissible className="trehub-hotels__notice">
             {labels.mock}
-          </p>
+          </Note>
         ) : null}
         {widgets.map((widget) => {
           if (!data) return null;
@@ -426,34 +425,7 @@ export default function HotelDetailsView({
           </aside>
         ) : null}
         <ModalShell
-          open={Boolean(expandedRoom)}
-          label={expandedRoom ? `${labels.roomDetailsHeading}: ${expandedRoom.title}` : undefined}
-          className="trehub-room-details-modal"
-          dialogClassName="trehub-room-details-modal__dialog"
-          closeOnOutsideClick
-          onClose={() => expandedRoom && onToggleRoom(expandedRoom.id)}
-        >
-          {expandedRoom ? (
-            <section className="trehub-room-details-modal__content">
-              <header className="trehub-room-details-modal__header">
-                <div>
-                  {expandedRoom.badge?.value ? (
-                    <span className="trehub-eyebrow">{expandedRoom.badge.value}</span>
-                  ) : null}
-                  <h2>{expandedRoom.title}</h2>
-                  <p>{expandedRoom.meta}</p>
-                </div>
-                <Button
-                  variant="text"
-                  iconLeft="x"
-                  aria-label={labels.closeRoomDetails}
-                  onClick={() => onToggleRoom(expandedRoom.id)}
-                />
-              </header>
-              <div className="trehub-room-details-modal__body">
-                <HotelRoomDetails room={expandedRoom} labels={labels} />
-              </div>
-              <footer className="trehub-room-details-modal__footer">
+          actions={expandedRoom ? (<footer className="trehub-room-details-modal__footer">
                 {expandedRoomTotal ? <div className="trehub-room-details-modal__total">
                   <span>{labels[expandedRoomTotal.labelRef] || labels.total}</span>
                   <strong>{expandedRoomTotal.value}</strong>
@@ -486,7 +458,36 @@ export default function HotelDetailsView({
                     }}
                   />
                 </div>
-              </footer>
+              </footer>) : null}
+          open={Boolean(expandedRoom)}
+          label={expandedRoom ? `${labels.roomDetailsHeading}: ${expandedRoom.title}` : undefined}
+          className="trehub-room-details-modal"
+          dialogClassName="trehub-room-details-modal__dialog"
+          closeOnOutsideClick
+          onClose={() => expandedRoom && onToggleRoom(expandedRoom.id)}
+        >
+          {expandedRoom ? (
+            <section className="trehub-room-details-modal__content" data-modal-content>
+              <header className="trehub-room-details-modal__header">
+                <div>
+                  {expandedRoom.badge?.value ? (
+                    <span className="trehub-eyebrow">{expandedRoom.badge.value}</span>
+                  ) : null}
+                  <h2>{expandedRoom.title}</h2>
+                  <p>{expandedRoom.meta}</p>
+                </div>
+                <Button
+                  variant="text"
+                  iconLeft="x"
+                  data-modal-close
+                  aria-label={labels.closeRoomDetails}
+                  onClick={() => onToggleRoom(expandedRoom.id)}
+                />
+              </header>
+              <div className="trehub-room-details-modal__body" data-modal-scroll>
+                <HotelRoomDetails room={expandedRoom} labels={labels} />
+              </div>
+
             </section>
           ) : null}
         </ModalShell>
@@ -499,7 +500,7 @@ export default function HotelDetailsView({
           onClose={() => setRateGroup(null)}
         >
           {rateGroup ? (
-            <section className="trehub-rate-modal__content">
+            <section className="trehub-rate-modal__content" data-modal-content>
               <header className="trehub-rate-modal__header">
                 <div>
                   <span className="trehub-eyebrow">{labels.rateOptions}</span>
@@ -509,11 +510,12 @@ export default function HotelDetailsView({
                 <Button
                   variant="text"
                   iconLeft="x"
+                  data-modal-close
                   aria-label={labels.closeRoomDetails}
                   onClick={() => setRateGroup(null)}
                 />
               </header>
-              <div className="trehub-rate-modal__list">
+              <div className="trehub-rate-modal__list" data-modal-scroll>
                 {rateGroup.variants.map((rate) => (
                   <HotelRateCard
                     key={rate.id}

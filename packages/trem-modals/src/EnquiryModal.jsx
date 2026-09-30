@@ -9,7 +9,10 @@ export default function EnquiryModal({
   confirmLabel = "Confirm and continue", cancelLabel = "Cancel", confirmDisabled = false,
 }) {
   return (
-    <ModalShell open={open} label={title} onClose={onClose} dialogClassName="trem-enquiry-modal">
+    <ModalShell open={open} label={title} onClose={onClose} dialogClassName="trem-enquiry-modal" actions={<footer className="trem-enquiry-modal__actions">
+        <Button variant="outline" text={cancelLabel} onClick={onClose} />
+        <Button variant="solid" text={confirmLabel} onClick={onConfirm} disabled={confirmDisabled || !summary} />
+      </footer>}>
       <header className="trem-enquiry-modal__header">
         <h2>{title}</h2>
         <Button variant="text" isCircular iconLeft="x" aria-label="Close" onClick={onClose} />
@@ -19,10 +22,7 @@ export default function EnquiryModal({
         {summary ? <CardWithSubEntity {...summary} /> : null}
         <EnquiryError error={error} />
       </div>
-      <footer className="trem-enquiry-modal__actions">
-        <Button variant="outline" text={cancelLabel} onClick={onClose} />
-        <Button variant="solid" text={confirmLabel} onClick={onConfirm} disabled={confirmDisabled || !summary} />
-      </footer>
+
     </ModalShell>
   );
 }

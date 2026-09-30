@@ -263,6 +263,7 @@ const FloatingActionBar = React.memo(function FloatingActionBar({
       <div
         ref={floatingActionRef}
         className={`trem-fab 
+          ${resolved.length === 1 ? "trem-fab--single-action" : ""}
           ${resolvedError ? "trem-fab--has-error" : ""} 
           trem-fab--align-${legacyAlign} 
           trem-fab--variant-${variant}

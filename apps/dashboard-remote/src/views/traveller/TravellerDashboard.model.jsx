@@ -41,7 +41,7 @@ export default function buildTravellerModel({
     id: trip.id || trip.enquiryRef || index,
     label: trip.title,
     icon: "plane",
-    target: sections.upcoming?.targetTab,
+    target: trip.target || sections.upcoming?.targetTab,
     description: trip.departureLabel || "",
     meta: [trip.enquiryRef].filter(Boolean),
     ariaLabel: copy.upcomingOpenAction ? `${copy.upcomingOpenAction}: ${trip.title}` : undefined,

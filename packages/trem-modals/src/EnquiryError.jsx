@@ -1,6 +1,7 @@
 import React from "react";
+import { Note } from "@packages/trem-ui";
 import { buildGlobalAuthUrl, buildGlobalAppShellUrl } from "@packages/trem-utils";
-import "./EnquiryError.styles.scss";
+
 
 export default function EnquiryError({ error }) {
   if (!error) return null;
@@ -11,12 +12,12 @@ export default function EnquiryError({ error }) {
   const needsMobile = error.code === "MOBILE_REQUIRED" || /add your mobile number to your profile/i.test(message);
 
   return (
-    <div className="trem-enquiry-error" role="alert">
+    <Note variant="error">
       {needsSignIn ? "Please sign in to create your enquiry." : message}
       {needsSignIn ? (
         <> <a href={buildGlobalAuthUrl({ returnTo: window.location.href })}>Sign in</a></>
       ) : null}
       {needsMobile ? <> <a href={buildGlobalAppShellUrl({ tab: "profile" })}>Add mobile number</a></> : null}
-    </div>
+    </Note>
   );
 }
