@@ -1,3 +1,4 @@
+import { useExistingEnquiryChoice } from "@packages/trem-modals";
 import { redirectToPayment } from "@packages/trem-utils";
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -32,6 +33,7 @@ const passengerRows = (offer) =>
   );
 
 export default function FlightDetailsContainer() {
+  const existingEnquiryChoice = useExistingEnquiryChoice();
   const location = useLocation();
   const navigate = useNavigate();
   const offerId = decodeURIComponent(location.pathname.split("/").filter(Boolean).at(-1) || "");
@@ -181,7 +183,7 @@ export default function FlightDetailsContainer() {
     }
   };
 
-  const createEnquiry = async () => {
+  const createEnquiry = async (startNew = false) => {
     setEnquiryError(null);
     setSaving(true);
     setState((current) => ({ ...current, error: "" }));
@@ -189,12 +191,19 @@ export default function FlightDetailsContainer() {
       const response = await createComponentData(
         state.contract.urls.enquiries || "/flights/enquiries",
         {
+          startNew: startNew === true,
           searchId,
           offerId,
           fareId,
           expectedTotal: state.offer.fares.find((fare) => fare.fareId === fareId)?.pricing?.total,
         },
       );
+      if (response.data?.existingEnquiry) {
+        const choice = await existingEnquiryChoice.choose(response.data);
+        if (choice === "new") return createEnquiry(true);
+        if (choice === "continue") navigate(response.data.targetPath);
+        return;
+      }
       setEnquiryModalOpen(false);
       navigate(response.data.targetPath);
     } catch (error) {
@@ -238,6 +247,8 @@ export default function FlightDetailsContainer() {
     });
 
   return (
+    <>
+      {existingEnquiryChoice.modal}
     <FlightDetailsView
       {...state}
       step={step}
@@ -289,5 +300,6 @@ export default function FlightDetailsContainer() {
       onRetryLoad={() => setReloadKey((current) => current + 1)}
       onBackToSearch={() => navigate(location.state?.returnTo || "/trehub/flights")}
     />
+    </>
   );
 }

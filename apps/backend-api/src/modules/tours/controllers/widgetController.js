@@ -473,40 +473,50 @@ const resolvePackageStays = (tour = {}, packageKey = "") => {
             const room = (option.rooms || []).find(
                 (item) =>
                     item?.available !== false &&
-                    (item.packageKeys || []).map(String).includes(String(packageKey)),
+                    (item.packageKeys?.length ? item.packageKeys : option.packageKeys || [])
+                        .map(String).includes(String(packageKey)),
             );
-            if (!room) return [];
+            const linkedHotelWithoutRooms = !(option.rooms || []).length &&
+                (option.packageKeys || []).map(String).includes(String(packageKey));
+            if (!room && !linkedHotelWithoutRooms) return [];
+            const selectedRoom = room || {};
             seenStays.add(stayKey);
             return [
                 {
-                    _id: `${String(option.optionKey || option._id)}:${String(room.roomKey || room._id)}`,
+                    _id: `${String(option.optionKey || option._id)}:${String(selectedRoom.roomKey || selectedRoom._id)}`,
                     stayKey,
                     hotelOptionKey: String(option.optionKey || option._id || ""),
-                    roomOptionKey: String(room.roomKey || room._id || ""),
+                    roomOptionKey: String(selectedRoom.roomKey || selectedRoom._id || ""),
                     nights: Math.max(0, Number(option.nights || 0)),
                     location: String(option.location || ""),
                     propertyName: String(option.propertyName || option.title || ""),
                     propertyClass: String(option.propertyClass || ""),
-                    roomType: String(room.name || ""),
-                    meals: (room.meals || []).map(String).slice(0, 20),
-                    description: String(room.description || option.description || ""),
-                    photos: (room.photos?.length ? room.photos : option.photos || [])
+                    roomType: String(selectedRoom.name || ""),
+                    meals: (selectedRoom.meals || []).map(String).slice(0, 20),
+                    description: String(selectedRoom.description || option.description || ""),
+                    photos: (selectedRoom.photos?.length ? selectedRoom.photos : option.photos || [])
                         .map(String)
                         .slice(0, 20),
                     amenities: [
                         ...new Set(
-                            [...(option.amenities || []), ...(room.amenities || [])].map(String),
+                            [...(option.amenities || []), ...(selectedRoom.amenities || [])].map(String),
                         ),
                     ].slice(0, 30),
+                    pricing: normalizeStayPricing(selectedRoom.pricing, tour) || normalizeStayPricing(option.pricing, tour),
                     includedForPackageKey: packageKey,
                 },
             ];
         });
-    return resolved.length
+    const hasPackageLinks = (tour.hotelOptions || []).some((option) =>
+        (option.packageKeys || []).length ||
+        (option.rooms || []).some((room) => (room.packageKeys || []).length),
+    );
+    return hasPackageLinks
         ? resolved
         : Array.isArray(tour.includedStays)
           ? tour.includedStays.map((stay, index) => ({
                 ...stay,
+                pricing: normalizeStayPricing(stay.pricing, tour),
                 stayKey: stayKeyFor({
                     stayKey: stay?.stayKey,
                     location: stay?.location,
@@ -808,6 +818,16 @@ export const getWidget = async (req, res) => {
                                 tourObj,
                                 widget.component.data.selectedPackageKey,
                             );
+                            if (req.query.allPackages === "true") {
+                                widget.component.data.packages = (tourObj.commercial?.packages || [])
+                                    .filter((item) => item?.enabled !== false && item?.packageKey)
+                                    .map((item) => ({
+                                        packageKey: String(item.packageKey),
+                                        name: publicPackageName(item),
+                                        stays: resolvePackageStays(tourObj, String(item.packageKey)),
+                                        hotelOptions: normalizeHotelOptionsForResponse(tourObj, String(item.packageKey)),
+                                    }));
+                            }
                             widget.component.data.customizable =
                                 tourObj.packageType === "custom" &&
                                 tourObj.customConfig?.allowCustomerCustomization === true;

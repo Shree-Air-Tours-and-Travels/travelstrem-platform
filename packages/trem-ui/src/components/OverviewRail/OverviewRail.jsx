@@ -145,15 +145,22 @@ const WIDGET_COMPONENTS = {
   exclusiveOffer: ExclusiveOfferCard,
 };
 
-export default function OverviewRail({ widgets = [], ariaLabel = "", className = "", onAction }) {
+export default function OverviewRail({
+  widgets = [],
+  ariaLabel = "",
+  className = "",
+  onAction,
+  children,
+}) {
   const visibleWidgets = widgets.filter((widget) => !widget.hide);
-  if (!visibleWidgets.length) return null;
+  if (!visibleWidgets.length && !children) return null;
 
   return (
     <aside
       className={`trem-overview-rail${className ? ` ${className}` : ""}`}
       aria-label={ariaLabel}
     >
+      {children}
       {visibleWidgets.map(({ id, type, ...props }) => {
         const Widget = WIDGET_COMPONENTS[type];
         return Widget ? <Widget key={id} {...props} onAction={onAction} /> : null;
@@ -217,6 +224,7 @@ ExclusiveOfferCard.propTypes = {
 };
 
 OverviewRail.propTypes = {
+  children: PropTypes.node,
   widgets: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.string.isRequired,

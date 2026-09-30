@@ -215,7 +215,7 @@ export default class FlightService {
         return this.requireOffer(searchId, offerId);
     }
 
-    async createEnquiry({ searchId, offerId, fareId, expectedTotal }, actor) {
+    async createEnquiry({ searchId, offerId, fareId, expectedTotal, startNew = false }, actor) {
         const userId = actorId(actor);
         if (!userId) throw domainError(401, "AUTH_REQUIRED", "Please sign in to create a flight enquiry");
         const search = await this.requireSearch(searchId);
@@ -230,7 +230,7 @@ export default class FlightService {
             throw domainError(409, "PRICE_CHANGED", "The fare has changed. Review the updated price and continue again to accept it.", { currentPrice: publicFlightPrice(revalidation.currentPrice) });
         }
         const existing = await ContactLead.findOne({ claimedBy: userId, journeyType: "flight", "customizationSnapshot.searchId": searchId, "customizationSnapshot.offerId": offerId, "customizationSnapshot.fareId": fareId, status: { $nin: ["cancelled", "closed"] } });
-        if (existing) return { enquiryId: String(existing._id), enquiryRef: existing.enquiryRef, targetPath: `/?tab=bookings&enquiry=${encodeURIComponent(existing.enquiryRef)}` };
+        if (existing && !startNew) return { existingEnquiry: true, enquiryId: String(existing._id), enquiryRef: existing.enquiryRef, targetPath: `/?tab=bookings&enquiry=${encodeURIComponent(existing.enquiryRef)}` };
         const customer = await User.findById(userId).select("name email phone phoneNumber mobile").lean();
         const firstSegment = offer.segments[0];
         const lastSegment = offer.segments.at(-1);

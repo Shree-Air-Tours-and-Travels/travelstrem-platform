@@ -87,7 +87,9 @@
     }
 
     &__sidebar {
-      display: none;
+      position: static;
+      max-height: none;
+      overflow: visible;
     }
   }
 }

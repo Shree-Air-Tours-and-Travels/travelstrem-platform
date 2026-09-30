@@ -1375,7 +1375,7 @@ export default class HotelService {
         };
     }
 
-    async createEnquiry({ searchId, hotelId, roomIds, roomId, expectedTotal }, actor) {
+    async createEnquiry({ searchId, hotelId, roomIds, roomId, expectedTotal, startNew = false }, actor) {
         const userId = idFor(actor);
         if (!userId) throw new ApiError(401, "Please sign in to create an enquiry.");
         const search = await this.requireSearch(searchId);
@@ -1396,7 +1396,7 @@ export default class HotelService {
             "customizationSnapshot.roomSignature": roomSignature,
             status: { $nin: ["cancelled", "closed"] },
         });
-        if (existing) return { targetPath: `/?tab=bookings&enquiry=${existing.enquiryRef}` };
+        if (existing && !startNew) return { existingEnquiry: true, targetPath: `/?tab=bookings&enquiry=${existing.enquiryRef}` };
         const customer = await User.findById(userId).select("name email phone").lean();
         const searchUrl = `/trehub/hotels?${new URLSearchParams(search.input)}`;
         const lead = await ContactLead.create({

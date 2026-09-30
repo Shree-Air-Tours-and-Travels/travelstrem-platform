@@ -46,6 +46,7 @@
           { "value": "with_flights", "label": "With flights" }
         ] },
         { "name": "preferredTravelDate", "type": "select", "label": "Fixed departure", "requiredWhenOptions": true, "optionsRef": "departures", "width": "full" },
+        { "slot": "addOns" },
         { "name": "message", "type": "textarea", "label": "Note for the trip captain", "required": false, "maxLength": 1200, "rows": 4, "colSpan": 2 }
       ]
     },

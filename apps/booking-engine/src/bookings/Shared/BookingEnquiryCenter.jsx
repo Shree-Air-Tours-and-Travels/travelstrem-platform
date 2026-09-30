@@ -70,6 +70,9 @@ function JourneyNotice({ journey, block }) {
 
 export default function BookingEnquiryCenter(props) {
   const paymentRedirectRef = useRef(false);
+  const journeyRequestRef = useRef(null);
+  const resolvedRequestRef = useRef("");
+  const mutationRefreshingRef = useRef(false);
   const [paymentBusy, setPaymentBusy] = useState(false);
   const [paymentReceipt, setPaymentReceipt] = useState(null);
   const returnParams = new URLSearchParams(window.location.search);
@@ -136,6 +139,8 @@ export default function BookingEnquiryCenter(props) {
   const selectedEnquiryForm = activeJourney?.data?.enquiryForm;
 
   useEffect(() => {
+    resolvedRequestRef.current = "";
+    journeyRequestRef.current = null;
     setJourneyPage(null);
     setJourney(null);
     setDecision(null);
@@ -143,10 +148,18 @@ export default function BookingEnquiryCenter(props) {
   }, [props.selectedId, selectedListRecord?.id]);
 
   useEffect(() => {
-    if (!selectedListRecord?.id) return;
+    if (!selectedListRecord?.id || mutationRefreshingRef.current) return;
     let active = true;
     setJourneyState((current) => ({ ...current, loading: true, error: "" }));
-    loadBookingJourney(selectedListRecord.id, window.location.pathname, activeStepId)
+    const requestKey = JSON.stringify([selectedListRecord.id, window.location.pathname, activeStepId, journeyState.revision, selectedListRecord?.status, clockConnected]);
+    if (resolvedRequestRef.current === requestKey) {
+      setJourneyState((current) => ({ ...current, loading: false }));
+      return;
+    }
+    if (journeyRequestRef.current?.key !== requestKey) {
+      journeyRequestRef.current = { key: requestKey, promise: loadBookingJourney(selectedListRecord.id, window.location.pathname, activeStepId) };
+    }
+    journeyRequestRef.current.promise
       .then((response) => {
         if (!active) return;
         if (response?.status !== "success" || !response.componentData) {
@@ -159,12 +172,14 @@ export default function BookingEnquiryCenter(props) {
           url.searchParams.set("step", resolvedStep);
           window.history.replaceState(window.history.state, "", url);
         }
+        resolvedRequestRef.current = JSON.stringify([selectedListRecord.id, window.location.pathname, resolvedStep || activeStepId, journeyState.revision, selectedListRecord?.status, clockConnected]);
         setActiveStepId(
           response.componentData.structure?.timeline?.activeStepId || activeStepId,
         );
         setJourneyState((current) => ({ ...current, loading: false, error: "" }));
       })
       .catch((error) => {
+        if (journeyRequestRef.current?.key === requestKey) journeyRequestRef.current = null;
         if (active) {
           setJourneyState((current) => ({
             ...current,
@@ -198,7 +213,7 @@ export default function BookingEnquiryCenter(props) {
             String(response.data?.bookingId) === String(journey.data.paymentBookingId)) setPaymentReceipt(response.data);
       }).catch(() => {});
     return () => { active = false; };
-  }, [paymentSessionId, journey]);
+  }, [paymentSessionId, journey?.data?.paymentBookingId]);
 
   const refreshPayment = (envelope) => {
     if (String(envelope.data?.bookingId) !== String(journey?.data?.paymentBookingId)) return;
@@ -246,8 +261,9 @@ export default function BookingEnquiryCenter(props) {
         window.location.assign(response.componentData.data.targetPath);
         return;
       }
+      mutationRefreshingRef.current = true;
+      try { await props.onRetry?.(); } finally { mutationRefreshingRef.current = false; }
       setJourneyState((current) => ({ ...current, revision: current.revision + 1 }));
-      await props.onRetry?.();
       const convertedBooking = response.componentData?.data;
       if (convertedBooking?.bookingId && convertedBooking?.bookingRef) {
         props.onSelect?.({
@@ -295,11 +311,12 @@ export default function BookingEnquiryCenter(props) {
       }
       setTravellerState({ saving: false, error: "", errors: {} });
       showToast({ title: response.message, status: "success" });
+      mutationRefreshingRef.current = true;
+      try { await props.onRetry?.(); } finally { mutationRefreshingRef.current = false; }
       if (selected.bookingJourney?.data?.travellerSaveNextStep) {
         setActiveStepId(selected.bookingJourney.data.travellerSaveNextStep);
       }
       setJourneyState((current) => ({ ...current, revision: current.revision + 1 }));
-      props.onRetry?.();
     } catch (error) {
       setTravellerState({ saving: false, error: error.message, errors: {} });
     }
@@ -315,9 +332,10 @@ export default function BookingEnquiryCenter(props) {
       }
       setEnquiryFormState({ saving: false, error: "", errors: {} });
       showToast({ title: response.message, status: "success" });
+      mutationRefreshingRef.current = true;
+      try { await props.onRetry?.(); } finally { mutationRefreshingRef.current = false; }
       setActiveStepId("travellers");
       setJourneyState((current) => ({ ...current, revision: current.revision + 1 }));
-      props.onRetry?.();
     } catch (error) {
       setEnquiryFormState({ saving: false, error: error.message, errors: {} });
     }
@@ -330,9 +348,10 @@ export default function BookingEnquiryCenter(props) {
       if (response.status !== "success") throw new Error(response.message || "The quotation could not be requested.");
       showToast({ title: response.message, status: "success" });
       setTravellerState({ saving: false, error: "", errors: {} });
+      mutationRefreshingRef.current = true;
+      try { await props.onRetry?.(); } finally { mutationRefreshingRef.current = false; }
       setActiveStepId("quote");
       setJourneyState((current) => ({ ...current, revision: current.revision + 1 }));
-      props.onRetry?.();
     } catch (error) {
       setTravellerState((current) => ({ ...current, saving: false, error: error.message }));
     }

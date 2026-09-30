@@ -6,6 +6,7 @@ import {
   Title,
   Paragraph,
   AgencyDetailsCard,
+  OverviewRail,
 } from "../../index.js";
 import { ContactAgentModal } from "@packages/trem-modals";
 import { PRODUCT_TYPE } from "../../constants/productTypes.js";
@@ -79,7 +80,6 @@ const CONTENT_WIDGETS = new Set([
   "InclusionsExclusions",
   "PackagePlans",
   "IncludedStays",
-  "CancellationPolicy",
   "ReviewsSection",
   "SimilarTours",
 ]);
@@ -152,6 +152,7 @@ const renderWidget = (widget, props) => {
           key={widget.type}
           tourRef={props.tourRef}
           selectedPackage={props.selectedPackage}
+          onSelectPackage={props.onSelectPackage}
           allowEnquiryCustomization={false}
         />
       );
@@ -256,7 +257,7 @@ export default function ToursDetailsView({
   const availableTabs = useMemo(() => {
     const sectionIds = new Set([
       "overview",
-      ...contentWidgets.map((widget) => SECTION_BY_WIDGET[widget.type]).filter(Boolean),
+      ...widgets.map((widget) => SECTION_BY_WIDGET[widget.type]).filter(Boolean),
     ]);
     const reviewCount = Number(
       activeTour?.reviewCount ?? activeTour?.rating?.count ?? activeTour?.reviews?.length ?? 0,
@@ -264,7 +265,7 @@ export default function ToursDetailsView({
     return DETAIL_TABS.filter(
       (tab) => sectionIds.has(tab.id) && (tab.id !== "reviews" || reviewCount > 0),
     );
-  }, [activeTour, contentWidgets]);
+  }, [activeTour, widgets]);
   const [activeSection, setActiveSection] = useState("overview");
   const sectionNavRef = useRef(null);
   const programmaticScrollRef = useRef(false);
@@ -272,6 +273,24 @@ export default function ToursDetailsView({
   const overviewWidget = heroWidgets.find((w) => w.type === "TourOverview");
   const galleryWidget = heroWidgets.find((w) => w.type === "TourGallery");
   const pricingWidget = heroWidgets.find((w) => w.type === "PricingCard");
+  const policyWidget = widgets.find((w) => w.type === "CancellationPolicy");
+
+  useEffect(() => {
+    const nav = sectionNavRef.current;
+    const page = nav?.closest(".tour-detail");
+    const breadcrumbs = page?.querySelector(".tour-detail__breadcrumbs");
+    if (!nav || !page || !breadcrumbs) return undefined;
+
+    const measureHeaders = () => {
+      page.style.setProperty("--td-breadcrumb-height", `${breadcrumbs.offsetHeight}px`);
+      page.style.setProperty("--td-section-nav-height", `${nav.offsetHeight}px`);
+    };
+    const observer = new ResizeObserver(measureHeaders);
+    observer.observe(nav);
+    observer.observe(breadcrumbs);
+    measureHeaders();
+    return () => observer.disconnect();
+  }, [tourUnavailable]);
 
   useEffect(() => {
     const nav = sectionNavRef.current;
@@ -294,7 +313,11 @@ export default function ToursDetailsView({
       let nextSection = sections[0];
 
       sections.forEach((section) => {
-        if (section.getBoundingClientRect().top <= activationLine) nextSection = section;
+        const sectionTop = section.getBoundingClientRect().top;
+        if (
+          sectionTop <= activationLine &&
+          sectionTop >= nextSection.getBoundingClientRect().top
+        ) nextSection = section;
       });
 
       const isAtEnd = scrollRoot.scrollTop + scrollRoot.clientHeight >= scrollRoot.scrollHeight - 2;
@@ -348,7 +371,7 @@ export default function ToursDetailsView({
   useEffect(() => {
     const nav = sectionNavRef.current;
     const activeButton = nav?.querySelector(`[data-section-id="${activeSection}"]`);
-    if (!nav || !activeButton) return;
+    if (!nav || !activeButton || nav.scrollWidth <= nav.clientWidth) return;
     nav.scrollTo({
       left: activeButton.offsetLeft - (nav.clientWidth - activeButton.offsetWidth) / 2,
       behavior: "smooth",
@@ -438,56 +461,66 @@ export default function ToursDetailsView({
           ))}
         </nav>
 
-        <div className="tour-detail__overview-anchor" id="tour-detail-overview">
-          <div className="tour-detail__hero-section">
-            <div className="tour-detail__hero-main">
-              {galleryWidget && renderWidget(galleryWidget, widgetProps)}
-              {overviewWidget && renderWidget(overviewWidget, widgetProps)}
-            </div>
-            {pricingWidget && renderWidget(pricingWidget, widgetProps)}
-          </div>
-
-          <TourFacts tourRef={tourRef} tour={activeTour} />
-
-          <AgencyDetailsCard
-            agency={activeTour?.agency}
-            operator={
-              activeTour?.operator ||
-              (activeTour?.ownerAgentName
-                ? {
-                    name: activeTour.ownerAgentName,
-                    email: activeTour.ownerAgentEmail,
-                  }
-                : !activeTour?.operator &&
-                    activeTour?.inventorySource === "platform" &&
-                    activeTour?.providerName
-                  ? {
-                      name: "TREM-AI",
-                      email: "",
-                    }
-                  : null)
-            }
-            providerName={activeTour?.providerName || ""}
-            labels={elements?.labels?.agencyDetails || {}}
-          />
-        </div>
-
-        <div className="tour-detail__content">
-          {contentWidgets.map((widget) => {
-            const sectionId = SECTION_BY_WIDGET[widget.type];
-            const content = renderWidget(widget, widgetProps);
-            return sectionId ? (
-              <div
-                className="tour-detail__section-anchor"
-                id={`tour-detail-${sectionId}`}
-                key={widget.type}
-              >
-                {content}
+        <div className="tour-detail__layout">
+          <div className="tour-detail__main">
+            <div className="tour-detail__overview-anchor" id="tour-detail-overview">
+              <div className="tour-detail__hero-section">
+                <div className="tour-detail__hero-main">
+                  {galleryWidget && renderWidget(galleryWidget, widgetProps)}
+                  {overviewWidget && renderWidget(overviewWidget, widgetProps)}
+                </div>
               </div>
-            ) : (
-              content
-            );
-          })}
+
+              <TourFacts tourRef={tourRef} tour={activeTour} />
+            </div>
+
+            <div className="tour-detail__content">
+              {contentWidgets.map((widget) => {
+                const sectionId = SECTION_BY_WIDGET[widget.type];
+                const content = renderWidget(widget, widgetProps);
+                return sectionId ? (
+                  <div
+                    className="tour-detail__section-anchor"
+                    id={`tour-detail-${sectionId}`}
+                    key={widget.type}
+                  >
+                    {content}
+                  </div>
+                ) : (
+                  content
+                );
+              })}
+            </div>
+          </div>
+          <OverviewRail className="tour-detail__sidebar" ariaLabel="Tour summary and policies">
+            {pricingWidget && renderWidget(pricingWidget, widgetProps)}
+            <AgencyDetailsCard
+              agency={activeTour?.agency}
+              operator={
+                activeTour?.operator ||
+                (activeTour?.ownerAgentName
+                  ? {
+                      name: activeTour.ownerAgentName,
+                      email: activeTour.ownerAgentEmail,
+                    }
+                  : !activeTour?.operator &&
+                      activeTour?.inventorySource === "platform" &&
+                      activeTour?.providerName
+                    ? {
+                        name: "TREM-AI",
+                        email: "",
+                      }
+                    : null)
+              }
+              providerName={activeTour?.providerName || ""}
+              labels={elements?.labels?.agencyDetails || {}}
+            />
+            {policyWidget && (
+              <div className="tour-detail__section-anchor" id="tour-detail-policies">
+                {renderWidget(policyWidget, widgetProps)}
+              </div>
+            )}
+          </OverviewRail>
         </div>
       </div>
 

@@ -395,6 +395,7 @@ const customerJourney = (booking, quote, requestedStep = "") => {
     backToPreviousStep: "Back",
     proceedPayment: isFlight && activeStepId === "review" ? "Confirm and proceed to pay" : "Proceed to Payment",
     bookNow: "Book now",
+    backToProduct: isTrevio ? "Back to trip" : "Back to tour",
     backToFlights: isHotel ? "Back to hotels" : "Back to flights",
     cancelFlightEnquiry: "Cancel enquiry",
     cancelFlightTitle: `Cancel this ${selectionName} enquiry?`,
@@ -445,7 +446,10 @@ const customerJourney = (booking, quote, requestedStep = "") => {
           tone: "danger",
         },
       }] : []),
-    ] : [],
+    ] : booking.sourceProductUrl ? [{
+      id: "back-to-product", type: "navigate", labelRef: "backToProduct",
+      href: booking.sourceProductUrl, iconLeft: "chevronLeft", variant: "outline", align: "left",
+    }] : [],
     actions: activeStepId === "quote" && quote?.id
       ? [
           {

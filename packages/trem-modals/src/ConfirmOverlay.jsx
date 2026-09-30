@@ -39,6 +39,7 @@ export default function ConfirmOverlay({
     return (
       <BottomSheet
         open={open}
+        zIndex={2100}
         onClose={onClose}
         title={title}
         closeOnOutsideClick={closeOnOutsideClick}

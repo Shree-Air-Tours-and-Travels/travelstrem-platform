@@ -17,6 +17,7 @@ import {
   validateFields,
 } from "@packages/trem-utils";
 import { showRealtimeToast } from "@packages/trem-events";
+import useExistingEnquiryChoice from "./useExistingEnquiryChoice.jsx";
 import EnquiryError from "./EnquiryError.jsx";
 import ModalShell from "./ModalShell.jsx";
 import "./ContactAgentModal.styles.scss";
@@ -149,6 +150,7 @@ const ContactAgentModal = ({
   onCustomizeJourney,
 }) => {
   const enquiryFormId = useId();
+  const existingEnquiryChoice = useExistingEnquiryChoice();
   const [formData, setFormData] = useState(null);
   const [formLoadError, setFormLoadError] = useState("");
   const [activeStage, setActiveStage] = useState("confirm");
@@ -675,7 +677,7 @@ const ContactAgentModal = ({
     goToStage(hasPricingJourney ? "pricing" : "review");
   };
 
-  const handleSubmit = async (ev) => {
+  const handleSubmit = async (ev, startNew = false) => {
     ev?.preventDefault?.();
 
     if (activeStage === "confirm") {
@@ -691,6 +693,7 @@ const ContactAgentModal = ({
         const response = await fetchData("/submit.json?form=contact-agent", {
           method: "POST",
           body: {
+            startNew,
             tourId: typeof tour?._id === "string" ? tour._id : tourId,
             tourTitle: tour?.title || "Trevio trip",
             product,
@@ -705,6 +708,13 @@ const ContactAgentModal = ({
         });
         if (response?.status !== "success") {
           throw new Error(response?.message || "The enquiry could not be created.");
+        }
+        if (response.data?.existingEnquiry) {
+          const choice = await existingEnquiryChoice.choose(response.data);
+          if (choice === "new") return handleSubmit(null, true);
+          if (choice === "continue") window.location.assign(response.data.targetPath);
+          setSubmitting(false);
+          return;
         }
         notifyDataChanged("enquiries");
         if (response.notify) showRealtimeToast(response.notify);
@@ -744,6 +754,7 @@ const ContactAgentModal = ({
     setMsg(null);
 
     const payload = {
+      startNew,
       tourId: typeof tour?._id === "string" ? tour._id : tourId,
       tourTitle: tour?.title ?? "title unknown",
       product,
@@ -763,6 +774,14 @@ const ContactAgentModal = ({
       });
       const { status, message, ui } = response;
       if (status === "success") {
+        if (response.data?.existingEnquiry) {
+          const choice = await existingEnquiryChoice.choose(response.data);
+          if (choice === "new") return handleSubmit(null, true);
+          if (choice === "continue") window.location.assign(response.data.targetPath);
+          setSubmitting(false);
+          return;
+        }
+
         notifyDataChanged("enquiries");
         // Backend-authored confirmation toast (title/subtitle/status come
         // from the API; the dedupeKey collapses the socket echo on other tabs).
@@ -793,6 +812,7 @@ const ContactAgentModal = ({
       closeOnOutsideClick={closeOnOutsideClick}
       onClose={onClose}
     >
+      {existingEnquiryChoice.modal}
       <Button
         variant="text"
         isCircular

@@ -76,6 +76,12 @@ const includedStaySchema = new Schema(
         roomType: { type: String, trim: true, default: "" },
         meals: [{ type: String, trim: true }],
         description: { type: String, trim: true, default: "" },
+        photos: [{ type: String, trim: true }],
+        pricing: {
+            amountMinor: { type: Number, min: 0, default: null },
+            currency: { type: String, default: "INR" },
+            unit: { type: String, enum: ["PER_PERSON", "PER_BOOKING", "PER_ROOM", "PER_NIGHT", "PER_ROOM_PER_NIGHT", "PER_PERSON_PER_NIGHT"], default: "PER_ROOM_PER_NIGHT" },
+        },
     },
     { _id: true },
 );
@@ -84,6 +90,12 @@ const hotelOptionSchema = new Schema(
     {
         title: { type: String, trim: true, default: "" },
         description: { type: String, trim: true, default: "" },
+        photos: [{ type: String, trim: true }],
+        pricing: {
+            amountMinor: { type: Number, min: 0, default: null },
+            currency: { type: String, default: "INR" },
+            unit: { type: String, enum: ["PER_PERSON", "PER_BOOKING", "PER_ROOM", "PER_NIGHT", "PER_ROOM_PER_NIGHT", "PER_PERSON_PER_NIGHT"], default: "PER_ROOM_PER_NIGHT" },
+        },
         costLabel: { type: String, trim: true, default: "Upgrade cost" },
         cost: { type: String, trim: true, default: "" },
         recommended: { type: Boolean, default: false },

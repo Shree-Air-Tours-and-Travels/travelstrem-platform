@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Button from "../Button/Button.jsx";
+import MultiSelect from "../MultiSelect/MultiSelect.jsx";
 import Dropdown from "../Dropdown/Dropdown.jsx";
 import InputField from "../InputField/InputField.jsx";
 import LocationTypeahead from "../LocationTypeahead/LocationTypeahead.jsx";
@@ -75,6 +76,12 @@ function FieldControl({ field, value, error, onChange }) {
           maxItems={field.maxItems}
         />
       );
+
+    case "multiselect":
+      return <MultiSelect label={field.label} placeholder={placeholder || "Select add-ons"}
+        value={Array.isArray(value) ? value : []} options={field.options || []}
+        onChange={handleChange} disabled={field.disabled} required={field.required}
+        error={error} searchable />;
 
     case "select": {
       const label = field.label || field.name;
@@ -249,6 +256,7 @@ function FieldGroup({ field, value, error, onChange, columns }) {
   const type = field.type || "text";
   const inlineControl = ["checkbox", "switch", "radio"].includes(type);
   const builtInLabel = [
+    "multiselect",
     "select",
     "text",
     "email",
@@ -273,7 +281,7 @@ function FieldGroup({ field, value, error, onChange, columns }) {
       <div className="trem-form__control">
         <FieldControl field={field} value={value} error={error} onChange={onChange} />
       </div>
-      {error && <div className="trem-form__error">{error}</div>}
+      {error && type !== "multiselect" && <div className="trem-form__error">{error}</div>}
     </div>
   );
 }

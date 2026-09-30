@@ -65,7 +65,10 @@ const validate = (field, value, now) => {
   }
   if (field.minItems != null && (!Array.isArray(value) || value.length < Number(field.minItems)))
     return `${field.label} needs at least ${field.minItems} items`;
-  if (field.options?.length && !field.options.some((option) => option.value === value))
+  if (field.type === "multiselect" &&
+      (!Array.isArray(value) || value.some((item) => !(field.options || []).some((option) => option.value === item))))
+    return `${field.label} contains an unsupported value`;
+  if (field.type !== "multiselect" && field.options?.length && !field.options.some((option) => option.value === value))
     return `${field.label} contains an unsupported value`;
   if (field.minDate === "today") {
     const selected = new Date(`${value}T00:00:00.000Z`);

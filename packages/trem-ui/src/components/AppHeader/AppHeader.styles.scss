@@ -30,9 +30,9 @@
   border-bottom: 1px solid var(--border);
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent 42%),
-    var(--surface-glass-strong, var(--card-bg));
+    #{$dark-surface};
   box-shadow: 0 14px 34px rgba(3, 10, 26, 0.22);
-  backdrop-filter: blur(18px);
+  isolation: isolate;
   transition: left $duration-slow $ease-standard;
 }
 

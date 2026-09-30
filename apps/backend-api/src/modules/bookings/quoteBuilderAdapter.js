@@ -342,6 +342,7 @@ export async function findAuthorizedBookingJourney(enquiryId, actor) {
         paymentEnabled: !config.IS_DEVELOPMENT ? false : paymentBooking
             ? !["PAID", "FULLY_PAID", "REFUNDED", "PARTIALLY_REFUNDED"].includes(paymentBooking.paymentStatus) && !["CANCELLED", "COMPLETED"].includes(paymentBooking.status)
             : enquiry.product === "trehub" && !["cancelled", "closed"].includes(enquiry.status),
+        sourceProductUrl: sourceJourney ? `/${enquiry.product === "trevio" ? "trevio/trips" : "trevista/tours"}/${encodeURIComponent(sourceJourney.slug || String(sourceJourney._id))}` : "",
         flightSearchUrl: enquiry.product === "trehub" ? flightSearchUrl(enquiry) : "",
         record: {
             ...(booking ? bookingView(booking.toObject(), enquiry, perspective) : enquiryView(enquiry, perspective)),
@@ -712,7 +713,7 @@ async function buildProductEnquiryContext(source, product = "trevista") {
             hotelsByStay.set(stayKey, group);
         });
     }
-    const addOnOptions = product === "trevista"
+    const addOnOptions = ["trevista", "trevio"].includes(product)
         ? (source?.extras || []).filter((item) => item.active !== false && item.included !== true)
             .map((item, index) => ({
                 key: optionKey(item._id, `addon-${index + 1}`),
@@ -913,6 +914,19 @@ async function loadQuoteContext(enquiry) {
                   packageComponent: true,
               },
     ] : [];
+    const selectedExtraIds = new Set((enquiry.customizationSnapshot?.selectedAddOnIds || []).map(String));
+    for (const extra of tour?.extras || []) {
+        if (!selectedExtraIds.has(String(extra._id)) || extra.included === true || extra.active === false) continue;
+        pricingItems.push({
+            name: extra.title || "Selected add-on",
+            category: "OTHER",
+            description: extra.description || "Customer-selected optional add-on",
+            pricingType: extra.perTraveller || extra.perPerson ? "PER_PERSON" : "FIXED",
+            unitAmount: extra.price != null && Number.isFinite(Number(extra.price)) && Number(extra.price) >= 0 ? String(Number(extra.price)) : "",
+            quantity: extra.perTraveller || extra.perPerson ? travellerCount : 1,
+            packageComponent: false,
+        });
+    }
     if (packageMinor > derivedTotalMinor && derivedItems.length)
         pricingItems.push({
             name: "Package pricing adjustment",

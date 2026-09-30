@@ -1072,6 +1072,22 @@ export const submitForm = async (req, res) => {
               }
             : {};
 
+        const customerId = req.user?.sub || req.user?.id || req.user?._id;
+        if (customerId && linkedTourId && req.body?.startNew !== true) {
+            const existing = await ContactLeadRepository.findOne({
+                claimedBy: customerId, tourId: linkedTourId, product,
+                ...(allowedFields.packageKey ? { "selection.packageKey": allowedFields.packageKey } : {}),
+                ...(allowedFields.preferredTravelDate ? { "fields.preferredTravelDate": allowedFields.preferredTravelDate } : {}),
+                status: { $nin: ["cancelled", "closed"] },
+            }).sort({ createdAt: -1 }).lean();
+            if (existing) return sendJson(res, 200, {
+                status: "success", data: { existingEnquiry: true,
+                    enquiryRef: existing.enquiryRef,
+                    targetPath: `/?product=${product}&tab=bookings&enquiry=${encodeURIComponent(existing.enquiryRef)}`,
+                },
+            });
+        }
+
         const newLead = ContactLeadRepository.create({
             form: submittedForm,
             fields: allowedFields,
