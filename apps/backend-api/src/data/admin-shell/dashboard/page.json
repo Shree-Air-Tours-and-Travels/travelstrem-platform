@@ -1,14 +1,60 @@
 {
   "status": "success",
   "component": {
-    "data": {},
+    "data": {
+      "metrics": {},
+      "inventory": [],
+      "governance": [],
+      "platform": {},
+      "recentActivity": [],
+      "generatedAt": null
+    },
     "dataScope": {
       "options": {}
     },
     "elements": {
       "labels": {
-        "dashboardTitle": "Admin Dashboard",
-        "dashboardDescription": "Overview of platform metrics and quick actions."
+        "progressWidgetTitle": "Platform tour performance",
+        "progressWidgetDescription": "Track traveller interest, conversion signals and automatically trending tours across the platform.",
+        "upcomingDeparturesTitle": "Upcoming departures",
+        "upcomingDeparturesDescription": "Next scheduled tours and trips.",
+        "systemStatusTitle": "System status",
+        "systemStatusDescription": "Current API instance and database health.",
+        "eyebrow": "PLATFORM CONTROL CENTER",
+        "dashboardTitle": "TravelsTREM operations",
+        "dashboardDescription": "Monitor product publishing, traveller demand, partner governance and platform reach from one workspace.",
+        "refresh": "Refresh dashboard",
+        "metricsAriaLabel": "Platform overview",
+        "totalInventory": "Travel inventory",
+        "publishedInventory": "Live inventory",
+        "openEnquiries": "Open enquiries",
+        "openSupportTickets": "Open support tickets",
+        "pendingApprovals": "Needs approval",
+        "inventoryTitle": "Product health",
+        "inventoryDescription": "Publishing health across active TravelsTREM products.",
+        "governanceTitle": "Governance queue",
+        "governanceDescription": "Records waiting for an administrator decision.",
+        "platformTitle": "Platform reach",
+        "platformDescription": "Active products, partners and account coverage.",
+        "activeProducts": "Active products",
+        "activePartners": "Active partners",
+        "activeAgents": "Approved agents",
+        "activeMembers": "Active members",
+        "recentTitle": "Recent activity",
+        "recentDescription": "Latest changes across products, enquiries and partner records.",
+        "recentEmptyTitle": "No recent platform changes",
+        "recentEmptyDescription": "New publishing, enquiry and partner events will appear here.",
+        "quickActionsTitle": "Quick actions",
+        "quickActionsDescription": "Open common administration workflows.",
+        "manageInventory": "Manage travel inventory",
+        "manageInventoryDescription": "Review, verify and publish tours and trips.",
+        "reviewEnquiries": "Review enquiries",
+        "reviewEnquiriesDescription": "Monitor traveller requests and responses.",
+        "managePartners": "Manage partners",
+        "managePartnersDescription": "Review agencies, agents and platform access.",
+        "published": "Published",
+        "draft": "Draft",
+        "pending": "Pending"
       },
       "urls": {}
     },
@@ -19,32 +65,170 @@
       },
       "widgets": [
         {
-          "type": "StatsGrid",
-          "widgetRef": "./widgets/stats-grid.json"
+          "type": "AdminMetrics",
+          "props": {
+            "endpoint": "/pages/admin-shell/dashboard/widgets/metrics",
+            "ariaLabelRef": "metricsAriaLabel",
+            "items": [
+              {
+                "id": "inventory",
+                "metric": "totalInventory",
+                "labelRef": "totalInventory",
+                "icon": "travelPackage",
+                "target": "services"
+              },
+              {
+                "id": "live",
+                "metric": "publishedInventory",
+                "labelRef": "publishedInventory",
+                "icon": "globe",
+                "target": "services"
+              },
+              {
+                "id": "enquiries",
+                "metric": "openEnquiries",
+                "labelRef": "openEnquiries",
+                "icon": "messageCircle",
+                "target": "enquiries"
+              },
+              {
+                "id": "support",
+                "metric": "openSupportTickets",
+                "labelRef": "openSupportTickets",
+                "icon": "support",
+                "target": "support"
+              },
+              {
+                "id": "approvals",
+                "metric": "pendingApprovals",
+                "labelRef": "pendingApprovals",
+                "icon": "shieldCheck",
+                "target": "tenancy"
+              }
+            ]
+          }
+        },
+        {
+          "type": "ProgressWidget",
+          "props": {
+            "endpoint": "/pages/admin-shell/dashboard/widgets/progress",
+            "group": "analytics",
+            "titleRef": "progressWidgetTitle",
+            "descriptionRef": "progressWidgetDescription"
+          }
+        },
+        {
+          "type": "ListingWidget",
+          "props": {
+            "endpoint": "/pages/admin-shell/dashboard/widgets/listing",
+            "group": "analytics"
+          }
+        },
+        {
+          "type": "InventoryHealth",
+          "props": {
+            "endpoint": "/pages/admin-shell/dashboard/widgets/productHealth",
+            "group": "operations",
+            "titleRef": "inventoryTitle",
+            "descriptionRef": "inventoryDescription",
+            "dataKey": "inventory"
+          }
+        },
+        {
+          "type": "GovernanceQueue",
+          "props": {
+            "endpoint": "/pages/admin-shell/dashboard/widgets/governanceQueue",
+            "group": "operations",
+            "titleRef": "governanceTitle",
+            "descriptionRef": "governanceDescription",
+            "dataKey": "governance"
+          }
+        },
+        {
+          "type": "PlatformReach",
+          "props": {
+            "endpoint": "/pages/admin-shell/dashboard/widgets/platformReach",
+            "group": "operations",
+            "titleRef": "platformTitle",
+            "descriptionRef": "platformDescription",
+            "dataKey": "platform"
+          }
         },
         {
           "type": "QuickActions",
-          "widgetRef": "./widgets/quick-actions.json"
+          "props": {
+            "endpoint": "/pages/admin-shell/dashboard/widgets/quickActions",
+            "group": "operations",
+            "titleRef": "quickActionsTitle",
+            "descriptionRef": "quickActionsDescription"
+          }
         },
         {
-          "type": "BookingStatusChart",
-          "widgetRef": "./widgets/booking-status-chart.json"
+          "type": "RecentActivity",
+          "props": {
+            "endpoint": "/pages/admin-shell/dashboard/widgets/recentActivity",
+            "group": "activity",
+            "slot": "primary",
+            "titleRef": "recentTitle",
+            "descriptionRef": "recentDescription",
+            "dataKey": "recentActivity",
+            "emptyTitleRef": "recentEmptyTitle",
+            "emptyDescriptionRef": "recentEmptyDescription"
+          }
         },
         {
-          "type": "RevenueChart",
-          "widgetRef": "./widgets/revenue-chart.json"
+          "type": "UpcomingDepartures",
+          "props": {
+            "endpoint": "/pages/admin-shell/dashboard/widgets/upcomingDepartures",
+            "group": "activity",
+            "slot": "secondary",
+            "titleRef": "upcomingDeparturesTitle",
+            "descriptionRef": "upcomingDeparturesDescription"
+          }
         },
         {
-          "type": "RecentBookingsList",
-          "widgetRef": "./widgets/recent-bookings-list.json"
-        },
-        {
-          "type": "PopularDestinations",
-          "widgetRef": "./widgets/popular-destinations.json"
+          "type": "SystemStatus",
+          "props": {
+            "endpoint": "/pages/admin-shell/dashboard/widgets/systemStatus",
+            "group": "activity",
+            "slot": "secondary",
+            "titleRef": "systemStatusTitle",
+            "descriptionRef": "systemStatusDescription"
+          }
         }
       ],
       "config": {},
-      "actions": []
+      "actions": [
+        {
+          "id": "inventory",
+          "labelRef": "manageInventory",
+          "descriptionRef": "manageInventoryDescription",
+          "icon": "map",
+          "target": "services"
+        },
+        {
+          "id": "enquiries",
+          "labelRef": "reviewEnquiries",
+          "descriptionRef": "reviewEnquiriesDescription",
+          "icon": "messageCircle",
+          "target": "enquiries"
+        },
+        {
+          "id": "support",
+          "labelRef": "openSupportTickets",
+          "descriptionRef": "recentDescription",
+          "icon": "support",
+          "target": "support"
+        },
+        {
+          "id": "partners",
+          "labelRef": "managePartners",
+          "descriptionRef": "managePartnersDescription",
+          "icon": "building2",
+          "target": "tenancy",
+          "masterOnly": true
+        }
+      ]
     }
   }
 }

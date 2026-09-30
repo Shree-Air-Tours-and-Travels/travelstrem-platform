@@ -1,64 +1,64 @@
 const normalizeSession = (data = {}) => ({
-    user: data.user || null,
-    permissions: Array.isArray(data.permissions) ? data.permissions : [],
-    isAuthenticated: Boolean(data.isAuthenticated || data.authenticated || data.user),
-    sessionVersion: data.sessionVersion || data.user?.sessionVersion || null,
-    flags: data.flags || {},
-    config: data.config || {},
+  user: data.user || null,
+  permissions: Array.isArray(data.permissions) ? data.permissions : [],
+  isAuthenticated: Boolean(data.isAuthenticated || data.authenticated || data.user),
+  sessionVersion: data.sessionVersion || data.user?.sessionVersion || null,
+  flags: data.flags || {},
+  config: data.config || {},
 });
 
 /** @deprecated Tokens are now stored in httpOnly cookies. */
 const getStoredAuthToken = () => null;
 
 const appendParams = (url, params = {}) => {
-    Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) url.searchParams.set(key, value);
-    });
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) url.searchParams.set(key, value);
+  });
 };
 
 export const createUserSession = ({ requestSession }) => {
-    let sessionPromise = null;
-    let cachedSession = null;
+  let sessionPromise = null;
+  let cachedSession = null;
 
-    const initUserSession = async (params = {}) => {
-        if (cachedSession) return cachedSession;
-        if (sessionPromise) return sessionPromise;
+  const initUserSession = async (params = {}) => {
+    if (cachedSession) return cachedSession;
+    if (sessionPromise) return sessionPromise;
 
-        sessionPromise = requestSession(params)
-            .then((data) => {
-                cachedSession = normalizeSession(data);
-                return cachedSession;
-            })
-            .finally(() => {
-                sessionPromise = null;
-            });
-
-        return sessionPromise;
-    };
-
-    const clearUserSessionCache = () => {
-        cachedSession = null;
+    sessionPromise = requestSession(params)
+      .then((data) => {
+        cachedSession = normalizeSession(data);
+        return cachedSession;
+      })
+      .finally(() => {
         sessionPromise = null;
-    };
+      });
 
-    return { initUserSession, clearUserSessionCache };
+    return sessionPromise;
+  };
+
+  const clearUserSessionCache = () => {
+    cachedSession = null;
+    sessionPromise = null;
+  };
+
+  return { initUserSession, clearUserSessionCache };
 };
 
 export const createApiServiceUserSession = ({ apiService }) =>
-    createUserSession({
-        requestSession: (params = {}) => apiService.get("/session", { params }),
-    });
+  createUserSession({
+    requestSession: (params = {}) => apiService.get("/session", { params }),
+  });
 
 export const createFetchUserSession = ({ apiBase, fetchImpl } = {}) =>
-    createUserSession({
-        requestSession: async (params = {}) => {
-            const url = new URL(`${apiBase}/session`);
-            appendParams(url, params);
+  createUserSession({
+    requestSession: async (params = {}) => {
+      const url = new URL(`${apiBase}/session`);
+      appendParams(url, params);
 
-            const res = await (fetchImpl || fetch)(url.toString(), {
-                credentials: "include",
-            });
+      const res = await (fetchImpl || fetch)(url.toString(), {
+        credentials: "include",
+      });
 
-            return res.json();
-        },
-    });
+      return res.json();
+    },
+  });

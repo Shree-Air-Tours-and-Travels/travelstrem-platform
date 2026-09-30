@@ -3,7 +3,7 @@
   "component": {
     "data": {
       "state": {
-        "bookingSteps": [
+        "planningSteps": [
           {
             "id": "choose",
             "title": "Choose your trip",
@@ -12,7 +12,7 @@
           {
             "id": "travellers",
             "title": "Add your travellers",
-            "description": "Enter traveller details once. They're saved for future bookings."
+            "description": "Share who is travelling so the team can prepare the right plan."
           },
           {
             "id": "addons",
@@ -21,8 +21,8 @@
           },
           {
             "id": "request",
-            "title": "Confirm your booking",
-            "description": "Review your summary and submit. We'll handle the rest."
+            "title": "Send your enquiry",
+            "description": "Review your preferences and send them to our travel team."
           }
         ]
       }
@@ -32,8 +32,8 @@
     },
     "elements": {
       "labels": {
-        "howEyebrow": "Simple booking journey",
-        "howHeading": "Book your adventure in four easy steps."
+        "howEyebrow": "Simple planning journey",
+        "howHeading": "Plan your adventure in four easy steps."
       },
       "urls": {}
     },
@@ -42,7 +42,7 @@
       "source": "trevio",
       "features": [
         {
-          "name": "bookingSteps",
+          "name": "planningSteps",
           "type": "stepList",
           "eyebrowRef": "howEyebrow",
           "headingRef": "howHeading"

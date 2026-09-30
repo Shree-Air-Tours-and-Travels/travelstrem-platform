@@ -1,0 +1,10 @@
+export default {
+  "duration-instant": "0.001ms",
+  "duration-fast": "120ms",
+  "duration-base": "160ms",
+  "duration-medium": "180ms",
+  "duration-slow": "220ms",
+  "duration-shimmer": "1.2s",
+  "ease-standard": "ease",
+  "ease-linear": "linear"
+};

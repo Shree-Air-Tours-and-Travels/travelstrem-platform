@@ -1,119 +1,135 @@
 const normalizeEnvironment = (value, { supportStaging = false } = {}) => {
-    const raw = String(value || "").trim().toLowerCase();
-    if (raw === "production" || raw === "prod") return "production";
-    if (supportStaging && (raw === "staging" || raw === "stage")) return "staging";
-    return "development";
+  const raw = String(value || "")
+    .trim()
+    .toLowerCase();
+  if (raw === "production" || raw === "prod") return "production";
+  if (supportStaging && (raw === "staging" || raw === "stage")) return "staging";
+  return "development";
 };
 
 const stripRemoteEntry = (remoteEntry) =>
-    String(remoteEntry || "").replace(/\/remoteEntry\.js$/, "").replace(/\/$/, "");
+  String(remoteEntry || "")
+    .replace(/\/remoteEntry\.js$/, "")
+    .replace(/\/$/, "");
 
 const normalizeUrl = (url) => String(url || "").replace(/\/$/, "");
 
 const defaultBackend = {
-    development: {
-        baseUrl: process.env.REACT_APP_BACKEND_URL,
-        apiBaseUrl: process.env.REACT_APP_API_URL,
-    },
-    production: {
-        baseUrl: process.env.REACT_APP_BACKEND_URL,
-        apiBaseUrl: process.env.REACT_APP_API_URL,
-    },
+  development: {
+    baseUrl: process.env.REACT_APP_BACKEND_URL,
+    apiBaseUrl: process.env.REACT_APP_API_URL,
+  },
+  production: {
+    baseUrl: process.env.REACT_APP_BACKEND_URL,
+    apiBaseUrl: process.env.REACT_APP_API_URL,
+  },
 };
 
 const adminEnvironments = {
-    development: {
-        backend: defaultBackend.development,
-        frontends: {
-            adminShell: { baseUrl: process.env.REACT_APP_ADMIN_SHELL_URL },
-        },
-        auth: { shellLoginPath: "/auth" },
+  development: {
+    backend: defaultBackend.development,
+    frontends: {
+      adminShell: { baseUrl: process.env.REACT_APP_ADMIN_SHELL_URL },
     },
-    production: {
-        backend: defaultBackend.production,
-        frontends: {
-            adminShell: { baseUrl: process.env.REACT_APP_ADMIN_SHELL_URL },
-        },
-        auth: { shellLoginPath: "/auth" },
+    auth: { shellLoginPath: "/auth" },
+  },
+  production: {
+    backend: defaultBackend.production,
+    frontends: {
+      adminShell: { baseUrl: process.env.REACT_APP_ADMIN_SHELL_URL },
     },
+    auth: { shellLoginPath: "/auth" },
+  },
 };
 
 const toursEnvironments = {
-    development: {
-        backend: defaultBackend.development,
-    },
-    production: {
-        backend: defaultBackend.production,
-    },
+  development: {
+    backend: defaultBackend.development,
+  },
+  production: {
+    backend: defaultBackend.production,
+  },
 };
 
 export const createPortalEnvironment = ({
-    processEnv = {},
-    environments,
-    supportStaging = false,
-    allowEnvOverrides = false,
-    allowApiUrlWithoutOverrideFlag = false,
-    allowBackendUrlFallback = false,
+  processEnv = {},
+  environments,
+  supportStaging = false,
+  allowEnvOverrides = false,
+  allowApiUrlWithoutOverrideFlag = false,
+  allowBackendUrlFallback = false,
 } = {}) => {
-    const portalEnv = normalizeEnvironment(processEnv.REACT_APP_PORTAL_ENV || processEnv.NODE_ENV, { supportStaging });
-    const portalEnvironment = environments[portalEnv] || environments.development;
+  const portalEnv = normalizeEnvironment(processEnv.REACT_APP_PORTAL_ENV || processEnv.NODE_ENV, {
+    supportStaging,
+  });
+  const portalEnvironment = environments[portalEnv] || environments.development;
 
-    const getConfiguredApiBase = () => {
-        const envApiUrl = allowEnvOverrides || allowApiUrlWithoutOverrideFlag ? processEnv.REACT_APP_API_URL : "";
-        const envBackendApiUrl =
-            allowBackendUrlFallback && processEnv.REACT_APP_BACKEND_URL
-                ? `${normalizeUrl(processEnv.REACT_APP_BACKEND_URL)}/api`
-                : "";
+  const getConfiguredApiBase = () => {
+    const envApiUrl =
+      allowEnvOverrides || allowApiUrlWithoutOverrideFlag ? processEnv.REACT_APP_API_URL : "";
+    const envBackendApiUrl =
+      allowBackendUrlFallback && processEnv.REACT_APP_BACKEND_URL
+        ? `${normalizeUrl(processEnv.REACT_APP_BACKEND_URL)}/api`
+        : "";
 
-        return (
-            envApiUrl ||
-            envBackendApiUrl ||
-            portalEnvironment?.backend?.apiBaseUrl ||
-            (portalEnvironment?.backend?.baseUrl ? `${normalizeUrl(portalEnvironment.backend.baseUrl)}/api` : "")
-        );
-    };
+    return (
+      envApiUrl ||
+      envBackendApiUrl ||
+      portalEnvironment?.backend?.apiBaseUrl ||
+      (portalEnvironment?.backend?.baseUrl
+        ? `${normalizeUrl(portalEnvironment.backend.baseUrl)}/api`
+        : "")
+    );
+  };
 
-    const getConfiguredFrontendOrigin = (key) => {
-        const app = portalEnvironment?.frontends?.[key] || {};
-        return app.baseUrl || stripRemoteEntry(app.remoteEntry);
-    };
+  const getConfiguredFrontendOrigin = (key) => {
+    const app = portalEnvironment?.frontends?.[key] || {};
+    return app.baseUrl || stripRemoteEntry(app.remoteEntry);
+  };
 
-    const getConfiguredRemoteOrigin = (key) => {
-        const envKey = key === "adminTREM" ? "REACT_APP_ADMIN_REMOTE_URL" : key === "trevista" ? "REACT_APP_TREVISTA_REMOTE_URL" : key === "trevio" ? "REACT_APP_TREVIO_REMOTE_URL" : null;
-        const envValue = allowEnvOverrides && envKey ? processEnv[envKey] : "";
-        const app = portalEnvironment?.frontends?.[key] || {};
-        return stripRemoteEntry(envValue || app.remoteEntry || app.baseUrl);
-    };
+  const getConfiguredRemoteOrigin = (key) => {
+    const envKey =
+      key === "adminTREM"
+        ? "REACT_APP_ADMIN_REMOTE_URL"
+        : key === "trevista"
+          ? "REACT_APP_TREVISTA_REMOTE_URL"
+          : key === "trevio"
+            ? "REACT_APP_TREVIO_REMOTE_URL"
+            : null;
+    const envValue = allowEnvOverrides && envKey ? processEnv[envKey] : "";
+    const app = portalEnvironment?.frontends?.[key] || {};
+    return stripRemoteEntry(envValue || app.remoteEntry || app.baseUrl);
+  };
 
-    const getShellLoginUrl = () => {
-        const shellBase =
-            getConfiguredFrontendOrigin("shell") ||
-            (typeof window !== "undefined" ? window.location.origin : "");
-        const loginPath = portalEnvironment?.auth?.shellLoginPath || "/login";
-        return `${shellBase.replace(/\/$/, "")}${loginPath.startsWith("/") ? loginPath : `/${loginPath}`}`;
-    };
+  const getShellLoginUrl = () => {
+    const shellBase =
+      getConfiguredFrontendOrigin("shell") ||
+      (typeof window !== "undefined" ? window.location.origin : "");
+    const loginPath = portalEnvironment?.auth?.shellLoginPath || "/login";
+    return `${shellBase.replace(/\/$/, "")}${loginPath.startsWith("/") ? loginPath : `/${loginPath}`}`;
+  };
 
-    return {
-        PORTAL_ENV: portalEnv,
-        portalEnvironment,
-        getConfiguredApiBase,
-        getConfiguredFrontendOrigin,
-        getConfiguredRemoteOrigin,
-        getShellLoginUrl,
-    };
+  return {
+    PORTAL_ENV: portalEnv,
+    portalEnvironment,
+    getConfiguredApiBase,
+    getConfiguredFrontendOrigin,
+    getConfiguredRemoteOrigin,
+    getShellLoginUrl,
+  };
 };
 
 export const createAdminPortalEnvironment = (processEnv = {}) =>
-    createPortalEnvironment({
-        processEnv,
-        environments: adminEnvironments,
-        allowEnvOverrides: processEnv.REACT_APP_ALLOW_ENV_OVERRIDES === "true",
-    });
+  createPortalEnvironment({
+    processEnv,
+    environments: adminEnvironments,
+    allowEnvOverrides: processEnv.REACT_APP_ALLOW_ENV_OVERRIDES === "true",
+  });
 
 export const createToursPortalEnvironment = (processEnv = {}) =>
-    createPortalEnvironment({
-        processEnv,
-        environments: toursEnvironments,
-        allowApiUrlWithoutOverrideFlag: true,
-        allowBackendUrlFallback: true,
-    });
+  createPortalEnvironment({
+    processEnv,
+    environments: toursEnvironments,
+    allowApiUrlWithoutOverrideFlag: true,
+    allowBackendUrlFallback: true,
+  });

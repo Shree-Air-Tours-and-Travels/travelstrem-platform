@@ -1,143 +1,342 @@
-import React from "react";
+import React, { useState } from "react";
 import {
-  NoDataFound,
-  MetricSummary,
-  OverviewRail,
-  PlanCards,
-  Preloader,
-  Spinner,
+  GlobalSearchCard,
+  HomeCardsWithFeature,
+  Icon,
 } from "@packages/trem-ui";
+import { useCountUp } from "../hooks/useCountUp";
+import { useHomeMotion } from "./useHomeMotion";
 import "./OverviewView.scss";
-
-function normalizeStatus(status) {
-  if (!status) return "Draft";
-  return status.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-function statusKey(status) {
-  return String(status || "").toUpperCase();
-}
-
-function formatDate(dateStr) {
-  if (!dateStr) return "";
-  try {
-    return new Date(dateStr).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-  } catch {
-    return dateStr;
-  }
-}
-
-function getTimeOfDay() {
-  const h = new Date().getHours();
-  if (h < 12) return "morning";
-  if (h < 17) return "afternoon";
-  return "evening";
-}
+import "./OverviewExperience.scss";
 
 export default function OverviewView({
-  user,
-  stats,
-  metricsDefinition,
-  planCards,
-  overviewRail,
-  overviewDefinitionLoading = false,
-  overviewStatsLoading = false,
-  bookingsLoading = false,
-  recentBookingsEmptyState,
-  recentBookings,
+  journeyHero,
+  journeyStory,
+  featuredTravel,
+  homeInsights,
+  onHeroSearch,
   onTabChange,
-  onViewBooking,
+  onArticleSelect,
 }) {
-  const metricItems = (metricsDefinition?.items || []).map((item) => ({
-    ...item,
-    label: metricsDefinition.labels?.[item.labelRef] || item.label || "",
-    value: stats?.[item.valueKey] ?? 0,
-    onClick: item.target ? () => onTabChange?.(item.target) : undefined,
-  }));
-
+  const discoveryState = journeyHero?.states?.discover;
+  const motionRef = useHomeMotion();
+  const [activeQuestion, setActiveQuestion] = useState(null);
+  const selectedQuestion = activeQuestion === null
+    ? homeInsights?.faq?.items?.find((item) => item.open === true)?.id
+    : activeQuestion;
   return (
-    <div className="dov">
-      <div className="dov__greeting">
-        <h1>Good {getTimeOfDay()}, {user?.name?.split(" ")[0] || "there"} 👋 </h1>
-        <p>Here's what's happening with your travel plans</p>
-      </div>
-
-      {overviewStatsLoading || overviewDefinitionLoading ? (
-        <Preloader
-          variant="stats"
-          count={1}
-          label="Loading statistics"
-          className="dov__stats-preloader"
-        />
-      ) : metricItems.length ? (
-        <MetricSummary
-          items={metricItems}
-          ariaLabel={metricsDefinition.labels?.[metricsDefinition.ariaLabelRef]}
-          className="dov__stats"
-        />
+    <div className="dov dov--experience" ref={motionRef}>
+      {discoveryState ? (
+        <section
+          className="dov__hero dov__hero--search"
+          aria-label={journeyHero?.ariaLabel}
+          style={
+            journeyHero?.backgroundUrl
+              ? { "--dov-hero-image": `url("${journeyHero.backgroundUrl}")` }
+              : undefined
+          }
+        >
+          <div className="dov__hero-media" aria-hidden="true" />
+          <div className="dov__hero-stage">
+            <div className="dov__hero-copy">
+              <span className="dov__hero-eyebrow" data-home-reveal>
+                <Icon name="sparkles" size={16} />
+                {journeyHero?.eyebrow}
+              </span>
+              <h1 data-home-reveal="title" data-home-order="1">{discoveryState.title}</h1>
+              <p className="dov__hero-description" data-home-reveal data-home-order="2">{discoveryState.description}</p>
+            </div>
+            {journeyHero?.search ? (
+              <GlobalSearchCard
+                className="dov__hero-search"
+                variant="all"
+                modes={journeyHero.search.modes}
+                fieldsByMode={journeyHero.search.fieldsByMode}
+                choiceGroupsByMode={journeyHero.search.choiceGroupsByMode}
+                labels={{
+                  searchAriaLabel: journeyHero.search.ariaLabel,
+                  searchSubmitLabel: journeyHero.search.submitLabel,
+                }}
+                ariaLabelRef="searchAriaLabel"
+                submitLabelRef="searchSubmitLabel"
+                initialValues={{
+                  flight: { travellers: 1 },
+                  hotel: {
+                    occupancy: { adults: 2, children: 0, childAges: [], rooms: 1, pets: false },
+                  },
+                  trip: { travellers: 1 },
+                  tour: { travellers: 1 },
+                }}
+                onSearch={onHeroSearch}
+              />
+            ) : null}
+            <div className="dov__hero-trust">
+              {(journeyHero?.trustItems || []).map((item) => (
+                <span key={item.id}>
+                  <Icon name={item.icon} size={15} />
+                  {item.label}
+                </span>
+              ))}
+            </div>
+          </div>
+          <svg className="dov__hero-wave" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M0 68C162 17 319 113 490 76C654 40 758 16 920 66C1091 119 1287 24 1440 65V120H0Z" />
+          </svg>
+        </section>
       ) : null}
 
-      <div className={`dov__content${overviewRail || overviewDefinitionLoading ? "" : " dov__content--single"}`}>
-        <main className="dov__main">
-          {overviewDefinitionLoading ? (
-            <Preloader
-              variant="cards"
-              count={3}
-              label="Loading journey planning options"
-              className="dov__plan-cards"
-            />
-          ) : planCards ? (
-            <PlanCards {...planCards} className="dov__plan-cards" />
-          ) : null}
+      {journeyStory ? (
+        <section className="dov__story" aria-label={journeyStory.ariaLabel}>
+          <div className="dov__advantage">
+            <header className="dov__advantage-heading" data-home-reveal="title">
+              <span className="dov__advantage-eyebrow">{journeyStory.eyebrow}</span>
+              <h2>
+                {journeyStory.title} <em>{journeyStory.highlight}</em>
+              </h2>
+              <p>{journeyStory.description}</p>
+            </header>
 
-          <div className="dov__section">
-            <h2 className="dov__section-title">Recent Bookings</h2>
-            {bookingsLoading ? (
-              <div className="dov__bookings-loading">
-                <Spinner size="lg" label="Loading bookings" />
+            <div className="dov__advantage-grid">
+              {(journeyStory.advantages || []).map((advantage, index) => (
+                <article
+                  className={`dov__advantage-card dov__advantage-card--${advantage.tone || "primary"}`}
+                  key={advantage.id}
+                  data-home-reveal
+                  data-home-order={index}
+                >
+                  <span className="dov__advantage-number" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+                  <span className="dov__advantage-icon" aria-hidden="true">
+                    <Icon name={advantage.icon || "sparkles"} size={27} />
+                  </span>
+                  <h3>{advantage.title}</h3>
+                  <p>{advantage.description}</p>
+                </article>
+              ))}
+            </div>
+
+            <div className="dov__advantage-scene" aria-hidden="true" data-home-ambient>
+              <strong>{journeyStory.backdropText}</strong>
+              {journeyStory.visual?.src ? (
+                <figure>
+                  <img src={journeyStory.visual.src} alt="" loading="lazy" />
+                </figure>
+              ) : null}
+              <span className="dov__advantage-badge">
+                <Icon name={journeyStory.visual?.badgeIcon || "luggage"} size={22} />
+                {journeyStory.visual?.badgeLabel}
+              </span>
+            </div>
+          </div>
+          <svg
+            className="dov__story-wave"
+            viewBox="0 0 1440 92"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+          >
+            <path d="M0 46C132 12 208 82 344 50C471 20 552 79 684 43C821 6 909 75 1041 48C1175 21 1280 72 1440 34V92H0Z" />
+          </svg>
+          <div className="dov__story-stats">
+            {(journeyStory.stats || []).map((stat) => (
+              <StoryStat key={stat.id} stat={stat} />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {featuredTravel ? <HomeCardsWithFeature data={featuredTravel} /> : null}
+
+      {homeInsights ? (
+        <section className="dov__insights" aria-label={homeInsights.ariaLabel}>
+          <div className="dov__faq" id="home-faq">
+            <div className="dov__insights-heading" data-home-reveal>
+              {homeInsights.faq?.eyebrow ? (
+                <span className="dov__insights-eyebrow">
+                  <Icon name={homeInsights.faq?.eyebrowIcon || "sparkles"} size={15} />
+                  {homeInsights.faq.eyebrow}
+                </span>
+              ) : null}
+              <h2>
+                {homeInsights.faq?.title} <em>{homeInsights.faq?.highlight}</em>
+              </h2>
+              {homeInsights.faq?.description ? <p>{homeInsights.faq.description}</p> : null}
+              <div className="dov__faq-route" aria-hidden="true" data-home-ambient>
+                <svg viewBox="0 0 360 120" fill="none">
+                  <path d="M12 95C82 95 75 22 147 22S211 110 268 74S306 28 345 28" />
+                  <circle cx="12" cy="95" r="5" /><circle cx="345" cy="28" r="5" />
+                </svg>
+                <span><Icon name="plane" size={30} /></span>
               </div>
-            ) : recentBookings && recentBookings.length > 0 ? (
-              <div className="dov__recent">
-                {recentBookings.slice(0, 5).map((b, i) => {
-                  const tour = b.tour || {};
-                  const tripName = tour.title || b.trip?.title || b.tripSelection?.packageId || "Trip";
-                  const product = b.product || "trevista";
+              {homeInsights.faq?.actionLabel ? (
+                <button className="dov__faq-action" type="button" onClick={() => onTabChange?.(homeInsights.faq.actionTarget)}>
+                  <Icon name="support" size={20} />{homeInsights.faq.actionLabel}<Icon name="arrowUpRight" size={18} />
+                </button>
+              ) : null}
+            </div>
+            <div className="dov__faq-list" data-home-reveal data-home-order="1">
+              <span className="dov__faq-flight-marker" aria-hidden="true">
+                <Icon name="plane" size={19} />
+              </span>
+              {(homeInsights.faq?.items || []).map((item, index) => (
+                <div className="dov__faq-item" data-open={selectedQuestion === item.id} key={item.id}>
+                  <h3>
+                  <button className="dov__faq-trigger" type="button"
+                    id={`home-faq-trigger-${item.id}`}
+                    aria-expanded={selectedQuestion === item.id}
+                    aria-controls={`home-faq-answer-${item.id}`}
+                    onClick={() => setActiveQuestion(selectedQuestion === item.id ? "" : item.id)}>
+                    <span className="dov__faq-question">
+                      <span className="dov__faq-index" aria-hidden="true">
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+                      <strong>{item.question}</strong>
+                    </span>
+                    <span className="dov__faq-toggle" aria-hidden="true" />
+                  </button>
+                  </h3>
+                  <div className="dov__faq-answer" id={`home-faq-answer-${item.id}`} aria-hidden={selectedQuestion !== item.id}>
+                    <div><p>{item.answer}</p></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
 
-                  return (
-                    <div key={b.id || b._id || i} className="dov__recent-item" onClick={() => onViewBooking?.(b)}>
-                      <div className="dov__recent-info">
-                        <span className="dov__recent-name">{tripName}</span>
-                        <div className="dov__recent-meta">
-                          <span className={`dov__recent-product dov__recent-product--${product}`}>
-                            {product === "trevio" ? "Trevio" : "Trevista"}
-                          </span>
-                          <span>{formatDate(b.createdAt)}</span>
-                        </div>
-                      </div>
-                      <span className={`dov__recent-status dov__recent-status--${statusKey(b.status)}`}>
-                        {normalizeStatus(b.status)}
+          <div className="dov__articles">
+            <div className="dov__articles-header" data-home-reveal="title">
+              <div className="dov__insights-heading">
+                {homeInsights.articles?.eyebrow ? (
+                  <span className="dov__insights-eyebrow">
+                    <Icon name={homeInsights.articles?.eyebrowIcon || "sparkles"} size={15} />
+                    {homeInsights.articles.eyebrow}
+                  </span>
+                ) : null}
+
+                <h2>
+                  {homeInsights.articles?.title}{" "}
+                  {homeInsights.articles?.highlight ? (
+                    <em>{homeInsights.articles.highlight}</em>
+                  ) : null}
+                </h2>
+
+                {homeInsights.articles?.description ? (
+                  <p>{homeInsights.articles.description}</p>
+                ) : null}
+              </div>
+
+              {homeInsights.articles?.actionLabel ? (
+                <button
+                  className="dov__articles-action dov__articles-action--desktop"
+                  type="button"
+                  onClick={() => onTabChange?.(homeInsights.articles.actionTarget)}
+                >
+                  <span>{homeInsights.articles.actionLabel}</span>
+
+                  <span className="dov__articles-action-icon" aria-hidden="true">
+                    <Icon name="chevronRight" size={16} strokeWidth={2.2} />
+                  </span>
+                </button>
+              ) : null}
+            </div>
+
+            <div className="dov__article-grid" aria-label={homeInsights.articles?.ariaLabel || "Travel articles"} tabIndex={0}>
+              {(homeInsights.articles?.items || []).map((article, index) => (
+                <article
+                  className={[
+                    "dov__article-card",
+                    index === 0 ? "dov__article-card--featured" : "dov__article-card--standard",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  key={article.id}
+                  data-home-reveal
+                  data-home-order={index}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={article.title}
+                  onClick={() => onArticleSelect?.(article)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      onArticleSelect?.(article);
+                    }
+                  }}
+                >
+                  <div className="dov__article-media">
+                    <img src={article.image} alt={article.imageAlt || ""} loading="lazy" />
+
+                    <div className="dov__article-media-overlay" />
+
+                    {article.category ? (
+                      <span className="dov__article-category">{article.category}</span>
+                    ) : null}
+
+                    {index === 0 ? (
+                      <span className="dov__article-featured-mark" aria-hidden="true">
+                        <Icon name="sparkles" size={15} strokeWidth={2} />
+                        Featured
+                      </span>
+                    ) : null}
+                  </div>
+
+                  <div className="dov__article-content">
+                    <div className="dov__article-meta">
+                      {article.author ? <span>{article.author}</span> : null}
+
+                      {article.author && article.date ? (
+                        <span className="dov__article-meta-dot" aria-hidden="true" />
+                      ) : null}
+
+                      {article.date ? <time>{article.date}</time> : null}
+                      {article.readTime ? (
+                        <>
+                          <span className="dov__article-meta-dot" aria-hidden="true" />
+                          <span>{article.readTime}</span>
+                        </>
+                      ) : null}
+                    </div>
+
+                    <div className="dov__article-title-row">
+                      <h3>{article.title}</h3>
+
+                      <span className="dov__article-arrow" aria-hidden="true">
+                        <Icon name="chevronRight" size={17} strokeWidth={2.2} />
                       </span>
                     </div>
-                  );
-                })}
-              </div>
-            ) : (
-              recentBookingsEmptyState ? <NoDataFound {...recentBookingsEmptyState} /> : null
-            )}
-          </div>
-        </main>
+                    {article.description ? (
+                      <p className="dov__article-description">{article.description}</p>
+                    ) : null}
+                  </div>
+                </article>
+              ))}
+            </div>
 
-        {overviewDefinitionLoading ? (
-          <Preloader
-            variant="stack"
-            count={3}
-            label="Loading travel tools"
-            className="dov__rail"
-          />
-        ) : overviewRail ? (
-          <OverviewRail {...overviewRail} className="dov__rail" />
-        ) : null}
-      </div>
+            {homeInsights.articles?.actionLabel ? (
+              <button
+                className="dov__articles-action dov__articles-action--mobile"
+                type="button"
+                onClick={() => onTabChange?.(homeInsights.articles.actionTarget)}
+              >
+                <span>{homeInsights.articles.actionLabel}</span>
+
+                <span className="dov__articles-action-icon" aria-hidden="true">
+                  <Icon name="chevronRight" size={16} strokeWidth={2.2} />
+                </span>
+              </button>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
+
+    </div>
+  );
+}
+
+function StoryStat({ stat }) {
+  const [valueRef, display] = useCountUp(stat.value);
+  return (
+    <div className="dov__story-stat">
+      <span>{stat.label}</span>
+      <strong ref={valueRef}>{display}</strong>
     </div>
   );
 }

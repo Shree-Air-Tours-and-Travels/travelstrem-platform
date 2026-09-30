@@ -1,1 +1,3 @@
-export { default } from "./Filters.container";
+import FiltersContainer from "./Filters.container.jsx";
+
+export default FiltersContainer;

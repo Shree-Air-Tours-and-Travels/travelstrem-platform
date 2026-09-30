@@ -14,6 +14,15 @@ const config = {
   docs: {
     autodocs: "tag",
   },
+  staticDirs: [{ from: "../public", to: "/" }],
+  managerHead: (head) => `${head}
+    <title>Trem UI Modules</title>
+    <link rel="icon" type="image/png" href="https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png" />
+    <link rel="apple-touch-icon" href="https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png" />
+    <script src="/trem-storybook-title.js"></script>`,
+  previewHead: (head) => `${head}
+    <link rel="icon" type="image/png" href="https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png" />
+    <link rel="apple-touch-icon" href="https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png" />`,
   async viteFinal(config) {
     return mergeConfig(config, {
       define: {
@@ -36,8 +45,19 @@ const config = {
             replacement: path.join(repoRoot, "packages/trem-ui/src/index.js"),
           },
           {
+            find: /^@packages\/trem-ui\/(components|icons|features|layout)\/.+\.jsx$/,
+            replacement: function (match) {
+              const relative = match.replace(/^@packages\/trem-ui\//, "");
+              return path.join(repoRoot, "packages/trem-ui/src", relative);
+            },
+          },
+          {
             find: /^@packages\/trem-utils$/,
             replacement: path.join(repoRoot, "packages/trem-utils/src/index.js"),
+          },
+          {
+            find: /^@packages\/trem-modals$/,
+            replacement: path.join(repoRoot, "packages/trem-modals/src/index.js"),
           },
         ],
       },

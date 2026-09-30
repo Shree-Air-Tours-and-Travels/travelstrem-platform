@@ -4,8 +4,8 @@ import { initUserSession } from "../services/userSession";
 import { getHeaderConfig } from "../services/configService";
 
 export const initApp = createInitApp({
-    initEventBus,
-    initUserSession,
-    getHeaderConfig,
-    defaultPage: "agent",
+  initEventBus,
+  initUserSession,
+  getHeaderConfig,
+  defaultPage: "agent",
 });

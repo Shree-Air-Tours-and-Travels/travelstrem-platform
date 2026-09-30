@@ -84,13 +84,13 @@ Before writing any code, analyze the screen design and classify every piece of c
 
 ### Classification Table
 
-| Category | Definition | Example | Where it lives |
-|----------|-----------|---------|---------------|
-| **Static text** | Labels, headings, descriptions, CTAs, error messages | "Contact Us", "Submit", "Full Name" | `elements.labels` in JSON, resolved via `*Ref` |
-| **Static URLs** | Image paths, icon names, links | `/images/contact-hero.jpg` | `elements.urls` in JSON, resolved via `*urlRef` |
-| **Static config** | Enums, options, dropdown values, layout flags | Sort options, tab names | `dataScope.options` in JSON |
-| **Dynamic data** | User-specific, API-driven, database content | Bookings list, user profile, search results | `data` in JSON + widget controller |
-| **Structure** | Layout order, widget types, section placement | Which widgets render, in what order | `structure.widgets` array in JSON |
+| Category          | Definition                                           | Example                                     | Where it lives                                  |
+| ----------------- | ---------------------------------------------------- | ------------------------------------------- | ----------------------------------------------- |
+| **Static text**   | Labels, headings, descriptions, CTAs, error messages | "Contact Us", "Submit", "Full Name"         | `elements.labels` in JSON, resolved via `*Ref`  |
+| **Static URLs**   | Image paths, icon names, links                       | `/images/contact-hero.jpg`                  | `elements.urls` in JSON, resolved via `*urlRef` |
+| **Static config** | Enums, options, dropdown values, layout flags        | Sort options, tab names                     | `dataScope.options` in JSON                     |
+| **Dynamic data**  | User-specific, API-driven, database content          | Bookings list, user profile, search results | `data` in JSON + widget controller              |
+| **Structure**     | Layout order, widget types, section placement        | Which widgets render, in what order         | `structure.widgets` array in JSON               |
 
 ### Rule
 
@@ -104,12 +104,12 @@ Exception: purely presentational icons (icon names in `iconRef` are not resolved
 
 Check existing `@packages/trem-ui` for reusable components:
 
-| Question | Action |
-|----------|--------|
-| Does the screen design use a component already in trem-ui? | Use it directly |
-| Is there a similar component that can be extended with props? | Extend with new props |
-| Is the component entirely new but reusable across pages? | Add to `@packages/trem-ui` |
-| Is the component unique to this page/widget? | Keep in `features/<page>/` locally |
+| Question                                                      | Action                             |
+| ------------------------------------------------------------- | ---------------------------------- |
+| Does the screen design use a component already in trem-ui?    | Use it directly                    |
+| Is there a similar component that can be extended with props? | Extend with new props              |
+| Is the component entirely new but reusable across pages?      | Add to `@packages/trem-ui`         |
+| Is the component unique to this page/widget?                  | Keep in `features/<page>/` locally |
 
 ### trem-ui available components
 
@@ -256,9 +256,7 @@ Same top-level shape as page.json:
       "descriptionRef": "contactDescription",
       "submitLabelRef": "submitLabel"
     },
-    "fields": [
-      { "name": "name", "labelRef": "fieldNameLabel", "type": "text" }
-    ],
+    "fields": [{ "name": "name", "labelRef": "fieldNameLabel", "type": "text" }],
     "ctas": {
       "primary": { "labelRef": "ctaPrimaryLabel", "href": "/submit" }
     }
@@ -273,9 +271,7 @@ After `buildResolvedView()` resolves the refs, the view receives:
   "title": "Contact Us",
   "description": "We'd love to hear from you",
   "submitLabel": "Send Message",
-  "fields": [
-    { "name": "name", "label": "Full Name", "type": "text" }
-  ]
+  "fields": [{ "name": "name", "label": "Full Name", "type": "text" }]
 }
 ```
 
@@ -305,12 +301,12 @@ Register the page in `apps/backend-api/src/data/index.json`:
 
 ### Files to modify
 
-| File | Action |
-|------|--------|
-| `apps/backend-api/src/data/index.json` | Add to `pages`, `pathMap`, and `aliases` |
-| `apps/backend-api/src/config/header.js` | (if new route mapping is needed) |
-| Create `data/<shell>/<page>/page.json` | Page contract |
-| Create `data/<shell>/<page>/widgets/` | Directory for widget JSONs |
+| File                                    | Action                                   |
+| --------------------------------------- | ---------------------------------------- |
+| `apps/backend-api/src/data/index.json`  | Add to `pages`, `pathMap`, and `aliases` |
+| `apps/backend-api/src/config/header.js` | (if new route mapping is needed)         |
+| Create `data/<shell>/<page>/page.json`  | Page contract                            |
+| Create `data/<shell>/<page>/widgets/`   | Directory for widget JSONs               |
 
 ---
 
@@ -334,25 +330,19 @@ import { useComponentData } from "@packages/trem-utils";
 import PageView from "./Page.view";
 
 export default function PageContainer() {
-    const { loading, error, resolvedView } = useComponentData(
-        "/pages/<shell>/<page>",
-        { headers: {}, params: {} }
-    );
+  const { loading, error, resolvedView } = useComponentData("/pages/<shell>/<page>", {
+    headers: {},
+    params: {},
+  });
 
-    // Extract widgets from resolvedView
-    const widgets = resolvedView?.structure?.widgets || [];
+  // Extract widgets from resolvedView
+  const widgets = resolvedView?.structure?.widgets || [];
 
-    if (loading) return <PageView loading error={null} widgets={[]} />;
-    if (error) return <PageView loading={false} error={error} widgets={[]} />;
-    if (!resolvedView) return null;
+  if (loading) return <PageView loading error={null} widgets={[]} />;
+  if (error) return <PageView loading={false} error={error} widgets={[]} />;
+  if (!resolvedView) return null;
 
-    return (
-        <PageView
-            loading={false}
-            error={null}
-            widgets={widgets}
-        />
-    );
+  return <PageView loading={false} error={null} widgets={widgets} />;
 }
 ```
 
@@ -362,14 +352,14 @@ export default function PageContainer() {
 import { WidgetRenderer } from "../../widgets/WidgetRenderer";
 
 export default function PageView({ loading, error, widgets }) {
-    if (loading) return <PagePreloader />;
-    if (error) return <ErrorState message={error} />;
+  if (loading) return <PagePreloader />;
+  if (error) return <ErrorState message={error} />;
 
-    return (
-        <main className="page">
-            <WidgetRenderer widgets={widgets} />
-        </main>
-    );
+  return (
+    <main className="page">
+      <WidgetRenderer widgets={widgets} />
+    </main>
+  );
 }
 ```
 
@@ -399,10 +389,10 @@ Register the entire page component in `apps/customer-shell/src/widgets/registry/
 
 ```jsx
 createWidgetDefinition({
-    type: "contactUs",
-    aliases: ["contact", "page.contact"],
-    component: ContactPage,
-})
+  type: "contactUs",
+  aliases: ["contact", "page.contact"],
+  component: ContactPage,
+});
 ```
 
 ### If the page has multiple widgets
@@ -411,21 +401,21 @@ Each widget component needs to be registered separately:
 
 ```jsx
 createWidgetDefinition({
-    type: "contactForm",
-    aliases: ["form.contact"],
-    component: ContactFormWidget,
-})
+  type: "contactForm",
+  aliases: ["form.contact"],
+  component: ContactFormWidget,
+});
 ```
 
 ### Key fields
 
-| Field | Description |
-|-------|-------------|
-| `type` | Primary identifier (used in `widget.type` in JSON) |
-| `aliases` | Alternative names (used for backwards compatibility) |
-| `component` | The React component |
-| `source` | `WIDGET_SOURCES.FEDERATED` for remote widgets; omitted for shell-local |
-| `mapProps` | Optional function to inject context (e.g., `withUser`) |
+| Field       | Description                                                            |
+| ----------- | ---------------------------------------------------------------------- |
+| `type`      | Primary identifier (used in `widget.type` in JSON)                     |
+| `aliases`   | Alternative names (used for backwards compatibility)                   |
+| `component` | The React component                                                    |
+| `source`    | `WIDGET_SOURCES.FEDERATED` for remote widgets; omitted for shell-local |
+| `mapProps`  | Optional function to inject context (e.g., `withUser`)                 |
 
 ---
 
@@ -443,8 +433,8 @@ import Contact from "../features/contact/Contact";
 
 ```jsx
 const componentByKey = {
-    // ... existing
-    contact: <Contact />,
+  // ... existing
+  contact: <Contact />,
 };
 ```
 
@@ -480,23 +470,23 @@ Later sources override earlier ones.
 
 The `resolveNode` function processes every key ending with `Ref` (except `iconRef`, `optionsRef`, `widgetRef`):
 
-| Key suffix | Resolved from | Example |
-|-----------|---------------|---------|
-| `Ref` (generic) | `elements.labels` | `titleRef` → `title` |
-| `urlRef` | `elements.urls` | `imageUrlRef` → `imageUrl` |
-| `optionsRef` | `dataScope.options` | `sortOptionsRef` → `sortOptions` |
-| `labelRef` | `elements.labels` | `ctaLabelRef` → `ctaLabel` |
+| Key suffix      | Resolved from       | Example                          |
+| --------------- | ------------------- | -------------------------------- |
+| `Ref` (generic) | `elements.labels`   | `titleRef` → `title`             |
+| `urlRef`        | `elements.urls`     | `imageUrlRef` → `imageUrl`       |
+| `optionsRef`    | `dataScope.options` | `sortOptionsRef` → `sortOptions` |
+| `labelRef`      | `elements.labels`   | `ctaLabelRef` → `ctaLabel`       |
 
 ### When to use *Ref vs hardcoded values
 
-| Scenario | Approach |
-|----------|----------|
-| User-facing text | **Must** use `*Ref` |
-| API error messages | **Must** use `*Ref` |
-| Icon names | Hardcoded in `icon` (not resolved) |
-| URLs that change per env | **Must** use `*urlRef` |
-| Static demo/mock data | `*Ref` with fallback value |
-| Page structural config | Hardcoded in `props` |
+| Scenario                 | Approach                           |
+| ------------------------ | ---------------------------------- |
+| User-facing text         | **Must** use `*Ref`                |
+| API error messages       | **Must** use `*Ref`                |
+| Icon names               | Hardcoded in `icon` (not resolved) |
+| URLs that change per env | **Must** use `*urlRef`             |
+| Static demo/mock data    | `*Ref` with fallback value         |
+| Page structural config   | Hardcoded in `props`               |
 
 ### Adding new shared labels
 
@@ -597,7 +587,11 @@ apps/customer-shell/src/
       },
       "widgets": [
         { "type": "contactForm", "source": "shell", "widgetRef": "./widgets/contact-form.json" },
-        { "type": "officeLocations", "source": "shell", "widgetRef": "./widgets/office-locations.json" }
+        {
+          "type": "officeLocations",
+          "source": "shell",
+          "widgetRef": "./widgets/office-locations.json"
+        }
       ],
       "config": {},
       "actions": []
@@ -634,20 +628,14 @@ import { useComponentData } from "@packages/trem-utils";
 import ContactView from "./Contact.view";
 
 export default function ContactContainer() {
-    const { loading, error, resolvedView } = useComponentData(
-        "/pages/customer-shell/contact",
-        { headers: {}, params: {} }
-    );
+  const { loading, error, resolvedView } = useComponentData("/pages/customer-shell/contact", {
+    headers: {},
+    params: {},
+  });
 
-    const widgets = resolvedView?.structure?.widgets || [];
+  const widgets = resolvedView?.structure?.widgets || [];
 
-    return (
-        <ContactView
-            loading={loading}
-            error={error}
-            widgets={widgets}
-        />
-    );
+  return <ContactView loading={loading} error={error} widgets={widgets} />;
 }
 ```
 
@@ -659,14 +647,14 @@ import WidgetRenderer from "../../widgets/WidgetRenderer";
 import "./contact.scss";
 
 export default function ContactView({ loading, error, widgets }) {
-    if (loading) return null;
-    if (error) return <div>{error}</div>;
+  if (loading) return null;
+  if (error) return <div>{error}</div>;
 
-    return (
-        <main className="contact-page">
-            <WidgetRenderer widgets={widgets} />
-        </main>
-    );
+  return (
+    <main className="contact-page">
+      <WidgetRenderer widgets={widgets} />
+    </main>
+  );
 }
 ```
 
@@ -677,6 +665,7 @@ export default function ContactView({ loading, error, widgets }) {
 Use this checklist to verify every new page implementation:
 
 ### Backend
+
 - [ ] `data/<shell>/<page>/page.json` created with valid schema
 - [ ] `data/<shell>/<page>/widgets/` directory created
 - [ ] Each widget has its own JSON file with `*Ref` → label mapping
@@ -686,6 +675,7 @@ Use this checklist to verify every new page implementation:
 - [ ] All static text uses labels (no hardcoded strings in JSON)
 
 ### Frontend
+
 - [ ] `features/<page>/` directory created with Container/View pattern
 - [ ] Container uses `useComponentData()` to fetch page contract
 - [ ] View handles loading, error, empty, and success states
@@ -699,6 +689,7 @@ Use this checklist to verify every new page implementation:
 - [ ] `npm run typecheck` passes (or equivalent)
 
 ### Architecture
+
 - [ ] Widgets are independent — one widget's failure does not block others
 - [ ] No cross-widget coupling
 - [ ] trem-ui reused where possible; new components added only if reusable across 2+ pages

@@ -7,7 +7,7 @@
     },
     "elements": {
       "labels": {
-        "totalBookings": "Total Bookings",
+        "totalTours": "Total Tours",
         "activeUsers": "Active Users",
         "totalRevenue": "Total Revenue",
         "pendingRequests": "Pending Requests",
@@ -17,7 +17,7 @@
         "vsLastPeriod": "vs last period"
       },
       "urls": {
-        "iconBookings": "/icons/bookings.svg",
+        "iconTours": "/icons/tours.svg",
         "iconUsers": "/icons/users.svg",
         "iconRevenue": "/icons/revenue.svg",
         "iconPending": "/icons/pending.svg"
@@ -31,9 +31,9 @@
           "props": {
             "cards": [
               {
-                "metric": "totalBookings",
-                "labelRef": "totalBookings",
-                "iconRef": "iconBookings"
+                "metric": "totalTours",
+                "labelRef": "totalTours",
+                "iconRef": "iconTours"
               },
               {
                 "metric": "activeUsers",

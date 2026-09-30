@@ -13,7 +13,10 @@
         "meals": "Meals",
         "accommodation": "Accommodation",
         "location": "Location",
-        "notes": "Notes"
+        "notes": "Notes",
+        "plannedExperience": "Planned experience",
+        "expandAll": "Expand all",
+        "collapseAll": "Collapse all"
       },
       "urls": {}
     },
@@ -29,7 +32,11 @@
             "mealsLabelRef": "meals",
             "accommodationLabelRef": "accommodation",
             "locationLabelRef": "location",
-            "notesLabelRef": "notes"
+            "notesLabelRef": "notes",
+            "plannedExperienceLabelRef": "plannedExperience",
+            "expandAllLabelRef": "expandAll",
+            "collapseAllLabelRef": "collapseAll",
+            "initialExpandedDays": 0
           }
         }
       ],

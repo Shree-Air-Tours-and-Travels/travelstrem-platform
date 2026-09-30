@@ -1,0 +1,34 @@
+// Compatibility aliases sourced directly from the same Sass tokens as trem-ui.
+@use "../../packages/trem-design-tokens/src/scss/index" as trem;
+
+:root {
+  --trem-primaryDark: var(--color-primary-dark);
+  --trem-tertiary: var(--color-tertiary);
+  --trem-accent: var(--color-accent);
+  --trem-surface: var(--surface);
+  --trem-surfaceMuted: var(--surface-muted);
+  --trem-dark-primary: #{trem.$dark-primary};
+  --trem-dark-primaryDark: #{trem.$dark-primary-dark};
+  --trem-dark-surface: #{trem.$dark-surface};
+  --trem-dark-surfaceMuted: #{trem.$dark-surface-muted};
+  --trem-dark-text: #{trem.$dark-text};
+  --trem-dark-textMuted: #{trem.$dark-text-muted};
+  --trem-dark-textLight: #{trem.$dark-text-light};
+  --trem-dark-border: #{trem.$dark-border};
+  --trem-radius-sm: #{trem.$radius-sm};
+  --trem-radius-md: #{trem.$radius-md};
+  --trem-radius-lg: #{trem.$radius-lg};
+  --trem-radius-full: #{trem.$radius-full};
+  --trem-shadow-card: #{trem.$shadow-card};
+  --trem-shadow-sm: #{trem.$shadow-sm};
+  --trem-shadow-md: #{trem.$shadow-md};
+  --trem-shadow-lg: #{trem.$shadow-lg};
+  --trem-font-primary: var(--font-primary);
+  --type-xs: var(--font-size-xs);
+  --type-sm: var(--font-size-sm);
+  --type-md: var(--font-size-md);
+  --type-lg: var(--font-size-lg);
+  --type-xl: var(--font-size-xl);
+  --type-xxl: var(--font-size-xxl);
+  --type-xxxl: var(--font-size-xxxl);
+}

@@ -6,75 +6,48 @@ function rgba(hex, alpha) {
 }
 
 export const colors = {
-  // Brand
-  primary: "#4F46E5",      // Rich Indigo
-  primaryDark: "#3730A3",
-
-  secondary: "#F97360",    // Premium Coral
-  secondaryDark: "#EA5A47",
-
-  tertiary: "#F6C453",     // Warm Gold
-  tertiaryDark: "#D89A22",
-
-  accent: "#111827",
-
-  // Status
-  success: "#16A34A",
-  danger: "#DC2626",
-  warning: "#D97706",
-
-  // Backgrounds
-  background: "#FAFBFF",
-  surface: "#FFFFFF",
-  surfaceMuted: "#EEF2FF",
-  surfaceSubtle: "#F7F8FF",
-
-  // Text
-  text: "#111827",
-  textMuted: "#4B5563",
-  textLight: "rgba(17, 24, 39, 0.65)",
-
-  // Borders
-  border: "rgba(17, 24, 39, 0.10)",
-  overlay: "rgba(17, 24, 39, 0.48)",
-
+  primary: "#2847a8",
+  primaryDark: "#1b2f78",
+  secondary: "#7540c9",
+  secondaryDark: "#55269a",
+  tertiary: "#b82f6f",
+  tertiaryDark: "#84204f",
+  accent: "#181a2d",
+  success: "#2878c8",
+  danger: "#d92f5c",
+  warning: "#8a4ac7",
+  background: "#f8f9fd",
+  surface: "#ffffff",
+  surfaceMuted: "#eaedf8",
+  surfaceSubtle: "#f3f5fb",
+  text: "#181a2d",
+  textMuted: "#606579",
+  textLight: "rgba(24, 26, 45, 0.64)",
+  border: "rgba(24, 26, 45, 0.1)",
+  overlay: "rgba(10, 12, 28, 0.58)",
   transparent: "transparent",
 };
 
 export const darkColors = {
-  // Brand
-  primary: "#7C74FF",      // Bright Indigo
-  primaryDark: "#5B54F5",
-
-  secondary: "#FF8B78",    // Soft Coral
-  secondaryDark: "#F97360",
-
-  tertiary: "#FFD166",     // Warm Gold
-  tertiaryDark: "#F6C453",
-
-  accent: "#FFFFFF",
-
-  // Status
-  success: "#4ADE80",
-  danger: "#F87171",
-  warning: "#FBBF24",
-
-  // Backgrounds
-  background: "#0F1222",
-  surface: "#171B2E",
-  surfaceMuted: "#202744",
-  surfaceSubtle: "#151A30",
-
-  // Text
-  text: "#F8FAFC",
-  textMuted: "rgba(248, 250, 252, 0.74)",
-  textLight: "rgba(248, 250, 252, 0.58)",
-
-  // Borders
-  border: "rgba(255, 255, 255, 0.08)",
-  overlay: "rgba(0, 0, 0, 0.72)",
-
-  transparent: "transparent",
+  primary: "#8fa8ff",
+  primaryDark: "#6682ed",
+  secondary: "#c1a0ff",
+  secondaryDark: "#986be8",
+  tertiary: "#ff84ba",
+  tertiaryDark: "#de4f8e",
+  accent: "#f7f8ff",
+  success: "#6bb9ff",
+  danger: "#ff7895",
+  warning: "#cf93ff",
+  background: "#070914",
+  surface: "#101420",
+  surfaceMuted: "#1d2336",
+  surfaceSubtle: "#151a2a",
+  text: "#f7f8ff",
+  textMuted: "rgba(235, 238, 255, 0.78)",
+  textLight: "rgba(210, 216, 238, 0.6)",
+  border: "rgba(222, 227, 255, 0.12)",
+  overlay: "rgba(2, 3, 10, 0.82)",
 };
 
 export function generateScss() {
@@ -133,7 +106,7 @@ export function generateScss() {
   lines.push("$hp-shimmer: linear-gradient(");
   lines.push("  90deg,");
   lines.push("  transparent 0%,");
-  lines.push("  rgba(255, 255, 255, 0.92) 50%,");
+  lines.push("  rgba(255, 255, 255, 0.94) 50%,");
   lines.push("  transparent 100%");
   lines.push(");");
   lines.push("");
@@ -144,13 +117,13 @@ export function generateScss() {
   lines.push(`$primary-surface: ${rgba(c.primary, 0.12)};`);
   lines.push(`$primary-surface-hover: ${rgba(c.primary, 0.2)};`);
   lines.push(`$primary-focus: ${rgba(c.primary, 0.18)};`);
-  lines.push(`$primary-shadow: ${rgba(c.primary, 0.18)};`);
+  lines.push(`$primary-shadow: ${rgba(c.primary, 0.2)};`);
   lines.push(`$secondary-soft: ${rgba(c.secondary, 0.1)};`);
   lines.push(`$secondary-surface: ${rgba(c.secondary, 0.12)};`);
   lines.push(`$secondary-surface-hover: ${rgba(c.secondary, 0.2)};`);
-  lines.push(`$tertiary-soft: ${rgba(c.tertiary, 0.16)};`);
-  lines.push(`$tertiary-surface: ${rgba(c.tertiary, 0.22)};`);
-  lines.push(`$tertiary-surface-hover: ${rgba(c.tertiary, 0.32)};`);
+  lines.push(`$tertiary-soft: ${rgba(c.tertiary, 0.1)};`);
+  lines.push(`$tertiary-surface: ${rgba(c.tertiary, 0.14)};`);
+  lines.push(`$tertiary-surface-hover: ${rgba(c.tertiary, 0.22)};`);
   lines.push(`$danger-soft: ${rgba(c.danger, 0.08)};`);
   lines.push(`$success-soft: ${rgba(c.success, 0.08)};`);
   lines.push(`$warning-soft: ${rgba(c.warning, 0.08)};`);
@@ -174,8 +147,8 @@ export function generateScss() {
   lines.push(`$dark-danger-soft: ${rgba(d.danger, 0.14)};`);
   lines.push(`$dark-success-soft: ${rgba(d.success, 0.14)};`);
   lines.push(`$dark-warning-soft: ${rgba(d.warning, 0.14)};`);
-  lines.push(`$dark-neutral-soft: rgba(255, 255, 255, 0.08);`);
-  lines.push(`$dark-neutral-softer: rgba(255, 255, 255, 0.04);`);
+  lines.push(`$dark-neutral-soft: ${rgba(d.text, 0.08)};`);
+  lines.push(`$dark-neutral-softer: ${rgba(d.text, 0.04)};`);
 
   return lines.join("\n") + "\n";
 }

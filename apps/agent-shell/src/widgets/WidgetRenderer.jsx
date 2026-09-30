@@ -5,21 +5,21 @@ import { agentWidgetRegistry } from "./registry/widgetRegistry";
 const WidgetFallback = () => null;
 
 export const WidgetRenderer = ({ widgets = [], registry = agentWidgetRegistry }) => {
-    return widgets.map((rawWidget, index) => {
-        const widget = normalizeWidgetConfig(rawWidget, index);
-        const definition = registry.get(widget.type);
-        const Component = definition?.component;
+  return widgets.map((rawWidget, index) => {
+    const widget = normalizeWidgetConfig(rawWidget, index);
+    const definition = registry.get(widget.type);
+    const Component = definition?.component;
 
-        if (!Component) return null;
+    if (!Component) return null;
 
-        const props = getWidgetRenderProps(definition, widget, {});
+    const props = getWidgetRenderProps(definition, widget, {});
 
-        return (
-            <Suspense fallback={<WidgetFallback />} key={widget.id}>
-                <Component {...props} />
-            </Suspense>
-        );
-    });
+    return (
+      <Suspense fallback={<WidgetFallback />} key={widget.id}>
+        <Component {...props} />
+      </Suspense>
+    );
+  });
 };
 
 export default WidgetRenderer;

@@ -4,9 +4,7 @@ import { processMessage } from "../../chatbot-engine/aiRouter.js";
 export async function handleChat(req, res) {
     const { messages } = req.body;
 
-    let sessionId =
-        req.user?.id ||
-        req.cookies?.trem_session_id;
+    let sessionId = req.user?.id || req.cookies?.trem_session_id;
 
     if (!sessionId) {
         sessionId = crypto.randomUUID();

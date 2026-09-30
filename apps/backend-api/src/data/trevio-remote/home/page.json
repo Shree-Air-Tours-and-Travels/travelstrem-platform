@@ -6,49 +6,49 @@
         "frames": [
           {
             "id": "spiti-valley",
-            "image": "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=600&q=80",
+            "image": "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519366/travelstrem/site-assets/452daff423fe69d6acbaf894.jpg",
             "location": "Spiti Valley",
             "shape": "blob-1"
           },
           {
             "id": "kerala-backwaters",
-            "image": "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=600&q=80",
+            "image": "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519366/travelstrem/site-assets/b9239a6f931c1a813f04431e.jpg",
             "location": "Kerala Backwaters",
             "shape": "hexagon"
           },
           {
             "id": "ladakh-pass",
-            "image": "https://images.unsplash.com/photo-1589792923962-537704632910?w=600&q=80",
+            "image": "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519367/travelstrem/site-assets/f531b5e13eae60dee9265546.jpg",
             "location": "Ladakh Pass",
             "shape": "diamond"
           },
           {
             "id": "goa-beaches",
-            "image": "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=600&q=80",
+            "image": "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519367/travelstrem/site-assets/0c306c9b091ee0c37e1ddc62.jpg",
             "location": "Goa Beaches",
             "shape": "blob-2"
           },
           {
             "id": "meghalaya-caves",
-            "image": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80",
+            "image": "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519367/travelstrem/site-assets/f5fca19ef23c5f8d1fe56ae5.jpg",
             "location": "Meghalaya Caves",
             "shape": "octagon"
           },
           {
             "id": "rajasthan-desert",
-            "image": "https://images.unsplash.com/photo-1477587458883-47145ed94245?w=600&q=80",
+            "image": "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519367/travelstrem/site-assets/8d5f536ad5518ee8128298b5.jpg",
             "location": "Rajasthan Desert",
             "shape": "blob-3"
           },
           {
             "id": "himachal-villages",
-            "image": "https://images.unsplash.com/photo-1571401835393-8c5f35328320?w=600&q=80",
+            "image": "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519367/travelstrem/site-assets/c2ff947c68bba49db28fd619.jpg",
             "location": "Himachal Villages",
             "shape": "diamond"
           },
           {
             "id": "sikkim-mountains",
-            "image": "https://images.unsplash.com/photo-1585409677983-0f6c41ca9c3b?w=600&q=80",
+            "image": "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519368/travelstrem/site-assets/7052e246826cc1fe3eea7f58.jpg",
             "location": "Sikkim Mountains",
             "shape": "hexagon"
           }
@@ -61,6 +61,8 @@
     "elements": {
       "labels": {
         "pageTitle": "Trevio",
+        "breadcrumbHome": "Home",
+        "homeBreadcrumb": "Trevio",
         "brandSubtitle": "by TravelsTrem",
         "navExplore": "Explore",
         "navHowItWorks": "How it works",
@@ -73,6 +75,10 @@
         "emptyTripList": "No listed Trevio trips found for this category.",
         "viewMoreAction": "View more",
         "viewMoreRemaining": "remaining",
+        "tripCardAgency": "Operated by",
+        "tripCardPrice": "Per person",
+        "tripCardAction": "View itinerary",
+        "tripCardSoldOutAction": "Sold out",
         "contactAgentTitle": "Contact Agent",
         "tripNotFound": "Trip not found",
         "detailOverviewTab": "Overview",
@@ -85,23 +91,16 @@
         "detailInclusionsTitle": "Inclusions",
         "detailExclusionsTitle": "Exclusions",
         "detailStayTitle": "Stay & transport",
-        "detailPoliciesTitle": "Booking policies",
-        "reserveTitle": "Reserve your seat",
+        "detailPoliciesTitle": "Travel policies",
         "pricePerPerson": "Price per person",
-        "tokenAmount": "Token amount",
         "nextDeparture": "Next departure",
         "seatsLeft": "Seats left",
-        "bookTripAction": "Book this trip",
         "saveAction": "♡ Save to wishlist",
         "savedAction": "♥ Saved",
         "backToTripsAction": "← Back to trips",
         "profileTitle": "Traveller account",
-        "profileBookingsTab": "My bookings",
         "profileWishlistTab": "Wishlist",
         "profileDetailsTab": "Personal details",
-        "profileBookingsTitle": "My trips",
-        "profileBookingsDescription": "Your confirmed Trevio adventures will appear here once the backend booking flow creates them.",
-        "profileBookingsEmpty": "No confirmed Trevio bookings yet.",
         "profileWishlistEmpty": "Save a trip to see it here.",
         "profileDetailsTitle": "Personal details",
         "profileDetailsDescription": "Profile data comes from the shared TravelsTrem account layer.",

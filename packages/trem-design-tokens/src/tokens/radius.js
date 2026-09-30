@@ -1,9 +1,12 @@
+import tokens from "./radius-sass.js";
+
 export const radius = {
+  "xs": tokens["radius-xs"],
+  "sm": tokens["radius-sm"],
+  "md": tokens["radius-md"],
+  "xl": tokens["radius-xl"],
+  "lg": tokens["radius-lg"],
+  "full": tokens["radius-full"],
+  "circle": tokens["radius-circle"],
   none: "0",
-  xs: "6px",
-  sm: "10px",
-  md: "16px",
-  lg: "28px",
-  full: "9999px",
-  circle: "50%",
 };

@@ -26,7 +26,10 @@ export const setComponentDataFetcher = (fetcher) => {
 const stableStringify = (value) => {
   if (!value || typeof value !== "object") return JSON.stringify(value);
   if (Array.isArray(value)) return `[${value.map(stableStringify).join(",")}]`;
-  return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`).join(",")}}`;
+  return `{${Object.keys(value)
+    .sort()
+    .map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`)
+    .join(",")}}`;
 };
 
 const getRequestKey = (endpoint, options = {}) => {
@@ -71,7 +74,8 @@ const resolveNode = (value, labels, urls, options) => {
   return Object.entries(value).reduce((acc, [key, child]) => {
     if (typeof child === "string" && key.endsWith("Ref") && key !== "iconRef") {
       const targetKey = key.slice(0, -3);
-      const source = key === "optionsRef" ? options : key.toLowerCase().includes("url") ? urls : labels;
+      const source =
+        key === "optionsRef" ? options : key.toLowerCase().includes("url") ? urls : labels;
       acc[targetKey] = source[child] ?? child;
       acc[key] = child;
       return acc;
@@ -214,7 +218,7 @@ export default function useComponentData(endpoint, options = {}) {
         });
       }
     },
-    [endpoint, requestKey, transform]
+    [endpoint, requestKey, transform],
   );
 
   useEffect(() => {

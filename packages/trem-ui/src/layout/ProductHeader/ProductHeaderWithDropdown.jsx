@@ -19,13 +19,15 @@ export default function ProductHeaderWithDropdown({
         onClick: profile.onClick,
       },
       ...accountItems,
-      authAction ? {
-        id: "account-auth",
-        label: authAction.label || "Sign out",
-        icon: "logout",
-        onClick: authAction.onClick,
-        disabled: authAction.disabled,
-      } : null,
+      authAction
+        ? {
+            id: "account-auth",
+            label: authAction.label || "Sign out",
+            icon: "logout",
+            onClick: authAction.onClick,
+            disabled: authAction.disabled,
+          }
+        : null,
     ].filter(Boolean);
 
     return {
@@ -49,7 +51,7 @@ export default function ProductHeaderWithDropdown({
 ProductHeaderWithDropdown.propTypes = {
   profile: PropTypes.shape({
     ariaLabel: PropTypes.string,
-    avatarUrl: PropTypes.string,
+    avatar: PropTypes.string,
     displayName: PropTypes.string,
     label: PropTypes.string,
     menuLabel: PropTypes.string,
@@ -60,12 +62,14 @@ ProductHeaderWithDropdown.propTypes = {
     label: PropTypes.string,
     onClick: PropTypes.func,
   }),
-  accountItems: PropTypes.arrayOf(PropTypes.shape({
-    id: PropTypes.string,
-    label: PropTypes.string.isRequired,
-    icon: PropTypes.string,
-    onClick: PropTypes.func,
-  })),
+  accountItems: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string,
+      label: PropTypes.string.isRequired,
+      icon: PropTypes.string,
+      onClick: PropTypes.func,
+    }),
+  ),
 };
 
 ProductHeaderWithDropdown.defaultProps = {

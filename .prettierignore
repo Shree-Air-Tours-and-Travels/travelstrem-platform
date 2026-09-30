@@ -1,0 +1,35 @@
+# Dependencies & lockfiles
+node_modules
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+.pnpm-store
+.pnpm-modules
+
+# Build outputs
+build
+dist
+storybook-static
+
+# Test & tooling caches
+coverage
+.turbo
+.eslintcache
+.prettiercache
+
+# Framework/generated artifacts
+.next
+out
+.cache
+public/build
+
+# Environment & secrets
+.env
+.env.*
+
+# OS / editor noise
+.DS_Store
+
+# Minified or vendored files
+*.min.js
+*.min.css

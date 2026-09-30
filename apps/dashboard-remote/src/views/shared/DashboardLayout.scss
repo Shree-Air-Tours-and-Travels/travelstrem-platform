@@ -1,0 +1,44 @@
+@import "./tokens";
+
+.admin-overview__metrics { width: 100%; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+
+.admin-overview__widget-grid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1.1fr) minmax(260px, .8fr); gap: $space-4; align-items: stretch; }
+
+.admin-overview__operations-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: $space-4; align-items: stretch; }
+
+.admin-overview__operations-grid .trem-dashboard-panel--actions .trem-dashboard-panel__items { grid-template-columns: minmax(0, 1fr); }
+
+.admin-overview__activity-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: $space-4; align-items: stretch; }
+
+.admin-overview__activity-stack { display: grid; gap: $space-4; align-content: start; }
+
+.admin-overview__overview-rail { display: grid; gap: $space-5; }
+
+@media (max-width: 1250px) {
+.admin-overview__widget-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.admin-overview__operations-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.admin-overview__metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 700px) {
+.admin-overview__metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.admin-overview__widget-grid { grid-template-columns: minmax(0, 1fr); }
+.admin-overview__operations-grid,
+.admin-overview__activity-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+.admin-overview__widget-grid:has(> :only-child),
+.admin-overview__operations-grid:has(> :only-child),
+.admin-overview__activity-grid:has(> :only-child) { grid-template-columns: minmax(0, 1fr); }
+
+@media (min-width: 701px) {
+.admin-overview__widget-grid:has(> :nth-child(2):last-child),
+.admin-overview__operations-grid:has(> :nth-child(2):last-child) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.admin-overview__widget-grid:has(> :nth-child(2):last-child) > * { grid-column: auto; }
+}
+
+@media (min-width: 1251px) {
+.admin-overview__operations-grid:has(> :nth-child(3):last-child) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+.admin-overview__snapshots:not(:has(> *)) { display: none; }

@@ -5,7 +5,10 @@ const readComponentData = async (path, params = {}) => {
     const data = await apiService.get(path, { params });
     return data.componentData || data;
   } catch (err) {
-    console.warn(`[configService] Failed to load ${path}:`, err?.response?.data?.message || err.message);
+    console.warn(
+      `[configService] Failed to load ${path}:`,
+      err?.response?.data?.message || err.message,
+    );
     return {};
   }
 };

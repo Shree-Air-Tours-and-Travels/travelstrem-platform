@@ -1,0 +1,165 @@
+{
+  "status": "success",
+  "component": {
+    "data": {
+      "travellerLayout": {
+        "search": {
+          "enabled": true,
+          "hide": false
+        },
+        "description": "Where would you like to go next?",
+        "activityTitle": "Your activity",
+        "activityDescription": "An overview of your travels, plans, requests and updates.",
+        "upcomingLabel": "Upcoming",
+        "emptyDescription": "Your activity will appear here as you plan, book and explore with TravelsTREM.",
+        "planLabel": "Plan a new trip",
+        "planTarget": "/trevista/tours",
+        "inspirationTitle": "Get inspired",
+        "inspirationDescription": "Explore destinations and experiences for your next journey.",
+        "profileTitle": "Unlock a smoother travel experience",
+        "profileDescription": "Keep your contact details and travel preferences up to date for your next booking."
+      },
+      "guestDashboard": {
+        "title": "Your next journey starts here",
+        "description": "Explore freely as a guest. Sign in and make a booking, send an enquiry, save a journey or search to build your personal dashboard.",
+        "searchTitle": "Where will you go next?",
+        "searchDescription": "Choose how you want to travel and start exploring.",
+        "searches": [
+          {
+            "id": "flight",
+            "label": "Search flights",
+            "description": "Find a route for your next journey.",
+            "icon": "flight",
+            "target": "/trehub/flights"
+          },
+          {
+            "id": "hotel",
+            "label": "Search hotels",
+            "description": "Explore places to stay.",
+            "icon": "hotel",
+            "target": "/trehub/hotels"
+          },
+          {
+            "id": "trip",
+            "label": "Explore trips",
+            "description": "Discover your next adventure.",
+            "icon": "travelPackage",
+            "target": "/trevio/trips"
+          },
+          {
+            "id": "tour",
+            "label": "Explore tours",
+            "description": "Find a journey shaped around you.",
+            "icon": "map",
+            "target": "/trevista/tours"
+          }
+        ],
+        "activityTitle": "A dashboard that grows with your travels",
+        "activityDescription": "There is no account activity to display in guest mode. After signing in, your bookings, enquiries, favorites, saved searches and support updates will appear here.",
+        "steps": [
+          {
+            "id": "discover",
+            "label": "Explore first",
+            "description": "Search flights, hotels, trips and tours without signing in.",
+            "icon": "search"
+          },
+          {
+            "id": "account",
+            "label": "Make it yours",
+            "description": "Sign in before saving searches or creating account activity.",
+            "icon": "user"
+          },
+          {
+            "id": "track",
+            "label": "Return to your dashboard",
+            "description": "Find your saved plans and follow updates in one place.",
+            "icon": "calendar"
+          }
+        ],
+        "knowledgeTitle": "A little travel knowledge",
+        "facts": [
+          {
+            "id": "time",
+            "label": "Local time matters",
+            "description": "Flight departure and arrival times are normally shown in the local time of each airport. Crossing time zones can make the clock difference unlike the flight duration.",
+            "icon": "clock"
+          },
+          {
+            "id": "nonstop",
+            "label": "Direct and nonstop are different",
+            "description": "A nonstop flight has no intermediate stops. A direct flight can stop along the way while keeping the same flight number.",
+            "icon": "flight"
+          },
+          {
+            "id": "codes",
+            "label": "Three letters, one airport",
+            "description": "IATA airport codes use three letters. Cities with several airports can have multiple airport codes, so check the airport as well as the city.",
+            "icon": "map"
+          }
+        ]
+      }
+    },
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "greetingMorning": "Good morning",
+        "greetingAfternoon": "Good afternoon",
+        "greetingEvening": "Good evening",
+        "greetingFallbackName": "there",
+        "greetingDescription": "Here\u2019s your personal travel overview.",
+        "dashboardAriaLabel": "Your TravelsTREM dashboard",
+        "dashboardEyebrow": "Your travel command centre",
+        "dashboardTitle": "Your travel dashboard",
+        "dashboardDescription": "Track requests, revisit plans and keep your next journey within easy reach.",
+        "dashboardBookingsAction": "My bookings",
+        "dashboardViewAllBookings": "View all",
+        "recentSectionAriaLabel": "Recent bookings and enquiries",
+        "recentDefaultTitle": "General tour enquiry",
+        "recentOpenAction": "Open enquiry in My Bookings",
+        "upcomingSectionAriaLabel": "Upcoming trips",
+        "upcomingOpenAction": "Open trip in My Bookings",
+        "loadingStatistics": "Loading travel summary",
+        "loadingPlanning": "Loading journey planning options",
+        "loadingTools": "Loading travel tools"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {
+        "titleRef": "dashboardTitle",
+        "descriptionRef": "dashboardDescription"
+      },
+      "widgets": [
+        {
+          "type": "DashboardMetrics",
+          "source": "shell",
+          "widgetRef": "../app-shell/widgets/metrics.json"
+        },
+        {
+          "type": "UpcomingTrips",
+          "source": "shell",
+          "widgetRef": "../app-shell/widgets/upcoming-trips.json"
+        },
+        {
+          "type": "HomeCardsWithFeature",
+          "source": "shell",
+          "widgetRef": "../app-shell/widgets/home-cards-with-feature.json"
+        },
+        {
+          "type": "RecentBookings",
+          "source": "shell",
+          "widgetRef": "../app-shell/widgets/recent-bookings.json"
+        },
+        {
+          "type": "OverviewRail",
+          "source": "shell",
+          "widgetRef": "../app-shell/widgets/overview-rail.json"
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

@@ -1,0 +1,35 @@
+@import "@packages/trem-design-tokens/scss";
+
+.trem-modal-shell {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $space-6;
+
+  &__backdrop {
+    position: absolute;
+    inset: 0;
+    background: var(--overlay-strong);
+    backdrop-filter: blur($space-1);
+  }
+
+  &__dialog {
+    position: relative;
+    z-index: 1;
+    max-width: 100%;
+    max-height: calc(100dvh - (2 * #{$space-6}));
+  }
+}
+
+@media (max-width: $breakpoint-mobile) {
+  .trem-modal-shell {
+    padding: $space-3;
+
+    &__dialog {
+      max-height: calc(100dvh - (2 * #{$space-3}));
+    }
+  }
+}

@@ -1,0 +1,13 @@
+import mongoose from "mongoose";
+const schema = new mongoose.Schema(
+    {
+        key: { type: String, required: true, unique: true, trim: true, lowercase: true },
+        name: { type: String, required: true, trim: true },
+        description: { type: String, trim: true, default: "" },
+        status: { type: String, enum: ["active", "inactive"], default: "active", index: true },
+        hidden: { type: Boolean, default: false },
+        metadata: { type: mongoose.Schema.Types.Mixed, default: {} },
+    },
+    { timestamps: true },
+);
+export default mongoose.models.Product || mongoose.model("Product", schema);

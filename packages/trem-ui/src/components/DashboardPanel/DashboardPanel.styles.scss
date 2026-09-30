@@ -1,0 +1,170 @@
+@import "../../styles/base/typography";
+
+.trem-dashboard-panel {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: $radius-lg;
+  background: var(--card-bg);
+  box-shadow: var(--shadow-xs);
+
+  &__heading {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+    padding: $space-4;
+    border-bottom: 1px solid var(--border);
+  }
+
+  &__heading>div {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__heading h2 {
+    margin: 0;
+    color: var(--heading);
+    font-size: $font-size-md;
+  }
+
+  &__heading p {
+    margin: $space-1 0 0;
+    color: var(--muted);
+    font-size: $font-size-xs;
+    line-height: $line-height-md;
+  }
+
+  &__heading-icon,
+  &__item-icon {
+    display: grid;
+    flex: 0 0 38px;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: $radius-md;
+    background: var(--primary-soft);
+    color: var(--color-primary);
+  }
+
+  &__items {
+    display: grid;
+    padding: $space-2 $space-3;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+    width: 100%;
+    min-width: 0;
+    padding: $space-3 $space-2;
+    border: 0;
+    border-bottom: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    text-align: left;
+  }
+
+  &__item:last-child {
+    border-bottom: 0;
+  }
+
+  button.trem-dashboard-panel__item {
+    cursor: pointer;
+  }
+
+  button.trem-dashboard-panel__item:hover {
+    background: var(--surface-muted);
+  }
+
+  button.trem-dashboard-panel__item:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+  }
+
+  &__item-copy {
+    display: grid;
+    flex: 1;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__item-copy strong {
+    color: var(--heading);
+    font-size: $font-size-sm;
+  }
+
+  &__item-copy small,
+  &__item-meta {
+    color: var(--muted);
+    font-size: $font-size-xs;
+    line-height: $line-height-md;
+  }
+
+  &__item-value {
+    color: var(--heading);
+    font-size: $font-size-lg;
+    white-space: nowrap;
+  }
+
+  &__stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-1 $space-2;
+  }
+
+  &__stats b {
+    color: var(--heading);
+  }
+
+  &__empty {
+    margin: $space-3;
+  }
+
+  &--tiles &__items,
+  &--actions &__items {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: $space-2;
+    padding: $space-3;
+  }
+
+  &--tiles &__item,
+  &--actions &__item {
+    flex-wrap: wrap;
+    min-height: 72px;
+    padding: $space-3;
+    border: 1px solid var(--border);
+    border-radius: $radius-md;
+  }
+
+  &--tiles &__item-value {
+    width: 100%;
+    padding-left: 50px;
+  }
+
+  &--feed &__item {
+    min-height: 72px;
+  }
+
+  &--feed &__item-meta {
+    margin-left: auto;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 620px) {
+
+  .trem-dashboard-panel--tiles .trem-dashboard-panel__items,
+  .trem-dashboard-panel--actions .trem-dashboard-panel__items {
+    grid-template-columns: 1fr;
+  }
+
+  .trem-dashboard-panel--feed .trem-dashboard-panel__item {
+    flex-wrap: wrap;
+  }
+
+  .trem-dashboard-panel--feed .trem-dashboard-panel__item-meta {
+    margin-left: 50px;
+  }
+}

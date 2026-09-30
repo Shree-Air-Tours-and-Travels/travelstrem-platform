@@ -1,0 +1,39 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "title": "Included stays",
+        "viewOptions": "View hotel options",
+        "optionsTitle": "Hotel options",
+        "optionsSubtitle": "Choose how you'd like to stay. Upgrade costs are per room, per stay.",
+        "optionsEmptyTitle": "No alternate hotels available yet",
+        "optionsEmptyDescription": "This stay currently has no alternate hotel or room options. Request another hotel and your agent will confirm suitable choices in the quote.",
+        "recommended": "Recommended",
+        "cancel": "Cancel",
+        "close": "Close hotel options",
+        "nightsLabel": "nights",
+        "empty": "This trip does not include accommodation. Contact our team for hotel options."
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "IncludedStays",
+          "props": {
+            "titleRef": "title",
+            "viewOptionsRef": "viewOptions"
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

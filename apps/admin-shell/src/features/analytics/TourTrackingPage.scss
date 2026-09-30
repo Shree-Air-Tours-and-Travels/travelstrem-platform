@@ -1,0 +1,8 @@
+@import "@packages/trem-ui/styles/base/typography";
+
+.admin-tour-tracking { display: grid; gap: $space-6; }
+.admin-tour-tracking__events { display: grid; gap: $space-4; }
+.admin-tour-tracking__events > header h2 { margin: 0; color: var(--heading); }
+.admin-tour-tracking__events > header p { margin: $space-1 0 0; color: var(--muted); }
+.admin-tour-tracking__event-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: $space-3; }
+@media (max-width: 820px) { .admin-tour-tracking__event-list { grid-template-columns: 1fr; } }

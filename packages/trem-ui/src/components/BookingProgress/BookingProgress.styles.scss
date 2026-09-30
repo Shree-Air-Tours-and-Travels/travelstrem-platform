@@ -1,4 +1,4 @@
-@import "@packages/trem-design-tokens/scss";
+@import "@packages/trem-design-tokens/scss/tokens";
 
 .booking-progress {
   display: flex;
@@ -39,8 +39,8 @@
     justify-content: center;
     font-size: $font-size-sm;
     font-weight: $font-semibold;
-    background: var(--surface-muted, #e5e7eb);
-    color: var(--text-muted, #9ca3af);
+    background: var(--surface-muted);
+    color: var(--text-muted);
     flex-shrink: 0;
     transition: all $duration-base $ease-default;
   }
@@ -48,7 +48,7 @@
   &__label {
     font-size: $font-size-sm;
     font-weight: $font-medium;
-    color: var(--text-muted, #9ca3af);
+    color: var(--text-muted);
     white-space: nowrap;
     transition: color $duration-base $ease-default;
 
@@ -60,7 +60,7 @@
   &__connector {
     width: 40px;
     height: 2px;
-    background: var(--surface-muted, #e5e7eb);
+    background: var(--surface-muted);
     margin: 0 $space-2;
     flex-shrink: 0;
     transition: background $duration-base $ease-default;
@@ -73,30 +73,30 @@
 
   &__step--active {
     .booking-progress__number {
-      background: var(--color-primary, $primary-color);
-      color: #fff;
+      background: var(--color-primary);
+      color: var(--color-on-primary);
       box-shadow: 0 0 0 4px rgba(15, 143, 134, 0.15);
     }
     .booking-progress__label {
-      color: var(--text, #111);
+      color: var(--text);
       font-weight: $font-semibold;
     }
     .booking-progress__connector {
-      background: var(--color-primary, $primary-color);
+      background: var(--color-primary);
       opacity: 0.3;
     }
   }
 
   &__step--completed {
     .booking-progress__number {
-      background: var(--color-primary, $primary-color);
-      color: #fff;
+      background: var(--color-primary);
+      color: var(--color-on-primary);
     }
     .booking-progress__label {
-      color: var(--text, #111);
+      color: var(--text);
     }
     .booking-progress__connector {
-      background: var(--color-primary, $primary-color);
+      background: var(--color-primary);
       opacity: 0.5;
     }
   }

@@ -23,12 +23,14 @@ const toOptionValue = (option) => {
   return option?.value;
 };
 
-const getOptionValues = (options = []) => new Set(options.map((option) => String(toOptionValue(option))));
+const getOptionValues = (options = []) =>
+  new Set(options.map((option) => String(toOptionValue(option))));
 
 export function getOptionList(field = {}, serverOptions = {}) {
   if (!field) return [];
   if (Array.isArray(field.options) && field.options.length) return field.options;
-  if (field.optionsSource && Array.isArray(serverOptions[field.optionsSource])) return serverOptions[field.optionsSource];
+  if (field.optionsSource && Array.isArray(serverOptions[field.optionsSource]))
+    return serverOptions[field.optionsSource];
   if (Array.isArray(serverOptions[field.name])) return serverOptions[field.name];
   return [];
 }
@@ -43,7 +45,12 @@ export function getActiveFilterCount(values = {}, defaults = {}) {
   }, 0);
 }
 
-const getMessage = (field = {}, key, fallback) => field.messages?.[key] || field.validation?.messages?.[key] || fallback || defaultMessages[key] || "Invalid";
+const getMessage = (field = {}, key, fallback) =>
+  field.messages?.[key] ||
+  field.validation?.messages?.[key] ||
+  fallback ||
+  defaultMessages[key] ||
+  "Invalid";
 
 const getRuleValue = (field = {}, key) => {
   if (field[key] !== undefined) return field[key];
@@ -51,7 +58,8 @@ const getRuleValue = (field = {}, key) => {
   return undefined;
 };
 
-const isEmptyValue = (value) => emptyValues.includes(value) || (Array.isArray(value) && !value.length);
+const isEmptyValue = (value) =>
+  emptyValues.includes(value) || (Array.isArray(value) && !value.length);
 
 const normalizeComparableDate = (value) => {
   const date = new Date(value);
@@ -63,7 +71,9 @@ export function validateField(name, value, field = {}, serverOptions = {}) {
   const required = !!getRuleValue(field, "required");
 
   if (isEmptyValue(value)) {
-    return required ? { ok: false, error: getMessage(field, "required") } : { ok: true, error: null };
+    return required
+      ? { ok: false, error: getMessage(field, "required") }
+      : { ok: true, error: null };
   }
 
   if (type === "number") {
@@ -71,9 +81,12 @@ export function validateField(name, value, field = {}, serverOptions = {}) {
     const min = getRuleValue(field, "min");
     const max = getRuleValue(field, "max");
     if (!Number.isFinite(number)) return { ok: false, error: getMessage(field, "number") };
-    if (getRuleValue(field, "integer") && !Number.isInteger(number)) return { ok: false, error: getMessage(field, "integer") };
-    if (min !== undefined && number < Number(min)) return { ok: false, error: getMessage(field, "min", `Minimum ${min}`) };
-    if (max !== undefined && number > Number(max)) return { ok: false, error: getMessage(field, "max", `Maximum ${max}`) };
+    if (getRuleValue(field, "integer") && !Number.isInteger(number))
+      return { ok: false, error: getMessage(field, "integer") };
+    if (min !== undefined && number < Number(min))
+      return { ok: false, error: getMessage(field, "min", `Minimum ${min}`) };
+    if (max !== undefined && number > Number(max))
+      return { ok: false, error: getMessage(field, "max", `Maximum ${max}`) };
     return { ok: true, error: null };
   }
 
@@ -83,27 +96,32 @@ export function validateField(name, value, field = {}, serverOptions = {}) {
     const dateRange = serverOptions.dateRange || {};
     const minDate = getRuleValue(field, "minDate") || dateRange.earliest;
     const maxDate = getRuleValue(field, "maxDate") || dateRange.latest;
-    if (minDate && date < new Date(minDate)) return { ok: false, error: getMessage(field, "minDate", `Earliest ${minDate}`) };
-    if (maxDate && date > new Date(maxDate)) return { ok: false, error: getMessage(field, "maxDate", `Latest ${maxDate}`) };
+    if (minDate && date < new Date(minDate))
+      return { ok: false, error: getMessage(field, "minDate", `Earliest ${minDate}`) };
+    if (maxDate && date > new Date(maxDate))
+      return { ok: false, error: getMessage(field, "maxDate", `Latest ${maxDate}`) };
     return { ok: true, error: null };
   }
 
   if (type === "email") {
     const email = String(value).trim();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: getMessage(field, "email") };
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+      return { ok: false, error: getMessage(field, "email") };
     return { ok: true, error: null };
   }
 
   if (type === "tel" || type === "phone") {
-    const phone = String(value).trim();
-    if (!/^\+?[0-9][0-9\s-]{6,18}$/.test(phone)) return { ok: false, error: getMessage(field, "phone") };
+    const phone = String(value).replace(/\D/g, "");
+    if (phone.length !== 10)
+      return { ok: false, error: getMessage(field, "phone", "Enter a valid 10-digit phone number") };
     return { ok: true, error: null };
   }
 
   if (type === "select") {
     const options = getOptionList(field, serverOptions);
     const values = getOptionValues(options);
-    if (values.size && !values.has(String(value))) return { ok: false, error: getMessage(field, "option") };
+    if (values.size && !values.has(String(value)))
+      return { ok: false, error: getMessage(field, "option") };
     return { ok: true, error: null };
   }
 
@@ -113,9 +131,12 @@ export function validateField(name, value, field = {}, serverOptions = {}) {
     const selected = toArray(value).map(String);
     const minItems = getRuleValue(field, "minItems");
     const maxItems = getRuleValue(field, "maxItems");
-    if (minItems !== undefined && selected.length < Number(minItems)) return { ok: false, error: getMessage(field, "minItems", `Choose at least ${minItems}`) };
-    if (maxItems !== undefined && selected.length > Number(maxItems)) return { ok: false, error: getMessage(field, "maxItems", `Choose up to ${maxItems}`) };
-    if (values.size && selected.some((item) => !values.has(item))) return { ok: false, error: getMessage(field, "options") };
+    if (minItems !== undefined && selected.length < Number(minItems))
+      return { ok: false, error: getMessage(field, "minItems", `Choose at least ${minItems}`) };
+    if (maxItems !== undefined && selected.length > Number(maxItems))
+      return { ok: false, error: getMessage(field, "maxItems", `Choose up to ${maxItems}`) };
+    if (values.size && selected.some((item) => !values.has(item)))
+      return { ok: false, error: getMessage(field, "options") };
     return { ok: true, error: null };
   }
 
@@ -124,9 +145,12 @@ export function validateField(name, value, field = {}, serverOptions = {}) {
     const minLength = getRuleValue(field, "minLength");
     const maxLength = getRuleValue(field, "maxLength");
     const pattern = getRuleValue(field, "pattern");
-    if (minLength && text.trim().length < Number(minLength)) return { ok: false, error: getMessage(field, "minLength", `Min ${minLength} characters`) };
-    if (maxLength && text.length > Number(maxLength)) return { ok: false, error: getMessage(field, "maxLength", `Max ${maxLength} characters`) };
-    if (pattern && !(new RegExp(pattern).test(text))) return { ok: false, error: getMessage(field, "pattern") };
+    if (minLength && text.trim().length < Number(minLength))
+      return { ok: false, error: getMessage(field, "minLength", `Min ${minLength} characters`) };
+    if (maxLength && text.length > Number(maxLength))
+      return { ok: false, error: getMessage(field, "maxLength", `Max ${maxLength} characters`) };
+    if (pattern && !new RegExp(pattern).test(text))
+      return { ok: false, error: getMessage(field, "pattern") };
     return { ok: true, error: null };
   }
 

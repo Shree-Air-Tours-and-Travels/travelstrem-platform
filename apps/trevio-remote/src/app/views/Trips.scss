@@ -1,0 +1,258 @@
+@import "@packages/trem-design-tokens/scss";
+
+.trevio-trips-page {
+  padding: 0 0 clamp(3rem, 6vw, 5rem);
+}
+
+.trevio-trips-page__breadcrumbs-shell {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  width: 100%;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  margin-bottom: $space-5;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-glass-strong, rgba(255, 255, 255, 0.92));
+  box-shadow: var(--shadow-xs);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.trevio-trips-page__breadcrumbs {
+  width: 100%;
+}
+
+.trevio-trips-page__hero {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: clamp($space-5, 5vw, $space-8);
+  margin-bottom: $space-6;
+  padding: clamp($space-5, 3vw, $space-8);
+  border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--border));
+  border-radius: var(--radius-xl);
+  background:
+    radial-gradient(circle at 88% 18%, color-mix(in srgb, var(--primary) 22%, transparent), transparent 28%),
+    linear-gradient(135deg, color-mix(in srgb, var(--primary) 8%, var(--surface)) 0%, var(--surface) 48%, color-mix(in srgb, var(--primary) 12%, var(--surface)) 100%);
+  box-shadow: var(--shadow-md);
+
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+    border-radius: 999px;
+  }
+
+  &::before {
+    width: clamp(12rem, 22vw, 22rem);
+    height: clamp(12rem, 22vw, 22rem);
+    right: -5rem;
+    top: -7rem;
+    border: 1px solid color-mix(in srgb, var(--primary) 22%, transparent);
+    background: radial-gradient(circle, color-mix(in srgb, var(--primary) 14%, transparent), transparent 68%);
+  }
+
+  &::after {
+    width: clamp(9rem, 18vw, 18rem);
+    height: clamp(9rem, 18vw, 18rem);
+    right: 12%;
+    bottom: -8rem;
+    background: color-mix(in srgb, var(--primary) 7%, transparent);
+  }
+
+  h1 {
+    margin: $space-2 0;
+    font-size: clamp(2rem, 4vw, 3.2rem);
+    letter-spacing: -0.04em;
+    line-height: $line-height-sm;
+  }
+
+  p {
+    max-width: 720px;
+    margin: 0;
+    color: var(--muted);
+    font-size: $font-size-md;
+  }
+}
+
+.trevio-trips-page__hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+.trevio-trips-page__hero-panel {
+  min-width: min(340px, 34%);
+  display: grid;
+  gap: $space-3;
+  padding: $space-4;
+  border: 1px solid color-mix(in srgb, var(--primary) 16%, var(--border));
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  span {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    color: var(--text);
+    font-weight: $font-bold;
+  }
+
+  span:first-child {
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: $font-size-xs;
+  }
+}
+
+.trevio-trips-page__toolbar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(220px, 280px) auto;
+  align-items: center;
+  gap: $space-4;
+  margin-bottom: $space-4;
+  padding: $space-4;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.trevio-trips-page__filter-toggle.ui-button {
+  min-height: 48px;
+}
+
+.trevio-trips-page__toolbar-search {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: $space-2;
+  min-width: 0;
+  padding-left: $space-3;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+
+  .trem-input {
+    min-width: 0;
+  }
+
+  .trem-input__row {
+    border: 0;
+    box-shadow: none;
+  }
+}
+
+.trevio-trips-page__toolbar-results {
+  color: var(--muted);
+  font-weight: $font-bold;
+  white-space: nowrap;
+}
+
+.trevio-trips-page__filters-dropdown {
+  margin: (-$space-2) 0 $space-4;
+  padding: $space-4;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+
+.trevio-trip-filters-panel__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: $space-4;
+}
+
+.trevio-trip-filters-panel__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: $space-3;
+  margin-top: $space-5;
+}
+
+.trevio-trips-page__active-chips {
+  margin-bottom: $space-4;
+}
+
+.trevio-trips-page__pagination {
+  justify-content: center;
+  margin-top: $space-6;
+}
+
+.trevio-trips-page__quick-chips.tt-quick-chips {
+  margin-bottom: $space-5;
+}
+
+@media (max-width: $breakpoint-tablet) {
+  .trevio-trips-page__hero {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .trevio-trips-page__hero-panel {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .trevio-trips-page__toolbar {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .trevio-trips-page__toolbar-sort,
+  .trevio-trips-page__toolbar-results {
+    grid-column: span 1;
+  }
+
+  .trevio-trip-filters-panel__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: $breakpoint-mobile) {
+  .trevio-trips-page__breadcrumbs-shell {
+    min-height: 48px;
+    margin-bottom: $space-4;
+  }
+
+  .trevio-trips-page__hero {
+    padding: $space-5;
+    border-radius: var(--radius-lg);
+  }
+
+  .trevio-trips-page__toolbar {
+    grid-template-columns: 1fr;
+    padding: $space-3;
+  }
+
+  .trevio-trips-page__toolbar-search {
+    order: -1;
+  }
+
+  .trevio-trip-filters-panel__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .trevio-trip-filters-panel__actions {
+    position: sticky;
+    bottom: 0;
+    flex-direction: column-reverse;
+    padding-top: $space-3;
+    background: var(--surface);
+
+    .ui-button {
+      width: 100%;
+    }
+  }
+
+  .trevio-trips-page__filters-sheet .trem-bottom-sheet__body {
+    padding-bottom: calc($space-3 + env(safe-area-inset-bottom, 0px));
+  }
+}
