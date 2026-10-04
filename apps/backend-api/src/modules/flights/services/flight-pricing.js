@@ -1,4 +1,5 @@
 import FinancialEngine from "../../../core/financial-engine/index.js";
+import { getConfiguredPaymentProviderName } from "../../../core/financial-engine/providers/registry.js";
 
 export const applyFlightFinancials = async ({ price, financialContext = {} }) => {
     const flightSubtotal = Number(price.flightSubtotal ?? price.total ?? 0);
@@ -10,7 +11,7 @@ export const applyFlightFinancials = async ({ price, financialContext = {} }) =>
         productType: "flight",
         baseAmountMinor: flightSubtotal,
         currency: price.currency || "INR",
-        paymentProvider: financialContext.paymentProvider || process.env.PAYMENT_PROVIDER || "razorpay",
+        paymentProvider: financialContext.paymentProvider || getConfiguredPaymentProviderName(),
         agencyId: financialContext.agencyId || null,
         customerType: financialContext.customerType || null,
         ...(financialContext.config ? { config: financialContext.config } : {}),

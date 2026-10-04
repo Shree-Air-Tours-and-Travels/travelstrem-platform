@@ -33,7 +33,7 @@
         "titleRef": "pageTitle"
       },
       "widgets": [
-        {"type": "Breadcrumbs", "props": {"items": [{"path": "/trevio", "labelRef": "breadcrumbHomePage"}, {"path": "/trips", "labelRef": "breadcrumbListingPage"}]}},
+        {"type": "Breadcrumbs", "props": {"items": [{"path": "/trevio", "labelRef": "breadcrumbHomePage"}, {"path": "/trevio/trips", "labelRef": "breadcrumbListingPage"}]}},
         {
           "type": "TourGallery",
           "source": "shell",

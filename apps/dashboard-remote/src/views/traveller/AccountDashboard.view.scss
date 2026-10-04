@@ -1,0 +1,76 @@
+@import "@packages/trem-design-tokens/scss/tokens";
+
+.account-dashboard {
+  min-height: 100%;
+  color: var(--text);
+  background: var(--page-bg);
+
+  &__body {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    min-height: calc(100dvh - #{$space-16});
+    align-items: start;
+  }
+
+  .account-dashboard__sidebar {
+    position: sticky;
+    top: $space-16;
+    width: 100%;
+    height: calc(100dvh - #{$space-16});
+  }
+
+  &__content {
+    min-width: 0;
+    padding: $space-8;
+  }
+
+  &__page-heading {
+    display: flex;
+    align-items: baseline;
+    gap: $space-4;
+    margin: $space-5 0;
+
+    h1 {
+      margin: 0;
+      color: var(--heading);
+      font-size: clamp(#{$font-size-xl}, 2vw, #{$font-size-xxl});
+      font-weight: $font-semibold;
+      line-height: $line-height-sm;
+    }
+  }
+
+  &__page {
+    min-width: 0;
+
+    > .trem-no-data {
+      min-height: 20rem;
+      border-style: solid;
+      border-radius: $radius-lg;
+      background: var(--card-bg);
+      box-shadow: var(--shadow-xs);
+    }
+
+    > .trem-dashboard-panel {
+      border-radius: $radius-lg;
+      box-shadow: var(--shadow-xs);
+    }
+
+    > .dpv { margin-top: $space-5; }
+  }
+}
+
+.account-dashboard__booking-options {
+  display: grid;
+  gap: $space-3;
+}
+
+@media (max-width: $breakpoint-md) {
+  .account-dashboard {
+    padding-bottom: calc(#{$space-20 + $space-4} + env(safe-area-inset-bottom, 0px));
+
+    &__body { display: block; }
+    .account-dashboard__sidebar { display: none; }
+    &__content { padding: $space-4; }
+    &__page > .trem-no-data { min-height: 15rem; }
+  }
+}

@@ -1,0 +1,109 @@
+@import "../../styles/base/typography";
+
+.trem-donut-chart {
+  .is-primary {
+    --donut-color: var(--color-primary);
+  }
+
+  .is-info {
+    --donut-color: var(--color-info, var(--color-primary));
+  }
+
+  .is-success {
+    --donut-color: var(--color-success);
+  }
+
+  .is-warning {
+    --donut-color: var(--color-warning);
+  }
+
+  &__visual {
+    position: relative;
+    width: min(100%, 240px);
+    margin: $space-3 auto;
+  }
+
+  svg {
+    display: block;
+    width: 100%;
+  }
+
+  circle {
+    fill: none;
+    stroke-width: 23;
+  }
+
+  &__track {
+    stroke: var(--surface-muted);
+  }
+
+  &__segment {
+    stroke: var(--donut-color, var(--color-primary));
+  }
+
+  &__total {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  &__total strong {
+    color: var(--heading);
+    font-size: $font-size-xxxl;
+    letter-spacing: -.04em;
+  }
+
+  &__total span,
+  &__empty {
+    color: var(--muted);
+    font-size: $font-size-sm;
+  }
+
+  &__empty {
+    text-align: center;
+  }
+
+  &__legend {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: $space-2;
+    padding: 0;
+    margin: $space-4 0 0;
+    list-style: none;
+  }
+
+  &__legend button {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: $space-2;
+    padding: $space-2;
+    background: var(--surface-muted);
+    border: 0;
+    border-radius: $radius-sm;
+    color: var(--text);
+    font: inherit;
+    font-size: $font-size-sm;
+    cursor: pointer;
+  }
+
+  &__legend button:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  &__legend i {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--donut-color);
+  }
+
+  &__legend strong {
+    margin-inline-start: auto;
+  }
+}

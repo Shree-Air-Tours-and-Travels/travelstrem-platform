@@ -11,7 +11,7 @@ function assertCanEdit(req, tour) {
     if (tour.status === "draft" && tour.agentTour === true && id(tour.ownerAgent) !== actorId) {
         throw Object.assign(new Error("Tour draft not found"), { status: 404 });
     }
-    if (req.access?.isMaster) return;
+    if (req.access?.isMaster || req.access?.isTenantAdmin) return;
     if (id(tour.agencyId) !== id(req.access?.agencyId || req.user?.agencyId))
         throw Object.assign(new Error("You cannot edit this draft"), { status: 403 });
     if (

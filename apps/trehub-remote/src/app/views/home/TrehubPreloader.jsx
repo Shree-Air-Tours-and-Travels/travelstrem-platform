@@ -66,6 +66,7 @@ const Filters = () => (
 export default function TrehubPreloader({ variant, label = "Loading content" }) {
   const isHotelList = variant === "hotel-list";
   const isList = isHotelList || variant === "flight-list";
+  const isResults = ["hotel-results", "flight-results"].includes(variant);
   const isHotelDetail = variant === "hotel-detail";
 
   return (
@@ -77,7 +78,7 @@ export default function TrehubPreloader({ variant, label = "Loading content" }) 
       aria-label={label || "Loading content"}
     >
       <div aria-hidden="true">
-        {variant !== "home" && !isHotelList && !isHotelDetail && variant !== "hotel-results" ? <Breadcrumb /> : null}
+        {variant !== "home" && !isHotelList && !isHotelDetail && !isResults ? <Breadcrumb /> : null}
         <div className="trehub-loading__content">
           {variant === "home" ? (
             <>
@@ -128,10 +129,10 @@ export default function TrehubPreloader({ variant, label = "Loading content" }) 
               </div>
             </>
           ) : null}
-          {variant === "hotel-results" ? (
+          {isResults ? (
             <div className="trehub-loading__results">
               {Array.from({ length: 2 }, (_, index) => (
-                <ListingCard hotel key={index} />
+                <ListingCard hotel={variant === "hotel-results"} key={index} />
               ))}
             </div>
           ) : null}

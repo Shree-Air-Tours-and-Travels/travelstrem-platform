@@ -5,6 +5,9 @@ let redis = null;
 let disconnectPromise = null;
 
 const redisOptions = {
+    ...(process.env.TENANT_CLIENT_ID
+        ? { keyPrefix: `tenant:${process.env.TENANT_CLIENT_ID}:` }
+        : {}),
     lazyConnect: true,
     connectTimeout: 10000,
     maxRetriesPerRequest: 3,

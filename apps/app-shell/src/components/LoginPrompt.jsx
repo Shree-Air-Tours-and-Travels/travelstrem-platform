@@ -1,14 +1,19 @@
 import React from "react";
-import { Button, Icon, Paragraph, Title } from "@packages/trem-ui";
+import { Button, Icon, Paragraph, Title, useTheme } from "@packages/trem-ui";
 import { ModalShell } from "@packages/trem-modals";
 import "./LoginPrompt.scss";
 
 export default function LoginPrompt({
   onLogin,
   onContinueAsGuest,
-  title = "Welcome to TravelsTrem",
+  brand = {},
+  title = "Welcome Traveller",
   description,
 }) {
+  const { brand: configuredBrand, theme } = useTheme();
+  const identity = brand.name ? brand : configuredBrand || {};
+  const brandName = identity.name || "";
+  const logoSrc = (theme === "dark" && identity.logoDarkSrc) || identity.logoSrc || "";
   const continueAsGuest = (event) => {
     event?.preventDefault?.();
     event?.stopPropagation?.();
@@ -35,15 +40,15 @@ export default function LoginPrompt({
         <Icon name="x" size={18} />
       </button>
       <div className="dlp__content">
-        <div className="dlp__brand">TRAVELSTREM</div>
+        <div className="dlp__brand">{brandName}</div>
         <div className="dlp__icon" aria-hidden="true">
-          <img src="https://res.cloudinary.com/dofxshf3z/image/upload/v1790519386/travelstrem/site-assets/e38709b8a4ada750aed0f6df.png" alt="" />
+          <img src={logoSrc} alt="" />
         </div>
         <Title text={title} primaryClassname="dlp__title" />
         <Paragraph
           text={
             description ||
-            "Sign in to manage favourites and enquiries, or continue as a guest to discover travel services tailored to you."
+            `Sign in to manage favourites and enquiries with ${brandName}, or continue as a guest to discover travel services tailored to you.`
           }
           primaryClassname="dlp__desc"
         />

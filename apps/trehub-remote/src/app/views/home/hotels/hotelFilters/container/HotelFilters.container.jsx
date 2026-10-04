@@ -118,8 +118,8 @@ export default function HotelFiltersContainer({ userSession }) {
       }
       setFilters(restored?.filters || initialFilters);
       setAppliedFilters(restored?.filters || initialFilters);
-      const response = query.destination && !restored
-        ? await createHotelSearch(next.elements.urls.search, query, sessionKey)
+      const response = !restored
+        ? await createHotelSearch(next.elements.urls.search, query.destination ? query : { ...query, initial: true }, sessionKey)
         : null;
       if (token === request.current) {
         const nextData = restored?.data || response?.data || null;
@@ -205,6 +205,7 @@ export default function HotelFiltersContainer({ userSession }) {
   };
 
   const applyFilters = async (nextFilters) => {
+    if (!data?.searchId) { setFilters(nextFilters); return; }
     const token = ++request.current;
     setFilters(nextFilters);
     setLoading(true);

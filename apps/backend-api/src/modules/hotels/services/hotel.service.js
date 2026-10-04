@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import { readFileSync } from "node:fs";
 import ApiError from "../../../shared/errors/ApiError.js";
 import FinancialEngine from "../../../core/financial-engine/index.js";
+import { getConfiguredPaymentProviderName } from "../../../core/financial-engine/providers/registry.js";
 import CurrencyAdapter from "../../../core/financial-engine/adapters/currency.adapter.js";
 import FlightOfferStore from "../../flights/services/flight-offer.store.js";
 import ContactLead from "../../forms/models/ContactLead.js";
@@ -262,7 +263,7 @@ export default class HotelService {
             productType: "hotel",
             baseAmountMinor: subtotal,
             currency: room.currency,
-            paymentProvider: process.env.PAYMENT_PROVIDER || "razorpay",
+            paymentProvider: getConfiguredPaymentProviderName(),
             agencyId: actor.agencyId || null,
         });
         return {
@@ -276,6 +277,16 @@ export default class HotelService {
     }
 
     async search(values, actor) {
+        if (values?.initial === true && !String(values.destination || "").trim()) {
+            return {
+                cards: [],
+                providerSyncStatus: "complete",
+                summary: "Available hotels",
+                emptyTitle: "Search for a stay",
+                emptyDescription: "Choose a destination and travel dates to see available hotels.",
+                pagination: { page: 1, pageSize: hotelPageSize, total: 0, totalPages: 0 },
+            };
+        }
         const input = validateHotelSearch({
             ...values,
             currency: values?.currency || actor?.currency || actor?.settings?.currency,
@@ -760,7 +771,7 @@ export default class HotelService {
             productType: "hotel",
             baseAmountMinor: best.subtotal,
             currency,
-            paymentProvider: process.env.PAYMENT_PROVIDER || "razorpay",
+            paymentProvider: getConfiguredPaymentProviderName(),
             agencyId: actor.agencyId || null,
         });
         return {
@@ -1060,12 +1071,16 @@ export default class HotelService {
         const shownAmenities = new Set(
             (hotel.amenities || []).map((value) => value.trim().toLowerCase()),
         );
-        const serviceValues = [...new Set([
-            ...(hotel.services || []),
-            ...(hotel.amenities || []).filter((value) =>
-                /wheelchair|accessible|braille|visual alarm|elevator|concierge|housekeeping|front desk|laundry service|transfer service/i.test(value),
-            ),
-        ])];
+        const serviceValues = [
+            ...new Set([
+                ...(hotel.services || []),
+                ...(hotel.amenities || []).filter((value) =>
+                    /wheelchair|accessible|braille|visual alarm|elevator|concierge|housekeeping|front desk|laundry service|transfer service/i.test(
+                        value,
+                    ),
+                ),
+            ]),
+        ];
         const shownPolicies = new Set(
             (hotel.policies || []).map((value) => value.trim().toLowerCase()),
         );
@@ -1176,10 +1191,12 @@ export default class HotelService {
                             : "",
                 },
             ].filter((item) => item.value),
-            amenities: (hotel.amenities || []).filter((value) => !serviceValues.includes(value)).map((value) => ({
-                value,
-                icon: amenityIcon(value),
-            })),
+            amenities: (hotel.amenities || [])
+                .filter((value) => !serviceValues.includes(value))
+                .map((value) => ({
+                    value,
+                    icon: amenityIcon(value),
+                })),
             policies: hotel.policies || [],
             policySections: hotel.policySections || [],
             services: serviceValues.map((value) => ({ value, icon: amenityIcon(value) })),
@@ -1353,7 +1370,7 @@ export default class HotelService {
             productType: "hotel",
             baseAmountMinor: subtotal,
             currency,
-            paymentProvider: process.env.PAYMENT_PROVIDER || "razorpay",
+            paymentProvider: getConfiguredPaymentProviderName(),
             agencyId: actor.agencyId || null,
         });
         return {
@@ -1375,7 +1392,10 @@ export default class HotelService {
         };
     }
 
-    async createEnquiry({ searchId, hotelId, roomIds, roomId, expectedTotal, startNew = false }, actor) {
+    async createEnquiry(
+        { searchId, hotelId, roomIds, roomId, expectedTotal, startNew = false },
+        actor,
+    ) {
         const userId = idFor(actor);
         if (!userId) throw new ApiError(401, "Please sign in to create an enquiry.");
         const search = await this.requireSearch(searchId);
@@ -1396,7 +1416,11 @@ export default class HotelService {
             "customizationSnapshot.roomSignature": roomSignature,
             status: { $nin: ["rejected", "cancelled", "closed"] },
         });
-        if (existing && !startNew) return { existingEnquiry: true, targetPath: `/?tab=bookings&enquiry=${existing.enquiryRef}` };
+        if (existing && !startNew)
+            return {
+                existingEnquiry: true,
+                targetPath: `/?tab=bookings&enquiry=${existing.enquiryRef}`,
+            };
         const customer = await User.findById(userId).select("name email phone").lean();
         const searchUrl = `/trehub/hotels?${new URLSearchParams(search.input)}`;
         const lead = await ContactLead.create({

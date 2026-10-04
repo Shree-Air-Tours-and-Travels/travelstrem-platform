@@ -1,3 +1,4 @@
+import { partnerAccessPlugin } from "../../clients/partnerAccessPlugin.js";
 import mongoose from "mongoose";
 
 const partnerAgencySchema = new mongoose.Schema(
@@ -91,6 +92,7 @@ partnerAgencySchema.set("toJSON", {
     },
 });
 
+partnerAgencySchema.plugin(partnerAccessPlugin);
 const PartnerAgency =
     mongoose.models?.PartnerAgency || mongoose.model("PartnerAgency", partnerAgencySchema);
 export default PartnerAgency;

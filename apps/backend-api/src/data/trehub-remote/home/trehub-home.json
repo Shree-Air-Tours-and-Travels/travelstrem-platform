@@ -2,8 +2,8 @@
   "status": "success",
   "component": {
     "data": {
-      "activeClientCount": 0,
-      "activeClients": [],
+      "providerCount": 0,
+      "providers": [],
       "popularLocations": {
         "items": [
           {
@@ -428,10 +428,10 @@
         "loadErrorTitle": "Trehub could not be loaded",
         "loadErrorDescription": "Please try loading this section again.",
         "retry": "Try again",
-        "searchEyebrow": "Trehub travel desk",
+        "searchEyebrow": "Travel desk",
         "searchTitle": "Welcome to",
-        "searchTitleAccent": "TREHUB",
-        "searchDescription": "Search flights and hotels together in one connected travel workspace.",
+        "searchTitleAccent": "Your travel desk",
+        "searchDescription": "Find flights and stays for your next journey.",
         "searchTypeAriaLabel": "Trehub search categories",
         "searchFlightsTab": "Flights",
         "searchHotelsTab": "Hotels",
@@ -550,17 +550,17 @@
         "guideTravellersPlaceholder": "2 travellers",
         "searchAction": "Search",
         "searchTrustLive": "Live availability ready",
-        "searchTrustSupport": "TREM support connected",
+        "searchTrustSupport": "Help with your journey",
         "searchTrustSecure": "Secure booking flow",
-        "whyEyebrow": "Why Trehub",
-        "whyTitle": "One journey. Every detail connected.",
-        "whyDescription": "From the first search to the final check-in, Trehub keeps your flights, stays and travel support moving together.",
-        "whyFastTitle": "Flights and stays, perfectly in sync",
-        "whyFastDescription": "Keep every reservation connected to one journey, with the details you need always within reach.",
-        "whyCompareTitle": "Search built around you",
-        "whyCompareDescription": "Compare one-way, return and multi-city flights alongside stays that match your plans.",
-        "whySupportTitle": "Real support, wherever you go",
-        "whySupportDescription": "Move smoothly from discovery to booking with TREM support connected throughout your journey.",
+        "whyEyebrow": "Why Us?",
+        "whyTitle": "Travel planning, made simple",
+        "whyDescription": "Plan your journey from your first search to your next stay.",
+        "whyFastTitle": "Flights and stays together",
+        "whyFastDescription": "Keep your travel details in one place.",
+        "whyCompareTitle": "Search your way",
+        "whyCompareDescription": "Compare flight and stay options that fit your plans.",
+        "whySupportTitle": "Here when you need us",
+        "whySupportDescription": "Contact the team for help with travel plans and reservations.",
         "popularLocationsEyebrow": "Travel inspiration",
         "popularLocationsTitle": "Popular locations",
         "popularLocationsDescription": "Explore destinations travellers are searching for now, selected for easy flight and stay planning.",
@@ -582,10 +582,10 @@
         "locationSingaporeDescription": "A connected city for food, design and family travel.",
         "locationSingaporeRegion": "Singapore",
         "locationSingaporeImageAlt": "Singapore city waterfront",
-        "clientShowcaseEyebrow": "Trusted network",
-        "clientShowcaseTitle": "Working with {count}+ active clients",
-        "clientShowcaseEmptyTitle": "Built for a growing travel network",
-        "clientShowcaseDescription": "A growing network of travel businesses uses TravelsTREM to keep journeys connected."
+        "providerShowcaseEyebrow": "Travel options",
+        "providerShowcaseTitle": "Connected to {count} travel providers",
+        "providerShowcaseEmptyTitle": "Travel provider connections",
+        "providerShowcaseDescription": "Explore available flights and places to stay."
       },
       "urls": {
         "airportSearch": "/flights/airports/search",
@@ -672,18 +672,18 @@
           }
         },
         {
-          "name": "clientShowcase",
+          "name": "providerShowcase",
           "type": "ClientShowcase",
           "source": "trehub",
           "props": {
-            "eyebrowRef": "clientShowcaseEyebrow",
-            "titleRef": "clientShowcaseTitle",
-            "emptyTitleRef": "clientShowcaseEmptyTitle",
-            "descriptionRef": "clientShowcaseDescription",
+            "eyebrowRef": "providerShowcaseEyebrow",
+            "titleRef": "providerShowcaseTitle",
+            "emptyTitleRef": "providerShowcaseEmptyTitle",
+            "descriptionRef": "providerShowcaseDescription",
             "templateValues": {
-              "count": "activeClientCount"
+              "count": "providerCount"
             },
-            "clientsDataPath": "activeClients"
+            "providersDataPath": "providers"
           }
         }
       ],

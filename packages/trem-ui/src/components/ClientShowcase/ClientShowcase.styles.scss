@@ -7,12 +7,10 @@
   gap: clamp($space-5, 4vw, $space-9);
   padding: clamp($space-5, 3vw, $space-8);
   overflow: hidden;
-  border: 0;
   border-radius: calc(#{$radius-xl} + 8px);
-  background:
-    radial-gradient(circle at 100% 0, rgba(55, 214, 207, 0.26), transparent 34%),
-    linear-gradient(125deg, #18275e, #243c92 58%, #086f7a);
-  box-shadow: 0 24px 52px rgba(24, 39, 94, 0.18);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
 }
 
 .trem-client-showcase__eyebrow {
@@ -20,8 +18,8 @@
   width: fit-content;
   padding: $space-1-5 $space-3;
   border-radius: $radius-full;
-  background: rgba(255, 255, 255, 0.12);
-  color: rgba(255, 255, 255, 0.86);
+  background: var(--primary-soft);
+  color: var(--color-primary);
   font-size: $font-size-xs;
   font-weight: $font-bold;
   letter-spacing: 0.11em;
@@ -30,7 +28,7 @@
 
 .trem-client-showcase__title.ui-subtitle {
   margin: $space-3 0 $space-2;
-  color: var(--color-on-primary);
+  color: var(--title);
   font-size: clamp(1.6rem, 2.7vw, 2.25rem);
   line-height: 1.15;
   letter-spacing: -0.025em;
@@ -38,7 +36,7 @@
 
 .trem-client-showcase__description.ui-paragraph {
   margin: 0;
-  color: rgba(255, 255, 255, 0.72);
+  color: var(--muted);
   line-height: 1.6;
 }
 
@@ -55,9 +53,9 @@
   min-width: 0;
   min-height: 4.25rem;
   padding: $space-3;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid var(--border);
   border-radius: $radius-md;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--surface-inset);
   backdrop-filter: blur(12px);
 
   > span,
@@ -68,15 +66,15 @@
     width: 2.25rem;
     height: 2.25rem;
     border-radius: $radius-sm;
-    background: rgba(255, 255, 255, 0.14);
-    color: var(--color-on-primary);
+    background: var(--primary-soft);
+    color: var(--color-primary);
     font-weight: $font-bold;
     object-fit: contain;
   }
 
   strong {
     overflow: hidden;
-    color: var(--color-on-primary);
+    color: var(--text);
     font-size: $font-size-sm;
     text-overflow: ellipsis;
     white-space: nowrap;

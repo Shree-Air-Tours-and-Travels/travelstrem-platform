@@ -1,3 +1,4 @@
+import { customerScopePlugin } from "../../tenancy/customerScope.js";
 import mongoose from "mongoose";
 import {
     SUPPORT_CHANNEL,
@@ -71,6 +72,8 @@ supportTicketSchema.set("toJSON", {
         delete ret._id;
     },
 });
+
+supportTicketSchema.plugin(customerScopePlugin, { ownerField: "user" });
 
 export default mongoose.models?.SupportTicket ||
     mongoose.model("SupportTicket", supportTicketSchema);

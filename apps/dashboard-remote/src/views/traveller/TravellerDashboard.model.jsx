@@ -2,6 +2,7 @@ import { timeOfDay, firstNameOf } from "../shared/dashboardHelpers";
 
 export default function buildTravellerModel({
   dashboardWidgets,
+  accountHome,
   user,
   copy = {},
   metricsDefinition,
@@ -69,7 +70,7 @@ export default function buildTravellerModel({
       eyebrow: copy.dashboardEyebrow,
       eyebrowIcon: "management",
       ariaLabel: copy.dashboardAriaLabel,
-      title: greetingText || copy.dashboardTitle,
+      title: accountHome ? copy.dashboardTitle : greetingText || copy.dashboardTitle,
       description: copy.dashboardDescription,
       meta: [],
       action: {
@@ -130,4 +131,3 @@ export default function buildTravellerModel({
     },
   };
 }
-

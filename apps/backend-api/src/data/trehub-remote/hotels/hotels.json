@@ -173,7 +173,7 @@
         "cancel": "Keep browsing",
         "confirm": "Create enquiry",
         "modalTitle": "Review your stay",
-        "modalDescription": "This creates an enquiry and opens My Bookings, where you can add guest details and review your stay. Payment is not available yet.",
+        "modalDescription": "This creates an enquiry and opens Dashboard, where you can add guest details and review your stay. Payment is not available yet.",
         "mock": "Demo hotel inventory — no live reservation will be made.",
         "eyebrow": "Hotels & stays",
         "description": "Find your place to unwind. Compare rooms, inclusions and the full cost of your stay.",
@@ -332,11 +332,11 @@
         {
           "type": "HotelBreadcrumbs",
           "searchItems": [
-            { "labelRef": "breadcrumbTrehub", "path": "/trehub?tab=trehub&product=trehub" },
+            { "labelRef": "breadcrumbTrehub", "path": "/trehub" },
             { "labelRef": "breadcrumbHotels" }
           ],
           "detailsItems": [
-            { "labelRef": "breadcrumbTrehub", "path": "/trehub?tab=trehub&product=trehub" },
+            { "labelRef": "breadcrumbTrehub", "path": "/trehub" },
             { "labelRef": "breadcrumbHotels", "path": "/trehub/hotels" },
             { "labelRef": "breadcrumbDetails" }
           ]
@@ -401,7 +401,7 @@
         "search": [
           {
             "labelRef": "breadcrumbTrehub",
-            "path": "/trehub?tab=trehub&product=trehub"
+            "path": "/trehub"
           },
           {
             "labelRef": "breadcrumbHotels"
@@ -410,7 +410,7 @@
         "details": [
           {
             "labelRef": "breadcrumbTrehub",
-            "path": "/trehub?tab=trehub&product=trehub"
+            "path": "/trehub"
           },
           {
             "labelRef": "breadcrumbHotels",

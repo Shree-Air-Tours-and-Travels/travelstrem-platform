@@ -238,7 +238,16 @@ const repositories = {
             ),
     },
 };
-const providers = {};
-if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET)
-    providers.razorpay = getPaymentProvider("razorpay");
+// Resolve credentials inside the current tenant request context. Provider
+// instances are never shared across tenants or frozen at process startup.
+const providers = new Proxy(
+    {},
+    {
+        get: (_target, provider) =>
+            typeof provider === "string" && provider !== "manual"
+                ? getPaymentProvider(provider)
+                : undefined,
+        has: (_target, provider) => provider === "manual" || typeof provider === "string",
+    },
+);
 configureFinancialEngine({ repositories, providers });

@@ -11,14 +11,14 @@ import mongoose from "mongoose";
 
 const count = (Model, query = {}) => Model.countDocuments(query);
 
-const activeProducts = () =>
-    Product.find({ status: "active", hidden: { $ne: true } })
+const activeProducts = (client) =>
+    Product.find({ ...(client ? { key: { $in: client.productAccess } } : { status: "active", hidden: { $ne: true } }) })
         .select("key name")
         .sort({ name: 1 })
         .lean();
 
-const productHealth = async () => {
-    const products = await activeProducts();
+const productHealth = async (client) => {
+    const products = await activeProducts(client);
     const byKey = new Map(products.map((product) => [product.key, product.name]));
     const inventory = [];
     if (byKey.has("trevista")) {
@@ -57,20 +57,21 @@ const productHealth = async () => {
             target: "services",
         });
     }
+    if (byKey.has("trehub")) inventory.push({ id: "trehub", label: byKey.get("trehub"), icon: "plane", total: (client?.modules?.trehub || ["flights", "hotels"]).length, target: "enquiries", stats: [] });
     return { inventory };
 };
 
-const governanceQueue = async () => {
-    const products = new Set((await activeProducts()).map((product) => product.key));
+const governanceQueue = async (client) => {
+    const products = new Set((await activeProducts(client)).map((product) => product.key));
     const [support, tours, trips, partners, agents] = await Promise.all([
         count(SupportTicket, { status: "AWAITING_SUPPORT" }),
         products.has("trevista") ? count(Tour, { status: "pending_approval" }) : 0,
         products.has("trevio") ? count(Trip, { status: "pending_approval" }) : 0,
-        count(PartnerAgency, { status: "pending" }),
-        count(User, {
+        !client || client.partnerEnabled ? count(PartnerAgency, { status: "pending" }) : 0,
+        !client || client.partnerEnabled ? count(User, {
             agencyRole: { $in: ["partner_admin", "partner_agent"] },
             agentApprovalStatus: "pending",
-        }),
+        }) : 0,
     ]);
     return {
         governance: [
@@ -117,20 +118,20 @@ const governanceQueue = async () => {
                 icon: "people",
                 target: "tenancy",
             },
-        ],
+        ].filter((item) => !client || ((item.target !== "tenancy" || client.partnerEnabled) && (item.target !== "support" || client.accountModules.includes("support")))),
     };
 };
 
-const platformReach = async () => {
+const platformReach = async (client) => {
     const [products, partners, agents, members] = await Promise.all([
-        count(Product, { status: "active", hidden: { $ne: true } }),
+        count(Product, { ...(client ? { key: { $in: client.productAccess } } : { status: "active", hidden: { $ne: true } }) }),
         count(PartnerAgency, { status: { $in: ["active", "approved"] } }),
-        count(User, {
+        !client || client.partnerEnabled ? count(User, {
             agencyRole: { $in: ["partner_admin", "partner_agent"] },
             accountStatus: "active",
             agentApprovalStatus: "approved",
-        }),
-        count(User, { role: "member", accountStatus: "active" }),
+        }) : 0,
+        count(User, { ...(client ? { clientId: client._id, clientRole: { $in: ["client_master_admin", "client_admin", "client_agent"] } } : { role: "member" }), accountStatus: "active" }),
     ]);
     return {
         platform: {
@@ -142,8 +143,8 @@ const platformReach = async () => {
     };
 };
 
-const metrics = async () => {
-    const products = new Set((await activeProducts()).map((product) => product.key));
+const metrics = async (client) => {
+    const products = new Set((await activeProducts(client)).map((product) => product.key));
     const [
         tours,
         trips,
@@ -161,16 +162,16 @@ const metrics = async () => {
         products.has("trevio") ? count(Trip) : 0,
         products.has("trevista") ? count(Tour, { status: "published" }) : 0,
         products.has("trevio") ? count(Trip, { status: "listed", isListed: true }) : 0,
-        count(ContactLead, { status: "new" }),
-        count(ContactLead, { status: "in_review" }),
+        count(ContactLead, { ...(client ? { product: { $in: client.productAccess } } : {}), status: "new" }),
+        count(ContactLead, { ...(client ? { product: { $in: client.productAccess } } : {}), status: "in_review" }),
         count(SupportTicket, { status: { $nin: ["RESOLVED", "CLOSED"] } }),
         products.has("trevista") ? count(Tour, { status: "pending_approval" }) : 0,
         products.has("trevio") ? count(Trip, { status: "pending_approval" }) : 0,
-        count(PartnerAgency, { status: "pending" }),
-        count(User, {
+        !client || client.partnerEnabled ? count(PartnerAgency, { status: "pending" }) : 0,
+        !client || client.partnerEnabled ? count(User, {
             agencyRole: { $in: ["partner_admin", "partner_agent"] },
             agentApprovalStatus: "pending",
-        }),
+        }) : 0,
     ]);
     return {
         metrics: {
@@ -183,9 +184,9 @@ const metrics = async () => {
     };
 };
 
-const recentActivity = async () => {
-    const keys = new Set((await activeProducts()).map((product) => product.key));
-    const activity = await buildRecentActivity();
+const recentActivity = async (client) => {
+    const keys = new Set((await activeProducts(client)).map((product) => product.key));
+    const activity = await buildRecentActivity(client);
     return {
         recentActivity: activity.filter(
             (item) =>
@@ -195,21 +196,21 @@ const recentActivity = async () => {
     };
 };
 
-const upcomingDepartures = async () => {
+const upcomingDepartures = async (client) => {
     const now = new Date();
     const [tours, trips] = await Promise.all([
-        Tour.find({
+        (!client || client.productAccess.includes("trevista")) ? Tour.find({
             status: "published",
             $or: [{ startDate: { $gte: now } }, { "departures.departureDate": { $gte: now } }],
         })
             .select("title startDate departures.departureDate")
             .limit(12)
-            .lean(),
-        Trip.find({ status: "listed", isListed: true, startDate: { $gte: now } })
+            .lean() : [],
+        (!client || client.productAccess.includes("trevio")) ? Trip.find({ status: "listed", isListed: true, startDate: { $gte: now } })
             .select("title startDate")
             .sort({ startDate: 1 })
             .limit(6)
-            .lean(),
+            .lean() : [],
     ]);
     const rows = [
         ...tours
@@ -260,8 +261,9 @@ export const ADMIN_DASHBOARD_WIDGET_KEYS = new Set([
     "systemStatus",
 ]);
 
-export async function buildAdminDashboardWidgetSnapshot(key) {
+export async function buildAdminDashboardWidgetSnapshot(key, client) {
     if (!ADMIN_DASHBOARD_WIDGET_KEYS.has(key)) return null;
+    if (client && ["progress", "listing"].includes(key) && !client.productAccess.includes("trevista")) return {};
     if (["progress", "listing"].includes(key)) {
         const sections =
             key === "progress"
@@ -287,5 +289,5 @@ export async function buildAdminDashboardWidgetSnapshot(key) {
         recentActivity,
         upcomingDepartures,
     };
-    return builders[key] ? builders[key]() : {};
+    return builders[key] ? builders[key](client) : {};
 }

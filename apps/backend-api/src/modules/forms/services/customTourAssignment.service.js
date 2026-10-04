@@ -54,7 +54,7 @@ const assignment = ({ agent, agency, reason }) => ({
     reason,
 });
 
-export const resolveCustomTourAssignment = async ({ sourceTour = null } = {}) => {
+export const resolveCustomTourAssignment = async ({ sourceTour = null, client = null } = {}) => {
     if (sourceTour?._id) {
         const agency = sourceTour.agencyId
             ? await PartnerAgency.findOne({ _id: sourceTour.agencyId, status: "active" }).lean()
@@ -67,6 +67,17 @@ export const resolveCustomTourAssignment = async ({ sourceTour = null } = {}) =>
                 ? directOwner
                 : await findAgencyPartnerAdmin(agency);
         if (owner) return assignment({ agent: owner, agency, reason: "source_tour_owner" });
+    }
+
+    if (client) {
+        const query = {
+            clientId: client._id,
+            productAccess: "trevista",
+            ...ACTIVE_USER,
+        };
+        const owner = await findUser({ ...query, clientRole: "client_master_admin" }) ||
+            await findUser({ ...query, clientRole: "client_admin" });
+        return assignment({ agent: owner, agency: null, reason: "client_internal_team" });
     }
 
     const partnerAgency = await PartnerAgency.findOne({

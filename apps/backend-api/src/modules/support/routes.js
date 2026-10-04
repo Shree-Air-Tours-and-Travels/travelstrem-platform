@@ -32,6 +32,7 @@ router.get("/articles/:articleId", getArticle);
 router.get("/contact-options", getContacts);
 
 router.use(authMiddleware);
+router.get("/account-home", getHome);
 router.get("/categories", getCategories);
 router.get("/desk/tickets", listSupportDeskTickets);
 router.get("/desk/tickets/:ticketId", getSupportDeskTicket);

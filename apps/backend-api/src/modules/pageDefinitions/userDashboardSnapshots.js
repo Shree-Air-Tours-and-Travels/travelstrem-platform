@@ -1,3 +1,4 @@
+import { customerScopeQuery } from "../tenancy/customerScope.js";
 import { bookingStatusDisplay, statusDisplay } from "../../constants/common.js";
 import Booking from "../bookings/models/Booking.js";
 import FlightBooking from "../flights/models/FlightBooking.js";
@@ -9,43 +10,49 @@ import SavedSearch from "../savedSearches/SavedSearch.js";
 // Every query is scoped to the authenticated customer, never to a caller-supplied account.
 export async function buildUserDashboardSnapshots(
     userId,
-    { totalEnquiries, totalFavorites, recentLeads },
+    { totalEnquiries, totalFavorites, recentLeads, context },
 ) {
+    const scope = customerScopeQuery(context);
+    const permitted = (permission) => context.permissions.includes(permission) ? {} : { _id: null };
+    const bookingQuery = { ...scope, ...permitted("booking:view"), userId, product: { $in: context.products } };
+    const flightQuery = { ...scope, ...permitted("booking:view"), userId, ...(context.products.includes("trehub") ? {} : { _id: null }) };
+    const supportQuery = { ...scope, ...permitted("support:view"), user: userId };
+    const notificationQuery = { ...scope, ...permitted("notifications:view"), userId, portal: "customer" };
     const results = await Promise.allSettled([
         Promise.all([
-            Booking.countDocuments({ userId }),
-            FlightBooking.countDocuments({ userId }),
-            Booking.find({ userId })
+            Booking.countDocuments(bookingQuery),
+            FlightBooking.countDocuments(flightQuery),
+            Booking.find(bookingQuery)
                 .select("bookingRef tourTitle status paymentStatus sourceEnquiryId createdAt")
                 .sort({ createdAt: -1 })
                 .limit(5)
                 .lean(),
-            FlightBooking.find({ userId })
+            FlightBooking.find(flightQuery)
                 .select("bookingRef status paymentStatus segmentSnapshot sourceEnquiryId createdAt")
                 .sort({ createdAt: -1 })
                 .limit(5)
                 .lean(),
         ]),
         Promise.all([
-            SupportTicket.countDocuments({ user: userId }),
-            SupportTicket.find({ user: userId })
+            SupportTicket.countDocuments(supportQuery),
+            SupportTicket.find(supportQuery)
                 .select("reference subject status")
                 .sort({ lastActivityAt: -1 })
                 .limit(5)
                 .lean(),
         ]),
         Promise.all([
-            Notification.countDocuments({ userId, portal: "customer", readAt: null }),
-            Notification.find({ userId, portal: "customer" })
+            Notification.countDocuments({ ...notificationQuery, readAt: null }),
+            Notification.find(notificationQuery)
                 .select("title readAt actionUrl")
                 .sort({ createdAt: -1 })
                 .limit(5)
                 .lean(),
         ]),
-        User.findById(userId).select("name email phone").lean(),
+        User.findOne({ _id: context.permissions.includes("profile:view") ? userId : null }).select("name email phone").lean(),
         Promise.all([
-            SavedSearch.countDocuments({ userId }),
-            SavedSearch.find({ userId })
+            SavedSearch.countDocuments({ userId, ...(context.tenantId === "travelstrem" ? {} : { _id: null }) }),
+            SavedSearch.find({ userId, ...(context.tenantId === "travelstrem" ? {} : { _id: null }) })
                 .select("title mode path query")
                 .sort({ updatedAt: -1 })
                 .limit(5)

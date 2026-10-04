@@ -20,10 +20,7 @@ export default applyHideFlags({
             panelId: "customer-shell-navigation",
         },
         brand: {
-            logoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png",
-            darkLogoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519386/travelstrem/site-assets/e38709b8a4ada750aed0f6df.png",
             name: "TravelsTREM",
-            subtitle: "Shree Air Tours & Travels",
             href: "/",
             ariaLabel: "TravelsTREM home",
         },
@@ -73,7 +70,7 @@ export default applyHideFlags({
                         icon: "management",
                         target: "dashboard",
                     },
-                    { id: "bookings", label: "My Bookings", icon: "calendar", target: "bookings" },
+                    { id: "bookings", label: "Dashboard", icon: "calendar", target: "dashboard" },
                     { id: "saved-searches", label: "Saved searches", icon: "search", target: "saved-searches" },
                     { id: "favorites", label: "Wishlist", icon: "heart", target: "favorites" },
                     {

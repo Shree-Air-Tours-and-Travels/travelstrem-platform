@@ -71,14 +71,16 @@ export default function ProfileActionMenu({
           <small>{isAuthenticated ? user?.role || "member" : "Guest"}</small>
         </span>
       </div>
-      <Button
-        variant="text"
-        iconLeft={themeIcon}
-        text={themeLabel}
-        primaryClassName="profile-action-menu__item"
-        role="menuitem"
-        onClick={() => runAction(onToggleTheme)}
-      />
+      {typeof onToggleTheme === "function" && (
+        <Button
+          variant="text"
+          iconLeft={themeIcon}
+          text={themeLabel}
+          primaryClassName="profile-action-menu__item"
+          role="menuitem"
+          onClick={() => runAction(onToggleTheme)}
+        />
+      )}
       <Button
         variant="text"
         iconLeft="settings"

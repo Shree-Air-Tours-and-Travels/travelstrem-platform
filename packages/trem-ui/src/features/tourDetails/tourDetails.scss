@@ -21,6 +21,7 @@
     width: 100%;
     min-width: 0;
     max-width: $full-width;
+    margin-inline: auto;
     display: flex;
     flex-direction: column;
     gap: 1.25rem;

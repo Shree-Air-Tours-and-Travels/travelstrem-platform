@@ -290,6 +290,7 @@ class PageDefinitionService {
             };
         }
 
+        if (options.transformComponent) payload.component = options.transformComponent(payload.component);
         payload.component = await masterDataService.hydrateDataScope(payload.component);
 
         return res.status(statusCode).json(payload);

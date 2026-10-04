@@ -228,7 +228,7 @@
           "source": "trehub",
           "props": {
             "items": [
-              { "labelRef": "breadcrumbTrehub", "path": "/trehub?tab=trehub&product=trehub" },
+              { "labelRef": "breadcrumbTrehub", "path": "/trehub" },
               { "labelRef": "breadcrumbFlights" }
             ]
           }

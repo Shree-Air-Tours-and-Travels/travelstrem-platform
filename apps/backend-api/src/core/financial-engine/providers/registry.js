@@ -1,13 +1,23 @@
 import RazorpayProvider from "./razorpay.provider.js";
-export function getPaymentProvider(name = process.env.PAYMENT_PROVIDER || "razorpay") {
+import { resolveTenantIntegration } from "../../../modules/integrations/runtime.js";
+
+export const getConfiguredPaymentProviderName = () => resolveTenantIntegration("payments").provider;
+
+export function getPaymentProvider(name) {
+    const runtime = resolveTenantIntegration("payments");
+    name ||= runtime.provider;
+    if (name !== runtime.provider) throw Object.assign(new Error("Payment provider does not match this tenant configuration."), { status: 403 });
     if (name !== "razorpay") throw new Error(`Unsupported payment provider: ${name}`);
     return new RazorpayProvider({
-        keyId: process.env.RAZORPAY_KEY_ID,
-        keySecret: process.env.RAZORPAY_KEY_SECRET,
-        webhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET,
+        keyId: runtime.credentials.keyId,
+        keySecret: runtime.credentials.keySecret,
+        webhookSecret: runtime.credentials.webhookSecret,
         // Local test checkout can open before webhook setup; confirmation still requires a verified webhook.
-        requireWebhook: !(process.env.NODE_ENV === "development" && process.env.RAZORPAY_KEY_ID?.startsWith("rzp_test_")),
-        apiBaseUrl: process.env.RAZORPAY_API_BASE_URL,
-        timeoutMs: Number(process.env.RAZORPAY_TIMEOUT_MS || 15000),
+        requireWebhook: !(
+            process.env.NODE_ENV === "development" &&
+            process.env.RAZORPAY_KEY_ID?.startsWith("rzp_test_")
+        ),
+        apiBaseUrl: runtime.options.apiBaseUrl,
+        timeoutMs: Number(runtime.options.timeoutMs || 15000),
     });
 }

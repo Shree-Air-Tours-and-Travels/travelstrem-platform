@@ -15,6 +15,10 @@ import "./SignedInDashboard.scss";
 
 export default function SignedInDashboard({
   model,
+  accountNavigation,
+  selectedSection,
+  sectionContent,
+  sectionFilters,
   isAuthenticated,
   userSnapshots = [],
   guestDashboard,
@@ -30,7 +34,7 @@ export default function SignedInDashboard({
   const signedIn = isAuthenticated === true;
   const copy = travellerLayout;
   const dashboardSearch = { ...searchConfig, ...copy.search };
-  const profile = userSnapshots.find((item) => item.id === "profile");
+  const profile = !accountNavigation && userSnapshots.find((item) => item.id === "profile");
   const upcoming = model.panels.inventory;
   const snapshots = [
     ...(upcoming
@@ -44,9 +48,10 @@ export default function SignedInDashboard({
           },
         ]
       : []),
-    ...userSnapshots.filter((item) => item.id !== "profile"),
+    ...userSnapshots.filter((item) => accountNavigation || item.id !== "profile"),
   ];
-  const active = snapshots.find((item) => item.id === activeId) || snapshots[0];
+  const active =
+    snapshots.find((item) => item.id === (selectedSection || activeId)) || snapshots[0];
   const categories = featuredTravel?.categories || [];
   const category =
     categories.find((item) => item.id === categoryId) ||
@@ -63,7 +68,9 @@ export default function SignedInDashboard({
   }));
   const navigate = (target) => target && onTabChange?.(target);
   return (
-    <div className="signed-in-dashboard">
+    <div
+      className={`signed-in-dashboard${accountNavigation ? " signed-in-dashboard--account" : ""}`}
+    >
       <header className="signed-in-dashboard__hero">
         <div className="signed-in-dashboard__hero-copy">
           <h1>{model.hero.title}</h1>
@@ -107,15 +114,18 @@ export default function SignedInDashboard({
                   <h2>{copy.activityTitle}</h2>
                   <p>{copy.activityDescription}</p>
                 </div>
+                {sectionFilters}
               </header>
               <QuickChips
                 title={copy.activityTitle}
                 filters={snapshots.map((item) => ({ id: item.id, label: item.title }))}
                 activeId={active?.id}
-                onClick={setActiveId}
+                onClick={accountNavigation ? onTabChange : setActiveId}
               />
               <div className="signed-in-dashboard__activity-content" key={active?.id}>
-                {active?.items?.length ? (
+                {sectionContent !== undefined ? (
+                  sectionContent
+                ) : accountNavigation || active?.items?.length ? (
                   <DashboardPanel
                     {...active}
                     items={active.items.map((item) => ({

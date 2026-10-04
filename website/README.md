@@ -4,10 +4,10 @@ The single Next.js App Router marketing site for `travelstrem.com`.
 
 Routes:
 
-- `/` — platform landing page
-- `/about` — company, leadership and vision
-- `/partnership` — partner and agency information
-- `/sales` — commercial models and demo booking
+- `/`: platform landing page
+- `/about`: company, leadership and vision
+- `/partnership`: partner and agency information
+- `/sales`: commercial models and demo booking
 
 Run locally from the repository root:
 

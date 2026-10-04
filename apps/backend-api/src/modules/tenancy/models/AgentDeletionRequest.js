@@ -1,3 +1,4 @@
+import { partnerAccessPlugin } from "../../clients/partnerAccessPlugin.js";
 import mongoose from "mongoose";
 const schema = new mongoose.Schema(
     {
@@ -31,5 +32,6 @@ schema.index(
         name: "one_pending_deletion_per_agent",
     },
 );
+schema.plugin(partnerAccessPlugin);
 export default mongoose.models.AgentDeletionRequest ||
     mongoose.model("AgentDeletionRequest", schema);

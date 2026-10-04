@@ -5,6 +5,7 @@ import ContactLead from "../forms/models/ContactLead.js";
 import Booking from "../bookings/models/Booking.js";
 import BookingQuote from "../bookings/models/BookingQuote.js";
 import FinancialEngine from "../../core/financial-engine/index.js";
+import { getConfiguredPaymentProviderName } from "../../core/financial-engine/providers/registry.js";
 import FlightService from "../flights/services/flight.service.js";
 import HotelService from "../hotels/services/hotel.service.js";
 import { ensureBookingFromAcceptedQuote } from "../bookings/services/EnquiryBookingConversionService.js";
@@ -38,7 +39,7 @@ export async function prepareEnquiryPayment(identifier, actor) {
     const refreshed = await new HotelService().quoteRooms({ searchId: saved.searchId, hotelId: saved.hotelId, roomIds: saved.roomIds }, actor);
     if (refreshed.price.total !== saved.price.total || refreshed.price.currency !== saved.price.currency) fail("Hotel price changed. Return to hotel search to review the new rate");
     const calculation = await FinancialEngine.calculatePricing({ productType: "hotel", baseAmountMinor: refreshed.price.subtotal,
-        currency: refreshed.price.currency, paymentProvider: process.env.PAYMENT_PROVIDER || "razorpay", config: refreshed.price.pricingConfigSnapshot });
+        currency: refreshed.price.currency, paymentProvider: getConfiguredPaymentProviderName(), config: refreshed.price.pricingConfigSnapshot });
     const key = `hotel:${enquiry._id}:checkout`;
     let quote = await BookingQuote.findOne({ idempotencyKey: key });
     if (!quote) {

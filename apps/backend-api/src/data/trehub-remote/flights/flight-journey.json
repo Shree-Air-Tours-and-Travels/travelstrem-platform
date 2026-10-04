@@ -29,7 +29,7 @@
         "breadcrumbBooking": "Complete booking",
         "journeyEyebrow": "Secure flight booking",
         "journeyTitle": "Complete your flight booking",
-        "journeyDescription": "Choose your fare, create an enquiry and review traveller details in My Bookings. Payment is not yet available.",
+        "journeyDescription": "Choose your fare, create an enquiry and review traveller details in Dashboard. Payment is not yet available.",
         "flightDetailsEyebrow": "Your selected flight",
         "flightDetailsTitle": "Review the complete flight itinerary",
         "flightDetailsDescription": "Check airport, terminal, aircraft, baggage and fare conditions before continuing.",
@@ -59,7 +59,7 @@
         "checkedBaggageTemplate": "{weight} kg checked baggage",
         "continue": "Continue",
         "createEnquiryTitle": "Continue with this flight?",
-        "createEnquiryDescription": "This will create a flight enquiry and take you to My Bookings, where you can review the enquiry and add traveller details.",
+        "createEnquiryDescription": "This will create a flight enquiry and take you to Dashboard, where you can review the enquiry and add traveller details.",
         "createEnquiryConfirm": "Create enquiry",
         "cancel": "Keep reviewing",
         "back": "Back",
@@ -98,7 +98,7 @@
         "acceptPrice": "Accept updated price",
         "bookingComplete": "Your flight reservation is confirmed",
         "bookingCompleteDescription": "Your booking snapshot is saved. Payment and ticketing statuses are tracked separately.",
-        "viewBookings": "View My Bookings",
+        "viewBookings": "View Dashboard",
         "pnr": "PNR",
         "payment": "Payment",
         "ticketing": "Ticketing",
@@ -126,7 +126,7 @@
       "header": {},
       "widgets": [
         { "name": "breadcrumbs", "type": "Breadcrumbs", "source": "trehub", "props": { "items": [
-          { "labelRef": "breadcrumbTrehub", "path": "/trehub?tab=trehub&product=trehub" },
+          { "labelRef": "breadcrumbTrehub", "path": "/trehub" },
           { "labelRef": "breadcrumbFlights", "path": "/trehub/flights" },
           { "labelRef": "breadcrumbBooking" }
         ] } },

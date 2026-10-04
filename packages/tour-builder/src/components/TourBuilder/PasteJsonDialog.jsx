@@ -2,11 +2,7 @@ import React, { useMemo, useState } from "react";
 import { ModalShell } from "@packages/trem-modals";
 import { Button, FormTextArea, Icon } from "@packages/trem-ui";
 import tourBuilderApi from "../../api/tourBuilderApi.js";
-import {
-  applyPastedJson,
-  buildStepTemplate,
-  unwrapTourJson,
-} from "../../utils/jsonImport.js";
+import { applyPastedJson, buildStepTemplate, unwrapTourJson } from "../../utils/jsonImport.js";
 
 const SAMPLE = `{
   "title": "Himalayan Escape",
@@ -35,7 +31,14 @@ const SCOPE_OPTIONS = [
  * Schema-aware JSON import shared by the agent and admin Tour Builders.
  * The backend remains the source of truth for template fields and enums.
  */
-export default function PasteJsonDialog({ open, definition, currentValues, onClose, onApply }) {
+export default function PasteJsonDialog({
+  open,
+  definition,
+  productKey,
+  currentValues,
+  onClose,
+  onApply,
+}) {
   const [text, setText] = useState("");
   const [templateScope, setTemplateScope] = useState("step");
   const [actionError, setActionError] = useState(null);
@@ -114,6 +117,7 @@ export default function PasteJsonDialog({ open, definition, currentValues, onClo
     try {
       const payload = await tourBuilderApi.fetchTemplate(
         templateScope === "full" ? null : definition?.stepKey,
+        productKey,
       );
       const body = payload?.tour ? payload : payload?.data || payload;
       const template =
@@ -198,9 +202,7 @@ export default function PasteJsonDialog({ open, definition, currentValues, onClo
             <div className="tb-json-dialog__section-head">
               <div>
                 <h4 id="tb-json-scope-title">Choose template scope</h4>
-                <p>
-                  This controls the template below. Apply always updates {stepTitle} only.
-                </p>
+                <p>This controls the template below. Apply always updates {stepTitle} only.</p>
               </div>
             </div>
 
@@ -278,7 +280,10 @@ export default function PasteJsonDialog({ open, definition, currentValues, onClo
               </div>
             ) : null}
             {hintsError ? (
-              <div className="tb-json-dialog__message tb-json-dialog__message--warning" role="status">
+              <div
+                className="tb-json-dialog__message tb-json-dialog__message--warning"
+                role="status"
+              >
                 <Icon name="info" size={18} />
                 <span>{hintsError}</span>
               </div>

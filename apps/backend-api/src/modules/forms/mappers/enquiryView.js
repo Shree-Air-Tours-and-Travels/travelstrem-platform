@@ -100,7 +100,7 @@ const quoteItemsView = (quote = {}) =>
 export const enquiryCenterView = (perspective = "sent") => {
     const isSent = perspective === "sent";
     return {
-        title: isSent ? "My bookings & enquiries" : "Bookings & enquiries received",
+        title: isSent ? "Bookings & enquiries" : "Bookings & enquiries received",
         description: isSent
             ? "Track your travel requests and the bookings created from accepted quotations."
             : "Review traveller requests and the bookings created from accepted quotations.",
@@ -274,7 +274,7 @@ export const enquiryCenterView = (perspective = "sent") => {
 export const enquiryView = (
     lead,
     perspective,
-    { quote = null, includeBookingJourney = false, summaryOnly = false } = {},
+    { quote = null, includeBookingJourney = false, summaryOnly = false, brand = {} } = {},
 ) => {
     const fields = lead?.fields || {};
     const isSent = perspective === "sent";
@@ -284,9 +284,9 @@ export const enquiryView = (
     const counterpart = isSent
         ? {
               label: "Sent to",
-              name: lead?.agentSnapshot?.name || "TravelsTREM",
-              email: lead?.agentSnapshot?.email || "",
-              phone: lead?.agentSnapshot?.phone || "",
+              name: lead?.agentSnapshot?.name || ownerAgent?.name || brand.name || "Travel team",
+              email: lead?.agentSnapshot?.email || ownerAgent?.email || brand.contactEmail || "",
+              phone: lead?.agentSnapshot?.phone || brand.contactPhone || "",
           }
         : {
               label: "Received from",
@@ -295,6 +295,15 @@ export const enquiryView = (
               phone: fields.phone || "",
           };
     const departure =
+        (lead?.journeyType === "hotel"
+            ? [
+                  lead?.customizationSnapshot?.searchInput?.checkIn,
+                  lead?.customizationSnapshot?.searchInput?.checkOut,
+              ]
+                  .filter(Boolean)
+                  .map((value) => formatDate(value) || value)
+                  .join(" – ")
+            : "") ||
         formatTravelDate(fields.preferredTravelDate) ||
         [fields.preferredStartDate, fields.preferredEndDate]
             .filter(Boolean)
@@ -486,17 +495,19 @@ export const enquiryView = (
         recipient: isSent
             ? counterpart
             : {
-                  name: lead?.agentSnapshot?.name || "Assigned travel specialist",
-                  email: lead?.agentSnapshot?.email || "",
-                  phone: lead?.agentSnapshot?.phone || "",
+                  name:
+                      lead?.agentSnapshot?.name || ownerAgent?.name || brand.name || "Travel team",
+                  email:
+                      lead?.agentSnapshot?.email || ownerAgent?.email || brand.contactEmail || "",
+                  phone: lead?.agentSnapshot?.phone || brand.contactPhone || "",
               },
         assignedAgent: {
-            name: lead?.agentSnapshot?.name || ownerAgent?.name || "",
+            name: lead?.agentSnapshot?.name || ownerAgent?.name || brand.name || "Travel team",
             email: lead?.agentSnapshot?.email || ownerAgent?.email || "",
         },
         agency: {
-            name: lead?.agencySnapshot?.name || agency?.agencyName || "",
-            logo: lead?.agencySnapshot?.logo || agency?.logo || "",
+            name: lead?.agencySnapshot?.name || agency?.agencyName || brand.name || "",
+            logo: lead?.agencySnapshot?.logo || agency?.logo || brand.logoSrc || "",
         },
         notified: Boolean(lead?.notified),
         ...(bookingJourney ? { bookingJourney } : {}),

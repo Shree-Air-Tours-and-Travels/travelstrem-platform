@@ -83,6 +83,34 @@ select {
     z-index: 100;
   }
 
+  .dash-layout--app-sidebar {
+    > .trem-sidebar {
+      grid-row: 1;
+      height: calc(100dvh - 64px);
+      margin-top: 64px;
+
+      .trem-sidebar__brand {
+        min-height: 0;
+        padding: 0;
+      }
+
+      .trem-sidebar__collapse {
+        top: $space-3;
+      }
+    }
+
+    > .dash-main > .trem-app-header {
+      z-index: 102;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+    }
+
+    > .dash-main > .trem-app-header .trem-app-header__mobile-row,
+    > .dash-main > .trem-app-header .trem-app-header__brand {
+      display: flex;
+      align-items: center;
+    }
+  }
+
   .dash-layout--top-dropdown {
     display: block;
 
@@ -357,6 +385,10 @@ select {
 }
 
 .dash-content--dashboard > .app-shell-page { width: 100%; max-width: none; }
+.dash-layout--account-dashboard { display: block; }
+.dash-layout--account-dashboard > .dash-main { grid-column: 1; }
+.dash-content--account-dashboard { padding: 0; }
+.dash-content--account-dashboard > * { width: 100%; max-width: none; }
 
 .dash-load-error {
   min-height: 100vh;

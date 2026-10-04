@@ -1,4 +1,5 @@
 import React, { useCallback } from "react";
+import { useAdminPortalConfig } from "../app/providers/AdminPortalProvider";
 import authService from "../services/authService";
 import { emit } from "@packages/trem-events";
 import { clearAuthBrowserState, emitAuthEvent } from "@packages/trem-auth-core";
@@ -15,6 +16,7 @@ const TAB_TITLES = {
 };
 
 export default function AdminDashboardHeader({ activeTab, theme, onToggleTheme, onMenuClick }) {
+  const { headerConfig } = useAdminPortalConfig();
   const handleLogout = useCallback(async () => {
     try {
       await authService.logout().catch(() => {});
@@ -32,8 +34,9 @@ export default function AdminDashboardHeader({ activeTab, theme, onToggleTheme, 
 
         <div className="dh__mobile-brand">
           <BrandLogo
-            logoSrc={process.env.REACT_APP_ADMIN_LOGO || ""}
-            name="TravelsTREM"
+            logoSrc={headerConfig?.brand?.logoSrc}
+            logoDarkSrc={headerConfig?.brand?.logoDarkSrc}
+            name={headerConfig?.brand?.name || headerConfig?.brand?.label}
             subtitle="Admin"
             size="small"
           />

@@ -17,9 +17,9 @@ import { useSupportResource } from "./support.hooks";
 import { ResourceBoundary, SupportLayout, SupportSection } from "./SupportLayout";
 import { executeSupportAction, trackSupport } from "./support.utils";
 
-export default function SupportHomePage({ isAuthenticated = false, onRequireAuthentication }) {
+export default function SupportHomePage({ isAuthenticated = false, onRequireAuthentication, embedded = false }) {
   const navigate = useSupportNavigate();
-  const resource = useSupportResource((signal) => supportApi.home(signal), []);
+  const resource = useSupportResource((signal) => supportApi.home(signal, isAuthenticated), [isAuthenticated]);
   const personal = useSupportResource(async (signal) => {
     if (!isAuthenticated) return null;
     const [context, requests] = await Promise.all([supportApi.categories(signal), supportApi.tickets("", signal)]);
@@ -73,6 +73,7 @@ export default function SupportHomePage({ isAuthenticated = false, onRequireAuth
 
   return (
     <SupportLayout
+      embedded={embedded}
       title={data?.ui?.header?.title}
       subtitle={data?.ui?.header?.subtitle}
       actions={

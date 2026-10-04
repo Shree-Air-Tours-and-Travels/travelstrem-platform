@@ -3,6 +3,7 @@ import { emit } from "@packages/trem-events";
 import { clearAuthBrowserState, emitAuthEvent } from "@packages/trem-auth-core";
 import { BrandLogo, PRODUCT_TYPE } from "@packages/trem-ui";
 import { buildGlobalAuthUrl } from "@packages/trem-utils";
+import { useAdminPortalConfig } from "../app/providers/AdminPortalProvider";
 import authService from "../services/authService";
 import "./AdminSidebar.scss";
 
@@ -79,6 +80,7 @@ export default function Sidebar({
     };
   }, [mobileOpen, onMobileClose]);
 
+  const { headerConfig } = useAdminPortalConfig();
   const handleLogout = useCallback(async () => {
     await authService.logout().catch(() => {});
     clearAuthBrowserState({ prefixes: ["adminTREM"] });
@@ -97,8 +99,9 @@ export default function Sidebar({
       <aside className={`dash-sidebar ${mobileOpen ? "is-mobile-open" : ""}`}>
         <div className="dsb-brand">
           <BrandLogo
-            logoSrc={process.env.REACT_APP_ADMIN_LOGO || ""}
-            name="TravelsTREM"
+            logoSrc={headerConfig?.brand?.logoSrc}
+            logoDarkSrc={headerConfig?.brand?.logoDarkSrc}
+            name={headerConfig?.brand?.name || headerConfig?.brand?.label}
             subtitle="Admin"
             size="small"
           />

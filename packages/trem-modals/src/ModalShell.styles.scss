@@ -12,8 +12,9 @@
   &__backdrop {
     position: absolute;
     inset: 0;
-    background: var(--overlay-strong);
-    backdrop-filter: blur($space-1);
+    background: var(--color-transparent);
+    backdrop-filter: brightness(0.5);
+
   }
 
   &__dialog {
@@ -35,7 +36,10 @@
 }
 
 .trem-modal-sheet .trem-modal-sheet__content {
-  .ct-modal-card__title { display: none; }
+  .ct-modal-card__title {
+    display: none;
+  }
+
   .trem-enquiry-modal__header,
   .trem-confirm-overlay__header,
   .trem-options-overlay__header,
@@ -43,6 +47,7 @@
   .trehub-room-details-modal__header {
     display: none;
   }
+
   width: 100%;
   min-width: 0;
   height: auto;
@@ -57,13 +62,18 @@
   box-shadow: none;
   animation: none;
   overflow: visible;
-  > .ct-modal-close,
-  > .trem-confirm-overlay__close { display: none; }
 
-  > .trem-options-overlay__close,
-  > .trem-enquiry-modal__header > .ui-button { display: none; }
+  >.ct-modal-close,
+  >.trem-confirm-overlay__close {
+    display: none;
+  }
 
-  > .trem-enquiry-modal__body {
+  >.trem-options-overlay__close,
+  >.trem-enquiry-modal__header>.ui-button {
+    display: none;
+  }
+
+  >.trem-enquiry-modal__body {
     overflow: visible;
     flex: none;
   }

@@ -1,3 +1,4 @@
+import CompanySettings from "../internalTeam/CompanySettings";
 import React, { Suspense, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -205,6 +206,7 @@ export default function ManageToursView({
       ariaLabel: "AdminTREM navigation",
       brand: {
         name: backendHeaderConfig?.brand?.label || "AdminTREM",
+        logoSrc: backendHeaderConfig?.brand?.logoSrc,
         fallbackSubtitle: backendHeaderConfig?.brand?.subtitle || "Platform Administration",
       },
       sections: [
@@ -240,10 +242,12 @@ export default function ManageToursView({
       ariaLabel: "AdminTREM application header",
       brand: {
         name: backendHeaderConfig?.brand?.label || "AdminTREM",
+        logoSrc: backendHeaderConfig?.brand?.logoSrc,
         subtitle: backendHeaderConfig?.brand?.subtitle || "Platform Administration",
       },
       search: { enabled: false },
       primaryAction: {
+        hide: !primaryCreateAction,
         label: primaryProduct
           ? `Create ${primaryProduct.label} ${primaryProduct.id === PRODUCT_TYPE.TREVIO ? "trip" : "tour"}`
           : "Create travel product",
@@ -289,7 +293,7 @@ export default function ManageToursView({
   const adminUser = useMemo(
     () => ({
       ...mergedUser,
-      adminRoleLabel: auth.adminLevel === "master" ? "Master Admin" : "Administrator",
+      adminRoleLabel: mergedUser.clientRole === "client_master_admin" ? "Client master admin" : mergedUser.clientRole === "client_admin" ? "Client admin" : auth.adminLevel === "master" ? "TREM master admin" : "Administrator",
     }),
     [auth.adminLevel, mergedUser],
   );
@@ -358,7 +362,9 @@ export default function ManageToursView({
           )}
           {tab === "enquiries" && <AgentAdminBookingJourney />}
           {tab === "support" && <SupportDeskPage />}
-          {tab === "internalTeam" && (
+          {tab === "internalTeam" && (backendHeaderConfig?.tenantId ? <CompanySettings /> : (
+            <>
+            {auth.adminLevel === "master" && <CompanySettings platform />}
             <InternalTeamPage
               admins={admins}
               currentUser={auth.user}
@@ -369,7 +375,8 @@ export default function ManageToursView({
               onRemove={handleRemoveAdmin}
               onUpdateTeam={handleUpdateAdminInternalTeam}
             />
-          )}
+            </>
+          ))}
           {tab === "services" && (
             <>
               <AdminServicesView
@@ -395,6 +402,7 @@ export default function ManageToursView({
                 agencyLoading={agencyLoading}
                 auth={auth}
                 activeProducts={dashboardDefinition?.data?.inventory}
+                companyName={backendHeaderConfig?.tenantCapabilities?.name}
                 fetchAgencyManagement={fetchAgencyManagement}
                 handleReviewAdmin={handleReviewAdmin}
                 handleRemoveAdmin={handleRemoveAdmin}

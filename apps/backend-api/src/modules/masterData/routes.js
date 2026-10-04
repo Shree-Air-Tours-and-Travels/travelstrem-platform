@@ -12,7 +12,7 @@ import { loadAccessContext } from "../tenancy/policy.js";
 const router = express.Router();
 
 const masterAdminOnly = (req, res, next) =>
-    req.access.isMaster
+    (req.access.isMaster || (req.access.isTenantAdmin && req.access.user.clientRole === "client_master_admin"))
         ? next()
         : res.status(403).json({
               status: "error",

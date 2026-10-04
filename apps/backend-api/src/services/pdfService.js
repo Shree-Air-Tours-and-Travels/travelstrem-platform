@@ -264,12 +264,12 @@ const formatTravelDates = (value) => {
 const drawQuoteContinuationHeader = (doc, model) => {
     doc.rect(0, 0, doc.page.width, 64).fill(QUOTE_THEME.primaryDark);
     doc.roundedRect(QUOTE_PAGE.left, 18, 28, 28, 7).fill(QUOTE_THEME.white);
-    doc.font("Helvetica-Bold").fontSize(14).fillColor(QUOTE_THEME.primary).text("T", 42, 25, {
+    doc.font("Helvetica-Bold").fontSize(14).fillColor(QUOTE_THEME.primary).text((model.company?.name || "T").slice(0, 1), 42, 25, {
         width: 28,
         align: "center",
     });
     doc.font("Helvetica-Bold").fontSize(12).fillColor(QUOTE_THEME.white).text(
-        COMPANY.name || "TravelsTREM",
+        model.company?.name || "Travel team",
         80,
         20,
     );
@@ -538,17 +538,17 @@ export function generateQuoteDocumentPdf(model) {
     doc.fillOpacity(1);
 
     doc.roundedRect(QUOTE_PAGE.left, 28, 38, 38, 10).fill(QUOTE_THEME.white);
-    doc.font("Helvetica-Bold").fontSize(20).fillColor(QUOTE_THEME.primary).text("T", 42, 37, {
+    doc.font("Helvetica-Bold").fontSize(20).fillColor(QUOTE_THEME.primary).text((model.company?.name || "T").slice(0, 1), 42, 37, {
         width: 38,
         align: "center",
     });
     doc.font("Helvetica-Bold").fontSize(17).fillColor(QUOTE_THEME.white).text(
-        COMPANY.name || "TravelsTREM",
+        model.company?.name || "Travel team",
         92,
         30,
     );
     doc.font("Helvetica").fontSize(7.5).fillColor("#D9DFF7").text(
-        COMPANY.tagline || "Your journey, thoughtfully planned",
+        model.company?.tagline || "Your journey, thoughtfully planned",
         92,
         52,
     );
@@ -687,7 +687,7 @@ export function generateQuoteDocumentPdf(model) {
             { width: 220, characterSpacing: 0.55 },
         );
         doc.font("Helvetica-Bold").fontSize(12).fillColor(QUOTE_THEME.ink).text(
-            quoteText(agency.name, COMPANY.name || "TravelsTREM"),
+            quoteText(agency.name, model.company?.name || "Travel team"),
             315,
             providerY + 34,
             { width: 220 },
@@ -866,7 +866,7 @@ export function generateQuoteDocumentPdf(model) {
             .strokeColor(QUOTE_THEME.border)
             .stroke();
         doc.font("Helvetica").fontSize(6.5).fillColor(QUOTE_THEME.muted).text(
-            [COMPANY.name, COMPANY.email, COMPANY.phone].filter(Boolean).join("  |  "),
+            [model.company?.name, model.company?.email, model.company?.phone].filter(Boolean).join("  |  "),
             QUOTE_PAGE.left,
             792,
             { width: 350 },

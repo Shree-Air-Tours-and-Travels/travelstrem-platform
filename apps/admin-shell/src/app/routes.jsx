@@ -5,6 +5,7 @@ import { TourDetailsPage } from "@packages/trem-ui";
 import { buildGlobalAuthUrl } from "@packages/trem-utils";
 import ManageTours from "../features/tours/ManageTours";
 import TourBuilderPage from "../features/tours/TourBuilderPage";
+import ClientBuildPage from "../features/clients/ClientBuildPage";
 import { useAdminPortalConfig } from "./providers/AdminPortalProvider";
 
 const adminRoles = ["admin"];
@@ -28,6 +29,7 @@ const Routers = () => {
     <>
       <Routes>
         <Route path="/manage/tours" element={<ManageTours session={session} />} />
+        <Route path="/manage/clients/build" element={<ClientBuildPage />} />
         <Route path="/manage/tours/builder" element={<TourBuilderPage />} />
         <Route path="/manage/tours/:tourId/edit" element={<TourBuilderPage mode="edit" />} />
         <Route

@@ -113,7 +113,7 @@ const bookingQuoteSchema = new Schema(
         selections: { type: Schema.Types.Mixed, default: null },
         pricing: { type: Schema.Types.Mixed, default: null, immutable: true },
         moneyUnit: { type: String, enum: ["PAISE"], default: "PAISE" },
-        idempotencyKey: { type: String, trim: true, default: "", index: true },
+        idempotencyKey: { type: String, trim: true, default: "" },
         configSnapshot: { type: Schema.Types.Mixed, default: null, immutable: true },
         financialSnapshot: { type: Schema.Types.Mixed, default: null, immutable: true },
         documentSnapshot: { type: Schema.Types.Mixed, default: null, immutable: true },

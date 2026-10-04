@@ -51,6 +51,11 @@ export { default as InternationalTripCard } from "./components/InternationalTrip
 export { default as MetricSummary } from "./components/MetricSummary/MetricSummary.jsx";
 export { default as ProgressMeter } from "./components/ProgressMeter/ProgressMeter.jsx";
 export { default as DataTrendChart } from "./components/DataTrendChart/DataTrendChart.jsx";
+export { default as DonutChart } from "./components/DonutChart/DonutChart.jsx";
+export {
+  TravelOverview,
+  TravelOverviewWidget,
+} from "./components/TravelOverview/TravelOverview.jsx";
 export { default as DashboardPanel } from "./components/DashboardPanel/DashboardPanel.jsx";
 export { default as TourPerformance } from "./components/TourPerformance/TourPerformance.jsx";
 export { default as InfoCard } from "./components/InfoCard/InfoCard.jsx";
@@ -94,6 +99,7 @@ export { default as LinkTabs } from "./components/LinkTabs/LinkTabs.jsx";
 export { default as AppHeader } from "./components/AppHeader/AppHeader.jsx";
 export { default as AuthHeader } from "./components/AuthHeader/AuthHeader.jsx";
 export { default as AppFooter } from "./components/AppFooter/AppFooter.jsx";
+export { default as ProductFooter } from "./components/ProductFooter/ProductFooter.jsx";
 export { default as ListingDropdown } from "./components/ListingDropdown/ListingDropdown.jsx";
 export { default as ReviewCard } from "./components/ReviewCard/ReviewCard.jsx";
 export { default as RecordReview } from "./components/RecordReview/RecordReview.jsx";
@@ -182,3 +188,5 @@ export { default as GlobalSearch } from "./components/AppHeader/GlobalSearch.jsx
 export { default as DetailsCard } from "./components/DetailsCard/DetailsCard.jsx";
 
 export { default as Note } from "./components/Note/Note.jsx";
+
+export { default as ConfiguredProductHeader } from "./layout/ConfiguredProductHeader/ConfiguredProductHeader.jsx";

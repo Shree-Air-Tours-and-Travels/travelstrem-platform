@@ -27,7 +27,14 @@
   }
 }
 
+@media (min-width: #{$breakpoint-md + 1px}) {
+  .trem-sidebar--withoutCollapse.trem-sidebar--no-brand .trem-sidebar__brand {
+    display: none;
+  }
+}
+
 .trem-sidebar__close {
+  margin-left: auto;
   display: none;
   width: 36px;
   height: 36px;
@@ -448,6 +455,11 @@
         justify-items: initial;
       }
     }
+  }
+
+  .trem-sidebar--no-brand .trem-sidebar__brand {
+    min-height: 36px;
+    padding: 0 0 $space-3;
   }
 
   .trem-sidebar__close {

@@ -40,12 +40,12 @@ const userSchema = new mongoose.Schema(
         clientId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Client",
-            default: null,
+            default: () => process.env.TENANT_CLIENT_ID || null,
             index: true,
         },
         clientRole: {
             type: String,
-            enum: ["none", "client_admin", "client_agent"],
+            enum: ["none", "client_master_admin", "client_admin", "client_agent"],
             default: "none",
         },
         designation: { type: String, trim: true, default: "" },

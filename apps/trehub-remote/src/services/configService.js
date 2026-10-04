@@ -1,15 +1,20 @@
+import { getConfiguredApiBase } from "../core/config/portalEnvironment.js";
+
 const normalizeApiBase = (raw) => {
-  const base = String(raw || "/api").replace(/\/$/, "");
+  const base = String(raw || getConfiguredApiBase()).replace(/\/$/, "");
   return base.endsWith("/api") ? base : `${base}/api`;
 };
 
-export const API_BASE = normalizeApiBase(process.env.REACT_APP_API_URL);
+export const API_BASE = normalizeApiBase(process.env.REACT_APP_API_URL || getConfiguredApiBase());
 
 const requestJson = async (url, options = {}) => {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 30000);
   try {
     const response = await fetch(url, { ...options, signal: controller.signal });
+    if (response.headers.get("content-type")?.includes("text/html")) {
+      throw new Error("Trehub received an HTML page instead of API data. Check REACT_APP_API_URL or REACT_APP_BACKEND_URL and restart Trehub.");
+    }
     const payload = await response.json().catch(() => null);
     if (!response.ok || !payload || payload.status === "error") {
       const error = new Error(payload?.message || "This request could not be completed. Please try again.");
@@ -47,5 +52,8 @@ export const createComponentData = async (path, body = {}) => {
   });
 };
 
-export const getHeaderConfig = (params) => readComponentData("/header-config", params);
+export const getHeaderConfig = async (params) => {
+  const data = await readComponentData("/header-config", params);
+  return data.componentData || data;
+};
 export const getPageConfig = (params) => readComponentData("/page-config", params);

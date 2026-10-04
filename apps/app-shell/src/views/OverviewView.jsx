@@ -87,6 +87,7 @@ export default function OverviewView({
 
       {journeyStory ? (
         <section className="dov__story" aria-label={journeyStory.ariaLabel}>
+          {journeyStory.contentVisible !== false ? <>
           <div className="dov__advantage">
             <header className="dov__advantage-heading" data-home-reveal="title">
               <span className="dov__advantage-eyebrow">{journeyStory.eyebrow}</span>
@@ -135,11 +136,14 @@ export default function OverviewView({
           >
             <path d="M0 46C132 12 208 82 344 50C471 20 552 79 684 43C821 6 909 75 1041 48C1175 21 1280 72 1440 34V92H0Z" />
           </svg>
+          </> : null}
+          {journeyStory.stats?.length ? (
           <div className="dov__story-stats">
             {(journeyStory.stats || []).map((stat) => (
               <StoryStat key={stat.id} stat={stat} />
             ))}
           </div>
+          ) : null}
         </section>
       ) : null}
 
@@ -147,7 +151,7 @@ export default function OverviewView({
 
       {homeInsights ? (
         <section className="dov__insights" aria-label={homeInsights.ariaLabel}>
-          <div className="dov__faq" id="home-faq">
+          {homeInsights.faq ? <div className="dov__faq" id="home-faq">
             <div className="dov__insights-heading" data-home-reveal>
               {homeInsights.faq?.eyebrow ? (
                 <span className="dov__insights-eyebrow">
@@ -201,7 +205,8 @@ export default function OverviewView({
             </div>
           </div>
 
-          <div className="dov__articles">
+          : null}
+          {homeInsights.articles ? <div className="dov__articles">
             <div className="dov__articles-header" data-home-reveal="title">
               <div className="dov__insights-heading">
                 {homeInsights.articles?.eyebrow ? (
@@ -323,7 +328,7 @@ export default function OverviewView({
                 </span>
               </button>
             ) : null}
-          </div>
+          </div> : null}
         </section>
       ) : null}
 

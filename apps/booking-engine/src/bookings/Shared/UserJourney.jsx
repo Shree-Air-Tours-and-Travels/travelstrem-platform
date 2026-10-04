@@ -5,10 +5,10 @@ import { fetchData } from "@packages/trem-utils";
 import useEnquiryBookings from "./useEnquiryBookings.js";
 import BookingEnquiryCenter from "./BookingEnquiryCenter.jsx";
 
-export default function UserJourney({ journeyType = "" }) {
+export default function UserJourney({ journeyType = "", ignoreProduct = false }) {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { enquiries, bookings, view, loading, error, load, filters, applyFilters } = useEnquiryBookings(journeyType);
+  const { enquiries, bookings, view, loading, error, load, filters, applyFilters } = useEnquiryBookings(journeyType, ignoreProduct);
   const selectedId = searchParams.get("booking") || searchParams.get("enquiry") || "";
   const [enquiryRef, setEnquiryRef] = useState("");
   const [claimState, setClaimState] = useState({ saving: false, message: "", error: false });

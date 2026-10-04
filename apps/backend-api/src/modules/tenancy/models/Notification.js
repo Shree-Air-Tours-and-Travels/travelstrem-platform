@@ -1,3 +1,4 @@
+import { customerScopePlugin } from "../../tenancy/customerScope.js";
 import mongoose from "mongoose";
 
 const schema = new mongoose.Schema(
@@ -29,4 +30,6 @@ const schema = new mongoose.Schema(
 );
 
 schema.index({ userId: 1, portal: 1, readAt: 1, createdAt: -1 });
+schema.plugin(customerScopePlugin, { ownerField: "userId" });
+
 export default mongoose.models.TenantNotification || mongoose.model("TenantNotification", schema);

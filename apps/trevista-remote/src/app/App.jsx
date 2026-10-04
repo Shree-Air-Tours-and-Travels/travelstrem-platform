@@ -1,27 +1,20 @@
 import React, { useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   FavoritesProvider,
   ProductHeader,
   GlobalLoader,
   PRODUCT_TYPE,
   ErrorState,
-  AppFooter,
+  ProductFooter,
   ScrollToTopButton,
   useTheme,
-  useFavoritesContext,
   Toaster,
 } from "@packages/trem-ui";
 import AppRoutes from "./routes";
 import { initApp } from "../core/initApp";
 import "../main.scss";
-import {
-  redirectToGlobalAuth,
-  setComponentDataFetcher,
-  fetchData,
-  createProductAuth,
-  buildGlobalAppShellUrl,
-  getCurrentReturnUrl,
-} from "@packages/trem-utils";
+import { applyDocumentBranding, setComponentDataFetcher, fetchData, createProductAuth } from "@packages/trem-utils";
 import {
   emit,
   registerSessionCacheClearer,
@@ -40,8 +33,6 @@ const { buildAuthAction } = createProductAuth({
   registerSessionCacheClearer,
   clearUserSessionCache,
 });
-const STANDALONE_ENABLED = false;
-
 const getPlatformUrl = () => {
   const host = window.location.hostname;
   const parts = host.split(".");
@@ -58,7 +49,10 @@ const getProductUrl = (product) => {
 const buildNavItemsFromConfig = (headerConfig, currentPath) => {
   const menu = headerConfig?.menu || [];
   const normalizedPath = currentPath || "/";
-  let hasActive = false;
+  const activeItem = menu
+    .filter((item) => item.type !== "dropdown" && item.path)
+    .filter((item) => normalizedPath === item.path || normalizedPath.startsWith(`${item.path}/`))
+    .sort((a, b) => b.path.length - a.path.length)[0];
   const items = menu
     .map((item) => {
       if (item.type === "dropdown") {
@@ -77,54 +71,86 @@ const buildNavItemsFromConfig = (headerConfig, currentPath) => {
         };
       }
       const itemPath = item.path || "";
-      const isActive = itemPath && normalizedPath === itemPath;
-      if (isActive) hasActive = true;
+      const isActive = item === activeItem;
       return {
         id: item.id || item.label,
         label: item.label,
         active: isActive,
         href: item.type === "external" ? item.href : item.path,
+        disabled: Boolean(item.disabled),
+        type: item.type,
+        target: item.target,
+        rel: item.rel,
       };
     })
     .filter((item) => item.label);
-  if (!hasActive && items.length) items[0].active = true;
+  if (!activeItem && items.length) items[0].active = true;
   return items;
 };
 
 function AppHeader({ headerConfig, state, navItems, activeTab, authAction, brand }) {
-  const { favoritesCount } = useFavoritesContext();
+  const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
   const logoConfig = headerConfig.logos?.trevista || {};
+  const linkedNavItems = navItems.map((item) => ({
+    ...item,
+    onClick: item.disabled
+      ? undefined
+      : () => {
+          if (item.type === "external") window.location.assign(item.href);
+          else navigate(item.href);
+        },
+  }));
+  const profileItems = [
+    ...(headerConfig.accountNavigation || []).map((item) => ({
+      ...item,
+      onClick: () => window.location.assign(item.href),
+    })),
+    {
+      id: "auth",
+      label: authAction?.label || "Sign in",
+      icon: state.session?.isAuthenticated ? "logout" : "user",
+      onClick:
+        authAction?.onClick ||
+        (authAction?.href ? () => window.location.assign(authAction.href) : undefined),
+    },
+    {
+      id: "theme",
+      label: theme === "dark" ? "Light mode" : "Dark mode",
+      icon: theme === "dark" ? "sun" : "moon",
+      onClick: toggleTheme,
+    },
+  ];
 
   return (
     <ProductHeader
       brand={{
         ...brand,
-        logoSrc: logoConfig.logoSrc || "",
-        logoAlt: logoConfig.name || brand.label,
+        label: brand.label || logoConfig.name,
+        subtitle: brand.subtitle || logoConfig.subtitle,
+        logoSrc: brand.logoSrc || logoConfig.logoSrc || "",
+        logoAlt: brand.label || logoConfig.name,
         href: "/trevista",
       }}
-      navItems={navItems}
+      navItems={linkedNavItems}
+      linkTabs={{
+        options: linkedNavItems,
+        ariaLabel: "Trevista navigation",
+        onSelect: (item) => item.onClick?.(),
+      }}
       activeTab={activeTab}
       theme={theme}
-      onToggleTheme={toggleTheme}
-      wishlist={{
-        label: "Wishlist",
-        ariaLabel: "Wishlist",
-        icon: "heart",
-        count: favoritesCount,
-        href: buildGlobalAppShellUrl({ product: PRODUCT_TYPE.TREVISTA }),
-      }}
       profile={{
-        label: state.session?.user?.name || brand.label || "Dashboard",
-        href: buildGlobalAppShellUrl({ product: PRODUCT_TYPE.TREVISTA }),
+        label: "Profile",
+        displayName: state.session?.user?.name || "Guest",
+        items: profileItems,
       }}
-      authAction={authAction}
     />
   );
 }
 
 function App({ dispatchEvent, embedded = false, userSession = null }) {
+  const location = useLocation();
   const [state, setState] = React.useState({
     loading: !embedded,
     error: null,
@@ -136,7 +162,7 @@ function App({ dispatchEvent, embedded = false, userSession = null }) {
   useEffect(() => initRealtimeNotifications(), []);
 
   React.useEffect(() => {
-    if (embedded || !STANDALONE_ENABLED) return undefined;
+    if (embedded) return undefined;
 
     let active = true;
 
@@ -148,10 +174,8 @@ function App({ dispatchEvent, embedded = false, userSession = null }) {
     })
       .then(({ session, header }) => {
         if (!active) return;
+        applyDocumentBranding(header.brand, { tenant: Boolean(header.tenantId) });
         setState({ loading: false, error: null, session, headerConfig: header });
-        if (!session?.isAuthenticated) {
-          redirectToGlobalAuth({ app: PRODUCT_TYPE.TREVISTA, returnTo: getCurrentReturnUrl() });
-        }
       })
       .catch((error) => {
         if (!active) return;
@@ -168,19 +192,6 @@ function App({ dispatchEvent, embedded = false, userSession = null }) {
     };
   }, [embedded]);
 
-  if (!embedded) {
-    return (
-      <ErrorState
-        title="Trevista now opens in TravelsTREM"
-        description="Trevista is integrated with the TravelsTREM customer dashboard and is no longer available as a standalone application."
-        retry={() =>
-          window.location.assign(buildGlobalAppShellUrl({ product: PRODUCT_TYPE.TREVISTA, tab: PRODUCT_TYPE.TREVISTA }))
-        }
-        retryText="Go to Trevista"
-      />
-    );
-  }
-
   if (state.error)
     return (
       <ErrorState
@@ -193,10 +204,6 @@ function App({ dispatchEvent, embedded = false, userSession = null }) {
 
   if (!embedded && state.loading) return <GlobalLoader visible text="Loading Trevista" />;
 
-  if (!embedded && !state.session?.isAuthenticated) {
-    return <div className="app-status">Redirecting to TravelsTrem secure login...</div>;
-  }
-
   const headerConfig = state.headerConfig || {};
   const logoConfig = headerConfig.logos?.trevista || {};
   const brand = headerConfig.brand || {
@@ -204,16 +211,7 @@ function App({ dispatchEvent, embedded = false, userSession = null }) {
     subtitle: "by TravelsTrem",
     mark: "T",
   };
-  const navItems = buildNavItemsFromConfig(headerConfig, window.location.pathname);
-  const aboutUrl = process.env.REACT_APP_ABOUT_URL;
-  if (aboutUrl)
-    navItems.push({
-      id: "about",
-      label: "About Us",
-      href: aboutUrl,
-      target: "_blank",
-      rel: "noopener noreferrer",
-    });
+  const navItems = buildNavItemsFromConfig(headerConfig, location.pathname);
   const activeTab = navItems.find((item) => item.active)?.id || "";
   const authAction = buildAuthAction(headerConfig, state.session);
 
@@ -243,12 +241,11 @@ function App({ dispatchEvent, embedded = false, userSession = null }) {
           </FavoritesProvider>
         </RealtimeProvider>
         {!embedded && (
-          <AppFooter
-            config={{
-              ...(headerConfig.footer || {}),
-              productName: "Trevista by TravelsTrem",
-              description: "Holiday packages and customized travel planning.",
-            }}
+          <ProductFooter
+            tenantConfig={headerConfig.tenant?.footer}
+            clientConfig={headerConfig.client?.footer}
+            config={headerConfig.footer}
+            tenantId={headerConfig.tenantId}
           />
         )}
         <ScrollToTopButton />

@@ -1,3 +1,5 @@
+import { resolveCustomerDashboardContext } from "../../dashboard/context.js";
+import { customerScopeQuery } from "../../tenancy/customerScope.js";
 import Favorite from "../models/Favorite.js";
 import Tour from "../models/Tour.js";
 import mongoose from "mongoose";
@@ -99,12 +101,17 @@ export const toggleFavorite = async (req, res) => {
             return res.status(400).json({ status: "error", message: "tourId is required" });
         }
 
-        const normalizedProduct = String(product || "trevista").trim().toLowerCase();
-        const availableProduct = await Product.exists({
-            key: normalizedProduct,
-            status: "active",
-            hidden: { $ne: true },
-        });
+        const context = await resolveCustomerDashboardContext(userId, "wishlist:view");
+        const normalizedProduct = String(product || "trevista")
+            .trim()
+            .toLowerCase();
+        const availableProduct =
+            context.products.includes(normalizedProduct) &&
+            (await Product.exists({
+                key: normalizedProduct,
+                status: "active",
+                hidden: { $ne: true },
+            }));
         if (!availableProduct) {
             return res.status(404).json({
                 status: "error",
@@ -112,7 +119,12 @@ export const toggleFavorite = async (req, res) => {
             });
         }
 
-        const existing = await Favorite.findOne({ tourId, userId, product: normalizedProduct });
+        const existing = await Favorite.findOne({
+            ...customerScopeQuery(context),
+            tourId,
+            userId,
+            product: normalizedProduct,
+        });
 
         if (existing) {
             await Favorite.deleteOne({ _id: existing._id });
@@ -137,18 +149,27 @@ export const toggleFavorite = async (req, res) => {
             .json({ status: "success", componentData: { data: { favorited: true } } });
     } catch (error) {
         console.error("toggleFavorite error:", error);
-        return res.status(500).json({ status: "error", message: "Failed to toggle favorite" });
+        return res
+            .status(error.status || 500)
+            .json({ status: "error", message: "Failed to toggle favorite" });
     }
 };
 
 export const getFavorites = async (req, res) => {
     try {
         const userId = req.user?.sub || req.user?.id || req.user?._id || req.user?.userId;
-        const products = await getVisibleProducts();
+        const context = await resolveCustomerDashboardContext(userId, "wishlist:view");
+        const products = (await getVisibleProducts()).filter(({ key }) =>
+            context.products.includes(key),
+        );
         const productMap = new Map(products.map((product) => [product.key, product]));
         const visibleProductKeys = products.map((product) => product.key);
         const favorites = visibleProductKeys.length
-            ? await Favorite.find({ userId, product: { $in: visibleProductKeys } })
+            ? await Favorite.find({
+                  ...customerScopeQuery(context),
+                  userId,
+                  product: { $in: visibleProductKeys },
+              })
                   .sort({ createdAt: -1 })
                   .lean()
             : [];
@@ -242,7 +263,7 @@ export const getFavorites = async (req, res) => {
         });
     } catch (error) {
         console.error("getFavorites error:", error);
-        return res.status(500).json({
+        return res.status(error.status || 500).json({
             status: "error",
             message: "Failed to get favorites",
             componentData: { data: [], structure: { widgets: [] }, config: {} },

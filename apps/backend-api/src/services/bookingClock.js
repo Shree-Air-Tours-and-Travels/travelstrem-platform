@@ -1,8 +1,13 @@
+import logger from "../shared/logger/index.js";
 import { PaymentSession } from "../modules/payments/models.js";
 import { publishToUser } from "../realtime/realtime.publisher.js";
 import { REALTIME_EVENTS } from "../realtime/realtime.constants.js";
 import FlightBooking from "../modules/flights/models/FlightBooking.js";
 import ContactLead from "../modules/forms/models/ContactLead.js";
+import {
+    captureTenantIntegrationContext,
+    runWithCapturedTenantIntegrationContext,
+} from "../modules/integrations/runtime.js";
 
 const settled = ["PROCESSING", "PAID", "REFUNDED", "PARTIALLY_REFUNDED"];
 const watches = new Map();
@@ -18,18 +23,23 @@ export function assertBookingOpen(expiresAt) {
 export function watchBookingClock({ userId, enquiryId, enquiryMongoId, paymentSessionId, expiresAt, status }) {
     const key = `${userId}:${enquiryId || paymentSessionId}`;
     if (!expiresAt || settled.includes(status)) { watches.delete(key); return; }
-    watches.set(key, { userId, enquiryId, enquiryMongoId, paymentSessionId, expiresAt });
+    const tenantContext = captureTenantIntegrationContext();
+    if (!tenantContext)
+        throw Object.assign(new Error("Booking clocks require an explicit tenant context."), {
+            code: "TENANT_CONTEXT_REQUIRED",
+        });
+    watches.set(key, { userId, enquiryId, enquiryMongoId, paymentSessionId, expiresAt, tenantContext });
 }
 let ticking = false;
 const timer = setInterval(async () => {
     if (ticking || !watches.size) return;
     ticking = true;
     try {
-        for (const [key, watch] of watches) {
+        for (const [key, watch] of watches) await runWithCapturedTenantIntegrationContext(watch.tenantContext, async () => {
             let status = "";
             if (!watch.paymentSessionId && watch.enquiryMongoId) {
                 const enquiry = await ContactLead.findById(watch.enquiryMongoId).select("bookingId status").lean();
-                if (!enquiry || ["cancelled", "closed"].includes(enquiry.status)) { watches.delete(key); continue; }
+                if (!enquiry || ["cancelled", "closed"].includes(enquiry.status)) { watches.delete(key); return; }
                 const booking = enquiry.bookingId ? { _id: enquiry.bookingId } : await FlightBooking.findOne({ sourceEnquiryId: watch.enquiryMongoId }).select("_id").lean();
                 if (booking) {
                     const session = await PaymentSession.findOne({ bookingId: booking._id }).select("sessionId").lean();
@@ -39,17 +49,17 @@ const timer = setInterval(async () => {
             if (watch.paymentSessionId) {
                 await PaymentSession.updateOne({ sessionId: watch.paymentSessionId, status: { $in: ["CREATED", "PENDING", "FAILED"] }, expiresAt: { $lte: new Date() } }, { $set: { status: "EXPIRED" } });
                 const session = await PaymentSession.findOne({ sessionId: watch.paymentSessionId }).select("status expiresAt").lean();
-                if (!session) { watches.delete(key); continue; }
+                if (!session) { watches.delete(key); return; }
                 status = session.status;
                 watch.expiresAt = session.expiresAt;
             }
             const clock = bookingClock(watch.expiresAt, status);
             await publishToUser(watch.userId, REALTIME_EVENTS.BOOKING_CLOCK, { enquiryId: watch.enquiryId, paymentSessionId: watch.paymentSessionId, ...clock });
             if (clock.expired || clock.remainingSeconds === null) watches.delete(key);
-        }
+        });
     } catch (error) {
         // No tick is safer than publishing an unverified payment state.
-        console.error("[BookingClock] sync failed:", error.message);
+        logger.error("[BookingClock] sync failed", error);
     } finally { ticking = false; }
 }, 1000);
 timer.unref();

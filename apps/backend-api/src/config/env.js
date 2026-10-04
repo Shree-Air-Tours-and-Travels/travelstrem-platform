@@ -9,6 +9,7 @@
 import fs from "fs";
 import path from "path";
 import dotenv from "dotenv";
+import { configureDns } from "./dns.js";
 import {
     validateGoogleConfiguration,
     validateMobileDevelopmentMode,
@@ -17,6 +18,10 @@ import {
 /* ------------------------------
    1) Load environment file
    ------------------------------ */
+// Tenant database references are local secrets, never browser configuration.
+const tenantSecretsFile = path.resolve(process.cwd(), "../../.env.tenants.local");
+if (process.env.USE_DOTENV === "true" && fs.existsSync(tenantSecretsFile)) dotenv.config({ path: tenantSecretsFile });
+
 // normalize node env early
 const RAW_NODE_ENV = (process.env.NODE_ENV || "development").toString().trim();
 const NODE_ENV = RAW_NODE_ENV || "development";
@@ -43,6 +48,8 @@ if (USE_DOTENV && fs.existsSync(localEnvFileCandidate)) {
     if (!IS_PRODUCTION_LIKE_ENV)
         console.log(`✅ Loaded local environment overrides from ${localEnvFileCandidate}`);
 }
+
+configureDns();
 
 /* ------------------------------
    2) Small helpers
@@ -157,6 +164,7 @@ const TREVISTA_URL = String(
 const TREHUB_URL = String(
     get("TREHUB_URL", portalJsonConfig?.frontends?.trehub?.baseUrl || "") || "",
 ).trim();
+const DASHBOARD_URL = String(get("DASHBOARD_URL", "") || "").replace(/\/$/, "");
 const SHELL_URL = String(
     get("SHELL_URL", portalJsonConfig?.frontends?.shell?.baseUrl || "") || "",
 ).trim();
@@ -499,6 +507,7 @@ const config = {
     TREVISTA_URL,
     TREHUB_URL,
     SHELL_URL,
+    DASHBOARD_URL,
     AUTH_APP_URL,
     PARTNER_URL,
     ADMIN_URL,
@@ -576,6 +585,7 @@ export {
     TREVISTA_URL,
     TREHUB_URL,
     SHELL_URL,
+    DASHBOARD_URL,
     AUTH_APP_URL,
     PARTNER_URL,
     ADMIN_URL,

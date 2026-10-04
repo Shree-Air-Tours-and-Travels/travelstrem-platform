@@ -4,9 +4,10 @@
 :root {
   --trem-primaryDark: var(--color-primary-dark);
   --trem-tertiary: var(--color-tertiary);
-  --trem-accent: var(--color-accent);
-  --trem-surface: var(--surface);
-  --trem-surfaceMuted: var(--surface-muted);
+  // Fixed contrast tokens for deliberately dark marketing sections.
+  --trem-accent: #{trem.$accent-color};
+  --trem-surface: #{trem.$white-color};
+  --trem-surfaceMuted: #{trem.$surface-muted};
   --trem-dark-primary: #{trem.$dark-primary};
   --trem-dark-primaryDark: #{trem.$dark-primary-dark};
   --trem-dark-surface: #{trem.$dark-surface};

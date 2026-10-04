@@ -104,6 +104,7 @@ export const fetchData = async (endpoint, options = {}) => {
     return {
       status: "error",
       message: err?.response?.data?.message || err.message || "Network error",
+      httpStatus: err?.response?.status,
       component: err?.response?.data?.component,
       componentData: err?.response?.data?.componentData || {
         title: "",

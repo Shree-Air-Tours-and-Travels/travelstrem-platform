@@ -20,7 +20,12 @@ const portalAllowedOrigins = (portal) =>
     new Set(
         (
             {
-                customer: [config.SHELL_URL, config.TREVISTA_URL, config.TREVIO_URL, config.TREHUB_URL],
+                customer: [
+                    config.SHELL_URL,
+                    config.TREVISTA_URL,
+                    config.TREVIO_URL,
+                    config.TREHUB_URL,
+                ],
                 admin: [config.ADMIN_URL],
                 partner: [config.PARTNER_URL],
             }[normalizePortalScope(portal)] || []
@@ -35,7 +40,12 @@ export const safeReturnUrl = (value, portal = "customer") => {
     if (!value) return base;
     try {
         const resolved = new URL(value, base);
-        if (!portalAllowedOrigins(portal).has(resolved.origin)) return base;
+        if (
+            process.env.TENANT_CLIENT_ID
+                ? resolved.origin !== new URL(base).origin
+                : !portalAllowedOrigins(portal).has(resolved.origin)
+        )
+            return base;
         if (!/^https?:$/.test(resolved.protocol)) return base;
         resolved.username = "";
         resolved.password = "";

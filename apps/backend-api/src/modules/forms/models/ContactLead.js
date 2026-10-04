@@ -1,3 +1,4 @@
+import { customerScopePlugin } from "../../tenancy/customerScope.js";
 import mongoose from "mongoose";
 
 const ContactLeadSchema = new mongoose.Schema(
@@ -84,6 +85,8 @@ const ContactLeadSchema = new mongoose.Schema(
     },
     { timestamps: true },
 );
+
+ContactLeadSchema.plugin(customerScopePlugin, { ownerField: "claimedBy" });
 
 const ContactLead = mongoose.model("ContactLead", ContactLeadSchema);
 export default ContactLead;

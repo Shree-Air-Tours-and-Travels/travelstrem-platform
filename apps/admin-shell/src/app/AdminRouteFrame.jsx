@@ -59,6 +59,7 @@ export default function AdminRouteFrame({
       ariaLabel: "AdminTREM navigation",
       brand: {
         name: backendHeaderConfig?.brand?.label || "AdminTREM",
+        logoSrc: backendHeaderConfig?.brand?.logoSrc,
         fallbackSubtitle: backendHeaderConfig?.brand?.subtitle || "Platform Administration",
       },
       sections: SECTION_IDS.map((section) => ({
@@ -77,7 +78,7 @@ export default function AdminRouteFrame({
   const adminUser = useMemo(
     () => ({
       ...user,
-      adminRoleLabel: adminLevel === "master" ? "Master Admin" : "Administrator",
+      adminRoleLabel: user.clientRole === "client_master_admin" ? "Client master admin" : user.clientRole === "client_admin" ? "Client admin" : adminLevel === "master" ? "TREM master admin" : "Administrator",
     }),
     [adminLevel, user],
   );
@@ -126,6 +127,7 @@ export default function AdminRouteFrame({
       ariaLabel: "AdminTREM application header",
       brand: {
         name: backendHeaderConfig?.brand?.label || "AdminTREM",
+        logoSrc: backendHeaderConfig?.brand?.logoSrc,
         subtitle: backendHeaderConfig?.brand?.subtitle || "Platform Administration",
       },
       search: { enabled: false },

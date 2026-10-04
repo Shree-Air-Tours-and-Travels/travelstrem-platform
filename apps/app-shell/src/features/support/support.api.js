@@ -15,7 +15,7 @@ const write = async (path, body) => {
 };
 
 export const supportApi = {
-  home: (signal) => read("/home", null, signal),
+  home: (signal, authenticated = false) => read(authenticated ? "/account-home" : "/home", null, signal),
   search: (query, signal) => read("/search", { q: query }, signal),
   service: (id, signal) => read(`/services/${encodeURIComponent(id)}`, null, signal),
   topic: (id, signal) => read(`/topics/${encodeURIComponent(id)}`, null, signal),

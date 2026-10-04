@@ -17,8 +17,6 @@ export default {
                 brand: {
                     name: "TravelsTREM",
                     tagline: "Tours · Reservations · Experiences · Management",
-                    logoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png",
-                    darkLogoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519386/travelstrem/site-assets/e38709b8a4ada750aed0f6df.png",
                 },
                 themeAction: {
                     darkLabel: "Switch to dark mode",
@@ -33,7 +31,7 @@ export default {
                 description:
                     "Discover curated trips, manage reservations and keep every travel detail together with",
                 descriptionHighlight:
-                    "TravelsTREM, the travel platform by Shree Air Tours and Travels.",
+                    "TravelsTREM travel platform.",
                 highlights: [
                     {
                         icon: "map",
@@ -51,7 +49,7 @@ export default {
                         description: "Helpful guidance from our Jaipur-based travel team.",
                     },
                 ],
-                businessName: "Shree Air Tours and Travels",
+                businessName: "",
                 location: "Jaipur, India",
             },
             strings: {

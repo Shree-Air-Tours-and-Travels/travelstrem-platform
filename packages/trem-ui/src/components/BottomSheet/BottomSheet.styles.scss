@@ -9,9 +9,9 @@
   &__overlay {
     position: fixed;
     inset: 0;
-    background: $overlay-color;
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    background: var(--color-transparent);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     pointer-events: auto;
   }
 

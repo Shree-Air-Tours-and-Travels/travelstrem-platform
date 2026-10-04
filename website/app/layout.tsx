@@ -11,21 +11,27 @@ import "@/styles/storytelling.scss";
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
-  title: { default: "TravelsTREM | Travel, thoughtfully connected", template: "%s | TravelsTREM" },
+  title: { default: "TravelsTREM | End-to-End Travel SaaS Platform", template: "%s | TravelsTREM" },
   description:
-    "Tours, reservations, experiences and travel management connected in one TravelsTREM ecosystem.",
+    "A white-label travel SaaS platform connecting customer experiences, enquiries, quotations, bookings, payments and operations.",
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     siteName: site.name,
     title: "TravelsTREM",
-    description: "Travel, thoughtfully connected.",
+    description: "The operating platform for modern travel businesses.",
     url: site.url,
   },
   icons: {
     icon: [
-      { url: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png", media: "(prefers-color-scheme: light)" },
-      { url: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519386/travelstrem/site-assets/e38709b8a4ada750aed0f6df.png", media: "(prefers-color-scheme: dark)" },
+      {
+        url: site.logoLightUrl,
+        media: "(prefers-color-scheme: light)",
+      },
+      {
+        url: site.logoDarkUrl,
+        media: "(prefers-color-scheme: dark)",
+      },
     ],
   },
   other: { "google-adsense-account": tracking.adsenseClient },

@@ -23,3 +23,7 @@ api-dev.env
 
 # Generated Next.js output
 .next/
+atlas-credentials.env
+.env.tenant-shree-air.local
+.env.tenants.local
+.env.shree-air.local

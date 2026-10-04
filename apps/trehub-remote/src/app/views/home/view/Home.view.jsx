@@ -148,8 +148,10 @@ export default function HomeView({ loading, error, pageModel, onSearch }) {
               />
             );
           }
-          if (widget.type === "ClientShowcase" || widget.name === "clientShowcase") {
-            const count = Number(getByPath(data, props.templateValues?.count) || 0);
+          if (widget.type === "ClientShowcase" || widget.name === "providerShowcase") {
+            const providers = getByPath(data, props.providersDataPath) || [];
+            if (!Array.isArray(providers) || !providers.length) return null;
+            const count = providers.length;
             const templateValues = Object.fromEntries(
               Object.entries(props.templateValues || {}).map(([key, path]) => [
                 key,
@@ -165,7 +167,7 @@ export default function HomeView({ loading, error, pageModel, onSearch }) {
                   templateValues,
                 )}
                 description={labelFor(labels, props.descriptionRef)}
-                clients={getByPath(data, props.clientsDataPath) || []}
+                clients={providers}
               />
             );
           }

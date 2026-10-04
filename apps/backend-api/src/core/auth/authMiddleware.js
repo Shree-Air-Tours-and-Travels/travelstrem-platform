@@ -38,7 +38,7 @@ export default async function authMiddleware(req, res, next) {
         }
         const user = await User.findById(payload.sub)
             .select(
-                "role adminLevel agencyRole agencyId partnerAgencyRef accountStatus tokenVersion productAccess permissionGrants permissionDenials internalTeamRoles",
+                "clientId clientRole role adminLevel agencyRole agencyId partnerAgencyRef accountStatus tokenVersion productAccess permissionGrants permissionDenials internalTeamRoles",
             )
             .lean();
         if (!user || Number(user.tokenVersion || 0) !== Number(payload.tokenVersion || 0)) {
@@ -60,6 +60,17 @@ export default async function authMiddleware(req, res, next) {
                     .status(403)
                     .json({ status: "error", message: "Agency access is not active." });
         }
+        if (req.tenant && !req.tenant.platform && String(user.clientId) !== req.tenant.id)
+            return res.status(403).json({ status: "error", message: "This account does not belong to this tenant." });
+        if (req.tenant && !req.tenant.platform && user.productAccess?.length &&
+            req.tenantProducts?.some((product) => !user.productAccess.includes(product)))
+            return res.status(403).json({ status: "error", message: "This product is not assigned to your account." });
+        if (req.tenant && !req.tenant.platform && getPortalScope(req) === "admin" && !["client_master_admin", "client_admin"].includes(user.clientRole))
+            return res.status(403).json({ status: "error", message: "Tenant administration requires a client administrator." });
+        if (req.tenant?.platform && user.clientId)
+            return res.status(403).json({ status: "error", message: "Use your tenant site to access this account." });
+        if (req.tenant?.platform && getPortalScope(req) === "admin" && (user.role !== "admin" || user.adminLevel !== "master"))
+            return res.status(403).json({ status: "error", message: "Platform administration is restricted to the master admin." });
         if (payload.sid) {
             const activityCutoff = new Date(Date.now() - SESSION_ACTIVITY_TOUCH_INTERVAL_MS);
             await RefreshToken.updateOne(

@@ -55,8 +55,10 @@ export const buildGlobalAppShellUrl = ({
   product = "",
   tab = "",
 } = {}) => {
-  const base = getGlobalAppShellBaseUrl(shellBaseUrl);
-  const url = new URL("/", safeBase(base));
+  const dashboardSection = { dashboard: "overview", bookings: "bookings", favorites: "wishlist", wishlist: "wishlist", profile: "profile", notifications: "notifications", support: "support" }[tab];
+  const dashboardBase = process.env.REACT_APP_DASHBOARD_URL || (typeof window !== "undefined" && isLocalHost(window.location.hostname) ? "http://localhost:3017" : "https://dashboard.travelstrem.com");
+  const base = dashboardSection ? dashboardBase : getGlobalAppShellBaseUrl(shellBaseUrl);
+  const url = new URL(dashboardSection ? `/dashboard/${dashboardSection}` : "/", safeBase(base));
   if (product) url.searchParams.set("product", product);
   if (tab) url.searchParams.set("tab", tab);
   if (returnTo) url.searchParams.set("returnTo", returnTo);

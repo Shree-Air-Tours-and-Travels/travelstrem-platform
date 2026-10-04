@@ -1,3 +1,5 @@
+import { resolveDashboardContext } from "../dashboard/context.js";
+import { customerScopeQuery } from "./customerScope.js";
 import mongoose from "mongoose";
 import crypto from "node:crypto";
 import { applyProcessAction, getProcessSnapshot } from "@packages/trem-process-engine";
@@ -245,7 +247,13 @@ const validatePartnership = (body) => {
         throw Object.assign(new Error("PAN must use the format ABCDE1234F."), { status: 400 });
 };
 
-export const getPartnershipWorkflow = (_req, res) => ok(res, PARTNERSHIP_WORKFLOW);
+export const getPartnershipWorkflow = (req, res) => {
+    const client = req.tenant?.client;
+    if (client && (!client.partnerEnabled || !client.productAccess.some((key) => ["trevio", "trevista"].includes(key))))
+        return res.status(403).json({ status: "error", message: "Partner enrollment is not available for this company." });
+    const name = client?.globalBrand?.label || client?.name || "TravelsTREM";
+    return ok(res, { ...PARTNERSHIP_WORKFLOW, title: `Partner with ${name}`, subtitle: `Apply to become a partner of ${name}. Complete each verified section to submit your agency for review.`, brand: { name, logoSrc: client?.globalBrand?.logoSrc }, returnLabel: `Back to ${name} sign in` });
+};
 
 export async function createPartnershipDraft(req, res) {
     try {
@@ -814,7 +822,7 @@ export async function listAgencies(req, res) {
 }
 export async function getAgency(req, res) {
     try {
-        const id = req.access.isMaster ? req.params.id : req.access.agencyId;
+        const id = (req.access.isMaster || req.access.isTenantAdmin) ? req.params.id : req.access.agencyId;
         const agency = await PartnerAgency.findById(id).lean();
         if (!agency) return res.status(404).json({ status: "error", message: "Agency not found." });
         const [admins, agents, trips, customers] = await Promise.all([
@@ -830,8 +838,8 @@ export async function getAgency(req, res) {
 }
 export async function updateAgency(req, res) {
     try {
-        const id = req.access.isMaster ? req.params.id : req.access.agencyId;
-        const allowed = req.access.isMaster
+        const id = (req.access.isMaster || req.access.isTenantAdmin) ? req.params.id : req.access.agencyId;
+        const allowed = (req.access.isMaster || req.access.isTenantAdmin)
             ? [
                   "agencyName",
                   "legalName",
@@ -963,7 +971,7 @@ export async function updateAgency(req, res) {
 
 export async function listAgents(req, res) {
     try {
-        const agencyId = req.access.isMaster ? req.params.agencyId : req.access.agencyId;
+        const agencyId = (req.access.isMaster || req.access.isTenantAdmin) ? req.params.agencyId : req.access.agencyId;
         const scopedAgencyId = mongoose.Types.ObjectId.isValid(agencyId)
             ? new mongoose.Types.ObjectId(agencyId)
             : agencyId;
@@ -1027,12 +1035,12 @@ export async function listAgents(req, res) {
 }
 export async function inviteAgent(req, res) {
     try {
-        const agencyId = req.access.isMaster ? req.params.agencyId : req.access.agencyId;
+        const agencyId = (req.access.isMaster || req.access.isTenantAdmin) ? req.params.agencyId : req.access.agencyId;
         const agency = await PartnerAgency.findById(agencyId);
         if (!agency || agency.status !== "active")
             return res.status(409).json({ status: "error", message: "Agency is not active." });
         const agencyRole =
-            req.body.agencyRole === "partner_admin" && req.access.isMaster
+            req.body.agencyRole === "partner_admin" && (req.access.isMaster || req.access.isTenantAdmin)
                 ? "partner_admin"
                 : "partner_agent";
         const requestedProducts = [
@@ -1065,7 +1073,7 @@ export async function inviteAgent(req, res) {
             requestedPermissions.some(
                 (value) =>
                     !delegable.has(value) ||
-                    (!req.access.isMaster && !req.access.permissions.has(value)),
+                    (!(req.access.isMaster || req.access.isTenantAdmin) && !req.access.permissions.has(value)),
             )
         )
             return res
@@ -1110,8 +1118,8 @@ export async function updateAgent(req, res) {
     try {
         const agent = await User.findOne({
             _id: req.params.id,
-            agencyId: req.access.isMaster ? { $exists: true } : req.access.agencyId,
-            ...(!req.access.isMaster ? { agencyRole: "partner_agent" } : {}),
+            agencyId: (req.access.isMaster || req.access.isTenantAdmin) ? { $exists: true } : req.access.agencyId,
+            ...(!(req.access.isMaster || req.access.isTenantAdmin) ? { agencyRole: "partner_agent" } : {}),
         });
         if (!agent) return res.status(404).json({ status: "error", message: "Agent not found." });
         const before = agent.toObject();
@@ -1137,7 +1145,7 @@ export async function updateAgent(req, res) {
                         (value) =>
                             !knownPermissions.has(value) ||
                             !delegablePermissions.has(value) ||
-                            (!req.access.isMaster && !req.access.permissions.has(value)),
+                            (!(req.access.isMaster || req.access.isTenantAdmin) && !req.access.permissions.has(value)),
                     )
                 )
                     return res.status(400).json({
@@ -1185,7 +1193,7 @@ export async function resendInvitation(req, res) {
         const user = await User.findById(req.params.id);
         if (
             !user ||
-            (!req.access.isMaster &&
+            (!(req.access.isMaster || req.access.isTenantAdmin) &&
                 (String(user.agencyId) !== req.access.agencyId ||
                     user.agencyRole !== "partner_agent"))
         )
@@ -1561,7 +1569,7 @@ export async function updateCustomer(req, res) {
 
 export async function reports(req, res) {
     try {
-        const agencyId = req.access.isMaster ? req.query.agencyId : req.access.agencyId;
+        const agencyId = (req.access.isMaster || req.access.isTenantAdmin) ? req.query.agencyId : req.access.agencyId;
         if (!agencyId || !mongoose.isValidObjectId(agencyId))
             return res
                 .status(400)
@@ -1586,9 +1594,9 @@ export async function listAudit(req, res) {
     try {
         const { skip, limit } = page(req);
         const q =
-            req.access.isMaster && req.query.agencyId
+            (req.access.isMaster || req.access.isTenantAdmin) && req.query.agencyId
                 ? { agencyId: req.query.agencyId }
-                : req.access.isMaster
+                : (req.access.isMaster || req.access.isTenantAdmin)
                   ? {}
                   : { agencyId: req.access.agencyId };
         const [items, total] = await Promise.all([
@@ -1611,7 +1619,7 @@ export async function listProducts(req, res) {
 export async function listProductAccessRequests(req, res) {
     try {
         const { skip, limit } = page(req);
-        const query = req.access.isMaster ? {} : { agencyId: req.access.agencyId };
+        const query = (req.access.isMaster || req.access.isTenantAdmin) ? {} : { agencyId: req.access.agencyId };
         if (req.query.status) query.status = req.query.status;
         const [items, total, products] = await Promise.all([
             ProductAccessRequest.find(query)
@@ -1635,7 +1643,7 @@ export async function listProductAccessRequests(req, res) {
 
 export async function createProductAccessRequest(req, res) {
     try {
-        if (req.access.isMaster || req.access.role !== "partner_admin")
+        if ((req.access.isMaster || req.access.isTenantAdmin) || req.access.role !== "partner_admin")
             return res.status(403).json({
                 status: "error",
                 message: "Only a Partner Admin can request products for an agency.",
@@ -1763,7 +1771,7 @@ export async function createProductAccessRequest(req, res) {
 export async function decideProductAccessRequest(req, res) {
     const session = await mongoose.startSession();
     try {
-        if (!req.access.isMaster)
+        if (!(req.access.isMaster || req.access.isTenantAdmin))
             return res.status(403).json({
                 status: "error",
                 message: "Only a Master Admin can decide product access requests.",
@@ -1904,7 +1912,7 @@ export async function decideProductAccessRequest(req, res) {
 export async function listDeletionRequests(req, res) {
     try {
         const { skip, limit } = page(req);
-        const q = req.access.isMaster
+        const q = (req.access.isMaster || req.access.isTenantAdmin)
             ? req.query.agencyId
                 ? { agencyId: req.query.agencyId }
                 : {}
@@ -1956,7 +1964,7 @@ export async function cancelDeletionRequest(req, res) {
 export async function transferAgentWork(req, res) {
     const session = await mongoose.startSession();
     try {
-        const agencyId = req.access.isMaster ? req.params.agencyId : req.access.agencyId;
+        const agencyId = (req.access.isMaster || req.access.isTenantAdmin) ? req.params.agencyId : req.access.agencyId;
         const { fromAgentId, toAgentId } = req.body;
         if (!fromAgentId || !toAgentId || fromAgentId === toAgentId)
             return res.status(400).json({
@@ -2089,7 +2097,7 @@ export async function archiveCustomer(req, res) {
 
 export async function dashboard(req, res) {
     try {
-        if (req.access.isMaster) {
+        if ((req.access.isMaster || req.access.isTenantAdmin)) {
             const [
                 pendingRequests,
                 approvedAgencies,
@@ -2303,16 +2311,24 @@ export async function dashboard(req, res) {
     }
 }
 
+const inboxScope = async (req, portal) => {
+    if (portal !== "customer") return {};
+    const context = await resolveDashboardContext(req.access);
+    if (!context.permissions.includes("notifications:view")) throw Object.assign(new Error("Notifications are not available."), { status: 403 });
+    return customerScopeQuery(context);
+};
+
 export async function listNotifications(req, res) {
     try {
         const { skip, limit } = page(req);
         const portal = getPortalScope(req);
-        const q = { userId: req.access.user._id, portal };
+        const scope = await inboxScope(req, portal);
+        const q = { ...scope, userId: req.access.user._id, portal };
         if (req.query.unread === "true") q.readAt = null;
         const [items, total, unread] = await Promise.all([
             Notification.find(q).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
             Notification.countDocuments(q),
-            Notification.countDocuments({ userId: req.access.user._id, portal, readAt: null }),
+            Notification.countDocuments({ ...scope, userId: req.access.user._id, portal, readAt: null }),
         ]);
         return ok(res, { items: items.map(notificationDto), total, unread, skip, limit });
     } catch (error) {
@@ -2323,7 +2339,7 @@ export async function readNotification(req, res) {
     try {
         const portal = getPortalScope(req);
         const record = await Notification.findOneAndUpdate(
-            { _id: req.params.id, userId: req.access.user._id, portal },
+            { ...await inboxScope(req, portal), _id: req.params.id, userId: req.access.user._id, portal },
             { $set: { readAt: new Date() } },
             { new: true },
         );
@@ -2338,7 +2354,7 @@ export async function readAllNotifications(req, res) {
     try {
         const portal = getPortalScope(req);
         await Notification.updateMany(
-            { userId: req.access.user._id, portal, readAt: null },
+            { ...await inboxScope(req, portal), userId: req.access.user._id, portal, readAt: null },
             { $set: { readAt: new Date() } },
         );
         return ok(res, null, "Notifications marked as read.");
@@ -2369,6 +2385,11 @@ export async function upsertProduct(req, res) {
             metadata: req.body.metadata || {},
         };
         if (typeof req.body.hidden === "boolean") update.hidden = req.body.hidden;
+        if (req.body.services !== undefined) {
+            if (!Array.isArray(req.body.services))
+                return res.status(400).json({ status: "error", message: "Product services must be a list." });
+            update.services = normalizeProductKeys(req.body.services);
+        }
         const product = await Product.findOneAndUpdate(
             { key },
             { $set: update },
@@ -2385,6 +2406,7 @@ export async function upsertProduct(req, res) {
             key: product.key,
             status: product.status,
             hidden: product.hidden,
+            services: product.services,
         });
         return ok(res, product, "Product saved.");
     } catch (error) {

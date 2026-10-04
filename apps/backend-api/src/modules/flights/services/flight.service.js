@@ -5,6 +5,7 @@ import logger from "../../../shared/logger/index.js";
 import ApiError from "../../../shared/errors/ApiError.js";
 import { airports } from "../data/catalog.js";
 import { createFlightProvider } from "../providers/flight-provider.factory.js";
+import { getConfiguredPaymentProviderName } from "../../../core/financial-engine/providers/registry.js";
 import FlightOfferStore from "./flight-offer.store.js";
 import FlightBookingRepository from "./flight-booking.repository.js";
 import { applyFlightFinancials } from "./flight-pricing.js";
@@ -74,7 +75,7 @@ export default class FlightService {
             const response = await this.provider.search(input, {
                 agencyId: actor?.agencyId || null,
                 customerType: actor?.agencyRole || null,
-                paymentProvider: process.env.PAYMENT_PROVIDER || "razorpay",
+                paymentProvider: getConfiguredPaymentProviderName(),
             });
             if (!Array.isArray(response.offers)) throw new Error("Invalid flight provider response");
             response.offers = await Promise.all(response.offers.map(async (providerOffer) => {

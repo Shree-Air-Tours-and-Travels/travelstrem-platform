@@ -1,3 +1,4 @@
+import { partnerAccessPlugin } from "../../clients/partnerAccessPlugin.js";
 import mongoose from "mongoose";
 const documentSchema = new mongoose.Schema(
     { name: String, url: String, mimeType: String, size: Number },
@@ -109,4 +110,5 @@ schema.index(
     { draftExpiresAt: 1 },
     { expireAfterSeconds: 0, partialFilterExpression: { status: "draft" } },
 );
+schema.plugin(partnerAccessPlugin);
 export default mongoose.models.PartnershipRequest || mongoose.model("PartnershipRequest", schema);

@@ -9,34 +9,12 @@ export default applyHideFlags({
     componentData: {
         version: 1,
         ariaLabel: "Dashboard application header",
-        brand: {
-            logoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png",
-            darkLogoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519386/travelstrem/site-assets/e38709b8a4ada750aed0f6df.png",
-            name: "Shree Air",
-            subtitle: "Tours & Travels",
-            href: "/",
-        },
+        brand: { href: "/" },
         footer: {
             brand: "TravelsTREM",
-            owner: "Shree Air Tours and Travels",
-            description: "Tours · Reservations · Experiences · Management",
-            logoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519386/travelstrem/site-assets/e38709b8a4ada750aed0f6df.png",
-            contacts: [
-                {
-                    id: "email",
-                    label: "akshat.goyal@travelstrem.com",
-                    href: "mailto:akshat.goyal@travelstrem.com",
-                    icon: "messageCircle",
-                },
-                { id: "phone", label: "+91 90576 35580", href: "tel:+919057635580", icon: "phoneCall" },
-                {
-                    id: "location",
-                    label: "Shree Air Tours and Travels, Jaipur",
-                    href: "https://maps.app.goo.gl/ebvDhsdzAe27XRSn7",
-                    target: "_blank",
-                    icon: "mapPin",
-                },
-            ],
+            owner: "",
+            description: config.COMPANY_TAGLINE || "Your Journey, Our Passion.",
+            contacts: [],
             sections: [
                 {
                     id: "explore",
@@ -53,8 +31,16 @@ export default applyHideFlags({
                     title: "TravelsTREM",
                     links: [
                         { id: "about", label: "About us", href: "https://travelstrem.com/about" },
-                        { id: "partnership", label: "Partnership", href: "https://travelstrem.com/partnership" },
-                        { id: "sales", label: "Book a demo", href: "https://travelstrem.com/sales#book-demo" },
+                        {
+                            id: "partnership",
+                            label: "Partnership",
+                            href: "https://travelstrem.com/partnership",
+                        },
+                        {
+                            id: "sales",
+                            label: "Book a demo",
+                            href: "https://travelstrem.com/sales#book-demo",
+                        },
                     ],
                 },
                 {
@@ -201,10 +187,10 @@ export default applyHideFlags({
         actions: [
             {
                 id: "bookings",
-                label: "My Bookings",
-                ariaLabel: "Open My Bookings",
+                label: "Dashboard",
+                ariaLabel: "Open Dashboard",
                 icon: "calendarDays",
-                target: "bookings",
+                target: "dashboard",
             },
             {
                 id: "wishlist",
@@ -228,14 +214,14 @@ export default applyHideFlags({
             menuEnabled: true,
             items: [
                 {
-                    id: "my-bookings",
-                    label: "My Bookings",
+                    id: "dashboard",
+                    label: "Dashboard",
                     icon: "calendarDays",
-                    target: "bookings",
+                    target: "dashboard",
                 },
                 {
                     id: "profile",
-                    label: "My Profile",
+                    label: "Profile",
                     icon: "user",
                     target: "profile",
                 },
@@ -244,6 +230,12 @@ export default applyHideFlags({
                     label: "Wishlist",
                     icon: "heart",
                     target: "favorites",
+                },
+                {
+                    id: "notifications",
+                    label: "Notifications",
+                    icon: "bell",
+                    target: "notifications",
                 },
                 {
                     id: "support",

@@ -1,3 +1,4 @@
+import { customerScopePlugin } from "../../tenancy/customerScope.js";
 import crypto from "crypto";
 import mongoose from "mongoose";
 import { encryptedStringField } from "../../../core/auth/secureFields.js";
@@ -53,5 +54,7 @@ const flightBookingSchema = new Schema({
 }, { timestamps: true });
 
 flightBookingSchema.set("toJSON", { virtuals: true, versionKey: false, transform: (_, value) => { delete value._id; return value; } });
+
+flightBookingSchema.plugin(customerScopePlugin, { ownerField: "userId" });
 
 export default mongoose.models?.FlightBooking || mongoose.model("FlightBooking", flightBookingSchema);

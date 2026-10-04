@@ -34,7 +34,7 @@
     margin-inline: auto;
   }
 
-  > .trem-global-search {
+  >.trem-global-search {
     width: 100%;
     border: 0;
     border-radius: 0;
@@ -168,6 +168,7 @@
 }
 
 @include mq-max($breakpoint-phablet) {
+
   .trehub-page,
   .trehub-home,
   .trehub-flight-list,
@@ -192,5 +193,39 @@
 @media (prefers-reduced-motion: reduce) {
   .trehub-why__card.trem-benefit-card {
     transition: none;
+  }
+}
+
+.trehub-service-page {
+  display: flow-root;
+  min-width: 0;
+}
+
+.trehub-service-tabs {
+  width: min(calc(100% - 2 * clamp(#{$space-4}, 3vw, #{$space-8})), #{$full-width});
+  margin: $space-4 auto 0;
+  padding: $space-1;
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+  background: var(--card-bg);
+
+  ul {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+  }
+
+  .trem-link-tabs__link {
+    width: 100%;
+    min-height: $space-12;
+    padding: $space-2;
+    white-space: normal;
+    text-align: center;
+    overflow-wrap: anywhere;
+    line-height: $line-height-md;
+  }
+
+  @media (max-width: $breakpoint-md) {
+    width: calc(100% - #{$space-3 * 2});
   }
 }

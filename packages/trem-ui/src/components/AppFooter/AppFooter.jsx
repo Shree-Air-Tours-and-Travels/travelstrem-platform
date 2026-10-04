@@ -1,30 +1,18 @@
 import React from "react";
+import { useTheme } from "../../context/ThemeContext";
 import PropTypes from "prop-types";
 import Icon from "../../icons/Icon/Icon.jsx";
+import FloatingActionBar from "../FloatingActionBar/FloatingActionBar.jsx";
 import "./AppFooter.styles.scss";
 
 const DEFAULT_CONFIG = {
-  brand: "TravelsTREM",
-  productName: "TravelsTREM",
-  owner: "Shree Air Tours and Travels",
-  description: "Your trusted travel partner for unforgettable journeys",
-  logoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519386/travelstrem/site-assets/e38709b8a4ada750aed0f6df.png",
-  contacts: [
-    {
-      id: "email",
-      label: "support@travelstrem.com",
-      href: "mailto:support@travelstrem.com",
-      icon: "mail",
-    },
-    { id: "phone", label: "+91 90576 35580", href: "tel:+919057635580", icon: "phone" },
-    {
-      id: "location",
-      label: "Jaipur, Rajasthan, India",
-      href: "https://www.google.com/maps/search/?api=1&query=Jaipur%2C%20Rajasthan%2C%20India",
-      target: "_blank",
-      icon: "mapPin",
-    },
-  ],
+  brand: "",
+  productName: "",
+  owner: "",
+  description: "",
+  logoSrc: "",
+  logoDarkSrc: "",
+  contacts: [],
   legalLinks: [
     { id: "privacy", label: "Privacy Policy", href: "/privacy" },
     { id: "terms", label: "Terms of Service", href: "/terms" },
@@ -81,8 +69,18 @@ const DEFAULT_SECTIONS = [
 ];
 
 const DEFAULT_SOCIAL_LINKS = [
-  { id: "instagram", label: "Instagram", href: "https://instagram.com/travelstrem", icon: "instagram" },
-  { id: "linkedin", label: "LinkedIn", href: "https://linkedin.com/company/travelstrem", icon: "linkedin" },
+  {
+    id: "instagram",
+    label: "Instagram",
+    href: "https://instagram.com/travelstrem",
+    icon: "instagram",
+  },
+  {
+    id: "linkedin",
+    label: "LinkedIn",
+    href: "https://linkedin.com/company/travelstrem",
+    icon: "linkedin",
+  },
   { id: "youtube", label: "YouTube", href: "https://youtube.com/@travelstrem", icon: "youtube" },
   { id: "twitter", label: "Twitter", href: "https://twitter.com/travelstrem", icon: "twitter" },
   { id: "facebook", label: "Facebook", href: "https://facebook.com/travelstrem", icon: "facebook" },
@@ -123,10 +121,36 @@ function SocialLink({ item }) {
   );
 }
 
-export default function AppFooter({ config = {}, className = "" }) {
+export default function AppFooter({ config = {}, className = "", onAction }) {
+  const { brand, theme } = useTheme();
+  if (config.variant === "withActions") {
+    const actions = (config.actions || []).filter((item) => !item.hide);
+    return (
+      <footer
+        className={`trem-app-footer trem-app-footer--withActions ${className}`.trim()}
+        style={{ "--trem-app-footer-action-count": actions.length || 1 }}
+      >
+        <FloatingActionBar
+          variant="mobile-navigation"
+          sheetTitle={config.ariaLabel || "Application navigation"}
+          actions={actions.map((item) => ({
+            ...item,
+            iconLeft: item.iconLeft || item.icon,
+            onClick: () => onAction?.(item.action || "navigate", item),
+          }))}
+        />
+      </footer>
+    );
+  }
   const value = {
     ...DEFAULT_CONFIG,
     ...config,
+    brand: config.brand || brand?.name || "",
+    logoSrc:
+      (theme === "dark" && (config.logoDarkSrc || brand?.logoDarkSrc)) ||
+      config.logoSrc ||
+      brand?.logoSrc ||
+      "",
     contacts: Array.isArray(config.contacts) ? config.contacts : DEFAULT_CONFIG.contacts,
     legalLinks: Array.isArray(config.legalLinks) ? config.legalLinks : DEFAULT_CONFIG.legalLinks,
     sections: Array.isArray(config.sections) ? config.sections : DEFAULT_SECTIONS,
@@ -135,7 +159,10 @@ export default function AppFooter({ config = {}, className = "" }) {
   const year = new Date().getFullYear();
 
   return (
-    <footer className={`trem-app-footer ${className}`.trim()} role="contentinfo">
+    <footer
+      className={`trem-app-footer ${value.variant === "minimal" ? "trem-app-footer--minimal" : ""} ${value.variant === "client" ? "trem-app-footer--client" : ""} ${className}`.trim()}
+      role="contentinfo"
+    >
       <div className="trem-app-footer__main">
         <div
           className="trem-app-footer__grid"
@@ -143,15 +170,20 @@ export default function AppFooter({ config = {}, className = "" }) {
         >
           <div className="trem-app-footer__brand-section">
             <div className="trem-app-footer__brand">
-              <span className="trem-app-footer__logo" aria-hidden="true">
+              <span
+                className={`trem-app-footer__logo${value.logoSrc ? " trem-app-footer__logo--image" : ""}`}
+                aria-hidden="true"
+              >
                 {value.logoSrc ? (
-                  <img src={value.logoSrc} alt="" width="40" height="40" />
+                  <img src={value.logoSrc} alt="" />
                 ) : (
                   (value.brand || "T").slice(0, 1)
                 )}
               </span>
               <div className="trem-app-footer__brand-text">
-                <strong className="trem-app-footer__brand-name">{value.productName || value.brand}</strong>
+                {value.variant === "client" ? (
+                  <strong className="trem-app-footer__brand-name">{value.brand}</strong>
+                ) : null}
                 <p className="trem-app-footer__tagline">{value.description}</p>
               </div>
             </div>
@@ -161,10 +193,17 @@ export default function AppFooter({ config = {}, className = "" }) {
                   key={contact.id}
                   href={contact.href}
                   target={contact.target}
-                  rel={contact.rel || (contact.target === "_blank" ? "noopener noreferrer" : undefined)}
+                  rel={
+                    contact.rel || (contact.target === "_blank" ? "noopener noreferrer" : undefined)
+                  }
                   className="trem-app-footer__contact"
                 >
-                  <Icon name={contact.icon} size={16} aria-hidden="true" className="trem-app-footer__contact-icon" />
+                  <Icon
+                    name={contact.icon}
+                    size={16}
+                    aria-hidden="true"
+                    className="trem-app-footer__contact-icon"
+                  />
                   <span>{contact.label}</span>
                 </a>
               ))}
@@ -222,9 +261,9 @@ export default function AppFooter({ config = {}, className = "" }) {
             </div>
           ) : null}
         </div>
-        <p className="trem-app-footer__powered">
-          Made with care by {value.owner}
-        </p>
+        {value.variant !== "client" && value.owner && (
+          <p className="trem-app-footer__powered">Made with care by {value.owner}</p>
+        )}
       </div>
     </footer>
   );
@@ -241,15 +280,20 @@ AppFooterLink.propTypes = {
 
 AppFooter.propTypes = {
   config: PropTypes.shape({
+    variant: PropTypes.string,
+    actions: PropTypes.array,
+    ariaLabel: PropTypes.string,
     brand: PropTypes.string,
     productName: PropTypes.string,
     owner: PropTypes.string,
     description: PropTypes.string,
     logoSrc: PropTypes.string,
+    logoDarkSrc: PropTypes.string,
     contacts: PropTypes.array,
     legalLinks: PropTypes.array,
     sections: PropTypes.array,
     socialLinks: PropTypes.array,
   }),
   className: PropTypes.string,
+  onAction: PropTypes.func,
 };

@@ -1,3 +1,4 @@
+import { customerScopePlugin } from "../../tenancy/customerScope.js";
 import mongoose from "mongoose";
 
 const favoriteSchema = new mongoose.Schema({
@@ -8,6 +9,8 @@ const favoriteSchema = new mongoose.Schema({
 });
 
 favoriteSchema.index({ tourId: 1, userId: 1, product: 1 }, { unique: true });
+
+favoriteSchema.plugin(customerScopePlugin, { ownerField: "userId" });
 
 const Favorite = mongoose.model("Favorite", favoriteSchema);
 export default Favorite;

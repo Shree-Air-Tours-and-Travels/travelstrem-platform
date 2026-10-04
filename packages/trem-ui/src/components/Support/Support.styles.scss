@@ -48,11 +48,11 @@
   color: var(--color-primary);
 }
 .trem-support-action--danger {
-  border-color: color-mix(in srgb, #d73535 35%, var(--border));
+  border-color: color-mix(in srgb, var(--color-danger) 35%, var(--border));
   color: var(--color-danger);
 }
 .trem-support-action--danger .trem-support-action__icon {
-  background: #fff0ee;
+  background: var(--danger-soft);
   color: var(--color-danger);
 }
 
@@ -96,7 +96,7 @@
   color: var(--color-primary);
 }
 .trem-support-category__icon--danger {
-  background: #fff0ee;
+  background: var(--danger-soft);
   color: var(--color-danger);
 }
 .trem-support-category__copy,

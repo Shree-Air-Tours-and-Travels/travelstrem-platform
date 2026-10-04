@@ -60,21 +60,21 @@
 }
 
 .dlp__icon {
-  width: $space-16;
-  height: $space-16;
-  border-radius: $radius-circle;
-  background: var(--page-bg);
+  width: min(220px, 100%);
+  height: 72px;
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 0 $space-6;
-  overflow: hidden;
-  box-shadow: var(--shadow-md);
+  overflow: visible;
+  box-shadow: none;
 
   img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
+    object-position: left center;
   }
 }
 
@@ -114,12 +114,14 @@
   height: $space-20 * 4;
   opacity: 0.55;
 }
+
 .dlp__visual-route {
   width: $space-20 * 6;
   height: $space-20 * 3;
   transform: rotate(-28deg);
   opacity: 0.35;
 }
+
 .dlp__visual-mark {
   position: relative;
   z-index: 1;
@@ -132,6 +134,7 @@
   background: var(--color-primary);
   box-shadow: 0 $space-3 $space-8 var(--primary-shadow);
 }
+
 .dlp__visual-point {
   position: absolute;
   width: $space-3;
@@ -139,10 +142,12 @@
   border-radius: $radius-circle;
   background: var(--color-primary);
 }
+
 .dlp__visual-point--start {
   top: 28%;
   left: 26%;
 }
+
 .dlp__visual-point--end {
   right: 22%;
   bottom: 27%;
@@ -154,22 +159,26 @@
     grid-template-columns: 1fr;
     width: min(100%, $container-width / 2);
   }
+
   .dlp__content {
     padding: $space-8 $space-6;
     align-items: center;
     text-align: center;
   }
+
   .dlp__icon {
-    margin-left: auto;
-    margin-right: auto;
+    margin-inline: auto;
   }
+
   .dlp__visual {
     display: none;
   }
+
   .dlp__actions {
     grid-template-columns: 1fr;
     width: 100%;
   }
+
   .dlp__btn {
     width: 100%;
   }

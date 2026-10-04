@@ -15,7 +15,10 @@ import FlightBooking from "../flights/models/FlightBooking.js";
 import User from "../auth/models/User.js";
 import { normalizeMobileNumber } from "../auth/services/mobileAuth.service.js";
 import FinancialEngine from "../../core/financial-engine/index.js";
-import { getPaymentProvider } from "../../core/financial-engine/providers/registry.js";
+import {
+    getConfiguredPaymentProviderName,
+    getPaymentProvider,
+} from "../../core/financial-engine/providers/registry.js";
 import { findAuthorizedBookingJourney } from "../bookings/quoteBuilderAdapter.js";
 import { publishFanOut, publishToBooking } from "../../realtime/index.js";
 import logger from "../../shared/logger/index.js";
@@ -158,7 +161,7 @@ export async function createSession(input, actor, portal) {
         })
     )
         fail(409, "Booking already has a payment or payment under verification");
-    const provider = process.env.PAYMENT_PROVIDER || "razorpay";
+    const provider = getConfiguredPaymentProviderName();
     getPaymentProvider(provider);
     const { quote, amountMinor, quotedCurrency } = await payableQuote(booking, type, provider);
     const returnUrl = validateReturnUrl(input.returnUrl);
