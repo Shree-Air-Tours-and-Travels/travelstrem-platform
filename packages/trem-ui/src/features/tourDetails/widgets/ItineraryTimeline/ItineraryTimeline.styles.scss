@@ -17,22 +17,17 @@
   }
 }
 
-.itinerary-header__toggle {
-  padding: 0.4rem 0.75rem;
-  border: 1px solid var(--border);
-  border-radius: $radius-xs;
-  background: var(--surface);
-  color: var(--muted);
-  font-size: 0.78rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all $duration-base $ease-standard;
+.itinerary-header__toggle.ui-button {
+  min-height: auto;
+  padding: $space-2 $space-3;
+  color: var(--color-primary-dark);
+  font-weight: $font-bold;
+  text-decoration: underline;
+  text-underline-offset: $space-1;
   white-space: nowrap;
 
   &:hover {
-    border-color: var(--color-primary);
-    color: var(--color-primary);
-    background: var(--surface-inset);
+    color: var(--color-secondary-dark);
   }
 }
 
@@ -42,6 +37,7 @@
   display: flex;
   flex-direction: column;
   gap: 0;
+  width: min(100%, 980px);
 }
 
 .itinerary-timeline__line {
@@ -50,11 +46,7 @@
   top: 0;
   bottom: 0;
   width: 2px;
-  background: linear-gradient(
-    to bottom,
-    var(--color-primary) 0%,
-    var(--border) 100%
-  );
+  background: linear-gradient(to bottom, var(--color-primary) 0%, var(--border) 100%);
   opacity: 0.5;
 }
 
@@ -63,19 +55,6 @@
   position: relative;
   padding-left: 52px;
 
-  &::before {
-    content: "";
-    position: absolute;
-    left: 14px;
-    top: 24px;
-    bottom: -1px;
-    width: 2px;
-    background: var(--border);
-  }
-
-  &:last-child::before {
-    display: none;
-  }
 }
 
 .itinerary-day__header {
@@ -118,7 +97,7 @@
   .is-expanded & {
     background: var(--color-primary);
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 4px rgba(var(--color-primary-rgb, 37, 99, 235), 0.15);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary) 15%, transparent);
   }
 }
 
@@ -129,11 +108,12 @@
   line-height: 1;
 
   .is-expanded & {
-    color: var(--color-on-primary, #fff);
+    color: var(--color-on-primary);
   }
 }
 
 .itinerary-day__header-content {
+  flex: 0 1 auto;
   min-width: 0;
   text-align: start;
 
@@ -159,6 +139,7 @@
 
 .itinerary-day__chevron {
   flex-shrink: 0;
+  margin-left: 0.25rem;
   color: var(--muted);
   transition: transform $duration-base $ease-standard;
 
@@ -255,8 +236,8 @@
   gap: 0.5rem;
   padding: 0.65rem 0.75rem;
   border-radius: $radius-sm;
-  background: rgba(var(--color-primary-rgb, 37, 99, 235), 0.06);
-  border: 1px solid rgba(var(--color-primary-rgb, 37, 99, 235), 0.15);
+  background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 15%, transparent);
 
   svg {
     flex-shrink: 0;

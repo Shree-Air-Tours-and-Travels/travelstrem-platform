@@ -16,11 +16,7 @@ Backend response
 
 ```js
 {
-  structure,
-  elements,
-  dataScope,
-  data,
-  resolvedView
+  (structure, elements, dataScope, data, resolvedView);
 }
 ```
 

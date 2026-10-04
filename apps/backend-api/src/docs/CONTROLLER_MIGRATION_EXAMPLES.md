@@ -9,10 +9,12 @@ After:
 ```js
 const hero = await Hero.findOne().sort({ createdAt: -1 });
 const page = pageDefinitionService.buildPageResponse("customer-shell/home", {
-  injectData: hero ? {
-    title: hero.title,
-    description: hero.description
-  } : undefined
+  injectData: hero
+    ? {
+        title: hero.title,
+        description: hero.description,
+      }
+    : undefined,
 });
 return res.json(page);
 ```
@@ -24,8 +26,8 @@ const page = pageDefinitionService.buildPageResponse("tours-remote/details", {
   injectData: {
     title: tour.title,
     tour,
-    tours: [tour]
-  }
+    tours: [tour],
+  },
 });
 return res.json(page);
 ```

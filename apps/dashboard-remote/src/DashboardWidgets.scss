@@ -1,0 +1,62 @@
+@import "@packages/trem-design-tokens/scss";
+
+.dashboard-widget {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: $radius-lg;
+  background: var(--card-bg);
+  box-shadow: var(--shadow-xs);
+  color: var(--text);
+
+  &__heading { display: flex; align-items: center; gap: $space-3; padding: $space-4; }
+  &__heading > div { flex: 1; min-width: 0; }
+  &__heading h2 { margin: 0; color: var(--heading); font-size: $font-size-lg; }
+  &__heading p { margin: $space-1 0 0; color: var(--muted); font-size: $font-size-sm; line-height: $line-height-md; }
+  &__heading-icon { display: grid; flex: 0 0 40px; place-items: center; width: 40px; height: 40px; border-radius: $radius-md; background: var(--primary-soft); color: var(--color-primary); }
+  &__period { flex: 0 0 auto; padding: $space-2 $space-3; border: 1px solid var(--border); border-radius: $radius-md; color: var(--muted); font-size: $font-size-xs; }
+  &__empty { margin: $space-3; }
+
+  &--progress { min-width: 0; }
+  &--progress > .trem-metric-summary { grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0 $space-4 $space-4; }
+  &__progress-body { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(230px, 1fr); gap: $space-3; padding: 0 $space-4 $space-4; }
+  &__progress-body.is-single { grid-template-columns: 1fr; }
+  &__subpanel { min-width: 0; padding: $space-4; border: 1px solid var(--border); border-radius: $radius-md; background: var(--surface); }
+  &__subpanel h3 { margin: 0 0 $space-4; color: var(--heading); font-size: $font-size-sm; }
+  &__meters { display: grid; gap: $space-5; }
+  &__funnel .trem-progress-meter { grid-template-columns: minmax(0, 1fr) auto; }
+
+  &__table-scroll { overflow-x: auto; padding: 0 $space-4 $space-4; }
+  table { width: 100%; border-collapse: collapse; font-size: $font-size-sm; }
+  th { padding: $space-2 $space-3; background: var(--surface-muted); color: var(--muted); font-weight: $font-semibold; text-align: left; white-space: nowrap; }
+  td { padding: $space-3; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; white-space: nowrap; }
+  tbody tr:last-child td { border-bottom: 0; }
+  td button { padding: 0; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+  td button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; }
+  &__primary-cell, &__cell { display: grid; gap: 2px; }
+  &__primary-cell span { color: var(--heading); font-weight: $font-semibold; }
+  td small { color: var(--muted); font-size: $font-size-xs; }
+
+  &__info-description { margin: 0; padding: 0 $space-4; color: var(--muted); font-size: $font-size-sm; line-height: $line-height-lg; }
+  &__info-items { display: grid; gap: $space-5; padding: $space-5 $space-4; }
+  &__info-items .trem-progress-meter { grid-template-columns: auto minmax(0, 1fr); }
+  &__info-items .trem-progress-meter__copy { display: grid; }
+  &__info-items .trem-progress-meter__copy span { white-space: normal; }
+  &__info-items .trem-progress-meter__percent { grid-column: 2; justify-self: end; }
+  &__info-line { display: flex; justify-content: space-between; gap: $space-2; color: var(--muted); font-size: $font-size-sm; }
+  &__info-line strong { color: var(--heading); }
+}
+
+@media (max-width: 1250px) {
+  .dashboard-widget--progress { grid-column: 1 / -1; }
+}
+@media (max-width: 850px) {
+  .dashboard-widget__progress-body { grid-template-columns: 1fr; }
+}
+@media (max-width: 620px) {
+  .dashboard-widget__heading { flex-wrap: wrap; }
+  .dashboard-widget--progress > .trem-metric-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dashboard-widget__progress-body { padding: 0 $space-3 $space-3; }
+  .dashboard-widget__table-scroll { padding: 0 $space-3 $space-3; }
+  .dashboard-widget table { min-width: 520px; }
+}

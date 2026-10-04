@@ -16,8 +16,10 @@ describe("Trem loading indicators", () => {
       <Preloader variant="stats" count={4} label="Loading statistics" />,
     );
 
-    expect(screen.getByRole("status", { name: "Loading statistics" }))
-      .toHaveAttribute("aria-busy", "true");
+    expect(screen.getByRole("status", { name: "Loading statistics" })).toHaveAttribute(
+      "aria-busy",
+      "true",
+    );
     expect(container.querySelectorAll(".trem-preloader__item")).toHaveLength(4);
   });
 });

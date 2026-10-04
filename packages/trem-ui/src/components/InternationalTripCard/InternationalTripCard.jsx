@@ -29,13 +29,14 @@ export default function InternationalTripCard({ trip = {}, onView }) {
   const price = trip.price?.amount || 0;
   const currency = trip.price?.currency || "";
   const rating = Number(trip.avgRating ?? trip.rating) || 0;
-  const formattedPrice = price > 0
-    ? new Intl.NumberFormat("en-IN", {
-        style: "currency",
-        currency: currency || "INR",
-        maximumFractionDigits: 0,
-      }).format(price)
-    : "";
+  const formattedPrice =
+    price > 0
+      ? new Intl.NumberFormat("en-IN", {
+          style: "currency",
+          currency: currency || "INR",
+          maximumFractionDigits: 0,
+        }).format(price)
+      : "";
 
   useEffect(() => {
     if (!open) return undefined;
@@ -47,8 +48,9 @@ export default function InternationalTripCard({ trip = {}, onView }) {
   }, [open]);
 
   const handleClick = () => {
-    const usesTouchInteraction = typeof window !== "undefined"
-      && window.matchMedia("(hover: none), (pointer: coarse)").matches;
+    const usesTouchInteraction =
+      typeof window !== "undefined" &&
+      window.matchMedia("(hover: none), (pointer: coarse)").matches;
     if (usesTouchInteraction && !open) {
       setOpen(true);
       return;
@@ -75,8 +77,18 @@ export default function InternationalTripCard({ trip = {}, onView }) {
               {location}
             </p>
             <div className="intl-card__back-meta">
-              {duration && <span><Icon name="calendar" size={14} />{duration}</span>}
-              {rating > 0 && <span><Icon name="star" size={14} />{rating.toFixed(1)}</span>}
+              {duration && (
+                <span>
+                  <Icon name="calendar" size={14} />
+                  {duration}
+                </span>
+              )}
+              {rating > 0 && (
+                <span>
+                  <Icon name="star" size={14} />
+                  {rating.toFixed(1)}
+                </span>
+              )}
             </div>
             {formattedPrice && (
               <p className="intl-card__price">
@@ -99,12 +111,7 @@ export default function InternationalTripCard({ trip = {}, onView }) {
 
         <div className="intl-card__cover">
           {coverImage && (
-            <img
-              className="intl-card__cover-img"
-              src={coverImage}
-              alt={title}
-              loading="lazy"
-            />
+            <img className="intl-card__cover-img" src={coverImage} alt={title} loading="lazy" />
           )}
           <div className="intl-card__cover-overlay" />
 
@@ -116,7 +123,12 @@ export default function InternationalTripCard({ trip = {}, onView }) {
           <div className="intl-card__cover-title">
             <span>Curated travel journal</span>
             <h3>{title}</h3>
-            {location && <p><Icon name="mapPin" size={14} />{location}</p>}
+            {location && (
+              <p>
+                <Icon name="mapPin" size={14} />
+                {location}
+              </p>
+            )}
             {formattedPrice && <strong>{formattedPrice}</strong>}
           </div>
 

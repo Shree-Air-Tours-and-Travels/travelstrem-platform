@@ -18,11 +18,13 @@ describe("ListingDropdown", () => {
         <ListingDropdown
           open
           anchorRef={anchorRef}
-          groups={[{
-            id: "people",
-            label: "People",
-            items: [{ id: "1", name: "Akshat" }],
-          }]}
+          groups={[
+            {
+              id: "people",
+              label: "People",
+              items: [{ id: "1", name: "Akshat" }],
+            },
+          ]}
           onClose={vi.fn()}
         >
           {({ item }) => <button key={item.id}>{item.name}</button>}
@@ -74,7 +76,9 @@ describe("ListingDropdown", () => {
     expect(screen.getByRole("dialog", { name: "Choose a result" })).toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: "Filter listings" })).toBeInTheDocument();
     expect(document.querySelector(".trem-bottom-sheet--fullscreen")).toBeInTheDocument();
-    expect(document.querySelector(".trem-bottom-sheet__header")).toContainElement(screen.getByText("Choose a result"));
+    expect(document.querySelector(".trem-bottom-sheet__header")).toContainElement(
+      screen.getByText("Choose a result"),
+    );
   });
 
   it("switches an open dropdown to BottomSheet when the viewport crosses its breakpoint", async () => {

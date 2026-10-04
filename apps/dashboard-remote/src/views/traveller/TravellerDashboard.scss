@@ -1,0 +1,100 @@
+@import "../shared/tokens";
+
+.traveller-dashboard {
+  gap: $space-6;
+
+  .admin-overview__hero {
+    position: relative;
+    isolation: isolate;
+    padding: $space-7;
+    border: 1px solid var(--border);
+    border-radius: $radius-lg;
+    background: linear-gradient(115deg, var(--card-bg), var(--primary-soft));
+    box-shadow: var(--shadow-xs);
+    &::after {
+      content: ""; position: absolute; z-index: -1; pointer-events: none;
+      width: 28rem; aspect-ratio: 1; right: -$space-12; top: -12rem;
+      border: 1px solid color-mix(in srgb, var(--color-primary) 14%, transparent);
+      border-radius: $radius-circle;
+      box-shadow: 0 0 0 $space-7 color-mix(in srgb, var(--color-primary) 4%, transparent), 0 0 0 $space-12 color-mix(in srgb, var(--color-primary) 3%, transparent);
+    }
+  }
+  .admin-overview__hero-copy > span { margin-bottom: $space-3; }
+  .admin-overview__hero-copy h1 { font-size: clamp(#{$font-size-xl}, 2.5vw, #{$font-size-xxxl}); letter-spacing: -.035em; margin-bottom: $space-3; }
+  .admin-overview__hero-copy p { font-size: $font-size-sm; }
+
+  .admin-overview__traveller-layout { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 1fr); gap: $space-5; align-items: start; }
+  .admin-overview__user-snapshots { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: $space-5; }
+  .admin-overview__user-snapshots > * { grid-column: span 3; min-width: 0; }
+  .admin-overview__user-snapshots > :nth-child(n+3):nth-child(-n+5) { grid-column: span 2; }
+  .admin-overview__user-snapshots > :only-child { grid-column: 1 / -1; }
+  .admin-overview__traveller-rail { display: grid; gap: $space-5; min-width: 0; }
+  .trem-overview-rail { gap: $space-5; }
+
+  .trem-dashboard-panel, .trem-rail-card {
+    --dashboard-accent: var(--color-primary);
+    border-radius: $radius-lg;
+    box-shadow: var(--shadow-xs);
+    background: var(--card-bg);
+    min-width: 0;
+  }
+  .admin-overview__user-snapshots > :nth-child(2n) { --dashboard-accent: var(--color-accent, var(--color-primary)); }
+  .admin-overview__user-snapshots > :nth-child(3n) { --dashboard-accent: var(--color-info, var(--color-primary)); }
+  .trem-dashboard-panel__heading {
+    padding: $space-5; gap: $space-3; align-items: flex-start; flex-wrap: wrap;
+    border-bottom: 0;
+    background: linear-gradient(160deg, color-mix(in srgb, var(--dashboard-accent) 7%, var(--card-bg)), var(--card-bg));
+  }
+  .trem-dashboard-panel__heading > div { flex-basis: 35%; }
+  .trem-dashboard-panel__heading h2 { font-size: $font-size-md; line-height: $line-height-md; letter-spacing: -.02em; }
+  .trem-dashboard-panel__heading p { margin-top: $space-1; line-height: $line-height-lg; }
+  .trem-dashboard-panel__heading-icon {
+    color: var(--dashboard-accent); background: color-mix(in srgb, var(--dashboard-accent) 10%, var(--card-bg));
+    border: 1px solid color-mix(in srgb, var(--dashboard-accent) 16%, transparent); border-radius: $radius-md;
+  }
+  .trem-dashboard-panel__heading .ui-button {
+    background: transparent; border-color: transparent; box-shadow: none;
+    color: var(--color-primary); padding-inline: $space-2; min-height: $space-8;
+  }
+  .trem-dashboard-panel__heading .ui-button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+  .trem-dashboard-panel__items { padding: 0 $space-5 $space-3; }
+  .trem-dashboard-panel__item { flex-wrap: wrap; padding-block: $space-3; gap: $space-2; }
+  .trem-dashboard-panel__item-copy { flex: 1 1 45%; min-width: 0; overflow-wrap: anywhere; }
+  .trem-dashboard-panel__item-value { flex: 1 1 35%; min-width: 0; white-space: normal; overflow-wrap: anywhere; font-size: $font-size-sm; text-align: end; }
+  .trem-dashboard-panel__item:last-child { border-bottom: 0; }
+
+  // Empty sections remain useful without resembling error callouts.
+  .trem-no-data { border: 0; background: var(--surface-muted); padding: $space-4; border-radius: $radius-md; }
+  .trem-dashboard-panel__empty { margin: 0 $space-5 $space-5; }
+  .trem-no-data__icon { background: var(--card-bg); color: var(--muted); }
+  .trem-no-data__copy h3 { font-size: $font-size-sm; font-weight: $font-medium; color: var(--muted); }
+  .trem-no-data__copy p { font-size: $font-size-xs; }
+  .admin-overview__traveller-rail .trem-dashboard-panel__heading { background: transparent; }
+  .trem-quick-actions { background: linear-gradient(150deg, var(--primary-soft), var(--card-bg)); border-color: color-mix(in srgb, var(--color-primary) 18%, var(--border)); }
+  .trem-rail-card__header h2 { letter-spacing: -.02em; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .admin-overview__hero, .admin-overview__traveller-layout { animation: traveller-arrive $duration-slow $ease-standard both; }
+    .admin-overview__traveller-layout { animation-delay: $duration-fast; }
+  }
+  @media (max-width: $breakpoint-laptop) {
+    .admin-overview__traveller-layout { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+    .admin-overview__user-snapshots > * { grid-column: span 3; }
+    .admin-overview__user-snapshots > :nth-child(n+3):nth-child(-n+5) { grid-column: span 3; }
+  }
+  @media (max-width: $breakpoint-tablet) {
+    .admin-overview__traveller-layout { grid-template-columns: minmax(0, 1fr); }
+    .admin-overview__hero { padding: $space-5; }
+  }
+  @media (max-width: $breakpoint-mobile) {
+    gap: $space-4;
+    .admin-overview__user-snapshots { grid-template-columns: minmax(0, 1fr); gap: $space-4; }
+    .admin-overview__user-snapshots > *, .admin-overview__user-snapshots > :nth-child(n+3):nth-child(-n+5) { grid-column: auto; }
+    .admin-overview__hero { align-items: flex-start; }
+  }
+}
+@keyframes traveller-arrive { from { opacity: .4; transform: translateY($space-2); } to { opacity: 1; transform: translateY(0); } }
+
+.traveller-dashboard .admin-overview__user-snapshots > .traveller-dashboard__guest-search,
+.traveller-dashboard .admin-overview__user-snapshots > .traveller-dashboard__guest-guide { grid-column: 1 / -1; }
+.traveller-dashboard__guest-search .trem-dashboard-panel__item { background: var(--primary-soft); }

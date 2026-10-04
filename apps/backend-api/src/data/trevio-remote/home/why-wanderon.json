@@ -42,12 +42,42 @@
           "highlightRef": "whyHighlight",
           "descriptionRef": "whyDescription",
           "items": [
-            { "titleRef": "whyFeature1Title", "descriptionRef": "whyFeature1Description", "iconNameRef": "whyFeature1Icon", "accent": "teal" },
-            { "titleRef": "whyFeature2Title", "descriptionRef": "whyFeature2Description", "iconNameRef": "whyFeature2Icon", "accent": "coral" },
-            { "titleRef": "whyFeature3Title", "descriptionRef": "whyFeature3Description", "iconNameRef": "whyFeature3Icon", "accent": "amber" },
-            { "titleRef": "whyFeature4Title", "descriptionRef": "whyFeature4Description", "iconNameRef": "whyFeature4Icon", "accent": "blue" },
-            { "titleRef": "whyFeature5Title", "descriptionRef": "whyFeature5Description", "iconNameRef": "whyFeature5Icon", "accent": "violet" },
-            { "titleRef": "whyFeature6Title", "descriptionRef": "whyFeature6Description", "iconNameRef": "whyFeature6Icon", "accent": "green" }
+            {
+              "titleRef": "whyFeature1Title",
+              "descriptionRef": "whyFeature1Description",
+              "iconNameRef": "whyFeature1Icon",
+              "accent": "teal"
+            },
+            {
+              "titleRef": "whyFeature2Title",
+              "descriptionRef": "whyFeature2Description",
+              "iconNameRef": "whyFeature2Icon",
+              "accent": "coral"
+            },
+            {
+              "titleRef": "whyFeature3Title",
+              "descriptionRef": "whyFeature3Description",
+              "iconNameRef": "whyFeature3Icon",
+              "accent": "amber"
+            },
+            {
+              "titleRef": "whyFeature4Title",
+              "descriptionRef": "whyFeature4Description",
+              "iconNameRef": "whyFeature4Icon",
+              "accent": "blue"
+            },
+            {
+              "titleRef": "whyFeature5Title",
+              "descriptionRef": "whyFeature5Description",
+              "iconNameRef": "whyFeature5Icon",
+              "accent": "violet"
+            },
+            {
+              "titleRef": "whyFeature6Title",
+              "descriptionRef": "whyFeature6Description",
+              "iconNameRef": "whyFeature6Icon",
+              "accent": "green"
+            }
           ]
         }
       ]

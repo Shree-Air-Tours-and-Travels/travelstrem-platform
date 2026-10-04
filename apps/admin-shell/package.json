@@ -3,10 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@apps/auth": "workspace:*",
+    "@apps/booking-engine": "workspace:*",
+    "@packages/tour-builder": "workspace:*",
     "@packages/trem-auth-core": "workspace:*",
     "@packages/trem-environment": "workspace:*",
     "@packages/trem-events": "workspace:*",
+    "@packages/trem-docengine": "workspace:*",
     "@packages/trem-runtime": "workspace:*",
     "@packages/trem-session": "workspace:*",
     "@packages/trem-widget-contracts": "workspace:*",
@@ -37,8 +39,8 @@
   },
   "scripts": {
     "prebuild": "node ../../scripts/sync-favicons.mjs admin-shell",
-    "dev": "cross-env PORT=3002 DISABLE_ESLINT_PLUGIN=true craco start",
-    "start": "cross-env PORT=3002 DISABLE_ESLINT_PLUGIN=true craco start",
+    "dev": "cross-env BROWSER=none PORT=3002 DISABLE_ESLINT_PLUGIN=true craco start",
+    "start": "cross-env BROWSER=none PORT=3002 DISABLE_ESLINT_PLUGIN=true craco start",
     "build": "cross-env DISABLE_ESLINT_PLUGIN=true craco build",
     "test": "craco test --watchAll=false",
     "eject": "react-scripts eject"

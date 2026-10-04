@@ -1,29 +1,209 @@
-@import "../../styles/base/typography"; // Import typography variables
+@import "../../styles/base/typography";
 
 .ui-title {
+  position: relative;
+
+  margin: 0;
+
   font-family: $font-primary;
   font-size: $font-size-xxl;
   font-weight: $font-bold;
+  line-height: 1.12;
+
+  letter-spacing: -0.025em;
+
   color: var(--title);
+
   text-align: center;
 
-  &--light {
-    color: var(--color-on-primary);
-  }
+  text-wrap: balance;
+
+  transition:
+    color 160ms $ease-standard,
+    opacity 160ms $ease-standard;
+
+  /* ---------------------------------------------------------------------- */
+  /* Variants                                                                */
+  /* ---------------------------------------------------------------------- */
 
   &--primary {
     color: var(--title-accent);
+
+    /*
+     * Gives primary headings a richer visual treatment while
+     * still respecting the existing theme colors.
+     */
+    background: linear-gradient(
+      110deg,
+      var(--title-accent) 0%,
+      color-mix(in srgb, var(--color-primary) 72%, var(--color-secondary) 28%) 55%,
+      var(--color-secondary) 100%
+    );
+
+    background-clip: text;
+    -webkit-background-clip: text;
+
+    -webkit-text-fill-color: transparent;
   }
 
   &--secondary {
     color: var(--color-secondary);
+
+    background: linear-gradient(110deg, var(--color-secondary-dark), var(--color-secondary));
+
+    background-clip: text;
+    -webkit-background-clip: text;
+
+    -webkit-text-fill-color: transparent;
   }
+
+  &--light {
+    color: var(--color-on-primary);
+
+    text-shadow:
+      0 1px 2px rgba(15, 23, 42, 0.12),
+      0 4px 14px rgba(15, 23, 42, 0.08);
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* Sizes                                                                   */
+  /* ---------------------------------------------------------------------- */
 
   &--small {
     font-size: $font-size-lg;
+
+    line-height: 1.25;
+
+    letter-spacing: -0.012em;
   }
 
   &--large {
-    font-size: $font-size-xxxl;
+    font-size: clamp(#{$font-size-xxl}, 3vw, #{$font-size-xxxl});
+
+    line-height: 1.08;
+
+    letter-spacing: -0.035em;
+  }
+}
+
+/* ========================================================================== */
+/* Optional utility styles via primaryClassname                               */
+/* ========================================================================== */
+
+/*
+ * Use:
+ * primaryClassname="ui-title--hero"
+ */
+.ui-title--hero {
+  max-width: 900px;
+
+  margin-inline: auto;
+
+  font-weight: $font-bold;
+
+  letter-spacing: -0.045em;
+
+  text-shadow: 0 8px 30px color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+/*
+ * Use:
+ * primaryClassname="ui-title--section"
+ *
+ * Better for page/section headings where you don't want
+ * the title to feel like a landing-page hero.
+ */
+.ui-title--section {
+  width: fit-content;
+
+  max-width: 100%;
+
+  text-align: left;
+
+  &::after {
+    content: "";
+
+    display: block;
+
+    width: 36px;
+    height: 3px;
+
+    margin-top: $space-2;
+
+    border-radius: 999px;
+
+    background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+
+    opacity: 0.85;
+  }
+}
+
+/*
+ * Use:
+ * primaryClassname="ui-title--eyecatcher"
+ *
+ * A stronger premium heading style for important screens.
+ */
+.ui-title--eyecatcher {
+  display: inline-block;
+
+  width: fit-content;
+
+  padding-bottom: $space-1;
+
+  &::before {
+    content: "";
+
+    position: absolute;
+
+    z-index: -1;
+
+    right: -8px;
+    bottom: 2px;
+    left: -8px;
+
+    height: 38%;
+
+    border-radius: $radius-xs;
+
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-primary) 10%, transparent),
+      color-mix(in srgb, var(--color-secondary) 12%, transparent)
+    );
+  }
+}
+
+/* ========================================================================== */
+/* Responsive                                                                 */
+/* ========================================================================== */
+
+@media (max-width: 768px) {
+  .ui-title {
+    letter-spacing: -0.02em;
+
+    &--large {
+      font-size: clamp(#{$font-size-xl}, 7vw, #{$font-size-xxl});
+
+      line-height: 1.12;
+    }
+
+    &--small {
+      font-size: $font-size-md;
+    }
+  }
+
+  .ui-title--hero {
+    max-width: 100%;
+  }
+}
+
+/* ========================================================================== */
+/* Reduced motion                                                             */
+/* ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-title {
+    transition: none;
   }
 }

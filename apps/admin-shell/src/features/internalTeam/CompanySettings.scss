@@ -1,0 +1,26 @@
+@import "@packages/trem-design-tokens/scss";
+
+.company-settings {
+  min-width: 0;
+
+  &__panel {
+    min-width: 0;
+    padding: $space-5;
+    border: 1px solid var(--border);
+    border-radius: $radius-lg;
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+
+    > h2 { margin: 0 0 $space-3; font-size: $font-size-lg; }
+    > p { color: var(--text-secondary); }
+    > .ui-button { margin-top: $space-4; margin-right: $space-2; }
+    .internal-team-card p { overflow-wrap: anywhere; margin: 0; }
+    .internal-team-card h3 { margin: 0; }
+  }
+
+  &__error { color: var(--color-error, #b42318) !important; }
+
+  @media (max-width: $breakpoint-md) {
+    &__panel { padding: $space-4; }
+  }
+}

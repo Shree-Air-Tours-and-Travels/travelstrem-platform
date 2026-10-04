@@ -9,7 +9,13 @@
     "currencySymbol": "₹",
     "locale": "en-IN",
     "dateFormat": { "day": "numeric", "month": "short", "year": "numeric" },
-    "dateTimeFormat": { "day": "numeric", "month": "short", "year": "numeric", "hour": "numeric", "minute": "2-digit" },
+    "dateTimeFormat": {
+      "day": "numeric",
+      "month": "short",
+      "year": "numeric",
+      "hour": "numeric",
+      "minute": "2-digit"
+    },
     "storagePrefix": "travelstrem",
     "authStorageKey": "travelstrem:token",
     "fallbackAuthStorageKey": "trem:token",
@@ -321,7 +327,15 @@
         "warning": ["AWAITING_TOKEN_PAYMENT", "PAYMENT_PENDING", "PARTIALLY_PAID", "REFUND_PENDING"]
       },
       "completedStatuses": ["COMPLETED", "CONFIRMED", "PAID", "TICKETED", "TRAVEL_READY"],
-      "pendingStatuses": ["DRAFT", "QUOTE_REQUESTED", "QUOTE_READY", "QUOTE_SENT", "UNDER_REVIEW", "PAYMENT_PENDING", "PARTIALLY_PAID"]
+      "pendingStatuses": [
+        "DRAFT",
+        "QUOTE_REQUESTED",
+        "QUOTE_READY",
+        "QUOTE_SENT",
+        "UNDER_REVIEW",
+        "PAYMENT_PENDING",
+        "PARTIALLY_PAID"
+      ]
     },
 
     "bookingDetail": {
@@ -450,7 +464,18 @@
       "maxAuditEntries": 500,
       "defaultRateLimit": { "attempts": 10, "windowMs": 60000 },
       "cspNonceLength": 16,
-      "privacyPatterns": ["credit_card", "email", "phone_intl", "aadhaar", "pan", "ssn", "ip_address", "password", "api_key", "jwt_token"],
+      "privacyPatterns": [
+        "credit_card",
+        "email",
+        "phone_intl",
+        "aadhaar",
+        "pan",
+        "ssn",
+        "ip_address",
+        "password",
+        "api_key",
+        "jwt_token"
+      ],
       "monitoredDomTags": ["script", "iframe", "object", "embed", "form"]
     }
   },
@@ -617,10 +642,24 @@
     "bookings": {
       "title": "Bookings",
       "statusFilters": [
-        "All", "Draft", "Quote Requested", "Under Review", "Quote Ready",
-        "Quote Sent", "Customer Accepted", "Payment Pending", "Partially Paid",
-        "Paid", "Confirmed", "Ticketing", "Ticketed", "Travel Ready",
-        "Completed", "Cancelled", "Refund Pending", "Refunded"
+        "All",
+        "Draft",
+        "Quote Requested",
+        "Under Review",
+        "Quote Ready",
+        "Quote Sent",
+        "Customer Accepted",
+        "Payment Pending",
+        "Partially Paid",
+        "Paid",
+        "Confirmed",
+        "Ticketing",
+        "Ticketed",
+        "Travel Ready",
+        "Completed",
+        "Cancelled",
+        "Refund Pending",
+        "Refunded"
       ],
       "productFilters": ["All", "Trevio", "Trevista"],
       "defaultProduct": "trevista",

@@ -1,0 +1,63 @@
+@mixin type-base {
+  font-family: $font-primary;
+  font-size: $font-size-md;
+  line-height: $line-height-md;
+  font-weight: $font-regular;
+  color: var(--text);
+}
+
+@mixin type-xs {
+  font-family: $font-primary;
+  font-size: $font-size-xs;
+  line-height: $line-height-xs;
+  font-weight: $font-regular;
+  color: var(--muted);
+}
+
+@mixin type-sm {
+  font-family: $font-primary;
+  font-size: $font-size-sm;
+  line-height: $line-height-sm;
+  font-weight: $font-regular;
+  color: var(--muted);
+}
+
+@mixin type-md {
+  font-family: $font-primary;
+  font-size: $font-size-md;
+  line-height: $line-height-md;
+  font-weight: $font-medium;
+  color: var(--text);
+}
+
+@mixin type-lg {
+  font-family: $font-primary;
+  font-size: $font-size-lg;
+  line-height: $line-height-lg;
+  font-weight: $font-medium;
+  color: var(--text);
+}
+
+@mixin type-xl {
+  font-family: $font-primary;
+  font-size: $font-size-xl;
+  line-height: $line-height-md;
+  font-weight: $font-semibold;
+  color: var(--text);
+}
+
+@mixin type-xxl {
+  font-family: $font-primary;
+  font-size: $font-size-xxl;
+  line-height: $line-height-sm;
+  font-weight: $font-semibold;
+  color: var(--text);
+}
+
+@mixin type-xxxl {
+  font-family: $font-primary;
+  font-size: $font-size-xxxl;
+  line-height: $line-height-sm;
+  font-weight: $font-bold;
+  color: var(--text);
+}

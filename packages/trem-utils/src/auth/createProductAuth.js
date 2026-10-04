@@ -43,7 +43,10 @@ export const createProductAuth = ({
     }
     return {
       label: headerConfig?.authActions?.login?.label || "Sign in",
-      href: buildGlobalAuthUrl({ app }),
+      href: buildGlobalAuthUrl({
+        app,
+        returnTo: typeof window !== "undefined" ? window.location.href : "",
+      }),
       variant: "primary",
     };
   };
