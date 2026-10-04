@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":["file:///Users/akshat.goyal1/Downloads/my-apps/travelstrem-platform/node_modules/.pnpm/next@16.3.6_@babel+core@7.29.0_@types+node@24.13.6_react-dom@19.3.0_react@19.3.0__react@19.3.0_sass@1.99.0/node_modules/next/image.js"],"sourcesContent":["module.exports = require('./dist/shared/lib/image-external')\n"],"names":["module","exports"],"mappings":"AAAAA,OAAOC,OAAO","ignoreList":[0]}},
+    {"offset": {"line": 7, "column": 0}, "map": {"version":3,"sources":["file:///Users/akshat.goyal1/Downloads/my-apps/travelstrem-platform/node_modules/.pnpm/next@16.3.6_@babel+core@7.29.0_@types+node@24.13.6_react-dom@19.3.0_react@19.3.0__react@19.3.0_sass@1.99.0/node_modules/next/navigation.js"],"sourcesContent":["module.exports = require('./dist/client/components/navigation')\n"],"names":["module","exports"],"mappings":"AAAAA,OAAOC,OAAO","ignoreList":[0]}}]
+}

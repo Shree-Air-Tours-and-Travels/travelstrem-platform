@@ -1,0 +1,59 @@
+/* [project]/website/styles/tokens.css [app-client] (css) */
+:root {
+  --trem-primary: #007f82;
+  --trem-primaryDark: #005e61;
+  --trem-secondary: #ff6b4a;
+  --trem-secondaryDark: #d94a2e;
+  --trem-tertiary: #f2b84b;
+  --trem-tertiaryDark: #c98716;
+  --trem-accent: #102a2e;
+  --trem-success: #16875b;
+  --trem-danger: #d64545;
+  --trem-warning: #d98a12;
+  --trem-background: #f5faf9;
+  --trem-surface: #fff;
+  --trem-surfaceMuted: #e4f3f1;
+  --trem-surfaceSubtle: #f0f7f6;
+  --trem-text: #102a2e;
+  --trem-textMuted: #52676a;
+  --trem-textLight: #102a2ea3;
+  --trem-border: #102a2e1c;
+  --trem-overlay: #061c1f85;
+  --trem-transparent: transparent;
+  --trem-dark-primary: #41c7c3;
+  --trem-dark-primaryDark: #22a6a4;
+  --trem-dark-secondary: #ff8268;
+  --trem-dark-secondaryDark: #f25e43;
+  --trem-dark-tertiary: #ffd06a;
+  --trem-dark-tertiaryDark: #e5a83d;
+  --trem-dark-accent: #f3fffd;
+  --trem-dark-success: #4bd39a;
+  --trem-dark-danger: #f77;
+  --trem-dark-warning: #f4bd4f;
+  --trem-dark-background: #07191b;
+  --trem-dark-surface: #0d2427;
+  --trem-dark-surfaceMuted: #153438;
+  --trem-dark-surfaceSubtle: #102b2e;
+  --trem-dark-text: #f3fffd;
+  --trem-dark-textMuted: #f3fffdbd;
+  --trem-dark-textLight: #f3fffd8f;
+  --trem-dark-border: #d2fffa1a;
+  --trem-dark-overlay: #000a0cc2;
+  --trem-dark-transparent: transparent;
+  --trem-radius-none: 0;
+  --trem-radius-xs: 6px;
+  --trem-radius-sm: 10px;
+  --trem-radius-md: 16px;
+  --trem-radius-lg: 28px;
+  --trem-radius-full: 9999px;
+  --trem-radius-circle: 50%;
+  --trem-shadow-soft: 0 10px 30px #1111110f;
+  --trem-shadow-card: 0 24px 60px #11111114;
+  --trem-shadow-sm: 0 4px 12px #1111110a;
+  --trem-shadow-md: 0 8px 22px #1111110f;
+  --trem-shadow-lg: 0 16px 40px #1111111f;
+  --trem-font-primary: "Inter", "Poppins", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --trem-font-secondary: "Inter", "Poppins", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/*# sourceMappingURL=website_styles_tokens_css_1igg3k2._.single.css.map*/

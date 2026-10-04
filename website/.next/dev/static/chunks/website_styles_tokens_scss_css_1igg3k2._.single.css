@@ -1,0 +1,315 @@
+/* [project]/website/styles/tokens.scss.css [app-client] (css) */
+:root, .theme--light {
+  --lightningcss-light: initial;
+  --lightningcss-dark: ;
+  color-scheme: light;
+  --color-primary: #2847a8;
+  --color-primary-dark: #1b2f78;
+  --color-secondary: #7540c9;
+  --color-secondary-dark: #55269a;
+  --color-tertiary: #b82f6f;
+  --color-tertiary-dark: #84204f;
+  --color-accent: #181a2d;
+  --color-success: #2878c8;
+  --color-danger: #d92f5c;
+  --color-warning: #8a4ac7;
+  --color-background: #f8f9fd;
+  --color-surface: #fff;
+  --color-surface-muted: #eaedf8;
+  --color-surface-subtle: #f3f5fb;
+  --color-text: #181a2d;
+  --color-text-muted: #606579;
+  --color-text-light: #181a2da3;
+  --color-border: #181a2d1a;
+  --color-overlay: #0a0c1c94;
+  --color-transparent: transparent;
+  --color-heading: var(--color-text);
+  --color-surface-elevated: var(--color-surface);
+  --color-on-primary: #fff;
+  --color-on-secondary: #fff;
+  --color-on-tertiary: #fff;
+  --color-on-surface: var(--color-text);
+  --color-tertiary-text: var(--color-tertiary-dark);
+  --color-link: var(--color-primary-dark);
+  --color-link-hover: var(--color-secondary-dark);
+  --overlay-strong: var(--color-overlay);
+  --surface-glass: color-mix(in srgb, var(--color-surface) 88%, transparent);
+  --surface-glass-strong: color-mix(in srgb, var(--color-surface) 98%, transparent);
+  --surface-shimmer: color-mix(in srgb, var(--color-on-primary) 75%, transparent);
+  --control-bg-hover: color-mix(in srgb, var(--color-text) 5%, transparent);
+  --primary-soft: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  --primary-softer: color-mix(in srgb, var(--color-primary) 5%, transparent);
+  --primary-surface: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  --primary-surface-hover: color-mix(in srgb, var(--color-primary) 20%, transparent);
+  --primary-focus: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  --primary-shadow: color-mix(in srgb, var(--color-primary) 20%, transparent);
+  --secondary-soft: color-mix(in srgb, var(--color-secondary) 10%, transparent);
+  --secondary-surface: color-mix(in srgb, var(--color-secondary) 12%, transparent);
+  --secondary-surface-hover: color-mix(in srgb, var(--color-secondary) 20%, transparent);
+  --tertiary-soft: color-mix(in srgb, var(--color-tertiary) 10%, transparent);
+  --tertiary-surface: color-mix(in srgb, var(--color-tertiary) 14%, transparent);
+  --tertiary-surface-hover: color-mix(in srgb, var(--color-tertiary) 22%, transparent);
+  --danger-soft: color-mix(in srgb, var(--color-danger) 8%, transparent);
+  --success-soft: color-mix(in srgb, var(--color-success) 8%, transparent);
+  --warning-soft: color-mix(in srgb, var(--color-warning) 8%, transparent);
+  --neutral-soft: color-mix(in srgb, var(--color-text) 6%, transparent);
+  --neutral-softer: color-mix(in srgb, var(--color-text) 3%, transparent);
+  --bg: var(--color-background);
+  --page-bg: var(--color-background);
+  --bg-2: var(--color-surface);
+  --surface: var(--color-surface);
+  --card-bg: var(--color-surface-elevated);
+  --surface-elevated: var(--color-surface-elevated);
+  --surface-inset: var(--color-surface-muted);
+  --surface-muted: var(--color-surface-muted);
+  --surface-subtle: var(--color-surface-subtle);
+  --text: var(--color-text);
+  --heading: var(--color-heading);
+  --title: var(--color-heading);
+  --card-title: var(--color-heading);
+  --muted: var(--color-text-muted);
+  --color-muted: var(--color-text-muted);
+  --text-muted: var(--color-text-muted);
+  --subtitle: var(--color-text-muted);
+  --card-text: var(--color-text-muted);
+  --text-light: var(--color-text-light);
+  --border: var(--color-border);
+  --muted-border: var(--color-border);
+  --overlay: var(--color-overlay);
+  --nav-text: var(--color-text);
+  --nav-text-muted: var(--color-text-light);
+  --nav-text-active: var(--color-primary);
+  --icon: var(--color-text);
+  --icon-active: var(--color-primary);
+  --title-accent: var(--color-primary);
+  --control-bg: var(--color-surface);
+  --control-border: var(--color-border);
+  --control-text: var(--color-text);
+  --focus-ring: var(--primary-focus);
+  --tours-bg: var(--color-background);
+  --tours-surface: var(--color-surface);
+  --tours-text: var(--color-text);
+  --tours-muted: var(--color-text-muted);
+  --tours-border: var(--color-border);
+  --tours-accent: var(--color-primary);
+  --tours-accent-dark: var(--color-primary-dark);
+  --tours-shadow: var(--shadow-md);
+}
+
+.theme--dark {
+  --lightningcss-light: ;
+  --lightningcss-dark: initial;
+  color-scheme: dark;
+  --color-primary: #8fa8ff;
+  --color-primary-dark: #6682ed;
+  --color-secondary: #c1a0ff;
+  --color-secondary-dark: #986be8;
+  --color-tertiary: #ff84ba;
+  --color-tertiary-dark: #de4f8e;
+  --color-accent: #f7f8ff;
+  --color-success: #6bb9ff;
+  --color-danger: #ff7895;
+  --color-warning: #cf93ff;
+  --color-background: #070914;
+  --color-surface: #101420;
+  --color-surface-muted: #1d2336;
+  --color-surface-subtle: #151a2a;
+  --color-text: #f7f8ff;
+  --color-text-muted: #ebeeffc7;
+  --color-text-light: #d2d8ee99;
+  --color-border: #dee3ff1f;
+  --color-overlay: #02030ad1;
+  --color-heading: var(--color-text);
+  --color-surface-elevated: var(--color-surface);
+  --color-on-primary: #1b2f78;
+  --color-on-secondary: #55269a;
+  --color-on-tertiary: #84204f;
+  --color-on-surface: var(--color-text);
+  --color-tertiary-text: var(--color-tertiary);
+  --color-link: var(--color-primary);
+  --color-link-hover: var(--color-secondary-dark);
+  --color-transparent: transparent;
+  --overlay-strong: var(--color-overlay);
+  --surface-glass: color-mix(in srgb, var(--color-surface) 88%, transparent);
+  --surface-glass-strong: color-mix(in srgb, var(--color-surface) 98%, transparent);
+  --surface-shimmer: color-mix(in srgb, var(--color-on-primary) 16%, transparent);
+  --control-bg-hover: color-mix(in srgb, var(--color-text) 5%, transparent);
+  --primary-soft: color-mix(in srgb, var(--color-primary) 16%, transparent);
+  --primary-softer: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  --primary-surface: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  --primary-surface-hover: color-mix(in srgb, var(--color-primary) 28%, transparent);
+  --primary-focus: color-mix(in srgb, var(--color-primary) 26%, transparent);
+  --primary-shadow: color-mix(in srgb, var(--color-primary) 22%, transparent);
+  --secondary-soft: color-mix(in srgb, var(--color-secondary) 14%, transparent);
+  --secondary-surface: color-mix(in srgb, var(--color-secondary) 16%, transparent);
+  --secondary-surface-hover: color-mix(in srgb, var(--color-secondary) 24%, transparent);
+  --tertiary-soft: color-mix(in srgb, var(--color-tertiary) 14%, transparent);
+  --tertiary-surface: color-mix(in srgb, var(--color-tertiary) 18%, transparent);
+  --tertiary-surface-hover: color-mix(in srgb, var(--color-tertiary) 26%, transparent);
+  --danger-soft: color-mix(in srgb, var(--color-danger) 14%, transparent);
+  --success-soft: color-mix(in srgb, var(--color-success) 14%, transparent);
+  --warning-soft: color-mix(in srgb, var(--color-warning) 14%, transparent);
+  --neutral-soft: color-mix(in srgb, var(--color-text) 8%, transparent);
+  --neutral-softer: color-mix(in srgb, var(--color-text) 4%, transparent);
+  --bg: var(--color-background);
+  --page-bg: var(--color-background);
+  --bg-2: var(--color-surface);
+  --surface: var(--color-surface);
+  --card-bg: var(--color-surface-elevated);
+  --surface-elevated: var(--color-surface-elevated);
+  --surface-inset: var(--color-surface-muted);
+  --surface-muted: var(--color-surface-muted);
+  --surface-subtle: var(--color-surface-subtle);
+  --text: var(--color-text);
+  --heading: var(--color-heading);
+  --title: var(--color-heading);
+  --card-title: var(--color-heading);
+  --muted: var(--color-text-muted);
+  --color-muted: var(--color-text-muted);
+  --text-muted: var(--color-text-muted);
+  --subtitle: var(--color-text-muted);
+  --card-text: var(--color-text-muted);
+  --text-light: var(--color-text-light);
+  --border: var(--color-border);
+  --muted-border: var(--color-border);
+  --overlay: var(--color-overlay);
+  --nav-text: var(--color-text);
+  --nav-text-muted: var(--color-text-light);
+  --nav-text-active: var(--color-primary);
+  --icon: var(--color-text);
+  --icon-active: var(--color-primary);
+  --title-accent: var(--color-primary);
+  --control-bg: var(--color-surface);
+  --control-border: var(--color-border);
+  --control-text: var(--color-text);
+  --focus-ring: var(--primary-focus);
+  --tours-bg: var(--color-background);
+  --tours-surface: var(--color-surface);
+  --tours-text: var(--color-text);
+  --tours-muted: var(--color-text-muted);
+  --tours-border: var(--color-border);
+  --tours-accent: var(--color-primary);
+  --tours-accent-dark: var(--color-primary-dark);
+  --tours-shadow: var(--shadow-md);
+}
+
+:root {
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 28px;
+  --shadow-soft: 0 10px 30px #1111110f;
+  --shadow-card: 0 24px 60px #11111114;
+  --shadow-sm: 0 4px 12px #1111110a;
+  --shadow-md: 0 8px 22px #1111110f;
+  --shadow-lg: 0 16px 40px #1111111f;
+  --container-width: 1180px;
+  --root-font-size: 16px;
+  --control-font-size: 1rem;
+  --layout-section-gap: 1.25rem;
+  --layout-card-gap: 1rem;
+  --tours-shadow: var(--shadow-md);
+}
+
+@media (max-width: 1024px) {
+  :root {
+    --root-font-size: 15px;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --root-font-size: 14px;
+    --control-font-size: 14px;
+    --layout-section-gap: 1rem;
+    --layout-card-gap: .75rem;
+  }
+}
+
+.theme--switching, .theme--switching *, .theme--switching :before, .theme--switching :after {
+  transition: none !important;
+}
+
+:root {
+  --font-primary: "Inter", "Poppins", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-size-xs: .76rem;
+  --font-size-sm: .875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.5rem;
+  --font-size-xxl: 2rem;
+  --font-size-xxxl: 2.5rem;
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+  --font-weight-black: 900;
+  --space-0: 0;
+  --space-1: .25rem;
+  --space-2: .5rem;
+  --space-3: .75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-7: 1.75rem;
+  --space-8: 2rem;
+  --space-9: 2.25rem;
+  --space-10: 2.5rem;
+  --space-11: 2.75rem;
+  --space-12: 3rem;
+  --space-14: 3.5rem;
+  --space-16: 4rem;
+  --space-18: 4.5rem;
+  --space-20: 5rem;
+  --space-1-25: .3125rem;
+  --space-1-5: .375rem;
+  --space-2-5: .625rem;
+  --space-3-5: .875rem;
+  --space-4-5: 1.125rem;
+  --space-5-5: 1.375rem;
+  --space-8-5: 2.125rem;
+  --space-19-5: 4.875rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: .001ms !important;
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+:root {
+  --trem-primaryDark: var(--color-primary-dark);
+  --trem-tertiary: var(--color-tertiary);
+  --trem-accent: #181a2d;
+  --trem-surface: #fff;
+  --trem-surfaceMuted: #eaedf8;
+  --trem-dark-primary: #8fa8ff;
+  --trem-dark-primaryDark: #6682ed;
+  --trem-dark-surface: #101420;
+  --trem-dark-surfaceMuted: #1d2336;
+  --trem-dark-text: #f7f8ff;
+  --trem-dark-textMuted: #ebeeffc7;
+  --trem-dark-textLight: #d2d8ee99;
+  --trem-dark-border: #dee3ff1f;
+  --trem-radius-sm: 10px;
+  --trem-radius-md: 16px;
+  --trem-radius-lg: 28px;
+  --trem-radius-full: 9999px;
+  --trem-shadow-card: 0 24px 60px #11111114;
+  --trem-shadow-sm: 0 4px 12px #1111110a;
+  --trem-shadow-md: 0 8px 22px #1111110f;
+  --trem-shadow-lg: 0 16px 40px #1111111f;
+  --trem-font-primary: var(--font-primary);
+  --type-xs: var(--font-size-xs);
+  --type-sm: var(--font-size-sm);
+  --type-md: var(--font-size-md);
+  --type-lg: var(--font-size-lg);
+  --type-xl: var(--font-size-xl);
+  --type-xxl: var(--font-size-xxl);
+  --type-xxxl: var(--font-size-xxxl);
+}
+
+/*# sourceMappingURL=website_styles_tokens_scss_css_1igg3k2._.single.css.map*/
