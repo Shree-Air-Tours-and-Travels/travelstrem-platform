@@ -7,7 +7,13 @@
     },
     "elements": {
       "labels": {
-        "pageTitle": "Discover Tours"
+        "breadcrumbHomePage": "Home",
+        "breadcrumbListingPage": "Tours",
+        "demoInventoryNote": "Demo tour inventory — no live reservation will be made.",
+
+        "pageTitle": "Explore Curated Holiday Packages",
+        "breadcrumbTrevista": "Home",
+        "breadcrumbTours": "Tours"
       },
       "urls": {}
     },
@@ -16,6 +22,7 @@
         "titleRef": "pageTitle"
       },
       "widgets": [
+        {"type": "Breadcrumbs", "props": {"items": [{"path": "/trevista", "labelRef": "breadcrumbHomePage"}, {"labelRef": "breadcrumbListingPage"}]}},
         {
           "type": "HeroBanner",
           "source": "shell",

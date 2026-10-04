@@ -1,11 +1,12 @@
 {
-  "name": "@apps/auth-trem",
+  "name": "@apps/auth",
   "version": "0.1.0",
   "private": true,
   "main": "src/public-api.js",
   "dependencies": {
     "@craco/craco": "^7.1.0",
     "@packages/trem-auth-core": "workspace:*",
+    "@packages/trem-events": "workspace:*",
     "@packages/trem-ui": "workspace:*",
     "@packages/trem-utils": "workspace:*",
     "axios": "^1.8.4",
@@ -20,9 +21,10 @@
     "cross-env": "^7.0.3"
   },
   "scripts": {
-    "dev": "cross-env PORT=3003 DISABLE_ESLINT_PLUGIN=true craco start",
-    "start": "cross-env PORT=3003 DISABLE_ESLINT_PLUGIN=true craco start",
-    "build": "cross-env DISABLE_ESLINT_PLUGIN=true craco build",
+    "prebuild": "node ../../scripts/sync-favicons.mjs auth-trem",
+    "dev": "cross-env BROWSER=none PORT=3003 DISABLE_ESLINT_PLUGIN=true craco start",
+    "start": "cross-env BROWSER=none PORT=3003 DISABLE_ESLINT_PLUGIN=true craco start",
+    "build": "DISABLE_ESLINT_PLUGIN=true craco build",
     "test": "craco test --watchAll=false",
     "eject": "react-scripts eject"
   },

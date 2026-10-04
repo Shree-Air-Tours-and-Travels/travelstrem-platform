@@ -1,0 +1,7 @@
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: $duration-instant !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: $duration-instant !important;
+  }
+}

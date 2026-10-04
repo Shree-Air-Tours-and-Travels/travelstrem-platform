@@ -1,40 +1,40 @@
 {
-    "fallbackText": "None.",
-    "fallbackImage": "No image",
-    "badgeFeatured": "Featured",
-    "editButton": { "text": "Edit" },
-    "closeButton": { "text": "Close" },
-    "backButton": { "text": "Back" },
-    "sections": {
-        "schedule": { "title": "Schedule" },
-        "description": { "title": "Description" },
-        "address": { "title": "Address" },
-        "photoGallery": { "title": "Photo Gallery" },
-        "itinerary": { "title": "Itinerary" },
-        "highlights": { "title": "Highlights" },
-        "inclusions": { "title": "Inclusions" },
-        "exclusions": { "title": "Exclusions" },
-        "cancellationPolicy": { "title": "Cancellation Policy" },
-        "seasonalPricing": { "title": "Seasonal Pricing" },
-        "tags": { "title": "Tags" },
-        "reviews": { "title": "Reviews" },
-        "tourInfo": { "title": "Tour Info" }
-    },
-    "meta": {
-        "duration": { "label": "Duration" },
-        "distance": { "label": "Distance" },
-        "price": { "label": "Price" },
-        "groupSize": { "label": "Group Size" },
-        "ageRange": { "label": "Age Range" },
-        "seats": { "label": "Seats" },
-        "meetingPoint": { "label": "Meeting Point" },
-        "languages": { "label": "Languages" }
-    },
-    "itineraryLabels": {
-        "activities": "Activities",
-        "meals": "Meals",
-        "accommodation": "Accommodation",
-        "location": "Location",
-        "notes": "Notes"
-    }
+  "fallbackText": "None.",
+  "fallbackImage": "No image",
+  "badgeFeatured": "Featured",
+  "editButton": { "text": "Edit" },
+  "closeButton": { "text": "Close" },
+  "backButton": { "text": "Back" },
+  "sections": {
+    "schedule": { "title": "Schedule" },
+    "description": { "title": "Description" },
+    "address": { "title": "Address" },
+    "photoGallery": { "title": "Photo Gallery" },
+    "itinerary": { "title": "Itinerary" },
+    "highlights": { "title": "Highlights" },
+    "inclusions": { "title": "Inclusions" },
+    "exclusions": { "title": "Exclusions" },
+    "cancellationPolicy": { "title": "Cancellation Policy" },
+    "seasonalPricing": { "title": "Seasonal Pricing" },
+    "tags": { "title": "Tags" },
+    "reviews": { "title": "Reviews" },
+    "tourInfo": { "title": "Tour Info" }
+  },
+  "meta": {
+    "duration": { "label": "Duration" },
+    "distance": { "label": "Distance" },
+    "price": { "label": "Price" },
+    "groupSize": { "label": "Group Size" },
+    "ageRange": { "label": "Age Range" },
+    "seats": { "label": "Seats" },
+    "meetingPoint": { "label": "Meeting Point" },
+    "languages": { "label": "Languages" }
+  },
+  "itineraryLabels": {
+    "activities": "Activities",
+    "meals": "Meals",
+    "accommodation": "Accommodation",
+    "location": "Location",
+    "notes": "Notes"
+  }
 }

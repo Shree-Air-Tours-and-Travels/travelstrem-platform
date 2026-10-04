@@ -1,0 +1,120 @@
+@import "@packages/trem-design-tokens/scss/tokens";
+
+.message-bubble {
+  display: flex;
+  flex-direction: column;
+  max-width: 75%;
+  margin-bottom: $space-2;
+
+  &--own {
+    align-self: flex-end;
+    align-items: flex-end;
+
+    .message-bubble__bubble {
+      background: var(--color-primary);
+      color: var(--color-on-primary);
+      border-radius: $radius-md $radius-md $radius-xs $radius-md;
+    }
+
+    .message-bubble__text {
+      color: var(--color-on-primary);
+    }
+  }
+
+  &--other {
+    align-self: flex-start;
+    align-items: flex-start;
+
+    .message-bubble__bubble {
+      background: var(--surface);
+      color: var(--text);
+      border-radius: $radius-md $radius-md $radius-md $radius-xs;
+    }
+  }
+
+  &--system {
+    align-self: center;
+    align-items: center;
+    max-width: 90%;
+
+    .message-bubble__system-content {
+      display: flex;
+      align-items: center;
+      gap: $space-2;
+      padding: $space-2 $space-4;
+      background: var(--surface-muted);
+      border: 1px solid color-mix(in srgb, var(--color-primary) 15%, transparent);
+      border-radius: $radius-full;
+      font-size: $font-size-xs;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .message-bubble__system-icon {
+      color: var(--color-primary);
+      flex-shrink: 0;
+    }
+  }
+
+  &--quote {
+    align-self: center;
+    align-items: center;
+    max-width: 85%;
+    background: var(--surface);
+    border: 1px solid var(--border, rgba(17, 17, 17, 0.12));
+    border-radius: $radius-md;
+    padding: $space-4;
+    box-shadow: $shadow-sm;
+  }
+
+  &__sender {
+    font-size: $font-size-xs;
+    font-weight: $font-medium;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+    padding-left: $space-1;
+  }
+
+  &__bubble {
+    padding: $space-3 $space-4;
+    max-width: 100%;
+  }
+
+  &__text {
+    font-size: $font-size-sm;
+    line-height: $line-height-md;
+    margin: 0;
+    word-break: break-word;
+  }
+
+  &__time {
+    font-size: 10px;
+    color: var(--text-light);
+    margin-top: 2px;
+    padding: 0 $space-1;
+  }
+
+  &__quote-header {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    margin-bottom: $space-2;
+  }
+
+  &__quote-icon {
+    color: var(--color-primary);
+  }
+
+  &__quote-label {
+    font-size: $font-size-sm;
+    font-weight: $font-semibold;
+    color: var(--color-primary);
+  }
+
+  &__quote-amount {
+    font-size: $font-size-xl;
+    font-weight: $font-bold;
+    color: var(--text);
+    margin-bottom: $space-2;
+  }
+}

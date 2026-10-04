@@ -1,24 +1,183 @@
+import {
+    tenantConfiguration,
+    tenantFooter,
+    tenantDeployment,
+} from "../../clients/configuration.js";
 import jwt from "jsonwebtoken";
 import config from "../../../config/index.js";
 import headerConfigTemplate from "../../../config/header.js";
 import sessionConfigTemplate from "../../../config/session.js";
 import pageConfigTemplate from "../../../config/pageConfig.js";
+import sidebarConfigTemplate from "../../../config/sidebar.js";
+import appHeaderConfigTemplate from "../../../config/appHeader.js";
+import navigationConfigTemplate from "../../../config/navigation.js";
 import User from "../../auth/models/User.js";
+import PartnerAgency from "../../auth/models/PartnerAgency.js";
+import { getSessionUser } from "../../auth/services/session.service.js";
+import { toSafePortalUser } from "../portalUser.serializer.js";
+import {
+    getHiddenProductKeys,
+    invalidateHiddenProductCache,
+} from "../../../utils/hiddenProductCache.js";
+import {
+    getPortalScope,
+    normalizePortalScope,
+    readPortalAccessToken,
+    scopeUserToPortal,
+} from "../../../core/auth/portalSession.js";
+
+const getRequestHiddenProducts = async (req) => {
+    const hidden = await getHiddenProductKeys();
+    const client = req.tenant?.client;
+    return client
+        ? ["trevio", "trevista", "trehub", "trecare"].filter(
+              (key) =>
+                  !client.productAccess.includes(key) ||
+                  (client.modules?.[key] && !client.modules[key].length),
+          )
+        : hidden;
+};
+
+// Tenant enrollment owns customer navigation; platform-only links stay on the platform.
+const tenantNavigationItem = (item, client) => {
+    if (item.hide || item.disabled || item.comingSoon) return null;
+    if (item.id === "about")
+        return { id: "about", label: "About Us", icon: "info", target: "about", href: "/about" };
+    if (item.id === "partnership" && !client.partnerEnabled) return null;
+    if (item.id === "articles" && !(client.accountModules || []).includes("articles")) return null;
+    if (["products", "saved-searches", "bookings", "documents", "payments"].includes(item.id))
+        return null;
+    if (["profile", "notifications", "support", "favorites", "wishlist"].includes(item.id)) {
+        const module = ["favorites", "wishlist"].includes(item.id) ? "wishlist" : item.id;
+        if (!(client.accountModules || []).includes(module)) return null;
+    }
+    return item;
+};
+
+const setPublicConfigCacheHeaders = (res) => {
+    res.setHeader(
+        "Cache-Control",
+        "public, max-age=60, s-maxage=300, stale-while-revalidate=86400, stale-if-error=86400",
+    );
+};
+
+const applyProductHiding = (config, hiddenKeys) => {
+    const next = structuredClone(config);
+
+    if (next.componentData?.sections) {
+        next.componentData = {
+            ...next.componentData,
+            sections: next.componentData.sections.map((section) => ({
+                ...section,
+                items: (section.items || []).map((item) => {
+                    const match =
+                        (item.target && hiddenKeys.includes(item.target)) ||
+                        (item.id && hiddenKeys.includes(item.id));
+                    return match ? { ...item, hide: true } : item;
+                }),
+            })),
+        };
+    }
+
+    if (next.componentData?.primaryAction?.menu?.items) {
+        next.componentData = {
+            ...next.componentData,
+            primaryAction: {
+                ...next.componentData.primaryAction,
+                menu: {
+                    ...next.componentData.primaryAction.menu,
+                    items: next.componentData.primaryAction.menu.items.map((item) => {
+                        const match =
+                            (item.target && hiddenKeys.includes(item.target)) ||
+                            (item.id && hiddenKeys.includes(item.id));
+                        return match ? { ...item, hide: true } : item;
+                    }),
+                },
+            },
+        };
+    }
+
+    if (next.componentData?.navigationTabs?.items) {
+        next.componentData = {
+            ...next.componentData,
+            navigationTabs: {
+                ...next.componentData.navigationTabs,
+                items: next.componentData.navigationTabs.items.map((item) => ({
+                    ...item,
+                    items: (item.items || []).map((child) =>
+                        child.target && hiddenKeys.includes(child.target)
+                            ? { ...child, hide: true }
+                            : child,
+                    ),
+                })),
+            },
+        };
+    }
+
+    return next;
+};
+
+const applyNavigationHiding = (config, hiddenKeys) => {
+    if (!hiddenKeys.length) return config;
+    return {
+        ...config,
+        destinations: (config.destinations || []).filter(
+            (dest) => !dest.product || !hiddenKeys.includes(dest.product),
+        ),
+        mobileActionPanel: config.mobileActionPanel
+            ? {
+                  ...config.mobileActionPanel,
+                  items: (config.mobileActionPanel.items || []).map((item) => ({
+                      ...item,
+                      activeTargets: (item.activeTargets || []).filter(
+                          (target) => !hiddenKeys.includes(target),
+                      ),
+                  })),
+              }
+            : config.mobileActionPanel,
+    };
+};
+
+export const getNavigationConfig = async (req, res) => {
+    const hiddenKeys = await getRequestHiddenProducts(req);
+    const navConfig = structuredClone(applyNavigationHiding(navigationConfigTemplate, hiddenKeys));
+    const services = req.tenant?.client?.modules?.trehub;
+    if (services && !services.includes("flights")) {
+        const trehub = navConfig.destinations.find((item) => item.id === "trehub");
+        if (trehub) trehub.path = "/trehub/hotels";
+    }
+    if (req.tenant?.client) {
+        const client = req.tenant.client;
+        navConfig.destinations = navConfig.destinations.filter(
+            (item) => item.id !== "articles" || (client.accountModules || []).includes("articles"),
+        );
+        navConfig.destinations.push({
+            id: "about",
+            kind: "tab",
+            renderer: "app-shell",
+            tab: "about",
+            path: "/about",
+            patterns: ["/about"],
+            activeId: "about",
+        });
+        res.setHeader("Cache-Control", "private, no-store");
+    } else setPublicConfigCacheHeaders(res);
+    res.status(200).json({
+        status: "success",
+        message: "Navigation config loaded",
+        componentData: navConfig,
+    });
+};
 
 const JWT_SECRET = (config.JWT && config.JWT.accessSecret) || process.env.JWT_SECRET;
-const COOKIE_NAME = config.IS_PRODUCTION ? "__Host-token" : "token";
-const MASTER_ADMIN_EMAIL = (config.MASTER_ADMIN_EMAIL || process.env.MASTER_ADMIN_EMAIL || "akshat.goyal@travelstrem.com")
-    .toString()
-    .trim()
-    .toLowerCase();
-
+const MASTER_ADMIN_EMAIL = (config.MASTER_ADMIN_EMAIL || "").toString().trim().toLowerCase();
 
 const getBearerToken = (req) => {
     const authHeader = req.headers.authorization || req.headers.Authorization || "";
     if (authHeader.startsWith("Bearer ")) return authHeader.split(" ")[1] || null;
     if (req.headers["x-ignore-cookie-auth"] === "true") return null;
 
-    return req.cookies?.[COOKIE_NAME] || req.cookies?.token || null;
+    return readPortalAccessToken(req);
 };
 
 const getUserFromRequest = (req) => {
@@ -27,55 +186,38 @@ const getUserFromRequest = (req) => {
 
     try {
         const payload = jwt.verify(token, JWT_SECRET);
-        return {
-            id: payload.sub || payload.id || payload.userId || null,
-            name: payload.name || null,
-            email: payload.email || null,
-            role: payload.role || "member",
-            agentRef: payload.agentRef || "",
-            agencyRef: payload.agencyRef || "",
-            partnerAgencyRef: payload.partnerAgencyRef || "",
-            agentApprovalStatus: payload.agentApprovalStatus || "not_required",
-            adminLevel: payload.adminLevel || "none",
-            adminApprovalStatus: payload.adminApprovalStatus || "not_required",
-        };
+        if (!payload.portal || normalizePortalScope(payload.portal) !== getPortalScope(req))
+            return null;
+        return scopeUserToPortal(
+            {
+                id: payload.sub || payload.id || payload.userId || null,
+                name: payload.name || null,
+                email: payload.email || null,
+                role: payload.role || "member",
+                agentRef: payload.agentRef || "",
+                agencyRef: payload.agencyRef || "",
+                partnerAgencyRef: payload.partnerAgencyRef || "",
+                agentApprovalStatus: payload.agentApprovalStatus || "not_required",
+                adminLevel: payload.adminLevel || "none",
+                adminApprovalStatus: payload.adminApprovalStatus || "not_required",
+            },
+            getPortalScope(req),
+        );
     } catch (error) {
         return null;
     }
 };
 
-const toSafeUser = (user, fallback = {}) => {
-    if (!user && !fallback) return null;
-
-    return {
-        id: user?._id?.toString?.() || user?.id || fallback.sub || fallback.id || fallback.userId || null,
-        name: user?.name || fallback.name || null,
-        email: user?.email || fallback.email || null,
-        role: user?.role || fallback.role || "member",
-        agentRef: user?.agentRef || fallback.agentRef || "",
-        agencyRef: user?.agencyRef || fallback.agencyRef || "",
-        partnerAgencyRef: user?.partnerAgencyRef || fallback.partnerAgencyRef || "",
-        agentApprovalStatus: user?.agentApprovalStatus || fallback.agentApprovalStatus || "not_required",
-        adminLevel: user?.adminLevel || fallback.adminLevel || "none",
-        adminApprovalStatus: user?.adminApprovalStatus || fallback.adminApprovalStatus || "not_required",
-    };
-};
-
-const getSessionFromRequest = async (req) => {
-    const token = getBearerToken(req);
-    if (!token) {
-        return {
-            user: null,
-            permissions: ["public"],
-            isAuthenticated: false,
-        };
-    }
-
+const getSessionFromRequest = async (req, res) => {
     try {
-        const payload = jwt.verify(token, JWT_SECRET);
-        const userId = payload.sub || payload.id || payload.userId;
-        const dbUser = userId ? await User.findById(userId).select("name email role agentRef agencyRef partnerAgencyRef agentApprovalStatus adminLevel adminApprovalStatus") : null;
-        if (dbUser?.role === "admin" && dbUser.email === MASTER_ADMIN_EMAIL && dbUser.adminLevel !== "master") {
+        const dbUser = await getSessionUser({ req, res });
+        if (
+            !dbUser?.clientId &&
+            !process.env.TENANT_CLIENT_ID &&
+            dbUser?.role === "admin" &&
+            dbUser.email === MASTER_ADMIN_EMAIL &&
+            dbUser.adminLevel !== "master"
+        ) {
             dbUser.adminLevel = "master";
             dbUser.adminApprovalStatus = "approved";
             await dbUser.save();
@@ -94,7 +236,20 @@ const getSessionFromRequest = async (req) => {
                 isAuthenticated: false,
             };
         }
-        const user = toSafeUser(dbUser, payload);
+        if (dbUser?.role === "agent" && dbUser.accountStatus !== "active") {
+            return {
+                user: null,
+                permissions: ["public"],
+                isAuthenticated: false,
+            };
+        }
+        const agency =
+            dbUser?.role === "agent" && dbUser?.agencyRole && dbUser?.agencyId
+                ? await PartnerAgency.findById(dbUser.agencyId).select("agencyName").lean()
+                : null;
+        const user = toSafePortalUser(scopeUserToPortal(dbUser, getPortalScope(req)), {
+            agencyName: getPortalScope(req) === "customer" ? "" : agency?.agencyName || "",
+        });
         const role = user?.role || "member";
 
         return {
@@ -113,12 +268,10 @@ const getSessionFromRequest = async (req) => {
 
 const pathToRegex = (routePath) => {
     const paramNames = [];
-    const pattern = routePath
-        .replace(/\/\*$/, "(?:/.*)?")
-        .replace(/:([^/]+)/g, (_, paramName) => {
-            paramNames.push(paramName);
-            return "([^/]+)";
-        });
+    const pattern = routePath.replace(/\/\*$/, "(?:/.*)?").replace(/:([^/]+)/g, (_, paramName) => {
+        paramNames.push(paramName);
+        return "([^/]+)";
+    });
 
     return { regex: new RegExp(`^${pattern}$`), paramNames };
 };
@@ -144,78 +297,385 @@ const matchRoute = (pathname, routePaths = {}) => {
     return null;
 };
 
-const flattenMenuItems = (items = []) => items.flatMap((item) => [
-    item,
-    ...(Array.isArray(item.items) ? flattenMenuItems(item.items) : []),
-]);
+const flattenMenuItems = (items = []) =>
+    items.flatMap((item) => [
+        item,
+        ...(Array.isArray(item.items) ? flattenMenuItems(item.items) : []),
+    ]);
 
 const resolveActivePath = (pathname = "/", configData = {}) => {
     const normalizedPath = pathname || "/";
     const routeMap = configData.routeMap || {};
     const paths = Object.keys(routeMap || {}).sort((a, b) => b.length - a.length);
-    const matchedPath = paths.find((routePath) => (
+    const matchedPath = paths.find((routePath) =>
         routePath === "/"
             ? normalizedPath === "/"
-            : normalizedPath === routePath || normalizedPath.startsWith(`${routePath}/`)
-    ));
+            : normalizedPath === routePath || normalizedPath.startsWith(`${routePath}/`),
+    );
 
     const matchedApp = matchedPath ? routeMap[matchedPath] : null;
-    const menuMatch = flattenMenuItems(configData.menu || []).find((item) => (
-        matchedApp && item?.app === matchedApp && item?.path
-    ));
+    const menuMatch = flattenMenuItems(configData.menu || []).find(
+        (item) => matchedApp && item?.app === matchedApp && item?.path,
+    );
     if (menuMatch?.path) return menuMatch.path;
 
     return matchedPath || "";
 };
 
-const stripRemoteEntry = (value = "") => String(value || "").replace(/\/remoteEntry\.js$/, "").replace(/\/$/, "");
+const stripRemoteEntry = (value = "") =>
+    String(value || "")
+        .replace(/\/remoteEntry\.js$/, "")
+        .replace(/\/$/, "");
 
 const applyEnvironmentRemotes = (headerConfig = {}) => {
     const envFrontends = config.PORTAL_CONFIG?.frontends || {};
     const remotes = headerConfig.remotes || {};
 
-    const toursRemoteUrl = stripRemoteEntry(envFrontends.toursTREM?.remoteEntry || envFrontends.toursTREM?.baseUrl);
-    const adminRemoteUrl = stripRemoteEntry(envFrontends.adminTREM?.remoteEntry || envFrontends.adminTREM?.baseUrl);
+    const trevistaRemoteUrl = stripRemoteEntry(
+        config.TREVISTA_URL || envFrontends.trevista?.remoteEntry || envFrontends.trevista?.baseUrl,
+    );
+    const trevioRemoteUrl = stripRemoteEntry(
+        config.TREVIO_URL || envFrontends.trevio?.remoteEntry || envFrontends.trevio?.baseUrl,
+    );
+    const trehubRemoteUrl = stripRemoteEntry(
+        config.TREHUB_URL || envFrontends.trehub?.remoteEntry || envFrontends.trehub?.baseUrl,
+    );
+    const adminRemoteUrl = stripRemoteEntry(
+        config.ADMIN_REMOTE_URL ||
+            envFrontends.adminTREM?.remoteEntry ||
+            envFrontends.adminTREM?.baseUrl,
+    );
+    const productUrls = {
+        Trevio: trevioRemoteUrl,
+        Trevista: trevistaRemoteUrl,
+        Trehub: trehubRemoteUrl,
+    };
+    const menu = (headerConfig.menu || []).map((item) => {
+        if (!Array.isArray(item.items)) return item;
+        return {
+            ...item,
+            items: item.items.map((child) =>
+                productUrls[child.label] ? { ...child, href: productUrls[child.label] } : child,
+            ),
+        };
+    });
 
     return {
         ...headerConfig,
+        menu,
         remotes: {
             ...remotes,
-            ...(remotes.toursTREM ? {
-                toursTREM: {
-                    ...remotes.toursTREM,
-                    defaultRemoteUrl: toursRemoteUrl || remotes.toursTREM.defaultRemoteUrl,
-                },
-            } : {}),
-            ...(remotes.adminTREM ? {
-                adminTREM: {
-                    ...remotes.adminTREM,
-                    defaultRemoteUrl: adminRemoteUrl || remotes.adminTREM.defaultRemoteUrl,
-                },
-            } : {}),
-            ...(remotes.admin ? {
-                admin: {
-                    ...remotes.admin,
-                    defaultRemoteUrl: adminRemoteUrl || remotes.admin.defaultRemoteUrl,
-                },
-            } : {}),
+            ...(remotes.adminTREM
+                ? {
+                      adminTREM: {
+                          ...remotes.adminTREM,
+                          defaultRemoteUrl: adminRemoteUrl || remotes.adminTREM.defaultRemoteUrl,
+                      },
+                  }
+                : {}),
+            ...(remotes.admin
+                ? {
+                      admin: {
+                          ...remotes.admin,
+                          defaultRemoteUrl: adminRemoteUrl || remotes.admin.defaultRemoteUrl,
+                      },
+                  }
+                : {}),
         },
     };
 };
 
+const buildTrevioHeaderConfig = (baseConfig = {}) => ({
+    ...baseConfig,
+    brand: {
+        label: "Trevio",
+        subtitle: "by TravelsTrem",
+        mark: "T",
+        homePath: "/trevio",
+    },
+    menu: [
+        { id: "home", label: "Home", type: "internal", path: "/trevio", disabled: false },
+        {
+            id: "trips",
+            label: "Trips & Adventures",
+            type: "internal",
+            path: "/trevio/trips",
+            disabled: false,
+            activePaths: ["/trevio/trips", "/trips", "/trevio/trip", "/trip"],
+        },
+        {
+            id: "customTrip",
+            label: "Custom trip",
+            type: "internal",
+            path: "/trevio/customise-trip",
+            disabled: true,
+        },
+        {
+            id: "dashboard",
+            label: "Dashboard",
+            type: "external",
+            href: `${String(config.DASHBOARD_URL || "").replace(/\/$/, "")}/dashboard?product=trevio`,
+            disabled: false,
+        },
+    ],
+    authActions: {
+        login: { label: "Sign in", path: "/auth?app=trevio" },
+        logout: { label: "Logout", eventName: "USER_LOGOUT", redirectTo: "/trevio" },
+    },
+    routeMap: {
+        "/trevio": "trevio",
+        "/trevio/trips": "trevio",
+        "/trips": "trevio",
+    },
+    routes: [
+        { id: "home", path: "/trevio", component: "home", access: "public" },
+        { id: "trips", path: "/trevio/trips", component: "trips", access: "public" },
+    ],
+    fallbacks: {
+        authenticated: "/trevio",
+        anonymous: "/auth?app=trevio",
+        unauthorized: "/trevio",
+    },
+});
+
+const buildTrevistaHeaderConfig = (baseConfig = {}) => ({
+    ...baseConfig,
+    brand: {
+        label: "Trevista",
+        subtitle: "by TravelsTrem",
+        mark: "T",
+        homePath: "/trevista",
+    },
+    menu: [
+        { id: "home", label: "Home", type: "internal", path: "/trevista", disabled: false },
+        {
+            id: "packages",
+            label: "Packages",
+            type: "internal",
+            path: "/trevista/tours",
+            disabled: false,
+        },
+        {
+            id: "customTrip",
+            label: "Custom trip",
+            type: "internal",
+            path: "/trevista/customise-tour",
+            disabled: false,
+        },
+        {
+            id: "dashboard",
+            label: "Dashboard",
+            type: "external",
+            href: `${String(config.DASHBOARD_URL || "").replace(/\/$/, "")}/dashboard?product=trevista`,
+            target: "_self",
+            disabled: false,
+        },
+    ],
+    navigation: [
+        { id: "home", label: "Home", path: "/trevista", access: "public" },
+        { id: "packages", label: "Packages", path: "/trevista/tours", access: "public" },
+        {
+            id: "customTrip",
+            label: "Custom trip",
+            path: "/trevista/customise-tour",
+            access: "public",
+        },
+        {
+            id: "dashboard",
+            label: "Dashboard",
+            path: "/dashboard",
+            access: "authenticated",
+            disabled: true,
+        },
+    ],
+    authActions: {
+        login: { label: "Sign in", path: "/auth?app=trevista" },
+        logout: { label: "Logout", eventName: "USER_LOGOUT", redirectTo: "/trevista" },
+    },
+    routeMap: {
+        "/trevista": "trevista",
+        "/trevista/tours": "trevista",
+        "/trevista/tour": "trevista",
+        "/trevista/customise-tour": "trevista",
+    },
+    routes: [
+        { id: "home", path: "/trevista", component: "home", access: "public" },
+        { id: "packages", path: "/trevista/tours", component: "tourListing", access: "public" },
+        {
+            id: "customTrip",
+            path: "/trevista/customise-tour",
+            component: "customTrip",
+            access: "public",
+        },
+        {
+            id: "tourDetails",
+            path: "/trevista/tour/:tourRef",
+            component: "tourDetails",
+            access: "public",
+        },
+    ],
+    fallbacks: {
+        authenticated: "/trevista",
+        anonymous: "/auth?app=trevista",
+        unauthorized: "/trevista",
+    },
+});
+
+const buildTrehubHeaderConfig = (baseConfig = {}) => ({
+    ...baseConfig,
+    brand: {
+        label: "Trehub",
+        subtitle: "Flights & Hotels by TravelsTrem",
+        mark: "T",
+        homePath: "/trehub",
+    },
+    menu: [
+        { id: "home", label: "Home", type: "internal", path: "/trehub", disabled: false },
+        {
+            id: "flights",
+            label: "Flights",
+            type: "internal",
+            path: "/trehub/flights",
+            disabled: false,
+        },
+        {
+            id: "hotels",
+            label: "Hotels",
+            type: "internal",
+            path: "/trehub/hotels",
+            disabled: false,
+        },
+        {
+            id: "dashboard",
+            label: "Dashboard",
+            type: "external",
+            href: `${String(config.DASHBOARD_URL || "").replace(/\/$/, "")}/dashboard?product=trehub`,
+            disabled: false,
+        },
+    ],
+    authActions: {
+        login: { label: "Sign in", path: "/auth?app=trehub" },
+        logout: { label: "Logout", eventName: "USER_LOGOUT", redirectTo: "/trehub" },
+    },
+    routeMap: {
+        "/trehub": "trehub",
+        "/trehub/flights": "trehub",
+        "/trehub/hotels": "trehub",
+    },
+    routes: [
+        { id: "home", path: "/trehub", component: "home", access: "public" },
+        { id: "flights", path: "/trehub/flights", component: "flights", access: "public" },
+        { id: "hotels", path: "/trehub/hotels", component: "hotels", access: "public" },
+    ],
+    fallbacks: {
+        authenticated: "/trehub",
+        anonymous: "/auth?app=trehub",
+        unauthorized: "/trehub",
+    },
+});
+
 const buildAdminHeaderConfig = (baseConfig = {}) => ({
     ...baseConfig,
+    variant: "admin",
     brand: {
         ...(baseConfig.brand || {}),
         label: "AdminTREM",
-        homePath: "/manage/tours?tab=dashboard",
+        subtitle: "Platform Administration",
+        homePath: "/manage/tours?tab=overview",
+    },
+    adminNavigation: [
+        { id: "overview", label: "Overview", icon: "home", target: "overview" },
+        {
+            id: "enquiries",
+            label: "Bookings & enquiries",
+            icon: "messageCircle",
+            target: "enquiries",
+        },
+        { id: "support", label: "Support desk", icon: "support", target: "support" },
+        {
+            id: "internalTeam",
+            label: "Internal team",
+            icon: "shieldCheck",
+            target: "internalTeam",
+        },
+        { id: "services", label: "Travel products", icon: "briefcaseBusiness", target: "services" },
+        {
+            id: "tenancy",
+            label: "Partners & agencies",
+            icon: "building2",
+            target: "tenancy",
+            masterOnly: true,
+        },
+        {
+            id: "pricing",
+            label: "Pricing controls",
+            icon: "wallet",
+            target: "pricing",
+            masterOnly: true,
+        },
+        {
+            id: "tracking",
+            label: "Tracking & events",
+            icon: "eye",
+            target: "tracking",
+            masterOnly: true,
+        },
+        { id: "clients", label: "Clients", icon: "usersRound", target: "clients" },
+        { id: "notifications", label: "Notifications", icon: "bell", target: "notifications" },
+        { id: "profile", label: "My profile", icon: "user", target: "profile" },
+        { id: "logout", label: "Sign out", icon: "logout", action: "logout" },
+    ],
+    adminBreadcrumbs: {
+        overview: [
+            { label: "Administration", path: "/manage/tours?tab=overview" },
+            { label: "Overview" },
+        ],
+        enquiries: [
+            { label: "Administration", path: "/manage/tours?tab=overview" },
+            { label: "Bookings & enquiries" },
+        ],
+        support: [
+            { label: "Administration", path: "/manage/tours?tab=overview" },
+            { label: "Support desk" },
+        ],
+        internalTeam: [
+            { label: "Administration", path: "/manage/tours?tab=overview" },
+            { label: "Internal team" },
+        ],
+        services: [
+            { label: "Administration", path: "/manage/tours?tab=overview" },
+            { label: "Travel products" },
+        ],
+        tenancy: [
+            { label: "Administration", path: "/manage/tours?tab=overview" },
+            { label: "Partners & agencies" },
+        ],
+        pricing: [
+            { label: "Administration", path: "/manage/tours?tab=overview" },
+            { label: "Pricing controls" },
+        ],
+        tracking: [
+            { label: "Administration", path: "/manage/tours?tab=overview" },
+            { label: "Tracking & events" },
+        ],
+        clients: [
+            { label: "Administration", path: "/manage/tours?tab=overview" },
+            { label: "Clients" },
+        ],
+        profile: [
+            { label: "Administration", path: "/manage/tours?tab=overview" },
+            { label: "My profile" },
+        ],
+        notifications: [
+            { label: "Administration", path: "/manage/tours?tab=overview" },
+            { label: "Notifications" },
+        ],
     },
     leftSection: {
         ...(baseConfig.leftSection || {}),
         welcome: true,
         showLogout: true,
         showStatus: true,
-        showNotifications: false,
         showFavorites: false,
     },
     menu: [
@@ -229,14 +689,14 @@ const buildAdminHeaderConfig = (baseConfig = {}) => ({
                     id: "adminTours",
                     label: "Tour Management",
                     app: "adminTREM",
-                    path: "/manage/tours?tab=tours",
+                    path: "/manage/tours?tab=services",
                     disabled: false,
                 },
                 {
                     id: "agencyManagement",
                     label: "Agency Management",
                     app: "adminTREM",
-                    path: "/manage/tours?tab=agencies",
+                    path: "/manage/tours?tab=tenancy",
                     disabled: false,
                 },
             ],
@@ -245,29 +705,63 @@ const buildAdminHeaderConfig = (baseConfig = {}) => ({
             id: "adminDashboard",
             label: "Dashboard",
             app: "adminTREM",
-            path: "/manage/tours?tab=dashboard",
+            path: "/manage/tours?tab=overview",
             disabled: false,
         },
     ],
     navigation: [
-        { id: "services", label: "Services", path: "/manage/tours?tab=tours", access: "authenticated" },
-        { id: "dashboard", label: "Dashboard", path: "/manage/tours?tab=dashboard", access: "authenticated" },
-        { id: "agencies", label: "Agencies", path: "/manage/tours?tab=agencies", access: "roles", roles: ["admin"] },
+        {
+            id: "services",
+            label: "Services",
+            path: "/manage/tours?tab=services",
+            access: "authenticated",
+        },
+        {
+            id: "dashboard",
+            label: "Dashboard",
+            path: "/manage/tours?tab=overview",
+            access: "authenticated",
+        },
+        {
+            id: "agencies",
+            label: "Agencies",
+            path: "/manage/tours?tab=tenancy",
+            access: "roles",
+            roles: ["admin"],
+        },
     ],
     routeMap: {
         "/manage/tours": "adminTREM",
         "/admin/tours": "adminTREM",
-        "/bookings": "adminTREM",
         "/login": "auth",
     },
     routes: [
-        { id: "login", path: "/login", component: "auth", access: "publicOnly", authenticatedRedirect: "/manage/tours?tab=dashboard" },
-        { id: "manageTours", path: "/manage/tours", component: "tourManagement", access: "roles", roles: ["admin"], preserveState: true },
-        { id: "adminTours", path: "/admin/tours", component: "tourManagement", access: "roles", roles: ["admin"], preserveState: true },
-        { id: "bookingDetail", path: "/bookings/:bookingId", component: "adminBookingDetail", access: "roles", roles: ["admin"], preserveState: true },
+        {
+            id: "login",
+            path: "/login",
+            component: "auth",
+            access: "publicOnly",
+            authenticatedRedirect: "/manage/tours?tab=overview",
+        },
+        {
+            id: "manageTours",
+            path: "/manage/tours",
+            component: "tourManagement",
+            access: "roles",
+            roles: ["admin"],
+            preserveState: true,
+        },
+        {
+            id: "adminTours",
+            path: "/admin/tours",
+            component: "tourManagement",
+            access: "roles",
+            roles: ["admin"],
+            preserveState: true,
+        },
     ],
     fallbacks: {
-        authenticated: "/manage/tours?tab=dashboard",
+        authenticated: "/manage/tours?tab=overview",
         anonymous: "/login",
         unauthorized: "/login",
     },
@@ -275,9 +769,10 @@ const buildAdminHeaderConfig = (baseConfig = {}) => ({
 
 const buildAgentHeaderConfig = (baseConfig = {}) => ({
     ...baseConfig,
+    variant: "partner",
     brand: {
         ...(baseConfig.brand || {}),
-        label: "AgentTREM",
+        label: "Partner Portal",
         homePath: "/agent/services",
     },
     leftSection: {
@@ -285,7 +780,6 @@ const buildAgentHeaderConfig = (baseConfig = {}) => ({
         welcome: true,
         showLogout: true,
         showStatus: true,
-        showNotifications: false,
         showFavorites: false,
     },
     menu: [
@@ -304,44 +798,182 @@ const buildAgentHeaderConfig = (baseConfig = {}) => ({
             disabled: false,
         },
         {
-            id: "agentBookings",
-            label: "Bookings",
-            app: "agentTREM",
-            path: "/agent/bookings",
-            disabled: false,
-        },
-        {
             id: "agentAgency",
-            label: "Agency",
+            label: "Partner Agency",
             app: "agentTREM",
             path: "/agent/agency",
             disabled: false,
         },
     ],
     navigation: [
-        { id: "services", label: "Services", path: "/agent/services", access: "roles", roles: ["agent"] },
-        { id: "dashboard", label: "Dashboard", path: "/agent/dashboard", access: "roles", roles: ["agent"] },
-        { id: "bookings", label: "Bookings", path: "/agent/bookings", access: "roles", roles: ["agent"] },
-        { id: "agency", label: "Agency", path: "/agent/agency", access: "roles", roles: ["agent"] },
+        {
+            id: "services",
+            label: "Services",
+            path: "/agent/services",
+            access: "roles",
+            roles: ["agent"],
+        },
+        {
+            id: "dashboard",
+            label: "Dashboard",
+            path: "/agent/dashboard",
+            access: "roles",
+            roles: ["agent"],
+        },
+        {
+            id: "agency",
+            label: "Partner Agency",
+            path: "/agent/agency",
+            access: "roles",
+            roles: ["agent"],
+        },
+    ],
+    partnerProducts: [
+        {
+            key: "trevista",
+            label: "Trevista",
+            menuLabel: "Trevista Tours",
+            icon: "map",
+            listPath: "/agent/services/tours",
+            createPath: "/agent/services/tours?create=true",
+            createLabel: "New Trevista Tour",
+        },
+        {
+            key: "trevio",
+            label: "Trevio",
+            menuLabel: "Trevio Trips",
+            icon: "mountain",
+            listPath: "/agent/trevio/trips",
+            createPath: "/agent/trevio/trips?create=true",
+            createLabel: "New Trevio Trip",
+        },
+    ],
+    partnerBreadcrumbs: [
+        {
+            match: "/agent/services/tours",
+            items: [{ label: "Products", path: "/agent/dashboard" }, { label: "Trevista Tours" }],
+        },
+        {
+            match: "/agent/trevio/trips",
+            items: [{ label: "Products", path: "/agent/dashboard" }, { label: "Trevio Trips" }],
+        },
+        {
+            match: "/agent/bookings",
+            items: [
+                { label: "Workspace", path: "/agent/dashboard" },
+                { label: "Bookings & enquiries" },
+            ],
+        },
+        {
+            match: "/agent/enquiries",
+            items: [
+                { label: "Workspace", path: "/agent/dashboard" },
+                { label: "Bookings & enquiries" },
+            ],
+        },
+        {
+            match: "/agent/customers",
+            items: [{ label: "Workspace", path: "/agent/dashboard" }, { label: "Customers" }],
+        },
+        {
+            match: "/agent/support",
+            items: [{ label: "Workspace", path: "/agent/dashboard" }, { label: "Help & Support" }],
+        },
+        {
+            match: "/agent/agency",
+            items: [
+                { label: "Workspace", path: "/agent/dashboard" },
+                { label: "Agency Workspace" },
+            ],
+        },
+        {
+            match: "/agent/agents",
+            items: [
+                { label: "Workspace", path: "/agent/dashboard" },
+                { label: "Agency Workspace", path: "/agent/agency" },
+                { label: "Team" },
+            ],
+        },
+        {
+            match: "/agent/partner-agency",
+            items: [
+                { label: "Workspace", path: "/agent/dashboard" },
+                { label: "Agency Workspace" },
+            ],
+        },
+        {
+            match: "/agent/reports",
+            items: [{ label: "Agency", path: "/agent/dashboard" }, { label: "Reports" }],
+        },
+        {
+            match: "/agent/profile",
+            items: [{ label: "Account", path: "/agent/dashboard" }, { label: "My Profile" }],
+        },
+        {
+            match: "/agent/settings",
+            items: [{ label: "Account", path: "/agent/dashboard" }, { label: "Settings" }],
+        },
+        {
+            match: "/agent/notifications",
+            items: [{ label: "Workspace", path: "/agent/dashboard" }, { label: "Notifications" }],
+        },
+        {
+            match: "/agent/services",
+            items: [{ label: "Workspace" }, { label: "Services" }],
+        },
+        {
+            match: "/agent/dashboard",
+            items: [{ label: "Workspace" }, { label: "Dashboard" }],
+        },
     ],
     routeMap: {
         "/agent/services": "agentTREM",
         "/agent/dashboard": "agentTREM",
-        "/agent/bookings": "agentTREM",
         "/agent/agency": "agentTREM",
         "/agent/settings": "agentTREM",
         "/agent/tours": "agentTREM",
-        "/bookings": "agentTREM",
         "/login": "auth",
     },
     routes: [
-        { id: "login", path: "/login", component: "auth", access: "publicOnly", authenticatedRedirect: "/agent/services" },
-        { id: "agentServices", path: "/agent/services", component: "agentServices", access: "roles", roles: ["agent"], preserveState: true },
-        { id: "agentDashboard", path: "/agent/dashboard", component: "agentProfileDashboard", access: "roles", roles: ["agent"], preserveState: true },
-        { id: "agentBookings", path: "/agent/bookings", component: "agentBookings", access: "roles", roles: ["agent"], preserveState: true },
-        { id: "agentAgency", path: "/agent/agency", component: "partnerAgency", access: "roles", roles: ["agent"], preserveState: true },
-        { id: "agentSettings", path: "/agent/settings", component: "agentSettings", access: "roles", roles: ["agent"], preserveState: true },
-        { id: "bookingDetail", path: "/bookings/:bookingId", component: "agentBookingDetail", access: "roles", roles: ["agent"], preserveState: true },
+        {
+            id: "login",
+            path: "/login",
+            component: "auth",
+            access: "publicOnly",
+            authenticatedRedirect: "/agent/services",
+        },
+        {
+            id: "agentServices",
+            path: "/agent/services",
+            component: "agentServices",
+            access: "roles",
+            roles: ["agent"],
+            preserveState: true,
+        },
+        {
+            id: "agentDashboard",
+            path: "/agent/dashboard",
+            component: "agentProfileDashboard",
+            access: "roles",
+            roles: ["agent"],
+            preserveState: true,
+        },
+        {
+            id: "agentAgency",
+            path: "/agent/agency",
+            component: "partnerAgency",
+            access: "roles",
+            roles: ["agent"],
+            preserveState: true,
+        },
+        {
+            id: "agentSettings",
+            path: "/agent/settings",
+            component: "agentSettings",
+            access: "roles",
+            roles: ["agent"],
+            preserveState: true,
+        },
     ],
     fallbacks: {
         authenticated: "/agent/services",
@@ -357,19 +989,20 @@ const resolvePageConfig = (req) => {
         "/agent/services": "agent-services",
         "/agent/tours": "agent-services",
         "/agent/dashboard": "agent-dashboard",
-        "/agent/bookings": "agent-bookings",
         "/agent/agency": "agent-agency",
         "/agent/settings": "agent-dashboard",
     };
-    const pageName = req.query.page
-        || (req.query.app === "agentTREM" ? agentPathMap[pathname] : null)
-        || json.componentData?.pathMap?.[pathname]
-        || json.componentData?.defaultPage
-        || "home";
-    const pageConfig = json.componentData?.pages?.[pageName] || json.componentData?.pages?.home || {
-        page: pageName,
-        widgets: [],
-    };
+    const pageName =
+        req.query.page ||
+        (req.query.app === "agentTREM" ? agentPathMap[pathname] : null) ||
+        json.componentData?.pathMap?.[pathname] ||
+        json.componentData?.defaultPage ||
+        "home";
+    const pageConfig = json.componentData?.pages?.[pageName] ||
+        json.componentData?.pages?.home || {
+            page: pageName,
+            widgets: [],
+        };
 
     return {
         ...pageConfig,
@@ -407,13 +1040,15 @@ export const getUserSession = async (req, res) => {
         });
     } catch (error) {
         console.error("getUserSession error:", error && error.stack ? error.stack : error);
-        return res.status(500).json({ status: "error", message: "Failed to load user session config" });
+        return res
+            .status(500)
+            .json({ status: "error", message: "Failed to load user session config" });
     }
 };
 
 export const getSession = async (req, res) => {
     try {
-        const session = await getSessionFromRequest(req);
+        const session = await getSessionFromRequest(req, res);
         const pageConfig = resolvePageConfig(req);
 
         return res.json({
@@ -435,42 +1070,165 @@ export const getSession = async (req, res) => {
     }
 };
 
+const scopeHeaderConfig = (headerConfig, app, brandMap = {}, globalBrand = {}) => {
+    const { logos = {}, navigation, remotes = {}, ...scoped } = headerConfig;
+    const logoKey = { adminTREM: "admin", agentTREM: "agent", shell: "app-shell" }[app] || app;
+    const logo = { ...logos[logoKey], ...brandMap[logoKey] };
+    const referencedRemotes = new Set(
+        (scoped.routes || []).map((route) => route.remote).filter(Boolean),
+    );
+    const scopedRemotes = Object.fromEntries(
+        Object.entries(remotes).filter(([key]) => referencedRemotes.has(key)),
+    );
+
+    return {
+        ...scoped,
+        version: 3,
+        app,
+        accountNavigation: [
+            ["overview", "Dashboard", "home"],
+            ["bookings", "Bookings", "calendar"],
+            ["wishlist", "Wishlist", "heart"],
+            ["profile", "Profile", "user"],
+            ["notifications", "Notifications", "bell"],
+            ["support", "Help & Support", "support"],
+        ].map(([id, label, icon]) => ({
+            id,
+            label,
+            icon,
+            href: `${String(config.DASHBOARD_URL || "").replace(/\/$/, "")}/dashboard/${id}${["trevio", "trevista", "trehub"].includes(app) ? `?product=${encodeURIComponent(app)}` : ""}`,
+        })),
+        brand: {
+            ...scoped.brand,
+            ...(logo.logoSrc ? { logoSrc: logo.logoSrc } : {}),
+            ...(brandMap[logoKey]?.name ? { label: brandMap[logoKey].name } : {}),
+            ...(brandMap[logoKey]?.subtitle !== undefined
+                ? { subtitle: brandMap[logoKey].subtitle }
+                : {}),
+            ...globalBrand,
+            subtitle: globalBrand.tagline || "",
+        },
+        ...(Object.keys(scopedRemotes).length ? { remotes: scopedRemotes } : {}),
+    };
+};
+
 export const getHeaderConfig = async (req, res) => {
     try {
         const json = headerConfigTemplate;
-        const requestedApp = req.query.app || "";
+        const requestedApp = req.query.app || "shell";
+        const supportedApps = [
+            "shell",
+            "app-shell",
+            "trevio",
+            "trevista",
+            "trehub",
+            "adminTREM",
+            "agentTREM",
+        ];
+        if (!supportedApps.includes(requestedApp)) {
+            return res.status(400).json({ status: "error", message: "Unsupported application" });
+        }
+        if (requestedApp === "app-shell") return await getAppHeaderConfig(req, res);
+        if (
+            req.tenant?.client &&
+            ["trevio", "trevista", "trehub"].includes(requestedApp) &&
+            tenantDeployment(req.tenant.client).mode === "app-shell"
+        )
+            return res.status(403).json({
+                status: "error",
+                message: "Open this product through your tenant App Shell.",
+            });
+        const clientId = req.tenant?.client ? req.tenant.id : process.env.TENANT_CLIENT_ID || "";
         const baseHeaderConfig = applyEnvironmentRemotes(json.componentData);
-        const headerConfig = requestedApp === "adminTREM"
-            ? buildAdminHeaderConfig(baseHeaderConfig)
-            : requestedApp === "agentTREM"
-                ? buildAgentHeaderConfig(baseHeaderConfig)
-                : baseHeaderConfig;
-        const pathname = req.query.pathname || "/";
+
+        let clientBranding = null;
+        if (clientId) {
+            try {
+                const Client = (await import("../../clients/models/Client.js")).default;
+                clientBranding = await Client.findById(clientId).lean();
+            } catch (_) {}
+        }
+
+        let headerConfig =
+            requestedApp === "trevio"
+                ? buildTrevioHeaderConfig(baseHeaderConfig)
+                : requestedApp === "trevista"
+                  ? buildTrevistaHeaderConfig(baseHeaderConfig)
+                  : requestedApp === "trehub"
+                    ? buildTrehubHeaderConfig(baseHeaderConfig)
+                    : requestedApp === "adminTREM"
+                      ? buildAdminHeaderConfig(baseHeaderConfig)
+                      : requestedApp === "agentTREM"
+                        ? buildAgentHeaderConfig(baseHeaderConfig)
+                        : baseHeaderConfig;
+
+        const brandMap =
+            clientBranding?.branding instanceof Map
+                ? Object.fromEntries(clientBranding.branding)
+                : clientBranding?.branding || {};
+        headerConfig = scopeHeaderConfig(headerConfig, requestedApp, brandMap, req.brand);
+        if (req.tenant?.client || clientBranding) {
+            const tenant = structuredClone(req.tenant?.client || clientBranding);
+            headerConfig.footer = tenantFooter(tenant);
+            headerConfig.tenantId = String(tenant._id);
+            const tenantUser = await getSessionUser({ req, res, allowRefresh: false });
+            const master = tenantUser?.clientRole === "client_master_admin";
+            if (tenantUser?.productAccess?.length)
+                tenant.productAccess = tenant.productAccess.filter((key) =>
+                    tenantUser.productAccess.includes(key),
+                );
+            headerConfig.tenantCapabilities = {
+                ...tenantConfiguration(tenant),
+                canManageCompany: master,
+                deployment: tenantDeployment(req.tenant?.client || clientBranding),
+            };
+            headerConfig.tenantTheme = tenantConfiguration(tenant).theme;
+            if (headerConfig.adminNavigation)
+                headerConfig.adminNavigation = headerConfig.adminNavigation
+                    .filter(
+                        (item) =>
+                            !["clients", "tracking"].includes(item.id) &&
+                            (!["internalTeam", "pricing"].includes(item.id) || master) &&
+                            (item.id !== "tenancy" || (tenant.partnerEnabled && master)) &&
+                            (item.id !== "services" ||
+                                tenant.productAccess.some((key) =>
+                                    ["trevio", "trevista"].includes(key),
+                                )) &&
+                            (!["support", "notifications", "profile"].includes(item.id) ||
+                                (tenant.accountModules || []).includes(item.id)),
+                    )
+                    .map((item) =>
+                        ["tenancy", "internalTeam", "pricing"].includes(item.id)
+                            ? {
+                                  ...item,
+                                  masterOnly: false,
+                                  ...(item.id === "internalTeam"
+                                      ? { label: "Company & members" }
+                                      : {}),
+                              }
+                            : item,
+                    );
+        }
+        if (!req.tenant?.client)
+            headerConfig.footer = {
+                ...req.brand.footer,
+                brand: req.brand.name,
+                logoSrc: req.brand.logoSrc,
+                logoDarkSrc: req.brand.logoDarkSrc,
+                description: req.brand.tagline,
+            };
+        const pathname = req.query.pathname || headerConfig.brand.homePath || "/";
         const activePath = resolveActivePath(pathname, headerConfig);
-        const pageConfig = resolvePageConfig(req);
-        const isAuthenticated = req.query.isAuthenticated === "true";
-        const user = isAuthenticated
-            ? {
-                id: null,
-                name: req.query.userName || null,
-                email: req.query.userEmail || null,
-                role: req.query.role || "member",
-            }
-            : null;
+        res.setHeader("Cache-Control", "private, no-store");
 
         return res.json({
             ...json,
             componentData: {
                 ...headerConfig,
                 activePath,
-                pageConfig,
-                state: {
-                    isAuthenticated,
-                    role: user?.role || "public",
-                    user,
-                    pathname,
-                    activePath,
-                },
+                ...(["adminTREM", "agentTREM"].includes(requestedApp)
+                    ? { pageConfig: resolvePageConfig(req) }
+                    : {}),
             },
         });
     } catch (error) {
@@ -479,9 +1237,193 @@ export const getHeaderConfig = async (req, res) => {
     }
 };
 
+const withSessionAuthAction = (template, isAuthenticated, surface) => {
+    if (isAuthenticated) return template;
+
+    if (surface === "sidebar") {
+        return {
+            ...template,
+            componentData: {
+                ...template.componentData,
+                sections: (template.componentData?.sections || []).map((section) => ({
+                    ...section,
+                    items: (section.items || []).map((item) =>
+                        item.action === "logout"
+                            ? {
+                                  ...item,
+                                  id: "login",
+                                  label: "Sign In",
+                                  icon: "login",
+                                  action: "login",
+                              }
+                            : item,
+                    ),
+                })),
+            },
+        };
+    }
+
+    return {
+        ...template,
+        componentData: {
+            ...template.componentData,
+            user: {
+                ...template.componentData?.user,
+                items: (template.componentData?.user?.items || []).map((item) =>
+                    item.action === "logout"
+                        ? { ...item, id: "login", label: "Sign In", icon: "login", action: "login" }
+                        : item,
+                ),
+            },
+        },
+    };
+};
+
+export const getSidebarConfig = async (req, res) => {
+    const [session, hiddenKeys] = await Promise.all([
+        getSessionFromRequest(req, res),
+        getRequestHiddenProducts(req),
+    ]);
+    const sidebarConfig = applyProductHiding(sidebarConfigTemplate, hiddenKeys);
+    sidebarConfig.componentData.brand = {
+        ...sidebarConfig.componentData.brand,
+        ...req.brand,
+        ariaLabel: `${req.brand.name} home`,
+    };
+    const services = req.tenant?.client?.modules?.trehub;
+    if (services?.length === 1) {
+        for (const section of sidebarConfig.componentData.sections || [])
+            for (const item of section.items || [])
+                if (item.target === "trehub")
+                    item.label = services[0] === "hotels" ? "Hotels" : "Flights";
+    }
+    if (req.tenant?.client) {
+        const client = req.tenant.client;
+        sidebarConfig.componentData.variant = "sidebar";
+        sidebarConfig.componentData.sections = sidebarConfig.componentData.sections
+            .map((section) => ({
+                ...section,
+                items: (section.items || [])
+                    .map((item) => tenantNavigationItem(item, client))
+                    .filter(Boolean),
+            }))
+            .filter((section) => section.items.length);
+        const plan = sidebarConfig.componentData.sections.find((section) => section.id === "plan");
+        if (plan && !hiddenKeys.includes("trevista"))
+            plan.items.push({
+                id: "custom-enquiries",
+                label: "Custom tour enquiry",
+                icon: "messageCircle",
+                target: "custom-enquiries",
+                path: "/trevista/customise-tour",
+            });
+        const account = sidebarConfig.componentData.sections.find(
+            (section) => section.id === "account",
+        );
+        if (account) {
+            account.items = account.items.filter((item) => item.id !== "login");
+            account.items.push({
+                id: "logout",
+                label: "Sign Out",
+                icon: "logout",
+                action: "logout",
+            });
+        }
+        sidebarConfig.componentData.profile.fallbackMeta = client.globalBrand?.label || client.name;
+        res.setHeader("Cache-Control", "private, no-store");
+        sidebarConfig.componentData.brand = {
+            ...sidebarConfig.componentData.brand,
+            name: req.tenant.client.globalBrand?.label || req.tenant.client.name,
+            ariaLabel: `${req.tenant.client.globalBrand?.label || req.tenant.client.name} home`,
+            logoSrc: req.tenant.client.globalBrand?.logoSrc || "",
+        };
+    }
+    return res.json(withSessionAuthAction(sidebarConfig, session.isAuthenticated, "sidebar"));
+};
+
+export const getAppHeaderConfig = async (req, res) => {
+    const [session, hiddenKeys] = await Promise.all([
+        getSessionFromRequest(req, res),
+        getRequestHiddenProducts(req),
+    ]);
+    const appHeaderConfig = applyProductHiding(appHeaderConfigTemplate, hiddenKeys);
+    appHeaderConfig.componentData.brand = { ...appHeaderConfig.componentData.brand, ...req.brand };
+    appHeaderConfig.componentData.footer = {
+        ...req.brand.footer,
+        brand: req.brand.name,
+        logoSrc: req.brand.logoSrc,
+        logoDarkSrc: req.brand.logoDarkSrc,
+        description: req.brand.tagline,
+    };
+    if (req.tenant?.client) {
+        const client = req.tenant.client;
+        appHeaderConfig.componentData.user.items = appHeaderConfig.componentData.user.items
+            .map((item) => tenantNavigationItem(item, client))
+            .filter(Boolean);
+        appHeaderConfig.componentData.navigationTabs.items =
+            appHeaderConfig.componentData.navigationTabs.items
+                .filter((item) => !["dashboard", "explore"].includes(item.id))
+                .map((item) => tenantNavigationItem(item, client))
+                .filter(Boolean);
+        appHeaderConfig.componentData.actions = appHeaderConfig.componentData.actions
+            .map((item) => tenantNavigationItem(item, client))
+            .filter(Boolean);
+    }
+    const services = req.tenant?.client?.modules?.trehub;
+    if (services?.length === 1) {
+        const item = appHeaderConfig.componentData.primaryAction?.menu?.items?.find(
+            (item) => item.target === "trehub",
+        );
+        if (item) {
+            item.title = services[0] === "hotels" ? "Hotels" : "Flights";
+            item.description = `Search ${services[0]}`;
+        }
+    }
+    res.setHeader("Cache-Control", "private, no-store");
+    return res.json(
+        withSessionAuthAction(
+            {
+                ...appHeaderConfig,
+                componentData: {
+                    ...appHeaderConfig.componentData,
+                    app: "app-shell",
+                    serviceNavigation: {
+                        trehub: hiddenKeys.includes("trehub")
+                            ? []
+                            : buildTrehubHeaderConfig().menu.filter(
+                                  (item) =>
+                                      item.path?.startsWith("/trehub/") &&
+                                      (!services || services.includes(item.id)),
+                              ),
+                    },
+                    ...(req.tenant?.client
+                        ? {
+                              footer: tenantFooter(req.tenant.client),
+                              tenantId: req.tenant.id,
+                              tenantTheme: tenantConfiguration(req.tenant.client).theme,
+                              tenantCapabilities: tenantConfiguration(req.tenant.client),
+                              brand: {
+                                  ...appHeaderConfig.componentData.brand,
+                                  ...req.tenant.client.globalBrand,
+                                  name:
+                                      req.tenant.client.globalBrand?.label ||
+                                      req.tenant.client.name,
+                              },
+                          }
+                        : {}),
+                },
+            },
+            session.isAuthenticated,
+            "header",
+        ),
+    );
+};
+
 export const getPageConfig = async (req, res) => {
     try {
         const pageConfig = resolvePageConfig(req);
+
+        setPublicConfigCacheHeaders(res);
 
         return res.json({
             status: "success",

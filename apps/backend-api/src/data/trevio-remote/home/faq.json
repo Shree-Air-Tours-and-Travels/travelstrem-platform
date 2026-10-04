@@ -1,0 +1,63 @@
+{
+  "status": "success",
+  "component": {
+    "data": {
+      "state": {
+        "faqItems": [
+          {
+            "question": "How do Trevio group trips work?",
+            "answer": "Trevio organises curated group trips for 8 to 16 like minded travellers. Each trip is led by a trip captain who handles logistics, local experiences, and on ground support, so you just show up and enjoy."
+          },
+          {
+            "question": "What's included in the trip price?",
+            "answer": "Most Trevio trips are all inclusive: accommodation, meals (as per itinerary), local transport, activities, and a trip captain. Flights are typically excluded unless mentioned. Check the Inclusions section on each trip page for specifics."
+          },
+          {
+            "question": "Can I customise the itinerary?",
+            "answer": "Trevio trips have a fixed curated itinerary, but we offer extras and optional experiences. For fully customised private trips, reach out via the Enquire button and our team will design something just for you."
+          },
+          {
+            "question": "What is the token amount and how does payment work?",
+            "answer": "The token amount is a small upfront payment (typically Rs. 1,999) to reserve your seat. The remaining balance can be paid in instalments before the departure date. Full payment details are shared after booking confirmation."
+          },
+          {
+            "question": "What is the cancellation policy?",
+            "answer": "Cancellation policies vary by trip. Generally, cancellations 30+ days before departure get a full refund minus the token amount. Closer to departure, tiered deductions apply. Check the Cancellation Policy section on each trip for exact terms."
+          },
+          {
+            "question": "Are the trips safe for solo travellers?",
+            "answer": "Absolutely. Most of our travellers come solo. Groups are vetted, trips are led by experienced captains, and 24/7 on trip support is always available. We also maintain verified reviews from past travellers for transparency."
+          }
+        ]
+      }
+    },
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "faqEyebrow": "FAQ",
+        "faqHeading": "Got questions?",
+        "faqHighlight": "We've got answers.",
+        "faqDescription": "Everything you need to know before you book your first Trevio trip."
+      },
+      "urls": {}
+    },
+    "structure": {
+      "type": "faqSection",
+      "source": "trevio",
+      "features": [
+        {
+          "name": "faqList",
+          "type": "faq",
+          "eyebrowRef": "faqEyebrow",
+          "headingRef": "faqHeading",
+          "highlightRef": "faqHighlight",
+          "descriptionRef": "faqDescription"
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

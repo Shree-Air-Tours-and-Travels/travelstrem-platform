@@ -1,4 +1,4 @@
-# TravelsTREM Page Definition Consistency Rules
+# TravelsTrem Page Definition Consistency Rules
 
 ## Contract
 

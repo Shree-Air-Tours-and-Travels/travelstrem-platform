@@ -1,0 +1,121 @@
+{
+  "status": "success",
+  "component": {
+    "data": {
+      "overviewRail": {
+        "ariaLabelRef": "railAriaLabel",
+        "widgets": [
+          {
+            "id": "quick-actions",
+            "type": "quickActions",
+            "titleRef": "quickActionsTitle",
+            "hideDisabled": true,
+            "items": [
+              {
+                "id": "plan-trip",
+                "titleRef": "planTripTitle",
+                "descriptionRef": "planTripDescription",
+                "icon": "map",
+                "hrefRef": "trevistaHome",
+                "target": "_self",
+                "ariaLabelRef": "planTripAriaLabel"
+              },
+              {
+                "id": "visa-requirements",
+                "titleRef": "visaTitle",
+                "descriptionRef": "visaDescription",
+                "icon": "visa",
+                "hrefRef": "contactTravelstrem",
+                "target": "_self",
+                "ariaLabelRef": "visaAriaLabel",
+                "disabled": true
+              },
+              {
+                "id": "upload-documents",
+                "titleRef": "documentsTitle",
+                "descriptionRef": "documentsDescription",
+                "icon": "passport",
+                "hrefRef": "profileHome",
+                "target": "_self",
+                "ariaLabelRef": "documentsAriaLabel",
+                "disabled": true
+              },
+              {
+                "id": "contact-support",
+                "titleRef": "supportTitle",
+                "descriptionRef": "supportDescription",
+                "icon": "phoneCall",
+                "targetTab": "support",
+                "ariaLabelRef": "supportAriaLabel"
+              }
+            ]
+          },
+          {
+            "id": "exclusive-offer",
+            "type": "exclusiveOffer",
+            "titleRef": "exclusiveTitle",
+            "available": false,
+            "emptyState": {
+              "icon": "ticket",
+              "titleRef": "exclusiveEmptyTitle",
+              "descriptionRef": "exclusiveEmptyDescription"
+            },
+            "headlineRef": "exclusiveHeadline",
+            "descriptionRef": "exclusiveDescription",
+            "codeLabelRef": "exclusiveCodeLabel",
+            "code": "TREM15",
+            "image": "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519358/travelstrem/site-assets/3c0cac66fdc978ae924520f8.jpg",
+            "imageAltRef": "exclusiveImageAlt",
+            "hrefRef": "trevistaPublic",
+            "target": "_self",
+            "ariaLabelRef": "exclusiveAriaLabel"
+          }
+        ]
+      }
+    },
+    "dataScope": { "options": {} },
+    "elements": {
+      "labels": {
+        "railAriaLabel": "Travel planning shortcuts and updates",
+        "quickActionsTitle": "Quick actions",
+        "planTripTitle": "Plan a new trip",
+        "planTripDescription": "Start planning your journey",
+        "planTripAriaLabel": "Plan a new trip with Tours and Packages",
+        "visaTitle": "Check visa requirements",
+        "visaDescription": "Get visa information for your destination",
+        "visaAriaLabel": "Ask about visa requirements",
+        "documentsTitle": "Upload documents",
+        "documentsDescription": "Keep your travel documents ready",
+        "documentsAriaLabel": "Open your travel profile",
+        "supportTitle": "Contact support",
+        "supportDescription": "We’re here to help",
+        "supportAriaLabel": "Open TravelsTREM support",
+        "exclusiveTitle": "Exclusive for you",
+        "exclusiveEmptyTitle": "New rewards are on the way",
+        "exclusiveEmptyDescription": "Personal offers and coupon codes will appear here when available.",
+        "exclusiveHeadline": "Get up to 15% off",
+        "exclusiveDescription": "on holiday packages",
+        "exclusiveCodeLabel": "Use code:",
+        "exclusiveImageAlt": "Tropical holiday resort by the sea",
+        "exclusiveAriaLabel": "Explore the exclusive Trevista holiday offer"
+      },
+      "urls": {
+        "trevistaHome": "/?tab=trevista",
+        "profileHome": "/?tab=profile",
+        "contactTravelstrem": "https://travelstrem.com/#contact",
+        "trevistaPublic": "https://trevista.travelstrem.com"
+      }
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "OverviewRail",
+          "props": { "dataKey": "overviewRail" }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

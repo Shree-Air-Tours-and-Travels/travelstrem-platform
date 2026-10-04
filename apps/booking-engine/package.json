@@ -1,0 +1,44 @@
+{
+  "name": "@apps/booking-engine",
+  "version": "0.1.0",
+  "private": true,
+  "main": "src/library.js",
+  "dependencies": {
+    "@packages/trem-docengine": "workspace:*",
+    "@packages/trem-form-engine": "workspace:*",
+    "@packages/trem-modals": "workspace:*",
+    "@packages/trem-process-engine": "workspace:*",
+    "@packages/trem-design-tokens": "workspace:*",
+    "@packages/trem-events": "workspace:*",
+    "@packages/trem-ui": "workspace:*",
+    "@packages/trem-utils": "workspace:*",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^7.8.2",
+    "react-scripts": "5.0.1",
+    "sass": "^1.86.0"
+  },
+  "scripts": {
+    "prebuild": "node ../../scripts/sync-favicons.mjs booking-engine",
+    "dev": "cross-env BROWSER=none PORT=3007 DISABLE_ESLINT_PLUGIN=true craco start",
+    "start": "cross-env BROWSER=none PORT=3007 DISABLE_ESLINT_PLUGIN=true craco start",
+    "build": "cross-env DISABLE_ESLINT_PLUGIN=true craco build",
+    "test": "craco test --watchAll=false"
+  },
+  "devDependencies": {
+    "@craco/craco": "^7.1.0",
+    "cross-env": "^7.0.3"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

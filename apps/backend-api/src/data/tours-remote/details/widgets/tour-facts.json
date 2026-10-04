@@ -8,9 +8,12 @@
     "elements": {
       "labels": {
         "route": "Route",
-        "distance": "Distance",
-        "km": "km",
-        "startDate": "Start date",
+        "duration": "Duration",
+        "days": "days",
+        "nights": "nights",
+        "departures": "Departures",
+        "dates": "Dates",
+        "to": "to",
         "seats": "Seats",
         "available": "available",
         "onRequest": "On request",

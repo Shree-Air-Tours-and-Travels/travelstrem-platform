@@ -1,0 +1,56 @@
+{
+  "status": "success",
+  "component": {
+    "data": {
+      "state": {
+        "features": [
+          {
+            "icon": "map",
+            "title": "Custom itineraries",
+            "description": "Tailored to your pace, interests and budget."
+          },
+          {
+            "icon": "users",
+            "title": "Expert local guides",
+            "description": "Passionate storytellers who know every hidden corner."
+          },
+          {
+            "icon": "shield",
+            "title": "Verified & safe",
+            "description": "Every trip is vetted. Secure payments, real reviews."
+          }
+        ]
+      }
+    },
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "touchEyebrow": "Get in Touch",
+        "touchHeading": "Your next story starts with a conversation.",
+        "touchDescription": "Whether you have a question about pricing, itinerary customisation, group sizes or dates — our travel experts are one message away.",
+        "touchCtaLabel": "Enquire Now",
+        "touchBadge": "Usually replies within 2 hours"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "type": "getInTouchSection",
+      "source": "trevio",
+      "features": [
+        {
+          "name": "contactCTA",
+          "type": "contactForm",
+          "eyebrowRef": "touchEyebrow",
+          "headingRef": "touchHeading",
+          "descriptionRef": "touchDescription",
+          "ctaActionLabelRef": "touchCtaLabel",
+          "badgeRef": "touchBadge"
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

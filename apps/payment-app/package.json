@@ -1,0 +1,37 @@
+{
+  "name": "@apps/payment-app",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@packages/trem-design-tokens": "workspace:*",
+    "@packages/trem-events": "workspace:*",
+    "@packages/trem-ui": "workspace:*",
+    "@packages/trem-utils": "workspace:*",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-scripts": "5.0.1",
+    "sass": "^1.86.0",
+    "@packages/trem-auth-core": "workspace:*"
+  },
+  "scripts": {
+    "dev": "cross-env BROWSER=none PORT=3018 DISABLE_ESLINT_PLUGIN=true craco start",
+    "start": "cross-env BROWSER=none PORT=3018 DISABLE_ESLINT_PLUGIN=true craco start",
+    "build": "cross-env DISABLE_ESLINT_PLUGIN=true craco build"
+  },
+  "devDependencies": {
+    "@craco/craco": "^7.1.0",
+    "cross-env": "^7.0.3"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

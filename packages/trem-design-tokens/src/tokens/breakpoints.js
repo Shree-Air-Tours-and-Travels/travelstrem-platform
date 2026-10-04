@@ -1,13 +1,15 @@
+import tokens from "./breakpoints-sass.js";
+
 export const breakpoints = {
-  phablet: "576px",
-  mobile: "640px",
-  md: "768px",
-  miniTablet: "834px",
-  tablet: "900px",
-  tabletLandscape: "1024px",
-  lg: "1024px",
-  laptop: "1280px",
-  desktop: "1440px",
-  wide: "1600px",
-  ultra: "1920px",
+  "phablet": tokens["breakpoint-phablet"],
+  "mobile": tokens["breakpoint-mobile"],
+  "md": tokens["breakpoint-md"],
+  "miniTablet": tokens["breakpoint-mini-tablet"],
+  "tablet": tokens["breakpoint-tablet"],
+  "tabletLandscape": tokens["breakpoint-tablet-landscape"],
+  "lg": tokens["breakpoint-lg"],
+  "laptop": tokens["breakpoint-laptop"],
+  "desktop": tokens["breakpoint-desktop"],
+  "wide": tokens["breakpoint-wide"],
+  "ultra": tokens["breakpoint-ultra"],
 };

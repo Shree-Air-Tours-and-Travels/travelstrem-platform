@@ -3,10 +3,19 @@
   "version": "1.0.0",
   "private": true,
   "main": "src/index.js",
-  "dependencies": { "axios": "^1.8.4" },
-  "peerDependencies": { "react": "^18.3.1" },
+  "dependencies": {
+    "@packages/trem-auth-core": "workspace:*",
+    "@packages/trem-events": "workspace:*",
+    "axios": "^1.8.4"
+  },
+  "peerDependencies": {
+    "react": "^18.3.1"
+  },
   "devDependencies": {
-    "vitest": "^3.0.0"
+    "@testing-library/react": "^16.2.0",
+    "jsdom": "^26.0.0",
+    "react-dom": "^18.3.1",
+    "vitest": "^3.2.6"
   },
   "scripts": {
     "test": "vitest run",

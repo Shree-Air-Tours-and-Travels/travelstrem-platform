@@ -1,16 +1,22 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { AdminPortalConfigProvider } from "./providers/AdminPortalProvider";
 import AppLayout from "./AppLayout";
-import { useThemeMode } from "@packages/trem-utils";
+import { Toaster } from "@packages/trem-ui";
+import { initRealtimeNotifications, RealtimeProvider } from "@packages/trem-events";
 
-const AdminApp = () => {
-    useThemeMode();
+const AdminApp = ({ embedded = false }) => {
+  // Backend-authored realtime toasts (e.g. new enquiry received).
+  useEffect(() => initRealtimeNotifications(), []);
 
-    return (
-        <AdminPortalConfigProvider>
-            <AppLayout />
-        </AdminPortalConfigProvider>
-    );
+  return (
+    <AdminPortalConfigProvider>
+      {/* Shared window-anchored socket: powers the live enquiry inbox. */}
+      <RealtimeProvider>
+        <Toaster />
+        <AppLayout embedded={embedded} />
+      </RealtimeProvider>
+    </AdminPortalConfigProvider>
+  );
 };
 
 export default AdminApp;

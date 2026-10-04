@@ -1,0 +1,33 @@
+@import "@packages/trem-design-tokens/scss/tokens";
+
+.quote-display {
+  &.card-subentity {
+    box-shadow: none;
+  }
+
+  .card-subentity__row {
+    min-height: 52px;
+  }
+
+  .card-subentity__row-label {
+    font-size: $font-size-sm;
+  }
+
+  .card-subentity__row-value {
+    font-size: $font-size-sm;
+  }
+
+  .card-subentity__totals {
+    margin-top: $space-5;
+  }
+
+  .card-subentity__footer-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .quote-display .card-subentity__footer-actions {
+    grid-template-columns: 1fr;
+  }
+}

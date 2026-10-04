@@ -1,0 +1,28 @@
+@import "../../styles/base/typography";
+
+.trem-progress-meter {
+  --meter-color: var(--color-primary);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: $space-3;
+  min-width: 0;
+  color: var(--text);
+
+  &--accent { --meter-color: var(--color-accent, var(--color-primary)); }
+  &--success { --meter-color: var(--color-success); }
+  &--info { --meter-color: var(--color-info, var(--color-primary)); }
+  &--warning { --meter-color: var(--color-warning); }
+
+  &__icon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: $radius-md; background: var(--primary-soft); color: var(--meter-color); }
+  &__body { display: grid; gap: $space-2; min-width: 0; }
+  &__copy { display: flex; align-items: baseline; justify-content: space-between; gap: $space-2; min-width: 0; }
+  &__copy span { overflow: hidden; color: var(--muted); font-size: $font-size-sm; text-overflow: ellipsis; white-space: nowrap; }
+  &__copy strong { color: var(--heading); font-size: $font-size-sm; white-space: nowrap; }
+  &__track { overflow: hidden; height: 8px; border-radius: $radius-full; background: var(--surface-muted); }
+  &__track span { display: block; height: 100%; border-radius: inherit; background: var(--meter-color); transform-origin: left; animation: trem-meter-reveal .55s $ease-standard both; }
+  &__percent { color: var(--muted); font-size: $font-size-xs; white-space: nowrap; }
+}
+
+@keyframes trem-meter-reveal { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) { .trem-progress-meter__track span { animation: none; } }

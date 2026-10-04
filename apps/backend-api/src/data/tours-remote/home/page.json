@@ -1,0 +1,34 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "pageTitle": "Welcome to Trevista by TravelsTREM"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {
+        "titleRef": "pageTitle"
+      },
+      "widgets": [
+        {
+          "type": "HeroBanner",
+          "source": "shell",
+          "widgetRef": "./widgets/hero-banner.json"
+        },
+        {
+          "type": "FeaturedHolidayPackages",
+          "source": "shell",
+          "widgetRef": "./widgets/featured-holiday-packages.json"
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

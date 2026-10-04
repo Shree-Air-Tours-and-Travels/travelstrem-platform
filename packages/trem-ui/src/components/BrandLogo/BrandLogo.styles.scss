@@ -1,0 +1,66 @@
+@import "../../styles/base/typography";
+
+.brand-logo {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  min-width: 0;
+  vertical-align: middle;
+  user-select: none;
+
+  &--clickable {
+    cursor: pointer;
+    border-radius: $radius-sm;
+
+    &:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 3px;
+    }
+  }
+}
+
+.brand-logo__mark {
+  position: relative;
+  display: flex;
+  align-items: center;
+  max-width: min(100%, 220px);
+  min-width: 0;
+  height: 42px;
+
+  &.is-loading { width: 112px; }
+}
+
+.brand-logo__image {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: left center;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+.brand-logo--small .brand-logo__mark {
+  height: 32px;
+}
+
+.brand-logo__placeholder {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: $radius-sm;
+  background: var(--surface-inset);
+  animation: brand-logo-pulse 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes brand-logo-pulse {
+  to { opacity: 0.45; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-logo__placeholder { animation: none; }
+}

@@ -1,0 +1,44 @@
+{
+  "status": "success",
+  "component": {
+    "data": {
+      "recentBookingsEmptyState": {
+        "icon": "reservations",
+        "titleRef": "recentEmptyTitle",
+        "descriptionRef": "recentEmptyDescription",
+        "actionLabelRef": "recentEmptyAction",
+        "actionHrefRef": "trevistaHome",
+        "actionAriaLabelRef": "recentEmptyActionAriaLabel"
+      }
+    },
+    "dataScope": { "options": {} },
+    "elements": {
+      "labels": {
+        "recentBookingsTitle": "Recent bookings & enquiries",
+        "recentEmptyTitle": "Your travel timeline starts here",
+        "recentEmptyDescription": "Request a tour and every enquiry, quote and booking update will appear in this timeline.",
+        "recentEmptyAction": "Discover tours",
+        "recentEmptyActionAriaLabel": "Explore available tours"
+      },
+      "urls": { "trevistaHome": "/?tab=trevista" }
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "RecentBookings",
+          "props": {
+            "titleRef": "recentBookingsTitle",
+            "dataKey": "recentActivity",
+            "emptyStateKey": "recentBookingsEmptyState",
+            "targetTab": "bookings",
+            "limit": 5,
+            "items": []
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

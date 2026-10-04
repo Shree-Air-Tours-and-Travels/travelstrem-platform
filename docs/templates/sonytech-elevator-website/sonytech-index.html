@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sonytech — Elevating Every Journey</title>
+  <meta name="description" content="Sonytech lifts, installation, modernization, spare parts, maintenance and customer support." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --ink:#202424;
+      --charcoal:#1c2526;
+      --slate:#596866;
+      --ivory:#f7f6f2;
+      --paper:#ffffff;
+      --soft:#efeee9;
+      --accent:#b89b72;
+      --accent-dark:#8e7654;
+      --success:#4f7964;
+      --danger:#b65d59;
+      --border:#e2e1dc;
+      --muted:#717876;
+      --radius:24px;
+      --shadow:0 20px 60px rgba(28,37,38,.08);
+      --container:min(1180px, calc(100% - 40px));
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      background:var(--ivory);
+      color:var(--ink);
+      font-family:Manrope,system-ui,-apple-system,sans-serif;
+      line-height:1.6;
+    }
+    a{color:inherit;text-decoration:none}
+    button,input,select,textarea{font:inherit}
+    img{max-width:100%;display:block}
+    .container{width:var(--container);margin:auto}
+    .section{padding:92px 0}
+    .section-sm{padding:60px 0}
+    .eyebrow{
+      display:inline-flex;align-items:center;gap:8px;
+      font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
+      color:var(--accent-dark);
+    }
+    .eyebrow:before{content:"";width:28px;height:1px;background:var(--accent)}
+    h1,h2,h3,h4{margin:0 0 14px;line-height:1.08}
+    h1,h2{font-family:"DM Serif Display",serif;font-weight:400}
+    h1{font-size:clamp(48px,7vw,88px);letter-spacing:-.035em}
+    h2{font-size:clamp(38px,5vw,62px);letter-spacing:-.025em}
+    h3{font-size:22px}
+    p{margin:0 0 18px;color:var(--muted)}
+    .lead{font-size:18px;max-width:700px}
+    .btn{
+      border:0;border-radius:999px;padding:14px 22px;font-weight:700;cursor:pointer;
+      display:inline-flex;align-items:center;justify-content:center;gap:8px;
+      transition:.2s ease;
+    }
+    .btn:hover{transform:translateY(-2px)}
+    .btn-dark{background:var(--charcoal);color:#fff}
+    .btn-light{background:#fff;border:1px solid var(--border)}
+    .btn-accent{background:var(--accent);color:#fff}
+    .btn-danger{background:var(--danger);color:#fff}
+    .btn-small{padding:10px 15px;font-size:13px}
+    .badge{
+      display:inline-flex;align-items:center;padding:7px 10px;border-radius:999px;
+      background:var(--soft);font-size:12px;font-weight:700;color:var(--slate)
+    }
+    .status{display:inline-flex;gap:7px;align-items:center;font-weight:700;font-size:13px}
+    .status:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--success)}
+    .grid{display:grid;gap:22px}
+    .grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .card{
+      background:rgba(255,255,255,.85);border:1px solid var(--border);
+      border-radius:var(--radius);padding:26px;box-shadow:0 1px 0 rgba(255,255,255,.8) inset;
+    }
+    .glass{background:rgba(255,255,255,.65);backdrop-filter:blur(18px)}
+    header{
+      position:sticky;top:0;z-index:30;background:rgba(247,246,242,.88);
+      backdrop-filter:blur(18px);border-bottom:1px solid rgba(226,225,220,.8)
+    }
+    .nav{height:78px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+    .brand{font-size:22px;font-weight:800;letter-spacing:.03em}
+    .brand span{color:var(--accent-dark)}
+    .navlinks{display:flex;gap:24px;font-size:14px;font-weight:700}
+    .navlinks a:hover{color:var(--accent-dark)}
+    .hero{padding:48px 0 34px}
+    .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:34px;align-items:stretch}
+    .hero-copy{
+      min-height:650px;background:linear-gradient(145deg,#f0eee6,#ffffff);
+      border:1px solid var(--border);border-radius:34px;padding:54px;
+      display:flex;flex-direction:column;justify-content:center;box-shadow:var(--shadow)
+    }
+    .hero-copy .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px}
+    .hero-visual{
+      min-height:650px;border-radius:34px;position:relative;overflow:hidden;
+      background:
+        linear-gradient(180deg,rgba(15,18,18,.06),rgba(15,18,18,.45)),
+        url('https://images.unsplash.com/photo-1487958449943-2429e8be8625?auto=format&fit=crop&w=1400&q=85') center/cover;
+      box-shadow:var(--shadow)
+    }
+    .hero-floating{
+      position:absolute;left:24px;right:24px;bottom:24px;padding:20px;border-radius:20px;
+      background:rgba(255,255,255,.88);backdrop-filter:blur(14px)
+    }
+    .trust{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:18px 0}
+    .trust .item{padding:18px 20px;border-left:1px solid var(--border)}
+    .trust strong{display:block;font-size:18px}
+    .section-head{display:flex;align-items:end;justify-content:space-between;gap:28px;margin-bottom:34px}
+    .section-head p{max-width:560px}
+    .lift-card{overflow:hidden;padding:0}
+    .lift-img{height:240px;background:#ddd center/cover}
+    .lift-card .body{padding:24px}
+    .specs{display:flex;flex-wrap:wrap;gap:9px;margin:18px 0}
+    .category-card{
+      min-height:210px;display:flex;flex-direction:column;justify-content:flex-end;
+      position:relative;overflow:hidden;color:#fff;background:#222
+    }
+    .category-card:before{
+      content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent,rgba(0,0,0,.7));z-index:1
+    }
+    .category-card > *{position:relative;z-index:2}
+    .category-card p{color:rgba(255,255,255,.8)}
+    .configurator{background:var(--charcoal);color:#fff;border-radius:34px;padding:36px}
+    .configurator p{color:#bfc7c5}
+    .steps{display:flex;gap:8px;flex-wrap:wrap;margin:24px 0 30px}
+    .step{padding:10px 14px;border-radius:999px;background:#2c3738;color:#c8d0ce;font-size:12px;font-weight:700}
+    .step.active{background:var(--accent);color:#fff}
+    .form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+    label{font-size:12px;font-weight:800;display:block;margin-bottom:7px}
+    input,select,textarea{
+      width:100%;border:1px solid #d9d8d3;border-radius:14px;padding:13px 14px;background:#fff;color:var(--ink);outline:none
+    }
+    textarea{min-height:105px;resize:vertical}
+    .configurator input,.configurator select,.configurator textarea{background:#253031;border-color:#3e4b4c;color:#fff}
+    .configurator option{color:#111}
+    .quote-box{background:#fff;color:var(--ink);border-radius:24px;padding:26px}
+    .price{font-size:34px;font-weight:800;letter-spacing:-.04em}
+    .timeline{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+    .timeline .node{padding:18px 12px;background:#fff;border:1px solid var(--border);border-radius:18px;text-align:center;font-size:12px;font-weight:800}
+    .timeline .node.done{background:#eef4f0;border-color:#d4e2da;color:var(--success)}
+    .timeline .node.active{background:var(--charcoal);color:#fff}
+    .dashboard-shell{display:grid;grid-template-columns:240px 1fr;min-height:650px;border:1px solid var(--border);border-radius:30px;overflow:hidden;background:#fff}
+    .sidebar{background:#182122;color:#fff;padding:25px}
+    .sidebar a{display:block;padding:11px 12px;border-radius:12px;color:#bfc7c5;font-size:13px}
+    .sidebar a.active,.sidebar a:hover{background:#263132;color:#fff}
+    .dash{padding:30px;background:#fafaf8}
+    .metric{background:#fff;border:1px solid var(--border);padding:20px;border-radius:18px}
+    .metric b{display:block;font-size:28px}
+    .support-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+    .emergency{background:#301f1f;color:#fff;border-radius:28px;padding:34px}
+    .emergency p{color:#e3cbcb}
+    .parts-search{display:flex;gap:10px;margin:22px 0}
+    .parts-search input{flex:1}
+    .part-row{display:grid;grid-template-columns:74px 1fr auto;gap:16px;align-items:center;padding:15px 0;border-top:1px solid var(--border)}
+    .part-thumb{width:74px;height:74px;border-radius:15px;background:var(--soft);display:grid;place-items:center;font-size:26px}
+    .portal-tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px}
+    .portal-tabs button{border:1px solid var(--border);background:#fff;padding:10px 14px;border-radius:999px;cursor:pointer;font-weight:700}
+    .portal-tabs button.active{background:var(--charcoal);color:#fff;border-color:var(--charcoal)}
+    .portal{display:none}
+    .portal.active{display:block}
+    .footer{background:#172020;color:#fff;padding:56px 0 28px;margin-top:90px}
+    .footer p,.footer a{color:#b8c0be}
+    .footer-grid{display:grid;grid-template-columns:1.3fr repeat(3,1fr);gap:32px}
+    .footer h4{font-size:14px}
+    .footer a{display:block;margin:8px 0;font-size:13px}
+    .copyright{border-top:1px solid #2f3a3b;margin-top:36px;padding-top:22px;font-size:12px;color:#93a09d}
+    .mobile-menu{display:none}
+    .toast{
+      position:fixed;right:24px;bottom:24px;background:var(--charcoal);color:#fff;padding:14px 18px;
+      border-radius:14px;box-shadow:var(--shadow);transform:translateY(20px);opacity:0;pointer-events:none;transition:.25s;z-index:100
+    }
+    .toast.show{transform:none;opacity:1}
+    @media(max-width:980px){
+      .navlinks{display:none}.mobile-menu{display:inline-flex}
+      .hero-grid,.grid-4,.grid-3,.dashboard-shell,.support-grid,.footer-grid{grid-template-columns:1fr}
+      .grid-2{grid-template-columns:1fr}
+      .hero-copy,.hero-visual{min-height:auto}.hero-visual{height:520px}
+      .trust{grid-template-columns:repeat(2,1fr)}
+      .timeline{grid-template-columns:repeat(3,1fr)}
+      .sidebar{display:none}
+      .section{padding:68px 0}
+    }
+    @media(max-width:620px){
+      :root{--container:min(100% - 24px,1180px)}
+      .hero-copy{padding:30px}.hero{padding-top:18px}
+      .hero-visual{height:420px}
+      .trust{grid-template-columns:1fr}
+      .form-grid{grid-template-columns:1fr}
+      .timeline{grid-template-columns:repeat(2,1fr)}
+      .section-head{align-items:start;flex-direction:column}
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container nav">
+    <a class="brand" href="#home">SONY<span>TECH</span></a>
+    <nav class="navlinks">
+      <a href="#lifts">Lifts</a>
+      <a href="#configurator">Configure</a>
+      <a href="#parts">Parts</a>
+      <a href="#maintenance">Maintenance</a>
+      <a href="#support">Support</a>
+      <a href="#portals">Portal</a>
+    </nav>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-light btn-small mobile-menu" onclick="toggleMobile()">Menu</button>
+      <a class="btn btn-dark btn-small" href="#quote">Get Quote</a>
+    </div>
+  </div>
+  <div id="mobileNav" style="display:none;padding:0 20px 18px;background:var(--ivory)">
+    <div class="card">
+      <a href="#lifts">Lifts</a> · <a href="#configurator">Configure</a> · <a href="#parts">Parts</a> ·
+      <a href="#maintenance">Maintenance</a> · <a href="#support">Support</a> · <a href="#portals">Portal</a>
+    </div>
+  </div>
+</header>
+
+<main id="home">
+  <section class="hero">
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <span class="eyebrow">Sonytech Elevators</span>
+        <h1>Elevating every journey.</h1>
+        <p class="lead">Residential, commercial and custom elevator solutions designed with quiet engineering, refined materials and lifetime support.</p>
+        <div class="actions">
+          <a class="btn btn-dark" href="#lifts">Explore Lifts</a>
+          <a class="btn btn-light" href="#quote">Get a Quote</a>
+        </div>
+        <div style="margin-top:46px" class="status">Service network online · 24/7 support</div>
+      </div>
+      <div class="hero-visual">
+        <div class="hero-floating">
+          <span class="badge">Signature Series</span>
+          <h3 style="margin-top:10px">Aura Home Elevator</h3>
+          <p style="margin:0">Silent mobility designed around premium homes.</p>
+        </div>
+      </div>
+    </div>
+    <div class="container trust">
+      <div class="item"><strong>20+ Years</strong><span>Engineering experience</span></div>
+      <div class="item"><strong>500+</strong><span>Installations</span></div>
+      <div class="item"><strong>24/7</strong><span>Emergency support</span></div>
+      <div class="item"><strong>360°</strong><span>Sales to AMC care</span></div>
+    </div>
+  </section>
+
+  <section class="section" id="lifts">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">Lift Portfolio</span>
+          <h2>Made for every kind of space.</h2>
+        </div>
+        <p>From intimate homes to hospitals, hotels, offices and industrial spaces, Sonytech combines performance, safety and architectural flexibility.</p>
+      </div>
+
+      <div class="grid grid-4">
+        <article class="card category-card" style="background:url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80') center/cover">
+          <h3>Residential Lifts</h3><p>Comfort designed for home.</p>
+        </article>
+        <article class="card category-card" style="background:url('https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=800&q=80') center/cover">
+          <h3>Passenger Lifts</h3><p>Reliable everyday mobility.</p>
+        </article>
+        <article class="card category-card" style="background:url('https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=800&q=80') center/cover">
+          <h3>Hospital Lifts</h3><p>Purpose-built healthcare access.</p>
+        </article>
+        <article class="card category-card" style="background:url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80') center/cover">
+          <h3>Commercial Lifts</h3><p>Performance for busy spaces.</p>
+        </article>
+      </div>
+
+      <div class="grid grid-3" style="margin-top:24px">
+        <article class="card lift-card">
+          <div class="lift-img" style="background-image:url('https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=900&q=80')"></div>
+          <div class="body">
+            <span class="badge">Home Elevator</span>
+            <h3 style="margin-top:12px">Sonytech Aura</h3>
+            <p>Compact luxury, quiet travel and refined finishes.</p>
+            <div class="specs"><span class="badge">4 persons</span><span class="badge">320 kg</span><span class="badge">6 stops</span></div>
+            <button class="btn btn-dark btn-small" onclick="selectLift('Aura Home Elevator')">Configure Aura</button>
+          </div>
+        </article>
+        <article class="card lift-card">
+          <div class="lift-img" style="background-image:url('https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=80')"></div>
+          <div class="body">
+            <span class="badge">Passenger Lift</span>
+            <h3 style="margin-top:12px">Sonytech Nova</h3>
+            <p>Efficient MRL elevator for modern commercial spaces.</p>
+            <div class="specs"><span class="badge">8 persons</span><span class="badge">544 kg</span><span class="badge">1.6 m/s</span></div>
+            <button class="btn btn-dark btn-small" onclick="selectLift('Nova Passenger Lift')">Configure Nova</button>
+          </div>
+        </article>
+        <article class="card lift-card">
+          <div class="lift-img" style="background-image:url('https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=900&q=80')"></div>
+          <div class="body">
+            <span class="badge">Hospital Lift</span>
+            <h3 style="margin-top:12px">Sonytech Care</h3>
+            <p>High-capacity movement engineered for healthcare environments.</p>
+            <div class="specs"><span class="badge">Bed lift</span><span class="badge">1600 kg</span><span class="badge">24/7 duty</span></div>
+            <button class="btn btn-dark btn-small" onclick="selectLift('Care Hospital Lift')">Configure Care</button>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-sm">
+    <div class="container">
+      <div class="grid grid-4">
+        <div class="card"><h3>Panoramic</h3><p>Statement lifts with architectural glass finishes.</p></div>
+        <div class="card"><h3>Goods</h3><p>Heavy-duty lifting for warehouses and factories.</p></div>
+        <div class="card"><h3>Car Lifts</h3><p>Smart vertical mobility for vehicle parking.</p></div>
+        <div class="card"><h3>Dumbwaiters</h3><p>Compact service movement for food and goods.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="configurator">
+    <div class="container configurator">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">Lift Configurator</span>
+          <h2>Build your Sonytech.</h2>
+        </div>
+        <p>Choose your lift, building, cabin, doors and installation preferences. The configurator generates a project summary for quotation.</p>
+      </div>
+      <div class="steps">
+        <span class="step active">01 Lift</span><span class="step">02 Building</span><span class="step">03 Cabin</span>
+        <span class="step">04 Doors</span><span class="step">05 Features</span><span class="step">06 Review</span>
+      </div>
+      <div class="grid grid-2">
+        <div class="form-grid">
+          <div><label>Lift Model</label><select id="liftModel"><option>Aura Home Elevator</option><option>Nova Passenger Lift</option><option>Care Hospital Lift</option><option>Custom Elevator</option></select></div>
+          <div><label>Building Type</label><select><option>Residential</option><option>Commercial</option><option>Hospital</option><option>Hotel</option><option>Industrial</option></select></div>
+          <div><label>Number of Floors</label><input id="floors" type="number" min="2" value="4"></div>
+          <div><label>Required Stops</label><input id="stops" type="number" min="2" value="4"></div>
+          <div><label>Cabin Style</label><select id="cabin"><option>Natural</option><option>Classic</option><option>Executive</option><option>Signature</option><option>Custom</option></select></div>
+          <div><label>Door Type</label><select><option>Automatic Telescopic</option><option>Automatic Centre Opening</option><option>Manual Swing</option></select></div>
+          <div><label>Shaft Width (mm)</label><input type="number" placeholder="e.g. 1500"></div>
+          <div><label>Shaft Depth (mm)</label><input type="number" placeholder="e.g. 1600"></div>
+          <div><label>Emergency Backup</label><select><option>Automatic Rescue + Battery</option><option>Standard Rescue Device</option></select></div>
+          <div><label>Smart Monitoring</label><select><option>Included</option><option>Not Required</option></select></div>
+        </div>
+        <div class="quote-box">
+          <span class="badge">Live Project Summary</span>
+          <h3 id="summaryModel" style="margin-top:16px">Aura Home Elevator</h3>
+          <p id="summaryText">4 stops · Natural cabin · Automatic door · Emergency backup</p>
+          <div style="border-top:1px solid var(--border);padding-top:18px;margin-top:18px">
+            <small style="color:var(--muted)">Indicative project range</small>
+            <div class="price">₹8.5L – ₹12.5L</div>
+            <p style="font-size:12px">Final quotation depends on civil conditions, travel height, finishes, taxes and site engineering.</p>
+          </div>
+          <button class="btn btn-accent" style="width:100%" onclick="syncSummary()">Update Configuration</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="quote">
+    <div class="container">
+      <div class="section-head">
+        <div><span class="eyebrow">Quotation & Booking</span><h2>From idea to installation.</h2></div>
+        <p>Sonytech manages site survey, engineering, quotation, payments, manufacturing, installation, inspection and handover in one transparent project flow.</p>
+      </div>
+
+      <div class="timeline">
+        <div class="node done">Enquiry</div><div class="node done">Site Survey</div><div class="node active">Quotation</div>
+        <div class="node">Engineering</div><div class="node">Installation</div><div class="node">Handover</div>
+      </div>
+
+      <div class="grid grid-2" style="margin-top:28px">
+        <div class="card">
+          <h3>Request detailed quotation</h3>
+          <div class="form-grid" style="margin-top:20px">
+            <div><label>Full Name</label><input placeholder="Your name"></div>
+            <div><label>Phone</label><input placeholder="+91"></div>
+            <div><label>Email</label><input placeholder="you@example.com"></div>
+            <div><label>Installation City</label><input placeholder="City"></div>
+            <div><label>Preferred Survey Date</label><input type="date"></div>
+            <div><label>Project Type</label><select><option>New Installation</option><option>Modernization</option><option>Replacement</option></select></div>
+          </div>
+          <div style="margin-top:16px"><label>Additional Requirements</label><textarea placeholder="Tell us about the site, number of floors, usage or design preferences."></textarea></div>
+          <button class="btn btn-dark" style="margin-top:14px" onclick="notify('Quotation request submitted')">Request Quotation</button>
+        </div>
+        <div class="card">
+          <span class="badge">Site Survey</span>
+          <h3 style="margin-top:14px">Book an engineer visit</h3>
+          <p>Choose a convenient site-survey slot. Our engineer validates shaft dimensions, electrical requirements, pit/headroom and installation feasibility.</p>
+          <div class="form-grid">
+            <div><label>Date</label><input type="date"></div>
+            <div><label>Time</label><select><option>10:00 AM</option><option>11:30 AM</option><option>2:00 PM</option><option>4:30 PM</option></select></div>
+          </div>
+          <div class="card" style="margin-top:18px;background:var(--soft)">
+            <strong>Free Consultation</strong><p style="margin-bottom:0">Site feasibility · Measurements · Engineering guidance · Initial recommendation</p>
+          </div>
+          <button class="btn btn-accent" style="margin-top:18px" onclick="notify('Site survey booked')">Confirm Appointment</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="maintenance">
+    <div class="container">
+      <div class="section-head">
+        <div><span class="eyebrow">Maintenance & AMC</span><h2>Care that continues after handover.</h2></div>
+        <p>Preventive maintenance, emergency service, original spare parts, digital service history and AMC plans for long-term lift performance.</p>
+      </div>
+      <div class="grid grid-3">
+        <div class="card"><span class="badge">Essential</span><h3 style="margin-top:14px">Scheduled Care</h3><p>Routine maintenance, safety inspection, basic diagnostics and support.</p><button class="btn btn-light btn-small">View Plan</button></div>
+        <div class="card" style="border-color:var(--accent);box-shadow:var(--shadow)"><span class="badge">Most Popular</span><h3 style="margin-top:14px">Care+</h3><p>Priority service, selected parts, digital history and emergency assistance.</p><button class="btn btn-accent btn-small">Choose Care+</button></div>
+        <div class="card"><span class="badge">Complete</span><h3 style="margin-top:14px">Full Coverage</h3><p>Comprehensive AMC, preventive service, major parts and remote monitoring.</p><button class="btn btn-light btn-small">View Plan</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="parts">
+    <div class="container">
+      <div class="section-head">
+        <div><span class="eyebrow">Original Lift Parts</span><h2>Parts engineered to belong.</h2></div>
+        <p>Controllers, motors, door systems, sensors, buttons, displays, safety components, ropes, belts, batteries and cabin components.</p>
+      </div>
+      <div class="grid grid-2">
+        <div class="card">
+          <h3>Find a part</h3>
+          <div class="parts-search"><input placeholder="Search part, code or lift model"><button class="btn btn-dark">Search</button></div>
+          <div class="specs">
+            <span class="badge">Controllers</span><span class="badge">Motors</span><span class="badge">Doors</span><span class="badge">Sensors</span>
+            <span class="badge">Displays</span><span class="badge">Safety</span><span class="badge">Batteries</span>
+          </div>
+        </div>
+        <div class="card">
+          <span class="status">Matched with your registered lift</span>
+          <div class="part-row">
+            <div class="part-thumb">◉</div>
+            <div><strong>Door Position Sensor</strong><p style="margin:3px 0">ST-DPS-420 · Aura / Nova compatible</p><span class="badge">In stock</span></div>
+            <div style="text-align:right"><strong>₹4,850</strong><br><button class="btn btn-light btn-small" onclick="notify('Part added to cart')">Add</button></div>
+          </div>
+          <div class="part-row">
+            <div class="part-thumb">▣</div>
+            <div><strong>Emergency Backup Battery</strong><p style="margin:3px 0">ST-EBB-218 · 12 month warranty</p><span class="badge">In stock</span></div>
+            <div style="text-align:right"><strong>₹8,200</strong><br><button class="btn btn-light btn-small" onclick="notify('Part added to cart')">Add</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="support">
+    <div class="container">
+      <div class="section-head">
+        <div><span class="eyebrow">Support</span><h2>Help when every second matters.</h2></div>
+        <p>Customers can request service, track technicians, access documents, manage warranty and AMC, or trigger emergency support from one place.</p>
+      </div>
+      <div class="support-grid">
+        <div class="card">
+          <h3>Create a service request</h3>
+          <div class="form-grid" style="margin-top:18px">
+            <div><label>Your Lift</label><select><option>Aura · ST-AUR-100842</option></select></div>
+            <div><label>Priority</label><select><option>Normal</option><option>Urgent</option><option>Emergency</option></select></div>
+            <div style="grid-column:1/-1"><label>Issue Type</label><select><option>Door issue</option><option>Lift not working</option><option>Noise / vibration</option><option>Display problem</option><option>Routine maintenance</option><option>Other</option></select></div>
+            <div style="grid-column:1/-1"><label>Description</label><textarea placeholder="Describe the issue"></textarea></div>
+          </div>
+          <button class="btn btn-dark" onclick="notify('Service ticket created: ST-28432')">Create Service Request</button>
+        </div>
+        <div class="emergency">
+          <span class="badge" style="background:#523232;color:#ffe2df">24/7 Emergency</span>
+          <h2 style="font-size:44px;margin-top:18px">Passengers trapped?</h2>
+          <p>Do not force the doors open. Use the emergency intercom if available and contact Sonytech emergency support immediately.</p>
+          <button class="btn btn-danger" onclick="notify('Emergency support flow opened')">Get Emergency Help</button>
+          <div style="margin-top:26px;border-top:1px solid #5c3b3b;padding-top:20px">
+            <strong>Emergency flow</strong>
+            <p style="margin-top:8px">Alert → Validate lift ID → Contact passenger → Dispatch nearest technician → Live ticket tracking.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="portals">
+    <div class="container">
+      <div class="section-head">
+        <div><span class="eyebrow">Connected Platform</span><h2>One ecosystem for every Sonytech team.</h2></div>
+        <p>Switch between the customer, operations, technician and architect experiences below.</p>
+      </div>
+
+      <div class="portal-tabs">
+        <button class="active" onclick="showPortal('customer', this)">Customer</button>
+        <button onclick="showPortal('admin', this)">Admin</button>
+        <button onclick="showPortal('technician', this)">Technician</button>
+        <button onclick="showPortal('architect', this)">Architect</button>
+      </div>
+
+      <div id="customer" class="portal active">
+        <div class="dashboard-shell">
+          <aside class="sidebar">
+            <div class="brand" style="margin-bottom:24px">SONY<span>TECH</span></div>
+            <a class="active">Overview</a><a>My Lifts</a><a>Projects</a><a>Quotations</a><a>Appointments</a>
+            <a>Maintenance</a><a>Service Requests</a><a>Lift Parts</a><a>Payments</a><a>Documents</a><a>Support</a>
+          </aside>
+          <div class="dash">
+            <span class="eyebrow">Customer Portal</span>
+            <h2 style="font-size:44px">Good afternoon.</h2>
+            <p>Your Aura elevator is operational and your next scheduled service is approaching.</p>
+            <div class="grid grid-4" style="margin:24px 0">
+              <div class="metric"><span>My Lifts</span><b>2</b></div><div class="metric"><span>Active Projects</span><b>1</b></div>
+              <div class="metric"><span>Next Service</span><b style="font-size:18px">12 Sep</b></div><div class="metric"><span>Open Tickets</span><b>1</b></div>
+            </div>
+            <div class="card">
+              <div style="display:flex;justify-content:space-between;gap:15px;align-items:start">
+                <div><span class="status">Operational</span><h3 style="margin-top:12px">Sonytech Aura · ST-AUR-100842</h3><p>Residential installation · Jaipur</p></div>
+                <button class="btn btn-light btn-small">View Lift</button>
+              </div>
+              <div class="grid grid-4" style="margin-top:18px">
+                <div><small>Last service</small><strong style="display:block">18 Aug 2026</strong></div>
+                <div><small>Next service</small><strong style="display:block">18 Nov 2026</strong></div>
+                <div><small>AMC</small><strong style="display:block">Active</strong></div>
+                <div><small>Health</small><strong style="display:block">Excellent</strong></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="admin" class="portal">
+        <div class="card">
+          <span class="eyebrow">Admin Operations</span><h2 style="font-size:44px">Sonytech command center.</h2>
+          <div class="grid grid-4" style="margin-top:24px">
+            <div class="metric"><span>New Leads</span><b>24</b></div><div class="metric"><span>Active Projects</span><b>38</b></div>
+            <div class="metric"><span>Installations</span><b>12</b></div><div class="metric"><span>Emergency Tickets</span><b>2</b></div>
+          </div>
+          <div class="grid grid-3" style="margin-top:20px">
+            <div class="card"><h3>Sales & Projects</h3><p>Leads, site surveys, quotations, approvals, bookings, engineering and installations.</p></div>
+            <div class="card"><h3>Service Operations</h3><p>AMC contracts, technician schedules, maintenance, breakdowns, SLAs and ticket escalation.</p></div>
+            <div class="card"><h3>Inventory & Finance</h3><p>Parts, suppliers, purchase orders, invoices, payments, GST and project milestones.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="technician" class="portal">
+        <div class="card" style="max-width:520px">
+          <span class="eyebrow">Technician Mobile</span><h2 style="font-size:42px">Today</h2>
+          <div class="grid grid-3"><div class="metric"><span>Visits</span><b>3</b></div><div class="metric"><span>Emergency</span><b>1</b></div><div class="metric"><span>Completed</span><b>2</b></div></div>
+          <div class="card" style="margin-top:18px;background:var(--soft)">
+            <span class="badge">11:30 AM · Urgent</span><h3 style="margin-top:13px">Aura Home Elevator</h3>
+            <p>Door closes intermittently · Customer site, Jaipur</p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-dark btn-small">Start Job</button><button class="btn btn-light btn-small">Navigate</button><button class="btn btn-light btn-small">Call</button></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="architect" class="portal">
+        <div class="card">
+          <span class="eyebrow">Architect & Developer Portal</span><h2 style="font-size:44px">Engineering starts at the drawing board.</h2>
+          <div class="grid grid-3" style="margin-top:24px">
+            <div class="card"><h3>Technical Library</h3><p>CAD files, BIM models, shaft plans, electrical loads and product specifications.</p><button class="btn btn-light btn-small">Open Library</button></div>
+            <div class="card"><h3>Project Workspace</h3><p>Quotes, drawings, revisions, approvals, installation requirements and project documents.</p><button class="btn btn-light btn-small">View Projects</button></div>
+            <div class="card"><h3>Engineering Support</h3><p>Traffic analysis, custom dimensions, structural coordination and specification assistance.</p><button class="btn btn-light btn-small">Ask Engineer</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-sm">
+    <div class="container card" style="background:linear-gradient(135deg,#eae4d8,#fff);padding:42px">
+      <div class="grid grid-2" style="align-items:center">
+        <div><span class="eyebrow">Modernization</span><h2 style="font-size:48px">Give your existing lift a second life.</h2><p>Upgrade controllers, motors, doors, cabins, safety systems, energy performance and smart monitoring without replacing everything.</p></div>
+        <div class="grid grid-2">
+          <div class="card">Controller modernization</div><div class="card">Automatic doors</div><div class="card">Cabin redesign</div><div class="card">Smart monitoring</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="container footer-grid">
+    <div><div class="brand">SONY<span>TECH</span></div><p style="max-width:330px;margin-top:14px">Elevator engineering, installation, modernization, parts, maintenance and support — designed around people and places.</p></div>
+    <div><h4>Solutions</h4><a href="#lifts">Residential</a><a href="#lifts">Commercial</a><a href="#lifts">Hospital</a><a href="#maintenance">Maintenance</a></div>
+    <div><h4>Platform</h4><a href="#quote">Get Quote</a><a href="#parts">Parts</a><a href="#support">Support</a><a href="#portals">Customer Portal</a></div>
+    <div><h4>Company</h4><a>About</a><a>Projects</a><a>Careers</a><a>Contact</a></div>
+  </div>
+  <div class="container copyright">© 2026 Sonytech. Prototype template for elevator sales, installation, service and support.</div>
+</footer>
+
+<div id="toast" class="toast">Done</div>
+
+<script>
+  function notify(message){
+    const t=document.getElementById('toast');
+    t.textContent=message;t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'),2400);
+  }
+  function toggleMobile(){
+    const n=document.getElementById('mobileNav');
+    n.style.display=n.style.display==='block'?'none':'block';
+  }
+  function showPortal(id,btn){
+    document.querySelectorAll('.portal').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.portal-tabs button').forEach(x=>x.classList.remove('active'));
+    document.getElementById(id).classList.add('active');btn.classList.add('active');
+  }
+  function selectLift(name){
+    document.getElementById('liftModel').value=name;
+    document.getElementById('summaryModel').textContent=name;
+    document.getElementById('configurator').scrollIntoView({behavior:'smooth'});
+    notify(name+' selected');
+  }
+  function syncSummary(){
+    const model=document.getElementById('liftModel').value;
+    const floors=document.getElementById('floors').value;
+    const stops=document.getElementById('stops').value;
+    const cabin=document.getElementById('cabin').value;
+    document.getElementById('summaryModel').textContent=model;
+    document.getElementById('summaryText').textContent=`${stops} stops · ${floors} floors · ${cabin} cabin · Emergency backup · Smart monitoring`;
+    notify('Configuration updated');
+  }
+</script>
+</body>
+</html>

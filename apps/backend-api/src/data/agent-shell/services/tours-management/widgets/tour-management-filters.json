@@ -1,0 +1,71 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "toolbarTitle": "Tours Management",
+        "searchPlaceholder": "Search tours by title, description, city, or tags...",
+        "createTour": "Create Tour",
+        "deleteAll": "Delete All",
+        "refresh": "Refresh",
+        "sortNewest": "Newest first",
+        "sortOldest": "Oldest first",
+        "sortByTitle": "By title"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {
+        "titleRef": "toolbarTitle"
+      },
+      "widgets": [
+        {
+          "type": "TourManagementFilters",
+          "props": {
+            "titleRef": "toolbarTitle",
+            "searchPlaceholderRef": "searchPlaceholder"
+          }
+        }
+      ],
+      "config": {
+        "search": {
+          "placeholderRef": "searchPlaceholder"
+        },
+        "sort": {
+          "options": [
+            { "id": "newest", "labelRef": "sortNewest" },
+            { "id": "oldest", "labelRef": "sortOldest" },
+            { "id": "title", "labelRef": "sortByTitle" }
+          ]
+        }
+      },
+      "actions": [
+        {
+          "name": "create",
+          "labelRef": "createTour",
+          "variant": "solid",
+          "color": "primary",
+          "iconLeft": "plus"
+        },
+        {
+          "name": "deleteAll",
+          "labelRef": "deleteAll",
+          "variant": "solid",
+          "color": "danger",
+          "requiresAdmin": true
+        },
+        {
+          "name": "refresh",
+          "labelRef": "refresh",
+          "variant": "outline",
+          "color": "primary",
+          "iconLeft": "refreshCw"
+        }
+      ]
+    }
+  }
+}

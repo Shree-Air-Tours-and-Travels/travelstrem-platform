@@ -1,0 +1,55 @@
+{
+  "status": "success",
+  "component": {
+    "data": {
+      "state": {
+        "planningSteps": [
+          {
+            "id": "choose",
+            "title": "Choose your trip",
+            "description": "Explore destinations, view itineraries, and pick the trip that fits you."
+          },
+          {
+            "id": "travellers",
+            "title": "Add your travellers",
+            "description": "Share who is travelling so the team can prepare the right plan."
+          },
+          {
+            "id": "addons",
+            "title": "Customise your package",
+            "description": "Add extras like activities, meals, or insurance and see the price update live."
+          },
+          {
+            "id": "request",
+            "title": "Send your enquiry",
+            "description": "Review your preferences and send them to our travel team."
+          }
+        ]
+      }
+    },
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "howEyebrow": "Simple planning journey",
+        "howHeading": "Plan your adventure in four easy steps."
+      },
+      "urls": {}
+    },
+    "structure": {
+      "type": "howToUseSection",
+      "source": "trevio",
+      "features": [
+        {
+          "name": "planningSteps",
+          "type": "stepList",
+          "eyebrowRef": "howEyebrow",
+          "headingRef": "howHeading"
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

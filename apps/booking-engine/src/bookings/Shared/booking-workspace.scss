@@ -1,0 +1,388 @@
+@import "@packages/trem-design-tokens/scss";
+
+.booking-engine-journey-notice {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: $space-4;
+  padding: $space-5;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 24%, var(--border));
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-primary) 5%, var(--surface));
+
+  &.is-success {
+    border-color: color-mix(in srgb, var(--color-success) 42%, var(--border));
+    background: color-mix(in srgb, var(--color-success) 7%, var(--surface));
+  }
+
+  h2,
+  p {
+    margin: 0;
+  }
+
+  p {
+    margin: $space-2 0 $space-3;
+    color: var(--muted);
+  }
+
+  &__icon {
+    display: grid;
+    width: 2.5rem;
+    height: 2.5rem;
+    place-items: center;
+    border-radius: var(--radius-sm);
+    background: var(--primary-soft);
+    color: var(--color-primary-dark);
+  }
+
+  &__heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-3;
+  }
+}
+
+.booking-engine-journey-page {
+  display: grid;
+  align-content: start;
+  gap: $space-6;
+  width: 100%;
+}
+
+.booking-engine-journey-page__empty {
+  min-height: 32rem;
+}
+
+.booking-engine-customer-quote {
+  display: grid;
+  gap: $space-4;
+}
+
+.booking-engine-customer-journey {
+  display: grid;
+  grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr);
+  gap: $space-6;
+  align-items: start;
+  margin-bottom: var(--trem-floating-action-clearance, 0);
+  padding: $space-5;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+
+  > aside {
+    position: sticky;
+    top: $space-5;
+    padding: $space-4;
+    border-radius: var(--radius-md);
+    background: var(--surface-muted, var(--primary-soft));
+  }
+}
+
+.booking-engine-customer-journey__stage {
+  min-width: 0;
+}
+
+.booking-engine-enquiry-step,
+.booking-engine-traveller-step {
+  min-width: 0;
+
+  .booking-engine-customer-journey {
+    grid-template-columns: minmax(13rem, 16rem) minmax(0, 1fr);
+    gap: $space-6;
+    margin-bottom: $space-4;
+    padding: $space-6;
+
+    > aside {
+      padding: $space-5;
+      background: linear-gradient(160deg, var(--primary-soft), var(--surface));
+      border: 1px solid var(--border);
+    }
+  }
+
+  .trem-traveller-form {
+    border: 0;
+    border-radius: 0;
+    overflow: visible;
+
+    &__header {
+      padding: 0 0 $space-5;
+      border: 0;
+
+      h2 { font-size: clamp(1.5rem, 2.2vw, 2rem); line-height: 1.2; }
+      p { max-width: 42rem; font-size: $font-size-sm; line-height: 1.6; }
+    }
+
+    .trem-form { padding: 0; }
+  }
+
+  .trem-form__sections { gap: $space-5; }
+  .trem-form__section-toggle { padding: $space-4 $space-5 $space-2; }
+  .trem-form__section-desc { margin: 0 $space-5; padding-bottom: $space-4; line-height: 1.5; }
+  .trem-form__section-body { padding: $space-5; }
+  .trem-form__grid { gap: $space-4; }
+
+  [data-section$="-party"] {
+    .trem-form__field {
+      gap: $space-3;
+      padding: $space-4;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+    }
+
+    .trem-form__label { color: var(--text); }
+    .trem-form__counter { align-self: stretch; justify-content: space-between; background: var(--surface); }
+  }
+
+  [data-section="trehub-request"] {
+    .trem-input:has(.trem-input__field:disabled) {
+      opacity: 1;
+      background: var(--surface);
+      border-color: transparent;
+      box-shadow: none;
+    }
+
+    .trem-input__field:disabled {
+      opacity: 1;
+      color: var(--text);
+      -webkit-text-fill-color: var(--text);
+      font-weight: 600;
+    }
+
+    .trem-form__field--span-2 {
+      padding: $space-2;
+      border-radius: var(--radius-sm);
+      background: var(--primary-soft);
+
+      .trem-input:has(.trem-input__field:disabled) { background: transparent; }
+      .trem-input__field { font-size: $font-size-xl; }
+    }
+
+    .trem-form__field:last-child {
+      border-radius: var(--radius-sm);
+      outline: 1px solid var(--border);
+      background: var(--primary-soft);
+
+      .trem-input:has(.trem-input__field:disabled) { background: transparent; }
+      .trem-input__field:disabled { color: var(--color-primary); -webkit-text-fill-color: var(--color-primary); }
+    }
+  }
+
+  > .trem-fab.trem-fab--variant-floating {
+    position: sticky;
+    left: auto;
+    right: auto;
+    bottom: $space-4;
+    transform: none;
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+    padding: $space-3 $space-6;
+
+    .trem-fab__inner { align-items: stretch; }
+    .trem-fab__group { align-items: stretch; }
+    .trem-fab__btn { min-height: 48px; }
+  }
+
+  @media (max-width: $breakpoint-md) {
+    .booking-engine-customer-journey {
+      grid-template-columns: 1fr;
+      padding: $space-4;
+      gap: $space-5;
+      > aside { position: static; padding: $space-4; }
+    }
+
+    .trem-form__section-body { padding: $space-3; }
+    [data-section$="-party"] .trem-form__field {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      padding: $space-3;
+    }
+
+    > .trem-fab.trem-fab--variant-floating {
+      bottom: env(safe-area-inset-bottom, 0px);
+      padding: 0;
+      .trem-fab__group--left { flex-shrink: 1; }
+      .trem-fab__group--left .trem-fab__btn.ui-button { min-width: 0; }
+    }
+  }
+}
+
+.booking-engine-traveller-step {
+  .trem-form__section-title {
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: $font-size-md;
+  }
+
+  .trem-form__section-body { padding: $space-5; }
+  .trem-form__grid { column-gap: $space-5; row-gap: $space-5; }
+  .trem-form__control { height: 100%; }
+
+  .trem-form__control .trem-input,
+  .trem-form__control .trem-dropdown__select,
+  .trem-form__control .trem-datepicker__trigger {
+    min-height: 64px;
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+  }
+
+  @media (max-width: $breakpoint-md) {
+    .trem-form__section-body { padding: $space-3; }
+    .trem-form__grid { gap: $space-4; }
+  }
+}
+
+.booking-engine-session {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: $space-1 $space-3;
+  max-width: 23rem;
+  padding-left: $space-5;
+  border-left: 1px solid var(--border);
+
+  &__label { font-size: $font-size-sm; font-weight: 600; color: var(--text); }
+  &__time {
+    color: var(--color-primary);
+    font-size: $font-size-xl;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  p { grid-column: 1 / -1; margin: 0; font-size: $font-size-xs; line-height: 1.5; color: var(--muted); }
+  a { grid-column: 1 / -1; color: var(--color-primary); font-size: $font-size-sm; }
+  &.is-expired .booking-engine-session__label { color: var(--color-danger); }
+
+  @media (max-width: $breakpoint-md) {
+    width: 100%;
+    max-width: none;
+    padding: $space-3 0 0;
+    border-left: 0;
+    border-top: 1px solid var(--border);
+  }
+}
+
+.booking-engine-review {
+  display: grid;
+  gap: $space-5;
+
+  h2, h3, p { margin: 0; }
+  h2 { font-size: clamp(1.5rem, 2.2vw, 2rem); }
+  p { margin-top: $space-2; color: var(--muted); line-height: 1.6; font-size: $font-size-sm; }
+
+  &__card {
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+
+    > header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: $space-3;
+      padding: $space-4 $space-5;
+      border-bottom: 1px solid var(--border);
+      background: var(--primary-soft);
+      h3 { font-size: $font-size-md; }
+    }
+
+    dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: $space-5; margin: 0; padding: $space-5; }
+    dt { color: var(--muted); font-size: $font-size-xs; margin-bottom: $space-1; }
+    dd { color: var(--text); font-size: $font-size-sm; font-weight: 600; margin: 0; overflow-wrap: anywhere; }
+  }
+
+  @media (max-width: $breakpoint-mobile) {
+    &__card dl { grid-template-columns: 1fr; gap: $space-4; padding: $space-4; }
+    &__card > header { padding: $space-3 $space-4; }
+  }
+}
+
+.booking-engine-quotation-pending {
+  display: grid;
+  gap: $space-6;
+}
+
+.booking-engine-summary {
+  display: grid;
+  gap: $space-5;
+  &__documents { list-style: none; padding: 0; margin: 0; display: grid; gap: $space-3; }
+  &__documents li { display: flex; align-items: center; justify-content: space-between; gap: $space-4; padding: $space-3; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+  &__documents strong { display: block; overflow-wrap: anywhere; }
+  &__documents span { display: block; margin-top: $space-1; text-transform: capitalize; font-size: $font-size-xs; color: var(--muted); }
+  &__empty { margin: 0; font-size: $font-size-sm; color: var(--muted); line-height: 1.6; }
+}
+
+.booking-engine-workspace__claim {
+  display: grid;
+  grid-template-columns: minmax(16rem, 1fr) minmax(14rem, 0.7fr) auto;
+  align-items: end;
+  gap: $space-4;
+  width: 100%;
+  margin-bottom: $space-6;
+  padding: $space-5;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+
+  h2,
+  p {
+    margin: 0;
+  }
+
+  h2 {
+    margin-bottom: $space-1;
+    font-size: $font-size-lg;
+  }
+
+  p {
+    color: var(--muted);
+  }
+
+  > p {
+    grid-column: 1 / -1;
+  }
+
+  .booking-engine-workspace__claim-submit {
+    align-self: end;
+    min-height: 66px;
+    padding-inline: $space-6;
+  }
+
+  .is-error {
+    color: var(--color-danger);
+  }
+
+  .is-success {
+    color: var(--color-success);
+  }
+}
+
+@media (max-width: $breakpoint-md) {
+  .booking-engine-customer-journey {
+    grid-template-columns: 1fr;
+    margin-bottom: var(--trem-floating-action-height, 0);
+
+    > aside { position: static; }
+  }
+
+  .booking-engine-workspace__claim {
+    grid-template-columns: 1fr;
+
+    .booking-engine-workspace__claim-submit {
+      min-height: 48px;
+      width: 100%;
+    }
+  }
+}
+
+.booking-payment-receipt {
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface, white);
+  dl > div { display: flex; justify-content: space-between; gap: 20px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  dd { margin: 0; text-align: right; overflow-wrap: anywhere; min-width: 0; }
+}

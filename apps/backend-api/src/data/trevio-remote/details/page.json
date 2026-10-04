@@ -1,0 +1,113 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "breadcrumbHomePage": "Home",
+        "breadcrumbListingPage": "Trips",
+
+        "pageTitle": "Trip Details",
+        "bookNow": "Book Now",
+        "enquire": "Enquire now",
+        "backToTours": "Back to trips",
+        "backToLabel": "Back to",
+        "referrerTours": "Trips",
+        "tourNotFoundTitle": "Trip not found",
+        "tourNotFoundMessage": "The trip link is missing a valid reference.",
+        "tourErrorTitle": "Trip details could not load",
+        "agencyDetails": {
+          "ariaLabel": "Trip operator details",
+          "eyebrow": "Uploaded by agency",
+          "travelPartner": "Agent working on this trip",
+          "partnerReference": "Agency reference"
+        }
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {
+        "titleRef": "pageTitle"
+      },
+      "widgets": [
+        {"type": "Breadcrumbs", "props": {"items": [{"path": "/trevio", "labelRef": "breadcrumbHomePage"}, {"path": "/trevio/trips", "labelRef": "breadcrumbListingPage"}]}},
+        {
+          "type": "TourGallery",
+          "source": "shell",
+          "widgetRef": "./widgets/tour-gallery.json"
+        },
+        {
+          "type": "TourOverview",
+          "source": "shell",
+          "widgetRef": "./widgets/tour-overview.json"
+        },
+        {
+          "type": "PricingCard",
+          "source": "shell",
+          "widgetRef": "./widgets/pricing-card.json"
+        },
+        {
+          "type": "ItineraryTimeline",
+          "source": "shell",
+          "widgetRef": "./widgets/itinerary-timeline.json"
+        },
+        {
+          "type": "InclusionsExclusions",
+          "source": "shell",
+          "widgetRef": "./widgets/inclusions-exclusions.json"
+        },
+        {
+          "type": "PackagePlans",
+          "source": "shell",
+          "widgetRef": "./widgets/pricing-card.json"
+        },
+        {
+          "type": "IncludedStays",
+          "source": "shell",
+          "widgetRef": "./widgets/included-stays.json"
+        },
+        {
+          "type": "CancellationPolicy",
+          "source": "shell",
+          "widgetRef": "./widgets/cancellation-policy.json"
+        },
+        {
+          "type": "ReviewsSection",
+          "source": "shell",
+          "widgetRef": "./widgets/reviews-section.json"
+        }
+      ],
+      "floatingActionBar": {
+        "config": {
+          "variant": "floating",
+          "align": "left-right",
+          "showBg": true,
+          "mobileVisible": 2,
+          "showBookNow": false
+        },
+        "actions": [
+          {
+            "type": "ghost",
+            "refId": "enquire",
+            "config": {
+              "alignementOnBar": "left",
+              "iconLeft": "messageCircle"
+            }
+          },
+          {
+            "type": "submit",
+            "refId": "bookNow",
+            "config": {
+              "alignementOnBar": "right"
+            }
+          }
+        ]
+      },
+      "config": {},
+      "actions": []
+    }
+  }
+}

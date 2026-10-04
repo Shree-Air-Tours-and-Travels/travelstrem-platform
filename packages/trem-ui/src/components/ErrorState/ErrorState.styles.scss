@@ -1,0 +1,58 @@
+@import "../../styles/base/typography";
+
+.tt-error-state {
+  display: grid;
+  min-height: 220px;
+  place-items: center;
+  align-content: center;
+  gap: $space-3;
+  padding: $space-7;
+  border: 1px dashed var(--border);
+  border-radius: $radius-md;
+  background: var(--card-bg);
+  text-align: center;
+}
+
+.tt-error-state__icon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border-radius: $radius-circle;
+  color: var(--color-danger);
+  background: var(--danger-soft);
+}
+
+.tt-error-state__title {
+  margin: 0;
+  color: var(--heading);
+  font-size: $font-size-md;
+  font-weight: $font-semibold;
+}
+
+.tt-error-state__desc {
+  max-width: 420px;
+  margin: 0;
+  color: var(--muted);
+  font-size: $font-size-sm;
+  line-height: $line-height-md;
+}
+
+.tt-error-state__error {
+  max-width: 480px;
+  margin: 0;
+  padding: $space-2 $space-3;
+  border: 1px solid color-mix(in srgb, var(--color-danger) 18%, var(--border));
+  border-radius: $radius-sm;
+  background: var(--danger-soft);
+  color: var(--color-danger);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: $font-size-xs;
+  word-break: break-word;
+}
+
+.tt-error-state__actions {
+  display: flex;
+  gap: $space-3;
+  margin-top: $space-1;
+}

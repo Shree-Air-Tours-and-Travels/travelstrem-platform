@@ -1,0 +1,94 @@
+@import "@packages/trem-design-tokens/scss";
+
+.dpf {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+  padding: $space-6;
+}
+
+.dpf__header {
+  margin-bottom: $space-6;
+}
+
+.dpf__title {
+  font-size: $font-size-md;
+  font-weight: $font-semibold;
+  color: var(--heading);
+  margin-bottom: $space-1;
+}
+
+.dpf__subtitle {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.dpf__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.dpf__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dpf__label {
+  font-size: 13px;
+  font-weight: $font-medium;
+  color: var(--muted);
+}
+
+.dpf__input {
+  padding: $space-3 $space-3;
+  border: 1px solid var(--border);
+  border-radius: $radius-sm;
+  background: var(--surface);
+  font-size: $font-size-sm;
+  color: var(--text);
+  outline: none;
+  transition: border-color $duration-base $ease-standard;
+
+  &:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--primary-soft);
+  }
+
+  &::placeholder {
+    color: var(--text-light);
+  }
+}
+
+.dpf__footer {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  margin-top: $space-6;
+}
+
+.dpf__save {
+  padding: $space-3 $space-5;
+  border-radius: $radius-sm;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-size: $font-size-sm;
+  font-weight: $font-medium;
+  transition: background $duration-base $ease-standard;
+
+  &:hover:not(:disabled) {
+    background: var(--color-primary-dark);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.dpf__saved {
+  font-size: 13px;
+  color: var(--success-color);
+  font-weight: $font-medium;
+}

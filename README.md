@@ -1,7 +1,6 @@
-
-
-
 # TravelsTREM Platform
+
+The authoritative platform documentation starts at [docs/README.md](docs/README.md). It covers the business, products, system architecture, backend integrations, frontend packages, administration and deployment runbook.
 
 A scalable monorepo architecture powering the TravelsTREM ecosystem using Micro Frontends (MFE), shared packages, and modular backend services.
 
@@ -11,7 +10,7 @@ A scalable monorepo architecture powering the TravelsTREM ecosystem using Micro 
 
 TravelsTREM is designed as a platform-level architecture consisting of:
 
-- Customer-facing applications
+- Parent company website and independent product applications
 - Admin operational platform
 - Shared backend API
 - Shared UI & utility packages
@@ -33,54 +32,59 @@ The system is built using:
 # Platform Architecture
 
 ┌──────────────────────────────────────────────┐
-│                Frontend Layer               │
+│ Frontend Layer │
 ├──────────────────────────────────────────────┤
-│                                              │
-│  travelstrem.com                             │
-│  └── Customer Shell                          │
-│       ├── ToursTREM                          │
-│       ├── BookingTREM                        │
-│       ├── ProfileTREM                        │
-│       └── Future Customer MFEs               │
-│                                              │
-│  admin.travelstrem.com                       │
-│  └── Admin Shell                             │
-│       ├── DashboardTREM                      │
-│       ├── TourManagementTREM                 │
-│       ├── BookingManagementTREM              │
-│       ├── UserManagementTREM                 │
-│       ├── AnalyticsTREM                      │
-│       └── Future Admin MFEs                  │
-│                                              │
+│ │
+│ travelstrem.com │
+│ └── TravelsTrem parent website │
+│ ├── Product discovery │
+│ ├── About / Contact / Help │
+│ └── Shared platform capabilities │
+│ │
+│ trevio.travelstrem.com │
+│ └── Trevio │
+│ │
+│ trevista.travelstrem.com │
+│ └── Trevista │
+│ │
+│ admin.travelstrem.com │
+│ └── Unified admin portal │
+│ ├── DashboardTREM │
+│ ├── Trevio operations │
+│ ├── Trevista operations │
+│ ├── Partners │
+│ ├── Payments │
+│ └── Support / Reports │
+│ │
 └──────────────────────────────────────────────┘
-                    │
-                    ▼
+│
+▼
 ┌──────────────────────────────────────────────┐
-│                Backend Layer                │
+│ Backend Layer │
 ├──────────────────────────────────────────────┤
-│                                              │
-│          api.travelstrem.com                 │
-│                                              │
-│   Shared Modular Backend API                 │
-│                                              │
-│   Modules:                                   │
-│   - auth                                     │
-│   - users                                    │
-│   - tours                                    │
-│   - bookings                                 │
-│   - analytics                                │
-│   - notifications                            │
-│   - admin                                    │
-│                                              │
+│ │
+│ api.travelstrem.com │
+│ │
+│ Shared Modular Backend API │
+│ │
+│ Modules: │
+│ - auth │
+│ - users │
+│ - tours │
+│ - bookings │
+│ - analytics │
+│ - notifications │
+│ - admin │
+│ │
 └──────────────────────────────────────────────┘
-                    │
-                    ▼
+│
+▼
 ┌──────────────────────────────────────────────┐
-│                Database Layer               │
+│ Database Layer │
 ├──────────────────────────────────────────────┤
-│                                              │
-│                 MongoDB                      │
-│                                              │
+│ │
+│ MongoDB │
+│ │
 └──────────────────────────────────────────────┘
 
 ---
@@ -90,61 +94,61 @@ The system is built using:
 travelstrem-platform/
 │
 ├── apps/
-│   │
-│   ├── customer-shell/
-│   │   ├── src/
-│   │   ├── public/
-│   │   └── package.json
-│   │
-│   ├── admin-shell/
-│   │   ├── src/
-│   │   ├── public/
-│   │   └── package.json
-│   │
-│   ├── tours-remote/
-│   │   ├── src/
-│   │   ├── federation/
-│   │   └── package.json
-│   │
-│   └── backend-api/
-│       ├── src/
-│       │   ├── modules/
-│       │   ├── middleware/
-│       │   ├── routes/
-│       │   ├── services/
-│       │   └── config/
-│       │
-│       └── package.json
+│ │
+│ ├── customer-shell/
+│ │ ├── src/
+│ │ ├── public/
+│ │ └── package.json
+│ │
+│ ├── admin-shell/
+│ │ ├── src/
+│ │ ├── public/
+│ │ └── package.json
+│ │
+│ ├── trevista-remote/
+│ │ ├── src/
+│ │ ├── federation/
+│ │ └── package.json
+│ │
+│ └── backend-api/
+│ ├── src/
+│ │ ├── modules/
+│ │ ├── middleware/
+│ │ ├── routes/
+│ │ ├── services/
+│ │ └── config/
+│ │
+│ └── package.json
 │
 ├── packages/
-│   │
-│   ├── trem-ui/
-│   │   ├── components/
-│   │   ├── styles/
-│   │   └── package.json
-│   │
-│   ├── trem-utils/
-│   │   ├── helpers/
-│   │   └── package.json
-│   │
-│   ├── trem-config/
-│   │   ├── eslint/
-│   │   ├── prettier/
-│   │   ├── tsconfig/
-│   │   └── package.json
-│   │
-│   └── trem-types/
-│       ├── dto/
-│       ├── enums/
-│       ├── interfaces/
-│       └── package.json
+│ │
+│ ├── trem-ui/
+│ │ ├── components/
+│ │ ├── styles/
+│ │ └── package.json
+│ │
+│ ├── trem-utils/
+│ │ ├── helpers/
+│ │ └── package.json
+│ │
+│ ├── trem-config/
+│ │ ├── eslint/
+│ │ ├── prettier/
+│ │ ├── tsconfig/
+│ │ └── package.json
+│ │
+│ └── trem-types/
+│ ├── dto/
+│ ├── enums/
+│ ├── interfaces/
+│ └── package.json
 │
 ├── infra/
-│   │
-│   ├── docker/
-│   ├── nginx/
-│   ├── deployment/
-│   └── github-actions/
+│ │
+│ ├── docker/
+│ ├── nginx/
+│ ├── deployment/
+│ └── github-actions/
 │
 ├── package.json
 ├── pnpm-workspace.yaml
@@ -169,17 +173,15 @@ This architecture provides:
 
 # Application Responsibilities
 
-## Customer Shell
+## TravelsTrem Parent Website
 
 Handles:
 
-- landing pages
-- browsing tours
-- search
-- bookings
-- user profiles
-- reviews
-- payments
+- company homepage
+- product discovery
+- about, contact, help, and platform pages
+- authentication entry points
+- shared profile, wallet, rewards, support, and platform capabilities
 
 Domain:
 travelstrem.com
@@ -268,6 +270,7 @@ Contains:
 - API response types
 
 Used by:
+
 - frontend
 - backend
 
@@ -292,11 +295,10 @@ TravelsTREM uses Module Federation.
 
 Example:
 
-Customer Shell dynamically loads:
+The parent website routes users into independent products:
 
-- ToursTREM
-- BookingTREM
-- ProfileTREM
+- Trevio
+- Trevista
 
 Admin Shell may later dynamically load:
 
@@ -365,17 +367,17 @@ Protected using:
 # Authentication Flow
 
 Customer Login
-    ↓
+↓
 JWT Issued
-    ↓
+↓
 Customer APIs Accessible
 
 Admin Login
-    ↓
+↓
 Admin JWT Issued
-    ↓
+↓
 Permission Validation
-    ↓
+↓
 Admin APIs Accessible
 
 ---
@@ -386,13 +388,13 @@ Each application deploys independently.
 
 Example:
 
-| Application | Deployment |
-|-------------|------------|
-| customer-shell | Vercel |
-| admin-shell | Vercel |
-| tours-remote | Vercel |
-| backend-api | Render |
-| MongoDB | Atlas |
+| Application     | Deployment |
+| --------------- | ---------- |
+| customer-shell  | Vercel     |
+| admin-shell     | Vercel     |
+| trevista-remote | Vercel     |
+| backend-api     | Render     |
+| MongoDB         | Atlas      |
 
 ---
 
@@ -403,6 +405,7 @@ Example:
 pnpm
 
 Reason:
+
 - fast
 - optimized for monorepos
 - disk efficient
@@ -414,6 +417,7 @@ Reason:
 Turborepo
 
 Reason:
+
 - excellent React support
 - optimized caching
 - scalable pipelines
@@ -493,7 +497,6 @@ Modular Frontend Ecosystem
 
 designed for long-term scalability and enterprise-grade growth.
 
-
 # Local Development
 
 Install dependencies:
@@ -513,4 +516,4 @@ pnpm --filter customer-shell dev
 Run backend only:
 
 pnpm --filter backend-api dev
-
+```

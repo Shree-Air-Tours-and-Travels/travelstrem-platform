@@ -1,0 +1,265 @@
+@import "@packages/trem-design-tokens/scss";
+
+.asv {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  gap: $space-5;
+  color: var(--text);
+}
+
+.asv__hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-7;
+  min-height: $space-20 * 2;
+  overflow: hidden;
+  padding: $space-7;
+  border: 1px solid var(--primary-focus);
+  border-radius: $radius-xl;
+  background:
+    radial-gradient(circle at 88% 5%, var(--primary-soft) 0, transparent 30%),
+    linear-gradient(120deg, var(--surface) 20%, var(--primary-softer) 140%);
+  box-shadow: var(--shadow-sm);
+}
+
+.asv__hero-copy {
+  max-width: $space-20 * 8;
+
+  > span {
+    color: var(--color-primary);
+    font-size: $font-size-xs;
+    font-weight: $font-bold;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    margin: $space-2 0;
+    color: var(--heading);
+    font-size: $font-size-xxl;
+  }
+
+  p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: $font-size-md;
+    line-height: $line-height-md;
+  }
+}
+
+.asv__actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: $space-2;
+  flex-wrap: wrap;
+}
+
+.asv__metrics {
+  margin: 0;
+}
+
+.asv__catalogue {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: $radius-xl;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.asv__catalogue-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: $space-6;
+  padding: $space-6 $space-6 0;
+  border-bottom: 1px solid var(--border);
+
+  h2 {
+    margin: 0;
+    color: var(--heading);
+    font-size: $font-size-xl;
+  }
+
+  p {
+    margin: $space-1 0 $space-5;
+    color: var(--text-muted);
+    font-size: $font-size-sm;
+  }
+}
+
+.asv__filter-tabs {
+  display: flex;
+  min-width: 0;
+  gap: $space-1;
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.asv__filter-tab {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: $space-2;
+  min-height: $space-12;
+  padding: 0 $space-4;
+  border: 0;
+  border-bottom: $space-1 solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: $font-size-sm;
+  font-weight: $font-semibold;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text);
+  }
+
+  &.is-active {
+    border-bottom-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+}
+
+.asv__filter-count {
+  display: inline-grid;
+  min-width: $space-6;
+  min-height: $space-6;
+  place-items: center;
+  padding-inline: $space-2;
+  border-radius: $radius-full;
+  background: var(--neutral-soft);
+  color: var(--text-muted);
+  font-size: $font-size-xs;
+
+  .is-active & {
+    background: var(--primary-soft);
+    color: var(--color-primary);
+  }
+}
+
+.asv__controls {
+  display: grid;
+  grid-template-columns: minmax(16rem, 1fr) repeat(3, minmax(9rem, auto)) auto;
+  align-items: center;
+  gap: $space-3;
+  padding: $space-4 $space-6;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-inset);
+}
+
+.asv__search,
+.asv__select {
+  width: 100%;
+  min-width: 0;
+}
+
+.asv__active-filters {
+  padding: $space-3 $space-6;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.asv__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+  gap: $space-4;
+  padding: $space-5;
+
+  > * {
+    min-width: 0;
+  }
+}
+
+.asv__loading {
+  display: flex;
+  min-height: $space-20 * 3;
+  align-items: center;
+  justify-content: center;
+  gap: $space-3;
+  color: var(--text-muted);
+}
+
+.asv__spinner {
+  width: $space-6;
+  height: $space-6;
+  border: $space-1 solid var(--border);
+  border-top-color: var(--color-primary);
+  border-radius: $radius-full;
+  animation: asv-spin $duration-slow linear infinite;
+}
+
+@keyframes asv-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@include mq-max($tablet-max) {
+  .asv__controls {
+    grid-template-columns: minmax(16rem, 1fr) repeat(2, minmax(9rem, auto));
+  }
+
+  .asv__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@include mq-max($mobile-max) {
+  .asv {
+    gap: $space-3;
+  }
+
+  .asv__hero {
+    align-items: stretch;
+    flex-direction: column;
+    padding: $space-5;
+  }
+
+  .asv__hero-copy h1 {
+    font-size: $font-size-xl;
+  }
+
+  .asv__actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    > :last-child:nth-child(odd) {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .asv__catalogue-header {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0;
+    padding: $space-5 $space-4 0;
+  }
+
+  .asv__filter-tabs {
+    width: 100%;
+  }
+
+  .asv__controls {
+    grid-template-columns: 1fr;
+    padding: $space-4;
+  }
+
+  .asv__active-filters {
+    padding-inline: $space-4;
+  }
+
+  .asv__grid {
+    grid-template-columns: 1fr;
+    padding: $space-3;
+  }
+}

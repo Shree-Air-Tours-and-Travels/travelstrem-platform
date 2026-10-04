@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Background -->
+  <rect width="64" height="64" rx="16" fill="#0A8A83"></rect>
+
+  <!-- Compass Circle -->
+  <circle cx="32" cy="32" r="18" fill="none" stroke="#FFFFFF" stroke-width="2.5" opacity="0.9"></circle>
+
+  <!-- Navigation Arrow -->
+  <path d="M32 17
+       L42 37
+       L33.5 33.5
+       L30 47
+       L27 31
+       L19 27
+       Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-linejoin="round"></path>
+
+  <!-- Center Dot -->
+  <circle cx="32" cy="32" r="2.2" fill="#0A8A83"></circle>
+</svg>
