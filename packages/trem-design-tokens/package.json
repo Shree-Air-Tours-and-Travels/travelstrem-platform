@@ -10,6 +10,7 @@
     "./scss/*": "./src/scss/*.scss"
   },
   "scripts": {
-    "generate": "node scripts/generate-scss.js"
+    "generate": "node scripts/generate-scss.js",
+    "check": "node scripts/generate-scss.js --check"
   }
 }

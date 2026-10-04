@@ -1,0 +1,62 @@
+{
+  "status": "success",
+  "component": {
+    "data": {},
+    "dataScope": {
+      "options": {}
+    },
+    "elements": {
+      "labels": {
+        "pageTitle": "Welcome to Trevista by TravelsTREM",
+        "titleSegments": [
+          { "text": "Welcome to " },
+          { "text": "Trevista", "tone": "product" },
+          { "text": " by " },
+          { "text": "TravelsTREM", "tone": "brand" }
+        ],
+        "pageSubtitle": "Trevista by TravelsTREM",
+        "eyebrow": "Curated holidays, customisable down to the details.",
+        "description": "Explore curated tours, compare hotels and inclusions, customise your itinerary, and manage the entire trip from one Trevista booking flow.",
+        "primaryActionLabel": "Explore packages",
+        "secondaryActionLabel": "Build a custom trip",
+        "trustItems": [
+          { "label": "Verified stays and experiences", "icon": "badgeCheck" },
+          { "label": "Transparent package pricing", "icon": "wallet" },
+          { "label": "Dedicated trip support", "icon": "support" }
+        ],
+        "searchTabLabel": "Holiday packages",
+        "customTabLabel": "Custom trip",
+        "searchLabels": {
+          "destination": "Destination",
+          "departureDate": "Departure date",
+          "travellers": "Travellers",
+          "interest": "Interest",
+          "maxBudget": "Maximum budget",
+          "submit": "Search packages"
+        },
+        "anyLabels": {
+          "destination": "Any destination",
+          "departureDate": "Any date",
+          "travellers": "Any group size",
+          "interest": "Any interest",
+          "maxBudget": "Any budget"
+        },
+        "heroImage": "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519364/travelstrem/site-assets/4e61143809a65097c5010ca1.jpg"
+      },
+      "urls": {}
+    },
+    "structure": {
+      "header": {},
+      "widgets": [
+        {
+          "type": "HeroBanner",
+          "props": {
+            "titleRef": "pageTitle"
+          }
+        }
+      ],
+      "config": {},
+      "actions": []
+    }
+  }
+}

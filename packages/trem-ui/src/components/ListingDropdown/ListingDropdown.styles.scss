@@ -3,70 +3,253 @@
 .trem-listing-dropdown {
   position: fixed;
   z-index: 650;
+
   overflow: hidden;
-  border: 1px solid var(--border);
+
+  border: 1px solid color-mix(in srgb, var(--border) 88%, var(--color-primary) 12%);
+
   border-radius: $radius-md;
-  background: var(--card-bg);
+
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--card-bg) 98%, var(--color-primary) 2%) 0%,
+    var(--card-bg) 100%
+  );
+
   color: var(--text);
-  box-shadow: var(--shadow-lg);
+
+  box-shadow:
+    0 18px 45px rgba(15, 23, 42, 0.14),
+    0 5px 14px rgba(15, 23, 42, 0.08),
+    0 1px 2px rgba(15, 23, 42, 0.05);
+
+  transform-origin: top center;
+
+  animation: trem-listing-dropdown-enter 150ms $ease-default;
+
+  isolation: isolate;
+
+  /* subtle premium top highlight */
+  &::before {
+    content: "";
+
+    position: absolute;
+    z-index: 2;
+
+    top: 0;
+    left: 12px;
+    right: 12px;
+
+    height: 1px;
+
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--color-primary) 26%, transparent),
+      transparent
+    );
+
+    pointer-events: none;
+  }
 }
+
+/* -------------------------------------------------------------------------- */
+/* Content                                                                    */
+/* -------------------------------------------------------------------------- */
 
 .trem-listing-dropdown__content {
+  position: relative;
+
   max-height: inherit;
+
+  overflow-x: hidden;
   overflow-y: auto;
+
   overscroll-behavior: contain;
-  padding: $space-2;
-  scrollbar-width: none;
+
+  padding: $space-1;
+
+  scrollbar-width: thin;
+
+  scrollbar-color: color-mix(in srgb, var(--muted) 25%, transparent) transparent;
 
   &::-webkit-scrollbar {
-    display: none;
+    display: block;
+
+    width: 5px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+
+    background: color-mix(in srgb, var(--muted) 24%, transparent);
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--muted) 38%, transparent);
   }
 }
+
+/* -------------------------------------------------------------------------- */
+/* Groups                                                                     */
+/* -------------------------------------------------------------------------- */
 
 .trem-listing-dropdown__group {
-  padding: $space-2;
+  position: relative;
+
+  padding: $space-1;
+
+  + .trem-listing-dropdown__group {
+    margin-top: $space-1;
+
+    padding-top: $space-2;
+
+    border-top: 1px solid color-mix(in srgb, var(--border) 68%, transparent);
+  }
 
   h2 {
-    margin: 0 0 $space-2;
-    padding-inline: $space-2;
+    display: flex;
+    align-items: center;
+
+    min-height: 22px;
+
+    margin: 0;
+    padding: 0 $space-2 $space-1;
+
     color: var(--muted);
-    font-size: $font-size-xs;
+
+    font-size: 10px;
     font-weight: $font-bold;
-    letter-spacing: 0.08em;
+    line-height: 1.2;
+
+    letter-spacing: 0.065em;
     text-transform: uppercase;
+
+    opacity: 0.82;
   }
 }
+
+/* -------------------------------------------------------------------------- */
+/* Listing                                                                    */
+/* -------------------------------------------------------------------------- */
 
 .trem-listing-dropdown__list {
   display: grid;
-  gap: $space-1;
+
+  gap: 2px;
+
+  width: 100%;
+
+  /*
+   * Gives rendered child items a slightly tighter visual rhythm
+   * without assuming what component is passed through children().
+   */
+  > * {
+    min-width: 0;
+  }
 }
+
+/* -------------------------------------------------------------------------- */
+/* Mobile Sheet                                                               */
+/* -------------------------------------------------------------------------- */
 
 .trem-listing-dropdown__sheet {
   .trem-bottom-sheet__panel {
-    height: min(78dvh, 680px);
+    height: min(72dvh, 620px);
+
+    border-top-left-radius: $radius-md;
+    border-top-right-radius: $radius-md;
+
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--card-bg) 97%, var(--color-primary) 3%),
+      var(--card-bg) 90px
+    );
+
+    box-shadow:
+      0 -12px 40px rgba(15, 23, 42, 0.14),
+      0 -2px 8px rgba(15, 23, 42, 0.05);
+
+    overflow: hidden;
   }
 
   .trem-bottom-sheet__body {
     display: flex;
+
     min-height: 0;
+
     flex-direction: column;
+
     overflow: hidden;
   }
 
   .trem-listing-dropdown__content {
     flex: 1;
+
     min-height: 0;
+
+    padding: $space-1 $space-2 calc($space-3 + env(safe-area-inset-bottom));
+  }
+
+  .trem-listing-dropdown__group {
     padding-inline: 0;
+
+    + .trem-listing-dropdown__group {
+      margin-top: $space-1;
+    }
+
+    h2 {
+      padding-inline: $space-2;
+    }
   }
 }
+
+/* -------------------------------------------------------------------------- */
+/* Fullscreen Mobile                                                          */
+/* -------------------------------------------------------------------------- */
 
 .trem-listing-dropdown__sheet.trem-bottom-sheet--fullscreen {
   .trem-bottom-sheet__panel {
     height: 100dvh;
+
+    border-radius: 0;
+
+    box-shadow: none;
   }
 
   .trem-bottom-sheet__body {
-    padding-top: $space-3;
+    padding-top: $space-1;
+  }
+
+  .trem-listing-dropdown__content {
+    padding-top: 0;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Animation                                                                  */
+/* -------------------------------------------------------------------------- */
+
+@keyframes trem-listing-dropdown-enter {
+  from {
+    opacity: 0;
+
+    transform: translateY(-4px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trem-listing-dropdown {
+    animation: none;
   }
 }

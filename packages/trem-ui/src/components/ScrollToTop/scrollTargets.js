@@ -1,9 +1,6 @@
 export function getScrollTargets() {
   if (typeof window === "undefined" || typeof document === "undefined") return [];
-  return [
-    window,
-    ...document.querySelectorAll("[data-scroll-root]"),
-  ];
+  return [window, ...document.querySelectorAll("[data-scroll-root]")];
 }
 
 export function getTargetScrollTop(target) {

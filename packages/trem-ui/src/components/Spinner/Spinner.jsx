@@ -5,16 +5,17 @@ import "./Spinner.styles.scss";
 export default function Spinner({
   size = "md",
   label = "Loading",
+  direction = "row",
   className = "",
 }) {
   return (
     <span
-      className={`trem-spinner trem-spinner--${size}${className ? ` ${className}` : ""}`}
+      className={`trem-spinner trem-spinner--${size} trem-spinner--${direction}${className ? ` ${className}` : ""}`}
       role="status"
       aria-live="polite"
     >
       <span className="trem-spinner__ring" aria-hidden="true" />
-      <span className="trem-spinner__label">{label}</span>
+      {label ? <span className="trem-spinner__label">{label}</span> : null}
     </span>
   );
 }
@@ -22,5 +23,6 @@ export default function Spinner({
 Spinner.propTypes = {
   size: PropTypes.oneOf(["sm", "md", "lg"]),
   label: PropTypes.string,
+  direction: PropTypes.oneOf(["row", "column"]),
   className: PropTypes.string,
 };

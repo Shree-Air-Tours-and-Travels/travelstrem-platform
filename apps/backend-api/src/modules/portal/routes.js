@@ -1,5 +1,13 @@
 import express from "express";
-import { getAppHeaderConfig, getHeaderConfig, getNavigationConfig, getPageConfig, getSession, getSidebarConfig, getUserSession } from "./controllers/portalController.js";
+import {
+    getAppHeaderConfig,
+    getHeaderConfig,
+    getNavigationConfig,
+    getPageConfig,
+    getSession,
+    getSidebarConfig,
+    getUserSession,
+} from "./controllers/portalController.js";
 
 const router = express.Router();
 

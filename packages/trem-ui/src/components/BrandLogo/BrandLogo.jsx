@@ -1,44 +1,75 @@
-import React from "react";
+import React, { useCallback, useState } from "react";
+import { useTheme } from "../../context/ThemeContext";
 import "./BrandLogo.styles.scss";
 
 export default function BrandLogo({
   logoSrc = "",
-  darkLogoSrc = "",
+  logoDarkSrc = "",
+  fallbackSrc,
   name,
-  subtitle,
   size = "default",
-  className,
+  className = "",
   onClick,
 }) {
-  const usesSharedLogo = !logoSrc || logoSrc === "/favicon.png";
-  const lightSource = logoSrc || "/favicon.png";
-  const darkSource = darkLogoSrc || (usesSharedLogo ? "/favicon-dark.png" : lightSource);
+  const [failedSource, setFailedSource] = useState(null);
+  const { theme, brand } = useTheme();
+  const lightSource = logoSrc || (fallbackSrc === undefined ? brand?.logoSrc : fallbackSrc) || "";
+  const darkSource = logoDarkSrc || (lightSource === brand?.logoSrc ? brand?.logoDarkSrc : "");
+  const preferredSource = theme === "dark" && darkSource ? darkSource : lightSource;
+  const source = preferredSource !== failedSource ? preferredSource : (lightSource !== failedSource ? lightSource : fallbackSrc || "");
+  const [loadedSource, setLoadedSource] = useState(null);
+
+  const handleKeyDown = useCallback(
+    (event) => {
+      if (!onClick) return;
+
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        onClick(event);
+      }
+    },
+    [onClick],
+  );
+
+  const rootClassName = [
+    "brand-logo",
+    `brand-logo--${size}`,
+    onClick ? "brand-logo--clickable" : "",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <div
-      className={`brand-logo brand-logo--${size}${className ? ` ${className}` : ""}${onClick ? " brand-logo--clickable" : ""}`}
+      className={rootClassName}
       onClick={onClick}
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
-      onKeyDown={onClick ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(e); } } : undefined}
+      onKeyDown={onClick ? handleKeyDown : undefined}
+      aria-label={onClick && name ? name : undefined}
     >
-      <img
-        className="brand-logo__image brand-logo__image--light"
-        src={lightSource}
-        alt={name || ""}
-      />
-      <img
-        className="brand-logo__image brand-logo__image--dark"
-        src={darkSource}
-        alt=""
-        aria-hidden="true"
-      />
-      {name && (
-        <div className="brand-logo__text">
-          <span className="brand-logo__name">{name}</span>
-          {subtitle && <span className="brand-logo__subtitle">{subtitle}</span>}
-        </div>
-      )}
+      <span className={`brand-logo__mark${source ? "" : " is-loading"}`}>
+        {source && loadedSource !== source ? (
+          <span className="brand-logo__placeholder" aria-hidden="true" />
+        ) : null}
+        {source ? (
+          <img
+            className="brand-logo__image"
+            src={source}
+            alt={name || "Logo"}
+            draggable={false}
+            decoding="async"
+            style={{ visibility: loadedSource === source ? "visible" : "hidden" }}
+            onLoad={() => setLoadedSource(source)}
+            onError={() => {
+              if (source !== fallbackSrc) setFailedSource(source);
+            }}
+          />
+        ) : (
+          <span className="brand-logo__placeholder" aria-label="Loading logo" />
+        )}
+      </span>
     </div>
   );
 }

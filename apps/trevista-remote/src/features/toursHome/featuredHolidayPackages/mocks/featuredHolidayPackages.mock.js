@@ -1,0 +1,58 @@
+export const featuredHolidayPackagesMock = [
+  {
+    _id: "mock-bali",
+    title: "Bali Tropical Escape",
+    desc: "A sun-soaked retreat through Ubud's rice terraces, Uluwatu's cliffs and Nusa Penida's turquoise bays.",
+    photo:
+      "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519379/travelstrem/site-assets/9f58751f6f8862eadb190963.jpg",
+    city: { from: "Mumbai", to: "Bali" },
+    address: { city: "Bali", country: "Indonesia" },
+    period: { days: 6, nights: 5 },
+    avgRating: 4.8,
+    reviewCount: 86,
+    featured: true,
+    priceInfo: { min: 74999, currency: "INR", isFinal: false },
+  },
+  {
+    _id: "mock-manali",
+    title: "Manali Snow Holiday",
+    desc: "Snow-dusted valleys, cosy cafés and a scenic drive over the Rohtang Pass.",
+    photo:
+      "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519379/travelstrem/site-assets/3aeeb733787f2dd400bb1729.jpg",
+    city: { from: "Chandigarh", to: "Manali" },
+    address: { city: "Manali", country: "India" },
+    period: { days: 5, nights: 4 },
+    avgRating: 4.6,
+    reviewCount: 142,
+    featured: true,
+    priceInfo: { min: 21999, currency: "INR", isFinal: false },
+  },
+  {
+    _id: "mock-jaipur",
+    title: "Royal Jaipur & Udaipur",
+    desc: "Forts, lakes and bazaars across Rajasthan's most photogenic cities.",
+    photo:
+      "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519379/travelstrem/site-assets/9d3576a968c833f01dd9d9bf.jpg",
+    city: { from: "Delhi", to: "Jaipur" },
+    address: { city: "Jaipur", country: "India" },
+    period: { days: 4, nights: 3 },
+    avgRating: 4.7,
+    reviewCount: 210,
+    featured: true,
+    priceInfo: { min: 18999, currency: "INR", isFinal: false },
+  },
+  {
+    _id: "mock-kerala",
+    title: "Alleppey Backwaters Escape",
+    desc: "Overnight houseboat stays, palm-lined canals and quiet village mornings in Kerala.",
+    photo:
+      "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519379/travelstrem/site-assets/7e70c4d688e295f49aece928.jpg",
+    city: { from: "Kochi", to: "Alleppey" },
+    address: { city: "Alleppey", country: "India" },
+    period: { days: 3, nights: 2 },
+    avgRating: 4.5,
+    reviewCount: 67,
+    featured: false,
+    priceInfo: { min: 15999, currency: "INR", isFinal: false },
+  },
+];

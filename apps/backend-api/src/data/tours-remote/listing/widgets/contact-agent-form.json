@@ -12,7 +12,19 @@
         "fullName": "Full name",
         "email": "Email",
         "phone": "Phone",
-        "sendRequest": "Send Request"
+        "sendRequest": "Send Request",
+        "quoteJourneyAriaLabel": "Enquiry request progress",
+        "quoteDetailsStep": "Contact details",
+        "quoteReviewStep": "Review request",
+        "quoteDetailsTitle": "Tell us how to reach you",
+        "quoteDetailsDescription": "Add your contact information so a travel specialist can help with this tour.",
+        "quoteReviewTitle": "Review and send your request",
+        "quoteReviewDescription": "Check your details before sending this enquiry.",
+        "cancel": "Cancel",
+        "continueToPricing": "Continue",
+        "backToDetails": "Back to details",
+        "sendingRequest": "Sending…",
+        "formValidationError": "Please fix the highlighted fields before continuing."
       },
       "urls": {}
     },

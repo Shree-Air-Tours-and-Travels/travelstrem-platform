@@ -6,6 +6,22 @@ export const THEME_CHANGE_EVENT = "travelsTrem:theme-change";
 
 const LEGACY_THEME_STORAGE_KEYS = ["trem-theme"];
 const THEME_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
+const THEME_SWITCHING_CLASS = "theme--switching";
+
+let themeSwitchFrame = null;
+const POLICY_KEY = "trem.tenant-theme-policy";
+let tenantPolicy = {};
+try { if (typeof window !== "undefined") tenantPolicy = JSON.parse(window.localStorage.getItem(POLICY_KEY) || "{}"); } catch { /* Use the runtime policy when storage is unavailable. */ }
+export function setTenantThemePolicy(policy = {}) {
+  const next = { mode: ["light", "dark"].includes(policy?.mode) ? policy.mode : "light", allowSwitching: policy?.allowSwitching !== false };
+  if (JSON.stringify(next) === JSON.stringify(tenantPolicy)) return;
+  tenantPolicy = next;
+  try { window.localStorage.setItem(POLICY_KEY, JSON.stringify(next)); } catch { /* Optional cache. */ }
+  const theme = getPreferredTheme();
+  applyThemeMode(theme);
+  window.dispatchEvent(new CustomEvent(THEME_CHANGE_EVENT, { detail: { theme } }));
+}
+
 
 const normalizeTheme = (theme) => (theme === "dark" ? "dark" : "light");
 
@@ -17,8 +33,7 @@ const readStorageTheme = () => {
     if (stored === "dark" || stored === "light") return stored;
 
     for (const key of LEGACY_THEME_STORAGE_KEYS) {
-      const legacy =
-        window.localStorage.getItem(key) || window.sessionStorage.getItem(key);
+      const legacy = window.localStorage.getItem(key) || window.sessionStorage.getItem(key);
       if (legacy === "dark" || legacy === "light") return legacy;
     }
   } catch {
@@ -45,9 +60,7 @@ const getConfiguredCookieDomain = () => {
   if (typeof window === "undefined") return "";
 
   const configuredDomain =
-    typeof process !== "undefined"
-      ? process.env.REACT_APP_THEME_COOKIE_DOMAIN
-      : "";
+    typeof process !== "undefined" ? process.env.REACT_APP_THEME_COOKIE_DOMAIN : "";
 
   if (configuredDomain) return configuredDomain;
 
@@ -60,6 +73,7 @@ const getConfiguredCookieDomain = () => {
 };
 
 export const getPreferredTheme = (defaultTheme) => {
+  if (tenantPolicy.allowSwitching === false) return normalizeTheme(tenantPolicy.mode);
   if (typeof window === "undefined") return normalizeTheme(defaultTheme);
 
   // The cookie is the cross-subdomain source of truth; local storage is the
@@ -67,14 +81,13 @@ export const getPreferredTheme = (defaultTheme) => {
   const explicitTheme = readCookieTheme() || readStorageTheme();
   if (explicitTheme) return explicitTheme;
   if (defaultTheme === "dark" || defaultTheme === "light") return defaultTheme;
+  if (tenantPolicy.mode === "dark" || tenantPolicy.mode === "light") return tenantPolicy.mode;
 
-  return window.matchMedia?.("(prefers-color-scheme: dark)")?.matches
-    ? "dark"
-    : "light";
+  return window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ? "dark" : "light";
 };
 
 export const applyThemeMode = (theme) => {
-  const nextTheme = normalizeTheme(theme);
+  const nextTheme = normalizeTheme(tenantPolicy.allowSwitching === false ? tenantPolicy.mode : theme);
   if (typeof document === "undefined") return nextTheme;
 
   const root = document.documentElement;
@@ -82,6 +95,28 @@ export const applyThemeMode = (theme) => {
   root.classList.add(`theme--${nextTheme}`);
   root.dataset.theme = nextTheme;
   root.style.colorScheme = nextTheme;
+
+  return nextTheme;
+};
+
+const applyThemeModeAtomically = (theme) => {
+  if (typeof document === "undefined") return applyThemeMode(theme);
+
+  const root = document.documentElement;
+  root.classList.add(THEME_SWITCHING_CLASS);
+  const nextTheme = applyThemeMode(theme);
+
+  if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
+    if (themeSwitchFrame !== null) window.cancelAnimationFrame(themeSwitchFrame);
+    themeSwitchFrame = window.requestAnimationFrame(() => {
+      themeSwitchFrame = window.requestAnimationFrame(() => {
+        root.classList.remove(THEME_SWITCHING_CLASS);
+        themeSwitchFrame = null;
+      });
+    });
+  } else {
+    root.classList.remove(THEME_SWITCHING_CLASS);
+  }
 
   return nextTheme;
 };
@@ -106,7 +141,7 @@ const persistTheme = (theme) => {
 };
 
 export const setPreferredTheme = (theme) => {
-  const nextTheme = applyThemeMode(theme);
+  const nextTheme = applyThemeModeAtomically(theme);
   persistTheme(nextTheme);
 
   if (typeof window !== "undefined") {
@@ -121,6 +156,7 @@ export const setPreferredTheme = (theme) => {
 };
 
 export function useThemeMode({ defaultTheme } = {}) {
+  const [canToggleTheme, setCanToggleTheme] = useState(tenantPolicy.allowSwitching !== false);
   const [theme, setThemeState] = useState(() => {
     const initialTheme = getPreferredTheme(defaultTheme);
     applyThemeMode(initialTheme);
@@ -139,16 +175,14 @@ export function useThemeMode({ defaultTheme } = {}) {
     };
 
     const handleStorage = (event) => {
-      if (
-        event.key === THEME_STORAGE_KEY ||
-        LEGACY_THEME_STORAGE_KEYS.includes(event.key)
-      ) {
+      if (event.key === THEME_STORAGE_KEY || LEGACY_THEME_STORAGE_KEYS.includes(event.key)) {
         syncTheme();
       }
     };
 
     const handleThemeChange = (event) => {
-      const nextTheme = normalizeTheme(event.detail?.theme);
+      setCanToggleTheme(tenantPolicy.allowSwitching !== false);
+      const nextTheme = tenantPolicy.allowSwitching === false ? normalizeTheme(tenantPolicy.mode) : normalizeTheme(event.detail?.theme);
       applyThemeMode(nextTheme);
       setThemeState(nextTheme);
     };
@@ -179,7 +213,7 @@ export function useThemeMode({ defaultTheme } = {}) {
     setThemeState(setPreferredTheme(nextTheme));
   }, []);
 
-  return { theme, setTheme, toggleTheme };
+  return { theme, setTheme, toggleTheme, canToggleTheme };
 }
 
 export function initializeThemeMode(defaultTheme) {

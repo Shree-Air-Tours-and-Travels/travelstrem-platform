@@ -1,0 +1,17 @@
+@import "./tokens";
+
+.admin-overview__skeleton { min-height: 118px; border-radius: $radius-lg; background: linear-gradient(90deg, var(--surface-muted), var(--primary-soft), var(--surface-muted)); background-size: 200% 100%; animation: admin-dashboard-pulse 1.3s ease infinite; }
+
+.admin-overview__skeleton.is-hero { min-height: 180px; }
+
+.admin-overview__skeleton.is-panel { min-height: 360px; }
+
+.admin-overview__skeleton.is-widget { min-height: 260px; }
+
+.admin-overview__skeleton-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: $space-4; }
+
+@keyframes admin-dashboard-pulse { to { background-position: -200% 0; } }
+
+@media (max-width: 700px) {
+.admin-overview__skeleton-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

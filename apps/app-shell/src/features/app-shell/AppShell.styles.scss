@@ -4,6 +4,14 @@
   width: 100%;
 }
 
+.app-shell-home-preloader {
+  display: grid;
+  gap: $space-8;
+  min-height: 70vh;
+  padding: clamp(#{$space-5}, 4vw, #{$space-10});
+  background: var(--page-bg);
+}
+
 .app-shell-page--error {
   display: flex;
   align-items: center;

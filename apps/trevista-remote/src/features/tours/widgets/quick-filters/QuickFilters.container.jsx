@@ -1,17 +1,32 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo } from "react";
 import QuickFiltersView from "./QuickFilters.view";
 
-export default function QuickFiltersContainer({ widgetData, onQuickFilter }) {
-    const filters = widgetData?.data?.filters || widgetData?.structure?.widgets?.[0]?.props?.filters || [];
-    const labels = widgetData?.elements?.labels || {};
-    const props = widgetData?.structure?.widgets?.[0]?.props || {};
-    const title = props.titleRef ? labels[props.titleRef] : null;
-    const [activeId, setActiveId] = useState("all");
+export default function QuickFiltersContainer({ widgetData, onQuickFilter, activeIds = ["all"] }) {
+  const filters = useMemo(
+    () => widgetData?.dataScope?.options?.quickFilters || [],
+    [widgetData],
+  );
+  const labels = widgetData?.elements?.labels || {};
+  const urls = widgetData?.elements?.urls || {};
+  const props = widgetData?.structure?.widgets?.[0]?.props || {};
+  const title = props.titleRef ? labels[props.titleRef] : null;
+  const handleClick = useCallback(
+    (id) => {
+      onQuickFilter?.(filters.find((filter) => filter.id === id));
+    },
+    [filters, onQuickFilter],
+  );
 
-    const handleClick = useCallback((id) => {
-        setActiveId(id);
-        onQuickFilter?.(id);
-    }, [onQuickFilter]);
-
-    return <QuickFiltersView title={title} filters={filters} labels={labels} activeId={activeId} onFilterClick={handleClick} />;
+  return (
+    <QuickFiltersView
+      title={title}
+      filters={filters}
+      labels={labels}
+      activeIds={activeIds}
+      onFilterClick={handleClick}
+      customTourPrompt={labels[props.customTourPromptRef] || ""}
+      customTourAction={labels[props.customTourActionRef] || ""}
+      customTourPath={urls[props.customTourPathRef] || ""}
+    />
+  );
 }

@@ -14,8 +14,18 @@ export default function Breadcrumbs({ items = [], className = "" }) {
           const isExternal = typeof item.path === "string" && /^https?:\/\//.test(item.path);
           return (
             <li key={item.label + i}>
-              {item.path && !isLast ? (
-                isExternal ? <a href={item.path}>{item.label}</a> : <Link to={item.path} state={item.state}>{item.label}</Link>
+              {item.onClick && !isLast ? (
+                <button type="button" onClick={item.onClick}>
+                  {item.label}
+                </button>
+              ) : item.path && !isLast ? (
+                isExternal ? (
+                  <a href={item.path}>{item.label}</a>
+                ) : (
+                  <Link to={item.path} state={item.state}>
+                    {item.label}
+                  </Link>
+                )
               ) : (
                 <span aria-current={isLast ? "page" : undefined}>{item.label}</span>
               )}
@@ -34,7 +44,8 @@ Breadcrumbs.propTypes = {
       label: PropTypes.string.isRequired,
       path: PropTypes.string,
       state: PropTypes.object,
-    })
+      onClick: PropTypes.func,
+    }),
   ),
   className: PropTypes.string,
 };

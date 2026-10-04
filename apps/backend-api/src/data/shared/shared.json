@@ -49,8 +49,8 @@
     },
 
     "urls": {
-      "logoUrl": "/logo-images/travelsTrem-header-logo.png",
-      "faviconUrl": "/favicon.png",
+      "logoUrl": "https://res.cloudinary.com/dofxshf3z/image/upload/v1791109947/ae275b55-9a5c-4f50-b3ad-2f2984404097.png",
+      "faviconUrl": "https://res.cloudinary.com/dofxshf3z/image/upload/v1791109947/ae275b55-9a5c-4f50-b3ad-2f2984404097.png",
       "defaultAvatar": "/images/default-avatar.png",
       "placeholderImage": "/images/placeholder.jpg"
     }

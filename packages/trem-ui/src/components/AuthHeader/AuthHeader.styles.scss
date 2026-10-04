@@ -13,10 +13,22 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    width: min(1180px, 100%);
-    min-height: 76px;
+    width: min(1728px, calc(100% - clamp(2rem, 10vw, 12rem)));
+    min-height: 72px;
     margin: 0 auto;
-    padding: $space-3 $space-5;
+  }
+
+  &__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-3;
+    min-width: 0;
+  }
+
+  &__brand-name {
+    color: var(--color-text);
+    font-weight: 700;
+    white-space: nowrap;
   }
 
   &__theme {
@@ -33,7 +45,10 @@
     line-height: 0;
     padding: 0;
     cursor: pointer;
-    transition: border-color 160ms ease, color 160ms ease, transform 160ms ease;
+    transition:
+      border-color 160ms ease,
+      color 160ms ease,
+      transform 160ms ease;
 
     &:hover {
       border-color: var(--color-primary);
@@ -58,31 +73,7 @@
 @media (max-width: 580px) {
   .trem-auth-header {
     &__inner {
-      min-height: 68px;
-      padding: $space-3 $space-4;
-    }
-
-    .brand-logo {
-      gap: $space-2;
-    }
-
-    .brand-logo__image {
-      width: 36px;
-      height: 36px;
-      flex-basis: 36px;
-    }
-
-    .brand-logo__name {
-      font-size: 1rem;
-    }
-
-    .brand-logo__subtitle {
-      max-width: min(56vw, 250px);
-      overflow: hidden;
-      font-size: 0.62rem;
-      line-height: 1.25;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      min-height: 52px;
     }
 
     &__theme {
@@ -90,5 +81,76 @@
       height: 38px;
       flex-basis: 38px;
     }
+  }
+}
+
+.trem-auth-header {
+  border-top: 3px solid var(--color-primary);
+
+  &__inner {
+    gap: $space-4;
+    box-sizing: border-box;
+  }
+
+  &__navigation {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    margin-left: auto;
+  }
+
+  &__link {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-2;
+    padding: $space-3 $space-4;
+    border-radius: $space-3;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    font-weight: 600;
+    white-space: nowrap;
+
+    &:hover {
+      color: var(--color-primary);
+      background: var(--primary-soft);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+  }
+}
+
+@media (max-width: 760px) {
+  .trem-auth-header {
+    &__inner {
+      flex-wrap: wrap;
+    }
+
+    &__navigation {
+      order: 3;
+      width: 100%;
+      margin: 0;
+      overflow-x: auto;
+      border-top: 1px solid var(--color-border);
+      padding-top: $space-2;
+    }
+
+    &__link {
+      flex: 1;
+      justify-content: center;
+      padding: $space-2 $space-3;
+      font-size: var(--font-size-sm);
+    }
+
+    &__theme {
+      margin-left: auto;
+    }
+  }
+}
+@media (min-width: 561px) and (max-width: 900px) {
+  .trem-auth-header__inner {
+    min-height: 56px;
   }
 }

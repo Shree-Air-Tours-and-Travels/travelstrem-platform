@@ -1,3 +1,6 @@
+@import "@packages/trem-design-tokens/scss";
+@import "./base/global-typography";
+
 /*
  * Scrollable regions keep their native scrolling behavior while scrollbar
  * chrome stays hidden consistently across Trem UI consumers.

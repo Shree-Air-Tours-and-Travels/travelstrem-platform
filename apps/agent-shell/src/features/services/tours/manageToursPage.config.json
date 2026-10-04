@@ -1,13 +1,13 @@
 {
-    "pageTitle": "Agent Operations",
-    "confirmModal": {
-        "defaultTitle": "Confirm",
-        "defaultMessage": "Are you sure?",
-        "cancelText": "Cancel",
-        "confirmText": "Confirm"
-    },
-    "deleteConfirm": {
-        "single": "Delete this tour? This action cannot be undone.",
-        "all": "Delete ALL tours? This is irreversible. Continue?"
-    }
+  "pageTitle": "Agent Operations",
+  "confirmModal": {
+    "defaultTitle": "Confirm",
+    "defaultMessage": "Are you sure?",
+    "cancelText": "Cancel",
+    "confirmText": "Confirm"
+  },
+  "deleteConfirm": {
+    "single": "Delete this tour? This action cannot be undone.",
+    "all": "Delete ALL tours? This is irreversible. Continue?"
+  }
 }

@@ -1,14 +1,5 @@
+import tokens from "./motion-sass.js";
 export const motion = {
-  duration: {
-    instant: "0.001ms",
-    fast: "120ms",
-    base: "160ms",
-    medium: "180ms",
-    slow: "220ms",
-    shimmer: "1.2s",
-  },
-  easing: {
-    standard: "ease",
-    linear: "linear",
-  },
+  duration: Object.fromEntries(Object.entries(tokens).filter(([key]) => key.startsWith("duration-")).map(([key, value]) => [key.slice(9), value])),
+  easing: { standard: tokens["ease-standard"], linear: tokens["ease-linear"] },
 };

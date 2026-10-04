@@ -1,0 +1,15 @@
+@import "./tokens";
+
+.admin-overview__journey { display: flex; align-items: center; justify-content: space-between; gap: $space-5; padding: $space-6 $space-7; border: 1px solid var(--border); border-radius: $radius-xl; background: var(--primary-surface, var(--surface-muted)); box-shadow: var(--shadow-xs); }
+
+.admin-overview__journey > div { max-width: 680px; }
+
+.admin-overview__journey > div > span { display: block; margin-bottom: $space-2; color: var(--color-primary); font-size: $font-size-xs; font-weight: $font-bold; letter-spacing: .1em; text-transform: uppercase; }
+
+.admin-overview__journey h2 { margin: 0 0 $space-2; color: var(--heading); font-size: $font-size-xl; }
+
+.admin-overview__journey p { margin: 0; color: var(--muted); line-height: $line-height-lg; }
+
+@media (max-width: 700px) {
+.admin-overview__journey { align-items: stretch; flex-direction: column; padding: $space-5; }
+}

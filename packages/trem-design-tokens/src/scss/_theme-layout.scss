@@ -1,0 +1,39 @@
+:root {
+  --radius-sm: #{$radius-sm};
+  --radius-md: #{$radius-md};
+  --radius-lg: #{$radius-lg};
+  --shadow-soft: #{$shadow-soft};
+  --shadow-card: #{$shadow-card};
+  --shadow-sm: #{$shadow-sm};
+  --shadow-md: #{$shadow-md};
+  --shadow-lg: #{$shadow-lg};
+  --container-width: #{$container-width};
+  --root-font-size: #{$root-font-size-desktop};
+  --control-font-size: #{$font-size-md};
+  --layout-section-gap: #{$space-5};
+  --layout-card-gap: #{$space-4};
+  --tours-shadow: var(--shadow-md);
+}
+@media (max-width: $breakpoint-lg) {
+  :root {
+    --root-font-size: #{$root-font-size-tablet};
+  }
+}
+
+@media (max-width: $breakpoint-md) {
+  :root {
+    --root-font-size: #{$root-font-size-mobile};
+    --control-font-size: #{$control-font-size-mobile};
+    --layout-section-gap: #{$space-4};
+    --layout-card-gap: #{$space-3};
+  }
+}
+
+// Theme tokens must be committed in one paint. Component-level transitions can
+// otherwise interpolate foreground and surface colours at different speeds.
+.theme--switching,
+.theme--switching *,
+.theme--switching *::before,
+.theme--switching *::after {
+  transition: none !important;
+}

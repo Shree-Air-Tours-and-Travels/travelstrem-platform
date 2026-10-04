@@ -6,11 +6,11 @@
   text-align: center;
   padding: 2rem;
   min-height: 240px;
-  color: var(--text, #14201d);
+  color: var(--text);
 }
 
 .tt-empty-state__icon {
-  color: var(--muted, #94a3b8);
+  color: var(--muted);
   margin-bottom: 0.4rem;
 }
 
@@ -18,14 +18,14 @@
   margin: 0;
   font-size: 1.15rem;
   font-weight: 700;
-  color: var(--text, #14201d);
+  color: var(--text);
 }
 
 .tt-empty-state__desc {
   margin: 0;
   max-width: 400px;
   font-size: 0.9rem;
-  color: var(--muted, #64748b);
+  color: var(--muted);
   line-height: 1.5;
 }
 

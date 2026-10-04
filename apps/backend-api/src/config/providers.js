@@ -1,10 +1,9 @@
 const providersConfig = Object.freeze({
-  travel: {
-    hotels: [],
-    flights: [],
-    tours: [],
-  },
+    travel: {
+        hotels: [],
+        flights: [],
+        tours: [],
+    },
 });
 
 export default providersConfig;
-

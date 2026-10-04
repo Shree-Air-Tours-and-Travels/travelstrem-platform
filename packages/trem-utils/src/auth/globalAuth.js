@@ -11,7 +11,10 @@ const isLocalHost = (hostname = "") => ["localhost", "127.0.0.1", "::1"].include
 export const getGlobalAuthBaseUrl = (override = "") => {
   const configured = override || process.env.REACT_APP_AUTH_APP_URL || "";
   if (configured) return normalizeBase(configured);
-  return "";
+  if (typeof window !== "undefined" && isLocalHost(window.location.hostname)) {
+    return "http://localhost:3003";
+  }
+  return "https://auth.travelstrem.com";
 };
 
 export const getCurrentReturnUrl = () => {
@@ -52,8 +55,10 @@ export const buildGlobalAppShellUrl = ({
   product = "",
   tab = "",
 } = {}) => {
-  const base = getGlobalAppShellBaseUrl(shellBaseUrl);
-  const url = new URL("/", safeBase(base));
+  const dashboardSection = { dashboard: "overview", bookings: "bookings", favorites: "wishlist", wishlist: "wishlist", profile: "profile", notifications: "notifications", support: "support" }[tab];
+  const dashboardBase = process.env.REACT_APP_DASHBOARD_URL || (typeof window !== "undefined" && isLocalHost(window.location.hostname) ? "http://localhost:3017" : "https://dashboard.travelstrem.com");
+  const base = dashboardSection ? dashboardBase : getGlobalAppShellBaseUrl(shellBaseUrl);
+  const url = new URL(dashboardSection ? `/dashboard/${dashboardSection}` : "/", safeBase(base));
   if (product) url.searchParams.set("product", product);
   if (tab) url.searchParams.set("tab", tab);
   if (returnTo) url.searchParams.set("returnTo", returnTo);
@@ -63,28 +68,4 @@ export const buildGlobalAppShellUrl = ({
 export const redirectToGlobalAppShell = (options = {}) => {
   if (typeof window === "undefined") return;
   window.location.assign(buildGlobalAppShellUrl(options));
-};
-
-export const getGlobalBookingEngineBaseUrl = (override = "") => {
-  const configured = override || process.env.REACT_APP_BOOKING_ENGINE_URL || "";
-  if (configured) return normalizeBase(configured);
-  return "";
-};
-
-export const buildGlobalBookingEngineUrl = ({
-  bookingEngineBaseUrl = "",
-  product = "",
-  tourRef = "",
-  returnTo = "",
-} = {}) => {
-  const url = new URL("/", safeBase(getGlobalBookingEngineBaseUrl(bookingEngineBaseUrl)));
-  if (product) url.searchParams.set("product", product);
-  if (tourRef) url.searchParams.set("tourRef", tourRef);
-  if (returnTo) url.searchParams.set("returnTo", returnTo);
-  return url.toString();
-};
-
-export const redirectToGlobalBookingEngine = (options = {}) => {
-  if (typeof window === "undefined") return;
-  window.location.assign(buildGlobalBookingEngineUrl(options));
 };

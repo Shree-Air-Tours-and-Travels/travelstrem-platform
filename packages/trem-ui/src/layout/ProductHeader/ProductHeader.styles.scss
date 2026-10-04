@@ -1,4 +1,4 @@
-@import "@packages/trem-design-tokens/scss";
+@import "@packages/trem-design-tokens/scss/tokens";
 
 .trem-product-header {
   position: sticky;
@@ -12,7 +12,7 @@
   backdrop-filter: blur(18px);
 
   &__inner {
-    width: min(1380px, calc(100% - clamp(2rem, 5vw, 5rem)));
+    width: min(1728px, calc(100% - clamp(2rem, 10vw, 12rem)));
     min-height: 72px;
     margin: 0 auto;
     display: grid;
@@ -21,7 +21,9 @@
     gap: var(--space-6, 1.5rem);
   }
 
-  &__hamburger { display: none; }
+  &__hamburger {
+    display: none;
+  }
 
   &__brand,
   &__nav-item,
@@ -31,7 +33,12 @@
     font: inherit;
     text-decoration: none;
     cursor: pointer;
-    transition: color 160ms ease, border-color 160ms ease, background 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+    transition:
+      color 160ms ease,
+      border-color 160ms ease,
+      background 160ms ease,
+      transform 160ms ease,
+      box-shadow 160ms ease;
 
     &:focus-visible {
       outline: none;
@@ -69,7 +76,7 @@
   }
 
   &__brand-logo {
-    flex: 0 0 42px;
+    max-width: 100%;
   }
 
   &__logo {
@@ -103,6 +110,10 @@
     align-items: center;
     justify-content: center;
     gap: clamp(1rem, 2.2vw, 2rem);
+  }
+
+  &__link-tabs {
+    justify-self: center;
   }
 
   &__nav-item {
@@ -354,7 +365,8 @@
       }
     }
 
-    &__nav {
+    &__nav,
+    &__link-tabs {
       display: none;
     }
 
@@ -375,12 +387,14 @@
       display: block;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.4);
+      background: var(--overlay);
       backdrop-filter: blur(3px);
       -webkit-backdrop-filter: blur(3px);
       opacity: 0;
       visibility: hidden;
-      transition: opacity 220ms ease, visibility 220ms ease;
+      transition:
+        opacity 220ms ease,
+        visibility 220ms ease;
       z-index: 49;
       pointer-events: none;
       -webkit-tap-highlight-color: transparent;
@@ -465,7 +479,7 @@
 
       strong {
         color: var(--text);
-        font-size: 1rem;
+        font-size: var(--font-size-md);
         font-weight: $font-bold;
         line-height: 1.2;
         overflow: hidden;
@@ -538,7 +552,9 @@
       font-weight: $font-semibold;
       padding: 0 0.9rem;
       border-radius: 10px;
-      transition: background 140ms ease, color 140ms ease;
+      transition:
+        background 140ms ease,
+        color 140ms ease;
 
       &:hover {
         background: var(--surface);
@@ -548,6 +564,12 @@
         color: var(--color-primary-dark);
         font-weight: $font-bold;
         background: var(--primary-softer, var(--surface-inset));
+      }
+
+      &.is-disabled {
+        color: var(--text-muted);
+        cursor: not-allowed;
+        opacity: 0.65;
       }
     }
 
@@ -572,7 +594,9 @@
       background: transparent;
       cursor: pointer;
       text-align: left;
-      transition: background 140ms ease, color 140ms ease;
+      transition:
+        background 140ms ease,
+        color 140ms ease;
 
       &:hover {
         background: var(--surface);
@@ -614,7 +638,9 @@
       font-weight: $font-semibold;
       padding: 0 0.75rem;
       border-radius: 8px;
-      transition: background 140ms ease, color 140ms ease;
+      transition:
+        background 140ms ease,
+        color 140ms ease;
 
       &:hover {
         background: var(--surface);
@@ -653,7 +679,9 @@
       font-weight: $font-semibold;
       cursor: pointer;
       text-align: left;
-      transition: background 140ms ease, color 140ms ease;
+      transition:
+        background 140ms ease,
+        color 140ms ease;
 
       &:hover {
         background: var(--surface-inset);

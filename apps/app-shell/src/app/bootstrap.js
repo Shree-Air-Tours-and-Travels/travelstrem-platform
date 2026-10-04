@@ -12,6 +12,6 @@ if (container) {
   createRoot(container).render(
     <BrowserRouter>
       <AppShellApp />
-    </BrowserRouter>
+    </BrowserRouter>,
   );
 }
