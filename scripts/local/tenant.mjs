@@ -15,6 +15,16 @@ const slug = process.argv[2];
 if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug || ""))
   throw new Error("Usage: node scripts/local/tenant.mjs <tenant-slug> [--invite-admin]");
 const read = (file) => (fs.existsSync(file) ? dotenv.parse(fs.readFileSync(file)) : {});
+const envFileIndex = process.argv.indexOf("--env-file");
+if (envFileIndex !== -1 && !process.argv[envFileIndex + 1])
+  throw new Error("--env-file requires a local environment file path.");
+const clientEnvFile =
+  envFileIndex === -1
+    ? path.join(root, `.env.${slug}.local`)
+    : path.resolve(root, process.argv[envFileIndex + 1]);
+if (envFileIndex !== -1 && !fs.existsSync(clientEnvFile))
+  throw new Error("The specified client environment file does not exist.");
+const clientEnv = read(clientEnvFile);
 const isAtlasConnection = (uri) => {
   const target = new URL(uri);
   return target.protocol === "mongodb+srv:" || /\.mongodb\.net(?::\d+)?(?:,|$)/i.test(target.host);
@@ -46,10 +56,15 @@ const master = await User.findOne({
   clientId: null,
 });
 if (!master) throw new Error("The configured master administrator is required.");
-const result = await provisionClient(client, master._id, {
-  invite: process.argv.includes("--invite-admin"),
-  syncConfiguration: false,
-});
+if (clientEnv.TENANT_CLIENT_ID && clientEnv.TENANT_CLIENT_ID !== String(client._id))
+  throw new Error("The client environment file belongs to another tenant.");
+const result =
+  client.provisioning?.status === "ready" && !process.argv.includes("--invite-admin")
+    ? null
+    : await provisionClient(client, master._id, {
+        invite: process.argv.includes("--invite-admin"),
+        syncConfiguration: false,
+      });
 if (process.argv.includes("--invite-admin")) {
   client.provisioning = { status: "ready", emailSent: result.emailSent };
   await client.save();
@@ -62,9 +77,11 @@ if (process.argv.includes("--invite-admin")) {
   );
 }
 const runtimeSecretRef = client.database.secretRef.replace(/^TENANT_DB_/, "TENANT_RUNTIME_DB_");
-let runtimeUri = source[runtimeSecretRef];
+let runtimeUri = clientEnv.MONGODB_URI || source[runtimeSecretRef];
 const provisioningRuntimeUri = source[client.database.secretRef];
-const isAtlas = isAtlasConnection(provisioningRuntimeUri);
+if (!runtimeUri && !provisioningRuntimeUri)
+  throw new Error(`Configure ${runtimeSecretRef} or MONGODB_URI in the client environment file.`);
+const isAtlas = isAtlasConnection(provisioningRuntimeUri || runtimeUri);
 if (!runtimeUri) {
   if (isAtlas)
     throw new Error(
@@ -148,7 +165,7 @@ for (const value of Object.values(origins.toObject?.() || origins)) {
     throw new Error("This launcher supports local tenant origins only.");
 }
 const secretFile = path.join(root, `.env.tenant-${slug}.local`);
-const saved = read(secretFile);
+const saved = { ...read(secretFile), ...clientEnv };
 const secrets = {
   JWT_ACCESS_SECRET: saved.JWT_ACCESS_SECRET || randomBytes(48).toString("hex"),
   JWT_REFRESH_SECRET: saved.JWT_REFRESH_SECRET || randomBytes(48).toString("hex"),

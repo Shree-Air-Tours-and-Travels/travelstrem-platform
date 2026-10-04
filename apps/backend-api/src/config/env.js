@@ -210,8 +210,6 @@ const INVITATION_TTL_HOURS = Math.min(
     168,
     Math.max(1, Number(get("INVITATION_TTL_HOURS", 48)) || 48),
 );
-const WHATSAPP_CHANNEL_URL = String(get("WHATSAPP_CHANNEL_URL", "") || "").trim();
-const WHATSAPP_CHANNEL_NAME = String(get("WHATSAPP_CHANNEL_NAME", "") || "").trim();
 
 /* ------------------------------
    5) JWT / Auth
@@ -520,8 +518,6 @@ const config = {
     DEFAULT_TOUR_IMAGE,
     AGENT_EMAIL_DOMAIN,
     INVITATION_TTL_HOURS,
-    WHATSAPP_CHANNEL_URL,
-    WHATSAPP_CHANNEL_NAME,
     JWT,
     ADMIN_CREATION_SECRET,
     MONGO_URI,
@@ -598,8 +594,6 @@ export {
     DEFAULT_TOUR_IMAGE,
     AGENT_EMAIL_DOMAIN,
     INVITATION_TTL_HOURS,
-    WHATSAPP_CHANNEL_URL,
-    WHATSAPP_CHANNEL_NAME,
     JWT,
     ADMIN_CREATION_SECRET,
     MONGO_URI,
