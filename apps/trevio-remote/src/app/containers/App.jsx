@@ -1,14 +1,12 @@
-import React, { useEffect, useState, useMemo, useRef, useCallback } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { Route, Routes, Navigate, useLocation, useParams } from "react-router-dom";
 import {
   fetchData,
-  redirectToGlobalAuth,
   setComponentDataFetcher,
   createProductAuth,
   buildGlobalAppShellUrl,
-  getGlobalAuthBaseUrl,
-  getCurrentReturnUrl,
   requestShellNavigation,
+  applyDocumentBranding,
 } from "@packages/trem-utils";
 import {
   emit,
@@ -18,6 +16,7 @@ import {
 } from "@packages/trem-events";
 import {
   FavoritesProvider,
+  GlobalLoader,
   ErrorState,
   PRODUCT_TYPE,
   ScrollToTop,
@@ -36,25 +35,17 @@ import { clearUserSessionCache } from "../../services/userSession";
 import "../../main.scss";
 
 setComponentDataFetcher(fetchData);
-const STANDALONE_ENABLED = false;
+
 
 function TripDetailsWithBreadcrumb({ session, labels = {}, tripRef: providedTripRef = "" }) {
   const params = useParams();
   const location = useLocation();
   const tripRef = providedTripRef || params.tripRef || "";
-  const breadcrumbTrail = Array.isArray(location.state?.trail) && location.state.trail.length
-    ? location.state.trail
-    : [
-        { label: labels.homeBreadcrumb || "Trevio", path: "/trevio" },
-        { label: labels.tripDirectoryHeading || "Trips", path: "/trips" },
-      ];
   return (
     <TourDetailsPage
       userSession={session}
       appKey={PRODUCT_TYPE.TREVIO}
       productType="trip"
-      breadcrumbTrail={breadcrumbTrail}
-      breadcrumbDetailLabel={`Trip-${tripRef || ""}`}
       routeRef={tripRef}
     />
   );
@@ -105,15 +96,7 @@ function AppShell({
         )
       ) : embedded ? (
         <Routes>
-          <Route
-            index
-            element={
-              <Home
-                user={session?.user}
-                pageModel={pageModel}
-              />
-            }
-          />
+          <Route index element={<Navigate to="trips" replace />} />
           <Route
             path="trips"
             element={<Trips pageModel={pageModel} />}
@@ -184,10 +167,8 @@ export default function App({
   });
   const [pageModel, setPageModel] = useState(null);
   const [initKey, setInitKey] = useState(0);
-  const initRunRef = useRef(false);
 
   const retryInit = useCallback(() => {
-    initRunRef.current = false;
     setState({ loading: true, error: null, session: null, headerConfig: null });
     setPageModel(null);
     setInitKey((k) => k + 1);
@@ -206,9 +187,7 @@ export default function App({
   );
 
   useEffect(() => {
-    if (embedded || !STANDALONE_ENABLED) return undefined;
-    if (initRunRef.current) return undefined;
-    initRunRef.current = true;
+    if (embedded) return undefined;
 
     let active = true;
 
@@ -220,19 +199,9 @@ export default function App({
     })
       .then(({ session, header }) => {
         if (!active) return;
+        applyDocumentBranding(header.brand, { tenant: Boolean(header.tenantId) });
         setState({ loading: false, error: null, session, headerConfig: header });
-        if (!session?.isAuthenticated) {
-          if (!getGlobalAuthBaseUrl()) {
-            setState({
-              loading: false,
-              error: "REACT_APP_AUTH_APP_URL is not configured. Cannot redirect to login.",
-              session: null,
-              headerConfig: null,
-            });
-            return;
-          }
-          redirectToGlobalAuth({ app: PRODUCT_TYPE.TREVIO, returnTo: getCurrentReturnUrl() });
-        }
+
       })
       .catch((error) => {
         if (!active) return;
@@ -251,7 +220,7 @@ export default function App({
 
   useEffect(() => {
     if (state.loading || state.error) return;
-    if (!embedded && !state.session?.isAuthenticated) return;
+
 
     let active = true;
     async function loadPage() {
@@ -273,19 +242,6 @@ export default function App({
     };
   }, [state.loading, state.error, state.session, embedded]);
 
-  if (!embedded) {
-    return (
-      <ErrorState
-        title="Trevio now opens in TravelsTREM"
-        description="This product is part of the customer dashboard and is no longer available as a standalone application."
-        retry={() =>
-          window.location.assign(buildGlobalAppShellUrl({ product: PRODUCT_TYPE.TREVIO, tab: PRODUCT_TYPE.TREVIO }))
-        }
-        retryText="Go to customer shell"
-      />
-    );
-  }
-
   if (state.error) {
     return (
       <ErrorState
@@ -297,9 +253,7 @@ export default function App({
       />
     );
   }
-  if (!embedded && !state.session?.isAuthenticated) {
-    return <div className="app-status">Redirecting to TravelsTrem secure login...</div>;
-  }
+  if (state.loading) return <GlobalLoader visible text="Loading Trevio" />;
 
   const session = externalSession || state.session;
 

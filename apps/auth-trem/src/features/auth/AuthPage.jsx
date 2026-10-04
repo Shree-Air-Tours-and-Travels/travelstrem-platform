@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { AuthHeader, Button, Paragraph, Title } from "@packages/trem-ui";
+import { AuthHeader, Button, ErrorState, Paragraph, Preloader, Title } from "@packages/trem-ui";
+import { applyDocumentBranding } from "@packages/trem-utils";
 import { AuthField, SecretField } from "./AuthField";
 import AuthBrandPanel from "./AuthBrandPanel";
 import "./auth-page.scss";
@@ -28,6 +29,13 @@ const ERROR_MESSAGES = {
 };
 
 const portalForApp = (app) => APP_PORTALS[String(app || "").toLowerCase()] || "customer";
+const brandingCacheKey = (app) => `trem-auth-brand:${process.env.REACT_APP_API_URL || ""}:${app}`;
+const cachedExperience = (app) => {
+  try {
+    const cached = JSON.parse(window.localStorage.getItem(brandingCacheKey(app)) || "null");
+    return cached?.savedAt > Date.now() - 24 * 60 * 60 * 1000 ? cached.experience : null;
+  } catch { return null; }
+};
 
 const secondsFromMs = (value, fallbackSeconds = 0) =>
   Math.max(0, Math.ceil(Number(value || fallbackSeconds * 1000) / 1000));
@@ -36,7 +44,9 @@ const formatOtpTimer = (seconds) => {
   const value = Math.max(0, Number(seconds || 0));
   const minutes = Math.floor(value / 60);
   const remainingSeconds = value % 60;
-  return minutes ? `${minutes}:${String(remainingSeconds).padStart(2, "0")}` : `${remainingSeconds}s`;
+  return minutes
+    ? `${minutes}:${String(remainingSeconds).padStart(2, "0")}`
+    : `${remainingSeconds}s`;
 };
 
 // Deployments sometimes configure app URLs without a scheme ("app-dev.travelstrem.com").
@@ -111,7 +121,6 @@ const GoogleMark = () => (
   </svg>
 );
 
-
 export default function AuthPage({
   authService,
   appName = "TravelsTREM",
@@ -120,8 +129,8 @@ export default function AuthPage({
   afterAuthPath = "/",
   theme = "light",
   onToggleTheme,
-  accessRequest,
   activationToken,
+  tenantConfiguration,
 }) {
   const location = useLocation();
   const params = useMemo(() => new URLSearchParams(location.search), [location.search]);
@@ -133,6 +142,46 @@ export default function AuthPage({
   const masterAdminEmail = String(process.env.REACT_APP_MASTER_ADMIN_EMAIL || "")
     .trim()
     .toLowerCase();
+  const [experience, setExperience] = useState(() => cachedExperience(requestingApp));
+  const accessRequest = experience?.accessRequest || null;
+  const tenantBrand = tenantConfiguration ? {
+    name: tenantConfiguration.name,
+    logoSrc: tenantConfiguration.logoSrc,
+    faviconSrc: tenantConfiguration.faviconSrc,
+    windowTitle: tenantConfiguration.windowTitle,
+  } : null;
+  useEffect(() => {
+    if (tenantBrand) applyDocumentBranding(tenantBrand, { tenant: true });
+  }, [tenantConfiguration]);
+  useEffect(() => {
+    let active = true;
+    const cached = cachedExperience(requestingApp);
+    setExperience(cached);
+    if (cached) applyDocumentBranding(cached.header?.brand || {}, { tenant: Boolean(cached.tenant) });
+    authService
+      .getExperience(requestingApp)
+      .then((response) => {
+        if (active) {
+          const next = response.data?.data || null;
+          if (next) {
+            applyDocumentBranding(next.header?.brand || {}, { tenant: Boolean(next.tenant) });
+            try {
+              window.localStorage.setItem(brandingCacheKey(requestingApp), JSON.stringify({
+                savedAt: Date.now(),
+                experience: { tenant: next.tenant, name: next.name, header: { brand: next.header?.brand } },
+              }));
+            } catch { /* Branding still works without browser storage. */ }
+          }
+          setExperience(next);
+        }
+      })
+      .catch(() => {
+        if (active) setExperience((current) => current || { tenant: true });
+      });
+    return () => {
+      active = false;
+    };
+  }, [authService, requestingApp]);
   const [methods, setMethods] = useState({
     directAuth: true,
     actions: {
@@ -146,6 +195,8 @@ export default function AuthPage({
     google: { enabled: false },
     mobile: { enabled: false, available: false },
   });
+  const [methodsStatus, setMethodsStatus] = useState("loading");
+  const [methodsRetry, setMethodsRetry] = useState(0);
   const [screen, setScreen] = useState("methods");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [challenge, setChallenge] = useState(null);
@@ -185,8 +236,11 @@ export default function AuthPage({
     emailForm.email.trim().toLowerCase() === masterAdminEmail;
 
   useEffect(() => {
+    let active = true;
+    setMethodsStatus("loading");
     Promise.all([authService.getMethods(), authService.getSession().catch(() => null)])
       .then(([methodsResponse, sessionResponse]) => {
+        if (!active) return;
         const methodsPayload = methodsResponse?.data || methodsResponse || {};
         setMethods({
           ...methods,
@@ -199,11 +253,13 @@ export default function AuthPage({
           },
         });
         const session = sessionResponse?.data || sessionResponse;
+        setMethodsStatus("ready");
         if (session?.authenticated || session?.isAuthenticated) redirectAfterAuth();
       })
-      .catch(() => setError("Authentication methods could not be loaded."));
+      .catch(() => { if (active) setMethodsStatus("error"); });
+    return () => { active = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authService]);
+  }, [authService, methodsRetry]);
 
   useEffect(() => {
     if (screen === "otp" || screen === "emailOtp") otpRef.current?.focus();
@@ -253,12 +309,31 @@ export default function AuthPage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activationToken]);
 
-  const redirectAfterAuth = () => window.location.replace(returnTo || afterAuthPath);
+  const redirectAfterAuth = async () => {
+    try {
+      const current = await authService.getExperience(requestingApp);
+      if (!current.data?.data?.tenant) {
+        window.location.replace(returnTo || afterAuthPath);
+        return;
+      }
+      const response = await authService.resolveReturn(
+        params.get("returnTo") || returnTo || afterAuthPath,
+      );
+      const target = response.data?.data?.returnTo;
+      if (!target) throw new Error("Login destination is unavailable.");
+      window.location.replace(target);
+    } catch (failure) {
+      setError(
+        failure.response?.data?.message || failure.message || "Unable to return to your site.",
+      );
+    }
+  };
 
   const authActions = methods.actions || {};
   const emailMethod = methods.email || {};
   const allowDirectAuth = methods.directAuth !== false;
-  const allowEmailLogin = allowDirectAuth && authActions.emailLogin !== false && emailMethod.login !== false;
+  const allowEmailLogin =
+    allowDirectAuth && authActions.emailLogin !== false && emailMethod.login !== false;
   const allowEmailRegister =
     allowDirectAuth &&
     registerEnabled &&
@@ -380,9 +455,13 @@ export default function AuthPage({
       }
       redirectAfterAuth();
     } catch (authError) {
-      setError(authError?.response?.data?.message ||
-        (authError?.request ? "We couldn’t connect. Check your connection and try again." : authError.message) ||
-        "Unable to sign in. Please try again.");
+      setError(
+        authError?.response?.data?.message ||
+          (authError?.request
+            ? "We couldn’t connect. Check your connection and try again."
+            : authError.message) ||
+          "Unable to sign in. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -466,7 +545,9 @@ export default function AuthPage({
     try {
       const response = await authService.forgotPassword({ email: emailForm.email.trim() });
       const data = response?.data || response;
-      setNotice(data?.message || "If that email is registered, a password reset code has been sent.");
+      setNotice(
+        data?.message || "If that email is registered, a password reset code has been sent.",
+      );
       setResetForm({ otp: "", password: "", confirmPassword: "" });
       setOtpExpiresIn(secondsFromMs(data?.expiresInMs, 300));
       setResendCooldown(secondsFromMs(data?.resendAfterMs, 30));
@@ -578,26 +659,37 @@ export default function AuthPage({
   return (
     <>
       <AuthHeader
-        config={{
-          brand: {
-            name: "TravelsTREM",
-            subtitle: "Tours · Reservations · Experiences · Management",
-          },
-        }}
+        config={
+          experience
+            ? { ...experience.header, brand: experience.header?.brand || tenantBrand || {}, tenant: Boolean(experience.tenant || tenantBrand) }
+            : { brand: tenantBrand || {}, tenant: Boolean(tenantBrand), brandReady: Boolean(tenantBrand) }
+        }
         theme={theme}
         onToggleTheme={onToggleTheme}
       />
       <main className="auth-trem">
-        <div className="auth-trem__experience">
-          <AuthBrandPanel />
-
-          <section className="auth-trem__access" aria-label="Account access">
-            <div className="auth-trem__card">
-              <Paragraph primaryClassname="auth-trem__eyebrow">{appName}</Paragraph>
-              <Title
-                primaryClassname="auth-trem__title"
-                text={
-                  screen === "forgotPassword" ? "Forgot your password?" : screen === "otp"
+        {methodsStatus === "loading" ? (
+          <div className="auth-trem__service-state"><Preloader label="Loading sign-in options" /></div>
+        ) : methodsStatus === "error" ? (
+          <div className="auth-trem__service-state">
+            <ErrorState
+              title="Sign-in unavailable"
+              description="Sign-in options could not be loaded. Please try again."
+              retry={() => setMethodsRetry((count) => count + 1)}
+            />
+          </div>
+        ) : (
+        <section className="auth-trem__access" aria-label="Account access">
+          <div className="auth-trem__card">
+            <Paragraph primaryClassname="auth-trem__eyebrow">
+              {experience?.name || tenantBrand?.name || (experience && !experience.tenant ? appName : "")}
+            </Paragraph>
+            <Title
+              primaryClassname="auth-trem__title"
+              text={
+                screen === "forgotPassword"
+                  ? "Forgot your password?"
+                  : screen === "otp"
                     ? "Verify your mobile"
                     : screen === "emailOtp"
                       ? "Verify your login"
@@ -608,10 +700,12 @@ export default function AuthPage({
                           : screen === "mobile"
                             ? "Your mobile number"
                             : "Welcome"
-                }
-              />
-              <Paragraph primaryClassname="auth-trem__sub">
-                {screen === "forgotPassword" ? "Enter your email and we’ll send you a reset code." : screen === "otp"
+              }
+            />
+            <Paragraph primaryClassname="auth-trem__sub">
+              {screen === "forgotPassword"
+                ? "Enter your email and we’ll send you a reset code."
+                : screen === "otp"
                   ? `We sent a verification code to ${phoneNumber}.`
                   : screen === "emailOtp"
                     ? `Enter the code sent to ${emailOtpStep?.email || "your email"}.`
@@ -620,176 +714,187 @@ export default function AuthPage({
                       : screen === "activation"
                         ? `Enter the code sent to ${activationEmail || "your email"} and choose a password.`
                         : "Sign in or create your account securely."}
-              </Paragraph>
+            </Paragraph>
 
-              {notice && !error ? <div className="auth-trem__notice" role="status">{notice}</div> : null}
-              {error ? (
-                <div className="auth-trem__error" role="alert">
-                  {error}
+            {notice && !error ? (
+              <div className="auth-trem__notice" role="status">
+                {notice}
+              </div>
+            ) : null}
+            {error ? (
+              <div className="auth-trem__error" role="alert">
+                {error}
+              </div>
+            ) : null}
+
+            {screen === "methods" && showExternalMethods ? (
+              <div className="auth-trem__method-list">
+                {allowGoogle ? (
+                  <button
+                    type="button"
+                    className="auth-trem__google-button"
+                    onClick={loginWithGoogle}
+                    disabled={loading}
+                  >
+                    <GoogleMark />
+                    <span>Continue with Google</span>
+                  </button>
+                ) : null}
+                {allowMobile ? (
+                  <Button
+                    variant="outline"
+                    iconLeft="phoneCall"
+                    text="Continue with Mobile Number"
+                    onClick={() => {
+                      setError("");
+                      setScreen("mobile");
+                    }}
+                    primaryClassName="auth-trem__mobile-button"
+                  />
+                ) : null}
+                <div className="auth-trem__guest-divider">
+                  <span>or use email</span>
                 </div>
-              ) : null}
+              </div>
+            ) : null}
 
-              {screen === "methods" && showExternalMethods ? (
-                <div className="auth-trem__method-list">
-                  {allowGoogle ? (
-                    <button
-                      type="button"
-                      className="auth-trem__google-button"
-                      onClick={loginWithGoogle}
-                      disabled={loading}
-                    >
-                      <GoogleMark />
-                      <span>Continue with Google</span>
-                    </button>
-                  ) : null}
-                  {allowMobile ? (
+            {(screen === "methods" || screen === "email") &&
+            (allowEmailLogin || allowEmailRegister) ? (
+              <form className="auth-trem__form auth-trem__email-form" onSubmit={submitEmailAuth}>
+                {allowEmailLogin && allowEmailRegister ? (
+                  <div className="auth-trem__tabs">
                     <Button
-                      variant="outline"
-                      iconLeft="phoneCall"
-                      text="Continue with Mobile Number"
+                      variant="text"
+                      type="button"
+                      text="Log In"
                       onClick={() => {
                         setError("");
-                        setScreen("mobile");
+                        setEmailMode("login");
                       }}
-                      primaryClassName="auth-trem__mobile-button"
+                      primaryClassName={`auth-trem__tab ${emailMode === "login" ? "is-active" : ""}`}
                     />
-                  ) : null}
-                  <div className="auth-trem__guest-divider">
-                    <span>or use email</span>
+                    <Button
+                      variant="text"
+                      type="button"
+                      text="Register"
+                      onClick={() => {
+                        setError("");
+                        setEmailMode("register");
+                        setError("");
+                        setNotice("");
+                      }}
+                      primaryClassName={`auth-trem__tab ${emailMode === "register" ? "is-active" : ""}`}
+                    />
                   </div>
-                </div>
-              ) : null}
-
-              {(screen === "methods" || screen === "email") &&
-              (allowEmailLogin || allowEmailRegister) ? (
-                <form className="auth-trem__form auth-trem__email-form" onSubmit={submitEmailAuth}>
-                  {allowEmailLogin && allowEmailRegister ? (
-                    <div className="auth-trem__tabs">
-                      <Button
-                        variant="text"
-                        type="button"
-                        text="Log In"
-                        onClick={() => {
-                          setError("");
-                          setEmailMode("login");
-                        }}
-                        primaryClassName={`auth-trem__tab ${emailMode === "login" ? "is-active" : ""}`}
-                      />
-                      <Button
-                        variant="text"
-                        type="button"
-                        text="Register"
-                        onClick={() => {
-                          setError("");
-                          setEmailMode("register"); setError(""); setNotice("");
-                        }}
-                        primaryClassName={`auth-trem__tab ${emailMode === "register" ? "is-active" : ""}`}
-                      />
-                    </div>
-                  ) : null}
-                  {emailMode === "register" ? (
-                    <AuthField
-                      className="auth-trem__field"
-                      autoComplete="name"
-                      placeholder="Full name" minLength={2} maxLength={100}
-                      value={emailForm.name}
-                      onChange={(event) =>
-                        setEmailForm((value) => ({ ...value, name: event.target.value }))
-                      }
-                      required
-                    />
-                  ) : null}
+                ) : null}
+                {emailMode === "register" ? (
                   <AuthField
                     className="auth-trem__field"
-                    type="email"
-                    inputMode="email"
-                    autoComplete="email"
-                    placeholder="Email" maxLength={254}
-                    value={emailForm.email}
+                    autoComplete="name"
+                    placeholder="Full name"
+                    minLength={2}
+                    maxLength={100}
+                    value={emailForm.name}
+                    onChange={(event) =>
+                      setEmailForm((value) => ({ ...value, name: event.target.value }))
+                    }
+                    required
+                  />
+                ) : null}
+                <AuthField
+                  className="auth-trem__field"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  placeholder="Email"
+                  maxLength={254}
+                  value={emailForm.email}
+                  onChange={(event) => {
+                    const email = event.target.value;
+                    setEmailForm((value) => ({ ...value, email, adminOtp: "", adminPin: "" }));
+                    setAdminRegistration(null);
+                  }}
+                  required
+                />
+                {isAdmin && emailMode === "register" ? (
+                  <AuthField
+                    className="auth-trem__field"
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    placeholder="Mobile number"
+                    value={emailForm.phone}
                     onChange={(event) => {
-                      const email = event.target.value;
-                      setEmailForm((value) => ({ ...value, email, adminOtp: "", adminPin: "" }));
+                      const phone = event.target.value;
+                      setEmailForm((value) => ({ ...value, phone, adminOtp: "", adminPin: "" }));
                       setAdminRegistration(null);
                     }}
                     required
                   />
-                  {isAdmin && emailMode === "register" ? (
-                    <AuthField
-                      className="auth-trem__field"
-                      type="tel"
-                      inputMode="tel"
-                      autoComplete="tel"
-                      placeholder="Mobile number"
-                      value={emailForm.phone}
-                      onChange={(event) => {
-                        const phone = event.target.value;
-                        setEmailForm((value) => ({ ...value, phone, adminOtp: "", adminPin: "" }));
-                        setAdminRegistration(null);
-                      }}
-                      required
-                    />
-                  ) : null}
+                ) : null}
+                <SecretField
+                  autoComplete={emailMode === "register" ? "new-password" : "current-password"}
+                  placeholder="Password"
+                  minLength={emailMode === "register" ? 8 : undefined}
+                  maxLength={128}
+                  value={emailForm.password}
+                  onChange={(event) =>
+                    setEmailForm((value) => ({ ...value, password: event.target.value }))
+                  }
+                  required
+                />
+                {emailMode === "register" ? (
                   <SecretField
-                    autoComplete={emailMode === "register" ? "new-password" : "current-password"}
-                    placeholder="Password" minLength={emailMode === "register" ? 8 : undefined} maxLength={128}
-                    value={emailForm.password}
+                    autoComplete="new-password"
+                    placeholder="Confirm password"
+                    matchValue={emailForm.password}
+                    maxLength={128}
+                    value={emailForm.confirmPassword}
                     onChange={(event) =>
-                      setEmailForm((value) => ({ ...value, password: event.target.value }))
+                      setEmailForm((value) => ({ ...value, confirmPassword: event.target.value }))
                     }
                     required
                   />
-                  {emailMode === "register" ? (
-                    <SecretField
-                      autoComplete="new-password"
-                      placeholder="Confirm password" matchValue={emailForm.password} maxLength={128}
-                      value={emailForm.confirmPassword}
-                      onChange={(event) =>
-                        setEmailForm((value) => ({ ...value, confirmPassword: event.target.value }))
-                      }
-                      required
-                    />
-                  ) : null}
-                  {isMasterAdminRegistration ? (
-                    <div className="auth-trem__secret">
-                      {adminRegistration?.status !== "verified" ? (
-                        <>
-                          <div className="auth-trem__otp-row">
-                            <input
-                              className="auth-trem__field"
-                              inputMode="numeric"
-                              autoComplete="one-time-code"
-                              placeholder="Registration code"
-                              pattern="[0-9]{6}"
-                              maxLength={6}
-                              value={emailForm.adminOtp}
-                              onChange={(event) =>
-                                setEmailForm((value) => ({
-                                  ...value,
-                                  adminOtp: event.target.value.replace(/\D/g, "").slice(0, 6),
-                                }))
-                              }
-                            />
-                            <Button
-                              variant="outline"
-                              size="small"
-                              type="button"
-                              text={
-                                adminRegistration?.status === "otp_sent"
-                                  ? "Verify code"
-                                  : "Send code"
-                              }
-                              disabled={
-                                loading ||
-                                (adminRegistration?.status === "otp_sent" &&
-                                  (otpExpiresIn <= 0 || emailForm.adminOtp.length !== 6))
-                              }
-                              onClick={
-                                adminRegistration?.status === "otp_sent"
-                                  ? verifyAdminRegistrationOtp
-                                  : requestAdminRegistrationOtp
-                              }
-                            />
-                          </div>
+                ) : null}
+                {isMasterAdminRegistration ? (
+                  <div className="auth-trem__secret">
+                    {adminRegistration?.status !== "verified" ? (
+                      <>
+                        <div className="auth-trem__otp-row">
+                          <input
+                            className="auth-trem__field"
+                            inputMode="numeric"
+                            autoComplete="one-time-code"
+                            placeholder="Registration code"
+                            pattern="[0-9]{6}"
+                            maxLength={6}
+                            value={emailForm.adminOtp}
+                            onChange={(event) =>
+                              setEmailForm((value) => ({
+                                ...value,
+                                adminOtp: event.target.value.replace(/\D/g, "").slice(0, 6),
+                              }))
+                            }
+                          />
+                          <Button
+                            variant="outline"
+                            size="small"
+                            type="button"
+                            text={
+                              adminRegistration?.status === "otp_sent" ? "Verify code" : "Send code"
+                            }
+                            disabled={
+                              loading ||
+                              (adminRegistration?.status === "otp_sent" &&
+                                (otpExpiresIn <= 0 || emailForm.adminOtp.length !== 6))
+                            }
+                            onClick={
+                              adminRegistration?.status === "otp_sent"
+                                ? verifyAdminRegistrationOtp
+                                : requestAdminRegistrationOtp
+                            }
+                          />
+                        </div>
                         {adminRegistration?.status === "otp_sent" ? (
                           <>
                             <div className="auth-trem__hint">
@@ -810,419 +915,452 @@ export default function AuthPage({
                             />
                           </>
                         ) : null}
-                        </>
-                      ) : (
-                        <SecretField
-                          inputMode="numeric"
-                          autoComplete="off"
-                          placeholder="6 digit Admin PIN"
-                          pattern="[0-9]{6}"
-                          maxLength={6}
-                          value={emailForm.adminPin}
-                          onChange={(event) =>
-                            setEmailForm((value) => ({
-                              ...value,
-                              adminPin: event.target.value.replace(/\D/g, "").slice(0, 6),
-                            }))
-                          }
-                          required
-                        />
-                      )}
-                      <div className="auth-trem__hint">
-                        The first master administrator must verify the configured email and mobile
-                        before entering the private Admin PIN.
-                      </div>
+                      </>
+                    ) : (
+                      <SecretField
+                        inputMode="numeric"
+                        autoComplete="off"
+                        placeholder="6 digit Admin PIN"
+                        pattern="[0-9]{6}"
+                        maxLength={6}
+                        value={emailForm.adminPin}
+                        onChange={(event) =>
+                          setEmailForm((value) => ({
+                            ...value,
+                            adminPin: event.target.value.replace(/\D/g, "").slice(0, 6),
+                          }))
+                        }
+                        required
+                      />
+                    )}
+                    <div className="auth-trem__hint">
+                      The first master administrator must verify the configured email and mobile
+                      before entering the private Admin PIN.
                     </div>
-                  ) : null}
-                  {emailMode === "login" ? (
-                    <div className="auth-trem__login-options">
-                      <label className="auth-trem__remember">
-                        <input
-                          type="checkbox"
-                          checked={rememberMe}
-                          onChange={(event) => setRememberMe(event.target.checked)}
-                        />
-                        <span title="Keep this sign-in in this browser. The session inactivity timeout still applies.">Remember me</span>
-                      </label>
-                      {allowForgotPassword ? (
-                        <Button
-                          variant="text"
-                          type="button"
-                          text="Forgot password?"
-                          onClick={() => {
-                            setError(""); setNotice("");
-                            setResetForm({ otp: "", password: "", confirmPassword: "" });
-                            setScreen("forgotPassword");
-                          }}
-                          primaryClassName="auth-trem__forgot-link"
-                        />
-                      ) : null}
-                    </div>
-                  ) : null}
-                  <Button
-                    variant="solid"
-                    color="primary"
-                    type="submit"
-                    text={
-                      loading ? "Please wait…" : emailMode === "register" ? "Register" : "Log In"
-                    }
-                    disabled={loading}
-                    primaryClassName="auth-trem__primary"
-                  />
-                  {isCustomer ? (
-                    <Button
-                      variant="text"
-                      type="button"
-                      text="Continue as guest"
-                      onClick={continueAsGuest}
-                      primaryClassName="auth-trem__guest-link"
-                    />
-                  ) : null}
-                </form>
-              ) : null}
-
-              {screen === "mobile" ? (
-                <form className="auth-trem__form" onSubmit={requestOtp}>
-                  <label className="auth-trem__mobile-label" htmlFor="mobile-number">
-                    Mobile number
-                  </label>
-                  <div className="auth-trem__mobile-input">
-                    <span>India&nbsp; +91</span>
-                    <input
-                      id="mobile-number"
-                      type="tel"
-                      inputMode="tel"
-                      autoComplete="tel"
-                      placeholder="98765 43210"
-                      value={phoneNumber}
-                      onChange={(event) => setPhoneNumber(event.target.value)}
-                      required
-                      autoFocus
-                    />
                   </div>
-                  <Button
-                    variant="solid"
-                    color="primary"
-                    type="submit"
-                    text={loading ? "Requesting code…" : "Continue"}
-                    disabled={loading}
-                    primaryClassName="auth-trem__primary"
-                  />
+                ) : null}
+                {emailMode === "login" ? (
+                  <div className="auth-trem__login-options">
+                    <label className="auth-trem__remember">
+                      <input
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(event) => setRememberMe(event.target.checked)}
+                      />
+                      <span title="Keep this sign-in in this browser. The session inactivity timeout still applies.">
+                        Remember me
+                      </span>
+                    </label>
+                    {allowForgotPassword ? (
+                      <Button
+                        variant="text"
+                        type="button"
+                        text="Forgot password?"
+                        onClick={() => {
+                          setError("");
+                          setNotice("");
+                          setResetForm({ otp: "", password: "", confirmPassword: "" });
+                          setScreen("forgotPassword");
+                        }}
+                        primaryClassName="auth-trem__forgot-link"
+                      />
+                    ) : null}
+                  </div>
+                ) : null}
+                <Button
+                  variant="solid"
+                  color="primary"
+                  type="submit"
+                  text={loading ? "Please wait…" : emailMode === "register" ? "Register" : "Log In"}
+                  disabled={loading}
+                  primaryClassName="auth-trem__primary"
+                />
+                {isCustomer ? (
                   <Button
                     variant="text"
                     type="button"
-                    text="Back to sign in options"
-                    onClick={() => {
-                      setError("");
-                      setScreen("methods");
-                    }}
+                    text="Continue as guest"
+                    onClick={continueAsGuest}
                     primaryClassName="auth-trem__guest-link"
                   />
-                </form>
-              ) : null}
+                ) : null}
+              </form>
+            ) : null}
 
-              {screen === "otp" ? (
-                <form className="auth-trem__form" onSubmit={verifyOtp}>
-                  <label className="auth-trem__mobile-label" htmlFor="mobile-otp">
-                    6-digit verification code
-                  </label>
+            {screen === "mobile" ? (
+              <form className="auth-trem__form" onSubmit={requestOtp}>
+                <label className="auth-trem__mobile-label" htmlFor="mobile-number">
+                  Mobile number
+                </label>
+                <div className="auth-trem__mobile-input">
+                  <span>India&nbsp; +91</span>
                   <input
-                    ref={otpRef}
-                    id="mobile-otp"
-                    className="auth-trem__field auth-trem__field--otp"
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    pattern="[0-9]{6}"
-                    maxLength={6}
-                    value={otp}
-                    onChange={(event) => setOtp(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                    id="mobile-number"
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    placeholder="98765 43210"
+                    value={phoneNumber}
+                    onChange={(event) => setPhoneNumber(event.target.value)}
                     required
+                    autoFocus
                   />
-                  <Button
-                    variant="solid"
-                    color="primary"
-                    type="submit"
-                    text={loading ? "Verifying…" : "Verify"}
-                    disabled={loading || otp.length !== 6 || otpExpiresIn <= 0}
-                    primaryClassName="auth-trem__primary"
-                  />
-                  <div className="auth-trem__hint">
-                    {otpExpiresIn > 0
-                      ? `Code expires in ${formatOtpTimer(otpExpiresIn)}.`
-                      : "Code expired. Request a new OTP."}
-                  </div>
-                  {challenge?.developmentOtp ? (
-                    <p className="auth-trem__dev-otp">
-                      Development code: <strong>{challenge.developmentOtp}</strong>
-                    </p>
-                  ) : null}
-                  <div className="auth-trem__otp-actions">
-                    <Button
-                      variant="text"
-                      type="button"
-                      text={
-                        resendCooldown
-                          ? `Request another OTP in ${formatOtpTimer(resendCooldown)}`
-                          : "Resend OTP"
-                      }
-                      disabled={loading || resendCooldown > 0}
-                      onClick={requestOtp}
-                    />
-                    <Button
-                      variant="text"
-                      type="button"
-                      text="Change number"
-                      onClick={() => {
-                        setOtp("");
-                        setError("");
-                        setScreen("mobile");
-                      }}
-                    />
-                  </div>
-                </form>
-              ) : null}
+                </div>
+                <Button
+                  variant="solid"
+                  color="primary"
+                  type="submit"
+                  text={loading ? "Requesting code…" : "Continue"}
+                  disabled={loading}
+                  primaryClassName="auth-trem__primary"
+                />
+                <Button
+                  variant="text"
+                  type="button"
+                  text="Back to sign in options"
+                  onClick={() => {
+                    setError("");
+                    setScreen("methods");
+                  }}
+                  primaryClassName="auth-trem__guest-link"
+                />
+              </form>
+            ) : null}
 
-              {screen === "emailOtp" ? (
-                <form className="auth-trem__form" onSubmit={verifyEmailOtp}>
-                  <label className="auth-trem__mobile-label" htmlFor="email-login-otp">
-                    6-digit verification code
-                  </label>
-                  <input
-                    ref={otpRef}
-                    id="email-login-otp"
-                    className="auth-trem__field auth-trem__field--otp"
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    pattern="[0-9]{6}"
-                    maxLength={6}
-                    value={otp}
-                    onChange={(event) => setOtp(event.target.value.replace(/\D/g, "").slice(0, 6))}
-                    required
-                  />
-                  <Button
-                    variant="solid"
-                    color="primary"
-                    type="submit"
-                    text={loading ? "Verifying…" : "Verify and continue"}
-                    disabled={loading || otp.length !== 6 || otpExpiresIn <= 0}
-                    primaryClassName="auth-trem__primary"
-                  />
-                  <div className="auth-trem__hint">
-                    {otpExpiresIn > 0
-                      ? `Code expires in ${formatOtpTimer(otpExpiresIn)}.`
-                      : "Code expired. Request a new code."}
-                  </div>
+            {screen === "otp" ? (
+              <form className="auth-trem__form" onSubmit={verifyOtp}>
+                <label className="auth-trem__mobile-label" htmlFor="mobile-otp">
+                  6-digit verification code
+                </label>
+                <input
+                  ref={otpRef}
+                  id="mobile-otp"
+                  className="auth-trem__field auth-trem__field--otp"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  pattern="[0-9]{6}"
+                  maxLength={6}
+                  value={otp}
+                  onChange={(event) => setOtp(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                  required
+                />
+                <Button
+                  variant="solid"
+                  color="primary"
+                  type="submit"
+                  text={loading ? "Verifying…" : "Verify"}
+                  disabled={loading || otp.length !== 6 || otpExpiresIn <= 0}
+                  primaryClassName="auth-trem__primary"
+                />
+                <div className="auth-trem__hint">
+                  {otpExpiresIn > 0
+                    ? `Code expires in ${formatOtpTimer(otpExpiresIn)}.`
+                    : "Code expired. Request a new OTP."}
+                </div>
+                {challenge?.developmentOtp ? (
+                  <p className="auth-trem__dev-otp">
+                    Development code: <strong>{challenge.developmentOtp}</strong>
+                  </p>
+                ) : null}
+                <div className="auth-trem__otp-actions">
                   <Button
                     variant="text"
                     type="button"
                     text={
                       resendCooldown
-                        ? `Request another code in ${formatOtpTimer(resendCooldown)}`
-                        : "Resend code"
+                        ? `Request another OTP in ${formatOtpTimer(resendCooldown)}`
+                        : "Resend OTP"
                     }
                     disabled={loading || resendCooldown > 0}
-                    onClick={resendEmailLoginOtp}
+                    onClick={requestOtp}
                   />
                   <Button
                     variant="text"
                     type="button"
-                    text="Back to login"
+                    text="Change number"
                     onClick={() => {
                       setOtp("");
-                      setError(""); setNotice("");
-                      setScreen(isCustomer ? "methods" : "email");
+                      setError("");
+                      setScreen("mobile");
                     }}
-                    primaryClassName="auth-trem__guest-link"
                   />
-                </form>
-              ) : null}
-
-              {screen === "forgotPassword" ? (
-                <form className="auth-trem__form" onSubmit={(event) => { event.preventDefault(); requestPasswordReset(); }}>
-                  <AuthField label="Email address" placeholder="you@example.com" type="email" autoComplete="email"
-                    value={emailForm.email} required maxLength={254}
-                    onChange={(event) => setEmailForm((current) => ({ ...current, email: event.target.value }))} />
-                  <Button type="submit" text={loading ? "Sending…" : "Send reset code"} disabled={loading} />
-                  <Button type="button" variant="text" text="Back to login" onClick={() => {
-                    setError(""); setNotice(""); setScreen(isCustomer ? "methods" : "email");
-                  }} />
-                </form>
-              ) : null}
-              {screen === "resetPassword" ? (
-                <form className="auth-trem__form" onSubmit={submitPasswordReset}>
-                  <label className="auth-trem__mobile-label" htmlFor="password-reset-otp">
-                    6-digit reset code
-                  </label>
-                  <input
-                    id="password-reset-otp"
-                    className="auth-trem__field auth-trem__field--otp"
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    pattern="[0-9]{6}"
-                    maxLength={6}
-                    value={resetForm.otp}
-                    onChange={(event) =>
-                      setResetForm((value) => ({
-                        ...value,
-                        otp: event.target.value.replace(/\D/g, "").slice(0, 6),
-                      }))
-                    }
-                    required
-                    autoFocus
-                  />
-                  <SecretField
-                    autoComplete="new-password"
-                    placeholder="New password" maxLength={128}
-                    value={resetForm.password}
-                    onChange={(event) =>
-                      setResetForm((value) => ({ ...value, password: event.target.value }))
-                    }
-                    required
-                    minLength={8}
-                  />
-                  <SecretField
-                    autoComplete="new-password"
-                    placeholder="Confirm new password" matchValue={resetForm.password} maxLength={128}
-                    value={resetForm.confirmPassword}
-                    onChange={(event) =>
-                      setResetForm((value) => ({ ...value, confirmPassword: event.target.value }))
-                    }
-                    required
-                    minLength={8}
-                  />
-                  <Button
-                    variant="solid"
-                    color="primary"
-                    type="submit"
-                    text={loading ? "Resetting…" : "Reset password"}
-                    disabled={loading || resetForm.otp.length !== 6 || otpExpiresIn <= 0}
-                    primaryClassName="auth-trem__primary"
-                  />
-                  <div className="auth-trem__hint">
-                    {otpExpiresIn > 0
-                      ? `Reset code expires in ${formatOtpTimer(otpExpiresIn)}.`
-                      : "Reset code expired. Send another code."}
-                  </div>
-                  <Button
-                    variant="text"
-                    type="button"
-                    text={
-                      resendCooldown
-                        ? `Request another code in ${formatOtpTimer(resendCooldown)}`
-                        : "Send another code"
-                    }
-                    disabled={loading || resendCooldown > 0}
-                    onClick={requestPasswordReset}
-                  />
-                  <Button
-                    variant="text"
-                    type="button"
-                    text="Back to login"
-                    onClick={() => {
-                      setError(""); setNotice("");
-                      setScreen(isCustomer ? "methods" : "email");
-                    }}
-                    primaryClassName="auth-trem__guest-link"
-                  />
-                </form>
-              ) : null}
-
-              {screen === "activation" ? (
-                <form className="auth-trem__form" onSubmit={submitActivation}>
-                  <label className="auth-trem__mobile-label" htmlFor="activation-otp">
-                    6-digit verification code
-                  </label>
-                  <input
-                    id="activation-otp"
-                    className="auth-trem__field auth-trem__field--otp"
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    pattern="[0-9]{6}"
-                    maxLength={6}
-                    value={activationForm.otp}
-                    onChange={(event) =>
-                      setActivationForm((value) => ({
-                        ...value,
-                        otp: event.target.value.replace(/\D/g, "").slice(0, 6),
-                      }))
-                    }
-                    required
-                    autoFocus
-                  />
-                  <SecretField
-                    autoComplete="new-password"
-                    placeholder="Choose a password"
-                    value={activationForm.password}
-                    onChange={(event) =>
-                      setActivationForm((value) => ({ ...value, password: event.target.value }))
-                    }
-                    required
-                    minLength={8}
-                  />
-                  <SecretField
-                    autoComplete="new-password"
-                    placeholder="Confirm password"
-                    value={activationForm.confirmPassword}
-                    onChange={(event) =>
-                      setActivationForm((value) => ({
-                        ...value,
-                        confirmPassword: event.target.value,
-                      }))
-                    }
-                    required
-                    minLength={8}
-                  />
-                  <Button
-                    variant="solid"
-                    color="primary"
-                    type="submit"
-                    text={loading ? "Activating…" : "Activate account"}
-                    disabled={
-                      loading ||
-                      activationForm.otp.length !== 6 ||
-                      !activationRequestSent ||
-                      otpExpiresIn <= 0
-                    }
-                    primaryClassName="auth-trem__primary"
-                  />
-                  <div className="auth-trem__hint">
-                    {otpExpiresIn > 0
-                      ? `Verification code expires in ${formatOtpTimer(otpExpiresIn)}.`
-                      : "Verification code expired. Resend the code."}
-                  </div>
-                  <Button
-                    variant="text"
-                    type="button"
-                    text={
-                      resendCooldown
-                        ? `Request another code in ${formatOtpTimer(resendCooldown)}`
-                        : "Resend code"
-                    }
-                    disabled={loading || resendCooldown > 0}
-                    onClick={requestActivationCode}
-                  />
-                  <Button
-                    variant="text"
-                    type="button"
-                    text="Back to login"
-                    onClick={() => {
-                      setError(""); setNotice("");
-                      setScreen(isCustomer ? "methods" : "email");
-                    }}
-                    primaryClassName="auth-trem__guest-link"
-                  />
-                </form>
-              ) : null}
-
-              {accessRequest?.href && !isAdmin ? (
-                <div className="auth-trem__access-request">
-                  <span>{accessRequest.prompt}</span>
-                  <a href={accessRequest.href}>{accessRequest.label}</a>
                 </div>
-              ) : null}
-            </div>
-          </section>
-        </div>
+              </form>
+            ) : null}
+
+            {screen === "emailOtp" ? (
+              <form className="auth-trem__form" onSubmit={verifyEmailOtp}>
+                <label className="auth-trem__mobile-label" htmlFor="email-login-otp">
+                  6-digit verification code
+                </label>
+                <input
+                  ref={otpRef}
+                  id="email-login-otp"
+                  className="auth-trem__field auth-trem__field--otp"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  pattern="[0-9]{6}"
+                  maxLength={6}
+                  value={otp}
+                  onChange={(event) => setOtp(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                  required
+                />
+                <Button
+                  variant="solid"
+                  color="primary"
+                  type="submit"
+                  text={loading ? "Verifying…" : "Verify and continue"}
+                  disabled={loading || otp.length !== 6 || otpExpiresIn <= 0}
+                  primaryClassName="auth-trem__primary"
+                />
+                <div className="auth-trem__hint">
+                  {otpExpiresIn > 0
+                    ? `Code expires in ${formatOtpTimer(otpExpiresIn)}.`
+                    : "Code expired. Request a new code."}
+                </div>
+                <Button
+                  variant="text"
+                  type="button"
+                  text={
+                    resendCooldown
+                      ? `Request another code in ${formatOtpTimer(resendCooldown)}`
+                      : "Resend code"
+                  }
+                  disabled={loading || resendCooldown > 0}
+                  onClick={resendEmailLoginOtp}
+                />
+                <Button
+                  variant="text"
+                  type="button"
+                  text="Back to login"
+                  onClick={() => {
+                    setOtp("");
+                    setError("");
+                    setNotice("");
+                    setScreen(isCustomer ? "methods" : "email");
+                  }}
+                  primaryClassName="auth-trem__guest-link"
+                />
+              </form>
+            ) : null}
+
+            {screen === "forgotPassword" ? (
+              <form
+                className="auth-trem__form"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  requestPasswordReset();
+                }}
+              >
+                <AuthField
+                  label="Email address"
+                  placeholder="you@example.com"
+                  type="email"
+                  autoComplete="email"
+                  value={emailForm.email}
+                  required
+                  maxLength={254}
+                  onChange={(event) =>
+                    setEmailForm((current) => ({ ...current, email: event.target.value }))
+                  }
+                />
+                <Button
+                  type="submit"
+                  text={loading ? "Sending…" : "Send reset code"}
+                  disabled={loading}
+                />
+                <Button
+                  type="button"
+                  variant="text"
+                  text="Back to login"
+                  onClick={() => {
+                    setError("");
+                    setNotice("");
+                    setScreen(isCustomer ? "methods" : "email");
+                  }}
+                />
+              </form>
+            ) : null}
+            {screen === "resetPassword" ? (
+              <form className="auth-trem__form" onSubmit={submitPasswordReset}>
+                <label className="auth-trem__mobile-label" htmlFor="password-reset-otp">
+                  6-digit reset code
+                </label>
+                <input
+                  id="password-reset-otp"
+                  className="auth-trem__field auth-trem__field--otp"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  pattern="[0-9]{6}"
+                  maxLength={6}
+                  value={resetForm.otp}
+                  onChange={(event) =>
+                    setResetForm((value) => ({
+                      ...value,
+                      otp: event.target.value.replace(/\D/g, "").slice(0, 6),
+                    }))
+                  }
+                  required
+                  autoFocus
+                />
+                <SecretField
+                  autoComplete="new-password"
+                  placeholder="New password"
+                  maxLength={128}
+                  value={resetForm.password}
+                  onChange={(event) =>
+                    setResetForm((value) => ({ ...value, password: event.target.value }))
+                  }
+                  required
+                  minLength={8}
+                />
+                <SecretField
+                  autoComplete="new-password"
+                  placeholder="Confirm new password"
+                  matchValue={resetForm.password}
+                  maxLength={128}
+                  value={resetForm.confirmPassword}
+                  onChange={(event) =>
+                    setResetForm((value) => ({ ...value, confirmPassword: event.target.value }))
+                  }
+                  required
+                  minLength={8}
+                />
+                <Button
+                  variant="solid"
+                  color="primary"
+                  type="submit"
+                  text={loading ? "Resetting…" : "Reset password"}
+                  disabled={loading || resetForm.otp.length !== 6 || otpExpiresIn <= 0}
+                  primaryClassName="auth-trem__primary"
+                />
+                <div className="auth-trem__hint">
+                  {otpExpiresIn > 0
+                    ? `Reset code expires in ${formatOtpTimer(otpExpiresIn)}.`
+                    : "Reset code expired. Send another code."}
+                </div>
+                <Button
+                  variant="text"
+                  type="button"
+                  text={
+                    resendCooldown
+                      ? `Request another code in ${formatOtpTimer(resendCooldown)}`
+                      : "Send another code"
+                  }
+                  disabled={loading || resendCooldown > 0}
+                  onClick={requestPasswordReset}
+                />
+                <Button
+                  variant="text"
+                  type="button"
+                  text="Back to login"
+                  onClick={() => {
+                    setError("");
+                    setNotice("");
+                    setScreen(isCustomer ? "methods" : "email");
+                  }}
+                  primaryClassName="auth-trem__guest-link"
+                />
+              </form>
+            ) : null}
+
+            {screen === "activation" ? (
+              <form className="auth-trem__form" onSubmit={submitActivation}>
+                <label className="auth-trem__mobile-label" htmlFor="activation-otp">
+                  6-digit verification code
+                </label>
+                <input
+                  id="activation-otp"
+                  className="auth-trem__field auth-trem__field--otp"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  pattern="[0-9]{6}"
+                  maxLength={6}
+                  value={activationForm.otp}
+                  onChange={(event) =>
+                    setActivationForm((value) => ({
+                      ...value,
+                      otp: event.target.value.replace(/\D/g, "").slice(0, 6),
+                    }))
+                  }
+                  required
+                  autoFocus
+                />
+                <SecretField
+                  autoComplete="new-password"
+                  placeholder="Choose a password"
+                  value={activationForm.password}
+                  onChange={(event) =>
+                    setActivationForm((value) => ({ ...value, password: event.target.value }))
+                  }
+                  required
+                  minLength={8}
+                />
+                <SecretField
+                  autoComplete="new-password"
+                  placeholder="Confirm password"
+                  value={activationForm.confirmPassword}
+                  onChange={(event) =>
+                    setActivationForm((value) => ({
+                      ...value,
+                      confirmPassword: event.target.value,
+                    }))
+                  }
+                  required
+                  minLength={8}
+                />
+                <Button
+                  variant="solid"
+                  color="primary"
+                  type="submit"
+                  text={loading ? "Activating…" : "Activate account"}
+                  disabled={
+                    loading ||
+                    activationForm.otp.length !== 6 ||
+                    !activationRequestSent ||
+                    otpExpiresIn <= 0
+                  }
+                  primaryClassName="auth-trem__primary"
+                />
+                <div className="auth-trem__hint">
+                  {otpExpiresIn > 0
+                    ? `Verification code expires in ${formatOtpTimer(otpExpiresIn)}.`
+                    : "Verification code expired. Resend the code."}
+                </div>
+                <Button
+                  variant="text"
+                  type="button"
+                  text={
+                    resendCooldown
+                      ? `Request another code in ${formatOtpTimer(resendCooldown)}`
+                      : "Resend code"
+                  }
+                  disabled={loading || resendCooldown > 0}
+                  onClick={requestActivationCode}
+                />
+                <Button
+                  variant="text"
+                  type="button"
+                  text="Back to login"
+                  onClick={() => {
+                    setError("");
+                    setNotice("");
+                    setScreen(isCustomer ? "methods" : "email");
+                  }}
+                  primaryClassName="auth-trem__guest-link"
+                />
+              </form>
+            ) : null}
+
+            {accessRequest?.href && !isAdmin ? (
+              <div className="auth-trem__access-request">
+                <span>{accessRequest.prompt}</span>
+                <a href={accessRequest.href}>{accessRequest.label}</a>
+              </div>
+            ) : null}
+          </div>
+        </section>
+        )}
       </main>
     </>
   );

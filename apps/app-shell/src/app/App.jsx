@@ -32,7 +32,12 @@ import {
 } from "@packages/trem-events";
 import { AppShellProvider, useAppShellConfig } from "./providers/AppShellProvider";
 import AppShellPage from "../features/app-shell/AppShell.container";
-import { buildGlobalAuthUrl, fetchData, SHELL_NAVIGATION_EVENT } from "@packages/trem-utils";
+import {
+  applyDocumentBranding,
+  buildGlobalAuthUrl,
+  fetchData,
+  SHELL_NAVIGATION_EVENT,
+} from "@packages/trem-utils";
 import { clearAuthBrowserState, emitAuthEvent } from "@packages/trem-auth-core";
 import MobileProfilePrompt from "../components/MobileProfilePrompt";
 import LoginPrompt from "../components/LoginPrompt";
@@ -47,13 +52,12 @@ import {
   resolveNavigationIntent,
   isGuestAccessibleDestination,
 } from "./routing/navigationRegistry";
-import {
-  resolveAuthReturnTo,
-  setActiveAuthReturnTo,
-} from "./routing/authReturnDestination";
+import { resolveAuthReturnTo, setActiveAuthReturnTo } from "./routing/authReturnDestination";
 import "../styles/global.scss";
 
 /* global __webpack_init_sharing__, __webpack_share_scopes__ */
+
+const AccountDashboard = React.lazy(() => import("dashboard/AccountDashboard"));
 
 const TrevistaApp = React.lazy(() => import("trevista/App"));
 const TrevioApp = React.lazy(() => import("trevio/App"));
@@ -116,7 +120,11 @@ const TrehubApp = React.lazy(() =>
     ),
   }).then((module) => ({ default: module.default || module.TrehubApp })),
 );
-const REMOTE_RENDERERS = Object.freeze({ trevio: TrevioApp, trevista: TrevistaApp, trehub: TrehubApp });
+const REMOTE_RENDERERS = Object.freeze({
+  trevio: TrevioApp,
+  trevista: TrevistaApp,
+  trehub: TrehubApp,
+});
 const USER_PROFILE_UPDATED_EVENT = "USER_PROFILE_UPDATED";
 const fetchShellConfiguration = ({ force = false } = {}) =>
   Promise.all([
@@ -155,6 +163,7 @@ class RemoteBoundary extends React.Component {
 
 function ProtectedRoute({
   children,
+  brand,
   onContinueAsGuest,
   allowGuest = false,
   suppressPrompt = false,
@@ -172,15 +181,17 @@ function ProtectedRoute({
     if (!authUrl) {
       return (
         <LoginPrompt
+          brand={brand}
           onContinueAsGuest={onContinueAsGuest}
-          title="Explore TravelsTREM"
-          description="Authentication is unavailable, but you can continue as a guest to explore trips and tours."
+          title="Welcome Traveller"
+          description={`Authentication is unavailable, but you can continue as a guest to explore ${brand?.name || "TravelsTREM"} travel services.`}
         />
       );
     }
 
     return (
       <LoginPrompt
+        brand={brand}
         onContinueAsGuest={onContinueAsGuest}
         onLogin={() => {
           if (!checkRateLimit("login-attempt", 5, 300000)) {
@@ -205,7 +216,8 @@ function AppShell() {
   const { loading, session, error: sessionError, reload: reloadSession } = useAppShellConfig();
   const { theme, toggleTheme } = useTheme();
   const notificationInbox = useNotificationInbox({
-    loadInbox: async ({ limit = 6 } = {}) => (await fetchData("/tenancy/notifications", { params: { limit } })).componentData?.data,
+    loadInbox: async ({ limit = 6 } = {}) =>
+      (await fetchData("/tenancy/notifications", { params: { limit } })).componentData?.data,
     readInboxItem: (id) => fetchData(`/tenancy/notifications/${id}/read`, { method: "PATCH" }),
     readAllInboxItems: () => fetchData("/tenancy/notifications/read-all", { method: "PATCH" }),
   });
@@ -235,13 +247,23 @@ function AppShell() {
 
   const applyShellConfiguration = useCallback(
     ([sidebarResponse, headerResponse, navigationResponse]) => {
-      if ([sidebarResponse, headerResponse, navigationResponse].some(
-        (response) => !response?.componentData || typeof response.componentData !== "object" ||
-          Array.isArray(response.componentData) || !Object.keys(response.componentData).length,
-      )) throw new Error("Shell configuration is unavailable");
+      if (
+        [sidebarResponse, headerResponse, navigationResponse].some(
+          (response) =>
+            !response?.componentData ||
+            typeof response.componentData !== "object" ||
+            Array.isArray(response.componentData) ||
+            !Object.keys(response.componentData).length,
+        )
+      )
+        throw new Error("Shell configuration is unavailable");
       setSidebarConfig(sidebarResponse.componentData);
-      setAppHeaderConfig(headerResponse?.componentData || {});
-      const serverNavigationConfig = navigationResponse?.componentData || FALLBACK_NAVIGATION_CONFIG;
+      applyDocumentBranding(headerResponse.componentData.brand, {
+        tenant: Boolean(headerResponse.componentData.tenantId),
+      });
+      setAppHeaderConfig(headerResponse.componentData);
+      const serverNavigationConfig =
+        navigationResponse?.componentData || FALLBACK_NAVIGATION_CONFIG;
       const fallbackNotificationDestination = FALLBACK_NAVIGATION_CONFIG.destinations.find(
         (item) => item.id === "notifications",
       );
@@ -252,7 +274,10 @@ function AppShell() {
         normalizeNavigationConfig(
           destinations.some((item) => item?.id === "notifications")
             ? serverNavigationConfig
-            : { ...serverNavigationConfig, destinations: [...destinations, fallbackNotificationDestination] },
+            : {
+                ...serverNavigationConfig,
+                destinations: [...destinations, fallbackNotificationDestination],
+              },
         ),
       );
     },
@@ -278,6 +303,43 @@ function AppShell() {
   );
   const selectedTab = destination.tab || searchParams.get("tab") || "overview";
   const activeTab = destination.activeId || selectedTab;
+  const sidebarActiveId = useMemo(() => {
+    if (location.pathname === "/trevista/customise-tour") return "custom-enquiries";
+    const matchingItem = (sidebarConfig.sections || [])
+      .flatMap((section) => section.items || [])
+      .filter(
+        (item) =>
+          !item.hide &&
+          item.path &&
+          (location.pathname === item.path || location.pathname.startsWith(`${item.path}/`)),
+      )
+      .sort((a, b) => b.path.length - a.path.length)[0];
+    return matchingItem?.id || activeTab;
+  }, [sidebarConfig.sections, location.pathname, activeTab]);
+  const accountSections = {
+    dashboard: "overview",
+    bookings: "bookings",
+    favorites: "wishlist",
+    wishlist: "wishlist",
+    profile: "profile",
+    notifications: "notifications",
+  };
+  const isAccountDashboard =
+    location.pathname.startsWith("/dashboard") ||
+    location.pathname.startsWith("/help") ||
+    Boolean(accountSections[activeTab]);
+  useEffect(() => {
+    if (location.pathname.startsWith("/dashboard") || location.pathname.startsWith("/help/"))
+      return;
+    const section = location.pathname === "/help" ? "support" : accountSections[activeTab];
+    if (!section) return;
+    const params = new URLSearchParams(location.search);
+    params.delete("tab");
+    navigate(
+      { pathname: `/dashboard/${section}`, search: params.toString() ? `?${params}` : "" },
+      { replace: true },
+    );
+  }, [activeTab, location.pathname, location.search, navigate]);
   const selectedBookingRecordRef =
     activeTab === "bookings"
       ? searchParams.get("booking") || searchParams.get("enquiry") || ""
@@ -337,11 +399,20 @@ function AppShell() {
     (rawIntent) => {
       const result = resolveNavigationIntent(navigationConfig, rawIntent, window.location.origin);
       if (result.type === "internal" || result.type === "internal-path") {
-        const dashboardOrigin = activeTab === "dashboard" ? "dashboard"
-          : activeTab === "overview" ? "overview" : location.state?.dashboardOrigin || new URLSearchParams(location.search).get("navFrom") || "overview";
+        const dashboardOrigin =
+          activeTab === "dashboard"
+            ? "dashboard"
+            : activeTab === "overview"
+              ? "overview"
+              : location.state?.dashboardOrigin ||
+                new URLSearchParams(location.search).get("navFrom") ||
+                "overview";
         const params = new URLSearchParams(result.location.search || "");
         params.set("navFrom", dashboardOrigin === "dashboard" ? "dashboard" : "overview");
-        navigate({ ...result.location, search: `?${params}` }, { replace: result.replace, state: { dashboardOrigin } });
+        navigate(
+          { ...result.location, search: `?${params}` },
+          { replace: result.replace, state: { dashboardOrigin } },
+        );
         return true;
       }
       if (result.type === "external") {
@@ -361,7 +432,9 @@ function AppShell() {
   const handleTabChange = useCallback(
     (target, item = {}) =>
       handleNavigation({
-        ...(typeof target === "string" && target.startsWith("/") ? { path: target } : { destination: target }),
+        ...(typeof target === "string" && target.startsWith("/")
+          ? { path: target }
+          : { destination: target }),
         targetWindow: item.target,
       }),
     [handleNavigation],
@@ -382,7 +455,7 @@ function AppShell() {
               ? () => setPrimaryActionOpen(true)
               : item.action === "open-profile-menu"
                 ? () => setProfileMenuOpen(true)
-              : () => handleTabChange(item.target, item),
+                : () => handleTabChange(item.target, item),
         }),
       ),
     [destination.id, handleTabChange, mobileActionPanel.variant, resolvedMobileActionPanelItems],
@@ -448,7 +521,9 @@ function AppShell() {
   }, [applyShellConfiguration, reloadSession, shellAttempt]);
 
   useRealtimeEvent(REALTIME_EVENTS.PRODUCT_CATALOG_UPDATED, () => {
-    fetchShellConfiguration({ force: true }).then(applyShellConfiguration).catch(() => null);
+    fetchShellConfiguration({ force: true })
+      .then(applyShellConfiguration)
+      .catch(() => null);
   });
 
   useEffect(() => {
@@ -593,19 +668,21 @@ function AppShell() {
     if (!home) return [];
     if (!current || current.id === home.id) return [{ label: home.label }];
 
-    const fromDashboard = activeTab !== "dashboard" && (location.state?.dashboardOrigin || searchParams.get("navFrom")) === "dashboard";
-    const root = fromDashboard ? { label: "Dashboard", path: "/?tab=dashboard" }
-      : { label: home.label, path: "/?tab=overview" };
-    const breadcrumbs = [
-      root,
-      { label: current.label },
-    ];
+    const fromDashboard =
+      activeTab !== "dashboard" &&
+      (location.state?.dashboardOrigin || searchParams.get("navFrom")) === "dashboard";
+    const root = { label: home.label, path: "/?tab=overview" };
+    const breadcrumbs = [root, { label: current.label }];
 
     const openArticleId = activeTab === "articles" ? searchParams.get("article") || "" : "";
     if (openArticleId) {
       return [
         { ...breadcrumbs[0] },
-        { ...breadcrumbs[1], path: `/?tab=articles&navFrom=${fromDashboard ? "dashboard" : "overview"}`, state: location.state },
+        {
+          ...breadcrumbs[1],
+          path: `/?tab=articles&navFrom=${fromDashboard ? "dashboard" : "overview"}`,
+          state: location.state,
+        },
         { label: openArticleTitle || current.label },
       ];
     }
@@ -613,7 +690,11 @@ function AppShell() {
     return selectedBookingRecordRef
       ? [
           { ...breadcrumbs[0] },
-          { ...breadcrumbs[1], path: `/?tab=bookings&navFrom=${fromDashboard ? "dashboard" : "overview"}`, state: location.state },
+          {
+            ...breadcrumbs[1],
+            path: `/?tab=bookings&navFrom=${fromDashboard ? "dashboard" : "overview"}`,
+            state: location.state,
+          },
           { label: selectedBookingRecordRef },
         ]
       : breadcrumbs;
@@ -650,7 +731,11 @@ function AppShell() {
   if (!session?.isAuthenticated && !guestMode && !authPromptDismissed) {
     return (
       <div className="dash-auth-only">
-        <ProtectedRoute onContinueAsGuest={continueAsGuest} returnTo={authReturnTo}>
+        <ProtectedRoute
+          brand={appHeaderConfig.brand}
+          onContinueAsGuest={continueAsGuest}
+          returnTo={authReturnTo}
+        >
           <></>
         </ProtectedRoute>
       </div>
@@ -662,7 +747,7 @@ function AppShell() {
 
   return (
     <div
-      className={`dash-layout${sidebarConfig.variant === "top-dropdown" ? " dash-layout--top-dropdown" : ""}${sidebarCollapsed ? " dash-layout--sidebar-collapsed" : ""}${showMobileNavigation ? " dash-layout--mobile-action-panel" : ""}`}
+      className={`dash-layout${isAccountDashboard ? " dash-layout--account-dashboard" : ""}${sidebarConfig.variant === "top-dropdown" ? " dash-layout--top-dropdown" : ""}${sidebarConfig.variant === "sidebar" && !isAccountDashboard ? " dash-layout--app-sidebar" : ""}${sidebarCollapsed ? " dash-layout--sidebar-collapsed" : ""}${showMobileNavigation && !isAccountDashboard ? " dash-layout--mobile-action-panel" : ""}`}
     >
       <MobileProfilePrompt
         key={user?.id || user?._id || "guest"}
@@ -670,105 +755,137 @@ function AppShell() {
         eligible={!isRemote && ["overview", "dashboard"].includes(activeTab)}
         onSaved={reloadSession}
       />
-      <SideBar
-        config={{
-          ...sidebarConfig,
-          sections: (sidebarConfig.sections || []).map((section) => ({
-            ...section,
-            items: (section.items || []).map((item) =>
-              item.id === "notifications"
-                ? { ...item, indicator: notificationInbox.unread > 0 }
-                : item.id === "login"
-                  ? { ...item, hide: Boolean(session?.isAuthenticated) }
-                : item.id === "logout"
-                  ? { ...item, hide: !session?.isAuthenticated }
-                  : item,
-            ),
-          })),
-        }}
-        activeId={activeTab}
-        user={user}
-        mobileOpen={mobileSidebarOpen}
-        desktopOpen={desktopSidebarOpen}
-        collapsed={sidebarCollapsed}
-        onNavigate={handleTabChange}
-        onAction={handleSidebarAction}
-        onClose={() => {
-          setMobileSidebarOpen(false);
-          setDesktopSidebarOpen(false);
-        }}
-        onCollapsedChange={setSidebarCollapsed}
-      />
+      {!isAccountDashboard && (
+        <SideBar
+          config={{
+            ...sidebarConfig,
+            hideBrand: sidebarConfig.variant === "sidebar",
+            sections: (sidebarConfig.sections || []).map((section) => ({
+              ...section,
+              items: (section.items || []).map((item) =>
+                item.id === "notifications"
+                  ? { ...item, indicator: notificationInbox.unread > 0 }
+                  : item.id === "login"
+                    ? { ...item, hide: Boolean(session?.isAuthenticated) }
+                    : item.id === "logout"
+                      ? { ...item, hide: !session?.isAuthenticated }
+                      : item,
+              ),
+            })),
+          }}
+          activeId={sidebarActiveId}
+          user={user}
+          mobileOpen={mobileSidebarOpen}
+          desktopOpen={desktopSidebarOpen}
+          collapsed={sidebarCollapsed}
+          onNavigate={handleTabChange}
+          onAction={handleSidebarAction}
+          onClose={() => {
+            setMobileSidebarOpen(false);
+            setDesktopSidebarOpen(false);
+          }}
+          onCollapsedChange={setSidebarCollapsed}
+        />
+      )}
 
       <div className="dash-main">
-        <AppHeader
-          config={{
-            ...resolvedAppHeaderConfig,
-            brand: sidebarConfig.brand || resolvedAppHeaderConfig.brand,
-            navigation: {
-              ...(sidebarConfig.topDropdown || {}),
-              variant: sidebarConfig.variant,
-            },
-            user: {
-              ...(resolvedAppHeaderConfig.user || {}),
-              variant: "outlined",
-            },
-          }}
-          user={user}
-          theme={theme}
-          sidebarCollapsed={sidebarCollapsed}
-          onToggleTheme={toggleTheme}
-          onAction={handleHeaderAction}
-          onSearch={handleGlobalSearch}
-          onSearchSelect={handleGlobalSearchSelect}
-          onLogoClick={() => handleNavigation({ destination: "overview" })}
-          menuOpen={mobileSidebarOpen}
-          onMenuToggle={() => setMobileSidebarOpen((open) => !open)}
-          desktopNavigationOpen={desktopSidebarOpen}
-          onDesktopNavigationToggle={() => setDesktopSidebarOpen((open) => !open)}
-          primaryActionOpen={primaryActionOpen}
-          onPrimaryActionOpenChange={setPrimaryActionOpen}
-          onPrimaryActionSelect={(item) => handleTabChange(item.target, item)}
-          userMenuOpen={profileMenuOpen}
-          onUserMenuOpenChange={setProfileMenuOpen}
-        />
-
-        {!isRemote &&
-        !isSupportScreen &&
-        activeTab !== "overview" &&
-        shellBreadcrumbItems.length ? (
-          <div className="dash-shell-breadcrumb" aria-live="polite">
-            <Breadcrumbs items={shellBreadcrumbItems} />
-          </div>
-        ) : null}
+        {!isAccountDashboard && (
+          <AppHeader
+            config={{
+              ...resolvedAppHeaderConfig,
+              brand: sidebarConfig.brand || resolvedAppHeaderConfig.brand,
+              navigation: {
+                ...(sidebarConfig.topDropdown || {}),
+                variant: sidebarConfig.variant,
+              },
+              fullWidth: sidebarConfig.variant === "sidebar",
+              user: {
+                ...(resolvedAppHeaderConfig.user || {}),
+                variant: "outlined",
+              },
+            }}
+            user={user}
+            theme={theme}
+            sidebarCollapsed={sidebarCollapsed}
+            onToggleTheme={toggleTheme}
+            onAction={handleHeaderAction}
+            onSearch={handleGlobalSearch}
+            onSearchSelect={handleGlobalSearchSelect}
+            onLogoClick={() => handleNavigation({ destination: "overview" })}
+            menuOpen={mobileSidebarOpen}
+            onMenuToggle={() => setMobileSidebarOpen((open) => !open)}
+            desktopNavigationOpen={desktopSidebarOpen}
+            onDesktopNavigationToggle={() => setDesktopSidebarOpen((open) => !open)}
+            primaryActionOpen={primaryActionOpen}
+            onPrimaryActionOpenChange={setPrimaryActionOpen}
+            onPrimaryActionSelect={(item) => handleTabChange(item.target, item)}
+            userMenuOpen={profileMenuOpen}
+            onUserMenuOpenChange={setProfileMenuOpen}
+          />
+        )}
 
         <div
           data-scroll-root
-          className={`dash-content${activeTab === "dashboard" ? " dash-content--dashboard" : ""}${isRemote ? " dash-content--remote" : ""}${isSupportScreen ? " dash-content--support" : ""}${activeTab === "overview" ? " dash-content--overview dash-content--home" : ""}`}
+          className={`dash-content${isAccountDashboard ? " dash-content--account-dashboard" : ""}${activeTab === "dashboard" ? " dash-content--dashboard" : ""}${isRemote ? " dash-content--remote" : ""}${isSupportScreen ? " dash-content--support" : ""}${activeTab === "overview" ? " dash-content--overview dash-content--home" : ""}`}
         >
+          {!isRemote &&
+          !isAccountDashboard &&
+          !isSupportScreen &&
+          activeTab !== "overview" &&
+          shellBreadcrumbItems.length ? (
+            <Breadcrumbs items={shellBreadcrumbItems} />
+          ) : null}
+
           <ProtectedRoute
+            brand={appHeaderConfig.brand}
             allowGuest={guestMode}
             suppressPrompt={authPromptDismissed}
             onContinueAsGuest={continueAsGuest}
             returnTo={authReturnTo}
           >
-            <RemoteBoundary
-              resetKey={`${location.pathname}${location.search}`}
-            >
-              {isSupportScreen ? (
+            <RemoteBoundary resetKey={`${location.pathname}${location.search}`}>
+              {isAccountDashboard ? (
+                <Suspense
+                  fallback={<Preloader variant="grid" count={4} label="Loading dashboard" />}
+                >
+                  <AccountDashboard
+                    key={user?.id || user?._id || "guest"}
+                    userId={user?.id || user?._id}
+                    isAuthenticated={Boolean(session?.isAuthenticated)}
+                    onRequireAuthentication={requireAuthentication}
+                  />
+                </Suspense>
+              ) : isSupportScreen ? (
                 <SupportRoutes
                   isAuthenticated={Boolean(session?.isAuthenticated)}
                   onRequireAuthentication={requireAuthentication}
                 />
+              ) : appHeaderConfig.tenantId && ["about", "articles"].includes(activeTab) ? (
+                <NoDataFound
+                  icon={activeTab === "about" ? "info" : "bookmark"}
+                  title={activeTab === "about" ? "About Us" : "Articles"}
+                  description="No content available yet."
+                />
               ) : activeTab === "notifications" ? (
                 <section className="dash-notifications" aria-label="Notifications">
-                  {notificationInbox.items.length ? notificationInbox.items.map((item) => (
-                    <button key={item._id} type="button" className={item.readAt ? "" : "is-unread"} onClick={() => openNotification(item)}>
-                      <strong>{item.title || "Notification"}</strong>
-                      {item.message ? <span>{item.message}</span> : null}
-                      {item.createdAt ? <time dateTime={item.createdAt}>{new Date(item.createdAt).toLocaleString()}</time> : null}
-                    </button>
-                  )) : (
+                  {notificationInbox.items.length ? (
+                    notificationInbox.items.map((item) => (
+                      <button
+                        key={item._id}
+                        type="button"
+                        className={item.readAt ? "" : "is-unread"}
+                        onClick={() => openNotification(item)}
+                      >
+                        <strong>{item.title || "Notification"}</strong>
+                        {item.message ? <span>{item.message}</span> : null}
+                        {item.createdAt ? (
+                          <time dateTime={item.createdAt}>
+                            {new Date(item.createdAt).toLocaleString()}
+                          </time>
+                        ) : null}
+                      </button>
+                    ))
+                  ) : (
                     <NoDataFound
                       icon="bell"
                       title="No notifications"
@@ -778,9 +895,7 @@ function AppShell() {
                 </section>
               ) : remoteElement ? (
                 <Suspense
-                  fallback={
-                    <Preloader variant="grid" count={4} label="Loading customer product" />
-                  }
+                  fallback={<Preloader variant="grid" count={4} label="Loading customer product" />}
                 >
                   <Routes>
                     {(destination.patterns || []).map((pattern) => (
@@ -790,9 +905,7 @@ function AppShell() {
                   </Routes>
                 </Suspense>
               ) : (
-                <Suspense
-                  fallback={<Preloader variant="stack" count={3} label="Loading page" />}
-                >
+                <Suspense fallback={<Preloader variant="stack" count={3} label="Loading page" />}>
                   <AppShellPage
                     onSearch={handleGlobalSearch}
                     onSearchSelect={handleGlobalSearchSelect}
@@ -806,13 +919,17 @@ function AppShell() {
               )}
             </RemoteBoundary>
           </ProtectedRoute>
-          {activeTab === "overview" && !isRemote && !isSupportScreen && appHeaderConfig.footer ? (
+          {activeTab === "overview" &&
+          !isAccountDashboard &&
+          !isRemote &&
+          !isSupportScreen &&
+          appHeaderConfig.footer ? (
             <AppFooter config={appHeaderConfig.footer} className="dash-app-footer" />
           ) : null}
         </div>
       </div>
 
-      {showMobileNavigation ? (
+      {showMobileNavigation && !isAccountDashboard ? (
         <FloatingActionBar
           variant={mobileActionPanel.variant}
           actions={mobileNavigationActions}
@@ -829,7 +946,7 @@ export default function App() {
   useEffect(() => initRealtimeNotifications(), []);
 
   return (
-    <ThemeProvider>
+    <ThemeProvider waitForConfiguration>
       <AppShellProvider>
         <RealtimeProvider>
           <Toaster />

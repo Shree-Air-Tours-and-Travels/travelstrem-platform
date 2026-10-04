@@ -1,8 +1,7 @@
 import React, { useRef } from "react";
-import { BrandLogo, PRODUCT_TYPE } from "@packages/trem-ui";
+import { BrandLogo } from "@packages/trem-ui";
 import "./ManageClients.scss";
 
-const PRODUCTS = [PRODUCT_TYPE.TREVIO, PRODUCT_TYPE.TREVISTA, "dashboard", "admin", "agent"];
 
 function LogoUploadCell({ client, product, onUpload }) {
   const inputRef = useRef(null);
@@ -86,7 +85,7 @@ export default function ManageClientsView({
               </div>
 
               <div className="mc-card__logos">
-                {PRODUCTS.map((product) => (
+                {(client.productAccess || []).map((product) => (
                   <LogoUploadCell
                     key={product}
                     client={client}
@@ -102,7 +101,7 @@ export default function ManageClientsView({
                   Edit
                 </button>
                 <button className="btn btn--danger btn--sm" onClick={() => onDelete(client)}>
-                  Delete
+                  Deactivate
                 </button>
               </div>
             </div>

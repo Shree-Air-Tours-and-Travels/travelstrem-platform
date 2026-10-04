@@ -1,3 +1,4 @@
+const { configureRemoteServer, configureRemoteBuild } = require("../../scripts/local/remoteDeployment.cjs");
 const { container } = require("webpack");
 const ModuleScopePlugin = require("react-dev-utils/ModuleScopePlugin");
 const moduleFederationConfig = require("./modulefederation.config");
@@ -16,7 +17,7 @@ module.exports = {
       "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
       "Access-Control-Allow-Headers": "X-Requested-With, content-type, Authorization",
     };
-    return config;
+    return configureRemoteServer(config);
   },
   webpack: {
     configure: (config) => {
@@ -60,7 +61,7 @@ module.exports = {
         rule.include = Array.from(new Set([...include, appSrc, sharedPackageSrc]));
       });
       config.plugins.push(new container.ModuleFederationPlugin(moduleFederationConfig));
-      return config;
+      return configureRemoteBuild(config);
     },
   },
 };

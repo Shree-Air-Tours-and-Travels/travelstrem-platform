@@ -73,8 +73,11 @@ export const tourBuilderApi = {
    * tour shape; with stepKey only the branches that step owns (or the
    * backing collection's sample record).
    */
-  async fetchTemplate(stepKey) {
-    const query = stepKey ? `?stepKey=${encodeURIComponent(stepKey)}` : "";
+  async fetchTemplate(stepKey, productKey) {
+    const params = new URLSearchParams();
+    if (stepKey) params.set("stepKey", stepKey);
+    if (productKey) params.set("product", productKey);
+    const query = params.size ? `?${params.toString()}` : "";
     const response = await adapter.request({ url: `/tours.json/builder/template${query}` });
     return unwrapEnvelope(response);
   },

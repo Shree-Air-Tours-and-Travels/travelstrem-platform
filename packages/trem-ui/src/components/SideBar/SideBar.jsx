@@ -35,14 +35,13 @@ export default function SideBar({
 }) {
   const panelRef = useRef(null);
   const variant = config.variant || "sidebar";
+  const withoutCollapse = variant === "withoutCollapse";
   const isTopDropdown = variant === "top-dropdown";
   const sections = config.sections || [];
   const profile = config.profile || {};
   const profileName =
     user?.[profile.nameKey || "name"] || user?.name || profile.fallbackName || "Traveller";
   const profileMeta = user?.[profile.metaKey || "membershipLabel"] || profile.fallbackMeta || "";
-  const brandSubtitle =
-    user?.[config.brand?.subtitleKey] || config.brand?.subtitle || config.brand?.fallbackSubtitle || "";
   const activeTargets = useMemo(
     () =>
       new Set(
@@ -92,9 +91,10 @@ export default function SideBar({
         className={[
           "trem-sidebar",
           `trem-sidebar--${variant}`,
+          config.hideBrand ? "trem-sidebar--no-brand" : "",
           mobileOpen ? "is-mobile-open" : "",
           isTopDropdown && desktopOpen ? "is-desktop-open" : "",
-          collapsed ? "is-collapsed" : "",
+          collapsed && !withoutCollapse ? "is-collapsed" : "",
           className,
         ]
           .filter(Boolean)
@@ -103,15 +103,17 @@ export default function SideBar({
         aria-hidden={isTopDropdown && !mobileOpen && !desktopOpen ? true : undefined}
       >
         <header className="trem-sidebar__brand">
-          <div className="trem-sidebar__brand-logo">
-            <BrandLogo
-              logoSrc={config.brand?.logoSrc}
-              darkLogoSrc={config.brand?.darkLogoSrc}
-              name={config.brand?.name || "TravelsTREM"}
-              subtitle={brandSubtitle}
-              size="small"
-            />
-          </div>
+          {!config.hideBrand && (
+            <div className="trem-sidebar__brand-logo">
+              <BrandLogo
+                logoSrc={config.brand?.logoSrc}
+                logoDarkSrc={config.brand?.logoDarkSrc}
+                fallbackSrc={config.tenantId ? "" : undefined}
+                name={config.brand?.name || "TravelsTREM"}
+                size="small"
+              />
+            </div>
+          )}
           <button
             type="button"
             className="trem-sidebar__close"
@@ -120,23 +122,25 @@ export default function SideBar({
           >
             <Icon name="menuClose" size={20} />
           </button>
-          <button
-            type="button"
-            className="trem-sidebar__collapse"
-            aria-label={
-              collapsed
-                ? config.expandLabel || "Expand sidebar"
-                : config.collapseLabel || "Collapse sidebar"
-            }
-            title={
-              collapsed
-                ? config.expandLabel || "Expand sidebar"
-                : config.collapseLabel || "Collapse sidebar"
-            }
-            onClick={() => onCollapsedChange?.(!collapsed)}
-          >
-            <Icon name={collapsed ? "chevronRight" : "chevronLeft"} size={18} />
-          </button>
+          {!withoutCollapse && (
+            <button
+              type="button"
+              className="trem-sidebar__collapse"
+              aria-label={
+                collapsed
+                  ? config.expandLabel || "Expand sidebar"
+                  : config.collapseLabel || "Collapse sidebar"
+              }
+              title={
+                collapsed
+                  ? config.expandLabel || "Expand sidebar"
+                  : config.collapseLabel || "Collapse sidebar"
+              }
+              onClick={() => onCollapsedChange?.(!collapsed)}
+            >
+              <Icon name={collapsed ? "chevronRight" : "chevronLeft"} size={18} />
+            </button>
+          )}
         </header>
 
         <nav className="trem-sidebar__nav">
@@ -188,6 +192,7 @@ export default function SideBar({
                         disabled={item.disabled}
                         title={item.comingSoon ? `${item.label} — Coming soon` : item.label}
                         className={classNames}
+                        aria-current={active ? "page" : undefined}
                         onClick={() => activate(item)}
                       >
                         {content}

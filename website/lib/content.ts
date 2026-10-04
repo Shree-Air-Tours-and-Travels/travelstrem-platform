@@ -1,5 +1,9 @@
 export const site = {
   name: "TravelsTREM",
+  logoLightUrl:
+    "https://res.cloudinary.com/dofxshf3z/image/upload/v1791109947/ae275b55-9a5c-4f50-b3ad-2f2984404097.png",
+  logoDarkUrl:
+    "https://res.cloudinary.com/dofxshf3z/image/upload/v1791110002/ad999807-fc7d-4448-91e7-78b93f98cce5.png",
   url: "https://travelstrem.com",
   appUrl: "https://app.travelstrem.com",
   demoUrl: "/sales#book-demo",

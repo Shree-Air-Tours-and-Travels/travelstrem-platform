@@ -4,27 +4,7 @@
 .trehub-home,
 .trehub-flight-list,
 .trehub-flight-journey {
-  --trehub-breadcrumb-height: #{$space-14};
   --trehub-page-gutter: clamp(#{$space-4}, 3vw, #{$space-8});
-}
-
-.trehub-page__breadcrumbs {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  min-height: var(--trehub-breadcrumb-height);
-  padding: $space-3 var(--trehub-page-gutter);
-  border-bottom: 1px solid var(--border);
-  background: var(--surface-glass-strong);
-  box-shadow: var(--shadow-xs);
-  backdrop-filter: blur(14px);
-}
-
-.trehub-home > .trehub-page__breadcrumbs {
-  margin-inline: calc(-1 * var(--trehub-page-gutter));
-  margin-bottom: $space-6;
 }
 
 .trehub-home,
@@ -36,7 +16,7 @@
 
 .trehub-home {
   min-height: 100%;
-  padding: 0 var(--trehub-page-gutter);
+  padding: 0;
   padding-bottom: $space-8;
   background: var(--page-bg);
   color: var(--text);
@@ -46,8 +26,20 @@
 .trehub-home__shell {
   display: grid;
   gap: $space-8;
-  width: min(100%, #{$full-width});
+  width: 100%;
   margin-inline: auto;
+
+  > :not(.trem-global-search) {
+    width: min(calc(100% - 2 * var(--trehub-page-gutter)), #{$full-width});
+    margin-inline: auto;
+  }
+
+  >.trem-global-search {
+    width: 100%;
+    border: 0;
+    border-radius: 0;
+    padding-inline: max(var(--trehub-page-gutter), calc((100% - #{$full-width}) / 2));
+  }
 
   > :last-child {
     margin-bottom: clamp($space-6, 4vw, $space-10);
@@ -176,9 +168,16 @@
 }
 
 @include mq-max($breakpoint-phablet) {
-  .trehub-home {
+
+  .trehub-page,
+  .trehub-home,
+  .trehub-flight-list,
+  .trehub-flight-journey {
     --trehub-page-gutter: #{$space-3};
-    padding: 0 var(--trehub-page-gutter);
+  }
+
+  .trehub-home {
+    padding: 0;
     padding-bottom: $space-8;
   }
 
@@ -194,5 +193,39 @@
 @media (prefers-reduced-motion: reduce) {
   .trehub-why__card.trem-benefit-card {
     transition: none;
+  }
+}
+
+.trehub-service-page {
+  display: flow-root;
+  min-width: 0;
+}
+
+.trehub-service-tabs {
+  width: min(calc(100% - 2 * clamp(#{$space-4}, 3vw, #{$space-8})), #{$full-width});
+  margin: $space-4 auto 0;
+  padding: $space-1;
+  border: 1px solid var(--border);
+  border-radius: $radius-md;
+  background: var(--card-bg);
+
+  ul {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+  }
+
+  .trem-link-tabs__link {
+    width: 100%;
+    min-height: $space-12;
+    padding: $space-2;
+    white-space: normal;
+    text-align: center;
+    overflow-wrap: anywhere;
+    line-height: $line-height-md;
+  }
+
+  @media (max-width: $breakpoint-md) {
+    width: calc(100% - #{$space-3 * 2});
   }
 }

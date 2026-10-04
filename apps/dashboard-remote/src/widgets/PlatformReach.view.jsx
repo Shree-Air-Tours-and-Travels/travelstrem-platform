@@ -14,6 +14,6 @@ export default function PlatformReachView({ widget, data, labels }) {
     description={labels?.[widget.props?.descriptionRef]}
     icon="globe"
     variant="tiles"
-    items={fields.map((field) => ({ ...field, label: labels?.[field.id] || field.id, value: data.platform?.[field.id] ?? 0 }))}
+    items={fields.filter((field) => !widget.props?.fields || widget.props.fields.includes(field.id)).map((field) => ({ ...field, label: labels?.[field.id] || field.id, value: data.platform?.[field.id] ?? 0 }))}
   />;
 }

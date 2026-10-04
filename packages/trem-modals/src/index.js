@@ -6,3 +6,5 @@ export { default as EnquiryError } from "./EnquiryError.jsx";
 export { default as EnquiryModal } from "./EnquiryModal.jsx";
 
 export { default as useExistingEnquiryChoice } from "./useExistingEnquiryChoice.jsx";
+
+export { default as useEnquiryContact } from "./useEnquiryContact.jsx";

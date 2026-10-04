@@ -1,6 +1,7 @@
 import nodemailer from "nodemailer";
 import config from "./env.js";
 import logger from "../shared/logger/index.js";
+import { resolveTenantIntegration } from "../modules/integrations/runtime.js";
 
 /**
  * Nodemailer adapter. The rest of the application talks to the email service,
@@ -51,6 +52,7 @@ export function createSmtpProvider(overrides = {}) {
     return {
         configured: true,
         verify: () => transporter.verify(),
+        close: () => transporter.close(),
         send: (message) =>
             transporter.sendMail({
                 ...message,
@@ -59,10 +61,19 @@ export function createSmtpProvider(overrides = {}) {
     };
 }
 
-let defaultProvider;
+const providers = new Map();
 export function getEmailProvider() {
-    if (!defaultProvider) defaultProvider = createSmtpProvider();
-    return defaultProvider;
+    const runtime = resolveTenantIntegration("notifications.email", () => ({
+        provider: "smtp",
+        options: {},
+        credentials: defaultProviderConfig,
+    }));
+    if (runtime.provider !== "smtp")
+        throw new Error(`Unsupported email provider: ${runtime.provider}`);
+    const smtp = { ...runtime.options, ...runtime.credentials };
+    const cacheKey = JSON.stringify(smtp);
+    if (!providers.has(cacheKey)) providers.set(cacheKey, createSmtpProvider(smtp));
+    return providers.get(cacheKey);
 }
 
 /** Best-effort startup health check; SMTP downtime never terminates the API. */
@@ -72,8 +83,8 @@ export async function verifyEmailConnection() {
         logger.info("✅ SMTP Connected");
         return { success: true, message: "SMTP connected" };
     } catch (error) {
-        logger.error("❌ SMTP Connection Failed", error?.message || error);
-        return { success: false, message: error?.message || "SMTP connection failed" };
+        logger.error("SMTP connection verification failed", { code: error?.code || "SMTP_UNAVAILABLE" });
+        return { success: false, message: "SMTP connection verification failed" };
     }
 }
 

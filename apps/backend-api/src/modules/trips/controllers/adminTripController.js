@@ -3,7 +3,7 @@ import { audit } from "../../tenancy/audit.service.js";
 import User from "../../auth/models/User.js";
 import Tour from "../../tours/models/Tour.js";
 
-const isMaster = (req) => req.user?.role === "admin" && req.user?.adminLevel === "master";
+const isMaster = (req) => req.access?.isMaster || req.access?.isTenantAdmin;
 const tripScope = (req) => {
     if (isMaster(req)) return {};
     if (!req.user?.agencyId) return { _id: null };

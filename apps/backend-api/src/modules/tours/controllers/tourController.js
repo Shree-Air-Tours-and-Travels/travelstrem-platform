@@ -121,6 +121,7 @@ const TOUR_TRANSITIONS = {
 };
 const canPublishTour = (req) =>
     req.access?.isMaster ||
+    req.access?.isTenantAdmin ||
     req.access?.role === "partner_admin" ||
     req.access?.agency?.settings?.tripPublishingPermissions?.agentCanPublish === true;
 const assertTourTransition = (from, to, req) => {
@@ -1455,7 +1456,7 @@ export const canModifyTour = (user, tour, access = null) => {
     }
 
     // Admin can modify any tour
-    if (access?.isMaster || (actor?.role === "admin" && actor?.adminLevel === "master"))
+    if (access?.isMaster || access?.isTenantAdmin || (!actor?.clientId && actor?.role === "admin" && actor?.adminLevel === "master"))
         return true;
 
     if (
@@ -1769,9 +1770,9 @@ export const updateTour = async (req, res) => {
             const requestedOwnerId = toString(req.body.ownerAgent?._id || req.body.ownerAgent);
             const existingOwnerId = toString(existing.ownerAgent?._id || existing.ownerAgent);
             if (requestedOwnerId === existingOwnerId) delete sanitized.ownerAgent;
-            else if (!(req.access?.isMaster || req.access?.role === "partner_admin"))
+            else if (!(req.access?.isMaster || req.access?.isTenantAdmin || req.access?.role === "partner_admin"))
                 delete sanitized.ownerAgent;
-            else if (req.access?.isMaster && !existing.agencyId) sanitized.ownerAgent = null;
+            else if ((req.access?.isMaster || req.access?.isTenantAdmin) && !existing.agencyId) sanitized.ownerAgent = null;
             else if (!req.body.ownerAgent) sanitized.ownerAgent = null;
             else {
                 const owner = await User.exists({
@@ -1871,7 +1872,7 @@ export const updateTour = async (req, res) => {
 /** Master-admin approval is explicit and cannot be set through create/update payloads. */
 export const verifyTour = async (req, res) => {
     const handler = getHandlerFromReq(req);
-    if (!req.access?.isMaster) {
+    if (!(req.access?.isMaster || req.access?.isTenantAdmin)) {
         return sendJson(
             res,
             403,
@@ -2079,7 +2080,7 @@ export const deleteTour = async (req, res) => {
 export const deleteAllTours = async (req, res) => {
     const handler = getHandlerFromReq(req);
     try {
-        if (!(req.user?.role === "admin" && req.user?.adminLevel === "master")) {
+        if (!(req.access?.isMaster || req.access?.isTenantAdmin)) {
             return sendJson(
                 res,
                 403,

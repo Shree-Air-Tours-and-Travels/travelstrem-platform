@@ -1,3 +1,8 @@
+import tenantManagementRoutes from "../modules/clients/tenantManagement.routes.js";
+import { tenantConfiguration, tenantDeployment } from "../modules/clients/configuration.js";
+import { getHiddenProductKeys } from "../utils/hiddenProductCache.js";
+import { resolveRuntimeTenant } from "../modules/tenancy/runtime.js";
+import dashboardRoutes from "../modules/dashboard/routes.js";
 import paymentRoutes, { webhookRouter } from "../modules/payments/routes.js";
 import savedSearchRoutes from "../modules/savedSearches/routes.js";
 import mongoose from "mongoose";
@@ -32,7 +37,6 @@ const getDbHealth = () => {
         readyState,
         status:
             ["disconnected", "connected", "connecting", "disconnecting"][readyState] || "unknown",
-        name: mongoose.connection.name || null,
     };
 };
 
@@ -65,6 +69,30 @@ export default function registerRoutes(app) {
         }),
     );
 
+    app.use("/api", resolveRuntimeTenant);
+    app.get("/api/tenant-config", async (req, res, next) => {
+        try {
+            const client = req.tenant?.client;
+            const hidden = client ? await getHiddenProductKeys() : [];
+            const data = client
+                ? {
+                      ...tenantConfiguration({
+                          ...client,
+                          productAccess: client.productAccess.filter(
+                              (key) => !hidden.includes(key),
+                          ),
+                      }),
+                      deployment: tenantDeployment(client),
+                  }
+                : null;
+            res.setHeader("Cache-Control", "no-store");
+            res.json({ status: "success", data, brand: req.brand });
+        } catch (error) {
+            next(error);
+        }
+    });
+    app.use("/api/tenant-management", tenantManagementRoutes);
+    app.use("/api/dashboard", dashboardRoutes);
     app.use("/api/payments", paymentRoutes);
     app.use("/api/webhooks/payments", webhookRouter);
     app.use(API_ROUTES.AUTH, authRoutes);

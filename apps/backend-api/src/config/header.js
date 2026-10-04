@@ -1,4 +1,5 @@
 import config from "./env.js";
+import appHeaderConfig from "./appHeader.js";
 
 const TREVIO_URL = config.TREVIO_URL;
 const TREVISTA_URL = config.TREVISTA_URL;
@@ -12,65 +13,37 @@ export default {
         version: 2,
         brand: {
             label: "TravelsTrem",
-            logoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png",
-            darkLogoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519386/travelstrem/site-assets/e38709b8a4ada750aed0f6df.png",
             homePath: "/",
         },
-        footer: {
-            brand: "TravelsTREM",
-            owner: "Shree Air Tours and Travels",
-            description: "Tours, Reservations, Experience & Management ",
-            navigationLabel: "Business and legal information",
-            contacts: [
-                {
-                    id: "email",
-                    label: "akshat.goyal@travelstrem.com",
-                    href: "mailto:akshat.goyal@travelstrem.com",
-                },
-                { id: "phone", label: "+91 90576 35580", href: "tel:+919057635580" },
-                {
-                    id: "location",
-                    label: "Jaipur, India",
-                    href: "https://www.google.com/maps/search/?api=1&query=Jaipur%2C%20India",
-                    target: "_blank",
-                },
-            ],
-            legalLinks: [{ id: "privacy", label: "Privacy", href: "/privacy" }],
-        },
+        footer: appHeaderConfig.componentData.footer,
         logos: {
             trevio: {
-                logoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png",
                 name: "Trevio",
                 subtitle: "by TravelsTrem",
                 initial: "",
             },
             trevista: {
-                logoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png",
                 name: "Trevista",
                 subtitle: "by TravelsTrem",
                 initial: "",
             },
             trehub: {
-                logoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png",
                 name: "Trehub",
                 subtitle: "Flights & Hotels by TravelsTrem",
                 initial: "",
             },
             "app-shell": {
-                logoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png",
                 name: "TravelsTrem",
                 subtitle: "Dashboard",
                 initial: "",
             },
-            admin: { logoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png", name: "TravelsTREM", subtitle: "Admin", initial: "" },
+            admin: { name: "TravelsTREM", subtitle: "Admin", initial: "" },
             booking: {
-                logoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png",
                 name: "TravelsTrem",
                 subtitle: "Booking",
                 initial: "",
             },
             agent: {
-                logoSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png",
                 name: "TravelsTrem",
                 subtitle: "Partner Portal",
                 initial: "",

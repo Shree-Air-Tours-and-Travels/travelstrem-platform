@@ -17,7 +17,7 @@ const optionalSubmitAuth = (req, res, next) => {
     return hasSession ? authMiddleware(req, res, next) : next();
 };
 
-router.get("/form.json", getForm);
+router.get("/form.json", optionalSubmitAuth, getForm);
 router.post("/submit.json", optionalSubmitAuth, requireEnquiryMobile, submitForm);
 router.post("/enquiries/claim", authMiddleware, claimEnquiry);
 router.get("/enquiries", authMiddleware, getLeads);

@@ -5,10 +5,6 @@ import { PRODUCT_TYPE } from "@packages/trem-ui";
 import { uploadTourImage } from "../../services/adminService";
 import AdminRouteFrame from "../../app/AdminRouteFrame";
 
-const uploader = {
-  upload: async (files) => Promise.all(files.map((file) => uploadTourImage(file))),
-};
-
 export default function TourBuilderPage({ mode = "create" }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -62,7 +58,7 @@ export default function TourBuilderPage({ mode = "create" }) {
         onLocationChange={syncBuilderLocation}
         onExit={exit}
         onComplete={() => navigate("/manage/tours?tab=services")}
-        uploader={uploader}
+        uploader={{ upload: async (files) => Promise.all(files.map((file) => uploadTourImage(file, productKey))) }}
       />
     </AdminRouteFrame>
   );

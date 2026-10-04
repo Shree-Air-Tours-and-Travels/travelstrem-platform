@@ -1,3 +1,4 @@
+import { partnerAccessPlugin } from "../../clients/partnerAccessPlugin.js";
 import mongoose from "mongoose";
 const schema = new mongoose.Schema(
     {
@@ -40,7 +41,12 @@ const schema = new mongoose.Schema(
             default: "any",
         },
         enquiryRefs: { type: [String], default: [] },
-        linkedUser: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null, index: true },
+        linkedUser: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            default: null,
+            index: true,
+        },
         followUpAt: { type: Date, default: null, index: true },
         lastContactedAt: { type: Date, default: null },
         lastActivityAt: { type: Date, default: null, index: true },
@@ -55,14 +61,15 @@ const schema = new mongoose.Schema(
     { timestamps: true },
 );
 schema.pre("validate", function normalizeCustomerIdentity() {
-    this.normalizedEmail = String(this.email || "").trim().toLowerCase();
+    this.normalizedEmail = String(this.email || "")
+        .trim()
+        .toLowerCase();
     this.email = this.normalizedEmail;
     this.normalizedPhone = String(this.phone || "").replace(/[^0-9+]/g, "");
     this.phone = String(this.phone || "").trim();
-    this.tags = [...new Set((this.tags || []).map((tag) => String(tag).trim()).filter(Boolean))].slice(
-        0,
-        20,
-    );
+    this.tags = [
+        ...new Set((this.tags || []).map((tag) => String(tag).trim()).filter(Boolean)),
+    ].slice(0, 20);
 });
 schema.index(
     { agencyId: 1, normalizedEmail: 1 },
@@ -77,4 +84,5 @@ schema.index(
     { unique: true, partialFilterExpression: { linkedUser: { $type: "objectId" } } },
 );
 schema.index({ agencyId: 1, ownerAgent: 1, status: 1, lifecycleStage: 1 });
+schema.plugin(partnerAccessPlugin);
 export default mongoose.models.AgencyCustomer || mongoose.model("AgencyCustomer", schema);

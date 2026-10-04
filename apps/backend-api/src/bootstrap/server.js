@@ -1,3 +1,4 @@
+import { runWithCapturedTenantIntegrationContext } from "../modules/integrations/runtime.js";
 import app from "./app.js";
 import initializeDatabase from "./database.js";
 import config from "../config/index.js";
@@ -14,7 +15,7 @@ export async function startServer({
 } = {}) {
     await initializeDatabase();
     await initializeRedis();
-    await verifyEmailConnection();
+    await runWithCapturedTenantIntegrationContext({ tenantId: process.env.TENANT_CLIENT_ID || "travelstrem" }, verifyEmailConnection);
 
     const server = app.listen(port, () => {
         logger.info(`Server running on port ${port} (env: ${config.NODE_ENV})`);

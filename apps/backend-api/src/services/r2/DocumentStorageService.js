@@ -15,7 +15,7 @@ export const DocumentStorageService = {
 
     async upload({ key, body, contentType = "application/pdf", metadata = {} }) {
         const client = getR2Client();
-        if (!client) throw new Error("R2 storage is not configured");
+        if (!client) throw new Error("Document storage is not configured");
         const { bucketName } = getR2Config();
 
         const command = new PutObjectCommand({
@@ -38,7 +38,7 @@ export const DocumentStorageService = {
 
     async download(key) {
         const client = getR2Client();
-        if (!client) throw new Error("R2 storage is not configured");
+        if (!client) throw new Error("Document storage is not configured");
         const { bucketName } = getR2Config();
 
         const command = new GetObjectCommand({
@@ -56,7 +56,7 @@ export const DocumentStorageService = {
 
     async delete(key) {
         const client = getR2Client();
-        if (!client) throw new Error("R2 storage is not configured");
+        if (!client) throw new Error("Document storage is not configured");
         const { bucketName } = getR2Config();
 
         const command = new DeleteObjectCommand({
@@ -69,7 +69,7 @@ export const DocumentStorageService = {
 
     async exists(key) {
         const client = getR2Client();
-        if (!client) throw new Error("R2 storage is not configured");
+        if (!client) throw new Error("Document storage is not configured");
         const { bucketName } = getR2Config();
 
         try {
@@ -87,7 +87,7 @@ export const DocumentStorageService = {
 
     async getSignedDownloadUrl(key, expiresIn) {
         const client = getR2Client();
-        if (!client) throw new Error("R2 storage is not configured");
+        if (!client) throw new Error("Document storage is not configured");
         const { bucketName } = getR2Config();
         const expiry = expiresIn || getSignedUrlDefaultExpiry();
 
@@ -102,7 +102,7 @@ export const DocumentStorageService = {
 
     async getSignedUploadUrl(key, contentType, expiresIn) {
         const client = getR2Client();
-        if (!client) throw new Error("R2 storage is not configured");
+        if (!client) throw new Error("Document storage is not configured");
         const { bucketName } = getR2Config();
         const expiry = expiresIn || getSignedUrlDefaultExpiry();
 

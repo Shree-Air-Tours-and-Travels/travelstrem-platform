@@ -1,3 +1,4 @@
+import { partnerAccessPlugin } from "../../../modules/clients/partnerAccessPlugin.js";
 import mongoose from "mongoose";
 const schema = new mongoose.Schema(
     {
@@ -17,5 +18,6 @@ const schema = new mongoose.Schema(
     { timestamps: true },
 );
 schema.index({ agencyId: 1, provider: 1 }, { unique: true });
+schema.plugin(partnerAccessPlugin);
 export default mongoose.models?.AgencyMerchantConfig ||
     mongoose.model("AgencyMerchantConfig", schema);

@@ -10,6 +10,7 @@ import {
   Button,
   Icon,
   InputField,
+  Note,
   SingleSelect,
 } from "@packages/trem-ui";
 
@@ -61,10 +62,7 @@ export default function ToursPageView({
   const [filtersSheetOpen, setFiltersSheetOpen] = useState(false);
 
   const handleOpenFilters = () => {
-    if (
-      typeof window !== "undefined" &&
-      window.matchMedia("(max-width: 768px)").matches
-    ) {
+    if (typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches) {
       setFiltersSheetOpen(true);
       return;
     }
@@ -105,15 +103,9 @@ export default function ToursPageView({
 
   return (
     <main className="tours-page">
-      <div className="tours-page__crumbs">
-        <Breadcrumbs
-          items={[
-            { label: pageLabels.breadcrumbTrevista, path: "/trevista" },
-            { label: pageLabels.breadcrumbTours },
-          ].filter((item) => item.label)}
-        />
-      </div>
       <div className="tours-page__inner">
+        <Breadcrumbs items={(widgets.find(widget => widget.type === "Breadcrumbs")?.props?.items || []).map(item => ({ ...item, label: pageLabels[item.labelRef] })).filter(item => item.label)} />
+        <Note variant="warning" dismissible>{pageLabels.demoInventoryNote}</Note>
         {widgets.map((w) => {
           if (w.type === "quickChips") {
             return (
@@ -251,7 +243,11 @@ export default function ToursPageView({
       <BottomSheet
         open={filtersSheetOpen}
         onClose={() => setFiltersSheetOpen(false)}
-        title="Filters"
+        title={
+          filterWidgetData?.elements?.labels?.[
+            filterWidgetData?.structure?.config?.overlayConfig?.titleRef
+          ] || "Filters"
+        }
         className="tours-page__filters-sheet"
       >
         <Filters

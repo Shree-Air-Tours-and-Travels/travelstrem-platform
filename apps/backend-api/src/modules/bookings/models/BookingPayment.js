@@ -14,7 +14,7 @@ export const BOOKING_PAYMENT_TYPES = PAYMENT_TYPE_LIST;
 
 const bookingPaymentSchema = new Schema(
     {
-        bookingId: { type: Schema.Types.ObjectId, ref: "Booking", required: true, index: true },
+        bookingId: { type: Schema.Types.ObjectId, ref: "Booking", required: true },
         agencyId: { type: Schema.Types.ObjectId, ref: "PartnerAgency", default: null, index: true },
         amount: { type: Number, required: true },
         amountMinor: { type: Number, min: 0, default: null },
@@ -40,8 +40,8 @@ const bookingPaymentSchema = new Schema(
         type: { type: String, enum: BOOKING_PAYMENT_TYPES, default: PAYMENT_TYPE.TOKEN },
         raw: { type: Schema.Types.Mixed, default: {} },
         quoteId: { type: Schema.Types.ObjectId, ref: "BookingQuote", default: null },
-        idempotencyKey: { type: String, trim: true, default: "", index: true },
-        providerEventId: { type: String, trim: true, default: "", index: true },
+        idempotencyKey: { type: String, trim: true, default: "" },
+        providerEventId: { type: String, trim: true, default: "" },
         providerPaymentId: { type: String, trim: true, default: "" },
         pricingSnapshot: { type: Schema.Types.Mixed, default: null, immutable: true },
         financialSnapshot: { type: Schema.Types.Mixed, default: null, immutable: true },

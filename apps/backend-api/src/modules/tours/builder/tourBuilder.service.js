@@ -158,18 +158,19 @@ const capabilitiesFor = (req, tour) => {
     const access = req.access || {};
     const role = access.role || req.user?.agencyRole;
     const agencySettings = access.agency?.settings || {};
+    const canAdminister = Boolean(access.isMaster || access.isTenantAdmin);
     return {
         isMaster: !!access.isMaster,
         canEdit: tour ? canModifyTour(req.user, tour, access) : true,
         canPublish:
-            !!access.isMaster ||
+            canAdminister ||
             role === "partner_admin" ||
             agencySettings?.tripPublishingPermissions?.agentCanPublish === true,
-        canVerify: !!access.isMaster,
-        canEditMetrics: !!access.isMaster,
-        canEditPlatformMeta: !!access.isMaster || role === "partner_admin",
-        canEditVisibility: !!access.isMaster || role === "partner_admin",
-        viewCosts: !!access.isMaster || role === "partner_admin" || !role,
+        canVerify: canAdminister,
+        canEditMetrics: canAdminister,
+        canEditPlatformMeta: canAdminister || role === "partner_admin",
+        canEditVisibility: canAdminister || role === "partner_admin",
+        viewCosts: canAdminister || role === "partner_admin" || !role,
     };
 };
 

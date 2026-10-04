@@ -7,6 +7,9 @@
     },
     "elements": {
       "labels": {
+        "breadcrumbHomePage": "Home",
+        "breadcrumbListingPage": "Tours",
+
         "pageTitle": "Tour Details",
         "bookNow": "Book now",
         "enquire": "Get a quote",
@@ -31,6 +34,7 @@
         "titleRef": "pageTitle"
       },
       "widgets": [
+        {"type": "Breadcrumbs", "props": {"items": [{"path": "/trevista", "labelRef": "breadcrumbHomePage"}, {"path": "/trevista/tours", "labelRef": "breadcrumbListingPage"}]}},
         {
           "type": "TourGallery",
           "source": "shell",

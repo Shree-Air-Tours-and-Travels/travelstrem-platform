@@ -151,10 +151,10 @@ export async function savePricingConfiguration(payload) {
   };
 }
 
-export async function uploadTourImage(file) {
+export async function uploadTourImage(file, product) {
   const fd = new FormData();
   fd.append("image", file);
-  const response = await api.post("/tours.json/upload", fd);
+  const response = await api.post("/tours.json/upload", fd, { params: product ? { product } : {} });
   const res = response?.data || {};
   const url =
     res?.componentData?.data?.url || res?.componentData?.url || res?.data?.url || res?.url;
@@ -279,30 +279,6 @@ export async function assignClientMember(id, payload) {
 
 export async function removeClientMember(id, userId) {
   return expectSuccess(fetchData(`/clients/${id}/members/${userId}`, { method: "DELETE" }), "Failed to remove client member");
-}
-
-export async function createClient(payload) {
-  const res = await expectSuccess(
-    fetchData("/clients", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    }),
-    "Failed to create client",
-  );
-  return res.componentData?.data?.client || res;
-}
-
-export async function updateClient(id, payload) {
-  const res = await expectSuccess(
-    fetchData(`/clients/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    }),
-    "Failed to update client",
-  );
-  return res.componentData?.data?.client || res;
 }
 
 export async function deleteClient(id) {

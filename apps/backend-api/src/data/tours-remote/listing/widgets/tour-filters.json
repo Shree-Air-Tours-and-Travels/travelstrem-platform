@@ -131,7 +131,13 @@
           }
         }
       ],
-      "config": {},
+      "config": {
+        "overlayConfig": {
+          "titleRef": "filtersHeading",
+          "applyLabelRef": "applyFilters",
+          "resetLabelRef": "resetFilters"
+        }
+      },
       "actions": [
         {
           "name": "apply",

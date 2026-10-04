@@ -1,6 +1,6 @@
 # TravelsTREM Platform
 
-Product architecture and migration rules are documented in [docs/product-architecture.md](docs/product-architecture.md). TravelsTREM is the parent platform; Trevio and Trevista are the active customer-facing products.
+The authoritative platform documentation starts at [docs/README.md](docs/README.md). It covers the business, products, system architecture, backend integrations, frontend packages, administration and deployment runbook.
 
 A scalable monorepo architecture powering the TravelsTREM ecosystem using Micro Frontends (MFE), shared packages, and modular backend services.
 

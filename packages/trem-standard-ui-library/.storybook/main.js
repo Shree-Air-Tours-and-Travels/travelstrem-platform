@@ -17,12 +17,12 @@ const config = {
   staticDirs: [{ from: "../public", to: "/" }],
   managerHead: (head) => `${head}
     <title>Trem UI Modules</title>
-    <link rel="icon" type="image/png" href="https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png" />
-    <link rel="apple-touch-icon" href="https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png" />
+    <link rel="icon" type="image/png" href="https://res.cloudinary.com/dofxshf3z/image/upload/v1791025311/1b717e27-5c07-4b49-be8f-85703fbcb86c.png" />
+    <link rel="apple-touch-icon" href="https://res.cloudinary.com/dofxshf3z/image/upload/v1791025311/1b717e27-5c07-4b49-be8f-85703fbcb86c.png" />
     <script src="/trem-storybook-title.js"></script>`,
   previewHead: (head) => `${head}
-    <link rel="icon" type="image/png" href="https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png" />
-    <link rel="apple-touch-icon" href="https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png" />`,
+    <link rel="icon" type="image/png" href="https://res.cloudinary.com/dofxshf3z/image/upload/v1791025311/1b717e27-5c07-4b49-be8f-85703fbcb86c.png" />
+    <link rel="apple-touch-icon" href="https://res.cloudinary.com/dofxshf3z/image/upload/v1791025311/1b717e27-5c07-4b49-be8f-85703fbcb86c.png" />`,
   async viteFinal(config) {
     return mergeConfig(config, {
       define: {

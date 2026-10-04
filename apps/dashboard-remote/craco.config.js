@@ -12,10 +12,19 @@ module.exports = {
   webpack: {
     configure: (config) => {
       config.output.publicPath = "auto";
+      // Standalone deep links load entry scripts from the app root; federated chunks
+      // still resolve against the remote entry URL through publicPath "auto".
+      config.plugins.forEach((plugin) => {
+        if (plugin.constructor.name === "HtmlWebpackPlugin") {
+          plugin.userOptions.publicPath = "/";
+          plugin.options.publicPath = "/";
+        }
+      });
       config.output.uniqueName = federation.name;
       config.optimization.runtimeChunk = false;
       config.resolve.alias = {
         ...(config.resolve.alias || {}),
+        "@apps/booking-engine": path.resolve(__dirname, "../booking-engine/src/library.js"),
         "@packages/trem-auth-core": path.resolve(__dirname, "../../packages/trem-auth-core/src"),
         "@packages/trem-environment": path.resolve(__dirname, "../../packages/trem-environment/src"),
         "@packages/trem-events": path.resolve(__dirname, "../../packages/trem-events/src"),
@@ -31,7 +40,7 @@ module.exports = {
       oneOf?.oneOf.forEach((rule) => {
         if (!rule.loader?.includes("babel-loader")) return;
         const includes = Array.isArray(rule.include) ? rule.include : rule.include ? [rule.include] : [];
-        rule.include = [...includes, path.resolve(__dirname, "src"), path.resolve(__dirname, "../../packages")];
+        rule.include = [...includes, path.resolve(__dirname, "src"), path.resolve(__dirname, "../../packages"), path.resolve(__dirname, "../booking-engine/src"), path.resolve(__dirname, "../app-shell/src")];
       });
       config.plugins.push(new container.ModuleFederationPlugin(federation));
       return config;

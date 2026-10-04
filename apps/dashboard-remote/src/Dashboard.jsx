@@ -53,6 +53,7 @@ export default function Dashboard(props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       props.role,
+      props.accountHome,
       definition,
       source,
       user,

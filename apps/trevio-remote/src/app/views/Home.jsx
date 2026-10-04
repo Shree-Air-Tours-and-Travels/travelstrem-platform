@@ -11,7 +11,6 @@ import {
   Icon,
   NoDataFound,
   PRODUCT_TYPE,
-  Breadcrumbs,
   useFavoritesContext,
 } from "@packages/trem-ui";
 import { ContactAgentModal } from "@packages/trem-modals";
@@ -97,16 +96,6 @@ export default function Home({
 
   return (
     <main>
-      <div className="trevio-page__breadcrumbs">
-        <div className="trevio-container">
-          <Breadcrumbs
-            items={[
-              { label: labels.breadcrumbHome, path: "/?tab=overview" },
-              { label: labels.homeBreadcrumb },
-            ].filter((item) => item.label)}
-          />
-        </div>
-      </div>
       <section className="trevio-hero">
         <div className="trevio-container trevio-hero__grid">
           <div className="trevio-hero__content">

@@ -8,6 +8,7 @@ export {
   getPreferredTheme,
   initializeThemeMode,
   setPreferredTheme,
+  setTenantThemePolicy,
   useThemeMode,
 } from "./theme/useThemeMode.js";
 export { default as useComponentData, setComponentDataFetcher } from "./data/useComponentData.js";
@@ -43,3 +44,6 @@ export {
 } from "./filters/filterUtils.js";
 
 export { createPaymentSession, redirectToPayment } from "./http/payments.js";
+
+export { applyDocumentBranding } from "./document/applyDocumentBranding.js";
+export { PLATFORM_BRAND } from "./branding/platformBrand.js";

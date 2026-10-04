@@ -84,8 +84,6 @@ export default function ToursDetailsContainer({
   appKey = PRODUCT_TYPE.TREVISTA,
   productType = "tour",
   breadcrumbRoot: breadcrumbRootProp,
-  breadcrumbTrail = null,
-  breadcrumbDetailLabel = "",
   routeRef: routeRefProp = "",
   userSession = null,
 } = {}) {
@@ -114,22 +112,8 @@ export default function ToursDetailsContainer({
 
   const [activeTour, setActiveTour] = useState(location.state?.tour || null);
   const [tourUnavailable, setTourUnavailable] = useState(false);
-  const [breadcrumbRoot, setBreadcrumbRoot] = useState(breadcrumbRootProp || defaultBreadcrumbRoot);
-  const referrer = useMemo(
-    () => location.state?.from || breadcrumbRoot,
-    [location.state?.from, breadcrumbRoot],
-  );
-
-  useEffect(() => {
-    if (breadcrumbRootProp || productType !== "tour") return;
-    fetchData("/breadcrumb.json")
-      .then((res) => {
-        if (res?.status === "success" && res?.componentData?.root) {
-          setBreadcrumbRoot(res.componentData.root);
-        }
-      })
-      .catch(() => {});
-  }, [breadcrumbRootProp, productType]);
+  const breadcrumbRoot = breadcrumbRootProp || defaultBreadcrumbRoot;
+  const referrer = location.state?.from || breadcrumbRoot;
 
   const [contactOpen, setContactOpen] = useState(false);
   const [selection, setSelection] = useState(() => selectionFromTourCard(location.state?.tour));
@@ -262,7 +246,6 @@ export default function ToursDetailsContainer({
     [activeTour?._id, appKey, navigate, productType],
   );
 
-
   const handleShare = useCallback(
     async (tour) => {
       const shareUrl = window.location.href;
@@ -309,12 +292,8 @@ export default function ToursDetailsContainer({
   }
 
   const widgetApiOptions = WIDGET_API_OPTIONS[productType] || WIDGET_API_OPTIONS.tour;
-  const intermediateCrumb =
-    productType === "tour" ? { label: "Tours", path: `/${appKey}/tours` } : null;
-  const baseBreadcrumbItems =
-    Array.isArray(breadcrumbTrail) && breadcrumbTrail.length ? breadcrumbTrail : [breadcrumbRoot];
+  const baseBreadcrumbItems = (widgets.find(widget => widget.type === "Breadcrumbs")?.props?.items || []).map(item => ({ ...item, label: pageLabels[item.labelRef] })).filter(item => item.label);
   const detailBreadcrumbLabel =
-    breadcrumbDetailLabel ||
     activeTour?.title ||
     pageLabels.pageTitle ||
     slugifyTitle(decodedRef).replace(/-/g, " ");
@@ -336,7 +315,6 @@ export default function ToursDetailsContainer({
         referrerLabel={referrer.label}
         breadcrumbItems={[
           ...baseBreadcrumbItems,
-          ...(intermediateCrumb ? [intermediateCrumb] : []),
           {
             label: detailBreadcrumbLabel,
           },

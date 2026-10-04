@@ -103,8 +103,9 @@
         "loading": "Updating flights",
         "loadErrorTitle": "Flights could not be loaded",
         "retry": "Try again",
-        "breadcrumbTrehub": "Trehub",
+        "breadcrumbTrehub": "Home",
         "breadcrumbFlights": "Flights",
+        "demoInventoryNote": "Demo flight inventory — no live reservation will be made.",
         "pageEyebrow": "Flight search",
         "pageTitle": "Choose the flight that fits your journey",
         "pageDescription": "Compare schedules, stops and fares returned for your search.",
@@ -152,6 +153,7 @@
         "summaryTravellersFallback": "1 traveller",
         "filtersTitle": "Filter results",
         "filtersReset": "Reset",
+        "filtersApply": "Show flights",
         "filterAirlines": "Airlines",
         "filterAirlinesPlaceholder": "Select airlines",
         "filterCabin": "Cabin class",
@@ -226,7 +228,7 @@
           "source": "trehub",
           "props": {
             "items": [
-              { "labelRef": "breadcrumbTrehub", "path": "/trehub?tab=trehub&product=trehub" },
+              { "labelRef": "breadcrumbTrehub", "path": "/trehub" },
               { "labelRef": "breadcrumbFlights" }
             ]
           }
@@ -245,6 +247,10 @@
             "mobileActionLabelRef": "mobileSearchAction",
             "mobileSheetTitleRef": "mobileSearchSheetTitle",
             "mobileCloseLabelRef": "mobileSearchClose",
+            "overlayConfig": {
+              "titleRef": "mobileSearchSheetTitle",
+              "closeLabelRef": "mobileSearchClose"
+            },
             "trustItems": [
               { "id": "live", "icon": "sparkles", "labelRef": "searchTrustLive" },
               { "id": "support", "icon": "support", "labelRef": "searchTrustSupport" },
@@ -272,7 +278,13 @@
             "fieldsOptionsRef": "flightFilters",
             "mobileActionLabelRef": "mobileFiltersAction",
             "mobileSheetTitleRef": "mobileFiltersSheetTitle",
-            "mobileCloseLabelRef": "mobileFiltersClose"
+            "mobileCloseLabelRef": "mobileFiltersClose",
+            "overlayConfig": {
+              "titleRef": "mobileFiltersSheetTitle",
+              "closeLabelRef": "mobileFiltersClose",
+              "applyLabelRef": "filtersApply",
+              "resetLabelRef": "filtersReset"
+            }
           }
         },
         {

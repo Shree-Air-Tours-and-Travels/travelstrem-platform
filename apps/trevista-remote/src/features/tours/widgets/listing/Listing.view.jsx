@@ -187,13 +187,15 @@ export default function ListingView({
           title={listingLabels.noToursFound || "No tours available right now"}
           description={listingLabels.noToursDescription}
           actionLabel={
-            hasActiveFilters ? "Clear all filters" : listingLabels.enquireLabel || "Enquire now"
+            hasActiveFilters
+              ? "Clear all filters"
+              : listingLabels.customTourLabel || "Create a custom tour"
           }
           onAction={hasActiveFilters ? onClearFilters : onEnquire}
           actionAriaLabel={
             hasActiveFilters
               ? "Clear all tour filters"
-              : listingLabels.enquireAriaLabel || "Open tour enquiry form"
+              : listingLabels.customTourAriaLabel || "Plan your custom tour"
           }
           className="tours-page__no-tours"
         />

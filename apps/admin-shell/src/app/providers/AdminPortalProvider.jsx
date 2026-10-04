@@ -8,8 +8,8 @@ import {
   subscribeAuthEvents,
   useSessionInactivity,
 } from "@packages/trem-auth-core";
-import { buildGlobalAuthUrl } from "@packages/trem-utils";
-import { SessionTimeoutModal } from "@packages/trem-ui";
+import { applyDocumentBranding, buildGlobalAuthUrl } from "@packages/trem-utils";
+import { SessionTimeoutModal, ThemeProvider } from "@packages/trem-ui";
 import apiService from "../../services/apiService";
 import {
   createPortalEventController,
@@ -126,6 +126,7 @@ export function AdminPortalConfigProvider({ children }) {
         userEmail: session?.user?.email || "",
       };
       const header = await getHeaderConfig(params);
+      applyDocumentBranding(header?.brand, { tenant: Boolean(header?.tenantId) });
 
       setState((current) => ({
         ...current,
@@ -155,6 +156,7 @@ export function AdminPortalConfigProvider({ children }) {
 
       initOnceRef.current = (async () => {
         const { session, header, pageConfig } = await initApp(params);
+        applyDocumentBranding(header?.brand, { tenant: Boolean(header?.tenantId) });
         lastHeaderRouteRef.current = `${params.pathname}${params.search}${params.hash}`;
 
         setState({
@@ -170,13 +172,11 @@ export function AdminPortalConfigProvider({ children }) {
           "[AdminPortalConfig] initApp failed, using shell fallbacks:",
           error?.message || error,
         );
-        setState({
+        setState((current) => ({
+          ...current,
           loading: false,
           error: error?.message || "init-app-failed",
-          session: DEFAULT_SESSION,
-          headerConfig: DEFAULT_HEADER_CONFIG,
-          pageConfig: DEFAULT_PAGE_CONFIG,
-        });
+        }));
       });
 
       return initOnceRef.current;
@@ -258,8 +258,15 @@ export function AdminPortalConfigProvider({ children }) {
     });
   }, [location, location.pathname, location.search, location.hash, refreshHeader, state.loading]);
 
+  React.useEffect(() => {
+    const refresh = () => loadPortalConfig({ background: true });
+    window.addEventListener('focus', refresh);
+    window.addEventListener('TENANT_CONFIG_UPDATED', refresh);
+    return () => { window.removeEventListener('focus', refresh); window.removeEventListener('TENANT_CONFIG_UPDATED', refresh); };
+  }, [loadPortalConfig]);
+
   const reload = React.useCallback(
-    () => loadPortalConfig({ background: true }),
+    () => loadPortalConfig({ forceSession: true }),
     [loadPortalConfig],
   );
 
@@ -282,7 +289,7 @@ export function AdminPortalConfigProvider({ children }) {
 
   return (
     <AdminPortalConfigContext.Provider value={value}>
-      {children}
+      <ThemeProvider tenantId={state.headerConfig?.tenantId} tenantTheme={state.headerConfig?.tenantTheme}>{children}</ThemeProvider>
       <SessionTimeoutModal
         open={sessionExpired}
         busy={sessionExitBusy}

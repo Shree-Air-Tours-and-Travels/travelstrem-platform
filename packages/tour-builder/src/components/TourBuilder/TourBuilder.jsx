@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Button, EmptyState, FloatingActionBar, PRODUCT_TYPE, Spinner, WizardFormShell } from "@packages/trem-ui";
+import {
+  Button,
+  EmptyState,
+  FloatingActionBar,
+  PRODUCT_TYPE,
+  Spinner,
+  WizardFormShell,
+} from "@packages/trem-ui";
 import { ConfirmOverlay } from "@packages/trem-modals";
 import useTourBuilder from "../../hooks/useTourBuilder.js";
 import useStepForm from "../../hooks/useStepForm.js";
@@ -123,6 +130,7 @@ export default function TourBuilder({
         <StepWorkspace
           key={`${builder.currentStepKey}-${builder.tourId || "new"}`}
           builder={builder}
+          productKey={productKey}
           uploader={uploader}
           onRequestExit={requestExit}
           onDirtyChange={setWorkspaceDirty}
@@ -165,6 +173,7 @@ export default function TourBuilder({
 /** Isolated per-step form so values/errors reset whenever the step changes. */
 function StepWorkspace({
   builder,
+  productKey,
   uploader,
   onRequestExit,
   onDirtyChange,
@@ -416,6 +425,7 @@ function StepWorkspace({
 
       <PasteJsonDialog
         open={showJsonImport}
+        productKey={productKey}
         definition={builder.definition}
         currentValues={form.values}
         onClose={() => setShowJsonImport(false)}

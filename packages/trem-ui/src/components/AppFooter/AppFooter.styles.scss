@@ -10,7 +10,7 @@
 }
 
 .trem-app-footer__main {
-  width: min(100%, 88rem);
+  width: 100%;
   margin-inline: auto;
   padding: clamp(#{$space-8}, 4vw, #{$space-12}) clamp(#{$space-5}, 5vw, #{$space-10}) $space-6;
 }
@@ -33,9 +33,9 @@
 }
 
 .trem-app-footer__brand {
-  display: flex;
-  align-items: flex-start;
-  gap: $space-3;
+  display: grid;
+  justify-items: start;
+  gap: $space-4;
 }
 
 .trem-app-footer__logo {
@@ -52,11 +52,20 @@
   font-weight: $font-bold;
   box-shadow: var(--shadow-md);
 
+  &--image {
+    width: min(100%, 12rem);
+    height: 3.75rem;
+    background: transparent;
+    box-shadow: none;
+  }
+
   img {
-    width: 100%;
+    display: block;
+    width: auto;
+    max-width: 100%;
     height: 100%;
-    object-fit: cover;
-    border-radius: inherit;
+    object-fit: contain;
+    object-position: left center;
   }
 }
 
@@ -237,7 +246,7 @@
 }
 
 .trem-app-footer__bottom {
-  width: min(100%, 88rem);
+  width: 100%;
   margin-inline: auto;
   padding: $space-5 clamp(#{$space-5}, 5vw, #{$space-10}) $space-6;
   border-top: 1px solid var(--border);
@@ -290,26 +299,69 @@
 }
 
 @media (max-width: $breakpoint-lg) {
-  .trem-app-footer__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .trem-app-footer__brand-section { grid-column: 1 / -1; padding-right: 0; }
-  .trem-app-footer__contacts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .trem-app-footer__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .trem-app-footer__brand-section {
+    grid-column: 1 / -1;
+    padding-right: 0;
+  }
+
+  .trem-app-footer__contacts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: $breakpoint-mobile) {
-  .trem-app-footer__main { padding: $space-8 $space-5 $space-4; }
-  .trem-app-footer__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: $space-7 $space-5; }
-  .trem-app-footer__contacts { grid-template-columns: 1fr; }
-  .trem-app-footer__nav-section:last-child { grid-column: 1 / -1; }
+  .trem-app-footer__main {
+    padding: $space-8 $space-5 $space-4;
+  }
+
+  .trem-app-footer__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: $space-7 $space-5;
+  }
+
+  .trem-app-footer__contacts {
+    grid-template-columns: 1fr;
+  }
+
+  .trem-app-footer__nav-section:last-child {
+    grid-column: 1 / -1;
+  }
+
   .trem-app-footer__nav-section:last-child .trem-app-footer__link-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: $space-1 $space-4;
   }
-  .trem-app-footer__section-title { font-size: $font-size-xs; letter-spacing: .05em; }
-  .trem-app-footer__link { padding-block: $space-1; }
-  .trem-app-footer__link-list { gap: $space-1; }
-  .trem-app-footer__bottom { padding: $space-4 $space-5; }
-  .trem-app-footer__bottom-content { align-items: flex-start; flex-direction: column; gap: $space-2; }
-  .trem-app-footer__follow-text { white-space: normal; }
+
+  .trem-app-footer__section-title {
+    font-size: $font-size-xs;
+    letter-spacing: .05em;
+  }
+
+  .trem-app-footer__link {
+    padding-block: $space-1;
+  }
+
+  .trem-app-footer__link-list {
+    gap: $space-1;
+  }
+
+  .trem-app-footer__bottom {
+    padding: $space-4 $space-5;
+  }
+
+  .trem-app-footer__bottom-content {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: $space-2;
+  }
+
+  .trem-app-footer__follow-text {
+    white-space: normal;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -319,5 +371,65 @@
   .trem-app-footer__social-link,
   .trem-app-footer__legal-link {
     transition: none;
+  }
+}
+
+.trem-app-footer--minimal {
+  background: var(--color-surface);
+
+  .trem-app-footer__main {
+    padding-block: $space-6;
+  }
+
+  .trem-app-footer__grid {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 0;
+  }
+
+  .trem-app-footer__brand-section {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0;
+  }
+
+  .trem-app-footer__contacts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-4;
+  }
+
+  .trem-app-footer__tagline:empty {
+    display: none;
+  }
+
+  .trem-app-footer__bottom {
+    background: var(--color-background);
+  }
+}
+
+.trem-app-footer--withActions {
+  margin: 0;
+  border: 0;
+  background: transparent;
+
+  .trem-fab__mobile-nav {
+    grid-template-columns: repeat(var(--trem-app-footer-action-count, 4), minmax(0, 1fr));
+  }
+}
+
+.trem-app-footer--client {
+  background: linear-gradient(135deg, var(--card-bg), var(--surface-muted));
+  border-top-color: color-mix(in srgb, var(--color-primary) 28%, var(--border));
+
+  .trem-app-footer__tagline {
+    &:empty {
+      display: none;
+    }
+  }
+
+  .trem-app-footer__logo--image {
+    height: 3.75rem;
   }
 }

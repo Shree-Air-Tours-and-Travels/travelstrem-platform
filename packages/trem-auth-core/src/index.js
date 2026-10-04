@@ -371,6 +371,8 @@ export const createAuthApi = (base = process.env.REACT_APP_API_URL || "", portal
 
 export const createAuthService = (api) => ({
   getConfig: () => api.get("/auth/config"),
+  getExperience: (app) => api.get("/auth/experience", { params: { app } }),
+  resolveReturn: (returnTo) => api.post("/auth/return", { returnTo }),
   getMethods: () => api.get("/auth/methods"),
   getSession: () => api.get("/auth/session"),
   getCurrentUser: () => api.get("/auth/me"),

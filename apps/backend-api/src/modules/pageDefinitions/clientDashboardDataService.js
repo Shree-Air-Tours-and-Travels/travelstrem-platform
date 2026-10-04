@@ -13,7 +13,7 @@ export async function buildClientDashboardSnapshot(userId, tokenVersion) {
         (user.accountStatus || "active") !== "active" ||
         Number(tokenVersion || 0) !== Number(user.tokenVersion || 0) ||
         !user.clientId ||
-        !["client_admin", "client_agent"].includes(user.clientRole)
+        !["client_master_admin", "client_admin", "client_agent"].includes(user.clientRole)
     )
         return null;
 
@@ -22,10 +22,10 @@ export async function buildClientDashboardSnapshot(userId, tokenVersion) {
         .lean();
     if (!client) return null;
 
-    const isAdmin = user.clientRole === "client_admin";
+    const isAdmin = ["client_master_admin", "client_admin"].includes(user.clientRole);
     const teamScope = {
         clientId: client._id,
-        clientRole: { $in: ["client_admin", "client_agent"] },
+        clientRole: { $in: ["client_master_admin", "client_admin", "client_agent"] },
     };
     const [totalMembers, activeMembers] = isAdmin
         ? await Promise.all([

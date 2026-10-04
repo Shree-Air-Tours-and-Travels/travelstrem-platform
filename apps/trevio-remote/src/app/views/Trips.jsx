@@ -8,6 +8,7 @@ import {
   Icon,
   InputField,
   NoDataFound,
+  Note,
   Pagination,
   Preloader,
   QuickChips,
@@ -57,6 +58,7 @@ function TripFilterPanel({
   onApply,
   onReset,
   onClose,
+  showActions = true,
 }) {
   return (
     <div className="trevio-trip-filters-panel">
@@ -90,7 +92,7 @@ function TripFilterPanel({
           size="sm"
         />
       </div>
-      <div className="trevio-trip-filters-panel__actions">
+      {showActions ? <div className="trevio-trip-filters-panel__actions">
         <Button variant="text" color="primary" onClick={onReset}>
           {labels.tripDirectoryFilterReset}
         </Button>
@@ -100,7 +102,7 @@ function TripFilterPanel({
         <Button variant="solid" color="primary" onClick={onApply}>
           {labels.tripDirectoryFilterApply}
         </Button>
-      </div>
+      </div> : null}
     </div>
   );
 }
@@ -147,6 +149,7 @@ export default function Trips({ pageModel }) {
     tripDirectorySearchChip: "Search",
     ...(pageModel?.labels || {}),
   };
+  const filterOverlay = pageModel?.overlayConfig?.tripFilters || {};
   const tripList = pageModel?.tripList || {};
   const [trips, setTrips] = useState([]);
   const [pagination, setPagination] = useState(pageDefaults);
@@ -375,10 +378,6 @@ export default function Trips({ pageModel }) {
       navigate(`/trips/${tripId(trip)}`, {
         state: {
           from: { label: labels.tripDirectoryHeading || "Trips", path: "/trips" },
-          trail: [
-            { label: labels.homeBreadcrumb || "Trevio", path: "/trevio" },
-            { label: labels.tripDirectoryHeading || "Trips", path: "/trips" },
-          ],
           tour: trip,
         },
       });
@@ -388,19 +387,9 @@ export default function Trips({ pageModel }) {
 
   return (
     <main className="trevio-trips-page">
-      <div className="trevio-trips-page__breadcrumbs-shell">
-        <div className="trevio-container">
-          <Breadcrumbs
-            items={[
-              { label: labels.homeBreadcrumb || "Trevio", path: "/trevio" },
-              { label: labels.tripDirectoryHeading || "Trips" },
-            ]}
-            className="trevio-trips-page__breadcrumbs"
-          />
-        </div>
-      </div>
-
       <div className="trevio-container">
+        <Breadcrumbs items={pageModel?.breadcrumbs || []} />
+        <Note variant="warning" dismissible>{labels.demoInventoryNote}</Note>
         <section className="trevio-trips-page__hero">
           <div>
             <span className="trevio-eyebrow">{labels.tripDirectoryEyebrow}</span>
@@ -527,8 +516,13 @@ export default function Trips({ pageModel }) {
       <BottomSheet
         open={filtersSheetOpen}
         onClose={() => setFiltersSheetOpen(false)}
-        title={labels.tripDirectoryFiltersTitle}
+        title={labels[filterOverlay.titleRef] || labels.tripDirectoryFiltersTitle}
+        closeLabel={labels[filterOverlay.closeLabelRef] || labels.tripDirectoryFilterClose}
         className="trevio-trips-page__filters-sheet"
+        actions={<div className="trevio-trip-filters-panel__actions">
+          <Button variant="solid" color="primary" onClick={applyFilters}>{labels[filterOverlay.applyLabelRef] || labels.tripDirectoryFilterApply}</Button>
+          <Button variant="outline" color="primary" onClick={resetFilters}>{labels[filterOverlay.resetLabelRef] || labels.tripDirectoryFilterReset}</Button>
+        </div>}
       >
         <TripFilterPanel
           labels={labels}
@@ -538,6 +532,7 @@ export default function Trips({ pageModel }) {
           onApply={applyFilters}
           onReset={resetFilters}
           onClose={() => setFiltersSheetOpen(false)}
+          showActions={false}
         />
       </BottomSheet>
     </main>

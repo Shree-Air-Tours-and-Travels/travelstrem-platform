@@ -1,3 +1,4 @@
+import { partnerAccessPlugin } from "../../clients/partnerAccessPlugin.js";
 import mongoose from "mongoose";
 
 const productAccessRequestSchema = new mongoose.Schema(
@@ -29,5 +30,6 @@ const productAccessRequestSchema = new mongoose.Schema(
 
 productAccessRequestSchema.index({ agencyId: 1, status: 1, createdAt: -1 });
 
+productAccessRequestSchema.plugin(partnerAccessPlugin);
 export default mongoose.models.ProductAccessRequest ||
     mongoose.model("ProductAccessRequest", productAccessRequestSchema);

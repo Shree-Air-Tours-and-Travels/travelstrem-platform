@@ -43,7 +43,7 @@
       gap: $space-2;
       padding: $space-2 $space-4;
       background: var(--surface-muted);
-      border: 1px solid rgba(15, 143, 134, 0.15);
+      border: 1px solid color-mix(in srgb, var(--color-primary) 15%, transparent);
       border-radius: $radius-full;
       font-size: $font-size-xs;
       color: var(--text-muted);

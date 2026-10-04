@@ -17,6 +17,7 @@ const userSchema = new mongoose.Schema(
         phone: { type: String, trim: true, default: "" },
         mobile: { type: String, trim: true, default: undefined, unique: true, sparse: true },
         emailVerified: { type: Boolean, default: false },
+        enquiryPreferences: { type: mongoose.Schema.Types.Mixed, default: {} },
         mobileVerified: { type: Boolean, default: false },
         passwordHash: { type: String, default: null, select: false },
         role: {
@@ -39,12 +40,12 @@ const userSchema = new mongoose.Schema(
         clientId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Client",
-            default: null,
+            default: () => process.env.TENANT_CLIENT_ID || null,
             index: true,
         },
         clientRole: {
             type: String,
-            enum: ["none", "client_admin", "client_agent"],
+            enum: ["none", "client_master_admin", "client_admin", "client_agent"],
             default: "none",
         },
         designation: { type: String, trim: true, default: "" },

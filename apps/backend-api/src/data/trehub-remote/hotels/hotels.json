@@ -173,11 +173,11 @@
         "cancel": "Keep browsing",
         "confirm": "Create enquiry",
         "modalTitle": "Review your stay",
-        "modalDescription": "This creates an enquiry and opens My Bookings, where you can add guest details and review your stay. Payment is not available yet.",
+        "modalDescription": "This creates an enquiry and opens Dashboard, where you can add guest details and review your stay. Payment is not available yet.",
         "mock": "Demo hotel inventory — no live reservation will be made.",
         "eyebrow": "Hotels & stays",
         "description": "Find your place to unwind. Compare rooms, inclusions and the full cost of your stay.",
-        "breadcrumbTrehub": "Trehub",
+        "breadcrumbTrehub": "Home",
         "breadcrumbHotels": "Hotels",
         "breadcrumbDetails": "Hotel details",
         "priceIncludesFees": "Includes applicable taxes and service charges",
@@ -344,11 +344,23 @@
         {
           "type": "HotelSearch",
           "props": {
-            "variant": "hotel"
+            "variant": "hotel",
+            "overlayConfig": {
+              "titleRef": "editSearch",
+              "closeLabelRef": "close"
+            }
           }
         },
         {
-          "type": "HotelFilters"
+          "type": "HotelFilters",
+          "props": {
+            "overlayConfig": {
+              "titleRef": "filters",
+              "closeLabelRef": "close",
+              "applyLabelRef": "apply",
+              "resetLabelRef": "reset"
+            }
+          }
         },
         {
           "type": "HotelResults",

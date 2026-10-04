@@ -264,7 +264,9 @@ export async function attachRealtime(httpServer) {
             subClient = createAdapterRedisClient("subscriber");
             await Promise.all([pubClient.connect(), subClient.connect()]);
             await Promise.all([pubClient.ping(), subClient.ping()]);
-            io.adapter(createAdapter(pubClient, subClient));
+            io.adapter(createAdapter(pubClient, subClient, {
+                key: `travelstrem:${config.NODE_ENV}:${process.env.TENANT_CLIENT_ID || "platform"}:socket.io`,
+            }));
             logger.info("[Realtime] Redis adapter enabled (multi-instance ready)");
         } catch (err) {
             logger.error(

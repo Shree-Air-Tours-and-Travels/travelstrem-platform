@@ -34,7 +34,6 @@
   width: 100%;
   height: auto;
   min-height: 100%;
-  margin-bottom: $space-6;
   container-name: trevio-shell;
   container-type: inline-size;
 
@@ -55,28 +54,6 @@
       margin-inline: auto;
     }
   }
-}
-
-.trevio-page__breadcrumbs {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  width: 100%;
-  min-height: $space-14;
-  display: flex;
-  align-items: center;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface-glass-strong, var(--surface));
-  box-shadow: var(--shadow-xs);
-  backdrop-filter: blur(14px);
-}
-
-.trevio-page__breadcrumbs .trevio-container,
-.trevio-trips-page__breadcrumbs-shell .trevio-container {
-  width: 100%;
-  max-width: none;
-  margin-inline: 0;
-  padding-inline: clamp($space-4, 3vw, $space-8);
 }
 
 @container trevio-shell (max-width: 1100px) {
@@ -468,7 +445,6 @@
   justify-content: space-between;
   align-items: end;
   gap: $space-5;
-  margin-bottom: $space-6;
 }
 
 .trevio-section-head h2 {

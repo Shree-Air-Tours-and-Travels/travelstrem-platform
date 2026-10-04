@@ -1,20 +1,6 @@
 @import "../../styles/base/typography";
 
 .trem-app-header {
-  --text: #{$dark-text};
-  --title: #{$dark-text};
-  --heading: #{$dark-text};
-  --muted: #{$dark-text-muted};
-  --card-bg: #{$dark-bg};
-  --surface: #{$dark-surface};
-  --surface-inset: #{$dark-surface-muted};
-  --surface-glass-strong: #{$dark-surface};
-  --border: #{$dark-border};
-  --primary-soft: #{$dark-primary-soft};
-  --primary-softer: #{$dark-primary-softer};
-  --color-primary: #{$dark-primary};
-  --color-primary-dark: #{$dark-primary-dark};
-  --color-on-primary: #{$dark-bg};
   position: fixed;
   top: 0;
   left: var(--trem-app-header-sidebar-offset, 260px);
@@ -28,25 +14,10 @@
   gap: $space-4;
   padding: $space-2 $space-5;
   border-bottom: 1px solid var(--border);
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent 42%),
-    #{$dark-surface};
-  box-shadow: 0 14px 34px rgba(3, 10, 26, 0.22);
+  background: var(--surface-glass-strong);
+  box-shadow: var(--shadow-md);
   isolation: isolate;
   transition: left $duration-slow $ease-standard;
-}
-
-.trem-app-header .brand-logo__image--light {
-  display: none;
-}
-
-.trem-app-header .brand-logo__image--dark {
-  display: block;
-}
-
-.trem-app-header .brand-logo__mark {
-  border-color: rgba(170, 204, 255, 0.2);
-  background: rgba(255, 255, 255, 0.1);
 }
 
 .trem-app-header__spacer {
@@ -258,13 +229,13 @@
 
     &:hover,
     &:focus-visible {
-      background: rgba(138, 165, 255, 0.14);
-      color: var(--color-on-primary);
+      background: var(--primary-surface);
+      color: var(--color-primary);
       opacity: 1;
     }
 
     &.is-active {
-      background: rgba(138, 165, 255, 0.16);
+      background: var(--primary-soft);
       color: var(--color-primary);
       opacity: 1;
     }
@@ -302,12 +273,12 @@
   gap: $space-2;
   padding: 0 $space-4;
   border-radius: $radius-sm;
-  background: #8fa8ff;
+  background: var(--color-primary);
   color: var(--color-on-primary);
   font-size: $font-size-sm;
   font-weight: $font-semibold;
   white-space: nowrap;
-  box-shadow: 0 10px 24px rgba(30, 70, 190, 0.18);
+  box-shadow: 0 10px 24px var(--primary-shadow);
 
   &:disabled {
     opacity: 0.48;
@@ -1134,4 +1105,53 @@
   .trem-app-header.has-header-actions.trem-app-header--mobile-profile-hidden {
     grid-template-columns: minmax(0, 1fr) var(--trem-mobile-header-action-size) max-content var(--trem-mobile-header-action-size);
   }
+}
+
+.trem-app-header.trem-app-header--withBackAction {
+  left: 0;
+  height: $space-16;
+  display: flex;
+  justify-content: space-between;
+  gap: $space-3;
+  padding: $space-2 $space-4;
+
+  .trem-app-header__back {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-2;
+    min-width: 0;
+    min-height: $space-11;
+    padding: $space-2;
+    border: 0;
+    border-radius: $radius-sm;
+    background: transparent;
+    color: var(--heading);
+    font: inherit;
+    font-weight: $font-semibold;
+    text-decoration: none;
+    cursor: pointer;
+
+    svg { flex-shrink: 0; }
+    span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    &:hover { background: var(--primary-soft); }
+    &:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+  }
+
+  .trem-app-header__actions,
+  .trem-app-header__action-slots {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: $space-2;
+  }
+
+  .trem-app-header__action {
+    width: $space-11;
+    height: $space-11;
+  }
+}
+
+.trem-app-header__spacer.trem-app-header__spacer--withBackAction {
+  height: $space-16;
+  flex-basis: $space-16;
 }

@@ -42,29 +42,32 @@ const toActivity = ({ id, title, description, type, status, occurredAt, target }
     target,
 });
 
-export const buildRecentActivity = async () => {
+export const buildRecentActivity = async (client) => {
+    const enabled = (product) => !client || client.productAccess.includes(product);
+    const partners = !client || client.partnerEnabled;
+    const support = !client || client.accountModules.includes("support");
     const [tours, trips, agencies, enquiries, supportTickets] = await Promise.all([
-        Tour.find({}).select("title status updatedAt").sort({ updatedAt: -1 }).limit(RECENT_LIMIT).lean(),
-        Trip.find({})
+        (enabled("trevista") ? Tour.find({}).select("title status updatedAt").sort({ updatedAt: -1 }).limit(RECENT_LIMIT).lean() : []),
+        enabled("trevio") ? Trip.find({})
             .select("title status updatedAt")
             .sort({ updatedAt: -1 })
             .limit(RECENT_LIMIT)
-            .lean(),
-        PartnerAgency.find({})
+            .lean() : [],
+        partners ? PartnerAgency.find({})
             .select("agencyName status updatedAt")
             .sort({ updatedAt: -1 })
             .limit(RECENT_LIMIT)
-            .lean(),
-        ContactLead.find({})
+            .lean() : [],
+        ContactLead.find(client ? { product: { $in: client.productAccess } } : {})
             .select("enquiryRef tourTitle product status updatedAt")
             .sort({ updatedAt: -1 })
             .limit(RECENT_LIMIT)
             .lean(),
-        SupportTicket.find({})
+        support ? SupportTicket.find({})
             .select("reference subject status updatedAt")
             .sort({ updatedAt: -1 })
             .limit(RECENT_LIMIT)
-            .lean(),
+            .lean() : [],
     ]);
 
     return [
@@ -105,7 +108,7 @@ export const buildRecentActivity = async () => {
             toActivity({
                 id: item._id,
                 title: item.tourTitle || item.enquiryRef || "Travel enquiry",
-                description: `${item.product === "trevio" ? "Trevio" : "Trevista"} enquiry status changed.`,
+                description: "Travel enquiry status changed.",
                 type: "enquiry",
                 status: item.status,
                 occurredAt: item.updatedAt,
@@ -132,7 +135,16 @@ export const buildRecentActivity = async () => {
         .slice(0, RECENT_LIMIT);
 };
 
-export const buildAdminDashboardSnapshot = async () => {
+export const buildAdminDashboardSnapshot = async (client) => {
+    const enabled = (product) => !client || client.productAccess.includes(product);
+    const partners = !client || client.partnerEnabled;
+    const support = !client || client.accountModules.includes("support");
+    const scopedCount = (Model, query = {}) => {
+        if ((Model === Tour && !enabled("trevista")) || (Model === Trip && !enabled("trevio")) ||
+            (Model === PartnerAgency && !partners) || (Model === User && query.agencyRole && !partners) ||
+            (Model === SupportTicket && !support)) return 0;
+        return count(Model, { ...query, ...(client && Model === ContactLead ? { product: { $in: client.productAccess } } : {}) });
+    };
     try {
         const [
             totalTours,
@@ -157,37 +169,37 @@ export const buildAdminDashboardSnapshot = async () => {
             recentActivity,
             tourAnalytics,
         ] = await Promise.all([
-            count(Tour),
-            count(Tour, { status: "published" }),
-            count(Tour, { status: "draft" }),
-            count(Tour, { status: "pending_approval" }),
-            count(Trip),
-            count(Trip, { status: "listed", isListed: true }),
-            count(Trip, { status: "draft" }),
-            count(Trip, { status: "pending_approval" }),
-            count(ContactLead),
-            count(ContactLead, { status: "new" }),
-            count(ContactLead, { status: "in_review" }),
-            count(SupportTicket, { status: { $nin: ["RESOLVED", "CLOSED"] } }),
-            count(SupportTicket, { status: "AWAITING_SUPPORT" }),
-            count(PartnerAgency, { status: "pending" }),
-            count(PartnerAgency, { status: { $in: ["active", "approved"] } }),
-            count(User, {
+            scopedCount(Tour),
+            scopedCount(Tour, { status: "published" }),
+            scopedCount(Tour, { status: "draft" }),
+            scopedCount(Tour, { status: "pending_approval" }),
+            scopedCount(Trip),
+            scopedCount(Trip, { status: "listed", isListed: true }),
+            scopedCount(Trip, { status: "draft" }),
+            scopedCount(Trip, { status: "pending_approval" }),
+            scopedCount(ContactLead),
+            scopedCount(ContactLead, { status: "new" }),
+            scopedCount(ContactLead, { status: "in_review" }),
+            scopedCount(SupportTicket, { status: { $nin: ["RESOLVED", "CLOSED"] } }),
+            scopedCount(SupportTicket, { status: "AWAITING_SUPPORT" }),
+            scopedCount(PartnerAgency, { status: "pending" }),
+            scopedCount(PartnerAgency, { status: { $in: ["active", "approved"] } }),
+            scopedCount(User, {
                 agencyRole: { $in: ["partner_admin", "partner_agent"] },
                 agentApprovalStatus: "pending",
             }),
-            count(User, {
+            scopedCount(User, {
                 agencyRole: { $in: ["partner_admin", "partner_agent"] },
                 accountStatus: "active",
                 agentApprovalStatus: "approved",
             }),
-            count(User, { role: "member", accountStatus: "active" }),
-            Product.find({ status: "active", hidden: { $ne: true } })
+            scopedCount(User, { role: "member", accountStatus: "active" }),
+            Product.find(client ? { key: { $in: client.productAccess } } : { status: "active", hidden: { $ne: true } })
                 .select("key name")
                 .sort({ name: 1 })
                 .lean(),
-            buildRecentActivity(),
-            buildTourAnalyticsSnapshot({ scope: "platform", sections: ["summary", "timeline", "topTours"] }),
+            buildRecentActivity(client),
+            enabled("trevista") ? buildTourAnalyticsSnapshot({ scope: "platform", sections: ["summary", "timeline", "topTours"] }) : null,
         ]);
 
         const enabledProductKeys = new Set(enabledProducts.map((product) => product.key));
@@ -268,7 +280,7 @@ export const buildAdminDashboardSnapshot = async () => {
                     icon: "usersRound",
                     target: "tenancy",
                 },
-            ].filter(
+            ].filter((item) => (support || item.target !== "support") && (partners || item.target !== "tenancy")).filter(
                 (item) =>
                     item.id !== "tourApprovals" || enabledProductKeys.has("trevista"),
             ).filter(

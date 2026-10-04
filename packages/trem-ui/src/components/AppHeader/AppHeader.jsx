@@ -1,3 +1,4 @@
+import { useThemeMode } from "@packages/trem-utils";
 import React from "react";
 import PropTypes from "prop-types";
 import BrandLogo from "../BrandLogo/BrandLogo.jsx";
@@ -69,6 +70,7 @@ export default function AppHeader({
   userMenuOpen,
   onUserMenuOpenChange,
 }) {
+  const { canToggleTheme } = useThemeMode();
   const brand = config.brand || {};
   const search = config.search || {};
   const primaryAction = config.primaryAction || {};
@@ -121,7 +123,7 @@ export default function AppHeader({
         else if (item.target) onAction?.("navigate", item);
       },
     }));
-  if (themeAction.placement === "profile") {
+  if (canToggleTheme && themeAction.enabled !== false && themeAction.placement === "profile") {
     userItems.unshift({
       id: "theme",
       label: themeLabel,
@@ -162,33 +164,98 @@ export default function AppHeader({
     </button>
   );
 
+  const actionSlots = (
+    <div className="trem-app-header__action-slots">
+      {headerActions.map((item) => (
+        <button
+          key={item.id || item.label}
+          type="button"
+          className={`trem-app-header__icon-button trem-app-header__action${item.mobileOnly ? " trem-app-header__action--mobile-only" : ""}${item.desktopOnly ? " trem-app-header__action--desktop-only" : ""}${item.variant === "labelled" ? " trem-app-header__action--labelled" : ""}${item.active ? " is-active" : ""}`.trim()}
+          aria-label={item.ariaLabel || item.label}
+          title={item.label}
+          disabled={item.disabled}
+          onClick={() => {
+            if (item.action) onAction?.(item.action, item);
+            else if (item.target) onAction?.("navigate", item);
+          }}
+        >
+          <Icon name={item.icon || "circle"} size={item.iconSize || 21} />
+          {item.variant === "labelled" ? (
+            <span className="trem-app-header__action-label">{item.label}</span>
+          ) : null}
+          {item.count ? (
+            <span className="trem-app-header__action-count">
+              {item.count > 9 ? "9+" : item.count}
+            </span>
+          ) : null}
+        </button>
+      ))}
+    </div>
+  );
+
+  if (config.variant === "withBackAction") {
+    const backAction = config.backAction || {};
+    const backContent = (
+      <>
+        <Icon name="arrowLeft" size={20} />
+        <span>{backAction.label || "Back"}</span>
+      </>
+    );
+    return (
+      <>
+        <header
+          className="trem-app-header trem-app-header--withBackAction"
+          aria-label={config.ariaLabel || "Application header"}
+        >
+          {backAction.href ? (
+            <a className="trem-app-header__back" href={backAction.href}>
+              {backContent}
+            </a>
+          ) : (
+            <button
+              type="button"
+              className="trem-app-header__back"
+              onClick={() => onAction?.(backAction.action || "back", backAction)}
+            >
+              {backContent}
+            </button>
+          )}
+          <div className="trem-app-header__actions">{actionSlots}</div>
+        </header>
+        <div
+          className="trem-app-header__spacer trem-app-header__spacer--withBackAction"
+          aria-hidden="true"
+        />
+      </>
+    );
+  }
+
   return (
     <>
       <header
         className={`trem-app-header${config.variant ? ` trem-app-header--${config.variant}` : ""}${usesTopDropdown ? " trem-app-header--top-dropdown-shell" : ""}${tabItems.length ? " has-navigation-tabs" : ""}${search.hide ? " is-search-hidden" : ""}${headerActions.length ? " has-header-actions" : ""}${headerActions.some((item) => item.mobileOnly) ? " has-mobile-actions" : ""}${mobileHeaderClasses ? ` ${mobileHeaderClasses}` : ""}`}
         aria-label={config.ariaLabel || "Application header"}
         style={{
-          "--trem-app-header-sidebar-offset": usesTopDropdown
-            ? "0"
-            : sidebarCollapsed
-              ? "76px"
-              : "260px",
+          "--trem-app-header-sidebar-offset":
+            usesTopDropdown || config.fullWidth ? "0" : sidebarCollapsed ? "76px" : "260px",
         }}
       >
         <div className="trem-app-header__mobile-row">
           <div className="trem-app-header__brand">
             <BrandLogo
               logoSrc={brand.logoSrc}
-              darkLogoSrc={brand.darkLogoSrc}
-              name={brand.name || "TravelsTREM"}
-              subtitle={brand.subtitle}
+              logoDarkSrc={brand?.logoDarkSrc}
+              fallbackSrc={config.tenantId ? "" : undefined}
+              name={brand.name || "Logo"}
               size="small"
               onClick={onLogoClick}
             />
           </div>
         </div>
 
-        {!search.hide ? <GlobalSearch config={search} onSearch={onSearch} onSelect={onSearchSelect} /> : null}
+        {!search.hide ? (
+          <GlobalSearch config={search} onSearch={onSearch} onSelect={onSearchSelect} />
+        ) : null}
 
         <LinkTabs
           className="trem-app-header__link-tabs"
@@ -271,26 +338,7 @@ export default function AppHeader({
             </button>
           ) : null}
 
-          <div className="trem-app-header__action-slots">
-          {headerActions.map((item) => (
-            <button
-              key={item.id || item.label}
-              type="button"
-              className={`trem-app-header__icon-button trem-app-header__action${item.mobileOnly ? " trem-app-header__action--mobile-only" : ""}${item.desktopOnly ? " trem-app-header__action--desktop-only" : ""}${item.variant === "labelled" ? " trem-app-header__action--labelled" : ""}${item.active ? " is-active" : ""}`.trim()}
-              aria-label={item.ariaLabel || item.label}
-              title={item.label}
-              disabled={item.disabled}
-              onClick={() => {
-                if (item.action) onAction?.(item.action, item);
-                else if (item.target) onAction?.("navigate", item);
-              }}
-            >
-              <Icon name={item.icon || "circle"} size={item.iconSize || 21} />
-              {item.variant === "labelled" ? <span className="trem-app-header__action-label">{item.label}</span> : null}
-              {item.count ? <span className="trem-app-header__action-count">{item.count > 9 ? "9+" : item.count}</span> : null}
-            </button>
-          ))}
-          </div>
+          {actionSlots}
 
           {!notification.hide && notification.items ? (
             <Dropdown
@@ -302,30 +350,73 @@ export default function AppHeader({
               menuTitle={notification.menuTitle || "Notifications"}
               portalWidth={360}
               portalClassName="trem-app-header__notification-menu"
-              emptyState={notification.emptyState || {
-                icon: "bell",
-                title: notification.emptyTitle || "No notifications",
-                description: notification.emptyDescription || "You are all caught up.",
-              }}
+              emptyState={
+                notification.emptyState || {
+                  icon: "bell",
+                  title: notification.emptyTitle || "No notifications",
+                  description: notification.emptyDescription || "You are all caught up.",
+                }
+              }
               renderItem={(item, _index, controls = {}) => {
                 const recordMeta = getNotificationRecordMeta(item);
                 return (
-                  <button type="button" className={`trem-app-header__notification-item${item.readAt ? "" : " is-unread"}`} onClick={() => { controls.close?.(); notification.onItemClick?.(item); }}>
+                  <button
+                    type="button"
+                    className={`trem-app-header__notification-item${item.readAt ? "" : " is-unread"}`}
+                    onClick={() => {
+                      controls.close?.();
+                      notification.onItemClick?.(item);
+                    }}
+                  >
                     <span className="trem-app-header__notification-copy">
-                      {recordMeta ? <span className="trem-app-header__notification-ref">{recordMeta.label} · {recordMeta.value}</span> : null}
+                      {recordMeta ? (
+                        <span className="trem-app-header__notification-ref">
+                          {recordMeta.label} · {recordMeta.value}
+                        </span>
+                      ) : null}
                       <strong>{item.title || "Notification"}</strong>
                       {item.message ? <span>{item.message}</span> : null}
                     </span>
                     {item.createdAt ? (
                       <time dateTime={item.createdAt}>
-                        {notification.formatTime?.(item.createdAt) || new Date(item.createdAt).toLocaleString()}
+                        {notification.formatTime?.(item.createdAt) ||
+                          new Date(item.createdAt).toLocaleString()}
                       </time>
                     ) : null}
                   </button>
                 );
               }}
-              menuFooter={({ close }) => <div className="trem-app-header__notification-footer"><button type="button" onClick={() => notification.onMarkAllRead?.()?.catch?.(() => null)}>Mark all read</button><button type="button" onClick={() => { close(); notification.onViewAll?.(); }}>View all</button></div>}
-              trigger={() => <button type="button" className="trem-app-header__icon-button trem-app-header__notification" aria-label={notification.label || "Notifications"}><Icon name={notification.icon || "bell"} size={21} />{notification.count ? <span>{notification.count > 9 ? "9+" : notification.count}</span> : null}</button>}
+              menuFooter={({ close }) => (
+                <div className="trem-app-header__notification-footer">
+                  <button
+                    type="button"
+                    onClick={() => notification.onMarkAllRead?.()?.catch?.(() => null)}
+                  >
+                    Mark all read
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      close();
+                      notification.onViewAll?.();
+                    }}
+                  >
+                    View all
+                  </button>
+                </div>
+              )}
+              trigger={() => (
+                <button
+                  type="button"
+                  className="trem-app-header__icon-button trem-app-header__notification"
+                  aria-label={notification.label || "Notifications"}
+                >
+                  <Icon name={notification.icon || "bell"} size={21} />
+                  {notification.count ? (
+                    <span>{notification.count > 9 ? "9+" : notification.count}</span>
+                  ) : null}
+                </button>
+              )}
             />
           ) : !notification.hide ? (
             <button
@@ -342,7 +433,7 @@ export default function AppHeader({
             </button>
           ) : null}
 
-          {themeAction.placement !== "profile" ? (
+          {canToggleTheme && themeAction.enabled !== false && themeAction.placement !== "profile" ? (
             <button
               type="button"
               className="trem-app-header__icon-button trem-app-header__theme"

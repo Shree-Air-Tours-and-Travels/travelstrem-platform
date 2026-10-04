@@ -1,5 +1,6 @@
 import React from "react";
 import BookingTable from "../BookingTable/BookingTable.jsx";
+import Note from "../Note/Note.jsx";
 import ErrorState from "../ErrorState/ErrorState.jsx";
 import StatusBadge from "../StatusBadge/StatusBadge.jsx";
 import "./EnquiryCenter.styles.scss";
@@ -21,6 +22,7 @@ export default function EnquiryCenter({
   bookings = [],
   selectedId = "",
   loading = false,
+  detailLoading = false,
   error = "",
   onSelect = () => {},
   onRetry = () => {},
@@ -80,7 +82,7 @@ export default function EnquiryCenter({
   if (error && !records.length)
     return <ErrorState title={states.loadErrorTitle} description={error} retry={onRetry} />;
 
-  if (selected) {
+  if (selected && !detailLoading) {
     const detailOverride = renderDetailOverride?.(selected);
     if (detailOverride) return detailOverride;
     const detailPanelsVisible =
@@ -145,9 +147,7 @@ export default function EnquiryCenter({
         </header>
 
         {selected.guidance ? (
-          <div className="trem-enquiries__guidance" role="status">
-            {selected.guidance}
-          </div>
+          <Note key={`${selected.id}:${selected.guidance}`} dismissible>{selected.guidance}</Note>
         ) : null}
 
         {renderDetailContent?.(selected)}
@@ -222,7 +222,7 @@ export default function EnquiryCenter({
         table={{
           title: tableCopy.title,
           description: tableCopy.description,
-          loading,
+          loading: loading || detailLoading,
           error,
           viewportMinHeight: "28rem",
           contentMinWidth: "68rem",

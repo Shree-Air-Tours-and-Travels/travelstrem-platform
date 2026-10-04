@@ -7,9 +7,10 @@ export const bookingView = (
     booking,
     sourceEnquiry,
     perspective,
-    { quote = null, includeBookingJourney = false, summaryOnly = false } = {},
+    { quote = null, includeBookingJourney = false, summaryOnly = false, brand = {} } = {},
 ) => {
     const source = enquiryView(sourceEnquiry, perspective, {
+        brand,
         quote,
         includeBookingJourney,
         summaryOnly,
@@ -28,6 +29,7 @@ export const bookingView = (
         reference: bookingRef,
         recordType: "booking",
         recordTypeLabel: "Booking",
+        journeyType: booking?.journeyType || source.journeyType,
         directionLabel: perspective === "sent" ? "Your booking" : "Customer booking",
         sourceEnquiryId: sourceEnquiry?.enquiryRef || "",
         sourceEnquiryRef: sourceEnquiry?.enquiryRef || "",

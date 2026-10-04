@@ -1,36 +1,23 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useState } from "react";
+import { useTheme } from "../../context/ThemeContext";
 import "./BrandLogo.styles.scss";
-
-const DEFAULT_LIGHT_LOGO = "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519387/travelstrem/site-assets/270b607401bdfbd2ec822ea0.png";
-const DEFAULT_DARK_LOGO = "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519386/travelstrem/site-assets/e38709b8a4ada750aed0f6df.png";
 
 export default function BrandLogo({
   logoSrc = "",
-  darkLogoSrc = "",
+  logoDarkSrc = "",
+  fallbackSrc,
   name,
-  subtitle,
   size = "default",
   className = "",
   onClick,
 }) {
-  const [lightFailed, setLightFailed] = useState(false);
-  const [darkFailed, setDarkFailed] = useState(false);
-
-  const sources = useMemo(() => {
-    const usesSharedLogo = !logoSrc || logoSrc === DEFAULT_LIGHT_LOGO;
-
-    const light = !lightFailed ? logoSrc || DEFAULT_LIGHT_LOGO : DEFAULT_LIGHT_LOGO;
-
-    const preferredDark = darkLogoSrc || (usesSharedLogo ? DEFAULT_DARK_LOGO : light);
-
-    const dark = !darkFailed ? preferredDark : light;
-
-    return {
-      light,
-      dark,
-      usesSameImage: light === dark,
-    };
-  }, [logoSrc, darkLogoSrc, lightFailed, darkFailed]);
+  const [failedSource, setFailedSource] = useState(null);
+  const { theme, brand } = useTheme();
+  const lightSource = logoSrc || (fallbackSrc === undefined ? brand?.logoSrc : fallbackSrc) || "";
+  const darkSource = logoDarkSrc || (lightSource === brand?.logoSrc ? brand?.logoDarkSrc : "");
+  const preferredSource = theme === "dark" && darkSource ? darkSource : lightSource;
+  const source = preferredSource !== failedSource ? preferredSource : (lightSource !== failedSource ? lightSource : fallbackSrc || "");
+  const [loadedSource, setLoadedSource] = useState(null);
 
   const handleKeyDown = useCallback(
     (event) => {
@@ -62,46 +49,27 @@ export default function BrandLogo({
       onKeyDown={onClick ? handleKeyDown : undefined}
       aria-label={onClick && name ? name : undefined}
     >
-      <span className="brand-logo__mark">
-        <img
-          className="brand-logo__image brand-logo__image--light"
-          src={sources.light}
-          alt={name || ""}
-          draggable={false}
-          decoding="async"
-          onError={() => {
-            if (sources.light !== DEFAULT_LIGHT_LOGO) {
-              setLightFailed(true);
-            }
-          }}
-        />
-
-        {!sources.usesSameImage ? (
+      <span className={`brand-logo__mark${source ? "" : " is-loading"}`}>
+        {source && loadedSource !== source ? (
+          <span className="brand-logo__placeholder" aria-hidden="true" />
+        ) : null}
+        {source ? (
           <img
-            className="brand-logo__image brand-logo__image--dark"
-            src={sources.dark}
-            alt=""
-            aria-hidden="true"
+            className="brand-logo__image"
+            src={source}
+            alt={name || "Logo"}
             draggable={false}
             decoding="async"
-            onError={() => setDarkFailed(true)}
+            style={{ visibility: loadedSource === source ? "visible" : "hidden" }}
+            onLoad={() => setLoadedSource(source)}
+            onError={() => {
+              if (source !== fallbackSrc) setFailedSource(source);
+            }}
           />
-        ) : null}
+        ) : (
+          <span className="brand-logo__placeholder" aria-label="Loading logo" />
+        )}
       </span>
-
-      {name ? (
-        <span className="brand-logo__text">
-          <span className="brand-logo__name" title={name}>
-            {name}
-          </span>
-
-          {subtitle ? (
-            <span className="brand-logo__subtitle" title={subtitle}>
-              {subtitle}
-            </span>
-          ) : null}
-        </span>
-      ) : null}
     </div>
   );
 }

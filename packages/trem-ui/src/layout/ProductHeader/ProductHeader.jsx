@@ -1,8 +1,10 @@
+import { useThemeMode } from "@packages/trem-utils";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import Icon from "../../icons/Icon/Icon.jsx";
 import Dropdown from "../../components/Dropdown/Dropdown.jsx";
 import BrandLogo from "../../components/BrandLogo/BrandLogo.jsx";
+import LinkTabs from "../../components/LinkTabs/LinkTabs.jsx";
 import { resolveAccountAvatar } from "../../components/AccountProfile/accountAvatar.constants.js";
 import "./ProductHeader.styles.scss";
 
@@ -266,7 +268,9 @@ function MobileDrawer({ open, onClose, brand, nav, actions, userLabel }) {
                     ) : (
                       <a
                         href={item.href || "#"}
-                        className={`trem-product-header__drawer-link${item.active ? " is-active" : ""}`}
+                        className={`trem-product-header__drawer-link${item.active ? " is-active" : ""}${item.disabled ? " is-disabled" : ""}`}
+                        aria-disabled={item.disabled || undefined}
+                        tabIndex={item.disabled ? -1 : undefined}
                         onClick={(e) => {
                           e.preventDefault();
                           handleItemClick(item);
@@ -373,11 +377,19 @@ export default function ProductHeader({
   authAction,
   theme,
   onToggleTheme,
+  linkTabs,
   className,
 }) {
+  const { canToggleTheme } = useThemeMode();
+  if (profile?.items && !canToggleTheme)
+    profile = {
+      ...profile,
+      items: profile.items.filter((item) => !["theme", "theme-toggle"].includes(item.id)),
+    };
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const nav = asArray(navItems)
+  const linkedOptions = asArray(linkTabs?.options);
+  const nav = asArray(linkedOptions.length ? linkedOptions : navItems)
     .filter(Boolean)
     .map((item) => ({
       ...item,
@@ -385,7 +397,7 @@ export default function ProductHeader({
     }));
 
   const themeToggle =
-    typeof onToggleTheme === "function"
+    canToggleTheme && typeof onToggleTheme === "function"
       ? {
           id: "theme-toggle",
           label: theme === "dark" ? "Light mode" : "Dark mode",
@@ -451,18 +463,23 @@ export default function ProductHeader({
           ariaLabel={`${brand?.label || "Product"} home`}
         >
           <BrandLogo
-            logoSrc={brand?.logoSrc || ""}
-            darkLogoSrc={brand?.darkLogoSrc || ""}
-            name=""
+            logoSrc={brand?.logoSrc}
+              logoDarkSrc={brand?.logoDarkSrc}
+            fallbackSrc={brand?.fallbackSrc}
+            name={brand?.label || "Product"}
             className="trem-product-header__brand-logo"
+            size="small"
           />
-          <span className="trem-product-header__brand-copy">
-            <strong>{brand?.label || "Product"}</strong>
-            {brand?.subtitle ? <small>{brand.subtitle}</small> : null}
-          </span>
         </HeaderButton>
 
-        {nav.length ? (
+        {linkedOptions.length ? (
+          <LinkTabs
+            className="trem-product-header__link-tabs"
+            ariaLabel={linkTabs.ariaLabel || brand?.navLabel || "Product navigation"}
+            options={nav}
+            onSelect={linkTabs.onSelect}
+          />
+        ) : nav.length ? (
           <nav
             className="trem-product-header__nav"
             aria-label={brand?.navLabel || "Product navigation"}
@@ -543,7 +560,6 @@ ProductHeader.propTypes = {
     href: PropTypes.string,
     label: PropTypes.string,
     logoAlt: PropTypes.string,
-    darkLogoSrc: PropTypes.string,
     logoSrc: PropTypes.string,
     navLabel: PropTypes.string,
     onClick: PropTypes.func,
@@ -559,7 +575,7 @@ ProductHeader.propTypes = {
       onClick: PropTypes.func,
       rel: PropTypes.string,
       target: PropTypes.string,
-      type: PropTypes.oneOf(["link", "dropdown"]),
+      type: PropTypes.oneOf(["link", "internal", "external", "dropdown"]),
       items: PropTypes.arrayOf(
         PropTypes.shape({
           id: PropTypes.string,
@@ -605,6 +621,11 @@ ProductHeader.propTypes = {
   }),
   theme: PropTypes.oneOf(["light", "dark"]),
   onToggleTheme: PropTypes.func,
+  linkTabs: PropTypes.shape({
+    ariaLabel: PropTypes.string,
+    onSelect: PropTypes.func,
+    options: PropTypes.arrayOf(PropTypes.object),
+  }),
   className: PropTypes.string,
 };
 
@@ -617,5 +638,6 @@ ProductHeader.defaultProps = {
   authAction: null,
   theme: "light",
   onToggleTheme: null,
+  linkTabs: null,
   className: "",
 };

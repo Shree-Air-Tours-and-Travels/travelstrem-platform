@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import ManageClientsView from "./ManageClients.view";
-import ClientForm from "./ClientForm";
 import {
   fetchClients,
-  createClient,
-  updateClient,
   deleteClient,
   uploadClientLogo,
   fetchClientMembers,
@@ -13,17 +11,18 @@ import {
 } from "../../services/adminService";
 
 export default function ManageClients({ embedded = false, isMaster = false }) {
+  const navigate = useNavigate();
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [showForm, setShowForm] = useState(false);
-  const [editingClient, setEditingClient] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [memberClient, setMemberClient] = useState(null);
   const [members, setMembers] = useState([]);
   const [memberEmail, setMemberEmail] = useState("");
   const [memberRole, setMemberRole] = useState("client_admin");
   const [memberError, setMemberError] = useState("");
+  const [memberMessage, setMemberMessage] = useState("");
+  const [memberBusy, setMemberBusy] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -43,13 +42,11 @@ export default function ManageClients({ embedded = false, isMaster = false }) {
   }, [load]);
 
   const handleCreate = () => {
-    setEditingClient(null);
-    setShowForm(true);
+    navigate("/manage/clients/build");
   };
 
   const handleEdit = (client) => {
-    setEditingClient(client);
-    setShowForm(true);
+    navigate(`/manage/clients/build?clientId=${encodeURIComponent(client._id)}`);
   };
 
   const handleDelete = async (client) => {
@@ -60,17 +57,6 @@ export default function ManageClients({ embedded = false, isMaster = false }) {
     } catch (err) {
       setError(err.message || "Delete failed");
     }
-  };
-
-  const handleSave = async (payload) => {
-    if (editingClient) {
-      await updateClient(editingClient._id, payload);
-    } else {
-      await createClient(payload);
-    }
-    setShowForm(false);
-    setEditingClient(null);
-    await load();
   };
 
   const handleLogoUpload = async (clientId, product, file) => {
@@ -84,7 +70,9 @@ export default function ManageClients({ embedded = false, isMaster = false }) {
 
   const openMembers = async (client) => {
     setMemberClient(client);
+    setMembers([]);
     setMemberError("");
+    setMemberMessage("");
     try {
       setMembers(await fetchClientMembers(client._id));
     } catch (err) {
@@ -92,16 +80,20 @@ export default function ManageClients({ embedded = false, isMaster = false }) {
     }
   };
 
-  const addMember = async (event) => {
-    event.preventDefault();
+  const addMember = async (event, member) => {
+    event?.preventDefault();
+    if (memberBusy) return;
+    setMemberBusy(true); setMemberMessage("");
     try {
       setMemberError("");
-      await assignClientMember(memberClient._id, { email: memberEmail, clientRole: memberRole });
+      const response = await assignClientMember(memberClient._id, { email: member?.email || memberEmail, clientRole: member?.clientRole || memberRole });
+      const result = response.componentData.data;
+      setMemberMessage(result.alreadyActive ? "Access updated for this active account." : result.emailSent ? "Activation invitation sent." : "Access saved, but email delivery failed. Resend the activation invitation.");
       setMembers(await fetchClientMembers(memberClient._id));
       setMemberEmail("");
     } catch (err) {
       setMemberError(err.message || "Could not assign member");
-    }
+    } finally { setMemberBusy(false); }
   };
 
   const removeMember = async (member) => {
@@ -127,49 +119,40 @@ export default function ManageClients({ embedded = false, isMaster = false }) {
           onMembers={isMaster ? openMembers : undefined}
           onRetry={load}
         />
-        {showForm && (
-          <ClientForm
-            client={editingClient}
-            onSave={handleSave}
-            onCancel={() => {
-              setShowForm(false);
-              setEditingClient(null);
-            }}
-          />
-        )}
         {deleteConfirm && (
-          <div className="modal-backdrop" onClick={() => setDeleteConfirm(null)}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <h3>Delete Client</h3>
+          <div className="mc-dialog-backdrop" onClick={() => setDeleteConfirm(null)}>
+            <div className="mc-dialog" onClick={(e) => e.stopPropagation()}>
+              <h3>Deactivate Client</h3>
               <p>
-                Are you sure you want to delete <strong>{deleteConfirm.name}</strong>?
+                Are you sure you want to deactivate <strong>{deleteConfirm.name}</strong>?
               </p>
-              <div className="modal-actions">
+              <div className="mc-dialog__actions">
                 <button className="btn btn--ghost" onClick={() => setDeleteConfirm(null)}>
                   Cancel
                 </button>
                 <button className="btn btn--danger" onClick={() => handleDelete(deleteConfirm)}>
-                  Delete
+                  Deactivate
                 </button>
               </div>
             </div>
           </div>
         )}
         {memberClient && (
-          <div className="modal-backdrop" onClick={() => setMemberClient(null)}>
-            <div className="modal-content mc-member-modal" role="dialog" aria-modal="true" aria-label={`${memberClient.name} access`} onClick={(event) => event.stopPropagation()}>
-              <h3>{memberClient.name} access</h3>
-              <p>Only members assigned to this client can open its dashboard.</p>
-              {memberError && <p role="alert">{memberError}</p>}
+          <div className="mc-dialog-backdrop" onClick={() => setMemberClient(null)}>
+            <div className="mc-dialog mc-member-modal" role="dialog" aria-modal="true" aria-labelledby="mc-access-title" onClick={(event) => event.stopPropagation()}>
+              <div className="mc-dialog__heading"><div><h3 id="mc-access-title">Manage access</h3><p>{memberClient.name}</p></div><button className="btn btn--ghost btn--sm" type="button" onClick={() => setMemberClient(null)} aria-label="Close access dialog">Close</button></div>
+              <p>Invite a member or assign an existing account to this client's dashboard.</p>
+              {memberError && <p className="mc-dialog__error" role="alert">{memberError}</p>}
+              {memberMessage && <p className="mc-dialog__success" role="status">{memberMessage}</p>}
               <form onSubmit={addMember} className="mc-member-form">
-                <label>Existing user email<input type="email" required value={memberEmail} onChange={(event) => setMemberEmail(event.target.value)} /></label>
-                <label>Role<select value={memberRole} onChange={(event) => setMemberRole(event.target.value)}><option value="client_admin">Client admin</option><option value="client_agent">Client agent</option></select></label>
-                <button className="btn btn--primary" type="submit">Assign member</button>
+                <label>Member email<input type="email" required value={memberEmail} onChange={(event) => setMemberEmail(event.target.value)} /></label>
+                <label>Role<select value={memberRole} onChange={(event) => setMemberRole(event.target.value)}><option value="client_master_admin">Client master admin</option><option value="client_admin">Client admin</option><option value="client_agent">Client agent</option></select></label>
+                <button className="btn btn--primary" type="submit" disabled={memberBusy}>Invite / assign member</button>
               </form>
-              <ul>
-                {members.map((member) => <li key={member._id}>{member.name} ({member.email}) · {member.clientRole} <button type="button" className="btn btn--ghost btn--sm" onClick={() => removeMember(member)}>Remove</button></li>)}
-              </ul>
-              <button className="btn btn--ghost" type="button" onClick={() => setMemberClient(null)}>Close</button>
+              <h4>Members with access</h4>
+              {members.length ? <ul className="mc-member-list">
+                {members.map((member) => <li key={member._id}><div><strong>{member.name || member.email}</strong><span>{member.email} · {member.clientRole.replaceAll('_', ' ')} · {member.accountStatus}</span></div><div>{member.accountStatus === "invited" && <button className="btn btn--ghost btn--sm" type="button" disabled={memberBusy} onClick={() => addMember(null, member)}>Resend activation</button>} <button type="button" className="btn btn--ghost btn--sm" disabled={memberBusy} onClick={() => removeMember(member)}>Remove</button></div></li>)}
+              </ul> : <p className="mc-member-empty">No members assigned yet.</p>}
             </div>
           </div>
         )}

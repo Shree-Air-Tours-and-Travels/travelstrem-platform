@@ -99,7 +99,9 @@ export const resolvePageContent = (pageResponse) => {
   const touchFeature = findFeature(touchWidget, ["contactCTA", "contactForm"]) || {};
 
   return {
+    breadcrumbs: (findWidget(widgets, ["Breadcrumbs"])?.props?.items || []).map(item => ({ ...item, label: labels[item.labelRef] || item.label })).filter(item => item.label),
     labels,
+    overlayConfig: component?.structure?.config?.overlayConfig || {},
     content: {
       productTitlePrefix: label(labels, heroStatic.productTitlePrefixRef),
       productName: label(labels, heroStatic.productNameRef),

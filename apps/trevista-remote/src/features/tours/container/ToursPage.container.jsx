@@ -5,8 +5,6 @@ import { useTourCatalogRealtime } from "@packages/trem-events";
 import ToursPageView from "../view/ToursPage.view";
 import { getTourRef } from "../helper";
 import useFavorites from "../hooks/useFavorites";
-import { ContactAgentModal } from "@packages/trem-modals";
-import { PRODUCT_TYPE } from "@packages/trem-ui";
 import { fetchTourSearch } from "../search/tourSearch.service";
 import {
   flattenTourSearchState,
@@ -70,7 +68,6 @@ export default function ToursPageContainer({ dispatchEvent, userSession = null }
   const [searching, setSearching] = useState(true);
   const [searchError, setSearchError] = useState(null);
   const [filtersExpanded, setFiltersExpanded] = useState(false);
-  const [contactOpen, setContactOpen] = useState(false);
   const previousQuery = useRef(searchState.query);
   const [realtimeTick, setRealtimeTick] = useState(0);
 
@@ -225,7 +222,7 @@ export default function ToursPageContainer({ dispatchEvent, userSession = null }
     commitSearch({ ...cleared, sort: searchState.sort, pageSize: searchState.pageSize });
   }, [commitSearch, searchState.pageSize, searchState.sort]);
 
-  const handleEnquire = useCallback(() => setContactOpen(true), []);
+  const handleEnquire = useCallback(() => navigate("/trevista/customise-tour"), [navigate]);
 
   return (
     <>
@@ -262,12 +259,6 @@ export default function ToursPageContainer({ dispatchEvent, userSession = null }
         onClearFilters={handleClearFilters}
         handleFilterChange={handleFilterChange}
         onEnquire={handleEnquire}
-      />
-      <ContactAgentModal
-        open={contactOpen}
-        onClose={() => setContactOpen(false)}
-        user={userSession?.user || null}
-        product={PRODUCT_TYPE.TREVISTA}
       />
     </>
   );

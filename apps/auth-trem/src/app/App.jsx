@@ -1,11 +1,11 @@
+import { ThemeProvider, useTheme } from "@packages/trem-ui";
 import React, { useMemo } from "react";
-import { useThemeMode } from "@packages/trem-utils";
 import AuthPage from "../features/auth/AuthPage.jsx";
 import PartnershipRequestPage from "../features/partnership/PartnershipRequestPage.jsx";
 import { createAuthApi, createAuthService } from "@packages/trem-auth-core";
 
-export default function AuthTremApp() {
-  const { theme, toggleTheme } = useThemeMode();
+function AuthTremApp() {
+  const { theme, toggleTheme, configuration } = useTheme();
   const params = new URLSearchParams(window.location.search);
   const requestingApp = params.get("app")?.trim().toLowerCase() || "app-shell";
   const activationToken = params.get("token") || null;
@@ -79,22 +79,10 @@ export default function AuthTremApp() {
         theme={theme}
         onToggleTheme={toggleTheme}
         activationToken={activationToken}
-        accessRequest={
-          portal === "admin"
-            ? null
-            : {
-                prompt:
-                  portal === "partner"
-                    ? "Need a PartnerTREM account?"
-                    : "Own or manage a travel agency?",
-                label:
-                  portal === "partner"
-                    ? "Apply or register your agency"
-                    : "Partner with TravelsTREM",
-                href: "/partnership",
-              }
-        }
+        tenantConfiguration={configuration}
       />
     </div>
   );
 }
+
+export default function ThemedAuthTremApp() { return <ThemeProvider waitForConfiguration><AuthTremApp /></ThemeProvider>; }

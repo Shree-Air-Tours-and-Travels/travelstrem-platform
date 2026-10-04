@@ -4,24 +4,10 @@
   padding: 0 0 clamp(3rem, 6vw, 5rem);
 }
 
-.trevio-trips-page__breadcrumbs-shell {
-  position: sticky;
-  top: 0;
-  z-index: 40;
-  width: 100%;
-  min-height: 56px;
+.trevio-trips-page > .trevio-container {
   display: flex;
-  align-items: center;
-  margin-bottom: $space-5;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface-glass-strong, rgba(255, 255, 255, 0.92));
-  box-shadow: var(--shadow-xs);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-}
-
-.trevio-trips-page__breadcrumbs {
-  width: 100%;
+  flex-direction: column;
+  gap: $space-5;
 }
 
 .trevio-trips-page__hero {
@@ -31,7 +17,7 @@
   justify-content: space-between;
   align-items: center;
   gap: clamp($space-5, 5vw, $space-8);
-  margin-bottom: $space-6;
+  margin-bottom: 0;
   padding: clamp($space-5, 3vw, $space-8);
   border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--border));
   border-radius: var(--radius-xl);
@@ -118,7 +104,7 @@
   grid-template-columns: auto minmax(0, 1fr) minmax(220px, 280px) auto;
   align-items: center;
   gap: $space-4;
-  margin-bottom: $space-4;
+  margin-bottom: 0;
   padding: $space-4;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -157,7 +143,7 @@
 }
 
 .trevio-trips-page__filters-dropdown {
-  margin: (-$space-2) 0 $space-4;
+  margin: 0;
   padding: $space-4;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -179,16 +165,16 @@
 }
 
 .trevio-trips-page__active-chips {
-  margin-bottom: $space-4;
+  margin: 0;
 }
 
 .trevio-trips-page__pagination {
   justify-content: center;
-  margin-top: $space-6;
+  margin-top: 0;
 }
 
 .trevio-trips-page__quick-chips.tt-quick-chips {
-  margin-bottom: $space-5;
+  margin: 0;
 }
 
 @media (max-width: $breakpoint-tablet) {
@@ -217,10 +203,6 @@
 }
 
 @media (max-width: $breakpoint-mobile) {
-  .trevio-trips-page__breadcrumbs-shell {
-    min-height: 48px;
-    margin-bottom: $space-4;
-  }
 
   .trevio-trips-page__hero {
     padding: $space-5;
@@ -249,6 +231,19 @@
 
     .ui-button {
       width: 100%;
+    }
+  }
+
+  .trevio-trips-page__filters-sheet .trem-bottom-sheet__actions .trevio-trip-filters-panel__actions {
+    position: static;
+    flex-direction: row;
+    margin: 0;
+    padding: 0;
+    gap: $space-2;
+
+    .ui-button {
+      flex: 1 1 0;
+      min-width: 0;
     }
   }
 

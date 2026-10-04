@@ -41,9 +41,13 @@ export const PERMISSIONS = Object.freeze({
     AUDIT_VIEW_PLATFORM: "audit.view.platform",
 });
 
+export const CUSTOMER_DASHBOARD_PERMISSIONS = ["dashboard:view", "booking:view", "wishlist:view", "profile:view", "notifications:view", "support:view"];
+
 const all = Object.values(PERMISSIONS);
 export const ROLE_PERMISSIONS = Object.freeze({
-    master_admin: all,
+    trem_master_admin: all,
+    client_master_admin: all.filter((permission) => permission !== PERMISSIONS.AUDIT_VIEW_PLATFORM),
+    client_admin: all.filter((permission) => /^(trip|booking|customer|reports)\./.test(permission)),
     partner_admin: all.filter(
         (permission) =>
             ![
@@ -75,7 +79,8 @@ export const ROLE_PERMISSIONS = Object.freeze({
 });
 
 export function effectiveRole(user = {}) {
-    if (user.role === "admin" && user.adminLevel === "master") return "master_admin";
+    if (user.clientId && ["client_master_admin", "client_admin"].includes(user.clientRole)) return user.clientRole;
+    if (!user.clientId && user.role === "admin" && user.adminLevel === "master") return "trem_master_admin";
     if (user.agencyRole === "partner_admin") return "partner_admin";
     if (user.role === "agent") return "partner_agent";
     return "member";
@@ -84,7 +89,7 @@ export function effectiveRole(user = {}) {
 export function permissionsFor(user = {}) {
     const base = ROLE_PERMISSIONS[effectiveRole(user)] || [];
     const denied = new Set(user.permissionDenials || []);
-    return [...new Set([...base, ...(user.permissionGrants || [])])].filter(
+    return [...new Set([...CUSTOMER_DASHBOARD_PERMISSIONS, ...base, ...(user.permissionGrants || [])])].filter(
         (permission) => !denied.has(permission),
     );
 }

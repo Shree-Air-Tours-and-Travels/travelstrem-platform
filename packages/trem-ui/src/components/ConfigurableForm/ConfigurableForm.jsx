@@ -78,10 +78,19 @@ function FieldControl({ field, value, error, onChange }) {
       );
 
     case "multiselect":
-      return <MultiSelect label={field.label} placeholder={placeholder || "Select add-ons"}
-        value={Array.isArray(value) ? value : []} options={field.options || []}
-        onChange={handleChange} disabled={field.disabled} required={field.required}
-        error={error} searchable />;
+      return (
+        <MultiSelect
+          label={field.label}
+          placeholder={placeholder || "Select add-ons"}
+          value={Array.isArray(value) ? value : []}
+          options={field.options || []}
+          onChange={handleChange}
+          disabled={field.disabled}
+          required={field.required}
+          error={error}
+          searchable
+        />
+      );
 
     case "select": {
       const label = field.label || field.name;
@@ -265,6 +274,7 @@ function FieldGroup({ field, value, error, onChange, columns }) {
     "monthYear",
     "location",
     "date",
+    "url",
   ].includes(type);
   const wide = !!field.wide;
   return (
@@ -298,10 +308,7 @@ function FormSection({
   expandable,
 }) {
   const sectionColumns = Math.max(1, Math.min(4, section.columns || columns));
-  const sectionMobileColumns = Math.max(
-    1,
-    Math.min(4, section.columnsMobile || mobileColumns),
-  );
+  const sectionMobileColumns = Math.max(1, Math.min(4, section.columnsMobile || mobileColumns));
   const fields = useMemo(
     () => normalizeFields(section.fields, sectionColumns),
     [section.fields, sectionColumns],
@@ -345,16 +352,18 @@ function FormSection({
               "--trem-form-cols-mobile": sectionMobileColumns,
             }}
           >
-            {fields.filter((field) => isFieldVisible(field, values)).map((field) => (
-              <FieldGroup
-                key={field.name}
-                field={field}
-                value={values[field.name]}
-                error={errors[field.name]}
-                onChange={(next) => onChange(field.name, next)}
-                columns={sectionColumns}
-              />
-            ))}
+            {fields
+              .filter((field) => isFieldVisible(field, values))
+              .map((field) => (
+                <FieldGroup
+                  key={field.name}
+                  field={field}
+                  value={values[field.name]}
+                  error={errors[field.name]}
+                  onChange={(next) => onChange(field.name, next)}
+                  columns={sectionColumns}
+                />
+              ))}
           </div>
         </div>
       )}
@@ -450,10 +459,7 @@ export default function ConfigurableForm({
   }, [allOpen, isControlled, onOpenSectionsChange, sections]);
 
   return (
-    <div
-      className={`trem-form${className ? ` ${className}` : ""}`}
-      data-control-size={controlSize}
-    >
+    <div className={`trem-form${className ? ` ${className}` : ""}`} data-control-size={controlSize}>
       {showExpandAll && (
         <div className="trem-form__toolbar">
           <Button

@@ -11,6 +11,10 @@ const invitationExpiry = () =>
     new Date(Date.now() + Number(config.INVITATION_TTL_HOURS || 48) * 60 * 60 * 1000);
 export async function inviteUser({
     agency,
+    client = null,
+    clientRole = "client_master_admin",
+    models = {},
+    authUrl = "",
     actorId,
     name,
     email,
@@ -21,24 +25,30 @@ export async function inviteUser({
     permissions = [],
     session = null,
 }) {
+    const UserModel = models.User || User;
+    const InvitationModel = models.Invitation || Invitation;
     const normalizedEmail = String(email || "")
         .trim()
         .toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail))
         throw Object.assign(new Error("A valid work email is required."), { status: 400 });
-    if (await User.exists({ email: normalizedEmail }).session(session))
+    if (await UserModel.exists({ email: normalizedEmail }).session(session))
         throw Object.assign(new Error("Email is already registered."), { status: 409 });
     const randomPasswordHash = await bcrypt.hash(crypto.randomBytes(48).toString("hex"), 12);
-    const user = new User({
+    const user = new UserModel({
         name,
         email: normalizedEmail,
         phone,
         designation,
         passwordHash: randomPasswordHash,
-        role: "agent",
-        agencyRole,
-        agencyId: agency._id,
-        partnerAgencyRef: agency.partnerAgencyRef,
+        role: client ? (["client_master_admin", "client_admin"].includes(clientRole) ? "admin" : "member") : "agent",
+        clientId: client?._id || process.env.TENANT_CLIENT_ID || null,
+        clientRole: client ? clientRole : "none",
+        adminLevel: client && ["client_master_admin", "client_admin"].includes(clientRole) ? "standard" : "none",
+        adminApprovalStatus: client && ["client_master_admin", "client_admin"].includes(clientRole) ? "approved" : "not_required",
+        agencyRole: client ? "none" : agencyRole,
+        agencyId: agency?._id,
+        partnerAgencyRef: agency?.partnerAgencyRef,
         agentRef: `agent-${crypto.randomBytes(6).toString("hex")}`,
         agentApprovalStatus: "approved",
         accountStatus: "invited",
@@ -48,11 +58,12 @@ export async function inviteUser({
     await user.save({ session });
     const rawToken = crypto.randomBytes(48).toString("base64url");
     const expiresAt = invitationExpiry();
-    const invitation = new Invitation({
+    const invitation = new InvitationModel({
         email: normalizedEmail,
-        agencyId: agency._id,
+        agencyId: agency?._id,
         userId: user._id,
-        role: agencyRole,
+        clientId: client?._id || process.env.TENANT_CLIENT_ID || null,
+        role: client ? clientRole : agencyRole,
         productKeys,
         permissions,
         tokenHash: hashToken(rawToken),
@@ -60,18 +71,18 @@ export async function inviteUser({
         invitedBy: actorId,
     });
     await invitation.save({ session });
-    const authBase = String(config.AUTH_APP_URL || config.PARTNER_URL || config.SHELL_URL).replace(
+    const authBase = String(authUrl || config.AUTH_APP_URL || config.PARTNER_URL || config.SHELL_URL).replace(
         /\/$/,
         "",
     );
-    const activationUrl = `${authBase}/?app=partner&token=${encodeURIComponent(rawToken)}`;
+    const activationUrl = `${authBase}/?app=${client ? (["client_master_admin", "client_admin"].includes(user.clientRole) ? "admin" : "customer") : "partner"}&token=${encodeURIComponent(rawToken)}`;
     const result = session
         ? { success: true, deferred: true }
         : await sendInvitationEmail({
               to: normalizedEmail,
               recipientName: name,
-              agencyName: agency.agencyName,
-              roleLabel: agencyRole === "partner_admin" ? "Partner Admin" : "Partner Agent",
+              agencyName: client?.name || agency.agencyName,
+              roleLabel: client ? (["client_master_admin", "client_admin"].includes(clientRole) ? "Client Admin" : "Client Member") : agencyRole === "partner_admin" ? "Partner Admin" : "Partner Agent",
               activationUrl,
               expiresInHours: config.INVITATION_TTL_HOURS || 48,
           });
@@ -119,35 +130,37 @@ export async function activateInvitation({ token, password }) {
     }
 }
 
-export async function renewInvitation({ user, agency, actorId }) {
+export async function renewInvitation({ user, agency, client = null, actorId, models = {}, authUrl = "" }) {
+    const InvitationModel = models.Invitation || Invitation;
     if (!user || user.accountStatus !== "invited")
         throw Object.assign(new Error("Only pending invitations can be resent."), { status: 409 });
-    await Invitation.updateMany(
+    await InvitationModel.updateMany(
         { userId: user._id, usedAt: null, revokedAt: null },
         { $set: { revokedAt: new Date() } },
     );
     const rawToken = crypto.randomBytes(48).toString("base64url");
-    const invitation = await Invitation.create({
+    const invitation = await InvitationModel.create({
         email: user.email,
-        agencyId: agency._id,
+        agencyId: agency?._id,
         userId: user._id,
-        role: user.agencyRole,
+        clientId: client?._id || process.env.TENANT_CLIENT_ID || null,
+        role: client ? user.clientRole : user.agencyRole,
         productKeys: user.productAccess || [],
         permissions: user.permissionGrants || [],
         tokenHash: hashToken(rawToken),
         expiresAt: invitationExpiry(),
         invitedBy: actorId,
     });
-    const authBase = String(config.AUTH_APP_URL || config.PARTNER_URL || config.SHELL_URL).replace(
+    const authBase = String(authUrl || config.AUTH_APP_URL || config.PARTNER_URL || config.SHELL_URL).replace(
         /\/$/,
         "",
     );
-    const activationUrl = `${authBase}/?app=partner&token=${encodeURIComponent(rawToken)}`;
+    const activationUrl = `${authBase}/?app=${client ? (["client_master_admin", "client_admin"].includes(user.clientRole) ? "admin" : "customer") : "partner"}&token=${encodeURIComponent(rawToken)}`;
     const email = await sendInvitationEmail({
         to: user.email,
         recipientName: user.name,
-        agencyName: agency.agencyName,
-        roleLabel: user.agencyRole === "partner_admin" ? "Partner Admin" : "Partner Agent",
+        agencyName: client?.name || agency.agencyName,
+        roleLabel: client ? (["client_master_admin", "client_admin"].includes(user.clientRole) ? "Client Admin" : "Client Member") : user.agencyRole === "partner_admin" ? "Partner Admin" : "Partner Agent",
         activationUrl,
         expiresInHours: config.INVITATION_TTL_HOURS || 48,
     });

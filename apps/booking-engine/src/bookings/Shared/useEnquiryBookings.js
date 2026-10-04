@@ -1,13 +1,16 @@
+import { useLocation } from "react-router-dom";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useEnquiryRealtime } from "@packages/trem-events";
 import { fetchData } from "@packages/trem-utils";
 
-export default function useEnquiryBookings(journeyType = "") {
+export default function useEnquiryBookings(journeyType = "", ignoreProduct = false) {
+  const location = useLocation();
+  const product = ignoreProduct ? "" : new URLSearchParams(location.search).get("product") || "";
   const requestRef = useRef(0);
   const pendingRef = useRef(null);
   const inFlightRef = useRef(null);
   const refreshTimerRef = useRef(null);
-  const [filters, setFilters] = useState({});
+  const [filters, setFilters] = useState(product ? { product: [product] } : {});
   const [state, setState] = useState({
     enquiries: [],
     bookings: [],
@@ -20,7 +23,7 @@ export default function useEnquiryBookings(journeyType = "") {
     const requestId = ++requestRef.current;
     setState((current) => ({ ...current, loading: true, error: "" }));
     try {
-      const response = await fetchData("/enquiries", { params: Object.fromEntries(Object.entries({ ...filters, journeyType }).map(([key, value]) => [key, Array.isArray(value) ? value.join(",") : value])) });
+      const response = await fetchData("/enquiries", { params: Object.fromEntries(Object.entries({ ...filters, journeyType, ...(product ? { product } : {}) }).map(([key, value]) => [key, Array.isArray(value) ? value.join(",") : value])) });
       if (response?.status !== "success") throw new Error(response?.message);
       if (requestId !== requestRef.current) return;
       const component = response.componentData || {};
@@ -43,7 +46,7 @@ export default function useEnquiryBookings(journeyType = "") {
         error: error?.message || "The booking enquiries could not be loaded.",
       }));
     }
-  }, [journeyType, filters]);
+  }, [journeyType, filters, product]);
 
   // Collapse mutation callbacks and their realtime echoes into one trailing refresh.
   const load = useCallback(() => {

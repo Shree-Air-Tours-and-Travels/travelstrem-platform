@@ -16,6 +16,7 @@ const enquirySnapshot = (enquiry) => ({
 const bookingOnInsert = (enquiry, quote, bookingRef = createReadableReference("BKQ")) => ({
     bookingRef,
     sourceEnquiryId: enquiry._id,
+    tenantId: enquiry.tenantId || null,
     acceptedQuoteId: quote._id,
     userId: enquiry.claimedBy || quote.userId || null,
     customerId: enquiry.customerId || null,
@@ -60,7 +61,11 @@ export async function ensureBookingFromAcceptedQuote(enquiry, quote, { session }
         throw Object.assign(new Error("The booking could not be created from this enquiry."), {
             status: 500,
         });
-    if (String(booking.acceptedQuoteId) !== String(quote._id)) throw Object.assign(new Error("A different quotation was already accepted for this enquiry."), { status: 409 });
+    if (String(booking.acceptedQuoteId) !== String(quote._id))
+        throw Object.assign(
+            new Error("A different quotation was already accepted for this enquiry."),
+            { status: 409 },
+        );
     return booking;
 }
 

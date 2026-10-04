@@ -1,6 +1,10 @@
+import { resolveCustomerDashboardContext } from "../dashboard/context.js";
+import { customerScopeQuery } from "../tenancy/customerScope.js";
 import { supportContexts } from "./support.context.js";
 import {
     SUPPORT_ACTION_TYPE,
+    SUPPORT_CONTACT_TYPE,
+    SUPPORT_CONTACT_AVAILABILITY,
     SUPPORT_SENDER_TYPE,
     SUPPORT_TICKET_STATUS_LIST,
 } from "@packages/trem-support-contracts";
@@ -35,6 +39,8 @@ import {
     supportMessageDto,
     supportTicketDto,
 } from "../../realtime/index.js";
+
+const ticketScope = async (req) => customerScopeQuery(await resolveCustomerDashboardContext(userId(req), "support:view"));
 
 const userId = (req) => req.user?.sub || req.user?.id;
 const ok = (res, data, message = "OK") =>
@@ -176,13 +182,36 @@ const notifyRequester = async ({ ticket, content, responderName }) => {
         console.error("[Support] requester email failed:", result.message, result.code || "");
 };
 
-export const getHome = asyncHandler(async (_req, res) => {
+export const getHome = asyncHandler(async (req, res) => {
+    const context = userId(req)
+        ? await resolveCustomerDashboardContext(userId(req), "support:view")
+        : null;
+    const phone = String(context?.contact?.phone || "").replace(/[^+\d]/g, "");
+    const email = String(context?.contact?.email || "").trim();
+    const contacts = [
+        ...(phone ? [{
+            id: "tenant-call", type: SUPPORT_CONTACT_TYPE.CALL,
+            label: `Call ${context.tenantName}`, description: phone, icon: "phoneCall",
+            availability: SUPPORT_CONTACT_AVAILABILITY.AVAILABLE,
+            action: { type: SUPPORT_ACTION_TYPE.CONTACT, target: `tel:${phone}` },
+            metadata: {},
+        }] : []),
+        ...(email ? [{
+            id: "tenant-email", type: SUPPORT_CONTACT_TYPE.EMAIL,
+            label: `Email ${context.tenantName}`, description: email, icon: "support",
+            availability: SUPPORT_CONTACT_AVAILABILITY.AVAILABLE,
+            action: { type: SUPPORT_ACTION_TYPE.CONTACT, target: `mailto:${email}` },
+            metadata: {},
+        }] : []),
+        ...PLATFORM_CONTACT_OPTIONS.filter((option) =>
+            option.action?.type === SUPPORT_ACTION_TYPE.CONTACT &&
+            !(phone && option.type === SUPPORT_CONTACT_TYPE.CALL) &&
+            !(email && option.type === SUPPORT_CONTACT_TYPE.EMAIL)),
+    ];
     return ok(res, {
         ui: SUPPORT_UI,
         categories: SUPPORT_CATEGORIES,
-        contactOptions: PLATFORM_CONTACT_OPTIONS.filter(
-            (option) => option.action?.type === SUPPORT_ACTION_TYPE.CONTACT,
-        ),
+        contactOptions: contacts,
         capabilities: { realtimeChat: true, attachments: false, ticketReplies: true },
     });
 });
@@ -278,7 +307,7 @@ export const getContacts = asyncHandler(async (_req, res) =>
 );
 
 export const listTickets = asyncHandler(async (req, res) => {
-    const query = { user: userId(req) };
+    const query = { ...await ticketScope(req), user: userId(req) };
     if (req.query.status) {
         if (!SUPPORT_TICKET_STATUS_LIST.includes(req.query.status))
             throw new ApiError(400, "Invalid support ticket status");
@@ -296,7 +325,7 @@ export const listTickets = asyncHandler(async (req, res) => {
 export const getTicket = asyncHandler(async (req, res) => {
     const lookup = ticketLookup(req.params.ticketId);
     if (!lookup) throw new ApiError(404, "Support request not found");
-    const ticket = await SupportTicket.findOne({ ...lookup, user: userId(req) });
+    const ticket = await SupportTicket.findOne({ ...await ticketScope(req), ...lookup, user: userId(req) });
     if (!ticket) throw new ApiError(404, "Support request not found");
     const messagePage = await getMessagePage({
         ticketId: ticket._id,
@@ -397,7 +426,7 @@ export const createTicket = asyncHandler(async (req, res) => {
 
 export const replyToTicket = asyncHandler(async (req, res) => {
     if (!validId(req.params.ticketId)) throw new ApiError(404, "Support request not found");
-    const ticket = await SupportTicket.findOne({ _id: req.params.ticketId, user: userId(req) });
+    const ticket = await SupportTicket.findOne({ ...await ticketScope(req), _id: req.params.ticketId, user: userId(req) });
     if (!ticket) throw new ApiError(404, "Support request not found");
     if (["RESOLVED", "CLOSED"].includes(ticket.status))
         throw new ApiError(409, "This support request no longer accepts replies");

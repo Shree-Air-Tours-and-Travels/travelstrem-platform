@@ -52,14 +52,31 @@ export const upsertMasterOptionSet = async (req, res) => {
     }
 };
 
-export const listPricingConfigs = async (_req, res) => {
+export const listPricingConfigs = async (req, res) => {
     try {
         const pricingConfigs = await listPricingConfigRecords();
-        return res.status(200).json(
-            pageDefinitionService.buildPageResponse("admin-shell/pricing", {
-                injectData: { pricingConfigs },
-            }),
-        );
+        const client = req.tenant?.client;
+        const name = client?.globalBrand?.label || client?.name;
+        const response = pageDefinitionService.buildPageResponse("admin-shell/pricing", {
+            injectData: { pricingConfigs },
+            ...(client ? { injectLabels: {
+                heroTitle: `${name} pricing controls`,
+                heroDescription: "Manage your company's fees, tax and payment-gateway recovery. New rules affect future quotes only.",
+                masterAdminOnly: "Client master admin only",
+                scopeGlobal: "Company default",
+                platformFeeTitle: `${name} service fee`,
+                platformFeeDescription: "Managed by your company's master administrator.",
+                collectPlatformFee: "Collect service fee",
+                collectPlatformFeeDescription: `Add the configured ${name} fee to new customer quotes.`,
+                platformFeeGst: "GST on service fee (%)",
+                tremFeeSummary: `${name} fee`,
+            } } : {}),
+        });
+        if (client) response.component.structure = {
+            ...response.component.structure,
+            config: { ...response.component.structure.config, access: { clientRoles: ["client_master_admin"] } },
+        };
+        return res.status(200).json(response);
     } catch (error) {
         return res.status(500).json({
             status: "error",
@@ -70,7 +87,7 @@ export const listPricingConfigs = async (_req, res) => {
 
 export const upsertPricingConfig = async (req, res) => {
     try {
-        const pricingConfig = await savePricingConfig(req.body, req.user?._id || req.user?.id);
+        const pricingConfig = await savePricingConfig(req.body, req.access?.user?._id || req.user?._id || req.user?.id);
         return res.status(200).json({
             status: "success",
             data: { pricingConfig },
@@ -80,7 +97,7 @@ export const upsertPricingConfig = async (req, res) => {
     } catch (error) {
         return res.status(400).json({
             status: "error",
-            message: error.message || "Pricing configuration could not be saved",
+            message: (req.tenant?.client ? error.message?.replaceAll("TravelsTREM fee", "Service fee") : error.message) || "Pricing configuration could not be saved",
         });
     }
 };

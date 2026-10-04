@@ -143,8 +143,8 @@ export default function AboutPage() {
           <Reveal>
             <SectionIntro
               eyebrow="Office and contact"
-              title="Meet the team in Jaipur."
-              copy="Explore curated journeys through Trevista, or contact our team to discuss travel planning and agency partnership."
+              title="Meet the platform team in Jaipur."
+              copy="Talk with us about your business model, products, operating workflows, integrations and the right TravelsTREM deployment for your team."
             />
           </Reveal>
           <address>

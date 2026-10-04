@@ -2,12 +2,14 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   BottomSheet,
   Breadcrumbs,
+  Button,
   ConfigurableFilterPanel,
   ErrorState,
   FlightCard,
   Spinner,
   GlobalSearchCard,
   NoDataFound,
+  Note,
   OptionCardRail,
   Pagination,
   Paragraph,
@@ -109,10 +111,7 @@ export default function FlightFiltersView({
       const facet = { airlines: "airlines", cabin: "cabins", stops: "stops" }[field.id];
       if (!facet || !Array.isArray(data.facets?.[facet])) return resolveOptions(field.optionsRef);
       const anyOption = resolveOptions(field.optionsRef).filter((option) => option.value === "");
-      return [
-        ...anyOption,
-        ...data.facets[facet].map(({ value, label }) => ({ value, label })),
-      ];
+      return [...anyOption, ...data.facets[facet].map(({ value, label }) => ({ value, label }))];
     })(),
   }));
   const filterValues = { ...query, airlines: query.airlines ? query.airlines.split(",") : [] };
@@ -161,10 +160,10 @@ export default function FlightFiltersView({
       fieldErrors={searchFieldErrors}
     />
   );
-  const renderFilters = (className) => (
+  const renderFilters = (className, inSheet = false) => (
     <ConfigurableFilterPanel
-      title={labelFor(labels, filterProps.titleRef)}
-      resetLabel={labelFor(labels, filterProps.resetLabelRef)}
+      title={inSheet ? undefined : labelFor(labels, filterProps.titleRef)}
+      resetLabel={inSheet ? undefined : labelFor(labels, filterProps.resetLabelRef)}
       fields={filterFields}
       values={filterValues}
       onChange={onFilterChange}
@@ -175,14 +174,16 @@ export default function FlightFiltersView({
 
   return (
     <main className="trehub-flight-list">
-      <div className="trehub-flight-list__breadcrumb trehub-page__breadcrumbs">
-        <Breadcrumbs
-          items={(breadcrumbProps.items || []).map((item) => ({
-            label: labelFor(labels, item.labelRef),
-            path: item.path,
-          }))}
-        />
-      </div>
+      <Breadcrumbs
+        items={(breadcrumbProps.items || []).map((item) => ({
+          label: labelFor(labels, item.labelRef),
+          path: item.path,
+        }))}
+      />
+      <Note variant="warning" dismissible>
+        {labelFor(labels, "demoInventoryNote")}
+      </Note>
+
       <section className="trehub-flight-list__search-stage" ref={searchStageRef}>
         <div className="trehub-flight-list__search-intro">
           <span>{labelFor(labels, "pageEyebrow")}</span>
@@ -214,7 +215,13 @@ export default function FlightFiltersView({
                 })}
               </p>
             </div>
-            {loading ? <Spinner size="sm" label={labels.loading || ""} className="trehub-flight-list__sync-status" /> : null}
+            {loading ? (
+              <Spinner
+                size="sm"
+                label={labels.loading || ""}
+                className="trehub-flight-list__sync-status"
+              />
+            ) : null}
             <div className="trehub-flight-list__sort">
               <SingleSelect
                 label={labelFor(labels, resultProps.sortLabelRef)}
@@ -224,7 +231,9 @@ export default function FlightFiltersView({
               />
             </div>
           </header>
-          {results.length ? (
+          {loading ? (
+            <TrehubPreloader variant="flight-results" label={labels.loading} />
+          ) : results.length ? (
             results.map((flight) => (
               <FlightCard
                 key={flight.offerId || flight.id}
@@ -261,6 +270,7 @@ export default function FlightFiltersView({
       <div className="trehub-flight-list__mobile-clearance" aria-hidden="true" />
       <FloatingActionBar
         hideOnDesktop
+        variant="inline"
         className={`trehub-flight-list__mobile-actions${mobileSearchVisible ? " has-search-action" : ""}`}
         actions={[
           {
@@ -286,17 +296,46 @@ export default function FlightFiltersView({
       <BottomSheet
         open={mobileFiltersOpen}
         onClose={() => setMobileFiltersOpen(false)}
-        title={labelFor(labels, filterProps.mobileSheetTitleRef)}
-        closeLabel={labelFor(labels, filterProps.mobileCloseLabelRef)}
+        title={labelFor(
+          labels,
+          filterProps.overlayConfig?.titleRef || filterProps.mobileSheetTitleRef,
+        )}
+        closeLabel={labelFor(
+          labels,
+          filterProps.overlayConfig?.closeLabelRef || filterProps.mobileCloseLabelRef,
+        )}
         className="trehub-flight-list__filter-sheet"
+        actions={
+          <div className="trehub-flight-list__sheet-actions">
+            <Button
+              variant="solid"
+              text={labelFor(labels, filterProps.overlayConfig?.applyLabelRef, "Show flights")}
+              onClick={() => setMobileFiltersOpen(false)}
+            />
+            <Button
+              variant="outline"
+              text={labelFor(
+                labels,
+                filterProps.overlayConfig?.resetLabelRef || filterProps.resetLabelRef,
+              )}
+              onClick={onResetFilters}
+            />
+          </div>
+        }
       >
-        {renderFilters("trehub-flight-list__sheet-filters")}
+        {renderFilters("trehub-flight-list__sheet-filters", true)}
       </BottomSheet>
       <BottomSheet
         open={mobileSearchOpen}
         onClose={() => setMobileSearchOpen(false)}
-        title={labelFor(labels, searchProps.mobileSheetTitleRef)}
-        closeLabel={labelFor(labels, searchProps.mobileCloseLabelRef)}
+        title={labelFor(
+          labels,
+          searchProps.overlayConfig?.titleRef || searchProps.mobileSheetTitleRef,
+        )}
+        closeLabel={labelFor(
+          labels,
+          searchProps.overlayConfig?.closeLabelRef || searchProps.mobileCloseLabelRef,
+        )}
         className="trehub-flight-list__search-sheet"
       >
         {renderSearch("sheet", (payload) => {

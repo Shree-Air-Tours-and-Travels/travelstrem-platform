@@ -12,8 +12,9 @@
   &__backdrop {
     position: absolute;
     inset: 0;
-    background: var(--overlay-strong);
-    backdrop-filter: blur($space-1);
+    background: var(--color-transparent);
+    backdrop-filter: brightness(0.5);
+
   }
 
   &__dialog {
@@ -31,5 +32,71 @@
     &__dialog {
       max-height: calc(100dvh - (2 * #{$space-3}));
     }
+  }
+}
+
+.trem-modal-sheet .trem-modal-sheet__content {
+  .ct-modal-card__title {
+    display: none;
+  }
+
+  .trem-enquiry-modal__header,
+  .trem-confirm-overlay__header,
+  .trem-options-overlay__header,
+  .trehub-rate-modal__header,
+  .trehub-room-details-modal__header {
+    display: none;
+  }
+
+  width: 100%;
+  min-width: 0;
+  height: auto;
+  min-height: 0;
+  box-sizing: border-box;
+  max-width: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  animation: none;
+  overflow: visible;
+
+  >.ct-modal-close,
+  >.trem-confirm-overlay__close {
+    display: none;
+  }
+
+  >.trem-options-overlay__close,
+  >.trem-enquiry-modal__header>.ui-button {
+    display: none;
+  }
+
+  >.trem-enquiry-modal__body {
+    overflow: visible;
+    flex: none;
+  }
+}
+
+// Embedded views yield scrolling and dismissal to the mobile sheet.
+.trem-modal-sheet .trem-modal-sheet__content {
+  [data-modal-close] {
+    display: none;
+  }
+
+  [data-modal-content],
+  [data-modal-scroll] {
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    min-width: 0;
+    overflow: visible;
+  }
+
+  [data-modal-content] {
+    width: 100%;
+    grid-template-rows: none;
+    grid-auto-rows: auto;
   }
 }

@@ -6,34 +6,24 @@
 }
 
 .trehub-flight-journey {
+  display: flex;
+  flex-direction: column;
+  gap: $space-5;
+  width: min(calc(100% - (2 * var(--trehub-page-gutter))), #{$full-width});
+  margin-inline: auto;
   min-height: 100%;
-  padding: 0 clamp($space-4, 3vw, $space-8)
-    calc(clamp($space-8, 6vw, 5rem) + var(--trem-floating-action-clearance, 0px));
+  padding: 0 0 calc(clamp($space-8, 6vw, 5rem) + var(--trem-floating-action-clearance, 0px));
   background: var(--page-bg);
   color: var(--text);
   font-family: $font-primary;
 
-  > :not(.trehub-flight-journey__breadcrumb) {
-    width: min(100%, #{$full-width});
-    margin-inline: auto;
-  }
-}
-
-.trehub-flight-journey__breadcrumb {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  margin: 0 calc(clamp($space-4, 3vw, $space-8) * -1);
-  padding: $space-3 clamp($space-4, 3vw, $space-8);
-  border-bottom: 1px solid var(--border);
-  background: var(--surface-elevated);
 }
 
 .trehub-flight-journey__hero {
   position: relative;
   width: 100%;
-  margin: $space-5 0;
-  padding: $space-5 0;
+  margin: 0;
+  padding: 0 0 $space-5;
   overflow: hidden;
   border-bottom: 1px solid var(--border);
   background: transparent;
@@ -458,9 +448,6 @@
 }
 
 @include mq-max($breakpoint-mobile) {
-  .trehub-flight-journey {
-    padding-inline: $space-3;
-  }
   .trehub-flight-journey__layout,
   .trehub-flight-journey__steps,
   .trehub-flight-journey__content {
@@ -509,10 +496,6 @@
     font-size: $font-size-xs;
     line-height: 1.25;
     text-align: center;
-  }
-  .trehub-flight-journey__breadcrumb {
-    margin-inline: -$space-3;
-    padding-inline: $space-3;
   }
   .trehub-flight-journey__hero {
     margin-block: $space-3;

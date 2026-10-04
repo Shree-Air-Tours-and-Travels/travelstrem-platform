@@ -26,6 +26,11 @@
   color: var(--text);
   font-family: $font-primary;
 
+  &__service-state {
+    width: min(520px, 100%);
+    margin: clamp(40px, 12vh, 120px) auto;
+  }
+
   &__company-details {
     display: none;
   }
@@ -188,7 +193,7 @@
     justify-content: flex-start;
     margin-bottom: 20px;
 
-    > div {
+    >div {
       width: 100%;
     }
   }
@@ -915,8 +920,7 @@
   .auth-trem {
     width: 100%;
     min-height: calc(100dvh - 69px);
-    padding: 18px max(14px, env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom))
-      max(14px, env(safe-area-inset-left));
+    padding: 18px max(14px, env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
 
     &__experience {
       display: flex;
@@ -1023,7 +1027,7 @@
 
 // Full-page identity panel and an open, readable account form.
 .auth-trem {
-  background: linear-gradient(90deg, var(--color-primary-dark), var(--color-primary) 50%, var(--page-bg) 50%);
+  // background: linear-gradient(90deg, var(--color-primary-dark), var(--color-primary) 50%, var(--page-bg) 50%);
 
   &__experience {
     width: min(1280px, 100%);
@@ -1045,10 +1049,14 @@
 
   &__company-title,
   &__company-description-highlight,
-  &__highlight strong { color: var(--color-on-primary); }
+  &__highlight strong {
+    color: var(--color-on-primary);
+  }
 
   &__company-description,
-  &__highlight small { color: color-mix(in srgb, var(--color-on-primary) 80%, transparent); }
+  &__highlight small {
+    color: color-mix(in srgb, var(--color-on-primary) 80%, transparent);
+  }
 
   &__company-eyebrow,
   &__highlight-icon {
@@ -1057,64 +1065,196 @@
     color: var(--color-on-primary);
   }
 
-  &__company-title { font-size: clamp(2.5rem, 4vw, 4.4rem); line-height: 1.08; }
+  &__company-title {
+    font-size: clamp(2.5rem, 4vw, 4.4rem);
+    line-height: 1.08;
+  }
+
   &__company,
   &__access,
   &__card,
-  &__field-group { min-width: 0; overflow-wrap: anywhere; }
-  &__company-description { max-width: 100%; }
-  &__field-input { box-sizing: border-box; }
-  &__row { flex-wrap: wrap; }
-  &__highlights { margin-top: 40px; gap: 22px; }
-  &__access { padding-block: 24px; }
-  &__title { font-size: clamp(2rem, 3vw, 2.6rem); }
-  &__sub { margin-bottom: 24px; }
-  &__form { gap: 18px; }
-  &__field-group { display: grid; gap: 8px; }
-  &__field-group > label { color: var(--text); font-size: $font-size-sm; font-weight: $font-semibold; }
-  &__field-input { min-height: 52px; }
-  &__field-input[aria-invalid="true"] { border-color: var(--color-danger); }
-  &__field-error { color: var(--color-danger); font-size: $font-size-xs; line-height: 1.5; }
-  &__notice { padding: 14px; margin-block: 16px; border-radius: 10px; background: var(--success-soft); color: var(--color-success); line-height: 1.5; }
-  &__tabs { border-bottom: 1px solid var(--border); gap: 24px; }
+  &__field-group {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  &__company-description {
+    max-width: 100%;
+  }
+
+  &__field-input {
+    box-sizing: border-box;
+  }
+
+  &__row {
+    flex-wrap: wrap;
+  }
+
+  &__highlights {
+    margin-top: 40px;
+    gap: 22px;
+  }
+
+  &__access {
+    padding-block: 24px;
+  }
+
+  &__title {
+    font-size: clamp(2rem, 3vw, 2.6rem);
+  }
+
+  &__sub {
+    margin-bottom: 24px;
+  }
+
+  &__form {
+    gap: 18px;
+  }
+
+  &__field-group {
+    display: grid;
+    gap: 8px;
+  }
+
+  &__field-group>label {
+    color: var(--text);
+    font-size: $font-size-sm;
+    font-weight: $font-semibold;
+  }
+
+  &__field-input {
+    min-height: 52px;
+  }
+
+  &__field-input[aria-invalid="true"] {
+    border-color: var(--color-danger);
+  }
+
+  &__field-error {
+    color: var(--color-danger);
+    font-size: $font-size-xs;
+    line-height: 1.5;
+  }
+
+  &__notice {
+    padding: 14px;
+    margin-block: 16px;
+    border-radius: 10px;
+    background: var(--success-soft);
+    color: var(--color-success);
+    line-height: 1.5;
+  }
+
+  &__tabs {
+    border-bottom: 1px solid var(--border);
+    gap: 24px;
+  }
+
   &__tab {
     border: 0;
     border-bottom: 3px solid transparent;
     border-radius: 0;
     background: transparent;
-    &.is-active { color: var(--color-primary); background: transparent; border-bottom-color: var(--color-primary); }
+
+    &.is-active {
+      color: var(--color-primary);
+      background: transparent;
+      border-bottom-color: var(--color-primary);
+    }
   }
 }
 
 @media (max-width: 960px) {
   .auth-trem {
     background: var(--page-bg);
-    &__experience { grid-template-columns: 1fr; gap: 32px; }
-    &__company { padding: 0; color: var(--text); }
+
+    &__experience {
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+
+    &__company {
+      padding: 0;
+      color: var(--text);
+    }
+
     &__company-title,
-    &__highlight strong { color: var(--title); }
+    &__highlight strong {
+      color: var(--title);
+    }
+
     &__company-description,
-    &__highlight small { color: var(--muted); }
-    &__company-description-highlight { color: var(--color-primary); }
+    &__highlight small {
+      color: var(--muted);
+    }
+
+    &__company-description-highlight {
+      color: var(--color-primary);
+    }
+
     &__company-eyebrow,
-    &__highlight-icon { background: var(--primary-soft); color: var(--color-primary); }
-    &__highlights { margin-top: 24px; }
-    &__access { padding-block: 8px; }
+    &__highlight-icon {
+      background: var(--primary-soft);
+      color: var(--color-primary);
+    }
+
+    &__highlights {
+      margin-top: 24px;
+    }
+
+    &__access {
+      padding-block: 8px;
+    }
   }
 }
 
 @media (max-width: 580px) {
   .auth-trem {
-    &__experience { gap: 24px; }
-    &__company { width: 100%; }
-    &__company-title { display: block; font-size: clamp(1.8rem, 8vw, 2.5rem); }
-    &__company-title br { display: none; }
-    &__company-description { margin-top: 12px; }
-    &__company-eyebrow { white-space: normal; }
-    &__access { max-width: 100%; }
-    &__field-input { font-size: 16px; }
-    &__row { flex-direction: row; align-items: center; gap: 12px; }
-    &__otp-actions { flex-wrap: wrap; }
-    &__access-request { line-height: 1.6; }
+    &__experience {
+      gap: 24px;
+    }
+
+    &__company {
+      width: 100%;
+    }
+
+    &__company-title {
+      display: block;
+      font-size: clamp(1.8rem, 8vw, 2.5rem);
+    }
+
+    &__company-title br {
+      display: none;
+    }
+
+    &__company-description {
+      margin-top: 12px;
+    }
+
+    &__company-eyebrow {
+      white-space: normal;
+    }
+
+    &__access {
+      max-width: 100%;
+    }
+
+    &__field-input {
+      font-size: 16px;
+    }
+
+    &__row {
+      flex-direction: row;
+      align-items: center;
+      gap: 12px;
+    }
+
+    &__otp-actions {
+      flex-wrap: wrap;
+    }
+
+    &__access-request {
+      line-height: 1.6;
+    }
   }
 }

@@ -14,7 +14,7 @@ export function calculateSettlementFromFinancials({
     const prorate = (amount) =>
         expectedMinor
             ? Number(
-                  (BigInt(amount) * ratioNumerator + BigInt(expectedMinor / 2)) /
+                  (BigInt(amount) * ratioNumerator + BigInt(expectedMinor) / 2n) /
                       BigInt(expectedMinor),
               )
             : 0;

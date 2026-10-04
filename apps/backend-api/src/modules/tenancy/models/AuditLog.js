@@ -3,6 +3,7 @@ const schema = new mongoose.Schema(
     {
         actorId: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null, index: true },
         actorRole: { type: String, default: "public" },
+        tenantId: { type: String, default: "travelstrem", index: true },
         agencyId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "PartnerAgency",
@@ -21,4 +22,5 @@ const schema = new mongoose.Schema(
     { timestamps: { createdAt: true, updatedAt: false } },
 );
 schema.index({ agencyId: 1, createdAt: -1 });
+schema.index({ tenantId: 1, createdAt: -1 });
 export default mongoose.models.AuditLog || mongoose.model("AuditLog", schema);

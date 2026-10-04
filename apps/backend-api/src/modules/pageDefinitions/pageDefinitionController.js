@@ -1,3 +1,4 @@
+import { scopeTenantDashboard, scopeTenantHome } from "./tenantDashboard.js";
 import jwt from "jsonwebtoken";
 import pageDefinitionService from "../../services/pageDefinitionService.js";
 import config from "../../config/index.js";
@@ -57,7 +58,7 @@ async function findAdminViewer(req, authUser = extractOptionalUser(req)) {
     const user = authUser?.userId
         ? await User.findById(authUser.userId)
               .select(
-                  "name role adminLevel adminApprovalStatus accountStatus tokenVersion internalTeamRoles",
+                  "name role clientId clientRole productAccess adminLevel adminApprovalStatus accountStatus tokenVersion internalTeamRoles",
               )
               .lean()
         : null;
@@ -70,6 +71,22 @@ async function findAdminViewer(req, authUser = extractOptionalUser(req)) {
         (user.adminLevel !== "master" && user.adminApprovalStatus !== "approved")
     )
         return null;
+    if (
+        process.env.TENANT_CLIENT_ID
+            ? String(user.clientId) !== process.env.TENANT_CLIENT_ID ||
+              !["client_master_admin", "client_admin"].includes(user.clientRole)
+            : user.clientId || user.adminLevel !== "master"
+    )
+        return null;
+    if (req.tenant?.client)
+        req.tenant.client = {
+            ...req.tenant.client,
+            productAccess: req.tenant.client.productAccess.filter(
+                (key) => !user.productAccess?.length || user.productAccess.includes(key),
+            ),
+            partnerEnabled:
+                req.tenant.client.partnerEnabled && user.clientRole === "client_master_admin",
+        };
     return user;
 }
 
@@ -87,7 +104,7 @@ export const getPageDefinition = async (req, res) => {
         injectData =
             user.internalTeamRoles?.includes("support") && user.adminLevel !== "master"
                 ? { supportDashboard: await buildSupportDashboardSnapshot(user) }
-                : await buildAdminDashboardSnapshot();
+                : await buildAdminDashboardSnapshot(req.tenant?.client);
     } else if (pageKey === "app-shell/home") {
         injectData = await buildHomeFeatureSnapshot();
     } else if (pageKey === "app-shell/dashboard") {
@@ -105,19 +122,32 @@ export const getPageDefinition = async (req, res) => {
                           user &&
                           (user.accountStatus || "active") === "active" &&
                           Number(authUser.tokenVersion || 0) === Number(user.tokenVersion || 0) &&
-                          scopeUserToPortal(user, getPortalScope(req)).internalTeamRoles?.includes("support")
+                          scopeUserToPortal(user, getPortalScope(req)).internalTeamRoles?.includes(
+                              "support",
+                          )
                               ? buildSupportDashboardSnapshot(user)
                               : null,
                       )
                 : Promise.resolve(null),
         ]);
-        injectData = { homeFeatures: homeFeatures.homeFeatures, ...dashboard, clientDashboard, supportDashboard };
+        injectData = {
+            homeFeatures: homeFeatures.homeFeatures,
+            ...dashboard,
+            clientDashboard,
+            supportDashboard,
+        };
     }
     return pageDefinitionService.resolvePage(req, res, pageKey, {
         remoteOverrides: parseOverride(req.query.remoteOverrides),
         featureOverrides: parseOverride(req.query.featureOverrides),
         authUser,
         injectData,
+        transformComponent:
+            pageKey === "admin-shell/dashboard"
+                ? (component) => scopeTenantDashboard(component, req.tenant?.client)
+                : pageKey === "app-shell/home"
+                  ? (component) => scopeTenantHome(component, req.tenant?.client)
+                  : undefined,
     });
 };
 
@@ -133,17 +163,22 @@ export const getDashboardWidget = async (req, res) => {
     if (!user || (user.internalTeamRoles?.includes("support") && user.adminLevel !== "master")) {
         return res.status(403).json({ status: "error", message: "Dashboard access denied." });
     }
-    const definition =
-        pageDefinitionService.loadPageDefinition("admin-shell/dashboard").definition.component;
+    const definition = scopeTenantDashboard(
+        pageDefinitionService.loadPageDefinition("admin-shell/dashboard").definition.component,
+        req.tenant?.client,
+    );
     const widget = (definition.structure?.widgets || []).find((entry) =>
         entry.props?.endpoint?.endsWith(`/widgets/${req.params.widgetKey}`),
     );
     if (!widget)
         return res.status(404).json({ status: "error", message: "Dashboard widget not found." });
-    const data = await buildAdminDashboardWidgetSnapshot(req.params.widgetKey);
+    const data = await buildAdminDashboardWidgetSnapshot(req.params.widgetKey, req.tenant?.client);
     if (req.params.widgetKey === "quickActions") {
         data.actions = (definition.structure?.actions || []).filter(
-            (action) => !action.masterOnly || user.adminLevel === "master",
+            (action) =>
+                !action.masterOnly ||
+                user.adminLevel === "master" ||
+                user.clientRole === "client_master_admin",
         );
     }
     return res.json({

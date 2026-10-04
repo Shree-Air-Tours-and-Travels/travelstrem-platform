@@ -21,7 +21,7 @@ import SavedSearchesView from "../../views/SavedSearchesView";
 import FavoritesView from "../../views/FavoritesView";
 import ProfileView from "../../views/ProfileView";
 import { UserBookingJourney } from "@apps/booking-engine";
-import { NoDataFound, Preloader, PRODUCT_TYPE } from "@packages/trem-ui";
+import { NoDataFound, Preloader, PRODUCT_TYPE, useTheme } from "@packages/trem-ui";
 import "./AppShell.styles.scss";
 
 const PRODUCT_URLS = { [PRODUCT_TYPE.TREVISTA]: process.env.REACT_APP_TREVISTA_URL };
@@ -105,6 +105,23 @@ export default function AppShellContainer({
 }) {
   const navigate = useNavigate();
   const { session } = useAppShellConfig();
+  const { configuration } = useTheme();
+  const enabledService = (key) => {
+    if (!configuration) return true;
+    const [product, service] = { flight: ["trehub", "flights"], flights: ["trehub", "flights"], hotel: ["trehub", "hotels"], hotels: ["trehub", "hotels"], trip: ["trevio", "trips"], trips: ["trevio", "trips"], tour: ["trevista", "tours"], tours: ["trevista", "tours"] }[key] || [];
+    return !product || (configuration.products.includes(product) && (!configuration.modules?.[product] || configuration.modules[product].includes(service)));
+  };
+  const scopeFeaturedTravel = (content) => {
+    if (!content) return content;
+    const categories = (content.categories || []).filter((item) => enabledService(item.id));
+    return { ...content, categories, defaultCategory: categories.some((item) => item.id === content.defaultCategory) ? content.defaultCategory : categories[0]?.id };
+  };
+  const scopeJourneyHero = (content) => {
+    if (!content) return content;
+    const modes = content.search?.modes?.filter((item) => enabledService(item.id));
+    return { ...content, search: modes?.length ? { ...content.search, modes } : null };
+  };
+
   const isAuthenticated = Boolean(session?.isAuthenticated);
   const user = session?.user || {};
   const overviewUserKey = String(user.id || user._id || "guest");
@@ -603,9 +620,9 @@ export default function AppShellContainer({
           />
         ) : (
           <OverviewView
-            journeyHero={journeyHero}
+            journeyHero={scopeJourneyHero(journeyHero)}
             journeyStory={journeyStory}
-            featuredTravel={featuredTravel}
+            featuredTravel={scopeFeaturedTravel(featuredTravel)}
             homeInsights={homeInsights}
             onHeroSearch={handleHeroSearch}
             onTabChange={onTabChange}
@@ -619,17 +636,17 @@ export default function AppShellContainer({
           hasData={Boolean(dashboardData)}
           onRetry={() => loadDashboard({ force: true })}
           onSearch={onSearch} onSearchSelect={onSearchSelect} searchConfig={searchConfig}
-          featuredTravel={dashboardFeaturedTravel} travellerLayout={dashboardData?.travellerLayout}
+          featuredTravel={scopeFeaturedTravel(dashboardFeaturedTravel)} travellerLayout={dashboardData?.travellerLayout}
           user={user}
           isAuthenticated={isAuthenticated}
           userSnapshots={dashboardData?.userSnapshots}
-          guestDashboard={dashboardData?.guestDashboard}
+          guestDashboard={dashboardData?.guestDashboard ? { ...dashboardData.guestDashboard, searches: dashboardData.guestDashboard.searches?.filter((item) => enabledService(item.id)) } : null}
           clientDashboard={dashboardData?.clientDashboard}
           supportDashboard={dashboardData?.supportDashboard}
           stats={dashboardData?.metrics || {}}
           copy={overviewCopy}
           journeyStage={dashboardData?.journeyStage}
-          journeyHero={journeyHero}
+          journeyHero={scopeJourneyHero(journeyHero)}
           sections={overviewSections}
           metricsDefinition={metricsDefinition}
           recentActivity={dashboardData?.recentActivity || []}

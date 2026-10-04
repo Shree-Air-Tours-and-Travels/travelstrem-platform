@@ -1,6 +1,5 @@
-import "../views/shared/DashboardSkeleton.scss";
 import React, { useEffect, useState } from "react";
-import { NoDataFound } from "@packages/trem-ui";
+import { NoDataFound, Preloader } from "@packages/trem-ui";
 
 export default function createDashboardWidgetContainer(View) {
   return function DashboardWidgetContainer({ widget, fetchWidgetData, refreshKey, ...viewProps }) {
@@ -28,7 +27,7 @@ export default function createDashboardWidgetContainer(View) {
       return () => { active = false; controller.abort(); };
     }, [endpoint, fetchWidgetData, refreshKey, retryKey]);
 
-    if (state.loading && !state.data) return <div className="admin-overview__skeleton is-widget" role="status" aria-label={`Loading ${widget?.type || "widget"}`} />;
+    if (state.loading && !state.data) return <Preloader variant="dashboardWidget" count={3} label={`Loading ${widget?.type || "widget"}`} />;
     if (state.error && !state.data) {
       return <NoDataFound title="Widget unavailable" description={state.error} actionLabel="Try again" onAction={() => setRetryKey((key) => key + 1)} compact />;
     }

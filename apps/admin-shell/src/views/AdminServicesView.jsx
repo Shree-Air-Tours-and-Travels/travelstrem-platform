@@ -73,6 +73,7 @@ export default function AdminServicesView({
   onRefresh,
   auth,
   activeProducts,
+  companyName,
   children,
 }) {
   const [typeFilter, setTypeFilter] = useState("all");
@@ -239,8 +240,9 @@ export default function AdminServicesView({
           <span>TRAVEL CATALOGUE</span>
           <h1>Travel product operations</h1>
           <p>
-            Review publishing health, verify catalogue quality and manage every active
-            TravelsTREM product from one workspace.
+            {companyName
+              ? `Review publishing health and manage ${companyName}'s enrolled travel products from one workspace.`
+              : "Review publishing health, verify catalogue quality and manage every active TravelsTREM product from one workspace."}
           </p>
         </div>
         <div className="asv__actions">
@@ -372,7 +374,7 @@ export default function AdminServicesView({
                     ownershipMode="agency"
                     ownershipLabels={{
                       agency: "Agency",
-                      platformAgency: "TravelsTREM platform",
+                      platformAgency: companyName || "TravelsTREM platform",
                     }}
                     ownerAgentName={service.ownerAgentName || ""}
                     showOwner
@@ -396,7 +398,7 @@ export default function AdminServicesView({
                   ownershipMode="agency"
                   labels={{
                     agency: "Agency",
-                    platformAgency: "TravelsTREM platform",
+                    platformAgency: companyName || "TravelsTREM platform",
                     price: "From",
                   }}
                   onView={() => onViewTrip?.(service)}

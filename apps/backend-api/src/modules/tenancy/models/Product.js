@@ -4,6 +4,7 @@ const schema = new mongoose.Schema(
         key: { type: String, required: true, unique: true, trim: true, lowercase: true },
         name: { type: String, required: true, trim: true },
         description: { type: String, trim: true, default: "" },
+        services: [{ type: String, trim: true, lowercase: true }],
         status: { type: String, enum: ["active", "inactive"], default: "active", index: true },
         hidden: { type: Boolean, default: false },
         metadata: { type: mongoose.Schema.Types.Mixed, default: {} },

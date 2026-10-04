@@ -495,3 +495,61 @@
     transform: scale(1) translateY(0);
   }
 }
+
+.ct-modal-save-preferences {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: var(--surface-inset);
+  border-radius: 10px;
+  label { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; }
+  input { accent-color: var(--color-primary); }
+}
+
+.trem-modal-sheet {
+  .ct-modal-card__body {
+    flex: none;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+    padding: $space-4 0;
+  }
+
+  .ct-modal-card__header-bar {
+    padding: $space-3 0 $space-4;
+    border-bottom: 0;
+  }
+
+  .ct-modal-card__intro {
+    gap: $space-3;
+  }
+
+  .ct-modal-save-preferences {
+    margin: 0;
+    padding: $space-3;
+    gap: $space-3;
+    border: 1px solid var(--border);
+    background: var(--surface-subtle);
+  }
+
+  .ct-modal-card__stage {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .ct-modal-card__workspace {
+    gap: $space-4;
+  }
+
+  .ct-modal-card__footer {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+    background: transparent;
+  }
+}

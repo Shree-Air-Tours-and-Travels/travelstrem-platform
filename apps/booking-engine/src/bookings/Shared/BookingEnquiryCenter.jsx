@@ -3,6 +3,7 @@ import { fetchData, redirectToPayment } from "@packages/trem-utils";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Breadcrumbs,
+  Note,
   Button,
   EnquiryCenter,
   DetailsCard,
@@ -34,24 +35,9 @@ const referencedLabel = (journey, ref) => journey?.labels?.[ref] || "";
 
 function JourneyNotice({ journey, block }) {
   return (
-    <article
-      className={`booking-engine-journey-notice is-${block.tone || "info"}`}
-      role="status"
-    >
-      <span className="booking-engine-journey-notice__icon" aria-hidden="true">
-        <Icon name={block.icon || "itinerary"} size={22} />
-      </span>
-      <div>
-        <div className="booking-engine-journey-notice__heading">
-          <h2>{referencedLabel(journey, block.titleRef)}</h2>
-          {block.badgeRef ? (
-            <StatusBadge
-              value={referencedLabel(journey, block.badgeRef)}
-              tone={block.badgeTone}
-              size="sm"
-            />
-          ) : null}
-        </div>
+    <Note variant={block.tone || "info"} icon={block.icon || "itinerary"}
+      title={referencedLabel(journey, block.titleRef)}
+      actions={block.badgeRef ? <StatusBadge value={referencedLabel(journey, block.badgeRef)} tone={block.badgeTone} size="sm" /> : null}>
         <p>{referencedLabel(journey, block.descriptionRef)}</p>
         {block.liveStatus ? (
           <RealtimeConnectionStatus
@@ -63,8 +49,7 @@ function JourneyNotice({ journey, block }) {
             )}
           />
         ) : null}
-      </div>
-    </article>
+    </Note>
   );
 }
 
@@ -73,6 +58,9 @@ export default function BookingEnquiryCenter(props) {
   const journeyRequestRef = useRef(null);
   const resolvedRequestRef = useRef("");
   const mutationRefreshingRef = useRef(false);
+  const connectionSeenRef = useRef(false);
+  const previousConnectionRef = useRef(null);
+  const recordStatusRef = useRef(null);
   const [paymentBusy, setPaymentBusy] = useState(false);
   const [paymentReceipt, setPaymentReceipt] = useState(null);
   const returnParams = new URLSearchParams(window.location.search);
@@ -145,19 +133,19 @@ export default function BookingEnquiryCenter(props) {
     setJourney(null);
     setDecision(null);
     setActiveStepId(returnStep);
-  }, [props.selectedId, selectedListRecord?.id]);
+  }, [props.selectedId]);
 
   useEffect(() => {
-    if (!selectedListRecord?.id || mutationRefreshingRef.current) return;
+    if (!props.selectedId || mutationRefreshingRef.current) return;
     let active = true;
     setJourneyState((current) => ({ ...current, loading: true, error: "" }));
-    const requestKey = JSON.stringify([selectedListRecord.id, window.location.pathname, activeStepId, journeyState.revision, selectedListRecord?.status, clockConnected]);
+    const requestKey = JSON.stringify([props.selectedId, window.location.pathname, activeStepId, journeyState.revision]);
     if (resolvedRequestRef.current === requestKey) {
       setJourneyState((current) => ({ ...current, loading: false }));
       return;
     }
     if (journeyRequestRef.current?.key !== requestKey) {
-      journeyRequestRef.current = { key: requestKey, promise: loadBookingJourney(selectedListRecord.id, window.location.pathname, activeStepId) };
+      journeyRequestRef.current = { key: requestKey, promise: loadBookingJourney(props.selectedId, window.location.pathname, activeStepId) };
     }
     journeyRequestRef.current.promise
       .then((response) => {
@@ -172,7 +160,7 @@ export default function BookingEnquiryCenter(props) {
           url.searchParams.set("step", resolvedStep);
           window.history.replaceState(window.history.state, "", url);
         }
-        resolvedRequestRef.current = JSON.stringify([selectedListRecord.id, window.location.pathname, resolvedStep || activeStepId, journeyState.revision, selectedListRecord?.status, clockConnected]);
+        resolvedRequestRef.current = JSON.stringify([props.selectedId, window.location.pathname, resolvedStep || activeStepId, journeyState.revision]);
         setActiveStepId(
           response.componentData.structure?.timeline?.activeStepId || activeStepId,
         );
@@ -189,7 +177,24 @@ export default function BookingEnquiryCenter(props) {
         }
       });
     return () => { active = false; };
-  }, [activeStepId, journeyState.revision, selectedListRecord?.id, selectedListRecord?.status, clockConnected]);
+  }, [activeStepId, journeyState.revision, props.selectedId]);
+
+  useEffect(() => {
+    if (clockConnected && previousConnectionRef.current === false && connectionSeenRef.current) {
+      setJourneyState(current => ({ ...current, revision: current.revision + 1 }));
+    }
+    if (clockConnected) connectionSeenRef.current = true;
+    previousConnectionRef.current = clockConnected;
+  }, [clockConnected]);
+
+  useEffect(() => {
+    const previous = recordStatusRef.current;
+    const current = selectedListRecord ? { id: selectedListRecord.id, status: selectedListRecord.status } : null;
+    recordStatusRef.current = current;
+    if (previous && current && previous.id === current.id && previous.status !== current.status) {
+      setJourneyState(state => ({ ...state, revision: state.revision + 1 }));
+    }
+  }, [selectedListRecord?.id, selectedListRecord?.status]);
 
   useEffect(() => {
     if (!selectedTravellerForm) return;
@@ -490,11 +495,17 @@ export default function BookingEnquiryCenter(props) {
     } else if (activeStepId === "payment") {
       stageContent = <div className="booking-engine-summary">
         {paymentReceipt ? <DetailsCard title={paymentReceipt.heading} actions={<StatusBadge value={paymentReceipt.statusLabel || paymentReceipt.status} tone={paymentReceipt.statusTone || paymentReceipt.tone} />} rows={[{ label: paymentReceipt.amountLabel || "Total payable", value: paymentReceipt.amount }, ...(paymentReceipt.details || [])]}>
+          {!!paymentReceipt.paymentDetails?.length && <details>
+            <summary>Payment details</summary>
+            <DetailsCard title="Payment details" rows={paymentReceipt.paymentDetails.filter(row => row.value !== undefined && row.value !== null && row.value !== "")} />
+          </details>}
           {!!paymentReceipt.refunds?.length && <section><h3>Refund updates</h3><p>Total refunded: {paymentReceipt.refundedAmount}</p>{paymentReceipt.refunds.map(item => <div key={item.reference}><strong>{item.status} · {item.amount}</strong><p>{item.message}</p><small>{item.reference}</small></div>)}</section>}
+        </DetailsCard> : journey.data?.flightConfirmation ? <DetailsCard title={journey.data.flightConfirmation.title} rows={journey.data.flightConfirmation.rows}>
+          {journey.data.flightConfirmation.reference && <details><summary>Booking details</summary><p>TravelsTREM booking reference: {journey.data.flightConfirmation.reference}</p></details>}
         </DetailsCard> : noticeBlock ? <JourneyNotice journey={journey} block={noticeBlock} /> : null}
         {(journey.data?.summaryCards || []).map(card => <DetailsCard key={card.id} title={card.title} rows={card.rows} />)}
         <DetailsCard title="Travel documents" description="Your tickets, vouchers and documents shared by your travel partner." rows={journey.data?.ticketRows || []}>
-          {journey.data?.travelDocuments?.length ? <ul className="booking-engine-summary__documents">{journey.data.travelDocuments.map(document => <li key={document.id}><div><strong>{document.title}</strong><span>{document.type} · {document.availability}</span></div>{document.href && <Button variant="outline" size="small" iconLeft="download" text="Download" aria-label={`Download ${document.title}`} onClick={() => openQuoteDocument(document.href).catch(error => showToast({ title: error.message, status: "error" }))} />}</li>)}</ul> : <p className="booking-engine-summary__empty">Your files will appear here once your travel partner or provider makes them available.</p>}
+          {journey.data?.travelDocuments?.length ? <ul className="booking-engine-summary__documents">{journey.data.travelDocuments.map(document => <li key={document.id}><div><strong>{document.title}</strong><span>{document.type} · {document.availability}</span></div>{document.href && <Button variant="outline" size="small" iconLeft="download" text={document.type === "ticket" ? "View / Download Ticket" : "Download"} aria-label={`Download ${document.title}`} onClick={() => openQuoteDocument(document.href).catch(error => showToast({ title: error.message, status: "error" }))} />}</li>)}</ul> : <p className="booking-engine-summary__empty">Your files will appear here once your travel partner or provider makes them available.</p>}
         </DetailsCard>
       </div>;
       actions = journey.data?.paymentComplete || ["PROCESSING", "PAID", "REFUNDED", "PARTIALLY_REFUNDED"].includes(paymentReceipt?.status || journey.data?.paymentStatus) ? [] : [{
@@ -616,6 +627,7 @@ export default function BookingEnquiryCenter(props) {
   return (
     <EnquiryCenter
       {...props}
+      detailLoading={Boolean(props.selectedId && (props.loading || selectedListRecord) && !activeJourney && !journeyState.error)}
       enquiries={(props.enquiries || []).map((item) =>
         selectedRecord && item.id === selectedListRecord?.id ? selectedRecord : item,
       )}

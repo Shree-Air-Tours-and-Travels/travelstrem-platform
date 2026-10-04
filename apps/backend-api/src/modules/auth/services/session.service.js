@@ -68,6 +68,16 @@ export const safeAuthUser = (user) => ({
     createdAt: user.createdAt ? new Date(user.createdAt).toISOString() : null,
 });
 
+const assertTenantSession = (user, portal) => {
+    const tenantId = process.env.TENANT_CLIENT_ID;
+    if (tenantId ? String(user.clientId) !== tenantId : Boolean(user.clientId))
+        throw Object.assign(new Error("Sign in through your tenant site."), { status: 403 });
+    if (portal === "admin" && (tenantId
+        ? !["client_master_admin", "client_admin"].includes(user.clientRole)
+        : user.role !== "admin" || user.adminLevel !== "master"))
+        throw Object.assign(new Error("Administration access is not allowed."), { status: 403 });
+};
+
 const signAccessToken = (user, portal, sessionId) =>
     jwt.sign(
         {
@@ -78,6 +88,7 @@ const signAccessToken = (user, portal, sessionId) =>
             tokenVersion: user.tokenVersion || 0,
             portal,
             sid: sessionId,
+            tenantId: process.env.TENANT_CLIENT_ID || "travelstrem",
         },
         config.JWT.accessSecret,
         { expiresIn: config.JWT.accessExpires },
@@ -101,6 +112,7 @@ export const createSession = async ({
     family = null,
     rememberMe = false,
 }) => {
+    assertTenantSession(user, requestPortal(req, portalOverride));
     const normalizedAvatar = normalizeProfileAvatar(user.avatar);
     if (user.avatar !== normalizedAvatar) {
         const previousAvatar = user.avatar ?? null;
@@ -254,7 +266,10 @@ export const rotateSession = async ({ req, res, portal: portalOverride }) => {
 export const getSessionUser = async ({ req, res, portal: portalOverride, allowRefresh = true }) => {
     const portal = requestPortal(req, portalOverride);
     const scopedReq = { ...req, headers: { ...req.headers, "x-travelstrem-portal": portal } };
-    const accessToken = readPortalAccessToken(scopedReq);
+    const authorization = req.headers.authorization || req.headers.Authorization || "";
+    const accessToken = authorization.startsWith("Bearer ")
+        ? authorization.slice(7)
+        : req.headers["x-ignore-cookie-auth"] === "true" ? null : readPortalAccessToken(scopedReq);
     if (accessToken) {
         try {
             const payload = jwt.verify(accessToken, config.JWT.accessSecret);
@@ -276,6 +291,7 @@ export const getSessionUser = async ({ req, res, portal: portalOverride, allowRe
                         ),
                     );
                 }
+                assertTenantSession(user, portal);
                 return user;
             }
         } catch {

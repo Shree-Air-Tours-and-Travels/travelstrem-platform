@@ -29,6 +29,8 @@ export const toSafePortalUser = (user, fallback = null) => {
         agencyRole: user?.agencyRole || fallback?.agencyRole || "none",
         agencyId: user?.agencyId?.toString?.() || user?.agencyId || fallback?.agencyId || null,
         accountStatus: user?.accountStatus || fallback?.accountStatus || "active",
+        clientId: user?.clientId?.toString?.() || fallback?.clientId || null,
+        clientRole: user?.clientRole || fallback?.clientRole || "none",
         productAccess: user?.productAccess || fallback?.productAccess || [],
         permissionGrants: user?.permissionGrants || fallback?.permissionGrants || [],
         permissionDenials: user?.permissionDenials || fallback?.permissionDenials || [],

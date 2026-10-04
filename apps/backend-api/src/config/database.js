@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { resolveMongoConnectionUri } from "./dns.js";
 import config from "./env.js";
 
 const connectDB = async () => {
@@ -11,7 +12,10 @@ const connectDB = async () => {
             );
         }
 
-        await mongoose.connect(mongoUri);
+        await mongoose.connect(
+            await resolveMongoConnectionUri(mongoUri),
+            process.env.TENANT_CLIENT_ID ? { autoCreate: false, autoIndex: false } : {},
+        );
         console.log("✅ MongoDB Connected..");
     } catch (error) {
         console.error("❌ MongoDB Connection Error:", error);

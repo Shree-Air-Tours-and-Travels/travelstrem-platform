@@ -110,7 +110,7 @@ export default function ManageTours({ session }) {
       const destination = (backendHeaderConfig?.adminNavigation || []).find(
         (item) => item.target === nextTab || item.id === nextTab,
       );
-      return !destination?.masterOnly || auth.adminLevel === "master";
+      return Boolean(destination) && (!destination.masterOnly || auth.adminLevel === "master");
     },
     [auth.adminLevel, backendHeaderConfig?.adminNavigation],
   );
@@ -200,6 +200,7 @@ export default function ManageTours({ session }) {
   }, [canAccessTab, location.pathname, location.search, navigate]);
 
   async function fetchTours() {
+    if (backendHeaderConfig?.tenantCapabilities && !backendHeaderConfig.tenantCapabilities.products.includes("trevista")) { setTours([]); return; }
     const seq = ++requestSeq.current;
     setLoading(true);
     setError(null);
@@ -219,6 +220,7 @@ export default function ManageTours({ session }) {
   }
 
   async function fetchTrips() {
+    if (backendHeaderConfig?.tenantCapabilities && !backendHeaderConfig.tenantCapabilities.products.includes("trevio")) { setTrips([]); return; }
     try {
       const fetched = await fetchAdminTrips();
       const tripData = Array.isArray(fetched) ? fetched : [];
@@ -239,10 +241,11 @@ export default function ManageTours({ session }) {
   }
 
   async function fetchAgencyManagement() {
+    if (backendHeaderConfig?.tenantCapabilities && !backendHeaderConfig.tenantCapabilities.partnerEnabled) return;
     setAgencyLoading(true);
     try {
       const [nextAgents, nextAgencies] = await Promise.all([fetchAgents(), fetchPartnerAgencies()]);
-      const nextAdmins = await fetchAdmins();
+      const nextAdmins = backendHeaderConfig?.tenantCapabilities ? [] : await fetchAdmins();
       setAdmins(nextAdmins);
       setAgents(nextAgents);
       setPartnerAgencies(nextAgencies);

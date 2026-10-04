@@ -4,12 +4,14 @@ import StayingApiProvider from "./stayingapi/stayingapi.provider.js";
 import TrekkoProvider from "./trekko/trekko.provider.js";
 import { createHotelProviderConfig, isHotelMockInventoryEnabled } from "./provider.config.js";
 import logger from "../../../shared/logger/index.js";
+import { resolveTenantIntegration } from "../../integrations/runtime.js";
 
 const registeredProviders = new Map([
     ["hotelbeds", (config) => new HotelBedsProvider({ config })],
     ["stayingapi", (config) => new StayingApiProvider({ config })],
     ["trekko", (config) => new TrekkoProvider({ config })],
 ]);
+export const getRegisteredHotelProviderNames = () => [...registeredProviders.keys()];
 const assertProvider = (provider, name) => {
     if (
         provider?.name?.toLowerCase() !== name ||
@@ -46,10 +48,16 @@ const createSingleHotelProvider = async (name) => {
     return assertProvider(new Provider({ config }), key);
 };
 
+export const getConfiguredHotelProviderNames = () =>
+    (() => {
+        const runtime = resolveTenantIntegration("travel.hotels");
+        return (runtime.options?.providers || [runtime.provider])
+            .map((name) => String(name).trim().toLowerCase())
+            .filter(Boolean);
+    })();
+
 export const createHotelProvider = async (
-    names = process.env.HOTEL_PROVIDERS ||
-        process.env.HOTEL_PROVIDER ||
-        "hotelbeds,stayingapi,trekko",
+    names = getConfiguredHotelProviderNames().join(","),
 ) => {
     const mockEnabled = isHotelMockInventoryEnabled();
     const keys = String(names)

@@ -1,3 +1,4 @@
+import { useThemeMode } from "@packages/trem-utils";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import Button from "../../components/Button/Button.jsx";
@@ -75,6 +76,7 @@ export default function Header({
 }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { canToggleTheme } = useThemeMode();
   const user = session?.user || null;
   const activePath = location.pathname || "/";
   const [open, setOpen] = useState(false);
@@ -375,7 +377,7 @@ export default function Header({
         user={user}
         isAuthenticated={session?.isAuthenticated}
         theme={theme}
-        onToggleTheme={onToggleTheme}
+        onToggleTheme={canToggleTheme ? onToggleTheme : undefined}
         onSettings={onSettings}
         onLogout={onLogout}
         logoutLabel={logoutAction.label || "Logout"}
@@ -418,11 +420,11 @@ export default function Header({
           >
             <BrandLogo
               logoSrc={brand.logoSrc || ""}
-              darkLogoSrc={brand.darkLogoSrc || ""}
-              name=""
+              logoDarkSrc={brand?.logoDarkSrc}
+              fallbackSrc={headerConfig?.tenantId ? "" : undefined}
+              name={brand.label || "Logo"}
               size="small"
             />
-            <span>{brand.label || "TravelsTrem"}</span>
           </Button>
           <nav className="trem-header__nav" role="navigation" aria-label="Main navigation">
             <ul className="trem-header__menu trem-header__menu--start">
@@ -519,13 +521,15 @@ export default function Header({
             </div>
 
             <div className="trem-header__drawer-bottom">
-              <Button
-                variant="text"
-                iconLeft={theme === "dark" ? "sun" : "moon"}
-                text={theme === "dark" ? "Light mode" : "Dark mode"}
-                onClick={() => runAction(onToggleTheme)}
-                primaryClassName="trem-header__drawer-action"
-              />
+              {canToggleTheme && (
+                <Button
+                  variant="text"
+                  iconLeft={theme === "dark" ? "sun" : "moon"}
+                  text={theme === "dark" ? "Light mode" : "Dark mode"}
+                  onClick={() => runAction(onToggleTheme)}
+                  primaryClassName="trem-header__drawer-action"
+                />
+              )}
               <Button
                 variant="text"
                 iconLeft="settings"

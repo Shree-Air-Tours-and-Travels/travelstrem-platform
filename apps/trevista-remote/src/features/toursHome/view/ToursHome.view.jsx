@@ -4,7 +4,7 @@ import HeroBanner from "../../tours/widgets/hero-banner/HeroBanner";
 import WhyChooseTrevista from "../whyChooseTrevista/WhyChooseTrevista";
 import FeaturedHolidayPackages from "../featuredHolidayPackages/FeaturedHolidayPackages";
 import { bookingBenefits } from "../whyChooseTrevista/data";
-import { Breadcrumbs, Button } from "@packages/trem-ui";
+import { Button } from "@packages/trem-ui";
 
 const ToursHomeSkeleton = () => (
   <div className="tours-page__home-skeleton" role="status" aria-label="Loading Trevista home">
@@ -22,7 +22,6 @@ export default function ToursHomeView({
   widgets,
   widgetsData,
   pageTitle,
-  breadcrumbs,
   loading,
   error,
   onRetry,
@@ -33,9 +32,6 @@ export default function ToursHomeView({
 }) {
   return (
     <main className="tours-page tours-page--home">
-      <div className="tours-page__crumbs">
-        <Breadcrumbs items={breadcrumbs} />
-      </div>
       <div className="tours-page__inner">
         {loading ? (
           <ToursHomeSkeleton />

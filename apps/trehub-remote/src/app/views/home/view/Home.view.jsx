@@ -3,7 +3,6 @@ import {
   BenefitCard,
   ClientShowcase,
   ErrorState,
-  Breadcrumbs,
   GlobalSearchCard,
   Paragraph,
   PopularLocations,
@@ -92,13 +91,6 @@ export default function HomeView({ loading, error, pageModel, onSearch }) {
 
   return (
     <main className="trehub-home">
-      <div className="trehub-page__breadcrumbs">
-        <Breadcrumbs
-          items={(widgets.find((widget) => widget.name === "breadcrumbs")?.props?.items || []).map(
-            (item) => ({ label: labels[item.labelRef], path: item.path }),
-          )}
-        />
-      </div>
       <div className="trehub-home__shell">
         {widgets.map((widget) => {
           const props = widget.props || {};
@@ -156,8 +148,10 @@ export default function HomeView({ loading, error, pageModel, onSearch }) {
               />
             );
           }
-          if (widget.type === "ClientShowcase" || widget.name === "clientShowcase") {
-            const count = Number(getByPath(data, props.templateValues?.count) || 0);
+          if (widget.type === "ClientShowcase" || widget.name === "providerShowcase") {
+            const providers = getByPath(data, props.providersDataPath) || [];
+            if (!Array.isArray(providers) || !providers.length) return null;
+            const count = providers.length;
             const templateValues = Object.fromEntries(
               Object.entries(props.templateValues || {}).map(([key, path]) => [
                 key,
@@ -173,7 +167,7 @@ export default function HomeView({ loading, error, pageModel, onSearch }) {
                   templateValues,
                 )}
                 description={labelFor(labels, props.descriptionRef)}
-                clients={getByPath(data, props.clientsDataPath) || []}
+                clients={providers}
               />
             );
           }

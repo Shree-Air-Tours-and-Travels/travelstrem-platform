@@ -252,7 +252,7 @@ $container-width: 1200px;
       display: block;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.5);
+      background: var(--overlay);
       backdrop-filter: blur(4px);
       -webkit-backdrop-filter: blur(4px);
       opacity: 0;
@@ -577,13 +577,13 @@ $container-width: 1200px;
       flex-shrink: 0;
     }
     &__drawer-action--danger {
-      color: var(--color-danger, #dc2626);
+      color: var(--color-danger);
     }
     &__drawer-action--danger svg {
-      color: var(--color-danger, #dc2626);
+      color: var(--color-danger);
     }
     &__drawer-action--danger:hover {
-      background: rgba(220, 38, 38, 0.08);
+      background: var(--danger-soft);
     }
   }
 }

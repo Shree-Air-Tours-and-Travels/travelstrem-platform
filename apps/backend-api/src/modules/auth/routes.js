@@ -9,6 +9,8 @@ import rateLimit from "express-rate-limit";
 import * as providerAuthController from "./controllers/providerAuthController.js";
 import config from "../../config/index.js";
 
+import { getExperience, resolveReturn } from "./controllers/tenantAuthController.js";
+
 const router = express.Router();
 const trustedOrigins = new Set(
     (config.FRONTENDS || []).flatMap((value) => {
@@ -50,6 +52,8 @@ const requireTrustedOrigin = (req, res, next) => {
 
 // serve auth configuration to frontend
 router.get("/config", controller.getAuthConfig);
+router.get("/experience", getExperience);
+router.post("/return", requireTrustedOrigin, authMiddleware, resolveReturn);
 router.get("/methods", providerAuthController.getAuthMethods);
 
 /*

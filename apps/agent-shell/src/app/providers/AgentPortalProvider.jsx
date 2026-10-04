@@ -8,7 +8,7 @@ import {
   subscribeAuthEvents,
   useSessionInactivity,
 } from "@packages/trem-auth-core";
-import { buildGlobalAuthUrl } from "@packages/trem-utils";
+import { applyDocumentBranding, buildGlobalAuthUrl } from "@packages/trem-utils";
 import { PRODUCT_TYPE, SessionTimeoutModal } from "@packages/trem-ui";
 import apiService from "../../services/apiService";
 import {
@@ -191,6 +191,7 @@ export function AgentPortalConfigProvider({ children }) {
         userEmail: session?.user?.email || "",
       };
       const header = await getHeaderConfig(params);
+      applyDocumentBranding(header?.brand, { tenant: Boolean(header?.tenantId) });
 
       setState((current) => ({
         ...current,
@@ -220,6 +221,7 @@ export function AgentPortalConfigProvider({ children }) {
 
       initOnceRef.current = (async () => {
         const { session, header, pageConfig } = await initApp(params);
+        applyDocumentBranding(header?.brand, { tenant: Boolean(header?.tenantId) });
         lastHeaderRouteRef.current = `${params.pathname}${params.search}${params.hash}`;
 
         setState({

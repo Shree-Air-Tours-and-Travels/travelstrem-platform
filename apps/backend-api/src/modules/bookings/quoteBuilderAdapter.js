@@ -1,3 +1,7 @@
+import Client from "../clients/models/Client.js";
+import { resolveBrand } from "../branding/service.js";
+import { resolveCustomerDashboardContext } from "../dashboard/context.js";
+import { customerScopeQuery } from "../tenancy/customerScope.js";
 import config from "../../config/index.js";
 import FlightBooking from "../flights/models/FlightBooking.js";
 import { PaymentSession } from "../payments/models.js";
@@ -186,6 +190,11 @@ const escapeHtml = (value) => String(value ?? "")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 
+async function customerEnquiryQuery(userId, query) {
+    const context = await resolveCustomerDashboardContext(userId);
+    return { ...query, ...customerScopeQuery(context), claimedBy: userId, product: { $in: context.products } };
+}
+
 async function findAuthorizedEnquiry(enquiryId, actor) {
     const userId = actorId(actor);
     const role = String(actor?.role || "").toLowerCase();
@@ -234,6 +243,8 @@ export async function downloadJourneyDocument(enquiryId, documentId, actor) {
 }
 
 export async function findAuthorizedBookingJourney(enquiryId, actor) {
+    const client = process.env.TENANT_CLIENT_ID ? await Client.findById(process.env.TENANT_CLIENT_ID).lean() : null;
+    const brand = await resolveBrand(client);
     const userId = actorId(actor);
     if (!userId)
         throw Object.assign(new Error("Please sign in to view this booking journey."), {
@@ -244,7 +255,7 @@ export async function findAuthorizedBookingJourney(enquiryId, actor) {
     const { booking, query } = await findEnquiryResource(enquiryId);
     const enquiryDocument = isOperator
         ? await findAuthorizedEnquiry(enquiryId, actor)
-        : await ContactLead.findOne({ ...query, claimedBy: userId });
+        : await ContactLead.findOne(await customerEnquiryQuery(userId, query));
     if (!enquiryDocument)
         throw Object.assign(new Error("Enquiry not found."), { status: 404 });
     await enquiryDocument.populate([
@@ -306,7 +317,16 @@ export async function findAuthorizedBookingJourney(enquiryId, actor) {
             type: doc.type,
             availability: doc.status === "REPLACED" ? "Replaced" : ["UPLOADED", "APPROVED"].includes(doc.status) && (doc.storageProvider === "R2" && doc.storageKey || /^https:\/\//i.test(doc.url || "")) ? "Available" : "Not issued yet",
             href: ["UPLOADED", "APPROVED"].includes(doc.status) && (doc.storageProvider === "R2" && doc.storageKey || /^https:\/\//i.test(doc.url || "")) ? `/booking-engine/bookings/${encodeURIComponent(enquiry.enquiryRef)}/documents/${doc._id}` : null,
-        })).concat((enquiry.journeyType === "flight" ? ["ticket"] : ["voucher"]).filter(type => !travelDocuments.some(doc => doc.type === type && doc.status !== "REPLACED")).map(type => ({ id: `pending-${type}`, type, title: type === "ticket" ? "Flight tickets" : "Travel vouchers", availability: "Not issued yet", href: null }))),
+        })).concat((enquiry.journeyType === "flight" ? ["ticket"] : ["voucher"]).filter(type => !travelDocuments.some(doc => doc.type === type && doc.status !== "REPLACED")).map(type => ({ id: `pending-${type}`, type, title: type === "ticket" ? "Flight tickets" : "Travel vouchers", availability: type === "ticket" && flightBooking?.tickets?.some(ticket => ticket.ticketNumber) ? "Ticket issued · Download not available yet" : "Not issued yet", href: null }))),
+        flightConfirmation: flightBooking && paymentStatus === "PAID" && ["CONFIRMED", "TICKETED"].includes(flightBooking.status) ? {
+            title: "Booking Confirmed",
+            rows: [
+                ...(flightBooking.pnr ? [{ label: "Airline PNR", value: flightBooking.pnr }] : []),
+                ...(Number.isSafeInteger(paymentSession?.expectedAmount) ? [{ label: "Amount paid", value: new Intl.NumberFormat("en-IN", { style: "currency", currency: paymentSession.currency || "INR" }).format(paymentSession.expectedAmount / 100) }] : []),
+                ...(!flightBooking.pnr && flightBooking.bookingRef ? [{ label: "Booking reference", value: flightBooking.bookingRef }] : []),
+            ],
+            reference: flightBooking.pnr ? flightBooking.bookingRef : "",
+        } : null,
         ticketRows: (flightBooking?.tickets || []).map((ticket, index) => ({ label: `Ticket ${index + 1}`, value: ticket.ticketNumber || "Awaiting ticket number" })),
         bookingExpiresAt: paymentBooking ? paymentSession?.expiresAt : bookingExpiresAt,
         restartBookingUrl: enquiry.customizationSnapshot?.searchUrl || (enquiry.journeyType === "hotel" ? "/trehub/hotels" : "/trehub/flights"),
@@ -345,7 +365,7 @@ export async function findAuthorizedBookingJourney(enquiryId, actor) {
         sourceProductUrl: sourceJourney ? `/${enquiry.product === "trevio" ? "trevio/trips" : "trevista/tours"}/${encodeURIComponent(sourceJourney.slug || String(sourceJourney._id))}` : "",
         flightSearchUrl: enquiry.product === "trehub" ? flightSearchUrl(enquiry) : "",
         record: {
-            ...(booking ? bookingView(booking.toObject(), enquiry, perspective) : enquiryView(enquiry, perspective)),
+            ...(booking ? bookingView(booking.toObject(), enquiry, perspective, { brand }) : enquiryView(enquiry, perspective, { brand })),
             ...(paymentBooking ? { status: paymentBooking.status, statusLabel: bookingStatusDisplay(paymentBooking.status, paymentStatus).label, guidance: paymentState.message, statusTone: bookingStatusDisplay(paymentBooking.status, paymentStatus).tone } : {}),
         },
     };
@@ -1124,6 +1144,14 @@ async function loadQuoteProvider(enquiry) {
     };
 }
 
+async function quoteCompany() {
+    const client = process.env.TENANT_CLIENT_ID
+        ? await Client.findById(process.env.TENANT_CLIENT_ID).lean()
+        : null;
+    const brand = await resolveBrand(client);
+    return { name: brand.name, tagline: brand.tagline || "", email: brand.contactEmail || "", phone: brand.contactPhone || "" };
+}
+
 async function previewQuoteDocument({ enquiry, context, data, input, calculation }) {
     const latest = await BookingQuote.findOne({
         $or: [
@@ -1148,6 +1176,7 @@ async function previewQuoteDocument({ enquiry, context, data, input, calculation
             provider: await loadQuoteProvider(enquiry),
         },
     });
+    model.company = await quoteCompany();
     return {
         buffer: await pdfDocumentToBuffer(generateQuoteDocumentPdf(model)),
         fileName: `${quoteRef}-preview.pdf`,
@@ -1197,9 +1226,13 @@ async function finalizeQuote({ enquiry, actor, context, data, input, calculation
         });
     }
 
+    // New quotes retain their issuer identity when the live brand changes later.
+    if (!quote) documentSnapshot.company = await quoteCompany();
+    const documentCompany = documentSnapshot.company || await quoteCompany();
+
     let document = await DocumentService.latest(enquiry._id, DOCUMENT_TYPE.QUOTE);
     if (!document || Number(document.quoteVersion) !== Number(version)) {
-        const pdf = generateQuoteDocumentPdf(documentSnapshot);
+        const pdf = generateQuoteDocumentPdf({ ...documentSnapshot, company: documentCompany });
         const buffer = await pdfDocumentToBuffer(pdf);
         pdfBuffer = buffer;
         document = await DocumentService.uploadGeneratedQuote({
@@ -1276,8 +1309,8 @@ async function finalizeQuote({ enquiry, actor, context, data, input, calculation
             const mail = await sendTransactionalEmail({
                 to: customerEmail,
                 subject: `${quoteRef} · Your TravelsTREM quotation is ready`,
-                text: `Hello ${enquiry.fields?.name || "Traveller"},\n\nYour quotation ${quoteRef} for ${data.details.title} is ready. The PDF is attached. You can also review and respond from My Bookings.`,
-                html: `<div style="font-family:Arial,sans-serif;max-width:640px;margin:auto;color:#172033"><h2 style="color:#173b8f">Your quotation is ready</h2><p>Hello ${escapeHtml(enquiry.fields?.name || "Traveller")},</p><p>Your travel specialist has prepared <strong>${escapeHtml(data.details.title)}</strong>.</p><p>The quotation PDF is attached. Open <strong>My Bookings</strong> to accept, reject, request changes, or cancel.</p><p style="color:#667085">Reference: ${escapeHtml(quoteRef)}</p></div>`,
+                text: `Hello ${enquiry.fields?.name || "Traveller"},\n\nYour quotation ${quoteRef} for ${data.details.title} is ready. The PDF is attached. You can also review and respond from Dashboard.`,
+                html: `<div style="font-family:Arial,sans-serif;max-width:640px;margin:auto;color:#172033"><h2 style="color:#173b8f">Your quotation is ready</h2><p>Hello ${escapeHtml(enquiry.fields?.name || "Traveller")},</p><p>Your travel specialist has prepared <strong>${escapeHtml(data.details.title)}</strong>.</p><p>The quotation PDF is attached. Open <strong>Dashboard</strong> to accept, reject, request changes, or cancel.</p><p style="color:#667085">Reference: ${escapeHtml(quoteRef)}</p></div>`,
                 attachments: [{ filename: `${quoteRef}.pdf`, content: attachment, contentType: "application/pdf" }],
             });
             delivery = {
@@ -1303,7 +1336,7 @@ async function finalizeQuote({ enquiry, actor, context, data, input, calculation
             portal: "customer",
             type: "booking",
             title: "Your quotation is ready",
-            message: `${quoteRef} · Review your quotation and respond from My Bookings.`,
+            message: `${quoteRef} · Review your quotation and respond from Dashboard.`,
             entityType: "BookingQuote",
             entityId: String(quote._id),
             data: {
@@ -1352,7 +1385,7 @@ export async function updateCustomerQuoteDecision({ enquiryId, quoteId, actor, a
     if (!userId) throw Object.assign(new Error("Please sign in to respond to this quote."), { status: 401 });
     const resource = await findEnquiryResource(enquiryId);
     let { booking } = resource;
-    const enquiry = await ContactLead.findOne({ ...resource.query, claimedBy: userId });
+    const enquiry = await ContactLead.findOne(await customerEnquiryQuery(userId, resource.query));
     if (!enquiry) throw Object.assign(new Error("Enquiry not found."), { status: 404 });
     if (!booking && enquiry.bookingId) booking = await Booking.findById(enquiry.bookingId);
     if (booking && ["PAID", "FULLY_PAID", "REFUNDED", "PARTIALLY_REFUNDED"].includes(booking.paymentStatus))
@@ -1492,7 +1525,7 @@ export async function saveCustomerTravellerDetails({ enquiryId, actor, values })
     const resource = await findEnquiryResource(enquiryId);
 
     let { booking } = resource;
-    const enquiry = await ContactLead.findOne({ ...resource.query, claimedBy: userId });
+    const enquiry = await ContactLead.findOne(await customerEnquiryQuery(userId, resource.query));
     if (!enquiry) throw Object.assign(new Error("Enquiry not found."), { status: 404 });
     if (!["new", "enquiry_details_added", "traveller_details_added"].includes(enquiry.status))
         throw Object.assign(new Error("Traveller details are locked after requesting a quotation. Request changes to the quotation instead."), { status: 409 });
@@ -1565,7 +1598,7 @@ export async function cancelCustomerFlightEnquiry({ enquiryId, actor }) {
     if (!userId)
         throw Object.assign(new Error("Please sign in to cancel this enquiry."), { status: 401 });
     const resource = await findEnquiryResource(enquiryId);
-    const enquiry = await ContactLead.findOne({ ...resource.query, claimedBy: userId });
+    const enquiry = await ContactLead.findOne(await customerEnquiryQuery(userId, resource.query));
     if (!enquiry) throw Object.assign(new Error("Enquiry not found."), { status: 404 });
     if (enquiry.product !== "trehub" || !["flight", "hotel"].includes(enquiry.journeyType))
         throw Object.assign(new Error("Only Trehub enquiries can be cancelled here."), {
@@ -1593,7 +1626,7 @@ export async function saveCustomerEnquiryDetails({ enquiryId, actor, values }) {
     const userId = actorId(actor);
     if (!userId) throw Object.assign(new Error("Please sign in to update this enquiry."), { status: 401 });
     const resource = await findEnquiryResource(enquiryId);
-    const enquiry = await ContactLead.findOne({ ...resource.query, claimedBy: userId });
+    const enquiry = await ContactLead.findOne(await customerEnquiryQuery(userId, resource.query));
     if (!enquiry) throw Object.assign(new Error("Enquiry not found."), { status: 404 });
     if (resource.booking || enquiry.bookingId || await FlightBooking.exists({ sourceEnquiryId: enquiry._id }))
         throw Object.assign(new Error("Your booking has been created. Contact support if you need to change its details."), { status: 409 });
@@ -1714,7 +1747,7 @@ export async function requestCustomerQuotation({ enquiryId, actor }) {
     const userId = actorId(actor);
     if (!userId) throw Object.assign(new Error("Please sign in to request a quotation."), { status: 401 });
     const resource = await findEnquiryResource(enquiryId);
-    const enquiry = await ContactLead.findOne({ ...resource.query, claimedBy: userId });
+    const enquiry = await ContactLead.findOne(await customerEnquiryQuery(userId, resource.query));
     if (!enquiry) throw Object.assign(new Error("Enquiry not found."), { status: 404 });
     if (resource.booking || enquiry.bookingId || enquiry.product === "trehub" || !["enquiry_details_added", "traveller_details_added", "quote_requested"].includes(enquiry.status)) {
         throw Object.assign(new Error("A quotation cannot be requested at this booking stage."), { status: 409 });

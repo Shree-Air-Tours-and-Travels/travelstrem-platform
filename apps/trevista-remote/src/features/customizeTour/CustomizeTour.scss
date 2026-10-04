@@ -4,17 +4,6 @@
   min-height: 100vh;
   background: var(--page-bg);
 
-  &__crumbs {
-    position: sticky;
-    top: var(--td-header-offset, 72px);
-    z-index: 50;
-    min-height: 48px;
-    display: flex;
-    align-items: center;
-    padding-inline: clamp(1rem, 2.5vw, 2rem);
-    border-bottom: 1px solid var(--border);
-    background: var(--surface);
-  }
 
   &__content {
     width: min(80rem, calc(100% - 2rem));
@@ -185,9 +174,6 @@
 
 @media (max-width: $breakpoint-mobile) {
   .customize-tour-page {
-    &__crumbs {
-      top: var(--td-header-offset, 56px);
-    }
 
     &__content {
       margin-block: $space-3;

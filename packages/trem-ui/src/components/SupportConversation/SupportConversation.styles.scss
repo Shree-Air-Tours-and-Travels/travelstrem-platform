@@ -51,8 +51,8 @@
 }
 
 .trem-support-conversation__presence.is-live {
-  background: #16a34a;
-  box-shadow: 0 0 0 4px rgb(22 163 74 / 12%);
+  background: var(--color-success);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-success) 12%, transparent);
 }
 
 .trem-support-conversation__viewport {
@@ -146,7 +146,7 @@
   background: linear-gradient(
     135deg,
     var(--color-primary),
-    color-mix(in srgb, var(--color-primary) 78%, #5b4bdb)
+    color-mix(in srgb, var(--color-primary) 78%, var(--color-secondary))
   );
   box-shadow: 0 7px 18px color-mix(in srgb, var(--color-primary) 18%, transparent);
 }

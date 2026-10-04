@@ -14,12 +14,12 @@ export default function AppRoutes({ dispatchEvent, embedded = false, userSession
       <>
         <ScrollToTop />
         <Routes>
-          <Route index element={<ToursHome {...routeProps} />} />
+          <Route index element={<Navigate to="tours" replace />} />
           <Route path="tours" element={<ToursPage {...routeProps} />} />
           <Route path="tours/:tourRef" element={<ToursDetails {...routeProps} />} />
           <Route path="tour/:tourRef" element={<ToursDetails {...routeProps} />} />
           <Route path="customise-tour" element={<CustomizeTour {...routeProps} />} />
-          <Route path="*" element={<Navigate to="." replace />} />
+          <Route path="*" element={<Navigate to="tours" replace />} />
         </Routes>
       </>
     );

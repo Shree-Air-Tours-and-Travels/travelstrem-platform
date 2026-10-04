@@ -358,7 +358,12 @@ const enforceActivePrivilegedUser = async (user) => {
         }
     }
     if (user.role === "admin") {
-        if (user.email === MASTER_ADMIN_EMAIL && user.adminLevel !== "master") {
+        if (
+            !user.clientId &&
+            !process.env.TENANT_CLIENT_ID &&
+            user.email === MASTER_ADMIN_EMAIL &&
+            user.adminLevel !== "master"
+        ) {
             user.adminLevel = "master";
             user.adminApprovalStatus = "approved";
             await user.save();
@@ -389,7 +394,14 @@ const enforceActivePrivilegedUser = async (user) => {
  */
 export const getAuthConfig = async (req, res) => {
     setAuthNoStoreHeaders(res);
-    return res.json(authConfig);
+    const data = structuredClone(authConfig);
+    data.componentData.structure.header.brand = {
+        ...data.componentData.structure.header.brand,
+        ...req.brand,
+    };
+    data.componentData.structure.header.ariaLabel = `${req.brand.name} authentication`;
+    data.componentData.structure.company.descriptionHighlight = `${req.brand.name} travel platform.`;
+    return res.json(data);
 };
 
 /**
@@ -529,10 +541,23 @@ export const register = async (req, res) => {
         const normalizedEmail = email.toLowerCase().trim();
         const existing = await UserRepository.findByEmail(normalizedEmail);
         if (existing) {
-            return res.status(409).json({ status: "error", message: "Email already in use." });
+            const belongsToAnotherClient =
+                process.env.TENANT_CLIENT_ID &&
+                String(existing.clientId || "") !== String(process.env.TENANT_CLIENT_ID);
+            return res.status(409).json({
+                status: "error",
+                message: belongsToAnotherClient
+                    ? "An account with this email exists outside this client. Contact support to resolve access."
+                    : "This email already has an account. Sign in or use its activation invitation.",
+            });
         }
 
         const requestedRole = role || "member";
+        if (process.env.TENANT_CLIENT_ID && requestedRole !== "member")
+            return res.status(403).json({
+                status: "error",
+                message: "Tenant administrators and partners require an invitation.",
+            });
         const portal = getPortalScope(req);
         if (!portalAllowsRole(portal, requestedRole)) {
             return res.status(403).json({
@@ -675,13 +700,13 @@ export const login = async (req, res) => {
                 label: "login",
             });
 
-        return res.json({
-            status: "verify_otp",
-            verificationId: verification._id.toString(),
-            email: maskEmail(normalizedEmail),
-            expiresInMs: OTP_TTL,
-            resendAfterMs: OTP_RESEND_COOLDOWN_MS,
-        });
+            return res.json({
+                status: "verify_otp",
+                verificationId: verification._id.toString(),
+                email: maskEmail(normalizedEmail),
+                expiresInMs: OTP_TTL,
+                resendAfterMs: OTP_RESEND_COOLDOWN_MS,
+            });
         }
 
         await revokeCurrentRefreshToken(req);
@@ -1256,7 +1281,7 @@ export const refreshTokenEndpoint = async (req, res) => {
 export const logout = async (req, res) => {
     setAuthNoStoreHeaders(res);
     await revokeCurrentSession(req, res);
-    return res.json({ success: true, message: "Logged out successfully." });
+    return res.json({ status: "success", success: true, message: "Logged out successfully." });
 };
 
 /**
@@ -1525,10 +1550,7 @@ export const listAdmins = async (req, res) => {
         if (admin.adminLevel !== "master") {
             query._id = { $ne: admin._id };
             query.adminLevel = { $ne: "master" };
-            query.$or = [
-                { adminApprovalStatus: "pending" },
-                { internalTeamRoles: "support" },
-            ];
+            query.$or = [{ adminApprovalStatus: "pending" }, { internalTeamRoles: "support" }];
         }
         const admins = await User.find(query)
             .select(
@@ -1638,12 +1660,10 @@ export const removeAdmin = async (req, res) => {
         if (!user || user.role !== "admin")
             return res.status(404).json({ status: "error", message: "Admin not found." });
         if (!canManageInternalTeamMember(admin, user)) {
-            return res
-                .status(403)
-                .json({
-                    status: "error",
-                    message: "You cannot remove master admins or sibling platform admins.",
-                });
+            return res.status(403).json({
+                status: "error",
+                message: "You cannot remove master admins or sibling platform admins.",
+            });
         }
 
         user.adminApprovalStatus = "removed";

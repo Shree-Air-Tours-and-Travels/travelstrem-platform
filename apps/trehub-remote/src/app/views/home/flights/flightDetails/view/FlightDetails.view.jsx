@@ -113,31 +113,38 @@ export default function FlightDetailsView({
 
   return (
     <main className="trehub-flight-journey">
-      <div className="trehub-flight-journey__breadcrumb trehub-page__breadcrumbs">
         <Breadcrumbs
           items={(breadcrumbs.items || []).map((item) => ({
             label: labelFor(labels, item.labelRef),
             path: item.path,
           }))}
         />
-      </div>
+
 
       <header className="trehub-flight-journey__hero">
         <span>{labelFor(labels, "journeyEyebrow")}</span>
-        <h1>{step === 4 ? booking?.paymentSummary?.heading || "Booking summary" : labelFor(labels, "journeyTitle")}</h1>
-        <p>{step === 4 ? booking?.paymentSummary?.message : labelFor(labels, "journeyDescription")}</p>
+        <h1>
+          {step === 4
+            ? booking?.paymentSummary?.heading || "Booking summary"
+            : labelFor(labels, "journeyTitle")}
+        </h1>
+        <p>
+          {step === 4 ? booking?.paymentSummary?.message : labelFor(labels, "journeyDescription")}
+        </p>
       </header>
 
       <div className="trehub-flight-journey__layout">
-        {!booking && <aside className="trehub-flight-journey__steps">
-          <TimelineStepper
-            steps={stepItems}
-            orientation="horizontal"
-            markerVariant="number"
-            showStepNumbers
-            showTime={false}
-          />
-        </aside>}
+        {!booking && (
+          <aside className="trehub-flight-journey__steps">
+            <TimelineStepper
+              steps={stepItems}
+              orientation="horizontal"
+              markerVariant="number"
+              showStepNumbers
+              showTime={false}
+            />
+          </aside>
+        )}
 
         <section className="trehub-flight-journey__content">
           {saving ? (
@@ -234,7 +241,9 @@ export default function FlightDetailsView({
               <div className="trehub-flight-journey__fares">
                 {visibleFares.map((fare) => {
                   const active = fare.fareId === fareId;
-                  const fareDetails = offer.details?.fares?.find((item) => item.fareId === fare.fareId);
+                  const fareDetails = offer.details?.fares?.find(
+                    (item) => item.fareId === fare.fareId,
+                  );
                   return (
                     <button
                       key={fare.fareId}
@@ -259,15 +268,24 @@ export default function FlightDetailsView({
                       </div>
                       <ul>
                         {(fareDetails?.conditions || []).slice(0, 2).map((item) => (
-                          <li key={item.id}>{item.label}: {item.value}</li>
+                          <li key={item.id}>
+                            {item.label}: {item.value}
+                          </li>
                         ))}
-                        {(fareDetails?.benefits || []).filter((item) => ["meal", "checked-baggage"].includes(item.id)).map((item) => (
-                          <li key={item.id}>{item.label}: {item.value}</li>
-                        ))}
+                        {(fareDetails?.benefits || [])
+                          .filter((item) => ["meal", "checked-baggage"].includes(item.id))
+                          .map((item) => (
+                            <li key={item.id}>
+                              {item.label}: {item.value}
+                            </li>
+                          ))}
                       </ul>
                       <StatusBadge
                         value={
-                          active ? labelFor(labels, "selectedFare") : fare.availability?.status || labelFor(labels, "checkAvailability", "Check availability")
+                          active
+                            ? labelFor(labels, "selectedFare")
+                            : fare.availability?.status ||
+                              labelFor(labels, "checkAvailability", "Check availability")
                         }
                         tone={active ? "success" : undefined}
                         appearance="accent"
@@ -484,14 +502,20 @@ export default function FlightDetailsView({
 
           {confirmationWidget && step === confirmationWidget.props?.showAtStep && booking ? (
             <div className="trehub-flight-journey__confirmation">
-              <div className="trehub-flight-journey__confirmation-icon" aria-hidden="true">{booking.pnr ? "✓" : "…"}</div>
+              <div className="trehub-flight-journey__confirmation-icon" aria-hidden="true">
+                {booking.pnr ? "✓" : "…"}
+              </div>
               <StatusBadge value={booking.status} appearance="accent" />
               <h2>{booking.bookingId}</h2>
               {booking.paymentSummary?.message && <p>{booking.paymentSummary.message}</p>}
-              {booking.paymentEnabled && <Button text={booking.paymentActionLabel} onClick={onPay} disabled={saving} />}
-              {booking.pnr && <p>
-                {labelFor(labels, "pnr")} <strong>{booking.pnr}</strong>
-              </p>}
+              {booking.paymentEnabled && (
+                <Button text={booking.paymentActionLabel} onClick={onPay} disabled={saving} />
+              )}
+              {booking.pnr && (
+                <p>
+                  {labelFor(labels, "pnr")} <strong>{booking.pnr}</strong>
+                </p>
+              )}
               <div>
                 <span>
                   {labelFor(labels, "payment")}{" "}
@@ -603,16 +627,39 @@ export default function FlightDetailsView({
         onClose={onCloseEnquiryModal}
         onConfirm={onCreateEnquiry}
         error={enquiryError}
-        summary={selectedFare?.pricing ? {
-          title: selectedFare.brand || labelFor(labels, "selectedFare", "Selected fare"),
-          items: [
-            { id: "base", label: labelFor(labels, "baseFare", "Base fare"), value: money(selectedFare.pricing.baseFare, selectedFare.pricing.currency) },
-            { id: "taxes", label: labelFor(labels, "taxes", "Taxes"), value: money(selectedFare.pricing.taxes, selectedFare.pricing.currency) },
-            { id: "providerFees", label: labelFor(labels, "providerFees", "Provider fees"), value: money(selectedFare.pricing.providerFees, selectedFare.pricing.currency) },
-            { id: "fee", label: labelFor(labels, "convenienceFee", "Convenience fee"), value: money(selectedFare.pricing.convenienceFee, selectedFare.pricing.currency) },
-          ],
-          totals: [{ id: "total", label: labelFor(labels, "total", "Total"), value: money(selectedFare.pricing.total, selectedFare.pricing.currency), tone: "highlight" }],
-        } : null}
+        summary={
+          selectedFare?.pricing
+            ? {
+                title: selectedFare.brand || labelFor(labels, "selectedFare", "Selected fare"),
+                items: [
+                  {
+                    id: "providerCost",
+                    label: labelFor(labels, "providerCost", "Provider cost (including taxes)"),
+                    value: money(
+                      selectedFare.pricing.flightSubtotal,
+                      selectedFare.pricing.currency,
+                    ),
+                  },
+                  {
+                    id: "fee",
+                    label: labelFor(labels, "tremCharges", "Trem charges (including taxes)"),
+                    value: money(
+                      selectedFare.pricing.convenienceFee,
+                      selectedFare.pricing.currency,
+                    ),
+                  },
+                ],
+                totals: [
+                  {
+                    id: "total",
+                    label: labelFor(labels, "total", "Total"),
+                    value: money(selectedFare.pricing.total, selectedFare.pricing.currency),
+                    tone: "highlight",
+                  },
+                ],
+              }
+            : null
+        }
       />
     </main>
   );

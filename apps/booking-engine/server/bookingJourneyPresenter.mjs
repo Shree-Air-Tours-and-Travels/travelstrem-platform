@@ -303,6 +303,7 @@ const customerJourney = (booking, quote, requestedStep = "") => {
         ...(booking.travelDocuments || []),
       ],
       ticketRows: booking.ticketRows || [],
+      flightConfirmation: booking.flightConfirmation || null,
     } : {}),
     ...((isFlight && activeStepId === "review" || !isFlight && activeStepId === "quote") && !paymentComplete ? {
       reviewCards: [

@@ -1,3 +1,4 @@
+import { customerScopePlugin } from "../../tenancy/customerScope.js";
 import mongoose from "mongoose";
 import { createReadableReference } from "../../../utils/readableReference.js";
 import {
@@ -114,6 +115,8 @@ bookingSchema.index({
     "inventoryHold.resourceId": 1,
     "inventoryHold.status": 1,
 });
+
+bookingSchema.plugin(customerScopePlugin, { ownerField: "userId" });
 
 const Booking = mongoose.models?.Booking || mongoose.model("Booking", bookingSchema);
 export default Booking;

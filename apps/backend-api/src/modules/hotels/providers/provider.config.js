@@ -1,3 +1,5 @@
+import { resolveTenantIntegration } from "../../integrations/runtime.js";
+
 const envKey = (name) =>
     `HOTEL_${String(name)
         .trim()
@@ -26,15 +28,18 @@ export const isHotelMockInventoryEnabled = () => {
 
 export const createHotelProviderConfig = (name) => {
     const prefix = envKey(name);
+    const runtime = resolveTenantIntegration("travel.hotels");
+    const referencedCredentials = runtime.credentials?.providers?.[name] || runtime.credentials || {};
+    const runtimeOptions = runtime.options?.providerOptions?.[name] || runtime.options || {};
     return Object.freeze({
         name: String(name).trim().toLowerCase(),
         alias: value(`${prefix}_ALIAS`, String(name).trim().toLowerCase()),
-        environment: value(`${prefix}_ENVIRONMENT`, "sandbox").toLowerCase(),
-        baseUrl: value(`${prefix}_BASE_URL`),
-        requestTimeoutMs: positiveInteger(`${prefix}_REQUEST_TIMEOUT_MS`, 30000),
+        environment: String(runtimeOptions.environment || value(`${prefix}_ENVIRONMENT`, "sandbox")).toLowerCase(),
+        baseUrl: runtimeOptions.baseUrl || value(`${prefix}_BASE_URL`),
+        requestTimeoutMs: Number(runtimeOptions.requestTimeoutMs || positiveInteger(`${prefix}_REQUEST_TIMEOUT_MS`, 30000)),
         credentials: Object.freeze({
-            apiKey: value(`${prefix}_API_KEY`),
-            apiSecret: value(`${prefix}_API_SECRET`),
+            apiKey: runtime.source === "tenant-profile" ? referencedCredentials.apiKey : value(`${prefix}_API_KEY`),
+            apiSecret: runtime.source === "tenant-profile" ? referencedCredentials.apiSecret : value(`${prefix}_API_SECRET`),
         }),
         mtls: Object.freeze({
             certificatePath: value(`${prefix}_MTLS_CERT_PATH`),

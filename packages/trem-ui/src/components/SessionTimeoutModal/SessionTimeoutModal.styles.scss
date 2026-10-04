@@ -12,7 +12,7 @@
 .trem-session-timeout__backdrop {
   position: absolute;
   inset: 0;
-  background: color-mix(in srgb, #101528 66%, transparent);
+  background: var(--overlay);
   backdrop-filter: blur(8px);
 }
 

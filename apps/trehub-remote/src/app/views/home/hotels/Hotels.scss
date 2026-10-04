@@ -7,16 +7,15 @@
   grid-template-columns: minmax(18rem, 20rem) minmax(0, 1fr);
   align-items: start;
   gap: $space-5;
-  width: 100%;
-  max-width: $full-width;
+  width: min(calc(100% - (2 * var(--trehub-page-gutter))), #{$full-width});
   margin-inline: auto;
-  padding: clamp($space-3, 3vw, $space-7);
-  padding-bottom: calc(#{$space-6} + var(--trem-floating-action-height, 0px));
+  padding: 0 0 calc(#{$space-6} + var(--trem-floating-action-height, 0px));
   color: var(--text);
   background: var(--page-bg);
   font-family: $font-primary;
   min-width: 0;
 
+  > nav,
   > header,
   > p,
   > .tt-error-state,
@@ -68,7 +67,7 @@
     display: grid;
     justify-items: start;
     gap: $space-3;
-    padding-block: $space-4;
+    padding-block: 0;
   }
   &__heading {
     display: grid;
@@ -85,8 +84,8 @@
   &__filters {
     grid-column: 1;
     position: sticky;
-    top: calc(var(--trehub-breadcrumb-height) + #{$space-4});
-    max-height: calc(100dvh - var(--trehub-breadcrumb-height) - #{$space-20});
+    top: $space-4;
+    max-height: calc(100dvh - #{$space-20});
     overflow-y: auto;
   }
   > .trehub-hotels__results {
@@ -213,6 +212,7 @@
   &--details {
     grid-template-columns: minmax(0, 1fr) minmax(17rem, 21rem);
     grid-template-areas:
+      "breadcrumb breadcrumb"
       "notice notice"
       "intro rail"
       "information rail"
@@ -226,15 +226,14 @@
       ),
       var(--page-bg);
   }
+  &--details > .trem-breadcrumbs {
+    grid-area: breadcrumb;
+  }
   &__notice {
+    grid-column: 1 / -1;
+  }
+  &--details > &__notice {
     grid-area: notice;
-    display: flex;
-    align-items: center;
-    gap: $space-2;
-    padding: $space-3 $space-4;
-    border-left: 3px solid var(--color-primary);
-    border-radius: $radius-sm;
-    background: var(--primary-surface);
   }
   &__gallery {
     min-width: 0;
@@ -409,7 +408,7 @@
   &__review-grid footer { color: var(--heading); font-size: $font-size-sm; font-weight: $font-semibold; }
   &__rail-stack {
     position: sticky;
-    top: calc(var(--trehub-breadcrumb-height) + #{$space-4});
+    top: $space-4;
     align-self: start;
     display: grid;
     gap: $space-4;
@@ -495,7 +494,7 @@
   &__stay-price-card { display: grid; gap: $space-3; padding: $space-5; border: 1px solid var(--border); border-radius: $radius-xl; background: var(--surface-elevated); box-shadow: var(--shadow-sm); }
   &__stay-price-card small { color: var(--text-muted); }
   &__stay-price-card strong { color: var(--heading); font-size: $font-size-xl; font-variant-numeric: tabular-nums; }
-  &__rooms { scroll-margin-top: calc(var(--trehub-breadcrumb-height) + #{$space-5}); }
+  &__rooms { scroll-margin-top: $space-5; }
   &--details > section,
   &--details &__details-main > section {
     padding: clamp($space-3, 2vw, $space-5);
@@ -599,7 +598,7 @@
   }
   &__room-slot-bar {
     position: sticky;
-    top: var(--trehub-breadcrumb-height);
+    top: 0;
     z-index: 20;
     display: grid;
     align-items: start;
@@ -1035,6 +1034,7 @@
     &--details {
       grid-template-columns: minmax(0, 1fr);
       grid-template-areas:
+        "breadcrumb"
         "notice"
         "intro"
         "rail"
@@ -1081,7 +1081,6 @@
     }
   }
   @include mq-max($mobile-max) {
-    padding: $space-3;
     padding-bottom: calc(#{$space-3} + var(--trem-floating-action-height, 0px));
     h1 {
       font-size: clamp($font-size-lg, 6vw, $font-size-xl);
@@ -1318,5 +1317,21 @@
 @include mq-max($breakpoint-md) {
   .trehub-hotels__filters {
     display: none;
+  }
+
+  .trehub-hotels__sheet .trem-bottom-sheet__actions .trehub-hotels__actions {
+    display: flex;
+    position: static;
+    bottom: auto;
+    gap: $space-2;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+
+    > .ui-button {
+      flex: 1 1 0;
+      min-width: 0;
+    }
   }
 }

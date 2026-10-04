@@ -60,6 +60,10 @@
     },
     "elements": {
       "labels": {
+        "breadcrumbHomePage": "Home",
+        "breadcrumbListingPage": "Trips",
+        "demoInventoryNote": "Demo trip inventory — no live reservation will be made.",
+
         "pageTitle": "Trevio",
         "breadcrumbHome": "Home",
         "homeBreadcrumb": "Trevio",
@@ -160,6 +164,7 @@
         "titleRef": "pageTitle"
       },
       "widgets": [
+        {"type": "Breadcrumbs", "props": {"items": [{"path": "/trevio", "labelRef": "breadcrumbHomePage"}, {"labelRef": "breadcrumbListingPage"}]}},
         {
           "name": "heroSection",
           "path": "trevio-remote/home/hero.json"
