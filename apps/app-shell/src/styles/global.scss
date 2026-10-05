@@ -340,9 +340,6 @@ select {
         var(--dash-mobile-action-panel-clearance)
     );
 
-    .trem-fab:not(.trem-fab--variant-mobile-navigation) {
-      bottom: var(--dash-mobile-action-panel-space);
-    }
   }
 }
 
@@ -367,21 +364,7 @@ select {
     padding: 0;
   }
 
-  // Keep every shell destination clear of the persistent mobile navigation.
-  // This stays last so page-specific padding cannot cover the reserved space.
-  .dash-layout--mobile-action-panel .dash-content {
-    padding-bottom: 0;
-    scroll-padding-bottom: var(--dash-mobile-action-panel-space);
 
-    &::after {
-      content: "";
-      display: block;
-      width: 100%;
-      min-height: var(--dash-mobile-action-panel-space);
-      flex: 0 0 var(--dash-mobile-action-panel-space);
-      pointer-events: none;
-    }
-  }
 }
 
 .dash-content--dashboard > .app-shell-page { width: 100%; max-width: none; }

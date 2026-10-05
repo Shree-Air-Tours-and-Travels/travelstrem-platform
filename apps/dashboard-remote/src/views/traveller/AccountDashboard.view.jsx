@@ -64,7 +64,7 @@ export default function AccountDashboardView({
     { id: "bookings", title: bookingSection?.label, items: bookingOptions },
     {
       id: "account",
-      title: "Account",
+      title: home.copy.accountTitle,
       items: navigation.filter(
         (item) => !item.parentId && !["overview", "bookings"].includes(item.id),
       ),
@@ -75,7 +75,7 @@ export default function AccountDashboardView({
       ...group,
       items: group.items.map((item) => ({ ...item, target: item.id })),
     }));
-  if (home.actions?.signOut) sidebarSections.push({ id: "session", items: [home.actions.signOut] });
+  if (home.actions?.signOut) sidebarSections.push({ id: "session", title: home.copy.sessionTitle, items: [home.actions.signOut] });
   const headerActions = navigation
     .filter((item) => ["wishlist", "notifications"].includes(item.id))
     .map((item) => ({ ...item, target: item.id, active: item.id === sectionId }));

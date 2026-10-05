@@ -66,7 +66,6 @@
 
 @media (max-width: $breakpoint-md) {
   .account-dashboard {
-    padding-bottom: calc(#{$space-20 + $space-4} + env(safe-area-inset-bottom, 0px));
 
     &__body { display: block; }
     .account-dashboard__sidebar { display: none; }

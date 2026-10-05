@@ -25,7 +25,7 @@
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
-    padding-bottom: calc(var(--trem-floating-action-clearance, 0px) + #{$space-5});
+    padding-bottom: $space-5;
   }
 
   &__section-nav {

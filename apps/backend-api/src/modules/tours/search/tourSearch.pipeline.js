@@ -255,7 +255,7 @@ const facetProjection = {
 
 export const buildTourSearchPipeline = (
     search,
-    { departureCollection = "tourdepartures", agencyCollection = "partneragencies" } = {},
+    { departureCollection = "tourdepartures", agencyCollection = "partneragencies", includePartnerAgencies = true } = {},
 ) => {
     const { filters, page, pageSize, sort } = search;
     const destinationCandidates = slugCandidates(filters.destinationCityIds);
@@ -324,14 +324,14 @@ export const buildTourSearchPipeline = (
                 as: "_storedDepartures",
             },
         },
-        {
+        includePartnerAgencies ? {
             $lookup: {
                 from: agencyCollection,
                 localField: "agencyId",
                 foreignField: "_id",
                 as: "_searchAgency",
             },
-        },
+        } : { $set: { _searchAgency: [] } },
         {
             $match: {
                 $or: [

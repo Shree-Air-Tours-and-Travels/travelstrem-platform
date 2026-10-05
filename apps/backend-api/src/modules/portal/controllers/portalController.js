@@ -41,6 +41,15 @@ const getRequestHiddenProducts = async (req) => {
 // Tenant enrollment owns customer navigation; platform-only links stay on the platform.
 const tenantNavigationItem = (item, client) => {
     if (item.hide || item.disabled || item.comingSoon) return null;
+    if (item.id === "about" && client.slug === "shree-air")
+        return {
+            id: "about",
+            label: "About Us",
+            icon: "info",
+            type: "external",
+            target: "_self",
+            href: "https://shree-air.travelstrem.com",
+        };
     if (item.id === "about")
         return { id: "about", label: "About Us", icon: "info", target: "about", href: "/about" };
     if (item.id === "partnership" && !client.partnerEnabled) return null;
@@ -1091,7 +1100,7 @@ const scopeHeaderConfig = (headerConfig, app, brandMap = {}, globalBrand = {}) =
             ["wishlist", "Wishlist", "heart"],
             ["profile", "Profile", "user"],
             ["notifications", "Notifications", "bell"],
-            ["support", "Help & Support", "support"],
+            ["support", "Support", "support"],
         ].map(([id, label, icon]) => ({
             id,
             label,
@@ -1362,7 +1371,11 @@ export const getAppHeaderConfig = async (req, res) => {
             .filter(Boolean);
         appHeaderConfig.componentData.navigationTabs.items =
             appHeaderConfig.componentData.navigationTabs.items
-                .filter((item) => !["dashboard", "explore"].includes(item.id))
+                .filter(
+                    (item) =>
+                        item.id !== "explore" &&
+                        (item.id !== "dashboard" || client.slug === "shree-air"),
+                )
                 .map((item) => tenantNavigationItem(item, client))
                 .filter(Boolean);
         appHeaderConfig.componentData.actions = appHeaderConfig.componentData.actions

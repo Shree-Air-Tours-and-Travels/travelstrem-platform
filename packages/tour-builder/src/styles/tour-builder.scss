@@ -6,7 +6,6 @@
  * ------------------------------------------------------------------------- */
 
 .tb-shell {
-  --tb-action-clearance: calc(#{$space-20} + #{$space-10} + env(safe-area-inset-bottom, 0px));
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -34,20 +33,20 @@
     align-self: stretch;
     height: auto;
     min-height: 0;
-    padding-bottom: var(--tb-action-clearance);
+    padding-bottom: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
-    scroll-padding-bottom: var(--tb-action-clearance);
+    scroll-padding-bottom: 0;
     scrollbar-gutter: stable;
   }
 
   .wizard-shell__main {
     height: 100%;
     min-height: 0;
-    padding-bottom: var(--tb-action-clearance);
+    padding-bottom: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
-    scroll-padding-bottom: var(--tb-action-clearance);
+    scroll-padding-bottom: 0;
     scrollbar-gutter: stable;
   }
 
@@ -64,7 +63,6 @@
 
 @media (max-width: 860px) {
   .tb-shell {
-    --tb-action-clearance: calc(#{$space-20} + #{$space-12} + env(safe-area-inset-bottom, 0px));
     height: calc(100dvh - 120px);
 
     .tb-action-bar.trem-fab--variant-floating {
@@ -79,8 +77,8 @@
     }
 
     .wizard-shell__main {
-      padding-bottom: var(--tb-action-clearance);
-      scroll-padding-bottom: var(--tb-action-clearance);
+      padding-bottom: 0;
+      scroll-padding-bottom: 0;
     }
   }
 }

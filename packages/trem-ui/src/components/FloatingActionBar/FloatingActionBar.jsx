@@ -1,6 +1,7 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Button from "../Button/Button.jsx";
 import BottomSheet from "../BottomSheet/BottomSheet.jsx";
+import { registerFloatingPanel } from "./floatingPanelLayout.js";
 import Icon from "../../icons/Icon/Icon.jsx";
 import "./FloatingActionBar.styles.scss";
 
@@ -145,65 +146,11 @@ const FloatingActionBar = React.memo(function FloatingActionBar({
   };
 
   useLayoutEffect(() => {
-    if (variant !== "mobile-navigation" || !mobileNavigationRef.current) return undefined;
-    const panel = mobileNavigationRef.current;
-    const layout = panel.closest(".dash-layout--mobile-action-panel");
-    if (!layout) return undefined;
-
-    const syncRenderedHeight = () => {
-      const height = Math.ceil(panel.getBoundingClientRect().height);
-      if (height > 0)
-        layout.style.setProperty("--dash-mobile-action-panel-rendered-height", `${height}px`);
-    };
-
-    syncRenderedHeight();
-    const observer =
-      typeof ResizeObserver === "function" ? new ResizeObserver(syncRenderedHeight) : null;
-    observer?.observe(panel);
-    window.addEventListener("resize", syncRenderedHeight);
-
-    return () => {
-      observer?.disconnect();
-      window.removeEventListener("resize", syncRenderedHeight);
-      layout.style.removeProperty("--dash-mobile-action-panel-rendered-height");
-    };
-  }, [resolved.length, variant]);
-
-  useLayoutEffect(() => {
-    if (variant !== "floating" || !floatingActionRef.current) return undefined;
-    const panel = floatingActionRef.current;
-    const root = document.documentElement;
-
-    const syncClearance = () => {
-      const rect = panel.getBoundingClientRect();
-      if (rect.height <= 0 || !Number.isFinite(rect.top)) return;
-      const clearance = Math.max(0, Math.ceil(window.innerHeight - rect.top + 12));
-      root.style.setProperty("--trem-floating-action-clearance", `${clearance}px`);
-      root.style.setProperty(
-        "--trem-floating-action-height",
-        `${Math.ceil(rect.height + 12)}px`,
-      );
-    };
-
-    syncClearance();
-    const observer =
-      typeof ResizeObserver === "function" ? new ResizeObserver(syncClearance) : null;
-    observer?.observe(panel);
-    const layout = panel.closest(".dash-layout");
-    const layoutObserver =
-      layout && typeof MutationObserver === "function"
-        ? new MutationObserver(syncClearance)
-        : null;
-    layoutObserver?.observe(layout, { attributes: true, attributeFilter: ["class", "style"] });
-    window.addEventListener("resize", syncClearance);
-
-    return () => {
-      observer?.disconnect();
-      layoutObserver?.disconnect();
-      window.removeEventListener("resize", syncClearance);
-      root.style.removeProperty("--trem-floating-action-clearance");
-      root.style.removeProperty("--trem-floating-action-height");
-    };
+    const panel = variant === "mobile-navigation"
+      ? mobileNavigationRef.current
+      : floatingActionRef.current;
+    if (!panel) return undefined;
+    return registerFloatingPanel(panel);
   }, [mobile, resolved.length, resolvedError, resolvedNote, variant]);
 
   if (variant === "mobile-navigation") {

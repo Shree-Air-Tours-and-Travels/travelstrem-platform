@@ -975,7 +975,7 @@
   .tours-page {
     --tours-page-gutter: 0.75rem;
 
-    padding-bottom: calc(var(--trem-floating-action-clearance, 64px) + var(--dash-mobile-action-panel-space, 0px) + env(safe-area-inset-bottom, 0px) + 0.75rem);
+    padding-bottom: 0.75rem;
 
     &__inner {
       margin-top: 0.65rem;
