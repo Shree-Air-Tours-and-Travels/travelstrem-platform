@@ -12,11 +12,14 @@ export async function seedPlatformBrand() {
     await PlatformBrand.updateOne(
         { _id: "platform" },
         {
+            $set: {
+                faviconSrc:
+                    "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519386/travelstrem/site-assets/e38709b8a4ada750aed0f6df.png",
+            },
             $setOnInsert: {
                 name: config.COMPANY_NAME || "TravelsTREM",
                 logoSrc,
                 logoDarkSrc,
-                faviconSrc: logoSrc,
                 windowTitle: config.COMPANY_NAME || "TravelsTREM",
                 tagline:
                     config.COMPANY_TAGLINE || "Tours · Reservations · Experiences · Management",
