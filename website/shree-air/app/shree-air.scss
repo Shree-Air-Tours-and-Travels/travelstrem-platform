@@ -87,6 +87,10 @@
     height: 70px;
   }
 
+  .sa-menu-toggle {
+    display: none;
+  }
+
   .sa-header nav {
     display: flex;
     align-items: center;
@@ -221,26 +225,15 @@
     color: var(--color-primary);
   }
 
-  .sa-agency-logo {
-    width: min(230px, 80%);
-    height: 85px;
-    object-fit: contain;
-    object-position: left center;
+  .sa-agency-face h1.sa-eyebrow,
+  .sa-agency-face h2.sa-eyebrow {
+    font-size: 1rem;
+    font-weight: 650;
+    letter-spacing: .16em;
+    line-height: 1.6;
+    text-transform: uppercase;
+    color: var(--color-primary-dark);
     margin-bottom: 1.25rem;
-  }
-
-  .sa-agency-face h1,
-  .sa-agency-face h2 {
-    font-size: clamp(2.5rem, 4vw, 4rem);
-    margin-bottom: 1.25rem;
-  }
-
-  .sa-agency-face h1 span,
-  .sa-agency-face h2 span {
-    display: block;
-    font-size: .55em;
-    letter-spacing: -.025em;
-    margin-top: .5rem;
   }
 
   .sa-agency-route {
@@ -918,8 +911,7 @@
     .sa-shell.sa-header-inner {
       min-height: 90px;
       gap: .5rem;
-      flex-direction: column;
-      align-items: stretch;
+      position: relative;
       padding: .7rem 1rem;
     }
 
@@ -928,24 +920,71 @@
       height: 55px;
     }
 
+    .sa-menu-toggle {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 5px;
+      width: 44px;
+      height: 44px;
+      padding: 10px;
+      border: 1px solid var(--sa-border);
+      border-radius: .6rem;
+      background: var(--sa-surface);
+      color: var(--sa-ink);
+      cursor: pointer;
+    }
+
+    .sa-menu-toggle span {
+      width: 22px;
+      height: 2px;
+      background: currentColor;
+      transition: transform .2s ease, opacity .2s ease;
+    }
+
+    .sa-menu-toggle.is-open span:first-child {
+      transform: translateY(7px) rotate(45deg);
+    }
+
+    .sa-menu-toggle.is-open span:nth-child(2) {
+      opacity: 0;
+    }
+
+    .sa-menu-toggle.is-open span:last-child {
+      transform: translateY(-7px) rotate(-45deg);
+    }
+
     .sa-header nav {
-      width: 100%;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: .25rem;
-      font-size: .75rem;
-      padding-bottom: .4rem;
+      padding: .75rem 1rem;
+      background: var(--sa-surface);
+      border-bottom: 1px solid var(--sa-border);
+      box-shadow: 0 12px 24px color-mix(in srgb, var(--sa-ink) 10%, transparent);
+      visibility: hidden;
+      opacity: 0;
+      transform: translateY(-.5rem);
+      transition: opacity .2s ease, transform .2s ease, visibility .2s;
+    }
+
+    .sa-header nav.is-open {
+      visibility: visible;
+      opacity: 1;
+      transform: translateY(0);
     }
 
     .sa-header nav a {
-      text-align: center;
-      padding: .75rem .15rem;
+      padding: .9rem 1rem;
     }
 
     .sa-header nav a.is-active {
       background: var(--sa-soft);
       border-radius: .5rem;
-      text-underline-offset: .3rem;
     }
 
     .sa-button-small {
