@@ -16,7 +16,7 @@ export default async function ShreeAirHome() {
     <section className="sa-hero">
       {image && <img className="sa-hero-background" src={image} alt="" fetchPriority="high" />}
       <div className="sa-shell">
-        <Reveal><AgencyCard logo={client.globalBrand.logoSrc} description={hero?.description || "Thoughtful travel planning, from your first idea to your next adventure."} phone={client.contactPhone} email={client.contactEmail} address={client.business?.address} /></Reveal>
+        <Reveal><AgencyCard brandName={client.globalBrand.label || client.name} description={hero?.description || "Thoughtful travel planning, from your first idea to your next adventure."} phone={client.contactPhone} email={client.contactEmail} address={client.business?.address} /></Reveal>
       </div>
     </section>
     <div className="sa-service-strip"><div className="sa-shell">PERSONAL PLANS <span>✧</span> CONNECTED JOURNEYS <span>✧</span> TRAVEL TOGETHER <span>✧</span> NEW POSSIBILITIES</div></div>

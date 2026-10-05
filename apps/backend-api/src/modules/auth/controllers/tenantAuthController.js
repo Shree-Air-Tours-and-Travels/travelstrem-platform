@@ -1,4 +1,3 @@
-import config from "../../../config/env.js";
 import Client from "../../clients/models/Client.js";
 import Product from "../../tenancy/models/Product.js";
 import User from "../models/User.js";
@@ -53,32 +52,7 @@ export const getExperience = asyncHandler(async (req, res) => {
                     ...req.brand,
                     subtitle: "Your journey starts here",
                 },
-                navigation: client
-                    ? []
-                    : [
-                          {
-                              id: "home",
-                              label: "Home",
-                              href: client?.domains?.website || config.SHELL_URL,
-                              icon: "home",
-                          },
-                          {
-                              id: "bookings",
-                              label: "My bookings",
-                              href: `${client?.domains?.dashboard || config.DASHBOARD_URL || config.SHELL_URL}/dashboard/overview`,
-                              icon: "calendar",
-                          },
-                          ...(!client || client.accountModules?.includes("support")
-                              ? [
-                                    {
-                                        id: "support",
-                                        label: "Help & support",
-                                        href: `${client?.domains?.dashboard || config.DASHBOARD_URL || config.SHELL_URL}/dashboard/support`,
-                                        icon: "support",
-                                    },
-                                ]
-                              : []),
-                      ],
+                navigation: [],
             },
             accessRequest: partnerEnabled
                 ? {
