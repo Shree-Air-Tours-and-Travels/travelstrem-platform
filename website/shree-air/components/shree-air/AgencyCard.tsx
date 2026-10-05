@@ -9,7 +9,8 @@ export function AgencyCard({ logo, description, phone, email, address }: AgencyC
   const [toggled, setToggled] = useState(false);
   const [hovered, setHovered] = useState(false);
   const flipped = toggled || hovered;
-  return <div className={`sa-agency-card${flipped ? " is-flipped" : ""}`} onPointerEnter={event => { if (event.pointerType === "mouse" && matchMedia("(hover: hover)").matches) setHovered(true); }} onPointerLeave={() => setHovered(false)}>
+  return <div className={`sa-agency-card${flipped ? " is-flipped" : ""}`}>
+    <div className="sa-agency-hover-area" onPointerEnter={event => { if (event.pointerType === "mouse" && matchMedia("(hover: hover)").matches) setHovered(true); }} onPointerLeave={() => setHovered(false)}>
     <div className="sa-agency-turn">
       <div className="sa-agency-face sa-agency-front" inert={flipped} aria-hidden={flipped}>
         <div className="sa-agency-top"><p className="sa-eyebrow">YOUR TRAVEL AGENCY IN JAIPUR</p><span aria-hidden="true">✈</span></div>
@@ -32,6 +33,7 @@ export function AgencyCard({ logo, description, phone, email, address }: AgencyC
         <div className="sa-agency-details">{phone && <a href={`tel:${phone}`}><small>CALL OUR TEAM</small>{phone} ↗</a>}{email && <a href={`mailto:${email}`}><small>WRITE TO US</small>{email} ↗</a>}{address && <p><small>FIND OUR AGENCY</small>{address}</p>}</div>
         <Link href="/about" className="sa-text-link">Get to know our agency ↗</Link>
       </div>
+    </div>
     </div>
     <div className="sa-agency-primary-action"><Link href="/contact" className="sa-button">Plan my journey ↗</Link></div>
     <button className="sa-agency-flip" type="button" onClick={() => { setToggled(!flipped); setHovered(false); }} aria-label={flipped ? "Show front of agency card" : "Show agency services and contact details"} aria-pressed={flipped}><span aria-hidden="true">↻</span> {flipped ? "Back to Shree Air" : "Flip for services & contact"}</button>
