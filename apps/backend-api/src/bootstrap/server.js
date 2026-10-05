@@ -13,17 +13,47 @@ export async function startServer({
     port = Number(config.PORT || 5000),
     shutdownTimeoutMs = DEFAULT_SHUTDOWN_TIMEOUT_MS,
 } = {}) {
-    await initializeDatabase();
-    await initializeRedis();
-    await runWithCapturedTenantIntegrationContext({ tenantId: process.env.TENANT_CLIENT_ID || "travelstrem" }, verifyEmailConnection);
-
-    const server = app.listen(port, () => {
-        logger.info(`Server running on port ${port} (env: ${config.NODE_ENV})`);
+    const { createServer } = await import("node:http");
+    let ready = false;
+    const server = createServer((req, res) => {
+        if (!ready) {
+            res.writeHead(503, { "Content-Type": "application/json", "Retry-After": "5" });
+            res.end(
+                JSON.stringify({
+                    status: "error",
+                    message: "Service is starting. Please try again shortly.",
+                }),
+            );
+            return;
+        }
+        app(req, res);
     });
+    await new Promise((resolve, reject) => {
+        server.once("error", reject);
+        server.listen(port, "0.0.0.0", resolve);
+    });
+    logger.info(`HTTP port ${port} bound; initializing services (env: ${config.NODE_ENV})`);
+
+    try {
+        logger.info("Initializing database...");
+        await initializeDatabase();
+        logger.info("Initializing Redis...");
+        await initializeRedis();
+    } catch (error) {
+        server.close();
+        throw error;
+    }
 
     // Realtime shares the platform HTTP server: same origin, same auth, no
     // separate websocket service.
     const realtime = await attachRealtime(server);
+    ready = true;
+    logger.info(`Server ready on port ${port}`);
+    // SMTP verification must not delay HTTP readiness.
+    void runWithCapturedTenantIntegrationContext(
+        { tenantId: process.env.TENANT_CLIENT_ID || "travelstrem" },
+        verifyEmailConnection,
+    ).catch((error) => logger.error("Email startup verification failed:", error?.message));
 
     let isShuttingDown = false;
     const shutdown = async () => {

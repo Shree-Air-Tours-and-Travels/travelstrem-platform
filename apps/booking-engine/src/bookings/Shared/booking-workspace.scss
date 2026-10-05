@@ -63,7 +63,7 @@
   grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr);
   gap: $space-6;
   align-items: start;
-  margin-bottom: var(--trem-floating-action-clearance, 0);
+  margin-bottom: 0;
   padding: $space-5;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -201,6 +201,9 @@
     }
 
     > .trem-fab.trem-fab--variant-floating {
+      position: fixed;
+      left: 0;
+      right: 0;
       bottom: env(safe-area-inset-bottom, 0px);
       padding: 0;
       .trem-fab__group--left { flex-shrink: 1; }
@@ -363,7 +366,7 @@
 @media (max-width: $breakpoint-md) {
   .booking-engine-customer-journey {
     grid-template-columns: 1fr;
-    margin-bottom: var(--trem-floating-action-height, 0);
+    margin-bottom: 0;
 
     > aside { position: static; }
   }

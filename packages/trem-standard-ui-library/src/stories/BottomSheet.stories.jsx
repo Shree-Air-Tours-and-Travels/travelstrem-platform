@@ -12,6 +12,7 @@ export const Default = {
     const [open, setOpen] = useState(false);
     return (
       <>
+        <p>Page content remains visible beneath the dimmed backdrop when the sheet opens.</p>
         <Button text="Open bottom sheet" onClick={() => setOpen(true)} />
         <BottomSheet open={open} onClose={() => setOpen(false)} title="Options">
           <div style={{ padding: "1rem 0" }}>

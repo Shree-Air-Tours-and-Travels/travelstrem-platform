@@ -12,8 +12,9 @@
   &__backdrop {
     position: absolute;
     inset: 0;
-    background: var(--color-transparent);
-    backdrop-filter: brightness(0.5);
+    background: rgba(0, 0, 0, 0.32);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
 
   }
 

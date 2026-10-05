@@ -12,7 +12,7 @@
   width: min(calc(100% - (2 * var(--trehub-page-gutter))), #{$full-width});
   margin-inline: auto;
   min-height: 100%;
-  padding: 0 0 calc(clamp($space-8, 6vw, 5rem) + var(--trem-floating-action-clearance, 0px));
+  padding: 0 0 clamp($space-8, 6vw, 5rem);
   background: var(--page-bg);
   color: var(--text);
   font-family: $font-primary;

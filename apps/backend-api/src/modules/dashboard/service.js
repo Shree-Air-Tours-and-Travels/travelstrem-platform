@@ -47,7 +47,7 @@ export const navigationFor = (context) => {
         ["wishlist", "Wishlist", "heart", "wishlist:view"],
         ["profile", "Profile", "user", "profile:view"],
         ["notifications", "Notifications", "bell", "notifications:view"],
-        ["support", "Help & Support", "support", "support:view"],
+        ["support", "Support", "support", "support:view"],
     );
     return pages
         .filter(
@@ -95,6 +95,8 @@ export async function buildDashboardHome(access, originProduct = "") {
         },
         copy: {
             title: "Dashboard",
+            accountTitle: "Account",
+            sessionTitle: "Session",
             emptyTitle: "Nothing here yet",
             emptyDescription: "Your activity will appear here when it is available.",
         },

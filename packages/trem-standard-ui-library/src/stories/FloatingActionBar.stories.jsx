@@ -1,5 +1,5 @@
 import React from "react";
-import { FloatingActionBar } from "@packages/trem-ui";
+import { AppFooter, FloatingActionBar } from "@packages/trem-ui";
 
 const sharedActions = [
   { label: "Save", variant: "solid", color: "primary", onClick: () => {} },
@@ -25,7 +25,7 @@ export const Floating = {
 
 export const Inline = {
   args: {
-    variant: "minimal",
+    variant: "inline",
     actions: sharedActions,
   },
 };
@@ -145,5 +145,22 @@ export const MobileNavigation = {
       { id: "profile", label: "Profile", iconLeft: "user" },
     ],
   },
+  parameters: { viewport: { defaultViewport: "mobile1" } },
+};
+
+export const WithFooterActions = {
+  render: () => (
+    <div style={{ height: "80vh", overflowY: "auto" }}>
+      {Array.from({ length: 12 }, (_, index) => <p key={index}>Booking content {index + 1}</p>)}
+      <p>End of booking content</p>
+      <FloatingActionBar actions={sharedActions} />
+      <AppFooter config={{ variant: "withActions", actions: [
+        { id: "overview", label: "Overview", iconLeft: "home" },
+        { id: "bookings", label: "Bookings", iconLeft: "calendar" },
+        { id: "support", label: "Support", iconLeft: "support" },
+        { id: "profile", label: "Profile", iconLeft: "user" },
+      ] }} />
+    </div>
+  ),
   parameters: { viewport: { defaultViewport: "mobile1" } },
 };
