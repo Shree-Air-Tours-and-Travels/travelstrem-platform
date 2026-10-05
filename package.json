@@ -21,7 +21,8 @@
     "storybook": "pnpm --filter @packages/trem-standard-ui-library storybook",
     "build:storybook": "pnpm --filter @packages/trem-standard-ui-library build-storybook",
     "tokens:generate": "pnpm --filter @packages/trem-design-tokens generate",
-    "tokens:check": "pnpm --filter @packages/trem-design-tokens check"
+    "tokens:check": "pnpm --filter @packages/trem-design-tokens check",
+    "build:shree-air-website": "pnpm --filter @websites/shree-air build"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
