@@ -1,0 +1,187 @@
+{
+  "_id": "6abe72dbc23ba0ff53e9d22c",
+  "name": "Shree Air tours & travels",
+  "contactEmail": "shreeairs1972@gmail.com",
+  "contactPhone": "9602225763",
+  "globalBrand": {
+    "logoSrc": "https://res.cloudinary.com/dofxshf3z/image/upload/v1790931866/shree-air-tp_keg6eh.png",
+    "faviconSrc": "https://res.cloudinary.com/dofxshf3z/image/upload/v1790933050/1c036c9a-97c9-4b80-b0c2-a49c49a4fabc.png",
+    "windowTitle": "Shree Air tours & travels",
+    "label": "Shree Air tours & travels"
+  },
+  "theme": {
+    "mode": "light",
+    "allowSwitching": false,
+    "primaryColor": "#159FA6",
+    "darkPrimaryColor": "#47C4C9",
+    "light": {
+      "--color-primary": "#159FA6",
+      "--color-primary-dark": "#0D747B",
+      "--color-secondary": "#278EB8",
+      "--color-secondary-dark": "#1A6788",
+      "--color-accent": "#12343B",
+      "--color-background": "#F5FAFA",
+      "--color-surface": "#FFFFFF",
+      "--color-surface-muted": "#DCEFF0",
+      "--color-surface-subtle": "#EDF7F7",
+      "--color-text": "#102D33",
+      "--color-text-muted": "#526D72",
+      "--color-text-light": "#789095",
+      "--color-border": "#BBDCDD",
+      "--color-overlay": "#0B272D"
+    },
+    "dark": {
+      "--color-primary": "#47C4C9",
+      "--color-primary-dark": "#159FA6",
+      "--color-secondary": "#3EA8CE",
+      "--color-secondary-dark": "#278EB8",
+      "--color-accent": "#C8F1F1",
+      "--color-background": "#07191D",
+      "--color-surface": "#0D252B",
+      "--color-surface-muted": "#15353B",
+      "--color-surface-subtle": "#102C32",
+      "--color-text": "#F2FAFA",
+      "--color-text-muted": "#B4CED0",
+      "--color-text-light": "#88A9AC",
+      "--color-border": "#285057",
+      "--color-overlay": "#020C0F"
+    }
+  },
+  "modules": {
+    "trehub": ["flights", "hotels"],
+    "trevio": ["trips"],
+    "trevista": ["tours"]
+  },
+  "heroImages": {
+    "appShell": "https://res.cloudinary.com/dofxshf3z/image/upload/v1791022090/hero-img-ltr_xgxjdq.png"
+  },
+  "homePage": {
+    "hero": {
+      "image": "https://res.cloudinary.com/dofxshf3z/image/upload/v1791022090/hero-img-ltr_xgxjdq.png",
+      "eyebrow": "SHREE AIR TOURS & TRAVELS",
+      "title": "Your next journey starts with us",
+      "description": "Discover flights, stays, tours and trips with travel planning shaped around you.",
+      "searchVisible": true,
+      "trustItems": [
+        {
+          "id": "planning",
+          "label": "Personalised travel planning",
+          "icon": "compass"
+        },
+        {
+          "id": "journeys",
+          "label": "Journeys for every occasion",
+          "icon": "luggage"
+        }
+      ]
+    },
+    "statistics": {
+      "visible": true,
+      "customerCount": 2500,
+      "customerLabel": "Happy travellers (sample)",
+      "items": [
+        {
+          "id": "journeys",
+          "label": "Journeys planned (sample)",
+          "value": "150+"
+        },
+        {
+          "id": "destinations",
+          "label": "Destinations (sample)",
+          "value": "35+"
+        },
+        {
+          "id": "experience",
+          "label": "Years of experience (sample)",
+          "value": "8+"
+        }
+      ]
+    },
+    "featured": {
+      "visible": true,
+      "eyebrow": "Find your next getaway",
+      "title": "A world of possibilities",
+      "description": "Explore our available tours, trips, flights and stays."
+    },
+    "customise": {
+      "visible": true,
+      "eyebrow": "Travel, your way",
+      "title": "Make every journey",
+      "highlight": "your own",
+      "description": "Tell us where you want to go and what matters to you. We will help bring your travel plans together.",
+      "advantages": [
+        {
+          "id": "planning",
+          "icon": "compass",
+          "title": "Plans that fit you",
+          "description": "Share your dates, preferences and budget with our travel team."
+        },
+        {
+          "id": "choices",
+          "icon": "luggage",
+          "title": "Travel together",
+          "description": "Plan a holiday for yourself, your family or your group."
+        },
+        {
+          "id": "details",
+          "icon": "route",
+          "title": "The details, connected",
+          "description": "Bring your flights, stays and experiences into one travel plan."
+        }
+      ]
+    },
+    "faq": {
+      "visible": true,
+      "title": "Before you set off",
+      "description": "A little clarity for your next journey.",
+      "items": [
+        {
+          "id": "plan",
+          "question": "How do I start planning a journey?",
+          "answer": "Explore the services above or contact our team with your destination, travel dates and number of travellers."
+        },
+        {
+          "id": "custom",
+          "question": "Can I discuss a personalised travel plan?",
+          "answer": "Yes. Contact our team to discuss your preferences and the available options for your journey."
+        },
+        {
+          "id": "terms",
+          "question": "Where can I find cancellation terms?",
+          "answer": "Cancellation terms depend on the selected service and supplier. Review the terms provided with your quote or booking before confirming."
+        }
+      ]
+    },
+    "footer": {
+      "description": "Shree Air tours & travels brings flights, stays, holidays and group trips together with personalised planning for every journey.",
+      "servicesTitle": "Explore our travel services",
+      "linksTitle": "Plan with Shree Air",
+      "links": [
+        {
+          "id": "contact",
+          "label": "Email our travel team",
+          "href": "mailto:shreeairs1972@gmail.com"
+        },
+        {
+          "id": "call",
+          "label": "Call us",
+          "href": "tel:9602225763"
+        },
+        {
+          "id": "faq",
+          "label": "Frequently asked questions",
+          "href": "/#home-faq"
+        }
+      ],
+      "socialLinks": [],
+      "legalLinks": []
+    }
+  },
+  "business": {
+    "address": "117 SHRIRAMPURI COLONY NIWARU ROAD, JHOTWARA, JAIPUR 302012"
+  },
+  "domains": {
+    "website": "http://127.0.0.1:3028",
+    "api": "http://127.0.0.1:5011"
+  }
+}

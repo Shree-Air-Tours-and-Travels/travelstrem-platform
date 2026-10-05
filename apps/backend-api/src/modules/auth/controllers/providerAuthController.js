@@ -29,11 +29,12 @@ const sendError = (res, error, fallbackCode = "AUTH_FAILED") => {
     });
 };
 
-const isExternalProviderAuthEnabled = () => config.IS_DEVELOPMENT;
+const isExternalProviderAuthEnabled = (req) =>
+    req.tenant?.platform === true && !process.env.TENANT_CLIENT_ID;
 
-export const getAuthMethods = (_req, res) => {
+export const getAuthMethods = (req, res) => {
     noStore(res);
-    const externalProviderAuthEnabled = isExternalProviderAuthEnabled();
+    const externalProviderAuthEnabled = isExternalProviderAuthEnabled(req);
     const googleEnabled = Boolean(
         externalProviderAuthEnabled &&
             config.GOOGLE_AUTH_ENABLED &&
@@ -71,10 +72,10 @@ export const getAuthMethods = (_req, res) => {
 
 export const startGoogle = async (req, res) => {
     noStore(res);
-    if (!isExternalProviderAuthEnabled()) {
+    if (!isExternalProviderAuthEnabled(req)) {
         return sendError(
             res,
-            Object.assign(new Error("Google sign-in is disabled for this environment."), {
+            Object.assign(new Error("Google sign-in is disabled for this client."), {
                 code: "GOOGLE_AUTH_DISABLED",
                 status: 404,
             }),
@@ -96,6 +97,12 @@ export const startGoogle = async (req, res) => {
 
 export const googleCallback = async (req, res) => {
     noStore(res);
+    if (!isExternalProviderAuthEnabled(req)) {
+        return sendError(res, Object.assign(new Error("Google sign-in is disabled for this client."), {
+            code: "GOOGLE_AUTH_DISABLED",
+            status: 404,
+        }));
+    }
     let portal = normalizePortalScope(req.query.portal || "customer");
     try {
         if (req.query.error)
@@ -121,10 +128,10 @@ export const googleCallback = async (req, res) => {
 
 export const requestOtp = async (req, res) => {
     noStore(res);
-    if (!isExternalProviderAuthEnabled()) {
+    if (!isExternalProviderAuthEnabled(req)) {
         return sendError(
             res,
-            Object.assign(new Error("Mobile sign-in is disabled for this environment."), {
+            Object.assign(new Error("Mobile sign-in is disabled for this client."), {
                 code: "MOBILE_AUTH_DISABLED",
                 status: 404,
             }),
@@ -146,10 +153,10 @@ export const requestOtp = async (req, res) => {
 
 export const verifyOtp = async (req, res) => {
     noStore(res);
-    if (!isExternalProviderAuthEnabled()) {
+    if (!isExternalProviderAuthEnabled(req)) {
         return sendError(
             res,
-            Object.assign(new Error("Mobile sign-in is disabled for this environment."), {
+            Object.assign(new Error("Mobile sign-in is disabled for this client."), {
                 code: "MOBILE_AUTH_DISABLED",
                 status: 404,
             }),

@@ -760,16 +760,19 @@ export const submitForm = async (req, res) => {
                 return sendJson(res, 400, {
                     status: "error",
                     message: `Please provide ${missingField}.`,
+                    fieldErrors: { [missingField]: `Please provide ${missingField}.` },
                 });
             if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(allowedFields.email))
                 return sendJson(res, 400, {
                     status: "error",
                     message: "Please provide a valid email address.",
+                    fieldErrors: { email: "Please provide a valid email address." },
                 });
             if (allowedFields.phone && String(allowedFields.phone).replace(/\D/g, "").length !== 10)
                 return sendJson(res, 400, {
                     status: "error",
                     message: "Please provide a valid 10-digit phone number.",
+                    fieldErrors: { phone: "Please provide a valid 10-digit phone number." },
                 });
             const preferredContactOptions = await masterDataService.getOptionSet(
                 "tours.preferredContactOptions",
@@ -783,6 +786,7 @@ export const submitForm = async (req, res) => {
                 return sendJson(res, 400, {
                     status: "error",
                     message: "Please choose an available contact method.",
+                    fieldErrors: { preferredContact: "Please choose an available contact method." },
                 });
         }
         const travellerCount = Number(allowedFields.travellerCount);
@@ -793,6 +797,7 @@ export const submitForm = async (req, res) => {
             return sendJson(res, 400, {
                 status: "error",
                 message: "Traveller count must be between 1 and 50.",
+                fieldErrors: { travellerCount: "Traveller count must be between 1 and 50." },
             });
         if (
             !isConfirmedBookingEnquiry &&
@@ -804,6 +809,7 @@ export const submitForm = async (req, res) => {
             return sendJson(res, 400, {
                 status: "error",
                 message: "Please select whether your quote should include flights.",
+                fieldErrors: { flightPreference: "Please select whether your quote should include flights." },
             });
 
         const normalizedTourId = normalizeMongoId(

@@ -6,11 +6,11 @@ import { deflateSync, inflateSync } from "node:zlib";
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const masterFavicons = [
   {
-    source: path.join(repoRoot, "website", "public", "favicon-light.png"),
+    source: path.join(repoRoot, "website", "travelstrem", "public", "favicon-light.png"),
     target: "favicon.png",
   },
   {
-    source: path.join(repoRoot, "website", "public", "favicon-dark.png"),
+    source: path.join(repoRoot, "website", "travelstrem", "public", "favicon-dark.png"),
     target: "favicon-dark.png",
   },
 ];

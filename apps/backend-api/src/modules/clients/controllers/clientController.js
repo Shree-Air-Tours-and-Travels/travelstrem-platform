@@ -160,7 +160,7 @@ export const uploadClientLogo = async (req, res) => {
 
 export const getClientBySlug = async (req, res) => {
     try {
-        const client = await Client.findOne({ slug: req.params.slug, status: "active" }).select("name slug branding globalBrand theme website domains productAccess modules accountModules partnerEnabled").lean();
+        const client = await Client.findOne({ slug: req.params.slug, status: "active" }).select("name slug branding globalBrand theme website domains productAccess modules accountModules partnerEnabled contactEmail contactPhone business.address homePage heroImages").lean();
         if (!client) return sendJson(res, 404, { status: "error", message: "Client not found" });
         return sendJson(res, 200, {
             status: "success",

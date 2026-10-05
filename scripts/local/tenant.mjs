@@ -26,8 +26,9 @@ if (envFileIndex !== -1 && !fs.existsSync(clientEnvFile))
   throw new Error("The specified client environment file does not exist.");
 const clientEnv = read(clientEnvFile);
 const isAtlasConnection = (uri) => {
-  const target = new URL(uri);
-  return target.protocol === "mongodb+srv:" || /\.mongodb\.net(?::\d+)?(?:,|$)/i.test(target.host);
+  if (!uri) return false;
+  const hosts = uri.replace(/^mongodb(?:\+srv)?:\/\//i, "").split("/")[0].split("@").pop();
+  return /\.mongodb\.net(?::\d+)?(?:,|$)/i.test(hosts);
 };
 const source = {
   ...read(path.join(backend, ".env")),
@@ -77,16 +78,21 @@ if (process.argv.includes("--invite-admin")) {
   );
 }
 const runtimeSecretRef = client.database.secretRef.replace(/^TENANT_DB_/, "TENANT_RUNTIME_DB_");
-let runtimeUri = clientEnv.MONGODB_URI || source[runtimeSecretRef];
+const scopedRuntimeUri =
+  clientEnv[runtimeSecretRef] || source[runtimeSecretRef] || process.env[runtimeSecretRef];
+let runtimeUri = clientEnv.MONGODB_URI || scopedRuntimeUri;
 const provisioningRuntimeUri = source[client.database.secretRef];
-if (!runtimeUri && !provisioningRuntimeUri)
-  throw new Error(`Configure ${runtimeSecretRef} or MONGODB_URI in the client environment file.`);
-const isAtlas = isAtlasConnection(provisioningRuntimeUri || runtimeUri);
-if (!runtimeUri) {
-  if (isAtlas)
+const isAtlas = [provisioningRuntimeUri, runtimeUri, scopedRuntimeUri].some(isAtlasConnection);
+if (isAtlas) {
+  runtimeUri = scopedRuntimeUri;
+  if (!runtimeUri)
     throw new Error(
       `MongoDB Atlas requires the pre-created scoped runtime credential in ${runtimeSecretRef}. The provisioning credential cannot be used for tenant runtime access.`,
     );
+}
+if (!runtimeUri && !provisioningRuntimeUri)
+  throw new Error(`Configure ${runtimeSecretRef} or MONGODB_URI in the client environment file.`);
+if (!isAtlas && !runtimeUri) {
   if (!process.argv.includes("--provision-runtime-user"))
     throw new Error(
       `Configure ${runtimeSecretRef} with collection-scoped runtime credentials, or explicitly run node scripts/local/tenant.mjs ${slug} --provision-runtime-user once.`,
@@ -138,8 +144,8 @@ if (!runtimeUri) {
     provisioningUri.password = password;
     provisioningUri.searchParams.set("authSource", client.database.name);
     runtimeUri = provisioningUri.toString();
-    const tenantsFile = path.join(root, ".env.tenants.local");
-    const tenantSecrets = { ...read(tenantsFile), [runtimeSecretRef]: runtimeUri };
+    const tenantsFile = clientEnvFile;
+    const tenantSecrets = { ...clientEnv, [runtimeSecretRef]: runtimeUri };
     fs.writeFileSync(
       tenantsFile,
       Object.entries(tenantSecrets)
@@ -164,7 +170,7 @@ for (const value of Object.values(origins.toObject?.() || origins)) {
   if (typeof value === "string" && !["127.0.0.1", "localhost"].includes(new URL(value).hostname))
     throw new Error("This launcher supports local tenant origins only.");
 }
-const secretFile = path.join(root, `.env.tenant-${slug}.local`);
+const secretFile = clientEnvFile;
 const saved = { ...read(secretFile), ...clientEnv };
 const secrets = {
   JWT_ACCESS_SECRET: saved.JWT_ACCESS_SECRET || randomBytes(48).toString("hex"),
