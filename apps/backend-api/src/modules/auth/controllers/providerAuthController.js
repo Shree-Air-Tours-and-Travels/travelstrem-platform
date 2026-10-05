@@ -30,7 +30,7 @@ const sendError = (res, error, fallbackCode = "AUTH_FAILED") => {
 };
 
 const isExternalProviderAuthEnabled = (req) =>
-    req.tenant?.platform === true && !process.env.TENANT_CLIENT_ID;
+    config.IS_DEVELOPMENT && req.tenant?.platform === true && !process.env.TENANT_CLIENT_ID;
 
 export const getAuthMethods = (req, res) => {
     noStore(res);

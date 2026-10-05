@@ -40,7 +40,7 @@ export async function resolveBrand(client = null) {
     const record = await PlatformBrand.findById("platform").lean();
     if (!record) throw new ApiError(503, "Platform branding has not been initialized.");
     const { _id, updatedBy, __v, createdAt, updatedAt, ...brand } = record;
-    return { ...brand, label: brand.name, windowTitle: brand.windowTitle || brand.name };
+    return { ...brand, faviconSrc: "https://res.cloudinary.com/dofxshf3z/image/upload/v1790519386/travelstrem/site-assets/e38709b8a4ada750aed0f6df.png", label: brand.name, windowTitle: brand.windowTitle || brand.name };
 }
 
 export function validateBrand(input) {
