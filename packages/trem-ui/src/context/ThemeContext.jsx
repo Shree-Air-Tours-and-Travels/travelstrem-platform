@@ -14,6 +14,18 @@ const ThemeContext = createContext({
 });
 
 const TENANT_CONFIGURATION_KEY = "trem.tenant-configuration";
+let tenantConfigurationRequest = null;
+let tenantConfigurationPending = false;
+
+const loadTenantConfiguration = (force = false) => {
+  if (!tenantConfigurationRequest || (force && !tenantConfigurationPending)) {
+    tenantConfigurationPending = true;
+    tenantConfigurationRequest = fetchData('/tenant-config').finally(() => {
+      tenantConfigurationPending = false;
+    });
+  }
+  return tenantConfigurationRequest;
+};
 const cachedTenantConfiguration = () => {
   try {
     const cached = JSON.parse(window.localStorage.getItem(TENANT_CONFIGURATION_KEY) || "null");
@@ -30,7 +42,7 @@ export function ThemeProvider({ defaultTheme, tenantId, tenantTheme, tenantTheme
   const [configurationLoaded, setConfigurationLoaded] = useState(() => Boolean(cachedTenantConfiguration()));
   useEffect(() => {
     let active = true;
-    const refresh = () => fetchData('/tenant-config').then((response) => {
+    const refresh = (force = false) => loadTenantConfiguration(force).then((response) => {
       if (active && response?.status === 'success') {
         setTenantThemePolicy(response.data?.theme);
         setConfiguration(response.data);
@@ -43,9 +55,9 @@ export function ThemeProvider({ defaultTheme, tenantId, tenantTheme, tenantTheme
       }
     }).catch(() => {}).finally(() => { if (active) setConfigurationLoaded(true); });
     refresh();
-    window.addEventListener('focus', refresh);
-    window.addEventListener('TENANT_CONFIG_UPDATED', refresh);
-    return () => { active = false; window.removeEventListener('focus', refresh); window.removeEventListener('TENANT_CONFIG_UPDATED', refresh); };
+    const onConfigurationUpdated = () => refresh(true);
+    window.addEventListener('TENANT_CONFIG_UPDATED', onConfigurationUpdated);
+    return () => { active = false; window.removeEventListener('TENANT_CONFIG_UPDATED', onConfigurationUpdated); };
   }, []);
   tenantId = configuration?.tenantId || tenantId;
   tenantTheme = configuration?.theme || tenantTheme;

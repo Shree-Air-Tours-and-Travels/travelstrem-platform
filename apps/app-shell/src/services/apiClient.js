@@ -35,7 +35,7 @@ const api = axios.create({
 });
 
 const STARTUP_PATHS = new Set([
-  "/tenant-config", "/auth/session", "/header-config",
+  "/auth/session", "/header-config",
   "/sidebar-config", "/app-header-config", "/navigation-config",
 ]);
 const STARTUP_RECOVERY_MS = 90000;
@@ -61,6 +61,10 @@ registerAuthHeaderClearer(clearApiAuthHeader);
 
 api.interceptors.request.use(
   async (cfg) => {
+    // One tenant lookup per page load; allow a cold start without retrying it.
+    if (cfg.method?.toLowerCase() === "get" && cfg.url === "/tenant-config") {
+      cfg.timeout = cfg.timeout || STARTUP_RECOVERY_MS;
+    }
     if (
       startupRecovery.active &&
       cfg.method?.toLowerCase() === "get" &&
