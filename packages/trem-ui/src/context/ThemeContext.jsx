@@ -23,7 +23,7 @@ const cachedTenantConfiguration = () => {
   }
 };
 
-export function ThemeProvider({ defaultTheme, tenantId, tenantTheme, tenantThemes, waitForConfiguration = false, children }) {
+export function ThemeProvider({ defaultTheme, tenantId, tenantTheme, tenantThemes, waitForConfiguration = false, loadingFallback = null, children }) {
   const themeMode = useThemeMode({ defaultTheme });
   const [brand, setBrand] = useState(null);
   const [configuration, setConfiguration] = useState(cachedTenantConfiguration);
@@ -52,7 +52,7 @@ export function ThemeProvider({ defaultTheme, tenantId, tenantTheme, tenantTheme
 
   useThemeEffect(() => applyTenantTheme({ tenantId, tenantTheme, tenantThemes, mode: themeMode.theme }), [tenantId, tenantTheme, tenantThemes, themeMode.theme]);
 
-  return <ThemeContext.Provider value={{ ...themeMode, configuration, brand }}>{configurationLoaded || !waitForConfiguration ? children : null}</ThemeContext.Provider>;
+  return <ThemeContext.Provider value={{ ...themeMode, configuration, brand }}>{configurationLoaded || !waitForConfiguration ? children : loadingFallback}</ThemeContext.Provider>;
 }
 
 export const useTheme = () => useContext(ThemeContext);

@@ -64,13 +64,7 @@ export default applyHideFlags({
                 id: "bookings",
                 title: "Manage Bookings",
                 items: [
-                    {
-                        id: "dashboard",
-                        label: "Dashboard",
-                        icon: "management",
-                        target: "dashboard",
-                    },
-                    { id: "bookings", label: "Dashboard", icon: "calendar", target: "dashboard" },
+                    { id: "bookings", label: "Bookings", icon: "calendar", target: "bookings" },
                     { id: "saved-searches", label: "Saved searches", icon: "search", target: "saved-searches" },
                     { id: "favorites", label: "Wishlist", icon: "heart", target: "favorites" },
                     {

@@ -44,6 +44,7 @@ import LoginPrompt from "../components/LoginPrompt";
 import SecurityMonitor from "../components/SecurityMonitor";
 import SupportRoutes from "../features/support/SupportRoutes";
 import { checkRateLimit } from "../services/security";
+import { finishStartupRecovery, restartStartupRecovery } from "../services/apiClient";
 import { clearGuestSession, enableGuestSession, isGuestSession } from "../services/guestSession";
 import {
   FALLBACK_NAVIGATION_CONFIG,
@@ -209,7 +210,7 @@ function ProtectedRoute({
   return children;
 }
 
-function AppShell() {
+function AppShell({ startupStartedAt, startupPreviewLoading = false }) {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -231,6 +232,7 @@ function AppShell() {
   const [shellLoading, setShellLoading] = useState(true);
   const [shellError, setShellError] = useState(false);
   const [shellAttempt, setShellAttempt] = useState(0);
+  const [retryStartedAt, setRetryStartedAt] = useState(null);
   const [sidebarConfig, setSidebarConfig] = useState({});
   const [appHeaderConfig, setAppHeaderConfig] = useState({});
   const [navigationConfig, setNavigationConfig] = useState(() =>
@@ -250,6 +252,7 @@ function AppShell() {
       if (
         [sidebarResponse, headerResponse, navigationResponse].some(
           (response) =>
+            response?.status !== "success" ||
             !response?.componentData ||
             typeof response.componentData !== "object" ||
             Array.isArray(response.componentData) ||
@@ -520,6 +523,10 @@ function AppShell() {
     };
   }, [applyShellConfiguration, reloadSession, shellAttempt]);
 
+  useEffect(() => {
+    if (!loading && !shellLoading) finishStartupRecovery();
+  }, [loading, shellLoading]);
+
   useRealtimeEvent(REALTIME_EVENTS.PRODUCT_CATALOG_UPDATED, () => {
     fetchShellConfiguration({ force: true })
       .then(applyShellConfiguration)
@@ -708,18 +715,21 @@ function AppShell() {
     sidebarConfig.sections,
   ]);
 
-  if (loading || shellLoading) {
-    return <GlobalLoader visible text="Loading App" />;
+  if (loading || shellLoading || startupPreviewLoading) {
+    return <GlobalLoader visible text="Loading App" startedAt={retryStartedAt ?? startupStartedAt} />;
   }
 
   if (shellError || sessionError) {
     return (
       <main className="dash-load-error">
         <NoDataFound
-          title="Something went wrong"
-          description="We couldn’t load this page right now. Please try again in a moment."
+          title="We couldn’t connect to your workspace"
+          description="The service may still be starting or temporarily unavailable. Check your connection and try again."
           actionLabel="Retry"
           onAction={() => {
+            restartStartupRecovery();
+            window.dispatchEvent(new Event("TENANT_CONFIG_UPDATED"));
+            setRetryStartedAt(Date.now());
             setShellLoading(true);
             setShellAttempt((attempt) => attempt + 1);
           }}
@@ -942,18 +952,46 @@ function AppShell() {
 }
 
 export default function App() {
+  const [startupStartedAt] = useState(() => Date.now());
+  const [startupPreviewMs] = useState(() => {
+    if (
+      process.env.NODE_ENV !== "development" ||
+      !["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname)
+    ) return 0;
+    const delay = Number(new URLSearchParams(window.location.search).get("startupDelay"));
+    return Number.isFinite(delay) ? Math.min(120000, Math.max(0, delay)) : 0;
+  });
+  const [startupPreviewLoading, setStartupPreviewLoading] = useState(startupPreviewMs > 0);
+
+  useEffect(() => {
+    if (!startupPreviewMs) return undefined;
+    const timer = window.setTimeout(() => setStartupPreviewLoading(false), startupPreviewMs);
+    return () => window.clearTimeout(timer);
+  }, [startupPreviewMs]);
+
   // Backend-authored realtime toasts (e.g. enquiry created confirmation).
   useEffect(() => initRealtimeNotifications(), []);
 
   return (
-    <ThemeProvider waitForConfiguration>
+    <ThemeProvider
+      waitForConfiguration
+      loadingFallback={<GlobalLoader visible text="Loading App" startedAt={startupStartedAt} />}
+    >
       <AppShellProvider>
         <RealtimeProvider>
           <Toaster />
           <SecurityMonitor>
             <ScrollToTop />
             <Routes>
-              <Route path="/*" element={<AppShell />} />
+              <Route
+                path="/*"
+                element={
+                  <AppShell
+                    startupStartedAt={startupStartedAt}
+                    startupPreviewLoading={startupPreviewLoading}
+                  />
+                }
+              />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </SecurityMonitor>

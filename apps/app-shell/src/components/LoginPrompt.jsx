@@ -40,7 +40,6 @@ export default function LoginPrompt({
         <Icon name="x" size={18} />
       </button>
       <div className="dlp__content">
-        <div className="dlp__brand">{brandName}</div>
         <div className="dlp__icon" aria-hidden="true">
           <img src={logoSrc} alt="" />
         </div>

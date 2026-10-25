@@ -24,3 +24,12 @@ export const CustomText = {
   },
   parameters: { layout: "fullscreen" },
 };
+
+export const WakingUp = {
+  render: function WakingUpPreview(args) {
+    const [startedAt] = React.useState(() => Date.now() - 10000);
+    return <GlobalLoader {...args} startedAt={startedAt} />;
+  },
+  args: { visible: true, text: "Loading App" },
+  parameters: { layout: "fullscreen" },
+};

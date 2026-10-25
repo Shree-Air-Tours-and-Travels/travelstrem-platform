@@ -100,7 +100,7 @@ export function AppShellProvider({ children }) {
             error?.response?.data?.message || error?.message || error,
           );
 
-          if (retryCount < MAX_RETRIES) {
+          if (retryCount < MAX_RETRIES && !error?.startupRecoveryExhausted) {
             initOnceRef.current = null;
             await new Promise((r) => setTimeout(r, RETRY_DELAY_MS * (retryCount + 1)));
             return attempt(retryCount + 1);

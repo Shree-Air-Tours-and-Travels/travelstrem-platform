@@ -34,6 +34,21 @@ const api = axios.create({
   headers: { "Content-Type": "application/json", "X-Travelstrem-Portal": "customer" },
 });
 
+const STARTUP_PATHS = new Set([
+  "/tenant-config", "/auth/session", "/header-config",
+  "/sidebar-config", "/app-header-config", "/navigation-config",
+]);
+const STARTUP_RECOVERY_MS = 90000;
+let startupRecovery = { id: 0, active: true, deadline: null };
+
+export const restartStartupRecovery = () => {
+  startupRecovery = { id: startupRecovery.id + 1, active: true, deadline: null };
+};
+
+export const finishStartupRecovery = () => {
+  startupRecovery.active = false;
+};
+
 setFetchDataApiClient(api);
 
 export const clearApiAuthHeader = () => {
@@ -46,6 +61,15 @@ registerAuthHeaderClearer(clearApiAuthHeader);
 
 api.interceptors.request.use(
   async (cfg) => {
+    if (
+      startupRecovery.active &&
+      cfg.method?.toLowerCase() === "get" &&
+      STARTUP_PATHS.has(cfg.url)
+    ) {
+      startupRecovery.deadline ??= Date.now() + STARTUP_RECOVERY_MS;
+      cfg.startupRecoveryId = startupRecovery.id;
+      cfg.timeout = Math.min(cfg.timeout || 15000, Math.max(1, startupRecovery.deadline - Date.now()));
+    }
     try {
       if (cfg?.headers?.Authorization) {
         delete cfg.headers.Authorization;
@@ -86,5 +110,37 @@ api.interceptors.request.use(
 );
 
 setupRefreshInterceptor(api, AUTH_STORAGE_PREFIX);
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const cfg = error.config;
+    const transient = !error.response || [502, 503, 504].includes(error.response.status);
+    if (
+      !cfg || axios.isCancel(error) || !transient || !startupRecovery.active ||
+      cfg.startupRecoveryId !== startupRecovery.id
+    ) throw error;
+
+    // Prevent the session provider from starting another retry cycle after this window.
+    error.startupRecoveryExhausted = true;
+    const remaining = startupRecovery.deadline - Date.now();
+    if (remaining <= 0 || cfg.signal?.aborted) throw error;
+
+    await new Promise((resolve) => {
+      const finish = () => {
+        window.clearTimeout(timer);
+        cfg.signal?.removeEventListener("abort", finish);
+        resolve();
+      };
+      const timer = window.setTimeout(finish, Math.min(3000, remaining));
+      cfg.signal?.addEventListener("abort", finish, { once: true });
+    });
+    if (
+      !startupRecovery.active || cfg.startupRecoveryId !== startupRecovery.id ||
+      cfg.signal?.aborted || Date.now() >= startupRecovery.deadline
+    ) throw error;
+    return api.request(cfg);
+  },
+);
 
 export default api;

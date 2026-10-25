@@ -30,22 +30,26 @@ export default function GlobalLoader({
   className = "",
   onFinish = () => {},
   autoHideAfter = null,
+  startedAt = null,
 }) {
   const [show, setShow] = useState(visible);
   const [hiding, setHiding] = useState(false);
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [elapsedSeconds, setElapsedSeconds] = useState(() =>
+    startedAt === null ? 0 : Math.max(0, Math.floor((Date.now() - startedAt) / 1000)),
+  );
   const hideTimerRef = useRef(null);
   const autoHideRef = useRef(null);
   const finishTimerRef = useRef(null);
 
   useEffect(() => {
     if (!visible) return undefined;
-    setElapsedSeconds(0);
-    const timer = window.setInterval(() => {
-      setElapsedSeconds((seconds) => seconds + 1);
-    }, 1000);
+    const start = startedAt ?? Date.now();
+    const updateElapsed = () =>
+      setElapsedSeconds(Math.max(0, Math.floor((Date.now() - start) / 1000)));
+    updateElapsed();
+    const timer = window.setInterval(updateElapsed, 1000);
     return () => window.clearInterval(timer);
-  }, [visible]);
+  }, [startedAt, visible]);
 
   const completeHide = React.useCallback(() => {
     setShow(false);
